@@ -26,6 +26,7 @@
 #include "nsStyleConsts.h"
 #include "nsHTMLAtoms.h"
 #include "nsUnitConversion.h"
+#include "nsStyleUtil.h"
 
 //#define DEBUG_REFS
 
@@ -546,6 +547,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
             font->mFont.name = family;
             font->mFixedFont.name = family;
           }
+          font->mFlags |= NS_STYLE_FONT_FACE_EXPLICIT;
         }
 
         // font-style: enum
@@ -583,50 +585,36 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
 
         // font-size: enum, length, percent
         if (ourFont->mSize.GetUnit() == eCSSUnit_Enumerated) {
-          static float kFontScale[7] = {
-            0.6874999f,   // xx-small == font size=1
-            0.85f,        // x-small  == font size=2
-            1.0f,         // small    == font size=3
-            1.175f,       // medium   == font size=4
-            1.5f,         // large    == font size=5
-            2.0f,         // x-large  == font size=6
-            3.0f          // xx-large == font size=7
-          };
           PRInt32 value = ourFont->mSize.GetIntValue();
 
-          const nsFont& normal = aPresContext->GetDefaultFont();  // use normal font or body font??
-          const nsFont& normalFixed = aPresContext->GetDefaultFixedFont();  // use normal font or body font??
+          const nsFont& normal = aPresContext->GetDefaultFont();
+          const nsFont& normalFixed = aPresContext->GetDefaultFixedFont();
           if ((NS_STYLE_FONT_SIZE_XXSMALL <= value) && 
               (value <= NS_STYLE_FONT_SIZE_XXLARGE)) {
-            font->mFont.size = (nscoord)((float)normal.size * kFontScale[value]);
-            font->mFixedFont.size = (nscoord)((float)normalFixed.size * kFontScale[value]);
+            font->mFont.size = nsStyleUtil::CalcFontPointSize(value + 1, (PRInt32)normal.size);
+            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(value + 1, (PRInt32)normalFixed.size);
           }
           else if (NS_STYLE_FONT_SIZE_LARGER == value) {
-            PRInt32 index;
-            for (index = NS_STYLE_FONT_SIZE_XXSMALL;
-                 index < NS_STYLE_FONT_SIZE_XXLARGE; index++)
-              if (parentFont->mFont.size < (nscoord)((float)normal.size * kFontScale[index]))
-                break;
-            font->mFont.size = (nscoord)((float)normal.size * kFontScale[index]);
-            font->mFixedFont.size = (nscoord)((float)normalFixed.size * kFontScale[index]);
+            PRInt32 index = nsStyleUtil::FindNextLargerFontSize(parentFont->mFont.size, (PRInt32)normal.size);
+            font->mFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)normal.size);
+            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)normalFixed.size);
           }
           else if (NS_STYLE_FONT_SIZE_SMALLER == value) {
-            PRInt32 index;
-            for (index = NS_STYLE_FONT_SIZE_XXLARGE;
-                 index > NS_STYLE_FONT_SIZE_XXSMALL; index--)
-              if (parentFont->mFont.size > (nscoord)((float)normal.size * kFontScale[index]))
-                break;
-            font->mFont.size = (nscoord)((float)normal.size * kFontScale[index]);
-            font->mFixedFont.size = (nscoord)((float)normalFixed.size * kFontScale[index]);
+            PRInt32 index = nsStyleUtil::FindNextSmallerFontSize(parentFont->mFont.size, (PRInt32)normal.size);
+            font->mFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)normal.size);
+            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)normalFixed.size);
           }
+          // this does NOT explicitly set font size
         }
         else if (ourFont->mSize.IsLengthUnit()) {
           font->mFont.size = CalcLength(ourFont->mSize, parentFont, aPresContext);
           font->mFixedFont.size = CalcLength(ourFont->mSize, parentFont, aPresContext);
+          font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
         }
         else if (ourFont->mSize.GetUnit() == eCSSUnit_Percent) {
           font->mFont.size = (nscoord)((float)(parentFont->mFont.size) * ourFont->mSize.GetPercentValue());
           font->mFixedFont.size = (nscoord)((float)(parentFont->mFixedFont.size) * ourFont->mSize.GetPercentValue());
+          font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
         }
 
         NS_IF_RELEASE(parentContext);
@@ -659,6 +647,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
             (ourText->mDecoration.GetUnit() == eCSSUnit_Integer)) {
           PRInt32 td = ourText->mDecoration.GetIntValue();
           font->mFont.decorations = td;
+          font->mFixedFont.decorations = td;
           text->mTextDecoration = td;
         }
 
