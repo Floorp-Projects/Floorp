@@ -41,7 +41,7 @@ nsHTMLEditUtils::IsBody(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("body"))
+  if (tag.EqualsWithConversion("body"))
   {
     return PR_TRUE;
   }
@@ -60,7 +60,7 @@ nsHTMLEditUtils::IsBreak(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("br"))
+  if (tag.EqualsWithConversion("br"))
   {
     return PR_TRUE;
   }
@@ -78,7 +78,7 @@ nsHTMLEditUtils::IsBig(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("big"))
+  if (tag.EqualsWithConversion("big"))
   {
     return PR_TRUE;
   }
@@ -96,7 +96,7 @@ nsHTMLEditUtils::IsSmall(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("small"))
+  if (tag.EqualsWithConversion("small"))
   {
     return PR_TRUE;
   }
@@ -128,11 +128,11 @@ nsHTMLEditUtils::HasMozAttr(nsIDOMNode *node)
   nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(node);
   if (elem)
   {
-    nsAutoString typeAttrName("type");
+    nsAutoString typeAttrName; typeAttrName.AssignWithConversion("type");
     nsAutoString typeAttrVal;
     nsresult res = elem->GetAttribute(typeAttrName, typeAttrVal);
     typeAttrVal.ToLowerCase();
-    if (NS_SUCCEEDED(res) && (typeAttrVal.Equals("_moz")))
+    if (NS_SUCCEEDED(res) && (typeAttrVal.EqualsWithConversion("_moz")))
       return PR_TRUE;
   }
   return PR_FALSE;
@@ -174,12 +174,12 @@ nsHTMLEditUtils::IsHeader(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if ( (tag.Equals("h1")) ||
-       (tag.Equals("h2")) ||
-       (tag.Equals("h3")) ||
-       (tag.Equals("h4")) ||
-       (tag.Equals("h5")) ||
-       (tag.Equals("h6")) )
+  if ( (tag.EqualsWithConversion("h1")) ||
+       (tag.EqualsWithConversion("h2")) ||
+       (tag.EqualsWithConversion("h3")) ||
+       (tag.EqualsWithConversion("h4")) ||
+       (tag.EqualsWithConversion("h5")) ||
+       (tag.EqualsWithConversion("h6")) )
   {
     return PR_TRUE;
   }
@@ -197,7 +197,7 @@ nsHTMLEditUtils::IsParagraph(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("p"))
+  if (tag.EqualsWithConversion("p"))
   {
     return PR_TRUE;
   }
@@ -215,7 +215,7 @@ nsHTMLEditUtils::IsListItem(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("li"))
+  if (tag.EqualsWithConversion("li"))
   {
     return PR_TRUE;
   }
@@ -232,7 +232,7 @@ nsHTMLEditUtils::IsTable(nsIDOMNode *node)
   NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTable");
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
-  if (tag.Equals("table"))
+  if (tag.EqualsWithConversion("table"))
     return PR_TRUE;
 
   return PR_FALSE;
@@ -248,7 +248,7 @@ nsHTMLEditUtils::IsTableRow(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("tr"))
+  if (tag.EqualsWithConversion("tr"))
   {
     return PR_TRUE;
   }
@@ -266,7 +266,7 @@ nsHTMLEditUtils::IsTableCell(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("td") || tag.Equals("th"))
+  if (tag.EqualsWithConversion("td") || tag.EqualsWithConversion("th"))
   {
     return PR_TRUE;
   }
@@ -284,8 +284,8 @@ nsHTMLEditUtils::IsList(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if ( (tag.Equals("ol")) ||
-       (tag.Equals("ul")) )
+  if ( (tag.EqualsWithConversion("ol")) ||
+       (tag.EqualsWithConversion("ul")) )
   {
     return PR_TRUE;
   }
@@ -303,7 +303,7 @@ nsHTMLEditUtils::IsOrderedList(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("ol"))
+  if (tag.EqualsWithConversion("ol"))
   {
     return PR_TRUE;
   }
@@ -321,7 +321,7 @@ nsHTMLEditUtils::IsUnorderedList(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("ul"))
+  if (tag.EqualsWithConversion("ul"))
   {
     return PR_TRUE;
   }
@@ -339,7 +339,7 @@ nsHTMLEditUtils::IsBlockquote(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("blockquote"))
+  if (tag.EqualsWithConversion("blockquote"))
   {
     return PR_TRUE;
   }
@@ -357,7 +357,7 @@ nsHTMLEditUtils::IsPre(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("pre"))
+  if (tag.EqualsWithConversion("pre"))
   {
     return PR_TRUE;
   }
@@ -375,7 +375,7 @@ nsHTMLEditUtils::IsAddress(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("address"))
+  if (tag.EqualsWithConversion("address"))
   {
     return PR_TRUE;
   }
@@ -393,7 +393,7 @@ nsHTMLEditUtils::IsAnchor(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("a"))
+  if (tag.EqualsWithConversion("a"))
   {
     return PR_TRUE;
   }
@@ -411,7 +411,7 @@ nsHTMLEditUtils::IsImage(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("img"))
+  if (tag.EqualsWithConversion("img"))
   {
     return PR_TRUE;
   }
@@ -429,7 +429,7 @@ nsHTMLEditUtils::IsDiv(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.Equals("div"))
+  if (tag.EqualsWithConversion("div"))
   {
     return PR_TRUE;
   }
@@ -470,13 +470,13 @@ nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
   if (IsBlockquote(node))
   {
     nsCOMPtr<nsIDOMElement> bqElem = do_QueryInterface(node);
-    nsAutoString typeAttrName("type");
+    nsAutoString typeAttrName; typeAttrName.AssignWithConversion("type");
     nsAutoString typeAttrVal;
     nsresult res = bqElem->GetAttribute(typeAttrName, typeAttrVal);
     typeAttrVal.ToLowerCase();
     if (NS_SUCCEEDED(res))
     {
-      if (typeAttrVal.Equals("cite", PR_TRUE, 4))
+      if (typeAttrVal.EqualsWithConversion("cite", PR_TRUE, 4))
         return PR_TRUE;
     }
   }

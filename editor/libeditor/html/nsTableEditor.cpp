@@ -115,7 +115,7 @@ nsHTMLEditor::InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpa
     if( NS_SUCCEEDED(res))
     {
       nsCOMPtr<nsIDOMElement> newCell;
-      res = CreateElementWithDefaults("td", getter_AddRefs(newCell));
+      res = CreateElementWithDefaults(NS_ConvertASCIItoUCS2("td"), getter_AddRefs(newCell));
       if(NS_FAILED(res)) return res;
       if(!newCell) return NS_ERROR_FAILURE;
 
@@ -129,13 +129,13 @@ nsHTMLEditor::InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpa
       {
         nsAutoString newRowSpan(aRowSpan);
         // Note: Do NOT use editor txt for this
-        newCell->SetAttribute("rowspan", newRowSpan);
+        newCell->SetAttribute(NS_ConvertASCIItoUCS2("rowspan"), newRowSpan);
       }
       if( aColSpan > 1)
       {
         nsAutoString newColSpan(aColSpan);
         // Note: Do NOT use editor txt for this
-        newCell->SetAttribute("colspan", newColSpan);
+        newCell->SetAttribute(NS_ConvertASCIItoUCS2("colspan"), newColSpan);
       }
       if(aAfter) cellOffset++;
 
@@ -164,8 +164,8 @@ NS_IMETHODIMP nsHTMLEditor::SetColSpan(nsIDOMElement *aCell, PRInt32 aColSpan)
 {
   if (!aCell) return NS_ERROR_NULL_POINTER;
   nsAutoString newSpan;
-  newSpan.Append(aColSpan, 10);
-  nsAutoString colSpan("colspan");
+  newSpan.AppendInt(aColSpan, 10);
+  nsAutoString colSpan; colSpan.AssignWithConversion("colspan");
   return SetAttribute(aCell, colSpan, newSpan);
 }
 
@@ -173,8 +173,8 @@ NS_IMETHODIMP nsHTMLEditor::SetRowSpan(nsIDOMElement *aCell, PRInt32 aRowSpan)
 {
   if (!aCell) return NS_ERROR_NULL_POINTER;
   nsAutoString newSpan;
-  newSpan.Append(aRowSpan, 10);
-  nsAutoString rowSpan("rowspan");
+  newSpan.AppendInt(aRowSpan, 10);
+  nsAutoString rowSpan; rowSpan.AssignWithConversion("rowspan");
   return SetAttribute(aCell, rowSpan, newSpan);
 }
 
@@ -213,7 +213,7 @@ nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
   for (i = 0; i < aNumber; i++)
   {
     nsCOMPtr<nsIDOMElement> newCell;
-    res = CreateElementWithDefaults("td", getter_AddRefs(newCell));
+    res = CreateElementWithDefaults(NS_ConvertASCIItoUCS2("td"), getter_AddRefs(newCell));
     if (NS_SUCCEEDED(res) && newCell)
     {
       if (aAfter) cellOffset++;
@@ -230,7 +230,7 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)
   aRow = nsnull;
 
   nsCOMPtr<nsIDOMElement> tableElement;
-  nsresult res = GetElementOrParentByTagName("table", aTableElement, getter_AddRefs(tableElement));
+  nsresult res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("table"), aTableElement, getter_AddRefs(tableElement));
   if (NS_FAILED(res)) return res;
   if (!tableElement) return NS_ERROR_NULL_POINTER;
 
@@ -295,7 +295,7 @@ nsHTMLEditor::GetNextRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)
   aRow = nsnull;  
 
   nsCOMPtr<nsIDOMElement> rowElement;
-  nsresult res = GetElementOrParentByTagName("tr", aTableElement, getter_AddRefs(rowElement));
+  nsresult res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("tr"), aTableElement, getter_AddRefs(rowElement));
   if (NS_FAILED(res)) return res;
   if (!rowElement) return NS_ERROR_NULL_POINTER;
 
@@ -484,7 +484,7 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
   if (!curCell) return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIDOMElement> parentRow;
-  res = GetElementOrParentByTagName("tr", curCell, getter_AddRefs(parentRow));
+  res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("tr"), curCell, getter_AddRefs(parentRow));
   if (NS_FAILED(res)) return res;
   if (!parentRow) return NS_ERROR_NULL_POINTER;
 
@@ -582,7 +582,7 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
     {
       // Create a new row
       nsCOMPtr<nsIDOMElement> newRow;
-      res = CreateElementWithDefaults("tr", getter_AddRefs(newRow));
+      res = CreateElementWithDefaults(NS_ConvertASCIItoUCS2("tr"), getter_AddRefs(newRow));
       if (NS_SUCCEEDED(res))
       {
         if (!newRow) return NS_ERROR_FAILURE;
@@ -590,7 +590,7 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
         for (PRInt32 i = 0; i < cellsInRow; i++)
         {
           nsCOMPtr<nsIDOMElement> newCell;
-          res = CreateElementWithDefaults("td", getter_AddRefs(newCell));
+          res = CreateElementWithDefaults(NS_ConvertASCIItoUCS2("td"), getter_AddRefs(newCell));
           if (NS_FAILED(res)) return res;
           if (!newCell) return NS_ERROR_FAILURE;
 
@@ -673,7 +673,7 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
     if (1 == GetNumberOfCellsInRow(table, startRowIndex))
     {
       nsCOMPtr<nsIDOMElement> parentRow;
-      res = GetElementOrParentByTagName("tr", cell, getter_AddRefs(parentRow));
+      res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("tr"), cell, getter_AddRefs(parentRow));
       if (NS_FAILED(res)) return res;
       if (!parentRow) return NS_ERROR_NULL_POINTER;
 
@@ -827,7 +827,7 @@ nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
           {
             // Only 1 cell in row - delete the row
             nsCOMPtr<nsIDOMElement> parentRow;
-            res = GetElementOrParentByTagName("tr", cell, getter_AddRefs(parentRow));
+            res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("tr"), cell, getter_AddRefs(parentRow));
             if (NS_FAILED(res)) return res;
             if(!parentRow) return NS_ERROR_NULL_POINTER;
 
@@ -943,7 +943,7 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
 
     // Delete the row
     nsCOMPtr<nsIDOMElement> parentRow;
-    res = GetElementOrParentByTagName("tr", cell, getter_AddRefs(parentRow));
+    res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("tr"), cell, getter_AddRefs(parentRow));
     if (NS_SUCCEEDED(res) && parentRow)
       res = DeleteNode(parentRow);
     if (NS_FAILED(res))
@@ -963,7 +963,7 @@ nsHTMLEditor::SelectTable()
 {
   nsCOMPtr<nsIDOMElement> table;
   nsresult res = NS_ERROR_FAILURE;
-  res = GetElementOrParentByTagName("table", nsnull, getter_AddRefs(table));
+  res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("table"), nsnull, getter_AddRefs(table));
   if (NS_FAILED(res)) return res;
   // Don't fail if we didn't find a table
   if (!table) return NS_OK;
@@ -982,7 +982,7 @@ NS_IMETHODIMP
 nsHTMLEditor::SelectTableCell()
 {
   nsCOMPtr<nsIDOMElement> cell;
-  nsresult res = GetElementOrParentByTagName("td", nsnull, getter_AddRefs(cell));
+  nsresult res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("td"), nsnull, getter_AddRefs(cell));
   if (NS_FAILED(res)) return res;
   // Don't fail if we didn't find a table
   if (!cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
@@ -1008,12 +1008,12 @@ nsHTMLEditor::SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndC
   if (!selection) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMElement> table;
-  res = GetElementOrParentByTagName("table", aStartCell, getter_AddRefs(table));
+  res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("table"), aStartCell, getter_AddRefs(table));
   if (NS_FAILED(res)) return res;
   if (!table) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMElement> endTable;
-  res = GetElementOrParentByTagName("table", aEndCell, getter_AddRefs(endTable));
+  res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("table"), aEndCell, getter_AddRefs(endTable));
   if (NS_FAILED(res)) return res;
   if (!endTable) return NS_ERROR_FAILURE;
   
@@ -1089,7 +1089,7 @@ NS_IMETHODIMP
 nsHTMLEditor::SelectAllTableCells()
 {
   nsCOMPtr<nsIDOMElement> cell;
-  nsresult res = GetElementOrParentByTagName("td", nsnull, getter_AddRefs(cell));
+  nsresult res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("td"), nsnull, getter_AddRefs(cell));
   if (NS_FAILED(res)) return res;
   
   // Don't fail if we didn't find a cell
@@ -1156,7 +1156,7 @@ NS_IMETHODIMP
 nsHTMLEditor::SelectTableRow()
 {
   nsCOMPtr<nsIDOMElement> cell;
-  nsresult res = GetElementOrParentByTagName("td", nsnull, getter_AddRefs(cell));
+  nsresult res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("td"), nsnull, getter_AddRefs(cell));
   if (NS_FAILED(res)) return res;
   
   // Don't fail if we didn't find a cell
@@ -1224,7 +1224,7 @@ NS_IMETHODIMP
 nsHTMLEditor::SelectTableColumn()
 {
   nsCOMPtr<nsIDOMElement> cell;
-  nsresult res = GetElementOrParentByTagName("td", nsnull, getter_AddRefs(cell));
+  nsresult res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("td"), nsnull, getter_AddRefs(cell));
   if (NS_FAILED(res)) return res;
   
   // Don't fail if we didn't find a cell
@@ -1377,7 +1377,7 @@ nsHTMLEditor::NormalizeTable(nsIDOMElement *aTable)
 {
   nsCOMPtr<nsIDOMElement> table;
   nsresult res = NS_ERROR_FAILURE;
-  res = GetElementOrParentByTagName("table", aTable, getter_AddRefs(table));
+  res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("table"), aTable, getter_AddRefs(table));
   if (NS_FAILED(res)) return res;
   // Don't fail if we didn't find a table
   if (!table)         return NS_OK;
@@ -1494,7 +1494,7 @@ nsHTMLEditor::GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aRowIndex, PRInt32 &
   {
     // Get the selected cell or the cell enclosing the selection anchor
     nsCOMPtr<nsIDOMElement> cell;
-    res = GetElementOrParentByTagName("td", nsnull, getter_AddRefs(cell));
+    res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("td"), nsnull, getter_AddRefs(cell));
     if (NS_SUCCEEDED(res) && cell)
       aCell = cell;
     else
@@ -1571,7 +1571,7 @@ nsHTMLEditor::GetTableSize(nsIDOMElement *aTable, PRInt32& aRowCount, PRInt32& a
   aColCount = 0;
   nsCOMPtr<nsIDOMElement> table;
   // Get the selected talbe or the table enclosing the selection anchor
-  res = GetElementOrParentByTagName("table", aTable, getter_AddRefs(table));
+  res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("table"), aTable, getter_AddRefs(table));
   if (NS_FAILED(res)) return res;
   if (!table)         return NS_ERROR_FAILURE;
   
@@ -1606,7 +1606,7 @@ nsHTMLEditor::GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aC
   {
     // Get the selected table or the table enclosing the selection anchor
     nsCOMPtr<nsIDOMElement> table;
-    res = GetElementOrParentByTagName("table", nsnull, getter_AddRefs(table));
+    res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("table"), nsnull, getter_AddRefs(table));
     if (NS_FAILED(res)) return res;
     if (table)
       aTable = table;
@@ -1657,12 +1657,12 @@ nsHTMLEditor::GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
   {
     // Get cell if it's the child of selection anchor node,
     //   or get the enclosing by a cell
-    res = GetElementOrParentByTagName("td", nsnull, getter_AddRefs(aCell));
+    res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("td"), nsnull, getter_AddRefs(aCell));
     if (NS_FAILED(res)) return res;
     if (!aCell)         return NS_ERROR_FAILURE;
   }
   // Get containing table and the immediate parent of the cell
-  res = GetElementOrParentByTagName("table", aCell, getter_AddRefs(aTable));
+  res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("table"), aCell, getter_AddRefs(aTable));
   if (NS_FAILED(res)) return res;
   if (!aTable)        return NS_ERROR_FAILURE;
 
@@ -1863,7 +1863,7 @@ NS_IMETHODIMP
 nsHTMLEditor::GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsString& aTagName, PRInt32 &aSelectedCount)
 {
   aTableElement = nsnull;
-  aTagName = "";
+  aTagName.SetLength(0);
   aSelectedCount = 0;
 
   nsCOMPtr<nsIDOMSelection> selection;
@@ -1871,9 +1871,9 @@ nsHTMLEditor::GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsS
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_FAILURE;
 
-  nsAutoString tableName("table");
-  nsAutoString trName("tr");
-  nsAutoString tdName("td");
+  nsAutoString tableName; tableName.AssignWithConversion("table");
+  nsAutoString trName; trName.AssignWithConversion("tr");
+  nsAutoString tdName; tdName.AssignWithConversion("td");
 
   nsCOMPtr<nsIDOMNode> anchorNode;
   res = selection->GetAnchorNode(getter_AddRefs(anchorNode));
@@ -1964,7 +1964,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelection
   //  (if aElement is null, this uses selection's anchor node)
   nsCOMPtr<nsIDOMElement> table;
 
-  nsresult res = GetElementOrParentByTagName("table", aElement, getter_AddRefs(table));
+  nsresult res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("table"), aElement, getter_AddRefs(table));
   if (NS_FAILED(res)) return res;
 
   PRInt32 rowCount, colCount;

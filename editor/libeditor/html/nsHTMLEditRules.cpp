@@ -389,7 +389,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
   if (NS_FAILED(res)) return res;
 
   // dont put text in places that cant have it
-  nsAutoString textTag = "__moz_text";
+  nsAutoString textTag; textTag.AssignWithConversion("__moz_text");
   if (!mEditor->IsTextNode(selNode) && !mEditor->CanContainTag(selNode, textTag))
     return NS_ERROR_FAILURE;
 
@@ -464,7 +464,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
         
         // is it a return?
-        if (subStr.Equals("\n"))
+        if (subStr.EqualsWithConversion("\n"))
         {
           res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
           pos++;
@@ -479,7 +479,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     else
     {
       char specialChars[] = {'\t','\n',0};
-      nsAutoString tabString = "    ";
+      nsAutoString tabString; tabString.AssignWithConversion("    ");
       while (unicodeBuf && (pos != -1) && (pos < inString->Length()))
       {
         PRInt32 oldPos = pos;
@@ -502,13 +502,13 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
         
         // is it a tab?
-        if (subStr.Equals("\t"))
+        if (subStr.EqualsWithConversion("\t"))
         {
           res = mEditor->InsertTextImpl(tabString, &curNode, &curOffset, doc);
           pos++;
         }
         // is it a return?
-        else if (subStr.Equals("\n"))
+        else if (subStr.EqualsWithConversion("\n"))
         {
           res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
           pos++;
@@ -1077,8 +1077,8 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
 
-  nsAutoString blockType("ul");
-  if (aOrdered) blockType = "ol";
+  nsAutoString blockType;
+  blockType.AssignWithConversion( aOrdered ? "ol" : "ul");
     
   PRBool outMakeEmpty;
   res = ShouldMakeEmptyBlock(aSelection, &blockType, &outMakeEmpty);
@@ -1094,13 +1094,12 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
     
     // make sure we can put a list here
     nsAutoString listType;
-    if (aOrdered) listType = "ol";
-    else listType = "ul";
+    listType.AssignWithConversion( aOrdered ? "ol" : "ul" );
     if (mEditor->CanContainTag(parent,listType))
     {
       res = mEditor->CreateNode(listType, parent, offset, getter_AddRefs(theList));
       if (NS_FAILED(res)) return res;
-      res = mEditor->CreateNode("li", theList, 0, getter_AddRefs(theListItem));
+      res = mEditor->CreateNode(NS_ConvertASCIItoUCS2("li"), theList, 0, getter_AddRefs(theListItem));
       if (NS_FAILED(res)) return res;
       // put selection in new list item
       res = aSelection->Collapse(theListItem,0);
@@ -1283,10 +1282,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
     // or if this node doesn't go in list we used earlier.
     if (!curList || transitionList[i])
     {
-      nsAutoString listType;
-      if (aOrdered) listType = "ol";
-      else listType = "ul";
-      res = mEditor->CreateNode(listType, curParent, offset, getter_AddRefs(curList));
+      res = mEditor->CreateNode(NS_ConvertASCIItoUCS2( aOrdered ? "ol" : "ul" ), curParent, offset, getter_AddRefs(curList));
       if (NS_FAILED(res)) return res;
       // curList is now the correct thing to put curNode in
       prevListItem = 0;
@@ -1320,11 +1316,11 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
         // don't wrap li around a paragraph.  instead replace paragraph with li
         if (nsHTMLEditUtils::IsParagraph(curNode))
         {
-          res = mEditor->ReplaceContainer(curNode, &listItem, "li");
+          res = mEditor->ReplaceContainer(curNode, &listItem, NS_ConvertASCIItoUCS2("li"));
         }
         else
         {
-          res = mEditor->InsertContainerAbove(curNode, &listItem, "li");
+          res = mEditor->InsertContainerAbove(curNode, &listItem, NS_ConvertASCIItoUCS2("li"));
         }
         if (NS_FAILED(res)) return res;
         if (nsEditor::IsInlineNode(curNode)) 
@@ -1361,9 +1357,6 @@ nsHTMLEditRules::WillRemoveList(nsIDOMSelection *aSelection,
   // initialize out param
   *aCancel = PR_FALSE;
   *aHandled = PR_TRUE;
-
-  nsAutoString blockType("ul");
-  if (aOrdered) blockType = "ol";
   
   nsAutoSelectionReset selectionResetter(aSelection, mEditor);
   
@@ -1585,15 +1578,14 @@ nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool
       // or if this node doesn't go in blockquote we used earlier.
       if (!curQuote || transitionList[i])
       {
-        nsAutoString quoteType("blockquote");
+        nsAutoString quoteType; quoteType.AssignWithConversion("blockquote");
         if (mEditor->CanContainTag(curParent,quoteType))
         {
           res = mEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curQuote));
           if (NS_FAILED(res)) return res;
           // set style to not have unwanted vertical margins
-          nsAutoString attr("style"), attrval("margin: 0 0 0 40px;");
           nsCOMPtr<nsIDOMElement> quoteElem = do_QueryInterface(curQuote);
-          res = mEditor->SetAttribute(quoteElem, attr, attrval);
+          res = mEditor->SetAttribute(quoteElem, NS_ConvertASCIItoUCS2("style"), NS_ConvertASCIItoUCS2("margin: 0 0 0 40px;"));
           if (NS_FAILED(res)) return res;
           // curQuote is now the correct thing to put curNode in
         }
@@ -1768,7 +1760,7 @@ nsHTMLEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDoc
     }
     nsCOMPtr<nsIDOMNode> newNode;
     nsCOMPtr<nsIDOMText> nodeAsText;
-    res = aDoc->CreateTextNode("", getter_AddRefs(nodeAsText));
+    res = aDoc->CreateTextNode(nsAutoString(), getter_AddRefs(nodeAsText));
     if (NS_FAILED(res)) return res;
     if (!nodeAsText) return NS_ERROR_NULL_POINTER;
     newNode = do_QueryInterface(nodeAsText);
@@ -1941,14 +1933,14 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection,
   {
     PRInt32 offset;
     nsCOMPtr<nsIDOMNode> brNode, parent, theDiv;
-    nsAutoString divType("div");
+    nsAutoString divType; divType.AssignWithConversion("div");
     res = mEditor->GetStartNodeAndOffset(aSelection, &parent, &offset);
     if (NS_FAILED(res)) return res;
     res = mEditor->CreateNode(divType, parent, offset, getter_AddRefs(theDiv));
     if (NS_FAILED(res)) return res;
     // set up the alignment on the div
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(theDiv);
-    nsAutoString attr("align");
+    nsAutoString attr; attr.AssignWithConversion("align");
     res = mEditor->SetAttribute(divElem, attr, *alignType);
     if (NS_FAILED(res)) return res;
     *aHandled = PR_TRUE;
@@ -2004,7 +1996,7 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection,
     if (nsHTMLEditUtils::IsDiv(curNode))
     {
       nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(curNode);
-      nsAutoString attr("align");
+      nsAutoString attr; attr.AssignWithConversion("align");
       res = mEditor->SetAttribute(divElem, attr, *alignType);
       if (NS_FAILED(res)) return res;
       // clear out curDiv so that we don't put nodes after this one into it
@@ -2027,12 +2019,12 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection,
     // or if this node doesn't go in div we used earlier.
     if (!curDiv || transitionList[i])
     {
-      nsAutoString divType("div");
+      nsAutoString divType; divType.AssignWithConversion("div");
       res = mEditor->CreateNode(divType, curParent, offset, getter_AddRefs(curDiv));
       if (NS_FAILED(res)) return res;
       // set up the alignment on the div
       nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(curDiv);
-      nsAutoString attr("align");
+      nsAutoString attr; attr.AssignWithConversion("align");
       res = mEditor->SetAttribute(divElem, attr, *alignType);
       if (NS_FAILED(res)) return res;
       // curDiv is now the correct thing to put curNode in
@@ -2132,19 +2124,19 @@ nsHTMLEditRules::AlignTableCellContents(nsIDOMNode *aNode, const nsString *align
     // the cell already has a div containing all of it's content: just
     // act on this div.
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(firstChild);
-    nsAutoString attr("align");
+    nsAutoString attr; attr.AssignWithConversion("align");
     res = mEditor->SetAttribute(divElem, attr, *alignType);
     if (NS_FAILED(res)) return res;
   }
   else
   {
     // else we need to put in a div, set the alignment, and toss in al the children
-    nsAutoString divType("div");
+    nsAutoString divType; divType.AssignWithConversion("div");
     res = mEditor->CreateNode(divType, aNode, 0, getter_AddRefs(divNode));
     if (NS_FAILED(res)) return res;
     // set up the alignment on the div
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(divNode);
-    nsAutoString attr("align");
+    nsAutoString attr; attr.AssignWithConversion("align");
     res = mEditor->SetAttribute(divElem, attr, *alignType);
     if (NS_FAILED(res)) return res;
     // tuck the children into the end of the active div
@@ -2782,14 +2774,14 @@ nsHTMLEditRules::InsertTab(nsIDOMSelection *aSelection,
     
   if (isPRE)
   {
-    *outString = '\t';
+    outString->AssignWithConversion('\t');
   }
   else
   {
     // number of spaces should be a pref?
     // note that we dont play around with nbsps here anymore.  
     // let the AfterEdit whitespace cleanup code handle it.
-    *outString = "    ";
+    outString->AssignWithConversion("    ");
   }
   
   return NS_OK;
@@ -3242,7 +3234,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
   
   // we special case an empty tag name to mean "remove block parents".
   // This is used for the "normal" paragraph style in mail-compose
-  if (aBlockTag->IsEmpty() || aBlockTag->Equals("normal")) bNoParent = PR_TRUE;
+  if (aBlockTag->IsEmpty() || aBlockTag->EqualsWithConversion("normal")) bNoParent = PR_TRUE;
   
   arrayOfNodes->Count(&listCount);
   
@@ -3269,15 +3261,15 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
     // it with a new block of correct type.
     // xxx floppy moose: pre cant hold everything the others can
     if (nsHTMLEditUtils::IsMozDiv(curNode)     ||
-        (curNodeTag.Equals("pre")) || 
-        (curNodeTag.Equals("p"))   ||
-        (curNodeTag.Equals("h1"))  ||
-        (curNodeTag.Equals("h2"))  ||
-        (curNodeTag.Equals("h3"))  ||
-        (curNodeTag.Equals("h4"))  ||
-        (curNodeTag.Equals("h5"))  ||
-        (curNodeTag.Equals("h6"))  ||
-        (curNodeTag.Equals("address")))
+        (curNodeTag.EqualsWithConversion("pre")) || 
+        (curNodeTag.EqualsWithConversion("p"))   ||
+        (curNodeTag.EqualsWithConversion("h1"))  ||
+        (curNodeTag.EqualsWithConversion("h2"))  ||
+        (curNodeTag.EqualsWithConversion("h3"))  ||
+        (curNodeTag.EqualsWithConversion("h4"))  ||
+        (curNodeTag.EqualsWithConversion("h5"))  ||
+        (curNodeTag.EqualsWithConversion("h6"))  ||
+        (curNodeTag.EqualsWithConversion("address")))
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
       if (bNoParent)
@@ -3293,15 +3285,15 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
       }
       if (NS_FAILED(res)) return res;
     }
-    else if ((curNodeTag.Equals("table"))      || 
-             (curNodeTag.Equals("tbody"))      ||
-             (curNodeTag.Equals("tr"))         ||
-             (curNodeTag.Equals("td"))         ||
-             (curNodeTag.Equals("ol"))         ||
-             (curNodeTag.Equals("ul"))         ||
-             (curNodeTag.Equals("li"))         ||
-             (curNodeTag.Equals("blockquote")) ||
-             (curNodeTag.Equals("div")))  // div's other than mozdivs
+    else if ((curNodeTag.EqualsWithConversion("table"))      || 
+             (curNodeTag.EqualsWithConversion("tbody"))      ||
+             (curNodeTag.EqualsWithConversion("tr"))         ||
+             (curNodeTag.EqualsWithConversion("td"))         ||
+             (curNodeTag.EqualsWithConversion("ol"))         ||
+             (curNodeTag.EqualsWithConversion("ul"))         ||
+             (curNodeTag.EqualsWithConversion("li"))         ||
+             (curNodeTag.EqualsWithConversion("blockquote")) ||
+             (curNodeTag.EqualsWithConversion("div")))  // div's other than mozdivs
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
       // recursion time
@@ -3313,7 +3305,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
     }
     
     // if the node is a break, we honor it by putting further nodes in a new parent
-    else if (curNodeTag.Equals("br"))
+    else if (curNodeTag.EqualsWithConversion("br"))
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
       if (!bNoParent)
@@ -3334,7 +3326,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
     else if (nsEditor::IsInlineNode(curNode) && !bNoParent)
     {
       // if curNode is a non editable, drop it if we are going to <pre>
-      if ((aBlockTag->Equals("pre")) && (!mEditor->IsEditable(curNode)))
+      if ((aBlockTag->EqualsWithConversion("pre")) && (!mEditor->IsEditable(curNode)))
         continue; // do nothing to this block
       
       // if no curBlock, make one
@@ -4049,40 +4041,40 @@ nsHTMLEditRules::ConvertWhitespace(const nsString & inString, nsString & outStri
   switch (len)
   {
     case 0:
-      outString = "";
+      outString.SetLength(0);
       return NS_OK;
     case 1:
-      if (inString.Equals("\n"))   // a bit of a hack: don't convert single newlines that 
-        outString = "\n";     // dont have whitespace adjacent.  This is to preserve 
+      if (inString.EqualsWithConversion("\n"))   // a bit of a hack: don't convert single newlines that 
+        outString.AssignWithConversion("\n");     // dont have whitespace adjacent.  This is to preserve 
       else                    // html source formatting to some degree.
-        outString = " ";
+        outString.AssignWithConversion(" ");
       return NS_OK;
     case 2:
-      outString = (PRUnichar)nbsp;
-      outString += " ";
+      outString.Assign((PRUnichar)nbsp);
+      outString.AppendWithConversion(" ");
       return NS_OK;
     case 3:
-      outString = " ";
+      outString.AssignWithConversion(" ");
       outString += (PRUnichar)nbsp;
-      outString += " ";
+      outString.AppendWithConversion(" ");
       return NS_OK;
   }
   if (len%2)  // length is odd
   {
     for (j=0;j<len;j++)
     {
-      if (!(j%2)) outString += " ";      // even char
+      if (!(j%2)) outString.AppendWithConversion(" ");      // even char
       else outString += (PRUnichar)nbsp; // odd char
     }
   }
   else
   {
-    outString = " ";
+    outString.AssignWithConversion(" ");
     outString += (PRUnichar)nbsp;
     outString += (PRUnichar)nbsp;
     for (j=0;j<len-3;j++)
     {
-      if (!(j%2)) outString += " ";      // even char
+      if (!(j%2)) outString.AppendWithConversion(" ");      // even char
       else outString += (PRUnichar)nbsp; // odd char
     }
   }  

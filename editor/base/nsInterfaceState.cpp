@@ -150,7 +150,7 @@ NS_IMETHODIMP nsInterfaceState::DidDo(nsITransactionManager *aManager,
   if (undoCount == 1)
   {
     if (mFirstDoOfFirstUndo)
-      CallUpdateCommands(nsAutoString("undo"));
+      CallUpdateCommands(NS_ConvertASCIItoUCS2("undo"));
     mFirstDoOfFirstUndo = PR_FALSE;
   }
 	
@@ -172,7 +172,7 @@ NS_IMETHODIMP nsInterfaceState::DidUndo(nsITransactionManager *aManager,
   if (undoCount == 0)
     mFirstDoOfFirstUndo = PR_TRUE;    // reset the state for the next do
 
-  CallUpdateCommands(nsAutoString("undo"));
+  CallUpdateCommands(NS_ConvertASCIItoUCS2("undo"));
   return NS_OK;
 }
 
@@ -186,7 +186,7 @@ NS_IMETHODIMP nsInterfaceState::WillRedo(nsITransactionManager *aManager,
 NS_IMETHODIMP nsInterfaceState::DidRedo(nsITransactionManager *aManager,  
   nsITransaction *aTransaction, nsresult aRedoResult)
 {
-  CallUpdateCommands(nsAutoString("undo"));
+  CallUpdateCommands(NS_ConvertASCIItoUCS2("undo"));
   return NS_OK;
 }
 
@@ -257,7 +257,7 @@ void nsInterfaceState::TimerCallback()
   PRBool isCollapsed = SelectionIsCollapsed();
   if (isCollapsed != mSelectionCollapsed)
   {
-    CallUpdateCommands(nsAutoString("select"));
+    CallUpdateCommands(NS_ConvertASCIItoUCS2("select"));
     mSelectionCollapsed = isCollapsed;
   }
   
@@ -443,7 +443,7 @@ nsInterfaceState::UpdateParagraphState(const char* observerName, const char* att
     //  selection and if different from the anchorNodeBlockParent, use "mixed" state
     // *** Not doing this now reduces risk for Beta1 -- simply assume mixed state
     // Note that "mixed" displays as "normal" in UI as of 3/6. 
-    tagName = "mixed";
+    tagName.AssignWithConversion("mixed");
   }
 
   if (tagName != mParagraphFormat)
@@ -471,19 +471,19 @@ nsInterfaceState::UpdateListState(const char* observerName)
     domSelection->GetAnchorNode(getter_AddRefs(domNode));
   
   // tagStr will hold the list state when we're done.
-  nsAutoString  tagStr("ol");
+  nsAutoString  tagStr; tagStr.AssignWithConversion("ol");
   nsCOMPtr<nsIDOMElement> parentElement;
   rv = mEditor->GetElementOrParentByTagName(tagStr, domNode, getter_AddRefs(parentElement));
   if (NS_FAILED(rv)) return rv;  
 
   if (!parentElement)
   {
-    tagStr = "ul";
+    tagStr.AssignWithConversion("ul");
     rv = mEditor->GetElementOrParentByTagName(tagStr, domNode, getter_AddRefs(parentElement));
     if (NS_FAILED(rv)) return rv;
     
     if (!parentElement)
-      tagStr = "";
+      tagStr.SetLength(0);
   }
   
   if (tagStr != mListTag)
@@ -505,7 +505,7 @@ nsInterfaceState::UpdateFontFace(const char* observerName, const char* attribute
   PRBool    allOfSelectionHasProp = PR_FALSE;
 
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom("font"));
-  nsAutoString faceStr("face");
+  nsAutoString faceStr; faceStr.AssignWithConversion("face");
   nsAutoString thisFace;
   
   // Use to test for "Default Fixed Width"
@@ -522,7 +522,7 @@ nsInterfaceState::UpdateFontFace(const char* observerName, const char* attribute
     {
       testBoolean = anyOfSelectionHasProp;
       if (anyOfSelectionHasProp)
-        thisFace = "tt";
+        thisFace.AssignWithConversion("tt");
     }
     else
       rv = NS_OK;   // we don't want to propagate this error
@@ -558,7 +558,7 @@ nsInterfaceState::UpdateTextState(const char* tagName, const char* observerName,
 
   if (testBoolean != ioState)
   {
-    rv = SetNodeAttribute(observerName, attributeName, testBoolean ? "true" : "false");
+    rv = SetNodeAttribute(observerName, attributeName, NS_ConvertASCIItoUCS2(testBoolean ? "true" : "false"));
 	  if (NS_FAILED(rv))
 	    return rv;
 	  
@@ -575,7 +575,7 @@ nsInterfaceState::UpdateDirtyState(PRBool aNowDirty)
   {
     nsresult rv;	// = SetNodeAttribute("Editor:Save", "disabled", aNowDirty ? "true" : "false");
 
-    rv = SetNodeAttribute("Editor:Save", "disabled", aNowDirty ? "false" : "true");
+    rv = SetNodeAttribute("Editor:Save", "disabled", NS_ConvertASCIItoUCS2(aNowDirty ? "false" : "true"));
 	  if (NS_FAILED(rv)) return rv;
 
     mDirtyState = aNowDirty;
@@ -594,7 +594,7 @@ nsInterfaceState::XULNodeExists(const char* nodeID)
     return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMElement> elem;
-  rv = mChromeDoc->GetElementById( nodeID, getter_AddRefs(elem) );
+  rv = mChromeDoc->GetElementById( NS_ConvertASCIItoUCS2(nodeID), getter_AddRefs(elem) );
   
   return NS_SUCCEEDED(rv) && elem;
 }
@@ -608,10 +608,10 @@ nsInterfaceState::SetNodeAttribute(const char* nodeID, const char* attributeName
     return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMElement> elem;
-  rv = mChromeDoc->GetElementById( nodeID, getter_AddRefs(elem) );
+  rv = mChromeDoc->GetElementById( NS_ConvertASCIItoUCS2(nodeID), getter_AddRefs(elem) );
   if (NS_FAILED(rv) || !elem) return rv;
   
-  return elem->SetAttribute(attributeName, newValue);
+  return elem->SetAttribute(NS_ConvertASCIItoUCS2(attributeName), newValue);
 }
 
 
@@ -624,10 +624,10 @@ nsInterfaceState::UnsetNodeAttribute(const char* nodeID, const char* attributeNa
     return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMElement> elem;
-  rv = mChromeDoc->GetElementById( nodeID, getter_AddRefs(elem) );
+  rv = mChromeDoc->GetElementById( NS_ConvertASCIItoUCS2(nodeID), getter_AddRefs(elem) );
   if (NS_FAILED(rv) || !elem) return rv;
   
-  return elem->RemoveAttribute(attributeName);
+  return elem->RemoveAttribute(NS_ConvertASCIItoUCS2(attributeName));
 }
 
 

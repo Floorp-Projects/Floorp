@@ -70,14 +70,14 @@ nsresult TextEditorTest::RunUnitTest(PRInt32 *outNumTests, PRInt32 *outNumTestsF
   // shouldn't we just bail on error here?
   
   // insert some simple text
-  nsString docContent("1234567890abcdefghij1234567890");
+  nsString docContent; docContent.AssignWithConversion("1234567890abcdefghij1234567890");
   result = mTextEditor->InsertText(docContent);
   TEST_RESULT(result);
   (*outNumTests)++;
   (*outNumTestsFailed) += (NS_FAILED(result) != NS_OK);
   
   // insert some more text
-  nsString docContent2("Moreover, I am cognizant of the interrelatedness of all communities and states.  I cannot sit idly by in Atlanta and not be concerned about what happens in Birmingham.  Injustice anywhere is a threat to justice everywhere");
+  nsString docContent2; docContent2.AssignWithConversion("Moreover, I am cognizant of the interrelatedness of all communities and states.  I cannot sit idly by in Atlanta and not be concerned about what happens in Birmingham.  Injustice anywhere is a threat to justice everywhere");
   result = mTextEditor->InsertText(docContent2);
   TEST_RESULT(result);
   (*outNumTests)++;
@@ -142,7 +142,7 @@ nsresult TextEditorTest::TestTextProperties()
   TEST_RESULT(result);
   TEST_POINTER(doc.get());
   nsCOMPtr<nsIDOMNodeList>nodeList;
-  nsAutoString textTag = "__moz_text";
+  nsAutoString textTag; textTag.AssignWithConversion("__moz_text");
   result = doc->GetElementsByTagName(textTag, getter_AddRefs(nodeList));
   TEST_RESULT(result);
   TEST_POINTER(nodeList.get());

@@ -152,7 +152,7 @@ AddStyleSheetTxn::GetUndoString(nsString *aString)
 {
   if (aString)
   {
-    *aString="Remove Style Sheet";
+    aString->AssignWithConversion("Remove Style Sheet");
   }
   return NS_OK;
 }
@@ -162,7 +162,7 @@ AddStyleSheetTxn::GetRedoString(nsString *aString)
 {
   if (aString)
   {
-    *aString="Add Style Sheet";
+    aString->AssignWithConversion("Add Style Sheet");
   }
   return NS_OK;
 }
@@ -289,7 +289,7 @@ RemoveStyleSheetTxn::GetUndoString(nsString *aString)
 {
   if (aString)
   {
-    *aString="Add Style Sheet";
+    aString->AssignWithConversion("Add Style Sheet");
   }
   return NS_OK;
 }
@@ -299,7 +299,7 @@ RemoveStyleSheetTxn::GetRedoString(nsString *aString)
 {
   if (aString)
   {
-    *aString="Remove Style Sheet";
+    aString->AssignWithConversion("Remove Style Sheet");
   }
   return NS_OK;
 }
