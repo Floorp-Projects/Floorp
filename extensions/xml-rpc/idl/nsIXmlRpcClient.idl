@@ -1,0 +1,160 @@
+/*
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla XML-RPC Client component.
+ * 
+ * The Initial Developer of the Original Code is Digital Creations 2, Inc.
+ * Portions created by Digital Creations 2, Inc. are Copyright (C) 2000 Digital
+ * Creations 2, Inc.  All Rights Reserved.
+ * 
+ * Contributor(s): Martijn Pieters <mj@digicool.com> (original author)
+ */
+
+/*
+ *  XPCOM XML-RPC Client, interface definition.
+ *  Version: $Revision: 1.1 $
+ *
+ *  $Id: nsIXmlRpcClient.idl,v 1.1 2000/05/05 06:06:31 mj%digicool.com Exp $
+ */
+
+#include "nsISupports.idl"
+#include "nsIURL.idl"
+#include "nsIXmlRpcClientListener.idl"
+
+// forward decl.
+interface nsIXmlRpcFault;
+
+/**
+ * Simple XML-RPC client interface.
+ */
+[scriptable, uuid(37127241-1e6e-46aa-ba87-601d41bb47df)]
+interface nsIXmlRpcClient: nsISupports {
+    /**
+     * Set server URL. Call this before using this object.
+     *
+     * @param serverURL URL of server side object on which methods should
+     *                  be called.
+     */
+    void init(in string serverURL);
+
+    /**
+     * The URL of the XML-RPC server
+     */
+    readonly attribute nsIURL serverURL;
+
+    /**
+     * Call remote method methodName with given arguments.
+     * 
+     * Supported arguments are:
+     * nsISupportsPRUint8, nsISupportsPRUint16,
+     * nsISupportsPRInt16, nsISupportsPRInt32: <i4>
+     * nsISupportsPRBool: <boolean>
+     * nsISupportsChar, nsISupportsString: <string>
+     * nsISupportsFloat, nsISupportsDouble: <double>
+     * nsISupportsPRTime: <dateTime.iso8601>
+     * nsIInputStream: <base64>
+     * nsISupportsArray: <array>
+     * nsIDictionary: <struct>
+     *
+     * Note that both nsISupportsArray and nsIDictionary can only hold any of
+     * the supported input types.
+     *
+     * Return value will be converted as follows:
+     * <i4> or <int>: nsISupportsPRInt32
+     * <boolean>: nsISupportsPRBool
+     * <string>: nsISupportsString
+     * <double>: nsISupportsDouble
+     * <dateTime.iso8601>: nsISupportsPRTime
+     * <base64>: nsISupportsString
+     * <array>: nsISupportsArray
+     * <struct>: nsIDictionary
+     *
+     * <fault>s (server side errors) are indicated by returning
+     * NS_ERROR_FAILURE. Via nsIXPConnect::GetPendingException()->data a
+     * nsIXmlRpcFault object can be retreieved with more information on the
+     * fault.
+     *
+     * @param methodName        Remote method to call.
+     * @param arguments         Array of arguments to pass to remote method.
+     * @return                  Return value of remote method.
+     */
+    nsISupports call(in string methodName, 
+        [array, size_is(count)] in nsISupports arguments, in PRUint32 count);
+
+    /**
+     * The asynchronous version of call.
+     *
+     * @param listener          A nsIXmlRpcClientListener that will get notified
+     *                          of XML-RPC events.
+     * @param context           A context to be passed on to the listener.
+     * @param methodName        Remote method to call.
+     * @param arguments         Array of arguments to pass to remote method.
+     * @return                  Return value of remote method.
+     */
+    void asyncCall(in nsIXmlRpcClientListener listener, in nsISupports ctxt,
+        in string methodName,
+        [array, size_is(count)] in nsISupports arguments, in PRUint32 count);
+
+    /**
+     * Wether or not a call is in progress
+     */
+    readonly attribute boolean inProgress;
+    
+    /**
+     * The most recent XML-RPC fault from returned from this server.
+     * null if the last call didn't return an XML-RPC fault.
+     */
+    readonly attribute nsIXmlRpcFault fault;
+
+    /**
+     * The most recent XML-RPC call result returned from this server.
+     * null if the last call didn't return a valid result
+     */
+    readonly attribute nsISupports result;
+
+    /**
+     * The most recent HTTP status code returned from this server
+     * null if the server was unreachable or not yet contacted.
+     */
+    readonly attribute unsigned long responseStatus;
+    readonly attribute unsigned long responseString;
+
+    /**
+     * Convenience: return the correct nsISupportsPrimitive for a given XML-RPC
+     * type, or nsISupportsArray or nsIDictionary.  'base64' isn't supported.
+     *
+     * @param type      One of the listed constants.
+     * @return          Return an appropriate XPCOM object.
+     */
+    nsISupports createType(in unsigned long type);
+    const unsigned long INT      = 1; // nsISupportsPRInt32
+    const unsigned long BOOLEAN  = 2; // nsISupportsPRBool
+    const unsigned long STRING   = 3; // nsISupportsString
+    const unsigned long DOUBLE   = 4; // nsISupportsDouble
+    const unsigned long DATETIME = 5; // nsISupportsPRTime
+    const unsigned long ARRAY    = 6; // nsISupportsArray
+    const unsigned long STRUCT   = 7; // nsIDictionary
+};
+
+/**
+ * An XML-RPC exception.
+ * XML-RPC server fault codes are returned wrapped in this Access via
+ * nsIXPConnect::GetPendingException()->data
+ */
+[scriptable, uuid(691cb864-0a7e-448c-98ee-4a7f359cf145)]
+interface nsIXmlRpcFault: nsISupports {
+    readonly attribute PRInt32 faultCode;
+    readonly attribute string faultString;
+    
+    void init(in PRInt32 faultCode, in string faultString);
+
+    string toString();
+};
+
+// vim:sw=4:sr:sta:et:sts:

@@ -1,0 +1,66 @@
+/*
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla XML-RPC Client component.
+ * 
+ * The Initial Developer of the Original Code is Digital Creations 2, Inc.
+ * Portions created by Digital Creations 2, Inc. are Copyright (C) 2000 Digital
+ * Creations 2, Inc.  All Rights Reserved.
+ * 
+ * Contributor(s): Martijn Pieters <mj@digicool.com> (original author)
+ */
+
+/*
+ *  XPCOM XML-RPC Client listener, interface definition.
+ *  Version: $Revision: 1.1 $
+ *
+ *  $Id: nsIXmlRpcClientListener.idl,v 1.1 2000/05/05 06:06:31 mj%digicool.com Exp $
+ */
+
+#include "nsISupports.idl"
+
+// forward decl.
+interface nsIXmlRpcClient;
+interface nsIXmlRpcFault;
+
+[scriptable, uuid(27e60cd8-6d63-4d87-b7d1-82c09e0c7363)]
+interface nsIXmlRpcClientListener: nsISupports {
+    /**
+     * Called when XML-RPC call has succeeded.
+     *
+     * @param client    The originating XML-RPC client.
+     * @param context   The context passed in to the asyncCall method.
+     * @param result    The result of the XML-RPC call.
+     */
+    void onResult(in nsIXmlRpcClient client, in nsISupports ctxt, 
+       in nsISupports result);
+
+    /**
+     * Called when the XML-RPC server returned a Fault
+     *
+     * @param client    The originating XML-RPC client.
+     * @param context   The context passed in to the asyncCall method.
+     * @param fault     The XML-RPC fault as returned by the server.
+     */
+    void onFault(in nsIXmlRpcClient client, in nsISupports ctxt, 
+        in nsIXmlRpcFault fault);
+
+    /**
+     * Called when a transport or other error occurs.
+     *
+     * @param client    The originating XML-RPC client.
+     * @param context   The context passed in to the asyncCall method.
+     * @param status    The status code of the error.
+     * @param errorMsg  A human readable error message.
+     */
+    void onError(in nsIXmlRpcClient client, in nsISupports ctxt,
+        in nsresult status, in wstring errorMsg);
+};
+
+// vim:sw=4:sr:sta:et:sts:

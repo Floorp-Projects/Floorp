@@ -1,0 +1,83 @@
+/*
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla XPCOM Dictionary.
+ * 
+ * The Initial Developer of the Original Code is Digital Creations 2, Inc.
+ * Portions created by Digital Creations 2, Inc. are Copyright (C) 2000 Digital
+ * Creations 2, Inc.  All Rights Reserved.
+ * 
+ * Contributor(s): Martijn Pieters <mj@digicool.com> (original author)
+ */
+
+/*
+ *  Simple dictionary implementation.
+ *  Version: $Revision: 1.1 $
+ *
+ *  $Id: nsIDictionary.idl,v 1.1 2000/05/05 06:06:31 mj%digicool.com Exp $
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * A simple mutable table of objects, accessed by key.
+ */
+[scriptable, uuid(1dd0cb45-aea3-4a52-8b29-01429a542863)]
+interface nsIDictionary: nsISupports {
+    /**
+     * Check if a given key is present in the dictionary.
+     *
+     * @param key       Key to check for
+     * @return          true if present, false if absent.
+     */
+    boolean hasKey(in string key);
+
+    /**
+     * Retrieve all keys in the dictionary.
+     *
+     * @return          array of all keys, unsorted.
+     */
+    void getKeys(out PRUint32 count,
+        [retval, array, size_is(count)] out string keys);
+    
+    /**
+     * Find the value indicated by the key.
+     *
+     * @param key       The lookup key indicating the value.
+     * @return          Value indicated by key. If the key doesn't exist,
+     *                  NS_ERROR_FAILURE will be returned.
+     */
+    nsISupports getValue(in string key);
+
+    /**
+     * Add the key-value pair to the dictionary.
+     * If the key is already present, replace the old value
+     * with the new.
+     *
+     * @param key       The key by which the value can be accessed
+     * @param value     The value to be stored.
+     */
+    void setValue(in string key, in nsISupports value);
+    
+    /**
+     * Delete the indicated key-value pair.
+     *
+     * @param key       The key indicating the pair to be removed.
+     * @return          The removed value. If the key doesn't exist,
+     *                  NS_ERROR_FAILURE will be returned.
+     */
+    nsISupports deleteValue(in string key);
+
+    /**
+     * Delete all key-value pairs from the dictionary.
+     */
+    void clear();
+};
+
+// vim:sw=4:sr:sta:et:sts:
