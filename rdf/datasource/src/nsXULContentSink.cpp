@@ -183,6 +183,7 @@ protected:
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kXUL_element;
     static nsIRDFResource* kXUL_tag;
+    static nsIRDFResource* kPosition;
 
     // Text management
     nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
@@ -274,6 +275,7 @@ nsIRDFResource*      XULContentSinkImpl::kRDF_child;
 nsIRDFResource*      XULContentSinkImpl::kRDF_instanceOf;
 nsIRDFResource*      XULContentSinkImpl::kXUL_element;
 nsIRDFResource*      XULContentSinkImpl::kXUL_tag;
+nsIRDFResource*      XULContentSinkImpl::kPosition;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -316,6 +318,7 @@ XULContentSinkImpl::XULContentSinkImpl()
             gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
             gRDFService->GetResource(XUL_NAMESPACE_URI "#element",   &kXUL_element);
             gRDFService->GetResource(XUL_NAMESPACE_URI "#tag",       &kXUL_tag);
+            gRDFService->GetResource("position",                     &kPosition);
         }
     }
 
@@ -445,6 +448,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kXUL_tag);
         NS_IF_RELEASE(kXUL_element);
+        NS_IF_RELEASE(kPosition);
     }
 
   // Delete all the elements from our overlay array
@@ -1274,7 +1278,7 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
     // Otherwise, we couldn't find anything, so just gensym one...
     nsXPIDLCString url;
     mDocumentURL->GetSpec(getter_Copies(url));
-    return rdf_CreateAnonymousResource(nsCAutoString(url), aResource);
+    return gRDFService->GetAnonymousResource(aResource);
 }
 
 nsresult
@@ -1459,14 +1463,8 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
         // Find out if a position is specified.  If so, we use that as the arc
         // label instead of appending the object to the end.
         // Add the attribute to RDF
-        nsCOMPtr<nsIRDFResource> property;
-        nsAutoString attr("#position");
-        
-        rv = gRDFService->GetUnicodeResource(attr.GetUnicode(), getter_AddRefs(property));
-        if (NS_FAILED(rv)) return rv;
-
         nsCOMPtr<nsIRDFNode> positionValue;
-        rv = mDataSource->GetTarget(rdfResource, property, PR_TRUE, getter_AddRefs(positionValue));
+        rv = mDataSource->GetTarget(rdfResource, kPosition, PR_TRUE, getter_AddRefs(positionValue));
         if (NS_FAILED(rv)) return rv;
 
         if (positionValue) { 

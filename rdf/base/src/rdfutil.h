@@ -38,24 +38,9 @@
 
 #include "prtypes.h"
 
-class nsIRDFResource;
 class nsCString;
 class nsString;
 class nsIURI;
-
-/**
- * Construct a new, "anonymous" node; that is, a node with an internal
- * resource URI.
- */
-nsresult
-rdf_CreateAnonymousResource(const nsCString& aContextURI, nsIRDFResource** result);
-
-/**
- * Determine if a resource is an "anonymous" resource that we've constructed
- * ourselves.
- */
-PRBool
-rdf_IsAnonymousResource(const nsCString& aContextURI, nsIRDFResource* aResource);
 
 nsresult
 rdf_MakeRelativeRef(const nsString& aBaseURI, nsString& aURI);

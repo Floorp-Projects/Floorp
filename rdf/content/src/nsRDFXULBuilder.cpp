@@ -622,7 +622,7 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to test contents-generated attribute");
     if (NS_FAILED(rv)) return rv;
 
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.EqualsIgnoreCase("true")))
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.Equals("true")))
         return NS_OK;
 
 #ifdef PR_LOGGING
@@ -902,7 +902,7 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
             if (rv == NS_CONTENT_ATTR_NOT_THERE || rv == NS_CONTENT_ATTR_NO_VALUE)
                 continue;
 
-            if (! contentsGenerated.EqualsIgnoreCase("true"))
+            if (! contentsGenerated.Equals("true"))
                 continue;
 
             // Okay, it's a "live" element, so go ahead and insert the
@@ -1030,7 +1030,7 @@ RDFXULBuilderImpl::OnUnassert(nsIRDFResource* aSource,
             if (rv == NS_CONTENT_ATTR_NOT_THERE || rv == NS_CONTENT_ATTR_NO_VALUE)
                 continue;
 
-            if (! contentsGenerated.EqualsIgnoreCase("true"))
+            if (! contentsGenerated.Equals("true"))
                 continue;
 
             // Okay, it's a "live" element, so go ahead and remove the
@@ -1155,7 +1155,7 @@ RDFXULBuilderImpl::OnChange(nsIRDFResource* aSource,
             if (rv == NS_CONTENT_ATTR_NOT_THERE || rv == NS_CONTENT_ATTR_NO_VALUE)
                 continue;
 
-            if (! contentsGenerated.EqualsIgnoreCase("true"))
+            if (! contentsGenerated.Equals("true"))
                 continue;
 
             // Okay, it's a "live" element, so go ahead and insert the
@@ -1614,25 +1614,35 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
     if (NS_FAILED(rv)) return rv;
 
     if (aResource) {
-        // Set the 'id' attribute
-        nsXPIDLCString uri;
-        rv = aResource->GetValue( getter_Copies(uri) );
+#ifdef NO_ID_ON_ANONYMOUS_ELEMENTS
+        PRBool isAnonymous;
+        rv = gRDFService->IsAnonymousResource(aResource, &isAnonymous);
         if (NS_FAILED(rv)) return rv;
 
-        nsAutoString id;
-        rv = nsRDFContentUtils::MakeElementID(doc, nsAutoString(uri), id);
-        if (NS_FAILED(rv)) return rv;
+        if (! isAnonymous) {
+#endif
+            // Set the 'id' attribute
+            nsXPIDLCString uri;
+            rv = aResource->GetValue( getter_Copies(uri) );
+            if (NS_FAILED(rv)) return rv;
+
+            nsAutoString id;
+            rv = nsRDFContentUtils::MakeElementID(doc, nsAutoString(uri), id);
+            if (NS_FAILED(rv)) return rv;
        
-        rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's ID");
-        if (NS_FAILED(rv)) return rv;
+            rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's ID");
+            if (NS_FAILED(rv)) return rv;
 
-        // Since we didn't notify when setting the 'id' attribute, we
-        // need to explicitly add ourselves to the resource-to-element
-        // map. XUL elements don't need to do this, because they've
-        // got a hacked SetAttribute() method...
-        rv = mDocument->AddElementForResource(aResource, element);
-        if (NS_FAILED(rv)) return rv;
+            // Since we didn't notify when setting the 'id' attribute, we
+            // need to explicitly add ourselves to the resource-to-element
+            // map. XUL elements don't need to do this, because they've
+            // got a hacked SetAttribute() method...
+            rv = mDocument->AddElementForResource(aResource, element);
+            if (NS_FAILED(rv)) return rv;
+#ifdef NO_ID_ON_ANONYMOUS_ELEMENTS
+        }
+#endif
 
         // Now iterate through all the properties and add them as
         // attributes on the element.  First, create a cursor that'll
@@ -1785,26 +1795,36 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
     if (NS_FAILED(rv)) return rv;
 
     if (aResource) {
-        // Set the element's ID. The XUL document will be listening
-        // for 'id' and 'ref' attribute changes, so we're sure that
-        // this will get properly hashed into the document's
-        // resource-to-element map.
-        nsXPIDLCString uri;
-        rv = aResource->GetValue( getter_Copies(uri) );
+#ifdef NO_ID_ON_ANONYMOUS_ELEMENTS
+        PRBool isAnonymous;
+        rv = gRDFService->IsAnonymousResource(aResource, &isAnonymous);
         if (NS_FAILED(rv)) return rv;
 
-        nsAutoString id;
-        rv = nsRDFContentUtils::MakeElementID(document, nsAutoString(uri), id);
-        if (NS_FAILED(rv)) return rv;
+        if (! isAnonymous) {
+#endif
+            // Set the element's ID. The XUL document will be listening
+            // for 'id' and 'ref' attribute changes, so we're sure that
+            // this will get properly hashed into the document's
+            // resource-to-element map.
+            nsXPIDLCString uri;
+            rv = aResource->GetValue( getter_Copies(uri) );
+            if (NS_FAILED(rv)) return rv;
 
-        rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE);
-        if (NS_FAILED(rv)) return rv;
+            nsAutoString id;
+            rv = nsRDFContentUtils::MakeElementID(document, nsAutoString(uri), id);
+            if (NS_FAILED(rv)) return rv;
 
-        // The XUL element's implementation has a hacked
-        // SetAttribute() method that'll be smart enough to add the
-        // element to the document's element-to-resource map, so no
-        // need to do it ourselves. N.B. that this is _different_ from
-        // an HTML element...
+            rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE);
+            if (NS_FAILED(rv)) return rv;
+
+            // The XUL element's implementation has a hacked
+            // SetAttribute() method that'll be smart enough to add the
+            // element to the document's element-to-resource map, so no
+            // need to do it ourselves. N.B. that this is _different_ from
+            // an HTML element...
+#ifdef NO_ID_ON_ANONYMOUS_ELEMENTS
+        }
+#endif
 
         // Now iterate through all the properties and add them as
         // attributes on the element.  First, create a cursor that'll

@@ -623,6 +623,69 @@ ServiceImpl::GetUnicodeResource(const PRUnichar* aURI, nsIRDFResource** aResourc
 
 
 NS_IMETHODIMP
+ServiceImpl::GetAnonymousResource(nsIRDFResource** aResult)
+{
+static PRUint32 gCounter = 0;
+static char gChars[] = "0123456789abcdef"
+                       "ghijklmnopqrstuv"
+                       "wxyzABCDEFGHIJKL"
+                       "MNOPQRSTUVWXYZ.+";
+
+static PRInt32 kMask  = 0x003f;
+static PRInt32 kShift = 6;
+
+    if (! gCounter) {
+        // Start it at a semi-unique value, just to minimize the
+        // chance that we get into a situation where
+        //
+        // 1. An anonymous resource gets serialized out in a graph
+        // 2. Reboot
+        // 3. The same anonymous resource gets requested, and refers
+        //    to something completely different.
+        // 4. The serialization is read back in.
+        LL_L2UI(gCounter, PR_Now());
+    }
+
+    nsresult rv;
+    nsCAutoString s;
+
+    do {
+        // Ugh, this is a really sloppy way to do this; I copied the
+        // implementation from the days when it lived outside the RDF
+        // service. Now that it's a member we can be more cleverer.
+
+        s.Truncate();
+        s.Append("rdf:#$");
+
+        PRUint32 id = ++gCounter;
+        while (id) {
+            char ch = gChars[(id & kMask)];
+            s.Append(ch);
+            id >>= kShift;
+        }
+
+        nsIRDFResource* resource;
+        rv = GetResource((const char*) s, &resource);
+        if (NS_FAILED(rv)) return rv;
+
+        // XXX an ugly but effective way to make sure that this
+        // resource is really unique in the world.
+        resource->AddRef();
+        nsrefcnt refcnt = resource->Release();
+
+        if (refcnt == 1) {
+            *aResult = resource;
+            break;
+        }
+
+        NS_RELEASE(resource);
+    } while (1);
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 ServiceImpl::GetLiteral(const PRUnichar* aValue, nsIRDFLiteral** aLiteral)
 {
     NS_PRECONDITION(aValue != nsnull, "null ptr");
@@ -676,6 +739,35 @@ ServiceImpl::GetIntLiteral(PRInt32 value, nsIRDFInt** literal)
 
     *literal = result;
     NS_ADDREF(result);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+ServiceImpl::IsAnonymousResource(nsIRDFResource* aResource, PRBool* _result)
+{
+    NS_PRECONDITION(aResource != nsnull, "null ptr");
+    if (! aResource)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    const char* uri;
+    rv = aResource->GetValueConst(&uri);
+    if (NS_FAILED(rv)) return rv;
+
+    if ((uri[0] == 'r') &&
+        (uri[1] == 'd') &&
+        (uri[2] == 'f') &&
+        (uri[3] == ':') &&
+        (uri[4] == '#') &&
+        (uri[5] == '$')) {
+        *_result = PR_TRUE;
+    }
+    else {
+        *_result = PR_FALSE;
+    }
+
     return NS_OK;
 }
 
