@@ -145,7 +145,44 @@
 		<separator/>
     		<menu name="Character Set">
     			<menuitem name="Western (ISO-8859-1)" onclick="SetDocumentCharacterSet('ISO-8859-1');"/>
+          <separator/>
+    			<menuitem name="Central European (ISO-8859-2)" onclick="SetDocumentCharacterSet('ISO-8859-2');"/>
+          <separator/>
+    			<menuitem name="Esperanto/Maltese (ISO-8859-3)" onclick="SetDocumentCharacterSet('ISO-8859-3');"/>
+          <separator/>
+    			<menuitem name="Baltic (ISO-8859-4)" onclick="SetDocumentCharacterSet('ISO-8859-4');"/>
+          <separator/>
+    			<menuitem name="Turkish (ISO-8859-9)" onclick="SetDocumentCharacterSet('ISO-8859-9');"/>
+          <separator/>
+    			<menuitem name="Northern European (ISO-8859-10)" onclick="SetDocumentCharacterSet('ISO-8859-10');"/>
+          <separator/>
+    			<menuitem name="Celtic (ISO-8859-14)" onclick="SetDocumentCharacterSet('ISO-8859-14');"/>
+          <separator/>
+    			<menuitem name="New Western (ISO-8859-15)" onclick="SetDocumentCharacterSet('ISO-8859-15');"/>
+          <separator/>
     			<menuitem name="Japanese (ISO-2022-JP)" onclick="SetDocumentCharacterSet('ISO-2022-JP');"/>
+          <separator/>
+    			<menuitem name="Traditional Chinese (Big5)" onclick="SetDocumentCharacterSet('Big5');"/>
+          <separator/>
+    			<menuitem name="Simplified Chinese (GB2312)" onclick="SetDocumentCharacterSet('GB2312');"/>
+          <separator/>
+    			<menuitem name="Korean (EUC-KR)" onclick="SetDocumentCharacterSet('EUC-KR');"/>
+          <separator/>
+    			<menuitem name="UTF-8" onclick="SetDocumentCharacterSet('UTF-8');"/>
+          <separator/>
+    			<menuitem name="UTF-7" onclick="SetDocumentCharacterSet('UTF-7');"/>
+          <separator/>
+    			<menuitem name="Cyrillic (KOI8-R)" onclick="SetDocumentCharacterSet('KOI8-R');"/>
+          <separator/>
+    			<menuitem name="Ukrainian (KOI8-U)" onclick="SetDocumentCharacterSet('KOI8-U');"/>
+          <separator/>
+    			<menuitem name="Greek (ISO-8859-7)" onclick="SetDocumentCharacterSet('ISO-8859-7');"/>
+          <separator/>
+    			<menuitem name="Vietnamese (VISCII)" onclick="SetDocumentCharacterSet('VISCII');"/>
+          <separator/>
+    			<menuitem name="Thai (TIS-620)" onclick="SetDocumentCharacterSet('TIS-620');"/>
+          <separator/>
+    			<menuitem name="Armenian (ARMSCII-8)" onclick="SetDocumentCharacterSet('ARMSCII-8');"/>
     		</menu>
     </menu>
     <menu name="&toolsMenu.label;">

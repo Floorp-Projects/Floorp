@@ -149,6 +149,7 @@ function ComposeExit()
 function SetDocumentCharacterSet(aCharset)
 {
 	dump("SetDocumentCharacterSet Callback!\n");
+	dump(aCharset); dump("\n");
 	if (composeAppCore != null)
 		composeAppCore.SetDocumentCharset(aCharset);
 	else
