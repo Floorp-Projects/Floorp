@@ -41,6 +41,7 @@
 #include "nsIAbCard.idl"
 #include "nsIAbDirectory.idl"
 
+interface nsIFile;
 interface nsIMdbTableRowCursor;
 interface nsIMdbEnv;
 interface nsIMdbRow;
@@ -137,6 +138,8 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	[noscript] attribute nsFileSpec dbPath;
 	[noscript] void open(in nsFileSpec folderName, in boolean create,
 						out nsIAddrDatabase pCardDB, in boolean upgrading);
+  nsIAddrDatabase openWithIFile(in nsIFile dbFile, in boolean create, in boolean upgrading);
+             
 	void close(in boolean forceCommit);
 	[noscript] void openMDB(in nsFileSpec dbName, in boolean create);
 	void closeMDB(in boolean commit);

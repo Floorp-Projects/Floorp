@@ -66,6 +66,8 @@
 
 #include "nsIPromptService.h"
 #include "nsIStringBundle.h"
+#include "nsIFile.h"
+#include "nsIFileSpec.h"
 
 #include "nsAddressBook.h" // for the map
 
@@ -542,6 +544,21 @@ NS_IMETHODIMP nsAddrDatabase::SetDbPath(nsFileSpec * aDbPath)
 {
     m_dbName = (*aDbPath);
     return NS_OK;
+}
+
+NS_IMETHODIMP nsAddrDatabase::OpenWithIFile(nsIFile *aFile, PRBool aCreate, PRBool aUpgrading, nsIAddrDatabase **aDB)
+{
+  NS_ENSURE_ARG_POINTER(aDB);
+  nsCOMPtr<nsIFileSpec> dbSpec;
+  nsFileSpec addrDBFileSpec;
+  // Convert the nsILocalFile into an nsIFileSpec
+  // TODO: convert users of nsIFileSpec to nsILocalFile
+  // and avoid this step.
+  nsresult rv = NS_NewFileSpecFromIFile(aFile, getter_AddRefs(dbSpec));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = dbSpec->GetFileSpec(&addrDBFileSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return Open(&addrDBFileSpec, aCreate, aDB, aUpgrading);
 }
 
 NS_IMETHODIMP nsAddrDatabase::Open
@@ -3089,7 +3106,7 @@ NS_IMETHODIMP nsAddrDBEnumerator::Next(void)
         mDone = PR_TRUE;
         return NS_ERROR_FAILURE;
     }
-        NS_IF_RELEASE(mCurrentRow);
+    NS_IF_RELEASE(mCurrentRow);
     nsresult rv = mRowCursor->NextRow(mDB->GetEnv(), &mCurrentRow, &mRowPos);
     if (mCurrentRow && NS_SUCCEEDED(rv))
     {
@@ -3120,7 +3137,8 @@ NS_IMETHODIMP nsAddrDBEnumerator::Next(void)
         mDone = PR_TRUE;
         return NS_ERROR_NULL_POINTER;
     }
-    else if (NS_FAILED(rv)) {
+    else if (NS_FAILED(rv)) 
+    {
         mDone = PR_TRUE;
         return NS_ERROR_FAILURE;
     }
