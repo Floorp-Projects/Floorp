@@ -62,13 +62,13 @@ function prefNavSelectFile(folderFieldId, stringId, useNative)
     /* XXX nsILocalFile doesn't have a URL string */
     if (useNative)
     {
-      folderField.value = file.path;
+      folderField.value = file.unicodePath;
     }
     else
     {
       // Hack to get a file: url from an nsIFile
       var tempFileSpec = Components.classes["component://netscape/filespec"].createInstance(Components.interfaces.nsIFileSpec);
-      tempFileSpec.nativePath = file.path;
+      tempFileSpec.nativePath = file.unicodePath;
 
       try {
         var url = tempFileSpec.URLString;

@@ -129,7 +129,7 @@ function PrefNavSelectFile(prefID) {
     fp.setFilters(nsIFilePicker.filterAll);
     fp.show();
     var field = document.getElementById(prefID);
-    field.setAttribute("value", fp.file.path);
+    field.setAttribute("value", fp.file.unicodePath);
   } catch(ex) { }
 }
 
@@ -142,7 +142,7 @@ function PrefCacheSelectFolder() {
     fp.setFilters(nsIFilePicker.filterAll);
     fp.show();
     var field = document.getElementById("pref:string:browser.cache.directory");
-    field.setAttribute("value", fp.file.path);
+    field.setAttribute("value", fp.file.unicodePath);
   } catch(ex) { }
 }
 
