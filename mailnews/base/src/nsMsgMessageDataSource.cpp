@@ -79,14 +79,20 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 
 	nsrefcnt refcnt;
 
-	NS_RELEASE2(kNC_Subject, refcnt);
-	NS_RELEASE2(kNC_Sender, refcnt);
-	NS_RELEASE2(kNC_Date, refcnt);
-	NS_RELEASE2(kNC_Status, refcnt);
-
-	NS_RELEASE2(kNC_MarkRead, refcnt);
-	NS_RELEASE2(kNC_MarkUnread, refcnt);
-	NS_RELEASE2(kNC_ToggleRead, refcnt);
+	if (kNC_Subject)
+		NS_RELEASE2(kNC_Subject, refcnt);
+	if (kNC_Sender)
+		NS_RELEASE2(kNC_Sender, refcnt);
+	if (kNC_Date)
+		NS_RELEASE2(kNC_Date, refcnt);
+	if (kNC_Status)
+		NS_RELEASE2(kNC_Status, refcnt);
+	if (kNC_MarkRead)
+		NS_RELEASE2(kNC_MarkRead, refcnt);
+	if (kNC_MarkUnread)
+		NS_RELEASE2(kNC_MarkUnread, refcnt);
+	if (kNC_ToggleRead)
+		NS_RELEASE2(kNC_ToggleRead, refcnt);
 
 	nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
 	NS_IF_RELEASE(mHeaderParser);
