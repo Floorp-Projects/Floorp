@@ -48,6 +48,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	check-radio.gif \
 	closedtwisty-selected.gif \
 	closedtwisty.gif \
+	columnselect.gif \
 	dir-closed.gif \
 	dir-open.gif \
 	gray-bottomleft.gif \
