@@ -66,6 +66,7 @@ class nsILoadGroup;
 class nsIRDFResource;
 class nsIRDFService;
 class nsIScriptContextOwner;
+class nsITimer;
 class nsIUnicharStreamLoader;
 class nsIXMLElementFactory;
 class nsIXULContentUtils;
@@ -285,8 +286,7 @@ public:
     NS_IMETHOD ResolveForwardReferences();
 
     NS_IMETHOD CreateFromPrototype(const char* aCommand,
-                                   nsIXULPrototypeDocument* aPrototype,
-                                   nsISupports* aContainer);
+                                   nsIXULPrototypeDocument* aPrototype);
 
     // nsIStreamLoadableDocument interface
     NS_IMETHOD LoadFromStream(nsIInputStream& xulStream,
@@ -748,6 +748,27 @@ protected:
     // timing
     nsTime mLoadStart;
 #endif
+
+    class CachedChromeLoader : public nsIStreamObserver
+    {
+    protected:
+        CachedChromeLoader(nsXULDocument* aDocument);
+        virtual ~CachedChromeLoader();
+
+        nsXULDocument* mDocument;
+        PRBool mLoading;
+
+    public:
+        static nsresult Create(nsXULDocument* aDocument, nsIStreamObserver** aResult);
+
+        // nsISupports interface
+        NS_DECL_ISUPPORTS
+
+        // nsIStreamObserver interface
+        NS_DECL_NSISTREAMOBSERVER
+    };
+
+    friend class CachedChromeLoader;
 };
 
 

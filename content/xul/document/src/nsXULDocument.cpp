@@ -91,6 +91,7 @@
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
 #include "nsITextContent.h"
+#include "nsITimer.h"
 #include "nsIURL.h"
 #include "nsIWebShell.h"
 #include "nsIXMLContent.h"
@@ -121,33 +122,34 @@
 // CIDs
 //
 
-static NS_DEFINE_CID(kEventListenerManagerCID,   NS_EVENTLISTENERMANAGER_CID);
+static NS_DEFINE_CID(kCSSLoaderCID,              NS_CSS_LOADER_CID);
 static NS_DEFINE_CID(kCSSParserCID,              NS_CSSPARSER_CID);
+static NS_DEFINE_CID(kChromeRegistryCID,         NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+static NS_DEFINE_CID(kEventListenerManagerCID,   NS_EVENTLISTENERMANAGER_CID);
+static NS_DEFINE_CID(kHTMLCSSStyleSheetCID,      NS_HTML_CSS_STYLESHEET_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,     NS_HTML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID,         NS_HTMLSTYLESHEET_CID);
-static NS_DEFINE_CID(kHTMLCSSStyleSheetCID,      NS_HTML_CSS_STYLESHEET_CID);
-static NS_DEFINE_CID(kChromeRegistryCID,         NS_CHROMEREGISTRY_CID);
-static NS_DEFINE_CID(kCSSLoaderCID,              NS_CSS_LOADER_CID);
+static NS_DEFINE_CID(kLWBrkCID,                  NS_LWBRK_CID);
+static NS_DEFINE_CID(kLoadGroupCID,              NS_LOADGROUP_CID);
+static NS_DEFINE_CID(kLocalStoreCID,             NS_LOCALSTORE_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kParserCID,                 NS_PARSER_IID); // XXX
 static NS_DEFINE_CID(kPresShellCID,              NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kLocalStoreCID,             NS_LOCALSTORE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,          NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kXMLElementFactoryCID,      NS_XML_ELEMENT_FACTORY_CID);
+static NS_DEFINE_CID(kXULCommandDispatcherCID,   NS_XULCOMMANDDISPATCHER_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
 static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
-static NS_DEFINE_CID(kXULCommandDispatcherCID,   NS_XULCOMMANDDISPATCHER_CID);
 static NS_DEFINE_CID(kXULKeyListenerCID,         NS_XULKEYLISTENER_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 static NS_DEFINE_CID(kXULTemplateBuilderCID,     NS_XULTEMPLATEBUILDER_CID);
-static NS_DEFINE_CID(kLWBrkCID,                  NS_LWBRK_CID);
 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
@@ -217,17 +219,19 @@ PRLogModuleInfo* nsXULDocument::gXULLog;
 class PlaceholderChannel : public nsIChannel
 {
 protected:
-	PlaceholderChannel();
-	virtual ~PlaceholderChannel();
-	
-	static PRInt32 gRefCnt;
-	static nsIURI* gURI;
+    PlaceholderChannel();
+    virtual ~PlaceholderChannel();
+
+    static PRInt32 gRefCnt;
+    static nsIURI* gURI;
+
+    nsCOMPtr<nsILoadGroup> mLoadGroup;
 
 public:
-	static nsresult
-	Create(nsIChannel** aResult);
+    static nsresult
+    Create(nsIChannel** aResult);
 	
-	NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
 
 	// nsIRequest
     NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
@@ -249,8 +253,8 @@ public:
 	NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { *aContentLength = 0; return NS_OK; }
 	NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
 	NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
-	NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = nsnull; return NS_OK; }
-	NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { return NS_OK; }
+	NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
+	NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
 	NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
 	NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
 };
@@ -265,34 +269,35 @@ NS_IMPL_QUERY_INTERFACE2(PlaceholderChannel, nsIRequest, nsIChannel);
 nsresult
 PlaceholderChannel::Create(nsIChannel** aResult)
 {
-	PlaceholderChannel* channel = new PlaceholderChannel();
-	if (! channel)
-		return NS_ERROR_OUT_OF_MEMORY;
+    PlaceholderChannel* channel = new PlaceholderChannel();
+    if (! channel)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-	*aResult = channel;
-	NS_ADDREF(*aResult);
-	return NS_OK;
+    *aResult = channel;
+    NS_ADDREF(*aResult);
+    return NS_OK;
 }
 
 
 PlaceholderChannel::PlaceholderChannel()
 {
-	NS_INIT_REFCNT();
-	
-	if (gRefCnt++ == 0) {
-		nsresult rv;
-		rv = NS_NewURI(&gURI, "about:xul-master-placeholder", nsnull);
-		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create about:xul-master-placeholder");
-	}
+    NS_INIT_REFCNT();
+
+    if (gRefCnt++ == 0) {
+        nsresult rv;
+        rv = NS_NewURI(&gURI, "about:xul-master-placeholder", nsnull);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create about:xul-master-placeholder");
+    }
 }
 
 
 PlaceholderChannel::~PlaceholderChannel()
 {
-	if (--gRefCnt == 0) {
-		NS_IF_RELEASE(gURI);
-	}
+    if (--gRefCnt == 0) {
+        NS_IF_RELEASE(gURI);
+    }
 }
+
 
 //----------------------------------------------------------------------
 //
@@ -1966,12 +1971,11 @@ nsXULDocument::ResolveForwardReferences()
 
 NS_IMETHODIMP
 nsXULDocument::CreateFromPrototype(const char* aCommand,
-                                   nsIXULPrototypeDocument* aPrototype,
-                                   nsISupports* aContainer)
+                                   nsIXULPrototypeDocument* aPrototype)
 {
     nsresult rv;
 
-    mCurrentPrototype       = aPrototype;
+    mMasterPrototype = mCurrentPrototype = aPrototype;
 
     rv = mCurrentPrototype->GetURI(getter_AddRefs(mDocumentURL));
     if (NS_FAILED(rv)) return rv;
@@ -1984,9 +1988,34 @@ nsXULDocument::CreateFromPrototype(const char* aCommand,
     rv = AddPrototypeSheets();
     if (NS_FAILED(rv)) return rv;
 
-    // Now create the delegates from the prototype
-    rv = PrepareToWalk();
-    if (NS_FAILED(rv)) return rv;
+    {
+        nsCOMPtr<nsILoadGroup> loadgroup;
+        rv = nsComponentManager::CreateInstance(kLoadGroupCID,
+                                                nsnull,
+                                                NS_GET_IID(nsILoadGroup),
+                                                getter_AddRefs(loadgroup));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIStreamObserver> loader;
+        rv = CachedChromeLoader::Create(this, getter_AddRefs(loader));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = loadgroup->Init(loader);
+        if (NS_FAILED(rv)) return rv;
+
+        // Even though we are only holding a weak reference to the
+        // load group, any channels that get added to the load group
+        // will acquire strong refs, keeping the load group alive
+        // until the last channel is complete.
+        mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(loadgroup));
+
+        // Now create the delegates from the prototype
+        rv = PrepareToWalk();
+        if (NS_FAILED(rv)) return rv;
+
+        // Closing this scope will result in the placeholder channel
+        // being the only reference to the load group.
+    }
 
     rv = ResumeWalk();
     return rv;
@@ -3922,7 +3951,7 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     if (NS_FAILED(rv)) return rv;
 
     // Bootstrap the master document prototype
-    if (!mMasterPrototype.get()) {
+    if (! mMasterPrototype) {
         mMasterPrototype = mCurrentPrototype;
         mMasterPrototype->SetDocumentPrincipal(aDocumentPrincipal);
     }
@@ -4321,18 +4350,21 @@ nsXULDocument::PrepareToWalk()
         // Add the root element to the XUL document's ID-to-element map.
         rv = AddElementToMap(root);
         if (NS_FAILED(rv)) return rv;
-        
+
         // Add a dummy channel to the load group as a placeholder for the document
         // load
         rv = PlaceholderChannel::Create(getter_AddRefs(mPlaceholderChannel));
         if (NS_FAILED(rv)) return rv;
-        
+
         nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
         NS_ASSERTION(group != nsnull, "no load group");
-        
+
         if (group) {
-        	rv = group->AddChannel(mPlaceholderChannel, nsnull);
-        	if (NS_FAILED(rv)) return rv;
+            rv = mPlaceholderChannel->SetLoadGroup(group);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = group->AddChannel(mPlaceholderChannel, nsnull);
+            if (NS_FAILED(rv)) return rv;
         }
     }
 
@@ -4669,17 +4701,17 @@ nsXULDocument::ResumeWalk()
     }
 #endif
 
-	// Remove the placeholder channel; if we're the last channel in the
-	// load group, this will fire the OnEndDocumentLoad() method in the
-	// webshell, and run the onload handlers, etc.
-	nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
-	if (group) {
-		rv = group->RemoveChannel(mPlaceholderChannel, nsnull, NS_OK, nsnull);
-		if (NS_FAILED(rv)) return rv;
-		
-		mPlaceholderChannel = nsnull;
-	}
-	
+    // Remove the placeholder channel; if we're the last channel in the
+    // load group, this will fire the OnEndDocumentLoad() method in the
+    // webshell, and run the onload handlers, etc.
+    nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+    if (group) {
+        rv = group->RemoveChannel(mPlaceholderChannel, nsnull, NS_OK, nsnull);
+        if (NS_FAILED(rv)) return rv;
+
+        mPlaceholderChannel = nsnull;
+    }
+
     return rv;
 }
 
@@ -5507,3 +5539,141 @@ nsXULDocument::IsChromeURI(nsIURI* aURI)
 
     return PR_FALSE;
 }
+
+
+//----------------------------------------------------------------------
+//
+// CachedChromeLoader
+//
+
+nsXULDocument::CachedChromeLoader::CachedChromeLoader(nsXULDocument* aDocument)
+    : mDocument(aDocument),
+      mLoading(PR_TRUE)
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF(aDocument);
+}
+
+nsXULDocument::CachedChromeLoader::~CachedChromeLoader()
+{
+    NS_RELEASE(mDocument);
+}
+
+nsresult
+nsXULDocument::CachedChromeLoader::Create(nsXULDocument* aDocument, nsIStreamObserver** aResult)
+{
+    CachedChromeLoader* loader = new CachedChromeLoader(aDocument);
+    if (! loader)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *aResult = loader;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
+
+NS_IMPL_ADDREF(nsXULDocument::CachedChromeLoader);
+NS_IMPL_RELEASE(nsXULDocument::CachedChromeLoader);
+
+NS_IMETHODIMP
+nsXULDocument::CachedChromeLoader::QueryInterface(REFNSIID aIID, void** aResult)
+{
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (aIID.Equals(NS_GET_IID(nsIStreamObserver)) ||
+        aIID.Equals(NS_GET_IID(nsISupports))) {
+        *aResult = this;
+        NS_ADDREF(this);
+        return NS_OK;
+    }
+    else {
+        *aResult = nsnull;
+        return NS_NOINTERFACE;
+    }
+}
+
+NS_IMETHODIMP
+nsXULDocument::CachedChromeLoader::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
+{
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULDocument::CachedChromeLoader::OnStopRequest(nsIChannel* aChannel,
+                                                 nsISupports* aContext,
+                                                 nsresult aStatus,
+                                                 const PRUnichar* aErrorMsg)
+{
+    // Not loading. Bail!
+    if (! mLoading)
+        return NS_OK;
+
+    nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocument->mDocumentLoadGroup);
+
+    // No more load group. Bail!
+    if (! group)
+        return NS_OK;
+
+    nsresult rv;
+    PRUint32 count;
+    rv = group->GetActiveCount(&count);
+    if (NS_FAILED(rv)) return rv;
+
+    // Still loading. Bail!
+    if (count != 0)
+        return NS_OK;
+
+    mLoading = PR_FALSE;
+
+    for (PRInt32 i = mDocument->GetNumberOfShells() - 1; i >= 0; --i) {
+        // Walk from the pres shell down to the script context
+        // owner. We'll consider any failure along the way
+        // non-terminal, and will continue on to the other pres
+        // shells.
+        nsIPresShell* shell = mDocument->GetShellAt(i);
+        NS_ASSERTION(shell != nsnull, "null shell");
+        if (! shell)
+            continue;
+
+        // the pres shell has a pres context...
+        nsCOMPtr<nsIPresContext> presContext;
+        shell->GetPresContext(getter_AddRefs(presContext));
+        NS_ASSERTION(presContext != nsnull, "shell has no pres context");
+        if (! presContext)
+            continue;
+
+        // the pres context should have a content container (really the webshell)...
+        nsCOMPtr<nsISupports> container;
+        presContext->GetContainer(getter_AddRefs(container));
+        NS_ASSERTION(container != nsnull, "pres context has no container");
+        if (! container)
+            continue;
+
+        // the container should be a script context owner...
+        nsCOMPtr<nsIScriptContextOwner> owner = do_QueryInterface(container);
+        NS_ASSERTION(owner != nsnull, "container is not a script context owner");
+        if (! owner)
+            continue;
+
+        // and the script context owner has a script global object...
+        nsCOMPtr<nsIScriptGlobalObject> global;
+        rv = owner->GetScriptGlobalObject(getter_AddRefs(global));
+        if (NS_FAILED(rv))
+            continue;
+
+        // dispatch the 'load' event to the script global object
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event;
+        event.eventStructType = NS_EVENT;
+        event.message = NS_PAGE_LOAD;
+
+        rv = global->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+        if (NS_FAILED(rv))
+            continue;
+    }
+
+    return NS_OK;
+}
+
