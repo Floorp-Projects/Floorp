@@ -43,7 +43,8 @@ public:
 
   static PRInt32 ConstrainFontWeight(PRInt32 aWeight);
 
-  static const nsStyleColor* FindNonTransparentBackground(nsIStyleContext* aContext);
+  static const nsStyleColor* FindNonTransparentBackground(nsIStyleContext* aContext,
+                                                          PRBool aStartAtParent = PR_FALSE);
 };
 
 
