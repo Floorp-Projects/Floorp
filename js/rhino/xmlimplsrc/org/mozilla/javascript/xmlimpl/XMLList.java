@@ -1254,9 +1254,26 @@ class XMLList extends XMLObjectImpl implements Function
      * @param name
      * @return
      */
-    boolean propertyIsEnumerable(XMLName xmlName)
+    boolean propertyIsEnumerable(Object name)
     {
-        return hasXMLProperty(xmlName);
+        long index;
+        if (name instanceof Integer) {
+            index = ((Integer)name).intValue();
+        } else if (name instanceof Number) {
+            double x = ((Number)name).doubleValue();
+            index = (long)x;
+            if ((double)index != x) {
+                return false;
+            }
+            if (index == 0 && 1.0 / x < 0) {
+                // Negative 0
+                return false;
+            }
+        } else {
+            String s = ScriptRuntime.toString(name);
+            index = ScriptRuntime.testUint32String(s);
+        }
+        return (0 <= index && index < length());
     }
 
     /**

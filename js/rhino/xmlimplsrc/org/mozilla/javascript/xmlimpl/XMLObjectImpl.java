@@ -117,7 +117,7 @@ abstract class XMLObjectImpl extends XMLObject
     abstract Object parent();
     abstract XML prependChild(Object xml);
     abstract Object processingInstructions(XMLName xmlName);
-    abstract boolean propertyIsEnumerable(XMLName xmlName);
+    abstract boolean propertyIsEnumerable(Object member);
     abstract XML removeNamespace(Namespace ns);
     abstract XML replace(long index, Object xml);
     abstract XML replace(XMLName name, Object xml);
@@ -548,14 +548,7 @@ abstract class XMLObjectImpl extends XMLObject
           case Id_appendChild:
             return realThis.appendChild(arg(args, 0));
           case Id_attribute: {
-            Object arg0 = arg(args, 0);
-            if (arg0 == null || arg0 == Undefined.instance) {
-                // XXX: E4X requires to throw the exception in this case
-                // (whoch toAttributeName will) but the test suite assumes
-                // it should be OK. Trust test suite for now.
-                arg0 = ScriptRuntime.toString(arg0);
-            }
-            XMLName xmlName = lib.toAttributeName(cx, arg0);
+            XMLName xmlName = lib.toAttributeName(cx, arg(args, 0));
             return realThis.attribute(xmlName);
           }
           case Id_attributes:
@@ -634,9 +627,8 @@ abstract class XMLObjectImpl extends XMLObject
             return realThis.processingInstructions(xmlName);
           }
           case Id_propertyIsEnumerable: {
-            XMLName xmlName = lib.toXMLName(cx, arg(args, 0));
             return ScriptRuntime.wrapBoolean(
-                       realThis.propertyIsEnumerable(xmlName));
+                       realThis.propertyIsEnumerable(arg(args, 0)));
           }
           case Id_removeNamespace: {
             Namespace ns = lib.castToNamespace(cx, arg(args, 0));

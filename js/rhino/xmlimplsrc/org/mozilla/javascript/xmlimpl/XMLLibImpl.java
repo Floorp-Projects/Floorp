@@ -121,15 +121,34 @@ public final class XMLLibImpl extends XMLLib
             QName qname = (QName)nameValue;
             uri = qname.uri();
             localName = qname.localName();
-        } else if (nameValue instanceof Scriptable) {
+        } else if (nameValue instanceof Boolean
+                   || nameValue instanceof Number
+                   || nameValue == Undefined.instance
+                   || nameValue == null)
+        {
+            throw badXMLName(nameValue);
+        } else {
             uri = "";
             localName = ScriptRuntime.toString(nameValue);
-        } else {
-            throw ScriptRuntime.typeError("Bad attribute name: "+nameValue);
         }
         XMLName xmlName = XMLName.formProperty(uri, localName);
         xmlName.setAttributeName();
         return xmlName;
+    }
+
+    private static RuntimeException badXMLName(Object value)
+    {
+        String msg;
+        if (value instanceof Number) {
+            msg = "Can not construct XML name from number: ";
+        } else if (value instanceof Boolean) {
+            msg = "Can not construct XML name from boolean: ";
+        } else if (value == Undefined.instance || value == null) {
+            msg = "Can not construct XML name from ";
+        } else {
+            throw new IllegalArgumentException(value.toString());
+        }
+        return ScriptRuntime.typeError(msg+ScriptRuntime.toString(value));
     }
 
     XMLName toXMLName(Context cx, Object nameValue)
@@ -141,6 +160,14 @@ public final class XMLLibImpl extends XMLLib
         } else if (nameValue instanceof QName) {
             QName qname = (QName)nameValue;
             result = XMLName.formProperty(qname.uri(), qname.localName());
+        } else if (nameValue instanceof String) {
+            result = toXMLNameFromString(cx, (String)nameValue);
+        } else if (nameValue instanceof Boolean
+                   || nameValue instanceof Number
+                   || nameValue == Undefined.instance
+                   || nameValue == null)
+        {
+            throw badXMLName(nameValue);
         } else {
             String name = ScriptRuntime.toString(nameValue);
             result = toXMLNameFromString(cx, name);
@@ -176,8 +203,7 @@ public final class XMLLibImpl extends XMLLib
                 ScriptRuntime.storeUint32Result(cx, l);
                 result = null;
             } else {
-                String str = ScriptRuntime.toString(d);
-                result = toXMLNameFromString(cx, str);
+                throw badXMLName(value);
             }
         } else if (value instanceof QName) {
             QName qname = (QName)value;
@@ -195,6 +221,11 @@ public final class XMLLibImpl extends XMLLib
             if (!number) {
                 result = XMLName.formProperty(uri, qname.localName());
             }
+        } else if (value instanceof Boolean
+                   || value == Undefined.instance
+                   || value == null)
+        {
+            throw badXMLName(value);
         } else {
             String str = ScriptRuntime.toString(value);
             long test = ScriptRuntime.testUint32String(str);
@@ -294,7 +325,7 @@ public final class XMLLibImpl extends XMLLib
             } else {
                 prefix = ScriptRuntime.toString(prefixValue);
                 if (prefix.length() != 0) {
-                    throw ScriptRuntime.constructError("TypeError",
+                    throw ScriptRuntime.typeError(
                         "Illegal prefix '"+prefix+"' for 'no namespace'.");
                 }
             }

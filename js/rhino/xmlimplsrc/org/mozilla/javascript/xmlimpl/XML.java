@@ -2579,9 +2579,19 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param name
      * @return
      */
-    boolean propertyIsEnumerable(XMLName xmlName)
+    boolean propertyIsEnumerable(Object name)
     {
-        return (getPropertyList(xmlName).length() > 0);
+        boolean result;
+        if (name instanceof Integer) {
+            result = (((Integer)name).intValue() == 0);
+        } else if (name instanceof Number) {
+            double x = ((Number)name).doubleValue();
+            // Check that number is posotive 0
+            result = (x == 0.0 && 1.0 / x > 0);
+        } else {
+            result = ScriptRuntime.toString(name).equals("0");
+        }
+        return result;
     }
 
     /**
