@@ -819,10 +819,10 @@ static NSArray* sToolbarDefaults = nil;
   }
   else if ( [itemIdent isEqual:SidebarToolbarItemIdentifier] )
   {
-    [toolbarItem setLabel:NSLocalizedString(@"Sidebar", @"Sidebar")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Sidebar", @"Toggle Sidebar")];
-    [toolbarItem setToolTip:NSLocalizedString(@"SidebarToolTip", @"Show or hide the Sidebar")];
-    [toolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
+    [toolbarItem setLabel:NSLocalizedString(@"Bookmarks", @"Bookmarks")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Manage Bookmarks", @"Manage Bookmarks")];
+    [toolbarItem setToolTip:NSLocalizedString(@"BookmarkMgrToolTip", @"Show or hide all bookmarks")];
+    [toolbarItem setImage:[NSImage imageNamed:@"manager"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(toggleSidebar:)];
   }
