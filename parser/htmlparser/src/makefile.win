@@ -111,9 +111,10 @@ EXPORTS=					\
 	COtherDTD.h				\
 	nsIDTD.h				\
 	nsXIFDTD.h				\
-	nsExpatDTD.h			\
-    nsParserCIID.h \
-	nsParserError.h \
+	nsExpatDTD.h				\
+        nsParserCIID.h 				\
+	nsParserError.h 			\
+	nsIElementObserver.h			\
 	$(NULL)
 
 EXTRA_EXPORTS=					\
