@@ -250,6 +250,8 @@ function setSearchScope(scope)
     for (var i=0; i<gSearchTerms.length; i++) {
         gSearchTerms[i].obj.searchattribute.searchScope = scope;
         gSearchTerms[i].scope = scope;
+        // act like the user "selected" this, see bug #202848
+        gSearchTerms[i].obj.searchattribute.onSelect(null /* no event */);  
     }
 }
 
