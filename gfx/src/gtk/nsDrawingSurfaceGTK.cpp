@@ -17,7 +17,7 @@
  */
 
 #include <gtk/gtk.h>
-
+#include <gdk/gdkprivate.h>
 #include "nsDrawingSurfaceGTK.h"
 
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
@@ -103,11 +103,34 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: QueryInterface(REFNSIID aIID, void** aInsta
 NS_IMPL_ADDREF(nsDrawingSurfaceGTK);
 NS_IMPL_RELEASE(nsDrawingSurfaceGTK);
 
+
+  /**
+   * Lock a rect of a drawing surface and return a
+   * pointer to the upper left hand corner of the
+   * bitmap.
+   * @param  aX x position of subrect of bitmap
+   * @param  aY y position of subrect of bitmap
+   * @param  aWidth width of subrect of bitmap
+   * @param  aHeight height of subrect of bitmap
+   * @param  aBits out parameter for upper left hand
+   *         corner of bitmap
+   * @param  aStride out parameter for number of bytes
+   *         to add to aBits to go from scanline to scanline
+   * @param  aWidthBytes out parameter for number of
+   *         bytes per line in aBits to process aWidth pixels
+   * @return error status
+   *
+   **/
 NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
                                           PRUint32 aWidth, PRUint32 aHeight,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
+  g_print("nsDrawingSurfaceGTK::Lock() called\n" \
+          "  aX = %i, aY = %i,\n" \
+	  "  aWidth = %i, aHeight = %i,\n" \
+	  "  aBits, aStride, aWidthBytes,\n" \
+	  "  aFlags = %i\n", aX, aY, aWidth, aHeight, aFlags);
   if (mLocked)
   {
     NS_ASSERTION(0, "nested lock attempt");
@@ -131,21 +154,25 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
 
   mImage = ::gdk_image_get(mPixmap, mLockX, mLockY, mLockWidth, mLockHeight);
  
- // aBits = &mImage->mem;
  // FIXME
+  aBits = &mImage->mem;
+  *aStride = ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
+  *aWidthBytes = mImage->bpl;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
 {
+  g_print("nsDrawingSurfaceGTK::UnLock() called\n");
   if (!mLocked)
   {
     NS_ASSERTION(0, "attempting to unlock an DS that isn't locked");
     return NS_ERROR_FAILURE;
   }
-/*
- //if it is writeable, we are going to want to redraw the pixmap from the image.
+
+#if 0
+//if it is writeable, we are going to want to redraw the pixmap from the image.
 // my bit looking/mangling skills are asleep.. someone do this the right way
   if (!(mFlags & NS_LOCK_SURFACE_READ_ONLY))
   {
@@ -157,7 +184,8 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
 		   mLockWidth, mLockHeight);
 
   }
-*/
+#endif
+
   if (mImage)
     ::gdk_image_destroy(mImage);
   mImage = nsnull;
@@ -183,6 +211,8 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: IsOffscreen(PRBool *aOffScreen)
 
 NS_IMETHODIMP nsDrawingSurfaceGTK :: IsPixelAddressable(PRBool *aAddressable)
 {
+// FIXME
+  *aAddressable = PR_FALSE;
   return NS_OK;
 }
 
@@ -234,16 +264,16 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: ReleaseGC(void)
   return NS_OK;
 }
 
-GdkGC *nsDrawingSurfaceGTK::GetGC(void)
-{
-  return mGC;
-}
-
 /* below are utility functions used mostly for nsRenderingContext and nsImage
  * to plug into gdk_* functions for drawing.  You should not set a pointer
  * that might hang around with the return from these.  instead use the ones
  * above.  pav
  */
+GdkGC *nsDrawingSurfaceGTK::GetGC(void)
+{
+  return mGC;
+}
+
 GdkDrawable *nsDrawingSurfaceGTK::GetDrawable(void)
 {
   return mPixmap;
