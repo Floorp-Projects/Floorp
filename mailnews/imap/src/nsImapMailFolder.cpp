@@ -1683,20 +1683,23 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
         m_copyState->m_dataBuffer[readCount] = '\0';
 
         start = m_copyState->m_dataBuffer;
-        end = PL_strstr(start, CRLF);
+        end = PL_strstr(start, MSG_LINEBREAK);
 
         while (start && end)
         {
             if (PL_strncasecmp(start, "X-Mozilla-Status:", 17) &&
                 PL_strncasecmp(start, "X-Mozilla-Status2:", 18) &&
                 PL_strncmp(start, "From - ", 7))
+            {
                 rv = m_copyState->m_tmpFileSpec->Write(start,
-                                                       end-start+2,
+                                                       end-start,
                                                        &writeCount);
-            start = end+2;
+                rv = m_copyState->m_tmpFileSpec->Write(CRLF, 2, &writeCount);
+            }
+            start = end+MSG_LINEBREAK_LEN;
             if (start >= m_copyState->m_dataBuffer+readCount)
                 break;
-            end = PL_strstr(start, CRLF);
+            end = PL_strstr(start, MSG_LINEBREAK);
         }
         if (NS_FAILED(rv)) return rv;
         aLength -= readCount;
