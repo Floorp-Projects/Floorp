@@ -294,6 +294,20 @@ public:
   float GetOpacity() const { return mOpacity; }
   void* GetClientData() const { return mClientData; }
   nsViewVisibility GetVisibility() const { return mVis; }
+  nsRect GetBounds() const {
+    // this assertion should go away once we're confident that it's not needed
+    NS_ASSERTION(!IsRoot() || (mDimBounds.x == 0 && mDimBounds.y == 0),
+                 "root views should always have explicit position of (0,0)");
+    return mDimBounds;
+  }
+  nsPoint GetPosition() const {
+     // this assertion should go away once we're confident that it's not needed
+    NS_ASSERTION(!IsRoot() || (mPosX == 0 && mPosY == 0),
+                 "root views should always have explicit position of (0,0)");
+    return nsPoint(mPosX, mPosY);
+  }
+  nsIWidget* GetWidget() const { return mWindow; }
+  PRBool HasWidget() const { return mWindow != nsnull; }
 
   nsView* GetChild(PRInt32 aIndex) const;
 
