@@ -3419,7 +3419,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     // first register ranges for special editor gravity
     for (i = 0; i < (PRInt32)rangeCount; i++)
     {
-      isupports = (dont_AddRef)(inArrayOfRanges->ElementAt(i));
+      isupports = (dont_AddRef)(inArrayOfRanges->ElementAt(0));
       opRange = do_QueryInterface(isupports);
       nsRangeStore *item = new nsRangeStore();
       if (!item) return NS_ERROR_NULL_POINTER;
@@ -3440,6 +3440,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     {
       nsRangeStore *item = (nsRangeStore*)rangeItemArray.ElementAt(0);
       if (!item) return NS_ERROR_NULL_POINTER;
+      rangeItemArray.RemoveElementAt(0);
       mEditor->mRangeUpdater.DropRangeItem(item);
       res = item->GetRange(&opRange);
       if (NS_FAILED(res)) return res;
