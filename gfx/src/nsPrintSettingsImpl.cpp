@@ -361,7 +361,11 @@ NS_IMETHODIMP nsPrintSettings::SetPrintRange(PRInt16 aPrintRange)
 NS_IMETHODIMP nsPrintSettings::GetTitle(PRUnichar * *aTitle)
 {
   NS_ENSURE_ARG_POINTER(aTitle);
-  *aTitle = ToNewUnicode(mTitle);
+  if (mTitle.Length() > 0) {
+    *aTitle = ToNewUnicode(mTitle);
+  } else {
+    *aTitle = nsnull;
+  }
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintSettings::SetTitle(const PRUnichar * aTitle)
@@ -375,7 +379,11 @@ NS_IMETHODIMP nsPrintSettings::SetTitle(const PRUnichar * aTitle)
 NS_IMETHODIMP nsPrintSettings::GetDocURL(PRUnichar * *aDocURL)
 {
   NS_ENSURE_ARG_POINTER(aDocURL);
-  *aDocURL = ToNewUnicode(mURL);
+  if (mURL.Length() > 0) {
+    *aDocURL = ToNewUnicode(mURL);
+  } else {
+    *aDocURL = nsnull;
+  }
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintSettings::SetDocURL(const PRUnichar * aDocURL)
