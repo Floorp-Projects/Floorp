@@ -136,6 +136,10 @@ sub is_http_alive() {
     }
   }
 
+  # Shorten some machine names.
+  my $short_name = "$ARGV[0]";
+  $short_name =~ s/.websys.aol.com//g;
+
   ReportData::send_results_to_server($graph_server,
                                      "$alive_time",
                                      ::hostname(),
@@ -157,5 +161,5 @@ sub is_http_alive() {
                                $status,
                                "TinderboxPrint:<a title=\"Hours httpd:80 has been alive.\" href=\"$graph_url\">Ta</a>",
                                "$ARGV[0]",
-                               "$ARGV[0] HTTP Alive Test");
+                               "$short_name HTTP Alive Test");
 }
