@@ -40,7 +40,7 @@
 #include "nsILocale.h"
 #include "nsLocaleCID.h"
 #include "nsMsgMimeCID.h"
-#include "nsILocaleFactory.h"
+#include "nsILocaleService.h"
 
 static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 
@@ -59,10 +59,6 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
-static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
-static NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
-static NS_DEFINE_CID(kLocaleCID, NS_LOCALE_CID);
-static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
@@ -2400,13 +2396,12 @@ nsresult nsMsgDatabase::GetCollationKeyGenerator()
 		nsCOMPtr <nsILocale> locale; 
 		nsString localeName; 
 
-		// get a locale factory 
-		nsILocaleFactory*	localeFactory;
-		err = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**) &localeFactory); 
-		if (NS_SUCCEEDED(err) && localeFactory)
+		// get a locale service 
+		nsCOMPtr <nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_PROGID, &err);
+		if (NS_SUCCEEDED(err))
 		{
 			// do this for a new db if no UI to be provided for locale selection 
-			err = localeFactory->GetApplicationLocale(getter_AddRefs(locale)); 
+			err = localeService->GetApplicationLocale(getter_AddRefs(locale)); 
 
 			if (locale)
 			{
@@ -2424,7 +2419,6 @@ nsresult nsMsgDatabase::GetCollationKeyGenerator()
 
 				}
 			}
-			NS_RELEASE(localeFactory);
 		}
 	}
 	return err;
