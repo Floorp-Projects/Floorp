@@ -1631,7 +1631,8 @@ PresShell::DoCopy()
           trans->SetConverter(xifConverter);
 
           // Now add the XIF data to the transferable
-          trans->SetTransferData(&flavor, buffer.ToNewCString(), buffer.Length());
+          trans->SetTransferData(&flavor, buffer.ToNewUnicode(), buffer.Length());
+          //trans->SetTransferData(&flavor, buffer.ToNewCString(), buffer.Length());
 
           // put the transferable on the clipboard
           clipboard->SetData(trans, nsnull);
