@@ -486,7 +486,6 @@ function (force_reload)
       this.node.removeAttribute('hidden');
   } else {
       no_panels_iframe.removeAttribute('hidden');
-      this.node.setAttribute('hidden','true');
   }
 
   this.initialized = true;
