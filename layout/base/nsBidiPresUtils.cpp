@@ -341,6 +341,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
                                    frameIndex, newIndex, temp);
             aForceReflow = PR_TRUE;
             runLength -= temp;
+            fragmentLength -= temp;
             lineOffset += temp;
             frameIndex = newIndex;
           }
