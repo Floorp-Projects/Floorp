@@ -24,12 +24,22 @@
 #define nsMsgSearchSession_h___
 
 #include "nscore.h"
+#include "nsMsgSearchCore.h"
 #include "nsIMsgSearchSession.h"
 
-class nsMsgSearchService : public nsIMsgSearchService
+/* Use the code below as a template for the implementation class for this interface. */
+
+/* Header file */
+class nsMsgSearchSession : public nsIMsgSearchSession
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGSEARCHSESSION
+
+  nsMsgSearchSession();
+  virtual ~nsMsgSearchSession();
+  /* additional members */
+
 
 	NS_IMETHOD AddSearchTerm (nsMsgSearchAttribute attrib,    /* attribute for this term                */
 			nsMsgSearchOperator op,         /* operator e.g. opContains               */
@@ -37,45 +47,22 @@ public:
 			PRBool BooleanAND, 		   /*  set to true if associated boolean operator is AND */
 			char * arbitraryHeader);      /* user defined arbitrary header. ignored unless attrib = attribOtherHeader */
 
-	NS_IMETHOD CountSearchTerms (PRInt32 *numTerms);
-
-	NS_IMETHOD GetNthSearchTerm (PRInt32 whichTerm,	nsMsgSearchAttribute *attrib, 
-		nsMsgSearchOperator *op, nsMsgSearchValue *value);
-
-	NS_IMETHOD MSG_CountSearchScopes (PRInt32 *numScopes);
-
-	NS_IMETHOD MSG_GetNthSearchScope (
-		PRInt32 which,
-		nsMsgScopeAttribute *scopeId,
-		void **scope);
-
 	/* add a scope (e.g. a mail folder) to the search */
 	NS_IMETHOD AddScopeTerm (
-		nsMsgScopeAttribute attrib,     /* what kind of scope term is this        */
+		nsMsgSearchScope attrib,     /* what kind of scope term is this        */
 		nsIMsgFolder *folder);       /* which folder to search                 */
-
-/* special cases for LDAP since LDAP isn't really a folderInfo */
-NS_IMETHOD AddLdapScope (nsMsgDIRServer *server) ;
-//NS_IMETHOD AddAllLdapScopes (XP_List *dirServerList);
 
 /* Call this function everytime the scope changes! It informs the FE if 
    the current scope support custom header use. FEs should not display the
    custom header dialog if custom headers are not supported */
 
-NS_IMETHOD ScopeUsesCustomHeaders(nsMsgScopeAttribute scope,
+NS_IMETHOD ScopeUsesCustomHeaders(nsMsgSearchScope scope,
 	void * selection,              /* could be a folder or server based on scope */
 	PRBool forFilters, PRBool *result) ;	 
 
-NS_IMETHOD IsStringAttribute(     /* use this to determine if your attribute is a string attrib */
-	nsMsgSearchAttribute attrib, PRBool *aResult) ;
-
 /* add all scopes of a given type to the search */
-NS_IMETHOD AddAllScopes (nsMsgScopeAttribute attrib) ;    /* what kind of scopes to add             */
+NS_IMETHOD AddAllScopes (nsMsgSearchScope attrib) ;    /* what kind of scopes to add             */
 
-/* begin execution of the search */
-NS_IMETHOD Search (void) ;
-NS_IMETHOD InterruptSearch (void) ;  
-NS_IMETHOD GetSearchParam (void **aParam) ;
 NS_IMETHOD GetSearchType (nsMsgSearchType *aResult) ;
 NS_IMETHOD SetSearchParam (nsMsgSearchType type,          /* type of specialized search to perform   */
 			void *param) ;                 /* extended search parameter               */

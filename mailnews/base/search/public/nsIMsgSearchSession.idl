@@ -30,7 +30,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 [scriptable, uuid(a819050a-0302-11d3-a50a-0060b0fc04b7)]
-interface nsIMsgSearchSession {
+interface nsIMsgSearchSession :  nsISupports {
 
     [noscript]
     void AddSearchTerm(in nsMsgSearchAttribute attrib, /* attribute for this term */
@@ -51,10 +51,10 @@ interface nsIMsgSearchSession {
 
     [noscript]
     voidStar MSG_GetNthSearchScope(in long which,
-                                   in nsMsgSearchScopeAttribute scopeId);
+                                   in nsMsgSearchScope scopeId);
 
 	/* add a scope (e.g. a mail folder) to the search */
-    void AddScopeTerm(in nsMsgSearchScopeAttribute attrib,
+    void AddScopeTerm(in nsMsgSearchScope attrib,
                       in nsIMsgFolder folder);
 
     /* special cases for LDAP since LDAP isn't really a folderInfo */
@@ -64,7 +64,7 @@ interface nsIMsgSearchSession {
     /* Call this function everytime the scope changes! It informs the FE if 
        the current scope support custom header use. FEs should not display the
        custom header dialog if custom headers are not supported */
-    [noscript] boolean ScopeUsesCustomHeaders(in nsMsgSearchScopeAttribute scope,
+    [noscript] boolean ScopeUsesCustomHeaders(in nsMsgSearchScope scope,
                                    /* could be a folder or server based on scope */
                                    in voidStar selection,
                                    in boolean forFilters);
@@ -73,7 +73,7 @@ interface nsIMsgSearchSession {
     boolean IsStringAttribute(in nsMsgSearchAttribute attrib);
 
     /* add all scopes of a given type to the search */
-    void AddAllScopes(in nsMsgSearchScopeAttribute attrib);
+    void AddAllScopes(in nsMsgSearchScope attrib);
     
     void Search();
     void InterruptSearch();
