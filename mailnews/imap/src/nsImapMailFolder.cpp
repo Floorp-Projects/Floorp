@@ -18,6 +18,7 @@
 
 #include "msgCore.h"
 #include "nsMsgImapCID.h"
+#include "nsIMessage.h"
 #include "nsImapMailFolder.h"
 #include "nsIEnumerator.h"
 #include "nsIFolderListener.h"
