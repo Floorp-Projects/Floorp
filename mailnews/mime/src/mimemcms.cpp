@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mimemcms.h"
+#include "mimecryp.h"
 #include "nsMimeTypes.h"
 #include "nspr.h"
 #include "nsMimeStringResources.h"
@@ -141,8 +142,6 @@ typedef struct MimeMultCMSdata
     delete [] item_data;
   }
 } MimeMultCMSdata;
-
-extern MimeObjectClass mimeEncryptedClass;
 
 static void
 MimeMultCMS_get_content_info(MimeObject *obj,

@@ -37,6 +37,7 @@
 
 #include "nsICMS.h"
 #include "mimecms.h"
+#include "mimemsig.h"
 #include "nsCRT.h"
 #include "nspr.h"
 #include "nsEscape.h"
@@ -195,7 +196,6 @@ MimeEncryptedCMS_encrypted_p (MimeObject *obj)
 }
 
 // extern MimeMessageClass mimeMessageClass;			/* gag */
-extern MimeObjectClass mimeMultipartSignedClass;	/* double gag */
 
 extern int ParseRFC822Addresses (const char *line,
 									 char **names, char **addresses);
