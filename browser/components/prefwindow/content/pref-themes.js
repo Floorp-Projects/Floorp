@@ -76,7 +76,7 @@ function Startup()
     var child = list.childNodes[i];
     var name = child.getAttribute("name");
     if (!theme)
-      matches = chromeRegistry.isSkinSelected(name, true) == Components.interfaces.nsIChromeRegistry.FULL;
+      matches = chromeRegistry.isSkinSelectedForPackage(name, "browser", true);
     else
       matches = name == theme;
     if (matches) {
@@ -93,6 +93,14 @@ function Startup()
     var description = document.getElementById("description");
     while (description.hasChildNodes())
       description.removeChild(description.firstChild);
+  }
+
+  var extList = document.getElementById("extList");
+  for (var i = 0; i < extList.childNodes.length; ++i) {
+    if (extList.childNodes[i].getAttribute("name")) {
+      extList.selectItem(extList.childNodes[i]);
+      break;
+    }
   }
 }
 
@@ -264,4 +272,54 @@ function themeSelect()
 }
 
 
+function extensionSelect()
+{
+  var list = document.getElementById("extList");
 
+  if (!list)
+    return;
+
+  var selectedItem = list.selectedItems.length ? list.selectedItems[0] : null;
+  if (selectedItem) {
+    var extName = selectedItem.getAttribute("displayName");
+    var nameField = document.getElementById("extDisplayName");
+    var author = document.getElementById("extAuthor");
+    var descText = document.createTextNode(selectedItem.getAttribute("description"));
+    var description = document.getElementById("extDescription");
+    var uninstallButton = document.getElementById("uninstallExtension");
+    
+    while (description.hasChildNodes())
+      description.removeChild(description.firstChild);
+
+    nameField.setAttribute("value", extName);
+    author.setAttribute("value", selectedItem.getAttribute("author"));
+    
+    description.appendChild(descText);
+
+    updateDisableExtButton(selectedItem);
+  }
+}
+
+function toggleExtension()
+{
+  var list = document.getElementById("extList");
+
+  if (!list)
+    return;
+
+  var selectedItem = list.selectedItems.length ? list.selectedItems[0] : null;
+  if (selectedItem) {
+    var disabled = (selectedItem.getAttribute("disabledState") == "true");
+    chromeRegistry.setAllowOverlaysForPackage(selectedItem.getAttribute("name"), disabled);
+    updateDisableExtButton(selectedItem);
+  }   
+}
+
+function updateDisableExtButton(item)
+{
+  var disableButton = document.getElementById("disableExtension");
+  if (item.getAttribute("disabledState") == "true")
+    disableButton.setAttribute("label", "Enable Extension"); // XXXdwh localize
+  else
+    disableButton.setAttribute("label", "Disable Extension"); // XXXdwh localize
+}
