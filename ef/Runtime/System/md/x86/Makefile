@@ -41,33 +41,8 @@ include $(DEPTH)/config/config.mk
 # (3) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-ifeq ($(OS_ARCH),Linux)
-ASFILES	=	x86Exception_gas.s					\
-		x86InvokeNative_gas.s					\
-		$(NULL)
-
-CPPSRCS	+= 	x86LinuxThread.cpp					\
-		$(NULL)
-
-LOCAL_MD_EXPORTS_x86 +=  	x86LinuxThread.h			\
-				$(NULL)
-
-endif
-
-ifeq ($(OS_ARCH),FreeBSD)
-ASFILES	=	x86Exception_gas.s					\
-		x86InvokeNative_gas.s					\
-		$(NULL)
-
-CPPSRCS	+= 	x86FreeBSDThread.cpp					\
-		$(NULL)
-
-LOCAL_MD_EXPORTS_x86 +=  	x86FreeBSDThread.h			\
-				$(NULL)
-
-endif
-
 ifeq ($(OS_ARCH),WINNT)
+
 CPPSRCS	+= 	Win32ExceptionHandler.cpp                               \
 		x86Win32InvokeNative.cpp				\
 		x86Win32Thread.cpp					\
@@ -75,6 +50,18 @@ CPPSRCS	+= 	Win32ExceptionHandler.cpp                               \
 
 LOCAL_MD_EXPORTS_x86 +=  	x86Win32Thread.h			\
 				$(NULL)
+else
+
+ASFILES	=	x86Exception_gas.s					\
+		x86InvokeNative_gas.s					\
+		$(NULL)
+
+CPPSRCS	+= 	x86UnixishThread.cpp					\
+		$(NULL)
+
+LOCAL_MD_EXPORTS_x86 +=  	x86UnixishThread.h			\
+				$(NULL)
+
 endif
 
 include $(DEPTH)/config/rules.mk
