@@ -550,7 +550,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     }
 
     if (aChromeMask & nsIWebBrowserChrome::CHROME_CENTER_SCREEN)
-      window->Center(nsnull, PR_TRUE, PR_FALSE);
+      window->Center(aParent, aParent ? PR_FALSE : PR_TRUE, PR_FALSE);
   }
 
   return rv;
