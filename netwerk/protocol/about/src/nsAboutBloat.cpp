@@ -27,6 +27,12 @@
 #include "nsCOMPtr.h"
 #include "nsIFileStream.h"
 
+#ifdef XP_MAC
+extern "C" void GC_gcollect(void);
+#else
+static void GC_gcollect() {}
+#endif
+
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 NS_IMPL_ISUPPORTS(nsAboutBloat, NS_GET_IID(nsIAboutModule));
@@ -45,6 +51,7 @@ nsAboutBloat::NewChannel(const char *verb,
 
     nsTraceRefcnt::StatisticsType statType = nsTraceRefcnt::ALL_STATS;
     PRBool clear = PR_FALSE;
+    PRBool leaks = PR_FALSE;
 
     nsCAutoString p(path);
     PRInt32 pos = p.Find("?");
@@ -55,6 +62,8 @@ nsAboutBloat::NewChannel(const char *verb,
             statType = nsTraceRefcnt::NEW_STATS;
         else if (param.Equals("clear"))
             clear = PR_TRUE;
+        else if (param.Equals("leaks"))
+            leaks = PR_TRUE;
     }
 
     nsCOMPtr<nsIInputStream> inStr;
@@ -64,6 +73,21 @@ nsAboutBloat::NewChannel(const char *verb,
 
         nsCOMPtr<nsISupports> s;
         const char* msg = "Bloat statistics cleared.";
+        rv = NS_NewStringInputStream(getter_AddRefs(s), msg);
+        if (NS_FAILED(rv)) return rv;
+
+        size = nsCRT::strlen(msg);
+
+        inStr = do_QueryInterface(s, &rv);
+        if (NS_FAILED(rv)) return rv;
+    }
+    else
+    if (leaks) {
+    	// dump the current set of leaks.
+		GC_gcollect();
+    	
+        nsCOMPtr<nsISupports> s;
+        const char* msg = "Memory leaks dumped.";
         rv = NS_NewStringInputStream(getter_AddRefs(s), msg);
         if (NS_FAILED(rv)) return rv;
 
