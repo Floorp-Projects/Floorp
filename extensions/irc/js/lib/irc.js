@@ -467,7 +467,11 @@ function serv_messto (code, target, msg, ctcpCode)
             var line = code + " " + target + " :" + pfx;
             this.sendsThisRound++;
             if (lines[i] != "")
-                line += " " + lines[i] + sfx;
+            {
+                if (ctcpCode)
+                    line += " ";
+                line += lines[i] + sfx;
+            }
             else
                 line += sfx;
             //dd ("-*- irc sending '" +  line + "'");
