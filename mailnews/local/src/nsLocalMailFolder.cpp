@@ -598,7 +598,8 @@ nsresult nsMsgLocalMailFolder::CreateDirectoryForFolder(nsFileSpec &path)
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
+nsresult
+nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 {
 	nsresult rv = NS_OK;
     
