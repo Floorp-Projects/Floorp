@@ -39,13 +39,13 @@ __dynamic_cast
 #__dt__Q23std8bad_castFv		# std::bad_cast::~bad_cast()
 __get_typeid
 __dt__Q23std10bad_typeidFv		# std::bad_typeid::~bad_typeid()
-nothrow__3std		# std::nothrow
-__dla__FPv		# __dla(void*)
-__nwa__FUlRCQ23std9nothrow_t		# __nwa(unsigned long,const std::nothrow_t&)
-__nwa__FUl		# __nwa(unsigned long)
-__dl__FPv		# operator delete(void*)
-__nw__FUlRCQ23std9nothrow_t		# operator new(unsigned long,const std::nothrow_t&)
-__nw__FUl		# operator new(unsigned long)
+nothrow__3std
+#__dla__FPv		# __dla(void*)
+#__nwa__FUlRCQ23std9nothrow_t		# __nwa(unsigned long,const std::nothrow_t&)
+#__nwa__FUl		# __nwa(unsigned long)
+#__dl__FPv		# operator delete(void*)
+#__nw__FUlRCQ23std9nothrow_t		# operator new(unsigned long,const std::nothrow_t&)
+#__nw__FUl		# operator new(unsigned long)
 #_prealloc_newpool__3stdFUl		# std::_prealloc_newpool(unsigned long)
 #_set_newnonptrmax__3stdFUl		# std::_set_newnonptrmax(unsigned long)
 #_set_newpoolsize__3stdFUl		# std::_set_newpoolsize(unsigned long)
