@@ -33,7 +33,7 @@ CompareSelectors(const void *v1, const void *v2)
         /* if both have a psuedo, they have to match, else both must be NULL */
         (s1->pseudo && s2->pseudo ?
          XP_STRCMP(s1->pseudo, s2->pseudo) :
-         !(s1 || s2));
+         !s1->pseudo && !s2->pseudo);
 }
 
 DOM_StyleDatabase *
