@@ -56,33 +56,27 @@ const int kDefaultExpireDays = 9;
   if (!mPrefService)
     return;
 
-  PRBool boolPref;
-  PRInt32 intPref;
-  nsresult rv = mPrefService->GetIntPref("browser.startup.page", &intPref);
-  // Check for NS_FAILED because we don't want to falsely interpret
-  // a failure as a preference set to 0.
-  if (NS_SUCCEEDED(rv) && intPref == 0)
-    [checkboxNewWindowBlank setState:YES];
-
-  rv = mPrefService->GetIntPref("browser.tabs.startPage", &intPref);
-  if (NS_SUCCEEDED(rv) && intPref == 0)
-    [checkboxNewTabBlank setState:YES];
-
-  rv = mPrefService->GetIntPref("browser.history_expire_days", &intPref);
-  if (NS_FAILED(rv))
-    intPref = kDefaultExpireDays;
-  [textFieldHistoryDays setIntValue:intPref];
-  [sliderHistoryDays setIntValue:intPref];
-
-  rv = mPrefService->GetBoolPref("browser.tabs.opentabfor.middleclick", &boolPref);
-  if (NS_SUCCEEDED(rv) && boolPref == PR_TRUE)
-    [checkboxOpenTabs setState:YES];
-
-  BOOL useSystemHomePage = NO;
-  rv = mPrefService->GetBoolPref("chimera.use_system_home_page", &boolPref);
-  if (NS_SUCCEEDED(rv) && boolPref == PR_TRUE)
-    useSystemHomePage = YES;
+  BOOL gotPref;
   
+  if (([self getIntPref:"browser.startup.page" withSuccess:&gotPref] == 0) && gotPref)
+    [checkboxNewWindowBlank setState:YES];
+  
+  if (([self getIntPref:"browser.tabs.startPage" withSuccess:&gotPref] == 0) && gotPref)
+    [checkboxNewTabBlank setState:YES];
+  
+  
+  int expireDays = [self getIntPref:"browser.history_expire_days" withSuccess:&gotPref];
+  if (!gotPref)
+    expireDays = kDefaultExpireDays;
+
+  [textFieldHistoryDays setIntValue:expireDays];
+  [sliderHistoryDays setIntValue:expireDays];
+
+  [checkboxOpenTabs setState:[self getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:&gotPref]];
+  [checkboxOpenTabsForAEs setState:[self getBooleanPref:"browser.always_reuse_window" withSuccess:&gotPref]];
+  [checkboxLoadTabsInBackground setState:[self getBooleanPref:"browser.tabs.loadInBackground" withSuccess:&gotPref]];
+
+  BOOL useSystemHomePage = [self getBooleanPref:"chimera.use_system_home_page" withSuccess:&gotPref] && gotPref;  
   if (useSystemHomePage)
     [textFieldHomePage setEnabled:NO];
 
@@ -111,10 +105,18 @@ const int kDefaultExpireDays = 9;
 
 - (IBAction)checkboxClicked:(id)sender
 {
-  if (!mPrefService || sender != checkboxOpenTabs)
+  if (!mPrefService)
     return;
 
-  mPrefService->SetBoolPref("browser.tabs.opentabfor.middleclick", [sender state] ? PR_TRUE : PR_FALSE);
+  if (sender == checkboxOpenTabs) {
+    [self setPref:"browser.tabs.opentabfor.middleclick" toBoolean:[sender state]];
+  }
+  else if (sender == checkboxOpenTabsForAEs) {
+    [self setPref:"browser.always_reuse_window" toBoolean:[sender state]];
+  }
+  else if (sender == checkboxLoadTabsInBackground) {
+    [self setPref:"browser.tabs.loadInBackground" toBoolean:[sender state]];
+  }
 }
 
 - (IBAction)checkboxUseSystemHomePageClicked:(id)sender
@@ -128,8 +130,7 @@ const int kDefaultExpireDays = 9;
   if (useSystemHomePage)
     [self setPref: "browser.startup.homepage" toString: [textFieldHomePage stringValue]];
   
-  mPrefService->SetBoolPref("chimera.use_system_home_page", useSystemHomePage ? PR_TRUE : PR_FALSE);
-
+  [self setPref:"chimera.use_system_home_page" toBoolean: useSystemHomePage];
   [textFieldHomePage setStringValue: [self getCurrentHomePage]];
   [textFieldHomePage setEnabled:!useSystemHomePage];
 }
@@ -144,11 +145,9 @@ const int kDefaultExpireDays = 9;
     prefName = "browser.tabs.page";
   else if (sender == checkboxNewWindowBlank)
     prefName = "browser.startup.page";
-  else
-    return;
 
-  if (prefName) 
-    mPrefService->SetIntPref(prefName, [sender state] ? 0 : 1);
+  if (prefName)
+    [self setPref:prefName toInt: [sender state] ? 0 : 1];
 }
 
 - (IBAction)historyDaysModified:(id)sender
@@ -161,16 +160,19 @@ const int kDefaultExpireDays = 9;
   else if (sender == textFieldHistoryDays) {
     // If any non-numeric characters were entered make some noise and spit it out.
     if (([[textFieldHistoryDays stringValue] rangeOfCharacterFromSet:[[NSCharacterSet decimalDigitCharacterSet] invertedSet]]).length) {
-      PRInt32 intPref = kDefaultExpireDays;
-      mPrefService->GetIntPref("browser.history_expire_days", &intPref);
-      [textFieldHistoryDays setIntValue:intPref];
+      BOOL gotPref;
+      int prefValue = [self getIntPref:"browser.history_expire_days" withSuccess:&gotPref];
+      if (!gotPref)
+        prefValue = kDefaultExpireDays;
+      [textFieldHistoryDays setIntValue:prefValue];
+      [sliderHistoryDays setIntValue:prefValue];
       NSBeep ();
       return;
     } else
       [sliderHistoryDays setIntValue:[textFieldHistoryDays intValue]];
   }
 
-  mPrefService->SetIntPref("browser.history_expire_days", [sender intValue]);
+  [self setPref:"browser.history_expire_days" toInt:[sender intValue]];
 }
 
 
@@ -217,17 +219,16 @@ const int kDefaultExpireDays = 9;
 
 - (NSString*) getCurrentHomePage
 {
-  BOOL useSystemHomePage = NO;
-  PRBool boolPref;
-  nsresult rv = mPrefService->GetBoolPref("chimera.use_system_home_page", &boolPref);
-  if (NS_SUCCEEDED(rv) && boolPref == PR_TRUE)
+  BOOL gotPref;
+  
+  if ([self getBooleanPref:"chimera.use_system_home_page" withSuccess:&gotPref] && gotPref)
     return [self getSystemHomePage];
     
-  return [self getPrefString: "browser.startup.homepage"];
+  return [self getStringPref: "browser.startup.homepage" withSuccess:&gotPref];
 }
 
 // convenience routines for mozilla prefs
-- (NSString*)getPrefString: (const char*)prefName
+- (NSString*)getStringPref: (const char*)prefName withSuccess:(BOOL*)outSuccess
 {
   NSMutableString *prefValue = [[[NSMutableString alloc] init] autorelease];
   
@@ -236,9 +237,32 @@ const int kDefaultExpireDays = 9;
   if (NS_SUCCEEDED(rv) && buf) {
     [prefValue setString:[NSString stringWithCString:buf]];
     free(buf);
+    if (outSuccess) *outSuccess = YES;
+  } else {
+    if (outSuccess) *outSuccess = NO;
   }
   
   return prefValue;
+}
+
+// convenience routines for mozilla prefs
+- (BOOL)getBooleanPref: (const char*)prefName withSuccess:(BOOL*)outSuccess
+{
+  PRBool boolPref = PR_FALSE;
+  nsresult rv = mPrefService->GetBoolPref(prefName, &boolPref);
+  if (outSuccess)
+    *outSuccess = NS_SUCCEEDED(rv);
+
+  return boolPref ? YES : NO;
+}
+
+- (int)getIntPref: (const char*)prefName withSuccess:(BOOL*)outSuccess
+{
+  PRInt32 intPref = 0;
+  nsresult rv = mPrefService->GetBoolPref(prefName, &intPref);
+  if (outSuccess)
+    *outSuccess = NS_SUCCEEDED(rv);
+  return intPref;
 }
 
 - (void)setPref: (const char*)prefName toString:(NSString*)value
@@ -248,5 +272,19 @@ const int kDefaultExpireDays = 9;
   }
 }
 
+- (void)setPref: (const char*)prefName toBoolean:(BOOL)value
+{
+  if (mPrefService) {
+    mPrefService->SetBoolPref(prefName, value ? PR_TRUE : PR_FALSE);
+  }
+}
+
+- (void)setPref: (const char*)prefName toInt:(int)value
+{
+  if (mPrefService) {
+    PRInt32 prefValue = value;
+    mPrefService->SetIntPref(prefName, prefValue);
+  }
+}
 
 @end

@@ -30,10 +30,15 @@ class nsIPref;
 {
   // IBOutlet NSButton *buttonSystemPreferences;
 	IBOutlet NSTextField *textFieldHomePage;
+  
 	IBOutlet NSButton *checkboxUseSystemHomePage;
   IBOutlet NSButton *checkboxNewTabBlank;
   IBOutlet NSButton *checkboxNewWindowBlank;
+  
   IBOutlet NSButton *checkboxOpenTabs;
+  IBOutlet NSButton *checkboxOpenTabsForAEs;
+  IBOutlet NSButton *checkboxLoadTabsInBackground;
+  
   IBOutlet NSSlider *sliderHistoryDays;
   IBOutlet NSTextField *textFieldHistoryDays;
   
@@ -50,6 +55,12 @@ class nsIPref;
 - (NSString*)getSystemHomePage;
 - (NSString*)getCurrentHomePage;
 
-- (NSString*)getPrefString: (const char*)prefName;
+- (NSString*)getStringPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
+- (BOOL)getBooleanPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
+- (int)getIntPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
+
 - (void)setPref: (const char*)prefName toString:(NSString*)value;
+- (void)setPref: (const char*)prefName toBoolean:(BOOL)value;
+- (void)setPref: (const char*)prefName toInt:(int)value;
+
 @end
