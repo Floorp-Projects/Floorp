@@ -22,6 +22,7 @@
  */
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
+#include "nsIDOMNSHTMLOptionCollection.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
@@ -363,7 +364,7 @@ nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
     if (NS_OK == GetSelect(selectElement)) {
 
       // Get the options from the select object.
-      nsIDOMHTMLCollection* options = nsnull;
+      nsIDOMNSHTMLOptionCollection* options = nsnull;
       if (NS_OK == selectElement->GetOptions(&options)) {
 
         // Walk the options to find out where we are in the list (ick, O(n))

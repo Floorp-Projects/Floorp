@@ -69,6 +69,7 @@ CPPSRCS =			\
 	nsJSHTMLOListElement.cpp \
 	nsJSHTMLObjectElement.cpp \
 	nsJSHTMLOptGroupElement.cpp \
+	nsJSNSHTMLOptionCollection.cpp \
 	nsJSHTMLOptionElement.cpp \
 	nsJSHTMLParagraphElement.cpp \
 	nsJSHTMLParamElement.cpp \
@@ -130,6 +131,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSHTMLOListElement.obj \
 	.\$(OBJDIR)\nsJSHTMLObjectElement.obj \
 	.\$(OBJDIR)\nsJSHTMLOptGroupElement.obj \
+	.\$(OBJDIR)\nsJSNSHTMLOptionCollection.obj \
 	.\$(OBJDIR)\nsJSHTMLOptionElement.obj \
 	.\$(OBJDIR)\nsJSHTMLParagraphElement.obj \
 	.\$(OBJDIR)\nsJSHTMLParamElement.obj \

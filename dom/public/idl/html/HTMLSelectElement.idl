@@ -5,9 +5,9 @@
    readonly attribute  DOMString            type;
             attribute  long                 selectedIndex;
             attribute  DOMString            value;
-   readonly attribute  unsigned long        length;
+            attribute  unsigned long        length;
    readonly attribute  HTMLFormElement      form;
-   readonly attribute  HTMLCollection       options;
+   readonly attribute  NSHTMLOptionCollection       options;
             attribute  boolean              disabled;
             attribute  boolean              multiple;
             attribute  DOMString            name;
@@ -24,5 +24,6 @@
  /* IID: { 0xa6cf9105, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
-   Element                   item(in unsigned long index);
+   Node                      item(in unsigned long index);
+   Node                      namedItem(in DOMString name);
  };

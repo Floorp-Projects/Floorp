@@ -73,6 +73,7 @@ CPPSRCS		= \
 		nsJSHTMLOListElement.cpp \
 		nsJSHTMLObjectElement.cpp \
 		nsJSHTMLOptGroupElement.cpp \
+		nsJSNSHTMLOptionCollection.cpp \
 		nsJSHTMLOptionElement.cpp \
 		nsJSHTMLParagraphElement.cpp \
 		nsJSHTMLParamElement.cpp \
