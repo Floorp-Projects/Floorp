@@ -37,6 +37,7 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);    /* file they should be g
 static PRInt32 gPrefMigrationInstanceCnt = 0;
 static PRInt32 gPrefMigrationLock        = 0;
 
+
 nsPrefMigrationFactory::nsPrefMigrationFactory(void)
 {
   mRefCnt=0;
@@ -92,18 +93,15 @@ nsPrefMigrationFactory::CreateInstance(nsISupports *aOuter,
   {
     return NS_ERROR_NULL_POINTER;
   }
+
   *aResult = NULL;
-  nsPrefMigration *pPrefMigration = new nsPrefMigration();
+  
+  nsPrefMigration *pPrefMigration = nsPrefMigration::GetInstance();
 
   if (pPrefMigration == NULL)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult result =  pPrefMigration->QueryInterface(aIID, aResult);
-
-  if (result != NS_OK)
-    delete pPrefMigration;
-
-  return result;
+  return pPrefMigration->QueryInterface(aIID, aResult);
 }
 
 NS_IMETHODIMP

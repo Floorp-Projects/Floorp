@@ -26,16 +26,22 @@
 #include "nsISupports.h"
 #include "nsFileSpec.h"
 #include "nsIPref.h"
-#include "nsIServiceManager.h" 
+#include "nsIServiceManager.h"
+#include "nsICommonDialogs.h"
 #include "nsCOMPtr.h"
+#include "nsIDOMWindow.h"
+#include "nsIWebShellWindow.h"
 #include "nsIFileSpec.h"
 #include "nsPrefMigrationCIDs.h"
 #include "nsIPrefMigration.h"
+#include "nsVoidArray.h"
 
 class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
 {
     public:
       NS_DEFINE_STATIC_CID_ACCESSOR(NS_PREFMIGRATION_CID) 
+
+      static nsPrefMigration *GetInstance();
 
       nsPrefMigration();
       virtual ~nsPrefMigration();
@@ -44,10 +50,19 @@ class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
 
       NS_DECL_NSIPREFMIGRATION
 
-	  /* nsIShutdownListener methods */
-	  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
+	    /* nsIShutdownListener methods */
+	    NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
 	  
+      // todo try to move this to private.  We need this because we need to call this
+      // from a thread.
+
+      nsVoidArray mProfilesToMigrate;
+      nsresult ProcessPrefsCallback(const char* oldProfilePathStr, const char * newProfilePathStr);
+      void WaitForThread();
+    
     private:
+      
+      static nsPrefMigration* mInstance;
 
       nsresult CreateNewUser5Tree(const char* oldProfilePath, 
                                   const char* newProfilePath);
@@ -86,11 +101,17 @@ class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
   
       nsresult SetPremigratedCharPref(const char *pref_name, char *value);
       nsresult SetPremigratedFilePref(const char *pref_name, nsFileSpec &filePath);
-
-private:
+      
+      
       nsIPref* m_prefs;
       nsresult getPrefService();
       nsCOMPtr<nsIFileSpec> m_prefsFile; 
+      nsCOMPtr<nsIDOMWindow> m_parentWindow;
+      nsIDOMWindow *m_progressWindow;
+      nsCOMPtr<nsIWebShellWindow>  mPMProgressWindow;
+  
+
+      
 };
 
 #endif

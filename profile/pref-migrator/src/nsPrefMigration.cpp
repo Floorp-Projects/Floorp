@@ -19,8 +19,14 @@
 
 #include "pratom.h"
 #include "nsRepository.h"
+#include "nsIAppShellComponentImpl.h"
+#include "nsIBrowserWindow.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsINetSupportDialogService.h"
+#include "nsIWindowMediator.h"
+#include "nsICommonDialogs.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsFileStream.h"
 #include "nsIFileSpec.h"
@@ -32,13 +38,17 @@
 #include "plstr.h"
 #include "prprf.h"
 
+#include "nsProxiedService.h"
+
+#include "nsNeckoUtil.h"
+
 /* Network */
 
 #include "net.h"
 
 #include "nsPrefMigration.h"
 #include "nsPrefMigrationFactory.h"
-#include "nsPMProgressDlg.h"
+//#include "nsPMProgressDlg.h"
 
 #define NEW_DIR_PERMISSIONS 00700
 
@@ -118,29 +128,75 @@
 /* and the winner is:  Windows */
 #define PREF_FILE_NAME_IN_5x "prefs.js"
 
+typedef struct
+{
+  const char* oldFile;
+  const char* newFile;
+
+} MigrateProfileItem;
+
+
 /*-----------------------------------------------------------------
  * Globals
  *-----------------------------------------------------------------*/
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 
 static NS_DEFINE_IID(kIPrefMigrationIID, NS_IPREFMIGRATION_IID);
 static NS_DEFINE_IID(kPrefMigrationCID,  NS_PREFMIGRATION_CID);
+
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
+static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
+
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 static PRInt32 gInstanceCnt = 0;
 static PRInt32 gLockCnt     = 0;
+
+
+
+
+nsPrefMigration* nsPrefMigration::mInstance = nsnull;
+
+nsPrefMigration *
+nsPrefMigration::GetInstance()
+{
+    if (mInstance == NULL) 
+    {
+        mInstance = new nsPrefMigration();
+    }
+    return mInstance;
+}
+
+
 
 nsPrefMigration::nsPrefMigration() : m_prefs(0)
 {
   NS_INIT_REFCNT();
 }
 
+
+
+PRBool ProfilesToMigrateCleanup(void* aElement, void *aData)
+{
+  if (aElement)
+    delete (MigrateProfileItem*)aElement;
+
+  return PR_TRUE;
+}
+
 nsPrefMigration::~nsPrefMigration()
 {
   if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
+  mProfilesToMigrate.EnumerateForwards((nsVoidArrayEnumFunc)ProfilesToMigrateCleanup, nsnull);
 }
+
+
 
 nsresult
 nsPrefMigration::getPrefService()
@@ -148,12 +204,22 @@ nsPrefMigration::getPrefService()
   // get the prefs service
   nsresult rv = NS_OK;
 
-  if (!m_prefs)
-  rv = nsServiceManager::GetService(kPrefServiceCID,
-                                      nsCOMTypeInfo<nsIPref>::GetIID(),
-                                      (nsISupports**)&m_prefs,
-                                      this);
-  if (NS_FAILED(rv)) return rv;
+  NS_WITH_SERVICE(nsIPref, pIMyService, kPrefServiceCID, &rv);
+  if(NS_FAILED(rv))
+    return rv;
+
+  NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+  if(NS_FAILED(rv))
+    return rv;
+  
+  rv = pIProxyObjectManager->GetProxyObject(nsnull, 
+                                            nsIPref::GetIID(), 
+                                            pIMyService, 
+                                            PROXY_SYNC,
+                                            (void**)&m_prefs);
+  NS_RELEASE(pIMyService);
+
+if (NS_FAILED(rv)) return rv;
 
   // m_prefs is good now
   return NS_OK;   
@@ -185,6 +251,124 @@ nsPrefMigration::QueryInterface(const nsIID& iid,void** result)
 NS_IMPL_ADDREF(nsPrefMigration)
 NS_IMPL_RELEASE(nsPrefMigration)
 
+
+NS_IMETHODIMP
+nsPrefMigration::AddProfilePaths(const char * oldProfilePathStr, const char * newProfilePathStr)
+{
+  MigrateProfileItem* item = new MigrateProfileItem();
+  item->oldFile = oldProfilePathStr;
+  item->newFile = newProfilePathStr;
+  
+  if (mProfilesToMigrate.AppendElement((void*)item));
+    return NS_OK;
+
+  return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP
+nsPrefMigration::ProcessPrefs()
+{
+  nsresult rv;
+  nsCOMPtr<nsIURI> pmprogressURL;
+  PRInt32 pmWinWidth  = 300;
+  PRInt32 pmWinHeight = 200;
+  nsAutoString args;
+  const char *pmprogressStr = "chrome://global/content/pmunprog.xul";
+
+
+  NS_WITH_SERVICE(nsIAppShellService, PMProgressAppShell,
+                  kAppShellServiceCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = NS_NewURI(getter_AddRefs(pmprogressURL), pmprogressStr);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = PMProgressAppShell->CreateTopLevelWindow(nsnull, pmprogressURL,
+                                          PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
+                                          nsnull, pmWinWidth, pmWinHeight,
+                                          getter_AddRefs(mPMProgressWindow));
+
+  if (NS_FAILED(rv)) 
+  {
+     return rv;
+  }
+
+  //PMProgressAppShell->Run();
+  mPMProgressWindow->ShowModal();
+  
+  return NS_OK;
+}
+
+
+static PRThread* gMigrationThread = nsnull;
+
+
+extern "C" void ProfileMigrationController(void *data)
+{
+  if (!data) return;
+
+  nsPrefMigration* migrator = (nsPrefMigration*)data;
+  nsIPrefMigration* interfaceM = (nsIPrefMigration*)data;
+  PRInt32 count = migrator->mProfilesToMigrate.Count();
+  PRInt32 index = -1;
+  nsresult rv = NS_OK;
+
+  while (++index < count && NS_SUCCEEDED(rv)) 
+  {
+
+    MigrateProfileItem* item = (MigrateProfileItem*)migrator->mProfilesToMigrate.ElementAt(index);
+    if (item)
+      rv = migrator->ProcessPrefsCallback(item->oldFile, item->newFile);
+  }
+
+  
+  NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+  if(NS_FAILED(rv))
+    return;
+  
+  nsIPrefMigration* prefProxy;
+  nsCOMPtr<nsIPrefMigration> migratorInterface = do_QueryInterface(interfaceM);
+
+  rv = pIProxyObjectManager->GetProxyObject(nsnull, 
+                                            nsIPrefMigration::GetIID(), 
+                                            migratorInterface, 
+                                            PROXY_SYNC,
+                                            (void**)&prefProxy);
+  
+  prefProxy->WindowCloseCallback(); 
+  NS_RELEASE(prefProxy);
+
+}
+
+NS_IMETHODIMP
+nsPrefMigration::WindowCloseCallback()
+{
+
+  if (mPMProgressWindow)
+    mPMProgressWindow->Close();
+
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsPrefMigration::ProcessPrefsFromJS()  // called via js so that we can have progress bar that show up.
+{
+  gMigrationThread = PR_CreateThread(PR_USER_THREAD,
+                                     ProfileMigrationController,
+                                     this, 
+                                     PR_PRIORITY_NORMAL, 
+                                     PR_GLOBAL_THREAD, 
+                                     PR_UNJOINABLE_THREAD,
+                                     0);  
+  return NS_OK;
+}
+
+
 /*--------------------------------------------------------------------------
  * Process Prefs is the primary funtion for the class nsPrefMigration.
  *
@@ -194,8 +378,8 @@ NS_IMPL_RELEASE(nsPrefMigration)
  * RETURN: Success or a failure code
  *
  *-------------------------------------------------------------------------*/
-NS_IMETHODIMP
-nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newProfilePathStr)
+nsresult
+nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char * newProfilePathStr)
 { 
   char *oldPOPMailPathStr = nsnull;
   char *oldIMAPMailPathStr= nsnull; 
@@ -219,9 +403,15 @@ nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newPro
   printf("*Entered Actual Migration routine*\n");
 #endif
 
+//  PRUnichar *testing1;
+//  PRUnichar *testing2;
+	
+//  ShowProgressDialog(testing1, testing2);
+  
   /* Create the new profile tree for 5.x */
   rv = CreateNewUser5Tree(oldProfilePathStr, newProfilePathStr);
   if (NS_FAILED(rv)) return rv;
+
 
   rv = getPrefService();
   if (NS_FAILED(rv)) return rv;
@@ -518,6 +708,8 @@ nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newPro
   rv=DoSpecialUpdates(newProfilePath);
   if (NS_FAILED(rv)) return rv;
 
+//  m_progressWindow->Close(); /* Close the progress dialog window */
+
   PR_FREEIF(oldPOPMailPathStr);
   PR_FREEIF(oldIMAPMailPathStr);
   PR_FREEIF(oldIMAPLocalMailPathStr);
@@ -529,6 +721,8 @@ nsPrefMigration::ProcessPrefs(const char* oldProfilePathStr, const char * newPro
   PR_FREEIF(popServerName);
 
   rv=m_prefs->SavePrefFileAs(m_prefsFile);
+  if (NS_FAILED(rv)) return rv;
+  rv=m_prefs->ResetPrefs();
   if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
@@ -972,18 +1166,33 @@ NSCanUnload(nsISupports* serviceMgr)
 }
 
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* aServiceMgr, const char *path)
+NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
-  nsRepository::RegisterComponent(kPrefMigrationCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
- 
-  return NS_OK;
+  nsresult rv;
+  //nsRepository::RegisterComponent(kPrefMigrationCID, "Profile Migration", "component://netscape/prefmigration", path, PR_TRUE, PR_TRUE);
+  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = compMgr->RegisterComponent(kPrefMigrationCID, "Profile Migration",
+                                  NS_PROFILEMIGRATION_PROGID,
+                                  path,
+                                  PR_TRUE,
+                                  PR_TRUE);
+  return rv;
 }
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* aServiceMgr, const char *path)
+NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
+  nsresult rv;
   //nsRepository::UnregisterFactory(kPrefMigrationCID, path);
-  return NS_OK;
+
+  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  rv = compMgr->UnregisterComponent(kPrefMigrationCID, path);
+
+  return rv;
 }
 
 
@@ -1050,6 +1259,8 @@ nsPrefMigration::SetPremigratedFilePref(const char *pref_name, nsFileSpec &fileP
 	return rv;
 }
 
+
+
 nsresult
 nsPrefMigration::SetPremigratedCharPref(const char *pref_name, char *value)
 {
@@ -1082,3 +1293,139 @@ nsPrefMigration::OnShutdown(const nsCID& aClass, nsISupports *service)
   return NS_OK;
 }
 
+/* This works.  Saving for reference 
+
+PRInt32    
+nsPrefMigration::ShowProgressDialog(nsString& string)
+{
+    nsresult res;  
+
+    NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID,  &res);
+    if (NS_FAILED(res)) 
+        return res;
+    
+    return dialog->Alert(string.GetUnicode());
+}
+*/
+
+#if 0
+
+PRInt32
+nsPrefMigration::ShowProgressDialog(const PRUnichar *inWindowTitle, const PRUnichar *inMsg)
+{
+    nsresult rv;
+    nsString text;
+
+    enum {  eMsg =0, eCheckboxMsg =1, eIconURL =2 , eTitleMessage =3, 
+            eEditfield1Msg =4, eEditfield2Msg =5, eEditfield1Value = 6, 
+            eEditfield2Value = 7,	eButton0Text = 8, eButton1Text = 9, 
+            eButton2Text =10, eButton3Text = 11,eDialogTitle = 12 };
+
+    enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, 
+           eNumberEditfields =3, eEditField1Password =4 };
+
+
+    NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+    if ( NS_SUCCEEDED ( rv ) )
+    {
+      //nsCOMPtr< nsIDOMWindow> window;
+      windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( m_parentWindow ) );
+	    
+      nsCOMPtr< nsIDialogParamBlock> block;
+	    rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
+                                               0,
+                                               nsIDialogParamBlock::GetIID(),
+                                               (void**)&block );
+      
+	    if ( NS_FAILED( rv ) )
+		    return rv;
+	    block->SetInt( eNumberButtons, 1 );
+
+      ShowPMDialogEngine(block, kProgressURL);
+
+      //nsCOMPtr<nsICommonDialogs> dialogService;
+      //rv = nsComponentManager::CreateInstance( kCommonDialogsCID,
+      //                                         0, 
+      //                                         nsICommonDialogs::GetIID(),
+      //                                         (void**)&dialogService );
+
+      //if( NS_SUCCEEDED ( rv ) )
+      //  rv = dialogService->DoDialog( window, block, kProgressURL);
+        //rv = dialogService->Alert( window, NULL, text.GetUnicode());
+    
+    }
+    return rv;
+}
+
+
+nsresult
+nsPrefMigration::ShowPMDialogEngine(nsIDialogParamBlock *ioParamBlock, const char *inChromeURL)
+{
+  nsresult rv = NS_OK;
+
+    if ( m_parentWindow && ioParamBlock &&inChromeURL )
+    {
+        // Get JS context from parent window.
+        nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( m_parentWindow, &rv );
+        if ( NS_SUCCEEDED( rv ) && sgo )
+        {
+            nsCOMPtr<nsIScriptContext> context;
+            sgo->GetContext( getter_AddRefs( context ) );
+            if ( context )
+            {
+                JSContext *jsContext = (JSContext*)context->GetNativeContext();
+                if ( jsContext ) {
+                    void *stackPtr;
+                    jsval *argv = JS_PushArguments( jsContext,
+                                                    &stackPtr,
+                                                    "svs%ip",
+                                                    inChromeURL,
+                                                    JSVAL_NULL,
+                                                    "chrome",
+                                                    (const nsIID*)(&nsIDialogParamBlock::GetIID()),
+                                                    (nsISupports*)ioParamBlock
+                                                  );
+                    if ( argv ) {
+                        //nsIDOMWindow *newWindow;
+                        rv = m_parentWindow->Open( jsContext, argv, 4, &m_progressWindow );
+                        if ( NS_SUCCEEDED( rv ) )
+                        {
+                            m_progressWindow->Release();
+                        } else
+                        {
+                        }
+                        JS_PopArguments( jsContext, stackPtr );
+                    }
+                    else
+                    {
+                    	
+                        NS_WARNING( "JS_PushArguments failed\n" );
+                        rv = NS_ERROR_FAILURE;
+                    }
+                }
+                else
+                {
+                    NS_WARNING(" GetNativeContext failed\n" );
+                    rv = NS_ERROR_FAILURE;
+                }
+            }
+            else
+            {
+                NS_WARNING( "GetContext failed\n" );
+                rv = NS_ERROR_FAILURE;
+            }
+        }
+        else
+        {
+            NS_WARNING( "QueryInterface (for nsIScriptGlobalObject) failed \n" );
+        }
+    }
+    else
+    {
+        NS_WARNING( " OpenDialogWithArg was passed a null pointer!\n" );
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+ }
+
+#endif /* 0 */
