@@ -1093,7 +1093,6 @@ nsHTTPChannel::CheckCache()
         if (size != (PRUint32) contentLength) {
             LOG(("Cached data size does not match the Content-Length header "
                  "[content-length=%u size=%u]\n", contentLength, size));
-            NS_BREAK();
             //NS_WARNING("Cached data size does not match the Content-Length header");
             return NS_OK; // must re-fetch
         }
