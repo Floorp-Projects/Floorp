@@ -26,7 +26,7 @@
 // god-awful fragile. The logic goes something like this. Our parent
 // is the sidebar, whose parent is the content frame, whose frame[1]
 // is the content area.
-var ContentWindow = window.parent.parent.frames[1];
+var ContentWindow = window.content;
 
 // The related links handler
 var Handler = Components.classes["component://netscape/related-links-handler"].createInstance();
