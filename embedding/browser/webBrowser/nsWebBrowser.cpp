@@ -1306,6 +1306,20 @@ NS_IMETHODIMP nsWebBrowser::SetVisibility(PRBool aVisibility)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsWebBrowser::GetEnabled(PRBool *aEnabled)
+{
+  if (mInternalWidget)
+    return mInternalWidget->IsEnabled(aEnabled);
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebBrowser::SetEnabled(PRBool aEnabled)
+{
+  if (mInternalWidget)
+    return mInternalWidget->Enable(aEnabled);
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsWebBrowser::GetMainWidget(nsIWidget** mainWidget)
 {
    NS_ENSURE_ARG_POINTER(mainWidget);

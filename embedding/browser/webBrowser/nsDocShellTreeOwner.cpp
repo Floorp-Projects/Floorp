@@ -617,6 +617,18 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetVisibility(PRBool aVisibility)
     return NS_ERROR_NULL_POINTER;
 }
 
+NS_IMETHODIMP nsDocShellTreeOwner::GetEnabled(PRBool *aEnabled)
+{
+  NS_ENSURE_ARG_POINTER(aEnabled);
+  *aEnabled = PR_TRUE;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsDocShellTreeOwner::SetEnabled(PRBool aEnabled)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsDocShellTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
     return NS_ERROR_NULL_POINTER;

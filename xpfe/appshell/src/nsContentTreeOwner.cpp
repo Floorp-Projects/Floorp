@@ -545,6 +545,16 @@ NS_IMETHODIMP nsContentTreeOwner::SetVisibility(PRBool aVisibility)
    return mXULWindow->SetVisibility(aVisibility);
 }
 
+NS_IMETHODIMP nsContentTreeOwner::GetEnabled(PRBool *aEnabled)
+{
+   return mXULWindow->GetEnabled(aEnabled);
+}
+
+NS_IMETHODIMP nsContentTreeOwner::SetEnabled(PRBool aEnable)
+{
+   return mXULWindow->SetEnabled(aEnable);
+}
+
 NS_IMETHODIMP nsContentTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
    NS_ENSURE_ARG_POINTER(aMainWidget);
