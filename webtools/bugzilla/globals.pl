@@ -348,7 +348,7 @@ sub DBname_to_id {
     my ($name) = (@_);
     SendSQL("select userid from profiles where login_name = @{[SqlQuote($name)]}");
     my $r = FetchOneColumn();
-    if ($r eq "") {
+    if (!defined $r || $r eq "") {
         return 0;
     }
     return $r;
