@@ -1706,8 +1706,13 @@ nsComboboxControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   }
   return NS_ERROR_FAILURE;
 #else  
-  *aFrame = this;
-  return NS_OK;
+  if (inThisFrame && (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND)) {
+    // should probably test for visibility, although children could be
+    // visible without parent, so I'm not sure...
+    *aFrame = this;
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 #endif
 }
 
