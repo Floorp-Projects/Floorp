@@ -30,7 +30,7 @@ interface nsISpellCheck : nsISupports
   void          IgnoreWordAllOccurrences(in wstring word);
   void          AddWordToDictionary(in wstring word);
   void          RemoveWordFromDictionary(in wstring word);
-  wstring       GetPersonalDictionaryWord();
+  wstring       GetPersonalDictionaryWord(in wstring word);
   void          CloseSpellChecking();
 
 };
