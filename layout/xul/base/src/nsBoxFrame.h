@@ -32,7 +32,7 @@
 #define nsBoxFrame_h___
 
 #include "nsCOMPtr.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsContainerBox.h"
 class nsBoxLayoutState;
 class nsBoxFrameInner;
@@ -60,7 +60,7 @@ class nsHTMLInfo;
 #define NS_STATE_STYLE_CHANGE            0x40000000
 #define NS_STATE_EQUAL_SIZE              0x80000000
 
-class nsBoxFrame : public nsHTMLContainerFrame, public nsContainerBox
+class nsBoxFrame : public nsContainerFrame, public nsContainerBox
 {
 public:
 
@@ -125,12 +125,6 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
-  NS_IMETHOD Paint ( nsIPresContext* aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect& aDirtyRect,
-                      nsFramePaintLayer aWhichLayer);
-
-
 
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -175,6 +169,12 @@ public:
                                    nsIFrame* aChild,
                                    nsIStyleContext* aStyleContext,
                                    PRBool aForce);
+
+  NS_IMETHOD  Paint(nsIPresContext* aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect& aDirtyRect,
+                    nsFramePaintLayer aWhichLayer);
+
 protected:
     virtual void GetBoxName(nsAutoString& aName);
 

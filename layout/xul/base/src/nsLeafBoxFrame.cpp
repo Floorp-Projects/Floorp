@@ -42,6 +42,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsWidgetsCID.h"
 #include "nsIViewManager.h"
+#include "nsHTMLContainerFrame.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 

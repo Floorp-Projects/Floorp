@@ -670,11 +670,16 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
    // mark it as needing to be reflowed.
    case eReflowReason_Dirty: {
         // only frames that implement nsIBox seem to be able to handle a reason of Dirty. For everyone else
-        // send down a resize.
-        reason = eReflowReason_Resize;
+        // send down a resize. 
+        reason = eReflowReason_Dirty; //eReflowReason_Resize;
 
         // get the frame state to see if it needs reflow
         needsReflow = mStyleChange || (childState & NS_FRAME_IS_DIRTY) || (childState & NS_FRAME_HAS_DIRTY_CHILDREN);
+
+        // redraw
+
+        //if (needsReflow)
+        //   Redraw(aState);
 
    } break;
 
