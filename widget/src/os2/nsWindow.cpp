@@ -1904,6 +1904,30 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
             result = OnPaint();
             break;
 
+        case WM_TRANSLATEACCEL:
+            {
+              PQMSG pQmsg = (PQMSG)mp1;
+              if (pQmsg->msg == WM_CHAR) 
+              {
+                LONG mp1 = (LONG)pQmsg->mp1;
+                LONG mp2 = (LONG)pQmsg->mp2;
+       
+                // If we have a shift+enter combination, return false
+                // immediately.  OS/2 considers the shift+enter
+                // combination an accelerator and will translate it into
+                // a WM_OPEN message.  When this happens we do not get a
+                // WM_CHAR for the down transition of the enter key when
+                // shift is also pressed and OnKeyDown will not be called.
+                if ( (SHORT1FROMMP(mp1) & (KC_VIRTUALKEY | KC_SHIFT)) &&
+                     (SHORT2FROMMP(mp2) == VK_ENTER)
+                   )
+                {
+                  return(PR_TRUE);
+                }
+              }
+            }
+            break;
+
         case WM_CHAR:
             result = OnKey( mp1, mp2);
             break;
