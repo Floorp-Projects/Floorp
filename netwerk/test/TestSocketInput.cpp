@@ -16,7 +16,10 @@
  * Reserved.
  */
 #include "stdio.h"
+
+#ifdef XP_WIN
 #include <windows.h>
+#endif
 
 #include "nscore.h"
 #include "nsXPComCIID.h"

@@ -17,7 +17,7 @@
  */
 #include <stdio.h>
 
-#ifdef XP_PC
+#ifdef XP_WIN
 #include <windows.h>
 #endif
 
