@@ -459,6 +459,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       mFixedTableWidth += specifiedFixedColWidth + colInset;
       if (0==colIndex)
         mFixedTableWidth += colInset;
+      if (PR_TRUE==gsDebug) printf("setting mFixedTableWidth=%d\n", mFixedTableWidth);
     }
 
     // cache the computed column info
@@ -838,7 +839,7 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(const nsHTMLReflowSt
     if (gsDebug) printf ("  * auto table minTW does not fit, calling BalanceColumnsTableDoesNotFit\n");
     result = BalanceColumnsTableDoesNotFit();
   }
-  else if (mMaxTableWidth <= actualMaxWidth)
+  else if (mMaxTableWidth < actualMaxWidth)
   { // the max width of the table fits comfortably in the available space
     if (gsDebug) printf ("  * auto table desired size fits, calling BalanceColumnsTableFits\n");
     result = BalanceColumnsTableFits(aReflowState, aAvailWidth, 
