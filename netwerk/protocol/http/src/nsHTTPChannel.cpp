@@ -835,22 +835,20 @@ private:
 
     NS_IMETHOD
     OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
-                    nsIInputStream *aStream, PRUint32 aSourceOffset, 
-                    PRUint32 aCount) 
-    {
-        return mListener->OnDataAvailable(mChannel, aContext, 
-                                          aStream, aSourceOffset, aCount);
+                    nsIInputStream *aStream, PRUint32 aSourceOffset, PRUint32 aCount) {
+        return mListener->OnDataAvailable(aChannel, aContext, aStream, aSourceOffset, aCount);
     }
 
     NS_IMETHOD
     OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
-        return mListener->OnStartRequest(mChannel, aContext);
+        return mListener->OnStartRequest(aChannel, aContext);
     }
 
     NS_IMETHOD
     OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
                   nsresult aStatus, const PRUnichar *aErrorMsg) {
-        return mChannel->ResponseCompleted(nsnull, mListener, aStatus, aErrorMsg);
+        mChannel->ResponseCompleted(0, aStatus, aErrorMsg);
+        return mListener->OnStopRequest(aChannel, aContext, aStatus, aErrorMsg);
     }
 
 protected:
@@ -920,7 +918,7 @@ nsHTTPChannel::ReadFromCache(PRUint32 aStartPosition, PRInt32 aReadCount)
                                  mResponseContext, listener);
     NS_RELEASE(listener);
     if (NS_FAILED(rv)) {
-        ResponseCompleted(0, nsnull, rv, 0);
+        ResponseCompleted(0, rv, 0);
     }
     return rv;
 }
@@ -1099,7 +1097,7 @@ nsHTTPChannel::Open(void)
     }
     if (NS_FAILED(rv)) {
       // Unable to create a transport...  End the request...
-      (void) ResponseCompleted(nsnull, mResponseDataListener, rv, nsnull);
+      (void) ResponseCompleted(nsnull, rv, nsnull);
       return rv;
     }
 
@@ -1107,7 +1105,7 @@ nsHTTPChannel::Open(void)
     rv = transport->SetNotificationCallbacks(this);
     if (NS_FAILED(rv)) {
       // Unable to create a transport...  End the request...
-      (void) ResponseCompleted(nsnull, mResponseDataListener, rv, nsnull);
+      (void) ResponseCompleted(nsnull, rv, nsnull);
       return rv;
     }
 
@@ -1244,46 +1242,10 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
 
 
 nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport, 
-                                          nsIStreamListener *aListener,
                                           nsresult aStatus,
                                           const PRUnichar* aMsg)
 {
   nsresult rv = NS_OK;
-
-  //
-  // First:
-  //
-  // Call the consumer OnStopRequest(...) to end the request...
-  if (aListener) {
-    rv = aListener->OnStopRequest(this, mResponseContext, aStatus, aMsg);
-
-    if (NS_FAILED(rv)) {
-      PR_LOG(gHTTPLog, PR_LOG_ERROR, 
-             ("nsHTTPChannel::OnStopRequest(...) [this=%x]."
-              "\tOnStopRequest to consumer failed! Status:%x\n",
-              this, rv));
-    }
-  }
-
-  // Release the transport...
-  if (aTransport) {
-    (void)mHandler->ReleaseTransport(aTransport);
-  }
-
-  //
-  // After the consumer has been notified, remove the channel from its 
-  // load group...  This will trigger an OnStopRequest from the load group.
-  //
-  if (mLoadGroup) {
-    (void)mLoadGroup->RemoveChannel(this, nsnull, aStatus, nsnull);
-  }
-
-  //
-  // Finally, notify the OpenObserver that the request has completed.
-  //
-  if (mOpenObserver) {
-      (void) mOpenObserver->OnStopRequest(this, mOpenContext, aStatus, aMsg);
-  }
 
   // Null out pointers that are no longer needed...
 
@@ -1293,6 +1255,21 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport,
 
   mResponseDataListener = 0;
   NS_IF_RELEASE(mCachedResponse);
+
+  // Release the transport...
+  if (aTransport) {
+    (void)mHandler->ReleaseTransport(aTransport);
+  }
+
+  // Remove the channel from its load group...
+  if (mLoadGroup) {
+    (void)mLoadGroup->RemoveChannel(this, nsnull, aStatus, nsnull);
+  }
+
+  if (mOpenObserver) {
+      rv = mOpenObserver->OnStopRequest(this, mOpenContext, aStatus, aMsg);
+      if (NS_FAILED(rv)) return rv;
+  }
 
   return rv;
 }
@@ -1305,15 +1282,6 @@ nsresult nsHTTPChannel::SetResponse(nsHTTPResponse* i_pResp)
 
   return NS_OK;
 }
-
-nsresult nsHTTPChannel::GetDataConsumer(nsIStreamListener* *aListener)
-{
-  *aListener = mResponseDataListener;
-  NS_IF_ADDREF(*aListener);
-
-  return NS_OK;
-}
-
 
 nsresult nsHTTPChannel::GetResponseContext(nsISupports** aContext)
 {
