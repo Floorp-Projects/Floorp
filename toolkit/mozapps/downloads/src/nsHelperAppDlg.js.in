@@ -442,6 +442,7 @@ nsUnknownContentTypeDialog.prototype = {
     initIntro: function(url, filename, displayname) {
         this.dialogElement( "location" ).value = displayname;
         this.dialogElement( "location" ).setAttribute("realname", filename);
+        this.dialogElement( "location" ).setAttribute("tooltiptext", displayname);
 
         // if mSourcePath is a local file, then let's use the pretty path name instead of an ugly
         // url...
@@ -463,9 +464,18 @@ nsUnknownContentTypeDialog.prototype = {
           }
         } catch(ex) {}
 
+        if (pathString == this.mSourcePath)
+        {
+          // wasn't a fileURL
+          var tmpurl = url.clone(); // don't want to change the real url
+          tmpurl.userPass = "";
+          pathString = tmpurl.prePath;
+        }
+
         // Set the location text, which is separate from the intro text so it can be cropped
         var location = this.dialogElement( "source" );
         location.value = pathString;
+        location.setAttribute("tooltiptext", this.mSourcePath);
         
         // Show the type of file. 
         var type = this.dialogElement("type");
