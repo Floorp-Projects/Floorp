@@ -106,7 +106,7 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Lock(PRInt32 aX, PRInt32 aY,
   printf("Time taken to lock:   %d\n", PR_Now() - mLockTime);
 #endif
 
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: Unlock(void)
@@ -153,20 +153,20 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: GetDimensions(PRUint32 *aWidth, PRUint32 *
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: IsOffscreen(PRBool *aOffScreen)
 {
   *aOffScreen = mIsOffscreen;//mBitmap ? PR_TRUE : PR_FALSE;
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: IsPixelAddressable(PRBool *aAddressable)
 {
   *aAddressable = PR_FALSE; 
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: GetPixelFormat(nsPixelFormat *aFormat)
 {
-	*aFormat = mPixFormat;
+  *aFormat = mPixFormat;
 
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView)
@@ -177,7 +177,7 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView)
     mWidth=nscoord(aView->Bounds().Width()); 
     mHeight=nscoord(aView->Bounds().Height()); 
     
-	mView = aView;
+    mView = aView;
 
     aView->UnlockLooper(); 
   } 
@@ -187,75 +187,74 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView)
   // widget or something. 
   mIsOffscreen = PR_FALSE; 
 
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView, PRUint32 aWidth,
                                           PRUint32 aHeight, PRUint32 aFlags)
 {
-	NS_ASSERTION(!(aView == nsnull), "null BView");
+  NS_ASSERTION(!(aView == nsnull), "null BView");
 
-       //remember dimensions
-       mWidth=aWidth;
-       mHeight=aHeight;
+  //remember dimensions
+  mWidth=aWidth;
+  mHeight=aHeight;
   mFlags = aFlags; 
   
   // we can draw on this offscreen because it has no parent 
   mIsOffscreen = PR_TRUE; 
 
-	BRect r = aView->Bounds();
-	mView = new BView(r, "", 0, 0);
-       if (mView==NULL)
-               return NS_ERROR_OUT_OF_MEMORY;
+  BRect r(0,0, mWidth-1, mHeight-1);
+  mView = new BView(r, "", 0, 0);
+  if (!mView)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-//	if((aFlags & NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS) &&
-//		(aWidth > 0) && (aHeight > 0))
-	if(aWidth > 0 && aHeight > 0)
-	{
-		mBitmap = new BBitmap(r, B_RGBA32, true);
-               if (mBitmap==NULL)
-                       return NS_ERROR_OUT_OF_MEMORY;
+//if((aFlags & NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS) &&
+//  (aWidth > 0) && (aHeight > 0))
+  if(aWidth > 0 && aHeight > 0)
+  {
+    mBitmap = new BBitmap(r, B_RGBA32, true);
+    if (!mBitmap)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-               if (mBitmap->InitCheck()!=B_OK) {
-                       //for some reason, the bitmap isn't valid - delete the
-                       //bitmap object, then indicate failure
-                       delete mBitmap;
-                       mBitmap=NULL;
-                       
-                       return NS_ERROR_FAILURE;
-	}
+    if (mBitmap->InitCheck()!=B_OK) {
+      //for some reason, the bitmap isn't valid - delete the
+      //bitmap object, then indicate failure
+      delete mBitmap;
+      mBitmap=NULL;
+      
+      return NS_ERROR_FAILURE;
+    }
 
-               mBitmap->AddChild(mView);
-       }
-
-	return NS_OK;
+    mBitmap->AddChild(mView);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: AcquireView(BView **aView) 
 {
-	*aView = mView;
+  *aView = mView;
 
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: AcquireBitmap(BBitmap **aBitmap)
 {
-	if(mBitmap && mBitmap->Lock())
-	{
-		mView->Sync();
-		mBitmap->Unlock();
-	}
-	*aBitmap = mBitmap;
+  if(mBitmap && mBitmap->Lock())
+  {
+    mView->Sync();
+    mBitmap->Unlock();
+  }
+  *aBitmap = mBitmap;
 
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: ReleaseView(void)
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: ReleaseBitmap(void)
 {
-	return NS_OK;
+  return NS_OK;
 }
