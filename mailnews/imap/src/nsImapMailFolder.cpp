@@ -2510,9 +2510,14 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxStatus(
     ChangeNumPendingUnread(numUnread - previousUnreadMessages);
     ChangeNumPendingTotalMessages(numUnread - previousUnreadMessages);
     if (numUnread > previousUnreadMessages)
+    {
       SetHasNewMessages(PR_TRUE);
+      SetNumNewMessages(numUnread - previousUnreadMessages);
+      SetBiffState(nsMsgBiffState_NewMail);
+    }
     SummaryChanged();
   }
+  SetPerformingBiff(PR_FALSE);
   m_numStatusUnseenMessages = numUnread;
   return NS_OK;
 }
@@ -5892,10 +5897,10 @@ nsresult nsImapMailFolder::GetClearedOriginalOp(nsIMsgOfflineImapOperation *op, 
 
 nsresult nsImapMailFolder::GetOriginalOp(nsIMsgOfflineImapOperation *op, nsIMsgOfflineImapOperation **originalOp, nsIMsgDatabase **originalDB)
 {
-	nsIMsgOfflineImapOperation *returnOp = nsnull;
-	
-	nsXPIDLCString sourceFolderURI;
-	op->GetSourceFolderURI(getter_Copies(sourceFolderURI));
+  nsIMsgOfflineImapOperation *returnOp = nsnull;
+  
+  nsXPIDLCString sourceFolderURI;
+  op->GetSourceFolderURI(getter_Copies(sourceFolderURI));
 	
   nsCOMPtr<nsIRDFResource> res;
   nsresult rv;
