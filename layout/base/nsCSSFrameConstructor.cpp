@@ -6635,7 +6635,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         return NS_OK;
       }
 
-      rv = ConstructFrame(shell, aPresContext, state, aChild, parentFrame, frameItems);
+      rv =  ConstructFrame(shell, aPresContext, state, aChild, parentFrame, frameItems);
 
       // XXX Bug 19949
       // Although select frame are inline we do not want to call
@@ -8650,6 +8650,11 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
 
+  PRBool fixBug28553 = PR_TRUE;
+  nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
+  if (pref) {
+	  pref->GetBoolPref("nglayout.bug28553", &fixBug28553);
+  }
   // We want to be able to quickly map from a content object to its frame,
   // but we also want to keep the hash table small. Therefore, many frames
   // are not added to the hash table when they're first created:
@@ -8659,8 +8664,8 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
   // - internal table frames (row-group, row, cell, col-group, col)
   //
   // That means we need to need to search for the frame
-  nsCOMPtr<nsIContent>   parentContent;
-  nsIFrame*              parentFrame;
+  nsCOMPtr<nsIContent>   parentContent; // we get this one time
+  nsIFrame*              parentFrame;   // this pointer is used to iterate across all frames that map to parentContent
 
   // Get the frame that corresponds to the parent content object.
   // Note that this may recurse indirectly, because the pres shell will
@@ -8668,7 +8673,7 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
   aContent->GetParent(*getter_AddRefs(parentContent));
   if (parentContent.get()) {
     aFrameManager->GetPrimaryFrameFor(parentContent, &parentFrame);
-    if (parentFrame) {
+    while (parentFrame) {
       // Search the child frames for a match
       *aFrame = FindFrameWithContent(aPresContext, parentFrame, parentContent.get(), aContent);
 
@@ -8676,6 +8681,24 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
       // next time this will be quick
       if (*aFrame) {
         aFrameManager->SetPrimaryFrameFor(aContent, *aFrame);
+        break;
+      }
+      else { 
+        if (!fixBug28553) {
+          break;  // the pref was set to skip the fix for bug 28553
+        }
+        // We need to check parentFrame's sibling frame as well 
+        parentFrame->GetNextSibling(&parentFrame); 
+        if (!parentFrame) {
+          break;
+        }
+        else {
+          nsCOMPtr<nsIContent>nextParentContent;
+          parentFrame->GetContent(getter_AddRefs(nextParentContent));
+          if (parentContent!=nextParentContent) {
+            break; 
+          }
+        } 
       }
     }
   }
