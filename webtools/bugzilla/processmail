@@ -194,10 +194,11 @@ sub ProcessOneBug {
                 $deptext .= $thisdiff;
             }
             $lastbug = $bug;
+            my $urlbase = Param("urlbase");
             $thisdiff =
-                "\nThis bug depends on bug $bug, which changed state.\n";
-            $thisdiff .=
-                "Bug $bug Summary: $summary\n\n";
+              "\nBug $id depends on bug $bug, which changed state.\n\n" . 
+              "Bug $bug Summary: $summary\n" . 
+              "${urlbase}show_bug.cgi?id=$bug\n\n"; 
             $thisdiff .= FormatTriple("What    ", "Old Value", "New Value");
             $thisdiff .= ('-' x 76) . "\n";
             $interestingchange = 0;
