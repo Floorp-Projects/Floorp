@@ -49,7 +49,8 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 NS_IMPL_ADDREF(nsWindow)
 NS_IMPL_RELEASE(nsWindow)
 
-extern XtAppContext gAppContext;
+//extern XtAppContext gAppContext;
+extern GtkWidget *gAppContext;
 
 //-------------------------------------------------------------------------
 //
@@ -262,8 +263,9 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
   gtk_widget_set_usize(mainWindow, aRect.width, aRect.height);
 
-//  mWidget = gtk_layout_new(FALSE,FALSE);
-  mWidget = gtk_label_new("foobar!");
+//  mWidget = ::gtk_layout_new(FALSE,FALSE);
+//  mWidget = gtk_label_new("foobar!");
+  mWidget = ::gtk_vbox_new(FALSE, FALSE);
   gtk_container_add(GTK_CONTAINER(mainWindow), mWidget);
 
   if (aParent) {
@@ -493,13 +495,19 @@ void nsWindow::RemoveChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Show(PRBool bState)
 {
-  g_print("nsWindow::Show called with %d", bState);
-  gtk_widget_show_all(gtk_widget_get_toplevel(mWidget));
+  g_print("nsWindow::Show called with %d\n", bState);
   mShown = bState;
   if (bState) {
-    gtk_widget_show(mWidget);
-    // gtk_widget_show_all(mWidget); Maybe?
+    //gtk_widget_show(mWidget);
+    if (mWidget)
+    {
+      GtkWidget *toplevel;
+      toplevel = gtk_widget_get_toplevel(mWidget);
+      if (toplevel)
+        gtk_widget_show_all(toplevel);
+    }
   } else {
+  // hide it
   }
 
 /*
