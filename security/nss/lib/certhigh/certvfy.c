@@ -1128,6 +1128,7 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
           case certUsageAnyCA:
           case certUsageProtectedObjectSigner:
           case certUsageUserCertImport:
+          case certUsageVerifyCA:
               /* these usages cannot be verified */
               NEXT_ITERATION();
 
