@@ -594,7 +594,7 @@ MsgAppCoreViewAllThreadMessages(JSContext *cx, JSObject *obj, uintN argc, jsval 
       return JS_FALSE;
     }
 
-		NS_RELEASE(db);
+		NS_IF_RELEASE(db);
   }
   else {
     JS_ReportError(cx, "Function ViewAllThreadMessages requires 1 parameter");

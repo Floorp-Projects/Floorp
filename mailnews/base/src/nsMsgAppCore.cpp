@@ -174,7 +174,7 @@ static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISuppo
 
 static nsresult AddView(nsIRDFCompositeDataSource *database, nsIMessageView **messageView)
 {
-	if(!messageView)
+	if(!messageView || !database)
 		return NS_ERROR_NULL_POINTER;
 
 	nsIRDFService* gRDFService = nsnull;
