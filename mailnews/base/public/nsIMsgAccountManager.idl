@@ -42,25 +42,46 @@ interface nsIMsgAccountManager : nsISupports {
    * in the account manager. You can only set the defaultAccount to an
    * account already in the account manager */
   attribute nsIMsgAccount defaultAccount;
+
+  /* ordered list of all accounts */
   readonly attribute nsISupportsArray accounts;
 
   /* Each account will have a unique key, which should not change
    * for the life of the account. */
   string getAccountKey(in nsIMsgAccount account);
 
-  /* utility routines to enumerate elements in all accounts */
+  /* list of all identities in all accounts */
   readonly attribute nsISupportsArray allIdentities;
+
+  /* list of all servers in all accounts */
   readonly attribute nsISupportsArray allServers;
 
-  /* lots of utility routines for finding specific identities and servers */
+  /* given the preferences key for an identity, find the identity in the
+   * account manager */
   nsIMsgIdentity GetIdentityByKey(in string key);
-      
+
+  /*
+   * search for the server with the given username, hostname, and type
+   * the type is the same as is specified in the preferences,
+   * i.e. "imap", "pop3", or "nntp"
+   */
   nsIMsgIncomingServer
       FindServer(in string userName, in string hostname, in string type);
+
+  /* given a server, return all identities in accounts that have this server */
   nsISupportsArray GetIdentitiesForServer(in nsIMsgIncomingServer server);
+
+  /* given an identity, return all servers in accounts that have
+   * this identity */
   nsISupportsArray GetServersForIdentity(in nsIMsgIdentity identity);
-  
+
+  /* load accounts kicks off the creation of all accounts. You do not need
+   * to call this and all accounts should be loaded lazily if you use any
+   * of the above.
+   */
   void LoadAccounts();
+
+  /* unload accounts frees all the account manager data structures */
   void UnloadAccounts();
 };
 

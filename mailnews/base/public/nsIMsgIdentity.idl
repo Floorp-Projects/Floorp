@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -20,21 +20,56 @@
 #include "nsIMsgSignature.idl"
 #include "nsIMsgVCard.idl"
 
+/*
+ * this interface contains all the personal outgoing mail information
+ * for a given person.
+ * each identity is identified by a key, which is the <id> string in
+ * the identity preferences, such as in
+ * mail.identity.<id>.replyTo
+ *
+ */
+
+
 [scriptable, uuid(D3B4A420-D5AC-11d2-806A-006008128C4E)]
 interface nsIMsgIdentity : nsISupports {
-  /* internal ID */
+  /* internal preferences ID */
   attribute string key;
-  
+
+  /*
+   *overriding display name for this identity. if this pref is not set
+   * then this will return some composed string from the fullname and email
+   */
   attribute string identityName;
+
+  /* user's full name, i.e. John Doe */
   attribute string fullName;
+
+  /* user's e-mail address, i.e. john@doe.com */
   attribute string email;
+
+  /* optional replyTo address, i.e. johnNOSPAM@doe.com */
   attribute string replyTo;
+
+  /* optional organization */
   attribute string organization;
+
+  /* should we compose with HTML by default? */
   attribute boolean composeHtml;
+
+  /* should we attach a signature by default? */
   attribute boolean attachSignature;
+
+  /* should we attach a vcard by default? */
   attribute boolean attachVCard;
+
+  /* the current signature */
   attribute nsIMsgSignature signature;
+
+  /* the current vcard */
   attribute nsIMsgVCard vCard;
+
+  /* the current SMTP server and hostname */
+  /* eventually these will be removed from the identity */
   attribute string smtpHostname;
   attribute string smtpUsername;
 };

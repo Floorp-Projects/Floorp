@@ -20,30 +20,55 @@
 
 interface nsIFolder;
 
-/* Interface for incoming mail/news host */
+/*
+ * Interface for incoming mail/news host
+ * this is the base interface for all mail server types (imap, pop, nntp, etc)
+ * often you will want to add extra interfaces that give you server-specific
+ * attributes and methods.
+ */
 
 [scriptable, uuid(60dcb100-e3f2-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgIncomingServer : nsISupports {
 
+  /* internal pref key */
   attribute string key;
-  
+
+  /* pretty name - should be "userid on hostname" if this pref is not set */
   attribute string prettyName;
-  
+
+  /* hostname of the server */
   attribute string hostName;
+
+  /* userid to log into the server */
   attribute string username;
+
+  /* server type, i.e. "pop3", "imap", "nntp", etc */
   readonly attribute string type;
-  
+
+  /* should we remember the password? */
   attribute boolean rememberPassword;
+
+  /* the password to login with (in cleartext for now) */
   attribute string password;
 
+  /* should we download whole messages when biff goes off? */
   attribute boolean downloadOnBiff;
+
+  /* should we biff the server? */
   attribute boolean doBiff;
+
+  /* how often to biff */
   attribute long biffMinutes;
 
+  /* the on-disk path to message storage for this server */
   attribute string localPath;
+
+  /* the RDF URI for the root mail folder */
   readonly attribute string serverURI;
 
+  /* the root folder for this server */
   attribute nsIFolder RootFolder;
 
+  /* do a biff */
   void PerformBiff();
 };
