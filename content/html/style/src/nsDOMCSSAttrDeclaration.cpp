@@ -82,7 +82,7 @@ nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAString& aPropertyName,
     rv = decl->RemoveProperty(prop, val);
 
     if (NS_SUCCEEDED(rv)) {
-      rv = SetCSSDeclaration(decl, PR_TRUE);
+      rv = SetCSSDeclaration(decl, PR_TRUE, PR_TRUE);
     } else {
       // RemoveProperty will throw in all sorts of situations -- eg if
       // the property is a shorthand one.  Do not propagate its return
@@ -102,13 +102,20 @@ nsDOMCSSAttributeDeclaration::DropReference()
 
 nsresult
 nsDOMCSSAttributeDeclaration::SetCSSDeclaration(nsCSSDeclaration* aDecl,
-                                                PRBool aNotify)
+                                                PRBool aNotify,
+                                                PRBool aDeclOwnedByRule)
 {
   NS_ASSERTION(mContent, "Must have content node to set the decl!");
+  NS_PRECONDITION(aDecl, "Null decl!");
     
   nsCOMPtr<nsICSSStyleRule> cssRule;
   nsresult rv = NS_NewCSSStyleRule(getter_AddRefs(cssRule), nsCSSSelector());
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    if (!aDeclOwnedByRule) {
+      aDecl->RuleAbort();
+    }
+    return rv;
+  }
     
   cssRule->SetDeclaration(aDecl);
   cssRule->SetWeight(PR_INT32_MAX);
@@ -138,9 +145,8 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
     else if (aAllocate) {
       result = NS_NewCSSDeclaration(aDecl);
       if (NS_SUCCEEDED(result)) {
-        result = SetCSSDeclaration(*aDecl, PR_FALSE);
+        result = SetCSSDeclaration(*aDecl, PR_FALSE, PR_FALSE);
         if (NS_FAILED(result)) {
-          (*aDecl)->RuleAbort();
           *aDecl = nsnull;
         }
       }
@@ -229,7 +235,7 @@ nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAString& aPropName,
   result = cssParser->ParseProperty(aPropName, aPropValue, baseURI, decl,
                                     &uselessHint);
   if (NS_SUCCEEDED(result)) {
-    result = SetCSSDeclaration(decl, PR_TRUE);
+    result = SetCSSDeclaration(decl, PR_TRUE, PR_TRUE);
   }
 
   if (cssLoader) {
@@ -287,7 +293,7 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAString& aDecl,
                                                 &uselessHint);
   
   if (NS_SUCCEEDED(result)) {
-    result = SetCSSDeclaration(decl, PR_TRUE);
+    result = SetCSSDeclaration(decl, PR_TRUE, PR_TRUE);
   }
 
   if (cssLoader) {
