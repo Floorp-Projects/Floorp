@@ -1836,7 +1836,7 @@ JSBool JS_ValueToInt32(JSContext *cx, jsval v, int32 *ip);
       </PARAM>
     </SYNTAX>
     <DESCRIPTION>
-      <C>JS_ValueToInt32</C> converts a specified JS value, <C>v</C>, to a JS double, and then to a 32-bit integer, if it fits. If the double is out of range, <C>JS_ValueToInt32</C> reports an error and conversion fails. The double rounded to the nearest integer value.<P/>
+      <C>JS_ValueToInt32</C> converts a specified JS value, <C>v</C>, to a 32-bit integer (-2147483648 to 2147483647). If <C>v</C> is NaN, or a double and out of the 32-bit range, <C>JS_ValueToInt32</C> reports an error and conversion fails. A double is rounded to the nearest integer value.<P/>
       The actual conversion is performed by the object's convert operation. The converted value is stored in the <C>int32</C> pointed to by <C>ip</C>.<P/>
       You can convert a JS value to an integer if the JS value to convert is a <C>JSVAL_INT</C>, <C>JSVAL_DOUBLE</C>, or <C>JSVAL_BOOLEAN</C>. If the JS value is a <C>JSVAL_STRING</C> that contains numeric values and signs only, conversion also succeeds. If the JS value is a <C>JSVAL_OBJECT</C>, conversion is successful if the object's convert operation returns a primitive value that can be converted.<P/>
       If the conversion is successful, <C>JS_ValueToInt32</C> returns <I><C>JS_TRUE</C></I>. Otherwise, it reports an error and returns <I><C>JS_FALSE</C></I>.<P/>
