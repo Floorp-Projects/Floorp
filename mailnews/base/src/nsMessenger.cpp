@@ -380,17 +380,17 @@ void nsMessenger::InitializeFolderRoot()
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = mailSession->GetCurrentServer(getter_AddRefs(server));
     
-    char * folderRoot=nsnull;
+    nsCOMPtr<nsIFileSpec> folderRoot;
     if (NS_SUCCEEDED(rv))
-        rv = server->GetLocalPath(&folderRoot);
+        rv = server->GetLocalPath(getter_AddRefs(folderRoot));
     
     if (NS_SUCCEEDED(rv)) {
         // everyone should have a inbox so let's
         // tack that folder name on to the root path...
-        m_folderPath = folderRoot;
-        m_folderPath += "Inbox";
+        rv = folderRoot->GetFileSpec(&m_folderPath);
+        if (NS_SUCCEEDED(rv))
+          m_folderPath += "Inbox";
     } // if we have a folder root for the current server
-    if (folderRoot) PL_strfree(folderRoot);
     
     // create Undo/Redo Transaction Manager
     NS_WITH_SERVICE (nsIComponentManager, compMgr, kComponentManagerCID, &rv);

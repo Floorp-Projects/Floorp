@@ -105,7 +105,7 @@ put_hash(Pop3UidlHost* host, PLHashTable* table, const char* key, char value)
 static Pop3UidlHost* 
 net_pop3_load_state(const char* searchhost, 
                     const char* searchuser,
-                    const char* mailDirectory)
+                    nsIFileSpec *mailDirectory)
 {
   char* buf;
   char* newStr;
@@ -131,7 +131,8 @@ net_pop3_load_state(const char* searchhost,
 	return NULL;
   }
 
-  nsFileSpec fileSpec(mailDirectory);
+  nsFileSpec fileSpec;
+  mailDirectory->GetFileSpec(&fileSpec);
   fileSpec += "popstate.dat";
 
   nsInputFileStream fileStream(fileSpec);
@@ -238,11 +239,12 @@ net_pop3_write_mapper(PLHashEntry* he, PRIntn msgindex, void* arg)
 }
 
 static void
-net_pop3_write_state(Pop3UidlHost* host, const char* mailDirectory)
+net_pop3_write_state(Pop3UidlHost* host, nsIFileSpec *mailDirectory)
 {
   PRInt32 len = 0;
 
-  nsFileSpec fileSpec(mailDirectory);
+  nsFileSpec fileSpec;
+  mailDirectory->GetFileSpec(&fileSpec);
   fileSpec += "popstate.dat";
 
   nsOutputFileStream outFileStream(fileSpec, PR_WRONLY | PR_CREATE_FILE |
@@ -283,7 +285,7 @@ extern void KillPopData(char* data);
 
 char* ReadPopData(char *hostname, 
                   char* username, 
-                  char* mailDirectory)
+                  nsIFileSpec* mailDirectory)
 {
 	Pop3UidlHost *uidlHost = NULL;
 	if(!username || !*username)
@@ -293,7 +295,7 @@ char* ReadPopData(char *hostname,
 	return (char*) uidlHost;
 }
 
-void SavePopData(char *data, char* mailDirectory)
+static void SavePopData(char *data, nsIFileSpec* mailDirectory)
 {
 	Pop3UidlHost *host = (Pop3UidlHost*) data;
 
@@ -511,7 +513,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
     m_nsIPop3URL->GetPop3Sink(getter_AddRefs(m_nsIPop3Sink));
 
 	nsCOMPtr<nsIPop3IncomingServer> popServer;
-    char* mailDirectory = 0;
+  nsCOMPtr<nsIFileSpec> mailDirectory;
 
 	nsXPIDLCString host;
 	aURL->GetHost(getter_Copies(host));
@@ -520,12 +522,11 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(popServer);
     if (server)
 	{
-        rv = server->GetLocalPath(&mailDirectory);
+        rv = server->GetLocalPath(getter_AddRefs(mailDirectory));
 		server->SetServerBusy(PR_TRUE); // the server is now busy
 	}
 
     m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
-    PL_strfree(mailDirectory);
 
 	m_pop3ConData->biffstate = nsMsgBiffState_NoMail;
 
@@ -2237,7 +2238,7 @@ nsPop3Protocol::CommitState(PRBool remove_last_entry)
     
     if (!m_pop3ConData->only_check_for_new_mail) {
         nsresult rv;
-        char* mailDirectory = 0;
+        nsCOMPtr<nsIFileSpec> mailDirectory;
 
         // get the mail directory
         nsCOMPtr<nsIPop3IncomingServer> popServer;
@@ -2248,13 +2249,12 @@ nsPop3Protocol::CommitState(PRBool remove_last_entry)
             do_QueryInterface(popServer, &rv);
         if (NS_FAILED(rv)) return -1;
                 
-        rv = server->GetLocalPath(&mailDirectory);
+        rv = server->GetLocalPath(getter_AddRefs(mailDirectory));
         if (NS_FAILED(rv)) return -1;
 
         // write the state in the mail directory
         net_pop3_write_state(m_pop3ConData->uidlinfo,
                              mailDirectory);
-        PL_strfree(mailDirectory);
         
     }
     return 0;

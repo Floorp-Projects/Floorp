@@ -1336,13 +1336,7 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity)
     mailDir->CreateDir();
   }
   
-  char *str = nsnull;
-  mailDir->GetNativePath(&str);
-  
-  if (str && *str) {
-    server->SetLocalPath(str);
-    PR_FREEIF(str);
-  }
+  server->SetLocalPath(mailDir);
   
   rv = mailDir->Exists(&dirExists);
   if (NS_FAILED(rv)) return rv;
@@ -1441,14 +1435,8 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   if (!dirExists) {
     mailDir->CreateDir();
   }
-  
-  char *str = nsnull;
-  mailDir->GetNativePath(&str);
-  
-  if (str && *str) {
-    server->SetLocalPath(str);
-    PR_FREEIF(str);
-  }
+
+  server->SetLocalPath(mailDir);
   
   rv = mailDir->Exists(&dirExists);
   if (NS_FAILED(rv)) return rv;
@@ -1671,13 +1659,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(imapMailDir));
   if (NS_FAILED(rv)) return rv;
 
-  char *str = nsnull;
-  imapMailDir->GetNativePath(&str);
-
-  if (str && *str) {
-    server->SetLocalPath(str);
-    PR_FREEIF(str);
-  }
+  server->SetLocalPath(imapMailDir);
   
   rv = imapMailDir->Exists(&dirExists);
   if (NS_FAILED(rv)) return rv;
@@ -1987,14 +1969,8 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	rv = NS_NewFileSpecWithSpec(thisNewsHostsDir, getter_AddRefs(newsDir));
 	if (NS_FAILED(rv)) return rv;
 
-	char *path_str = nsnull;
-	newsDir->GetNativePath(&path_str);
-	
-	if (path_str && *path_str) {
-		server->SetLocalPath(path_str);
-		PR_FREEIF(path_str);
-	}
-	
+    server->SetLocalPath(newsDir);
+		
 	rv = newsDir->Exists(&dirExists);
 	if (NS_FAILED(rv)) return rv;
     	

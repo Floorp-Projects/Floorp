@@ -33,64 +33,13 @@ class nsIMsgFolderCache;
 
 class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
  public:
-  NS_DECL_ISUPPORTS
-
   nsMsgIncomingServer();
   virtual ~nsMsgIncomingServer();
 
-  /* attribute string key; */
-  NS_IMETHOD GetKey(char * *aKey);
-  NS_IMETHOD SetKey(char * aKey);
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIMSGINCOMINGSERVER
   
-   /* attribute string prettyName; */
-  NS_IMETHOD GetPrettyName(PRUnichar * *aPrettyName);
-  NS_IMETHOD SetPrettyName(PRUnichar * aPrettyName);
-
-  /* attribute string hostName; */
-  NS_IMETHOD GetHostName(char * *aHostName);
-  NS_IMETHOD SetHostName(char * aHostName);
-
-  /* attribute string userName; */
-  NS_IMETHOD GetUsername(char * *aUserName);
-  NS_IMETHOD SetUsername(char * aUserName);
-
-  /* attribute string type; */
-  NS_IMETHOD GetType(char * *aType);
-  NS_IMETHOD SetType(char * aType);
-  
-  /* attribute boolean rememberPassword; */
-  NS_IMETHOD GetRememberPassword(PRBool *aRememberPassword);
-  NS_IMETHOD SetRememberPassword(PRBool aRememberPassword);
-  
-  /* attribute string password; */
-  NS_IMETHOD GetPassword(PRBool aWithUI, char * *aPassword);
-  NS_IMETHOD SetPassword(const char * aPassword);
-  
-  /* attribute boolean doBiff; */
-  NS_IMETHOD GetDoBiff(PRBool *aDoBiff);
-  NS_IMETHOD SetDoBiff(PRBool aDoBiff);
-
-  /* attribute long biffMinutes; */
-  NS_IMETHOD GetBiffMinutes(PRInt32 *aBiffMinutes);
-  NS_IMETHOD SetBiffMinutes(PRInt32 aBiffMinutes);
-
-  /* attribute boolean downloadOnBiff; */
-  NS_IMETHOD GetDownloadOnBiff(PRBool *aDownloadOnBiff);
-  NS_IMETHOD SetDownloadOnBiff(PRBool aDownloadOnBiff);
-
-  /* attribute string localPath; */
-  NS_IMETHOD GetLocalPath(char * *aLocalPath);
-  NS_IMETHOD SetLocalPath(char * aLocalPath);
-
-  /* attribute string rootFolder; */
-  NS_IMETHOD GetRootFolder(nsIFolder * *aRootFolder);
-  NS_IMETHOD SetRootFolder(nsIFolder * aRootFolder);
-
-  /* attribute boolean gettingNewMail; */
-  NS_IMPL_CLASS_GETSET(ServerBusy, PRBool, m_serverBusy);
-
-  NS_IMETHOD PerformBiff();
-  NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
 private:
   nsIPref *m_prefs;
   char *m_serverKey;
@@ -107,56 +56,11 @@ protected:
   NS_IMETHOD SetPrefPassword(char * aPassword);
   
   nsCOMPtr <nsIFolder> m_rootFolder;
-  nsresult getCharPref(const char *pref, char **);
   nsresult getDefaultCharPref(const char *pref, char **);
-  nsresult setCharPref(const char *pref, const char *);
-  
-  nsresult getBoolPref(const char *pref, PRBool *);
   nsresult getDefaultBoolPref(const char *pref, PRBool *);
-  nsresult setBoolPref(const char *pref, PRBool);
-  
-  nsresult getIntPref(const char *pref, PRInt32 *);
   nsresult getDefaultIntPref(const char *pref, PRInt32 *);
-  nsresult setIntPref(const char *pref, PRInt32);
-
-	void CreateRootFolder();
+  
+  nsresult CreateRootFolder();
 
 };
-
-/* some useful macros to implement accessors */
-#define NS_IMPL_SERVERPREF_STR(_class, _postfix, _prefname)	\
-NS_IMETHODIMP								   	\
-_class::Get##_postfix(char **retval)   			\
-{											   	\
-  return getCharPref(_prefname, retval);		\
-}												\
-NS_IMETHODIMP	   								\
-_class::Set##_postfix(char *chvalue)			\
-{												\
-  return setCharPref(_prefname, chvalue);		\
-}
-
-#define NS_IMPL_SERVERPREF_BOOL(_class, _postfix, _prefname)\
-NS_IMETHODIMP								   	\
-_class::Get##_postfix(PRBool *retval)   		\
-{											   	\
-  return getBoolPref(_prefname, retval);		\
-}												\
-NS_IMETHODIMP	   								\
-_class::Set##_postfix(PRBool bvalue)			\
-{												\
-  return setBoolPref(_prefname, bvalue);		\
-}
-
-#define NS_IMPL_SERVERPREF_INT(_class, _postfix, _prefname)\
-NS_IMETHODIMP								   	\
-_class::Get##_postfix(PRInt32 *retval)   		\
-{											   	\
-  return getIntPref(_prefname, retval);			\
-}												\
-NS_IMETHODIMP	   								\
-_class::Set##_postfix(PRInt32 ivalue)			\
-{												\
-  return setIntPref(_prefname, ivalue);			\
-}
 

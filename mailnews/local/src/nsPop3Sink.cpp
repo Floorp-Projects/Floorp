@@ -129,12 +129,12 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_popServer);
     if (!server) return NS_ERROR_UNEXPECTED;
 
-    char *mailDirectory;
-    rv = server->GetLocalPath(&mailDirectory);
+    nsCOMPtr<nsIFileSpec> mailDirectory;
+    rv = server->GetLocalPath(getter_AddRefs(mailDirectory));
     if (NS_FAILED(rv)) return rv;
     
-    nsFileSpec fileSpec(mailDirectory);
-    PL_strfree(mailDirectory);
+    nsFileSpec fileSpec;
+    mailDirectory->GetFileSpec(&fileSpec);
     fileSpec += "Inbox";
     m_outFileStream = new nsIOFileStream(fileSpec /*, PR_CREATE_FILE */);
 	if (m_outFileStream)

@@ -16,19 +16,22 @@
  * Reserved.
  */
 
+#include "prmem.h"
+#include "plstr.h"
+#include "prprf.h"
+
+#include "nsCOMPtr.h"
+#include "nsIPref.h"
+
+#include "nsXPIDLString.h"
+
 #include "nsIPop3IncomingServer.h"
 #include "nsPop3IncomingServer.h"
 #include "nsMsgIncomingServer.h"
 #include "nsIPop3Service.h"
+#include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
 #include "nsMsgFolderFlags.h"
-
-#include "nsIPref.h"
-
-#include "prmem.h"
-#include "plstr.h"
-#include "prprf.h"
-#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 
@@ -39,37 +42,24 @@ class nsPop3IncomingServer : public nsMsgIncomingServer,
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIPOP3INCOMINGSERVER
 
     nsPop3IncomingServer();
     virtual ~nsPop3IncomingServer();
-    
-    NS_IMETHOD GetRootFolderPath(char **);
-    NS_IMETHOD SetRootFolderPath(char *);
 
-    NS_IMETHOD GetLeaveMessagesOnServer(PRBool *);
-    NS_IMETHOD SetLeaveMessagesOnServer(PRBool);
-
-    NS_IMETHOD GetDeleteMailLeftOnServer(PRBool *);
-    NS_IMETHOD SetDeleteMailLeftOnServer(PRBool);
-
-    NS_IMETHOD GetServerURI(char * *uri);
-
-	NS_IMETHOD PerformBiff();
+    NS_IMETHOD GetServerURI(char **);
+    NS_IMETHOD PerformBiff();
     
 private:
-    char *m_rootFolderPath;
     PRBool m_leaveOnServer;
     PRBool m_deleteMailLeftOnServer;
+
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(nsPop3IncomingServer,
-                            nsMsgIncomingServer,
-                            nsIPop3IncomingServer);
-
-                            
+NS_IMPL_ISUPPORTS_INHERITED(nsPop3IncomingServer,nsMsgIncomingServer,
+                            nsIPop3IncomingServer)
 
 nsPop3IncomingServer::nsPop3IncomingServer() :
-    m_rootFolderPath(0),
     m_leaveOnServer(PR_FALSE),
     m_deleteMailLeftOnServer(PR_FALSE)
 {    
@@ -78,12 +68,10 @@ nsPop3IncomingServer::nsPop3IncomingServer() :
 
 nsPop3IncomingServer::~nsPop3IncomingServer()
 {
-    PR_FREEIF(m_rootFolderPath);
 }
 
-NS_IMPL_SERVERPREF_STR(nsPop3IncomingServer,
-                       RootFolderPath,
-                       "directory")
+
+
 
 NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
                         LeaveMessagesOnServer,

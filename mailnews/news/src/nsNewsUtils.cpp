@@ -207,17 +207,11 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (NS_FAILED(rv)) return rv;
 
   // now ask the server what it's root is
-  char *localPath = nsnull;
-  rv = server->GetLocalPath(&localPath);
+  nsCOMPtr<nsIFileSpec> localPath;
+  rv = server->GetLocalPath(getter_AddRefs(localPath));
   if (NS_FAILED(rv)) return rv;
 
-#ifdef DEBUG_NEWS
-  printf("local path = %s\n", localPath);
-#endif
-  pathResult = localPath;
-
-  // mismatched free?
-  if (localPath) PL_strfree(localPath);
+  localPath->GetFileSpec(&pathResult);
 
   if (!pathResult.Exists())
     pathResult.CreateDir();

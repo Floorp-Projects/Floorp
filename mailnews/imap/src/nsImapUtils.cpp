@@ -122,16 +122,15 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   
   if (NS_FAILED(rv)) return rv;
   
-  char *localPath = nsnull;
   if (server) {
-    rv = server->GetLocalPath(&localPath);
+    nsCOMPtr<nsIFileSpec> localPath;
+    rv = server->GetLocalPath(getter_AddRefs(localPath));
+    if (NS_FAILED(rv)) return rv;
     
-    if (NS_SUCCEEDED(rv)) {
-		nsFileSpec dirCreator(localPath, PR_TRUE);	// force parent directories to be created
-      pathResult = localPath;
-      pathResult.CreateDirectory();
-      PL_strfree(localPath);
-    }
+    rv = localPath->GetFileSpec(&pathResult);
+    if (NS_FAILED(rv)) return rv;
+    
+    pathResult.CreateDirectory();
   }
 
 	if (NS_FAILED(rv)) 

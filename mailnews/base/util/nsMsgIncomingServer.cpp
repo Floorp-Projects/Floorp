@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -56,9 +56,9 @@ nsMsgIncomingServer::~nsMsgIncomingServer()
     PR_FREEIF(m_serverKey)
 }
 
-NS_IMPL_ISUPPORTS(nsMsgIncomingServer, GetIID());
+NS_IMPL_ISUPPORTS1(nsMsgIncomingServer, nsIMsgIncomingServer)
 
-
+NS_IMPL_GETSET(nsMsgIncomingServer, ServerBusy, PRBool, m_serverBusy)
 NS_IMPL_GETTER_STR(nsMsgIncomingServer::GetKey, m_serverKey)
 
 
@@ -93,8 +93,10 @@ nsMsgIncomingServer::GetRootFolder(nsIFolder * *aRootFolder)
       *aRootFolder = m_rootFolder;
       NS_ADDREF(*aRootFolder);
     } else {
-			CreateRootFolder();
-			*aRootFolder = m_rootFolder;
+      nsresult rv = CreateRootFolder();
+      if (NS_FAILED(rv)) return rv;
+      
+      *aRootFolder = m_rootFolder;
       NS_IF_ADDREF(*aRootFolder);
     }
 	return NS_OK;
@@ -120,13 +122,20 @@ NS_IMETHODIMP nsMsgIncomingServer::WriteToFolderCache(nsIMsgFolderCache *folderC
 	return rv;
 }
 
-void nsMsgIncomingServer::CreateRootFolder()
+NS_IMETHODIMP
+nsMsgIncomingServer::GetServerURI(char **)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsMsgIncomingServer::CreateRootFolder()
 {
 	nsresult rv;
 			  // get the URI from the incoming server
   nsXPIDLCString serverUri;
   rv = GetServerURI(getter_Copies(serverUri));
-  if (NS_FAILED(rv)) return ;
+  if (NS_FAILED(rv)) return rv;
 
   NS_WITH_SERVICE(nsIRDFService, rdf,
                         kRDFServiceCID, &rv);
@@ -135,11 +144,12 @@ void nsMsgIncomingServer::CreateRootFolder()
   // RDF will create the server resource if it doesn't already exist
   nsCOMPtr<nsIRDFResource> serverResource;
   rv = rdf->GetResource(serverUri, getter_AddRefs(serverResource));
-  if (NS_FAILED(rv)) return;
+  if (NS_FAILED(rv)) return rv;
 
   // make incoming server know about its root server folder so we 
   // can find sub-folders given an incoming server.
-  m_rootFolder = do_QueryInterface(serverResource);
+  m_rootFolder = do_QueryInterface(serverResource, &rv);
+  return rv;
 }
 
 char *
@@ -159,7 +169,7 @@ nsMsgIncomingServer::getDefaultPrefName(const char *fullPrefName)
 
 
 nsresult
-nsMsgIncomingServer::getBoolPref(const char *prefname,
+nsMsgIncomingServer::GetBoolValue(const char *prefname,
                                  PRBool *val)
 {
   char *fullPrefName = getPrefName(m_serverKey, prefname);
@@ -188,7 +198,7 @@ nsMsgIncomingServer::getDefaultBoolPref(const char *prefname,
 }
 
 nsresult
-nsMsgIncomingServer::setBoolPref(const char *prefname,
+nsMsgIncomingServer::SetBoolValue(const char *prefname,
                                  PRBool val)
 {
   nsresult rv;
@@ -199,7 +209,7 @@ nsMsgIncomingServer::setBoolPref(const char *prefname,
 
   if (NS_SUCCEEDED(rv) &&
       val == defaultValue)
-    rv = m_prefs->ClearUserPref(fullPrefName);
+    m_prefs->ClearUserPref(fullPrefName);
   else
     rv = m_prefs->SetBoolPref(fullPrefName, val);
   
@@ -209,7 +219,7 @@ nsMsgIncomingServer::setBoolPref(const char *prefname,
 }
 
 nsresult
-nsMsgIncomingServer::getIntPref(const char *prefname,
+nsMsgIncomingServer::GetIntValue(const char *prefname,
                                 PRInt32 *val)
 {
   char *fullPrefName = getPrefName(m_serverKey, prefname);
@@ -219,6 +229,28 @@ nsMsgIncomingServer::getIntPref(const char *prefname,
   if (NS_FAILED(rv))
     rv = getDefaultIntPref(prefname, val);
   
+  return rv;
+}
+
+nsresult
+nsMsgIncomingServer::GetFileValue(const char* prefname,
+                                  nsIFileSpec **spec)
+{
+  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsresult rv = m_prefs->GetFilePref(fullPrefName, spec);
+  PR_Free(fullPrefName);
+
+  return rv;
+}
+
+nsresult
+nsMsgIncomingServer::SetFileValue(const char* prefname,
+                                    nsIFileSpec *spec)
+{
+  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsresult rv = m_prefs->SetFilePref(fullPrefName, spec, PR_FALSE);
+  PR_Free(fullPrefName);
+
   return rv;
 }
 
@@ -239,7 +271,7 @@ nsMsgIncomingServer::getDefaultIntPref(const char *prefname,
 }
 
 nsresult
-nsMsgIncomingServer::setIntPref(const char *prefname,
+nsMsgIncomingServer::SetIntValue(const char *prefname,
                                  PRInt32 val)
 {
   nsresult rv;
@@ -249,7 +281,7 @@ nsMsgIncomingServer::setIntPref(const char *prefname,
   rv = getDefaultIntPref(prefname, &defaultVal);
   
   if (NS_SUCCEEDED(rv) && defaultVal == val)
-    rv = m_prefs->ClearUserPref(fullPrefName);
+    m_prefs->ClearUserPref(fullPrefName);
   else
     rv = m_prefs->SetIntPref(fullPrefName, val);
   
@@ -259,7 +291,7 @@ nsMsgIncomingServer::setIntPref(const char *prefname,
 }
 
 nsresult
-nsMsgIncomingServer::getCharPref(const char *prefname,
+nsMsgIncomingServer::GetCharValue(const char *prefname,
                                  char  **val)
 {
   char *fullPrefName = getPrefName(m_serverKey, prefname);
@@ -288,17 +320,23 @@ nsMsgIncomingServer::getDefaultCharPref(const char *prefname,
 }
 
 nsresult
-nsMsgIncomingServer::setCharPref(const char *prefname,
+nsMsgIncomingServer::SetCharValue(const char *prefname,
                                  const char * val)
 {
   nsresult rv;
   char *fullPrefName = getPrefName(m_serverKey, prefname);
 
+  if (!val) {
+    m_prefs->ClearUserPref(fullPrefName);
+    return NS_OK;
+  }
+  
   char *defaultVal=nsnull;
   rv = getDefaultCharPref(prefname, &defaultVal);
+  
   if (NS_SUCCEEDED(rv) &&
       PL_strcmp(defaultVal, val) == 0)
-    rv = m_prefs->ClearUserPref(fullPrefName);
+    m_prefs->ClearUserPref(fullPrefName);
   else
     rv = m_prefs->SetCharPref(fullPrefName, val);
   
@@ -313,7 +351,7 @@ NS_IMETHODIMP
 nsMsgIncomingServer::GetPrettyName(PRUnichar **retval) {
 
   char *val=nsnull;
-  nsresult rv = getCharPref("name", &val);
+  nsresult rv = GetCharValue("name", &val);
   if (NS_FAILED(rv)) return rv;
 
   nsString prettyName;
@@ -349,8 +387,20 @@ NS_IMETHODIMP
 nsMsgIncomingServer::SetPrettyName(PRUnichar *value) {
   // this is lossy. Not sure what to do.
   nsCString str(value);
-  return setCharPref("name", str.GetBuffer());
+  return SetCharValue("name", str.GetBuffer());
 }
+
+NS_IMETHODIMP
+nsMsgIncomingServer::ToString(PRUnichar** aResult) {
+  nsString servername("[nsIMsgIncomingServer: ");
+  servername += m_serverKey;
+  servername += "]";
+  
+  *aResult = servername.ToNewUnicode();
+  NS_ASSERTION(*aResult, "no server name!");
+  return NS_OK;
+}
+  
 
 NS_IMETHODIMP nsMsgIncomingServer::SetPassword(const char * aPassword)
 {
@@ -437,6 +487,52 @@ NS_IMETHODIMP nsMsgIncomingServer::GetPassword(PRBool aWithUI, char ** aPassword
 	return rv;
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
+{
+    nsresult rv;
+    rv = GetFileValue("directory", aLocalPath);
+    if (NS_SUCCEEDED(rv) && *aLocalPath) return rv;
+
+
+    
+    nsXPIDLCString type;
+    GetType(getter_Copies(type));
+
+    nsCString pathPref("mail.root.");
+    pathPref += type;
+    
+    nsCOMPtr<nsIFileSpec> path;
+    rv = m_prefs->GetFilePref(pathPref, getter_AddRefs(path));
+    if (NS_FAILED(rv)) return rv;
+    
+    path->CreateDir();
+    
+    nsXPIDLCString hostname;
+    rv = GetHostName(getter_Copies(hostname));
+    if (NS_FAILED(rv)) return rv;
+
+    path->AppendRelativeUnixPath(hostname);
+
+    if (NS_FAILED(rv)) return rv;
+    SetLocalPath(path);
+    
+    *aLocalPath = path;
+    NS_ADDREF(*aLocalPath);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::SetLocalPath(nsIFileSpec *spec)
+{
+    if (spec) {
+        spec->CreateDir();
+        return SetFileValue("directory", spec);
+    }
+    return NS_OK;
+}
+
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
@@ -444,7 +540,6 @@ NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DoBiff, "check_new_mail");
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, RememberPassword, "remember_password");
-NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, LocalPath, "directory");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Type, "type");
 
 /* what was this called in 4.x? */

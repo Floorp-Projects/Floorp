@@ -173,12 +173,10 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
   
   // now ask the server what it's root is
   // and begin pathResult with the mailbox root
-  char *localPath;
-  rv = server->GetLocalPath(&localPath);
+  nsCOMPtr<nsIFileSpec> localPath;
+  rv = server->GetLocalPath(getter_AddRefs(localPath));
   if (NS_SUCCEEDED(rv)) 
-    pathResult = localPath;
-
-  if (localPath) PL_strfree(localPath);
+    localPath->GetFileSpec(&pathResult);
 
   const char *curPos = uriStr + PL_strlen(rootURI);
   if (curPos) {

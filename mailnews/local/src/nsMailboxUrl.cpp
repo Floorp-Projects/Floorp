@@ -83,13 +83,13 @@ static char *nsMailboxGetURI(const char *nativepath)
         if (!server) continue;
 
         // get the path string, convert it to an nsFilePath
-        char *nativeServerPath;
-        rv = server->GetLocalPath(&nativeServerPath);
+        nsCOMPtr<nsIFileSpec> nativeServerPath;
+        rv = server->GetLocalPath(getter_AddRefs(nativeServerPath));
         if (NS_FAILED(rv)) continue;
         
-        nsFileSpec spec(nativeServerPath);
+        nsFileSpec spec;
+        nativeServerPath->GetFileSpec(&spec);
         nsFilePath serverPath(spec);
-        PL_strfree(nativeServerPath);
         
         // check if filepath begins with serverPath
         PRInt32 len = PL_strlen(serverPath);
@@ -126,7 +126,7 @@ nsMailboxUrl::nsMailboxUrl()
  
 nsMailboxUrl::~nsMailboxUrl()
 {
-	delete m_filePath;
+	if (m_filePath) delete m_filePath;
 
 	PR_FREEIF(m_messageID);
 }

@@ -17,6 +17,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIFileSpec.idl"
 
 interface nsIFolder;
 interface nsIMsgFolderCache;
@@ -53,8 +54,8 @@ interface nsIMsgIncomingServer : nsISupports {
 	  want us to bring up UI to ask for the password. If you pass
 	  in false, we will return an empty password if we don't know 
 	  it already and we will NOT ask the user */
-  void GetPassword(in boolean aWithUI, out string aPassword);
-  void SetPassword(in string aPassword);
+  string getPassword(in boolean aWithUI);
+  void setPassword(in string aPassword);
 
   /* should we download whole messages when biff goes off? */
   attribute boolean downloadOnBiff;
@@ -66,7 +67,7 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute long biffMinutes;
 
   /* the on-disk path to message storage for this server */
-  attribute string localPath;
+  attribute nsIFileSpec localPath;
 
   /* the RDF URI for the root mail folder */
   readonly attribute string serverURI;
@@ -84,5 +85,71 @@ interface nsIMsgIncomingServer : nsISupports {
 
   void WriteToFolderCache(in nsIMsgFolderCache folderCache);
 
+  /* access to generic attributes */
+  boolean getBoolValue(in string attr);
+  void setBoolValue(in string attr, in boolean value);
 
+  string getCharValue(in string attr);
+  void setCharValue(in string attr, in string value);
+
+  long getIntValue(in string attr);
+  void setIntValue(in string attr, in long value);
+
+  nsIFileSpec getFileValue(in string attr);
+  void setFileValue(in string attr, in nsIFileSpec value);
+  
+  wstring toString();
 };
+
+%{C++
+/* some useful macros to implement nsIMsgIncomingServer accessors */
+#define NS_IMPL_SERVERPREF_STR(_class, _postfix, _prefname)	\
+NS_IMETHODIMP								   	\
+_class::Get##_postfix(char **retval)   			\
+{											   	\
+  return GetCharValue(_prefname, retval);		\
+}												\
+NS_IMETHODIMP	   								\
+_class::Set##_postfix(char *chvalue)			\
+{												\
+  return SetCharValue(_prefname, chvalue);		\
+}
+
+#define NS_IMPL_SERVERPREF_BOOL(_class, _postfix, _prefname)\
+NS_IMETHODIMP								   	\
+_class::Get##_postfix(PRBool *retval)   		\
+{											   	\
+  return GetBoolValue(_prefname, retval);		\
+}												\
+NS_IMETHODIMP	   								\
+_class::Set##_postfix(PRBool bvalue)			\
+{												\
+  return SetBoolValue(_prefname, bvalue);		\
+}
+
+#define NS_IMPL_SERVERPREF_INT(_class, _postfix, _prefname)\
+NS_IMETHODIMP								   	\
+_class::Get##_postfix(PRInt32 *retval)   		\
+{											   	\
+  return GetIntValue(_prefname, retval);			\
+}												\
+NS_IMETHODIMP	   								\
+_class::Set##_postfix(PRInt32 ivalue)			\
+{												\
+  return SetIntValue(_prefname, ivalue);			\
+}
+
+#define NS_IMPL_SERVERPREF_FILE(_class, _postfix, _prefname)\
+NS_IMETHODIMP								   	\
+_class::Get##_postfix(nsIFileSpec **retval)   		\
+{											   	\
+  return GetFileValue(_prefname, retval);			\
+}												\
+NS_IMETHODIMP	   								\
+_class::Set##_postfix(nsIFileSpec* ivalue)			\
+{												\
+  return SetFileValue(_prefname, ivalue);			\
+}
+
+
+%}
