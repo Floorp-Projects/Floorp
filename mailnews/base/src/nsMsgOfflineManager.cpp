@@ -309,10 +309,9 @@ NS_IMETHODIMP nsMsgOfflineManager::GoOnline(PRBool sendUnsentMessages, PRBool pl
   m_playbackOfflineImapOps = playbackOfflineImapOperations;
   m_curOperation = eGoingOnline;
   SetWindow(aMsgWindow);
+  SetOnlineState(PR_TRUE);
   if (!m_sendUnsentMessages && !playbackOfflineImapOperations)
-  {
-    return SetOnlineState(PR_TRUE);
-  }
+    return NS_OK;
   else
     AdvanceToNextState(NS_OK);
   return NS_OK;
