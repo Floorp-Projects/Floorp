@@ -37,7 +37,6 @@ Rights Reserved.
 	  		  onselect="top.ThreadPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
               onclick="ThreadPaneOnClick(event);"
               onblur="goOnEvent(this,'blur')"
-   	          ondragover="return DragOverTree(event);"
               ondraggesture="return BeginDragThreadTree(event);"
               ondragdrop="return DropOnThreadTree(event);"
               containment="http://home.netscape.com/NC-rdf#MessageChild"
