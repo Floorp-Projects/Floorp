@@ -166,7 +166,7 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
                             NS_REINTERPRET_CAST(const nsStyleStruct*&, text));
 
   if (text->mUnicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
-    nsresult rv;
+    nsresult rv = NS_OK;
     nsIFrame *directionalFrame = nsnull;
     if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
       rv = NS_NewDirectionalFrame(&directionalFrame, kRLO);
@@ -225,13 +225,13 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
   PRInt32                  temp;
   PRInt32                  frameIndex     = -1;
   PRInt32                  frameCount     = mLogicalFrames.Count();
-  PRInt32                  contentOffset;        // offset within current frame
+  PRInt32                  contentOffset  = 0;   // offset within current frame
   PRInt32                  lineOffset     = 0;   // offset within mBuffer
   PRInt32                  logicalLimit   = 0;
   PRInt32                  numRun         = -1;
   PRUint8                  charType;
   PRUint8                  prevType       = eCharType_LeftToRight;
-  PRBool                   isTextFrame;
+  PRBool                   isTextFrame    = PR_FALSE;
   nsIFrame*                frame = nsnull;
   nsIFrame*                nextBidi;
   nsITextFrame*            textFrame;
@@ -589,11 +589,13 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
 #ifdef FIX_FOR_BUG_40882
   PRInt32 ch;
   PRInt32 charType;
-  nscoord width, dWidth, alefWidth = 0, dx = 0;
+  nscoord width, dWidth, alefWidth, dx;
   PRUnichar buf[2] = {ALEF, 0x0000};
 
   PRBool isBidiSystem;
   PRUint32 hints = 0;
+
+  dWidth = alefWidth = dx = 0;
   aRendContext->GetHints(hints);
   isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
 #endif // bug
