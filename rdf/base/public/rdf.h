@@ -70,7 +70,7 @@ static const char kURI##prefix##_##name[] = ns #name
 #define RDF_NAMESPACE_URI  "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define WEB_NAMESPACE_URI  "http://home.netscape.com/WEB-rdf#"
 #define NC_NAMESPACE_URI   "http://home.netscape.com/NC-rdf#"
-
+#define DEVMO_NAMESPACE_URI_PREFIX "http://developer.mozilla.org/rdf/vocabulary/"
 
 /**
  * @name Standard RDF error codes
@@ -103,6 +103,7 @@ static const char kURI##prefix##_##name[] = ns #name
 #define NS_RDF_DATASOURCE_CONTRACTID_PREFIX         NS_RDF_DATASOURCE_CONTRACTID "?name="
 #define NS_RDF_RESOURCE_FACTORY_CONTRACTID          "@mozilla.org/rdf/resource-factory;1"
 #define NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX   NS_RDF_RESOURCE_FACTORY_CONTRACTID "?name="
+#define NS_RDF_INFER_DATASOURCE_CONTRACTID_PREFIX   NS_RDF_CONTRACTID "/infer-datasource;1?engine="
 
 // contract ID is in the form
 // @mozilla.org/rdf/delegate-factory;1?key=<key>&scheme=<scheme>

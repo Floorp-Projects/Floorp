@@ -301,7 +301,8 @@ public:
 protected:
     // We are an observer of the composite datasource. The cycle is
     // broken when the document is destroyed.
-    nsCOMPtr<nsIRDFCompositeDataSource> mDB;
+    nsCOMPtr<nsIRDFDataSource> mDB;
+    nsCOMPtr<nsIRDFCompositeDataSource> mCompDB;
 
     // Circular reference, broken when the document is destroyed.
     nsCOMPtr<nsIContent> mRoot;

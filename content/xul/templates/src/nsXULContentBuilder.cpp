@@ -802,7 +802,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 rv = NS_ERROR_UNEXPECTED;
 
                 if (gXULSortService && isResourceElement) {
-                    rv = gXULSortService->InsertContainerNode(mDB, &sortState,
+                    rv = gXULSortService->InsertContainerNode(mCompDB, &sortState,
                                                               mRoot, aResourceNode,
                                                               aRealNode, realKid,
                                                               aNotify);
