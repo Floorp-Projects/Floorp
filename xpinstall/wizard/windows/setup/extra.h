@@ -215,6 +215,7 @@ BOOL              ShowAdditionalOptionsDialog(void);
 DWORD             GetPreviousUnfinishedState(void);
 void              RefreshIcons();
 void              NeedToInstallFiles(LPSTR szProdDir);
+void              UpdateGREAppInstallerProgress(int percent);
 
 #endif /* _EXTRA_H_ */
 

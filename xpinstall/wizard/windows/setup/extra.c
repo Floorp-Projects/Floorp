@@ -74,6 +74,17 @@ typedef struct structVer
   ULONGLONG ullBuild;
 } verBlock;
 
+//GRE app installer progress bar integration
+typedef LONG (CALLBACK* LPFNDLLFUNC)(LPCTSTR,INT);
+
+#define GRE_APP_INSTALLER_PROXY_DLL      "ProgUpd.dll"
+#define GRE_PROXY_UPD_FUNC               "StdUpdateProgress"
+#define GRE_INSTALLER_ID                 "gre"
+
+LPSTR szProxyDLLPath;
+LPFNDLLFUNC lpfnProgressUpd;
+HINSTANCE hGREAppInstallerProxyDLL;
+
 void  TranslateVersionStr(LPSTR szVersion, verBlock *vbVersion);
 BOOL  GetFileVersion(LPSTR szFile, verBlock *vbVersion);
 int   CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew);
@@ -402,6 +413,12 @@ char *GetSetupCurrentDownloadFile(char *szCurrentDownloadFile,
   return(szCurrentDownloadFile);
 }
 
+void UpdateGREAppInstallerProgress(int percent)
+{
+  if (lpfnProgressUpd)
+    lpfnProgressUpd(GRE_INSTALLER_ID, percent);
+}
+
 BOOL UpdateFile(char *szInFilename, char *szOutFilename, char *szIgnoreStr)
 {
   FILE *ifp;
@@ -622,6 +639,9 @@ HRESULT Initialize(HINSTANCE hInstance)
   if((szOSTempDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
+  if((szProxyDLLPath = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
   if((szFileIniConfig = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
@@ -692,6 +712,23 @@ HRESULT Initialize(HINSTANCE hInstance)
     }
     RemoveBackSlash(szTempDir);
   }
+
+  /* Check if we need to load GRE App installer proxy DLL;
+     this DLL lives in the Windows temp directory when the 
+     external GRE app installer is running. If found, it 
+     will be loaded and fed with incremental progress updates.
+  */  
+
+  GetTempPath(MAX_BUF, szProxyDLLPath);
+  AppendBackSlash(szProxyDLLPath, MAX_BUF);
+  strcat(szProxyDLLPath, GRE_APP_INSTALLER_PROXY_DLL);
+  
+  if (FileExists(szProxyDLLPath) != FALSE)
+    hGREAppInstallerProxyDLL = LoadLibrary(szProxyDLLPath);
+  
+  if (hGREAppInstallerProxyDLL != NULL)
+    lpfnProgressUpd = (LPFNDLLFUNC) GetProcAddress(hGREAppInstallerProxyDLL, GRE_PROXY_UPD_FUNC);
+                             
 
   hbmpBoxChecked         = LoadBitmap(hSetupRscInst, MAKEINTRESOURCE(IDB_BOX_CHECKED));
   hbmpBoxCheckedDisabled = LoadBitmap(hSetupRscInst, MAKEINTRESOURCE(IDB_BOX_CHECKED_DISABLED));
@@ -7637,6 +7674,7 @@ void DeInitialize()
 
   FreeMemory(&szTempDir);
   FreeMemory(&szOSTempDir);
+  FreeMemory(&szProxyDLLPath);
   FreeMemory(&szSetupDir);
   FreeMemory(&szFileIniConfig);
   FreeMemory(&szFileIniInstall);
@@ -7648,6 +7686,8 @@ void DeInitialize()
   DeleteObject(sgInstallGui.definedFont);
 
   FreeLibrary(hSetupRscInst);
+  if (hGREAppInstallerProxyDLL != NULL) 
+    FreeLibrary(hGREAppInstallerProxyDLL);
 }
 
 char *GetSaveInstallerPath(char *szBuf, DWORD dwBufSize)
