@@ -121,7 +121,7 @@ NS_IMETHODIMP
 nsXBLEventHandler::BindingAttached()
 {
   nsresult ret;
-  if (mEventName.EqualsWithConversion("bindingattached")) {
+  if (mEventName == NS_LITERAL_STRING("bindingattached")) {
     nsMouseEvent event;
     event.eventStructType = NS_EVENT;
     event.message = NS_MENU_ACTION;
@@ -178,201 +178,201 @@ nsresult nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
 nsresult nsXBLEventHandler::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  if (!mEventName.EqualsWithConversion("keyup"))
+  if (mEventName != NS_LITERAL_STRING("keyup"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (KeyEventMatched(keyEvent))
-    ExecuteHandler(NS_ConvertASCIItoUCS2("keyup"), aKeyEvent);
+    ExecuteHandler(NS_LITERAL_STRING("keyup"), aKeyEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  if (!mEventName.EqualsWithConversion("keydown"))
+  if (mEventName != NS_LITERAL_STRING("keydown"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (KeyEventMatched(keyEvent))
-    ExecuteHandler(NS_ConvertASCIItoUCS2("keydown"), aKeyEvent);
+    ExecuteHandler(NS_LITERAL_STRING("keydown"), aKeyEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  if (!mEventName.EqualsWithConversion("keypress"))
+  if (mEventName != NS_LITERAL_STRING("keypress"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (KeyEventMatched(keyEvent))
-    ExecuteHandler(NS_ConvertASCIItoUCS2("keypress"), aKeyEvent);
+    ExecuteHandler(NS_LITERAL_STRING("keypress"), aKeyEvent);
   return NS_OK;
 }
    
 nsresult nsXBLEventHandler::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  if (!mEventName.EqualsWithConversion("mousedown"))
+  if (mEventName != NS_LITERAL_STRING("mousedown"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler(NS_ConvertASCIItoUCS2("mousedown"), aMouseEvent);
+    ExecuteHandler(NS_LITERAL_STRING("mousedown"), aMouseEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  if (!mEventName.EqualsWithConversion("mouseup"))
+  if (mEventName != NS_LITERAL_STRING("mouseup"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler(NS_ConvertASCIItoUCS2("mouseup"), aMouseEvent);
+    ExecuteHandler(NS_LITERAL_STRING("mouseup"), aMouseEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  if (!mEventName.EqualsWithConversion("click"))
+  if (mEventName != NS_LITERAL_STRING("click"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler(NS_ConvertASCIItoUCS2("click"), aMouseEvent);
+    ExecuteHandler(NS_LITERAL_STRING("click"), aMouseEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
-  if (!mEventName.EqualsWithConversion("dblclick"))
+  if (mEventName != NS_LITERAL_STRING("dblclick"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler(NS_ConvertASCIItoUCS2("dblclick"), aMouseEvent);
+    ExecuteHandler(NS_LITERAL_STRING("dblclick"), aMouseEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::MouseOver(nsIDOMEvent* aMouseEvent)
 {
-  if (!mEventName.EqualsWithConversion("mouseover"))
+  if (mEventName != NS_LITERAL_STRING("mouseover"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler(NS_ConvertASCIItoUCS2("mouseover"), aMouseEvent);
+    ExecuteHandler(NS_LITERAL_STRING("mouseover"), aMouseEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::MouseOut(nsIDOMEvent* aMouseEvent)
 {
-  if (!mEventName.EqualsWithConversion("mouseout"))
+  if (mEventName != NS_LITERAL_STRING("mouseout"))
     return NS_OK;
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
-    ExecuteHandler(NS_ConvertASCIItoUCS2("mouseout"), aMouseEvent);
+    ExecuteHandler(NS_LITERAL_STRING("mouseout"), aMouseEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::Focus(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.EqualsWithConversion("focus"))
+  if (mEventName != NS_LITERAL_STRING("focus"))
     return NS_OK;
 
-  ExecuteHandler(NS_ConvertASCIItoUCS2("focus"), aEvent);
+  ExecuteHandler(NS_LITERAL_STRING("focus"), aEvent);
   return NS_OK;
 }
 
 
 nsresult nsXBLEventHandler::Blur(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.EqualsWithConversion("blur"))
+  if (mEventName != NS_LITERAL_STRING("blur"))
     return NS_OK;
 
-  ExecuteHandler(NS_ConvertASCIItoUCS2("blur"), aEvent);
+  ExecuteHandler(NS_LITERAL_STRING("blur"), aEvent);
   return NS_OK;
 }
 
 
 nsresult nsXBLEventHandler::Action(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.EqualsWithConversion("command"))
+  if (mEventName != NS_LITERAL_STRING("command"))
     return NS_OK;
 
-  ExecuteHandler(NS_ConvertASCIItoUCS2("command"), aEvent);
+  ExecuteHandler(NS_LITERAL_STRING("command"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::Create(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.EqualsWithConversion("create"))
+  if (mEventName != NS_LITERAL_STRING("create"))
     return NS_OK;
 
-  ExecuteHandler(NS_ConvertASCIItoUCS2("create"), aEvent);
+  ExecuteHandler(NS_LITERAL_STRING("create"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::Close(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.EqualsWithConversion("close"))
+  if (mEventName != NS_LITERAL_STRING("close"))
     return NS_OK;
 
-  ExecuteHandler(NS_ConvertASCIItoUCS2("close"), aEvent);
+  ExecuteHandler(NS_LITERAL_STRING("close"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::Broadcast(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.EqualsWithConversion("broadcast"))
+  if (mEventName != NS_LITERAL_STRING("broadcast"))
     return NS_OK;
 
-  ExecuteHandler(NS_ConvertASCIItoUCS2("broadcast"), aEvent);
+  ExecuteHandler(NS_LITERAL_STRING("broadcast"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::CommandUpdate(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.EqualsWithConversion("commandupdate"))
+  if (mEventName != NS_LITERAL_STRING("commandupdate"))
     return NS_OK;
 
-  ExecuteHandler(NS_ConvertASCIItoUCS2("commandupdate"), aEvent);
+  ExecuteHandler(NS_LITERAL_STRING("commandupdate"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::Overflow(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.EqualsWithConversion("overflow"))
+  if (mEventName != NS_LITERAL_STRING("overflow"))
     return NS_OK;
 
-  ExecuteHandler(NS_ConvertASCIItoUCS2("overflow"), aEvent);
+  ExecuteHandler(NS_LITERAL_STRING("overflow"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::Underflow(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.EqualsWithConversion("underflow"))
+  if (mEventName != NS_LITERAL_STRING("underflow"))
     return NS_OK;
 
-  ExecuteHandler(NS_ConvertASCIItoUCS2("underflow"), aEvent);
+  ExecuteHandler(NS_LITERAL_STRING("underflow"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::OverflowChanged(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.EqualsWithConversion("underflowchanged"))
+  if (mEventName != NS_LITERAL_STRING("underflowchanged"))
     return NS_OK;
 
-  ExecuteHandler(NS_ConvertASCIItoUCS2("underflowchanged"), aEvent);
+  ExecuteHandler(NS_LITERAL_STRING("underflowchanged"), aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLEventHandler::Destroy(nsIDOMEvent* aEvent)
 {
-  if (!mEventName.EqualsWithConversion("destroy"))
+  if (mEventName != NS_LITERAL_STRING("destroy"))
     return NS_OK;
 
-  ExecuteHandler(NS_ConvertASCIItoUCS2("destroy"), aEvent);
+  ExecuteHandler(NS_LITERAL_STRING("destroy"), aEvent);
   return NS_OK;
 }
 
@@ -645,7 +645,7 @@ nsXBLEventHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
 }
 
 NS_IMETHODIMP
-nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEvent)
+nsXBLEventHandler::ExecuteHandler(const nsAReadableString & aEventName, nsIDOMEvent* aEvent)
 {
   if (!mHandlerElement)
     return NS_ERROR_FAILURE;
@@ -775,8 +775,8 @@ nsXBLEventHandler::RemoveEventHandlers()
     if (mNextHandler)
       mNextHandler->RemoveEventHandlers();
 
-    if (mEventName.EqualsWithConversion("bindingattached") ||
-        mEventName.EqualsWithConversion("bindingdetached")) {
+    if (mEventName == NS_LITERAL_STRING("bindingattached") ||
+        mEventName == NS_LITERAL_STRING("bindingdetached")) {
       // Release and drop.
       NS_RELEASE_THIS();
       return;
@@ -786,7 +786,7 @@ nsXBLEventHandler::RemoveEventHandlers()
     PRBool useCapture = PR_FALSE;
     nsAutoString capturer;
     mHandlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kCapturerAtom, capturer);
-    if (capturer.EqualsWithConversion("true"))
+    if (capturer == NS_LITERAL_STRING("true"))
       useCapture = PR_TRUE;
 
     // XXX Will potentially be comma-separated

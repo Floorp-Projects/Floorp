@@ -443,7 +443,7 @@ nsXBLBinding::SetBindingElement(nsIContent* aElement)
   mBinding = aElement;
   nsAutoString inheritStyle;
   mBinding->GetAttribute(kNameSpaceID_None, kInheritStyleAtom, inheritStyle);
-  if (inheritStyle.EqualsWithConversion("false"))
+  if (inheritStyle == NS_LITERAL_STRING("false"))
     mInheritStyle = PR_FALSE;
 
   return NS_OK;
@@ -486,7 +486,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
   // See if there's an excludes attribute.
   nsAutoString excludes;
   content->GetAttribute(kNameSpaceID_None, kExcludesAtom, excludes);
-  if (!excludes.EqualsWithConversion("*")) {
+  if ( excludes != NS_LITERAL_STRING("*")) {
     PRInt32 childCount;
     aBoundElement->ChildCount(childCount);
     if (childCount > 0) {
@@ -533,7 +533,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
       nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(attribute));
       nsAutoString name;
       attr->GetName(name);
-      if (!name.EqualsWithConversion("excludes")) {
+      if (name  != NS_LITERAL_STRING("excludes")) {
         nsAutoString value;
         nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mBoundElement));
         element->GetAttribute(name, value);
@@ -613,12 +613,12 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
           nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
           nsAutoString attachType;
           child->GetAttribute(kNameSpaceID_None, kAttachToAtom, attachType);
-          if (attachType.EqualsWithConversion("document") || 
-              attachType.EqualsWithConversion("window"))
+          if (attachType == NS_LITERAL_STRING("document") || 
+              attachType == NS_LITERAL_STRING("window"))
           {
             nsCOMPtr<nsIDocument> boundDoc;
             mBoundElement->GetDocument(*getter_AddRefs(boundDoc));
-            if (attachType.EqualsWithConversion("window")) {
+            if (attachType == NS_LITERAL_STRING("window")) {
               nsCOMPtr<nsIScriptGlobalObject> global;
               boundDoc->GetScriptGlobalObject(getter_AddRefs(global));
               receiver = do_QueryInterface(global);
@@ -644,7 +644,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
             PRBool useCapture = PR_FALSE;
             nsAutoString capturer;
             child->GetAttribute(kNameSpaceID_None, kCapturerAtom, capturer);
-            if (capturer.EqualsWithConversion("true"))
+            if (capturer == NS_LITERAL_STRING("true"))
               useCapture = PR_TRUE;
 
             // Add the event listener.
@@ -828,7 +828,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
           void* setFunc = nsnull;
           uintN attrs = JSPROP_ENUMERATE;
 
-          if (readOnly.EqualsWithConversion("true"))
+          if (readOnly == NS_LITERAL_STRING("true"))
             attrs |= JSPROP_READONLY;
 
           // try for first <getter> tag
@@ -1452,7 +1452,7 @@ nsXBLBinding::IsInExcludesList(nsIAtom* aTag, const nsString& aList)
   nsAutoString element;
   aTag->ToString(element);
 
-  if (aList.EqualsWithConversion("*"))
+  if (aList == NS_LITERAL_STRING("*"))
       return PR_TRUE; // match _everything_!
 
   PRInt32 indx = aList.Find(element);
@@ -1598,35 +1598,35 @@ nsXBLBinding::GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
 PRBool
 nsXBLBinding::IsMouseHandler(const nsString& aName)
 {
-  return ((aName.EqualsWithConversion("click")) || (aName.EqualsWithConversion("dblclick")) || (aName.EqualsWithConversion("mousedown")) ||
-          (aName.EqualsWithConversion("mouseover")) || (aName.EqualsWithConversion("mouseout")) || (aName.EqualsWithConversion("mouseup")));
+  return ((aName == NS_LITERAL_STRING("click")) || (aName == NS_LITERAL_STRING("dblclick")) || (aName == NS_LITERAL_STRING("mousedown")) ||
+          (aName == NS_LITERAL_STRING("mouseover")) || (aName == NS_LITERAL_STRING("mouseout")) || (aName == NS_LITERAL_STRING("mouseup")));
 }
 
 PRBool
 nsXBLBinding::IsKeyHandler(const nsString& aName)
 {
-  return ((aName.EqualsWithConversion("keypress")) || (aName.EqualsWithConversion("keydown")) || (aName.EqualsWithConversion("keyup")));
+  return ((aName == NS_LITERAL_STRING("keypress")) || (aName == NS_LITERAL_STRING("keydown")) || (aName == NS_LITERAL_STRING("keyup")));
 }
 
 PRBool
 nsXBLBinding::IsFocusHandler(const nsString& aName)
 {
-  return ((aName.EqualsWithConversion("focus")) || (aName.EqualsWithConversion("blur")));
+  return ((aName == NS_LITERAL_STRING("focus")) || (aName == NS_LITERAL_STRING("blur")));
 }
 
 PRBool
 nsXBLBinding::IsXULHandler(const nsString& aName)
 {
-  return ((aName.EqualsWithConversion("create")) || (aName.EqualsWithConversion("destroy")) || (aName.EqualsWithConversion("broadcast")) ||
-          (aName.EqualsWithConversion("command")) || (aName.EqualsWithConversion("commandupdate")) || (aName.EqualsWithConversion("close")));
+  return ((aName == NS_LITERAL_STRING("create")) || (aName == NS_LITERAL_STRING("destroy")) || (aName == NS_LITERAL_STRING("broadcast")) ||
+          (aName == NS_LITERAL_STRING("command")) || (aName == NS_LITERAL_STRING("commandupdate")) || (aName == NS_LITERAL_STRING("close")));
 }
 
 PRBool
 nsXBLBinding::IsScrollHandler(const nsString& aName)
 {
-  return (aName.EqualsWithConversion("overflow") ||
-          aName.EqualsWithConversion("underflow") ||
-          aName.EqualsWithConversion("overflowchanged"));
+  return (aName == NS_LITERAL_STRING("overflow") ||
+          aName == NS_LITERAL_STRING("underflow") ||
+          aName == NS_LITERAL_STRING("overflowchanged"));
 }
 
 NS_IMETHODIMP
