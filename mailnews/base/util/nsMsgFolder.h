@@ -291,6 +291,7 @@ public:
 	NS_IMETHOD GetMsgDatabase(nsIMsgDatabase** aMsgDatabase);
 	NS_IMETHOD GetPath(nsIFileSpec * *aPath);
 
+	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 	NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 	NS_IMETHOD MarkAllMessagesRead(void);
 

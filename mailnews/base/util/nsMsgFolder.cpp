@@ -396,10 +396,10 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 				delete[] folderName;
 				return NS_OK;
 			}
-		delete[] folderName;
+			delete[] folderName;
 		}
-  }
-  return NS_OK;
+	}
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgFolder ** child)
@@ -1472,6 +1472,14 @@ nsMsgFolder::CopyFileMessage(nsIFileSpec* fileSpec,
                              nsIMsgCopyServiceListener* listener)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgFolder::MatchName(nsString *name, PRBool *matches)
+{
+	if (!matches)
+		return NS_ERROR_NULL_POINTER;
+	*matches = mName.EqualsIgnoreCase(*name);
+	return NS_OK;
 }
 
 nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char* newValue)
