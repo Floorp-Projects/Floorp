@@ -70,8 +70,8 @@ class NS_COM nsString :
 #endif
   public nsStr {
 
-protected:
 #ifdef NEW_STRING_APIS
+protected:
   virtual const void* Implementation() const { return "nsString"; }
   virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
   virtual PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 );
@@ -942,6 +942,7 @@ class NS_COM NS_ConvertASCIItoUCS2
     public:
       NS_ConvertASCIItoUCS2( const char* );
       NS_ConvertASCIItoUCS2( const char*, PRUint32 );
+      NS_ConvertASCIItoUCS2( char );
 #if 0
 #ifdef NEW_STRING_APIS
       NS_ConvertASCIItoUCS2( const nsAReadableCString& );
@@ -950,6 +951,10 @@ class NS_COM NS_ConvertASCIItoUCS2
       NS_ConvertASCIItoUCS2( const nsCString& );
 #endif
 #endif
+
+    private:
+        // NOT TO BE IMPLEMENTED
+      NS_ConvertASCIItoUCS2( PRUnichar );
   };
 
 #define NS_ConvertToString NS_ConvertASCIItoUCS2
