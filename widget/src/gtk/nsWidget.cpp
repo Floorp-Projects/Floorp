@@ -731,7 +731,7 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
 NS_IMETHODIMP nsWidget::Update(void)
 {
-  if (! mWidget)
+  if (!mWidget)
     return NS_OK;
 
   if (mUpdateArea.width && mUpdateArea.height) {
@@ -1087,6 +1087,8 @@ nsWidget::debug_GetName(GtkWidget * aGtkWidget)
 }
 
 #endif // NS_DEBUG
+
+
 //////////////////////////////////////////////////////////////////
 
 //-------------------------------------------------------------------------

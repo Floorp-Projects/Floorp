@@ -425,7 +425,8 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
                          debug_GetName(mWidget),
                          (PRInt32) debug_GetRenderXID(mWidget));
 #endif // NS_DEBUG
-    
+
+
     event.renderingContext = GetRenderingContext();
     result = DispatchWindowEvent(&event);
     
@@ -497,6 +498,11 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
 
   mShown = bState;
 
+
+  // don't show if we are too big
+  if (mIsTooSmall && bState == PR_FALSE)
+    return NS_OK;
+
   // show
   if (bState)
   {
@@ -547,46 +553,37 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
 {
-  if (mIsToplevel && mShell)
-  {
-    if (aCapture)
-    {
-      printf("grabbing mShell\n");
-      mGrabTime = gdk_time_get();
+#ifdef DEBUG_pavlov
+  GtkWidget *grabWidget;
 
-      gdk_pointer_grab (mShell->window, PR_TRUE,(GdkEventMask)
-                        (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-                         GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                         GDK_POINTER_MOTION_MASK),
-                        (GdkWindow*) NULL, (GdkCursor*) NULL, mGrabTime);
-    }
-    else
-    {
-      printf("ungrabbing mShell\n");
-      gdk_pointer_ungrab(mGrabTime);
-    }
+  if (mIsToplevel && mShell)
+    grabWidget = mShell;
+  else
+    grabWidget = mWidget;
+
+  if (aCapture)
+  {
+    printf("grabbing mShell\n");
+    mGrabTime = gdk_time_get();
+
+    gdk_pointer_grab (GDK_ROOT_WINDOW(), PR_TRUE,(GdkEventMask)
+                      (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                       GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+                       GDK_POINTER_MOTION_MASK),
+                      (GdkWindow*) NULL, (GdkCursor*) NULL, mGrabTime);
+    gtk_grab_add(grabWidget);
   }
   else
-  { 
-    if (aCapture)
-    {
-      printf("grabbing mWidget\n");
-      mGrabTime = gdk_time_get();
-
-      gdk_pointer_grab (mWidget->window, PR_TRUE,(GdkEventMask)
-                        (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-                         GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                         GDK_POINTER_MOTION_MASK),
-                        (GdkWindow*) NULL, (GdkCursor*) NULL, mGrabTime);
-    }
-    else
-    {
-      printf("ungrabbing mWidget\n");
-      gdk_pointer_ungrab(mGrabTime);
-    }
+  {
+    printf("ungrabbing mShell\n");
+    gdk_pointer_ungrab(mGrabTime);
+    gtk_grab_remove(grabWidget);
   }
 
   return NS_OK;
+#else
+  return NS_ERROR_FAILURE;
+#endif
 }
 
 
@@ -603,7 +600,10 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
   {
     // do it the way it should be done period.
     if (!mParent)
-      gtk_widget_set_uposition(mShell, aX, aY);
+    {
+      if (mWindowType != eWindowType_toplevel)
+        gtk_widget_set_uposition(mShell, aX, aY);
+    }
     else
     {
       // *VERY* stupid hack to make gfx combo boxes work
@@ -637,7 +637,9 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
 NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-#if 0
+  PRBool nNeedToShow = PR_FALSE;
+
+#if 1
   printf("nsWindow::Resize %s (%p) to %d %d\n",
          (const char *) debug_GetName(mWidget),
          this,
@@ -652,14 +654,27 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   {
     if (mIsToplevel && mShell)
     {
-      if (!GTK_WIDGET_VISIBLE(mShell))
-      {
-        aWidth = 1;
-        aHeight = 1;
-      }
+      aWidth = 1;
+      aHeight = 1;
+      mIsTooSmall = PR_TRUE;
+      if (GTK_WIDGET_VISIBLE(mShell))
+        gtk_widget_hide(mShell);
     }
     else
-      return NS_OK;
+    {
+      aWidth = 1;
+      aHeight = 1;
+      mIsTooSmall = PR_TRUE;
+      gtk_widget_hide(mWidget);
+    }
+  }
+  else
+  {
+    if (mIsTooSmall)
+    {
+      nNeedToShow = PR_TRUE;
+      mIsTooSmall = PR_FALSE;
+    }
   }
 
   if (mWidget) {
@@ -685,6 +700,14 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   alloc.x = 0;
   alloc.y = 0;
   handle_size_allocate(mWidget, &alloc, this);
+
+  if (nNeedToShow)
+  {
+    if (mIsToplevel && mShell)
+      gtk_widget_show(mShell);
+    else
+      gtk_widget_show(mWidget);
+  }
 
   return NS_OK;
 }
