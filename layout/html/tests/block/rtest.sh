@@ -14,20 +14,21 @@ nodots() {
   echo $NODOTS_OUT
 }
 
-dirs="	base			\
-	bugs			\
-	printing			\
-	../table/core		\
-	../table/viewer_tests	\
-	../table/bugs		\
-	../table/marvin		\
-	../table/other		\
-	../table/dom		\
-	../table/printing	\
-        ../formctls/base        \
-        ../formctls/bugs        \
-	../style/bugs           \
-	../xbl"
+dirs="  base \
+        bugs \
+        printing \
+        ../table/core \
+        ../table/viewer_tests \
+        ../table/bugs \
+        ../table/marvin \
+        ../table/other \
+        ../table/dom \
+        ../table/printing \
+        ../formctls/base \
+        ../formctls/bugs \
+        ../style/bugs \
+        ../xbl \
+        "
 
 # This doesn't appear to work on Linux right now; needs support for a
 # null driver, perhaps?
