@@ -1075,8 +1075,20 @@ if ($action eq 'update') {
     CheckProduct($productold);
     my $product_id = get_product_id($productold);
 
-    if ($maxvotesperbug !~ /^\d+$/ || $maxvotesperbug <= 0) {
+    if (!detaint_natural($maxvotesperbug) || $maxvotesperbug == 0) {
         print "Sorry, the max votes per bug must be a positive integer.";
+        PutTrailer($localtrailer);
+        exit;
+    }
+
+    if (!detaint_natural($votesperuser)) {
+        print "Sorry, the votes per user must be an integer >= 0.";
+        PutTrailer($localtrailer);
+        exit;
+    }
+
+    if (!detaint_natural($votestoconfirm)) {
+        print "Sorry, the votes to confirm must be an integer >= 0.";
         PutTrailer($localtrailer);
         exit;
     }
