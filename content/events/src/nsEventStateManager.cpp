@@ -66,6 +66,8 @@
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIObserverService.h"
 #include "prlog.h"
+#include "nsIDocShell.h"
+#include "nsIMarkupDocumentViewer.h"
 
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0  
@@ -692,6 +694,29 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
   }
 } // GenerateDragGesture
 
+nsresult
+nsEventStateManager::ChangeTextSize(PRInt32 change)
+{
+  nsCOMPtr<nsISupports> pcContainer;
+  mPresContext->GetContainer(getter_AddRefs(pcContainer));
+  NS_ENSURE_TRUE(pcContainer, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(pcContainer));
+  NS_ENSURE_TRUE(docshell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIContentViewer> cv;
+  docshell->GetContentViewer(getter_AddRefs(cv));
+  NS_ENSURE_TRUE(cv, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIMarkupDocumentViewer> mv(do_QueryInterface(cv));
+  NS_ENSURE_TRUE(mv, NS_ERROR_FAILURE);
+
+  float textzoom;
+  mv->GetTextZoom(&textzoom);
+  mv->SetTextZoom(textzoom + 0.1*change);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext, 
@@ -823,6 +848,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
 
       switch (action) {
       case MOUSE_SCROLL_N_LINES:
+      case MOUSE_SCROLL_PAGE:
         {
           nsIView* focusView = nsnull;
           nsIScrollableView* sv = nsnull;
@@ -833,44 +859,29 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
                                                       aTargetFrame, aView, sv,
                                                       sf, focusView)))
             {
-              if (sv)
-                {
+              if (sv) {
+                if (action == MOUSE_SCROLL_N_LINES)
                   sv->ScrollByLines(numLines);
-                  ForceViewUpdate(focusView);
-                }
-              else if (sf)
-                sf->ScrollByLines(aPresContext, numLines);
-            }
-        // We may end up with a different PresContext than we started with.
-        // If so, we are done with it now, so release it.
-
-        if (mwPresContext != aPresContext)
-          NS_RELEASE(mwPresContext);
-
-        }
-
-        break;
-
-      case MOUSE_SCROLL_PAGE:
-        {
-          nsIView* focusView = nsnull;
-          nsIScrollableView* sv = nsnull;
-          nsISelfScrollingFrame* sf = nsnull;
-          
-          if (NS_SUCCEEDED(GetScrollableFrameOrView(aPresContext, aTargetFrame,
-                                                    aView, sv, sf, focusView)))
-            {
-              if (sv)
-                {
+                else
                   sv->ScrollByPages((numLines > 0) ? 1 : -1);
-                  ForceViewUpdate(focusView);
-                }
-              else if (sf)
-                sf->ScrollByPages(aPresContext, (numLines > 0) ? 1 : -1);
+                ForceViewUpdate(focusView);
+              } else if (sf) {
+                if (action == MOUSE_SCROLL_N_LINES)
+                  sf->ScrollByLines(aPresContext, numLines);
+                else
+                  sf->ScrollByPages(aPresContext, (numLines > 0) ? 1 : -1);
+              }
             }
+
+           // We may end up with a different PresContext than we started
+           // with. If so, we are done with it now, so release it.
+
+           if (mwPresContext != aPresContext)
+             NS_RELEASE(mwPresContext);
         }
+
         break;
-        
+
       case MOUSE_SCROLL_HISTORY:
         {
           nsCOMPtr<nsISupports> pcContainer;
@@ -888,9 +899,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         break;
 
       case MOUSE_SCROLL_TEXTSIZE:
-        {
+        ChangeTextSize((numLines > 0) ? 1 : -1);
         break;
-        }
       }
       *aStatus = nsEventStatus_eConsumeNoDefault;
 

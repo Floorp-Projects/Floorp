@@ -132,6 +132,7 @@ protected:
                                      nsIView* &focusView);
   void ForceViewUpdate(nsIView* aView);
   nsresult getPrefService();
+  nsresult ChangeTextSize(PRInt32 change);
   // end mousewheel functions
 
   // routines for the d&d gesture tracking state machine

@@ -501,11 +501,11 @@ pref("security.policy.default.window.scriptglobals", "sameOrigin");
 pref("middlemouse.paste", false);
 pref("middlemouse.openNewWindow", false);
 
-/* 0=lines, 1=pages, 2=history */
+/* 0=lines, 1=pages, 2=history , 3=text size */
 pref("mousewheel.withnokey.action",0);
 pref("mousewheel.withnokey.numlines",1);	
 pref("mousewheel.withnokey.sysnumlines",true);
-pref("mousewheel.withcontrolkey.action",1);
+pref("mousewheel.withcontrolkey.action",3);
 pref("mousewheel.withcontrolkey.numlines",1);
 pref("mousewheel.withcontrolkey.sysnumlines",false);
 pref("mousewheel.withshiftkey.action",0);
