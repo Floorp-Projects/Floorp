@@ -24,3 +24,12 @@ interface nsIMsgLogonRedirector : nsISupports
   /* reply with logon redirection data. */
   void OnLogonRedirectionReply(in wstring pHost, in unsigned short pPort, in string pCookieData, in unsigned short pCookieSize);
 }; 
+
+/* this is the service we use to request a logon redirection */ 
+[scriptable, uuid(0c2e96ac-e0ae-11d3-a560-0060b0fc04b7)] 
+interface nsIMsgLogonRedirectionRequester : nsISupports 
+{ 
+ void Logon(in string userName, in string password, in nsIMsgLogonRedirector listener); 
+ void Logoff(); /* might not need this one */ 
+}; 
+
