@@ -36,7 +36,9 @@ else
 INSTALL_JS = unix-install.js
 endif
 
-ifneq ($(OS_ARCH), WINNT)
+# The following don't need a CPLUSPLUSRUNTIME defined:  WINNT, HP-UX
+# so filter them out.
+ifeq (,$(filter WINNT HP-UX,$(OS_ARCH)))
 ifeq ($(OS_ARCH), Linux)
 # On linux, we link with libstdc++ (we're always using egcs on linux, right?)
 CPLUSPLUSRUNTIME = -L /usr/lib -lstdc++ -lm
@@ -62,13 +64,6 @@ ifdef USE_PTHREADS
 # Replace OS_LIBS, because the order of libpthread, libdl, and libc are
 # very important. Otherwise you get horrible crashes.
 OS_LIBS = -lpthread -ldl -lc
-endif
-endif
-
-# Adding HP-UX Specific Fixes
-ifeq ($(OS_ARCH), HP-UX)
-ifdef USE_PTHREADS
-OS_LIBS += -lpthread
 endif
 endif
 
@@ -170,8 +165,11 @@ PROTOCOL_LIBS = -L$(MOZ_DIST)/lib -lprotocol
 
 # Adding HP-UX Specific Fixes
 ifeq ($(OS_ARCH), HP-UX)
-NSPR_LINK_LIBS = -L$(DIST)/lib -shared -lnspr4 -lplc4 -lplds4
+NSPR_LINK_LIBS = -L$(DIST)/lib -lnspr4 -lplc4 -lplds4
 XPCOM_LINK_LIBS = -lxpcom
+
+MKSHLIB = $(CCC) $(DSO_LDOPTS)
+MKPROG = $(CCC)
 endif
 
 EXTRA_LIBS += \
@@ -216,7 +214,7 @@ endif
 install::
 	$(NSINSTALL) -m 644 $(UI_DIST)/psm*.properties $(DIST)/bin/psmdata/ui
 	$(NSINSTALL) -m 644 ../doc/*.gif ../doc/*.html ../doc/*.htm $(DIST)/bin/psmdata/doc
-	$(NSINSTALL) -m 644 $(DIST)/lib/$(DLL_PREFIX)nssckbi.$(DLL_SUFFIX) $(DIST)/bin
+	$(NSINSTALL) -m 755 $(DIST)/lib/$(DLL_PREFIX)nssckbi.$(DLL_SUFFIX) $(DIST)/bin
 ifneq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -m 775 start-psm $(DIST)/bin
 endif
@@ -244,8 +242,8 @@ patch: $(PROGRAM)
 build_xpi: $(PROGRAM)
 	$(NSINSTALL) -m 644 ../ui/$(PLATFORM)/psm*.properties xpi/psm/psmdata/ui
 	$(NSINSTALL) -m 644 ../doc/*.gif ../doc/*.html ../doc/*.htm xpi/psm/psmdata/doc
-	$(NSINSTALL) -m 644 $(XPCOM_LIBS) xpi/psm 
-	$(NSINSTALL) -m 644 $(NSPR_LIBS) xpi/psm
+	$(NSINSTALL) -m 755 $(XPCOM_LIBS) xpi/psm 
+	$(NSINSTALL) -m 755 $(NSPR_LIBS) xpi/psm
 ifneq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -m 775 start-psm xpi/psm
 endif
@@ -256,7 +254,7 @@ ifeq ($(OS_ARCH), Linux)
 	cd $(PLATFORM); start-regxpcom
 	$(NSINSTALL) -m 644 $(PLATFORM)/component.reg xpi/psm
 endif
-	$(NSINSTALL) -m 666 $(PLATFORM)/components/*.* xpi/psm/components
+	$(NSINSTALL) -m 777 $(PLATFORM)/components/*.* xpi/psm/components
 	cp $(INSTALL_JS) xpi/install.js
 	cd xpi; zip -T -r ../$(PLATFORM)/psm.xpi psm install.js
 	rm -rf xpi

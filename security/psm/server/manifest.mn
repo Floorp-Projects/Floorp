@@ -53,12 +53,16 @@ CSRCS = \
 	profile.c \
 	prefs.c \
 	certsearch.c \
-	main.c     \
+	psmmain.c     \
 	autorenewal.c \
 	derprint.c \
 	msgthread.c \
 	sdrres.c \
 	$(NULL) 
+
+CPPSRCS = \
+	main.cpp	\
+	$(NULL)
 
 RESNAME = psm.rc
 
