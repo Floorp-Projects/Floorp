@@ -79,6 +79,7 @@ public:
 
     NS_IMETHOD OnDataAvailable(nsISupports* context,
                                nsIInputStream *aIStream, 
+                               PRUint32 aSourceOffset,
                                PRUint32 aLength);
 
     // nsMarshalingStreamListener methods:
@@ -240,11 +241,13 @@ public:
           mIStream(nsnull), mLength(0) {}
     virtual ~nsOnDataAvailableEvent();
 
-    nsresult Init(nsIInputStream* aIStream, PRUint32 aLength);
+    nsresult Init(nsIInputStream* aIStream, PRUint32 aSourceOffset,
+                  PRUint32 aLength);
     NS_IMETHOD HandleEvent();
 
 protected:
     nsIInputStream*     mIStream;
+    PRUint32            mSourceOffset;
     PRUint32            mLength;
 };
 
@@ -254,8 +257,10 @@ nsOnDataAvailableEvent::~nsOnDataAvailableEvent()
 }
 
 nsresult
-nsOnDataAvailableEvent::Init(nsIInputStream* aIStream, PRUint32 aLength)
+nsOnDataAvailableEvent::Init(nsIInputStream* aIStream, PRUint32 aSourceOffset,
+                             PRUint32 aLength)
 {
+    mSourceOffset = aSourceOffset;
     mLength = aLength;
     mIStream = aIStream;
     NS_ADDREF(mIStream);
@@ -266,12 +271,13 @@ NS_IMETHODIMP
 nsOnDataAvailableEvent::HandleEvent()
 {
   nsIStreamListener* receiver = (nsIStreamListener*)mListener->GetReceiver();
-  return receiver->OnDataAvailable(mContext, mIStream, mLength);
+  return receiver->OnDataAvailable(mContext, mIStream, mSourceOffset, mLength);
 }
 
 NS_IMETHODIMP 
 nsMarshalingStreamListener::OnDataAvailable(nsISupports* context,
                                             nsIInputStream *aIStream, 
+                                            PRUint32 aSourceOffset,
                                             PRUint32 aLength)
 {
     nsresult rv = GetStatus();
@@ -282,7 +288,7 @@ nsMarshalingStreamListener::OnDataAvailable(nsISupports* context,
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = event->Init(aIStream, aLength);
+    rv = event->Init(aIStream, aSourceOffset, aLength);
     if (NS_FAILED(rv)) goto failed;
     rv = event->Fire(mEventQueue);
     if (NS_FAILED(rv)) goto failed;

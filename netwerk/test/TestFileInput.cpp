@@ -93,6 +93,7 @@ public:
 
     NS_IMETHOD OnDataAvailable(nsISupports* context,
                                nsIInputStream *aIStream, 
+                               PRUint32 aSourceOffset,
                                PRUint32 aLength) {
         PR_CEnterMonitor(this);
         char buf[1025];
@@ -171,6 +172,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     nsIInputStream* fileStr = nsnull;
     nsIByteBufferInputStream* bufStr = nsnull;
     nsFileSpec spec(path);
+    PRUint32 sourceOffset = 0;
 
     rv = reader->OnStartBinding(nsnull);
     if (NS_FAILED(rv)) goto done;       // XXX should this abort the transfer?
@@ -194,8 +196,10 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
         }
         if (NS_FAILED(rv)) break;
 
-        rv = reader->OnDataAvailable(nsnull, bufStr, amt);
+        rv = reader->OnDataAvailable(nsnull, bufStr, sourceOffset, amt);
         if (NS_FAILED(rv)) break;
+
+        sourceOffset += amt;
     }
 
   done:

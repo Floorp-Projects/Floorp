@@ -24,6 +24,7 @@
 #include "nsIFileStream.h"
 #include "nsFileSpec.h"
 #include "nsIByteBufferInputStream.h"
+#include "prcmon.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -33,7 +34,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 nsFileTransport::nsFileTransport()
     : mPath(nsnull), mContext(nsnull), mListener(nsnull), mState(ENDED),
       mSuspended(PR_FALSE), mFileStream(nsnull), mBufferStream(nsnull), 
-      mStatus(NS_OK), mService(nsnull)
+      mStatus(NS_OK), mService(nsnull), mSourceOffset(0)
 {
     NS_INIT_REFCNT();
 }
@@ -222,7 +223,7 @@ nsFileTransport::OpenOutputStream(nsIOutputStream* *result)
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-nsFileTransport::Continue(void)
+nsFileTransport::Process(void)
 {
     PR_CEnterMonitor(this);
     switch (mState) {
@@ -255,9 +256,12 @@ nsFileTransport::Continue(void)
           if (NS_FAILED(mStatus)) goto error;
 
           // and feed the buffer to the application via the byte buffer stream:
-          mStatus = mListener->OnDataAvailable(mContext, mBufferStream, amt);      // XXX maybe amt should be mBufferStream->GetLength()
+          // XXX maybe amt should be mBufferStream->GetLength():
+          mStatus = mListener->OnDataAvailable(mContext, mBufferStream, mSourceOffset, amt);
           if (NS_FAILED(mStatus)) goto error;
           
+          mSourceOffset += amt;
+
           // stay in the READING state
           break;
       }
@@ -316,7 +320,7 @@ NS_IMETHODIMP
 nsFileTransport::Run(void)
 {
     while (mState != ENDED && !mSuspended) {
-        Continue();
+        Process();
     }
     return NS_OK;
 }

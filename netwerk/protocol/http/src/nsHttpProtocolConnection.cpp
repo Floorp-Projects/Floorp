@@ -241,6 +241,10 @@ nsHttpProtocolConnection::Get(void)
     rv = Write(in, CRLF, 2);
     if (NS_FAILED(rv)) goto done;
 
+    // blank line to end the request
+    rv = Write(in, CRLF, 2);
+    if (NS_FAILED(rv)) goto done;
+
     // send it to the server:
     rv = mTransport->AsyncWrite(in,
                                 NS_STATIC_CAST(nsIProtocolConnection*, this),
@@ -316,9 +320,25 @@ nsHttpProtocolConnection::OnStopBinding(nsISupports* context,
 NS_IMETHODIMP
 nsHttpProtocolConnection::OnDataAvailable(nsISupports* context,
                                           nsIInputStream *aIStream, 
+                                          PRUint32 aSourceOffset,
                                           PRUint32 aLength)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+    switch (mState) {
+      case WAITING_REPLY:
+        // data coming in for our request
+
+        // XXX do some header parsing here
+
+//        mEventSink->OnProgress();
+        rv = mEventSink->OnDataAvailable(context, aIStream, aSourceOffset, aLength);
+
+        break;
+      default:
+        NS_NOTREACHED("bad state");
+        break;
+    }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

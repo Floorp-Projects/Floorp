@@ -110,6 +110,7 @@ protected:
   nsIStreamListener* mListener;
   nsIByteBufferInputStream* mReadStream;
   nsIInputStream* mWriteStream;
+  PRUint32 mSourceOffset;
 
   nsSocketTransportService* mService;
 };

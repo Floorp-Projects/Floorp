@@ -57,6 +57,7 @@ public:
 
   NS_IMETHOD OnDataAvailable(nsISupports* context,
                              nsIInputStream *aIStream, 
+                             PRUint32 aSourceOffset,
                              PRUint32 aLength);
 
   NS_IMETHOD OnStopBinding(nsISupports* context,
@@ -90,6 +91,7 @@ InputTestConsumer::OnStartBinding(nsISupports* context)
 NS_IMETHODIMP
 InputTestConsumer::OnDataAvailable(nsISupports* context,
                                    nsIInputStream *aIStream, 
+                                   PRUint32 aSourceOffset,
                                    PRUint32 aLength)
 {
   char buf[1025];

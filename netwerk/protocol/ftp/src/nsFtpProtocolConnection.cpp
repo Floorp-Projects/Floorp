@@ -316,8 +316,9 @@ nsFtpProtocolConnection::OnStopBinding(nsISupports* context,
 // routine/logic for handling.
 NS_IMETHODIMP
 nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
-                                          nsIInputStream *aIStream, 
-                                          PRUint32 aLength) {
+                                         nsIInputStream *aIStream, 
+                                         PRUint32 aSourceOffset,
+                                         PRUint32 aLength) {
     nsresult rv;
 
     // we've got some data. suck it out of the inputSteam.

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -124,6 +124,7 @@ nsSocketTransport::nsSocketTransport()
   mWriteStream  = nsnull;
   mListener     = nsnull;
   mContext      = nsnull;
+  mSourceOffset = 0;
   mService      = nsnull;
 
   //
@@ -516,7 +517,8 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   // been filled into the stream as possible...
   //
   if (totalBytesWritten) {
-    mListener->OnDataAvailable(mContext, mReadStream, totalBytesWritten);
+    mListener->OnDataAvailable(mContext, mReadStream, mSourceOffset, totalBytesWritten);
+    mSourceOffset += totalBytesWritten;
   }
 
   //
@@ -543,7 +545,7 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
 //-----
 nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
 {
-  PRUint32 size, bytesRead;
+  PRUint32 bytesRead;
   PRInt32 len;
   PRErrorCode code;
   nsresult rv = NS_OK;
