@@ -27,14 +27,17 @@ GenericElementCollection::GenericElementCollection(nsIContent *aParent,
 {
   mParent = aParent;
   mTag = aTag;
-  NS_IF_ADDREF(mTag);
+  NS_IF_ADDREF(aTag);
 }
 
 GenericElementCollection::~GenericElementCollection()
 {
-  // we do NOT have a ref-counted reference to mParent, so do NOT release it!
-  // this is to avoid circular references.  The instantiator who provided mParent
-  // is responsible for managing our reference for us.
+  // we do NOT have a ref-counted reference to mParent, so do NOT
+  // release it!  this is to avoid circular references.  The
+  // instantiator who provided mParent is responsible for managing our
+  // reference for us.
+
+  // Release reference on the tag
   NS_IF_RELEASE(mTag);
 }
 
