@@ -37,6 +37,7 @@
 #include "jstypes.h"
 #include "jsclasses.h"
 #include "icodegenerator.h"
+#include "interpreter.h"
 
 #include <stdexcept>
 
@@ -1196,26 +1197,6 @@ void ICodeGenerator::preprocess(StmtNode *p)
                 genStmt(t->finally);
         }
         break;
-   case StmtNode::Class:
-        {
-            using JSClasses::JSClass;
-            ClassStmtNode *classStmt = static_cast<ClassStmtNode *>(p);
-            ASSERT(classStmt->name->getKind() == ExprNode::identifier);
-            IdentifierExprNode* nameExpr = static_cast<IdentifierExprNode*>(classStmt->name);
-            JSClass* superclass = 0;
-            if (classStmt->superclass) {
-                ASSERT(classStmt->superclass->getKind() == ExprNode::identifier);
-                IdentifierExprNode* superclassExpr = static_cast<IdentifierExprNode*>(classStmt->superclass);
-                JSValue superclassValue = mGlobal->getVariable(superclassExpr->name);
-                ASSERT(superclassValue.isObject() && !superclassValue.isNull());
-                superclass = static_cast<JSClass*>(superclassValue.object);
-            }
-            JSClass* jsclass = new JSClass(nameExpr->name, superclass);
-            mGlobal->defineVariable(nameExpr->name, JSValue(jsclass));
-            // put this class into the current defining scope, and as a side-effect(?) make it
-            // the current defining scope, for later compilation into?
-        }
-        break;
    }
 }
 
@@ -1229,6 +1210,75 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
     }
 
     switch (p->getKind()) {
+    case StmtNode::Class:
+        {
+            // FIXME:  need a semantic check to make sure a class isn't being redefined(?)
+            using JSClasses::JSClass;
+            ClassStmtNode *classStmt = static_cast<ClassStmtNode *>(p);
+            ASSERT(classStmt->name->getKind() == ExprNode::identifier);
+            IdentifierExprNode* nameExpr = static_cast<IdentifierExprNode*>(classStmt->name);
+            JSClass* superclass = 0;
+            if (classStmt->superclass) {
+                ASSERT(classStmt->superclass->getKind() == ExprNode::identifier);
+                IdentifierExprNode* superclassExpr = static_cast<IdentifierExprNode*>(classStmt->superclass);
+                const JSValue& superclassValue = mGlobal->getVariable(superclassExpr->name);
+                ASSERT(superclassValue.isObject() && !superclassValue.isNull());
+                superclass = static_cast<JSClass*>(superclassValue.object);
+            }
+            JSClass* thisClass = new JSClass(mGlobal, nameExpr->name, superclass);
+            JSValue thisValue(thisClass); thisValue.tag = JSValue::object_tag;
+            // is it ok for a partially defined class to appear in global scope? this is needed
+            // to handle recursive types, such as linked list nodes.
+            mGlobal->defineVariable(nameExpr->name, thisValue);
+            if (classStmt->body) {
+                bool hasMethods = false;
+                ICodeGenerator fcg(mWorld, thisClass->getScope());
+                StmtNode* s = classStmt->body->statements;
+                while (s) {
+                    switch (s->getKind()) {
+                    case StmtNode::Var:
+                        {
+                            // FIXME:  need to generate a constructor function using the initializers, etc.
+                            VariableStmtNode *vs = static_cast<VariableStmtNode *>(s);
+                            VariableBinding *v = vs->bindings;
+                            while (v)  {
+                                if (v->name) {
+                                    ASSERT(v->name->getKind() == ExprNode::identifier);
+                                    IdentifierExprNode* idExpr = static_cast<IdentifierExprNode*>(v->name);
+                                    const JSType* type = &Any_Type;
+                                    // FIXME:  need to do code generation for type expressions.
+                                    if (v->type && v->type->getKind() == ExprNode::identifier) {
+                                        IdentifierExprNode* typeExpr = static_cast<IdentifierExprNode*>(v->type);
+                                        const JSValue& typeValue = mGlobal->getVariable(typeExpr->name);
+                                        ASSERT(typeValue.isObject() && !typeValue.isNull());
+                                        type = static_cast<JSType*>(typeValue.object);
+                                    }
+                                    thisClass->addSlot(idExpr->name, type);
+                                }
+                                v = v->next;
+                            }
+                        }
+                        break;
+                    case StmtNode::Function:
+                        {
+                            fcg.preprocess(s);
+                            fcg.genStmt(s);
+                            hasMethods = true;
+                        }
+                        break;
+                    }
+                    s = s->next;
+                }
+                if (hasMethods) {
+                    // run the code which defines the functions in the class's scope.
+                    using Interpreter::Context;
+                    Context cx(*mWorld, thisClass->getScope());
+                    fcg.returnStmt(TypedRegister(NotARegister, &None_Type));
+                    cx.interpret(fcg.complete(), JSValues());
+                }
+            }
+        }
+        break;
     case StmtNode::Function:
         {
             FunctionStmtNode *f = static_cast<FunctionStmtNode *>(p);
@@ -1562,11 +1612,6 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 rts();
             }
             setLabel(beyondLabel);
-        }
-        break;
-
-    case StmtNode::Class:
-        {
         }
         break;
 
