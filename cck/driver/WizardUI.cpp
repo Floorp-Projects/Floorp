@@ -128,20 +128,9 @@ BOOL CWizardUI::OnSetActive()
 	pSheet->GetDlgItem(IDCANCEL)->SetWindowText(CurrentNode->localVars->wizbut->cancel);
 
 	// Using the ini files to set the value as mentioned above 
-	//	instead of using the commented out code below 
-
-	// !!! Use an OnEnter for this instead !!!
-/*	if (CurrentNode->localVars->functionality == "BuildInstallers")
-	{
-		pSheet->GetDlgItem(ID_WIZNEXT)->SetWindowText("Build &Installers");
-		isBuildInstaller = TRUE;
-	}
-	else { 
-		isBuildInstaller = FALSE;
-		pSheet->GetDlgItem(ID_WIZNEXT)->SetWindowText("&Next >");
-	}
-*/
-
+	//we used to check for a particular value previously and then set the values 
+	// not doing it any more cuz - the wizard neednt know the values of the buttons in inifiles
+	
 	if (theApp.IsLastNode(CurrentNode)) 
 	{
 		pSheet->SetWizardButtons(PSWIZB_BACK | PSWIZB_FINISH);
@@ -206,7 +195,7 @@ LRESULT CWizardUI::OnWizardNext()
 	if (!nextLock.IsLocked())
 	{
 		nextLock.Lock();
-
+#if 0
 		if (isBuildInstaller) {
 			isCDLayoutCreated = FALSE;
 
@@ -231,7 +220,7 @@ LRESULT CWizardUI::OnWizardNext()
 			MessageBox("CD Image would be created", "OK", MB_OK);
 			isBuildInstaller = FALSE;
 		}
-	
+#endif	
 		UpdateGlobals();
 		DestroyCurrentScreenWidgets();
 		while (!theApp.GoToNextNode())

@@ -656,6 +656,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 							if (var2.Compare(value2) != 0)
 							{
 								AfxMessageBox(message, MB_OK);
+								return FALSE;
 							}
 						}
 					}
