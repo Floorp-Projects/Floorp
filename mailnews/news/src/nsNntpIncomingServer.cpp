@@ -31,6 +31,14 @@
 #include "nsIFileSpec.h"
 #include "nsFileStream.h"
 
+// sorry, unix & mac will have to wait for tomorrow.  camelot is down.
+#if defined(XP_WIN) 
+#define HAVE_REAL_SUBSCRIBE 1
+#endif
+
+#ifdef HAVE_REAL_SUBSCRIBE
+#include "nsISubscribeDialogListener.h"
+#endif
 #ifdef DEBUG_seth
 #define DO_HASHING_OF_HOSTNAME 1
 #endif /* DEBUG_seth */
@@ -52,9 +60,16 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 
+#ifdef HAVE_REAL_SUBSCRIBE
+NS_IMPL_ISUPPORTS_INHERITED2(nsNntpIncomingServer,
+                            nsMsgIncomingServer,
+                            nsINntpIncomingServer,
+							nsISubscribeDialogMaster);
+#else
 NS_IMPL_ISUPPORTS_INHERITED(nsNntpIncomingServer,
                             nsMsgIncomingServer,
                             nsINntpIncomingServer);
+#endif
 
 
 nsNntpIncomingServer::nsNntpIncomingServer()
@@ -295,3 +310,24 @@ nsNntpIncomingServer::CloseCachedConnections()
 {
     return WriteNewsrcFile();
 }
+
+#ifdef HAVE_REAL_SUBSCRIBE
+NS_IMETHODIMP
+nsNntpIncomingServer::PopulateSubscribeDialog(nsISubscribeDialogListener *listener)
+{
+	nsresult rv;
+	PRInt32 i;
+	if (!listener) return NS_ERROR_FAILURE;
+
+	nsAutoString name;
+
+	// simple test code for now.
+	for (i=0;i<1000;i++) {
+		name = "";
+		name.Append(i);
+		rv = listener->AddItem(name.GetUnicode(),PR_FALSE,i+2);
+		if (NS_FAILED(rv)) return rv;
+	}
+	return NS_OK;
+}
+#endif 

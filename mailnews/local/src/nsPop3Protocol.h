@@ -260,6 +260,9 @@ public:
 	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports * aContext, nsresult aStatus, const PRUnichar* aMsg);
 	NS_IMETHOD Cancel();  // handle stop button
 
+	// for nsMsgLineBuffer
+    virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
+
 private:
   nsCOMPtr<nsIMsgStringService> mStringService;
 
@@ -328,7 +331,6 @@ private:
     PRInt32 SendXsender();
     PRInt32 XsenderResponse();
     PRInt32 SendRetr();
-    PRInt32 HandleLine(char *line, PRUint32 line_length);
 
     PRInt32 RetrResponse(nsIInputStream* inputStream, PRUint32 length);
     PRInt32 TopResponse(nsIInputStream* inputStream, PRUint32 length);

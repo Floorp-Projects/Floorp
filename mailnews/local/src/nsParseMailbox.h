@@ -168,6 +168,8 @@ public:
 
 	virtual void	DoneParsingFolder(nsresult status);
 	virtual void	AbortNewHeader();
+
+	// for nsMsgLineBuffer
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
 
 	void			UpdateDBFolderInfo();

@@ -27,6 +27,7 @@
 #include "nscore.h"
 
 #include "nsMsgIncomingServer.h"
+#include "nsISubscribeDialogMaster.h"
 
 #include "nsIPref.h"
 
@@ -36,12 +37,14 @@
 
 /* get some implementation from nsMsgIncomingServer */
 class nsNntpIncomingServer : public nsMsgIncomingServer,
-                             public nsINntpIncomingServer
+                             public nsINntpIncomingServer,
+							 public nsISubscribeDialogMaster
                              
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSINNTPINCOMINGSERVER
+	NS_DECL_NSISUBSCRIBEDIALOGMASTER
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
     

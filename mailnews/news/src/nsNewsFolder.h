@@ -94,6 +94,9 @@ public:
 	NS_IMETHOD GetCanRename(PRBool *aResult);
     NS_IMETHOD OnReadChanged(nsIDBChangeListener * aInstigator);
 
+	// for nsMsgLineBuffer
+	virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
+
 protected:
 	nsresult AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 fullwords);
 	nsresult ParseFolder(nsFileSpec& path);
@@ -106,11 +109,11 @@ protected:
   nsresult RememberUnsubscribedGroup(const char *newsgroup, const char *setStr);
   nsresult ForgetLine(void);
 
-  PRInt32 HandleLine(char *line, PRUint32 line_size);
+  PRInt32 HandleNewsrcLine(char *line, PRUint32 line_size);
   virtual const char *GetIncomingServerType() {return "nntp";}
   virtual nsresult CreateBaseMessageURI(const char *aURI);
 
-  nsByteArray		m_inputStream;
+	nsByteArray		m_newsrcInputStream;
 
 protected:
 	PRUint32  mExpungedBytes;

@@ -65,6 +65,7 @@
 #include "nsIWalletService.h"
 #include "nsIURL.h"
 #include "nsINntpUrl.h"
+#include "nsNewsSummarySpec.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -78,8 +79,11 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 
-#define PREF_NEWS_MAX_HEADERS_TO_SHOW "news.max_headers_to_show"
 #define PREF_NEWS_ABBREVIATE_PRETTY_NAMES "news.abbreviate_pretty_name"
+
+// ###tw  This really ought to be the most
+// efficient file reading size for the current
+// operating system.
 #define NEWSRC_FILE_BUFFER_SIZE 1024
 
 #define NEWS_SCHEME "news:"
@@ -161,6 +165,7 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
     if (NS_FAILED(rv)) return rv;
       
     rv = LoadNewsrcFileAndCreateNewsgroups();
+    if (NS_FAILED(rv)) return rv;
   }
   else {
 #ifdef DEBUG_NEWS
@@ -550,8 +555,26 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname
 
 NS_IMETHODIMP nsMsgNewsFolder::Delete()
 {
-  NS_ASSERTION(0,"Delete not implemented");
-  return NS_ERROR_NOT_IMPLEMENTED;
+	nsresult rv = GetDatabase(nsnull);
+
+	if(NS_SUCCEEDED(rv)) {
+		mDatabase->ForceClosed();
+		mDatabase = null_nsCOMPtr();
+	}
+
+	nsCOMPtr<nsIFileSpec> pathSpec;
+	rv = GetPath(getter_AddRefs(pathSpec));
+	if (NS_FAILED(rv)) return rv;
+
+	nsFileSpec path;
+	rv = pathSpec->GetFileSpec(&path);
+	if (NS_FAILED(rv)) return rv;
+
+	// Remove summary file.	
+	nsNewsSummarySpec summarySpec(path);
+	summarySpec.Delete(PR_FALSE);
+	
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::Rename(const PRUnichar *newName)
@@ -910,34 +933,29 @@ nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups()
   rv = mNewsrcFilePath->Exists(&exists);
   if (NS_FAILED(rv)) return rv;
 
-  // it is ok for the newsrc file to not exist yet
-  if (!exists) return NS_OK;
+  if (!exists) {
+#ifdef DEBUG_NEWS
+  	printf("it is ok for the newsrc file to not exist yet\n");
+#endif
+	return NS_OK;
+  }
 
   nsInputFileStream newsrcStream(mNewsrcFilePath); 
 
   PRInt32 numread = 0;
 
-  if (NS_FAILED(m_inputStream.GrowBuffer(NEWSRC_FILE_BUFFER_SIZE))) {
-#ifdef DEBUG_NEWS
-    printf("GrowBuffer failed\n");
-#endif
+  if (NS_FAILED(m_newsrcInputStream.GrowBuffer(NEWSRC_FILE_BUFFER_SIZE))) {
     return NS_ERROR_FAILURE;
   }
 	
   while (1) {
-    numread = newsrcStream.read(m_inputStream.GetBuffer(), NEWSRC_FILE_BUFFER_SIZE);
-#ifdef DEBUG_NEWS
-    printf("numread == %d\n", numread);
-#endif
+    numread = newsrcStream.read(m_newsrcInputStream.GetBuffer(), NEWSRC_FILE_BUFFER_SIZE);
     if (numread == 0) {
       break;
     }
     else {
-      rv = BufferInput(m_inputStream.GetBuffer(), numread);
+      rv = BufferInput(m_newsrcInputStream.GetBuffer(), numread);
       if (NS_FAILED(rv)) {
-#ifdef DEBUG_NEWS
-        printf("bufferInput did not return NS_OK\n");
-#endif
         break;
       }
     }
@@ -952,14 +970,22 @@ nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups()
 PRInt32
 nsMsgNewsFolder::HandleLine(char* line, PRUint32 line_size)
 {
+	return HandleNewsrcLine(line, line_size);
+}
+
+PRInt32
+nsMsgNewsFolder::HandleNewsrcLine(char* line, PRUint32 line_size)
+{
     nsresult rv;
-#ifdef DEBUG_NEWS
-    printf("nsMsgNewsFolder::HandleLine(%s,%d)\n",line,line_size);
-#endif
+
 	/* guard against blank line lossage */
 	if (line[0] == '#' || line[0] == CR || line[0] == LF) return 0;
 
 	line[line_size] = 0;
+
+#ifdef DEBUG_NEWS_
+    printf("nsMsgNewsFolder::HandleNewsrcLine(%s,%d)\n",line,line_size);
+#endif
 
 	if ((line[0] == 'o' || line[0] == 'O') &&
 		!PL_strncasecmp (line, "options", 7)) {
@@ -1057,7 +1083,7 @@ nsMsgNewsFolder::HandleLine(char* line, PRUint32 line_size)
 			if (!info) {	// autosubscribe, if we haven't seen this one.
 				char* groupLine = PR_smprintf("%s:", fullname);
 				if (groupLine) {
-					HandleLine(groupLine, PL_strlen(groupLine));
+					HandleNewsrcLine(groupLine, PL_strlen(groupLine));
 					PR_FREEIF(groupLine);
           groupLine = nsnull;
 				}
