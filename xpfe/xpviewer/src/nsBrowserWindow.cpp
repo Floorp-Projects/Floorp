@@ -61,8 +61,6 @@
 #include "nsHTMLContentSinkStream.h"
 #include "nsGUIEvent.h"
 
-#ifdef NGEDITOR
-#include "nsIEditor.h"
 
 // Needed for "Find" GUI
 #include "nsIDialog.h"
@@ -98,6 +96,8 @@
 #endif
 
 
+#ifdef NGEDITOR
+#include "nsIEditor.h"
 //these defines are for use with the experimental autopointers. 
 //they WILL NOT be permanent
 #define NOT_PRODUCTION_CODE
