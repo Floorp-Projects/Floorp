@@ -134,7 +134,7 @@ NS_IMETHODIMP nsAbDirectoryQuerySimpleBooleanExpression::AgetExpressions(PRUint3
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirectoryQueryArguments, nsIAbDirectoryQueryArguments)
 
 nsAbDirectoryQueryArguments::nsAbDirectoryQueryArguments() :
-    mQuerySubDirectories (PR_TRUE)
+    mQuerySubDirectories(PR_TRUE)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -162,18 +162,14 @@ NS_IMETHODIMP nsAbDirectoryQueryArguments::SetExpression(nsISupports* aExpressio
 /* attribute boolean querySubDirectories; */
 NS_IMETHODIMP nsAbDirectoryQueryArguments::GetQuerySubDirectories(PRBool* aQuerySubDirectories)
 {
-    if (!aQuerySubDirectories)
-        return NS_ERROR_NULL_POINTER;
-
+    NS_ENSURE_ARG_POINTER(aQuerySubDirectories);
     *aQuerySubDirectories = mQuerySubDirectories;
-
     return NS_OK;
 }
 
 NS_IMETHODIMP nsAbDirectoryQueryArguments::SetQuerySubDirectories(PRBool aQuerySubDirectories)
 {
     mQuerySubDirectories = aQuerySubDirectories;
-
     return NS_OK;
 }
 
@@ -183,7 +179,7 @@ NS_IMETHODIMP nsAbDirectoryQueryArguments::SetReturnProperties(PRUint32 returnPr
         const char** returnPropertiesArray)
 {
     nsresult rv;
-    rv = CharPtrArrayToCStringArray::Convert (mReturnProperties,
+    rv = CharPtrArrayToCStringArray::Convert(mReturnProperties,
         returnPropertiesSize,
         returnPropertiesArray);
 
@@ -387,9 +383,8 @@ nsresult nsAbDirectoryQuery::query (nsIAbDirectory* directory,
 
     PRBool doSubDirectories;
     arguments->GetQuerySubDirectories (&doSubDirectories);
-    if (doSubDirectories == PR_TRUE && *resultLimit != 0)
-    {
-        rv = queryChildren (directory, arguments, listener, resultLimit);
+    if (doSubDirectories && *resultLimit != 0) {
+        rv = queryChildren(directory, arguments, listener, resultLimit);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -407,7 +402,7 @@ nsresult nsAbDirectoryQuery::queryChildren (nsIAbDirectory* directory,
     rv = directory->GetChildNodes(getter_AddRefs(subDirectories));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = subDirectories->First ();
+    rv = subDirectories->First();
     if (NS_FAILED(rv))
         return NS_OK;
 
@@ -423,7 +418,7 @@ nsresult nsAbDirectoryQuery::queryChildren (nsIAbDirectory* directory,
         rv = query (subDirectory, arguments, listener, resultLimit);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = subDirectories->Next ();
+        rv = subDirectories->Next();
     }
     while (rv == NS_OK);
 
@@ -450,14 +445,14 @@ nsresult nsAbDirectoryQuery::queryCards (nsIAbDirectory* directory,
     if (!cards)
         return NS_OK;
 
-    rv = cards->First ();
+    rv = cards->First();
     if (NS_FAILED(rv))
         return NS_OK;
 
     do
     {
         nsCOMPtr<nsISupports> item;
-        rv = cards->CurrentItem (getter_AddRefs (item));
+        rv = cards->CurrentItem(getter_AddRefs(item));
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIAbCard> card(do_QueryInterface(item, &rv));

@@ -408,7 +408,7 @@ NS_IMETHODIMP nsAbMDBDirectory::GetChildCards(nsIEnumerator* *result)
   if (mIsQueryURI)
   {
     nsresult rv;
-    rv =  StartSearch ();
+    rv = StartSearch();
     NS_ENSURE_SUCCESS(rv, rv);
 
     // TODO
@@ -416,7 +416,7 @@ NS_IMETHODIMP nsAbMDBDirectory::GetChildCards(nsIEnumerator* *result)
     // results after search is complete
     nsCOMPtr<nsISupportsArray> array;
     NS_NewISupportsArray(getter_AddRefs(array));
-    mSearchCache.Enumerate (enumerateSearchCache, (void* )array);
+    mSearchCache.Enumerate(enumerateSearchCache, (void*)array);
     return array->Enumerate(result);
   }
 
@@ -912,31 +912,36 @@ NS_IMETHODIMP nsAbMDBDirectory::StartSearch()
   nsresult rv;
 
   mPerformingQuery = PR_TRUE;
-  mSearchCache.Reset ();
+  mSearchCache.Reset();
 
   nsCOMPtr<nsIAbDirectoryQueryArguments> arguments = do_CreateInstance(NS_ABDIRECTORYQUERYARGUMENTS_CONTRACTID,&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAbBooleanExpression> expression;
-  rv = nsAbQueryStringToExpression::Convert (mQueryString.get (),
+  rv = nsAbQueryStringToExpression::Convert(mQueryString.get(),
     getter_AddRefs(expression));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = arguments->SetExpression (expression);
+  rv = arguments->SetExpression(expression);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the return properties to
   // return nsIAbCard interfaces
   nsCStringArray properties;
-  properties.AppendCString (nsCAutoString ("card:nsIAbCard"));
-  CharPtrArrayGuard returnProperties (PR_FALSE);
-  rv = CStringArrayToCharPtrArray::Convert (properties,returnProperties.GetSizeAddr(),
+  properties.AppendCString(nsCAutoString("card:nsIAbCard"));
+  CharPtrArrayGuard returnProperties(PR_FALSE);
+  rv = CStringArrayToCharPtrArray::Convert(properties,returnProperties.GetSizeAddr(),
           returnProperties.GetArrayAddr(), PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = arguments->SetReturnProperties (returnProperties.GetSize(), returnProperties.GetArray());
+  rv = arguments->SetReturnProperties(returnProperties.GetSize(), returnProperties.GetArray());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = arguments->SetQuerySubDirectories (PR_TRUE);
+  // don't search the subdirectories 
+  // if the current directory is a mailing list, it won't have any subdirectories
+  // if the current directory is a addressbook, searching both it
+  // and the subdirectories (the mailing lists), will yield duplicate results
+  // because every entry in a mailing list will be an entry in the parent addressbook
+  rv = arguments->SetQuerySubDirectories(PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the the query listener
@@ -945,24 +950,23 @@ NS_IMETHODIMP nsAbMDBDirectory::StartSearch()
     new nsAbDirSearchListener (this);
   queryListener = _queryListener;
 
-
   // Get the directory without the query
   nsCOMPtr<nsIRDFResource> resource;
-  rv = gRDFService->GetResource (mURINoQuery.get (), getter_AddRefs (resource));
+  rv = gRDFService->GetResource (mURINoQuery.get(), getter_AddRefs(resource));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIAbDirectory> directory (do_QueryInterface(resource, &rv));
+  nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Initiate the proxy query with the no query directory
   nsCOMPtr<nsIAbDirectoryQueryProxy> queryProxy = 
-      do_CreateInstance (NS_ABDIRECTORYQUERYPROXY_CONTRACTID, &rv);
+      do_CreateInstance(NS_ABDIRECTORYQUERYPROXY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = queryProxy->Initiate (directory);
+  rv = queryProxy->Initiate(directory);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = queryProxy->DoQuery (arguments, queryListener, -1, 0, &mContext);
+  rv = queryProxy->DoQuery(arguments, queryListener, -1, 0, &mContext);
   return NS_OK;
 }
 
