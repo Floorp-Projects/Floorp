@@ -39,7 +39,9 @@ DIRS = \
 		modules\libutil \
 		netwerk \
 		modules\appfilelocprovider \
-		security \
+!if defined(BUILD_PSM)
+                security \
+!endif
 		uriloader \
                 uriloader\exthandler \
 		intl \
@@ -68,6 +70,9 @@ DIRS = \
 		profile \
 		xpfe \
 		extensions \
+!if defined(BUILD_PSM)
+                extensions\psm-glue \
+!endif
 		mailnews \
 		xpinstall \
 		$(NULL)
@@ -83,6 +88,7 @@ DIRS = \
 		modules\libutil \
 		jpeg \
 		modules\libimg \
+		widget\timer \
 		gfx \
 		widget \
 		js \
@@ -91,7 +97,9 @@ DIRS = \
 		modules\zlib \
 		modules\zlib\standalone \
 		netwerk \
-		security \
+!if defined(BUILD_PSM)
+                security \
+!endif
 		uriloader \
 		intl \
 		modules\libpref \
@@ -112,7 +120,9 @@ DIRS = \
 		xpfe\appshell \
 		xpfe\components\shistory \
 		extensions\cookie \
-		extensions\psm-glue \
+!if defined(BUILD_PSM)
+                extensions\psm-glue \
+!endif
 		$(NULL)
 !endif
 
