@@ -637,15 +637,26 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
   /* readonly attribute boolean focusedChild; */
 NS_IMETHODIMP nsAccessible::GetFocusedChild(nsIAccessible **aFocusedChild) 
 { 
-  *aFocusedChild = nsnull;
-
-  if (!gLastFocusedNode) {
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIAccessible> focusedChild;
+  if (gLastFocusedNode == mDOMNode) {
+    NS_ADDREF(*aFocusedChild = this);
+  }
+  else if (gLastFocusedNode) {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    accService->GetAccessibleInWeakShell(gLastFocusedNode, mWeakShell, 
+                                         getter_AddRefs(focusedChild));
+    if (focusedChild) {
+      nsCOMPtr<nsIAccessible> focusedParentAccessible;
+      focusedChild->GetParent(getter_AddRefs(focusedParentAccessible));
+      if (focusedParentAccessible != this) {
+        focusedChild = nsnull;
+      }
+    }
   }
 
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-  return accService->GetAccessibleInWeakShell(gLastFocusedNode, mWeakShell, 
-                                              aFocusedChild);
+  NS_IF_ADDREF(*aFocusedChild = focusedChild);
+  return NS_OK;
 }
 
   /* nsIAccessible getChildAtPoint (in long x, in long y); */
@@ -1342,7 +1353,7 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"checkbox-tristate", ROLE_CHECKBUTTON, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {"checked", "mixed", STATE_MIXED}, {"readonly", 0, STATE_READONLY}},
   {"columnheader", ROLE_COLUMNHEADER, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
   {"icon", ROLE_ICON, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-  {"menu", ROLE_MENUPOPUP, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"menugroup", ROLE_MENUPOPUP, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"menupopup", ROLE_MENUPOPUP, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"menubar", ROLE_MENUBAR, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"menuitem", ROLE_MENUITEM, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},

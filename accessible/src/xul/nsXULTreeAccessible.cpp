@@ -222,6 +222,24 @@ NS_IMETHODIMP nsXULTreeAccessible::GetChildCount(PRInt32 *aAccChildCount)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsXULTreeAccessible::GetFocusedChild(nsIAccessible **aFocusedChild) 
+{
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
+    do_QueryInterface(mDOMNode);
+  if (multiSelect) {
+    PRInt32 row;
+    multiSelect->GetCurrentIndex(&row);
+    if (row >= 0) {
+      GetCachedTreeitemAccessible(row, nsnull, aFocusedChild);
+      if (*aFocusedChild) {
+        return NS_OK;  // Already addref'd by getter
+      }
+    }
+  }
+  NS_ADDREF(*aFocusedChild = this);
+  return NS_OK;
+}
+
 // Ask treeselection to get all selected children
 NS_IMETHODIMP nsXULTreeAccessible::GetSelectedChildren(nsIArray **_retval)
 {
@@ -374,8 +392,9 @@ NS_IMETHODIMP nsXULTreeAccessible::SelectAllSelection(PRBool *_retval)
 
 NS_IMETHODIMP nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow, nsITreeColumn* aColumn, nsIAccessible** aAccessible)
 {
-  NS_ASSERTION(mAccessNodeCache, "No accessibility cache for tree");
+  *aAccessible = nsnull;
 
+  NS_ASSERTION(mAccessNodeCache, "No accessibility cache for tree");
   NS_ASSERTION(mTree && mTreeView, "Can't get mTree or mTreeView!\n");
 
   nsCOMPtr<nsITreeColumn> col = aColumn;

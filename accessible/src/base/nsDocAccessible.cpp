@@ -180,6 +180,19 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDocAccessible::GetFocusedChild(nsIAccessible **aFocusedChild) 
+{
+  if (!gLastFocusedNode) {
+    *aFocusedChild = nsnull;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIAccessibilityService> accService =
+    do_GetService("@mozilla.org/accessibilityService;1");
+  return accService->GetAccessibleInWeakShell(gLastFocusedNode, mWeakShell, 
+                                              aFocusedChild);
+}
+
 // ------- nsIAccessibleDocument Methods (5) ---------------
 
 NS_IMETHODIMP nsDocAccessible::GetURL(nsAString& aURL)
@@ -530,17 +543,6 @@ nsresult nsDocAccessible::AddEventListeners()
   mIsNewDocument = PR_TRUE;
   mBusy = eBusyStateLoading;
 
-  if (!isLoading) {
-    // If already loaded, fire "done loading" event after short timeout
-    // If we fired the event here, we'd get reentrancy problems
-    // Otherwise, if the doc is still loading, 
-    // the event will be fired from OnStateChange when the load is done
-    mDocLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if (mDocLoadTimer) {
-      mDocLoadTimer->InitWithFuncCallback(DocLoadCallback, this, 1,
-                                          nsITimer::TYPE_ONE_SHOT);
-    }
-  }
   // add ourself as a mutation event listener 
   // (this slows down mozilla about 3%, but only used when accessibility APIs active)
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocument));

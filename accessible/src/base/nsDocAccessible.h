@@ -80,6 +80,7 @@ class nsDocAccessible : public nsBlockAccessible,
     NS_IMETHOD GetName(nsAString& aName);
     NS_IMETHOD GetValue(nsAString& aValue);
     NS_IMETHOD GetState(PRUint32 *aState);
+    NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
 
     // ----- nsIScrollPositionListener ---------------------------
     NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
