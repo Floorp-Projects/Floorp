@@ -158,7 +158,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   }
 
 #ifdef DEBUG_sspitzer
-  printf("ConvertNewsMessageURI2NewsURI(%s,??) -> %s %u\n", messageURI, nsAutoCString(folder), key);
+  printf("ConvertNewsMessageURI2NewsURI(%s,??) -> %s %u\n", messageURI, (const char *)nsAutoCString(folder), key);
 #endif
 
   nsNativeFileSpec pathResult;
@@ -213,7 +213,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   newsURI += messageId;
 
 #ifdef DEBUG_sspitzer
-  printf("newsURI = %s\n", nsAutoCString(newsURI));
+  printf("newsURI = %s\n", (const char *)nsAutoCString(newsURI));
 #endif
 
   return NS_OK;
@@ -275,10 +275,23 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 			if (aUrlListener) // register listener if there is one...
 				nntpUrl->RegisterListener(aUrlListener);
 			
-			nntpUrl->GetHostPort(&port);
-			nntpUrl->GetHost(&hostname);
+			rv = nntpUrl->GetHostPort(&port);
+            if (NS_FAILED(rv)) {
+              return rv;
+            }
+			rv = nntpUrl->GetHost(&hostname);
+            if (NS_FAILED(rv)) {
+              return rv;
+            }
+#ifdef DEBUG_sspitzer
+            printf("set file to post to %s\n",(const char *)pathToFile);
+#endif
+            rv = nntpUrl->SetPostMessageFile(pathToFile);
+            if (NS_FAILED(rv)) {
+              return rv;
+            }
+            
 			// okay now create a transport to run the url in...
-			
 #ifdef DEBUG_sspitzer
             printf("nsNntpService::RunNewsUrl(): hostname = %s port = %d\n", hostname, port);
 #endif
@@ -314,7 +327,6 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 								post->AddNewsgroup(newsgroupName);
 								// eventually, use pathToFile
 								post->SetBody("hello, this is a test\n");
-								//post->SetFile(pathToFile);
 								post->SetSubject((char *)subject);
 								post->SetFrom((char *)from);
 								post->SetOrganization((char *)org);
@@ -355,7 +367,7 @@ nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer,
 										nsIUrlListener *aUrlListener, nsIURL ** aURL)
 {
 #ifdef DEBUG_sspitzer
-    printf("nsNntpService::RunNewsUrl(%s,...)\n",nsAutoCString(urlString));
+    printf("nsNntpService::RunNewsUrl(%s,...)\n", (const char *)nsAutoCString(urlString));
 #endif
 	// for now, assume the url is a news url and load it....
 	nsINntpUrl		*nntpUrl = nsnull;
