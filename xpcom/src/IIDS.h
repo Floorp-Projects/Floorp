@@ -23,7 +23,7 @@
 // an unused IID in this file and change the word "INTERFACE" to the
 // name of the C++ interface that claims the IID.
 
-INTERFACENAME = { /* a6cf9050-15b3-11d2-932e-00805f8add32 */
+nsIFrame = { /* a6cf9050-15b3-11d2-932e-00805f8add32 */
     0xa6cf9050,
     0x15b3,
     0x11d2,
