@@ -29,7 +29,10 @@
 #include "prnetdb.h"
 
 #include "nsString2.h"
+#include "nsIIOService.h"
+#include "nsIServiceManager.h"
 
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #if defined(XP_MAC)
 #include "pprthred.h"
@@ -434,6 +437,13 @@ nsDNSService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
     if (aOuter != nsnull)
     	return NS_ERROR_NO_AGGREGATION;
     
+    NS_WITH_SERVICE(nsIIOService, ios, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    PRBool offline;
+    rv = ios->GetOffline(&offline);
+    if (NS_FAILED(rv)) return rv;
+    if (offline) return NS_ERROR_FAILURE;
+
     nsDNSService* dnsService = new nsDNSService();
     if (dnsService == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
