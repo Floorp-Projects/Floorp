@@ -37,8 +37,12 @@
 #include <stdlib.h>
 
 PRLock *_connectLock = NULL;
+
+#ifndef BONE_VERSION
+/* Workaround for nonblocking connects under net_server */
 PRUint32 connectCount = 0;
 ConnectListNode connectList[64];
+#endif
                                    
 void
 _MD_cleanup_before_exit (void)
@@ -63,7 +67,10 @@ _MD_final_init (void)
 {
     _connectLock = PR_NewLock();
     PR_ASSERT(NULL != _connectLock); 
+#ifndef BONE_VERSION   
+    /* Workaround for nonblocking connects under net_server */
     connectCount = 0;
+#endif
 }
 
 void

@@ -741,6 +741,56 @@ _MD_pr_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 						out_flags |= PR_POLL_WRITE;
 				}
 				if (FD_ISSET(osfd, &ex)) out_flags |= PR_POLL_EXCEPT;
+
+/* Workaround for nonblocking connects under net_server */
+#ifndef BONE_VERSION 		
+				if (out_flags)
+				{
+					/* check if it is a pending connect */
+					int i = 0, j = 0;
+					PR_Lock( _connectLock );
+					for( i = 0; i < connectCount; i++ ) 
+					{
+						if(connectList[i].osfd == osfd)
+						{
+							int connectError;
+							int connectResult;
+					
+							connectResult = connect(connectList[i].osfd,
+							                        &connectList[i].addr,
+							                        connectList[i].addrlen);
+							connectError = errno;
+					
+							if(connectResult < 0 ) 
+							{
+								if(connectError == EINTR || connectError == EWOULDBLOCK ||
+					  		   connectError == EINPROGRESS || connectError == EALREADY)
+								{
+									break;
+								}
+							}
+					
+							if(i == (connectCount - 1))
+							{
+								connectList[i].osfd = -1;
+							} else {
+								for(j = i; j < connectCount; j++ )
+								{
+									memcpy( &connectList[j], &connectList[j+1],
+									        sizeof(connectList[j]));
+								}
+							}
+							connectCount--;
+					
+							bottom->secret->md.connectReturnValue = connectResult;
+							bottom->secret->md.connectReturnError = connectError;
+							bottom->secret->md.connectValueValid = PR_TRUE;
+							break;
+						}
+					}
+					PR_Unlock( _connectLock );
+				}
+#endif
 			}
 			pd->out_flags = out_flags;
 			if (out_flags) ready++;
