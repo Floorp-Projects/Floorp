@@ -21,10 +21,14 @@
  *   Ben Goodger <ben@netscape.com> (Original Author)
  */
  
+const kTxnPrefix = "urn:mozilla:vixen:transactions:"; 
+ 
 function vxVFDTransactionManager() 
 {
   this.mTxnStack = new vxVFDTransactionStack();
 
+  vxVFDTransactionDS.init();
+  
   // a record of transaction execution listeners that have attached
   // themselves to us.
   this.mTransactionListeners = [];
@@ -70,8 +74,13 @@ vxVFDTransactionManager.prototype =
     // append the transaction to our list
     this.mTxnStack.push(aTransaction);
 
-    // add the transaction to the stack
-    this.mTxnSeq.AppendElement(new RDFLiteral(this.mTxnStack.index-1));
+    // create a resource for the transaction and add to the 
+    // stack
+    var resource        = new RDFResource(kTxnPrefix + (this.mTxnStack.index-1));
+    var commandProperty = new RDFLiteral(kTxnPrefix + "command-string");
+    var commandString   = new RDFLiteral(aTransaction.commandString);
+    vxVFDTransactionDS.Assert(resource, commandProperty, commandString, true);
+    this.mTxnSeq.AppendElement(resource);
     
     for (i = 0; i < this.mTransactionListeners.length; i++) {
       interruptRequest = {};
@@ -93,7 +102,9 @@ vxVFDTransactionManager.prototype =
     }
     
     // retrieve the previous transaction
-    var txn = this.mTxnStack.mStack[this.mTxnStack.index-1];
+    var txn = null;
+    if (this.mTxnStack.index-1 >= 0)
+      txn = this.mTxnStack.mStack[this.mTxnStack.index-1];
 
     // undo the transaction
     if (txn) {
@@ -121,7 +132,9 @@ vxVFDTransactionManager.prototype =
     }
 
     // retrieve the previous transaction
-    var txn = this.mTxnStack.mStack[this.mTxnStack.index];
+    var txn = null;
+    if (this.mTxnStack.index < this.mTxnStack.mStack.length)
+      txn = this.mTxnStack.mStack[this.mTxnStack.index];
 
     // redo the transaction
     if (txn) { 
@@ -165,7 +178,7 @@ vxVFDTransactionManager.prototype =
         }
       }
     }
-  },
+  }
 };
 
 /** 
@@ -173,6 +186,12 @@ vxVFDTransactionManager.prototype =
  */
 var vxVFDTransactionDS = 
 {
+  init: function ()
+  {
+    var arc = new RDFResource("http://www.mozilla.org/projects/vixen/rdf#transaction-list");
+    this.Assert(vxVFDTransactions, arc, vxVFDTransactionSeq, true);
+  },
+
   mResources: { },
  
   HasAssertion: function (aSource, aProperty, aValue, aTruthValue)
@@ -196,7 +215,7 @@ var vxVFDTransactionDS =
     var prop = aProperty.Value;
     if (!prop) throw Components.results.NS_ERROR_FAILURE;
     
-    if (!this.mResources[res])
+    if (!(res in this.mResources))
       this.mResources[res] = { };
     this.mResources[res][prop] = aValue;
   },
@@ -254,11 +273,19 @@ var vxVFDTransactionDS =
 };
 
 /** 
- * Implements nsIRDFResource
+ * The resource that wraps the transaction Seq (urn:mozilla:vixen:transactions)
+ */
+var vxVFDTransactions =
+{
+  Value: "urn:mozilla:vixen:transactions"
+};
+
+/** 
+ * The Transaction Seq
  */
 var vxVFDTransactionSeq = 
 {
-  Value: "vxVFDTransactionSeq"
+  Value: "http://www.mozilla.org/projects/vixen/rdf#txnList"
 };
 
 function stripRDFPrefix (aString)
@@ -311,46 +338,4 @@ vxVFDTransactionStack.prototype =
   }
 }; 
 
-/** 
- * RDF Literal object
- */
-function RDFLiteral (aValue)
-{
-  this.Value = aValue;
-}
-
-RDFLiteral.prototype = 
-{
-  EqualsNode: function (aRDFNode) 
-  {
-    try {
-      var node = aRDFNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
-      if (node.Value == this.Value) 
-        return true;
-    }
-    catch (e) {
-    }
-    return false;
-  }
-}
-
-/*
-function txnResource(aTransaction)
-{
-  this.Value = "";
-  this.mTransaction = aTransaction;
-}
-
-txnResource.prototype = {  
-  QueryInterface: function (aIID)
-  {
-    if (aIID == Components.interfaces.nsIRDFResource || 
-        aIID == Components.interfaces.nsIRDFNode ||
-        aIID == Components.interfaces.nsISupports)
-      return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-    return null;
-  }
-};
-*/
 

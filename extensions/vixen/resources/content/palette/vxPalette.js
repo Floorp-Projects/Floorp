@@ -67,15 +67,19 @@ var vxPalette =
                                                      radiogroupAttributes, 
                                                      radiogroupValues, false);
     radiogroupAttrTxn.init();
+    radiogroupTxn.addListener(radiogroupAttrTxn);
 
     var radioTxn = new vxCreateElementTxn(vfdDocument, "radio", radiogroupTxn.mID, insertionPoint.index);
     radioTxn.init();
+    radiogroupTxn.addListener(radioTxn);
+    
     var radioAttributes = ["value", "group", "id"];
     var radioValues = ["Radio " + nRadios, "radiogroup_" + nRadiogroups, "radio_" + nRadios];
     var radioAttrTxn = new vxChangeAttributeTxn(radioTxn.mID, 
                                                 radioAttributes, 
                                                 radioValues, false);
     radioAttrTxn.init();
+    radioTxn.addListener(radioAttrTxn);
 
     // batch the transactions
     var txns = [radiogroupTxn, radiogroupAttrTxn, radioTxn, radioAttrTxn];
@@ -83,9 +87,7 @@ var vxPalette =
     aggregateTxn.init();
     
     var txmgr = focusedWindow.vxVFD.mTxMgrShell;
-    aggregateTxn.addListener([radiogroupAttrTxn, radioTxn, radioAttrTxn]);
     txmgr.doTransaction(aggregateTxn);
-    aggregateTxn.removeListener([radiogroupAttrTxn, radioTxn, radioAttrTxn]);
   },
   
   incrementElementCount: function (aNodeName)
@@ -110,15 +112,14 @@ var vxPalette =
     elementTxn.init();
     var elementAttrTxn = new vxChangeAttributeTxn(elementTxn.mID, aAttributes, aValues, false);
     elementAttrTxn.init();
-
+    elementTxn.addListener(elementAttrTxn);
+      
     // batch the transactions
     var aggregateTxn = new vxAggregateTxn([elementTxn, elementAttrTxn]);
     aggregateTxn.init();
-
+    
     var txmgr = focusedWindow.vxVFD.mTxMgrShell;
-    txmgr.addListener(elementAttrTxn);
     txmgr.doTransaction(aggregateTxn);
-    txmgr.removeListener(elementAttrTxn);
   },
 
   /** 

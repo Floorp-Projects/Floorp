@@ -21,13 +21,3 @@
  *   Ben Goodger <ben@netscape.com> (Original Author)
  */
  
-function vxVFDSelectionManager ()
-{
-  this.selectionExists = false;
-}
-
-vxVFDSelectionManager.prototype = 
-{
-  selectionExists: null
-};
-

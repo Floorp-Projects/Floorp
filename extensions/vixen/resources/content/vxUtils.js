@@ -76,3 +76,52 @@ ArrayEnumerator.prototype = {
     return false;
   }
 };
+
+/** 
+ * RDF Node object
+ */
+function RDFNode()
+{
+}
+
+RDFNode.prototype = {
+  EqualsNode: function (aRDFNode) 
+  {
+    try {
+      var node = aRDFNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
+      if (node.Value == this.Value) 
+        return true;
+    }
+    catch (e) {
+    }
+    return false;
+  }
+}; 
+ 
+/** 
+ * RDF Literal object
+ */
+function RDFLiteral (aValue)
+{
+  this.Value = aValue;
+}
+
+RDFLiteral.prototype = 
+{
+  __proto__: RDFNode.prototype
+};
+
+/** 
+ * RDF Resource object
+ */
+function RDFResource (aValue)
+{
+  this.Value = aValue;
+}
+
+RDFResource.prototype = 
+{ 
+  __proto__: RDFNode.prototype
+};
+
+

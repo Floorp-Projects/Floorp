@@ -59,7 +59,17 @@ var vxVFD =
     // for a focused vfd, send "vfd,url"
     // vixenMain.vxShell.mFocusObserver.Notify({ }, "window_focus", ("vfd," + this.mParams.documentURL));
     vixenMain.vxShell.mFocusedWindow = window;
-    _ddf("focused window, according to our parent, is", vixenMain.vxShell.mFocusedWindow);
+    
+    // XXX-HACK until we set up observers
+    var history = vxUtils.getWindow("vixen:history");
+    if (history) {
+      var doc = history.document;
+      var historyTree = doc.getElementById("historyTree");
+      if (historyTree) {
+        historyTree.database.AddDataSource(vxVFDTransactionDS);
+        historyTree.builder.rebuild();
+      }
+    }
   },
   
   get vfdDocumentWindowNode()
@@ -79,7 +89,7 @@ var vxVFD =
   
   getInsertionPoint: function ()
   {
-    if (this.mSelection && this.mSelection.selectionExists) {
+    if (this.mSelection && this.mSelection.selectionExists) { // && this.mSelection.selectionExists) {
       // compute the insertion point based on selection
       // XXX - TODO
     }

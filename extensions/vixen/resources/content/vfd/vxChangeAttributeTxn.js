@@ -64,33 +64,48 @@ vxChangeAttributeTxn.prototype = {
     if (!this.mElementCreated)
       return;
       
+    var irq = { };
+    this.notifyListeners("willDo", this, irq);
+
     for (var i = 0; i < this.mAttributes.length; i++) {
       this.mUndoValues[i] = this.mElement.getAttribute(this.mAttributes[i]);
-      if (!this.mRemoveFlags[i])
+      if ("mRemoveFlags" in this && i < this.mRemoveFlags.length && !this.mRemoveFlags[i])
         this.mElement.setAttribute(this.mAttributes[i], this.mValues[i]);
       else
         this.mElement.removeAttribute(this.mAttributes[i]);
     }
+
+    this.notifyListeners("didDo", this, irq);
   },
 
   undoTransaction: function ()
   {
+    var irq = { };
+    this.notifyListeners("willUndo", this, irq);
+
     for (var i = 0; i < this.mAttributes.length; i++) {
       if (this.mUndoValues[i]) 
         this.mElement.setAttribute(this.mAttributes[i], this.mUndoValues[i]);
       else
         this.mElement.removeAttribute(this.mAttributes[i]);
     }
+
+    this.notifyListeners("didUndo", this, irq);
   },
   
   redoTransaction: function ()
   {
+    var irq = { };
+    this.notifyListeners("willRedo", this, irq);
+
     for (var i = 0; i < this.mAttributes.length; i++) {
-      if (!this.mRemoveFlags[i])
+      if ("mRemoveFlags" in this && i < this.mRemoveFlags.length && !this.mRemoveFlags[i])
         this.mElement.setAttribute(this.mAttributes[i], this.mValues[i]);
       else
         this.mElement.removeAttribute(this.mAttributes[i]);
     }
+
+    this.notifyListeners("didRedo", this, irq);
   },
   
   // XXX TODO: update to support multiple attribute syntax
@@ -109,18 +124,9 @@ vxChangeAttributeTxn.prototype = {
    */
   didDo: function (aTransactionManager, aTransaction, aInterrupt) 
   {
-    var prevTxn = null;
-    if (aTransaction.commandString.indexOf("aggregate-txn") >= 0)
-      prevTxn = aTransaction.mTransactionList[this.mElementTxnID];
-    else 
-      prevTxn = aTransaction;
-
-    if (prevTxn.commandString.indexOf("create-element") >= 0) {
-      _ddf("did create element of", prevTxn.mLocalName);
-      this.mElement = prevTxn.mElement;
+    if (aTransaction.commandString.indexOf("create-element") >= 0) {
+      this.mElement = aTransaction.mElement;
       this.mElementCreated = true;
-      _ddf("going to actually do this transaction now", this.mAttributes);
-      this.doTransaction();
     }
   }
 };

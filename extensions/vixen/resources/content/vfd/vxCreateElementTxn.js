@@ -49,23 +49,30 @@ vxCreateElementTxn.prototype = {
 
   doTransaction: function ()
   {
-    if (!this.mElementCreated) {
-      _dd("element we rely on does not yet exist, so bail for now");
+    if (!this.mElementCreated)
       return;
-    }
-      
+     
+    var irq = { };
+    this.notifyListeners("willDo", this, irq);
     this.mElement = this.mDocument.createElement(this.mLocalName);
     this.insertNode();
+    this.notifyListeners("didDo", this, irq);
   },
 
   undoTransaction: function ()
   {
+    var irq = { };
+    this.notifyListeners("willUndo", this, irq);
     this.mParentNode.removeChild(this.mElement);
+    this.notifyListeners("didUndo", this, irq);
   },
   
   redoTransaction: function ()
   {
+    var irq = { };
+    this.notifyListeners("willRedo", this, irq);
     this.insertNode();
+    this.notifyListeners("didRedo", this, irq);
   },
 
   insertNode: function () 
@@ -91,16 +98,9 @@ vxCreateElementTxn.prototype = {
    */
   didDo: function (aTransactionManager, aTransaction, aInterrupt) 
   {
-    var prevTxn = null;
-    if (aTransaction.commandString.indexOf("aggregate-txn") >= 0) 
-      prevTxn = aTransaction.mTransactionList[this.mElementTxnID];
-    else
-      prevTxn = aTransaction;
-  
-    if (prevTxn.commandString.indexOf("create-element") >= 0) {
-      this.mParentNode = prevTxn.mElement;
+    if (aTransaction.commandString.indexOf("create-element") >= 0) {
+      this.mParentNode = aTransaction.mElement;
       this.mElementCreated = true;
-      this.doTransaction();
     }
   }
   
