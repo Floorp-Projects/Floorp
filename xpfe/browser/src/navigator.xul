@@ -394,6 +394,26 @@
     }
   }
 
+  function SignonViewer()
+  {
+    if (appCore != null) {
+      dump("SignonViewer\n");
+      appCore.signonViewer();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function CookieViewer()
+  {
+    if (appCore != null) {
+      dump("CookieViewer\n");
+      appCore.cookieViewer();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
   function OpenMessenger()
   {
     var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
@@ -514,6 +534,8 @@
           <menuitem name="Quick Form Fill" onclick="WalletQuickFillin();"/> 
           <separator /> 
           <menuitem name="Wallet Contents" onclick="WalletEditor();"/> 
+          <menuitem name="Display Signons" onclick="SignonViewer();"/> 
+          <menuitem name="Display Cookies" onclick="CookieViewer();"/> 
           <separator /> 
           <menuitem name="Samples" onclick="WalletSamples();"/> 
 	  </menu> 
