@@ -24,7 +24,10 @@ public:
 	BOOL m_bUseCustomPopupMenu;
 	BOOL m_bUseCustomDropTarget;
 	CMenu m_menu;
-
+    BOOL m_bNewWindow;
+    BOOL m_bEditMode;
+    BOOL m_bCanGoBack;
+    BOOL m_bCanGoForward;
 	CBrowseDlg(CWnd* pParent = NULL);	// standard constructor
 
 	static CBrowseDlg *m_pBrowseDlg;
@@ -44,9 +47,10 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CBrowseDlg)
 	enum { IDD = IDD_CBROWSE_DIALOG };
-	CButton	m_btnEditMode;
+	CButton	m_btnStop;
+	CButton	m_btnForward;
+	CButton	m_btnBack;
 	CComboBox	m_cmbURLs;
-	BOOL	m_bNewWindow;
 	//}}AFX_DATA
 
 	CToolBar m_EditBar;
@@ -84,7 +88,6 @@ protected:
 	afx_msg void OnClose();
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-	afx_msg void OnEditMode();
 	afx_msg void OnFileExit();
 	afx_msg void OnViewGotoBack();
 	afx_msg void OnViewGotoForward();
@@ -104,6 +107,11 @@ protected:
 	afx_msg void OnDebugVisible();
 	afx_msg void OnUpdateDebugVisible(CCmdUI* pCmdUI);
 	afx_msg void OnDebugPostDataTest();
+	afx_msg void OnReload();
+	afx_msg void OnViewEditmode();
+	afx_msg void OnViewOpenInNewWindow();
+	afx_msg void OnUpdateViewEditmode(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateViewOpenInNewWindow(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	afx_msg void OnEditBold();
 	afx_msg void OnEditItalic();

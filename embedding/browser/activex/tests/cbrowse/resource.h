@@ -47,6 +47,7 @@
 #define IDC_EDITBAR_MARKER              1025
 #define IDC_OVERRIDE                    1026
 #define IDC_BUTTON1                     1027
+#define IDC_RELOAD                      1028
 #define IDB_BOLD                        32771
 #define IDB_ITALIC                      32772
 #define IDB_UNDERLINE                   32773
@@ -67,14 +68,16 @@
 #define ID_FILE_SAVEAS                  32793
 #define ID_DEBUG_VISIBLE                32794
 #define ID_DEBUG_POSTDATATEST           32795
+#define ID_VIEW_EDITMODE                32796
+#define ID_VIEW_OPENLINKSINNEWWINDOWS   32797
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        142
-#define _APS_NEXT_COMMAND_VALUE         32796
-#define _APS_NEXT_CONTROL_VALUE         1028
+#define _APS_NEXT_COMMAND_VALUE         32798
+#define _APS_NEXT_CONTROL_VALUE         1029
 #define _APS_NEXT_SYMED_VALUE           107
 #endif
 #endif

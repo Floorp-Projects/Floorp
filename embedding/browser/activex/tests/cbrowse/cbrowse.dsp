@@ -120,11 +120,11 @@ SOURCE=.\ControlEventSink.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\src\control\ControlSite.cpp
+SOURCE=..\..\src\common\ControlSite.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\src\control\ControlSiteIPFrame.cpp
+SOURCE=..\..\src\common\ControlSiteIPFrame.cpp
 # End Source File
 # Begin Source File
 
@@ -140,7 +140,7 @@ SOURCE=.\PickerDlg.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\src\control\PropertyBag.cpp
+SOURCE=..\..\src\common\PropertyBag.cpp
 # End Source File
 # Begin Source File
 
@@ -197,11 +197,11 @@ SOURCE=.\ControlEventSink.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\ControlSite.h
+SOURCE=..\..\src\common\ControlSite.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\ControlSiteIPFrame.h
+SOURCE=..\..\src\common\ControlSiteIPFrame.h
 # End Source File
 # Begin Source File
 
@@ -210,6 +210,10 @@ SOURCE=.\EditToolBar.h
 # Begin Source File
 
 SOURCE=.\PickerDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\common\PropertyBag.h
 # End Source File
 # Begin Source File
 

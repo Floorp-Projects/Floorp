@@ -51,7 +51,6 @@ CBrowseDlg::CBrowseDlg(CWnd* pParent /*=NULL*/)
 	double y = 1.0/x;
 
 	//{{AFX_DATA_INIT(CBrowseDlg)
-	m_bNewWindow = FALSE;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_pBrowseDlg = this;
@@ -59,15 +58,20 @@ CBrowseDlg::CBrowseDlg(CWnd* pParent /*=NULL*/)
 	m_clsid = CLSID_NULL;
 	m_bUseCustomPopupMenu = FALSE;
 	m_bUseCustomDropTarget = FALSE;
+    m_bEditMode = FALSE;
+    m_bNewWindow = FALSE;
+    m_bCanGoBack = FALSE;
+    m_bCanGoForward = FALSE;
 }
 
 void CBrowseDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
+    CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CBrowseDlg)
-	DDX_Control(pDX, IDC_EDITMODE, m_btnEditMode);
+	DDX_Control(pDX, IDC_STOP, m_btnStop);
+	DDX_Control(pDX, IDC_FORWARD, m_btnForward);
+	DDX_Control(pDX, IDC_BACKWARD, m_btnBack);
 	DDX_Control(pDX, IDC_URL, m_cmbURLs);
-	DDX_Check(pDX, IDC_NEWWINDOW, m_bNewWindow);
 	//}}AFX_DATA_MAP
 }
 
@@ -81,7 +85,6 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_WM_CLOSE()
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
-	ON_BN_CLICKED(IDC_EDITMODE, OnEditMode)
 	ON_COMMAND(ID_FILE_EXIT, OnFileExit)
 	ON_COMMAND(ID_VIEW_GOTO_BACK, OnViewGotoBack)
 	ON_COMMAND(ID_VIEW_GOTO_FORWARD, OnViewGotoForward)
@@ -101,6 +104,11 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_COMMAND(ID_DEBUG_VISIBLE, OnDebugVisible)
 	ON_UPDATE_COMMAND_UI(ID_DEBUG_VISIBLE, OnUpdateDebugVisible)
 	ON_COMMAND(ID_DEBUG_POSTDATATEST, OnDebugPostDataTest)
+	ON_BN_CLICKED(IDC_RELOAD, OnReload)
+	ON_COMMAND(ID_VIEW_EDITMODE, OnViewEditmode)
+	ON_COMMAND(ID_VIEW_OPENLINKSINNEWWINDOWS, OnViewOpenInNewWindow)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_EDITMODE, OnUpdateViewEditmode)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_OPENLINKSINNEWWINDOWS, OnUpdateViewOpenInNewWindow)
 	//}}AFX_MSG_MAP
 	ON_COMMAND(IDB_BOLD, OnEditBold)
 	ON_COMMAND(IDB_ITALIC, OnEditItalic)
@@ -319,8 +327,8 @@ HRESULT CBrowseDlg::CreateWebBrowser()
 		return E_OUTOFMEMORY;
 	}
 
-	CControlEventSinkInstance *pEventSink = NULL;
-	CControlEventSinkInstance::CreateInstance(&pEventSink);
+	CBrowseEventSinkInstance *pEventSink = NULL;
+	CBrowseEventSinkInstance::CreateInstance(&pEventSink);
 	if (pEventSink == NULL)
 	{
 		m_pControlSite->Release();
@@ -461,52 +469,57 @@ void CBrowseDlg::OnGo()
 {
 	UpdateData();
 
-	IWebBrowser *pIWebBrowser = NULL;
-	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	CComPtr<IWebBrowser> webBrowser;
+	if (SUCCEEDED(GetWebBrowser(&webBrowser)))
 	{
 		CString szURL;
 		m_cmbURLs.GetWindowText(szURL);
 		CComVariant vFlags(m_bNewWindow ? navOpenInNewWindow : 0);
 		BSTR bstrURL = szURL.AllocSysString();
-		HRESULT hr = pIWebBrowser->Navigate(bstrURL, &vFlags, NULL, NULL, NULL);
+		HRESULT hr = webBrowser->Navigate(bstrURL, &vFlags, NULL, NULL, NULL);
         if (FAILED(hr))
         {
             OutputString("Navigate failed (hr=0x%08x)", hr);
         }
 		::SysFreeString(bstrURL);
-		pIWebBrowser->Release();
 	}
 }
 
 
 void CBrowseDlg::OnStop() 
 {
-	IWebBrowser *pIWebBrowser = NULL;
-	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	CComPtr<IWebBrowser> webBrowser;
+	if (SUCCEEDED(GetWebBrowser(&webBrowser)))
 	{
-		pIWebBrowser->Stop();
-		pIWebBrowser->Release();
+		webBrowser->Stop();
 	}
 }
 
+void CBrowseDlg::OnReload() 
+{
+	CComPtr<IWebBrowser> webBrowser;
+	if (SUCCEEDED(GetWebBrowser(&webBrowser)))
+	{
+		CComVariant vValue(REFRESH_COMPLETELY);
+		webBrowser->Refresh2(&vValue);
+	}
+}
 
 void CBrowseDlg::OnBackward() 
 {
-	IWebBrowser *pIWebBrowser = NULL;
-	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	CComPtr<IWebBrowser> webBrowser;
+	if (SUCCEEDED(GetWebBrowser(&webBrowser)))
 	{
-		pIWebBrowser->GoBack();
-		pIWebBrowser->Release();
+		webBrowser->GoBack();
 	}
 }
 
 void CBrowseDlg::OnForward() 
 {
-	IWebBrowser *pIWebBrowser = NULL;
-	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	CComPtr<IWebBrowser> webBrowser;
+	if (SUCCEEDED(GetWebBrowser(&webBrowser)))
 	{
-		pIWebBrowser->GoForward();
-		pIWebBrowser->Release();
+		webBrowser->GoForward();
 	}
 }
 
@@ -782,18 +795,6 @@ void CBrowseDlg::ExecOleCommand(const GUID *pguidGroup, DWORD nCmdId)
 }
 
 
-void CBrowseDlg::OnEditMode() 
-{
-	DWORD nCmdID = (m_btnEditMode.GetCheck()) ? IDM_EDITMODE : IDM_BROWSEMODE;
-	ExecOleCommand(&CGID_MSHTML, nCmdID);
-
-//	if (m_pControlSite)
-//	{
-//		m_pControlSite->SetAmbientUserMode((m_btnEditMode.GetCheck() == 0) ? FALSE : TRUE);
-//	}
-}
-
-
 void CBrowseDlg::OnEditBold()
 {
 	ExecOleCommand(&CGID_MSHTML, IDM_BOLD);
@@ -816,13 +817,7 @@ void CBrowseDlg::OnFileExit()
 
 void CBrowseDlg::OnViewRefresh() 
 {
-	IWebBrowser *pIWebBrowser = NULL;
-	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
-	{
-		CComVariant vValue(REFRESH_COMPLETELY);
-		pIWebBrowser->Refresh2(&vValue);
-		pIWebBrowser->Release();
-	}
+    OnReload();
 }
 
 void CBrowseDlg::OnViewGotoBack() 
@@ -837,21 +832,20 @@ void CBrowseDlg::OnViewGotoForward()
 
 void CBrowseDlg::OnUpdateViewGotoBack(CCmdUI* pCmdUI) 
 {
-	// TODO: Add your command update UI handler code here
+    pCmdUI->Enable(m_bCanGoBack);
 }
 
 void CBrowseDlg::OnUpdateViewGotoForward(CCmdUI* pCmdUI) 
 {
-	// TODO: Add your command update UI handler code here
+    pCmdUI->Enable(m_bCanGoForward);
 }
 
 void CBrowseDlg::OnViewGotoHome() 
 {
-	IWebBrowser *pIWebBrowser = NULL;
-	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	CComPtr<IWebBrowser> webBrowser;
+	if (SUCCEEDED(GetWebBrowser(&webBrowser)))
 	{
-		pIWebBrowser->GoHome();
-		pIWebBrowser->Release();
+		webBrowser->GoHome();
 	}
 }
 
@@ -898,25 +892,23 @@ void CBrowseDlg::OnFilePrint()
 void CBrowseDlg::OnDebugVisible() 
 {
     VARIANT_BOOL visible = VARIANT_TRUE;
-	IWebBrowser *pIWebBrowser = NULL;
-	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	CComPtr<IWebBrowser> webBrowser;
+	if (SUCCEEDED(GetWebBrowser(&webBrowser)))
 	{
-       	CIPtr(IWebBrowserApp) cpWebBrowser = pIWebBrowser;
+       	CIPtr(IWebBrowserApp) cpWebBrowser = webBrowser;
         cpWebBrowser->get_Visible(&visible);
         cpWebBrowser->put_Visible(visible == VARIANT_TRUE ? VARIANT_FALSE : VARIANT_TRUE);
-		pIWebBrowser->Release();
 	}
 }
 
 void CBrowseDlg::OnUpdateDebugVisible(CCmdUI* pCmdUI) 
 {
     VARIANT_BOOL visible = VARIANT_TRUE;
-	IWebBrowser *pIWebBrowser = NULL;
-	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	CComPtr<IWebBrowser> webBrowser;
+	if (SUCCEEDED(GetWebBrowser(&webBrowser)))
 	{
-       	CIPtr(IWebBrowserApp) cpWebBrowser = pIWebBrowser;
+       	CIPtr(IWebBrowserApp) cpWebBrowser = webBrowser;
 		cpWebBrowser->get_Visible(&visible);
-		pIWebBrowser->Release();
 	}
 
     pCmdUI->SetCheck(visible == VARIANT_TRUE ? 1 : 0);
@@ -924,10 +916,10 @@ void CBrowseDlg::OnUpdateDebugVisible(CCmdUI* pCmdUI)
 
 void CBrowseDlg::OnDebugPostDataTest() 
 {
-	IWebBrowser *pIWebBrowser = NULL;
-	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	CComPtr<IWebBrowser> webBrowser;
+	if (SUCCEEDED(GetWebBrowser(&webBrowser)))
 	{
-       	CIPtr(IWebBrowser2) cpWebBrowser = pIWebBrowser;
+       	CIPtr(IWebBrowser2) cpWebBrowser = webBrowser;
 
         CComVariant vURL(L"http://www.mozilla.org/htdig-cgi/htsearch");
         const char *szPostData="config=htdig&restrict=&exclude=&words=embedding&method=and&format=builtin-long";
@@ -953,7 +945,32 @@ void CBrowseDlg::OnDebugPostDataTest()
             &vPostData,
             &vHeaders  // Headers
         );
-
-		pIWebBrowser->Release();
 	}
+}
+
+void CBrowseDlg::OnViewEditmode() 
+{
+    m_bEditMode = m_bEditMode ? FALSE : TRUE;
+	DWORD nCmdID = m_bEditMode ? IDM_EDITMODE : IDM_BROWSEMODE;
+	ExecOleCommand(&CGID_MSHTML, nCmdID);
+
+//	if (m_pControlSite)
+//	{
+//		m_pControlSite->SetAmbientUserMode((m_btnEditMode.GetCheck() == 0) ? FALSE : TRUE);
+//	}
+}
+
+void CBrowseDlg::OnViewOpenInNewWindow() 
+{
+    m_bNewWindow = m_bNewWindow ? FALSE : TRUE;
+}
+
+void CBrowseDlg::OnUpdateViewEditmode(CCmdUI* pCmdUI) 
+{
+    pCmdUI->SetCheck(m_bEditMode ? 1 : 0);
+}
+
+void CBrowseDlg::OnUpdateViewOpenInNewWindow(CCmdUI* pCmdUI) 
+{
+    pCmdUI->SetCheck(1); //m_bNewWindow ? 1 : 0);
 }

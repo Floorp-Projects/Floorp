@@ -1,18 +1,18 @@
-// ControlEventSink.cpp : Implementation of CControlEventSink
+// ControlEventSink.cpp : Implementation of CBrowseEventSink
 #include "stdafx.h"
 #include "Cbrowse.h"
 #include "ControlEventSink.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// CControlEventSink
+// CBrowseEventSink
 
-HRESULT STDMETHODCALLTYPE CControlEventSink::GetTypeInfoCount( 
+HRESULT STDMETHODCALLTYPE CBrowseEventSink::GetTypeInfoCount( 
     /* [out] */ UINT __RPC_FAR *pctinfo)
 {
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CControlEventSink::GetTypeInfo( 
+HRESULT STDMETHODCALLTYPE CBrowseEventSink::GetTypeInfo( 
     /* [in] */ UINT iTInfo,
     /* [in] */ LCID lcid,
     /* [out] */ ITypeInfo __RPC_FAR *__RPC_FAR *ppTInfo)
@@ -20,7 +20,7 @@ HRESULT STDMETHODCALLTYPE CControlEventSink::GetTypeInfo(
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CControlEventSink::GetIDsOfNames( 
+HRESULT STDMETHODCALLTYPE CBrowseEventSink::GetIDsOfNames( 
     /* [in] */ REFIID riid,
     /* [size_is][in] */ LPOLESTR __RPC_FAR *rgszNames,
     /* [in] */ UINT cNames,
@@ -30,7 +30,7 @@ HRESULT STDMETHODCALLTYPE CControlEventSink::GetIDsOfNames(
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CControlEventSink:: Invoke( 
+HRESULT STDMETHODCALLTYPE CBrowseEventSink:: Invoke( 
     /* [in] */ DISPID dispIdMember,
     /* [in] */ REFIID riid,
     /* [in] */ LCID lcid,
@@ -64,13 +64,29 @@ HRESULT STDMETHODCALLTYPE CControlEventSink:: Invoke(
         }
         break;
     case 0x69:
-        szEvent = _T("CommandStateChange");
+        {
+            BOOL enable = pDispParams->rgvarg[0].boolVal == VARIANT_TRUE ? TRUE : FALSE;
+            LONG commandState = pDispParams->rgvarg[1].lVal;
+            if (commandState == CSC_NAVIGATEBACK)
+            {
+                m_pBrowseDlg->m_bCanGoBack = enable;
+                m_pBrowseDlg->m_btnBack.EnableWindow(enable);
+            }
+            else if (commandState == CSC_NAVIGATEFORWARD)
+            {
+                m_pBrowseDlg->m_bCanGoForward = enable;
+                m_pBrowseDlg->m_btnForward.EnableWindow(enable);
+            }
+            szEvent.Format(_T("CommandStateChange(%ld, %d)"), commandState, enable);
+        }
         break;
     case 0x6a:
         szEvent = _T("DownloadBegin");
+        m_pBrowseDlg->m_btnStop.EnableWindow(TRUE);
         break;
     case 0x68:
         szEvent = _T("DownloadComplete");
+        m_pBrowseDlg->m_btnStop.EnableWindow(FALSE);
         break;
     case 0x71:
         {
@@ -86,9 +102,7 @@ HRESULT STDMETHODCALLTYPE CControlEventSink:: Invoke(
         szEvent = _T("PropertyChange");
         break;
     case 0xfa:
-        {
-            szEvent = _T("BeforeNavigate2");
-        }
+        szEvent = _T("BeforeNavigate2");
         break;
     case 0xfb:
         {
