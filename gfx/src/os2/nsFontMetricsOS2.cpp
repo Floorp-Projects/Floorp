@@ -1511,8 +1511,16 @@ nsFontMetricsOS2::RealizeFont()
   mStrikeoutPosition  = NSToCoordRound( mXHeight / 2.0f);
   mStrikeoutSize      = PR_MAX(onePixel, NSToCoordRound(fm.lStrikeoutSize * dev2app));
 
+#if 1
+  // Can't trust the fonts to give us good results for the underline position
+  //  and size.  This calculation, though, gives very good results.
+  float height = fm.lMaxAscender + fm.lMaxDescender;
+  mUnderlinePosition = -PR_MAX(onePixel, NSToIntRound(floor(0.1 * height + 0.5) * dev2app));
+  mUnderlineSize = PR_MAX(onePixel, NSToIntRound(floor(0.05 * height + 0.5) * dev2app));
+#else
   mUnderlinePosition  = -NSToCoordRound( fm.lUnderscorePosition * dev2app );
   mUnderlineSize      = PR_MAX(onePixel, NSToCoordRound(fm.lUnderscoreSize * dev2app));
+#endif
 
   mAveCharWidth       = PR_MAX(1, NSToCoordRound(fm.lAveCharWidth * dev2app));
 
