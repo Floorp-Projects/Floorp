@@ -30,3 +30,10 @@ require rather large changes throughout PLIF).
 
 
 Make getSettings return a boolean instead of raising an exception.
+
+
+Need a pass-through command that output can use to bring up specific
+templates
+
+
+Stylesheet should be a template
