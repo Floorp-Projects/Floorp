@@ -135,11 +135,7 @@ UnregisterProc(nsIComponentManager *aCompMgr,
 }
 
 static const nsModuleComponentInfo components[] = {
-    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_SERVICE_CONTRACTID,
-      nsBookmarksServiceConstructor },
-    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_DATASOURCE_CONTRACTID,
-      nsBookmarksServiceConstructor },
-    { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
+  { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
       "@mozilla.org/xpfe/http-index-format-factory-constructor",
       nsDirectoryViewerFactoryConstructor, RegisterProc, UnregisterProc  },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_SERVICE_CONTRACTID,
@@ -147,6 +143,10 @@ static const nsModuleComponentInfo components[] = {
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,
       nsHTTPIndexConstructor },
 #ifndef MOZ_PHOENIX
+    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_SERVICE_CONTRACTID,
+      nsBookmarksServiceConstructor },
+    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_DATASOURCE_CONTRACTID,
+      nsBookmarksServiceConstructor },
     { "Download Manager", NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID,
       nsDownloadManagerConstructor },
     { "Download", NS_DOWNLOAD_CID, NS_DOWNLOAD_CONTRACTID,
