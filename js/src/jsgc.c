@@ -1279,10 +1279,10 @@ restart:
 
 #define GC_CALLBACK(status)                                                   \
     if (rt->gcCallback) {                                                     \
-        if (gcflags & GC_ALREADY_LOCKED)                                      \
+        if (status == JSGC_END && gcflags & GC_ALREADY_LOCKED)                \
             JS_UNLOCK_GC(rt);                                                 \
         (void) rt->gcCallback(cx, status);                                    \
-        if (gcflags & GC_ALREADY_LOCKED)                                      \
+        if (status == JSGC_END && gcflags & GC_ALREADY_LOCKED)                \
             JS_LOCK_GC(rt);                                                   \
     }
 
