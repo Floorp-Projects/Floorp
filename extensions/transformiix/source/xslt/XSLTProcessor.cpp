@@ -258,7 +258,7 @@ void XSLTProcessor::parseStylesheetPI(String& data, String& type, String& href) 
     String* buffer = &sink;
 
     for (ccount = 0; ccount < size; ccount++) {
-        char ch = data.charAt(ccount);
+        UNICODE_CHAR ch = data.charAt(ccount);
         switch ( ch ) {
             case ' ' :
                 if ( inLiteral ) {

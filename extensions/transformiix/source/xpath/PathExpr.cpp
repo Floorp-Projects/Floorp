@@ -112,7 +112,7 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs)
     ListIterator iter(&expressions);
     PathExprItem* pxi;
 
-    while (pxi = (PathExprItem*)iter.next()) {
+    while ((pxi = (PathExprItem*)iter.next())) {
         NodeSet* tmpNodes = 0;
         for (int i = 0; i < nodes->size(); i++) {
             Node* node = nodes->get(i);
@@ -268,7 +268,7 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
  * Returns the String representation of this Expr.
  * @param dest the String to use when creating the String
  * representation. The String representation will be appended to
- *  any data in the destination String, to allow cascading calls to
+ * any data in the destination String, to allow cascading calls to
  * other #toString() methods for Expressions.
  * @return the String representation of this Expr.
 **/
@@ -283,7 +283,7 @@ void PathExpr::toString(String& dest)
         pxi->expr->toString(dest);
     }
     
-    while (pxi = (PathExprItem*)iter.next()) {
+    while ((pxi = (PathExprItem*)iter.next())) {
         switch (pxi->pathOp) {
             case DESCENDANT_OP:
                 dest.append("//");
