@@ -1436,6 +1436,7 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
   DWORD dwIndex1;
   char  szIndex1[MAX_BUF];
   char  szBuf[MAX_BUF];
+  char  szBuf2[MAX_BUF];
   char  szSection0[MAX_BUF];
   char  szSection1[MAX_BUF];
   char  szProgramFolder[MAX_BUF];
@@ -1444,6 +1445,8 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
   char  szTitle[MAX_BUF];
   char  szSetupString[MAX_BUF];
   char  szLocation[MAX_BUF];
+  char  szAssocFilters[MAX_BUF];
+  char  szAssocTypes[MAX_BUF];
 
 
   dwIndex0 = 0;
@@ -1469,14 +1472,81 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
       GetPrivateProfileString(szSection1, "ClassName", "", szClassName, sizeof(szClassName), szFileIniConfig);
       while(*szBuf != '\0')
       {
+        *szSetupString = '\0';
         GetPrivateProfileString(szSection1, "Title",    "", szBuf, sizeof(szBuf), szFileIniConfig);
         DecryptString(szTitle, szBuf);
-        GetPrivateProfileString(szSection1, "SetupString",  "", szBuf, sizeof(szBuf), szFileIniConfig);
-        DecryptString(szSetupString, szBuf);
         GetPrivateProfileString(szSection1, "Location",  "", szBuf, sizeof(szBuf), szFileIniConfig);
         DecryptString(szLocation, szBuf);
+        GetPrivateProfileString(szSection1, "File",  "", szBuf, sizeof(szBuf), szFileIniConfig);
+        DecryptString(szBuf2, szBuf);
+        if (szBuf2[0]) {
+          if (szSetupString[0]) {
+            strcat(szSetupString, ";");
+          }
+          strcat(szSetupString, "EXENAME=");
+          strcat(szSetupString, szBuf2);
+        }
+        GetPrivateProfileString(szSection1, "Parameters",  "", szBuf, sizeof(szBuf), szFileIniConfig);
+        DecryptString(szBuf2, szBuf);
+        if (szBuf2[0]) {
+          if (szSetupString[0]) {
+            strcat(szSetupString, ";");
+          }
+          strcat(szSetupString, "PARAMETERS=");
+          strcat(szSetupString, szBuf2);
+        }
+        GetPrivateProfileString(szSection1, "Working Dir",  "", szBuf, sizeof(szBuf), szFileIniConfig);
+        DecryptString(szBuf2, szBuf);
+        if (szBuf2[0]) {
+          if (szSetupString[0]) {
+            strcat(szSetupString, ";");
+          }
+          strcat(szSetupString, "STARTUPDIR=");
+          strcat(szSetupString, szBuf2);
+        }
+        GetPrivateProfileString(szSection1, "Object ID",  "", szBuf, sizeof(szBuf), szFileIniConfig);
+        if (szBuf[0]) {
+          if (szSetupString[0]) {
+            strcat(szSetupString, ";");
+          }
+          strcat(szSetupString, "OBJECTID=");
+          strcat(szSetupString, szBuf);
+        }
+        GetPrivateProfileString(szSection1, "Association Filters",  "", szBuf, sizeof(szBuf), szFileIniConfig);
+        if (szBuf[0]) {
+          if (diOS2Integration.oiCBAssociateHTML.bCheckBoxState == TRUE) {
+            if (szSetupString[0]) {
+              strcat(szSetupString, ";");
+            }
+            strcat(szSetupString, "ASSOCFILTER=");
+            strcat(szSetupString, szBuf);
+          }
+        }
+        GetPrivateProfileString(szSection1, "Association Types",  "", szBuf, sizeof(szBuf), szFileIniConfig);
+        if (szBuf[0]) {
+          if (diOS2Integration.oiCBAssociateHTML.bCheckBoxState == TRUE) {
+            if (szSetupString[0]) {
+              strcat(szSetupString, ";");
+            }
+            strcat(szSetupString, "ASSOCTYPE=");
+            strcat(szSetupString, szBuf);
+          }
+        }
+        GetPrivateProfileString(szSection1, "Setup String",  "", szBuf, sizeof(szBuf), szFileIniConfig);
+        DecryptString(szBuf2, szBuf);
+        if (szBuf2[0]) {
+          if (szSetupString[0]) {
+            strcat(szSetupString, ";");
+          }
+          strcat(szSetupString, szBuf2);
+        }
 
         WinCreateObject(szClassName, szTitle, szSetupString, szLocation, CO_REPLACEIFEXISTS);
+
+        if (diOS2Integration.oiCBMakeDefaultBrowser.bCheckBoxState == TRUE) {
+
+        }
+        
 #ifdef OLDCODE
         strcpy(szBuf, szProgramFolder);
         AppendBackSlash(szBuf, sizeof(szBuf));

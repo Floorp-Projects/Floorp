@@ -74,8 +74,39 @@ BOOL      gbUncompressOnly;
 ULONG     ulMode;
 static ULONG	nTotalBytes = 0;  // sum of all the FILE resources
 
+char szOSTempDir[CCHMAXPATH];
+
 /////////////////////////////////////////////////////////////////////////////
 // Utility Functions
+
+BOOL isFAT(char* szPath)
+{
+    APIRET rc;
+    ULONG ulSize;
+    PFSQBUFFER2 pfsqbuf2;
+    CHAR szDrive[3];
+
+    ulSize = sizeof(FSQBUFFER2) + 3 * CCHMAXPATH;
+    pfsqbuf2 = (PFSQBUFFER2)malloc(ulSize);
+    strncpy(szDrive, szPath, 2);
+    szDrive[2] = '\0';
+
+    DosError(FERR_DISABLEHARDERR);
+    rc = DosQueryFSAttach(szDrive, 0, FSAIL_QUERYNAME,
+                          pfsqbuf2, &ulSize);
+    DosError(FERR_ENABLEHARDERR);
+
+    if (rc == NO_ERROR) {
+      if (strcmp((char*)(pfsqbuf2->szFSDName + pfsqbuf2->cbName), "FAT") == 0) {
+        return TRUE;
+      }
+    }
+  if (rc == NO_ERROR) {
+    return FALSE;
+  } else {
+    return TRUE;
+  }
+}
 
 HWND FindWindow(PCSZ pszAtomString)
 {
@@ -103,39 +134,6 @@ HWND FindWindow(PCSZ pszAtomString)
   return  hwnd;
 }
 
-// This function is similar to GetFullPathName except instead of
-// using the current drive and directory it uses the path of the
-// directory designated for temporary files
-// If you don't specify a filename, you just get the temp dir without
-// a trailing slash
-static BOOL
-GetFullTempPathName(PCSZ szFileName, ULONG ulBufferLength, PSZ szBuffer)
-{
-  ULONG ulLen;
-  char *c = getenv( "TMP");
-  if (c) {
-    strcpy(szBuffer, c);
-  } else {
-    c = getenv("TEMP");
-    if (c) {
-      strcpy(szBuffer, c);
-    }
-  }
-
-  ulLen = strlen(szBuffer);
-  if (szBuffer[ulLen - 1] != '\\')
-    strcat(szBuffer, "\\");
-  strcat(szBuffer, WIZ_TEMP_DIR);
-
-  ulLen = strlen(szBuffer);
-  if ((szBuffer[ulLen - 1] != '\\') && (szFileName)) {
-    strcat(szBuffer, "\\");
-    strcat(szBuffer, szFileName);
-  }
-
-  return TRUE;
-}
-
 // this function appends a backslash at the end of a string,
 // if one does not already exists.
 static void AppendBackSlash(PSZ szInput, ULONG ulInputSize)
@@ -151,6 +149,27 @@ static void AppendBackSlash(PSZ szInput, ULONG ulInputSize)
     }
   }
 }
+
+// This function is similar to GetFullPathName except instead of
+// using the current drive and directory it uses the path of the
+// directory designated for temporary files
+// If you don't specify a filename, you just get the temp dir without
+// a trailing slash
+static BOOL
+GetFullTempPathName(PCSZ szFileName, ULONG ulBufferLength, PSZ szBuffer)
+{
+  strcpy(szBuffer, szOSTempDir);
+  AppendBackSlash(szBuffer, MAX_BUF);
+  strcat(szBuffer, WIZ_TEMP_DIR);
+  AppendBackSlash(szBuffer, MAX_BUF);
+
+  if (szFileName) {
+    strcat(szBuffer, szFileName);
+  }
+
+  return TRUE;
+}
+
 
 static void CreateDirectoriesAll(char* szPath)
 {
@@ -549,6 +568,57 @@ main(int argc, char *argv[], char *envp[])
 
   hab = WinInitialize(0);
   hmq = WinCreateMsgQueue(hab,0);
+
+  char *tempEnvVar = NULL;
+
+  // determine the system's TEMP path
+  tempEnvVar = getenv("TMP");
+  if ((tempEnvVar) && (!(isFAT(tempEnvVar)))) {
+    strcpy(szOSTempDir, tempEnvVar);
+  }
+  else
+  {
+    tempEnvVar = getenv("TEMP");
+    if (tempEnvVar)
+      strcpy(szOSTempDir, tempEnvVar);
+  }
+  if ((!tempEnvVar) || (isFAT(tempEnvVar)))
+  {
+    ULONG ulBootDrive = 0;
+    APIRET rc;
+    char  buffer[] = " :\\OS2\\";
+    DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
+                    &ulBootDrive, sizeof(ulBootDrive));
+    buffer[0] = 'A' - 1 + ulBootDrive;
+    if (isFAT(buffer)) {
+       /* Try current disk if boot drive is FAT */
+       ULONG ulDriveNum;
+       ULONG ulDriveMap;
+       strcpy(buffer, " :\\");
+       DosQueryCurrentDisk(&ulDriveNum, &ulDriveMap);
+       buffer[0] = 'A' - 1 + ulDriveNum;
+       if (isFAT(buffer)) {
+         int i;
+         for (i = 2; i < 26; i++) {
+           if ((ulDriveMap<<(31-i)) >> 31) {
+             buffer[0] = 'A' + i;
+             if (!(isFAT(buffer))) {
+                break;
+             }
+           }
+         }
+         if (i == 26) {
+            char szBuf[MAX_BUF];
+            WinLoadString(0, NULLHANDLE, IDS_ERROR_NO_LONG_FILENAMES, sizeof(szBuf), szBuf);
+            WinMessageBox(HWND_DESKTOP, HWND_DESKTOP, szBuf, NULL, 0, MB_ICONEXCLAMATION);
+            return(1);
+         }
+       }
+    }
+    strcpy(szOSTempDir, buffer);
+    strcat(szOSTempDir, "TEMP");
+  }
+
 
   WinLoadString(0, NULLHANDLE, IDS_TITLE, MAX_BUF, szTitle);
 

@@ -1,4 +1,5 @@
 #define IDS_ERROR_FILE_NOT_FOUND        3
+#define IDS_ERROR_NO_LONG_FILENAMES     5
 #define IDRESUME                        3
 #define IDPAUSE                         4
 #define IDS_MSG_RETRIEVE_INSTALLINI     11
@@ -93,7 +94,7 @@
 #define DLG_SELECT_COMPONENTS_SINGLE    2004
 #define DLG_SELECT_COMPONENTS           2004
 #define DLG_SELECT_COMPONENTS_MULTI     2005
-#define DLG_WINDOWS_INTEGRATION         2006
+#define DLG_OS2_INTEGRATION             2006
 #define DLG_PROGRAM_FOLDER              2007
 #define DLG_START_INSTALL               2008
 #define DLG_EXTRACTING                  2009

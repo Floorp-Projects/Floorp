@@ -291,6 +291,7 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
    char szBuf[MAX_BUF];
    PFILEDLG pfiledlg;
+   HRESULT hresult;
 
    switch ( msg ) {
       case WM_INITDLG:
@@ -401,7 +402,10 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
         switch ( SHORT1FROMMP( mp1 ) ) {
         case DID_OK:
           WinQueryDlgItemText(hwndDlg, 777, MAX_BUF, szBuf);
-          if(*szBuf == '\0')
+          if(*szBuf != '\0')
+             hresult = FileExists(szBuf);
+
+          if ((*szBuf == '\0') || ((hresult == TRUE) && (hresult != FILE_DIRECTORY)))
           {
             char szEDestinationPath[MAX_BUF];
 
@@ -410,7 +414,13 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
             return (MRESULT)TRUE;
           }
 
-          if(FileExists(szBuf) == FALSE)
+          if (isFAT(szBuf)) {
+            GetPrivateProfileString("Messages", "ERROR_FILESYSTEM", "", szBuf, sizeof(szBuf), szFileIniInstall);
+            WinMessageBox(HWND_DESKTOP, hwndDlg, szBuf, NULL, 0, MB_OK | MB_ICONEXCLAMATION);
+            return (MRESULT)TRUE;
+          }
+
+          if(hresult == FALSE)
           {
             char szMsgCreateDirectory[MAX_BUF];
             char szStrCreateDirectory[MAX_BUF];
@@ -437,7 +447,7 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
                 char szECreateDirectory[MAX_BUF];
 
                 strcpy(szBufTemp, "\n\n");
-                strcat(szBufTemp, sgProduct.szPath);
+                strcat(szBufTemp, szBuf);
                 RemoveBackSlash(szBufTemp);
                 strcat(szBufTemp, "\n\n");
 
@@ -470,6 +480,7 @@ BOOL BrowseForDirectory(HWND hDlg, char *szCurrDir)
   char           szSearchPathBuf[MAX_BUF];
   char           szDlgBrowseTitle[MAX_BUF];
   BOOL           bRet;
+  char*          caret;
 
   memset(szDlgBrowseTitle, 0, sizeof(szDlgBrowseTitle));
   GetPrivateProfileString("Messages", "DLGBROWSETITLE", "", szDlgBrowseTitle, sizeof(szDlgBrowseTitle), szFileIniInstall);
@@ -483,7 +494,14 @@ BOOL BrowseForDirectory(HWND hDlg, char *szCurrDir)
   filedlg.fl = FDS_OPEN_DIALOG | FDS_CENTER;
   filedlg.pfnDlgProc = DirDialogProc;
   WinFileDlg(HWND_DESKTOP, hDlg, &filedlg);
-  *(strstr(filedlg.szFullFile, "^")-1) = '\0';
+  caret = strstr(filedlg.szFullFile, "^");
+  if (caret) {
+    *(caret-1) = '\0';
+  } else {
+    /* Something went horribly wrong. Usually this means they typed a filename */
+    /* that actually exists. */
+    /* If this is the case, use the parent directory */
+  }
 
   if (filedlg.lReturn == DID_OK) {
     bRet = TRUE;
@@ -558,6 +576,7 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   char          szBuf[MAX_BUF];
   char          szBufTemp[MAX_BUF];
   char          szBufTemp2[MAX_BUF];
+  HRESULT       hresult;
   HOBJECT       hobject;
 
   hRadioSt0   = WinWindowFromID(hDlg, IDC_RADIO_ST0);
@@ -579,6 +598,7 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
       WinSetWindowText(hDlg, diSetupType.szTitle);
 
       hDestinationPath = WinWindowFromID(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
+      strcpy(szTempSetupPath, sgProduct.szPath);
       TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
 
       WinSetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
@@ -669,7 +689,10 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
                       0,
                       SWP_MOVE);
 
-      if((*diSetupType.szReadmeFilename == '\0') || (FileExists(diSetupType.szReadmeFilename) == FALSE))
+      strcpy(szBuf, szSetupDir);
+      AppendBackSlash(szBuf, sizeof(szBuf));
+      strcat(szBuf, diSetupType.szReadmeFilename);
+      if((*diSetupType.szReadmeFilename == '\0') || (FileExists(szBuf) == FALSE))
         WinShowWindow(hReadme, FALSE);
       else
         WinShowWindow(hReadme, TRUE);
@@ -715,16 +738,20 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
           break;
 
         case IDC_README:
-#ifdef OLDCODE /* NEeds to be written */
-//          if(*diSetupType.szReadmeApp == '\0') {
+          if(*diSetupType.szReadmeApp != '\0') {
+            STARTDATA startdata;
+            PID       pid;
+            ULONG     ulSessID;
+        
+            memset(&startdata, 0, sizeof(STARTDATA));
+            startdata.Length  = sizeof(STARTDATA);
+            startdata.PgmName = diSetupType.szReadmeApp;
             strcpy(szBuf, szSetupDir);
+            AppendBackSlash(szBuf, sizeof(szBuf));
             strcat(szBuf, diSetupType.szReadmeFilename);
-            WinOpenObject(WinQueryObject(szBuf), 0, TRUE);
-//            WinOpenObject(WinQueryObject(szBuf), 0, TRUE);
-//          }
-//          else
-//            WinSpawn(diSetupType.szReadmeApp, diSetupType.szReadmeFilename, szSetupDir, TRUENORMAL, FALSE);
-#endif
+            startdata.PgmInputs = szBuf;
+            DosStartSession(&startdata, &ulSessID, &pid);  /* Start the session */
+          }
           return (MRESULT)TRUE;
           break;
 
@@ -732,6 +759,22 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
           strcpy(sgProduct.szPath, szTempSetupPath);
 
           strcpy(szBuf, sgProduct.szPath);
+
+          if (isFAT(szBuf)) {
+            GetPrivateProfileString("Messages", "ERROR_FILESYSTEM", "", szBuf, sizeof(szBuf), szFileIniInstall);
+            WinMessageBox(HWND_DESKTOP, hDlg, szBuf, NULL, 0, MB_OK | MB_ICONEXCLAMATION);
+            return (MRESULT)TRUE;
+          }
+
+          hresult = FileExists(szBuf);
+          if ((hresult == TRUE) && (hresult != FILE_DIRECTORY))
+          {
+            char szEDestinationPath[MAX_BUF];
+
+            GetPrivateProfileString("Messages", "ERROR_DESTINATION_PATH", "", szEDestinationPath, sizeof(szEDestinationPath), szFileIniInstall);
+            WinMessageBox(HWND_DESKTOP, hDlg, szEDestinationPath, NULL, 0, MB_OK | MB_ICONEXCLAMATION);
+            return (MRESULT)TRUE;
+          }
 
           if(FileExists(szBuf) == FALSE)
           {
@@ -826,13 +869,12 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 
         case IDWIZBACK:
           ulTempSetupType = ulSetupType;
-          strcpy(szTempSetupPath, sgProduct.szPath);
+          strcpy(sgProduct.szPath, szTempSetupPath);
           WinDestroyWindow(hDlg);
           DlgSequence(PREV_DLG);
           break;
 
         case IDCANCEL:
-          strcpy(sgProduct.szPath, szTempSetupPath);
           AskCancelDlg(hDlg);
           return (MRESULT)TRUE;
           break;
@@ -1144,6 +1186,151 @@ MRESULT EXPENTRY DlgProcSelectComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
       break;
   }
 
+  return(WinDefDlgProc(hDlg, msg, mp1, mp2));
+}
+
+MRESULT APIENTRY DlgProcOS2Integration(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
+{
+  char szBuf[MAX_BUF];
+  HWND hcbCheck0;
+  HWND hcbCheck1;
+  HWND hcbCheck2;
+  HWND hcbCheck3;
+  HWND hDestinationPath;
+  SWP                 swpDlg;
+
+  hcbCheck0 = WinWindowFromID(hDlg, IDC_CHECK0);
+  hcbCheck1 = WinWindowFromID(hDlg, IDC_CHECK1);
+  hcbCheck2 = WinWindowFromID(hDlg, IDC_CHECK2);
+  hcbCheck3 = WinWindowFromID(hDlg, IDC_CHECK3);
+
+  switch(msg)
+  {
+    case WM_INITDLG:
+      AdjustDialogSize(hDlg);
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
+      WinSetWindowText(hDlg, diOS2Integration.szTitle);
+
+      if (diOS2Integration.szHomeDirectory[0]) {
+        strcpy(szTempSetupPath, diOS2Integration.szHomeDirectory);
+        hDestinationPath = WinWindowFromID(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
+        TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
+      } else {
+        strcpy(szTempSetupPath, sgProduct.szPath);
+        hDestinationPath = WinWindowFromID(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
+        TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
+      }
+
+      WinSetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
+
+      WinSetDlgItemText(hDlg, IDC_MESSAGE0, diOS2Integration.szMessage0);
+      WinSetDlgItemText(hDlg, IDC_MESSAGE1, diOS2Integration.szMessage1);
+
+      if(diOS2Integration.oiCBMakeDefaultBrowser.bEnabled)
+      {
+        WinShowWindow(hcbCheck0, TRUE);
+        WinCheckButton(hDlg, IDC_CHECK0, diOS2Integration.oiCBMakeDefaultBrowser.bCheckBoxState);
+        WinSetDlgItemText(hDlg, IDC_CHECK0, diOS2Integration.oiCBMakeDefaultBrowser.szDescription);
+      }
+      else
+        WinShowWindow(hcbCheck0, FALSE);
+
+      if(diOS2Integration.oiCBAssociateHTML.bEnabled)
+      {
+        WinShowWindow(hcbCheck1, TRUE);
+        WinCheckButton(hDlg, IDC_CHECK1, diOS2Integration.oiCBAssociateHTML.bCheckBoxState);
+        WinSetDlgItemText(hDlg, IDC_CHECK1, diOS2Integration.oiCBAssociateHTML.szDescription);
+      }
+      else
+        WinShowWindow(hcbCheck1, FALSE);
+
+      if(diOS2Integration.oiCBUpdateCONFIGSYS.bEnabled)
+      {
+        WinShowWindow(hcbCheck2, TRUE);
+        WinCheckButton(hDlg, IDC_CHECK2, diOS2Integration.oiCBUpdateCONFIGSYS.bCheckBoxState);
+        WinSetDlgItemText(hDlg, IDC_CHECK2, diOS2Integration.oiCBUpdateCONFIGSYS.szDescription);
+      }
+      else
+        WinShowWindow(hcbCheck2, FALSE);
+
+      WinQueryWindowPos(hDlg, &swpDlg);
+      WinSetWindowPos(hDlg,
+                      HWND_TOP,
+                      (gSystemInfo.lScreenX/2)-(swpDlg.cx/2),
+                      (gSystemInfo.lScreenY/2)-(swpDlg.cy/2),
+                      0,
+                      0,
+                      SWP_MOVE);
+
+      WinSetDlgItemText(hDlg, IDC_BUTTON_BROWSE, sgInstallGui.szBrowse_);
+      WinSetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
+      WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
+      break;
+
+    case WM_CLOSE:
+      AskCancelDlg(hDlg);
+      return (MRESULT)TRUE;
+      break;
+
+    case WM_COMMAND:
+      switch ( SHORT1FROMMP( mp1 ) )
+      {
+        case IDC_BUTTON_BROWSE:
+          if (BrowseForDirectory(hDlg, szTempSetupPath)) {
+            strcpy(diOS2Integration.szHomeDirectory, szTempSetupPath);
+          }
+
+          hDestinationPath = WinWindowFromID(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
+          TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
+          WinSetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
+          return (MRESULT)TRUE;
+          break;
+        case IDWIZNEXT:
+          if(diOS2Integration.oiCBMakeDefaultBrowser.bEnabled)
+          {
+            if(WinQueryButtonCheckstate(hDlg, IDC_CHECK0) == 1)
+              diOS2Integration.oiCBMakeDefaultBrowser.bCheckBoxState = TRUE;
+            else
+              diOS2Integration.oiCBMakeDefaultBrowser.bCheckBoxState = FALSE;
+          }
+
+          if(diOS2Integration.oiCBAssociateHTML.bEnabled)
+          {
+            if(WinQueryButtonCheckstate(hDlg, IDC_CHECK1) == 1)
+              diOS2Integration.oiCBAssociateHTML.bCheckBoxState = TRUE;
+            else
+              diOS2Integration.oiCBAssociateHTML.bCheckBoxState = FALSE;
+          }
+
+          if(diOS2Integration.oiCBUpdateCONFIGSYS.bEnabled)
+          {
+            if(WinQueryButtonCheckstate(hDlg, IDC_CHECK2) == 1)
+              diOS2Integration.oiCBUpdateCONFIGSYS.bCheckBoxState = TRUE;
+            else
+              diOS2Integration.oiCBUpdateCONFIGSYS.bCheckBoxState = FALSE;
+          }
+
+          WinDestroyWindow(hDlg);
+          DlgSequence(NEXT_DLG);
+          break;
+
+        case IDWIZBACK:
+          WinDestroyWindow(hDlg);
+          DlgSequence(PREV_DLG);
+          break;
+
+        case IDCANCEL:
+          AskCancelDlg(hDlg);
+          return (MRESULT)TRUE;
+          break;
+
+        default:
+          break;
+      }
+      break;
+  }
   return(WinDefDlgProc(hDlg, msg, mp1, mp2));
 }
 
@@ -2011,6 +2198,9 @@ void DlgSequence(int iDirection)
           ulWizardState = DLG_SELECT_COMPONENTS;
           break;
         case DLG_SELECT_COMPONENTS:
+          ulWizardState = DLG_OS2_INTEGRATION;
+          break;
+        case DLG_OS2_INTEGRATION:
           ulWizardState = DLG_ADDITIONAL_OPTIONS;
           break;
         case DLG_ADDITIONAL_OPTIONS:
@@ -2041,8 +2231,11 @@ void DlgSequence(int iDirection)
         case DLG_SELECT_COMPONENTS:
           ulWizardState = DLG_SETUP_TYPE;
           break;
-        case DLG_ADDITIONAL_OPTIONS:
+        case DLG_OS2_INTEGRATION:
           ulWizardState = DLG_SELECT_COMPONENTS;
+          break;
+        case DLG_ADDITIONAL_OPTIONS:
+          ulWizardState = DLG_OS2_INTEGRATION;
           break;
         case DLG_START_INSTALL:
           ulWizardState = DLG_ADDITIONAL_OPTIONS;
@@ -2109,6 +2302,14 @@ void DlgSequence(int iDirection)
         }
         break;
 
+      case DLG_OS2_INTEGRATION:
+        if(diOS2Integration.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, ulWizardState, diOS2Integration.szTitle, DlgProcOS2Integration);
+          bDone = TRUE;
+        }
+        break;
+
       case DLG_ADVANCED_SETTINGS:
         if(diAdvancedSettings.bShowDialog)
         {
@@ -2117,7 +2318,7 @@ void DlgSequence(int iDirection)
         }
         break;
 
-     case DLG_ADDITIONAL_OPTIONS:
+      case DLG_ADDITIONAL_OPTIONS:
         do
         {
           hrValue = VerifyDiskSpace();
@@ -2281,12 +2482,14 @@ void CommitInstall(void)
             /* DEPEND_REBOOT process file manipulation functions */
             ProcessFileOpsForAll(T_DEPEND_REBOOT);
 
+            ProcessOS2Integration();
+
             UnsetSetupState(); // clear setup state
             if(!gbIgnoreProgramFolderX)
               ProcessProgramFolderShowCmd();
 
             CleanupArgsRegistry();
-            CleanupPreviousVersionRegKeys();
+//            CleanupPreviousVersionRegKeys();
             if(NeedReboot())
             {
               CleanupXpcomFile();

@@ -64,6 +64,7 @@ BEGIN
     IDS_ERROR_FILE_WRITE    "Unable to write file %s"
     IDS_TITLE               "Installation"
     IDS_ERROR_OUT_OF_MEMORY "Out of memory!"
+    IDS_ERROR_NO_LONG_FILENAMES "You must have at least one drive that supports long filenames to install this product."
 END
 
 /////////////////////////////////////////////////////////////////////////////
