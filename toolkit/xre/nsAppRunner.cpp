@@ -407,6 +407,9 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
     return nsnull;
   }
 
+  int i;
+
+  // Read string-valued fields
   const struct {
     const char* key;
     char* buf;
@@ -419,8 +422,7 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
     { "BuildID",   buildID,   sizeof(buildID),   PR_TRUE  },
     { "Copyright", copyright, sizeof(copyright), PR_FALSE }
   };
-
-  for (int i=0; i<5; ++i) {
+  for (i=0; i<5; ++i) {
     rv = parser.GetString("App", string_fields[i].key, string_fields[i].buf,
                           string_fields[i].bufLen);
     if (NS_FAILED(rv)) {
@@ -434,6 +436,7 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
     }
   }
 
+  // Read boolean-valued fields
   const struct {
     const char* key;
     PRBool* value;
@@ -442,8 +445,7 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
     { "EnableExtensionManager", &data.enableExtensionManager }
   };
   char buf[2];
-
-  for (int i=0; i<2; ++i) {
+  for (i=0; i<2; ++i) {
     rv = parser.GetString("App", boolean_fields[i].key, buf, sizeof(buf));
     if (NS_SUCCEEDED(rv))
       *(boolean_fields[i].value) =
