@@ -107,14 +107,6 @@ struct nsINetService : public nsISupports
      */
     NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie)=0;
 
-#ifdef SingleSignon
-    NS_IMETHOD SI_DisplaySignonInfoAsHTML()=0;
-    NS_IMETHOD SI_RememberSignonData
-        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt)=0;
-    NS_IMETHOD SI_RestoreSignonData
-        (char* URLNAME, char* name, char** value)=0;
-#endif
-
 #ifdef CookieManagement
     NS_IMETHOD NET_DisplayCookieInfoAsHTML()=0;
 #ifdef PrivacySiteInfo

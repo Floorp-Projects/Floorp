@@ -53,14 +53,6 @@ public:
     NS_IMETHOD GetCookieString(nsIURL *aURL, nsString& aCookie);
     NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie);
 
-#ifdef SingleSignon
-    NS_IMETHOD SI_DisplaySignonInfoAsHTML();
-    NS_IMETHOD SI_RememberSignonData
-        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
-    NS_IMETHOD SI_RestoreSignonData
-        (char* URLNAME, char* name, char** value);
-#endif
-
 #ifdef CookieManagement
     NS_IMETHOD NET_DisplayCookieInfoAsHTML();
 #ifdef PrivacySiteInfo
