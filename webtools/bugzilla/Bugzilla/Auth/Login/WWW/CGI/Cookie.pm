@@ -57,18 +57,16 @@ sub authenticate {
                 "  logincookies.userid=profiles.userid AND " .
                 "  logincookies.userid=? AND " .
                 "  (logincookies.ipaddr=?";
+    my @params = ($login_cookie, $login, $ipaddr);
     if (defined $netaddr) {
         trick_taint($netaddr);
         $query .= " OR logincookies.ipaddr=?";
+        push(@params, $netaddr);
     }
     $query .= ")";
 
     my $dbh = Bugzilla->dbh;
-    my ($userid, $disabledtext) = $dbh->selectrow_array($query, undef,
-                                                        $login_cookie,
-                                                        $login,
-                                                        $ipaddr,
-                                                        $netaddr);
+    my ($userid, $disabledtext) = $dbh->selectrow_array($query, undef, @params);
 
     return (AUTH_DISABLED, $userid, $disabledtext)
       if ($disabledtext);
