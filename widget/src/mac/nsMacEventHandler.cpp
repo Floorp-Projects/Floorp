@@ -170,7 +170,10 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 		focusedWidget = toolkit->GetFocus();
 	
 	if (!focusedWidget)
+	{
+	  NS_WARNING("Throwing away menu event because there is no focused widget");
 		return PR_FALSE;
+	}
 	
 	// nsEvent
 	nsMenuEvent menuEvent;
@@ -668,8 +671,11 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 		focusedWidget = toolkit->GetFocus();
 	
 	if (!focusedWidget)
+	{
+  	NS_WARNING("Throwing away key event because there is no focused widget");
 		return PR_FALSE;
-
+	}
+	
 	// nsEvent
 	nsKeyEvent	keyEvent;
 	switch (aOSEvent.what)
@@ -1186,8 +1192,11 @@ PRBool nsMacEventHandler::HandleStartComposition(void)
 		focusedWidget = toolkit->GetFocus();
 	
 	if (!focusedWidget)
+	{
+  	NS_WARNING("Throwing away start composition event because there is no focused widget");
 		return PR_FALSE;
-
+	}
+	
 	//
 	// create the nsCompositionEvent
 	//
@@ -1224,8 +1233,11 @@ PRBool nsMacEventHandler::HandleEndComposition(void)
 		focusedWidget = toolkit->GetFocus();
 	
 	if (!focusedWidget)
+	{
+  	NS_WARNING("Throwing away end composition event because there is no focused widget");
 		return PR_FALSE;
-
+	}
+	
 	//
 	// create the nsCompositionEvent
 	//
@@ -1262,8 +1274,11 @@ PRBool nsMacEventHandler::HandleTextEvent(void)
 		focusedWidget = toolkit->GetFocus();
 	
 	if (!focusedWidget)
+	{
+  	NS_WARNING("Throwing away text event because there is no focused widget");
 		return PR_FALSE;
-
+	}
+	
 	//
 	// create the nsCompositionEvent
 	//
