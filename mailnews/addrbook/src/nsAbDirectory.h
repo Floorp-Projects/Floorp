@@ -55,6 +55,7 @@ public:
 	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir);
 	NS_IMETHOD GetMailingList(nsIEnumerator **mailingList);
 	NS_IMETHOD CreateNewDirectory(const char *dirName, const char *fileName);
+	NS_IMETHOD GetDirUri(char **uri);
 
 	// nsIAddrDBListener methods:
 	NS_IMETHOD OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator);

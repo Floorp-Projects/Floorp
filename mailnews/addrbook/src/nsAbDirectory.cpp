@@ -471,3 +471,18 @@ nsresult nsAbDirectory::NotifyItemDeleted(nsISupports *item)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsAbDirectory::GetDirUri(char **uri)
+{
+	if (uri)
+	{
+		if (mURI)
+			*uri = PL_strdup(mURI);
+		else
+			*uri = PL_strdup("");
+		return NS_OK;
+	}
+	else
+		return NS_RDF_NO_VALUE;
+}
+
+

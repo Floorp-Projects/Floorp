@@ -97,6 +97,8 @@ protected:
                                  nsIRDFNode** target);
 	nsresult createDirectoryNameNode(nsIAbDirectory *directory,
                                      nsIRDFNode **target);
+	nsresult createDirectoryUriNode(nsIAbDirectory *directory,
+                                     nsIRDFNode **target);
 	nsresult createDirectoryChildNode(nsIAbDirectory *directory,
                                       nsIRDFNode **target);
 	nsresult createCardChildNode(nsIAbDirectory *directory,
@@ -119,6 +121,7 @@ protected:
 	static nsIRDFResource* kNC_DirName;
 	static nsIRDFResource* kNC_MailingList;
 	static nsIRDFResource* kNC_CardChild;
+	static nsIRDFResource* kNC_DirUri;
 
 	// commands
 	static nsIRDFResource* kNC_Delete;
