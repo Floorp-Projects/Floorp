@@ -153,10 +153,12 @@ nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
     
     do {
         PRUint32 read = 0;
+        // XXX readSegments, to avoid the first copy?
         rv = aInStream->Read(buffer, aCount-amtRead, &read);
         if (NS_FAILED(rv)) return rv;
 
         buffer[read] = '\0';
+        // XXX charsets?? non-latin1 characters?? utf-16??
         mBuffer.AppendWithConversion(buffer);
         amtRead += read;
 
