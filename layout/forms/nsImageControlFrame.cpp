@@ -442,7 +442,7 @@ nsImageControlFrame::MouseClicked(nsIPresContext* aPresContext)
     nsIContent *formContent = nsnull;
     mFormFrame->GetContent(&formContent);
 
-    nsEventStatus status;
+    nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event;
     event.eventStructType = NS_EVENT;
     event.message = NS_FORM_SUBMIT;
