@@ -78,6 +78,7 @@ dnl ========================================================
 MOZJPEG=62
 MOZPNG=10205
 MOZMNG="((1<<16)|(0<<8)|(4))"
+MOZZLIB=1.1.4
 NSPR_VERSION=4
 
 dnl Set the minimum version of toolkit libs used by mozilla
@@ -2801,6 +2802,7 @@ MOZ_ARG_WITH_STRING(system-zlib,
 
 _SAVE_CFLAGS=$CFLAGS
 _SAVE_LDFLAGS=$LDFLAGS
+_SAVE_LIBS=$LIBS
 if test -n "${ZLIB_DIR}"; then
     CFLAGS="-I${ZLIB_DIR}/include $CFLAGS"
     LDFLAGS="-L${ZLIB_DIR}/lib $LDFLAGS"
@@ -2808,18 +2810,34 @@ fi
 if test -z "$ZLIB_DIR" -o "$ZLIB_DIR" = no; then
     SYSTEM_ZLIB=
 else
-    AC_MSG_CHECKING("for zlib.h")
-    AC_TRY_COMPILE([#include "zlib.h"], [], 
-	[result="yes" SYSTEM_ZLIB=1],
-	[result="no" SYSTEM_ZLIB=])
-    AC_MSG_RESULT("$result")
-fi
-if test "$SYSTEM_ZLIB" = 1; then
     AC_CHECK_LIB(z, gzread, [SYSTEM_ZLIB=1 ZLIB_LIBS="-lz $ZLIB_LIBS"], 
 	[SYSTEM_ZLIB= ZLIB_CFLAGS= ZLIB_LIBS=], $ZLIB_LIBS)
 fi
+if test "$SYSTEM_ZLIB" = 1; then
+    LIBS="$ZLIB_LIBS $LIBS"
+    AC_TRY_RUN([
+    #include <stdio.h>
+    #include <string.h>
+    #include <zlib.h>
+    int parse_version(const char *str, int *ver) {
+      return (sscanf(str, "%d.%d.%d", ver, ver+1, ver+2)==3?0:1);
+    }
+    int main() {
+      int sys[3], req[3];
+      if (parse_version(zlib_version, sys) || parse_version("$MOZZLIB", req))
+        exit(1);
+      if ((sys[0] == req[0]) &&
+          ((sys[1] > req[1]) || ((sys[1] == req[1]) && (sys[2] >= req[2]))))
+        exit(0);
+      else
+        exit(1);
+    }
+    ], SYSTEM_ZLIB=1, [SYSTEM_ZLIB= ZLIB_CFLAGS= ZLIB_LIBS=], SYSTEM_ZLIB= ) 
+    rm -f core
+fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
+LIBS=$_SAVE_LIBS
 
 if test "${ZLIB_DIR}" -a -d "${ZLIB_DIR}" -a "$SYSTEM_ZLIB" = 1; then
     ZLIB_CFLAGS="-I${ZLIB_DIR}/include"
