@@ -1805,13 +1805,18 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     else if ( mNotifier )
     {
         // error in preparation step -- log it
-        char* errprefix = PR_smprintf("ERROR (%d): ",error);
-        nsString errstr = errprefix;
-        errstr += objString;
+        char* errRsrc = GetResourcedString("ERROR");
+        if (errRsrc)
+        {
+            char* errprefix = PR_smprintf("%s (%d): ", errRsrc, error);
+            nsString errstr = errprefix;
+            errstr += objString;
 
-        mNotifier->LogComment( errstr.GetUnicode() );
+            mNotifier->LogComment( errstr.GetUnicode() );
 
-        PR_smprintf_free(errprefix);
+            PR_smprintf_free(errprefix);
+            nsCRT::free(errRsrc);
+        }   
     }
 
     if (objString)
@@ -2229,8 +2234,8 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
  * Obtains the string resource for actions and messages that are displayed
  * in user interface confirmation and progress dialogs.
  *
- * @param   aResName         - property name/identifier of string resource
- * @return  rscdStr          - corresponding resourced value in the string bundle
+ * @param   aResName    - property name/identifier of string resource
+ * @return  rscdStr     - corresponding resourced value in the string bundle
  */
 char*
 nsInstall::GetResourcedString(const nsString& aResName)
