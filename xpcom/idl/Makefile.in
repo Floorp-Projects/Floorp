@@ -23,8 +23,9 @@ include $(DEPTH)/config/autoconf.mk
 
 IDLSRCS = \
 	nsISupports.idl	\
+	nsIShutdownListener.idl \
+	nsIServiceManager.idl \
 	$(NULL)
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk

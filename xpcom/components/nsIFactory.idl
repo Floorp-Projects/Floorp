@@ -16,31 +16,15 @@
  * Reserved.
  */
 
-%{C++
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsIID.h"
-#include "nsError.h"
+#include "nsISupports.idl"
 
-#include "nsISupportsUtils.h"
-%}
 
-native nsQIResult(void *);
-native voidStar(void*);
-native voidStarRef(void**);
-native nsID(nsID *);
-native nsCIDRef(nsCID&);
-native nsIIDRef(nsIID&);
-native nsCID(nsCID);
-native nsIID(nsIID);
+interface nsIFactory :  nsISupports {
 
-typedef unsigned long   nsrefcnt;
+  voidStar CreateInstance(in nsISupports aOuter,
+                          in nsIIDRef iid);
 
-[
- object,
-	uuid(00000000-0000-0000-c000-000000000046)
-]
-interface nsISupports {
-  void QueryInterface(in nsID uuid, out nsQIResult result);
+  void LockFactory(in boolean lock);
+
 };
+

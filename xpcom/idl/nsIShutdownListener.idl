@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,31 +16,12 @@
  * Reserved.
  */
 
-%{C++
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsIID.h"
-#include "nsError.h"
+#include "nsISupports.idl"
+#include "nsIFactory.idl"
 
-#include "nsISupportsUtils.h"
-%}
+[object, uuid(cf0df3b0-3401-11d2-8163-006008119d7a)]
+interface nsIShutdownListener : nsISupports {
 
-native nsQIResult(void *);
-native voidStar(void*);
-native voidStarRef(void**);
-native nsID(nsID *);
-native nsCIDRef(nsCID&);
-native nsIIDRef(nsIID&);
-native nsCID(nsCID);
-native nsIID(nsIID);
+  void OnShutdown(inout nsCID aClass, in nsISupports service);
 
-typedef unsigned long   nsrefcnt;
-
-[
- object,
-	uuid(00000000-0000-0000-c000-000000000046)
-]
-interface nsISupports {
-  void QueryInterface(in nsID uuid, out nsQIResult result);
 };
