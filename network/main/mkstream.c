@@ -253,7 +253,7 @@ NET_StreamBuilder  (FO_Present_Types format_out,
  * are printed out.
  */
 MODULE_PRIVATE char *
-XP_ListNextPresentationType(Bool first)
+XP_ListNextPresentationType(PRBool first)
 {
     static XP_List * converter_list_ptr;
     net_ConverterStruct * converter;
@@ -281,7 +281,7 @@ XP_ListNextPresentationType(Bool first)
  * are printed out.
  */
 MODULE_PRIVATE char *
-XP_ListNextEncodingType(Bool first)
+XP_ListNextEncodingType(PRBool first)
 {
     static XP_List * decoder_list_ptr;
     net_ConverterStruct * converter;
