@@ -481,12 +481,12 @@ static PRBool TamilToText(PRInt32 ordinal,  nsString& result)
 
 static const char gLowerRomanCharsA[] = "ixcm";
 static const char gUpperRomanCharsA[] = "IXCM";
-static const char gLowerRomanCharsB[] = "vld?";
-static const char gUpperRomanCharsB[] = "VLD?";
+static const char gLowerRomanCharsB[] = "vld";
+static const char gUpperRomanCharsB[] = "VLD";
 
 static PRBool RomanToText(PRInt32 ordinal, nsString& result, const char* achars, const char* bchars)
 {
-  if (ordinal < 1) {
+  if (ordinal < 1 || ordinal > 3999) {
     DecimalToText(ordinal, result);
     return PR_FALSE;
   }
