@@ -744,6 +744,7 @@ nsresult nsHttpUrlImpl::SetSpec(const char *aNewSpec)
 //    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
     NS_LOCK_INSTANCE();
 //    rv = ParseURL(aNewSpec);
+    PR_FREEIF(mSpec);
     mSpec = nsCRT::strdup(aNewSpec);
     NS_UNLOCK_INSTANCE();
     return rv;
