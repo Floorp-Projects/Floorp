@@ -167,7 +167,7 @@ rm -f $SUMMARYFILE
 DIFFFILE="$MYTMPDIR/diff.txt"
 if [ -e $OLDTSVFILE ]; then
   diff $OLDTSVFILE $COPYSORTTSV > $DIFFFILE
-  ./mozilla/dist/bin/maptsvdifftool --input $DIFFFILE | dos2unix >> $SUMMARYFILE
+  ./mozilla/dist/bin/maptsvdifftool --negation --input $DIFFFILE | dos2unix >> $SUMMARYFILE
 else
   ./mozilla/dist/bin/codesighs --modules --input $COPYSORTTSV | dos2unix >> $SUMMARYFILE
 fi
@@ -190,7 +190,7 @@ if [ -e $DIFFFILE ]; then
 if [ $TINDERBOX_OUTPUT ]; then
     echo -n "__codesizeDiff:"
 fi
-    ./mozilla/dist/bin/maptsvdifftool --summary --input $DIFFFILE | dos2unix
+    ./mozilla/dist/bin/maptsvdifftool --negation --summary --input $DIFFFILE | dos2unix
 fi
 
 #

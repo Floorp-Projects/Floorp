@@ -57,6 +57,7 @@ typedef struct __struct_Options
 **  mHelp           Wether or not help should be shown.
 **  mSummaryOnly    Only output a signle line.
 **  mZeroDrift      Output zero drift data.
+**  mNegation       Perform negation heuristics on the symbol drifts.
 */
 {
     const char* mProgramName;
@@ -67,6 +68,7 @@ typedef struct __struct_Options
     int mHelp;
     int mSummaryOnly;
     int mZeroDrift;
+    int mNegation;
 }
 Options;
 
@@ -89,7 +91,8 @@ Switch;
 static Switch gInputSwitch = {"--input", "-i", 1, NULL, "Specify input file." DESC_NEWLINE "stdin is default."};
 static Switch gOutputSwitch = {"--output", "-o", 1, NULL, "Specify output file." DESC_NEWLINE "Appends if file exists." DESC_NEWLINE "stdout is default."};
 static Switch gSummarySwitch = {"--summary", "-s", 0, NULL, "Only output a single line." DESC_NEWLINE "The cumulative size changes." DESC_NEWLINE "Overrides all other output options."};
-static Switch gZeroDriftSwitch = {"--zerodrift", "-z", 0, NULL, "Output zero drift data."  DESC_NEWLINE "Zero drift data includes all changes, even if they cancel out."};
+static Switch gZeroDriftSwitch = {"--zerodrift", "-z", 0, NULL, "Output zero drift data." DESC_NEWLINE "Reports symbol changes even when there is no net drift."};
+static Switch gNegationSwitch = {"--negation", "-n", 0, NULL, "Use negation heuristics." DESC_NEWLINE "When symbol sizes are inferred by offset, order changes cause noise." DESC_NEWLINE "This helps see through the noise by eliminating equal and opposite drifts."};
 static Switch gHelpSwitch = {"--help", "-h", 0, NULL, "Information on usage."};
 
 static Switch* gSwitches[] = {
@@ -97,6 +100,7 @@ static Switch* gSwitches[] = {
         &gOutputSwitch,
         &gSummarySwitch,
         &gZeroDriftSwitch,
+        &gNegationSwitch,
         &gHelpSwitch
 };
 
@@ -359,6 +363,7 @@ int difftool(Options* inOptions)
     ObjectStats* theObject = NULL;
     unsigned symbolLoop = 0;
     SymbolStats* theSymbol = NULL;
+    unsigned allSymbolCount = 0;
 
     memset(&overall, 0, sizeof(overall));
 
@@ -569,6 +574,7 @@ int difftool(Options* inOptions)
                                     {
                                         theObject->mSymbols = (SymbolStats*)moved;
                                         theObject->mSymbolCount++;
+                                        allSymbolCount++;
                                         memset(theObject->mSymbols + symbolIndex, 0, sizeof(SymbolStats));
                                         
                                         theObject->mSymbols[symbolIndex].mSymbol = strdup(symbol);
@@ -645,6 +651,167 @@ int difftool(Options* inOptions)
         retval = __LINE__;
         ERROR_REPORT(retval, inOptions->mInputName, "Unable to read file.");
     }
+
+    /*
+    **  Next, it is time to perform revisionist history of sorts.
+    **  If the negation switch is in play, we perfrom the following
+    **      aggressive steps:
+    **
+    **  For each section, find size changes which have an equal and
+    **      opposite change, and set them both to zero.
+    **  However, you can only do this if the number of negating changes
+    **      is even, as if it is odd, then any one of the many could be
+    **      at fault for the actual change.
+    **
+    **  This orginally exists to make the win32 codesighs reports more
+    **      readable/meaningful.
+    */
+    if(0 == retval && 0 != inOptions->mNegation)
+    {
+        ObjectStats** objArray = NULL;
+        SymbolStats** symArray = NULL;
+
+        /*
+        **  Create arrays big enough to hold all symbols.
+        **  As well as an array to keep the owning object at the same index.
+        **  We will keep the object around as we may need to modify the size.
+        */
+        objArray = (ObjectStats**)malloc(allSymbolCount * sizeof(ObjectStats*));
+        symArray = (SymbolStats**)malloc(allSymbolCount * sizeof(SymbolStats*));
+        if(NULL == objArray || NULL == symArray)
+        {
+            retval = __LINE__;
+            ERROR_REPORT(retval, inOptions->mProgramName, "Unable to allocate negation array memory.");
+        }
+        else
+        {
+            unsigned arrayCount = 0;
+            unsigned arrayLoop = 0;
+
+            /*
+            **  Go through and perform the steps on each section/segment.
+            */
+            for(moduleLoop = 0; moduleLoop < moduleCount; moduleLoop++)
+            {
+                theModule = modules + moduleLoop;
+
+                for(segmentLoop = 0; segmentLoop < theModule->mSegmentCount; segmentLoop++)
+                {
+                    theSegment = theModule->mSegments + segmentLoop;
+
+                    /*
+                    **  Collect all symbols under this section.
+                    **  The symbols are spread out between all the objects,
+                    **      so keep track of both independently at the
+                    **      same index.
+                    */
+                    arrayCount = 0;
+
+                    for(objectLoop = 0; objectLoop < theSegment->mObjectCount; objectLoop++)
+                    {
+                        theObject = theSegment->mObjects + objectLoop;
+
+                        for(symbolLoop = 0; symbolLoop < theObject->mSymbolCount; symbolLoop++)
+                        {
+                            theSymbol = theObject->mSymbols + symbolLoop;
+
+                            objArray[arrayCount] = theObject;
+                            symArray[arrayCount] = theSymbol;
+                            arrayCount++;
+                        }
+                    }
+
+                    /*
+                    **  Now that we have a list of symbols, go through each
+                    **      and see if there is a chance of negation.
+                    */
+                    for(arrayLoop = 0; arrayLoop < arrayCount; arrayLoop++)
+                    {
+                        /*
+                        **  If the item is NULL, it was already negated.
+                        **  Don't do this for items with a zero size.
+                        */
+                        if(NULL != symArray[arrayLoop] && 0 != symArray[arrayLoop]->mSize)
+                        {
+                            unsigned identicalValues = 0;
+                            unsigned oppositeValues = 0;
+                            unsigned lookLoop = 0;
+                            const int lookingFor = symArray[arrayLoop]->mSize;
+
+                            /*
+                            **  Count the number of items with this value.
+                            **  Count the number of items with the opposite equal value.
+                            **  If they are equal, go through and negate all sizes.
+                            */
+                            for(lookLoop = arrayLoop; lookLoop < arrayCount; lookLoop++)
+                            {
+                                /*
+                                **  Skip negated items.
+                                **  Skip zero length items.
+                                */
+                                if(NULL == symArray[lookLoop] || 0 == symArray[lookLoop]->mSize)
+                                {
+                                    continue;
+                                }
+
+                                if(lookingFor == symArray[lookLoop]->mSize)
+                                {
+                                    identicalValues++;
+                                }
+                                else if((-1 * lookingFor) == symArray[lookLoop]->mSize)
+                                {
+                                    oppositeValues++;
+                                }
+                            }
+                            
+                            if(0 != identicalValues && identicalValues == oppositeValues)
+                            {
+                                unsigned negationLoop = 0;
+
+                                for(negationLoop = arrayLoop; 0 != identicalValues || 0 != oppositeValues; negationLoop++)
+                                {
+                                    /*
+                                    **  Skip negated items.
+                                    **  Skip zero length items.
+                                    */
+                                    if(NULL == symArray[negationLoop] || 0 == symArray[negationLoop]->mSize)
+                                    {
+                                        continue;
+                                    }
+
+                                    /*
+                                    **  Negate any size matches.
+                                    **  Reflect the change in the object as well.
+                                    **  Clear the symbol.
+                                    */
+                                    if(lookingFor == symArray[negationLoop]->mSize)
+                                    {
+                                        objArray[negationLoop]->mSize -= lookingFor;
+                                        symArray[negationLoop]->mSize = 0;
+                                        symArray[negationLoop] = NULL;
+
+                                        identicalValues--;
+                                    }
+                                    else if((-1 * lookingFor) == symArray[negationLoop]->mSize)
+                                    {
+                                        objArray[negationLoop]->mSize += lookingFor;
+                                        symArray[negationLoop]->mSize = 0;
+                                        symArray[negationLoop] = NULL;
+
+                                        oppositeValues--;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        CLEANUP(objArray);
+        CLEANUP(symArray);
+    }
+
 
     /*
     **  If all went well, time to report.
@@ -1047,6 +1214,10 @@ int initOptions(Options* outOptions, int inArgc, char** inArgv)
             else if(current == &gZeroDriftSwitch)
             {
                 outOptions->mZeroDrift = __LINE__;
+            }
+            else if(current == &gNegationSwitch)
+            {
+                outOptions->mNegation = __LINE__;
             }
             else
             {
