@@ -33,6 +33,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsMarshalingStreamListener.obj \
         .\$(OBJDIR)\nsNetService.obj               \
         .\$(OBJDIR)\nsTransportService.obj         \
+        .\$(OBJDIR)\nsUrl.obj                      \
         $(NULL)
 
 LINCS =                     \
