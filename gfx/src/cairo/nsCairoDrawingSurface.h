@@ -57,7 +57,7 @@ public:
     nsresult Init (nsCairoDeviceContext *aDC, PRUint32 aWidth, PRUint32 aHeight, PRBool aFastAccess);
 
     // create a fast drawing surface for a native widget
-    nsresult Init (nsCairoDevicecontext *aDC, nsIWidget *aWidget);
+    nsresult Init (nsCairoDeviceContext *aDC, nsIWidget *aWidget);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -75,7 +75,7 @@ public:
 
     /* utility functions */
     cairo_surface_t *GetCairoSurface(void) { return mSurface; }
-    PRInt32 GetDepth() { return mDepth; }
+    PRInt32 GetDepth() { /* XXX */ return 32; }
 private:
     cairo_surface_t *mSurface, *mImageSurface;
 

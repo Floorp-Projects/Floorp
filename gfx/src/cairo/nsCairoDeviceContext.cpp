@@ -18,7 +18,7 @@
  * Copyright (C) 2004 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *    Stuart Parmenter <pavlov@netscape.com>
+ *    Stuart Parmenter <pavlov@pavlov.net>
  *    Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -106,7 +106,7 @@ nsCairoDeviceContext::CreateRenderingContext(nsIView *aView,
 }
 
 NS_IMETHODIMP
-nsCairoDeviceContext::CreateRenderingContext(nsDrawingSurface aSurface,
+nsCairoDeviceContext::CreateRenderingContext(nsIDrawingSurface *aSurface,
                                              nsIRenderingContext *&aContext)
 {
     nsresult rv;
@@ -189,7 +189,7 @@ nsCairoDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
 
 NS_IMETHODIMP
 nsCairoDeviceContext::GetDrawingSurface(nsIRenderingContext &aContext,
-                                        nsDrawingSurface &aSurface)
+                                        nsIDrawingSurface *aSurface)
 {
     NS_WARNING("Fix my broken ass interface to not use stupid refs");
     return NS_OK;

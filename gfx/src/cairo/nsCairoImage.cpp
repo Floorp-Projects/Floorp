@@ -18,7 +18,7 @@
  * Copyright (C) 2004 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *    Stuart Parmenter <pavlov@netscape.com>
+ *    Stuart Parmenter <pavlov@pavlov.net>
  *    Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -169,7 +169,7 @@ nsCairoImage::GetColorMap()
 /* WHY ARE THESE HERE?!?!?!?!?!? */
 /* INSTEAD OF RENDERINGCONTEXT, WHICH ONLY TAKES IMGICONTAINER?!?!?!? */
 NS_IMETHODIMP
-nsCairoImage::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+nsCairoImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
                    PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
     NS_WARNING("not implemented");
@@ -177,7 +177,7 @@ nsCairoImage::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 }
 
 NS_IMETHODIMP
-nsCairoImage::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+nsCairoImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
                    PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                    PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
@@ -215,7 +215,7 @@ nsCairoImage::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
 NS_IMETHODIMP
 nsCairoImage::DrawTile(nsIRenderingContext &aContext,
-                       nsDrawingSurface aSurface,
+                       nsIDrawingSurface *aSurface,
                        PRInt32 aSXOffset, PRInt32 aSYOffset,
                        PRInt32 aPadX, PRInt32 aPadY,
                        const nsRect &aTileRect)

@@ -18,7 +18,7 @@
  * Copyright (C) 2004 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *    Stuart Parmenter <pavlov@netscape.com>
+ *    Stuart Parmenter <pavlov@pavlov.net>
  *    Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -53,7 +53,7 @@ public:
     NS_IMETHOD Init(nsNativeWidget aWidget);
     NS_IMETHOD CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext);
 
-    NS_IMETHOD CreateRenderingContext(nsDrawingSurface aSurface, nsIRenderingContext *&aContext);
+    NS_IMETHOD CreateRenderingContext(nsIDrawingSurface *aSurface, nsIRenderingContext *&aContext);
     NS_IMETHOD CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext);
     NS_IMETHOD CreateRenderingContext(nsIRenderingContext *&aContext);
     NS_IMETHOD CreateRenderingContextInstance(nsIRenderingContext *&aContext);
@@ -64,7 +64,7 @@ public:
 
     NS_IMETHOD GetSystemFont(nsSystemFontID aID, nsFont *aFont) const;
 
-    NS_IMETHOD GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
+    NS_IMETHOD GetDrawingSurface(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface);
 
     NS_IMETHOD CheckFontExistence(const nsString& aFaceName);
 
