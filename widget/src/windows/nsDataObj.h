@@ -140,6 +140,9 @@ class nsDataObj : public IDataObject
 
     nsresult ExtractShortcutURL ( nsString & outURL ) ;
     nsresult ExtractShortcutTitle ( nsString & outTitle ) ;
+    
+      // munge our HTML data to win32's CF_HTML spec. Will null terminate
+    nsresult BuildPlatformHTML ( const char* inOurHTML, char** outPlatformHTML ) ;
 
     nsString mStringData;
 
@@ -159,4 +162,5 @@ class nsDataObj : public IDataObject
 };
 
 
-#endif  //
+#endif  // _NSDATAOBJ_H_
+

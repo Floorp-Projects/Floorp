@@ -84,3 +84,4 @@ protected:
 
 
 #endif // nsClipboard_h__
+
