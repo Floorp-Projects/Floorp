@@ -46,15 +46,12 @@ Implementation of resizable array with focus on minimizing memory usage by stori
 
 public class ObjArray implements Serializable {
 
-    public ObjArray() {
-        minimalAllocation = 8;
-    }
+    public ObjArray() { }
 
     public ObjArray(int capacityHint) {
-        this();
         if (capacityHint < 0) throw new IllegalArgumentException();
-        if (minimalAllocation < capacityHint - FIELDS_STORE_SIZE) {
-            minimalAllocation = capacityHint - FIELDS_STORE_SIZE;
+        if (capacityHint > FIELDS_STORE_SIZE) {
+            data = new Object[capacityHint - FIELDS_STORE_SIZE];
         }
     }
 
@@ -74,7 +71,7 @@ public class ObjArray implements Serializable {
                 setImpl(i, null);
             }
         }else if (newSize > N) {
-            if (newSize >= FIELDS_STORE_SIZE) {
+            if (newSize > FIELDS_STORE_SIZE) {
                 ensureCapacity(newSize);
             }
         }
@@ -286,27 +283,30 @@ public class ObjArray implements Serializable {
 
     private void ensureCapacity(int minimalCapacity) {
         int required = minimalCapacity - FIELDS_STORE_SIZE;
-        if (required > 0) {
-            if (data == null) {
-                int alloc = minimalAllocation;
+        if (required <= 0) throw new IllegalArgumentException();
+        if (data == null) {
+            int alloc = FIELDS_STORE_SIZE * 2;
+            if (alloc < required) {
+                alloc = required;
+            }
+            data = new Object[alloc];
+        } else {
+            int alloc = data.length;
+            if (alloc < required) {
+                   if (alloc <= FIELDS_STORE_SIZE) {
+                    alloc = FIELDS_STORE_SIZE * 2;
+                } else {
+                    alloc *= 2;
+                }
                 if (alloc < required) {
                     alloc = required;
                 }
-                data = new Object[alloc];
-            }else {
-                int alloc = data.length;
-                if (alloc < required) {
-                    alloc *= 2;
-                    if (alloc < required) {
-                        alloc = required;
-                    }
-                    Object[] tmp = new Object[alloc];
-                    if (size - FIELDS_STORE_SIZE > 0) {
-                        System.arraycopy(data, 0, tmp, 0,
-                                         size - FIELDS_STORE_SIZE);
-                    }
-                    data = tmp;
+                Object[] tmp = new Object[alloc];
+                if (size > FIELDS_STORE_SIZE) {
+                    System.arraycopy(data, 0, tmp, 0,
+                                     size - FIELDS_STORE_SIZE);
                 }
+                data = tmp;
             }
         }
     }
@@ -323,8 +323,6 @@ public class ObjArray implements Serializable {
 
     private void writeObject(ObjectOutputStream os) throws IOException {
         os.defaultWriteObject();
-        int dataCapacity = (data == null) ? 0 : data.length;
-        os.writeInt(dataCapacity);
         int N = size;
         for (int i = 0; i != N; ++i) {
             Object obj = getImpl(i);
@@ -336,24 +334,20 @@ public class ObjArray implements Serializable {
         throws IOException, ClassNotFoundException
     {
         is.defaultReadObject(); // It reads size
-        int dataCapacity = is.readInt();
-        if (dataCapacity > 0) {
-            data = new Object[dataCapacity];
-        }
         int N = size;
+        if (N > FIELDS_STORE_SIZE) {
+            data = new Object[N - FIELDS_STORE_SIZE];
+        }
         for (int i = 0; i != N; ++i) {
             Object obj = is.readObject();
             setImpl(i, obj);
         }
     }
 
-    static final long serialVersionUID = 1686562671277752339L;
+    static final long serialVersionUID = 7448768847663119705L;
 
 // Number of data elements
     private int size;
-
-// Minimal length of allocated data
-    private int minimalAllocation;
 
     private static final int FIELDS_STORE_SIZE = 6;
     private transient Object f0, f1, f2, f3, f4, f5;
