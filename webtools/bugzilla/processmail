@@ -540,7 +540,7 @@ sub NewProcessOneBug {
             if ( !defined(NewProcessOnePerson($person, $count, \@headerlist,
                                               \%values, \%defmailhead, 
                                               \%fielddescription, $difftext, 
-                                              $newcomments, $start, $id, 1))) {
+                                              $newcomments, $start, $id))) {
 
                 # if a value is not returned, this means that the person
                 # was not sent mail.  add them to the excludedAddresses list.
@@ -569,7 +569,7 @@ sub NewProcessOneBug {
             if ( !defined(NewProcessOnePerson($person, $count, \@headerlist, 
                                               \%values, \%defmailhead, 
                                               \%fielddescription, $difftext, 
-                                              $newcomments, $start, $id, 1))) {
+                                              $newcomments, $start, $id))) {
 
                 # if a value is not returned, this means that the person
                 # was not sent mail.  add them to the excludedAddresses list.
@@ -724,6 +724,23 @@ sub filterEmailGroup ($$$) {
     #
     push @emailList, @{$force{$emailGroup}};
 
+    # Check this user for any watchers... doing this here allows them to inhert the
+    # relationship to the bug of the person they are watching (if the person they
+    # are watching is an owner, their mail is filtered as if they were the owner).
+    if (Param("supportwatchers")) {
+	my @watchers;
+	foreach my $person(@emailList) {
+	    my $personId = DBname_to_id($person);
+	    SendSQL("SELECT watcher FROM watch WHERE watched = $personId");
+	    my $watcher = FetchSQLData();
+	    if ($watcher) {
+	        push (@watchers, DBID_to_name($watcher));
+	    }
+	}
+	push(@emailList, @watchers);
+    }
+
+
     foreach my $person (@emailList) {
         
         my $userid;
@@ -854,9 +871,9 @@ sub filterEmailGroup ($$$) {
     return @filteredList;
 }
 
-sub NewProcessOnePerson ($$$$$$$$$$$) {
+sub NewProcessOnePerson ($$$$$$$$$$) {
     my ($person, $count, $hlRef, $valueRef, $dmhRef, $fdRef, $difftext, 
-        $newcomments, $start, $id, $checkWatchers) = @_;
+        $newcomments, $start, $id) = @_;
 
     my %values = %$valueRef;
     my @headerlist = @$hlRef;
@@ -873,25 +890,6 @@ sub NewProcessOnePerson ($$$$$$$$$$$) {
     my ($userid, $emailnotification, $newemailtech, 
         $groupset) =  (FetchSQLData());
     
-    # check for watchers, and recurse if we find any, but tell the
-    # recursive call not to check for watchers 
-    #
-    if (Param("supportwatchers") && $checkWatchers)  {
-      my $personId = DBname_to_id($person);
-      my $watcherSet = new RelationSet();
-      $watcherSet->mergeFromDB("SELECT watcher FROM watch WHERE" .
-                               " watched = $personId");
-
-      foreach my $watcher ( $watcherSet->toArray() ) {
-        
-        &NewProcessOnePerson(DBID_to_name($watcher) . Param('emailsuffix'), 
-                            $count, \@headerlist, \%values,
-                            \%defmailhead, \%fielddescription, $difftext, 
-                            $newcomments, $start, $id, 0);
-      }
-
-    }
-
     if (!$newemailtech || !Param('newemailtech')) {
       return;
     }
