@@ -75,7 +75,6 @@
 // Transactionas
 #include "PlaceholderTxn.h"
 #include "nsStyleSheetTxns.h"
-#include "nsInsertHTMLTxn.h"
 
 // Misc
 #include "TextEditorTest.h"
@@ -925,35 +924,10 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 
   // Insert the contents of the document fragment:
   nsCOMPtr<nsIDOMNode> fragmentAsNode (do_QueryInterface(docfrag));
-#define INSERT_FRAGMENT_DIRECTLY 1
-#ifdef INSERT_FRAGMENT_DIRECTLY
-  // Make a collapsed range pointing to right after the current selection,
-  // and let range gravity keep track of where it is so that we can
-  // set the selection back there after the insert.
-  // Unfortunately this doesn't work right yet.
-  nsCOMPtr<nsIDOMRange> saverange;
-  res = selection->GetRangeAt(0, getter_AddRefs(saverange));
 
-  // Insert the node:
-  res = InsertNode(fragmentAsNode, parentNode, offsetOfNewNode);
-
-  // Now collapse the selection to the beginning of what we just inserted;
-  // would be better to set it to the end.
-  if (saverange)
-  {
-    nsCOMPtr<nsIDOMNode> parent;
-    PRInt32 offset;
-		// XXX: ERROR_HANDLING  error return codes are lost
-    if (NS_SUCCEEDED(saverange->GetEndParent(getter_AddRefs(parent))))
-      if (NS_SUCCEEDED(saverange->GetEndOffset(&offset)))
-        selection->Collapse(parent, offset);
-  }
-  else
-    selection->Collapse(parentNode, 0/*offsetOfNewNode*/);
-#else /* INSERT_FRAGMENT_DIRECTLY */
   // Loop over the contents of the fragment:
   nsCOMPtr<nsIDOMNode> child;
-  res = fragmentAsNode->GetFirstChild(getter_AddRefS(child));
+  res = fragmentAsNode->GetFirstChild(getter_AddRefs(child));
   if (NS_FAILED(res))
   {
     printf("GetFirstChild failed!\n");
@@ -961,12 +935,23 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
   }
   while (child)
   {
+#if defined(DEBUG_akkana_verbose)
+    printf("About to try to insert this node:\n");
+    nsCOMPtr<nsIContent> nodec (do_QueryInterface(child));
+    if (nodec) nodec->List(stdout);
+    printf("-----\n");
+#endif
+    // Get the next sibling before inserting the node;
+    // when we insert the node, it moves into the main doc tree
+    // so we'll no longer be able to get the siblings in the doc frag.
+    nsCOMPtr<nsIDOMNode> nextSib;
+    child->GetNextSibling(getter_AddRefs(nextSib));
+    // Ignore the return value, we'll check child when we loop around again.
+
+    // Now we can insert the node.
     res = InsertNode(child, parentNode, offsetOfNewNode++);
     if (NS_FAILED(res))
       break;
-    nsCOMPtr<nsIDOMNode> nextSib;
-    if (NS_FAILED(child->GetNextSibling(getter_AddRefs(nextSib))))
-      /*break*/;
     child = nextSib;
   }
   if (NS_FAILED(res))
@@ -974,7 +959,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 
   // Now collapse the selection to the end of what we just inserted:
   selection->Collapse(parentNode, offsetOfNewNode);
-#endif /* INSERT_FRAGMENT_DIRECTLY */
+
   return res;
 }
 
@@ -2908,7 +2893,7 @@ NS_IMETHODIMP nsHTMLEditor::Copy()
 
 NS_IMETHODIMP nsHTMLEditor::Paste()
 {
-  nsString stuffToPaste;
+  nsAutoString stuffToPaste;
 
   // Get Clipboard Service
   nsresult rv;
@@ -2945,7 +2930,9 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
         {
           nsAutoString flavor ( bestFlavor );   // just so we can use flavor.Equals()
 #ifdef DEBUG_akkana
-          printf("Got flavor [%s]\n", flavor);
+          char* flav = flavor.ToNewCString();
+          printf("Got flavor [%s]\n", flav);
+          delete[] flav;
 #endif
           if (flavor.Equals(kHTMLMime))
           {
@@ -2954,7 +2941,6 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
             {
               PRUnichar* text = nsnull;
               textDataObj->ToString ( &text );
-              nsAutoString stuffToPaste;
               stuffToPaste.SetString ( text, len / 2 );
               rv = InsertHTML(stuffToPaste);
             }
@@ -2966,7 +2952,6 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
             {
               char* text = nsnull;
               textDataObj->ToString ( &text );
-              nsAutoString stuffToPaste;
               stuffToPaste.SetString ( text, len );
               rv = InsertText(stuffToPaste);
             }
