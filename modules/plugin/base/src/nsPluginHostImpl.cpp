@@ -859,7 +859,7 @@ public:
 private:
 
   nsresult SetUpCache(nsIURI* aURL);
-  nsresult SetUpStreamListener(nsIURI* aURL);
+  nsresult SetUpStreamListener(nsIChannel *channel, nsIURI* aURL);
 
   nsIURI                  *mURL;
   nsIPluginInstanceOwner  *mOwner;
@@ -867,7 +867,18 @@ private:
 
   nsIPluginStreamListener *mPStreamListener;
   nsPluginStreamInfo	  *mPluginStreamInfo;
-  PRBool				  mSetUpListener;
+  PRBool		  mSetUpListener;
+
+  /*
+
+   * Set to PR_TRUE after nsIPluginInstancePeer::OnStartBinding() has
+   * been called.  Checked in ::OnStopRequest so we can call the
+   * plugin's OnStartBinding if, for some reason, it has not already
+   * been called.
+
+   */
+
+  PRBool		  mStartBinding;
 
   // these get passed to the plugin stream listener
   char                    *mMIMEType;
@@ -960,6 +971,7 @@ nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
   mSetUpListener = PR_FALSE;
   mHost = nsnull;
   mStreamType = nsPluginStreamType_Normal;
+  mStartBinding = PR_FALSE;
 }
 
 nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
@@ -1162,10 +1174,18 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIChannel* channel, nsISupports* aCo
   PRInt32 length;
 
   rv = channel->GetContentLength(&length);
-  if (NS_FAILED(rv)) return rv;
-  mPluginStreamInfo->SetLength(length);
 
-  rv = SetUpStreamListener(aURL);
+  // it's possible for the server to not send a Content-Length.  We should
+  // still work in this case.
+  if (NS_FAILED(rv)) {
+    mPluginStreamInfo->SetLength(-1);
+  }
+  else {
+    mPluginStreamInfo->SetLength(length);
+  }
+
+
+  rv = SetUpStreamListener(channel, aURL);
   if (NS_FAILED(rv)) return rv;
 
   return rv;
@@ -1207,24 +1227,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIChannel* channel,
   aURL->GetSpec(&urlString);
   mPluginStreamInfo->SetURL(urlString);
   nsCRT::free(urlString);
-
-  /*
-
-   * Assumption
-
-   * By the time nsPluginStreamListenerPeer::OnDataAvailable() gets
-   * called, all the headers have been read.
-
-   */
-
-  nsCOMPtr<nsIHTTPHeaderListener> headerListener = 
-    do_QueryInterface(mPStreamListener);
-  if (headerListener) {
-    nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
-    if (httpChannel) {
-      ReadHeadersFromChannelAndPostToListener(httpChannel, headerListener);
-    }
-  }
 
   // if the plugin has requested an AsFileOnly stream, then don't 
   // call OnDataAvailable
@@ -1282,7 +1284,17 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIChannel* channel,
       nsCRT::free(urlString);
     }
 
-    mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
+    if (mStartBinding)
+    {
+	// On start binding has been called
+	mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
+    }
+    else
+    {
+	// OnStartBinding hasn't been called, so complete the action.
+	mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
+	mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
+    }
   }
 
   return rv;
@@ -1298,7 +1310,8 @@ nsresult nsPluginStreamListenerPeer::SetUpCache(nsIURI* aURL)
 	return NS_OpenURI(cacheListener, nsnull, aURL, nsnull);
 }
 
-nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIURI* aURL)
+nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIChannel* channel,
+                                                         nsIURI* aURL)
 {
   nsresult rv = NS_OK;
 
@@ -1316,6 +1329,26 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIURI* aURL)
   if(mPStreamListener == nsnull)
     return NS_ERROR_NULL_POINTER;
   
+
+  /*
+
+   * Assumption
+
+   * By the time nsPluginStreamListenerPeer::OnDataAvailable() gets
+   * called, all the headers have been read.
+
+   */
+
+  nsCOMPtr<nsIHTTPHeaderListener> headerListener = 
+    do_QueryInterface(mPStreamListener);
+  if (headerListener) {
+    nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
+    if (httpChannel) {
+      ReadHeadersFromChannelAndPostToListener(httpChannel, headerListener);
+    }
+  }
+
+  
   mSetUpListener = PR_TRUE;
   mPluginStreamInfo->SetSeekable(PR_FALSE);
   //mPluginStreamInfo->SetModified(??);
@@ -1326,6 +1359,8 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIURI* aURL)
   nsCRT::free(urlString);
 
   rv = mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
+
+  mStartBinding = PR_TRUE;
 
   if(rv == NS_OK)
   {
@@ -3343,8 +3378,6 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
         channel->SetOwner(principal);
       }
 
-      rv = channel->AsyncRead(listenerPeer, nsnull);
-
       // deal with headers and post data
       nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel));
       if(httpChannel)
@@ -3380,16 +3413,20 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
               httpChannel->SetRequestMethod(method);
               httpChannel->SetUploadStream(postDataStream);
             }
+
           if (aHeadersData) 
             {
               rv = AddHeadersToChannel(aHeadersData, aHeadersDataLen, 
                                        httpChannel);
-            }
+            }  
+
         }
-    }
+
+       rv = channel->AsyncRead(listenerPeer, nsnull);
+      }
+    
     NS_RELEASE(listenerPeer);
   }
-
   return rv;
 }
 
