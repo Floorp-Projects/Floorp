@@ -40,6 +40,7 @@
 #define TOOLKIT_H
 
 #include "nsdefs.h"
+#include "prmon.h"
 #include "nsIToolkit.h"
 
 struct MethodInfo;
