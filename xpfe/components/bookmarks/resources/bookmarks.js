@@ -1416,9 +1416,7 @@ var BookmarksUtils = {
         break;
       case "text/x-moz-url":
       case "text/unicode":
-        var charSet = aDragSession.sourceDocument ? 
-                      aDragSession.sourceDocument.characterSet : null;
-        rSource = BookmarksUtils.createBookmark(null, uri, charSet, extra);
+        rSource = BookmarksUtils.createBookmark(null, uri, null, extra);
         parent = null;
         break;
       }
