@@ -28,6 +28,7 @@
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
 #include "nsILinkHandler.h"
+#include "nsIEventStateManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIFrame.h"
@@ -964,6 +965,20 @@ static PRBool ValueDashMatch(const nsString& aValueList, const nsString& aValue,
   return PR_FALSE;
 }
 
+static PRBool IsEventPseudo(nsIAtom* aAtom)
+{
+  return PRBool ((nsCSSAtoms::activePseudo == aAtom) || 
+                 (nsCSSAtoms::focusPseudo == aAtom) || 
+                 (nsCSSAtoms::hoverPseudo == aAtom)); 
+  // XXX selected, enabled, disabled, selection?
+}
+
+static PRBool IsLinkPseudo(nsIAtom* aAtom)
+{
+  return PRBool ((nsCSSAtoms::linkPseudo == aAtom) || 
+                 (nsCSSAtoms::outOfDatePseudo == aAtom) || 
+                 (nsCSSAtoms::visitedPseudo == aAtom));
+}
 
 static PRBool SelectorMatches(nsIPresContext* aPresContext,
                               nsCSSSelector* aSelector, nsIContent* aContent)
@@ -1032,65 +1047,120 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
     }
     if ((PR_TRUE == result) && 
         (nsnull != aSelector->mPseudoClassList)) {  // test for pseudo class match
-      result = PR_FALSE;
-      // XXX only testing for anchor pseudo classes right now
-      // XXX only testing first pseudo class right now
-      if ((contentTag == nsHTMLAtoms::a) && (nsnull != aSelector->mPseudoClassList)) {
-        // test link state
-        nsILinkHandler* linkHandler;
+      // first-child, lang, active, focus, hover, link, outOfDate, visited
+      // XXX disabled, enabled, selected, selection
+      nsAtomList* pseudoClass = aSelector->mPseudoClassList;
+      nsLinkEventState eventState = eLinkState_Unspecified;
+      nsLinkState linkState = nsLinkState(-1);  // not a link
+      nsILinkHandler* linkHandler = nsnull;
+      nsIEventStateManager* eventStateManager = nsnull;
 
-        if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
-            (nsnull != linkHandler)) {
-          nsAutoString base, href;
-          nsresult attrState = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
-
-          if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
-            nsIURL* docURL = nsnull;
-            nsIHTMLContent* htmlContent;
-            if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
-              htmlContent->GetBaseURL(docURL);
-              NS_RELEASE(htmlContent);
-            }
-            else {
-              nsIDocument* doc = nsnull;
-              aContent->GetDocument(doc);
-              if (nsnull != doc) {
-                doc->GetBaseURL(docURL);
-                NS_RELEASE(doc);
+      while ((PR_TRUE == result) && (nsnull != pseudoClass)) {
+        if (nsCSSAtoms::firstChildPseudo == pseudoClass->mAtom) {
+          nsIContent* firstChild = nsnull;
+          nsIContent* parent;
+          aContent->GetParent(parent);
+          if (parent) {
+            PRInt32 index = -1;
+            do {
+              parent->ChildAt(++index, firstChild);
+              if (firstChild) { // skip text & comments
+                nsIAtom* tag;
+                firstChild->GetTag(tag);
+                if ((tag != nsLayoutAtoms::textTagName) && 
+                    (tag != nsLayoutAtoms::commentTagName)) {
+                  NS_IF_RELEASE(tag);
+                  break;
+                }
+                NS_IF_RELEASE(tag);
+                NS_RELEASE(firstChild);
               }
-            }
-
-            nsAutoString absURLSpec;
-            NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
-            NS_IF_RELEASE(docURL);
-
-            nsIAtom* pseudo = aSelector->mPseudoClassList->mAtom;
-            nsLinkState  state;
-            if (NS_OK == linkHandler->GetLinkState(absURLSpec, state)) {
-              switch (state) {
-                case eLinkState_Unvisited:
-                  result = PRBool (pseudo == nsCSSAtoms::linkPseudo);
-                  break;
-                case eLinkState_Visited:
-                  result = PRBool (pseudo == nsCSSAtoms::visitedPseudo);
-                  break;
-                case eLinkState_OutOfDate:
-                  result = PRBool (pseudo == nsCSSAtoms::outOfDatePseudo);
-                  break;
-                //These cases have been moved from nsILinkHandler to to nsIEventStateManager.
-                //Code needs to be adjusted to get these state items from their new location.
-                /*case eLinkState_Active:
-                  result = PRBool (pseudo == nsCSSAtoms::activePseudo);
-                  break;
-                case eLinkState_Hover:
-                  result = PRBool (pseudo == nsCSSAtoms::hoverPseudo);
-                  break;*/
+              else {
+                break;
               }
+            } while (1 == 1);
+            NS_RELEASE(parent);
+          }
+          result = PRBool(aContent == firstChild);
+          NS_IF_RELEASE(firstChild);
+        }
+        else if (nsCSSAtoms::langPseudo == pseudoClass->mAtom) {
+          // XXX not yet implemented
+          result = PR_FALSE;
+        }
+        else if (IsEventPseudo(pseudoClass->mAtom)) {
+          if (! eventStateManager) {
+            aPresContext->GetEventStateManager(&eventStateManager);
+            if (eventStateManager) {
+              eventStateManager->GetLinkState(aContent, eventState);
             }
           }
-          NS_RELEASE(linkHandler);
+          if (nsCSSAtoms::activePseudo == pseudoClass->mAtom) {
+            result = PRBool(0 != (eventState & eLinkState_Active));
+          }
+          else if (nsCSSAtoms::focusPseudo == pseudoClass->mAtom) {
+//            result = PRBool(0 != (eventState & eLinkState_Focus));
+            result = PR_FALSE;
+          }
+          else if (nsCSSAtoms::hoverPseudo == pseudoClass->mAtom) {
+            result = PRBool(0 != (eventState & eLinkState_Hover));
+          }
         }
+        else if (IsLinkPseudo(pseudoClass->mAtom)) {
+          // XXX xml link too
+          if (nsHTMLAtoms::a == contentTag) {
+            if (! linkHandler) {
+              aPresContext->GetLinkHandler(&linkHandler);
+              if (linkHandler) {
+                nsAutoString base, href;
+                nsresult attrState = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
+
+                if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
+                  nsIURL* docURL = nsnull;
+                  nsIHTMLContent* htmlContent;
+                  if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+                    htmlContent->GetBaseURL(docURL);
+                    NS_RELEASE(htmlContent);
+                  }
+                  else {
+                    nsIDocument* doc = nsnull;
+                    aContent->GetDocument(doc);
+                    if (nsnull != doc) {
+                      doc->GetBaseURL(docURL);
+                      NS_RELEASE(doc);
+                    }
+                  }
+
+                  nsAutoString absURLSpec;
+                  NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+                  NS_IF_RELEASE(docURL);
+
+                  linkHandler->GetLinkState(absURLSpec, linkState);
+                }
+              }
+            }
+            if (nsCSSAtoms::linkPseudo == pseudoClass->mAtom) {
+              result = PRBool(eLinkState_Unvisited == linkState);
+            }
+            else if (nsCSSAtoms::outOfDatePseudo == pseudoClass->mAtom) {
+              result = PRBool(eLinkState_OutOfDate == linkState);
+            }
+            else if (nsCSSAtoms::visitedPseudo == pseudoClass->mAtom) {
+              result = PRBool(eLinkState_Visited == linkState);
+            }
+          }
+          else {
+            result = PR_FALSE;  // not a link
+          }
+        }
+        else {
+          result = PR_FALSE;  // unknown pseudo class
+        }
+        pseudoClass = pseudoClass->mNext;
       }
+
+      NS_IF_RELEASE(linkHandler);
+      NS_IF_RELEASE(eventStateManager);
     }
   }
   NS_IF_RELEASE(contentTag);
@@ -1115,29 +1185,70 @@ struct ContentEnumData {
   PRInt32           mCount;
 };
 
+static PRBool SelectorMatchesTree(nsIPresContext* aPresContext, 
+                                  nsIContent* aLastContent, 
+                                  nsCSSSelector* aSelector) 
+{
+  nsCSSSelector* selector = aSelector;
+
+  if (selector) {
+    nsIContent* content = nsnull;
+    nsIContent* lastContent = aLastContent;
+    NS_ADDREF(lastContent);
+    while (nsnull != selector) { // check compound selectors
+      if (PRUnichar('+') == selector->mOperator) { // fetch previous sibling
+        nsIContent* parent;
+        PRInt32 index;
+        lastContent->GetParent(parent);
+        if (parent) {
+          parent->IndexOf(lastContent, index);
+          while (0 <= --index) {  // skip text & comment nodes
+            parent->ChildAt(index, content);
+            nsIAtom* tag;
+            content->GetTag(tag);
+            if ((tag != nsLayoutAtoms::textTagName) && 
+                (tag != nsLayoutAtoms::commentTagName)) {
+              NS_IF_RELEASE(tag);
+              break;
+            }
+            NS_RELEASE(content);
+            NS_IF_RELEASE(tag);
+          }
+          NS_RELEASE(parent);
+        }
+      }
+      else {  // fetch parent
+        lastContent->GetParent(content);
+      }
+      if (! content) {
+        break;
+      }
+      if (SelectorMatches(aPresContext, selector, content)) {
+        selector = selector->mNext;
+      }
+      else {
+        if (PRUnichar(0) != selector->mOperator) {
+          NS_RELEASE(content);
+          break;  // parent was required to match
+        }
+      }
+      NS_IF_RELEASE(lastContent);
+      lastContent = content;  // take refcount
+      content = nsnull;
+    }
+    NS_IF_RELEASE(lastContent);
+  }
+  return PRBool(nsnull == selector);  // matches if ran out of selectors
+}
+
 static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
 {
   ContentEnumData* data = (ContentEnumData*)aData;
 
-  // XXX not dealing with selector functions...
-
   nsCSSSelector* selector = aRule->FirstSelector();
   if (SelectorMatches(data->mPresContext, selector, data->mContent)) {
     selector = selector->mNext;
-
-    nsIContent* content = nsnull;
-    nsIContent* lastContent = nsnull;
-    data->mContent->GetParent(content);
-    while ((nsnull != selector) && (nsnull != content)) { // check compound selectors
-      if (SelectorMatches(data->mPresContext, selector, content)) {
-        selector = selector->mNext;
-      }
-      lastContent = content;
-      content->GetParent(content);
-      NS_IF_RELEASE(lastContent);
-    }
-    NS_IF_RELEASE(content);
-    if (nsnull == selector) { // ran out, it matched
+    if (SelectorMatchesTree(data->mPresContext, data->mContent, selector)) {
       nsIStyleRule* iRule;
       if (NS_OK == aRule->QueryInterface(kIStyleRuleIID, (void**)&iRule)) {
         data->mResults->AppendElement(iRule);
@@ -1270,30 +1381,36 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
   nsCSSSelector* selector = aRule->FirstSelector();
   if (selector->mTag == data->mPseudoTag) {
     selector = selector->mNext;
-    nsIContent* content = data->mParentContent;
-    nsIContent* lastContent = nsnull;
-    NS_IF_ADDREF(content);
-    while ((nsnull != selector) && (nsnull != content)) { // check compound selectors
-      if (SelectorMatches(data->mPresContext, selector, content)) {
+
+    if (selector) { // test next selector specially
+      if (PRUnichar('+') == selector->mOperator) {
+        return; // not valid here, can't match
+      }
+      if (SelectorMatches(data->mPresContext, selector, data->mParentContent)) {
         selector = selector->mNext;
       }
-      lastContent = content;
-      content->GetParent(content);
-      NS_IF_RELEASE(lastContent);
+      else {
+        if (PRUnichar('>') == selector->mOperator) {
+          return; // immediate parent didn't match
+        }
+      }
     }
-    NS_IF_RELEASE(content);
-    if (nsnull == selector) { // ran out, it matched
-      nsIStyleRule* iRule;
-      if (NS_OK == aRule->QueryInterface(kIStyleRuleIID, (void**)&iRule)) {
+
+    if (selector && 
+        (! SelectorMatchesTree(data->mPresContext, data->mParentContent, selector))) {
+      return; // remaining selectors didn't match
+    }
+
+    nsIStyleRule* iRule;
+    if (NS_OK == aRule->QueryInterface(kIStyleRuleIID, (void**)&iRule)) {
+      data->mResults->AppendElement(iRule);
+      data->mCount++;
+      NS_RELEASE(iRule);
+      iRule = aRule->GetImportantRule();
+      if (nsnull != iRule) {
         data->mResults->AppendElement(iRule);
         data->mCount++;
         NS_RELEASE(iRule);
-        iRule = aRule->GetImportantRule();
-        if (nsnull != iRule) {
-          data->mResults->AppendElement(iRule);
-          data->mCount++;
-          NS_RELEASE(iRule);
-        }
       }
     }
   }
