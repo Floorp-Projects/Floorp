@@ -1,4 +1,4 @@
-/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -48,6 +48,26 @@ function findErr(result)
     }
     dump("No result code found for " + result + "\n");
 }
+// I wonder how many copies of this are floating around
+function findIface(iface)
+{
+    for (var i in CI) {
+        if (iface.equals(CI[i])) {
+            return i;
+        }
+    }
+    dump("No interface found for " + iface + "\n");
+}
+
+function findOpName(op)
+{
+    for (var i in CI.calIOperationListener) {
+        if (op == CI.calIOperationListener[i]) {
+            return i;
+        }
+    }
+    dump("Operation type " + op + "unknown\n");
+}
 
 function getService(contract, iface)
 {
@@ -67,33 +87,35 @@ function calOpListener() {
 calOpListener.prototype = 
 {
 
-  onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, 
-                                aDetail) {
-    dump("onOperationComplete:\n\t");
-    dump(aCalendar + "\n\t" + findErr(aStatus) + "\n\t" + aOperationType + 
-	 "\n\t" + aId + "\n\t" + aDetail + "\n");
+    onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, 
+                                  aDetail) {
+        dump("onOperationComplete:\n\t");
+        dump(aCalendar + "\n\t" + findErr(aStatus) + "\n\t" + 
+             findOpName(aOperationType) + "\n\t" + aId + "\n\t" + aDetail +
+             "\n");
 
-    stopEventPump();
-    return;
-  },
+        stopEventPump();
+        return;
+    },
 
-  onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, 
-                        aItems) {
-    dump("onGetResult: \n\t");
-    dump(aCalendar + "\n\t" + findErr(aStatus) + "\n\t" + aItemType + "\n\t" +
-	 aDetail + "\n\t" + aCount + "\n\t" + aItems + "\n");
-  }
+    onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, 
+                          aItems) {
+        dump("onGetResult: \n\t");
+        dump(aCalendar + "\n\t" + findErr(aStatus) + "\n\t" + findIface(aItemType)
+             + "\n\t" + aDetail + "\n\t" + aCount + "\n\t" + aItems + "\n");
+    }
 }
 
 function GETITEM(aId) {
   
 }
+
 const ioSvc = getService("@mozilla.org/network/io-service;1",
                          "nsIIOService");
  
 function URLFromSpec(spec)
 {
-  return ioSvc.newURI(spec, null, null);
+    return ioSvc.newURI(spec, null, null);
 }
 
 const evQSvc = getService("@mozilla.org/event-queue-service;1",
