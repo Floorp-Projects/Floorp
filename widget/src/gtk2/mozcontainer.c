@@ -397,8 +397,8 @@ moz_container_forall (GtkContainer *container, gboolean include_internals,
     while (tmp_list) {
         MozContainerChild *child;
         child = tmp_list->data;
-        (* callback) (child->widget, callback_data);
         tmp_list = tmp_list->next;
+        (* callback) (child->widget, callback_data);
     }
 }
 
