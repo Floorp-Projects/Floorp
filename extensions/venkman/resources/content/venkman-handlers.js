@@ -126,16 +126,19 @@ function con_ieval (e)
     {
         var str = "";
         
-        if ("name" in ex && "fileName" in ex && "lineNumber" in ex &&
-            "message" in ex)
+        if (ex.fileName && ex.lineNumber && ex.message)
+        {
+            if (!ex.name)
+                ex.name = "Error";    
             /* if it looks like a normal exception, print all the bits */
-            str = ex.name + ": " + ex.fileName + ", line " + ex.lineNumber +
-                ": " + ex.message;
+            str = getMsg (MSN_EVAL_ERROR, [ex.name, ex.fileName, ex.lineNumber,
+                                           ex.message]);
+        }
         else
             /* otherwise, just convert to a string */
-            str = String(ex);
-        
-        display (str, "ERROR");
+            str = getMsg (MSN_EVAL_THREW, String(ex));
+
+        display (str, MT_ERROR);
     }
     
     return true;
@@ -186,6 +189,8 @@ console.onUnload =
 function con_unload (e)
 {
     dd ("Application venkman, 'JavaScript Debugger' unloaded.");
+
+    detachDebugger();
 }
 
 window.onresize =
