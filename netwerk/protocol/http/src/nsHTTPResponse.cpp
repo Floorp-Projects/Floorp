@@ -670,15 +670,17 @@ nsresult nsHTTPResponse::EmitHeaders(nsCString& aResponseBuffer)
             return NS_ERROR_FAILURE;
 
         header->GetField(getter_AddRefs(headerAtom));
-        if (headerAtom == nsHTTPAtoms::Connection          ||
-            headerAtom == nsHTTPAtoms::Keep_Alive          ||
-            headerAtom == nsHTTPAtoms::Proxy_Authenticate  ||
-            headerAtom == nsHTTPAtoms::Proxy_Authorization ||
-            headerAtom == nsHTTPAtoms::TE                  ||
-            headerAtom == nsHTTPAtoms::Trailer             ||
-            headerAtom == nsHTTPAtoms::Transfer_Encoding   ||
-            headerAtom == nsHTTPAtoms::Upgrade             ||
-            headerAtom == nsHTTPAtoms::Set_Cookie)
+        nsIAtom* headerAtomRaw = headerAtom;
+            
+        if (headerAtomRaw == nsHTTPAtoms::Connection          ||
+            headerAtomRaw == nsHTTPAtoms::Keep_Alive          ||
+            headerAtomRaw == nsHTTPAtoms::Proxy_Authenticate  ||
+            headerAtomRaw == nsHTTPAtoms::Proxy_Authorization ||
+            headerAtomRaw == nsHTTPAtoms::TE                  ||
+            headerAtomRaw == nsHTTPAtoms::Trailer             ||
+            headerAtomRaw == nsHTTPAtoms::Transfer_Encoding   ||
+            headerAtomRaw == nsHTTPAtoms::Upgrade             ||
+            headerAtomRaw == nsHTTPAtoms::Set_Cookie)
             continue;
                     
         header->GetValue(getter_Copies(autoBuffer));
