@@ -425,7 +425,7 @@ fi
 
 dnl Be sure the make we use is GNU make.
 AC_PATH_PROGS(MAKE, gmake make, :)
-_make_try=`$MAKE --version 2>/dev/null`
+_make_try=`$MAKE --version 2>/dev/null | grep GNU`
 if test ! "$_make_try"
 then
 	echo
@@ -434,7 +434,10 @@ then
 	exit 1
 fi
 dnl Now exit if version if < MAKE_VERSION
-_make_vers=`$MAKE --version | grep Make | $AWK '{ print \$4 }' | sed 's/,//'`
+rm -f dummy.mk
+echo 'all: ; @echo $(MAKE_VERSION)' > dummy.mk
+_make_vers=`$MAKE -f dummy.mk all 2>/dev/null`
+rm -f dummy.mk
 _MAKE_MAJOR_VERSION=`echo $_make_vers | $AWK -F\. '{ print $1 }'`
 _MAKE_MINOR_VERSION=`echo $_make_vers | $AWK -F\. '{ print $2 }'`
 MAKE_MAJOR_VERSION=`echo $MAKE_VERSION | $AWK -F\. '{ print $1 }'`
