@@ -133,24 +133,23 @@ nsLDAPOperation::GetMessageListener(nsILDAPMessageListener **aMessageListener)
 // wrapper for ldap_simple_bind()
 //
 NS_IMETHODIMP
-nsLDAPOperation::SimpleBind(const PRUnichar *passwd)
+nsLDAPOperation::SimpleBind(const nsACString& passwd)
 {
     nsresult rv;
-    nsXPIDLString bindName;
+    nsCAutoString bindName;
 
     NS_PRECONDITION(mMessageListener != 0, "MessageListener not set");
 
-    rv = mConnection->GetBindName(getter_Copies(bindName));
+    rv = mConnection->GetBindName(bindName);
     if (NS_FAILED(rv))
         return rv;
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
            ("nsLDAPOperation::SimpleBind(): called; bindName = '%s'; ",
-            NS_LossyConvertUCS2toASCII(bindName).get()));
+            bindName));
 
-    mMsgID = ldap_simple_bind(mConnectionHandle,
-                              NS_ConvertUCS2toUTF8(bindName).get(),
-                              NS_ConvertUCS2toUTF8(passwd).get());
+    mMsgID = ldap_simple_bind(mConnectionHandle, bindName.get(),
+                              PromiseFlatCString(passwd).get());
 
     if (mMsgID == -1) {
         const int lderrno = ldap_get_lderrno(mConnectionHandle, 0, 0);
@@ -207,9 +206,9 @@ nsLDAPOperation::SimpleBind(const PRUnichar *passwd)
 // wrappers for ldap_search_ext
 //
 int
-nsLDAPOperation::SearchExt(const PRUnichar *base, // base DN to search
+nsLDAPOperation::SearchExt(const nsACString& base, // base DN to search
                            int scope, // SCOPE_{BASE,ONELEVEL,SUBTREE}
-                           const PRUnichar *filter, // search filter
+                           const nsACString& filter, // search filter
                            char **attrs, // attribute types to be returned
                            int attrsOnly, // attrs only, or values too?
                            LDAPControl **serverctrls, 
@@ -222,8 +221,8 @@ nsLDAPOperation::SearchExt(const PRUnichar *base, // base DN to search
         return NS_ERROR_NOT_INITIALIZED;
     }
 
-    return ldap_search_ext(mConnectionHandle, NS_ConvertUCS2toUTF8(base).get(),
-                           scope, NS_ConvertUCS2toUTF8(filter).get(), attrs,
+    return ldap_search_ext(mConnectionHandle, PromiseFlatCString(base).get(),
+                           scope, PromiseFlatCString(filter).get(), attrs,
                            attrsOnly, serverctrls, clientctrls, timeoutp,
                            sizelimit, &mMsgID);
 }
@@ -242,22 +241,21 @@ nsLDAPOperation::SearchExt(const PRUnichar *base, // base DN to search
  *
  * XXX doesn't currently handle LDAPControl params
  *
- * void searchExt(in string aBaseDn, in PRInt32 aScope,
- *                in string aFilter, PRUint32 aAttrCount,
+ * void searchExt(in AUTF8String aBaseDn, in PRInt32 aScope,
+ *                in AUTF8String aFilter, PRUint32 aAttrCount,
  *                const char **aAttributes, in PRIntervalTime aTimeOut,
  *                in PRInt32 aSizeLimit);
  */
 NS_IMETHODIMP
-nsLDAPOperation::SearchExt(const PRUnichar *aBaseDn, PRInt32 aScope, 
-                           const PRUnichar *aFilter, PRUint32 aAttrCount,
+nsLDAPOperation::SearchExt(const nsACString& aBaseDn, PRInt32 aScope, 
+                           const nsACString& aFilter, PRUint32 aAttrCount,
                            const char **aAttributes, PRIntervalTime aTimeOut,
                            PRInt32 aSizeLimit) 
 {
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
            ("nsLDAPOperation::SearchExt(): called with aBaseDn = '%s'; "
             "aFilter = '%s', aAttrCounts = %u, aSizeLimit = %d", 
-            NS_ConvertUCS2toUTF8(aBaseDn).get(), 
-            NS_ConvertUCS2toUTF8(aFilter).get(), aAttrCount, aSizeLimit));
+            aBaseDn, aFilter, aAttrCount, aSizeLimit));
 
     char **attrs = 0;
 

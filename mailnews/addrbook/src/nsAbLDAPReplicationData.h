@@ -74,8 +74,8 @@ protected :
   PRBool          mInitialized;
   
   DIR_Server *    mDirServerInfo;
-  nsString        mAuthDN;      // authDN of the user
-  nsString        mAuthPswd;    // pswd of the authDN user
+  nsCString       mAuthDN;      // authDN of the user
+  nsCString       mAuthPswd;    // pswd of the authDN user
   
   virtual nsresult OnLDAPBind(nsILDAPMessage *aMessage);
   virtual nsresult OnLDAPSearchEntry(nsILDAPMessage *aMessage);

@@ -68,7 +68,7 @@ class nsLDAPAutoCompleteSession : public nsILDAPMessageListener,
     nsCOMPtr<nsIAutoCompleteResults> mResults;    // being built up
     nsCOMPtr<nsISupportsArray> mResultsArray;     // cached, to avoid re-gets
     nsString mSearchString;                       // autocomplete this string
-    nsString mFilterTemplate;                     // search filter template
+    nsCString mFilterTemplate;                    // search filter template
     nsCOMPtr<nsILDAPURL> mServerURL;        // URL for the directory to search
     PRInt32 mMaxHits;                       // return at most this many entries
     PRUint32 mMinStringLength;              // strings < this size are ignored

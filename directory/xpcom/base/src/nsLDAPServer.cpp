@@ -69,66 +69,39 @@ NS_IMETHODIMP nsLDAPServer::SetKey(const PRUnichar *aKey)
     return NS_OK;
 }
 
-// attribute wstring password;
-NS_IMETHODIMP nsLDAPServer::GetUsername(PRUnichar **_retval)
+// attribute AUTF8String username;
+NS_IMETHODIMP nsLDAPServer::GetUsername(nsACString& _retval)
 {
-    if (!_retval) {
-        NS_ERROR("nsLDAPServer::GetUsername: null pointer ");
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *_retval = ToNewUnicode(mUsername);
-    if (!*_retval) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
+    _retval.Assign(mUsername);
     return NS_OK;
 }
-NS_IMETHODIMP nsLDAPServer::SetUsername(const PRUnichar *aUsername)
+NS_IMETHODIMP nsLDAPServer::SetUsername(const nsACString& aUsername)
 {
-    mUsername = aUsername;
+    mUsername.Assign(aUsername);
     return NS_OK;
 }
 
-// attribute wstring username;
-NS_IMETHODIMP nsLDAPServer::GetPassword(PRUnichar **_retval)
+// attribute AUTF8String password;
+NS_IMETHODIMP nsLDAPServer::GetPassword(nsACString& _retval)
 {
-    if (!_retval) {
-        NS_ERROR("nsLDAPServer::GetPassword: null pointer ");
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *_retval = ToNewUnicode(mPassword);
-    if (!*_retval) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
+    _retval.Assign(mPassword);
     return NS_OK;
 }
-NS_IMETHODIMP nsLDAPServer::SetPassword(const PRUnichar *aPassword)
+NS_IMETHODIMP nsLDAPServer::SetPassword(const nsACString& aPassword)
 {
-    mPassword = aPassword;
+    mPassword.Assign(aPassword);
     return NS_OK;
 }
 
-// attribute wstring binddn;
-NS_IMETHODIMP nsLDAPServer::GetBinddn(PRUnichar **_retval)
+// attribute AUTF8String binddn;
+NS_IMETHODIMP nsLDAPServer::GetBinddn(nsACString& _retval)
 {
-    if (!_retval) {
-        NS_ERROR("nsLDAPServer::GetBinddn: null pointer ");
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *_retval = ToNewUnicode(mBindDN);
-    if (!*_retval) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
+    _retval.Assign(mBindDN);
     return NS_OK;
 }
-NS_IMETHODIMP nsLDAPServer::SetBinddn(const PRUnichar *aBindDN)
+NS_IMETHODIMP nsLDAPServer::SetBinddn(const nsACString& aBindDN)
 {
-    mBindDN = aBindDN;
+    mBindDN.Assign(aBindDN);
     return NS_OK;
 }
 

@@ -72,7 +72,7 @@ protected:
     friend class nsAbQueryLDAPMessageListener;
     nsresult RemoveListener (PRInt32 contextID);
     nsresult Initiate ();
-    nsXPIDLString mLogin; // authenticate to the LDAP server as...
+    nsXPIDLCString mLogin; // authenticate to the LDAP server as...
     nsCOMPtr<nsILDAPURL> mDirectoryUrl; // the URL for the server
 
 private:

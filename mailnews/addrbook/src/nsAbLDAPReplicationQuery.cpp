@@ -111,7 +111,7 @@ nsresult nsAbLDAPReplicationQuery::InitLDAPData()
     return rv;
 }
 
-NS_IMETHODIMP nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL *aURL, const nsAString & aAuthDN)
+NS_IMETHODIMP nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL *aURL, const nsACString & aAuthDN)
 {
     NS_ENSURE_ARG_POINTER(aURL);
     if (!mInitialized) 
@@ -166,9 +166,8 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL *aURL, co
 
     // initialize the LDAP connection
     return mConnection->Init(host.get(), port, 
-			     (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE
-			     : PR_FALSE, PromiseFlatString(aAuthDN).get(),
-			     listener, nsnull);
+			     (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE : PR_FALSE,
+			     aAuthDN, listener, nsnull);
 }
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::Init(const nsACString & aPrefName, nsIWebProgressListener *aProgressListener)
@@ -194,7 +193,7 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::Init(const nsACString & aPrefName, nsIWe
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::DoReplicationQuery()
 {
-    return ConnectToLDAPServer(mURL, NS_LITERAL_STRING(""));
+    return ConnectToLDAPServer(mURL, NS_LITERAL_CSTRING(""));
 }
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::QueryAllEntries()
@@ -204,13 +203,13 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::QueryAllEntries()
 
     // get the search filter associated with the directory server url; 
     //
-    nsXPIDLCString urlFilter;
-    nsresult rv = mURL->GetFilter(getter_Copies(urlFilter));
+    nsCAutoString urlFilter;
+    nsresult rv = mURL->GetFilter(urlFilter);
     if (NS_FAILED(rv)) 
         return rv;
 
-    nsXPIDLCString dn;
-    rv = mURL->GetDn(getter_Copies(dn));
+    nsCAutoString dn;
+    rv = mURL->GetDn(dn);
     if (NS_FAILED(rv)) 
         return rv;
     if (dn.IsEmpty())
@@ -226,8 +225,7 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::QueryAllEntries()
     if (NS_FAILED(rv)) 
         return rv;
 
-    return mOperation->SearchExt(NS_ConvertUTF8toUCS2(dn).get(), scope, 
-                               NS_ConvertUTF8toUCS2(urlFilter).get(), 
+    return mOperation->SearchExt(dn, scope, urlFilter, 
                                attributes.GetSize(), attributes.GetArray(),
                                0, 0);
 }

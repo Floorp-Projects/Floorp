@@ -401,7 +401,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsILDAPConnection *aConn,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Bind
-    rv = ldapOperation->SimpleBind(passwd);
+    rv = ldapOperation->SimpleBind(NS_ConvertUCS2toUTF8(passwd));
     NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;
@@ -463,28 +463,23 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessa
     rv = mSearchOperation->Init (mConnection, proxyListener, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLCString dn;
-    rv = mUrl->GetDn (getter_Copies (dn));
+    nsCAutoString dn;
+    rv = mUrl->GetDn (dn);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 scope;
     rv = mUrl->GetScope (&scope);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLCString filter;
-    rv = mUrl->GetFilter (getter_Copies (filter));
+    nsCAutoString filter;
+    rv = mUrl->GetFilter (filter);
     NS_ENSURE_SUCCESS(rv, rv);
 
     CharPtrArrayGuard attributes;
     rv = mUrl->GetAttributes (attributes.GetSizeAddr (), attributes.GetArrayAddr ());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // when we called SetSpec(), our spec contained UTF8 data
-    // so when we call GetFilter(), it's not going to be ASCII.
-    // it will be UTF8, so we need to convert from UTF8 to UCS2
-    // see bug #124995
-    rv = mSearchOperation->SearchExt (NS_ConvertUTF8toUCS2(dn).get(), scope,
-            NS_ConvertUTF8toUCS2(filter).get(),
+    rv = mSearchOperation->SearchExt (dn, scope, filter,
             attributes.GetSize (), attributes.GetArray (),
             mTimeOut, mResultLimit);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -516,12 +511,12 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
         if (propertyName.Equals("card:nsIAbCard"))
         {
             // Meta property
-            nsXPIDLString dn;
-            rv = aMessage->GetDn (getter_Copies (dn));
+            nsCAutoString dn;
+            rv = aMessage->GetDn (dn);
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsCOMPtr<nsIAbCard> card;
-            rv = mDirectoryQuery->CreateCard (mUrl, NS_ConvertUCS2toUTF8(dn).get(), getter_AddRefs (card));
+            rv = mDirectoryQuery->CreateCard (mUrl, dn.get(), getter_AddRefs (card));
             NS_ENSURE_SUCCESS(rv, rv);
 
             PRBool hasSetCardProperty = PR_FALSE;
@@ -717,8 +712,8 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     rv = mDirectoryUrl->GetPort(&port);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLCString dn;
-    rv = mDirectoryUrl->GetDn(getter_Copies (dn));
+    nsCAutoString dn;
+    rv = mDirectoryUrl->GetDn(dn);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint32 options;
@@ -790,7 +785,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
 
     // Now lets initialize the LDAP connection properly. We'll kick
     // off the bind operation in the callback function, |OnLDAPInit()|.
-    rv = ldapConnection->Init(host.get(), port, options, mLogin.get(),
+    rv = ldapConnection->Init(host.get(), port, options, mLogin,
                               messageListener, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 

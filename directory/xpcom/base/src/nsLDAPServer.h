@@ -56,9 +56,9 @@ class nsLDAPServer : public nsILDAPServer
 
   protected:
     nsString mKey;          // Unique identifier for this server object
-    nsString mUsername;     // Username / UID
-    nsString mPassword;     // Password to bind with
-    nsString mBindDN;       // DN associated with the UID above
+    nsCString mUsername;    // Username / UID
+    nsCString mPassword;    // Password to bind with
+    nsCString mBindDN;      // DN associated with the UID above
     PRUint32 mSizeLimit;    // Limit the LDAP search to this # of entries
 
     // This "links" to a LDAP URL object, which holds further information

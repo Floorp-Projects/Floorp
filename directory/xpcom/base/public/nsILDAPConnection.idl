@@ -50,7 +50,7 @@ interface nsILDAPConnection : nsISupports
      *
      * @exception NS_ERROR_OUT_OF_MEMORY
      */
-    readonly attribute wstring bindName;
+    readonly attribute AUTF8String bindName;
     
     /**
      * private parameter (anything caller desires)
@@ -76,7 +76,7 @@ interface nsILDAPConnection : nsISupports
      * @exception NS_ERROR_UNEXPECTED           internal error
      */
     void init(in string aHost, in short aPort, in boolean aSSL,
-              in wstring aBindName, 
+              in AUTF8String aBindName, 
               in nsILDAPMessageListener aMessageListener,
               in nsISupports aClosure);
 
@@ -93,5 +93,5 @@ interface nsILDAPConnection : nsISupports
      * 
      * @return          the error code, as defined in nsILDAPErrors.idl
      */
-    long getLdErrno(out wstring matched, out wstring s);
+    long getLdErrno(out AUTF8String matched, out AUTF8String s);
 };

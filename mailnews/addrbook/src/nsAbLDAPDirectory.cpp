@@ -150,21 +150,13 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
 
     // get the login information, if there is any 
     //
-    nsCOMPtr<nsISupportsString> login;
-    rv = prefs->GetComplexValue(
+    rv = prefs->GetCharPref(
         PromiseFlatCString(
             Substring(mURINoQuery, kLDAPDirectoryRootLen,
                       mURINoQuery.Length() - kLDAPDirectoryRootLen)
             + NS_LITERAL_CSTRING(".auth.dn")).get(),
-        NS_GET_IID(nsISupportsString), getter_AddRefs(login));
-    if (NS_SUCCEEDED(rv)) {
-        rv = login->ToString(getter_Copies(mLogin));
-        if (NS_FAILED(rv)) {
-            NS_ERROR("nsAbLDAPDirectory::Initiate(): error converting login to"
-                     " wstring");
-            return rv;
-        }
-    } else {
+        getter_Copies(mLogin));
+    if (NS_FAILED(rv)) {
         mLogin.Truncate();  // zero out mLogin
     }
 

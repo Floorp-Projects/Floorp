@@ -68,7 +68,7 @@ interface nsILDAPServer : nsISupports {
      * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
      * @exception NS_ERROR_OUT_OF_MEMORY    ran out of memory
      */
-    attribute wstring password;
+    attribute AUTF8String password;
 
     /**
      * the user name to authenticate as. An empty string here would
@@ -77,7 +77,7 @@ interface nsILDAPServer : nsISupports {
      * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
      * @exception NS_ERROR_OUT_OF_MEMORY    ran out of memory
      */
-    attribute wstring username;
+    attribute AUTF8String username;
 
     /**
      * the bind DN (Distinguished Name).
@@ -85,7 +85,7 @@ interface nsILDAPServer : nsISupports {
      * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
      * @exception NS_ERROR_OUT_OF_MEMORY    ran out of memory
      */
-    attribute wstring binddn;
+    attribute AUTF8String binddn;
 
     /** maximum number of hits we want to accept from an LDAP search
      *  operation.

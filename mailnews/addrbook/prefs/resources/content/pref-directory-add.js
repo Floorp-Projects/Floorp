@@ -4,8 +4,6 @@ var gPref_string_desc = "";
 var gPrefInt = null;
 var gCurrentDirectory = null;
 var gCurrentDirectoryString = null;
-var gLdapService = Components.classes["@mozilla.org/network/ldap-service;1"].
-    getService(Components.interfaces.nsILDAPService);
 
 const kDefaultMaxHits = 100;
 const kDefaultLDAPPort = 389;
@@ -62,10 +60,8 @@ function fillSettings()
   document.getElementById("hostname").value = ldapUrl.host;
   document.getElementById("port").value = ldapUrl.port;
 
-  document.getElementById("basedn").value = 
-    gLdapService.UTF8toUCS2(ldapUrl.dn);
-  document.getElementById("search").value = 
-    gLdapService.UTF8toUCS2(ldapUrl.filter);
+  document.getElementById("basedn").value = ldapUrl.dn;
+  document.getElementById("search").value = ldapUrl.filter;
 
   var sub = document.getElementById("sub");
   switch(ldapUrl.scope) {
@@ -259,12 +255,8 @@ function onAccept()
                                Components.interfaces.nsISupportsString, str);
   
       ldapUrl.host = hostname;
-      pref_string_content = gLdapService.
-        UCS2toUTF8(document.getElementById("basedn").value);
-      ldapUrl.dn = pref_string_content;
-      pref_string_content = gLdapService.
-        UCS2toUTF8(document.getElementById("search").value);
-      ldapUrl.filter = pref_string_content;
+      ldapUrl.dn = document.getElementById("basedn").value;
+      ldapUrl.filter = document.getElementById("search").value;
       if (!port) {
         if (secure.checked)
           ldapUrl.port = kDefaultSecureLDAPPort;

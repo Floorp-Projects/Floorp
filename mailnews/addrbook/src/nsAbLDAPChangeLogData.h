@@ -43,7 +43,7 @@
 #include "nsVoidArray.h"
 
 typedef struct {
-  nsString      changeLogDN;
+  nsCString     changeLogDN;
   PRInt32       firstChangeNumber;
   PRInt32       lastChangeNumber;
   nsCString     dataVersion;
@@ -70,7 +70,7 @@ protected :
   nsresult ParseRootDSEEntry(nsILDAPMessage *aMessage);
 
   nsresult  GetAuthData(); // displays username and password prompt
-  nsString  mAuthUserID;  // user id of the user making the connection
+  nsCString mAuthUserID;   // user id of the user making the connection
 
   nsresult OnSearchAuthDNDone();
   nsresult OnSearchRootDSEDone();

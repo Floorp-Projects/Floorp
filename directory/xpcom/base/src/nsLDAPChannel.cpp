@@ -45,6 +45,7 @@
 #include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
+#include "nsILDAPMessage.h"
 
 #if !INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
 #include "nsNetUtil.h"
@@ -642,7 +643,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     //
     rv = mConnection->Init(host.get(), port,
                            (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE 
-                           : PR_FALSE, nsnull, this, nsnull);
+                           : PR_FALSE, NS_LITERAL_CSTRING(""), this, nsnull);
     switch (rv) {
     case NS_OK:
         break;
@@ -674,7 +675,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     // kick off a bind operation 
     // 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("initiating SimpleBind\n"));
-    rv = mCurrentOperation->SimpleBind(0);
+    rv = mCurrentOperation->SimpleBind(NS_LITERAL_CSTRING(""));
     if (NS_FAILED(rv)) {
 
         // XXXdmose better error handling / passthrough; deal with password
@@ -760,8 +761,8 @@ nsresult
 nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage) 
 {
     nsCOMPtr<nsILDAPURL> url;
-    nsXPIDLCString baseDn;
-    nsXPIDLCString filter;
+    nsCAutoString baseDn;
+    nsCAutoString filter;
     PRInt32 scope;
     nsresult rv;
 
@@ -791,7 +792,7 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
     // get a base DN.  
     // XXXdmose - is it reasonable to barf on an empty dn?
     //
-    rv = url->GetDn(getter_Copies(baseDn));
+    rv = url->GetDn(baseDn);
     NS_ENSURE_SUCCESS(rv, rv);
     if (baseDn.IsEmpty()) {
         return NS_ERROR_MALFORMED_URI;
@@ -804,7 +805,7 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
 
     // and the filter 
     //
-    rv = url->GetFilter(getter_Copies(filter));
+    rv = url->GetFilter(filter);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // time to kick off the search.
@@ -814,11 +815,8 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
     //
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
            ("bind completed; starting search\n"));
-    rv = mCurrentOperation->SearchExt(NS_ConvertUTF8toUCS2(baseDn).get(),
-                                      scope,
-                                      NS_ConvertUTF8toUCS2(filter).get(),
-                                      0, 0,
-                                      0, LDAP_NO_LIMIT);
+    rv = mCurrentOperation->SearchExt(baseDn, scope, filter, 0, 0, 0,
+                                      LDAP_NO_LIMIT);
     NS_ENSURE_SUCCESS(rv,rv);
     
     return NS_OK;
@@ -901,7 +899,7 @@ nsresult
 nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 {
     nsresult rv;
-    nsXPIDLString dn;
+    nsCAutoString dn;
     nsString entry;
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("entry returned!\n"));
@@ -909,11 +907,11 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     // get the DN
     // XXX better err handling
     //
-    rv = aMessage->GetDn(getter_Copies(dn));
+    rv = aMessage->GetDn(dn);
     NS_ENSURE_SUCCESS(rv, rv);
 
     entry.SetCapacity(256);
-    entry = NS_LITERAL_STRING("dn: ") + nsDependentString(dn) 
+    entry = NS_LITERAL_STRING("dn: ") + NS_ConvertUTF8toUCS2(dn)
         + NS_LITERAL_STRING("\n");
 
     char **attrs;

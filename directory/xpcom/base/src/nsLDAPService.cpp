@@ -709,7 +709,7 @@ nsLDAPService::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus)
 //
 nsresult
 nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
-                                            nsILDAPMessageListener *aListener)
+                                   nsILDAPMessageListener *aListener)
 {
     nsCOMPtr<nsILDAPOperation> operation;
     nsCOMPtr<nsILDAPServer> server;
@@ -717,8 +717,8 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
     nsCOMPtr<nsILDAPConnection> conn, conn2;
     nsCOMPtr<nsILDAPMessage> message;
     nsCAutoString host;
-    nsXPIDLString binddn;
-    nsXPIDLString password;
+    nsCAutoString binddn;
+    nsCAutoString password;
     PRInt32 port;
     PRUint32 options;
     nsresult rv;
@@ -730,11 +730,11 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
 
     // Get username and password from the server entry.
     //
-    rv = server->GetBinddn(getter_Copies(binddn));
+    rv = server->GetBinddn(binddn);
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
     }
-    rv = server->GetPassword(getter_Copies(password));
+    rv = server->GetPassword(password);
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
     }
@@ -771,7 +771,7 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
     //
     rv = conn->Init(host.get(), port, 
                     (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE : PR_FALSE, 
-                    nsnull, this, nsnull);
+                    binddn, this, nsnull);
     if (NS_FAILED(rv)) {
         switch (rv) {
         // Only pass along errors we are aware of
@@ -849,7 +849,7 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
     //
     // Here we need to support the password, see bug #75990
     // 
-    rv = operation->SimpleBind(0);
+    rv = operation->SimpleBind(password);
     if (NS_FAILED(rv)) {
         switch (rv) {
         // Only pass along errors we are aware of
@@ -869,12 +869,12 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
 
 /* AString createFilter (in unsigned long aMaxSize, in AString aPattern, in AString aPrefix, in AString aSuffix, in AString aAttr, in AString aValue); */
 NS_IMETHODIMP nsLDAPService::CreateFilter(PRUint32 aMaxSize, 
-                                          const nsAString & aPattern,
-                                          const nsAString & aPrefix,
-                                          const nsAString & aSuffix,
-                                          const nsAString & aAttr,
-                                          const nsAString & aValue,
-                                          nsAString & _retval)
+                                          const nsACString & aPattern,
+                                          const nsACString & aPrefix,
+                                          const nsACString & aSuffix,
+                                          const nsACString & aAttr,
+                                          const nsACString & aValue,
+                                          nsACString & _retval)
 {
     if (!aMaxSize) {
         return NS_ERROR_INVALID_ARG;
@@ -882,7 +882,7 @@ NS_IMETHODIMP nsLDAPService::CreateFilter(PRUint32 aMaxSize,
 
     // prepare to tokenize |value| for %vM ... %vN
     //
-    nsReadingIterator<PRUnichar> iter, iterEnd; // setup the iterators
+    nsReadingIterator<char> iter, iterEnd; // setup the iterators
     aValue.BeginReading(iter);
     aValue.EndReading(iterEnd);
 
@@ -924,11 +924,11 @@ NS_IMETHODIMP nsLDAPService::CreateFilter(PRUint32 aMaxSize,
     //
     nsresult rv;
     int result = ldap_create_filter(buffer, aMaxSize, 
-                   NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(aPattern).get()),
-                   NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(aPrefix).get()), 
-                   NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(aSuffix).get()), 
-                   NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(aAttr).get()),
-                   NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(aValue).get()),
+                   NS_CONST_CAST(char *, PromiseFlatCString(aPattern).get()),
+                   NS_CONST_CAST(char *, PromiseFlatCString(aPrefix).get()),
+                   NS_CONST_CAST(char *, PromiseFlatCString(aSuffix).get()),
+                   NS_CONST_CAST(char *, PromiseFlatCString(aAttr).get()),
+                   NS_CONST_CAST(char *, PromiseFlatCString(aValue).get()),
                    valueWords);
     switch (result) {
     case LDAP_SUCCESS:
@@ -954,7 +954,7 @@ NS_IMETHODIMP nsLDAPService::CreateFilter(PRUint32 aMaxSize,
         break;
     }
 
-    _retval = NS_ConvertUTF8toUCS2(buffer);
+    _retval.Assign(buffer);
 
     // done with the array and the buffer
     //
@@ -967,8 +967,8 @@ NS_IMETHODIMP nsLDAPService::CreateFilter(PRUint32 aMaxSize,
 // Count the number of space-separated tokens between aIter and aIterEnd
 //
 PRUint32
-nsLDAPService::CountTokens(nsReadingIterator<PRUnichar> aIter,
-                           nsReadingIterator<PRUnichar> aIterEnd)
+nsLDAPService::CountTokens(nsReadingIterator<char> aIter,
+                           nsReadingIterator<char> aIterEnd)
 {
     PRUint32 count(0);
 
@@ -978,7 +978,8 @@ nsLDAPService::CountTokens(nsReadingIterator<PRUnichar> aIter,
     
         // move past any leading spaces
         //
-        while (aIter != aIterEnd && nsCRT::IsAsciiSpace(*aIter)) {
+        while (aIter != aIterEnd &&
+               ldap_utf8isspace(NS_CONST_CAST(char *, aIter.get()))){
             ++aIter;
         }
 
@@ -986,7 +987,7 @@ nsLDAPService::CountTokens(nsReadingIterator<PRUnichar> aIter,
         //
         while (aIter != aIterEnd) {
 
-            if (nsCRT::IsAsciiSpace(*aIter)) {
+            if (ldap_utf8isspace(NS_CONST_CAST(char *, aIter.get()))) {
                 ++count;    // token finished; increment the count
                 ++aIter;    // move past the space
                 break;
@@ -1010,56 +1011,25 @@ nsLDAPService::CountTokens(nsReadingIterator<PRUnichar> aIter,
 
 // return the next token in this iterator
 //
-char *
-nsLDAPService::NextToken(nsReadingIterator<PRUnichar> & aIter,
-                         nsReadingIterator<PRUnichar> & aIterEnd)
+char*
+nsLDAPService::NextToken(nsReadingIterator<char> & aIter,
+                         nsReadingIterator<char> & aIterEnd)
 {
     // move past any leading whitespace
     //
-    while ( aIter != aIterEnd && nsCRT::IsAsciiSpace(*aIter) ) {
+    while (aIter != aIterEnd &&
+           ldap_utf8isspace(NS_CONST_CAST(char *, aIter.get()))) {
         ++aIter;
     }
 
-    nsAString::const_iterator start(aIter);
+    nsACString::const_iterator start(aIter);
 
     // copy the token into our local variable
     //
-    while ( aIter != aIterEnd && !nsCRT::IsAsciiSpace(*aIter) ) {
+    while (aIter != aIterEnd &&
+           !ldap_utf8isspace(NS_CONST_CAST(char *, aIter.get()))) {
         ++aIter;
     }
 
-    return ToNewUTF8String(Substring(start, aIter));
-}
-
-// Note that these 2 functions might go away in the future, see bug 84186.
-//
-// string UCS2ToUTF8 (in AString aString);
-NS_IMETHODIMP
-nsLDAPService::UCS2toUTF8(const nsAString &aString,
-                                        char **_retval)
-{
-    char *str;
-
-    if (!_retval) {
-        NS_ERROR("nsLDAPService::UCS2toUTF8: null pointer ");
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    str = ToNewUTF8String(aString);
-    if (!str) {
-        NS_ERROR("nsLDAPService::UCS2toUTF8: out of memory ");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    *_retval = str;
-    return NS_OK;
-}
-
-// AString UTF8ToUCS2 (in string aString);
-NS_IMETHODIMP
-nsLDAPService::UTF8toUCS2(const char *aString,
-                                        nsAString &_retval)
-{
-    _retval = NS_ConvertUTF8toUCS2(aString);
-    return NS_OK;
+    return ToNewCString(Substring(start, aIter));
 }

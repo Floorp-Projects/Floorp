@@ -92,14 +92,14 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::DoReplicationQuery()
         return NS_ERROR_NOT_INITIALIZED;
 
 #ifdef USE_AUTHDLG
-    return ConnectToLDAPServer(mURL, NS_LITERAL_STRING(""));
+    return ConnectToLDAPServer(mURL, NS_LITERAL_CSTRING(""));
 #else
     mDataProcessor->PopulateAuthData();
     return ConnectToLDAPServer(mURL, mAuthDN);
 #endif
 }
 
-NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryAuthDN(const nsAString & aValueUsedToFindDn)
+NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryAuthDN(const nsACString & aValueUsedToFindDn)
 {
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
@@ -112,18 +112,16 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryAuthDN(const nsAString & aValueUsedTo
     attributes.GetArray()[0] = ToNewCString(nsDependentCString(DIR_GetFirstAttributeString(mDirServer, cn)));
     attributes.GetArray()[1] = nsnull;
     
-    nsAutoString filter;
-    filter.AssignWithConversion(DIR_GetFirstAttributeString(mDirServer, auth));
-    filter.AppendWithConversion(NS_LITERAL_CSTRING("=").get());
+    nsCAutoString filter(DIR_GetFirstAttributeString(mDirServer, auth));
+    filter += '=';
     filter += aValueUsedToFindDn;
 
-    nsXPIDLCString dn;
-    rv = mURL->GetDn(getter_Copies(dn));
+    nsCAutoString dn;
+    rv = mURL->GetDn(dn);
     if(NS_FAILED(rv)) 
         return rv;
 
-    return mOperation->SearchExt(NS_ConvertUTF8toUCS2(dn).get(), nsILDAPURL::SCOPE_SUBTREE, 
-                               filter.get(), 
+    return mOperation->SearchExt(dn, nsILDAPURL::SCOPE_SUBTREE, filter, 
                                attributes.GetSize(), attributes.GetArray(),
                                0, 0);
 }
@@ -133,14 +131,14 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryRootDSE()
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
 
-    return mOperation->SearchExt(nsnull, nsILDAPURL::SCOPE_BASE, 
-                               NS_LITERAL_STRING("objectclass=*").get(), 
+    return mOperation->SearchExt(NS_LITERAL_CSTRING(""), nsILDAPURL::SCOPE_BASE, 
+                               NS_LITERAL_CSTRING("objectclass=*"), 
                                MozillaLdapPropertyRelator::rootDSEAttribCount, 
                                MozillaLdapPropertyRelator::changeLogRootDSEAttribs,
                                0, 0);
 }
 
-NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangeLog(const nsAString & aChangeLogDN, PRInt32 aLastChangeNo)
+NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangeLog(const nsACString & aChangeLogDN, PRInt32 aLastChangeNo)
 {
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
@@ -153,23 +151,23 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangeLog(const nsAString & aChangeLo
     nsCAutoString filter (NS_LITERAL_CSTRING("changenumber>="));
     filter.AppendInt(mDirServer->replInfo->lastChangeNumber+1);
 
-    return mOperation->SearchExt(PromiseFlatString(aChangeLogDN).get(), 
+    return mOperation->SearchExt(aChangeLogDN, 
                                nsILDAPURL::SCOPE_ONELEVEL,
-                               NS_ConvertUTF8toUCS2(filter).get(), 
+                               filter, 
                                MozillaLdapPropertyRelator::changeLogEntryAttribCount, 
                                MozillaLdapPropertyRelator::changeLogEntryAttribs,
                                0, 0);
 }
 
-NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangedEntries(const nsAString & aChangedEntryDN)
+NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangedEntries(const nsACString & aChangedEntryDN)
 {
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
     if(aChangedEntryDN.IsEmpty()) 
         return NS_ERROR_UNEXPECTED;
 
-    nsXPIDLCString urlFilter;
-    nsresult rv = mURL->GetFilter(getter_Copies(urlFilter));
+    nsCAutoString urlFilter;
+    nsresult rv = mURL->GetFilter(urlFilter);
     if(NS_FAILED(rv)) 
         return rv;
 
@@ -183,8 +181,7 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangedEntries(const nsAString & aCha
     if(NS_FAILED(rv)) 
         return rv;
 
-    return mOperation->SearchExt(PromiseFlatString(aChangedEntryDN).get(), scope, 
-                               NS_ConvertUTF8toUCS2(urlFilter).get(), 
+    return mOperation->SearchExt(aChangedEntryDN, scope, urlFilter, 
                                attributes.GetSize(), attributes.GetArray(),
                                0, 0);
 }

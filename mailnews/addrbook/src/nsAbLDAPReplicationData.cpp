@@ -156,14 +156,8 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::OnLDAPInit(nsILDAPConnection *aCon
     }
 
     // Bind
-    if(mAuthPswd.IsEmpty()) {
-    rv = operation->SimpleBind(nsnull);
-        mState = kAnonymousBinding;
-    }
-    else {
-        rv = operation->SimpleBind(mAuthPswd.get());
-        mState = kAuthenticatedBinding;
-    }
+    rv = operation->SimpleBind(mAuthPswd);
+    mState = mAuthPswd.IsEmpty() ? kAnonymousBinding : kAuthenticatedBinding;
 
     if(NS_FAILED(rv)) {
         Done(PR_FALSE);
@@ -250,7 +244,7 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::Abort()
 // this should get the authDN from prefs and password from PswdMgr
 NS_IMETHODIMP nsAbLDAPProcessReplicationData::PopulateAuthData()
 {
-    mAuthDN.AssignWithConversion(mDirServerInfo->authDn);
+    mAuthDN.Assign(mDirServerInfo->authDn);
 
     nsresult rv = NS_OK;
     nsCOMPtr <nsIPasswordManagerInternal> passwordMgrInt = do_GetService(NS_PASSWORDMANAGER_CONTRACTID, &rv);
@@ -276,7 +270,8 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::PopulateAuthData()
             return rv;
 
         if (!passwordFound.IsEmpty())
-            mAuthPswd = passwordFound;
+            // XXX This needs CopyUCS2toUTF8
+            mAuthPswd.Assign(NS_ConvertUCS2toUTF8(passwordFound));
     }
 
     return rv;
@@ -390,12 +385,12 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchEntry(nsILDAPMessage *aMess
     }
 
     // now set the attribute for the DN of the entry in the card in the DB
-    nsXPIDLString authDN;
-    rv = aMessage->GetDn(getter_Copies(authDN));
+    nsCAutoString authDN;
+    rv = aMessage->GetDn(authDN);
     if(NS_SUCCEEDED(rv) && !authDN.IsEmpty())
     {
         dbCard->SetAbDatabase(mReplicationDB);
-        dbCard->SetStringAttribute("_DN", authDN.get());
+        dbCard->SetStringAttribute("_DN", NS_ConvertUTF8toUCS2(authDN).get());
     }
 
     newCard = do_QueryInterface(dbCard, &rv);

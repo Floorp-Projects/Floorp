@@ -143,8 +143,8 @@ nsresult nsAbLDAPProcessChangeLogData::OnLDAPSearchEntry(nsILDAPMessage *aMessag
     {
     case kSearchingAuthDN :
         {
-            nsXPIDLString authDN;
-            rv = aMessage->GetDn(getter_Copies(authDN));
+            nsCAutoString authDN;
+            rv = aMessage->GetDn(authDN);
             if(NS_SUCCEEDED(rv) && !authDN.IsEmpty())
                 mAuthDN = authDN.get();
         }
@@ -292,8 +292,9 @@ nsresult nsAbLDAPProcessChangeLogData::GetAuthData()
                                             getter_Copies(username), getter_Copies(password), 
                                             &btnResult);
     if(NS_SUCCEEDED(rv) && btnResult) {
-        mAuthUserID = username;
-        mAuthPswd = password;
+        // XXX This needs CopyUCS2toUTF8
+        mAuthUserID.Assign(NS_ConvertUCS2toUTF8(username));
+        mAuthPswd.Assign(NS_ConvertUCS2toUTF8(password));
         mDirServerInfo->enableAuth=PR_TRUE;
         mDirServerInfo->savePassword=PR_TRUE;
     }
@@ -315,7 +316,7 @@ nsresult nsAbLDAPProcessChangeLogData::OnSearchAuthDNDone()
     if(NS_SUCCEEDED(rv)) {
         mState = kAuthenticatedBinding;
         PR_FREEIF(mDirServerInfo->authDn);
-        mDirServerInfo->authDn=ToNewCString(NS_ConvertUCS2toUTF8(mAuthDN));
+        mDirServerInfo->authDn=ToNewCString(mAuthDN);
     }
 
     return rv;
@@ -341,12 +342,14 @@ nsresult nsAbLDAPProcessChangeLogData::ParseRootDSEEntry(nsILDAPMessage *aMessag
             continue;
         if(vals.GetSize()) {
             if (!PL_strcasecmp(attrs[i], "changelog"))
-                mRootDSEEntry.changeLogDN = vals[0];
+                // XXX This needs CopyUCS2toUTF8
+                mRootDSEEntry.changeLogDN.Assign(NS_ConvertUCS2toUTF8(vals[0]));
             if (!PL_strcasecmp(attrs[i], "firstChangeNumber"))
                 mRootDSEEntry.firstChangeNumber = atol(NS_LossyConvertUCS2toASCII(vals[0]).get());
             if (!PL_strcasecmp(attrs[i], "lastChangeNumber"))
                 mRootDSEEntry.lastChangeNumber = atol(NS_LossyConvertUCS2toASCII(vals[0]).get());
             if (!PL_strcasecmp(attrs[i], "dataVersion"))
+                // XXX This needs CopyUCS2toUTF8
                 mRootDSEEntry.dataVersion = NS_ConvertUCS2toUTF8(vals[0]).get();
         }
     }
@@ -509,7 +512,7 @@ nsresult nsAbLDAPProcessChangeLogData::OnFindingChangesDone()
 
     // decrement the count first to get the correct array element
     mEntriesAddedQueryCount--;
-    rv = mChangeLogQuery->QueryChangedEntries(*(mEntriesToAdd[mEntriesAddedQueryCount]));
+    rv = mChangeLogQuery->QueryChangedEntries(NS_ConvertUCS2toUTF8(*(mEntriesToAdd[mEntriesAddedQueryCount])));
     if (NS_FAILED(rv))
         return rv;
 
@@ -547,7 +550,7 @@ nsresult nsAbLDAPProcessChangeLogData::OnReplicatingChangeDone()
     if(mEntriesAddedQueryCount < mEntriesToAdd.Count() && mEntriesAddedQueryCount >= 0)
         mEntriesToAdd.RemoveStringAt(mEntriesAddedQueryCount);
     mEntriesAddedQueryCount--;
-    rv = mChangeLogQuery->QueryChangedEntries(*(mEntriesToAdd[mEntriesAddedQueryCount]));
+    rv = mChangeLogQuery->QueryChangedEntries(NS_ConvertUCS2toUTF8(*(mEntriesToAdd[mEntriesAddedQueryCount])));
 
     return rv;
 }

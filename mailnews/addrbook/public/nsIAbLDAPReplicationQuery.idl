@@ -72,7 +72,7 @@ interface nsIAbLDAPReplicationQuery : nsISupports {
   /**
      * connects to an LDAP Server using a DN
 	 */
-	void connectToLDAPServer(in nsILDAPURL aURL, in AString aAuthDN);
+	void connectToLDAPServer(in nsILDAPURL aURL, in AUTF8String aAuthDN);
 
   /**
     * Starts an LDAP query to replicate all entries
@@ -96,7 +96,7 @@ interface nsIAbLDAPChangeLogQuery : nsISupports {
   /**
     * Starts an LDAP query to find auth DN
     */
-    void queryAuthDN(in AString aValueUsedToFindDn);
+    void queryAuthDN(in AUTF8String aValueUsedToFindDn);
 
   /**
     * Starts an LDAP query to search server's Root DSE
@@ -106,11 +106,11 @@ interface nsIAbLDAPChangeLogQuery : nsISupports {
   /**
     * Starts an LDAP ChangeLog query to find changelog entries
     */
-    void queryChangeLog(in AString aChangeLogDN, in PRInt32 aLastChangeNo);
+    void queryChangeLog(in AUTF8String aChangeLogDN, in PRInt32 aLastChangeNo);
       
   /**
     * Starts an LDAP query to find changed entries
     */
-    void queryChangedEntries(in AString aChangedEntryDN);
+    void queryChangedEntries(in AUTF8String aChangedEntryDN);
 };
 

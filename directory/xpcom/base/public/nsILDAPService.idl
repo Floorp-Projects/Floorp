@@ -191,7 +191,7 @@ interface nsILDAPService : nsISupports {
      * under any open source license, so I can't include that
      * documentation here in the doxygen comments.
      *
-     * @param aMaxSize   maximum size (in PRUnichars) of string to be 
+     * @param aMaxSize   maximum size (in char) of string to be 
      *                   created and returned (including final \0)
      * @param aPattern   pattern to be used for the filter
      * @param aPrefix    prefix to prepend to the filter
@@ -205,33 +205,7 @@ interface nsILDAPService : nsISupports {
      * @exception NS_ERROR_UNEXPECTED       ldap_create_filter returned
      *                                      unexpected error code
      */
-    AString createFilter(in unsigned long aMaxSize, in AString aPattern, 
-                         in AString aPrefix, in AString aSuffix,
-                         in AString aAttr, in AString aValue);
-
-    /**
-     * Convert a Unicode string (AString) to a single byte string, using
-     * UTF8 encoding. This is used to pass UTF8 encoded strings into the
-     * nsILDAPURL interface for instance. Note that this method will go
-     * away (hopefully) once we have a real solution (see bug 84186).
-     *
-     * @param aString                        Unicode string to be converted
-     * @return                               UTF8 encoded string, single byte
-     *
-     * @exception NS_ERROR_NULL_POINTER     NULL pointer
-     * @exception NS_ERROR_OUT_OF_MEMORY    ran out of memory
-     */
-    string UCS2toUTF8(in AString aString);
-
-    /**
-     * Convert a UTF8 string (|string|) to a Unicode (|AString|) string.
-     * Note that this method will go away (hopefully) once we have a
-     * real solution (see bug 84186).
-     *
-     * @param string                 UTF8 string to be converted
-     * @return                       Unicode string
-     *
-     * @exception NS_ERROR_OUT_OF_MEMORY    ran out of memory
-     */
-    AString UTF8toUCS2(in string aString);
+    AUTF8String createFilter(in unsigned long aMaxSize, in AUTF8String aPattern, 
+                             in AUTF8String aPrefix, in AUTF8String aSuffix,
+                             in AUTF8String aAttr, in AUTF8String aValue);
 };

@@ -41,13 +41,6 @@
  * in this interface, except attribute types (e.g. "cn"), should in fact
  * be UTF8. It's important to remember that attributes can not be UTF8,
  * they can only be of a limited subset of ASCII (see RFC 2251).
- *
- * Currently we deal with this encoding using two little helper methods
- * in the nsILDAPService interface, |UTF8toUCS2()| and |UCS2toUTF8|,
- * which are both scriptable. This will hopefully go away once a real
- * solution is implemented, see bug 84186 for more details.
- *
- * FYI, ASCII is a subset of UTF8.
  */
 
 [scriptable, uuid(7310562d-1567-43c7-a123-633c1ba3663e)]
@@ -62,7 +55,7 @@ interface nsILDAPURL : nsIURI {
      * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
      * @exception NS_ERROR_OUT_OF_MEMORY	Ran out of memory
      */
-    attribute string dn;
+    attribute AUTF8String dn;
 
     /**
      * Return all LDAP attributes currently set. The empty array indicates
@@ -135,7 +128,7 @@ interface nsILDAPURL : nsIURI {
     /**
      * The search filter. "(objectClass=*)" is the default.
      */
-    attribute string filter;
+    attribute AUTF8String filter;
 
     /**
      * Any options defined for this URL (check options using a bitwise and)

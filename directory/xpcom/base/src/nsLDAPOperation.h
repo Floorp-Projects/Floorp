@@ -64,9 +64,9 @@ class nsLDAPOperation : public nsILDAPOperation
      *
      * XXX should move to idl, once LDAPControls have an IDL representation
      */
-    int SearchExt(const PRUnichar *base, // base DN to search
+    int SearchExt(const nsACString& base, // base DN to search
                   int scope, // SCOPE_{BASE,ONELEVEL,SUBTREE}
-                  const PRUnichar *filter, // search filter
+                  const nsACString& filter, // search filter
                   char **attrs, // attribute types to be returned
                   int attrsOnly, // attrs only, or values too?
                   LDAPControl **serverctrls, 

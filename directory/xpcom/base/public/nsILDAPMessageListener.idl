@@ -33,7 +33,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsILDAPMessage.idl"
+
+interface nsILDAPMessage;
 
 interface nsILDAPConnection;
 

@@ -46,6 +46,7 @@
 #include "nsILDAPErrors.h"
 #include "nsIEventQueueService.h"
 #include "nsReadableUtils.h"
+#include "nsILDAPMessage.h"
 
 // nsISupports Implementation
 
@@ -164,7 +165,7 @@ nsLDAPSyncQuery::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus)
 
     // kick off a bind operation 
     // 
-    rv = mOperation->SimpleBind(NULL); 
+    rv = mOperation->SimpleBind(nsCString()); 
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();
         return NS_ERROR_FAILURE;
@@ -309,8 +310,8 @@ nsLDAPSyncQuery::StartLDAPSearch()
 
     // get the search filter associated with the directory server url; 
     //
-    nsXPIDLCString urlFilter;
-    rv = mServerURL->GetFilter(getter_Copies(urlFilter));
+    nsCAutoString urlFilter;
+    rv = mServerURL->GetFilter(urlFilter);
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();
         return NS_ERROR_UNEXPECTED;
@@ -318,8 +319,8 @@ nsLDAPSyncQuery::StartLDAPSearch()
 
     // get the base dn to search
     //
-    nsXPIDLCString dn;
-    rv = mServerURL->GetDn(getter_Copies(dn));
+    nsCAutoString dn;
+    rv = mServerURL->GetDn(dn);
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();
         return NS_ERROR_UNEXPECTED;
@@ -344,9 +345,7 @@ nsLDAPSyncQuery::StartLDAPSearch()
 
     // time to kick off the search.
     //
-    rv = mOperation->SearchExt(NS_ConvertUTF8toUCS2(dn).get(), scope, 
-                               NS_ConvertUTF8toUCS2(urlFilter).get(), 
-                               mAttrCount,
+    rv = mOperation->SearchExt(dn, scope, urlFilter, mAttrCount,
                                NS_CONST_CAST(const char **, mAttrs), 0, 0);
 
     if (NS_FAILED(rv)) {
@@ -425,7 +424,8 @@ nsresult nsLDAPSyncQuery::InitConnection()
 
     rv = mConnection->Init(host.get(), port, 
                            (options & nsILDAPURL::OPT_SECURE) 
-                           ? PR_TRUE : PR_FALSE, 0, selfProxy, nsnull);
+                           ? PR_TRUE : PR_FALSE, nsCString(), selfProxy,
+                           nsnull);
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();
         return NS_ERROR_UNEXPECTED; // this should never happen

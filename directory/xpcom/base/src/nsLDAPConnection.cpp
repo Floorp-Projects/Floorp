@@ -93,10 +93,6 @@ nsLDAPConnection::~nsLDAPConnection()
 
   PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbound\n"));
 
-  if (mBindName) {
-      delete mBindName;
-  }
-
   if (mPendingOperations) {
       delete mPendingOperations;
   }
@@ -170,7 +166,7 @@ nsLDAPConnection::Release(void)
 
 NS_IMETHODIMP
 nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, PRBool aSSL,
-                       const PRUnichar *aBindName, 
+                       const nsACString& aBindName, 
                        nsILDAPMessageListener *aMessageListener,
                        nsISupports *aClosure)
 {
@@ -187,18 +183,7 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, PRBool aSSL,
     NS_ASSERTION(!mDNSRequest, "nsLDAPConnection::Init() "
                  "Connection was already initialized\n");
 
-    // XXXdmose - is a bindname of "" equivalent to a bind name of
-    // NULL (which which means bind anonymously)?  if so, we don't
-    // need to go through these contortions.
-    //
-    if (aBindName) {
-        mBindName = new nsString(aBindName);
-        if (!mBindName) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-    } else {
-        mBindName = 0;
-    }
+    mBindName.Assign(aBindName);
 
     mClosure = aClosure;
 
@@ -308,27 +293,12 @@ nsLDAPConnection::SetClosure(nsISupports *aClosure)
 
 // who we're binding as
 //
-// readonly attribute wstring bindName
+// readonly attribute AUTF8String bindName
 //
 NS_IMETHODIMP
-nsLDAPConnection::GetBindName(PRUnichar **_retval)
+nsLDAPConnection::GetBindName(nsACString& _retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
-
-    // check for NULL (meaning bind anonymously)
-    //
-    if (!mBindName) {
-        *_retval = 0;
-    } else {
-
-        // otherwise, hand out a copy of the bind name
-        //
-        *_retval = ToNewUnicode(*mBindName);
-        if (!(*_retval)) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-    }
-
+    _retval.Assign(mBindName);
     return NS_OK;
 }
 
@@ -336,7 +306,7 @@ nsLDAPConnection::GetBindName(PRUnichar **_retval)
 // XXX should copy before returning
 //
 NS_IMETHODIMP
-nsLDAPConnection::GetLdErrno(PRUnichar **matched, PRUnichar **errString, 
+nsLDAPConnection::GetLdErrno(nsACString& matched, nsACString& errString, 
                              PRInt32 *_retval)
 {
     char *match, *err;
@@ -344,9 +314,8 @@ nsLDAPConnection::GetLdErrno(PRUnichar **matched, PRUnichar **errString,
     NS_ENSURE_ARG_POINTER(_retval);
 
     *_retval = ldap_get_lderrno(mConnectionHandle, &match, &err);
-    *matched = ToNewUnicode(NS_ConvertUTF8toUCS2(match));
-    *errString = ToNewUnicode(NS_ConvertUTF8toUCS2(err));
-
+    matched.Assign(match);
+    errString.Assign(err);
     return NS_OK;
 }
 
@@ -373,7 +342,6 @@ nsLDAPConnection::GetErrorString(PRUnichar **_retval)
     if (!*_retval) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-
     return NS_OK;
 }
 

@@ -396,26 +396,16 @@ NS_IMETHODIMP nsLDAPURL::Resolve(const nsACString &relativePath,
 
 // The following attributes come from nsILDAPURL
 
-// attribute string dn;
+// attribute AUTF8String dn;
 //
-NS_IMETHODIMP nsLDAPURL::GetDn(char **_retval)
+NS_IMETHODIMP nsLDAPURL::GetDn(nsACString& _retval)
 {
-    if (!_retval) {
-        NS_ERROR("nsLDAPURL::GetDn: null pointer ");
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *_retval = ToNewCString(mDN);
-    if (!*_retval) {
-        NS_ERROR("nsLDAPURL::GetDN: out of memory ");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
+    _retval.Assign(mDN);
     return NS_OK;
 }
-NS_IMETHODIMP nsLDAPURL::SetDn(const char *aDn)
+NS_IMETHODIMP nsLDAPURL::SetDn(const nsACString& aDn)
 {
-    mDN = aDn;
+    mDN.Assign(aDn);
     return NS_OK;
 }
 
@@ -556,24 +546,14 @@ NS_IMETHODIMP nsLDAPURL::SetScope(PRInt32 aScope)
 
 // attribute string filter;
 //
-NS_IMETHODIMP nsLDAPURL::GetFilter(char **_retval)
+NS_IMETHODIMP nsLDAPURL::GetFilter(nsACString& _retval)
 {
-    if (!_retval) {
-        NS_ERROR("nsLDAPURL::GetFilter: null pointer ");
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *_retval = ToNewCString(mFilter);
-    if (!*_retval) {
-        NS_ERROR("nsLDAPURL::GetFilter: out of memory ");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    
+    _retval.Assign(mFilter);
     return NS_OK;
 }
-NS_IMETHODIMP nsLDAPURL::SetFilter(const char *aFilter)
+NS_IMETHODIMP nsLDAPURL::SetFilter(const nsACString& aFilter)
 {
-    mFilter = aFilter;
+    mFilter.Assign(aFilter);
     return NS_OK;
 }
 

@@ -433,12 +433,8 @@ nsLDAPMessage::IterateAttributes(PRUint32 *aAttrCount, char** *aAttributes,
 }
 
 // readonly attribute wstring dn;
-NS_IMETHODIMP nsLDAPMessage::GetDn(PRUnichar **aDn)
+NS_IMETHODIMP nsLDAPMessage::GetDn(nsACString& aDn)
 {
-    if (!aDn) {
-        return NS_ERROR_ILLEGAL_VALUE;
-    }
-
     char *rawDn = ldap_get_dn(mConnectionHandle, mMsgHandle);
 
     if (!rawDn) {
@@ -455,17 +451,10 @@ NS_IMETHODIMP nsLDAPMessage::GetDn(PRUnichar **aDn)
             NS_ERROR("nsLDAPMessage::GetDn(): internal error");
             return NS_ERROR_UNEXPECTED;
         }
-    } 
-
-    // get a copy made with the shared allocator, and dispose of the original
-    //
-
-    *aDn = ToNewUnicode(NS_ConvertUTF8toUCS2(rawDn));
-    ldap_memfree(rawDn);
-
-    if (!*aDn) {
-        return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    aDn.Assign(rawDn);
+    ldap_memfree(rawDn);
 
     return NS_OK;
 }
@@ -652,16 +641,16 @@ nsLDAPMessage::ToUnicode(PRUnichar* *aString)
 }
 
 NS_IMETHODIMP
-nsLDAPMessage::GetErrorMessage(nsAString & aErrorMessage)
+nsLDAPMessage::GetErrorMessage(nsACString & aErrorMessage)
 {
-    aErrorMessage = NS_ConvertUTF8toUCS2(mErrorMessage);
+    aErrorMessage.Assign(mErrorMessage);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLDAPMessage::GetMatchedDn(nsAString & aMatchedDn)
+nsLDAPMessage::GetMatchedDn(nsACString & aMatchedDn)
 {
-    aMatchedDn = NS_ConvertUTF8toUCS2(mMatchedDn);
+    aMatchedDn.Assign(mMatchedDn);
     return NS_OK;
 }
 

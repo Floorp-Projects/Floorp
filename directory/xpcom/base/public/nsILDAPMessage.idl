@@ -34,11 +34,6 @@
 
 #include "nsISupports.idl"
 
-/* hack around XPIDL bug 78848; when that's fixed, this can disappear */
-%{C++
-#include "nsAString.h"
-%}
-
 interface nsILDAPBERValue;
 interface nsILDAPOperation;
 
@@ -53,7 +48,7 @@ interface nsILDAPMessage : nsISupports
      * @exception NS_ERROR_LDAP_DECODING_ERROR  problem during BER-decoding
      * @exception NS_ERROR_UNEXPECTED           bug or memory corruption
      */
-    readonly attribute wstring dn;
+    readonly attribute AUTF8String dn;
 
     /**
      * Get all the attributes in this message.
@@ -172,14 +167,14 @@ interface nsILDAPMessage : nsISupports
     /**
      * Additional error information optionally sent by the server.
      */
-    readonly attribute AString errorMessage;
+    readonly attribute AUTF8String errorMessage;
 
     /**
      * In LDAPv3, when the server returns any of the following errors:
      * NO_SUCH_OBJECT, ALIAS_PROBLEM, INVALID_DN_SYNTAX, ALIAS_DEREF_PROBLEM,
      * it also returns the closest existing DN to the entry requested.
      */
-    readonly attribute AString matchedDn;
+    readonly attribute AUTF8String matchedDn;
 
     /**
      * Get an array of all the attribute values in this message (a wrapper

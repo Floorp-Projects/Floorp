@@ -32,7 +32,6 @@ const NS_LDAPPREFSSERVICE_IID = Components.interfaces.nsILDAPPrefsService;
 const nsISupports        = Components.interfaces.nsISupports;
 const nsIPrefBranch      = Components.interfaces.nsIPrefBranch;
 const nsILDAPURL         = Components.interfaces.nsILDAPURL;
-const nsILDAPService     = Components.interfaces.nsILDAPService;
 
 const kDefaultLDAPPort = 389;
 const kDefaultSecureLDAPPort = 636;
@@ -167,7 +166,6 @@ function () {
   if (this.prefs_migrated) return;
   var gPrefInt = null;
   var host;
-  var dn;
   try {
     gPrefInt = Components.classes["@mozilla.org/preferences-service;1"];
     gPrefInt = gPrefInt.getService(Components.interfaces.nsIPrefBranch);
@@ -189,16 +187,6 @@ function () {
     var useDirectory = gPrefInt.getBoolPref("ldap_2.servers.useDirectory");
   }
   catch(ex) {}
-  try {
-    var ldapService = Components.classes[
-        "@mozilla.org/network/ldap-service;1"].
-        getService(Components.interfaces.nsILDAPService);
-  }
-  catch (ex)
-  { 
-    dump("failed to get ldap service!\n");
-    ldapService = null;
-  }
   for (var i=0; i < this.availDirectories.length; i++) {
     pref_string = this.availDirectories[i][0];
     try{
@@ -218,14 +206,10 @@ function () {
       }
       ldapUrl.host = host;
       try{
-        dn = gPrefInt.getComplexValue(pref_string + ".searchBase",
-                                      Components.interfaces.nsISupportsString).data;
+        ldapUrl.dn = gPrefInt.getCharPref(pref_string + ".searchBase");
       }
       catch (ex) {
-        dn = null;
       }
-      if (dn && ldapService)
-        ldapUrl.dn = ldapService.UCS2toUTF8(dn);
       var secure = false;
       try {
         secure = gPrefInt.getBoolPref(pref_string + ".isSecure");
