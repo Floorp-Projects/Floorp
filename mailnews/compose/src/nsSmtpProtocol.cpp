@@ -784,6 +784,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
             return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
         }
         if ((TestFlag(SMTP_AUTH_PLAIN_ENABLED) ||
+            TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED) ||
              TestFlag(SMTP_AUTH_LOGIN_ENABLED)) &&
             (m_prefAuthMethod == PREF_AUTH_ANY))
         {
@@ -807,6 +808,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
             return NS_OK;
         }
         else if (TestFlag(SMTP_AUTH_LOGIN_ENABLED) ||
+                TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED) ||
                  TestFlag(SMTP_AUTH_PLAIN_ENABLED))
         {
             m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
