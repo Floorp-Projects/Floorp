@@ -80,6 +80,7 @@ public:
   NS_IMETHOD SafeToDestroy(PRBool* aResult);
 
   NS_IMETHOD GetURL(nsString& aResult);
+  NS_IMETHOD GetPresContext(nsIPresContext** aPresContext);
 
   NS_IMETHOD GetImage(nsIImage** aResult);
 

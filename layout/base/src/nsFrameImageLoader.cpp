@@ -356,6 +356,13 @@ nsFrameImageLoader::GetURL(nsString& aResult)
 }
 
 NS_IMETHODIMP
+nsFrameImageLoader::GetPresContext(nsIPresContext** aPresContext)
+{
+  NS_IF_ADDREF(*aPresContext = mPresContext);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFrameImageLoader::GetImage(nsIImage** aResult)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");

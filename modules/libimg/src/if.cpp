@@ -1907,33 +1907,24 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
     }
 
     /* obtain first url from aObserver */
-
     if (!aObserver) {
         Recycle(host);
         return PR_TRUE;
     }
-
-#ifdef xxx
-    /* real ugly hack until I figure out the right way to get the presContext from aObserver */
-    nsIPresContext* presContext = (nsIPresContext*)(((PRInt32 *)aObserver)[3]);
-
-    nsIURI * firstUri;
-    rv = presContext->GetBaseURL(&firstUri);
-    if (NS_FAILED(rv) || !firstUri) {
-        Recycle(host);
-        return PR_TRUE;
+    char* firstHost = 0;
+    nsCOMPtr<nsIFrameImageLoader> frameImageLoader = do_QueryInterface(aObserver);
+    if (frameImageLoader) {
+        nsCOMPtr<nsIPresContext> presContext;
+        rv = frameImageLoader->GetPresContext(getter_AddRefs(presContext));
+        if (presContext) {
+            nsCOMPtr<nsIURI> firstURI;
+            presContext->GetBaseURL(getter_AddRefs(firstURI));
+            rv = firstURI->GetHost(&firstHost);
+        }
     }
-
-    char* firstHost = nsnull;
-    rv = firstUri->GetHost(&firstHost);
-    NS_RELEASE(firstUri);
-    if (NS_FAILED(rv)) {
-        Recycle(host);
-        return PR_TRUE;
+    if (!firstHost) {
+        firstHost = PL_strdup(host);
     }
-#else
-    char* firstHost = PL_strdup(host);
-#endif
 
     /* check to see if we need to block image from loading */
     NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &rv);
