@@ -1492,7 +1492,6 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
     if (msgHdr)
     {
       nsXPIDLCString subject;
-      nsCString subjectStr;
       nsXPIDLString decodedString;
       nsXPIDLCString decodedCString;
 
@@ -1509,7 +1508,60 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
       rv = msgHdr->GetSubject(getter_Copies(subject));
       if (NS_FAILED(rv)) return rv;
 
-      subjectStr.SetLength(0);
+      // Check if (was: is present in the subject
+      nsACString::const_iterator wasStart, wasEnd;
+      subject.BeginReading(wasStart);
+      subject.EndReading(wasEnd);
+      PRBool wasFound = RFindInReadable(NS_LITERAL_CSTRING(" (was:"), wasStart, wasEnd);
+      PRBool strip = PR_TRUE;
+
+      if (wasFound) {
+        // Check the number of references, to check if was: should be stripped
+        // First, assume that it should be stripped; the variable will be set to
+        // false later if stripping should not happen.
+        PRUint16 numRef;
+        msgHdr->GetNumReferences(&numRef);
+        if (numRef) {
+          // If there are references, look for the first message in the thread
+          // firstly, get the database via the folder
+          nsCOMPtr<nsIMsgFolder> folder;
+          msgHdr->GetFolder(getter_AddRefs(folder));
+	  if (folder) {
+            nsCOMPtr<nsIMsgDatabase> db;
+            folder->GetMsgDatabase(nsnull, getter_AddRefs(db));
+  
+	    if (db) {
+              nsCAutoString reference;
+              msgHdr->GetStringReference(0, reference);
+  
+              nsCOMPtr<nsIMsgDBHdr> refHdr;
+              db->GetMsgHdrForMessageID(reference.get(), getter_AddRefs(refHdr));
+  
+              if (refHdr) {
+                nsXPIDLCString refSubject;
+                rv = refHdr->GetSubject(getter_Copies(refSubject));
+                if (NS_SUCCEEDED(rv)) {
+                  nsACString::const_iterator start, end;
+                  refSubject.BeginReading(start);
+                  refSubject.EndReading(end);
+                  if (FindInReadable(NS_LITERAL_CSTRING(" (was:"), start, end))
+                    strip = PR_FALSE;
+                }
+              }
+            }
+	  }
+        }
+        else
+          strip = PR_FALSE;
+      }
+  
+
+      if (strip && wasFound) {
+        // Strip of the "(was: old subject)" part
+        nsACString::const_iterator start;
+        subject.BeginReading(start);
+        subject.Assign(Substring(start, wasStart));
+      }
 
       switch (type)
       {
@@ -1527,7 +1579,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
             }
             mQuotingToFollow = PR_TRUE;
 
-            subjectStr.Append("Re: ");
+            nsCAutoString subjectStr("Re: ");
             subjectStr.Append(subject);
             rv = mimeConverter->DecodeMimeHeader(subjectStr.get(),
                 getter_Copies(decodedString),
@@ -1562,8 +1614,9 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
             PRUint32 flags;
 
             msgHdr->GetFlags(&flags);
+            nsCAutoString subjectStr;
             if (flags & MSG_FLAG_HAS_RE)
-              subjectStr.Append("Re: ");
+              subjectStr.Assign("Re: ");
             subjectStr.Append(subject);
 
             rv = mimeConverter->DecodeMimeHeader(subjectStr.get(), 
