@@ -236,7 +236,6 @@ sub print_warnings_as_html {
     <style>
       td { background-color: #ededed }
     </style>
-    <base target="_other">
     </head>
     <body>
       <font size="+2" face="Helvetica,Arial"><b>
