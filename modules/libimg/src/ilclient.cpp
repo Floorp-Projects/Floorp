@@ -647,6 +647,7 @@ il_delete_container(il_container *ic)
 
         FREE_IF_NOT_NULL(ic->comment);
         nsCRT::free(ic->url_address);
+        nsCRT::free(ic->type);
         FREE_IF_NOT_NULL(ic->fetch_url);
         
         PR_FREEIF(ic);
