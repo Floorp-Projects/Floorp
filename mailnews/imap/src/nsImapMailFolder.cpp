@@ -41,7 +41,6 @@
 #include "nsMsgUtils.h"
 #include "nsIMsgMailSession.h"
 #include "nsImapMessage.h"
-#include "nsIWebShell.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
 #include "nsImapUndoTxn.h"

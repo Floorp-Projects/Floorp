@@ -42,7 +42,6 @@
 #include "nsImapServerResponseParser.h"
 #include "nspr.h"
 #include "plbase64.h"
-#include "nsIWebShell.h"
 #include "nsIImapService.h"
 #include "nsISocketTransportService.h"
 #include "nsNetUtil.h"
@@ -68,7 +67,6 @@ const char *kImapTrashFolderName = "Trash"; // **** needs to be localized ****
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);

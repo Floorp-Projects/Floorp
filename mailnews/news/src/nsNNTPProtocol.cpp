@@ -35,10 +35,6 @@
 #include "nsIPipe.h"
 #include "nsCOMPtr.h"
 
-// mscott: this is a short term hack for the demo...we should be able to remove this webshell
-// dependency at a later date....
-#include "nsIWebShell.h"
-
 #include "nsMsgBaseCID.h"
 #include "nsMsgNewsCID.h"
 
@@ -136,7 +132,6 @@ char * NET_SACat (char **destination, const char *source);
 
 }
 
-static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);  
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kNNTPArticleListCID, NS_NNTPARTICLELIST_CID);

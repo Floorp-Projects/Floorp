@@ -44,7 +44,6 @@
 #include "nsFileStream.h"
 PRLogModuleInfo *MAILBOX;
 
-static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
 
