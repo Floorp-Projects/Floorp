@@ -739,7 +739,7 @@ You will get this message once a day until you\'ve dealt with these bugs!
            'popular value to put here is <tt>^[^@]+$</tt>, which means ' .
            '"local usernames, no @ allowed."',
    type => 't',
-   default => q:^[^@]+@[^@]+\\.[^@]+$:,
+   default => q:^[\\w\\.\\+\\-=]+@[\\w\\.\\-]+\\.[\\w\\-]+$:,
    checker => \&check_regexp
   },
 

@@ -3949,7 +3949,7 @@ if ($sth->rows == 0) {
     $mailcheckexp = Param('emailregexp');
     $mailcheck    = Param('emailregexpdesc');
   } else {
-    $mailcheckexp = '^[^@]+@[^@]+\\.[^@]+$';
+    $mailcheckexp = '^[\\w\\.\\+\\-=]+@[\\w\\.\\-]+\\.[\\w\\-]+$';
     $mailcheck    = 'A legal address must contain exactly one \'@\', 
       and at least one \'.\' after the @.';
   }
