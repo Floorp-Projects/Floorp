@@ -832,6 +832,12 @@ HASH_ResultLenByOidTag;
 HASH_ResultLenContext;
 SECKEY_CacheStaticFlags;
 SECOID_AddEntry;
+;+#
+;+# Data objects
+;+#
+;+# Don't export these DATA symbols on Windows because they don't work right.
+;;CERT_SequenceOfCertExtensionTemplate DATA ;
+NSS_Get_CERT_SequenceOfCertExtensionTemplate;
 ;+    local:
 ;+       *;
 ;+};
