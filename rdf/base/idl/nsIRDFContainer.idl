@@ -85,10 +85,10 @@ interface nsIRDFContainer : nsISupports {
 };
 
 %{C++
-PR_EXTERN(nsresult)
+nsresult
 NS_NewRDFContainer(nsIRDFContainer** aResult);
 
-PR_EXTERN(nsresult)
+nsresult
 NS_NewRDFContainer(nsIRDFDataSource* aDataSource,
                    nsIRDFResource* aResource,
                    nsIRDFContainer** aResult);
@@ -97,7 +97,7 @@ NS_NewRDFContainer(nsIRDFDataSource* aDataSource,
  * Create a cursor on a container that enumerates its contents in
  * order
  */
-PR_EXTERN(nsresult)
+nsresult
 NS_NewContainerEnumerator(nsIRDFDataSource* aDataSource,
                           nsIRDFResource* aContainer,
                           nsISimpleEnumerator** aResult);
