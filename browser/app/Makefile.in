@@ -136,10 +136,16 @@ endif
 
 ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
+RCFLAGS += -DMOZ_PHOENIX
 ifdef BUILD_STATIC_LIBS
+OS_LIBS += -lpmwinx
 EXE_DEF_FILE = browser.def
-RCFLAGS += -d MOZ_STATIC_BUILD -i $(DIST)/include/widget
+RCFLAGS += -DMOZ_STATIC_BUILD -i $(DIST)/include/widget
 endif
+ifdef DEBUG
+RCFLAGS += -DDEBUG
+endif
+RCFLAGS += -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -261,6 +267,11 @@ ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 	cp $(srcdir)/default.xpm   $(DIST)/branding/default.xpm	
+endif
+ifeq ($(OS_ARCH),OS2)
+	cp $(srcdir)/firefox-os2.ico   $(DIST)/branding/firefox.ico
+	cp $(srcdir)/firefox-os2.ico   $(DIST)/branding/app.ico
+	cp $(srcdir)/document-os2.ico  $(DIST)/branding/document.ico
 endif
 endif
 
