@@ -103,6 +103,29 @@ js_FlushPropertyCache(JSContext *cx)
 }
 
 void
+js_FlushPropertyCacheByObject(JSContext *cx, JSObject *obj)
+{
+    JSPropertyCache *cache;
+    JSPropertyCacheEntry *end, *pce, entry;
+    JSObject *pce_obj;
+
+    cache = &cx->runtime->propertyCache;
+    if (cache->empty)
+        return;
+
+    end = &cache->table[PROPERTY_CACHE_SIZE];
+    for (pce = &cache->table[0]; pce < end; pce++) {
+        PCE_LOAD(cache, pce, entry);
+        pce_obj = PCE_OBJECT(entry);
+        if (pce_obj == obj) {
+            PCE_OBJECT(entry) = NULL;
+            PCE_PROPERTY(entry) = NULL;
+            PCE_STORE(cache, pce, entry);
+        }
+    }
+}
+
+void
 js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop)
 {
     JSPropertyCache *cache;

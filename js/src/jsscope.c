@@ -229,6 +229,11 @@ js_hash_scope_clear(JSContext *cx, JSScope *scope)
     JSScopePrivate *priv;
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
+    JS_ASSERT(!cx->clearingScope);
+    if (!cx->runtime->gcRunning && scope->object) {
+        cx->clearingScope = JS_TRUE;
+        js_FlushPropertyCacheByObject(cx, scope->object);
+    }
     priv = (JSScopePrivate *) table->allocPriv;
     priv->context = cx;
     JS_HashTableEnumerateEntries(table, js_hash_scope_slot_invalidator, NULL);
@@ -236,6 +241,7 @@ js_hash_scope_clear(JSContext *cx, JSScope *scope)
     JS_free(cx, priv);
     scope->ops = &js_list_scope_ops;
     scope->data = NULL;
+    cx->clearingScope = JS_FALSE;
 }
 
 JSScopeOps js_hash_scope_ops = {
@@ -358,6 +364,11 @@ js_list_scope_clear(JSContext *cx, JSScope *scope)
     JSScopeProperty *sprop;
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
+    JS_ASSERT(!cx->clearingScope);
+    if (!cx->runtime->gcRunning && scope->object) {
+        cx->clearingScope = JS_TRUE;
+        js_FlushPropertyCacheByObject(cx, scope->object);
+    }
     while ((sym = (JSSymbol *) scope->data) != NULL) {
         scope->data = sym->entry.next;
         priv.context = cx;
@@ -367,6 +378,7 @@ js_list_scope_clear(JSContext *cx, JSScope *scope)
             sprop->slot = SPROP_INVALID_SLOT;
         js_free_symbol(&priv, &sym->entry, HT_FREE_ENTRY);
     }
+    cx->clearingScope = JS_FALSE;
 }
 
 JSScopeOps JS_FRIEND_DATA(js_list_scope_ops) = {
@@ -559,10 +571,12 @@ js_DestroyScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop)
     }
 
     /*
-     * Purge any cached weak links to prop (unless we're running the gc, which
-     * flushed the whole cache), then free prop.
+     * Purge any cached weak links to prop (unless cx is clearing a scope,
+     * which must be this scope because js_*scope_clear does not nest; and
+     * unless we're running the gc, which already flushed the whole cache),
+     * then free prop.
      */
-    if (!cx->runtime->gcRunning)
+    if (!cx->clearingScope && !cx->runtime->gcRunning)
         js_FlushPropertyCacheByProp(cx, (JSProperty *)sprop);
     JS_free(cx, sprop);
 }

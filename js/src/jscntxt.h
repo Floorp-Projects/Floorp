@@ -334,7 +334,10 @@ struct JSContext {
     JSPackedBool        rval2set;
 #endif
 
-    /* Exception state (NB: throwing packs with rval2set, above). */
+    /* True if clearing a scope -- used to coalesce property cache flushes. */
+    JSPackedBool        clearingScope;
+
+    /* Exception state (NB: throwing packs with clearingScope, above). */
     JSPackedBool        throwing;           /* is there a pending exception? */
     jsval               exception;          /* most-recently-thrown exceptin */
 
