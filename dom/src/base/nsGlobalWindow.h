@@ -250,7 +250,6 @@ protected:
   void EnsureReflowFlushAndPaint();
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
-  static nsresult CheckSecurityIsChromeCaller(PRBool *isChrome);
   static PRBool CanSetProperty(const char *aPrefName);
 
   void MakeScriptDialogTitle(const nsAString &aInTitle, nsAString &aOutTitle);

@@ -2176,36 +2176,15 @@ GlobalWindowImpl::SetTextZoom(float aZoom)
 }
 
 // static
-nsresult
-GlobalWindowImpl::CheckSecurityIsChromeCaller(PRBool *aIsChrome)
-{
-  NS_ENSURE_ARG_POINTER(aIsChrome);
-
-  *aIsChrome = PR_FALSE;
-
-  // Check if this is a privileged system script
-
-  NS_ENSURE_TRUE(sSecMan, NS_ERROR_FAILURE);
-
-  PRBool isChrome = PR_FALSE;
-  nsresult rv = sSecMan->SubjectPrincipalIsSystem(&isChrome);
-  if (NS_SUCCEEDED(rv)) {
-    *aIsChrome = isChrome;
-  }
-
-  return NS_OK;
-}
-
-// static
 PRBool
 GlobalWindowImpl::IsCallerChrome()
 {
-  PRBool is_caller_chrome = PR_FALSE;
+  NS_ENSURE_TRUE(sSecMan, PR_FALSE);
 
-  nsresult rv = CheckSecurityIsChromeCaller(&is_caller_chrome);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  PRBool isChrome = PR_FALSE;
+  nsresult rv = sSecMan->SubjectPrincipalIsSystem(&isChrome);
 
-  return is_caller_chrome;
+  return NS_SUCCEEDED(rv) ? isChrome : PR_FALSE;
 }
 
 void
@@ -2262,17 +2241,16 @@ GlobalWindowImpl::Alert(const nsAString& aString)
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
   // Test whether title needs to prefixed with [script]
-  PRBool isChrome = PR_FALSE;
   nsAutoString newTitle;
   const PRUnichar *title = nsnull;
-  nsresult rv = CheckSecurityIsChromeCaller(&isChrome);
-  if (NS_FAILED(rv) || !isChrome) {
+  if (!IsCallerChrome()) {
       MakeScriptDialogTitle(EmptyString(), newTitle);
       title = newTitle.get();
   }
-  NS_WARN_IF_FALSE(!isChrome,
-                   "chrome shouldn't be calling alert(), use the prompt "
-                   "service");
+  else {
+      NS_WARNING("chrome shouldn't be calling alert(), use the prompt "
+                 "service");
+  }
 
   // Before bringing up the window, unsuppress painting and flush
   // pending reflows.
@@ -2295,17 +2273,16 @@ GlobalWindowImpl::Confirm(const nsAString& aString, PRBool* aReturn)
   // XXX: Concatenation of optional args?
 
   // Test whether title needs to prefixed with [script]
-  PRBool isChrome = PR_FALSE;
   nsAutoString newTitle;
   const PRUnichar *title = nsnull;
-  nsresult rv = CheckSecurityIsChromeCaller(&isChrome);
-  if (NS_FAILED(rv) || !isChrome) {
+  if (!IsCallerChrome()) {
       MakeScriptDialogTitle(EmptyString(), newTitle);
       title = newTitle.get();
   }
-  NS_WARN_IF_FALSE(!isChrome,
-                   "chrome shouldn't be calling confirm(), use the prompt "
-                   "service");
+  else {
+      NS_WARNING("chrome shouldn't be calling confirm(), use the prompt "
+                 "service");
+  }
 
   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
@@ -2324,14 +2301,11 @@ GlobalWindowImpl::Prompt(const nsAString& aMessage,
                          PRUint32 aSavePassword,
                          nsAString& aReturn)
 {
+  SetDOMStringToNull(aReturn);
+
   NS_ENSURE_STATE(mDocShell);
 
-  aReturn.Truncate(); // XXX Null string!!!
-
-  nsresult rv = NS_OK;
-
   nsCOMPtr<nsIAuthPrompt> prompter(do_GetInterface(mDocShell));
-
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
   PRBool b;
@@ -2343,46 +2317,23 @@ GlobalWindowImpl::Prompt(const nsAString& aMessage,
 
   // Test whether title needs to prefixed with [script]
   nsAutoString title;
-  PRBool isChrome = PR_FALSE;
-  rv = CheckSecurityIsChromeCaller(&isChrome);
-  if (NS_FAILED(rv) || !isChrome) {
+  if (!IsCallerChrome()) {
       MakeScriptDialogTitle(aTitle, title);
   } else {
+      NS_WARNING("chrome shouldn't be calling prompt(), use the prompt "
+                 "service");
       title.Assign(aTitle);
   }
-  NS_WARN_IF_FALSE(!isChrome, "chrome shouldn't be calling prompt(), use the prompt service");
 
-  rv = prompter->Prompt(title.get(),
-                        PromiseFlatString(aMessage).get(), nsnull,
-                        aSavePassword,
-                        PromiseFlatString(aInitial).get(),
-                        getter_Copies(uniResult), &b);
+  nsresult rv = prompter->Prompt(title.get(),
+                                 PromiseFlatString(aMessage).get(), nsnull,
+                                 aSavePassword,
+                                 PromiseFlatString(aInitial).get(),
+                                 getter_Copies(uniResult), &b);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (uniResult && b) {
     aReturn.Assign(uniResult);
-  }
-  else {
-    SetDOMStringToNull(aReturn);
-
-    // XXX: Since DOMString's can't be null yet we'll haveto do this here...
-
-    if (sXPConnect) {
-      nsCOMPtr<nsIXPCNativeCallContext> ncc;
-
-      sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(ncc));
-
-      if (ncc) {
-        jsval *retval = nsnull;
-
-        rv = ncc->GetRetValPtr(&retval);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        *retval = JSVAL_NULL;
-
-        ncc->SetReturnValueWasSet(PR_TRUE);
-      }
-    }
   }
 
   return rv;
