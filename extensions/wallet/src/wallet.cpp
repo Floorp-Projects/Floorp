@@ -2821,16 +2821,15 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, c
   }
 
   /* read in the mappings if they are not already present */
-  if (!schema.Length()) {
+  wallet_Initialize();
+  wallet_InitializeCurrentURL(doc);
 
 #ifdef IgnoreFieldNames
 // use displayable text instead of field names
-return PR_FALSE;
-#endif
-
-    wallet_Initialize();
-    wallet_InitializeCurrentURL(doc);
+  if (!schema.Length()) {
+    return PR_FALSE;
   }
+#endif
 
   nsAutoString oldValue;
 
@@ -3706,6 +3705,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
           PRBool OKToPrompt = PR_FALSE;
           PRInt32 passwordcount = 0;
           PRInt32 hits = 0;
+          wallet_InitializeStateTesting();
 #endif
           for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
             nsCOMPtr<nsIDOMNode> elementNode;
@@ -3758,28 +3758,41 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                         data->isPassword = isPassword;
                         signonData->AppendElement(data);
 #ifdef AutoCapture
-                        if (passwordcount == 0) {
+                        if (passwordcount == 0 && !OKToPrompt) {
                           /* get schema from field */
                           wallet_Initialize(PR_FALSE);
                           wallet_InitializeCurrentURL(doc);
                           nsAutoString schema;
                           nsVoidArray* dummy;
                           nsString stripField;
-                          if (schema.Length() ||
-                              (wallet_ReadFromList(Strip(field, stripField), schema, dummy, wallet_FieldToSchema_list, PR_FALSE))) {
+
+                          /* try to get schema from displayable text */
+                          if (schema.Length() == 0) {
+                            wallet_GetSchemaFromDisplayableText(inputElement, schema, PR_FALSE);
                           }
-                          /* see if schema is in distinguished list */
-                          wallet_MapElement * mapElementPtr;
-                          PRInt32 count = LIST_COUNT(wallet_DistinguishedSchema_list);
-                          /* test for at least two distinguished schemas and no passwords */
-                          for (PRInt32 i=0; i<count; i++) {
-                            mapElementPtr = NS_STATIC_CAST
-                              (wallet_MapElement*, wallet_DistinguishedSchema_list->ElementAt(i));
-                            if (mapElementPtr->item1.EqualsIgnoreCase(schema) && value.Length() > 0) {
-                              hits++;
-                              if (hits > 1) {
-                                OKToPrompt = PR_TRUE;
-                                break;
+
+#ifndef IgnoreFieldNames
+                          /* no schema found, so try to get it from field name */
+                          if (schema.Length() == 0) {
+                            wallet_ReadFromList(Strip(field, stripField), schema, dummy, wallet_FieldToSchema_list, PR_FALSE);
+                          }
+#endif
+
+                          /* if schema found, see if it is in distinguished schema list */
+                          if (schema.Length()) {
+                            /* see if schema is in distinguished list */
+                            wallet_MapElement * mapElementPtr;
+                            PRInt32 count = LIST_COUNT(wallet_DistinguishedSchema_list);
+                            /* test for at least two distinguished schemas and no passwords */
+                            for (PRInt32 i=0; i<count; i++) {
+                              mapElementPtr = NS_STATIC_CAST
+                                (wallet_MapElement*, wallet_DistinguishedSchema_list->ElementAt(i));
+                              if (mapElementPtr->item1.EqualsIgnoreCase(schema) && value.Length() > 0) {
+                                hits++;
+                                if (hits > 1) {
+                                  OKToPrompt = PR_TRUE;
+                                  break;
+                                }
                               }
                             }
                           }
@@ -3859,8 +3872,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                         }
 
                         /* get schema from displayable text if possible */
-                        wallet_GetSchemaFromDisplayableText(element, schema, PR_FALSE);
-
+                        wallet_GetSchemaFromDisplayableText(inputElement, schema, PR_FALSE);
                         wallet_Capture(doc, field, value, schema);
                       }
                     }
