@@ -18,21 +18,23 @@
 #ifndef Window_h__
 #define Window_h__
 
-#include "nsISupports.h"
-
+#include "nsBaseWidget.h"
 #include "nsToolkit.h"
-
-#include "nsIWidget.h"
-#include "nsIEnumerator.h"
 #include "nsIAppShell.h"
 
-#include "nsIMouseListener.h"
-#include "nsIEventListener.h"
-#include "nsString.h"
+#include <Xm/Xm.h>
 
-#include "Xm/Xm.h"
 
-#include "nsXtManageWidget.h"
+// #include "nsIWidget.h"
+// #include "nsIEnumerator.h"
+// #include "nsIAppShell.h"
+
+// #include "nsIMouseListener.h"
+// #include "nsIEventListener.h"
+// #include "nsString.h"
+
+
+// #include "nsXtManageWidget.h"
 
 class nsFont;
 
@@ -44,7 +46,7 @@ class nsFont;
  * Native Motif window wrapper. 
  */
 
-class nsWindow : public nsIWidget
+class nsWindow : public nsBaseWidget
 {
 
 public:
@@ -143,11 +145,14 @@ public:
     NS_IMETHOD            EnableFileDrop(PRBool aEnable);
     NS_IMETHOD            CaptureMouse(PRBool aCapture);
 
+#ifdef DEBUG
+  void                    DebugPrintEvent(nsGUIEvent & aEvent,Widget aWidget);
+#endif
 
     virtual PRBool IsChild() { return(PR_FALSE); };
 
      // Utility methods
-    void     SetBounds(const nsRect &aRect);
+    NS_IMETHOD              SetBounds(const nsRect &aRect);
     PRBool   ConvertStatus(nsEventStatus aStatus);
     virtual  PRBool OnPaint(nsPaintEvent &event);
     virtual  void   OnDestroy();
