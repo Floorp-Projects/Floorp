@@ -1933,18 +1933,18 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-#define VCARD_URL       "resource:/res/mailnews/messenger/vcard.properties"
+char *VCARD_URL = {"resource:/chrome/messenger/content/default/vcard_en.properties"};
 
 extern "C" 
 char *
-MimeGetStringByIDREAL(PRInt32 stringID)
+VCardGetStringByIDREAL(PRInt32 stringID)
 {
   nsresult    res = NS_OK;
   char*       propertyURL;
 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
   if (NS_SUCCEEDED(res) && prefs)
-    res = prefs->CopyCharPref("mail.strings.mime", &propertyURL);
+    res = prefs->CopyCharPref("mail.strings.vcard", &propertyURL);
 
   if (!NS_SUCCEEDED(res) || !prefs)
     propertyURL = VCARD_URL;

@@ -255,9 +255,8 @@ mime_dump_attachments ( attachmentList );
   else if (editorType == nsMsgHTMLEditor)
     format = MSGCOMP_FORMAT_HTML;
     
-  rv = msgComposeService->OpenComposeWindowWithCompFields(
-                        nsString2("chrome://messengercompose/content/").GetUnicode(),
-                        format, compFields);
+  rv = msgComposeService->OpenComposeWindowWithCompFields(nsnull, /* default chrome */
+                                                          format, compFields);
   return rv;
 }
 

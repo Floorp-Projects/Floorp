@@ -116,6 +116,8 @@ char        *nsMsgParseURL(const char *url, int part);
 
 char        *GenerateFileNameFromURI(nsIURI *aURL);
 
+char        *nsMsgGetExtensionFromFileURL(nsString aUrl);
+
 //
 // Folder calls...
 //

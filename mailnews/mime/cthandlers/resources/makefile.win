@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) vcard_en.properties $(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) vcard_en.properties $(DIST)\bin\chrome\messenger\content\default
 
 clobber::
-	rm -f $(DIST)\bin\res\mailnews\messenger\vcard_en.properties
+	rm -f $(DIST)\bin\chrome\messenger\content\default\vcard_en.properties

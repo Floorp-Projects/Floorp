@@ -52,6 +52,9 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
+#include "nsIMIMEService.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
@@ -63,6 +66,7 @@ static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
+static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
 #ifdef XP_MAC
 #include "errors.h"
@@ -505,7 +509,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
       goto FAILMEM;
     }
   
-    NS_ADDREF(m_plaintext->mURL);
+    NS_IF_ADDREF(m_plaintext->mURL);
     PR_FREEIF(tempURL);
 
 		PR_FREEIF(m_plaintext->m_type);
@@ -1180,10 +1184,47 @@ PRUint32                  i;
       // Create the URI
       if (NS_FAILED(image->GetSrc(tUrl)))
         return NS_ERROR_FAILURE;
-      if (NS_FAILED(nsMsgNewURL(&attachment.url, nsCAutoString(tUrl))))
-        return NS_ERROR_OUT_OF_MEMORY;
 
-      NS_ADDREF(attachment.url);
+      if (NS_FAILED(nsMsgNewURL(&attachment.url, nsCAutoString(tUrl))))
+      {
+        // Well, the first time failed...which means we probably didn't get
+        // the full path name...
+        //
+        nsIDOMDocument    *ownerDocument = nsnull;
+        node->GetOwnerDocument(&ownerDocument);
+        if (ownerDocument)
+        {
+          nsIDocument     *doc = nsnull;
+          if (NS_FAILED(ownerDocument->QueryInterface(nsIDocument::GetIID(),(void**)&doc)) || !doc)
+          {
+            return NS_ERROR_OUT_OF_MEMORY;
+          }
+
+          nsXPIDLCString    spec;
+          nsIURI            *uri = doc->GetDocumentURL();
+
+          if (!uri)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+          uri->GetSpec(getter_Copies(spec));
+
+          // Ok, now get the path to the root doc and tack on the name we
+          // got from the GetSrc() call....
+          nsString   workURL(spec);
+
+          PRInt32 loc = workURL.RFind("/");
+          if (loc >= 0)
+            workURL.SetLength(loc+1);
+          workURL.Append(tUrl);
+          if (NS_FAILED(nsMsgNewURL(&attachment.url, nsCAutoString(workURL))))
+          {
+            // RICHIE SHERRY - just try to continue and send it without this image.
+            // return NS_ERROR_OUT_OF_MEMORY;
+          }
+        }
+      }
+
+      NS_IF_ADDREF(attachment.url);
 
       if (NS_FAILED(image->GetName(tName)))
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1204,7 +1245,7 @@ PRUint32                  i;
       if (NS_FAILED(nsMsgNewURL(&attachment.url, nsCAutoString(tUrl))))
         return NS_ERROR_OUT_OF_MEMORY;
 
-      NS_ADDREF(attachment.url);
+      NS_IF_ADDREF(attachment.url);
     }
     else if (anchor)
     {
@@ -1217,7 +1258,7 @@ PRUint32                  i;
       if (NS_FAILED(nsMsgNewURL(&attachment.url, nsCAutoString(tUrl))))
         return NS_ERROR_OUT_OF_MEMORY;
 
-      NS_ADDREF(attachment.url);
+      NS_IF_ADDREF(attachment.url);
 
       if (NS_FAILED(anchor->GetName(tName)))
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1351,13 +1392,6 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
       // Check to see if this is a file URL, if so, don't retrieve
       // like a remote URL...
       //
-      // RICHIE SHERRY
-      // Ok, try to optimize and see where it gets you :-( If we say these
-      // are local files and don't do a fetch, we don't get the Content/Type
-      // of the attachment which totally screws the operation...so until we 
-      // plugin some sort of disk_file -> content_type mapping service, we are
-      // going to "fetch" all URL's even if they are local
-      /************************************************************************
       if (str.Compare("file://", PR_TRUE, 7) == 0)
       {
         mCompFieldLocalAttachments++;
@@ -1367,7 +1401,6 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
 #endif
       }
       else    // This is a remote URL...
-      ************************************************************************/
       {
         mCompFieldRemoteAttachments++;
 #ifdef NS_DEBUG
@@ -1443,6 +1476,23 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
 			  m_attachments[newLoc].mFileSpec = new nsFileSpec( nsFileURL(str) );
 
 			  msg_pick_real_name(&m_attachments[newLoc], mCompFields->GetCharacterSet());
+
+        // Now, most importantly, we need to figure out what the content type is for
+        // this attachment...If we can't, then just make it application/octet-stream
+        nsresult  rv = NS_OK;
+        NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
+        if (NS_SUCCEEDED(rv) && mimeFinder) 
+        {
+          char *fileExt = nsMsgGetExtensionFromFileURL(str);
+          if (fileExt)
+            mimeFinder->GetTypeFromExtension(fileExt, &(m_attachments[newLoc].m_type));
+
+          PR_FREEIF(fileExt);
+        }
+
+        if ((!m_attachments[newLoc].m_type) || (!*m_attachments[newLoc].m_type))
+          m_attachments[newLoc].m_type = PL_strdup(APPLICATION_OCTET_STREAM);
+
         ++newLoc;
       }
 
@@ -1489,15 +1539,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
       // Just look for files that are NOT local file attachments and do 
       // the right thing.
       //
-      // RICHIE SHERRY
-      // Ok, try to optimize and see where it gets you :-( If we say these
-      // are local files and don't do a fetch, we don't get the Content/Type
-      // of the attachment which totally screws the operation...so until we 
-      // plugin some sort of disk_file -> content_type mapping service, we are
-      // going to "fetch" all URL's even if they are local
-      /************************************************************************
       if (str.Compare("file://", PR_TRUE, 7) != 0)
-      *************************************************************************/
       {
 #ifdef NS_DEBUG
         printf("Adding REMOTE attachment %d: %s\n", newLoc, str.GetBuffer());
@@ -2404,7 +2446,7 @@ nsMsgComposeAndSend::SetListenerArray(nsIMsgSendListener **aListenerArray)
   for (i=0; i<mListenerArrayCount; i++)
   {
     mListenerArray[i] = aListenerArray[i];
-    NS_ADDREF(mListenerArray[i]);
+    NS_IF_ADDREF(mListenerArray[i]);
   }
 
   return NS_OK;
@@ -2433,7 +2475,7 @@ nsMsgComposeAndSend::AddListener(nsIMsgSendListener *aListener)
     nsCRT::memset(mListenerArray, 0, (sizeof(nsIMsgSendListener *) * mListenerArrayCount));
   
     mListenerArray[0] = aListener;
-    NS_ADDREF(mListenerArray[0]);
+    NS_IF_ADDREF(mListenerArray[0]);
     return NS_OK;
   }
 }
@@ -2927,6 +2969,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   PRInt32       n;
   char          *envelopeLine = nsMsgGetEnvelopeLine();
   PRBool        folderIsLocal = PR_TRUE;
+  char          *turi = nsnull;
 
   //
   // Create the file that will be used for the copy service!
@@ -2993,7 +3036,10 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   // First, we we need to put a Berkely "From - " delimiter at the head of 
   // the file for parsing...
   //
-  folderIsLocal = MessageFolderIsLocal(mUserIdentity, mode, mCompFields->GetFcc());
+  turi = GetFolderURIFromUserPrefs(mode, PR_FALSE);
+  folderIsLocal = MessageFolderIsLocal(mUserIdentity, mode, turi);
+  PR_FREEIF(turi);
+
   if ( (envelopeLine) && (folderIsLocal) )
   {
     PRInt32   len = PL_strlen(envelopeLine);
@@ -3270,31 +3316,23 @@ nsresult
 nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec, 
                                                nsMsgDeliverMode   mode)
 {
+  char        *uri = nsnull;
+
   mCopyObj = new nsMsgCopy();
   if (!mCopyObj)
     return NS_ERROR_OUT_OF_MEMORY;
-
-  if (!mCompFields->GetFcc() || !*mCompFields->GetFcc())
-  {
-    //
-    // Actually, we need to pick up the proper folder from the prefs and not
-    // default to the default "Flagged" folder choices
-    //
-    nsresult    rv;
-
-    // RICHIE SHERRY - Need to deal with news FCC's also
-    char        *uri = GetFolderURIFromUserPrefs(mode, PR_FALSE);
-
-    rv = mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
-                                      this, uri, mMsgToReplace);
-    PR_FREEIF(uri);
-    return rv;    
-  }
-  else
-  {
-    // If we get here, then we are doing an FCC operation so the GetFcc is fine
-    return mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
-                                        this, mCompFields->GetFcc(), mMsgToReplace);
-  }
+  
+  //
+  // Actually, we need to pick up the proper folder from the prefs and not
+  // default to the default "Flagged" folder choices
+  //
+  nsresult    rv;
+  
+  // RICHIE SHERRY - Need to deal with News! FCC's also
+  uri = GetFolderURIFromUserPrefs(mode, PR_FALSE);
+  rv = mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
+                                    this, uri, mMsgToReplace);
+  PR_FREEIF(uri);
+  return rv;
 }
 

@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#ifndef _nsMsgCompose_H_
+#define _nsMsgCompose_H_
+
 #include "nsIMsgCompose.h"
 #include "nsCOMPtr.h"
 #include "nsMsgCompFields.h"
@@ -27,8 +30,10 @@
 #include "nsIMsgCopyServiceListener.h"
 #include "nsIMsgSend.h"
 
+// Forward declares
 class QuotingOutputStreamListener;
 class nsMsgComposeSendListener;
+class nsMsgDocumentStateListener;
 
 class nsMsgCompose : public nsIMsgCompose
 {
@@ -85,35 +90,52 @@ class nsMsgCompose : public nsIMsgCompose
 	NS_IMETHOD GetWrapLength(PRInt32 *aWrapLength);
 /******/
 
-	nsresult LoadBody();
-	nsresult SetQuotingToFollow(PRBool aVal);
-	nsresult ShowWindow(PRBool show);
- private:
+  // Deal with quoting issues...
+	nsresult                      QuoteOriginalMessage(const PRUnichar * originalMsgURI, PRInt32 what); // New template
+  PRBool                        QuotingToFollow(void);
+  nsresult                      SetQuotingToFollow(PRBool aVal);
+  nsresult                      LoadAsQuote(nsString  aTextToLoad);
+  nsresult                      ConvertHTMLToText(char *aSigFile, nsString &aSigData);
+  nsresult                      ConvertTextToHTML(char *aSigFile, nsString &aSigData);
 
+  nsString                      mQuoteURI;
+  nsFileSpec                    *mSigFileSpec;
+  nsFileSpec                    *mTempComposeFileSpec;
+
+  /////// RICHIE - this is a hack for the old quoting and should go away soon!
+  void                          HackToGetBody(PRInt32 what); //Temporary
+  PRInt32                       mWhatHolder;
+  PRBool                        UsingOldQuotingHack(const char *compString);
+  PRBool                        mUseOldQuotingHack;
+  /////// 
+
+  nsresult                      ProcessSignature(nsOutputFileStream *aAppendFileStream); // for setting up the users compose window environment
+  nsresult                      BuildQuotedMessageAndSignature(void);                    // for setting up the users compose window environment
+	nsresult                      ShowWindow(PRBool show);
+  nsresult                      LoadDataFromFile(char *sigFilePath, nsString &sigData);
+
+
+ private:
 	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, const PRUnichar *callback);
 	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields* compFields, nsISupports* object);
-	void HackToGetBody(PRInt32 what); //Temporary
 	void CleanUpRecipients(nsString& recipients);
 
-	nsresult QuoteOriginalMessage(const PRUnichar * originalMsgURI, PRInt32 what); // New template
+	nsMsgComposeSendListener      *m_sendListener;
+	nsIEditorShell                *m_editor;
+	nsIDOMWindow                  *m_window;
+	nsIWebShell                   *m_webShell;
+	nsIWebShellWindow             *m_webShellWin;
+	nsMsgCompFields               *m_compFields;
+	PRBool						            m_composeHTML;
+	QuotingOutputStreamListener   *mQuoteStreamListener;
+	nsCOMPtr<nsIOutputStream>     mBaseStream;
 
-	nsMsgComposeSendListener*	m_sendListener;
-	nsIEditorShell*				m_editor;
-	nsIDOMWindow*				m_window;
-	nsIWebShell*				m_webShell;
-	nsIWebShellWindow*			m_webShellWin;
-	nsMsgCompFields* 			m_compFields;
-	PRBool						m_composeHTML;
-	QuotingOutputStreamListener*	mQuoteStreamListener;
-	nsCOMPtr<nsIOutputStream>   mBaseStream;
-	nsCOMPtr<nsIMsgQuote>       mQuote;
+  nsCOMPtr<nsIMsgSend>          mMsgSend;   // for composition back end
 
-  nsCOMPtr<nsIMsgSend>        mMsgSend;   // for composition back end
-
-	// For only making a single LoadUrl call on the editor
-	PRBool						mBodyLoaded;
-	PRBool						mQuotingToFollow;
-
+  // Deal with quoting issues...
+	nsCOMPtr<nsIMsgQuote>         mQuote;
+	PRBool						            mQuotingToFollow; // Quoting indicator
+  nsMsgDocumentStateListener    *mDocumentListener;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -192,4 +214,28 @@ private:
 
 };
 
+////////////////////////////////////////////////////////////////////////////////////
+// This is a class that will allow us to listen to state changes in the Ender 
+// compose window. This is important since we must wait until the have this 
+////////////////////////////////////////////////////////////////////////////////////
 
+class nsMsgDocumentStateListener : public nsIDocumentStateListener {
+public:
+  nsMsgDocumentStateListener(void);
+  virtual ~nsMsgDocumentStateListener(void);
+
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD  NotifyDocumentCreated(void);
+  NS_IMETHOD  NotifyDocumentWillBeDestroyed(void);
+  NS_IMETHOD  NotifyDocumentStateChanged(PRBool nowDirty);
+
+  void        SetComposeObj(nsMsgCompose *obj);
+
+  // class vars.
+  nsMsgCompose    *mComposeObj;
+};
+
+
+#endif /* _nsMsgCompose_H_ */

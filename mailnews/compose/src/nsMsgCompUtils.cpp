@@ -1911,11 +1911,11 @@ char
 char * 
 nsMsgPlatformFileToURL (const char *name)
 {
-	char *prefix = "file://";
+	char *prefix = "file:///";
 	char *retVal = (char *)PR_Malloc(PL_strlen(name) + PL_strlen(prefix) + 1);
 	if (retVal)
 	{
-		PL_strcpy(retVal, "file://");
+		PL_strcpy(retVal, prefix);
 		PL_strcat(retVal, name);
 	}
 
@@ -1923,6 +1923,9 @@ nsMsgPlatformFileToURL (const char *name)
   while (*ptr)
   {
     if (*ptr == '\\') *ptr = '/';
+    if ( (*ptr == ':') && (ptr > (retVal+4)) )
+      *ptr = '|';
+
     ++ptr;
   }
 	return retVal;
@@ -2111,4 +2114,46 @@ GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
   }
 
   return uri;
+}
+
+//
+// Find an extension in a URL
+char *
+nsMsgGetExtensionFromFileURL(nsString aUrl)
+{
+  char *url = nsnull;
+  char *rightDot = nsnull;
+  char *rightSlash = nsnull;
+
+  if (aUrl == "")
+    return nsnull;
+
+  url = aUrl.ToNewCString();
+  if (!url)
+    goto ERROR_OUT;
+
+  rightDot = PL_strrchr(url, '.');
+  if (!rightDot)
+    goto ERROR_OUT;
+
+  rightSlash  = PL_strrchr(url, '/');
+  if (!rightSlash)
+    rightSlash = PL_strrchr(url, '\\');
+   
+  if (!rightSlash)
+    goto ERROR_OUT;
+
+  if (rightDot > rightSlash)
+  {
+    if (rightDot+1 == '\0')
+      goto ERROR_OUT;
+
+    char *retVal = PL_strdup(rightDot + 1);
+    PR_FREEIF(url);
+    return retVal;
+  }
+
+ERROR_OUT:
+  PR_FREEIF(url);
+  return nsnull;
 }
