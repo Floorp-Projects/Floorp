@@ -66,5 +66,8 @@ class HistoryDataSourceObserver;
 
 - (IBAction)openHistoryItem: (id)aSender;
 - (IBAction)deleteHistoryItems: (id)aSender;
+- (IBAction)openHistoryItemInNewWindow:(id)aSender;
+- (IBAction)openHistoryItemInNewTab:(id)aSender;
+
 
 @end

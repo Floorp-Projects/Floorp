@@ -42,6 +42,7 @@
 #import "HistoryDataSource.h"
 #import "CHBrowserView.h"
 #import "ExtendedOutlineView.h"
+#import "PreferenceManager.h"
 
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
@@ -322,16 +323,41 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
   return NO;
 }
 
+//
+// this better be coming from a context menu
+//
+-(IBAction)openHistoryItemInNewTab:(id)aSender
+{
+  NSString *url = [aSender representedObject];
+  if ([url isKindOfClass:[NSString class]]) {
+    BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+    [mBrowserWindowController openNewTabWithURL:url referrer:nil loadInBackground: loadInBackground];
+  }
+}
+
+//
+// this better be coming from a context menu
+//
+
+-(IBAction)openHistoryItemInNewWindow:(id)aSender
+{
+  NSString *url = [aSender representedObject];
+  if ([url isKindOfClass:[NSString class]]) {
+    BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+    [mBrowserWindowController openNewWindowWithURL:url referrer: nil loadInBackground: loadInBackground];  
+  }
+}
+
 
 -(IBAction)openHistoryItem: (id)aSender
 {
     int index = [mOutlineView selectedRow];
     if (index == -1)
-        return;
-    
+      return;
+
     id item = [mOutlineView itemAtRow: index];
     if (!item)
-        return;
+      return;
     
     // expand if collapsed and double click
     if ([mOutlineView isExpandable: item]) {
@@ -436,8 +462,40 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
     if ( [outlineView isExpandable: item] )
       [inCell setImage:[NSImage imageNamed:@"folder"]];
     else
-      [inCell setImage:[NSImage imageNamed:@"globe_ico"]];
+      [inCell setImage:[NSImage imageNamed:@"smallbookmark"]];
   }
+}
+
+- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item
+{
+  if (nil == item || [mOutlineView isExpandable: item])
+    return nil;
+
+  // get item's URL, prep context menu
+  NSString* url = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:item];
+  NSString *nulString = [NSString string];
+  NSMenu *contextMenu = [[[NSMenu alloc] initWithTitle:@"snookums"] autorelease];
+
+  // open in new window
+  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in New Window",@"Open in New Window") action:@selector(openHistoryItemInNewWindow:) keyEquivalent:nulString];
+  [menuItem setTarget:self];
+  [menuItem setRepresentedObject:url];
+  [contextMenu addItem:menuItem];
+  [menuItem release];
+
+  // open in new tab
+  menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in New Tab",@"Open in New Tab") action:@selector(openHistoryItemInNewTab:) keyEquivalent:nulString];
+  [menuItem setTarget:self];
+  [menuItem setRepresentedObject:url];
+  [contextMenu addItem:menuItem];
+  [menuItem release];
+
+  // delete
+  menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete",@"Delete") action:@selector(deleteHistoryItems:) keyEquivalent:nulString];
+  [menuItem setTarget:self];
+  [contextMenu addItem:menuItem];
+  [menuItem release];
+  return contextMenu;
 }
 
 @end
