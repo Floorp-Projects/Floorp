@@ -179,6 +179,22 @@ public class ObjToIntMap implements Serializable {
         values[index] = value;
     }
 
+    /**
+     * If table already contains a key that equals to keyArg, return that key
+     * while setting its value to zero, otherwise add keyArg with 0 value to
+     * the table and return it.
+     */
+    public Object intern(Object keyArg) {
+        boolean nullKey = false;
+        if (keyArg == null) {
+            nullKey = true;
+            keyArg = UniqueTag.NULL_VALUE;
+        }
+        int index = ensureIndex(keyArg);
+        values[index] = 0;
+        return (nullKey) ? null : keys[index];
+    }
+
     public void remove(Object key) {
         if (key == null) { key = UniqueTag.NULL_VALUE; }
         int index = findIndex(key);
