@@ -1,0 +1,395 @@
+#include "stdafx.h"
+#include "WizardMachine.h"
+#include "Interpret.h"
+#include "WizardUI.h"
+#include "ImgDlg.h"
+#include "SumDlg.h"
+#include "NewDialog.h"
+#include <direct.h>
+
+// for CopyDir
+#include "winbase.h"  
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+extern CWizardMachineApp theApp;
+extern NODE *CurrentNode;
+extern HBITMAP hBitmap;
+extern CString Path;
+extern char iniFilePath[MAX_SIZE];
+
+extern BOOL inNext;
+extern BOOL inPrev;
+extern NODE* WizardTree;
+extern WIDGET GlobalWidgetArray[1000];
+extern int GlobalArrayIndex;
+extern char currDirPath[MAX_SIZE];
+extern char customizationPath[MAX_SIZE];
+extern CString CacheFile;
+extern CString CachePath;
+extern char asePath[MAX_SIZE];
+extern char nciPath[MAX_SIZE];
+extern char tmpPath[MAX_SIZE];
+
+extern _declspec (dllimport) WIDGET ptr_ga[1000];
+
+CInterpret::CInterpret()
+{
+}
+
+CInterpret::~CInterpret()
+{
+}
+
+BOOL CInterpret::InitInstance()
+{
+	return FALSE;
+}
+
+//----------------------------------------------------------
+
+void CInterpret::CopyDir(CString from, CString to)
+{
+	WIN32_FIND_DATA data;
+	HANDLE d;
+	CString dot = ".";
+	CString dotdot = "..";
+	CString fchild, tchild;
+	CString pattern = from + "\\*.*";
+	int		found;
+	DWORD	tmp;
+
+
+	d = FindFirstFile((const char *) to, &data);
+	if (d == INVALID_HANDLE_VALUE)
+		mkdir(to);
+
+	d = FindFirstFile((const char *) pattern, &data);
+	found = (d != INVALID_HANDLE_VALUE);
+
+	while (found)
+	{
+		if (data.cFileName != dot && data.cFileName != dotdot)
+		{
+			fchild = from + "\\" + data.cFileName;
+			tchild = to + "\\" + data.cFileName;
+			tmp = data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+			if (tmp == FILE_ATTRIBUTE_DIRECTORY)
+				CopyDir(fchild, tchild);
+			else
+				CopyFile((const char *) fchild, (const char *) tchild, FALSE);
+		}
+
+		found = FindNextFile(d, &data);
+	}
+
+	FindClose(d);
+}
+
+void CInterpret::ExecuteCommand(char *command, int showflag)
+{
+	STARTUPINFO	startupInfo; 
+	PROCESS_INFORMATION	processInfo; 
+
+	memset(&startupInfo, 0, sizeof(startupInfo));
+	memset(&processInfo, 0, sizeof(processInfo));
+
+	startupInfo.cb = sizeof(STARTUPINFO);
+	startupInfo.dwFlags = STARTF_USESHOWWINDOW;
+	//startupInfo.wShowWindow = SW_SHOW;
+	startupInfo.wShowWindow = showflag;
+
+	BOOL executionSuccessful = CreateProcess(NULL, command, NULL, NULL, TRUE, 
+												NORMAL_PRIORITY_CLASS, NULL, NULL, 
+												&startupInfo, &processInfo); 
+	DWORD error = GetLastError();
+	WaitForSingleObject(processInfo.hProcess, INFINITE);
+}
+
+BOOL CInterpret::IterateListBox(char *parms)
+{
+	char *target = strtok(parms, ",");
+	char *showstr = strtok(NULL, ",");
+	char *cmd	 = strtok(NULL, "");
+	WIDGET *w 	 = theApp.findWidget(target);
+	char indices[MAX_SIZE];
+	int  showflag;
+
+	if (!w || w->type != "ListBox")
+		return FALSE;
+
+	if (w->control && w->control->m_hWnd)
+	{
+		// Widget is still visible on screen, get temporary copy of current value
+		// (from here, we depend on UpdataData() having been called somewhere upstream)
+		CString v = CWizardUI::GetScreenValue(w);
+		strcpy(indices, (char *) (LPCSTR) v);
+	}
+	else
+		strcpy(indices, w->value); 
+
+	if (strcmp(showstr, "SHOW") == 0)
+		showflag = SW_SHOWDEFAULT;
+	else if (strcmp(showstr, "HIDE") == 0)
+		showflag = SW_HIDE;
+	else
+		showflag = SW_SHOWDEFAULT;
+
+	char *s = strtok(indices, ",");
+	for (; s; s=strtok(NULL, ","))
+	{
+		char *cmd_copy = strdup(cmd);
+		CString command = replaceVars(cmd_copy, s);
+		free(cmd_copy);
+		ExecuteCommand((char *) (LPCSTR) command, showflag);
+	}
+
+	return TRUE;
+}
+
+CString CInterpret::replaceVars(char *str, char *listval)
+{
+	char buf[MIN_SIZE];
+	char *b = buf;
+	char *v;
+	CString v1;
+
+	while (*str)
+	{
+		if (*str == '%')
+		{
+			char *n = ++str;
+			while (*str && *str != '%')
+				str++;
+			if (*str == '%')
+			{
+				*str = '\0';
+
+				if (listval && strlen(n) <= 0)
+					v = listval;
+				else
+				{
+					WIDGET *w = theApp.findWidget(n);
+					if (w)
+					{
+						if (w->control && w->control->m_hWnd)
+						{
+							v1 = CWizardUI::GetScreenValue(w);
+							v = (char *) (LPCSTR) v1;
+						}
+						else
+							v = (char *) (LPCSTR) w->value;
+					}
+					else
+						v = "";
+				}
+				strcpy(b, v);
+				b += strlen(v);
+			}
+			else
+			{
+				CWnd myWnd;
+				myWnd.MessageBox("Improperly terminated globals reference", "Error", MB_OK);
+				exit(12);
+			}
+			str++;
+		}
+		else
+			*b++ = *str++;
+	}
+	*b = '\0';
+
+	return CString(buf);
+}
+
+BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
+{
+		// Make modifiable copy of string's buffer
+		char buf[MAX_SIZE];
+		strcpy(buf, (char *)(LPCTSTR) cmds);
+
+		// Format of commandList is:  <command1>;<command2>;...
+		// Format of command is:   <command>(<parm1>,<parm2>,...)
+		int numCmds = 0;
+		char *cmdList[100];
+		char *pcmdL = strtok(buf, ";");
+		while (pcmdL)
+		{
+			cmdList[numCmds] = strdup(pcmdL);
+			pcmdL = strtok(NULL, ";");
+			numCmds++;
+			if (numCmds >= 100)
+			{
+				//fprintf(out, "Skipping command interpretation, too many commands.\n");
+				return FALSE;
+			}
+		}
+
+		int i;
+		for (i=0; i<numCmds; i++)
+		{
+			char *pcmd = strtok(cmdList[i], "(");
+			char *parms = strtok(NULL, ")");
+			if (pcmd)
+			{
+				if (strcmp(pcmd, "command") == 0)
+				{
+					CString p = replaceVars(parms, NULL);
+					ExecuteCommand((char *) (LPCSTR) p, SW_SHOWDEFAULT);
+				}
+				else if (strcmp(pcmd, "IterateListBox") == 0)
+				{
+					if (!IterateListBox(parms))
+						return FALSE;
+				}
+				else if (strcmp(pcmd, "VerifySet") == 0)
+				{
+					// VerifySet checks to see if the first parameter has any value
+					//   If (p1) then continue else show error dialog and return FALSE
+
+					char *p2 = strchr(parms, ',');
+
+					if (p2)
+						*p2++ = '\0';
+					else
+						p2 = "A message belongs here.";
+					CString value = replaceVars(parms, NULL);
+
+					if (!value || value.IsEmpty())
+					{
+						CWnd myWnd;
+						myWnd.MessageBox(p2, "Error", MB_OK|MB_SYSTEMMODAL);
+						return FALSE;
+					}
+				}
+				else if (strcmp(pcmd, "Reload") == 0)
+				{
+					// Reload sets the CachePath and reloads the cache from the new file
+					CString newDir = replaceVars(parms, NULL);
+					CachePath = Path + newDir + "\\" + CacheFile;
+					theApp.FillGlobalWidgetArray(CachePath);  // Ignore failure, we'll write one out later
+				}
+				else if (strcmp(pcmd, "VerifyVal") == 0)
+				{
+					CString Getval = replaceVars(parms, NULL);
+					if (Getval == "0")
+						return FALSE;
+				}
+				else if (strcmp(pcmd, "VerifyDir") == 0)
+				{
+					CFileFind tmpDir;
+					BOOL dirFound = tmpDir.FindFile(CString(nciPath)+"*.*");
+					if (!dirFound)
+					{
+						strcpy(tmpPath,asePath);
+						strcat(tmpPath,"NCIFiles");
+						_mkdir (tmpPath);
+					}
+				}
+				else if (strcmp(pcmd, "DisplayImage") == 0)
+				{
+					// This is to dsiplay an image in a separate dialog
+					CImgDlg imgDlg(parms);
+					int retVal = imgDlg.DoModal();
+				}
+				else if (strcmp(pcmd, "ShowSum") == 0)
+				{
+					CSumDlg sumdlg;
+					int retVal = sumdlg.DoModal();
+				}
+				else if (strcmp(pcmd, "NewNCIDialog") == 0)
+				{
+					CString entryName;
+					CNewDialog newDlg;
+					newDlg.DoModal();
+					entryName = newDlg.GetData();
+					theApp.SetGlobal(parms, entryName);
+				}
+				else if (strcmp(pcmd, "inform") == 0)
+				{
+					CString entryName;
+					CWnd myWnd;
+					char localPath[MAX_SIZE] = {'\0'};
+					char infoPath[MAX_SIZE] = {'\0'};
+					strcpy(infoPath, currDirPath);
+					if (localPath) {
+						strcat(infoPath, localPath);
+					}
+
+					entryName = theApp.GetGlobal(parms);
+					if (entryName != "") {
+						myWnd.MessageBox( entryName + " is saved in " + CString(infoPath), "Information", MB_OK);
+					}
+					// Delete the global var now...
+				}	
+				else if (strcmp(pcmd, "GenerateFileList") == 0 || strcmp(pcmd, "GenerateDirList") == 0)
+				{
+					char *p2 = strchr(parms, ',');
+
+					if (p2)
+						*p2++ = '\0';
+					CString value = replaceVars(parms, NULL);
+
+					WIDGET *w;
+					if (strcmp(parms, "self") == 0)
+						w = curWidget;
+					else
+						w = theApp.findWidget(parms);
+
+					if (w)
+						theApp.GenerateList(pcmd, w, p2);
+				}
+				else if (strcmp(pcmd, "BrowseFile") == 0)
+				{
+					if (curWidget)
+						CWizardUI::BrowseFile(curWidget);
+				}
+			
+				else if (strcmp(pcmd, "BrowseDir") == 0)
+				{
+					if (curWidget)
+						CWizardUI::BrowseDir(curWidget);
+				}
+			
+				else if (strcmp(pcmd, "NewConfigDialog") == 0)
+				{
+					if (curWidget)
+						CWizardUI::NewConfig(curWidget, CString(parms));
+				}
+
+				else if (strcmp(pcmd, "CopyDir") == 0)
+				{
+					char *p2 = strchr(parms, ',');
+					if (p2)
+					{
+						*p2++ = '\0';
+						CString from = replaceVars(parms, NULL);
+						CString to = replaceVars(p2, NULL);
+						CopyDir(from, to);
+					}
+				}
+				else if (strcmp(pcmd, "SetGlobal") == 0)
+				{
+					char *p2 = strchr(parms, ',');
+					if (p2)
+					{
+						*p2++ = '\0';
+						CString name = replaceVars(parms, NULL);
+						CString value = replaceVars(p2, NULL);
+						value.TrimRight();
+						theApp.SetGlobal(name, value);
+					}
+				}
+			}
+			// This is an extra free...
+			//free(pcmd);
+		}
+
+	return TRUE;
+}
+
+
