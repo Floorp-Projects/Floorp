@@ -465,7 +465,10 @@ nsRDFXMLSerializer::SerializeProperty(nsIOutputStream* aStream,
     if (! assertions)
         return NS_ERROR_FAILURE;
 
-    PRBool multi = PR_FALSE;
+    // Serializing the assertion inline is ok as long as the property has
+    // only one target value, and it is a literal that doesn't include line
+    // breaks.
+    PRBool needsChild = PR_FALSE;
 
     while (1) {
         PRBool hasMore = PR_FALSE;
@@ -475,18 +478,30 @@ nsRDFXMLSerializer::SerializeProperty(nsIOutputStream* aStream,
 
         nsCOMPtr<nsISupports> isupports;
         assertions->GetNext(getter_AddRefs(isupports));
+        nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(isupports);
+        needsChild |= (!literal);
 
-        if (! multi) {
-            assertions->HasMoreElements(&hasMore);
-            if (hasMore)
-                multi = PR_TRUE;
+        if (!needsChild) {
+            assertions->HasMoreElements(&needsChild);
+            if (!needsChild) {
+                const PRUnichar* literalVal = nsnull;
+                literal->GetValueConst(&literalVal);
+                if (literalVal) {
+                    for (; *literalVal; literalVal++) {
+                        if (*literalVal == PRUnichar('\n') ||
+                            *literalVal == PRUnichar('\r')) {
+                            needsChild = PR_TRUE;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
-        nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(isupports);
-        if (aInline && (literal && !multi)) {
+        if (aInline && !needsChild) {
             rv = SerializeInlineAssertion(aStream, aResource, aProperty, literal);
         }
-        else if (!aInline && (!literal || multi)) {
+        else if (!aInline && needsChild) {
             nsCOMPtr<nsIRDFNode> value = do_QueryInterface(isupports);
             rv = SerializeChildAssertion(aStream, aResource, aProperty, value);
         }
