@@ -2,17 +2,17 @@
     "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
   <HEAD>
-    <TITLE>MII TransforMiiX Test Cases</TITLE>
+    <TITLE>TransforMiiX Test Cases</TITLE>
   </HEAD>
-  <BODY>
+  <BODY BGCOLOR="#FFFFFF" Text="#000000">
     <CENTER>
       <FONT COLOR="BLUE" FACE="Arial">
         <B>MITRE</B>
       </FONT>
       <BR>
-      <B>MII Transfor<FONT COLOR="blue">Mii</FONT>X Test Cases</B>
+      <B>Transfor<FONT COLOR="blue">Mii</FONT>X Test Cases</B>
     </CENTER>
-    <P>This document serves to test XPath and XSL functions.</P>
+    <P ALIGN="CENTER">This document serves to test XPath and XSLT functions.</P>
     <TABLE>
       <TR BGColor="#E0E0FF">
         <TD Colspan="2" ALIGN="CENTER">
@@ -124,7 +124,7 @@
         <TD VALIGN="TOP">
           <B>Test:</B>
         </TD>
-        <TD>&lt;xsl:value-of select="true()"/&gt;<BR>
+        <TD>&lt;xsl:value-ofselect="true()"/&gt;<BR>
         </TD>
       </TR>
       <TR>
@@ -979,6 +979,297 @@
         </TD>
         <TD>
           <FONT COLOR="blue">AAA</FONT>
+        </TD>
+      </TR>
+    </TABLE>
+    <TABLE>
+      <TR BGColor="#E0E0FF">
+        <TD Colspan="2" ALIGN="CENTER">
+          <B>Number Functions</B>
+        </TD>
+      </TR>
+      <TR>
+        <TD BGColor="#EEEEEE">
+          <B>Function:</B>
+        </TD>
+        <TD BGColor="#EEEEEE">
+          <I>number</I>
+          <B> number(</B>
+          <I>object?</I>
+          <B>)</B>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="number()"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">NaN</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">NaN</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="number('654.97')"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">654.97</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">654.97</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD BGColor="#EEEEEE">
+          <B>Function:</B>
+        </TD>
+        <TD BGColor="#EEEEEE">
+          <I>number</I>
+          <B> round(</B>
+          <I>number</I>
+          <B>)</B>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="round(1.75)"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">2</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">2</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="round(1.25)"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">1</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">1</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="round(-0.5)"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">0</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">0</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="round(0.5)"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">1</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">1</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD BGColor="#EEEEEE">
+          <B>Function:</B>
+        </TD>
+        <TD BGColor="#EEEEEE">
+          <I>number</I>
+          <B> floor(</B>
+          <I>number</I>
+          <B>)</B>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="floor(2.2)"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">2</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">2</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="floor(-2.2)"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">-3</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">-3</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD BGColor="#EEEEEE">
+          <B>Function:</B>
+        </TD>
+        <TD BGColor="#EEEEEE">
+          <I>number</I>
+          <B> ceiling(</B>
+          <I>number</I>
+          <B>)</B>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="ceiling(2.2)"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">3</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">3</FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="ceiling(-2.2)"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">-2</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">-2</FONT>
         </TD>
       </TR>
     </TABLE>
