@@ -938,8 +938,12 @@ nsSessionHistory::add(nsIWebShell * aWebShell)
                */
               nsIWebShell * root=nsnull;
               aWebShell->GetRootWebShell(root);
-              if (!root) 
-               return;   
+              if (!root) {
+#ifdef DEBUG
+ 	       printf("fix build bustage.  someone needs to look at this.\n");
+#endif
+               return NS_OK;   
+              }
               nsresult ret = mHistoryEntryInLoad->Load(root);
               if (!ret) {
                /* The interim page matches exactly with the one in history.
