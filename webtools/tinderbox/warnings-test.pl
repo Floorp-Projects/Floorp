@@ -155,7 +155,7 @@ sub build_file_hash {
 
   use File::Find;
   for my $include (@include_list) {
-    $include .= ",v" if /\./;
+    $include .= ",v" if $include =~ /\./;
     &find(\&find_cvs_files, "$cvsroot/$include"); 
   }
   return \%bases, \%fullpath;
