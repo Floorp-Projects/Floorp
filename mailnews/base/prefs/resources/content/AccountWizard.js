@@ -175,8 +175,8 @@ function AccountDataToPageData(accountData, pageData)
 
     if (server.type == undefined) {
         // clear out the old server data
-        setPageData(pageData, "accounttype", "mailaccount", undefined);
-        setPageData(pageData, "accounttype", "newsaccount", undefined);
+        //setPageData(pageData, "accounttype", "mailaccount", undefined);
+        //        setPageData(pageData, "accounttype", "newsaccount", undefined);
         setPageData(pageData, "server", "servertype", undefined);
         setPageData(pageData, "server", "hostname", undefined);
         
@@ -188,7 +188,7 @@ function AccountDataToPageData(accountData, pageData)
         }
         
         else {
-	    setPageData(pageData, "accounttype", "mailaccount", true);
+            setPageData(pageData, "accounttype", "mailaccount", true);
             setPageData(pageData, "server", "servertype", server.type);
             setPageData(pageData, "server", "hostname", server.hostName);
         }
@@ -538,6 +538,7 @@ function checkForInvalidAccounts()
         
         // account -> accountData -> pageData
         accountData = AccountToAccountData(firstInvalidAccount, accountData);
+        
         AccountDataToPageData(accountData, pageData);
 
         gCurrentAccountData = accountData;
@@ -632,8 +633,8 @@ function UpdateWizardMap() {
 function updateMap(pageData, wizardMap) {
     dump("Updating wizard map..\n");
     if (pageData.accounttype) {
-        var ismailaccount = pageData.accounttype.mailaccount
-        dump("Accounttype is mail: " + (ismailaccount && ismailaccount.value) + "\n");
+        var ismailaccount = pageData.accounttype.mailaccount;
+        dump("Accounttype is mail: " + (ismailaccount && ismailaccount.value + "\n");
         // set up default account stuff
         wizardMap.identity.next = "server";
         wizardMap.done.previous = "accname";
@@ -724,4 +725,12 @@ function getInterfaceForType(type) {
         dump("could not get IID for " + type + ": " + ex + "\n");
         return undefined;
     }
+}
+
+// flush the XUL cache - just for debugging purposes - not called
+function onFlush() {
+        var prefs = Components.classes["component://netscape/preferences"].getService(Components.interfaces.nsIPref);
+        prefs.SetBoolPref("nglayout.debug.disable_xul_cache", true);
+        prefs.SetBoolPref("nglayout.debug.disable_xul_cache", false);
+
 }

@@ -3,7 +3,7 @@
 <!ENTITY accountTitle.label "Account Settings">
 <!ENTITY accountSettingsDesc.label "The following information is needed before you can send mail. If you do not know the information requested, please contact your system administrator or Internet Service Provider.">
 <!ENTITY accountName.label "Account Name:">
-<!ENTITY accountNameDesc.label "The account name identifies each account">
+<!ENTITY accountNameDesc.label "The account name is used to identify each account">
 <!ENTITY identityTitle.label "Identity">
 <!ENTITY identityDesc.label "Each account can have its own identity, which is the information that other people see when they read your messages.">
 <!ENTITY name.label "Your Name:">

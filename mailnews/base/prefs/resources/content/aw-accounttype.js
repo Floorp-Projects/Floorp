@@ -22,8 +22,15 @@
  */
 
 function onInit() {
-    // select the first radio button
-    document.getElementById("mailaccount").checked=true;
+    // this is a total hack.
+    // select the first radio button, assuming the wizard hasn't
+    // already selected one for us. The wizard can get in this wierd state
+    var elements = document.getElementsByAttribute("group", "acctyperadio");
+    var topItem = elements[0];
+    for (var i=0; i < elements.length; i++)
+        if (elements[i].checked) topItem = elements[i];
+
+    document.getElementById("acctyperadio").selectedItem = topItem;
 }
 
 function onUnload() {
