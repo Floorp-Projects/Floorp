@@ -72,6 +72,7 @@ GlobalWindowImpl::GlobalWindowImpl()
   mScriptObject = nsnull;
   mDocument = nsnull;
   mNavigator = nsnull;
+  mLocation = nsnull;
 
   mTimeouts = nsnull;
   mTimeoutInsertionPoint = nsnull;
@@ -96,6 +97,7 @@ GlobalWindowImpl::~GlobalWindowImpl()
   }
   
   NS_IF_RELEASE(mNavigator);
+  NS_IF_RELEASE(mLocation);
   NS_IF_RELEASE(mListenerManager);
 }
 
@@ -215,6 +217,9 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
 {
   //mWebShell isn't refcnt'd here.  WebShell calls SetWebShell(nsnull) when deleted.
   mWebShell = aWebShell;
+  if (nsnull != mLocation) {
+    mLocation->SetWebShell(aWebShell);
+  }
 }
 
 NS_IMETHODIMP    
@@ -254,6 +259,20 @@ GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
 
   *aNavigator = mNavigator;
   NS_IF_ADDREF(mNavigator);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::GetLocation(nsIDOMLocation** aLocation)
+{
+  if (nsnull == mLocation) {
+    mLocation = new LocationImpl(mWebShell);
+    NS_IF_ADDREF(mLocation);
+  }
+
+  *aLocation = mLocation;
+  NS_IF_ADDREF(mLocation);
 
   return NS_OK;
 }
@@ -718,7 +737,6 @@ GlobalWindowImpl::Open(JSContext *cx,
   PRUint32 mChrome = 0;
   nsString mURL, mName;
   JSString* str;
-  char *url_string;
   *aReturn = JSVAL_NULL;
 
   if (argc > 0) {
@@ -869,7 +887,8 @@ GlobalWindowImpl::Open(JSContext *cx,
   return NS_OK;
 }
 
-nsresult GlobalWindowImpl::CheckWindowName(JSContext *cx, nsString& aName)
+nsresult 
+GlobalWindowImpl::CheckWindowName(JSContext *cx, nsString& aName)
 {
   PRInt32 index;
   PRUnichar mChar;
@@ -886,7 +905,8 @@ nsresult GlobalWindowImpl::CheckWindowName(JSContext *cx, nsString& aName)
   return NS_OK;
 }
 
-int32 GlobalWindowImpl::WinHasOption(char *options, char *name)
+int32 
+GlobalWindowImpl::WinHasOption(char *options, char *name)
 {
   char *comma, *equal;
   int32 found = 0;
@@ -911,7 +931,8 @@ int32 GlobalWindowImpl::WinHasOption(char *options, char *name)
   return found;
 }
 
-nsresult GlobalWindowImpl::GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser)
+nsresult 
+GlobalWindowImpl::GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser)
 {
   nsresult ret;
   
@@ -929,26 +950,59 @@ nsresult GlobalWindowImpl::GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser
   return ret;
 }
 
-PRBool    GlobalWindowImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+PRBool    
+GlobalWindowImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
   return PR_TRUE;
 }
 
-PRBool    GlobalWindowImpl::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+PRBool    
+GlobalWindowImpl::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
   return PR_TRUE;
 }
 
-PRBool    GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+PRBool    
+GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
+  
+  if (JSVAL_IS_STRING(aID) && 
+      PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
+    nsIDOMLocation *location;
+    
+    if (NS_OK == GetLocation(&location)) {
+      if (location != nsnull) {
+        nsIScriptObjectOwner *owner = nsnull;
+        if (NS_OK == location->QueryInterface(kIScriptObjectOwnerIID, 
+                                              (void**)&owner)) {
+          JSObject *object = nsnull;
+          nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+            // set the return value
+            *aVp = OBJECT_TO_JSVAL(object);
+          }
+          NS_RELEASE(owner);
+        }
+        NS_RELEASE(location);
+      }
+      else {
+        *aVp = JSVAL_NULL;
+      }
+    }
+    else {
+      return PR_FALSE;
+    }
+  }
+
   return PR_TRUE;
 }
 
-PRBool    GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+PRBool    
+GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
     nsAutoString mPropName, mPrefix;
-    mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
+    mPropName.SetString(JS_GetStringBytes(JS_ValueToString(aContext, aID)));
     mPrefix.SetString(mPropName, 2);
     if (mPrefix == "on") {
       nsIEventListenerManager *mManager = nsnull;
@@ -1012,29 +1066,56 @@ PRBool    GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *a
       NS_IF_RELEASE(mManager);
     }
   }
+  else if (JSVAL_IS_STRING(aID) && 
+           PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
+    JSString *jsstring = JS_ValueToString(aContext, *aVp);
+
+    if (nsnull != jsstring) {
+      nsIDOMLocation *location;
+      nsAutoString locationStr;
+      
+      locationStr.SetString(JS_GetStringChars(jsstring));
+      if (NS_OK == GetLocation(&location)) {
+        if (NS_OK != location->SetHref(locationStr)) {
+          NS_RELEASE(location);
+          return PR_FALSE;
+        }
+        NS_RELEASE(location);
+      }
+      else {
+        return PR_FALSE;
+      }
+    }
+  }
+
   return PR_TRUE;
 }
 
-PRBool    GlobalWindowImpl::EnumerateProperty(JSContext *aContext)
+PRBool    
+GlobalWindowImpl::EnumerateProperty(JSContext *aContext)
 {
   return PR_TRUE;
 }
 
-PRBool    GlobalWindowImpl::Resolve(JSContext *aContext, jsval aID)
+PRBool    
+GlobalWindowImpl::Resolve(JSContext *aContext, jsval aID)
 {
   return PR_TRUE;
 }
 
-PRBool    GlobalWindowImpl::Convert(JSContext *aContext, jsval aID)
+PRBool    
+GlobalWindowImpl::Convert(JSContext *aContext, jsval aID)
 {
   return PR_TRUE;
 }
 
-void      GlobalWindowImpl::Finalize(JSContext *aContext)
+void      
+GlobalWindowImpl::Finalize(JSContext *aContext)
 {
 }
 
-nsresult GlobalWindowImpl::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
+nsresult 
+GlobalWindowImpl::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
 {
   if (nsnull != mListenerManager) {
     return mListenerManager->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult);;
@@ -1054,16 +1135,18 @@ nsresult GlobalWindowImpl::GetListenerManager(nsIEventListenerManager **aInstanc
 }
 
 //XXX I need another way around the circular link problem.
-nsresult GlobalWindowImpl::GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult)
+nsresult 
+GlobalWindowImpl::GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult)
 {
   return NS_ERROR_FAILURE;
 }
 
-nsresult GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext, 
-                                    nsEvent* aEvent, 
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus& aEventStatus)
+nsresult 
+GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext, 
+                                 nsEvent* aEvent, 
+                                 nsIDOMEvent** aDOMEvent,
+                                 PRUint32 aFlags,
+                                 nsEventStatus& aEventStatus)
 {
   nsresult mRet = NS_OK;
   nsIDOMEvent* mDOMEvent = nsnull;
@@ -1107,7 +1190,8 @@ nsresult GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   return mRet;
 }
 
-nsresult GlobalWindowImpl::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+nsresult 
+GlobalWindowImpl::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
   nsIEventListenerManager *mManager;
 
@@ -1119,7 +1203,8 @@ nsresult GlobalWindowImpl::AddEventListener(nsIDOMEventListener *aListener, cons
   return NS_ERROR_FAILURE;
 }
 
-nsresult GlobalWindowImpl::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+nsresult 
+GlobalWindowImpl::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
   if (nsnull != mListenerManager) {
     mListenerManager->RemoveEventListener(aListener, aIID);
@@ -1128,7 +1213,8 @@ nsresult GlobalWindowImpl::RemoveEventListener(nsIDOMEventListener *aListener, c
   return NS_ERROR_FAILURE;
 }
 
-nsresult GlobalWindowImpl::CaptureEvent(nsIDOMEventListener *aListener)
+nsresult 
+GlobalWindowImpl::CaptureEvent(nsIDOMEventListener *aListener)
 {
   nsIEventListenerManager *mManager;
 
@@ -1140,7 +1226,8 @@ nsresult GlobalWindowImpl::CaptureEvent(nsIDOMEventListener *aListener)
   return NS_ERROR_FAILURE;
 }
 
-nsresult GlobalWindowImpl::ReleaseEvent(nsIDOMEventListener *aListener)
+nsresult 
+GlobalWindowImpl::ReleaseEvent(nsIDOMEventListener *aListener)
 {
   if (nsnull != mListenerManager) {
     mListenerManager->ReleaseEvent(aListener);

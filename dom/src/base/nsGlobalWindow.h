@@ -26,6 +26,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMNavigator.h"
+#include "nsIDOMLocation.h"
 #include "nsITimer.h"
 #include "nsIJSScriptObject.h"
 #include "nsIDOMEventCapturer.h"
@@ -40,6 +41,9 @@ class nsIBrowserWindow;
 #include "jsapi.h"
 
 typedef struct nsTimeoutImpl nsTimeoutImpl;
+
+class LocationImpl;
+class NavigatorImpl;
 
 // Global object for scripting
 class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObject, public nsIDOMWindow, 
@@ -63,6 +67,7 @@ public:
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator);
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);
+  NS_IMETHOD    GetLocation(nsIDOMLocation** aLocation);
   NS_IMETHOD    Dump(const nsString& aStr);
   NS_IMETHOD    Alert(const nsString& aStr);
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);
@@ -118,7 +123,8 @@ protected:
   nsIScriptContext *mContext;
   void *mScriptObject;
   nsIDOMDocument *mDocument;
-  nsIDOMNavigator *mNavigator;
+  NavigatorImpl *mNavigator;
+  LocationImpl *mLocation;
   nsIWebShell *mWebShell;
   
   nsTimeoutImpl *mTimeouts;
@@ -180,6 +186,48 @@ public:
   NS_IMETHOD    JavaEnabled(PRBool* aReturn);
 
 protected:
+  void *mScriptObject;
+};
+
+class LocationImpl : public nsIScriptObjectOwner, public nsIDOMLocation {
+
+protected:
+public:
+  LocationImpl(nsIWebShell *aWebShell);
+  ~LocationImpl();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD ResetScriptObject();
+
+  NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell);
+
+  NS_IMETHOD    GetHash(nsString& aHash);
+  NS_IMETHOD    SetHash(const nsString& aHash);
+  NS_IMETHOD    GetHost(nsString& aHost);
+  NS_IMETHOD    SetHost(const nsString& aHost);
+  NS_IMETHOD    GetHostname(nsString& aHostname);
+  NS_IMETHOD    SetHostname(const nsString& aHostname);
+  NS_IMETHOD    GetHref(nsString& aHref);
+  NS_IMETHOD    SetHref(const nsString& aHref);
+  NS_IMETHOD    GetPathname(nsString& aPathname);
+  NS_IMETHOD    SetPathname(const nsString& aPathname);
+  NS_IMETHOD    GetPort(nsString& aPort);
+  NS_IMETHOD    SetPort(const nsString& aPort);
+  NS_IMETHOD    GetProtocol(nsString& aProtocol);
+  NS_IMETHOD    SetProtocol(const nsString& aProtocol);
+  NS_IMETHOD    GetSearch(nsString& aSearch);
+  NS_IMETHOD    SetSearch(const nsString& aSearch);
+  NS_IMETHOD    Reload(JSContext *cx, jsval *argv, PRUint32 argc);
+  NS_IMETHOD    Replace(const nsString& aUrl);
+
+protected:
+  void ConcatenateAndSet(const char *aProtocol,	const char *aHost,
+                         PRInt32 aPort, const char *aFile,
+                         const char *aRef, const char *aSearch);
+
+  nsIWebShell *mWebShell;
   void *mScriptObject;
 };
 

@@ -22,7 +22,8 @@ DIRS=coreDom html events
 MODULE=raptor 
 
 IDLSRCS =  \
-        Navigator.idl
+        Navigator.idl \
+	Location.idl
 
 GLOBAL_IDLSRC = Window.idl
 
