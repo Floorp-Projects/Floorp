@@ -141,7 +141,9 @@ fips_140_1()
   echo "$SCRIPTNAME: List the FIPS module keys."
   echo "certutil -d ${R_FIPSDIR} -K -f ${R_FIPSPWFILE}"
   certutil -d ${R_FIPSDIR} -K -f ${R_FIPSPWFILE} 2>&1
-  html_msg $? 0 "List the FIPS module keys (certutil -K)"
+  # certutil -K now returns a failure if no keys are found. This verifies that
+  # our delete succeded.
+  html_msg $? 255 "List the FIPS module keys (certutil -K)"
 
   echo "$SCRIPTNAME: Import the certificate and key from the PKCS#12 file"
   echo "pk12util -d ${R_FIPSDIR} -i fips140.p12 -w ${R_FIPSP12PWFILE} -k ${R_FIPSPWFILE}"

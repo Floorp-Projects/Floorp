@@ -934,14 +934,21 @@ printKeyCB(SECKEYPublicKey *key, SECItem *data, void *arg)
     return SECSuccess;
 }
 
+struct secuCBData {
+    FILE *file;
+    int	keycount;
+};
+
 /* callback for listing certs through pkcs11 */
-SECStatus
+static SECStatus
 secu_PrintKeyFromCert(CERTCertificate *cert, void *data)
 {
     FILE *out;
+    struct secuCBData *cbdata;
     SECKEYPrivateKey *key;
 
-    out = (FILE *)data;
+    cbdata = (struct secuCBData *)data;
+    out = cbdata->file;
     key = PK11_FindPrivateKeyFromCert(PK11_GetInternalKeySlot(), cert, NULL);
     if (!key) {
 	fprintf(out, "XXX could not extract key for %s.\n", cert->nickname);
@@ -950,6 +957,8 @@ secu_PrintKeyFromCert(CERTCertificate *cert, void *data)
     /* XXX should have a type field also */
     fprintf(out, "<%d> %s\n", 0, cert->nickname);
 
+    cbdata->keycount++;
+
     return SECSuccess;
 }
 
@@ -957,6 +966,10 @@ static SECStatus
 listKeys(PK11SlotInfo *slot, KeyType keyType, void *pwarg)
 {
     SECStatus rv = SECSuccess;
+    struct secuCBData cbdata;
+
+    cbdata.keycount = 0;
+    cbdata.file = stdout;
 
 #ifdef notdef
     if (PK11_IsInternal(slot)) {
@@ -974,9 +987,13 @@ listKeys(PK11SlotInfo *slot, KeyType keyType, void *pwarg)
     /*rv = PK11_TraverseSlotKeys(slotname, keyType, printKeyCB, NULL, NULL);*/
 	if (PK11_NeedLogin(slot))
 	    PK11_Authenticate(slot, PR_TRUE, pwarg);
-	rv = PK11_TraverseCertsInSlot(slot, secu_PrintKeyFromCert, stdout);
+	rv = PK11_TraverseCertsInSlot(slot, secu_PrintKeyFromCert, &cbdata);
 	if (rv) {
 	    SECU_PrintError(progName, "problem listing keys");
+	    return SECFailure;
+	}
+	if (cbdata.keycount == 0) {
+	    SECU_PrintError(progName, "no keys found");
 	    return SECFailure;
 	}
 	return SECSuccess;
