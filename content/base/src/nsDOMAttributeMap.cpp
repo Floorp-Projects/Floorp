@@ -238,8 +238,8 @@ nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     nsCOMPtr<nsINodeInfo> ni(mContent->GetNodeInfo());
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
-    ni->NodeInfoManager()->GetNodeInfo(nameAtom, prefix, nameSpaceID,
-                                       getter_AddRefs(ni));
+    nsCOMPtr<nsINodeInfoManager> nimgr = ni->NodeInfoManager();
+    nimgr->GetNodeInfo(nameAtom, prefix, nameSpaceID, getter_AddRefs(ni));
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     nsDOMAttribute* domAttribute = new nsDOMAttribute(mContent, ni, value);
@@ -300,8 +300,8 @@ nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
                                    getter_AddRefs(prefix), value);
 
     if (NS_CONTENT_ATTR_NOT_THERE != attrResult && NS_SUCCEEDED(attrResult)) {
-      ni->NodeInfoManager()->GetNodeInfo(nameAtom, prefix,
-                                         nameSpaceID, getter_AddRefs(ni));
+      nsCOMPtr<nsINodeInfoManager> nimgr = ni->NodeInfoManager();
+      nimgr->GetNodeInfo(nameAtom, prefix, nameSpaceID, getter_AddRefs(ni));
       NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
       nsDOMAttribute* domAttribute = new nsDOMAttribute(mContent, ni, value);
@@ -352,7 +352,8 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
     nsCOMPtr<nsINodeInfo> ni(mContent->GetNodeInfo());
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
-    ni->NodeInfoManager()->GetNodeInfo(name, nsURI, getter_AddRefs(ni));
+    nsCOMPtr<nsINodeInfoManager> nimgr = ni->NodeInfoManager();
+    nimgr->GetNodeInfo(name, nsURI, getter_AddRefs(ni));
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     nsresult attrResult = mContent->GetAttr(ni->NamespaceID(),
@@ -416,8 +417,8 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
                                    getter_AddRefs(prefix), value);
 
     if (NS_CONTENT_ATTR_NOT_THERE != attrResult && NS_SUCCEEDED(attrResult)) {
-      ni->NodeInfoManager()->GetNodeInfo(nameAtom, prefix, nameSpaceID,
-                                         getter_AddRefs(ni));
+      nsCOMPtr<nsINodeInfoManager> nimgr = ni->NodeInfoManager();
+      nimgr->GetNodeInfo(nameAtom, prefix, nameSpaceID, getter_AddRefs(ni));
       NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
       nsDOMAttribute* domAttribute = new nsDOMAttribute(nsnull, ni, value);
