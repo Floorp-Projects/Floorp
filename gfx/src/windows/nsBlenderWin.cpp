@@ -22,10 +22,6 @@
 #include "il_util.h"
 
 
-#ifdef NGLAYOUT_DDRAW
-#include "ddraw.h"
-#endif
-
 //static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
 
 /** --------------------------------------------------------------------------
@@ -105,79 +101,13 @@ nsPixelFormat pixformat;
   maskloc.x = 0;
   maskloc.y = 0;
 
-//  if (CalcAlphaMetrics(&mSrcInfo, &mDstInfo,
-//                       ((nsnull != mSecondSrcbinfo) || (PR_TRUE == secondsrcissurf)) ? &mSecondSrcInfo : nsnull,
-//                       &srcloc, NULL, &maskloc, aWidth, aHeight, &numlines, &numbytes,
-//                       &s1, &d1, &ssl, &m1, &slinespan, &dlinespan, &mlinespan))
-if (1)
-  {
-//    if (mSrcInfo.bmBitsPixel == mDstInfo.bmBitsPixel)
-if (1)
-    {
-      PRUint32 depth;
-      mContext->GetDepth(depth);
-      SrcWinSurf->GetPixelFormat(&pixformat);
-      // now do the blend
-      switch (depth)
-      {
-        case 32:
-          if (!mask){
-            level = (PRInt32)(aSrcOpacity * 100);
-            Do32Blend(level, aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-                      mSecondSrcBytes, mSrcRowBytes, mDestRowBytes, nsHighQual,
-                      aSrcBackColor, aSecondSrcBackColor, pixformat);
-            result = NS_OK;
-          }else
-            result = NS_ERROR_FAILURE;
-          break;
+  SrcWinSurf->GetPixelFormat(&pixformat);
 
-        case 24:
-          if (mask){
-            Do24BlendWithMask(aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-                              NULL, mSrcRowBytes, mDestRowBytes, 0, nsHighQual);
-            result = NS_OK;
-          }else{
-            level = (PRInt32)(aSrcOpacity*100);
-            Do24Blend(level, aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-                      mSecondSrcBytes, mSrcRowBytes, mDestRowBytes, nsHighQual,
-                      aSrcBackColor, aSecondSrcBackColor, pixformat);
-            result = NS_OK;
-          }
-          break;
-
-        case 16:
-          if (!mask){
-            level = (PRInt32)(aSrcOpacity*100);
-            Do16Blend(level, aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-                      mSecondSrcBytes, mSrcRowBytes, mDestRowBytes, nsHighQual,
-                      aSrcBackColor, aSecondSrcBackColor, pixformat);
-            result = NS_OK;
-          }
-          else
-            result = NS_ERROR_FAILURE;
-          break;
-
-        case 8:
-          if (mask){
-            Do8BlendWithMask(aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-                             NULL, mSrcRowBytes, mDestRowBytes, 0, nsHighQual);
-            result = NS_OK;
-          }else{
-            if (mContext->GetILColorSpace(thespace) == NS_OK){
-              level = (PRInt32)(aSrcOpacity*100);
-              Do8Blend(level, aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-                       mSecondSrcBytes, mSrcRowBytes, mDestRowBytes, thespace,
-                       nsHighQual, aSrcBackColor, aSecondSrcBackColor);
-              result = NS_OK;
-              IL_ReleaseColorSpace(thespace);
-            }
-          }
-          break;
-      }
-    }
-    else
-      result = NS_ERROR_FAILURE;
-  }
+  result = Blend(mSrcBytes, mSrcRowBytes, mSrcSpan,
+                 mDestBytes, mDestRowBytes, mDestSpan,
+                 mSecondSrcBytes, mSecondSrcRowBytes, mSecondSrcSpan,
+                 aHeight, (PRInt32)(aSrcOpacity * 100), pixformat,
+                 aSrcBackColor, aSecondSrcBackColor);
 
   SrcWinSurf->Unlock();
   DstWinSurf->Unlock();
@@ -193,18 +123,17 @@ NS_IMETHODIMP nsBlenderWin :: Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PR
                    nsIRenderingContext *aSecondSrc, nscolor aSrcBackColor,
                    nscolor aSecondSrcBackColor)
 {
-nsresult      result = NS_ERROR_FAILURE;
-HBITMAP       dstbits, tb1;
-nsPoint       srcloc, maskloc;
-PRInt32       dlinespan, slinespan, mlinespan, numbytes, numlines, level;
-PRUint8       *s1, *d1, *m1, *mask = NULL, *ssl = NULL;
-IL_ColorSpace *thespace=nsnull;
-HDC           srcdc, dstdc, secondsrcdc;
-PRBool        srcissurf = PR_FALSE;
-PRBool        secondsrcissurf = PR_FALSE;
-PRBool        dstissurf = PR_FALSE;
-nsPixelFormat pixformat;
-nsDrawingSurface srcsurf;
+  nsresult      result = NS_ERROR_FAILURE;
+  HBITMAP       dstbits, tb1;
+  nsPoint       srcloc, maskloc;
+  PRInt32       dlinespan, slinespan, mlinespan, numbytes, numlines, level;
+  PRUint8       *s1, *d1, *m1, *mask = NULL, *ssl = NULL;
+  HDC           srcdc, dstdc, secondsrcdc;
+  PRBool        srcissurf = PR_FALSE;
+  PRBool        secondsrcissurf = PR_FALSE;
+  PRBool        dstissurf = PR_FALSE;
+  nsPixelFormat pixformat;
+  nsDrawingSurface srcsurf;
 
   mSrcBytes = mSecondSrcBytes = mDestBytes = nsnull;
 
@@ -220,6 +149,32 @@ nsDrawingSurface srcsurf;
   maskloc.x = 0;
   maskloc.y = 0;
 
+  aSrc->GetDrawingSurface(&srcsurf);
+  ((nsIDrawingSurface *)srcsurf)->GetPixelFormat(&pixformat);
+
+  result = Blend(mSrcBytes, mSrcRowBytes, mSrcSpan,
+                 mDestBytes, mDestRowBytes, mDestSpan,
+                 mSecondSrcBytes, mSecondSrcRowBytes, mSecondSrcSpan,
+                 aHeight, (PRInt32)(aSrcOpacity * 100), pixformat,
+                 aSrcBackColor, aSecondSrcBackColor);
+
+  aSrc->UnlockDrawingSurface();
+  aDest->UnlockDrawingSurface();
+
+  if (nsnull != aSecondSrc)
+    aSecondSrc->UnlockDrawingSurface();
+
+  return result;
+}
+
+nsresult nsBlenderWin :: Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride, PRInt32 aSrcBytes,
+                               PRUint8 *aDestBits, PRInt32 aDestStride, PRInt32 aDestBytes,
+                               PRUint8 *aSecondSrcBits, PRInt32 aSecondSrcStride, PRInt32 aSecondSrcBytes,
+                               PRInt32 aLines, PRInt32 aAlpha, nsPixelFormat &aPixFormat,
+                               nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
+{
+  nsresult  result = NS_OK;
+
 //  if (CalcAlphaMetrics(&mSrcInfo, &mDstInfo,
 //                       ((nsnull != mSecondSrcbinfo) || (PR_TRUE == secondsrcissurf)) ? &mSecondSrcInfo : nsnull,
 //                       &srcloc, NULL, &maskloc, aWidth, aHeight, &numlines, &numbytes,
@@ -231,75 +186,66 @@ if (1)
     {
       PRUint32 depth;
       mContext->GetDepth(depth);
-      aSrc->GetDrawingSurface(&srcsurf);
-      ((nsIDrawingSurface *)srcsurf)->GetPixelFormat(&pixformat);
       // now do the blend
       switch (depth)
       {
         case 32:
-          if (!mask){
-            level = (PRInt32)(aSrcOpacity * 100);
-            Do32Blend(level, aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-                      mSecondSrcBytes, mSrcRowBytes, mDestRowBytes, nsHighQual,
-                      aSrcBackColor, aSecondSrcBackColor, pixformat);
+//          if (!mask){
+            Do32Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
+                      aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
+                      aSrcBackColor, aSecondSrcBackColor, aPixFormat);
             result = NS_OK;
-          }else
-            result = NS_ERROR_FAILURE;
+//          }else
+//            result = NS_ERROR_FAILURE;
           break;
 
         case 24:
-          if (mask){
-            Do24BlendWithMask(aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-                              NULL, mSrcRowBytes, mDestRowBytes, 0, nsHighQual);
-            result = NS_OK;
-          }else{
-            level = (PRInt32)(aSrcOpacity*100);
-            Do24Blend(level, aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-                      mSecondSrcBytes, mSrcRowBytes, mDestRowBytes, nsHighQual,
-                      aSrcBackColor, aSecondSrcBackColor, pixformat);
-            result = NS_OK;
-          }
+//          if (mask){
+//            Do24BlendWithMask(aHeight, mSrcSpan, mSrcBytes, mDestBytes,
+//                              NULL, mSrcRowBytes, mDestRowBytes, 0, nsHighQual);
+//            result = NS_OK;
+//          }else{
+            Do24Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
+                      aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
+                      aSrcBackColor, aSecondSrcBackColor, aPixFormat);
+//            result = NS_OK;
+//          }
           break;
 
         case 16:
-          if (!mask){
-            level = (PRInt32)(aSrcOpacity*100);
-            Do16Blend(level, aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-                      mSecondSrcBytes, mSrcRowBytes, mDestRowBytes, nsHighQual,
-                      aSrcBackColor, aSecondSrcBackColor, pixformat);
-            result = NS_OK;
-          }
-          else
-            result = NS_ERROR_FAILURE;
+//          if (!mask){
+            Do16Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
+                      aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
+                      aSrcBackColor, aSecondSrcBackColor, aPixFormat);
+//            result = NS_OK;
+//          }
+//          else
+//            result = NS_ERROR_FAILURE;
           break;
 
         case 8:
-          if (mask){
-            Do8BlendWithMask(aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-                             NULL, mSrcRowBytes, mDestRowBytes, 0, nsHighQual);
-            result = NS_OK;
-          }else{
-            if (mContext->GetILColorSpace(thespace) == NS_OK){
-              level = (PRInt32)(aSrcOpacity*100);
-              Do8Blend(level, aHeight, mSrcSpan, mSrcBytes, mDestBytes,
-                       mSecondSrcBytes, mSrcRowBytes, mDestRowBytes, thespace,
+        {
+          IL_ColorSpace *thespace = nsnull;
+
+//          if (mask){
+//            Do8BlendWithMask(aHeight, mSrcSpan, mSrcBytes, mDestBytes,
+//                             NULL, mSrcRowBytes, mDestRowBytes, 0, nsHighQual);
+//            result = NS_OK;
+//          }else{
+            if ((result = mContext->GetILColorSpace(thespace)) == NS_OK){
+              Do8Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
+                       aSecondSrcBits, aSrcStride, aDestStride, thespace,
                        nsHighQual, aSrcBackColor, aSecondSrcBackColor);
-              result = NS_OK;
               IL_ReleaseColorSpace(thespace);
             }
-          }
+//          }
           break;
+        }
       }
     }
     else
       result = NS_ERROR_FAILURE;
   }
-
-  aSrc->UnlockDrawingSurface();
-  aDest->UnlockDrawingSurface();
-
-  if (nsnull != aSecondSrc)
-    aSecondSrc->UnlockDrawingSurface();
 
   return result;
 }
