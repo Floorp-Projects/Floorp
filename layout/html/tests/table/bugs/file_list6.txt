@@ -38,3 +38,4 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug9271-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug965.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug9879.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug9879-1.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug9879-1.html

@@ -1,6 +1,5 @@
 #file:///s|/mozilla/layout/html/tests/table/bugs/bug26178.html
 #file:///s|/mozilla/layout/html/tests/table/bugs/bug26193.html
-file:///s|/mozilla/layout/html/tests/table/bugs/bug26553.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug2684.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug27038-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug27038-2.html
@@ -40,4 +39,5 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug30985.html
 #file:///s|/mozilla/layout/html/tests/table/bugs/bug30692.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3103.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3105.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug3191.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3191.html
