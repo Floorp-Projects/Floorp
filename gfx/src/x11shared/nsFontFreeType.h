@@ -40,6 +40,7 @@
 #ifndef nsFontFreeType_h__
 #define nsFontFreeType_h__
 
+#include "gfx-config.h"
 #include "nsFontMetricsGTK.h"
 #include "nsFreeType.h"
 

@@ -106,6 +106,7 @@ EXTRA_DSO_LDOPTS += \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
+		-I../.. \
 		-I$(srcdir) \
 		-I$(srcdir)/../xlib \
 		-I$(srcdir)/../xlibrgb \

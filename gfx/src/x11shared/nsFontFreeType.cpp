@@ -43,6 +43,7 @@
 #define DEBUG_SHOW_GLYPH_BOX 0
 #endif
 
+#include "gfx-config.h"
 #include "nsFontFreeType.h"
 #include "nsUnicharUtils.h"
 

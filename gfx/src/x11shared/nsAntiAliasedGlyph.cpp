@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "gfx-config.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

@@ -48,7 +48,7 @@ EXTRA_DSO_LDOPTS = \
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_ENABLE_FREETYPE2
-DEFINES         += -DMOZ_ENABLE_FREETYPE2
+LOCAL_INCLUDES	= -I../..
 INCLUDES        += $(FT2_CFLAGS)
 # due to runtime linking with PR_LoadLibrary
 # EXTRA_DSO_LDOPTS does not need $(FT2_LIBS)

@@ -41,6 +41,7 @@
 #ifndef NS_FT2_FONT_CATALOG_H
 #define NS_FT2_FONT_CATALOG_H
 
+#include "gfx-config.h"
 #include "nsIFontCatalogService.h"
 
 #if (defined(MOZ_ENABLE_FREETYPE2))

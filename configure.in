@@ -3319,7 +3319,10 @@ fi
 if test -z "$_NO_FREETYPE2"; then
     AC_CHECK_FT2(6.1.0, [MOZ_ENABLE_FREETYPE2=1], [MOZ_ENABLE_FREETYPE2=])
 fi
-
+if test "$MOZ_ENABLE_FREETYPE2"; then
+    AC_DEFINE(MOZ_ENABLE_FREETYPE2)
+    _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES MOZ_ENABLE_FREETYPE2"
+fi
 AC_SUBST(MOZ_ENABLE_FREETYPE2)
 
 dnl ========================================================
@@ -5218,6 +5221,8 @@ AC_SUBST(ac_configure_args)
 
 dnl Spit out some output
 dnl ========================================================
+
+AC_CONFIG_HEADER(gfx/gfx-config.h)
 
 # Save the defines header file before autoconf removes it.
 # (Do not add AC_DEFINE calls after this line.)
