@@ -101,5 +101,5 @@ endif
 	cp -f mdheader.jar $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME); \
 	chmod 664 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME)/mdheader.jar
 
-depend:
+depend: clean
 	@echo "NSPR20 has no dependencies.  Skipped."
