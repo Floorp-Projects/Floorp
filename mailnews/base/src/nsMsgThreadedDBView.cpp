@@ -107,35 +107,35 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
   nsMsgKeyArray preservedSelection;
   SaveAndClearSelection(&preservedSelection);  
 
+  // restore saved id array and flags array
+  // first, remove all the search hits
+  PRInt32 oldSize = GetSize();
+  m_keys.RemoveAll();
+  m_flags.RemoveAll();
+  m_levels.RemoveAll();
+
+  // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
+  if (mTree)
+    mTree->RowCountChanged(0, -oldSize);
+
   if (m_preSearchKeys.GetSize())
   {
-    // restore saved id array and flags array
-    // first, remove all the search hits
-    PRInt32 oldSize = GetSize();
-    m_keys.RemoveAll();
-    m_flags.RemoveAll();
-    m_levels.RemoveAll();
-
-    // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
-    if (mTree)
-      mTree->RowCountChanged(0, -oldSize);
-
     m_keys.InsertAt(0, &m_preSearchKeys);
     m_flags.InsertAt(0, &m_preSearchFlags);
     m_levels.InsertAt(0, &m_preSearchLevels);
     ClearPreSearchInfo();
     ClearPrevIdArray();  // previous cached info about non threaded display is not useful
     Sort(m_sortType, m_sortOrder);
-
-    // now, account for adding all the pre search items back.
-    // this needs to happen after we add back the keys, as RowCountChanged() will call our GetRowCount()
-    if (mTree)
-      mTree->RowCountChanged(0, GetSize());
   }
   else
   {
     rv = InitThreadedView(nsnull);
   }
+
+  // now, account for adding all the pre search items back.
+  // this needs to happen after we add back the keys, as RowCountChanged() will call our GetRowCount()
+  if (mTree)
+    mTree->RowCountChanged(0, GetSize());
 
   RestoreSelection(&preservedSelection);
 
