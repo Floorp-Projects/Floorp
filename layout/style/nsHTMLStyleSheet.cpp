@@ -31,42 +31,21 @@
 #include "nsHTMLAtoms.h"
 #include "nsIPresContext.h"
 #include "nsILinkHandler.h"
+#include "nsIEventStateManager.h"
 #include "nsIDocument.h"
-//#include "nsIHTMLTableCellElement.h"
-//#include "nsTableColFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
-//#include "nsIViewManager.h"
 #include "nsStyleConsts.h"
-//#include "nsTableOuterFrame.h"
-//#include "nsIXMLDocument.h"
-//#include "nsIWebShell.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"
-//#include "nsIDOMHTMLSelectElement.h"
-//#include "nsIComboboxControlFrame.h"
-//#include "nsIListControlFrame.h"
-//#include "nsDeque.h"
-//#include "nsIDOMCharacterData.h"
-//#include "nsIDOMHTMLImageElement.h"
-//#include "nsITextContent.h"
 
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
-//static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
-//static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
-//static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-
-//static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
-//static NS_DEFINE_IID(kIComboboxControlFrameIID, NS_ICOMBOBOXCONTROLFRAME_IID);
-//static NS_DEFINE_IID(kIListControlFrameIID,     NS_ILISTCONTROLFRAME_IID);
-//static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
-//static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 
 class HTMLAnchorRule : public nsIStyleRule {
 public:
@@ -441,14 +420,14 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       styledContent->GetTag(tag);
       // if we have anchor colors, check if this is an anchor with an href
       if (tag == nsHTMLAtoms::a) {
-        if ((nsnull != mLinkRule) || (nsnull != mVisitedRule) || (nsnull != mActiveRule)) {
+        if ((nsnull != mLinkRule) || (nsnull != mVisitedRule)) {
           // test link state
           nsILinkHandler* linkHandler;
 
           if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
               (nsnull != linkHandler)) {
             nsAutoString base, href;
-            nsresult attrState = styledContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
+            nsresult attrState = styledContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
 
             if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
               nsIURL* docURL = nsnull;
@@ -476,25 +455,32 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                         matchCount++;
                       }
                       break;
-                    //This case have been moved from nsILinkHandler to to nsIEventStateManager.
-                    //Code needs to be adjusted to get this state item from new location.
-                    /*case eLinkState_Active:
-                      if (nsnull != mActiveRule) {
-                        aResults->AppendElement(mActiveRule);
-                        matchCount++;
-                      }
-                      break;*/
                   }
                 }
                 NS_RELEASE(htmlContent);
               }
             }
-            NS_RELEASE(linkHandler);
           }
-        }
-      }
+          NS_RELEASE(linkHandler);
+        } // end link/visited rules
+        if (nsnull != mActiveRule) {  // test active state of link
+          nsIEventStateManager* eventStateManager;
+
+          if ((NS_OK == aPresContext->GetEventStateManager(&eventStateManager)) &&
+              (nsnull != eventStateManager)) {
+            nsLinkEventState  state;
+            if (NS_OK == eventStateManager->GetLinkState(aContent, state)) {
+              if (0 != (state & eLinkState_Active)) {
+                aResults->AppendElement(mActiveRule);
+                matchCount++;
+              }
+            }
+            NS_RELEASE(eventStateManager);
+          }
+        } // end active rule
+      } // end A tag
       NS_IF_RELEASE(tag);
-    } // end A tag
+    } // end html namespace
 
     // just get the one and only style rule from the content
     nsIStyleRule* rule;
