@@ -193,7 +193,7 @@ int main( int  argc,  char *argv[] )
   if (argc > 1)
     loadURLStr = argv[1];
   else
-    loadURLStr = "http://www.mozilla.org";
+      loadURLStr = "http://www.mozilla.org/projects/embedding";
 
   NS_InitEmbedding(nsnull, nsnull);
 
