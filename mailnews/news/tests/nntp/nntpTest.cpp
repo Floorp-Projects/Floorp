@@ -50,6 +50,8 @@
 
 #include "nsMsgNewsCID.h"
 
+#include "nsString.h"
+
 #ifdef XP_PC
 #define NETLIB_DLL	"netlib.dll"
 #define XPCOM_DLL	"xpcom32.dll"
@@ -74,7 +76,8 @@
 
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 #ifdef XP_UNIX
 extern "C" char *fe_GetConfigDir(void) {
@@ -92,6 +95,8 @@ public:
 
     nsresult ConvertStringTest(const char *str, const char *expectedStr);
 	nsresult RunDriver();
+	nsresult TestConvertNewsgroupsString();
+	nsresult TestPostMessage();
 
 protected:
     nsCOMPtr <nsINntpService> m_nntpService;
@@ -110,8 +115,44 @@ nsresult nsNntpTestDriver::RunDriver()
     nsresult rv;
     
     rv = nsComponentManager::CreateInstance(kNntpServiceCID, nsnull, nsINntpService::GetIID(), getter_AddRefs(m_nntpService));
-    
     if (NS_FAILED(rv)) return rv;
+
+	rv = TestConvertNewsgroupsString();
+	if (NS_FAILED(rv)) return rv;
+	
+	rv = TestPostMessage();
+	if (NS_FAILED(rv)) return rv;
+	
+	/*
+	nsIURI RunNewsUrl (in nsString urlString, in nsString newsgroupName, in nsMsgKey aKey, in nsISupports aConsumer, in nsIUrlListener aUrlListener); 
+
+	nsIURI GetNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener);
+
+	nsIURI CancelMessages (in string hostname, in string newsgroupname, in nsISupportsArray messages, in nsISupports aConsumer, in nsIUrlListener aUrlListener);
+	*/
+
+	return rv;
+}
+
+nsresult nsNntpTestDriver::TestPostMessage()
+{
+	nsresult rv;
+	nsFilePath fileToPost("c:\\temp\\foo.txt");
+	
+	nsString newsgroups(eOneByte);
+
+	newsgroups = "news://news.mozilla.org/netscape.test";
+
+	/*
+	nsIURI PostMessage (in nsFilePath pathToFile, in string newsgroupNames, in nsIUrlListener aUrlListener);
+	*/
+	rv=m_nntpService->PostMessage(fileToPost, newsgroups.GetBuffer(), nsnull, nsnull);
+	return rv;
+}
+
+nsresult nsNntpTestDriver::TestConvertNewsgroupsString()
+{
+	nsresult rv;
 
     rv = ConvertStringTest("news://news.mozilla.org/a","a");
     if (NS_FAILED(rv)) return rv;
@@ -177,17 +218,24 @@ int main()
 {
     nsresult result;
 
+	nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kNntpServiceCID, NULL, NULL, NEWS_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-    
+	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+
 	// make sure prefs get initialized and loaded..
 	// mscott - this is just a bad bad bad hack right now until prefs
 	// has the ability to take nsnull as a parameter. Once that happens,
 	// prefs will do the work of figuring out which prefs file to load...
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
-    if (NS_FAILED(result) || !prefs) {
+    if (NS_FAILED(result) || (prefs == nsnull)) {
         exit(result);
+    }
+   
+    if (NS_FAILED(prefs->ReadUserPrefs()))
+    {
+      printf("Failed on reading user prefs!\n");
+      exit(-1);
     }
 
 	nsNntpTestDriver * driver = new nsNntpTestDriver;
