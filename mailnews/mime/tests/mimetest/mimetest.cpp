@@ -38,6 +38,7 @@
 #include "nsICharsetConverterManager.h"
 #include "prprf.h"
 #include "nsIAllocator.h" // for the CID
+#include "msgCore.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
 // THIS IS THE STUFF TO GET THE TEST HARNESS OFF THE GROUND
@@ -131,7 +132,13 @@ SetupRegistry(void)
 class ConsoleOutputStreamImpl : public nsIOutputStream
 {
 public:
-    ConsoleOutputStreamImpl(void) { NS_INIT_REFCNT(); }
+    ConsoleOutputStreamImpl(void) 
+    { 
+      NS_INIT_REFCNT(); 
+      mIndentCount = 0;
+      mInClosingTag = PR_FALSE;
+    }
+
     virtual ~ConsoleOutputStreamImpl(void) {}
 
     // nsISupports interface
@@ -140,22 +147,84 @@ public:
     // nsIBaseStream interface
     NS_IMETHOD Close(void) 
     {
+      char *note = "<center><hr WIDTH=\"90%\"><br><b>Anything after the above horizontal line is diagnostic output<br>and is not part of the HTML stream!</b></center>";
+      PR_Write(PR_GetSpecialFD(PR_StandardOutput), note, PL_strlen(note));
+
       return NS_OK;
     }
 
     // nsIOutputStream interface
-    NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount) {
-        PR_Write(PR_GetSpecialFD(PR_StandardOutput), aBuf, aCount);
-        *aWriteCount = aCount;
-        return NS_OK;
-    }
+    NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
 
     NS_IMETHOD Flush(void) {
         PR_Sync(PR_GetSpecialFD(PR_StandardOutput));
         return NS_OK;
     }
+
+    nsresult  DoIndent();
+
+private:
+  PRInt32   mIndentCount;
+  PRBool    mInClosingTag;
 };
 NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, nsIOutputStream::GetIID());
+
+#define TAB_SPACES    2
+
+// make the html pretty :-)
+nsresult
+ConsoleOutputStreamImpl::DoIndent()
+{
+  PR_Write(PR_GetSpecialFD(PR_StandardOutput), MSG_LINEBREAK, MSG_LINEBREAK_LEN);
+  if (mIndentCount <= 1)
+    return NS_OK;
+
+  for (PRUint32 j=0; j<(PRUint32) ((mIndentCount-1)*TAB_SPACES); j++)
+    PR_Write(PR_GetSpecialFD(PR_StandardOutput), " ", 1);
+  return NS_OK;
+}
+
+nsresult
+ConsoleOutputStreamImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
+{
+  PRUint32 i=0;
+
+  for (i=0; i<aCount; i++)
+  {
+    // First, check if we are in a new level of html...
+    if (aBuf[i] == '<')
+    {
+      if ( (i < aCount) && (aBuf[i+1] == '/') )
+      {
+        --mIndentCount;
+        mInClosingTag = PR_TRUE;
+      }
+      else
+      {
+        ++mIndentCount;
+        DoIndent();
+        mInClosingTag = PR_FALSE;
+      }
+
+      if (mIndentCount < 0)
+        mIndentCount = 0;
+    }
+
+    // Now, write the HTML character...
+    PR_Write(PR_GetSpecialFD(PR_StandardOutput), aBuf+i, 1);
+
+    if (aBuf[i] == '>')
+    {
+      // Now, write out the correct number or spaces for the indent count...
+      if (mInClosingTag)
+        DoIndent();
+    }
+  }
+
+  *aWriteCount = aCount;
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 // END OF CONSUMER STREAM
 ////////////////////////////////////////////////////////////////////////////////////
@@ -259,7 +328,7 @@ FixURL(char *url)
   }
 }
 
-// Utility to create a nsIURI object...
+// Utility to create a nsIURL object...
 nsresult 
 NewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
 {  
@@ -267,7 +336,7 @@ NewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
     return NS_ERROR_NULL_POINTER;
   
   nsINetService *inet = nsnull;
-  nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(),
+  nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsCOMTypeInfo<nsINetService>::GetIID(),
                                              (nsISupports **)&inet);
   if (rv != NS_OK) 
     return rv;
