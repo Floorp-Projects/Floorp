@@ -1,48 +1,64 @@
 #!/perl
 
-# make-jars [-c] [-v] [-d <destPath>] < <jar.mn>
+# make-jars [-c] [-v] [-d <destPath>] [-s <srcdir>] < <jar.mn>
+
+use strict;
 
 use Getopt::Std;
 use Cwd;
 use File::stat;
 use Time::localtime;
+use Cwd;
+use File::Copy;
+use File::Path;
 
-@cleanupList = ();
-$IS_DIR = 1;
-$IS_FILE = 2;
+my @cleanupList = ();
+my $IS_DIR = 1;
+my $IS_FILE = 2;
 
-getopt("d:");
+my $objdir = getcwd;
+
+getopts("d:s:cv");
+
+my $usrcdir = undef;
+if (defined($::opt_s)) {
+    $usrcdir = $::opt_s;
+}
+
 my $destPath = ".";
-if (defined($opt_d)) {
-    $destPath = $opt_d;
+if (defined($::opt_d)) {
+    $destPath = $::opt_d;
+    if ( defined($usrcdir) && substr($destPath, 0, 1) ne "/") {
+	$destPath = "$objdir/$destPath";
+    }
 }
 
-getopt("c:");
-my $copyFiles = false;
-if (defined($opt_c)) {
-    $copyFiles = true;
+my $copyFiles = 0;
+if (defined($::opt_c)) {
+    $copyFiles = 1;
 }
 
-getopt("v:");
-my $verbose = false;
-if (defined($opt_v)) {
-    $verbose = true;
+my $verbose = 0;
+if (defined($::opt_v)) {
+    $verbose = 1;
 }
 
-if ($verbose eq true) {
+if ($verbose) {
     print "make-jars "
         . ($copyFiles ? "-c " : "")
+#        . ($srcDir ? "-s $srcDir " : "")
         . "-v -d $destPath\n";
 }
 
 sub Cleanup
 {
-    while (true) {
+    while (1) {
         my $isDir = pop(@cleanupList);
         if ($isDir == undef) {
             return 0;
         }
         my $path = pop(@cleanupList);
+	#print "Cleaning up $path\n";
         if ($isDir == $IS_DIR) {
             rmdir($path) || die "can't remove dir $path: $!";
         }
@@ -50,6 +66,16 @@ sub Cleanup
             unlink($path) || die "can't remove file $path: $!";
         }
     }
+}
+
+sub zipErrorCheck($)
+{
+    my ($err) = @_;
+
+    return if ($err == 0 || $err == 12);
+
+    die ("Error invoking zip: $err\n");
+	
 }
 
 sub JarIt
@@ -60,40 +86,47 @@ sub JarIt
     if ("$dir/$jarfile" =~ /([\w\d.\-\\\/]+)[\\\/]([\w\d.\-]+)/) {
         $dir = $1;
     }
-    MkDirs($dir, ".", false);
+    
+    MkDirs($dir, ".", 0);
 
-    if ($copyFiles eq true) {
+    if ($copyFiles) {
         my $indivDir = $jarfile;
         if ($indivDir =~ /(.*).jar/) {
             $indivDir = $1;
         }
         my $indivPath = "$destPath/$indivDir";
-        MkDirs($indivPath, ".", false);
-        
+        MkDirs($indivPath, ".", 0);
+
+	my $file;
         foreach $file (split(' ', $args)) {
-            if ($verbose eq true) {
+            if ($verbose) {
                 print "adding individual file $file to dist\n";
             }
-            EnsureFileInDir("$indivPath/$file", $file, false, false);
+            EnsureFileInDir("$indivPath/$file", $file, 0, 0);
         }
         foreach $file (split(' ', $overrides)) {
-            if ($verbose eq true) {
-                print "adding individual file $file to dist\n";
+            if ($verbose) {
+                print "override: adding individual file $file to dist\n";
             }
-            EnsureFileInDir("$indivPath/$file", $file, false, true);
+            EnsureFileInDir("$indivPath/$file", $file, 0, 1);
         }
     }
 
     if (!($args eq "")) {
-        system "zip -u $destPath/$jarfile $args\n" || die "zip failed";
+	my $cwd = getcwd;
+	my $err = 0; 
+        system("zip -u $destPath/$jarfile $args") == 0 or
+	    $err = $? >> 8;
+	zipErrorCheck($err);
     }
     if (!($overrides eq "")) {
+	my $err = 0; 
         print "+++ overriding $overrides\n";
-        system "zip $destPath/$jarfile $overrides\n" || die "zip failed";
+        system("zip $destPath/$jarfile $overrides\n") == 0 or 
+	    $err = $? >> 8;
+	zipErrorCheck($err);
     }
 
-    my $cwd = cwd();
-    print "+++ made chrome $cwd => $destPath/$jarfile\n";
     Cleanup();
 }
 
@@ -105,11 +138,11 @@ sub MkDirs
         my $dir = $1;
         $path = $2;
         if (!-e $dir) {
-            if ($verbose eq true) {
+            if ($verbose) {
                 print "making dir $containingDir/$dir\n";
             }
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
-            if ($doCleanup eq true) {
+            if ($doCleanup) {
                 push(@cleanupList, "$containingDir/$dir");
                 push(@cleanupList, $IS_DIR);
             }
@@ -123,11 +156,11 @@ sub MkDirs
         my $dir = $path;
         if ($dir eq "") { return 0; } 
         if (!-e $dir) {
-            if ($verbose eq true) {
+            if ($verbose) {
                 print "making dir $containingDir/$dir\n";
             }
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
-            if ($doCleanup eq true) {
+            if ($doCleanup) {
                 push(@cleanupList, "$containingDir/$dir");
                 push(@cleanupList, $IS_DIR);
             }
@@ -138,37 +171,17 @@ sub MkDirs
 sub CopyFile
 {
     my ($from, $to, $doCleanup) = @_;
-    if ($verbose eq true) {
+    if ($verbose) {
         print "copying $from to $to\n";
     }
-    open(OUT, ">$to") || die "error: can't open '$to': $!";
-    open(IN, "<$from") || die "error: can't open '$from': $!";
-    binmode IN;
-    binmode OUT;
-    my $len;
-    my $buf;
-    while ($len = sysread(IN, $buf, 4096)) {
-        if (!defined $len) {
-            next if $! =~ /^Interrupted/;
-            die "System read error: $!\n";
-        }
-        my $offset = 0;
-        while ($len) {
-            my $written = syswrite(OUT, $buf, $len, $offset);
-            die "System write error: $!\n" unless defined $written;
-            $len -= $written;
-            $offset += $written;
-        }
-    }
-    close(IN) || die "error: can't close '$from': $!";
-    close(OUT) || die "error: can't close '$to': $!";
+    copy("$from", "$to") || die "CopyFile failed: $!\n";
 
     # fix the mod date so we don't jar everything (is this faster than just jarring everything?)
     my $atime = stat($from)->atime || die $!;
     my $mtime = stat($from)->mtime || die $!;
     utime($atime, $mtime, $to);
 
-    if ($doCleanup eq true) {
+    if ($doCleanup) {
         push(@cleanupList, "$to");
         push(@cleanupList, $IS_FILE);
     }
@@ -184,7 +197,7 @@ sub EnsureFileInDir
     my $srcStat = stat($srcPath);
     my $srcMtime = $srcStat ? $srcStat->mtime : 0;
     #print "destMtime = $destMtime, srcMtime = $srcMtime\n";
-    if (!-e $destPath || $destMtime < $srcMtime || $override eq true) {
+    if (!-e $destPath || $destMtime < $srcMtime || $override) {
         #print "copying $destPath, from $srcPath\n";
         my $dir = "";
         my $file;
@@ -201,16 +214,33 @@ sub EnsureFileInDir
         }
 
         if (!-e $file) {
-            die "error: file '$file' doesn't exist\n";
+	    if (defined($usrcdir)) {
+		if (-e "$usrcdir/$file") {
+		    $file = "$usrcdir/$file";
+		} else {
+		    die "error: file '$usrcdir/$file' doesn't exist\n";
+		}
+	    } else {
+		die "error: file '$file' doesn't exist\n";
+	    }
         }
         MkDirs($dir, ".", $doCleanup);
         CopyFile($file, $destPath, $doCleanup);
         return 1;
     }
-#    elsif ($doCleanup eq false && -e $destPath) {
+#    elsif ($doCleanup == 0 && -e $destPath) {
 #        print "!!! file $destPath already exists -- need to add '+' rule to jar.mn\n";
 #    }
     return 0;
+}
+
+if (defined($usrcdir)) {
+    if ( -e "$usrcdir" ) {
+	print "Change to $usrcdir from $objdir\n";
+	chdir($usrcdir) or die "chdir: $!\n";
+    } else {
+	die "srcdir $usrcdir does not exist!\n";
+    }
 }
 
 while (<STDIN>) {
@@ -220,6 +250,8 @@ while (<STDIN>) {
         my $jarfile = $1;
         my $args = "";
         my $overrides = "";
+	my $cwd = cwd();
+	print "+++ making chrome $cwd  => $destPath/$jarfile\n";
         while (<STDIN>) {
             if (/^\s+([\w\d.\-\\\/]+)\s*(\([\w\d.\-\\\/]+\))?$\s*/) {
                 my $dest = $1;
@@ -227,29 +259,53 @@ while (<STDIN>) {
 
                 if ( $srcPath ) {  
                     $srcPath = substr($srcPath,1,-1);
-                }
 
-                EnsureFileInDir($dest, $srcPath, true);
+		    if (defined($usrcdir)) {
+			#print "Chkpt A: Switching to $objdir\n";
+			chdir $objdir or die "chdir: $!\n";
+			$srcPath = "$usrcdir/$srcPath";
+		    }
+		}
+		EnsureFileInDir($dest, $srcPath, 1);
                 $args = "$args$dest ";
+		JarIt($destPath, $jarfile, $copyFiles, $args, $overrides);
+
+		if ($srcPath && defined($usrcdir)) {
+		    #print "Chkpt B: Switching back to $usrcdir\n";
+		    chdir $usrcdir or die "chdir: $!\n";
+		}		
             } elsif (/^\+\s+([\w\d.\-\\\/]+)\s*(\([\w\d.\-\\\/]+\))?$\s*/) {
                 my $dest = $1;
                 my $srcPath = $2;
 
                 if ( $srcPath ) {  
                     $srcPath = substr($srcPath,1,-1);
-                }
-
-                EnsureFileInDir($dest, $srcPath, true);
+		    if (defined($usrcdir)) {
+			#print "Chkpt C: Switching to $objdir\n";
+			chdir $objdir or die "chdir: $!\n";
+			$srcPath = "$usrcdir/$srcPath";
+		    }
+		}
+                EnsureFileInDir($dest, $srcPath, 1);
                 $overrides = "$overrides$dest ";
+		JarIt($destPath, $jarfile, $copyFiles, $args, $overrides);
+		if ($srcPath && defined($usrcdir)) {
+		    #print "Chkpt D: Switching back to $usrcdir\n";
+		    chdir $usrcdir or die "chdir: $!\n";
+		}		
             } elsif (/^\s*$/) {
                 # end with blank line
                 last;
             } else {
+		#print "Chkpt E\n";
+
                 JarIt($destPath, $jarfile, $copyFiles, $args, $overrides);
+
+		#print "Chkpt F\n";
+
                 goto start;
             }
         }
-        JarIt($destPath, $jarfile, $copyFiles, $args, $overrides);
 
     } elsif (/^\s*\#.*$/) {
         # skip comments
