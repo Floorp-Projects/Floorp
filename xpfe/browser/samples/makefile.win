@@ -22,6 +22,7 @@ DIRS=sampleimages
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
+	$(MAKE_INSTALL) colorpicker.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) dexanimmaster.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) dexanimdialog.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) dexparammaster.xul $(DIST)\bin\res\samples
@@ -34,6 +35,7 @@ install:: $(DLL)
         $(MAKE_INSTALL) xpmenu.xul $(DIST)\bin\res\samples
 
 clobber::
+	rm -f $(DIST)\res\samples\colorpicker.xul
 	rm -f $(DIST)\res\samples\dexanimmaster.xul
 	rm -f $(DIST)\res\samples\dexanimdialog.xul
 	rm -f $(DIST)\res\samples\dexparammaster.xul

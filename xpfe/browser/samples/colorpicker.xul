@@ -1,0 +1,28 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML -*- -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window title="Color Picker"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  align="vertical"
+  style="width:200px"
+  >
+
+<html:script>
+  function doSomethingUseful(cp)
+  {
+    var color = cp.getAttribute('color');
+    document.getElementById("input").value = color;
+    document.getElementById("mydiv").style.backgroundColor = color;
+  }
+</html:script>
+
+<colorpicker id="cp" onclick="doSomethingUseful(this);"/>
+<html:p/>
+<html:input id="input"/>
+<html:p/>
+<html:div id="mydiv" style="width:100px; height:100px; background-color:white"/>
+
+</window>
