@@ -76,6 +76,9 @@
 <!ENTITY deleteAbCmd.label                              "Delete Address Book">  
 <!ENTITY deleteCardCmd.label                            "Delete Card">  
 <!ENTITY deleteCardsCmd.label                           "Delete Selected Cards">  
+<!ENTITY deleteListCmd.label                            "Delete List">
+<!ENTITY deleteListsCmd.label                           "Delete Selected Lists">
+<!ENTITY deleteItemsCmd.label                           "Delete Selected Items">
 <!ENTITY swapFirstNameLastNameCmd.label                 "Swap First/Last Name">
 <!ENTITY swapFirstNameLastNameCmd.accesskey             "w">  
 <!ENTITY propertiesCmd.label                            "Properties...">
