@@ -2148,9 +2148,42 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIRequest *request,
           unichars = mUnicodeConversionBuffer;
         }
 
-        rv = mUnicodeDecoder->Convert(newBuf, &inputLength, unichars, &unicharLength);
-        if (NS_SUCCEEDED(rv))
-          mMsgBody.Append(unichars, unicharLength);
+        PRInt32 consumedInputLength = 0;
+        PRInt32 originalInputLength = inputLength;
+        char *inputBuffer = newBuf;
+        PRInt32 convertedOutputLength = 0;
+        PRInt32 outputBufferLength = unicharLength;
+        PRUnichar *originalOutputBuffer = unichars;
+        do 
+        {
+          rv = mUnicodeDecoder->Convert(inputBuffer, &inputLength, unichars, &unicharLength);
+          if (NS_SUCCEEDED(rv)) 
+          {
+            convertedOutputLength += unicharLength;
+            break;
+          }
+
+          // if we failed, we consume one byte, replace it with a question mark
+          // and try the conversion again.
+          unichars += unicharLength;
+          *unichars = (PRUnichar)'?';
+          unichars++;
+          unicharLength++;
+
+          mUnicodeDecoder->Reset();
+
+          inputBuffer += ++inputLength;
+          consumedInputLength += inputLength;
+          inputLength = originalInputLength - consumedInputLength;  // update input length to convert
+          convertedOutputLength += unicharLength;
+          unicharLength = outputBufferLength - unicharLength;       // update output length
+
+        } while (NS_FAILED(rv) &&
+                 (originalInputLength > consumedInputLength) && 
+                 (outputBufferLength > convertedOutputLength));
+
+        if (convertedOutputLength > 0)
+          mMsgBody.Append(originalOutputBuffer, convertedOutputLength);
       }
     }
   }
