@@ -16,6 +16,7 @@
  */
 
 #include "nsIModule.h"
+#include "nsNativeComponentLoader.h"
  
 struct nsStaticModuleInfo {
   const char      *name;

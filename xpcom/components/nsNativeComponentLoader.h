@@ -78,4 +78,18 @@ class nsNativeComponentLoader : public nsIComponentLoader {
                            const char *aNsprErrorMsg);
 };
 
+
+// Exported Function from module dll to Create the nsIModule
+#define NS_GET_MODULE_SYMBOL "NSGetModule"
+
+extern "C" NS_EXPORT nsresult PR_CALLBACK 
+NSGetModule(nsIComponentManager *aCompMgr,
+            nsIFile* location,
+            nsIModule** return_cobj);
+
+typedef nsresult (PR_CALLBACK *nsGetModuleProc)(nsIComponentManager *aCompMgr,
+                                                nsIFile* location,
+                                                nsIModule** return_cobj);
+
+
 #endif /* nsNativeComponentLoader_h__ */
