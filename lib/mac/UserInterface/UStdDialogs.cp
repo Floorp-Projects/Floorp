@@ -35,6 +35,7 @@ short	gUploadAsType = 1;	// UploadAsHook stores file type in this variable
 
 const	PaneIDT	okAlertBtnID = 900;
 const	PaneIDT	cancelAlertBtnID = 901;
+const	PaneIDT	checkConfirmChkboxID = 902;
 
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -653,10 +654,61 @@ Boolean UStdDialogs::CheckConfirm(
 	LWindow*			inOverWindow,
 	LCommander*			inSuper)
 {
+#if 0
 	// temporary UI until FE implements this function as a single dialog box
     Boolean userHasAccepted = AskOkCancel(pConfirmMessage);
     *pChecked = (XP_Bool)AskOkCancel(pCheckMessage);
     return userHasAccepted;	
+#endif
+
+	if (inSuper == NULL)
+		inSuper = LCommander::GetTopCommander();
+
+	StStdDialogHandler theHandler(WIND_CheckConfirmDialog, inSuper);
+	theHandler.SetCaption(pConfirmMessage);
+	theHandler.SetInitialDialogPosition(inOverWindow);
+	LWindow* theDialog = theHandler.GetDialog();
+
+	if ( pOKMessage.Length() )
+	{
+		LStdButton* okBtnPtr = dynamic_cast<LStdButton*>( theDialog->FindPaneByID( okAlertBtnID ) );
+		if( okBtnPtr )
+			okBtnPtr->SetDescriptor( pOKMessage );
+	}
+		
+	if ( pCancelMessage.Length() )
+	{
+		LStdButton* cancelBtnPtr = dynamic_cast<LStdButton*>( theDialog->FindPaneByID( cancelAlertBtnID ) );
+		if( cancelBtnPtr )
+			cancelBtnPtr->SetDescriptor( pCancelMessage );
+	}
+
+	
+	LStdCheckBox* checkBoxPtr = dynamic_cast<LStdCheckBox*>( theDialog->FindPaneByID( checkConfirmChkboxID ) );
+	if( checkBoxPtr )
+	{
+		if ( pCheckMessage.Length() )
+			checkBoxPtr->SetDescriptor( pCheckMessage );
+		else
+			checkBoxPtr->Hide();
+	}
+
+	MessageT theMessage = msg_Cancel;
+	if (UStdDialogs::TryToInteract())
+		{
+		theDialog->Show();
+		theMessage = theHandler.WaitUserResponse();
+		}
+	
+	// Value of checkbox only important if user selects No/Cancel
+	if (theMessage == msg_Cancel)
+		if (checkBoxPtr->GetValue())
+			*pChecked = (XP_Bool)true;
+		else
+			*pChecked = (XP_Bool)false;
+	
+	return (theMessage == msg_OK);
+
 }
 
 

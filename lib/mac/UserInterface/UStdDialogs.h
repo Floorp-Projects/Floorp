@@ -44,7 +44,8 @@ enum {
 	WIND_Resizeable,
 	WIND_OkCancelAlert,
 	WIND_BigMessageAlert,
-	WIND_MessageDialog		// for non-alert uses of FE_Alert
+	WIND_MessageDialog,		// for non-alert uses of FE_Alert
+	WIND_CheckConfirmDialog
 };
 
 
