@@ -111,7 +111,7 @@ ifdef MOZ_NETCAST
 ICONS += images/Desk_Netcaster.gif
 endif
 
-ifdef XFEPRIVDIR
+ifdef NETSCAPE_BUILD
 ANIM		= $(wildcard $(XFEPRIVDIR)/icons/anim/main/*.gif)
 else
 ANIM		= $(wildcard anim/main/*.gif)
