@@ -981,7 +981,7 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
       sheet->GetComplete(complete);
       if (!modified || !complete) {
         // Proceed on failures; at worst we'll try to create one below
-        sheet->Clone(*aSheet);
+        sheet->Clone(nsnull, nsnull, nsnull, nsnull, aSheet);
         NS_ASSERTION(complete || aSheetState != eSheetComplete,
                      "Sheet thinks it's not complete while we think it is");
       }
