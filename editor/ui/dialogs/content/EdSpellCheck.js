@@ -420,5 +420,6 @@ function onClose()
   spellChecker.UninitSpellChecker();
   SaveWindowLocation();
   window.close();
+  return true;
 }
 
