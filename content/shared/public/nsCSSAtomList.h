@@ -89,6 +89,4 @@ CSS_ATOM(rootPseudo, ":root")
 
 CSS_ATOM(xblBoundElementPseudo, ":-moz-bound-element")
 
-CSS_ATOM(universalSelector, "*")
-
 CSS_ATOM(visitedPseudo, ":visited")
