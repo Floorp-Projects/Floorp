@@ -173,58 +173,12 @@ gtk_xtbin_class_init (GtkXtBinClass *klass)
 static void
 gtk_xtbin_init (GtkXtBin *xtbin)
 {
-  static Display *xtdisplay = NULL;
-
+  xtbin->xtdisplay = NULL;
   xtbin->xtwidget = NULL;
   xtbin->parent_window = NULL;
   xtbin->xtwindow = 0;
   xtbin->x = 0;
   xtbin->y = 0;
-
-  /* Initialize the Xt toolkit */
-  if (xt_is_initialized == 0) {
-    char         *mArgv[1];
-    int           mArgc = 0;
-    XtAppContext  app_context;
-    int            cnumber;
-
-#ifdef DEBUG_XTBIN
-    printf("starting up Xt stuff\n");
-#endif
-    /*
-     * Initialize Xt stuff
-     */
-
-    XtToolkitInitialize();
-    app_context = XtCreateApplicationContext();
-    if (fallback)
-      XtAppSetFallbackResources(app_context, fallback);
-  
-    xtdisplay = XtOpenDisplay(app_context, NULL, NULL, 
-                              "Wrapper", NULL, 0, &mArgc, mArgv);
-
-    /*
-     * hook Xt event loop into the glib event loop.
-     */
-
-    /* the assumption is that gtk_init has already been called */
-    g_source_add (GDK_PRIORITY_EVENTS, TRUE, 
-                  &xt_event_funcs, NULL, xtdisplay, NULL);	
-    
-#ifdef VMS
-    cnumber = XConnectionNumber(xtdisplay);
-#else
-    cnumber = ConnectionNumber(xtdisplay);
-#endif
-    xt_event_poll_fd.fd = cnumber;
-    xt_event_poll_fd.events = G_IO_IN; 
-    xt_event_poll_fd.revents = 0;    /* hmm... is this correct? */
-
-    g_main_add_poll (&xt_event_poll_fd, G_PRIORITY_DEFAULT);
-  }
-  xt_is_initialized++; /* bump up our count here */
-
-  xtbin->xtdisplay = xtdisplay;
 }
 
 static void
@@ -239,12 +193,10 @@ gtk_xtbin_realize (GtkWidget *widget)
   Window        win;
   Widget        embeded;
 
-
   g_return_if_fail (GTK_IS_XTBIN (widget));
 
   gdk_flush();
   xtbin = GTK_XTBIN (widget);
-
 
   if (widget->allocation.x == -1 &&
       widget->allocation.y == -1 &&
@@ -370,11 +322,72 @@ gtk_xtbin_realize (GtkWidget *widget)
 GtkWidget*
 gtk_xtbin_new (GdkWindow *parent_window, String * f)
 {
-  GtkXtBin *xtbin;
+  static Display *xtdisplay = NULL;
 
+  GtkXtBin *xtbin;
   assert(parent_window != NULL);
 
   xtbin = gtk_type_new (GTK_TYPE_XTBIN);
+
+  if (!xtbin)
+    return (GtkWidget*)NULL;
+
+  /* Initialize the Xt toolkit */
+  if (xt_is_initialized == 0) {
+    char         *mArgv[1];
+    int           mArgc = 0;
+    XtAppContext  app_context;
+    int           cnumber;
+
+#ifdef DEBUG_XTBIN
+    printf("starting up Xt stuff\n");
+#endif
+    /*
+     * Initialize Xt stuff
+     */
+
+    XtToolkitInitialize();
+    app_context = XtCreateApplicationContext();
+    if (fallback)
+      XtAppSetFallbackResources(app_context, fallback);
+  
+    xtdisplay = XtOpenDisplay(app_context, NULL, NULL, 
+                              "Wrapper", NULL, 0, &mArgc, mArgv);
+
+    if (!xtdisplay) {
+      /* If XtOpenDisplay failed, we can't go any further.
+       *  Bail out.
+       */
+#ifdef DEBUG_XTBIN
+      printf("gtk_xtbin_init: XtOpenDisplay() returned NULL.\n");
+#endif
+
+      gtk_type_free (GTK_TYPE_XTBIN, xtbin);
+      return (GtkWidget *)NULL;
+    }
+
+    /*
+     * hook Xt event loop into the glib event loop.
+     */
+
+    /* the assumption is that gtk_init has already been called */
+    g_source_add (GDK_PRIORITY_EVENTS, TRUE, 
+                  &xt_event_funcs, NULL, xtdisplay, (GDestroyNotify)NULL);
+    
+#ifdef VMS
+    cnumber = XConnectionNumber(xtdisplay);
+#else
+    cnumber = ConnectionNumber(xtdisplay);
+#endif
+    xt_event_poll_fd.fd = cnumber;
+    xt_event_poll_fd.events = G_IO_IN; 
+    xt_event_poll_fd.revents = 0;    /* hmm... is this correct? */
+
+    g_main_add_poll (&xt_event_poll_fd, G_PRIORITY_DEFAULT);
+    xt_is_initialized++; /* bump up our count here */
+  }
+
+  xtbin->xtdisplay = xtdisplay;
   xtbin->parent_window = parent_window;
   if (f)
     fallback = f;
