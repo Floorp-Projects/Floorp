@@ -629,7 +629,9 @@ RDFUtil_GetPTFolder()
 PR_PUBLIC_API(void)
 RDFUtil_SetPTFolder(RDF_Resource container)
 {
+  /*
   RDFUtil_SetFirstInstance( gNavCenter->RDF_PersonalToolbarFolderCategory, container);
+  */
 }
 
 

@@ -177,10 +177,12 @@ parseNextBkToken (RDFFile f, char* token)
 	      addSlotValue(f, f->lastItem, gCoreVocab->RDF_name, 
 			   copyString(token), RDF_STRING_TYPE, true);
 	}
+/*
       if (startsWith("Personal Toolbar", token) && (containerp(f->lastItem)))
 	nlocalStoreAssert(gLocalStore, f->lastItem, gCoreVocab->RDF_instanceOf, 
 			  gNavCenter->RDF_PersonalToolbarFolderCategory, 
 			  RDF_RESOURCE_TYPE, true);
+*/
     } else if (f->status == IN_ITEM_DESCRIPTION) {
       addDescription(f, f->lastItem, token);
     }

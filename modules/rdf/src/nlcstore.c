@@ -85,7 +85,7 @@ makeRDFDBURL(char* directory, char* name)
 void
 readInBookmarksOnInit(RDFFile f)
 {
-  RDF_Resource ptFolder;
+  /* RDF_Resource ptFolder; */
   PRFileDesc *fp;
   int32 len;
   char buf[512];
@@ -99,6 +99,7 @@ readInBookmarksOnInit(RDFFile f)
   {
 	/* if no personal toolbar was specified in bookmark file, create one */
 
+	/*
 	ptFolder = nlocalStoreGetSlotValue(f->db, gNavCenter->RDF_PersonalToolbarFolderCategory,
 	gCoreVocab->RDF_instanceOf, RDF_RESOURCE_TYPE, true, true);
 
@@ -115,6 +116,7 @@ readInBookmarksOnInit(RDFFile f)
 	RDFUtil_SetPTFolder(ptFolder);
 	}
 	}
+	*/
   }
   PR_Close(fp);
   freeMem(f->line);

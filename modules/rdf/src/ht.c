@@ -514,7 +514,7 @@ htrdfNotifFunc (RDF_Event ns, void* pdata)
 				}
 			}
 		}
-		else
+		else if (aev->s != gCoreVocab->RDF_instanceOf)
 		{
 			if (aev->s == gNavCenter->RDF_HTMLURL)
 			{
@@ -555,7 +555,7 @@ htrdfNotifFunc (RDF_Event ns, void* pdata)
 				}
 			}
 		}
-		else
+		else if (uev->s != gCoreVocab->RDF_instanceOf)
 		{
 			if (uev->s == gNavCenter->RDF_HTMLURL)
 			{
@@ -1368,6 +1368,21 @@ HT_AddToContainer (HT_Resource container, char *url, char *optionalTitle)
 		htSetBookmarkAddDateToNow(r);
 		RDF_Assert(db, r, gCoreVocab->RDF_parent, container->node, RDF_RESOURCE_TYPE);
 		htLookInCacheForMetaTags(url);
+	}
+}
+
+
+
+PR_PUBLIC_API(void)
+HT_LayoutComplete(MWContext *cx, char *url)
+{
+	XP_ASSERT(cx != NULL);
+	XP_ASSERT(url != NULL);
+
+	if ((cx != NULL) && (url != NULL))
+	{
+		/* if url exists in RDF graph, then get any META tags
+		   for this document from the context, and save them */
 	}
 }
 
@@ -2228,7 +2243,7 @@ destroyViewInt (HT_Resource r, PRBool saveOpenState)
 PR_PUBLIC_API(HT_Error)
 HT_DeleteView (HT_View view)
 {
-	HT_Column		column, nextColumn;
+	HT_Column		nextColumn;
 	HT_View			*viewList;
 	HT_Pane			pane;
 	HT_Resource		**r;
@@ -2253,18 +2268,18 @@ HT_DeleteView (HT_View view)
 		view->itemList = NULL;
 	}
 
-	column = view->columns;					/* delete columns */
-	while (column != NULL)
+	while (view->columns != NULL)				/* delete columns */
 	{
-		nextColumn = column->next;
-		sendColumnNotification (view, column->token, column->tokenType, HT_EVENT_COLUMN_DELETE);
-		if (column->name != NULL)
+		nextColumn = view->columns->next;
+		sendColumnNotification (view, view->columns->token,
+			view->columns->tokenType, HT_EVENT_COLUMN_DELETE);
+		if (view->columns->name != NULL)
 		{
-			freeMem(column->name);
-			column->name = NULL;
+			freeMem(view->columns->name);
+			view->columns->name = NULL;
 		}
-		freeMem(column);
-		column = nextColumn;
+		freeMem(view->columns);
+		view->columns = nextColumn;
 	}
 	view->columns = NULL;
 
@@ -2964,7 +2979,7 @@ HT_DeleteColumnCursor(HT_Cursor cursor)
 PR_PUBLIC_API(void)
 HT_SetColumnOrder(HT_View view, void *srcColToken, void *destColToken, PRBool afterDestFlag)
 {
-	HT_Column	*columnList, *srcCol = NULL, *destCol = NULL;
+	HT_Column	*columnList, *srcCol = NULL, *destCol = NULL, temp;
 
 	XP_ASSERT(view != NULL);
 	XP_ASSERT(srcColToken != NULL);
@@ -2986,6 +3001,7 @@ HT_SetColumnOrder(HT_View view, void *srcColToken, void *destColToken, PRBool af
 		}
 		if ((srcCol != NULL) && (destCol != NULL))
 		{
+			temp = *srcCol;
 			*srcCol = (*srcCol)->next;
 			if (afterDestFlag == TRUE)
 			{
@@ -2994,8 +3010,8 @@ HT_SetColumnOrder(HT_View view, void *srcColToken, void *destColToken, PRBool af
 			}
 			else
 			{
-				(*srcCol)->next = *destCol;
-				*destCol = *srcCol;
+				temp->next = *destCol;
+				*destCol = temp;
 			}
 			sendColumnNotification(view, (*srcCol)->token,
 				(*srcCol)->tokenType, HT_EVENT_COLUMN_REORDER);
@@ -3547,6 +3563,8 @@ htIsMenuCmdEnabled(HT_Pane pane, HT_MenuCmd menuCmd,
 			break;
 
 			case	HT_CMD_SET_TOOLBAR_FOLDER:
+			return(false);
+			/*
 			if (multSelection == true)		return(false);
 			if (node == NULL)			return(false);
 			if (!HT_IsContainer(node))		return(false);
@@ -3557,6 +3575,7 @@ htIsMenuCmdEnabled(HT_Pane pane, HT_MenuCmd menuCmd,
 			if (node->view->pane->personaltoolbar == true)
 								return(false);
 			if (!HT_IsLocalData(node))		return(false);
+			*/
 			break;
 
 			case	HT_CMD_SET_BOOKMARK_MENU:
@@ -5404,6 +5423,8 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 	return(canEditFlag);
 }
 
+
+
 PR_PUBLIC_API(PRBool)
 HT_InNavigationMode(HT_View view)
 {
@@ -5426,6 +5447,8 @@ HT_InNavigationMode(HT_View view)
 
 	return PR_TRUE;
 }
+
+
 	
 PR_PUBLIC_API(HT_Error)
 HT_ToggleTreeMode(HT_View view)
@@ -5465,6 +5488,8 @@ HT_ToggleTreeMode(HT_View view)
 	return result;
 }
 
+
+
 PR_PUBLIC_API(char*)
 HT_GetTreeStateForButton(HT_Resource node)
 {
@@ -5477,6 +5502,8 @@ HT_GetTreeStateForButton(HT_Resource node)
 
 	return "Popup";
 }
+
+
 	
 PR_PUBLIC_API(HT_Error)
 HT_SetTreeStateForButton(HT_Resource node, char* state)
