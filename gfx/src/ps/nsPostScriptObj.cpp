@@ -617,16 +617,13 @@ FILE *f;
 
   fprintf(f, "] /isolatin1encoding exch def\n");
 
-  // Procedure to reencode and invert a font
+  // Procedure to reencode a font
   fprintf(f, "%s",
       "/Mfr {\n"
       "  findfont dup length dict\n"
       "  begin\n"
       "    {1 index /FID ne {def} {pop pop} ifelse} forall\n"
       "    /Encoding isolatin1encoding def\n"
-      // Generate a new fontmatrix with the Y scale inverted
-      "    1 -1 matrix scale /FontMatrix load\n"
-      "    matrix concatmatrix /FontMatrix exch def\n"
       "    currentdict\n"
       "  end\n"
       "  definefont pop\n"
@@ -1975,18 +1972,19 @@ FILE *f;
       mPrintSetup->num_copies);
   }
   fprintf(f,"/pagelevel save def\n");
-  // Rescale the coordinate system from points to twips, with the Y
-  // axis increasing downwards.
-  fprintf(f, "%g -%g scale\n",
+  // Rescale the coordinate system from points to twips.
+  fprintf(f, "%g %g scale\n",
     1.0 / TWIPS_PER_POINT_FLOAT, 1.0 / TWIPS_PER_POINT_FLOAT);
-  // Move the origin to the top left of the printable area.
+  // Move the origin to the bottom left of the printable region.
   if (mPrintContext->prSetup->landscape){
-    fprintf(f, "-90 rotate %d %d translate\n",
-      mPrintContext->prSetup->left, mPrintContext->prSetup->top);
+    fprintf(f, "90 rotate %d -%d translate\n",
+      mPrintContext->prSetup->left,
+      mPrintContext->prSetup->height + mPrintContext->prSetup->top);
   }
   else {
-    fprintf(f, "%d -%d translate\n", mPrintContext->prSetup->left,
-      mPrintContext->prSetup->bottom + mPrintContext->prSetup->height);
+    fprintf(f, "%d %d translate\n",
+      mPrintContext->prSetup->left,
+      mPrintContext->prSetup->bottom);
   }
   // Try to turn on automatic stroke adjust
   fputs("true Msetstrokeadjust\n", f);
@@ -2517,178 +2515,133 @@ nsPostScriptObj::translate(nscoord x, nscoord y)
 }
 
 
-/** ---------------------------------------------------
- *  See documentation in nsPostScriptObj.h
- *  Special notes, this on window will blow up since we can not get the bits in a DDB
- *	@update 2/1/99 dwc
- */
-void 
-nsPostScriptObj::grayimage(
-  nsIImage *aImage, const nsRect& sRect, const nsRect& dRect)
-{
-  PRInt32 rowData, x, y;
-  PRInt32 width, height, bytewidth, cbits, n;
-  PRUint8 *theBits, *curline;
-  PRBool isTopToBottom;
-  PRInt32 sRow, eRow, rStep; 
+  /** ---------------------------------------------------
+   *  Draw an image. dRect may be thought of as a hole in the document
+   *  page, through which we can see another page containing the image.
+   *  sRect is the portion of the image page which is visible through the
+   *  hole in the document. iRect is the portion of the image page which
+   *  contains the image represented by anImage. sRect and iRect may be
+   *  at arbitrary positions relative to each other.
+   *
+   *    @update 11/25/2003 kherron
+   *    @param anImage  Image to draw
+   *    @param dRect    Rectangle describing where on the page the image
+   *                    should appear. Units are twips.
+   *    @param sRect    Rectangle describing the portion of the image that
+   *                    appears on the page, i.e. the part of the image's
+   *                    coordinate space that maps to dRect.
+   *    @param iRect    Rectangle describing the portion of the image's
+   *                    coordinate space covered by the image pixel data.
+   */
 
-  // No point in scaling images to 0--some printers choke on it (bug 191684)
-  if (dRect.width == 0 || dRect.height == 0) {
+void
+nsPostScriptObj::draw_image(nsIImage *anImage,
+    const nsRect& sRect, const nsRect& iRect, const nsRect& dRect)
+{
+  FILE *f = mPrintContext->prSetup->tmpBody;
+  
+  // If a final image dimension is 0 pixels, just return (see bug 191684)
+  if ((0 == dRect.width) || (0 == dRect.height)) {
     return;
   }
 
-  aImage->LockImagePixels(PR_FALSE);
-  theBits = aImage->GetBits();
+  anImage->LockImagePixels(PR_FALSE);
+  PRUint8 *theBits = anImage->GetBits();
 
   /* image data might not be available (ex: spacer image) */
   if (!theBits)
   {
-    aImage->UnlockImagePixels(PR_FALSE);
+    anImage->UnlockImagePixels(PR_FALSE);
     return;
   }
 
-  rowData = aImage->GetLineStride();
-  height = aImage->GetHeight();
-  width = aImage->GetWidth();
-  bytewidth = 3 * sRect.width;
-  cbits = 8;
+  // Save the current graphic state and define a PS variable that
+  // can hold one line of pixel data.
+  fprintf(f, "gsave\n/rowdata %d string def\n",
+     mPrintSetup->color ? iRect.width * 3 : iRect.width);
+ 
+  // Translate the coordinate origin to the corner of the rectangle where
+  // the image should appear, set up a clipping region, and scale the
+  // coordinate system to the image's final size.
+  translate(dRect.x, dRect.y);
+  box(0, 0, dRect.width, dRect.height);
+  clip();
+  fprintf(f, "%d %d scale\n", dRect.width, dRect.height);
 
-  XL_SET_NUMERIC_LOCALE();
+  // Describe how the pixel data is to be interpreted: pixels per row,
+  // rows, and bits per pixel (per component in color).
+  fprintf(f, "%d %d 8 ", iRect.width, iRect.height);
 
-  FILE *f = mPrintContext->prSetup->tmpBody;
-  fprintf(f, "gsave\n");
-  fprintf(f, "/rowdata %d string def\n", bytewidth/3);
-  // Translate to the lower left corner of the image
-  translate(dRect.x, dRect.y + dRect.height);
-  // Set the image scale, keeping in mind the Y axis is inverted
-  fprintf(f, "%d %d scale\n", dRect.width, -dRect.height);
-  fprintf(f, "%d %d %d ", sRect.width, sRect.height, cbits);
-  fprintf(f, "[ %d 0 0 %d 0 0 ]\n", sRect.width, sRect.height);
-  fprintf(f, " { currentfile rowdata readhexstring pop }\n");
-  fprintf(f, " image\n");
+  // Output the transformation matrix for the image. This is a bit tricky
+  // to understand. PS image-drawing operations involve two transformation
+  // matrices: (1) A Transformation matrix associated with the image
+  // describes how to map the pixel data (width x height) onto a unit square,
+  // and (2) the document's TM maps the unit square to the desired size and
+  // position. The image TM is technically an inverse TM, i.e. it describes
+  // how to map the unit square onto the pixel array.
+  //
+  // sRect and dRect define the same rectangle, only in different coordinate
+  // systems. Following the translate & scale operations above, the origin
+  // is at [sRect.x, sRect.y]. The "real" origin of image space is thus at
+  // [-sRect.x, -sRect.y] and the pixel data should start at
+  // [-sRect.x + iRect.x, -sRect.y + iRect.y]. These are negated because the
+  // TM is supposed to be an inverse TM.
+  nscoord tmTX = sRect.x - iRect.x;
+  nscoord tmTY = sRect.y - iRect.y;
 
-  n = 0;
-  if ( ( isTopToBottom = aImage->GetIsRowOrderTopToBottom()) == PR_TRUE ) {
-    sRow = sRect.y + sRect.height - 1;
-    eRow = sRect.y;
-    rStep = -1;
-  } else {
-    sRow = sRect.y;
-    eRow = sRect.y + sRect.height;
-    rStep = 1;
+  // In document space, the target rectangle is [dRect.width,
+  // dRect.height]; in image space it's [sRect.width, sRect.height]. So
+  // the proper scale factor is [1/sRect.width, 1/sRect.height], but
+  // again, the output should be an inverse TM so these are inverted.
+  nscoord tmSX = sRect.width;
+  nscoord tmSY = sRect.height;
+
+  // If the image data is in the wrong order, invert the TM, causing
+  // the image to be drawn inverted.
+  if (!anImage->GetIsRowOrderTopToBottom()) {
+    tmTY += tmSY;
+    tmSY = -tmSY;
   }
+  fprintf(f, "[ %d 0 0 %d %d %d ]\n", tmSX, tmSY, tmTX, tmTY);
 
-  y = sRow;
-  while ( 1 ) {
-    curline = theBits + y * rowData + 3 * sRect.x;
-    for(x=0; x < bytewidth; x+=3) {
-      if (n > 71) {
-          fprintf(mPrintContext->prSetup->tmpBody, "\n");
-          n = 0;
+  // Output the data-reading procedure and the appropriate image command.
+  fputs(" { currentfile rowdata readhexstring pop }", f);
+  if (mPrintSetup->color)
+    fputs(" false 3 colorimage\n", f);
+  else
+    fputs(" image\n", f);
+
+  // Output the image data. The entire image is written, even
+  // if it's partially clipped in the document.
+  int outputCount = 0;
+  PRInt32 bytesPerRow = anImage->GetLineStride();
+
+  for (nscoord y = 0; y < iRect.height; y++) {
+    // calculate the starting point for this row of pixels
+    PRUint8 *row = theBits                // Pixel buffer start
+      + y * bytesPerRow;                  // Rows already output
+
+    for (nscoord x = 0; x < iRect.width; x++) {
+      PRUint8 *pixel = row + (x * 3);
+      if (mPrintSetup->color)
+        outputCount +=
+          fprintf(f, "%02x%02x%02x", pixel[0], pixel[1], pixel[2]);
+      else
+        outputCount +=
+          fprintf(f, "%02x", NS_RGB_TO_GRAY(pixel[0], pixel[1], pixel[2]));
+      if (outputCount >= 72) {
+        fputc('\n', f);
+        outputCount = 0;
       }
-      int gray = NS_RGB_TO_GRAY(curline[0], curline[1], curline[2]);
-      fprintf(mPrintContext->prSetup->tmpBody, "%02x", (int) (0xff & gray));
-      curline+=3; 
-      n += 2;
     }
-    y += rStep;
-    if ( isTopToBottom == PR_TRUE && y < eRow ) break;
-    if ( isTopToBottom == PR_FALSE && y >= eRow ) break;
   }
-  aImage->UnlockImagePixels(PR_FALSE);
+  anImage->UnlockImagePixels(PR_FALSE);
 
-  fprintf(mPrintContext->prSetup->tmpBody, "\ngrestore\n");
-  XL_RESTORE_NUMERIC_LOCALE();
-
+  // Free the PS data buffer and restore the previous graphics state.
+  fputs("\n/rowdata where { /rowdata undef } if\n", f);
+  fputs("grestore\n", f);
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsPostScriptObj.h
- *  Special notes, this on window will blow up since we can not get the bits in a DDB
- *	@update 2/1/99 dwc
- */
-void 
-nsPostScriptObj::colorimage(
-  nsIImage *aImage, const nsRect& sRect, const nsRect& dRect)
-{
-  PRInt32 rowData, x, y;
-  PRInt32 width, height, bytewidth, cbits, n;
-  PRUint8 *theBits, *curline;
-  PRBool isTopToBottom;
-  PRInt32 sRow, eRow, rStep; 
-
-  if(mPrintSetup->color == PR_FALSE) {
-    this->grayimage(aImage, sRect, dRect);
-    return;
-  }
-
-  // No point in scaling images to 0--some printers choke on it (bug 191684)
-  if (dRect.width == 0 || dRect.height == 0) {
-    return;
-  }
-
-  aImage->LockImagePixels(PR_FALSE);
-  theBits = aImage->GetBits();
-
-  /* image data might not be available (ex: spacer image) */
-  if (!theBits)
-  {
-    aImage->UnlockImagePixels(PR_FALSE);
-    return;
-  }
-
-  rowData = aImage->GetLineStride();
-  height = aImage->GetHeight();
-  width = aImage->GetWidth();
-  bytewidth = 3 * sRect.width;
-  cbits = 8;
-
-  XL_SET_NUMERIC_LOCALE();
-
-  FILE *f = mPrintContext->prSetup->tmpBody;
-  fprintf(f, "gsave\n");
-  fprintf(f, "/rowdata %d string def\n", bytewidth);
-  // Translate to the lower left corner of the image
-  translate(dRect.x, dRect.y + dRect.height);
-  // Set the image scale, keeping in mind the Y axis is inverted
-  fprintf(f, "%d %d scale\n", dRect.width, -dRect.height);
-  fprintf(f, "%d %d %d ", sRect.width, sRect.height, cbits);
-  fprintf(f, "[ %d 0 0 %d 0 0 ]\n", sRect.width, sRect.height);
-  fprintf(f, " { currentfile rowdata readhexstring pop }\n");
-  fprintf(f, " false 3 colorimage\n");
-
-  n = 0;
-  if ( ( isTopToBottom = aImage->GetIsRowOrderTopToBottom()) == PR_TRUE ) {
-    sRow = sRect.y + sRect.height - 1;
-    eRow = sRect.y;
-    rStep = -1;
-  } else {
-    sRow = sRect.y;
-    eRow = sRect.y + sRect.height;
-    rStep = 1;
-  }
-
-  y = sRow;
-  while ( 1 ) {
-    curline = theBits + y * rowData + 3 * sRect.x;
-    for(x=0; x < bytewidth; x++) {
-      if (n > 71) {
-          fprintf(f, "\n");
-          n = 0;
-      }
-      fprintf(f, "%02x", (int) (0xff & *curline++));
-      n += 2;
-    }
-    y += rStep;
-    if ( isTopToBottom == PR_TRUE && y < eRow ) break;
-    if ( isTopToBottom == PR_FALSE && y >= eRow ) break;
-  }
-  aImage->UnlockImagePixels(PR_FALSE);
-
-  fprintf(f, "\ngrestore\n");
-  XL_RESTORE_NUMERIC_LOCALE();
-
-}
 
 /** ---------------------------------------------------
  *  See documentation in nsPostScriptObj.h

@@ -184,15 +184,18 @@ nsRenderingContextPS::Init(nsIDeviceContext* aContext)
   NS_ENSURE_TRUE(nsnull != aContext, NS_ERROR_NULL_POINTER);
 
   mContext = aContext;
+  mContext->GetDevUnitsToAppUnits(mP2T);
 
   mPSObj = NS_REINTERPRET_CAST(nsDeviceContextPS *, mContext.get())->GetPrintContext();
 
   NS_ENSURE_TRUE(nsnull != mPSObj, NS_ERROR_NULL_POINTER);
 
-  // Set the transformation matrix to identity. Baseline coordinate
-  // conversions are performed by the PS interpreter.
-  mTranMatrix->SetToIdentity();
-  mContext->GetDevUnitsToAppUnits(mP2T);
+  // Layout's coordinate system places the origin at top left with Y
+  // increasing down; PS places the origin at bottom left with Y increasing
+  // upward. Both systems use twips for units, so no resizing is needed.
+  mTranMatrix->SetToScale(1.0, -1.0);
+  mTranMatrix->AddTranslation(0, -mPSObj->mPrintSetup->height);
+
   return NS_OK;
 }
 
@@ -1251,8 +1254,7 @@ nsRenderingContextPS::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, 
 NS_IMETHODIMP
 nsRenderingContextPS::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect)
 {
-  nsRect dr;
-  nsRect sr;
+  nsRect sr, ir, dr;
 
   // Transform the destination rectangle.
   dr = *aDestRect;
@@ -1273,7 +1275,8 @@ nsRenderingContextPS::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrc
   nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
   if (!img) return NS_ERROR_FAILURE;
 
-  mPSObj->colorimage(img, sr, dr);
+  iframe->GetRect(ir);
+  mPSObj->draw_image(img, sr, ir, dr);
   return NS_OK;
 }
 

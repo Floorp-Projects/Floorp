@@ -346,22 +346,25 @@ public:
   void graphics_restore();
 
   /** ---------------------------------------------------
-   *  output a color postscript image
-   *	@update 9/30/2003 kherron
-   *	@param aImage   The image to draw
-   *	       sRect    The portion of the image to draw
-   *	       dRect    Where on the page to place the image
+   *  Draw an image. dRect may be thought of as a hole in the document
+   *  page, through which we can see another page containing the image.
+   *  sRect is the portion of the image page which is visible through the 
+   *  hole in the document. iRect is the portion of the image page which
+   *  contains the image represented by anImage. sRect and iRect may be
+   *  at arbitrary positions relative to each other.
+   *
+   *    @update 11/25/2003 kherron
+   *    @param anImage  Image to draw
+   *    @param dRect    Rectangle describing where on the page the image
+   *                    should appear. Units are twips.
+   *    @param sRect    Rectangle describing the portion of the image that
+   *                    appears on the page, i.e. the part of the image's
+   *                    coordinate space that maps to dRect.
+   *    @param iRect    Rectangle describing the portion of the image's
+   *                    coordinate space covered by the image pixel data.
    */
-  void colorimage(nsIImage *aImage, const nsRect& sRect, const nsRect& dRect);
-
-  /** ---------------------------------------------------
-   *  output a grayscale postscript image
-   *	@update 9/30/2003 kherron
-   *	@param aImage   The image to draw
-   *	       sRect    The portion of the image to draw
-   *	       dRect    Where on the page to place the image
-   */
-  void grayimage(nsIImage *aImage, const nsRect& sRect, const nsRect& dRect);
+  void draw_image(nsIImage *anImage,
+      const nsRect& sRect, const nsRect& iRect, const nsRect& dRect);
 
   /** ---------------------------------------------------
    *  ???
