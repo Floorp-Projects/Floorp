@@ -86,7 +86,7 @@ nsMappedAttributes::Clone(PRBool aWillAddAttr)
   return new (mAttrCount + extra) nsMappedAttributes(*this);
 }
 
-void* nsMappedAttributes::operator new(size_t aSize, PRUint32 aAttrCount)
+void* nsMappedAttributes::operator new(size_t aSize, PRUint32 aAttrCount) CPP_THROW_NEW
 {
   NS_ASSERTION(aAttrCount > 0, "zero-attribute nsMappedAttributes requested");
 
