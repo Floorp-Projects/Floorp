@@ -56,6 +56,7 @@
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "rdf.h"
+#include "nsIInterfaceRequestor.h"
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -83,19 +84,19 @@ protected:
   // in the script context _after_ the XUL doc has been embedded into
   // content viewer. We'll know that this has happened once we receive
   // an OnStartRequest() notification
-  nsIContentViewerContainer* mContainer; // [WEAK]
+  nsISupports* mContainer; // [WEAK]
 
   nsCString mBaseURL;
 
   nsCOMPtr<nsIRDFDataSource> mDataSource;
 
-  nsHTTPIndex(nsIContentViewerContainer* aContainer);
+  nsHTTPIndex(nsISupports* aContainer);
   nsresult Init(nsIURI* aBaseURL);
   virtual ~nsHTTPIndex();
 
 public:
 
-  static nsresult Create(nsIURI* aBaseURI, nsIContentViewerContainer* aContainer, nsIHTTPIndex** aResult);
+  static nsresult Create(nsIURI* aBaseURI, nsISupports* aContainer, nsIHTTPIndex** aResult);
 
   // nsISupports interface
   NS_DECL_ISUPPORTS
@@ -150,7 +151,7 @@ protected:
 
   nsVoidArray mFormat;
 
-  nsHTTPIndexParser(nsHTTPIndex* aHTTPIndex, nsIContentViewerContainer* aContainer);
+  nsHTTPIndexParser(nsHTTPIndex* aHTTPIndex, nsISupports* aContainer);
   nsresult Init();
 
   virtual ~nsHTTPIndexParser();
@@ -159,11 +160,11 @@ protected:
   // the global object when we get an OnStartRequest() notification
   // (at this point, we'll know that the XUL document has been
   // embedded and the global object won't get clobbered.
-  nsIContentViewerContainer* mContainer;
+  nsISupports* mContainer;
 
 public:
   static nsresult Create(nsHTTPIndex* aHTTPIndex,
-                         nsIContentViewerContainer* aContainer,
+                         nsISupports* aContainer,
                          nsIStreamListener** aResult);
 
   NS_DECL_ISUPPORTS
@@ -190,9 +191,7 @@ nsHTTPIndexParser::gFieldTable[] = {
   { nsnull,           nsHTTPIndexParser::ParseLiteral, nsnull },
 };
 
-
-
-nsHTTPIndexParser::nsHTTPIndexParser(nsHTTPIndex* aHTTPIndex, nsIContentViewerContainer* aContainer)
+nsHTTPIndexParser::nsHTTPIndexParser(nsHTTPIndex* aHTTPIndex, nsISupports* aContainer)
   : mHTTPIndex(aHTTPIndex),
     mContainer(aContainer)
 {
@@ -267,7 +266,7 @@ nsHTTPIndexParser::~nsHTTPIndexParser()
 
 nsresult
 nsHTTPIndexParser::Create(nsHTTPIndex* aHTTPIndex,
-                          nsIContentViewerContainer* aContainer,
+                          nsISupports* aContainer,
                           nsIStreamListener** aResult)
 {
   NS_PRECONDITION(aHTTPIndex != nsnull, "null ptr");
@@ -323,7 +322,8 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 {
   nsresult rv;
 
-  if (mContainer) {
+  nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mContainer));
+  if (requestor) {
     // We need to undo the AddRef() on the nsHTTPIndex object that
     // happened in nsDirectoryViewerFactory::CreateInstance(). We'll
     // stuff it into an nsCOMPtr (because we _know_ it'll get release
@@ -335,7 +335,7 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 
     // Now get the content viewer container's script object.
     nsCOMPtr<nsIScriptContextOwner> contextowner;
-    rv = mContainer->QueryCapability(nsCOMTypeInfo<nsIScriptContextOwner>::GetIID(),
+    rv = requestor->GetInterface(NS_GET_IID(nsIScriptContextOwner),
                                      getter_AddRefs(contextowner));
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get script context owner from document");
@@ -802,9 +802,7 @@ nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** 
 ////////////////////////////////////////////////////////////////////////
 // nsHTTPIndex implementation
 
-
-
-nsHTTPIndex::nsHTTPIndex(nsIContentViewerContainer* aContainer)
+nsHTTPIndex::nsHTTPIndex(nsISupports* aContainer)
   : mContainer(aContainer)
 {
   NS_INIT_REFCNT();
@@ -839,7 +837,7 @@ nsHTTPIndex::Init(nsIURI* aBaseURL)
 
 
 nsresult
-nsHTTPIndex::Create(nsIURI* aBaseURL, nsIContentViewerContainer* aContainer, nsIHTTPIndex** aResult)
+nsHTTPIndex::Create(nsIURI* aBaseURL, nsISupports* aContainer, nsIHTTPIndex** aResult)
 {
   nsHTTPIndex* result = new nsHTTPIndex(aContainer);
   if (! result)

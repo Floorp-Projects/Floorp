@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsIContentViewer.h"
@@ -36,6 +37,7 @@
 #include "nsIBrowserWindow.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsIInterfaceRequestor.h"
 
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
@@ -159,7 +161,7 @@ public:
 
   nsIWidget* mWindow;
   nsIDocument* mDocument;
-  nsIContentViewerContainer* mContainer;
+  nsCOMPtr<nsISupports> mContainer;
   nsIChannel* mChannel;
   pluginInstanceOwner *mOwner;
   PRBool mEnableRendering;
@@ -236,7 +238,6 @@ PluginViewerImpl::~PluginViewerImpl()
     NS_RELEASE(mWindow);
   }
   NS_IF_RELEASE(mDocument);
-  NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mChannel);
 }
 
@@ -258,17 +259,17 @@ PluginViewerImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
 NS_IMETHODIMP
 PluginViewerImpl::SetContainer(nsIContentViewerContainer* aContainer)
 {
-  NS_IF_RELEASE(mContainer);
   mContainer = aContainer;
-  NS_IF_ADDREF(mContainer);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PluginViewerImpl::GetContainer(nsIContentViewerContainer*& aResult)
 {
-  aResult = mContainer;
-  NS_IF_ADDREF(mContainer);
+   if(mContainer)
+      return CallQueryInterface(mContainer, &aResult);
+   else
+      aResult = nsnull;
   return NS_OK;
 }
 
@@ -308,13 +309,16 @@ PluginViewerImpl::StartLoad(nsIChannel* channel, nsIStreamListener*& aResult)
   aResult = nsnull;
 
   // Only instantiate the plugin if our container can host it
-  nsIPluginHost* host;
-  nsresult rv = mContainer->QueryCapability(kIPluginHostIID, (void **)&host);
+  nsCOMPtr<nsIPluginHost> host;
+  nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mContainer));
+  NS_ENSURE_TRUE(requestor, NS_ERROR_FAILURE);
+
+  nsresult rv = requestor->GetInterface(NS_GET_IID(nsIPluginHost), 
+   getter_AddRefs(host));
   if (NS_OK == rv) {
     nsRect r;
     mWindow->GetClientBounds(r);
     rv = CreatePlugin(host, nsRect(0, 0, r.width, r.height), aResult);
-    NS_RELEASE(host);
   }
 
   return rv;
