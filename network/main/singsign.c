@@ -305,7 +305,7 @@ si_Randomize(char * password) {
 PRIVATE si_SignonURLStruct *
 si_GetURL(char * URLName) {
     XP_List * list_ptr = si_signon_list;
-    si_SignonURLStruct * URL;
+    si_SignonURLStruct * url;
     char *strippedURLName = 0;
 
     if (!URLName) {
@@ -314,10 +314,10 @@ si_GetURL(char * URLName) {
     }
 
     strippedURLName = si_StrippedURL(URLName);
-    while((URL = (si_SignonURLStruct *) XP_ListNextObject(list_ptr))!=0) {
-	if(URL->URLName && !XP_STRCMP(strippedURLName, URL->URLName)) {
+    while((url = (si_SignonURLStruct *) XP_ListNextObject(list_ptr))!=0) {
+	if(url->URLName && !XP_STRCMP(strippedURLName, url->URLName)) {
 	    XP_FREE(strippedURLName);
-	    return URL;
+	    return url;
 	}
     }
     XP_FREE(strippedURLName);
@@ -327,7 +327,7 @@ si_GetURL(char * URLName) {
 /* Remove a user node from a given URL node */
 PUBLIC Bool
 SI_RemoveUser(char *URLName, char *userName, Bool save) {
-    si_SignonURLStruct * URL;
+    si_SignonURLStruct * url;
     si_SignonUserStruct * user;
     si_SignonDataStruct * data;
     XP_List * user_ptr;
@@ -341,15 +341,15 @@ SI_RemoveUser(char *URLName, char *userName, Bool save) {
     si_lock_signon_list();
 
     /* get URL corresponding to URLName (or first URL if URLName is NULL) */
-    URL = si_GetURL(URLName);
-    if (!URL) {
+    url = si_GetURL(URLName);
+    if (!url) {
 	/* URL not found */
 	si_unlock_signon_list();
 	return FALSE;
     }
 
     /* free the data in each node of the specified user node for this URL */
-    user_ptr = URL->signonUser_list;
+    user_ptr = url->signonUser_list;
 
     if (userName == NULL) {
 
@@ -383,12 +383,12 @@ SI_RemoveUser(char *URLName, char *userName, Bool save) {
     XP_ListDestroy(user->signonData_list);
 
     /* free the user node */
-    XP_ListRemoveObject(URL->signonUser_list, user);
+    XP_ListRemoveObject(url->signonUser_list, user);
 
     /* remove this URL if it contains no more users */
-    if (XP_ListCount(URL->signonUser_list) == 0) {
-	XP_FREE(URL->URLName);
-	XP_ListRemoveObject(si_signon_list, URL);
+    if (XP_ListCount(url->signonUser_list) == 0) {
+	XP_FREE(url->URLName);
+	XP_ListRemoveObject(si_signon_list, url);
     }
 
     /* write out the change to disk */
@@ -404,7 +404,7 @@ SI_RemoveUser(char *URLName, char *userName, Bool save) {
 /* Determine if a specified url/user exists */
 PRIVATE Bool
 si_CheckForUser(char *URLName, char *userName) {
-    si_SignonURLStruct * URL;
+    si_SignonURLStruct * url;
     si_SignonUserStruct * user;
     si_SignonDataStruct * data;
     XP_List * user_ptr;
@@ -418,15 +418,15 @@ si_CheckForUser(char *URLName, char *userName) {
     si_lock_signon_list();
 
     /* get URL corresponding to URLName */
-    URL = si_GetURL(URLName);
-    if (!URL) {
+    url = si_GetURL(URLName);
+    if (!url) {
 	/* URL not found */
 	si_unlock_signon_list();
 	return FALSE;
     }
 
     /* find the specified user */
-    user_ptr = URL->signonUser_list;
+    user_ptr = url->signonUser_list;
     while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
 	data_ptr = user->signonData_list;
 	while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
@@ -449,30 +449,30 @@ si_CheckForUser(char *URLName, char *userName) {
  */
 PRIVATE si_SignonUserStruct*
 si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
-    si_SignonURLStruct* URL;
+    si_SignonURLStruct* url;
     si_SignonUserStruct* user;
     si_SignonDataStruct* data;
     XP_List * data_ptr=0;
     XP_List * user_ptr=0;
 
     /* get to node for this URL */
-    URL = si_GetURL(URLName);
-    if (URL != NULL) {
+    url = si_GetURL(URLName);
+    if (url != NULL) {
 
 	/* node for this URL was found */
 	int16 user_count;
-	user_ptr = URL->signonUser_list;
+	user_ptr = url->signonUser_list;
 	if ((user_count = XP_ListCount(user_ptr)) == 1) {
 
 	    /* only one set of data exists for this URL so select it */
 	    user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
-	    URL->firsttime_chosing_user = FALSE;
-	    URL->chosen_user = user;
+	    url->firsttime_chosing_user = FALSE;
+	    url->chosen_user = user;
 
 	} else if (pickFirstUser) {
 	    user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
 
-	} else if (URL->firsttime_chosing_user) {
+	} else if (url->firsttime_chosing_user) {
 	    /* multiple users for this URL so a choice needs to be made */
 	    char ** list;
 	    char ** list2;
@@ -506,10 +506,10 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
                     user_count = 0; /* user didn't select, so use first one */
 		}
 		user = users[user_count]; /* this is the selected item */
-		URL->chosen_user = user;
+		url->chosen_user = user;
 		/* item selected is now most-recently used, put at head of list */
-		XP_ListRemoveObject(URL->signonUser_list, user);
-		XP_ListAddObject(URL->signonUser_list, user);
+		XP_ListRemoveObject(url->signonUser_list, user);
+		XP_ListAddObject(url->signonUser_list, user);
 	    } else {
 		user = NULL;
 	    }
@@ -528,10 +528,10 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
 	     * NET_GetURL could be made which will call SI_LogNewURL
 	     * which sets firsttime_chosing_user to TRUE
 	     */
-	    URL->firsttime_chosing_user = FALSE;
+	    url->firsttime_chosing_user = FALSE;
 
 	} else {
-	    user = URL->chosen_user;
+	    user = url->chosen_user;
 	}
     } else {
 	user = NULL;
@@ -549,7 +549,7 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
 PRIVATE si_SignonUserStruct*
 si_GetUserForChangeForm(MWContext *context, char* URLName, int messageNumber)
 {
-    si_SignonURLStruct* URL;
+    si_SignonURLStruct* url;
     si_SignonUserStruct* user;
     si_SignonDataStruct * data;
     XP_List * user_ptr = 0;
@@ -557,11 +557,11 @@ si_GetUserForChangeForm(MWContext *context, char* URLName, int messageNumber)
     char *message = 0;
 
     /* get to node for this URL */
-    URL = si_GetURL(URLName);
-    if (URL != NULL) {
+    url = si_GetURL(URLName);
+    if (url != NULL) {
 
 	/* node for this URL was found */
-	user_ptr = URL->signonUser_list;
+	user_ptr = url->signonUser_list;
 	while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
 	    char *strippedURLName = si_StrippedURL(URLName);
 	    data_ptr = user->signonData_list;
@@ -576,8 +576,8 @@ si_GetUserForChangeForm(MWContext *context, char* URLName, int messageNumber)
 		 * to the head of the user list so that it can be favored for
 		 * re-use the next time this form is encountered
 		 */
-		XP_ListRemoveObject(URL->signonUser_list, user);
-		XP_ListAddObject(URL->signonUser_list, user);
+		XP_ListRemoveObject(url->signonUser_list, user);
+		XP_ListAddObject(url->signonUser_list, user);
 		si_signon_list_changed = TRUE;
 		si_SaveSignonDataLocked(NULL);
 		XP_FREE(message);
@@ -732,7 +732,7 @@ si_OkToSave(MWContext *context, char *URLName, char *userName) {
     if (!FE_CheckConfirm(context,
 	    XP_GetString(MK_SIGNON_NAG),
 	    XP_GetString(MK_SIGNON_REMEMBER),
-            0,0,
+	    0,0,
 	    &remember_checked)) {
 	if (remember_checked) {
 	    si_PutReject(strippedURLName, userName, TRUE);
@@ -757,7 +757,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
     char * name;
     char * value;
     Bool added_to_list = FALSE;
-    si_SignonURLStruct * URL;
+    si_SignonURLStruct * url;
     si_SignonUserStruct * user;
     si_SignonDataStruct * data;
     int j;
@@ -801,11 +801,11 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
     }
 
     /* find node in signon list having the same URL */
-    if ((URL = si_GetURL(URLName)) == NULL) {
+    if ((url = si_GetURL(URLName)) == NULL) {
 
         /* doesn't exist so allocate new node to be put into signon list */
-	URL = XP_NEW(si_SignonURLStruct);
-	if (!URL) {
+	url = XP_NEW(si_SignonURLStruct);
+	if (!url) {
 	    if (save) {
 		si_unlock_signon_list();
 	    }
@@ -813,19 +813,19 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
 	}
 
 	/* fill in fields of new node */
-	URL->URLName = si_StrippedURL(URLName);
-	if (!URL->URLName) {
-	    XP_FREE(URL);
+	url->URLName = si_StrippedURL(URLName);
+	if (!url->URLName) {
+	    XP_FREE(url);
 	    if (save) {
 		si_unlock_signon_list();
 	    }
 	    return;
 	}
 
-	URL->signonUser_list = XP_ListNew();
-	if(!URL->signonUser_list) {
-	    XP_FREE(URL->URLName);
-	    XP_FREE(URL);
+	url->signonUser_list = XP_ListNew();
+	if(!url->signonUser_list) {
+	    XP_FREE(url->URLName);
+	    XP_FREE(url);
 	}
 
 	/* put new node into signon list */
@@ -835,31 +835,31 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
 	list_ptr = si_signon_list;
 	while((tmp_URL_ptr =
 		(si_SignonURLStruct *) XP_ListNextObject(list_ptr))!=0) {
-	    if(PL_strcmp(URL->URLName,tmp_URL_ptr->URLName)<0) {
+	    if(PL_strcmp(url->URLName,tmp_URL_ptr->URLName)<0) {
 		XP_ListInsertObject
-		    (si_signon_list, tmp_URL_ptr, URL);
+		    (si_signon_list, tmp_URL_ptr, url);
 		added_to_list = TRUE;
 		break;
 	    }
 	}
 	if (!added_to_list) {
-	    XP_ListAddObjectToEnd (si_signon_list, URL);
+	    XP_ListAddObjectToEnd (si_signon_list, url);
 	}
     }
 #else
 	/* add it to the end of the list */
-	XP_ListAddObjectToEnd (si_signon_list, URL);
+	XP_ListAddObjectToEnd (si_signon_list, url);
 #endif
 
     /* initialize state variables in URL node */
-    URL->chosen_user = NULL;
-    URL->firsttime_chosing_user = TRUE;
+    url->chosen_user = NULL;
+    url->firsttime_chosing_user = TRUE;
 
     /*
      * see if a user node with data list matching new data already exists
      * (password fields will not be checked for in this matching)
      */
-    user_ptr = URL->signonUser_list;
+    user_ptr = url->signonUser_list;
     while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
 	data_ptr = user->signonData_list;
 	j = 0;
@@ -939,8 +939,8 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
 	     * to the head of the user list so that it can be favored for
 	     * re-use the next time this form is encountered
 	     */
-	    XP_ListRemoveObject(URL->signonUser_list, user);
-	    XP_ListAddObject(URL->signonUser_list, user);
+	    XP_ListRemoveObject(url->signonUser_list, user);
+	    XP_ListAddObject(url->signonUser_list, user);
 
 	    /* return */
 	    if (save) {
@@ -1014,12 +1014,12 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
 	 * we will be reversing the order when reading in.
 	 */
     if (save) {
-	XP_ListAddObject(URL->signonUser_list, user);
+	XP_ListAddObject(url->signonUser_list, user);
 	si_signon_list_changed = TRUE;
 	si_SaveSignonDataLocked(NULL);
 	si_unlock_signon_list();
     } else {
-	XP_ListAddObjectToEnd(URL->signonUser_list, user);
+	XP_ListAddObjectToEnd(url->signonUser_list, user);
     }
 }
 
@@ -1186,7 +1186,7 @@ si_SaveSignonDataLocked(char * filename) {
     XP_List * list_ptr;
     XP_List * user_ptr;
     XP_List * data_ptr;
-    si_SignonURLStruct * URL;
+    si_SignonURLStruct * url;
     si_SignonUserStruct * user;
     si_SignonDataStruct * data;
     si_Reject * reject;
@@ -1252,15 +1252,15 @@ si_SaveSignonDataLocked(char * filename) {
     /* write out each URL node */
     if((si_signon_list)) {
 	list_ptr = si_signon_list;
-	while((URL = (si_SignonURLStruct *)
+	while((url = (si_SignonURLStruct *)
 		XP_ListNextObject(list_ptr)) != NULL) {
 
-	    user_ptr = URL->signonUser_list;
+	    user_ptr = url->signonUser_list;
 
 	    /* write out each user node of the URL node */
 	    while((user = (si_SignonUserStruct *)
 		    XP_ListNextObject(user_ptr)) != NULL) {
-		XP_FileWrite(URL->URLName, -1, fp);
+		XP_FileWrite(url->URLName, -1, fp);
 		XP_FileWrite(LINEBREAK, -1, fp);
 
 		data_ptr = user->signonData_list;
@@ -1434,7 +1434,7 @@ SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
 
 /*
  * if we leave a form without submitting it, the URL's state variable
- * will not get reset.  So we test for that case now and reset the
+ * will not get reset.	So we test for that case now and reset the
  * state variables if necessary
  */
 PUBLIC void
@@ -1456,7 +1456,7 @@ PUBLIC void
 SI_RestoreOldSignonData
     (MWContext *context, LO_FormElementStruct *form_element, char* URLName)
 {
-    si_SignonURLStruct* URL;
+    si_SignonURLStruct* url;
     si_SignonUserStruct* user;
     si_SignonDataStruct* data;
     XP_List * data_ptr=0;
@@ -1468,8 +1468,8 @@ SI_RestoreOldSignonData
 
     /* get URL */
     si_lock_signon_list();
-    URL = si_GetURL(URLName);
-    lastURL = URL;
+    url = si_GetURL(URLName);
+    lastURL = url;
 
     /* see if this is first item in form and is a password */
     si_TagCount++;
@@ -1509,8 +1509,8 @@ SI_RestoreOldSignonData
     if (si_TagCount == 1) {
 	user = si_GetUser(context, URLName, FALSE);
     } else {
-	if (URL) {
-	    user = URL->chosen_user;
+	if (url) {
+	    user = url->chosen_user;
 	} else {
 	    user = NULL;
 	}
@@ -1893,11 +1893,11 @@ PR_STATIC_CALLBACK(PRBool)
 si_SignonInfoDialogDone(XPDialogState* state, char** argv, int argc,
 						unsigned int button)
 {
-    XP_List *URL_ptr;
+    XP_List *url_ptr;
     XP_List *user_ptr;
     XP_List *data_ptr;
     XP_List *reject_ptr;
-    si_SignonURLStruct *URL;
+    si_SignonURLStruct *url;
     si_SignonURLStruct *URLToDelete = 0;
     si_SignonUserStruct* user;
     si_SignonUserStruct* userToDelete = 0;
@@ -1931,9 +1931,9 @@ si_SignonInfoDialogDone(XPDialogState* state, char** argv, int argc,
      * that would destroy "user_ptr". So we do a lazy deletion
      */
     userNumber = 0;
-    URL_ptr = si_signon_list;
-    while ((URL = (si_SignonURLStruct *) XP_ListNextObject(URL_ptr))) {
-	user_ptr = URL->signonUser_list;
+    url_ptr = si_signon_list;
+    while ((url = (si_SignonURLStruct *) XP_ListNextObject(url_ptr))) {
+	user_ptr = url->signonUser_list;
 	while ((user = (si_SignonUserStruct *)
 		XP_ListNextObject(user_ptr))) {
 	    if (si_InSequence(gone, userNumber)) {
@@ -1946,7 +1946,7 @@ si_SignonInfoDialogDone(XPDialogState* state, char** argv, int argc,
 		    SI_RemoveUser(URLToDelete->URLName, data->value, TRUE);
 		}
 		userToDelete = user;
-		URLToDelete = URL;
+		URLToDelete = url;
 	    }
 	    userNumber++;
 	}
@@ -2009,11 +2009,11 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     char *buffer = (char*)XP_ALLOC(BUFLEN);
     char *buffer2 = 0;
     int g = 0, signonNum, count;
-    XP_List *URL_ptr;
+    XP_List *url_ptr;
     XP_List *user_ptr;
     XP_List *data_ptr;
     XP_List *reject_ptr;
-    si_SignonURLStruct *URL;
+    si_SignonURLStruct *url;
     si_SignonUserStruct * user;
     si_SignonDataStruct* data;
     si_Reject *reject;
@@ -2065,10 +2065,10 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     si_lock_signon_list();
 
     /* fill in initial 0's for deleted_signons and deleted_rejects arrays */
-    URL_ptr = si_signon_list;
+    url_ptr = si_signon_list;
     i = 0;
-    while ( (URL=(si_SignonURLStruct *) XP_ListNextObject(URL_ptr)) ) {
-	user_ptr = URL->signonUser_list;
+    while ( (url=(si_SignonURLStruct *) XP_ListNextObject(url_ptr)) ) {
+	user_ptr = url->signonUser_list;
 	while ( (user=(si_SignonUserStruct *) XP_ListNextObject(user_ptr)) ) {
             /* this actually gives one 0 too many but that doesn't hurt */
 	    g += PR_snprintf(buffer+g, BUFLEN-g,
@@ -2192,10 +2192,10 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     PR_FREEIF(heading);
 
     /* generate the html for the list of signons */
-    URL_ptr = si_signon_list;
+    url_ptr = si_signon_list;
     signonNum = 0;
-    while ( (URL=(si_SignonURLStruct *) XP_ListNextObject(URL_ptr)) ) {
-	user_ptr = URL->signonUser_list;
+    while ( (url=(si_SignonURLStruct *) XP_ListNextObject(url_ptr)) ) {
+	user_ptr = url->signonUser_list;
 	while ( (user=(si_SignonUserStruct *) XP_ListNextObject(user_ptr)) ) {
 	    /* first data item for user is the username */
 	    data_ptr = user->signonData_list;
@@ -2209,7 +2209,7 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 "        );\n"
 "      }\n",
 	    signonNum, signonNum,
-	    URL->URLName,
+	    url->URLName,
 	    data->value
 	    );
 	}
