@@ -53,6 +53,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-proxy-manual.xul \
 		$(srcdir)/pref-publish.xul \
 		$(srcdir)/pref-mousewheel.xul \
+		$(srcdir)/pref-mousewheel.js \
 		$(srcdir)/pref-cookies.xul \
 		$(srcdir)/pref-wallet.xul \
 		$(srcdir)/pref-search.js \

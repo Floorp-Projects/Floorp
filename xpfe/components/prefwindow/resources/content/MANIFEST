@@ -30,6 +30,7 @@ pref.js
 pref.xul
 preftree.xul
 pref-mousewheel.xul
+pref-mousewheel.js
 fontScalingOverlay.xul
 pref-wallet.xul
 prefutilities.js
