@@ -18,19 +18,26 @@ James Clark. All Rights Reserved.
 Contributor(s):
 */
 
-#include <stdlib.h>
-#include <string.h>
-
 #include "xmldef.h"
-#include "hashtable.h"
 
-#ifdef XML_UNICODE
-#define keycmp wcscmp
-#else
-#define keycmp strcmp
+#ifdef XML_UNICODE_WCHAR_T
+#ifndef XML_UNICODE
+#define XML_UNICODE
+#endif
 #endif
 
+#include "hashtable.h"
+
 #define INIT_SIZE 64
+
+static
+int keyeq(KEY s1, KEY s2)
+{
+  for (; *s1 == *s2; s1++, s2++)
+    if (*s1 == 0)
+      return 1;
+  return 0;
+}
 
 static
 unsigned long hash(KEY s)
@@ -59,7 +66,7 @@ NAMED *lookup(HASH_TABLE *table, KEY name, size_t createSize)
     for (i = h & (table->size - 1);
          table->v[i];
          i == 0 ? i = table->size - 1 : --i) {
-      if (keycmp(name, table->v[i]->name) == 0)
+      if (keyeq(name, table->v[i]->name))
 	return table->v[i];
     }
     if (!createSize)

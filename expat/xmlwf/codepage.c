@@ -21,6 +21,9 @@ Contributor(s):
 #include "codepage.h"
 
 #ifdef WIN32
+#define STRICT 1
+#define WIN32_LEAN_AND_MEAN 1
+
 #include <windows.h>
 
 int codepageMap(int cp, int *map)

@@ -70,6 +70,19 @@ protocol or null if there is none specified. */
 XML_Parser XMLPARSEAPI
 XML_ParserCreate(const XML_Char *encoding);
 
+/* Constructs a new parser and namespace processor.  Element type names
+and attribute names that belong to a namespace will be expanded;
+unprefixed attribute names are never expanded; unprefixed element type
+names are expanded only if there is a default namespace. The expanded
+name is the concatenation of the namespace URI, the namespace separator character,
+and the local part of the name.  If the namespace separator is '\0' then
+the namespace URI and the local part will be concatenated without any
+separator.  When a namespace is not declared, the name and prefix will be
+passed through without expansion. */
+
+XML_Parser XMLPARSEAPI
+XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
+
 
 /* atts is array of name/value pairs, terminated by 0;
    names and values are 0 terminated. */
@@ -91,6 +104,12 @@ typedef void (*XML_ProcessingInstructionHandler)(void *userData,
 						 const XML_Char *target,
 						 const XML_Char *data);
 
+/* data is 0 terminated */
+typedef void (*XML_CommentHandler)(void *userData, const XML_Char *data);
+
+typedef void (*XML_StartCdataSectionHandler)(void *userData);
+typedef void (*XML_EndCdataSectionHandler)(void *userData);
+
 /* This is called for any characters in the XML document for
 which there is no applicable handler.  This includes both
 characters that are part of markup which is of a kind that is
@@ -100,10 +119,9 @@ for which no handler has been supplied. The characters are passed
 exactly as they were in the XML document except that
 they will be encoded in UTF-8.  Line boundaries are not normalized.
 Note that a byte order mark character is not passed to the default handler.
-If a default handler is set, internal entity references
-are not expanded. There are no guarantees about
-how characters are divided between calls to the default handler:
-for example, a comment might be split between multiple calls. */
+There are no guarantees about how characters are divided between calls
+to the default handler: for example, a comment might be split between
+multiple calls. */
 
 typedef void (*XML_DefaultHandler)(void *userData,
 				   const XML_Char *s,
@@ -131,6 +149,19 @@ typedef void (*XML_NotationDeclHandler)(void *userData,
 					const XML_Char *systemId,
 					const XML_Char *publicId);
 
+/* When namespace processing is enabled, these are called once for
+each namespace declaration. The call to the start and end element
+handlers occur between the calls to the start and end namespace
+declaration handlers. For an xmlns attribute, prefix will be null.
+For an xmlns="" attribute, uri will be null. */
+
+typedef void (*XML_StartNamespaceDeclHandler)(void *userData,
+					      const XML_Char *prefix,
+					      const XML_Char *uri);
+
+typedef void (*XML_EndNamespaceDeclHandler)(void *userData,
+					    const XML_Char *prefix);
+
 /* This is called for a reference to an external parsed general entity.
 The referenced entity is not automatically parsed.
 The application can parse it immediately or later using
@@ -145,10 +176,9 @@ it may be null.
 The publicId argument is the public identifier as specified in the entity declaration,
 or null if none was specified; the whitespace in the public identifier
 will have been normalized as required by the XML spec.
-The openEntityNames argument is a space-separated list of the names of the entities
-that are open for the parse of this entity (including the name of the referenced
-entity); this can be passed as the openEntityNames argument to
-XML_ExternalEntityParserCreate; openEntityNames is valid only until the handler
+The context argument specifies the parsing context in the format
+expected by the context argument to
+XML_ExternalEntityParserCreate; context is valid only until the handler
 returns, so if the referenced entity is to be parsed later, it must be copied.
 The handler should return 0 if processing should not continue because of
 a fatal error in the handling of the external entity.
@@ -157,7 +187,7 @@ error.
 Note that unlike other handlers the first argument is the parser, not userData. */
 
 typedef int (*XML_ExternalEntityRefHandler)(XML_Parser parser,
-					    const XML_Char *openEntityNames,
+					    const XML_Char *context,
 					    const XML_Char *base,
 					    const XML_Char *systemId,
 					    const XML_Char *publicId);
@@ -237,10 +267,28 @@ XML_SetCharacterDataHandler(XML_Parser parser,
 void XMLPARSEAPI
 XML_SetProcessingInstructionHandler(XML_Parser parser,
 				    XML_ProcessingInstructionHandler handler);
+void XMLPARSEAPI
+XML_SetCommentHandler(XML_Parser parser,
+                      XML_CommentHandler handler);
+
+void XMLPARSEAPI
+XML_SetCdataSectionHandler(XML_Parser parser,
+			   XML_StartCdataSectionHandler start,
+			   XML_EndCdataSectionHandler end);
+
+/* This sets the default handler and also inhibits expansion of internal entities.
+The entity reference will be passed to the default handler. */
 
 void XMLPARSEAPI
 XML_SetDefaultHandler(XML_Parser parser,
 		      XML_DefaultHandler handler);
+
+/* This sets the default handler but does not inhibit expansion of internal entities.
+The entity reference will not be passed to the default handler. */
+
+void XMLPARSEAPI
+XML_SetDefaultHandlerExpand(XML_Parser parser,
+		            XML_DefaultHandler handler);
 
 void XMLPARSEAPI
 XML_SetUnparsedEntityDeclHandler(XML_Parser parser,
@@ -251,8 +299,19 @@ XML_SetNotationDeclHandler(XML_Parser parser,
 			   XML_NotationDeclHandler handler);
 
 void XMLPARSEAPI
+XML_SetNamespaceDeclHandler(XML_Parser parser,
+			    XML_StartNamespaceDeclHandler start,
+			    XML_EndNamespaceDeclHandler end);
+
+void XMLPARSEAPI
 XML_SetExternalEntityRefHandler(XML_Parser parser,
 				XML_ExternalEntityRefHandler handler);
+
+/* If a non-null value for arg is specified here, then it will be passed
+as the first argument to the external entity ref handler instead
+of the parser object. */
+void XMLPARSEAPI
+XML_SetExternalEntityRefHandlerArg(XML_Parser, void *arg);
 
 void XMLPARSEAPI
 XML_SetUnknownEncodingHandler(XML_Parser parser,
@@ -261,10 +320,7 @@ XML_SetUnknownEncodingHandler(XML_Parser parser,
 
 /* This can be called within a handler for a start element, end element,
 processing instruction or character data.  It causes the corresponding
-markup to be passed to the default handler.
-Within the expansion of an internal entity, nothing will be passed
-to the default handler, although this usually will not happen since
-setting a default handler inhibits expansion of internal entities. */
+markup to be passed to the default handler. */
 void XMLPARSEAPI XML_DefaultCurrent(XML_Parser parser);
 
 /* This value is passed as the userData argument to callbacks. */
@@ -273,6 +329,13 @@ XML_SetUserData(XML_Parser parser, void *userData);
 
 /* Returns the last value set by XML_SetUserData or null. */
 #define XML_GetUserData(parser) (*(void **)(parser))
+
+/* This is equivalent to supplying an encoding argument
+to XML_CreateParser. It must not be called after XML_Parse
+or XML_ParseBuffer. */
+
+int XMLPARSEAPI
+XML_SetEncoding(XML_Parser parser, const XML_Char *encoding);
 
 /* If this function is called, then the parser will be passed
 as the first argument to callbacks instead of userData.
@@ -307,10 +370,13 @@ int XMLPARSEAPI
 XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
 
 /* Creates an XML_Parser object that can parse an external general entity;
-openEntityNames is a space-separated list of the names of the entities that are open
-for the parse of this entity (including the name of this one);
-encoding is the externally specified encoding,
+context is a '\0'-terminated string specifying the parse context;
+encoding is a '\0'-terminated string giving the name of the externally specified encoding,
 or null if there is no externally specified encoding.
+The context string consists of a sequence of tokens separated by formfeeds (\f);
+a token consisting of a name specifies that the general entity of the name
+is open; a token of the form prefix=uri specifies the namespace for a particular
+prefix; a token of the form =uri specifies the default namespace.
 This can be called at any point after the first call to an ExternalEntityRefHandler
 so longer as the parser has not yet been freed.
 The new parser is completely independent and may safely be used in a separate thread.
@@ -318,7 +384,7 @@ The handlers and userData are initialized from the parser argument.
 Returns 0 if out of memory.  Otherwise returns a new XML_Parser object. */
 XML_Parser XMLPARSEAPI
 XML_ExternalEntityParserCreate(XML_Parser parser,
-			       const XML_Char *openEntityNames,
+			       const XML_Char *context,
 			       const XML_Char *encoding);
 
 enum XML_Error {
