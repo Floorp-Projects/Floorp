@@ -134,13 +134,15 @@ int main(int argc, char **argv)
     inFile = 0;
     outFile = 0;
     progName = strrchr(argv[0], '/');
+    if (!progName)
+	progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
 
     /* Parse command line arguments */
     optstate = PL_CreateOptState(argc, argv, "i:o:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
-	  case '?':
+	  default:
 	    Usage(progName);
 	    break;
 
@@ -163,6 +165,8 @@ int main(int argc, char **argv)
 	    break;
 	}
     }
+    if (status == PL_OPT_BAD)
+	Usage(progName);
     if (!inFile) {
 #if defined(WIN32)
 	/* If we're going to read binary data from stdin, we must put stdin
@@ -170,7 +174,7 @@ int main(int argc, char **argv)
 	*/
 
 	int smrv = _setmode(_fileno(stdin), _O_BINARY);
-	if (int smrv == -1) {
+	if (smrv == -1) {
 	    fprintf(stderr,
 	    "%s: Cannot change stdin to binary mode. Use -i option instead.\n",
 	            progName);
