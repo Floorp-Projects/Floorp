@@ -135,6 +135,12 @@ MimeInlineTextHTMLSanitized_parse_eof (MimeObject *obj, PRBool abort_p)
 #ifdef DEBUG_BenB
 printf("parse_eof\n");
 #endif
+
+  if (obj->closed_p)
+    return 0;
+  int status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
+  if (status < 0) 
+    return status;
   MimeInlineTextHTMLSanitized *textHTMLSan =
                                        (MimeInlineTextHTMLSanitized *) obj;
 
@@ -142,12 +148,12 @@ printf("parse_eof\n");
 printf(" cbp: %d\n", textHTMLSan->complete_buffer);
 printf(" closed_p: %s\n", obj->closed_p?"true":"false");
 #endif
-  if (obj->closed_p || !textHTMLSan || !textHTMLSan->complete_buffer)
+  if (!textHTMLSan || !textHTMLSan->complete_buffer)
   {
 #ifdef DEBUG_BenB
 printf("/parse_eof (early exit)\n");
 #endif
-    return -1;
+    return 0;
   }
 #ifdef DEBUG_BenB
 printf(" E1\n");
@@ -184,15 +190,13 @@ printf(" E6\n");
   /* That function doesn't work correctly, if the first META tag is no
      charset spec. (It assumes that it's on its own line.)
      Most likely not fatally wrong, however. */
-  int status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_line(
+  status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_line(
                              NS_CONST_CAST(char*, resultCStr.get()),
                              resultCStr.Length(),
                              obj);
 #ifdef DEBUG_BenB
 printf(" E7\n");
 #endif
-  if (status < 0)
-    return status;
 
 #ifdef DEBUG_BenB
 printf(" E8\n");
@@ -203,7 +207,8 @@ printf(" E8\n");
 #ifdef DEBUG_BenB
 printf("/parse_eof\n");
 #endif
-  return ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
+
+  return status;
 }
 
 void
@@ -264,7 +269,11 @@ printf("Can't output: %s\n", line);
     return -1;
   }
 
-  (textHTMLSan->complete_buffer)->Append(NS_ConvertUTF8toUCS2(line));
+  nsCString linestr(line, length);
+  NS_ConvertUTF8toUCS2 line_ucs2(linestr.get());
+  if (length && line_ucs2.IsEmpty())
+    line_ucs2.AssignWithConversion(linestr.get());
+  (textHTMLSan->complete_buffer)->Append(line_ucs2);
 
 #ifdef DEBUG_BenB
 printf("l ");
