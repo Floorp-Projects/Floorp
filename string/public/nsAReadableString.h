@@ -1284,7 +1284,7 @@ inline
 nsPromiseConcatenation<CharT>
 operator+( const nsPromiseConcatenation<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
-    return nsPromiseConcatenation<CharT>(lhs, rhs, lhs.GetFragmentIdentifierMask());
+    return nsPromiseConcatenation<CharT>(lhs, rhs, lhs.GetFragmentIdentifierMask()<<1);
   }
 
 template <class CharT>
