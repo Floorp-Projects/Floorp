@@ -17,7 +17,6 @@ function doEngineClick(node)
 
 		resultsTree.setAttribute("style", "height: 70%; width: 100%;");
 		contentArea.setAttribute("style", "height: 100; width: 100%;");
-		html = "<HTML><BODY></BODY></HTML>\n";
 	}
 	else
 	{
@@ -49,12 +48,16 @@ function doEngineClick(node)
 		}
 	}
 
-	if (html)
+	if (html != "")
 	{
 		var doc = window.frames[0].document;
 		doc.open("text/html", "replace");
 		doc.writeln(html);
 		doc.close();
+	}
+	else
+	{
+		window.frames[0].document.location = "default.htm";
 	}
 
 }
