@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
-#include "nsBookmarksService.h"
 #include "nsDirectoryViewer.h"
 #include "rdf.h"
 #include "nsTimeBomb.h"
@@ -50,6 +49,7 @@
 #include "nsRDFCID.h"
 #ifndef MOZ_PHOENIX
 #include "nsAutoComplete.h"
+#include "nsBookmarksService.h"
 #include "nsGlobalHistory.h"
 #include "nsUrlbarHistory.h"
 #include "nsDownloadManager.h"
@@ -69,7 +69,6 @@
 #include "nsCURILoader.h"
 
 // Factory constructors
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(LocalSearchDataSource, Init)
@@ -81,6 +80,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
 #ifndef MOZ_PHOENIX
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)

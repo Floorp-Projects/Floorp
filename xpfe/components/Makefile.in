@@ -27,7 +27,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS	= \
-			bookmarks \
 			directory \
 			filepicker \
 			find \
@@ -46,7 +45,13 @@ DIRS	= \
 			$(NULL)
 
 ifndef MOZ_PHOENIX
-DIRS += autocomplete history urlbarhistory download-manager
+DIRS += \
+		autocomplete \
+		bookmarks \
+		download-manager \
+		history \
+		urlbarhistory \
+		$(NULL)
 endif
 
 ifdef MOZ_ENABLE_XREMOTE
