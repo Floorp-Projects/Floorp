@@ -216,6 +216,23 @@ MaiWidget::CreateAndCache(nsIAccessible *aAcc)
     return retWidget;
 }
 
+void
+MaiWidget::ChildrenChange(AtkChildrenChange *event)
+{
+    MaiWidget *maiChild;
+    if (event && event->child &&
+        (maiChild = CreateAndCache(event->child))) {
+        //update the specified child, but now use the easiest way.
+        g_hash_table_destroy(mChildren);
+        mChildren = g_hash_table_new(g_direct_hash, NULL);
+    }
+    else {
+        //update whole child list
+        g_hash_table_destroy(mChildren);
+        mChildren = g_hash_table_new(g_direct_hash, NULL);
+    }
+}
+
 GType
 MaiWidget::GetMaiAtkType(void)
 {

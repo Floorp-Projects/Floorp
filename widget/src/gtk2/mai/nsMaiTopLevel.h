@@ -64,7 +64,7 @@ public:
     static MaiTopLevel *CreateAndCache(nsIAccessible *aAcc);
 
 private:
-    MaiObject *CreateMaiObjectFor(nsIAccessible* aAccessible);
+    MaiWidget *CreateMaiWidgetFor(nsIAccessible* aAccessible);
     static AtkStateType TranslateAState(PRUint32 aAccState);
 };
 
