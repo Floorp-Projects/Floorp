@@ -14,6 +14,8 @@
  *
  * The Original Code is Mac OSX New Mail Notification Code..
  *
+ * The Initial Developer of the Original Code is
+ * The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
