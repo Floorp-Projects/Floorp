@@ -1089,6 +1089,15 @@ XULDocumentImpl::~XULDocumentImpl()
       mCSSLoader->DropDocumentReference();
     }
     
+    PRInt32 i;
+    for (i = 0; i < mObservers.Count(); i++) {
+        nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(i);
+        observer->DocumentWillBeDestroyed(this);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+          i--;
+        }
+    }
+
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(kCommandUpdaterAtom);
         NS_IF_RELEASE(kEventsAtom);
@@ -2135,7 +2144,7 @@ XULDocumentImpl::AttributeChanged(nsIContent* aElement,
     if (nameSpaceID == kNameSpaceID_HTML) {
         if ((aAttribute == kIdAtom) || (aAttribute == kRefAtom)) {
 
-            rv = mResources.Enumerate(RemoveElementsFromMapByContent, nsnull);
+            rv = mResources.Enumerate(RemoveElementsFromMapByContent, aElement);
             if (NS_FAILED(rv)) return rv;
 
             // That'll have removed _both_ the 'ref' and 'id' entries from
@@ -2158,23 +2167,22 @@ XULDocumentImpl::AttributeChanged(nsIContent* aElement,
     // notified the observer to ensure that any frames that are
     // caching information (e.g., the tree widget and the 'open'
     // attribute) will notice things properly.
-    if (nameSpaceID == kNameSpaceID_XUL) {
-        if (aAttribute == kOpenAtom) {
-            nsAutoString open;
-            rv = aElement->GetAttribute(kNameSpaceID_None, kOpenAtom, open);
-            if (NS_FAILED(rv)) return rv;
+    if ((nameSpaceID == kNameSpaceID_XUL) && (aAttribute == kOpenAtom)) {
+        nsAutoString open;
+        rv = aElement->GetAttribute(kNameSpaceID_None, kOpenAtom, open);
+        if (NS_FAILED(rv)) return rv;
 
-            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (open.Equals("true"))) {
-                OpenWidgetItem(aElement);
-            }
-            else {
-                CloseWidgetItem(aElement);
-            }
+        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (open.Equals("true"))) {
+            OpenWidgetItem(aElement);
         }
-        else if (aAttribute == kRefAtom) {
-            RebuildWidgetItem(aElement);
+        else {
+            CloseWidgetItem(aElement);
         }
     }
+    else if (aAttribute == kRefAtom) {
+        RebuildWidgetItem(aElement);
+    }
+
 
     // Finally, see if there is anything we need to persist in the
     // localstore.
