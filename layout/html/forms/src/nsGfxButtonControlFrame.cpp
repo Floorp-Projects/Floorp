@@ -28,6 +28,10 @@
 #include "nsISupportsArray.h"
 #include "nsINameSpaceManager.h"
 
+// Saving PresState
+#include "nsIPresState.h"
+#include "nsIHTMLContent.h"
+
 const nscoord kSuggestedNotSet = -1;
 
 nsGfxButtonControlFrame::nsGfxButtonControlFrame()
@@ -456,14 +460,17 @@ nsGfxButtonControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
 NS_IMETHODIMP
 nsGfxButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  } else if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
-    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;
-    return NS_OK;
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+  if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIAnonymousContentCreator*, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIStatefulFrame*, this);
+  } else {
+    return nsHTMLButtonControlFrame::QueryInterface(aIID, aInstancePtr);
   }
-  return nsHTMLButtonControlFrame::QueryInterface(aIID, aInstancePtr);
+
+  return NS_OK;
 }
 
 // Initially we hardcoded the default strings here.
@@ -665,4 +672,50 @@ nsGfxButtonControlFrame::HandleEvent(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGfxButtonControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType)
+{
+  *aStateType = nsIStatefulFrame::eTextType;
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsGfxButtonControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  // Get the value string
+  nsAutoString stateString;
+  nsresult res = GetProperty(nsHTMLAtoms::value, stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // Compare to default value, and only save if needed (Bug 62713)
+  nsAutoString defaultStateString;
+  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
+  if (formControl) {
+    formControl->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, defaultStateString);
+  }
+
+  if (! stateString.Equals(defaultStateString)) {
+
+    // Construct a pres state and store value in it.
+    res = NS_NewPresState(aState);
+    NS_ENSURE_SUCCESS(res, res);
+    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), stateString);
+  }
+
+  return res;
+}
+
+NS_IMETHODIMP
+nsGfxButtonControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  // Set the value to the stored state.
+  nsAutoString stateString;
+  nsresult res = aState->GetStateProperty(NS_LITERAL_STRING("value"), stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
+  return SetProperty(aPresContext, nsHTMLAtoms::value, stateString);
+}

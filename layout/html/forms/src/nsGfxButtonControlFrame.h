@@ -28,14 +28,18 @@
 #include "nsCOMPtr.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsITextContent.h"
+#include "nsIStatefulFrame.h"
 
 // Class which implements the input[type=button, reset, submit] and
 // browse button for input[type=file].
 // The label for button is specified through generated content
 // in the ua.css file.
 
+class nsIPresState;
+
 class nsGfxButtonControlFrame : public nsHTMLButtonControlFrame,
-                                public nsIAnonymousContentCreator
+                                public nsIAnonymousContentCreator,
+                                public nsIStatefulFrame
 {
 public:
   nsGfxButtonControlFrame();
@@ -90,6 +94,12 @@ protected:
   virtual PRBool IsReset(PRInt32 type);
   virtual PRBool IsSubmit(PRInt32 type);
   virtual PRBool IsBrowse(PRInt32 type); // Browse button of file input
+
+//nsIStatefulFrame
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
