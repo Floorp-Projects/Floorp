@@ -23,13 +23,13 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/pref-composer.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://editor/content/pref-composer.xul');">
+      onload="parent.initPanel('chrome://editor/content/pref-composer.xul');"
+      headertitle="&lHeader;">
 
   <script type="application/x-javascript">
   <!-- Add "shouldAutoSave", "autoSaveAmount" to _elementIDs when implemented -->
@@ -38,8 +38,6 @@
   ]]>
   </script>        
         
-  <hbox class="box-smallheader" title="&lHeader;"/>
-
   <!-- Recent files menu -->
   <groupbox>
     <caption label="&recentFiles.title;"/>

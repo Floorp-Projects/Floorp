@@ -3,10 +3,10 @@
 <!DOCTYPE overlay SYSTEM "chrome://inspector/locale/prefs.dtd">
 
 <?xml-stylesheet href="chrome://inspector/skin/"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<page id="winPref" orient="vertical"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<page id="winPref"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      headertitle="&Inspector.label;">
 
   <script type="application/x-javascript" src="chrome://inspector/content/extensions/wsm-colorpicker.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/prefs/pref-sidebar.js"/>
@@ -49,8 +49,6 @@
     }
     
   ]]></script>
-
-  <hbox class="box-smallheader" title="&Inspector.label;"/>
 
   <vbox id="bxGeneralPrefs">
     <groupbox id="tbxBlink" flex="1">
