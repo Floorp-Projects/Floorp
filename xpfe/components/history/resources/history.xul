@@ -56,7 +56,7 @@
       </menupopup>
     </menu>
   </menubar>
-
+  <html:div flex="100%">
   <tree rdf:datasources="rdf:history rdf:localsearch"
         ondblclick="OpenURL(event,event.target.parentNode.parentNode);"
         ref="NC:HistoryRoot"
@@ -109,4 +109,5 @@
 
     <!-- TREECHILDREN are built *here* -->
   </tree>
+  </html:div>
 </window>
