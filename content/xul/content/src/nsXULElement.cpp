@@ -5040,6 +5040,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     
     if (mNumChildren > 0) {
         mChildren = new nsXULPrototypeNode*[mNumChildren];
+        memset(mChildren, 0, sizeof(nsXULPrototypeNode*) * mNumChildren);
         if (! mChildren)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -5090,6 +5091,16 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
             }
 
             mChildren[i] = child;
+
+            // Oh dear. Something failed during the deserialization. We don't know what. 
+            // But likely consequences of failed deserializations included calls to 
+            // |AbortFastLoads| which shuts down the FastLoadService and closes our 
+            // streams. If that happens, next time through this loop, we die a messy
+            // death. So, let's just fail now, and propagate that failure upward so that
+            // the ChromeProtocolHandler knows it can't use a cached chrome channel for 
+            // this. 
+            if (NS_FAILED(rv))
+                return rv;
         }
     }
 
@@ -5287,6 +5298,10 @@ nsresult
 nsXULPrototypeScript::DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
                                                  nsIScriptContext* aContext)
 {
+    // Keep track of FastLoad failure via rv, so we can
+    // AbortFastLoads if things look bad.
+    nsresult rv = NS_OK;
+
     nsIXULPrototypeCache* cache = GetXULCache();
     nsCOMPtr<nsIFastLoadService> fastLoadService;
     cache->GetFastLoadService(getter_AddRefs(fastLoadService));
@@ -5316,10 +5331,6 @@ nsXULPrototypeScript::DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
         }
 
         if (! mJSObject) {
-            // Keep track of FastLoad failure via rv, so we can
-            // AbortFastLoads if things look bad.
-            nsresult rv = NS_OK;
-
             nsCOMPtr<nsIURI> oldURI;
 
             if (mSrcURI) {
@@ -5380,7 +5391,7 @@ nsXULPrototypeScript::DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
         }
     }
 
-    return NS_OK;
+    return rv;
 }
 
 nsresult

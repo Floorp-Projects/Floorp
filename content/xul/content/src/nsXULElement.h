@@ -246,8 +246,11 @@ public:
     virtual void ReleaseSubtree() 
     {
       if (mChildren) {
-        for (PRInt32 i = mNumChildren-1; i >= 0; i--)
+        for (PRInt32 i = mNumChildren-1; i >= 0; i--) {
+          if (! mChildren[i])
+            break;
           mChildren[i]->ReleaseSubtree();
+        }
       }
 
       nsXULPrototypeNode::ReleaseSubtree();
