@@ -73,9 +73,6 @@ my $product = $::FORM{'product'};
 # Set cookies
 my $cookiepath = Param("cookiepath");
 if (exists $::FORM{'product'}) {
-    print "Set-Cookie: PLATFORM=$product ; path=$cookiepath ; \
-           expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-    
     if (exists $::FORM{'version'}) {           
         print "Set-Cookie: VERSION-$product=$::FORM{'version'} ; \
                path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n"; 

@@ -300,10 +300,16 @@ $default{'rep_platform'} = pickplatform();
 $vars->{'op_sys'} = \@legal_opsys; 
 $default{'op_sys'} = pickos();
 
-# Default version is the last one in the list (hopefully the latest one).
+# Posting a bug sets a cookie for the current version, if one exists. Else,
+# the default version is the last one in the list (hopefully the latest one).
 # Eventually maybe each product should have a "current version" parameter.
 $vars->{'version'} = $::versions{$product} || [];
-$default{'version'} = $vars->{'version'}->[$#{$vars->{'version'}}];
+if (exists $::COOKIE{"VERSION-$product"} &&
+    lsearch($vars->{'version'}, $::COOKIE{"VERSION-$product"}) != -1) {
+    $default{'version'} = $::COOKIE{"VERSION-$product"};
+} else {
+    $default{'version'} = $vars->{'version'}->[$#{$vars->{'version'}}];
+}
 
 # There must be at least one status in @status.
 my @status = "NEW";
