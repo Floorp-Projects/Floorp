@@ -90,8 +90,6 @@ PRInt32 nsRegisterItem::Prepare()
 
         if (!isDir)
             mURL.Append("!/");
-        else
-            mURL.Append("/");
     }
 
     return nsInstall::SUCCESS;
