@@ -65,7 +65,7 @@ PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
     return 0;
   nsRange* range = new nsRange;
   nsresult res = range->SetStart(aParent1, aOffset1);
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
     return 0;
   res = range->SetEnd(aParent2, aOffset2);
   delete range;
@@ -93,16 +93,16 @@ PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
   if (!GetNodeBracketPoints(aNode, &parent, &nodeStart, &nodeEnd))
     return PR_FALSE;
   
-  if (!NS_SUCCEEDED(aRange->GetStartParent(getter_AddRefs(rangeStartParent))))
+  if (NS_FAILED(aRange->GetStartParent(getter_AddRefs(rangeStartParent))))
     return PR_FALSE;
 
-  if (!NS_SUCCEEDED(aRange->GetStartOffset(&rangeStartOffset)))
+  if (NS_FAILED(aRange->GetStartOffset(&rangeStartOffset)))
     return PR_FALSE;
 
-  if (!NS_SUCCEEDED(aRange->GetEndParent(getter_AddRefs(rangeEndParent))))
+  if (NS_FAILED(aRange->GetEndParent(getter_AddRefs(rangeEndParent))))
     return PR_FALSE;
 
-  if (!NS_SUCCEEDED(aRange->GetEndOffset(&rangeEndOffset)))
+  if (NS_FAILED(aRange->GetEndOffset(&rangeEndOffset)))
     return PR_FALSE;
 
   // is RANGE(start) < NODE(end) ?
@@ -152,7 +152,7 @@ nsresult CompareNodeToRange(nsIContent* aNode,
   // Why do I have to cast above?  Because GetIsPositioned() is
   // mysteriously missing from the nsIDOMRange interface.  dunno why.
 
-  if (!NS_SUCCEEDED(err))
+  if (NS_FAILED(err))
     return err;
     
   if (!isPositioned) 
@@ -165,16 +165,16 @@ nsresult CompareNodeToRange(nsIContent* aNode,
   if (!GetNodeBracketPoints(aNode, &parent, &nodeStart, &nodeEnd))
     return NS_ERROR_FAILURE;
   
-  if (!NS_SUCCEEDED(aRange->GetStartParent(getter_AddRefs(rangeStartParent))))
+  if (NS_FAILED(aRange->GetStartParent(getter_AddRefs(rangeStartParent))))
     return NS_ERROR_FAILURE;
 
-  if (!NS_SUCCEEDED(aRange->GetStartOffset(&rangeStartOffset)))
+  if (NS_FAILED(aRange->GetStartOffset(&rangeStartOffset)))
     return NS_ERROR_FAILURE;
 
-  if (!NS_SUCCEEDED(aRange->GetEndParent(getter_AddRefs(rangeEndParent))))
+  if (NS_FAILED(aRange->GetEndParent(getter_AddRefs(rangeEndParent))))
     return NS_ERROR_FAILURE;
 
-  if (!NS_SUCCEEDED(aRange->GetEndOffset(&rangeEndOffset)))
+  if (NS_FAILED(aRange->GetEndOffset(&rangeEndOffset)))
     return NS_ERROR_FAILURE;
 
   *outNodeBefore = PR_FALSE;
@@ -233,7 +233,7 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
   else
   {
     nsCOMPtr<nsIContent> cN(do_QueryInterface(*outParent));
-    if (!NS_SUCCEEDED(cN->IndexOf(aNode, indx)))
+    if (NS_FAILED(cN->IndexOf(aNode, indx)))
       return PR_FALSE;
     *outStartOffset = indx;
     *outEndOffset = indx+1;
@@ -317,16 +317,16 @@ PRBool nsRange::InSameDoc(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr<nsIDOMNode> aNod
   nsCOMPtr<nsIDocument> doc2;
   
   nsresult res = GetContentFromDOMNode(aNode1, &cN1);
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
     return PR_FALSE;
   res = GetContentFromDOMNode(aNode2, &cN2);
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
     return PR_FALSE;
   res = cN1->GetDocument(*getter_AddRefs(doc1));
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
     return PR_FALSE;
   res = cN2->GetDocument(*getter_AddRefs(doc2));
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
     return PR_FALSE;
   
   // Now compare the two documents: is direct comparison safe?
@@ -345,7 +345,7 @@ nsresult nsRange::AddToListOf(nsCOMPtr<nsIDOMNode> aNode)
   nsCOMPtr<nsIContent> cN;
 
   nsresult res = aNode->QueryInterface(nsIContent::GetIID(), getter_AddRefs(cN));
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
     return res;
 
   res = cN->RangeAdd(*NS_STATIC_CAST(nsIDOMRange*,this));
@@ -361,7 +361,7 @@ nsresult nsRange::RemoveFromListOf(nsCOMPtr<nsIDOMNode> aNode)
   nsCOMPtr<nsIContent> cN;
 
   nsresult res = aNode->QueryInterface(nsIContent::GetIID(), getter_AddRefs(cN));
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
     return res;
 
   res = cN->RangeRemove(*NS_STATIC_CAST(nsIDOMRange*,this));
@@ -592,21 +592,21 @@ PRInt32 nsRange::IndexOf(nsCOMPtr<nsIDOMNode> aChildNode)
 
   // get the parent node
   nsresult res = aChildNode->GetParentNode(getter_AddRefs(parentNode));
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
     return 0;
   
   // convert node and parent to nsIContent, so that we can find the child index
   res = parentNode->QueryInterface(nsIContent::GetIID(), getter_AddRefs(contentParent));
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
     return 0;
 
   res = aChildNode->QueryInterface(nsIContent::GetIID(), getter_AddRefs(contentChild));
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
     return 0;
   
   // finally we get the index
   res = contentParent->IndexOf(contentChild,theIndex); 
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
     return 0;
 
   return theIndex;
@@ -648,7 +648,7 @@ PRInt32 nsRange::GetAncestorsAndOffsets(nsCOMPtr<nsIDOMNode> aNode, PRInt32 aOff
   // callers responsibility to make sure args are non-null and proper type
 
   res = aNode->QueryInterface(nsIContent::GetIID(),getter_AddRefs(contentNode));
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
   {
     NS_NOTREACHED("nsRange::GetAncestorsAndOffsets");
     return -1;  // poor man's error code
@@ -738,7 +738,7 @@ nsresult nsRange::GetDOMNodeFromContent(nsCOMPtr<nsIContent> inContentNode, nsCO
   if (!outDomNode) 
     return NS_ERROR_NULL_POINTER;
   nsresult res = inContentNode->QueryInterface(nsIDOMNode::GetIID(), getter_AddRefs(*outDomNode));
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
     return res;
   return NS_OK;
 }
@@ -748,7 +748,7 @@ nsresult nsRange::GetContentFromDOMNode(nsCOMPtr<nsIDOMNode> inDomNode, nsCOMPtr
   if (!outContentNode) 
     return NS_ERROR_NULL_POINTER;
   nsresult res = inDomNode->QueryInterface(nsIContent::GetIID(), getter_AddRefs(*outContentNode));
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
     return res;
   return NS_OK;
 }
@@ -805,8 +805,18 @@ nsresult nsRange::PopRanges(nsCOMPtr<nsIDOMNode> aDestNode, PRInt32 aOffset, nsC
             theCount = 0;
        } 
     }
-    iter->Next();
+    res = iter->Next();
+    if (NS_FAILED(res)) // a little noise here to catch bugs
+    {
+      NS_NOTREACHED("nsRange::PopRanges() : iterator failed to advance");
+      return res;
+    }
     res = iter->CurrentNode(getter_AddRefs(cN));
+    if (NS_FAILED(res)) // a little noise here to catch bugs
+    {
+      NS_NOTREACHED("nsRange::PopRanges() : iterator failed to position");
+      return res;
+    }
   }
   
   return NS_OK;
@@ -928,7 +938,8 @@ nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
   nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling);
   nsIDOMNode *nParent;
-  theSibling->GetParentNode(&nParent);
+  nsresult res = theSibling->GetParentNode(&nParent);
+  if (NS_FAILED(res)) return res;
   return SetStart(nParent,indx);
 }
 
@@ -937,7 +948,8 @@ nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
   nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling) + 1;
   nsIDOMNode *nParent;
-  theSibling->GetParentNode(&nParent);
+  nsresult res = theSibling->GetParentNode(&nParent);
+  if (NS_FAILED(res)) return res;
   return SetStart(nParent,indx);
 }
 
@@ -971,7 +983,8 @@ nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
   nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling);
   nsIDOMNode *nParent;
-  theSibling->GetParentNode(&nParent);
+  nsresult res = theSibling->GetParentNode(&nParent);
+  if (NS_FAILED(res)) return res;
   return SetEnd(nParent,indx);
 }
 
@@ -980,7 +993,8 @@ nsresult nsRange::SetEndAfter(nsIDOMNode* aSibling)
   nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling) + 1;
   nsIDOMNode *nParent;
-  theSibling->GetParentNode(&nParent);
+  nsresult res = theSibling->GetParentNode(&nParent);
+  if (NS_FAILED(res)) return res;
   return SetEnd(nParent,indx);
 }
 
@@ -1011,9 +1025,7 @@ nsresult nsRange::SelectNode(nsIDOMNode* aN)
   nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(aN) );
   
   nsresult res = aN->GetParentNode(getter_AddRefs(parent));
-  if (!NS_SUCCEEDED(res))
-    return res;
-
+  if (NS_FAILED(res)) return res;
   PRInt32 indx = IndexOf(theNode);
   return DoSetRange(parent,indx,parent,indx+1);
 }
@@ -1024,13 +1036,13 @@ nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
   nsCOMPtr<nsIDOMNodeList> aChildNodes;
   
   nsresult res = aN->GetChildNodes(getter_AddRefs(aChildNodes));
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
     return res;
   if (!aChildNodes)
     return NS_ERROR_UNEXPECTED;
   PRUint32 indx;
   res = aChildNodes->GetLength(&indx);
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
     return res;
   return DoSetRange(theNode,0,theNode,indx);
 }
@@ -1042,13 +1054,13 @@ nsresult nsRange::DeleteContents()
   
   // get the content versions of our endpoints
   nsresult res = mStartParent->QueryInterface(nsIContent::GetIID(), getter_AddRefs(cStart));
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
   {
     NS_NOTREACHED("nsRange::DeleteContents");
     return NS_ERROR_UNEXPECTED;
   }
   res = mEndParent->QueryInterface(nsIContent::GetIID(), getter_AddRefs(cEnd));
-  if (!NS_SUCCEEDED(res)) 
+  if (NS_FAILED(res)) 
   {
     NS_NOTREACHED("nsRange::DeleteContents");
     return NS_ERROR_UNEXPECTED;
@@ -1059,7 +1071,7 @@ nsresult nsRange::DeleteContents()
   {
     PRBool hasChildren;
     res = cStart->CanContainChildren(hasChildren);
-    if (!NS_SUCCEEDED(res)) 
+    if (NS_FAILED(res)) 
     {
       NS_NOTREACHED("nsRange::DeleteContents");
       return res;
@@ -1071,7 +1083,7 @@ nsresult nsRange::DeleteContents()
       for (i=mEndOffset; i>=mStartOffset; --i)
       {
         res = cStart->RemoveChildAt(i, PR_TRUE);
-        if (!NS_SUCCEEDED(res)) 
+        if (NS_FAILED(res)) 
         {
           NS_NOTREACHED("nsRange::DeleteContents");
           return res;
@@ -1083,14 +1095,14 @@ nsresult nsRange::DeleteContents()
     {
       nsCOMPtr<nsIDOMText> textNode;
       res = mStartParent->QueryInterface(nsIDOMText::GetIID(), getter_AddRefs(textNode));
-      if (!NS_SUCCEEDED(res)) // if it's not a text node, punt
+      if (NS_FAILED(res)) // if it's not a text node, punt
       {
         NS_NOTREACHED("nsRange::DeleteContents");
         return NS_ERROR_UNEXPECTED;
       }
       // delete the text
       res = textNode->DeleteData(mStartOffset, mEndOffset - mStartOffset);
-      if (!NS_SUCCEEDED(res)) 
+      if (NS_FAILED(res)) 
       {
         NS_NOTREACHED("nsRange::DeleteContents");
         return res;
@@ -1146,8 +1158,11 @@ nsresult nsRange::DeleteContents()
   {
     cN = do_QueryInterface(NS_STATIC_CAST(nsIContent*, deleteList.ElementAt(0)));
     res = cN->GetParent(*getter_AddRefs(cParent));
+    if (NS_FAILED(res)) return res;
     res = cParent->IndexOf(cN,indx);
+    if (NS_FAILED(res)) return res;
     res = cParent->RemoveChildAt(indx, PR_TRUE);
+    if (NS_FAILED(res)) return res;
     deleteList.RemoveElementAt(0);
   }
   
@@ -1157,7 +1172,7 @@ nsresult nsRange::DeleteContents()
   if (NS_SUCCEEDED(res)) 
   {
     res = textNode->DeleteData(mStartOffset, 0xFFFFFFFF); // del to end
-    if (!NS_SUCCEEDED(res))
+    if (NS_FAILED(res))
       return res;  // XXX need to switch over to nsCOMPtr to avoid leaks here
   }
 
@@ -1166,7 +1181,7 @@ nsresult nsRange::DeleteContents()
   if (NS_SUCCEEDED(res)) 
   {
     res = textNode->DeleteData(0, mEndOffset); // del from start
-    if (!NS_SUCCEEDED(res))
+    if (NS_FAILED(res))
       return res;  // XXX need to switch over to nsCOMPtr to avoid leaks here
   }
 
@@ -1224,7 +1239,7 @@ nsresult nsRange::CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
     return res;
 
   if ((node1 == node2) && (offset1 == offset2))
@@ -1239,7 +1254,7 @@ nsresult nsRange::CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange,
 nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
 { 
   nsresult res = CloneContents(aReturn);
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
     return res;
   res = DeleteContents();
   return res; 
@@ -1280,7 +1295,7 @@ nsRange::CloneSibsAndParents(nsCOMPtr<nsIDOMNode> parentNode, PRInt32 nodeOffset
   else
   {
     res = parentNode->CloneNode(PR_FALSE, getter_AddRefs(parentClone));
-    if (!NS_SUCCEEDED(res))
+    if (NS_FAILED(res))
       return res;
   }
 
@@ -1291,7 +1306,7 @@ nsRange::CloneSibsAndParents(nsCOMPtr<nsIDOMNode> parentNode, PRInt32 nodeOffset
   int i = 0;  // or 1, depending on which base IndexOf uses
   nsCOMPtr<nsIDOMNode> tmpNode;
   res = parentNode->GetFirstChild(getter_AddRefs(tmpNode));
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
   {
     return res;
   }
@@ -1304,7 +1319,7 @@ nsRange::CloneSibsAndParents(nsCOMPtr<nsIDOMNode> parentNode, PRInt32 nodeOffset
       if (!clonedNode)
       {
         res = tmpNode->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
-        if (!NS_SUCCEEDED(res))
+        if (NS_FAILED(res))
           break;
       }
 
@@ -1318,17 +1333,17 @@ nsRange::CloneSibsAndParents(nsCOMPtr<nsIDOMNode> parentNode, PRInt32 nodeOffset
     }
     else
       res = NS_OK;
-    if (!NS_SUCCEEDED(res))
+    if (NS_FAILED(res))
       break;
 
     ++i;
     nsCOMPtr<nsIDOMNode> tmptmpNode = tmpNode;
     res = tmpNode->GetNextSibling(getter_AddRefs(tmpNode));
-    if (!NS_SUCCEEDED(res) || tmpNode == 0)
+    if (NS_FAILED(res) || tmpNode == 0)
       break;
   }
 
-  if (!NS_SUCCEEDED(res))	  // Probably broke out of the loop prematurely
+  if (NS_FAILED(res))	  // Probably broke out of the loop prematurely
     return res;
 
   // Recurse to parent:
@@ -1366,7 +1381,7 @@ return NS_ERROR_NOT_IMPLEMENTED;
   nsresult res;
   nsCOMPtr<nsIDOMDocument> document;
   res = mStartParent->GetOwnerDocument(getter_AddRefs(document));
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
     return res;
 
   // Create a new document fragment in the context of this document
@@ -1402,7 +1417,7 @@ nsresult nsRange::Clone(nsIDOMRange** aReturn)
     return NS_ERROR_NULL_POINTER;
 
   nsresult res = NS_NewRange(aReturn);
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
     return res;
 
   return DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset);
@@ -1433,7 +1448,7 @@ nsresult nsRange::ToString(nsString& aReturn)
     if (textNode)
     {
       // grab the text
-      if (!NS_SUCCEEDED(textNode->SubstringData(mStartOffset,mEndOffset-mStartOffset,aReturn)))
+      if (NS_FAILED(textNode->SubstringData(mStartOffset,mEndOffset-mStartOffset,aReturn)))
         return NS_ERROR_UNEXPECTED;
       return NS_OK;
     }
