@@ -22,7 +22,7 @@
 
 -->
 
-<?xml-stylesheet href="chrome://related/skin/related-panel.css" type="text/css"?>
+<?xml-stylesheet href="chrome://related/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://related/locale/related-panel.dtd" >
 <window
