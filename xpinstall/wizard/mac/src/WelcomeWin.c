@@ -164,6 +164,7 @@ InWelcomeContent(EventRecord* evt, WindowPtr wCurrPtr)
 			return;
 	}	
 			
+#if 0
 	HLock((Handle)gControls->backB);
 	r = (**(gControls->backB)).contrlRect;
 	HUnlock((Handle)gControls->backB);
@@ -177,6 +178,7 @@ InWelcomeContent(EventRecord* evt, WindowPtr wCurrPtr)
 			return;
 		}
 	}
+#endif
 	
 	HLock((Handle)gControls->nextB);			
 	r = (**(gControls->nextB)).contrlRect;
