@@ -68,6 +68,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIDocumentLoader.h"
+#include "nsIPref.h"
 #include "nsFrameSetFrame.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"

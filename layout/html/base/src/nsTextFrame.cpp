@@ -83,8 +83,7 @@
 
 #include "nsILineIterator.h"
 
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
+#include "nsIPref.h"
 #include "nsIServiceManager.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessible.h"
@@ -105,6 +104,8 @@
 #ifdef SUNCTL
 #include "nsILE.h"
 #endif /* SUNCTL */
+
+static NS_DEFINE_CID(kPrefCID,     NS_PREF_CID);
 
 #ifdef NS_DEBUG
 #undef NOISY_BLINK
@@ -1364,10 +1365,10 @@ nsTextFrame::nsTextFrame()
 {
   // read in our global word selection prefs
   if ( !sWordSelectPrefInited ) {
-    nsCOMPtr<nsIPrefBranch> prefBranch ( do_GetService(NS_PREFSERVICE_CONTRACTID) );
-    if ( prefBranch ) {
+    nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
+    if ( prefService ) {
       PRBool temp = PR_FALSE;
-      prefBranch->GetBoolPref("layout.word_select.eat_space_to_next_word", &temp);
+      prefService->GetBoolPref("layout.word_select.eat_space_to_next_word", &temp);
       sWordSelectEatSpaceAfter = temp;
     }
     sWordSelectPrefInited = PR_TRUE;
@@ -2640,12 +2641,12 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   ComputeExtraJustificationSpacing(*aRendContext, ts, paintBuffer.mBuffer, textLength, numSpaces);
 
 //IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
-  nsCOMPtr<nsIPrefBranch> prefBranch( do_GetService(NS_PREFSERVICE_CONTRACTID) );
+  nsCOMPtr<nsIPref> prefs( do_GetService(kPrefCID, &rv) );
   PRInt32 prefInt = 0;
   PRBool outofstylehandled = PR_FALSE;
-  if (prefBranch) 
+  if (NS_SUCCEEDED(rv) && prefs) 
   { 
-    if (NS_SUCCEEDED(prefBranch->GetIntPref("browser.drag_out_of_frame_style", &prefInt)) && prefInt)
+    if (NS_SUCCEEDED(prefs->GetIntPref("browser.drag_out_of_frame_style", &prefInt)) && prefInt)
     {
       if (aPoint.y < origin.y)//above rectangle
       {
@@ -3528,12 +3529,12 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
       GetOffsetFromView(aCX, origin, &view);
 
 //IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
-      nsCOMPtr<nsIPrefBranch> prefBranch( do_GetService(NS_PREFSERVICE_CONTRACTID) );
+      nsCOMPtr<nsIPref> prefs( do_GetService(kPrefCID, &rv) );
       PRInt32 prefInt = 0;
       PRBool outofstylehandled = PR_FALSE;
-      if (prefBranch) 
+      if (NS_SUCCEEDED(rv) && prefs) 
       { 
-        if (NS_SUCCEEDED(prefBranch->GetIntPref("browser.drag_out_of_frame_style", &prefInt)) && prefInt)
+        if (NS_SUCCEEDED(prefs->GetIntPref("browser.drag_out_of_frame_style", &prefInt)) && prefInt)
         {
           if ((aPoint.y - origin.y) < 0)//above rectangle
           {
