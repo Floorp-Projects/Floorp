@@ -221,6 +221,7 @@ private:
   nsIPluginHost     *mPluginHost;
   
   nsresult DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent);
+  nsresult DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent);
 };
 
   // Mac specific code to fix up port position and clip during paint
@@ -1333,18 +1334,18 @@ nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
       switch (anEvent->message) 
     {
     //XXX: All of the button down's are handled by the DOM listener 
-     // case NS_MOUSE_LEFT_BUTTON_DOWN:
-      case NS_MOUSE_LEFT_BUTTON_UP:
-      case NS_MOUSE_LEFT_DOUBLECLICK:
-     // case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      case NS_MOUSE_RIGHT_BUTTON_UP:
-      case NS_MOUSE_RIGHT_DOUBLECLICK:
-     // case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
-      case NS_MOUSE_MIDDLE_DOUBLECLICK:
-      case NS_MOUSE_MOVE:
-      //case NS_KEY_UP:
-      //case NS_KEY_DOWN:
+      // case NS_MOUSE_LEFT_BUTTON_DOWN:
+      // case NS_MOUSE_LEFT_BUTTON_UP:
+      // case NS_MOUSE_LEFT_DOUBLECLICK:
+      // case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      // case NS_MOUSE_RIGHT_BUTTON_UP:
+      // case NS_MOUSE_RIGHT_DOUBLECLICK:
+      // case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+      // case NS_MOUSE_MIDDLE_BUTTON_UP:
+      // case NS_MOUSE_MIDDLE_DOUBLECLICK:
+      // case NS_MOUSE_MOVE:
+      // case NS_KEY_UP:
+      // case NS_KEY_DOWN:
       case NS_GOTFOCUS:
       case NS_LOSTFOCUS:
       //case set cursor should be here too:
@@ -1366,11 +1367,11 @@ nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
 	case NS_LOSTFOCUS:
 	//case NS_KEY_UP:
 	//case NS_KEY_DOWN:
-	case NS_MOUSE_MOVE:
-	case NS_MOUSE_ENTER:
-	case NS_MOUSE_LEFT_BUTTON_UP:
+	//case NS_MOUSE_MOVE:
+	//case NS_MOUSE_ENTER:
+	//case NS_MOUSE_LEFT_BUTTON_UP:
 #ifndef XP_MAC
-	case NS_MOUSE_LEFT_BUTTON_DOWN:
+	//case NS_MOUSE_LEFT_BUTTON_DOWN:
 #endif
 		*anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
 		break;
@@ -2522,35 +2523,51 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult
 nsPluginInstanceOwner::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  
-  return NS_OK;
+  return DispatchMouseToPlugin(aMouseEvent);
 }
 
 nsresult
 nsPluginInstanceOwner::MouseClick(nsIDOMEvent* aMouseEvent)
 {
- 
-  return NS_OK;
+  return DispatchMouseToPlugin(aMouseEvent);
 }
 
 nsresult
 nsPluginInstanceOwner::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
- 
-  return NS_OK;
+  return DispatchMouseToPlugin(aMouseEvent);
 }
 
 nsresult
 nsPluginInstanceOwner::MouseOver(nsIDOMEvent* aMouseEvent)
 {
- 
-  return NS_OK;
+  return DispatchMouseToPlugin(aMouseEvent);
 }
 
 nsresult
 nsPluginInstanceOwner::MouseOut(nsIDOMEvent* aMouseEvent)
 {
- 
+  return DispatchMouseToPlugin(aMouseEvent);
+}
+
+nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
+{
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
+  if (privateEvent) {
+    nsMouseEvent* mouseEvent = nsnull;
+    privateEvent->GetInternalNSEvent((nsEvent**)&mouseEvent);
+    if (mouseEvent) {
+      nsEventStatus rv = ProcessEvent(*mouseEvent);
+      if (nsEventStatus_eConsumeNoDefault == rv) {
+        aMouseEvent->PreventDefault();
+        aMouseEvent->PreventBubble();
+        return NS_ERROR_FAILURE; // means consume event
+      }
+    }
+    else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchMouseToPlugin failed, mouseEvent null");   
+  }
+  else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchMouseToPlugin failed, privateEvent null");   
+  
   return NS_OK;
 }
 
