@@ -242,7 +242,7 @@ OBJS +=	md/windows/$(OBJDIR)/w95io.$(OBJ_SUFFIX) \
 ifeq ($(MOZ_BITS),32)
 ifdef MOZ_DEBUG
 ifdef GLOWCODE
-	EXTRA_LIBS += c:/bin/glowcode/glowcode.lib
+	EXTRA_LIBS += $(GLOWDIR)/glowcode.lib
 endif
 endif
 endif
