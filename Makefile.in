@@ -323,6 +323,16 @@ tier_99_dirs   += modules/staticmod
 endif
 endif # MOZ_COMPONENTLIB
 
+# axcontrol
+ifeq ($(OS_ARCH),WINNT)
+ifndef MOZ_NO_ACTIVEX_SUPPORT
+tier_99_dirs += \
+		embedding/browser/activex/src/control \
+		embedding/browser/activex/src/control_kicker \
+		$(NULL)
+endif
+endif
+
 ifdef MOZ_PHOENIX
 tier_99_dirs	+= browser xpfe/bootstrap/init.d
 ifdef MOZ_USE_OFFICIAL_BRANDING
@@ -372,16 +382,10 @@ ifneq (,$(ENABLE_TESTS))
 tier_99_dirs += webshell/tests
 endif
 
-# winembed, mfcembed, axcontrol
+# winembed, mfcembed
 ifeq ($(OS_ARCH),WINNT)
 ifneq (,$(ENABLE_TESTS)$(MOZILLA_OFFICIAL))
 tier_99_dirs += embedding/tests
-endif
-ifndef MOZ_NO_ACTIVEX_SUPPORT
-tier_99_dirs += \
-		embedding/browser/activex/src/control \
-		embedding/browser/activex/src/control_kicker \
-		$(NULL)
 endif
 endif
 
