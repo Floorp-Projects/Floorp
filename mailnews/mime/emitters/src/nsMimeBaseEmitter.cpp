@@ -70,11 +70,16 @@ static    NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static    NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static    NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
-NS_IMPL_ISUPPORTS4(nsMimeBaseEmitter, 
-                   nsIMimeEmitter, 
-                   nsIInputStreamObserver, 
-                   nsIOutputStreamObserver,
-                   nsIInterfaceRequestor)
+NS_IMPL_THREADSAFE_ADDREF(nsMimeBaseEmitter)
+NS_IMPL_THREADSAFE_RELEASE(nsMimeBaseEmitter)
+
+NS_INTERFACE_MAP_BEGIN(nsMimeBaseEmitter)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMimeEmitter)
+   NS_INTERFACE_MAP_ENTRY(nsIMimeEmitter)
+   NS_INTERFACE_MAP_ENTRY(nsIInputStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIOutputStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+NS_INTERFACE_MAP_END
 
 nsMimeBaseEmitter::nsMimeBaseEmitter()
 {
@@ -291,8 +296,8 @@ NS_IMETHODIMP nsMimeBaseEmitter::OnFull(nsIOutputStream* out)
       NS_ASSERTION(NS_SUCCEEDED(rv), "Available failed");
       
       nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel);
+      
       rv = mOutListener->OnDataAvailable(request, mURL, mInputStream, 0, bytesAvailable);
-
   }
   else 
     rv = NS_ERROR_NULL_POINTER;
@@ -880,12 +885,14 @@ nsMimeBaseEmitter::Complete()
 
   if (mOutListener)
   {
-    PRUint32 bytesInStream;
+    PRUint32 bytesInStream = 0;
     nsresult rv2 = mInputStream->Available(&bytesInStream);
-	NS_ASSERTION(NS_SUCCEEDED(rv2), "Available failed");
-    nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel);
-    rv2 = mOutListener->OnDataAvailable(request, mURL, mInputStream, 0, bytesInStream);
-	NS_ASSERTION(NS_SUCCEEDED(rv2), "OnDataAvailable failed");
+	  NS_ASSERTION(NS_SUCCEEDED(rv2), "Available failed");
+    if (bytesInStream)
+    {
+      nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel);
+      rv2 = mOutListener->OnDataAvailable(request, mURL, mInputStream, 0, bytesInStream);
+    }
   }
 
   return NS_OK;
