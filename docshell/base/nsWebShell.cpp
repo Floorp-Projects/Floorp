@@ -1749,7 +1749,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
       rv = currentURI->GetSpec(getter_Copies(currentUriSpec));
       if (NS_FAILED(rv)) return rv;
       nsAutoString currentURIString(currentUriSpec);
-	  if (currentURIString == spec) {
+	  if (currentURIString.Equals(spec)) {
          /* The url to be loaded is the same as the 
 		  * url already in the page. Don't add it to session history
 		  */
@@ -2538,7 +2538,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
             if (NS_FAILED(rv)) return rv;
 
-            errorMsg = host;
+            errorMsg.Assign(host);
             errorMsg.Append(' ');
             errorMsg.Append(messageStr);
 
@@ -2560,7 +2560,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
             if (NS_FAILED(rv)) return rv;
 
-            errorMsg = messageStr;
+            errorMsg.Assign(messageStr);
             errorMsg.Append(' ');
             errorMsg.Append(host);
             if (port > 0) {
@@ -2583,7 +2583,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
             if (NS_FAILED(rv)) return rv;
 
-            errorMsg = messageStr;
+            errorMsg.Assign(messageStr);
             errorMsg.Append(' ');
             errorMsg.Append(host);
             errorMsg.Append('.');
