@@ -242,6 +242,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 nsISupports* iface = *((nsISupports**)s);
                 if(!iface)
                     break;
+                nsIScriptObjectOwner* owner;
                 JSObject* aJSObj = NULL;
                 // is this a wrapped JS object?
                 if(nsXPCWrappedJSClass::IsWrappedJS(iface))
@@ -256,62 +257,62 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                         *d = OBJECT_TO_JSVAL(aJSObj);
                     }
                 }
+                // is this a DOM wrapped native object?
+                else if(NS_SUCCEEDED(iface->QueryInterface(
+                            nsIScriptObjectOwner::GetIID(), (void**)&owner)))
+                {
+
+                    nsresult rv;
+                    JSBool success = JS_FALSE;
+                    JSObject* globalObject;
+                    nsISupports* domObject;
+                    NS_ASSERTION(owner,"QI succeeded but yielded NULL!");
+                    if(NULL != (globalObject = 
+                                    JS_GetGlobalObject(cx)) &&
+                       NULL != (domObject = (nsISupports*)
+                                    JS_GetPrivate(cx, globalObject)))
+                    {
+                        nsIScriptGlobalObject* scriptObject;
+                        if(NS_SUCCEEDED(domObject->QueryInterface(
+                                            nsIScriptGlobalObject::GetIID(), 
+                                            (void**)&scriptObject)))
+                        {
+                            NS_ASSERTION(scriptObject,"QI succeeded but yielded NULL!");
+                            nsIScriptContext* scriptContext = NULL;
+                            scriptObject->GetContext(&scriptContext);
+                            if(scriptContext)
+                            {
+                                rv = owner->GetScriptObject(scriptContext, 
+                                                    (void **)&aJSObj);
+                                NS_RELEASE(scriptContext);
+                                if (NS_SUCCEEDED(rv))
+                                    success = JS_TRUE;
+                            }
+                            NS_RELEASE(scriptObject);
+                        }
+                    }
+                    NS_RELEASE(owner);
+                    if(!success)
+                        return JS_FALSE;
+                }
                 else
                 {
-                    nsIScriptObjectOwner* owner = NULL;
-                    nsresult rv;
-                    rv = iface->QueryInterface(nsIScriptObjectOwner::GetIID(), 
-                                               (void**)&owner);
-                    if(NS_SUCCEEDED(rv) && owner)
+                    // we need to build a wrapper
+                    nsXPCWrappedNative* wrapper = NULL;
+                    XPCContext* xpcc;
+                    if(!iid || 
+                       !(xpcc = nsXPConnect::GetContext(cx)) ||
+                       !(wrapper = 
+                            nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc,
+                                                             iface, *iid)))
                     {
-                        JSObject* globalObject;
-                        nsISupports* domObject;
-                        if(NULL != (globalObject = 
-                                        JS_GetGlobalObject(cx)) &&
-                           NULL != (domObject = (nsISupports*)
-                                        JS_GetPrivate(cx, globalObject)))
-                        {
-                            nsIScriptGlobalObject* scriptObject = NULL;
-                            rv = domObject->QueryInterface(
-                                                nsIScriptGlobalObject::GetIID(), 
-                                                (void**)&scriptObject);
-                            if(NS_SUCCEEDED(rv) && scriptObject)
-                            {
-                                nsIScriptContext* scriptContext = NULL;
-                                scriptObject->GetContext(&scriptContext);
-                                if(scriptContext)
-                                {
-                                    rv = owner->GetScriptObject(scriptContext, 
-                                                        (void **)&aJSObj);
-                                    NS_RELEASE(scriptContext);
-                                    if (NS_FAILED(rv))
-                                        return JS_FALSE;
-                                }
-                                NS_RELEASE(scriptObject);
-                            }
-                        }
-                        NS_RELEASE(owner);
+                        return JS_FALSE;
                     }
-
-                    if(!aJSObj)
-                    {
-                        // we need to build a wrapper
-                        nsXPCWrappedNative* wrapper = NULL;
-                        XPCContext* xpcc;
-                        if(!iid || 
-                           !(xpcc = nsXPConnect::GetContext(cx)) ||
-                           !(wrapper = 
-                                nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc,
-                                                                 iface, *iid)))
-                        {
-                            return JS_FALSE;
-                        }
-                        aJSObj = wrapper->GetJSObject();
-                        NS_RELEASE(wrapper);
-                    }
-                    if(aJSObj)
-                        *d = OBJECT_TO_JSVAL(aJSObj);
+                    aJSObj = wrapper->GetJSObject();
+                    NS_RELEASE(wrapper);
                 }
+                if(aJSObj)
+                    *d = OBJECT_TO_JSVAL(aJSObj);
                 break;
             }
         default:
