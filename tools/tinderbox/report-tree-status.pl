@@ -170,10 +170,10 @@ sub is_tree_open {
       $time_since_open = ($now - $time_tree_opened)/3600;
       print "time_since_open (hours) = $time_since_open\n";
 
-      # Clamp time to 8 hours so we don't get huge spikes for
+      # Clamp time to 20 hours so we don't get huge spikes for
       # extended open times (weekends)
-      if($time_since_open > 8.0) {
-        $time_since_open = 8.0;
+      if($time_since_open > 20.0) {
+        $time_since_open = 20.0;
       }
       
     }
