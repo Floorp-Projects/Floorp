@@ -91,9 +91,9 @@ static PRInt32 TestCompare_wcscmp(nsString& string1, nsString& string2)
 }
 #endif //WIN32
 
-static void TestCollation()
+static void TestCollation(nsILocale *locale)
 {
-   nsString locale("en-US");
+//   nsString locale("en-US");
    nsICollationFactory *f = NULL;
    nsICollation *t = NULL;
    nsresult res;
@@ -340,7 +340,7 @@ static void TestSortPrint2(collation_rec *key_array, int len)
   cout << "\n";
 }
 
-static void TestSort()
+static void TestSort(nsILocale *locale)
 {
   nsresult res;
   nsICollationFactory *factoryInst;
@@ -348,7 +348,7 @@ static void TestSort()
   collation_rec key_array[5];
   PRUint8 *aKey;
   PRUint32 aLength;
-  nsString locale("en-US");
+  //nsString locale("en-US");
   nsString string1("AAC");
   nsString string2("aac");
   nsString string3("xyz");
@@ -462,7 +462,7 @@ static void TestSort()
 NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
-static void TestDateTimeFormat()
+static void TestDateTimeFormat(nsILocale *locale)
 {
   cout << "==============================\n";
   cout << "Start nsIDateTimeFormat Test \n";
@@ -494,7 +494,7 @@ static void TestDateTimeFormat()
 
 
   nsAutoString dateString;
-  nsString locale("en-GB");
+//  nsString locale("en-GB");
   time_t  timetTime;
 
 
@@ -593,10 +593,11 @@ int main(int argc, char** argv) {
   }
 
   // --------------------------------------------
+  nsILocale *locale = NULL;
 
-  TestCollation();
-  TestSort();
-  TestDateTimeFormat();
+  TestCollation(locale);
+  TestSort(locale);
+  TestDateTimeFormat(locale);
 
   // --------------------------------------------
 

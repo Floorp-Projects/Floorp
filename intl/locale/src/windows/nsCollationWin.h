@@ -55,7 +55,7 @@ public:
 
   // init this interface to a specified locale (should only be called by collation factory)
   //
-  NS_IMETHOD Initialize(const nsString& locale);
+  NS_IMETHOD Initialize(nsILocale* locale);
 
   nsCollationWin();
 

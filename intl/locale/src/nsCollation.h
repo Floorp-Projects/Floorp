@@ -31,7 +31,7 @@ class nsCollationFactory: public nsICollationFactory {
 public: 
   NS_DECL_ISUPPORTS 
 
-  NS_IMETHOD CreateCollation(const nsString& locale, nsICollation** instancePtr);
+  NS_IMETHOD CreateCollation(nsILocale* locale, nsICollation** instancePtr);
 
   nsCollationFactory() {NS_INIT_REFCNT();};
 };

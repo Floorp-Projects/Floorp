@@ -37,7 +37,7 @@ nsCollationUnix::~nsCollationUnix()
     delete mCollation;
 }
 
-nsresult nsCollationUnix::Initialize(const nsString& locale) 
+nsresult nsCollationUnix::Initialize(nsILocale* locale) 
 {
   mCollation = new nsCollation;
   if (mCollation == NULL) {

@@ -29,14 +29,14 @@ public:
   NS_DECL_ISUPPORTS 
 
   // performs a locale sensitive date formatting operation on the time_t parameter
-  NS_IMETHOD FormatTime(const nsString& locale, 
+  NS_IMETHOD FormatTime(nsILocale* locale, 
                         const nsDateFormatSelector  dateFormatSelector, 
                         const nsTimeFormatSelector timeFormatSelector, 
                         const time_t  timetTime, 
                         nsString& stringOut); 
 
   // performs a locale sensitive date formatting operation on the struct tm parameter
-  NS_IMETHOD FormatTMTime(const nsString& locale, 
+  NS_IMETHOD FormatTMTime(nsILocale* locale, 
                           const nsDateFormatSelector  dateFormatSelector, 
                           const nsTimeFormatSelector timeFormatSelector, 
                           const struct tm*  tmTime, 

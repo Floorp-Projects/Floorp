@@ -28,7 +28,7 @@ NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
 
 NS_IMPL_ISUPPORTS(nsCollationFactory, kICollationFactoryIID);
 
-nsresult nsCollationFactory::CreateCollation(const nsString& locale, nsICollation** instancePtr)
+nsresult nsCollationFactory::CreateCollation(nsILocale* locale, nsICollation** instancePtr)
 {
   // Create a collation interface instance.
   //

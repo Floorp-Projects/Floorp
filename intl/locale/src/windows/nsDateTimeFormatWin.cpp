@@ -27,7 +27,7 @@ NS_IMPL_ISUPPORTS(nsDateTimeFormatWin, kIDateTimeFormatIID);
 
 
 // performs a locale sensitive date formatting operation on the time_t parameter
-nsresult nsDateTimeFormatWin::FormatTime(const nsString& locale, 
+nsresult nsDateTimeFormatWin::FormatTime(nsILocale* locale, 
                                          const nsDateFormatSelector  dateFormatSelector, 
                                          const nsTimeFormatSelector timeFormatSelector, 
                                          const time_t  timetTime, 
@@ -37,7 +37,7 @@ nsresult nsDateTimeFormatWin::FormatTime(const nsString& locale,
 }
 
 // performs a locale sensitive date formatting operation on the struct tm parameter
-nsresult nsDateTimeFormatWin::FormatTMTime(const nsString& locale, 
+nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale, 
                                            const nsDateFormatSelector  dateFormatSelector, 
                                            const nsTimeFormatSelector timeFormatSelector, 
                                            const struct tm*  tmTime, 
