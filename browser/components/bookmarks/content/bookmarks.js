@@ -1673,6 +1673,9 @@ function dumpDOM (aElement, aIndent)
 {
   if (!aElement)
     return;
+  if (typeof(aElement) == "string")
+    aElement = document.getElementById(aElement);
+
   if (!aIndent)
     aIndent = 0;
   for (var i=0; i<aIndent*2; ++i)
