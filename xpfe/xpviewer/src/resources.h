@@ -85,4 +85,6 @@
 #define IDC_SITE_NAME           40402
 #define ID_EXIT                 40404
 
+#define VIEWER_FILE_VIEW_SOURCE 40500
+
 #endif /* resources_h___ */
