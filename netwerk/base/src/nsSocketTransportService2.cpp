@@ -215,11 +215,11 @@ nsSocketTransportService::RemoveFromIdleList(SocketContext *sock)
 {
     LOG(("nsSocketTransportService::RemoveFromIdleList [handler=%x]\n", sock->mHandler));
 
-    PRUint32 index = sock - &mIdleList[0];
+    PRInt32 index = sock - &mIdleList[0];
     NS_ASSERTION(index >= 0 && index < NS_SOCKET_MAX_COUNT, "invalid index");
 
-    if (index != mIdleCount - 1)
-        memcpy(&mActiveList[index], &mActiveList[mIdleCount - 1], sizeof(SocketContext));
+    if (index != (PRInt32) mIdleCount - 1)
+        memcpy(&mIdleList[index], &mIdleList[mIdleCount - 1], sizeof(SocketContext));
     mIdleCount--;
 
     LOG(("  active=%u idle=%u\n", mActiveCount, mIdleCount));
@@ -596,6 +596,7 @@ nsSocketTransportService::Run()
             }
         }
         else {
+            LOG(("  PR_Poll timed out\n"));
             //
             // service event queue whenever PR_Poll times out.
             //

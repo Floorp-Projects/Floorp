@@ -1213,6 +1213,8 @@ nsSocketTransport::OnSocketEvent(PRUint32 type, PRUint32 uparam, void *vparam)
         if (!mAttached) // need to process this error ourselves...
             OnSocketDetached(nsnull);
     }
+    else if (mPollFlags == PR_POLL_EXCEPT)
+        mPollFlags = 0; // make idle
 
     return NS_OK;
 }
@@ -1221,72 +1223,57 @@ nsSocketTransport::OnSocketEvent(PRUint32 type, PRUint32 uparam, void *vparam)
 // socket handler impl
 
 void
-nsSocketTransport::OnSocketReady(PRFileDesc *fd, PRInt16 pollFlags)
+nsSocketTransport::OnSocketReady(PRFileDesc *fd, PRInt16 outFlags)
 {
-    LOG(("nsSocketTransport::OnSocketReady [this=%x pollflags=%hd]\n",
-        this, pollFlags));
+    LOG(("nsSocketTransport::OnSocketReady [this=%x outFlags=%hd]\n",
+        this, outFlags));
 
     if (mState == STATE_TRANSFERRING) {
-        // check poll flags for errors
-        if (pollFlags & PR_POLL_ERR || pollFlags & PR_POLL_EXCEPT) {
-            // the network connection was abruptly closed
-            mCondition = NS_ERROR_NET_RESET;
+        // if waiting to write and socket is writable or hit an exception.
+        if ((mPollFlags & PR_POLL_WRITE) && (outFlags & ~PR_POLL_READ)) {
+            SendStatus(STATUS_SENDING_TO);
+            // assume that we won't need to poll any longer (the stream will
+            // request that we poll again if it is still pending).
+            mPollFlags &= ~PR_POLL_WRITE;
+            mOutput.OnSocketReady(NS_OK);
         }
-        else if (pollFlags & PR_POLL_HUP) {
-            // the network connection was gracefully closed
-            mCondition = NS_BASE_STREAM_CLOSED;
-        }
-        else {
-            if (pollFlags & PR_POLL_WRITE) {
-                SendStatus(STATUS_SENDING_TO);
-                // assume that we won't need to poll any longer (the stream will
-                // request that we poll again if it is still pending).
-                mPollFlags &= ~PR_POLL_WRITE;
-                mOutput.OnSocketReady(NS_OK);
-            }
-            if (pollFlags & PR_POLL_READ) {
-                SendStatus(STATUS_RECEIVING_FROM);
-                // assume that we won't need to poll any longer (the stream will
-                // request that we poll again if it is still pending).
-                mPollFlags &= ~PR_POLL_READ;
-                mInput.OnSocketReady(NS_OK);
-            }
+        // if waiting to read and socket is readable or hit an exception.
+        if ((mPollFlags & PR_POLL_READ) && (outFlags & ~PR_POLL_WRITE)) {
+            SendStatus(STATUS_RECEIVING_FROM);
+            // assume that we won't need to poll any longer (the stream will
+            // request that we poll again if it is still pending).
+            mPollFlags &= ~PR_POLL_READ;
+            mInput.OnSocketReady(NS_OK);
         }
     }
     else if (mState == STATE_CONNECTING) {
-        // XXX PR_ConnectContinue does not handle PR_POLL_ERR here (bug 192830).
-        if (pollFlags & PR_POLL_ERR) {
-            mCondition = NS_ERROR_NET_RESET;
+        PRStatus status = PR_ConnectContinue(fd, outFlags);
+        if (status == PR_SUCCESS) {
+            //
+            // we are connected!
+            //
+            OnSocketConnected();
         }
         else {
-            PRStatus status = PR_ConnectContinue(fd, pollFlags);
-            if (status == PR_SUCCESS) {
-                //
-                // we are connected!
-                //
-                OnSocketConnected();
-            }
-            else {
-                PRErrorCode code = PR_GetError();
+            PRErrorCode code = PR_GetError();
 #if defined(TEST_CONNECT_ERRORS)
-                code = RandomizeConnectError(code);
+            code = RandomizeConnectError(code);
 #endif
+            //
+            // If the connect is still not ready, then continue polling...
+            //
+            if ((PR_WOULD_BLOCK_ERROR == code) || (PR_IN_PROGRESS_ERROR == code)) {
+                // Set up the select flags for connect...
+                mPollFlags = (PR_POLL_EXCEPT | PR_POLL_WRITE);
+            } 
+            else {
                 //
-                // If the connect is still not ready, then continue polling...
+                // else, the connection failed...
                 //
-                if ((PR_WOULD_BLOCK_ERROR == code) || (PR_IN_PROGRESS_ERROR == code)) {
-                    // Set up the select flags for connect...
-                    mPollFlags = (PR_POLL_EXCEPT | PR_POLL_WRITE);
-                } 
-                else {
-                    //
-                    // else, the connection failed...
-                    //
-                    mCondition = ErrorAccordingToNSPR(code);
-                    if ((mCondition == NS_ERROR_CONNECTION_REFUSED) && !mProxyHost.IsEmpty())
-                        mCondition = NS_ERROR_PROXY_CONNECTION_REFUSED;
-                    LOG(("  connection failed! [reason=%x]\n", mCondition));
-                }
+                mCondition = ErrorAccordingToNSPR(code);
+                if ((mCondition == NS_ERROR_CONNECTION_REFUSED) && !mProxyHost.IsEmpty())
+                    mCondition = NS_ERROR_PROXY_CONNECTION_REFUSED;
+                LOG(("  connection failed! [reason=%x]\n", mCondition));
             }
         }
     }
@@ -1294,6 +1281,9 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, PRInt16 pollFlags)
         NS_ERROR("unexpected socket state");
         mCondition = NS_ERROR_UNEXPECTED;
     }
+
+    if (mPollFlags == PR_POLL_EXCEPT)
+        mPollFlags = 0; // make idle
 }
 
 // called on the socket thread only
