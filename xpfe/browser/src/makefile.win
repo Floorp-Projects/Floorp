@@ -79,7 +79,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) navigator.xul $(DISTRES)
 	$(MAKE_INSTALL) navigator.js $(DISTRES)
 	$(MAKE_INSTALL) viewSource.xul $(DISTRES)
-	$(MAKE_INSTALL) viewSource.js $(DISTRES)
+	$(MAKE_INSTALL) viewsource.js $(DISTRES)
 	$(MAKE_INSTALL) unknownContent.xul $(DISTRES)
 	$(MAKE_INSTALL) NetSupportUserPassword.xul $(DISTRES)
 	$(MAKE_INSTALL) downloadProgress.xul $(DISTRES)
@@ -102,7 +102,7 @@ clobber::
 	rm -f $(DISTRES)\xul.css
 	rm -f $(DISTRES)\navigator.xul
 	rm -f $(DISTRES)\viewSource.xul
-    rm -f $(DISTRES)\viewSource.js
+    rm -f $(DISTRES)\viewsource.js
 	rm -f $(DISTRES)\unknownContent.xul
 	rm -f $(DISTRES)\downloadProgress.xul
 	rm -f $(DISTRES)\downloadProgress.css

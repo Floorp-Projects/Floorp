@@ -105,7 +105,7 @@
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="Startup1()" title="Mozilla"> 
+        onload="StartupViewSource()" title="Mozilla"> 
   
   <html:script src="navigator.js"></html:script>
   <html:script src="viewsource.js"></html:script>
@@ -144,6 +144,8 @@
       <menuitem name="&printPreviewCmd.label;" onclick=""/>
       <menuitem name="&printCmd.label;" onclick="BrowserPrint()"/>
       <separator />
+	  <menuitem name="closeCmd.label" onclick="BrowserClose();"/>
+	  <menuitem name="quitCmd.label" onclick="BrowserExit();"/>
     </menu>
 	<menu name="&editMenu.label;"> 
       <menuitem name="&undoCmd.label;" onclick="NotImplementedYet();" disabled=""/> 
