@@ -291,17 +291,23 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CMiniSecurityButton);
 	
 	RegisterClass_(CHyperTreeFlexTable);
-	RegisterClass_(CRDFCoordinator);
 	RegisterClass_(CDockedRDFCoordinator);
+	RegisterClass_(CShackRDFCoordinator);
+	RegisterClass_(CWindowRDFCoordinator);
+	RegisterClass_(CPopupRDFCoordinator);
 	RegisterClass_(CHyperTreeHeader);
 	RegisterClass_(CInlineEditField);
 
+	RegisterClass_(CChameleonCaption);
+	RegisterClass_(CChameleonBroadcastCaption);
+	
 	RegisterClass_(CNavCenterWindow);
 	RegisterClass_(CBookmarksFindDialog);
 	RegisterClass_(CPluginView);
 	RegisterClass_(LDividedView);
 	RegisterClass_(CNavCenterContextMenuAttachment);
 	RegisterClass_(CNavCenterTitle);
+	RegisterClass_(CNavCenterCommandStrip);
 	
 #ifdef EDITOR
 	CEditorWindow::RegisterViewTypes();
