@@ -538,8 +538,10 @@ function getEventTable( )
          break;
       case "current":
          var SelectedDate = gCalendarWindow.getSelectedDate();
-         var EndDate = new Date( SelectedDate.getTime() + ( 1000 * 60 * 60 * 24 ) );
-         eventTable = gEventSource.getEventsForRange( SelectedDate, EndDate );
+         MidnightSelectedDate = new Date( SelectedDate.getFullYear(), SelectedDate.getMonth(), SelectedDate.getDate(), 0, 0, 0 );
+
+         var EndDate = new Date( MidnightSelectedDate.getTime() + ( 1000 * 60 * 60 * 24 ) );
+         eventTable = gEventSource.getEventsForRange( MidnightSelectedDate, EndDate );
          break;
       default: 
          eventTable = new Array();

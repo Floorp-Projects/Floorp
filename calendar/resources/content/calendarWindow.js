@@ -355,6 +355,12 @@ CalendarWindow.prototype.setSelectedDate = function calWin_setSelectedDate( date
    // Copy the date because we might mess with it in place
    
    this.selectedDate = new Date( date );
+
+   if( document.getElementById( "event-filter-menulist" ).selectedItem.value == "current" )
+   {
+      //redraw the top tree
+      setTimeout( "refreshEventTree( false );", 150 );
+   }
 }
 
 /** PUBLIC
@@ -540,7 +546,7 @@ CalendarView.prototype.superConstructor = CalendarView;
 
 CalendarView.prototype.goToDay = function calView_goToDay( newDate, ShowEvent )
 {
-   var oldDate = this.calendarWindow.selectedDate;
+   var oldDate = this.calendarWindow.getSelectedDate();
    
    this.calendarWindow.setSelectedDate( newDate ); 
    

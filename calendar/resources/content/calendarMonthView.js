@@ -743,16 +743,20 @@ MonthView.prototype.clickDay = function monthView_clickDay( event )
   
    var dayBoxItem = event.currentTarget;
    
-   if( dayBoxItem.dayNumber != null )
+   if( dayBoxItem.dayNumber != null && event.detail == 1 )
    {
       // turn off showingLastDay - see notes in MonthView class
-      
       this.showingLastDay = false;
    
       // change the selected date and redraw it
-      
-      this.calendarWindow.selectedDate.setDate( dayBoxItem.dayNumber );
+      var newDate = this.calendarWindow.getSelectedDate();
 
+      newDate.setDate( dayBoxItem.dayNumber );
+      
+      this.calendarWindow.setSelectedDate( newDate );
+
+      //changing the selection will redraw the day as selected (colored blue) in the month view.
+      //therefor, this has to happen after setSelectedDate
       gCalendarWindow.EventSelection.emptySelection();
    }
 }
@@ -773,7 +777,7 @@ MonthView.prototype.contextClickDay = function monthView_contextClickDay( event 
    
       // change the selected date and redraw it
       
-      gNewDateVariable = this.calendarWindow.selectedDate;
+      gNewDateVariable = gCalendarWindow.getSelectedDate();
 
       gNewDateVariable.setDate( dayBoxItem.dayNumber );
    }
@@ -788,9 +792,7 @@ MonthView.prototype.doubleClickDay = function monthView_doubleClickDay( event )
    if( event.button > 0 )
       return;
    
-   var dayBoxItem = event.currentTarget;
-
-   if ( dayBoxItem.dayNumber != null ) 
+   if ( event.currentTarget.dayNumber != null ) 
    {
       // change the selected date and redraw it
 

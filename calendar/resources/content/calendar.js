@@ -260,7 +260,8 @@ function dayEventItemDoubleClick( eventBox, event )
 
 function dayViewHourClick( event )
 {
-   gCalendarWindow.setSelectedHour( event.target.getAttribute( "hour" ) );
+   if( event.detail == 1 )
+      gCalendarWindow.setSelectedHour( event.target.getAttribute( "hour" ) );
 }
 
 
@@ -290,11 +291,8 @@ function dayViewHourContextClick( event )
 
 function dayViewHourDoubleClick( event )
 {
-   // change the date selection to the clicked hour
-   
-   gCalendarWindow.setSelectedHour( event.target.getAttribute( "hour" ) );
-   
    var startDate = gCalendarWindow.dayView.getNewEventDate();
+   
    newEvent( startDate );
 }
 
@@ -311,7 +309,15 @@ function weekEventItemClick( eventBox, event )
 {
    //do this check, otherwise on double click you get into an infinite loop
    if( event.detail == 1 )
+   {
       gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
+
+      var newDate = gCalendarWindow.getSelectedDate();
+
+      newDate.setDate( eventBox.calendarEventDisplay.event.start.day );
+
+      gCalendarWindow.setSelectedDate( newDate );
+   }
 
    if ( event ) 
    {
@@ -349,13 +355,16 @@ function weekEventItemDoubleClick( eventBox, event )
 
 function weekViewHourClick( event )
 {
-   var dayIndex = event.target.getAttribute( "day" );
+   if( event.detail == 1 )
+   {
+      var dayIndex = event.target.getAttribute( "day" );
 
-   newDate = gHeaderDateItemArray[dayIndex].getAttribute( "date" );
+      newDate = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
 
-   gCalendarWindow.setSelectedDate( newDate );
+      newDate.setHours( event.target.getAttribute( "hour" ) );
 
-   gCalendarWindow.setSelectedHour( event.target.getAttribute( "hour" ) );
+      gCalendarWindow.setSelectedDate( newDate );
+   }
 }
 
 
@@ -383,17 +392,8 @@ function weekViewContextClick( event )
 
 function weekViewHourDoubleClick( event )
 {
-   var dayIndex = event.target.getAttribute( "day" );
-
-   newDate = gHeaderDateItemArray[dayIndex].getAttribute( "date" );
-
-   gCalendarWindow.setSelectedDate( newDate );
-
-   // change the date selection to the clicked hour
-   
-   gCalendarWindow.setSelectedHour( event.target.getAttribute( "hour" ) );
-   
    var startDate = gCalendarWindow.weekView.getNewEventDate();
+   
    newEvent( startDate );
 }
 
@@ -410,7 +410,15 @@ function monthEventBoxClickEvent( eventBox, event )
 {
    //do this check, otherwise on double click you get into an infinite loop
    if( event.detail == 1 )
+   {
       gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
+      
+      var newDate = gCalendarWindow.getSelectedDate();
+
+      newDate.setDate( eventBox.calendarEventDisplay.event.start.day );
+
+      gCalendarWindow.setSelectedDate( newDate );
+   }
 
    if ( event ) 
    {
