@@ -911,9 +911,9 @@ nsresult nsFontMetricsOS2::RealizeFont()
   nsCAutoString name(NS_LossyConvertUCS2toASCII(langGroup).get());
   for (int j=0; j < eCharSet_COUNT; j++ )
   {
-    if (name[0] == gCharSetInfo[j].mLangGroup[0])
+    if (name.get()[0] == gCharSetInfo[j].mLangGroup[0])
     {
-      if (!strcmp(name, gCharSetInfo[j].mLangGroup))
+      if (!strcmp(name.get(), gCharSetInfo[j].mLangGroup))
       {
         fattrs->usCodePage = gCharSetInfo[j].mCodePage;
         mCodePage = gCharSetInfo[j].mCodePage;
