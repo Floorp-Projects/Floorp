@@ -43,7 +43,8 @@ chomp $object_root;
 #    called from "mozilla/gfx/src", then $source_subdir would be
 #    "gfx/src/".
 $source_subdir = "$object_fullpath/";
-$source_subdir =~ s|^$object_root/||;
+my $quoted_object_root = quotemeta($object_root);
+$source_subdir =~ s|^$quoted_object_root/||;
 
 # Prefix makefiles with $source_subdir so that paths
 # will be relative to the top of the object tree.
