@@ -45,6 +45,8 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIObserverService.h"
 #include "nsIWindowMediator.h"
+#include "nsIScreenManager.h"
+#include "nsIScreen.h"
 
 // XXX Get rid of this
 #pragma message("WARNING: XXX bad include, remove it.")
@@ -66,7 +68,7 @@ nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull),
    mContentTreeOwner(nsnull), mPrimaryContentTreeOwner(nsnull),
    mContinueModalLoop(PR_FALSE), mChromeLoaded(PR_FALSE), 
    mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE),
-   mZlevel(nsIXULWindow::normalZ)
+   mCenterAfterLoad(PR_FALSE), mZlevel(nsIXULWindow::normalZ)
    
 {
 	NS_INIT_REFCNT();
@@ -494,6 +496,53 @@ NS_IMETHODIMP nsXULWindow::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* c
    return NS_OK;
 }
 
+// only does screen-centering right now
+NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, PRBool aScreen, PRBool aAlert) {
+
+  PRInt32  left, top, width, height,
+           ourWidth, ourHeight;
+  nsresult result;
+
+  if (!mChromeLoaded) {
+    // note we lose the parameters. at time of writing, this isn't a problem.
+    mCenterAfterLoad = PR_TRUE;
+    return NS_OK;
+  }
+
+  if (!aScreen && !aRelative)
+    return NS_ERROR_INVALID_ARG;
+
+  nsCOMPtr<nsIScreenManager> screenmgr = do_GetService("component://netscape/gfx/screenmanager", &result);
+  if (NS_FAILED(result))
+    return result;
+
+  nsCOMPtr<nsIScreen> screen;
+
+  if (aRelative) {
+    nsCOMPtr<nsIBaseWindow> base(do_QueryInterface(aRelative, &result));
+    if (base) { // assume result will be an error indication
+      base->GetPositionAndSize(&left, &top, &width, &height);
+      if (aScreen)
+        screenmgr->ScreenForRect(left, top, width, height, getter_AddRefs(screen));
+    }
+  } else
+    screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
+  if (NS_FAILED(result))
+    return result;
+
+  if (aScreen) {
+    screen->GetAvailLeft(&left);
+    screen->GetAvailTop(&top);
+    screen->GetAvailWidth(&width);
+    screen->GetAvailHeight(&height);
+  }
+
+  GetSize(&ourWidth, &ourHeight);
+  SetPosition(left+(width-ourWidth)/2, top+(height-ourHeight)/(aAlert?3:2));
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsXULWindow::Repaint(PRBool aForce)
 {
    //XXX First Check In
@@ -695,6 +744,9 @@ void nsXULWindow::OnChromeLoaded()
       }
 
    //LoadContentAreas();
+
+   if (mCenterAfterLoad)
+      Center(nsnull, PR_TRUE, PR_FALSE);
 
    if(mShowAfterLoad)
       SetVisibility(PR_TRUE);
