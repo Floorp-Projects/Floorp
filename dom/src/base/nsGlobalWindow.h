@@ -187,6 +187,7 @@ public:
   NS_IMETHOD GetExtantDocument(nsIDOMDocument** aDocument);
 
   NS_IMETHOD ReallyCloseWindow();
+  NS_IMETHOD IsLoadingOrRunningTimeout(PRBool* aResult);
 
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS

@@ -84,6 +84,8 @@ public:
   NS_IMETHOD GetExtantDocument(nsIDOMDocument** aDocument) = 0;
 
   NS_IMETHOD ReallyCloseWindow() = 0;
+
+  NS_IMETHOD IsLoadingOrRunningTimeout(PRBool* aResult) = 0;
 };
 
 #endif // nsPIDOMWindow_h__

@@ -2814,6 +2814,13 @@ GlobalWindowImpl::ReallyCloseWindow()
 }
 
 NS_IMETHODIMP
+GlobalWindowImpl::IsLoadingOrRunningTimeout(PRBool* aResult)
+{
+  *aResult = !mIsDocumentLoaded || mRunningTimeout;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GlobalWindowImpl::UpdateCommands(const nsAString& anAction)
 {
   nsCOMPtr<nsIDOMWindowInternal> rootWindow;

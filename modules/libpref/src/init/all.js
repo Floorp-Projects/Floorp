@@ -690,3 +690,6 @@ pref("update_notifications.provider.0.datasource", "chrome://communicator-region
 // if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
 pref("plugin.override_internal_types", false);
 
+// See bug 136985.  Gives embedders a pref to hook into to show
+// a popup blocker if they choose.
+pref("browser.popups.showPopupBlocker", true);
