@@ -147,6 +147,12 @@ pref("browser.tabs.loadGroup", 1);
 pref("browser.tabs.loadOnNewTab", 0);
 pref("browser.windows.loadOnNewWindow", 1);
 
+// link handling in tabbed browsers. values from nsIBrowserDOMWindow.
+pref("browser.link.open_external", 1);
+pref("browser.link.open_newwindow", 2);
+pref("browser.link.open_newwindow.ui", 3); // prefs UI version
+pref("browser.link.open_newwindow.restriction", 0); // values from GlobalWindow
+
 // view source
 pref("view_source.syntax_highlight", true);
 pref("view_source.wrap_long_lines", false);
@@ -391,7 +397,6 @@ pref("capability.policy.default.Clipboard.cutcopy", "noAccess");
 pref("capability.policy.default.Clipboard.paste", "noAccess");
 
 // Scripts & Windows prefs
-pref("browser.block.target_new_window",     false);
 pref("dom.disable_image_src_set",           false);
 pref("dom.disable_window_flip",             false);
 pref("dom.disable_window_move_resize",      false);
@@ -1071,9 +1076,6 @@ pref("intl.jis0208.map", "CP932");
 // Mac specific preference defaults
 pref("browser.drag_out_of_frame_style", 1);
 pref("ui.key.saveLink.shift", false); // true = shift, false = meta
-
-// should a GURL event open a new window or re-use (4.x compat)
-pref("browser.always_reuse_window", false);
 
 // default font name (in UTF8)
 
