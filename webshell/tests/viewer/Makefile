@@ -27,7 +27,7 @@ CPPSRCS = \
 	nsSetupRegistry.cpp	\
 	nsUnixMain.cpp		\
 	nsViewerApp.cpp		\
-	nsWebCrawler.app	\
+	nsWebCrawler.cpp	\
 	$(NULL)
 
 INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom \
