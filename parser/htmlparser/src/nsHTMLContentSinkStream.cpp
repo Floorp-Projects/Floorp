@@ -215,8 +215,8 @@ nsHTMLContentSinkStream::InitEncoder()
  
   NS_ASSERTION(nsnull != calias, "cannot find charset alias"); 
   if(NS_SUCCEEDED(res) && (nsnull != calias)) 
-  { 
-    res = calias->GetPreferred(mCharsetOverride, charsetName); 
+  {
+    res = calias->GetPreferred(mCharsetOverride, charsetName);
     nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
   }
   if (NS_FAILED(res))
@@ -291,9 +291,18 @@ void nsHTMLContentSinkStream::Write(const nsString& aString)
   if (mBodyOnly && !mInBody)
     return;
 
+  // If an encoder is being used then convert first convert the input string
+  if (mUnicodeEncoder)
+    EncodeToBuffer(aString);
+
   // No need to re-encode strings, since they're going from UCS2 to UCS2
   if (mString)
-    mString->Append(aString);
+  {
+    if (mUnicodeEncoder)
+      mString->Append(mBuffer, mBufferLength);
+    else
+      mString->Append(aString);
+  }
 
   if (!mStream)
     return;
@@ -304,7 +313,6 @@ void nsHTMLContentSinkStream::Write(const nsString& aString)
   // If an encoder is being used then convert first convert the input string
   if (mUnicodeEncoder)
   {
-    EncodeToBuffer(aString);
     out.write(mBuffer, mBufferLength);
   }
   // else just write the unicode
