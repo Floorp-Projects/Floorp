@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.5 2000/09/15 06:38:32 mcgreer%netscape.com Exp $
+ * $Id: cms.h,v 1.6 2000/09/29 16:38:11 mcgreer%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -1065,6 +1065,17 @@ NSS_CMSDigestContext_FinishSingle(NSSCMSDigestContext *cmsdigcx, PLArenaPool *po
 /************************************************************************
  * 
  ************************************************************************/
+
+/* shortcuts for basic use */
+
+/*
+ * NSS_CMSDEREncode - DER Encode a CMS message, with input being
+ *                    the plaintext message and derOut being the output,
+ *                    stored in arena's pool.
+ */
+extern SECStatus
+NSS_CMSDEREncode(NSSCMSMessage *cmsg, SECItem *input, SECItem *derOut, 
+                 PLArenaPool *arena);
 
 
 /************************************************************************/
