@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 /* This file was modified since it was taken from the zlib distribution */
-/* $Id: zutil.c,v 3.3 2000/08/18 22:07:41 sgehani%netscape.com Exp $ */
+/* $Id: zutil.c,v 3.4 2000/08/18 23:22:11 sgehani%netscape.com Exp $ */
 
 #include <stdio.h>
 
@@ -43,7 +43,7 @@ void z_error (m)
     char *m;
 {
 #ifndef XP_UNIX
-    PR_ASSERT(0);	  	
+    /* PR_ASSERT(0); */
 #endif
 }
 #endif
