@@ -39,7 +39,11 @@ public:
     // nsStdURL methods:
 
     nsStdURL(const char* i_Spec, nsISupports* outer=nsnull);
+	nsStdURL(const nsStdURL& i_URL); 
     virtual ~nsStdURL();
+
+	nsStdURL&	operator =(const nsStdURL& otherURL); 
+	PRBool		operator ==(const nsStdURL& otherURL) const;
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -93,6 +97,10 @@ public:
     NS_IMETHOD GetFileName(char * *aFileName);
     NS_IMETHOD SetFileName(char * aFileName);
 
+	/* attribute string Param; */
+	NS_IMETHOD GetParam(char * *aParam);
+	NS_IMETHOD SetParam(char * aParam);
+
     /* attribute string Query; */
     NS_IMETHOD GetQuery(char * *aQuery);
     NS_IMETHOD SetQuery(char * aQuery);
@@ -106,6 +114,7 @@ public:
 
 	/* todo move this to protected later */
 	nsresult ParsePath(void);
+
 protected:
     nsresult Parse(void);
     nsresult ReconstructPath(void);
@@ -124,14 +133,11 @@ protected:
 
 	char*		mDirectory;
 	char*		mFileName;
-    char*       mQuery;
+    char*		mParam;
+	char*       mQuery;
     char*       mRef;
 
     char*       mSpec; 
-
-private:
-	nsStdURL(const nsStdURL&); // no-op
-	nsStdURL& operator =(const nsStdURL&); // no-op
 
 };
 
@@ -181,6 +187,12 @@ inline NS_METHOD
 nsStdURL::GetRef(char* *o_Ref)
 {
 	return DupString(o_Ref, mRef);
+}
+
+inline NS_METHOD
+nsStdURL::GetParam(char **o_Param)
+{
+	return DupString(o_Param, mParam);
 }
 
 inline NS_METHOD
