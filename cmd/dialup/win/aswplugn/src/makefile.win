@@ -32,6 +32,8 @@ INCS= \
 	-I$(DEPTH)\dist\public\java \
 	-I$(DEPTH)\dist\public\nspr \
 	-I$(DEPTH)\dist\public\libreg \
+	-I$(DEPTH)\dist\public\pref \
+	-I$(DEPTH)\dist\public\js \
 !ifdef MOZ_PRIV
 	-I$(PRIVDIR) \
 	-I$(PRIVDIR)\..\..\shiva \
@@ -114,6 +116,9 @@ DLL_LIBS=winsock \
 	olecli.lib \
 	olesvr.lib \
 	shell.lib\
+	$(LIBNSPR) \
+	$(DEPTH)\dist\$(OBJDIR)\lib\libreg16.lib \
+	$(DEPTH)\dist\$(OBJDIR)\lib\xppref16.lib \
 	$(DLL_LIBS)
 !else
 DEFFILE = plugn32.def
@@ -126,6 +131,7 @@ DLL_LIBS=mapi32.lib \
 	ole32.lib \
 	$(LIBNSPR) \
 	$(DEPTH)\dist\$(OBJDIR)\lib\libreg32.lib \
+	$(DEPTH)\dist\$(OBJDIR)\lib\xppref32.lib \
 	$(DLL_LIBS)
 !endif
 
