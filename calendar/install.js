@@ -1,10 +1,11 @@
 /* ***************
 Desc: Installation script
 ****************** */
-const displayName = "Mozilla Calendar";
-const name        = "MozillaCalendar";
-const version     = "0.8";
-const addLocales   = new Array("cs-CZ", "cy-GB", "de-AT", "es-ES", "fr-FR", "hu-HU", "ja-JP", "lt-LT", "nl-NL", "pl-PL", "pt-BR", "sk-SK", "sl-SI", "sv-SE", "wen-DE");
+const displayName      = "Mozilla Calendar";
+const name             = "MozillaCalendar";
+const version          = "0.8";
+const addLocales       = new Array("cs-CZ", "cy-GB", "de-AT", "es-ES", "fr-FR", "hu-HU", "ja-JP", "lt-LT", "nl-NL", "pl-PL", "pt-BR", "sk-SK", "sl-SI", "sv-SE", "wen-DE");
+const default_lang     =  "en-US";
 
 var err = initInstall(displayName, name, version);
 
@@ -38,7 +39,7 @@ if ( err == SUCCESS ) {
    registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "content/calendar/");
    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "skin/classic/calendar/");
    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "skin/modern/calendar/");
-   registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "locale/en-US/calendar/");
+   registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "locale/"+default_lang+"/calendar/");
 
    for (var i = 0; i < addLocales.length; i++) {
 
@@ -50,8 +51,12 @@ if ( err == SUCCESS ) {
                        "chrome/calendar-"+addLocales[i]+".jar", // jar source folder 
                        getFolder("Chrome"),        // target folder
                        "");
-        registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","calendar-"+addLocales[i]+".jar"),
-                                                "locale/"+addLocales[i]+"/calendar/");
+        logComment("addFile() for locale " + addLocales[i] + " returned: " + err);
+        if( err != SUCCESS )
+            alert( "addFile() for locale " + addLocales[i] + " returned: " + err );
+        else 
+            registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","calendar-" +addLocales[i] + ".jar"),
+                                                "locale/" +addLocales[i] + "/calendar/");
       }
 
       // Check Mozilla Thunderbird (Mail/News)
@@ -62,8 +67,12 @@ if ( err == SUCCESS ) {
                        "chrome/calendar-"+addLocales[i]+".jar", // jar source folder 
                        getFolder("Chrome"),        // target folder
                        "");
-        registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","calendar-"+addLocales[i]+".jar"),
-                                                "locale/"+addLocales[i]+"/calendar/");
+        logComment("addFile() for locale " + addLocales[i] + " returned: " + err);
+        if( err != SUCCESS )
+            alert( "addFile() for locale " + addLocales[i] + " returned: " + err );
+        else 
+            registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","calendar-" + addLocales[i]+".jar"),
+                                                "locale/" + addLocales[i]+"/calendar/");
       }
    }
 
@@ -79,7 +88,7 @@ if ( err == SUCCESS ) {
    }
 } 
 else {
-   alert("Failed to create directory. \n"
+   alert("Failed to add some/all files. \n"
     +"You probably don't have appropriate permissions \n"
     +"(write access to <mozilla>/chrome directory). \n"
     +"If you installed Mozilla as root then you need to install calendar as root as well.\n"

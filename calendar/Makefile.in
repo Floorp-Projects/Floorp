@@ -100,8 +100,12 @@ xpi::
 
 	echo "Building xpi..."
 
+	cp $(srcdir)/resources/content/about.html $(srcdir)/resources/content/about.html.bkup
 	$(PERL) $(srcdir)/createBuildId.pl $(srcdir)/resources/content/about.html
 	make
+	make -C resources/locale
+	cp $(srcdir)/resources/content/about.html.bkup $(srcdir)/resources/content/about.html
+	rm -f $(srcdir)/resources/content/about.html.bkup
 	mkdir -p ./xpi/components
 	mkdir -p ./xpi/chrome
 	mkdir -p ./xpi/other_stuff
