@@ -346,25 +346,11 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   var image = TrimString(gDialog.BackgroundImageInput.value);
   if (image)
   {
-    if (IsValidImage(image))
-    {
-      backgroundImage = image;
+    backgroundImage = image;
 
-      // Display must use absolute URL if possible
-      var displayImage = gHaveDocumentUrl ? MakeAbsoluteUrl(image) : image;
-      styleValue += backImageStyle+displayImage+");";
-    }
-    else
-    {
-      backgroundImage = null;
-      if (ShowErrorMessage)
-      {
-        SetTextboxFocus(gDialog.BackgroundImageInput);
-        // Tell user about bad image
-        ShowInputErrorMessage(GetString("MissingImageError"));
-      }
-      retVal = false;
-    }
+    // Display must use absolute URL if possible
+    var displayImage = gHaveDocumentUrl ? MakeAbsoluteUrl(image) : image;
+    styleValue += backImageStyle+displayImage+");";
   }
   else backgroundImage = null;
 
