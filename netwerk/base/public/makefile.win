@@ -65,6 +65,7 @@ XPIDLSRCS =                             \
 	.\nsIStreamProvider.idl         \
 	.\nsITransport.idl              \
         .\nsIDownloader.idl             \
+	.\nsIUploadChannel.idl          \
         .\nsIURI.idl                    \
         .\nsIURL.idl                    \
         .\nsIURLParser.idl              \
