@@ -15,8 +15,8 @@ toolkit.jar:
 en-US.jar:
 +  locale/en-US/global/printdialog.dtd              (locale/printdialog.dtd)
 +  locale/en-US/global/printjoboptions.dtd          (locale/printjoboptions.dtd)
++  locale/en-US/global/printjoboptions.properties   (locale/printjoboptions.properties)
 +  locale/en-US/global/printPageSetup.dtd           (locale/printPageSetup.dtd)
-+  locale/en-US/global/printPageSetup.properties    (locale/printPageSetup.properties)
 +  locale/en-US/global/printPreview.dtd             (locale/printPreview.dtd)
 +  locale/en-US/global/printPreviewProgress.dtd     (locale/printPreviewProgress.dtd)
 +  locale/en-US/global/printProgress.dtd            (locale/printProgress.dtd)
