@@ -34,16 +34,10 @@
 #include "secrng.h"
 #ifdef XP_WIN
 #include <windows.h>
-
-#if defined(_WIN32_WCE)
-#include <stdlib.h>	/* Win CE puts lots of stuff here. */
-#include "prprf.h"	/* for PR_snprintf */
-#else
 #include <time.h>
 #include <io.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#endif
 #include <stdio.h>
 
 #ifndef _WIN32
@@ -51,13 +45,6 @@
 #define OP_OVERRIDE     _asm _emit 0x66
 #include <dos.h>
 #endif
-
-#include "prio.h"
-
-static PRInt32  filesToRead;
-static DWORD    totalFileBytes;
-static DWORD    maxFileBytes	= 250000;
-static DWORD    dwNumFiles, dwReadEvery;
 
 static BOOL
 CurrentClockTickTime(LPDWORD lpdwHigh, LPDWORD lpdwLow)
@@ -129,6 +116,7 @@ size_t RNG_GetNoise(void *buf, size_t maxbuf)
     DWORD   dwHigh, dwLow, dwVal;
     int     n = 0;
     int     nBytes;
+    time_t  sTime;
 
     if (maxbuf <= 0)
         return 0;
@@ -163,81 +151,18 @@ size_t RNG_GetNoise(void *buf, size_t maxbuf)
     if (maxbuf <= 0)
         return n;
 
-#if defined(_WIN32_WCE)
-    {
-    // get the number of milliseconds elapsed since Windows CE was started. 
-    DWORD  tickCount = GetTickCount();
-    nBytes = (sizeof tickCount) > maxbuf ? maxbuf : (sizeof tickCount);
-    memcpy(((char *)buf) + n, &tickCount, nBytes);
-    n += nBytes;
-    }
-#else
-    {
-    time_t  sTime;
     // get the time in seconds since midnight Jan 1, 1970
     time(&sTime);
     nBytes = sizeof(sTime) > maxbuf ? maxbuf : sizeof(sTime);
     memcpy(((char *)buf) + n, &sTime, nBytes);
     n += nBytes;
-    }
-#endif
 
     return n;
 }
 
-#if defined(_WIN32_WCE)
 static BOOL
-EnumSystemFilesWithNSPR(const char * dirName, 
-			BOOL recursive,
-                        PRInt32 (*func)(const char *))
+EnumSystemFiles(void (*func)(const char *))
 {
-    PRDir *      pDir;
-    PRDirEntry * pEntry;
-    BOOL         rv 		= FALSE;
-
-    pDir = PR_OpenDir(dirName);
-    if (!pDir)
-    	return rv;
-    while ((pEntry = PR_ReadDir(pDir, PR_SKIP_BOTH|PR_SKIP_HIDDEN)) != NULL) {
-	PRStatus    status;
-	PRInt32     count;
-	PRInt32     stop;
-	PRFileInfo  fileInfo;
-	char        szFileName[_MAX_PATH];
-
-        count = (PRInt32)PR_snprintf(szFileName, sizeof szFileName, "%s\\%s", 
-	                             dirName, PR_DirName(pEntry));
-	if (count < 1)
-	    continue;
-	status = PR_GetFileInfo(szFileName, &fileInfo);
-	if (status != PR_SUCCESS)
-	    continue;
-	if (fileInfo.type == PR_FILE_FILE) {
-	    stop = (*func)(szFileName);
-	    rv = TRUE;
-	    if (stop)
-	        break;
-	    continue;
-    	}
-	if (recursive && fileInfo.type == PR_FILE_DIRECTORY) {
-	    rv |= EnumSystemFilesWithNSPR(szFileName, recursive, func);
-	}
-    }
-    PR_CloseDir(pDir);
-    return rv;
-}
-#endif
-
-static BOOL
-EnumSystemFiles(PRInt32 (*func)(const char *))
-{
-#if defined(_WIN32_WCE)
-    BOOL rv = FALSE;
-    rv |= EnumSystemFilesWithNSPR("\\Windows\\Temporary Internet Files", TRUE, func);
-    rv |= EnumSystemFilesWithNSPR("\\Temp",    FALSE, func);
-    rv |= EnumSystemFilesWithNSPR("\\Windows", FALSE, func);
-    return rv;
-#else
     int                 iStatus;
     char                szSysDir[_MAX_PATH];
     char                szFileName[_MAX_PATH];
@@ -282,31 +207,23 @@ EnumSystemFiles(PRInt32 (*func)(const char *))
 #endif
 
     return TRUE;
-#endif
 }
 
-static PRInt32
+static DWORD    dwNumFiles, dwReadEvery;
+
+static void
 CountFiles(const char *file)
 {
     dwNumFiles++;
-    return 0;
 }
 
-static PRInt32
+static void
 ReadFiles(const char *file)
 {
-    if ((dwNumFiles % dwReadEvery) == 0) {
-	++filesToRead;
-    }
-    if (filesToRead) {
-	DWORD    prevFileBytes = totalFileBytes;
+    if ((dwNumFiles % dwReadEvery) == 0)
         RNG_FileForRNG(file);
-	if (prevFileBytes < totalFileBytes) {
-	    --filesToRead;
-	}
-    }
+
     dwNumFiles++;
-    return (totalFileBytes >= maxFileBytes);
 }
 
 static void
@@ -320,7 +237,6 @@ ReadSystemFiles()
     RNG_RandomUpdate(&dwNumFiles, sizeof(dwNumFiles));
 
     // now read 10 files
-    filesToRead = 10;
     if (dwNumFiles == 0)
         return;
 
@@ -339,14 +255,12 @@ void RNG_SystemInfoForRNG(void)
     int             nBytes;
 #ifdef _WIN32
     MEMORYSTATUS    sMem;
-    HANDLE          hVal;
-#if !defined(_WIN32_WCE)
     DWORD           dwSerialNum;
     DWORD           dwComponentLen;
     DWORD           dwSysFlags;
     char            volName[128];
     DWORD           dwSectors, dwBytes, dwFreeClusters, dwNumClusters;
-#endif
+    HANDLE          hVal;
 #else
     int             iVal;
     HTASK           hTask;
@@ -361,10 +275,10 @@ void RNG_SystemInfoForRNG(void)
     sMem.dwLength = sizeof(sMem);
     GlobalMemoryStatus(&sMem);                // assorted memory stats
     RNG_RandomUpdate(&sMem, sizeof(sMem));
-#if !defined(_WIN32_WCE)
+
     dwVal = GetLogicalDrives();
     RNG_RandomUpdate(&dwVal, sizeof(dwVal));  // bitfields in bits 0-25
-#endif
+
 #else
     dwVal = GetFreeSpace(0);
     RNG_RandomUpdate(&dwVal, sizeof(dwVal));
@@ -376,11 +290,10 @@ void RNG_SystemInfoForRNG(void)
 #endif
 
 #ifdef _WIN32
-#if !defined(_WIN32_WCE)
     dwVal = sizeof(buffer);
     if (GetComputerName(buffer, &dwVal))
         RNG_RandomUpdate(buffer, dwVal);
-#endif
+
 /* XXX This is code that got yanked because of NSPR20.  We should put it
  * back someday.
  */
@@ -413,7 +326,6 @@ void RNG_SystemInfoForRNG(void)
     dwVal = GetCurrentProcessId();            // process ID (4 bytes)
     RNG_RandomUpdate(&dwVal, sizeof(dwVal));
 
-#if !defined(_WIN32_WCE)
     volName[0] = '\0';
     buffer[0] = '\0';
     GetVolumeInformation(NULL,
@@ -437,7 +349,7 @@ void RNG_SystemInfoForRNG(void)
         RNG_RandomUpdate(&dwFreeClusters, sizeof(dwFreeClusters));
         RNG_RandomUpdate(&dwNumClusters,  sizeof(dwNumClusters));
     }
-#endif
+
 #else   /* is WIN16 */
     hTask = GetCurrentTask();
     RNG_RandomUpdate((void *)&hTask, sizeof(hTask));
@@ -462,36 +374,38 @@ void RNG_SystemInfoForRNG(void)
 
 void RNG_FileForRNG(const char *filename)
 {
-    PRFileDesc *    file;
+    FILE*           file;
     int             nBytes;
-    PRFileInfo      infoBuf;
+    struct stat     stat_buf;
     unsigned char   buffer[1024];
+
+    static DWORD    totalFileBytes = 0;
 
     /* windows doesn't initialize all the bytes in the stat buf,
      * so initialize them all here to avoid UMRs.
      */
-    memset(&infoBuf, 0, sizeof infoBuf);
+    memset(&stat_buf, 0, sizeof stat_buf);
 
-    if (PR_GetFileInfo(filename, &infoBuf) < 0)
+    if (stat((char *)filename, &stat_buf) < 0)
         return;
 
-    RNG_RandomUpdate((unsigned char*)&infoBuf, sizeof(infoBuf));
+    RNG_RandomUpdate((unsigned char*)&stat_buf, sizeof(stat_buf));
 
-    file = PR_Open(filename, PR_RDONLY, 0);
+    file = fopen((char *)filename, "r");
     if (file != NULL) {
         for (;;) {
-            PRInt32 bytes = PR_Read(file, buffer, sizeof buffer);
+            size_t  bytes = fread(buffer, 1, sizeof(buffer), file);
 
-            if (bytes <= 0)
+            if (bytes == 0)
                 break;
 
             RNG_RandomUpdate(buffer, bytes);
             totalFileBytes += bytes;
-            if (totalFileBytes > maxFileBytes)
+            if (totalFileBytes > 250000)
                 break;
         }
 
-        PR_Close(file);
+        fclose(file);
     }
 
     nBytes = RNG_GetNoise(buffer, 20);  // get up to 20 bytes
