@@ -36,7 +36,7 @@
     var _elementIDs = ["nglayoutDebugWindow",
                        "debugXULBoxes", "nglayoutDebugUseXBLForms", 
                        "nglayoutDebugEnableXPCOMRefcntLog", "showAboutAsStupidModalWindow",
-                       "browserEnableTBDnD"];
+                       "browserEnableTBDnD", "acceleratorKeyValue", "menuAccessKeyValue"];
   ]]>
   </script>
         
@@ -70,6 +70,32 @@
               prefattribute="checked"/>
   </titledbox>              
 
+
+  <titledbox orient="vertical">
+    <label value="&accelerators.label;"/>
+    <label value="&acceleratorsBlurb.label;"/>
+
+      <grid flex="1">
+        <columns>
+          <column/>
+          <column/>
+        </columns>
+        
+        <rows>
+          <row autostretch="never">
+            <text class="label" value="&acceleratorKey.label;" for="acceleratorKeyValue"/>
+            <textbox id="acceleratorKeyValue" pref="true" preftype="int"
+              prefstring="ui.key.accelKey" prefattribute="value" size="5"/>
+          </row>
+          <row autostretch="never">
+            <text class="label" value="&menuAccessKey.label;" for="menuAccessKeyValue"/>
+            <textbox id="menuAccessKeyValue" pref="true" preftype="int"
+              prefstring="ui.key.menuAccessKey" prefattribute="value" size="5"/>
+          </row>
+        </rows>
+      </grid>
+
+  </titledbox>
 
 </window>
 
