@@ -480,7 +480,7 @@
     </tr>
 </table>
 <!-- from EdDialogOverlay -->
-<xul:box id="advancedEditButtonNoHR"/>
+<xul:box id="AdvancedEditButtonNoHR"/>
 
 </div> <!-- END of "MoreRow" block that is hidden by More/Fewer button -->
 

@@ -48,7 +48,7 @@
   <xul:keyset id="keyset"/>
 
   <!-- from EdDialogOverlay -->
-  <xul:box id="advancedEditButton"/>
+  <xul:box id="AdvancedEditButton"/>
   <!-- from global dialogOverlay -->
 	<xul:box id="okCancelButtons"/> 
 </xul:window>

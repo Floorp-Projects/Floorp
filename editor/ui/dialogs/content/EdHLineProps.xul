@@ -57,7 +57,7 @@
               </td>
               <td colspan="2">
                 <input type="text" id="height" size="4" maxlength="4"
-                    onkeypress="forceInteger('height')" />
+                    onkeyup="forceInteger('height')" />
                 <label> &pixelsPopup.value; </label>
               </td>
             </tr>
@@ -67,7 +67,7 @@
               </td>
               <td>
                 <input type="text" id="width" size="4" maxlength="4"
-                    onkeypress="forceInteger('width')" />
+                    onkeyup="forceInteger('width')" />
               </td>
               <td>
                 <xul:menu>
@@ -102,7 +102,7 @@
     </tr>
   </table>
   <!-- from EdDialogOverlay -->
-  <xul:box id="advancedEditButton"/>
+  <xul:box id="AdvancedEditButton"/>
   <!-- from global dialogOverlay -->
 	<xul:box id="okCancelButtons"/> 
 </xul:window>
