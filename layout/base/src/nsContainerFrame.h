@@ -115,6 +115,8 @@ public:
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
+  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+                       nsDidReflowStatus aStatus);
 
   // Painting
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
