@@ -19,6 +19,8 @@
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
+ *   Andrew Thompson (lordpixel@mac.com)
+ *   Andrew Thompson (lordpixel@mac.com)
  * Contributor(s):
  *   Mike Pinkerton (pinkerton@netscape.com)
  *
@@ -42,7 +44,9 @@
 
 
 #include "nsISupports.h"
-#include <quickdraw.h>
+#include "nsRect.h"
+#include <QuickDraw.h>
+
 
 // IID for the nsIImage interface
 // {80b2f600-f140-11d4-bb6f-d472847e8dbc}
@@ -53,6 +57,7 @@
 // 
 // nsIImageMac
 //
+  
 // MacOS-specific Interface to Images
 //
 class nsIImageMac : public nsISupports
@@ -72,6 +77,22 @@ public:
   
     // Get the PixMap for this image
   NS_IMETHOD GetPixMap ( PixMap** aPixMap ) = 0;
+  
+    //Convert to the os-native icon format. Most used to put icons
+    //onto windows and menus. The outIcon will be allocated, the caller
+    //is responsible for disposing the memory
+  NS_IMETHOD ConvertToIcon(  const nsRect& aSrcRegion, 
+                             const PRInt16 aIconDepth, 
+                             const PRInt16 aIconSize,
+                             Handle* aOutIcon,
+                             OSType* aOutIconType) = 0;
+    //Companion method for ConvertToIcon, makes icon masks
+    //see nsImageMac.cpp for full details
+  NS_IMETHOD ConvertAlphaToIconMask(  const nsRect& aSrcRegion, 
+                                      const PRInt16 aMaskDepth, 
+                                      const PRInt16 aMaskSize,
+                                      Handle* aOutMask,
+                                      OSType* aOutIconType) = 0;  
 
 }; // nsIImageMac
 
