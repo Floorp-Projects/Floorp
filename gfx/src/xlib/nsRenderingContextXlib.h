@@ -165,6 +165,7 @@ private:
   nsIFontMetrics          *mFontMetrics;
   nsIDeviceContext        *mContext;
   void                    *mScriptObject;
+  Font                     mCurrentFont;
 };
 
 #endif
