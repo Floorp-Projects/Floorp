@@ -29,11 +29,12 @@ BEGIN { use Support::Templates; }
 BEGIN { $tests = @Support::Templates::testitems * 2; }
 BEGIN { use Test::More tests => $tests; }
 
+use strict;
 use Template;
 
 my @testitems = @Support::Templates::testitems;
 my $include_path = $Support::Templates::include_path;
-my $verbose = $::ENV{VERBOSE};
+my $verbose = $::ENV{TEST_VERBOSE};
 
 # Check to make sure all templates that are referenced in
 # Bugzilla exist in the proper place.

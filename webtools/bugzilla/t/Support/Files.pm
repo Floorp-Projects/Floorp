@@ -1,3 +1,4 @@
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 # 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -43,7 +44,7 @@ sub isTestingFile {
   my ($file) = @_;
   my $exclude;
   foreach $exclude (@exclude_files) {
-  	if ($file eq $exclude) { return undef; } # get rid of excluded files.
+        if ($file eq $exclude) { return undef; } # get rid of excluded files.
   }
 
   if ($file =~ /\.cgi$|\.pl$/) {
@@ -57,9 +58,9 @@ sub isTestingFile {
 }
 
 foreach $currentfile (@files) {
-	if (isTestingFile($currentfile)) {
-		push(@testitems,$currentfile);
-	}
+        if (isTestingFile($currentfile)) {
+                push(@testitems,$currentfile);
+        }
 }
 
 

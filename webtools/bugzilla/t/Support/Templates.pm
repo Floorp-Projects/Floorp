@@ -35,11 +35,11 @@ foreach my $file (@files) {
     my @lines = <FILE>;
     close (FILE);
     foreach my $line (@lines) {
-	if ($line =~ m/template->process\(\"(.+?)\", .+?\)/) {
+        if ($line =~ m/template->process\(\"(.+?)\", .+?\)/) {
             $template = $1;
-	    push (@testitems, $template) unless $t{$template};
-	    $t{$template} = 1;
-	}
+            push (@testitems, $template) unless $t{$template};
+            $t{$template} = 1;
+        }
     }
 }
 

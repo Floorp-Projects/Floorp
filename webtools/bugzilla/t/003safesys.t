@@ -1,3 +1,4 @@
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 # 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -40,19 +41,22 @@ BEGIN { use Support::Files; }
 BEGIN { $tests = @Support::Files::testitems; }    
 BEGIN { use Test::More tests => $tests; }
 
-@testitems = @Support::Files::testitems; 
-my $verbose = $::ENV{VERBOSE};
-$perlapp=$^X;
-foreach $file (@testitems) {
-	$file =~ s/\s.*$//; # nuke everything after the first space (#comment)
-	next if (!$file); # skip null entries
-	$command = "$perlapp -c -It/Support -MSystemexec $file 2>&1";
-	$loginfo=`$command`;
-	if ($loginfo =~ /arguments for Systemexec::system|exec/im) {
-		ok(0,"$file DOES NOT use proper system or exec calls");
-		if ($verbose) { print STDERR $loginfo; }
-	} else {
-		ok(1,"$file uses proper system and exec calls");
-	}
+use strict;
+
+my @testitems = @Support::Files::testitems; 
+my $verbose = $::ENV{TEST_VERBOSE};
+my $perlapp = $^X;
+
+foreach my $file (@testitems) {
+        $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
+        next if (!$file); # skip null entries
+        my $command = "$perlapp -c -It -MSupport::Systemexec $file 2>&1";
+        my $loginfo=`$command`;
+        if ($loginfo =~ /arguments for Support::Systemexec::(system|exec)/im) {
+                ok(0,"$file DOES NOT use proper system or exec calls");
+                if ($verbose) { print STDERR $loginfo; }
+        } else {
+                ok(1,"$file uses proper system and exec calls");
+        }
 }
 

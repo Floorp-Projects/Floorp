@@ -1,4 +1,6 @@
-package Systemexec;
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+
+package Support::Systemexec;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(system exec);

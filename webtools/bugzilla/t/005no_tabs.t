@@ -21,7 +21,7 @@
 #
 
 #################
-#Bugzilla Test 4#
+#Bugzilla Test 5#
 #####no_tabs#####
 
 BEGIN { use lib "t/"; }
@@ -29,8 +29,10 @@ BEGIN { use Support::Files; }
 BEGIN { $tests = @Support::Files::testitems; }
 BEGIN { use Test::More tests => $tests; }
 
+use strict;
+
 my @testitems = @Support::Files::testitems;
-my $verbose = $::ENV{VERBOSE};
+my $verbose = $::ENV{TEST_VERBOSE};
 
 foreach my $file (@testitems) {
     open (FILE, "$file");

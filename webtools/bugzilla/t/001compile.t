@@ -1,4 +1,5 @@
-# 
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -40,17 +41,15 @@ BEGIN { use Support::Files; }
 BEGIN { $tests = @Support::Files::testitems + 4; }
 BEGIN { use Test::More tests => $tests; }
 
-sub foo {
-$warnings = "foo"; #oy!
-}
+use strict;
 
 # First now we test the scripts                                                   
-@testitems = @Support::Files::testitems; 
+my @testitems = @Support::Files::testitems; 
+my %warnings;
+my $verbose = $::ENV{TEST_VERBOSE};
+my $perlapp = $^X;
 
-my $warnings;
-my $verbose = $::ENV{VERBOSE};
-$perlapp=$^X;
-foreach $file (@testitems) {
+foreach my $file (@testitems) {
         $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
         next if (!$file); # skip null entries
         open (FILE,$file);
@@ -60,20 +59,20 @@ foreach $file (@testitems) {
         if ($bang =~ m/#!\S*perl\s+-.*T/) {
             $T = "T";
         }
-	$command = "$perlapp"." -c$T $file 2>&1";
-	$loginfo=`$command`;
-#	  print '@@'.$loginfo.'##';
-	if ($loginfo =~ /syntax ok$/im) {
-		$warnings{$_} = 1 foreach ($loginfo =~ /\((W.*?)\)/mg);
-		if ($1) {
+        my $command = "$perlapp"." -c$T $file 2>&1";
+        my $loginfo=`$command`;
+        #print '@@'.$loginfo.'##';
+        if ($loginfo =~ /syntax ok$/im) {
+                $warnings{$_} = 1 foreach ($loginfo =~ /\((W.*?)\)/mg);
+                if ($1) {
                         if ($verbose) { print STDERR $loginfo; }
                         ok(0,$file."--WARNING");
                 } else {
-			ok(1,$file);
-		}
-	} else {
+                        ok(1,$file);
+                }
+        } else {
                 if ($verbose) { print STDERR $loginfo; }
-		ok(0,$file."--ERROR");
+                ok(0,$file."--ERROR");
         }
 }      
 

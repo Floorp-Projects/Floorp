@@ -1,3 +1,4 @@
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 # 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -40,34 +41,37 @@ BEGIN { use Support::Files; }
 BEGIN { $tests = @Support::Files::testitems * 2; }
 BEGIN { use Test::More tests => $tests; }
 
-@testitems = @Support::Files::testitems; # get the files to test.
+use strict;
 
-foreach $file (@testitems) {
+my @testitems = @Support::Files::testitems; # get the files to test.
+my $verbose = $::ENV{TEST_VERBOSE};
+
+foreach my $file (@testitems) {
         $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
         next if (!$file); # skip null entries
-	$filecontent = `cat $file`;
-	if ($filecontent !~ /\/usr\/bonsaitools\/bin\/perl/) {
-		ok(1,"$file does not have a shebang");	
-		next;
-	} else {
-		if ($filecontent =~ m#/usr/bonsaitools/bin/perl -w#) {
-			ok(1,"$file uses -w");
-			next;
-		} else {
-			ok(0,"$file is MISSING -w");
-			next;
-		}
-	}
+        my $filecontent = `cat $file`;
+        if ($filecontent !~ /\/usr\/bonsaitools\/bin\/perl/) {
+                ok(1,"$file does not have a shebang");	
+                next;
+        } else {
+                if ($filecontent =~ m#/usr/bonsaitools/bin/perl -w#) {
+                        ok(1,"$file uses -w");
+                        next;
+                } else {
+                        ok(0,"$file is MISSING -w");
+                        next;
+                }
+        }
 }
-foreach $file (@testitems) {
-	$file =~ s/\s.*$//; # nuke everything after the first space (#comment)
-	next if (!$file); # skip null entries
-	$filecontent = `cat $file`;
-	if ($filecontent !~ /use strict/) {
-		ok(0,"$file DOES NOT use strict");
-	} else {
-		ok(1,"$file uses strict");
-	}
+foreach my $file (@testitems) {
+        $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
+        next if (!$file); # skip null entries
+        my $filecontent = `cat $file`;
+        if ($filecontent !~ /use strict/) {
+                ok(0,"$file DOES NOT use strict");
+        } else {
+                ok(1,"$file uses strict");
+        }
 }
 
 
