@@ -1274,10 +1274,11 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame,
 static nsChangeHint
 CaptureChange(nsStyleContext* aOldContext, nsStyleContext* aNewContext,
               nsIFrame* aFrame, nsIContent* aContent,
-              nsStyleChangeList* aChangeList, nsChangeHint aMinChange)
+              nsStyleChangeList* aChangeList, nsChangeHint aMinChange,
+              nsChangeHint aChangeToAssume)
 {
-  nsChangeHint ourChange = NS_STYLE_HINT_NONE;
-  ourChange = aOldContext->CalcStyleDifference(aNewContext);
+  nsChangeHint ourChange = aOldContext->CalcStyleDifference(aNewContext);
+  NS_UpdateHint(ourChange, aChangeToAssume);
   if (NS_UpdateHint(aMinChange, ourChange)) {
     aChangeList->AppendChange(aFrame, aContent, ourChange);
   }
@@ -1299,7 +1300,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
   // We do need a reference to oldContext for the lifetime of this function, and it's possible
   // that the frame has the last reference to it, so AddRef it here.
 
-  nsChangeHint resultChange = NS_STYLE_HINT_NONE;
+  nsChangeHint assumeDifferenceHint = NS_STYLE_HINT_NONE;
   nsStyleContext* oldContext = aFrame->GetStyleContext();
   nsStyleSet* styleSet = aPresContext->StyleSet();
 
@@ -1324,9 +1325,17 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
         parentContext = nsnull;
     }
     else {
-      // resolve the provider here (before aFrame below)
-      resultChange = ReResolveStyleContext(aPresContext, providerFrame,
-                                           content, aChangeList, aMinChange);
+      // resolve the provider here (before aFrame below).
+
+      // assumeDifferenceHint forces the parent's change to be also
+      // applied to this frame, no matter what
+      // nsStyleStruct::CalcStyleDifference says. CalcStyleDifference
+      // can't be trusted because it assumes any changes to the parent
+      // style context provider will be automatically propagated to
+      // the frame(s) with child style contexts.
+      assumeDifferenceHint = ReResolveStyleContext(aPresContext, providerFrame,
+                                                   content, aChangeList, aMinChange);
+
       // The provider's new context becomes the parent context of
       // aFrame's context.
       parentContext = providerFrame->GetStyleContext();
@@ -1388,7 +1397,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
 
       if (newContext != oldContext) {
         aMinChange = CaptureChange(oldContext, newContext, aFrame,
-                                   content, aChangeList, aMinChange);
+                                   content, aChangeList, aMinChange,
+                                   assumeDifferenceHint);
         if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
           // if frame gets regenerated, let it keep old context
           aFrame->SetStyleContext(aPresContext, newContext);
@@ -1440,7 +1450,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
           if (oldExtraContext != newExtraContext) {
             aMinChange = CaptureChange(oldExtraContext, newExtraContext,
                                        aFrame, content, aChangeList,
-                                       aMinChange);
+                                       aMinChange, assumeDifferenceHint);
             if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
               aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
             }
@@ -1492,8 +1502,6 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
         }
       }
     }
-
-    resultChange = aMinChange;
 
     if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
       // Make sure not to do this for pseudo-frames -- those can't have :before
@@ -1612,7 +1620,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
     newContext->Release();
   }
 
-  return resultChange;
+  return aMinChange;
 }
 
 nsChangeHint
