@@ -1531,6 +1531,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
   if ( (obj) && (obj->options) && (obj->options->prefs) )
     nsServiceManager::ReleaseService(kPrefCID, obj->options->prefs);
   
+  mdd->identity = nsnull;
   PR_Free (mdd);
   
   PR_FREEIF(host);
@@ -1928,7 +1929,6 @@ mime_decompose_file_close_fn ( void *stream_closure )
     mdd->tmpFileStream->close();
   delete mdd->tmpFileStream;
   delete mdd->tmpFileSpec;
-  mdd->identity = nsnull;
   mdd->tmpFileSpec = nsnull;
   
   return 0;
