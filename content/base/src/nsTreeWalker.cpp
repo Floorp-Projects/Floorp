@@ -86,7 +86,6 @@ nsTreeWalker::nsTreeWalker(nsIDOMNode *aRoot,
     mCurrentNode(aRoot),
     mPossibleIndexesPos(-1)
 {
-    NS_INIT_ISUPPORTS();
 
     NS_ASSERTION(aRoot, "invalid root in call to nsTreeWalker constructor");
 }

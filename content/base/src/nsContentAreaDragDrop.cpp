@@ -116,7 +116,6 @@ NS_INTERFACE_MAP_END
 nsContentAreaDragDrop::nsContentAreaDragDrop ( ) 
   : mListenerInstalled(PR_FALSE), mNavigator(nsnull), mOverrideDrag(nsnull), mOverrideDrop(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 } // ctor
 
 

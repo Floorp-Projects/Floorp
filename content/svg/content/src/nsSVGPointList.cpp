@@ -69,7 +69,6 @@ nsSVGPointList::Create(nsIDOMSVGPointList** aResult)
 
 nsSVGPointList::nsSVGPointList()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSVGPointList::~nsSVGPointList()

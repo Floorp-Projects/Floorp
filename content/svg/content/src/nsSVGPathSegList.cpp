@@ -96,7 +96,6 @@ protected:
 
 nsSVGPathSegList::nsSVGPathSegList()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSVGPathSegList::~nsSVGPathSegList()

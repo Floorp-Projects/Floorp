@@ -55,7 +55,6 @@ nsScriptEventManager::nsScriptEventManager(nsIDOMDocument *aDocument)
 {
   nsresult rv;
 
-  NS_INIT_ISUPPORTS();
 
   rv = aDocument->GetElementsByTagName(NS_LITERAL_STRING("script"),
                                        getter_AddRefs(mScriptElements));

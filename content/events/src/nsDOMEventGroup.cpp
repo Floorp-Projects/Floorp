@@ -43,7 +43,6 @@ NS_IMPL_ISUPPORTS1(nsDOMEventGroup, nsIDOMEventGroup)
 
 nsDOMEventGroup::nsDOMEventGroup()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

@@ -52,7 +52,7 @@ struct nsModuleComponentInfo;
 class nsContentHTTPStartup : public nsIObserver
 {
 public:
-    nsContentHTTPStartup() { NS_INIT_ISUPPORTS(); }
+    nsContentHTTPStartup() { }
     virtual ~nsContentHTTPStartup() {}
   
     NS_DECL_ISUPPORTS

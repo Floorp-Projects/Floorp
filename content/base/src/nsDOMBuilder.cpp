@@ -63,7 +63,6 @@ nsDOMBuilder::nsDOMBuilder(PRUint16 aMode,
 			   const nsAString& aSchemaType,
 			   nsIDOMDOMImplementation* aDOMImplementation)
 {
-  NS_INIT_ISUPPORTS();
   mDOMImplementation = aDOMImplementation;
 }
 

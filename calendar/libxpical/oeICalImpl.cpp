@@ -95,7 +95,6 @@ oeEventEnumerator::oeEventEnumerator( )
 :
     mCurrentIndex( 0 )
 {
-    NS_INIT_ISUPPORTS();
 }
 
 oeEventEnumerator::~oeEventEnumerator()
@@ -151,7 +150,6 @@ oeDateEnumerator::oeDateEnumerator( )
 :
     mCurrentIndex( 0 )
 {
-    NS_INIT_ISUPPORTS();
 }
 
 oeDateEnumerator::~oeDateEnumerator()
@@ -237,7 +235,6 @@ oeICalImpl::oeICalImpl()
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::oeICalImpl()\n" );
 #endif
-        NS_INIT_ISUPPORTS();
 
         m_batchMode = false;
 
@@ -2046,7 +2043,6 @@ NS_IMPL_ISUPPORTS1(oeICalFilter, oeIICalTodo)
 
 oeICalFilter::oeICalFilter()
 {
-    NS_INIT_ISUPPORTS();
 
     nsresult rv;
 	if( NS_FAILED( rv = NS_NewDateTime((oeIDateTime**) &m_completed ))) {

@@ -967,7 +967,6 @@ CSSImportantRule::CSSImportantRule(nsICSSStyleSheet* aSheet, nsCSSDeclaration* a
   : mDeclaration(aDeclaration),
     mSheet(aSheet)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 CSSImportantRule::~CSSImportantRule(void)

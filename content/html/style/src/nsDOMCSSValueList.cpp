@@ -44,7 +44,6 @@
 nsDOMCSSValueList::nsDOMCSSValueList(PRBool aCommaDelimited, PRBool aReadonly)
   : mCommaDelimited(aCommaDelimited), mReadonly(aReadonly)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDOMCSSValueList::~nsDOMCSSValueList()

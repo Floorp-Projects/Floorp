@@ -51,7 +51,6 @@
 nsDOMCSSDeclaration::nsDOMCSSDeclaration()
   : mInner(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDOMCSSDeclaration::~nsDOMCSSDeclaration()

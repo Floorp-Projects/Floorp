@@ -41,7 +41,6 @@
 
 nsGenericDOMNodeList::nsGenericDOMNodeList() 
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsGenericDOMNodeList::~nsGenericDOMNodeList()

@@ -222,7 +222,6 @@ oeICalEventImpl::oeICalEventImpl()
 #ifdef ICAL_DEBUG
     printf( "oeICalEventImpl::oeICalEventImpl(): %d\n", ++gEventCount );
 #endif
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
     nsresult rv;
 	if( NS_FAILED( rv = NS_NewDateTime((oeIDateTime**) &m_start ))) {
@@ -2517,7 +2516,6 @@ oeICalEventDisplayImpl::oeICalEventDisplayImpl( oeIICalEvent* event )
 #ifdef ICAL_DEBUG_ALL
     printf( "oeICalEventDisplayImpl::oeICalEventDisplayImpl(): %d\n", ++gEventDisplayCount );
 #endif
-    NS_INIT_ISUPPORTS();
     nsresult rv;
     if( event == nsnull ) {
         mEvent = do_CreateInstance(OE_ICALEVENTDISPLAY_CONTRACTID, &rv);

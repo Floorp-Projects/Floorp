@@ -41,7 +41,6 @@ NS_IMPL_ISUPPORTS1(oeICalStartupHandler, nsICmdLineHandler);
 
 oeICalStartupHandler::oeICalStartupHandler()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 oeICalStartupHandler::~oeICalStartupHandler()

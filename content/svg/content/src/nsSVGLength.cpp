@@ -123,7 +123,6 @@ nsSVGLength::nsSVGLength(float value,
       mSpecifiedUnitType(unit),
       mDirection(dir)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsresult nsSVGLength::Init(nsIDOMSVGElement* owner)

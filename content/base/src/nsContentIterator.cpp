@@ -362,7 +362,6 @@ nsContentIterator::nsContentIterator() :
   // don't need to explicitly initialize |nsCOMPtr|s, they will automatically be NULL
   mCachedIndex(0), mIsDone(PR_FALSE), mPre(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

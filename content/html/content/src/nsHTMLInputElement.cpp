@@ -2778,7 +2778,7 @@ nsHTMLInputElement::VisitGroup(nsIRadioVisitor* aVisitor)
 //
 class nsRadioVisitor : public nsIRadioVisitor {
 public:
-  nsRadioVisitor() { NS_INIT_ISUPPORTS(); }
+  nsRadioVisitor() { }
   virtual ~nsRadioVisitor() { };
 
   NS_DECL_ISUPPORTS

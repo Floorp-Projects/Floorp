@@ -75,7 +75,6 @@ public:
 
 nsSVGElementFactory::nsSVGElementFactory()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSVGElementFactory::~nsSVGElementFactory()

@@ -48,7 +48,6 @@ nsPagePrintTimer::nsPagePrintTimer() :
   mPrintSettings(nsnull), 
   mDelay(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPagePrintTimer::~nsPagePrintTimer()

@@ -1585,7 +1585,6 @@ nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement* aForm)
   : mForm(aForm),
     mNameLookupTable(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsFormControlList::~nsFormControlList()
@@ -1893,7 +1892,6 @@ NS_IMPL_ISUPPORTS1(nsFormControlEnumerator, nsISimpleEnumerator);
 nsFormControlEnumerator::nsFormControlEnumerator(nsHTMLFormElement* aForm)
   : mForm(aForm), mElementsIndex(0), mNotInElementsIndex(0)
 {
-  NS_INIT_ISUPPORTS();
 
   // Create the sorted mNotInElementsSorted array
   PRInt32 len = aForm->mControls->mNotInElements.Count();

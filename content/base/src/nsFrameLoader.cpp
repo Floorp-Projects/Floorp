@@ -111,7 +111,6 @@ NS_NewFrameLoader(nsIFrameLoader **aFrameLoader)
 nsFrameLoader::nsFrameLoader()
   : mOwnerContent(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsFrameLoader::~nsFrameLoader()

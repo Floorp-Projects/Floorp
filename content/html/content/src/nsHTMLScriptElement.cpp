@@ -95,7 +95,6 @@ protected:
 
 nsHTMLScriptEventHandler::nsHTMLScriptEventHandler(nsIDOMHTMLScriptElement *aOuter)
 {
-  NS_INIT_ISUPPORTS();
 
   // Weak reference...
   mOuter = aOuter;

@@ -111,7 +111,6 @@ NS_NewSVGPathSegClosePath(nsIDOMSVGPathSeg** result)
 
 nsSVGPathSegClosePath::nsSVGPathSegClosePath()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -185,7 +184,6 @@ NS_NewSVGPathSegMovetoAbs(nsIDOMSVGPathSeg** result,
 nsSVGPathSegMovetoAbs::nsSVGPathSegMovetoAbs(float x, float y)
     : mX(x), mY(y)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -294,7 +292,6 @@ NS_NewSVGPathSegMovetoRel(nsIDOMSVGPathSeg** result,
 nsSVGPathSegMovetoRel::nsSVGPathSegMovetoRel(float x, float y)
     : mX(x), mY(y)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -402,7 +399,6 @@ NS_NewSVGPathSegLinetoAbs(nsIDOMSVGPathSeg** result,
 nsSVGPathSegLinetoAbs::nsSVGPathSegLinetoAbs(float x, float y)
     : mX(x), mY(y)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -511,7 +507,6 @@ NS_NewSVGPathSegLinetoRel(nsIDOMSVGPathSeg** result,
 nsSVGPathSegLinetoRel::nsSVGPathSegLinetoRel(float x, float y)
     : mX(x), mY(y)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -626,7 +621,6 @@ nsSVGPathSegCurvetoCubicAbs::nsSVGPathSegCurvetoCubicAbs(float x, float y,
                                                          float x2, float y2)
     : mX(x), mY(y), mX1(x1), mY1(y1), mX2(x2), mY2(y2)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -798,7 +792,6 @@ nsSVGPathSegCurvetoCubicRel::nsSVGPathSegCurvetoCubicRel(float x, float y,
                                                          float x2, float y2)
     : mX(x), mY(y), mX1(x1), mY1(y1), mX2(x2), mY2(y2)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -966,7 +959,6 @@ nsSVGPathSegCurvetoQuadraticAbs::nsSVGPathSegCurvetoQuadraticAbs(float x, float 
                                                                  float x1, float y1)
     : mX(x), mY(y), mX1(x1), mY1(y1)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -1107,7 +1099,6 @@ nsSVGPathSegCurvetoQuadraticRel::nsSVGPathSegCurvetoQuadraticRel(float x, float 
                                                                  float x1, float y1)
     : mX(x), mY(y), mX1(x1), mY1(y1)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -1254,7 +1245,6 @@ nsSVGPathSegArcAbs::nsSVGPathSegArcAbs(float x, float y,
     : mX(x), mY(y), mR1(r1), mR2(r2), mAngle(angle),
       mLargeArcFlag(largeArcFlag), mSweepFlag(sweepFlag)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -1444,7 +1434,6 @@ nsSVGPathSegArcRel::nsSVGPathSegArcRel(float x, float y,
     : mX(x), mY(y), mR1(r1), mR2(r2), mAngle(angle),
       mLargeArcFlag(largeArcFlag), mSweepFlag(sweepFlag)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -1623,7 +1612,6 @@ NS_NewSVGPathSegLinetoHorizontalAbs(nsIDOMSVGPathSeg** result, float x)
 nsSVGPathSegLinetoHorizontalAbs::nsSVGPathSegLinetoHorizontalAbs(float x)
     : mX(x)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -1716,7 +1704,6 @@ NS_NewSVGPathSegLinetoHorizontalRel(nsIDOMSVGPathSeg** result, float x)
 nsSVGPathSegLinetoHorizontalRel::nsSVGPathSegLinetoHorizontalRel(float x)
     : mX(x)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -1809,7 +1796,6 @@ NS_NewSVGPathSegLinetoVerticalAbs(nsIDOMSVGPathSeg** result, float y)
 nsSVGPathSegLinetoVerticalAbs::nsSVGPathSegLinetoVerticalAbs(float y)
     : mY(y)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -1902,7 +1888,6 @@ NS_NewSVGPathSegLinetoVerticalRel(nsIDOMSVGPathSeg** result, float y)
 nsSVGPathSegLinetoVerticalRel::nsSVGPathSegLinetoVerticalRel(float y)
     : mY(y)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -1999,7 +1984,6 @@ nsSVGPathSegCurvetoCubicSmoothAbs::nsSVGPathSegCurvetoCubicSmoothAbs(float x, fl
                                                                      float x2, float y2)
     : mX(x), mY(y), mX2(x2), mY2(y2)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -2139,7 +2123,6 @@ nsSVGPathSegCurvetoCubicSmoothRel::nsSVGPathSegCurvetoCubicSmoothRel(float x, fl
                                                                      float x2, float y2)
     : mX(x), mY(y), mX2(x2), mY2(y2)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -2276,7 +2259,6 @@ NS_NewSVGPathSegCurvetoQuadraticSmoothAbs(nsIDOMSVGPathSeg** result,
 nsSVGPathSegCurvetoQuadraticSmoothAbs::nsSVGPathSegCurvetoQuadraticSmoothAbs(float x, float y)
     : mX(x), mY(y)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -2384,7 +2366,6 @@ NS_NewSVGPathSegCurvetoQuadraticSmoothRel(nsIDOMSVGPathSeg** result,
 nsSVGPathSegCurvetoQuadraticSmoothRel::nsSVGPathSegCurvetoQuadraticSmoothRel(float x, float y)
     : mX(x), mY(y)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------

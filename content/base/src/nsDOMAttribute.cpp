@@ -55,7 +55,6 @@ nsDOMAttribute::nsDOMAttribute(nsIContent* aContent, nsINodeInfo *aNodeInfo,
 {
   NS_ABORT_IF_FALSE(mNodeInfo, "We must get a nodeinfo here!");
 
-  NS_INIT_ISUPPORTS();
 
   // We don't add a reference to our content. It will tell us
   // to drop our reference when it goes away.

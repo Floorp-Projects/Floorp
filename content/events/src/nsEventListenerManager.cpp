@@ -112,7 +112,6 @@ nsEventListenerManager::nsEventListenerManager()
   mListenersRemoved = PR_FALSE;
 
   mTarget = nsnull;
-  NS_INIT_ISUPPORTS();
   ++mInstanceCount;
 }
 

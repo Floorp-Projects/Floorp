@@ -273,7 +273,6 @@ nsPrintEngine::nsPrintEngine() :
   mDebugFile(nsnull)
 
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //-------------------------------------------------------

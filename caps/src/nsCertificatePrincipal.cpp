@@ -220,7 +220,6 @@ nsCertificatePrincipal::Init(const char* aCertificateID)
 
 nsCertificatePrincipal::nsCertificatePrincipal()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsCertificatePrincipal::~nsCertificatePrincipal()

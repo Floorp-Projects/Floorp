@@ -970,7 +970,6 @@ public:
 
 CSSRuleListImpl::CSSRuleListImpl(CSSStyleSheetImpl *aStyleSheet)
 {
-  NS_INIT_ISUPPORTS();
   // Not reference counted to avoid circular references.
   // The style sheet will tell us when its going away.
   mStyleSheet = aStyleSheet;
@@ -1089,7 +1088,6 @@ DOMMediaListImpl::DOMMediaListImpl(nsISupportsArray *aArray,
                                    CSSStyleSheetImpl *aStyleSheet)
   : mArray(aArray), mStyleSheet(aStyleSheet)
 {
-  NS_INIT_ISUPPORTS();
 
   NS_ABORT_IF_FALSE(mArray, "This can't be used without an array!!");
 }
@@ -1409,7 +1407,6 @@ protected:
 
 CSSImportsCollectionImpl::CSSImportsCollectionImpl(nsICSSStyleSheet *aStyleSheet)
 {
-  NS_INIT_ISUPPORTS();
   // Not reference counted to avoid circular references.
   // The style sheet will tell us when its going away.
   mStyleSheet = aStyleSheet;
@@ -1735,7 +1732,6 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
     mDirty(PR_FALSE),
     mRuleProcessors(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 
   mInner = new CSSStyleSheetInner(this);
 }
@@ -1758,7 +1754,6 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
     mInner(aCopy.mInner),
     mRuleProcessors(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 
   mInner->AddSheet(this);
 
@@ -3294,7 +3289,6 @@ CSSRuleProcessor::CSSRuleProcessor(void)
   : mSheets(nsnull),
     mRuleCascades(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 static PRBool

@@ -79,7 +79,6 @@ oeICalTodoImpl::oeICalTodoImpl()
 #ifdef ICAL_DEBUG
     printf( "oeICalTodoImpl::oeICalTodoImpl()\n" );
 #endif
-    NS_INIT_ISUPPORTS();
 
     mEvent = new oeICalEventImpl();
 

@@ -39,7 +39,6 @@ nsWyciwygChannel::nsWyciwygChannel()
       mLoadFlags(LOAD_NORMAL),
       mIsPending(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsWyciwygChannel::~nsWyciwygChannel() 

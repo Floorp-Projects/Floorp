@@ -156,7 +156,7 @@ NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 class ContentShutdownObserver : public nsIObserver
 {
 public:
-  ContentShutdownObserver() { NS_INIT_ISUPPORTS(); }
+  ContentShutdownObserver() { }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER

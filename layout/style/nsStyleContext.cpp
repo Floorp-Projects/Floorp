@@ -152,7 +152,6 @@ nsStyleContext::nsStyleContext(nsIStyleContext* aParent,
     mRuleNode(aRuleNode),
     mBits(0)
 {
-  NS_INIT_ISUPPORTS();
   
   mNextSibling = this;
   mPrevSibling = this;

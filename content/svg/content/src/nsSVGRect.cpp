@@ -87,7 +87,6 @@ nsSVGRect::Create(nsIDOMSVGRect** result,
 nsSVGRect::nsSVGRect(float x, float y, float w, float h)
     : mX(x), mY(y), mWidth(w), mHeight(h)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------
@@ -234,7 +233,6 @@ nsSVGRectPrototypeWrapper::nsSVGRectPrototypeWrapper(nsIDOMSVGRect* prototype,
                                                      nsIDOMSVGRect* body)
     : mPrototype(prototype), mBody(body)
 {
-  NS_INIT_ISUPPORTS();
   NS_ASSERTION(mPrototype, "need prototype");
 }
 

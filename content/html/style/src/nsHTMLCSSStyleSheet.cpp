@@ -84,7 +84,6 @@ public:
 CSSFirstLineRule::CSSFirstLineRule(nsIHTMLCSSStyleSheet* aSheet)
   : mSheet(aSheet)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 CSSFirstLineRule::~CSSFirstLineRule()
@@ -263,7 +262,6 @@ HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
     mFirstLineRule(nsnull),
     mFirstLetterRule(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 HTMLCSSStyleSheetImpl::~HTMLCSSStyleSheetImpl()

@@ -97,7 +97,6 @@ nsresult NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer)
 nsPlainTextSerializer::nsPlainTextSerializer()
   : kSpace(NS_LITERAL_STRING(" ")) // Init of "constant"
 {
-  NS_INIT_ISUPPORTS();
 
   mOutputString = nsnull;
   mInHead = PR_FALSE;

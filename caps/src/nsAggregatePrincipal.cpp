@@ -444,7 +444,6 @@ nsAggregatePrincipal::Write(nsIObjectOutputStream* aStream)
 
 nsAggregatePrincipal::nsAggregatePrincipal() : mCodebaseWasChanged(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsAggregatePrincipal::~nsAggregatePrincipal()

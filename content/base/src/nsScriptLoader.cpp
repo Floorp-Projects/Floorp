@@ -85,7 +85,6 @@ nsScriptLoadRequest::nsScriptLoadRequest(nsIDOMHTMLScriptElement* aElement,
   mLoading(PR_TRUE), mWasPending(PR_FALSE),
   mIsInline(PR_TRUE), mJSVersion(aVersionString), mLineNo(1)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsScriptLoadRequest::~nsScriptLoadRequest()
@@ -125,7 +124,6 @@ nsScriptLoadRequest::FireScriptEvaluated(nsresult aResult)
 nsScriptLoader::nsScriptLoader() 
   : mDocument(nsnull), mEnabled(PR_TRUE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsScriptLoader::~nsScriptLoader()

@@ -76,7 +76,6 @@ nsresult NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer)
 
 nsXMLContentSerializer::nsXMLContentSerializer()
 {
-  NS_INIT_ISUPPORTS();
   mPrefixIndex = 0;
   mInAttribute = PR_FALSE;
 }

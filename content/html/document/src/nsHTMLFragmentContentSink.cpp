@@ -203,7 +203,6 @@ NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aResult)
 
 nsHTMLFragmentContentSink::nsHTMLFragmentContentSink()
 {
-  NS_INIT_ISUPPORTS();
   mHitSentinel = PR_FALSE;
   mSeenBody = PR_TRUE;
   mRoot = nsnull;

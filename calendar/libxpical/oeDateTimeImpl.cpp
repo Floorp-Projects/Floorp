@@ -66,7 +66,6 @@ NS_NewDateTime( oeIDateTime** inst )
 
 oeDateTimeImpl::oeDateTimeImpl()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
   m_datetime = icaltime_null_time();
 }

@@ -168,7 +168,6 @@ protected:
 
 txLoadListenerProxy::txLoadListenerProxy(nsWeakPtr aParent)
 {
-    NS_INIT_ISUPPORTS();
     mParent = aParent;
 }
 
@@ -240,7 +239,6 @@ txLoadListenerProxy::Error(nsIDOMEvent* aEvent)
 
 nsSyncLoader::nsSyncLoader()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSyncLoader::~nsSyncLoader()
@@ -485,7 +483,6 @@ nsSyncLoader::GetInterface(const nsIID & aIID,
 
 nsSyncLoadService::nsSyncLoadService()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSyncLoadService::~nsSyncLoadService()

@@ -46,7 +46,6 @@ oeICalContainerImpl::oeICalContainerImpl()
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::oeICalContainerImpl()\n" );
 #endif
-        NS_INIT_ISUPPORTS();
 
         m_batchMode = false;
 
@@ -1326,7 +1325,6 @@ NS_IMPL_ISUPPORTS1(oeFilterDateTime, oeIDateTime)
 
 oeFilterDateTime::oeFilterDateTime()
 {
-  NS_INIT_ISUPPORTS();
   m_datetime = icaltime_null_time();
 }
 

@@ -55,7 +55,6 @@ nsSVGMatrix::nsSVGMatrix(float a, float b, float c,
                          float d, float e, float f)
     : mA(a), mB(b), mC(c), mD(d), mE(e), mF(f)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //----------------------------------------------------------------------

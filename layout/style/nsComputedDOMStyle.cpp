@@ -97,7 +97,6 @@ NS_NewComputedDOMStyle(nsIComputedDOMStyle** aComputedStyle)
 nsComputedDOMStyle::nsComputedDOMStyle()
   : mInner(nsnull), mPresShellWeak(nsnull), mT2P(0.0f)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

@@ -411,7 +411,6 @@ PRUint32 nsDOMEventRTTearoff::mCachedEventTearoffCount = 0;
 nsDOMEventRTTearoff::nsDOMEventRTTearoff(nsIContent *aContent)
   : mContent(aContent)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDOMEventRTTearoff::~nsDOMEventRTTearoff()
@@ -740,7 +739,6 @@ nsGenericElement::nsGenericElement()
   : mDocument(nsnull), mParent(nsnull), mNodeInfo(nsnull),
     mFlagsOrSlots(GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsGenericElement::~nsGenericElement()
