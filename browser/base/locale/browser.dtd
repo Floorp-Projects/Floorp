@@ -29,8 +29,6 @@
 <!ENTITY navbarCmd.accesskey "N">
 <!ENTITY personalbarCmd.label "Personal Toolbar">
 <!ENTITY personalbarCmd.accesskey "P">
-<!ENTITY tabbarCmd.label "Tab Bar">
-<!ENTITY tabbarCmd.accesskey "T">
 <!ENTITY taskbarCmd.label "Status Bar">
 <!ENTITY taskbarCmd.accesskey "S">
 
