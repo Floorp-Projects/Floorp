@@ -558,7 +558,7 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   case NS_STYLE_LIST_STYLE_BASIC:
   case NS_STYLE_LIST_STYLE_SQUARE:
     t2p = aCX->GetTwipsToPixels();
-    bulletSize = nscoord(t2p * fm->GetMaxAscent() / 2);
+    bulletSize = nscoord(t2p * .8 * (fm->GetMaxAscent() / 2));
     if (bulletSize < 1) {
       bulletSize = MIN_BULLET_SIZE;
     }
