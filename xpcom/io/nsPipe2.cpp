@@ -649,12 +649,20 @@ nsPipe::nsPipeOutputStream::Flush(void)
     nsPipe* pipe = GET_OUTPUTSTREAM_PIPE(this);
     nsAutoCMonitor mon(pipe);
     nsresult rv = NS_OK;
+    PRBool firstTime = PR_TRUE;
     while (PR_TRUE) {
         // check write buffer again while in the monitor
         PRUint32 amt;
         const char* buf;
         rv = pipe->GetReadSegment(0, &buf, &amt);
+        if (firstTime && amt == 0) {
+            // If we think we needed to flush, yet there's nothing
+            // in the buffer to read, we must have not been able to 
+            // allocate any segments. Return out of memory:
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         if (NS_FAILED(rv) || amt == 0) return rv;
+        firstTime = PR_FALSE;
 
         // else notify the reader and wait
         rv = mon.Notify();
@@ -712,7 +720,7 @@ nsPipe::nsPipeOutputStream::SetNonBlocking(PRBool aNonBlocking)
 ////////////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_CID(kPageManagerCID, NS_PAGEMANAGER_CID);
-//static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
+static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 NS_COM nsresult
 NS_NewPipe(nsIBufferInputStream* *inStrResult,
@@ -722,8 +730,13 @@ NS_NewPipe(nsIBufferInputStream* *inStrResult,
            PRUint32 maxSize)
 {
     nsresult rv;
+#ifdef XP_MAC
+    // Don't use page buffers on the mac because we don't really have
+    // VM there, and they end up being more wasteful:
+    NS_WITH_SERVICE(nsIAllocator, alloc, kAllocatorCID, &rv);
+#else
     NS_WITH_SERVICE(nsIAllocator, alloc, kPageManagerCID, &rv);
-//    NS_WITH_SERVICE(nsIAllocator, alloc, kAllocatorCID, &rv);
+#endif
     if (NS_FAILED(rv)) return rv;
 
     nsPipe* pipe = new nsPipe(segmentSize, maxSize, alloc, observer);

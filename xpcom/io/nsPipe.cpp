@@ -453,12 +453,20 @@ nsBufferOutputStream::Flush(void)
 {
     nsAutoCMonitor mon(mBuffer);
     nsresult rv = NS_OK;
+    PRBool firstTime = PR_TRUE;
     while (PR_TRUE) {
         // check write buffer again while in the monitor
         PRUint32 amt;
         const char* buf;
         rv = mBuffer->GetReadSegment(0, &buf, &amt);
+        if (firstTime && amt == 0) {
+            // If we think we needed to flush, yet there's nothing
+            // in the buffer to read, we must have not been able to 
+            // allocate any segments. Return out of memory:
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         if (NS_FAILED(rv) || amt == 0) return rv;
+        firstTime = PR_FALSE;
 
         // else notify the reader and wait
         rv = mon.Notify();
@@ -509,8 +517,14 @@ NS_NewPipe(nsIBufferInputStream* *inStrResult,
     nsIBufferInputStream* inStr = nsnull;
     nsIBufferOutputStream* outStr = nsnull;
     nsIBuffer* buf = nsnull;
-    
+
+#ifdef XP_MAC
+    // Don't use page buffers on the mac because we don't really have
+    // VM there, and they end up being more wasteful:
+    rv = NS_NewBuffer(&buf, growBySize, maxSize, observer);
+#else
     rv = NS_NewPageBuffer(&buf, growBySize, maxSize, observer);
+#endif
     if (NS_FAILED(rv)) goto error;
 
     rv = NS_NewBufferInputStream(&inStr, buf, blocking);
