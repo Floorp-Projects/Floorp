@@ -133,17 +133,13 @@ function AfterHighlightColorChange()
   }      
 }
 
-
-
 function EditorOnLoad()
 {
     // See if argument was passed.
     if ( window.arguments && window.arguments[0] ) {
         // Opened via window.openDialog with URL as argument.
         // Put argument where EditorStartup expects it.
-        var url = window.arguments[0];
-        document.getElementById( "args" ).setAttribute( "value", url );
-        SetSaveAndPublishUI(url);
+        document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
     }
 
     // get default character set if provided
@@ -170,9 +166,7 @@ function TextEditorOnLoad()
     if ( window.arguments && window.arguments[0] ) {
         // Opened via window.openDialog with URL as argument.
         // Put argument where EditorStartup expects it.
-        var url = window.arguments[0];
-        document.getElementById( "args" ).setAttribute( "value", url );
-        SetSaveAndPublishUI(url);
+        document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
     }
     // Continue with normal startup.
     EditorStartup('text', document.getElementById("content-frame"));
@@ -247,6 +241,10 @@ var DocumentStateListener =
 
     if (!("InsertCharWindow" in window))
       window.InsertCharWindow = null;
+    
+    // We must wait until document is created to get proper Url
+    // (Windows may load with local file paths)
+    SetSaveAndPublishUI(GetDocumentUrl());
   },
 
   NotifyDocumentWillBeDestroyed: function() {},
@@ -318,7 +316,6 @@ function EditorStartup(editorType, editorElement)
   if (charset) editorShell.SetDocumentCharacterSet(charset);
 
   editorShell.LoadUrl(url);
-  SetSaveAndPublishUI(url);
 }
 
 // This is also called by Message Composer
