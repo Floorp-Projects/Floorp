@@ -36,6 +36,18 @@
 PRInt32 nsInputFileFrame::gSpacing = 40;
 nsString* nsInputFile::gFILE_TYPE = new nsString("file");
 
+nsresult
+NS_NewInputFileFrame(nsIContent* aContent,
+                     nsIFrame*   aParent,
+                     nsIFrame*&  aResult)
+{
+  aResult = new nsInputFileFrame(aContent, aParent);
+  if (nsnull == aResult) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
 nsInputFileFrame::nsInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsHTMLContainerFrame(aContent, aParentFrame)
 {

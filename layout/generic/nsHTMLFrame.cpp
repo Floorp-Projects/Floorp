@@ -42,6 +42,8 @@ class RootFrame : public nsContainerFrame {
 public:
   RootFrame(nsIContent* aContent);
 
+  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
@@ -94,6 +96,27 @@ RootFrame::RootFrame(nsIContent* aContent)
 }
 
 NS_IMETHODIMP
+RootFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  // Construct the root content frame and set its style context
+  mFirstChild = new RootContentFrame(mContent, this);
+  mChildCount = 1;
+  nsIStyleContext* pseudoStyleContext =
+    aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::rootContentPseudo, this);
+  mFirstChild->SetStyleContext(&aPresContext, pseudoStyleContext);
+  NS_RELEASE(pseudoStyleContext);
+
+  // Set the geometric and content parent for each of the child frames
+  for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
+    frame->SetGeometricParent(mFirstChild);
+    frame->SetContentParent(mFirstChild);
+  }
+
+  // Queue up the frames for the root content frame
+  return mFirstChild->Init(aPresContext, aChildList);
+}
+
+NS_IMETHODIMP
 RootFrame::Reflow(nsIPresContext&      aPresContext,
                   nsReflowMetrics&     aDesiredSize,
                   const nsReflowState& aReflowState,
@@ -122,6 +145,8 @@ RootFrame::Reflow(nsIPresContext&      aPresContext,
     aReflowState.reflowCommand->GetNext(next);
     NS_ASSERTION(next == mFirstChild, "unexpected next reflow command frame");
   
+  // XXX CONSTRUCTION
+#if 0
   } else {
     // Do we have any children?
     if (nsnull == mFirstChild) {
@@ -133,6 +158,7 @@ RootFrame::Reflow(nsIPresContext&      aPresContext,
       mFirstChild->SetStyleContext(&aPresContext,style);
       NS_RELEASE(style);
     }
+#endif
   }
 
   // Reflow our pseudo frame. It will choose whetever height its child frame
@@ -353,12 +379,15 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
   } else {
     nsReflowReason  reflowReason = aReflowState.reason;
 
+    // XXX CONSTRUCTION
+#if 0
     // Do we have any children?
     if (nsnull == mFirstChild) {
       // No, create the first child frame
       reflowReason = eReflowReason_Initial;
       CreateFirstChild(&aPresContext);
     }
+#endif
   
     // Resize our frames
     if (nsnull != mFirstChild) {

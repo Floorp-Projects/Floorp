@@ -163,6 +163,17 @@ protected:
   nsString* mContent;
 };
 
+nsresult
+NS_NewHTMLSelectFrame(nsIContent* aContent,
+                      nsIFrame*   aParent,
+                      nsIFrame*&  aResult)
+{
+  aResult = new nsSelectFrame(aContent, aParent);
+  if (nsnull == aResult) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
 
 nsSelectFrame::nsSelectFrame(nsIContent* aContent,
                              nsIFrame* aParentFrame)

@@ -507,12 +507,13 @@ void nsDocument::ContentChanged(nsIContent* aContent,
   }
 }
 
-void nsDocument::ContentAppended(nsIContent* aContainer)
+void nsDocument::ContentAppended(nsIContent* aContainer,
+                                 PRInt32     aNewIndexInContainer)
 {
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentAppended(this, aContainer);
+    observer->ContentAppended(this, aContainer, aNewIndexInContainer);
   }
 }
 

@@ -73,6 +73,18 @@ protected:
                               nsSize& aDesiredWidgetSize);
 };
 
+nsresult
+NS_NewInputTextFrame(nsIContent* aContent,
+                     nsIFrame*   aParent,
+                     nsIFrame*&  aResult)
+{
+  aResult = new nsInputTextFrame(aContent, aParent);
+  if (nsnull == aResult) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
 nsInputTextFrame::nsInputTextFrame(nsIContent* aContent,
                                    nsIFrame* aParentFrame)
   : nsInputFrame(aContent, aParentFrame)

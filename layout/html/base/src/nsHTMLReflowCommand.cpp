@@ -151,6 +151,12 @@ NS_IMETHODIMP nsHTMLReflowCommand::GetTarget(nsIFrame*& aTargetFrame) const
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLReflowCommand::SetTarget(nsIFrame* aTargetFrame)
+{
+  mTargetFrame = aTargetFrame;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsHTMLReflowCommand::GetType(ReflowType& aReflowType) const
 {
   aReflowType = mType;

@@ -163,7 +163,8 @@ public:
                             nsIContent* aContent,
                             nsISupports* aSubContent);
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
-                             nsIContent* aContainer);
+                             nsIContent* aContainer,
+                             PRInt32     aNewIndexInContainer);
   NS_IMETHOD ContentInserted(nsIDocument *aDocument,
                              nsIContent* aContainer,
                              nsIContent* aChild,
@@ -198,6 +199,7 @@ public:
   NS_IMETHOD ExitReflowLock();
   virtual void BeginObservingDocument();
   virtual void EndObservingDocument();
+  NS_IMETHOD InitialReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight);
   virtual nsIFrame* GetRootFrame();
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent);
@@ -448,6 +450,79 @@ PresShell::EndObservingDocument()
 }
 
 NS_IMETHODIMP
+PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
+{
+  NS_PRECONDITION(nsnull == mRootFrame, "unexpected root frame");
+
+  EnterReflowLock();
+
+  if (nsnull != mPresContext) {
+    nsRect r(0, 0, aWidth, aHeight);
+    mPresContext->SetVisibleArea(r);
+  }
+
+  if (nsnull == mRootFrame) {
+    if (nsnull != mDocument) {
+      nsIContent* root = mDocument->GetRootContent();
+      if (nsnull != root) {
+// XXX CONSTRUCTION
+#if 0
+        nsIContentDelegate* cd = root->GetDelegate(mPresContext);
+        if (nsnull != cd) {
+          nsIStyleContext* rootSC =
+            mPresContext->ResolveStyleContextFor(root, nsnull);
+          nsresult rv = cd->CreateFrame(mPresContext, root, nsnull,
+                                        rootSC, mRootFrame);
+          NS_RELEASE(rootSC);
+          NS_RELEASE(cd);
+
+          // Bind root frame to root view (and root window)
+          nsIView* rootView;
+          mViewManager->GetRootView(rootView);
+          mRootFrame->SetView(rootView);
+        }
+#else
+        // Have style sheet processor construct a frame for the
+        // root content object
+        mPresContext->ConstructFrame(root, nsnull, mRootFrame);
+#endif
+        NS_RELEASE(root);
+      }
+    }
+  }
+
+  if (nsnull != mRootFrame) {
+    // Kick off a top-down reflow
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+                 ("enter nsPresShell::InitialReflow: %d,%d", aWidth, aHeight));
+#ifdef NS_DEBUG
+    if (nsIFrame::GetVerifyTreeEnable()) {
+      mRootFrame->VerifyTree();
+    }
+#endif
+    nsRect          bounds;
+    mPresContext->GetVisibleArea(bounds);
+    nsSize          maxSize(bounds.width, bounds.height);
+    nsReflowMetrics desiredSize(nsnull);
+    nsReflowStatus  status;
+    nsReflowState   reflowState(mRootFrame, eReflowReason_Initial, maxSize);
+
+    mRootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
+    mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
+#ifdef NS_DEBUG
+    if (nsIFrame::GetVerifyTreeEnable()) {
+      mRootFrame->VerifyTree();
+    }
+#endif
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::InitialReflow"));
+  }
+
+  ExitReflowLock();
+
+  return NS_OK; //XXX this needs to be real. MMP
+}
+
+NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
   EnterReflowLock();
@@ -457,32 +532,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     mPresContext->SetVisibleArea(r);
   }
 
-  nsReflowReason  reflowReason = eReflowReason_Resize;
-
-  if (nsnull == mRootFrame) {
-    if (nsnull != mDocument) {
-      nsIContent* root = mDocument->GetRootContent();
-      if (nsnull != root) {
-        nsIContentDelegate* cd = root->GetDelegate(mPresContext);
-        if (nsnull != cd) {
-          nsIStyleContext* rootSC =
-            mPresContext->ResolveStyleContextFor(root, nsnull);
-          nsresult rv = cd->CreateFrame(mPresContext, root, nsnull,
-                                        rootSC, mRootFrame);
-          NS_RELEASE(rootSC);
-          NS_RELEASE(cd);
-          reflowReason = eReflowReason_Initial;
-
-          // Bind root frame to root view (and root window)
-          nsIView* rootView;
-          mViewManager->GetRootView(rootView);
-          mRootFrame->SetView(rootView);
-        }
-        NS_RELEASE(root);
-      }
-    }
-  }
-
+  // If we don't have a root frame yet, that means we haven't had our initial
+  // reflow...
   if (nsnull != mRootFrame) {
     // Kick off a top-down reflow
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
@@ -497,7 +548,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     nsSize          maxSize(bounds.width, bounds.height);
     nsReflowMetrics desiredSize(nsnull);
     nsReflowStatus  status;
-    nsReflowState   reflowState(mRootFrame, reflowReason, maxSize);
+    nsReflowState   reflowState(mRootFrame, eReflowReason_Resize, maxSize);
 
     mRootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
     mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
@@ -663,35 +714,27 @@ PresShell::ContentChanged(nsIDocument *aDocument,
 
 NS_IMETHODIMP
 PresShell::ContentAppended(nsIDocument *aDocument,
-                           nsIContent* aContainer)
+                           nsIContent* aContainer,
+                           PRInt32     aNewIndexInContainer)
 {
-  NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
-
   EnterReflowLock();
-
-  nsIContent* parentContainer = aContainer;
-  while (nsnull != parentContainer) {
-    nsIFrame* frame = FindFrameWithContent(parentContainer);
-    if (nsnull != frame) {
-      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-             ("PresShell::ContentAppended: container=%p[%s] frame=%p",
-              aContainer, ContentTag(aContainer, 0), frame));
-      frame->ContentAppended(this, mPresContext, aContainer);
-      break;
-    }
-    parentContainer->GetParent(parentContainer);
-  }
-
+  nsresult  rv = mPresContext->ContentAppended(aDocument, aContainer, aNewIndexInContainer);
   ExitReflowLock();
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
-PresShell::ContentInserted(nsIDocument *aDocument,
-                           nsIContent* aContainer,
-                           nsIContent* aChild,
-                           PRInt32     aIndexInContainer)
+PresShell::ContentInserted(nsIDocument* aDocument,
+                           nsIContent*  aContainer,
+                           nsIContent*  aChild,
+                           PRInt32      aIndexInContainer)
 {
+#ifdef FRAME_CONSTRUCTION
+  EnterReflowLock();
+  nsresult  rv = mPresContext->ContentInserted(aDocument, aContainer, aChild, aIndexInContainer);
+  ExitReflowLock();
+  return rv;
+#else
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
 
   EnterReflowLock();
@@ -708,15 +751,23 @@ PresShell::ContentInserted(nsIDocument *aDocument,
 
   ExitReflowLock();
   return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
-PresShell::ContentReplaced(nsIDocument *aDocument,
-                           nsIContent* aContainer,
-                           nsIContent* aOldChild,
-                           nsIContent* aNewChild,
-                           PRInt32     aIndexInContainer)
+PresShell::ContentReplaced(nsIDocument* aDocument,
+                           nsIContent*  aContainer,
+                           nsIContent*  aOldChild,
+                           nsIContent*  aNewChild,
+                           PRInt32      aIndexInContainer)
 {
+#ifdef FRAME_CONSTRUCTION
+  EnterReflowLock();
+  nsresult  rv = mPresContext->ContentReplaced(aDocument, aContainer, aOldChild,
+                                               aNewChild, aIndexInContainer);
+  ExitReflowLock();
+  return rv;
+#else
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
 
   EnterReflowLock();
@@ -733,6 +784,7 @@ PresShell::ContentReplaced(nsIDocument *aDocument,
 
   ExitReflowLock();
   return NS_OK;
+#endif
 }
 
 // XXX keep this?
@@ -755,6 +807,12 @@ PresShell::ContentHasBeenRemoved(nsIDocument *aDocument,
                                  nsIContent* aChild,
                                  PRInt32     aIndexInContainer)
 {
+#ifdef FRAME_CONSTRUCTION
+  nsresult  rv = mPresContext->ContentRemoved(aDocument, aContainer,
+                                              aChild, aIndexInContainer);
+  ProcessReflowCommands();
+  return rv;
+#else
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
 
   nsIFrame* frame = FindFrameWithContent(aContainer);
@@ -766,6 +824,7 @@ PresShell::ContentHasBeenRemoved(nsIDocument *aDocument,
                         aIndexInContainer);
   ProcessReflowCommands();
   return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP

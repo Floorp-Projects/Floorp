@@ -107,6 +107,8 @@ class nsContainerFrame : public nsSplittableFrame
 public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
 
+  NS_IMETHOD  Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+
   NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext);
   /**
    * Default implementation is to use the content delegate to create a new

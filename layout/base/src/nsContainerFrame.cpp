@@ -56,6 +56,16 @@ nsContainerFrame::SizeOf(nsISizeOfHandler* aHandler) const
 }
 
 NS_IMETHODIMP
+nsContainerFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  NS_PRECONDITION(nsnull == mFirstChild, "already initialized");
+
+  mFirstChild = aChildList;
+  mChildCount = LengthOf(mFirstChild);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsContainerFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   // Delete our child frames before doing anything else. In particular
@@ -1239,6 +1249,8 @@ void nsContainerFrame::CheckContentOffsets()
 
 void nsContainerFrame::PreReflowCheck()
 {
+  // XXX CONSTRUCTION
+#if 0
   PRInt32 len = LengthOf(mFirstChild);
   NS_ASSERTION(len == mChildCount, "bad child count");
 
@@ -1249,10 +1261,13 @@ void nsContainerFrame::PreReflowCheck()
     CheckContentOffsets();
   }
   VerifyLastIsComplete();
+#endif
 }
 
 void nsContainerFrame::PostReflowCheck(nsReflowStatus aStatus)
 {
+  // XXX CONSTRUCTION
+#if 0
   PRInt32 len = LengthOf(mFirstChild) ;
   NS_ASSERTION(len == mChildCount, "bad child count");
 
@@ -1263,6 +1278,7 @@ void nsContainerFrame::PostReflowCheck(nsReflowStatus aStatus)
     CheckContentOffsets();
   }
   VerifyLastIsComplete();
+#endif
 }
 
 /**

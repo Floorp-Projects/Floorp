@@ -260,10 +260,29 @@ typedef PRBool nsDidReflowStatus;
  *
  * Frames are NOT reference counted. Use the DeleteFrame() member function
  * to delete a frame
+ *
+ * XXX This should probably be changed so it's consistent with the way nsIView
+ * (which is also not reference counted) is defined...
  */
 class nsIFrame : private nsISupports
 {
 public:
+  /**
+   * Initialize the frame passing it its child frame list.
+   *
+   * This member function is called for all frames just after the frame is
+   * constructed.
+   *
+   * You should reflow the frames when you get your 'initial' reflow
+   * notification.
+   *   
+   * XXX Should we also pass in the child count?
+   *
+   * @param   aChildList list of child frames. May be NULL
+   * @see     #Reflow()
+   */
+  NS_IMETHOD  Init(nsIPresContext& aPresContext, nsIFrame* aChildList) = 0;
+
   /**
    * QueryInterface() defined in nsISupports. This is the only member
    * function of nsISupports that is public.
@@ -466,9 +485,12 @@ public:
    * FrameAppended incremental reflow command. You then handle the incremental
    * reflow command by creating frames for the appended content.
    */
+  // XXX CONSTRUCTION
+#if 0
   NS_IMETHOD  ContentAppended(nsIPresShell*   aShell,
                               nsIPresContext* aPresContext,
                               nsIContent*     aContainer) = 0;
+#endif
 
   /**
    * This call is invoked when content is inserted in the content

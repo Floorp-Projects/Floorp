@@ -95,6 +95,8 @@ NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&      aPresContext,
   return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
+// XXX CONSTRUCTION
+#if 0
 NS_IMETHODIMP nsAbsoluteFrame::ContentAppended(nsIPresShell*   aShell,
                                                nsIPresContext* aPresContext,
                                                nsIContent*     aContainer)
@@ -108,6 +110,7 @@ NS_IMETHODIMP nsAbsoluteFrame::ContentAppended(nsIPresShell*   aShell,
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP nsAbsoluteFrame::ContentInserted(nsIPresShell*   aShell,
                                                nsIPresContext* aPresContext,

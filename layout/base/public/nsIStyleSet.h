@@ -30,6 +30,7 @@ class nsIStyleContext;
 class nsIPresContext;
 class nsIContent;
 class nsIFrame;
+class nsIDocument;
 
 
 // IID for the nsIStyleSet interface {e59396b0-b244-11d1-8031-006008159b5a}
@@ -86,6 +87,36 @@ public:
                                                nsIAtom* aPseudoTag,
                                                nsIFrame* aParentFrame,
                                                PRBool aForceUnique = PR_FALSE) = 0;
+
+  // Handles association of elements in the content model to frames. Finds the
+  // applicable construction rule, applies the action, and produces a sub-tree
+  // of frame objects. Can return nsnull.
+  NS_IMETHOD  ConstructFrame(nsIPresContext* aPresContext,
+                             nsIContent*     aContent,
+                             nsIFrame*       aParentFrame,
+                             nsIFrame*&      aFrameSubTree) = 0;
+
+  // Notifications of changes to the content mpodel
+  NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
+                             nsIDocument*    aDocument,
+                             nsIContent*     aContainer,
+                             PRInt32         aNewIndexInContainer) = 0;
+  NS_IMETHOD ContentInserted(nsIPresContext* aPresContext,
+                             nsIDocument*    aDocument,
+                             nsIContent*     aContainer,
+                             nsIContent*     aChild,
+                             PRInt32         aIndexInContainer) = 0;
+  NS_IMETHOD ContentReplaced(nsIPresContext* aPresContext,
+                             nsIDocument*    aDocument,
+                             nsIContent*     aContainer,
+                             nsIContent*     aOldChild,
+                             nsIContent*     aNewChild,
+                             PRInt32         aIndexInContainer) = 0;
+  NS_IMETHOD ContentRemoved(nsIPresContext*  aPresContext,
+                            nsIDocument*     aDocument,
+                            nsIContent*      aContainer,
+                            nsIContent*      aChild,
+                            PRInt32          aIndexInContainer) = 0;
 
   // xxx style rules enumeration
 

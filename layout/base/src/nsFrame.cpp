@@ -289,6 +289,16 @@ nsrefcnt nsFrame::Release(void)
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
+NS_IMETHODIMP nsFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  if (nsnull != aChildList) {
+    NS_ERROR("not a container");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
 NS_METHOD nsFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   //XXX Why is this done in nsFrame instead of some frame class
@@ -1172,12 +1182,15 @@ NS_METHOD nsFrame::Reflow(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
+// XXX CONSTRUCTION
+#if 0
 NS_METHOD nsFrame::ContentAppended(nsIPresShell*   aShell,
                                    nsIPresContext* aPresContext,
                                    nsIContent*     aContainer)
 {
   return NS_OK;
 }
+#endif
 
 NS_METHOD nsFrame::ContentInserted(nsIPresShell*   aShell,
                                    nsIPresContext* aPresContext,

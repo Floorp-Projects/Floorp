@@ -140,7 +140,8 @@ public:
   virtual void ContentChanged(nsIContent* aContent,
                               nsISupports* aSubContent);
 
-  virtual void ContentAppended(nsIContent* aContainer);
+  virtual void ContentAppended(nsIContent* aContainer,
+                               PRInt32     aNewIndexInContainer);
 
   virtual void ContentInserted(nsIContent* aContainer,
                                nsIContent* aChild,

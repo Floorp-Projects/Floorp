@@ -72,6 +72,15 @@ public:
   virtual void EndObservingDocument() = 0;
 
   /**
+   * Perform the initial reflow. Constructs the frame for the root content
+   * object and then reflows the frame model into the specified width and
+   * height.
+   *
+   * The coordinates for aWidth and aHeight must be in standard nscoord's.
+   */
+  NS_IMETHOD InitialReflow(nscoord aWidth, nscoord aHeight) = 0;
+
+  /**
    * Reflow the frame model into a new width and height.  The
    * coordinates for aWidth and aHeight must be in standard nscoord's.
    */
