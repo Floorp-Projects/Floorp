@@ -291,8 +291,6 @@ input[type="radio"] {
   cursor: default;
   -moz-binding: none;
 
-  border-width: 2px !important;
-  border-style: inset !important;
   -moz-border-radius: 100% !important;
 }
 
@@ -306,12 +304,19 @@ input[type="checkbox"] {
   cursor: default;
   -moz-binding: none;
 
-  border-width: 2px !important;
-  border-style: inset !important;
   -moz-border-radius: 0 !important;
 }
 
 /* common features of radio buttons and check boxes */
+
+input[type="radio"],
+input[type="checkbox"] {
+  /* same colors as |input| rule, but |!important| this time. */
+  background-color: -moz-Field ! important;
+  color: -moz-FieldText ! important;
+  border: 2px inset ThreeDFace ! important;
+}
+
 input[type="radio"][disabled],
 input[type="radio"][disabled]:active,
 input[type="radio"][disabled]:hover,
@@ -321,10 +326,7 @@ input[type="checkbox"][disabled]:active,
 input[type="checkbox"][disabled]:hover,
 input[type="checkbox"][disabled]:hover:active {
   padding: 1px;
-  border-color: ThreeDShadow;
-
-  border-width: 1px !important;
-  border-style: inset !important;
+  border: 1px inset ThreeDShadow ! important;
 }
 
 input[type="checkbox"]:focus,
@@ -334,17 +336,14 @@ input[type="radio"]:focus {
 
 input[type="checkbox"]:hover:active,
 input[type="radio"]:hover:active {
-  background-color: ThreeDFace;
-
+  background-color: ThreeDFace ! important;
   border-style: inset !important;
 }
 
 *|*:-moz-radio {
   width: 4px;
   height: 4px;
-  left: 6px;
-  top: 6px;
-  background-color: -moz-FieldText;
+  background-color: -moz-FieldText ! important;
   -moz-border-radius: 3px;
 }
 
