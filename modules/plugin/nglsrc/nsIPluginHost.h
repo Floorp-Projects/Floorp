@@ -28,6 +28,7 @@
 
 class nsIPlugin;
 class nsIURL;
+class nsIDOMPlugin;
 
 #define NS_IPLUGINHOST_IID \
 { 0x264c0640, 0x1c31, 0x11d2, \
@@ -65,6 +66,11 @@ public:
   NS_IMETHOD
   IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType) = 0;
 
+  NS_IMETHOD
+  GetPluginCount(PRUint32* aPluginCount) = 0;
+  
+  NS_IMETHOD
+  GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin* aPluginArray[]) = 0;
 };
 
 #endif // nsIPluginHost_h___
