@@ -151,6 +151,7 @@
 #define FlashWindow               mozce_FlashWindow
 #define FrameRect                 mozce_FrameRect
 #define GLYPHMETRICS              mozce_GLYPHMETRICS
+#define GetACP                    mozce_GetACP
 #define GetCurrentProcess         mozce_GetCurrentProcess
 #define GetCurrentThreadId        mozce_GetCurrentThreadId
 #define GetDIBits                 mozce_GetDIBits
@@ -204,6 +205,13 @@
 #define CreateDCA                 mozce_CreateDCA
 #define CreateDCA2                mozce_CreateDCA2
 #define CreateDirectoryA          mozce_CreateDirectoryA
+
+#pragma warning(disable : 4005) // OK to have no return value
+// We use a method named CreateEvent.  We do not want to map
+// CreateEvent to CreateEventA
+#define CreateEvent               CreateEvent
+#pragma warning(default : 4005) // restore default
+
 #define CreateEventA              mozce_CreateEventA
 #define CreateFileA               mozce_CreateFileA
 #define CreateFileMappingA        mozce_CreateFileMappingA
@@ -267,6 +275,7 @@
 #define RemoveDirectoryA          mozce_RemoveDirectoryA
 #define RemovePropA               mozce_RemovePropA
 #define SendMessageA              mozce_SendMessageA
+#define SetCurrentDirectory       mozce_SetCurrentDirectoryA
 #define SetCurrentDirectoryA      mozce_SetCurrentDirectoryA
 #define SetDlgItemTextA           mozce_SetDlgItemTextA
 #define SetEnvironmentVariable    mozce_SetEnvironmentVariableA
@@ -421,12 +430,13 @@ extern "C" {
   MOZCE_SHUNT_API BOOL mozce_SetMenu(HWND inWnd, HMENU inMenu);
   MOZCE_SHUNT_API BOOL mozce_GetUserName(LPTSTR inBuffer, LPDWORD inoutSize);
   MOZCE_SHUNT_API DWORD mozce_GetShortPathName(LPCTSTR inLongPath, LPTSTR outShortPath, DWORD inBufferSize);
-  MOZCE_SHUNT_API DWORD mozce_GetEnvironmentVariable(LPCTSTR lpName, LPSTR lpBuffer, DWORD nSize);
+  MOZCE_SHUNT_API DWORD mozce_GetEnvironmentVariable(LPCSTR lpName, LPCSTR lpBuffer, DWORD nSize);
   MOZCE_SHUNT_API HMENU mozce_LoadMenuA(HINSTANCE hInstance, LPCSTR lpMenuName);
 
   MOZCE_SHUNT_API void mozce_GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime);
   MOZCE_SHUNT_API DWORD mozce_GetFullPathName(LPCTSTR lpFileName, DWORD nBufferLength, LPTSTR lpBuffer, LPTSTR* lpFilePart);
 
+  MOZCE_SHUNT_API UINT mozce_GetACP(void);
   MOZCE_SHUNT_API HANDLE mozce_GetCurrentProcess(void);
   MOZCE_SHUNT_API DWORD mozce_TlsAlloc(void);
   MOZCE_SHUNT_API BOOL mozce_TlsFree(DWORD dwTlsIndex);

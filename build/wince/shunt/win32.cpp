@@ -878,7 +878,7 @@ MOZCE_SHUNT_API DWORD mozce_GetShortPathName(LPCTSTR inLongPath, LPTSTR outShort
     return retval;
 }
 
-MOZCE_SHUNT_API DWORD mozce_GetEnvironmentVariable(LPCTSTR lpName, LPSTR lpBuffer, DWORD nSize)
+MOZCE_SHUNT_API DWORD mozce_GetEnvironmentVariable(LPCSTR lpName, LPCSTR lpBuffer, DWORD nSize)
 {
 #ifdef DEBUG
     printf("-- mozce_GetEnvironmentVariable called\n");
@@ -973,14 +973,17 @@ MOZCE_SHUNT_API DWORD mozce_GetFullPathName(LPCSTR lpFileName,
                                             LPCSTR lpBuffer, 
                                             LPCSTR* lpFilePart)
 {
+#ifdef DEBUG
+    printf("mozce_GetFullPathName called\n");
+#endif
 
-	DWORD len = strlen(lpFileName);
-	if (len > nBufferLength)
-		return len;
-
+    DWORD len = strlen(lpFileName);
+    if (len > nBufferLength)
+        return len;
+    
     strncpy((char*)lpBuffer, lpFileName, len);
     ((char*)lpBuffer)[len] = '\0';
-
+    
     if(lpFilePart)
     {
         char* sep = strrchr(lpBuffer, '\\');
@@ -991,7 +994,7 @@ MOZCE_SHUNT_API DWORD mozce_GetFullPathName(LPCSTR lpFileName,
         else
             *lpFilePart = lpBuffer;
     }
-
+    
 #ifdef DEBUG
     printf("mozce_GetFullPathName called %s (%s)\n", lpBuffer, *lpFilePart);
 #endif
@@ -1000,13 +1003,29 @@ MOZCE_SHUNT_API DWORD mozce_GetFullPathName(LPCSTR lpFileName,
 
 MOZCE_SHUNT_API DWORD mozce_MsgWaitForMultipleObjects(DWORD nCount, const HANDLE* pHandles, BOOL bWaitAll, DWORD dwMilliseconds, DWORD dwWakeMask)
 {
+#ifdef DEBUG
+    printf("mozce_MsgWaitForMultipleObjects called\n");
+#endif
+
     return MsgWaitForMultipleObjects(nCount, (HANDLE*) pHandles, bWaitAll, dwMilliseconds, dwWakeMask);
 }
 
 MOZCE_SHUNT_API LONG mozce_GetMessageTime(void)
 {
+#ifdef DEBUG
+    printf("mozce_GetMessageTime called\n");
+#endif
   // Close enough guess?
   return GetTickCount();
+}
+
+MOZCE_SHUNT_API UINT mozce_GetACP(void)
+{
+#ifdef DEBUG
+    printf("mozce_GetACP called\n");
+#endif
+
+    return GetACP();
 }
 
 #if 0
