@@ -227,29 +227,29 @@
        (production :numeric-literal (:decimal-literal) numeric-literal-decimal
          (double-value (rational-to-double (rational-value :decimal-literal))))
        (production :numeric-literal (:hex-integer-literal) numeric-literal-hex
-         (double-value (rational-to-double (integer-to-rational (integer-value :hex-integer-literal)))))
+         (double-value (rational-to-double (integer-value :hex-integer-literal))))
        (production :numeric-literal (:octal-integer-literal) numeric-literal-octal
-         (double-value (rational-to-double (integer-to-rational (integer-value :octal-integer-literal)))))
+         (double-value (rational-to-double (integer-value :octal-integer-literal))))
        (%print-actions)
        
        (define (expt (base rational) (exponent integer)) rational
          (if (= exponent 0)
-           (integer-to-rational 1)
+           1
            (if (< exponent 0)
-             (rational/ (integer-to-rational 1) (expt base (neg exponent)))
+             (rational/ 1 (expt base (neg exponent)))
              (rational* base (expt base (- exponent 1))))))
        
        (declare-action rational-value :decimal-literal rational)
        (production :decimal-literal (:mantissa :exponent) decimal-literal
-         (rational-value (rational* (rational-value :mantissa) (expt (integer-to-rational 10) (integer-value :exponent)))))
+         (rational-value (rational* (rational-value :mantissa) (expt 10 (integer-value :exponent)))))
        
        (declare-action rational-value :mantissa rational)
        (production :mantissa (:decimal-integer-literal) mantissa-integer
-         (rational-value (integer-to-rational (integer-value :decimal-integer-literal))))
+         (rational-value (integer-value :decimal-integer-literal)))
        (production :mantissa (:decimal-integer-literal #\.) mantissa-integer-dot
-         (rational-value (integer-to-rational (integer-value :decimal-integer-literal))))
+         (rational-value (integer-value :decimal-integer-literal)))
        (production :mantissa (:decimal-integer-literal #\. :fraction) mantissa-integer-dot-fraction
-         (rational-value (rational+ (integer-to-rational (integer-value :decimal-integer-literal))
+         (rational-value (rational+ (integer-value :decimal-integer-literal)
                                     (rational-value :fraction))))
        (production :mantissa (#\. :fraction) mantissa-dot-fraction
          (rational-value (rational-value :fraction)))
@@ -270,8 +270,8 @@
        
        (declare-action rational-value :fraction rational)
        (production :fraction (:decimal-digits) fraction-decimal-digits
-         (rational-value (rational/ (integer-to-rational (integer-value :decimal-digits))
-                                    (expt (integer-to-rational 10) (n-digits :decimal-digits)))))
+         (rational-value (rational/ (integer-value :decimal-digits)
+                                    (expt 10 (n-digits :decimal-digits)))))
        (%print-actions)
        
        (declare-action integer-value :exponent integer)
