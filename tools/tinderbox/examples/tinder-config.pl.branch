@@ -6,7 +6,6 @@
 $BuildAdministrator = "mcafee\@netscape.com";
 
 #- You'll need to change these to suit your machine's needs
-$BaseDir       = '/builds/mcafee/tinderbox';
 $DisplayServer = 'costarica.mcom.com:0.0';
 
 #- Default values of command-line opts

@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.47 $ ';
+$::UtilsVersion = '$Revision: 1.48 $ ';
 
 package TinderUtils;
 
@@ -270,6 +270,11 @@ sub LoadConfig {
 
 sub SetupEnv {
     umask 0;
+
+	# Assume this file lives in the base dir, this will
+	# avoid human error from setting this manually.
+	$Settings::BaseDir = Cwd::getcwd();
+
     my $topsrcdir = "$Settings::BaseDir/$Settings::DirName/mozilla";
 
 	if ($Settings::ObjDir ne '') {

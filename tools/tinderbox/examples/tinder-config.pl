@@ -6,7 +6,6 @@
 $BuildAdministrator = 'mcafee@mocha.com';
 
 #- You'll need to change these to suit your machine's needs
-$BaseDir       = '/builds/mcafee/tinderbox';
 $DisplayServer = ':0.0'; # costarica:0.0
 
 #- Until you get the script working. When it works,
