@@ -1,4 +1,5 @@
 #!gmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -14,19 +15,54 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH	= ../..
+DEPTH = ../../../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= public src
+MODULE = TestXPC
 
-DIRS    += tests
+CPPSRCS = \
+	TestXPC.cpp \
+	$(NULL)
 
-DIRS	+= tools
+include $(topsrcdir)/config/config.mk
 
-# DIRS	+= xptinfo xptcall
+CFLAGS += -DJS_THREADSAFE -DJSFILE
+
+
+LDFLAGS		= 		\
+	-L$(DIST)/bin \
+	-lxpcom       \
+	-lxptcmd \
+	-lxptinfo \
+	-lreg       \
+	-l$(MOZ_LIB_UTIL_PREFIX)util    \
+	$(NSPR_LIBS) 	\
+	$(NULL)
+
+
+PROGS = $(OBJDIR)/TestXPC
+
+TEST_FILES = testxpc.js
+
+TARGETS= $(PROGS)
 
 include $(topsrcdir)/config/rules.mk
+
+INCLUDES	+= -I$(PUBLIC)/xpcom -I$(PUBLIC)/js -I$(PUBLIC)/xptcall \
+               -I$(PUBLIC)/xptinfo -I$(PUBLIC)/libxpt -I$(PUBLIC)/raptor
+
+#$(PROGS): $(OBJS)
+#	@$(MAKE_OBJDIR)
+#	$(CC) -o $@ $(OBJS) $(LD_FLAGS) -L$(DIST)/lib $(LIBS) $(OS_LIBS)
+
+export:: $(TARGETS)
+	$(INSTALL) $(PROGS) $(DIST)/bin
+	$(INSTALL) $(TEST_FILES) $(DIST)/bin
+
+clobber::
+	rm -f $(DIST)/bin/TestXPC
+	rm -f $(PROGS) $(OBJS)

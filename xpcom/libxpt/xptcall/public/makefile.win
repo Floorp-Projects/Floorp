@@ -1,4 +1,5 @@
-#!gmake
+#!nmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -14,19 +15,15 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH	= ../..
-topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
-srcdir		= @srcdir@
+IGNORE_MANIFEST=1
 
-include $(DEPTH)/config/autoconf.mk
+DEPTH=..\..\..\..
 
-DIRS	= public src
+EXPORTS =	xptcall.h	\
+		xptcstubsdecl.inc \
+		xptcstubsdef.inc \
+		$(NULL)
 
-DIRS    += tests
+MODULE	=	xptcall
 
-DIRS	+= tools
-
-# DIRS	+= xptinfo xptcall
-
-include $(topsrcdir)/config/rules.mk
+include <$(DEPTH)\config\rules.mak>

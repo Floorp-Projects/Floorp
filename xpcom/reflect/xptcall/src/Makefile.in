@@ -14,19 +14,25 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH	= ../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= public src
+MODULE		= xptcall
+LIBRARY_NAME	= xptcall
 
-DIRS    += tests
+DIRS = md
 
-DIRS	+= tools
+CFLAGS	+= -DEXPORT_XPTC_API
 
-# DIRS	+= xptinfo xptcall
+CSRCS		= xptcall.c 	\
+		  $(NULL)
+
+REQUIRES	= $(MODULE)
+
+export:: libs
 
 include $(topsrcdir)/config/rules.mk

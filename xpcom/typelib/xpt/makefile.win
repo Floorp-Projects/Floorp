@@ -16,6 +16,6 @@
 
 DEPTH=..\..
 IGNORE_MANIFEST=1
-DIRS=public src tests tools xptinfo
+DIRS=public src tests tools xptinfo xptcall
 
 include <$(DEPTH)\config\rules.mak>
