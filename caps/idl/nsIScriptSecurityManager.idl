@@ -204,7 +204,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * Returns true if the principal of the currently running script is the
      * system principal, false otherwise.
      */
-    boolean subjectPrincipalIsSystem();
+    [noscript] boolean subjectPrincipalIsSystem();
 
     /**
      * Returns OK if aJSContext and target have the same "origin"
@@ -217,8 +217,8 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * Returns OK if aSourceURI and target have the same "origin"
      * (scheme, host, and port).
      */
-    [noscript] void checkSameOriginURI(in nsIURI aSourceURI,
-                                       in nsIURI aTargetURI);
+    void checkSameOriginURI(in nsIURI aSourceURI,
+                            in nsIURI aTargetURI);
 
     /**
      * Returns OK if aSourcePrincipal and aTargetPrincipal
