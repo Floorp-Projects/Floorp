@@ -33,6 +33,7 @@ EXTRA_LIBS	=
 
 CPPSRCS		= \
 	gif.cpp \
+	nsGIFModule.cpp \
 	nsGIFDecoder.cpp \
 	nsGIFCallback.cpp \
 	dllcompat.cpp \

@@ -20,9 +20,7 @@
  *   nsGIFDecoder.cpp --- interface to gif decoder
  */
 
-#include "nsIImgDecoder.h"  // include if_struct.h Needs to be included first
 #include "nsGIFDecoder.h"
-#include "gif.h"
 
 /*--- needed for autoregistry ---*/
 #include "nsIComponentManager.h"
@@ -39,32 +37,6 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGIFDecoderCID, NS_GIFDECODER_CID);
 static NS_DEFINE_IID(kIImgDecoderIID, NS_IIMGDECODER_IID);
 
-//////////////////////////////////////////////////////////////////////
-// GIF Decoder Definition
-
-class GIFDecoder : public nsIImgDecoder   
-{
-public:
-  GIFDecoder(il_container* aContainer);
-  virtual ~GIFDecoder();
- 
-  NS_DECL_ISUPPORTS
-
-  /* stream */
-  NS_IMETHOD ImgDInit();
-
-  NS_IMETHOD ImgDWriteReady();
-  NS_IMETHOD ImgDWrite(const unsigned char *buf, int32 len);
-  NS_IMETHOD ImgDComplete();
-  NS_IMETHOD ImgDAbort();
-
-  NS_IMETHOD_(il_container *) SetContainer(il_container *ic){ilContainer = ic; return ic;}
-  NS_IMETHOD_(il_container *) GetContainer() {return ilContainer;}
-
-  
-private:
-  il_container* ilContainer;
-};
 
 //////////////////////////////////////////////////////////////////////
 // GIF Decoder Implementation
@@ -128,111 +100,6 @@ GIFDecoder::ImgDAbort()
     il_gif_abort(ilContainer);
   }
   return 0;
-}
-
-//////////////////////////////////////////////////////////////////////
-// GIF Decoder Factory using nsIGenericFactory
-
-static NS_IMETHODIMP
-nsGIFDecoderCreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    GIFDecoder *gifdec = NULL;
-    *aResult = NULL;
-    il_container* ic = NULL;
-
-    NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-    if (aOuter && !aIID.Equals(kISupportsIID))
-        return NS_NOINTERFACE;  
-
-    ic = new il_container();
-    if (!ic)
-    {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    gifdec = new GIFDecoder(ic);
-    if (!gifdec)
-    {
-        delete ic;
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    nsresult res = gifdec->QueryInterface(aIID, aResult);
-    if (NS_FAILED(res))
-    {
-        *aResult = NULL;
-        delete gifdec;
-    }
-    delete ic; /* is a place holder */
-    return res;
-}
-
-
-//////////////////////////////////////////////////////////////////////
-// Module Object Creation Entry points
-
-extern "C" NS_EXPORT nsresult
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
-{
-  if( !aClass.Equals(kGIFDecoderCID))
-		return NS_ERROR_FACTORY_NOT_REGISTERED;
-
-  nsCOMPtr<nsIGenericFactory> fact;
-  nsresult rv = NS_NewGenericFactory(getter_AddRefs(fact), nsGIFDecoderCreateInstance);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = fact->QueryInterface(kIFactoryIID, (void **)aFactory);
-  return rv;
-}
-
-//////////////////////////////////////////////////////////////////////
-// Module Registration Entrypoints
-
-extern "C" NS_EXPORT nsresult 
-NSRegisterSelf(nsISupports* aServMgr, const char *path)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-     if ((rv = compMgr->RegisterComponent(kGIFDecoderCID, 
-       "Netscape GIFDec", 
-       "component://netscape/image/decoder&type=image/gif", path, PR_TRUE, PR_TRUE)
-				  ) != NS_OK) {
-				  return rv;
-			  }
- (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
-
-}
-
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->UnregisterComponent(kGIFDecoderCID, path);
-
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
 }
  
 
