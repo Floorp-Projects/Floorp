@@ -6629,21 +6629,29 @@ DocumentViewerImpl::DoPrintProgress(PRBool aIsForPrinting)
   nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
   if (prefs) {
     prefs->GetBoolPref("print.show_print_progress", &mPrt->mShowProgressDialog);
-    if (mPrt->mShowProgressDialog) {
-      nsPrintProgressParams* prtProgressParams = new nsPrintProgressParams();
-      nsCOMPtr<nsIPrintProgressParams> params;
-      rv = prtProgressParams->QueryInterface(NS_GET_IID(nsIPrintProgressParams), (void**)getter_AddRefs(mPrt->mPrintProgressParams));
-      if (NS_SUCCEEDED(rv) && mPrt->mPrintProgressParams) {
-        SetDocAndURLIntoProgress(mPrt->mPrintObject, mPrt->mPrintProgressParams);
+  }
 
-        nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-        if (wwatch) {
-          nsCOMPtr<nsIDOMWindow> active;
-          wwatch->GetActiveWindow(getter_AddRefs(active));
+  // Turning off the showing of Print Progress in Prefs overrides
+  // whether the calling PS desire to have it on or off, so only check PS if 
+  // prefs says it's ok to be on.
+  if (mPrt->mShowProgressDialog) {
+    mPrt->mPrintSettings->GetShowPrintProgress(&mPrt->mShowProgressDialog);
+  }
 
-          nsCOMPtr<nsIDOMWindowInternal> parent(do_QueryInterface(active));
-          mPrt->mPrintProgress->OpenProgressDialog(parent, "chrome://global/content/printProgress.xul", mPrt->mPrintProgressParams);
-        }
+  if (mPrt->mShowProgressDialog) {
+    nsPrintProgressParams* prtProgressParams = new nsPrintProgressParams();
+    nsCOMPtr<nsIPrintProgressParams> params;
+    rv = prtProgressParams->QueryInterface(NS_GET_IID(nsIPrintProgressParams), (void**)getter_AddRefs(mPrt->mPrintProgressParams));
+    if (NS_SUCCEEDED(rv) && mPrt->mPrintProgressParams) {
+      SetDocAndURLIntoProgress(mPrt->mPrintObject, mPrt->mPrintProgressParams);
+
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      if (wwatch) {
+        nsCOMPtr<nsIDOMWindow> active;
+        wwatch->GetActiveWindow(getter_AddRefs(active));
+
+        nsCOMPtr<nsIDOMWindowInternal> parent(do_QueryInterface(active));
+        mPrt->mPrintProgress->OpenProgressDialog(parent, "chrome://global/content/printProgress.xul", mPrt->mPrintProgressParams);
       }
     }
   }
