@@ -57,6 +57,7 @@ public:
     NS_IMETHOD GetParent(nsIDMItem*& pItem) const;
 
     // Setters
+	NS_IMETHOD SetOpenState(PRBool open);
 
     // Methods to query the data model for a specific item displayed within the widget.
     NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& itemProperty) const;
