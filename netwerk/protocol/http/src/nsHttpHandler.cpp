@@ -58,6 +58,10 @@
 #include <windows.h>
 #endif
 
+#if defined(XP_MAC)
+#include <Gestalt.h>
+#endif
+
 static const char NETWORK_PREFS[] = "network.";
 static const char INTL_ACCEPT_LANGUAGES[] = "intl.accept_languages";
 static const char INTL_ACCEPT_CHARSET[] = "intl.charset.default";
@@ -1036,7 +1040,11 @@ nsHttpHandler::InitUserAgentComponents()
         mOscpu.Adopt(ToNewCString(buf));
     }
 #elif defined (XP_MAC)
-    mOscpu.Adopt(nsCRT::strdup("PPC"));
+    long version;
+    if (::Gestalt(gestaltSystemVersion, &version) == noErr && version >= 0x00001000)
+        mOscpu.Adopt(nsCRT::strdup("PPC Mac OS X"));
+    else
+        mOscpu.Adopt(nsCRT::strdup("PPC"));
 #endif
 
     mUserAgentIsDirty = PR_TRUE;
