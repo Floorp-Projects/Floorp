@@ -23,17 +23,17 @@ var IMAGEPERMISSION = 1;
 
 function viewImages() {
   window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
-                    "modal=yes,chrome,resizable=yes", "imageManager" );
+                    "chrome,resizable=yes", "imageManager" );
 }
 
 function viewCookies() {
   window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
-                    "modal=yes,chrome,resizable=yes", "cookieManager");
+                    "chrome,resizable=yes", "cookieManager");
 }  
 
 function viewCookiesFromIcon() {
   window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
-                    "modal=yes,chrome,resizable=yes", "cookieManagerFromIcon");
+                    "chrome,resizable=yes", "cookieManagerFromIcon");
 }  
 
 function viewTutorial() {
@@ -43,5 +43,5 @@ function viewTutorial() {
 
 function viewP3P() {
   window.openDialog
-    ("chrome://cookie/content/p3p.xul","_blank","modal=yes,chrome,resizable=no");
+    ("chrome://cookie/content/p3p.xul","_blank","chrome,resizable=no");
 }  
