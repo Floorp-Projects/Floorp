@@ -1381,8 +1381,10 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                     }
                                     JSSlot& slot = thisClass->addSlot(idExpr->name, type);
                                     // generate code for the default constructor, which initializes the slots.
-                                    if (v->initializer)
+                                    if (v->initializer) {
                                         ccg.setSlot(thisRegister, slot.mIndex, ccg.genExpr(v->initializer));
+                                        ccg.resetStatement();
+                                    }
                                 }
                                 v = v->next;
                             }
