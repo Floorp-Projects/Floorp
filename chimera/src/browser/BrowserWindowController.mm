@@ -115,11 +115,12 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 - (id)initWithWindowNibName:(NSString *)windowNibName
 {
     if ( (self = [super initWithWindowNibName:(NSString *)windowNibName]) ) {
-        if ( nsCocoaBrowserService::sNumBrowsers == 0 ) {
+        // this won't correctly cascade windows on multiple monitors. RADAR bug 2972893 
+        // filed since it also happens in Terminal.app
+        if ( nsCocoaBrowserService::sNumBrowsers == 0 )
             [self setShouldCascadeWindows:NO];
-        } else {
+        else
             [self setShouldCascadeWindows:YES];
-        }
         mInitialized = NO;
         mMoveReentrant = NO;
         mShouldAutosave = YES;
