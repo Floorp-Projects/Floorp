@@ -46,14 +46,14 @@
 # See http://www.mozilla.org/build/unix.html for more information.
 #
 # Options:
-#   MOZ_WITH_NSPR       - Nspr directory for configure --with-nspr=
-#   MOZ_WITH_PTHREADS   - Pthreads for nspr and configure
-#   MOZ_OBJDIR          - Destination object directory
+#   MOZ_WITH_NSPR        - Nspr directory for configure --with-nspr=
+#   MOZ_WITHOUT_PTHREADS - Turn off pthreads for nspr and configure
+#   MOZ_OBJDIR           - Destination object directory
 # also,
-#   MOZ_CO_BRANCH       - Branch tag to use for checkout (default: HEAD)
-#   MOZ_CO_MODULE       - Module to checkout (default: SeaMonkeyEditor)
-#   MOZ_CVS_FLAGS       - Flags to pass cvs (default: -q -z3)
-#   MOZ_CO_FLAGS        - Flags to pass after 'cvs co' (default: -P)
+#   MOZ_CO_BRANCH        - Branch tag to use for checkout (default: HEAD)
+#   MOZ_CO_MODULE        - Module to checkout (default: SeaMonkeyEditor)
+#   MOZ_CVS_FLAGS        - Flags to pass cvs (default: -q -z3)
+#   MOZ_CO_FLAGS         - Flags to pass after 'cvs co' (default: -P)
 
 CWD		:= $(shell pwd)
 ifeq (mozilla, $(notdir $(CWD)))
@@ -149,7 +149,7 @@ CVSCO_LOGFILE	:= $(ROOTDIR)/cvsco.log
 ####################################
 # NSPR
 
-ifeq ($(MOZ_WITH_PTHREADS), 1)
+ifneq ($(MOZ_WITHOUT_PTHREADS), 1)
 NSPR_PTHREAD_FLAG := USE_PTHREADS=1
 endif
 
@@ -195,8 +195,8 @@ ifdef NEED_WITH_NSPR
 CONFIG_FLAGS += --with-nspr=$(NSPR_INSTALL_DIR)
 endif
 
-ifeq "$(origin MOZ_WITH_PTHREADS)" "environment"
-CONFIG_FLAGS += --with-pthreads
+ifeq "$(origin MOZ_WITHOUT_PTHREADS)" "environment"
+CONFIG_FLAGS += --without-pthreads
 endif
 
 #######################################################################

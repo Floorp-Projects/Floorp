@@ -37,9 +37,10 @@ ac_add_options() {
     # and substitute '@<word>@' with '$(<word)'.
     _opt=`echo $_opt | sed -e 's/\([\ \	\$\"\\]\)/\\\\\1/g; s/@\([^@]*\)@/\$(\1)/g;'`
     case "$_opt" in
-      --with-nspr=* )     echo MOZ_WITH_NSPR=`expr $_opt : ".*=\(.*\)"` ;;
-      --with-pthreads* )  echo MOZ_WITH_PTHREADS=1 ;;
-      --*-* )             echo "# $_opt is not used by client.mk" ;;
+      --with-nspr=* )       echo MOZ_WITH_NSPR=`expr $_opt : ".*=\(.*\)"` ;;
+      --with-pthreads=no )  echo MOZ_WITHOUT_PTHREADS=1 ;;
+      --without-pthreads )  echo MOZ_WITHOUT_PTHREADS=1 ;;
+      --*-* )               echo "# $_opt is not used by client.mk" ;;
     esac
   done
 }
