@@ -444,7 +444,7 @@ main(int argc, char **argv)
 		cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
 		for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; )
 		    /* do nothing */;
-		if (cipher) {
+		if (cipher > 0) {
 		    SSL_CipherPrefSetDefault(cipher, PR_TRUE);
 		}
 	    }

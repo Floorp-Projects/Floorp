@@ -47,7 +47,6 @@ DEPTH      = ../..
 #  smime
 #  ckfw (builtins module)
 #  crmf jar (not dll's)
-#  fortcrypt
 DIRS =  util freebl softoken \
 	base asn1 dev pki pki1 \
 	certdb certhigh pk11wrap cryptohi nss \
@@ -55,8 +54,9 @@ DIRS =  util freebl softoken \
 	pkcs12 pkcs7 smime \
 	crmf jar \
 	ckfw      \
-	fortcrypt \
 	$(NULL)
+
+#  fortcrypt  is no longer built
 
 # NSS 4.0 build - pure stan libraries
 ifdef PURE_STAN_BUILD

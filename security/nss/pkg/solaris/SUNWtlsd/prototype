@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: prototype,v 1.4 2005/02/28 17:45:19 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: prototype,v 1.5 2005/04/06 19:43:19 nelsonb%netscape.com Exp $"
 #
 # This required package information file contains a list of package contents.
 # The 'pkgmk' command uses this file to identify the contents of a package
@@ -160,6 +160,4 @@ f none usr/include/mps/ssl.h 0644 root bin
 f none usr/include/mps/sslerr.h 0644 root bin
 f none usr/include/mps/sslproto.h 0644 root bin
 f none usr/include/mps/sslt.h 0644 root bin
-f none usr/include/mps/swfort.h 0644 root bin
-f none usr/include/mps/swfortt.h 0644 root bin
 f none usr/include/mps/watcomfx.h 0644 root bin
