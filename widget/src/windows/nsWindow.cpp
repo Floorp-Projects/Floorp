@@ -398,12 +398,12 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 //-------------------------------------------------------------------------
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-      // Get the window which caused the event and ask it to process the message
+
+    // Get the window which caused the event and ask it to process the message
     nsWindow *someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
 
-
-      // Re-direct a tab change message destined for it's parent window to the
-      // the actual window which generated the event.
+    // Re-direct a tab change message destined for it's parent window to the
+    // the actual window which generated the event.
     if (msg == WM_NOTIFY) {
       LPNMHDR pnmh = (LPNMHDR) lParam;
       if (pnmh->code == TCN_SELCHANGE) {             
@@ -467,18 +467,19 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     //
   
     nsToolkit* toolkit = (nsToolkit *)mToolkit;
-    if (! toolkit->IsGuiThread()) {
-        DWORD args[5];
+    if (!toolkit->IsGuiThread()) {
+        DWORD args[7];
         args[0] = (DWORD)aParent;
         args[1] = (DWORD)&aRect;
         args[2] = (DWORD)aHandleEventFunction;
         args[3] = (DWORD)aContext;
-        args[4] = (DWORD)aToolkit;
-        args[5] = (DWORD)aInitData;
+        args[4] = (DWORD)aAppShell;
+        args[5] = (DWORD)aToolkit;
+        args[6] = (DWORD)aInitData;
 
         if (nsnull != aParent) {
            // nsIWidget parent dispatch
-          MethodInfo info(this, nsWindow::CREATE, 6, args);
+          MethodInfo info(this, nsWindow::CREATE, 7, args);
           toolkit->CallMethod(&info);
            return NS_OK;
         }
