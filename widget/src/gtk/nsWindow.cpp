@@ -4404,7 +4404,7 @@ void nsWindow::ApplyTransparencyBitmap() {
                                                       mTransparencyBitmap,
                                                       mBounds.width, mBounds.height);
   if (!maskBitmap)
-    return NS_ERROR_FAILURE;
+    return;
 
   gtk_widget_shape_combine_mask(mShell, maskBitmap, 0, 0);
   gdk_bitmap_unref(maskBitmap);
