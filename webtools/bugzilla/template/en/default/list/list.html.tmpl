@@ -67,7 +67,6 @@
 
 <hr>
 
-
 [%############################################################################%]
 [%# Preceding Status Line                                                    #%]
 [%############################################################################%]
@@ -76,7 +75,6 @@
   [% bugs.size %]&nbsp;[% terms.bugs %] found.
 [% END %]
 
-
 [%############################################################################%]
 [%# Start of Change Form                                                     #%]
 [%############################################################################%]
@@ -84,7 +82,6 @@
 [% IF dotweak %]
   <form name="changeform" method="post" action="process_bug.cgi">
 [% END %]
-
 
 [%############################################################################%]
 [%# Bug Table                                                                #%]
@@ -99,54 +96,42 @@
 
 [% IF bugs.size == 0 %]
   [% terms.zeroSearchResults %].
-  <p>
-    <a href="query.cgi">Query Page</a>
-    &nbsp;&nbsp;<a href="enter_bug.cgi">Enter New [% terms.Bug %]</a>
-    <a href="query.cgi?[% urlquerypart FILTER html %]">Edit this query</a>
-  </p>
-
 [% ELSIF bugs.size == 1 %]
   One [% terms.bug %] found.
-
 [% ELSE %]
   [% bugs.size %]&nbsp;[% terms.bugs %] found.
-
 [% END %]
 
 <br>
-
 
 [%############################################################################%]
 [%# Rest of Change Form                                                      #%]
 [%############################################################################%]
 
 [% IF dotweak %]
-
   [% PROCESS "list/edit-multiple.html.tmpl" %]
-
   </form>
-
   <hr>
-
 [% END %]
-
 
 [%############################################################################%]
 [%# Navigation Bar                                                           #%]
 [%############################################################################%]
 
-[% IF bugs.size > 0 %]
-  <p>
-  <table>
-    <tr>
-      <td valign="top">
+<p>
+<table>
+  <tr>
+    [% IF bugs.size > 0 %]
+      <td valign="bottom">
         <form method="post" action="long_list.cgi">
           <input type="hidden" name="buglist" value="[% buglist %]">
           <input type="submit" value="Long Format">
         </form>
       </td>
+      
       <td>&nbsp;</td>
-      <td valign="top">
+      
+      <td valign="bottom">
         <a href="buglist.cgi?
         [% urlquerypart FILTER html %]&amp;ctype=csv">CSV</a> |
         <a href="colchange.cgi?
@@ -163,33 +148,37 @@
           <a href="mailto:
             [% bugowners FILTER html %]">Send&nbsp;Mail&nbsp;to&nbsp;[% terms.Bug %]&nbsp;Owners</a> |
         [% END %]
-
-        <a href="query.cgi?[% urlquerypart FILTER html %]">Edit&nbsp;Search</a>
       </td>
-      [% IF searchname %]
-        <td valign="top" nowrap="nowrap">
-          |
-          <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
-                  [% searchname FILTER html %]">Forget&nbsp;Search&nbsp;'
-                  [% searchname FILTER html %]'</a>
-        </td>
-      [% ELSE %]
-        <td>&nbsp;</td>
-        <td>
-          <form method="get" action="buglist.cgi">
-            <input type="submit" value="Remember search"> as 
-            <input type="hidden" name="newquery" 
-                   value="[% urlquerypart FILTER html %]">
-            <input type="hidden" name="cmdtype" value="doit">
-            <input type="hidden" name="remtype" value="asnamed">
-            <input type="text" name="newqueryname" size="20"> 
-          </form> 
-        </td>
-      [% END %]  
-    </tr>
-  </table>
-  </p>  
-[% END %]
+    [% END %]
+    
+    <td valign="bottom">
+      <a href="query.cgi?[% urlquerypart FILTER html %]">Edit&nbsp;Search</a>
+    </td>
+      
+    [% IF searchname %]
+      <td valign="bottom" nowrap="nowrap">
+        |
+        <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
+                [% searchname FILTER html %]">Forget&nbsp;Search&nbsp;'
+                [% searchname FILTER html %]'</a>
+      </td>
+    [% ELSE %]
+      <td>&nbsp;</td>
+      
+      <td valign="bottom">
+        <form method="get" action="buglist.cgi">
+          <input type="submit" value="Remember search"> as 
+          <input type="hidden" name="newquery" 
+                 value="[% urlquerypart FILTER html %]">
+          <input type="hidden" name="cmdtype" value="doit">
+          <input type="hidden" name="remtype" value="asnamed">
+          <input type="text" name="newqueryname" size="20"> 
+        </form> 
+      </td>
+    [% END %]  
+  </tr>
+</table>
+</p>  
 
 
 [%############################################################################%]
