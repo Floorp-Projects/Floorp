@@ -311,7 +311,22 @@ nsBrowserStatusHandler.prototype =
   {
     this.setOverLink("", null);
 
-    var location = aLocation.spec;
+    var location = "";
+
+    if (aLocation) {
+      try {
+        if (!gURIFixup)
+          gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                                .getService(Components.interfaces.nsIURIFixup);
+        // If the url has "wyciwyg://" as the protocol, strip it off.
+        // Nobody wants to see it on the urlbar for dynamically generated
+        // pages.
+        location = gURIFixup.createExposableURI(aLocation).spec;
+      }
+      catch(ex) {
+        location = aLocation.spec;
+      }
+    }
 
     if (this.hideAboutBlank) {
       this.hideAboutBlank = false;
@@ -332,11 +347,6 @@ nsBrowserStatusHandler.prototype =
 
     if (aWebProgress.DOMWindow == content) {
       if (!this.userTyped.value) {
-        // If the url has "wyciwyg://" as the protocol, strip it off.
-        // Nobody wants to see it on the urlbar for dynamically generated
-        // pages. 
-        if (/^\s*wyciwyg:\/\/\d+\//.test(location))
-          location = RegExp.rightContext;
         this.urlBar.value = location;
         // the above causes userTyped.value to become true, reset it
         this.userTyped.value = false;

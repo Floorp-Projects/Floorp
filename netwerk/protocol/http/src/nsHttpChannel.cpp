@@ -2485,12 +2485,16 @@ nsHttpChannel::SetReferrer(nsIURI *referrerIn, PRUint32 referrerType)
             // To figure out where the "real" URL starts, search path for a '/', starting at 
             // the third character.
             PRInt32 slashIndex = path.FindChar('/', 2);
-            if (slashIndex < 0) return NS_ERROR_FAILURE;
+            if (slashIndex == kNotFound) return NS_ERROR_FAILURE;
+
+            // Get the charset of the original URI so we can pass it to our fixed up URI.
+            nsCAutoString charset;
+            referrer->GetOriginCharset(charset);
 
             // Replace |referrer| with a URI without wyciwyg://123/.
-            nsCAutoString newReferrer;
-            path.Right(newReferrer, pathLength - slashIndex - 1);
-            rv = NS_NewURI(getter_AddRefs(referrer), newReferrer.get());
+            rv = NS_NewURI(getter_AddRefs(referrer),
+                           Substring(path, slashIndex + 1, pathLength - slashIndex - 1),
+                           charset.get());
             if (NS_FAILED(rv)) return rv;
         }
 

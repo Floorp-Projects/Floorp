@@ -2344,8 +2344,28 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
                     nsIInputStream * aHeaderStream)
 {
     nsCOMPtr<nsIURI> uri;
+    nsresult rv;
+    // Create the fixup object if necessary
+    if (!mURIFixup) {
+        mURIFixup = do_GetService(NS_URIFIXUP_CONTRACTID);
+        if (!mURIFixup) {
+            // No fixup service so try and create a URI and see what happens
+            nsAutoString uriString(aURI);
+            // Cleanup the empty spaces that might be on each end.
+            uriString.Trim(" ");
+            // Eliminate embedded newlines, which single-line text fields now allow:
+            uriString.StripChars("\r\n");
+            NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
 
-    nsresult rv = CreateFixupURI(nsDependentString(aURI), getter_AddRefs(uri));
+            rv = NS_NewURI(getter_AddRefs(uri), uriString);
+        }
+    }
+    if (mURIFixup) {
+        // Call the fixup object
+        rv = mURIFixup->CreateFixupURI(nsDependentString(aURI),
+                                       nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
+                                       getter_AddRefs(uri));
+    }
 
     if (NS_ERROR_UNKNOWN_PROTOCOL == rv ||
         NS_ERROR_MALFORMED_URI == rv) {
@@ -4912,32 +4932,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                    aDocShell, aRequest);
 
     return rv;
-}
-
-NS_IMETHODIMP
-nsDocShell::CreateFixupURI(const nsAString& aStringURI, nsIURI ** aURI)
-{
-    *aURI = nsnull;
-    nsAutoString uriString(aStringURI);
-    uriString.Trim(" ");        // Cleanup the empty spaces that might be on each end.
-
-    // Eliminate embedded newlines, which single-line text fields now allow:
-    uriString.StripChars("\r\n");
-
-    NS_ENSURE_TRUE(uriString.Length() > 0, NS_ERROR_FAILURE);
-
-    // Create the fixup object if necessary
-    if (!mURIFixup) {
-        mURIFixup = do_GetService(NS_URIFIXUP_CONTRACTID);
-        if (!mURIFixup) {
-            // No fixup service so try and create a URI and see what happens
-            return NS_NewURI(aURI, uriString);
-        }
-    }
-
-    // Call the fixup object
-    return mURIFixup->CreateFixupURI(aStringURI,
-        nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP, aURI);
 }
 
 NS_IMETHODIMP

@@ -109,6 +109,10 @@
                   .getService(Components.interfaces.nsIPrefService)
                   .getBranch(null);
       </field>
+      <field name="mURIFixup" readonly="true">
+        Components.classes["@mozilla.org/docshell/urifixup;1"]
+                  .getService(Components.interfaces.nsIURIFixup);
+      </field>
       <field name="mTabBox">
         document.getAnonymousNodes(this)[1]
       </field>
@@ -351,7 +355,7 @@
             var newTitle = "";
             var docTitle;
             if (this.docShell.contentViewer)
-              docTitle = this.contentDocument.title;
+              docTitle = this.contentTitle;
             
             if (docTitle) {
               newTitle += this.ownerDocument.documentElement.getAttribute("titlepreface");
@@ -390,9 +394,6 @@
 
             // Update the URL bar.
             var loc = this.mCurrentBrowser.currentURI;
-            if (!loc)
-              loc = ({ spec: "" });
-
             var webProgress = this.mCurrentBrowser.webProgress;
             var securityUI = this.mCurrentBrowser.securityUI;
             var i, p;
@@ -545,18 +546,24 @@
         <body>
           <![CDATA[
             var browser = this.getBrowserForTab(aTab);
+            var title = browser.contentTitle;
             var crop = "end";
-            var titleViaGetter = browser.contentDocument.__proto__.__lookupGetter__('title').call(browser.contentDocument);
-            var title;
 
-            if (titleViaGetter)
-              title = titleViaGetter
-            else if (browser.currentURI.spec && browser.currentURI.spec != "about:blank") {
-              title = browser.currentURI.spec;
-              crop  = "center";
+            if (!title) {
+              if (browser.currentURI.spec) {
+                try {
+                  title = this.mURIFixup.createExposableURI(browser.currentURI).spec;
+                }
+                catch(ex) {
+                  title = browser.currentURI.spec;
+                }
+              }
+
+              if (title && title != "about:blank")
+                crop = "center";
+              else // Still no title?  Fall back to our untitled string.
+                title = this.mStringBundle.getString("tabs.untitled");
             }
-            else
-              title = this.mStringBundle.getString("tabs.untitled");
 
             aTab.label = title;
             aTab.setAttribute("crop", crop);
@@ -1129,6 +1136,10 @@
 
       <property name="contentDocument"
                 onget="return this.mCurrentBrowser.contentDocument;"
+                readonly="true"/>
+
+      <property name="contentTitle"
+                onget="return this.mCurrentBrowser.contentTitle;"
                 readonly="true"/>
 
       <property name="securityUI"
