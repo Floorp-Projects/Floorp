@@ -1602,6 +1602,18 @@ gtk_moz_embed_startup_xpcom(void)
   gHiddenWindow = hiddenWindow.get();
   NS_ADDREF(gHiddenWindow);
 
+  // remove the X property from the hidden window otherwise this
+  // window will respond ( actually, fail ) to respond to moz remote
+  // commands
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(gHiddenWindow);
+  nsCOMPtr<nsIWidget> widget;
+  baseWindow->GetMainWidget(getter_AddRefs(widget));
+  GdkWindow *gdkWindow = NS_STATIC_CAST(GdkWindow *, widget->GetNativeData(NS_NATIVE_WINDOW));
+  gdkWindow = gdk_window_get_toplevel(gdkWindow);
+  
+  Atom atom = XInternAtom(GDK_DISPLAY(), "_MOZILLA_VERSION", False);
+  XDeleteProperty(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(gdkWindow), atom);
+
   // spin up an appshell
   nsCOMPtr<nsIAppShell> appShell;
   appShell = do_CreateInstance(kAppShellCID);
