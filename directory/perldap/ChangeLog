@@ -1,0 +1,5 @@
+1998-07-22  Leif Hedstrom  <leif@netscape.com>
+
+	* Utils.pm (printEntry): Moved from the ::Connection class, and
+	marked it as "obsolete".
+
