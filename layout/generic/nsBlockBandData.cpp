@@ -52,6 +52,14 @@ nsBlockBandData::Init(nsISpaceManager* aSpaceManager,
   aSpaceManager->GetTranslation(mSpaceManagerX, mSpaceManagerY);
 
   mSpace = aSpace;
+#ifdef DEBUG_kipp
+  if (mSpace.width != NS_UNCONSTRAINEDSIZE) {
+    NS_ASSERTION((mSpace.width > -200000) && (mSpace.width < 200000), "oy");
+  }
+  if (mSpace.height != NS_UNCONSTRAINEDSIZE) {
+    NS_ASSERTION((mSpace.height > -200000) && (mSpace.height < 200000), "oy");
+  }
+#endif
   return NS_OK;
 }
 
@@ -67,39 +75,7 @@ nsBlockBandData::GetAvailableSpace(nscoord aY, nsRect& aResult)
   // Compute the bounding rect of the available space, i.e. space
   // between any left and right floaters.
   ComputeAvailSpaceRect();
-
-  // Fixup width
-  if (NS_UNCONSTRAINEDSIZE == mSpace.width) {
-    mAvailSpace.width = NS_UNCONSTRAINEDSIZE;
-  }
   aResult = mAvailSpace;
-}
-
-// Get the available reflow space for the current y coordinate. The
-// available space is relative to our coordinate system (0,0) is our
-// upper left corner.
-void
-nsBlockBandData::GetAvailableSpace(nscoord aY)
-{
-  // Get the raw band data for the given Y coordinate
-  mSpaceManager->GetBandData(aY, mSpace, *this);
-
-  // Compute the bounding rect of the available space, i.e. space
-  // between any left and right floaters.
-  ComputeAvailSpaceRect();
-
-  // Fixup width
-  if (NS_UNCONSTRAINEDSIZE == mSpace.width) {
-    mAvailSpace.width = NS_UNCONSTRAINEDSIZE;
-  }
-#ifdef DEBUG_kipp
-  if (mAvailSpace.width != NS_UNCONSTRAINEDSIZE) {
-    NS_ASSERTION((mAvailSpace.width > -200000) && (mAvailSpace.width < 200000), "oy");
-  }
-  if (mAvailSpace.height != NS_UNCONSTRAINEDSIZE) {
-    NS_ASSERTION((mAvailSpace.height > -200000) && (mAvailSpace.height < 200000), "oy");
-  }
-#endif
 }
 
 /**
@@ -206,6 +182,19 @@ nsBlockBandData::ComputeAvailSpaceRect()
     }
     mAvailSpace.width = 0;
   }
+
+  // Fixup width
+  if (NS_UNCONSTRAINEDSIZE == mSpace.width) {
+    mAvailSpace.width = NS_UNCONSTRAINEDSIZE;
+  }
+#ifdef DEBUG_kipp
+  if (mAvailSpace.width != NS_UNCONSTRAINEDSIZE) {
+    NS_ASSERTION((mAvailSpace.width > -200000) && (mAvailSpace.width < 200000), "oy");
+  }
+  if (mAvailSpace.height != NS_UNCONSTRAINEDSIZE) {
+    NS_ASSERTION((mAvailSpace.height > -200000) && (mAvailSpace.height < 200000), "oy");
+  }
+#endif
 }
 
 /**
@@ -285,7 +274,8 @@ nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 {
   for (;;) {
     // Update band information based on target Y before clearing.
-    GetAvailableSpace(aY);
+    mSpaceManager->GetBandData(aY, mSpace, *this);
+    ComputeAvailSpaceRect();
 
     // Compute aYS as aY in space-manager "root" coordinates.
     nscoord aYS = aY + mSpaceManagerY;

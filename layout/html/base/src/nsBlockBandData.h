@@ -96,7 +96,6 @@ protected:
   PRInt32 mLeftFloaters, mRightFloaters;
 
   void ComputeAvailSpaceRect();
-  void GetAvailableSpace(nscoord aY);
   PRBool ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType);
   nscoord GetFrameYMost(nsIFrame* aFrame);
 };
