@@ -20,6 +20,7 @@
  * Contributor(s): 
  *  Ramiro
  *  Jerry.Kirk@Nexwarecorp.com
+ *  Chris Seawood <cls@seawood.org>
  */
 
 /*
@@ -47,7 +48,11 @@
 #ifdef XP_BEOS
 #include <be/app/Application.h>
 #include <string.h>
-extern "C" const char * strsignal(int);
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsIAppShellService.h"
+#include "nsAppShellCIDs.h"
+static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 #else
 extern "C" char * strsignal(int);
 #endif
@@ -126,9 +131,18 @@ void beos_signal_handler(int signum) {
 #ifdef DEBUG
 	fprintf(stderr, "beos_signal_handler: %d\n", signum);
 #endif
-	if (be_app->Lock()) {
-		be_app->Quit();
+	nsresult rv;
+	nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID,&rv));
+	if (NS_FAILED(rv)) {
+		// Failed to get the appshell service so shutdown the hard way
+#ifdef DEBUG
+		fprintf(stderr, "beos_signal_handler: appShell->do_GetService() failed\n");
+#endif
+		exit(13);
 	}
+
+	// Exit the appshell so that the app can shutdown normally
+	appShellService->Quit();
 }
 #endif 
 
