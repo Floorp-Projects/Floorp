@@ -1151,6 +1151,30 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           switch(type) {
             case NS_FORM_INPUT_CHECKBOX:
             case NS_FORM_INPUT_RADIO:
+            {
+              // Checkbox and Radio try to submit on Enter press
+              if (keyEvent->keyCode != NS_VK_SPACE) {
+                // Generate a submit event targetted at the form content
+                nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
+
+                if (form) {
+                  nsCOMPtr<nsIPresShell> shell;
+                  aPresContext->GetShell(getter_AddRefs(shell));
+                  if (shell) {
+                    nsCOMPtr<nsIContent> formControl = this; // kungFuDeathGrip
+
+                    nsFormEvent event;
+                    event.eventStructType = NS_FORM_EVENT;
+                    event.message         = NS_FORM_SUBMIT;
+                    event.originator      = formControl;
+                    nsEventStatus status  = nsEventStatus_eIgnore;
+                    shell->HandleDOMEventWithTarget(form, &event, &status);
+                  }
+                }
+                break;  // If we are submitting, do not send click event
+              }
+              // else fall through and treat Space like click...
+            }
             case NS_FORM_INPUT_BUTTON:
             case NS_FORM_INPUT_RESET:
             case NS_FORM_INPUT_SUBMIT:
