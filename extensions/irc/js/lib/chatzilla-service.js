@@ -56,6 +56,8 @@ const IOSERVICE_CONTRACTID =
     "@mozilla.org/network/io-service;1";
 const ASS_CONTRACTID =
     "@mozilla.org/appshell/appShellService;1";
+const RDFS_CONTRACTID =
+    "@mozilla.org/rdf/rdf-service;1";
 
 /* interafces used in this file */
 const nsIWindowMediator  = Components.interfaces.nsIWindowMediator;
@@ -70,6 +72,7 @@ const nsIRequest         = Components.interfaces.nsIRequest;
 const nsIIOService       = Components.interfaces.nsIIOService;
 const nsIAppShellService = Components.interfaces.nsIAppShellService;
 const nsISupports        = Components.interfaces.nsISupports;
+const nsIRDFService      = Components.interfaces.nsIRDFService;
 
 /* Command Line handler service */
 function CLineService()
@@ -334,6 +337,19 @@ function(compMgr, fileSpec, location)
 ChatzillaModule.getClassObject =
 function (compMgr, cid, iid)
 {
+    // Checking if we're disabled in the Chrome Registry.
+    var rv;
+    try {
+        var rdfSvc = Components.classes[RDFS_CONTRACTID].getService(nsIRDFService);
+        var rdfDS = rdfSvc.GetDataSource("rdf:chrome");
+        var resSelf = rdfSvc.GetResource("urn:mozilla:package:chatzilla");
+        var resDisabled = rdfSvc.GetResource("http://www.mozilla.org/rdf/chrome#disabled");
+        rv = rdfDS.GetTarget(resSelf, resDisabled, true);
+    } catch (e) {
+    }
+    if (rv)
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    
     if (cid.equals(CLINE_SERVICE_CID))
         return CLineFactory;
 
