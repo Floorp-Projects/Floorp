@@ -170,45 +170,57 @@ AddJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject)
                                         PL_DHASH_ADD));
   entry->mJavaObject = java_ref;
 
-  LOG("+ Adding Java<->XPCOM binding (Java=0x%08x] | XPCOM=0x%08x)\n",
-         (PRUint32) java_ref, (int) aXPCOMObject);
+  LOG("+ Adding Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x) weakref=0x%08x\n",
+         hash, (int) aXPCOMObject, (PRUint32) java_ref);
 }
 
 void
 RemoveJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject)
 {
-  JavaXPCOMBindingEntry* entry;
-
   // We either get a Java or an XPCOM object.  So find the other object.
   jint hash = 0;
+  JavaXPCOMBindingEntry* entry = nsnull;
+
   if (aJavaObject) {
     hash = env->CallIntMethod(aJavaObject, hashCodeMID);
-    entry =
+    JavaXPCOMBindingEntry* e =
       NS_STATIC_CAST(JavaXPCOMBindingEntry*,
                      PL_DHashTableOperate(gJAVAtoXPCOMBindings,
                                           NS_INT32_TO_PTR(hash),
                                           PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(e))
+      entry = e;
   } else {
-    entry =
+    JavaXPCOMBindingEntry* e =
       NS_STATIC_CAST(JavaXPCOMBindingEntry*,
                      PL_DHashTableOperate(gXPCOMtoJAVABindings, aXPCOMObject,
                                           PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(e))
+      entry = e;
   }
+  NS_ASSERTION(entry != nsnull, "Failed to find matching entry");
 
-  jobject jweakref = entry->mJavaObject;
-  void* xpcom_obj = entry->mXPCOMInstance;
-  if (hash == 0)
-    hash = env->CallIntMethod(jweakref, hashCodeMID);
+  if (entry) {
+    jobject jweakref = entry->mJavaObject;
+    void* xpcom_obj = entry->mXPCOMInstance;
+    if (hash == 0)
+      hash = env->CallIntMethod(jweakref, hashCodeMID);
 
-  // Remove both instances from stores
-  PL_DHashTableOperate(gJAVAtoXPCOMBindings, NS_INT32_TO_PTR(hash),
-                       PL_DHASH_REMOVE);
-  PL_DHashTableOperate(gXPCOMtoJAVABindings, xpcom_obj, PL_DHASH_REMOVE);
+    NS_ASSERTION(env->IsSameObject(jweakref, aJavaObject),
+                 "Weakref does not point to expected Java object");
+    NS_ASSERTION(!env->IsSameObject(jweakref, NULL),
+                 "Weakref refers to garbage collected Java object. No longer valid");
 
-  LOG("- Removing Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
-      hash, (int) xpcom_obj);
+    // Remove both instances from stores
+    PL_DHashTableOperate(gJAVAtoXPCOMBindings, NS_INT32_TO_PTR(hash),
+                         PL_DHASH_REMOVE);
+    PL_DHashTableOperate(gXPCOMtoJAVABindings, xpcom_obj, PL_DHASH_REMOVE);
 
-  env->DeleteWeakGlobalRef(NS_STATIC_CAST(jweak, jweakref));
+    LOG("- Removing Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x) weakref=0x%08x\n",
+        hash, (int) xpcom_obj, (PRUint32) jweakref);
+
+    env->DeleteWeakGlobalRef(NS_STATIC_CAST(jweak, jweakref));
+  }
 }
 
 void*
