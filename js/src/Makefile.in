@@ -204,7 +204,7 @@ else
 NSPR_STATIC_PATH = $(DIST)/lib
 endif
 
-LDFLAGS		= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS))
+LDFLAGS		+= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS))
 
 ifneq ($(OS_ARCH),BeOS)
 LDFLAGS		+= -lm

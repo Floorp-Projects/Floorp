@@ -718,13 +718,13 @@ ifdef SHARED_LIBRARY_LIBS
 ifeq ($(TARGET_MD_ARCH), win32)
 	$(MKSHLIB) $(OBJS) $(LOBJS) $(SUB_LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
 else
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(SUB_LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(SUB_LOBJS) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
 endif # TARGET_MD_ARCH
 else
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
 endif
 else
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
 endif
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
 else
