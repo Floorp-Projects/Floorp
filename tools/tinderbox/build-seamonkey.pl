@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 
-$Version = '$Revision: 1.56 $ ';
+$Version = '$Revision: 1.57 $ ';
 
 
 sub PrintUsage {
@@ -214,7 +214,7 @@ sub BuildIt {
 	  print LOG "no binary detected, can't delete.\n";
 
 	  # If we're only running tests and have no binary, bail.
-	  unless ($TestOnly) {
+	  if ($TestOnly) {
 		$EarlyExit++;
 	  }
 	}
