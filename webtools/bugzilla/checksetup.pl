@@ -383,6 +383,7 @@ unlink "data/versioncache";
 #
 
 if ($webservergroup) {
+    mkdir 'shadow', 0770 unless -d 'shadow';
     # Funny! getgrname returns the GID if fed with NAME ...
     my $webservergid = getgrnam($webservergroup);
     chown 0, $webservergid, glob('*');
@@ -394,7 +395,7 @@ if ($webservergroup) {
                 'collectstats.pl',
                 'checksetup.pl';
 
-    chmod 0770, 'data';
+    chmod 0770, 'data', 'shadow';
     chmod 0666, glob('data/*');
 }
 
