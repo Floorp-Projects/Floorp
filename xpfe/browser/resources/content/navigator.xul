@@ -261,7 +261,7 @@ var contextTarget = null; // Content element to which context menu applies.
      Please do be so kind as to reflect any changes made into that
      file as well, in anticipation of the happy day when the parser
      will let us use included files. -->
-<menubar chromeclass="menubar">
+<menubar id="main-menubar" chromeclass="menubar">
   <menu id="menu_File"/>
 
   <menu id="menu_Edit">
