@@ -47,6 +47,8 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload = "Startup()"
         onfocus = "onFocus()"
+        buttonlabelaccept="&insertButton.label;"
+        buttonlabelcancel="&closeButton.label;"
         ondialogaccept = "return onAccept();"
         ondialogcancel = "return onClose();">
 

@@ -61,19 +61,6 @@ function Startup()
 
   StartupLatin();
 
-  // Dialog is non-modal:
-  // Change button text: "Ok" to "Insert"; "Cancel" to "Close"
-  var insertButton = document.documentElement.getButton("accept");
-  if (insertButton)
-  {
-    insertButton.setAttribute("label", GetString("Insert"));
-    insertButton.setAttribute("accesskey", GetString("InsertAccessKey"));
-  }
-
-  var cancelButton = document.getElementById("insertCharsDlg").getButton("cancel");
-  if (cancelButton)
-    cancelButton.setAttribute("label", GetString("Close"));
-
   // Set a variable on the opener window so we
   //  can track ownership of close this window with it
   window.opener.InsertCharWindow = window;

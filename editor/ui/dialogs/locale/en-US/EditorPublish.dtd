@@ -43,6 +43,8 @@
 <!ENTITY publishTab.label         "Publish">
 <!ENTITY settingsTab.label        "Settings">
 
+<!ENTITY publishButton.label      "Publish">
+
 <!-- Publish Tab Panel -->
 <!ENTITY siteList.label           "Site Name:">
 <!ENTITY siteList.tooltip         "Choose the site that you want to publish to">

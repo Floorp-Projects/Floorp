@@ -43,3 +43,4 @@
 <!ENTITY changeUrlButton.label "Change Location of Selected Item">
 <!ENTITY succeeded.label       "Succeeded">
 <!ENTITY failed.label          "Failed">
+<!ENTITY closeButton.label     "Close">

@@ -86,11 +86,6 @@ function Startup()
   gDialog.PasswordInput       = document.getElementById("PasswordInput");
   gDialog.SavePassword        = document.getElementById("SavePassword");
 
-  gDialog.PublishButton       = document.documentElement.getButton("accept");
-
-  // Change 'Ok' button to 'Publish'
-  gDialog.PublishButton.setAttribute("label", GetString("Publish"));
-  
   gPasswordManagerOn = GetBoolPref("signon.rememberSignons");
   gDialog.SavePassword.disabled = !gPasswordManagerOn;
 

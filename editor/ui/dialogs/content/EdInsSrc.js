@@ -48,13 +48,8 @@ function Startup()
     return;
   }
 
-  var okButton = document.documentElement.getButton("accept");
-  if (okButton)
-  {
-    okButton.removeAttribute("default");
-    okButton.setAttribute("label",GetString("Insert"));
-    okButton.setAttribute("accesskey",GetString("InsertAccessKey"));
-  }
+  document.documentElement.getButton("accept").removeAttribute("default");
+
   // Create dialog object to store controls for easy access
   gDialog.srcInput = document.getElementById("srcInput");
 
