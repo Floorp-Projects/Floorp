@@ -505,9 +505,9 @@ nsIContentDelegate* nsHTMLContent::GetDelegate(nsIPresContext* aCX)
   return gContentDelegate;
 }
 
-nsresult nsHTMLContent::ResetScriptObject()
+nsresult nsHTMLContent::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 

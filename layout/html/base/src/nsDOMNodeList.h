@@ -31,7 +31,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   // nsIDOMNodeList interface
   NS_DECL_IDOMNODELIST

@@ -116,7 +116,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   // nsIDOMAttribute interface
   NS_IMETHOD GetSpecified(PRBool* aSpecified);
@@ -163,7 +163,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   // nsIDOMNamedNodeMap interface
   NS_IMETHOD GetLength(PRUint32* aSize);
@@ -190,7 +190,7 @@ public:
   NS_DECL_ISUPPORTS
   
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
   
   // nsIDOMNodeList interface
   NS_DECL_IDOMNODELIST
@@ -321,9 +321,9 @@ DOMAttribute::GetScriptObject(nsIScriptContext *aContext,
 }
 
 nsresult
-DOMAttribute::ResetScriptObject()
+DOMAttribute::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 
@@ -541,9 +541,9 @@ DOMAttributeMap::GetScriptObject(nsIScriptContext *aContext,
 }
 
 nsresult
-DOMAttributeMap::ResetScriptObject()
+DOMAttributeMap::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 
@@ -1958,9 +1958,9 @@ nsGenericHTMLElement::GetScriptObject(nsIScriptContext* aContext,
 }
 
 nsresult
-nsGenericHTMLElement::ResetScriptObject()
+nsGenericHTMLElement::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 
@@ -3053,9 +3053,9 @@ nsChildContentList::GetScriptObject(nsIScriptContext *aContext, void** aScriptOb
 }
 
 nsresult 
-nsChildContentList::ResetScriptObject()
+nsChildContentList::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 

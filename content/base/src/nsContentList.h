@@ -55,7 +55,7 @@ public:
   NS_IMETHOD NamedItem(const nsString& aName, nsIDOMNode** aReturn);
 
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
   
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
   NS_IMETHOD EndUpdate(nsIDocument *aDocument) { return NS_OK; }

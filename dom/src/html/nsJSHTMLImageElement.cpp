@@ -27,6 +27,10 @@
 #include "nsString.h"
 #include "nsIDOMImage.h"
 #include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMNativeObjectRegistry.h"
+#include "nsIServiceManager.h"
+#include "nsRepository.h"
+#include "nsDOMCID.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -515,7 +519,7 @@ FinalizeHTMLImageElement(JSContext *cx, JSObject *obj)
     // get the js object
     nsIScriptObjectOwner *owner = nsnull;
     if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->ResetScriptObject();
+      owner->SetScriptObject(nsnull);
       NS_RELEASE(owner);
     }
 
@@ -619,9 +623,57 @@ static JSFunctionSpec HTMLImageElementMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 HTMLImageElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+  nsresult result;
+  nsIID factoryCID;
+  nsIDOMNativeObjectRegistry *registry;
+  nsIDOMHTMLImageElementFactory *factory;
+  nsIDOMHTMLImageElement *nativeThis;
+  nsIScriptObjectOwner *owner = nsnull;
+
+  static NS_DEFINE_IID(kDOMNativeObjectRegistryCID, NS_DOM_NATIVE_OBJECT_REGISTRY_CID);
+  static NS_DEFINE_IID(kIDOMNativeObjectRegistryIID, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);
+  static NS_DEFINE_IID(kIDOMHTMLImageElementFactoryIID, NS_IDOMHTMLIMAGEELEMENTFACTORY_IID);
+
+  result = nsServiceManager::GetService(kDOMNativeObjectRegistryCID,
+                                        kIDOMNativeObjectRegistryIID,
+                                        (nsISupports **)&registry);
+  if (NS_OK != result) {
+    return JS_FALSE;
+  }
+
+  result = registry->GetFactoryCID("HTMLImageElement", factoryCID);
+  nsServiceManager::ReleaseService(kDOMNativeObjectRegistryCID,
+                                   registry);
+  if (NS_OK != result) {
+    return JS_FALSE;
+  }
+
+  result = nsRepository::CreateInstance(factoryCID,
+                                        nsnull,
+                                        kIDOMHTMLImageElementFactoryIID,
+                                        (void **)&factory);
+  if (NS_OK != result) {
+    return JS_FALSE;
+  }
+
+  result = factory->CreateInstance(&nativeThis);
+  NS_RELEASE(factory);
+  if (NS_OK != result) {
+    return JS_FALSE;
+  }
+
+  result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
+  if (NS_OK != result) {
+    NS_RELEASE(nativeThis);
+    return JS_FALSE;
+  }
+
+  owner->SetScriptObject((void *)obj);
+  JS_SetPrivate(cx, obj, nativeThis);
+
+  NS_RELEASE(owner);
   return JS_TRUE;
 }
-
 
 //
 // HTMLImageElement class initialization

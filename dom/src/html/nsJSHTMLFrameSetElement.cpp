@@ -194,7 +194,7 @@ FinalizeHTMLFrameSetElement(JSContext *cx, JSObject *obj)
     // get the js object
     nsIScriptObjectOwner *owner = nsnull;
     if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->ResetScriptObject();
+      owner->SetScriptObject(nsnull);
       NS_RELEASE(owner);
     }
 
@@ -287,7 +287,7 @@ static JSFunctionSpec HTMLFrameSetElementMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 HTMLFrameSetElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  return JS_TRUE;
+  return JS_FALSE;
 }
 
 

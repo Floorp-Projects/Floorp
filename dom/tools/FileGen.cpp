@@ -360,3 +360,21 @@ FileGen::EnumerateAllObjects(IdlSpecification &aSpec,
   PL_HashTableEnumerateEntries(htable, aEnumerator, aArg);
   PL_HashTableDestroy(htable);
 }
+
+PRBool
+FileGen::HasConstructor(IdlInterface &aInterface, IdlFunction **aConstructor)
+{
+  int m, mcount = aInterface.FunctionCount();
+  for (m = 0; m < mcount; m++) {
+    IdlFunction *func = aInterface.GetFunctionAt(m);
+    if (strcmp(func->GetName(), aInterface.GetName()) == 0) {
+      if (NULL != aConstructor) {
+        *aConstructor = func;
+      }
+      return PR_TRUE;
+    }
+  }  
+
+  return PR_FALSE;
+}
+

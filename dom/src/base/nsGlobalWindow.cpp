@@ -159,9 +159,9 @@ GlobalWindowImpl::QueryInterface(const nsIID& aIID,
 }
 
 nsresult 
-GlobalWindowImpl::ResetScriptObject()
+GlobalWindowImpl::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 
@@ -1527,9 +1527,9 @@ NavigatorImpl::QueryInterface(const nsIID& aIID,
 }
 
 nsresult 
-NavigatorImpl::ResetScriptObject()
+NavigatorImpl::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 

@@ -25,11 +25,13 @@ LIBRARY_NAME = raptorhtml
 
 MODULE=raptor 
 
-REQUIRES=xpcom raptor
+REQUIRES=xpcom raptor dom js
 
-CPPSRCS=dlldeps.cpp 
+CPPSRCS=dlldeps.cpp nsLayoutFactory.cpp
 
-#INCLUDES +=  -I../html/base/src -I../base/src -I../css/layout/src
+EXPORTS=nsLayoutCID.h
+
+INCLUDES +=  -I../html/base/src
 
 ifeq ($(OS_ARCH),IRIX)
 LD = $(CCC)

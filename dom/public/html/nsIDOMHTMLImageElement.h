@@ -133,6 +133,16 @@ public:
   NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to##SetWidth(aWidth); } \
 
 
+#define NS_IDOMHTMLIMAGEELEMENTFACTORY_IID \
+{ 0x6f765308,  0xee43, 0x11d1, \
+ { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
+
+class nsIDOMHTMLImageElementFactory : public nsISupports {
+public:
+  NS_IMETHOD   CreateInstance(nsIDOMHTMLImageElement **aReturn)=0;
+
+};
+
 extern nsresult NS_InitHTMLImageElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLImageElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);

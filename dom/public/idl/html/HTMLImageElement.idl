@@ -1,4 +1,6 @@
    interface HTMLImageElement : HTMLElement {
+     void HTMLImageElement();
+
      attribute wstring         lowSrc;
      attribute wstring         name;
      attribute wstring         align;

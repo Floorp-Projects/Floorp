@@ -70,6 +70,12 @@ static const char *kEllipsisCallStr = "cx, argv, argc";
 static const char *kReturnStr = "%s%s aReturn";
 static const char *kReturnCallStr = "aReturn";
 static const char *kClassEpilogStr = "};\n\n";
+
+static const char *kFactoryClassDeclBeginStr =
+"class nsIDOM%sFactory : public nsISupports {\n"
+"public:\n";
+static const char *kConstructorDeclStr = "  NS_IMETHOD   CreateInstance(%snsIDOM%s **aReturn)=0;\n";
+static const char *kFactoryClassDeclEndStr = "\n};\n\n";
 static const char *kGlobalInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);\n\n";
 static const char *kInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, void **aPrototype);\n\n";
 static const char *kNewObjStr = "extern \"C\" NS_DOM nsresult NS_NewScript%s(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);\n\n";
@@ -117,7 +123,13 @@ XPCOMGen::Generate(char *aFileName,
       GenerateEndClassDecl();
       GenerateDeclMacro(*iface);
       GenerateForwardMacro(*iface);
-      GenerateEpilog(*iface, (PRBool)(i==0));
+      if (i == 0) {
+        GenerateFactory(*iface);
+        GenerateEpilog(*iface, PR_TRUE);
+      }
+      else {
+        GenerateEpilog(*iface, PR_FALSE);
+      }
       CloseFile();
     }
   }
@@ -189,7 +201,6 @@ XPCOMGen::GenerateGuid(IdlInterface &aInterface)
   char uuid_buf[256];
   ofstream *file = GetFile();
 
-  // XXX Need to generate unique guids
   GetInterfaceIID(uuid_buf, aInterface);
   sprintf(buf, kUuidStr, uuid_buf);
   *file << buf;
@@ -278,6 +289,11 @@ XPCOMGen::GenerateMethods(IdlInterface &aInterface)
     char *cur_param = param_buf;
     IdlFunction *func = aInterface.GetFunctionAt(m);
 
+    // Don't generate a constructor method
+    if (strcmp(func->GetName(), aInterface.GetName()) == 0) {
+      continue;
+    }
+
     int p, pcount = func->ParameterCount();
     for (p = 0; p < pcount; p++) {
       IdlParameter *param = func->GetParameterAt(p);
@@ -358,6 +374,11 @@ XPCOMGen::GenerateDeclMacro(IdlInterface &aInterface)
     char param_buf[256];
     char *cur_param = param_buf;
     IdlFunction *func = aInterface.GetFunctionAt(m);
+
+    // Don't generate a constructor method
+    if (strcmp(func->GetName(), aInterface.GetName()) == 0) {
+      continue;
+    }
 
     int p, pcount = func->ParameterCount();
     for (p = 0; p < pcount; p++) {
@@ -445,6 +466,11 @@ XPCOMGen::GenerateForwardMacro(IdlInterface &aInterface)
     char *cur_param2 = param_buf2;
     IdlFunction *func = aInterface.GetFunctionAt(m);
 
+    // Don't generate a constructor method
+    if (strcmp(func->GetName(), aInterface.GetName()) == 0) {
+      continue;
+    }
+
     int p, pcount = func->ParameterCount();
     for (p = 0; p < pcount; p++) {
       IdlParameter *param = func->GetParameterAt(p);
@@ -509,6 +535,63 @@ XPCOMGen::GenerateEndClassDecl()
   ofstream *file = GetFile();
   
   *file << kClassEpilogStr;
+}
+
+void 
+XPCOMGen::GenerateFactory(IdlInterface &aInterface)
+{
+  char buf[512];
+  ofstream *file = GetFile();
+  char *iface_name = aInterface.GetName();
+  char name_buf[128];
+  char type_buf[128];
+  char uuid_buf[128];
+  char param_buf[256];
+  char *cur_param = param_buf;
+  IdlFunction *constructor;
+
+  *cur_param = '\0';
+  
+  if (HasConstructor(aInterface, &constructor)) {
+    strcpy(name_buf, iface_name);
+    strcat(name_buf, "Factory");
+    GetInterfaceIID(uuid_buf, name_buf);
+    sprintf(buf, kUuidStr, uuid_buf);
+    *file << buf;
+    
+    sprintf(buf, kFactoryClassDeclBeginStr, iface_name);
+    *file << buf;
+    
+    int p, pcount = constructor->ParameterCount();
+    for (p = 0; p < pcount; p++) {
+      IdlParameter *param = constructor->GetParameterAt(p);
+      
+      if (p > 0) {
+        strcpy(cur_param, kDelimiterStr);
+        cur_param += strlen(kDelimiterStr);
+      }
+
+      GetParameterType(type_buf, *param);
+      GetCapitalizedName(name_buf, *param);
+      sprintf(cur_param, kParamStr, type_buf, name_buf);
+      cur_param += strlen(cur_param);
+    }
+    
+    if (constructor->GetHasEllipsis()) {
+      if (pcount > 0) {
+        strcpy(cur_param, kDelimiterStr);
+        cur_param += strlen(kDelimiterStr);
+      }
+      sprintf(cur_param, kEllipsisParamStr);
+      cur_param += strlen(cur_param);
+    }
+    
+    GetCapitalizedName(name_buf, *constructor);
+    sprintf(buf, kConstructorDeclStr, param_buf, name_buf);
+    *file << buf;
+    
+    *file << kFactoryClassDeclEndStr;
+  }
 }
 
 void     

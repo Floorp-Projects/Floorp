@@ -20,13 +20,15 @@ DEPTH=..\..
 DEFINES=-D_IMPL_NS_HTML 
 
 MODULE=raptor 
-REQUIRES=xpcom raptor dom
+REQUIRES=xpcom raptor dom js
 
-CPPSRCS=dlldeps.cpp 
+CPPSRCS=dlldeps.cpp nsLayoutFactory.cpp
 
-CPP_OBJS=.\$(OBJDIR)\dlldeps.obj 
+CPP_OBJS=.\$(OBJDIR)\dlldeps.obj .\$(OBJDIR)\nsLayoutFactory.obj
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor 
+EXPORTS=nsLayoutCID.h
+
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(PUBLIC)\dom
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorhtml
@@ -55,7 +57,7 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\style\src
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\..\style\src -I..\html\base\src
 
 # These are the libraries we need to link with to create the dll
 LLIBS=					\

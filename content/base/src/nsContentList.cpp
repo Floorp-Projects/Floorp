@@ -226,9 +226,9 @@ nsContentList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 }
 
 NS_IMETHODIMP 
-nsContentList::ResetScriptObject()
+nsContentList::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = nsnull;
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 

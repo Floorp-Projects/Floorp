@@ -16,21 +16,26 @@
  * Reserved.
  */
 
-#ifndef nsDOMCID_h__
-#define nsDOMCID_h__
+#ifndef nsLayoutCID_h__
+#define nsLayoutCID_h__
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsRepository.h"
 
-#define NS_DOM_SCRIPT_OBJECT_FACTORY_CID            \
- { /* 9eb760f0-4380-11d2-b328-00805f8a3859 */       \
-  0x9eb760f0, 0x4380, 0x11d2,                       \
- {0xb3, 0x28, 0x00, 0x80, 0x5f, 0x8a, 0x38, 0x59} }
+#define NS_HTMLDOCUMENT_CID                       \
+{ /* 5d0fcdd0-4daa-11d2-b328-00805f8a3859 */      \
+ 0x5d0fcdd0, 0x4daa, 0x11d2,                      \
+ {0xb3, 0x28, 0x00, 0x80, 0x5f, 0x8a, 0x38, 0x59}}
 
-#define NS_DOM_NATIVE_OBJECT_REGISTRY_CID            \
- { /* 651074a0-4cd4-11d2-b328-00805f8a3859 */        \
-  0x651074a0, 0x4cd4, 0x11d2,                        \
- {0xb3, 0x28, 0x00, 0x80, 0x5f, 0x8a, 0x38, 0x59 } }
+#define NS_IMAGEDOCUMENT_CID                      \
+{ /* e11a6080-4daa-11d2-b328-00805f8a3859 */      \
+ 0xe11a6080, 0x4daa, 0x11d2,                      \
+ {0xb3, 0x28, 0x00, 0x80, 0x5f, 0x8a, 0x38, 0x59}}
 
-#endif /* nsDOMCID_h__ */
+#define NS_HTMLIMAGEELEMENTFACTORY_CID            \
+{ /* d6008c40-4dad-11d2-b328-00805f8a3859 */      \
+ 0xd6008c40, 0x4dad, 0x11d2,                      \
+ {0xb3, 0x28, 0x00, 0x80, 0x5f, 0x8a, 0x38, 0x59}}
+
+#endif // nsLayoutCID_h__

@@ -40,7 +40,7 @@ public:
 
   //nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
   
   //local methods
   NS_IMETHOD SetWebShell(nsIWebShell* aWebShell);
