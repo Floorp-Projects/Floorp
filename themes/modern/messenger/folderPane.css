@@ -171,7 +171,8 @@ treechildren:-moz-tree-image(syncCol, isServer-true) {
 }
 
 #folderUnreadCol,
-#folderTotalCol {
+#folderTotalCol,
+#folderSizeCol {
   text-align: right;
 }
 
