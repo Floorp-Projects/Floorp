@@ -40,6 +40,9 @@
 #include "nsIStreamListener.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIPrompt.h"
+#include "nsICommonDialogs.h"
+#include "nsIDOMWindowInternal.h"
 
 // utility classes
 #include "nsXPIDLString.h"
@@ -54,7 +57,8 @@ class GtkMozEmbedChrome : public nsIGtkEmbed,
                           public nsIBaseWindow,
                           public nsIURIContentListener,
                           public nsIDocShellTreeOwner,
-                          public nsIInterfaceRequestor
+                          public nsIInterfaceRequestor,
+                          public nsIPrompt
 {
 public:
 
@@ -71,6 +75,8 @@ public:
   NS_IMETHOD OpenStream                   (const char *aBaseURI, const char *aContentType);
   NS_IMETHOD AppendToStream               (const char *aData, gint32 aLen);
   NS_IMETHOD CloseStream                  (void);
+  NS_IMETHOD EnsureCommonDialogs          (void);
+  NS_IMETHOD GetDOMWindowInternal         (nsIDOMWindowInternal **aWindow);
 
   NS_DECL_ISUPPORTS
 
@@ -83,6 +89,8 @@ public:
   NS_DECL_NSIDOCSHELLTREEOWNER
 
   NS_DECL_NSIBASEWINDOW
+
+  NS_DECL_NSIPROMPT
 
 private:
   GtkWidget                 *mOwningGtkWidget;
@@ -104,6 +112,7 @@ private:
   PRBool                     mDoingStream;
   GtkEmbedListener          *mChromeListener;
   nsIDocShellTreeItem       *mContentShell;
+  nsCOMPtr<nsICommonDialogs> mCommonDialogs;
 };
 
 #endif /* __GtkMozEmbedChrome_h */

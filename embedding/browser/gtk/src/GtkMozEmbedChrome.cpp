@@ -33,6 +33,7 @@
 #include "nsIDocShell.h"
 
 static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
+static NS_DEFINE_CID(kCommonDialogsCID,        NS_CommonDialog_CID);
 
 // this is a define to make sure that we don't call certain function
 // before the object has been properly initialized
@@ -93,6 +94,7 @@ NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChrome)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
 NS_INTERFACE_MAP_END
 
 // nsIGtkEmbed interface
@@ -304,6 +306,44 @@ NS_IMETHODIMP GtkMozEmbedChrome::CloseStream (void)
   mStreamListener = nsnull;
   mContentViewer = nsnull;
   mOffset = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::EnsureCommonDialogs(void)
+{
+  nsresult rv = NS_OK;
+  if (!mCommonDialogs)
+    mCommonDialogs = do_GetService(kCommonDialogsCID, &rv);
+  return rv;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::GetDOMWindowInternal (nsIDOMWindowInternal **aWindow)
+{
+  
+  // get the browser as an item
+  nsCOMPtr<nsIDocShellTreeItem> browserAsItem;
+  browserAsItem = do_QueryInterface(mWebBrowser);
+  NS_ENSURE_TRUE(browserAsItem, NS_ERROR_FAILURE);
+
+  // get the owner for that item
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  browserAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
+
+  // get the primary content shell as an item
+  nsCOMPtr<nsIDocShellTreeItem> contentItem;
+  treeOwner->GetPrimaryContentShell(getter_AddRefs(contentItem));
+  NS_ENSURE_TRUE(contentItem, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  domWindow = do_GetInterface(contentItem);
+  NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
+
+  *aWindow = domWindow.get();
+  NS_ADDREF(*aWindow);
+  
   return NS_OK;
 }
 
@@ -866,4 +906,229 @@ GtkMozEmbedChrome::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
                                   PRBool* aPersistSizeMode)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// nsIPrompt
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::Alert(const PRUnichar *dialogTitle,
+			 const PRUnichar *text)
+{
+  nsresult rv;
+  rv = EnsureCommonDialogs();
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  rv = GetDOMWindowInternal(getter_AddRefs(domWindow));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return mCommonDialogs->Alert(domWindow, dialogTitle, text);
+  
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::AlertCheck(const PRUnichar *dialogTitle, 
+			      const PRUnichar *text, 
+			      const PRUnichar *checkMsg,
+			      PRBool *checkValue)
+{
+  nsresult rv;
+  rv = EnsureCommonDialogs();
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  rv = GetDOMWindowInternal(getter_AddRefs(domWindow));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return mCommonDialogs->AlertCheck(domWindow, dialogTitle, text, checkMsg, checkValue);
+
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::Confirm(const PRUnichar *dialogTitle, 
+			   const PRUnichar *text, PRBool *_retval) 
+{
+  nsresult rv;
+  rv = EnsureCommonDialogs();
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  rv = GetDOMWindowInternal(getter_AddRefs(domWindow));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return mCommonDialogs->Confirm(domWindow, dialogTitle, text, _retval);
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::ConfirmCheck(const PRUnichar *dialogTitle,
+				const PRUnichar *text,
+				const PRUnichar *checkMsg, 
+				PRBool *checkValue, PRBool *_retval)
+{
+  nsresult rv;
+  rv = EnsureCommonDialogs();
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  rv = GetDOMWindowInternal(getter_AddRefs(domWindow));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return mCommonDialogs->ConfirmCheck(domWindow,
+				      dialogTitle,
+				      text,
+				      checkMsg,
+				      checkValue,
+				      _retval);
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::Prompt(const PRUnichar *dialogTitle,
+			  const PRUnichar *text,
+			  const PRUnichar *passwordRealm,
+			  PRUint32 savePassword,
+			  const PRUnichar *defaultText, 
+			  PRUnichar **result, PRBool *_retval)
+{
+  nsresult rv;
+  rv = EnsureCommonDialogs();
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  rv = GetDOMWindowInternal(getter_AddRefs(domWindow));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return mCommonDialogs->Prompt(domWindow,
+				dialogTitle, 
+				text,
+				defaultText, 
+				result, 
+				_retval);
+				
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
+					     const PRUnichar *text,
+					     const PRUnichar *passwordRealm,
+					     PRUint32 savePassword, 
+					     PRUnichar **user,
+					     PRUnichar **pwd, 
+					     PRBool *_retval)
+{
+  nsresult rv;
+  rv = EnsureCommonDialogs();
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  rv = GetDOMWindowInternal(getter_AddRefs(domWindow));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return mCommonDialogs->PromptUsernameAndPassword(domWindow, dialogTitle,
+						   text, user, pwd, _retval);
+					    
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::PromptPassword(const PRUnichar *dialogTitle,
+				  const PRUnichar *text, 
+				  const PRUnichar *passwordRealm,
+				  PRUint32 savePassword, PRUnichar **pwd,
+				  PRBool *_retval)
+{
+  nsresult rv;
+  rv = EnsureCommonDialogs();
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  rv = GetDOMWindowInternal(getter_AddRefs(domWindow));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return mCommonDialogs->PromptPassword(domWindow, 
+					dialogTitle,
+					text,
+					pwd, _retval);
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::Select(const PRUnichar *dialogTitle,
+			  const PRUnichar *text, PRUint32 count,
+			  const PRUnichar **selectList,
+			  PRInt32 *outSelection, PRBool *_retval)
+{
+  nsresult rv;
+  rv = EnsureCommonDialogs();
+  if (NS_FAILED(rv))
+    return rv;
+  
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  rv = GetDOMWindowInternal(getter_AddRefs(domWindow));
+  if (NS_FAILED(rv))
+    return rv;
+  
+  return mCommonDialogs->Select(domWindow, dialogTitle,
+				text, count, selectList,
+				outSelection, _retval);
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::UniversalDialog(const PRUnichar *titleMessage,
+				   const PRUnichar *dialogTitle,
+				   const PRUnichar *text,
+				   const PRUnichar *checkboxMsg,
+				   const PRUnichar *button0Text, 
+				   const PRUnichar *button1Text,
+				   const PRUnichar *button2Text, 
+				   const PRUnichar *button3Text,
+				   const PRUnichar *editfield1Msg,
+				   const PRUnichar *editfield2Msg,
+				   PRUnichar **editfield1Value, 
+				   PRUnichar **editfield2Value,
+				   const PRUnichar *iconURL,
+				   PRBool *checkboxState, 
+				   PRInt32 numberButtons, 
+				   PRInt32 numberEditfields,
+				   PRInt32 editField1Password,
+				   PRInt32 *buttonPressed)
+{
+   nsresult rv;
+  rv = EnsureCommonDialogs();
+  if (NS_FAILED(rv))
+    return rv;
+  
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  rv = GetDOMWindowInternal(getter_AddRefs(domWindow));
+  if (NS_FAILED(rv))
+    return rv;
+  
+  return mCommonDialogs->UniversalDialog(domWindow, titleMessage,
+					 dialogTitle, text,
+					 checkboxMsg, button0Text, 
+					 button1Text,
+					 button2Text, 
+					 button3Text,
+					 editfield1Msg,
+					 editfield2Msg,
+					 editfield1Value, 
+					 editfield2Value,
+					 iconURL,
+					 checkboxState, 
+					 numberButtons, 
+					 numberEditfields,
+					 editField1Password,
+					 buttonPressed);
+					 
 }
