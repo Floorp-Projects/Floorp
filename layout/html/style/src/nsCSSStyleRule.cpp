@@ -1648,6 +1648,7 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
           if (dc) {
           	SystemAttrStruct sysInfo;
           	sysInfo.mFont = &font->mFont;
+          	font->mFont.size = defaultFont.size; // GetSystemAttribute sets the font face but not necessarily the size
           	if (NS_FAILED(dc->GetSystemAttribute(sysID, &sysInfo))) {
               font->mFont.name = defaultFont.name;
               font->mFixedFont.name = defaultFixedFont.name;
@@ -1657,12 +1658,47 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
 
           // NavQuirks uses sans-serif instead of whatever the native font is
           if (eCompatibility_NavQuirks == mode) {
-            if (sysID == eSystemAttr_Font_Field) {
-              font->mFont.name.AssignWithConversion("monospace");
-            } else if (sysID == eSystemAttr_Font_Button ||
-                       sysID == eSystemAttr_Font_Caption) {
-              font->mFont.name.AssignWithConversion("sans-serif");
+#ifdef XP_MAC
+            switch (sysID) {
+              case eSystemAttr_Font_Field:
+              case eSystemAttr_Font_List:
+                font->mFont.name.AssignWithConversion("monospace");
+                font->mFont.size = defaultFixedFont.size;
+                break;
+              case eSystemAttr_Font_Button:
+                font->mFont.name.AssignWithConversion("serif");
+                font->mFont.size = defaultFont.size;
+                break;
             }
+#endif
+
+#ifdef XP_PC
+            switch (sysID) {
+              case eSystemAttr_Font_Field:
+                font->mFont.name.AssignWithConversion("monospace");
+                font->mFont.size = defaultFixedFont.size;
+                break;
+              case eSystemAttr_Font_Button:
+              case eSystemAttr_Font_List:
+                font->mFont.name.AssignWithConversion("sans-serif");
+                font->mFont.size = defaultFont.size;
+                break;
+            }
+#endif
+
+#ifdef XP_UNIX
+            switch (sysID) {
+              case eSystemAttr_Font_Field:
+                font->mFont.name.AssignWithConversion("monospace");
+                font->mFont.size = defaultFixedFont.size;
+                break;
+              case eSystemAttr_Font_Button:
+              case eSystemAttr_Font_List:
+                font->mFont.name.AssignWithConversion("serif");
+                font->mFont.size = defaultFont.size;
+                break;
+            }
+#endif
           }
         }
         else if (eCSSUnit_Inherit == ourFont->mFamily.GetUnit()) {
