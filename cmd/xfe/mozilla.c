@@ -1806,6 +1806,7 @@ void FE_TrackJavaConsole(int on, void *notused)
 }
 #endif /* JAVA */
 
+#ifdef SW_THREADS
 /* Dummy input precedures and timer callbacks to track Xt's select fd
 ** in nspr
 */
@@ -1821,6 +1822,13 @@ static void dummyTimerProc(XtPointer closure, XtIntervalId *id)
 }
 #endif /*XFE_XLOCK_FD_TIMER_HACK*/
 
+static int
+fe_xt_hack_okayToReleaseXLock()
+{
+  return(XEventsQueued(fe_display, QueuedAlready) == 0);
+}
+#endif /* SW_THREADS */
+
 static void fe_late_init(void)
 {
   LOCK_FDSET();
@@ -1828,12 +1836,6 @@ static void fe_late_init(void)
 		 (XtPointer) (XtInputReadMask),
 		 fe_event_processor_callback, 0);
   UNLOCK_FDSET();
-}
-
-static int
-fe_xt_hack_okayToReleaseXLock()
-{
-  return(XEventsQueued(fe_display, QueuedAlready) == 0);
 }
 
 static Boolean fe_command_line_done = False;
@@ -2516,6 +2518,7 @@ main
   }
 #endif
 
+#ifdef SW_THREADS
  {
  	extern int PR_XGetXtHackFD(void);
  	int fd;
@@ -2554,6 +2557,7 @@ main
   	(void) XtAppAddTimeOut(fe_XtAppContext, 500L, dummyTimerProc, NULL); 
 #endif /*XFE_XLOCK_FD_TIMER_HACK*/
    }
+#endif /* SW_THREADS */
 
   /* For xxx stuff... */
   fe_dpy_kludge = dpy;
@@ -3411,10 +3415,12 @@ main
 
   fe_command_line_done = True;
 
+#ifdef SW_THREADS
   {
     extern void PR_SetXtHackOkayToReleaseXLockFn(int (*fn)(void));
     PR_SetXtHackOkayToReleaseXLockFn(fe_xt_hack_okayToReleaseXLock);
   }
+#endif /* SW_THREADS */
 
   while (1)
     fe_EventLoop ();
