@@ -165,7 +165,8 @@ private:
 
   // nsISupportsArray enumerators
   static PRBool findServerByName(nsISupports *aElement, void *data);
-  
+
+  PRBool isUnique(nsIMsgIncomingServer *server);
   nsresult upgradePrefs();
   nsIMsgAccount *LoadAccount(nsString& accountKey);
   
@@ -248,6 +249,16 @@ nsMsgAccountManager::AddAccount(nsIMsgAccount *account)
     nsresult rv;
     rv = LoadAccounts();
     if (NS_FAILED(rv)) return rv;
+
+
+    // check for uniqueness
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    account->GetIncomingServer(getter_AddRefs(server));
+    if (!isUnique(server)) {
+      // this means the server was found, which is bad.
+      return NS_ERROR_UNEXPECTED;
+    }
+
     
     nsXPIDLCString accountKey;
     account->GetKey(getter_Copies(accountKey));
@@ -260,10 +271,9 @@ nsMsgAccountManager::AddAccount(nsIMsgAccount *account)
     if (m_accounts->Exists(&key))
       return NS_ERROR_UNEXPECTED;
         
-    m_accounts->Put(&key, account);
-
     // do an addref for the storage in the hash table
     NS_ADDREF(account);
+    m_accounts->Put(&key, account);
     
     if (m_accounts->Count() == 1)
       m_defaultAccount = dont_QueryInterface(account);
@@ -382,6 +392,32 @@ nsMsgAccountManager::SetDefaultAccount(nsIMsgAccount * aDefaultAccount)
   return NS_OK;
 }
 
+PRBool
+nsMsgAccountManager::isUnique(nsIMsgIncomingServer *server)
+{
+  nsresult rv;
+  nsXPIDLCString username;
+  nsXPIDLCString hostname;
+  nsXPIDLCString type;
+  
+  // make sure this server is unique
+  rv = server->GetUsername(getter_Copies(username));
+  if (NS_FAILED(rv)) return rv;
+    
+  rv = server->GetHostName(getter_Copies(hostname));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = server->GetType(getter_Copies(type));
+
+  nsCOMPtr<nsIMsgIncomingServer> dupeServer;
+  rv = FindServer(username, hostname, type, getter_AddRefs(dupeServer));
+  
+  if (NS_SUCCEEDED(rv))
+    return PR_FALSE;
+  return PR_TRUE;
+}
+
+
 /* map account->key by enumerating all accounts and returning the key
  * when the account is found */
 nsHashKey *
@@ -461,12 +497,11 @@ PRBool
 nsMsgAccountManager::hashTableRemoveAccount(nsHashKey *aKey, void *aData,
                                             void*closure)
 {
-  // COM cleanup
   nsIMsgAccount* account = (nsIMsgAccount*)aData;
-  NS_RELEASE(account);
+  nsMsgAccountManager* accountManager = (nsMsgAccountManager*) closure;
 
   // remove from hashtable
-  nsMsgAccountManager* accountManager = (nsMsgAccountManager*) closure;
+  NS_RELEASE(account);
   accountManager->m_accounts->Remove(aKey);
 
   return PR_TRUE;
@@ -854,6 +889,7 @@ nsMsgAccountManager::FindServer(const char* username,
 
   if (!serverInfo.server) return NS_ERROR_UNEXPECTED;
   *aResult = serverInfo.server;
+  NS_ADDREF(*aResult);
   
   return NS_OK;
 
@@ -888,7 +924,6 @@ nsMsgAccountManager::findServerByName(nsISupports *aElement, void *data)
       PL_strcmp(entry->username, username)==0 &&
       PL_strcmp(entry->type, thisType)==0) {
     entry->server = server;
-    NS_ADDREF(entry->server);
     return PR_FALSE;            // stop on first find
   }
 
