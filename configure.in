@@ -2849,23 +2849,18 @@ MOZ_ARG_DISABLE_BOOL(debug,
 [  --disable-debug         Disable building with debug info],
   MOZ_DEBUG=)
 
-if test "$MOZ_DEBUG"
-then
-  CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
-  CXXFLAGS="$CXXFLAGS $MOZ_DEBUG_FLAGS"
-  AC_DEFINE(DEBUG)
-  case "${target_os}" in
+MOZ_DEBUG_ENABLE_DEFS="-DDEBUG"
+ case "${target_os}" in
     beos*)
-        AC_DEFINE_UNQUOTED(DEBUG_${USER})
+      MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
         ;;
     *) 
-        AC_DEFINE_UNQUOTED(DEBUG_`$WHOAMI`)
+      MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`$WHOAMI`"
         ;;
   esac
-else
-  AC_DEFINE(NDEBUG)
-  AC_DEFINE(TRIMMED)
-fi
+MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DTRACING"
+
+MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
 
 dnl ========================================================
 dnl =
@@ -2919,14 +2914,41 @@ dnl ========================================================
 
 dnl ========================================================
 dnl =
-dnl = --with-debug-modules=module1,module1,etc
+dnl = --with-debug-modules=module1,^module2,etc
 dnl = 
-dnl = Enable debug for specific modules only
+dnl = Enable/disable debug for specific modules only
+dnl =   module names beginning with ^ will be disabled (this is because you can't
+dnl =   pass args to --without-debug-modules)
 dnl = 
 dnl ========================================================
+
 MOZ_ARG_WITH_STRING(debug-modules,
-[  --with-debug-modules    Enable debug for specific modules only],
+[  --with-debug-modules    Enable/disable debug for specific modules only],
   [ MOZ_DEBUG_MODULES=`echo $withval | sed 's/,/ /g'` ] )
+dnl ========================================================
+
+dnl ========================================================
+dnl =
+dnl = --with-dbgrinfo-modules=module1,^module2,etc
+dnl = 
+dnl = Enable/disable generation of debugger info for specific modules only
+dnl =    the special module name ALL_MODULES can be used to denote all modules
+dnl =    module names beginning with ^ will be disabled
+dnl = 
+dnl ========================================================
+
+MOZ_DBGRINFO_MODULES="ALL_MODULES"
+
+MOZ_ARG_WITH_STRING(dbgrinfo-modules,
+[  --with-dbgrinfo-modules Enable/disable generation of debugger info for specific modules only],
+  [ for i in `echo $withval | sed 's/,/ /g'`; do
+
+      dnl note that the list of module names is reversed as it is copied - this is
+      dnl important, as it will allow config.mk to interpret stuff like
+      dnl "^ALL_MODULES xpcom" properly
+
+      MOZ_DBGRINFO_MODULES="$i $MOZ_DBGRINFO_MODULES";
+    done ])
 dnl ========================================================
 
 dnl ========================================================
@@ -3351,6 +3373,10 @@ dnl AC_SUBST(MOZ_NETCAST)
 AC_SUBST(BUILD_MODULES)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_MODULES)
+AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
+AC_SUBST(MOZ_DEBUG_DISABLE_DEFS)
+AC_SUBST(MOZ_DEBUG_FLAGS)
+AC_SUBST(MOZ_DBGRINFO_MODULES)
 AC_SUBST(MOZ_EXTENSIONS)
 AC_SUBST(MOZILLA_GPROF)
 AC_SUBST(MOZ_PERF_METRICS)
