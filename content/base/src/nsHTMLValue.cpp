@@ -172,8 +172,9 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
         }
       }
       else if (nsnull != aOther.mValue.mString) {
-        return nsDependentString(mValue.mString).Equals(nsDependentString(aOther.mValue.mString),
-                                                        nsCaseInsensitiveStringComparator());
+        return 0 == Compare(nsDependentString(mValue.mString),
+                            nsDependentString(aOther.mValue.mString),
+                            nsCaseInsensitiveStringComparator());
       }
     }
     else if (eHTMLUnit_ISupports == mUnit) {

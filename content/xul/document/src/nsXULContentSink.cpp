@@ -1444,12 +1444,10 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
   nsAutoString src;
   while (*aAttributes) {
       const nsDependentString key(aAttributes[0]);
-      if (key.Equals(NS_LITERAL_STRING("src"),
-                     nsCaseInsensitiveStringComparator())) {
+      if (Compare(key, NS_LITERAL_STRING("src"),nsCaseInsensitiveStringComparator()) == 0) {
           src.Assign(aAttributes[1]);
       }
-      else if (key.Equals(NS_LITERAL_STRING("type"),
-                          nsCaseInsensitiveStringComparator())) {
+      else if (Compare(key, NS_LITERAL_STRING("type"),nsCaseInsensitiveStringComparator()) == 0) {
           nsAutoString  type(aAttributes[1]);
           nsAutoString  mimeType;
           nsAutoString  params;
@@ -1475,8 +1473,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
               jsVersionString = JS_VersionToString(jsVersion);
           }
       }
-      else if (key.Equals(NS_LITERAL_STRING("language"),
-                          nsCaseInsensitiveStringComparator())) {
+      else if (Compare(key, NS_LITERAL_STRING("language"),nsCaseInsensitiveStringComparator()) == 0) {
         nsAutoString  lang(aAttributes[1]);
         isJavaScript = nsParserUtils::IsJavaScriptLanguage(lang, &jsVersionString);
       }

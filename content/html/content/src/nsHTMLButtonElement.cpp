@@ -212,7 +212,7 @@ nsHTMLButtonElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsAutoString value(aValue);
 
   if (aName == nsHTMLAtoms::disabled &&
-      value.Equals(NS_LITERAL_STRING("false"), nsCaseInsensitiveStringComparator())) {
+      !Compare(value, NS_LITERAL_STRING("false"), nsCaseInsensitiveStringComparator())) {
     return UnsetAttr(aNameSpaceID, aName, aNotify);
   }
 

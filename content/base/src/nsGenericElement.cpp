@@ -839,23 +839,23 @@ nsGenericElement::InternalIsSupported(const nsAReadableString& aFeature,
   *aReturn = PR_FALSE;
   nsAutoString feature(aFeature);
 
-  if (feature.Equals(NS_LITERAL_STRING("XML"), nsCaseInsensitiveStringComparator()) ||
-      feature.Equals(NS_LITERAL_STRING("HTML"), nsCaseInsensitiveStringComparator())) {
+  if (!Compare(feature, NS_LITERAL_STRING("XML"), nsCaseInsensitiveStringComparator()) ||
+      !Compare(feature, NS_LITERAL_STRING("HTML"), nsCaseInsensitiveStringComparator())) {
     if (aVersion.IsEmpty() ||
         aVersion.Equals(NS_LITERAL_STRING("1.0")) ||
         aVersion.Equals(NS_LITERAL_STRING("2.0"))) {
       *aReturn = PR_TRUE;
     }
-  } else if (feature.Equals(NS_LITERAL_STRING("Views"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("StyleSheets"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("CSS"), nsCaseInsensitiveStringComparator()) ||
-//           feature.Equals(NS_LITERAL_STRING("CSS2"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("Events"), nsCaseInsensitiveStringComparator()) ||
-//           feature.Equals(NS_LITERAL_STRING("UIEvents"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("MouseEvents"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("MouseScrollEvents"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("HTMLEvents"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("Range"), nsCaseInsensitiveStringComparator())) {
+  } else if (!Compare(feature, NS_LITERAL_STRING("Views"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("StyleSheets"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("CSS"), nsCaseInsensitiveStringComparator()) ||
+//           !Compare(feature, NS_LITERAL_STRING("CSS2"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("Events"), nsCaseInsensitiveStringComparator()) ||
+//           !Compare(feature, NS_LITERAL_STRING("UIEvents"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("MouseEvents"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("MouseScrollEvents"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("HTMLEvents"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("Range"), nsCaseInsensitiveStringComparator())) {
     if (aVersion.IsEmpty() || aVersion.Equals(NS_LITERAL_STRING("2.0"))) {
       *aReturn = PR_TRUE;
     }
