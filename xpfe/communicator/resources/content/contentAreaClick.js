@@ -187,6 +187,7 @@
     }
 
     if (pref && !isKeyPress && event.button == 1 &&
+        !event.getPreventDefault() &&
         !findParentNode(event.originalTarget, "scrollbar") &&
         pref.getBoolPref("middlemouse.contentLoadURL")) {
       if (middleMousePaste(event)) {

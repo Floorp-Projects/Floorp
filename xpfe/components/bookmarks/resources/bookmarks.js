@@ -1599,6 +1599,9 @@ var BookmarksUtils = {
       if (aEvent.button > 1)
         return null;
 
+      // Prevent default click handling (e.g. middlemouse.contentLoadURL==true)
+      aEvent.preventDefault();
+
       if (aEvent.button != 1 && !aEvent.metaKey && !aEvent.ctrlKey)
         return "current";
 
