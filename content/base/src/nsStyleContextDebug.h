@@ -36,7 +36,7 @@ struct StyleFontImplLog: public StyleFontImpl {
   {}
   void ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresContext);
   StyleFontImpl mInternalFont;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StyleFontImplLog::ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresContext)
@@ -50,7 +50,7 @@ void StyleFontImplLog::ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPr
 struct StyleColorImplLog: public StyleColorImpl {
   void ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPresContext);
   StyleColorImpl mInternalColor;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StyleColorImplLog::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPresContext)
@@ -64,7 +64,7 @@ void StyleColorImplLog::ResetFrom(const nsStyleColor* aParent, nsIPresContext* a
 struct StyleListImplLog: public StyleListImpl {
   void ResetFrom(const nsStyleList* aParent, nsIPresContext* aPresContext);
   StyleListImpl mInternalList;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StyleListImplLog::ResetFrom(const nsStyleList* aParent, nsIPresContext* aPresContext)
@@ -78,7 +78,7 @@ void StyleListImplLog::ResetFrom(const nsStyleList* aParent, nsIPresContext* aPr
 struct StylePositionImplLog: public StylePositionImpl {
   void ResetFrom(const nsStylePosition* aParent, nsIPresContext* aPresContext);
   StylePositionImpl mInternalPosition;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StylePositionImplLog::ResetFrom(const nsStylePosition* aParent, nsIPresContext* aPresContext)
@@ -92,7 +92,7 @@ void StylePositionImplLog::ResetFrom(const nsStylePosition* aParent, nsIPresCont
 struct StyleTextImplLog: public StyleTextImpl {
   void ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresContext);
   StyleTextImpl mInternalText;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StyleTextImplLog::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresContext)
@@ -106,7 +106,7 @@ void StyleTextImplLog::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPr
 struct StyleDisplayImplLog: public StyleDisplayImpl {
   void ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* aPresContext);
   StyleDisplayImpl mInternalDisplay;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StyleDisplayImplLog::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* aPresContext)
@@ -120,7 +120,7 @@ void StyleDisplayImplLog::ResetFrom(const nsStyleDisplay* aParent, nsIPresContex
 struct StyleTableImplLog: public StyleTableImpl {
   void ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPresContext);
   StyleTableImpl mInternalTable;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StyleTableImplLog::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPresContext)
@@ -134,7 +134,7 @@ void StyleTableImplLog::ResetFrom(const nsStyleTable* aParent, nsIPresContext* a
 struct StyleContentImplLog: public StyleContentImpl {
   void ResetFrom(const StyleContentImpl* aParent, nsIPresContext* aPresContext);
   StyleContentImpl mInternalContent;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StyleContentImplLog::ResetFrom(const StyleContentImpl* aParent, nsIPresContext* aPresContext)
@@ -148,7 +148,7 @@ void StyleContentImplLog::ResetFrom(const StyleContentImpl* aParent, nsIPresCont
 struct StyleUserInterfaceImplLog: public StyleUserInterfaceImpl {
   void ResetFrom(const nsStyleUserInterface* aParent, nsIPresContext* aPresContext);
   StyleUserInterfaceImpl mInternalUserInterface;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StyleUserInterfaceImplLog::ResetFrom(const nsStyleUserInterface* aParent, nsIPresContext* aPresContext)
@@ -162,7 +162,7 @@ void StyleUserInterfaceImplLog::ResetFrom(const nsStyleUserInterface* aParent, n
 struct StylePrintImplLog: public StylePrintImpl {
   void ResetFrom(const nsStylePrint* aParent, nsIPresContext* aPresContext);
   StylePrintImpl mInternalPrint;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StylePrintImplLog::ResetFrom(const nsStylePrint* aParent, nsIPresContext* aPresContext)
@@ -176,7 +176,7 @@ void StylePrintImplLog::ResetFrom(const nsStylePrint* aParent, nsIPresContext* a
 struct StyleMarginImplLog: public StyleMarginImpl {
   void ResetFrom(const nsStyleMargin* aParent, nsIPresContext* aPresContext);
   StyleMarginImpl mInternalMargin;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StyleMarginImplLog::ResetFrom(const nsStyleMargin* aParent, nsIPresContext* aPresContext)
@@ -190,7 +190,7 @@ void StyleMarginImplLog::ResetFrom(const nsStyleMargin* aParent, nsIPresContext*
 struct StylePaddingImplLog: public StylePaddingImpl {
   void ResetFrom(const nsStylePadding* aParent, nsIPresContext* aPresContext);
   StylePaddingImpl mInternalPadding;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StylePaddingImplLog::ResetFrom(const nsStylePadding* aParent, nsIPresContext* aPresContext)
@@ -204,7 +204,7 @@ void StylePaddingImplLog::ResetFrom(const nsStylePadding* aParent, nsIPresContex
 struct StyleBorderImplLog: public StyleBorderImpl {
   void ResetFrom(const nsStyleBorder* aParent, nsIPresContext* aPresContext);
   StyleBorderImpl mInternalBorder;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StyleBorderImplLog::ResetFrom(const nsStyleBorder* aParent, nsIPresContext* aPresContext)
@@ -218,7 +218,7 @@ void StyleBorderImplLog::ResetFrom(const nsStyleBorder* aParent, nsIPresContext*
 struct StyleOutlineImplLog: public StyleOutlineImpl {
   void ResetFrom(const nsStyleOutline* aParent, nsIPresContext* aPresContext);
   StyleOutlineImpl mInternalOutline;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StyleOutlineImplLog::ResetFrom(const nsStyleOutline* aParent, nsIPresContext* aPresContext)
@@ -233,7 +233,7 @@ void StyleOutlineImplLog::ResetFrom(const nsStyleOutline* aParent, nsIPresContex
 struct StyleXULImplLog: public StyleXULImpl {
   void ResetFrom(const nsStyleXUL* aParent, nsIPresContext* aPresContext);
   StyleXULImpl mInternalXUL;
-  bool mSetFromParent;
+  PRBool mSetFromParent;
 };
 
 void StyleXULImplLog::ResetFrom(const nsStyleXUL* aParent, nsIPresContext* aPresContext)
@@ -268,7 +268,7 @@ enum LogCallType {
 };
 
 static void LogGetStyleDataCall(nsStyleStructID aSID, LogCallType aLogCallType,
-                                  nsIStyleContext* aStyleContext, bool aEnteringFunction);
+                                  nsIStyleContext* aStyleContext, PRBool aEnteringFunction);
 
 #endif // LOG_GET_STYLE_DATA_CALLS
 
