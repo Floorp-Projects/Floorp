@@ -29,7 +29,6 @@ nsSupportsIDImpl::nsSupportsIDImpl()
     : mData(nsnull)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsIDImpl::~nsSupportsIDImpl()
@@ -103,7 +102,6 @@ nsSupportsStringImpl::nsSupportsStringImpl()
     : mData(nsnull)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsStringImpl::~nsSupportsStringImpl()
@@ -157,7 +155,6 @@ nsSupportsWStringImpl::nsSupportsWStringImpl()
     : mData(nsnull)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsWStringImpl::~nsSupportsWStringImpl()
@@ -211,7 +208,6 @@ nsSupportsPRBoolImpl::nsSupportsPRBoolImpl()
     : mData(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsPRBoolImpl::~nsSupportsPRBoolImpl() {}
@@ -254,7 +250,6 @@ nsSupportsPRUint8Impl::nsSupportsPRUint8Impl()
     : mData(0)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsPRUint8Impl::~nsSupportsPRUint8Impl() {}
@@ -301,7 +296,6 @@ nsSupportsPRUint16Impl::nsSupportsPRUint16Impl()
     : mData(0)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsPRUint16Impl::~nsSupportsPRUint16Impl() {}
@@ -348,7 +342,6 @@ nsSupportsPRUint32Impl::nsSupportsPRUint32Impl()
     : mData(0)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsPRUint32Impl::~nsSupportsPRUint32Impl() {}
@@ -395,7 +388,6 @@ nsSupportsPRUint64Impl::nsSupportsPRUint64Impl()
     : mData(LL_ZERO)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsPRUint64Impl::~nsSupportsPRUint64Impl() {}
@@ -442,7 +434,6 @@ nsSupportsPRTimeImpl::nsSupportsPRTimeImpl()
     : mData(LL_ZERO)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsPRTimeImpl::~nsSupportsPRTimeImpl() {}
@@ -489,7 +480,6 @@ nsSupportsCharImpl::nsSupportsCharImpl()
     : mData(0)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsCharImpl::~nsSupportsCharImpl() {}
@@ -521,7 +511,7 @@ NS_IMETHODIMP nsSupportsCharImpl::toString(char **_retval)
 
     *_retval = (char*) nsAllocator::Alloc(2*sizeof(char));
     if(!*_retval)
-        NS_ERROR_OUT_OF_MEMORY;
+        return NS_ERROR_OUT_OF_MEMORY;
     (*_retval)[0] = mData;
     (*_retval)[1] = 0;
     return NS_OK;
@@ -535,7 +525,6 @@ nsSupportsPRInt16Impl::nsSupportsPRInt16Impl()
     : mData(0)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsPRInt16Impl::~nsSupportsPRInt16Impl() {}
@@ -582,7 +571,6 @@ nsSupportsPRInt32Impl::nsSupportsPRInt32Impl()
     : mData(0)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsPRInt32Impl::~nsSupportsPRInt32Impl() {}
@@ -629,7 +617,6 @@ nsSupportsPRInt64Impl::nsSupportsPRInt64Impl()
     : mData(LL_ZERO)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsPRInt64Impl::~nsSupportsPRInt64Impl() {}
@@ -676,7 +663,6 @@ nsSupportsFloatImpl::nsSupportsFloatImpl()
     : mData(float(0.0))
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsFloatImpl::~nsSupportsFloatImpl() {}
@@ -723,7 +709,6 @@ nsSupportsDoubleImpl::nsSupportsDoubleImpl()
     : mData(double(0.0))
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsSupportsDoubleImpl::~nsSupportsDoubleImpl() {}
