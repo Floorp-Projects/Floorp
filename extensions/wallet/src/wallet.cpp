@@ -1484,7 +1484,7 @@ Wallet_SimpleGet(nsInputFileStream& strm) {
 char* schemaValueFileName = nsnull;
 
 const char URLFileName[] = "URL.tbl";
-const char allFileName[] = "All.tbl";
+const char allFileName[] = "wallet1.html";
 const char fieldSchemaFileName[] = "FieldSchema.tbl";
 const char URLFieldSchemaFileName[] = "URLFieldSchema.tbl";
 const char schemaConcatFileName[] = "SchemaConcat.tbl";
@@ -2080,7 +2080,11 @@ wallet_GetSelectIndex(
           nsAutoString optionText;
           optionElement->GetValue(optionValue);
           optionElement->GetText(optionText);
-          if (value==optionValue || value==optionText) {
+          nsAutoString valueLC = value;
+          valueLC.ToLowerCase();
+          optionValue.ToLowerCase();
+          optionText.ToLowerCase();
+          if (valueLC==optionValue || valueLC==optionText) {
             index = optionX;
             return 0;
           }
