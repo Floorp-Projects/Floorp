@@ -48,7 +48,7 @@ my $redirect_command = ($os_type ne "MAC") ? " 2>&1" : "";
 my $opt_suite_path;
 my $opt_trace = 0;
 my $opt_classpath = "";
-my $opt_rhino_interp = 0;
+my $opt_rhino_opt = 0;
 my $opt_rhino_ms = 0;
 my @opt_engine_list;
 my $opt_engine_type = "";
@@ -462,7 +462,7 @@ sub usage {
        "(-e|--engine) <type> ...  Specify the type of engine(s) to test.\n" .
        "                          <type> is one or more of\n" .
        "                          (smopt|smdebug|lcopt|lcdebug|xpcshell|" .
-       "rhino|rhinoi|rhinoms|rhinomsi).\n" .
+       "rhino|rhinoi|rhinoms|rhinomsi|rhino9|rhinoms9).\n" .
        "(-f|--file) <file>        Redirect output to file named <file>.\n" .
        "                          (default is " .
        "results-<engine-type>-<date-stamp>.html)\n" .
@@ -494,22 +494,32 @@ sub get_engine_command {
     
     if ($opt_engine_type eq "rhino") {
         &dd ("getting rhino engine command.");
-        $opt_rhino_interp = 0;
+        $opt_rhino_opt = 0;
         $opt_rhino_ms = 0;
         $retval = &get_rhino_engine_command;
     } elsif ($opt_engine_type eq "rhinoi") {
         &dd ("getting rhinoi engine command.");
-        $opt_rhino_interp = 1;
+        $opt_rhino_opt = -1;
+        $opt_rhino_ms = 0;
+        $retval = &get_rhino_engine_command;
+    } elsif ($opt_engine_type eq "rhino9") {
+        &dd ("getting rhino engine command.");
+        $opt_rhino_opt = 9;
         $opt_rhino_ms = 0;
         $retval = &get_rhino_engine_command;
     } elsif ($opt_engine_type eq "rhinoms") {
         &dd ("getting rhinoms engine command.");
-        $opt_rhino_interp = 0;
+        $opt_rhino_opt = 0;
         $opt_rhino_ms = 1;
         $retval = &get_rhino_engine_command;
     } elsif ($opt_engine_type eq "rhinomsi") {
         &dd ("getting rhinomsi engine command.");
-        $opt_rhino_interp = 1;
+        $opt_rhino_opt = -1;
+        $opt_rhino_ms = 1;
+        $retval = &get_rhino_engine_command;
+    } elsif ($opt_engine_type eq "rhinoms9") {
+        &dd ("getting rhinomsi engine command.");
+        $opt_rhino_opt = 9;
         $opt_rhino_ms = 1;
         $retval = &get_rhino_engine_command;
     } elsif ($opt_engine_type eq "xpcshell") {
@@ -551,8 +561,8 @@ sub get_rhino_engine_command {
     
     $retval .= "org.mozilla.javascript.tools.shell.Main";
 
-    if ($opt_rhino_interp) {
-        $retval .= " -opt -1";
+    if ($opt_rhino_opt) {
+        $retval .= " -opt $opt_rhino_opt";
     }
     
     return $retval;
