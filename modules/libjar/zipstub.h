@@ -60,7 +60,7 @@
 #if defined(XP_MAC)
 #define PR_EXTERN(__type)       extern __declspec(export) __type
 #define PR_PUBLIC_API(__type)   __declspec(export) __type
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2_VACPP)
 #define PR_EXTERN(__type)       extern _declspec(dllexport) __type
 #define PR_PUBLIC_API(__type)   _declspec(dllexport) __type
 #else /* XP_UNIX */
