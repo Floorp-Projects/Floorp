@@ -106,11 +106,10 @@ nsEventStatus PR_CALLBACK HandleEventMain(nsGUIEvent *aEvent)
         {
             nsIEnumerator *enumer = aEvent->widget->GetChildren();
             if (enumer) {
-                nsISupports *next;
-                next = enumer->Next();
-                if (next) {
+                nsISupports *child;
+                if (NS_SUCCEEDED(enumer->CurrentItem(&child))) {
                     nsIWidget *widget;
-                    if (NS_OK == next->QueryInterface(kIWidgetIID, (void**)&widget)) {
+                    if (NS_OK == child->QueryInterface(kIWidgetIID, (void**)&widget)) {
                         widget->Resize(0, 0, 200, 
                           ((nsSizeEvent*)aEvent)->windowSize->height, PR_TRUE);
                         NS_RELEASE(widget);
