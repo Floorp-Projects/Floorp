@@ -93,6 +93,7 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { IMAGE_GIF, "gif", "GIF Image", 0,0 },
   { IMAGE_JPG, "jpeg,jpg", "JPEG Image", 0, 0 },
   { IMAGE_PNG, "png", "PNG Image", 0, 0 },
+  { APPLICATION_XPINSTALL, "xpi", "XPInstall Install", 'xpi*','MOSS' },
 };
 
 // This table lists all of the 'extra" content types that we can deduce from particular
@@ -115,7 +116,6 @@ static nsDefaultMimeTypeEntry extraMimeEntries [] =
   { TEXT_RTF, "rtf", "Rich Text Format", 0, 0 },
   { TEXT_CPP, "cpp", "CPP file", 'TEXT','CWIE' },
   { "application/x-arj", "arj", "ARJ file", 0,0 },
-  { APPLICATION_XPINSTALL, "xpi", "XPInstall Install", 'xpi*','MOSS' },
 };
 
 NS_IMPL_THREADSAFE_ADDREF(nsExternalHelperAppService)
