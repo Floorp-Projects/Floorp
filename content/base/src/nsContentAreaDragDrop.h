@@ -56,7 +56,7 @@ class nsPresContext;
 class nsIContent;
 class nsIDocument;
 class nsIURI;
-class nsILocalFile;
+class nsIFile;
 class nsISimpleEnumerator;
 
 // {1f34bc80-1bc7-11d6-a384-d705dd0746fc}
@@ -103,7 +103,8 @@ private:
   static void NormalizeSelection(nsIDOMNode* inBaseNode, nsISelection* inSelection);
   static void GetEventDocument(nsIDOMEvent* inEvent, nsIDOMDocument** outDocument);
 
-  static nsresult SaveURIToFileInDirectory(nsAString& inSourceURIString, nsILocalFile* inDestDirectory, nsILocalFile** outFile);
+  static nsresult SaveURIToFile(nsAString& inSourceURIString,
+                                nsIFile* inDestFile);
   
   nsresult CreateTransferable(nsIDOMEvent* inMouseEvent, nsITransferable** outTrans);
   void ExtractURLFromData(const nsACString & inFlavor, nsISupports* inDataWrapper, PRUint32 inDataLen,
