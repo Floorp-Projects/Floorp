@@ -159,7 +159,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
           // need to add border and padding into percent width
           nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
                                                                   aPixelToTwips, cellFrame);
-          cellWidth = percent * (float)availWidth + borderPadding.left + borderPadding.right;
+          cellWidth = NSToCoordRound(percent * (float) availWidth) + borderPadding.left + borderPadding.right;
           colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(((float) cellWidth) / ((float) colSpan)),
                                                                       aPixelToTwips); 
           colFrame->SetWidth(PCT, colWidths[colX]);
