@@ -42,28 +42,29 @@ $pull{all} 				= 0;
 $pull{moz}				= 0;
 $pull{runtime} 			= 0;
 
-$build{all} 			= 1;	# turn off to do individual builds, or to do "most"
-$build{most} 			= 0;	# turn off to do individual builds
-$build{dist} 			= 0;
-$build{dist_runtime}	= 0;	# implied by $build{dist}
-$build{xpidl}			= 0;
+$build{all}             = 1;	# turn off to do individual builds, or to do "most"
+$build{most}            = 0;	# turn off to do individual builds
+$build{dist}            = 0;
+$build{dist_runtime}    = 0;	# implied by $build{dist}
+$build{xpidl}           = 0;
 $build{idl}             = 0;
-$build{stubs} 			= 0;
-$build{runtime}			= 0;
-$build{common} 			= 0;
-$build{imglib} 			= 0;
-$build{necko} 			= 0;
-$build{browserutils} 	= 0;
-$build{intl} 			= 0;
-$build{nglayout} 		= 0;
-$build{editor} 			= 0;
-$build{viewer} 			= 0;
-$build{xpapp} 			= 0;
-$build{extensions} 		= 0;
-$build{plugins} 	    = 0;
-$build{mailnews} 		= 0;
-$build{apprunner}		= 0;
-$build{resources} 		= 0;
+$build{stubs}           = 0;
+$build{runtime}         = 0;
+$build{common}          = 0;
+$build{imglib}          = 0;
+$build{necko}           = 0;
+$build{security}        = 0;
+$build{browserutils}    = 0;
+$build{intl}            = 0;
+$build{nglayout}        = 0;
+$build{editor}          = 0;
+$build{viewer}          = 0;
+$build{xpapp}           = 0;
+$build{extensions}      = 0;
+$build{plugins}         = 0;
+$build{mailnews}        = 0;
+$build{apprunner}       = 0;
+$build{resources}       = 0;
 
 $options{transformiix}	= 0;
 $options{mathml}		= 0;
@@ -118,26 +119,27 @@ if ($build{all})
 if ($build{most})
 {
 ### Just uncomment/comment to get the ones you want (if "most" is selected).
-#	$build{dist} 			= 0;
-#	$build{dist_runtime}	= 0;	# Implied by $build{dist}
-#	$build{xpidl}			= 0;
-#	$build{idl}             = 0;
-#	$build{stubs} 			= 0;
-#	$build{runtime}			= 1;
-#	$build{common} 			= 1;
-#	$build{imglib} 			= 1;
-#	$build{necko} 			= 1;
-#	$build{browserutils} 	= 1;
-#	$build{intl} 			= 1;
-#	$build{nglayout} 		= 1;
-#	$build{editor} 			= 1;
-#	$build{viewer} 			= 1;
-#	$build{xpapp} 			= 1;
-#	$build{extensions} 		= 1;
+#   $build{dist}            = 0;
+#   $build{dist_runtime}    = 0;	# Implied by $build{dist}
+#   $build{xpidl}           = 0;
+#   $build{idl}             = 0;
+#   $build{stubs}           = 0;
+#   $build{runtime}         = 1;
+#   $build{common}          = 1;
+#   $build{imglib}          = 1;
+#   $build{necko}           = 1;
+#   $build{security}        = 1;
+#   $build{browserutils}    = 1;
+#   $build{intl}            = 1;
+#   $build{nglayout}        = 1;
+#   $build{editor}          = 1;
+#   $build{viewer}          = 1;
+#   $build{xpapp}           = 1;
+#   $build{extensions}      = 1;
 #   $build{plugins}         = 1;
-#	$build{mailnews} 		= 1;
-#	$build{apprunner} 		= 1;
-#	$build{resources} 		= 0;
+#   $build{mailnews}        = 1;
+#   $build{apprunner}       = 1;
+#   $build{resources}       = 0;
 }
 
 # do the work
