@@ -40,6 +40,7 @@ BEGIN {
 require "globals.pl";
 use BugzillaEmail;
 use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::BugMail;
 
 # Create a new MIME parser:
 my $parser = new MIME::Parser;
@@ -118,7 +119,7 @@ my $Body = "Subject: " . $Subject . "\n" . $Comment;
 my $long_desc_query = "INSERT INTO longdescs SET bug_id=$found_id, who=$userid, bug_when=NOW(), thetext=" . SqlQuote($Body) . ";";
 SendSQL($long_desc_query);
 
-system("./processmail", $found_id, $SenderShort);
+Bugzilla::BugMail::Send( $found_id, { changer => $SenderShort } );
 
 sub DealWithError {
   my ($reason) = @_;
