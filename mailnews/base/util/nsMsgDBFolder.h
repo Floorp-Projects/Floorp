@@ -246,6 +246,7 @@ protected:
   static NS_MSG_BASE_STATIC_MEMBER_(PRUnichar*) kLocalizedTemplatesName;
   static NS_MSG_BASE_STATIC_MEMBER_(PRUnichar*) kLocalizedUnsentName;
   static NS_MSG_BASE_STATIC_MEMBER_(PRUnichar*) kLocalizedJunkName;
+  static NS_MSG_BASE_STATIC_MEMBER_(PRUnichar*) kLocalizedBrandShortName;
   
   static NS_MSG_BASE_STATIC_MEMBER_(nsIAtom*) kTotalUnreadMessagesAtom;
   static NS_MSG_BASE_STATIC_MEMBER_(nsIAtom*) kBiffStateAtom;

@@ -121,6 +121,7 @@ PRUnichar *nsMsgDBFolder::kLocalizedDraftsName;
 PRUnichar *nsMsgDBFolder::kLocalizedTemplatesName;
 PRUnichar *nsMsgDBFolder::kLocalizedUnsentName;
 PRUnichar *nsMsgDBFolder::kLocalizedJunkName;
+PRUnichar *nsMsgDBFolder::kLocalizedBrandShortName;
 
 nsrefcnt nsMsgDBFolder::mInstanceCount=0;
 
@@ -200,6 +201,7 @@ nsMsgDBFolder::~nsMsgDBFolder(void)
     CRTFREEIF(kLocalizedTemplatesName);
     CRTFREEIF(kLocalizedUnsentName);
     CRTFREEIF(kLocalizedJunkName);
+    CRTFREEIF(kLocalizedBrandShortName);
 #ifdef MSG_FASTER_URI_PARSING
     mParsingURL = nsnull;
 #endif
@@ -2143,6 +2145,14 @@ nsMsgDBFolder::initializeStrings()
                             &kLocalizedJunkName);
   bundle->GetStringFromName(NS_LITERAL_STRING("unsentFolderName").get(),
                             &kLocalizedUnsentName);
+
+  nsCOMPtr<nsIStringBundle> brandBundle;
+  rv = bundleService->CreateBundle("chrome://branding/locale/brand.properties", getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                            &kLocalizedBrandShortName);
+
   return NS_OK;
 }
 
@@ -4765,10 +4775,11 @@ nsMsgDBFolder::GetStringWithFolderNameFromBundle(const char *msgName, PRUnichar 
     GetName(getter_Copies(folderName));
     const PRUnichar *formatStrings[] =
     {
-      folderName
+      folderName,
+      kLocalizedBrandShortName
     };
     rv = bundle->FormatStringFromName(NS_ConvertASCIItoUCS2(msgName).get(),
-                                      formatStrings, 1, aResult);
+                                      formatStrings, 2, aResult);
   }
   return rv;
 }
