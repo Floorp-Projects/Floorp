@@ -691,7 +691,8 @@ gif_clear_screen(gif_struct *gs)
     if (gs->images_decoded == 0)
     {
         if ((gs->width  != gs->screen_width) ||
-            (gs->height != gs->screen_height))
+            (gs->height != gs->screen_height) ||
+			 gs->is_transparent)
         {
             erase = PR_TRUE;
             erase_width  = gs->screen_width;
@@ -774,7 +775,7 @@ int
 il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 {
   int status;
-	gif_struct *gs = (gif_struct *)ic->ds;
+  gif_struct *gs = (gif_struct *)ic->ds;
   NI_PixmapHeader *src_header = ic->src_header;
   NI_ColorMap *cmap = &src_header->color_space->cmap;
   const uint8 *q, *p=buf,*ep=buf+len;
@@ -816,7 +817,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 		
         case gif_lzw_start:
         {
-            int i, status;
+            int i;
 
             cmap->map = gs->is_local_colormap_defined ?
                 gs->local_colormap : gs->global_colormap;
@@ -829,10 +830,6 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
             if (gs->is_local_colormap_defined || (gs->images_decoded == 0))
               if(ic->imgdcb)
                 ic->imgdcb->ImgDCBSetupColorspaceConverter(); 
-
-            status = gif_clear_screen(gs);
-            if (status < 0)
-                return status;
 
             /* Initialize LZW parser/decoder */
             gs->datasize = *q;
@@ -1239,19 +1236,22 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 				ic->image->header.widthBytes = (ic->image->header.width * ic->image->header.color_space->pixmap_depth + 7)/8; 
 
 				ic->image->header.widthBytes = ROUNDUP(ic->image->header.widthBytes, 4);
-        if(ic->imgdcb)
-		       status = ic->imgdcb->ImgDCBImageSize();
 
-                if (status < 0)
-                { 
-                   if (status == MK_OUT_OF_MEMORY) 
-						gs->state = gif_oom;
-                    else
-						gs->state = gif_error;
-					break;
+				if(ic->imgdcb){
+				  nsresult rv = ic->imgdcb->ImgDCBImageSize();
+                 
+                  if(NS_FAILED(rv)){
+                      gs->state = gif_error;
+			          break;
+                  }
 				}
-        ic->img_cx->img_cb->NewPixmap(ic->img_cx->dpy_cx, ic->dest_width,
-            ic->dest_height, ic->image, ic->mask);
+                else{    //no callback is an error too.
+                    gs->state = gif_error;
+                    break;
+                }
+
+                ic->img_cx->img_cb->NewPixmap(ic->img_cx->dpy_cx, ic->dest_width,
+                            ic->dest_height, ic->image, ic->mask);
     
 				if((!ic->scalerow)||(!ic->image->bits)||(ic->mask && !ic->mask->bits)){
 					gs->state=gif_oom;
@@ -1281,17 +1281,17 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
             if (gs->images_decoded == 0) {
                 src_header->width = gs->screen_width;
                 src_header->height = gs->screen_height;
-				        if(ic->imgdcb)
-                   status = ic->imgdcb->ImgDCBImageSize();
 
-                if (status < 0)
-                { 
-                    if (status == MK_OUT_OF_MEMORY) {
-                        ILTRACE(0,("il:gif: MEM il_size"));
-                        gs->state = gif_oom;
-                    }
-                    else
+		        if(ic->imgdcb){
+				    nsresult rv = ic->imgdcb->ImgDCBImageSize();
+                 
+                    if(NS_FAILED(rv)){
                         gs->state = gif_error;
+			            break;
+                    }
+				}
+                else{    //no callback is an error too.
+                    gs->state = gif_error;
                     break;
                 }
             }
@@ -1320,6 +1320,10 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
                 gs->progressive_display = ic->img_cx->progressive_display &&
                     !(gs->interlaced && gs->is_transparent);
             }
+
+             status = gif_clear_screen(gs);             
+             if (status < 0)
+                return status;
 
             /* Clear state from last image */
             gs->requested_buffer_fullness = 0;
