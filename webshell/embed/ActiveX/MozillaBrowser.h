@@ -34,6 +34,10 @@ class CWebShellContainer;
 #define CDWebBrowserEvents1 CProxyDWebBrowserEvents<CMozillaBrowser>
 #define CDWebBrowserEvents2 CProxyDWebBrowserEvents2<CMozillaBrowser>
 
+// A list of objects
+typedef CComPtr<IUnknown> CComUnkPtr;
+typedef std::vector<CComUnkPtr> ObjectList;
+
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
 class ATL_NO_VTABLE CMozillaBrowser : 
@@ -90,6 +94,8 @@ BEGIN_COM_MAP(CMozillaBrowser)
 	COM_INTERFACE_ENTRY(IProvideClassInfo2)
 	COM_INTERFACE_ENTRY(ISupportErrorInfo)
 	COM_INTERFACE_ENTRY_IMPL(IConnectionPointContainer)
+	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents,  CDWebBrowserEvents1)
+	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents2, CDWebBrowserEvents2)
 END_COM_MAP()
 
 BEGIN_PROPERTY_MAP(CMozillaBrowser)
@@ -101,8 +107,8 @@ END_PROPERTY_MAP()
 
 BEGIN_CONNECTION_POINT_MAP(CMozillaBrowser)
 	// Fires IE events
-	CONNECTION_POINT_ENTRY(DIID_DWebBrowserEvents)
 	CONNECTION_POINT_ENTRY(DIID_DWebBrowserEvents2)
+	CONNECTION_POINT_ENTRY(DIID_DWebBrowserEvents)
 END_CONNECTION_POINT_MAP()
 
 
@@ -155,8 +161,14 @@ protected:
 	// Ready status of control
 	READYSTATE				m_nBrowserReadyState;
 
+	// List of registered browser helper objects
+	ObjectList				m_cBrowserHelperList;
+
 	virtual HRESULT CreateWebShell();
 	virtual BOOL IsValid();
+
+	virtual HRESULT LoadBrowserHelpers();
+	virtual HRESULT UnloadBrowserHelpers();
 
 public:
 // IOleObjectImpl overrides
