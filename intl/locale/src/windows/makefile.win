@@ -35,6 +35,20 @@ OBJS =						\
 	.\$(OBJDIR)\nsIWin32LocaleImpl.obj	\
 	$(NULL)
 
+LINCS= \
+		-I..\
+        -I$(PUBLIC)\locale		\
+        -I$(PUBLIC)\xpcom		\
+        -I$(PUBLIC)\unicharutil		\
+        -I$(PUBLIC)\uconv		\
+        -I$(PUBLIC)\raptor		\
+        $(NULL)
+
+LCFLAGS = \
+        $(LCFLAGS) \
+	$(DEFINES) \
+        $(NULL)
+
 SUB_LIBRARIES	=  $(DIST)\lib\nslocale_s.lib
 
 LLIBS=					\
