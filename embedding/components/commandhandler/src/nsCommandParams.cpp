@@ -43,10 +43,6 @@
 #include "nsCommandParams.h"
 
 
-// will come from pldhash.h soon
-#define PL_DHASH_ENTRY_IS_LIVE(entry)        ((entry)->keyHash >= 2)
-
-
 PLDHashTableOps nsCommandParams::sHashOps =
 {
     PL_DHashAllocTable,
@@ -277,7 +273,7 @@ nsCommandParams::HashEntry*
 nsCommandParams::GetIndexedEntry(PRInt32 index)
 {
   HashEntry*  entry = NS_REINTERPRET_CAST(HashEntry*, mValuesHash.entryStore);
-  HashEntry*  limit = entry + PR_BIT(mValuesHash.sizeLog2);
+  HashEntry*  limit = entry + PL_DHASH_TABLE_SIZE(&mValuesHash);
   PRUint32    entryCount = 0;
   
   do
@@ -299,7 +295,7 @@ PRUint32
 nsCommandParams::GetNumEntries()
 {
   HashEntry*  entry = NS_REINTERPRET_CAST(HashEntry*, mValuesHash.entryStore);
-  HashEntry*  limit = entry + PR_BIT(mValuesHash.sizeLog2);
+  HashEntry*  limit = entry + PL_DHASH_TABLE_SIZE(&mValuesHash);
   PRUint32    entryCount = 0;
   
   do
