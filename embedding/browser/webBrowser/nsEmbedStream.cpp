@@ -97,8 +97,6 @@ nsEmbedStream::OpenStream(nsIURI *aBaseURI, const nsACString& aContentType)
   NS_ENSURE_ARG_POINTER(aBaseURI);
   NS_ENSURE_TRUE(IsASCII(aContentType), NS_ERROR_INVALID_ARG);
 
-  nsresult rv = NS_OK;
-
   // if we're already doing a stream, return an error
   if (mDoingStream)
     return NS_ERROR_IN_PROGRESS;
@@ -107,7 +105,7 @@ nsEmbedStream::OpenStream(nsIURI *aBaseURI, const nsACString& aContentType)
   mDoingStream = PR_TRUE;
 
   // initialize our streams
-  rv = Init();
+  nsresult rv = Init();
   if (NS_FAILED(rv))
     return rv;
 
@@ -176,8 +174,7 @@ nsEmbedStream::OpenStream(nsIURI *aBaseURI, const nsACString& aContentType)
     return rv;
 
   // start our request
-  nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel); 
-  rv = mStreamListener->OnStartRequest(request, NULL);
+  rv = mStreamListener->OnStartRequest(mChannel, NULL);
   if (NS_FAILED(rv))
     return rv;
   
@@ -195,8 +192,7 @@ nsEmbedStream::AppendToStream(const PRUint8 *aData, PRUint32 aLen)
     return rv;
 
   // notify our listeners
-  nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel); 
-  rv = mStreamListener->OnDataAvailable(request,
+  rv = mStreamListener->OnDataAvailable(mChannel,
 					NULL,
 					NS_STATIC_CAST(nsIInputStream *, this),
 					mOffset, /* offset */
@@ -219,15 +215,10 @@ nsEmbedStream::CloseStream(void)
   NS_ENSURE_STATE(mDoingStream);
   mDoingStream = PR_FALSE;
 
-  nsCOMPtr<nsIRequest> request = do_QueryInterface(mChannel, &rv); 
-  if (NS_FAILED(rv))
-    goto loser;
-  
-  rv = mStreamListener->OnStopRequest(request, NULL, NS_OK);
+  rv = mStreamListener->OnStopRequest(mChannel, NULL, NS_OK);
   if (NS_FAILED(rv))
     return rv;
 
- loser:
   mLoadGroup = nsnull;
   mChannel = nsnull;
   mStreamListener = nsnull;
