@@ -76,6 +76,7 @@
 #include "nsGenericDOMNodeList.h"
 #include "nsICSSLoader.h"
 #include "nsIHTTPChannel.h"
+#include "nsIFileChannel.h"
 #include "nsIEventListenerManager.h"
 
 #include "nsICharsetDetector.h"
@@ -96,6 +97,7 @@ static PRBool gPlugDetector = PR_FALSE;
 #endif
 
 #include "prmem.h"
+#include "prtime.h"
 
 // Find/Serach Includes
 const PRInt32 kForward  = 0;
@@ -398,10 +400,10 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   rv = aChannel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
   
+  nsAutoString lastModified;
   nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
     nsXPIDLCString lastModHeader;
-    nsAutoString lastModified;
     nsIAtom* lastModKey = NS_NewAtom("last-modified");
 
     rv = httpChannel->GetResponseHeader(lastModKey, 
@@ -468,6 +470,25 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // Don't propogate the result code beyond here, since it
     // could just be that the response header wasn't found.
     rv = NS_OK;
+  }
+
+  nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(aChannel);
+  if (fileChannel) {
+    PRTime modDate;
+    
+    rv = fileChannel->GetModDate(&modDate);
+    if (NS_SUCCEEDED(rv)) {
+      PRExplodedTime prtime;
+      char buf[100];
+      PRInt64 prusec, scale;
+
+      LL_I2L(scale, 1000000L);
+      LL_MUL(prusec, modDate, scale);
+      PR_ExplodeTime(prusec, PR_LocalTimeParameters, &prtime);
+      PR_FormatTime(buf, sizeof buf, "%#c", &prtime);
+      lastModified.SetString(buf);
+      SetLastModified(lastModified);
+    }
   }
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
