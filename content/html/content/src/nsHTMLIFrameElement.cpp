@@ -92,6 +92,8 @@ public:
 
   // nsIContent
   NS_IMETHOD SetParent(nsIContent *aParent);
+  NS_IMETHOD SetDocument(nsIDocument *aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
@@ -286,7 +288,7 @@ nsHTMLIFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
 nsresult
 nsHTMLIFrameElement::EnsureFrameLoader()
 {
-  if (mFrameLoader || !mParent) {
+  if (mFrameLoader || !mParent || !mDocument) {
     return NS_OK;
   }
 
@@ -331,6 +333,24 @@ nsHTMLIFrameElement::SetParent(nsIContent *aParent)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return LoadSrc();
+}
+
+NS_IMETHODIMP
+nsHTMLIFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
+                                 PRBool aCompileEventHandlers)
+{
+  nsresult rv =
+    nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                               aCompileEventHandlers);
+
+  if (NS_SUCCEEDED(rv) && mParent && mDocument) {
+    // SetParent() was already called on this element, load the
+    // frame...
+
+    rv = LoadSrc();
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
