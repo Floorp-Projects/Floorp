@@ -1,0 +1,16 @@
+<html>
+<body>
+<h1>document.load() test</h1>
+<script>
+var xmlDoc = document.implementation.createDocument("", "test", null);
+
+function documentLoaded(e) {
+  alert(xmlDoc.getElementById("id1").firstChild.nodeValue);
+}
+
+xmlDoc.addEventListener("load", documentLoaded, false);
+
+xmlDoc.load("test.xml");
+</script>
+</body>
+</html>
