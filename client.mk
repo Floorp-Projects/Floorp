@@ -286,19 +286,34 @@ CVSCO_IMGLIB2 = $(CVS) $(CVS_FLAGS) co $(IMGLIB2_CO_FLAGS) $(CVS_CO_DATE_FLAGS) 
 CVSCO_CALENDAR := $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/calendar mozilla/other-licenses/libical
 
 ####################################
+# CVS defines for SeaMonkey
+#
+ifeq ($(MOZ_CO_MODULE),)
+  MOZ_CO_MODULE := SeaMonkeyAll
+endif
+CVSCO_SEAMONKEY := $(CVSCO) $(CVS_CO_DATE_FLAGS) $(MOZ_CO_MODULE)
+
+####################################
 # CVS defines for standalone modules
 #
-ifneq ($(BUILD_MODULES),all)
-  MOZ_CO_MODULE := $(filter-out $(NSPRPUB_DIR) security directory/c-sdk, $(BUILD_MODULE_CVS))
-  MOZ_CO_MODULE += allmakefiles.sh client.mk aclocal.m4 configure configure.in
-  MOZ_CO_MODULE += Makefile.in
-  MOZ_CO_MODULE := $(addprefix mozilla/, $(MOZ_CO_MODULE))
+ifeq ($(BUILD_MODULES),all)
+  CHECKOUT_STANDALONE := true
+  CHECKOUT_STANDALONE_NOSUBDIRS := true
+else
+  STANDALONE_CO_MODULE := $(filter-out $(NSPRPUB_DIR) security directory/c-sdk, $(BUILD_MODULE_CVS))
+  STANDALONE_CO_MODULE += allmakefiles.sh client.mk aclocal.m4 configure configure.in
+  STANDALONE_CO_MODULE += Makefile.in
+  STANDALONE_CO_MODULE := $(addprefix mozilla/, $(STANDALONE_CO_MODULE))
+  CHECKOUT_STANDALONE := cvs_co $(CVSCO) $(CVS_CO_DATE_FLAGS) $(STANDALONE_CO_MODULE)
 
   NOSUBDIRS_MODULE := $(addprefix mozilla/, $(BUILD_MODULE_CVS_NS))
 ifneq ($(NOSUBDIRS_MODULE),)
-  CVSCO_NOSUBDIRS := $(CVSCO) -l $(CVS_CO_DATE_FLAGS) $(NOSUBDIRS_MODULE)
+  CHECKOUT_STANDALONE_NOSUBDIRS := cvs_co $(CVSCO) -l $(CVS_CO_DATE_FLAGS) $(NOSUBDIRS_MODULE)
+else
+  CHECKOUT_STANDALONE_NOSUBDIRS := true
 endif
 
+CVSCO_SEAMONKEY :=
 ifeq (,$(filter $(NSPRPUB_DIR), $(BUILD_MODULE_CVS)))
   CVSCO_NSPR :=
 endif
@@ -319,14 +334,6 @@ ifeq (,$(filter calendar other-licenses/libical, $(BUILD_MODULE_CVS)))
   CVSCO_CALENDAR :=
 endif
 endif
-
-####################################
-# CVS defines for SeaMonkey
-#
-ifeq ($(MOZ_CO_MODULE),)
-  MOZ_CO_MODULE := SeaMonkeyAll
-endif
-CVSCO_SEAMONKEY := $(CVSCO) $(CVS_CO_DATE_FLAGS) $(MOZ_CO_MODULE)
 
 ####################################
 # CVS defined for libart (pulled and built if MOZ_INTERNAL_LIBART_LGPL is set)
@@ -424,6 +431,8 @@ real_checkout:
 	cvs_co() { echo "$$@" ; \
 	  ("$$@" || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
 	  if test -f $$failed; then false; else true; fi; }; \
+	$(CHECKOUT_STANDALONE) && \
+	$(CHECKOUT_STANDALONE_NOSUBDIRS) && \
 	cvs_co $(CVSCO_NSPR) && \
 	cvs_co $(CVSCO_NSS) && \
 	cvs_co $(CVSCO_PSM) && \
@@ -434,8 +443,7 @@ real_checkout:
 	$(CHECKOUT_LIBART) && \
 	$(CHECKOUT_PHOENIX) && \
 	$(CHECKOUT_CODESIGHS) && \
-	cvs_co $(CVSCO_SEAMONKEY) && \
-	cvs_co $(CVSCO_NOSUBDIRS)
+	cvs_co $(CVSCO_SEAMONKEY)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
 #	@: Check the log for conflicts. ;
 	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
@@ -495,8 +503,7 @@ real_fast-update:
 	$(FASTUPDATE_LIBART) && \
 	$(FASTUPDATE_PHOENIX) && \
 	$(FASTUPDATE_CODESIGHS) && \
-	fast_update $(CVSCO_SEAMONKEY) && \
-	fast_update $(CVSCO_NOSUBDIRS)
+	fast_update $(CVSCO_SEAMONKEY)
 	@echo "fast_update finish: "`date` | tee -a $(CVSCO_LOGFILE)
 #	@: Check the log for conflicts. ;
 	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
