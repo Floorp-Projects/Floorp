@@ -74,7 +74,6 @@ protected:
   PRBool GrowBuffer();
 
   PRUnichar* mAutoBuffer;
-  PRInt32 mAutoBufferLength;
   PRUnichar* mBuffer;
   PRInt32 mBufferLength;
   PRBool mHasMultibyte;
