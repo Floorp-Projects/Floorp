@@ -549,7 +549,7 @@ ns4xPlugin::_invalidateregion(NPP npp, NPRegion invalidRegion)
     if (NS_OK == peer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&wpeer))
     {
       // XXX nsRegion & NPRegion are typedef'd to the same thing
-      wpeer->InvalidateRegion((nsPluginRegion*) invalidRegion);
+      wpeer->InvalidateRegion((nsPluginRegion)invalidRegion);
       NS_RELEASE(wpeer);
     }
 }
