@@ -278,20 +278,20 @@ class basic_nsAReadableString
 
     public:
 
-      ReadingIterator
+      basic_nsAReadableString<CharT>::ReadingIterator
       BeginReading( PRUint32 aOffset = 0 ) const
         {
           ReadableFragment fragment;
           const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, aOffset);
-          return ReadingIterator(fragment, startPos, *this);
+          return basic_nsAReadableString<CharT>::ReadingIterator(fragment, startPos, *this);
         }
 
-      ReadingIterator
+      basic_nsAReadableString<CharT>::ReadingIterator
       EndReading( PRUint32 aOffset = 0 ) const
         {
           ReadableFragment fragment;
           const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, NS_MAX(0U, Length()-aOffset));
-          return ReadingIterator(fragment, startPos, *this);
+          return basic_nsAReadableString<CharT>::ReadingIterator(fragment, startPos, *this);
         }
 
     public:
@@ -650,7 +650,7 @@ class basic_nsLiteralString
         }
 
       basic_nsLiteralString( const CharT* aLiteral, PRUint32 aLength )
-          : mStart(aLiteral)
+          : mStart(aLiteral),
             mEnd(mStart + aLength)
         {
           // nothing else to do here
@@ -787,9 +787,6 @@ template <class CharT>
 const CharT*
 nsPromiseConcatenation<CharT>::GetReadableFragment( ReadableFragment& aFragment, FragmentRequest aRequest, PRUint32 aPosition ) const
   {
-    const int kLeftString   = 0;
-    const int kRightString  = 1;
-
     int whichString;
 
       // based on the request, pick which string we will forward the |GetReadableFragment()| call into
