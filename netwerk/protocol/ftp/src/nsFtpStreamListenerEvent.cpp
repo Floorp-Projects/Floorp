@@ -19,7 +19,6 @@
 #include "nsFtpStreamListenerEvent.h"
 #include "nsIBufferInputStream.h"
 #include "nscore.h"
-#include "nsIString.h"
 
 
 nsFtpStreamListenerEvent::nsFtpStreamListenerEvent(nsIStreamListener* listener,
@@ -166,15 +165,13 @@ nsMarshalingStreamListener::OnDataAvailable(nsISupports* context,
 
 nsFtpOnStopBindingEvent::~nsFtpOnStopBindingEvent()
 {
-    NS_IF_RELEASE(mMessage);
 }
 
 nsresult
-nsFtpOnStopBindingEvent::Init(nsresult status, nsIString* aMsg)
+nsFtpOnStopBindingEvent::Init(nsresult status, PRUnichar* aMsg)
 {
     mStatus = status;
     mMessage = aMsg;
-    NS_IF_ADDREF(mMessage);
     return NS_OK;
 }
 
@@ -188,7 +185,7 @@ nsFtpOnStopBindingEvent::HandleEvent()
 NS_IMETHODIMP 
 nsMarshalingStreamObserver::OnStopBinding(nsISupports* context,
                                           nsresult aStatus,
-                                          nsIString* aMsg)
+                                          const PRUnichar* aMsg)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;

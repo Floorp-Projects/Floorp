@@ -22,7 +22,6 @@
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "nsIURI.h"
-#include "nsIString.h"
 
 #include "nsString2.h"
 #include "nsIEventQueue.h"
@@ -133,7 +132,7 @@ private:
     void SetSystInternals(void);
     FTP_STATE FindActionState(void);
     FTP_STATE FindGetState(void);
-    nsresult MapResultCodeToString(nsresult aResultCode, nsIString* *aOutMsg);
+    nsresult MapResultCodeToString(nsresult aResultCode, PRUnichar* *aOutMsg);
 
     // Private members
 

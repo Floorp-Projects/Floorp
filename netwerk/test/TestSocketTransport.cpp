@@ -131,7 +131,7 @@ public:
 
   NS_IMETHOD OnStopBinding(nsISupports* context,
                            nsresult aStatus,
-                           nsIString* aMsg);
+                           const PRUnichar* aMsg);
 
   NS_IMETHOD OnStartRequest(nsISupports* context) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -139,7 +139,7 @@ public:
 
   NS_IMETHOD OnStopRequest(nsISupports* context,
                            nsresult aStatus,
-                           nsIString* aMsg) {
+                           const PRUnichar* aMsg) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -206,7 +206,7 @@ InputConsumer::OnDataAvailable(nsISupports* context,
 NS_IMETHODIMP
 InputConsumer::OnStopBinding(nsISupports* context,
                              nsresult aStatus,
-                            nsIString* aMsg)
+                             const PRUnichar* aMsg)
 {
   printf("\n+++ InputConsumer::OnStopBinding (status = %x) +++.  Context = %p\n", aStatus, context);
   mConnection->Lock();
@@ -237,7 +237,7 @@ public:
 
   NS_IMETHOD OnStopBinding(nsISupports* context,
                            nsresult aStatus,
-                           nsIString* aMsg);
+                           const PRUnichar* aMsg);
 
   NS_IMETHOD OnStartRequest(nsISupports* context) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -245,7 +245,7 @@ public:
 
   NS_IMETHOD OnStopRequest(nsISupports* context,
                            nsresult aStatus,
-                           nsIString* aMsg) {
+                           const PRUnichar* aMsg) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -282,7 +282,7 @@ OutputObserver::OnStartBinding(nsISupports* context)
 NS_IMETHODIMP
 OutputObserver::OnStopBinding(nsISupports* context,
                                  nsresult aStatus,
-                                 nsIString* aMsg)
+                                 const PRUnichar* aMsg)
 {
 ///  mConnection->Lock();
 

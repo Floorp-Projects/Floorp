@@ -61,7 +61,7 @@ public:
 
   NS_IMETHOD OnStopBinding(nsISupports* context,
                            nsresult aStatus,
-                           nsIString* aMsg);
+                           const PRUnichar* aMsg);
 
   NS_IMETHOD OnStartRequest(nsISupports* context) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -69,7 +69,7 @@ public:
 
   NS_IMETHOD OnStopRequest(nsISupports* context,
                            nsresult aStatus,
-                           nsIString* aMsg) {
+                           const PRUnichar* aMsg) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -119,7 +119,7 @@ InputTestConsumer::OnDataAvailable(nsISupports* context,
 NS_IMETHODIMP
 InputTestConsumer::OnStopBinding(nsISupports* context,
                          nsresult aStatus,
-                         nsIString* aMsg)
+                         const PRUnichar* aMsg)
 {
   gKeepRunning = 0;
   printf("\n+++ InputTestConsumer::OnStopBinding (status = %x) +++\n", aStatus);
@@ -143,7 +143,7 @@ public:
 
   NS_IMETHOD OnStopBinding(nsISupports* context,
                            nsresult aStatus,
-                           nsIString* aMsg);
+                           const PRUnichar* aMsg);
 
   NS_IMETHOD OnStartRequest(nsISupports* context) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -151,7 +151,7 @@ public:
 
   NS_IMETHOD OnStopRequest(nsISupports* context,
                            nsresult aStatus,
-                           nsIString* aMsg) {
+                           const PRUnichar* aMsg) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -188,7 +188,7 @@ TestWriteObserver::OnStartBinding(nsISupports* context)
 NS_IMETHODIMP
 TestWriteObserver::OnStopBinding(nsISupports* context,
                                  nsresult aStatus,
-                                 nsIString* aMsg)
+                                 const PRUnichar* aMsg)
 {
   printf("\n+++ TestWriteObserver::OnStopBinding (status = %x) +++\n", aStatus);
 

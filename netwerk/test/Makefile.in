@@ -15,6 +15,7 @@
 # Reserved.
 
 DEPTH		= ../..
+
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -23,13 +24,13 @@ IGNORE_MANIFEST=1
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS		=  			\
-			TestSocketIO.cpp \
-			TestSocketInput.cpp \
-			TestSocketTransport.cpp \
-			TestFileInput.cpp \
-			TestProtocols.cpp \
-			$(NULL)
+CPPSRCS =			\
+	TestSocketIO.cpp 	\
+	TestSocketInput.cpp 	\
+	TestSocketTransport.cpp \
+	TestFileInput.cpp 	\
+	TestProtocols.cpp 	\
+	$(NULL)
 
 BASE_LIBS =	     \
 	-lreg	     \
@@ -42,7 +43,6 @@ LIBS =		       \
 	$(NULL)
 
 DEFINES		+= -DUSE_NSREG
-INCLUDES	+= -I$(srcdir)/../public
 
 REQUIRES=libreg xpcom
 

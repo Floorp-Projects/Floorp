@@ -21,7 +21,6 @@
 
 #include "nsIStreamObserver.h"
 class nsIChannel;
-class nsIString;
 
 /* 
     The nsHTTPRequestObserver class is the request writer observer that 
@@ -56,7 +55,7 @@ public:
 
     NS_IMETHOD OnStopBinding(nsISupports* context,
                nsresult aStatus,
-               nsIString* aMsg);
+               const PRUnichar* aMsg);
 
 protected:
 

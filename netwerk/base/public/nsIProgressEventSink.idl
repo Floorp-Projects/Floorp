@@ -19,7 +19,6 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIString;
 
 /**
  * An instance of nsIFfpEventSink should be passed as the eventSink
@@ -39,6 +38,6 @@ interface nsIProgressEventSink : nsISupports
     /**
      * Notify the EventSink with a status message for the URL load.<BR>
      */
-    void OnStatus(in nsISupports ctxt, in nsIString aMsg);
+    void OnStatus(in nsISupports ctxt, in wstring aMsg);
 
 };

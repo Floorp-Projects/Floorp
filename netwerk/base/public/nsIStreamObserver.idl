@@ -18,7 +18,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIString;
 interface nsIEventQueue;
 
 [scriptable, uuid(fd91e2e0-1481-11d3-9333-00104ba0fd40)]
@@ -28,7 +27,7 @@ interface nsIStreamObserver : nsISupports
 
     void OnStopBinding(in nsISupports ctxt, 
                        in nsresult status,
-                       in nsIString errorMsg);
+                       in wstring errorMsg);
 
     /**
      * Called after the stream is opened for reading or writing.
@@ -39,7 +38,7 @@ interface nsIStreamObserver : nsISupports
 
     void OnStopRequest(in nsISupports ctxt,
                        in nsresult status,
-                       in nsIString errorMsg);
+                       in wstring errorMsg);
 };
 
 %{C++

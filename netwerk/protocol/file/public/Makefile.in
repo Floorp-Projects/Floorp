@@ -18,13 +18,14 @@
 MODULE = netwerk
 
 DEPTH = ../../../..
+
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 XPIDL_MODULE = netwerk_file
 
-XPIDLSRCS =                  \
+XPIDLSRCS =                \
         nsIFileChannel.idl \
         $(NULL)
 

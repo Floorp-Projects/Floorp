@@ -13,11 +13,13 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-
 DEPTH = ../../../..
+
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+
+MODULE = netwerk
 
 LIBRARY_NAME = fileprotocol
 
@@ -32,8 +34,6 @@ CPPSRCS =			  \
         $(NULL)
 
 REQUIRES = xpcom netwerk raptor
-
-MODULE = netwerk
 
 include $(topsrcdir)/config/config.mk
 

@@ -901,7 +901,7 @@ nsHTTPRequest::OnStartBinding(nsISupports* i_pContext)
 NS_IMETHODIMP
 nsHTTPRequest::OnStopBinding(nsISupports* i_pContext,
                                  nsresult iStatus,
-                                 nsIString* i_pMsg)
+                                 const PRUnichar* i_pMsg)
 {
     //printf("nsHTTPRequest::OnStopBinding...\n");
     // if we could write successfully... 
@@ -941,7 +941,7 @@ nsHTTPRequest::OnStartRequest(nsISupports* i_pContext)
 NS_IMETHODIMP
 nsHTTPRequest::OnStopRequest(nsISupports* i_pContext,
                              nsresult iStatus,
-                             nsIString* i_pMsg)
+                             const PRUnichar* i_pMsg)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -238,7 +238,7 @@ nsFTPChannel::OnStartBinding(nsISupports* context) {
 NS_IMETHODIMP
 nsFTPChannel::OnStopBinding(nsISupports* context,
                             nsresult aStatus,
-                            nsIString* aMsg) {
+                            const PRUnichar* aMsg) {
     // Release the lock so the user get's the data stream
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -251,7 +251,7 @@ nsFTPChannel::OnStartRequest(nsISupports* context) {
 NS_IMETHODIMP
 nsFTPChannel::OnStopRequest(nsISupports* context,
                             nsresult aStatus,
-                            nsIString* aMsg) {
+                            const PRUnichar* aMsg) {
     // Release the lock so the user get's the data stream
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -241,9 +241,9 @@ public:
     NS_IMETHOD OnStartBinding(nsISupports* context);
     NS_IMETHOD OnStopBinding(nsISupports* context,
                nsresult aStatus,
-               nsIString* aMsg);
+               const PRUnichar* aMsg);
     NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, nsIString *errorMsg);
+    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
     // Finally our own methods...
     /*

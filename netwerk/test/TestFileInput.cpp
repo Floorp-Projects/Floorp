@@ -133,16 +133,12 @@ public:
 
     NS_IMETHOD OnStopBinding(nsISupports* context,
                              nsresult aStatus,
-                             nsIString* aMsg) {
+                             const PRUnichar* aMsg) {
         nsresult rv;
         PR_EnterMonitor(mMonitor);
-        if (aStatus == NS_OK) {
-            PRIntervalTime endTime = PR_IntervalNow();
-            gDuration += (endTime - mStartTime);
-        }
-        else {
-            printf("stop binding, %d\n", aStatus);
-        }
+        PRIntervalTime endTime = PR_IntervalNow();
+        gDuration += (endTime - mStartTime);
+        printf("stop binding, %d\n", aStatus);
         PR_ExitMonitor(mMonitor);
 
         // get me out of my event loop
@@ -158,7 +154,7 @@ public:
 
     NS_IMETHOD OnStopRequest(nsISupports* context,
                              nsresult aStatus,
-                             nsIString* aMsg) {
+                             const PRUnichar* aMsg) {
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
@@ -224,11 +220,13 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     rv = NS_NewBufferInputStream(&bufStr, buf);
     if (NS_FAILED(rv)) goto done;
 
+    /*
     if ( spec.GetFileSize() == 0) goto done;
+    */
 
     while (PR_TRUE) {
         PRUint32 amt;
-		/* id'l change to FillFrom... */
+		    /* id'l change to FillFrom... */
         rv = bufStr->FillFrom(fileStr, spec.GetFileSize(), &amt);
         if (rv == NS_BASE_STREAM_EOF) {
             rv = NS_OK;
