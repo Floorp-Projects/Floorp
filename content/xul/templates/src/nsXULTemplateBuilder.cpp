@@ -71,7 +71,7 @@
 #include "nsIHTMLContent.h"
 #include "nsRDFGenericBuilder.h"
 
-#define	XUL_TEMPLATES	1
+// #define	XUL_TEMPLATES	1
 
 ////////////////////////////////////////////////////////////////////////
 
