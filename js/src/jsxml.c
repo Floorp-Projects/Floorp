@@ -2431,6 +2431,17 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
     return prefix;
 }
 
+static JSBool
+namespace_match(const void *a, const void *b)
+{
+    const JSXMLNamespace *nsa = (const JSXMLNamespace *) a;
+    const JSXMLNamespace *nsb = (const JSXMLNamespace *) b;
+
+    if (nsb->prefix)
+        return nsa->prefix && !js_CompareStrings(nsa->prefix, nsb->prefix);
+    return !js_CompareStrings(nsa->uri, nsb->uri);
+}
+
 /* ECMA-357 10.2.1 and 10.2.2 */
 static JSString *
 XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
@@ -2616,7 +2627,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
          * Assign the new prefix to a copy of ns.  Flag this namespace as if
          * it were declared, for assertion-testing's sake later below.
          *
-         * Erratum: ns->prefix and xml->name are both null (*undefined* in
+         * Erratum: if ns->prefix and xml->name are both null (*undefined* in
          * ECMA-357), we know that xml was named using the default namespace
          * (proof: see GetNamespace and the Namespace constructor called with
          * two arguments).  So we ought not generate a new prefix here, when
@@ -2635,6 +2646,25 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         ns = js_NewXMLNamespace(cx, prefix, ns->uri, JS_TRUE);
         if (!ns)
             goto out;
+
+        /*
+         * If the xml->name was unprefixed, we must remove any declared default
+         * namespace from decls before appending ns.  How can you get a default
+         * namespace in decls that doesn't match the one from name?  Apparently
+         * by calling x.setNamespace(ns) where ns has no prefix.  The other way
+         * to fix this is to update x's in-scope namespaces when setNamespace
+         * is called, but that's not specified by ECMA-357.
+         *
+         * Likely Erratum here, depending on whether the lack of update to x's
+         * in-scope namespace in XML.prototype.setNamespace (13.4.4.36) is an
+         * erratum or not.  Note that changing setNamespace to update the list
+         * of in-scope namespaces will change x.namespaceDeclarations().
+         */
+        if (IS_EMPTY(prefix)) {
+            i = XMLArrayFindMember(&decls, ns, namespace_match);
+            if (i != XML_NOT_FOUND)
+                XMLArrayDelete(cx, &decls, i, JS_TRUE);
+        }
 
         /*
          * In the spec, ancdecls has no name, but is always written out as
@@ -5940,17 +5970,6 @@ xml_namespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         *rval = (i < length) ? OBJECT_TO_JSVAL(ns->object) : JSVAL_VOID;
     }
     return JS_TRUE;
-}
-
-static JSBool
-namespace_match(const void *a, const void *b)
-{
-    const JSXMLNamespace *nsa = (const JSXMLNamespace *) a;
-    const JSXMLNamespace *nsb = (const JSXMLNamespace *) b;
-
-    if (nsb->prefix)
-        return nsa->prefix && !js_CompareStrings(nsa->prefix, nsb->prefix);
-    return !js_CompareStrings(nsa->uri, nsb->uri);
 }
 
 static JSBool
