@@ -19,6 +19,7 @@
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
  *   Dan Rosen <dr@netscape.com>
+ *   Ben Goodger <ben@netscape.com>
  */
 
 // Local includes
@@ -699,18 +700,18 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
   PRInt32 specY = currY;
   PRInt32 specWidth = currWidth;
   PRInt32 specHeight = currHeight;
-  nsAutoString sizeString;
+  nsAutoString posString, sizeString;
 
-  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("screenX"), sizeString);
+  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("screenX"), posString);
   if (NS_SUCCEEDED(rv)) {
-    temp = sizeString.ToInteger(&errorCode);
+    temp = posString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0)
       specX = temp;
   }
 
-  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("screenY"), sizeString);
+  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("screenY"), posString);
   if (NS_SUCCEEDED(rv)) {
-    temp = sizeString.ToInteger(&errorCode);
+    temp = posString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0)
       specY = temp;
   }
@@ -720,7 +721,6 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
     temp = sizeString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0) {
       specWidth = temp;
-      mIntrinsicallySized = PR_FALSE;
     }
   }
   rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("height"), sizeString);
@@ -728,7 +728,6 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
     temp = sizeString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0) {
       specHeight = temp;
-      mIntrinsicallySized = PR_FALSE;
     }
   }
 
@@ -775,16 +774,18 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
   }
 
   // Now set position and size.
-  if (aSize) {
-    if (specWidth != currWidth || specHeight != currHeight)
-      SetSize(specWidth, specHeight, PR_FALSE);
-  }
-
   if (aPosition) {
     mWindow->ConstrainPosition(&specX, &specY);
     if (specX != currX || specY != currY)
       SetPosition(specX, specY);
+  }
 
+  if (aSize) {
+    if (specWidth != currWidth || specHeight != currHeight) {
+      mIntrinsicallySized = PR_FALSE;
+      SetSize(specWidth, specHeight, PR_FALSE);
+    }
+  
     rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("sizemode"), sizeString);
     if (NS_SUCCEEDED(rv)) {
       mSizeMode = nsSizeMode_Normal;
@@ -797,7 +798,7 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
       // defer telling the widget until we're visible
     }
   }
-
+  
   return NS_OK;
 }
 
