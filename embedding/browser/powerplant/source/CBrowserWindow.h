@@ -74,6 +74,7 @@ private:
 
     friend class CWebBrowserChrome;	
     friend class CWindowCreator;
+    friend class CBrowserShell;
 
 public:
 	enum { class_ID = FOUR_CHAR_CODE('BroW') };

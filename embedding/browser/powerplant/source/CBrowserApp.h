@@ -69,6 +69,7 @@ public:
 protected:
 		
 	virtual void            StartUp();			// override startup functions
+	virtual nsresult        OverrideComponents();
 	virtual void		    MakeMenuBar();
 
 	virtual nsresult        InitializePrefs();
