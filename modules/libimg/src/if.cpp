@@ -1041,6 +1041,7 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
     case IL_XBM : PL_strcpy(imgtype, "xbm"); break;
     case IL_JPEG : PL_strcpy(imgtype, "jpeg"); break;
     case IL_PNG : PL_strcpy(imgtype, "png"); break;
+	case IL_ART : PL_strcpy(imgtype, "art"); break;
     default : PL_strcpy(imgtype, "");
     }
 
