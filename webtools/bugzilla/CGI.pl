@@ -191,7 +191,7 @@ sub ProcessMultipartFormFields {
 
         # If the current input line is a boundary line, save the previous
         # form value and reset the storage variables.
-        if ($_ =~ m/^-*$boundary/) {
+        if ($_ =~ m/^-*\Q$boundary\E/) {
             if ( $fieldname ) {
                 chomp($fieldvalue);
                 $fieldvalue =~ s/\r$//;
