@@ -3,6 +3,15 @@ XML {
   background-color: inherit;
 }
 
+
+Book {
+  display: block;
+  padding-left: 8px;
+  padding-top: 8px;
+  font-family: Courier;
+  font-size: 10pt;
+}
+
 Abbrev {
   display: block;
 }
@@ -251,6 +260,7 @@ Link {
 ListItem {
   margin-left: 25pt;
   display: list-item;
+  list-style-position: inside;
 }
 
 Literal {
@@ -365,7 +375,7 @@ RefEntry {
 
 RefEntryTitle {
   display: block;
-  font-size: 20em;
+  font-size: 20pt;
   font-weight: bold;
 }
 
