@@ -262,7 +262,9 @@
     <menu label="&cookiePopupManager.label;"
           accesskey="&cookiePopupManager.accesskey;"
           id="popup"
-          insertbefore="navBeginGlobalItems">
+          insertbefore="navBeginGlobalItems"
+          oncommand="popupBlockerMenuCommand(event.target);"
+          onpopupshowing="return popupBlockerMenuShowing(event)" >
       <menupopup>
         <menuitem id="AllowPopups" label="&cookieAllowPopupsCmd.label;"
                   accesskey="&cookieAllowPopupsCmd.accesskey;" 
@@ -275,6 +277,9 @@
                   accesskey="&cookieManagePopups.accesskey;"
                   oncommand="OpenManagePopups('');"
                   hidden="true"/>
+        <menuseparator id="popupMenuSeparator" hidden="true"/>
+        <!-- Additional items are generated, see popupBlockerMenuShowing()
+             in navigator.js -->
       </menupopup>
     </menu>
   </menupopup>
