@@ -389,6 +389,14 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
   if (!docShell) return NS_ERROR_FAILURE;  
 
+  // Flush out frame construction to make sure that the subframe's
+  // presshell is set up if it needs to be.
+  // XXXbz we really shouldn't need a presShell/presContext here!
+  nsCOMPtr<nsIDocument> document(do_QueryInterface(doc));
+  if (document) {
+    document->FlushPendingNotifications(Flush_Frames);
+  }
+  
   nsCOMPtr<nsIPresShell> presShell;
   rv = docShell->GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(rv)) return rv;
