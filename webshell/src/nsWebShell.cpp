@@ -1200,13 +1200,31 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
   // if no scheme (protocol) is found, assume http.
   if ( ((colon=urlSpec.Find(':')) == -1) // no colon at all
-      || ( (fSlash > -1) && (colon > fSlash) ) // the only colon comes after the first slash
-      || ( (colon < urlSpec.Length()-1) // the first char after the first colon is a digit (i.e. a port)
-            && ((port=urlSpec.CharAt(colon+1)) < '9')
-            && (port > '0') )
-      ) {
-    nsString httpDef("http://");
-    urlSpec.Insert(httpDef, 0, 7);
+       || ( (fSlash > -1) && (colon > fSlash) ) // the only colon comes after the first slash
+       || ( (colon < urlSpec.Length()-1) // the first char after the first colon is a digit (i.e. a port)
+            && ((port=urlSpec.CharAt(colon+1)) <= '9')
+            && (port > '0') )) {
+    // find host name
+    int hostPos = urlSpec.FindCharInSet("./:");
+    if (hostPos == -1) {
+      hostPos = urlSpec.Length();
+    }
+
+    // extract host name
+    nsAutoString hostSpec;
+    urlSpec.Left(hostSpec, hostPos);
+
+    // insert url spec corresponding to host name
+    if (hostSpec.EqualsIgnoreCase("www")) {
+      nsString ftpDef("http://");
+      urlSpec.Insert(ftpDef, 0, 7);
+    } else if (hostSpec.EqualsIgnoreCase("ftp")) {
+      nsString ftpDef("ftp://");
+      urlSpec.Insert(ftpDef, 0, 6);
+    } else {
+      nsString httpDef("http://");
+      urlSpec.Insert(httpDef, 0, 7);
+    }
   }
 
   // Give web-shell-container right of refusal
