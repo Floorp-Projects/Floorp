@@ -104,6 +104,17 @@ public:
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
+  
+  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList);
+
+  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame);
 
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
@@ -221,38 +232,6 @@ protected:
                            RowGroupReflowState& aReflowState,
                            nsReflowStatus&      aStatus);
 
-  NS_IMETHOD IR_RowInserted(nsIPresContext&      aPresContext,
-                            nsHTMLReflowMetrics& aDesiredSize,
-                            RowGroupReflowState& aReflowState,
-                            nsReflowStatus&      aStatus,
-                            nsTableRowFrame *    aInsertedFrame,
-                            PRBool               aReplace);
-
-  NS_IMETHOD IR_RowAppended(nsIPresContext&      aPresContext,
-                            nsHTMLReflowMetrics& aDesiredSize,
-                            RowGroupReflowState& aReflowState,
-                            nsReflowStatus&      aStatus,
-                            nsTableRowFrame *    aAppendedFrame);
-
-  NS_IMETHOD IR_RowRemoved(nsIPresContext&      aPresContext,
-                           nsHTMLReflowMetrics& aDesiredSize,
-                           RowGroupReflowState& aReflowState,
-                           nsReflowStatus&      aStatus,
-                           nsTableRowFrame *    aDeletedFrame);
-
-  NS_IMETHOD IR_RowGroupInserted(nsIPresContext&        aPresContext,
-                                 nsHTMLReflowMetrics&   aDesiredSize,
-                                 RowGroupReflowState&   aReflowState,
-                                 nsReflowStatus&        aStatus,
-                                 nsTableRowGroupFrame * aInsertedFrame,
-                                 PRBool                 aReplace);
-
-  NS_IMETHOD IR_RowGroupRemoved(nsIPresContext&         aPresContext,
-                                nsHTMLReflowMetrics&    aDesiredSize,
-                                RowGroupReflowState&    aReflowState,
-                                nsReflowStatus&         aStatus,
-                                nsTableRowGroupFrame *  aDeletedFrame);
-
   NS_IMETHOD IR_StyleChanged(nsIPresContext&      aPresContext,
                              nsHTMLReflowMetrics& aDesiredSize,
                              RowGroupReflowState& aReflowState,
@@ -306,6 +285,10 @@ protected:
                                       RowGroupReflowState& aReflowState,
                                       nsReflowStatus&      aStatus,
                                       nsReflowReason       aReason) { return NS_OK; };
+
+  nsresult AddTableDirtyReflowCommand(nsIPresContext& aPresContext,
+                                      nsIPresShell&   aPresShell,
+                                      nsIFrame*       aTableFrame);
 
   virtual nsIFrame* GetFirstFrameForReflow(nsIPresContext& aPresContext) { return mFrames.FirstChild(); };
   virtual void GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFrame* aFrame, nsIFrame** aResult) { aFrame->GetNextSibling(aResult); };
