@@ -181,6 +181,9 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
       case eBorderStyle_window:
         mBorderStyle = GTK_WINDOW_TOPLEVEL;
         break;
+      case eBorderStyle_BorderlessTopLevel:
+      	mBorderStyle = GTK_WINDOW_POPUP;
+        break;
       case eBorderStyle_3DChildWindow:
         break;
     }
@@ -214,7 +217,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 
   if (!parentWidget) {
 
-//  mainWindow = gtk_window_new(mBorderStyle);
+    // mainWindow = gtk_window_new(mBorderStyle);
     mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_default_size(GTK_WINDOW(mShell), 
                                 mBounds.width,
@@ -236,7 +239,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                                   (GdkWindowHints) (GDK_HINT_MIN_SIZE |
                                                     GDK_HINT_RESIZE_INC));
 
-// VBox for the menu, etc.
+    // VBox for the menu, etc.
     mVBox = gtk_vbox_new(PR_FALSE, 0);
     gtk_widget_show (mVBox);
     gtk_container_add(GTK_CONTAINER(mShell), mVBox);
@@ -255,6 +258,35 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
     nsClipboard::SetTopLevelWidget(mShell);
   }
 
+
+
+  if (mBorderStyle == GTK_WINDOW_POPUP)
+  {
+
+    mShell = gtk_window_new(GTK_WINDOW_POPUP);
+    gtk_window_set_default_size(GTK_WINDOW(mShell), 
+                                mBounds.width,
+                                mBounds.height);
+    gtk_widget_show (mShell);
+
+    gtk_container_add(GTK_CONTAINER(mShell), mWidget);
+
+    // Distinguish top-level windows from child windows
+    mIsToplevel = PR_TRUE;
+
+
+    // is this needed?
+    /*
+      gtk_signal_connect(GTK_OBJECT(mShell),
+      "delete_event",
+      GTK_SIGNAL_FUNC(handle_delete_event),
+      this);
+    */
+    // XXX Hack, give the clipboard class a pointer to
+    // any top-level window, how about mShell.
+    nsClipboard::SetTopLevelWidget(mShell);
+  }
+  
   // Force cursor to default setting
   gtk_widget_set_name(mWidget, "nsWindow");
   mCursor = eCursor_select;
