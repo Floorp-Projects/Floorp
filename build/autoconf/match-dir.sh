@@ -39,30 +39,15 @@ fi
 
 # Use DEPTH in the Makefile.in to determine the depth
 depth=`grep -w DEPTH ${MAKEFILE}  | grep -e "\.\." | awk -F"=" '{ print $2; }'`
+cwd=`pwd`
 
 # Determine the depth count
 n=`echo $depth | tr '/' ' ' | wc -w`
 
-# Determine the path (strip anything before the mozilla/ root)
-# If we are building in the source directory then the Makefile will have
-# srcdir set to '.' and we have to get the path from the pwd command.
-# If we are building outside of the source tree then we can get the information
-# we need from the srcdir statement in the Makefile.
+cd $depth
+objdir=`pwd`
 
-tpth=`grep '^srcdir.*/mozilla/' ${MAKEFILE}`
-if [ "$tpth" = "" ]; then
-	tpth=`pwd`
-fi
-
-path=`echo $tpth | awk -v count=$n -F"/" '\
-{ for(i=NF-count+0; i <= NF ; i++) \
-{ \
-if (i!=NF) \
-  { printf "%s/", $i } \
-else \
-  { printf "%s", $i } \
-} \
-}'`
+path=`echo $cwd | sed "s|^${objdir}/||"`
 
 match=$path
 
