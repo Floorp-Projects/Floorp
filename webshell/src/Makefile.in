@@ -41,6 +41,7 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-ljsdom \
 		$(MOZ_COMPONENT_LIBS) \
+		-ldocshell \
 		$(NULL)
 ifdef MOZ_PERF
 EXTRA_DSO_LDOPTS += \
@@ -51,4 +52,6 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_WEB
-
+INCLUDES	+= \
+		-I$(topsrcdir)/docshell/base \
+		$(NULL)
