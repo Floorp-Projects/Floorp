@@ -38,7 +38,7 @@
 #include <windows.h>
 #include "nsINativeAppSupportWin.h"
 
-1 24 "mozbrowser.exe.manifest"
+1 24 "phoenix.exe.manifest"
 
 // Program icon.
 IDI_APPLICATION ICON
