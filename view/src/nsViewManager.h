@@ -26,6 +26,7 @@
 #include "nsITimer.h"
 #include "prtime.h"
 #include "nsVoidArray.h"
+#include "nsIScrollableView.h"
 
 class nsViewManager : public nsIViewManager
 {
@@ -109,6 +110,9 @@ public:
   NS_IMETHOD  DisableRefresh(void);
   NS_IMETHOD  EnableRefresh(void);
 
+  NS_IMETHOD SetRootScrollableView(nsIScrollableView *aScrollable);
+  NS_IMETHOD GetRootScrollableView(nsIScrollableView **aScrollable);
+
   nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds);
 
   NS_IMETHOD Display(nsIView *aView);
@@ -126,11 +130,14 @@ private:
                nsIRegion *region, PRUint32 aUpdateFlags);
   void Refresh(nsIView* aView, nsIRenderingContext *aContext,
                const nsRect *rect, PRUint32 aUpdateFlags);
-  void FlattenViewTree(nsIView *aView, PRInt32 *aIndex,
-                       nsIView *aTopView = nsnull, nsVoidArray *aArray = nsnull,
-                       nscoord aX = 0, nscoord aY = 0);
   void RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect,
                    PRBool &aResult);
+  void RenderView(nsIView *aView, nsIRenderingContext &aRC,
+                  const nsRect &aDamageRect, nsRect &aGlobalRect, PRBool &aResult);
+  void FlattenViewTree(nsIView *aView, PRInt32 *aIndex, const nsRect *aDamageRect = nsnull,
+                       nsIView *aTopView = nsnull, nsVoidArray *aArray = nsnull,
+                       nscoord aX = 0, nscoord aY = 0);
+  PRBool DoesViewHaveNativeWidget(nsIView &aView);
 
 
   nsIDeviceContext  *mContext;
@@ -144,10 +151,18 @@ private:
   nsIView           *mKeyGrabber;
   PRInt32           mUpdateCnt;
   nsVoidArray       *mFlatViews;
+  nsIScrollableView *mRootScrollable;
 
   static PRUint32          mVMCount;        //number of viewmanagers
   static nsDrawingSurface  mDrawingSurface; //single drawing surface
   static nsRect            mDSBounds;       //for all VMs
+
+  //blending buffers
+  nsDrawingSurface  gOffScreen;
+  nsDrawingSurface  gRed;
+  nsDrawingSurface  gBlue;
+  PRInt32           gBlendWidth;
+  PRInt32           gBlendHeight;
 
 public:
   //these are public so that our timer callback can poke them.

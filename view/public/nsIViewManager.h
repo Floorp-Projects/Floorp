@@ -28,6 +28,7 @@ class nsIRegion;
 class nsIEvent;
 class nsIPresContext;
 class nsIView;
+class nsIScrollableView;
 class nsIWidget;
 struct nsRect;
 
@@ -354,6 +355,22 @@ public:
    * @return error status
    */
   NS_IMETHOD EnableRefresh(void) = 0;
+
+  /**
+   * set the view that is is considered to be the root scrollable
+   * view for the document.
+   * @param aScrollable root scrollable view
+   * @return error status
+   */
+  NS_IMETHOD SetRootScrollableView(nsIScrollableView *aScrollable) = 0;
+
+  /**
+   * get the view that is is considered to be the root scrollable
+   * view for the document.
+   * @param aScrollable out parameter for root scrollable view
+   * @return error status
+   */
+  NS_IMETHOD GetRootScrollableView(nsIScrollableView **aScrollable) = 0;
 
   /**
    * Display the specified view. Used when printing.
