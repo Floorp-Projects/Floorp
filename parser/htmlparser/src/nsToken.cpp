@@ -140,31 +140,6 @@ CToken::~CToken() {
 }
 
 /**
- * 
- * @update	harishd 08/01/00
- * @param   aSize    - 
- * @param   aArena   - Allocate memory from this pool.
- */
-void *
-CToken::operator new (size_t aSize, nsFixedSizeAllocator& anArena)
-{
-  return (CToken*)anArena.Alloc(aSize);
-}
-
-/**
- *  
- *
- * @update	harishd 08/01/00
- * @param   aPtr     - The memory that should be recycled/freed.
- * @param   aSize    - The size of memory that needs to be freed.
- */
-void
-CToken::operator delete (void* aPtr,size_t aSize)
-{
-  nsFixedSizeAllocator::Free(aPtr,aSize);
-}
-
-/**
  * This method gets called when a token is about to be reused
  * for some other purpose. The token should initialize itself 
  * to some reasonable default values.
