@@ -47,6 +47,7 @@ extern int MK_SIGNON_YOUR_SIGNONS;
 static PRMonitor * signon_lock_monitor = NULL;
 static PRThread  * signon_lock_owner = NULL;
 static int signon_lock_count = 0;
+static Bool si_anonymous = FALSE;
 
 PRIVATE void
 si_lock_signon_list(void)
@@ -979,8 +980,13 @@ si_SaveSignonDataLocked(char * filename) {
 	return(-1);
     }
 
-    /* do nothing is signon list is empty */
-    if(XP_ListIsEmpty(si_signon_list)) {
+    /* do nothing is signon list doesn't exist */
+    if(!(si_signon_list)) {
+	return(-1);
+    }
+
+    /* do not save signons if in anonymous mode */
+    if(si_anonymous) {
 	return(-1);
     }
 
@@ -1074,11 +1080,6 @@ SI_SaveSignonData(char * filename) {
 
 PUBLIC void
 SI_RemoveAllSignonData() {
-
-    /* do nothing if signon preference is not enabled */
-    if (!si_GetSignonRememberingPref()) {
-	return;
-    }
 
     /* repeatedly remove first user node of first URL node */
     while (SI_RemoveUser(NULL, NULL, FALSE)) {
@@ -1533,6 +1534,32 @@ SI_Prompt (MWContext *context, char *prompt,
     return result;
 }
 
+PRIVATE XP_List * si_dormant_signon_list=0;
+
+PUBLIC void
+SI_AnonymizeSignons()
+{
+    if (!si_anonymous) {
+	si_lock_signon_list();
+	si_dormant_signon_list = si_signon_list;
+	si_signon_list = XP_ListNew();
+	si_unlock_signon_list();
+	si_anonymous = TRUE;
+    }
+}
+
+PUBLIC void
+SI_UnanonymizeSignons()
+{
+    if (si_anonymous) {
+	SI_RemoveAllSignonData();
+	si_lock_signon_list();
+	si_signon_list = si_dormant_signon_list;
+	si_unlock_signon_list();
+	si_dormant_signon_list = 0;
+	si_anonymous = FALSE;
+    }
+}
 #include "mkgeturl.h"
 #include "htmldlgs.h"
 extern int XP_EMPTY_STRINGS;
