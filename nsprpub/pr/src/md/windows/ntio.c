@@ -238,8 +238,13 @@ _PR_MD_PAUSE_CPU(PRIntervalTime ticks)
 #if 0
         timeout = INFINITE;
 #else
-    /* temporary hack to poll the runq every 5 seconds because of bug in
+    /*
+     * temporary hack to poll the runq every 5 seconds because of bug in
      * native threads creating user threads and not poking the right cpu.
+     *
+     * A local thread that was interrupted is bound to its current
+     * cpu but there is no easy way for the interrupter to poke the
+     * right cpu.  This is a hack to poll the runq every 5 seconds.
      */
         timeout = 5000;
 #endif
