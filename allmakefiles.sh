@@ -1005,6 +1005,11 @@ if [ "$NS_TRACE_MALLOC" ]; then
     MAKEFILES_tracemalloc="tools/trace-malloc/Makefile"
 fi
 
+# tools/codesighs
+if [ "$MOZ_MAPINFO" ]; then
+    MAKEFILES_codesighs="tools/codesighs/Makefile"
+fi
+
 # MathML
 if [ "$MOZ_MATHML" ]; then
     MAKEFILES_intl="$MAKEFILES_intl
@@ -1201,6 +1206,7 @@ $MAKEFILES_dbm
 $MAKEFILES_docshell
 $MAKEFILES_dom
 $MAKEFILES_editor
+$MAKEFILES_codesighs
 $MAKEFILES_composer
 $MAKEFILES_embedding
 $MAKEFILES_expat
