@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.15 $ 
-# $Date: 2002/04/26 00:44:23 $ 
+# $Revision: 1.16 $ 
+# $Date: 2002/04/26 00:49:22 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -424,6 +424,11 @@ sub backward_compatibility {
     $TINDERBOX{'builddate'} = undef;
   }
 
+  if ($TINDERBOX{'build'}) {
+    $TINDERBOX{'buildname'} = $TINDERBOX{'build'};
+    $TINDERBOX{'buildname'} = undef;
+  }
+
   return 1;
 }
 
@@ -506,7 +511,6 @@ sub check_required_vars {
 
   my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::line_type";
   my ($ignore) = eval &$func(@_);    
-  
   ($@) &&
     ($err_string .= "Errorparser: '$TINDERBOX{'errorparser'}::line_type'".
      " does not exist.\n");
