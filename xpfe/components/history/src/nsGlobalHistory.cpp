@@ -54,6 +54,7 @@
 #include "prprf.h"
 #include "prtime.h"
 #include "rdf.h"
+#include "nsIRDFRemoteDataSource.h"
 
 #include "nsMdbPtr.h"
 #include "nsInt64.h"
@@ -287,7 +288,8 @@ nsMdbTableEnumerator::GetNext(nsISupports** _result)
 //
 
 class nsGlobalHistory : public nsIGlobalHistory,
-                        public nsIRDFDataSource
+                        public nsIRDFDataSource,
+                        public nsIRDFRemoteDataSource
 {
 public:
   // nsISupports methods 
@@ -295,6 +297,9 @@ public:
 
   // nsIGlobalHistory
   NS_DECL_NSIGLOBALHISTORY
+
+  // nsIRDFRemoteDataSource
+  NS_DECL_NSIRDFREMOTEDATASOURCE
 
   // nsIRDFDataSource
   NS_IMETHOD GetURI(char* *aURI);
@@ -546,7 +551,7 @@ NS_NewGlobalHistory(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 NS_IMPL_ADDREF(nsGlobalHistory);
 NS_IMPL_RELEASE(nsGlobalHistory);
-NS_IMPL_QUERY_INTERFACE2(nsGlobalHistory, nsIGlobalHistory, nsIRDFDataSource)
+NS_IMPL_QUERY_INTERFACE3(nsGlobalHistory, nsIGlobalHistory, nsIRDFDataSource, nsIRDFRemoteDataSource)
 
 //----------------------------------------------------------------------
 //
@@ -1441,6 +1446,61 @@ nsGlobalHistory::GetAllResources(nsISimpleEnumerator** aResult)
   NS_ADDREF(*aResult);
   return NS_OK;
 }
+
+
+
+////////////////////////////////////////////////////////////////////////
+// nsIRDFRemoteDataSource
+
+NS_IMETHODIMP
+nsGlobalHistory::GetLoaded(PRBool* _result)
+{
+    *_result = PR_TRUE;
+    return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsGlobalHistory::Init(const char* aURI)
+{
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+nsGlobalHistory::Refresh(PRBool aBlocking)
+{
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+nsGlobalHistory::Flush()
+{
+	nsMdbPtr<nsIMdbThumb> thumb(mEnv);
+	mdb_err err;
+
+	err = mStore->LargeCommit(mEnv, getter_Acquires(thumb));
+	if (err != 0) return NS_ERROR_FAILURE;
+
+	mdb_count total;
+	mdb_count current;
+	mdb_bool done;
+	mdb_bool broken;
+
+	do
+	{
+		err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
+	} while ((err == 0) && !broken && !done);
+
+	if ((err != 0) || !done) return NS_ERROR_FAILURE;
+
+	return(NS_OK);
+}
+
 
 
 //----------------------------------------------------------------------
