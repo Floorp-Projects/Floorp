@@ -109,6 +109,7 @@ const char *cipherString;
 
 int certsTested;
 int MakeCertOK;
+int NoReuse;
 
 void
 disableSSL2Ciphers(void)
@@ -169,7 +170,7 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
     	"Usage: %s [-n rsa_nickname] [-p port] [-d dbdir] [-c connections]\n"
-	"          [-v] [-f fortezza_nickname] [-2 filename]\n"
+	"          [-v] [-N] [-f fortezza_nickname] [-2 filename]\n"
 	"          [-w dbpasswd] [-C cipher(s)] hostname\n",
 	progName);
     exit(1);
@@ -896,6 +897,13 @@ client_main(
 	}
     }
 
+    if (NoReuse) {
+	rv = SSL_Enable(model_sock, SSL_NO_CACHE, 1);
+	if (rv < 0) {
+	    errExit("SSL_Enable SSL_NO_CACHE");
+	}
+    }
+
     SSL_SetURL(model_sock, hostName);
 
     SSL_AuthCertificateHook(model_sock, mySSLAuthCertificate, 
@@ -998,7 +1006,7 @@ main(int argc, char **argv)
     progName = progName ? progName + 1 : tmp;
  
 
-    optstate = PL_CreateOptState(argc, argv, "2:C:c:d:f:n:op:vw:");
+    optstate = PL_CreateOptState(argc, argv, "2:C:Nc:d:f:n:op:vw:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch(optstate->option) {
 
@@ -1007,6 +1015,10 @@ main(int argc, char **argv)
 	    break;
 	case 'C':
 	    cipherString = optstate->value;
+	    break;
+
+	case 'N':
+	    NoReuse = 1;
 	    break;
 
 	case 'c':
