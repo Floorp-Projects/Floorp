@@ -548,13 +548,13 @@
      
     <!-- Editor toolbar items -->
     <!-- note that we override the submenu item label "Blank Window" with "New" used for the menu -->
-    <titledbutton id="newButton"   src="&newEditorIcon.url;"     observes="cmd_newEditor" value="&newMenu.label;" />
-    <titledbutton id="openButton"  src="&openEditorIcon.url;"    observes="Editor:Open"/>
-    <titledbutton id="saveButton"  src="&saveIcon.url;"          observes="Editor:Save"/>
+    <titledbutton id="newButton"   class="button28" src="&newEditorIcon.url;"     observes="cmd_newEditor" value="&newMenu.label;" />
+    <titledbutton id="openButton"  class="button28" src="&openEditorIcon.url;"    observes="Editor:Open"/>
+    <titledbutton id="saveButton"  class="button28" src="&saveIcon.url;"          observes="Editor:Save"/>
     <titledbutton id="printButton" src="&printIcon.url;"         observes="Editor:Print"/>
     <titledbutton id="findButton"  src="&findIcon.url;"          observes="Editor:Find"/>
-
     <titledbutton id="spellingButton" src="&spellingIcon.url;" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
+
     <titledbutton id="imageButton" src="&imageIcon.url;" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
     <titledbutton id="hlineButton" src="&hlineIcon.url;" value="&hruleToolbarCmd.label;" onclick="EditorInsertHLine()"/>
     <titledbutton id="tableButton" src="&tableIcon.url;" value="&tableToolbarCmd.label;" onclick="EditorInsertOrEditTable(true)"/>
@@ -571,17 +571,17 @@
     <titledbutton id="BackColorPopupButton" src="chrome://editor/skin/images/backcolor.gif" class="popup" popupanchor="bottomleft"/>
 
     <!-- can't just use observes here because we don't want the value from the broadcaster -->
-    <titledbutton id="boldButton" value="&formatToolbar.boldChar;" onclick="EditorToggleStyle('bold')">
+    <titledbutton id="boldButton" value="&formatToolbar.boldChar;" align="center" onclick="EditorToggleStyle('bold')">
       <observes element="Editor:Bold" attribute="bold" onbroadcast="onStyleChange('bold')"/>
     </titledbutton>
-    <titledbutton id="italicButton" value="&formatToolbar.italicChar;" onclick="EditorToggleStyle('italic')">
+    <titledbutton id="italicButton" value="&formatToolbar.italicChar;" align="center" onclick="EditorToggleStyle('italic')">
       <observes element="Editor:Italic" attribute="italic" onbroadcast="onStyleChange('italic')"/>
     </titledbutton>
-    <titledbutton id="underlineButton" value="&formatToolbar.underlineChar;" onclick="EditorToggleStyle('underline')">
+    <titledbutton id="underlineButton" value="&formatToolbar.underlineChar;" align="center" onclick="EditorToggleStyle('underline')">
       <observes element="Editor:Underline" attribute="underline" onbroadcast="onStyleChange('underline')"/>
     </titledbutton>
 
-    <titledbutton id="ulButton" src="&bulletListIcon.url;" align="bottom" onclick="EditorMakeOrChangeList('ul')">
+    <titledbutton id="ulButton" src="&bulletListIcon.url;" onclick="EditorMakeOrChangeList('ul')">
         <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ul')"/>
     </titledbutton>
 

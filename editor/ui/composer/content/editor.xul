@@ -130,12 +130,12 @@
 <toolbox>
    <!-- toolbar filled out from editorOverlay -->
    <!-- add  class="standard" for dark blue background (icons need rework first) -->
-   <toolbar id="EditToolbar" persist="collapsed">
+   <toolbar id="EditToolbar" class="standard" persist="collapsed">
       <titledbutton id="newButton"/>
       <titledbutton id="openButton"/>
       <titledbutton id="saveButton"/>
       
-      <html:div class="separator" align="vertical" />
+      <!-- html:div class="separator" align="vertical" /-->
 
       <titledbutton id="printButton"/>
       <titledbutton id="findButton"/>
@@ -147,12 +147,12 @@
       <titledbutton id="hlineButton"/>
       <titledbutton id="tableButton"/>
 
-      <html:div class="separator" align="vertical" />
+      <!-- html:div class="separator" align="vertical" / -->
 
       <titledbutton id="linkButton"/>
       <titledbutton id="namedAnchorButton"/>
 
-      <html:div class="separator" align="vertical" />
+      <!-- html:div class="separator" align="vertical" / -->
       <spring flex="100%"/>
     </toolbar>
     
@@ -179,13 +179,13 @@
         <menupopup id="BackColorPopup"/>
       </menu>
       
-      <html:div class="separator" align="vertical" />
+      <!-- html:div class="separator" align="vertical" / -->
 
       <titledbutton id="boldButton"/>
       <titledbutton id="italicButton"/>
       <titledbutton id="underlineButton"/>
 
-      <html:div class="separator" align="vertical" />
+      <!-- html:div class="separator" align="vertical" / -->
 
       <titledbutton id="ulButton"/>
       <titledbutton id="olButton"/>
@@ -193,7 +193,7 @@
       <titledbutton id="outdentButton"/>
       <titledbutton id="indentButton"/>
 
-      <html:div class="separator" align="vertical" />
+      <!-- html:div class="separator" align="vertical" / -->
 
       <menu>
         <titledbutton id="AlignPopupButton"/>
@@ -218,7 +218,7 @@
         <!-- This is a pain: can't use CSS margin to add extra space above text? -->
         <box align="vertical">
         <spring style="height: 2px"/>
-        <html:div>&displayMode.label;</html:div>
+        <html:div style="margin-left: 3px">&displayMode.label;</html:div>
         </box>
       <spring class="spacer"/>
       <titledbutton id="EditModeButton"    class="DisplayModeButton" selected="1" value="&editModeButton.label;"    onclick="EditorSetDisplayStyle(0)"/>

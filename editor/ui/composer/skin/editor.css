@@ -30,15 +30,21 @@ toolbox#EditorToolbars {
   min-width: 20px;
 }
 
+toolbar#FormatToolbar {
+	background-color: #99CCCC;
+}
+
 /* global.css has "box#status-bar". 
    This should be a class so we can use the same colors here 
 */
 box#DisplayModeBar {
   /*margin-top: -2px;*/
+  margin-bottom: 0px;
   border-top: 1px solid darkgray;
   border-bottom: 1px solid darkgray;
   min-width:1em;
-	background-color: #CCCCCC;
+  color: white;
+	background-color: #333366;
 }
 
 titledbutton#TextColorPopupButton {
@@ -54,6 +60,9 @@ titledbutton#boldButton {
   font-size: 19px; 
   font-weight: bold; 
   font-family: times, serif, sans-serif;
+  height: 16px;
+  padding: 0px;
+  padding-top: 2px;
 }
 
 titledbutton#boldButton:hover {
@@ -66,6 +75,9 @@ titledbutton#italicButton {
   font-weight: bold; 
   font-family: times, serif, sans-serif; 
   font-style:  italic;
+  height: 16px;
+  padding: 0px;
+  padding-top: 2px;
 }
 
 titledbutton#italicButton:hover {
@@ -78,32 +90,43 @@ titledbutton#underlineButton {
   font-weight: normal; 
   font-family: times, serif, sans-serif; 
   text-decoration: underline;
+  height: 16px;
+  padding: 0px;
+  padding-top: 2px;
 }
 
 titledbutton[class~=DisplayModeButton] {
-  padding: 1px 4px 0px 4px;
-  margin: 0px;
-  border-width: 1px;
   border: 1px solid transparent;
   border-left: 1px solid darkgray;
-  
-  /* This is the same as the "grippy" area on left edge of toolbar*/
-	background-color: #CCCCCC;
-}
-
-titledbutton[class~=DisplayModeButton][selected="1"] {
-  border:  1px white outset;
-  padding: 2px 4px 0px 4px;
-  margin: -2px 0px 0px 0px;
-  /* This is the same as the "grippy" area on left edge of toolbar*/
+  padding: 1px 4px 0px 4px;
+  margin: 0px;
+  color: black;
 	background-color: #99CCCC;
 }
 
+titledbutton[class~=DisplayModeButton]:hover {
+  border:  1px solid white;
+  padding: 1px 4px 0px 4px;
+  margin: 0px;
+}
+
+titledbutton[class~=DisplayModeButton][selected="1"] {
+  border:  1px outset outset;
+  padding: 2px 4px 0px 4px;
+  margin: -2px 0px 0px 0px;
+  color: black;
+	background-color: #99FFFF;
+}
+
+titledbutton[class~=DisplayModeButton][selected="1"]:hover {
+  border:  1px solid white;
+}
+
 /* Color must be same as for DisplayModeButton's border-left */
-html|div.VerticalSeparator { 
+window html|div.VerticalSeparator { 
 	 height: 100%; 
 	 max-width: 1px; 
-   border-left: 1px solid darkgray;
+   border-left: 1px solid white;
 	 margin: 1px 0px;
 }
 
