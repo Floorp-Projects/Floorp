@@ -157,23 +157,6 @@ public:
                              PRInt32 aIndexInContainer) = 0;
 
   /**
-   * Content is going to be removed immediately after this call. This
-   * method is called automatically by content container objects when a
-   * content object is about to be removed from the container (therefore
-   * there is normally no need to invoke this method directly). The
-   * notification is passed on to all of the document observers.
-   *
-   * @param aDocument The document being observed
-   * @param aContainer the container that contains aChild
-   * @param aChild the child that will be removed
-   * @param aIndexInContainer the index of the child in the container
-   */
-  NS_IMETHOD ContentWillBeRemoved(nsIDocument *aDocument,
-                                  nsIContent* aContainer,
-                                  nsIContent* aChild,
-                                  PRInt32 aIndexInContainer) = 0;
-
-  /**
    * Content has just been removed. This method is called automatically
    * by content container objects when a content object has just been
    * removed from the container (therefore there is normally no need to
@@ -186,10 +169,10 @@ public:
    * @param aIndexInContainer the index of the child in the container
    *  before it was removed
    */
-  NS_IMETHOD ContentHasBeenRemoved(nsIDocument *aDocument,
-                                   nsIContent* aContainer,
-                                   nsIContent* aChild,
-                                   PRInt32 aIndexInContainer) = 0;
+  NS_IMETHOD ContentRemoved(nsIDocument *aDocument,
+                            nsIContent* aContainer,
+                            nsIContent* aChild,
+                            PRInt32 aIndexInContainer) = 0;
 
   /**
    * A StyleSheet has just been added to the document.
