@@ -2734,14 +2734,17 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 #ifndef XP_WIN    // on Windows, events are sent directly to plugins through child windows
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aFocusEvent));
   if (privateEvent) {
-    nsGUIEvent* focusEvent = nsnull;
-    privateEvent->GetInternalNSEvent((nsEvent**)&focusEvent);
-    if (focusEvent) {
-      nsEventStatus rv = ProcessEvent(*focusEvent);
-      if (nsEventStatus_eConsumeNoDefault == rv) {
-        aFocusEvent->PreventDefault();
-        aFocusEvent->PreventBubble();
-        return NS_ERROR_FAILURE; // means consume event
+    nsEvent * theEvent;
+    privateEvent->GetInternalNSEvent(&theEvent);
+    if (theEvent) {
+      if (theEvent->eventStructType & NS_GUI_EVENT) {
+        nsGUIEvent* focusEvent = (nsGUIEvent *)theEvent;
+        nsEventStatus rv = ProcessEvent(*focusEvent);
+        if (nsEventStatus_eConsumeNoDefault == rv) {
+          aFocusEvent->PreventDefault();
+          aFocusEvent->PreventBubble();
+          return NS_ERROR_FAILURE; // means consume event
+        }
       }
     }
     else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchFocusToPlugin failed, focusEvent null");   
