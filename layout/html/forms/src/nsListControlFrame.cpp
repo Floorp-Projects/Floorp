@@ -1587,7 +1587,8 @@ nsListControlFrame::PerformSelection(PRInt32 aClickedIndex,
         endIndex   = mStartSelectionIndex;
       }
 
-      wasChanged = ExtendedSelection(startIndex, endIndex, PR_TRUE);
+      // Clear only if control was not pressed
+      wasChanged = ExtendedSelection(startIndex, endIndex, !aIsControl);
       ScrollToIndex(aClickedIndex);
 
       if (mStartSelectionIndex == kNothingSelected) {
