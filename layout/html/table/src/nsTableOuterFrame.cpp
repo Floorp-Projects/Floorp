@@ -1189,62 +1189,6 @@ NS_NewTableOuterFrame(nsIFrame*& aResult)
   return NS_OK;
 }
 
-/* ----- debugging methods ----- */
-NS_METHOD nsTableOuterFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
-{
-  // if a filter is present, only output this frame if the filter says we should
-  // since this could be any "tag" with the right display type, we'll
-  // just pretend it's a tbody
-  if (nsnull==aFilter)
-    return nsContainerFrame::List(out, aIndent, aFilter);
-
-  nsAutoString tagString("tbody");
-  PRBool outputMe = aFilter->OutputTag(&tagString);
-  if (PR_TRUE==outputMe)
-  {
-    // Indent
-    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
-
-    // Output the tag and rect
-    nsIAtom* tag;
-    mContent->GetTag(tag);
-    if (tag != nsnull) {
-      nsAutoString buf;
-      tag->ToString(buf);
-      fputs(buf, out);
-      NS_RELEASE(tag);
-    }
-
-    fprintf(out, "(%d)", ContentIndexInContainer(this));
-    out << mRect;
-    if (0 != mState) {
-      fprintf(out, " [state=%08x]", mState);
-    }
-    fputs("\n", out);
-  }
-  // Output the children
-  if (mFrames.NotEmpty()) {
-    if (PR_TRUE==outputMe)
-    {
-      if (0 != mState) {
-        fprintf(out, " [state=%08x]\n", mState);
-      }
-    }
-    for (nsIFrame* child = mFrames.FirstChild(); child;
-         child->GetNextSibling(child)) {
-      child->List(out, aIndent + 1, aFilter);
-    }
-  } else {
-    if (PR_TRUE==outputMe)
-    {
-      if (0 != mState) {
-        fprintf(out, " [state=%08x]\n", mState);
-      }
-    }
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsTableOuterFrame::GetFrameName(nsString& aResult) const
 {

@@ -29,7 +29,6 @@ class nsIAtom;
 class nsIContentDelegate;
 class nsIDocument;
 class nsIPresContext;
-class nsISizeOfHandler;
 class nsString;
 class nsString;
 class nsVoidArray;
@@ -222,12 +221,6 @@ public:
   NS_IMETHOD RangeRemove(nsIDOMRange& aRange) = 0;
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const = 0;
   
-  /**
-   * Add this object's size information to the sizeof handler and
-   * any objects that it can reach.
-   */
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const = 0;
-
   /**
    * Handle a DOM event for this piece of content.
    */

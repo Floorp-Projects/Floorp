@@ -503,7 +503,7 @@ nsBaseIBFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 }
 
 NS_METHOD
-nsBaseIBFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
+nsBaseIBFrame::List(FILE* out, PRInt32 aIndent) const
 {
   // if a filter is present, only output this frame if the filter says
   // we should
@@ -516,51 +516,47 @@ nsBaseIBFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
       NS_RELEASE(tag);
     }
   }
-  PRBool outputMe = (nsnull == aFilter) || aFilter->OutputTag(&tagString);
-  if (outputMe) {
-    // Indent
-    IndentBy(stdout, aIndent);
 
-    // Output the tag
-    ListTag(out);
-    nsIView* view;
-    GetView(view);
-    if (nsnull != view) {
-      fprintf(out, " [view=%p]", view);
-    }
+  // Indent
+  IndentBy(stdout, aIndent);
 
-    // Output the flow linkage
-    if (nsnull != mPrevInFlow) {
-      fprintf(out, " prev-in-flow=%p", mPrevInFlow);
-    }
-    if (nsnull != mNextInFlow) {
-      fprintf(out, " next-in-flow=%p", mNextInFlow);
-    }
-
-    // Output the rect and state
-    out << mRect;
-    if (0 != mState) {
-      fprintf(out, " [state=%08x]", mState);
-    }
-    fputs("<\n", out);
-    aIndent++;
+  // Output the tag
+  ListTag(out);
+  nsIView* view;
+  GetView(view);
+  if (nsnull != view) {
+    fprintf(out, " [view=%p]", view);
   }
+
+  // Output the flow linkage
+  if (nsnull != mPrevInFlow) {
+    fprintf(out, " prev-in-flow=%p", mPrevInFlow);
+  }
+  if (nsnull != mNextInFlow) {
+    fprintf(out, " next-in-flow=%p", mNextInFlow);
+  }
+
+  // Output the rect and state
+  out << mRect;
+  if (0 != mState) {
+    fprintf(out, " [state=%08x]", mState);
+  }
+  fputs("<\n", out);
+  aIndent++;
 
   // Output the lines
   if (nsnull != mLines) {
     nsLineBox* line = mLines;
     while (nsnull != line) {
-      line->List(out, aIndent, aFilter, outputMe);
+      line->List(out, aIndent);
       line = line->mNext;
     }
   }
 
   // Output the text-runs
-  if (outputMe) {
-    aIndent--;
-    IndentBy(stdout, aIndent);
-    fputs(">\n", out);
-  }
+  aIndent--;
+  IndentBy(stdout, aIndent);
+  fputs(">\n", out);
 
   return NS_OK;
 }
@@ -4302,12 +4298,10 @@ ListTextRuns(FILE* out, PRInt32 aIndent, nsTextRun* aRuns)
 }
 
 NS_METHOD
-nsBlockFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
+nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
 
-  // if a filter is present, only output this frame if the filter says
-  // we should
   nsAutoString tagString;
   if (nsnull != mContent) {
     nsIAtom* tag;
@@ -4317,91 +4311,79 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
       NS_RELEASE(tag);
     }
   }
-  PRBool outputMe = (nsnull == aFilter) || aFilter->OutputTag(&tagString);
-  if (outputMe) {
-    // Indent
-    for (i = aIndent; --i >= 0; ) fputs("  ", out);
 
-    // Output the tag
-    ListTag(out);
-    nsIView* view;
-    GetView(view);
-    if (nsnull != view) {
-      fprintf(out, " [view=%p]", view);
-    }
+  // Indent
+  for (i = aIndent; --i >= 0; ) fputs("  ", out);
 
-    // Output the flow linkage
-    if (nsnull != mPrevInFlow) {
-      fprintf(out, " prev-in-flow=%p", mPrevInFlow);
-    }
-    if (nsnull != mNextInFlow) {
-      fprintf(out, " next-in-flow=%p", mNextInFlow);
-    }
-
-    // Output the rect and state
-    out << mRect;
-    if (0 != mState) {
-      fprintf(out, " [state=%08x]", mState);
-    }
-    fputs("<\n", out);
-    aIndent++;
+  // Output the tag
+  ListTag(out);
+  nsIView* view;
+  GetView(view);
+  if (nsnull != view) {
+    fprintf(out, " [view=%p]", view);
   }
+
+  // Output the flow linkage
+  if (nsnull != mPrevInFlow) {
+    fprintf(out, " prev-in-flow=%p", mPrevInFlow);
+  }
+  if (nsnull != mNextInFlow) {
+    fprintf(out, " next-in-flow=%p", mNextInFlow);
+  }
+
+  // Output the rect and state
+  out << mRect;
+  if (0 != mState) {
+    fprintf(out, " [state=%08x]", mState);
+  }
+  fputs("<\n", out);
+  aIndent++;
 
   // Output bullet first
   if (nsnull != mBullet) {
-    if (outputMe) {
-      for (i = aIndent; --i >= 0; ) fputs("  ", out);
-      fprintf(out, "bullet <\n");
-    }
-    mBullet->List(out, aIndent+1, aFilter);
-    if (outputMe) {
-      for (i = aIndent; --i >= 0; ) fputs("  ", out);
-      fputs(">\n", out);
-    }
+    for (i = aIndent; --i >= 0; ) fputs("  ", out);
+    fprintf(out, "bullet <\n");
+    mBullet->List(out, aIndent+1);
+    for (i = aIndent; --i >= 0; ) fputs("  ", out);
+    fputs(">\n", out);
   }
 
   // Output the lines
   if (nsnull != mLines) {
     nsLineBox* line = mLines;
     while (nsnull != line) {
-      line->List(out, aIndent, aFilter, outputMe);
+      line->List(out, aIndent);
       line = line->mNext;
     }
   }
 
   // Output floaters next
   if (mFloaters.NotEmpty()) {
-    if (outputMe) {
-      for (i = aIndent; --i >= 0; ) fputs("  ", out);
-      fprintf(out, "all-floaters <\n");
-    }
+    for (i = aIndent; --i >= 0; ) fputs("  ", out);
+    fprintf(out, "all-floaters <\n");
     nsIFrame* floater = mFloaters.FirstChild();
     while (nsnull != floater) {
-      floater->List(out, aIndent+1, aFilter);
+      floater->List(out, aIndent+1);
       floater->GetNextSibling(floater);
     }
-    if (outputMe) {
-      for (i = aIndent; --i >= 0; ) fputs("  ", out);
-      fputs(">\n", out);
-    }
-  }
-
-  // Output the text-runs
-  if (outputMe) {
-    if (nsnull != mTextRuns) {
-      for (i = aIndent; --i >= 0; ) fputs("  ", out);
-      fputs("text-runs <\n", out);
-
-      ListTextRuns(out, aIndent + 1, mTextRuns);
-
-      for (i = aIndent; --i >= 0; ) fputs("  ", out);
-      fputs(">\n", out);
-    }
-
-    aIndent--;
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
     fputs(">\n", out);
   }
+
+  // Output the text-runs
+  if (nsnull != mTextRuns) {
+    for (i = aIndent; --i >= 0; ) fputs("  ", out);
+    fputs("text-runs <\n", out);
+
+    ListTextRuns(out, aIndent + 1, mTextRuns);
+
+    for (i = aIndent; --i >= 0; ) fputs("  ", out);
+    fputs(">\n", out);
+  }
+
+  aIndent--;
+  for (i = aIndent; --i >= 0; ) fputs("  ", out);
+  fputs(">\n", out);
 
   return NS_OK;
 }

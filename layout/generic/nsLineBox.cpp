@@ -54,7 +54,7 @@ ListFloaters(FILE* out, PRInt32 aIndent, nsVoidArray* aFloaters)
       fprintf(out, "placeholder@%p\n", ph);
       nsIFrame* frame = ph->GetAnchoredItem();
       if (nsnull != frame) {
-        frame->List(out, aIndent + 1, nsnull);
+        frame->List(out, aIndent + 1);
       }
     }
   }
@@ -71,44 +71,39 @@ nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
 }
 
 void
-nsLineBox::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter,
-               PRBool aOutputMe) const
+nsLineBox::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
 
-  if (aOutputMe) {
-    for (i = aIndent; --i >= 0; ) fputs("  ", out);
-    char cbuf[100];
-    fprintf(out, "line %p: count=%d state=%s ",
-            this, ChildCount(), StateToString(cbuf, sizeof(cbuf)));
-    if (0 != mCarriedOutTopMargin) {
-      fprintf(out, "tm=%d ", mCarriedOutTopMargin);
-    }
-    if (0 != mCarriedOutBottomMargin) {
-      fprintf(out, "bm=%d ", mCarriedOutBottomMargin);
-    }
-    out << mBounds;
-    fprintf(out, " ca=");
-    out << mCombinedArea;
-    fprintf(out, " <\n");
+  for (i = aIndent; --i >= 0; ) fputs("  ", out);
+  char cbuf[100];
+  fprintf(out, "line %p: count=%d state=%s ",
+          this, ChildCount(), StateToString(cbuf, sizeof(cbuf)));
+  if (0 != mCarriedOutTopMargin) {
+    fprintf(out, "tm=%d ", mCarriedOutTopMargin);
   }
+  if (0 != mCarriedOutBottomMargin) {
+    fprintf(out, "bm=%d ", mCarriedOutBottomMargin);
+  }
+  out << mBounds;
+  fprintf(out, " ca=");
+  out << mCombinedArea;
+  fprintf(out, " <\n");
 
   nsIFrame* frame = mFirstChild;
   PRInt32 n = ChildCount();
   while (--n >= 0) {
-    frame->List(out, aIndent + 1, aFilter);
+    frame->List(out, aIndent + 1);
     frame->GetNextSibling(frame);
   }
 
-  if (aOutputMe) {
+  for (i = aIndent; --i >= 0; ) fputs("  ", out);
+  if (nsnull != mFloaters) {
+    fputs("> floaters <\n", out);
+    ListFloaters(out, aIndent + 1, mFloaters);
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
-    if (nsnull != mFloaters) {
-      fputs("> floaters <\n", out);
-      ListFloaters(out, aIndent + 1, mFloaters);
-      for (i = aIndent; --i >= 0; ) fputs("  ", out);
-    }
-    fputs(">\n", out);
   }
+  fputs(">\n", out);
 }
 
 nsIFrame*

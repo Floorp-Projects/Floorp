@@ -22,28 +22,6 @@
 #include "nsISizeOfHandler.h"
 
 NS_IMETHODIMP
-nsSplittableFrame::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  nsSplittableFrame::SizeOfWithoutThis(aHandler);
-  return NS_OK;
-}
-
-void
-nsSplittableFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
-{
-  nsFrame::SizeOfWithoutThis(aHandler);
-  if (!aHandler->HaveSeen(mPrevInFlow)) {
-    mPrevInFlow->SizeOf(aHandler);
-  }
-  if (!aHandler->HaveSeen(mNextInFlow)) {
-    mNextInFlow->SizeOf(aHandler);
-  }
-}
-
-// Flow member functions
-
-NS_IMETHODIMP
 nsSplittableFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 {
   aIsSplittable = NS_FRAME_SPLITTABLE;

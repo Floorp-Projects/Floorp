@@ -55,7 +55,7 @@ nsBulletFrame::GetFrameName(nsString& aResult) const
 }
 
 NS_IMETHODIMP
-nsBulletFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
+nsBulletFrame::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);

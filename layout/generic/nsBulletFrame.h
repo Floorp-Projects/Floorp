@@ -38,7 +38,7 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
   NS_IMETHOD GetFrameName(nsString& aResult) const;
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,

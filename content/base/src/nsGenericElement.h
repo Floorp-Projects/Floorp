@@ -247,7 +247,6 @@ public:
                               nsIAtom*& aName) const;
   nsresult GetAttributeCount(PRInt32& aResult) const;
   nsresult List(FILE* out, PRInt32 aIndent) const;
-  nsresult SizeOf(nsISizeOfHandler* aHandler) const;
   nsresult CanContainChildren(PRBool& aResult) const;
   nsresult ChildCount(PRInt32& aResult) const;
   nsresult ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
@@ -478,9 +477,6 @@ public:
   }                                                                        \
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
-  }                                                                        \
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const {                    \
-    return _g.SizeOf(aHandler);                                            \
   }                                                                        \
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,                  \
                             nsEvent* aEvent,                               \

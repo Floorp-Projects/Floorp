@@ -57,7 +57,6 @@ public:
   NS_IMETHOD GetImage(nsIImage*& aResult) const;
   NS_IMETHOD GetSize(nsSize& aResult) const;
   NS_IMETHOD GetImageLoadStatus(PRIntn& aLoadStatus) const;
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
 
 protected:
   nsFrameImageLoader();

@@ -121,7 +121,7 @@ void TempList(nsIDOMHTMLTableElement* aTable) {
         nsIFrame* rootFrame;
         shell->GetRootFrame(rootFrame);
         if (nsnull != rootFrame) {
-          rootFrame->List(stdout, 0, nsnull);
+          rootFrame->List(stdout, 0);
         }
       }
       NS_RELEASE(shell);

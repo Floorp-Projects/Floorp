@@ -41,7 +41,7 @@ public:
                              nsIFrame**     aFrame);
   NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
                                    nsIStyleContext* aParentContext);
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   // nsIHTMLReflow overrides
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,

@@ -696,9 +696,9 @@ nsAreaFrame::GetFrameName(nsString& aResult) const
 // XXX The base class implementation should handle listing all of
 // the additional named child lists...
 NS_IMETHODIMP
-nsAreaFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter* aFilter) const
+nsAreaFrame::List(FILE* out, PRInt32 aIndent) const
 {
-  nsresult  rv = nsBlockFrame::List(out, aIndent, aFilter);
+  nsresult  rv = nsBlockFrame::List(out, aIndent);
 
   // Output absolutely positioned frames
   if (mAbsoluteFrames.NotEmpty()) {
@@ -707,7 +707,7 @@ nsAreaFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter* aFilter) const
 
     nsIFrame* f = mAbsoluteFrames.FirstChild();
     while (nsnull != f) {
-      f->List(out, aIndent+1, aFilter);
+      f->List(out, aIndent+1);
       f->GetNextSibling(f);
     }
 

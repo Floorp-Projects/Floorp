@@ -140,9 +140,6 @@ public:
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {
     return mInner.FinishConvertToXIF(aConverter);
   }
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const {
-    return mInner.SizeOf(aHandler);
-  }
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,

@@ -175,7 +175,6 @@ struct nsGenericDOMDataNode {
   nsresult GetRangeList(nsVoidArray*& aResult) const;
 
   // Implementation for nsIContent
-  nsresult SizeOf(nsISizeOfHandler* aHandler) const;
   nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
   nsresult ConvertContentToXIF(nsXIFConverter& aConverter) const;
   nsresult FinishConvertToXIF(nsXIFConverter& aConverter) const;
@@ -441,9 +440,6 @@ struct nsGenericDOMDataNode {
   }                                                                        \
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
-  }                                                                        \
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const {                    \
-    return _g.SizeOf(aHandler);                                            \
   }                                                                        \
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,                  \
                             nsEvent* aEvent,                               \

@@ -391,12 +391,3 @@ nsFrameImageLoader::GetImageLoadStatus(PRIntn& aLoadStatus) const
   aLoadStatus = mImageLoadStatus;
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsFrameImageLoader::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  // XXX mImage
-  // XXX mImageRequest
-  return NS_OK;
-}

@@ -73,7 +73,7 @@ public:
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
 
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter* aFilter) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
 protected:

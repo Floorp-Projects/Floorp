@@ -24,7 +24,6 @@
 class nsSplittableFrame : public nsFrame
 {
 public:
-  NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler) const;
   // CreateContinuingFrame() does the default behavior of using the
   // content delegate to create a new frame
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
@@ -55,8 +54,6 @@ public:
   nsIFrame*   GetNextInFlow();
 
 protected:
-  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
-
   virtual void DumpBaseRegressionData(FILE* out, PRInt32 aIndent);
 
   nsIFrame*   mPrevInFlow;

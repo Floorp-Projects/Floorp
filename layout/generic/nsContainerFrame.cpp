@@ -348,7 +348,6 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               nsReflowStatus&          aStatus)
 {
   NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
-  NS_PRECONDITION(IsChild(aKidFrame), "not my child");
 
   // Query for the nsIHTMLReflow interface
   nsIHTMLReflow*  htmlReflow;
@@ -559,11 +558,8 @@ nsContainerFrame::RemoveFrame(nsIFrame* aRemovedFrame)
 // Debugging
 
 NS_IMETHODIMP
-nsContainerFrame::List(FILE* out, PRInt32 aIndent,
-                       nsIListFilter *aFilter) const
+nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
 {
-  // if a filter is present, only output this frame if the filter says
-  // we should
   nsAutoString tagString;
   if (nsnull != mContent) {
     nsIAtom* tag;
@@ -573,55 +569,46 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent,
       NS_RELEASE(tag);
     }
   }
-  PRBool outputMe = (nsnull==aFilter) || aFilter->OutputTag(&tagString);
 
-  if (outputMe) {
-    // Indent
-    IndentBy(out, aIndent);
+  // Indent
+  IndentBy(out, aIndent);
 
-    // Output the tag
-    ListTag(out);
+  // Output the tag
+  ListTag(out);
 
-    nsIView* view;
-    GetView(view);
-    if (nsnull != view) {
-      fprintf(out, " [view=%p]", view);
-    }
-
-    if (nsnull != mPrevInFlow) {
-      fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
-    }
-    if (nsnull != mNextInFlow) {
-      fprintf(out, "next-in-flow=%p ", mNextInFlow);
-    }
-
-    // Output the rect
-    out << mRect;
+  nsIView* view;
+  GetView(view);
+  if (nsnull != view) {
+    fprintf(out, " [view=%p]", view);
   }
+
+  if (nsnull != mPrevInFlow) {
+    fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
+  }
+  if (nsnull != mNextInFlow) {
+    fprintf(out, "next-in-flow=%p ", mNextInFlow);
+  }
+
+  // Output the rect
+  out << mRect;
 
   // Output the children
   if (mFrames.NotEmpty()) {
-    if (outputMe) {
-      if (0 != mState) {
-        fprintf(out, " [state=%08x]", mState);
-      }
-      fputs("<\n", out);
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
     }
+    fputs("<\n", out);
     for (nsIFrame* child = mFrames.FirstChild(); child;
          child->GetNextSibling(child)) {
-      child->List(out, aIndent + 1, aFilter);
+      child->List(out, aIndent + 1);
     }
-    if (outputMe) {
-      IndentBy(out, aIndent);
-      fputs(">\n", out);
-    }
+    IndentBy(out, aIndent);
+    fputs(">\n", out);
   } else {
-    if (outputMe) {
-      if (0 != mState) {
-        fprintf(out, " [state=%08x]", mState);
-      }
-      fputs("<>\n", out);
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
     }
+    fputs("<>\n", out);
   }
 
   return NS_OK;

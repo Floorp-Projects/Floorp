@@ -88,8 +88,7 @@ public:
 
   static nsLineBox* FindLineContaining(nsLineBox* aLine, nsIFrame* aFrame);
 
-  void List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter,
-            PRBool aOutputMe) const;
+  void List(FILE* out, PRInt32 aIndent) const;
 
   PRInt32 ChildCount() const {
     return PRInt32(mChildCount);

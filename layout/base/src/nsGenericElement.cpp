@@ -1754,13 +1754,6 @@ nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
 }
 
 nsresult
-nsGenericContainerElement::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  return NS_OK;
-}
-
-nsresult
 nsGenericContainerElement::CanContainChildren(PRBool& aResult) const
 {
   aResult = PR_TRUE;

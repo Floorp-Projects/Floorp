@@ -23,7 +23,6 @@
 #include "nsHTMLValue.h"
 #include "nsIHTMLContent.h"
 class nsIAtom;
-class nsISizeOfHandler;
 class nsISupportsArray;
 class nsIHTMLStyleSheet;
 
@@ -66,11 +65,6 @@ public:
   NS_IMETHOD Reset(void) = 0;
   NS_IMETHOD SetMappingFunction(nsMapAttributesFunc aMapFunc) = 0;
   NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet) = 0;
-
-  /**
-   * Add this object's size information to the sizeof handler.
-   */
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const = 0;
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 };

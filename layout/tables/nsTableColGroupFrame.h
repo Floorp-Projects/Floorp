@@ -94,8 +94,6 @@ public:
     */
   //PRBool IsManufactured();
 
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
-
 protected:
 
   /** implement abstract method on nsHTMLContainerFrame */
