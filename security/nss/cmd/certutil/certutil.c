@@ -2463,7 +2463,7 @@ main(int argc, char **argv)
     /*  Initialize NSPR and NSS.  */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
     rv = NSS_Initialize(SECU_ConfigDirectory(NULL), certPrefix, certPrefix,
-                        "secmod.db", PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+                        "secmod.db", 0);
     if (rv != SECSuccess) {
 	SECU_PrintPRandOSError(progName);
 	return -1;

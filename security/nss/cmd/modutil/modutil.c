@@ -506,6 +506,7 @@ init_crypto(PRBool create, PRBool readOnly)
 #endif
 	Error retval;
 	SECStatus rv;
+	int flags = 0;
 
 
 	if(SECU_ConfigDirectory(dbdir)[0] == '\0') {
@@ -617,8 +618,11 @@ init_crypto(PRBool create, PRBool readOnly)
 	}
 
 	/* Open/create key database */
+	flags = 0;
+	if (readOnly) flags |= NSS_INIT_READONLY;
+	if (nocertdb) flags |= NSS_INIT_NOCERTDB;
 	rv = NSS_Initialize(SECU_ConfigDirectory(NULL), dbprefix, dbprefix,
-	               "secmod.db", readOnly, nocertdb, PR_FALSE, PR_FALSE);
+	               "secmod.db", flags);
 	if (rv != SECSuccess) {
 	    SECU_PrintPRandOSError(progName);
 	    retval=NSS_INITIALIZE_FAILED_ERR;
