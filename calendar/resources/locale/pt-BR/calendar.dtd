@@ -152,7 +152,7 @@
 <!ENTITY newtodo.status.longlabel "Status da Tarefa">
 <!ENTITY newtodo.duetime.warning    "Sua hora de in&#xED;cio &#xE9; ap&#xF4;s a sua hora prevista para t&#xE9;rmino.">
 <!ENTITY newtodo.duedate.warning    "Sua data de in&#xED;cio &#xE9; ap&#xF4;s a sua data prevista para t&#xE9;rmino.">
-<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
+<!ENTITY newtodo.repeatstart.warning "Hora de in&#xED;cio necess&#xE1;ria para recorr&#xEA;ncia.">
 
 <!ENTITY calendar.confirm.deleteevent "Voc&#xEA; tem certeza de que quer apagar o seguinte evento: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Voc&#xEA; tem certeza de que quer apagar este evento sem t&#xED;tulo?" >
@@ -253,25 +253,25 @@
 
 <!ENTITY calendar.choosedate.button.label       "Escolher Data" >
 
-<!ENTITY calendar.cut.button.tooltip            "Cut" >
-<!ENTITY calendar.copy.button.tooltip           "Copy" >
-<!ENTITY calendar.paste.button.tooltip          "Paste" >
-<!ENTITY calendar.print.button.tooltip          "Print Calendar" >
+<!ENTITY calendar.cut.button.tooltip            "Cortar" >
+<!ENTITY calendar.copy.button.tooltip           "Copiar" >
+<!ENTITY calendar.paste.button.tooltip          "Colar" >
+<!ENTITY calendar.print.button.tooltip          "Imprimir Calend&#xE1;rio" >
 
-<!ENTITY calendar.cut.button.label              "Cut" >
-<!ENTITY calendar.copy.button.label             "Copy" >
-<!ENTITY calendar.paste.button.label            "Paste" >
-<!ENTITY calendar.print.button.label            "Print" >
+<!ENTITY calendar.cut.button.label              "Cortar" >
+<!ENTITY calendar.copy.button.label             "Copiar" >
+<!ENTITY calendar.paste.button.label            "Colar" >
+<!ENTITY calendar.print.button.label            "Imprimir" >
 
-<!ENTITY calendar.import.button.tooltip            "Import: Import events from a local file." >
-<!ENTITY calendar.export.button.tooltip            "Export: Export events to a local file." >
-<!ENTITY calendar.subscribe.button.tooltip         "Subscribe: Subscribe to a calendar file on a remote machine." >
-<!ENTITY calendar.publish.button.tooltip            "Publish: Publish events to a remote machine." >
+<!ENTITY calendar.import.button.tooltip            "Importar: Importa eventos de um arquivo local." >
+<!ENTITY calendar.export.button.tooltip            "Exportar: Exporta eventos para um arquivo local." >
+<!ENTITY calendar.subscribe.button.tooltip         "Subscrever: Assina/Baixa periodicamente um arquivo de calend&#xE1;rio de uma m&#xE1;quina  remota." >
+<!ENTITY calendar.publish.button.tooltip            "Publicar: Publica eventos em uma m&#xE1;quina remota." >
 
-<!ENTITY calendar.import.button.label              "Import" >
-<!ENTITY calendar.export.button.label              "Export" >
-<!ENTITY calendar.subscribe.button.label           "Subscribe" >
-<!ENTITY calendar.publish.button.label             "Publish" >
+<!ENTITY calendar.import.button.label              "Importar" >
+<!ENTITY calendar.export.button.label              "Exportar" >
+<!ENTITY calendar.subscribe.button.label           "Subscrever" >
+<!ENTITY calendar.publish.button.label             "Publicar" >
 
 <!ENTITY calendar.dayview.button.label          "Dia" >
 <!ENTITY calendar.weekview.button.label         "Semana" >
@@ -317,11 +317,11 @@
 <!ENTITY window.title            "Calend&#xE1;rio do Mozilla">
 
 <!-- customizable toolbars -->
-<!ENTITY calendar.context.customize.label             "Customize">
+<!ENTITY calendar.context.customize.label             "Customizar">
 <!ENTITY calendar.context.customize.accesskey         "C">
-<!ENTITY calendar.menu.customize.label                "Customize Toolbars">
+<!ENTITY calendar.menu.customize.label                "Customizar Barras de Ferramentas">
 <!ENTITY calendar.menu.customize.accesskey            "C">
-<!ENTITY calendar.maintoolbar.name                    "Main Toolbar">
+<!ENTITY calendar.maintoolbar.name                    "Barra de Ferramentas Principal">
 <!ENTITY calendar.maintoolbar.accesskey               "M">
 
 <!-- Context Menu -->
@@ -439,7 +439,7 @@
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importar: Importa eventos de um arquivo local em um calend&#xE1;rio existente.">
 <!ENTITY calendar.wizard.export.label              "Exportar: Exporta eventos de um calend&#xE1;rio existente para um arquivo local.">
-<!ENTITY calendar.wizard.subscribe.label           "Subscrever: Baixa periodicamente um arquivo de calend&#xE1;rio em uma m&#xE1;quina remota (ex. na Internet)">
+<!ENTITY calendar.wizard.subscribe.label           "Subscrever: Assina/Baixa periodicamente um arquivo de calend&#xE1;rio em uma m&#xE1;quina remota (ex. na Internet)">
 <!ENTITY calendar.wizard.publish.label             "Publicar: Publica eventos em uma m&#xE1;quina remota (ex. na Internet) para que outros possam baixar (subscrever).">
 
 <!-- Calendar Import Outlook CSV Dialog -->
