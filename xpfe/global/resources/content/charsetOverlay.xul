@@ -108,7 +108,7 @@
             </menupopup>
         </menu>
         <menuseparator />
-        <menuitem name="charsetCustomize" value="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'composer')"/>
+        <menuitem name="charsetCustomize" value="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
         </menupopup>
     </menu>
 
@@ -211,7 +211,7 @@
             </menupopup>
         </menu>
         <menuseparator />
-        <menuitem name="charsetCustomize" value="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'mailview')"/>
+        <menuitem name="charsetCustomize" value="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
         </menupopup>
     </menu>
 
