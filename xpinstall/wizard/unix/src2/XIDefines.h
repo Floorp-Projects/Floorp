@@ -91,6 +91,7 @@
 #define SELECTED_ATTR       "SELECTED"
 #define INVISIBLE_ATTR      "INVISIBLE"
 #define LAUNCHAPP_ATTR      "LAUNCHAPP"
+#define DOWNLOAD_ONLY_ATTR  "DOWNLOAD_ONLY"
 
 #define RUNAPPd             "RunApp%d"
 #define TARGET              "Target"

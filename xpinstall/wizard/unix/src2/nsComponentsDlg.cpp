@@ -193,6 +193,8 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
             currComp->SetLaunchApp();
         else
             currComp->SetDontLaunchApp();
+        if (NULL != strstr(currAttrStr, DOWNLOAD_ONLY_ATTR))
+            currComp->SetDownloadOnly();
 
         // parse failover URLs
         for (j = 0; j < MAX_URLS; j++)

@@ -257,8 +257,8 @@ nsXInstaller::DrawCancelButton(GtkWidget *aLogoVBox)
     GtkWidget *hbox;
 
     gCtx->cancel = gtk_button_new_with_label(gCtx->Res("CANCEL"));
-    hbox = gtk_hbox_new(FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(hbox), gCtx->cancel, TRUE, TRUE, 15);
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), gCtx->cancel, TRUE, TRUE, 0);
     gtk_box_pack_end(GTK_BOX(aLogoVBox), hbox, FALSE, TRUE, 10);
     gCtx->cancelID = gtk_signal_connect(GTK_OBJECT(gCtx->cancel), "clicked",
                         GTK_SIGNAL_FUNC(Kill), NULL);
