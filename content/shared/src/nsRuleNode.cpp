@@ -407,15 +407,28 @@ nsRuleNode::nsRuleNode(nsIPresContext* aContext, nsIStyleRule* aRule, nsRuleNode
     mRootChildren = nsnull;
 }
 
+PR_STATIC_CALLBACK(PRBool) DeleteRuleNodeChildren(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsRuleNode* ruleNode = (nsRuleNode*)aData;
+  ruleNode->Destroy();
+  return PR_TRUE;
+}
+
 nsRuleNode::~nsRuleNode()
 {
   MOZ_COUNT_DTOR(nsRuleNode);
   if (mStyleData.mResetData || mStyleData.mInheritedData)
     mStyleData.Destroy(0, mPresContext);
-  if (mParent && mChildren)
-    mChildren->Destroy(mPresContext);
-  else if (!mParent)
-    delete mRootChildren;
+  if (mParent) {
+    if (mChildren)
+      mChildren->Destroy(mPresContext);
+  }
+  else {
+    if (mRootChildren) {
+      mRootChildren->Enumerate(DeleteRuleNodeChildren, nsnull);
+      delete mRootChildren;
+    }
+  }
 }
 
 nsresult 
