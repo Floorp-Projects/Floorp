@@ -24,15 +24,13 @@ Contributor(s): ______________________________________. -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?> 
-<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/charsetDetectorsOverlay.xul"?>
-<?xul-overlay href="chrome://sidebar/content/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://sidebar/content/sidebarOverlay.xul"?>
 <?xml-stylesheet href="chrome://sidebar/skin/sidebarOverlay.css" type="text/css"?> 
 
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/navigator.dtd" >
+
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

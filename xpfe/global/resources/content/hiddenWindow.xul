@@ -22,7 +22,6 @@ Contributor(s): ______________________________________. -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 
 <!-- hiddenwindow is a "minimal" XUL window intended for creating the,
