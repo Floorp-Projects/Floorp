@@ -519,6 +519,7 @@ cookie_RemoveAllPermissions() {
     victim = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
     if (victim) {
       cookie_FreePermission(victim, PR_FALSE);
+	  i = -1;
     }
   }
   delete cookie_permissionList;
@@ -534,8 +535,9 @@ cookie_FreeCookie(cookie_CookieStruct * cookie) {
   if(!cookie) {
     return;
   }
-  if (cookie_cookieList == nsnull)
+  if (cookie_cookieList == nsnull) {
     return;
+  }
   cookie_cookieList->RemoveElement(cookie);
   PR_FREEIF(cookie->path);
   PR_FREEIF(cookie->host);
@@ -563,6 +565,7 @@ cookie_RemoveAllCookies() {
     victim = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
     if (victim) {
       cookie_FreeCookie(victim);
+	  i = -1;
     }
   }
   delete cookie_cookieList;
@@ -611,8 +614,9 @@ cookie_RemoveExpiredCookies() {
   cookie_CookieStruct * cookie_s;
   time_t cur_time = time(NULL);
   
-  if (cookie_cookieList == nsnull)
+  if (cookie_cookieList == nsnull) {
     return;
+  }
   
   PRInt32 count = cookie_cookieList->Count();
   for (PRInt32 i = 0; i < count; ++i) {
@@ -646,8 +650,9 @@ cookie_CheckForMaxCookiesFromHo(const char * cur_host) {
   cookie_CookieStruct * oldest_cookie = 0;
   int cookie_count = 0;
   
-  if (cookie_cookieList == nsnull)
+  if (cookie_cookieList == nsnull) {
     return;
+  }
   
   PRInt32 count = cookie_cookieList->Count();
   for (PRInt32 i = 0; i < count; ++i) {
@@ -674,8 +679,9 @@ cookie_CheckForMaxCookiesFromHo(const char * cur_host) {
 PRIVATE cookie_CookieStruct *
 cookie_CheckForPrevCookie(char * path, char * hostname, char * name) {
   cookie_CookieStruct * cookie_s;
-  if (cookie_cookieList == nsnull)
+  if (cookie_cookieList == nsnull) {
     return NULL;
+  }
   
   PRInt32 count = cookie_cookieList->Count();
   for (PRInt32 i = 0; i < count; ++i) {
@@ -829,10 +835,12 @@ COOKIE_GetCookie(char * address) {
   PRInt32 count = cookie_cookieList->Count();
   for (PRInt32 i = 0; i < count; ++i) {
     cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
-    if (cookie_s == nsnull) 
+    if (cookie_s == nsnull) {
       continue;
-    if(!cookie_s->host)
-    continue;
+	}
+    if(!cookie_s->host) {
+		continue;
+	}
 
     /* check the host or domain first */
     if(cookie_s->isDomain) {
