@@ -1161,7 +1161,8 @@ WIDGET* CWizardMachineApp::findWidget(char *theName)
 void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString iniFile, int pageBaseIndex, BOOL readValue)
 {
 	static int idCounter = 0;
-	char buffer[MAX_SIZE];
+	char buffer[MAX_SIZE] = {'\0'};
+	char largeBuffer[EXTD_MAX_SIZE] = {'\0'};
 	
 	idCounter++;
 
@@ -1176,8 +1177,8 @@ void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString
 
 	if (readValue)
 	{
-		GetPrivateProfileString(iniSection, "Value", "", buffer, MAX_SIZE, iniFile);
-		aWidget->value = buffer;
+		GetPrivateProfileString(iniSection, "Value", "", largeBuffer, EXTD_MAX_SIZE, iniFile);
+		aWidget->value = largeBuffer;
 		aWidget->value.TrimRight();
 	}
 
