@@ -1376,33 +1376,48 @@ nsHTMLTagContent::ValueOrPercentToString(const nsHTMLValue& aValue,
   return PR_FALSE;
 }
 
-void
+PRBool
 nsHTMLTagContent::ParseValue(const nsString& aString, PRInt32 aMin,
                              nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
 {
   PRInt32 ec, val = aString.ToInteger(&ec);
-  if (val < aMin) val = aMin;
-  if (eHTMLUnit_Pixel == aValueUnit) {
-    aResult.SetPixelValue(val);
+  if (NS_OK == ec) {
+    if (val < aMin) val = aMin;
+    if (eHTMLUnit_Pixel == aValueUnit) {
+      aResult.SetPixelValue(val);
+    }
+    else {
+      aResult.SetIntValue(val, aValueUnit);
+    }
+    return PR_TRUE;
   }
-  else {
-    aResult.SetIntValue(val, aValueUnit);
-  }
+
+  // Illegal values are mapped to empty
+  aResult.SetEmptyValue();
+  return PR_FALSE;
 }
 
-void nsHTMLTagContent::ParseValue(const nsString& aString, PRInt32 aMin,
-                                  PRInt32 aMax,
-                                  nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
+PRBool
+nsHTMLTagContent::ParseValue(const nsString& aString, PRInt32 aMin,
+                             PRInt32 aMax,
+                             nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
 {
   PRInt32 ec, val = aString.ToInteger(&ec);
-  if (val < aMin) val = aMin;
-  if (val > aMax) val = aMax;
-  if (eHTMLUnit_Pixel == aValueUnit) {
-    aResult.SetPixelValue(val);
+  if (NS_OK == ec) {
+    if (val < aMin) val = aMin;
+    if (val > aMax) val = aMax;
+    if (eHTMLUnit_Pixel == aValueUnit) {
+      aResult.SetPixelValue(val);
+    }
+    else {
+      aResult.SetIntValue(val, aValueUnit);
+    }
+    return PR_TRUE;
   }
-  else {
-    aResult.SetIntValue(val, aValueUnit);
-  }
+
+  // Illegal values are mapped to empty
+  aResult.SetEmptyValue();
+  return PR_FALSE;
 }
 
 PRBool nsHTMLTagContent::ParseImageProperty(nsIAtom* aAttribute,
