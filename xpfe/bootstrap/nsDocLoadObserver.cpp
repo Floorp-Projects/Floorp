@@ -86,7 +86,7 @@ void nsDocLoadObserver::Unregister()
 		if (NS_SUCCEEDED(rv))
 		{
 			if (NS_SUCCEEDED(anObserverService->RemoveObserver(this, 
-				NS_ConvertASCIItoUCS2("EndDocumentLoad").get())))
+				"EndDocumentLoad")))
 			{
 				mRegistered = PR_FALSE;
 			}
@@ -111,7 +111,7 @@ void nsDocLoadObserver::RemoveEchoRequester(OSType appSignature)
 }
 
 NS_IMETHODIMP nsDocLoadObserver::Observe(nsISupports* /*aSubject*/,
-		const PRUnichar* /*aTopic*/, const PRUnichar* someData)
+		const char* /*aTopic*/, const PRUnichar* someData)
 {
 	// we need a URL to forward
 	if (!someData)

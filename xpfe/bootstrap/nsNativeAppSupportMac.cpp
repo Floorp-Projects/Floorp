@@ -126,7 +126,7 @@ nsSplashScreenMac::Hide()
 
 
 NS_IMETHODIMP
-nsSplashScreenMac::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+nsSplashScreenMac::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   // update a string in the dialog
   
