@@ -97,7 +97,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
   nsresult ret = NS_ERROR_NOT_IMPLEMENTED;
 
   nsAutoString uesc;
-  uesc.AssignWithConversion("x-u-escaped");
+  uesc.AssignWithConversion("UTF-8");
 
 #ifndef XPCOM_STANDALONE
   ret = NS_NewConverterStream(&mIn, nsnull, aIn, 0, &uesc);
@@ -131,19 +131,73 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
       key.Trim(trimThese, PR_FALSE, PR_TRUE);
       c = Read();
       nsAutoString value;
+      PRUint32 state  = 0;
+      PRUnichar uchar = 0;
       while ((c >= 0) && (c != '\r') && (c != '\n')) {
-        if (c == '\\') {
-          c = Read();
-          if ((c == '\r') || (c == '\n')) {
-            c = SkipWhiteSpace(c);
-          }
-          else {
-            value.AppendWithConversion('\\');
-          }
+        switch(state) {
+          case 0:
+           if (c == '\\') {
+             c = Read();
+             switch(c) {
+               case '\r':
+               case '\n':
+                 c = SkipWhiteSpace(c);
+                 value.Append((PRUnichar) c);
+                 break;
+               case 'u':
+               case 'U':
+                 state = 1;
+                 uchar=0;
+                 break;
+               case 't':
+                 value.AppendWithConversion('\t');
+                 break;
+               case 'n':
+                 value.AppendWithConversion('\n');
+                 break;
+               case 'r':
+                 value.AppendWithConversion('\r');
+                 break;
+               default:
+                 value.AppendWithConversion('\\');
+                 value.Append((PRUnichar) c);
+             } // switch(c)
+           } else {
+             value.Append((PRUnichar) c);
+           }
+           c = Read();
+           break;
+         case 1:
+         case 2:
+         case 3:
+         case 4:
+           if(('0' <= c) && (c <= '9')) {
+              uchar = (uchar << 4) | (c - '0');
+              state++;
+              c = Read();
+           } else if(('a' <= c) && (c <= 'f')) {
+              uchar = (uchar << 4) | (c - 'a' + 0x0a);
+              state++;
+              c = Read();
+           } else if(('A' <= c) && (c <= 'F')) {
+              uchar = (uchar << 4) | (c - 'A' + 0x0a);
+              state++;
+              c = Read();
+           } else {
+             value.Append((PRUnichar) uchar);
+             state = 0;
+           }
+           break;
+         case 5:
+           value.Append((PRUnichar) uchar);
+           state = 0;
         }
-        value.Append((PRUnichar) c);
-        c = Read();
       }
+      if(state != 0) {
+        value.Append((PRUnichar) uchar);
+        state = 0;
+      }
+
       value.Trim(trimThese, PR_TRUE, PR_TRUE);
       nsAutoString oldValue;
       mSubclass->SetStringProperty(key, value, oldValue);
