@@ -160,7 +160,7 @@ function conditionallyEnableUI(id)
     document.getElementById("purgeLabel").disabled = !enabled || !checked;
   }
 
-  if (!id || id == "purge") {
+  if (id == "purge") {
     enabled = document.getElementById("purge").checked;
     document.getElementById("purgeInterval").disabled = !enabled;
     document.getElementById("purgeLabel").disabled = !enabled;

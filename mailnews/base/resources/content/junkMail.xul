@@ -99,7 +99,7 @@
       </grid>
     </radiogroup>
     
-    <hbox autostretch="never">
+    <hbox autostretch="never" align="center">
       <spacer width="20px"/>
       <checkbox id="purge" oncommand="conditionallyEnableUI('purge')" accesskey="&purge1.accesskey;" label="&purge1.label;"/>
       <textbox size="3" id="purgeInterval" />
