@@ -175,6 +175,18 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
                 desiredRect, aMaxElementSize, aStatus);
     mSpaceManager->Translate(-leftInset, -topInset);
 
+    // If the frame is complete, then check whether there's a next-in-flow that
+    // needs to be deleted
+    if (frComplete == aStatus) {
+      nsIFrame* kidNextInFlow;
+       
+      mFirstChild->GetNextInFlow(kidNextInFlow);
+      if (nsnull != kidNextInFlow) {
+        // Remove all of the childs next-in-flows
+        DeleteChildsNextInFlow(mFirstChild);
+      }
+    }
+
     // Place and size the column
     desiredRect.x += leftInset;
     desiredRect.y += topInset;
@@ -269,11 +281,6 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
     topInset = mySpacing->mBorderPadding.top;
   }
 
-  // XXX Clear the list of regions. This fixes a problem with the way reflow
-  // appended is currently working (we're reflowing some framems twice)
-  if (nsReflowCommand::FrameAppended == aReflowCommand.GetType()) {
-    mSpaceManager->ClearRegions();
-  }
   mSpaceManager->Translate(leftInset, topInset);
 
   // The reflow command should never be target for us
