@@ -247,6 +247,7 @@ EnsureLoggingService()
         rv = gLoggingService->Init();
         if (NS_FAILED(rv)) {
             delete gLoggingService;
+            gLoggingService = nsnull;
             return rv; 
         }
         // Note that there's no AddRef here. That's because when the service manager
@@ -638,7 +639,7 @@ nsFileLogEventSink::Init(const char* filePath)
         filePtr = stderr;
     }
     else {
-        filePtr = ::fopen(filePath, "W");
+        filePtr = ::fopen(filePath, "w");
         if (filePtr == nsnull)
             return NS_ERROR_FAILURE;
         mCloseFile = PR_TRUE;
