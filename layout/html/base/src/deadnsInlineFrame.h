@@ -91,6 +91,12 @@ protected:
                                         nsInlineState&  aState,
                                         nsIFrame*       aChildFrame,
                                         PRInt32         aChildIndex);
+
+  nsReflowStatus ReflowChild(nsInlineState&       aState,
+                             nsIFrame*            aKidFrame,
+                             nsIPresContext*      aPresContext,
+                             nsReflowMetrics&     aDesiredSize,
+                             const nsReflowState& aReflowState);
 };
 
 #endif /* nsInlineFrame_h___ */
