@@ -651,7 +651,8 @@ nsEditor::EndTransaction()
 
 nsresult nsEditor::ScrollIntoView(PRBool aScrollToBegin)
 {
-  nsresult result;
+  return NS_OK; //mjudge we should depricate this method
+/*  nsresult result;
   if (mPresShell)
   {
     nsCOMPtr<nsIDOMSelection> selection;
@@ -684,6 +685,7 @@ nsresult nsEditor::ScrollIntoView(PRBool aScrollToBegin)
     result = NS_ERROR_NOT_INITIALIZED;
   }
   return result;
+  */
 }
 
 
