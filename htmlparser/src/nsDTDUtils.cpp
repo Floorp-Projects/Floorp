@@ -844,7 +844,7 @@ CNodeRecycler::~CNodeRecycler() {
   nsCParserNode* theNode=0;
 
 #ifdef NS_DEBUG
-#if 0
+#if 1
   PRInt32 count=gNodeCount-mSharedNodes.GetSize();
   if(count) {
     printf("%i of %i nodes leaked!\n",count,gNodeCount);
@@ -1039,7 +1039,6 @@ void nsObserverTopic::RegisterObserverForTag(nsIElementObserver *anObserver,eHTM
     mObservers[aTag]->Push(anObserver);
   }
 }
-
 
 /**
  * This method will notify observers registered for specific tags.

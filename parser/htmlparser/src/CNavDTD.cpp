@@ -1091,8 +1091,10 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
     if(theService) {
       CParserContext*   pc=mParser->PeekContext();
       void*             theDocID=(pc)? pc->mKey:0;
+      
+      const nsISupportsParserBundle*  bundle=mParser->GetParserBundle();
  
-      result=theService->Notify(aTag,aNode,theDocID, NS_ConvertToString(kHTMLTextContentType), mParser);
+      result=theService->Notify(aTag,aNode,(void*)bundle, NS_ConvertToString(kHTMLTextContentType), mParser);
     }
   }
 
@@ -1426,7 +1428,6 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           break;
 
         case eHTMLTag_noframes:
-        case eHTMLTag_nolayer:
         case eHTMLTag_noembed:
           mHasOpenNoXXX++;
           break;
@@ -1666,7 +1667,6 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
       break;
 
     case eHTMLTag_noframes:
-    case eHTMLTag_nolayer:
     case eHTMLTag_noembed:
     case eHTMLTag_noscript:
       mHasOpenNoXXX--;
@@ -1999,6 +1999,7 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
   
     result = (mSink)? mSink->AddDocTypeDecl(*theNode,mDTDMode):NS_OK;
+    
     mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
   
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
@@ -3423,7 +3424,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode *aNode){
 nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
   nsresult result=NS_OK;
 
-  static eHTMLTags gNoXTags[]={eHTMLTag_noembed,eHTMLTag_noframes,eHTMLTag_nolayer,eHTMLTag_noscript};
+  static eHTMLTags gNoXTags[]={eHTMLTag_noembed,eHTMLTag_noframes,eHTMLTag_noscript};
 
   eHTMLTags theTag=(eHTMLTags)aNode->GetNodeType();
   
