@@ -678,6 +678,7 @@ sub do_express {
       my ($bw) = Backwards->new("$form{tree}/build.dat") or die;
 
       $latest_time=0;
+      my $tooearly = 0;
       while( $_ = $bw->readline ) {
 	chop;
 	($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile) = 
@@ -687,7 +688,16 @@ sub do_express {
 	    $latest_time = $buildtime;
 	  }
 	  # Ignore stuff more than 12 hours old
-	  last if $buildtime < $latest_time - 12*60*60;
+	  if ($buildtime < $latest_time - 12*60*60) {
+            # Occasionally, a build might show up with a bogus time.  So,
+            # we won't judge ourselves as having hit the end until we
+            # hit a full 20 lines in a row that are too early.
+            if ($tooearly++ > 20) {
+              last;
+            }
+            next;
+          }
+
 	  next if defined $build{$buildname};
 	  
 	  $build{$buildname} = $buildstatus;
