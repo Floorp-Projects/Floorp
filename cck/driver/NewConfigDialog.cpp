@@ -48,9 +48,25 @@ void CNewConfigDialog::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CNewConfigDialog)
 	DDX_Text(pDX, IDC_EDIT1, m_NewConfig_field);
+    DDV_Config(pDX, m_NewConfig_field);
+
 	//}}AFX_DATA_MAP
 }
 
+void CNewConfigDialog::DDV_Config(CDataExchange* pDX, CString value)
+{
+	if(pDX->m_bSaveAndValidate) 
+	{
+		value.TrimRight();
+		if(value.IsEmpty())
+		{
+			CWnd nbox;
+			nbox.MessageBox("Please enter a Configuration Name" ,"Error",MB_ICONEXCLAMATION);
+			pDX->Fail();
+		}
+		newConfigName = value;
+	}
+}
 
 BEGIN_MESSAGE_MAP(CNewConfigDialog, CDialog)
 	//{{AFX_MSG_MAP(CNewConfigDialog)
@@ -63,8 +79,8 @@ END_MESSAGE_MAP()
 void CNewConfigDialog::OnOK() 
 {
 	// TODO: Add extra validation here
-	UpdateData();
-	newConfigName = m_NewConfig_field;
+//	UpdateData();
+//	newConfigName = m_NewConfig_field;
 
 	CDialog::OnOK();
 }

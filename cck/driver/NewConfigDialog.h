@@ -35,6 +35,8 @@ public:
 	//}}AFX_DATA
 
 	CString GetConfigName();
+	void DDV_Config(CDataExchange* pDX, CString value);
+
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CNewConfigDialog)
