@@ -130,7 +130,7 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
 	nsresult rv = NS_OK;
 	NS_LOCK_INSTANCE();
 
-	nsMailboxAction mailboxAction = nsMailboxActionMoveMessage;
+	nsMailboxAction mailboxAction = nsIMailboxUrl::ActionMoveMessage;
 
 	rv = PrepareMessageUrl(aSrcMailboxURI, aUrlListener, mailboxAction, getter_AddRefs(mailboxurl));
 
@@ -138,7 +138,7 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
 	{
 
 		if (!moveMessage)
-			mailboxurl->SetMailboxAction(nsMailboxActionCopyMessage);
+			mailboxurl->SetMailboxAction(nsIMailboxUrl::ActionCopyMessage);
 		mailboxurl->SetMailboxCopyHandler(aMailboxCopyHandler);
 		nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
 		rv = RunMailboxUrl(url);
@@ -161,7 +161,7 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
 	NS_LOCK_INSTANCE();
 
-	rv = PrepareMessageUrl(aMessageURI, aUrlListener, nsMailboxActionDisplayMessage, getter_AddRefs(mailboxurl));
+	rv = PrepareMessageUrl(aMessageURI, aUrlListener, nsIMailboxUrl::ActionDisplayMessage, getter_AddRefs(mailboxurl));
 
 	if (NS_SUCCEEDED(rv))
 	{
@@ -183,7 +183,7 @@ NS_IMETHODIMP nsMailboxService::SaveMessageToDisk(const char *aMessageURI, nsIFi
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
 	NS_LOCK_INSTANCE();
 
-	rv = PrepareMessageUrl(aMessageURI, aUrlListener, nsMailboxActionSaveMessageToDisk, getter_AddRefs(mailboxurl));
+	rv = PrepareMessageUrl(aMessageURI, aUrlListener, nsIMailboxUrl::ActionSaveMessageToDisk, getter_AddRefs(mailboxurl));
 
 	if (NS_SUCCEEDED(rv))
 	{

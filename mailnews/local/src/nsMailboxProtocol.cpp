@@ -26,7 +26,7 @@
 #include "nsMsgLineBuffer.h"
 #include "nsIMessage.h"
 #include "nsMsgDBCID.h"
-
+#include "nsIMsgMailNewsUrl.h"
 #include "rosetta.h"
 
 #include "allxpstr.h"
@@ -73,7 +73,7 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
 		nsresult rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **) getter_AddRefs(m_runningUrl));
 		if (NS_SUCCEEDED(rv) && m_runningUrl)
 		{
-			const nsFileSpec * fileSpec = nsnull;
+			nsFileSpec * fileSpec = nsnull;
 			m_runningUrl->GetFilePath(&fileSpec);
 			rv = OpenFileSocket(aURL, fileSpec);
 		}
@@ -164,7 +164,7 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
 		rv = m_tempMessageFile->closeStream();
 
 	// disply hack: run a file url on the temp file
-	if (m_mailboxAction == nsMailboxActionDisplayMessage && m_displayConsumer)
+	if (m_mailboxAction == nsIMailboxUrl::ActionDisplayMessage && m_displayConsumer)
 	{
 		nsFilePath filePath(MESSAGE_PATH);
 		nsFileURL  fileURL(filePath);
@@ -226,19 +226,19 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 			{
 				switch (m_mailboxAction)
 				{
-				case nsMailboxActionParseMailbox:
+				case nsIMailboxUrl::ActionParseMailbox:
 					// extract the mailbox parser..
 					rv = m_runningUrl->GetMailboxParser(getter_AddRefs(m_mailboxParser));
 					m_nextState = MAILBOX_READ_FOLDER;
 					break;
-				case nsMailboxActionSaveMessageToDisk:
+				case nsIMailboxUrl::ActionSaveMessageToDisk:
 					// ohhh, display message already writes a msg to disk (as part of a hack)
 					// so we can piggy back off of that!! We just need to change m_tempMessageFile
 					// to be the name of our save message to disk file. Since save message to disk
 					// urls are run without a webshell to display the msg into, we won't be trying
 					// to display the message after we write it to disk...
 					m_runningUrl->GetMessageFile(getter_AddRefs(m_tempMessageFile));
-				case nsMailboxActionDisplayMessage:
+				case nsIMailboxUrl::ActionDisplayMessage:
 					// create a temp file to write the message into. We need to do this because
 					// we don't have pluggable converters yet. We want to let mkfile do the work of 
 					// converting the message from RFC-822 to HTML before displaying it...
@@ -248,8 +248,8 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 					m_nextState = MAILBOX_READ_MESSAGE;
 					break;
 
-				case nsMailboxActionCopyMessage:
-				case nsMailboxActionMoveMessage:
+				case nsIMailboxUrl::ActionCopyMessage:
+				case nsIMailboxUrl::ActionMoveMessage:
 					rv = m_runningUrl->GetMailboxCopyHandler(getter_AddRefs(m_mailboxCopyHandler));
 					SetupMessageExtraction();
 					m_nextState = MAILBOX_READ_MESSAGE;
@@ -308,7 +308,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 	// if we are doing a move or a copy, forward the data onto the copy handler...
 	// if we want to display the message then parse the incoming data...
 
-	if (m_mailboxAction == nsMailboxActionCopyMessage || m_mailboxAction == nsMailboxActionMoveMessage) 
+	if (m_mailboxAction == nsIMailboxUrl::ActionCopyMessage || m_mailboxAction == nsIMailboxUrl::ActionMoveMessage) 
 	{
 		if (m_mailboxCopyHandler)
 		{

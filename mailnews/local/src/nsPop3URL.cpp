@@ -73,7 +73,7 @@ nsresult nsPop3URL::SetPop3Sink(nsIPop3Sink* aPop3Sink)
     return NS_OK;
 }
 
-nsresult nsPop3URL::GetPop3Sink(nsIPop3Sink** aPop3Sink) const
+nsresult nsPop3URL::GetPop3Sink(nsIPop3Sink** aPop3Sink)
 {
     NS_LOCK_INSTANCE();
     if (aPop3Sink)

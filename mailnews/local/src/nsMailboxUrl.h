@@ -38,8 +38,9 @@ public:
 	NS_IMETHOD SetMailboxCopyHandler(nsIStreamListener *  aConsumer);
 	NS_IMETHOD GetMailboxCopyHandler(nsIStreamListener ** aConsumer);
 	
-	NS_IMETHOD GetFilePath(const nsFileSpec ** aFilePath);
-	NS_IMETHOD GetMessageKey(nsMsgKey& aMessageKey);
+	NS_IMETHOD GetFilePath(nsFileSpec ** aFilePath);
+	NS_IMETHOD GetMessageKey(nsMsgKey* aMessageKey);
+    NS_IMETHOD GetMessageSize(PRUint32 *aMessageSize);
 	NS_IMETHOD SetMessageSize(PRUint32 aMessageSize);
 	NS_IMPL_CLASS_GETSET(MailboxAction, nsMailboxAction, m_mailboxAction);
 

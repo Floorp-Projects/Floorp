@@ -121,7 +121,7 @@ char * extractAttributeValue(const char * searchString, const char * attributeNa
 
 nsMailboxUrl::nsMailboxUrl()
 {
-	m_mailboxAction = nsMailboxActionParseMailbox;
+	m_mailboxAction = nsIMailboxUrl::ActionParseMailbox;
 	m_filePath = nsnull;
 	m_messageID = nsnull;
 	m_messageKey = 0;
@@ -217,7 +217,7 @@ nsresult nsMailboxUrl::GetMailboxCopyHandler(nsIStreamListener ** aMailboxCopyHa
 	return  NS_OK;
 }
 
-nsresult nsMailboxUrl::GetFilePath(const nsFileSpec ** aFilePath)
+nsresult nsMailboxUrl::GetFilePath(nsFileSpec ** aFilePath)
 {
 	if (aFilePath)
 		*aFilePath = m_filePath;
@@ -237,10 +237,17 @@ nsresult nsMailboxUrl::SetFilePath(const nsFileSpec& aFilePath)
 }
 #endif
 
-nsresult nsMailboxUrl::GetMessageKey(nsMsgKey& aMessageKey)
+nsresult nsMailboxUrl::GetMessageKey(nsMsgKey* aMessageKey)
 {
-	aMessageKey = m_messageKey;
+	*aMessageKey = m_messageKey;
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMailboxUrl::GetMessageSize(PRUint32 *aMessageSize)
+{
+    *aMessageSize = m_messageSize;
+    return NS_OK;
 }
 
 nsresult nsMailboxUrl::SetMessageSize(PRUint32 aMessageSize)
@@ -258,7 +265,7 @@ NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
 
 	if (aURI)
 	{
-		const nsFileSpec * filePath = nsnull;
+		nsFileSpec * filePath = nsnull;
 		GetFilePath(&filePath);
 		if (filePath)
 		{
@@ -320,9 +327,9 @@ NS_IMETHODIMP nsMailboxUrl::GetMessageFile(nsIFileSpec ** aFileSpec)
 NS_IMETHODIMP nsMailboxUrl::SetURLInfo(URL_Struct *URL_s)
 {
 	nsresult rv = nsMsgMailNewsUrl::SetURLInfo(URL_s);
-	if (m_mailboxAction == nsMailboxActionDisplayMessage || m_mailboxAction == nsMailboxActionCopyMessage
-		|| m_mailboxAction == nsMailboxActionMoveMessage || m_mailboxAction == 	nsMailboxActionSaveMessageToDisk 
-		|| m_mailboxAction == nsMailboxActionAppendMessageToDisk)
+	if (m_mailboxAction == nsIMailboxUrl::ActionDisplayMessage || m_mailboxAction == nsIMailboxUrl::ActionCopyMessage
+		|| m_mailboxAction == nsIMailboxUrl::ActionMoveMessage || m_mailboxAction == 	nsIMailboxUrl::ActionSaveMessageToDisk 
+		|| m_mailboxAction == nsIMailboxUrl::ActionAppendMessageToDisk)
 	{
 		// set the byte field range for the url struct...
 		char * byteRange = PR_smprintf("bytes=%d-%d", m_messageKey, m_messageKey+m_messageSize - 1);
@@ -351,7 +358,7 @@ nsresult nsMailboxUrl::ParseSearchPart()
 			m_messageKey = atol(messageKey); // convert to a long...
 		if (messageKey || m_messageID)
 			// the action for this mailbox must be a display message...
-			m_mailboxAction = nsMailboxActionDisplayMessage;
+			m_mailboxAction = nsIMailboxUrl::ActionDisplayMessage;
 		PR_FREEIF(messageKey);
 	}
 
@@ -486,7 +493,7 @@ nsresult nsMailboxUrl::ParseUrl(const nsString& aSpec)
 	// otherwise there was no search part to the urlSpec so we should manually set the
 	// parse mailbox action (which is the default)
 	if (m_search == nsnull)
-		m_mailboxAction = nsMailboxActionParseMailbox;
+		m_mailboxAction = nsIMailboxUrl::ActionParseMailbox;
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;

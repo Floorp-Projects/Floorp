@@ -29,7 +29,7 @@ public:
 	// From nsIPop3URL
 
     NS_IMETHOD SetPop3Sink(nsIPop3Sink* aPop3Sink);
-    NS_IMETHOD GetPop3Sink(nsIPop3Sink** aPop3Sink) const;
+    NS_IMETHOD GetPop3Sink(nsIPop3Sink** aPop3Sink);
 
     nsPop3URL();
 	
