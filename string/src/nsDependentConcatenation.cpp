@@ -38,12 +38,6 @@ nsDependentConcatenation::Length() const
     return mStrings[kFirstString]->Length() + mStrings[kLastString]->Length();
   }
 
-PRBool
-nsDependentConcatenation::IsDependentOn( const abstract_string_type& aString ) const
-  {
-    return mStrings[kFirstString]->IsDependentOn(aString) || mStrings[kLastString]->IsDependentOn(aString);
-  }
-
 #if 0
 PRBool
 nsDependentConcatenation::PromisesExactly( const abstract_string_type& aString ) const
@@ -121,12 +115,6 @@ PRUint32
 nsDependentCConcatenation::Length() const
   {
     return mStrings[kFirstString]->Length() + mStrings[kLastString]->Length();
-  }
-
-PRBool
-nsDependentCConcatenation::IsDependentOn( const abstract_string_type& aString ) const
-  {
-    return mStrings[kFirstString]->IsDependentOn(aString) || mStrings[kLastString]->IsDependentOn(aString);
   }
 
 #if 0

@@ -43,7 +43,7 @@
   //
 
 class NS_COM nsDependentSubstring
-      : public nsAPromiseString
+    : public nsAString
     /*
       NOT FOR USE BY HUMANS (mostly)
 
@@ -87,7 +87,6 @@ class NS_COM nsDependentSubstring
 
     public:
       virtual PRUint32 Length() const;
-      virtual PRBool IsDependentOn( const abstract_string_type& aString ) const { return mString.IsDependentOn(aString); }
 
     private:
       const abstract_string_type&  mString;
@@ -96,7 +95,7 @@ class NS_COM nsDependentSubstring
   };
 
 class NS_COM nsDependentCSubstring
-      : public nsAPromiseCString
+    : public nsACString
     /*
       NOT FOR USE BY HUMANS (mostly)
 
@@ -140,7 +139,6 @@ class NS_COM nsDependentCSubstring
 
     public:
       virtual PRUint32 Length() const;
-      virtual PRBool IsDependentOn( const abstract_string_type& aString ) const { return mString.IsDependentOn(aString); }
 
     private:
       const abstract_string_type&  mString;

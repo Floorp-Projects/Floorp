@@ -40,14 +40,6 @@ class nsACString;
 
 
   /**
-   * @see nsAPromiseString.h
-   */
-
-class nsAPromiseString;
-class nsAPromiseCString;
-
-
-  /**
    * @see nsAFlatString.h
    */
 
