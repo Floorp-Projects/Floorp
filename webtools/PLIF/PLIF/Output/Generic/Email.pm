@@ -80,9 +80,9 @@ sub output {
     my $self = shift;
     my($app, $session, $string) = @_;
     $self->assert(defined($self->handle), 1, 'No SMTP handle, can\'t send mail');
-    $self->handle->mail($self->from);
-    $self->handle->to($session->getAddress('email'));
-    $self->handle->data($string);
+    $self->assert($self->handle->mail($self->from), 1, 'Could not start sending mail');
+    $self->assert($self->handle->to($session->getAddress('email')), 1, 'Could not set mail recipient (was going to send to '.($session->getAddress('email')).')');
+    $self->assert($self->handle->data($string), 1, 'Could not send mail body');
 }
 
 # protocol.smtp
