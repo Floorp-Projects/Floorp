@@ -385,7 +385,8 @@ SWITCH: for ($current_tab_name) {
         DoPermissions();
         last SWITCH;
     };
-    ThrowUserError("current_tab_name");
+    ThrowUserError("unknown_tab",
+                   { current_tab_name => $current_tab_name });
 }
 
 # Generate and return the UI (HTML page) from the appropriate template.

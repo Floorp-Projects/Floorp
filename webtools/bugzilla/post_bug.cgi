@@ -78,8 +78,8 @@ ValidateComment($comment);
 my $product = $::FORM{'product'};
 my $product_id = get_product_id($product);
 if (!$product_id) {
-    $vars->{'product'} = $product;
-    ThrowUserError("invalid_product_name");
+    ThrowUserError("invalid_product_name",
+                   { product => $product });
 }
 
 # Set cookies
@@ -230,8 +230,8 @@ if ($::FORM{'keywords'} && UserInGroup("editbugs")) {
         }
         my $i = GetKeywordIdFromName($keyword);
         if (!$i) {
-            $vars->{'keyword'} = $keyword;
-            ThrowUserError("unknown_keyword");
+            ThrowUserError("unknown_keyword",
+                           { keyword => $keyword });
         }
         if (!$keywordseen{$i}) {
             push(@keywordlist, $i);
@@ -301,8 +301,10 @@ if (UserInGroup("editbugs") && defined($::FORM{'dependson'})) {
                 foreach my $i (@isect) {
                     $both = $both . GetBugLink($i, "#" . $i) . " ";
                 }
-                $vars->{'both'} = $both;
-                ThrowUserError("dependency_loop_multi", undef, "abort");
+
+                ThrowUserError("dependency_loop_multi",
+                               { both => $both },
+                               "abort");
             }
         }
         my $tmp = $me;
@@ -337,8 +339,8 @@ if (UserInGroup(Param("timetrackinggroup")) &&
     if ($est_time =~ /^(?:\d+(?:\.\d*)?|\.\d+)$/) {
         $sql .= SqlQuote($est_time) . "," . SqlQuote($est_time);
     } else {
-        $vars->{'field'} = "estimated_time";
-        ThrowUserError("need_positive_number");
+        ThrowUserError("need_positive_number",
+                       { field => 'estimated_time' });
     }
 } else {
     $sql .= "0, 0";

@@ -127,7 +127,6 @@ sub AppendComment {
        # zero or more digits, OR we have a period followed by one or more digits
        if ($work_time !~ /^-?(?:\d+(?:\.\d*)?|\.\d+)$/) { 
           ThrowUserError("need_numeric_value");
-          return;
        }
     } else { $work_time = 0 };
 
@@ -863,8 +862,8 @@ sub DBNameToIdAndCheck {
         return $result;
     }
 
-    $::vars->{'name'} = $name;
-    ThrowUserError("invalid_username");
+    ThrowUserError("invalid_username",
+                   { name => $name });
 }
 
 

@@ -171,7 +171,8 @@ sub validateCanEdit
             "attach_id = $attach_id AND submitter_id = $::userid");
 
     FetchSQLData()
-      || ThrowUserError("illegal_attachment_edit");
+      || ThrowUserError("illegal_attachment_edit",
+                        { attach_id => $attach_id });
 }
 
 sub validateCanChangeAttachment 
@@ -183,7 +184,8 @@ sub validateCanChangeAttachment
              AND bugs.bug_id = attachments.bug_id");
     my $productid = FetchOneColumn();
     CanEditProductId($productid)
-      || ThrowUserError("illegal_attachment_edit");
+      || ThrowUserError("illegal_attachment_edit",
+                        { attach_id => $attachid });
 }
 
 sub validateCanChangeBug
@@ -194,7 +196,8 @@ sub validateCanChangeBug
              WHERE bug_id = $bugid");
     my $productid = FetchOneColumn();
     CanEditProductId($productid)
-      || ThrowUserError("illegal_attachment_edit");
+      || ThrowUserError("illegal_attachment_edit_bug",
+                        { bug_id => $bugid });
 }
 
 sub validateDescription
@@ -249,8 +252,8 @@ sub validateContentType
 
   if ( $::FORM{'contenttype'} !~ /^(application|audio|image|message|model|multipart|text|video)\/.+$/ )
   {
-    $vars->{'contenttype'} = $::FORM{'contenttype'};
-    ThrowUserError("invalid_content_type");
+    ThrowUserError("invalid_content_type",
+                   { contenttype => $::FORM{'contenttype'} });
   }
 }
 
@@ -292,11 +295,11 @@ sub validateData
   # Make sure the attachment does not exceed the maximum permitted size
   my $len = length($data);
   if ($maxsize && $len > $maxsize) {
-      $vars->{'filesize'} = sprintf("%.0f", $len/1024);
+      my $vars = { filesize => sprintf("%.0f", $len/1024) };
       if ( $::FORM{'ispatch'} ) {
-          ThrowUserError("patch_too_large");
+          ThrowUserError("patch_too_large", $vars);
       } else {
-          ThrowUserError("file_too_large");
+          ThrowUserError("file_too_large", $vars);
       }
   }
 
@@ -328,6 +331,9 @@ sub validateObsolete
   # Make sure the attachment id is valid and the user has permissions to view
   # the bug to which it is attached.
   foreach my $attachid (@{$::MFORM{'obsolete'}}) {
+    # my $vars after ThrowCodeError is updated to not use the global
+    # vars hash
+
     $vars->{'attach_id'} = $attachid;
     
     detaint_natural($attachid)
@@ -338,7 +344,7 @@ sub validateObsolete
 
     # Make sure the attachment exists in the database.
     MoreSQLData()
-      || ThrowUserError("invalid_attach_id");
+      || ThrowUserError("invalid_attach_id", $vars);
 
     my ($bugid, $isobsolete, $description) = FetchSQLData();
 
@@ -663,8 +669,8 @@ sub update
   my $bugid = FetchSQLData();
   unless ($bugid) 
   {
-    $vars->{'bug_id'} = $bugid;
-    ThrowUserError("invalid_bug_id");
+    ThrowUserError("invalid_bug_id",
+                   { bug_id => $bugid });
   }
   
   # Lock database tables in preparation for updating the attachment.

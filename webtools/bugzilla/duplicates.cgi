@@ -83,8 +83,8 @@ my $product_id;
 if ($product) {
     $product_id = get_product_id($product);
     if (!$product_id) {
-        $vars->{'product'} = $product;
-        ThrowUserError("invalid_product_name");
+        ThrowUserError("invalid_product_name",
+                       { product => $product });
     }
 }
 
@@ -109,17 +109,17 @@ if (!tie(%dbmcount, 'AnyDBM_File', "data/duplicates/dupes$today",
     if ($!{ENOENT}) {
         if (!tie(%dbmcount, 'AnyDBM_File', "data/duplicates/dupes$yesterday",
                  O_RDONLY, 0644)) {
-            $vars->{'today'} = $today;
+            my $vars = { today => $today };
             if ($!{ENOENT}) {
-                ThrowUserError("no_dupe_stats");
+                ThrowUserError("no_dupe_stats", $vars);
             } else {
                 $vars->{'error_msg'} = $!;
-                ThrowUserError("no_dupe_stats_error_yesterday");
+                ThrowUserError("no_dupe_stats_error_yesterday", $vars);
             }
         }
     } else {
-        $vars->{'error_msg'} = $!;
-        ThrowUserError("no_dupe_stats_error_today");
+        ThrowUserError("no_dupe_stats_error_today",
+                       { error_msg => $! });
     }
 }
 
@@ -146,10 +146,11 @@ if (!tie(%before, 'AnyDBM_File', "data/duplicates/dupes$whenever",
          O_RDONLY, 0644)) {
     # Ignore file not found errors
     if (!$!{ENOENT}) {
-        $vars->{'error_msg'} = $!;
-        $vars->{'changedsince'} = $changedsince;
-        $vars->{'whenever'} = $whenever;    
-        ThrowUserError("no_dupe_stats_error_whenever");
+        ThrowUserError("no_dupe_stats_error_whenever",
+                       { error_msg => $!,
+                         changedsince => $changedsince,
+                         whenever => $whenever,
+                       });
     }
 } else {
     # Calculate the deltas

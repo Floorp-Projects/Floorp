@@ -223,7 +223,12 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
         $vars->{'oldvalue'} = $::oldproduct;
         $vars->{'newvalue'} = $::FORM{'product'};
         $vars->{'field'} = 'product';
-        ThrowUserError("illegal_change", undef, "abort");            
+        ThrowUserError("illegal_change",
+                       { oldvalue => $::oldproduct,
+                         newvalue => $::FORM{'product'},
+                         field => 'product',
+                       },
+                       "abort");
     }
  
     CheckFormField(\%::FORM, 'product', \@::legal_product);
@@ -689,7 +694,7 @@ if (Param("usebugaliases") && defined($::FORM{'alias'})) {
 
             # Make sure the alias is unique.
             my $escaped_alias = SqlQuote($alias);
-            $vars->{'alias'} = $alias;
+            my $vars = { alias => $alias };
             
             SendSQL("SELECT bug_id FROM bugs WHERE alias = $escaped_alias " . 
                     "AND bug_id != $idlist[0]");
@@ -697,17 +702,17 @@ if (Param("usebugaliases") && defined($::FORM{'alias'})) {
             
             if ($id) {
                 $vars->{'bug_link'} = GetBugLink($id, "Bug $id");
-                ThrowUserError("alias_in_use");
+                ThrowUserError("alias_in_use", $vars);
             }
 
             # Make sure the alias isn't just a number.
             if ($alias =~ /^\d+$/) {
-                ThrowUserError("alias_is_numeric");
+                ThrowUserError("alias_is_numeric", $vars);
             }
 
             # Make sure the alias has no commas or spaces.
             if ($alias =~ /[, ]/) {
-                ThrowUserError("alias_has_comma_or_space");
+                ThrowUserError("alias_has_comma_or_space", $vars);
             }
         }
         
@@ -750,8 +755,8 @@ if (UserInGroup(Param('timetrackinggroup'))) {
                     DoComma();
                     $::query .= "$field = " . SqlQuote($er_time);
                 } else {
-                    $vars->{'field'} = $field;
-                    ThrowUserError("need_positive_number");
+                    ThrowUserError("need_positive_number",
+                                   field => $field);
                 }
             }
         }
@@ -946,8 +951,8 @@ SWITCH: for ($::FORM{'knob'}) {
         SendSQL("SELECT bug_id FROM bugs where bug_id = " .  SqlQuote($checkid));
         $checkid = FetchOneColumn();
         if (!$checkid) {
-            $vars->{'bug_id'} = $checkid;
-            ThrowUserError("invalid_bug_id");
+            ThrowUserError("invalid_bug_id",
+                           { bug_id => $checkid });
         }
         $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
         $duplicate = $num;
@@ -975,8 +980,8 @@ if ($::FORM{'keywords'}) {
         }
         my $i = GetKeywordIdFromName($keyword);
         if (!$i) {
-            $vars->{keyword} = $keyword;
-            ThrowUserError("unknown_keyword");
+            ThrowUserError("unknown_keyword",
+                           { keyword => $keyword });
         }
         if (!$keywordseen{$i}) {
             push(@keywordlist, $i);
@@ -1098,6 +1103,7 @@ foreach my $id (@idlist) {
         if (exists $::FORM{$col}) {
             if (!CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col})) {
                 # More fun hacking... don't display component_id
+                my $vars;
                 if ($col eq 'component_id') {
                     $vars->{'oldvalue'} = get_component_name($oldhash{'component_id'});
                     $vars->{'newvalue'} = $::FORM{'component'};
@@ -1108,23 +1114,23 @@ foreach my $id (@idlist) {
                     $vars->{'newvalue'} = $::FORM{$col};
                     $vars->{'field'} = $col;
                 }
-                ThrowUserError("illegal_change", undef, "abort");            
+                ThrowUserError("illegal_change", $vars, "abort");
             }
         }
         $i++;
     }
     $oldhash{'product'} = get_product_name($oldhash{'product_id'});
     if (!CanEditProductId($oldhash{'product_id'})) {
-        $vars->{'product'} = $oldhash{'product'};
-        ThrowUserError("product_edit_denied");
+        ThrowUserError("product_edit_denied",
+                      { product => $oldhash{'product'} });
     }
 
     if (defined $::FORM{'product'} 
         && $::FORM{'product'} ne $::FORM{'dontchange'} 
         && $::FORM{'product'} ne $oldhash{'product'}
         && !CanEnterProduct($::FORM{'product'})) {
-        $vars->{'product'} = $::FORM{'product'};
-        ThrowUserError("entry_access_denied");
+        ThrowUserError("entry_access_denied",
+                       { product => $::FORM{'product'} });
     }
     if ($requiremilestone) {
         my $value = $::FORM{'target_milestone'};
@@ -1135,8 +1141,9 @@ foreach my $id (@idlist) {
                 SqlQuote($oldhash{'product'}));
         if ($value eq FetchOneColumn()) {
             SendSQL("UNLOCK TABLES");
-            $vars->{'bug_id'} = $id;
-            ThrowUserError("milestone_required", undef, "abort");
+            ThrowUserError("milestone_required",
+                           { bug_id => $id },
+                           "abort");
         }
     }   
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
@@ -1213,9 +1220,10 @@ foreach my $id (@idlist) {
                     foreach my $i (@isect) {
                        $both = $both . GetBugLink($i, "#" . $i) . " ";
                     }
-                    
-                    $vars->{'both'} = $both;
-                    ThrowUserError("dependency_loop_multi", undef, "abort");
+
+                    ThrowUserError("dependency_loop_multi",
+                                   { both => $both },
+                                   "abort");
                 }
             }
             my $tmp = $me;

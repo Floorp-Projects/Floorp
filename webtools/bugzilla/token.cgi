@@ -231,9 +231,9 @@ sub changeEmail {
     # The new email address should be available as this was 
     # confirmed initially so cancel token if it is not still available
     if (! ValidateNewUser($new_email,$old_email)) {
-        $vars->{'email'} = $new_email;
+        $vars->{'email'} = $new_email; # Needed for Token::Cancel's mail
         Token::Cancel($::token,"account_exists");
-        ThrowUserError("account_exists");
+        ThrowUserError("account_exists", { email => $new_email } );
     } 
 
     # Update the user's login name in the profiles table and delete the token

@@ -83,8 +83,8 @@ my $product = $::FORM{'product'};
 my $product_id = get_product_id($product);
 
 if (!$product_id) {
-    $::vars->{'product'} = $product;
-    ThrowUserError("invalid_product_name");
+    ThrowUserError("invalid_product_name",
+                   { product => $product });
 }
 
 # Make sure the user is authorized to access this product.

@@ -103,8 +103,8 @@ sub init {
         my $c = trim($params->param('votes'));
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
-                $::vars->{'value'} = $c;
-                &::ThrowUserError("illegal_at_least_x_votes");
+                &::ThrowUserError("illegal_at_least_x_votes",
+                                  { value => $c });
             }
             push(@specialchart, ["votes", "greaterthan", $c - 1]);
         }
@@ -207,8 +207,8 @@ sub init {
         if (@clist) {
             push(@specialchart, \@clist);
         } else {
-            $::vars->{'email'} = $email;
-            &::ThrowUserError("missing_email_type");
+            ThrowUserError("missing_email_type",
+                           { email => $email });
         }
     }
 
@@ -217,8 +217,8 @@ sub init {
         my $c = trim($params->param('changedin'));
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
-                $::vars->{'value'} = $c;
-                &::ThrowUserError("illegal_changed_in_last_x_days");
+                &::ThrowUserError("illegal_changed_in_last_x_days",
+                                 { value => $c });
             }
             push(@specialchart, ["changedin",
                                  "lessthan", $c + 1]);
@@ -558,8 +558,8 @@ sub init {
                      push(@list, "$table.keywordid = $id");
                  }
                  else {
-                     $::vars->{'keyword'} = $v;
-                     &::ThrowUserError("unknown_keyword");
+                     ThrowUserError("unknown_keyword",
+                                    { keyword => $v });
                  }
              }
              my $haveawordterm;
@@ -992,8 +992,7 @@ sub SqlifyDate {
     }
     my $date = str2time($str);
     if (!defined($date)) {
-        $::vars->{'date'} = $str;
-        &::ThrowUserError("illegal_date");
+        &::ThrowUserError("illegal_date", { date => $str });
     }
     return time2str("%Y-%m-%d %H:%M:%S", $date);
 }

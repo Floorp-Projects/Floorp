@@ -34,14 +34,7 @@
 [% DEFAULT title = "Error" %]
 
 [% error_message = BLOCK %]
-  [% IF    error == "aaa_example_error_tag" %]
-    [% title = "Example Error" %]    
-    This is an example error. The title is set above. This text is the body
-    of the error. It can contain arbitrary <b>HTML</b>, and also references
-    to any [% parameters %] which you may have set before calling
-    ThrowUserError.
-
-  [% ELSIF error == "account_creation_disabled" %]
+  [% IF    error == "account_creation_disabled" %]
     [% title = "Account Creation Disabled" %]
     Account self-creation has been disabled or restricted.
     <hr>
@@ -159,7 +152,7 @@
     [% title = "Nice Try..." %]
     Nice try, [% user.login FILTER html %], but it doesn't 
     really make sense to mark a bug as a duplicate of itself, 
-    does it?  
+    does it?
     
   [% ELSIF error == "email_change_in_progress" %]
     [% title = "Email Change Already In Progress" %]
@@ -207,7 +200,7 @@
   [% ELSIF error == "flag_type_sortkey_invalid" %]
     [% title = "Flag Type Sort Key Invalid" %]
     The sort key must be an integer between 0 and 32767 inclusive.
-    It cannot be <em>[% variables.sortkey %]</em>.
+    It cannot be <em>[% sortkey FILTER html %]</em>.
   
   [% ELSIF error == "illegal_at_least_x_votes" %]
     [% title = "Your Query Makes No Sense" %]
@@ -217,6 +210,10 @@
   [% ELSIF error == "illegal_attachment_edit" %]
     [% title = "Unauthorised Action" %]
     You are not authorised to edit attachment [% attach_id %].
+
+  [% ELSIF error == "illegal_attachment_edit_bug" %]
+    [% title = "Unauthorised Action" %]
+    You are not authorised to edit attachments on bug [% bug_id %].
          
   [% ELSIF error == "illegal_attachment_is_patch" %]
     [% title = "Your Query Makes No Sense" %]
@@ -507,18 +504,6 @@
     [% title = "Access Denied" %]
     You do not have the permissions necessary to view reports for this product.
 
-  [% ELSIF error == "requestee_too_short" %]
-    [% title = "Requestee Name Too Short" %]
-    One or two characters match too many users, so please enter at least 
-    three characters of the name/email address of the user you want to set 
-    the flag.
-  
-  [% ELSIF error == "requestee_too_many_matches" %]
-    [% title = "Requestee String Matched Too Many Times" %]
-    The string <em>[% requestee FILTER html %]</em> matched more than 
-    100 users.  Enter more of the name to bring the number of matches 
-    down to a reasonable amount.
-  
   [% ELSIF error == "require_component" %]
     [% title = "Component Needed" %]
     You must choose a component to file this bug in. If necessary, 
@@ -569,7 +554,7 @@
 
   [% ELSIF error == "unknown_tab" %]
     [% title = "Unknown Tab" %]
-    <code>[% current_tab_name FILTER html %]</code> is not a legal tab name.    
+    <code>[% current_tab_name FILTER html %]</code> is not a legal tab name.
     
   [% ELSIF error == "votes_must_be_nonnegative" %]
     [% title = "Votes Must Be Non-negative" %]
@@ -593,14 +578,13 @@
 
   [% ELSIF error == "zero_length_file" %]
     [% title = "File Is Empty" %]
-    The file you are trying to attach is empty!    
+    The file you are trying to attach is empty!
     
   [% ELSE %]
-    [%# Cope with legacy calling convention, where "error" was the string
-      # to print. 
-      #%]
-        
-    [% error %]
+    [% title = "Error string not found" %]
+    The user error string <code>[% error FILTER html %]</code> was not found.
+    Please send email to [% Param("maintainer") %] describing the steps taken
+    to obtain this message.
   [% END %]
 [% END %]
 

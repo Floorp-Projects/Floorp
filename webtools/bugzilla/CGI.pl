@@ -35,6 +35,7 @@ use lib ".";
 use Bugzilla::Util;
 use Bugzilla::Config;
 use Bugzilla::Constants;
+use Bugzilla::Error;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
@@ -252,8 +253,7 @@ sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
     if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
-        $vars->{'addr'} = $addr;
-        ThrowUserError("illegal_email_address");
+        ThrowUserError("illegal_email_address", { addr => $addr });
     }
 }
 
@@ -322,24 +322,6 @@ sub ThrowCodeError {
   
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
   $template->process("global/code-error.html.tmpl", $vars)
-    || ThrowTemplateError($template->error());
-    
-  exit;
-}
-
-# For errors made by the user.
-sub ThrowUserError {
-  ($vars->{'error'}, my $extra_vars, my $unlock_tables) = (@_);
-
-  SendSQL("UNLOCK TABLES") if $unlock_tables;
- 
-  # Copy the extra_vars into the vars hash 
-  foreach my $var (keys %$extra_vars) {
-      $vars->{$var} = $extra_vars->{$var};
-  }
-  
-  print "Content-type: text/html\n\n" if !$vars->{'header_done'};
-  $template->process("global/user-error.html.tmpl", $vars)
     || ThrowTemplateError($template->error());
     
   exit;
