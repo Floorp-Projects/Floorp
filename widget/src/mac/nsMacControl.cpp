@@ -345,14 +345,6 @@ NS_METHOD nsMacControl::CreateOrReplaceMacControl(short inControlType)
 
 	if(nsnull != mWindowPtr)
 	{
-#ifdef DEBUG
-		// we should have a root control at this point. If not, something's wrong.
-		// it's made in nsMacWindow
-		ControlHandle		rootControl = nil;
-		OSErr		err = ::GetRootControl(mWindowPtr, &rootControl);
-		NS_ASSERTION((err == noErr && rootControl != nil), "No root control exists for the window");
-#endif
-
 		if (mControl)
 			::DisposeControl(mControl);
 

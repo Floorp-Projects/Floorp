@@ -42,9 +42,7 @@
 
 #include "nsIServiceManager.h"    // for drag and drop
 #include "nsWidgetsCID.h"
-#include "nsIDragService.h"
-#include "nsIDragSession.h"
-#include "nsIDragSessionMac.h"
+#include "nsIDragHelperService.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
 #include "nsGUIEvent.h"
@@ -69,8 +67,6 @@ enum {
 const UInt32 kWindowLiveResizeAttribute = (1L << 28);
 #endif
 
-// Define Class IDs -- i hate having to do this
-static NS_DEFINE_CID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
 // from MacHeaders.c
@@ -101,50 +97,14 @@ const short kDialogTitleBarHeight = 26;
 const short kDialogMarginWidth = 6;
 
 
-void SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers ) ; 
-
-
-//
-// SetDragActionsBasedOnModifiers [static]
-//
-// Examines the MacOS modifier keys and sets the appropriate drag action on the
-// drag session to copy/move/etc
-//
-void
-SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers ) 
-{
-  nsCOMPtr<nsIDragSession> dragSession;
-  inDragService->GetCurrentSession ( getter_AddRefs(dragSession) );
-  if ( dragSession ) {
-    PRUint32 action = nsIDragService::DRAGDROP_ACTION_MOVE;
-    
-    // force copy = option, alias = cmd-option, default is move
-    if ( inModifiers & optionKey ) {
-      if ( inModifiers & cmdKey )
-        action = nsIDragService::DRAGDROP_ACTION_LINK;
-      else
-        action = nsIDragService::DRAGDROP_ACTION_COPY;
-    }
-
-    dragSession->SetDragAction ( action );    
-  }
-
-} // SetDragActionBasedOnModifiers
-
 #pragma mark -
 
 
-//еее this should probably go into the drag session as a static
 pascal OSErr
 nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
                     void *handlerRefCon, DragReference theDrag)
 {
-  // holds our drag service across multiple calls to this callback. The reference to
-  // the service is obtained when the mouse enters the window and is released when
-  // the mouse leaves the window (or there is a drop). This prevents us from having
-  // to re-establish the connection to the service manager 15 times a second when
-  // handling the |kDragTrackingInWindow| message.
-  static nsIDragService* sDragService = nsnull;
+  static nsCOMPtr<nsIDragHelperService> sDragHelper;
 
   nsCOMPtr<nsIEventSink> windowEventSink;
   nsToolkit::GetWindowEventSink(theWindow, getter_AddRefs(windowEventSink));
@@ -159,85 +119,28 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
       
     case kDragTrackingEnterWindow:
     {
-      // get our drag service for the duration of the drag.
-      nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                                NS_GET_IID(nsIDragService),
-                                              (nsISupports **)&sDragService);
-            NS_ASSERTION ( sDragService, "Couldn't get a drag service, we're in biiig trouble" );
-
-      // tell the session about this drag
-      if ( sDragService ) {
-        sDragService->StartDragSession();
-        nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(sDragService) );
-        if ( macSession )
-          macSession->SetDragReference ( theDrag );
-      }
-      
-      // let gecko know that the mouse has entered the window so it
-      // can start tracking and sending enter/exit events to frames.
-      Point mouseLocGlobal;
-      ::GetDragMouse ( theDrag, &mouseLocGlobal, nsnull );
-      PRBool handled = PR_FALSE;
-      windowEventSink->DragEvent ( NS_DRAGDROP_ENTER, mouseLocGlobal.h, mouseLocGlobal.v, 0L, &handled );     
+      sDragHelper = do_GetService ( "@mozilla.org/widget/draghelperservice;1" );
+      NS_ASSERTION ( sDragHelper, "Couldn't get a drag service, we're in biiig trouble" );
+      if ( sDragHelper )
+        sDragHelper->Enter ( theDrag, windowEventSink );
       break;
     }
     
     case kDragTrackingInWindow:
     {
-      Point mouseLocGlobal;
-      ::GetDragMouse ( theDrag, &mouseLocGlobal, nsnull );
-      short modifiers;
-      ::GetDragModifiers ( theDrag, &modifiers, nsnull, nsnull );
-      
-      NS_ASSERTION ( sDragService, "If we don't have a drag service, we're fucked" );
-      
-      // set the drag action on the service so the frames know what is going on
-      SetDragActionBasedOnModifiers ( sDragService, modifiers );
-      
-      // clear out the |canDrop| property of the drag session. If it's meant to
-      // be, it will be set again.
-      nsCOMPtr<nsIDragSession> session;
-      sDragService->GetCurrentSession(getter_AddRefs(session));
-      NS_ASSERTION ( session, "If we don't have a drag session, we're fucked" );
-      if ( session )
-        session->SetCanDrop(PR_FALSE);
-
-      // pass into gecko for handling...
-      PRBool handled = PR_FALSE;
-      windowEventSink->DragEvent ( NS_DRAGDROP_OVER, mouseLocGlobal.h, mouseLocGlobal.v, modifiers, &handled );
+      if ( sDragHelper ) {
+        PRBool dropAllowed = PR_FALSE;
+        sDragHelper->Tracking ( theDrag, windowEventSink, &dropAllowed );
+      }
       break;
     }
     
     case kDragTrackingLeaveWindow:
     {
-      // tell the drag service that we're done with it.
-      if ( sDragService ) {
-        sDragService->EndDragSession();
-        
-        // clear out the dragRef in the drag session. We are guaranteed that
-        // this will be called _after_ the drop has been processed (if there
-        // is one), so we're not destroying valuable information if the drop
-        // was in our window.
-        nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(sDragService) );
-        if ( macSession )
-          macSession->SetDragReference ( 0 );         
-      }     
-    
-      // let gecko know that the mouse has left the window so it
-      // can stop tracking and sending enter/exit events to frames.
-      Point mouseLocGlobal;
-      ::GetDragMouse ( theDrag, &mouseLocGlobal, nsnull );
-      PRBool handled = PR_FALSE;
-      windowEventSink->DragEvent ( NS_DRAGDROP_EXIT, mouseLocGlobal.h, mouseLocGlobal.v, 0L, &handled );
-      
-      ::HideDragHilite ( theDrag );
-  
-      // we're _really_ done with it, so let go of the service.
-      if ( sDragService ) {
-        nsServiceManager::ReleaseService(kCDragServiceCID, sDragService);
-        sDragService = nsnull;      
+      if ( sDragHelper ) {
+        sDragHelper->Leave ( theDrag, windowEventSink );
+        sDragHelper = nsnull;      
       }
-      
       break;
     }
     
@@ -248,7 +151,6 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 } // DragTrackingHandler
 
 
-//еее this should probably go into the drag session as a static
 pascal OSErr
 nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
                   DragReference theDragRef)
@@ -257,39 +159,18 @@ nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
   nsToolkit::GetWindowEventSink(theWindow, getter_AddRefs(windowEventSink));
   if ( !theWindow || !windowEventSink )
     return dragNotAcceptedErr;
-    
-  // We make the assuption that the dragOver handlers have correctly set
-  // the |canDrop| property of the Drag Session. Before we dispatch the event
-  // into Gecko, check that value and either dispatch it or set the result
-  // code to "spring-back" and show the user the drag failed. 
-  OSErr result = noErr;
-  nsCOMPtr<nsIDragService> dragService ( do_GetService(kCDragServiceCID) );
-  if ( dragService ) {
-    nsCOMPtr<nsIDragSession> dragSession;
-    dragService->GetCurrentSession ( getter_AddRefs(dragSession) );
-    if ( dragSession ) {
-      // if the target has set that it can accept the drag, pass along
-      // to gecko, otherwise set phasers for failure.
-      PRBool canDrop = PR_FALSE;
-      if ( NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) )
-        if ( canDrop ) {
-          // pass the drop event along to Gecko
-          Point mouseLocGlobal;
-          ::GetDragMouse ( theDragRef, &mouseLocGlobal, nsnull );
-          short modifiers;
-          ::GetDragModifiers ( theDragRef, &modifiers, nsnull, nsnull );
-          PRBool handled = PR_FALSE;
-          windowEventSink->DragEvent ( NS_DRAGDROP_DROP, mouseLocGlobal.h, mouseLocGlobal.v, modifiers, &handled );
-        }
-        else
-          result = dragNotAcceptedErr;  
-    } // if a valid drag session
-        
-    // we don't need the drag session anymore, the user has released the
-    // mouse and the event has already gone to gecko.
-    dragService->EndDragSession();
-  }
   
+  // tell Gecko about the drop. It will tell us if one of the handlers
+  // accepted it. If not, we need to tell the drag manager.
+  OSErr result = noErr;
+  nsCOMPtr<nsIDragHelperService> helper ( do_GetService("@mozilla.org/widget/draghelperservice;1") );
+  if ( helper ) {
+    PRBool dragAccepted = PR_FALSE;
+    helper->Drop ( theDragRef, windowEventSink, &dragAccepted );
+    if ( !dragAccepted )
+      result = dragNotAcceptedErr;
+  }
+    
   return result;
   
 } // DragReceiveHandler
@@ -332,8 +213,8 @@ nsMacWindow::nsMacWindow() : Inherited()
 //-------------------------------------------------------------------------
 nsMacWindow::~nsMacWindow()
 {
-  if (mWindowPtr)
-  {
+  if ( mWindowPtr && mWindowMadeHere ) {
+    
     // cleanup our special defproc if we are a popup
     if ( mWindowType == eWindowType_popup )
       RemoveBorderlessDefProc ( mWindowPtr );
@@ -345,8 +226,6 @@ nsMacWindow::~nsMacWindow()
       delete mPhantomScrollbarData;
     }
 #endif    
-    if (mWindowMadeHere)
-      ::DisposeWindow(mWindowPtr);
       
     // clean up DragManager stuff
     if ( mDragTrackingHandlerUPP ) {
@@ -358,6 +237,7 @@ nsMacWindow::~nsMacWindow()
       ::DisposeDragReceiveHandlerUPP ( mDragReceiveHandlerUPP );
     }
 
+    ::DisposeWindow(mWindowPtr);
     mWindowPtr = nsnull;
   }
   
@@ -381,26 +261,26 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 {
   short bottomPinDelta = 0;     // # of pixels to subtract to pin window bottom
   nsCOMPtr<nsIToolkit> theToolkit = aToolkit;
+  Boolean resizable = false;
   
   // build the main native window
   if (aNativeParent == nsnull)
   {
     nsWindowType windowType;
-    if (aInitData)
-    {
+    if (aInitData) {
       mWindowType = aInitData->mWindowType;
       // if a toplevel window was requested without a titlebar, use a dialog windowproc
       if (aInitData->mWindowType == eWindowType_toplevel &&
         (aInitData->mBorderStyle == eBorderStyle_none ||
          aInitData->mBorderStyle != eBorderStyle_all && !(aInitData->mBorderStyle & eBorderStyle_title)))
         windowType = eWindowType_dialog;
-    } else
+    } 
+    else
       mWindowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
 
     short     wDefProcID = kWindowDocumentProc;
-    Boolean   goAwayFlag;
-    short     hOffset;
-    short     vOffset;
+    Boolean   goAwayFlag = false;
+    short     hOffset = 0, vOffset = 0;
 
     switch (mWindowType)
     {
@@ -413,9 +293,6 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
           theToolkit = getter_AddRefs(aParent->GetToolkit());
 
         mAcceptsActivation = PR_FALSE;
-        goAwayFlag = false;
-        hOffset = 0;
-        vOffset = 0;
 #if TARGET_CARBON
         wDefProcID = kWindowSimpleProc;
 #else
@@ -425,9 +302,6 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
       case eWindowType_child:
         wDefProcID = plainDBox;
-        goAwayFlag = false;
-        hOffset = 0;
-        vOffset = 0;
         break;
 
       case eWindowType_dialog:
@@ -456,6 +330,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
               #else
                 wDefProcID = kWindowMovableModalGrowProc;   // should we add a close box (kWindowGrowDocumentProc) ?
               #endif
+              resizable = true;
               break;
               
             case eBorderStyle_default:
@@ -482,6 +357,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
                   #else
                     wDefProcID = kWindowMovableModalGrowProc;   // this is the only kind of resizable dialog.
                   #endif
+                  resizable = true;
                   break;
                                   
                 default:
@@ -507,8 +383,10 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
           (aInitData->mBorderStyle == eBorderStyle_none ||
            !(aInitData->mBorderStyle & eBorderStyle_resizeh)))
           wDefProcID = kWindowDocumentProc;
-        else
+        else {
           wDefProcID = kWindowFullZoomGrowDocumentProc;
+          resizable = true;
+        }
         goAwayFlag = true;
         hOffset = kWindowMarginWidth;
         vOffset = kWindowTitleBarHeight;
@@ -564,13 +442,6 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
   if (mWindowPtr == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
-  
-  // Create the root control. 
-  ControlHandle rootControl = nsnull;
-  if ( GetRootControl(mWindowPtr, &rootControl) != noErr ) {
-    OSErr err = CreateRootControl(mWindowPtr, &rootControl);
-    NS_ASSERTION(err == noErr, "Error creating window root control");
-  }
 
   // In order to get back to this nsIWidget from a WindowPtr, we hang
   // ourselves off a property of the window. This allows places like
@@ -590,88 +461,108 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // (note: aParent is ignored. Mac (real) windows don't want parents)
   Inherited::StandardCreate(nil, bounds, aHandleEventFunction, aContext, aAppShell, theToolkit, aInitData);
 
+  // there is a lot of work that we only want to do if we actually created 
+  // the window. Embedding apps would be really torqed off if we mucked around
+  // with the window they gave us. Do things like tweak chrome, register
+  // event handlers, and install root controls and hacked scrollbars.
+  if ( mWindowMadeHere ) {
 #if TARGET_CARBON
-  if ( mWindowType == eWindowType_popup ) {
-    // OSX enforces window layering so we have to make sure that popups can
-    // appear over modal dialogs (at the top of the layering chain). Create
-    // the popup like normal and change its window class to the modal layer.
-    //
-    // XXX This needs to use ::SetWindowGroup() when we move to headers that
-    // XXX support it.
-    ::SetWindowClass(mWindowPtr, kModalWindowClass);
-  }
-  else if ( mWindowType == eWindowType_dialog ) {
-    // Dialogs on mac don't have a close box, but we probably used a defproc above that
-    // contains one. Thankfully, carbon lets us turn it off after the window has been 
-    // created. Do so. We currently leave the collapse widget for all dialogs.
-    ::ChangeWindowAttributes(mWindowPtr, 0L, kWindowCloseBoxAttribute );
-  }
-  else if ( mWindowType == eWindowType_toplevel || mWindowType == eWindowType_invisible ) {
-    // enable toolbar collapse/expand box 
-    ::ChangeWindowAttributes(mWindowPtr, kWindowToolbarButtonAttribute, 0L );
-
-    // Setup the live window resizing
-    WindowAttributes removeAttributes = kWindowNoAttributes;
-    if ( mWindowType == eWindowType_invisible )
-      removeAttributes |= kWindowInWindowMenuAttribute;     
-    ::ChangeWindowAttributes ( mWindowPtr, kWindowLiveResizeAttribute, removeAttributes );
+    if ( mWindowType == eWindowType_popup ) {
+      // OSX enforces window layering so we have to make sure that popups can
+      // appear over modal dialogs (at the top of the layering chain). Create
+      // the popup like normal and change its window class to the modal layer.
+      //
+      // XXX This needs to use ::SetWindowGroup() when we move to headers that
+      // XXX support it.
+      ::SetWindowClass(mWindowPtr, kModalWindowClass);
+    }
+    else if ( mWindowType == eWindowType_dialog ) {
+      // Dialogs on mac don't have a close box, but we probably used a defproc above that
+      // contains one. Thankfully, carbon lets us turn it off after the window has been 
+      // created. Do so. We currently leave the collapse widget for all dialogs.
+      ::ChangeWindowAttributes(mWindowPtr, 0L, kWindowCloseBoxAttribute );
+    }
+    else if ( mWindowType == eWindowType_toplevel || mWindowType == eWindowType_invisible ) {
+      // enable toolbar collapse/expand box 
+      WindowAttributes removeAttributes = kWindowNoAttributes;
+      if ( mWindowType == eWindowType_invisible )
+        removeAttributes |= kWindowInWindowMenuAttribute;     
+      ::ChangeWindowAttributes(mWindowPtr, kWindowToolbarButtonAttribute, removeAttributes );
+      
+      EventTypeSpec scrollEventList[] = { {kEventClassMouse, kEventMouseWheelMoved} };
+      OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(ScrollEventHandler), 1, scrollEventList, this, NULL );
+        // note, passing NULL as the final param to IWEH() causes the UPP to be disposed automatically
+        // when the event target (the window) goes away. See CarbonEvents.h for info.
+      
+      NS_ASSERTION(err == noErr, "Couldn't install Carbon Event handlers");
+    }
     
-    EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowBoundsChanged},
-                                      {kEventClassWindow, kEventWindowConstrain} };
-    EventTypeSpec scrollEventList[] = { {kEventClassMouse, kEventMouseWheelMoved} };
-    OSStatus err1 = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler), 2, windEventList, this, NULL );
-    OSStatus err2 = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(ScrollEventHandler), 1, scrollEventList, this, NULL );
-      // note, passing NULL as the final param to IWEH() causes the UPP to be disposed automatically
-      // when the event target (the window) goes away. See CarbonEvents.h for info.
+    // Setup the live window resizing if appropriate
+    if ( resizable ) {
+      ::ChangeWindowAttributes ( mWindowPtr, kWindowLiveResizeAttribute, kWindowNoAttributes );
     
-    NS_ASSERTION(err1 == noErr && err2 == noErr, "Couldn't install Carbon Event handlers");
-  }  
+      EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowBoundsChanged},
+                                          {kEventClassWindow, kEventWindowConstrain} };
+      OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler), 2, windEventList, this, NULL );
+    
+      NS_ASSERTION(err == noErr, "Couldn't install Carbon resize event handler");
+    }  
 #endif
   
 #if !TARGET_CARBON
-  // create a phantom scrollbar to catch the attention of mousewheel 
-  // drivers. We'll catch events sent to this scrollbar in the eventhandler
-  // and dispatch them into gecko as NS_SCROLL_EVENTs at that point. We need
-  // to hang a struct off the refCon in order to provide some data
-  // to the action proc.
-  //
-  // For Logitech, the scrollbar has to be in the content area but can have
-  // zero width. For USBOverdrive (used also by MSFT), the scrollbar can be
-  // anywhere, but must have a valid width (one pixel wide works). The
-  // current location (one pixel wide, and flush along the left side of the
-  // window) is a reasonable comprimise in the short term. It is not intended
-  // to fix all cases.
-  //
-  // Even after all this, we still have to make one more tweak for Kensington
-  // mice. With their new driver, the scrollbar has to be two pixels wide due
-  // to a bug in the appearance manager that doesn't put the correct widgetry
-  // on 1px wide scrollbars in every case. Rather than have it sticking out 2px
-  // into the window, we straddle the window border so only 1px is actually
-  // in the content area. Luckily, this is good enough for Logitech ;)
-  //
-  // NONE of this is required on OSX, which uses CarbonEvents ;)
-  Rect sbRect = { 100, -1, 150, 1 };
-  mPhantomScrollbarData = new PhantomScrollbarData;
-  mPhantomScrollbar = ::NewControl ( mWindowPtr, &sbRect, nil, true, 50, 0, 100, 
-                                            kControlScrollBarLiveProc, (long)mPhantomScrollbarData );
-  ::EmbedControl ( rootControl, mPhantomScrollbar );
+    // create a phantom scrollbar to catch the attention of mousewheel 
+    // drivers. We'll catch events sent to this scrollbar in the eventhandler
+    // and dispatch them into gecko as NS_SCROLL_EVENTs at that point. We need
+    // to hang a struct off the refCon in order to provide some data
+    // to the action proc.
+    //
+    // For Logitech, the scrollbar has to be in the content area but can have
+    // zero width. For USBOverdrive (used also by MSFT), the scrollbar can be
+    // anywhere, but must have a valid width (one pixel wide works). The
+    // current location (one pixel wide, and flush along the left side of the
+    // window) is a reasonable comprimise in the short term. It is not intended
+    // to fix all cases.
+    //
+    // Even after all this, we still have to make one more tweak for Kensington
+    // mice. With their new driver, the scrollbar has to be two pixels wide due
+    // to a bug in the appearance manager that doesn't put the correct widgetry
+    // on 1px wide scrollbars in every case. Rather than have it sticking out 2px
+    // into the window, we straddle the window border so only 1px is actually
+    // in the content area. Luckily, this is good enough for Logitech ;)
+    //
+    // NONE of this is required on OSX, which uses CarbonEvents ;)
+    
+    // Create the root control. 
+    ControlHandle rootControl = nsnull;
+    if ( GetRootControl(mWindowPtr, &rootControl) != noErr ) {
+      OSErr err = CreateRootControl(mWindowPtr, &rootControl);
+      NS_ASSERTION(err == noErr, "Error creating window root control");
+    }
+
+    Rect sbRect = { 100, -1, 150, 1 };
+    mPhantomScrollbarData = new PhantomScrollbarData;
+    mPhantomScrollbar = ::NewControl ( mWindowPtr, &sbRect, nil, true, 50, 0, 100, 
+                                              kControlScrollBarLiveProc, (long)mPhantomScrollbarData );
+    ::EmbedControl ( rootControl, mPhantomScrollbar );
 #endif
     
-  // register tracking and receive handlers with the native Drag Manager
-  if ( mDragTrackingHandlerUPP ) {
-    OSErr result = ::InstallTrackingHandler ( mDragTrackingHandlerUPP, mWindowPtr, nsnull );
-    NS_ASSERTION ( result == noErr, "can't install drag tracking handler");
-  }
-  if ( mDragReceiveHandlerUPP ) {
-    OSErr result = ::InstallReceiveHandler ( mDragReceiveHandlerUPP, mWindowPtr, nsnull );
-    NS_ASSERTION ( result == noErr, "can't install drag receive handler");
-  }
+    // register tracking and receive handlers with the native Drag Manager
+    if ( mDragTrackingHandlerUPP ) {
+      OSErr result = ::InstallTrackingHandler ( mDragTrackingHandlerUPP, mWindowPtr, nsnull );
+      NS_ASSERTION ( result == noErr, "can't install drag tracking handler");
+    }
+    if ( mDragReceiveHandlerUPP ) {
+      OSErr result = ::InstallReceiveHandler ( mDragReceiveHandlerUPP, mWindowPtr, nsnull );
+      NS_ASSERTION ( result == noErr, "can't install drag receive handler");
+    }
+  
+    // If we're a popup, we don't want a border (we want CSS to draw it for us). So
+    // install our own window defProc.
+    if ( mWindowType == eWindowType_popup )
+      InstallBorderlessDefProc(mWindowPtr);
 
-  // If we're a popup, we don't want a border (we want CSS to draw it for us). So
-  // install our own window defProc.
-  if ( mWindowType == eWindowType_popup )
-    InstallBorderlessDefProc(mWindowPtr);
-
+  } // if we created windowPtr
+  
   return NS_OK;
 }
 
@@ -1399,6 +1290,26 @@ nsMacWindow::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
   if (mMacEventHandler.get())
     *_retval = mMacEventHandler->DragEvent(aMessage, globalPoint, aKeyModifiers);
   
+  return NS_OK;
+}
+
+
+//
+// Scroll
+//
+// Someone wants us to scroll in the current window, probably as the result
+// of a scrollWheel event or external scrollbars. Pass along to the 
+// eventhandler.
+//
+NS_IMETHODIMP
+nsMacWindow::Scroll ( PRBool aVertical, PRInt16 aNumLines, PRInt16 aMouseLocalX, 
+                        PRInt16 aMouseLocalY, PRBool *_retval )
+{
+  *_retval = PR_FALSE;
+  Point localPoint = {aMouseLocalY, aMouseLocalX};
+  if ( mMacEventHandler.get() )
+    *_retval = mMacEventHandler->Scroll(aVertical ? kEventMouseWheelAxisY : kEventMouseWheelAxisX,
+                                          aNumLines, localPoint);
   return NS_OK;
 }
 
