@@ -52,6 +52,16 @@ nsHTTreeItem::nsHTTreeItem(nsIContent* pContent, nsHierarchicalDataModel* pModel
 nsHTTreeItem::~nsHTTreeItem()
 {
   NS_IF_RELEASE(mContentNode);
+
+  // Empty out our rectangle array
+  PRInt32 count = mColumnRectArray.Count();
+  for (PRInt32 i = 0; i < count; i++)
+  {
+	  nsRect* rect = (nsRect*)mColumnRectArray[i];
+	  delete rect;
+  }
+
+  mColumnRectArray.Clear();
 }
 
 // ISupports Implementation --------------------------------------------------------------------
@@ -83,7 +93,10 @@ void nsHTTreeItem::GetItemStyle(nsIDeviceContext* dc, nsTreeItemStyleInfo& style
 	styleInfo.showIcon = PR_TRUE;
 	styleInfo.leftJustifyTrigger = PR_FALSE;
 	
-	styleInfo.rolloverFGColor = NS_RGB(128,128,128);
+	styleInfo.rolloverFGColor = NS_RGB(0,0,255);
+
+	styleInfo.selectionBGColor = NS_RGB(0,0,128);
+	styleInfo.selectionFGColor = NS_RGB(255,255,255);
 
 	styleInfo.showHorizontalDivider = PR_TRUE;
 	styleInfo.showVerticalDivider = PR_TRUE;
@@ -210,4 +223,38 @@ void nsHTTreeItem::Notify(nsIImageRequest *aImageRequest,
 void nsHTTreeItem::NotifyError(nsIImageRequest *aImageRequest,
                                nsImageError aErrorType)
 {
+}
+
+
+PRUint32 nsHTTreeItem::GetChildCount() const
+{
+	nsIContent* pChildrenNode = nsHTDataModel::FindChildWithName(mContentNode, "children");
+	PRInt32 childCount = 0;
+	if (pChildrenNode)
+		pChildrenNode->ChildCount(childCount);
+
+	return childCount;
+}
+
+nsIContent* nsHTTreeItem::GetNthChildContentNode(PRUint32 n) const
+{
+	nsIContent* pGrandchild = nsnull;
+	nsIContent* pChildrenNode = nsHTDataModel::FindChildWithName(mContentNode, "children");
+	if (pChildrenNode)
+	{
+		pChildrenNode->ChildAt(n, pGrandchild);
+	}
+	return pGrandchild;
+}
+
+void nsHTTreeItem::SetContentRectangle(const nsRect& rect, PRUint32 n)
+{
+	PRInt32 count = mColumnRectArray.Count();
+	if (count == (PRInt32)n)
+	  mColumnRectArray.AppendElement(new nsRect(rect));
+	else
+	{
+		nsRect* existingRect = (nsRect*)(mColumnRectArray[n]);
+		*existingRect = rect;
+	}
 }

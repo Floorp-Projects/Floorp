@@ -144,6 +144,45 @@ nsHierarchicalDataItem* nsHTDataModel::GetNthItemDelegate(PRUint32 n) const
 	else return nsnull;
 }
 
+
+void nsHTDataModel::SetSelectionDelegate(nsHierarchicalDataItem* pDataItem)
+{
+	ClearSelectionDelegate(); // First clear our selection.
+	
+	ToggleSelectionDelegate(pDataItem); // Add this node to the selection.
+}
+	
+void nsHTDataModel::ToggleSelectionDelegate(nsHierarchicalDataItem* pDataItem)
+{
+	nsString attrValue;
+	// Need to set the attribute's value.
+	if (pDataItem->IsSelected())
+		attrValue = "false";
+	else attrValue = "true";
+
+	// Set it and wait for the callback.
+	nsHTItem* pItem = NS_STATIC_CAST(nsHTItem*, pDataItem->GetImplData());
+	pItem->GetContentNode()->SetAttribute("selected", attrValue, PR_TRUE);
+
+	// TODO: Remove this and put it in the callback instead.
+	pItem->FinishSelectionChange();
+}
+
+void nsHTDataModel::RangedSelectionDelegate(PRUint32 n, PRUint32 count)
+{
+}
+
+void nsHTDataModel::ClearSelectionDelegate()
+{
+	// Iterate over our array and clear the selection.
+	PRInt32 count = mSelectedItemArray.Count();
+	for (PRInt32 i = 0; i < count; i++)
+	{
+		nsHierarchicalDataItem* pItem = (nsHierarchicalDataItem*)mSelectedItemArray[0];
+		ToggleSelectionDelegate(pItem);
+	}
+}
+
 void nsHTDataModel::ImageLoaded(nsHierarchicalDataItem* pItem)
 {
 	if (mListener)

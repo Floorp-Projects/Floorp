@@ -36,6 +36,9 @@ public:
 
 	virtual PRBool IsExpanded() const = 0;
 	virtual void ToggleOpenState() = 0;
+	virtual PRUint32 GetChildCount() const = 0; // Gets the number of children that reside underneath this node.
+
+	virtual PRBool IsSelected() const = 0;
 
 	virtual PRUint32 GetIndentationLevel() const = 0;
 	virtual void SetIndentationLevel(PRUint32 n) = 0;

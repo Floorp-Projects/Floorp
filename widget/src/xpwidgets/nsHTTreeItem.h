@@ -20,6 +20,7 @@
 #define nsHTTreeItem_h___
 
 #include "nsTreeItem.h"
+#include "nsVoidArray.h"
 #include "nsHTItem.h"
 #include "nsIImageObserver.h"
 
@@ -56,6 +57,8 @@ public:
 	// the concrete implementation.
 	virtual PRBool IsExpanded() const { return IsExpandedDelegate(); };
 	virtual void ToggleOpenState() { ToggleOpenStateDelegate(); };
+	virtual PRUint32 GetChildCount() const;
+	virtual PRBool IsSelected() const { return IsSelectedDelegate(); };
 	virtual PRUint32 GetIndentationLevel() const { return GetIndentationLevelDelegate(); };
 	virtual void SetIndentationLevel(PRUint32 n) { SetIndentationLevelDelegate(n); };
 	// End of delegated functions
@@ -69,6 +72,12 @@ public:
 	virtual void SetTreeItemRectangle(const nsRect& rect) { mRowRectangle = rect; };
 	virtual void GetTriggerRectangle(nsRect& rect) const { rect = mTriggerRectangle; };
 	virtual void SetTriggerRectangle(const nsRect& rect) { mTriggerRectangle = rect; };
+	virtual void GetContentRectangle(nsRect& rect, PRUint32 n) const 
+	{ rect = *((nsRect*)mColumnRectArray[n]); };
+	virtual void SetContentRectangle(const nsRect& rect, PRUint32 n);
+	
+	virtual nsHierarchicalDataItem* GetDataItem() { return this; } // Used by nsHTItem.
+	virtual nsIContent* GetNthChildContentNode(PRUint32 n) const;
 
 protected:
 	nsIImageRequest* RequestImage(nsString& reqUrl) const; // Helper to kick off the image load.
@@ -85,6 +94,7 @@ protected:
 
 	 nsRect mRowRectangle;	// A cached copy of our position within the tree view.
 	 nsRect mTriggerRectangle;	// A cached copy of our trigger rectangle
+	 nsVoidArray mColumnRectArray; // A cached copy of our content rectangles
 };
 
 #endif /* nsHTTreeItem_h___ */

@@ -61,6 +61,18 @@ public:
 	virtual nsHierarchicalDataItem* GetNthItem(PRUint32 n) const { return GetNthItemDelegate(n) ;};
 	virtual void SetDataModelListener(nsDataModelWidget* pListener) { SetDataModelListenerDelegate(pListener); };
 
+	virtual void SetSelection(nsHierarchicalDataItem* pDataItem) 
+	{ SetSelectionDelegate(pDataItem); };
+
+	virtual void ToggleSelection(nsHierarchicalDataItem* pDataItem)
+	{ ToggleSelectionDelegate(pDataItem); };
+
+	virtual void RangedSelection(PRUint32 n, PRUint32 count)
+	{ RangedSelectionDelegate(n, count); };
+	
+	virtual void ClearSelection()
+	{ ClearSelectionDelegate(); };
+
 	// ---------------- End of delegated functions
 	
 	// Style Retrievers

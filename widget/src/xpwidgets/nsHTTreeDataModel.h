@@ -63,6 +63,19 @@ public:
 	virtual void SetFirstVisibleItemIndex(PRUint32 index) { SetFirstVisibleItemIndexDelegate(index); };
 	virtual nsHierarchicalDataItem* GetNthItem(PRUint32 n) const { return GetNthItemDelegate(n) ;};
 	virtual void SetDataModelListener(nsDataModelWidget* pListener) { SetDataModelListenerDelegate(pListener); };
+	
+	virtual void SetSelection(nsHierarchicalDataItem* pDataItem) 
+	{ SetSelectionDelegate(pDataItem); };
+
+	virtual void ToggleSelection(nsHierarchicalDataItem* pDataItem)
+	{ ToggleSelectionDelegate(pDataItem); };
+
+	virtual void RangedSelection(PRUint32 n, PRUint32 count)
+	{ RangedSelectionDelegate(n, count); };
+	
+	virtual void ClearSelection()
+	{ ClearSelectionDelegate(); };
+
 	// End of delegated functions
 	
 	// Column Iteration
@@ -90,6 +103,9 @@ public:
 	virtual void GetControlStripStyle(nsIDeviceContext* pContext,  
 									  nsBasicStyleInfo& styleInfo) const;
 
+	virtual PRInt32 GetSelectedColumnIndex() const { return mSelectedColumnIndex; };
+	virtual void SetSelectedColumnIndex(PRInt32 n) { mSelectedColumnIndex = n; };
+
 	// Text for the title bar, control strip and column headers
 	virtual void GetTitleBarText(nsString& text) const;
 
@@ -113,6 +129,7 @@ private:
 	nsIImageRequest* mControlStripBGRequest;// The control strip bg image
 	nsIImageRequest* mColumnHeaderBGRequest;// The column header background image
 
+	PRInt32 mSelectedColumnIndex;
 };
 
 #endif /* nsHTTreeDataModel_h___ */
