@@ -129,6 +129,8 @@ nsFormControlFrame::~nsFormControlFrame()
 NS_IMETHODIMP
 nsFormControlFrame::Destroy(nsIPresContext *aPresContext)
 {
+  // XXXldb Do we really need to do this?  Shouldn't only those frames
+  // that use it do it?
   nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   return nsLeafFrame::Destroy(aPresContext);
 }
@@ -581,10 +583,9 @@ nsFormControlFrame::RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * a
     nsCOMPtr<nsIContent> content;
     if (NS_SUCCEEDED(aFrame->GetContent(getter_AddRefs(content)))) {
 #if 1
-      PRInt32 nameSpaceID;
-      content->GetNameSpaceID(nameSpaceID);
       nsAutoString resultValue;
-      rv = content->GetAttr(nameSpaceID, nsHTMLAtoms::accesskey, accessKey);
+      rv = content->GetAttr(kNameSpaceID_None,
+                            nsHTMLAtoms::accesskey, accessKey);
 #else
       nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(content));
       if (inputElement) {
