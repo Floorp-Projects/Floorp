@@ -427,7 +427,7 @@ nsMsgSendLater::DeleteCurrentMessage()
   }
 
   msgArray->InsertElementAt(mMessage, 0);
-  res = mMessageFolder->DeleteMessages(msgArray, nsnull);
+  res = mMessageFolder->DeleteMessages(msgArray, nsnull, PR_TRUE);
   if (NS_FAILED(res))
     return NS_ERROR_FAILURE;
 
