@@ -524,7 +524,7 @@ void free_stub_context(MWContext *window_id)
 extern "C" MWContext * XP_FindContextOfType (MWContext * context, 
                                              MWContextType type)
 {
-    MWContext *window_id;
+    MWContext *window_id = 0;
 
     /*
      * Return the context that was passed in if it is the correct type
