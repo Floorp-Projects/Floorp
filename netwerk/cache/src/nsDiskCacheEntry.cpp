@@ -42,14 +42,15 @@ PLDHashTableOps nsDiskCacheEntryHashTable::ops =
 };
 
 nsDiskCacheEntryHashTable::nsDiskCacheEntryHashTable()
-    : initialized(0)
+    : initialized(PR_FALSE)
 {
 }
 
 
 nsDiskCacheEntryHashTable::~nsDiskCacheEntryHashTable()
 {
-    PL_DHashTableFinish(&table);
+    if (initialized)
+        PL_DHashTableFinish(&table);
 }
 
 

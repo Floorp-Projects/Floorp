@@ -93,6 +93,7 @@ private:
     nsDiskCacheEntryHashTable   mBoundEntries;
     PRUint32                    mCacheCapacity;
     PRUint32                    mCacheSize;
+    PRBool                      mInitialized;
 };
 
 #endif // _nsDiskCacheDevice_h_
