@@ -185,6 +185,9 @@ nsBufferInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
         if (!mBlocking && NS_FAILED(rv)) break;
 
         if (amt == 0) {
+            if (*aReadCount > 0) {
+                break;  // don't Fill if we've got something
+            }
             rv = Fill();
             if (rv == NS_BASE_STREAM_WOULD_BLOCK) break;
             if (NS_FAILED(rv)) break;
@@ -231,81 +234,6 @@ nsBufferInputStream::Search(const char *forString, PRBool ignoreCase, PRBool *fo
 
     return mBuffer->Search(forString, ignoreCase, found, offsetSearchedTo);
 }
-
-#if 0
-NS_IMETHODIMP
-nsBufferInputStream::Fill(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
-{
-    nsAutoCMonitor mon(mBuffer);
-    nsresult rv = NS_OK;
-
-#ifdef DEBUG
-    PRBool closed;
-    rv = mBuffer->GetReaderClosed(&closed);
-    NS_ASSERTION(NS_SUCCEEDED(rv) && !closed, "state change error");
-#endif
-
-    *aWriteCount = 0;
-    while (aCount > 0) {
-        PRUint32 amt;
-        amt = 0;
-        rv = mBuffer->Write(aBuf, aCount, &amt);
-        if (rv == NS_BASE_STREAM_EOF)
-            return *aWriteCount > 0 ? NS_OK : rv;
-        // If a blocking write fails just drop into Fill()
-        if (!mBlocking && NS_FAILED(rv)) break;
-
-        if (amt == 0) {
-            rv = Fill();
-            if (rv == NS_BASE_STREAM_WOULD_BLOCK)
-                return *aWriteCount > 0 ? NS_OK : rv;
-            if (NS_FAILED(rv)) return rv;
-        }
-        else {
-            aBuf += amt;
-            aCount -= amt;
-            *aWriteCount += amt;
-        }
-    }
-    return rv;
-}
-
-NS_IMETHODIMP
-nsBufferInputStream::FillFrom(nsIInputStream *fromStream, PRUint32 aCount, PRUint32 *aWriteCount)
-{
-    nsAutoCMonitor mon(mBuffer);
-    nsresult rv = NS_OK;
-
-#ifdef DEBUG
-    PRBool closed;
-    rv = mBuffer->GetReaderClosed(&closed);
-    NS_ASSERTION(NS_SUCCEEDED(rv) && !closed, "state change error");
-#endif
-
-    *aWriteCount = 0;
-    while (aCount > 0) {
-        PRUint32 amt;
-        amt = 0;
-        rv = mBuffer->WriteFrom(fromStream, aCount, &amt);
-        if (rv == NS_BASE_STREAM_EOF)
-            return *aWriteCount > 0 ? NS_OK : rv;
-        // If a blocking WriteFrom fails just drop into Fill()
-        if (!mBlocking && NS_FAILED(rv)) break;
-
-        if (amt == 0) {
-            rv = Fill();
-            if (rv == NS_BASE_STREAM_WOULD_BLOCK)
-                return *aWriteCount > 0 ? NS_OK : rv;
-            if (NS_FAILED(rv)) return rv;
-        }
-        else {
-            aCount -= amt;
-            *aWriteCount += amt;
-        }
-    }
-    return rv;
-}
-#endif
 
 NS_IMETHODIMP
 nsBufferInputStream::GetNonBlocking(PRBool *aNonBlocking)
