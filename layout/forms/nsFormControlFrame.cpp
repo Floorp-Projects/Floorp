@@ -233,20 +233,27 @@ nsFormControlFrame::Reflow(nsIPresContext&          aPresContext,
     nsFormFrame::AddFormControlFrame(aPresContext, *this);
   }
 
-  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
+  nsWidgetRendering mode;
+  aPresContext.GetWidgetRenderingMode(&mode);
+  if (eWidgetRendering_Native == mode) {
+    GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
-  if (!mDidInit) {
-    PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
-    mDidInit = PR_TRUE;
-  }
-  
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
+    if (!mDidInit) {
+      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+      mDidInit = PR_TRUE;
+    }
+    aDesiredSize.ascent = aDesiredSize.height;
+    aDesiredSize.descent = 0;
 
-  if (nsnull != aDesiredSize.maxElementSize) {
-    //XXX aDesiredSize.AddBorderPaddingToMaxElementSize(borderPadding);
+  } else {
+    GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
+    if (!mDidInit) {
+      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+      mDidInit = PR_TRUE;
+    }
+    return nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
-    
+
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
