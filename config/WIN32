@@ -77,6 +77,8 @@ OS_LFLAGS=
 !endif
 !endif
 
+OPTIMIZER=$(OPTIMIZER) -DCookieManagement -DSingleSignon
+
 #//------------------------------------------------------------------------
 #//
 #// Select the correct RTL to link...
@@ -135,4 +137,3 @@ EXE_LIBS=
 DLL_CFLAGS=
 DLL_LFLAGS=/SUBSYSTEM:WINDOWS
 DLL_LIBS=
-
