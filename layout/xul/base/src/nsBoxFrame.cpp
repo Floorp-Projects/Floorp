@@ -599,7 +599,7 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
   PRBool finished;
   nscoord passes = 0;
   nscoord changedIndex = -1;
-  nscoord count = 0;
+  //nscoord count = 0;
   nsAutoString reason("initial");
   nsAutoString nextReason("initial");
   PRBool resized[100];
@@ -1228,7 +1228,7 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
 
           // figure out the direction of the box and get the correct value either the width or height
           nscoord& pref = GET_WIDTH(spring.prefSize);
-          nscoord& max  = GET_WIDTH(spring.maxSize);
+          // nscoord& max  = GET_WIDTH(spring.maxSize); // Not used.
           nscoord& min  = GET_WIDTH(spring.minSize);
          
           GET_HEIGHT(spring.calculatedSize) = GET_HEIGHT(size);
@@ -1479,8 +1479,8 @@ nsBoxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aR
 
         // add in the child's margin and border/padding if there is one.
         const nsStyleSpacing* spacing;
-        nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
-                      (const nsStyleStruct*&) spacing);
+        rv = childFrame->GetStyleData(eStyleStruct_Spacing,
+                                      (const nsStyleStruct*&) spacing);
 
         NS_ASSERTION(rv == NS_OK,"failed to get spacing info");
         if (NS_FAILED(rv))
@@ -1744,7 +1744,7 @@ nsBoxDebugInner::FillRect(nsIRenderingContext& aRenderingContext, nscoord x, nsc
 void 
 nsBoxDebugInner::DrawSpring(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, float flex, nscoord x, nscoord y, nscoord size, nscoord springSize)
 {
-        PRBool h = mOuter->mHorizontal;
+        // PRBool h = mOuter->mHorizontal;
     
         float p2t;
         aPresContext.GetScaledPixelsToTwips(&p2t);

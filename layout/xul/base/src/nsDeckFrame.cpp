@@ -88,8 +88,8 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
             aPresContext->GetShell(getter_AddRefs(shell));
 
             nsCOMPtr<nsIReflowCommand> reflowCmd;
-            nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
-                                                  nsIReflowCommand::StyleChanged);
+            rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
+                                         nsIReflowCommand::StyleChanged);
             if (NS_SUCCEEDED(rv)) 
               shell->AppendReflowCommand(reflowCmd);
   }
