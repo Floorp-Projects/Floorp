@@ -337,12 +337,18 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
     {
       // remember start and end points of selection
       // XXX: this won't work for discontiguous selections
+
+#if 0
+		// these don't seem to be used. sfraser
       nsCOMPtr<nsIDOMNode> selStartNode;
       PRInt32 selStartOffset;
       nsCOMPtr<nsIDOMNode> selEndNode;
       PRInt32 selEndOffset;
-      selection->GetAnchorNodeAndOffset(getter_AddRefs(selStartNode), &selStartOffset);
-      selection->GetFocusNodeAndOffset(getter_AddRefs(selEndNode), &selEndOffset);
+      selection->GetAnchorNode(getter_AddRefs(selStartNode));
+      selection->GetAnchorOffset(&selStartOffset);
+      selection->GetFocusNode(getter_AddRefs(selEndNode));
+      selection->GetFocusOffset(&selEndOffset);
+#endif
 
       // set the text property for all selected ranges
       nsEditor::BeginTransaction();
