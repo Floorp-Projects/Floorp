@@ -50,6 +50,7 @@
 #include "nsINetDataCacheManager.h"
 #include "nsINetDataCache.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsMimeTypes.h"
 
 #ifdef DEBUG_gagan
 #include "nsUnixColorPrintf.h"
@@ -327,7 +328,7 @@ nsHTTPChannel::GetContentType(char * *aContentType)
     }
 
     if (!*aContentType) 
-        *aContentType = nsCRT::strdup(UNKNOWN_MIME);
+        *aContentType = nsCRT::strdup(UNKNOWN_CONTENT_TYPE);
     if (!*aContentType) {
         rv = NS_ERROR_OUT_OF_MEMORY;
     } else {

@@ -30,6 +30,7 @@
 #include "nsIMIMEService.h"
 #include "nsIPipe.h"
 #include "nsNetUtil.h"
+#include "nsMimeTypes.h"
 
 static NS_DEFINE_CID(kMIMEServiceCID,               NS_MIMESERVICE_CID);
 
@@ -420,7 +421,7 @@ nsFTPChannel::GetContentType(char* *aContentType) {
         if (NS_SUCCEEDED(rv)) {
             mContentType = *aContentType;
         } else {
-            mContentType = UNKNOWN_MIME;
+            mContentType = UNKNOWN_CONTENT_TYPE;
             rv = NS_OK;
         }
     }
