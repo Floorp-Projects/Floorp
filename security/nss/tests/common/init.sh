@@ -161,6 +161,14 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     DLL_SUFFIX=`(cd $COMMON; gmake dll_suffix)`
     OS_NAME=`uname -s | sed -e "s/-[0-9]*\.[0-9]*//"`
 
+    # Pathnames constructed from ${TESTDIR} are passed to NSS tools
+    # such as certutil, which don't understand Cygwin pathnames.
+    # So we need to convert ${TESTDIR} to a Windows pathname (with
+    # regular slashes).
+    if [ "${OS_ARCH}" = "WINNT" -a "$OS_NAME" = "CYGWIN_NT" ]; then
+        TESTDIR=`cygpath -m ${TESTDIR}`
+    fi
+
 #in case of backward comp. tests the calling scripts set the
 #PATH and LD_LIBRARY_PATH and do not want them to be changed
     if [ -z "${DON_T_SET_PATHS}" -o "${DON_T_SET_PATHS}" != "TRUE" ] ; then

@@ -117,7 +117,11 @@ is_selfserv_alive()
           Exit 9 "Fatal - selfserv pid file ${SERVERPID} does not exist"
       fi
   fi
-  PID=`cat ${SERVERPID}`
+  if [ "${OS_ARCH}" = "WINNT" -a "$OS_NAME" = "CYGWIN_NT" ]; then
+      PID=${SHELL_SERVERPID}
+  else
+      PID=`cat ${SERVERPID}`
+  fi
   #if  [ "${OS_ARCH}" = "Linux" ]; then
       kill -0 $PID >/dev/null 2>/dev/null || Exit 10 "Fatal - selfserv process not detectable"
   #else
@@ -131,8 +135,8 @@ is_selfserv_alive()
 ########################################################################
 wait_for_selfserv()
 {
-  echo "tstclnt -p ${PORT} -h ${HOSTADDR} -q "
-  echo "        -d ${P_R_CLIENTDIR} < ${REQUEST_FILE} \\"
+  echo "tstclnt -p ${PORT} -h ${HOSTADDR} -q \\"
+  echo "        -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
   #echo "tstclnt -q started at `date`"
   tstclnt -p ${PORT} -h ${HOSTADDR} -q -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
   if [ $? -ne 0 ]; then
@@ -151,8 +155,13 @@ wait_for_selfserv()
 ########################################################################
 kill_selfserv()
 {
-  ${KILL} `cat ${SERVERPID}`
-  wait `cat ${SERVERPID}`
+  if [ "${OS_ARCH}" = "WINNT" -a "$OS_NAME" = "CYGWIN_NT" ]; then
+      PID=${SHELL_SERVERPID}
+  else
+      PID=`cat ${SERVERPID}`
+  fi
+  ${KILL} ${PID}
+  wait ${PID}
   if [ ${fileout} -eq 1 ]; then
       cat ${SERVEROUTFILE}
   fi
@@ -188,6 +197,19 @@ start_selfserv()
       selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} \
                -w nss ${sparam} -i ${R_SERVERPID} $verbose &
   fi
+  # The PID $! returned by the MKS or Cygwin shell is not the PID of
+  # the real background process, but rather the PID of a helper
+  # process (sh.exe).  MKS's kill command has a bug: invoking kill
+  # on the helper process does not terminate the real background
+  # process.  Our workaround has been to have selfserv save its PID
+  # in the ${SERVERPID} file and "kill" that PID instead.  But this
+  # doesn't work under Cygwin; its kill command doesn't recognize
+  # the PID of the real background process, but it does work on the
+  # PID of the helper process.  So we save the value of $! in the
+  # SHELL_SERVERPID variable, and use it instead of the ${SERVERPID}
+  # file under Cygwin.  (In fact, this should work in any shell
+  # other than the MKS shell.)
+  SHELL_SERVERPID=$!
   wait_for_selfserv
 }
 
