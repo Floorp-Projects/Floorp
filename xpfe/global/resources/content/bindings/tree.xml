@@ -614,8 +614,11 @@
            var rowCount = this.treeBoxObject.view.rowCount;
            var start = 1;
            
-           if (this._incrementalString.length > 1)
+           if (this._incrementalString.length > 1) {
              start = 0;
+             if (c < 0)
+               c = 0;
+           }
 
            for (var i = 0; i < rowCount; i++) {
              var l = (i + start + c) % rowCount;

@@ -644,7 +644,8 @@
       </handler>
       <handler event="keypress">
       <![CDATA[
-         if (!this.disableKeyNavigation && event.charCode > 0) {
+         if (!this.disableKeyNavigation && event.charCode > 0 && 
+             !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
            var key = String.fromCharCode(event.charCode);
            key = key.toLowerCase();
            if (event.timeStamp - this._lastKeyTime > 1000)
@@ -662,8 +663,11 @@
            var rowCount = this.getRowCount();
            var start = 1;
            
-           if (this._incrementalString.length > 1)
+           if (this._incrementalString.length > 1) {
              start = 0;
+             if (c < 0)
+               c = 0;
+           }
 
            for (var i = 0; i < rowCount; i++) {
              var k = (i + start + c) % rowCount;

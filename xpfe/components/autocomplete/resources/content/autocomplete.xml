@@ -44,6 +44,7 @@
         this.ifSetAttribute("maxrows", 5);
         this.ifSetAttribute("showpopup", true);
         this.ifSetAttribute("disablehistory", true);
+        this.ifSetAttribute("disableKeyNavigation", true);
         
         // initialize the search sessions
         this.searchSessions = this.getAttribute("searchSessions");
