@@ -115,9 +115,6 @@ public class JavaAdapter extends ScriptableObject {
 
         // Now, go through the superclasses methods, checking for abstract 
         // methods or additional methods to override.
-        FlattenedObject obj = jsObj != null 
-                              ? new FlattenedObject(jsObj) 
-                              : null;
 
         // generate any additional overrides that the object might contain.
         Method[] methods = superClass.getMethods();
@@ -130,7 +127,7 @@ public class JavaAdapter extends ScriptableObject {
             // resulting class won't be instantiable. otherwise, if the object 
             // has a property of the same name, then an override is intended.
             if (Modifier.isAbstract(mods) || 
-                (obj != null && obj.hasProperty(method.getName())))
+                (jsObj != null && jsObj.has(method.getName(), jsObj)))
             {
                 // make sure to generate only one instance of a particular 
                 // method/signature.
@@ -147,13 +144,14 @@ public class JavaAdapter extends ScriptableObject {
         
         // Generate Java methods, fields for remaining properties that
         // are not overrides.
-        Object[] ids = obj.getIds();
+        Object[] ids = jsObj.getIds();
         for (int j=0; j < ids.length; j++) {
             if (!(ids[j] instanceof String)) 
                 continue;
-            if (generatedMethods.containsKey((String) ids[j]))
+            String id = (String) ids[j];
+            if (generatedMethods.containsKey(id))
                 continue;
-            Object f = obj.getProperty(ids[j]);
+            Object f = jsObj.get(id, jsObj);
             int length;
             if (f instanceof FlattenedObject) {
                 Object p = ((FlattenedObject) f).getObject();
