@@ -1000,6 +1000,7 @@
     "xulcommanddispatcher.getcontrollers", \
     "xulcommanddispatcher.removecommandupdater", \
     "xulcommanddispatcher.suppressfocus", \
+    "xulcommanddispatcher.suppressfocusscroll", \
     "xulcommanddispatcher.updatecommands", \
     "xuldocument.commanddispatcher", \
     "xuldocument.controls", \
