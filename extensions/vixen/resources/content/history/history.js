@@ -64,8 +64,8 @@ var vfdFocusObserver = {
         
         if (aData.vfdDocumentWindowNode) {
           var documentTitle = aData.vfdDocumentWindowNode.getAttribute("title");
-          var titleString = vxHistory.mBundle.getString("historyWindowTitle");
-          titleString = titleString.replace(/%FORM_NAME%/, documentTitle);
+          var titleString = vxHistory.mBundle.getFormattedString("historyWindowTitle",
+                                                                 [ documentTitle ]);
           window.title = titleString;
         }
         
