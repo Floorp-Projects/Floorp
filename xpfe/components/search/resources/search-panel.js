@@ -139,7 +139,7 @@ function rememberSearchText(target)
         }
       }
 
-      textNode.value = unescape(target);
+      textNode.value = decodeURI(target);
       doEnabling();
     }
   }
@@ -479,7 +479,7 @@ function haveSearchResults()
       // convert plusses (+) back to spaces
       target = target.replace(/\+/g, " ");
       var textNode = document.getElementById("sidebar-search-text");
-      textNode.value = unescape(target);
+      textNode.value = decodeURI(target);
       return true;
     }
   }
@@ -831,7 +831,7 @@ function OpenSearch(aSearchStr, engineURIs)
 
   var searchDS = Components.classes[ISEARCH_CONTRACTID].getService(nsIInternetSearchService);
 
-  var escapedSearchStr = escape(aSearchStr);
+  var escapedSearchStr = encodeURIComponent(aSearchStr);
   sidebarInitiatedSearch = true;
   searchDS.RememberLastSearchText(escapedSearchStr);
   sidebarInitiatedSearch = false;
@@ -877,7 +877,7 @@ function OpenSearch(aSearchStr, engineURIs)
       }
       searchURL += ("&text=" + escapedSearchStr);
       gURL = searchURL;
-      loadURLInContent("chrome://communicator/content/search/internetresults.xul?" + escape(searchURL));
+      loadURLInContent(encodeURI("chrome://communicator/content/search/internetresults.xul?" + searchURL));
     }
   }
   catch (ex) {
@@ -915,7 +915,7 @@ function saveSearch()
     if (target) {
       // convert plusses (+) back to spaces
       target = target.replace(/\+/g, " ");
-      lastSearchText = unescape(target);
+      lastSearchText = decodeURI(target);
     }
   }
 
@@ -961,7 +961,7 @@ function showMoreResults(direction)
 
   // get search term
   var searchTerm = document.getElementById("sidebar-search-text").value;
-  searchTerm = escape(searchTerm);
+  searchTerm = encodeURIComponent(searchTerm);
 
   // change page number
   if (direction > 0)

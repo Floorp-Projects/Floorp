@@ -1686,7 +1686,7 @@ function OpenSearch(tabName, searchStr, newTabFlag)
        BrowserLoadURL()
     } else {
       if (searchStr) {
-        var escapedSearchStr = escape(searchStr);
+        var escapedSearchStr = encodeURIComponent(searchStr);
         defaultSearchURL += escapedSearchStr;
         var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
                                  .getService(Components.interfaces.nsIInternetSearchService);
@@ -3813,7 +3813,7 @@ function launchExternalUrl(aURL)
 function sendLink(url, title)
 {
   // generate a mailto url based on the url and the url's title
-  var mailtoUrl = url ? "mailto:?body=" + url + "&subject=" + escape(title) : "mailto:";
+  var mailtoUrl = url ? "mailto:?body=" + url + "&subject=" + encodeURIComponent(title) : "mailto:";
 
   var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
   var uri = ioService.newURI(mailtoUrl, null, null);

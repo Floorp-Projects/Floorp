@@ -125,7 +125,7 @@ function loadResultsList( aSearchURL )
 {
   var resultsTree = document.getElementById( "resultsList" );
   if (!resultsTree) return false;
-  resultsTree.setAttribute("ref", unescape(aSearchURL));
+  resultsTree.setAttribute("ref", decodeURI(aSearchURL));
   return true;
 }
 

@@ -127,7 +127,7 @@ function AddAttachment(attachment)
     item.setAttribute("label", attachment.name);    //use for display only
     item.attachment = attachment;   //full attachment object stored here
     try {
-      item.setAttribute("tooltiptext", unescape(attachment.url));
+      item.setAttribute("tooltiptext", decodeURI(attachment.url));
     } catch(e) {
       item.setAttribute("tooltiptext", attachment.url);
     }
