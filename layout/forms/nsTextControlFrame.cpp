@@ -208,11 +208,18 @@ void
 nsTextControlFrame::EnterPressed(nsIPresContext& aPresContext) 
 {
   if (mFormFrame && mFormFrame->CanSubmit(*this)) {
-    nsEventStatus mStatus = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    event.message = NS_FORM_SUBMIT;
-    mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, mStatus); 
+    nsIContent *formContent = nsnull;
+
+    mFormFrame->GetContent(formContent);
+    if (nsnull != formContent) {
+      nsEvent event;
+      nsEventStatus status = nsEventStatus_eIgnore;
+
+      event.eventStructType = NS_EVENT;
+      event.message = NS_FORM_SUBMIT;
+      formContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+      NS_RELEASE(formContent);
+    }
 
     mFormFrame->OnSubmit(&aPresContext, this);
   }
