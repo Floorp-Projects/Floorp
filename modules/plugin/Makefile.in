@@ -26,13 +26,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public nglsrc default/unix
+DIRS		= public nglsrc 
+
+# These subdirs rely on GTK libraries and header files, it is not
+#  buildable on other non-GTK unix builds
+
+ifdef MOZ_ENABLE_GTK
+DIRS		+= default/unix
 
 ifdef ENABLE_TESTS
-
-# This test relies on GTK libraries and header files, it is not
-#  buildable on other non-GTK uinix builds
-ifdef MOZ_ENABLE_GTK
 DIRS		+= test
 endif
 
