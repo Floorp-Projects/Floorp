@@ -124,7 +124,6 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
 
   // for every content child that (is a column thingy and does not already have a frame)
   // create a frame and adjust it's style
-  nsresult rv;
   nsIFrame* kidFrame = nsnull;
  
   if (eReflowReason_Initial == aReflowState.reason) {
