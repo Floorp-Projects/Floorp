@@ -4782,8 +4782,9 @@ PresShell::HandlePostedReflowCallbacks()
       node = node->next;
       mFirstCallbackEventRequest = node;
       FreeFrame(sizeof(nsCallbackEventRequest), toFree);
-      callback->ReflowFinished(this, &shouldFlush);
-      NS_RELEASE(callback);
+	  if (callback)
+        callback->ReflowFinished(this, &shouldFlush);
+      NS_IF_RELEASE(callback);
    }
 
    mFirstCallbackEventRequest = mLastCallbackEventRequest = nsnull;
