@@ -45,6 +45,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
+
 #include "nsIImportMail.h"
 #include "nsIImportGeneric.h"
 #include "nsISupportsPrimitives.h"
@@ -69,6 +70,8 @@
 
 #include "ImportDebug.h"
 
+#define IMPORT_MSGS_URL       "chrome://messenger/locale/importMsgs.properties"
+
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
@@ -80,43 +83,6 @@ static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_WSTRING_CID);
 PR_STATIC_CALLBACK( void) ImportMailThread( void *stuff);
 
 static nsCOMPtr<nsIImportService>	gService;
-
-static void ConvertToUnicode(const char *pStr, nsString &dist)
-{
-	nsresult rv;
-
-	if (!gService)
-		gService = do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv);
-
-	if (gService)
-		rv = gService->SystemStringToUnicode(pStr, dist);
-
-	if (NS_FAILED(rv))
-	{
-		// XXX bad cast
-		NS_ASSERTION(NS_SUCCEEDED(rv), "decoding method may occur bad cast\n");
-		dist.AssignWithConversion(pStr);
-	}
-}
-
-static void ConvertFromUnicode(const PRUnichar *pStr, nsCString &dist)
-{
-	nsresult rv;
-
-	if (!gService)
-		gService = do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv);
-
-	if (gService)
-		rv = gService->SystemStringFromUnicode(pStr, dist);
-
-	if (NS_FAILED(rv))
-	{
-		// XXX bad cast
-		NS_ASSERTION(NS_SUCCEEDED(rv), "encodeing method may occur bad cast\n");
-		dist.AssignWithConversion(pStr);
-	}
-}
-
 
 class ImportThreadData;
 
@@ -152,12 +118,10 @@ public:
 	NS_IMETHOD CancelImport(void);
 
 private:
-	PRBool	GetAccount( nsIMsgFolder **ppFolder);
-	PRBool	FindAccount( nsIMsgFolder **ppFolder);
+	PRBool	CreateFolder( nsIMsgFolder **ppFolder);
 	void	GetDefaultMailboxes( void);
 	void	GetDefaultLocation( void);
 	void	GetDefaultDestination( void);
-	void	GetUniquePrettyName( nsIMsgAccountManager *pMgr, nsString& name);
 	void	GetMailboxName( PRUint32 index, nsISupportsWString *pStr);
 
 public:
@@ -168,7 +132,7 @@ private:
 	PRUnichar *			m_pName;	// module name that created this interface
 	nsIMsgFolder *		m_pDestFolder;
 	PRBool				m_deleteDestFolder;
-	PRBool				m_createdAccount;
+	PRBool				m_createdFolder;
 	nsIFileSpec *		m_pSrcLocation;
 	PRBool				m_gotLocation;
 	PRBool				m_found;
@@ -192,7 +156,6 @@ public:
 	PRUint32				currentSize;
 	nsIMsgFolder *			destRoot;
 	PRBool					ownsDestRoot;
-	PRBool					ownsAccount;
 	nsISupportsArray *		boxes;
 	nsIImportMail *			mailImport;
 	nsISupportsWString *	successLog;
@@ -242,7 +205,7 @@ nsImportGenericMail::nsImportGenericMail()
 
 	m_pDestFolder = nsnull;
 	m_deleteDestFolder = PR_FALSE;
-	m_createdAccount = PR_FALSE;
+	m_createdFolder = PR_FALSE;
 	m_pName = nsnull;
 
 }
@@ -427,40 +390,14 @@ void nsImportGenericMail::GetDefaultDestination( void)
 
 	nsIMsgFolder *	rootFolder;
 	m_deleteDestFolder = PR_FALSE;
-	m_createdAccount = PR_FALSE;
-	if (GetAccount( &rootFolder)) {
+	m_createdFolder = PR_FALSE;
+	if (CreateFolder( &rootFolder)) {
 		m_pDestFolder = rootFolder;
 		m_deleteDestFolder = PR_TRUE;
-		m_createdAccount = PR_TRUE;
+		m_createdFolder = PR_TRUE;
 		return;
 	}
-
-	if (FindAccount( &rootFolder)) {
-		// create the sub folder for our import.
-		char *pName = nsnull;
-		rootFolder->GenerateUniqueSubfolderName( "Imported Mail", nsnull, &pName);
-		if (pName) {
-			IMPORT_LOG1( "* Creating folder for importing mail: %s\n", pName);
-
-			// need convert to Unicode
-			nsAutoString childName;
-			ConvertToUnicode(pName, childName);
-
-			rootFolder->CreateSubfolder( childName.get(), nsnull);
-			nsCOMPtr<nsISupports> subFolder;
-			rootFolder->GetChildNamed( pName, getter_AddRefs( subFolder));
-			nsMemory::Free(pName);
-			if (subFolder) {
-				subFolder->QueryInterface( NS_GET_IID(nsIMsgFolder), (void **) &m_pDestFolder);
-				if (m_pDestFolder)
-					m_deleteDestFolder = PR_TRUE;
-			}
-		}
-		rootFolder->Release();
-	}
-	if (!m_pDestFolder) {
-		IMPORT_LOG0( "*** FAILED to create a default import destination\n");
-	}
+	IMPORT_LOG0( "*** FAILED to create a default import destination\n");
 }
 
 NS_IMETHODIMP nsImportGenericMail::WantsProgress(PRBool *_retval)
@@ -753,7 +690,6 @@ ImportThreadData::ImportThreadData()
 	currentSize = 0;
 	destRoot = nsnull;
 	ownsDestRoot = PR_FALSE;
-	ownsAccount = PR_FALSE;
 	boxes = nsnull;
 	mailImport = nsnull;
 	successLog = nsnull;
@@ -824,7 +760,6 @@ ImportMailThread( void *stuff)
 	PRUint32		newDepth;
 	nsString		lastName;
 	PRUnichar *		pName;
-	nsCString		strName;
 	
 	nsCOMPtr<nsIMsgFolder>  	curFolder( destRoot);
 	nsCOMPtr<nsIMsgFolder>		curProxy;
@@ -832,6 +767,7 @@ ImportMailThread( void *stuff)
 	nsCOMPtr<nsIMsgFolder>		newFolder;
 	nsCOMPtr<nsIFileSpec>  		outBox;
 	nsCOMPtr<nsISupports>		subFolder;
+	nsCOMPtr<nsIEnumerator>     enumerator;
 
 	PRBool						exists;
 	
@@ -848,6 +784,9 @@ ImportMailThread( void *stuff)
 										curFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
 
 		IMPORT_LOG1( "Proxy result for curFolder: 0x%lx\n", (long) rv);
+		if (NS_SUCCEEDED(rv))
+			// GetSubfolders() will initialize folders if they are not already initialized.
+			curProxy->GetSubFolders(getter_AddRefs(enumerator));
 	}
 	else {
 		IMPORT_LOG0( "Unable to obtain proxy service to do import\n");
@@ -877,9 +816,8 @@ ImportMailThread( void *stuff)
 				if (newDepth > depth) {
           // OK, we are going to add a subfolder under the last/previous folder we processed, so
           // find this folder (stored in 'lastName') who is going to be the new parent folder.
-					ConvertFromUnicode(lastName.get(), strName);
-					IMPORT_LOG1( "* Finding folder for child named: %s\n", strName.get());
-					rv = curProxy->GetChildNamed( strName.get(), getter_AddRefs( subFolder));
+					IMPORT_LOG1( "* Finding folder for child named: %s\n", lastName.get());
+					rv = curProxy->GetChildNamed( lastName.get(), getter_AddRefs( subFolder));
 					if (NS_FAILED( rv)) {
 						nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.get(), &success);
 						pData->fatalError = PR_TRUE;
@@ -895,7 +833,6 @@ ImportMailThread( void *stuff)
 					}
 
           // Make sure this new parent folder obj has the correct subfolder list so far.
-          nsCOMPtr<nsIEnumerator> enumerator;
           rv = curProxy->GetSubFolders(getter_AddRefs(enumerator));
 
 					IMPORT_LOG1( "Created proxy for new subFolder: 0x%lx\n", (long) rv);
@@ -925,28 +862,22 @@ ImportMailThread( void *stuff)
 				else
 					lastName.Assign(NS_LITERAL_STRING("Unknown!"));
 				
-				ConvertFromUnicode(lastName.get(), strName);
 				exists = PR_FALSE;
-				rv = curProxy->ContainsChildNamed( strName.get(), &exists);
+				rv = curProxy->ContainsChildNamed( lastName.get(), &exists);
 				if (exists) {
-					char *pSubName = nsnull;
-					curProxy->GenerateUniqueSubfolderName( strName.get(), nsnull, &pSubName);
-					if (pSubName) {
-						strName.Assign(pSubName);
-						nsMemory::Free(pSubName);
-					}
+					nsXPIDLString subName;
+					curProxy->GenerateUniqueSubfolderName( lastName.get(), nsnull, getter_Copies(subName));
+					if (!subName.IsEmpty()) 
+                        lastName.Assign(subName);
 				}
-				ConvertToUnicode(strName.get(), lastName);
 				
-				IMPORT_LOG1( "* Creating new import folder: %s\n", strName.get());
-				nsAutoString newName;
-				ConvertToUnicode(strName.get(), newName);
+				IMPORT_LOG1( "* Creating new import folder: %s\n", lastName.get());
 
-				rv = curProxy->CreateSubfolder( newName.get(),nsnull);
+				rv = curProxy->CreateSubfolder( lastName.get(),nsnull);
 				
 				IMPORT_LOG1( "New folder created, rv: 0x%lx\n", (long) rv);
 				if (NS_SUCCEEDED( rv)) {
-					rv = curProxy->GetChildNamed( strName.get(), getter_AddRefs( subFolder));
+					rv = curProxy->GetChildNamed( lastName.get(), getter_AddRefs( subFolder));
 					IMPORT_LOG1( "GetChildNamed for new folder returned rv: 0x%lx\n", (long) rv);
 					if (NS_SUCCEEDED( rv)) {
 						newFolder = do_QueryInterface( subFolder);
@@ -1027,237 +958,82 @@ ImportMailThread( void *stuff)
 
 }
 
-
-PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
+// Creates a folder in Local Folders with the module name + mail
+// for e.g: Outlook Mail
+PRBool nsImportGenericMail::CreateFolder( nsIMsgFolder **ppFolder)
 {
-	nsresult	rv;
-	
-	*ppFolder = nsnull;
-		
-	nsCOMPtr <nsIMsgAccountManager> accMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Failed to create a account manager!\n");
-		return( PR_FALSE);
-	}
+  nsresult rv;
+  *ppFolder = nsnull;
 
-	// Create a new account for the import
-	// TODO: Ensure that the named used for this server is unique.
-	// Get the default name from the import module.
-	nsString	prettyName;
-	if (m_pName)
-		prettyName = m_pName;
-	else
-		prettyName.Assign(NS_LITERAL_STRING("Imported Mail"));
-	
-	nsCOMPtr<nsIMsgIncomingServer> server;
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(
+                                     NS_STRINGBUNDLE_CONTRACTID, &rv));
+  if (NS_FAILED(rv) || !bundleService) 
+      return PR_FALSE;
+  rv = bundleService->CreateBundle(IMPORT_MSGS_URL, getter_AddRefs(bundle));
+  if (NS_FAILED(rv)) 
+      return PR_FALSE;
+  nsXPIDLString folderName;
+  if (m_pName) {
+    const PRUnichar *moduleName[] = { m_pName };
+    rv = bundle->FormatStringFromName(NS_LITERAL_STRING("ModuleFolderName").get(),
+                                      moduleName, 1,
+                                      getter_Copies(folderName));
+  }
+  else {
+    rv = bundle->GetStringFromName(NS_LITERAL_STRING("DefaultFolderName").get(),
+                                   getter_Copies(folderName));
+  }
+  if (NS_FAILED(rv)) {
+      IMPORT_LOG0( "*** Failed to get Folder Name!\n");
+      return PR_FALSE;
+  }
+  nsCOMPtr <nsIMsgAccountManager> accMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    IMPORT_LOG0( "*** Failed to create account manager!\n");
+    return PR_FALSE;
+  }
 
-	// Let's find a host name we're not using yet for a new "none" server
-	int		count = 1;
-	char	hostName[30];
-	PR_snprintf( hostName, 30, "%s", "imported.mail");
-	while (count < 1000) {
-		rv = accMgr->FindServer( "import", hostName, "none", getter_AddRefs( server));
-		if (NS_SUCCEEDED( rv)) {
-			PR_snprintf( hostName, 30, "imported%d.mail", count);
-			count++;
-		}
-		else
-			break;
-	}
-	
-	if (NS_SUCCEEDED( rv)) {
-		IMPORT_LOG0( "*** Failed to find a unique 'none' server to create for importing\n");
-		return( PR_FALSE);
-	}
-	
-	rv = accMgr->CreateIncomingServer( "import", hostName, "none", getter_AddRefs( server));
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Failed to create a 'none' incoming server\n");
-		return( PR_FALSE);
-	}
-	server->SetType( "none");
-
-    // usually, servers of type none can't be deleted; this must be
-    // overridden
-    server->SetCanDelete(PR_TRUE);
-
-	// Let's get a reasonable "pretty name" that doesn't exist yet?
-	GetUniquePrettyName( accMgr, prettyName);
-	
-	server->SetPrettyName( (PRUnichar *) prettyName.get());
-	// server->SetHostName( hostName);
-	// server->SetUsername( "import");  
-
-	
-	// create a new account with the server and identity.
-	nsCOMPtr<nsIMsgAccount>	account;
-
-	rv = accMgr->CreateAccount( getter_AddRefs( account));
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Error creating new account\n");
-		return( PR_FALSE);
-	}
-	
-	rv = account->SetIncomingServer( server);	
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Error setting incoming server on account\n");
-	}
-
-	nsCOMPtr<nsIFolder>	rootFolder;
-	rv = server->GetRootFolder( getter_AddRefs( rootFolder));
-	if (NS_SUCCEEDED( rv) && (rootFolder != nsnull)) {
-		rv = rootFolder->QueryInterface( NS_GET_IID(nsIMsgFolder), (void **)ppFolder);
-		if (NS_SUCCEEDED( rv)) {
-			IMPORT_LOG0( "****** CREATED NEW ACCOUNT FOR IMPORT\n");
-			return( PR_TRUE);
-		}
-	}
-			
-	IMPORT_LOG0( "****** FAILED TO CREATE NEW ACCOUNT FOR IMPORT\n");
-
-	return( PR_FALSE);
+  nsCOMPtr <nsIMsgIncomingServer> server;
+  rv = accMgr->GetLocalFoldersServer(getter_AddRefs(server)); 
+  if (NS_SUCCEEDED(rv) && server) {
+    nsCOMPtr <nsIMsgFolder> localRootFolder;
+    rv = server->GetRootMsgFolder(getter_AddRefs(localRootFolder)); 
+    if (localRootFolder) {
+      // we need to call GetSubFolders() so that the folders get initialized 
+      // if they are not initialized yet. 
+      nsCOMPtr <nsIEnumerator> aEnumerator;
+      rv = localRootFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+      if (NS_SUCCEEDED(rv)) {
+        // check if the folder name we picked already exists.
+        PRBool exists = PR_FALSE;
+        rv = localRootFolder->ContainsChildNamed(folderName.get(), &exists);
+        if (exists) {
+          nsXPIDLString name;
+          localRootFolder->GenerateUniqueSubfolderName(folderName.get(), nsnull, getter_Copies(name));
+          if (!name.IsEmpty())
+            folderName.Assign(name);
+          else {
+            IMPORT_LOG0( "*** Failed to find a unique folder name!\n");
+            return PR_FALSE;
+          }
+        }
+        IMPORT_LOG1( "* Creating folder for importing mail: %s\n", folderName.get());
+        rv = localRootFolder->CreateSubfolder(folderName.get(), nsnull);
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsISupports> subFolder;
+          rv = localRootFolder->GetChildNamed(folderName.get(), getter_AddRefs(subFolder));
+          if (subFolder) {
+            subFolder->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) ppFolder);
+            if (*ppFolder) {
+              IMPORT_LOG0("****** CREATED NEW FOLDER FOR IMPORT\n");
+              return PR_TRUE;
+            }
+          } // if subFolder
+        }
+      }
+    } // if localRootFolder
+  } // if server
+  IMPORT_LOG0("****** FAILED TO CREATE FOLDER FOR IMPORT\n");
+  return PR_FALSE;
 }
-
-void nsImportGenericMail::GetUniquePrettyName( nsIMsgAccountManager *pMgr, nsString& name)
-{
-	nsString	newName = name;
-	nsString	num;
-	int			count = 1;
-	
-	nsCOMPtr<nsISupportsArray>	array;
-
-	nsresult rv = pMgr->GetAllServers( getter_AddRefs( array));
-	if (NS_FAILED( rv))
-		return;
-
-	PRBool		found;
-	PRUint32	sz = 0;
-	rv = array->Count( &sz);
-	if (!sz)
-		return;
-
-	nsCOMPtr<nsISupports>			sup;
-	nsCOMPtr<nsIMsgIncomingServer>	server;
-
-	do {
-		found = PR_FALSE;
-		for (int i = 0; (i < (int) sz) && !found; i++) {
-			rv = array->GetElementAt( i, getter_AddRefs( sup));
-			if (NS_SUCCEEDED( rv) && sup) {
-				server = do_QueryInterface( sup);
-				if (server) {
-					nsXPIDLString	prettyName;
-					rv = server->GetPrettyName( getter_Copies( prettyName));
-					if (NS_SUCCEEDED( rv)) {
-						if (newName.Equals( prettyName, nsCaseInsensitiveStringComparator()))
-							found = PR_TRUE;
-					}	
-				}
-			}
-		}
-		if (found) {
-			newName = name;
-			newName.Append(NS_LITERAL_STRING(" "));
-			newName.AppendInt( count);
-			count++;
-		}
-
-	} while (found == PR_TRUE);
-
-	name = newName;
-}
-
-PRBool nsImportGenericMail::FindAccount( nsIMsgFolder **ppFolder)
-{
-	nsresult	rv;
-	
-	*ppFolder = nsnull;
-
-	nsCOMPtr <nsIMsgAccountManager> accMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Failed to create a account manager!\n");
-		return( PR_FALSE);
-	}	
-	/*
-		First check the default account to see if it has a local mail
-		store.  If it does then use this account to import the mail.
-	*/
-	char *							pServerType = nsnull;
-	nsCOMPtr<nsIMsgAccount>			defAcc;
-	nsCOMPtr<nsIMsgIncomingServer>	localServer;
-	nsCOMPtr<nsIFolder>				rootFolder;
-	rv = accMgr->GetDefaultAccount( getter_AddRefs( defAcc));
-	if (NS_SUCCEEDED( rv) && (defAcc != nsnull)) {
-		rv = defAcc->GetIncomingServer( getter_AddRefs( localServer));
-		if (NS_SUCCEEDED( rv) && (localServer != nsnull)) {
-			rv = localServer->GetType( &pServerType);
-			if (NS_SUCCEEDED( rv) && pServerType &&
-				(!nsCRT::strcasecmp( pServerType, "none") ||
-				 !nsCRT::strcasecmp( pServerType, "POP3"))) {
-				nsCRT::free( pServerType);
-				rv = localServer->GetRootFolder( getter_AddRefs( rootFolder));
-				if (NS_SUCCEEDED( rv) && (rootFolder != nsnull)) {
-					rv = rootFolder->QueryInterface( NS_GET_IID(nsIMsgFolder), (void **)ppFolder);
-					if (NS_SUCCEEDED( rv))
-						return( PR_TRUE);
-				}
-			}
-			if (pServerType) {
-				nsCRT::free( pServerType);
-				pServerType = nsnull;
-			}
-		}
-	}
-
-	
-	/*
-		Either an error occurred or the default account does not exist or
-		the default account is not of type "none" or "POP3".  Look for the
-		first account that we can use.
-	*/
-
-	nsCOMPtr<nsISupportsArray> accounts;
-	rv = accMgr->GetAccounts( getter_AddRefs( accounts));
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Failed to get the accounts from the account manager\n");
-		return( PR_FALSE);
-	}
-	
-	PRUint32	cnt = 0;
-	accounts->Count( &cnt);
-	nsISupports *	pSupports;
-	for (PRUint32 i = 0; i < cnt; i++) {
-		rv = accounts->GetElementAt( i, &pSupports);
-		if (NS_SUCCEEDED( rv) && pSupports) {
-			nsCOMPtr<nsISupports>		iFace( dont_AddRef( pSupports));
-			nsCOMPtr<nsIMsgAccount>		acc( do_QueryInterface( pSupports));
-			if (acc) {
-				nsCOMPtr<nsIMsgIncomingServer> server;
-				rv = acc->GetIncomingServer( getter_AddRefs( server));
-				if (NS_SUCCEEDED( rv) && (server != nsnull)) {
-					char *pType = nsnull;
-					rv = server->GetType( &pType);
-					if (pType) {
-						if (!nsCRT::strcasecmp( pType, "none") ||
-							!nsCRT::strcasecmp( pType, "POP3")) {
-							nsCRT::free( pType);
-							rv = server->GetRootFolder( getter_AddRefs( rootFolder));
-							if (NS_SUCCEEDED( rv) && (rootFolder != nsnull)) {   
-								rv = rootFolder->QueryInterface( NS_GET_IID(nsIMsgFolder), (void **) ppFolder);
-								if (NS_SUCCEEDED( rv))
-									return( PR_TRUE);
-							}
-						}
-						else {
-							nsCRT::free( pType);
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	return( PR_FALSE);
-		
-}
-

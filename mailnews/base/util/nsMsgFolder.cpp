@@ -942,7 +942,7 @@ NS_IMETHODIMP nsMsgFolder::GetAbbreviatedName(PRUnichar * *aAbbreviatedName)
 	return GetName(aAbbreviatedName);
 }
 
-NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild)
+NS_IMETHODIMP nsMsgFolder::GetChildNamed(const PRUnichar *name, nsISupports ** aChild)
 {
 	NS_ASSERTION(aChild, "NULL child");
 	nsresult rv;
@@ -955,9 +955,6 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 	rv = mSubFolders->Count(&count);
 	if (NS_FAILED(rv)) return rv;
 
-	nsString uniName;
-	ConvertToUnicode(nsMsgI18NFileSystemCharset(), name, uniName);
-
 	for (PRUint32 i = 0; i < count; i++)
 	{
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
@@ -969,7 +966,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 			rv = folder->GetName(getter_Copies(folderName));
 			// case-insensitive compare is probably LCD across OS filesystems
 			if (NS_SUCCEEDED(rv) &&
-          folderName.Equals(uniName,
+                folderName.Equals(name,
                             nsCaseInsensitiveStringComparator()))
 			{
 				*aChild = folder;
@@ -1285,7 +1282,7 @@ NS_IMETHODIMP nsMsgFolder::RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsgFolde
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgFolder::ContainsChildNamed(const char *name, PRBool* containsChild)
+NS_IMETHODIMP nsMsgFolder::ContainsChildNamed(const PRUnichar *name, PRBool* containsChild)
 {
 	nsCOMPtr<nsISupports> child;
 	
@@ -1338,8 +1335,8 @@ NS_IMETHODIMP nsMsgFolder::IsAncestorOf(nsIMsgFolder *child, PRBool *isAncestor)
 }
 
 
-NS_IMETHODIMP nsMsgFolder::GenerateUniqueSubfolderName(const char *prefix, nsIMsgFolder *otherFolder,
-                                                       char **name)
+NS_IMETHODIMP nsMsgFolder::GenerateUniqueSubfolderName(const PRUnichar *prefix, nsIMsgFolder *otherFolder,
+                                                       PRUnichar **name)
 {
 	if(!name)
 		return NS_ERROR_NULL_POINTER;
@@ -1347,29 +1344,23 @@ NS_IMETHODIMP nsMsgFolder::GenerateUniqueSubfolderName(const char *prefix, nsIMs
 	/* only try 256 times */
 	for (int count = 0; (count < 256); count++)
 	{
-		PRUint32 prefixSize = PL_strlen(prefix);
-
-		//allocate string big enough for prefix, 256, and '\0'
-		char *uniqueName = (char*)PR_MALLOC(prefixSize + 4);
-		if(!uniqueName)
-			return NS_ERROR_OUT_OF_MEMORY;
-		PR_snprintf(uniqueName, prefixSize + 4, "%s%d",prefix,count);
+        nsAutoString uniqueName;
+        uniqueName.Assign(prefix);
+		uniqueName.AppendInt(count);
 		PRBool containsChild;
 		PRBool otherContainsChild = PR_FALSE;
 
-		ContainsChildNamed(uniqueName, &containsChild);
+		ContainsChildNamed(uniqueName.get(), &containsChild);
 		if(otherFolder)
 		{
-			((nsIMsgFolder*)otherFolder)->ContainsChildNamed(uniqueName, &otherContainsChild);
+			((nsIMsgFolder*)otherFolder)->ContainsChildNamed(uniqueName.get(), &otherContainsChild);
 		}
 
 		if (!containsChild && !otherContainsChild)
 		{
-			*name = uniqueName;
+            *name = nsCRT::strdup(uniqueName.get());
 			return NS_OK;
 		}
-		else
-			PR_FREEIF(uniqueName);
 	}
 	*name = nsnull;
 	return NS_OK;

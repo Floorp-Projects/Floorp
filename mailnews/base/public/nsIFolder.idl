@@ -48,7 +48,7 @@ interface nsIFolder : nsICollection {
 	attribute wstring prettyName;
 	readonly attribute wstring abbreviatedName;
 
-	nsISupports GetChildNamed(in string name);
+	nsISupports getChildNamed(in wstring name);
 	attribute nsIFolder parent;
 
 	nsIEnumerator GetSubFolders();

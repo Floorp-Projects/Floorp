@@ -183,10 +183,10 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    *
    * @param name the name of the target subfolder
    */
-	boolean containsChildNamed(in string name);
+	boolean containsChildNamed(in wstring name);
 	boolean isAncestorOf(in nsIMsgFolder folder);
 
-	string generateUniqueSubfolderName(in string prefix,
+	wstring generateUniqueSubfolderName(in wstring prefix,
                                      in nsIMsgFolder otherFolder);
 
 	void updateSummaryTotals(in boolean force);

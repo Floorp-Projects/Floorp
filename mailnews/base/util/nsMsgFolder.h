@@ -121,9 +121,9 @@ public:
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
   NS_IMETHOD Rename(const PRUnichar *name, nsIMsgWindow *msgWindow);
   NS_IMETHOD RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsgFolder *msgFolder);
-  NS_IMETHOD ContainsChildNamed(const char *name, PRBool *_retval);
+  NS_IMETHOD ContainsChildNamed(const PRUnichar *name, PRBool *_retval);
   NS_IMETHOD IsAncestorOf(nsIMsgFolder *folder, PRBool *_retval);
-  NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, nsIMsgFolder *otherFolder, char **_retval); 
+  NS_IMETHOD GenerateUniqueSubfolderName(const PRUnichar *prefix, nsIMsgFolder *otherFolder, PRUnichar **_retval); 
   NS_IMETHOD UpdateSummaryTotals(PRBool force);
   NS_IMETHOD SummaryChanged(void);
   NS_IMETHOD GetNumUnread(PRBool deep, PRInt32 *_retval);
