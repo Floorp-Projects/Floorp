@@ -1211,7 +1211,7 @@ nsPluginStreamListenerPeer::GetLoadGroup()
   nsIDocument* doc;
   nsresult rv = mOwner->GetDocument(&doc);
   if (NS_SUCCEEDED(rv)) {
-    loadGroup = doc->GetDocumentLoadGroup();
+    doc->GetDocumentLoadGroup(&loadGroup);
     NS_RELEASE(doc);
   }
   return loadGroup;
