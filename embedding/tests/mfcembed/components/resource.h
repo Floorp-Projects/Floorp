@@ -5,6 +5,8 @@
 #define IDD_PROMPT_DIALOG               128
 #define IDD_PROMPT_PASSWORD_DIALOG      129
 #define IDD_PROMPT_USERPASS_DIALOG      130
+#define IDD_ALERT_CHECK_DIALOG          131
+#define IDD_CONFIRM_CHECK_DIALOG        132
 #define IDC_PROMPT_ANSWER               1001
 #define IDC_PROMPT_TEXT                 1002
 #define IDC_USERNAME                    1003
@@ -12,6 +14,11 @@
 #define IDC_CHECK_SAVE_PASSWORD         1005
 #define IDC_USERNAME_LABEL              1006
 #define IDC_PASSWORD_LABEL              1007
+#define IDC_CHECKBOX                    1008
+#define IDC_MSG_TEXT                    1009
+#define IDC_BTN1                        1010
+#define IDC_BTN2                        1011
+#define IDC_BTN3                        1012
 
 // Next default values for new objects
 // 
