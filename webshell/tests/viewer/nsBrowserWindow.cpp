@@ -883,6 +883,9 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 
 NS_IMETHODIMP
 nsBrowserWindow::OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec)
 {
+  if (nsnull != mStatus) {
+    mStatus->SetText(aURLSpec);
+  }
   return NS_OK;
 }
 
