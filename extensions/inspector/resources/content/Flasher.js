@@ -55,12 +55,12 @@ var gFlasherRegistry = [];
 
 function Flasher(aColor, aThickness, aDuration, aSpeed, aInvert)
 {
-  this.mShell = XPCU.createInstance("@mozilla.org/inspector/flasher;1", "inIFlasher");
-  this.color = aColor;
-  this.mThickness = aThickness;
+  this.mShell = XPCU.getService("@mozilla.org/inspector/flasher;1", "inIFlasher");
+  this.mShell.color = aColor;
+  this.mShell.thickness = aThickness;
+  this.mShell.invert = aInvert;
   this.duration = aDuration;
   this.mSpeed = aSpeed;
-  this.mInvert = aInvert;
   
   this.register();
 }
@@ -75,11 +75,8 @@ Flasher.prototype =
   mRegistryId: null,
   mFlashes: 0,
   mStartTime: 0,
-  mColor: null,
-  mThickness: 0,
   mDuration: 0,
   mSpeed: 0,
-  mInvert: false,
 
   ////////////////////////////////////////////////////////////////////////////
   //// Properties
@@ -96,11 +93,11 @@ Flasher.prototype =
       throw "Invalid node type.";
   },
 
-  get color() { return this.mColor; },
-  set color(aVal) { if (aVal.charAt(0) == '#') aVal = aVal.substr(1); this.mColor = aVal; },
+  get color() { return this.mShell.color; },
+  set color(aVal) { return this.mShell.color = aVal; },
 
-  get thickness() { return this.mThickness; },
-  set thickness(aVal) { this.mThickness = aVal; },
+  get thickness() { return this.mShell.thickness; },
+  set thickness(aVal) { this.mShell.thickness = aVal; },
 
   get duration() { return this.mDuration; },
   set duration(aVal) { this.mDuration = aVal; },
@@ -108,8 +105,8 @@ Flasher.prototype =
   get speed() { return this.mSpeed; },
   set speed(aVal) { this.mSpeed = aVal; },
 
-  get invert() { return this.mInvert; },
-  set invert(aVal) { this.mInvert = aVal; },
+  get invert() { return this.mShell.invert; },
+  set invert(aVal) { this.mShell.invert = aVal; },
 
   // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   // :::::::::::::::::::: Methods ::::::::::::::::::::::::::::
@@ -159,7 +156,7 @@ Flasher.prototype =
 
   paintOn: function()
   {
-    this.mShell.drawElementOutline(this.mElement, this.mColor, this.mThickness, this.mInvert);
+    this.mShell.drawElementOutline(this.mElement);
   },
 
   paintOff: function()
