@@ -250,6 +250,11 @@ enum nsDOMClassInfoID {
   // DOM Traversal classes
   eDOMClassInfo_TreeWalker_id,
 
+  // We are now trying to preserve binary compat in classinfo.  No
+  // more putting things in those categories up there.  New entries
+  // are to be added right before eDOMClassInfoIDCount
+  eDOMClassInfo_CSSRect_id,
+  
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

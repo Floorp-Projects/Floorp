@@ -43,10 +43,11 @@
 #include "nsString.h"
 #include "nsCoord.h"
 #include "nsUnitConversion.h"
+#include "nsReadableUtils.h"
 
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
-
+#include "nsDOMCSSRect.h"
 
 class nsROCSSPrimitiveValue : public nsIDOMCSSPrimitiveValue
 {
@@ -74,9 +75,9 @@ public:
     mTwips = aValue;
   }
 
-  void SetString(const char *aString)
+  void SetString(const nsACString& aString)
   {
-    mString.AssignWithConversion(aString);
+    CopyASCIItoUCS2(aString, mString);
     mType = CSS_STRING;
   }
 
@@ -86,10 +87,17 @@ public:
     mType = CSS_STRING;
   }
 
+  void SetRect(nsIDOMRect* aRect)
+  {
+    mRect = aRect;
+    mType = CSS_RECT;
+  }
+
 private:
   PRUint16 mType;
 
   nscoord mTwips;
+  nsCOMPtr<nsIDOMRect> mRect;
   nsString mString;
   float mFloat;
 

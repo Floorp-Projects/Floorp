@@ -75,47 +75,42 @@ NS_IMETHODIMP
 nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
 {
   nsAutoString tmpStr;
-
   aCssText.Truncate();
+  nsresult result = NS_OK;
 
   switch (mType) {
     case CSS_PX :
       {
-        PRInt32 px = NSTwipsToIntPixels(mTwips, mT2P);
-        tmpStr.AppendInt(px);
+        float val = NSTwipsToFloatPixels(mTwips, mT2P);
+        tmpStr.AppendFloat(val);
         tmpStr.Append(NS_LITERAL_STRING("px"));
-
         break;
       }
     case CSS_CM :
       {
         float val = NS_TWIPS_TO_CENTIMETERS(mTwips);
-        char buf[64];
-        PR_snprintf(buf, 63, "%.2fcm", val);
+        tmpStr.AppendFloat(val);
         tmpStr.Append(NS_LITERAL_STRING("cm"));
         break;
       }
     case CSS_MM :
       {
         float val = NS_TWIPS_TO_MILLIMETERS(mTwips);
-        char buf[64];
-        PR_snprintf(buf, 63, "%.2fcm", val);
+        tmpStr.AppendFloat(val);
         tmpStr.Append(NS_LITERAL_STRING("mm"));
         break;
       }
     case CSS_IN :
       {
         float val = NS_TWIPS_TO_INCHES(mTwips);
-        char buf[64];
-        PR_snprintf(buf, 63, "%.2fcm", val);
+        tmpStr.AppendFloat(val);
         tmpStr.Append(NS_LITERAL_STRING("in"));
         break;
       }
     case CSS_PT :
       {
         float val = NSTwipsToFloatPoints(mTwips);
-        char buf[64];
-        PR_snprintf(buf, 63, "%.2fcm", val);
+        tmpStr.AppendFloat(val);
         tmpStr.Append(NS_LITERAL_STRING("pt"));
         break;
       }
@@ -126,8 +121,48 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
       }
     case CSS_PERCENTAGE :
       {
-        tmpStr.AppendInt(int(mFloat * 100));
+        tmpStr.AppendFloat(mFloat * 100);
         tmpStr.Append(PRUnichar('%'));
+        break;
+      }
+    case CSS_RECT :
+      {
+        NS_NAMED_LITERAL_STRING(comma, ", ");
+        nsCOMPtr<nsIDOMCSSPrimitiveValue> sideCSSValue;
+        nsAutoString sideValue;
+        tmpStr = NS_LITERAL_STRING("rect(");
+        // get the top
+        result = mRect->GetTop(getter_AddRefs(sideCSSValue));
+        if (NS_FAILED(result))
+          break;
+        result = sideCSSValue->GetCssText(sideValue);
+        if (NS_FAILED(result))
+          break;
+        tmpStr.Append(sideValue + comma);
+        // get the right
+        result = mRect->GetRight(getter_AddRefs(sideCSSValue));
+        if (NS_FAILED(result))
+          break;
+        result = sideCSSValue->GetCssText(sideValue);
+        if (NS_FAILED(result))
+          break;
+        tmpStr.Append(sideValue + comma);
+        // get the bottom
+        result = mRect->GetBottom(getter_AddRefs(sideCSSValue));
+        if (NS_FAILED(result))
+          break;
+        result = sideCSSValue->GetCssText(sideValue);
+        if (NS_FAILED(result))
+          break;
+        tmpStr.Append(sideValue + comma);
+        // get the left
+        result = mRect->GetLeft(getter_AddRefs(sideCSSValue));
+        if (NS_FAILED(result))
+          break;
+        result = sideCSSValue->GetCssText(sideValue);
+        if (NS_FAILED(result))
+          break;
+        tmpStr.Append(sideValue + NS_LITERAL_STRING(")"));
         break;
       }
     case CSS_PC :
@@ -147,12 +182,13 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
     case CSS_IDENT :
     case CSS_ATTR :
     case CSS_COUNTER :
-    case CSS_RECT :
     case CSS_RGBCOLOR :
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
-  aCssText.Assign(tmpStr);
+  if (NS_SUCCEEDED(result)) {
+    aCssText.Assign(tmpStr);
+  }
 
   return NS_OK;
 }
@@ -219,10 +255,12 @@ nsROCSSPrimitiveValue::GetFloatValue(PRUint16 aUnitType, float* aReturn)
     case CSS_PT :
       *aReturn = NSTwipsToFloatPoints(mTwips);
       break;
+    case CSS_PERCENTAGE :
+      *aReturn = mFloat * 100;
+      break;
     case CSS_PC :
     case CSS_UNKNOWN :
     case CSS_NUMBER :
-    case CSS_PERCENTAGE :
     case CSS_EMS :
     case CSS_EXS :
     case CSS_DEG :
@@ -258,6 +296,10 @@ nsROCSSPrimitiveValue::SetStringValue(PRUint16 aStringType,
 NS_IMETHODIMP
 nsROCSSPrimitiveValue::GetStringValue(nsAWritableString& aReturn)
 {
+  if (mType != CSS_STRING) {
+    aReturn.Truncate();
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
   aReturn.Assign(mString);
   return NS_OK;
 }
@@ -273,7 +315,11 @@ nsROCSSPrimitiveValue::GetCounterValue(nsIDOMCounter** aReturn)
 NS_IMETHODIMP
 nsROCSSPrimitiveValue::GetRectValue(nsIDOMRect** aReturn)
 {
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  if (mType != CSS_RECT || !mRect) {
+    *aReturn = nsnull;
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
+  return CallQueryInterface(mRect, aReturn);
 }
 
 
