@@ -47,15 +47,16 @@
 #include "nsICmdLineHandler.h"
 #include "nsIComponentManager.h"
 #include "nsIContentHandler.h"
+#include "rdf.h"
 
 class nsILocalFile;
 class nsIAbDirectory;
 
-#define NC_RDF_NEWABCARD			"http://home.netscape.com/NC-rdf#NewCard"
-#define NC_RDF_MODIFY				"http://home.netscape.com/NC-rdf#Modify"
-#define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
-#define NC_RDF_DELETECARD			"http://home.netscape.com/NC-rdf#DeleteCards"
-#define NC_RDF_NEWDIRECTORY			"http://home.netscape.com/NC-rdf#NewDirectory"
+#define NC_RDF_NEWABCARD            NC_NAMESPACE_URI "NewCard"
+#define NC_RDF_MODIFY               NC_NAMESPACE_URI "Modify"
+#define NC_RDF_DELETE               NC_NAMESPACE_URI "Delete"
+#define NC_RDF_DELETECARD           NC_NAMESPACE_URI "DeleteCards"
+#define NC_RDF_NEWDIRECTORY         NC_NAMESPACE_URI "NewDirectory"
 
 #define   EXPORT_ATTRIBUTES_TABLE_COUNT      53
 

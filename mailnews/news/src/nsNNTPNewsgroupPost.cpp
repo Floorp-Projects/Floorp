@@ -65,17 +65,15 @@ nsNNTPNewsgroupPost::~nsNNTPNewsgroupPost()
 {
     int i;
     for (i=0; i<=HEADER_LAST; i++)
-        if (m_header[i]) PR_FREEIF(m_header[i]);
+        PR_FREEIF(m_header[i]);
 
     PR_FREEIF(m_body);
     PR_FREEIF(m_messageBuffer);
     NS_IF_RELEASE(m_postMessageFile);
 }
 
-char *
-nsNNTPNewsgroupPost::AppendAndAlloc(char *string,
-                                    const char *newSubstring,
-                                    PRBool withComma)
+static char *
+AppendAndAlloc(char *string, const char *newSubstring, PRBool withComma)
 {
     if (!newSubstring) return NULL;
     
@@ -100,7 +98,7 @@ nsNNTPNewsgroupPost::AppendAndAlloc(char *string,
 nsresult
 nsNNTPNewsgroupPost::AddNewsgroup(const char *newsgroup)
 {
-    m_header[HEADER_NEWSGROUPS]=AppendAndAlloc(m_header[HEADER_NEWSGROUPS], newsgroup, PR_TRUE);
+    m_header[IDX_HEADER_NEWSGROUPS]=AppendAndAlloc(m_header[IDX_HEADER_NEWSGROUPS], newsgroup, PR_TRUE);
     return NS_OK;
 }
 
