@@ -684,7 +684,7 @@ nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
       return bindingManager->ResolveTag(aContent, aNameSpaceID, aResult);
   }
 
-  aContent->GetNameSpaceID(aNameSpaceID);
+  *aNameSpaceID = aContent->GetNameSpaceID();
   NS_ADDREF(*aResult = aContent->Tag());
 
   return NS_OK;

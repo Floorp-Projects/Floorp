@@ -60,8 +60,8 @@ class nsIURI;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0xdd5c7dd9, 0x4c9b, 0x46ac, \
-  { 0x87, 0x5c, 0xcb, 0xba, 0xe5, 0x41, 0x84, 0xb5 } }
+{ 0x84840657, 0x2f0b, 0x4b11, \
+  { 0xa8, 0xba, 0xbc, 0x0e, 0xe3, 0xcd, 0xef, 0x08 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -152,9 +152,9 @@ public:
 
   /**
    * Get the namespace that this element's tag is defined in
-   * @param aResult the namespace [OUT]
+   * @return the namespace
    */
-  virtual void GetNameSpaceID(PRInt32* aResult) const = 0;
+  virtual PRInt32 GetNameSpaceID() const = 0;
 
   /**
    * Get the tag for this element. This will always return a non-null

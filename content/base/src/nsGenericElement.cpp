@@ -1820,10 +1820,10 @@ nsGenericElement::SetNativeAnonymous(PRBool aAnonymous)
   }
 }
 
-void
-nsGenericElement::GetNameSpaceID(PRInt32* aNameSpaceID) const
+PRInt32
+nsGenericElement::GetNameSpaceID() const
 {
-  *aNameSpaceID = mNodeInfo->NamespaceID();
+  return mNodeInfo->NamespaceID();
 }
 
 nsIAtom *

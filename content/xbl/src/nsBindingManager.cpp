@@ -612,7 +612,7 @@ nsBindingManager::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
     }
   }
 
-  aContent->GetNameSpaceID(aNameSpaceID);
+  *aNameSpaceID = aContent->GetNameSpaceID();
   NS_ADDREF(*aResult = aContent->Tag());
 
   return NS_OK;

@@ -1965,10 +1965,10 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     return NS_OK;
 }
 
-void
-nsXULElement::GetNameSpaceID(PRInt32* aNameSpaceID) const
+PRInt32
+nsXULElement::GetNameSpaceID() const
 {
-    *aNameSpaceID = NodeInfo()->NamespaceID();
+    return NodeInfo()->NamespaceID();
 }
 
 nsIAtom *

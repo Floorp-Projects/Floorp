@@ -150,15 +150,17 @@ STDMETHODIMP nsAccessNodeWrap::get_nodeInfo(
   mDOMNode->GetNodeValue(nodeValue);
   *aNodeValue = ::SysAllocString(nodeValue.get());
 
-  PRInt32 nameSpaceID = 0;
+  PRInt32 nameSpaceID;
   *aUniqueID = 0; // magic value of 0 means we're on the document node.
   if (content) {
-    content->GetNameSpaceID(&nameSpaceID);
+    nameSpaceID = content->GetNameSpaceID();
     // This is a unique ID for every content node.  The 3rd party
     // accessibility application can compare this to the childID we
     // return for events such as focus events, to correlate back to
     // data nodes in their internal object model.
     *aUniqueID = content->ContentID();
+  } else {
+    nameSpaceID = 0;
   }
   *aNameSpaceID = NS_STATIC_CAST(short, nameSpaceID);
 

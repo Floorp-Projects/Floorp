@@ -446,8 +446,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
     for (PRUint32 kid = 0; kid < count; kid++) {
         nsIContent *tmplKid = aTemplateNode->GetChildAt(kid);
 
-        PRInt32 nameSpaceID;
-        tmplKid->GetNameSpaceID(&nameSpaceID);
+        PRInt32 nameSpaceID = tmplKid->GetNameSpaceID();
 
         // Check whether this element is the "resource" element. The
         // "resource" element is the element that is cookie-cutter
@@ -1570,10 +1569,8 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
     // Handle "open" and "close" cases. We do this handling before
     // we've notified the observer, so that content is already created
     // for the frame system to walk.
-    PRInt32 nameSpaceID = kNameSpaceID_Unknown;
-    aContent->GetNameSpaceID(&nameSpaceID);
-
-    if ((nameSpaceID == kNameSpaceID_XUL) && (aAttribute == nsXULAtoms::open)) {
+    if ((aContent->GetNameSpaceID() == kNameSpaceID_XUL) &&
+        (aAttribute == nsXULAtoms::open)) {
         // We're on a XUL tag, and an ``open'' attribute changed.
         nsAutoString open;
         aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);

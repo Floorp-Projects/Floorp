@@ -3954,9 +3954,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     styleContext = contentFrame->GetStyleContext();
   } else {
     // otherwise build a box or a block
-#if defined(MOZ_SVG)
-    PRInt32 nameSpaceID;
-#endif
 #ifdef MOZ_XUL
     if (aDocElement->IsContentOfType(nsIContent::eXUL)) {
       rv = NS_NewDocElementBoxFrame(aPresShell, &contentFrame);
@@ -3967,8 +3964,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     else
 #endif 
 #ifdef MOZ_SVG
-    if (aDocElement->GetNameSpaceID(&nameSpaceID),
-        (nameSpaceID == kNameSpaceID_SVG)) {
+    if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG) {
       rv = NS_NewSVGOuterSVGFrame(aPresShell, aDocElement, &contentFrame);
       if (NS_FAILED(rv)) {
         return rv;
@@ -7439,9 +7435,6 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresShell*            aPresShell,
   nsRefPtr<nsStyleContext> styleContext;
   styleContext = ResolveStyleContext(aPresContext, aParentFrame, aContent);
 
-  PRInt32 nameSpaceID;
-  aContent->GetNameSpaceID(&nameSpaceID);
-
   PRBool pageBreakAfter = PR_FALSE;
 
   if (aPresContext->IsPaginated()) {
@@ -7451,7 +7444,8 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresShell*            aPresShell,
   }
   // construct the frame
   rv = ConstructFrameInternal(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                              tag, nameSpaceID, styleContext, aFrameItems, PR_FALSE);
+                              tag, aContent->GetNameSpaceID(), styleContext,
+                              aFrameItems, PR_FALSE);
   if (NS_SUCCEEDED(rv) && pageBreakAfter) {
     // Construct the page break after
     ConstructPageBreakFrame(aPresShell, aPresContext, aState, aContent,
@@ -10513,12 +10507,10 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
   nsStyleContext* styleContext = aFrame->GetStyleContext();
 
   // Get aFrame's content object and the tag name
-  PRInt32                   nameSpaceID;
   nsIAtom*                  tag;
 
   nsIContent* content = aFrame->GetContent();
   NS_ASSERTION(content, "null content object");
-  content->GetNameSpaceID(&nameSpaceID);
   tag = content->Tag();
 
   // Get the child list name that the frame is contained in
@@ -10622,7 +10614,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
     // Note: if the old frame was out-of-flow, then so will the new frame
     // and we'll get a new placeholder frame
     rv = ConstructFrameByDisplayType(aPresShell, aPresContext, state, display,
-                                     content, nameSpaceID, tag,
+                                     content, content->GetNameSpaceID(), tag,
                                      inFlowParent, styleContext, frameItems);
 
     if (NS_FAILED(rv)) return rv;
@@ -12647,12 +12639,10 @@ nsCSSFrameConstructor::CreateListBoxContent(nsPresContext* aPresContext,
       return NS_OK;
     }
 
-    PRInt32 namespaceID;
-    aChild->GetNameSpaceID(&namespaceID);
-
     rv = ConstructFrameInternal(aPresContext->PresShell(),
                                 aPresContext, state, aChild,
-                                aParentFrame, aChild->Tag(), namespaceID, 
+                                aParentFrame, aChild->Tag(),
+                                aChild->GetNameSpaceID(),
                                 styleContext, frameItems, PR_FALSE);
     
     nsIFrame* newFrame = frameItems.childList;

@@ -1229,11 +1229,11 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
       else {
         PRInt32 nameSpace = kNameSpaceID_Unknown;
         if (content)
-          content->GetNameSpaceID(&nameSpace);
+          nameSpace = content->GetNameSpaceID();
         else if (doc) {
           nsCOMPtr<nsIContent> root = doc->GetRootContent();
           if (root)
-            root->GetNameSpaceID(&nameSpace);
+            nameSpace = root->GetNameSpaceID();
         }
         const char *eventName = nsContentUtils::GetEventArgName(nameSpace);
 
@@ -1446,9 +1446,8 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
                                                      &handler);
         }
         else {
-          PRInt32 nameSpace = kNameSpaceID_Unknown;
-          content->GetNameSpaceID(&nameSpace);
-          const char *eventName = nsContentUtils::GetEventArgName(nameSpace);
+          const char *eventName =
+            nsContentUtils::GetEventArgName(content->GetNameSpaceID());
 
           result = aContext->CompileEventHandler(jsobj, aName, eventName,
                                                  handlerBody,
