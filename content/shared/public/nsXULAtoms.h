@@ -32,78 +32,23 @@ class nsINameSpaceManager;
 class nsXULAtoms {
 public:
 
-  static void AddrefAtoms();
+  static void AddRefAtoms();
   static void ReleaseAtoms();
 
   // XUL namespace ID, good for the life of the nsXULAtoms object
   static PRInt32  nameSpaceID;
 
-  // Alphabetical list of xul tag and attribute atoms
-  static nsIAtom* button;
+  /* Declare all atoms
 
-  static nsIAtom* checkbox;
-  static nsIAtom* spinner;
-  static nsIAtom* scrollbar;
-  static nsIAtom* slider;
-  static nsIAtom* colorpicker;
-  static nsIAtom* fontpicker;
+     The atom names and values are stored in nsCSSAtomList.h and
+     are brought to you by the magic of C preprocessing
 
-  static nsIAtom* radio;
+     Add new atoms to nsCSSAtomList and all support logic will be auto-generated
+   */
+#define XUL_ATOM(_name, _value) static nsIAtom* _name;
+#include "nsXULAtomList.h"
+#undef XUL_ATOM
 
-  static nsIAtom* text;
-  static nsIAtom* toolbar;
-  static nsIAtom* toolbaritem;
-  static nsIAtom* toolbox;
-  
-  // The tree atoms
-  static nsIAtom* tree; // The start of a tree view
-  static nsIAtom* treecaption; // The caption of a tree view
-  static nsIAtom* treehead; // The header of the tree view
-  static nsIAtom* treerow; // A row in the tree view
-  static nsIAtom* treeitem; // An item in the tree view
-  static nsIAtom* treecell; // A cell in the tree view
-  static nsIAtom* treechildren; // The children of an item in the tree viw
-  static nsIAtom* treeindentation; // Specifies that the indentation for the level should occur here.
-  static nsIAtom* treeallowevents; // Lets events be handled on the cell contents.
-  static nsIAtom* treecol; // A column in the tree view
-  static nsIAtom* treecolgroup; // A column group in the tree view
-  static nsIAtom* treefoot; // The footer of the tree view
-  static nsIAtom* treepusher; // A column pusher (left or right) for the tree view
-
-  static nsIAtom* menu; // The menu element
-  static nsIAtom* menubar; // The menubar element
-  static nsIAtom* menuitem; // A single menu item
-  static nsIAtom* menubutton; // A button inside an XP menu.
-  static nsIAtom* menuchildren; // The menu's children.
-  
-  static nsIAtom* progressmeter; 
-  static nsIAtom* titledbutton;
-  static nsIAtom* mode; 
-
-  static nsIAtom* box; 
-  static nsIAtom* flex; 
-
-  static nsIAtom* deck; 
-  static nsIAtom* tabcontrol; 
-  static nsIAtom* tabbox; 
-  static nsIAtom* tab; 
-  static nsIAtom* tabpanel; 
-  static nsIAtom* tabpage; 
-
-  static nsIAtom* widget;
-  static nsIAtom* window;
-
-  static nsIAtom* curpos; 
-  static nsIAtom* maxpos; 
-  static nsIAtom* increment; 
-  static nsIAtom* pageincrement; 
-  static nsIAtom* scrollbarbutton; 
-  static nsIAtom* thumb; 
-
-  static nsIAtom* toggled; 
-  static nsIAtom* grippy; 
-  static nsIAtom* splitter; 
-  static nsIAtom* collapse; 
 };
 
 #endif /* nsXULAtoms_h___ */
