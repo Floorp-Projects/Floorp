@@ -699,6 +699,17 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
     if (NS_FAILED(rv)) return rv;
     req =(nsHTTPRequest *) mRequests->ElementAt(0);
 
+    //
+    // Propagate the load attributes from the HTTPChannel into the
+    // transport...
+    //
+    if (req->mConnection) {
+      nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL;
+      req->mConnection->GetLoadAttributes(&loadAttributes);
+
+      mTransport->SetLoadAttributes(loadAttributes);
+    }
+
     mOnStopDone = PR_FALSE;
     rv = mTransport->AsyncWrite(stream, this,(nsISupports*)(nsIRequest*)req->mConnection);
     NS_RELEASE(req);
