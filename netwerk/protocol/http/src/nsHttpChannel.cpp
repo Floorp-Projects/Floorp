@@ -1562,6 +1562,7 @@ nsHttpChannel::Cancel(nsresult status)
         mTransaction->Cancel(status);
     else if (mCacheReadRequest)
         mCacheReadRequest->Cancel(status);
+    mStatus = status;
     return NS_OK;
 }
 
