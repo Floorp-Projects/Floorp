@@ -34,7 +34,7 @@ sub processFile {
                         refRem => $10,
                         refMean => $11,
                         refStdDev => $12,
-                        bloat => $3 * 5 # size * objTotal
+                        bloat => $3 * $5 # size * objTotal
                       };
         } else {
 #            print "failed to parse: $_\n";
