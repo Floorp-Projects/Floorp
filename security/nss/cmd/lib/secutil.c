@@ -321,7 +321,6 @@ secu_InitSlotPassword(PK11SlotInfo *slot, PRBool retry, void *arg)
 	    PR_fprintf(PR_STDERR, "Error opening input terminal for read\n");
 	    return NULL;
 	}
-#endif
 
 	/* we have no password, so initialize database with one */
 	PR_fprintf(PR_STDERR, 
