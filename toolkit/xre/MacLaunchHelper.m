@@ -64,9 +64,10 @@ UpdatePrebinding()
 
   // We run the redo-prebinding script in these cases:
   // 10.1.x (5.x): No auto-update of prebinding exists
-  // 10.3.x (7.x): Auto-update of prebinding fails to complete successfully
-  //               (for no apparent reason)
-  if (u.release[0] != '5' && u.release[0] != '7')
+  // On 10.3.x, prebinding fails to update automatically but this script
+  // doesn't work either.  It doesn't matter though, because in 10.3.4 and
+  // higher, the loader is improved so that prebinding is unnecessary.
+  if (u.release[0] != '5')
     return;
 
   if (!_dyld_launched_prebound()) {
