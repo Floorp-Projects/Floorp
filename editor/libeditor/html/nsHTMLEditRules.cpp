@@ -1439,6 +1439,24 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
       if (!node) node = parent;  
     }
     
+    // if this is an inline node, back up through any prior inline nodes that
+    // aren't across a <br> from us, and that are enclosed in the same block.
+    
+    if (!nsEditor::IsBlockNode(node))
+    {
+      nsCOMPtr<nsIDOMNode> prevNode;
+      prevNode = nsEditor::NextNodeInBlock(node, nsEditor::kIterBackward);
+      while (prevNode)
+      {
+        if (IsBreak(prevNode))
+          break;
+        if (nsEditor::IsBlockNode(prevNode))
+          break;
+        node = prevNode;
+        prevNode = nsEditor::NextNodeInBlock(node, nsEditor::kIterBackward);
+      }
+    }
+    
     // finding the real start for this point.  look up the tree for as long as we are the 
     // first node in the container, and as long as we haven't hit the body node.
     while ((IsFirstNode(node)) && (!IsBody(parent)))
@@ -1469,6 +1487,24 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
       offset++;  // since this is going to be used for a range _endpoint_, we want to be after the node
     else
       node = parent;
+    
+    // if this is an inline node, look ahead through any further inline nodes that
+    // aren't across a <br> from us, and that are enclosed in the same block.
+    
+    if (!nsEditor::IsBlockNode(node))
+    {
+      nsCOMPtr<nsIDOMNode> nextNode;
+      nextNode = nsEditor::NextNodeInBlock(node, nsEditor::kIterForward);
+      while (nextNode)
+      {
+        if (IsBreak(nextNode))
+          break;
+        if (nsEditor::IsBlockNode(nextNode))
+          break;
+        node = nextNode;
+        nextNode = nsEditor::NextNodeInBlock(node, nsEditor::kIterForward);
+      }
+    }
     
     // finding the real end for this point.  look up the tree for as long as we are the 
     // last node in the container, and as long as we haven't hit the body node.
