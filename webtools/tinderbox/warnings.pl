@@ -93,8 +93,9 @@ $source_root_pat = '^.*/mozilla/';
   '\' was hidden',
   'aggregate has a partly bracketed initializer', # mailnews is stuck with this
   #'declaration of \`index\' shadows global',
-  'declaration of \`ws\' shadows global', # from istream
-  'declaration of \`(?:y0|y1)\' shadows global', # from mathcalls.h
+  'declaration of \`ws\' shadows global', # From istream
+  'declaration of \`free\' shadows global', # From strstream.h
+  'declaration of \`(?:y0|y1|j1|remainder)\' shadows global', #From mathcalls.h
   'is not \(any longer\) pertinent', # cvs warning we can safely ignore
   'ANSI C forbids long long integer constants', # js uses long long constants
 );
@@ -679,7 +680,7 @@ sub print_source_code {
   for my $warn_rec (@{ $line_rec->{list}}) {
     my $warning = $warn_rec->{warning_text};
     my ($keyword) = $warning =~ /\`([^\']*)\'/;
-    next if $keyword eq '';
+    next unless defined $keyword and $keyword ne '';
     $source_text =~ s|\b\Q$keyword\E\b|<b>$keyword</b>|gm;
     last;
   }
