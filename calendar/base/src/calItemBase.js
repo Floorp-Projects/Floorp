@@ -36,6 +36,7 @@ calItemBase.prototype = {
     initItemBase: function () {
         this.mCreationDate = createCalDateTime();
         this.mAlarmTime = createCalDateTime();
+        this.mLastModifiedTime = createCalDateTime();
 
         this.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
                            createInstance(Components.interfaces.nsIWritablePropertyBag);
@@ -53,7 +54,7 @@ calItemBase.prototype = {
     cloneItemBaseInto: function (m) {
         m.mImmutable = false;
         m.mGeneration = this.mGeneration;
-        m.mLastModifiedTime = this.mLastModifiedTime;
+        m.mLastModifiedTime = this.mLastModifiedTime.clone();
         m.mParent = this.mParent;
         m.mId = this.mId;
         m.mTitle = this.mTitle;
@@ -94,7 +95,6 @@ calItemBase.prototype = {
     mIsPrivate: 0, get isPrivate() { return this.mIsPrivate; }, set isPrivate(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mIsPrivate = v; },
     mMethod: 0, get method() { return this.mMethod; }, set method(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mMethod = v; },
     mStatus: 0, get status() { return this.mStatus; }, set status(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mStatus = v; },
-    mIcalString: "", get icalString() { return this.mIcalString; }, set icalString(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mIcalString = v; },
     mHasAlarm: false, get hasAlarm() { return this.mHasAlarm; }, set hasAlarm(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mHasAlarm = v; },
     mAlarmTime: null, get alarmTime() { return this.mAlarmTime; }, set alarmTime(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mAlarmTime = v; },
     mRecurrenceInfo: null, get recurrenceInfo() { return this.mRecurrenceInfo; }, set recurrenceInfo(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mRecurrenceInfo = v; },
@@ -106,7 +106,11 @@ calItemBase.prototype = {
 
     get propertyEnumerator() { return this.mProperties.enumerator; },
     getProperty: function (aName) {
-        return this.mProperties.getProperty(aName);
+        try {
+            return this.mProperties.getProperty(aName);
+        } catch (e) {
+            return null;
+        }
     },
     setProperty: function (aName, aValue) {
         if (this.mImmutable)
@@ -116,7 +120,10 @@ calItemBase.prototype = {
     deleteProperty: function (aName) {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
-        this.mProperties.deleteProperty(aName);
+        try {
+            this.mProperties.deleteProperty(aName);
+        } catch (e) {
+        }
     },
 
     getAttendees: function (countObj) {
@@ -190,6 +197,35 @@ calItemOccurrence.prototype = {
         if (this.item.recurrenceInfo)
             return this.item.recurrenceInfo.getPreviousOccurrence(this.item, aStartDate);
         return null;
+    },
+
+
+    get icalString() {
+        throw Components.results.NS_NOT_IMPLEMENTED;
+    },
+    set icalString() {
+        throw Components.results.NS_NOT_IMPLEMENTED;
+    },
+    setItemBaseFromICS: function (icalcomp) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        var propmap = [["mCreationDate", "createdTime"],
+                       ["mLastModifiedTime", "lastModified"],
+                       ["mGeneration", "version"],
+                       ["mId", "uid"],
+                       ["mTitle", "summary"],
+                       ["mPriority", "priority"],
+                       ["mMethod", "method"],
+                       ["mStatus", "status"]];
+        for (var i = 0; i < propmap.length; i++) {
+            var prop = propmap[i];
+            this[prop[0]] = icalcomp[prop[1]];
+        }
+
+        if (icalcomp.icalClass == Components.interfaces.calIICSService.VISIBILITY_PUBLIC)
+            this.mIsPrivate = false;
+        else
+            this.mIsPrivate = true;
     }
 };
 

@@ -78,6 +78,7 @@ calItemBase.prototype = {
     initItemBase: function () {
         this.mCreationDate = createCalDateTime();
         this.mAlarmTime = createCalDateTime();
+        this.mLastModifiedTime = createCalDateTime();
 
         this.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
                            createInstance(Components.interfaces.nsIWritablePropertyBag);
@@ -95,7 +96,7 @@ calItemBase.prototype = {
     cloneItemBaseInto: function (m) {
         m.mImmutable = false;
         m.mGeneration = this.mGeneration;
-        m.mLastModifiedTime = this.mLastModifiedTime;
+        m.mLastModifiedTime = this.mLastModifiedTime.clone();
         m.mParent = this.mParent;
         m.mId = this.mId;
         m.mTitle = this.mTitle;
@@ -136,7 +137,6 @@ calItemBase.prototype = {
     MEMBER_ATTR(mIsPrivate, 0, isPrivate),
     MEMBER_ATTR(mMethod, 0, method),
     MEMBER_ATTR(mStatus, 0, status),
-    MEMBER_ATTR(mIcalString, "", icalString),
     MEMBER_ATTR(mHasAlarm, false, hasAlarm),
     MEMBER_ATTR(mAlarmTime, null, alarmTime),
     MEMBER_ATTR(mRecurrenceInfo, null, recurrenceInfo),
@@ -239,6 +239,35 @@ calItemOccurrence.prototype = {
         if (this.item.recurrenceInfo)
             return this.item.recurrenceInfo.getPreviousOccurrence(this.item, aStartDate);
         return null;
+    },
+
+    /* MEMBER_ATTR(mIcalString, "", icalString), */
+    get icalString() {
+        throw Components.results.NS_NOT_IMPLEMENTED;
+    },
+    set icalString() {
+        throw Components.results.NS_NOT_IMPLEMENTED;
+    },
+    setItemBaseFromICS: function (icalcomp) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        var propmap = [["mCreationDate", "createdTime"],
+                       ["mLastModifiedTime", "lastModified"],
+                       ["mGeneration", "version"],
+                       ["mId", "uid"],
+                       ["mTitle", "summary"],
+                       ["mPriority", "priority"],
+                       ["mMethod", "method"],
+                       ["mStatus", "status"]];
+        for (var i = 0; i < propmap.length; i++) {
+            var prop = propmap[i];
+            this[prop[0]] = icalcomp[prop[1]];
+        }
+
+        if (icalcomp.icalClass == Components.interfaces.calIICSService.VISIBILITY_PUBLIC)
+            this.mIsPrivate = false;
+        else
+            this.mIsPrivate = true;
     }
 };
 
