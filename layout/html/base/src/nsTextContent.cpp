@@ -757,7 +757,7 @@ NS_METHOD TextFrame::Reflow(nsIPresContext* aCX,
                             nsReflowStatus& aStatus)
 {
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-     ("enter TextFrame::ResizeReflow: aMaxSize=%d,%d",
+     ("enter TextFrame::Reflow: aMaxSize=%d,%d",
       aReflowState.maxSize.width, aReflowState.maxSize.height));
 
   // Wipe out old justification information since it's going to change
@@ -816,7 +816,7 @@ NS_METHOD TextFrame::Reflow(nsIPresContext* aCX,
   }
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-               ("exit TextFrame::ResizeReflow: %scomplete width=%d",
+               ("exit TextFrame::Reflow: %scomplete width=%d",
                 (NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not "),
                 aDesiredSize.width));
   return NS_OK;
