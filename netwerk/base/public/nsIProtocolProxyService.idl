@@ -33,6 +33,8 @@
 [scriptable, uuid(495CC980-E0D4-11d3-A1A8-0050041CAF44)]
 interface nsIProtocolProxyService : nsISupports
 {
+    readonly attribute PRBool proxyEnabled;
+
     void examineForProxy(in nsIURI aURI, in nsIProxy aProxy);
 };
 
