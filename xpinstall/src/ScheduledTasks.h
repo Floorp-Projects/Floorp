@@ -21,6 +21,7 @@
  * Contributor(s): 
  *     Daniel Veditz <dveditz@netscape.com>
  *     Douglas Turner <dougt@netscape.com>
+ *     Samir Gehani <sgehani@netscape.com>
  */
 
 #ifndef __SCHEDULEDTASKS_H__
@@ -36,6 +37,7 @@ PR_BEGIN_EXTERN_C
 
 PRInt32 DeleteFileNowOrSchedule(nsIFile* filename);
 PRInt32 ReplaceFileNowOrSchedule(nsIFile* tmpfile, nsIFile* target );
+PRInt32 ScheduleFileForDeletion(nsIFile* filename);
 
 
 void PerformScheduledTasks(HREG reg);

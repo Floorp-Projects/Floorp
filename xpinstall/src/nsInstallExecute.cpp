@@ -105,7 +105,7 @@ PRInt32 nsInstallExecute::Complete()
     if(cArgs[0])
       delete(cArgs[0]);
     
-    DeleteFileNowOrSchedule( app );
+    ScheduleFileForDeletion( app );
     
     return result;
 }
