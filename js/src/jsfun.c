@@ -798,7 +798,7 @@ fun_finalize(JSContext *cx, JSObject *obj)
         return;
     if (fun->object == obj)
         fun->object = NULL;
-    JS_ATOMIC_ADDREF(&fun->nrefs, -1);
+    JS_ATOMIC_DECREMENT(&fun->nrefs);
     if (fun->nrefs)
         return;
     if (fun->script)
@@ -1680,7 +1680,7 @@ js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *funobj)
         fun->object = funobj;
     if (!JS_SetPrivate(cx, funobj, fun))
         return JS_FALSE;
-    JS_ATOMIC_ADDREF(&fun->nrefs, 1);
+    JS_ATOMIC_INCREMENT(&fun->nrefs);
     return JS_TRUE;
 }
 

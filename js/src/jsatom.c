@@ -229,7 +229,7 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
 	return JS_FALSE;
     }
 #ifdef JS_THREADSAFE
-    js_NewLock(&state->lock);
+    js_InitLock(&state->lock);
     state->tablegen = 0;
 #endif
 
@@ -301,7 +301,7 @@ js_FreeAtomState(JSContext *cx, JSAtomState *state)
     state->table = NULL;
     state->number = 0;
 #ifdef JS_THREADSAFE
-    js_DestroyLock(&state->lock);
+    js_FinishLock(&state->lock);
 #endif
 }
 
@@ -776,7 +776,7 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
     uint32 count;
 
 #ifdef DEBUG
-    JS_ATOMIC_ADDREF(&js_atom_map_count, 1);
+    JS_ATOMIC_INCREMENT(&js_atom_map_count);
 #endif
     ale = al->list;
     if (!ale && !al->table) {
@@ -797,7 +797,7 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 
     if (al->table) {
 #ifdef DEBUG
-        JS_ATOMIC_ADDREF(&js_atom_map_hash_table_count, 1);
+        JS_ATOMIC_INCREMENT(&js_atom_map_hash_table_count);
 #endif
         JS_HashTableEnumerateEntries(al->table, js_map_atom, vector);
     } else {

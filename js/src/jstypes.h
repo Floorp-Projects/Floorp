@@ -387,12 +387,6 @@ typedef JSIntn JSBool;
 typedef JSUint8 JSPackedBool;
 
 /*
-** Status code used by some routines that have a single point of failure or 
-** special status return.
-*/
-typedef enum { JS_FAILURE = -1, JS_SUCCESS = 0 } JSStatus;
-
-/*
 ** A JSWord is an integer that is the same size as a void*
 */
 typedef long JSWord;

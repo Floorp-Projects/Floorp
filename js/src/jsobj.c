@@ -230,6 +230,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
      *      rt->setSlotLock < pobj's grand-proto-or-parent's scope lock;
      *      etc...
      * (2)  rt->setSlotLock < obj's scope lock < pobj's scope lock.
+     *      rt->setSlotLock < obj's scope lock < rt->gcLock
      *
      * We avoid AB-BA deadlock by restricting obj from being on pobj's parent
      * or proto chain (pobj may already be on obj's parent or proto chain; it
@@ -272,6 +273,19 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
                     return JS_FALSE;
                 }
             } else if (OBJ_IS_NATIVE(pobj) && OBJ_SCOPE(pobj) != scope) {
+#ifdef JS_THREADSAFE
+                /*
+                 * Avoid deadlock by never nesting a scope lock (for pobj, in
+                 * this case) within a "flyweight" scope lock (for obj).  Give
+                 * scope a non-flyweight lock, allowing it to be shared among
+                 * multiple threads.  See ClaimScope in jslock.c.
+                 */
+                if (scope->ownercx) {
+                    JS_ASSERT(scope->ownercx == cx);                
+                    js_PromoteScopeLock(cx, scope);
+                }
+#endif
+
                 /* We can't deadlock because we checked for cycles above (2). */
                 JS_LOCK_OBJ(cx, pobj);
                 newscope = (JSScope *) js_HoldObjectMap(cx, pobj->map);
@@ -1420,7 +1434,7 @@ JSObjectMap *
 js_HoldObjectMap(JSContext *cx, JSObjectMap *map)
 {
     JS_ASSERT(map->nrefs >= 0);
-    JS_ATOMIC_ADDREF(&map->nrefs, 1);
+    JS_ATOMIC_INCREMENT(&map->nrefs);
     return map;
 }
 
@@ -1428,7 +1442,7 @@ JSObjectMap *
 js_DropObjectMap(JSContext *cx, JSObjectMap *map, JSObject *obj)
 {
     JS_ASSERT(map->nrefs > 0);
-    JS_ATOMIC_ADDREF(&map->nrefs, -1);
+    JS_ATOMIC_DECREMENT(&map->nrefs);
     if (map->nrefs == 0) {
 	map->ops->destroyObjectMap(cx, map);
 	return NULL;
@@ -1867,7 +1881,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     hash = js_HashValue(id);
     for (;;) {
 	JS_LOCK_OBJ(cx, obj);
-	_SET_OBJ_INFO(obj, file, line);
+	SET_OBJ_INFO(obj, file, line);
 	scope = OBJ_SCOPE(obj);
         if (scope->object == obj) {
             sym = scope->ops->lookup(cx, scope, id, hash);
@@ -1894,7 +1908,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 		    if (!newresolve(cx, obj, js_IdToValue(id), flags, &obj2))
 			return JS_FALSE;
 		    JS_LOCK_OBJ(cx, obj);
-		    _SET_OBJ_INFO(obj, file, line);
+		    SET_OBJ_INFO(obj, file, line);
 		    if (obj2) {
 			scope = OBJ_SCOPE(obj2);
 			if (MAP_IS_NATIVE(&scope->map))
@@ -1905,7 +1919,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 		    if (!resolve(cx, obj, js_IdToValue(id)))
 			return JS_FALSE;
 		    JS_LOCK_OBJ(cx, obj);
-		    _SET_OBJ_INFO(obj, file, line);
+		    SET_OBJ_INFO(obj, file, line);
 		    scope = OBJ_SCOPE(obj);
 		    if (MAP_IS_NATIVE(&scope->map))
 			sym = scope->ops->lookup(cx, scope, id, hash);
@@ -1951,7 +1965,7 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
 	if (prop) {
 #ifdef JS_THREADSAFE
 	    JS_ASSERT(OBJ_IS_NATIVE(obj));
-	    JS_ATOMIC_ADDREF(&((JSScopeProperty *)prop)->nrefs, 1);
+	    ((JSScopeProperty *)prop)->nrefs++;
 #endif
 	    *objp = obj;
 	    *pobjp = obj;
@@ -2106,7 +2120,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     slot = sprop->slot;
     *vp = LOCKED_OBJ_GET_SLOT(obj2, slot);
 #ifndef JS_THREADSAFE
-    JS_ATOMIC_ADDREF(&sprop->nrefs, 1);
+    sprop->nrefs++;
 #endif
     JS_UNLOCK_SCOPE(cx, scope);
     if (!SPROP_GET(cx, sprop, obj, obj2, vp)) {
@@ -2199,7 +2213,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
             /* Don't clone a setter or shared prototype property. */
             if (attrs & (JSPROP_SETTER | JSPROP_SHARED)) {
-                JS_ATOMIC_ADDREF(&sprop->nrefs, 1);
+                sprop->nrefs++;
                 JS_UNLOCK_SCOPE(cx, scope);
 
                 ok = SPROP_SET(cx, sprop, obj, obj, vp);
@@ -2245,7 +2259,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                                 goto unlocked_read_only;
                             }
                             if (attrs & (JSPROP_SETTER | JSPROP_SHARED)) {
-                                JS_ATOMIC_ADDREF(&sprop->nrefs, 1);
+                                sprop->nrefs++;
                                 JS_UNLOCK_SCOPE(cx, scope);
 
                                 ok = SPROP_SET(cx, sprop, obj, obj, vp);
@@ -2349,7 +2363,7 @@ unlocked_read_only:
     pval = LOCKED_OBJ_GET_SLOT(obj, slot);
 
     /* Hold sprop across setter callout, and drop after, in case of delete. */
-    JS_ATOMIC_ADDREF(&sprop->nrefs, 1);
+    sprop->nrefs++;
 
     /* Avoid deadlock by unlocking obj while calling sprop's setter. */
     JS_UNLOCK_OBJ(cx, obj);

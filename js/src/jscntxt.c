@@ -76,7 +76,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 
     JS_LOCK_RUNTIME(rt);
     for (;;) {
-	first = (rt->contextList.next == (JSCList *)&rt->contextList);
+	first = (rt->contextList.next == &rt->contextList);
 	if (rt->state == JSRTS_UP) {
 	    JS_ASSERT(!first);
 	    break;
@@ -159,7 +159,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     JS_LOCK_RUNTIME(rt);
     JS_ASSERT(rt->state == JSRTS_UP || rt->state == JSRTS_LAUNCHING);
     JS_REMOVE_LINK(&cx->links);
-    last = (rt->contextList.next == (JSCList *)&rt->contextList);
+    last = (rt->contextList.next == &rt->contextList);
     if (last)
     	rt->state = JSRTS_LANDING;
     JS_UNLOCK_RUNTIME(rt);
@@ -178,7 +178,12 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     }
 
 #if JS_HAS_REGEXPS
-    /* Remove more GC roots in regExpStatics, then collect garbage. */
+    /*
+     * Remove more GC roots in regExpStatics, then collect garbage.
+     * XXX anti-modularity alert: we rely on the call to js_RemoveRoot within
+     * XXX this function call to wait for any racing GC to complete, in the
+     * XXX case where JS_DestroyContext is called outside of a request on cx
+     */
     js_FreeRegExpStatics(cx, &cx->regExpStatics);
 #endif
 
@@ -241,6 +246,21 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     free(cx);
 }
 
+JSBool
+js_LiveContext(JSRuntime *rt, JSContext *cx)
+{
+    JSCList *cl;
+
+    for (cl = rt->contextList.next; cl != &rt->contextList; cl = cl->next) {
+        if (cl == &cx->links)
+            return JS_TRUE;
+    }
+#ifdef DEBUG
+    JS_ATOMIC_INCREMENT(&rt->deadContexts);
+#endif
+    return JS_FALSE;
+}
+
 JSContext *
 js_ContextIterator(JSRuntime *rt, JSContext **iterp)
 {
@@ -248,11 +268,11 @@ js_ContextIterator(JSRuntime *rt, JSContext **iterp)
 
     JS_LOCK_RUNTIME(rt);
     if (!cx)
-	cx = (JSContext *)rt->contextList.next;
-    if ((void *)cx == &rt->contextList)
-	cx = NULL;
-    else
-	*iterp = (JSContext *)cx->links.next;
+        cx = (JSContext *)&rt->contextList;
+    cx = (JSContext *)cx->links.next;
+    if (&cx->links == &rt->contextList)
+        cx = NULL;
+    *iterp = cx;
     JS_UNLOCK_RUNTIME(rt);
     return cx;
 }

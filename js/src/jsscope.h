@@ -43,6 +43,10 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
+#ifdef JS_THREADSAFE
+# include "jslock.h"
+#endif
+
 #ifndef JS_DOUBLE_HASHING
 struct JSScopeOps {
     JSSymbol *      (*lookup)(JSContext *cx, JSScope *scope, jsid id,
@@ -69,8 +73,12 @@ struct JSScope {
     void            *data;              /* private data specific to ops */
 #endif
 #ifdef JS_THREADSAFE
+    JSContext       *ownercx;           /* creating context, NULL if shared */
     JSThinLock      lock;               /* binary semaphore protecting scope */
-    int32           count;              /* entry count for reentrancy */
+    union {                             /* union lockful and lock-free state: */
+        jsrefcount  count;              /* lock entry count for reentrancy */
+        JSScope     *link;              /* next link in rt->scopeSharingTodo */
+    } u;
 #ifdef DEBUG
     const char      *file[4];           /* file where lock was (re-)taken */
     unsigned int    line[4];            /* line where lock was (re-)taken */
@@ -78,12 +86,12 @@ struct JSScope {
 #endif
 };
 
-#define OBJ_SCOPE(obj)          ((JSScope *)(obj)->map)
-#define SPROP_GETTER(sprop,obj) SPROP_GETTER_SCOPE(sprop, OBJ_SCOPE(obj))
-#define SPROP_SETTER(sprop,obj) SPROP_SETTER_SCOPE(sprop, OBJ_SCOPE(obj))
+#define OBJ_SCOPE(obj)              ((JSScope *)(obj)->map)
+#define SPROP_GETTER(sprop,obj)     SPROP_GETTER_SCOPE(sprop, OBJ_SCOPE(obj))
+#define SPROP_SETTER(sprop,obj)     SPROP_SETTER_SCOPE(sprop, OBJ_SCOPE(obj))
 
-#define SPROP_INVALID_SLOT       0xffffffff
-#define SPROP_HAS_VALID_SLOT(_s) ((_s)->slot != SPROP_INVALID_SLOT)
+#define SPROP_INVALID_SLOT          0xffffffff
+#define SPROP_HAS_VALID_SLOT(sprop) ((sprop)->slot != SPROP_INVALID_SLOT)
 
 #ifdef JS_DOUBLE_HASHING
 
