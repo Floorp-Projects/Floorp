@@ -22,9 +22,11 @@
  */
 
 #include "nsMemoryCacheDevice.h"
-#include "nsMemoryCacheTransport.h"
 #include "nsICacheService.h"
+#include "nsIComponentManager.h"
+#include "nsNetCID.h"
 
+static NS_DEFINE_CID(kStorageTransportCID, NS_STORAGETRANSPORT_CID);
 
 nsMemoryCacheDevice::nsMemoryCacheDevice()
     : mCurrentTotal(0)
@@ -148,10 +150,12 @@ nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry *    entry,
         return CallQueryInterface(data, transport);
     else {
         // create a new transport for this entry
-        NS_NEWXPCOM(*transport, nsMemoryCacheTransport);
-        if (!*transport)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(*transport);
+        rv = nsComponentManager::CreateInstance(kStorageTransportCID,
+                                                nsnull,
+                                                NS_GET_IID(nsITransport),
+                                                (void **) transport);
+        if (NS_FAILED(rv)) return rv;
+
         return entry->SetData(*transport);
     }
 }

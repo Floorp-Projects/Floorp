@@ -45,7 +45,6 @@ CPPSRCS		= \
 	nsCacheSession.cpp \
 	nsDiskCacheDevice.cpp \
 	nsMemoryCacheDevice.cpp \
-    nsMemoryCacheTransport.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
