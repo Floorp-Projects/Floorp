@@ -172,6 +172,15 @@ PRIVATE PRBool uCheckAndGenAlways1ByteShiftGL(
 		PRUint32*				outlen
 );
 
+PRIVATE PRBool uCnGAlways8BytesComposedHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+);
+
 PRIVATE PRBool uGenAlways2Byte(
 		PRUint16 				in,
 		unsigned char*		out
@@ -216,6 +225,7 @@ PRIVATE uGeneratorFunc m_generator[uNumOfCharsetType] =
 	uCheckAndGen2ByteGRPrefix8EA6,
 	uCheckAndGen2ByteGRPrefix8EA7,
 	uCheckAndGenAlways1ByteShiftGL,
+        uCnGAlways8BytesComposedHangul
 };
 
 /*=================================================================================
@@ -674,6 +684,57 @@ PRIVATE PRBool uCheckAndGenAlways1ByteShiftGL(
 	{
         *outlen = 1;
 	    out[0] = in & 0x7f;
+	    return PR_TRUE;
+    }
+}
+#define SBase 0xAC00
+#define LCount 19
+#define VCount 21
+#define TCount 28
+#define NCount (VCount * TCount)
+/*=================================================================================
+
+=================================================================================*/
+PRIVATE PRBool uCnGAlways8BytesComposedHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+)
+{
+	if(outbuflen < 8)
+		return PR_FALSE;
+	else
+	{
+            static PRUint8 lMap[LCount] = {
+              0xa1, 0xa2, 0xa4, 0xa7, 0xa8, 0xa9, 0xb1, 0xb2, 0xb3, 0xb5,
+              0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe
+            };
+ 
+            static PRUint8 tMap[TCount] = {
+              0xd4, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa9, 0xaa, 
+              0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb4, 0xb5, 
+              0xb6, 0xb7, 0xb8, 0xba, 0xbb, 0xbc, 0xbd, 0xbe
+            };
+            PRUint16 SIndex, LIndex, VIndex, TIndex;
+            /* the following line are copy from Unicode 2.0 page 3-13 */
+            /* item 1 of Hangul Syllabel Decomposition */
+            SIndex =  in - SBase;
+
+            /* the following lines are copy from Unicode 2.0 page 3-14 */
+            /* item 2 of Hangul Syllabel Decomposition w/ modification */
+            LIndex = SIndex / NCount;
+            VIndex = (SIndex % NCount) / TCount;
+            TIndex = SIndex / TCount;
+
+            *outlen = 8;
+            out[0] = out[2] = out[4] = out[6] = 0xa4;
+            out[1] = 0xd4;
+            out[2] = lMap[LIndex];
+            out[4] = VIndex + 0xbf;
+            out[6] = tMap[TIndex];
 	    return PR_TRUE;
     }
 }
