@@ -4273,13 +4273,15 @@ NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI, PRBool* aShould
    PRBool isImap = PR_FALSE;
    PRBool isNews = PR_FALSE;
    PRBool isMailbox = PR_FALSE;
+   PRBool isViewSource = PR_FALSE;
 
    NS_ENSURE_SUCCESS(aURI->SchemeIs("about", &isAbout), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(aURI->SchemeIs("imap", &isImap), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(aURI->SchemeIs("news", &isNews), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(aURI->SchemeIs("mailbox", &isMailbox), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aURI->SchemeIs("view-source", &isViewSource), NS_ERROR_FAILURE);
 
-   if (isAbout || isImap || isNews || isMailbox)
+   if (isAbout || isImap || isNews || isMailbox || isViewSource)
       return NS_OK;
 
    *aShouldAdd = PR_TRUE;
