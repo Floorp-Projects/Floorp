@@ -194,6 +194,9 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
   // Determine whether the image has fixed content width and height
   PRBool  fixedContentWidth = aReflowState.HaveFixedContentWidth();
   PRBool  fixedContentHeight = aReflowState.HaveFixedContentHeight();
+  if (NS_INTRINSICSIZE == aReflowState.computedWidth) {
+    fixedContentWidth = PR_FALSE;
+  }
   if (NS_INTRINSICSIZE == aReflowState.computedHeight) {
     fixedContentHeight = PR_FALSE;
   }
