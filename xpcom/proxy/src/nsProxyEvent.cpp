@@ -135,15 +135,17 @@ nsProxyObjectCallInfo::CopyStrings(PRBool copy)
                 {
                     if (copy)
                     {
-                        nsString str((char*)mParameterList[i].val.p);
+                        void *ptr = mParameterList[i].val.p;
 
                         if (type_tag == nsXPTType::T_CHAR_STR)
                         {
-                            mParameterList[i].val.p = str.ToNewCString();   
+                            mParameterList[i].val.p =
+                                nsCRT::strdup((const char *)ptr);
                         }
                         else if (type_tag == nsXPTType::T_WCHAR_STR)
                         {
-                            mParameterList[i].val.p = str.ToNewUnicode();
+                            mParameterList[i].val.p =
+                                nsCRT::strdup((const PRUnichar *)ptr);
                         }
                     }
                     else
