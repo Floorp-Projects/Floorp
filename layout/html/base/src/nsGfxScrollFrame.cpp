@@ -696,29 +696,68 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   frame->GetStyleData(eStyleStruct_Display,
                       (const nsStyleStruct*&)styleDisplay);
 
-  nsresult rv = mInner->mScrollAreaBox->GetPrefSize(aState, aSize);
-  nsBox::AddMargin(mInner->mScrollAreaBox, aSize);
-
+  nsSize vSize(0,0);
   if (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
       styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL) {
      // make sure they are visible.
      mInner->SetScrollbarVisibility(mInner->mVScrollbarBox, PR_TRUE);
-     nsSize vSize(0,0);
      mInner->mVScrollbarBox->GetPrefSize(aState, vSize);
      nsBox::AddMargin(mInner->mVScrollbarBox, vSize);
-
-     aSize.width += vSize.width;
   }
    
+  nsSize hSize(0,0);
   if (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
       styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL) {
-     nsSize hSize(0,0);
      mInner->SetScrollbarVisibility(mInner->mHScrollbarBox, PR_TRUE);
      mInner->mHScrollbarBox->GetPrefSize(aState, hSize);
      nsBox::AddMargin(mInner->mHScrollbarBox, hSize);
-
-     aSize.height += hSize.height;
   }
+
+  // if one of the width and height is constrained,
+  // do smarter preferred size checking in case the scrolled frame is a block.
+  nsSize computedSize(aState.GetReflowState()->mComputedWidth,
+                      aState.GetReflowState()->mComputedHeight);
+  nsSize oldConstrainedSize;
+  aState.GetScrolledBlockSizeConstraint(oldConstrainedSize);
+  if ((computedSize.width != NS_INTRINSICSIZE)
+      != (computedSize.height != NS_INTRINSICSIZE)) {
+    // adjust constraints in case we have scrollbars
+    if (computedSize.width != NS_INTRINSICSIZE) {
+      computedSize.width = PR_MAX(0, computedSize.width - vSize.width);
+    }
+    if (computedSize.height != NS_INTRINSICSIZE) {
+      computedSize.height = PR_MAX(0, computedSize.height - hSize.height);
+    }
+    aState.SetScrolledBlockSizeConstraint(computedSize);
+  } else {
+    aState.SetScrolledBlockSizeConstraint(nsSize(-1,-1));
+  }
+  nsresult rv = mInner->mScrollAreaBox->GetPrefSize(aState, aSize);
+  aState.SetScrolledBlockSizeConstraint(oldConstrainedSize);
+
+  if (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_AUTO) {
+    if (computedSize.height == NS_INTRINSICSIZE
+        && computedSize.width != NS_INTRINSICSIZE
+        && aSize.width > computedSize.width) {
+      // Add height of horizontal scrollbar which will be needed
+      mInner->SetScrollbarVisibility(mInner->mHScrollbarBox, PR_TRUE);
+      mInner->mHScrollbarBox->GetPrefSize(aState, hSize);
+      nsBox::AddMargin(mInner->mHScrollbarBox, hSize);
+    }
+    if (computedSize.width == NS_INTRINSICSIZE
+        && computedSize.height != NS_INTRINSICSIZE
+        && aSize.height > computedSize.height) {
+      // Add width of vertical scrollbar which will be needed
+      mInner->SetScrollbarVisibility(mInner->mVScrollbarBox, PR_TRUE);
+      mInner->mVScrollbarBox->GetPrefSize(aState, vSize);
+      nsBox::AddMargin(mInner->mVScrollbarBox, vSize);
+    }
+  }
+
+  nsBox::AddMargin(mInner->mScrollAreaBox, aSize);
+
+  aSize.width += vSize.width;
+  aSize.height += hSize.height;
 
   AddBorderAndPadding(aSize);
   AddInset(aSize);
