@@ -58,6 +58,8 @@
 //~~~ For image mime types
 #include "net.h"
 
+#define REFLOW_MODS
+
 class nsObjectFrame;
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
@@ -223,6 +225,7 @@ protected:
 
   nsresult SetFullURL(nsIURI* aURL);
 
+#ifdef REFLOW_MODS
   nsresult InstantiateWidget(nsIPresContext&          aPresContext,
 							nsHTMLReflowMetrics&     aMetrics,
 							const nsHTMLReflowState& aReflowState,
@@ -242,6 +245,7 @@ protected:
 					   nsIFrame* child);
  
   nsresult GetBaseURL(nsIURI* &aURL);
+#endif
 
 private:
   nsPluginInstanceOwner *mInstanceOwner;
@@ -268,6 +272,7 @@ static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
+static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
 
@@ -530,6 +535,329 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aMetrics.descent = 0;
 }
 
+#ifndef REFLOW_MODS
+
+NS_IMETHODIMP
+nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
+                      nsHTMLReflowMetrics&     aMetrics,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus&          aStatus)
+{
+  // Get our desired size
+  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+
+  // Handle the clsid instantiation of arbitrary widgets
+  nsAutoString classid;
+  PRInt32 nameSpaceID;
+  mContent->GetNameSpaceID(nameSpaceID);
+  if (NS_CONTENT_ATTR_HAS_VALUE == 
+			 mContent->GetAttribute(nameSpaceID, nsHTMLAtoms::classid, classid))
+  {
+		// A widget with a certain classID may need to be instantiated.
+		nsString protocol;
+		classid.Left(protocol, 5);
+		if (protocol == "clsid")
+		{
+			// We are looking at a class ID for an XPCOM object. We need to create the
+			// widget that corresponds to this object.
+			classid.Cut(0, 6); // Strip off the clsid:. What's left is the class ID.
+			static NS_DEFINE_IID(kCTreeViewCID, NS_TREEVIEW_CID);
+			static NS_DEFINE_IID(kCToolbarCID, NS_TOOLBAR_CID);
+			static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
+			static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
+			
+			nsCID aWidgetCID;
+			// These are some builtin types that we know about for now.
+			// (Eventually this will move somewhere else.)
+			if (classid == "treeview")
+				aWidgetCID = kCTreeViewCID;
+			else if (classid == "toolbar")
+				aWidgetCID = kCToolbarCID;
+			else if (classid == "browser")
+				aWidgetCID = kCAppShellCID;
+			else
+			{
+				// parse it.
+				char* buffer;
+				PRInt32 buflen = classid.Length();
+
+                if (buflen > 0) {
+                  buffer = (char *)PR_Malloc(buflen + 1);
+
+                  if (nsnull != buffer)
+                    classid.ToCString(buffer, buflen + 1);
+              
+				  aWidgetCID.Parse(buffer);
+				  PR_Free((void*)buffer);
+				}
+			}
+
+			// let's try making a widget.
+				
+			if (mInstanceOwner == nsnull)
+			{
+				mInstanceOwner = new nsPluginInstanceOwner();
+				NS_ADDREF(mInstanceOwner);
+				mInstanceOwner->Init(&aPresContext, this);
+				
+			}
+
+			if (mWidget == nsnull)
+			{
+				GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+				nsIView *parentWithView;
+				nsPoint origin;
+				GetOffsetFromView(origin, &parentWithView);
+				// Just make the frigging widget.
+
+				float           t2p;
+                aPresContext.GetTwipsToPixels(&t2p);
+
+				PRInt32 x = NSTwipsToIntPixels(origin.x, t2p);
+				PRInt32 y = NSTwipsToIntPixels(origin.y, t2p);
+				PRInt32 width = NSTwipsToIntPixels(aMetrics.width, t2p);
+				PRInt32 height = NSTwipsToIntPixels(aMetrics.height, t2p);
+				nsRect r = nsRect(x, y, width, height);
+				
+				static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+				nsresult rv = nsComponentManager::CreateInstance(aWidgetCID, nsnull, kIWidgetIID,
+									   (void**)&mWidget);
+				if(rv != NS_OK)
+					return rv;
+
+				nsIWidget *parent;
+				parentWithView->GetOffsetFromWidget(nsnull, nsnull, parent);
+				mWidget->Create(parent, r, nsnull, nsnull);
+
+				// See if the widget implements the CONTENT CONNECTOR interface.  If it
+				// does, we can hand it the content subtree for further processing.
+				nsIContentConnector* cc;
+	
+				if (NS_OK == mWidget->QueryInterface(kIContentConnectorIID, (void**)&cc))
+				{
+				   cc->SetContentRoot(mContent);
+				   NS_IF_RELEASE(cc);
+				}
+				mWidget->Show(PR_TRUE);
+			}	
+		}
+
+		aStatus = NS_FRAME_COMPLETE;
+		return NS_OK;
+  }
+
+  //This could be an image
+  nsIFrame * child = mFrames.FirstChild();
+  if(child != nsnull)
+  {
+    nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+    nsHTMLReflowMetrics kidDesiredSize(nsnull);
+
+    nsReflowReason reflowReason;
+    nsFrameState frameState;
+    child->GetFrameState(&frameState);
+    if (frameState & NS_FRAME_FIRST_REFLOW)
+      reflowReason = eReflowReason_Initial;
+    else
+      reflowReason = eReflowReason_Resize;
+
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, child,
+                                     availSize, reflowReason);
+
+    nsReflowStatus status;
+
+    ReflowChild(child, aPresContext, kidDesiredSize, kidReflowState, status);
+
+    nsRect rect(0, 0, kidDesiredSize.width, kidDesiredSize.height);
+    child->SetRect(rect);
+
+    aMetrics.width = kidDesiredSize.width;
+    aMetrics.height = kidDesiredSize.height;
+    aMetrics.ascent = kidDesiredSize.height;
+    aMetrics.descent = 0;
+
+    aStatus = NS_FRAME_COMPLETE;
+    return NS_OK;
+  }
+
+  // XXX deal with border and padding the usual way...wrap it up!
+
+  nsresult rv = NS_OK;
+
+  nsIAtom* atom;
+  mContent->GetTag(atom);
+  if ((nsnull != atom) && (nsnull == mInstanceOwner)) 
+  {
+    static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
+    static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
+
+    nsISupports               *container;
+    nsIPluginHost             *pm;
+    nsIContentViewerContainer *cv;
+
+    mInstanceOwner = new nsPluginInstanceOwner();
+
+    if (nsnull != mInstanceOwner) {
+      NS_ADDREF(mInstanceOwner);
+      mInstanceOwner->Init(&aPresContext, this);
+
+      rv = aPresContext.GetContainer(&container);
+
+      if (NS_OK == rv) {
+        rv = container->QueryInterface(kIContentViewerContainerIID, (void **)&cv);
+
+        if (NS_OK == rv) {
+          rv = cv->QueryCapability(kIPluginHostIID, (void **)&pm);
+
+          if (NS_OK == rv) {
+            nsAutoString    type;
+            char            *buf = nsnull;
+            PRInt32         buflen;
+            nsPluginWindow  *window;
+            float           t2p;
+            aPresContext.GetTwipsToPixels(&t2p);
+            nsAutoString    src;
+            nsIURL* fullURL = nsnull;
+            nsIURL* baseURL = nsnull;
+
+            nsIHTMLContent* htmlContent;
+            if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+              htmlContent->GetBaseURL(baseURL);
+              NS_RELEASE(htmlContent);
+            }
+            else {
+              nsIDocument* doc = nsnull;
+              if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
+                doc->GetBaseURL(baseURL);
+                NS_RELEASE(doc);
+              }
+            }
+
+            mInstanceOwner->GetWindow(window);
+
+            if (atom == nsHTMLAtoms::applet) {
+              buf = (char *)PR_Malloc(PL_strlen("application/x-java-vm") + 1);
+              PL_strcpy(buf, "application/x-java-vm");
+
+              if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::code, src)) {
+                nsIURLGroup* group = nsnull;
+                if (nsnull != baseURL) {
+                  baseURL->GetURLGroup(&group);
+                }
+
+                nsAutoString codeBase;
+                if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) {
+                  nsIURL* codeBaseURL = nsnull;
+                  rv = NS_NewURL(&codeBaseURL, codeBase, baseURL, nsnull, group);
+                  NS_IF_RELEASE(baseURL);
+                  baseURL = codeBaseURL;
+                }
+
+                // Create an absolute URL
+                rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
+
+                SetFullURL(fullURL);
+
+                NS_IF_RELEASE(group);
+              }
+            }
+            else {
+              mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
+
+              buflen = type.Length();
+
+              if (buflen > 0) {
+                buf = (char *)PR_Malloc(buflen + 1);
+
+                if (nsnull != buf)
+                  type.ToCString(buf, buflen + 1);
+              }
+
+              //stream in the object source if there is one...
+
+              if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src) ||
+                  NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) 
+              {
+                nsIURLGroup* group = nsnull;
+                if (nsnull != baseURL) 
+                  baseURL->GetURLGroup(&group);
+
+                // Create an absolute URL
+                rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
+
+                SetFullURL(fullURL);
+
+                NS_IF_RELEASE(group);
+             }
+           }
+
+           // if there's no fullURL at this point, we need to set one
+           if(!fullURL && baseURL) {
+             SetFullURL(baseURL); 
+             fullURL = baseURL;
+             NS_IF_ADDREF(fullURL);
+	       }
+           nsIView *parentWithView;
+           nsPoint origin;
+
+            // we need to recalculate this now that we have access to the nsPluginInstanceOwner
+            // and its size info (as set in the tag)
+            GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+            if (nsnull != aMetrics.maxElementSize) {
+//XXX              AddBorderPaddingToMaxElementSize(borderPadding);
+              aMetrics.maxElementSize->width = aMetrics.width;
+              aMetrics.maxElementSize->height = aMetrics.height;
+            }
+
+            GetOffsetFromView(origin, &parentWithView);
+
+            window->x = NSTwipsToIntPixels(origin.x, t2p);
+            window->y = NSTwipsToIntPixels(origin.y, t2p);
+            window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
+            window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
+            
+            // beard: this needs to be in port coordinates on Mac OS, but
+            // the port isn't known yet.
+            window->clipRect.top = 0;
+            window->clipRect.left = 0;
+            window->clipRect.bottom = window->height;
+            window->clipRect.right = window->width;
+            
+#ifdef XP_UNIX
+            window->ws_info = nsnull;   //XXX need to figure out what this is. MMP
+#endif
+            rv = pm->InstantiateEmbededPlugin(buf, fullURL, mInstanceOwner);
+            NS_IF_RELEASE(fullURL);
+            NS_IF_RELEASE(baseURL);
+
+            PR_Free((void *)buf);
+
+            NS_RELEASE(pm);
+          }
+          NS_RELEASE(cv);
+        }
+        NS_RELEASE(container);
+      }
+    }
+    NS_RELEASE(atom);
+  }
+
+  if(rv == NS_OK)
+  {
+    aStatus = NS_FRAME_COMPLETE;
+    return NS_OK;
+  }
+
+  nsIPresShell* presShell;
+  aPresContext.GetShell(&presShell);
+  presShell->CantRenderReplacedElement(&aPresContext, this);
+  NS_RELEASE(presShell);
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
+}
+
+#else
+
 #define JAVA_CLASS_ID "8AD9C840-044E-11D1-B3E9-00805F499D93"
 
 NS_IMETHODIMP
@@ -575,19 +903,30 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(nameSpaceID, nsHTMLAtoms::classid, classid))
     {
       nsCID widgetCID;
+	
+	PRBool bJavaObject = PR_FALSE;
+	PRBool bJavaPluginClsid = PR_FALSE;
+
+	if (classid.Find("java:") != -1)
+	{
+	    classid.Cut(0, 5); // Strip off the "java:". What's left is the class file.
+	    bJavaObject = PR_TRUE;
+	}
+
+	if (classid.Find("clsid:") != -1)
+	{
+            classid.Cut(0, 6); // Strip off the "clsid:". What's left is the class ID.
+	    bJavaPluginClsid = (classid == JAVA_CLASS_ID);
+	}
 
       // if we find "java:" in the class id, or we match the Java classid number, we have a java applet
-      if((classid.Find("java:") != -1) || classid == JAVA_CLASS_ID)
+      if(bJavaObject || bJavaPluginClsid)
       {
         mimeType = (char *)PR_Malloc(PL_strlen("application/x-java-vm") + 1);
         PL_strcpy(mimeType, "application/x-java-vm");
 
-        // removing the "java:" leaves us with the class file
-        if(classid != JAVA_CLASS_ID)
-          classid.Cut(0, 5); 
-
-	      if((rv = GetBaseURL(baseURL)) != NS_OK)
-	        return rv;
+      if((rv = GetBaseURL(baseURL)) != NS_OK)
+	return rv;
 
 #ifndef NECKO
         nsILoadGroup* group = nsnull;
@@ -597,7 +936,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
         nsAutoString codeBase;
         if(NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase) &&
-           classid != JAVA_CLASS_ID) 
+           !bJavaPluginClsid) 
 		    {
           nsIURI* codeBaseURL = nsnull;
 #ifdef NECKO
@@ -618,7 +957,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 #endif
 
         // Create an absolute URL
-        if(classid != JAVA_CLASS_ID) {
+        if(bJavaPluginClsid) {
 #ifdef NECKO
           rv = NS_NewURI(&fullURL, classid, baseURL);
 #else
@@ -931,6 +1270,15 @@ nsObjectFrame::InstantiateWidget(nsIPresContext&          aPresContext,
   nsIWidget *parent;
   parentWithView->GetOffsetFromWidget(nsnull, nsnull, parent);
   mWidget->Create(parent, r, nsnull, nsnull);
+
+  // See if the widget implements the CONTENT CONNECTOR interface.  If it
+  // does, we can hand it the content subtree for further processing.
+  nsIContentConnector* cc;
+  if ((rv = mWidget->QueryInterface(kIContentConnectorIID, (void**)&cc)) == NS_OK)
+  {
+    cc->SetContentRoot(mContent);
+    NS_IF_RELEASE(cc); 
+  }
   mWidget->Show(PR_TRUE);
   return rv;
 }
@@ -1075,6 +1423,8 @@ nsObjectFrame::GetBaseURL(nsIURI* &aURL)
   return NS_OK;
 }
 
+#endif // REFLOW_MODS
+
 NS_IMETHODIMP
 nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
@@ -1217,6 +1567,8 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
     const nsStyleFont* font = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
 
     aRenderingContext.SetFont(font->mFont);
+    aRenderingContext.SetColor(NS_RGB(192, 192, 192));
+    aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
     float p2t;
