@@ -234,7 +234,7 @@ SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
     case PW_FROMFILE:
 	return SECU_FilePasswd(slot, retry, pwdata->data);
     case PW_PLAINTEXT:
-	return PL_strdup(arg);
+	return PL_strdup(pwdata->data);
     default:
 	break;
     }
