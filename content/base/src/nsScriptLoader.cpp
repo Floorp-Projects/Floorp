@@ -758,7 +758,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   rv = aLoader->GetRequest(getter_AddRefs(req));    
   NS_ASSERTION(req, "StreamLoader's request went away prematurely");
   if (NS_FAILED(rv)) return rv;  // XXX Should this remove the pending request?
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(req));
   if (httpChannel) {
     PRBool requestSucceeded;
     rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
