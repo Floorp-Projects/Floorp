@@ -452,6 +452,12 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   }
 
+  // If we got a mouse down inside the editing area, we should force the 
+  // IME to commit before we change the cursor position
+  nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor);
+  if(imeEditor)
+  	imeEditor->ForceCompositionEnd();
+
    nsCOMPtr<nsIEditor> editor (do_QueryInterface(mEditor));
   if (!editor) { return NS_OK; }
 

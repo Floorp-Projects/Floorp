@@ -63,6 +63,10 @@ public:
    */
   NS_IMETHOD QueryComposition(nsTextEventReply *aReply) = 0;
 
+  /**
+   * ForceCompositionEnd() force the composition end
+   */
+  NS_IMETHOD ForceCompositionEnd() = 0;
 };
 
 
