@@ -20,6 +20,7 @@
 #define nsWebCrawler_h___
 
 #include "nsIBrowserWindow.h"
+#include "nsIStreamListener.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 
@@ -32,7 +33,7 @@ class nsIPresShell;
 class nsViewerApp;
 class AtomHashTable;
 
-class nsWebCrawler : public nsISupports {
+class nsWebCrawler : public nsIStreamObserver {
 public:
   nsWebCrawler(nsViewerApp* aViewer);
 
@@ -107,6 +108,8 @@ public:
   void SetVerbose(PRBool aSetting) {
     mVerbose = aSetting;
   }
+
+  void EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
 
 protected:
   virtual ~nsWebCrawler();
