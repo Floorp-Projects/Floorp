@@ -179,7 +179,7 @@ protected:
 
 private: 
   
-  enum {eGrowthDelta=10}; 
+  enum {eGrowthDelta=64}; 
 
   /**
    * Copy constructor (PRIVATE)
