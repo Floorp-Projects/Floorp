@@ -40,7 +40,6 @@ CPPSRCS = \
 
 LIBS := \
 	-lraptorgfx \
-	$(TK_LIBS) \
 	-lgfxps \
 	-lnetlib \
 	-lremoturl \
@@ -59,17 +58,22 @@ LIBS := \
 	-lsecfree \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-limg \
+	$(PNG_LIBS) \
+	$(JPEG_LIBS) \
 	-lxpcom \
 	-lreg \
 	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lwidget$(MOZ_TOOLKIT) \
-    -lgfx$(MOZ_TOOLKIT)    \
-    -lraptorgfx \
-    -lgfxps \
+	-lgfx$(MOZ_TOOLKIT)    \
+	$(TK_LIBS) \
+	-lraptorgfx \
+	-lgfxps \
 	-lxp \
 	-lraptorhtmlpars \
 	-lexpat \
 	-lxmltok \
+	-ljsurl \
+	-ljsdom \
 	-lraptorgfx \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
