@@ -25,3 +25,4 @@ nsIScriptEventListener.h
 nsIDOMScriptObjectFactory.h
 nsIDOMNativeObjectRegistry.h
 nsDOMCID.h
+nsIScriptSecurityManager.h

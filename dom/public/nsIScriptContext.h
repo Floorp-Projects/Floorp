@@ -25,6 +25,7 @@
 #include "jsapi.h"
 
 class nsIScriptGlobalObject;
+class nsIScriptSecurityManager;
 
 #define NS_ISCRIPTCONTEXT_IID \
 { /* 8f6bca7d-ce42-11d1-b724-00600891d8c9 */ \
@@ -115,6 +116,12 @@ public:
    * @return NS_OK if the method is successful
    */
   virtual nsresult GC() = 0;
+
+  /**
+   * Get the security manager for this context.
+   * @return NS_OK if the method is successful
+   */
+  NS_IMETHOD GetSecurityManager(nsIScriptSecurityManager** aInstancePtr) = 0;
 };
 
 /**

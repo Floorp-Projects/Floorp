@@ -28,6 +28,7 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLImageElement.h"
+#include "nsIScriptSecurityManager.h"
 
 const uint32 gGCSize = 4L * 1024L * 1024L;
 const size_t gStackSize = 8192;
@@ -179,6 +180,12 @@ nsJSContext::GC()
 {
   JS_GC(mContext);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSContext::GetSecurityManager(nsIScriptSecurityManager** aInstancePtr)
+{
+  return NS_NewScriptSecurityManager(aInstancePtr);
 }
 
 nsJSEnvironment *nsJSEnvironment::sTheEnvironment = nsnull;

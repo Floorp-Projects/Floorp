@@ -34,6 +34,7 @@ CPPSRCS =			 \
 	nsGlobalWindow.cpp       \
 	nsLocation.cpp		 \
 	nsFrameList.cpp		 \
+	nsJSSecurityManager.cpp \
 	$(NULL)
 
 include $(DEPTH)/config/config.mk
