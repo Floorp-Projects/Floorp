@@ -21,7 +21,6 @@
 
 #include "nsWindow.h"
 #include "nsTextHelper.h"
-
 #include "nsITextAreaWidget.h"
 
 /**

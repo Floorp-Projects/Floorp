@@ -41,15 +41,11 @@ class nsAppShell : public nsIAppShell
     NS_DECL_ISUPPORTS
 
     // nsIAppShellInterface
-  
     NS_IMETHOD        Create(int* argc, char ** argv);
     NS_IMETHOD        Run(); 
     NS_IMETHOD        Exit();
-
     NS_IMETHOD        SetDispatchListener(nsDispatchListener* aDispatchListener);
-
-    virtual void* GetNativeData(PRUint32 aDataType);
-
+    virtual void*     GetNativeData(PRUint32 aDataType);
 };
 
 #endif // nsAppShell_h__

@@ -46,20 +46,9 @@
 
 #define DBG 0
 
-#define SET_VALUES 1
-
-nsWindow* gMainWindow; //REMOVE Kludge
-nsWindow* gChildren[5];
-int gChildCount = 0;
-
-//#if defined(LINUX)
-//#undef SET_VALUES
-//#endif
-
-Widget gFirstTopLevelWindow = 0;
+Widget gFirstTopLevelWindow = 0; //XXX: REMOVE Kludge should not be needed.
 
 extern XtAppContext gAppContext;
-
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 NS_IMPL_ADDREF(nsWindow)
@@ -164,8 +153,6 @@ NS_METHOD nsWindow::RemoveTooltips()
   return NS_OK;
 }
 
-
-
 //-------------------------------------------------------------------------
 //
 // 
@@ -265,7 +252,6 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-  gMainWindow = this;
   Widget mainWindow = 0, frame = 0;
   mBounds = aRect;
   mAppShell = aAppShell;
@@ -280,6 +266,8 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
   
   Widget frameParent = 0;
 
+   // XXX: This is a kludge, need to be able to create multiple top 
+   // level windows instead.
   if (gFirstTopLevelWindow == 0) {
     mainWindow = ::XtVaCreateManagedWidget("mainWindow",
         xmMainWindowWidgetClass,
@@ -344,9 +332,6 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
   mBounds = aRect;
   mAppShell = aAppShell;
  
-  gChildren[gChildCount] = this;
-  gChildCount++;
-
   InitToolkit(aToolkit, aWidgetParent);
   
   // save the event callback function
@@ -432,8 +417,6 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
 //-------------------------------------------------------------------------
 void nsWindow::InitCallbacks(char * aName)
 {
-  if (DBG) fprintf(stderr, "Setting Up Callbacks 0x%x [%s]\n", this, (aName != nsnull?aName:"<unknown>"));
-  // setup the event Handlers
   XtAddEventHandler(mWidget, 
 		    ButtonPressMask, 
 		    PR_FALSE, 
@@ -534,7 +517,7 @@ NS_METHOD nsWindow::Create(nsIWidget *aParent,
 {
     if (aParent)
       aParent->AddChild(this);
-    CreateWindow((nsNativeWidget)((aParent) ? aParent->GetNativeData(NS_NATIVE_WIDGET) : 0), 
+      CreateWindow((nsNativeWidget)((aParent) ? aParent->GetNativeData(NS_NATIVE_WIDGET) : 0), 
         aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit,
         aInitData);
   return NS_OK;
@@ -594,6 +577,7 @@ NS_IMETHODIMP nsWindow::SetClientData(void* aClientData)
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
+  // XXX: Implement this
   return nsnull;
 }
 
@@ -605,7 +589,8 @@ nsIWidget* nsWindow::GetParent(void)
 //-------------------------------------------------------------------------
 nsIEnumerator* nsWindow::GetChildren()
 {
-    return nsnull;
+  //XXX: Implement this
+  return nsnull;
 }
 
 
@@ -616,6 +601,7 @@ nsIEnumerator* nsWindow::GetChildren()
 //-------------------------------------------------------------------------
 void nsWindow::AddChild(nsIWidget* aChild)
 {
+  // XXX:Implement this
 }
 
 
@@ -626,6 +612,7 @@ void nsWindow::AddChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsWindow::RemoveChild(nsIWidget* aChild)
 {
+  // XXX:Implement this
 }
 
 
@@ -663,11 +650,7 @@ NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
   mBounds.x = aX;
   mBounds.y = aY;
 
-#ifdef SET_VALUES
   XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
-#else
-  XtMoveWidget(mWidget, (Position)aX, (Position)GetYCoord(aY));
-#endif
   return NS_OK;
 }
 
@@ -682,13 +665,7 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
                   gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-#ifdef SET_VALUES
-
   XtVaSetValues(mWidget, XmNx, mBounds.x, XmNy, mBounds.y, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
-
-#else
-  XtConfigureWidget(mWidget, mBounds.x, mBounds.y, aWidth, aHeight, 0);
-#endif
   return NS_OK;
 }
 
@@ -704,13 +681,8 @@ NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 a
   mBounds.y      = aY;
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-
-#ifdef SET_VALUES
   XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY),
                         XmNwidth, aWidth, XmNheight, aHeight, nsnull);
-#else
-  XtConfigureWidget(mWidget, aX, GetYCoord(aY), aWidth, aHeight, 0);
-#endif
   return NS_OK;
 }
 
@@ -786,9 +758,8 @@ nscolor nsWindow::GetForegroundColor(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetForegroundColor(const nscolor &aColor)
 {
-  mForeground = aColor;
-
   PRUint32 pixel;
+  mForeground = aColor;
   mContext->ConvertPixel(aColor, pixel);
   XtVaSetValues(mWidget, XtNforeground, pixel, nsnull);
   return NS_OK;
@@ -829,6 +800,7 @@ NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
 //-------------------------------------------------------------------------
 nsIFontMetrics* nsWindow::GetFont(void)
 {
+  //XXX: Implement this
   NS_NOTYETIMPLEMENTED("GetFont not yet implemented"); // to be implemented
   return nsnull;
 }
@@ -948,11 +920,11 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       break;
 
       default:
-        NS_ASSERTION(0, "Invalid cursor type");
+        NS_ASSERTION(PR_FALSE, "Invalid cursor type");
       break;
     }
 
-    if (0 != newCursor) {
+    if (nsnull != newCursor) {
       mCursor = aCursor;
       ::XDefineCursor(display, window, newCursor);
     }
@@ -992,8 +964,6 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
   XSendEvent(display, win, False, ExposureMask, &evt);
   XFlush(display);
   return NS_OK;
-
-  
 }
 
 
@@ -1131,11 +1101,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
       Position y;
       XtVaGetValues(children[i], XtNx, &x, XtNy, &y, nsnull);
 
-#ifdef SET_VALUES
       XtVaSetValues(children[i], XmNx, x + aDx, XmNy, y + aDy, nsnull);
-#else
-      XtMoveWidget(children[i], x + aDx,  y + aDy);
-#endif
     } 
   }
   
@@ -1166,11 +1132,6 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     evt.xgraphicsexpose.height     = aDy;
   }
   evt.xgraphicsexpose.count      = 0;
-  if (DBG) printf("Forcing repaint %d %d %d %d\n", evt.xgraphicsexpose.x, 
-                                          evt.xgraphicsexpose.y, 
-                                          evt.xgraphicsexpose.width, 
-                                          evt.xgraphicsexpose.height);
-
   XSendEvent(display, win, False, ExposureMask, &evt);
   XFlush(display);
   return NS_OK;
@@ -1365,10 +1326,11 @@ NS_METHOD nsWindow::EndResizingChildren(void)
 void nsWindow::OnDestroy()
 {
     // release references to children, device context, toolkit, and app shell
+  //XXX: Why is there a problem releasing these
   // NS_IF_RELEASE(mChildren);
   //  NS_IF_RELEASE(mContext);
- //   NS_IF_RELEASE(mToolkit);
- //   NS_IF_RELEASE(mAppShell);
+  //   NS_IF_RELEASE(mToolkit);
+  //   NS_IF_RELEASE(mAppShell);
 }
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
@@ -1402,7 +1364,6 @@ PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 
 PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
-printf("IN NSWINDOW ON SCROLL\n");
  return FALSE;
 }
 
@@ -1552,10 +1513,11 @@ extern "C" void nsWindow_ResizeWidget(Widget w)
       nsWindow_Refresh_Callback(win);
     }
     else {
-       // KLUDGE: Do actual resize later. This lets most 
+       // XXX: KLUDGE: Do actual resize later. This lets most 
        // of the resize events come through before actually 
        // resizing. This is only needed for main (shell) 
-       // windows.
+       // windows. This should be replaced with code that actually
+       // Compresses the event queue.
       XtAppAddTimeOut(gAppContext, 250, (XtTimerCallbackProc)nsWindow_Refresh_Callback, win);
     }
   }
@@ -1572,8 +1534,7 @@ NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
   aWidth  = mPreferredWidth;
   aHeight = mPreferredHeight;
-  return (mPreferredWidth != 0 && mPreferredHeight != 0)?NS_OK:NS_ERROR_FAILURE; 
-  //return NS_ERROR_FAILURE;
+  return (mPreferredWidth != 0 && mPreferredHeight != 0)?NS_OK:NS_ERROR_FAILURE;
 }
 
 NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)

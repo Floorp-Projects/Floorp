@@ -76,9 +76,6 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
 
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
-
   mWidget = ::XtVaCreateManagedWidget("button",
                                     xmTextWidgetClass, 
                                     parentWidget,
@@ -90,7 +87,6 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
 		                    XmNx, aRect.x,
 		                    XmNy, aRect.y, 
                                     nsnull);
-  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
@@ -194,6 +190,5 @@ NS_METHOD nsTextWidget::SetPassword(PRBool aIsPassword)
   nsTextHelper::SetPassword(aIsPassword);
   return NS_OK;
 }
-
 
 

@@ -39,8 +39,8 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWindow(), nsIScrollbar()
   strcpy(gInstanceClassName, "nsScrollbar");
   mOrientation  = (aIsVertical) ? XmVERTICAL : XmHORIZONTAL;
   mLineIncrement = 0;
-
 }
+
 //-------------------------------------------------------------------------
 //
 // Create
@@ -97,11 +97,6 @@ NS_METHOD nsScrollbar::Create(nsNativeWidget aParent,
                 XmNvalueChangedCallback,
                 nsXtWidget_Scrollbar_Callback,
                 this);
-
-  /*XtAddCallback(mWidget,
-                XmNresizeCallback,
-                nsXtWidget_Resize_Callback,
-                this);*/
 
   return NS_OK;
 }
@@ -165,7 +160,6 @@ NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
   int max = aEndRange;
   XtVaGetValues(mWidget, XmNmaximum, &max, nsnull);
   return NS_OK;
-
 }
 
 
@@ -312,9 +306,7 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent & aEvent)
 
 PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 {
-
   return nsWindow::OnResize(aEvent);
-  //return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------

@@ -49,7 +49,6 @@ CPPSRCS= \
         nsMenuItem.cpp \
         nsPopUpMenu.cpp \
         nsWidgetSupport.cpp \
-        nsObject.cpp \
 	nsComboBox.cpp \
 	nsTextHelper.cpp \
 	nsTextAreaWidget.cpp \
@@ -78,7 +77,6 @@ CPP_OBJS=				\
  ./$(OBJDIR)/nsImageButton.o  \
  ./$(OBJDIR)/nsToolBar.obj  \
  ./$(OBJDIR)/nsWidgetSupport.o		\
- ./$(OBJDIR)/nsObject.o		        \
  ./$(OBJDIR)/nsComboBox.o		\
  ./$(OBJDIR)/nsFileWidget.o		\
  ./$(OBJDIR)/nsTextHelper.o		\

@@ -76,8 +76,6 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
     NS_IMETHOD            OnOk();
     NS_IMETHOD            OnCancel();
 
-
-  
   protected:
      PRBool                 mIOwnEventLoop;
      PRBool                 mWasCancelled;

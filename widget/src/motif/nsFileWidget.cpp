@@ -33,8 +33,7 @@ NS_IMPL_RELEASE(nsFileWidget)
 //-------------------------------------------------------------------------
 nsFileWidget::nsFileWidget() : nsWindow(), nsIFileWidget()
 {
-  //NS_INIT_REFCNT();
-
+  NS_INIT_REFCNT();
   mNumberOfFilters = 0;
 }
 
@@ -61,7 +60,6 @@ NS_METHOD   nsFileWidget:: Create(nsIWidget  *aParent,
                              nsIToolkit *aToolkit,
                              void       *aInitData)
 {
-  //mWnd = (aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0;
   mTitle.SetLength(0);
   mTitle.Append(aTitle);
   mMode = aMode;
@@ -90,7 +88,6 @@ NS_METHOD   nsFileWidget:: Create(nsIWidget  *aParent,
   XtAddCallback(mWidget, XmNcancelCallback, nsXtWidget_FSBCancel_Callback, this);
   XtAddCallback(mWidget, XmNokCallback, nsXtWidget_FSBOk_Callback, this);
 
-  //XtManageChild(mWidget);
   return NS_OK;
 }
 
@@ -112,8 +109,6 @@ NS_METHOD nsFileWidget::Create(nsNativeWidget aParent,
 //-------------------------------------------------------------------------
 nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  //  nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
-
     nsresult result = NS_NOINTERFACE;
     static NS_DEFINE_IID(kInsFileWidgetIID, NS_IFILEWIDGET_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kInsFileWidgetIID)) {
@@ -153,7 +148,6 @@ NS_METHOD nsFileWidget::OnCancel()
   return NS_OK;
 }
 
-
 //-------------------------------------------------------------------------
 //
 // Show - Display the file dialog
@@ -185,53 +179,6 @@ PRBool nsFileWidget::Show()
     }
   }
 
-  /*char fileBuffer[MAX_PATH];
-  fileBuffer[0] = '\0';
-  OPENFILENAME ofn;
-  memset(&ofn, 0, sizeof(ofn));
-
-  ofn.lStructSize = sizeof(ofn);
-
-  nsString filterList;
-  GetFilterListArray(filterList);
-  char *filterBuffer = filterList.ToNewCString();
-  char *title = mTitle.ToNewCString();
-  ofn.lpstrTitle = title;
-  ofn.lpstrFilter = filterBuffer;
-  ofn.nFilterIndex = 1;
-  ofn.hwndOwner = mWnd;
-  ofn.lpstrFile = fileBuffer;
-  ofn.nMaxFile = MAX_PATH;
-  ofn.Flags = OFN_SHAREAWARE | OFN_NOCHANGEDIR | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
-  
-  BOOL result;
-
-    // Save current directory, so we can reset if it changes.
-  char* currentDirectory = new char[MAX_PATH+1];
-  VERIFY(::GetCurrentDirectory(MAX_PATH, currentDirectory) > 0);
-
-  if (mMode == eMode_load) {
-    result = GetOpenFileName(&ofn);
-  }
-  else if (mMode == eMode_save) {
-    result = GetSaveFileName(&ofn);
-  }
-  else {
-    NS_ASSERTION(0, "Only load and save are supported modes"); 
-  }
-
-  VERIFY(::SetCurrentDirectory(currentDirectory));
-  
-   // Clean up filter buffers
-  delete filterBuffer;
-  delete title;
-
-   // Set user-selected location of file or directory
-  mFile.SetLength(0);
-  if (result==PR_TRUE) {
-    mFile.Append(fileBuffer);
-  }
- */ 
  return PR_TRUE;
 }
 

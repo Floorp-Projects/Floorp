@@ -50,43 +50,41 @@ public:
     NS_IMETHOD      SelectItem(PRInt32 aPosition);
     NS_IMETHOD      Deselect() ;
 
-    NS_IMETHOD Create(nsIWidget *aParent,
-                const nsRect &aRect,
-                EVENT_CALLBACK aHandleEventFunction,
-                nsIDeviceContext *aContext,
-                nsIAppShell *aAppShell = nsnull,
-                nsIToolkit *aToolkit = nsnull,
-                nsWidgetInitData *aInitData = nsnull);
+    NS_IMETHOD      Create(nsIWidget *aParent,
+                     const nsRect &aRect,
+                     EVENT_CALLBACK aHandleEventFunction,
+                     nsIDeviceContext *aContext,
+                     nsIAppShell *aAppShell = nsnull,
+                     nsIToolkit *aToolkit = nsnull,
+                     nsWidgetInitData *aInitData = nsnull);
 
-    NS_IMETHOD Create(nsNativeWidget aParent,
-                const nsRect &aRect, 
-                EVENT_CALLBACK aHandleEventFunction,
-                nsIDeviceContext *aContext,
-                nsIAppShell *aAppShell = nsnull,
-                nsIToolkit *aToolkit = nsnull,
-                nsWidgetInitData *aInitData = nsnull);
+    NS_IMETHOD      Create(nsNativeWidget aParent,
+                     const nsRect &aRect, 
+                     EVENT_CALLBACK aHandleEventFunction,
+                     nsIDeviceContext *aContext,
+                     nsIAppShell *aAppShell = nsnull,
+                     nsIToolkit *aToolkit = nsnull,
+                     nsWidgetInitData *aInitData = nsnull);
 
-    NS_IMETHOD SetForegroundColor(const nscolor &aColor);
-    NS_IMETHOD SetBackgroundColor(const nscolor &aColor);
+    NS_IMETHOD      SetForegroundColor(const nscolor &aColor);
+    NS_IMETHOD      SetBackgroundColor(const nscolor &aColor);
 
-    virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
-    virtual PRBool OnPaint(nsPaintEvent & aEvent);
-    virtual PRBool OnResize(nsSizeEvent &aEvent);
+    virtual PRBool  OnMove(PRInt32 aX, PRInt32 aY);
+    virtual PRBool  OnPaint(nsPaintEvent & aEvent);
+    virtual PRBool  OnResize(nsSizeEvent &aEvent);
 
     // nsIComboBox interface
-    NS_IMETHOD SetMultipleSelection(PRBool aMultipleSelections);
-    PRInt32    GetSelectedCount();
-    NS_IMETHOD GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+    NS_IMETHOD      SetMultipleSelection(PRBool aMultipleSelections);
+    PRInt32         GetSelectedCount();
+    NS_IMETHOD      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
 
 protected:
     Widget  mPullDownMenu;
     Widget  mOptionMenu;
     PRBool  mMultiSelect;
-
-    Widget  * mItems; // an array of Widgets
-    int       mMaxNumItems;
-    int       mNumItems;
-
+    Widget  *mItems; 
+    int     mMaxNumItems;
+    int     mNumItems;
 };
 
 #endif // nsComboBox_h__

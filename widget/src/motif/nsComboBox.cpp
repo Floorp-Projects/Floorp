@@ -252,7 +252,7 @@ PRInt32 nsComboBox::GetSelectedIndex()
       }
     }
   } else {
-    NS_ASSERTION(0, "Multi selection list box does not support GetSlectedIndex()");
+    NS_ASSERTION(PR_FALSE, "Multi selection list box does not support GetSlectedIndex()");
   }
   return -1;
 }
@@ -288,7 +288,7 @@ PRInt32 nsComboBox::GetSelectedCount()
     PRInt32 inx = GetSelectedIndex();
     return (inx == -1? 0 : 1);
   } else {
-    return 0;//::SendMessage(mWnd, LB_GETSELCOUNT, (int)0, (LPARAM)0);
+    return 0;
   }
 }
 
@@ -310,10 +310,7 @@ NS_METHOD nsComboBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //-------------------------------------------------------------------------
 NS_METHOD nsComboBox::Deselect()
 {
-  if (!mMultiSelect) { 
-    //::SendMessage(mWnd, LB_SETCURSEL, (WPARAM)-1, (LPARAM)0); 
-  } else {
-    // this is an error
+  if (mMultiSelect) { 
     return NS_ERROR_FAILURE;
   }
 
@@ -361,8 +358,6 @@ NS_METHOD nsComboBox::Create(nsIWidget *aParent,
   aParent->AddChild(this);
   Widget parentWidget = nsnull;
 
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else if (aAppShell) {
@@ -372,70 +367,42 @@ NS_METHOD nsComboBox::Create(nsIWidget *aParent,
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
 
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
+  Arg	args[30];
+  int	argc;
 
-  /*mWidget = ::XtVaCreateManagedWidget("",
-                                    xmListWidgetClass,
-                                    parentWidget,
-                                    XmNitemCount, 0,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNx, aRect.x,
-                                    XmNy, aRect.y,
-                                    nsnull);
-  */
-    Arg	args[30];
-    int	argc;
+  argc = 0;
+  XtSetArg(args[argc], XmNx, 0); argc++;
+  XtSetArg(args[argc], XmNy, 0); argc++;
+  mPullDownMenu = XmCreatePulldownMenu(parentWidget, "pulldown", args, argc);
 
-    argc = 0;
-    XtSetArg(args[argc], XmNx, 0); argc++;
-    XtSetArg(args[argc], XmNy, 0); argc++;
-    mPullDownMenu = XmCreatePulldownMenu(parentWidget, "pulldown", args, argc);
+  argc = 0;
+  XtSetArg(args[argc], XmNmarginHeight, 0); argc++;
+  XtSetArg(args[argc], XmNmarginWidth, 0); argc++;
+  XtSetArg(args[argc], XmNrecomputeSize, False); argc++;
+  XtSetArg(args[argc], XmNresizeHeight, False); argc++;
+  XtSetArg(args[argc], XmNresizeWidth, False); argc++;
+  XtSetArg(args[argc], XmNspacing, False); argc++;
+  XtSetArg(args[argc], XmNborderWidth, 0); argc++;
+  XtSetArg(args[argc], XmNnavigationType, XmTAB_GROUP); argc++;
+  XtSetArg(args[argc], XmNtraversalOn, True); argc++;
+  XtSetArg(args[argc], XmNorientation, XmVERTICAL); argc++;
+  XtSetArg(args[argc], XmNadjustMargin, False); argc++;
+  XtSetArg(args[argc], XmNsubMenuId, mPullDownMenu); argc++;
+  XtSetArg(args[argc], XmNuserData, (XtPointer)this); argc++;
+  XtSetArg(args[argc], XmNx, aRect.x); argc++;
+  XtSetArg(args[argc], XmNy, aRect.y); argc++;
+  XtSetArg(args[argc], XmNwidth, aRect.width); argc++;
+  XtSetArg(args[argc], XmNheight, aRect.height); argc++;
+  mWidget = XmCreateOptionMenu(parentWidget, "", args, argc);
 
-    argc = 0;
-    XtSetArg(args[argc], XmNmarginHeight, 0); argc++;
-    XtSetArg(args[argc], XmNmarginWidth, 0); argc++;
-    XtSetArg(args[argc], XmNrecomputeSize, False); argc++;
-    XtSetArg(args[argc], XmNresizeHeight, False); argc++;
-    XtSetArg(args[argc], XmNresizeWidth, False); argc++;
-    XtSetArg(args[argc], XmNspacing, False); argc++;
-    XtSetArg(args[argc], XmNborderWidth, 0); argc++;
-    XtSetArg(args[argc], XmNnavigationType, XmTAB_GROUP); argc++;
-    XtSetArg(args[argc], XmNtraversalOn, True); argc++;
-    XtSetArg(args[argc], XmNorientation, XmVERTICAL); argc++;
-    XtSetArg(args[argc], XmNadjustMargin, False); argc++;
-    XtSetArg(args[argc], XmNsubMenuId, mPullDownMenu); argc++;
-    XtSetArg(args[argc], XmNuserData, (XtPointer)this); argc++;
-    XtSetArg(args[argc], XmNx, aRect.x); argc++;
-    XtSetArg(args[argc], XmNy, aRect.y); argc++;
-    XtSetArg(args[argc], XmNwidth, aRect.width); argc++;
-    XtSetArg(args[argc], XmNheight, aRect.height); argc++;
-    mWidget = XmCreateOptionMenu(parentWidget, "", args, argc);
-
-    mOptionMenu = XmOptionLabelGadget(mWidget);
-    XtUnmanageChild(mOptionMenu);
-
-    /*XtVaSetValues(mWidget, 
-                  XmNx, aRect.x, 
-                  XmNy, aRect.y, 
-                  XmNwidth, aRect.width, 
-                  XmNheight, aRect.height, 
-                  nsnull);*/
-    //XtManageChild(mPullDownMenu);
-    //XtManageChild(mOptionMenu);
-
-    //XtSetMappedWhenManaged(mOptionMenu, False);
-    //XtManageChild(mOptionMenu);
-
-
-  //if (DBG) 
+  mOptionMenu = XmOptionLabelGadget(mWidget);
+  XtUnmanageChild(mOptionMenu);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
 
   //InitCallbacks();
   return NS_OK;
-
 }
 
 //-------------------------------------------------------------------------

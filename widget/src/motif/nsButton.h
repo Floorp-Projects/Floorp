@@ -19,7 +19,6 @@
 #ifndef nsButton_h__
 #define nsButton_h__
 
-//#include "nsdefs.h"
 #include "nsWindow.h"
 #include "nsIButton.h"
 

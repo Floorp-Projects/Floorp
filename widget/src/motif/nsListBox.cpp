@@ -221,7 +221,7 @@ PRInt32 nsListBox::GetSelectedIndex()
       return index;
     }
   } else {
-    NS_ASSERTION(0, "Multi selection list box does not support GetSlectedIndex()");
+    NS_ASSERTION(PR_FALSE, "Multi selection list box does not support GetSelectedIndex()");
   }
   return -1;
 }

@@ -62,14 +62,10 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 {
   mParent = aParent;
   NS_ADDREF(mParent);
-
   Widget parentWidget = (Widget)mParent->GetNativeData(NS_NATIVE_WIDGET);
-
   Widget mainWindow = XtParent(parentWidget);
-
   mMenu = XmCreateMenuBar(mainWindow, "menubar", nsnull, 0);
   XtManageChild(mMenu);
-
   return NS_OK;
 
 }
@@ -77,18 +73,15 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 {
-
+ // XXX: Shouldn't this do an addref here? or is this just internal
   aParent = mParent;
-
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
-
   // XXX add to internal data structure
-
   return NS_OK;
 }
 

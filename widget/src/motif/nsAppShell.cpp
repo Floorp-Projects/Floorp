@@ -62,7 +62,6 @@ NS_METHOD nsAppShell::Run()
 {
   XtRealizeWidget(mTopLevel);
 
-//  XtAppMainLoop(mAppContext);
   XEvent event;
   for (;;) {
     XtAppNextEvent(mAppContext, &event);

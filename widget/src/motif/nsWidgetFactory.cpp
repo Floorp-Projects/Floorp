@@ -88,7 +88,6 @@ static NS_DEFINE_IID(kCToolBarItemHolder,  NS_TOOLBARITEMHOLDER_CID);
 static NS_DEFINE_IID(kCMenuButton,     NS_MENUBUTTON_CID);
 */
 
-
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
 
@@ -157,9 +156,11 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         return NS_ERROR_NULL_POINTER;  
     }  
 
+    if (nsnull != aOuter)
+      return NS_ERROR_NO_AGGREGATION;
+
     *aResult = NULL;  
   
-
     nsISupports *inst = nsnull;
     if (aIID.Equals(kCWindow)) {
         inst = (nsISupports *)(nsIWidget *)new nsWindow();
@@ -175,10 +176,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCHorzScrollbarCID)) {
         inst = (nsISupports *)(nsIWidget *)new nsScrollbar(PR_FALSE);
-    }
-    else if (aIID.Equals(kIScrollbar)) {
-        inst = nsnull;
-        fprintf(stderr, "------ NOT CreatingkIScrollbar Scrollbar\n");
     }
     else if (mClassID.Equals(kCTextWidgetCID)) {
         inst = (nsISupports *)(nsIWidget *)new nsTextWidget();
@@ -269,9 +266,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
 
     if (res != NS_OK) {
         delete inst;         
-    }
-    else {
-//      NS_RELEASE(inst);
     }
         
     return res;

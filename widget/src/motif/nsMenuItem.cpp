@@ -77,24 +77,18 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
 
   mTarget = aMBParent;
   char * nameStr = mLabel.ToNewCString();
-
   Widget parentMenuHandle = GetNativeParent();
-
   mMenu = XtVaCreateManagedWidget(nameStr, xmCascadeButtonGadgetClass,
                                           parentMenuHandle,
                                           NULL);
-
   XtAddCallback(mMenu, XmNactivateCallback, nsXtWidget_Menu_Callback, 
                 (nsIMenuItem *)this);
-
   delete[] nameStr;
-
 }
 
 //-------------------------------------------------------------------------
 Widget nsMenuItem::GetNativeParent()
 {
-
   void * voidData;
   if (nsnull != mMenuParent) {
     mMenuParent->GetNativeData(voidData);
@@ -104,7 +98,6 @@ Widget nsMenuItem::GetNativeParent()
     return NULL;
   }
   return (Widget)voidData;
-
 }
 
 

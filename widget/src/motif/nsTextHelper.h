@@ -51,8 +51,6 @@ public:
 protected:
     PRBool  mIsPassword;
     PRBool  mIsReadOnly;
-//    Widget  mWidget;
-
 
 };
 
