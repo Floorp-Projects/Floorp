@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.1 2000/03/31 20:02:17 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.2 2000/09/22 17:34:29 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -43,6 +43,7 @@
 #include "ssl.h"
 #include "sslproto.h"
 #include "secmod.h"
+#include "secmodi.h"
 #include "nss.h"
 #include "secrng.h"
 #include "cdbhdl.h"	/* ??? */
@@ -180,6 +181,42 @@ loser:
     return rv;
 }
 
+/*
+ * initialize NSS without a creating cert db's, key db's, or secmod db's.
+ */
+SECStatus
+NSS_NoDB_Init(const char * configdir)
+{
+          
+      CERTCertDBHandle certhandle = { 0 };
+      SECStatus rv = SECSuccess;
+      SECMODModule *module;
+
+      /* now we want to verify the signature */
+      /*  Initialize the cert code */
+      rv = CERT_OpenVolatileCertDB(&certhandle);
+      if (rv != SECSuccess) {
+	   return rv;
+      }
+      CERT_SetDefaultCertDB(&certhandle);
+
+      RNG_RNGInit();
+      RNG_SystemInfoForRNG();
+      PK11_InitSlotLists();
+
+      module = SECMOD_NewInternal();
+      if (module == NULL) {
+	   return SECFailure;
+      }
+      rv = SECMOD_LoadModule(module);
+      if (rv != SECSuccess) {
+	   return rv;
+      }
+
+      SECMOD_SetInternalModule(module);
+      return rv;
+}
+
 void
 NSS_Shutdown(void)
 {
@@ -199,3 +236,4 @@ NSS_Shutdown(void)
      * but there's no secmod function to close the DB.
      */
 }
+
