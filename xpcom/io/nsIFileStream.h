@@ -31,7 +31,7 @@ class nsFileSpec;
 
 //========================================================================================
 class nsIFile
-// Represents a file, and supports Open, Tell etc.
+// Represents a file, and supports Open.
 //========================================================================================
 : public nsISupports
 {
@@ -44,14 +44,30 @@ public:
                                            // Note: Open() is only needed after
                                            // an explicit Close().  All file streams
                                            // are automatically opened on construction.
-    NS_IMETHOD                         Seek(PRSeekWhence whence, PRInt32 offset) = 0;
     NS_IMETHOD                         GetIsOpen(PRBool* outOpen) = 0;
+
+}; // class nsIFile
+
+/* a6cf90e8-15b3-11d2-932e-00805f8add32 */
+#define NS_IRANDOMACCESS_IID \
+{  0xa6cf90eb, 0x15b3, 0x11d2, \
+    {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+
+//========================================================================================
+class nsIRandomAccessStore
+// Supports Seek, Tell etc.
+//========================================================================================
+: public nsISupports
+{
+public:
+    static const nsIID& GetIID() { static nsIID iid = NS_IRANDOMACCESS_IID; return iid; }
+    NS_IMETHOD                         Seek(PRSeekWhence whence, PRInt32 offset) = 0;
     NS_IMETHOD                         Tell(PRIntn* outWhere) = 0;
 
 /* "PROTECTED" */
     NS_IMETHOD                         GetAtEOF(PRBool* outAtEOF) = 0;
     NS_IMETHOD                         SetAtEOF(PRBool inAtEOF) = 0;
-}; // class nsIFile
+}; // class nsIRandomAccessStore
 
 /* a6cf90e6-15b3-11d2-932e-00805f8add32 */
 #define NS_IFILEINPUTSTREAM_IID \
@@ -64,7 +80,7 @@ class nsIFileInputStream
 // nsIInputStream supports.  The current implementation supports both
 // interfaces.
 //========================================================================================
-: public nsISupports
+: public nsIInputStream
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IFILEINPUTSTREAM_IID; return iid; }
@@ -81,7 +97,7 @@ class nsIFileOutputStream
 // nsIOutputStream supports.  The current implementation supports both
 // interfaces.
 //========================================================================================
-: public nsISupports
+: public nsIOutputStream
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IFILEOUTPUTSTREAM_IID; return iid; }

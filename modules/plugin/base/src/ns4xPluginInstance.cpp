@@ -134,7 +134,7 @@ ns4xPluginStreamListener::OnStartBinding(const char* url, nsIPluginStreamInfo* p
 
 NS_IMETHODIMP
 ns4xPluginStreamListener::OnDataAvailable(const char* url, nsIInputStream* input,
-                                            PRUint32 offset, PRUint32 length, nsIPluginStreamInfo* pluginInfo)
+                                            PRUint32 /*offset*/, PRUint32 length, nsIPluginStreamInfo* pluginInfo)
 {
 	const NPPluginFuncs *callbacks;
     NPP                 npp;
@@ -154,7 +154,7 @@ ns4xPluginStreamListener::OnDataAvailable(const char* url, nsIInputStream* input
 	// Get the data from the input stream
 	char* buffer = new char[length];
     if (buffer) 
-        input->Read(buffer, offset, length, &amountRead);
+        input->Read(buffer, length, &amountRead);
 
 	// amountRead tells us how many bytes were put in the buffer
 	// WriteReady returns to us how many bytes the plugin is 

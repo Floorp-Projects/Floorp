@@ -189,7 +189,7 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
       nsresult  result;
       PRBool    first = PR_TRUE;
 
-      result = stream->Read(buf, 0, sizeof(buf), &count);
+      result = stream->Read(buf, sizeof(buf), &count);
       while (NS_SUCCEEDED(result) && (count > 0)) {
         if (first == PR_TRUE) {
           PRInt32 ilErr;
@@ -206,7 +206,7 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
         aReader->Write((const unsigned char *)buf, (int32)count);
   
         // Get the next block
-        result = stream->Read(buf, 0, sizeof(buf), &count);
+        result = stream->Read(buf, sizeof(buf), &count);
       }
   
       if (NS_FAILED(result)) {

@@ -845,7 +845,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUin
   nsresult result=NS_OK;
 
   while ((theNumRead>0) && (aLength>theTotalRead) && (NS_OK==result)) {
-    result = pIStream->Read(mParserContext->mTransferBuffer, 0, aLength, &theNumRead);
+    result = pIStream->Read(mParserContext->mTransferBuffer, aLength, &theNumRead);
     if((result == NS_OK) && (theNumRead>0)) {
       theTotalRead+=theNumRead;
       if(mParserFilter)

@@ -16,8 +16,7 @@
 
 //========================================================================================
 class FileImpl
-    : public nsIOutputStream
-    , public nsIInputStream
+    : public nsIRandomAccessStore
     , public nsIFileOutputStream
     , public nsIFileInputStream
     , public nsIFile
@@ -78,7 +77,6 @@ class FileImpl
                                             return NS_OK;
                                         }
 		NS_IMETHOD                      Read(char* aBuf,
-					                        PRUint32 aOffset,
 			                                PRUint32 aCount,
 					                        PRUint32 *aReadCount)
 								        {
@@ -92,8 +90,6 @@ class FileImpl
 								                return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
 								            if (mFailed)
 								                return NS_ERROR_FAILURE;
-								            if (aOffset)
-								                PR_Seek(mFileDesc, aOffset, PR_SEEK_CUR);
 								            PRInt32 bytesRead = PR_Read(mFileDesc, aBuf, aCount);
 								            if (bytesRead < 0)
 								            {
@@ -106,7 +102,6 @@ class FileImpl
 								        }
 		// nsIOutputStream interface
 		NS_IMETHOD                      Write(const char* aBuf,
-					                        PRUint32 aOffset,
 			                                PRUint32 aCount,
 					                        PRUint32 *aWriteCount)
 								        {
@@ -127,8 +122,6 @@ class FileImpl
 								                return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
 								            if (mFailed)
 								               return NS_ERROR_FAILURE;
-								            if (aOffset)
-								                PR_Seek(mFileDesc, aOffset, PR_SEEK_CUR);
 								            PRInt32 bytesWrit = PR_Write(mFileDesc, aBuf, aCount);
 								            if (bytesWrit != aCount)
 								            {
@@ -154,19 +147,19 @@ class FileImpl
 
     protected:
     
-        PRFileDesc*                             mFileDesc;
-        int                                     mNSPRMode;
-        PRBool                                  mFailed;
-        PRBool                                  mEOF;
-        PRInt32                                 mLength;
+        PRFileDesc*                     mFileDesc;
+        int                             mNSPRMode;
+        PRBool                          mFailed;
+        PRBool                          mEOF;
+        PRInt32                         mLength;
 }; // class FileImpl
 
-#define SAY_I_IMPLEMENT(classname)        \
-  if (aIID.Equals(classname::GetIID()))        \
-  {                                            \
+#define SAY_I_IMPLEMENT(classname)               \
+  if (aIID.Equals(classname::GetIID()))          \
+  {                                              \
       *aInstancePtr = (void*)((classname*)this); \
-      NS_ADDREF_THIS();                        \
-      return NS_OK;                            \
+      NS_ADDREF_THIS();                          \
+      return NS_OK;                              \
   }
 
 NS_IMPL_RELEASE(FileImpl)
@@ -182,6 +175,7 @@ NS_IMETHODIMP FileImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   *aInstancePtr = nsnull;
 
   SAY_I_IMPLEMENT(nsIFile)
+  SAY_I_IMPLEMENT(nsIRandomAccessStore)
   SAY_I_IMPLEMENT(nsIOutputStream)
   SAY_I_IMPLEMENT(nsIInputStream)
   SAY_I_IMPLEMENT(nsIFileInputStream)
@@ -319,7 +313,7 @@ NS_IMETHODIMP FileImpl::Seek(PRSeekWhence whence, PRInt32 offset)
         newPosition = 0;
         mFailed = PR_TRUE;
     }
-    else if (newPosition >= fileSize)
+    if (newPosition >= fileSize) // nb: not "else if".
     {
         newPosition = fileSize;
         mEOF = PR_TRUE;

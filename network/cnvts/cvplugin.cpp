@@ -58,7 +58,7 @@ plugin_stream_write(NET_StreamClass *stream, const char* str, int32 len)
 	nsresult res;
 	int32 written;
 
-	res = instance_stream->Write(str, (unsigned int)0, (unsigned int)len, (unsigned int *)&written);
+	res = instance_stream->Write(str, (unsigned int)len, (unsigned int *)&written);
 	if (res == NS_OK)
 	{
 		return written;

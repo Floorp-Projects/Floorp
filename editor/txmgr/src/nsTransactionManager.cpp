@@ -475,10 +475,10 @@ nsTransactionManager::Write(nsIOutputStream *aOutputStream)
   if (!aOutputStream)
     return NS_ERROR_NULL_POINTER;
 
-  aOutputStream->Write("UndoStack:\n\n", 0, 12, &len);
+  aOutputStream->Write("UndoStack:\n\n", 12, &len);
   mUndoStack.Write(aOutputStream);
 
-  aOutputStream->Write("\nRedoStack:\n\n", 0, 13, &len);
+  aOutputStream->Write("\nRedoStack:\n\n", 13, &len);
   mRedoStack.Write(aOutputStream);
 
   return NS_OK;

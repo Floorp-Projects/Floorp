@@ -539,7 +539,7 @@ ns4xPlugin::_write(NPP npp, NPStream *pstream, int32 len, void *buffer)
     nsIOutputStream* stream = wrapper->GetStream();
 
     PRUint32 count = 0;
-    nsresult rv = stream->Write((char *)buffer, 0, len, &count);
+    nsresult rv = stream->Write((char *)buffer, len, &count);
 
     NS_RELEASE(stream);
 

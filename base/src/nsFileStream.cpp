@@ -22,6 +22,7 @@
 
 #include "nsFileStream.h"
 
+#include "nsIStringStream.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -45,6 +46,19 @@ char nsInputStream::get()
     read(&c, sizeof(c));
     return c;
 }
+
+//----------------------------------------------------------------------------------------
+PRInt32 nsInputStream::read(void* s, PRInt32 n)
+//----------------------------------------------------------------------------------------
+{
+  if (!mInputStream)
+      return 0;
+  PRInt32 result = 0;
+  mInputStream->Read((char*)s, n, (PRUint32*)&result);
+  if (result < n)
+      set_at_eof(PR_TRUE);
+  return result;
+} // nsInputStream::read
 
 //----------------------------------------------------------------------------------------
 static void TidyEndOfLine(char*& cp)
@@ -83,6 +97,17 @@ void nsOutputStream::put(char c)
 {
     write(&c, sizeof(c));
 }
+
+//----------------------------------------------------------------------------------------
+PRInt32 nsOutputStream::write(const void* s, PRInt32 n)
+//----------------------------------------------------------------------------------------
+{
+  if (!mOutputStream)
+      return 0;
+  PRInt32 result = 0;
+  mOutputStream->Write((char*)s, n, (PRUint32*)&result);
+  return result;
+} // nsOutputStream::write
 
 //----------------------------------------------------------------------------------------
 void nsOutputStream::flush()
@@ -143,11 +168,11 @@ nsOutputStream& nsOutputStream::operator << (unsigned long val)
 }
 
 //========================================================================================
-//          nsInputFileStream
+//          nsRandomAccessInputStream
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-PRBool nsInputFileStream::readline(char* s, PRInt32 n)
+PRBool nsRandomAccessInputStream::readline(char* s, PRInt32 n)
 // This will truncate if the buffer is too small.  Result will always be null-terminated.
 //----------------------------------------------------------------------------------------
 {
@@ -173,7 +198,84 @@ PRBool nsInputFileStream::readline(char* s, PRInt32 n)
     position += bytesRead;
     seek(position);
     return bufferLargeEnough;
-} // nsInputStream::readline
+} // nsRandomAccessInputStream::readline
+
+//========================================================================================
+//          nsInputStringStream
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsInputStringStream::nsInputStringStream(const char* stringToRead)
+//----------------------------------------------------------------------------------------
+{
+	nsISupports* stream;
+	if (NS_FAILED(NS_NewCharInputStream(&stream, stringToRead)))
+		return;
+	mInputStream = nsQueryInterface(stream);
+	mStore = nsQueryInterface(stream);
+	NS_RELEASE(stream);
+}
+
+//----------------------------------------------------------------------------------------
+nsInputStringStream::nsInputStringStream(const nsString& stringToRead)
+//----------------------------------------------------------------------------------------
+{
+	nsISupports* stream;
+	if (NS_FAILED(NS_NewStringInputStream(&stream, stringToRead)))
+		return;
+	mInputStream = nsQueryInterface(stream);
+	mStore = nsQueryInterface(stream);
+	NS_RELEASE(stream);
+}
+
+//========================================================================================
+//          nsOutputStringStream
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsOutputStringStream::nsOutputStringStream(char*& stringToChange)
+//----------------------------------------------------------------------------------------
+{
+	nsISupports* stream;
+	if (NS_FAILED(NS_NewCharOutputStream(&stream, &stringToChange)))
+		return;
+	mOutputStream = nsQueryInterface(stream);
+	mStore = nsQueryInterface(stream);
+	NS_RELEASE(stream);
+}
+
+//----------------------------------------------------------------------------------------
+nsOutputStringStream::nsOutputStringStream(nsString& stringToChange)
+//----------------------------------------------------------------------------------------
+{
+	nsISupports* stream;
+	if (NS_FAILED(NS_NewStringOutputStream(&stream, stringToChange)))
+		return;
+	mOutputStream = nsQueryInterface(stream);
+	mStore = nsQueryInterface(stream);
+	NS_RELEASE(stream);
+}
+
+//========================================================================================
+//          nsInputFileStream
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsInputFileStream::nsInputFileStream(
+	const nsFileSpec& inFile,
+	int nsprMode,
+	PRIntn accessMode)
+//----------------------------------------------------------------------------------------
+{
+	nsISupports* stream;
+	if (NS_FAILED(NS_NewIOFileStream(&stream, inFile, nsprMode, accessMode)))
+        return;
+	mFile = nsQueryInterface(stream);
+	mInputStream = nsQueryInterface(stream);
+	mStore = nsQueryInterface(stream);
+	mFileInputStream = nsQueryInterface(stream);
+	NS_RELEASE(stream);
+} // nsInputFileStream::nsInputFileStream
 
 //========================================================================================
 //          nsOutputFileStream

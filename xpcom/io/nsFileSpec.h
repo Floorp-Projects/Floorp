@@ -401,6 +401,8 @@ class NS_BASE nsFileURL
         void                    operator = (const nsFilePath& inOther);
         void                    operator = (const nsFileSpec& inOther);
 
+                                operator const char* const () { return mURL; }
+
         friend                  NS_BASE nsOutputStream& operator << (
                                      nsOutputStream& s, const nsFileURL& spec);
 
@@ -411,7 +413,6 @@ class NS_BASE nsFileURL
     private:
         // Should not be defined (only nsFilePath is to be treated as strings.
                                 operator char* ();
-                                operator const char* const ();
     private:
                                 friend class nsFilePath; // to allow construction of nsFilePath
         char*                   mURL;
