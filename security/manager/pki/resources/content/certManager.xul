@@ -41,37 +41,28 @@
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://pippki/content/certManager.js"/>
 
+  <vbox flex="1">
+    <tabbox flex="1">
+      <tabs id="certMgrTabbox">
+        <tab id="mine_tab" label="&certmgr.tab.mine;"/>
+        <tab id="others_tab" label="&certmgr.tab.others;"/>
+        <tab id="websites_tab" label="&certmgr.tab.websites;"/>
+        <tab id="ca_tab" label="&certmgr.tab.ca;" selected="true"/>
+      </tabs>
+      <tabpanels flex="1">
+        <vbox id="myCerts" flex="1"/>
+        <vbox id="othersCerts" flex="1"/>
+        <vbox id="webCerts" flex="1"/>
+        <vbox id="CACerts" flex="1"/>
+      </tabpanels>
+    </tabbox>
 
-<hbox flex="1">
-  <grid flex="1">
-    <column flex="1"/>
-    <rows>
-      <row flex="1">
-        <tabbox flex="1">
-          <tabs id="certMgrTabbox">
-            <tab id="mine_tab" label="&certmgr.tab.mine;"/>
-            <tab id="others_tab" label="&certmgr.tab.others;"/>
-            <tab id="websites_tab" label="&certmgr.tab.websites;"/>
-            <tab id="ca_tab" label="&certmgr.tab.ca;" selected="true"/>
-          </tabs>
-          <tabpanels flex="1">
-            <vbox id="myCerts" flex="1"/>
-            <vbox id="othersCerts" flex="1"/>
-            <vbox id="webCerts" flex="1"/>
-            <vbox id="CACerts" flex="1"/>
-          </tabpanels>
-        </tabbox>
-      </row>
-      <row>
-        <hbox flex="1">
-          <button id="HelpButton"
-                  label="&certmgr.help.label;" 
-                  accesskey="&certmgr.helpButtonAccessKey;"
-                  oncommand="doHelpButton();"/>
-        </hbox>
-      </row>
-    </rows>
-  </grid>
-</hbox>
+    <hbox>
+      <button id="HelpButton"
+              label="&certmgr.help.label;" 
+              accesskey="&certmgr.helpButtonAccessKey;"
+              oncommand="doHelpButton();"/>
+    </hbox>
+  </vbox>
 
 </window>
