@@ -133,7 +133,9 @@ nsMimeConverter::DecodeMimeHeader(const char *header,
 
 nsresult
 nsMimeConverter::EncodeMimePartIIStr(const char    *header, 
+                                           PRBool        structured, 
                                            const char    *mailCharset, 
+                                           PRInt32       fieldnamelen,
                                            const PRInt32 encodedWordSize, 
                                            char          **encodedString)
 {
@@ -142,17 +144,19 @@ nsMimeConverter::EncodeMimePartIIStr(const char    *header,
   nsAutoString tempUnicodeString;
   nsresult rv = ConvertToUnicode(mailCharset, header, tempUnicodeString);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = EncodeMimePartIIStr_UTF8(NS_ConvertUCS2toUTF8(tempUnicodeString).get(), mailCharset, encodedWordSize, encodedString);
+  rv = EncodeMimePartIIStr_UTF8(NS_ConvertUCS2toUTF8(tempUnicodeString).get(), structured, mailCharset, fieldnamelen, encodedWordSize, encodedString);
   return rv;
 }
 
 nsresult
 nsMimeConverter::EncodeMimePartIIStr_UTF8(const char    *header, 
+                                          PRBool        structured, 
                                           const char    *mailCharset, 
+                                          PRInt32       fieldnamelen,
                                           const PRInt32 encodedWordSize, 
                                           char          **encodedString)
 {
-  char *retString = MIME_EncodeMimePartIIStr(header, mailCharset, encodedWordSize);
+  char *retString = MIME_EncodeMimePartIIStr(header, structured, mailCharset, fieldnamelen, encodedWordSize);
   if (retString == NULL)
     return NS_ERROR_FAILURE;
   else

@@ -78,13 +78,17 @@ public:
 
   // Encode routine
   NS_IMETHOD EncodeMimePartIIStr(const char    *header, 
+                                 PRBool        structured, 
                                  const char    *mailCharset, 
+                                 PRInt32       fieldnamelen,
                                  const PRInt32 encodedWordSize, 
                                  char          **encodedString);
 
   // Encode routine (utf-8 input)
   NS_IMETHOD EncodeMimePartIIStr_UTF8(const char    *header, 
+                                      PRBool        structured, 
                                       const char    *mailCharset, 
+                                      PRInt32       fieldnamelen,
                                       const PRInt32 encodedWordSize, 
                                       char          **encodedString);
 

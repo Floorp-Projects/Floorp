@@ -220,6 +220,19 @@ nsMsgStripLine (char * string)
 //
 #define UA_PREF_PREFIX "general.useragent."
 
+#define ENCODE_AND_PUSH(name, structured, body, charset, usemime) \
+  { \
+    PUSH_STRING((name)); \
+    convbuf = nsMsgI18NEncodeMimePartIIStr((body), (structured), (charset), nsCRT::strlen(name), (usemime)); \
+    if (convbuf) { \
+      PUSH_STRING (convbuf); \
+      PR_FREEIF(convbuf); \
+    } \
+    else \
+      PUSH_STRING((body)); \
+    PUSH_NEWLINE (); \
+  }
+
 char * 
 mime_generate_headers (nsMsgCompFields *fields,
                        const char *charset,
@@ -234,7 +247,8 @@ mime_generate_headers (nsMsgCompFields *fields,
     return nsnull;
   }
 
-  int size = 0;
+  PRBool usemime = nsMsgMIMEGetConformToStandard();
+  PRInt32 size = 0;
   char *buffer = 0, *buffer_tail = 0;
   PRBool isDraft =
   deliver_mode == nsIMsgSend::nsMsgSaveAsDraft ||
@@ -253,6 +267,7 @@ mime_generate_headers (nsMsgCompFields *fields,
   const char* pPriority;
   const char* pReference;
   const char* pOtherHdr;
+  char *convbuf;
 
   nsCAutoString headerBuf;    // accumulate header strings for charset conversion check
   headerBuf.Truncate(0);
@@ -313,7 +328,6 @@ mime_generate_headers (nsMsgCompFields *fields,
   buffer_tail = buffer;
 
   if (pMessageID && *pMessageID) {
-    char *convbuf = NULL;
     PUSH_STRING ("Message-ID: ");
     PUSH_STRING (pMessageID);
     PUSH_NEWLINE ();
@@ -336,49 +350,20 @@ mime_generate_headers (nsMsgCompFields *fields,
       // 0 = MDN Disposition-Notification-To: ; 1 = Return-Receipt-To: ; 2 =
       // both MDN DNT & RRT headers
       if (receipt_header_type == 1) {
-        RRT_HEADER:
-        PUSH_STRING ("Return-Receipt-To: ");
-        convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pFrom, charset, nsMsgMIMEGetConformToStandard());
-        if (convbuf) {    /* MIME-PartII conversion */
-          PUSH_STRING (convbuf);
-          PR_FREEIF(convbuf);
-        }
-        else
-          PUSH_STRING (pFrom);
-        PUSH_NEWLINE ();
+RRT_HEADER:
+        ENCODE_AND_PUSH("Return-Receipt-To: ", PR_TRUE, pFrom, charset, usemime);
       }
       else  {
-        PUSH_STRING ("Disposition-Notification-To: ");
-        convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pFrom, charset,
-                        nsMsgMIMEGetConformToStandard());
-        if (convbuf) {     /* MIME-PartII conversion */
-          PUSH_STRING (convbuf);
-          PR_FREEIF(convbuf);
-        }
-        else
-          PUSH_STRING (pFrom);
-        PUSH_NEWLINE ();
+        ENCODE_AND_PUSH("Disposition-Notification-To: ", PR_TRUE, pFrom, charset, usemime);
         if (receipt_header_type == 2)
           goto RRT_HEADER;
       }
     }
 #ifdef SUPPORT_X_TEMPLATE_NAME
     if (deliver_mode == MSG_SaveAsTemplate) {
-      PUSH_STRING ("X-Template: ");
-      char * pStr = fields->GetTemplateName();
-      if (pStr) {
-        convbuf = nsMsgI18NEncodeMimePartIIStr((char *)
-                   pStr,
-                   charset,
-                   nsMsgMIMEGetConformToStandard());
-        if (convbuf) {
-          PUSH_STRING (convbuf);
-          PR_FREEIF(convbuf);
-        }
-        else
-          PUSH_STRING(pStr);
-      }
-      PUSH_NEWLINE ();
+      const char *pStr = fields->GetTemplateName();
+      pStr = pStr ? pStr : "";
+      ENCODE_AND_PUSH("X-Template: ", PR_FALSE, pStr, charset, usemime);
     }
 #endif /* SUPPORT_X_TEMPLATE_NAME */
   }
@@ -400,53 +385,23 @@ mime_generate_headers (nsMsgCompFields *fields,
   PR_snprintf(buffer_tail, buffer + size - buffer_tail,
         "%c%02d%02d" CRLF,
         (gmtoffset >= 0 ? '+' : '-'),
-        (PR_ABS(gmtoffset) / 60),
-        (PR_ABS(gmtoffset) % 60));
+        ((gmtoffset >= 0 ? gmtoffset : -gmtoffset) / 60),
+        ((gmtoffset >= 0 ? gmtoffset : -gmtoffset) % 60));
   buffer_tail += PL_strlen (buffer_tail);
 
-  if (pFrom && *pFrom) {
-    char *convbuf;
-    PUSH_STRING ("From: ");
-    convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pFrom, charset,
-                    nsMsgMIMEGetConformToStandard());
-
-    if (convbuf) {    /* MIME-PartII conversion */
-      PUSH_STRING (convbuf);
-      PR_Free(convbuf);
-    }
-    else
-      PUSH_STRING (pFrom);
-    PUSH_NEWLINE ();
+  if (pFrom && *pFrom) 
+  {
+    ENCODE_AND_PUSH("From: ", PR_TRUE, pFrom, charset, usemime);
   }
 
   if (pReplyTo && *pReplyTo)
   {
-    char *convbuf;
-    PUSH_STRING ("Reply-To: ");
-    convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pReplyTo, charset,
-                    nsMsgMIMEGetConformToStandard());
-    if (convbuf) {     /* MIME-PartII conversion */
-      PUSH_STRING (convbuf);
-      PR_Free(convbuf);
-    }
-    else
-      PUSH_STRING (pReplyTo);
-    PUSH_NEWLINE ();
+    ENCODE_AND_PUSH("Reply-To: ", PR_TRUE, pReplyTo, charset, usemime);
   }
 
   if (pOrg && *pOrg)
   {
-    char *convbuf;
-    PUSH_STRING ("Organization: ");
-    convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pOrg, charset,
-                    nsMsgMIMEGetConformToStandard());
-    if (convbuf) {     /* MIME-PartII conversion */
-      PUSH_STRING (convbuf);
-      PR_Free(convbuf);
-    }
-    else
-      PUSH_STRING (pOrg);
-    PUSH_NEWLINE ();
+    ENCODE_AND_PUSH("Organization: ", PR_FALSE, pOrg, charset, usemime);
   }
 
   // X-Mozilla-Draft-Info
@@ -509,26 +464,14 @@ mime_generate_headers (nsMsgCompFields *fields,
   if (pNewsGrp && *pNewsGrp) {
     /* turn whitespace into a comma list
     */
-    char *ptr, *ptr2;
-    char *n2;
-    char *convbuf;
-
-    convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pNewsGrp, charset,
-                    nsMsgMIMEGetConformToStandard());
-    if (convbuf)
-        n2 = nsMsgStripLine (convbuf);
-    else {
-      ptr = PL_strdup(pNewsGrp);
-      if (!ptr) {
-        PR_FREEIF(buffer);
-        return nsnull; /* NS_ERROR_OUT_OF_MEMORY */
-      }
-          n2 = nsMsgStripLine(ptr);
-      NS_ASSERTION(n2 == ptr, "n2 != ptr"); /* Otherwise, the PR_Free below is
-                             gonna choke badly. */
+    char *duppedNewsGrp = PL_strdup(pNewsGrp);
+    if (!duppedNewsGrp) {
+      PR_FREEIF(buffer);
+      return nsnull; /* NS_ERROR_OUT_OF_MEMORY */
     }
+    char *n2 = nsMsgStripLine(duppedNewsGrp);
 
-    for(ptr=n2; *ptr != '\0'; ptr++) {
+    for(char *ptr = n2; *ptr != '\0'; ptr++) {
       /* find first non white space */
       while(!IS_SPACE(*ptr) && *ptr != ',' && *ptr != '\0')
         ptr++;
@@ -540,7 +483,7 @@ mime_generate_headers (nsMsgCompFields *fields,
         *ptr = ',';
 
       /* find next non white space */
-      ptr2 = ptr+1;
+      char *ptr2 = ptr+1;
       while(IS_SPACE(*ptr2))
         ptr2++;
 
@@ -590,33 +533,21 @@ mime_generate_headers (nsMsgCompFields *fields,
       PUSH_NEWLINE ();
     }
 
-    PR_FREEIF(n2);
+    PR_FREEIF(duppedNewsGrp);
   }
 
   /* #### shamelessly duplicated from above */
   if (pFollow && *pFollow) {
     /* turn whitespace into a comma list
     */
-    char *ptr, *ptr2;
-    char *n2;
-    char *convbuf;
-
-    convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pFollow, charset,
-                    nsMsgMIMEGetConformToStandard());
-    if (convbuf)
-      n2 = nsMsgStripLine (convbuf);
-    else {
-      ptr = PL_strdup(pFollow);
-      if (!ptr) {
-        PR_FREEIF(buffer);
-        return nsnull; /* NS_ERROR_OUT_OF_MEMORY */
-      }
-      n2 = nsMsgStripLine (ptr);
-      NS_ASSERTION(n2 == ptr, "n2 != ptr"); /* Otherwise, the PR_Free below is
-                             gonna choke badly. */
+    char *duppedFollowup = PL_strdup(pFollow);
+    if (!duppedFollowup) {
+      PR_FREEIF(buffer);
+      return nsnull; /* NS_ERROR_OUT_OF_MEMORY */
     }
+    char *n2 = nsMsgStripLine (duppedFollowup);
 
-    for (ptr=n2; *ptr != '\0'; ptr++) {
+    for (char *ptr = n2; *ptr != '\0'; ptr++) {
       /* find first non white space */
       while(!IS_SPACE(*ptr) && *ptr != ',' && *ptr != '\0')
         ptr++;
@@ -628,7 +559,7 @@ mime_generate_headers (nsMsgCompFields *fields,
         *ptr = ',';
 
       /* find next non white space */
-      ptr2 = ptr+1;
+      char *ptr2 = ptr+1;
       while(IS_SPACE(*ptr2))
         ptr2++;
 
@@ -638,52 +569,20 @@ mime_generate_headers (nsMsgCompFields *fields,
 
     PUSH_STRING ("Followup-To: ");
     PUSH_STRING (n2);
-    PR_Free (n2);
+    PR_Free (duppedFollowup);
     PUSH_NEWLINE ();
   }
 
   if (pTo && *pTo) {
-    char *convbuf;
-    PUSH_STRING ("To: ");
-    convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pTo, charset,
-                    nsMsgMIMEGetConformToStandard());
-    if (convbuf) {     /* MIME-PartII conversion */
-      PUSH_STRING (convbuf);
-      PR_Free(convbuf);
-    }
-    else
-      PUSH_STRING (pTo);
-
-    PUSH_NEWLINE ();
+    ENCODE_AND_PUSH("To: ", PR_TRUE, pTo, charset, usemime);
   }
  
   if (pCc && *pCc) {
-    char *convbuf;
-    PUSH_STRING ("CC: ");
-    convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pCc, charset,
-                    nsMsgMIMEGetConformToStandard());
-    if (convbuf) {   /* MIME-PartII conversion */
-      PUSH_STRING (convbuf);
-      PR_Free(convbuf);
-    }
-    else
-      PUSH_STRING (pCc);
-    PUSH_NEWLINE ();
+    ENCODE_AND_PUSH("CC: ", PR_TRUE, pCc, charset, usemime);
   }
 
   if (pSubject && *pSubject) {
-
-    char *convbuf;
-    PUSH_STRING ("Subject: ");
-    convbuf = nsMsgI18NEncodeMimePartIIStr((char *)pSubject, charset,
-                    nsMsgMIMEGetConformToStandard());
-    if (convbuf) {  /* MIME-PartII conversion */
-      PUSH_STRING (convbuf);
-      PR_Free(convbuf);
-    }
-    else
-      PUSH_STRING (pSubject);
-    PUSH_NEWLINE ();
+    ENCODE_AND_PUSH("Subject: ", PR_FALSE, pSubject, charset, usemime);
   }
   
   if (pPriority && *pPriority)
@@ -809,6 +708,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
 
   NS_ASSERTION (encoding, "null encoding");
 
+  PRBool usemime = nsMsgMIMEGetConformToStandard();
   PRInt32 parmFolding = 0;
   if (NS_SUCCEEDED(rv) && prefs) 
     prefs->GetIntPref("mail.strictly_mime.parm_folding", &parmFolding);
@@ -817,12 +717,11 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
   char *encodedRealName = nsnull;
   if (real_name)
   {
-    encodedRealName = nsMsgI18NEncodeMimePartIIStr(real_name,
-      nsMsgI18NFileSystemCharset(), nsMsgMIMEGetConformToStandard());
+    encodedRealName = nsMsgI18NEncodeMimePartIIStr(real_name, PR_FALSE, nsMsgI18NFileSystemCharset(), 0, usemime);
     if (!encodedRealName || !*encodedRealName)
     {
       /* Let's try one more time using UTF8 */
-        encodedRealName = nsMsgI18NEncodeMimePartIIStr(real_name, "UTF-8", nsMsgMIMEGetConformToStandard());
+        encodedRealName = nsMsgI18NEncodeMimePartIIStr(real_name, PR_FALSE, "UTF-8", 0, usemime);
       if (!encodedRealName || !*encodedRealName)
       {
         PR_FREEIF(encodedRealName);

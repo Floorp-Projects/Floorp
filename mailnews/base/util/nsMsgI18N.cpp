@@ -393,10 +393,10 @@ const char * nsMsgI18NFileSystemCharset()
 }
 
 // MIME encoder, output string should be freed by PR_FREE
-char * nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime) 
+char * nsMsgI18NEncodeMimePartIIStr(const char *header, PRBool structured, const char *charset, PRInt32 fieldnamelen, PRBool usemime) 
 {
   // No MIME, convert to the outgoing mail charset.
-  if (PR_FALSE == bUseMime) {
+  if (PR_FALSE == usemime) {
     char *convertedStr;
     if (NS_SUCCEEDED(ConvertFromUnicode(charset, NS_ConvertUTF8toUCS2(header), &convertedStr)))
       return (convertedStr);
@@ -408,7 +408,7 @@ char * nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRB
   nsresult res;
   nsCOMPtr<nsIMimeConverter> converter = do_GetService(kCMimeConverterCID, &res);
   if (NS_SUCCEEDED(res) && nsnull != converter)
-    res = converter->EncodeMimePartIIStr_UTF8(header, charset, kMIME_ENCODED_WORD_SIZE, &encodedString);
+    res = converter->EncodeMimePartIIStr_UTF8(header, structured, charset, fieldnamelen, kMIME_ENCODED_WORD_SIZE, &encodedString);
 
   return NS_SUCCEEDED(res) ? encodedString : nsnull;
 }

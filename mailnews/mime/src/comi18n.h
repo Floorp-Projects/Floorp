@@ -80,11 +80,13 @@ extern "C" char *MIME_DecodeMimeHeader(const char *header,
  *
  *
  * @param header          [IN] A header to encode (utf-8 Cstring).
+ * @param structured      [IN] A boolean to swtich between structured field body and non-structured field body.
  * @param mailCharset     [IN] Charset name (in C string) to convert.
+ * @param fieldNameLen    [IN] Header field name length (e.g. "From: " -> 6)
  * @param encodedWordSize [IN] Byte length limit of the output, ususally 72 (use kMIME_ENCODED_WORD_SIZE).
  * @return            Encoded buffer (in C string) or NULL in case of error.
  */
-char *MIME_EncodeMimePartIIStr(const char *header, const char* mailCharset, const PRInt32 encodedWordSize);
+char *MIME_EncodeMimePartIIStr(const char *header, PRBool structured, const char* mailCharset, const PRInt32 fieldNameLen, const PRInt32 encodedWordSize);
 
 /**
  * Get a next character position in an UTF-8 string.

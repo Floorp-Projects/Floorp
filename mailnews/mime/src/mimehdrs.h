@@ -109,4 +109,6 @@ extern char *MimeHeaders_get_name(MimeHeaders *hdrs, MimeDisplayOptions *opt);
 extern char *mime_decode_filename(char *name, const char* charset,
                                   MimeDisplayOptions *opt);
 
+extern "C"  char * MIME_StripContinuations(char *original);
+
 #endif /* _MIMEHDRS_H_ */

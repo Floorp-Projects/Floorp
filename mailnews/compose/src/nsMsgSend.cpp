@@ -3001,10 +3001,9 @@ nsMsgComposeAndSend::DeliverMessage()
   PRBool news_p = (mCompFields->GetNewsgroups() && 
             *(mCompFields->GetNewsgroups()) ? PR_TRUE : PR_FALSE);
 
-  if ( m_deliver_mode != nsMsgSaveAsDraft &&
-      m_deliver_mode != nsMsgSaveAsTemplate )
+  if ( m_deliver_mode != nsMsgSaveAsDraft && m_deliver_mode != nsMsgSaveAsTemplate ) {
     NS_ASSERTION(mail_p || news_p, "message without destination");
-
+  }
   if (m_deliver_mode == nsMsgQueueForLater) 
   {
     return QueueForLater();
@@ -3161,8 +3160,8 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   }
 
   // Ok, now MIME II encode this to prevent 8bit problems...
-  char *convbuf = nsMsgI18NEncodeMimePartIIStr((char *)buf, mCompFields->GetCharacterSet(),
-                                               nsMsgMIMEGetConformToStandard());
+  char *convbuf = nsMsgI18NEncodeMimePartIIStr(buf, PR_TRUE, 
+            mCompFields->GetCharacterSet(), 0, nsMsgMIMEGetConformToStandard());
   if (convbuf) 
   {     
     // MIME-PartII conversion 

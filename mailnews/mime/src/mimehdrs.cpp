@@ -56,10 +56,10 @@
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
 #include "nsMsgI18N.h"
+#include "mimehdrs.h"
 
 // Forward declares...
-extern "C"  char    *MIME_StripContinuations(char *original);
-int MimeHeaders_build_heads_list(MimeHeaders *hdrs);
+PRInt32 MimeHeaders_build_heads_list(MimeHeaders *hdrs);
 
 static char *
 MimeHeaders_convert_header_value(MimeDisplayOptions *opt, char **value)

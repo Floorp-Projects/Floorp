@@ -49,12 +49,14 @@ class nsFileSpec;
 /**
  * Encode an input string into RFC 2047 form.
  *
- * @param header      [IN] A header to encode.
- * @param charset     [IN] Charset name to convert.
- * @param bUseMime    [IN] If false then apply charset conversion only no MIME encoding.
- * @return            Encoded buffer (in C string) or NULL in case of error.
+ * @param header       [IN] A header to encode.
+ * @param structured   [IN] Specify the header is structured or non-structured field (See RFC-822).
+ * @param charset      [IN] Charset name to convert.
+ * @param fieldnamelen [IN] Header field name length. (e.g. "From: " -> 6)
+ * @param usemime      [IN] If false then apply charset conversion only no MIME encoding.
+ * @return             Encoded buffer (in C string) or NULL in case of error.
  */
-NS_MSG_BASE char      *nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime);
+NS_MSG_BASE char      *nsMsgI18NEncodeMimePartIIStr(const char *header, PRBool structured, const char *charset, PRInt32 fieldnamelen, PRBool usemime);
 
 /**
  * Check if given charset is stateful (e.g. ISO-2022-JP).

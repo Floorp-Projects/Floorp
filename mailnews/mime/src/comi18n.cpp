@@ -21,6 +21,8 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   John G Myers   <jgmyers@netscape.com>
+ *   Takayuki Tei   <taka@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -38,20 +40,17 @@
 
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-
 #include "prtypes.h"
 #include "prmem.h"
 #include "prlog.h"
+#include "prprf.h"
 #include "plstr.h"
 #include "nsCRT.h"
 #include "comi18n.h"
-
-
 #include "nsIServiceManager.h"
 #include "nsIStringCharsetDetector.h"
 #include "nsIPref.h"
@@ -59,327 +58,16 @@
 #include "nsMsgI18N.h"
 #include "nsMimeTypes.h"
 #include "nsICharsetConverterManager2.h"
+#include "nsISaveAsCharset.h"
+#include "nsHankakuToZenkakuCID.h"
+#include "nsReadableUtils.h"
+#include "mimehdrs.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
-// BEGIN EXTERNAL DEPENDANCY
-
-extern "C"  char * MIME_StripContinuations(char *original);
-static PRBool intl_is_legal_utf8(const char *input, unsigned len);
 
 ////////////////////////////////////////////////////////////////////////////////
-//  Pasted from the old code (xp_wrap.c)
-//  Removed multi byte support because we use UTF-8 internally and no overwrap with us-ascii.
-
-#undef OUTPUT
-#define OUTPUT(b) \
-do \
-{ \
-	if (out - ret >= size) \
-	{ \
-		unsigned char *old; \
-		size *= 2; \
-		old = ret; \
-		ret = (unsigned char *) PR_REALLOC(old, size); \
-		if (!ret) \
-		{ \
-			PR_Free(old); \
-			return NULL; \
-		} \
-		out = ret + (size / 2); \
-	} \
-	*out++ = b; \
-} while (0)
-
-#undef OUTPUTSTR
-#define OUTPUTSTR(s) \
-do \
-{ \
-	const char *p1 = s; \
-    while(*p1) {OUTPUT(*p1); p1++;} \
-} while (0)
- 
-
-#undef OUTPUT_MACHINE_NEW_LINE
-#ifdef XP_PC
-#define OUTPUT_MACHINE_NEW_LINE(c) \
-do \
-{ \
-	OUTPUT(nsCRT::CR); \
-	OUTPUT(nsCRT::LF); \
-} while (0)
-#else
-#ifdef XP_MAC
-#define OUTPUT_MACHINE_NEW_LINE(c) \
-do \
-{ \
-	OUTPUT(nsCRT::CR); \
-	if (c) OUTPUT(nsCRT::LF); \
-} while (0)
-#else
-#define OUTPUT_MACHINE_NEW_LINE(c) \
-do \
-{ \
-	if (c) OUTPUT(nsCRT::CR); \
-	OUTPUT(nsCRT::LF); \
-} while (0)
-#endif
-#endif
-
-
-#undef OUTPUT_NEW_LINE
-#define OUTPUT_NEW_LINE(c) \
-do \
-{ \
-	OUTPUT_MACHINE_NEW_LINE(c); \
-	beginningOfLine = in; \
-	currentColumn = 0; \
-	lastBreakablePos = NULL; \
-} while (0)
-
-
-#undef NEW_LINE
-#define NEW_LINE(c) \
-do \
-{ \
-	if ((*in == nsCRT::CR) && (*(in + 1) == nsCRT::LF)) \
-	{ \
-		in += 2; \
-	} \
-	else \
-	{ \
-		in++; \
-	} \
-	OUTPUT_NEW_LINE(c); \
-} while (0)
-
-static unsigned char *
-xp_word_wrap(unsigned char *str, int maxColumn, int checkQuoting,
-			       const char *pfix, int addCRLF)
-{
-	unsigned char	*beginningOfLine;
-	int		byteWidth;
-	int		columnWidth;
-	int		currentColumn;
-	unsigned char	*end;
-	unsigned char	*in;
-	unsigned char	*lastBreakablePos;
-	unsigned char	*out;
-	unsigned char	*p;
-	unsigned char	*ret;
-	int32		size;
-
-	if (!str)
-	{
-		return NULL;
-	}
-
-	size = 1;
-	ret = (unsigned char *) PR_MALLOC(size);
-	if (!ret)
-	{
-		return NULL;
-	}
-
-	in = str;
-	out = ret;
-
-	beginningOfLine = str;
-	currentColumn = 0;
-	lastBreakablePos = NULL;
-
-	while (*in)
-	{
-		if (checkQuoting && (in == beginningOfLine) && (*in == '>'))
-		{
-			while (*in && (*in != nsCRT::CR) && (*in != nsCRT::LF))
-			{
-				OUTPUT(*in++);
-			}
-			if (*in)
-			{
-				NEW_LINE(addCRLF);
-				if (pfix) OUTPUTSTR(pfix);
-			}
-			else
-			{
-				/*
-				 * to prevent writing out line again after
-				 * the main while loop
-				 */
-				beginningOfLine = in;
-			}
-		}
-		else
-		{
-			if ((*in == nsCRT::CR) || (*in == nsCRT::LF))
-			{
-				if (in != beginningOfLine)
-				{
-					p = beginningOfLine;
-					while (p < in)
-					{
-						OUTPUT(*p++);
-					}
-				}
-				NEW_LINE(addCRLF);
-				if (pfix) OUTPUTSTR(pfix);
-				continue;
-			}
-			byteWidth = strlen((const char *) in);
-			columnWidth = strlen((const char *) in);
-			if (currentColumn + columnWidth > (maxColumn +
-				(((*in == ' ') || (*in == '\t')) ? 1 : 0)))
-			{
-				if (lastBreakablePos)
-				{
-					p = beginningOfLine;
-					end = lastBreakablePos - 1;
-					if ((*end != ' ') && (*end != '\t'))
-					{
-						end++;
-					}
-					while (p < end)
-					{
-						OUTPUT(*p++);
-					}
-					if (addCRLF && (*end == ' ' || *end == '\t'))
-					{
-						OUTPUT(*end);
-					}
-					in = lastBreakablePos;
-					OUTPUT_NEW_LINE(addCRLF);
-					if (pfix) OUTPUTSTR(pfix);
-					continue;
-				}
-			}
-			if ( ((in[0] == ' ') || (in[0] == '\t')) &&
-					((in[1] != ' ') && (in[1] != '\t')) )
-			{
-				lastBreakablePos = in + byteWidth;
-			}
-			in += byteWidth;
-			currentColumn += columnWidth;
-		}
-	}
-
-	if (in != beginningOfLine)
-	{
-		p = beginningOfLine;
-		while (*p)
-		{
-			OUTPUT(*p++);
-		}
-	}
-
-	OUTPUT(0);
-
-	return ret;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// The default setting of 'B' or 'Q' is the same as 4.5.
-//
-const char kMsgHeaderBEncoding[] = "B";
-const char kMsgHeaderQEncoding[] = "Q";
-static const char * intl_message_header_encoding(const char* charset)
-{
-  if (nsMsgI18Nmultibyte_charset(charset))
-    return kMsgHeaderBEncoding;
-  else
-    return kMsgHeaderQEncoding;
-}
-
-static PRBool stateful_encoding(const char* charset)
-{
-  return (nsCRT::strcasecmp(charset, "ISO-2022-JP") == 0);
-}
-
-// END EXTERNAL DEPENDANCY
-
-
-#define IS_MAIL_SEPARATOR(p) ((*(p) == ',' || *(p) == ' ' || *(p) == '\"' || *(p) == ':' || \
-  *(p) == '(' || *(p) == ')' || *(p) == '\\' || (unsigned char)*p < 0x20))
-
-
-/*
-        Prototype for Private Function
-*/
-static PRBool  intlmime_only_ascii_str(const char *s);
-static char *   intlmime_encode_next8bitword(char *src);
-
-/*      we should consider replace this base64 encoding
-function with a better one */
-static char *   intlmime_decode_q(const char *in, unsigned length);
-static char *   intlmime_decode_b(const char *in, unsigned length);
-static int      intlmime_encode_base64 (const char *in, char *out);
-static char *   intlmime_encode_base64_buf(char *subject, size_t size);
-static char *   intlmime_encode_qp_buf(char *subject);
-
-////////////////////////////////////////////////////////////////////////////////
-
 
 static char basis_64[] =
    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-static int intlmime_encode_base64 (const char *in, char *out)
-{
-  unsigned char c1, c2, c3;
-  c1 = in[0];
-  c2 = in[1];
-  c3 = in[2];
-
-  *out++ = basis_64[c1>>2];
-  *out++ = basis_64[((c1 & 0x3)<< 4) | ((c2 & 0xF0) >> 4)];
-
-  *out++ = basis_64[((c2 & 0xF) << 2) | ((c3 & 0xC0) >>6)];
-  *out++ = basis_64[c3 & 0x3F];
-  return 1;
-}
-
-static char *intlmime_encode_base64_buf(char *subject, size_t size)
-{
-  char *output = 0;
-  char *pSrc, *pDest ;
-  int i ;
-
-  output = (char *)PR_Malloc(size * 4 / 3 + 4);
-  if (output == NULL)
-    return NULL;
-
-  pSrc = subject;
-  pDest = output ;
-  for (i = size; i >= 3; i -= 3)
-  {
-    if (intlmime_encode_base64(pSrc, pDest) == 0) /* error */
-    {
-      pSrc += 3;
-      pDest += 3;
-    }
-    else
-    {
-      pSrc += 3;
-      pDest += 4;
-    }
-  }
-  /* in case (i % 3 ) == 1 or 2 */
-  if(i > 0)
-  {
-    char in[3];
-    int j;
-    in[0] = in[1] = in[2] ='\0';
-    for(j=0;j<i;j++)
-            in[j] = *pSrc++;
-    intlmime_encode_base64(in, pDest);
-    for(j=i+1;j<4;j++)
-            pDest[j] = '=';
-    pDest += 4;
-  }
-  *pDest = '\0';
-  return output;
-}
 
 #define XX 127
 /*
@@ -405,10 +93,95 @@ static char index_64[256] = {
 };
 #define CHAR64(c)  (index_64[(unsigned char)(c)])
 
+#define NO_Q_ENCODING_NEEDED(ch)  \
+  (((ch) >= 'a' && (ch) <= 'z') || ((ch) >= 'A' && (ch) <= 'Z') || \
+   ((ch) >= '0' && (ch) <= '9') ||  (ch) == '!' || (ch) == '*' ||  \
+    (ch) == '+' || (ch) == '-' || (ch) == '/')
+
+static const char hexdigits[] = "0123456789ABCDEF";
+
+static PRInt32
+intlmime_encode_q(const unsigned char *src, PRInt32 srcsize, char *out)
+{
+  const unsigned char *in = (unsigned char *) src;
+  const unsigned char *end = in + srcsize;
+  char *head = out;
+
+  for (; in < end; in++) {
+    if (NO_Q_ENCODING_NEEDED(*in)) {
+      *out++ = *in;
+    }
+    else if (*in == ' ') {
+      *out++ = '_';
+    }
+    else {
+      *out++ = '=';
+      *out++ = hexdigits[*in >> 4];
+      *out++ = hexdigits[*in & 0xF];
+    }
+  }
+  *out = '\0';
+  return (out - head);
+}
+
+static void
+encodeChunk(const unsigned char* chunk, char* output)
+{
+  register PRInt32 offset;
+
+  offset = *chunk >> 2;
+  *output++ = basis_64[offset];
+
+  offset = ((*chunk << 4) & 0x30) + (*(chunk+1) >> 4);
+  *output++ = basis_64[offset];
+
+  if (*(chunk+1)) {
+    offset = ((*(chunk+1) & 0x0f) << 2) + ((*(chunk+2) & 0xc0) >> 6);
+    *output++ = basis_64[offset];
+  }
+  else
+    *output++ = '=';
+
+  if (*(chunk+2)) {
+    offset = *(chunk+2) & 0x3f;
+    *output++ = basis_64[offset];
+  }
+  else
+    *output++ = '=';
+}
+
+static PRInt32
+intlmime_encode_b(const unsigned char* input, PRInt32 inlen, char* output)
+{
+  unsigned char  chunk[3];
+  PRInt32   i, len;
+  char *head = output;
+
+  for (len = 0; inlen >=3 ; inlen -= 3) {
+    for (i = 0; i < 3; i++)
+      chunk[i] = *input++;
+    encodeChunk(chunk, output);
+    output += 4;
+    len += 4;
+  }
+
+  if (inlen > 0) {
+    for (i = 0; i < inlen; i++)
+      chunk[i] = *input++;
+    for (; i < 3; i++)
+      chunk[i] = 0;
+    encodeChunk(chunk, output);
+    output += 4;
+  }
+
+  *output = 0;
+  return (output - head);
+}
+
 static char *intlmime_decode_b (const char *in, unsigned length)
 {
   char *out, *dest = 0;
-  int c1, c2, c3, c4;
+  PRInt32 c1, c2, c3, c4;
 
   out = dest = (char *)PR_Malloc(length+1);
   if (dest == NULL)
@@ -451,7 +224,7 @@ static char *intlmime_decode_b (const char *in, unsigned length)
 
     c1 = CHAR64(c1);
     c2 = CHAR64(c2);
-	*out++ = ((c1<<2) | ((c2&0x30)>>4));
+    *out++ = ((c1<<2) | ((c2&0x30)>>4));
     if (c3 == '=') {
       if (c4 != '=') goto badsyntax;
       break; /* End of data */
@@ -467,85 +240,9 @@ static char *intlmime_decode_b (const char *in, unsigned length)
   *out++ = '\0';
   return dest;
 
- badsyntax:
+badsyntax:
   PR_Free(dest);
   return NULL;
-}
-
-static char *intlmime_encode_qp_buf(char *subject)
-{
-  char *output = 0;
-  unsigned char *p, *pDest ;
-  int i, n, len ;
-
-  if (subject == NULL || *subject == '\0')
-    return NULL;
-  len = strlen(subject);
-  output = (char *) PR_Malloc(len * 3 + 1);
-  if (output == NULL)
-    return NULL;
-
-  p = (unsigned char*)subject;
-  pDest = (unsigned char*)output ;
-
-  for (i = 0; i < len; i++)
-  {
-    /* XP_IS_ALPHA(*p) || XP_IS_DIGIT(*p)) */
-    if ((*p < 0x80) &&
-        (((*p >= 'a') && (*p <= 'z')) ||
-         ((*p >= 'A') && (*p <= 'Z')) ||
-         ((*p >= '0') && (*p <= '9')))
-       )
-      *pDest = *p;
-    else
-    {
-      *pDest++ = '=';
-      n = (*p & 0xF0) >> 4; /* high byte */
-      if (n < 10)
-        *pDest = '0' + n;
-      else
-        *pDest = 'A' + n - 10;
-      pDest ++ ;
-
-      n = *p & 0x0F;                  /* low byte */
-      if (n < 10)
-        *pDest = '0' + n;
-      else
-        *pDest = 'A' + n - 10;
-    }
-
-    p ++;
-    pDest ++;
-  }
-
-  *pDest = '\0';
-  return output;
-}
-
-static char *intlmime_encode_next8bitword(char *src)
-{
-  char *p;
-  PRBool non_ascii = PR_FALSE;
-  if (src == NULL)
-    return NULL;
-  p = src;
-  while (*p == ' ')
-    p ++ ;
-  while ( *p )
-  {
-    if ((unsigned char) *p > 0x7F)
-      non_ascii = PR_TRUE;
-    if ( IS_MAIL_SEPARATOR(p) )
-    {
-      break;
-    }
-    p++; // the string is UTF-8 thus no conflict with scanning chars (which is all us-ascii).
-  }
-
-  if (non_ascii)
-    return p;
-  else
-    return NULL;
 }
 
 /*      some utility function used by this file */
@@ -562,7 +259,7 @@ static unsigned char * utf8_nextchar(unsigned char *str)
   if (*str < 128) {
     return (str+1);
   }
-  int len = strlen((char *) str);
+  int len = nsCRT::strlen((char *) str);
   // RFC 2279 defines more than 3 bytes sequences (0xF0, 0xF8, 0xFC),
   // but I think we won't encounter those cases as long as we're supporting UCS-2 and no surrogate.
   if ((len >= 3) && (*str >= 0xE0)) {
@@ -575,423 +272,516 @@ static unsigned char * utf8_nextchar(unsigned char *str)
   return (str+1); // error, return +1 to avoid infinite loop
 }
 
-/*
-lock then length of input buffer, so the return value is less than
-iThreshold bytes
-*/
-static int ResetLen(int iThreshold, const char* buffer)
-{
-  unsigned char *begin, *end, *tmp;
+/* -------------- */
 
-  tmp = begin = end = (unsigned char *) buffer;
-  PR_ASSERT( iThreshold > 1 );
-  PR_ASSERT( buffer != NULL );
-  while( (int) ( end - begin ) <= iThreshold ){
-    tmp = end;
-    if (!(*end))
-      break;
-    end = utf8_nextchar(end);
+static
+PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, char *output, PRInt32 outlen, PRInt32 output_carryoverlen, PRInt32 foldlen, PRBool foldingonly)
+{
+  nsCOMPtr <nsISaveAsCharset> conv;
+  PRUnichar *_pUCS2 = nsnull, *pUCS2 = nsnull, *pUCS2Head = nsnull, cUCS2Tmp = 0;
+  char  *ibuf, *o = output, encodedword_head[kMAX_CSNAME+4+1], _charset[kMAX_CSNAME];
+  char  *pUTF8Head = nsnull, cUTF8Tmp = 0;
+  PRInt32   olen = 0, offset, linelen = output_carryoverlen, convlen = 0;
+  PRInt32   encodedword_headlen = 0, encodedword_taillen = foldingonly ? 0 : 2; // "?="
+  nsresult rv;
+
+  encodedword_head[0] = 0;
+
+  if (!foldingonly) {
+
+    // Deal with UCS2 pointer
+    pUCS2 = _pUCS2 = ToNewUnicode(NS_ConvertUTF8toUCS2(pUTF8));
+    if (!pUCS2)
+      return -1;
+
+    // Resolve charset alias
+    {
+      nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+      nsCOMPtr <nsIAtom> charsetAtom;
+      charset = !nsCRT::strcasecmp(charset, "us-ascii") ? "ISO-8859-1" : charset;
+      rv = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(charset).get(), getter_AddRefs(charsetAtom));
+      if (NS_FAILED(rv)) {
+        if (_pUCS2)
+          nsMemory::Free(_pUCS2);
+        return -1;
+      }
+      const PRUnichar *charsetName;
+      charsetAtom->GetUnicode(&charsetName);
+      strcpy(_charset, NS_ConvertUCS2toUTF8(charsetName).get());
+      if (_charset[0])
+        charset = _charset;
+    }
+
+    // Prepare MIME encoded-word head with official charset name
+    if (PR_snprintf(encodedword_head, sizeof(encodedword_head)-1, "=?%s?%c?", charset, method) < 0) {
+      if (_pUCS2)
+        nsMemory::Free(_pUCS2);
+      return -1;
+    }
+    encodedword_headlen = nsCRT::strlen(encodedword_head);
+
+    // Load HANKAKU-KANA prefrence and cache it.
+    if (!nsCRT::strcasecmp("ISO-2022-JP", charset)) {
+      static PRInt32  conv_kana = -1;
+      if (conv_kana < 0) {
+        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+        if (nsnull != prefs && NS_SUCCEEDED(rv)) {
+          PRBool val;
+          if (NS_FAILED(prefs->GetBoolPref("mailnews.send_hankaku_kana", &val)))
+            val = PR_FALSE;  // no pref means need the mapping
+          conv_kana = val ? 0 : 1;
+        }
+      }
+      // Do nsITextTransform if needed
+      if (conv_kana > 0) {
+        nsCOMPtr <nsITextTransform> textTransform;
+        rv = nsComponentManager::CreateInstance(NS_HANKAKUTOZENKAKU_CONTRACTID, nsnull, 
+                                                NS_GET_IID(nsITextTransform), getter_AddRefs(textTransform));
+        if (NS_SUCCEEDED(rv)) {
+          nsString text(pUCS2), result;
+          rv = textTransform->Change(pUCS2, nsCRT::strlen(pUCS2), result);
+          if (NS_SUCCEEDED(rv)) {
+            if (_pUCS2)
+              nsMemory::Free(_pUCS2);
+            pUCS2 = _pUCS2 = ToNewUnicode(result);
+            if (!pUCS2)
+              return -1;
+          }
+        }
+      }
+    }
+
+    // Create an instance of charset converter and initialize it
+    conv = do_CreateInstance(NS_SAVEASCHARSET_CONTRACTID, &rv);
+    if(NS_SUCCEEDED(rv)) {
+      rv = conv->Init(charset, 
+                       nsISaveAsCharset::attr_FallbackQuestionMark + nsISaveAsCharset::attr_EntityNone, 
+                       nsIEntityConverter::transliterate);
+    }
+    if (NS_FAILED(rv)) {
+      if (_pUCS2)
+        nsMemory::Free(_pUCS2);
+      return -1;
+    }
+  } // if (!foldingonly)
+
+  /*
+     See if folding needs to happen.
+     If carried over length is already too long to hold
+     encoded-word header and trailer length, it's too obvious
+     that we need to fold.  So, don't waste time for calculation.
+  */
+  if (linelen + encodedword_headlen + encodedword_taillen < foldlen) {
+    if (foldingonly) {
+      offset = nsCRT::strlen(pUTF8Head = pUTF8);
+      pUTF8 += offset;
+    }
+    else {
+      rv = conv->Convert(pUCS2, &ibuf);
+      if (NS_FAILED(rv) || ibuf == nsnull) {
+        if (_pUCS2)
+          nsMemory::Free(_pUCS2);
+        return -1; //error
+      }
+      if (method == 'B') {
+        /* 4 / 3 = B encoding multiplier */
+        offset = nsCRT::strlen(ibuf) * 4 / 3;
+      }
+      else {
+        /* 3 = Q encoding multiplier */
+        offset = 0;
+        for (PRInt32 i = 0; *(ibuf+i); i++)
+          offset += NO_Q_ENCODING_NEEDED(*(ibuf+i)) ? 1 : 3;
+      }
+    }
+    if (linelen + encodedword_headlen + offset + encodedword_taillen > foldlen) {
+      /* folding has to happen */
+      if (foldingonly) {
+        pUTF8 = pUTF8Head;
+        pUTF8Head = nsnull;
+      }
+      else
+        PR_Free(ibuf);
+    }
+    else {
+      /* no folding needed, let's fall thru */
+      strcpy(o, encodedword_head);
+      olen += encodedword_headlen;
+      linelen += encodedword_headlen;
+      o += encodedword_headlen;
+      if (!foldingonly)
+        *pUCS2 = 0;
+    }
+  }
+  else {
+    strcpy(o, "\r\n ");
+    olen += 3;
+    o += 3;
+    linelen = 1;
   }
 
-  PR_ASSERT( tmp > begin );
-  return tmp - begin;
+  /*
+    Let's do the nasty RFC-2047 & folding stuff
+  */
+
+  while ((foldingonly ? *pUTF8 : *pUCS2) && (olen < outlen)) {
+    strcpy(o, encodedword_head);
+    olen += encodedword_headlen;
+    linelen += encodedword_headlen;
+    o += encodedword_headlen;
+    olen += encodedword_taillen;
+    if (foldingonly)
+      pUTF8Head = pUTF8;
+    else
+      pUCS2Head = pUCS2;
+
+    while ((foldingonly ? *pUTF8 : *pUCS2) && (olen < outlen)) {
+      if (foldingonly) {
+        ++pUTF8;
+        for (;;) {
+          if (*pUTF8 == ' ' || *pUTF8 == TAB || !*pUTF8) {
+            offset = pUTF8 - pUTF8Head;
+            cUTF8Tmp = *pUTF8;
+            *pUTF8 = 0;
+            break;
+          }
+          ++pUTF8;
+        }
+      }
+      else {
+        convlen = ++pUCS2 - pUCS2Head;
+        cUCS2Tmp = *(pUCS2Head + convlen);
+        *(pUCS2Head + convlen) = 0;
+        rv = conv->Convert(pUCS2Head, &ibuf);
+        *(pUCS2Head + convlen) = cUCS2Tmp;
+        if (NS_FAILED(rv) || ibuf == nsnull) {
+          if (_pUCS2)
+            nsMemory::Free(_pUCS2);
+          return -1; //error
+        }
+        if (method == 'B') {
+          /* 4 / 3 = B encoding multiplier */
+          offset = nsCRT::strlen(ibuf) * 4 / 3;
+        }
+        else {
+          /* 3 = Q encoding multiplier */
+          offset = 0;
+          for (PRInt32 i = 0; *(ibuf+i); i++)
+            offset += NO_Q_ENCODING_NEEDED(*(ibuf+i)) ? 1 : 3;
+        }
+      }
+      if (linelen + offset > foldlen) {
+process_lastline:
+        PRInt32 enclen;
+        if (foldingonly) {
+          strcpy(o, pUTF8Head);
+          enclen = nsCRT::strlen(o);
+          o += enclen;
+          *pUTF8 = cUTF8Tmp;
+        }
+        else {
+          if (method == 'B')
+            enclen = intlmime_encode_b((const unsigned char *)ibuf, nsCRT::strlen(ibuf), o);
+          else
+            enclen = intlmime_encode_q((const unsigned char *)ibuf, nsCRT::strlen(ibuf), o);
+          PR_Free(ibuf);
+          o += enclen;
+          strcpy(o, "?=");
+        }
+        o += encodedword_taillen;
+        olen += enclen;
+        if (foldingonly ? *pUTF8 : *pUCS2) { /* not last line */
+          strcpy(o, "\r\n ");
+          o += 3;
+          olen += 3;
+          linelen = 1;
+          if (foldingonly) {
+            pUTF8Head = nsnull;
+            if (*pUTF8 == ' ' || *pUTF8 == TAB)
+              ++pUTF8;
+          }
+        }
+        else {
+          if (_pUCS2)
+            nsMemory::Free(_pUCS2);
+          return linelen + enclen + encodedword_taillen;
+        }
+        break;
+      }
+      else {
+        if (foldingonly)
+          *pUTF8 = cUTF8Tmp;
+        else {
+          if (*pUCS2)
+            PR_Free(ibuf);
+        }
+      }
+    }
+  }
+  if (linelen)
+    goto process_lastline;
+  if (_pUCS2)
+    nsMemory::Free(_pUCS2);
+
+  return linelen;
 }
 
+typedef struct _RFC822AddressList {
+  char        *displayname;
+  PRBool      asciionly;
+  char        *addrspec;
+  struct _RFC822AddressList *next;
+} RFC822AddressList;
+
+static
+void destroy_addresslist(RFC822AddressList *p)
+{
+  if (p->next)
+    destroy_addresslist(p->next);
+  PR_FREEIF(p->displayname);
+  PR_FREEIF(p->addrspec);
+  PR_Free(p);
+  return;
+}
+
+static
+RFC822AddressList * construct_addresslist(char *s)
+{
+  PRBool  quoted = PR_FALSE, angle_addr = PR_FALSE;
+  PRInt32  comment = 0;
+  char *displayname = nsnull, *addrspec = nsnull;
+  static RFC822AddressList  listinit;
+  RFC822AddressList  *listhead = (RFC822AddressList *)PR_Malloc(sizeof(RFC822AddressList));
+  RFC822AddressList  *list = listhead;
+
+  if (!list)
+    return nsnull;
+
+  while (*s == ' ' || *s == TAB)
+    ++s;
+
+  for (*list = listinit; *s; ++s) {
+    if (*s == '\\') {
+      if (quoted || comment) {
+        ++s;
+        continue;
+      }
+    }
+    else if (*s == '(' || *s == ')') {
+      if (!quoted) {
+        if (*s == '(') {
+          if (comment++ == 0)
+            displayname = s + 1;
+        }
+        else {
+          if (--comment == 0) {
+            *s = '\0';
+            PR_FREEIF(list->displayname);
+            list->displayname = nsCRT::strdup(displayname);
+            list->asciionly = intlmime_only_ascii_str(displayname);
+            *s = ')';
+          }
+        }
+        continue;
+      }
+    }
+    else if (*s == '"') {
+      if (!comment) {
+        quoted = !quoted;
+        if (quoted)
+          displayname = s;
+        else {
+          char tmp = *(s+1);
+          *(s+1) = '\0';
+          PR_FREEIF(list->displayname);
+          list->displayname = nsCRT::strdup(displayname);
+          list->asciionly = intlmime_only_ascii_str(displayname);
+          *(s+1) = tmp;
+        }
+        continue;
+      }
+    }
+    else if (*s == '<' || *s == '>') {
+      if (!quoted && !comment) {
+        if (*s == '<') {
+          angle_addr = PR_TRUE;
+          addrspec = s;
+          if (displayname) {
+            char *e = s - 1, tmp;
+            while (*e == TAB || *e == ' ')
+              --e;
+            tmp = *++e;
+            *e = '\0';
+            PR_FREEIF(list->displayname);
+            list->displayname = nsCRT::strdup(displayname);
+            list->asciionly = intlmime_only_ascii_str(displayname);
+            *e = tmp;
+          }
+        }
+        else {
+          char tmp;
+          angle_addr = PR_FALSE;
+          tmp = *(s+1);
+          *(s+1) = '\0';
+          PR_FREEIF(list->addrspec);
+          list->addrspec = nsCRT::strdup(addrspec);
+          *(s+1) = tmp;
+        }
+        continue;
+      }
+    }
+    if (!quoted && !comment && !angle_addr) {
+      /* address-list separator. end of this address */
+      if (*s == ',') {
+        /* deal with addr-spec only address */
+        if (!addrspec && displayname) {
+          *s = '\0';
+          list->addrspec = nsCRT::strdup(displayname);
+        }
+        /* prepare for next address */
+        addrspec = displayname = nsnull;
+        list->next = (RFC822AddressList *)PR_Malloc(sizeof(RFC822AddressList));
+        list = list->next;
+        *list = listinit;
+        /* eat spaces */
+        ++s;
+        while (*s == ' ' || *s == TAB)
+          ++s;
+        if (*s == '\r' && *(s+1) == '\n' && (*(s+2) == ' ' || *(s+2) == TAB))
+          s += 2;
+        else
+          --s;
+      }
+      else if (!displayname && *s != ' ' && *s != TAB)
+        displayname = s;
+    }
+  }
+
+  /* deal with addr-spec only address comes at last */
+  if (!addrspec && displayname)
+    list->addrspec = nsCRT::strdup(displayname);
+
+  return listhead;
+}
 
 static 
-char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLineLen)
+char * apply_rfc2047_encoding(const char *_src, PRBool structured, const char *charset, PRInt32 cursor, PRInt32 foldlen)
 {
-  char *begin, *end;
-  char *retbuf = nsnull, *srcbuf = nsnull;
-  char sep = '\0';
-  char *sep_p = nsnull;
-  PRInt32  retbufsize;
-  PRInt32 line_len = 0;
-  PRInt32 srclen;
-  PRInt32 default_iThreshold;
-  PRInt32 iThreshold;         /* how many bytes we can convert from the src */
-  PRInt32 iEffectLen;         /* the maximum length we can convert from the src */
-  PRInt32 mime2CharsLen;      /* length of charset name plus =? ?B? ?= chars  */
-  PRBool bChop = PR_FALSE;
-  PRBool bBase64Encode = PR_FALSE;
+  RFC822AddressList  *listhead, *list;
+  PRInt32   outputlen, usedlen;
+  char  *src, *src_head, *output, *outputtail;
+  char  method = nsMsgI18Nmultibyte_charset(charset) ? 'B' : 'Q';
 
-  if (!src)
+  if (!_src)
     return nsnull;
-
-  /* make a copy, so don't need touch original buffer */
-  srcbuf = nsCRT::strdup(src);
-  if (!srcbuf)
+  if ((src = src_head = nsCRT::strdup(_src)) == nsnull)
     return nsnull;
-  begin = srcbuf;
-
-  mime2CharsLen = strlen(charset) + 7;
-
-  default_iThreshold = iEffectLen = ( maxLineLen - mime2CharsLen ) * 3 / 4;
-  iThreshold = default_iThreshold;
-
-  bBase64Encode = !nsCRT::strcasecmp(intl_message_header_encoding((const char *) charset), kMsgHeaderBEncoding);
 
   /* allocate enough buffer for conversion, this way it can avoid
      do another memory allocation which is expensive
    */
-  retbufsize = strlen(srcbuf) * 3 + kMAX_CSNAME + 8;
-  retbuf =  (char *) PR_Malloc(retbufsize);
-  if (!retbuf) {  /* Give up if not enough memory */
-    PR_Free(srcbuf);
+  outputlen = nsCRT::strlen(src) * 4 + kMAX_CSNAME + 8;
+  if ((outputtail = output = (char *)PR_Malloc(outputlen)) == nsnull) {
+    PR_Free(src_head);
     return nsnull;
   }
 
-  *retbuf = '\0';
-
-  // loop for separating encoded words by the separators
-  // the input string is UTF-8 at this point
-  srclen = strlen(srcbuf);
-
-convert_and_encode:
-
-  while (begin < (srcbuf + srclen))
-  { /* get block of data between commas (and other separators) */
-    char *p, *q;
-    char *buf1, *buf2;
-    PRInt32 len, newsize, convlen, retbuflen;
-    PRBool non_ascii;
-
-    retbuflen = strlen(retbuf);
-    end = nsnull;
-
-    /* scan for separator, conversion (and encode) happens on 8bit word between separators
-       we need to exclude RFC822 special characters from encoded word 
-       regardless of the encoding method ('B' or 'Q').
-     */
-    if (IS_MAIL_SEPARATOR(begin))
-    {   /*  skip white spaces and separator */
-        q = begin;
-        while ( IS_MAIL_SEPARATOR(q) )
-          q ++ ;
-        sep = *(q - 1);
-        sep_p = (q - 1);
-        *(q - 1) = '\0';
-        end = q - 1;
+  if (structured) {
+    listhead = list = construct_addresslist(src);
+    if (!list) {
+      PR_Free(output);
+      output = nsnull;
     }
-    else
-    {
-      sep = '\0';
-      /* scan for next separator */
-      non_ascii = PR_FALSE;
-      for (q = begin; *q;)
-      {
-        if ((unsigned char) *q > 0x7F)
-          non_ascii = PR_TRUE;
-        if ( IS_MAIL_SEPARATOR(q) )
-        {
-          if ((*q == ' ') && (non_ascii == PR_TRUE))
-          {
-            while ((p = intlmime_encode_next8bitword(q)) != NULL)
-            {
-              q = p;
-              if (*p != ' ')
-                 break;
+    else {
+      for (; list && (outputlen > 0); list = list->next) {
+        if (list->displayname) {
+          cursor = generate_encodedwords(list->displayname, charset, method, outputtail, outputlen, cursor, foldlen, list->asciionly);
+          if (cursor < 0) {
+            PR_Free(output);
+            output = nsnull;
+            break;
+          }
+          usedlen = nsCRT::strlen(outputtail);
+          outputtail += usedlen;
+          outputlen -= usedlen;
+        }
+        if (list->addrspec) {
+          usedlen = nsCRT::strlen(list->addrspec);
+          if (cursor + usedlen > foldlen) {
+            if (PR_snprintf(outputtail, outputlen - 1, "\r\n %s", list->addrspec) < 0) {
+              PR_Free(output);
+              destroy_addresslist(listhead);
+              return nsnull;
             }
+            usedlen += 3;         /* FWS + addr-spec */
+            cursor = usedlen - 2; /* \r\n */
           }
-          sep = *q;
-          sep_p = q;
-          *q = '\0';
-          end = q;
+          else {
+            if (PR_snprintf(outputtail, outputlen - 1, " %s", list->addrspec) < 0) {
+              PR_Free(output);
+              destroy_addresslist(listhead);
+              return nsnull;
+            }
+            usedlen++;
+            cursor += usedlen;
+          }
+          outputtail += usedlen;
+          outputlen -= usedlen;
+        }
+        else {
+          PR_Free(output);
+          output = nsnull;
           break;
         }
-        q++;  // the string is UTF-8 thus no conflict with scanning chars (which is all us-ascii).
+        if (list->next) {
+          strcpy(outputtail, ", ");
+          cursor += 2;
+          outputtail += 2;
+          outputlen -= 2;
+        }
       }
+      destroy_addresslist(listhead);
     }
-
-    // convert UTF-8 to mail charset
-    /* get the to_be_converted_buffer's len */
-//    len = nsCRT::strlen(begin);
-    len = q - begin;
-
-    if ( !intlmime_only_ascii_str(begin) )
-    {
-      // now the input is UTF-8, a character may be more than 2 bytes len
-      // so we may over estimate (i.e. threshold may be smaller) but wrapping early is no problem, I think.
-
-      /*
-        the 30 length is calculated as follows (I think)
-        total:             30 = 7 + 11 + 8 + 4
-        --------------------------------------
-        Mime Part II tags: 7  = "=?...?B?...?="
-        Charset name:      11 = "iso-2022-jp"
-        JIS excape seq.    8  = "<ESC>$B" + "<ESC>(B" * 4/3
-        space for one char 4  = 2 * 4/3 rounded up to nearest 4
-        Brian Stell 10/97
-       */
-      if ( ( maxLineLen - line_len < 30 ) || bChop ) {
-        /* chop first, then continue */
-        buf1 = retbuf + retbuflen;
-        *buf1++ = nsCRT::CR;   *buf1++ = nsCRT::LF; *buf1++ = '\t';
-        line_len = 0;
-        retbuflen += 3;
-        *buf1 = '\0';
-        bChop = PR_FALSE;
-        iThreshold = default_iThreshold;
-      }
-
-      // loop for line wrapping: estimate converted/encoded length 
-      // and apply conversion (UTF-8 to mail charset)
-
-      /* iEffectLen - the max byte-string length of JIS ( converted form S-JIS )
-         name - such as "iso-2022-jp", the encoding name, MUST be shorter than 23 bytes
-         mime2CharsLen - is the "=?:?:?=" 
-       */
-      iEffectLen = ( maxLineLen - line_len - mime2CharsLen ) * 3 / 4;
-      while ( PR_TRUE ) {
-        PRInt32 iBufLen;    /* converted buffer's length, not BASE64 */
-        if ( len > iThreshold )
-        {
-          len = ResetLen(iThreshold, begin);
-          if (sep_p) {
-              *sep_p = sep; /*restore the original character */
-              sep = '\0';   /*to be processed with the rest  */
-              sep_p = nsnull; /*of this chunk in next iteration*/
-          }
-        }
-
-        if ( iThreshold <= 1 )
-        {
-          /* Certain trashed mailboxes were causing an
-          ** infinite loop at this point, so we need a way of
-          ** getting out of trouble.
-          **
-          ** BEFORE:    iThreshold was becoming 1, then 0, and
-          **            we were looping indefinitely.
-          ** AFTER:     Now, first there will be
-          **            an assert in the previous call to ResetLen,
-          **            then we'll do that again on the repeat pass,
-          **            then we'll exit more or less gracefully.
-          **    - bug #83204, an oldie but goodie.
-          **    - jrm 98/03/25
-          */
-          return nsnull;
-        }
-        // UTF-8 to mail charset conversion (or iso-8859-1 in case of us-ascii).
-        nsresult rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, 
-                                             !nsCRT::strcasecmp(charset, "us-ascii") ? "ISO-8859-1" : charset, 
-                                             NS_ConvertUTF8toUCS2(begin, len).get(), &buf1);
-        if (NS_FAILED(rv) || !buf1) {
-          PR_FREEIF(srcbuf);
-          PR_FREEIF(retbuf);
-          return nsnull; //error
-        }
-        iBufLen = strlen(buf1);
-//        buf1 = (char *) cvtfunc(obj, (unsigned char *)begin, len);
-//        iBufLen = nsCRT::strlen( buf1 );
-        if (iBufLen <= 0) {
-          if (!end) {
-            PR_FREEIF(srcbuf);
-            PR_FREEIF(retbuf);
-            return nsnull; //error
-          }
-          begin = end + 1;
-          goto convert_and_encode;  // nothing was converted, skip this part
-        }
-
-        /* recal iThreshold each time based on last experience */
-        iThreshold = len * iEffectLen / iBufLen;
-        if ( iBufLen > iEffectLen ){
-          /* the converted buffer is too large, we have to
-                  1. free the buffer;
-                  2. redo again based on the new iThreshold
-          */
-          bChop = PR_TRUE;           /* append CRLFTAB */
-          if (buf1 && (buf1 != begin)){
-            PR_Free(buf1);
-            buf1 = nsnull;
-          }
-        } else {
-          end = begin + len - 1;
-          break;
-        }
-      }
-      if (bChop && sep_p) {
-        *sep_p = sep;   /* we are length limited so we do not need this */
-        sep = '\0';     /* artifical terminator. So, restore the original character */
-        sep_p = nsnull;
-      }
-
-      if (!buf1)
-      {
-        PR_Free(srcbuf);
-        PR_Free(retbuf);
+  }
+  else {
+    char *spacepos = nsnull, *org_output = output;
+    /* show some mercy to stupid ML systems which don't know 
+       how to respect MIME encoded subject */
+    for (char *p = src; *p && !(*p & 0x80); p++) {
+      if (*p == 0x20 || *p == TAB)
+        spacepos = p;
+    }
+    if (spacepos) {
+      char head[kMAX_CSNAME+4+1];
+      PRInt32  overhead, skiplen;
+      if (PR_snprintf(head, sizeof(head) - 1, "=?%s?%c?", charset, method) < 0) {
+        PR_Free(output);
         return nsnull;
       }
-
-      // converted to mail charset, now apply MIME encode
-      if (bBase64Encode)
-      {
-        /* converts to Base64 Encoding */
-        buf2 = (char *)intlmime_encode_base64_buf(buf1, strlen(buf1));
+      overhead = nsCRT::strlen(head) + 2 + 4; // 2 : "?=", 4 : a B-encoded chunk
+      skiplen = spacepos + 1 - src;
+      if (cursor + skiplen + overhead < foldlen) {
+        char tmp = *(spacepos + 1);
+        *(spacepos + 1) = '\0';
+        strcpy(output, src);
+        output += skiplen;
+        outputlen -= skiplen;
+        cursor += skiplen;
+        src += skiplen;
+        *src = tmp;
       }
-      else
-      {
-        /* Converts to Quote Printable Encoding */
-        buf2 = (char *)intlmime_encode_qp_buf(buf1);
-      }
-
-
-      if (buf1 && (buf1 != begin))
-        PR_Free(buf1);
-
-      if (!buf2) /* QUIT if memory allocation failed */
-      {
-        PR_Free(srcbuf);
-        PR_Free(retbuf);
-        return nsnull;
-      }
-
-      /* realloc memory for retbuff if necessary,
-         mime2CharsLen: =?<charset>?B?..?=, 3: CR LF TAB */
-      convlen = strlen(buf2) + mime2CharsLen;
-      newsize = convlen + retbuflen + 3 + 2;  /* 2:SEP '\0', 3:CRLFTAB */
-
-      if (newsize > retbufsize)
-      {
-        char *tempbuf;
-        tempbuf = (char *) PR_Realloc(retbuf, newsize);
-        if (!tempbuf)  /* QUIT, if not enough memory left */
-        {
-          PR_Free(buf2);
-          PR_Free(srcbuf);
-          PR_Free(retbuf);
-          return nsnull;
-        }
-        retbuf = tempbuf;
-        retbufsize = newsize;
-      }
-      /* buf1 points to end of current retbuf */
-      buf1 = retbuf + retbuflen;
-
-      if ((line_len > 10) &&
-          ((line_len + convlen) > maxLineLen))
-      {
-        *buf1++ = nsCRT::CR;
-        *buf1++ = nsCRT::LF;
-        *buf1++ = '\t';
-        line_len = 0;
-        iThreshold = default_iThreshold;
-      }
-      *buf1 = '\0';
-
-      /* Add encoding tag for base64 and QP */
-      PL_strcat(buf1, "=?");
-      PL_strcat(buf1, charset );
-      if (bBase64Encode)
-        PL_strcat(buf1, "?B?");
-      else
-        PL_strcat(buf1, "?Q?");
-      PL_strcat(buf1, buf2);
-      PL_strcat(buf1, "?=");
-
-      line_len += convlen + 1;  /* 1: SEP */
-
-      PR_Free(buf2);  /* free base64 buffer */
     }
-    else  /* if no 8bit data in the block */  // so no conversion/encode needed
-    {
-      newsize = retbuflen + len + 2 + 3; /* 2: ',''\0', 3: CRLFTAB */
-      if (newsize > retbufsize)
-      {
-        char *tempbuf;
-        tempbuf = (char *) PR_Realloc(retbuf, newsize);
-        if (!tempbuf)
-        {
-          PR_Free(srcbuf);
-          PR_Free(retbuf);
-          return nsnull;
-        }
-        retbuf = tempbuf;
-        retbufsize = newsize;
-      }
-      buf1 = retbuf + retbuflen;
-
-      if ((line_len > 10) &&
-          ((line_len + len) > maxLineLen))
-      {
-        *buf1++ = nsCRT::CR;
-        *buf1++ = nsCRT::LF;
-        *buf1++ = '\t';
-        line_len = 0;
-        iThreshold = default_iThreshold;
-      }
-      /* copy buffer from begin to buf1 stripping CRLFTAB */
-      for (p = begin; *p; p++)
-      {
-        if (*p == nsCRT::CR || *p == nsCRT::LF || *p == TAB)
-          len --;
-        else
-          *buf1++ = *p;
-      }
-      *buf1 = '\0';
-      line_len += len + 1;  /* 1: SEP */
+    PRBool asciionly = intlmime_only_ascii_str(src);
+    if (generate_encodedwords(src, charset, method, output, outputlen, cursor, foldlen, asciionly) < 0) {
+      PR_Free(org_output);
+      org_output = nsnull;
     }
-
-    buf1 = buf1 + strlen(buf1);
-    if (sep == nsCRT::CR || sep == nsCRT::LF || sep == TAB) /* strip CR,LF,TAB */
-      *buf1 = '\0';
-    else
-    {
-      *buf1 = sep;
-      *(buf1+1) = '\0';
-    }
-
-    if (end == NULL)
-      break;
-    begin = end + 1;
-    if ('\0' == *begin)
-      begin++;
+    output = org_output;
   }
 
-  if (srcbuf)
-    PR_Free(srcbuf);
+  PR_Free(src_head);
 
-  return retbuf;
-}
-
-/*
-  Latin1, latin2:
-    Source --> Quote Printable --> Encoding Info
-  Japanese:
-    EUC,JIS,SJIS --> JIS --> Base64 --> Encoding Info
-  Others:
-    Use MIME flag:  0:  8bit on
-                    1:  mime_use_quoted_printable_p
-  return: NULL  if no conversion occured
-
-*/
-
-// input UTF-8, return NULL in case of error.
-static
-char *utf8_EncodeMimePartIIStr(const char *subject, char *charset, int maxLineLen)
-{
-  char *buf = NULL;
-
-  if (subject == NULL)
-    return NULL;
-
-  /* check to see if subject are all ascii or not */
-  if((*subject == '\0') ||
-     (!intl_is_legal_utf8(subject, strlen(subject))) ||
-    (!stateful_encoding((const char *) charset) && intlmime_only_ascii_str(subject)))
-    return (char *) xp_word_wrap((unsigned char *) subject, maxLineLen, 0, " ", 1);
-
-  /* If we are sending JIS then check the pref setting and
-   * decide if we should convert hankaku (1byte) to zenkaku (2byte) kana.
-   */
-  if (!nsCRT::strcasecmp(charset, "ISO-2022-JP")) {
-    ;
-  }
-
-  /* MIME Part2 encode */
-  buf = utf8_mime_encode_mail_address(charset, subject, maxLineLen);
-
-  return buf;
+  return output;
 }
 
 /*
@@ -1016,6 +806,14 @@ static char index_hex[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
 };
 #define HEXCHAR(c)  (index_hex[(unsigned char)(c)])
+
+static void convert_htab(char *s)
+{
+  for (; *s; ++s) {
+    if (*s == TAB)
+      *s = ' ';
+  }
+}
 
 static char *intlmime_decode_q(const char *in, unsigned length)
 {
@@ -1048,6 +846,7 @@ static char *intlmime_decode_q(const char *in, unsigned length)
     }
   }
   *out++ = '\0';
+  convert_htab(dest);
   return dest;
 
  badsyntax:
@@ -1057,7 +856,7 @@ static char *intlmime_decode_q(const char *in, unsigned length)
 
 static PRBool intl_is_legal_utf8(const char *input, unsigned len)
 {
-  int c;
+  PRInt32 c;
 
   while (len) {
     c = (unsigned char)*input++;
@@ -1095,7 +894,7 @@ static PRBool intl_is_legal_utf8(const char *input, unsigned len)
 static void intl_copy_uncoded_header(char **output, const char *input,
   unsigned len, const char *default_charset)
 {
-  int c;
+  PRInt32 c;
   char *dest = *output;
 
   if (!default_charset) {
@@ -1140,7 +939,7 @@ char *intl_decode_mime_part2_str(const char *header,
   const char *p, *q, *r;
   char *decoded_text;
   const char *begin; /* tracking pointer for where we are in the input buffer */
-  int last_saw_encoded_word = 0;
+  PRInt32 last_saw_encoded_word = 0;
   const char *charset_start, *charset_end;
   char charset[80];
   nsAutoString tempUnicodeString;
@@ -1149,7 +948,7 @@ char *intl_decode_mime_part2_str(const char *header,
   charset[0] = '\0';
 
   /* Assume no more than 3X expansion due to UTF-8 conversion */
-  retbuff = (char *)PR_Malloc(3*strlen(header)+1);
+  retbuff = (char *)PR_Malloc(3*nsCRT::strlen(header)+1);
 
   if (retbuff == NULL)
     return NULL;
@@ -1256,8 +1055,9 @@ char *intl_decode_mime_part2_str(const char *header,
   }
 
   /* put the tail back  */
-  intl_copy_uncoded_header(&output_p, begin, strlen(begin), default_charset);
+  intl_copy_uncoded_header(&output_p, begin, nsCRT::strlen(begin), default_charset);
   *output_p = '\0';
+  convert_htab(retbuff);
 
   return retbuff;
 }
@@ -1281,7 +1081,7 @@ extern "C" char *MIME_DecodeMimeHeader(const char *header,
 
   // If no MIME encoded then do nothing otherwise decode the input.
   if (PL_strstr(header, "=?") ||
-      (default_charset && !intl_is_legal_utf8(header, strlen(header)))) {
+      (default_charset && !intl_is_legal_utf8(header, nsCRT::strlen(header)))) {
 	  result = intl_decode_mime_part2_str(header, default_charset, override_charset);
   } else if (eatContinuations && 
              (PL_strchr(header, '\n') || PL_strchr(header, '\r'))) {
@@ -1295,9 +1095,9 @@ extern "C" char *MIME_DecodeMimeHeader(const char *header,
   return result;
 }  
 
-char *MIME_EncodeMimePartIIStr(const char* header, const char* mailCharset, const PRInt32 encodedWordSize)
+char *MIME_EncodeMimePartIIStr(const char* header, PRBool structured, const char* mailCharset, const PRInt32 fieldNameLen, const PRInt32 encodedWordSize)
 {
-  return utf8_EncodeMimePartIIStr((char *) header, (char *) mailCharset, encodedWordSize);
+  return apply_rfc2047_encoding(header, structured, mailCharset, fieldNameLen, encodedWordSize);
 }
 
 // UTF-8 utility functions.
