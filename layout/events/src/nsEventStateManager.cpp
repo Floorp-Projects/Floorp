@@ -1013,10 +1013,10 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           
           // Get the content's view and scroll it.
           presShell->GetPrimaryFrameFor(focusContent, &focusFrame);
-          if (focusFrame) {
-            focusFrame->GetView(aPresContext, &focusView);
-          }
+          if (!focusFrame)
+              break;
 
+          focusFrame->GetView(aPresContext, &focusView);
           if (!focusView) {
             nsIFrame* frameWithView;
             focusFrame->GetParentWithView(aPresContext, &frameWithView);
