@@ -105,6 +105,7 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *_retval);
   NS_IMETHOD GetAccValue(nsAString& _retval);
   NS_IMETHOD AccTakeFocus();
+  NS_IMETHOD GetAccKeyboardShortcut(nsAString& _retval);
 
 protected:
   PRBool IsALink();
