@@ -117,10 +117,18 @@ interface nsIStreamBufferAccess : nsISupports
 # define NS_SWAP16(x) ((((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
 # define NS_SWAP32(x) ((NS_SWAP16((x) & 0xffff) << 16) | (NS_SWAP16((x) >> 16)))
 
+// We want to avoid casting to 32-bit types if possible, since that violates
+// aliasing rules (a standard compiler may assume that pointers of two types
+// do not address overlapping storage).
+//
+// XXX What if we have a compiler that follows aliasing rules strictly but
+// doesn't have a 64-bit int type?
+//
 // XXXbe shouldn't NSPR's LL_INIT work for non-constant arguments in all cases?
-# if defined(HAVE_LONG_LONG)
-#  define NS_SWAP64(x) (((PRUint64)NS_SWAP32(*(PRUint32*)&(x)) << 32)         \
-                        | NS_SWAP32(*((PRUint32*)&(x)+1)))
+
+# if defined HAVE_LONG_LONG
+#  define NS_SWAP64(x) ((NS_SWAP32((x) & 0xffffffff) << 32) |                 \
+                        (NS_SWAP32((x) >> 32)))
 # else
 #  define NS_SWAP64(x) LL_INIT(NS_SWAP32(*(PRUint32*)&(x)),                   \
                                NS_SWAP32(*((PRUint32*)&(x)+1)))
