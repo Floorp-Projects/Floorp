@@ -1867,8 +1867,9 @@ void nsWebShellWindow::ExecuteStartupCode()
 
   // Execute the string in the onLoad attribute of the webshellElement.
   nsString startupCode;
-  if (webshellElement && NS_SUCCEEDED(webshellElement->GetAttribute("onload", startupCode)))
-    ExecuteJavaScriptString(startupCode);
+  // This is now triggered from elsewhere.
+  //if (webshellElement && NS_SUCCEEDED(webshellElement->GetAttribute("onload", startupCode)))
+  //  ExecuteJavaScriptString(startupCode);
 
   if (mCallbacks)
     mCallbacks->ConstructAfterJavaScript(mWebShell);
