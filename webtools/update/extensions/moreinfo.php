@@ -184,12 +184,12 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             $maxappver = $row["MaxAppVer"];
         }
 
-        if ($VerDateAdded > $dateadded) {
-            $dateadded = $VerDateAdded;
+        if ($verdateadded > $dateadded) {
+            $dateadded = $verdateadded;
         }
 
-        if ($VerDateUpdated > $dateupdated) {
-            $dateupdated = $VerDateUpdated;
+        if ($verdateupdated > $dateupdated) {
+            $dateupdated = $verdateupdated;
         }
 
     //Turn Authors Array into readable string...
@@ -462,7 +462,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 
     echo"<h3>All Releases</h3>";
 
-    $sql = "SELECT TV.vID, TV.Version, TV.MinAppVer, TV.MaxAppVer, TV.Size, TV.URI, TV.Notes, TA.AppName, TOS.OSName
+    $sql = "SELECT TV.vID, TV.Version, TV.MinAppVer, TV.MaxAppVer, TV.Size, TV.URI, TV.Notes, TV.DateAdded AS VerDateAdded, TA.AppName, TOS.OSName
             FROM  `version` TV
             INNER  JOIN applications TA ON TV.AppID = TA.AppID
             INNER  JOIN os TOS ON TV.OSID = TOS.OSID
@@ -488,11 +488,14 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             $osname = $row["OSName"];
             $appname = $row["AppName"];
             $filename = basename($uri);
+            $dateadded = $row["VerDateAdded"];
+            $releasedate = date("F d, Y",  strtotime("$dateadded"));
 
             echo"<DIV>"; //Open Version DIV
 
             //Description & Version Notes
             echo"<h3><A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id&amp;vid=$vid\">$name $version</A></h3>\n";
+            echo"Released on $releasedate<br>\n";
             if ($notes) {
                 echo"$notes<br><br>\n";
             }
