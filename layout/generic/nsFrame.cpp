@@ -1130,7 +1130,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   // Let Ctrl/Cmd+mouse down do table selection instead of drag initiation
   nsCOMPtr<nsIContent>parentContent;
   PRInt32  contentOffset;
-  PRInt16 target;
+  PRInt32 target;
   rv = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
   if (NS_SUCCEEDED(rv) && parentContent)
   {
@@ -1382,7 +1382,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
     // Check if we are dragging in a table cell
     nsCOMPtr<nsIContent> parentContent;
     PRInt32 contentOffset;
-    PRInt16 target;
+    PRInt32 target;
     nsMouseEvent *me = (nsMouseEvent *)aEvent;
     result = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
     if (NS_SUCCEEDED(result) && parentContent)
@@ -1491,7 +1491,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
         me = (nsMouseEvent *)aEvent;
         nsCOMPtr<nsIContent>parentContent;
         PRInt32  contentOffset;
-        PRInt16 target;
+        PRInt32 target;
         result = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
 
         if (NS_SUCCEEDED(result) && parentContent)
