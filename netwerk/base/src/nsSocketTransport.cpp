@@ -2270,6 +2270,21 @@ nsSocketTransport::SetIdleTimeout (PRUint32  seconds)
 }
 
 NS_IMETHODIMP
+nsSocketTransport::GetIPStr(PRUint32 aLen, char **_retval) {
+    NS_ASSERTION(aLen > 0, "caller must pass in str len");
+    *_retval = (char*)nsAllocator::Alloc(aLen);
+    if (!*_retval) return NS_ERROR_FAILURE;
+
+    PRStatus status = PR_NetAddrToString(&mNetAddress, *_retval, aLen);
+
+    if (PR_FAILURE == status) {
+        nsAllocator::Free(*_retval);
+        return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSocketTransport::GetSocketTimeout (PRUint32 * o_Seconds)
 {
     if (o_Seconds == NULL)
