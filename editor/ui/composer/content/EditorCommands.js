@@ -865,7 +865,8 @@ function EditorImageMap()
 
 function EditorInsertHTML()
 {
-  window.openDialog("chrome://editor/content/EdInsSrc.xul","_blank", "chrome,close,titlebar,modal", "");
+  // Resizing doesn't work!
+  window.openDialog("chrome://editor/content/EdInsSrc.xul","_blank", "chrome,close,titlebar,modal,resizeable=yes");
   contentWindow.focus();
 }
 
@@ -1482,13 +1483,13 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
     var color = colorPicker.getAttribute('color');
     dump("setColor to: "+color+"\n");
 
-    if (colorWell)
+    if (colorWell && color)
     {
       // Use setAttribute so colorwell can be a XUL element, such as titledbutton
       colorWell.setAttribute("style", "background-color: " + color); 
     }
   }
-
+  //TODO: Trigger UI update to get color from the current caret/selection  
   return color;
 }
 
