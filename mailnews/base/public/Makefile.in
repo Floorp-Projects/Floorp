@@ -49,6 +49,7 @@ EXPORTS =				\
 		nsIMsgMailSession.h	\
 		nsIMsgIdentity.h	\
 		nsIFolderListener.h	\
+		nsIDOMMsgAppCore.h	\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -39,6 +39,7 @@ EXPORTS = \
 	nsUrlListenerManager.h \
 	nsMsgMailSession.h \
 	nsMsgIdentity.h	\
+	nsMsgAppCore.h	\
 	$(NULL)
 
 CPPSRCS = \
