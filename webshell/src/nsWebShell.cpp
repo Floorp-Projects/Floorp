@@ -180,15 +180,10 @@ public:
   NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult);
 
-		/**
-	 * Set the type of the webshell to be content or chrome.
-   */
 	NS_IMETHOD SetWebShellType(nsWebShellType aWebShellType);
-
-	/**
-	 * Get the type of the webshell. Indicates whether the webshell is content or chrome.
-	 */
-	NS_IMETHOD GetWebShellType(nsWebShellType& aWebShellType);
+  NS_IMETHOD GetWebShellType(nsWebShellType& aWebShellType);
+  NS_IMETHOD GetContainingChromeShell(nsIWebShell** aResult);
+  NS_IMETHOD SetContainingChromeShell(nsIWebShell* aChromeShell);
 
   NS_IMETHOD GetMarginWidth (PRInt32& aWidth);
   NS_IMETHOD SetMarginWidth (PRInt32  aWidth);
@@ -400,6 +395,7 @@ protected:
   nsVoidArray mRefreshments;
 
 	nsWebShellType mWebShellType;
+  nsIWebShell* mChromeShell; // Weak reference.
 
   void ReleaseChildren();
   void DestroyChildren();
@@ -531,6 +527,8 @@ nsWebShell::nsWebShell()
   InitFrameData(PR_TRUE);
   mIsFrame = PR_FALSE;
 	mWebShellType = nsWebShellContent;
+  mChromeShell = nsnull;
+
   // XXX we should get such mDefaultCharacterSet from pref laster...
   mDefaultCharacterSet = "ISO-8859-1";
   mProcessedEndDocumentLoad = PR_FALSE;
@@ -1359,6 +1357,22 @@ nsWebShell::SetWebShellType(nsWebShellType aWebShellType)
 	}
 	mWebShellType = aWebShellType;
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetContainingChromeShell(nsIWebShell** aResult)
+{
+  NS_IF_ADDREF(mChromeShell);
+  *aResult = mChromeShell;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetContainingChromeShell(nsIWebShell* aChromeShell)
+{
+  // Weak reference. Don't addref.
+  mChromeShell = aChromeShell;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
