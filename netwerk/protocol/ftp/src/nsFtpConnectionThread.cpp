@@ -1072,12 +1072,6 @@ nsFtpConnectionThread::R_pwd() {
             }
             tmpPath.Append(mPath);
 
-            // ensure FTP directory URLs end with '/'    
-            if (tmpPath.Last() != '/')
-            {
-                tmpPath.Append("/");
-            }
-
             mResponseMsg = tmpPath;
             mURL->SetPath(tmpPath);
             mPath = tmpPath;            
