@@ -187,7 +187,7 @@ nsHTMLBase::CreateFrame(nsIPresContext* aPresContext,
   } else {
     // Since kid has a prev-in-flow, use that to create the next
     // frame.
-    rv = aKidPrevInFlow->CreateContinuingFrame(aPresContext, aParentFrame,
+    rv = aKidPrevInFlow->CreateContinuingFrame(*aPresContext, aParentFrame,
                                                kidSC, kidFrame);
   }
 

@@ -1758,7 +1758,7 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
            
           nsIStyleContext* kidSC;
           kidFrame->GetStyleContext(aPresContext, kidSC);
-          kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
+          kidFrame->CreateContinuingFrame(*aPresContext, this, kidSC, continuingFrame);
           NS_RELEASE(kidSC);
           NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
@@ -2005,7 +2005,7 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
 
         nsIStyleContext* kidSC;
         kidFrame->GetStyleContext(aPresContext, kidSC);
-        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
+        kidFrame->CreateContinuingFrame(*aPresContext, this, kidSC, continuingFrame);
         NS_RELEASE(kidSC);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
@@ -2138,7 +2138,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
                                         kidStyleContext, kidFrame);
       NS_RELEASE(kidDel);
     } else {
-      kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidStyleContext,
+      kidPrevInFlow->CreateContinuingFrame(*aPresContext, this, kidStyleContext,
                                            kidFrame);
     }
 
@@ -2570,7 +2570,7 @@ PRBool nsTableFrame::IsFirstPassValid() const
 }
 
 NS_METHOD
-nsTableFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                     nsIFrame*        aParent,
                                     nsIStyleContext* aStyleContext,
                                     nsIFrame*&       aContinuingFrame)
@@ -2606,11 +2606,11 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
       printf("found a head or foot in continuing frame\n");
       // Resolve style for the child
       nsIStyleContext* kidStyleContext =
-        aPresContext->ResolveStyleContextFor(content, cf);               // kidStyleContext: REFCNT++
+        aPresContext.ResolveStyleContextFor(content, cf);               // kidStyleContext: REFCNT++
       nsIContentDelegate* kidDel = nsnull;
-      kidDel = content->GetDelegate(aPresContext);                       // kidDel: REFCNT++
+      kidDel = content->GetDelegate(&aPresContext);                     // kidDel: REFCNT++
       nsIFrame* duplicateFrame;
-      nsresult rv = kidDel->CreateFrame(aPresContext, content, cf,
+      nsresult rv = kidDel->CreateFrame(&aPresContext, content, cf,
                                         kidStyleContext, duplicateFrame);
       NS_RELEASE(kidDel);                                                // kidDel: REFCNT--
       NS_RELEASE(kidStyleContext);                                       // kidStyleContenxt: REFCNT--

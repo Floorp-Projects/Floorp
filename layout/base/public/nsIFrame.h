@@ -537,7 +537,7 @@ public:
    * Flow member functions. CreateContinuingFrame() is responsible for
    * appending the continuing frame to the flow.
    */
-  NS_IMETHOD  CreateContinuingFrame(nsIPresContext*  aPresContext,
+  NS_IMETHOD  CreateContinuingFrame(nsIPresContext&  aPresContext,
                                     nsIFrame*        aParent,
                                     nsIStyleContext* aStyleContext,
                                     nsIFrame*&       aContinuingFrame) = 0;

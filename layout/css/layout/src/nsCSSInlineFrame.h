@@ -62,7 +62,7 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIFrame
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aCX,
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aCX,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);

@@ -143,7 +143,7 @@ nsCSSInlineFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-nsCSSInlineFrame::CreateContinuingFrame(nsIPresContext*  aCX,
+nsCSSInlineFrame::CreateContinuingFrame(nsIPresContext&  aCX,
                                         nsIFrame*        aParent,
                                         nsIStyleContext* aStyleContext,
                                         nsIFrame*&       aContinuingFrame)

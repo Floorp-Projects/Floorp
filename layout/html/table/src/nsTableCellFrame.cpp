@@ -181,7 +181,7 @@ void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
     // Create a continuing column
     nsIStyleContext* kidSC;
     prevPseudoFrame->GetStyleContext(aPresContext, kidSC);
-    prevPseudoFrame->CreateContinuingFrame(aPresContext, this, kidSC, mFirstChild);
+    prevPseudoFrame->CreateContinuingFrame(*aPresContext, this, kidSC, mFirstChild);
     NS_RELEASE(kidSC);
     mChildCount = 1;
   }
@@ -390,7 +390,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
 }
 
 NS_METHOD
-nsTableCellFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+nsTableCellFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                         nsIFrame*        aParent,
                                         nsIStyleContext* aStyleContext,
                                         nsIFrame*&       aContinuingFrame)

@@ -110,7 +110,7 @@ public:
                     nsReflowStatus& aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);

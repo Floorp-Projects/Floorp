@@ -1141,7 +1141,7 @@ NS_METHOD nsFrame::IsSplittable(nsSplittableType& aIsSplittable) const
   return NS_OK;
 }
 
-NS_METHOD nsFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+NS_METHOD nsFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                          nsIFrame*        aParent,
                                          nsIStyleContext* aStyleContext,
                                          nsIFrame*&       aContinuingFrame)

@@ -399,7 +399,7 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext&      aPresContext,
             nsIStyleContext* kidSC;
             kidFrame->GetStyleContext(&aPresContext, kidSC);
             nsIFrame*  continuingPage;
-            nsresult rv = kidFrame->CreateContinuingFrame(&aPresContext, this,
+            nsresult rv = kidFrame->CreateContinuingFrame(aPresContext, this,
                                                           kidSC, continuingPage);
             NS_RELEASE(kidSC);
             reflowReason = eReflowReason_Initial;
