@@ -68,6 +68,10 @@
                 onset="if (val) this.setAttribute('disableKeyNavigation', 'true');
                        else this.removeAttribute('disableKeyNavigation'); return val;"/>
 
+      <property name="_selectDelay" 
+                onset="this.setAttribute('_selectDelay', val);"
+                onget="return this.getAttribute('_selectDelay') || 50;"/>
+
       <method name="timedSelect">
         <parameter name="item"/>
         <parameter name="timeout"/>
@@ -497,7 +501,7 @@
          var n = this.getPreviousItem(this.selectedItems[this.selectedItems.length-1], 1);
          if (n) {
            this.ensureIndexIsVisible(this.getIndexOfItem(n));
-           this.timedSelect(n, 500);
+           this.timedSelect(n, this._selectDelay);
          }
         ]]>
       </handler>
@@ -518,7 +522,7 @@
 
          if (n) {
            this.ensureIndexIsVisible(this.getIndexOfItem(n));
-           this.timedSelect(n, 500);
+           this.timedSelect(n, this._selectDelay);
          }
         ]]>
       </handler>
@@ -584,7 +588,7 @@
            }
            this.scrollToIndex(newIndex);
          }
-         this.timedSelect(n, 500);
+         this.timedSelect(n, this._selectDelay);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down">
@@ -609,7 +613,7 @@
            }
            this.scrollToIndex(newIndex);
          }
-         this.timedSelect(n, 500);
+         this.timedSelect(n, this._selectDelay);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_home">
@@ -678,7 +682,7 @@
                this._isUpSelection=0;
                this._isDownSelection=0;
                this.ensureIndexIsVisible(k);
-               this.timedSelect(item, 500);
+               this.timedSelect(item, this._selectDelay);
                break;
              }
            }
