@@ -454,18 +454,20 @@ void cleanRLTree (RL_Item item) {
   }
 }
 
-void RL_AddItem (RL_Window win, char* url, char* name, uint8 type) {
+void RL_AddItem (RL_Window win, char* nurl, char* name, uint8 type) {
   if (win != NULL && (win->status == RL_STATUS_LOADING)) {
     RL_Item item = (RL_Item)getMem(sizeof(struct _RL_Item));
     PRBool zerop = (win->count == 0) ? PR_TRUE : PR_FALSE;
-    RL_Item existing;  
+    RL_Item existing; 
+	char* url;
+	if (nurl) url = strstr(&nurl[7], "http://");
+	if (!url) url = nurl;
     if (item == NULL) return;
     item->name = name;
     item->url = url;
     item->type = type;
     win->count++;
-    existing =  (win->depth == 0 ? win->items :
-win->stack[win->depth-1]->child);
+    existing =  (win->depth == 0 ? win->items : win->stack[win->depth-1]->child);
     if (!existing) {
       if (win->depth == 0) {
         win->items = item;
@@ -473,12 +475,19 @@ win->stack[win->depth-1]->child);
         win->stack[win->depth-1]->child = item;
       }
     } else {
-      while (existing->next) {existing = existing->next;}
+      while (existing->next) {
+	if (existing->url && url && (strcmp(existing->url, url) == 0)) {
+	  freeMem(item);
+	  return;
+	}
+	existing = existing->next; 
+      }
       existing->next = item;
     }
     if (type == RL_CONTAINER)  win->stack[win->depth++] = item;
   }
 }
+
   
 RL_Item RL_WindowItems (RL_Window win) {
   if ((win != NULL) && (win->rlurl[0] != '\0') && enableRelatedLinksp) {
@@ -487,7 +496,7 @@ RL_Item RL_WindowItems (RL_Window win) {
     if (win->items) {
       return win->items;
     } else if (win->status == RL_STATUS_WAITING_TO_LOAD) {
-      win->status = RL_STATUS_LOADING;
+      win->status = RL_STATUS_LOADING; 
       GetRL(win);
       if (win->items == NULL) return gRLSpecial->loading;
       return win->items;
@@ -570,7 +579,7 @@ void rl_GetUrlExitFunc (URL_Struct *urls, int status, MWContext *cx) {
     RL_Window win = (RL_Window)urls->fe_data;
     if ( win != NULL ) {
             win->status = RL_STATUS_ABORTED;
-            if (win->callBack) (*(win->callBack))(win->fe_data, win);  
+         /*   if (win->callBack) (*(win->callBack))(win->fe_data, win);  */
             NET_FreeURLStruct (urls);
         }
   }
