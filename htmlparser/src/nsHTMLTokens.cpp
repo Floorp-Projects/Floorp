@@ -527,7 +527,7 @@ PRInt32 CTextToken::GetTextLength(void) {
  *  @return  error result
  */
 nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {;
-  static nsString theTerminals = NS_ConvertToString("\n\r&<",4);  
+  static nsString theTerminals = NS_LITERAL_STRING("\n\r&<");
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
   nsReadingIterator<PRUnichar> origin, start, end;
@@ -897,7 +897,7 @@ PRInt32 CMarkupDeclToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CMarkupDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-  static nsString theTerminals = NS_ConvertToString("\n\r'\">",5);
+  static nsString theTerminals = NS_LITERAL_STRING("\n\r'\">");
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
   PRUnichar quote=0;
@@ -1521,7 +1521,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
  */
 static
 nsresult ConsumeAttributeValueText(PRUnichar,nsString& aString,nsScanner& aScanner){
-  static nsString theTerminals = NS_ConvertToString("\b\t\n\r >",6);
+  static nsString theTerminals = NS_LITERAL_STRING("\b\t\n\r >");
   nsresult result=aScanner.ReadUntil(aString,theTerminals,PR_FALSE);
   
   //Let's force quotes if either the first or last char is quoted.
@@ -1570,7 +1570,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
       }
       else {
           //If you're here, handle an unquoted key.
-        static nsAutoString theTerminals = NS_ConvertToString("\b\t\n\r \"=>",8);
+        static nsAutoString theTerminals = NS_LITERAL_STRING("\b\t\n\r \"=>");
         result=aScanner.ReadUntil(start,end,theTerminals,PR_FALSE);
       }
       if (!aRetainWhitespace) {

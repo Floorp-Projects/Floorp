@@ -135,7 +135,7 @@ ContentScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 
   result = aScriptContext->GetNameSpaceManager(&manager);
   if (NS_OK == result) {
-    result = manager->RegisterGlobalName(NS_ConvertToString("HTMLImageElement"),
+    result = manager->RegisterGlobalName(NS_LITERAL_STRING("HTMLImageElement"),
                                          NS_GET_IID(nsIScriptObjectOwner),
                                          kHTMLImageElementCID,
                                          PR_TRUE);
@@ -144,7 +144,7 @@ ContentScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
       return result;
     }
 
-    result = manager->RegisterGlobalName(NS_ConvertToString("HTMLOptionElement"),
+    result = manager->RegisterGlobalName(NS_LITERAL_STRING("HTMLOptionElement"),
                                          NS_GET_IID(nsIScriptObjectOwner),
                                          kHTMLOptionElementCID,
                                          PR_TRUE);

@@ -27,6 +27,7 @@
 #include "nsLocale.h"
 #include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
+#include "nsReadableUtils.h"
 
 #include <ctype.h>
 
@@ -502,7 +503,7 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
   //
   result = NS_ERROR_FAILURE;
   if (countLang>0) {
-	  PRUnichar* localeName = NS_ConvertToString(acceptLanguageList[0]).ToNewUnicode();
+	  PRUnichar* localeName = ToNewUnicode(nsLiteralCString(acceptLanguageList[0]));
 	  result = NewLocale(localeName,_retval);
 	  delete localeName;
   }

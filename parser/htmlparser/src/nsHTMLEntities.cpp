@@ -226,7 +226,7 @@ public:
      }
 
      // Make sure we don't find things that aren't there
-     value = nsHTMLEntities::EntityToUnicode(NS_ConvertToString("@"));
+     value = nsHTMLEntities::EntityToUnicode(nsCAutoString("@"));
      NS_ASSERTION(value == -1, "found @");
      value = nsHTMLEntities::EntityToUnicode(nsCAutoString("zzzzz"));
      NS_ASSERTION(value == -1, "found zzzzz");

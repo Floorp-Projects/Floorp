@@ -494,7 +494,7 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
             }
           }
             //if the content model is empty, then begin by opening <html>...
-          theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_ConvertToString("html")));
+          theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_LITERAL_STRING("html")));
           if(theToken) {
             mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack.
           }
@@ -547,7 +547,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
 
       mSkipTarget=eHTMLTag_unknown; //clear this in case we were searching earlier.
 
-      CStartToken *theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_ConvertToString("body")));
+      CStartToken *theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
       mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
       result=BuildModel(aParser,mTokenizer,0,aSink);
     } 
@@ -788,7 +788,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
                 //However, in quirks mode, a few tags request, ambiguosly, for a BODY. - Bugs 18928, 24204.-
                 mMisplacedContent.Push(aToken);
                 if(mDTDMode==eDTDMode_quirks && (gHTMLElements[theTag].HasSpecialProperty(kRequiresBody))) {
-                  CToken* theBodyToken=NS_STATIC_CAST(CToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_ConvertToString("body")));
+                  CToken* theBodyToken=NS_STATIC_CAST(CToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
                   result=HandleToken(theBodyToken,aParser);
                 }
                 return result;

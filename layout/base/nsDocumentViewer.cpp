@@ -2899,7 +2899,7 @@ NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged(nsIDOMDocument
     nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(scriptGlobalObject);
     if (!domWindow) return NS_ERROR_FAILURE;
     
-    domWindow->UpdateCommands(NS_ConvertToString("select"));
+    domWindow->UpdateCommands(NS_LITERAL_STRING("select"));
     mGotSelectionState = PR_TRUE;
     mSelectionWasCollapsed = selectionCollapsed;
   }  

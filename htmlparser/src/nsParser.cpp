@@ -2121,7 +2121,7 @@ nsresult nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
   rv = channel->GetContentType(&contentType);
   if (NS_SUCCEEDED(rv))
   {
-    mParserContext->SetMimeType( NS_ConvertToString(contentType) );
+    mParserContext->SetMimeType( NS_ConvertASCIItoUCS2(contentType) );
 	  nsCRT::free(contentType);
   }
   else

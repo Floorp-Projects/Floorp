@@ -516,10 +516,10 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
       if(theAllocator) {
 #ifdef VIEW_SOURCE_HTML
-        theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertToString(kPreStyle));
+        theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kPreStyle));
         theAttr->SetKey(NS_LITERAL_STRING("style"));
 #else
-        theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertToString("http://www.mozilla.org/viewsource"));
+        theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_LITERAL_STRING("http://www.mozilla.org/viewsource"));
         theAttr->SetKey(NS_LITERAL_STRING("xmlns"));
 #endif // VIEW_SOURCE_HTML
       }
@@ -904,7 +904,7 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
 #ifdef VIEW_SOURCE_HTML
     nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
     if(theAllocator) {
-      CAttributeToken* theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertToString(kElementStyles[aTagType]));
+      CAttributeToken* theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kElementStyles[aTagType]));
       theAttr->SetKey(NS_LITERAL_STRING("style"));
       theContext.mStartNode.AddAttribute(theAttr);
     }

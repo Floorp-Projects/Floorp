@@ -46,12 +46,12 @@ class nsScriptNameSpaceManager : public nsIScriptNameSpaceManager {
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD RegisterGlobalName(const nsString& aName, 
+  NS_IMETHOD RegisterGlobalName(const nsAReadableString& aName, 
                                 const nsIID& aIID,
                                 const nsIID& aCID,
                                 PRBool aIsConstructor);
-  NS_IMETHOD UnregisterGlobalName(const nsString& aName);
-  NS_IMETHOD LookupName(const nsString& aName, 
+  NS_IMETHOD UnregisterGlobalName(const nsAReadableString& aName);
+  NS_IMETHOD LookupName(const nsAReadableString& aName, 
                         PRBool& aIsConstructor,
                         nsIID& aIID,
                         nsIID& aCID);
