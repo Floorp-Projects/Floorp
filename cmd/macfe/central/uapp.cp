@@ -32,7 +32,9 @@
 //#define DONT_DO_MOZILLA_PROFILE
 //#define PROFILE_UPDATE_MENUS
 
-#include "fullsoft.h"
+#ifdef MOZ_FULLCIRCLE
+	#include "fullsoft.h"
+#endif
 
 #include "uapp.h"
 
@@ -1109,7 +1111,7 @@ void CFrontApp::Initialize()
 	new CNSContextCallbacks;
 	LDocApplication::Initialize();
 	
-#ifdef FCAPI
+#if defined(MOZ_FULLCIRCLE) && defined(FCAPI)
 	// initialization for spiral stuff.....
 	FCInitialize();
 #endif
