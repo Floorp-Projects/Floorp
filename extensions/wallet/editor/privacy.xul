@@ -68,7 +68,7 @@
   <spring style="height: 5px;"/>
   <box orient="horizontal">
     <spring flex="100%"/>
-   <button class="right dialog" id="ok" value="&ok;" default="true" onclick="doOKButton()"/> 
+   <button class="right dialog" id="ok" value="&ok;" default="true" oncommand="doOKButton();"/> 
   </box>
   <spring style="height: 5px;"/>
 

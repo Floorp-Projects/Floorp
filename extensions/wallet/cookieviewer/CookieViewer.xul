@@ -109,11 +109,11 @@
           <box>
             <button id="removeCookies" class="dialog push" disabled="true"
                           value="&button.removecookie.label;"
-                          onclick="DeleteCookieSelected();"/>
+                          oncommand="DeleteCookieSelected();"/>
             <button id="removeAllCookies" class="dialog push"
                           value="&button.removeallcookies.label;"
-                          onclick="DeleteAllCookies();"/>
-            <!--  todo: <button id="restoreCookies" class="dialog push" disabled="true" value="&button.restorecookie.label;" onclick="RestoreCookies();"/> -->
+                          oncommand="DeleteAllCookies();"/>
+            <!--  todo: <button id="restoreCookies" class="dialog push" disabled="true" value="&button.restorecookie.label;" oncommand="RestoreCookies();"/> -->
           </box>
           <separator class="thin"/>
           <box autostretch="never">
@@ -143,10 +143,10 @@
           <box>
             <button id="removePermissions" class="dialog push" disabled="true" 
                           value="&removepermission.label;" 
-                          onclick="DeletePermissionSelected();"/>
+                          oncommand="DeletePermissionSelected();"/>
             <button id="removeAllPermissions" class="dialog push"
                           value="&removeallpermissions.label;" 
-                          onclick="DeleteAllPermissions();"/>
+                          oncommand="DeleteAllPermissions();"/>
           </box>
       </box>
 
@@ -172,10 +172,10 @@
           <box>
             <button id="removeImages" class="dialog push" disabled="true"
                           value="&removeimage.label;" 
-                          onclick="DeleteImageSelected();"/>
+                          oncommand="DeleteImageSelected();"/>
             <button id="removeAllImages" class="dialog push"
                           value="&removeallimages.label;" 
-                          onclick="DeleteAllImages();"/>
+                          oncommand="DeleteAllImages();"/>
           </box>
       </box>
 
