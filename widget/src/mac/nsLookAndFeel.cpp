@@ -23,6 +23,7 @@
 #include "nsLookAndFeel.h"
 #include "nsXPLookAndFeel.h"
 #include "nsCarbonHelpers.h"
+#include "nsIInternetConfigService.h"
 
  
 //-------------------------------------------------------------------------
@@ -58,7 +59,18 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 
     switch (aID) {
     case eColor_WindowBackground:
-        aColor = NS_RGB(0xdd,0xdd,0xdd);
+        {
+          nsCOMPtr<nsIInternetConfigService> icService_wb (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+          if (icService_wb)
+          {
+            res = icService_wb->GetColor(nsIInternetConfigService::eICColor_WebBackgroundColour, &aColor);
+            if (NS_SUCCEEDED(res))
+              return res;
+          }
+
+          aColor = NS_RGB(0xff,0xff,0xff); // default to white if we didn't find it in internet config
+          res = NS_OK;
+        }
         break;
     case eColor_WindowForeground:
         aColor = NS_RGB(0x00,0x00,0x00);        
@@ -85,7 +97,17 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
         aColor = NS_RGB(0xff,0xff,0xff);
         break;
     case eColor_TextForeground: 
-        aColor = NS_RGB(0x00,0x00,0x00);
+        {
+          nsCOMPtr<nsIInternetConfigService> icService_tf (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+          if (icService_tf)
+          {
+            res = icService_tf->GetColor(nsIInternetConfigService::eICColor_WebTextColor, &aColor);
+            if (NS_SUCCEEDED(res))
+              return res;
+          }
+          aColor = NS_RGB(0x00,0x00,0x00);
+          res = NS_OK;
+        }
         break;
     case eColor_highlight: // CSS2 color
     case eColor_TextSelectBackground:
