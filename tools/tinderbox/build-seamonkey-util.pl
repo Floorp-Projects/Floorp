@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.64 $ ';
+$::UtilsVersion = '$Revision: 1.65 $ ';
 
 package TinderUtils;
 
@@ -578,14 +578,21 @@ sub BuildIt {
 		$ENV{MOZILLA_FIVE_HOME} = "$build_dir/${Settings::ObjDir}/mozilla/dist/bin";
         
         my $cvsco = '';
-        if ($Settings::UseTimeStamp) {
+		# Tack on pull by date if requested.  Don't pull by date on a branch,
+		# cvs currently only supports one tag, either a date tag or a branch tag,
+		# we will assume branch tag wins for now.
+		if (not defined($Settings::BuildTag)) {
+		  if ($Settings::UseTimeStamp) {
             $start_time = adjust_start_time($start_time);
             my $time_str = POSIX::strftime("%m/%d/%Y %H:%M", localtime($start_time));
             $ENV{MOZ_CO_DATE} = "$time_str";
             $cvsco = "$Settings::CVSCO -D '$time_str'";
-        } else {
+		  } else {
             $cvsco = "$Settings::CVSCO -A";
-        }
+		  }
+		} else {
+		  $cvsco = "$Settings::CVSCO";
+		}
         
         mail_build_started_message($start_time) if $Settings::ReportStatus;
         
