@@ -74,7 +74,7 @@
 var gSelectedFolder;
 var gName;
 var gMenulist;
-var gBookmarkTree;
+var gBookmarksTree;
 var gGroup;
 
 function Startup()
@@ -85,7 +85,7 @@ function Startup()
   gName  = document.getElementById("name");
   gGroup = document.getElementById("addgroup");
   gMenulist = document.getElementById("select-menu");
-  gBookmarkTree = document.getElementById("folder-tree");
+  gBookmarksTree = document.getElementById("folder-tree");
   gName.value = window.arguments[0];
   gName.select();
   gName.focus();
@@ -136,9 +136,9 @@ function onOK()
   BookmarksUtils.insertAndCheckSelection("newbookmark", selection, target);
   
   if (window.arguments[6] && rSource) {
-        // Assert that we're a web panel.
-        BMDS.Assert(rSource, RDF.GetResource(NC_NS+"WebPanel"),
-                    RDF.GetLiteral("true"), true);
+    // Assert that we're a web panel.
+    BMDS.Assert(rSource, RDF.GetResource(NC_NS+"WebPanel"),
+                RDF.GetLiteral("true"), true);
   }
   
   // in insertSelection, the ds flush is delayed. It will never be performed,
@@ -174,26 +174,54 @@ function getNormalizedURL(url)
 function selectMenulistFolder(aEvent)
 {
   gSelectedFolder = RDF.GetResource(aEvent.target.id);
+  if (!gBookmarksTree.collapsed) {
+    gBookmarksTree.treeBoxObject.selection.selectEventsSuppressed = true;
+    gBookmarksTree.treeBoxObject.selection.clearSelection();
+    gBookmarksTree.selectResource(gSelectedFolder);
+    var index = gBookmarksTree.treeBuilder.getIndexOfResource(gSelectedFolder);
+    gBookmarksTree.treeBoxObject.ensureRowIsVisible(index);
+    gBookmarksTree.treeBoxObject.selection.selectEventsSuppressed = false;
+  }
 }
 
 function selectTreeFolder()
 {
-  gSelectedFolder = gBookmarkTree._selection.item[0];
+  gSelectedFolder = gBookmarksTree._selection.item[0];
   gMenulist.label = BookmarksUtils.getProperty(gSelectedFolder, NC_NS+"Name");
 }
 
 function expandTree()
 {
   setFolderTreeHeight();
-  var isCollapsed = gBookmarkTree.collapsed;
-  document.getElementById("expander").setAttribute("class", isCollapsed? "up":"down");
-  gBookmarkTree.collapsed = !isCollapsed;
+  var isCollapsed = !gBookmarksTree.collapsed;
+  gBookmarksTree.collapsed = isCollapsed;
   sizeToContent();
+  document.documentElement.getButton("extra2").collapsed = isCollapsed;
+  if (isCollapsed)
+    document.documentElement.buttons = "accept,cancel";
+  else {
+    document.documentElement.buttons = "accept,cancel,extra2";
+    gBookmarksTree.focus();
+  }
 }
 
 function setFolderTreeHeight()
 {
-  var isCollapsed = gBookmarkTree.collapsed;
+  var isCollapsed = gBookmarksTree.collapsed;
   if (!isCollapsed)
-    gBookmarkTree.setAttribute("height", gBookmarkTree.boxObject.height);
+    gBookmarksTree.setAttribute("height", gBookmarksTree.boxObject.height);
+}
+
+function newFolder()
+{
+  gBookmarksTree.focus();
+  // we should use goDoCommand, but the current way of inserting
+  // resources do not insert in folders.
+  //goDoCommand("cmd_bm_newfolder");
+  gBookmarksTree.treeBoxObject.selection.selectEventsSuppressed = true;
+  gBookmarksTree.treeBoxObject.selection.clearSelection();
+  var target = BookmarksUtils.getTargetFromFolder(gSelectedFolder);
+  var folder = BookmarksCommand.createNewFolder(target);
+  gBookmarksTree.selectResource(folder);
+  gBookmarksTree.treeBoxObject.selection.selectEventsSuppressed = false;
 }

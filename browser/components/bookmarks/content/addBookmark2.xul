@@ -31,12 +31,19 @@
 <dialog id="addBookmarkDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        ondialogextra2="newFolder()"
         ondialogaccept="return onOK(event)"
+        buttons="accept,cancel" 
+        buttonlabelextra2="&newFolder.label;" buttonaccesskeyextra2="&newFolder.accesskey;"
+#ifdef XP_UNIX
+        buttonlabelaccept="&accept.label;"
+#endif
         title="&newBookmark.title;" title-selectFolder="&selectFolder.label;"
         onload="Startup();"
         onunload="setFolderTreeHeight();"
         persist="screenX screenY width">
    
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/addBookmark2.js"/>
 
