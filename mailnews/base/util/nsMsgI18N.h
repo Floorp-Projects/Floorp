@@ -50,6 +50,14 @@ NS_MSG_BASE char      *nsMsgI18NEncodeMimePartIIStr(const char *header, const ch
 NS_MSG_BASE PRBool    nsMsgI18Nstateful_charset(const char *charset);
 
 /**
+ * Check if given charset is multibye (e.g. Shift_JIS, Big5).
+ *
+ * @param charset     [IN] Charset name.
+ * @return            True if multibyte
+ */
+NS_MSG_BASE PRBool nsMsgI18Nmultibyte_charset(const char *charset);
+
+/**
  * Check the input string contains 7 bit data only.
  *
  * @param charset     [IN] Charset name of the input string.
@@ -58,6 +66,17 @@ NS_MSG_BASE PRBool    nsMsgI18Nstateful_charset(const char *charset);
  * @return            True if 7 bit only.
  */
 NS_MSG_BASE PRBool    nsMsgI18N7bit_data_part(const char *charset, const char *string, const PRUint32 size);
+
+/**
+ * Check the input (unicode) string is in a range of the given charset after the conversion.
+ * Note, do not use this for large string (e.g. message body) since this actually applies the conversion to the buffer.
+ *
+ * @param charset     [IN] Charset to be converted.
+ * @param inString    [IN] Input unicode string to be examined.
+ * @return            True if the string can be converted within the charset range.
+ *                    False if one or more characters cannot be converted to the target charset.
+ */
+NS_MSG_BASE PRBool    nsMsgI18Ncheck_data_in_charset_range(const char *charset, const nsString& inString);
 
 /**
  * Return accept language.
@@ -174,5 +193,18 @@ NS_MSG_BASE nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString
  * @return            nsresult.
  */
 NS_MSG_BASE nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char* charset, const PRUnichar* inString, char** outString);
+
+/**
+ * Convert from unicode to charset, generates NNTP XPAT search string.
+ * Migrated from mozilla classic, 
+ * see "http://lxr.mozilla.org/classic/source/include/libi18n.h#2162" for detail.
+ *
+ * @param aCharset    [IN] Charset name to convert.
+ * @param inString    [IN] Input unicode string to convert.
+ * @param outString   [OUT] Converted output, the pattern should be send to NNTP XPAT command 
+ *                          for searching non-ASCII header.
+ * @return            nsresult.
+ */
+NS_MSG_BASE nsresult nsMsgI18NFormatNNTPXPATInNonRFC1522Format(const nsCString& aCharset, const nsString& inString, nsCString& outString);
 
 #endif /* _nsMsgI18N_H_ */

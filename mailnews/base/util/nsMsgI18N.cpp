@@ -28,6 +28,7 @@
 #include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS
 #include "nsIServiceManager.h"
+#include "nsICharsetConverterManager2.h"
 
 #include "nsISupports.h"
 #include "nsIPref.h"
@@ -434,6 +435,27 @@ PRBool nsMsgI18Nstateful_charset(const char *charset)
   return (nsCRT::strcasecmp(charset, "ISO-2022-JP") == 0);
 }
 
+PRBool nsMsgI18Nmultibyte_charset(const char *charset)
+{
+  nsresult res;
+  nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(kCharsetConverterManagerCID, &res);
+  PRBool result = PR_FALSE;
+
+  if (NS_SUCCEEDED(res)) {
+    nsCOMPtr <nsIAtom> charsetAtom;
+    nsAutoString charsetData;
+    res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(charset).GetUnicode(), getter_AddRefs(charsetAtom));
+    if (NS_SUCCEEDED(res)) {
+      res = ccm2->GetCharsetData2(charsetAtom, NS_ConvertASCIItoUCS2(".isMultibyte").GetUnicode(), &charsetData);
+      if (NS_SUCCEEDED(res)) {
+        result = charsetData.EqualsWithConversion("true", PR_TRUE);
+      }
+    }
+  }
+
+  return result;
+}
+
 // Check 7bit in a given buffer.
 // This is expensive (both memory and performance).
 // The check would be very simple if applied to an unicode text (e.g. nsString or utf-8).
@@ -476,6 +498,49 @@ PRBool nsMsgI18N7bit_data_part(const char *charset, const char *inString, const 
         consumedLen = currentSrcPtr - inString; // src length used so far
       }
       NS_IF_RELEASE(decoder);
+    }    
+  }
+
+  return result;
+}
+
+PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const nsString& inString)
+{
+  nsAutoString aCharset; aCharset.AssignWithConversion(charset);
+  nsresult res;
+  PRBool result = PR_TRUE;
+  
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &res);
+
+  if (NS_SUCCEEDED(res)) {
+    nsCOMPtr <nsIUnicodeEncoder> encoder;
+
+    // get an unicode converter
+    res = ccm->GetUnicodeEncoder(&aCharset, getter_AddRefs(encoder));
+    if(NS_SUCCEEDED(res)) {
+      const PRUnichar *originalPtr = inString.GetUnicode();
+      PRInt32 originalLen = inString.Length();
+      PRUnichar *currentSrcPtr = NS_CONST_CAST(PRUnichar *, originalPtr);
+      char localBuff[512];
+      PRInt32 consumedLen = 0;
+      PRInt32 srcLen;
+      PRInt32 dstLength;
+
+      // convert to unicode
+      while (consumedLen < originalLen) {
+        srcLen = originalLen - consumedLen;
+        dstLength = 512;
+        res = encoder->Convert(currentSrcPtr, &srcLen, localBuff, &dstLength);
+        if (NS_ERROR_UENC_NOMAPPING == res) {
+          result = PR_FALSE;
+          break;
+        }
+        else if (NS_FAILED(res) || (0 == dstLength))
+          break;
+
+        currentSrcPtr += srcLen;
+        consumedLen = currentSrcPtr - originalPtr; // src length used so far
+      }
     }    
   }
 
@@ -637,6 +702,14 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
   }
  
   return res;
+}
+
+nsresult nsMsgI18NFormatNNTPXPATInNonRFC1522Format(const nsCString& aCharset, 
+                                                   const nsString& inString, 
+                                                   nsCString& outString)
+{
+  outString.AssignWithConversion(inString);
+  return NS_OK;
 }
 
 // RICHIE - not sure about this one?? need to see what it did in the old
