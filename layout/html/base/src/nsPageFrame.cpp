@@ -64,6 +64,11 @@
 // for page number localization formatting
 #include "nsTextFormatter.h"
 
+#ifdef IBMBIDI
+#include "nsBidiUtils.h"
+#include "nsBidiPresUtils.h"
+#endif
+
 // Temporary
 #include "nsIFontMetrics.h"
 
@@ -461,7 +466,8 @@ nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext,
 // @parm aUseHalfThePage - indicates whether the text should limited to  the width
 //                         of the entire page or just half the page
 void
-nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
+nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
+                              nsIRenderingContext& aRenderingContext,
                               nsIFrame *           aFrame,
                               nsHeaderFooterEnum   aHeaderFooter,
                               PRInt32              aJust,
@@ -481,13 +487,13 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
   nscoord strSpace = aRect.width / numStrs;
 
   if (!aStr1.IsEmpty()) {
-    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintSettings::kJustLeft, aStr1, aRect, aAscent, aHeight, strSpace);
+    DrawHeaderFooter(aPresContext, aRenderingContext, aFrame, aHeaderFooter, nsIPrintSettings::kJustLeft, aStr1, aRect, aAscent, aHeight, strSpace);
   }
   if (!aStr2.IsEmpty()) {
-    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintSettings::kJustCenter, aStr2, aRect, aAscent, aHeight, strSpace);
+    DrawHeaderFooter(aPresContext, aRenderingContext, aFrame, aHeaderFooter, nsIPrintSettings::kJustCenter, aStr2, aRect, aAscent, aHeight, strSpace);
   }
   if (!aStr3.IsEmpty()) {
-    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintSettings::kJustRight, aStr3, aRect, aAscent, aHeight, strSpace);
+    DrawHeaderFooter(aPresContext, aRenderingContext, aFrame, aHeaderFooter, nsIPrintSettings::kJustRight, aStr3, aRect, aAscent, aHeight, strSpace);
   }
 }
 
@@ -501,7 +507,8 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
 // @parm aHeight - the height of the text
 // @parm aWidth - available width for any one of the strings
 void
-nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
+nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
+                              nsIRenderingContext& aRenderingContext,
                               nsIFrame *           aFrame,
                               nsHeaderFooterEnum   aHeaderFooter,
                               PRInt32              aJust,
@@ -556,6 +563,26 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     aRenderingContext.PushState();
     aRenderingContext.SetColor(NS_RGB(0,0,0));
     aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
+#ifdef IBMBIDI
+    nsresult rv = NS_ERROR_FAILURE;
+
+    PRBool isBidiEnabled = PR_FALSE;
+    aPresContext->GetBidiEnabled(&isBidiEnabled);
+    if (isBidiEnabled) {
+      nsBidiPresUtils* bidiUtils;
+      aPresContext->GetBidiUtils(&bidiUtils);
+      
+      if (bidiUtils) {
+        PRUnichar* buffer = (PRUnichar*)str.get();
+        // Base direction is always LTR for now. If bug 139337 is fixed, 
+        // that should change.
+        rv = bidiUtils->RenderText(buffer, str.Length(), NSBIDI_LTR,
+                                   aPresContext, aRenderingContext,
+                                   x, y + aAscent);
+      }
+    }
+    if (NS_FAILED(rv))
+#endif // IBMBIDI
     aRenderingContext.DrawString(str, x, y + aAscent);
     aRenderingContext.PopState(clipEmpty);
 #ifdef DEBUG_PRINTING
@@ -690,7 +717,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     mPD->mPrintSettings->GetHeaderStrLeft(&headers[0]);   // creates memory
     mPD->mPrintSettings->GetHeaderStrCenter(&headers[1]); // creates memory
     mPD->mPrintSettings->GetHeaderStrRight(&headers[2]);  // creates memory
-    DrawHeaderFooter(aRenderingContext, this, eHeader, nsIPrintSettings::kJustLeft, 
+    DrawHeaderFooter(aPresContext, aRenderingContext, this, eHeader, nsIPrintSettings::kJustLeft, 
                      nsAutoString(headers[0]), nsAutoString(headers[1]), nsAutoString(headers[2]), 
                      rect, ascent, visibleHeight);
     PRInt32 i;
@@ -700,7 +727,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     mPD->mPrintSettings->GetFooterStrLeft(&footers[0]);   // creates memory
     mPD->mPrintSettings->GetFooterStrCenter(&footers[1]); // creates memory
     mPD->mPrintSettings->GetFooterStrRight(&footers[2]);  // creates memory
-    DrawHeaderFooter(aRenderingContext, this, eFooter, nsIPrintSettings::kJustRight, 
+    DrawHeaderFooter(aPresContext, aRenderingContext, this, eFooter, nsIPrintSettings::kJustRight, 
                      nsAutoString(footers[0]), nsAutoString(footers[1]), nsAutoString(footers[2]), 
                      rect, ascent, visibleHeight);
     for (i=0;i<3;i++) nsMemory::Free(footers[i]);

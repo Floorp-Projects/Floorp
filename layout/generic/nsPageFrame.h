@@ -111,7 +111,8 @@ protected:
                        PRInt32              aJust,
                        const nsString&      aStr);
 
-  void DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
+  void DrawHeaderFooter(nsIPresContext*      aPresContext,
+                        nsIRenderingContext& aRenderingContext,
                         nsIFrame *           aFrame,
                         nsHeaderFooterEnum   aHeaderFooter,
                         PRInt32              aJust,
@@ -121,7 +122,8 @@ protected:
                         nscoord              aAscent,
                         nscoord              aWidth);
 
-  void DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
+  void DrawHeaderFooter(nsIPresContext*      aPresContext,
+                        nsIRenderingContext& aRenderingContext,
                         nsIFrame *           aFrame,
                         nsHeaderFooterEnum   aHeaderFooter,
                         PRInt32              aJust,
