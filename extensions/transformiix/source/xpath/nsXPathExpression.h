@@ -71,7 +71,9 @@ private:
     {
     public:
         EvalContextImpl(Node* aContextNode, txResultRecycler* aRecycler)
-            : mNode(aContextNode), mLastError(NS_OK), mRecycler(aRecycler)
+            : mContextNode(aContextNode),
+              mLastError(NS_OK),
+              mRecycler(aRecycler)
         {
         }
 
@@ -85,8 +87,9 @@ private:
         }
 
         TX_DECL_EVAL_CONTEXT;
+
     private:
-        Node* mNode;
+        Node* mContextNode;
         nsresult mLastError;
         nsRefPtr<txResultRecycler> mRecycler;
     };

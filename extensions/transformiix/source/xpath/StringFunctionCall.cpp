@@ -278,12 +278,13 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             if (!requireParams(3, 3, aContext))
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
+            nsAutoString src;
+            evaluateToString((Expr*)iter.next(), aContext, src);
+
             nsRefPtr<StringResult> strRes;
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            nsAutoString src;
-            evaluateToString((Expr*)iter.next(), aContext, src);
             strRes->mValue.SetCapacity(src.Length());
             nsAutoString oldChars, newChars;
             evaluateToString((Expr*)iter.next(), aContext, oldChars);

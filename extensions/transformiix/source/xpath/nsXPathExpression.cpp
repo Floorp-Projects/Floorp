@@ -200,7 +200,7 @@ void nsXPathExpression::EvalContextImpl::receiveError(const nsAString& aMsg,
 
 Node* nsXPathExpression::EvalContextImpl::getContextNode()
 {
-    return mNode;
+    return mContextNode;
 }
 
 PRUint32 nsXPathExpression::EvalContextImpl::size()
