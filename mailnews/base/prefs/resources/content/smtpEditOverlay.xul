@@ -38,7 +38,8 @@
     </box>
     <!-- use a grid here when it's implemented -->
     <box orient="vertical">
-      <checkbox id="smtp.alwaysUseUsername" value="&alwaysUseUsername.label;"/>
+      <checkbox id="smtp.alwaysUseUsername" value="&alwaysUseUsername.label;"
+                oncommand="updateControls();"/>
       <box orient="vertical" style="margin-left: 2em">
         <box orient="horizontal">
           <text value="&userName.label;"/>
@@ -47,11 +48,11 @@
         <checkbox id="smtp.savePassword" value="&savePassword.label;"/>
       </box>
      </box>
-     <checkbox value="&isSecure.label;"/>
+     <checkbox id="smtp.isSecure" value="&isSecure.label;" oncommand="updateControls();"/>
      <radiogroup id="smtp.trySSL">
        <box orient="horizontal">
-         <radio value="&alwaysSecure.label;"/>
-         <radio value="&sometimesSecure.label;"/>
+         <radio value="&alwaysSecure.label;" id="smtp.alwaysSecure"/>
+         <radio value="&sometimesSecure.label;" id="smtp.sometimesSecure"/>
        </box>
      </radiogroup>
   </box>

@@ -25,15 +25,18 @@
 // with the new XUL widgets
 
 function initSmtpSettings(server) {
-    if (!server) return;
     
-    document.getElementById("smtp.hostname").value = server.hostname;
-    document.getElementById("smtp.alwaysUseUsername").checked =
-        server.alwaysUseUsername;
-    document.getElementById("smtp.username").value = server.username;
-    document.getElementById("smtp.savePassword").checked = server.savePassword;
-    // radio groups not implemented
-    //document.getElementById("smtp.trySSL").value = server.trySSL;
+    if (server) {
+        document.getElementById("smtp.hostname").value = server.hostname;
+        document.getElementById("smtp.alwaysUseUsername").checked =
+            server.alwaysUseUsername;
+        document.getElementById("smtp.username").value = server.username;
+        document.getElementById("smtp.savePassword").checked = server.savePassword;
+        // radio groups not implemented
+        //document.getElementById("smtp.trySSL").value = server.trySSL;
+    }
+
+    updateControls();
 }
 
 function saveSmtpSettings(server)
@@ -45,4 +48,36 @@ function saveSmtpSettings(server)
     server.username = document.getElementById("smtp.username").value;
     //server.savePassword = document.getElementById("smtp.savePassword").checked;
     
+}
+
+function updateControls() {
+
+    dump("Update controls..\n");
+    var alwaysUseUsername =
+        (document.getElementById("smtp.alwaysUseUsername").checked == "true")
+        
+    if (alwaysUseUsername) {
+        document.getElementById("smtp.username").removeAttribute("disabled");
+        document.getElementById("smtp.savePassword").removeAttribute("disabled");
+    }
+    
+    else {
+        document.getElementById("smtp.username").setAttribute("disabled", "true");
+        document.getElementById("smtp.savePassword").setAttribute("disabled", "true");
+    }
+
+
+    var isSecure =
+        (document.getElementById("smtp.isSecure").checked == "true");
+
+    if (isSecure) {
+        document.getElementById("smtp.alwaysSecure").removeAttribute("disabled");
+        document.getElementById("smtp.sometimesSecure").removeAttribute("disabled");
+    }
+
+    else {
+        document.getElementById("smtp.alwaysSecure").setAttribute("disabled", "true");
+        document.getElementById("smtp.sometimesSecure").setAttribute("disabled", "true");
+    }
+
 }
