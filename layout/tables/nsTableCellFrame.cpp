@@ -755,7 +755,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   nsSize availSize(aReflowState.availableWidth, availHeight);
 
-  PRBool contentEmptyBeforeReflow = GetContentEmpty();
+  PRBool noBorderBeforeReflow = GetContentEmpty() &&
+    GetStyleTableBorder()->mEmptyCells != NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame = nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame); if (!tableFrame) ABORT1(NS_ERROR_NULL_POINTER);
@@ -763,7 +764,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   nsMargin borderPadding = aReflowState.mComputedPadding;
   nsMargin border;
   GetBorderWidth(p2t, border);
-  if ((NS_UNCONSTRAINEDSIZE == availSize.width) || !contentEmptyBeforeReflow) {
+  if ((NS_UNCONSTRAINEDSIZE == availSize.width) || !noBorderBeforeReflow) {
     borderPadding += border;
   }
   
@@ -880,7 +881,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   // see testcase "emptyCells.html"
   if ((0 == kidSize.width) || (0 == kidSize.height)) { // XXX why was this &&
     SetContentEmpty(PR_TRUE);
-    if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) {
+    if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth &&
+        GetStyleTableBorder()->mEmptyCells != NS_STYLE_TABLE_EMPTY_CELLS_SHOW) {
       // need to reduce the insets by border if the cell is empty
       leftInset   -= border.left;
       rightInset  -= border.right;
@@ -890,7 +892,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   }
   else {
     SetContentEmpty(PR_FALSE);
-    if ((eReflowReason_Incremental == aReflowState.reason) && contentEmptyBeforeReflow) {
+    if ((eReflowReason_Incremental == aReflowState.reason) && noBorderBeforeReflow) {
       // need to consider borders, since they were factored out above
       leftInset   += border.left;
       rightInset  += border.right;
