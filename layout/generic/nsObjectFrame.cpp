@@ -309,6 +309,16 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // Determine our size stylistically
   PRBool haveWidth = PR_FALSE;
   PRBool haveHeight = PR_FALSE;
+  PRUint32 width = EMBED_DEF_DIM;
+  PRUint32 height = EMBED_DEF_DIM;
+
+  // the first time, mInstanceOwner will be null, so we a temporary default
+  if(mInstanceOwner != nsnull)
+  {
+	mInstanceOwner->GetWidth(&width);
+	mInstanceOwner->GetHeight(&height);
+  }
+
   if (aReflowState.HaveFixedContentWidth()) {
     aMetrics.width = aReflowState.minWidth;
     haveWidth = PR_TRUE;
@@ -326,7 +336,7 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
     else {
       float p2t;
       aPresContext->GetScaledPixelsToTwips(p2t);
-      aMetrics.width = NSIntPixelsToTwips(EMBED_DEF_DIM, p2t);
+      aMetrics.width = NSIntPixelsToTwips(width, p2t);
     }
   }
   if (!haveHeight) {
@@ -336,7 +346,7 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
     else {
       float p2t;
       aPresContext->GetScaledPixelsToTwips(p2t);
-      aMetrics.height = NSIntPixelsToTwips(EMBED_DEF_DIM, p2t);
+      aMetrics.height = NSIntPixelsToTwips(height, p2t);
     }
   }
   aMetrics.ascent = aMetrics.height;
@@ -351,10 +361,6 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 {
   // Get our desired size
   GetDesiredSize(&aPresContext, aReflowState, aMetrics);
-  if (nsnull != aMetrics.maxElementSize) {
-    aMetrics.maxElementSize->width = aMetrics.width;
-    aMetrics.maxElementSize->height = aMetrics.height;
-  }
 
   // XXX deal with border and padding the usual way...wrap it up!
 
@@ -456,6 +462,14 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
             nsIView *parentWithView;
             nsPoint origin;
 
+			// we need to recalculate this now that we have access to the nsPluginInstanceOwner
+			// and its size info (as set in the tag)
+			GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+			if (nsnull != aMetrics.maxElementSize) {
+				aMetrics.maxElementSize->width = aMetrics.width;
+				aMetrics.maxElementSize->height = aMetrics.height;
+			}
+
             GetOffsetFromView(origin, parentWithView);
 
             window->x = NSTwipsToIntPixels(origin.x, t2p);
@@ -464,8 +478,10 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
             window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
             window->clipRect.top = 0;
             window->clipRect.left = 0;
+
 //              window->clipRect.top = NSTwipsToIntPixels(origin.y, t2p);
 //              window->clipRect.left = NSTwipsToIntPixels(origin.x, t2p);
+
             window->clipRect.bottom = NSTwipsToIntPixels(aMetrics.height, t2p);
             window->clipRect.right = NSTwipsToIntPixels(aMetrics.width, t2p);
 #ifdef XP_UNIX
