@@ -67,7 +67,7 @@ public:
 
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop)=0;
 
-  NS_IMETHOD    GetContent(nsIDOMWindow** aContent)=0;
+  NS_IMETHOD    Get_content(nsIDOMWindow** a_content)=0;
 
   NS_IMETHOD    GetSidebar(nsISidebar** aSidebar)=0;
 
@@ -222,7 +222,7 @@ public:
   NS_IMETHOD    GetHistory(nsIDOMHistory** aHistory);  \
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent);  \
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop);  \
-  NS_IMETHOD    GetContent(nsIDOMWindow** aContent);  \
+  NS_IMETHOD    Get_content(nsIDOMWindow** a_content);  \
   NS_IMETHOD    GetSidebar(nsISidebar** aSidebar);  \
   NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar);  \
   NS_IMETHOD    GetToolbar(nsIDOMBarProp** aToolbar);  \
@@ -312,7 +312,7 @@ public:
   NS_IMETHOD    GetHistory(nsIDOMHistory** aHistory) { return _to GetHistory(aHistory); } \
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent) { return _to GetParent(aParent); } \
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop) { return _to GetTop(aTop); } \
-  NS_IMETHOD    GetContent(nsIDOMWindow** aContent) { return _to GetContent(aContent); } \
+  NS_IMETHOD    Get_content(nsIDOMWindow** a_content) { return _to Get_content(a_content); } \
   NS_IMETHOD    GetSidebar(nsISidebar** aSidebar) { return _to GetSidebar(aSidebar); } \
   NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar) { return _to GetMenubar(aMenubar); } \
   NS_IMETHOD    GetToolbar(nsIDOMBarProp** aToolbar) { return _to GetToolbar(aToolbar); } \
