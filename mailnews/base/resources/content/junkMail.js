@@ -149,7 +149,9 @@ function conditionallyEnableUI(id)
     enabled = document.getElementById("moveOnSpam").checked;
     var choice = document.getElementById("moveTargetMode").selectedItem.getAttribute("value");
  
+    document.getElementById("moveTargetMode0").disabled = !enabled || (choice == 1);
     document.getElementById("actionTargetAccount").disabled = !enabled || (choice == 1);
+    document.getElementById("moveTargetMode1").disabled = !enabled || (choice == 0);
     document.getElementById("actionTargetFolder").disabled = !enabled || (choice == 0);
 
     var checked = document.getElementById("purge").checked;
