@@ -50,5 +50,6 @@ interface nsIDOMEventTarget : nsISupports
   void                     removeEventListener(in DOMString type,
                                                in nsIDOMEventListener listener,
                                                in boolean useCapture);
-  boolean                  dispatchEvent(in nsIDOMEvent evt);
+  boolean                  dispatchEvent(in nsIDOMEvent evt)
+                                               raises(DOMException);
 };
