@@ -40,7 +40,9 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIWindowWatcher.h"
 #include "jsapi.h"
 
 #include "nsAEEventHandling.h"
@@ -282,35 +284,19 @@ OSErr nsMacCommandLine::HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileT
 nsresult nsMacCommandLine::OpenWindow(const char *chrome, const PRUnichar *url)
 //----------------------------------------------------------------------------------------
 {
+	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+	nsCOMPtr<nsISupportsWString> urlWrapper(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+	if (!wwatch || !urlWrapper)
+		return NS_ERROR_FAILURE;
+
+	urlWrapper->SetData(url);
+
+	nsCOMPtr<nsIDOMWindow> newWindow;
 	nsresult rv;
-    NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv)
-    if (NS_SUCCEEDED(rv))
-    {
-    	nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-	    JSContext *jsContext;
-    	rv = appShellService->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
-                                                           &jsContext );
-	    if (NS_SUCCEEDED(rv))
-	    {
-		    void *stackPtr;
-		    jsval *argv = JS_PushArguments( jsContext,
-                		                    &stackPtr,
-                		                    "sssW",
-                        		            chrome,
-                                		    "_blank",
-		                                    "chrome,dialog=no,all",
-        		                            url );
-		    if(argv)
-		    {
-			    nsCOMPtr<nsIDOMWindowInternal> newWindow;
-			    rv = hiddenWindow->OpenDialog( jsContext,
-			                                   argv,
-			                                   4,
-			                                   getter_AddRefs( newWindow ) );
-			    JS_PopArguments( jsContext, stackPtr );
-			}
-		}
-	}
+	rv = wwatch->OpenWindow(0, chrome, "_blank",
+	             "chrome,dialog=no,all", urlWrapper,
+	             getter_AddRefs(newWindow));
+
 	return rv;
 }
 

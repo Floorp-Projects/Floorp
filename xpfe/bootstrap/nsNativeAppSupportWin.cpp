@@ -28,10 +28,10 @@
 #include "nsXPIDLString.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsICmdLineHandler.h"
+#include "nsIDOMWindow.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIWindowWatcher.h"
 #include <windows.h>
 #include <ddeml.h>
 #include <stdlib.h>
@@ -1027,36 +1027,22 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
 
 nsresult
 nsNativeAppSupportWin::OpenWindow( const char*urlstr, const char *args ) {
-    nsresult rv;
-    static NS_DEFINE_CID( kAppShellServiceCID,    NS_APPSHELL_SERVICE_CID );
-    NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv)
-    if ( NS_SUCCEEDED( rv ) ) {
-        nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-        JSContext *jsContext;
-        rv = appShellService->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
-                                                           &jsContext );
-        if ( NS_SUCCEEDED( rv ) ) {
-            void *stackPtr;
-            jsval *argv = JS_PushArguments( jsContext,
-                                            &stackPtr,
-                                            "ssss",
-                                            urlstr,
-                                            "_blank",
-                                            "chrome,dialog=no,all",
-                                            args );
-            if( argv ) {
-                nsCOMPtr<nsIDOMWindowInternal> newWindow;
-                rv = hiddenWindow->OpenDialog( jsContext,
-                                               argv,
-                                               4,
-                                               getter_AddRefs( newWindow ) );
-                JS_PopArguments( jsContext, stackPtr );
-            }
-        } else {
-            #ifdef MOZ_DEBUG_DDE
-            printf( "GetHiddenWindowAndJSContext failed, rv=0x%08X\n", (int)rv );
-            #endif
-        }
-    }
-    return rv;
+
+  nsresult rv = NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsISupportsString> sarg(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  if (sarg)
+    sarg->SetData(args);
+
+  if (wwatch && sarg) {
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    rv = wwatch->OpenWindow(0, urlstr, "_blank", "chrome,dialog=no,all",
+                   sarg, getter_AddRefs(newWindow));
+#ifdef MOZ_DEBUG_DDE
+  } else {
+      printf("Get WindowWatcher (or create string) failed\n");
+#endif
+  }
+  return rv;
 }

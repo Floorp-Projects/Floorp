@@ -57,11 +57,10 @@ public:
   static NS_METHOD   AddBookmark     (const char *aURL, const char *aTitle);
 
   // utility functions for getting windows
-  static NS_METHOD   GetHiddenWindow      (nsIDOMWindowInternal **_retval);
-  static NS_METHOD   GetLastBrowserWindow (nsIDOMWindowInternal **_retval);
-  static NS_METHOD   OpenXULWindow        (const char *aChromeURL, nsIDOMWindowInternal *aParent,
+  static NS_METHOD   GetLastBrowserWindow (nsIDOMWindow **_retval);
+  static NS_METHOD   OpenXULWindow        (const char *aChromeURL, nsIDOMWindow *aParent,
 					   const char *aWindowFeatures,
-					   const PRUnichar *aName, const PRUnichar *aURL);
+					   const char *aName, const PRUnichar *aURL);
  
   static        Atom sMozVersionAtom;
   static        Atom sMozLockAtom;

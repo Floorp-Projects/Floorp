@@ -23,14 +23,15 @@
 #include <stdlib.h>
 #include "nsGtkMozRemoteHelper.h"
 #include "nsCRT.h"
-#include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 #include "nsIXULWindow.h"
 #include "nsIDocShell.h"
 #include "nsProxiedService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIWindowMediator.h"
+#include "nsIWindowWatcher.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIPref.h"
@@ -71,7 +72,6 @@ static char *s501UnrecognizedCommand = "501 unrecognized command:";
 // static char *s502NoWindow            = "502 no appropriate window for:";
 static char *s509InternalError       = "509 internal error";
 
-static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 class RemoteHelperContentListener : public nsIURIContentListener,
@@ -630,7 +630,7 @@ NS_METHOD
 nsGtkMozRemoteHelper::OpenURLDialog  (void)
 {
   nsresult rv;
-  nsCOMPtr<nsIDOMWindowInternal> lastWindow;
+  nsCOMPtr<nsIDOMWindow> lastWindow;
   
   // get the last used browser window
   rv = GetLastBrowserWindow(getter_AddRefs(lastWindow));
@@ -643,7 +643,7 @@ nsGtkMozRemoteHelper::OpenURLDialog  (void)
   rv = OpenXULWindow ("chrome://communicator/content/openLocation.xul",
 		      lastWindow,
 		      "chrome,modal",
-		      NS_LITERAL_STRING("_blank").get(),
+		      "_blank",
 		      nsnull);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
@@ -655,7 +655,6 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow, PRBoo
 {
   nsresult rv;
   nsString newURL;
-  nsString name;
   nsCString navChromeURL;
   nsXPIDLCString tempString;
   NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
@@ -672,14 +671,9 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow, PRBoo
 
   if (aNewWindow)
   {
-    nsCOMPtr<nsIDOMWindowInternal> parentWindow;
-    rv = GetHiddenWindow(getter_AddRefs(parentWindow));
-    if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
-
-    rv = OpenXULWindow(navChromeURL, parentWindow,
+    rv = OpenXULWindow(navChromeURL, 0,
 		       "chrome,all,dialog=no",
-		       name.GetUnicode(), newURL.GetUnicode());
+		       "_blank", newURL.GetUnicode());
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
   }
@@ -839,33 +833,7 @@ nsGtkMozRemoteHelper::AddBookmark    (const char *aURL, const char *aTitle)
   return NS_OK;
 }
 
-NS_METHOD
-nsGtkMozRemoteHelper::GetHiddenWindow (nsIDOMWindowInternal **_retval)
-{
-  nsresult rv;
-  NS_WITH_PROXIED_SERVICE(nsIAppShellService, appShell,
-			  kAppShellServiceCID, nsnull, &rv);
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIXULWindow> xulWindow;
-  rv = appShell->GetHiddenWindow(getter_AddRefs(xulWindow));
-  if(NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocShell> docShell;
-  rv = xulWindow->GetDocShell(getter_AddRefs(docShell));
-  if(NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsIDOMWindowInternal> domWindow(do_GetInterface(docShell));
-  *_retval = domWindow;
-  NS_IF_ADDREF(*_retval);
-
-  return NS_OK;
-}
-
-NS_METHOD nsGtkMozRemoteHelper::GetLastBrowserWindow (nsIDOMWindowInternal **_retval)
+NS_METHOD nsGtkMozRemoteHelper::GetLastBrowserWindow (nsIDOMWindow **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
@@ -883,59 +851,42 @@ NS_METHOD nsGtkMozRemoteHelper::GetLastBrowserWindow (nsIDOMWindowInternal **_re
   rv = windowMediator->GetMostRecentWindow(browserString.GetUnicode(), getter_AddRefs(outerWindow));
   if (NS_FAILED(rv))
     return rv;
-  *_retval = outerWindow.get();
+  nsCOMPtr<nsIDOMWindow> domwin(do_QueryInterface(outerWindow));
+  if (!domwin)
+    return NS_ERROR_NO_INTERFACE;
+  *_retval = domwin;
   NS_ADDREF(*_retval);
   return NS_OK;
 }
 
-NS_METHOD nsGtkMozRemoteHelper::OpenXULWindow (const char *aChromeURL, nsIDOMWindowInternal *aParent,
+NS_METHOD nsGtkMozRemoteHelper::OpenXULWindow (const char *aChromeURL, nsIDOMWindow *aParent,
 					       const char *aWindowFeatures,
-					       const PRUnichar *aName, const PRUnichar *aURL)
+					       const char *aName, const PRUnichar *aURL)
 {
   NS_ENSURE_ARG_POINTER(aChromeURL);
   NS_ENSURE_ARG_POINTER(aWindowFeatures);
   NS_ENSURE_ARG_POINTER(aParent);
 
-  nsCOMPtr<nsIDOMWindowInternal> returnedWindow;
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObj = do_QueryInterface(aParent);
-  JSContext *jsContext = nsnull;
-
-  if (!scriptGlobalObj)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIScriptContext> scriptcx;
-  scriptGlobalObj->GetContext(getter_AddRefs(scriptcx));
-  if (scriptcx)
-    jsContext = (JSContext *)scriptcx->GetNativeContext();
-
-  if (!jsContext)
-    return NS_ERROR_FAILURE;
-  
   // make sure that we pass a valid name even if there isn't one
   // passed in.
-  const PRUnichar *name;
+  const char *name;
   const PRUnichar *url;
 
-  static PRUnichar kEmpty[] = { PRUnichar(0) };
-  name = aName ? aName : kEmpty;
-  url = aURL ? aURL : kEmpty;
+  static char kEmptyChar[] = { 0 };
+  static PRUnichar kEmptyUnichar[] = { PRUnichar(0) };
+  name = aName ? aName : kEmptyChar;
+  url = aURL ? aURL : kEmptyUnichar;
 
-  jsval *jsargv;
-  void *mark;
-
-  jsargv = JS_PushArguments(jsContext, &mark, "sWsW", aChromeURL, name,
-			    aWindowFeatures, url);
-
-  if (!jsargv)
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsISupportsWString> sarg(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  if (!wwatch || !sarg)
     return NS_ERROR_FAILURE;
-  
+
+  sarg->SetData(aURL);
+  nsCOMPtr<nsIDOMWindow> returnedWindow;
   nsresult rv;
+  rv = wwatch->OpenWindow(aParent, aChromeURL, aName, aWindowFeatures, sarg,
+                  getter_AddRefs(returnedWindow));
 
-  rv = aParent->OpenDialog(jsContext, jsargv, 4, getter_AddRefs(returnedWindow));
-  JS_PopArguments(jsContext, mark);
-
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
+  return rv;
 }

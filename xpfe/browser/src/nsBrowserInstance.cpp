@@ -60,6 +60,7 @@
 #include "nsIDocShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsIWindowWatcher.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
@@ -1451,39 +1452,13 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
                                                      nsISupports * aWindowContext,
                                                      nsIRequest * aRequest)
 {
-  // we need a dom window to create the new browser window...in order
-  // to do this, we need to get the window mediator service and ask it for a dom window
+  // create a new browser window to handle the content
   NS_ENSURE_ARG(aRequest);
-  nsCOMPtr<nsIDOMWindowInternal> parentWindow;
-  JSContext* jsContext = nsnull;
+  nsCOMPtr<nsIDOMWindow> parentWindow;
 
   if (aWindowContext)
-  {
     parentWindow = do_GetInterface(aWindowContext);
-    if (parentWindow)
-    {
-      nsCOMPtr<nsIScriptGlobalObject> sgo;     
-      sgo = do_QueryInterface( parentWindow );
-      if (sgo)
-      {
-        nsCOMPtr<nsIScriptContext> scriptContext;
-        sgo->GetContext( getter_AddRefs( scriptContext ) );
-        if (scriptContext)
-          jsContext = (JSContext*)scriptContext->GetNativeContext();
-      }
 
-    }
-  }
-
-  // if we still don't have a parent window, try to use the hidden window...
-  if (!parentWindow || !jsContext)
-  {
-    nsCOMPtr<nsIAppShellService> windowService (do_GetService(kAppShellServiceCID));
-    NS_ENSURE_SUCCESS(windowService->GetHiddenWindowAndJSContext(getter_AddRefs(parentWindow), &jsContext),
-                      NS_ERROR_FAILURE);
-  }
-
-  
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aRequest);
   if (!aChannel) return NS_ERROR_FAILURE;
 
@@ -1492,12 +1467,6 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
   nsXPIDLCString spec;
   uri->GetSpec(getter_Copies(spec));
-
-  void* mark;
-  jsval* argv;
-
-  nsAutoString value;
-  value.AssignWithConversion(spec);
 
   // we only want to pass in the window target name if it isn't something like _new or _blank....
   // i.e. only real names like "my window", etc...
@@ -1509,12 +1478,12 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
                         !nsCRT::strcasecmp(aWindowTarget, "_content"))
     windowTarget = "";
 
-  argv = JS_PushArguments(jsContext, &mark, "Ws", value.GetUnicode(), windowTarget);
-  NS_ENSURE_TRUE(argv, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMWindowInternal> newWindow;
-  parentWindow->Open(jsContext, argv, 2, getter_AddRefs(newWindow));
-  JS_PopArguments(jsContext, mark);
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  if (wwatch) {
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    wwatch->OpenWindow(parentWindow, spec, windowTarget, 0, 0,
+              getter_AddRefs(newWindow));
+  }
 
   // now abort the current channel load...
   aRequest->Cancel(NS_BINDING_ABORTED);

@@ -67,8 +67,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsPSMUIHandlerImpl, nsIPSMUIHandler)
 NS_METHOD
 nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, const char *urlStr, nsIDOMWindow * win)
 {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
     nsresult rv;
-    nsCOMPtr<nsIDOMWindowInternal> parentWindow;
+    nsCOMPtr<nsIDOMWindow> parentWindow;
     JSContext *jsContext;
 	jsval	*argv = NULL;
 
@@ -88,16 +89,6 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, cons
 		if (!jsContext) { rv = NS_ERROR_FAILURE; goto loser; }
 
 		parentWindow = do_QueryInterface(win);
-	} else {
-		NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-		if (NS_FAILED(rv)) {
-			goto loser;
-		}
-		rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs( parentWindow ),
-				                                        &jsContext );
-		if ( NS_FAILED( rv ) ) {
-			goto loser;
-		}
 	}
 
   // Set up arguments for "window.open"
@@ -114,23 +105,13 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, cons
               : "menubar=no,height=%d,width=%d",
               height,
               width );
-  void *stackPtr;
-  argv = JS_PushArguments(jsContext, &stackPtr, "sss", urlStr, "_blank", buffer);
-  if (argv) {
-    // open the window
-    nsIDOMWindowInternal *newWindow;
-#if defined(WIN32) || defined(XP_OS2)
-    if (modal && win) {
-      parentWindow->OpenDialog(jsContext, argv, 3, &newWindow);
-    } else {
-      parentWindow->Open(jsContext, argv, 3, &newWindow);
+
+
+    if (wwatch) {
+        nsCOMPtr<nsIDOMWindow> newwin;
+        wwatch->OpenWindow(parentWindow, urlStr, "_blank", buffer, 0, getter_AddRefs(newwin));
     }
-    newWindow->ResizeTo(width, height);
-#else
-    parentWindow->Open(jsContext, argv, 3, &newWindow);
-#endif
-    JS_PopArguments(jsContext, stackPtr);
-  }
+
  loser:
   return rv;
 }
