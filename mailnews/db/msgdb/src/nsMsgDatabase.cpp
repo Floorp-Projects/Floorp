@@ -567,15 +567,14 @@ NS_IMETHODIMP nsMsgDatabase::NotifyAnnouncerGoingAway(void)
   // on this notification
   PRUint32 count;
   m_ChangeListeners->Count(&count);
-  for (PRInt32 i = count - 1; i >= 0 ; i--)
+  for (PRUint32 i = count - 1; i >= 0 ; i--)
   {
     nsCOMPtr<nsIDBChangeListener> changeListener;
     m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
-    nsresult rv;
-    if (changeListener)
-      rv = changeListener->OnAnnouncerGoingAway(this); 
-    if (NS_FAILED(rv)) 
-      return rv;
+    if (changeListener) {
+      nsresult rv = changeListener->OnAnnouncerGoingAway(this); 
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
   }
   return NS_OK;
 }
