@@ -205,27 +205,6 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
     if (GTK_WIDGET_VISIBLE (mWidget))
       ::gtk_widget_queue_draw (mWidget);
 
-/*
-  if (aRepaint && GTK_IS_WIDGET (mWidget) &&
-       GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
-    
-    GdkEventExpose event;
-
-    event.type = GDK_EXPOSE;
-    event.send_event = PR_TRUE;
-    event.window = GTK_WIDGET(mWidget)->window;
-    event.area.width = mBounds.width;
-    event.area.height = mBounds.height;
-    event.area.x = 0;
-    event.area.y = 0;
-
-    event.count = 0;
-
-    gdk_window_ref (event.window);
-    gtk_widget_event (GTK_WIDGET(mWidget), (GdkEvent*) &event);
-    gdk_window_unref (event.window);
-  }
-*/
   return NS_OK;
 }
 
@@ -452,16 +431,16 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   nRect.x = aRect.x;
   nRect.y = aRect.y;
 
-#ifdef HAVE_GTK_BETTER_THAN_1_1_13
+#ifdef GTK_HAVE_FEATURES_1_1_14
   if ( aIsSynchronous)
-#endif /* HAVE_GTK_BETTER_THAN_1_1_13 */
+#endif
       ::gtk_widget_draw(mWidget, &nRect);
-#ifdef HAVE_GTK_BETTER_THAN_1_1_13
+#ifdef GTK_HAVE_FEATURES_1_1_14
   else
       ::gtk_widget_queue_draw_area(mWidget,
                                    aRect.width, aRect.height,
                                    aRect.x, aRect.y);
-#endif /* HAVE_GTK_BETTER_THAN_1_1_13 */
+#endif
 
   return NS_OK;
 }
