@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.236 $ ';
+$::UtilsVersion = '$Revision: 1.237 $ ';
 
 package TinderUtils;
 
@@ -51,6 +51,9 @@ require "gettime.pl";
 #   [...]
 #   cpan> install Bundle::LWP
 #
+
+my $co_time_str = 0;  # Global, let tests send cvs co time to graph server.
+
 
 sub Setup {
     InitVars();
@@ -707,6 +710,10 @@ sub BuildIt {
             $start_time = adjust_start_time($start_time);
             my $time_str = POSIX::strftime("%m/%d/%Y %H:%M", localtime($start_time));
 
+            # Global, sorry.  Tests need this, it's everywhere.
+            # Switch to format the graph server uses, to be consistant.
+            $co_time_str = POSIX::strftime("%Y:%m:%d:%H:%M:%S", localtime($start_time));
+
             # Figure out the timezone.  Some platform issues here:
             #
             # Win32/Activate returns the long form, e.g. "Pacific Daylight Time"
@@ -1329,10 +1336,14 @@ sub print_test_errors {
 # perl-libwww-perl-5.53-3.noarch.rpm
 #
 sub send_results_to_server {
-    my ($value, $data, $testname, $tbox) = @_;
+    my ($value, $raw_data, $testname, $tbox) = @_;
+
+    # Prepend raw data with cvs checkout date, performance
+    # Use MOZ_CO_DATE, but with same graph/collect.cgi format. (server)
+    my $data_plus_co_time = "MOZ_CO_DATE=$co_time_str\t$raw_data";
 
     my $tmpurl = "http://$Settings::results_server/graph/collect.cgi";
-    $tmpurl .= "?value=$value&data=$data&testname=$testname&tbox=$tbox";
+    $tmpurl .= "?value=$value&data=$data_plus_co_time&testname=$testname&tbox=$tbox";
 
     print_log "send_results_to_server(): \n";
     print_log "tmpurl = $tmpurl\n";
