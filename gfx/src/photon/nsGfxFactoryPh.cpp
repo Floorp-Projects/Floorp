@@ -158,5 +158,5 @@ static nsModuleComponentInfo components[] =
     nsScreenManagerPhConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsGfxPhModule", components)
+NS_IMPL_NSGETMODULE(nsGfxPhModule, components)
 

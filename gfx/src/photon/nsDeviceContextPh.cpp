@@ -25,7 +25,6 @@
 #include "nspr.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
-#include "il_util.h"
 #include "nsCRT.h"
 
 #include "nsDeviceContextPh.h"

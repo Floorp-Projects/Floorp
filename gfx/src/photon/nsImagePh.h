@@ -29,7 +29,7 @@
 class nsImagePh : public nsIImage {
 public:
   nsImagePh();
-  ~nsImagePh();
+  virtual ~nsImagePh();
 
   NS_DECL_ISUPPORTS
 

@@ -31,7 +31,6 @@
 #include <photon/PhRender.h>
 
 #include <errno.h>
-#include "libimg.h"
 #include "nsDeviceContextPh.h"
 #include "prprf.h"
 #include "nsDrawingSurfacePh.h"

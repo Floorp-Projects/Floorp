@@ -91,7 +91,6 @@ protected:
 
   nsDrawingSurface      mSurface;
   PRUint32              mDepth;  // bit depth of device
-  nsPaletteInfo         mPaletteInfo;
   float                 mPixelScale;
   PRInt16               mScrollbarHeight;
   PRInt16               mScrollbarWidth;
