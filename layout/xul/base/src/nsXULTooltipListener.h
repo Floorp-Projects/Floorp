@@ -99,7 +99,6 @@ public:
   nsresult GetDefaultTooltip(nsIContent** aDefaultTooltip);
   nsresult AddTooltipSupport(nsIContent* aNode);
   nsresult RemoveTooltipSupport(nsIContent* aNode);
-  nsresult GetTargetOutlinerBoxObject(nsIOutlinerBoxObject** aBoxObject);
 
 protected:
 
@@ -111,6 +110,7 @@ protected:
   void CreateAutoHideTimer();
 
   void CheckOutlinerBodyMove(nsIDOMMouseEvent* aMouseEvent);
+  nsresult GetSourceOutlinerBoxObject(nsIOutlinerBoxObject** aBoxObject);
 
   nsresult ShowTooltip();
   nsresult LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY);
@@ -139,7 +139,7 @@ protected:
   };
 
   // special members for handling outliners
-  PRBool mIsTargetOutliner;
+  PRBool mIsSourceOutliner;
   PRBool mNeedTitletip;
   PRInt32 mLastOutlinerRow;
   nsAutoString mLastOutlinerCol;

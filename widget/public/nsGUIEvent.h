@@ -360,6 +360,7 @@ enum nsDragDropEventStatus {
 #define NS_ACCESSIBLE_EVENT   20
 #define NS_FORM_EVENT         21
 #define NS_FOCUS_EVENT        22
+#define NS_POPUP_EVENT        23
 
  /**
  * GUI MESSAGES

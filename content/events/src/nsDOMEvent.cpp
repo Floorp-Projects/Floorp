@@ -184,6 +184,10 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
       mEvent = PR_NEWZAP(nsMutationEvent);
       mEvent->eventStructType = NS_MUTATION_EVENT;
     }
+    else if (eventType.EqualsIgnoreCase("PopupEvents")) {
+      mEvent = PR_NEWZAP(nsGUIEvent);
+      mEvent->eventStructType = NS_POPUP_EVENT;
+    }
     else {
       mEvent = PR_NEWZAP(nsEvent);
       mEvent->eventStructType = NS_EVENT;
@@ -603,7 +607,9 @@ nsDOMEvent::GetReconversionReply(nsReconversionEventReply** aReply)
 NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
 {
   if (!mEvent || 
-       (mEvent->eventStructType != NS_MOUSE_EVENT && mEvent->eventStructType != NS_DRAGDROP_EVENT) ) {
+       (mEvent->eventStructType != NS_MOUSE_EVENT &&
+        mEvent->eventStructType != NS_POPUP_EVENT &&
+        mEvent->eventStructType != NS_DRAGDROP_EVENT)) {
     *aScreenX = 0;
     return NS_OK;
   }
@@ -625,7 +631,9 @@ NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
 NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 {
   if (!mEvent || 
-        (mEvent->eventStructType != NS_MOUSE_EVENT && mEvent->eventStructType != NS_DRAGDROP_EVENT) ) {
+       (mEvent->eventStructType != NS_MOUSE_EVENT &&
+        mEvent->eventStructType != NS_POPUP_EVENT &&
+        mEvent->eventStructType != NS_DRAGDROP_EVENT)) {
     *aScreenY = 0;
     return NS_OK;
   }
@@ -647,7 +655,9 @@ NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 {
   if (!mEvent || 
-       (mEvent->eventStructType != NS_MOUSE_EVENT && mEvent->eventStructType != NS_DRAGDROP_EVENT) ||
+       (mEvent->eventStructType != NS_MOUSE_EVENT &&
+        mEvent->eventStructType != NS_POPUP_EVENT &&
+        mEvent->eventStructType != NS_DRAGDROP_EVENT) ||
       !mPresContext) {
     *aClientX = 0;
     return NS_OK;
@@ -698,8 +708,10 @@ NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
 {
   if (!mEvent || 
-       (mEvent->eventStructType != NS_MOUSE_EVENT && mEvent->eventStructType != NS_DRAGDROP_EVENT) ||
-      !mPresContext) {
+       (mEvent->eventStructType != NS_MOUSE_EVENT &&
+        mEvent->eventStructType != NS_POPUP_EVENT &&
+        mEvent->eventStructType != NS_DRAGDROP_EVENT) ||
+       !mPresContext) {
     *aClientY = 0;
     return NS_OK;
   }

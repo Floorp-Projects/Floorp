@@ -523,7 +523,7 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
-  event.eventStructType = NS_EVENT;
+  event.eventStructType = NS_POPUP_EVENT;
   event.message = NS_XUL_POPUP_SHOWING;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
@@ -613,7 +613,7 @@ nsPopupSetFrame::OnCreated(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
-  event.eventStructType = NS_EVENT;
+  event.eventStructType = NS_POPUP_EVENT;
   event.message = NS_XUL_POPUP_SHOWN;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
@@ -643,7 +643,7 @@ nsPopupSetFrame::OnDestroy(nsIContent* aPopupContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
-  event.eventStructType = NS_EVENT;
+  event.eventStructType = NS_POPUP_EVENT;
   event.message = NS_XUL_POPUP_HIDING;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
@@ -669,7 +669,7 @@ nsPopupSetFrame::OnDestroyed(nsIContent* aPopupContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
-  event.eventStructType = NS_EVENT;
+  event.eventStructType = NS_POPUP_EVENT;
   event.message = NS_XUL_POPUP_HIDDEN;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
