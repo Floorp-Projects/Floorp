@@ -422,7 +422,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
       case NS_MOVE: {
         // persist position, but not immediately, in case this OS is firing
         // repeated move events as the user drags the window
-        eventWindow->SetPersistenceTimer(PR_FALSE, PR_TRUE);
+        eventWindow->SetPersistenceTimer(PR_FALSE, PR_TRUE, PR_FALSE);
         break;
       }
       case NS_SIZE: {
@@ -432,14 +432,17 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
           sizeEvent->windowSize->height, PR_FALSE);  
         // persist size, but not immediately, in case this OS is firing
         // repeated size events as the user drags the sizing handle
-        eventWindow->SetPersistenceTimer(PR_TRUE, PR_FALSE);
+        eventWindow->SetPersistenceTimer(PR_TRUE, PR_FALSE, PR_TRUE);
         result = nsEventStatus_eConsumeNoDefault;
         break;
       }
       case NS_SIZEMODE: {
         nsSizeModeEvent* modeEvent = (nsSizeModeEvent*)aEvent;
         aEvent->widget->SetSizeMode(modeEvent->mSizeMode);
-        eventWindow->StoreBoundsToXUL(PR_FALSE, PR_FALSE, PR_TRUE);
+        // persist mode, but not immediately, because in many (all?)
+        // cases this will merge with the similar call in NS_SIZE and
+        // write the attribute values only once.
+        eventWindow->SetPersistenceTimer(PR_FALSE, PR_FALSE, PR_TRUE);
         result = nsEventStatus_eConsumeDoDefault;
         // Note the current implementation of SetSizeMode just stores
         // the new state; it doesn't actually resize. So here we store
@@ -592,7 +595,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
             // since the window has been activated, replace persistent size data
             // with the newly activated window's
             if (eventWindow->mChromeLoaded)
-              eventWindow->StoreBoundsToXUL(PR_TRUE, PR_TRUE, PR_TRUE);
+              eventWindow->PersistPositionAndSize(PR_TRUE, PR_TRUE, PR_TRUE);
 
             break;
           }
@@ -1153,13 +1156,14 @@ nsWebShellWindow::DestroyModalDialogEvent(PLEvent *aEvent)
 }
 
 void
-nsWebShellWindow::SetPersistenceTimer(PRBool aSize, PRBool aPosition)
+nsWebShellWindow::SetPersistenceTimer(PRBool aSize, PRBool aPosition, PRBool aMode)
 {
   PR_Lock(mSPTimerLock);
   if (mSPTimer) {
     mSPTimer->SetDelay(SIZE_PERSISTENCE_TIMEOUT);
     mSPTimerSize |= aSize;
     mSPTimerPosition |= aPosition;
+    mSPTimerMode |= aMode;
   } else {
     nsresult rv;
     mSPTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
@@ -1168,6 +1172,7 @@ nsWebShellWindow::SetPersistenceTimer(PRBool aSize, PRBool aPosition)
                      SIZE_PERSISTENCE_TIMEOUT, NS_TYPE_ONE_SHOT);
       mSPTimerSize = aSize;
       mSPTimerPosition = aPosition;
+      mSPTimerMode = aMode;
     }
   }
   PR_Unlock(mSPTimerLock);
@@ -1180,7 +1185,8 @@ nsWebShellWindow::FirePersistenceTimer(nsITimer *aTimer, void *aClosure)
   PR_Lock(win->mSPTimerLock);
   win->mSPTimer = nsnull;
   PR_Unlock(win->mSPTimerLock);
-  win->StoreBoundsToXUL(win->mSPTimerPosition, win->mSPTimerSize, PR_FALSE);
+  win->PersistPositionAndSize(win->mSPTimerPosition, win->mSPTimerSize,
+                              win->mSPTimerMode);
 }
 
 
@@ -1378,12 +1384,6 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsAString & aWeb
 } // nsWebShellWindow::GetNamedDOMDoc
 
 //----------------------------------------
-
-/* copy the window's size and position to the window tag */
-void nsWebShellWindow::StoreBoundsToXUL(PRBool aPosition, PRBool aSize, PRBool aSizeMode)
-{
-   PersistPositionAndSize(aPosition, aSize, aSizeMode);
-} // StoreBoundsToXUL
 
 // if the main document URL specified URLs for any content areas, start them loading
 void nsWebShellWindow::LoadContentAreas() {
@@ -1737,7 +1737,7 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
   if (mSPTimer) {
     mSPTimer->Cancel();
     mSPTimer = nsnull;
-    StoreBoundsToXUL(mSPTimerPosition, mSPTimerSize, PR_FALSE);
+    PersistPositionAndSize(mSPTimerPosition, mSPTimerSize, mSPTimerMode);
   }
   PR_Unlock(mSPTimerLock);
 
