@@ -42,6 +42,8 @@ static const PRUnichar kLineSeparator    = 0x2028;
 static const PRUnichar kObjectSubstitute = 0xFFFC;
 static const PRUnichar kLRE              = 0x202A;
 static const PRUnichar kRLE              = 0x202B;
+static const PRUnichar kLRO              = 0x202D;
+static const PRUnichar kRLO              = 0x202E;
 static const PRUnichar kPDF              = 0x202C;
 
 #ifdef FIX_FOR_BUG_40882
@@ -128,34 +130,6 @@ CreateBidiContinuation(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-static void
-AdjustEmbeddingLevel(nsIFrame* aFrame,
-                     PRUint8&  aEmbeddingLevel)
-{
-  const nsStyleText* text;
-  aFrame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) text);
-
-  NS_ASSERTION(text, "Couldn't get text StyleData in nsBidiPresUtils::AdjustEmbeddingLevel");
-
-  if (NS_STYLE_UNICODE_BIDI_OVERRIDE == text->mUnicodeBidi) {
-    const nsStyleVisibility* vis;
-
-    aFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
-          
-    NS_ASSERTION(text, "Couldn't get display StyleData in nsBidiPresUtils::AdjustEmbeddingLevel");
-    
-    if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-      // ensure embedding level is odd
-      aEmbeddingLevel = (aEmbeddingLevel - 1) | 0x01;
-    }
-    else { // if (NS_STYLE_DIRECTION_LTR == display->mDirection)
-      // ensure embedding level is even
-      aEmbeddingLevel &= ~0x01;
-    }
-  }
-}
-/*************************************/
-
 nsresult
 nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
                          nsIFrame*       aBlockFrame,
@@ -165,7 +139,36 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
   aForceReflow = PR_FALSE;
   mLogicalFrames.Clear();
 
+  // handle bidi-override being set on the block itself before calling
+  // InitLogicalArray.
+  const nsStyleVisibility* vis;
+  aBlockFrame->GetStyleData(eStyleStruct_Visibility,
+                            NS_REINTERPRET_CAST(const nsStyleStruct*&, vis));
+  const nsStyleTextReset* text;
+  aBlockFrame->GetStyleData(eStyleStruct_TextReset,
+                            NS_REINTERPRET_CAST(const nsStyleStruct*&, text));
+
+  if (text->mUnicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
+    nsresult rv;
+    nsIFrame *directionalFrame = nsnull;
+    if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
+      rv = NS_NewDirectionalFrame(&directionalFrame, kRLO);
+    }
+    else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
+      rv = NS_NewDirectionalFrame(&directionalFrame, kLRO);
+    }
+    if (directionalFrame && NS_SUCCEEDED(rv)) {
+      mLogicalFrames.AppendElement(directionalFrame);
+    }
+  }
   mSuccess = InitLogicalArray(aPresContext, aFirstChild, nsnull, PR_TRUE);
+  if (text->mUnicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
+    nsIFrame *directionalFrame = nsnull;
+    nsresult rv = NS_NewDirectionalFrame(&directionalFrame, kPDF);
+    if (directionalFrame && NS_SUCCEEDED(rv)) {
+      mLogicalFrames.AppendElement(directionalFrame);
+    }
+  }
   if (NS_FAILED(mSuccess) ) {
     return mSuccess;
   }
@@ -178,9 +181,6 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
     mSuccess = NS_OK;
     return mSuccess;
   }
-  const nsStyleVisibility* vis;
-  aBlockFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
-
   PRInt32 runCount;
   PRUint8 embeddingLevel;
 
@@ -274,14 +274,14 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
       ++lineOffset;
     }
     else {
-      AdjustEmbeddingLevel(frame, embeddingLevel);
       frame->SetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
                              (void *)embeddingLevel);
       frame->SetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel,
                              (void *)paraLevel);
       if (isTextFrame) {
-        PRInt32 limit = PR_MIN(logicalLimit, lineOffset + fragmentLength);
-        CalculateCharType(limit, lineOffset, charType, prevType);
+        PRInt32 typeLimit = PR_MIN(logicalLimit, lineOffset + fragmentLength);
+        CalculateCharType(lineOffset, typeLimit, logicalLimit, runLength,
+                           runCount, charType, prevType);
         // IBMBIDI - Egypt - Start
         frame->SetBidiProperty(aPresContext,nsLayoutAtoms::charType,(void*)charType);
         // IBMBIDI - Egypt - End
@@ -353,37 +353,37 @@ nsBidiPresUtils::InitLogicalArray(nsIPresContext* aPresContext,
     rv = NS_ERROR_FAILURE;
     frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
     
-    if ( (aAddMarkers) && (!display->IsBlockLevel() ) ) {
-      // Example: <bdo dir=ltr>latin HEBREW</bdo>
-      // should be displayed as is: latin HEBREW
-      // The entire text frame receives even EL and whouldn't "normally" be split.
-      // Then, if the platform is Bidi, it reverses hebrew characters, which results in
-      // incorrect text order: latin WERBEH
-      // To avoid that, we always insert LRE/RLE. That forces splitting the frame into
-      // uni-directional (from the platform point of view) pieces - with even EL for
-      // "latin" and odd EL for "HEBREW". Unicode override, if any, will be taken into
-      // account in AdjustEmbeddingLevel(). Correct text order on a bidi platform will
-      // be ensured by nsBidiPresUtils::FormatUnicodeText (which would reverse "HEBREW"
-      // due to inconsistency between its Bidi category (U_RIGHT_TO_LEFT) and the
-      // parity of its EL (even).
-      nsCOMPtr<nsIStyleContext> styleContext;
-      frame->GetStyleContext(getter_AddRefs(styleContext));
+    if (aAddMarkers && !display->IsBlockLevel() ) {
       const nsStyleVisibility* vis;
-      frame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
-      PRUint32 bits;
-      styleContext->GetStyleBits(&bits);
-      if (bits & NS_STYLE_INHERIT_VISIBILITY) {
-        if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-          rv = NS_NewDirectionalFrame(&directionalFrame, kRLE);
-        }
-        else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
-          rv = NS_NewDirectionalFrame(&directionalFrame, kLRE);
-        }
-        if (NS_SUCCEEDED(rv) ) {
-          mLogicalFrames.AppendElement(directionalFrame);
-        }
+      frame->GetStyleData(eStyleStruct_Visibility,
+                          NS_REINTERPRET_CAST(const nsStyleStruct*&, vis));
+      const nsStyleTextReset* text;
+      frame->GetStyleData(eStyleStruct_TextReset,
+                          NS_REINTERPRET_CAST(const nsStyleStruct*&, text));
+      switch (text->mUnicodeBidi) {
+        case NS_STYLE_UNICODE_BIDI_NORMAL:
+          break;
+        case NS_STYLE_UNICODE_BIDI_EMBED:
+          if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
+            rv = NS_NewDirectionalFrame(&directionalFrame, kRLE);
+          }
+          else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
+            rv = NS_NewDirectionalFrame(&directionalFrame, kLRE);
+          }
+          break;
+        case NS_STYLE_UNICODE_BIDI_OVERRIDE:
+          if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
+            rv = NS_NewDirectionalFrame(&directionalFrame, kRLO);
+          }
+          else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
+            rv = NS_NewDirectionalFrame(&directionalFrame, kLRO);
+          }
+          break;
       }
-    } // if (aAddMarkers)
+      if (NS_SUCCEEDED(rv) ) {
+        mLogicalFrames.AppendElement(directionalFrame);
+      }
+    }
 
     frame->GetFrameType(getter_AddRefs(frameType) );
 
@@ -939,19 +939,13 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
                                      NSBIDI_REMOVE_BIDI_CONTROLS | NSBIDI_DO_MIRRORING,
                                      &newLen);
     }
+    if (NS_SUCCEEDED(rv) && buffer) {
+      aTextLength = newLen;
+      nsCRT::memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
+    }
   } // doReverse
   else {
-    buffer = nsnull; // remove this line after writeForward is implemented
-    // XXX: todo
-#if 0
-    // Still need to remove bidi controls
-    rv = mBidiEngine->WriteForward(aText, aTextLength, buffer,
-                                   NSBIDI_REMOVE_BIDI_CONTROLS, &newLen);
-#endif
-  }
-  if (NS_SUCCEEDED(rv) && buffer) {
-    aTextLength = newLen;
-    nsCRT::memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
+    StripBidiControlCharacters(aText, aTextLength);
   }
   return rv;
 }
@@ -978,10 +972,14 @@ RemoveDiacritics(PRUnichar* aText,
 #endif
 
 void
-nsBidiPresUtils::CalculateCharType(PRInt32  aLimit,
-                                   PRInt32& aOffset,
+nsBidiPresUtils::CalculateCharType(PRInt32& aOffset,
+                                   PRInt32  aCharTypeLimit,
+                                   PRInt32& aRunLimit,
+                                   PRInt32& aRunLength,
+                                   PRInt32& aRunCount,
                                    PRUint8& aCharType,
                                    PRUint8& aPrevCharType) const
+
 {
   PRBool     strongTypeFound = PR_FALSE;
   PRInt32    offset;
@@ -989,7 +987,7 @@ nsBidiPresUtils::CalculateCharType(PRInt32  aLimit,
 
   aCharType = eCharType_OtherNeutral;
 
-  for (offset = aOffset; offset < aLimit; offset++) {
+  for (offset = aOffset; offset < aCharTypeLimit; offset++) {
     // Make sure we give RTL chartype to all that stuff that would be classified
     // as Right-To-Left by a bidi platform.
     // (May differ from the UnicodeData, eg we set RTL chartype to some NSM's.)
@@ -1006,24 +1004,60 @@ nsBidiPresUtils::CalculateCharType(PRInt32  aLimit,
     }
 
     if (!CHARTYPE_IS_WEAK(charType) ) {
+
+      if (strongTypeFound
+          && (charType != aPrevCharType)
+          && (CHARTYPE_IS_RTL(charType) || CHARTYPE_IS_RTL(aPrevCharType) ) ) {
+        // Stop at this point to ensure uni-directionality of the text
+        // (from platform's point of view).
+        // Also, don't mix Arabic and Hebrew content (since platform may
+        // provide BIDI support to one of them only).
+        aRunLength = offset - aOffset;
+        aOffset = aRunLimit = offset;
+        ++aRunCount;
+        return;
+      }
+
       if ( (eCharType_RightToLeftArabic == aPrevCharType
-          || eCharType_ArabicNumber == aPrevCharType)
+            || eCharType_ArabicNumber == aPrevCharType)
           && eCharType_EuropeanNumber == charType) {
         charType = eCharType_ArabicNumber;
       }
+
       // Set PrevCharType to the last strong type in this frame
       // (for correct numeric shaping)
       aPrevCharType = charType;
 
-      // eCharType_RightToLeftArabic, if presents, outweighs
-      // (otherwise may miss shaping)
-      if (!strongTypeFound || (eCharType_RightToLeftArabic == charType) ) {
+      if (!strongTypeFound) {
         strongTypeFound = PR_TRUE;
         aCharType = charType;
       }
     }
   }
-  aOffset = aLimit;
+  aOffset = aCharTypeLimit;
+}
+
+void
+nsBidiPresUtils::StripBidiControlCharacters(PRUnichar* aText,
+                                            PRInt32&   aTextLength) const
+{
+  if ( (nsnull == aText) || (aTextLength < 1) ) {
+    return;
+  }
+
+  PRInt32 stripLen = 0;
+  PRBool isBidiControl;
+
+  for (PRInt32 i = 0; i < aTextLength; i++) {
+    mUnicodeUtils->IsBidiControl(aText[i], &isBidiControl);
+    if (isBidiControl) {
+      ++stripLen;
+    }
+    else {
+      aText[i - stripLen] = aText[i];
+    }
+  }
+  aTextLength -= stripLen;
 }
 
 nsresult nsBidiPresUtils::GetBidiEngine(nsIBidi** aBidiEngine)

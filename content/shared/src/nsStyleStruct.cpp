@@ -1074,6 +1074,9 @@ nsStyleTextReset::nsStyleTextReset(void)
 { 
   mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
   mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
+#ifdef IBMBIDI
+  mUnicodeBidi = NS_STYLE_UNICODE_BIDI_NORMAL;
+#endif // IBMBIDI
 }
 
 nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource) 
@@ -1085,7 +1088,11 @@ nsStyleTextReset::~nsStyleTextReset(void) { }
 
 PRInt32 nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) const
 {
-  if (mVerticalAlign == aOther.mVerticalAlign) {
+  if (mVerticalAlign == aOther.mVerticalAlign
+#ifdef IBMBIDI
+      && mUnicodeBidi == aOther.mUnicodeBidi
+#endif // IBMBIDI
+      ) {
     if (mTextDecoration != aOther.mTextDecoration)
       return NS_STYLE_HINT_VISUAL;
     return NS_STYLE_HINT_NONE;
@@ -1107,9 +1114,6 @@ nsStyleText::nsStyleText(void)
   mLineHeight.SetNormalValue();
   mTextIndent.SetCoordValue(0);
   mWordSpacing.SetNormalValue();
-#ifdef IBMBIDI
-  mUnicodeBidi = NS_STYLE_UNICODE_BIDI_INHERIT;
-#endif // IBMBIDI
 }
 
 nsStyleText::nsStyleText(const nsStyleText& aSource) 
@@ -1127,9 +1131,6 @@ PRInt32 nsStyleText::CalcDifference(const nsStyleText& aOther) const
       (mLetterSpacing == aOther.mLetterSpacing) &&
       (mLineHeight == aOther.mLineHeight) &&
       (mTextIndent == aOther.mTextIndent) &&
-#ifdef IBMBIDI
-      (mUnicodeBidi == aOther.mUnicodeBidi) &&
-#endif // IBMBIDI
       (mWordSpacing == aOther.mWordSpacing))
     return NS_STYLE_HINT_NONE;
   return NS_STYLE_HINT_REFLOW;

@@ -2052,11 +2052,6 @@ MapTextForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCS
 
     if (aText.mWordSpacing.GetUnit() == eCSSUnit_Null && ourText->mWordSpacing.GetUnit() != eCSSUnit_Null)
       aText.mWordSpacing = ourText->mWordSpacing;
-
-#ifdef IBMBIDI
-    if (aText.mUnicodeBidi.GetUnit() == eCSSUnit_Null && ourText->mUnicodeBidi.GetUnit() != eCSSUnit_Null)
-      aText.mUnicodeBidi = ourText->mUnicodeBidi;
-#endif
   }
   else if (aID == eStyleStruct_TextReset) {
     if (aText.mVerticalAlign.GetUnit() == eCSSUnit_Null && ourText->mVerticalAlign.GetUnit() != eCSSUnit_Null)
@@ -2064,6 +2059,11 @@ MapTextForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCS
 
     if (aText.mDecoration.GetUnit() == eCSSUnit_Null && ourText->mDecoration.GetUnit() != eCSSUnit_Null)
       aText.mDecoration = ourText->mDecoration;
+
+#ifdef IBMBIDI
+    if (aText.mUnicodeBidi.GetUnit() == eCSSUnit_Null && ourText->mUnicodeBidi.GetUnit() != eCSSUnit_Null)
+      aText.mUnicodeBidi = ourText->mUnicodeBidi;
+#endif
   }
 
   return NS_OK;

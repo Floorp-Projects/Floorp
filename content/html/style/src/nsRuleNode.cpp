@@ -1646,23 +1646,6 @@ nsRuleNode::ComputeTextData(nsStyleText* aStartData, const nsCSSText& aTextData,
   SetCoord(aTextData.mWordSpacing, text->mWordSpacing, parentText->mWordSpacing,
            SETCOORD_LH | SETCOORD_NORMAL, aContext, mPresContext, inherited);
 
-#ifdef IBMBIDI
-  // unicode-bidi: enum, normal, inherit
-  // normal means that override prohibited
-  if (eCSSUnit_Normal == aTextData.mUnicodeBidi.GetUnit() ) {
-    text->mUnicodeBidi = NS_STYLE_UNICODE_BIDI_NORMAL;
-  }
-  else {
-    if (eCSSUnit_Enumerated == aTextData.mUnicodeBidi.GetUnit() ) {
-      text->mUnicodeBidi = aTextData.mUnicodeBidi.GetIntValue();
-    }
-    if (NS_STYLE_UNICODE_BIDI_INHERIT == text->mUnicodeBidi) {
-      inherited = PR_TRUE;
-      text->mUnicodeBidi = parentText->mUnicodeBidi;
-    }
-  }
-#endif // IBMBIDI
-
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
@@ -1719,6 +1702,20 @@ nsRuleNode::ComputeTextResetData(nsStyleTextReset* aStartData, const nsCSSText& 
     inherited = PR_TRUE;
     text->mTextDecoration = parentText->mTextDecoration;
   }
+
+#ifdef IBMBIDI
+  // unicode-bidi: enum, normal, inherit
+  if (eCSSUnit_Normal == aTextData.mUnicodeBidi.GetUnit() ) {
+    text->mUnicodeBidi = NS_STYLE_UNICODE_BIDI_NORMAL;
+  }
+  else if (eCSSUnit_Enumerated == aTextData.mUnicodeBidi.GetUnit() ) {
+    text->mUnicodeBidi = aTextData.mUnicodeBidi.GetIntValue();
+  }
+  else if (eCSSUnit_Inherit == aTextData.mUnicodeBidi.GetUnit() ) {
+    inherited = PR_TRUE;
+    text->mUnicodeBidi = parentText->mUnicodeBidi;
+  }
+#endif // IBMBIDI
 
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
@@ -4249,19 +4246,13 @@ nsRuleNode::CheckQuotesProperties(const nsCSSContent& aData)
 inline nsRuleNode::RuleDetail 
 nsRuleNode::CheckTextProperties(const nsCSSText& aData)
 {
-  const PRUint32 numProps = 8;
+  const PRUint32 numProps = 7;
   PRUint32 totalCount=0;
   PRUint32 inheritCount=0;
 
   if (eCSSUnit_Null != aData.mLineHeight.GetUnit()) {
     totalCount++;
     if (eCSSUnit_Inherit == aData.mLineHeight.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mUnicodeBidi.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mUnicodeBidi.GetUnit())
       inheritCount++;
   }
 
@@ -4317,7 +4308,7 @@ nsRuleNode::CheckTextProperties(const nsCSSText& aData)
 inline nsRuleNode::RuleDetail 
 nsRuleNode::CheckTextResetProperties(const nsCSSText& aData)
 {
-  const PRUint32 numProps = 2;
+  const PRUint32 numProps = 3;
   PRUint32 totalCount=0;
   PRUint32 inheritCount=0;
 
@@ -4330,6 +4321,12 @@ nsRuleNode::CheckTextResetProperties(const nsCSSText& aData)
   if (eCSSUnit_Null != aData.mVerticalAlign.GetUnit()) {
     totalCount++;
     if (eCSSUnit_Inherit == aData.mVerticalAlign.GetUnit())
+      inheritCount++;
+  }
+
+  if (eCSSUnit_Null != aData.mUnicodeBidi.GetUnit()) {
+    totalCount++;
+    if (eCSSUnit_Inherit == aData.mUnicodeBidi.GetUnit())
       inheritCount++;
   }
 

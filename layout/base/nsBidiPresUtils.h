@@ -133,11 +133,16 @@ private:
                                 nsIContent*     aContent,
                                 PRInt32&        aFrameIndex,
                                 PRInt32&        aOffset) const;
-  void CalculateCharType(PRInt32  aLimit,
-                         PRInt32& aOffset,
+  void CalculateCharType(PRInt32& aOffset,
+                         PRInt32  aCharTypeLimit,
+                         PRInt32& aRunLimit,
+                         PRInt32& aRunLength,
+                         PRInt32& aRunCount,
                          PRUint8& aCharType,
                          PRUint8& aPrevCharType) const;
   
+  void StripBidiControlCharacters(PRUnichar* aText,
+                                  PRInt32&   aTextLength) const;
   nsAutoString    mBuffer;
   nsVoidArray     mLogicalFrames;
   nsVoidArray     mVisualFrames;
