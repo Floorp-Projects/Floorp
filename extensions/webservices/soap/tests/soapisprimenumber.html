@@ -26,11 +26,10 @@ function oncompletion(resp, call, status) {
   // Was there a SOAP fault in the response?
   if (resp.fault != null) {
     var f = resp.fault;
-    var element = f.element;
+    var detail = f.detail;
     var ds = new XMLSerializer();
-    var elementStr = ds.serializeToString(element);
-    alert("Fault:\nFault code: " + f.faultCode + "\nFault string: " + f.faultString 
-      + "\nFault actor: "  + f.faultActor + "\nDetail: " + elementStr);
+    var detailStr = detail ? ds.serializeToString(detail) : "";
+    alert("Fault namespace: " + f.faultNamespaceURI + "\nFault code: " + f.faultCode + "\nFault string: " + f.faultString + "\nFault actor: "  + f.faultActor + "\nDetail: " + detailStr);
   }
   else {
     var ret = resp.getParameters(false, {});

@@ -39,6 +39,11 @@ interface nsISOAPFault:nsISupports {
   attribute nsIDOMElement element;
 
   /**
+   * The namespaceURI of the fault code.
+   */
+  readonly attribute AString faultNamespaceURI;
+
+  /**
    * The fault code
    */
   readonly attribute AString faultCode;

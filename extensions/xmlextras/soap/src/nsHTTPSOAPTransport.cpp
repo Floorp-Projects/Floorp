@@ -121,12 +121,14 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall,
   if (NS_FAILED(rv))
     return rv;
 
+#if 0
   PRUint32 status;
   rv = request->GetStatus(&status);
   if (NS_SUCCEEDED(rv) && (status < 200 || status >= 300))
     rv = NS_ERROR_FAILURE;
   if (NS_FAILED(rv))
     return rv;
+#endif
 
   if (aResponse) {
     nsCOMPtr < nsIDOMDocument > response;
@@ -214,13 +216,15 @@ NS_IMETHODIMP nsHTTPSOAPTransportCompletion::Abort(PRBool * _retval)
 NS_IMETHODIMP
     nsHTTPSOAPTransportCompletion::HandleEvent(nsIDOMEvent * aEvent)
 {
-  PRUint32 status;
-  nsresult rv;
+//  PRUint32 status;
+  nsresult rv = NS_OK;
   if (mRequest) {		//  Avoid if it has been aborted.
+#if 0
     rv = mRequest->GetStatus(&status);
     if (NS_SUCCEEDED(rv) && (status < 200 || status >= 300))
       rv = NS_ERROR_FAILURE;
-    if (mResponse && NS_SUCCEEDED(rv)) {
+#endif
+    if (mResponse) { // && NS_SUCCEEDED(rv)) {
       nsCOMPtr < nsIDOMDocument > document;
       rv = mRequest->GetResponseXML(getter_AddRefs(document));
       if (NS_SUCCEEDED(rv) && document) {

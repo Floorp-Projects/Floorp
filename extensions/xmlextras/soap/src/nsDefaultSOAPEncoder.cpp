@@ -48,64 +48,64 @@
 #include "nsIPropertyBag.h"
 #include "nsSupportsArray.h"
 
-NS_NAMED_LITERAL_STRING(kEmpty, "");
+static NS_NAMED_LITERAL_STRING(kEmpty, "");
 
-NS_NAMED_LITERAL_STRING(kSOAPArrayTypeAttribute, "arrayType");
-NS_NAMED_LITERAL_STRING(kSOAPArrayOffsetAttribute, "offset");
-NS_NAMED_LITERAL_STRING(kSOAPArrayPositionAttribute, "position");
+static NS_NAMED_LITERAL_STRING(kSOAPArrayTypeAttribute, "arrayType");
+static NS_NAMED_LITERAL_STRING(kSOAPArrayOffsetAttribute, "offset");
+static NS_NAMED_LITERAL_STRING(kSOAPArrayPositionAttribute, "position");
 
-NS_NAMED_LITERAL_STRING(kAnyTypeSchemaType, "anyType");
-NS_NAMED_LITERAL_STRING(kAnySimpleTypeSchemaType, "anySimpleType");
-NS_NAMED_LITERAL_STRING(kArraySOAPType, "Array");
-NS_NAMED_LITERAL_STRING(kStructSOAPType, "Struct");
+static NS_NAMED_LITERAL_STRING(kAnyTypeSchemaType, "anyType");
+static NS_NAMED_LITERAL_STRING(kAnySimpleTypeSchemaType, "anySimpleType");
+static NS_NAMED_LITERAL_STRING(kArraySOAPType, "Array");
+static NS_NAMED_LITERAL_STRING(kStructSOAPType, "Struct");
 
-NS_NAMED_LITERAL_STRING(kStringSchemaType, "string");
-NS_NAMED_LITERAL_STRING(kBooleanSchemaType, "boolean");
-NS_NAMED_LITERAL_STRING(kFloatSchemaType, "float");
-NS_NAMED_LITERAL_STRING(kDoubleSchemaType, "double");
-NS_NAMED_LITERAL_STRING(kLongSchemaType, "long");
-NS_NAMED_LITERAL_STRING(kIntSchemaType, "int");
-NS_NAMED_LITERAL_STRING(kShortSchemaType, "short");
-NS_NAMED_LITERAL_STRING(kByteSchemaType, "byte");
-NS_NAMED_LITERAL_STRING(kUnsignedLongSchemaType, "unsignedLong");
-NS_NAMED_LITERAL_STRING(kUnsignedIntSchemaType, "unsignedInt");
-NS_NAMED_LITERAL_STRING(kUnsignedShortSchemaType, "unsignedShort");
-NS_NAMED_LITERAL_STRING(kUnsignedByteSchemaType, "unsignedByte");
+static NS_NAMED_LITERAL_STRING(kStringSchemaType, "string");
+static NS_NAMED_LITERAL_STRING(kBooleanSchemaType, "boolean");
+static NS_NAMED_LITERAL_STRING(kFloatSchemaType, "float");
+static NS_NAMED_LITERAL_STRING(kDoubleSchemaType, "double");
+static NS_NAMED_LITERAL_STRING(kLongSchemaType, "long");
+static NS_NAMED_LITERAL_STRING(kIntSchemaType, "int");
+static NS_NAMED_LITERAL_STRING(kShortSchemaType, "short");
+static NS_NAMED_LITERAL_STRING(kByteSchemaType, "byte");
+static NS_NAMED_LITERAL_STRING(kUnsignedLongSchemaType, "unsignedLong");
+static NS_NAMED_LITERAL_STRING(kUnsignedIntSchemaType, "unsignedInt");
+static NS_NAMED_LITERAL_STRING(kUnsignedShortSchemaType, "unsignedShort");
+static NS_NAMED_LITERAL_STRING(kUnsignedByteSchemaType, "unsignedByte");
 
-NS_NAMED_LITERAL_STRING(kDurationSchemaType, "duration");
-NS_NAMED_LITERAL_STRING(kDateTimeSchemaType, "dateTime");
-NS_NAMED_LITERAL_STRING(kTimeSchemaType, "time");
-NS_NAMED_LITERAL_STRING(kDateSchemaType, "date");
-NS_NAMED_LITERAL_STRING(kGYearMonthSchemaType, "gYearMonth");
-NS_NAMED_LITERAL_STRING(kGYearSchemaType, "gYear");
-NS_NAMED_LITERAL_STRING(kGMonthDaySchemaType, "gMonthDay");
-NS_NAMED_LITERAL_STRING(kGDaySchemaType, "gDay");
-NS_NAMED_LITERAL_STRING(kGMonthSchemaType, "gMonth");
-NS_NAMED_LITERAL_STRING(kHexBinarySchemaType, "hexBinary");
-NS_NAMED_LITERAL_STRING(kBase64BinarySchemaType, "base64Binary");
-NS_NAMED_LITERAL_STRING(kAnyURISchemaType, "anyURI");
-NS_NAMED_LITERAL_STRING(kQNameSchemaType, "QName");
-NS_NAMED_LITERAL_STRING(kNOTATIONSchemaType, "NOTATION");
-NS_NAMED_LITERAL_STRING(kNormalizedStringSchemaType, "normalizedString");
-NS_NAMED_LITERAL_STRING(kTokenSchemaType, "token");
-NS_NAMED_LITERAL_STRING(kLanguageSchemaType, "language");
-NS_NAMED_LITERAL_STRING(kNMTOKENSchemaType, "NMTOKEN");
-NS_NAMED_LITERAL_STRING(kNMTOKENSSchemaType, "NMTOKENS");
-NS_NAMED_LITERAL_STRING(kNameSchemaType, "Name");
-NS_NAMED_LITERAL_STRING(kNCNameSchemaType, "NCName");
-NS_NAMED_LITERAL_STRING(kIDSchemaType, "ID");
-NS_NAMED_LITERAL_STRING(kIDREFSchemaType, "IDREF");
-NS_NAMED_LITERAL_STRING(kIDREFSSchemaType, "IDREFS");
-NS_NAMED_LITERAL_STRING(kENTITYSchemaType, "ENTITY");
-NS_NAMED_LITERAL_STRING(kENTITIESSchemaType, "ENTITIES");
-NS_NAMED_LITERAL_STRING(kDecimalSchemaType, "decimal");
-NS_NAMED_LITERAL_STRING(kIntegerSchemaType, "integer");
-NS_NAMED_LITERAL_STRING(kNonPositiveIntegerSchemaType,
+static NS_NAMED_LITERAL_STRING(kDurationSchemaType, "duration");
+static NS_NAMED_LITERAL_STRING(kDateTimeSchemaType, "dateTime");
+static NS_NAMED_LITERAL_STRING(kTimeSchemaType, "time");
+static NS_NAMED_LITERAL_STRING(kDateSchemaType, "date");
+static NS_NAMED_LITERAL_STRING(kGYearMonthSchemaType, "gYearMonth");
+static NS_NAMED_LITERAL_STRING(kGYearSchemaType, "gYear");
+static NS_NAMED_LITERAL_STRING(kGMonthDaySchemaType, "gMonthDay");
+static NS_NAMED_LITERAL_STRING(kGDaySchemaType, "gDay");
+static NS_NAMED_LITERAL_STRING(kGMonthSchemaType, "gMonth");
+static NS_NAMED_LITERAL_STRING(kHexBinarySchemaType, "hexBinary");
+static NS_NAMED_LITERAL_STRING(kBase64BinarySchemaType, "base64Binary");
+static NS_NAMED_LITERAL_STRING(kAnyURISchemaType, "anyURI");
+static NS_NAMED_LITERAL_STRING(kQNameSchemaType, "QName");
+static NS_NAMED_LITERAL_STRING(kNOTATIONSchemaType, "NOTATION");
+static NS_NAMED_LITERAL_STRING(kNormalizedStringSchemaType, "normalizedString");
+static NS_NAMED_LITERAL_STRING(kTokenSchemaType, "token");
+static NS_NAMED_LITERAL_STRING(kLanguageSchemaType, "language");
+static NS_NAMED_LITERAL_STRING(kNMTOKENSchemaType, "NMTOKEN");
+static NS_NAMED_LITERAL_STRING(kNMTOKENSSchemaType, "NMTOKENS");
+static NS_NAMED_LITERAL_STRING(kNameSchemaType, "Name");
+static NS_NAMED_LITERAL_STRING(kNCNameSchemaType, "NCName");
+static NS_NAMED_LITERAL_STRING(kIDSchemaType, "ID");
+static NS_NAMED_LITERAL_STRING(kIDREFSchemaType, "IDREF");
+static NS_NAMED_LITERAL_STRING(kIDREFSSchemaType, "IDREFS");
+static NS_NAMED_LITERAL_STRING(kENTITYSchemaType, "ENTITY");
+static NS_NAMED_LITERAL_STRING(kENTITIESSchemaType, "ENTITIES");
+static NS_NAMED_LITERAL_STRING(kDecimalSchemaType, "decimal");
+static NS_NAMED_LITERAL_STRING(kIntegerSchemaType, "integer");
+static NS_NAMED_LITERAL_STRING(kNonPositiveIntegerSchemaType,
                         "nonPositiveInteger");
-NS_NAMED_LITERAL_STRING(kNegativeIntegerSchemaType, "negativeInteger");
-NS_NAMED_LITERAL_STRING(kNonNegativeIntegerSchemaType,
+static NS_NAMED_LITERAL_STRING(kNegativeIntegerSchemaType, "negativeInteger");
+static NS_NAMED_LITERAL_STRING(kNonNegativeIntegerSchemaType,
                         "nonNegativeInteger");
-NS_NAMED_LITERAL_STRING(kPositiveIntegerSchemaType, "positiveInteger");
+static NS_NAMED_LITERAL_STRING(kPositiveIntegerSchemaType, "positiveInteger");
 
 #define DECLARE_ENCODER(name) \
 class ns##name##Encoder : \
@@ -541,37 +541,37 @@ static nsresult EncodeStructParticle(nsISOAPEncoding* aEncoding, nsIPropertyBag*
           return NS_ERROR_NOT_AVAILABLE; //  For now, we just try something else if we can (recoverable)
         }
         nsCOMPtr<nsISchemaElement> element = do_QueryInterface(aParticle);
-	nsAutoString name;
-	rc = element->GetTargetNamespace(name);
+        nsAutoString name;
+        rc = element->GetTargetNamespace(name);
         if (NS_FAILED(rc))
           return rc;
-	if (!name.IsEmpty()) {
+        if (!name.IsEmpty()) {
           rc = NS_ERROR_NOT_AVAILABLE; //  No known way to use namespace qualification in struct
-	}
-	else {
-	  rc = element->GetName(name);
+        }
+        else {
+          rc = element->GetName(name);
           if (NS_FAILED(rc))
             return rc;
-	  rc = element->GetName(name);
+          rc = element->GetName(name);
           if (NS_FAILED(rc))
             return rc;
           nsCOMPtr<nsISchemaType> type;
           rc = element->GetType(getter_AddRefs(type));
           if (NS_FAILED(rc))
             return rc;
-	  nsCOMPtr<nsIVariant> value;
-	  rc = aPropertyBag->GetProperty(name, getter_AddRefs(value));
-	  if (!NS_FAILED(rc)) {
-	    nsCOMPtr<nsIDOMElement> dummy;
-	    rc = aEncoding->Encode(value, kEmpty, name, type, aAttachments, aDestination, getter_AddRefs(dummy));
+          nsCOMPtr<nsIVariant> value;
+          rc = aPropertyBag->GetProperty(name, getter_AddRefs(value));
+          if (!NS_FAILED(rc)) {
+            nsCOMPtr<nsIDOMElement> dummy;
+            rc = aEncoding->Encode(value, kEmpty, name, type, aAttachments, aDestination, getter_AddRefs(dummy));
             if (NS_FAILED(rc))
               return rc;
-	  }
-	}
+          }
+        }
         if (minOccurs == 0
           && rc == NS_ERROR_NOT_AVAILABLE)  //  If we succeeded or failed recoverably, but we were permitted to, then return success
           rc = NS_OK;
-	return rc;
+        return rc;
       }
       case nsISchemaParticle::PARTICLE_TYPE_MODEL_GROUP: 
       {
@@ -593,26 +593,26 @@ static nsresult EncodeStructParticle(nsISOAPEncoding* aEncoding, nsIPropertyBag*
           if (NS_FAILED(rc))
             return rc;
           rc = EncodeStructParticle(aEncoding, aPropertyBag, child, aAttachments, aDestination);
-	  if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE) {
+          if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE) {
             if (!NS_FAILED(rc)) {
               return NS_OK;
-	    }
-	    if (rc == NS_ERROR_NOT_AVAILABLE) {  //  In a choice, recoverable model failures are OK.
+            }
+            if (rc == NS_ERROR_NOT_AVAILABLE) {  //  In a choice, recoverable model failures are OK.
               rc = NS_OK;
-	    }
-	  }
-	  else if (i > 0 && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
+            }
+          }
+          else if (i > 0 && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
             rc = NS_ERROR_ILLEGAL_VALUE;                  //  Error is not considered recoverable due to partially-created output.
-	  }
+          }
           if (NS_FAILED(rc))
             break;
         }
-	if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE)  //  If choice selected nothing, this is recoverable failure
+        if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE)  //  If choice selected nothing, this is recoverable failure
           rc = NS_ERROR_NOT_AVAILABLE;
         if (minOccurs == 0
           && rc == NS_ERROR_NOT_AVAILABLE)  //  If we succeeded or failed recoverably, but we were permitted to, then return success
           rc = NS_OK;
-	return rc;                    //  Return status
+        return rc;                    //  Return status
       }
       case nsISchemaParticle::PARTICLE_TYPE_ANY:
 //  No model available here (we may wish to handle strict versus lazy, but what does that mean with only local accessor names)
@@ -761,37 +761,38 @@ NS_IMETHODIMP
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
   if (NS_FAILED(rc))
     return rc;
+  PRBool freeptrs = PR_FALSE;
   switch (type) {
 #define ENCODE_SIMPLE_ARRAY(XPType, SOAPType, Format, Source) \
       {\
         nsAutoString value;\
         rc = nsSOAPUtils::MakeNamespacePrefix(*aReturnValue, *nsSOAPUtils::kXSURI[mSchemaVersion], value);\
-        if (NS_FAILED(rc)) return rc;\
+        if (NS_FAILED(rc)) break;\
         value.Append(nsSOAPUtils::kQualifiedSeparator);\
         value.Append(k##SOAPType##SchemaType);\
         value.Append(NS_LITERAL_STRING("[") + \
                      NS_ConvertUTF8toUCS2(nsPrintfCString("%d", count)) + \
                      NS_LITERAL_STRING("]")); \
         rc = (*aReturnValue)->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion], kSOAPArrayTypeAttribute, value);\
-        if (NS_FAILED(rc)) return rc;\
+        if (NS_FAILED(rc)) break;\
         XPType* values = NS_STATIC_CAST(XPType*, array);\
         nsCOMPtr<nsIDOMElement> dummy;\
         for (PRUint32 i = 0; i < count; i++) {\
           char* ptr = PR_smprintf(Format,Source);\
-          if (!ptr) return NS_ERROR_OUT_OF_MEMORY;\
+          if (!ptr) {rc = NS_ERROR_OUT_OF_MEMORY;break;}\
           nsAutoString value;\
           value.Assign(NS_ConvertUTF8toUCS2(nsDependentCString(ptr)).get());\
           PR_smprintf_free(ptr);\
           rc = EncodeSimpleValue(value,\
                        *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],\
                        k##SOAPType##SchemaType,\
-		       nsnull,\
-		       mSchemaVersion,\
+                       nsnull,\
+                       mSchemaVersion,\
                        *aReturnValue,\
                        getter_AddRefs(dummy));\
-          if (NS_FAILED(rc)) return rc;\
+          if (NS_FAILED(rc)) break;\
         }\
-        return rc;\
+        break;\
       }
   case nsIDataType::VTYPE_INT8:
     ENCODE_SIMPLE_ARRAY(PRUint8, Byte, "%hd",
@@ -818,26 +819,27 @@ NS_IMETHODIMP
     ENCODE_SIMPLE_ARRAY(PRBool, Boolean, "%hu", (PRUint16) values[i]);
   case nsIDataType::VTYPE_CHAR_STR:
     ENCODE_SIMPLE_ARRAY(char *, String, "%s", values[i]);
+  case nsIDataType::VTYPE_ID:
+  case nsIDataType::VTYPE_WCHAR:
   case nsIDataType::VTYPE_WCHAR_STR:
+    freeptrs = PR_TRUE;
     ENCODE_SIMPLE_ARRAY(PRUnichar *, String, "%s", NS_ConvertUCS2toUTF8
       (values[i]).get());
   case nsIDataType::VTYPE_CHAR:
     ENCODE_SIMPLE_ARRAY(char, String, "%c", values[i]);
-  case nsIDataType::VTYPE_ASTRING:
-    ENCODE_SIMPLE_ARRAY(nsAString, String, "%s",
-      NS_ConvertUCS2toUTF8(values[i]).get())
   case nsIDataType::VTYPE_INTERFACE_IS:
+    freeptrs = PR_TRUE;
     if (iid.Equals(NS_GET_IID(nsIVariant))) {  //  Only do variants for now.
       nsAutoString value;
       rc = nsSOAPUtils::MakeNamespacePrefix(*aReturnValue, *nsSOAPUtils::kXSURI[mSchemaVersion], value);
-      if (NS_FAILED(rc)) return rc;
+      if (NS_FAILED(rc)) break;
       value.Append(nsSOAPUtils::kQualifiedSeparator);
       value.Append(kAnyTypeSchemaType);
       value.Append(NS_LITERAL_STRING("[") + 
                    NS_ConvertUTF8toUCS2(nsPrintfCString("%d", count)) + 
                    NS_LITERAL_STRING("]")); 
       rc = (*aReturnValue)->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion], kSOAPArrayTypeAttribute, value);
-      if (NS_FAILED(rc)) return rc;
+      if (NS_FAILED(rc)) break;
       nsIVariant** values = NS_STATIC_CAST(nsIVariant**, array);
       nsCOMPtr<nsIDOMElement> dummy;
       for (PRUint32 i = 0; i < count; i++) {
@@ -848,20 +850,25 @@ NS_IMETHODIMP
                        aAttachments,
                        *aReturnValue,
                        getter_AddRefs(dummy));
-        if (NS_FAILED(rc)) return rc;
+        if (NS_FAILED(rc)) break;
       }
-      return rc;
     }
 //  Don't support these array types just now (needs more work).
-  case nsIDataType::VTYPE_WCHAR:
-  case nsIDataType::VTYPE_ID:
+  case nsIDataType::VTYPE_ASTRING:
   case nsIDataType::VTYPE_VOID:
   case nsIDataType::VTYPE_EMPTY:
   case nsIDataType::VTYPE_INTERFACE:
   case nsIDataType::VTYPE_ARRAY:
-    break;
+    rc = NS_ERROR_ILLEGAL_VALUE;
   }
-  return NS_ERROR_ILLEGAL_VALUE;
+  if (freeptrs) {
+    void** ptrs = NS_STATIC_CAST(void**,array);
+    for (PRUint32 i = 0; i < count; i++) {
+      nsMemory::Free(ptrs[i]);
+    }
+    nsMemory::Free(array);
+  }
+  return rc;
 }
 
 //  String
@@ -1350,10 +1357,10 @@ NS_IMETHODIMP
       nsCOMPtr < nsISchemaType > lookupType = subsubType;
       do {
         if (lookupType == subType) {  //  Tick off the located super classes
-	  subType = nsnull;
+          subType = nsnull;
         }
         if (lookupType == type) {  //  Tick off the located super classes
-	  type = nsnull;
+          type = nsnull;
         }
         PRUint16 typevalue;
         rc = lookupType->GetSchemaType(&typevalue);
@@ -1480,7 +1487,7 @@ NS_IMETHODIMP
 static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* aElement, 
                                nsISchemaParticle* aParticle, 
                                nsISOAPAttachments * aAttachments, nsISOAPPropertyBagMutator* aDestination,
-			       nsIDOMElement** _retElement)
+                               nsIDOMElement** _retElement)
 {
   nsresult rc;
   *_retElement = nsnull;
@@ -1503,56 +1510,56 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
           return NS_ERROR_NOT_AVAILABLE; //  For now, we just try something else if we can (recoverable)
         }
         nsCOMPtr<nsISchemaElement> element = do_QueryInterface(aParticle);
-	nsAutoString name;
-	rc = element->GetTargetNamespace(name);
+        nsAutoString name;
+        rc = element->GetTargetNamespace(name);
         if (NS_FAILED(rc))
           return rc;
-	if (!name.IsEmpty()) {
+        if (!name.IsEmpty()) {
           rc = NS_ERROR_NOT_AVAILABLE; //  No known way to use namespace qualification in struct
-	}
-	else {
-	  rc = element->GetName(name);
+        }
+        else {
+          rc = element->GetName(name);
           if (NS_FAILED(rc))
             return rc;
-	  rc = element->GetName(name);
+          rc = element->GetName(name);
           if (NS_FAILED(rc))
             return rc;
           nsAutoString ename;
-	  if (aElement) {                //  Permits aElement to be null and fail recoverably
+          if (aElement) {                //  Permits aElement to be null and fail recoverably
             aElement->GetNamespaceURI(ename);
             if (NS_FAILED(rc))
               return rc;
-	    if (ename.IsEmpty()) {
-	      ename.SetLength(0);          //  No name.
-	    } else {
-	      aElement->GetLocalName(ename);
+            if (ename.IsEmpty()) {
+              ename.SetLength(0);          //  No name.
+            } else {
+              aElement->GetLocalName(ename);
               if (NS_FAILED(rc))
                 return rc;
-	    }
-	  }
-	  if (!ename.Equals(name))
+            }
+          }
+          if (!ename.Equals(name))
             rc = NS_ERROR_NOT_AVAILABLE; //  The element must be a declaration of the next element
-	}
-	if (!NS_FAILED(rc)) {
+        }
+        if (!NS_FAILED(rc)) {
           nsCOMPtr<nsISchemaType> type;
           rc = element->GetType(getter_AddRefs(type));
           if (NS_FAILED(rc))
             return rc;
-	  nsCOMPtr<nsIVariant> value;
-	  rc = aEncoding->Decode(aElement, type, aAttachments, getter_AddRefs(value));
+          nsCOMPtr<nsIVariant> value;
+          rc = aEncoding->Decode(aElement, type, aAttachments, getter_AddRefs(value));
           if (NS_FAILED(rc))
             return rc;
-	  rc = aDestination->AddProperty(name, value);
+          rc = aDestination->AddProperty(name, value);
           if (NS_FAILED(rc))
             return rc;
-	  nsSOAPUtils::GetNextSiblingElement(aElement, _retElement);
-	}
+          nsSOAPUtils::GetNextSiblingElement(aElement, _retElement);
+        }
         if (minOccurs == 0
           && rc == NS_ERROR_NOT_AVAILABLE)  //  If we failed recoverably, but we were permitted to, then return success
           *_retElement = aElement;
-	  NS_IF_ADDREF(*_retElement);
+          NS_IF_ADDREF(*_retElement);
           rc = NS_OK;
-	return rc;
+        return rc;
       }
       case nsISchemaParticle::PARTICLE_TYPE_MODEL_GROUP: 
       {
@@ -1568,99 +1575,99 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
         rc = modelGroup->GetParticleCount(&particleCount);
         if (NS_FAILED(rc))
           return rc;
-	if (compositor == nsISchemaModelGroup::COMPOSITOR_ALL) {  //  This handles out-of-order appearances.
+        if (compositor == nsISchemaModelGroup::COMPOSITOR_ALL) {  //  This handles out-of-order appearances.
           nsCOMPtr<nsISupportsArray> all = new nsSupportsArray(); //  Create something we can mutate
-	  all->SizeTo(particleCount);
+          all->SizeTo(particleCount);
           nsCOMPtr<nsISchemaParticle> child;
-	  PRBool mangled = PR_FALSE;
-	  for (PRUint32 i = 0; i < particleCount; i++) {
+          PRBool mangled = PR_FALSE;
+          for (PRUint32 i = 0; i < particleCount; i++) {
             rc = modelGroup->GetParticle(i, getter_AddRefs(child));
             if (NS_FAILED(rc))
               return rc;
-	    rc = all->AppendElement(child);
+            rc = all->AppendElement(child);
             if (NS_FAILED(rc))
               return rc;
-	  }
-	  nsCOMPtr<nsIDOMElement> next = aElement;
-	  while (particleCount > 0) {
+          }
+          nsCOMPtr<nsIDOMElement> next = aElement;
+          while (particleCount > 0) {
             for (PRUint32 i = 0; i < particleCount; i++) {
-	      child = dont_AddRef(NS_STATIC_CAST
-		    (nsISchemaParticle*, all->ElementAt(i)));
-	      nsCOMPtr<nsIDOMElement> after;
+              child = dont_AddRef(NS_STATIC_CAST
+                    (nsISchemaParticle*, all->ElementAt(i)));
+              nsCOMPtr<nsIDOMElement> after;
               rc = DecodeStructParticle(aEncoding, aElement, child, aAttachments, aDestination, getter_AddRefs(after));
-	      if (!NS_FAILED(rc)) {
+              if (!NS_FAILED(rc)) {
                 next = after;
-		mangled = PR_TRUE;
-		rc = all->RemoveElementAt(i);
-		particleCount--;
+                mangled = PR_TRUE;
+                rc = all->RemoveElementAt(i);
+                particleCount--;
                 if (NS_FAILED(rc))
                   return rc;
-	      }
-	      if (rc != NS_ERROR_NOT_AVAILABLE) {
-		break;
-	      }
-	    }
-	    if (mangled && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
+              }
+              if (rc != NS_ERROR_NOT_AVAILABLE) {
+                break;
+              }
+            }
+            if (mangled && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
               rc = NS_ERROR_ILLEGAL_VALUE;                  //  Error is not considered recoverable due to partially-created output.
-	    }
+            }
             if (NS_FAILED(rc))
               break;
           }
-	  if (!NS_FAILED(rc)) {
-	    *_retElement = next;
-	    NS_IF_ADDREF(*_retElement);
-	  }
+          if (!NS_FAILED(rc)) {
+            *_retElement = next;
+            NS_IF_ADDREF(*_retElement);
+          }
           if (minOccurs == 0
             && rc == NS_ERROR_NOT_AVAILABLE) {  //  If we succeeded or failed recoverably, but we were permitted to, then return success
             *_retElement = aElement;
             NS_IF_ADDREF(*_retElement);
             rc = NS_OK;
-	  }
-	}
-	else {  //  This handles sequences and choices.
-	  nsCOMPtr<nsIDOMElement> next = aElement;
+          }
+        }
+        else {  //  This handles sequences and choices.
+          nsCOMPtr<nsIDOMElement> next = aElement;
           for (PRUint32 i = 0; i < particleCount; i++) {
             nsCOMPtr<nsISchemaParticle> child;
             rc = modelGroup->GetParticle(i, getter_AddRefs(child));
             if (NS_FAILED(rc))
               return rc;
-	    nsCOMPtr<nsIDOMElement> after;
+            nsCOMPtr<nsIDOMElement> after;
             rc = DecodeStructParticle(aEncoding, aElement, child, aAttachments, aDestination, getter_AddRefs(after));
-	    if (!NS_FAILED(rc)) {
+            if (!NS_FAILED(rc)) {
                next = after;
-	    }
-	    if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE) {
-	      if (rc == NS_ERROR_NOT_AVAILABLE) {
+            }
+            if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE) {
+              if (rc == NS_ERROR_NOT_AVAILABLE) {
                 rc = NS_OK;
-	      }
-	      else {
-	        if (!NS_FAILED(rc)) {
-		  *_retElement = next;
-		  NS_IF_ADDREF(*_retElement);
-	        }
+              }
+              else {
+                if (!NS_FAILED(rc)) {
+                  *_retElement = next;
+                  NS_IF_ADDREF(*_retElement);
+                }
                 return rc;
-	      }
-	    }
-	    else if (i > 0 && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
+              }
+            }
+            else if (i > 0 && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
               rc = NS_ERROR_ILLEGAL_VALUE;                  //  Error is not considered recoverable due to partially-created output.
-	    }
+            }
             if (NS_FAILED(rc))
               break;
           }
-	  if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE)
+          if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE)
             rc = NS_ERROR_NOT_AVAILABLE;
-	  if (!NS_FAILED(rc)) {
-	    *_retElement = next;
-	    NS_IF_ADDREF(*_retElement);
-	  }
+          if (!NS_FAILED(rc)) {
+            *_retElement = next;
+            NS_IF_ADDREF(*_retElement);
+          }
           if (minOccurs == 0
             && rc == NS_ERROR_NOT_AVAILABLE) {  //  If we succeeded or failed recoverably, but we were permitted to, then return success
             *_retElement = aElement;
             NS_IF_ADDREF(*_retElement);
             rc = NS_OK;
-	  }
-	}
-	return rc;                    //  Return status
+          }
+        }
+        return rc;                    //  Return status
       }
       case nsISchemaParticle::PARTICLE_TYPE_ANY:
 //  No model available here (we may wish to handle strict versus lazy, but what does that mean with only local accessor names)
@@ -1816,9 +1823,12 @@ static PRInt32 GetArrayDimensions(const nsAString& src, PRInt32* dim, nsAString 
   int len;
   {
     nsReadingIterator < PRUnichar > i3 = i2++;  //  Cover any extra white space
-    while (i1 != i2      //  Loop past white space
-      && *(--i2) <= ' ')
-      ;
+    while (i1 != i3) {      //  Loop past white space
+      if (*(--i3) > ' ') {
+        i3++;
+        break;
+      }
+    }
     len = Distance(i1, i3);        //  Length remaining in string after operation
   }
 
@@ -1930,7 +1940,7 @@ NS_IMETHODIMP
 
     if (d > 0) {
       PRInt64 tot = 1;  //  Collect in 64 bits, just to make sure it fits
-      for (int i = 0; i < d; i++) {
+      for (PRInt32 i = 0; i < d; i++) {
         PRInt32 next = dim[i];
         if (next == -1) {
           tot = -1;
@@ -2013,7 +2023,7 @@ NS_IMETHODIMP
     nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));
     PRInt32 pp[MAX_ARRAY_DIMENSIONS];
     if (d != -1) {
-      for (int i = d; i-- != 0;) {
+      for (PRUint32 i = d; i-- != 0;) {
         pp[i] = 0;
       }
     }
@@ -2037,7 +2047,7 @@ NS_IMETHODIMP
           return NS_ERROR_ILLEGAL_VALUE;
         if (d == -1) {
           d = i;             //  If we never had dimension count before, we do now.
-          for (int i = d; i-- != 0;) {
+          for (PRUint32 i = d; i-- != 0;) {
             pp[i] = 0;
           }
         }
@@ -2067,7 +2077,7 @@ NS_IMETHODIMP
       pp[0] = next;
     }
     PRInt64 tot = 1;  //  Collect in 64 bits, just to make sure it fits
-    for (int i = 0; i < d; i++) {
+    for (PRInt32 i = 0; i < d; i++) {
       PRInt32 next = dim[i];
       if (next == -1) {          //  Only derive those with no other declaration
         dim[i] = next = pp[i];
@@ -2084,8 +2094,9 @@ NS_IMETHODIMP
   
   nsCOMPtr<nsIWritableVariant> result = do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
 
-#define DECODE_ARRAY(XPType, VTYPE, Test, iid, Convert) \
+#define DECODE_ARRAY(XPType, VTYPE, iid, Convert, Free) \
       XPType* a = new XPType[size];\
+      for (PRInt32 i = 0; i < size; i++) a[i] = 0;\
       nsCOMPtr<nsIDOMElement> child;\
       nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));\
       PRUint32 next = offset;\
@@ -2108,7 +2119,7 @@ NS_IMETHODIMP
           p = next++;\
         }\
         if (p >= size\
-           || Test) {\
+           || a[p]) {\
           rc = NS_ERROR_ILLEGAL_VALUE;\
           break;\
         }\
@@ -2117,6 +2128,7 @@ NS_IMETHODIMP
         rc = aEncoding->Decode(child, subtype, aAttachments, getter_AddRefs(v));\
         if (NS_FAILED(rc))\
           break;\
+        Convert \
 \
         nsCOMPtr<nsIDOMElement> next;\
         nsSOAPUtils::GetNextSiblingElement(child, getter_AddRefs(next));\
@@ -2125,39 +2137,38 @@ NS_IMETHODIMP
       if (!NS_FAILED(rc)) {\
         rc = result->SetAsArray(nsIDataType::VTYPE_##VTYPE,iid,size,a);\
       }\
+      Free\
       delete[] a;\
-      if (NS_FAILED(rc))\
-        return rc;
 
-#define DECODE_SIMPLE_ARRAY(XPType, VType, VTYPE, Test, Ref) \
-  DECODE_ARRAY(XPType, VTYPE, Test, nsnull, rc = v->GetAs##VType(Ref(a + p));if(NS_FAILED(rc))break;)
+#define DECODE_SIMPLE_ARRAY(XPType, VType, VTYPE) \
+  DECODE_ARRAY(XPType, VTYPE, nsnull, rc = v->GetAs##VType(a + p);if(NS_FAILED(rc))break;,)
 
   if (NS_FAILED(rc))
     return rc;
   PRBool unhandled = PR_FALSE;
   if (ns.Equals(*nsSOAPUtils::kXSURI[mSchemaVersion])) {
     if (name.Equals(kBooleanSchemaType)) {
-      DECODE_SIMPLE_ARRAY(PRBool,Bool,BOOL,a[p],);
+      DECODE_SIMPLE_ARRAY(PRBool,Bool,BOOL);
     } else if (name.Equals(kFloatSchemaType)) {
-      DECODE_SIMPLE_ARRAY(float,Float,FLOAT,a[p],);
+      DECODE_SIMPLE_ARRAY(float,Float,FLOAT);
     } else if (name.Equals(kDoubleSchemaType)) {
-      DECODE_SIMPLE_ARRAY(double,Double,DOUBLE,a[p],);
+      DECODE_SIMPLE_ARRAY(double,Double,DOUBLE);
     } else if (name.Equals(kLongSchemaType)) {
-      DECODE_SIMPLE_ARRAY(PRInt64,Int64,INT64,a[p],);
+      DECODE_SIMPLE_ARRAY(PRInt64,Int64,INT64);
     } else if (name.Equals(kIntSchemaType)) {
-      DECODE_SIMPLE_ARRAY(PRInt32,Int32,INT32,a[p],);
+      DECODE_SIMPLE_ARRAY(PRInt32,Int32,INT32);
     } else if (name.Equals(kShortSchemaType)) {
-      DECODE_SIMPLE_ARRAY(PRInt16,Int16,INT16,a[p],);
+      DECODE_SIMPLE_ARRAY(PRInt16,Int16,INT16);
     } else if (name.Equals(kByteSchemaType)) {
-      DECODE_SIMPLE_ARRAY(PRUint8,Int8,INT8,a[p],);
+      DECODE_SIMPLE_ARRAY(PRUint8,Int8,INT8);
     } else if (name.Equals(kUnsignedLongSchemaType)) {
-      DECODE_SIMPLE_ARRAY(PRUint64,Uint64,UINT64,a[p],);
+      DECODE_SIMPLE_ARRAY(PRUint64,Uint64,UINT64);
     } else if (name.Equals(kUnsignedIntSchemaType)) {
-      DECODE_SIMPLE_ARRAY(PRUint32,Uint32,UINT32,a[p],);
+      DECODE_SIMPLE_ARRAY(PRUint32,Uint32,UINT32);
     } else if (name.Equals(kUnsignedShortSchemaType)) {
-      DECODE_SIMPLE_ARRAY(PRUint16,Uint16,UINT16,a[p],);
+      DECODE_SIMPLE_ARRAY(PRUint16,Uint16,UINT16);
     } else if (name.Equals(kUnsignedByteSchemaType)) {
-      DECODE_SIMPLE_ARRAY(PRUint8,Uint8,UINT8,a[p],);
+      DECODE_SIMPLE_ARRAY(PRUint8,Uint8,UINT8);
     } else {
       unhandled = PR_TRUE;
     }
@@ -2167,18 +2178,22 @@ NS_IMETHODIMP
   if (unhandled) {  //  Handle all the other cases
     if (subtype) {
       PRUint16 typevalue;
-      nsresult rc = aSchemaType->GetSchemaType(&typevalue);
+      nsresult rc = subtype->GetSchemaType(&typevalue);
       if (NS_FAILED(rc))
         return rc;
       if (typevalue != nsISchemaType::SCHEMA_TYPE_COMPLEX) {//  Simple == string
-        DECODE_SIMPLE_ARRAY(nsString,AString,ASTRING,!a[p].IsEmpty(),*);
+        DECODE_ARRAY(PRUnichar*,WCHAR_STR,nsnull,rc = v->GetAsWString(a + p);if(NS_FAILED(rc))break;,
+                      for (PRInt32 i = 0; i < size; i++) nsMemory::Free(a[i]););
         unhandled = PR_FALSE;
       }
     }
     if (unhandled) {  //  Handle all the other cases as variants.
-      DECODE_ARRAY(nsIVariant*,INTERFACE,a[p],&NS_GET_IID(nsIVariant),a[p] = v;);
+      DECODE_ARRAY(nsIVariant*,INTERFACE,&NS_GET_IID(nsIVariant),a[p] = v;,
+                      for (PRInt32 i = 0; i < size; i++) a[i]->Release(););
     }
   }
+  if (NS_FAILED(rc))\
+    return rc;
   *_retval = result;
   NS_ADDREF(*_retval);
   return NS_OK;

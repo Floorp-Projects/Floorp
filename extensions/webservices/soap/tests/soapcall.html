@@ -18,8 +18,8 @@ function oncompletion(resp, call, status) {
     var f = resp.fault;
     var detail = f.detail;
     var ds = new XMLSerializer();
-    var detailStr = ds.serializeToString(detail);
-    alert("Fault:\nFault code: " + f.faultCode + "\nFault string: " + f.faultString + "\nFault actor: "  + f.faultActor + "\nDetail: " + detailStr);
+    var detailStr = detail ? ds.serializeToString(detail) : "";
+    alert("Fault namespace: " + f.faultNamespaceURI + "\nFault code: " + f.faultCode + "\nFault string: " + f.faultString + "\nFault actor: "  + f.faultActor + "\nDetail: " + detailStr);
   }
   else {
     var ret = resp.getParameters(false, {});

@@ -84,6 +84,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPCall)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPResponse)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPEncoding)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPFault)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPHeaderBlock)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPParameter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder_1_1)
@@ -261,6 +262,12 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "SOAPFault",
+                                NS_SOAPFAULT_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
                                 "SOAPHeaderBlock",
                                 NS_SOAPHEADERBLOCK_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
@@ -324,7 +331,7 @@ static nsModuleComponentInfo components[] = {
     nsnull, &NS_CLASSINFO_NAME(nsSOAPEncoding), 
     nsIClassInfo::DOM_OBJECT },
   { "SOAP Fault", NS_SOAPFAULT_CID, NS_SOAPFAULT_CONTRACTID,
-    nsnull, nsnull, nsnull, nsnull, 
+    nsSOAPFaultConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPFault), 
     nsnull, &NS_CLASSINFO_NAME(nsSOAPFault), 
     nsIClassInfo::DOM_OBJECT },

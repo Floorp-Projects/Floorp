@@ -2,10 +2,8 @@
 <HEAD>
 </HEAD>
 <BODY>
-<H1>SOAP Test: Is It a Prime Number</H1>
-The number typed in the text field will change color depending upon whether the soap call 
-reports <font color="green">prime</font> or <font  color="red">nonprime</font>.  
-<p>This works by calling a SOAP service listed on 
+<H1>SOAP Test: Unscramble</H1>
+The entered word will be unscrambled against a dictionary.  Other services found on
 <A href="http://www.xmethods.com">X Methods Website</A>.  View the source of this 
 page for details on how it was called.  If you compile mozilla DEBUG (you also need  
 MOZ_SOAP), the message sent and received will  be logged to the console.
@@ -18,6 +16,7 @@ user interfaces such as the one in this test.
 // Passed in as the response handler in the asynchronous case
 // and called directly (see below) in the synchronous case
 function oncompletion(resp, call, status) { 
+  document.getElementById('BUTTON').value = "Call";
   if (status != 0) {
     alert("Error completion: " + status);
     return true;
@@ -32,39 +31,38 @@ function oncompletion(resp, call, status) {
     alert("Fault namespace: " + f.faultNamespaceURI + "\nFault code: " + f.faultCode + "\nFault string: " + f.faultString + "\nFault actor: "  + f.faultActor + "\nDetail: " + detailStr);
   }
   else {
-    var ret = resp.getParameters(false, {});
-    var val = ret[0].value;
-    if (val) {
-      document.getElementById("NUMBER").style.color="green";
-    } else {
-      document.getElementById("NUMBER").style.color="red";
-    }
+	  var ret = resp.getParameters(false, {})[0].value;
+	  for (i = 0; i < ret.length; i++) {
+		  alert(ret[i]);
+	  }
   }
   return true;
 }
 
-function makeCall(value) {
+function makeCall(word) {
   var s = new SOAPCall();
   // The targetObjectURI, methodName and destinatioName are mandatory.
   // The actionURI is optional.
 
-  s.transportURI = "http://213.23.125.181:8080/RPC";
+  s.transportURI = "http://ray.dsl.xmission.com:8080/soap/servlet/rpcrouter";
 
   // Set the parameters on the call object. Note that in this case,
   // the last parameter is an object that will be serialized into
   // a struct parameter. It does not have a parameter wrapper because 
   // we don't need it to be named
-  s.encode(0, "isPrimeNumber", "urn:SpheonJSOAPStatistics", 0, null, 1, new Array(new SOAPParameter(value,"number")));
-
-  if (currentCall != null) { currentCall.abort(); }
-  document.getElementById("NUMBER").style.color="black";
+  s.encode(0, "unscramble", "http://ray.dsl.xmission.com/dictionary", 0, null,
+  2, new Array(new SOAPParameter("us","language"), new SOAPParameter(word,"word")));
+    if (currentCall != null) { currentCall.abort(); }
+  document.getElementById('BUTTON').value = "Wait...";
   currentCall = s.asyncInvoke(oncompletion);
   
 }
 </SCRIPT>
 <P>
 <FORM>
-<INPUT ID=NUMBER TYPE="text">
-<INPUT TYPE="button" VALUE="Call" ONCLICK="makeCall(document.getElementById('NUMBER').value);">
+
+<INPUT
+<INPUT ID=WORD TYPE="text">
+<INPUT ID=BUTTON TYPE="button" VALUE="Call" ONCLICK="makeCall(document.getElementById('WORD').value);">
 </BODY>
 </HTML>
