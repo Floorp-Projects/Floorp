@@ -373,7 +373,6 @@
   -moz-border-right-colors: #D2DAE1 #000000 #768C9F;
   -moz-border-bottom-colors: #D2DAE1 #000000 #768C9F;
   -moz-border-left-colors: #A5ACB5 #000000 #A7BACA;
-  -moz-box-align: center;
   background: url("chrome://navigator/skin/toolbar/urlbar-mid.gif") #EDF5F7 bottom repeat-x;
 }
 
