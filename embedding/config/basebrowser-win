@@ -160,6 +160,11 @@ components\jar.xpt
 components\pref.xpt                     
 components\xppref32.dll
 
+; plugins
+; Optional - only if you need plugin support
+components\gkplugin.dll
+components\plugin.xpt
+
 ; profile
 components\profile.dll                  
 components\profile.xpt
