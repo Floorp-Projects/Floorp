@@ -22,8 +22,11 @@
  * Contributor(s):
  *   David Epstein <depstein@netscape.com> 
  *   Ashish Bhatt <ashishbhatt@netscape.com> 
+
  *
+
  *
+
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -54,6 +57,7 @@ class CnsIObserServ : public nsIObserver, public nsSupportsWeakReference
 {
 public:
 	CnsIObserServ();
+
 	virtual ~CnsIObserServ();
 
 	NS_DECL_ISUPPORTS
@@ -61,13 +65,13 @@ public:
 
 	//nsCOMPtr<nsIWebBrowser> qaWebBrowser ;
 
+
 	void RunAllTests();
 	void AddObserversTest();
 	void RemoveObserversTest();
 	void NotifyObserversTest();
 	void EnumerateObserversTest();
 	void OnStartTests(UINT nMenuID);
-
 };
 
 typedef struct

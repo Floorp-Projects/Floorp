@@ -271,7 +271,10 @@ NS_IMETHODIMP CBrowserImpl::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 
 NS_IMETHODIMP CBrowserImpl::ShowAsModal(void)
 {
-   return NS_ERROR_NOT_IMPLEMENTED;
+//   return NS_ERROR_NOT_IMPLEMENTED;
+	QAOutput("inside nsIWebBrowserChrome::ShowAsModal()", 2);
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP CBrowserImpl::IsWindowModal(PRBool *retval)
@@ -470,6 +473,14 @@ NS_IMETHODIMP CBrowserImpl::OnHideTooltip()
 /*NS_IMETHODIMP CBrowserImpl::GetNodeText(nsIDOMNode *aNode, const PRUnichar *aTipText)
 {    
 	QAOutput("Tool Tip Listened",1);
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP CBrowserImpl::GetParentURIContentListener(nsIURIContentListener *myURIContentListener)
+{
+	QAOutput("GetParentURIContentListener", 2);
+
 	return NS_OK;
 }
 */
