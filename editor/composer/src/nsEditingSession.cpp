@@ -502,6 +502,15 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
   rv = editorDocShell->GetEditor(getter_AddRefs(editor));
   if (NS_FAILED(rv)) return rv;
 
+  // null out the editor on the controllers first to prevent their weak 
+  // references from pointing to a destroyed editor
+  if (mStateMaintainer && editor)
+  {
+      // null out the editor on the controllers
+      rv = SetEditorOnControllers(aWindow, nsnull);
+      if (NS_FAILED(rv)) return rv;  
+  }
+
   // null out the editor on the docShell to trigger PreDestroy which
   // needs to happen before document state listeners are removed below
   rv = editorDocShell->SetEditor(nsnull);
@@ -538,10 +547,6 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
               do_QueryInterface(mStateMaintainer);
         txnMgr->RemoveListener(transactionListener);
       }
-
-      // null out the editor on the controllers
-      rv = SetEditorOnControllers(aWindow, nsnull);
-      if (NS_FAILED(rv)) return rv;  
     }
     else
     {
