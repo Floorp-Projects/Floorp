@@ -423,6 +423,7 @@ PK11_NewSlotInfo(void)
     slot->needLogin = PR_FALSE;
     slot->hasRandom = PR_FALSE;
     slot->defRWSession = PR_FALSE;
+    slot->protectedAuthPath = PR_FALSE;
     slot->flags = 0;
     slot->session = CK_INVALID_SESSION;
     slot->slotID = 0;
@@ -642,6 +643,11 @@ pk11_CheckPassword(PK11SlotInfo *slot,char *pw)
     SECStatus rv;
     int64 currtime = PR_Now();
 
+    if (slot->protectedAuthPath) {
+	len = 0;
+	pw = NULL;
+    }
+
     PK11_EnterSlotMonitor(slot);
     crv = PK11_GETTAB(slot)->C_Login(slot->session,CKU_USER,
 						(unsigned char *)pw,len);
@@ -676,6 +682,11 @@ PK11_CheckUserPassword(PK11SlotInfo *slot,char *pw)
     CK_RV crv;
     SECStatus rv;
     int64 currtime = PR_Now();
+
+    if (slot->protectedAuthPath) {
+	len = 0;
+	pw = NULL;
+    }
 
     /* force a logout */
     PK11_EnterSlotMonitor(slot);
@@ -908,6 +919,11 @@ PK11_CheckSSOPassword(PK11SlotInfo *slot, char *ssopw)
     rwsession = PK11_GetRWSession(slot);
     if (rwsession == CK_INVALID_SESSION) return rv;
 
+    if (slot->protectedAuthPath) {
+	len = 0;
+	ssopw = NULL;
+    }
+
     /* check the password */
     crv = PK11_GETTAB(slot)->C_Login(rwsession,CKU_SO,
 						(unsigned char *)ssopw,len);
@@ -966,6 +982,13 @@ PK11_InitPin(PK11SlotInfo *slot,char *ssopw, char *userpw)
     /* get a rwsession */
     rwsession = PK11_GetRWSession(slot);
     if (rwsession == CK_INVALID_SESSION) goto done;
+
+    if (slot->protectedAuthPath) {
+	len = 0;
+	ssolen = 0;
+	ssopw = NULL;
+	userpw = NULL;
+    }
 
     /* check the password */
     crv = PK11_GETTAB(slot)->C_Login(rwsession,CKU_SO, 
@@ -1678,6 +1701,9 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
     slot->readOnly = ((tokenInfo.flags & CKF_WRITE_PROTECTED) ? 
 							PR_TRUE : PR_FALSE);
     slot->hasRandom = ((tokenInfo.flags & CKF_RNG) ? PR_TRUE : PR_FALSE);
+    slot->protectedAuthPath =
+    		((tokenInfo.flags & CKF_PROTECTED_AUTHENTICATION_PATH) 
+							? PR_TRUE : PR_FALSE);
     tmp = PK11_MakeString(NULL,slot->token_name,
 			(char *)tokenInfo.label, sizeof(tokenInfo.label));
     slot->minPassword = tokenInfo.ulMinPinLen;
@@ -1993,11 +2019,18 @@ PK11_GetModule(PK11SlotInfo *slot)
 	return slot->module;
 }
 
-/* returnt the default flags of a slot */
+/* return the default flags of a slot */
 unsigned long
 PK11_GetDefaultFlags(PK11SlotInfo *slot)
 {
 	return slot->defaultFlags;
+}
+
+/* Does this slot have a protected pin path? */
+PRBool
+PK11_ProtectedAuthenticationPath(PK11SlotInfo *slot)
+{
+	return slot->protectedAuthPath;
 }
 
 /*
