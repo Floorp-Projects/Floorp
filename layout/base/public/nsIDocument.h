@@ -48,6 +48,7 @@ class nsIDeviceContext;
 class nsIParser;
 class nsIDOMNode;
 class nsXIFConverter;
+class nsINameSpaceManager;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -150,6 +151,11 @@ public:
    */
   virtual nsIScriptContextOwner *GetScriptContextOwner() = 0;
   virtual void SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner) = 0;
+
+  /**
+   * Get the name space manager for this document
+   */
+  NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager) = 0;
 
   //----------------------------------------------------------------------
 
