@@ -33,6 +33,7 @@ if [ "$os_name" != "Windows_95" -a \
 then
     PATH=.:$HOME/bin:/tools/ns/bin:/bin:/usr/bin:/usr/sbin:/usr/ccs/bin:/usr/dist/local/exe:/usr/bin/X11:/usr/audio/bin:/u/sonmi/bin:$PATH
     JAVA_HOME="D:/i386/jdk1.2.2"
+    JAVA_HOME14="R:/jdk/1.4.0/WINNT"
 fi
 
 CVSROOT=:pserver:svbld@redcvs.red.iplanet.com:/m/src
@@ -60,6 +61,7 @@ if [ "$os_name" = "HP-UX" ]
 then
     PATH=$PATH:/usr/local/bin:/opt/aCC/bin:/usr/local/bin/audio:/tools/ns/bin:/etc:/usr/contrib/bin:/usr/contrib/bin/X11:/usr/local/hpux/bin:/nfs/iapp1/hphome/bin:/etc:/u/svbld/bin/HP/perl/bin
     JAVA_HOME="/share/builds/components/cms_jdk/HP-UX/1.2.2.04"
+    JAVA_HOME14=$JAVA_HOME
 #    JAVA_HOME="/share/builds/components/cms_jdk/HP-UX/1.3.0.00"
 elif [ "$os_name" = "SunOS" ]
 then
@@ -71,10 +73,12 @@ then
     then
         #PATH=/usr/ucb:/opt/usr/local/bin:$PATH
         JAVA_HOME="/usr/java1.2"
+	JAVA_HOME14=/share/builds/components/jdk/1.4.0/SunOS_x86
         PATH=".:/usr/dist/share/forte_dev_i386,v6.2/SUNWspro/bin:/opt/usr/local/perl5/bin:/opt/SUNWspro/bin:/opt/usr/local/bin:/bin:/usr/bin:/usr/sbin:/usr/ccs/bin:/usr/dist/local/exe:/usr/ccs/bin:/usr/ucb/bin:/usr/ucb:/opt/SUNWwabi/bin:/usr/local/bin:/tools/ns/bin:/etc:/tools/contrib/bin"
     else
         PATH=/usr/ucb:$PATH
         JAVA_HOME="/share/builds/components/jdk/1.2.2/SunOS"
+	JAVA_HOME14=/share/builds/components/jdk/1.4.0/SunOS64
         PATH=/tools/ns/bin:$PATH:/opt/SUNWspro/bin:/usr/bin/X11:/usr/openwin/bin:/usr/openwin/demo
     
         if [ "$os_version" = "5.8" -o "$os_version" = "5.7" -o \
@@ -93,11 +97,13 @@ then
     PATH=$PATH:/tools/ns/bin:/usr/local/bin:/etc:/usr/bsd
     MANPATH=/tools/ns/man:/usr/local/man
     JAVA_HOME="/share/builds/components/jdk/1.2.2/IRIX"
+    JAVA_HOME14=$JAVA_HOME
 elif [ "$os_name" = "IRIX64" ]
 then
     PATH=$PATH:/tools/ns/bin:/usr/local/bin:/etc:/usr/bsd
     MANPATH=/tools/ns/man:/usr/local/man
     JAVA_HOME="/share/builds/components/jdk/1.2.2/IRIX"
+    JAVA_HOME14=$JAVA_HOME
 elif [ "$os_name" = "Linux" ]
 then
     PATH=/lib:/usr/lib:/bin:/sbin:/usr/bin:/usr/sbin:$PATH
@@ -107,16 +113,19 @@ then
     BEFORE_CONTEXT_GREP="--before-context=10"
     AFTER_CONTEXT_GREP="--after-context=3"
     JAVA_HOME="/share/builds/components/jdk/1.2.2/Linux"
+    JAVA_HOME14=/share/builds/components/jdk/1.4.0/Linux
 elif [ "$os_name" = "AIX" ]
 then
     PATH=$PATH:/tools/contrib/bin:/usr/local/bin 
     TERM=vt100
     export TERM
     JAVA_HOME="/share/builds/components/cms_jdk/AIX/1.3.0"
+    JAVA_HOME14=$JAVA_HOME
 elif [ "$os_name" = "OSF1" ]
 then
     PATH=$PATH:/usr/local/bin
     JAVA_HOME="/share/builds/components/jdk/1.2.2/OSF1"
+    JAVA_HOME14=$JAVA_HOME
 fi
 
 if [ "$os_name" = "IRIX" ]
@@ -218,6 +227,8 @@ system=`uname -n`        # name of this system.
 
 JAVAC=$JAVA_HOME/bin/javac
 JAVA=$JAVA_HOME/bin/java
+JAVAC14=$JAVA_HOME14/bin/javac
+JAVA14=$JAVA_HOME14/bin/java
 #JAVA=$JAVA_HOME/jre/bin/java
-export JAVAC JAVA JAVA_HOME
+export JAVAC JAVA JAVA_HOME JAVAC14 JAVA_HOME14 JAVA14
 
