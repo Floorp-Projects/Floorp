@@ -638,6 +638,13 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
+  // Do not process any DOM events if the element is disabled
+  PRBool disabled;
+  nsresult rv = GetDisabled(&disabled);
+  if (NS_FAILED(rv) || disabled) {
+    return rv;
+  }
+
   // Try script event handlers first
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

@@ -827,6 +827,13 @@ nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
                            PRUint32 aFlags,
                            nsEventStatus* aEventStatus)
 {
+  // Do not process any DOM events if the element is disabled
+  PRBool disabled;
+  nsresult rv = GetDisabled(&disabled);
+  if (NS_FAILED(rv) || disabled) {
+    return rv;
+  }
+
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
