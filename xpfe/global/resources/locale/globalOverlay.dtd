@@ -1,0 +1,18 @@
+<!-- extracted from globalOverlay.xul -->
+
+<!ENTITY quitApplicationCmd.label			"Exit"> 
+
+<!ENTITY helpMenu.label					"Help"> 
+<!ENTITY helpContentCmd.label				".Help Contents">  
+<!ENTITY referenceLibraryCmd.label			".Reference Library">  
+<!ENTITY releaseNotesCmd.label				".Release Notes">  
+<!ENTITY productInfoCmd.label				".Product Information and Support">  
+<!ENTITY softwareUpdatesCmd.label			".Software Updates">  
+<!ENTITY registerCmd.label					".Register Now">  
+<!ENTITY memberServicesCmd.label			".Member Services">  
+<!ENTITY internationalCmd.label				".International Users">  
+<!ENTITY securityCmd.label					".Security">  
+<!ENTITY netwatchCmd.label					".NetWatch">  
+<!ENTITY aboutPluginsCmd.label				".About Plug-ins">  
+<!ENTITY aboutFontCmd.label					".About Font Displayers">  
+<!ENTITY aboutCmd.label						".About Communicator...">  
