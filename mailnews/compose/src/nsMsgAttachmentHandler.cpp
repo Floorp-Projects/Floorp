@@ -530,6 +530,13 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
     return SnarfMsgAttachment(compFields);
 
   tempName = GenerateFileNameFromURI(mURL); // Make it a sane name
+#ifdef XP_WIN
+  if (tempName && PL_strchr(tempName, '|'))
+  {
+    PR_Free(tempName);
+    tempName = nsnull;
+  }
+#endif
 #ifdef XP_MAC
   if (tempName && PL_strlen(tempName) >= 31)
     PR_DELETE(tempName)
