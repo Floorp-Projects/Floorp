@@ -128,37 +128,37 @@ treechildren:-moz-tree-image(Name) {
 .bookmark-item,
 treechildren:-moz-tree-image(Name) {
   margin: 0px 2px;
-  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-n.png");
+  list-style-image: url("chrome://browser/skin/bookmark-icon-n.png");
 }
 
 .bookmark-item:hover,
 treechildren:-moz-tree-image(Name) {
-  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-h.png");
+  list-style-image: url("chrome://browser/skin/bookmark-icon-h.png");
 }
 
 .bookmark-item:active,
 treechildren:-moz-tree-image(Name) {
-  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-a.png");
+  list-style-image: url("chrome://browser/skin/bookmark-icon-a.png");
 }
 
 .bookmark-item[container="true"],
 treechildren:-moz-tree-image(Name, container) {
-  list-style-image: url("chrome://browser/skin/o3-bookmark-folder-n.png");
+  list-style-image: url("chrome://browser/skin/bookmark-folder-n.png");
 }
 
 .bookmark-item[container="true"]:hover,
 treechildren:-moz-tree-image(Name, container) {
-  list-style-image: url("chrome://browser/skin/o3-bookmark-folder-h.png");
+  list-style-image: url("chrome://browser/skin/bookmark-folder-h.png");
 }
 
 .bookmark-item[open="true"],
 treechildren:-moz-tree-image(Name, open) {
-  list-style-image: url("chrome://browser/skin/o3-bookmark-folder-a.png");
+  list-style-image: url("chrome://browser/skin/bookmark-folder-a.png");
 }
 
 .bookmark-item[container="true"][open="true"],
 treechildren:-moz-tree-image(Name, open) {
-  list-style-image: url("chrome://browser/skin/o3-bookmark-folder-a.png");
+  list-style-image: url("chrome://browser/skin/bookmark-folder-a.png");
 }
 
 
@@ -204,7 +204,7 @@ menubutton:not([disabled="true"]):hover:active {
 }
 
 .toolbarbutton-menubutton-dropmarker {
-  list-style-image: url("chrome://browser/skin/o3-imap-dropmarker.png");
+  list-style-image: url("chrome://browser/skin/dropmarker.png");
   -moz-image-region: rect(0 14px 15px 0px) !important;
 }
 
@@ -214,7 +214,7 @@ toolbarbutton:hover > stack > .toolbarbutton-menubutton-dropmarker {
 
 toolbarbutton[disabled="true"] > stack > .toolbarbutton-menubutton-dropmarker,
 toolbarbutton[disabled="true"]:hover > stack > .toolbarbutton-menubutton-dropmarker {
-  list-style-image: url("chrome://browser/skin/o3-imap-dropmarker.png") !important;
+  list-style-image: url("chrome://browser/skin/dropmarker.png") !important;
   -moz-image-region: rect(0px 44px 15px 30px) !important;
 }
 
@@ -281,13 +281,13 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 46px 42px 0px);
   -moz-box-orient: vertical;
 }
-#back-button:hover {
+#back-button[buttonover="true"] {
   -moz-image-region: rect(0px 100px 42px 54px);
 }
 #back-button[disabled="true"] {
   -moz-image-region: rect(0px 154px 42px 108px);
 }
-#back-button:hover:active {
+#back-button[buttondown="true"] {
   -moz-image-region: rect(0px 208px 42px 162px);
 }
 
@@ -297,13 +297,13 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 46px 42px 0px);
   -moz-box-orient: vertical;
 }
-#forward-button:hover {
+#forward-button[buttonover="true"] {
   -moz-image-region: rect(0px 100px 42px 54px);
 }
 #forward-button[disabled="true"] {
   -moz-image-region: rect(0px 154px 42px 108px) !important;
 }
-#forward-button:hover:active {
+#forward-button[buttondown="true"] {
   -moz-image-region: rect(0px 208px 42px 162px);
 }
 
@@ -380,18 +380,18 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 /* ::::: small primary toolbar buttons ::::: */
 
-toolbar[iconsize="small"]  #back-button {
+toolbar[iconsize="small"] #back-button {
   list-style-image: url("chrome://browser/skin/back-forward-small.png") !important;
   -moz-image-region: rect(0px 28px 25px 0px);
 }
 toolbar[iconsize="small"] #back-button:hover {
   -moz-image-region: rect(0px 56px 25px 28px);
 }
+toolbar[iconsize="small"] #back-button[buttondown="true"] {
+  -moz-image-region: rect(0px 112px 25px 84px);
+}
 toolbar[iconsize="small"] #back-button[disabled="true"] {
   -moz-image-region: rect(0px 84px 25px 56px);
-}
-toolbar[iconsize="small"] #back-button:hover:active {
-  -moz-image-region: rect(0px 112px 25px 84px) !important;
 }
 
 toolbar[iconsize="small"] #forward-button {
@@ -401,7 +401,7 @@ toolbar[iconsize="small"] #forward-button {
 toolbar[iconsize="small"] #forward-button:hover {
   -moz-image-region: rect(25px 56px 50px 28px);
 }
-toolbar[iconsize="small"] #forward-button:hover:active {
+toolbar[iconsize="small"] #forward-button[buttondown="true"] {
   -moz-image-region: rect(25px 84px 50px 56px);
 }
 toolbar[iconsize="small"] #forward-button[disabled="true"] {
@@ -501,7 +501,7 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 
 #page-proxy-button {
-  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-n.png");
+  list-style-image: url("chrome://browser/skin/bookmark-icon-n.png");
 }
 
 #page-proxy-favicon {
@@ -509,16 +509,16 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 
 #page-proxy-button[pageproxystate="valid"]:hover  {
-  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-h.png");
+  list-style-image: url("chrome://browser/skin/bookmark-icon-h.png");
 }
 
 #page-proxy-button[pageproxystate="valid"]:hover:active {
-  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-a.png");
+  list-style-image: url("chrome://browser/skin/bookmark-icon-a.png");
 }
 
 #page-proxy-button[pageproxystate="invalid"] {
   cursor: default;
-  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-d.png");
+  list-style-image: url("chrome://browser/skin/bookmark-icon-d.png");
 }
 
 /* ::::: autocomplete ::::: */
@@ -559,7 +559,7 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
   border: 0px;
   padding-top: 2px;
 
-  list-style-image: url("chrome://browser/skin/o3-imap-dropmarker.png");
+  list-style-image: url("chrome://browser/skin/dropmarker.png");
   -moz-image-region: rect(0 14px 15px 0px) !important;
   -moz-appearance: none !important;
 }
@@ -656,7 +656,7 @@ tab[busy] {
   margin-right: 3px;
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-n.png");
+  list-style-image: url("chrome://browser/skin/bookmark-icon-n.png");
 }
 
 
@@ -666,7 +666,7 @@ tab[busy] {
   margin: 0px 4px;
   padding: 1px 2px 2px 2px;
   border: none;
-  list-style-image: url("chrome://browser/skin/o3-imap-close-v2.png");
+  list-style-image: url("chrome://browser/skin/close.png");
   -moz-image-region: rect(0px 20px 20px 0px);
 }
 
@@ -675,21 +675,6 @@ tab[busy] {
 }
 
 .tabs-closebutton:hover:active {
-  -moz-image-region: rect(0px 110px 20px 90px);
-}
-
-.tabs-newbutton {
-  border: none;
-  padding: 1px 2px 2px 2px;
-  list-style-image: url("chrome://browser/skin/o3-imap-newtab.png");
-  -moz-image-region: rect(0px 20px 20px 0px);
-}
-
-.tabs-newbutton:hover {
-  -moz-image-region: rect(0px 50px 20px 30px);
-}
-
-.tabs-newbutton:hover:active {
   -moz-image-region: rect(0px 110px 20px 90px);
 }
 
