@@ -42,6 +42,8 @@
 #include "nsIProxy.h"
 #include "nsIPrompt.h"
 #include "nsIHTTPEventSink.h"
+#include "nsIStreamAsFile.h"
+class nsIFile;
 
 class nsHTTPRequest;
 class nsHTTPResponse;
@@ -66,7 +68,8 @@ DupString(char* *o_Dest, const char* i_Src);
 class nsHTTPChannel : public nsIHTTPChannel,
                       public nsIInterfaceRequestor,
                       public nsIProgressEventSink,
-                      public nsIProxy
+                      public nsIProxy,
+                      public nsIStreamAsFile
 {
 
 public:
@@ -83,7 +86,8 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSIPROXY
-
+		NS_DECL_NSISTREAMASFILE
+		
     // nsHTTPChannel methods:
     nsresult            Authenticate(const char *iChallenge,
                                      PRBool bProxyAuth = PR_FALSE);
@@ -186,6 +190,8 @@ protected:
     PRBool                              mPipeliningAllowed;
     nsHTTPPipelinedRequest*             mPipelinedRequest;
     nsCOMPtr<nsISupports>               mSecurityInfo;
+    // Stream as file
+    nsCOMPtr<nsISupportsArray>						mStreamAsFileObserverArray;
 };
 
 #endif /* _nsHTTPChannel_h_ */
