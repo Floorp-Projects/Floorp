@@ -2867,6 +2867,8 @@ static PRInt32 dir_GetPrefsFrom40Branch(nsVoidArray **list)
 
 	PRInt32 result = -1;
 	(*list) = new nsVoidArray();
+	if (!(*list))
+		return result;
 
 	/* get the preference for how many directories */
 	if (*list)
@@ -2921,9 +2923,11 @@ static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsol
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	if (obsoleteList)
+	{
 		(*obsoleteList) = new nsVoidArray();
-	if (!(*obsoleteList))
-		return NS_ERROR_OUT_OF_MEMORY;
+		if (!(*obsoleteList))
+			return NS_ERROR_OUT_OF_MEMORY;
+	}
 
 	if (pPref->CreateChildList(PREF_LDAP_SERVER_TREE_NAME, &children) == PREF_NOERROR)
 	{	
