@@ -8,3 +8,4 @@ nsIMessenger.idl
 nsIMsgIdentity.idl
 nsIMsgSignature.idl
 nsIMsgVCard.idl
+nsIMsgFolder.idl
