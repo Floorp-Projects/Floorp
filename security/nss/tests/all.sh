@@ -75,8 +75,7 @@
 
 #FIXME - all will be sourced by the wrapper wrapper will do cleanup etc
 
-TESTS="cert ssl sdr cipher smime perf" #tools is temporarily disabled
-                                       #since it fails on a few platforms
+TESTS="cert ssl sdr cipher smime perf tools"
 SCRIPTNAME=all.sh
 CLEANUP="${SCRIPTNAME}"
 cd `dirname $0`	#FIXME - if sourced 
