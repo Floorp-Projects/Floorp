@@ -77,6 +77,24 @@ unsigned char *_mbsstr( const unsigned char *str,
 };
 #endif
 
+class nsDriveEnumerator : public nsISimpleEnumerator
+{
+public:
+    nsDriveEnumerator();
+    virtual ~nsDriveEnumerator();
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISIMPLEENUMERATOR
+    nsresult Init();
+private:
+    /* mDrives and mLetter share data
+     * Init sets them.
+     * HasMoreElements reads mLetter.
+     * GetNext advances mLetter.
+     */
+    nsCString mDrives;
+    const char *mLetter;
+};
+
 //----------------------------------------------------------------------------
 // short cut resolver
 //----------------------------------------------------------------------------
@@ -745,8 +763,9 @@ nsLocalFile::InitWithNativePath(const nsACString &filePath)
 
     // kill any trailing '\' provided it isn't the second char of DBCS
     PRInt32 len = pathLen - 1;
-    if (path[len] == '\\' && (!::IsDBCSLeadByte(path[len-1]) ||
-                _mbsrchr((const unsigned char *)path, '\\') == (const unsigned char *)path+len))
+    if (path[len] == '\\' &&
+        (!::IsDBCSLeadByte(path[len-1]) ||
+         _mbsrchr((const unsigned char *)path, '\\') == (const unsigned char *)path+len))
     {
         path[len] = '\0';
         pathLen = len;
@@ -1747,13 +1766,17 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     // cannot use nsCString::RFindChar() due to 0x5c problem
     PRInt32 offset = (PRInt32) (_mbsrchr((const unsigned char *) parentPath.get(), '\\')
                      - (const unsigned char *) parentPath.get());
-    if (offset < 0)
-        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-
-    parentPath.Truncate(offset);
+    if (offset == 1 && parentPath[0] == '\\') {
+        aParent = nsnull;
+        return NS_OK;
+    }
+    if (offset > 0)
+        parentPath.Truncate(offset);
+    else
+        parentPath = NS_LITERAL_CSTRING("\\\\.");
 
     nsCOMPtr<nsILocalFile> localFile;
-    nsresult rv =  NS_NewNativeLocalFile(parentPath, mFollowSymlinks, getter_AddRefs(localFile));
+    nsresult rv = NS_NewNativeLocalFile(parentPath, mFollowSymlinks, getter_AddRefs(localFile));
 
     if(NS_SUCCEEDED(rv) && localFile)
     {
@@ -2053,6 +2076,19 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
     nsresult rv;
 
     *entries = nsnull;
+    if (mWorkingPath.Equals(NS_LITERAL_CSTRING("\\\\."))) {
+        nsDriveEnumerator *drives = new nsDriveEnumerator;
+        if (!drives)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(drives);
+        rv = drives->Init();
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(drives);
+            return rv;
+        }
+        *entries = drives;
+        return NS_OK;
+    }
 
     PRBool isDir;
     rv = IsDirectory(&isDir);
@@ -2478,4 +2514,53 @@ void
 nsLocalFile::GlobalShutdown()
 {
     NS_DestroyShortcutResolver();
+}
+
+NS_IMPL_ISUPPORTS1(nsDriveEnumerator, nsISimpleEnumerator);
+
+nsDriveEnumerator::nsDriveEnumerator()
+ : mLetter(0)
+{
+}
+
+nsDriveEnumerator::~nsDriveEnumerator()
+{
+}
+
+nsresult nsDriveEnumerator::Init()
+{
+    /* If the length passed to GetLogicalDriveStrings is smaller
+     * than the length of the string it would return, it returns
+     * the length required for the string. */
+    DWORD length = GetLogicalDriveStrings(0, 0);
+    /* The string is null terminated */
+    mDrives.SetLength(length+1);
+    if (!GetLogicalDriveStrings(length, mDrives.BeginWriting()))
+        return NS_ERROR_FAILURE;
+    mLetter = mDrives.get();
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDriveEnumerator::HasMoreElements(PRBool *aHasMore)
+{
+    *aHasMore = *mLetter != '\0';
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDriveEnumerator::GetNext(nsISupports **aNext)
+{
+    /* GetLogicalDrives stored in mLetter is a concatenation
+     * of null terminated strings, followed by a null terminator. */
+    if (!*mLetter) {
+        *aNext = nsnull;
+        return NS_OK;
+    }
+    const char *drive = mLetter;
+    mLetter += strlen(drive) + 1;
+    nsILocalFile *file;
+    nsresult rv = 
+        NS_NewNativeLocalFile(nsDependentCString(drive), PR_FALSE, &file);
+
+    *aNext = file;
+    return rv;
 }
