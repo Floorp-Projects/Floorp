@@ -162,23 +162,7 @@ PRInt32 CNavDelegate::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CToke
     }//if
   }//while
 
-  //ok, this is a bit complicated, so follow closely.
-  //Since we're incremental (but pessimistic), it is possible that even though 
-  //we've eaten a few delicious attributes, we can't keep them because
-  //we couldn't eat all of them (up to an including the close > for this tag).
-  //Therefore, we need to remove the ones we just created from the tokendeque,
-  //and destroy them. (They'll get reconsumed on the next incremental pass).
-  //NOTE: This process can be enhanced later on by adding state to the delegate
-  //      telling us that we're in the attribute consumption phase.
-  //      Remember the mantra: Crawl, Walk, Run!
-  if(kNoError==result) {
-    aToken->SetAttributeCount(theAttrCount);
-  }
-  else {
-    while(theAttrCount--) {
-      delete mTokenDeque.PopBack();
-    }
-  }
+  aToken->SetAttributeCount(theAttrCount);
   return result;
 }
 
@@ -214,8 +198,10 @@ PRInt32 CNavDelegate::ConsumeContentToEndTag(const nsString& aString,PRUnichar a
  *  @return new token or null 
  */
 PRInt32 CNavDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-  aToken=new CStartToken(nsAutoString(""));
+  PRInt32 theDequeSize=mTokenDeque.GetSize();
   PRInt32 result=kNoError;
+
+  aToken=new CStartToken(nsAutoString(""));
 
   if(aToken) {
     result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
@@ -251,6 +237,20 @@ PRInt32 CNavDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*
           } //if
         } //if
       } //if
+
+      //EEEEECCCCKKKK!!! 
+      //This code is confusing, so pay attention.
+      //If you're here, it's because we were in the midst of consuming a start
+      //tag but ran out of data (not in the stream, but in this *part* of the stream.
+      //For simplicity, we have to unwind our input. Therefore, we pop and discard
+      //any new tokens we've cued this round. Later we can get smarter about this.
+      if(kNoError!=result) {
+        while(mTokenDeque.GetSize()>theDequeSize) {
+          delete mTokenDeque.PopBack();
+        }
+      }
+
+
     } //if
   } //if
   return result;

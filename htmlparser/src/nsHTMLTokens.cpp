@@ -37,6 +37,7 @@ static nsString     gAlphaChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU
 static nsAutoString gDigits("0123456789");
 static nsAutoString gWhitespace(" \t\b");
 static nsAutoString gOperatorChars("/?.<>[]{}~^+=-!%&*(),|:");
+static const char*  gUserdefined = "userdefined";
 
 //debug error messages...
 static const char* kNullScanner = "Error: Scanner is null.";
@@ -99,7 +100,6 @@ struct HTMLTagEntry {
   eHTMLTags  fTagID;
 };
 
-
   // KEEP THIS LIST SORTED!
   // NOTE: This table is sorted in ascii collating order. If you
   // add a new entry, make sure you put it in the right spot otherwise
@@ -121,6 +121,7 @@ HTMLTagEntry gHTMLTagTable[] =
   {"CERTIFICATE", eHTMLTag_certificate},
   {"CITE",        eHTMLTag_cite},         {"CODE",      eHTMLTag_code},
   {"COL",         eHTMLTag_col},          {"COLGROUP",  eHTMLTag_colgroup},
+  {"COMMENT",     eHTMLTag_comment},
 
   {"DD",          eHTMLTag_dd},           {"DEL",       eHTMLTag_del},
   {"DFN",         eHTMLTag_dfn},          {"DIR",       eHTMLTag_dir},
@@ -193,7 +194,6 @@ HTMLTagEntry gHTMLTagTable[] =
   {"VAR",         eHTMLTag_var},          {"WBR",       eHTMLTag_wbr},
   {"WS",          eHTMLTag_whitespace},       
 
-
 };
 
 
@@ -263,6 +263,17 @@ CHTMLToken::CHTMLToken(const nsString& aName) : CToken(aName) {
 }
 
 /*
+ *  constructor from tag id
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+CHTMLToken::CHTMLToken(eHTMLTags aTag) : CToken(GetTagName(aTag)) {
+  mTagType=aTag; 
+}
+
+/*
  *  
  *  
  *  @update  gess 3/25/98
@@ -293,6 +304,17 @@ void CHTMLToken::SetHTMLTag(eHTMLTags aTagType) {
  *  @return  
  */
 CStartToken::CStartToken(const nsString& aName) : CHTMLToken(aName) {
+  mAttributed=PR_FALSE;
+}
+
+/*
+ *  constructor from tag id
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
   mAttributed=PR_FALSE;
 }
 
@@ -1335,17 +1357,15 @@ eHTMLTags DetermineHTMLTagType(const nsString& aString)
   PRInt32  high=cnt-1;
   PRInt32  middle=kNotFound;
   
-  if (0 != cnt)
-    while(low<=high)
-    {
-      middle=(PRInt32)(low+high)/2;
-      result=aString.Compare(gHTMLTagTable[middle].fName, PR_TRUE);
-      if (result==0)
-        return gHTMLTagTable[middle].fTagID; 
-      if (result<0)
-        high=middle-1; 
-      else low=middle+1; 
-    }
+  while(low<=high){
+    middle=(PRInt32)(low+high)/2;
+    result=aString.Compare(gHTMLTagTable[middle].fName, PR_TRUE);
+    if (result==0)
+      return gHTMLTagTable[middle].fTagID; 
+    if (result<0)
+      high=middle-1; 
+    else low=middle+1; 
+  }
   return eHTMLTag_userdefined;
 }
 
@@ -1357,16 +1377,23 @@ eHTMLTags DetermineHTMLTagType(const nsString& aString)
  * @return
  */
 const char* GetTagName(PRInt32 aTag) {
-  const char* result=0;
-  PRInt32     cnt=sizeof(gHTMLTagTable)/sizeof(HTMLTagEntry);
-
-  int i=0;
-  for(i=0;i<cnt;i++){
-    if(aTag==gHTMLTagTable[i].fTagID)
-      return gHTMLTagTable[i].fName;
+  const    char* result=0;
+  PRInt32  cnt=sizeof(gHTMLTagTable)/sizeof(HTMLTagEntry);
+  PRInt32  low=0; 
+  PRInt32  high=cnt-1;
+  PRInt32  middle=kNotFound;
+  
+  while(low<=high) {
+    middle=(PRInt32)(low+high)/2;
+    if(aTag==gHTMLTagTable[middle].fTagID)
+      return gHTMLTagTable[middle].fName;
+    if(aTag<gHTMLTagTable[middle].fTagID)
+      high=middle-1; 
+    else low=middle+1; 
   }
-  return result;
+  return gUserdefined;
 }
+
 
 /*
  *  This method iterates the attribute-table to ensure that is 

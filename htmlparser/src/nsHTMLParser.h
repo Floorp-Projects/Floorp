@@ -521,6 +521,7 @@ protected:
     ITokenizerDelegate* mDelegate;
     PRInt32             mIteration;
     char*               mTransferBuffer;
+    PRBool              mHasSeenOpenTag;
 };
 
 

@@ -400,8 +400,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       if (eHTMLTag_listitem == aChild) {
         return PR_FALSE;
       }
-      result = PR_TRUE;
-      break;
+      result=PRBool(!strchr(gHeadingTags,aChild)); break;
 
     case eHTMLTag_listing:
       result = PR_TRUE; break;
@@ -423,8 +422,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_ol:
     case eHTMLTag_ul:
       // XXX kipp was here
-      result = PR_TRUE;
-      break;
+      result=PRBool(!strchr(gHeadingTags,aChild)); break;
 
     case eHTMLTag_noframes:
       if(eHTMLTag_body==aChild)
@@ -785,10 +783,6 @@ PRInt32 CNavDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
 
     case eHTMLTag_col:
       result=eHTMLTag_colgroup; break;    
-
-      //These have to do with listings...
-    case eHTMLTag_listitem:
-      result=eHTMLTag_ul; break;    
 
     case eHTMLTag_dd:
     case eHTMLTag_dt:

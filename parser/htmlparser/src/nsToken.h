@@ -61,6 +61,13 @@ class CToken {
     CToken(const nsString& aName);
 
     /**
+     * constructor from char*
+     * @update	gess5/11/98
+     * @param   aName is the given name of the token 
+     */
+    CToken(const char* aName);
+
+    /**
      * destructor
      * @update	gess5/11/98
      */

@@ -59,21 +59,21 @@ enum eHTMLTags
   eHTMLTag_button,      eHTMLTag_caption,     eHTMLTag_center,    
   eHTMLTag_certificate, eHTMLTag_cite,
   eHTMLTag_code,        eHTMLTag_col,         eHTMLTag_colgroup,  eHTMLTag_comment,
-  eHTMLTag_dd,          eHTMLTag_del,         eHTMLTag_dfn,       eHTMLTag_div,       
-  eHTMLTag_dir,         eHTMLTag_dl,          eHTMLTag_dt,        
+  eHTMLTag_dd,          eHTMLTag_del,         eHTMLTag_dfn,       eHTMLTag_dir,       
+  eHTMLTag_div,         eHTMLTag_dl,          eHTMLTag_dt,        
   eHTMLTag_em,          eHTMLTag_embed,
   eHTMLTag_fieldset,    eHTMLTag_font,        eHTMLTag_footer,  
-  eHTMLTag_form,        eHTMLTag_frame,       eHTMLTag_frameset,
+  eHTMLTag_form,        eHTMLTag_frame,       eHTMLTag_frameset,  //39
   eHTMLTag_h1,          eHTMLTag_h2,          eHTMLTag_h3,        eHTMLTag_h4,
   eHTMLTag_h5,          eHTMLTag_h6,          eHTMLTag_head,      eHTMLTag_header,
-  eHTMLTag_hr,          eHTMLTag_html,        eHTMLTag_iframe,    eHTMLTag_ilayer,
-  eHTMLTag_italic,      eHTMLTag_img,         eHTMLTag_ins,       eHTMLTag_input,       
+  eHTMLTag_hr,          eHTMLTag_html,        eHTMLTag_italic,    eHTMLTag_iframe,    
+  eHTMLTag_ilayer,      eHTMLTag_img,         eHTMLTag_input,     eHTMLTag_ins,
   eHTMLTag_isindex,       
   eHTMLTag_kbd,         eHTMLTag_keygen,
-  eHTMLTag_label,       eHTMLTag_layer,       eHTMLTag_legend,    eHTMLTag_listitem,
+  eHTMLTag_label,       eHTMLTag_layer,       eHTMLTag_legend,    eHTMLTag_listitem, 
   eHTMLTag_link,        eHTMLTag_listing,     eHTMLTag_map,       eHTMLTag_marquee,
   eHTMLTag_math,        eHTMLTag_menu,        eHTMLTag_meta,      eHTMLTag_newline,
-  eHTMLTag_noembed,     eHTMLTag_noframes,    eHTMLTag_nolayer,   eHTMLTag_noscript,  
+  eHTMLTag_noembed,     eHTMLTag_noframes,    eHTMLTag_nolayer,   eHTMLTag_noscript,  //74
   eHTMLTag_note,        eHTMLTag_object,      eHTMLTag_ol,
   eHTMLTag_option,      eHTMLTag_paragraph,   eHTMLTag_param,     eHTMLTag_plaintext,   
   eHTMLTag_pre,         eHTMLTag_quotation,   eHTMLTag_strike,    eHTMLTag_samp,        
@@ -81,10 +81,10 @@ enum eHTMLTags
   eHTMLTag_server,      eHTMLTag_small,     
   eHTMLTag_spacer,      eHTMLTag_span,
   eHTMLTag_strong,      eHTMLTag_style,       eHTMLTag_sub,       eHTMLTag_sup,         
-  eHTMLTag_table,       eHTMLTag_tbody,       eHTMLTag_td,        
+  eHTMLTag_table,       eHTMLTag_tbody,       eHTMLTag_td,        //98
   
-  eHTMLTag_text,  //used for plain text; this is not really a tag.   
-  eHTMLTag_textarea,
+  eHTMLTag_text,  //used for plain text; this is not really a tag.  
+  eHTMLTag_textarea,  //100
   
   eHTMLTag_tfoot,   
   eHTMLTag_th,          eHTMLTag_thead,       eHTMLTag_title,     eHTMLTag_tr,
@@ -125,6 +125,7 @@ const char*     GetTagName(PRInt32 aTag);
  */
 class CHTMLToken : public CToken {
 public:
+                        CHTMLToken(eHTMLTags aTag);
                         CHTMLToken(const nsString& aString);
   virtual   eHTMLTags   GetHTMLTag();
             void        SetHTMLTag(eHTMLTags aTagType);
@@ -142,6 +143,7 @@ protected:
  */
 class CStartToken: public CHTMLToken {
   public:
+                        CStartToken(eHTMLTags aTag);
                         CStartToken(const nsString& aString);
     virtual PRInt32     Consume(PRUnichar aChar,CScanner& aScanner);
     virtual eHTMLTags   GetHTMLTag();
