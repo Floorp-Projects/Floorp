@@ -29,6 +29,7 @@
 #include "prio.h"
 
 #include <string.h> /* for memset() */
+static PRStatus _PR_DestroyIOLayer(PRFileDesc *stack);
 
 void PR_CALLBACK pl_FDDestructor(PRFileDesc *fd)
 {
@@ -43,20 +44,42 @@ void PR_CALLBACK pl_FDDestructor(PRFileDesc *fd)
 */
 static PRStatus PR_CALLBACK pl_TopClose (PRFileDesc *fd)
 {
-    PRFileDesc *top;
+    PRFileDesc *top, *lower;
+	PRStatus rv;
+
     PR_ASSERT(fd != NULL);
     PR_ASSERT(fd->lower != NULL);
     PR_ASSERT(fd->secret == NULL);
     PR_ASSERT(fd->methods->file_type == PR_DESC_LAYERED);
 
-    if (fd->higher != NULL)
-    {
-        PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
-        return PR_FAILURE;
-    }
-    top = PR_PopIOLayer(fd, PR_TOP_IO_LAYER);
-    top->dtor(top);
-    return (fd->methods->close)(fd);
+	if (PR_IO_LAYER_HEAD == fd->identity) {
+		/*
+		 * new style stack; close all the layers, before deleting the
+		 * stack head
+		 */
+		rv = fd->lower->methods->close(fd->lower);
+		_PR_DestroyIOLayer(fd);
+		return rv;
+	} else if ((fd->higher) && (PR_IO_LAYER_HEAD == fd->higher->identity)) {
+		/*
+		 * lower layers of new style stack
+		 */
+		lower = fd->lower;
+		/*
+		 * pop and cleanup current layer
+		 */
+    	top = PR_PopIOLayer(fd->higher, PR_TOP_IO_LAYER);
+		top->dtor(top);
+		/*
+		 * then call lower layer
+		 */
+		return (lower->methods->close(lower));
+	} else {
+		/* old style stack */
+    	top = PR_PopIOLayer(fd, PR_TOP_IO_LAYER);
+		top->dtor(top);
+		return (fd->methods->close)(fd);
+	}
 }
 
 static PRInt32 PR_CALLBACK pl_DefRead (PRFileDesc *fd, void *buf, PRInt32 amount)
@@ -156,12 +179,17 @@ static PRFileDesc* PR_CALLBACK pl_TopAccept (
     PRFileDesc *fd, PRNetAddr *addr, PRIntervalTime timeout)
 {
     PRStatus rv;
-    PRFileDesc *newfd;
+    PRFileDesc *newfd, *layer = fd;
     PRFileDesc *newstack;
+	PRBool newstyle_stack = PR_FALSE;
 
     PR_ASSERT(fd != NULL);
     PR_ASSERT(fd->lower != NULL);
 
+	/* test for new style stack */
+	while (NULL != layer->higher)
+		layer = layer->higher;
+	newstyle_stack = (PR_IO_LAYER_HEAD == layer->identity) ? PR_TRUE : PR_FALSE;
     newstack = PR_NEW(PRFileDesc);
     if (NULL == newstack)
     {
@@ -177,10 +205,16 @@ static PRFileDesc* PR_CALLBACK pl_TopAccept (
         return NULL;
     }
 
-    /* this PR_PushIOLayer call cannot fail */
-    rv = PR_PushIOLayer(newfd, PR_TOP_IO_LAYER, newstack);
-    PR_ASSERT(PR_SUCCESS == rv);
-    return newfd;  /* that's it */
+    if (newstyle_stack) {
+		newstack->lower = newfd;
+		newfd->higher = newstack;
+		return newstack;
+	} else {
+		/* this PR_PushIOLayer call cannot fail */
+		rv = PR_PushIOLayer(newfd, PR_TOP_IO_LAYER, newstack);
+		PR_ASSERT(PR_SUCCESS == rv);
+    	return newfd;  /* that's it */
+	}
 }
 
 static PRStatus PR_CALLBACK pl_DefBind (PRFileDesc *fd, const PRNetAddr *addr)
@@ -266,10 +300,16 @@ static PRInt32 PR_CALLBACK pl_DefAcceptread (
     PRInt32 nbytes;
     PRStatus rv;
     PRFileDesc *newstack;
+    PRFileDesc *layer = sd;
+	PRBool newstyle_stack = PR_FALSE;
 
     PR_ASSERT(sd != NULL);
     PR_ASSERT(sd->lower != NULL);
 
+	/* test for new style stack */
+	while (NULL != layer->higher)
+		layer = layer->higher;
+	newstyle_stack = (PR_IO_LAYER_HEAD == layer->identity) ? PR_TRUE : PR_FALSE;
     newstack = PR_NEW(PRFileDesc);
     if (NULL == newstack)
     {
@@ -285,11 +325,17 @@ static PRInt32 PR_CALLBACK pl_DefAcceptread (
         PR_DELETE(newstack);
         return nbytes;
     }
-
-    /* this PR_PushIOLayer call cannot fail */
-    rv = PR_PushIOLayer(*nd, PR_TOP_IO_LAYER, newstack);
-    PR_ASSERT(PR_SUCCESS == rv);
-    return nbytes;
+    if (newstyle_stack) {
+		newstack->lower = *nd;
+		(*nd)->higher = newstack;
+		*nd = newstack;
+		return nbytes;
+	} else {
+		/* this PR_PushIOLayer call cannot fail */
+		rv = PR_PushIOLayer(*nd, PR_TOP_IO_LAYER, newstack);
+		PR_ASSERT(PR_SUCCESS == rv);
+		return nbytes;
+	}
 }
 
 static PRInt32 PR_CALLBACK pl_DefTransmitfile (
@@ -415,6 +461,49 @@ PR_IMPLEMENT(PRFileDesc*) PR_CreateIOLayerStub(
     return fd;
 }  /* PR_CreateIOLayerStub */
 
+/*
+ * PR_CreateIOLayer
+ *		Create a new style stack, where the stack top is a dummy header.
+ *		Unlike the old style stacks, the contents of the stack head
+ *		are not modified when a layer is pushed onto or popped from a new
+ *		style stack.
+ */
+
+PR_IMPLEMENT(PRFileDesc*) PR_CreateIOLayer(PRFileDesc *top)
+{
+    PRFileDesc *fd = NULL;
+
+	fd = PR_NEWZAP(PRFileDesc);
+	if (NULL == fd)
+		PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+	else
+	{
+		fd->methods = &pl_methods;
+		fd->dtor = pl_FDDestructor;
+		fd->identity = PR_IO_LAYER_HEAD;
+		fd->higher = NULL;
+		fd->lower = top;
+		top->higher = fd;
+		top->lower = NULL;
+	}
+    return fd;
+}  /* PR_CreateIOLayer */
+
+/*
+ * _PR_DestroyIOLayer
+ *		Delete the stack head of a new style stack.
+ */
+
+static PRStatus _PR_DestroyIOLayer(PRFileDesc *stack)
+{
+    if (NULL == stack)
+        return PR_FAILURE;
+    else {
+        PR_DELETE(stack);
+    	return PR_SUCCESS;
+    }
+}  /* _PR_DestroyIOLayer */
+
 PR_IMPLEMENT(PRStatus) PR_PushIOLayer(
     PRFileDesc *stack, PRDescIdentity id, PRFileDesc *fd)
 {
@@ -423,6 +512,7 @@ PR_IMPLEMENT(PRStatus) PR_PushIOLayer(
     PR_ASSERT(fd != NULL);
     PR_ASSERT(stack != NULL);
     PR_ASSERT(insert != NULL);
+    PR_ASSERT(PR_IO_LAYER_HEAD != id);
     if ((NULL == stack) || (NULL == fd) || (NULL == insert))
     {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
@@ -431,17 +521,19 @@ PR_IMPLEMENT(PRStatus) PR_PushIOLayer(
 
     if (stack == insert)
     {
-        /* going on top of the stack */
-        PRFileDesc copy = *stack;
-        *stack = *fd;
-        *fd = copy;
-        fd->higher = stack;
-        stack->lower = fd;
-        stack->higher = NULL;
-    }
-    else
-    {
-        /* going somewhere in the middle of the stack */
+		/* going on top of the stack */
+		/* old-style stack */	
+		PRFileDesc copy = *stack;
+		*stack = *fd;
+		*fd = copy;
+		fd->higher = stack;
+		stack->lower = fd;
+		stack->higher = NULL;
+	} else {
+        /*
+		 * going somewhere in the middle of the stack for both old and new
+		 * style stacks, or going on top of stack for new style stack
+		 */
         fd->lower = insert;
         fd->higher = insert->higher;
 
@@ -465,17 +557,24 @@ PR_IMPLEMENT(PRFileDesc*) PR_PopIOLayer(PRFileDesc *stack, PRDescIdentity id)
         return NULL;
     }
 
-    if (extract == stack)
-    {
+    if (extract == stack) {
         /* popping top layer of the stack */
+		/* old style stack */
         PRFileDesc copy = *stack;
         extract = stack->lower;
         *stack = *extract;
         *extract = copy;
         stack->higher = NULL;
-    }
-    else
-    {
+	} else if ((PR_IO_LAYER_HEAD == stack->identity) &&
+					(extract == stack->lower) && (extract->lower == NULL)) {
+			/*
+			 * new style stack
+			 * popping the only layer in the stack; delete the stack too
+			 */
+			stack->lower = NULL;
+			_PR_DestroyIOLayer(stack);
+	} else {
+		/* for both kinds of stacks */
         extract->lower->higher = extract->higher;
         extract->higher->lower = extract->lower;
     }
@@ -583,14 +682,23 @@ PR_IMPLEMENT(const char*) PR_GetNameForIdentity(PRDescIdentity ident)
 PR_IMPLEMENT(PRDescIdentity) PR_GetLayersIdentity(PRFileDesc* fd)
 {
     PR_ASSERT(NULL != fd);
-    return fd->identity;
+    if (PR_IO_LAYER_HEAD == fd->identity) {
+    	PR_ASSERT(NULL != fd->lower);
+    	return fd->lower->identity;
+	} else
+    	return fd->identity;
 }  /* PR_GetLayersIdentity */
 
 PR_IMPLEMENT(PRFileDesc*) PR_GetIdentitiesLayer(PRFileDesc* fd, PRDescIdentity id)
 {
     PRFileDesc *layer = fd;
 
-    if (PR_TOP_IO_LAYER == id) return fd;
+    if (PR_TOP_IO_LAYER == id) {
+    	if (PR_IO_LAYER_HEAD == fd->identity)
+			return fd->lower;
+		else 
+			return fd;
+	}
 
     for (layer = fd; layer != NULL; layer = layer->lower)
     {

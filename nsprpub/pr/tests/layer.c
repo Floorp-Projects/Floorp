@@ -64,6 +64,40 @@ static PRFileDesc *PushLayer(PRFileDesc *stack)
     return stack;
 }  /* PushLayer */
 
+static PRFileDesc *PushNewLayers(PRFileDesc *stack)
+{
+	PRDescIdentity tmp_identity;
+    PRFileDesc *layer;
+    PRStatus rv;
+
+	/* push a dummy layer */
+    tmp_identity = PR_GetUniqueIdentity("Dummy 1");
+    layer = PR_CreateIOLayerStub(tmp_identity, PR_GetDefaultIOMethods());
+    rv = PR_PushIOLayer(stack, PR_GetLayersIdentity(stack), layer);
+    if (verbosity > quiet)
+        PR_fprintf(logFile, "Pushed layer(0x%x) onto stack(0x%x)\n", layer,
+															stack);
+    PR_ASSERT(PR_SUCCESS == rv);
+
+	/* push a data procesing layer */
+    layer = PR_CreateIOLayerStub(identity, &myMethods);
+    rv = PR_PushIOLayer(stack, PR_GetLayersIdentity(stack), layer);
+    if (verbosity > quiet)
+        PR_fprintf(logFile, "Pushed layer(0x%x) onto stack(0x%x)\n", layer,
+													stack);
+    PR_ASSERT(PR_SUCCESS == rv);
+
+	/* push another dummy layer */
+    tmp_identity = PR_GetUniqueIdentity("Dummy 2");
+    layer = PR_CreateIOLayerStub(tmp_identity, PR_GetDefaultIOMethods());
+    rv = PR_PushIOLayer(stack, PR_GetLayersIdentity(stack), layer);
+    if (verbosity > quiet)
+        PR_fprintf(logFile, "Pushed layer(0x%x) onto stack(0x%x)\n", layer,
+															stack);
+    PR_ASSERT(PR_SUCCESS == rv);
+    return stack;
+}  /* PushLayer */
+
 #if 0
 static PRFileDesc *PopLayer(PRFileDesc *stack)
 {
@@ -231,6 +265,7 @@ PRIntn main(PRIntn argc, char **argv)
     PRIntn mits;
     PLOptStatus os;
     PRFileDesc *client, *service;
+    PRFileDesc *client_stack, *service_stack;
     PRNetAddr any_address;
     const char *server_name = NULL;
     const PRIOMethods *stubMethods;
@@ -367,6 +402,41 @@ PRIntn main(PRIntn argc, char **argv)
 
         rv = PR_Close(client); PR_ASSERT(PR_SUCCESS == rv);
         rv = PR_Close(service); PR_ASSERT(PR_SUCCESS == rv);
+        /* with layering, using new style stack */
+        if (verbosity > silent)
+            PR_fprintf(logFile,
+							"Beginning layered test with new style stack\n");
+        client = PR_NewTCPSocket(); PR_ASSERT(NULL != client);
+    	client_stack = PR_CreateIOLayer(client);
+        PushNewLayers(client_stack);
+        service = PR_NewTCPSocket(); PR_ASSERT(NULL != service);
+    	service_stack = PR_CreateIOLayer(service);
+        PushNewLayers(service_stack);
+        rv = PR_InitializeNetAddr(PR_IpAddrAny, default_port, &any_address);
+        PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Bind(service, &any_address); PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Listen(service, 10); PR_ASSERT(PR_SUCCESS == rv);
+
+        minor_iterations = mits;
+        server_thread = PR_CreateThread(
+            PR_USER_THREAD, Server, service_stack,
+            PR_PRIORITY_HIGH, thread_scope,
+            PR_JOINABLE_THREAD, 16 * 1024);
+        PR_ASSERT(NULL != server_thread);
+
+        client_thread = PR_CreateThread(
+            PR_USER_THREAD, Client, client_stack,
+            PR_PRIORITY_NORMAL, thread_scope,
+            PR_JOINABLE_THREAD, 16 * 1024);
+        PR_ASSERT(NULL != client_thread);
+
+        rv = PR_JoinThread(client_thread);
+        PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_JoinThread(server_thread);
+        PR_ASSERT(PR_SUCCESS == rv);
+
+        rv = PR_Close(client_stack); PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Close(service_stack); PR_ASSERT(PR_SUCCESS == rv);
         if (verbosity > silent)
             PR_fprintf(logFile, "Ending layered test\n");
     }
