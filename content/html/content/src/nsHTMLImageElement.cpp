@@ -77,6 +77,8 @@
 
 #include "nsIJSContextStack.h"
 #include "nsIView.h"
+#include "nsImageMapUtils.h"
+#include "nsIDOMHTMLMapElement.h"
 
 // XXX nav attrs: suppress
 
@@ -128,6 +130,7 @@ public:
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
+  PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
@@ -525,6 +528,34 @@ nsHTMLImageElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   return nsGenericHTMLElement::HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                               aFlags, aEventStatus);
+}
+
+PRBool
+nsHTMLImageElement::IsFocusable(PRInt32 *aTabIndex)
+{
+  PRInt32 tabIndex;
+  GetTabIndex(&tabIndex);
+
+  if (mDocument) {
+    nsAutoString usemap;
+    GetUseMap(usemap);
+    nsCOMPtr<nsIDOMHTMLMapElement> imageMap =
+      nsImageMapUtils::FindImageMap(mDocument, usemap);
+    if (imageMap) {
+      if (aTabIndex) {
+        // Use tab index on individual map areas
+        *aTabIndex = (sTabFocusModel & eTabFocus_linksMask)? 0 : -1;
+      }
+      return PR_TRUE;    
+    }
+  }
+
+  if (aTabIndex) {
+    // Can be in tab order if tabindex >=0 and form controls are tabbable.
+    *aTabIndex = (sTabFocusModel & eTabFocus_formElementsMask)? tabIndex : -1;
+  }
+
+  return tabIndex >= 0;
 }
 
 nsresult

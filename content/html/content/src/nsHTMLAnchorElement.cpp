@@ -102,7 +102,8 @@ public:
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
   virtual void SetFocus(nsIPresContext* aPresContext);
-  virtual void RemoveFocus(nsIPresContext* aPresContext);
+  virtual PRBool IsFocusable(PRBool *aTabIndex = nsnull);
+
   virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
@@ -234,20 +235,30 @@ nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
   }
 }
 
-void
-nsHTMLAnchorElement::RemoveFocus(nsIPresContext* aPresContext)
+PRBool
+nsHTMLAnchorElement::IsFocusable(PRInt32 *aTabIndex)
 {
-  if (!aPresContext) {
-    return;
+  if (!nsGenericHTMLElement::IsFocusable(aTabIndex)) {
+    return PR_FALSE;
   }
 
-  // If we are disabled, we probably shouldn't have focus in the
-  // first place, so allow it to be removed.
-
-  if (mDocument) {
-    aPresContext->EventStateManager()->SetContentState(nsnull,
-                                                       NS_EVENT_STATE_FOCUS);
+  PRBool isFocusable = PR_FALSE;
+  nsAutoString href;
+  GetAttribute(NS_LITERAL_STRING("href"), href);
+  if (href.IsEmpty() && !HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
+    // Not tabbable or focusable without href (bug 17605), unless
+    // forced to be via presence of nonnegative tabindex attribute
+    if (aTabIndex) {
+      *aTabIndex = -1;
+    }
+    return PR_FALSE;
   }
+
+  if (aTabIndex && (sTabFocusModel & eTabFocus_linksMask) == 0) {
+    *aTabIndex = -1;
+  }
+
+  return PR_TRUE;
 }
 
 nsresult

@@ -70,6 +70,9 @@ public:
   // nsIDOMHTMLObjectElement
   NS_DECL_NSIDOMHTMLOBJECTELEMENT
 
+  // nsIContent
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+
   // Overriden nsIFormControl methods
   NS_IMETHOD_(PRInt32) GetType() { return NS_FORM_OBJECT; }
   NS_IMETHOD Reset();
@@ -143,6 +146,18 @@ NS_IMETHODIMP
 nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   return nsGenericHTMLFormElement::GetForm(aForm);
+}
+
+PRBool
+nsHTMLObjectElement::IsFocusable(PRInt32 *aTabIndex)
+{
+  if (!nsGenericHTMLElement::IsFocusable(aTabIndex)) {
+    return PR_FALSE;
+  }
+  if (aTabIndex && (sTabFocusModel & eTabFocus_formElementsMask) == 0) {
+    *aTabIndex = -1;
+  }
+  return PR_TRUE;
 }
 
 // nsIFormControl

@@ -130,7 +130,6 @@ public:
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
   virtual void SetFocus(nsIPresContext* aPresContext);
-  virtual void RemoveFocus(nsIPresContext* aPresContext);
 
   virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
@@ -257,27 +256,6 @@ nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
     formControlFrame->ScrollIntoView(aPresContext);
     // Could call SelectAll(aPresContext) here to automatically
     // select text when we receive focus.
-  }
-}
-
-void
-nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
-{
-  if (!aPresContext)
-    return;
-
-  // If we are disabled, we probably shouldn't have focus in the
-  // first place, so allow it to be removed.
-
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-
-  if (formControlFrame) {
-    formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
-  }
-
-  if (mDocument) {
-    aPresContext->EventStateManager()->SetContentState(nsnull,
-                                                       NS_EVENT_STATE_FOCUS);
   }
 }
 

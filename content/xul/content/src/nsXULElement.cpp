@@ -147,6 +147,7 @@
 #include "nsDOMAttributeMap.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsGenericHTMLElement.h"
+#include "nsHTMLAtoms.h"
 
 #include "prlog.h"
 #include "rdf.h"
@@ -1422,6 +1423,32 @@ nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
     *aResult = mListenerManager;
     NS_ADDREF(*aResult);
     return NS_OK;
+}
+
+PRBool
+nsXULElement::IsFocusable(PRInt32 *aTabIndex)
+{
+  // Use incoming tabindex as default value
+  PRInt32 tabIndex = aTabIndex? *aTabIndex : -1;
+  PRBool disabled = tabIndex < 0;
+  nsCOMPtr<nsIDOMXULControlElement> xulControl = 
+    do_QueryInterface(NS_STATIC_CAST(nsIContent*, this));
+  if (xulControl) {
+    xulControl->GetDisabled(&disabled);
+    if (disabled) {
+      tabIndex = -1;  // Can't tab to disabled elements
+    }
+    else if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
+      // If attribute not set, will use default value passed in
+      xulControl->GetTabIndex(&tabIndex);
+    }
+  }
+
+  if (aTabIndex) {
+    *aTabIndex = tabIndex;
+  }
+
+  return !disabled;
 }
 
 

@@ -189,6 +189,8 @@ public:
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
+  virtual void RemoveFocus(nsIPresContext *aPresContext);
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
   nsresult HandleDOMEvent(nsIPresContext* aPresContext,
                           nsEvent* aEvent,
@@ -945,6 +947,7 @@ public:
   NS_IMETHOD SetFrameLoader(nsIFrameLoader *aFrameLoader);
 
   // nsIContent
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
   virtual void SetParent(nsIContent *aParent);
   virtual void SetDocument(nsIDocument *aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);

@@ -145,7 +145,6 @@ public:
 
   NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus);
   NS_IMETHOD MoveCaretToFocus();
-  NS_IMETHOD GetTabbable(PRInt32 aTabFocusType, PRBool *aIsTabbable);
 
 protected:
   friend class CurrentEventShepherd;
@@ -167,13 +166,13 @@ protected:
   nsresult SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   nsresult CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   PRBool ChangeFocus(nsIContent* aFocus, PRInt32 aFocusedWith);
-  static PRBool HasFocusableAncestor(nsIFrame *aFrame);
   nsresult GetNextTabbableContent(nsIContent* aRootContent,
                                   nsIContent* aStartContent,
                                   nsIFrame* aStartFrame,
                                   PRBool forward, PRBool ignoreTabIndex,
                                   nsIContent** aResultNode,
                                   nsIFrame** aResultFrame);
+  nsIContent *GetNextTabbableMapArea(PRBool aForward, nsIContent *imageContent);
 
   void TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);

@@ -88,7 +88,6 @@ public:
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
   virtual void SetFocus(nsIPresContext* aPresContext);
-  virtual void RemoveFocus(nsIPresContext* aPresContext);
 
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
@@ -200,16 +199,6 @@ nsHTMLAreaElement::SetFocus(nsIPresContext* aPresContext)
                                      NS_PRESSHELL_SCROLL_ANYWHERE);
     }
   }
-}
-
-void
-nsHTMLAreaElement::RemoveFocus(nsIPresContext* aPresContext)
-{
-  if (!aPresContext)
-    return;
-
-  aPresContext->EventStateManager()->SetContentState(nsnull,
-                                                     NS_EVENT_STATE_FOCUS);
 }
 
 void

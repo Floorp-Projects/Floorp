@@ -117,7 +117,7 @@ DebugListContentTree(nsIContent* aElement)
 
 PLDHashTable nsGenericElement::sRangeListsHash;
 PLDHashTable nsGenericElement::sEventListenerManagersHash;
-
+PRInt32 nsIContent::sTabFocusModel = eTabFocus_any;
 //----------------------------------------------------------------------
 
 nsChildContentList::nsChildContentList(nsIContent *aContent)

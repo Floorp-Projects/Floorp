@@ -4618,6 +4618,59 @@ nsFrame::GetStyleDataExternal(nsStyleStructID aSID) const
   return mStyleContext->GetStyleData(aSID);
 }
 
+nsIFrame*
+nsIFrame::FocusableAncestor(nsIFrame *aFrame)
+{
+  // This method helps prevent a situation where a link or other element
+  // with -moz-user-focus is focused twice, because the parent link
+  // would get focused, and all of the children also get focus.
+  // Scroll frames are the only focusable containers that 
+  // can have focusable children.
+
+  nsIFrame *ancestorFrame = aFrame;
+  while ((ancestorFrame = ancestorFrame->GetParent()) != nsnull &&
+         ancestorFrame->GetType() != nsLayoutAtoms::scrollFrame) {
+    // Any other parent that's focusable can't have focusable children
+    const nsStyleUserInterface *ui = ancestorFrame->GetStyleUserInterface();
+    if (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE &&
+        ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) {
+      // Inside a focusable parent -- let parent get focus
+      // instead of child (to avoid links within links etc.)
+      return ancestorFrame;   
+    }
+  }
+  return nsnull;
+}
+
+
+PRBool
+nsIFrame::IsFocusable(PRInt32 *aTabIndex)
+{
+  PRInt32 tabIndex = -1;
+  PRBool isFocusable = PR_FALSE;
+
+  if (AreAncestorViewsVisible() && mContent &&
+      mContent->IsContentOfType(nsIContent::eELEMENT) &&
+      !FocusableAncestor(this)) {
+    const nsStyleVisibility* vis = GetStyleVisibility();
+    if (vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE &&
+        vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN) {
+      const nsStyleUserInterface* ui = GetStyleUserInterface();
+      if (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE &&
+          ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) {
+        // Pass in default tabindex of -1 for nonfocusable and 0 for focusable
+        tabIndex = 0;
+      }
+      isFocusable = mContent->IsFocusable(&tabIndex);
+    }
+  }
+
+  if (aTabIndex) {
+    *aTabIndex = tabIndex;
+  }
+  return isFocusable;
+}
+
 #ifdef NS_DEBUG
 static void
 GetTagName(nsFrame* aFrame, nsIContent* aContent, PRIntn aResultSize,
