@@ -2597,7 +2597,14 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
 	    if(URL_s->content_length != URL_s->real_content_length
 	       && !found_cache_obj->incomplete_file)
 	      {
-		    PR_ASSERT(0);  
+            /* TODO later- switch back to a PR_ASSERT(0) */
+            if (1)
+            {
+			    char *buf = 0;
+			    StrAllocCopy(buf,"Possible Gromit vs. Mozilla cache corruption!\nDid you forget to clean your cache?\nIf you see this error AFTER cleaning your cache then call me- Gagan(x2187)");
+			    FE_Alert(ctxt, buf);
+			    PR_Free(buf);
+            }
 
 			URL_s->real_content_length = 0;
 			URL_s->content_length = 0;
