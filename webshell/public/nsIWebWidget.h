@@ -59,6 +59,10 @@ public:
 
   NS_IMETHOD GetContainer(nsISupports** aResult) = 0;
 
+  // XXX temp hack
+  virtual void          SetRootWebWidget(nsIWebWidget* aWebWidget) = 0;
+  virtual nsIWebWidget* GetRootWebWidget() = 0;
+
   NS_IMETHOD SetLinkHandler(nsILinkHandler* aHandler) = 0;
 
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult) = 0;
@@ -84,6 +88,8 @@ public:
   NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDocument) = 0;
                                                 
   NS_IMETHOD ReleaseScriptContext() = 0;
+
+  virtual nsIPresContext* GetPresContext() = 0;
 
 };
 
