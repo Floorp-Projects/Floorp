@@ -2175,19 +2175,22 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
     // Note: we intentionally make 2 passes: 
     // The first pass tries to exactly match, the 2nd pass matches the group.
 
+    TagList* theRootTags=gHTMLElements[mTagID].GetEndRootTags();
     PRInt32 theIndexCopy=theIndex;
     while(--theIndex>=anIndex){
       eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag == mTagID) {
         return theTag; // we found our target.
       }
-      else if (!CanContain(theTag)) {
+      else if (!CanContain(theTag) || 
+               (theRootTags && FindTagInSet(theTag,theRootTags->mTags,theRootTags->mCount))) {
         // If you cannot contain this tag then
         // you cannot close it either. It looks like
         // the tag trying to close is misplaced.
         // In the following Exs. notice the misplaced /font:
         // Ex. <font><table><tr><td></font></td></tr></table. -- Ref. bug 56245
-        // Ex. <font><select><option></font></select> -- Ref. bug 37618.
+        // Ex. <font><select><option></font></select> -- Ref. bug 37618
+        // Ex. <font><select></font><option></select> -- Ref. bug 98187
         return eHTMLTag_unknown;
       }
     }
