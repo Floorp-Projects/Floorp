@@ -148,7 +148,7 @@ class LossyConvertEncoding
 
 NS_COM
 void
-CopyUCS2toASCII( const nsAString& aSource, nsACString& aDest )
+CopyUTF16toASCII( const nsAString& aSource, nsACString& aDest )
   {
       // right now, this won't work on multi-fragment destinations
     aDest.SetLength(aSource.Length());
@@ -163,7 +163,7 @@ CopyUCS2toASCII( const nsAString& aSource, nsACString& aDest )
 
 NS_COM
 void
-CopyASCIItoUCS2( const nsACString& aSource, nsAString& aDest )
+CopyASCIItoUTF16( const nsACString& aSource, nsAString& aDest )
   {
       // right now, this won't work on multi-fragment destinations
     aDest.SetLength(aSource.Length());
@@ -239,7 +239,7 @@ AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
 
             // All ready? Time to convert
 
-            ConvertUCS2toUTF8 converter(dest.get());
+            ConvertUTF16toUTF8 converter(dest.get());
             copy_string(aSource.BeginReading(source_start),
                         aSource.EndReading(source_end), converter);
 
@@ -258,7 +258,7 @@ AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
             // rare situation.
 
             aDest.Replace(old_dest_length, count,
-                          NS_ConvertUCS2toUTF8(aSource));
+                          NS_ConvertUTF16toUTF8(aSource));
           }
       }
   }
@@ -294,7 +294,7 @@ AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
 
             // All ready? Time to convert
 
-            ConvertUTF8toUCS2 converter(dest.get());
+            ConvertUTF8toUTF16 converter(dest.get());
             copy_string(aSource.BeginReading(source_start),
                         aSource.EndReading(source_end), converter);
 
@@ -312,7 +312,7 @@ AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
             // this rare situation.
 
             aDest.Replace(old_dest_length, count,
-                          NS_ConvertUTF8toUCS2(aSource));
+                          NS_ConvertUTF8toUTF16(aSource));
           }
       }
   }
@@ -376,7 +376,7 @@ ToNewUTF8String( const nsAString& aSource )
     char *result = NS_STATIC_CAST(char*,
         nsMemory::Alloc(calculator.Size() + 1));
 
-    ConvertUCS2toUTF8 converter(result);
+    ConvertUTF16toUTF8 converter(result);
     copy_string(aSource.BeginReading(start), aSource.EndReading(end),
                 converter).write_terminator();
     NS_ASSERTION(calculator.Size() == converter.Size(), "length mismatch");
@@ -436,7 +436,7 @@ UTF8ToNewUnicode( const nsACString& aSource )
     PRUnichar *result = NS_STATIC_CAST(PRUnichar*,
         nsMemory::Alloc(sizeof(PRUnichar) * (calculator.Length() + 1)));
 
-    ConvertUTF8toUCS2 converter(result);
+    ConvertUTF8toUTF16 converter(result);
     copy_string(aSource.BeginReading(start), aSource.EndReading(end),
                 converter).write_terminator();
     NS_ASSERTION(calculator.Length() == converter.Length(), "length mismatch");
@@ -616,7 +616,7 @@ IsUTF8( const nsACString& aString )
                       }
                   }
                 else
-                  return PR_FALSE; // Not UTF8 string
+                  return PR_FALSE; // Not UTF-8 string
               }
               
               while (ptr < fragmentEnd && state)
@@ -632,7 +632,7 @@ IsUTF8( const nsACString& aString )
 
                   if ( !UTF8traits::isInSeq(c) || overlong && c <= olupper || 
                        surrogate && slower <= c || nonchar && !state )
-                    return PR_FALSE; // Not UTF8 string
+                    return PR_FALSE; // Not UTF-8 string
                   overlong = surrogate = PR_FALSE;
                 }
             }

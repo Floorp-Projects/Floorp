@@ -45,8 +45,8 @@ class nsCString;
 NS_COM size_t Distance( const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
 NS_COM size_t Distance( const nsReadingIterator<char>&, const nsReadingIterator<char>& );
 
-NS_COM void CopyUCS2toASCII( const nsAString& aSource, nsACString& aDest );
-NS_COM void CopyASCIItoUCS2( const nsACString& aSource, nsAString& aDest );
+NS_COM void CopyUTF16toASCII( const nsAString& aSource, nsACString& aDest );
+NS_COM void CopyASCIItoUTF16( const nsACString& aSource, nsAString& aDest );
 
 NS_COM void CopyUTF16toUTF8( const nsAString& aSource, nsACString& aDest );
 NS_COM void CopyUTF8toUTF16( const nsACString& aSource, nsAString& aDest );
@@ -59,6 +59,14 @@ NS_COM void AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest );
 
 NS_COM void AppendUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest );
 NS_COM void AppendUTF8toUTF16( const char* aSource, nsAString& aDest );
+
+// Backward compatibility
+inline 
+NS_COM void CopyUCS2toASCII( const nsAString& aSource, nsACString& aDest )
+{ CopyUTF16toASCII(aSource, aDest); }
+inline 
+NS_COM void CopyASCIItoUCS2( const nsACString& aSource, nsAString& aDest )
+{ CopyASCIItoUTF16(aSource, aDest); }
 
   /**
    * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
@@ -88,11 +96,14 @@ NS_COM char* ToNewCString( const nsACString& aSource );
   /**
    * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
    *
-   * Allocates and returns a new |char| buffer which you must free with |nsMemory::Free|.
-   * Performs a encoding conversion by converting 16-bit wide characters down to UTF8 encoded 8-bits wide string copying |aSource| to your new buffer.
-   * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
+   * Allocates and returns a new |char| buffer which you must free with 
+   * |nsMemory::Free|.
+   * Performs an encoding conversion from a UTF-16 string to a UTF-8 string
+   * copying |aSource| to your new buffer.
+   * The new buffer is zero-terminated, but that may not help you if |aSource| 
+   * contains embedded nulls.
    *
-   * @param aSource a 16-bit wide string
+   * @param aSource a UTF-16 string (made of PRUnichar's)
    * @return a new |char| buffer you must free with |nsMemory::Free|.
    */
 
@@ -100,12 +111,15 @@ NS_COM char* ToNewUTF8String( const nsAString& aSource );
 
 
   /**
-   * Returns a new |PRUnichar| buffer containing a zero-terminated copy of |aSource|.
+   * Returns a new |PRUnichar| buffer containing a zero-terminated copy of 
+   * |aSource|.
    *
-   * Allocates and returns a new |PRUnichar| buffer which you must free with |nsMemory::Free|.
-   * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
+   * Allocates and returns a new |PRUnichar| buffer which you must free with 
+   * |nsMemory::Free|.
+   * The new buffer is zero-terminated, but that may not help you if |aSource| 
+   * contains embedded nulls.
    *
-   * @param aSource a 16-bit wide string
+   * @param aSource a UTF-16 string
    * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
    */
 NS_COM PRUnichar* ToNewUnicode( const nsAString& aSource );
@@ -129,28 +143,27 @@ NS_COM PRUnichar* ToNewUnicode( const nsACString& aSource );
    * of |aSource|.
    *
    * Allocates and returns a new |char| buffer which you must free with
-   * |nsMemory::Free|.  Performs an encoding conversion by 0-padding
-   * 8-bit wide characters up to 16-bits wide while copying |aSource| to
-   * your new buffer.  This conversion is not well defined; but it
-   * reproduces legacy string behavior.  The new buffer is
-   * zero-terminated, but that may not help you if |aSource| contains
-   * embedded nulls.
+   * |nsMemory::Free|.  Performs an encoding conversion from UTF-8 to UTF-16 
+   * while copying |aSource| to your new buffer.  This conversion is well defined
+   * for a valid UTF-8 string.  The new buffer is zero-terminated, but that 
+   * may not help you if |aSource| contains embedded nulls.
    *
    * @param aSource an 8-bit wide string, UTF-8 encoded
    * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
+   *         (UTF-16 encoded)
    */
 NS_COM PRUnichar* UTF8ToNewUnicode( const nsACString& aSource );
 
   /**
-   * Copies |aLength| 16-bit characters from the start of |aSource| to the
+   * Copies |aLength| 16-bit code units from the start of |aSource| to the
    * |PRUnichar| buffer |aDest|.
    *
    * After this operation |aDest| is not null terminated.
    *
-   * @param aSource a 16-bit wide string
+   * @param aSource a UTF-16 string
    * @param aSrcOffset start offset in the source string
    * @param aDest a |PRUnichar| buffer
-   * @param aLength the number of 16-bit characters to copy
+   * @param aLength the number of 16-bit code units to copy
    * @return pointer to destination buffer - identical to |aDest|
    */
 NS_COM PRUnichar* CopyUnicodeTo( const nsAString& aSource,
@@ -208,7 +221,7 @@ NS_COM PRBool IsASCII( const nsACString& aString );
    * XXX This is not bullet-proof and nor an all-purpose UTF-8 validator. 
    * It is mainly written to replace and roughly equivalent to
    *
-   *    str.Equals(NS_ConvertUCS2toUTF8(NS_ConvertUTF8toUCS2(str)))
+   *    str.Equals(NS_ConvertUTF16toUTF8(NS_ConvertUTF8toUTF16(str)))
    *
    * (see bug 191541)
    * As such,  it does not check for non-UTF-8 7bit encodings such as 

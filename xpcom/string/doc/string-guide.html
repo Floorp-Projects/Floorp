@@ -516,9 +516,10 @@ foo::GetShortName( nsAString&amp; aResult ) const
       If your string happens to be wide,
         you'll need to convert it before you can <span class="code">printf</span> something reasonable.
       If it's just for debugging,
-        you probably wouldn't care if something odd was printed in the case of a UCS2 character that didn't have
-        an ASCII equivalent.
-      The simplest thing in this case is to make a temporary conversion using <span class="code">NS_ConvertUCS2toUTF8</span>.
+        you probably wouldn't care if something odd was printed in the case of a Unicode character that didn't have
+        an ASCII equivalent. (If you have a UTF-8 terminal, the result is 
+       perfectly legible and nothing odd is printed.)
+      The simplest thing in this case is to make a temporary conversion using <span class="code">NS_ConvertUTF16toUTF8</span>.
       The result is conveniently flat already, so getting the pointer is simple.
       Remember not to hold onto the pointer you get out of this beyond the lifetime of temporary.
     </dd>
@@ -534,14 +535,14 @@ void PrintSomeStrings( const nsAString& aString, const PRUnichar* aKey, const ns
     printf("%s\n", <span class="notice">PromiseFlatCString(</span>aCString<span class="notice">).get()</span>);     // GOOD
 
       // the simplest way to get a |printf|-able |const char*| out of a string
-    printf("%s\n", <span class="notice">NS_ConvertUCS2toUTF8(</span>aKey<span class="notice">).get()</span>);       // GOOD
+    printf("%s\n", <span class="notice">NS_ConvertUTF16toUTF8(</span>aKey<span class="notice">).get()</span>);       // GOOD
 
       // works just as well with an formal wide string type...
-    printf("%s\n", <span class="notice">NS_ConvertUCS2toUTF8(</span>aString<span class="notice">).get()</span>);
+    printf("%s\n", <span class="notice">NS_ConvertUTF16toUTF8(</span>aString<span class="notice">).get()</span>);
 
 
       // But don't hold onto the pointer longer than the lifetime of the temporary!
-    <span class="warning">const char* cstring = NS_ConvertUCS2toUTF8(aKey).get(); // BAD! |cstring| is dangling
+    <span class="warning">const char* cstring = NS_ConvertUTF16toUTF8(aKey).get(); // BAD! |cstring| is dangling
     printf("%s\n", cstring);</span>
   }
 </pre>
@@ -554,6 +555,15 @@ void PrintSomeStrings( const nsAString& aString, const PRUnichar* aKey, const ns
   Here are the email answers I have yet to format into the FAQ.
   Some of the URLs may be out-dated or moved.
   The messages are in order from oldest to newest.
+</p>
+<p class="editnote">[Note : In June, 2003, these emails were modified
+to better reflect what is stored in 'wide' string
+classes (UTF-16 string instead of UCS-2)  and what        
+related methods do as a part of the patch for <a href=
+"http://bugzilla.mozilla.org/show_bug.cgi?id=183156" 
+title="replace UCS2 in function/class/method names with UTF16">bug 183156</a>.
+Therefore, they're a little different from  the original emails
+written by <a href="http://ScottCollins.net/">Scott Collins</a>]
 </p>
 <hr>
 <pre>
@@ -570,19 +580,25 @@ rambling, and for the fact that this message may accidentally mix
 discussion of how things <strong>are</strong> and how they will be.
 
 <p>There are many different possible encodings.  Three in common use in
-the Mozilla source base are: ASCII, UCS2, and UTF8.  In ASCII, every
+the Mozilla source base are: ASCII, UTF-16, and UTF-8.  In ASCII, every
+<!--the Mozilla source base are: ASCII, UCS2, and UTF8.  In ASCII, every-->
 character fits in 7-bits and is typically stored in an 8-bit byte.  We
 usually represent ASCII strings with <span class="code">nsCString</span>s, <span class="code">nsXPIDLCString</span>s,
-or <span class="code">char</span> string literals.  In UCS2, characters occupy 16 bits each. 
-We usually represent UCS2 strings as <span class="code">nsString</span>s, etc., i.e., two-byte
-or `wide' strings.  UTF8 is a multi-byte encoding.  A character might
-occupy one, two, or three bytes.  It is easiest to store and
+or <span class="code">char</span> string literals.  In UTF-16, characters occupy one 16-bit code unit (
+<a href="http://www.unicode.org/glossary/index.html#BMP_character">
+<abbr title="Basic Multilingual Plane">BMP</abbr>characters</a>) 
+or two 16-bit code units 
+(<a href="http://www.unicode.org/glossary/index.html#supplementary_character">
+<abbr title="Supplementary Plane : Plane 1 through 16">non-BMP</abbr> characters</a>).
+We usually represent UTF-16 strings as <span class="code">nsString</span>s, etc., i.e., two-byte
+or `wide' strings.  UTF-8 is a multi-byte encoding.  A character might
+occupy one, two, three, or four bytes.  It is easiest to store and
 manipulate such a string within a single-byte or `narrow' string
 implementation.
 
 <p>None of our current string implementations know the encoding of the
 data they hold at any given moment.  An <span class="code">nsCString</span> might legitimately
-hold data encoded in ASCII, UTF8, or even EBCDIC for that matter.
+hold data encoded in ASCII, UTF-8 or even EBCDIC for that matter.
 
 <p>Operations that convert from one encoding to another, or operations
 that are encoding sensitive (e.g., <span class="code">to_upper</span>), rightly belong in
@@ -590,7 +606,7 @@ i18n.  The fact that our current string interfaces automatically and
 implicitly convert between wide and narrow strings is actually the
 source of many errors in two particular categories: (1) unintended
 extra work, (2) mistaken re-encoding, e.g., accidentally `converting'
-a UTF8 string to UCS2 by pretending the UTF8 string is ASCII and then
+a UTF-8 string to UTF-16 by pretending the UTF-8 string is ASCII and then
 padding with <span class="code">'\0'</span>s.
 
 <p>We've known these were bad for a long time, and have been trying to
@@ -600,7 +616,7 @@ ramifications.
 
 <div class="source-code">
 <pre>
-void foo( const nsString&amp;  aUCS2string );
+void foo( const nsString&amp;  aUTF16string );
 
 foo("hello"); // works!  constructs a temporary |nsString| by
               // converting the ASCII literal with padding.
@@ -620,13 +636,13 @@ foo( nsAutoString("hello") );
 <p>which still copy/converts, but at least it probably doesn't need to do
 a heap allocation.  In the best of all worlds, no conversion, copying,
 or allocation would be necessary.  To do that, you would need to be
-able to directly specify a UCS2 string, e.g., with the <span class="code">L"hello"</span>
+able to directly specify a UTF-16 string, e.g., with the <span class="code">L"hello"</span>
 notation, and wrap that in an interface that just held a pointer. 
 E.g., something like
 
 <div class="source-code">
 <pre>
-void foo( const nsAReadableString&amp;  aUCS2string );
+void foo( const nsAReadableString&amp;  aUTF16string );
 
 foo( nsLiteralString(L"hello") );
 </pre>
@@ -675,10 +691,10 @@ class that derives from <span class="code">nsAutoString</span>, but allows const
 
 <div class="source-code">
 <pre>
-class NS_ConvertASCIItoUCS2 : public nsAutoString
+class NS_ConvertASCIItoUTF16 : public nsAutoString
   {
     public:
-      NS_ConvertASCIItoUCS2( const char* );
+      NS_ConvertASCIItoUTF16( const char* );
       // ...
   };
 </pre>
@@ -688,7 +704,7 @@ class NS_ConvertASCIItoUCS2 : public nsAutoString
 
 <div class="source-code">
 <pre>
-foo( NS_ConvertASCIItoUCS2("hello") );
+foo( NS_ConvertASCIItoUTF16("hello") );
 </pre>
 </div>
 
@@ -697,8 +713,8 @@ acts like a function call to an explicit encoding conversion.  It <strong>is</st
 a function call to an explicit encoding conversion.  We think that
 this naming pattern has room for growth.  In the meeting, we concluded
 that the best representation for encoding conversions is a family of
-functions, and <span class="code">NS_ConvertASCIItoUCS2</span> fits right in.  We think that
-XPCOM probably can't live without the ASCII to UCS2 conversion (though
+functions, and <span class="code">NS_ConvertASCIItoUTF16</span> fits right in.  We think that
+XPCOM probably can't live without the ASCII to UTF-16 conversion (though
 as explicit as possible) but that all others rightly belong in i18n
 land.
 
@@ -710,19 +726,19 @@ the `WithConversion' form must be used.  E.g.,
 
 <div class="source-code">
 <pre>
-nsString aUCS2string;
+nsString aUTF16string;
 nsCString anASCIIstring;
 // ...
 
-aUCS2string += anASCIIstring;  // Currently legal, but not for long
-aUCS2string.Append(anASCIIstring); // same
+aUTF16string += anASCIIstring;  // Currently legal, but not for long
+aUTF16string.Append(anASCIIstring); // same
 
-aUCS2string.AppendWithConversion(anASCIIstring); // the new way
+aUTF16string.AppendWithConversion(anASCIIstring); // the new way
 
-if ( aUCS2string == anASCIIstring ) // Sorry, this is going away too
+if ( aUTF16string == anASCIIstring ) // Sorry, this is going away too
   // ...
 
-if ( aUCS2string.EqualsWithConversion(anASCIIstring) )
+if ( aUTF16string.EqualsWithConversion(anASCIIstring) )
   // ...
 </pre>
 </div>
@@ -747,8 +763,8 @@ unrelated to encoding issues, so I'll defer it to another post.
 
 <div class="source-code">
 <pre>
-xxxConvertingASCIItoUCS2
-xxxConvertingUCS2toASCII
+xxxConvertingASCIItoUTF16
+xxxConvertingUTF16toASCII
 </pre>
 </div>
 
@@ -781,7 +797,7 @@ appealing, but more likely to work, like
 
 <div class="source-code">
 <pre>
-NS_ConvertASCIItoUCS2("Hello")
+NS_ConvertASCIItoUTF16("Hello")
 </pre>
 </div>
 
@@ -800,7 +816,7 @@ often we are converting constant literal strings, and why.
 `WithConversion' forms where appropriate.  I was also converting
 things to use <span class="code">NS_ConvertToString</span> where appropriate; unless I get
 talked out of it, I want to switch midstream to
-<span class="code">NS_ConvertASCIItoUCS2</span>, then go back and fix up the
+<span class="code">NS_ConvertASCIItoUTF16</span>, then go back and fix up the
 <span class="code">NS_ConvertToString</span> instances later.  I've set things up so I can
 check in as I go.  After all these conversions have been done, I'll be
 able to throw the switch (what switch?  NEW_STRING_APIS) which will
@@ -815,8 +831,8 @@ reasoning.)
 <ul>
   <li>how really annoying this whole topic is
   <li>how bad <span class="code">L"xxx"</span> is
-  <li>whether to move forward with <span class="code">NS_ConvertASCIItoUCS2</span>
-  <li>whether we should move to xxxConvertingASCIItoUCS2 etc instead
+  <li>whether to move forward with <span class="code">NS_ConvertASCIItoUTF16</span>
+  <li>whether we should move to xxxConvertingASCIItoUTF16 etc instead
       of `WithConverting'
   <li>arguments about where encoding conversions should live
   <li>arguments about whether going between 1 and 2 byte storage is an
@@ -908,7 +924,7 @@ standard as we move forward.
   #define NS_LITERAL_STRING(s)  nsLiteralString(L##s, \
                       (sizeof(L##s)/sizeof(wchar_t))-1)
 #else
-  #define NS_LITERAL_STRING(s)  NS_ConvertASCIItoUCS2(s, \
+  #define NS_LITERAL_STRING(s)  NS_ConvertASCIItoUTF16(s, \
                        sizeof(s)-1)
 #endif
 </pre>
@@ -1045,7 +1061,7 @@ example I gave above, that is, the one with <span class="code">AssignWithConvers
 
 <p><span class="code">Assign</span> still exists.  <span class="code">AssignWithConversion</span> takes on that
 functionality for assignments that require encoding transformations
-(e.g., from ASCII to UCS2).  <span class="code">SetString</span> is gone, since it was always
+(e.g., from ASCII to UTF16).  <span class="code">SetString</span> is gone, since it was always
 a synonym for <span class="code">Assign</span>. 
 
 <p>Learn more about the general APIs for strings that we are trying to
@@ -1263,7 +1279,7 @@ strings semantics
 <p>In a later message, Chris Waterson asks a related question
 <pre class="email-quote">
   >scc: should we add <span class="code">operator PRUnichar*()</span> to
-  >NS_ConvertASCIItoUCS2?
+  >NS_ConvertASCIItoUTF16?
 </pre>
 
 <p>And I reply:
@@ -1999,7 +2015,7 @@ Subject: Re: how to free an nsString::ToNewCString
 
 <hr>
 
-<p>You use several <span class="code">NS_ConvertASCIItoUCS2("...").get()</span>, these should be
+<p>You use several <span class="code">NS_ConvertASCIItoUTF16("...").get()</span>, these should be
 
   NS_LITERAL_STRING("...").get()
 
@@ -2037,7 +2053,7 @@ DoSomething( nsAWritableString&amp;  answer )
         if ( localFile )
           {
            
-localFile->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(path));
+localFile->SetPersistentDescriptor(NS_ConvertUTF16toUTF8(path));
 
             nsXPIDLString converted_path;
             localFile->GetUnicodePath(getter_Copies(converted_path));

@@ -61,7 +61,7 @@
    * wide version of this class, since wide |printf| is not generally available.  That means
    * to get a wide version of your formatted data, you must, e.g.,
    *
-   *   CopyASCIItoUCS2(nsPrintfCString("%f", 13.917"), myStr);
+   *   CopyASCIItoUTF16(nsPrintfCString("%f", 13.917"), myStr);
    *
    * That's another good reason to avoid this class for anything but numbers ... as strings can be
    * much more efficiently handled with |NS_LITERAL_[C]STRING| and |nsLiteral[C]String|.

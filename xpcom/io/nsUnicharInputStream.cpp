@@ -339,7 +339,7 @@ PRInt32 UTF8InputStream::Fill(nsresult * aErrorCode)
                "Ouch. I would overflow my buffer if I wasn't so careful.");
   if (PRInt32(dstLen) > mUnicharData->GetBufferSize()) return 0;
   
-  ConvertUTF8toUCS2 converter(mUnicharData->GetBuffer());
+  ConvertUTF8toUTF16 converter(mUnicharData->GetBuffer());
   
   nsASingleFragmentCString::const_char_iterator start = mByteData->GetBuffer();
   nsASingleFragmentCString::const_char_iterator end = mByteData->GetBuffer() + srcLen;

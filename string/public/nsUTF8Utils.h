@@ -62,15 +62,15 @@ class UTF8traits
 
 /**
  * A character sink (see |copy_string| in nsAlgorithm.h) for converting
- * UTF-8 to UCS2 (really UTF-16).
+ * UTF-8 to UTF-16
  */
-class ConvertUTF8toUCS2
+class ConvertUTF8toUTF16
   {
     public:
       typedef nsACString::char_type value_type;
       typedef nsAString::char_type  buffer_type;
 
-    ConvertUTF8toUCS2( buffer_type* aBuffer )
+    ConvertUTF8toUTF16( buffer_type* aBuffer )
         : mStart(aBuffer), mBuffer(aBuffer), mErrorEncountered(PR_FALSE) {}
 
     size_t Length() const { return mBuffer - mStart; }
@@ -267,19 +267,19 @@ class CalculateUTF8Length
 
 /**
  * A character sink (see |copy_string| in nsAlgorithm.h) for converting
- * UCS2 (really UTF-16) to UTF-8.
+ * UTF-16 to UTF-8.
  */
-class ConvertUCS2toUTF8
+class ConvertUTF16toUTF8
   {
     public:
       typedef nsAString::char_type  value_type;
       typedef nsACString::char_type buffer_type;
 
     // The error handling here is more lenient than that in
-    // |ConvertUTF8toUCS2|, but it's that way for backwards
+    // |ConvertUTF8toUTF16|, but it's that way for backwards
     // compatibility.
 
-    ConvertUCS2toUTF8( buffer_type* aBuffer )
+    ConvertUTF16toUTF8( buffer_type* aBuffer )
         : mStart(aBuffer), mBuffer(aBuffer) {}
 
     size_t Size() const { return mBuffer - mStart; }
@@ -363,7 +363,7 @@ class ConvertUCS2toUTF8
 
 /**
  * A character sink (see |copy_string| in nsAlgorithm.h) for computing
- * the number of bytes a UCS2 (really UTF-16) would occupy in UTF-8.
+ * the number of bytes a UTF-16 would occupy in UTF-8.
  */
 class CalculateUTF8Size
   {
