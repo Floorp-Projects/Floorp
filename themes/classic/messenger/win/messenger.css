@@ -392,12 +392,6 @@ searchterm
     border-bottom       : 1px solid threedface;
   }  
   
-  
-#sidebar-splitter
-  {
-    border-right        : 1px solid threedshadow;
-  }
-    
 #threadpane-splitter
   {
     border-left         : 1px solid threedhighlight;
@@ -407,4 +401,9 @@ searchterm
   {
     border-right        : 1px solid threedhighlight;
   }
-      
+        
+#sidebar-splitter
+  {
+    border-right        : 1px solid threedshadow;
+  }
+    
