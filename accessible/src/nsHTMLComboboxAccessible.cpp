@@ -395,8 +395,9 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::AccDoAction(PRUint8 index)
     }
     return NS_ERROR_FAILURE;
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_INVALID_ARG;
 }
+
 
 /**
   * Just one action ( click ).

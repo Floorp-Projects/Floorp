@@ -471,7 +471,16 @@ nsAccessible::~nsAccessible()
 #endif
 }
 
-nsresult nsAccessible::GetAccParent(nsIAccessible **  aAccParent)
+
+NS_IMETHODIMP nsAccessible::GetAccName(nsAWritableString& _retval)
+{
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
+  if (elt) 
+    return elt->GetAttribute(NS_LITERAL_STRING("title"), _retval);
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsAccessible::GetAccParent(nsIAccessible **  aAccParent)
 {
   nsCOMPtr<nsIPresContext> context;
   GetPresContext(context);
@@ -583,7 +592,7 @@ nsresult nsAccessible::GetTranslatedString(PRUnichar *aKey, nsAWritableString *a
     // nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(kStringBundleServiceCID, &rv));
     if (!stringBundleService) { 
       NS_WARNING("ERROR: Failed to get StringBundle Service instance.\n");
-      return NS_ERROR_FAILURE;;
+      return NS_ERROR_FAILURE;
     }
     stringBundleService->CreateBundle(ACCESSIBLE_BUNDLE_URL, getter_AddRefs(stringBundle));
   }
@@ -1493,6 +1502,17 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *_retval)
 
   // Focused? Do we implement that here or up the chain?
   return NS_OK;
+}
+
+
+NS_IMETHODIMP nsLinkableAccessible::GetAccValue(nsAWritableString& _retval)
+{
+  if (IsALink()) {
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mLinkContent));
+    if (elt) 
+      return elt->GetAttribute(NS_LITERAL_STRING("href"), _retval);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 

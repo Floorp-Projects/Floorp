@@ -105,6 +105,9 @@ NS_IMETHODIMP nsHTMLFormControlAccessible::GetAccName(nsAWritableString& _retval
   } 
   
   label.CompressWhitespace();
+  if (label.IsEmpty())
+    return nsAccessible::GetAccName(_retval);
+
   _retval.Assign(label);
   
   return NS_OK;
@@ -176,7 +179,7 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccActionName(PRUint8 index, nsAWrita
 
     return NS_OK;
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_INVALID_ARG;
 }
 
 /* void accDoAction (in PRUint8 index); */
@@ -189,7 +192,7 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::AccDoAction(PRUint8 index)
     element->SetChecked(checked ? PR_FALSE : PR_TRUE);
     return NS_OK;
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_INVALID_ARG;
 }
 
 
@@ -214,7 +217,7 @@ NS_IMETHODIMP nsHTMLRadioButtonAccessible::GetAccActionName(PRUint8 index, nsAWr
     _retval = NS_LITERAL_STRING("select");
     return NS_OK;
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_INVALID_ARG;
 }
 
 /* void accDoAction (in PRUint8 index); */
@@ -225,7 +228,7 @@ NS_IMETHODIMP nsHTMLRadioButtonAccessible::AccDoAction(PRUint8 index)
     element->Click();
     return NS_OK;
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_INVALID_ARG;
 }
 
 
@@ -258,7 +261,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetAccActionName(PRUint8 index, nsAWritabl
     _retval = NS_LITERAL_STRING("press");
     return NS_OK;
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_INVALID_ARG;
 }
 
 /* void accDoAction (in PRUint8 index); */
@@ -269,7 +272,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::AccDoAction(PRUint8 index)
     element->Click();
     return NS_OK;
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_INVALID_ARG;
 }
 
 /* unsigned long getAccRole (); */
@@ -317,7 +320,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccActionName(PRUint8 index, nsAWritab
     _retval = NS_LITERAL_STRING("press");
     return NS_OK;
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_INVALID_ARG;
 }
 
 /* void accDoAction (in PRUint8 index); */
@@ -328,7 +331,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::AccDoAction(PRUint8 index)
     element->Click();
     return NS_OK;
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_INVALID_ARG;
 }
 
 /* unsigned long getAccRole (); */
@@ -390,7 +393,13 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccValue(nsAWritableString& _retval)
     return NS_OK;
   }
   
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(mDOMNode));
+  if (inputElement) {
+    inputElement->GetValue(_retval);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 /* long getAccState (); */
@@ -445,7 +454,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccState(PRUint32 *_retval)
       *_retval |= moreStates;
       return rv;
     }
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_FAILURE;
   }
 
   PRBool disabled = PR_FALSE;

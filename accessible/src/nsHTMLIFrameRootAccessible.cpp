@@ -182,7 +182,7 @@ NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccNextSibling(nsIAccessible **_ret
     return accessible->GetAccNextSibling(_retval);
 
   *_retval = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_FAILURE;
 }
 
   /* nsIAccessible getAccPreviousSibling (); */
@@ -194,7 +194,7 @@ NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccPreviousSibling(nsIAccessible **
     return accessible->GetAccPreviousSibling(_retval);
 
   *_retval = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetHTMLIFrameAccessible(nsIAccessible** aAcc)
