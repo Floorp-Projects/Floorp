@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.5 $ 
-# $Date: 2000/08/30 20:16:46 $ 
+# $Revision: 1.6 $ 
+# $Date: 2000/09/18 19:20:44 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -824,15 +824,38 @@ sub apply_db_updates {
   scalar(@sorted_files) || return 0;
 
   foreach $update_file (@sorted_files) {
-
-    my ($record) = Persistence::load_structure("$dirname/$update_file");
+    my $full_file = "$dirname/$update_file";
+    my ($record) = Persistence::load_structure($full_file);
 
     ($record) ||
-      die("Error reading Build update file '$dirname/$update_file'.\n");
+      die("Error reading Build update file '$full_file'.\n");
 
     my ($build) = $record->{'buildname'};
     my ($buildstatus) = $record->{'status'};
     my ($starttime) = $record->{'starttime'};
+    my ($timenow) =  $record->{'timenow'};
+
+    # sanity check the record, taint checks are done in processmail.
+    {
+      is_status_valid($buildstatus) ||
+        die("Error in updatefile: $full_file, Status not valid");
+      
+      ($tree eq $record->{'tree'}) ||
+        die("Error in updatefile: $full_file, ".
+            "Tree: $tree, equal to Tree: $record->{'tree'}.");
+
+      (main::is_time_valid($starttime)) ||
+        die("Error in updatefile: $full_file, ".
+            "starttime: $starttime, is not a valid time.");
+
+      (main::is_time_valid($timenow)) ||
+        die("Error in updatefile: $full_file, ".
+            "timenow: $timenow, is not a valid time.");
+
+      ($starttime < $timenow) ||
+        die("Error in updatefile: $full_file, ".
+            "starttime: $starttime, is less then timenow: $timenow.");
+   }  
 
     # ignore updates which arrive out of order
     
@@ -1068,11 +1091,9 @@ sub status_table_row {
       $links.= "\t\t".
         HTMLPopUp::Link(
                         "linktxt"=>"L", 
-                        "href"=>(
-                                 "$FileStructure::URLS{'gunzip'}?".
-                                 "tree=$tree&".
-                                 "brief-log=$current_rec->{'brieflog'}"
-                                ),
+                        # the mail processor tells us the URL to
+                        # retreive the log files.
+                        "href"=>$current_rec->{'brieflog'},
                         "windowtxt"=>$current_rec->{'info'}, 
                         "windowtitle" =>$title,
                        )."\n";
