@@ -508,11 +508,6 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
            do_GetService(kMsgAccountManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  // create the account
-  nsCOMPtr<nsIMsgAccount> account;
-  rv = accountManager->CreateAccount(getter_AddRefs(account));
-  if (NS_FAILED(rv)) return rv;
-
   // create the server
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = accountManager->CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
@@ -593,6 +588,12 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
 	    mailDirSpec->CreateDir();
 	}
   }
+
+  // Create an account when valid server values are established.
+  // This will keep the status of accounts sane by avoiding the addition of incomplete accounts. 
+  nsCOMPtr<nsIMsgAccount> account;
+  rv = accountManager->CreateAccount(getter_AddRefs(account));
+  if (NS_FAILED(rv)) return rv;
 
   // notice, no identity for local mail
   // hook the server to the account 
@@ -1092,11 +1093,6 @@ nsMessengerMigrator::MigrateLocalMailAccount()
            do_GetService(kMsgAccountManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  // create the account
-  nsCOMPtr<nsIMsgAccount> account;
-  rv = accountManager->CreateAccount(getter_AddRefs(account));
-  if (NS_FAILED(rv)) return rv;
-
   // create the server
   // "none" is the type we use for migrating 4.x "Local Mail"
   nsCOMPtr<nsIMsgIncomingServer> server;
@@ -1186,6 +1182,12 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   rv = noneServer->CopyDefaultMessages("Templates",mailDirSpec);
   if (NS_FAILED(rv)) return rv;
  
+  // Create an account when valid server values are established.
+  // This will keep the status of accounts sane by avoiding the addition of incomplete accounts. 
+  nsCOMPtr<nsIMsgAccount> account;
+  rv = accountManager->CreateAccount(getter_AddRefs(account));
+  if (NS_FAILED(rv)) return rv;
+
   // notice, no identity for local mail
   // hook the server to the account 
   // after we set the server's local path
@@ -1206,14 +1208,10 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
 {
   nsresult rv;
   
-  nsCOMPtr<nsIMsgAccount> account;
   nsCOMPtr<nsIMsgIncomingServer> server;
   
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
            do_GetService(kMsgAccountManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = accountManager->CreateAccount(getter_AddRefs(account));
   if (NS_FAILED(rv)) return rv;
 
   // get the pop username
@@ -1285,6 +1283,12 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   if (!dirExists) {
     mailDir->CreateDir();
   }
+
+  // Create an account when valid server and identity values are established.
+  // This will keep the status of accounts sane by avoiding the addition of incomplete accounts. 
+  nsCOMPtr<nsIMsgAccount> account;
+  rv = accountManager->CreateAccount(getter_AddRefs(account));
+  if (NS_FAILED(rv)) return rv;
     
   // hook the server to the account 
   // before setting the copies and folder prefs
@@ -1323,12 +1327,7 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
            do_GetService(kMsgAccountManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIMsgAccount> account;
   nsCOMPtr<nsIMsgIncomingServer> server;
-
-  rv = accountManager->CreateAccount(getter_AddRefs(account));
-  if (NS_FAILED(rv)) return rv;
-
 
   // get the pop username
   nsXPIDLCString username;
@@ -1445,16 +1444,18 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   rv = SetSendLaterUriPref(server);
   if (NS_FAILED(rv)) return rv;
 
-  // we could only have one pop account in 4.x, so we make it the default in 5.0
-  rv = accountManager->SetDefaultAccount(account);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Set check for new mail option for default account to TRUE 
   rv = server->SetLoginAtStartUp(PR_TRUE);
 
   // create the identity
   nsCOMPtr<nsIMsgIdentity> copied_identity;
   rv = accountManager->CreateIdentity(getter_AddRefs(copied_identity));
+  if (NS_FAILED(rv)) return rv;
+
+  // Create an account when valid server and identity values are established.
+  // This will keep the status of accounts sane by avoiding the addition of incomplete accounts. 
+  nsCOMPtr<nsIMsgAccount> account;
+  rv = accountManager->CreateAccount(getter_AddRefs(account));
   if (NS_FAILED(rv)) return rv;
 
   // hook the server to the account 
@@ -1464,6 +1465,10 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   // (see bug #66018)
   account->SetIncomingServer(server);
   account->AddIdentity(copied_identity);
+
+  // we could only have one pop account in 4.x, so we make it the default in 5.0
+  rv = accountManager->SetDefaultAccount(account);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // make this new identity a copy of the identity
   // that we created out of the 4.x prefs
@@ -1589,11 +1594,6 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 
   if (!hostAndPort) return NS_ERROR_NULL_POINTER;
  
-  // create the account
-  nsCOMPtr<nsIMsgAccount> account;
-  rv = accountManager->CreateAccount(getter_AddRefs(account));
-  if (NS_FAILED(rv)) return rv;
-
   // get the old username
   nsXPIDLCString username;
   char *imapUsernamePref =
@@ -1737,6 +1737,12 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   // create the identity
   nsCOMPtr<nsIMsgIdentity> copied_identity;
   rv = accountManager->CreateIdentity(getter_AddRefs(copied_identity));
+  if (NS_FAILED(rv)) return rv;
+
+  // Create an account when valid server and identity values are established.
+  // This will keep the status of accounts sane by avoiding the addition of incomplete accounts. 
+  nsCOMPtr<nsIMsgAccount> account;
+  rv = accountManager->CreateAccount(getter_AddRefs(account));
   if (NS_FAILED(rv)) return rv;
 
   // hook the server to the account 
@@ -2265,11 +2271,6 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
     if (!identity) return NS_ERROR_NULL_POINTER;
 	if (!hostAndPort) return NS_ERROR_NULL_POINTER;
 
-    // create the account
-	nsCOMPtr<nsIMsgAccount> account;
-    rv = accountManager->CreateAccount(getter_AddRefs(account));
-	if (NS_FAILED(rv)) return rv;
-
     PRInt32 port=-1;
 	nsCAutoString hostname(hostAndPort);
 	PRInt32 colonPos = hostname.FindChar(':');
@@ -2391,6 +2392,12 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
   // create the identity
   nsCOMPtr<nsIMsgIdentity> copied_identity;
   rv = accountManager->CreateIdentity(getter_AddRefs(copied_identity));
+  if (NS_FAILED(rv)) return rv;
+
+  // Create an account when valid server and identity values are established.
+  // This will keep the status of accounts sane by avoiding the addition of incomplete accounts. 
+  nsCOMPtr<nsIMsgAccount> account;
+  rv = accountManager->CreateAccount(getter_AddRefs(account));
   if (NS_FAILED(rv)) return rv;
 
   // hook the server to the account 
