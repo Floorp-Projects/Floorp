@@ -38,7 +38,7 @@
 #ifdef DEBUG_shaver
 #define DBG(x) printf##x
 #else
-#define DBG(x) do { } while (0)
+#define DBG(x) (0)
 #endif
 
 /* XXX fail if XPT_DATA and !state->data_offset */
