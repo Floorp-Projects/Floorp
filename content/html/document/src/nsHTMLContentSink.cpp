@@ -1508,9 +1508,11 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     if (mStack[mStackPos].mNumFlushed < childCount) {
 #ifdef NS_DEBUG
       // Tracing code
-      nsCOMPtr<nsIDTD> dtd;
-      mSink->mParser->GetDTD(getter_AddRefs(dtd));
-      nsDependentString str(dtd->IntTagToStringTag(nsHTMLTag(nodeType)));
+      nsCOMPtr<nsIAtom> tag;
+      mStack[mStackPos].mContent->GetTag(*getter_AddRefs(tag));
+      const PRUnichar* tagChar;
+      tag->GetUnicode(&tagChar);
+      nsDependentString str(tagChar);
 
       SINK_TRACE(SINK_TRACE_REFLOW,
                  ("SinkContext::CloseContainer: reflow on notifyImmediate tag=%s newIndex=%d stackPos=%d",
@@ -1915,10 +1917,12 @@ SinkContext::FlushTags(PRBool aNotify)
       if (!flushed && (mStack[stackPos].mNumFlushed < childCount)) {
 #ifdef NS_DEBUG
         // Tracing code
-        nsCOMPtr<nsIDTD> dtd;
-        mSink->mParser->GetDTD(getter_AddRefs(dtd));
-        nsDependentString str(dtd->IntTagToStringTag(nsHTMLTag(mStack[stackPos].mType)));
-        
+        nsCOMPtr<nsIAtom> tag;
+        mStack[mStackPos].mContent->GetTag(*getter_AddRefs(tag));
+        const PRUnichar* tagChar;
+        tag->GetUnicode(&tagChar);
+        nsDependentString str(tagChar);
+
         SINK_TRACE(SINK_TRACE_REFLOW,
                    ("SinkContext::FlushTags: tag=%s from newindex=%d at stackPos=%d", 
                     NS_LossyConvertUCS2toASCII(str).get(),
