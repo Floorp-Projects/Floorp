@@ -82,7 +82,7 @@ include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),IRIX)
 ifeq ($(GNU_CXX),1)
-LDFLAGS        += -Wl,-LD_LAYOUT:lgot_buffer=50
+LDFLAGS        += -Wl,-LD_LAYOUT:lgot_buffer=60
 endif
 endif
 
