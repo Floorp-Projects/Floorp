@@ -167,7 +167,7 @@ private:
 nsComponentManagerImpl::nsComponentManagerImpl()
     : mFactories(NULL), mProgIDs(NULL), mLoaders(0), mMon(NULL), 
       mRegistry(NULL), mPrePopulationDone(PR_FALSE),
-      mNativeComponentLoader(0)
+      mNativeComponentLoader(0), mShuttingDown(NS_SHUTDOWN_NEVERHAPPENED)
 {
     NS_INIT_REFCNT();
 }
@@ -192,6 +192,12 @@ nsCID_Destroy(nsHashKey *aKey, void *aData, void* closure)
 
 nsresult nsComponentManagerImpl::Init(void) 
 {
+    PR_ASSERT(mShuttingDown != NS_SHUTDOWN_INPROGRESS);
+    if (mShuttingDown == NS_SHUTDOWN_INPROGRESS)
+        return NS_ERROR_FAILURE;
+
+    mShuttingDown = NS_SHUTDOWN_NEVERHAPPENED;
+
     if (nsComponentManagerLog == NULL)
     {
         nsComponentManagerLog = PR_NewLogModule("nsComponentManager");
@@ -249,9 +255,16 @@ nsresult nsComponentManagerImpl::Init(void)
     return NS_OK;
 }
 
-nsComponentManagerImpl::~nsComponentManagerImpl()
+nsresult nsComponentManagerImpl::Shutdown(void) 
 {
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Beginning destruction."));
+    PR_ASSERT(mShuttingDown == NS_SHUTDOWN_NEVERHAPPENED);
+    if (mShuttingDown != NS_SHUTDOWN_NEVERHAPPENED)
+        return NS_ERROR_FAILURE;
+
+    mShuttingDown = NS_SHUTDOWN_INPROGRESS;
+
+    // Shutdown the component manager
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Beginning Shutdown."));
 
     // Release all cached factories
     if (mFactories)
@@ -286,8 +299,21 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     NR_ShutdownRegistry();
 #endif /* USE_REGISTRY */
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
+    mShuttingDown = NS_SHUTDOWN_COMPLETE;
 
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Shutdown complete."));
+
+    return NS_OK;
+}
+
+nsComponentManagerImpl::~nsComponentManagerImpl()
+{
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Beginning destruction."));
+
+    if (mShuttingDown != NS_SHUTDOWN_COMPLETE)
+        Shutdown();
+
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
 }
 
 NS_IMPL_ISUPPORTS2(nsComponentManagerImpl, nsIComponentManager, nsISupportsWeakReference)

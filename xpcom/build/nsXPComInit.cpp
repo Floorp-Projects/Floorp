@@ -478,6 +478,15 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     NS_RELEASE2(nsServiceManager::mGlobalServiceManager, cnt);
     NS_ASSERTION(cnt == 0, "Service Manager being held past XPCOM shutdown.");
 
+#if defined(DEBUG_shaver) || defined(DEBUG_dp)
+    /* shaver needs to fix this and turn this on for the world */
+
+    // Shutdown xpcom. This will release all loaders and cause others holding
+    // a refcount to the component manager to release it.
+    nsresult rv = (nsComponentManagerImpl::gComponentManager)->Shutdown();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Component Manager shutdown failed.");
+#endif
+
     // Finally, release the component manager last because it unloads the
     // libraries:
     NS_RELEASE2(nsComponentManagerImpl::gComponentManager, cnt);
