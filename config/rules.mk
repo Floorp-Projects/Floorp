@@ -1044,19 +1044,17 @@ endif # ! COMPILER_DEPEND
 # Yet another depend system: -MD
 ifdef COMPILER_DEPEND
 ifdef OBJS
-MDDEPEND_FILES := $(foreach obj, $(OBJS), \
-                    $(MDDEPDIR)/$(basename $(notdir $(obj))).pp)
-MDDEPEND_FILES := $(wildcard $(MDDEPEND_FILES))
+MDDEPEND_FILES := $(wildcard $(MDDEPDIR)/*.pp)
 ifdef MDDEPEND_FILES
 ifdef PERL
 # The script mddepend.pl checks the dependencies and writes to stdout
 # one rule to force out-of-date objects. For example,
 #   foo.o boo.o: FORCE
 # The script has an advantage over including the *.pp files directly
-# because it handles missing header files. 'make' would complain that
-# there is no way to build missing headers.
+# because it handles the case when header files are removed from the build.
+# 'make' would complain that there is no way to build missing headers.
 $(MDDEPDIR)/.all.pp: FORCE
-	@$(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES) >$@
+	@$(PERL) $(topsrcdir)/config/mddepend.pl $@ $(MDDEPEND_FILES) 
 -include $(MDDEPDIR)/.all.pp
 else
 include $(MDDEPEND_FILES)
