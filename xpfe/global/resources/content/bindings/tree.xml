@@ -88,7 +88,9 @@
                 onset="if (val) this.setAttribute('disableKeyNavigation', 'true');
                        else this.removeAttribute('disableKeyNavigation'); return val;"/>
       
-      <property name="_selectDelay" onget="return 50;"/>
+      <property name="_selectDelay" 
+                onset="this.setAttribute('_selectDelay', val);"
+                onget="return this.getAttribute('_selectDelay') || 500;"/>
       <field name="_columnsDirty">true</field>
       <field name="_handleMouseScroll">
       <![CDATA[
