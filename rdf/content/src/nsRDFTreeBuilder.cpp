@@ -163,11 +163,6 @@ public:
                          nsIRDFResource* aProperty,
                          PRInt32* aIndex);
 
-    nsresult
-    SetCellValue(nsIContent* aTreeRowElement,
-                 nsIRDFResource* aProperty,
-                 nsIRDFNode* aValue);
- 
     nsresult 
     GetRootWidgetAtom(nsIAtom** aResult) {
         NS_ADDREF(kTreeAtom);
@@ -1053,11 +1048,11 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
     //   <xul:treechildren>
     //     <xul:treeitem id="value" rdf:property="property">
     //        <xul:treecell>
-    //           <!-- value not specified until SetCellValue() -->
+    //           <!-- value not specified until SetWidgetAttribute() -->
     //        </xul:treecell>
     //
     //        <xul:treecell>
-    //           <!-- value not specified until SetCellValue() -->
+    //           <!-- value not specified until SetWidgetAttribute() -->
     //        </xul:treecell>
     //
     //        ...
@@ -1164,16 +1159,14 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> tag;
-        if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, getter_AddRefs(tag)))) {
-            NS_ERROR("unable to split property");
-            return rv;
-        }
+        rv = mDocument->SplitProperty(property, &nameSpaceID, getter_AddRefs(tag));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to split property");
+        if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFNode> value;
-        if (NS_FAILED(rv = mDB->GetTarget(aValue, property, PR_TRUE, getter_AddRefs(value)))) {
-            NS_ERROR("unable to get target");
-            return rv;
-        }
+        rv = mDB->GetTarget(aValue, property, PR_TRUE, getter_AddRefs(value));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get target");
+        if (NS_FAILED(rv)) return rv;
 
         NS_ASSERTION(rv != NS_RDF_NO_VALUE, "arc-out with no target: fix your arcs-out cursor");
         if (rv == NS_RDF_NO_VALUE)
@@ -1345,7 +1338,7 @@ RDFTreeBuilderImpl::SetWidgetAttribute(nsIContent* aTreeItemElement,
     nsAutoString value;
     rv = nsRDFContentUtils::GetTextForNode(aValue, value);
 
-    // see it it's a cell in the tree
+    // see if it's a cell in the tree
     PRInt32 index;
     if (NS_SUCCEEDED(rv = GetColumnForProperty(mRoot, aProperty, &index))) {
         // ...yep.
@@ -1358,9 +1351,13 @@ RDFTreeBuilderImpl::SetWidgetAttribute(nsIContent* aTreeItemElement,
         rv = FindTextElement(cellElement, getter_AddRefs(text));
         if (NS_FAILED(rv)) return rv;
 
-        NS_ASSERTION(text != nsnull, "unable to find text child");
-        if (text)
-            text->SetText(value.GetUnicode(), value.Length(), PR_TRUE);
+        if (text) {
+            rv = text->SetText(value.GetUnicode(), value.Length(), PR_TRUE);
+        }
+        else {
+            rv = nsRDFContentUtils::AttachTextNode(cellElement, aValue);
+        }
+        if (NS_FAILED(rv)) return rv;
     }
 
 
@@ -1396,9 +1393,13 @@ RDFTreeBuilderImpl::UnsetWidgetAttribute(nsIContent* aTreeItemElement,
         rv = FindTextElement(cellElement, getter_AddRefs(text));
         if (NS_FAILED(rv)) return rv;
 
-        NS_ASSERTION(text != nsnull, "unable to find text child");
-        if (text)
-            text->SetText(nsAutoString().GetUnicode(), 0, PR_TRUE);
+        if (text) {
+            rv = text->SetText(nsAutoString().GetUnicode(), 0, PR_TRUE);
+        }
+        else {
+            rv = NS_OK; // It was never there. nothing to unset!
+        }
+        if (NS_FAILED(rv)) return rv;
     }
 
     // no matter what, it's also been created as an attribute.
@@ -1600,8 +1601,6 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
             return rv;
         }
 
-        nsIContent* textParent = cellElement;
-
         // The first cell gets a <xul:treeindentation> element and a
         // <xul:treeicon> element...
         //
@@ -1609,79 +1608,69 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
         // out a better way to specify this.
         if (cellIndex == 0) {
             nsCOMPtr<nsIContent> indentationElement;
-            if (NS_FAILED(rv = NS_NewRDFElement(kNameSpaceID_XUL,
-                                                kTreeIndentationAtom,
-                                                getter_AddRefs(indentationElement)))) {
-                NS_ERROR("unable to create indentation node");
-                return rv;
-            }
+            rv = NS_NewRDFElement(kNameSpaceID_XUL,
+                                  kTreeIndentationAtom,
+                                  getter_AddRefs(indentationElement));
 
-            if (NS_FAILED(rv = cellElement->AppendChildTo(indentationElement, PR_FALSE))) {
-                NS_ERROR("unable to append indentation element");
-                return rv;
-            }
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create indentation node");
+            if (NS_FAILED(rv)) return rv;
+
+            rv = cellElement->AppendChildTo(indentationElement, PR_FALSE);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to append indentation element");
+            if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsIContent> iconElement;
-            if (NS_FAILED(rv = NS_NewRDFElement(kNameSpaceID_XUL,
-                                                kTitledButtonAtom /* kTreeIconAtom */,
-                                                getter_AddRefs(iconElement)))) {
-                NS_ERROR("unable to create icon node");
-                return rv;
-            }
+            rv = NS_NewRDFElement(kNameSpaceID_XUL,
+                                  kTitledButtonAtom /* kTreeIconAtom */,
+                                  getter_AddRefs(iconElement));
 
-            if (NS_FAILED(rv = cellElement->AppendChildTo(iconElement, PR_FALSE))) {
-                NS_ERROR("uanble to append icon element");
-                return rv;
-            }
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create icon node");
+            if (NS_FAILED(rv)) return rv;
 
-            //textParent = iconElement;
+            rv = cellElement->AppendChildTo(iconElement, PR_FALSE);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "uanble to append icon element");
+            if (NS_FAILED(rv)) return rv;
         }
 
 
         // The column property is stored in the RDF:resource attribute
         // of the tag.
         nsAutoString uri;
-        if (NS_FAILED(rv = kid->GetAttribute(kNameSpaceID_RDF, kResourceAtom, uri))) {
-            NS_ERROR("severe error occured retrieving attribute");
-            return rv;
-        }
+        rv = kid->GetAttribute(kNameSpaceID_RDF, kResourceAtom, uri);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "severe error occured retrieving attribute");
+        if (NS_FAILED(rv)) return rv;
 
         // Set its value, if we know it.
+        nsCOMPtr<nsIRDFNode> value;
         if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
 
             // First construct a property resource from the URI...
             nsCOMPtr<nsIRDFResource> property;
-            if (NS_FAILED(gRDFService->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(property)))) {
-                NS_ERROR("unable to construct resource for xul:treecell");
-                return rv; // XXX fatal
-            }
+            rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(property));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct resource for xul:treecell");
+            if (NS_FAILED(rv)) return rv;
 
             // ...then query the RDF back-end
-            nsCOMPtr<nsIRDFNode> value;
             rv = mDB->GetTarget(treeItemResource,
                                 property,
                                 PR_TRUE,
                                 getter_AddRefs(value));
 
-            if (rv == NS_RDF_NO_VALUE) {
-                // There was no value for this. It'll have to get set
-                // later, when an OnAssert() comes in (if it even has
-                // a value at all...)
-            }
-            else if (NS_FAILED(rv)) {
-                NS_ERROR("error getting cell's value");
-                return rv; // XXX something serious happened
-            }
-            else {
-                // Attach a plain old text node: nothing fancy. Here's
-                // where we'd do wacky stuff like pull in an icon or
-                // whatever.
-                if (NS_FAILED(rv = nsRDFContentUtils::AttachTextNode(textParent, value))) {
-                    NS_ERROR("unable to attach text node to xul:treecell");
-                    return rv;
-                }
-            }
+            if (NS_FAILED(rv)) return rv;
         }
+
+        // Attach a plain old text node: nothing fancy. Here's
+        // where we'd do wacky stuff like pull in an icon or
+        // whatever.
+
+        // XXX At one point, I had optimized this to _only_ create a
+        // text node if the thing had a value. However, due to a
+        // incremental reflow bug in the table code (5759), this
+        // didn't work. So we always create a text node, even if it's
+        // empty.
+        rv = nsRDFContentUtils::AttachTextNode(cellElement, value);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to attach text node to xul:treecell");
+        if (NS_FAILED(rv)) return rv;
 
         ++cellIndex;
     }
@@ -1761,38 +1750,3 @@ RDFTreeBuilderImpl::GetColumnForProperty(nsIContent* aTreeElement,
     // Nope, couldn't find it.
     return NS_ERROR_FAILURE;
 }
-
-nsresult
-RDFTreeBuilderImpl::SetCellValue(nsIContent* aTreeItemElement,
-                                 nsIRDFResource* aProperty,
-                                 nsIRDFNode* aValue)
-{
-    nsresult rv;
-
-    // XXX We assume that aTreeItemElement is actually a
-    // <xul:treeitem>, it'd be good to enforce this...
-
-    PRInt32 index;
-    if (NS_FAILED(rv = GetColumnForProperty(mRoot, aProperty, &index))) {
-        // If we can't find a column for the specified property, that
-        // just means there isn't a column in the tree for that
-        // property. No big deal. Bye!
-        return NS_OK;
-    }
-
-    nsCOMPtr<nsIContent> cellElement;
-    if (NS_FAILED(rv = EnsureCell(aTreeItemElement, index, getter_AddRefs(cellElement)))) {
-        NS_ERROR("unable to find/create cell element");
-        return rv;
-    }
-
-    // XXX if the cell already has a value, we need to replace it, not
-    // just append new text...
-
-    if (NS_FAILED(rv = nsRDFContentUtils::AttachTextNode(cellElement, aValue)))
-        return rv;
-
-    return NS_OK;
-}
-
-
