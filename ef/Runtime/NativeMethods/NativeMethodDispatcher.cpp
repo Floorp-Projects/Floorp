@@ -54,18 +54,10 @@ Vector<NameMangler *> NativeMethodDispatcher::manglers;
  * of callType. It returns false when handed a callType it can't handle
  * or which does not apply to the current platform.
  */
-#if defined(XP_PC)
 bool NativeMethodDispatcher::buildFunName(char *name, Int32 nameMax, 
 					  Method &m,
 					  NativeCallingConvention callType,
 					  NameMangler &mangler)
-#else
-/* Avoid those *$#&*&* unused variable warnings */
-bool NativeMethodDispatcher::buildFunName(char *, Int32,
-					  Method &,
-					  NativeCallingConvention callType,
-					  NameMangler &)
-#endif
 {
 #if defined(XP_PC)
   if (callType == nativeCallingConventionStdCallMSVC) {
@@ -93,6 +85,17 @@ bool NativeMethodDispatcher::buildFunName(char *, Int32,
     PR_snprintf(name + nameLen + 1, sizeof(suffix), "%s", suffix);
     return true;
   }   
+#endif
+
+#if defined(GLOBALS_NEED_UNDERSCORE)
+  int nameLen;
+  int i;
+  
+  nameLen = PL_strlen(name);
+  
+  for(i = nameLen; i > 0; i--)
+    name[i] = name[i-1];
+  name[0] = '_';
 #endif
 
   if (callType == nativeCallingConventionDefault)
