@@ -83,6 +83,7 @@ class nsFontOS2
   ULONG     mHashMe;
   nscoord   mMaxAscent;
   nscoord   mMaxDescent;
+  int       mConvertCodePage;
 };
 
 struct nsMiniFontMetrics
@@ -211,7 +212,7 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   PRUint8             mTriedAllGenerics;
   PRUint8             mIsUserDefined;
 
-  int                 mCodePage;
+  int                 mConvertCodePage;
 
 
  protected:

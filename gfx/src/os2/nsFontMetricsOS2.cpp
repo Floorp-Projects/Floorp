@@ -199,7 +199,7 @@ nsFontOS2::GetWidth( HPS aPS, const PRUnichar* aString,
   PRInt32 srcLength = aLength, destLength = aLength;
   mConverter->Convert(aString, &srcLength, pstr, &destLength);
 #else
-  int convertedLength = WideCharToMultiByte( mFattrs.usCodePage, aString,
+  int convertedLength = WideCharToMultiByte( mConvertCodePage, aString,
                                              aLength, pstr, destLength );
 #endif
 
@@ -231,7 +231,7 @@ nsFontOS2::DrawString( HPS aPS, nsDrawingSurfaceOS2* aSurface,
   PRInt32 srcLength = aLength, destLength = aLength;
   mConverter->Convert(aString, &srcLength, pstr, &destLength);
 #else
-  int convertedLength = WideCharToMultiByte( mFattrs.usCodePage, aString,
+  int convertedLength = WideCharToMultiByte( mConvertCodePage, aString,
                                              aLength, pstr, destLength );
 #endif
 
@@ -595,15 +595,24 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
     {
       if (!strcmp(name.get(), gCharsetInfo[j].mLangGroup))
       {
-        fattrs->usCodePage = gCharsetInfo[j].mCodePage;
-        mCodePage = gCharsetInfo[j].mCodePage;
+        mConvertCodePage = gCharsetInfo[j].mCodePage;
         break;
       }
     }
   }
 
-   // set up the charbox;  set for image fonts also, in case we need to
-   //  substitute a vector font later on (for UTF-8, etc)
+  // Symbols fonts must be created with codepage 65400,
+  // so use 65400 for the fattrs codepage. We still do
+  // conversions with the charset codepage
+  if (strcmp(fattrs->szFacename, "Webdings") == 0) {
+    fattrs->usCodePage = 65400;
+  } else {
+    fattrs->usCodePage = mConvertCodePage;
+  }
+
+
+  // set up the charbox;  set for image fonts also, in case we need to
+  //  substitute a vector font later on (for UTF-8, etc)
   float app2dev, fHeight;
   mDeviceContext->GetAppUnitsToDevUnits( app2dev );
 
@@ -1106,8 +1115,8 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
   nsFontMetricsOS2* metrics = (nsFontMetricsOS2*) aData;
   /* Hack for Truetype on OS/2 - if it's Arial and not 1252 or 0, just get another font */
   if (aFamily.Find("Arial", IGNORE_CASE) != -1) {
-     if (metrics->mCodePage != 1252) {
-        if ((metrics->mCodePage == 0) &&
+     if (metrics->mConvertCodePage != 1252) {
+        if ((metrics->mConvertCodePage == 0) &&
             (ulSystemCodePage != 850) &&
             (ulSystemCodePage != 437)) {
            return PR_TRUE; // don't stop
@@ -1282,6 +1291,8 @@ nsFontMetricsOS2::RealizeFont()
       ::WinReleasePS(ps);
     return NS_ERROR_FAILURE;
   }
+
+  font->mConvertCodePage = mConvertCodePage;
 
    // 9) Record font handle & record various font metrics to cache
   mFontHandle = font;
@@ -1564,7 +1575,7 @@ nsFontMetricsOS2::ResolveForwards(HPS                  aPS,
   fontSwitch.mFont = 0;
   nsFontOS2* fh = nsnull;
   
-  if( mCodePage == 1252 )
+  if( mConvertCodePage == 1252 )
   {
     while( running && firstChar < lastChar )
     {
@@ -1658,7 +1669,7 @@ nsFontMetricsOS2::ResolveBackwards(HPS                  aPS,
   fontSwitch.mFont = 0;
   nsFontOS2* fh = nsnull;
   
-  if( mCodePage == 1252 )
+  if( mConvertCodePage == 1252 )
   {
     while( running && firstChar > lastChar )
     {
@@ -1946,7 +1957,7 @@ nsFontMetricsOS2::InitializeGlobalFonts()
   font->nextFamily = count;
   ::WinReleasePS(ps);
     
-#ifdef DEBUG_pedemont
+#ifdef DEBUG
   for( int k = 0; k < gGlobalFonts->Count(); k++ )
   {
     font = (nsGlobalFont*)gGlobalFonts->ElementAt(k);
