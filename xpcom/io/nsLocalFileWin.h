@@ -46,7 +46,7 @@ DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
 
 #include <sys/stat.h>
 
-class NS_COM nsLocalFile : public nsILocalFile
+class nsLocalFile : public nsILocalFile
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
