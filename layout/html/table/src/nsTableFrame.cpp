@@ -4760,249 +4760,39 @@ PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, const nsSty
 }
 
 
-/* helper method for getting the width of the table's containing block */
-nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowState)
-{
-  const nsStyleDisplay *display;
-  nscoord parentWidth = aReflowState.availableWidth;
-
-  // Walk up the reflow state chain until we find a block
-  // frame. Our width is computed relative to there.
-  const nsReflowState* rs = &aReflowState;
-  nsTableCellFrame *lastCellFrame=nsnull;
-  while (nsnull != rs) 
-  {
-    // if it's a block, use its max width
-    rs->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-    if (NS_STYLE_DISPLAY_BLOCK==display->mDisplay) 
-    { // we found a block, see if it's really a table cell (which means we're a nested table)
-      PRBool skipThisBlock=PR_FALSE;
-      const nsReflowState* parentRS = rs->parentReflowState;
-      if (nsnull!=parentRS)
-      {
-        parentRS = parentRS->parentReflowState;
-        if (nsnull!=parentRS)
-        {
-          parentRS->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-          if (NS_STYLE_DISPLAY_TABLE_CELL==display->mDisplay) {
-            skipThisBlock = PR_TRUE;
-          }
-        }
-      }
-      // at this point, we know we have a block.  If we're sure it's not a table cell pframe,
-      // then we can use it
-      if (PR_FALSE==skipThisBlock)
-      {
-        if (NS_UNCONSTRAINEDSIZE!=rs->availableWidth)
-        {
-          parentWidth = rs->availableWidth;
-          break;
-        }
-      }
-    }
-    // or if it's another table (we're nested) use its computed width
-    if (rs->frame!=aReflowState.frame)
-    {
-      nsMargin borderPadding;
-      const nsStylePosition* tablePosition;
-      const nsStyleSpacing* spacing;
-      rs->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-      if (NS_STYLE_DISPLAY_TABLE_CELL==display->mDisplay) 
-      { // if it's a cell and the cell has a specified width, use it
-        // Compute and subtract out the insets (sum of border and padding) for the table
-        lastCellFrame = (nsTableCellFrame*)(rs->frame);
-        const nsStylePosition* cellPosition;
-        lastCellFrame->GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)cellPosition));
-        if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
-        {
-          nsTableFrame *tableParent;
-          nsresult rv=GetTableFrame(lastCellFrame, tableParent);
-          if ((NS_OK==rv) && (nsnull!=tableParent) && (nsnull!=tableParent->mColumnWidths))
-          {
-            parentWidth=0;
-            PRInt32 colIndex;
-            lastCellFrame->GetColIndex(colIndex);
-            PRInt32 colSpan = tableParent->GetEffectiveColSpan(colIndex, lastCellFrame);
-            for (PRInt32 i=0; i<colSpan; i++)
-              parentWidth += tableParent->GetColumnWidth(colIndex);
-            break;
-          }
-          // if the column width of this cell is already computed, it overrides the attribute
-          // otherwise, use the attribute becauase the actual column width has not yet been computed
-          else
-          {
-            parentWidth = cellPosition->mWidth.GetCoordValue();
-            // subtract out cell border and padding
-            lastCellFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-            spacing->CalcBorderPaddingFor(lastCellFrame, borderPadding);  //XXX: COLLAPSE
-            parentWidth -= (borderPadding.right + borderPadding.left);
-            break;
-          }
-        }
-      }
-      else
-      {
-        rs->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-        if (NS_STYLE_DISPLAY_TABLE==display->mDisplay) 
-        {
-          // we only want to do this for inner table frames, so check the frame's parent to make sure it is an outer table frame
-          // we know that if both the frame and it's parent map to NS_STYLE_DISPLAY_TABLE, then we have an inner table frame 
-          nsIFrame * tableFrameParent;
-          rs->frame->GetParent(&tableFrameParent);
-          tableFrameParent->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-          if (NS_STYLE_DISPLAY_TABLE==display->mDisplay)
-          {
-            /* We found the nearest containing table (actually, the inner table).  
-               This defines what our percentage size is relative to. Use its desired width 
-               as the basis for computing our width.
-               **********************************************************************************
-               Nav4 compatibility code:  if the inner table has a percent width and the outer
-               table has an auto width, the parentWidth is the width the containing cell would be 
-               without the inner table.
-               **********************************************************************************
-             */
-            // Compute and subtract out the insets (sum of border and padding) for the table
-            rs->frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)tablePosition);
-            rs->frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-            if (eStyleUnit_Auto == tablePosition->mWidth.GetUnit())
-            {
-              parentWidth = NS_UNCONSTRAINEDSIZE;
-              if (nsnull != ((nsTableFrame*)(rs->frame))->mColumnWidths)
-              {
-                parentWidth=0;
-                PRInt32 colIndex;
-                lastCellFrame->GetColIndex(colIndex);
-                PRInt32 colSpan = ((nsTableFrame*)(rs->frame))->GetEffectiveColSpan(colIndex, lastCellFrame);
-                for (PRInt32 i = 0; i<colSpan; i++)
-                  parentWidth += ((nsTableFrame*)(rs->frame))->GetColumnWidth(i+colIndex);
-                // subtract out cell border and padding
-                lastCellFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-                spacing->CalcBorderPaddingFor(lastCellFrame, borderPadding); //XXX: COLLAPSE
-                parentWidth -= (borderPadding.right + borderPadding.left);
-              }
-            }
-            else
-            {
-              if (PR_TRUE==((nsTableFrame*)(rs->frame))->IsColumnWidthsSet())
-              {
-                parentWidth=0;
-                PRInt32 colIndex;
-                lastCellFrame->GetColIndex(colIndex);
-                PRInt32 colSpan = ((nsTableFrame*)(rs->frame))->GetEffectiveColSpan(colIndex, lastCellFrame);
-                for (PRInt32 i = 0; i<colSpan; i++)
-                  parentWidth += ((nsTableFrame*)(rs->frame))->GetColumnWidth(i+colIndex);
-                // factor in the cell
-                lastCellFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-                spacing->CalcBorderPaddingFor(lastCellFrame, borderPadding); //XXX: COLLAPSE
-                parentWidth -= (borderPadding.right + borderPadding.left);
-              }
-              else
-              {
-                nsSize tableSize;
-                rs->frame->GetSize(tableSize);
-                parentWidth = tableSize.width;
-                if (0!=tableSize.width)
-                { // the table has been sized, so we can compute the available space for the child
-                  ((nsTableFrame *)(rs->frame))->GetTableBorder (borderPadding);
-                  nsMargin padding;
-                  spacing->GetPadding(padding);
-                  borderPadding += padding;
-                  parentWidth -= (borderPadding.right + borderPadding.left);
-                  // factor in the cell
-                  lastCellFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-                  spacing->CalcBorderPaddingFor(lastCellFrame, borderPadding); //XXX: COLLAPSE
-                  parentWidth -= (borderPadding.right + borderPadding.left);
-                }
-                else
-                {
-                  // the table has not yet been sized, so we need to infer the available space
-                  parentWidth = rs->availableWidth;
-                  if (eStyleUnit_Percent == tablePosition->mWidth.GetUnit())
-                  {
-                    float percent = tablePosition->mWidth.GetPercentValue();
-                    parentWidth = (nscoord)(percent*((float)parentWidth));
-                  }
-                }
-              }
-            }
-            break;
-          }
-        }
-      }
-    }
-
-    rs = rs->parentReflowState;
-  }
-  return parentWidth;
-}
-
 // aSpecifiedTableWidth is filled if the table witdth is not auto
-PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
-                                      nsIStyleContext *aTableStyle, 
-                                      const nsHTMLReflowState& aReflowState,
-                                      nscoord& aSpecifiedTableWidth)
+PRBool nsTableFrame::IsAutoWidth(const nsHTMLReflowState& aReflowState,
+                                 nscoord&                 aSpecifiedTableWidth)
 {
-  // XXX the following 5 lines is proposed by Hyatt
-  //if (aReflowState.mComputedWidth > 0 &&
-  //    aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) {
-  //  aSpecifiedTableWidth = aReflowState.mComputedWidth;
-  //  return PR_FALSE;
-  //}
-  NS_ASSERTION(nsnull != aTableStyle, "bad arg - aTableStyle");
-  PRBool result = PR_TRUE;  // the default
-  if (aTableStyle) {
-    nsStylePosition* tablePosition = (nsStylePosition*)aTableStyle->GetStyleData(eStyleStruct_Position);
-    const nsStyleSpacing* spacing;
-    switch (tablePosition->mWidth.GetUnit()) {
-    case eStyleUnit_Auto:         // specified auto width
-    case eStyleUnit_Proportional: // illegal for table, so ignored
-      break;
+  PRBool isAuto = PR_TRUE;  // the default
 
-    case eStyleUnit_Inherit:
-      // get width of parent and see if it is a specified value or not
-      // XXX for now, just return true
-      break;
+  nsStylePosition* tablePosition = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
+  const nsStyleSpacing* spacing;
 
-    case eStyleUnit_Coord:
-    {
-      nscoord coordWidth = tablePosition->mWidth.GetCoordValue();
-      // NAV4 compatibility.  If coord width is 0, do nothing so we get same result as "auto"
-      if (0 != coordWidth) {
-        aSpecifiedTableWidth = coordWidth;
-        result = PR_FALSE;
-      }
-    }
+  switch (tablePosition->mWidth.GetUnit()) {
+
+  case eStyleUnit_Auto:         // specified auto width
+  case eStyleUnit_Proportional: // illegal for table, so ignored
     break;
-
-    case eStyleUnit_Percent:
-    {
-      // set aSpecifiedTableWidth to be the given percent of the parent.
-      // first, get the effective parent width (parent width - insets)
-      nscoord parentWidth = nsTableFrame::GetTableContainerWidth(aReflowState);
-      if (NS_UNCONSTRAINEDSIZE != parentWidth) {
-        aReflowState.frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-        nsMargin borderPadding;
-        spacing->CalcBorderPaddingFor(aReflowState.frame, borderPadding); //XXX: COLLAPSE
-        parentWidth -= (borderPadding.right + borderPadding.left);
-
-        // then set aSpecifiedTableWidth to the given percent of the computed parent width
-        float percent = tablePosition->mWidth.GetPercentValue();
-        aSpecifiedTableWidth = (PRInt32)(parentWidth*percent);
-      }
-      else {
-        aSpecifiedTableWidth=parentWidth;
-      }
-      result = PR_FALSE;
-    }
+  case eStyleUnit_Inherit:
+    // get width of parent and see if it is a specified value or not
+    // XXX for now, just return true
     break;
-
-    default:
-      break;
+  case eStyleUnit_Coord:
+  case eStyleUnit_Percent:
+    if ((aReflowState.mComputedWidth > 0) &&
+        (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE)) {
+      aSpecifiedTableWidth = aReflowState.mComputedWidth;
     }
+    isAuto = PR_FALSE;
+    break;
+  default:
+    break;
   }
 
-  return result; 
+  return isAuto; 
 }
+
 
 nscoord nsTableFrame::GetMinCaptionWidth()
 {
