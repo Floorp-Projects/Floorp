@@ -1,5 +1,6 @@
 nsCharsetDetectionAdaptorCID.h
 nsDetectionConfident.h
+nsDocumentCharsetInfoCID.h
 nsICharsetDetectionAdaptor.h
 nsICharsetDetectionObserver.h
 nsICharsetDetector.h
@@ -8,4 +9,3 @@ nsIStringCharsetDetector.h
 nsIXMLEncodingService.h
 nsMetaCharsetCID.h
 nsXMLEncodingCID.h
-nsIDocumentCharsetInfo.h

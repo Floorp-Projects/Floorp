@@ -48,7 +48,6 @@ public:
 
   NS_IMETHOD SetParentCharset(nsIAtom * aCharset);
   NS_IMETHOD GetParentCharset(nsIAtom ** aResult);
-  NS_IMETHOD SetParentCharset(nsString * aCharset);
 
 private:
   nsCOMPtr<nsIAtom> mForcedCharset;
@@ -123,19 +122,6 @@ NS_IMETHODIMP nsDocumentCharsetInfo::GetParentCharset(nsIAtom ** aResult)
   *aResult = mParentCharset;
   if (mParentCharset) NS_ADDREF(*aResult);
   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentCharsetInfo::SetParentCharset(nsString * aCharset)
-{
-  nsresult res = NS_OK;
-  NS_WITH_SERVICE(nsICharsetConverterManager2, ccMan, kCharsetConverterManagerCID, &res);
-  if (NS_FAILED(res)) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> csAtom;
-  res = ccMan->GetCharsetAtom(aCharset->GetUnicode(), getter_AddRefs(csAtom));
-  if (NS_FAILED(res)) return NS_ERROR_FAILURE;
-
-  return SetParentCharset(csAtom);
 }
 
 NS_IMPL_ISUPPORTS(nsDocumentCharsetInfoFactory, NS_GET_IID(nsIFactory));

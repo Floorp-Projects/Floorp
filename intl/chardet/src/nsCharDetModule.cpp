@@ -45,6 +45,7 @@
 #include "nsXMLEncodingCID.h"
 #include "nsCharsetDetectionAdaptorCID.h"
 #include "nsDocumentCharsetInfo.h"
+#include "nsDocumentCharsetInfoCID.h"
 
 #include "nsPSMDetectors.h"
 
@@ -239,7 +240,7 @@ static Components gComponents[] = {
   { "Meta Charset", &kMetaCharsetCID,
     NS_META_CHARSET_CONTRACTID, },
   { "Document Charset Info", &kDocumentCharsetInfoCID,
-    NS_DOCUMENTCHARSETINFO_PID, },
+    NS_DOCUMENTCHARSETINFO_CONTRACTID, },
   { "XML Encoding", &kXMLEncodingCID,
     NS_XML_ENCODING_CONTRACTID, },
   { "Charset Detection Adaptor", &kCharsetDetectionAdaptorCID,
