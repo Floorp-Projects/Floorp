@@ -1945,9 +1945,11 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
   
   // deal with 404 (Not Found) HTTP response,
   // just return, this causes the request to be ignored.
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel, &rv));
+  // Also deal with content-encoding
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+  PRBool useCacheAsFile = PR_TRUE;
 
-  if (NS_SUCCEEDED(rv)) {
+  if (httpChannel) {
     PRUint32 responseCode = 0;
     rv = httpChannel->GetResponseStatus(&responseCode);
     if (NS_FAILED(rv) || responseCode > 206) { // not normal
@@ -1956,18 +1958,31 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
       // return error will cancel this request
       return NS_ERROR_FAILURE;
     }
+
+    // Now we look for a content-encoding header.  If we find one,
+    // we can't use the cache as a file
+    nsXPIDLCString contentEncoding;
+    rv = httpChannel->GetResponseHeader("Content-Encoding",
+                                        getter_Copies(contentEncoding));
+    if (NS_SUCCEEDED(rv) &&
+        !contentEncoding.Equals("identity",
+                                nsCaseInsensitiveCStringComparator())) {
+      useCacheAsFile = PR_FALSE;
+    }
   }
 
-  nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(channel, &rv);
-  if (cacheChannel)
-        rv = cacheChannel->SetCacheAsFile(PR_TRUE);
+  if (useCacheAsFile) {
+    nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(channel, &rv);
+    if (cacheChannel)
+      rv = cacheChannel->SetCacheAsFile(PR_TRUE);
+  }
 
-        if (NS_FAILED(rv)) {
+  if (!useCacheAsFile || NS_FAILED(rv)) {
     // The channel doesn't want to do our bidding, lets cache it to disk ourselves
     rv = SetupPluginCacheFile(channel);
     if (NS_FAILED(rv))
       NS_WARNING("No Cache Aval.  Some plugins wont work OR we don't have a URL");
-    }
+  }
 
   char* aContentType = nsnull;
   rv = channel->GetContentType(&aContentType);
@@ -2228,7 +2243,9 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   // doing multiple requests, the main url load (the cacheable entry) could come
   // out of order.  Here we will check to see if the request is main url load.
 
-  if (cacheChannel) {
+  mPluginStreamInfo->GetLocalCachedFile(getter_Copies(pathAndFilename));
+
+  if (!pathAndFilename && cacheChannel) {
     rv = cacheChannel->GetCacheFile(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv)) {
         localFile->GetPath(getter_Copies(pathAndFilename));
@@ -2280,9 +2297,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   
   if(!mPStreamListener)
       return NS_ERROR_FAILURE;
-
-  if (!pathAndFilename)
-    mPluginStreamInfo->GetLocalCachedFile(getter_Copies(pathAndFilename));
 
   if (!pathAndFilename) {
     // see if it is a file channel.
