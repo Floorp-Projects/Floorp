@@ -77,9 +77,15 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  void KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
+
   void ToggleMenuState();
   void SelectMenu(PRBool aActivateFlag);
   void OpenMenu(PRBool aActivateFlag);
+
+  void SelectFirstItem();
+
+  PRBool IsOpen() { return mMenuOpen; };
 
 protected:
   void GetMenuChildrenElement(nsIContent** aResult);
