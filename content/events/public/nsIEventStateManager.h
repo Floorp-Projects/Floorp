@@ -58,6 +58,8 @@ class nsIWidget;
 0x80a98c80, 0x2036, 0x11d2, \
 {0xbd, 0x89, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
 
+#define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
+
 class nsIEventStateManager : public nsISupports {
 
 public:
@@ -66,16 +68,16 @@ public:
   NS_IMETHOD Init() = 0;
 
   NS_IMETHOD PreHandleEvent(nsIPresContext* aPresContext, 
-                         nsEvent *aEvent, 
-                         nsIFrame* aTargetFrame,
-                         nsEventStatus* aStatus,
-                         nsIView* aView) = 0;
+                            nsEvent *aEvent, 
+                            nsIFrame* aTargetFrame,
+                            nsEventStatus* aStatus,
+                            nsIView* aView) = 0;
 
   NS_IMETHOD PostHandleEvent(nsIPresContext* aPresContext, 
-                         nsEvent *aEvent, 
-                         nsIFrame* aTargetFrame,
-                         nsEventStatus* aStatus,
-                         nsIView* aView) = 0;
+                             nsEvent *aEvent, 
+                             nsIFrame* aTargetFrame,
+                             nsEventStatus* aStatus,
+                             nsIView* aView) = 0;
 
   NS_IMETHOD SetPresContext(nsIPresContext* aPresContext) = 0;
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
