@@ -639,8 +639,9 @@ nsTypeAheadFind::HandleBackspace()
 
   // ---------- No chars in string ------------
   if (mTypeAheadBuffer.IsEmpty() || !mStartFindRange) {
-    if (mRepeatingMode == eRepeatingChar || 
-      mRepeatingMode == eRepeatingCharReverse) {
+    if (!mFindNextBuffer.IsEmpty() &&
+        (mRepeatingMode == eRepeatingChar || 
+         mRepeatingMode == eRepeatingCharReverse)) {
       // Backspace to find previous repeated char
       mTypeAheadBuffer = mFindNextBuffer;
       mFocusedDocSelection->GetRangeAt(0, getter_AddRefs(mStartFindRange));
