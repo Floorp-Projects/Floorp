@@ -138,6 +138,12 @@ typedef PRUcs2 PRUnichar;
 
 /* ------------------------------------------------------------------------ */
 // Casting macros for hiding C++ features from older compilers
+
+#define HAS_C_PLUS_PLUS_CASTS // we'll be optimistic.
+#if defined(__sgi) && !defined(__GNUC__)
+#undef HAS_C_PLUS_PLUS_CASTS
+#endif
+
 #if defined(HAS_C_PLUS_PLUS_CASTS)
 #define NS_STATIC_CAST(__type, __ptr)      static_cast<__type>(__ptr)
 #define NS_CONST_CAST(__type, __ptr)       const_cast<__type>(__ptr)
