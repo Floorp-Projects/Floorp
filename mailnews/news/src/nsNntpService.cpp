@@ -638,8 +638,18 @@ nsNntpService::GetFolderFromUri(const char *aUri, nsIMsgFolder **aFolder)
     return rootFolder->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
   }
 
+  // the URI is news://host/(escaped group)
+  // but the *name* of the newsgroup (we are calling ::GetChildNamed())
+  // is unescaped.  see http://bugzilla.mozilla.org/show_bug.cgi?id=210089#c17
+  // for more about this
+  char *unescapedPath = PL_strdup(path.get() + 1); /* skip the leading slash */
+  if (!unescapedPath)
+    return NS_ERROR_OUT_OF_MEMORY;
+  nsUnescape(unescapedPath);
+
   nsCOMPtr<nsISupports> subFolder;
-  rv = rootFolder->GetChildNamed(NS_ConvertASCIItoUCS2(path.get() + 1).get() /* skip the leading slash */, getter_AddRefs(subFolder));
+  rv = rootFolder->GetChildNamed(NS_ConvertASCIItoUCS2(unescapedPath).get() , getter_AddRefs(subFolder));
+  PL_strfree(unescapedPath);
   NS_ENSURE_SUCCESS(rv,rv);
 
   return CallQueryInterface(subFolder, aFolder);
@@ -1747,8 +1757,6 @@ NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
   *aChromeUrlForTask = PL_strdup("chrome://messenger/content/"); 
 #endif
 }
-
-
 
 NS_IMETHODIMP 
 nsNntpService::HandleContent(const char * aContentType, const char * aCommand, nsISupports * aWindowContext, nsIRequest *request)
