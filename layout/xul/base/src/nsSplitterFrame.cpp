@@ -753,6 +753,9 @@ nsresult
 nsSplitterFrameInner::MouseUp(nsIDOMEvent* aMouseEvent)
 {  
   mPressed = PR_FALSE;
+
+  mOuter->CaptureMouse(mOuter->mPresContext, PR_FALSE);
+
   return NS_OK;
 }
 
