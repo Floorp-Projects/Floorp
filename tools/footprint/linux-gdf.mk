@@ -65,10 +65,11 @@
 LINEAR_REGRESSION=awk -f linear-regression.awk
 
 WATCH=./watch.sh
+INTERVAL=10
 
 MOZILLA_DIR=../../dist/bin
 PROGRAM=gtkEmbed
-BUSTER_URL=http://localhost/cgi-bin/buster.cgi?refresh=10
+BUSTER_URL=http://localhost/cgi-bin/buster.cgi?refresh=$(INTERVAL)
 
 #----------------------------------------------------------------------
 # Top-level target
@@ -112,7 +113,7 @@ rss.dat: linux.dat
 linux.dat:
 	LD_LIBRARY_PATH=$(MOZILLA_DIR) \
 	MOZILLA_FIVE_HOME=$(MOZILLA_DIR) \
-	$(WATCH) -o $@ $(MOZILLA_DIR)/$(PROGRAM) "$(BUSTER_URL)"
+	$(WATCH) -i $(INTERVAL) -o $@ $(MOZILLA_DIR)/$(PROGRAM) "$(BUSTER_URL)"
 
 # Clean up the mess.
 clean:
