@@ -52,6 +52,7 @@ public:
 
   nsHTMLValue&  operator=(const nsHTMLValue& aCopy);
   PRBool        operator==(const nsHTMLValue& aOther) const;
+  PRBool        operator!=(const nsHTMLValue& aOther) const;
   PRUint32      HashValue(void) const;
 
   nsHTMLUnit  GetUnit(void) const { return mUnit; }
@@ -154,6 +155,10 @@ inline nscolor nsHTMLValue::GetColorValue(void) const
   return NS_RGB(0,0,0);
 }
 
+inline PRBool nsHTMLValue::operator!=(const nsHTMLValue& aOther) const
+{
+  return PRBool(! ((*this) == aOther));
+}
 
 #endif /* nsHTMLValue_h___ */
 
