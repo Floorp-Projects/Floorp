@@ -160,4 +160,11 @@ public:
 
 #define nsLAF nsILookAndFeel
 
+	// On the Mac, GetColor(eColor_TextSelectForeground, color) returns this
+	// constant to specify that the foreground color should not be changed
+	// (ie. a colored text keeps its colors  when selected).
+	// Of course if other plaforms work like the Mac, they can use it too.
+#define NS_DONT_CHANGE_COLOR 	NS_RGB(0x01, 0x01, 0x01)
+
+
 #endif /* __nsILookAndFeel */
