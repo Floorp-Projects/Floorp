@@ -180,7 +180,7 @@ rdf_FormatDate(PRTime aTime, nsACString &aResult)
     PRExplodedTime t;
     PR_ExplodeTime(aTime, PR_LocalTimeParameters, &t);
 
-    char buf[32];
+    char buf[256];
     PR_FormatTimeUSEnglish(buf, sizeof buf, "%a %b %d %H:%M:%S %Z %Y", &t);
     aResult.Append(buf);
 
