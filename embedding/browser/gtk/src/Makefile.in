@@ -45,6 +45,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= gtkembedmoz
 LIBRARY_NAME	= gtkembedmoz
+MOZ_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  docshell \
