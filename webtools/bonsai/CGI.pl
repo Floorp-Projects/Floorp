@@ -86,6 +86,12 @@ sub url_encode3 {
     return $s;
 }
 
+# Quotify a string, suitable for invoking a shell process
+sub shell_escape {
+    my ($file) = @_;
+    $file =~ s/([ \"\'\?\$\&\|\!<>\(\)\[\]\;\:])/\\$1/g;
+    return $file;
+}
 
 ##
 ##  Routines to generate html as part of Bonsai

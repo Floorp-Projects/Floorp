@@ -183,9 +183,9 @@ sub process_cvs_info {
         for $i (@changed_files, "BEATME.NOW", @added_files ) {
             if( $i eq "BEATME.NOW" ){ $stat = 'A'; }
             if($i eq $fn ){
-                $rcsfile = "$envcvsroot/$repository/$fn,v";
+                $rcsfile = shell_escape("$envcvsroot/$repository/$fn,v");
                 if( ! -r $rcsfile ){
-                    $rcsfile = "$envcvsroot/$repository/Attic/$fn,v";
+                    $rcsfile = shell_escape("$envcvsroot/$repository/Attic/$fn,v");
                 }
                 open(LOG, "$rlogcommand -N -r$rev $rcsfile |") 
                         || print STDERR "dolog.pl: Couldn't run rlog\n";
@@ -304,3 +304,11 @@ sub mail_notification {
     print S "QUIT\n";
     close(S);
 }
+
+# Quotify a string, suitable for invoking a shell process
+sub shell_escape {
+    my ($file) = @_;
+    $file =~ s/([ \"\'\?\$\&\|\!<>\(\)\[\]\;\:])/\\$1/g;
+    return $file;
+}
+

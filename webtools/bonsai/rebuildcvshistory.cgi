@@ -37,7 +37,7 @@ require "CGI.pl";
 
 sub ProcessOneFile {
      my ($filename) = @_;
-     my $rlog = Param('rlogcommand') . " $filename |";
+     my $rlog = Param('rlogcommand') . " " . shell_escape($filename) . " |";
      my $doingtags = 0;
      my $filehead = dirname($filename);
      my (%branchname, $filerealname, $filetail, $line, $trimmed);

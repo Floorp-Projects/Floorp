@@ -40,6 +40,7 @@ sub sillyness {
     $zz = $::query_filetype;
     $zz = $::query_logexpr;
     $zz = $::query_whotype;
+    $zz = $::script_type;
 }
 
 

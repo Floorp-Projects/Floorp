@@ -51,10 +51,9 @@ sub sillyness {
     my $zz;
     $zz = $::TreeInfo;
     $zz = $::TreeList;
-    $zz = $::file_description;
-    $zz = $::principal_branch;
+    $zz = $::head_revision;
     $zz = $::revision_ctime;
-    $zz = %::timestamp;
+    $zz = $::script_type;
 }
 
 my $request = new CGI;
@@ -409,7 +408,9 @@ sub do_log {
 
     chdir($dir);
 
-    open(RCSLOG, "rlog -r$opt_rev $opt_file |");
+    my $rlog = Param('rlogcommand') . " -r$opt_rev " . 
+        shell_escape($opt_file) . " |";
+    open(RCSLOG, "$rlog");
 
     while (<RCSLOG>) {
         last if (/^revision $opt_rev$/);
