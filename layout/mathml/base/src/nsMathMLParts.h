@@ -45,7 +45,7 @@ extern nsresult NS_NewMathMLmunderoverFrame ( nsIPresShell* aPresShell, nsIFrame
 extern nsresult NS_NewMathMLmmultiscriptsFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmstyleFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmtableOuterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmtdFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+extern nsresult NS_NewMathMLmtdInnerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmsqrtFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmrootFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmactionFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
