@@ -6,8 +6,8 @@
 #		 displayed on the tinderbox status page.
 
 
-# $Revision: 1.24 $ 
-# $Date: 2003/08/17 00:44:03 $ 
+# $Revision: 1.25 $ 
+# $Date: 2004/04/19 12:42:16 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -272,8 +272,6 @@ sub save_note {
 
   my ($localtime) = localtime($EFFECTIVE_TIME);
   
-  my ($pretty_time) = HTMLPopUp::timeHTML($time);
-
   my %association;
   foreach $association (@CHOSEN_ASSOCIATIONS) {
       $association{$association} = 1;
@@ -297,7 +295,7 @@ sub save_note {
                  };
 
   my ($update_file) = (FileStructure::get_filename($TREE, 'TinderDB_Dir').
-                       "/Notice\.Update\.$time\.$MAILADDR"); 
+                       "/Notice\.Update\.$TIME\.$MAILADDR"); 
 
   $update_file =~ s/\@/\./g;
   $update_file = main::extract_safe_filename($update_file);
