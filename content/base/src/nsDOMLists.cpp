@@ -78,6 +78,14 @@ nsDOMStringList::GetLength(PRUint32 *aLength)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
+{
+  *aResult = mNames.IndexOf(aString) > -1;
+
+  return NS_OK;
+}
+
 
 nsNameList::nsNameList()
 {
@@ -139,4 +147,30 @@ nsNameList::Add(const nsAString& aNamespaceURI, const nsAString& aName)
   }
 
   return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsNameList::Contains(const nsAString& aName, PRBool *aResult)
+{
+  *aResult = mNames.IndexOf(aName) > -1;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNameList::ContainsNS(const nsAString& aNamespaceURI, const nsAString& aName,
+                       PRBool *aResult)
+{
+  PRInt32 index = mNames.IndexOf(aName);
+  if (index > -1) {
+    nsAutoString ns;
+    mNamespaceURIs.StringAt(index, ns);
+
+    *aResult = ns.Equals(aNamespaceURI);
+  }
+  else {
+    *aResult = PR_FALSE;
+  }
+
+  return NS_OK;
 }
