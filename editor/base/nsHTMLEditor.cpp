@@ -1882,7 +1882,9 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
           }
         }
       }
-      iter->Next();
+      result = iter->Next();
+      if (NS_FAILED(result))  
+        break;
       iter->CurrentNode(getter_AddRefs(content));
     }
   }
