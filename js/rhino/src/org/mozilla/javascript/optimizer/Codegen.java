@@ -80,6 +80,7 @@ public class Codegen extends Interpreter {
         Exception e = null;
         Class result = null;
         DefiningClassLoader classLoader = new DefiningClassLoader();
+        nameHelper.reset();
 
         try {
             if (cx.getOptimizationLevel() > 0) {
