@@ -484,7 +484,7 @@ void nsDll::BreakAfterLoad(const char *nsprPath)
             // Loading a dll that we want to break on
             // Put your breakpoint here
             printf("...Loading module %s\n", nsprPath);
-#ifdef __linux
+#if 0 // XXX I need a define for x86 linux
             // Break in the debugger here.
             asm("int $3");
 #endif
