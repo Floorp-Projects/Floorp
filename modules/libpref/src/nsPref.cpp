@@ -1030,6 +1030,9 @@ PrefResult pref_OpenFileSpec(
 {
     PrefResult result = PREF_NOERROR;
 
+    if (NS_FAILED(fileSpec->ResolveSymlink()))
+      return PREF_ERROR;
+    
     if (!Exists(fileSpec))
         return PREF_ERROR;
 
