@@ -601,6 +601,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDConte
     nsCompatibility mode;
     mPresContext->GetCompatibilityMode(&mode);
     cx->SetCompatibilityMode(mode);
+    cx->SetContainer(aParent);
 
     CreateStyleSet(mDocument, getter_AddRefs(ss));
 
