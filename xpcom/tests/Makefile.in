@@ -32,7 +32,7 @@ ifeq ($(OS_ARCH),WINNT)
 DIRS		+= windows
 endif
 
-REQUIRES	= necko \
+REQUIRES	= \
 		  string \
 		  $(NULL)
 
@@ -63,13 +63,6 @@ CPPSRCS		= \
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
-
-# These won't link on BSD/OS, due to multiply defined symbols.
-ifneq ($(OS_ARCH),BSD_OS)
-CPPSRCS		+= \
-		PropertiesTest.cpp \
-		$(NULL)
-endif
 
 LIBS		+= \
 		$(XPCOM_LIBS) \
