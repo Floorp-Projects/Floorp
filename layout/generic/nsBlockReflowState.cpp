@@ -27,6 +27,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLValue.h"
+#include "nsReflowCommand.h"
 
 // XXX what do we do with catastrophic errors (rv < 0)? What is the
 // state of the reflow world after such an error?
@@ -794,12 +795,12 @@ nsBlockFrame::ReflowUnmapped(nsBlockReflowState& aState)
     while (nsnull != line->mNextLine) {
       line = line->mNextLine;
     }
-    prevLine = line;
+    prevLine = line->mPrevLine;
 
     // If the last line is not complete then kidPrevInFlow should be
     // set to the last-line's last child.
-    if (!prevLine->mLastContentIsComplete) {
-      kidPrevInFlow = prevLine->GetLastChild();
+    if (!line->mLastContentIsComplete) {
+      kidPrevInFlow = line->GetLastChild();
     }
   }
 
@@ -964,6 +965,8 @@ PRBool
 nsBlockFrame::MoreToReflow(nsBlockReflowState& aState)
 {
   PRBool rv = PR_FALSE;
+#if 0
+  // XXX Don't need this anymore now that body has changed...
   if (aState.mBlockIsPseudo) {
     // Get the next content object that we would like to reflow
     PRInt32 kidIndex = NextChildOffset();
@@ -986,10 +989,13 @@ nsBlockFrame::MoreToReflow(nsBlockReflowState& aState)
       }
     }
   } else {
+#endif
     if (NextChildOffset() < mContent->ChildCount()) {
       rv = PR_TRUE;
     }
+#if 0
   }
+#endif
   return rv;
 }
 
@@ -1141,8 +1147,7 @@ nsBlockFrame::ContentAppended(nsIPresShell*   aShell,
                               nsIPresContext* aPresContext,
                               nsIContent*     aContainer)
 {
-  nsresult rv = NS_OK;
-  return rv;
+  return nsHTMLContainerFrame::ContentAppended(aShell, aPresContext, aContainer);
 }
 
 NS_METHOD
@@ -1217,7 +1222,110 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
                                 nsReflowCommand&        aReflowCommand,
                                 nsIFrame::ReflowStatus& aStatus)
 {
+#ifdef NS_DEBUG
+  VerifyLines(PR_TRUE);
+  PreReflowCheck();
+#endif
+  
   nsresult rv = NS_OK;
+  aStatus = frComplete;
+  nsBlockReflowState state;
+  rv = InitializeState(aPresContext, aSpaceManager, aMaxSize,
+                       nsnull, state);
+
+  nsIPresShell* shell = state.mPresContext->GetShell();
+  shell->PutCachedData(this, &state);
+
+  // Is the reflow command target at us?
+  if (this == aReflowCommand.GetTarget()) {
+    if (aReflowCommand.GetType() == nsReflowCommand::FrameAppended) {
+      nsLineData* lastLine = mLines;
+
+      // Get the last line
+      if (nsnull != lastLine) {
+        while (nsnull != lastLine->mNextLine) {
+          lastLine = lastLine->mNextLine;
+        }
+      }
+
+      // Restore the state
+      if ((nsnull != lastLine) && (nsnull != lastLine->mPrevLine)) {
+        nsLineData* prevLine = lastLine->mPrevLine;
+
+        state.mY = prevLine->mBounds.YMost();
+
+        if (!state.mUnconstrainedHeight) {
+          state.mAvailSize.height -= state.mY;
+        }
+
+        state.mKidXMost = mRect.XMost();
+
+#if 0
+        // XXX Set this...
+        state.mPrevMaxNegBottomMargin = ?;
+        state.mPrevMaxPosBottomMargin = ?;
+#endif
+      }
+
+      // Reflow unmapped children
+      rv = ReflowUnmapped(state);
+
+      // Set return status
+      aStatus = frComplete;
+      if (NS_LINE_LAYOUT_NOT_COMPLETE == rv) {
+        rv = NS_OK;
+        aStatus = frNotComplete;
+      }
+
+    } else {
+      NS_NOTYETIMPLEMENTED("unexpected reflow command");
+    }
+  } else {
+    NS_NOTYETIMPLEMENTED("unexpected reflow command");
+  }
+
+  // Return our desired rect and our status
+  // XXX Share this code with DoResizeReflow()...
+  aDesiredRect.x = 0;
+  aDesiredRect.y = 0;
+  aDesiredRect.width = state.mKidXMost + state.mBorderPadding.right;
+  if (!state.mUnconstrainedWidth) {
+    // Make sure we're at least as wide as the max size we were given
+    nscoord maxWidth = state.mAvailSize.width + state.mBorderPadding.left +
+      state.mBorderPadding.right;
+    if (aDesiredRect.width < maxWidth) {
+      aDesiredRect.width = maxWidth;
+    }
+  }
+  state.mY += state.mBorderPadding.bottom;
+  nscoord lastBottomMargin = state.mPrevMaxPosBottomMargin -
+    state.mPrevMaxNegBottomMargin;
+  if (!state.mUnconstrainedHeight && (lastBottomMargin > 0)) {
+    // It's possible that we don't have room for the last bottom
+    // margin (the last bottom margin is the margin following a block
+    // element that we contain; it isn't applied immediately because
+    // of the margin collapsing logic). This can happen when we are
+    // reflowed in a limited amount of space because we don't know in
+    // advance what the last bottom margin will be.
+    nscoord maxY = aMaxSize.height;
+    if (state.mY + lastBottomMargin > maxY) {
+      lastBottomMargin = maxY - state.mY;
+      if (lastBottomMargin < 0) {
+        lastBottomMargin = 0;
+      }
+    }
+    state.mY += lastBottomMargin;
+  }
+  aDesiredRect.height = state.mY;
+
+  // Now that reflow has finished, remove the cached pointer
+  shell->RemoveCachedData(this);
+  NS_RELEASE(shell);
+
+#ifdef NS_DEBUG
+  VerifyLines(PR_TRUE);
+  PostReflowCheck(aStatus);
+#endif
   return rv;
 }
 

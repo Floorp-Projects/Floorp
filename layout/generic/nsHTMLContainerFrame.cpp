@@ -18,6 +18,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
+#include "nsIPresShell.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsCSSRendering.h"
@@ -29,6 +30,7 @@
 #include "nsGUIEvent.h"
 #include "nsIDocument.h"
 #include "nsIURL.h"
+#include "nsReflowCommand.h"
 
 static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
@@ -169,6 +171,40 @@ NS_METHOD nsHTMLContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
   aCursor = NS_STYLE_CURSOR_INHERIT;
   return NS_OK;
 }
+
+NS_METHOD nsHTMLContainerFrame::ContentAppended(nsIPresShell*   aShell,
+                                                nsIPresContext* aPresContext,
+                                                nsIContent*     aContainer)
+{
+  // Get the last-in-flow
+  nsHTMLContainerFrame* lastInFlow = (nsHTMLContainerFrame*)GetLastInFlow();
+
+  // Generate a reflow command for the frame
+  nsReflowCommand* cmd = new nsReflowCommand(aPresContext, lastInFlow,
+                                             nsReflowCommand::FrameAppended);
+  aShell->AppendReflowCommand(cmd);
+  return NS_OK;
+}
+
+#if 0
+void nsHTMLContainerFrame::AdjustIndexInParents(nsIContent*   aChild,
+                                                PRInt32       aIndexInParent,
+                                                ContentChange aChange)
+{
+  // Walk each child
+}
+
+NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
+                                                nsIPresContext* aPresContext,
+                                                nsIContent*     aContainer,
+                                                nsIContent*     aChild,
+                                                PRInt32         aIndexInParent)
+{
+  // Adjust the index-in-parent of each frame that follows the child that was
+  // inserted
+  AdjustIndexInParents(aChild, aIndexInParent, ContentInserted);
+}
+#endif
 
 #if 0
 nsIFrame::ReflowStatus

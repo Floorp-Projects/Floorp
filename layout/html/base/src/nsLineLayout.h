@@ -106,7 +106,10 @@ struct nsLineLayout {
   // The block behind the line
   nsBlockFrame* mBlock;
   nsISpaceManager* mSpaceManager;
+#if 0
+  // XXX I don't think we need this anymore...
   PRBool mBlockIsPseudo;
+#endif
   nsIContent* mBlockContent;
   PRInt32 mKidIndex;
 

@@ -43,10 +43,6 @@ public:
                                 nsReflowCommand& aReflowCommand,
                                 ReflowStatus&    aStatus);
 
-  NS_IMETHOD  ContentAppended(nsIPresShell*   aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent*     aContainer);
-
   NS_IMETHOD  GetReflowMetrics(nsIPresContext*  aPresContext,
                                nsReflowMetrics& aMetrics);
 

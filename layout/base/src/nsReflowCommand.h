@@ -28,20 +28,8 @@ class nsISpaceManager;
 class nsReflowCommand {
 public:
   enum ReflowType {
-    // These reflow types are used for pre-processing a content
-    // append, insert or delete. The target frame is responsible for
-    // creating frames for the new children (or removing frames for
-    // delete) and then updating it's children's index-in-parent
-    // values. After that, the frame is responsible for creating new
-    // reflow commands to deal with the appended, inserted or deleted
-    // frames.
-    ContentAppended,
-    ContentInserted,
-    ContentReplaced,
-    ContentDeleted,
-
-    // These are the reflow commands generated after the previous
-    // commands have completed.
+    // Reflow commands generated in response to a content insert/delete/append
+    // notification
     FrameAppended,
     FrameInserted,
     FrameDeleted,
@@ -68,33 +56,13 @@ public:
   // XXX factory methods?
 
   nsReflowCommand(nsIPresContext* aPresContext,
-                  nsIFrame* aTargetFrame,
-                  ReflowType aReflowType);
+                  nsIFrame*       aTargetFrame,
+                  ReflowType      aReflowType);
 
   nsReflowCommand(nsIPresContext* aPresContext,
-                  nsIFrame* aTargetFrame,
-                  ReflowType aReflowType,
-                  PRInt32 aIndexValue);
-
-  nsReflowCommand(nsIPresContext* aPresContext,
-                  nsIFrame* aTargetFrame,
-                  ReflowType aReflowType,
-                  nsIContent* aContainer);
-
-  nsReflowCommand(nsIPresContext* aPresContext,
-                  nsIFrame* aTargetFrame,
-                  ReflowType aReflowType,
-                  nsIContent* aContainer,
-                  nsIContent* aChild,
-                  PRInt32 aIndexInParent);
-
-  nsReflowCommand(nsIPresContext* aPresContext,
-                  nsIFrame* aTargetFrame,
-                  ReflowType aReflowType,
-                  nsIContent* aContainer,
-                  nsIContent* aOldChild,
-                  nsIContent* aNewChild,
-                  PRInt32 aIndexInParent);
+                  nsIFrame*       aTargetFrame,
+                  ReflowType      aReflowType,
+                  nsIFrame*       aChildFrame);
 
   virtual ~nsReflowCommand();
 
@@ -124,22 +92,19 @@ public:
   nsIFrame* GetNext() const;
 
   // Get the target of the reflow command
-  nsIFrame* GetTarget() const { return mTargetFrame; }
+  nsIFrame* GetTarget() const {return mTargetFrame;}
 
   // Get the type of reflow command
-  ReflowType GetType() const { return mType; }
+  ReflowType GetType() const {return mType;}
 
-  // Get the index value
-  PRInt32 GetIndex() const { return mIndex; }
+  // Get the child frame associated with the reflow command
+  nsIFrame*  GetChildFrame() const {return mChildFrame;}
 
 private:
   nsIPresContext* mPresContext;
   ReflowType      mType;
-  nsIContent*     mContainer;
-  nsIContent*     mChild;
-  nsIContent*     mOldChild;
-  PRInt32         mIndex;
   nsIFrame*       mTargetFrame;
+  nsIFrame*       mChildFrame;
   nsVoidArray     mPath;
 };
 

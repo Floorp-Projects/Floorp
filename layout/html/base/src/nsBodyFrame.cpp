@@ -26,7 +26,7 @@
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
 #include "nsIDeviceContext.h"
-#include "nsColumnFrame.h"
+#include "nsBlockFrame.h"
 #include "nsSpaceManager.h"
 
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
@@ -84,7 +84,7 @@ void nsBodyFrame::CreateColumnFrame(nsIPresContext* aPresContext)
   // Do we have a prev-in-flow?
   if (nsnull == mPrevInFlow) {
     // No, create a column pseudo frame
-    mFirstChild = new ColumnFrame(mContent, mIndexInParent, this);
+    nsBlockFrame::NewFrame(&mFirstChild, mContent, mIndexInParent, this);
     mChildCount = 1;
 
     // Resolve style and set the style context
@@ -278,72 +278,43 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   mSpaceManager->ClearRegions();
   mSpaceManager->Translate(leftInset, topInset);
 
-  // Is the reflow command targeted for us?
-  if (aReflowCommand.GetTarget() == this) {
-    // Currently we only support appended content
-    if (aReflowCommand.GetType() != nsReflowCommand::FrameAppended) {
-      NS_NOTYETIMPLEMENTED("unexpected reflow command");
-    }
+  // The reflow command should never be target for us
+  NS_ASSERTION(aReflowCommand.GetTarget() != this, "bad reflow command target");
 
-    // Compute the column's max size
-    nsSize  columnMaxSize = GetColumnAvailSpace(aPresContext, mySpacing,
-                                                aMaxSize);
+  // Compute the column's max size
+  nsSize  columnMaxSize = GetColumnAvailSpace(aPresContext, mySpacing,
+                                              aMaxSize);
 
-    // Pass the command along to our column pseudo frame
-    nsIRunaround* reflowRunaround;
-    nsRect        aDesiredRect;
+  // Pass the command along to our column pseudo frame
+  nsIRunaround* reflowRunaround;
+  nsRect        aDesiredRect;
 
-    NS_ASSERTION(nsnull != mFirstChild, "no first child");
-    mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
-    reflowRunaround->IncrementalReflow(aPresContext, mSpaceManager,
-      columnMaxSize, aDesiredRect, aReflowCommand, aStatus);
+  NS_ASSERTION(nsnull != mFirstChild, "no first child");
+  mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
+  reflowRunaround->IncrementalReflow(aPresContext, mSpaceManager,
+    columnMaxSize, aDesiredRect, aReflowCommand, aStatus);
 
-    // Place and size the column
-    aDesiredRect.x += leftInset;
-    aDesiredRect.y += topInset;
-    mFirstChild->SetRect(aDesiredRect);
+  // Place and size the column
+  aDesiredRect.x += leftInset;
+  aDesiredRect.y += topInset;
+  mFirstChild->SetRect(aDesiredRect);
 
-    // Set our last content offset and whether the last content is complete
-    // based on the state of the pseudo frame
-    SetLastContentOffset(mFirstChild);
+  // Set our last content offset and whether the last content is complete
+  // based on the state of the pseudo frame
+  SetLastContentOffset(mFirstChild);
 
-    // Return our desired size
-#if 0
+  // Return our desired size
+  aDesiredSize.height = PR_MAX(aDesiredRect.YMost(), mSpaceManager->YMost());
+  if (isPseudoFrame) {
     aDesiredSize.width = aDesiredRect.XMost();
-    aDesiredSize.height = aDesiredRect.YMost();
-    if (!isPseudoFrame) {
-      aDesiredSize.width += mySpacing->mBorderPadding.left + mySpacing->mBorderPadding.right;
-      aDesiredSize.height += mySpacing->mBorderPadding.top + mySpacing->mBorderPadding.bottom;
-    }
-#else
-    aDesiredSize.height = PR_MAX(aDesiredRect.YMost(), mSpaceManager->YMost());
-    if (isPseudoFrame) {
-      aDesiredSize.width = aDesiredRect.XMost();
-    }
-    else {
-      aDesiredSize.width = aMaxSize.width;
-      aDesiredSize.height += mySpacing->mBorderPadding.top +
-        mySpacing->mBorderPadding.bottom;
-    }
-    aDesiredSize.ascent = aDesiredSize.height;
-    aDesiredSize.descent = 0;
-#endif
-  } else {
-    NS_NOTYETIMPLEMENTED("unexpected reflow command");
-    nsRect    desiredRect;
-    nsIFrame* child;
-
-    aStatus = aReflowCommand.Next(mSpaceManager, desiredRect, aMaxSize, child);
-
-    // XXX Deal with next in flow, adjusting of siblings, adjusting the
-    // content length...
-
-    // Return our desired size
-    aDesiredSize.width = 0;
-    aDesiredSize.height = 0;
-    aDesiredSize.ascent = aDesiredSize.height;
-    aDesiredSize.descent = 0;
   }
+  else {
+    aDesiredSize.width = aMaxSize.width;
+    aDesiredSize.height += mySpacing->mBorderPadding.top +
+      mySpacing->mBorderPadding.bottom;
+  }
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
 
   mSpaceManager->Translate(-leftInset, -topInset);
   return NS_OK;
@@ -355,20 +326,9 @@ NS_METHOD nsBodyFrame::ContentAppended(nsIPresShell*   aShell,
 {
   NS_ASSERTION(mContent == aContainer, "bad content-appended target");
 
-  // Get the last-in-flow
-  nsBodyFrame* flow = (nsBodyFrame*)GetLastInFlow();
-
-  // Since body frame's have only a single pseudo-frame in them,
-  // pass on the content-appended call to the pseudo-frame
-  PRInt32 oldLastContentOffset = mLastContentOffset;
-  flow->mFirstChild->ContentAppended(aShell, aPresContext, aContainer);
-
-  // Now generate a frame reflow command aimed at flow
-  nsReflowCommand* rc =
-    new nsReflowCommand(aPresContext, flow, nsReflowCommand::FrameAppended,
-                        oldLastContentOffset);
-  aShell->AppendReflowCommand(rc);
-  return NS_OK;
+  // Pass along the notification to our pseudo frame. It will generate a
+  // reflow command
+  return mFirstChild->ContentAppended(aShell, aPresContext, aContainer);
 }
 
 void nsBodyFrame::AddAnchoredItem(nsIFrame*         aAnchoredItem,

@@ -30,7 +30,7 @@
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
-#define   NOISY_STYLE
+//#define   NOISY_STYLE
 //#define NOISY_FLOW
 #else
 static const PRBool gsDebug = PR_FALSE;
