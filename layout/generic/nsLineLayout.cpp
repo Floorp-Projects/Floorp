@@ -146,9 +146,6 @@ nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
   mTextRunP = &mTextRuns;
   mNewTextRun = nsnull;
   SetFlag(LL_KNOWSTRICTMODE, PR_FALSE);
-  PRInt32 size = sizeof nsLineLayout;
-  PRInt32 size_pfd = sizeof PerFrameData;
-  PRInt32 size_psd = sizeof PerSpanData;
 }
 
 nsLineLayout::nsLineLayout(nsIPresContext* aPresContext)
