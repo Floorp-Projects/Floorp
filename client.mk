@@ -290,7 +290,7 @@ cleansrcdir:
 	fi; \
         if [ -f webshell/embed/gtk/Makefile ]; then \
           $(MAKE) -C webshell/embed/gtk distclean; \
-        fi \
+        fi; \
 	if [ ! "$$_skip_find" ]; then \
 	  echo "Removing object files from srcdir..."; \
 	  rm -fr `find . -type d \( -name .deps -print -o -name CVS \
