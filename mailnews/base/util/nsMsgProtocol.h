@@ -62,9 +62,9 @@ public:
 	virtual nsresult SetUrl(nsIURI * aURL); // sometimes we want to set the url before we load it
 
 	// Flag manipulators
-	PRBool TestFlag  (PRUint32 flag) {return flag & m_flags;}
-	void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
-	void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
+	virtual PRBool TestFlag  (PRUint32 flag) {return flag & m_flags;}
+	virtual void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
+	virtual void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
 
 protected:
 	// methods for opening and closing a socket with core netlib....

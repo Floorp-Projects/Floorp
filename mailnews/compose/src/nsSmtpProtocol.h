@@ -56,18 +56,24 @@ SMTP_SEND_AUTH_LOGIN_USERNAME,                      // 16
 SMTP_SEND_AUTH_LOGIN_PASSWORD,                      // 17
 SMTP_AUTH_LOGIN_RESPONSE,                           // 18
 SMTP_TLS_RESPONSE,                                  // 19
-SMTP_AUTH_EXTERNAL_RESPONSE                         // 20
+SMTP_AUTH_EXTERNAL_RESPONSE,                        // 20
+SMTP_AUTH_PROCESS_STATE                             // 21
 } SmtpState;
 
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
 // commands, etc. I do not intend it to refer to protocol state)
-#define SMTP_PAUSE_FOR_READ			    0x00000001  /* should we pause for the next read */
+#define SMTP_PAUSE_FOR_READ			    0x00000001  /* should we pause for the
+                                                    /* next read */
+// *** don't change the following value; they are in sync with the capability
+// *** flags defined in nsISmtpServer.idl
+
 #define SMTP_EHLO_DSN_ENABLED		    0x00000002
 #define SMTP_AUTH_LOGIN_ENABLED		  0x00000004
 #define SMTP_AUTH_PLAIN_ENABLED     0x00000008
 #define SMTP_AUTH_EXTERNAL_ENABLED  0x00000010
 #define SMTP_EHLO_STARTTLS_ENABLED  0x00000020
+
 // if we are using a login redirection
 // and we are waiting for it to give us the
 // host and port to connect to, then this flag
@@ -109,6 +115,9 @@ public:
 
 	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
   virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
+
+    virtual void SetFlag (PRUint32 flag);
+    virtual void ClearFlag (PRUint32 flag);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
@@ -157,6 +166,8 @@ private:
   // multiple smtp servers
   PRInt32 m_prefAuthMethod;
   PRBool m_tlsEnabled;
+  
+    PRBool m_tlsInitiated;
 
 	// message specific information
 	PRInt32		m_totalAmountWritten;
@@ -205,7 +216,7 @@ private:
 	PRInt32 SendPostData();
 	PRInt32 SendMessageResponse();
 
-	PRInt32 CheckAuthResponse();
+	PRInt32 ProcessAuth();
 
 
 	////////////////////////////////////////////////////////////////////////////////////////
