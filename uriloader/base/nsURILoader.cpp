@@ -568,11 +568,20 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID, &rv);
   if (helperAppService) {
     LOG(("  Passing load off to helper app service"));
+
+    // Set these flags to indicate that the channel has been targeted and that
+    // we are not using the original consumer.
+    nsLoadFlags loadFlags = 0;
+    request->GetLoadFlags(&loadFlags);
+    request->SetLoadFlags(loadFlags | nsIChannel::LOAD_RETARGETED_DOCUMENT_URI
+                                    | nsIChannel::LOAD_TARGETED);
+
     rv = helperAppService->DoContent(mContentType,
                                      request,
                                      m_originalContext,
                                      getter_AddRefs(m_targetStreamListener));
     if (NS_FAILED(rv)) {
+      request->SetLoadFlags(loadFlags);
       m_targetStreamListener = nsnull;
     }
   }
@@ -691,11 +700,16 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
   nsLoadFlags loadFlags = 0;
   aChannel->GetLoadFlags(&loadFlags);
 
+  // Set this flag to indicate that the channel has been targeted at a final
+  // consumer.  This load flag is tested in nsDocLoader::OnProgress.
+  nsLoadFlags newLoadFlags = nsIChannel::LOAD_TARGETED;
+
   nsCOMPtr<nsIURIContentListener> originalListener =
     do_GetInterface(m_originalContext);
   if (originalListener != aListener) {
-    aChannel->SetLoadFlags(loadFlags | nsIChannel::LOAD_RETARGETED_DOCUMENT_URI);
+    newLoadFlags |= nsIChannel::LOAD_RETARGETED_DOCUMENT_URI;
   }
+  aChannel->SetLoadFlags(loadFlags | newLoadFlags);
   
   PRBool abort = PR_FALSE;
   nsresult rv = aListener->DoContent(mContentType.get(),
