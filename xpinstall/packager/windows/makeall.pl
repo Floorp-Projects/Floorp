@@ -119,7 +119,7 @@ system("copy $inDistPath\\setuprsc.dll  $inDistPath\\setup");
 # build the self-extracting .exe (installer) file.
 print "\nbuilding self-extracting installer ($seiFileNameSpecific)...\n";
 system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecific");
-system("$inDistPath\\nszip.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*");
+system("$inDistPath\\nsztool.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*");
 
 print " done!\n\n";
 
@@ -172,7 +172,7 @@ sub MakeUninstall
   # build the self-extracting .exe (uninstaller) file.
   print "\nbuilding self-extracting uninstaller ($seuFileNameSpecific)...\n";
   system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seuFileNameSpecific");
-  system("$inDistPath\\nszip.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*");
+  system("$inDistPath\\nsztool.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*");
   system("copy $inDistPath\\$seuFileNameSpecific $inDistPath\\xpi");
 }
 
