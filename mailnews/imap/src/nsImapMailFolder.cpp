@@ -860,6 +860,23 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages)
                         messageIds.Append(',');
                     messageIds.Append((PRInt32)key);
                 }
+                if (mDatabase) // *** jt - we shouldn't need to do this I think
+                {
+                    nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
+                    nsCOMPtr<nsIDBMessage>
+                        dbMessage(do_QueryInterface(message, &rv));
+
+                    if(NS_SUCCEEDED(rv))
+                    {
+                        rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+                        if(NS_SUCCEEDED(rv))
+                        {
+                            rv =mDatabase->DeleteHeader(msgDBHdr, nsnull,
+                                                        PR_TRUE, PR_TRUE);
+                        }
+                    }
+                    
+                }
             }
         }
         NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
