@@ -295,7 +295,6 @@ protected:
 	mdb_kind			m_PabTableKind;
  	mdb_kind			m_HistoryTableKind;
 	mdb_kind			m_MailListTableKind;
-	mdb_kind			m_CategoryTableKind;
 
 	mdb_scope			m_CardRowScopeToken;
 

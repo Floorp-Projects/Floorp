@@ -61,7 +61,6 @@ const char *kAnonymousRowScope = "ns:addrbk:db:row:scope:anonymous:all";
 const char *kPabTableKind = "ns:addrbk:db:table:kind:pab";
 const char *kHistoryTableKind = "ns:addrbk:db:table:kind:history";
 const char *kMailListTableKind = "ns:addrbk:db:table:kind:maillist";
-const char *kCategoryTableKind = "ns:addrbk:db:table:kind:category";
 
 const char *kCardRowScope = "ns:addrbk:db:row:scope:card:all";
 
@@ -109,7 +108,6 @@ const char *kAddressCharSetColumn = "AddrCharSet";
 
 struct mdbOid gAddressBookTableOID;
 struct mdbOid gMailListTableOID;
-struct mdbOid gCategoryTableOID;
 struct mdbOid gAnonymousTableOID;
 
 nsAddrDatabase::nsAddrDatabase()
@@ -122,7 +120,7 @@ nsAddrDatabase::nsAddrDatabase()
 	  m_pAnonymousIntValues(nsnull), m_pAnonymousBoolAttributes(nsnull),
 	  m_pAnonymousBoolValues(nsnull),
       m_PabTableKind(0), m_HistoryTableKind(0),
-      m_MailListTableKind(0), m_CategoryTableKind(0),
+      m_MailListTableKind(0),
       m_CardRowScopeToken(0),
       m_FirstNameColumnToken(0),
       m_LastNameColumnToken(0),
