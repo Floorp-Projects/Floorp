@@ -17,7 +17,7 @@
  */
 
 
-#include "nsSpinnerFrame.h"
+#include "nsSliderFrame.h"
 
 #include "nsIContent.h"
 #include "prtypes.h"
@@ -29,14 +29,14 @@
 
 
 //
-// NS_NewSpinnerFrame
+// NS_NewSliderFrame
 //
 // Wrapper for creating a new spinner
 //
 nsresult
-NS_NewSpinnerFrame(nsIFrame*& aResult)
+NS_NewSliderFrame(nsIFrame*& aResult)
 {
-  aResult = new nsSpinnerFrame;
+  aResult = new nsSliderFrame;
   if ( !aResult )
     return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
@@ -44,9 +44,9 @@ NS_NewSpinnerFrame(nsIFrame*& aResult)
 
 
 //
-// nsSpinnerFrame cntr
+// nsSliderFrame cntr
 //
-nsSpinnerFrame::nsSpinnerFrame()
+nsSliderFrame::nsSliderFrame()
 {
 
 } // cntr
@@ -58,7 +58,7 @@ nsSpinnerFrame::nsSpinnerFrame()
 // Overidden to handle ???
 //
 NS_METHOD 
-nsSpinnerFrame::Paint(nsIPresContext& aPresContext,
+nsSliderFrame::Paint(nsIPresContext& aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               const nsRect& aDirtyRect,
                               nsFramePaintLayer aWhichLayer)
@@ -73,7 +73,7 @@ nsSpinnerFrame::Paint(nsIPresContext& aPresContext,
 // For now, be as big as CSS wants us to be, or some small default size.
 //
 void
-nsSpinnerFrame :: GetDesiredSize(nsIPresContext* aPresContext,
+nsSliderFrame :: GetDesiredSize(nsIPresContext* aPresContext,
                                            const nsHTMLReflowState& aReflowState,
                                            nsHTMLReflowMetrics& aDesiredLayoutSize)
 {
