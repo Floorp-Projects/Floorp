@@ -16,6 +16,13 @@
  * Reserved.
  */
 
+//
+// Note from pinkerton:
+//
+// This class is now obsolete in Mozilla. Use it at your own risk. Better yet, use
+// CAMSavvyBevelView to get appearance manager support
+//
+
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //
 //		A beveled gray view that can draw raised, recessed, or no bevel
