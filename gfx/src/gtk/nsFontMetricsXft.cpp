@@ -386,7 +386,7 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     // Hang onto the device context
     mDeviceContext = aContext;
 
-    mPointSize = NSTwipsToIntPoints(mFont->size);
+    mPointSize = NSTwipsToFloatPoints(mFont->size);
 
     // pixels -> twips ; twips -> points
     float dev2app;
@@ -1112,7 +1112,7 @@ nsFontMetricsXft::SetupFCPattern(void)
         }
 
         // point size
-        printf("\tpoint,pixel size: %d,%d\n", mPointSize, mFont->size);
+        printf("\tpoint,pixel size: %f,%d\n", mPointSize, mFont->size);
 
         // slant type
         printf("\tslant: ");
@@ -1135,7 +1135,7 @@ nsFontMetricsXft::SetupFCPattern(void)
     }        
 
     // add the point size
-    FcPatternAddInteger(mPattern, FC_SIZE, mPointSize);
+    FcPatternAddDouble(mPattern, FC_SIZE, mPointSize);
 
     // Add the slant type
     FcPatternAddInteger(mPattern, FC_SLANT,

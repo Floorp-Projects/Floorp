@@ -271,7 +271,7 @@ private:
     nsCOMPtr<nsIAtom>    mLangGroup;
     nsCString           *mGenericFont;
     nsFont              *mFont;
-    PRUint16             mPointSize;
+    float                mPointSize;
 
     nsCAutoString        mDefaultFont;
 
