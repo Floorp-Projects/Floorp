@@ -580,9 +580,12 @@ HRESULT nsDataObj::GetText(nsCAutoString * aDataFlavor, FORMATETC& aFE, STGMEDIU
       return ResultFromScode(S_OK);
     }
   }
-  else if ( aFE.cfFormat == CF_UNICODETEXT )
+  else {
+    // we assume that any data that isn't CF_TEXT is unicode. This may
+    // be an erroneous assumption, but is true so far.
     allocLen += sizeof(PRUnichar);
-    
+  }
+
   hGlobalMemory = (HGLOBAL)::GlobalAlloc(GMEM_MOVEABLE, allocLen);
 
   // Copy text to Global Memory Area
