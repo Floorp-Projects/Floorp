@@ -760,6 +760,7 @@ SECKEY_PublicKeyStrengthInBits;
 ;+    global:
 CERT_DecodeTimeChoice;
 CERT_EncodeTimeChoice;
+;;CERT_TimeChoiceTemplate DATA ;
 NSS_Get_CERT_TimeChoiceTemplate;
 PK11_FindSlotsByAliases;
 SEC_DupCrl;
