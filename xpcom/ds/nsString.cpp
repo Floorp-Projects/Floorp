@@ -662,7 +662,8 @@ char* nsCString::ToNewCString() const {
  * @return  ptr to new ascii string
  */
 PRUnichar* nsCString::ToNewUnicode() const {
-  nsString temp(*this);         //construct nsCString with alloc on heap (which we'll steal in a moment)
+  nsString temp;
+  temp.AssignWithConversion(*this);         //construct nsCString with alloc on heap (which we'll steal in a moment)
   temp.SetCapacity(8);          //force temp to have an allocated buffer, even if this is empty.
   PRUnichar* result=temp.mUStr; //steal temp's buffer
   temp.mStr=0;                  //now clear temp's buffer to prevent deallocation
