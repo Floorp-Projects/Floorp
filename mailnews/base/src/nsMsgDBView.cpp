@@ -1553,7 +1553,7 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     nsCOMPtr <nsIDBFolderInfo> folderInfo;
     nsresult rv = folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(m_db));
     NS_ENSURE_SUCCESS(rv,rv);
-	  m_db->AddListener(this);
+    m_db->AddListener(this);
     m_folder = folder;
     mIsSearchView = PR_FALSE;
     // save off sort type and order, view type and flags
@@ -1894,14 +1894,22 @@ NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, P
 
   switch (command)
   {
+  case nsMsgViewCommandType::deleteMsg:
+  case nsMsgViewCommandType::deleteNoTrash:
+    {
+      PRBool canDelete;
+      if (m_folder && NS_SUCCEEDED(m_folder->GetCanDeleteMessages(&canDelete)) && !canDelete)
+        *selectable_p = PR_FALSE;
+      else
+        *selectable_p = haveSelection;
+    }
+    break;
   case nsMsgViewCommandType::markMessagesRead:
   case nsMsgViewCommandType::markMessagesUnread:
   case nsMsgViewCommandType::toggleMessageRead:
   case nsMsgViewCommandType::flagMessages:
   case nsMsgViewCommandType::unflagMessages:
   case nsMsgViewCommandType::toggleThreadWatched:
-  case nsMsgViewCommandType::deleteMsg:
-  case nsMsgViewCommandType::deleteNoTrash:
   case nsMsgViewCommandType::markThreadRead:
   case nsMsgViewCommandType::downloadSelectedForOffline:
   case nsMsgViewCommandType::label1:
@@ -3031,16 +3039,15 @@ nsMsgViewIndex nsMsgDBView::GetIndexOfFirstDisplayedKeyInThread(nsIMsgThread *th
 	return retIndex;
 }
 
-// caller must referTo hdr if they want to hold it or change it!
 nsresult nsMsgDBView::GetFirstMessageHdrToDisplayInThread(nsIMsgThread *threadHdr, nsIMsgDBHdr **result)
 {
   nsresult rv;
-
-	if (m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)
-		rv = threadHdr->GetFirstUnreadChild(result);
-	else
-		rv = threadHdr->GetChildHdrAt(0, result);
-	return rv;
+  
+  if (m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)
+    rv = threadHdr->GetFirstUnreadChild(result);
+  else
+    rv = threadHdr->GetChildHdrAt(0, result);
+  return rv;
 }
 
 // Find the view index of the thread containing the passed msgKey, if
