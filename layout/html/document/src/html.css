@@ -512,8 +512,9 @@ input[type="file"][disabled] input[type="button"] {
 
 
 input[type=radio] {
-  box-sizing: border-box;
+  box-sizing: content-box;
   /* these margins are for NavQuirks, we need a Standard ua.css */  
+  padding: 0px;
   margin-left:   3px;   
   margin-right:  5px;  
   margin-top:    2px; 
@@ -521,8 +522,8 @@ input[type=radio] {
   border: 2px outset rgb(153, 153, 153);
   background-color:rgb(204, 204, 204);
   color:black;
-  width:12px;
-  height:12px;
+  width:8px;
+  height:8px;
   behavior: none;
   -moz-border-radius:6px;
 }
@@ -562,20 +563,17 @@ input[type=radio][disabled]:active {
 
 
 input[type=checkbox] {
-  box-sizing: border-box;
+  box-sizing: content-box;
   /* these margins are for NavQuirks, we need a Standard ua.css */  
-  padding-top:   0px;
-  padding-left:  0px;
-  padding-right: 1px;
-  padding-bottom:1px;
+  padding:       0px;
   margin-left:   3px;   
   margin-right:  4px;  
   margin-top:    3px; 
   margin-bottom: 3px;
   border: 2px inset rgb(153, 153, 153);
   background-color:rgb(204, 204, 204);
-  width:13px;
-  height:13px;
+  width:9px;
+  height:9px;
   color:black;
   behavior: none;
 /*  -moz-border-radius:1px; */
@@ -926,7 +924,23 @@ label {
 }
 
 /* Combo box style */
+select *:-moz-display-comboboxcontrol-frame {
+  cursor: default !important;
+  user-select: none !important;
+  overflow:hidden !important
+	white-space:nowrap !important;
+	background-color: inherit !important;
+	color: inherit !important;
+	text-align: inherit !important;
+  padding-left:   4px !important;
+  padding-right:  5px !important;
+  padding-bottom: 1px !important;
+  padding-top:    1px !important;
+}
+
 select:-moz-display-comboboxcontrol-frame {
+  cursor: default;
+  user-select: none;
   overflow:hidden;
 	white-space:nowrap;
 	background-color: inherit;
@@ -936,6 +950,14 @@ select:-moz-display-comboboxcontrol-frame {
   padding-right:  5px;
   padding-bottom: 1px;
   padding-top:    1px;
+}
+
+select:focus *:-moz-display-comboboxcontrol-frame {
+  border: 1px dotted black;
+  padding-left:   3px;
+  padding-right:  4px;
+  padding-bottom: 0px;
+  padding-top:    0px;
 }
 
 select:-moz-dummy-option { 
@@ -953,6 +975,7 @@ select[size] {
   padding-top:    1px;
   padding-right:  0px;
   padding-bottom: 1px;
+  overflow:-moz-scrollbars-vertical;
 }
 
 select, select[size="1"] {
@@ -970,6 +993,11 @@ select, select[size="1"] {
   color:black;
   white-space:nowrap;
   text-align: left; 
+}
+
+/* temporary rule to make repaint happen on loss of focus */
+select:focus, select[size="1"]:focus {
+  background-color: #FEFEFE;
 }
 
 select[size][disabled] {
@@ -1017,7 +1045,7 @@ select > input:button-content {
   text-align: left;
 }
 
-select[disabled]:-moz-display-comboboxcontrol-frame {
+select[disabled] > *:-moz-display-comboboxcontrol-frame {
   color: gray;
 }
 
@@ -1076,6 +1104,10 @@ select[size] option[-moz-option-selected] {
   color:white;
   background-color:rgb(51,51,102); 
 }
+select[size] option[-moz-option-selected-focus] {
+  color:white;
+  background-color:rgb(51,51,102); 
+}
 
 select[size][disabled] option[-moz-option-selected] {
   color:rgb(153,153,153); 
@@ -1110,26 +1142,6 @@ optgroup > option {
 optgroup:before {
   display:block;
   content:attr(label);
-}
-
-select[size]:focus {
-  border: 2px dotted rgb(128,128,128);
-  padding-left:   0px;
-  padding-top:    1px;
-  padding-right:  0px;
-  padding-bottom: 1px;
-}
-
-select:focus, select[size="1"]:focus {
-  border: 2px dotted rgb(128,128,128);
-  padding-left:   0px;
-  padding-top:    0px;
-  padding-right:  0px;
-  padding-bottom: 0px;
-}
-
-select[multiple]:focus {
-  border: 2px dotted rgb(128,128,128);
 }
 
 /* Begin - Margin setting for form controls inside tables for Nav Quirks */
