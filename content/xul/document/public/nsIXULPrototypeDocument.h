@@ -57,6 +57,7 @@ class nsXULPrototypeElement;
 class nsIXULDocument;
 class nsIScriptGlobalObject;
 class nsNodeInfoManager;
+class nsISupportsArray;
 
 #define NS_IXULPROTOTYPEDOCUMENT_IID \
 { 0x726f0ab8, 0xb3cb, 0x11d8, { 0xb2, 0x67, 0x00, 0x0a, 0x95, 0xdc, 0x23, 0x4c } }
