@@ -22,6 +22,9 @@
 #include <math.h>
 #include "nspr.h"
 
+#include "nsRegionUnix.h"
+#include "nsGfxCIID.h"
+
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 
@@ -306,18 +309,56 @@ PRBool nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine 
 
 PRBool nsRenderingContextUnix :: GetClipRect(nsRect &aRect)
 {
-  return PR_FALSE;
+  if (mRegion != nsnull) {
+    XRectangle xrect;
+    ::XClipBox(mRegion, &xrect);
+    aRect.SetRect(xrect.x, xrect.y, xrect.width, xrect.height);
+  } else {
+    aRect.SetRect(0,0,0,0);
+  }
+  return PR_TRUE;
+
 }
 
 PRBool nsRenderingContextUnix :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
 {
-  //XXX wow, needs to do something.
-  return PR_FALSE;
+  nsRect rect;
+  XRectangle xrect;
+
+  nsRegionUnix *pRegion = (nsRegionUnix *)&aRegion;
+  Region xregion = pRegion->GetXRegion();
+
+  ::XSetRegion(mRenderingSurface->display,
+	       mRenderingSurface->gc,
+	       xregion);
+
+  mRegion = xregion ;
+
+  return (PR_TRUE);
 }
 
 void nsRenderingContextUnix :: GetClipRegion(nsIRegion **aRegion)
 {
-  //XXX wow, needs to do something.
+  nsIRegion * pRegion ;
+
+  static NS_DEFINE_IID(kCRegionCID, NS_REGION_CID);
+  static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
+
+  nsresult rv = NSRepository::CreateInstance(kCRegionCID, 
+					     nsnull, 
+					     kIRegionIID, 
+					     (void **)aRegion);
+
+  if (NS_OK == rv) {
+    nsRect rect;
+    pRegion = (nsIRegion *)&aRegion;
+    pRegion->Init();    
+    this->GetClipRect(rect);
+    pRegion->Union(rect.x,rect.y,rect.width,rect.height);
+  }
+
+  return ;
+
 }
 
 void nsRenderingContextUnix :: SetColor(nscolor aColor)
@@ -422,7 +463,7 @@ void nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface aDS)
     mOffscreenSurface = nsnull;
 
   if (mRenderingSurface == surface)
-    mRenderingSurface == nsnull;
+    mRenderingSurface = nsnull;
 
   delete aDS;
 }

@@ -57,6 +57,8 @@ public:
   virtual PRBool ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual PRBool ForEachRect(nsRectInRegionFunc *func, void *closure);
 
+  Region GetXRegion(void);
+
 private:
   Region    mRegion;
   nsRegionType  mRegionType;
