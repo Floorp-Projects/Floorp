@@ -70,22 +70,23 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
   virtual void Cleanup();
 
  protected:
-	nsIRDFService *getRDFService();
-	static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
-	static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);
-	static PRBool changeEnumFunc(nsISupports *aElement, void *aData);
-	nsresult  NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
-								nsIRDFNode *object, PRBool assert, PRBool change);
+  nsIRDFService *getRDFService();
+  static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
+  static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);
+  static PRBool changeEnumFunc(nsISupports *aElement, void *aData);
+  nsresult  NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
+                            nsIRDFNode *newObject, nsIRDFNode *oldObject, 
+                            PRBool assert, PRBool change);
 
-	nsresult NotifyPropertyChanged(nsIRDFResource *resource,
-													  nsIRDFResource *propertyResource,
-													  nsIRDFNode *newNode);
-	nsresult GetTransactionManager(nsISupportsArray *sources, nsITransactionManager **aTransactionManager);
+  nsresult NotifyPropertyChanged(nsIRDFResource *resource, 
+                    nsIRDFResource *propertyResource, nsIRDFNode *newNode, 
+                    nsIRDFNode *oldNode = nsnull);
+  nsresult GetTransactionManager(nsISupportsArray *sources, nsITransactionManager **aTransactionManager);
 
-	nsCOMPtr<nsIMsgWindow> mWindow;
+  nsCOMPtr<nsIMsgWindow> mWindow;
 
-	PRBool m_shuttingDown;
-    PRBool mInitialized;
+  PRBool m_shuttingDown;
+  PRBool mInitialized;
 
  private:
   nsCOMPtr<nsIRDFService> mRDFService;
