@@ -77,8 +77,10 @@ extern const String WITH_PARAM;
 
 
 //-- Attributes
+extern const String CASE_ORDER_ATTR;
 extern const String CDATA_ELEMENTS;
 extern const String COUNT_ATTR;
+extern const String DATA_TYPE_ATTR;
 extern const String DEFAULT_SPACE_ATTR;
 extern const String DOCTYPE_PUBLIC_ATTR;
 extern const String DOCTYPE_SYSTEM_ATTR;
@@ -107,14 +109,21 @@ extern const String USE_ATTR;
 extern const String USE_ATTRIBUTE_SETS_ATTR;
 extern const String VALUE_ATTR;
 extern const String VERSION_ATTR;
+extern const String XML_LANG_ATTR;
 
 //-- Attribute Values
 extern const String ANY_VALUE;
+extern const String ASCENDING_VALUE;
+extern const String DESCENDING_VALUE;
+extern const String LOWER_FIRST_VALUE;
 extern const String MULTIPLE_VALUE;
 extern const String NO_VALUE;
+extern const String NUMBER_VALUE;
 extern const String PRESERVE_VALUE;
 extern const String SINGLE_VALUE;
 extern const String STRIP_VALUE;
+extern const String TEXT_VALUE;
+extern const String UPPER_FIRST_VALUE;
 extern const String YES_VALUE;
 
 //-- Stylesheet attributes

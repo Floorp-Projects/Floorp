@@ -34,10 +34,11 @@ REQUIRES	= string \
 		  layout \
 		  content \
 		  widget \
+		  locale \
 		  $(NULL)
 endif
 
-CPPSRCS = NodeSorter.cpp NodeStack.cpp
+CPPSRCS = NodeStack.cpp txNodeSorter.cpp txXPathResultComparator.cpp
 
 include $(topsrcdir)/config/rules.mk
 

@@ -46,7 +46,7 @@
 #include "VariableBinding.h"
 #include "XMLUtils.h"
 #include "XMLDOMUtils.h"
-#include "NodeSorter.h"
+#include "txNodeSorter.h"
 #include "Numbering.h"
 #include "Tokenizer.h"
 #include "URIUtils.h"
@@ -1022,24 +1022,24 @@ void XSLTProcessor::processAction
                     //-- make sure nodes are in DocumentOrder
                     ps->sortByDocumentOrder(nodeSet);
 
-                    //-- look for xsl:sort elements
+                    //-- push nodeSet onto context stack
+                    ps->getNodeSetStack()->push(nodeSet);
+
+                    // Look for xsl:sort elements
+                    txNodeSorter sorter(ps);
                     Node* child = actionElement->getFirstChild();
                     while (child) {
-                        if (child->getNodeType() == Node::ELEMENT_NODE) {
-                            String nodeName = child->getNodeName();
-                            if (getElementType(nodeName, ps) == XSLType::SORT) {
-                                NodeSorter::sort(nodeSet, (Element*)child, node, ps);
-                                break;
-                            }
+                        if ((child->getNodeType() == Node::ELEMENT_NODE) &&
+                            (getElementType(child->getNodeName(), ps) == XSLType::SORT)) {
+                            sorter.addSortElement((Element*)child, node);
                         }
                         child = child->getNextSibling();
                     }
+                    sorter.sortNodeSet(nodeSet);
 
                     // Process xsl:with-param elements
                     NamedMap* actualParams = processParameters(actionElement, node, ps);
 
-                    //-- push nodeSet onto context stack
-                    ps->getNodeSetStack()->push(nodeSet);
                     for (int i = 0; i < nodeSet->size(); i++) {
                         Node* currNode = nodeSet->get(i);
                         Element* xslTemplate = ps->findTemplate(currNode, node, mode);
@@ -1076,7 +1076,7 @@ void XSLTProcessor::processAction
                     String ns = actionElement->getAttribute(NAMESPACE_ATTR);
                     //-- process name as an AttributeValueTemplate
                     String name;
-                    processAttrValueTemplate(attr->getValue(),name,node,ps);
+                    ps->processAttrValueTemplate(attr->getValue(), node, name);
                     Attr* newAttr = 0;
                     //-- check name validity
                     if ( XMLUtils::isValidQName(name)) {
@@ -1210,7 +1210,7 @@ void XSLTProcessor::processAction
                     String ns = actionElement->getAttribute(NAMESPACE_ATTR);
                     //-- process name as an AttributeValueTemplate
                     String name;
-                    processAttrValueTemplate(attr->getValue(),name,node,ps);
+                    ps->processAttrValueTemplate(attr->getValue(), node, name);
                     Element* element = 0;
                     //-- check name validity
                     if ( XMLUtils::isValidQName(name)) {
@@ -1267,27 +1267,40 @@ void XSLTProcessor::processAction
                     //-- make sure nodes are in DocumentOrder
                     ps->sortByDocumentOrder(nodeSet);
 
-                    //-- look for xsl:sort elements
+                    //-- push nodeSet onto context stack
+                    ps->getNodeSetStack()->push(nodeSet);
+
+                    // Look for xsl:sort elements
+                    txNodeSorter sorter(ps);
                     Node* child = actionElement->getFirstChild();
                     while (child) {
-                        if (child->getNodeType() == Node::ELEMENT_NODE) {
-                            String nodeName = child->getNodeName();
-                            if (getElementType(nodeName, ps) == XSLType::SORT) {
-                                NodeSorter::sort(nodeSet, (Element*)child, node, ps);
+                        int nodeType = child->getNodeType();
+                        if (nodeType == Node::ELEMENT_NODE) {
+                            if (getElementType(child->getNodeName(), ps) == XSLType::SORT) {
+                                sorter.addSortElement((Element*)child, node);
+                            }
+                            else {
+                                // xsl:sort must occur first
                                 break;
                             }
                         }
+                        else if ((nodeType == Node::TEXT_NODE ||
+                                  nodeType == Node::CDATA_SECTION_NODE) &&
+                                 !XMLUtils::isWhitespace(child->getNodeValue())) {
+                            break;
+                        }
+
                         child = child->getNextSibling();
                     }
+                    sorter.sortNodeSet(nodeSet);
 
-                    //-- push nodeSet onto context stack
-                    ps->getNodeSetStack()->push(nodeSet);
                     for (int i = 0; i < nodeSet->size(); i++) {
                         Node* currNode = nodeSet->get(i);
                         ps->pushCurrentNode(currNode);
                         processChildren(currNode, actionElement, ps);
                         ps->popCurrentNode();
                     }
+
                     //-- remove nodeSet from context stack
                     ps->getNodeSetStack()->pop();
                 }
@@ -1368,7 +1381,7 @@ void XSLTProcessor::processAction
                     String ns = actionElement->getAttribute(NAMESPACE_ATTR);
                     //-- process name as an AttributeValueTemplate
                     String name;
-                    processAttrValueTemplate(attr->getValue(),name,node,ps);
+                    ps->processAttrValueTemplate(attr->getValue(), node, name);
                     //-- check name validity
                     if ( !XMLUtils::isValidQName(name)) {
                         String err("error processing xsl:");
@@ -1532,7 +1545,7 @@ void XSLTProcessor::processAction
                         Attr* newAttr = resultDoc->createAttribute(attr->getName());
                         //-- process Attribute Value Templates
                         String value;
-                        processAttrValueTemplate(attr->getValue(), value, node, ps);
+                        ps->processAttrValueTemplate(attr->getValue(), node, value);
                         newAttr->setValue(value);
                         ps->addToResultTree(newAttr);
                     }
@@ -1585,32 +1598,6 @@ void XSLTProcessor::processAttributeSets
         }
     }
 } //-- processAttributeSets
-
-/**
- * Processes the given attribute value as an AttributeValueTemplate
- * @param attValue the attribute value to process
- * @param result, the String in which to store the result
- * @param context the current context node
- * @param ps the current ProcessorState
-**/
-void XSLTProcessor::processAttrValueTemplate
-    (const String& attValue, String& result, Node* context, ProcessorState* ps)
-{
-    AttributeValueTemplate* avt = 0;
-    avt = exprParser.createAttributeValueTemplate(attValue);
-    if (!avt) {
-        return;
-    }
-
-    ExprResult* exprResult = avt->evaluate(context,ps);
-    if (!exprResult) {
-        return;
-    }
-
-    exprResult->stringValue(result);
-    delete exprResult;
-    delete avt;
-} //-- processAttributeValueTemplate
 
 /**
  * Processes the xsl:with-param child elements of the given xsl action.

@@ -34,7 +34,6 @@ REQUIRES	= string \
 endif
 
 CPPSRCS	= ArrayList.cpp             \
-	DefaultStringComparator.cpp \
 	Double.cpp \
 	Integer.cpp \
 	List.cpp \
@@ -43,7 +42,6 @@ CPPSRCS	= ArrayList.cpp             \
 	NamedMap.cpp \
 	SimpleErrorObserver.cpp \
 	Stack.cpp \
-	StringComparator.cpp \
 	StringList.cpp \
 	Tokenizer.cpp
 

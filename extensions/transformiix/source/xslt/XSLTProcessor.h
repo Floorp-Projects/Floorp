@@ -219,11 +219,6 @@ private:
     SimpleErrorObserver fatalObserver;
 
     /**
-     * An expression parser for creating AttributeValueTemplates
-    **/
-    ExprParser exprParser;
-
-    /**
      * The version of XSL which this Processes
     **/
     String xslVersion;
@@ -312,16 +307,6 @@ private:
      * Processes the attribute sets specified in the names argument
     **/
     void processAttributeSets(const String& names, Node* node, ProcessorState* ps);
-
-    /**
-     * Processes the given attribute value as an AttributeValueTemplate
-     * @param attValue the attribute value to process
-     * @param result, the String in which to store the result
-     * @param context the current context node
-     * @param ps the current ProcessorState
-    **/
-    void processAttrValueTemplate
-        (const String& attValue, String& result, Node* context, ProcessorState* ps);
 
     /**
      * Processes the children of the specified element using the given context node

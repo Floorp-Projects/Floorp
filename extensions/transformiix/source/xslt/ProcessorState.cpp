@@ -620,6 +620,29 @@ Node* ProcessorState::popCurrentNode() {
    return currentNodeStack.pop();
 } //-- popCurrentNode
 
+void ProcessorState::processAttrValueTemplate(const String& aAttValue,
+                                              Node* aContext,
+                                              String& aResult)
+{
+    aResult.clear();
+    AttributeValueTemplate* avt =
+                    exprParser.createAttributeValueTemplate(aAttValue);
+    if (!avt) {
+        // XXX ErrorReport: out of memory
+        return;
+    }
+
+    ExprResult* exprResult = avt->evaluate(aContext, this);
+    delete avt;
+    if (!exprResult) {
+        // XXX ErrorReport: out of memory
+        return;
+    }
+
+    exprResult->stringValue(aResult);
+    delete exprResult;
+}
+
 /**
  * Adds the given XSLT action to the top of the action stack
 **/
