@@ -50,14 +50,13 @@ inBitmapDecoder::~inBitmapDecoder()
 
 /** imgIDecoder methods **/
 
-NS_IMETHODIMP inBitmapDecoder::Init(imgIRequest *aRequest)
+NS_IMETHODIMP inBitmapDecoder::Init(imgILoad *aLoad)
 {
-  mRequest = aRequest;
-
-  mObserver = do_QueryInterface(aRequest);  // we're holding 2 strong refs to the request.
+  mObserver = do_QueryInterface(aRequest);
 
   mImage = do_CreateInstance("@mozilla.org/image/container;1"); 
-  aRequest->SetImage(mImage);                                                   
+  if (!mImage) return NS_ERROR_FAILURE;
+  aLoad->SetImage(mImage);                                                   
 
   mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
   if (!mFrame) return NS_ERROR_FAILURE;
