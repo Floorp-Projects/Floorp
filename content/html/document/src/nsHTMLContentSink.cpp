@@ -163,6 +163,8 @@ protected:
 
   nsresult ProcessBRTag(nsIHTMLContent** aInstancePtrResult,
                         const nsIParserNode& aNode);
+  nsresult ProcessEMBEDTag(nsIHTMLContent** aInstancePtrResult,
+                           const nsIParserNode& aNode);
   nsresult ProcessHRTag(nsIHTMLContent** aInstancePtrResult,
                         const nsIParserNode& aNode);
   nsresult ProcessINPUTTag(nsIHTMLContent** aInstancePtrResult,
@@ -633,10 +635,6 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
     break;
 
   case eHTMLTag_object:
-    rv = NS_NewHTMLEmbed(&container, atom);
-    break;
-
-  case eHTMLTag_embed:
     rv = NS_NewHTMLObject(&container, atom);
     break;
 
@@ -1049,6 +1047,9 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
       FlushText();
       ProcessTEXTAREATag(&leaf, aNode);
       break;
+    case eHTMLTag_embed:
+      rv = ProcessEMBEDTag(&leaf, aNode);
+      break;
     }
     break;
 
@@ -1373,6 +1374,19 @@ nsresult HTMLContentSink::ProcessBRTag(nsIHTMLContent** aInstancePtrResult,
   nsAutoString tmp("BR");
   nsIAtom* atom = NS_NewAtom(tmp);
   rv = NS_NewHTMLBreak(aInstancePtrResult, atom);
+  if (NS_OK == rv) {
+    rv = AddAttributes(aNode, *aInstancePtrResult);
+  }
+  NS_RELEASE(atom);
+  return rv;
+}
+nsresult HTMLContentSink::ProcessEMBEDTag(nsIHTMLContent** aInstancePtrResult,
+                                          const nsIParserNode& aNode)
+{
+  nsresult rv = NS_OK;
+  nsAutoString tmp("EMBED");
+  nsIAtom* atom = NS_NewAtom(tmp);
+  rv = NS_NewHTMLEmbed(aInstancePtrResult, atom);
   if (NS_OK == rv) {
     rv = AddAttributes(aNode, *aInstancePtrResult);
   }
