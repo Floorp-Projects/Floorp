@@ -30,7 +30,8 @@ function init()
   // Description
   var descriptionArc = rdfs.GetResource(EM_NS("description"));
   var description = gExtensionDB.GetTarget(extension, descriptionArc, true);
-  description = description.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  if (description)
+    description = description.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   // Home Page URL
   var homepageArc = rdfs.GetResource(EM_NS("homepageURL"));
   var homepage = gExtensionDB.GetTarget(extension, homepageArc, true);
@@ -40,7 +41,8 @@ function init()
   // Creator
   var creatorArc = rdfs.GetResource(EM_NS("creator"));
   var creator = gExtensionDB.GetTarget(extension, creatorArc, true);
-  creator = creator.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  if (creator)
+    creator = creator.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   
   document.documentElement.setAttribute("title", extensionsStrings.getFormattedString("aboutWindowTitle", [name]));
   var extensionName = document.getElementById("extensionName");
