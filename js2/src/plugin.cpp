@@ -278,7 +278,7 @@ void nsPluginInstance::StreamAsFile(NPStream* stream, const char* fname)
 						    std::string fstr(fnName.length(), char());
 						    std::transform(fnName.begin(), fnName.end(), fstr.begin(), narrow);
 
-                            printf("Pandora: adding wrapper for %s\n", fstr.c_str());
+                            printf("Pandora: adding wrapper for \"%s\"\n", fstr.c_str());
                 
 						    StringFormatter sf;
 						    printFormat(sf, "JavaScript:function %s() { return document.js2.invoke(\"%s\"); }", fstr.c_str(), fstr.c_str());
@@ -515,7 +515,7 @@ bool JS2SpiderMonkeyClass::Read(JS2Metadata *meta, js2val *base, Multiname *mult
     std::string str(multiname->name->length(), char());
     std::transform(multiname->name->begin(), multiname->name->end(), str.begin(), narrow);
 
-    printf("JS2SpiderMonkeyClass: Reading property %s\n", str.c_str());
+    printf("JS2SpiderMonkeyClass: Reading property \"%s\"\n", str.c_str());
     
 
     ASSERT(JS2VAL_IS_OBJECT(*base) && !JS2VAL_IS_NULL(*base));
@@ -550,7 +550,7 @@ bool JS2SpiderMonkeyClass::Write(JS2Metadata *meta, js2val base, Multiname *mult
     std::string str(multiname->name->length(), char());
     std::transform(multiname->name->begin(), multiname->name->end(), str.begin(), narrow);
 
-    printf("JS2SpiderMonkeyClass: Writing property %s\n", str.c_str());
+    printf("JS2SpiderMonkeyClass: Writing property \"%s\"\n", str.c_str());
     
 
     ASSERT(JS2VAL_IS_OBJECT(base) && !JS2VAL_IS_NULL(base));

@@ -130,7 +130,7 @@ namespace MetaData {
 						defineHoistedVar(env, pb->name, JS2VAL_UNDEFINED, true, pos);
 					}
 					else {
-						FrameVariable *v = new (this) FrameVariable(result->fWrap->compileFrame->allocateSlot(), FrameVariable::Parameter);
+						FrameVariable *v = new FrameVariable(result->fWrap->compileFrame->allocateSlot(), FrameVariable::Parameter);
 						pb->member = v;
 						defineLocalMember(env, pb->name, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos, true);
 					}
