@@ -26,26 +26,26 @@ include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 clobber::
-	rm -f $(DIST)\chrome\$(THEME)\navigator\skin\*.*
+	rm -f $(DIST)\chrome\skins\$(THEME)\navigator\skin\*.*
 
 install:: 
-	$(MAKE_INSTALL) NavSecurityOverlay.css $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) alertl.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) back.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) broken.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) errorl.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) forward.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) home.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) location-hover.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) location.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) lock.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) messagel.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) mynetscape.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) n-box-persbar.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) navigator.css $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) print.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) questionl.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) reload.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) search.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) unlock.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) NavSecurityOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) alertl.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) back.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) broken.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) errorl.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) forward.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) home.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) location-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) location.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) lock.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) messagel.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) mynetscape.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) n-box-persbar.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navigator.css $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) print.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) questionl.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) reload.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) search.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) unlock.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin

@@ -26,7 +26,7 @@ include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 clobber::
-	rm -f $(DIST)\chrome\$(THEME)\communicator\skin\pref\*.*
+	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\pref\*.*
 
 install:: 
-	$(MAKE_INSTALL) pref.css $(DIST)\bin\chrome\$(THEME)\communicator\skin\pref
+	$(MAKE_INSTALL) pref.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\pref

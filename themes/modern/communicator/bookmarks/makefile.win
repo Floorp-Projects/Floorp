@@ -26,19 +26,19 @@ include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 clobber::
-	rm -f $(DIST)\chrome\$(THEME)\communicator\skin\bookmarks\*.*
+	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\bookmarks\*.*
 
 install:: 
-	$(MAKE_INSTALL) bookmark-folder-closed-sel.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
-	$(MAKE_INSTALL) bookmark-folder-closed.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
-	$(MAKE_INSTALL) bookmark-folder-open-sel.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
-	$(MAKE_INSTALL) bookmark-folder-open.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
-	$(MAKE_INSTALL) bookmark-item.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
-	$(MAKE_INSTALL) bookmarks.css $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
-	$(MAKE_INSTALL) home-sel.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
-	$(MAKE_INSTALL) home.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
-	$(MAKE_INSTALL) iefavorite.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
-	$(MAKE_INSTALL) personal-folder-closed-sel.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
-	$(MAKE_INSTALL) personal-folder-closed.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
-	$(MAKE_INSTALL) personal-folder-open-sel.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
-	$(MAKE_INSTALL) personal-folder-open.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) bookmark-folder-closed-sel.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) bookmark-folder-closed.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) bookmark-folder-open-sel.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) bookmark-folder-open.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) bookmark-item.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) bookmarks.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) home-sel.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) home.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) iefavorite.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) personal-folder-closed-sel.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) personal-folder-closed.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) personal-folder-open-sel.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) personal-folder-open.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks

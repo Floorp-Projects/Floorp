@@ -28,8 +28,8 @@ include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 clobber::
-	rm -rf $(DIST)\chrome\$(THEME)\*.*
+	rm -rf $(DIST)\chrome\skins\$(THEME)\*.*
 
 install::
-	$(MAKE_INSTALL) manifest.rdf $(DIST)\bin\chrome\$(THEME)
+	$(MAKE_INSTALL) manifest.rdf $(DIST)\bin\chrome\skins\$(THEME)
 

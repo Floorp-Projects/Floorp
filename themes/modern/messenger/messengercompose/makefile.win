@@ -26,14 +26,14 @@ include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 clobber::
-	rm -f $(DIST)\chrome\$(THEME)\messenger\skin\messengercompose\*.*
+	rm -f $(DIST)\chrome\skins\$(THEME)\messenger\skin\messengercompose\*.*
 
 install:: 
-	$(MAKE_INSTALL) address.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\messengercompose
-	$(MAKE_INSTALL) attach.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\messengercompose
-	$(MAKE_INSTALL) messengercompose.css $(DIST)\bin\chrome\$(THEME)\messenger\skin\messengercompose
-	$(MAKE_INSTALL) quote.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\messengercompose
-	$(MAKE_INSTALL) save.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\messengercompose
-	$(MAKE_INSTALL) send.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\messengercompose
-	$(MAKE_INSTALL) spelling.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\messengercompose
-	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) address.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) attach.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) messengercompose.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) quote.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) save.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) send.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) spelling.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose

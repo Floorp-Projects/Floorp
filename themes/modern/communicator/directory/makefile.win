@@ -26,13 +26,13 @@ include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 clobber::
-	rm -f $(DIST)\chrome\$(THEME)\communicator\skin\directory\*.*
+	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\directory\*.*
 
 install:: 
-	$(MAKE_INSTALL) directory.css $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
-	$(MAKE_INSTALL) file-folder-closed-sel.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
-	$(MAKE_INSTALL) file-folder-closed.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
-	$(MAKE_INSTALL) file-folder-open-sel.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
-	$(MAKE_INSTALL) file-folder-open.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
-	$(MAKE_INSTALL) file-icon-sel.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
-	$(MAKE_INSTALL) file-icon.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) directory.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) file-folder-closed-sel.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) file-folder-closed.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) file-folder-open-sel.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) file-folder-open.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) file-icon-sel.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\directory
+	$(MAKE_INSTALL) file-icon.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\directory

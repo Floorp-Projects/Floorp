@@ -26,8 +26,8 @@ include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 clobber::
-	rm -f $(DIST)\chrome\$(THEME)\communicator\skin\related\*.*
+	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\related\*.*
 
 install:: 
-	$(MAKE_INSTALL) related.css $(DIST)\bin\chrome\$(THEME)\communicator\skin\related
-	$(MAKE_INSTALL) sitemap.gif $(DIST)\bin\chrome\$(THEME)\communicator\skin\related
+	$(MAKE_INSTALL) related.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\related
+	$(MAKE_INSTALL) sitemap.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\related

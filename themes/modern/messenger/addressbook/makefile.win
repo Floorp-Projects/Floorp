@@ -26,16 +26,16 @@ include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 clobber::
-	rm -f $(DIST)\chrome\$(THEME)\messenger\skin\addressbook\*.*
+	rm -f $(DIST)\chrome\skins\$(THEME)\messenger\skin\addressbook\*.*
 
 install:: 
-	$(MAKE_INSTALL) abnewmsg.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\addressbook
-	$(MAKE_INSTALL) addressbook.css $(DIST)\bin\chrome\$(THEME)\messenger\skin\addressbook
-	$(MAKE_INSTALL) edit.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\addressbook
-	$(MAKE_INSTALL) list.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\addressbook
-	$(MAKE_INSTALL) myaddrbk.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\addressbook
-	$(MAKE_INSTALL) newcard.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\addressbook
-	$(MAKE_INSTALL) newlist.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\addressbook
-	$(MAKE_INSTALL) newmsgab.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\addressbook
-	$(MAKE_INSTALL) person.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\addressbook
-	$(MAKE_INSTALL) property.gif $(DIST)\bin\chrome\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) abnewmsg.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) addressbook.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) edit.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) list.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) myaddrbk.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newcard.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newlist.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) newmsgab.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) person.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
+	$(MAKE_INSTALL) property.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
