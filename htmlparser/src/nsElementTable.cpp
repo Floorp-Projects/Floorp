@@ -1892,7 +1892,7 @@ PRBool nsHTMLElement::CanAutoCloseTag(nsDTDContext& aContext,eHTMLTags aChildTag
 
 /**
  * 
- * @update	gess12/13/98
+ * @update	gess 10.17.2000
  * @param 
  * @return
  */
@@ -1918,7 +1918,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
         }
 
         //phrasal elements can close other phrasals, along with fontstyle and special tags...
-        if(!gHTMLElements[theTag].ContainsSet(kSpecial|kFontStyle|kPhrase)) {
+        if(!gHTMLElements[theTag].IsMemberOf(kSpecial|kFontStyle|kPhrase)) {  //fix bug 56665
           break; //it's not something I can close
         }
       }
@@ -1961,7 +1961,8 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
     }
   }
 
-  else if(IsMemberOf(kFormControl|kExtensions|kPreformatted)){  //bug54834...
+  else if( //ContainsSet(kPreformatted) ||  
+          IsMemberOf(kFormControl|kExtensions|kPreformatted)){  //bug54834...
 
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
       eHTMLTags theTag=aContext.TagAt(theIndex);
