@@ -26,6 +26,7 @@ IDLSRCS =                                         \
 			$(NULL)
 
 EXPORTS =                                       \
+			nsIMessenger.h			\
 			nsIMsgRFC822Parser.h    \
 			msgCore.h               \
 			nsMsgFolderFlags.h      \

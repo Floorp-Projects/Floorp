@@ -25,9 +25,14 @@
 #include "rdf.h"
 #include "nsCRT.h"
 
+#include "nsMessenger.h"
+
 /* Include all of the interfaces our factory can generate components for */
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgRFC822Parser.h"
+
+static NS_DEFINE_CID(kCMessengerCID, NS_MESSENGER_CID);
+static NS_DEFINE_CID(kCMessengerBootstrapCID, NS_MESSENGER_CID);
 
 static NS_DEFINE_CID(kCMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
 static NS_DEFINE_CID(kCMsgFolderEventCID, NS_MSGFOLDEREVENT_CID);
@@ -44,7 +49,10 @@ public:
 	// nsISupports methods
 	NS_DECL_ISUPPORTS 
 
-  nsMsgFactory(const nsCID &aClass, const char* aClassName, const char* aProgID); 
+  nsMsgFactory(const nsCID &aClass,
+               const char* aClassName,
+               const char* aProgID,
+               nsISupports*);
 
   // nsIFactory methods   
   NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
@@ -56,22 +64,35 @@ protected:
   nsCID mClassID;
   char* mClassName;
   char* mProgID;
+  nsIServiceManager* mServiceManager;
 };   
 
-nsMsgFactory::nsMsgFactory(const nsCID &aClass, const char* aClassName, const char* aProgID)
-  : mClassID(aClass), mClassName(nsCRT::strdup(aClassName)), mProgID(nsCRT::strdup(aProgID))
-{   
+nsMsgFactory::nsMsgFactory(const nsCID &aClass,
+                           const char* aClassName,
+                           const char* aProgID,
+                           nsISupports *serviceMgrSupports)
+  : mClassID(aClass),
+    mClassName(nsCRT::strdup(aClassName)),
+    mProgID(nsCRT::strdup(aProgID))
+{
 	NS_INIT_REFCNT();
+
+  // store a copy of the 
+  serviceMgrSupports->QueryInterface(nsIServiceManager::IID(),
+                                     (void **)mServiceManager);
 }   
 
 nsMsgFactory::~nsMsgFactory()   
 {
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
+	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
+  
+  NS_IF_RELEASE(mServiceManager);
   delete[] mClassName;
   delete[] mProgID;
 }   
 
-nsresult nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)   
+nsresult
+nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)   
 {   
   if (aResult == NULL)  
     return NS_ERROR_NULL_POINTER;  
@@ -95,7 +116,10 @@ nsresult nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)
 NS_IMPL_ADDREF(nsMsgFactory)
 NS_IMPL_RELEASE(nsMsgFactory)
 
-nsresult nsMsgFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult)  
+nsresult
+nsMsgFactory::CreateInstance(nsISupports *aOuter,
+                                      const nsIID &aIID,
+                                      void **aResult)  
 {  
 	nsresult res = NS_OK;
 
@@ -119,6 +143,15 @@ nsresult nsMsgFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, vo
     NS_NOTREACHED("hello? what happens here?");
 		return NS_OK;
 	}
+  else if (mClassID.Equals(kCMessengerBootstrapCID)) {
+    res = NS_NewMessengerBootstrap((nsIAppShellService**)&inst,
+                                   mServiceManager);
+    if (NS_FAILED(res)) return res;
+  }
+  else if (mClassID.Equals(kCMessengerCID)) {
+    res = NS_NewMessenger((nsIMessenger**)&inst);
+    if (NS_FAILED(res)) return res;
+  }
 
 	// End of checking the interface ID code....
 	if (inst) {
@@ -135,7 +168,8 @@ nsresult nsMsgFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, vo
   return res;  
 }  
 
-nsresult nsMsgFactory::LockFactory(PRBool aLock)  
+nsresult
+nsMsgFactory::LockFactory(PRBool aLock)  
 {  
 	if (aLock) { 
 		PR_AtomicIncrement(&g_LockCount); 
@@ -158,9 +192,10 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	if (nsnull == aFactory)
 		return NS_ERROR_NULL_POINTER;
 
-  *aFactory = new nsMsgFactory(aClass, aClassName, aProgID);
+  *aFactory = new nsMsgFactory(aClass, aClassName, aProgID, serviceMgr);
   if (aFactory)
-    return (*aFactory)->QueryInterface(nsIFactory::IID(), (void**)aFactory);
+    return (*aFactory)->QueryInterface(nsIFactory::IID(),
+                                       (void**)aFactory);
   else
     return NS_ERROR_OUT_OF_MEMORY;
 }
@@ -181,6 +216,12 @@ NSRegisterSelf(nsISupports* serviceMgr, const char* path)
   rv = nsRepository::RegisterComponent(kCMsgFolderEventCID, 
                                        nsnull, nsnull,
                                        path, PR_TRUE, PR_TRUE);
+  
+  rv = nsRepository::RegisterComponent(kCMessengerCID,
+                                       "Netscape Messenger",
+                                       "component://netscape/messenger",
+                                       path,
+                                       PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
   return rv;

@@ -27,6 +27,8 @@ REQUIRES=xpcom js nspr
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=                         \
+	nsMessenger.cpp			\
+	nsMessengerNameSet.cpp	\
         nsMsgRFC822Parser.cpp    \
 	nsUInt32Array.cpp        \
 	nsMsgKeyArray.cpp        \
@@ -39,6 +41,8 @@ CPPSRCS=                         \
 	$(NULL)
 
 CPP_OBJS=                                    \
+    .\$(OBJDIR)\nsMessenger.obj	\
+	.\$(OBJDIR)\nsMessengerNameSet.obj	\
         .\$(OBJDIR)\nsMsgRFC822Parser.obj    \
 	.\$(OBJDIR)\nsUInt32Array.obj        \
 	.\$(OBJDIR)\nsMsgKeyArray.obj        \
@@ -51,6 +55,7 @@ CPP_OBJS=                                    \
 	$(NULL)
 
 EXPORTS=                    \
+	nsMessenger.h	\
         nsMsgRFC822Parser.h \
 	nsUInt32Array.h     \
 	nsMsgKeyArray.h     \

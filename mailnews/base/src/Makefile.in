@@ -26,6 +26,7 @@ MODULE = mailnewsbase
 LIBRARY_NAME=mailnewsbase
 
 EXPORTS = \
+	nsMessenger.h	\
 	nsMsgKeyArray.h\
 	nsMsgGroupRecord.h \
 	nsMsgRFC822Parser.h \
@@ -37,6 +38,8 @@ EXPORTS = \
 	$(NULL)
 
 CPPSRCS = \
+	nsMessenger.cpp	\
+	nsMessengerNameSet.cpp \
 	nsMsgGroupRecord.cpp \
 	nsMsgRFC822Parser.cpp \
 	nsMsgFolder.cpp \

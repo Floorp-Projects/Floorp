@@ -30,6 +30,7 @@ IDLSRCS =				  \
 
 EXPORTS =				\
 		msgCore.h		\
+		nsIMessenger.h		\
 		nsMsgFolderFlags.h	\
 		nsMsgHeaderMasks.h	\
 		nsMsgMessageFlags.h	\
