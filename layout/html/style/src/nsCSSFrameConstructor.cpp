@@ -5306,10 +5306,12 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 
       // Block containers sometimes don't create frames for the kids
       if (containerIsBlock) {
+#if 0
         if (okToSkip && IsEmptyTextContent(childContent)) {
           // Don't create a frame for useless compressible whitespace
           continue;
         }
+#endif
 #if 0
         if (whitespaceDoesntMatter && IsEmptyHTMLParagraph(childContent)) {
           // Don't create a frame for empty html paragraph's
@@ -7730,9 +7732,9 @@ nsCSSFrameConstructor::ShouldCreateFirstLetterFrame(
 
   // See if the first frame isa text frame and if it is, that it has
   // some non-whitespace content.
-  nsIAtom* frameType;
-  aFrame->GetFrameType(&frameType);
-  if (frameType == nsLayoutAtoms::textFrame) {
+  nsCOMPtr<nsIAtom> frameType;
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+  if (frameType.get() == nsLayoutAtoms::textFrame) {
     nsITextContent* tc = nsnull;
     nsresult rv = aContent->QueryInterface(kITextContentIID, (void**) &tc);
     if (NS_SUCCEEDED(rv)) {
@@ -7741,7 +7743,6 @@ nsCSSFrameConstructor::ShouldCreateFirstLetterFrame(
       NS_RELEASE(tc);
     }
   }
-  NS_IF_RELEASE(frameType);
   return result;
 }
 
@@ -7797,9 +7798,11 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*          aPresContext,
     nsCOMPtr<nsIContent> childContent;
     if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent)))) {
       if (aParentIsBlock) {
+#if 0
         if (okToSkip && IsEmptyTextContent(childContent)) {
           continue;
         }
+#endif
 #if 0
         if (whitespaceDoesntMatter && IsEmptyHTMLParagraph(childContent)) {
           continue;
@@ -8079,7 +8082,7 @@ nsCSSFrameConstructor::InsertFirstLineFrames(
     aBlockFrame->FirstChild(nsnull, &firstBlockKid);
     nsCOMPtr<nsIAtom> frameType;
     firstBlockKid->GetFrameType(getter_AddRefs(frameType));
-    if (frameType == nsLayoutAtoms::lineFrame) {
+    if (frameType.get() == nsLayoutAtoms::lineFrame) {
       // We already have a first-line frame
       nsIFrame* lineFrame = firstBlockKid;
       nsCOMPtr<nsIStyleContext> firstLineStyle;
