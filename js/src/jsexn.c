@@ -52,16 +52,17 @@
 # error "JS_HAS_EXCEPTIONS must be defined to use JS_HAS_ERROR_EXCEPTIONS"
 #endif
 
-/* Declaration to resolve circular reference of js_ErrorClass by Exception. */
+/* XXX consider adding rt->atomState.messageAtom */
+static char js_message_str[] = "message";
+
+/* Forward declarations for ExceptionClass's initializer. */
 static JSBool
 Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
-JSBool
-js_exnHasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 static void
 exn_finalize(JSContext *cx, JSObject *obj);
 
-JSClass js_ErrorClass = {
+static JSClass ExceptionClass = {
     "Exception",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
@@ -122,17 +123,18 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report)
 	js_strncpy((jschar *)newReport->uclinebuf, report->uclinebuf, len);
 	newReport->uctokenptr = newReport->uclinebuf + (report->uctokenptr -
 							report->uclinebuf);
-    } else
+    } else {
 	newReport->uclinebuf = newReport->uctokenptr = NULL;
-   
+    }
+
     if (report->ucmessage != NULL) {
         jsint len = js_strlen(report->ucmessage) + 1;
         newReport->ucmessage = (const jschar *)JS_malloc(cx, len * sizeof(jschar));
         js_strncpy((jschar *)newReport->ucmessage, report->ucmessage, len);
-        
+
         if (report->messageArgs) {
             intN i;
-            
+
             for (i = 0; report->messageArgs[i] != NULL; i++)
                 ;
             JS_ASSERT(i);
@@ -170,7 +172,7 @@ exn_destroyPrivate(JSContext *cx, JSExnPrivate *privateData)
 {
     JSErrorReport *report;
     const jschar **args;
-    
+
     report = privateData->errorReport;
     JS_ASSERT(report);
     if (report->uclinebuf)
@@ -181,7 +183,7 @@ exn_destroyPrivate(JSContext *cx, JSExnPrivate *privateData)
 	JS_free(cx, (void *)report->ucmessage);
     if (report->messageArgs) {
         args = report->messageArgs;
-        while(*args != NULL)
+        while (*args != NULL)
             JS_free(cx, (void *)*args++);
         JS_free(cx, (void *)report->messageArgs);
     }
@@ -214,7 +216,7 @@ js_ErrorFromException(JSContext *cx, jsval exn)
     if (JSVAL_IS_PRIMITIVE(exn))
         return NULL;
     obj = JSVAL_TO_OBJECT(exn);
-    if (OBJ_GET_CLASS(cx, obj) != &js_ErrorClass)
+    if (OBJ_GET_CLASS(cx, obj) != &ExceptionClass)
         return NULL;
     privateValue = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     if (privateValue == JSVAL_NULL)
@@ -222,12 +224,15 @@ js_ErrorFromException(JSContext *cx, jsval exn)
     privateData = (JSExnPrivate*) JSVAL_TO_PRIVATE(privateValue);
     if (!privateData)
         return NULL;
-    
+
     JS_ASSERT(privateData->errorReport);
     return privateData->errorReport;
 }
 
-/* This must be kept in synch with the exceptions array below. */
+/*
+ * This must be kept in synch with the exceptions array below.
+ * XXX use a jsexn.tbl file a la jsopcode.tbl
+ */
 typedef enum JSExnType {
     JSEXN_NONE = -1,
       JSEXN_ERR,
@@ -244,89 +249,95 @@ typedef enum JSExnType {
 struct JSExnSpec {
     int protoIndex;
     const char *name;
+    JSNative native;
 };
 
+/*
+ * All *Error constructors share the same JSClass, ExceptionClass.  But each
+ * constructor function for an *Error class must have a distinct native 'call'
+ * function pointer, in order for instanceof to work properly across multiple
+ * standard class sets.  See jsfun.c:fun_hasInstance.
+ */
+#define MAKE_EXCEPTION_CTOR(name)                                             \
+static JSBool                                                                 \
+name(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)      \
+{                                                                             \
+    return Exception(cx, obj, argc, argv, rval);                              \
+}
+
+MAKE_EXCEPTION_CTOR(Error)
+MAKE_EXCEPTION_CTOR(InternalError)
+MAKE_EXCEPTION_CTOR(EvalError)
+MAKE_EXCEPTION_CTOR(RangeError)
+MAKE_EXCEPTION_CTOR(ReferenceError)
+MAKE_EXCEPTION_CTOR(SyntaxError)
+MAKE_EXCEPTION_CTOR(TypeError)
+MAKE_EXCEPTION_CTOR(URIError)
+
+#undef MAKE_EXCEPTION_CTOR
+
 static struct JSExnSpec exceptions[] = {
-    { JSEXN_NONE,          "Error"             },
-    { JSEXN_ERR,           "InternalError"     },
-    { JSEXN_ERR,           "EvalError"         },
-    { JSEXN_ERR,           "RangeError"        },
-    { JSEXN_ERR,           "ReferenceError"    },
-    { JSEXN_ERR,           "SyntaxError"       },
-    { JSEXN_ERR,           "TypeError"         },
-    { JSEXN_ERR,           "URIError"          },
-    {0,0}
+    { JSEXN_NONE,          "Error",             Error },
+    { JSEXN_ERR,           "InternalError",     InternalError },
+    { JSEXN_ERR,           "EvalError",         EvalError },
+    { JSEXN_ERR,           "RangeError",        RangeError },
+    { JSEXN_ERR,           "ReferenceError",    ReferenceError },
+    { JSEXN_ERR,           "SyntaxError",       SyntaxError },
+    { JSEXN_ERR,           "TypeError",         TypeError },
+    { JSEXN_ERR,           "URIError",          URIError },
+    {0,0,NULL}
 };
 
 static JSBool
 Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    jsval pval;
     JSString *message;
 
-    /*
-     * Does it make sense to throw a not-a-function-error here?
-     * A constructor that was not a function would be novel.
-     */
     if (!cx->fp->constructing) {
-	return JS_TRUE;
+        /*
+         * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
+         * called as functions, without operator new.  But as we do not give
+         * each constructor a distinct JSClass, whose .name member is used by
+         * js_NewObject to find the class prototype, we must get the class
+         * prototype ourselves.
+         */
+        if (!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(argv[-2]),
+                              (jsid)cx->runtime->atomState.classPrototypeAtom,
+                              &pval)) {
+            return JS_FALSE;
+        }
+        obj = js_NewObject(cx, &ExceptionClass, JSVAL_TO_OBJECT(pval), NULL);
+        if (!obj)
+            return JS_FALSE;
     }
 
     /*
      * If it's a new object of class Exception, then null out the private
      * data so that the finalizer doesn't attempt to free it.
      */
-    if (OBJ_GET_CLASS(cx, obj) == &js_ErrorClass)
+    if (OBJ_GET_CLASS(cx, obj) == &ExceptionClass)
         OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, JSVAL_NULL);
 
     /*
      * Set the 'message' property.
      */
     if (argc > 0) {
-	message = js_ValueToString(cx, argv[0]);
-	if (!message)
-	    return JS_FALSE;
-    } else {
-	message = cx->runtime->emptyString;
-    }
-    return JS_DefineProperty(cx, obj, "message", STRING_TO_JSVAL(message),
-                           NULL, NULL, JSPROP_ENUMERATE);
-}
-
-/*
-*   Called by fun_hasInstance when 'obj' has js_ErrorClass, to see if
-*   'v' could be an instanceof an exception from some other context
-*   - we'll know it is if it has that special 'something'
-*/
-
-JSBool
-js_exnHasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
-{
-    JSFunction *fun;
-    jsid exceptionId;
-    jsval pval;
-
-    *bp = JS_FALSE;
-
-    fun = (JSFunction *)JS_GetPrivate(cx, obj);
-    exceptionId = (jsid)fun->atom;
-
-    if (!JSVAL_IS_PRIMITIVE(v)) {
-        if (!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(v), exceptionId, &pval))
+        message = js_ValueToString(cx, argv[0]);
+        if (!message)
             return JS_FALSE;
-
-        /* XXX isn't this test a little too loose? */
-        if (JSVAL_IS_INT(pval))
-            *bp = JS_TRUE;
+    } else {
+        message = cx->runtime->emptyString;
     }
-
-    return JS_TRUE;
+    return JS_DefineProperty(cx, obj, js_message_str, STRING_TO_JSVAL(message),
+                             NULL, NULL, JSPROP_ENUMERATE);
 }
 
 /*
  * Convert to string.
  *
- * This method only uses JavaScript-modifiable properties name, message; it is
- * left to the host to check for private data and report filename and line
+ * This method only uses JavaScript-modifiable properties name, message.  It
+ * is left to the host to check for private data and report filename and line
  * number information along with this message.
  */
 static JSBool
@@ -336,29 +347,31 @@ exn_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *name, *message, *result;
     jschar *chars, *cp;
     size_t length;
-    jsid id;
 
-    id = (jsid) cx->runtime->atomState.nameAtom;
-    if (!OBJ_GET_PROPERTY(cx, obj, id, &v) || !(name = js_ValueToString(cx, v)))
+    if (!OBJ_GET_PROPERTY(cx, obj, (jsid)cx->runtime->atomState.nameAtom, &v))
+        return JS_FALSE;
+    name = js_ValueToString(cx, v);
+    if (!name)
         return JS_FALSE;
 
-    if (!JS_GetProperty(cx, obj, "message", &v) ||
-        !(message = js_ValueToString(cx, v)))
+    if (!JS_GetProperty(cx, obj, js_message_str, &v) ||
+        !(message = js_ValueToString(cx, v))) {
         return JS_FALSE;
+    }
 
     if (message->length > 0) {
         length = name->length + message->length + 2;
         cp = chars = (jschar*) JS_malloc(cx, (length + 1) * sizeof(jschar));
         if (!chars)
             return JS_FALSE;
-        
+
         js_strncpy(cp, name->chars, name->length);
         cp += name->length;
         *cp++ = ':'; *cp++ = ' ';
         js_strncpy(cp, message->chars, message->length);
         cp += message->length;
         *cp = 0;
-        
+
         result = js_NewString(cx, chars, length, 0);
         if (!result) {
             JS_free(cx, chars);
@@ -379,19 +392,21 @@ exn_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    jsval v;
     JSString *name, *message, *result;
     jschar *chars, *cp;
-    jsid id;
     size_t length;
-    jsval v;
 
-    id = (jsid) cx->runtime->atomState.nameAtom;
-    if (!OBJ_GET_PROPERTY(cx, obj, id, &v) || !(name = js_ValueToString(cx, v)))
+    if (!OBJ_GET_PROPERTY(cx, obj, (jsid)cx->runtime->atomState.nameAtom, &v))
+        return JS_FALSE;
+    name = js_ValueToString(cx, v);
+    if (!name)
         return JS_FALSE;
 
-    if (!JS_GetProperty(cx, obj, "message", &v) ||
-        !(message = js_ValueToString(cx, v)))
+    if (!JS_GetProperty(cx, obj, js_message_str, &v) ||
+        !(message = js_ValueToString(cx, v))) {
         return JS_FALSE;
+    }
 
     length = (message->length > 0) ? name->length + message->length + 10
         : name->length + 8;
@@ -442,73 +457,63 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         JSAtom *atom;
         JSFunction *fun;
         JSString *nameString;
-        int protoidx = exceptions[i].protoIndex;
-        
+        int protoIndex = exceptions[i].protoIndex;
+
         /* Make the prototype for the current constructor name. */
-        protos[i] = js_NewObject(cx, &js_ErrorClass,
-                                 protoidx >= 0 ? protos[protoidx] : NULL,
+        protos[i] = js_NewObject(cx, &ExceptionClass,
+                                 (protoIndex != JSEXN_NONE)
+                                 ? protos[protoIndex]
+                                 : NULL,
                                  obj);
         if (!protos[i])
             return NULL;
 
+        /* So exn_finalize knows whether to destroy private data. */
+        OBJ_SET_SLOT(cx, protos[i], JSSLOT_PRIVATE, JSVAL_NULL);
+
         atom = js_Atomize(cx, exceptions[i].name, strlen(exceptions[i].name), 0);
-
-        /*
-            Now add a property to this prototype that can be used to 
-            identify these kind of exceptions across multiple contexts.
-            This is a little less than satisfying, since other proto
-            chains may include objects with the same property but it'll
-            pass for now.
-        */
-        if (!JS_DefineProperty(cx, protos[i], exceptions[i].name,
-                               INT_TO_JSVAL(i),
-                               NULL, NULL,
-                               JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!atom)
             return NULL;
-
 
         /* Make a constructor function for the current name. */
-        fun = js_DefineFunction(cx, obj, atom, Exception, 1, 0);
+        fun = js_DefineFunction(cx, obj, atom, exceptions[i].native, 1, 0);
         if (!fun)
-            return NULL; /* XXX also remove named property from obj... */
+            return NULL;
 
         /* Make this constructor make objects of class Exception. */
-        fun->clasp = &js_ErrorClass;
+        fun->clasp = &ExceptionClass;
 
         /* Make the prototype and constructor links. */
-        if (!js_SetClassPrototype(cx, fun->object, 
-                              protos[i],
-                              JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!js_SetClassPrototype(cx, fun->object, protos[i],
+                                  JSPROP_READONLY | JSPROP_PERMANENT)) {
             return NULL;
+        }
 
         /* proto bootstrap bit from JS_InitClass omitted. */
         nameString = JS_NewStringCopyZ(cx, exceptions[i].name);
         if (nameString == NULL)
             return NULL;
-        
+
         /* Add the name property to the prototype. */
         if (!JS_DefineProperty(cx, protos[i], js_name_str,
                                STRING_TO_JSVAL(nameString),
                                NULL, NULL,
                                JSPROP_ENUMERATE)) {
-            /* release it? */
             return NULL;
-        }   
-        
-        /* So finalize knows whether to. */
-        OBJ_SET_SLOT(cx, protos[i], JSSLOT_PRIVATE, JSVAL_NULL);
+        }
     }
-    
+
     /*
      * Add an empty message property.  (To Exception.prototype only,
      * because this property will be the same for all the exception
      * protos.)
      */
-    if (!JS_DefineProperty(cx, protos[0], "message",
+    if (!JS_DefineProperty(cx, protos[0], js_message_str,
                            STRING_TO_JSVAL(cx->runtime->emptyString),
-                           NULL, NULL, JSPROP_ENUMERATE))
+                           NULL, NULL, JSPROP_ENUMERATE)) {
         return NULL;
-    
+    }
+
     /*
      * Add methods only to Exception.prototype, because ostensibly all
      * exception types delegate to that.
@@ -580,14 +585,15 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
      * Use js_NewObject instead of js_ConstructObject, because
      * js_ConstructObject seems to require a frame.
      */
-    errObject = js_NewObject(cx, &js_ErrorClass, errProto, NULL);
+    errObject = js_NewObject(cx, &ExceptionClass, errProto, NULL);
 
     /* Store 'message' as a javascript-visible value. */
     msgstr = JS_NewStringCopyZ(cx, message);
-    if (!JS_DefineProperty(cx, errObject, "message", STRING_TO_JSVAL(msgstr),
-                           NULL, NULL,
-                           JSPROP_ENUMERATE))
+    if (!JS_DefineProperty(cx, errObject, js_message_str,
+                           STRING_TO_JSVAL(msgstr), NULL, NULL,
+                           JSPROP_ENUMERATE)) {
         return JS_FALSE;
+    }
 
     /*
      * Construct a new copy of the error report, and store it in the
@@ -621,7 +627,7 @@ js_ReportUncaughtException(JSContext *cx)
 
     if (!JS_IsExceptionPending(cx))
         return JS_FALSE;
-    
+
     if (!JS_GetPendingException(cx, &exn))
         return JS_FALSE;
 

@@ -480,7 +480,7 @@ JS_FRIEND_API(JSBool)
 js_Invoke(JSContext *cx, uintN argc, uintN flags)
 {
     JSStackFrame *fp, frame;
-    jsval *sp, *newsp;
+    jsval *sp, *newsp, *limit;
     jsval *vp, v;
     JSObject *funobj, *parent, *thisp;
     JSClass *clasp;
@@ -607,13 +607,16 @@ have_fun:
     if (nslots) {
         /* All arguments must be contiguous, so we may have to copy actuals. */
         nalloc = nslots;
-        if ((jsuword)(sp + nslots) > cx->stackPool.current->limit)
-            nalloc += argc;
-
-        /* Take advantage of the surplus slots in the caller's frame depth. */
-        surplus = (jsval *)mark - sp;
-        JS_ASSERT(surplus >= 0);
-        nalloc -= surplus;
+        limit = (jsval *) cx->stackPool.current->limit;
+        if (sp + nslots > limit) {
+            /* Hit end of arena: we have to copy argv[-2..(argc+nslots-1)]. */
+            nalloc += 2 + argc;
+        } else {
+            /* Take advantage of surplus slots in the caller's frame depth. */
+            surplus = (jsval *)mark - sp;
+            JS_ASSERT(surplus >= 0);
+            nalloc -= surplus;
+        }
 
         /* Check whether we have enough space in the caller's frame. */
         if (nalloc > 0) {
@@ -626,6 +629,10 @@ have_fun:
 
             /* If we couldn't allocate contiguous args, copy actuals now. */
             if (newsp != mark) {
+                JS_ASSERT(sp + nslots > limit);
+                JS_ASSERT(2 + argc + nslots == (uintN)nalloc);
+                *newsp++ = vp[0];
+                *newsp++ = vp[1];
                 if (argc)
                     memcpy(newsp, frame.argv, argc * sizeof(jsval));
                 frame.argv = newsp;
