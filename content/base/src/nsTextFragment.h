@@ -24,9 +24,7 @@
 
 #include "nslayout.h"
 #include "nsAWritableString.h"
-#include "nsCRT.h"
-#include "nsString.h"
-#include "nsMemory.h"
+class nsString;
 
 // XXX should this normalize the code to keep a \u0000 at the end?
 
@@ -67,9 +65,7 @@ public:
     mAllBits = 0;
   }
 
-  ~nsTextFragment() {
-    ReleaseText();
-  }
+  ~nsTextFragment();
 
   /**
    * Initialize the contents of this fragment to be a copy of
@@ -87,10 +83,7 @@ public:
    * Initialize the contents of this fragment to be a copy of
    * the argument ucs2 string.
    */
-  nsTextFragment(const PRUnichar* aString) : m1b(nsnull), mAllBits(0) {
-    SetTo(aString, nsCRT::strlen(aString));
-  }
-
+  nsTextFragment(const PRUnichar* aString);
 
   /**
    * Initialize the contents of this fragment to be a copy of
@@ -184,55 +177,7 @@ public:
    * buffer. Like operator= except a length is specified instead of
    * assuming 0 termination.
    */
-  void SetTo(const PRUnichar* aBuffer, PRInt32 aLength) {
-    ReleaseText();
-    if (0 != aLength) {
-      // See if we need to store the data in ucs2 or not
-      PRBool need2 = PR_FALSE;
-      const PRUnichar* ucp = aBuffer;
-      const PRUnichar* uend = aBuffer + aLength;
-      while (ucp < uend) {
-        PRUnichar ch = *ucp++;
-        if (ch >> 8) {
-          need2 = PR_TRUE;
-          break;
-        }
-      }
-
-      if (need2) {
-        // Use ucs2 storage because we have to
-        PRUnichar* nt = (PRUnichar*)nsMemory::Alloc(aLength*sizeof(PRUnichar));
-        if (nsnull != nt) {
-          // Copy data
-          nsCRT::memcpy(nt, aBuffer, sizeof(PRUnichar) * aLength);
-
-          // Setup our fields
-          m2b = nt;
-          mState.mIs2b = 1;
-          mState.mInHeap = 1;
-          mState.mLength = aLength;
-        }
-      }
-      else {
-        // Use 1 byte storage because we can
-        unsigned char* nt = (unsigned char*)nsMemory::Alloc(aLength*sizeof(unsigned char));
-        if (nsnull != nt) {
-          // Copy data
-          unsigned char* cp = nt;
-          unsigned char* end = nt + aLength;
-          while (cp < end) {
-            *cp++ = (unsigned char) *aBuffer++;
-          }
-
-          // Setup our fields
-          m1b = nt;
-          mState.mIs2b = 0;
-          mState.mInHeap = 1;
-          mState.mLength = aLength;
-        }
-      }
-    }
-  }
+  void SetTo(const PRUnichar* aBuffer, PRInt32 aLength);
 
   /**
    * Change the contents of this fragment to be a copy of the given
@@ -244,14 +189,7 @@ public:
   /**
    * Append the contents of this string fragment to aString
    */
-  void AppendTo(nsString& aString) const {
-    if (mState.mIs2b) {
-      aString.Append(m2b, mState.mLength);
-    }
-    else {
-      aString.AppendWithConversion((char*)m1b, mState.mLength);
-    }
-  }
+  void AppendTo(nsString& aString) const;
 
   /**
    * Make a copy of the fragments contents starting at offset for
@@ -297,20 +235,7 @@ protected:
     FragmentBits mState;
   };
 
-  void ReleaseText() {
-    if (mState.mLength && m1b && mState.mInHeap) {
-      if (mState.mIs2b) {
-        nsMemory::Free(m2b);
-      }
-      else {
-        nsMemory::Free(m1b);
-      }
-    }
-    m1b = nsnull;
-    mState.mIs2b = 0;
-    mState.mInHeap = 0;
-    mState.mLength = 0;
-  }
+  void ReleaseText();
 };
 
 #endif /* nsTextFragment_h___ */

@@ -26,8 +26,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-BUILD_DATE = gbdate.h
-
 MODULE		= layout
 LIBRARY_NAME	= gklayout
 SHORT_LIBNAME	= gkhtml
@@ -45,7 +43,7 @@ ifndef MKSHLIB_FORCE_ALL
 CPPSRCS		+= dlldeps.cpp
 endif
 
-EXPORTS		= nsLayoutCID.h $(BUILD_DATE)
+EXPORTS		= nsLayoutCID.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libgkhtmlbase_s.$(LIB_SUFFIX) \
@@ -53,9 +51,9 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libgkhtmlforms_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkhtmlstyle_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkhtmltable_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkxulcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkxulbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkconshared_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkxuloutliner_s.$(LIB_SUFFIX) \
 		$(NULL)
 
@@ -90,8 +88,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORT_OBJS	= 1
 endif
 
-GARBAGE	+= $(BUILD_DATE)
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
@@ -110,10 +106,6 @@ endif
 ifdef MOZ_SVG
 INCLUDES += -I$(srcdir)/../svg/content/src
 endif
-
-$(BUILD_DATE):
-	$(RM) $@
-	$(PERL) $(srcdir)/gbdate.pl > $@
 
 # To prevent ILink from crashing
 ifeq ($(MOZ_OS2_TOOLS),VACPP)

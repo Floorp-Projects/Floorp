@@ -31,12 +31,9 @@ LIBRARY_NAME	= gkconhtmlstyle_s
 REQUIRES	= xpcom string dom widget timer caps editor locale js view necko webshell pref rdf xul htmlparser txmgr docshell uriloader unicharutil uconv xuldoc xpconnect
 
 CPPSRCS		= \
-		nsCSSAtoms.cpp \
-		nsCSSKeywords.cpp \
 		nsCSSDeclaration.cpp \
 		nsCSSLoader.cpp \
 		nsCSSParser.cpp \
-		nsCSSProps.cpp \
 		nsCSSScanner.cpp \
 		nsCSSRule.cpp \
 		nsCSSStyleRule.cpp \
@@ -47,18 +44,12 @@ CPPSRCS		= \
 		nsHTMLAttributes.cpp \
 		nsHTMLStyleSheet.cpp \
 		nsHTMLCSSStyleSheet.cpp \
-		nsHTMLValue.cpp \
-		nsStyleUtil.cpp \
 		nsComputedDOMStyle.cpp \
 		nsROCSSPrimitiveValue.cpp \
 		$(NULL)
 
 EXPORTS		= \
 		nsDOMCSSDeclaration.h \
-		nsCSSKeywords.h \
-		nsCSSKeywordList.h \
-		nsCSSProps.h \
-		nsCSSPropList.h \
 		nsCSSValue.h \
 		nsICSSStyleRuleProcessor.h \
 		nsICSSRule.h \
@@ -69,7 +60,6 @@ EXPORTS		= \
 		nsICSSMediaRule.h \
 		nsICSSNameSpaceRule.h \
 		nsICSSDeclaration.h \
-		nsHTMLValue.h \
 		nsIHTMLCSSStyleSheet.h \
 		nsIHTMLAttributes.h \
 		$(NULL)

@@ -51,7 +51,6 @@ nsIStyleSheet.h \
 nsIStyleSheetLinkingElement.h \
 nsIStyleRuleProcessor.h \
 nsITextContent.h \
-nsTextFragment.h \
 nsIPrivateDOMImplementation.h \
 nsIContentSerializer.h \
 nsIHTMLToTextSink.h \

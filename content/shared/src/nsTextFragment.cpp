@@ -20,7 +20,32 @@
  * Contributor(s): 
  */
 #include "nsTextFragment.h"
+#include "nsString.h"
+#include "nsCRT.h"
 #include "nsReadableUtils.h"
+#include "nsMemory.h"
+
+nsTextFragment::~nsTextFragment()
+{
+  ReleaseText();
+}
+
+void
+nsTextFragment::ReleaseText()
+{
+  if (mState.mLength && m1b && mState.mInHeap) {
+    if (mState.mIs2b) {
+      nsMemory::Free(m2b);
+    }
+    else {
+      nsMemory::Free(m1b);
+    }
+  }
+  m1b = nsnull;
+  mState.mIs2b = 0;
+  mState.mInHeap = 0;
+  mState.mLength = 0;
+}
 
 nsTextFragment::nsTextFragment(const nsTextFragment& aOther)
   : m1b(nsnull),
@@ -39,6 +64,13 @@ nsTextFragment::nsTextFragment(const char* aString)
     mAllBits(0)
 {
   SetTo(aString, strlen(aString));
+}
+
+nsTextFragment::nsTextFragment(const PRUnichar* aString)
+  : m1b(nsnull),
+    mAllBits(0)
+{
+  SetTo(aString, nsCRT::strlen(aString));
 }
 
 nsTextFragment::nsTextFragment(const nsString& aString)
@@ -108,6 +140,58 @@ nsTextFragment::SetTo(PRUnichar* aBuffer, PRInt32 aLength, PRBool aRelease)
 }
 
 void
+nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
+{
+  ReleaseText();
+  if (0 != aLength) {
+    // See if we need to store the data in ucs2 or not
+    PRBool need2 = PR_FALSE;
+    const PRUnichar* ucp = aBuffer;
+    const PRUnichar* uend = aBuffer + aLength;
+    while (ucp < uend) {
+      PRUnichar ch = *ucp++;
+      if (ch >> 8) {
+        need2 = PR_TRUE;
+        break;
+      }
+    }
+
+    if (need2) {
+      // Use ucs2 storage because we have to
+      PRUnichar* nt = (PRUnichar*)nsMemory::Alloc(aLength*sizeof(PRUnichar));
+      if (nsnull != nt) {
+        // Copy data
+        nsCRT::memcpy(nt, aBuffer, sizeof(PRUnichar) * aLength);
+
+        // Setup our fields
+        m2b = nt;
+        mState.mIs2b = 1;
+        mState.mInHeap = 1;
+        mState.mLength = aLength;
+      }
+    }
+    else {
+      // Use 1 byte storage because we can
+      unsigned char* nt = (unsigned char*)nsMemory::Alloc(aLength*sizeof(unsigned char));
+      if (nsnull != nt) {
+        // Copy data
+        unsigned char* cp = nt;
+        unsigned char* end = nt + aLength;
+        while (cp < end) {
+          *cp++ = (unsigned char) *aBuffer++;
+        }
+
+        // Setup our fields
+        m1b = nt;
+        mState.mIs2b = 0;
+        mState.mInHeap = 1;
+        mState.mLength = aLength;
+      }
+    }
+  }
+}
+
+void
 nsTextFragment::SetTo(const char* aBuffer, PRInt32 aLength)
 {
   ReleaseText();
@@ -121,6 +205,17 @@ nsTextFragment::SetTo(const char* aBuffer, PRInt32 aLength)
       mState.mInHeap = 1;
       mState.mLength = aLength;
     }
+  }
+}
+
+void
+nsTextFragment::AppendTo(nsString& aString) const
+{
+  if (mState.mIs2b) {
+    aString.Append(m2b, mState.mLength);
+  }
+  else {
+    aString.AppendWithConversion((char*)m1b, mState.mLength);
   }
 }
 

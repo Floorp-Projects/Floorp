@@ -26,6 +26,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= base content document style
+DIRS		= content document style
 
 include $(topsrcdir)/config/rules.mk

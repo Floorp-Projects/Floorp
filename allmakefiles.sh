@@ -241,8 +241,6 @@ content/events/Makefile
 content/events/public/Makefile
 content/events/src/Makefile
 content/html/Makefile
-content/html/base/Makefile
-content/html/base/src/Makefile
 content/html/content/Makefile
 content/html/content/public/Makefile
 content/html/content/src/Makefile
@@ -276,6 +274,9 @@ content/xbl/builtin/os2/Makefile
 content/xsl/Makefile
 content/xsl/document/Makefile
 content/xsl/document/src/Makefile
+content/shared/Makefile
+content/shared/public/Makefile
+content/shared/src/Makefile
 "
 
 MAKEFILES_layout="
@@ -294,7 +295,6 @@ layout/html/forms/Makefile
 layout/html/forms/public/Makefile
 layout/html/forms/src/Makefile
 layout/html/style/Makefile
-layout/html/style/public/Makefile
 layout/html/style/src/Makefile
 layout/html/table/Makefile
 layout/html/table/public/Makefile
@@ -308,8 +308,6 @@ layout/xul/base/src/Makefile
 layout/xul/base/src/outliner/Makefile
 layout/xul/base/src/outliner/src/Makefile
 layout/xul/base/src/outliner/public/Makefile
-layout/xul/content/Makefile
-layout/xul/content/src/Makefile
 "
 
 MAKEFILES_mpfilelocprovider="

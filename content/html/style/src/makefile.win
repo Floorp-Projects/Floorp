@@ -27,10 +27,6 @@ MODULE=raptor
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 EXPORTS =			\
-	nsCSSKeywords.h 		\
-	nsCSSKeywordList.h 		\
-	nsCSSProps.h 		\
-	nsCSSPropList.h 		\
 	nsCSSValue.h 		\
 	nsICSSStyleRuleProcessor.h 		\
 	nsICSSRule.h 	\
@@ -42,19 +38,15 @@ EXPORTS =			\
 	nsICSSNameSpaceRule.h \
 	nsICSSDeclaration.h 	\
 	nsIHTMLCSSStyleSheet.h 	\
-	nsHTMLValue.h 		\
 	nsDOMCSSDeclaration.h 	\
 	nsIHTMLAttributes.h 	\
 	$(NULL)
 
 CPPSRCS=				\
 	nsHTMLStyleSheet.cpp 	\
-	nsCSSAtoms.cpp 		\
-	nsCSSKeywords.cpp 		\
 	nsCSSDeclaration.cpp 		\
 	nsCSSLoader.cpp   \
 	nsCSSParser.cpp 		\
-	nsCSSProps.cpp			\
 	nsCSSScanner.cpp 		\
 	nsCSSRule.cpp 		\
 	nsCSSStyleRule.cpp 		\
@@ -63,8 +55,6 @@ CPPSRCS=				\
 	nsCSSValue.cpp			\
 	nsHTMLAttributes.cpp 		\
 	nsHTMLCSSStyleSheet.cpp		\
-	nsHTMLValue.cpp 		\
-	nsStyleUtil.cpp 		\
 	nsDOMCSSDeclaration.cpp		\
 	nsComputedDOMStyle.cpp		\
 	nsROCSSPrimitiveValue.cpp	\
@@ -72,12 +62,9 @@ CPPSRCS=				\
 
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsHTMLStyleSheet.obj 		\
-	.\$(OBJDIR)\nsCSSAtoms.obj 		\
-	.\$(OBJDIR)\nsCSSKeywords.obj 		\
 	.\$(OBJDIR)\nsCSSDeclaration.obj 	\
 	.\$(OBJDIR)\nsCSSLoader.obj  \
 	.\$(OBJDIR)\nsCSSParser.obj 		\
-	.\$(OBJDIR)\nsCSSProps.obj 		\
 	.\$(OBJDIR)\nsCSSScanner.obj 		\
 	.\$(OBJDIR)\nsCSSRule.obj 		\
 	.\$(OBJDIR)\nsCSSStyleRule.obj 		\
@@ -86,8 +73,6 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsCSSValue.obj 		\
 	.\$(OBJDIR)\nsHTMLAttributes.obj 	\
 	.\$(OBJDIR)\nsHTMLCSSStyleSheet.obj 	\
-	.\$(OBJDIR)\nsHTMLValue.obj 		\
-	.\$(OBJDIR)\nsStyleUtil.obj 		\
 	.\$(OBJDIR)\nsDOMCSSDeclaration.obj 	\
 	.\$(OBJDIR)\nsComputedDOMStyle.obj 	\
 	.\$(OBJDIR)\nsROCSSPrimitiveValue.obj 	\

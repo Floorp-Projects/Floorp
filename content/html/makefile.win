@@ -21,7 +21,7 @@
 
 DEPTH=..\..
 
-DIRS = base content document style
+DIRS = content document style
 # tests is now done after we build content/events
 
 include <$(DEPTH)\config\rules.mak>

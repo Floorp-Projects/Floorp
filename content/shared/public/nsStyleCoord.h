@@ -25,7 +25,7 @@
 #include "nscore.h"
 #include "nsCoord.h"
 #include "nsCRT.h"
-#include "nsString.h"
+class nsString;
 
 enum nsStyleUnit {
   eStyleUnit_Null         = 0,      // (no value) value is not specified
@@ -48,86 +48,15 @@ typedef union {
 
 class nsStyleCoord {
 public:
-  nsStyleCoord(nsStyleUnit aUnit = eStyleUnit_Null)
-    : mUnit(aUnit) {
-    NS_ASSERTION(aUnit < eStyleUnit_Percent, "not a valueless unit");
-    if (aUnit >= eStyleUnit_Percent) {
-      mUnit = eStyleUnit_Null;
-    }
-    mValue.mInt = 0;
-  }
+  nsStyleCoord(nsStyleUnit aUnit = eStyleUnit_Null);
+  nsStyleCoord(nscoord aValue);
+  nsStyleCoord(PRInt32 aValue, nsStyleUnit aUnit);
+  nsStyleCoord(float aValue, nsStyleUnit aUnit);
+  nsStyleCoord(const nsStyleCoord& aCopy);
 
-  nsStyleCoord(nscoord aValue)
-    : mUnit(eStyleUnit_Coord)  {
-    mValue.mInt = aValue;
-  }
-
-  nsStyleCoord(PRInt32 aValue, nsStyleUnit aUnit)
-    : mUnit(aUnit)  {
-    //if you want to pass in eStyleUnit_Coord, don't. instead, use the
-    //constructor just above this one... MMP
-    NS_ASSERTION((aUnit == eStyleUnit_Proportional) ||
-                 (aUnit == eStyleUnit_Enumerated) ||
-                 (aUnit == eStyleUnit_Integer), "not an int value");
-    if ((aUnit == eStyleUnit_Proportional) ||
-        (aUnit == eStyleUnit_Enumerated) ||
-        (aUnit == eStyleUnit_Integer)) {
-      mValue.mInt = aValue;
-    }
-    else {
-      mUnit = eStyleUnit_Null;
-      mValue.mInt = 0;
-    }
-  }
-
-  nsStyleCoord(float aValue, nsStyleUnit aUnit)
-    : mUnit(aUnit)  {
-    NS_ASSERTION((aUnit == eStyleUnit_Percent) ||
-                 (aUnit == eStyleUnit_Factor), "not a float value");
-    if ((aUnit == eStyleUnit_Percent) ||
-        (aUnit == eStyleUnit_Factor)) {
-      mValue.mFloat = aValue;
-    }
-    else {
-      mUnit = eStyleUnit_Null;
-      mValue.mInt = 0;
-    }
-  }
-
-  nsStyleCoord(const nsStyleCoord& aCopy)
-    : mUnit(aCopy.mUnit)  {
-    if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
-      mValue.mFloat = aCopy.mValue.mFloat;
-    }
-    else {
-      mValue.mInt = aCopy.mValue.mInt;
-    }
-  }
-
-  nsStyleCoord& operator=(const nsStyleCoord& aCopy) {
-    mUnit = aCopy.mUnit;
-    if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
-      mValue.mFloat = aCopy.mValue.mFloat;
-    }
-    else {
-      mValue.mInt = aCopy.mValue.mInt;
-    }
-    return *this;
-  }
-
-  PRBool operator==(const nsStyleCoord& aOther) const {
-    if (mUnit == aOther.mUnit) {
-      if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
-        return PRBool(mValue.mFloat == aOther.mValue.mFloat);
-      }
-      else {
-        return PRBool(mValue.mInt == aOther.mValue.mInt);
-      }
-    }
-    return PR_FALSE;
-  }
-
-  PRBool operator!=(const nsStyleCoord& aOther) const;
+  nsStyleCoord&  operator=(const nsStyleCoord& aCopy);
+  PRBool         operator==(const nsStyleCoord& aOther) const;
+  PRBool         operator!=(const nsStyleCoord& aOther) const;
 
   nsStyleUnit GetUnit(void) const { return mUnit; }
   nscoord     GetCoordValue(void) const;
@@ -136,98 +65,18 @@ public:
   float       GetFactorValue(void) const;
   void        GetUnionValue(nsStyleUnion& aValue) const;
 
-  void  Reset(void) {
-    mUnit = eStyleUnit_Null;
-    mValue.mInt = 0;
-  }
+  void  Reset(void);  // sets to null
+  void  SetCoordValue(nscoord aValue);
+  void  SetIntValue(PRInt32 aValue, nsStyleUnit aUnit);
+  void  SetPercentValue(float aValue);
+  void  SetFactorValue(float aValue);
+  void  SetNormalValue(void);
+  void  SetAutoValue(void);
+  void  SetInheritValue(void);
+  void  SetUnionValue(const nsStyleUnion& aValue, nsStyleUnit aUnit);
 
-  void  SetCoordValue(nscoord aValue) {
-    mUnit = eStyleUnit_Coord;
-    mValue.mInt = aValue;
-  }
-
-  void  SetIntValue(PRInt32 aValue, nsStyleUnit aUnit) {
-    if ((aUnit == eStyleUnit_Proportional) ||
-        (aUnit == eStyleUnit_Enumerated) ||
-        (aUnit == eStyleUnit_Chars) ||
-        (aUnit == eStyleUnit_Integer)) {
-      mUnit = aUnit;
-      mValue.mInt = aValue;
-    }
-    else {
-      NS_WARNING("not an int value");
-      Reset();
-    }
-  }
-
-  void  SetPercentValue(float aValue) {
-    mUnit = eStyleUnit_Percent;
-    mValue.mFloat = aValue;
-  }
-
-  void  SetFactorValue(float aValue) {
-    mUnit = eStyleUnit_Factor;
-    mValue.mFloat = aValue;
-  }
-
-  void  SetNormalValue(void) {
-    mUnit = eStyleUnit_Normal;
-    mValue.mInt = 0;
-  }
-
-  void  SetAutoValue(void) {
-    mUnit = eStyleUnit_Auto;
-    mValue.mInt = 0;
-  }
-
-  void  SetInheritValue(void) {
-    mUnit = eStyleUnit_Inherit;
-    mValue.mInt = 0;
-  }
-
-  void  SetUnionValue(const nsStyleUnion& aValue, nsStyleUnit aUnit) {
-    mUnit = aUnit;
-#if PR_BYTES_PER_INT == PR_BYTES_PER_FLOAT
-    mValue.mInt = aValue.mInt;
-#else
-    nsCRT::memcpy(&mValue, &aValue, sizeof(nsStyleUnion));
-#endif
-  }
-
-  void  AppendToString(nsString& aBuffer) const {
-    if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
-      aBuffer.AppendFloat(mValue.mFloat);
-    }
-    else if ((eStyleUnit_Coord == mUnit) || 
-             (eStyleUnit_Proportional == mUnit) ||
-             (eStyleUnit_Enumerated == mUnit) ||
-             (eStyleUnit_Integer == mUnit)) {
-      aBuffer.AppendInt(mValue.mInt, 10);
-      aBuffer.AppendWithConversion("[0x");
-      aBuffer.AppendInt(mValue.mInt, 16);
-      aBuffer.AppendWithConversion(']');
-    }
-
-    switch (mUnit) {
-      case eStyleUnit_Null:         aBuffer.AppendWithConversion("Null");     break;
-      case eStyleUnit_Coord:        aBuffer.AppendWithConversion("tw");       break;
-      case eStyleUnit_Percent:      aBuffer.AppendWithConversion("%");        break;
-      case eStyleUnit_Factor:       aBuffer.AppendWithConversion("f");        break;
-      case eStyleUnit_Normal:       aBuffer.AppendWithConversion("Normal");   break;
-      case eStyleUnit_Auto:         aBuffer.AppendWithConversion("Auto");     break;
-      case eStyleUnit_Inherit:      aBuffer.AppendWithConversion("Inherit");  break;
-      case eStyleUnit_Proportional: aBuffer.AppendWithConversion("*");        break;
-      case eStyleUnit_Enumerated:   aBuffer.AppendWithConversion("enum");     break;
-      case eStyleUnit_Integer:      aBuffer.AppendWithConversion("int");      break;
-      case eStyleUnit_Chars:        aBuffer.AppendWithConversion("chars");    break;
-    }
-    aBuffer.AppendWithConversion(' ');
-  }
-
-  void  ToString(nsString& aBuffer) const {
-    aBuffer.Truncate();
-    AppendToString(aBuffer);
-  }
+  void  AppendToString(nsString& aBuffer) const;
+  void  ToString(nsString& aBuffer) const;
 
 public:
   nsStyleUnit   mUnit;
@@ -235,38 +84,12 @@ public:
 };
 
 
-#define COMPARE_SIDE(side)                                                    \
-  if ((eStyleUnit_Percent <= m##side##Unit) &&                                \
-      (m##side##Unit < eStyleUnit_Coord)) {                                   \
-    if (m##side##Value.mFloat != aOther.m##side##Value.mFloat)                \
-      return PR_FALSE;                                                        \
-  }                                                                           \
-  else {                                                                      \
-    if (m##side##Value.mInt != aOther.m##side##Value.mInt)                    \
-      return PR_FALSE;                                                        \
-  }
-
 class nsStyleSides {
 public:
-  nsStyleSides(void) {
-    nsCRT::memset(this, 0x00, sizeof(nsStyleSides));
-  }
+  nsStyleSides(void);
 
 //  nsStyleSides&  operator=(const nsStyleSides& aCopy);  // use compiler's version
-  PRBool         operator==(const nsStyleSides& aOther) const {
-    if ((mLeftUnit == aOther.mLeftUnit) && 
-        (mTopUnit == aOther.mTopUnit) &&
-        (mRightUnit == aOther.mRightUnit) &&
-        (mBottomUnit == aOther.mBottomUnit)) {
-      COMPARE_SIDE(Left);
-      COMPARE_SIDE(Top);
-      COMPARE_SIDE(Right);
-      COMPARE_SIDE(Bottom);
-      return PR_TRUE;
-    }
-    return PR_FALSE;
-  }
-
+  PRBool         operator==(const nsStyleSides& aOther) const;
   PRBool         operator!=(const nsStyleSides& aOther) const;
 
   nsStyleUnit GetLeftUnit(void) const;
@@ -279,39 +102,14 @@ public:
   nsStyleCoord& GetRight(nsStyleCoord& aCoord) const;
   nsStyleCoord& GetBottom(nsStyleCoord& aCoord) const;
 
-  void  Reset(void) {
-    nsCRT::memset(this, 0x00, sizeof(nsStyleSides));
-  }
-
+  void  Reset(void);
   void  SetLeft(const nsStyleCoord& aCoord);
   void  SetTop(const nsStyleCoord& aCoord);
   void  SetRight(const nsStyleCoord& aCoord);
   void  SetBottom(const nsStyleCoord& aCoord);
 
-  void  AppendToString(nsString& aBuffer) const {
-    nsStyleCoord  temp;
-
-    GetLeft(temp);
-    aBuffer.AppendWithConversion("left: ");
-    temp.AppendToString(aBuffer);
-
-    GetTop(temp);
-    aBuffer.AppendWithConversion("top: ");
-    temp.AppendToString(aBuffer);
-
-    GetRight(temp);
-    aBuffer.AppendWithConversion("right: ");
-    temp.AppendToString(aBuffer);
-
-    GetBottom(temp);
-    aBuffer.AppendWithConversion("bottom: ");
-    temp.AppendToString(aBuffer);
-  }
-
-  void  ToString(nsString& aBuffer) const {
-    aBuffer.Truncate();
-    AppendToString(aBuffer);
-  }
+  void  AppendToString(nsString& aBuffer) const;
+  void  ToString(nsString& aBuffer) const;
 
 protected:
   PRUint8       mLeftUnit;

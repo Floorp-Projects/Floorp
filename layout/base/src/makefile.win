@@ -41,9 +41,7 @@ CPPSRCS =				\
 	nsPrintPreviewContext.cpp	\
 	nsSpaceManager.cpp		\
 	nsStyleChangeList.cpp		\
-	nsLayoutAtoms.cpp		\
 	nsLayoutDebugger.cpp		\
-	nsLayoutUtils.cpp		\
 	nsCaret.cpp			\
 	nsLayoutHistoryState.cpp	\
 	$(NULL)
@@ -64,9 +62,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsPrintPreviewContext.obj	\
 	.\$(OBJDIR)\nsSpaceManager.obj		\
 	.\$(OBJDIR)\nsStyleChangeList.obj	\
-	.\$(OBJDIR)\nsLayoutAtoms.obj		\
 	.\$(OBJDIR)\nsLayoutDebugger.obj	\
-	.\$(OBJDIR)\nsLayoutUtils.obj		\
 	.\$(OBJDIR)\nsCaret.obj			\
 	.\$(OBJDIR)\nsLayoutHistoryState.obj	\
 	$(NULL)

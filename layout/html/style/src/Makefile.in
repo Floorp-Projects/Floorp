@@ -31,12 +31,8 @@ LIBRARY_NAME	= gkhtmlstyle_s
 REQUIRES	= xpcom string dom widget timer caps editor locale js view necko webshell pref rdf htmlparser txmgr docshell uriloader unicharutil uconv
 
 CPPSRCS		= \
-		nsCSSAtoms.cpp \
-		nsCSSKeywords.cpp \
 		nsCSSFrameConstructor.cpp \
-		nsCSSProps.cpp \
 		nsCSSRendering.cpp \
-		nsStyleUtil.cpp \
 		$(NULL)
 
 EXPORTS		= \

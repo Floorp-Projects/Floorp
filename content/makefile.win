@@ -29,6 +29,7 @@ DIRS=                \
         xbl          \
         events       \
         xul          \
+        shared       \
         build        \
         $(NULL)
 

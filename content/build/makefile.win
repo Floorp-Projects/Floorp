@@ -38,7 +38,7 @@ CPP_OBJS=				\
 	.\$(OBJDIR)\nsContentModule.obj	\
 	$(NULL)
 
-EXPORTS=nsContentCID.h $(BUILD_DATE)
+EXPORTS=nsContentCID.h
 
 
 MAKE_OBJ_TYPE = DLL
@@ -62,7 +62,6 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
 # These are the libraries we need to link with to create the dll
 LLIBS=					\
  $(DIST)\lib\contentbase_s.lib		\
- $(DIST)\lib\contenthtmlbase_s.lib	\
  $(DIST)\lib\contenthtmlcontent_s.lib		\
  $(DIST)\lib\contenthtmldoc_s.lib	\
  $(DIST)\lib\contenthtmlstyle_s.lib	\
@@ -74,6 +73,7 @@ LLIBS=					\
  $(DIST)\lib\contentxultemplates_s.lib  \
  $(DIST)\lib\contentxbl_s.lib \
  $(DIST)\lib\contentevents_s.lib		\
+ $(DIST)\lib\contentshared_s.lib		\
  $(DIST)\lib\xpcom.lib		\
  $(DIST)\lib\gkgfxwin.lib		\
  $(DIST)\lib\timer_s.lib \

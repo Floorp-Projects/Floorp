@@ -22,8 +22,19 @@
 
 #include "nsHTMLValue.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsISizeOfHandler.h"
+
+nsHTMLValue::nsHTMLValue(nsHTMLUnit aUnit)
+  : mUnit(aUnit)
+{
+  NS_ASSERTION((aUnit <= eHTMLUnit_Empty), "not a valueless unit");
+  if (aUnit > eHTMLUnit_Empty) {
+    mUnit = eHTMLUnit_Null;
+  }
+  mValue.mString = nsnull;
+}
 
 nsHTMLValue::nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit)
   : mUnit(aUnit)
@@ -48,6 +59,21 @@ nsHTMLValue::nsHTMLValue(float aValue)
   : mUnit(eHTMLUnit_Percent)
 {
   mValue.mFloat = aValue;
+}
+
+nsHTMLValue::nsHTMLValue(const nsAReadableString& aValue, nsHTMLUnit aUnit)
+  : mUnit(aUnit)
+{
+  NS_ASSERTION((eHTMLUnit_String == aUnit) ||
+               (eHTMLUnit_ColorName == aUnit), "not a string value");
+  if ((eHTMLUnit_String == aUnit) ||
+      (eHTMLUnit_ColorName == aUnit)) {
+    mValue.mString = ToNewUnicode(aValue);
+  }
+  else {
+    mUnit = eHTMLUnit_Null;
+    mValue.mInt = 0;
+  }
 }
 
 nsHTMLValue::nsHTMLValue(nsISupports* aValue)
@@ -87,6 +113,11 @@ nsHTMLValue::nsHTMLValue(const nsHTMLValue& aCopy)
   else {
     mValue.mInt = aCopy.mValue.mInt;
   }
+}
+
+nsHTMLValue::~nsHTMLValue(void)
+{
+  Reset();
 }
 
 nsHTMLValue& nsHTMLValue::operator=(const nsHTMLValue& aCopy)
@@ -150,6 +181,21 @@ PRUint32 nsHTMLValue::HashValue(void) const
            (nsnull != mValue.mString)) ? 
           nsCRT::HashCode(mValue.mString) : 
           mValue.mInt);
+}
+
+
+void nsHTMLValue::Reset(void)
+{
+  if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
+    if (nsnull != mValue.mString) {
+      nsCRT::free(mValue.mString);
+    }
+  }
+  else if (eHTMLUnit_ISupports == mUnit) {
+    NS_IF_RELEASE(mValue.mISupports);
+  }
+  mUnit = eHTMLUnit_Null;
+  mValue.mString = nsnull;
 }
 
 

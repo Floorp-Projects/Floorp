@@ -39,9 +39,7 @@ CPPSRCS		= \
 		nsFrameTraversal.cpp \
 		nsFrameUtil.cpp \
 		nsGalleyContext.cpp \
-		nsLayoutAtoms.cpp \
 		nsLayoutDebugger.cpp \
-		nsLayoutUtils.cpp \
 		nsPresContext.cpp \
 		nsPresState.cpp \
 		nsPrintContext.cpp \

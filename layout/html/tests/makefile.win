@@ -54,7 +54,7 @@ LLIBS=				\
  $(DIST)\lib\layoutbase_s.lib	\
  $(DIST)\lib\gkgfxwin.lib	\
  $(DIST)\lib\layoutxulbase_s.lib \
- $(DIST)\lib\layoutxulcontent_s.lib \
+ $(DIST)\lib\contentshared_s.lib \
 !ifdef MOZ_MATHML
  $(DIST)\lib\layoutmathmlbase_s.lib \
  $(DIST)\lib\layoutmathmlcontent_s.lib	\

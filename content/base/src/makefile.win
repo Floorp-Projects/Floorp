@@ -57,7 +57,6 @@ CPPSRCS =				\
 	nsHTMLContentSerializer.cpp	\
         nsParserUtils.cpp               \
 	nsPlainTextSerializer.cpp	\
-  nsLayoutAtoms.cpp \
   nsContentUtils.cpp \
 	$(NULL)
 
@@ -84,7 +83,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsNameSpaceManager.obj	\
 	.\$(OBJDIR)\nsNodeInfo.obj		\
 	.\$(OBJDIR)\nsNodeInfoManager.obj	\
-	.\$(OBJDIR)\nsTextFragment.obj		\
 	.\$(OBJDIR)\nsSelection.obj		\
 	.\$(OBJDIR)\nsRange.obj			\
 	.\$(OBJDIR)\nsTextContentChangeData.obj	\
@@ -93,7 +91,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLContentSerializer.obj	\
         .\$(OBJDIR)\nsParserUtils.obj           \
 	.\$(OBJDIR)\nsPlainTextSerializer.obj   \
-	.\$(OBJDIR)\nsLayoutAtoms.obj   \
 	.\$(OBJDIR)\nsContentUtils.obj   \
 	$(NULL)
 

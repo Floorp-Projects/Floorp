@@ -45,11 +45,10 @@ ifndef MKSHLIB_FORCE_ALL
 CPPSRCS		+= dlldeps.cpp
 endif
 
-EXPORTS		= nsContentCID.h $(BUILD_DATE)
+EXPORTS		= nsContentCID.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libgkconevents_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkconhtmlbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconhtmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconhtmldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconhtmlstyle_s.$(LIB_SUFFIX) \
@@ -61,6 +60,7 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libgkconxultmpl_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconxbl_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkconshared_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 ifdef MOZ_PERF_METRICS
@@ -79,8 +79,6 @@ EXTRA_DSO_LDOPTS = \
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORT_OBJS	= 1
 endif
-
-GARBAGE	+= $(BUILD_DATE)
 
 include $(topsrcdir)/config/rules.mk
 
