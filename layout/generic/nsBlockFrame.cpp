@@ -2604,7 +2604,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       aLine->mMaximumWidth = aLine->mBounds.XMost();
 #ifdef NOISY_MAXIMUM_WIDTH
       printf("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaximumWidth to %d\n", 
-             this, aLine, aLine->mMaximumWidth);
+             this, NS_STATIC_CAST(void*, aLine.get()), aLine->mMaximumWidth);
 #endif
       aState.UpdateMaximumWidth(aLine->mMaximumWidth);
 
@@ -2634,7 +2634,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         {
 #ifdef NOISY_MAXIMUM_WIDTH
           printf("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaximumWidth to %d\n", 
-                 this, aLine, aLine->mMaximumWidth);
+                 this, NS_STATIC_CAST(void*, aLine.get()), aLine->mMaximumWidth);
 #endif
           aState.UpdateMaximumWidth(aLine->mMaximumWidth);
         }
@@ -2644,7 +2644,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
           if (gNoisyMaxElementSize) {
             IndentBy(stdout, gNoiseIndent);
             printf("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaxElementWidth to %d\n", 
-                   this, aLine, aLine->mMaxElementWidth);
+                   this, NS_STATIC_CAST(void*, aLine.get()), aLine->mMaxElementWidth);
           }
 #endif
           aState.UpdateMaxElementSize(nsSize(aLine->mMaxElementWidth, aLine->mBounds.height));
@@ -2667,7 +2667,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
              this, aDamageDirtyArea ? "aDamageDirtyArea" : "aLine->IsForceInvalidate",
              dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
       if (aLine->IsForceInvalidate())
-        printf("  dirty line is %p\n");
+        printf("  dirty line is %p\n", NS_STATIC_CAST(void*, aLine.get());
 #endif
       if (!dirtyRect.IsEmpty()) {
         Invalidate(aState.mPresContext, dirtyRect);
@@ -4371,7 +4371,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       if (gNoisyMaxElementSize) {
         IndentBy(stdout, gNoiseIndent);
         printf ("nsBlockFrame::PlaceLine: %p setting MES for line %p to %d\n", 
-                this, aLine, maxElementSize.width);
+                this, NS_STATIC_CAST(void*, aLine.get()), maxElementSize.width);
       }
 #endif
     }

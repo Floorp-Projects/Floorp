@@ -2490,7 +2490,7 @@ void CElementTable::DebugDumpInlineElements(const char* aTitle) {
       result=theTag->IsInlineElement(eHTMLTag_unknown);
       if(result) {
         const PRUnichar *t = nsHTMLTags::GetStringValue(theTag->mTag);
-        printf("  %s\n", NS_ConvertUCS2toUTF8(t));
+        printf("  %s\n", NS_ConvertUCS2toUTF8(t).get());
       }
     }
     theTagID++;
