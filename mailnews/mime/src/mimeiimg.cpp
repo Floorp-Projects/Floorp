@@ -19,8 +19,9 @@
  *
  * Contributor(s): 
  */
-
+#include "nsCOMPtr.h"
 #include "mimeiimg.h"
+#include "mimemoz2.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "prlog.h"
@@ -121,6 +122,19 @@ MimeInlineImage_parse_begin (MimeObject *obj)
 	  PR_Free(html);
 	  if (status < 0) return status;
 	}
+
+  // 
+  // Now we are going to see if we should set the content type in the
+  // URI for the url being run...
+  //
+  if (obj->options && obj->options->stream_closure && obj->content_type)
+  {
+    mime_stream_data  *msd = (mime_stream_data *) (obj->options->stream_closure);
+    if ( (msd) && (msd->channel) )
+    {
+      msd->channel->SetContentType(obj->content_type);
+    }
+  }
 
   return 0;
 }

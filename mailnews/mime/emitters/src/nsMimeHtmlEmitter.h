@@ -52,6 +52,7 @@ public:
 
     // Body handling routines
     NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten);
+    NS_IMETHOD    EndBody();
 
     virtual nsresult            WriteHeaderFieldHTMLPrefix();
     virtual nsresult            WriteHeaderFieldHTML(const char *field, const char *value);

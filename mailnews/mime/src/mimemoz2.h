@@ -106,6 +106,7 @@ struct mime_stream_data {           /* This struct is the state we pass around
                                        amongst the various stream functions
                                        used by MIME_MessageConverter(). */
   char                *url_name;
+  nsIChannel          *channel;
   nsMimeOutputType    format_out;
   void                *pluginObj2;  /* The new XP-COM stream converter object */
   nsMIMESession       *istream;     /* Holdover - new stream we're writing out image data-if any. */
@@ -129,7 +130,8 @@ void         *mime_bridge_create_display_stream(nsIMimeEmitter      *newEmitter,
                                                 nsStreamConverter   *newPluginObj2,
                                                 nsIURI              *uri,
                                                 nsMimeOutputType    format_out,
-						PRUint32	    whattodo);
+						                                    PRUint32	          whattodo,
+                                                nsIChannel          *aChannel);
 
 // To get the mime emitter...
 extern "C" nsIMimeEmitter   *GetMimeEmitter(MimeDisplayOptions *opt);

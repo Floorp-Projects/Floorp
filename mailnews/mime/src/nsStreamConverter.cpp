@@ -69,13 +69,15 @@ bridge_create_stream(nsIMimeEmitter      *newEmitter,
                      nsStreamConverter   *newPluginObj2,
                      nsIURI              *uri,
                      nsMimeOutputType    format_out,
-		     PRUint32		 whattodo)
+		                 PRUint32		         whattodo,
+                     nsIChannel          *aChannel)
 {
   if  ( (format_out == nsMimeOutput::nsMimeMessageDraftOrTemplate) ||
         (format_out == nsMimeOutput::nsMimeMessageEditorTemplate) )
     return mime_bridge_create_draft_stream(newEmitter, newPluginObj2, uri, format_out);
   else 
-    return mime_bridge_create_display_stream(newEmitter, newPluginObj2, uri, format_out, whattodo);
+    return mime_bridge_create_display_stream(newEmitter, newPluginObj2, uri, format_out, whattodo,
+                                             aChannel);
 }
 
 void
@@ -521,7 +523,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
       	whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
       }
     }
-	mBridgeStream = bridge_create_stream(mEmitter, this, aURI, newType, whattodo);
+	mBridgeStream = bridge_create_stream(mEmitter, this, aURI, newType, whattodo, mOutgoingChannel);
 
 	if (!mBridgeStream)
 		return NS_ERROR_OUT_OF_MEMORY;

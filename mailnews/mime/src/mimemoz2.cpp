@@ -1089,7 +1089,8 @@ mime_bridge_create_display_stream(
                           nsStreamConverter   *newPluginObj2,
                           nsIURI              *uri,
                           nsMimeOutputType    format_out,
-                          PRUint32	      whattodo)
+                          PRUint32	          whattodo,
+                          nsIChannel          *aChannel)
 {
   int                       status = 0;
   MimeObject                *obj;
@@ -1109,6 +1110,9 @@ mime_bridge_create_display_stream(
   // Store the URL string for this decode operation
   char *urlString;
   nsresult rv;
+
+  // Keep a hold of the channel...
+  msd->channel = aChannel;
   rv = uri->GetSpec(&urlString);
   if (NS_SUCCEEDED(rv))
   {
@@ -1117,7 +1121,6 @@ mime_bridge_create_display_stream(
       msd->url_name = nsCRT::strdup(urlString);
       if (!(msd->url_name))
       {
-        // RICHIE_URL PR_FREEIF(msd->url);
         PR_FREEIF(msd);
         return NULL;
       }

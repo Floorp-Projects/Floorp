@@ -139,11 +139,17 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
 {
   if (mDocHeader)
   {
+    UtilityWriteCRLF("<HTML>");
+    UtilityWriteCRLF("<HEAD>");
+
     // mscott --> we should refer to the style sheet used in msg display...this one is wrong i think.
     // Stylesheet info!
     UtilityWriteCRLF("<LINK REL=\"STYLESHEET\" HREF=\"chrome://messenger/skin/mailheader.css\">");
     // Make it look consistent...
     UtilityWriteCRLF("<LINK REL=\"STYLESHEET\" HREF=\"chrome://global/skin\">");
+
+    UtilityWriteCRLF("</HEAD>");
+    UtilityWriteCRLF("<BODY>");
   }
 
   // if we aren't broadcasting headers...just do whatever
@@ -338,3 +344,13 @@ nsMimeHtmlDisplayEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *am
   Write(buf, size, amountWritten);
   return NS_OK;
 }
+
+nsresult
+nsMimeHtmlDisplayEmitter::EndBody()
+{
+  UtilityWriteCRLF("</BODY>");
+  UtilityWriteCRLF("</HTML>");
+  return NS_OK;
+}
+
+
