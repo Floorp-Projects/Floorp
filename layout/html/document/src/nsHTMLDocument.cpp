@@ -50,6 +50,11 @@
 #include "nsParserCIID.h"
 #include "nsIDOMHTMLElement.h"
 
+#ifdef PCB_USE_PROTOCOL_CONNECTION
+// beard: how else would we get the referrer to a URL?
+#include "nsIProtocolConnection.h"
+#include "net.h"
+#endif
 
 // Find/Serach Includes
 #if XP_NEW_SELECTION
@@ -82,7 +87,6 @@ static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
-
 
 NS_LAYOUT nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
@@ -576,6 +580,9 @@ nsHTMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
 //
 // nsIDOMHTMLDocument interface implementation
 //
+// see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-html.html#ID-1006298752
+// for full specification.
+//
 NS_IMETHODIMP
 nsHTMLDocument::GetTitle(nsString& aTitle)
 {
@@ -589,14 +596,37 @@ NS_IMETHODIMP
 nsHTMLDocument::GetReferrer(nsString& aReferrer)
 {
   //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // PCB: How do we know what link was traversed to get here? Until we do, it's legal to
+  // return an empty string. Would we have to look in history to get this? Find out.
+  aReferrer.SetLength(0);
+#ifdef PCB_USE_PROTOCOL_CONNECTION
+  if (nsnull != mDocumentURL) {
+    nsIProtocolConnection* protocolConnection = NULL;
+    static NS_DEFINE_IID(kIProtocolConnectionIID, NS_IPROTOCOLCONNECTION_IID);
+    if (mDocumentURL->QueryInterface(kIProtocolConnectionIID, &protocolConnection) == NS_OK) {
+      URL_Struct_* urlInfo = NULL;
+      if (protocolConnection->GetURLInfo(&urlInfo) == NS_OK)
+        aReferrer.SetString(urlInfo->referer);
+      NS_RELEASE(protocolConnection);
+    }
+  }
+#endif
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetDomain(nsString& aDomain)
 {
   //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // PCB: This is the domain name of the server that produced this document. Can we just
+  // extract it from the URL? What about proxy servers, etc.?
+  if (nsnull != mDocumentURL) {
+    const char* hostName = mDocumentURL->GetHost();
+    aDomain.SetString(hostName);
+  } else {
+    aDomain.SetLength(0);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
