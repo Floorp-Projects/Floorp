@@ -37,8 +37,7 @@
 * Date:    19 June 2003
 * SUMMARY: Testing regexp submatches with quantifiers
 *
-* See http://bugzilla.mozilla.org/show_bug.cgi?id=209919#c10
-* See http://bugzilla.mozilla.org/show_bug.cgi?id=209919#c11
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=209919
 *
 */
 //-----------------------------------------------------------------------------
@@ -90,23 +89,51 @@ addThis();
 
 
 /*
+ * Reduction of the above examples to contain only the condition b*
+ * inside the capturing parens. This can be even harder to grasp!
+ *
+ * The global match is the '' at the ^ position of 'a', but the parens
+ * is NOT permitted to capture it since the minimum repeat count is 0!
+ */
+status = inSection(3);
+string = 'a';
+pattern = /(b*)*/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('', undefined);
+addThis();
+
+
+/*
+ * Here we have used the + quantifier (repeat count 1) outside the parens.
+ * Therefore the parens must capture at least once before stopping, so it
+ * does capture the '' this time -
+ */
+status = inSection(4);
+string = 'a';
+pattern = /(b*)+/;
+actualmatch = string.match(pattern);
+expectedmatch = Array('', '');
+addThis();
+
+
+/*
  * More complex examples -
  */
 pattern = /^\-?(\d{1,}|\.{0,})*(\,\d{1,})?$/;
 
-  status = inSection(3);
+  status = inSection(5);
   string = '100.00';
   actualmatch = string.match(pattern);
   expectedmatch = Array(string, '00', undefined);
   addThis();
 
-  status = inSection(4);
+  status = inSection(6);
   string = '100,00';
   actualmatch = string.match(pattern);
   expectedmatch = Array(string, '100', ',00');
   addThis();
 
-  status = inSection(5);
+  status = inSection(7);
   string = '1.000,00';
   actualmatch = string.match(pattern);
   expectedmatch = Array(string, '000', ',00');
