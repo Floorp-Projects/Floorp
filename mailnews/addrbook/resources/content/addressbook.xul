@@ -222,7 +222,7 @@ Rights Reserved.
 	<box orient="horizontal" flex="100%" style="min-width:150px">
 		<!-- sidebar with dir tree -->
 		<box id="sidebar-box">
-				<sidebarheader class="sidebarheader-main" value="&addressbook-sidebar-header.label;"/>
+				<sidebarheader type="box" class="sidebarheader-main" value="&addressbook-sidebar-header.label;"/>
 			
 			<tree id="dirTree" flex="1000"/>
 		</box>
@@ -235,10 +235,15 @@ Rights Reserved.
 				<tree id="resultsTree" flex="1" style="height:0px"/>
 			</box>
 			
-			<splitter id="gray_horizontal_splitter" collapse="after" persist="state"/>
+			<splitter id="results-splitter" collapse="after" persist="state"
+              orient="vertical" autostretch="never">
+        <grippy/>
+      </splitter>
 			
 			<!-- card view -->
-			<box id="CardViewBox" style="height:170px; min-height:1px; min-width:1px"/>
+      <box id="CardViewOuterBox" flex="1">
+  			<box id="CardViewBox" style="height:170px; min-height:1px; min-width:1px"/>
+      </box>
 		
       <box id="status-bar">
           <text id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;"/>

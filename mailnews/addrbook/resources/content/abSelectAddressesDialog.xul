@@ -30,7 +30,6 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abSelectAddressesDialog.dtd">
 
-
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&selectAddressWindow.title;"
@@ -56,10 +55,10 @@ Rights Reserved.
 			
 			<!-- dir tree -->
 			<box id="dirTreeBox" align="horizontal">
-				<tree id="dirTree" flex="1"/>
+				<tree id="dirTree" type="dialog" flex="1"/>
 			</box>
 				
-			<splitter id="gray_vertical_splitter" collapse="after"  persist="state"/>
+			<splitter id="vertical-splitter" collapse="before"  persist="state"/>
 
 			<!-- Box that holds results pane, (to,cc,bcc buttons), and address bucket -->
 			<box id="results-bucket-tree-box" orient="vertical" flex="100%">
@@ -82,7 +81,7 @@ Rights Reserved.
 					</box>
 				</box>
 				
-					<splitter id="gray_horizontal_splitter" collapse="after"  persist="state"/>
+		  	<splitter id="bucket-splitter" collapse="before" persist="state"/>
 				
 				<!-- Address bucket -->
 				<box id="bucketBox" align="vertical">

@@ -1,6 +1,5 @@
 skins/classic.jar:
     manifest.rdf                                               
-    preview.png                                                  (preview/win/preview.png)
     communicator/skin/search-widgets.css                         (communicator/win/search-widgets.css)
     communicator/skin/broken.gif                                 (communicator/broken.gif)
     communicator/skin/lock.gif                                   (communicator/lock.gif)
@@ -420,7 +419,6 @@ skins/classic.jar:
     messenger/skin/wink.gif                                      (messenger/wink.gif)
     messenger/skin/winwide.gif                                   (messenger/winwide.gif)
     messenger/skin/addressbook/abnewmsg.gif                      (messenger/addressbook/abnewmsg.gif)
-    messenger/skin/addressbook/addressbook.css                   (messenger/addressbook/addressbook.css)
     messenger/skin/addressbook/call-disabled.gif                 (messenger/addressbook/call-disabled.gif)
     messenger/skin/addressbook/call-hover-active.gif             (messenger/addressbook/call-hover-active.gif)
     messenger/skin/addressbook/call-hover.gif                    (messenger/addressbook/call-hover.gif)

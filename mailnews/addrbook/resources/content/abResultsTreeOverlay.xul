@@ -45,7 +45,7 @@ Rights Reserved.
 				<treechildren flex="1">
 					<treeitem uri="...">
 						<treerow id="AbRows">
-					    	<treecell class="cardicon" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+					    	<treecell class="treecell-iconic cardicon" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail"/>
 					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#WorkPhone"/>
 					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#Company"/>

@@ -32,7 +32,6 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/messenger/skin/addressbook
 
 EXPORT_RESOURCE_SAMPLES = \
 		abnewmsg.gif \
-		addressbook.css \
 		call-disabled.gif \
 		call-hover-active.gif \
 		call-hover.gif \
@@ -68,7 +67,10 @@ EXPORT_RESOURCE_SAMPLES = \
 		trash-hover-active.gif \
 		$(NULL)
 
+DIRS = win
+
 include $(topsrcdir)/config/rules.mk
+
 
 GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
 

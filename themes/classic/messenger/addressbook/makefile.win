@@ -22,6 +22,8 @@
 DEPTH		= ..\..\..\..
 THEME_ROOT_DEPTH = ..\..
 
+DIRS= win
+
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
@@ -30,7 +32,6 @@ clobber::
 
 install:: 
 	$(MAKE_INSTALL) abnewmsg.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
-	$(MAKE_INSTALL) addressbook.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) call-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) call-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
 	$(MAKE_INSTALL) call-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\addressbook
