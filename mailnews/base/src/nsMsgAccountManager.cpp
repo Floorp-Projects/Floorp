@@ -99,8 +99,7 @@ public:
   NS_IMETHOD GetDefaultAccount(nsIMsgAccount * *aDefaultAccount) ;
   NS_IMETHOD SetDefaultAccount(nsIMsgAccount * aDefaultAccount) ;
   
-  /* nsISupportsArray getAccounts (); */
-  NS_IMETHOD getAccounts(nsISupportsArray **_retval) ;
+  NS_IMETHOD GetAccounts(nsISupportsArray **_retval) ;
   
   /* string getAccountKey (in nsIMsgAccount account); */
   NS_IMETHOD getAccountKey(nsIMsgAccount *account, char **_retval) ;
@@ -138,6 +137,8 @@ private:
   static PRBool addServerToArray(nsHashKey *aKey, void *aData, void *closure);
 
   // add all identities in the account
+  static PRBool addAccountsToArray(nsHashKey *aKey, void *aData,
+                                   void* closure);
   static PRBool addIdentitiesToArray(nsHashKey *aKey, void *aData,
                                      void *closure);
   static PRBool hashTableFindAccount(nsHashKey *aKey, void *aData,
@@ -418,11 +419,18 @@ PRBool nsMsgAccountManager::hashTableRemoveAccountFromBiff(nsHashKey *aKey, void
 }
 
 
-/* nsISupportsArray getAccounts (); */
+/* readonly attribute nsISupportsArray accounts; */
 NS_IMETHODIMP
-nsMsgAccountManager::getAccounts(nsISupportsArray **_retval)
+nsMsgAccountManager::GetAccounts(nsISupportsArray **_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsISupportsArray> accounts;
+  NS_NewISupportsArray(getter_AddRefs(accounts));
+  m_accounts->Enumerate(addAccountsToArray, (void *)accounts);
+
+  *_retval = accounts;
+  NS_ADDREF(*_retval);
+
+  return NS_OK;
 }
 
 /* string getAccountKey (in nsIMsgAccount account); */
@@ -432,6 +440,16 @@ nsMsgAccountManager::getAccountKey(nsIMsgAccount *account, char **_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+PRBool
+nsMsgAccountManager::addAccountsToArray(nsHashKey *key, void *aData, void *closure)
+{
+  nsISupportsArray *array = (nsISupportsArray*)closure;
+  nsIMsgAccount *account = (nsIMsgAccount*) aData;
+
+  array->AppendElement(account);
+  return PR_TRUE;
+}
 
 PRBool
 nsMsgAccountManager::addIdentitiesToArray(nsHashKey *key, void *aData, void *closure)

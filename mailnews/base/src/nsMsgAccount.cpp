@@ -188,8 +188,13 @@ nsMsgAccount::SetIncomingServer(nsIMsgIncomingServer * aIncomingServer)
 NS_IMETHODIMP
 nsMsgAccount::GetIdentities(nsISupportsArray **_retval)
 {
+  if (!_retval) return NS_ERROR_NULL_POINTER;
+  if (!m_identities) return NS_ERROR_UNEXPECTED;
   
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *_retval = m_identities;
+  NS_ADDREF(*_retval);
+
+  return NS_OK;
 }
 
 /* attribute nsIMsgIdentity defaultIdentity; */
