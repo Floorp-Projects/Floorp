@@ -71,10 +71,6 @@ protected:
                                  PRUint32 aChromeMask,
                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                                  PRBool aIsHiddenWindow, nsIXULWindow **aResult);
-  void InitializeComponent( const nsCID &aComponentCID );
-  void ShutdownComponent( const nsCID &aComponentCID );
-  typedef void (nsAppShellService::*EnumeratorMemberFunction)(const nsCID&);
-  void EnumerateComponents( void (nsAppShellService::*function)(const nsCID&) );
   nsresult SetXPConnectSafeContext();
   nsresult ClearXPConnectSafeContext();
 

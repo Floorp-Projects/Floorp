@@ -89,12 +89,6 @@ interface nsIAppShellService : nsISupports
   void quit();
 
   /**
-   * Required exit routine.  Cleanly shuts down
-   * the appshell components.
-   */
-  void shutdown();
-
-  /**
    * Create a window.
    * @param aParent the parent window.  Can be null.
    * @param aUrl the contents of the new window.
@@ -122,11 +116,6 @@ interface nsIAppShellService : nsISupports
                                     in PRUint32 aChromeMask,
                                     in long aInitialWidth,
                                     in long aInitialHeight);
-
-  /**
-   * Apply Initialize function  to each app shell component.
-   */
-  void enumerateAndInitializeComponents();
 
   /**
    * Close a window.

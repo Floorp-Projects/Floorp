@@ -22,7 +22,6 @@
 DEPTH=..\..
 
 DIRS= \
-    public \
     bookmarks \
     directory \
     filepicker \
