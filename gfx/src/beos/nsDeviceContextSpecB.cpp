@@ -53,6 +53,7 @@
 #include "nsIDOMWindowInternal.h"
 
 #include "nsIPrintOptions.h"
+#include "nsGfxCIID.h"
 #include "nsReadableUtils.h"
 
 //#include "prmem.h"

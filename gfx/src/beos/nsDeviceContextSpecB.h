@@ -126,4 +126,17 @@ protected:
 	
 };
 
+//-------------------------------------------------------------------------
+// Printer Enumerator
+//-------------------------------------------------------------------------
+class nsPrinterEnumeratorBeOS : public nsIPrinterEnumerator
+{
+public:
+  nsPrinterEnumeratorBeOS();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRINTERENUMERATOR
+
+protected:
+};
+
 #endif
