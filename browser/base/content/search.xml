@@ -232,8 +232,9 @@
 
           var ISEARCHSVC = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
                                      .getService(Components.interfaces.nsIInternetSearchService);
+          //XXX Bug 269994: Add in dummy search text "ABC" if the field is empty to ensure a result
           var searchURL = ISEARCHSVC.GetInternetSearchURL(this.currentEngine,
-                                       this.value? encodeURIComponent(this.value):"", 
+                                       this.value? encodeURIComponent(this.value):"ABC", 
                                        0, 0, {value:0});
 
 #         if the search box is empty, let''s load the host
