@@ -674,7 +674,7 @@ nsInstallFileOpItem::NativeFileOpFileCopyPrepare()
           return nsInstall::IS_FILE;
         else
         {
-          tempVar = mTarget;
+          mTarget->Clone(getter_AddRefs(tempVar));
           mSrc->GetLeafName(&leafName);
           tempVar->Append(leafName);
         }
@@ -714,9 +714,10 @@ nsInstallFileOpItem::NativeFileOpFileCopyComplete()
 PRInt32
 nsInstallFileOpItem::NativeFileOpFileCopyAbort()
 {
-  nsCOMPtr<nsIFile> fullTarget = mTarget;
+  nsCOMPtr<nsIFile> fullTarget;
   PRInt32 ret = nsInstall::SUCCESS;
 
+  mTarget->Clone(getter_AddRefs(fullTarget));
   if(nsInstallFileOpItem::ACTION_SUCCESS == mAction)
   {
     char* leafName;
