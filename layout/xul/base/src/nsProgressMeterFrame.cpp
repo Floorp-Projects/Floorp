@@ -117,32 +117,33 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
 
   // did the progress change?
   if (nsHTMLAtoms::value == aAttribute) {
-    PRInt32 childCount;
-    mContent->ChildCount(childCount);
+    nsIFrame* barChild = nsnull;
+    FirstChild(aPresContext, nsnull, &barChild);
+    if (!barChild) return NS_OK;
+    nsIFrame* remainderChild = nsnull;
+    barChild->GetNextSibling(&remainderChild);
+    if (!remainderChild) return NS_OK;
 
-    if (childCount >= 2) {
-      nsCOMPtr<nsIContent> progressBar;
-      nsCOMPtr<nsIContent> progressRemainder;
+    nsCOMPtr<nsIContent> progressBar;
+    barChild->GetContent(getter_AddRefs(progressBar));
+    nsCOMPtr<nsIContent> progressRemainder;
+    remainderChild->GetContent(getter_AddRefs(progressRemainder));
 
-      mContent->ChildAt(0, *getter_AddRefs(progressBar));
-      mContent->ChildAt(1, *getter_AddRefs(progressRemainder));
+    nsAutoString value;
+    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value);
 
-      nsAutoString value;
-      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value);
+    PRInt32 error;
+    PRInt32 flex = value.ToInteger(&error);
+    if (flex < 0) flex = 0;
+    if (flex > 100) flex = 100;
 
-      PRInt32 error;
-      PRInt32 flex = value.ToInteger(&error);
-      if (flex < 0) flex = 0;
-      if (flex > 100) flex = 100;
+    PRInt32 remainder = 100 - flex;
 
-      PRInt32 remainder = 100 - flex;
-
-      nsAutoString leftFlex, rightFlex;
-      leftFlex.AppendInt(flex);
-      rightFlex.AppendInt(remainder);
-      progressBar->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, leftFlex, PR_TRUE);
-      progressRemainder->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, rightFlex, PR_TRUE);
-    }
+    nsAutoString leftFlex, rightFlex;
+    leftFlex.AppendInt(flex);
+    rightFlex.AppendInt(remainder);
+    progressBar->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, leftFlex, PR_TRUE);
+    progressRemainder->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, rightFlex, PR_TRUE);
   }
   return NS_OK;
 }

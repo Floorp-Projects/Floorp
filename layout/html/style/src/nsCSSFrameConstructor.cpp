@@ -5326,7 +5326,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       // End of TREE CONSTRUCTION code here (there's more later on in the function)
 
       // PROGRESS METER CONSTRUCTION
-      else if (aTag == nsXULAtoms::progressbar) {
+      else if (aTag == nsXULAtoms::progressmeter) {
         processChildren = PR_TRUE;
         isReplaced = PR_TRUE;
         rv = NS_NewProgressMeterFrame(aPresShell, &newFrame);

@@ -45,23 +45,22 @@
 
 progressmeter {
   margin: 2px 4px;
-  border-top: 1px solid #8997A1;
-  border-right: 1px solid #E0ECF6;
-  border-bottom: 1px solid #E0ECF6;
-  border-left: 1px solid #8997A1;
-  padding: 1px;
+  border: 2px solid;
+  -moz-border-top-colors: #8997A1 #C7D0D9;
+  -moz-border-right-colors: #E0ECF6 #C7D0D9;
+  -moz-border-bottom-colors: #E0ECF6 #C7D0D9;
+  -moz-border-left-colors: #8997A1 #C7D0D9;
   min-width: 128px;
   height: 14px;
+}
+
+progressmeter[mode="undetermined"] {
+  background: url("chrome://global/skin/progressmeter/progress-busy.gif");
 }
 
 .progress-bar {
   min-width: 0px;
   background-color: #6B7B8D;
-}
-
-.progressmeter-progressbar[mode="undetermined"] {
-  background: url("chrome://global/skin/progressmeter/progress-busy.gif");
-  visibility: visible !important;
 }
 
 .progress-bar[mode="undetermined"],
@@ -72,10 +71,10 @@ progressmeter {
 /* ::::: statusbar progressmeter ::::: */
 
 .progressmeter-statusbar {
-  margin: 0px;
-  border-top: 1px solid #E0ECF6;
-  border-left: 1px solid #E0ECF6;
-  border-right: 1px solid #8997A1;
+  margin: 0;
   border-bottom: none;
+  -moz-border-top-colors: #E0ECF6 #C7D0D9;
+  -moz-border-right-colors: #8997A1 #C7D0D9;
+  -moz-border-left-colors: #E0ECF6 #C7D0D9;
 }
 

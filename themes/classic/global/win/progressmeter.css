@@ -1,64 +1,80 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Joe Hewitt <hewitt@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ===== progressmeter.css ==============================================
+  == Styles used by the XUL progressmeter element.
+  ======================================================================= */
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/** 
- * XUL <progressmeter> 
- **/
-  progressmeter[mode="undetermined"] > .progressmeter-internal-box
-    {
-      background-image    : url("chrome://global/skin/progressmeter/progressmeter-busy.gif");
-    }
- 
-  progressmeter[mode="undetermined"] > .progressmeter-internal-box > .progressmeter-stack > .progressmeter-progressbar 
-    {
-      visibility          : collapse;
-    }
+/* ::::: progressmeter ::::: */
 
-  progressmeter
-    {
-      min-width: 100px;
-      min-height: 14px;
-      border-left: 1px solid ThreeDShadow;
-      border-top: 1px solid ThreeDShadow;
-      border-right: 1px solid ThreeDHighlight;
-      border-bottom: 1px solid ThreeDHighlight;
-      background-color: -moz-Dialog;
-    }
+progressmeter {
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-right-colors: ThreeDHighlight -moz-Dialog;
+  -moz-border-bottom-colors: ThreeDHighlight -moz-Dialog;
+  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+  background-color: -moz-Dialog;
+  min-width: 128px;
+  height: 15px;
+}
 
-  .progressmeter-statusbar 
-    {
-      border-left         : 1px solid ThreeDHighlight;
-      border-top          : 1px solid ThreeDHighlight;
-      border-right        : 1px solid ThreeDShadow;
-      border-bottom       : 1px solid ThreeDShadow;
-    }
-    
-  .progress-text 
-    {
-      visibility          : collapse;
-    }    
+progressmeter[mode="undetermined"] {
+  background: url("chrome://global/skin/progressmeter/progressmeter-busy.gif") repeat-x 0% 50%;
+}
 
-  .progressmeter-internal-box
-    {
-      border              : 1px solid -moz-Dialog;
-      padding             : 1px;
-    }
-  
-  .progressmeter-inset  
-    {
-      margin              : 1px 5px 2px 5px;
-    }
-  
-  .progressmeter-inset > .progressmeter-internal-box 
-    {
-      border-left         : 1px solid ThreeDDarkShadow;
-      border-top          : 1px solid ThreeDDarkShadow;
-      border-right        : 1px solid ThreeDHighlight;
-      border-bottom       : 1px solid ThreeDHighlight;
-    }
+.progress-bar {
+  min-width: 0px;
+  background-color: ThreeDShadow;
+}
 
-/* progress indicators */
-  .progress-bar 
-    {
-      background-color    : ThreeDShadow;
-    }
-  
+.progress-bar[mode="undetermined"],
+.progress-remainder[mode="undetermined"] {
+  visibility: collapsed;
+}
+
+/* ::::: statusbar progressmeter ::::: */
+
+.progressmeter-statusbar {
+  margin: 0;
+  -moz-border-top-colors: ThreeDHighlight -moz-Dialog;
+  -moz-border-right-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-bottom-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-left-colors: ThreeDHighlight -moz-Dialog;
+}
