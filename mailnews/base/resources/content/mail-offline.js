@@ -18,7 +18,7 @@
  * Rights Reserved.
  */
 
-var gPrefs;
+var gMailOfflinePrefs = null;
 var gOfflinePromptsBundle;
 var gPromptService;
 var gOfflineManager;
@@ -36,7 +36,7 @@ function MsgSettingsOffline()
 }
 
 // Init PrefsService
-function GetPrefsService()
+function GetMailOfflinePrefs()
 {
   // Store the prefs object
   try {
@@ -44,9 +44,9 @@ function GetPrefsService()
     if (prefsService)
     prefsService = prefsService.getService();
     if (prefsService)
-    gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPrefBranch);
+    gMailOfflinePrefs = prefsService.QueryInterface(Components.interfaces.nsIPrefBranch);
 
-    if (!gPrefs)
+    if (!gMailOfflinePrefs)
     dump("failed to get prefs service!\n");
   }
   catch(ex) {
@@ -113,9 +113,9 @@ function PromptSendMessages()
     if(buttonPressed) {
       if(buttonPressed.value == 0) {
         if(checkValue.value) 
-          gPrefs.setIntPref("offline.send.unsent_messages", 0);
+          gMailOfflinePrefs.setIntPref("offline.send.unsent_messages", 0);
         else 
-          gPrefs.setIntPref("offline.send.unsent_messages", 1);
+          gMailOfflinePrefs.setIntPref("offline.send.unsent_messages", 1);
 
         gOfflineManager.goOnline(true /* sendUnsentMessages */, 
                                  true /* playbackOfflineImapOperations */, 
@@ -127,9 +127,9 @@ function PromptSendMessages()
       }
       else if(buttonPressed.value == 2) {
         if(checkValue.value) 
-          gPrefs.setIntPref("offline.send.unsent_messages", 0);
+          gMailOfflinePrefs.setIntPref("offline.send.unsent_messages", 0);
         else 
-          gPrefs.setIntPref("offline.send.unsent_messages", 2);
+          gMailOfflinePrefs.setIntPref("offline.send.unsent_messages", 2);
         gOfflineManager.goOnline(false /* sendUnsentMessages */, 
                                  true /* playbackOfflineImapOperations */, 
                                  msgWindow);
@@ -162,9 +162,9 @@ function PromptDownloadMessages()
     if(buttonPressed) {
       if(buttonPressed.value == 0) {
         if(checkValue.value) 
-          gPrefs.setIntPref("offline.download.download_messages", 0);
+          gMailOfflinePrefs.setIntPref("offline.download.download_messages", 0);
         else 
-          gPrefs.setIntPref("offline.download.download_messages", 1);
+          gMailOfflinePrefs.setIntPref("offline.download.download_messages", 1);
         // download news, download mail, send unsent messages, go offline when done, msg window
         gOfflineManager.synchronizeForOffline(false, true, false, true, msgWindow);
         return true;
@@ -174,9 +174,9 @@ function PromptDownloadMessages()
       }
       else if(buttonPressed.value == 2) {
         if(checkValue.value) 
-          gPrefs.setIntPref("offline.download.download_messages", 0);
+          gMailOfflinePrefs.setIntPref("offline.download.download_messages", 0);
         else 
-          gPrefs.setIntPref("offline.download.download_messages", 2);
+          gMailOfflinePrefs.setIntPref("offline.download.download_messages", 2);
         // download news, download mail, send unsent messages, go offline when done, msg window
         gOfflineManager.synchronizeForOffline(false, false, false, true, msgWindow);
         return true;
@@ -196,8 +196,8 @@ function CheckOnline()
 // Init Pref Service & Offline Manager
 function InitServices()
 {
-  if (!gPrefs) 
-    GetPrefsService();
+  if (!gMailOfflinePrefs) 
+    GetMailOfflinePrefs();
 
   if (!gOfflineManager) 
     GetOfflineMgrService();
@@ -225,8 +225,8 @@ function MailCheckBeforeOfflineChange()
 
   InitServices();
 
-  var prefSendUnsentMessages = gPrefs.getIntPref("offline.send.unsent_messages");
-  var prefDownloadMessages   = gPrefs.getIntPref("offline.download.download_messages");
+  var prefSendUnsentMessages = gMailOfflinePrefs.getIntPref("offline.send.unsent_messages");
+  var prefDownloadMessages   = gMailOfflinePrefs.getIntPref("offline.download.download_messages");
 
   if(goingOnline) {
     switch(prefSendUnsentMessages) { 
