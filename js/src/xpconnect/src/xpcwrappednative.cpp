@@ -2718,7 +2718,7 @@ static JSBool MembersAreTheSame(XPCNativeInterface* iface1,
     PRUint16 index1 = member1->GetIndex();
     PRUint16 index2 = member2->GetIndex();
 
-    // If they are both constants, then we'll just be sure that are equivelent.
+    // If they are both constants, then we'll just be sure that they are equivalent.
 
     if(member1->IsConstant())
     {

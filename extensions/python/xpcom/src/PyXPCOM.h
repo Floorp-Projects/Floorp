@@ -332,7 +332,7 @@ public:
 	virtual PyObject *UnwrapPythonObject(void) = 0;
 };
 
-// This is roughly equivilent to PyGatewayBase in win32com
+// This is roughly equivalent to PyGatewayBase in win32com
 //
 class PYXPCOM_EXPORT PyG_Base : public nsIInternalPython, public nsISupportsWeakReference
 {

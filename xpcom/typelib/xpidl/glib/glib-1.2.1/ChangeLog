@@ -1548,7 +1548,7 @@ Wed Nov  4 15:06:44 PST 1998 Manish Singh <yosh@gimp.org>
 	(g_array_remove_index_fast): new function for removing an entry
 	from an array. the order might be distorted
 	(g_ptr_array_remove_index_fast, g_ptr_array_remove_fast): new
-	functions; working similiar to the above. (they have the semantic
+       functions; working similar to the above. (they have the semantic
 	of the old g_ptr_array_remove[_index] functions)
 	(g_ptr_array_remove_index, g_ptr_array_remove): new semantic. now
 	the order of the elements in the array is not changed

@@ -272,7 +272,7 @@ interface jsdIDebuggerService : nsISupports
     /**
      * Enumerate registered filters.  This routine refreshes each filter before
      * passing them on to the enumeration function.  Calling this with a null
-     * |enumerator| is equivilant to jsdIService::refreshFilters.
+     * |enumerator| is equivalent to jsdIService::refreshFilters.
      *
      * @param enumerator jsdIFilterEnumerator instance to be called back for the
      *                   enumeration.
@@ -281,7 +281,7 @@ interface jsdIDebuggerService : nsISupports
     /**
      * Force the debugger to resync its internal filter cache with the
      * actual values in the jsdIFilter objects.  To refresh a single filter
-     * use jsdIService::swapFilters.  This method is equivilant to
+     * use jsdIService::swapFilters.  This method is equivalent to
      * jsdIService::enumerateFilters with a null enumerator.
      */
     void refreshFilters ();

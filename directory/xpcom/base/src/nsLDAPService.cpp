@@ -161,7 +161,7 @@ void nsLDAPServiceEntry::SetMessage(nsILDAPMessage *aMessage)
 // Push/Pop pending listeners/callback for this server entry. This is
 // implemented as a "stack" on top of the nsVoidArrays, since we can
 // potentially have more than one listener waiting for the connection
-// to be avilable for consumption.
+// to be available for consumption.
 //
 already_AddRefed<nsILDAPMessageListener> nsLDAPServiceEntry::PopListener()
 {
