@@ -318,7 +318,7 @@ Contributor(s): ______________________________________. -->
         </menupopup>
       </menubutton>
 
-      <box id="navigator-throbber" autostretch="never">
+      <box id="throbber-box" autostretch="never">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
       </box>
     </toolbar>
