@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.17 2000/12/13 01:22:21 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.18 2000/12/29 01:01:34 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -274,6 +274,7 @@ mp_err mp_read_raw(mp_int *mp, char *str, int len);
 int    mp_raw_size(mp_int *mp);
 mp_err mp_toraw(mp_int *mp, char *str);
 mp_err mp_read_radix(mp_int *mp, const char *str, int radix);
+mp_err mp_read_variable_radix(mp_int *a, const char * str, int default_radix);
 int    mp_radix_size(mp_int *mp, int radix);
 mp_err mp_toradix(mp_int *mp, char *str, int radix);
 int    mp_tovalue(char ch, int r);
