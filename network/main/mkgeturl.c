@@ -207,7 +207,7 @@ extern int XP_ALERT_OFFLINE_MODE_SELECTED;
 
 extern void NET_InitMailtoProtocol(void);
 
-#if defined(JAVA)
+#if defined(JAVA) || defined(NS_MT_SUPPORTED)
 #include "nslocks.h"
 #include "prlog.h"
 #include <stdarg.h>
@@ -218,7 +218,7 @@ PRMonitor* libnet_asyncIO;
 extern int gethostname(char *, int);
 #endif /* SOLARIS */
 
-#endif /* JAVA */
+#endif /* JAVA || NS_MT_SUPPORTED */
 
 #define LIBNET_UNLOCK_AND_RETURN(value) \
 	do { int rv = (value); LIBNET_UNLOCK(); return rv; } while (0)
@@ -784,7 +784,7 @@ NET_InitNetLib(int socket_buffer_size, int max_number_of_connections)
 
     NET_TotalNumberOfProcessingURLs=0; /* reset */
 
-#ifdef JAVA
+#if defined(JAVA) || defined(NS_MT_SUPPORTED)
     libnet_asyncIO = PR_NewNamedMonitor("libnet");
 #endif
  
@@ -1705,7 +1705,7 @@ NET_ShutdownNetLib(void)
     ActiveEntry *tmpEntry;
 
 /* #ifdef XP_WIN */
-#ifdef JAVA
+#if defined(JAVA) || defined(NS_MT_SUPPORTED)
 	if (libnet_asyncIO) LIBNET_LOCK();
 #else
     LIBNET_LOCK();
@@ -1788,7 +1788,7 @@ NET_ShutdownNetLib(void)
 #endif
 
 /* #ifdef XP_WIN */
-#ifdef JAVA
+#if defined(JAVA) || defined(NS_MT_SUPPORTED)
     if (libnet_asyncIO) LIBNET_UNLOCK();
 #else
     LIBNET_UNLOCK();
