@@ -4790,11 +4790,11 @@ LoadXPCOMPlugin(nsIRegistry* aRegistry,
   // The name, description, MIME types, MIME descriptions, and
   // supported file extensions will all hang off of the plugin's key
   // in the registry. Pull these out now.
-  PRUint8 * name;
+  PRUint8 * name=nsnull;
   PRUint32 length;
   aRegistry->GetBytesUTF8(aPluginKey, kPluginsNameKey, &length, &name);
 
-  PRUint8 * description;
+  PRUint8 * description=nsnull;
   aRegistry->GetBytesUTF8(aPluginKey, kPluginsDescKey, &length, &description);
 
   nsXPIDLCString filename;
@@ -4910,6 +4910,8 @@ LoadXPCOMPlugin(nsIRegistry* aRegistry,
   delete[] mimetypes;
   delete[] mimedescriptions;
   delete[] extensions;
+  PR_FREEIF(name);
+  PR_FREEIF(description);
 
   return rv;
 }
