@@ -20,6 +20,8 @@ nsIScriptContext.h
 nsIJSScriptObject.h
 nsIScriptObjectOwner.h
 nsIScriptContextOwner.h
-nsIJSScriptObject.h
 nsIScriptGlobalObject.h
 nsIScriptEventListener.h
+nsIDOMWindow.h
+nsIDOMLocation.h
+nsIDOMNavigator.h

@@ -18,6 +18,7 @@
 #include "nsJSEnvironment.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMNavigator.h"
+#include "nsIDOMLocation.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -33,6 +34,7 @@ void XXXDomNeverCalled()
   nsJSContext* jcx = new nsJSContext(0);
   NS_NewScriptGlobalObject(0);
   NS_NewScriptNavigator(0, 0, 0, 0);
+  NS_NewScriptLocation(0, 0, 0, 0);
   NS_NewScriptHTMLDocument(0, 0, 0, 0);
   NS_NewScriptHTMLCollection(0, 0, 0, 0);
   NS_NewScriptEventListener(0, 0, 0);

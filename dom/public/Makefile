@@ -30,6 +30,7 @@ EXPORTS =			 \
 	nsIScriptGlobalObject.h	 \
 	nsIDOMWindow.h	         \
 	nsIDOMNavigator.h        \
+	nsIDOMLocation.h	 \
 	$(NULL)
 
 MODULE = dom

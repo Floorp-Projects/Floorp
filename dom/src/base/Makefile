@@ -29,7 +29,9 @@ CPPSRCS =			\
 	nsJSEnvironment.cpp	\
 	nsJSWindow.cpp          \
 	nsJSNavigator.cpp       \
+	nsJSLocation.cpp	\
 	nsGlobalWindow.cpp      \
+	nsLocation.cpp		\
 	$(NULL)
 
 include $(DEPTH)/config/config.mk

@@ -26,7 +26,9 @@ CPPSRCS =			\
 	nsJSEnvironment.cpp	\
 	nsJSWindow.cpp          \
 	nsJSNavigator.cpp       \
+	nsJSLocation.cpp	\
 	nsGlobalWindow.cpp      \
+	nsLocation.cpp		\
 	$(NULL)
 
 MODULE=raptor 
@@ -38,6 +40,8 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSWindow.obj		\
 	.\$(OBJDIR)\nsGlobalWindow.obj		\
 	.\$(OBJDIR)\nsJSNavigator.obj		\
+	.\$(OBJDIR)\nsLocation.obj		\
+	.\$(OBJDIR)\nsJSLocation.obj		\
 	$(NULL)
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
