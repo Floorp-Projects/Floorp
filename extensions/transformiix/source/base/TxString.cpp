@@ -15,99 +15,16 @@
  * lost profits even if the Copyright owner has been advised of the
  * possibility of their occurrence.
  *
- * Please see release.txt distributed with this file for more information.
+ * Contributor(s):
+ *
+ * Tom Kneeland
+ *    -- original author.
+ *
+ * Keith Visco <kvisco@ziplink.net>
+ * Larry Fitzpatrick
  *
  */
 
-// Tom Kneeland (3/17/99)
-//
-//  Implementation of a simple String class
-//
-// Modification History:
-// Who  When      What
-// TK   03/17/99  Created
-// TK   03/23/99  Released without "lastIndexOf" functions
-// TK   04/02/99  Added support for 'const' strings, and added
-//                'operator=' for constant char*.
-// TK   04/09/99  Overloaded the output operator (<<).  Currently it only
-//                supports outputing the String to a C sytle character based
-//                stream.
-// TK   04/09/99  Provided support for the extraction of the DOM_CHAR
-//                representation of the string.  The new method, "toDomChar()"
-//                returns a constant pointer to the internal DOM_CHAR string
-//                buffer.
-// TK   04/10/99  Added the implementation for appending an array of DOM_CHARs
-//                to a string.  It should be noted that a length needs to be
-//                provided in order to determine the length of the source
-//                array.
-// TK   04/22/99  Fixed a bug where setting a string equal to NULL would cause
-//                a core dump.  Also added support for constructing a string
-//                using the NULL identifier.
-//                Modified the output operator (<<) to accept a const String
-//                reference.  This eliminates a wasteful copy constructor call.
-// TK   04/28/99  Modified the clear() method to leave the DOM_CHAR array
-//                in place.
-// TK   04/28/99  Added 3 new member functions: insert, deleteChars, and
-//                replace.
-// TK   05/05/99  Added support for implicit integer conversion.  This allows
-//                integers to be appended, inserted, and used as replacements
-//                for DOM_CHARs. To support this feature, ConvertInt has been
-//                added which converts the given integer to a string and stores
-//                it in the target.
-// TK   05/05/99  Converted DOM_CHAR to UNICODE_CHAR
-//
-// KV   07/29/1999  Added lastIndexOf methods
-// KV   07/29/1999  Changed indexOf methods with no offset, to call the
-//                  indexOf methods with offset of 0. This allows re-use of
-//                  code, makes it easier to debug, and minimizes the size of
-//                  the implementation
-// LF  08/06/1999   In method #operator=,
-//                  added line: return *this
-// KV  08/11/1999  changed charAt to return -1, if index is out of bounds, instead of 0,
-//                 since 0, is a valid character, and this makes my code more compatible
-//                 with Java
-// KV  08/11/1999  removed PRBool, uses baseutils.h (MBool)
-// TK  12/03/1999  Made some of the interface functions virtual, to support
-//                 wrapping Mozilla nsStrings in a String interface
-// TK  12/09/1999  Since "String" can be extended, we can not be certin of its
-//                 implementation, therefore any function accepting a String
-//                 object as an argument must only deal with its public
-//                 interface.  The following member functions have been
-//                 modified: append, insert, replace, indexOf, isEqual,
-//                           lastIndexOf, and subString
-//
-//                 Modified subString(Int32 start, String& dest) to simmply
-//                 call subString(Int32 start, Int32 end, String& dest).  This
-//                 helps with code reuse.
-//
-//                 Made ConvetInt a protected member function so it is
-//                 available to classes derrived from String.  This is possible
-//                 since the implementation of ConvertInt only uses the public
-//                 interface of String
-//
-//                 Made UnicodeLength a protected member function since it
-//                 only calculates the length of a null terminated UNICODE_CHAR
-//                 array.
-// TK  12/17/1999  To support non-null terminated UNICODE_CHAR* arrays, an
-//                 additional insert function has been added that accepts a
-//                 length parameter.
-//
-//                 Modified append(const UNICODE_CHAR* source) to simply
-//                 calculate the length of the UNICODE_CHAR array, and then
-//                 defer its processing to
-//                 append(const UNICODE_CHAR* source, Int32 sourceLength)
-// TK  12/22/1999  Enhanced Trim() to to remove additional "white space"
-//                 characters (added \n, \t, and \r).
-//
-// TK  02/14/2000  Added a constructon  which accepts a UNICODE_CHAR* array, and
-//                 its associated length.
-//
-// TK  03/10/2000  Fixed a bug found by Bobbi Guarino where 
-//                 String::indexOf(const String& string...) was not RETURNing
-//                 a value.
-//
-// TK  03/30/2000  Changed toChar to toCharArray and provided an overloaded
-//                 version which will instantiate its own character buffer.
 
 #include <stdlib.h>
 #include <string.h>

@@ -31,7 +31,7 @@ CPP_OBJS=                                       \
   ../base/$(OBJDIR)/Double.obj \
   ../base/$(OBJDIR)/Integer.obj \
   ../base/$(OBJDIR)/List.obj \
-  ../base/$(OBJDIR)/MITREObjectWrapper.obj \
+  ../base/$(OBJDIR)/TxObjectWrapper.obj \
   ../base/$(OBJDIR)/Map.obj \
   ../base/$(OBJDIR)/NamedMap.obj \
   ../base/$(OBJDIR)/SimpleErrorObserver.obj \

@@ -38,14 +38,24 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.38 2001/04/03 12:21:45 peterv%netscape.com Exp $
+ * $Id: XSLTProcessor.cpp,v 1.39 2001/04/08 14:32:16 peterv%netscape.com Exp $
  */
 
 #include "XSLTProcessor.h"
+#include "Names.h"
+#include "XMLParser.h"
+#include "VariableBinding.h"
+#include "XMLUtils.h"
+#include "XMLDOMUtils.h"
+#include "NodeSorter.h"
+#include "Numbering.h"
+#include "Tokenizer.h"
+#include "URIUtils.h"
 #ifdef MOZ_XSL
 #include "nsIObserverService.h"
 //#include "nslog.h"
 #else
+#include "printers.h"
 #include "TxLog.h"
 #endif
 
@@ -56,7 +66,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.38 $ $Date: 2001/04/03 12:21:45 $
+ * @version $Revision: 1.39 $ $Date: 2001/04/08 14:32:16 $
 **/
 
 /**

@@ -148,7 +148,7 @@ _txClass* Document::_function(nsIDOM##_txClass* aNsObject) \
  * Base wrapper class for a Mozilla object. Owns the Mozilla object through an
  * nsCOMPtr<nsISupports>.
  */
-class MozillaObjectWrapper : public MITREObject
+class MozillaObjectWrapper : public TxObject
 {
     public:
         MozillaObjectWrapper(nsISupports* aNsObject, Document* aOwner);
@@ -301,8 +301,8 @@ class Document : public Node
         // wrapper for it.
         Node* createWrapper(nsIDOMNode* node);
         void addWrapper(MozillaObjectWrapper* aObject);
-        MITREObject* removeWrapper(nsISupports* aMozillaObject);
-        MITREObject* removeWrapper(MozillaObjectWrapper* aObject);
+        TxObject* removeWrapper(nsISupports* aMozillaObject);
+        TxObject* removeWrapper(MozillaObjectWrapper* aObject);
 
         // Factory functions for various node types.  These functions
         // are responsible for storing the wrapper classes they create in 

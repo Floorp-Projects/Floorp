@@ -24,17 +24,20 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- changed some behavoir to be more compliant with spec
  *    
- * $Id: NodeSetFunctionCall.cpp,v 1.4 2001/03/19 21:48:19 axel%pike.org Exp $
+ * $Id: NodeSetFunctionCall.cpp,v 1.5 2001/04/08 14:37:39 peterv%netscape.com Exp $
  */
 
 /**
  * NodeSetFunctionCall
  * A representation of the XPath NodeSet funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2001/03/19 21:48:19 $
+ * @version $Revision: 1.5 $ $Date: 2001/04/08 14:37:39 $
 **/
 
 #include "FunctionLib.h"
+#include "XMLUtils.h"
+#include "XMLDOMUtils.h"
+#include <math.h>
 
 /**
  * Creates a default NodeSetFunctionCall. The Position function

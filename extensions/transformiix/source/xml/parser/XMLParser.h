@@ -23,8 +23,11 @@
  * Keith Visco 
  *    -- finished implementation
  *
- * $Id: XMLParser.h,v 1.8 2001/03/06 00:12:43 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XMLParser.h,v 1.9 2001/04/08 14:34:53 peterv%netscape.com Exp $
  */
+
+#ifndef MITRE_XMLPARSER_H
+#define MITRE_XMLPARSER_H
 
 #include <iostream.h>
 #ifndef XML_UNICODE
@@ -46,7 +49,7 @@ typedef struct  {
  * parsing is provided by EXPAT.
  * @author <a href="tomk@mitre.org">Tom Kneeland</a>
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2001/03/06 00:12:43 $
+ * @version $Revision: 1.9 $ $Date: 2001/04/08 14:34:53 $
 **/
 class XMLParser
 {
@@ -90,4 +93,6 @@ void startElement(void *userData, const XML_Char* name, const XML_Char** atts);
 void endElement(void *userData, const XML_Char* name);
 void piHandler(void *userData, const XML_Char *target, const XML_Char *data);
 void piHandler(void *userData, const XML_Char *s);
+#endif
+
 #endif

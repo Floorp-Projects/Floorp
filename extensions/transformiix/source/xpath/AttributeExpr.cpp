@@ -21,10 +21,11 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: AttributeExpr.cpp,v 1.3 2001/01/22 09:36:12 kvisco%ziplink.net Exp $
+ * $Id: AttributeExpr.cpp,v 1.4 2001/04/08 14:37:57 peterv%netscape.com Exp $
  */
 
 #include "Expr.h"
+#include "XMLDOMUtils.h"
 
 /*
   This class represents a Attribute Expression as defined by the XPath

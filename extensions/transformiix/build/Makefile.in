@@ -38,7 +38,7 @@ OBJS =../source/base/ArrayList.o \
   ../source/base/Double.o \
   ../source/base/Integer.o \
   ../source/base/List.o \
-  ../source/base/MITREObjectWrapper.o \
+  ../source/base/TxObjectWrapper.o \
   ../source/base/Map.o \
   ../source/base/NamedMap.o \
   ../source/base/SimpleErrorObserver.o \

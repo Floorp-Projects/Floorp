@@ -25,13 +25,13 @@
  *    -- fixed memory leak in NamedMap::hashKey method by deleting
  *       up char[] chars;
  *
- * $Id: NamedMap.cpp,v 1.6 2001/04/03 12:36:04 peterv%netscape.com Exp $
+ * $Id: NamedMap.cpp,v 1.7 2001/04/08 14:36:06 peterv%netscape.com Exp $
  */
 
 /**
- * A Named Map for MITREObjects
+ * A Named Map for TxObjects
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2001/04/03 12:36:04 $
+ * @version $Revision: 1.7 $ $Date: 2001/04/08 14:36:06 $
 **/
 
 #include "NamedMap.h"

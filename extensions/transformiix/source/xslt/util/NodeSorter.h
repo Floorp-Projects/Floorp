@@ -20,23 +20,21 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: NodeSorter.h,v 1.2 2000/04/12 22:33:55 nisheeth%netscape.com Exp $
+ * $Id: NodeSorter.h,v 1.3 2001/04/08 14:38:57 peterv%netscape.com Exp $
  */
 
-
-#include "TxString.h"
-#include "StringComparator.h"
-#include "NamedMap.h"
-#include "dom.h"
-#include "NodeSet.h"
-#include "ProcessorState.h"
-#include "Names.h"
-/*
- * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
- */
 
 #ifndef TRANSFRMX_NODESORTER_H
 #define TRANSFRMX_NODESORTER_H
+
+#include "TxString.h"
+#include "dom.h"
+#include "NodeSet.h"
+#include "ProcessorState.h"
+
+/*
+ * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
+ */
 
 class NodeSorter {
 

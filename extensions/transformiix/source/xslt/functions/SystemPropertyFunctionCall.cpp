@@ -1,5 +1,6 @@
 #include "XSLTFunctions.h"
 #include "XMLUtils.h"
+#include "Names.h"
 
 const String XSL_VERSION_PROPERTY    = "version";
 const String XSL_VENDOR_PROPERTY     = "vendor";

@@ -28,26 +28,16 @@
  * Eric Du, duxy@leyou.com.cn
  *   -- added fix for FreeBSD
  *
- * $Id: primitives.h,v 1.5 2000/04/12 22:31:09 nisheeth%netscape.com Exp $
+ * $Id: primitives.h,v 1.6 2001/04/08 14:37:07 peterv%netscape.com Exp $
  */
 
 
 #ifndef MITRE_PRIMITIVES_H
 #define MITRE_PRIMITIVES_H
 
-#include "MITREObject.h"
+#include "TxObject.h"
 #include "baseutils.h"
 #include "TxString.h"
-#include  <math.h>
-
-#ifdef WIN32
-#include <float.h>
-#endif
-
-//A trick to handle IEEE floating point exceptions on FreeBSD - E.D.
-#ifdef __FreeBSD__
-#include <floatingpoint.h>
-#endif
 
 /**
  * A wrapper for the primitive double type, and provides some simple
@@ -55,7 +45,7 @@
  * @author <a href="mailto:lef@opentext.com">Larry Fitzpatrick</a>
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
 **/
-class Double : public MITREObject {
+class Double : public TxObject {
 
 public:
 
@@ -142,7 +132,7 @@ private:
  * integer related routines
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
 **/
-class Integer : public MITREObject {
+class Integer : public TxObject {
 public:
 
     /**

@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.14 2001/03/06 00:12:21 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.h,v 1.15 2001/04/08 14:32:59 peterv%netscape.com Exp $
  */
 
 
@@ -38,28 +38,16 @@
 
 #ifdef MOZ_XSL
 #include "nsIDocumentTransformer.h"
-#else
-#include "CommandLineUtils.h"
-#include "printers.h"
-#include "XMLDOMUtils.h"
 #endif
 
-#include "URIUtils.h"
-#include "XMLParser.h"
 #include "dom.h"
 #include "ExprParser.h"
-#include "MITREObject.h"
+#include "TxObject.h"
 #include "NamedMap.h"
-#include "Names.h"
-#include "NodeSet.h"
 #include "ProcessorState.h"
 #include "TxString.h"
-#include "Tokenizer.h"
 #include "ErrorObserver.h"
 #include "List.h"
-#include "VariableBinding.h"
-#include "Numbering.h"
-#include "NodeSorter.h"
 
 #ifdef MOZ_XSL
 /* bacd8ad0-552f-11d3-a9f7-000064657374 */
@@ -75,7 +63,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.14 $ $Date: 2001/03/06 00:12:21 $
+ * @version $Revision: 1.15 $ $Date: 2001/04/08 14:32:59 $
 **/
 class XSLTProcessor
 #ifdef MOZ_XSL
@@ -358,7 +346,7 @@ private:
 
 }; //-- XSLTProcessor
 
-class XSLType : public MITREObject {
+class XSLType : public TxObject {
 
 public:
     enum types {

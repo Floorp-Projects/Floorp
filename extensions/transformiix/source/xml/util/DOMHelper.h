@@ -19,7 +19,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DOMHelper.h,v 1.5 2001/04/03 12:30:43 peterv%netscape.com Exp $
+ * $Id: DOMHelper.h,v 1.6 2001/04/08 14:36:43 peterv%netscape.com Exp $
  */
 
 #ifndef TRANSFRMX_DOMHELPER_H
@@ -27,11 +27,9 @@
 
 #include "baseutils.h"
 #include "TxString.h"
-#include "List.h"
 #include "dom.h"
 #include "Map.h"
-#include "MITREObject.h"
-#include "primitives.h"
+#include "TxObject.h"
 
 
 //----------------------/
@@ -42,7 +40,7 @@
  * A class used by DOMHelper to hold document order information
  * for DOM Nodes
 **/
-class OrderInfo : public MITREObject {
+class OrderInfo : public TxObject {
 
  public:
 
@@ -59,7 +57,7 @@ class OrderInfo : public MITREObject {
 /**
  * A class used to overcome DOM 1.0 deficiencies
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2001/04/03 12:30:43 $
+ * @version $Revision: 1.6 $ $Date: 2001/04/08 14:36:43 $
 **/
 class DOMHelper {
 

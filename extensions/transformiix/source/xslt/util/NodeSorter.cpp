@@ -20,12 +20,15 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: NodeSorter.cpp,v 1.4 2000/06/11 12:22:57 Peter.VanderBeken%pandora.be Exp $
+ * $Id: NodeSorter.cpp,v 1.5 2001/04/08 14:37:45 peterv%netscape.com Exp $
  */
 
 
 
 #include "NodeSorter.h"
+#include "StringComparator.h"
+#include "Names.h"
+#include "XMLDOMUtils.h"
 
 /*
  * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation

@@ -25,18 +25,25 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.22 2001/04/03 12:21:49 peterv%netscape.com Exp $
+ * $Id: ProcessorState.cpp,v 1.23 2001/04/08 14:32:37 peterv%netscape.com Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.22 $ $Date: 2001/04/03 12:21:49 $
+ * @version $Revision: 1.23 $ $Date: 2001/04/08 14:32:37 $
 **/
 
 #include "ProcessorState.h"
 #include "XSLTFunctions.h"
+#include "FunctionLib.h"
 #include "URIUtils.h"
+#include "XMLUtils.h"
+#include "XMLDOMUtils.h"
+#include "Tokenizer.h"
+#include "VariableBinding.h"
+#include "ExprResult.h"
+#include "Names.h"
 #ifdef MOZ_XSL
 //  #include "nslog.h"
 //  #define PRINTF NS_LOG_PRINTF(XPATH)
@@ -93,8 +100,8 @@ ProcessorState::~ProcessorState() {
   StringListIterator* iter = keys->iterator();
   while (iter->hasNext()) {
       String* key = iter->next();
-      MITREObjectWrapper* objWrapper
-          = (MITREObjectWrapper*)includes.remove(*key);
+      TxObjectWrapper* objWrapper
+          = (TxObjectWrapper*)includes.remove(*key);
       delete (Document*)objWrapper->object;
       delete objWrapper;
   }
@@ -160,7 +167,7 @@ void ProcessorState::addErrorObserver(ErrorObserver& errorObserver) {
  * including the same document more than once
 **/
 void ProcessorState::addInclude(const String& href, Document* xslDocument) {
-  MITREObjectWrapper* objWrapper = new MITREObjectWrapper();
+  TxObjectWrapper* objWrapper = new TxObjectWrapper();
   objWrapper->object = xslDocument;
   includes.put(href, objWrapper);
 } //-- addInclude
@@ -176,7 +183,7 @@ void ProcessorState::addTemplate(Element* xslTemplate) {
     String name = xslTemplate->getAttribute(NAME_ATTR);
     if ( name.length() > 0 ) {
         //-- check for duplicates
-        MITREObjectWrapper* mObj = (MITREObjectWrapper*)namedTemplates.get(name);
+        TxObjectWrapper* mObj = (TxObjectWrapper*)namedTemplates.get(name);
         if ( mObj ) {
             String warn("error duplicate template name: ");
             warn.append(name);
@@ -184,8 +191,8 @@ void ProcessorState::addTemplate(Element* xslTemplate) {
             recieveError(warn,ErrorObserver::WARNING);
             delete mObj;
         }
-        MITREObjectWrapper* oldObj = mObj;
-        mObj= new MITREObjectWrapper();
+        TxObjectWrapper* oldObj = mObj;
+        mObj= new TxObjectWrapper();
         mObj->object = xslTemplate;
         namedTemplates.put(name,mObj);
         if ( oldObj ) delete oldObj;
@@ -415,8 +422,8 @@ void ProcessorState::getDocumentHref
   StringListIterator* iter = keys->iterator();
   while (iter->hasNext()) {
       String* key = iter->next();
-      MITREObjectWrapper* objWrapper
-          = (MITREObjectWrapper*)includes.get(*key);
+      TxObjectWrapper* objWrapper
+          = (TxObjectWrapper*)includes.get(*key);
       if (xslDocument == objWrapper->object) {
           documentBase.append(*key);
           break;
@@ -431,7 +438,7 @@ void ProcessorState::getDocumentHref
  * given href, or null if no document is found
 **/
 Document* ProcessorState::getInclude(const String& href) {
-  MITREObjectWrapper* objWrapper = (MITREObjectWrapper*)includes.get(href);
+  TxObjectWrapper* objWrapper = (TxObjectWrapper*)includes.get(href);
   Document* doc = 0;
   if (objWrapper) {
     doc = (Document*) objWrapper->object;
@@ -461,7 +468,7 @@ Expr* ProcessorState::getExpr(const String& pattern) {
  * null if not template is found
 **/
 Element* ProcessorState::getNamedTemplate(String& name) {
-    MITREObjectWrapper* mObj = (MITREObjectWrapper*)namedTemplates.get(name);
+    TxObjectWrapper* mObj = (TxObjectWrapper*)namedTemplates.get(name);
     if ( mObj ) {
         return (Element*)mObj->object;
     }

@@ -592,7 +592,7 @@ Node* Document::createWrapper(nsIDOMNode* aNode)
 /**
  * Add a wrapper to the document's hash table using the specified hash value.
  *
- * @param aObj the MITREObject you want to add
+ * @param aObj the TxObject you want to add
  * @param aHashValue the key for the object in the hash table
  */
 void Document::addWrapper(MozillaObjectWrapper* aObject)
@@ -606,12 +606,12 @@ void Document::addWrapper(MozillaObjectWrapper* aObject)
  *
  * @param aHashValue the key for the object you want to remove
  *
- * @return the wrapper as a MITREObject
+ * @return the wrapper as a TxObject
  */
-MITREObject* Document::removeWrapper(nsISupports* aMozillaObject)
+TxObject* Document::removeWrapper(nsISupports* aMozillaObject)
 {
     nsISupportsKey key(aMozillaObject);
-    return (MITREObject*)wrapperHashTable->Remove(&key);
+    return (TxObject*)wrapperHashTable->Remove(&key);
 }
 
 /**
@@ -619,12 +619,12 @@ MITREObject* Document::removeWrapper(nsISupports* aMozillaObject)
  *
  * @param aHashValue the key for the object you want to remove
  *
- * @return the wrapper as a MITREObject
+ * @return the wrapper as a TxObject
  */
-MITREObject* Document::removeWrapper(MozillaObjectWrapper* aObject)
+TxObject* Document::removeWrapper(MozillaObjectWrapper* aObject)
 {
     nsISupportsKey key(aObject->getNSObj());
-    return (MITREObject*)wrapperHashTable->Remove(&key);
+    return (TxObject*)wrapperHashTable->Remove(&key);
 }
 
 

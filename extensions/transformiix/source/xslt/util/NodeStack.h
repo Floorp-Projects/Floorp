@@ -24,20 +24,15 @@
  *
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *    -- moved initialization of DEFAULT_SIZE to NodeStack.cpp
- * $Id: NodeStack.h,v 1.1 2000/04/06 07:47:42 kvisco%ziplink.net Exp $
+ * $Id: NodeStack.h,v 1.2 2001/04/08 14:39:46 peterv%netscape.com Exp $
  */
 
 
-/**
- * NodeStack
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:47:42 $
-**/
-#include "dom.h"
-#include "baseutils.h"
-
 #ifndef NODESTACK_H
 #define NODESTACK_H
+
+#include "dom.h"
+#include "baseutils.h"
 
 class NodeStack {
 

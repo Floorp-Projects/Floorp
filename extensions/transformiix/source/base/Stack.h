@@ -21,21 +21,20 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Stack.h,v 1.2 1999/11/15 07:12:41 nisheeth%netscape.com Exp $
+ * $Id: Stack.h,v 1.3 2001/04/08 14:39:07 peterv%netscape.com Exp $
  */
 
 /**
  * Stack
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:41 $
+ * @version $Revision: 1.3 $ $Date: 2001/04/08 14:39:07 $
 **/
-
-#include "List.h"
-#include "baseutils.h"
-
 
 #ifndef MITRE_STACK_H
 #define MITRE_STACK_H
+
+#include "List.h"
+#include "baseutils.h"
 
 typedef ListIterator StackIterator;
 

@@ -16,14 +16,14 @@
  * Peter Van der Beken, Peter.VanderBeken@pandora.be
  *   -- original author.
  *
- * $Id: NamespaceResolver.h,v 1.5 2001/01/24 14:44:01 axel%pike.org Exp $
+ * $Id: NamespaceResolver.h,v 1.6 2001/04/08 14:37:03 peterv%netscape.com Exp $
  */
 
 
-#include "TxString.h"
-
 #ifndef TRANSFRMX_NAMESPACE_RESOLVER_H
 #define TRANSFRMX_NAMESPACE_RESOLVER_H
+
+#include "TxString.h"
 
 /**
  * A class that returns the relevant namespace URI for a node.

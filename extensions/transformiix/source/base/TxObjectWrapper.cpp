@@ -20,27 +20,25 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
- *
- * $Id: MITREObjectWrapper.cpp,v 1.3 2000/02/22 11:09:51 kvisco%ziplink.net Exp $
  */
 
-#include "MITREObject.h"
+#include "TxObject.h"
 
    //--------------------------------------/
-  //- A Simple MITREObject wrapper class -/
+  //- A Simple TxObject wrapper class -/
  //--------------------------------------/
 
 /**
  * Default Constructor
 **/
-MITREObjectWrapper::MITREObjectWrapper() {
+TxObjectWrapper::TxObjectWrapper() {
     this->object = 0;
-} //-- MITREObjectWrapper
+} //-- TxObjectWrapper
 
 /**
  * Default destructor
 **/
-MITREObjectWrapper::~MITREObjectWrapper() {
+TxObjectWrapper::~TxObjectWrapper() {
     this->object = 0;
-} //-- ~MITREObjectWrapper
+} //-- ~TxObjectWrapper
 

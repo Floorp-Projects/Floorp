@@ -9,7 +9,7 @@ BASE_OBJS = ArrayList.o               \
             Integer.o \
             List.o \
             Map.o \
-            MITREObjectWrapper.o \
+            TxObjectWrapper.o \
             NamedMap.o \
             SimpleErrorObserver.o \
             Stack.o \
@@ -41,8 +41,8 @@ List.o: List.h List.cpp
 Map.o: Map.h Map.cpp
 	$(CC) -c Map.cpp
 
-MITREObjectWrapper.o: MITREObject.h MITREObjectWrapper.cpp
-	$(CC) -c MITREObjectWrapper.cpp
+TxObjectWrapper.o: TxObject.h TxObjectWrapper.cpp
+	$(CC) -c TxObjectWrapper.cpp
 
 NamedMap.o: TxString.h NamedMap.h NamedMap.cpp
 	$(CC) -c NamedMap.cpp

@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.11 2001/03/06 00:12:28 Peter.VanderBeken%pandora.be Exp $
+ * $Id: ProcessorState.h,v 1.12 2001/04/08 14:33:28 peterv%netscape.com Exp $
  */
 
 
@@ -29,27 +29,21 @@
 #ifndef TRANSFRMX_PROCESSORSTATE_H
 #define TRANSFRMX_PROCESSORSTATE_H
 
-#include "dom.h"
 #include "DOMHelper.h"
-#include "XMLUtils.h"
-#include "Names.h"
 #include "NodeSet.h"
 #include "NodeStack.h"
 #include "Stack.h"
 #include "ErrorObserver.h"
-#include "List.h"
 #include "NamedMap.h"
 #include "ExprParser.h"
 #include "Expr.h"
 #include "StringList.h"
-#include "Tokenizer.h"
-#include "VariableBinding.h"
 #include "OutputFormat.h"
 
 /**
  * Class used for keeping the current state of the XSL Processor
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.11 $ $Date: 2001/03/06 00:12:28 $
+ * @version $Revision: 1.12 $ $Date: 2001/04/08 14:33:28 $
 **/
 class ProcessorState : public ContextState {
 

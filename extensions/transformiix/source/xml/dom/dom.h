@@ -16,8 +16,11 @@
  * Peter Van der Beken
  *    -- original author
  *
- * $Id: dom.h,v 1.8 2000/07/06 12:35:38 axel%pike.org Exp $
+ * $Id: dom.h,v 1.9 2001/04/08 14:34:22 peterv%netscape.com Exp $
  */
+
+#ifndef __TX_DOM_WRAPPER__
+#define __TX_DOM_WRAPPER__
 
 #ifndef MOZ_XSL
 #include "standalone/dom.h"
@@ -25,4 +28,4 @@
 #include "mozImpl/mozilladom.h"
 #endif
 
-
+#endif

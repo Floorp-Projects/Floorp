@@ -23,9 +23,12 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: printers.h,v 1.6 2000/11/16 22:08:56 axel%pike.org Exp $
+ * $Id: printers.h,v 1.7 2001/04/08 14:36:18 peterv%netscape.com Exp $
  */
 
+
+#ifndef TRANSFRMX_PRINTERS_H
+#define TRANSFRMX_PRINTERS_H
 
 #include "dom.h"
 #include "TxString.h"
@@ -33,15 +36,12 @@
 #include "NamedMap.h"
 #include <iostream.h>
 
-#ifndef TRANSFRMX_PRINTERS_H
-#define TRANSFRMX_PRINTERS_H
-
 
 /**
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2000/11/16 22:08:56 $
+ * @version $Revision: 1.7 $ $Date: 2001/04/08 14:36:18 $
 **/
 class XMLPrinter {
 
@@ -244,7 +244,7 @@ private:
  * A class for printing an XML node as non-well-formed HTML
  * This class was ported from XSL:P Java source
  * @author Keith Visco (kvisco@ziplink.net)
- * @version $Revision: 1.6 $ $Date: 2000/11/16 22:08:56 $
+ * @version $Revision: 1.7 $ $Date: 2001/04/08 14:36:18 $
 **/
 class HTMLPrinter : public XMLPrinter {
 
