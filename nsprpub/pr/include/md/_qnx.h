@@ -16,92 +16,87 @@
  * Reserved.
  */
 
-#ifndef nspr_unixware_defs_h___
-#define nspr_unixware_defs_h___
+#ifndef nspr_qnx_defs_h___
+#define nspr_qnx_defs_h___
 
 /*
- * Internal configuration macros
- */
-
-#define PR_LINKER_ARCH	"ncr"
-#define _PR_SI_SYSNAME		"NCR"
+** Internal configuration macros
+*/
+#define PR_LINKER_ARCH		"qnx"
+#define _PR_SI_SYSNAME		"QNX"
 #define _PR_SI_ARCHITECTURE	"x86"
 #define PR_DLL_SUFFIX		".so"
 
-#define _PR_VMBASE	 	0x30000000
+#define _PR_VMBASE		0x30000000
 #define _PR_STACK_VMBASE	0x50000000
 #define _MD_DEFAULT_STACK_SIZE	65536L
-#define _MD_MMAP_FLAGS          MAP_PRIVATE
-
-#define	HAVE_DLL
-#define	USE_DLFCN
-#define _PR_RECV_BROKEN /* recv doesn't work on Unix Domain Sockets */
-
-#if !defined (HAVE_STRERROR)
-#define HAVE_STRERROR
-#endif
+#define _MD_MMAP_FLAGS		MAP_PRIVATE
 
 #ifndef	HAVE_WEAK_IO_SYMBOLS
 #define	HAVE_WEAK_IO_SYMBOLS
 #endif
 
-#define _PR_POLL_AVAILABLE
-#define _PR_USE_POLL
+#undef _PR_POLL_AVAILABLE
+#undef _PR_USE_POLL
+#define _PR_HAVE_SOCKADDR_LEN
+#define HAVE_BSD_FLOCK
 #define _PR_NO_LARGE_FILES
+#define _PR_STAT_HAS_ONLY_ST_ATIME
+
+#include <sys/select.h>
 
 #undef  HAVE_STACK_GROWING_UP
-#define HAVE_NETCONFIG
+#undef	HAVE_DLL
+#undef	USE_DLFCN
 #define NEED_STRFTIME_LOCK
 #define NEED_TIME_R
-#define NEED_LOCALTIME_R
-#define NEED_GMTIME_R  
-#define NEED_ASCTIME_R
-#define NEED_STRTOK_R
-#define NEED_CTIME_R
 #define _PR_NEED_STRCASECMP
+
+#ifndef HAVE_STRERROR
+#define HAVE_STRERROR
+#endif
 
 #define USE_SETJMP
 
 #include <setjmp.h>
 
-#define _SETJMP setjmp
-#define _LONGJMP longjmp
-#define _PR_CONTEXT_TYPE         jmp_buf
-#define _MD_GET_SP(_t)           (_t)->md.context[4]
-#define _PR_NUM_GCREGS	_JBLEN
+#define _SETJMP			setjmp
+#define _LONGJMP		longjmp
+#define _PR_CONTEXT_TYPE	jmp_buf
+#define _PR_NUM_GCREGS		_JBLEN
+#define _MD_GET_SP(_t)		(_t)->md.context[7]
 
-#define CONTEXT(_th) ((_th)->md.context)
+#define CONTEXT(_th)		((_th)->md.context)
 
 /*
 ** Initialize the thread context preparing it to execute _main.
 */
-#define _MD_INIT_CONTEXT(_thread, _sp, _main, status) \
-{								  \
-    *status = PR_TRUE; \
-    if(_SETJMP(CONTEXT(_thread))) (*_main)(); \
-    _MD_GET_SP(_thread) = (int) ((_sp) - 128); \
+#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)	\
+{							\
+    *status = PR_TRUE;					\
+    if(_SETJMP(CONTEXT(_thread))) (*_main)();		\
+    _MD_GET_SP(_thread) = (int) ((_sp) - 128);		\
 }
 
-#define _MD_SWITCH_CONTEXT(_thread)  \
-    if (!_SETJMP(CONTEXT(_thread))) { \
-	(_thread)->md.errcode = errno;  \
-	_PR_Schedule();		     \
+#define _MD_SWITCH_CONTEXT(_thread)	\
+    if (!_SETJMP(CONTEXT(_thread))) {	\
+	(_thread)->md.errcode = errno;	\
+	_PR_Schedule();			\
     }
 
 /*
 ** Restore a thread context, saved by _MD_SWITCH_CONTEXT
 */
-#define _MD_RESTORE_CONTEXT(_thread) \
-{				     \
-    errno = (_thread)->md.errcode;	     \
-    _MD_SET_CURRENT_THREAD(_thread); \
-    _LONGJMP(CONTEXT(_thread), 1);    \
+#define _MD_RESTORE_CONTEXT(_thread)	\
+{					\
+    errno = (_thread)->md.errcode;	\
+    _MD_SET_CURRENT_THREAD(_thread);	\
+    _LONGJMP(CONTEXT(_thread), 1);	\
 }
 
-/* Machine-dependent (MD) data structures.
- * Don't use SVR4 native threads (yet). 
- */
-
+/*
+** Machine-dependent (MD) data structures.
+*/
 struct _MDThread {
     _PR_CONTEXT_TYPE context;
     int id;
@@ -129,9 +124,9 @@ struct _MDSegment {
 };
 
 /*
- * md-specific cpu structure field
- */
-#define _PR_MD_MAX_OSFD FD_SETSIZE
+** md-specific cpu structure field
+*/
+#define _PR_MD_MAX_OSFD		FD_SETSIZE
 
 struct _MDCPU_Unix {
     PRCList ioQ;
@@ -140,16 +135,15 @@ struct _MDCPU_Unix {
     PRInt32 ioq_osfd_cnt;
 #ifndef _PR_USE_POLL
     fd_set fd_read_set, fd_write_set, fd_exception_set;
-    PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD],fd_write_cnt[_PR_MD_MAX_OSFD],
-				fd_exception_cnt[_PR_MD_MAX_OSFD];
+    PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD], fd_write_cnt[_PR_MD_MAX_OSFD], fd_exception_cnt[_PR_MD_MAX_OSFD];
 #else
-	struct pollfd *ioq_pollfds;
-	int ioq_pollfds_size;
-#endif	/* _PR_USE_POLL */
+    struct pollfd *ioq_pollfds;
+    int ioq_pollfds_size;
+#endif
 };
 
 #define _PR_IOQ(_cpu)			((_cpu)->md.md_unix.ioQ)
-#define _PR_ADD_TO_IOQ(_pq, _cpu) PR_APPEND_LINK(&_pq.links, &_PR_IOQ(_cpu))
+#define _PR_ADD_TO_IOQ(_pq, _cpu)	PR_APPEND_LINK(&_pq.links, &_PR_IOQ(_cpu))
 #define _PR_FD_READ_SET(_cpu)		((_cpu)->md.md_unix.fd_read_set)
 #define _PR_FD_READ_CNT(_cpu)		((_cpu)->md.md_unix.fd_read_cnt)
 #define _PR_FD_WRITE_SET(_cpu)		((_cpu)->md.md_unix.fd_write_set)
@@ -169,7 +163,7 @@ struct _MDCPU {
 };
 
 #define _MD_INIT_LOCKS()
-#define _MD_NEW_LOCK(lock) PR_SUCCESS
+#define _MD_NEW_LOCK(lock)		PR_SUCCESS
 #define _MD_FREE_LOCK(lock)
 #define _MD_LOCK(lock)
 #define _MD_UNLOCK(lock)
@@ -177,35 +171,26 @@ struct _MDCPU {
 #define _MD_IOQ_LOCK()
 #define _MD_IOQ_UNLOCK()
 
-/*
- * The following are copied from _sunos.h, _aix.h.  This means
- * some of them should probably be moved into _unixos.h.  But
- * _irix.h seems to be quite different in regard to these macros.
- */
-#define _MD_GET_INTERVAL                  _PR_UNIX_GetInterval
-#define _MD_INTERVAL_PER_SEC              _PR_UNIX_TicksPerSecond
-
-#define _MD_EARLY_INIT		_MD_EarlyInit
-#define _MD_FINAL_INIT		_PR_UnixInit
-#define _MD_INIT_RUNNING_CPU(cpu) _MD_unix_init_running_cpu(cpu)
-#define _MD_INIT_THREAD         _MD_InitializeThread
+#define _MD_GET_INTERVAL		_PR_UNIX_GetInterval
+#define _MD_INTERVAL_PER_SEC		_PR_UNIX_TicksPerSecond
+#define _MD_EARLY_INIT			_MD_EarlyInit
+#define _MD_FINAL_INIT			_PR_UnixInit
+#define _MD_INIT_RUNNING_CPU(cpu)	_MD_unix_init_running_cpu(cpu)
+#define _MD_INIT_THREAD			_MD_InitializeThread
 #define _MD_EXIT_THREAD(thread)
 #define	_MD_SUSPEND_THREAD(thread)
 #define	_MD_RESUME_THREAD(thread)
 #define _MD_CLEAN_THREAD(_thread)
 
 /*
- * We wrapped the select() call.  _MD_SELECT refers to the built-in,
- * unwrapped version.
- */
+** We wrapped the select() call.  _MD_SELECT refers to the built-in,
+** unwrapped version.
+*/
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/select.h>
-extern int _select(int nfds, fd_set *readfds, fd_set *writefds,
-	fd_set *execptfds, struct timeval *timeout);
-#define _MD_SELECT _select
+#define _MD_SELECT		select
 
-#define _MD_POLL _poll
-extern int _poll(struct pollfd *fds, unsigned long nfds, int timeout);
+#define SA_RESTART 0
 
-#endif /* nspr_ncr_defs_h */
+#endif /* nspr_qnx_defs_h___ */

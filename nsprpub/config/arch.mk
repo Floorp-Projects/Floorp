@@ -60,6 +60,9 @@ endif
 ifeq ($(OS_ARCH),UNIX_System_V)
 OS_ARCH		:= NEC
 endif
+ifeq ($(OS_ARCH),QNX)
+OS_RELEASE	:= $(shell uname -v | sed 's/^\([0-9]\)\([0-9]*\)$$/\1.\2/')
+endif
 ifeq ($(OS_ARCH),SCO_SV)
 OS_ARCH		:= SCOOS
 OS_RELEASE	:= 5.0
@@ -68,6 +71,9 @@ ifeq ($(OS_ARCH),SINIX-N)
 OS_ARCH		:= SINIX
 endif
 ifeq ($(OS_ARCH),SINIX-Y)
+OS_ARCH		:= SINIX
+endif
+ifeq ($(OS_ARCH),SINIX-Z)
 OS_ARCH		:= SINIX
 endif
 # SINIX changes name to ReliantUNIX with 5.43

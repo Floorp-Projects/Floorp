@@ -26,8 +26,8 @@
  *     override select().)
  */
 
-#ifndef AIX4_1
-#error aixwrap.c should only be used on AIX 4.1
+#ifndef AIX_RENAME_SELECT
+#error aixwrap.c should only be used on AIX 3.2 or 4.1
 #else
 
 #include <sys/select.h>
@@ -43,4 +43,4 @@ int _MD_POLL(void *listptr, unsigned long nfds, long timeout)
     return poll(listptr, nfds, timeout);
 }
 
-#endif /* AIX4_1 */
+#endif /* AIX_RENAME_SELECT */

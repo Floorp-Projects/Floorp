@@ -18,10 +18,6 @@
 
 #include "primpl.h"
 
-#ifdef XP_UNIX
-#include <sys/mman.h>
-#endif
-
 /* List of free stack virtual memory chunks */
 PRLock *_pr_stackLock;
 PRCList _pr_freeStacks = PR_INIT_STATIC_CLIST(&_pr_freeStacks);

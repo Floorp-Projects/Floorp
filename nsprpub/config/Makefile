@@ -34,7 +34,7 @@ endif
 # Temporary workaround to disable the generation of
 # library build time because now.c uses the 'long long'
 # data type that's not available on some platforms.
-ifeq (,$(filter-out NEC NEXTSTEP SCOOS UNIXWARE,$(OS_ARCH)))
+ifeq (,$(filter-out NEC NEXTSTEP QNX SCOOS UNIXWARE,$(OS_ARCH)))
 DEFINES += -DOMIT_LIB_BUILD_TIME
 endif
 
@@ -83,7 +83,7 @@ endif
 
 # Redefine MAKE_OBJDIR for just this directory
 define MAKE_OBJDIR
-if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); fi
+if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); else true; fi
 endef
 
 export:: $(TARGETS)

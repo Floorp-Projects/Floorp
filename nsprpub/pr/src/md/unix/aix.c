@@ -18,6 +18,7 @@
 
 #include "primpl.h"
 
+#ifdef AIX_HAVE_ATOMIC_OP_H
 #include <sys/atomic_op.h>
 
 PRInt32 _AIX_AtomicSet(PRInt32 *val, PRInt32 newval)
@@ -31,6 +32,7 @@ PRInt32 _AIX_AtomicSet(PRInt32 *val, PRInt32 newval)
     } while (!stored);
     return oldval;
 }  /* _AIX_AtomicSet */
+#endif /* AIX_HAVE_ATOMIC_OP_H */
 
 #if defined(AIX_TIMERS)
 
@@ -181,7 +183,7 @@ _MD_CREATE_THREAD(
  * at the original system select() and poll() functions.
  */
 
-#if !defined(AIX4_1)
+#if !defined(AIX_RENAME_SELECT)
 
 #include <sys/select.h>
 #include <sys/poll.h>
@@ -249,7 +251,7 @@ void _pr_aix_dummy()
     poll(0,0,0);
 }
 
-#endif /* !defined(AIX4_1) */
+#endif /* !defined(AIX_RENAME_SELECT) */
 
 #ifdef _PR_HAVE_ATOMIC_CAS
 

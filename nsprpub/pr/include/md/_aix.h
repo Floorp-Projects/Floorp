@@ -56,7 +56,6 @@
 #define _PR_STAT_HAS_ONLY_ST_ATIME
 
 /* Timer operations */
-#define AIX_TIMERS
 #if defined(AIX_TIMERS)
 extern PRIntervalTime _MD_AixGetInterval(void);
 #define _MD_GET_INTERVAL _MD_AixGetInterval
@@ -69,6 +68,7 @@ extern PRIntervalTime _MD_AixIntervalPerSec(void);
 #define _MD_INTERVAL_PER_SEC    _PR_UNIX_TicksPerSecond
 #endif  /* defined(AIX_TIMERS) */
 
+#ifdef AIX_HAVE_ATOMIC_OP_H
 /* The atomic operations */
 #include <sys/atomic_op.h>
 #define _PR_HAVE_ATOMIC_OPS
@@ -78,6 +78,7 @@ extern PRIntervalTime _MD_AixIntervalPerSec(void);
 #define _MD_ATOMIC_ADD(ptr, val)   ((PRInt32)fetch_and_add((atomic_p)ptr, val) + val)
 #define _MD_ATOMIC_DECREMENT(val)   ((PRInt32)fetch_and_add((atomic_p)val, -1) - 1)
 #define _MD_ATOMIC_SET(val, newval) _AIX_AtomicSet(val, newval)
+#endif /* AIX_HAVE_ATOMIC_OP_H */
 
 #define USE_SETJMP
 
@@ -213,7 +214,7 @@ struct _MDCPU {
 #define _MD_CLEAN_THREAD(_thread)
 #endif /* PTHREADS_USER */
 
-#ifdef AIX4_1
+#ifdef AIX_RENAME_SELECT
 #define _MD_SELECT	select
 #define _MD_POLL	poll
 #endif

@@ -42,8 +42,6 @@
 #define NEED_TIME_R
 #define USE_DLFCN
 
-#define _PR_HAVE_ATOMIC_OPS
-#define _PR_HAVE_ATOMIC_CAS
 #define _PR_POLL_AVAILABLE
 #define _PR_USE_POLL
 #define _PR_STAT_HAS_ONLY_ST_ATIME
@@ -187,6 +185,7 @@ struct _MDCPU {
 #define _MD_CLEAN_THREAD(_thread)
 
 /* The following defines unwrapped versions of select() and poll(). */
+#include <sys/time.h>
 extern int __select (int, fd_set *, fd_set *, fd_set *, struct timeval *);
 #define _MD_SELECT              __select
 
@@ -197,13 +196,15 @@ extern int __poll(struct pollfd filedes[], unsigned int nfds, int timeout);
 /*
  * Atomic operations
  */
-#ifdef _PR_HAVE_ATOMIC_OPS
+#ifdef OSF1_HAVE_MACHINE_BUILTINS_H
 #include <machine/builtins.h>
+#define _PR_HAVE_ATOMIC_OPS
+#define _PR_HAVE_ATOMIC_CAS
 #define _MD_INIT_ATOMIC()
 #define _MD_ATOMIC_INCREMENT(val) (__ATOMIC_INCREMENT_LONG(val) + 1)
 #define _MD_ATOMIC_ADD(ptr, val)  (__ATOMIC_ADD_LONG(ptr, val) + val)
 #define _MD_ATOMIC_DECREMENT(val) (__ATOMIC_DECREMENT_LONG(val) - 1)
 #define _MD_ATOMIC_SET(val, newval) __ATOMIC_EXCH_LONG(val, newval)
-#endif /* _PR_HAVE_ATOMIC_OPS */
+#endif /* OSF1_HAVE_MACHINE_BUILTINS_H */
 
 #endif /* nspr_osf1_defs_h___ */

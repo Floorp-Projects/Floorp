@@ -54,9 +54,8 @@ error Unknown NEXTSTEP architecture
 
 #define HAVE_WEAK_MALLOC_SYMBOLS
 
-/* do this until I figure out the rhapsody dll stuff. */
 #define HAVE_DLL
-#define USE_RLD
+#define USE_MACH_DYLD
 #define _PR_HAVE_SOCKADDR_LEN
 #define _PR_STAT_HAS_ONLY_ST_ATIME
 #define _PR_NO_LARGE_FILES
@@ -252,8 +251,6 @@ extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
 **	and pray for it to work.
 **	
 */
-#define PROT_NONE	0x0
-
 caddr_t mmap(caddr_t addr, size_t len, int prot, int flags,
           int fildes, off_t off);
 int munmap(caddr_t addr, size_t len);

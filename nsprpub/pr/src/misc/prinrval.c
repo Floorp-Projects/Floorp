@@ -35,6 +35,14 @@
 void _PR_InitClock(void)
 {
     _PR_MD_INTERVAL_INIT();
+#ifdef DEBUG
+    {
+        PRIntervalTime ticksPerSec = PR_TicksPerSecond();
+
+        PR_ASSERT(ticksPerSec >= PR_INTERVAL_MIN);
+        PR_ASSERT(ticksPerSec <= PR_INTERVAL_MAX);
+    }
+#endif /* DEBUG */
 }
 
 /*

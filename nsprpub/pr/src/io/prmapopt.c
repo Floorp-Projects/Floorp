@@ -350,8 +350,14 @@ PRStatus PR_CALLBACK _PR_SocketSetSocketOption(PRFileDesc *fd, const PRSocketOpt
 #error "SO_LINGER is not defined"
 #endif
 
+/*
+ * Some platforms, such as NCR 2.03, don't have TCP_NODELAY defined
+ * in <netinet/tcp.h>
+ */
+#if !defined(NCR)
 #if !defined(TCP_NODELAY)
 #error "TCP_NODELAY is not defined"
+#endif
 #endif
 
 /*
@@ -386,6 +392,10 @@ PRStatus PR_CALLBACK _PR_SocketSetSocketOption(PRFileDesc *fd, const PRSocketOpt
 
 #ifndef IP_TOS                          /* set/get IP Type Of Service       */
 #define IP_TOS              _PR_NO_SUCH_SOCKOPT
+#endif
+
+#ifndef TCP_NODELAY                     /* don't delay to coalesce data     */
+#define TCP_NODELAY         _PR_NO_SUCH_SOCKOPT
 #endif
 
 #ifndef TCP_MAXSEG                      /* maxumum segment size for tcp     */

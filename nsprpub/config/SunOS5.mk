@@ -102,7 +102,11 @@ CPU_ARCH_TAG		= _$(CPU_ARCH)
 ifeq (5.5,$(findstring 5.5,$(OS_RELEASE)))
 OS_DEFINES		+= -DSOLARIS2_5
 else
+ifeq (,$(filter-out 5.3 5.4,$(OS_RELEASE)))
+OS_DEFINES		+= -D_PR_NO_LARGE_FILES
+else
 OS_DEFINES		+= -D_PR_HAVE_OFF64_T
+endif
 endif
 
 ifneq ($(LOCAL_THREADS_ONLY),1)

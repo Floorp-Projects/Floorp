@@ -52,7 +52,7 @@
 #endif
 #include <netdb.h>
 
-#if defined(FREEBSD) || defined(BSDI)
+#if defined(FREEBSD) || defined(BSDI) || defined(QNX)
 #include <rpc/types.h> /* the only place that defines INADDR_LOOPBACK */
 #endif
 

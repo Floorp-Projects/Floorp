@@ -144,6 +144,11 @@ extern void _MD_unix_init_running_cpu(struct _PRCPU *cpu);
 ** work - it just means that we don't really have a functional
 ** redzone.
 */
+#include <sys/mman.h>
+#ifndef PROT_NONE
+#define PROT_NONE 0x0
+#endif
+
 #if defined(DEBUG) && !defined(RHAPSODY) && !defined(NEXTSTEP)
 #if !defined(SOLARIS)	
 #include <string.h>  /* for memset() */
@@ -563,7 +568,6 @@ struct _MD_IOVector
     _MD_Mmap64 _mmap64;
     _MD_Stat64 _stat64;
     _MD_Fstat64 _fstat64;
-    _MD_Lockf64 _lockf64;
     _MD_Lseek64 _lseek64;
 };
 extern struct _MD_IOVector _md_iovector;

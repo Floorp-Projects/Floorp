@@ -118,6 +118,10 @@ DGUX_CSRCS = \
 	dgux.c \
 	$(NULL)
 
+QNX_CSRCS = \
+	qnx.c \
+	$(NULL)
+
 ifeq ($(PTHREADS_USER),1)
 CSRCS += $(PTH_USER_CSRCS)
 endif
@@ -185,6 +189,9 @@ endif
 ifeq ($(OS_ARCH),DGUX)
 CSRCS += $(DGUX_CSRCS)
 endif
+ifeq ($(OS_ARCH),QNX)
+CSRCS += $(QNX_CSRCS)
+endif
 
 #
 # Some Unix platforms have an assembly language file.
@@ -223,7 +230,7 @@ endif
 TARGETS		= $(OBJS)
 
 ifeq ($(OS_ARCH),AIX)
-ifneq ($(OS_RELEASE),4.2)
+ifeq (,$(filter-out 3.2 4.1,$(OS_RELEASE)))
 ifneq ($(USE_PTHREADS), 1)
 #TARGETS		+= $(OBJDIR)/aixwrap.$(OBJ_SUFFIX)
 endif
@@ -249,7 +256,7 @@ include $(MOD_DEPTH)/config/rules.mk
 
 export:: $(TARGETS)
 #ifeq ($(OS_ARCH),AIX)
-#ifneq ($(OS_RELEASE),4.2)
+#ifeq (,$(filter-out 3.2 4.1,$(OS_RELEASE)))
 #ifneq ($(USE_PTHREADS), 1)
 #	$(INSTALL) -m 444 $(OBJDIR)/aixwrap.$(OBJ_SUFFIX) $(DIST)/lib
 #endif

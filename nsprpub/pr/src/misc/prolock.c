@@ -75,17 +75,6 @@ PR_IMPLEMENT(PRStatus)
 **  
 */
 
+/* Some compilers don't like an empty compilation unit. */
+static int dummy = 0;
 #endif /* defined(FORCE_NSPR_ORDERED_LOCK */
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -39,13 +39,16 @@ endif
 endif
 
 #
-# On OSF1 V3.2, classic nspr is the default (and only) implementation
+# Prior to OSF1 V4.0, classic nspr is the default (and only) implementation
 # strategy.
 #
 # On OSF1 V4.0, pthreads is the default implementation strategy.
 # Classic nspr is also available.
 #
-ifneq ($(OS_RELEASE),V3.2)
+ifeq (,$(filter-out V2.0 V3.2,$(OS_RELEASE)))
+CLASSIC_NSPR = 1
+endif
+
 ifeq ($(CLASSIC_NSPR), 1)
 	IMPL_STRATEGY = _EMU
 	DEFINES += -D_PR_LOCAL_THREADS_ONLY
@@ -53,9 +56,11 @@ else
 	USE_PTHREADS = 1
 	IMPL_STRATEGY = _PTH
 endif
-endif
 
-CC			= cc $(NON_LD_FLAGS) -std1 -readonly_strings
+CC			= cc $(NON_LD_FLAGS) -std1
+ifneq ($(OS_RELEASE),V2.0)
+CC			+= -readonly_strings
+endif
 # The C++ compiler cxx has -readonly_strings on by default.
 CCC			= cxx
 
@@ -71,7 +76,11 @@ NON_LD_FLAGS		= -ieee_with_inexact
 
 OS_CFLAGS		= -DOSF1 -D_REENTRANT
 
-ifeq ($(OS_RELEASE),V3.2)
+ifneq (,$(filter-out V2.0 V3.2,$(OS_RELEASE)))
+OS_CFLAGS		+= -DOSF1_HAVE_MACHINE_BUILTINS_H
+endif
+
+ifeq (,$(filter-out V2.0 V3.2,$(OS_RELEASE)))
 OS_CFLAGS		+= -DHAVE_INT_LOCALTIME_R
 endif
 

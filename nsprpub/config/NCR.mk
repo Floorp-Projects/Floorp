@@ -33,6 +33,12 @@ GCC_FLAGS_EXTRA = -pipe
 
 DEFINES		+= -DSVR4 -DSYSV -DHAVE_STRERROR -DNCR -D_PR_LOCAL_THREADS_ONLY
 
+ifeq (,$(filter-out 2.03,$(OS_RELEASE)))
+DEFINES		+= -D_PR_STAT_HAS_ST_ATIM
+else
+DEFINES		+= -D_PR_STAT_HAS_ST_ATIM_UNION
+endif
+
 ifdef NS_USE_NATIVE
 CC              = cc
 CCC             = ncc

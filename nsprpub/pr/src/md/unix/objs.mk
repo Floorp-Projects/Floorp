@@ -110,6 +110,10 @@ DGUX_CSRCS = \
 	dgux.c \
 	$(NULL)
 
+QNX_CSRCS = \
+	qnx.c \
+	$(NULL)
+
 
 ifeq ($(PTHREADS_USER),1)
 CSRCS += $(PTH_USER_CSRCS)
@@ -177,6 +181,9 @@ CSRCS += $(SCOOS_CSRCS)
 endif
 ifeq ($(OS_ARCH),DGUX)
 CSRCS += $(DGUX_CSRCS)
+endif
+ifeq ($(OS_ARCH),QNX)
+CSRCS += $(QNX_CSRCS)
 endif
  
 #

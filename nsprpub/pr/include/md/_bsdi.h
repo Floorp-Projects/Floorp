@@ -32,26 +32,21 @@
 #define _MD_DEFAULT_STACK_SIZE	65536L
 #define _MD_MMAP_FLAGS          MAP_PRIVATE
 
-#define	HAVE_DLL
-#define USE_DLFCN
 #define HAVE_BSD_FLOCK
 #define NEED_TIME_R
 #define _PR_HAVE_SOCKADDR_LEN
-#define _PR_STAT_HAS_ST_ATIMESPEC
 #define _PR_NO_LARGE_FILES
-
-#if defined(BSDI_2)
-#define PROT_NONE 0x0
-#endif
 
 #define USE_SETJMP
 
 #include <setjmp.h>
 
-#if defined(BSDI_2)
+#if defined(_PR_BSDI_JMPBUF_IS_ARRAY)
 #define _MD_GET_SP(_t)    (_t)->md.context[2] 
-#else
+#elif defined(_PR_BSDI_JMPBUF_IS_STRUCT)
 #define _MD_GET_SP(_t)    (_t)->md.context[0].jb_esp
+#else
+#error "Unknown BSDI jmp_buf type"
 #endif
 
 #define PR_NUM_GCREGS	_JBLEN
