@@ -22,6 +22,8 @@
 
 #include "nsAString.h"
 
+// to be turned on as a part of bug 100214
+#if 0
 void ToLowerCase( nsAString& );
 void ToUpperCase( nsAString& );
 
@@ -34,3 +36,4 @@ class nsCaseInsensitiveStringComparator
       virtual int operator()( const PRUnichar*, const PRUnichar*, PRUint32 aLength ) const;
   };
 
+#endif
