@@ -98,6 +98,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeItem.h"
 
+#include "nsIMarkupDocumentViewer.h"
+
 
 // HACK for M4, should be removed by M5
 #ifdef XP_MAC
@@ -1497,7 +1499,13 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   
   SetBoundsFromXUL(PR_TRUE, PR_TRUE /* !mIntrinsicallySized */);
   if (mIntrinsicallySized)
-    mWebShell->SizeToContent();
+    {
+    nsCOMPtr<nsIContentViewer> cv;
+    mDocShell->GetContentViewer(getter_AddRefs(cv));
+    nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
+    if(markupViewer)
+      markupViewer->SizeToContent();
+    }
 
   // Here's where we service the "show" request initially given in Initialize()
   OnChromeLoaded();
