@@ -224,48 +224,15 @@
         <titledbox flex="1" orient="vertical">
           <title id="alignLabel" value="&alignment.label;"/>
           <spring class="spacer"/>
-          <stack>
-            <menulist id = "alignTypeSelect" oncommand="changeAlignment(event.target)" 
-                      style="height: 15px" onfocus="onAlignFocus();" onblur="onAlignBlur();">
-              <menupopup valign="middle">
-                <menuitem class="middle" valign="middle" autostretch="never">
-                  <spring class="spacer"/>
-                  <image class="img-align-top"/>
-                  <spring class="spacer"/>
-                  <text id="topText"    class="label" value = "&topPopup.value;"/>
-                </menuitem>
-                <menuitem class="middle" valign="middle" autostretch="never">
-                  <spring class="spacer"/>
-                  <image class="img-align-middle"/>
-                  <spring class="spacer"/>
-                  <text id="middleText" class="label" value = "&centerPopup.value;"/>
-                </menuitem>
-                <menuitem class="middle" valign="middle" autostretch="never">
-                  <spring class="spacer"/>
-                  <image class="img-align-bottom"/>
-                  <spring class="spacer"/>
-                  <text id="bottomText" class="label" value = "&bottomPopup.value;"/>
-                </menuitem>
-                <menuitem class="middle" valign="middle" autostretch="never">
-                  <spring class="spacer"/>
-                  <image class="img-align-right"/>  <spring class="spacer"/>
-                  <text id="rightText"  class="label" value = "&wrapLeftPopup.value;"/>
-                </menuitem>
-                <menuitem class="middle" valign="middle" autostretch="never">
-                  <spring class="spacer"/>
-                  <image class="img-align-left"/>
-                  <spring class="spacer"/>
-                  <text id="leftText" class="label" value = "&wrapRightPopup.value;"/>
-                </menuitem>
-              </menupopup>
-            </menulist>
-            <box valign="middle" autostretch="never" style="padding: 4px 4px 4px 10px" 
-              mousethrough="always">
-              <image id="alignImage"/>
-              <spring class="spacer"/>
-              <text id="alignText" class="label menu-list"/>
-            </box>
-          </stack>
+          <menulist id="alignTypeSelect" class="align-menu">
+            <menupopup valign="middle">
+              <menuitem class="align-menu" data="top" value="&topPopup.value;"/>
+              <menuitem class="align-menu" data="center" value="&centerPopup.value;"/>
+              <menuitem class="align-menu" data="bottom" value="&bottomPopup.value;"/>
+              <menuitem class="align-menu" data="left" value="&wrapLeftPopup.value;"/>
+              <menuitem class="align-menu" data="right" value="&wrapRightPopup.value;"/>
+            </menupopup>
+          </menulist>
         </titledbox>
 
         <!--//////// Borders and Spacing ////////-->

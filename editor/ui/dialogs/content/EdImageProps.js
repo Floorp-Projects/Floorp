@@ -232,37 +232,14 @@ function InitDialog()
   switch ( align )
   {
 	  case "top":
-	    dialog.alignTypeSelect.selectedIndex = 0;
-      imgClass = "img-align-top";
-      textID   = "topText";
-	    break;
 	  case "center":
-	    dialog.alignTypeSelect.selectedIndex = 1;
-      imgClass = "img-align-middle";
-      textID   = "middleText";
-	    break;
 	  case "right":
-      // Note: this means the image is on the right
-	    dialog.alignTypeSelect.selectedIndex = 3;
-      imgClass = "img-align-right";
-      textID   = "rightText";
-	    break;
 	  case "left":
-      // Note: this means the image is on the left
-	    dialog.alignTypeSelect.selectedIndex = 4;
-      imgClass = "img-align-left";
-      textID   = "leftText";
-	    break;
+      dialog.alignTypeSelect.data = align;
+      break;
 	  default:  // Default or "bottom"
-	    dialog.alignTypeSelect.selectedIndex = 2;
-      imgClass = "img-align-bottom";
-      textID   = "bottomText";
-	    break;
+	    dialog.alignTypeSelect.data = "bottom";
   }
-  // Set the same image and text as used in the selected menuitem in the menulist    
-  // Image url is CSS-driven based on class
-  dialog.alignImage.setAttribute("class", imgClass);
-  dialog.alignText.setAttribute("value", document.getElementById(textID).getAttribute("value"));
 
   // we want to force an update so initialize "wasEnableAll" to be the opposite of what the actual state is
   wasEnableAll = !IsValidImage(dialog.srcInput.value);
@@ -575,16 +552,6 @@ function removeImageMap()
   }
 }
 
-function changeAlignment(menuItem)
-{
-  // Item index assume structure in XUL
-  // (current item has spring, image, spring, text)
-  var image = menuItem.childNodes.item(1);
-  var text =  menuItem.childNodes.item(3);
-  dialog.alignImage.setAttribute("class", image.getAttribute("class"));
-  dialog.alignText.setAttribute("value", text.getAttribute("value"));
-}
-
 // Get data from widgets, validate, and set for the global element
 //   accessible to AdvancedEdit() [in EdDialogCommon.js]
 function ValidateData()
@@ -701,26 +668,17 @@ function ValidateData()
   // Note that the attributes "left" and "right" are opposite
   //  of what we use in the UI, which describes where the TEXT wraps,
   //  not the image location (which is what the HTML describes)
-	var align = "";
-	switch ( dialog.alignTypeSelect.selectedIndex )
+	switch ( dialog.alignTypeSelect.data )
 	{
-	  case 0:
-	    align = "top";
-	    break;
-	  case 1:
-	    align = "center";
-	    break;
-	  case 3:
-	    align = "right";
-	    break;
-	  case 4:
-	    align = "left";
-	    break;
+	  case "top":
+	  case "center":
+	  case "right":
+	  case "left":
+      globalElement.setAttribute( "align", dialog.alignTypeSelect.data );
+      break;
+    default:
+      globalElement.removeAttribute( "align" );
 	}
-	if (align == "")
-	  globalElement.removeAttribute( "align" );
-	else
-	  globalElement.setAttribute( "align", align );
 
   return true;
 }
@@ -792,15 +750,5 @@ function onImageCancel()
 {
   CancelTimer();
   onCancel();
-}
-
-function onAlignFocus()
-{
-  dialog.alignText.setAttribute("focused", "true");
-}
-
-function onAlignBlur()
-{
-  dialog.alignText.removeAttribute("focused");
 }
 
