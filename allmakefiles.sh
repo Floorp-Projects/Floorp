@@ -93,6 +93,7 @@ editor/Makefile
 editor/public/Makefile
 editor/idl/Makefile
 editor/txmgr/Makefile
+editor/txmgr/idl/Makefile
 editor/txmgr/public/Makefile
 editor/txmgr/src/Makefile
 editor/txmgr/tests/Makefile
