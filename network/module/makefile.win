@@ -27,11 +27,12 @@ EXPORTS = nsINetService.h               \
           nsIRelatedLinks.h             \
           nsINetlibURL.h                \
           nsIURLGroup.h                 \
-          nsIUnicharStreamLoader.h	\
+          nsIUnicharStreamLoader.h      \
           nsIConnectionInfo.h           \
           nsIRefreshUrl.h               \
           nsIProtocol.h                 \
           nsIProtocolURLFactory.h       \
+		  nsSocketTransport.h			\
           $(NULL)
 
 DIRS = tests
@@ -74,6 +75,7 @@ OBJS=                                   \
         .\$(OBJDIR)\nsLoadAttribs.obj   \
         .\$(OBJDIR)\nsNetFactory.obj    \
         .\$(OBJDIR)\nsHttpURLFactory.obj  \
+        .\$(OBJDIR)\nsSocketTransport.obj \
         $(NULL)
 
 #//------------------------------------------------------------------------
@@ -96,35 +98,36 @@ LCFLAGS=-DNETSCAPE -D_IMPL_NS_NET
 
 
 NETLIBS=\
-		$(DIST)\lib\abouturl.lib    \
-		$(DIST)\lib\fileurl.lib     \
-		$(DIST)\lib\ftpurl.lib      \
-		$(DIST)\lib\gophurl.lib     \
-		$(DIST)\lib\httpurl.lib     \
-		$(DIST)\lib\remoturl.lib    \
+        $(DIST)\lib\abouturl.lib    \
+        $(DIST)\lib\fileurl.lib     \
+        $(DIST)\lib\ftpurl.lib      \
+        $(DIST)\lib\gophurl.lib     \
+        $(DIST)\lib\httpurl.lib     \
+        $(DIST)\lib\sockstub.lib     \
+        $(DIST)\lib\remoturl.lib    \
 !ifdef NU_CACHE
-		$(DIST)\lib\cache.lib       \
+        $(DIST)\lib\cache.lib       \
 !endif
-		$(DIST)\lib\netcache.lib    \
-		$(DIST)\lib\netcnvts.lib    \
-		$(DIST)\lib\mimetype.lib    \
-		$(DIST)\lib\netutil.lib	    \
-		$(DIST)\lib\network.lib     \
-		$(NULL)
+        $(DIST)\lib\netcache.lib    \
+        $(DIST)\lib\netcnvts.lib    \
+        $(DIST)\lib\mimetype.lib    \
+        $(DIST)\lib\netutil.lib     \
+        $(DIST)\lib\network.lib     \
+        $(NULL)
 
 LLIBS=$(LLIBS)  $(LIBNSPR)                  \
-		$(DIST)\lib\secfreenav32.lib \
-		$(DIST)\lib\libpwcac.lib    \
+        $(DIST)\lib\secfreenav32.lib \
+        $(DIST)\lib\libpwcac.lib    \
                 $(DIST)\lib\libplc21.lib    \
                 $(DIST)\lib\js32$(VERSION_NUMBER).lib      \
                 $(DIST)\lib\xppref32.lib    \
                 $(DIST)\lib\xpcom32.lib     \
-		$(DIST)\lib\xplib.lib       \
-		$(DIST)\lib\zip3250.lib     \
+        $(DIST)\lib\xplib.lib       \
+        $(DIST)\lib\zip3250.lib     \
                 $(DIST)\lib\raptorbase.lib  \
-		$(DIST)\lib\dbm32.lib       \
-		$(NETLIBS)                  \
-		$(NULL)
+        $(DIST)\lib\dbm32.lib       \
+        $(NETLIBS)                  \
+        $(NULL)
 
 LINCS=$(LINCS)  -I.                         \
                 -I..\public          \
@@ -133,20 +136,21 @@ LINCS=$(LINCS)  -I.                         \
                 -I$(PUBLIC)\pref            \
                 -I$(PUBLIC)\js              \
                 -I$(PUBLIC)\xpcom           \
-		-I$(PUBLIC)\httpurl         \
+        -I$(PUBLIC)\httpurl         \
 !ifdef NU_CACHE
-		-I$(PUBLIC)\cache           \
+        -I$(PUBLIC)\cache           \
 !endif
-		-I$(PUBLIC)\netcache        \
-		-I$(PUBLIC)\network         \
-		-I$(PUBLIC)\netcnvts        \
-                -I$(PUBLIC)\abouturl 	    \
-                -I$(PUBLIC)\fileurl	    \
-                -I$(PUBLIC)\ftpurl	    \
-		-I$(PUBLIC)\gophurl	    \
-                -I$(PUBLIC)\httpurl	    \
-                -I$(PUBLIC)\remoturl	    \
-                -I$(PUBLIC)\netlib	    \
+        -I$(PUBLIC)\netcache        \
+        -I$(PUBLIC)\network         \
+        -I$(PUBLIC)\netcnvts        \
+                -I$(PUBLIC)\abouturl        \
+                -I$(PUBLIC)\fileurl     \
+                -I$(PUBLIC)\ftpurl      \
+        -I$(PUBLIC)\gophurl     \
+                -I$(PUBLIC)\httpurl     \
+                -I$(PUBLIC)\sockstub        \
+                -I$(PUBLIC)\remoturl        \
+                -I$(PUBLIC)\netlib      \
                 $(NULL)
 
 # clobber and clobber_all will remove the following garbage:
