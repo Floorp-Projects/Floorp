@@ -36,7 +36,6 @@
 # Branched 11/01/99
 #
 
-use 5.004;
 use strict;
 use Getopt::Mixed "nextOption";
 
