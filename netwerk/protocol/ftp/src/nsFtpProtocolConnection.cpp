@@ -20,8 +20,6 @@
 
 #include "nsFtpProtocolConnection.h"
 #include "nscore.h"
-#include "nsIUrl.h"
-#include "nsIFtpEventSink.h"
 #include "nsIServiceManager.h"
 #include "nsIByteBufferInputStream.h"
 #include "nsFtpConnectionThread.h"

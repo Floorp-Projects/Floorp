@@ -85,7 +85,7 @@ public:
     NS_DECL_ISUPPORTS
 
 	nsFtpConnectionThread(PLEventQueue* aEventQ, nsIStreamListener *aListener);
-	~nsFtpConnectionThread();
+	virtual ~nsFtpConnectionThread();
 	
 	// nsIRunnable method
 	NS_IMETHOD Run();
