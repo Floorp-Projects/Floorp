@@ -184,8 +184,20 @@ nsHttpProtocolConnection::GetOutputStream(nsIOutputStream* *result)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIHttpProtocolConnection methods:
 
+static nsresult
+Write(nsIByteBufferInputStream* in, const char* str, 
+      PRInt32 len = -1)
+{
+    if (len == -1)
+        len = nsCRT::strlen(str);
+    PRUint32 writeCnt;
+    nsresult rv = in->Fill(str, (PRUint32)len, &writeCnt);
+    NS_ASSERTION((PRInt32)writeCnt == len, "nsIByteBufferInputStream failed");
+    return rv;
+}
+
 NS_IMETHODIMP
-nsHttpProtocolConnection::GetHeader(const char* header)
+nsHttpProtocolConnection::GetHeader(const char* header, char* *result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -210,39 +222,31 @@ nsHttpProtocolConnection::Get(void)
     if (mState != CONNECTED)
         return NS_ERROR_NOT_CONNECTED;
 
-    // Write the http request to the server. 
-    // Note: We're doing synchronous writes here because it's
-    // unlikely that our get request will fill the output
-    // stream's buffer and block. 
-    nsIOutputStream* out;
-    rv = mTransport->OpenOutputStream(&out);
+    // build up the http request:
+    nsIByteBufferInputStream* in;
+    rv = NS_NewByteBufferInputStream(&in);
     if (NS_FAILED(rv)) return rv;
 
-    PRUint32 written;
-    rv = out->Write("GET ", 4, &written);
-    if (NS_FAILED(rv)) return rv;
-    NS_ASSERTION(written == 4, "write failed");
-
+    rv = Write(in, "GET ", 4);
+    if (NS_FAILED(rv)) goto done;
     const char* path;
     rv = mUrl->GetPath(&path);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
+    rv = Write(in, path);
+    if (NS_FAILED(rv)) goto done;
+    rv = Write(in, " ", 1);
+    if (NS_FAILED(rv)) goto done;
+    rv = Write(in, HTTP_DEFAULT_VERSION_STRING, HTTP_VERSION_STRING_LENGTH);
+    if (NS_FAILED(rv)) goto done;
+    rv = Write(in, CRLF, 2);
+    if (NS_FAILED(rv)) goto done;
 
-    PRUint32 pathLen = nsCRT::strlen(path);
-    rv = out->Write(path, pathLen, &written);
-    if (NS_FAILED(rv)) return rv;
-    NS_ASSERTION(written == pathLen, "write failed");
-    rv = out->Write(" HTTP/1.1", 9, &written);
-    if (NS_FAILED(rv)) return rv;
-    NS_ASSERTION(written == 9, "write failed");
-
-    rv = out->Flush();
-    if (NS_FAILED(rv)) return rv;
-
-    // start the state machine to read the response:
-    rv = mTransport->AsyncRead(NS_STATIC_CAST(nsIProtocolConnection*, this),
-                               mEventQueue, this);
-    if (NS_FAILED(rv)) return rv;
-
+    // send it to the server:
+    rv = mTransport->AsyncWrite(in,
+                                NS_STATIC_CAST(nsIProtocolConnection*, this),
+                                mEventQueue, this);
+  done:
+    NS_RELEASE(in);
     return rv;
 }
 
