@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.180 $ ';
+$::UtilsVersion = '$Revision: 1.181 $ ';
 
 package TinderUtils;
 
@@ -657,13 +657,34 @@ sub BuildIt {
         if ($Settings::UseTimeStamp) {
             $start_time = adjust_start_time($start_time);
             my $time_str = POSIX::strftime("%m/%d/%Y %H:%M", localtime($start_time));
-            my $timezone = POSIX::strftime("%Z", localtime($start_time));
-            # assume PST if no timezone is found
-            $timezone = "PST" if ($timezone eq "");
-            #XXXjrgm win32 returns the long form, which chokes win32 cvs
-            # so allow the use of value from tinder-config.pl
-            $timezone = $Settings::Timezone
-                if $Settings::Timezone && $Settings::OS =~ /^(Darwin|WIN)/;
+
+            # Figure out the timezone.  Some platform issues here:
+            #
+            # Win32/Activate returns the long form, e.g. "Pacific Daylight Time"
+            # which chokes win32 cvs.  Win32/cygwin perl returns "".
+            #
+            # Jaguar/MacOSX 10.2 posix call crashes.
+            #
+
+            my $timezone;
+
+            if ($Settings::Timezone) {
+                # If this is set in tinder-config.pl, use it.
+                $timezone = $Settings::Timezone;
+            } elsif (not ($Settings::OS =~ /^(Darwin|WIN)/)) {
+                # Try posix call to find timezone.
+                # Don't do this for Darwin, Win32.
+                $timezone = POSIX::strftime("%Z", localtime($start_time));
+            } elsif (not ($Settings::OS =~ /^(WIN)/)) {
+                # Fallback to what `date` says.
+                chomp($timezone = `date "+%Z"`);
+            } else {
+                # Guess.
+                $timezone = "PDT";  # PST ?
+            }
+
+            print "timezone = $timezone\n";
+
             $time_str .= " $timezone";
             $ENV{MOZ_CO_DATE} = "$time_str";
             # command.com/win9x loathes single quotes in command line
