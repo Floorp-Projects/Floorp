@@ -24,8 +24,95 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+
+CORE_DEPTH=$(topsrcdir)/security
+
+include $(CORE_DEPTH)/coreconf/arch.mk
+ifeq (,$(filter-out NetBSD,$(OS_TARGET)))
+include $(CORE_DEPTH)/coreconf/$(OS_TARGET).mk
+else
+include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
+endif
+include $(CORE_DEPTH)/coreconf/prefix.mk
+CPU_TAG = _$(CPU_ARCH)
+LOADABLE_ROOT_MODULE = $(DLL_PREFIX)nssckbi$(DLL_SUFFIX)
+CORECONF_OBJDIR=$(OBJDIR_NAME)
+
 include $(DEPTH)/config/autoconf.mk
+
+ifndef MOZ_DEBUG
+OPT_GMAKE_FLAGS = BUILD_OPT=1
+BUILD_OPT=1
+OBJDIR_TAG=_OPT
+endif
+
+DEFAULT_GMAKE_FLAGS = -f Makefile $(OPT_GMAKE_FLAGS) 
+
+CORECONF_INSTALL     = $(DIST)/$(CORECONF_OBJDIR)
+CORECONF_DIST        = $(MOZ_BUILD_ROOT)/dist/$(CORECONF_OBJDIR)
+DEFAULT_GMAKE_FLAGS += DIST=$(CORECONF_DIST) 
+DEFAULT_GMAKE_FLAGS += SOURCE_LIB_DIR=$(CORECONF_DIST)/lib
+DEFAULT_GMAKE_FLAGS += SOURCE_BIN_DIR=$(CORECONF_DIST)/bin
+DEFAULT_GMAKE_FLAGS += SOURCE_XP_DIR=$(CORECONF_DIST)
+
 
 DIRS		= lib
 
 include $(topsrcdir)/config/rules.mk
+
+ABS_topsrcdir	:= $(shell cd $(topsrcdir); pwd)
+
+install::
+ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
+	if test ! -d $(MOZ_BUILD_ROOT)/security/nss; then                   \
+		cp -r $(topsrcdir)/security/nss $(MOZ_BUILD_ROOT)/security; \
+	fi;
+	if test ! -d $(MOZ_BUILD_ROOT)/security/coreconf; then              \
+		cp -r $(topsrcdir)/security/coreconf $(MOZ_BUILD_ROOT)/security; \
+	fi;
+	if test ! -d $(MOZ_BUILD_ROOT)/security/psm/server; then            \
+		cp -r $(topsrcdir)/security/psm/server $(MOZ_BUILD_ROOT)/security/psm/server; \
+	fi;
+	if test ! -d $(MOZ_BUILD_ROOT)/security/psm/ui; then        \
+		cp -r $(topsrcdir)/security/psm/ui $(MOZ_BUILD_ROOT)/security/psm/; \
+	fi;
+	if test ! -d $(MOZ_BUILD_ROOT)/security/psm/doc; then       \
+		cp -r $(topsrcdir)/security/psm/doc $(MOZ_BUILD_ROOT)/security/psm/; \
+	fi;
+endif
+	cd $(MOZ_BUILD_ROOT)/security/coreconf; gmake $(DEFAULT_GMAKE_FLAGS)
+	cd $(MOZ_BUILD_ROOT)/security/nss; gmake $(DEFAULT_GMAKE_FLAGS) moz_import
+	cd $(MOZ_BUILD_ROOT)/security/nss/lib; gmake $(DEFAULT_GMAKE_FLAGS)
+	cd $(MOZ_BUILD_ROOT)/security/psm/ui; gmake $(DEFAULT_GMAKE_FLAGS)
+	cd $(MOZ_BUILD_ROOT)/security/psm/server; gmake $(DEFAULT_GMAKE_FLAGS)
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psm $(DIST)/bin/
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata $(DIST)/bin
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/start-psm $(DIST)/bin
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
+
+clean clobber clobber_all realclean distclean::
+ifeq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
+	cd $(MOZ_BUILD_ROOT)/security/coreconf; gmake $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/nss; gmake $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/psm/ui; gmake $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/psm/server; gmake $(DEFAULT_GMAKE_FLAGS) clean
+else
+	if test -d $(MOZ_BUILD_ROOT)/security/nss; then \
+		rm -rf $(MOZ_BUILD_ROOT)/security/nss;  \
+	fi;
+	if test -d $(MOZ_BUILD_ROOT)/security/coreconf; then    \
+		rm -rf $(MOZ_BUILD_ROOT)/security/coreconf;     \
+	fi;
+	if test -d $(MOZ_BUILD_ROOT)/security/psm/server; then  \
+		rm -rf $(MOZ_BUILD_ROOT)/security/psm/server;   \
+	fi;
+	if test -d $(MOZ_BUILD_ROOT)/security/psm/ui; then      \
+		rm -rf $(MOZ_BUILD_ROOT)/security/psm/ui;       \
+	fi;
+	if test -d $(MOZ_BUILD_ROOT)/security/psm/doc; then     \
+		rm -rf $(MOZ_BUILD_ROOT)/security/psm/doc;      \
+	fi;
+	if test -d $(MOZ_BUILD_ROOT)/dist/$(CORECONF_OBJDIR); then      \
+		rm -rf $(MOZ_BUILD_ROOT)/dist/$(CORECONF_OBJDIR);       \
+	fi;
+endif
