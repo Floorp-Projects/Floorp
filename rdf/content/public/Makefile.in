@@ -28,6 +28,7 @@ EXPORTS =				\
 	nsIRDFContent.h			\
 	nsIRDFContentModelBuilder.h	\
 	nsIRDFDocument.h		\
+	nsIDOMXULNode.h \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
