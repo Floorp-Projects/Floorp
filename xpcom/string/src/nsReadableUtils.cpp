@@ -1410,3 +1410,18 @@ NS_COM PRUint32 HashString( const nsACString& aStr )
     return sink.GetHashCode();
   }
 
+static const PRUnichar empty_buffer[1] = { '\0' };
+
+NS_COM const nsAFlatString& EmptyString()
+  {
+    static const nsDependentString sEmpty(empty_buffer);
+
+    return sEmpty;
+  }
+
+NS_COM const nsAFlatCString& EmptyCString()
+  {
+    static const nsDependentCString sEmpty((const char *)empty_buffer);
+
+    return sEmpty;
+  }

@@ -45,13 +45,6 @@
 #include "nsDTDUtils.h"
 
 
-static
-const nsString& GetEmptyString() {
-  static nsString gEmptyStr;
-  return gEmptyStr;
-}
-
-
 /**
  *  Default Constructor
  */
@@ -153,7 +146,7 @@ nsCParserNode::AddAttribute(CToken* aToken)
  */
 const nsAString&
 nsCParserNode::GetTagName() const {
-  return GetEmptyString();
+  return EmptyString();
 }
 
 
@@ -171,7 +164,7 @@ nsCParserNode::GetText() const
   if (mToken) {
     return mToken->GetStringValue();
   }
-  return GetEmptyString();
+  return EmptyString();
 }
 
 /**
@@ -228,7 +221,7 @@ nsCParserNode::GetAttributeCount(PRBool askToken) const
 const nsAString&
 nsCParserNode::GetKeyAt(PRUint32 anIndex) const 
 {
-  return GetEmptyString();
+  return EmptyString();
 }
 
 
@@ -242,7 +235,7 @@ nsCParserNode::GetKeyAt(PRUint32 anIndex) const
 const nsAString&
 nsCParserNode::GetValueAt(PRUint32 anIndex) const 
 {
-  return GetEmptyString();
+  return EmptyString();
 }
 
 PRInt32 
@@ -343,7 +336,7 @@ nsCParserStartNode::GetKeyAt(PRUint32 anIndex) const
       return attr->GetKey();
     }
   }
-  return GetEmptyString();
+  return EmptyString();
 }
 
 const nsAString&
@@ -356,7 +349,7 @@ nsCParserStartNode::GetValueAt(PRUint32 anIndex) const
       return attr->GetValue();
     }
   }
-  return GetEmptyString();
+  return EmptyString();
 }
 
 CToken* 
