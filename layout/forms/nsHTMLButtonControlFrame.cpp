@@ -432,21 +432,21 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext* aPresContext,
 
 #else // temporary
     // XXX This is temporary
-  // clips to it's size minus the border and padding,
+  // clips to it's size minus the border 
   // but the real problem is the FirstChild (the AreaFrame)
   // isn't being constrained properly
   // Bug #17474
   const nsStyleSpacing* spacing;
   GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
-  nsMargin borderPadding;
-  borderPadding.SizeTo(0, 0, 0, 0);
-  spacing->CalcBorderPaddingFor(this, borderPadding);
+  nsMargin border;
+  border.SizeTo(0, 0, 0, 0);
+  spacing->CalcBorderFor(this, border);
 
   nsRect rect;
   GetRect(rect);
   rect.x = 0;
   rect.y = 0;
-  rect.Deflate(borderPadding);
+  rect.Deflate(border);
   aRenderingContext.PushState();
   PRBool clipEmpty;
 
