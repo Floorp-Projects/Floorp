@@ -36,10 +36,10 @@ Rights Reserved.
 <!ENTITY color.accesskey                  "c">
 <!ENTITY displayWidth.label               "Plain Text Messages">
 <!ENTITY plainText.label				  "Display plain text messages using:">
-<!ENTITY displayText.label				  "Use the following settings when displaying quoted plain text messages:">
+<!ENTITY displayText.label				  "Settings for displaying quoted plain text messages:">
 <!ENTITY viewingPlainText.label			  "When viewing plain text messages:">
 <!ENTITY languages.label				  "Languages">
-<!ENTITY coding.label					  "Use the following character coding as the default for viewing messages:">
+<!ENTITY coding.label					  "Default character coding for viewing messages:">
 <!ENTITY sendDefaultCharset.label         "Character Coding:">
 <!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore character coding specified by MIME header).">
 <!ENTITY forceCharsetOverride.accesskey   "i">
