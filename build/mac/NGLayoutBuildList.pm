@@ -1658,6 +1658,11 @@ sub BuildAppRunner()
 	$cmd_file = "Mozilla Preferences";
 	_copy( $cmd_file_path . "Mozilla_Preference", $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
+	
+	$cmd_file = "NSPR Logging";
+	_copy( $cmd_file_path . "Mozilla_NSPR_Log", $dist_dir . $cmd_file );
+	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
+
 }
 
 #//--------------------------------------------------------------------------------------------------
