@@ -148,7 +148,7 @@ else
 ifneq ("$(wildcard /usr/lib/libnspr21*)","")
 NSPR_INSTALL_DIR := /usr
 else
-NSPR_INSTALL_DIR := $(TOPSRCDIR)/$(OBJDIR)/nspr
+NSPR_INSTALL_DIR := $(OBJDIR)/nspr
 endif
 endif
 
@@ -217,12 +217,12 @@ checkout:
 #
 webconfig:
 	netscape -remote "openURL($(WEBCONFIG_URL))"
-	@echo Fill out the form on the browser.
-	@echo Save the results to $(WEBCONFIG_FILE) when done.
 	@if test -f $(WEBCONFIG_FILE) ; then \
 	  mv $(WEBCONFIG_FILE) $(WEBCONFIG_FILE).old; \
 	  echo Saving $(WEBCONFIG_FILE) as $(WEBCONFIG_FILE).old; \
 	fi
+	@echo Fill out the form on the browser.
+	@echo Save the results to $(WEBCONFIG_FILE) when done.
 
 #	netscape -remote "saveAs($(WEBCONFIG_FILE))"
 
