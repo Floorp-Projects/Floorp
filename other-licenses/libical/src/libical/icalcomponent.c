@@ -2,7 +2,7 @@
   FILE: icalcomponent.c
   CREATOR: eric 28 April 1999
   
-  $Id: icalcomponent.c,v 1.13 2002/12/03 21:12:26 mostafah%oeone.com Exp $
+  $Id: icalcomponent.c,v 1.14 2004/03/12 20:14:52 mostafah%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -754,108 +754,24 @@ icalcomponent* icalcomponent_get_first_real_component(icalcomponent *c)
     return 0;
 }
 
-#ifndef WIN32
-#define BEN
-#endif
 
-#ifdef BEN
-
-time_t icalcomponent_convert_time(icalproperty *p)
-{
-    struct icaltimetype sict;
-    time_t convt;
-    icalproperty *tzp;
-        
-
-    /* Though it says _dtstart, it will work for dtend too */
-    sict = icalproperty_get_dtstart(p);
-
-    tzp = icalproperty_get_first_parameter(p,ICAL_TZID_PARAMETER);
-
-    if (sict.is_utc == 1 && tzp != 0){
-	icalerror_warn("icalcomponent_get_span: component has a UTC DTSTART with a timezone specified ");
-	icalerror_set_errno(ICAL_MALFORMEDDATA_ERROR);
-	return 0; 
-    }
-
-    if(sict.is_utc == 1){
-	/* _as_timet will use gmtime() to do the conversion */
-	convt = icaltime_as_timet(sict);
-
-#ifdef TEST_CONVERT_TIME
-	printf("convert time: use as_timet:\n %s\n %s",
-	       icalproperty_as_ical_string(p), ctime(&convt));
-#endif
-
-    } else if (sict.is_utc == 0 && tzp == 0 ) { 	/* not utc and no zone info */
-	time_t offset;
-
-	/* _as_timet will use localtime() to do the conversion */
-	convt = icaltime_as_timet(sict);
-	
-	/* offset = icaltime_utc_offset(sict,0); */
-	
-	/* benjaminlee: this replaces the line above
-	maybe it can be changed to something better? */
-	
-	{
-#if defined(__sgi) || defined(__sun)
-		tzset();
-		offset = daylight ? altzone : timezone;
-#else
-#ifdef XP_MAC
-		time_t now = time(NULL);
-
-		struct tm *utctm = gmtime(&now);
-		time_t utc = mktime(utctm);
-
-		struct tm localtm = *localtime(&now);
-		time_t local = mktime(&localtm);
-
-		offset = difftime(local, utc);
-#else
-		struct tm *tmp_tm;
-		time_t t;
-
-		t = time(NULL);
-#ifdef __USE_BSD
-	 	offset = localtime(&t)->tm_gmtoff;
-#else
-	 	offset = localtime(&t)->__tm_gmtoff;
-#endif
-#endif
-#endif
-	}
-
-	convt += offset;
-
-#ifdef TEST_CONVERT_TIME
-	printf("convert time: use as_timet and adjust:\n %s\n %s",
-	       icalproperty_as_ical_string(p), ctime(&convt));
-#endif
-    } else {
-	/* Convert the local time in the timezone (from tzp) to UTC*/
-	const char* mytimezone = icalparameter_get_tzid(tzp);
-	
-	icaltimezone_convert_time (&sict, 
-			icaltimezone_get_builtin_timezone(mytimezone),
-			icaltimezone_get_utc_timezone()
-			);
-	
-	sict.is_utc = 1;
-
-	convt = icaltime_as_timet(sict);
-
-#ifdef TEST_CONVERT_TIME
-	printf("convert time: use _as_utc:\n %s\n %s",
-	       icalproperty_as_ical_string(p), ctime(&convt));
-#endif
-    }	    
-
-    return convt;
-}
-
-#endif
+/**	@brief Get the timespan covered by this component, in UTC
+ *	(deprecated)
+ *
+ *      see icalcomponent_foreach_recurrence() for a better way to
+ *      extract spans from an component.
+ *
+ *	This method can be called on either a VCALENDAR or any real
+ *	component. If the VCALENDAR contains no real component, but
+ *	contains a VTIMEZONE, we return that span instead.
+ *	This might not be a desirable behavior; we keep it for now
+ *	for backward compatibility, but it might be deprecated at a
+ *	future time.
+ *
+ *	FIXME this API needs to be clarified. DTEND is defined as the
+ *	first available time after the end of this event, so the span
+ *	should actually end 1 second before DTEND.
+ */
 
 struct icaltime_span icalcomponent_get_span(icalcomponent* comp)
 {
@@ -863,18 +779,19 @@ struct icaltime_span icalcomponent_get_span(icalcomponent* comp)
     icalproperty *p, *duration;
     icalcomponent_kind kind;
     struct icaltime_span span;
-    struct icaltimetype start;
+    struct icaltimetype start, end;
 
     span.start = 0;
     span.end = 0;
     span.is_busy= 1;
 
     /* initial Error checking */
+    if (comp == NULL) {
+	return span;
+    }
 
-/*    icalerror_check_arg_rz( (comp!=0),"comp");*/
-
+    /* FIXME this might go away */
     kind  = icalcomponent_isa(comp);
-
     if(kind == ICAL_VCALENDAR_COMPONENT){
 	inner = icalcomponent_get_first_real_component(comp);
 
@@ -906,74 +823,33 @@ struct icaltime_span icalcomponent_get_span(icalcomponent* comp)
 	
     }
 
-
-
     /* Get to work. starting with DTSTART */
-
-    p = icalcomponent_get_first_property(inner, ICAL_DTSTART_PROPERTY);
-
-    if (p ==0 ) {
-	icalerror_set_errno(ICAL_MALFORMEDDATA_ERROR);
-	/*icalerror_warn("icalcomponent_get_span: component has no DTSTART time");*/
-	return span; 
-    }
-
-
-    start = icalproperty_get_dtstart(p);
-
-    icalerror_clear_errno();
-
-    /* FIXME: Needs updating to new icaltimezone functions. */
-#ifdef BEN
-    span.start = icalcomponent_convert_time(p);
-#endif
-
-#ifdef TEST_CONVERT_TIME
-    printf("convert time:\n %s %s",
-	   icalproperty_as_ical_string(p), ctime(&span.start));
-#endif
-
-    if(icalerrno != ICAL_NO_ERROR){
-
-		if ( icalerrno != ICAL_MALFORMEDDATA_ERROR ) {
-	span.start = 0;
+    start = icalcomponent_get_dtstart(comp);
+    if (icaltime_is_null_time(start)) {
 	return span;
     }
-#ifndef NO_WARN_ICAL_MALFORMEDDATA_ERROR_HACK
-		fprintf(stderr, "** WARNING ** %s: %d %s\n", __FILE__, __LINE__, icalerror_strerror(icalerrno));
-		fprintf(stderr, "** WARNING ** %s: %d %s\n", __FILE__, __LINE__, "HACK around ICAL_MALFORMEDDATA_ERROR");
-#endif
-    }
+    span.start = icaltime_as_timet_with_zone(start,
+	icaltimezone_get_utc_timezone());
 
     /* The end time could be specified as either a DTEND or a DURATION */
-    p = icalcomponent_get_first_property(inner, ICAL_DTEND_PROPERTY);
-    duration = icalcomponent_get_first_property(inner, ICAL_DURATION_PROPERTY);
+    /* icalcomponent_get_dtend takes care of these cases. */
+    end = icalcomponent_get_dtend(comp);
+    if (icaltime_is_null_time(end)) {
+	if (!icaltime_is_date(start)) {
+	    /* If dtstart is a DATE-TIME and there is no DTEND nor DURATION
+	       it takes no time */
+	    span.start = 0;
+	    return span;
+	} else {
+	    end = start;
+	}
+    }
 
-    if (p==0 && duration == 0 && start.is_date != 1) {
-	icalerror_set_errno(ICAL_MALFORMEDDATA_ERROR);
-	/*icalerror_warn("icalcomponent_get_span: component has neither DTEND nor DURATION time");*/
-	span.start = 0;
-	return span; 
-    } 
-
-    if (p!=0){
-    /* FIXME: Needs updating to new icaltimezone functions. */
-#ifdef BEN
-	span.end = icalcomponent_convert_time(p);
-#endif
-    } else if (start.is_date == 1) {
-	/* Duration is all day */
-	span.end = span.start + 60*60*24;
-    } else {
-	/* Use the duration */
-	struct icaldurationtype dur;
-	time_t durt;
-	
-	
-	dur = icalproperty_get_duration(duration);
-
-	durt = icaldurationtype_as_int(dur);
-	span.end = span.start+durt;
+    span.end = icaltime_as_timet_with_zone(end,
+	icaltimezone_get_utc_timezone());
+    if (icaltime_is_date(start)) {
+	/* Until the end of the day*/
+	span.end += 60*60*24 - 1;
     }
 
     return span;
