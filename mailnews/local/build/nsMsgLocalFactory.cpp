@@ -249,67 +249,62 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
+  nsresult finalResult = NS_OK;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kMailboxUrlCID, nsnull, nsnull,
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kMailboxServiceCID, nsnull, 
 								  "component://netscape/messenger/mailboxservice", 
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kMailboxServiceCID, nsnull, 
 								  "component://netscape/messenger/messageservice;type=mailbox", 
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kMailboxServiceCID, nsnull, 
 								  "component://netscape/messenger/messageservice;type=mailbox_message", 
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kMailboxParserCID, nsnull, nsnull,
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kPop3UrlCID, nsnull, nsnull,
 								  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kPop3ServiceCID, nsnull, 
 								  "component://netscape/messenger/popservice",
 								  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   // register our RDF resource factories:
   rv = compMgr->RegisterComponent(kLocalMailFolderResourceCID,
                                   "Local Mail Folder Resource Factory",
                                   NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox",
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
    rv = compMgr->RegisterComponent(kMailboxMessageResourceCID,
                                    "Local Message Resource Factory",
                                    NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox_message",
                                    path, PR_TRUE, PR_TRUE);
-   if (NS_FAILED(rv)) goto done;
+   if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kPop3IncomingServerCID,
                                   "Pop3 Incoming Server",
                                   "component://netscape/messenger/server&type=pop3",
                                   path, PR_TRUE, PR_TRUE);
 	
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
    rv = compMgr->RegisterComponent(kParseMailMsgStateCID,
                                   "Parse MailMessage State",
                                   "component://netscape/messenger/messagestateparser",
@@ -317,54 +312,45 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   
                                   
   
-  if (NS_FAILED(rv)) goto done;
-   done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
+  if (NS_FAILED(rv)) finalResult = rv;
+  return finalResult;
 }
 
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
+  nsresult finalResult = NS_OK;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kMailboxUrlCID, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->UnregisterComponent(kMailboxServiceCID, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->UnregisterComponent(kPop3UrlCID, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->UnregisterComponent(kPop3ServiceCID, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->UnregisterComponent(kMailboxParserCID, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->UnregisterComponent(kLocalMailFolderResourceCID, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
-	rv = compMgr->UnregisterComponent(kMailboxMessageResourceCID, path);
-	if (NS_FAILED(rv)) goto done;
+  rv = compMgr->UnregisterComponent(kMailboxMessageResourceCID, path);
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->UnregisterComponent(kPop3IncomingServerCID, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->UnregisterComponent(kParseMailMsgStateCID, path);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) finalResult = rv;
 
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
+  return finalResult;
 }
