@@ -1,4 +1,5 @@
 <!-- Entities for the Sample Extension Options Dialog go here -->
 <!ENTITY reporterMenu.title                         "Report Broken Website">
+<!ENTITY reporterMenu.tooltip                       "Report Broken Website">
 <!ENTITY reporterMenu.accesskey                     "R">
 
