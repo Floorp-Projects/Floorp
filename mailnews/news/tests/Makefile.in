@@ -51,6 +51,7 @@ LIBS = \
 	-lnetlib \
 	-lnetutil \
 	-lnntp	\
+	-lrdf \
 	-lmailnewsbase \
 	-lreg	\
 	-lxpcom	\
@@ -63,6 +64,7 @@ LIBS = \
 	-lgmbase$(MOZ_TOOLKIT) \
 	-lsecfree \
 	-lz \
+	$(DIST)/lib/librdfbase_s.a \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)
