@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -1067,7 +1067,8 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 	  sprintf(buf, "%.800s/newsdb", conf_dir);
 	  name = buf;
 	  break;
-
+          
+#ifdef OLD_MOZ_MAIL_NEWS
 	case xpImapRootDirectory:
 	{
         char prefbuf[1024];
@@ -1091,7 +1092,7 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 		name = buf;
 		break;
 	}
-
+        
 	case xpImapServerDirectory:
 	{
         char prefbuf[1024];
@@ -1114,6 +1115,8 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 		sprintf (buf, "%s/summary.dat", conf_dir);
 		name = buf;
 		break;
+
+#endif /* OLD_MOZ_MAIL_NEWS */
 
 #ifdef MOZ_SECURITY
      case xpCryptoPolicy:
@@ -1360,6 +1363,7 @@ xp_TempName (XP_FileType type, const char * prefix, char* buf, char* buf2, unsig
 }
 
 
+#ifdef OLD_MOZ_MAIL_NEWS
 /* XP_GetNewsRCFiles returns a null terminated array
  * of pointers to malloc'd filename's.  Each filename
  * represents a different newsrc file.
@@ -1508,6 +1512,8 @@ XP_GetNewsRCFiles(void)
 	XP_CloseDir (dir_ptr);
 	return(array);
 }
+
+#endif
 
 XP_Dir XP_OpenDir(const char * name, XP_FileType type)
 {
