@@ -2724,7 +2724,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     if(NS_FAILED(rv)) goto done;
 
     srcSupport = do_QueryInterface(srcFolder);
-    urlListener = do_QueryInterface(srcFolder);
+	rv = QueryInterface(nsIUrlListener::GetIID(), getter_AddRefs(urlListener));
 
     rv = InitCopyState(srcSupport, messages, isMove);
     if (NS_FAILED(rv)) goto done;
