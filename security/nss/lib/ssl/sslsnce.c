@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.22 2002/09/06 00:27:52 wtc%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.23 2003/01/23 00:15:08 jpierre%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -220,6 +220,7 @@ struct cacheDescStr {
     struct cacheDescStr *      sharedCache;  /* shared copy of this struct */
     PRFileMap *                cacheMemMap;
     PRThread  *                poller;
+    PRBool shared;
 };
 typedef struct cacheDescStr cacheDesc;
 
@@ -882,7 +883,7 @@ long gettid(void)
 
 static SECStatus
 InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout, 
-          PRUint32 ssl3_timeout, const char *directory)
+          PRUint32 ssl3_timeout, const char *directory, PRBool shared)
 {
     ptrdiff_t     ptr;
     sidCacheLock *pLock;
@@ -1000,16 +1001,28 @@ InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout,
 	goto loser;
     }
 
+    cache->shared = shared;
     /* Create cache */
-    cacheMemMap = PR_OpenAnonFileMap(cfn, cache->sharedMemSize, 
+    if (PR_TRUE == shared) {
+        cacheMemMap = PR_OpenAnonFileMap(cfn, cache->sharedMemSize, 
                                             PR_PROT_READWRITE);
+    } else {
+        cacheMemMap = NULL;
+    }
+
     PR_smprintf_free(cfn);
-    if(! cacheMemMap) {
+    if( (PR_TRUE == shared) && (!cacheMemMap) ) {
 	goto loser;
     }
-    sharedMem = PR_MemMap(cacheMemMap, 0, cache->sharedMemSize);
+
+    if (PR_TRUE == shared) {
+        sharedMem = PR_MemMap(cacheMemMap, 0, cache->sharedMemSize);
+    } else {
+        sharedMem = PORT_Alloc(cache->sharedMemSize);
+    }
+    
     if (! sharedMem) {
-	goto loser;
+        goto loser;
     }
 
     /* Initialize shared memory. This may not be necessary on all platforms */
@@ -1060,10 +1073,16 @@ loser:
 		    sslMutex_Destroy(&pLock->mutex);
 		}
 	    }
-	    PR_MemUnmap(cache->sharedMem, cache->sharedMemSize);
-	    cache->sharedMem = NULL;
+            if (shared) {
+                PR_MemUnmap(cache->sharedMem, cache->sharedMemSize);
+                cache->sharedMem = NULL;
+            }
 	}
-    	PR_CloseFileMap(cache->cacheMemMap);
+        if (shared) {
+            PR_CloseFileMap(cache->cacheMemMap);
+        } else {
+            PORT_Free(sharedMem);
+        }
 	cache->cacheMemMap = NULL;
     }
     return SECFailure;
@@ -1098,7 +1117,7 @@ SSL_ConfigServerSessionIDCacheInstance(	cacheDesc *cache,
                                 int      maxCacheEntries, 
 				PRUint32 ssl2_timeout,
 			       	PRUint32 ssl3_timeout, 
-			  const char *   directory)
+			  const char *   directory, PRBool shared)
 {
     SECStatus rv;
 
@@ -1117,7 +1136,7 @@ SSL_ConfigServerSessionIDCacheInstance(	cacheDesc *cache,
 	directory = DEFAULT_CACHE_DIRECTORY;
     }
     rv = InitCache(cache, maxCacheEntries, ssl2_timeout, ssl3_timeout, 
-                   directory);
+                   directory, shared);
     if (rv) {
 	SET_ERROR_CODE
     	return SECFailure;
@@ -1136,7 +1155,7 @@ SSL_ConfigServerSessionIDCache(	int      maxCacheEntries,
 			  const char *   directory)
 {
     return SSL_ConfigServerSessionIDCacheInstance(&globalCache, 
-    		maxCacheEntries, ssl2_timeout, ssl3_timeout, directory);
+    		maxCacheEntries, ssl2_timeout, ssl3_timeout, directory, PR_FALSE);
 }
 
 /* Use this function, instead of SSL_ConfigServerSessionIDCache,
@@ -1160,7 +1179,7 @@ SSL_ConfigMPServerSIDCache(	int      maxCacheEntries,
 
     isMultiProcess = PR_TRUE;
     result = SSL_ConfigServerSessionIDCacheInstance(cache, maxCacheEntries, 
-					ssl2_timeout, ssl3_timeout, directory);
+					ssl2_timeout, ssl3_timeout, directory, PR_TRUE);
     if (result != SECSuccess) 
         return result;
 
