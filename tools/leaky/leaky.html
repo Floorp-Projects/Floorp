@@ -1,43 +1,55 @@
 <!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <head>
-   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.5 [en] (X11; I; Linux 2.0.36 i686) [Netscape]">
+<title>Leaky</title>
 </head>
-<body>
+<body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
 
-<h2>
-About Leaky</h2>
+<center><b><font size="+2" face="Arial,Helvetica">
+Leaky
+</font></b></center><br>
 Leaky is a program which will help you find memory leaks, and as of late,
-help you debug reference count problems with xpcom objects.
-<p>To use leaky you must first build it. I've made it work only on x86
-linux. To work on other platforms you will need to:
-<ol>
-<li>
-Implement CrawlStack in libmalloc.cpp</li>
+help you debug reference count problems with xpcom objects.<br>
+<br>
 
-<li>
-Implement DumpAddressMap in libmalloc.cpp and in ShowLibs.cpp</li>
+<b><font size="+2" face="Arial,Helvetica">
+Get the Source
+</font></b></center><br>
+Leaky is not currently part of the default SeaMonkey module,<br>
+you will need to explicitly pull the source:<br>
+<br>
+<pre>
+  cvs checkout mozilla/tools/leaky
+</pre>
+If there is enough demand, we can make this part of
+the default SeaMonkey module.
+<br>
+<br>
 
-<li>
-Either support LD_PRELOAD in your dynamic linker *or* produce a library
-that wraps your libc malloc (see config.h for some clues)</li>
+<b><font size="+2" face="Arial,Helvetica">
+Building it
+</font></b></center><br>
+<pre>
+  ./configure --enable-leaky
+</pre>
+Top-of-tree build should Just Build It and leaky will show up in dist/bin.
+<br>
+<br>
 
-<li>
-Implement symbol table reading code (see coff.cpp, elf.cpp and bfd.cpp
-for examples; at the time of writing this document only bfd.cpp was known
-to work)</li>
-</ol>
 
-After its built, you can use TestPreload and TestMalloc and ShowLibs to
+<b><font size="+2" face="Arial,Helvetica">
+Using Leaky
+</font></b></center><br>
+
+After it has been built, you can use TestPreload and TestMalloc and ShowLibs to
 debug your implementation.
-<p>By setting the LIBMALLOC_LOG environment variable you control how much
+<p>By setting the <code>LIBMALLOC_LOG</code> environment variable you control how much
 information is logged during the programs execution. See libmalloc.h for
-a definition of the values to use. If you are using LD_PRELOAD, here is
+a definition of the values to use. If you are using <code>LD_PRELOAD</code>, here is
 one way to run your program:
 <blockquote><tt>env LD_PRELOAD=/full/path/to/libleaky.so LIBMALLOC_LOG=1
 my-program</tt></blockquote>
-The debugging malloc library creates two files - "malloc-log" and "malloc-map".
+The debugging malloc library creates two files, <code>malloc-log</code> and <code>malloc-map</code>.
 The malloc-log file can be quite large for large programs (e.g. mozilla)
 so be prepared to have alot of disk space. The malloc-map is tiny.
 <p>Once your program has completed execution you can use leaky to look
@@ -86,14 +98,11 @@ file of around 5 to 10 megabytes and the resulting converted log file will
 be 10 to 20 times that so be prepared to have alot of disk space. It helps
 a great deal to narrow down your problem space to reduce the log file size...</li>
 </ol>
+<br>
 
-<hr>
-
-<p>A quick additional note. Leaky now has a "graph" output option.
-If you do this:</p>
-
-<pre>leaky -gqx viewer malloc-log | c++filt | sed -e 's/&/&amp;/g' > /tmp/GQ0.html</pre>
-
+Leaky now has a "graph" output option.  If you do this:</p>
+<pre>
+  leaky -gqx &lt;program-name-goes-here>&nbsp; malloc-log | c++filt | sed -e 's/&/&amp;/g' > /tmp/GQ0.html</pre>
 <p>Then leaky will make a graph of the leaks [-g] and output that graph
 in xml format (currently actually html...) [-x]. I use c++filt to
 translate the C++ mangled names into ascii and then use sed to make it
@@ -102,6 +111,34 @@ legitimate html and off it goes to a file.</p>
 <p>If you throw file at viewer (recursion is cool) then it will
 present you with a treeview of the leaks that you can click on to
 open/close sections. Enjoy!</p>
+
+<br>
+<br>
+
+<b><font size="+2" face="Arial,Helvetica">
+Porting to non-Intel/Linux
+</font></b></center><br>
+
+<p>Initial version works only on x86 linux. To work on other platforms you will need to:
+<ol>
+<li>Implement <code>CrawlStack()</code> in libmalloc.cpp</li>
+<li>Implement <code>DumpAddressMap()</code> in libmalloc.cpp and in ShowLibs.cpp</li>
+<li>Either support LD_PRELOAD in your dynamic linker, <b>or</b><br>produce a library
+that wraps your libc malloc (see config.h for some clues)</li>
+<li>Implement symbol table reading code (see coff.cpp, elf.cpp and bfd.cpp
+for examples; at the time of writing this document only bfd.cpp was known
+to work)</li>
+</ol>
+
+<hr>
+<!-- hhmts start -->
+Last modified: Sun Sep 26 13:15:33 PDT 1999
+<!-- hhmts end -->
+<br>
+Send comments to <i><a href="mailto:kipp@netscape.com">Kipp Hickman</a></i><br>
+<br>
+
+
 
 </body>
 </html>
