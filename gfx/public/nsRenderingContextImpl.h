@@ -53,6 +53,12 @@ public:
    */
   NS_IMETHOD DrawPath(nsPathPoint aPointArray[],PRInt32 aNumPts);
 
+    /** ---------------------------------------------------
+   *  See documentation in nsIRenderingContext.h
+   *	@update 03/29/00 dwc
+   */
+  NS_IMETHOD FillPath(nsPathPoint aPointArray[],PRInt32 aNumPts);
+
   /** ---------------------------------------------------
    *  See documentation in nsIRenderingContext.h
    *	@update 05/01/00 dwc
@@ -96,6 +102,49 @@ public:
 
 
 /** ---------------------------------------------------
+ *  A point structure with floats for the Quadratic bezier curve
+ *	@update 4/27/2000 dwc
+ */
+struct nsFloatPoint {
+  float x, y;
+
+  // Constructors
+  nsFloatPoint() {}
+  nsFloatPoint(const nsFloatPoint& aPoint) {x = aPoint.x; y = aPoint.y;}
+  nsFloatPoint(float aX, float aY) {x = aX; y = aY;}
+
+  void MoveTo(float aX, float aY) {x = aX; y = aY;}
+  void MoveTo(nscoord aX, nscoord aY) {x = (float)aX; y = (float)aY;}
+  void MoveBy(float aDx, float aDy) {x += aDx; y += aDy;}
+
+  // Overloaded operators. Note that '=' isn't defined so we'll get the
+  // compiler generated default assignment operator
+  PRBool   operator==(const nsFloatPoint& aPoint) const {
+    return (PRBool) ((x == aPoint.x) && (y == aPoint.y));
+  }
+  PRBool   operator!=(const nsFloatPoint& aPoint) const {
+    return (PRBool) ((x != aPoint.x) || (y != aPoint.y));
+  }
+  nsFloatPoint operator+(const nsFloatPoint& aPoint) const {
+    return nsFloatPoint(x + aPoint.x, y + aPoint.y);
+  }
+  nsFloatPoint operator-(const nsFloatPoint& aPoint) const {
+    return nsFloatPoint(x - aPoint.x, y - aPoint.y);
+  }
+  nsFloatPoint& operator+=(const nsFloatPoint& aPoint) {
+    x += aPoint.x;
+    y += aPoint.y;
+    return *this;
+  }
+  nsFloatPoint& operator-=(const nsFloatPoint& aPoint) {
+    x -= aPoint.x;
+    y -= aPoint.y;
+    return *this;
+  }
+};
+
+
+/** ---------------------------------------------------
  *  Class QBezierCurve, a quadratic bezier curve
  *	@update 4/27/2000 dwc
  */
@@ -103,13 +152,14 @@ class QBezierCurve
 {
 
 public:
-	nsPoint	mAnc1;
-	nsPoint	mCon;
-	nsPoint mAnc2;
+	nsFloatPoint	mAnc1;
+	nsFloatPoint	mCon;
+	nsFloatPoint  mAnc2;
 
   QBezierCurve() {mAnc1.x=0;mAnc1.y=0;mCon=mAnc2=mAnc1;}
-  void SetControls(nsPoint &aAnc1,nsPoint &aCon,nsPoint &aAnc2) { mAnc1 = aAnc1; mCon = aCon; mAnc2 = aAnc2;}
+  void SetControls(nsFloatPoint &aAnc1,nsFloatPoint &aCon,nsFloatPoint &aAnc2) { mAnc1 = aAnc1; mCon = aCon; mAnc2 = aAnc2;}
   void SetPoints(nscoord a1x,nscoord a1y,nscoord acx,nscoord acy,nscoord a2x,nscoord a2y) {mAnc1.MoveTo(a1x,a1y),mCon.MoveTo(acx,acy),mAnc2.MoveTo(a2x,a2y);}
+  void SetPoints(float a1x,float a1y,float acx,float acy,float a2x,float a2y) {mAnc1.MoveTo(a1x,a1y),mCon.MoveTo(acx,acy),mAnc2.MoveTo(a2x,a2y);}
 
 /** ---------------------------------------------------
  *  Divide a Quadratic curve into line segments if it is not smaller than a certain size
@@ -118,6 +168,15 @@ public:
  *	@update 3/26/99 dwc
  */
   void SubDivide(nsIRenderingContext *aRenderingContext);
+
+/** ---------------------------------------------------
+ *  Divide a Quadratic curve into line segments if it is not smaller than a certain size
+ *  else it is so small that it can be approximated by 2 lineto calls
+ *  @param nsPoint* -- The points array to rasterize into
+ *  @param aNumPts* -- Current number of points in this array
+ *	@update 3/26/99 dwc
+ */
+  void SubDivide(nsPoint aThePoints[],PRInt16 *aNumPts);
 
 /** ---------------------------------------------------
  *  Divide a Quadratic Bezier curve at the mid-point

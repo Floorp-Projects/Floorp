@@ -177,11 +177,67 @@ nsPathIter::eSegType  curveType;
 	while ( thePathIter->NextSeg(thecurve,curveType) ) {
     // draw the curve we found
     if(eLINE == curveType){
-      DrawStdLine(thecurve.mAnc1.x,thecurve.mAnc1.y,thecurve.mAnc2.x,thecurve.mAnc2.y);
+      DrawStdLine(NSToCoordRound(thecurve.mAnc1.x),NSToCoordRound(thecurve.mAnc1.y),NSToCoordRound(thecurve.mAnc2.x),NSToCoordRound(thecurve.mAnc2.y));
     } else {
       thecurve.SubDivide(this);
     }
 	}
+
+  // Release temporary storage if necessary
+  if (pp0 != pts)
+    delete pp0;
+
+  return NS_OK;
+}
+
+
+#define MAXPATHSIZE 1000
+
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 3/29/00 dwc
+ */
+NS_IMETHODIMP 
+nsRenderingContextImpl::FillPath(nsPathPoint aPointArray[],PRInt32 aNumPts)
+{
+PRInt32               i;
+nsPathPoint           pts[20];
+nsPathPoint           *pp0,*np=0,*pp;
+QBezierCurve          thecurve;
+nsPathIter            *thePathIter;
+nsPathIter::eSegType  curveType;
+nsPoint               thePath[MAXPATHSIZE];
+PRInt16               curPoint=0;
+
+
+  // Transform the points first
+  if (aNumPts > 20){
+    pp0 = new nsPathPoint[aNumPts];
+  } else {
+    pp0 = &pts[0];
+  }
+  pp = pp0;
+  np = &aPointArray[0];
+
+	for ( i= 0; i < aNumPts; i++,np++,pp++){
+		pp->x = np->x;
+		pp->y = np->y;
+    pp->mIsOnCurve = np->mIsOnCurve;
+		mTranMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
+	}
+
+  thePathIter = new nsPathIter(pp0,aNumPts);
+	while ( thePathIter->NextSeg(thecurve,curveType) ) {
+    // build a polygon with the points
+    if(eLINE == curveType){
+      thePath[curPoint++].MoveTo(NSToCoordRound(thecurve.mAnc1.x),NSToCoordRound(thecurve.mAnc1.y));
+      thePath[curPoint++].MoveTo(NSToCoordRound(thecurve.mAnc2.x),NSToCoordRound(thecurve.mAnc2.y));
+    } else {
+      thecurve.SubDivide(thePath,&curPoint);
+    }
+	}
+
+  this->FillStdPolygon(thePath,curPoint);
 
   // Release temporary storage if necessary
   if (pp0 != pts)
@@ -224,20 +280,18 @@ PRInt32 flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
 void 
 QBezierCurve::SubDivide(nsIRenderingContext *aRenderingContext)
 {
-QBezierCurve    curve1,curve2;
-PRInt16         fx,fy,smag;
+QBezierCurve  curve1,curve2;
+float         fx,fy,smag;
 
   // divide the curve into 2 pieces
 	MidPointDivide(&curve1,&curve2);
 	
-
   // for now to fix the build
-	//fx = (PRInt16)abs(curve1.mAnc2.x - this->mCon.x);
-	//fy = (PRInt16)abs(curve1.mAnc2.y - this->mCon.y);
-  fx = fy = 1;
+	fx = (float) fabs(curve1.mAnc2.x - this->mCon.x);
+	fy = (float) fabs(curve1.mAnc2.y - this->mCon.y);
 
-	smag = fx+fy-(PR_MIN(fx,fy)>>1);
-  //smag = fx*fx + fy*fy;
+	//smag = fx+fy-(PR_MIN(fx,fy)>>1);
+  smag = fx*fx + fy*fy;
  
 	if (smag>1){
 		// split the curve again
@@ -245,8 +299,43 @@ PRInt16         fx,fy,smag;
     curve2.SubDivide(aRenderingContext);
 	}else{
     // draw the curve 
-    aRenderingContext->DrawStdLine(curve1.mAnc1.x,curve1.mAnc1.y,curve1.mAnc2.x,curve1.mAnc2.y);
-    aRenderingContext->DrawStdLine(curve1.mAnc2.x,curve1.mAnc2.y,curve2.mAnc2.x,curve2.mAnc2.y);
+    aRenderingContext->DrawStdLine(NSToCoordRound(curve1.mAnc1.x),NSToCoordRound(curve1.mAnc1.y),NSToCoordRound(curve1.mAnc2.x),NSToCoordRound(curve1.mAnc2.y)); 
+    aRenderingContext->DrawStdLine(NSToCoordRound(curve1.mAnc2.x),NSToCoordRound(curve1.mAnc2.y),NSToCoordRound(curve2.mAnc2.x),NSToCoordRound(curve2.mAnc2.y));
+	}
+}
+
+
+/** ---------------------------------------------------
+ *  See documentation in nsRenderingContextImpl.h
+ *	@update 3/29/00 dwc
+ */
+void 
+QBezierCurve::SubDivide(nsPoint  aThePoints[],PRInt16 *aNumPts)
+{
+QBezierCurve  curve1,curve2;
+float         fx,fy,smag;
+
+  // divide the curve into 2 pieces
+	MidPointDivide(&curve1,&curve2);
+	
+
+  // for now to fix the build
+	//fx = (float) fabs(curve1.mAnc2.x - this->mCon.x);
+	//fy = (float) fabs(curve1.mAnc2.y - this->mCon.y);
+  fx = fy = 0;
+
+	//smag = fx+fy-(PR_MIN(fx,fy)>>1);
+  smag = fx*fx + fy*fy;
+ 
+	if (smag>1){
+		// split the curve again
+    curve1.SubDivide(aThePoints,aNumPts);
+    curve2.SubDivide(aThePoints,aNumPts);
+	}else{
+    // draw the curve 
+      aThePoints[(*aNumPts)++].MoveTo(NSToCoordRound(curve1.mAnc1.x),NSToCoordRound(curve1.mAnc1.y));
+      aThePoints[(*aNumPts)++].MoveTo(NSToCoordRound(curve1.mAnc2.x),NSToCoordRound(curve1.mAnc2.y));
+      aThePoints[(*aNumPts)++].MoveTo(NSToCoordRound(curve2.mAnc2.x),NSToCoordRound(curve2.mAnc2.y));
 	}
 }
 
@@ -257,28 +346,27 @@ PRInt16         fx,fy,smag;
 void 
 QBezierCurve::MidPointDivide(QBezierCurve *A,QBezierCurve *B)
 {
-double  c1x,c1y,c2x,c2y;
-nsPoint	a1;
+float         c1x,c1y,c2x,c2y;
+nsFloatPoint	a1;
 
-  c1x = (mAnc1.x+mCon.x)/2.0;
-  c1y = (mAnc1.y+mCon.y)/2.0;
-  c2x = (mAnc2.x+mCon.x)/2.0;
-  c2y = (mAnc2.y+mCon.y)/2.0;
+  c1x = (float) ((mAnc1.x+mCon.x)/2.0);
+  c1y = (float) ((mAnc1.y+mCon.y)/2.0);
+  c2x = (float) ((mAnc2.x+mCon.x)/2.0);
+  c2y = (float) ((mAnc2.y+mCon.y)/2.0);
 
-  a1.x = (PRInt32)((c1x + c2x)/2.0);
-	a1.y = (PRInt32)((c1y + c2y)/2.0);
+  a1.x = (float) ((c1x + c2x)/2.0);
+	a1.y = (float) ((c1y + c2y)/2.0);
 
   // put the math into our 2 new curves
   A->mAnc1 = this->mAnc1;
-  A->mCon.x = (PRInt16)c1x;
-  A->mCon.y = (PRInt16)c1y;
+  A->mCon.x = c1x;
+  A->mCon.y = c1y;
   A->mAnc2 = a1;
   B->mAnc1 = a1;
-  B->mCon.x = (PRInt16)c2x;
-  B->mCon.y = (PRInt16)c2y;
+  B->mCon.x = c2x;
+  B->mCon.y = c2y;
   B->mAnc2 = this->mAnc2;
 }
-
 
 /** ---------------------------------------------------
  *  See documentation in nsRenderingContextImpl.h
@@ -316,8 +404,7 @@ nsPathIter::NextSeg(QBezierCurve& TheSegment,eSegType& aCurveType)
 PRInt8        code=0,number=1;
 PRBool        result = PR_TRUE;
 nsPathPoint   *pt1,*pt2,*pt3;
-nsPathPoint   ptAvg,ptAvg1;
-
+float         avx,avy,av1x,av1y;
 
   if ( mCurPoint < mNumPoints) {
     // 1st point
@@ -354,9 +441,9 @@ nsPathPoint   ptAvg,ptAvg1;
             mCurPoint+=2;
             break;
           case 04:                        // 100
-              ptAvg.x = (nscoord) (((pt2->x+pt3->x)/2.0));
-              ptAvg.y = (nscoord) (((pt2->y+pt3->y)/2.0));
-              TheSegment.SetPoints(pt1->x,pt1->y,pt2->x,pt2->y,ptAvg.x,ptAvg.y);
+              avx = (float)((pt2->x+pt3->x)/2.0);
+              avy = (float)((pt2->y+pt3->y)/2.0);
+              TheSegment.SetPoints((float)pt1->x,(float)pt1->y,(float)pt2->x,(float)pt2->y,avx,avy);
               aCurveType = eQCURVE;
               mCurPoint++;
           case 03:                        // 011
@@ -365,17 +452,17 @@ nsPathPoint   ptAvg,ptAvg1;
               aCurveType = eLINE;  
               mCurPoint++;
           case 01:                        // 001
-              ptAvg.x = (nscoord) (((pt1->x+pt2->x)/2.0));
-              ptAvg.y = (nscoord) (((pt1->y+pt2->y)/2.0));
-              TheSegment.SetPoints(ptAvg.x,ptAvg.y,pt2->x,pt3->y,pt2->x,pt3->y);
+              avx = (float)((pt1->x+pt2->x)/2.0);
+              avy = (float)((pt1->y+pt2->y)/2.0);
+              TheSegment.SetPoints(avx,avy,(float)pt2->x,(float)pt3->y,(float)pt2->x,(float)pt3->y);
               aCurveType = eQCURVE;
               mCurPoint+=2;
           case 00:                        // 000
-              ptAvg.x = (nscoord) (((pt1->x+pt2->x)/2.0));
-              ptAvg.y = (nscoord) (((pt1->y+pt2->y)/2.0));
-              ptAvg1.x = (nscoord) (((pt2->x+pt3->x)/2.0));
-              ptAvg1.y = (nscoord) (((pt2->y+pt3->y)/2.0));
-              TheSegment.SetPoints(ptAvg.x,ptAvg.y,pt2->x,pt2->y,ptAvg1.x,ptAvg1.y);
+              avx = (float)((pt1->x+pt2->x)/2.0);
+              avy = (float)((pt1->y+pt2->y)/2.0);
+              av1x = (float)((pt2->x+pt3->x)/2.0);
+              av1y = (float)((pt2->y+pt3->y)/2.0);
+              TheSegment.SetPoints(avx,avy,(float)pt2->x,(float)pt2->y,av1x,av1y);
           default:
             break;
         }
