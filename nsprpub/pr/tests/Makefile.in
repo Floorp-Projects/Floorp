@@ -112,11 +112,11 @@ CSRCS =             \
 	multiacc.c		\
 	multiwait.c		\
 	many_cv.c		\
-	nameshm1.c	\
+	nameshm1.c      \
 	nbconn.c		\
 	nblayer.c		\
 	nonblock.c		\
-	ntioto.c	\
+	ntioto.c        \
 	ntoh.c			\
 	obsints.c		\
 	op_2long.c      \
@@ -147,7 +147,7 @@ CSRCS =             \
 	prpoll.c		\
 	prpollml.c		\
 	ranfile.c       \
-	randseed.c	\
+	randseed.c      \
 	rwlocktest.c    \
 	sel_spd.c  		\
 	selct_er.c	    \
@@ -156,12 +156,12 @@ CSRCS =             \
 	select2.c  		\
 	selintr.c  		\
 	sem.c 	  		\
-	sema.c			\
-	semaerr.c		\
-	semaerr1.c		\
-	semaping.c		\
-	semapong.c		\
-	sendzlf.c		\
+	sema.c 	  		\
+	semaerr.c 		\
+	semaerr1.c 		\
+	semaping.c 		\
+	semapong.c 		\
+	sendzlf.c 		\
 	server_test.c	\
 	servr_kk.c		\
 	servr_ku.c		\
@@ -185,6 +185,8 @@ CSRCS =             \
 	system.c		\
 	testbit.c    	\
 	testfile.c    	\
+	thrpool_server.c \
+	thrpool_client.c \
 	threads.c 	  	\
 	thruput.c 	  	\
 	timemac.c		\
@@ -198,7 +200,7 @@ CSRCS =             \
 	writev.c        \
 	xnotify.c       \
 	y2k.c           \
-	y2ktmo.c	\
+	y2ktmo.c        \
 	zerolen.c       \
 	$(NULL)
 
@@ -210,7 +212,7 @@ CSRCS +=            \
 	$(NULL)
 endif
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 PROG_SUFFIX = .exe
 else
 PROG_SUFFIX =
@@ -235,15 +237,6 @@ ifeq ($(OS_TARGET), WIN16)
   LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).lib
   LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).lib
 else
-ifeq ($(OS_TARGET), OS2)
-ifdef XP_OS2_VACPP
-  LDOPTS =
-  LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).lib
-  LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).lib
-else
-  LDOPTS = -Zlinker /PM:VIO
-endif
-else
   LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
   ifeq ($(OS_TARGET), WIN95)
     LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
@@ -255,6 +248,17 @@ else
   ifdef PROFILE                                                                              
     LDOPTS += -PROFILE -MAP                                                                  
   endif # profile
+endif
+endif
+
+ifeq ($(OS_ARCH),OS2)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+  LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO
+  LIBPR  = $(DIST)/lib/nspr$(MOD_VERSION).lib
+  LIBPLC = $(DIST)/lib/plc$(MOD_VERSION).lib
+else
+ifeq ($(MOZ_OS2_EMX_OBJECTFORMAT),OMF)
+  LDOPTS = -Zlinker /PM:VIO
 endif
 endif
 endif
@@ -311,8 +315,8 @@ endif
 ifeq ($(OS_ARCH), HP-UX)
     LDOPTS += -z -Wl,+s,+b,$(ABSOLUTE_LIB_DIR)
     ifeq ($(USE_64),1)
-	LDOPTS += +DA2.0W
-	EXTRA_LIBS = -lpthread
+        LDOPTS += +DA2.0W
+        EXTRA_LIBS = -lpthread
     endif
 endif
 
@@ -427,6 +431,13 @@ ifeq ($(OS_ARCH), UNIXWARE)
 export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
 endif
 
+ifeq ($(OS_ARCH),FreeBSD)
+ifeq ($(USE_PTHREADS),1)
+LDOPTS += -pthread
+endif
+LDOPTS += -Xlinker -R $(ABSOLUTE_LIB_DIR)
+endif
+
 ifeq ($(OS_ARCH),OpenBSD)
 ifeq ($(USE_PTHREADS),1)
 LDOPTS += -pthread
@@ -438,6 +449,12 @@ ifeq ($(USE_PTHREADS),1)
 LDOPTS += -pthread
 endif
 LDOPTS += -Xlinker -R $(ABSOLUTE_LIB_DIR)
+endif
+
+ifeq ($(OS_ARCH),OpenBSD)
+ifeq ($(USE_PTHREADS),1)
+LDOPTS += -pthread
+endif
 endif
 
 ifeq ($(OS_ARCH),BSD_OS)
@@ -523,16 +540,15 @@ ifeq ($(OS_TARGET),WIN16)
 	echo winsock.lib     >>w16link
 	wlink @w16link.
 else
-ifeq ($(OS_TARGET),OS2)
-	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC) $(LIBPR) $(OS_LIBS) $(EXTRA_LIBS)
-else
 	link $(LDOPTS) $(EXTRA_LDOPTS) $< $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) wsock32.lib -out:$@
 endif
-endif
+else
+ifeq ($(OS_ARCH),OS2)
+	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC) $(LIBPR) $(OS_LIBS) $(EXTRA_LIBS)
 else
 	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) -o $@
 endif
-
+endif
 endif
 
 endif # !USE_AUTOCONF
@@ -543,10 +559,14 @@ clean::
 	rm -f $(TARGETS)
 
 ifndef USE_AUTOCONF
-# The prpoll test calls BSD socket functions, so it needs to link
+# The following tests call BSD socket functions, so they need to link
 # with -lsocket on some platforms.
 ifeq ($(OS_ARCH),SunOS)
 ifneq ($(OS_RELEASE),4.1.3_U1)
+ifeq ($(USE_IPV6),1)
+$(OBJDIR)/gethost: $(OBJDIR)/gethost.o
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) -lsocket $(EXTRA_LIBS) -o $@
+endif
 $(OBJDIR)/prpoll: $(OBJDIR)/prpoll.o
 	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) -lsocket $(EXTRA_LIBS) -o $@
 endif
@@ -578,7 +598,7 @@ PROGRAMS = $(notdir $(PROGS))
 ifdef NSPR_TEST_LOGFILE
 LOGFILE = $(NSPR_TEST_LOGFILE)
 else
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 LOGFILE = nul
 else
 LOGFILE = /dev/null

@@ -54,7 +54,7 @@ CSRCS =             \
 	tail.c		    \
 	$(NULL)
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 PROG_SUFFIX = .exe
 else
 PROG_SUFFIX =
@@ -83,6 +83,16 @@ LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
 LIBPR = $(DIST)/lib/libnspr$(NSPR_VERSION).$(LIB_SUFFIX)
 LIBPLC= $(DIST)/lib/libplc$(NSPR_VERSION).$(LIB_SUFFIX)
 endif
+endif
+
+ifeq ($(OS_ARCH),OS2)
+  ifeq ($(MOZ_OS2_TOOLS),VACPP)
+    LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO
+    LIBPR = $(DIST)/lib/nspr$(NSPR_VERSION).lib
+    LIBPLC= $(DIST)/lib/plc$(NSPR_VERSION).lib
+  else
+    LDOPTS += -Zomf -Zlinker /PM:VIO
+  endif
 endif
 
 ifneq ($(OS_ARCH), WINNT)
@@ -221,9 +231,12 @@ else
 	link $(LDOPTS) $< $(LIBPR) $(LIBPLC) wsock32.lib -out:$@
 endif
 else
+ifeq ($(OS_ARCH),OS2)
+	$(LINK) $(LDOPTS) $< $(LIBPR) $(LIBPLC) $(OS_LIBS) $(EXTRA_LIBS) -o $@
+else
 	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPR) $(LIBPLC) $(EXTRA_LIBS) -o $@
 endif
-
+endif
 endif
 
 export:: $(TARGETS)

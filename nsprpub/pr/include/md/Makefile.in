@@ -63,13 +63,13 @@ else
 ifeq ($(OS_TARGET), WIN16)
 MDCPUCFG_H = _win16.cfg
 else
-ifeq ($(OS_TARGET),OS2)
-MDCPUCFG_H = _os2.cfg
-else
 MDCPUCFG_H = _winnt.cfg
 endif
 endif
 endif
+
+ifeq ($(OS_ARCH),OS2)
+MDCPUCFG_H = _os2.cfg
 endif
 
 ifeq ($(OS_ARCH),AIX)
@@ -187,6 +187,11 @@ endif
 endif # ! USE_AUTOCONF
 
 export:: $(MDCPUCFG_H)
+ifeq ($(MOZ_BITS),16)
+	cp $(DIST)/include/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h
+	$(INSTALL) -m 444 $(MDCPUCFG_H) $(MOZ_INCL)
+	mv -f $(DIST)/include/$(MDCPUCFG_H) $(MOZ_INCL)/prcpucfg.h
+else
 	$(INSTALL) -m 444 $(CONFIGS) $(DIST)/include/md
 	$(INSTALL) -m 444 $(srcdir)/$(MDCPUCFG_H) $(DIST)/include
 ifneq ($(OS_ARCH),OpenVMS)
@@ -196,6 +201,7 @@ else
 	rm -f $(DIST)/include/$(MDCPUCFG_H)
 	rm -f $(DIST)/include/prcpucfg.h
 	ln -fs `pwd`/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h
+endif
 endif
 
 release:: export

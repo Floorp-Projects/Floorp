@@ -59,7 +59,7 @@ CXXSRCS =           \
 
 OBJS = $(addprefix $(OBJDIR)/,$(CXXSRCS:.cpp=.$(OBJ_SUFFIX)))
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 PROG_SUFFIX = .exe
 else
 PROG_SUFFIX =
@@ -132,6 +132,16 @@ else
   LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
   LIBPL = $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
 endif
+endif
+
+ifeq ($(OS_ARCH),OS2)
+  ifeq ($(MOZ_OS2_TOOLS),VACPP)
+    LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO
+    LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).lib
+    LIBPLC = $(DIST)/lib/plc$(MOD_VERSION).lib
+  else
+    LDOPTS += -Zomf -Zlinker /PM:VIO -lstdcpp
+  endif
 endif
 
 ifneq ($(OS_ARCH), WINNT)
@@ -260,9 +270,12 @@ else
 	link $(LDOPTS) $< $(LIBPR) $(LIBPL) wsock32.lib -out:$@
 endif
 else
+ifeq ($(OS_ARCH),OS2)
+	$(LINK) $(LDOPTS) $< $(LIBGC) $(LIBPLC) $(LIBPR) $(OS_LIBS) $(EXTRA_LIBS) -o $@
+else
 	$(CCC) $(XCFLAGS) $< $(LDOPTS) $(LIBPR) $(LIBPL) $(EXTRA_LIBS) -o $@
 endif
-
+endif
 endif
 
 export:: $(TARGETS)
