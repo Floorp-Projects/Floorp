@@ -315,7 +315,7 @@ nsFileDlgResults nsFileWidget::PutFile(nsIWidget        * aParent,
                                        const nsString   & promptString,    
                                        nsFileSpec       & theFileSpec)
 {
-  Create(aParent, promptString, eMode_load, nsnull, nsnull);
+  Create(aParent, promptString, eMode_save, nsnull, nsnull);
   PRBool result = Show();
   nsFileDlgResults status = nsFileDlgResults_Cancel;
   if (result && mFile.Length() > 0) {
