@@ -655,7 +655,7 @@ function showRelativePanel(goForward) {
   var sidebarButtons = new Array();
   for (var i = 0; i < sidebarBox.childNodes.length; i++) {
     var btn = sidebarBox.childNodes[i];
-    if (btn.nodeName == "button") {
+    if (btn.nodeName == "toolbarbutton") {
       if (btn.getAttribute("selected") == "true")
         selectedIndex = sidebarButtons.length;
       sidebarButtons.push(btn);

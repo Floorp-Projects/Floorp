@@ -126,13 +126,13 @@
       <vbox id="helpsidebar-box" persist="width">
 
          <!-- glossary panel -->
-         <button id="help-glossary-btn" class="box-texttab"
+         <toolbarbutton id="help-glossary-btn" class="box-texttab"
             label="&glossarytab.label;" oncommand="showPanel('help-glossary')"
             accesskey="&glossarytab.accesskey;"/>
-         <tree id="help-glossary-panel" flex="1" hidecolumnpicker="true" hidden="true"
-               datasources="rdf:null"
+         <tree id="help-glossary-panel" class="focusring"
+               flex="1" hidecolumnpicker="true" hidden="true"
+               datasources="rdf:null" ref="urn:root"
                containment="http://home.netscape.com/NC-rdf#subheadings"
-               ref="urn:root"
                flags="dont-build-content"
                onselect="onselect_loadURI(this);">
         <template>
@@ -169,14 +169,14 @@
          </tree>
 
 	 <!-- index panel -->
-         <button id="help-index-btn" class="box-texttab"
+         <toolbarbutton id="help-index-btn" class="box-texttab"
             label="&indextab.label;"  oncommand="showPanel('help-index');displayIndex();"
             accesskey="&indextab.accesskey;"/>
 
-         <tree id="help-index-panel" flex="1"
-               datasources="rdf:null" hidecolumnpicker="true" hidden="true"
+         <tree id="help-index-panel" class="focusring"
+               flex="1" hidecolumnpicker="true" hidden="true"
+               datasources="rdf:null" ref="urn:root"
                containment="http://home.netscape.com/NC-rdf#subheadings"
-               ref="urn:root"
                flags="dont-build-content dont-test-empty"
                onselect="onselect_loadURI(this);">
         <template>
@@ -216,7 +216,7 @@
          </tree>
 
      <!-- search panel -->
-     <button id="help-search-btn" class="box-texttab"
+     <toolbarbutton id="help-search-btn" class="box-texttab"
              label="&searchtab.label;" oncommand="showPanel('help-search')"
              accesskey="&searchtab.accesskey;"/>
 
@@ -229,11 +229,10 @@
 
                   <button id="findButton" default="true" disabled="true" label="&gobtn.label;" oncommand="doFind()" flex="0"/>
                 </hbox>
-                <tree id="help-search-tree"
+                <tree id="help-search-tree" class="focusring"
                       flex="1" hidecolumnpicker="true"
-                      datasources="rdf:null"
+                      datasources="rdf:null" ref="urn:root"
                       containment="http://home.netscape.com/NC-rdf#child"
-                      ref="urn:root"
                       flags="dont-build-content"
                       onselect="onselect_loadURI(this);">
             <template>
@@ -272,13 +271,13 @@
        </vbox>
 
        <!-- table of contents panel -->
-       <button id="help-toc-btn" class="box-texttab"
+       <toolbarbutton id="help-toc-btn" class="box-texttab"
           label="&toctab.label;" oncommand="showPanel('help-toc')"
           accesskey="&toctab.accesskey;"/>
-          <tree id="help-toc-panel" flex="1"  hidecolumnpicker="true"
-                datasources="rdf:null"
+          <tree id="help-toc-panel" class="focusring"
+                flex="1" hidecolumnpicker="true"
+                datasources="rdf:null" ref="urn:root"
                 containment="http://home.netscape.com/NC-rdf#subheadings"
-                ref="urn:root"
                 flags="dont-build-content"
                 onselect="onselect_loadURI(this);">
           <template>
