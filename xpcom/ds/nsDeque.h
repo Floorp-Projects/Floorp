@@ -205,7 +205,7 @@ friend class nsDequeIterator;
 
 
   /**
-   * Call this method when you want to to iterate all the
+   * Call this method when you want to iterate all the
    * members of the container, passing a functor along
    * to call your code.
    *
@@ -216,7 +216,7 @@ friend class nsDequeIterator;
   void ForEach(nsDequeFunctor& aFunctor) const;
 
   /**
-   * Call this method when you want to to iterate all the
+   * Call this method when you want to iterate all the
    * members of the container, passing a functor along
    * to call your code. This process will interupt if
    * your function returns a null to this iterator.
@@ -406,7 +406,7 @@ public:
   void* GetCurrent(void);
 
   /**
-   * Call this method when you want to to iterate all the
+   * Call this method when you want to iterate all the
    * members of the container, passing a functor along
    * to call your code.
    *
@@ -417,7 +417,7 @@ public:
   void ForEach(nsDequeFunctor& aFunctor) const;
   
   /**
-   * Call this method when you want to to iterate all the
+   * Call this method when you want to iterate all the
    * members of the container, passing a functor along
    * to call your code.
    *
