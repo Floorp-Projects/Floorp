@@ -1002,11 +1002,12 @@ void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   Window  win      = XtWindow(mWidget);
   Display *display = XtDisplay(mWidget);
   
-  XCopyArea(display, win, win, XDefaultGC(display, 0), 
+  if (nsnull != aClipRect) {
+    XCopyArea(display, win, win, XDefaultGC(display, 0), 
             aClipRect->x, aClipRect->y, 
             aClipRect->XMost(),  aClipRect->YMost(), aDx, aDy);
+  }
 
-#if 1
   XEvent evt;
   evt.xgraphicsexpose.type       = GraphicsExpose;
   evt.xgraphicsexpose.send_event = False;
@@ -1031,7 +1032,6 @@ void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
   XSendEvent(display, win, False, ExposureMask, &evt);
   XFlush(display);
-#endif
 }
 
 

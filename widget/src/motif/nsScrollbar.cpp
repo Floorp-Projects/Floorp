@@ -43,21 +43,15 @@ nsScrollbar::nsScrollbar(nsISupports *aOuter, PRBool aIsVertical) : nsWindow(aOu
 // Create
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::Create(nsIWidget *aParent,
+void nsScrollbar::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-  Widget parentWidget = nsnull;
+  Widget parentWidget = (Widget)aParent;
   strcpy(gInstanceClassName, "nsScrollbar");
-
-  if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else {
-    parentWidget = (Widget) aInitData ;
-  }
 
   int procDir = mOrientation == XmVERTICAL? XmMAX_ON_BOTTOM:XmMAX_ON_RIGHT;
 
@@ -107,18 +101,23 @@ void nsScrollbar::Create(nsIWidget *aParent,
 
 }
 
-//-------------------------------------------------------------------------
-//
-// Create
-//
-//-------------------------------------------------------------------------
-void nsScrollbar::Create(nsNativeWidget aParent,
+
+void nsScrollbar::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+Widget parentWidget;
+
+  if (aParent) {
+    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
+  } else {
+    parentWidget = (Widget) aInitData ;
+  }
+  Create((nsNativeWidget)parentWidget, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
+
 }
 
 //-------------------------------------------------------------------------
