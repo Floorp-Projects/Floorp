@@ -61,8 +61,8 @@ class nsToolkitCore : public nsBaseAppCore,
 
   private:
 
-    nsCOMPtr<nsIWebShellWindow>
-                  DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow) const;
+    void          DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow,
+                    nsCOMPtr<nsIWebShellWindow> *webWindow) const;
 };
 
 #endif // nsToolkitCorePrivate_h___
