@@ -684,9 +684,9 @@ SECMOD_CanDeleteInternalModule;
 ;+    global:
 CERT_AddOCSPAcceptableResponses;
 CERT_CompleteCRLDecodeEntries;
-CERT_DecodeDERCrlWithFlags;
 CERT_CreateOCSPCertID;
 CERT_CreateOCSPRequest;
+CERT_DecodeDERCrlWithFlags;
 CERT_DecodeOCSPResponse;
 CERT_DestroyOCSPCertID;
 CERT_DestroyOCSPRequest;
