@@ -59,3 +59,35 @@ nsFTPListener::OnDataAvailable(nsIChannel* aChannel, nsISupports* aContext,
                                PRUint32 aLength) {
     return mListener->OnDataAvailable(mFTPChannel, aContext, aInputStream, aSourceOffset, aLength);
 }
+
+
+
+NS_IMPL_ISUPPORTS(nsFTPObserver, NS_GET_IID(nsIStreamObserver));
+
+// nsFTPListener methods
+
+nsFTPObserver::nsFTPObserver(nsIStreamObserver *aObserver, nsIChannel *aChannel) {
+    NS_INIT_REFCNT();
+    NS_ASSERTION(aObserver && aChannel, "null ptr");
+    mObserver = aObserver;
+    mFTPChannel = aChannel;
+}
+
+nsFTPObserver::~nsFTPObserver() {
+    mObserver = 0;
+    mFTPChannel = 0;
+}
+
+// nsIStreamObserver methods.
+NS_IMETHODIMP
+nsFTPObserver::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
+                                      nsresult aStatus, const PRUnichar* aMsg) {
+    return mObserver->OnStopRequest(mFTPChannel, aContext, aStatus, aMsg);
+
+}
+
+NS_IMETHODIMP
+nsFTPObserver::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
+    return mObserver->OnStartRequest(mFTPChannel, aContext);
+}
+

@@ -79,8 +79,8 @@ typedef enum _FTP_STATE {
     FTP_S_MODE, FTP_R_MODE,
     FTP_S_CWD,  FTP_R_CWD,
     FTP_S_SIZE, FTP_R_SIZE,
-    FTP_S_PUT,  FTP_R_PUT,
     FTP_S_RETR, FTP_R_RETR,
+    FTP_S_STOR, FTP_R_STOR,
     FTP_S_MDTM, FTP_R_MDTM,
     FTP_S_LIST, FTP_R_LIST,
     FTP_S_TYPE, FTP_R_TYPE,
@@ -110,14 +110,18 @@ public:
                   PRUint32              bufferSegmentSize,
                   PRUint32              bufferMaxSize);
 
-    // use this to set an observer. (as in the asyncopen case)
+    // use this to set an observer.
     nsresult SetStreamObserver(nsIStreamObserver *aObserver, nsISupports *aContext);
     
     // use this to set a listener to receive data related On*() notifications
     nsresult SetStreamListener(nsIStreamListener *aListener, nsISupports *aContext=nsnull);
 
-    // user level setup
-    nsresult SetAction(FTP_ACTION aAction);
+    // use this to provide a stream to be written to the server.
+    nsresult SetWriteStream(nsIInputStream* aInStream, PRUint32 aWriteCount);
+
+    // use this to indicate that the transaction started w/ AsyncOpen. This
+    // affects how observers are notified.
+    nsresult SetAsyncOpen(PRBool aAsyncOpen);
 
 private:
     ///////////////////////////////////
@@ -137,6 +141,7 @@ private:
     nsresult        S_list(); FTP_STATE       R_list();
 
     nsresult        S_retr(); FTP_STATE       R_retr();
+    nsresult        S_stor(); FTP_STATE       R_stor();
     nsresult        S_pasv();     FTP_STATE   R_pasv();
     nsresult        S_del_file(); FTP_STATE   R_del_file();
     nsresult        S_del_dir();  FTP_STATE   R_del_dir();
@@ -175,7 +180,7 @@ private:
         // ****** consumer vars
     nsCOMPtr<nsIStreamListener>     mListener;        // the consumer of our read events
     nsCOMPtr<nsISupports>           mListenerContext; // the context we pass through our read events
-    nsCOMPtr<nsIStreamObserver>     mObserver;        // the consumer of our open events
+    nsCOMPtr<nsIStreamObserver>     mObserver; // the consumer of our open events
     nsCOMPtr<nsISupports>           mObserverContext; // the context we pass through our open events
     nsCOMPtr<nsIChannel>            mChannel;         // our owning FTP channel we pass through our events
 
@@ -221,6 +226,9 @@ private:
     PRMonitor              *mMonitor;
     nsCOMPtr<nsIEventQueue>mUIEventQ;
     PLEvent                *mAsyncReadEvent;
+    nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
+    PRUint32               mWriteCount;  // The amount of data to write to the server.
+    PRBool                 mAsyncOpened; // This is set when the consumer wants AsyncOpen info.
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)

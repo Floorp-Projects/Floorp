@@ -36,6 +36,7 @@ CPPSRCS		= \
 		nsFtpConnectionThread.cpp \
 		nsFtpModule.cpp \
 		nsFTPListener.cpp \
+		nsAsyncEvent.obj \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)

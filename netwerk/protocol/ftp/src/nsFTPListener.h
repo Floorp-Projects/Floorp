@@ -40,4 +40,16 @@ public:
     nsCOMPtr<nsIChannel>        mFTPChannel;
 };
 
+class nsFTPObserver : public nsIStreamObserver {
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMOBSERVER
+
+    nsFTPObserver(nsIStreamObserver* aObserver, nsIChannel *aChannel);
+    virtual ~nsFTPObserver();
+
+    nsCOMPtr<nsIStreamObserver> mObserver;
+    nsCOMPtr<nsIChannel>        mFTPChannel;
+};
+
 #endif // ___nsftplistener_h___
