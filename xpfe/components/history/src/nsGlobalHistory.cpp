@@ -1477,7 +1477,8 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       NS_ADDREF(*aTarget);
       return NS_OK;
     }
-    else if (aProperty == kNC_Name) {
+    else if (aProperty == kNC_Name ||
+             aProperty == kNC_NameSort) {
       // Site name (i.e., page title)
       nsAutoString title;
       rv = GetRowValue(row, kToken_NameColumn, title);
@@ -3463,6 +3464,7 @@ nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
                                nsIAutoCompleteListener *listener)
 {
   NS_ASSERTION(searchString, "searchString can't be null, fix your caller");
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
 
   if (!listener)
     return NS_ERROR_NULL_POINTER;
