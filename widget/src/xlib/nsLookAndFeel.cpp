@@ -25,13 +25,11 @@
 
 #include "nsXPLookAndFeel.h"
 
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
-
-NS_IMPL_ISUPPORTS(nsLookAndFeel, kILookAndFeelIID)
+NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
 
 nsLookAndFeel::nsLookAndFeel()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::nsLookAndFeel()\n"));
     (void)NS_NewXPLookAndFeel(getter_AddRefs(mXPLookAndFeel));
@@ -57,138 +55,146 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     }
 
     aColor = 0;
-  switch (aID) {
-  case eColor_WindowBackground:
-    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
-    break;
-  case eColor_WindowForeground:
-    aColor = NS_RGB(0x00, 0x00, 0x00);
-    break;
-  case eColor_WidgetBackground:
-    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
-    break;
-  case eColor_WidgetForeground:
-    aColor = NS_RGB(0x00, 0x00, 0x00);
-    break;
-  case eColor_WidgetSelectBackground:
-    aColor = NS_RGB(0x00, 0x00, 0x9c);
-    break;
-  case eColor_WidgetSelectForeground:
-    aColor = NS_RGB(0xff, 0xff, 0xff);
-    break;
-  case eColor_Widget3DHighlight:
-    aColor = NS_RGB(0xa0,0xa0,0xa0);
-    break;
-  case eColor_Widget3DShadow:
-    aColor = NS_RGB(0x40,0x40,0x40);
-    break;
-  case eColor_TextBackground:
-    aColor = NS_RGB(0xff, 0xff, 0xff);
-    break;
-  case eColor_TextForeground:
-    aColor = NS_RGB(0x00, 0x00, 0x00);
-    break;
-  case eColor_TextSelectBackground:
-    aColor = NS_RGB(0x00, 0x00, 0x9c);
-    break;
-  case eColor_TextSelectForeground:
-    aColor = NS_RGB(0xff, 0xff, 0xff);
-    break;
+    switch (aID) {
+    case eColor_WindowBackground:
+        aColor = NS_RGB(0xcc, 0xcc, 0xcc);
+        break;
+    case eColor_WindowForeground:
+        aColor = NS_RGB(0x00, 0x00, 0x00);
+        break;
+    case eColor_WidgetBackground:
+        aColor = NS_RGB(0xcc, 0xcc, 0xcc);
+        break;
+    case eColor_WidgetForeground:
+        aColor = NS_RGB(0x00, 0x00, 0x00);
+        break;
+    case eColor_WidgetSelectBackground:
+        aColor = NS_RGB(0x00, 0x00, 0x9c);
+        break;
+    case eColor_WidgetSelectForeground:
+        aColor = NS_RGB(0xff, 0xff, 0xff);
+        break;
+    case eColor_Widget3DHighlight:
+        aColor = NS_RGB(0x99,0x99,0x99);
+        break;
+    case eColor_Widget3DShadow:
+        aColor = NS_RGB(0x40,0x40,0x40);
+        break;
+    case eColor_TextBackground:
+        aColor = NS_RGB(0xff, 0xff, 0xff);
+        break;
+    case eColor_TextForeground:
+        aColor = NS_RGB(0x00, 0x00, 0x00);
+        break;
+    case eColor_TextSelectBackground:
+        aColor = NS_RGB(0x00, 0x00, 0x9c);
+        break;
+    case eColor_TextSelectForeground:
+        aColor = NS_RGB(0xff, 0xff, 0xff);
+        break;
 
-    // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
-  case eColor_activeborder:
-    aColor = NS_RGB(0x00, 0x00, 0x00);
-    break;
-  case eColor_activecaption:
-    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
-    break;
-  case eColor_appworkspace:
-    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
-    break;
-  case eColor_background:
-    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
-    break;
+        // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
+    case eColor_activeborder:
+        aColor = NS_RGB(0x00, 0x00, 0x00);
+        break;
+    case eColor_activecaption:
+        aColor = NS_RGB(0xcc, 0xcc, 0xcc);
+        break;
+    case eColor_appworkspace:
+        aColor = NS_RGB(0xcc, 0xcc, 0xcc);
+        break;
+    case eColor_background:
+        aColor = NS_RGB(0xcc, 0xcc, 0xcc);
+        break;
 
-  case eColor_captiontext:
-    aColor = NS_RGB(0x00, 0x00, 0x00);
-    break;
-  case eColor_graytext:
-    aColor = NS_RGB(0x80, 0x80, 0x80);
-    break;
-  case eColor_highlight:
-    aColor = NS_RGB(0x00, 0x00, 0x9c);
-    break;
-  case eColor_highlighttext:
-    aColor = NS_RGB(0xff, 0xff, 0xff);
-    break;
-  case eColor_inactiveborder:
-    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
-    break;
-  case eColor_inactivecaption:
-    aColor = NS_RGB(0x80, 0x80, 0x80);
-    break;
-  case eColor_inactivecaptiontext:
-    aColor = NS_RGB(0xff, 0xff, 0xff);
-    break;
-  case eColor_infobackground:
-    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
-    break;
-  case eColor_infotext:
-    aColor = NS_RGB(0x00, 0x00, 0x00);
-    break;
-  case eColor_menu:
-    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
-    break;
-  case eColor_menutext:
-    aColor = NS_RGB(0x00, 0x00, 0x00);
-    break;
-  case eColor_scrollbar:
-    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
-    break;
+    case eColor_captiontext:
+        aColor = NS_RGB(0x00, 0x00, 0x00);
+        break;
+    case eColor_graytext:
+        aColor = NS_RGB(0x80, 0x80, 0x80);
+        break;
+    case eColor_highlight:
+        aColor = NS_RGB(0x00, 0x00, 0x9c);
+        break;
+    case eColor_highlighttext:
+        aColor = NS_RGB(0xff, 0xff, 0xff);
+        break;
+    case eColor_inactiveborder:
+        aColor = NS_RGB(0xcc, 0xcc, 0xcc);
+        break;
+    case eColor_inactivecaption:
+        aColor = NS_RGB(0x80, 0x80, 0x80);
+        break;
+    case eColor_inactivecaptiontext:
+        aColor = NS_RGB(0xff, 0xff, 0xff);
+        break;
+    case eColor_infobackground:
+        aColor = NS_RGB(0xcc, 0xcc, 0xcc);
+        break;
+    case eColor_infotext:
+        aColor = NS_RGB(0x00, 0x00, 0x00);
+        break;
+    case eColor_menu:
+        aColor = NS_RGB(0xcc, 0xcc, 0xcc);
+        break;
+    case eColor_menutext:
+        aColor = NS_RGB(0x00, 0x00, 0x00);
+        break;
+    case eColor_scrollbar:
+        aColor = NS_RGB(0xcc, 0xcc, 0xcc);
+        break;
 
-  case eColor_threedface:
-  case eColor_buttonface:
-    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
-    break;
+    case eColor_threedface:
+          // 3-D face color
+    case eColor_buttonface:
+          // 3-D face color
+    case eColor_threedlightshadow:
+          // 3-D inner highlight color
+        aColor = NS_RGB(0xcc, 0xcc, 0xcc);
+        break;
 
-  case eColor_buttonhighlight:  // ?
-  case eColor_threedhighlight:
-    aColor = NS_RGB(0xa0, 0xa0, 0xa0);
-    break;
+    case eColor_buttonhighlight:
+          // 3-D highlight color
+    case eColor_threedhighlight:
+          // 3-D outer highlight color
+        aColor = NS_RGB(0xff, 0xff, 0xff);
+        break;
 
-  case eColor_buttontext:
-    aColor = NS_RGB(0x00, 0x00, 0x00);
-    break;
+    case eColor_buttontext:
+        aColor = NS_RGB(0x00, 0x00, 0x00);
+        break;
 
-  case eColor_buttonshadow:
-  case eColor_threeddarkshadow:
-  case eColor_threedshadow: // i think these should be the same
-    aColor = NS_RGB(0x60, 0x60, 0x60);
-    break;
+    case eColor_buttonshadow:
+          // 3-D shadow color
+    case eColor_threedshadow:
+          // 3-D inner shadow color
+        aColor = NS_RGB(0x66, 0x66, 0x66);
+        break;
 
-  case eColor_threedlightshadow:
-    aColor = NS_RGB(0xa0, 0xa0, 0xa0);
-    break;
+    case eColor_threeddarkshadow:
+          // 3-D outer shadow color
+        aColor = NS_RGB(0x00, 0x00, 0x00);
+        break;
 
-  case eColor_window:
-  case eColor_windowframe:
-    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
-    break;
+    case eColor_window:
+    case eColor_windowframe:
+        aColor = NS_RGB(0xcc, 0xcc, 0xcc);
+        break;
 
-  case eColor_windowtext:
-    aColor = NS_RGB(0x00, 0x00, 0x00);
-    break;
+    case eColor_windowtext:
+        aColor = NS_RGB(0x00, 0x00, 0x00);
+        break;
 
-  case eColor__moz_field:
-    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
-    break;
+    case eColor__moz_field:
+        aColor = NS_RGB(0xff, 0xff, 0xff);
+        break;
 
-  default:
-    /* default color is BLACK */
-    aColor = 0;
-    res    = NS_ERROR_FAILURE;
-    break;
-  }
+    default:
+        /* default color is BLACK */
+        aColor = 0;
+        res    = NS_ERROR_FAILURE;
+        break;
+    }
     return NS_OK;
 }
 
