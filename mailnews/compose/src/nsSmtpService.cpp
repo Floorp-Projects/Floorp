@@ -65,6 +65,7 @@
 #define SERVER_DELIMITER ","
 #define APPEND_SERVERS_VERSION_PREF_NAME "append_preconfig_smtpservers.version"
 #define MAIL_ROOT_PREF "mail."
+#define PREF_MAIL_SMTPSERVERS "mail.smtpservers"
 #define PREF_MAIL_SMTPSERVERS_APPEND_SERVERS "mail.smtpservers.appendsmtpservers"
 
 typedef struct _findServerByKeyEntry {
@@ -644,10 +645,40 @@ nsSmtpService::loadSmtpServers()
     nsresult rv;
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
-    
-    nsXPIDLCString serverList;
-    rv = prefs->CopyCharPref("mail.smtpservers", getter_Copies(serverList));
 
+    nsXPIDLCString tempServerList;
+    nsXPIDLCString serverList;
+    rv = prefs->CopyCharPref(PREF_MAIL_SMTPSERVERS, getter_Copies(tempServerList));
+
+    //Get the pref in a tempServerList and then parse it to see if it has dupes.
+    //if so remove the dupes and then create the serverList.
+    if (!tempServerList.IsEmpty()) {
+
+      // Tokenize the data and add each smtp server if it is not already there 
+      // in the user's current smtp server list
+      char *tempSmtpServerStr;
+      char *tempSmtpServersStr = nsCRT::strdup(tempServerList.get());
+      char *tempToken = nsCRT::strtok(tempSmtpServersStr, SERVER_DELIMITER, &tempSmtpServerStr);
+
+      nsCAutoString tempSmtpServer;
+      while (tempToken) {
+        if (*tempToken) {
+          if (serverList.IsEmpty() || !strstr(serverList.get(), tempToken)) {
+            tempSmtpServer.Assign(tempToken);
+            tempSmtpServer.StripWhitespace();
+            if (!serverList.IsEmpty())
+              serverList += SERVER_DELIMITER;
+            serverList += tempSmtpServer;
+          }
+        }
+        tempToken = nsCRT::strtok(tempSmtpServerStr, SERVER_DELIMITER, &tempSmtpServerStr);
+      }
+      nsCRT::free(tempSmtpServersStr);
+    }
+    else {
+      serverList = tempServerList;
+    }
+      
     // We need to check if we have any pre-configured smtp servers so that
     // those servers can be appended to the list. 
     nsXPIDLCString appendServerList;
@@ -753,7 +784,7 @@ nsSmtpService::saveKeyList()
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     
-    return prefs->SetCharPref("mail.smtpservers", mServerKeyList.get());
+    return prefs->SetCharPref(PREF_MAIL_SMTPSERVERS, mServerKeyList.get());
 }
 
 nsresult
