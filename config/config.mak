@@ -259,8 +259,10 @@ PATH_SEPARATOR = ;
 # where the bytecode will go
 !if "$(AWT_11)" == "1"
 JAVA_DESTPATH = $(DEPTH)\dist\classes11
+CFLAGS = $(CFLAGS) -DAWT_11
 !else
 JAVA_DESTPATH = $(DEPTH)\dist\classes
+CFLAGS = $(CFLAGS) -DAWT_102
 !endif
 
 # where the source are
