@@ -35,7 +35,7 @@
 #define PKINSS3HACK_H
 
 #ifdef DEBUG
-static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.8 $ $Date: 2002/03/14 04:12:25 $ $Name:  $";
+static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.9 $ $Date: 2002/04/03 19:22:15 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSDEVT_H
@@ -109,6 +109,9 @@ STAN_RemoveModuleFromDefaultTrustDomain
 (
   SECMODModule *module
 );
+
+NSS_EXTERN CERTCertificate *
+STAN_ForceCERTCertificateUpdate(NSSCertificate *c);
 
 NSS_EXTERN CERTCertificate *
 STAN_GetCERTCertificate(NSSCertificate *c);

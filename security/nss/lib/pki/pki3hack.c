@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.45 $ $Date: 2002/03/15 19:23:10 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.46 $ $Date: 2002/04/03 19:22:14 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -888,6 +888,9 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
 	}
     } else if (instance) {
 	/* slot */
+	if (cc->slot) {
+	    PK11_FreeSlot(cc->slot);
+	}
 	cc->slot = PK11_ReferenceSlot(instance->token->pk11slot);
 	cc->ownSlot = PR_TRUE;
 	/* pkcs11ID */
@@ -930,6 +933,12 @@ stan_GetCERTCertificate(NSSCertificate *c, PRBool forceUpdate)
 	}
     }
     return cc;
+}
+
+NSS_IMPLEMENT CERTCertificate *
+STAN_ForceCERTCertificateUpdate(NSSCertificate *c)
+{
+    return stan_GetCERTCertificate(c, PR_TRUE);
 }
 
 NSS_IMPLEMENT CERTCertificate *
