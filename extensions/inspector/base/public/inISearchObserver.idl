@@ -1,0 +1,39 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface inISearchProcess;
+
+[scriptable, uuid(46226D9B-E398-4106-8D9B-225D4D0589F5)]
+interface inISearchObserver : nsISupports
+{
+  // result codes which are sent to onSearchEnd
+  const short SUCCESS = 1; // search completed successfully
+  const short INTERRUPTED = 2; // search stopped due to user interruption
+  const short ERROR = 3; // search stopped due to an error
+
+  void onSearchStart(in inISearchProcess aModule);
+  void onSearchResult(in inISearchProcess aModule);
+  void onSearchEnd(in inISearchProcess aModule, in short aResult);
+  void onSearchError(in inISearchProcess aModule, in wstring aMessage);
+};

@@ -1,0 +1,10 @@
+
+@namespace ins url("http://www.mozilla.org/inspector#");
+
+*[hide="true"] {
+  visibility: hidden;
+}
+
+row {
+  vertical-align: middle;
+}

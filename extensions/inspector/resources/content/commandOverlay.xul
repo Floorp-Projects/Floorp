@@ -1,0 +1,63 @@
+<?xml version="1.0"?> 
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+]>
+
+<overlay id="ovCommandsMain"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <broadcasterset id="brsGlobalCommands" datasources="rdf:null" ref="commands:global">
+    <template>
+      <rule>
+        <conditions>
+          <content uri="?uri"/>
+          <member container="?uri" child="?cmd"/>
+        </conditions>
+
+        <bindings>
+          <binding subject="?cmd" predicate="&INS-rdf;oncommand" object="?oncommand"/>
+          <binding subject="?cmd" predicate="&INS-rdf;onkeypress" object="?onkeypress"/>
+        </bindings>
+
+        <action>
+          <broadcaster uri="?cmd" onkeypress="?onkeypress" oncommand="?oncommand" disabled="true"/>
+        </action>
+      </rule>
+    </template>
+
+    <broadcaster 
+      id="cmdGotoURL" 
+      onkeypress="if(event.keyCode == 13) inspector.gotoTypedURL();"
+      oncommand="inspector.gotoTypedURL()"/>
+
+    <broadcaster id="cmdShowOpenURLDialog" oncommand="inspector.showOpenURLDialog()"/>
+    <broadcaster id="cmdExit" oncommand="inspector.exit();"/>
+  
+    <broadcaster id="cmdUndo" disabled="true" oncommand=""/>
+    <broadcaster id="cmdRedo" disabled="true" oncommand=""/>
+    <broadcaster id="cmdCut" disabled="true" oncommand=""/>
+    <broadcaster id="cmdCopy" disabled="true" oncommand=""/>
+    <broadcaster id="cmdPaste" disabled="true" oncommand=""/>
+    <broadcaster id="cmdDelete" disabled="true" oncommand=""/>
+    <broadcaster id="cmdShowPrefsDialog" oncommand="inspector.showPrefsDialog()"/>
+  
+    <broadcaster id="cmdRunSearch" oncommand="inspector.runSearch()"/>
+
+    <broadcaster id="cmdToggleBrowser" oncommand="inspector.toggleBrowser()"/>
+    <broadcaster id="cmdToggleSearch" oncommand="inspector.toggleSearch()"/>
+    <broadcaster id="cmdFlashSelected" oncommand="inspector.toggleFlashSelected()"/>
+
+    <broadcaster id="cmdShowNotes" oncommand="inspector.showNotes()"/>
+    <broadcaster id="cmdShowAbout" oncommand="inspector.showAbout()"/>
+
+    <broadcaster id="cmdViewSearchItem" oncommand="inspector.viewSearchItem()"/>
+    <broadcaster id="cmdEditSearchItem" oncommand="inspector.editSearchItem()"/>
+    <broadcaster id="cmdCopySearchItemLine" oncommand="inspector.copySearchItemLine()"/>
+    <broadcaster id="cmdCopySearchItemAll" oncommand="inspector.copySearchItemAll()"/>
+    <broadcaster id="cmdSaveSearchItemText" oncommand="inspector.saveSearchItemText()"/>
+    <broadcaster id="cmdClearSearch" oncommand="inspector.clearSearchResults()"/>
+  </broadcasterset>
+
+</overlay>

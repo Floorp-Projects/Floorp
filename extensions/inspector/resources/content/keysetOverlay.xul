@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+]>
+
+<overlay id="ovKeyset" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <keyset id="ksGlobalKeyset" xulkey="ctrl" datasources="rdf:null" ref="keys:global">
+    <template>
+      <rule>
+        <conditions>
+          <content uri="?uri"/>
+          <member container="?uri" child="?key"/>
+        </conditions>
+
+        <bindings>
+          <binding subject="?key" predicate="&INS-rdf;xulkey" object="?xulkey"/>
+          <binding subject="?key" predicate="&INS-rdf;key" object="?tkey"/>
+          <binding subject="?key" predicate="&INS-rdf;keycode" object="?keycode"/>
+          <binding subject="?key" predicate="&INS-rdf;modifiers" object="?modifiers"/>
+          <binding subject="?key" predicate="&INS-rdf;observes" object="?observes"/>
+          <binding subject="?key" predicate="&INS-rdf;oncommand" object="?oncommand"/>
+        </bindings>
+
+        <action>
+          <key uri="?key" 
+            xulkey="?xulkey" key="?tkey" keycode="?keycode" modifiers="?modifiers"
+            observes="?observes" oncommand="?oncommand"/>
+        </action>
+      </rule>
+    </template>
+  </keyset>
+
+</overlay>
+
+        

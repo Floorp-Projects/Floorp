@@ -1,0 +1,47 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "inISearchProcess.idl"
+
+interface nsIDOMDocument;
+
+[scriptable, uuid(e0d39e48-1dd1-11b2-81bd-9a0c117f0736)]
+interface inICSSValueSearch : inISearchProcess {
+  
+  attribute nsIDOMDocument document;
+  
+  // the base url for all returned URL results, if returnRelativeURLs is true
+  attribute wstring baseURL; 
+  
+  // strip off the baseURL for all URL results if true
+  attribute boolean returnRelativeURLs;
+
+  // correct the paths on a chrome url, such as turning global/skin/blah into global/blah
+  attribute boolean normalizeChromeURLs;
+
+  // add a css property to search for
+  void addPropertyCriteria(in wstring aPropName);
+  
+  // set the text value to search for in the properties specified (optional)
+  attribute wstring textCriteria;
+
+};
