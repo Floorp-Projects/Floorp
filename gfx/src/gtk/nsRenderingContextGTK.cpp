@@ -27,7 +27,6 @@
 
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
-
 NS_IMPL_ISUPPORTS1(nsRenderingContextGTK, nsIRenderingContext)
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
@@ -414,7 +413,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
 #if 0
   nscolor color = mCurrentColor;
   SetColor(NS_RGB(255,   0,   0));
-  DrawRect(aRect);
+  FillRect(aRect);
   SetColor(color);
 #endif
   aClipEmpty = mClipRegion->IsEmpty();
@@ -1449,6 +1448,18 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
 
   mTMatrix->TransformCoord(&x, &y, &w, &h);
 
+#if 0
+  //  gdk_window_clear_area(mSurface->GetDrawable(), x, y, w, h);
+  PRInt32 xx, yy, ww, hh;
+  mClipRegion->GetBoundingBox(&xx,&yy,&ww,&hh);
+  printf("clip bounds: x = %i, y = %i, w = %i, h = %i\n", xx, yy, ww, hh);
+
+  nscolor color = mCurrentColor;
+  SetColor(NS_RGB(255,   0,   0));
+  FillRect(xx, yy, ww, hh);
+  SetColor(color);
+#endif
+
   return aImage->Draw(*this, mSurface,
                       x, y, w, h);
 }
@@ -1473,6 +1484,19 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
   dr = aDRect;
   mTMatrix->TransformCoord(&dr.x, &dr.y,
                            &dr.width, &dr.height);
+
+#if 0
+  PRInt32 x, y, w, h;
+  mClipRegion->GetBoundingBox(&x,&y,&w,&h);
+  printf("clip bounds: x = %i, y = %i, w = %i, h = %i\n", x, y, w, h);
+
+  //  gdk_window_clear_area(mSurface->GetDrawable(), sr.x, sr.y, sr.width, sr.height);
+
+  nscolor color = mCurrentColor;
+  SetColor(NS_RGB(255,   0,   0));
+  FillRect(x, y, w, h);
+  SetColor(color);
+#endif
 
   return aImage->Draw(*this, mSurface,
                       sr.x, sr.y,

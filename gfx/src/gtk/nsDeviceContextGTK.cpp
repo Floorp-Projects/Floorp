@@ -73,7 +73,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 
   mWidget = aNativeWidget;
 
-  static nscoord dpi = 100;
+  static nscoord dpi = 96;
   static int initialized = 0;
   if (!initialized) {
     initialized = 1;
@@ -98,6 +98,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
     }
   }
 
+
 #if 0
   // Now for some wacky heuristics. 
   if (dpi < 84) dpi = 72;
@@ -105,7 +106,13 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   else if (dpi < 132) dpi = 120;
 #endif
 
-  mTwipsToPixels = float(dpi) / float(NSIntPointsToTwips(72));
+  int pt2t = 72;
+  // Now for some wacky heuristics. XXX used to hope that dpi / nsIntPointsToTwips is always the same?
+  if (dpi == 96) pt2t = 72;
+  else if (dpi == 100) pt2t = 75;
+  else if (dpi == 120) pt2t = 90;
+
+  mTwipsToPixels = float(dpi) / float(NSIntPointsToTwips(pt2t));
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
 #if 0
