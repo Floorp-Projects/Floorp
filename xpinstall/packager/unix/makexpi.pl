@@ -59,7 +59,7 @@ sub RecursiveStrip
 
     # strip all .so files in this dir
     chdir($targetDir);                  # push targetDir
-    system("strip *.so >& /dev/null");
+    system("strip *.so > /dev/null 2>&1");
     chdir($saveCwd);                    # pop targetDir
 
     # iterate over all subdir entries 
