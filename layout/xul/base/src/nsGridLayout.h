@@ -57,6 +57,8 @@ public:
   NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast);
   NS_IMETHOD GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIMonument** aParentMonument);
   NS_IMETHOD GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList** aList);
+  NS_IMETHOD EnscriptionChanged(nsBoxLayoutState& aState, PRInt32 aIndex);
+  NS_IMETHOD DesecrateMonuments(nsIBox* aBox, nsBoxLayoutState& aState);
 
 protected:
   nsGridLayout(nsIPresShell* aShell);

@@ -48,7 +48,7 @@ class nsMenuBarFrame : public nsToolbarFrame, public nsIMenuParent
 {
 public:
   nsMenuBarFrame(nsIPresShell* aShell);
-  ~nsMenuBarFrame();
+  virtual ~nsMenuBarFrame();
 
   NS_DECL_ISUPPORTS
 

@@ -880,24 +880,19 @@ NS_IMETHODIMP nsView :: SetPosition(nscoord aX, nscoord aY)
 
 NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
 {
+  // if the widget was moved or resized
   if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED || mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED)
   {
     nsIDeviceContext  *dx;
     float             t2p;
 
-
     mViewManager->GetDeviceContext(dx);
     dx->GetAppUnitsToDevUnits(t2p);
     NS_RELEASE(dx);
 
-    if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED) 
-    {
-      mWindow->Resize(NSTwipsToIntPixels(mBounds.width, t2p), NSTwipsToIntPixels(mBounds.height, t2p),
-                      PR_TRUE);
-      mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
-    } 
 
-    if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED) 
+    // if we moved and resized do it all in one shot
+    if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED && mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED)
     {
       nscoord parx = 0, pary = 0;
       nsIWidget         *pwidget = nsnull;
@@ -905,11 +900,34 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
       GetOffsetFromWidget(&parx, &pary, pwidget);
       NS_IF_RELEASE(pwidget);
 
-      mWindow->Move(NSTwipsToIntPixels(mBounds.x + parx, t2p),
-                    NSTwipsToIntPixels(mBounds.y + pary, t2p));
+      mWindow->Resize(NSTwipsToIntPixels(mBounds.x + parx, t2p),
+                      NSTwipsToIntPixels(mBounds.y + pary, t2p),
+                      NSTwipsToIntPixels(mBounds.width, t2p), NSTwipsToIntPixels(mBounds.height, t2p),
+                      PR_TRUE);
 
+      mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
       mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
-    }        
+    } else {
+      // if we just resized do it
+      if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED) 
+      {
+        mWindow->Resize(NSTwipsToIntPixels(mBounds.width, t2p), NSTwipsToIntPixels(mBounds.height, t2p),
+                        PR_TRUE);
+        mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
+      } else if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED) {
+        // if we just moved do it.
+        nscoord parx = 0, pary = 0;
+        nsIWidget         *pwidget = nsnull;
+
+        GetOffsetFromWidget(&parx, &pary, pwidget);
+        NS_IF_RELEASE(pwidget);
+
+        mWindow->Move(NSTwipsToIntPixels(mBounds.x + parx, t2p),
+                      NSTwipsToIntPixels(mBounds.y + pary, t2p));
+
+        mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
+      }        
+    }
   }
 
   return NS_OK;

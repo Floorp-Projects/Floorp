@@ -43,6 +43,7 @@ public:
   nscoord left;
   nscoord right;
   PRBool  collapsed;
+  PRBool  bogus;
 
   nsBoxSize* next;
 

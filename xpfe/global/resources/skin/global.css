@@ -574,6 +574,11 @@ window[orient="vertical"]>splitter {
 	cursor: n-resize;
 }
 
+rows>splitter {
+	/* a vertical splitter */
+    cursor: n-resize;
+}
+
 /* for backwards compatibility */
 box[align="vertical"]>splitter grippy {
 	/* a horizontal splitter */

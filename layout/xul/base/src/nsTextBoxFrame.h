@@ -64,7 +64,7 @@ public:
                     nsFramePaintLayer aWhichLayer);
 
  
-  ~nsTextBoxFrame();
+  virtual ~nsTextBoxFrame();
 protected:
 
   void UpdateAccessUnderline();

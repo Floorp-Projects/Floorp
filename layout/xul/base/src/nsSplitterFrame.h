@@ -40,7 +40,7 @@ class nsSplitterFrame : public nsBoxFrame, public nsIAnonymousContentCreator
 {
 public:
   nsSplitterFrame(nsIPresShell* aPresShell);
-  ~nsSplitterFrame();
+  virtual ~nsSplitterFrame();
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {

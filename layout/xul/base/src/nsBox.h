@@ -73,6 +73,8 @@ public:
   NS_IMETHOD NeedsRecalc();
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox);
   NS_IMETHOD GetDebug(PRBool& aDebug);
+  NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild);
+  NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
 
   // XXX Eventually these will move into nsIFrame.
   // These methods are used for XBL <children>.
@@ -107,8 +109,8 @@ protected:
   virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
 
   enum eMouseThrough {
+    unset,
     never,
-    sometimes,
     always
   };
 

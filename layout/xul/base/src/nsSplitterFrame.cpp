@@ -135,6 +135,7 @@ public:
 
   void MoveSplitterBy(nsIPresContext* aPresContext, nscoord aDiff);
   void EnsureOrient();
+  void SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildBox, nscoord aOnePixel, PRBool aIsHorizontal, nscoord* aSize);
 
   nsSplitterFrame* mOuter;
   PRBool mDidDrag;
@@ -1072,6 +1073,16 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext, nsSplitterInf
     aPresContext->GetScaledPixelsToTwips(&p2t);
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
+    // first set all the widths.
+    nsIBox* child = nsnull;
+    mOuter->GetChildBox(&child);
+    while(child)
+    {
+      SetPreferredSize(state, child, onePixel, aIsHorizontal, nsnull);
+      child->GetNextBox(&child);
+    }
+
+    // now set our changed widths.
     for (int i=0; i < aCount; i++) 
     {
         nscoord   pref       = aChildInfos[i].changed;
@@ -1079,44 +1090,71 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext, nsSplitterInf
         nsIBox* childBox     = aChildInfos[i].child;
         PRInt32 index        = aChildInfos[i].index;
 
-        //printf("current=%d, pref=%d", current/onePixel, pref/onePixel);
+        SetPreferredSize(state, childBox, onePixel, aIsHorizontal, &pref);
+    }
+}
 
-        if (current/onePixel == pref/onePixel)
-          continue;
+void
+nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildBox, nscoord aOnePixel, PRBool aIsHorizontal, nscoord* aSize)
+{
+  //printf("current=%d, pref=%d", current/onePixel, pref/onePixel);
+ 
+  nscoord current = 0;
 
-        nsMargin margin(0,0,0,0);
-        childBox->GetMargin(margin);
+  nsRect rect(0,0,0,0);
+  aChildBox->GetBounds(rect);
+  if (aIsHorizontal) 
+    current = rect.width;
+  else
+    current = rect.height;
 
-        nsCOMPtr<nsIAtom> attribute;
+  nscoord pref = 0;
 
-        if (aIsHorizontal) {
-	        pref -= (margin.left + margin.right);
-	        attribute = nsHTMLAtoms::width;
-        } else {
-	        pref -= (margin.top + margin.bottom);
-	        attribute = nsHTMLAtoms::height;
-        }
+  if (!aSize)
+  {
+    if (aIsHorizontal) 
+      pref = rect.width;
+    else
+      pref = rect.height;
+  } else {
+    pref = *aSize;
+  }
 
-        nsIFrame* childFrame = nsnull;
-        childBox->GetFrame(&childFrame);
+  nsMargin margin(0,0,0,0);
+  aChildBox->GetMargin(margin);
 
-        nsCOMPtr<nsIContent> content;
-        childFrame->GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIAtom> attribute;
 
-        // set its preferred size.
-        char ch[50];
-        sprintf(ch,"%d",pref/onePixel);
-        content->SetAttribute(kNameSpaceID_None, attribute, ch, PR_FALSE);
+  if (aIsHorizontal) {
+	  pref -= (margin.left + margin.right);
+	  attribute = nsHTMLAtoms::width;
+  } else {
+	  pref -= (margin.top + margin.bottom);
+	  attribute = nsHTMLAtoms::height;
+  }
+
+  nsIFrame* childFrame = nsnull;
+  aChildBox->GetFrame(&childFrame);
+
+  nsCOMPtr<nsIContent> content;
+  childFrame->GetContent(getter_AddRefs(content));
+
+  // set its preferred size.
+  char ch[50];
+  sprintf(ch,"%d",pref/aOnePixel);
+  nsAutoString oldValue;
+  content->GetAttribute(kNameSpaceID_None, attribute, oldValue);
+  if (oldValue == ch)
+     return;
+
+  content->SetAttribute(kNameSpaceID_None, attribute, ch, PR_FALSE);
 #ifndef REAL_TIME_DRAG
-        childBox->MarkDirty(state);
+  aChildBox->MarkDirty(aState);
 #else
-        childBox->MarkDirty(state);
+  aChildBox->MarkDirty(aState);
 #endif
 
-    }
-
-    //printf("\n");
-
+  //printf("\n");
 }
 
 

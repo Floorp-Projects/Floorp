@@ -130,3 +130,11 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
   }
   return NS_OK;
 }
+
+#ifdef NS_DEBUG
+NS_IMETHODIMP
+nsProgressMeterFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("ProgressMeter", aResult);
+}
+#endif

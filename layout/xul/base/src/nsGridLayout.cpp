@@ -153,6 +153,20 @@ nsGridLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeL
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsGridLayout::EnscriptionChanged(nsBoxLayoutState& aState, PRInt32 aIndex)
+{
+  NS_ERROR("Should Never be Called!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGridLayout::DesecrateMonuments(nsIBox* aBox, nsBoxLayoutState& aState)
+{
+  NS_ERROR("Should Never be Called!");
+  return NS_OK;
+}
+
 NS_IMPL_ADDREF_INHERITED(nsGridLayout, nsStackLayout);
 NS_IMPL_RELEASE_INHERITED(nsGridLayout, nsStackLayout);
 

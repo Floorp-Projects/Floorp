@@ -46,6 +46,12 @@ nsObeliskLayout::nsObeliskLayout(nsIPresShell* aPresShell):nsMonumentLayout(aPre
   mOtherMonumentList = nsnull;
 }
 
+nsObeliskLayout::~nsObeliskLayout()
+{
+  if (mOtherMonumentList)
+    mOtherMonumentList->RemoveListener();
+}
+
 NS_IMETHODIMP
 nsObeliskLayout::CastToObelisk(nsObeliskLayout** aObelisk)
 {
@@ -56,16 +62,20 @@ nsObeliskLayout::CastToObelisk(nsObeliskLayout** aObelisk)
 void
 nsObeliskLayout::UpdateMonuments(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  if (!mOtherMonumentList || mOtherMonumentList->GetRefCount() == 1)
+  if (!mOtherMonumentList)
   {
-    if (mOtherMonumentList) {
-      mOtherMonumentList->Release(aState);
-    }
-
-     mOtherMonumentList = nsnull;
      GetOtherMonuments(aBox, &mOtherMonumentList);
-     if (mOtherMonumentList)
-        mOtherMonumentList->AddRef();
+     if (mOtherMonumentList) {
+        // if we fail to set the listener the null out our list.
+        // this could happend if someone put more than 1 <columns> or <rows> tags in a grid. This is 
+        // technically illegal. But at the moment we can't stop them from doing it.
+       PRBool wasSet = mOtherMonumentList->SetListener(aBox, *this);
+       NS_ASSERTION(wasSet, "Too many columns or rows!");
+
+       // recover gracefully for the optimized bits.
+       if (!wasSet) 
+           mOtherMonumentList = nsnull;
+     }
   }
 }
 
@@ -175,63 +185,48 @@ nsObeliskLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
   return NS_OK;
 }
 
-void
-nsObeliskLayout::ChildNeedsLayout(nsIBox* aBox, nsIBoxLayout* aChild)
+NS_IMETHODIMP
+nsObeliskLayout::ChildBecameDirty(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChild)
 {
   // if one of our cells has changed size and needs reflow
   // make sure we clean any cached information about it.
-  nsIBoxLayout* layout;
-  GetParentLayout(aBox, &layout);
-  nsTempleLayout* parent = nsnull;
-  nsIMonument* monument = nsnull;
+  nsCOMPtr<nsIMonument> parent;
+  nsCOMPtr<nsIBox> parentBox;
+  GetParentMonument(aBox, parentBox, getter_AddRefs(parent));
 
   nsIBox* child = nsnull;
   aBox->GetChildBox(&child);
   PRInt32 count = 0;
+  nsCOMPtr<nsIBoxLayout> layout;
   while(child)
   {
-    nsIBoxLayout* layout = nsnull;
-    child->GetLayoutManager(&layout);
-    if (layout && NS_SUCCEEDED(layout->QueryInterface(NS_GET_IID(nsIMonument), (void**)&monument)) && monument) 
-    {
-      if (layout == aChild) {
-        parent->EncriptionChanged(count);
-        return;
-      }
+    if (child == aChild) {
+      parent->EnscriptionChanged(aState, count);
+      return NS_OK;
     }
+
     child->GetNextBox(&child);
     count++;
   }
+
+  return NS_OK;
 }
 
-/*
-void
-nsObeliskLayout::ComputeChildSizes(nsIBox* aBox, 
-                                   nsBoxLayoutState& aState, 
-                                   nscoord& aGivenSize, 
-                                   nsBoxSize* aBoxSizes, 
-                                   nsComputedBoxSize*& aComputedBoxSizes)
+NS_IMETHODIMP
+nsObeliskLayout::BecameDirty(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  nsTempleLayout* temple = nsnull;
-  nsIBox* aTempleBox = nsnull;
-  GetOtherTemple(aBox, &temple, &aTempleBox);
-  if (temple) {
-     // substitute our sizes for the other temples obelisk sizes.
-     nsBoxSize* first = nsnull;
-     nsBoxSize* last = nsnull;
-     temple->BuildBoxSizeList(aTempleBox, aState, first, last);
-     nsSprocketLayout::ComputeChildSizes(aBox, aState, aGivenSize, first, aComputedBoxSizes);  
-     while(first)
-     {
-       nsBoxSize* toDelete = first;
-       first = first->next;
-       delete toDelete;
-     }
-  } else {
-    nsSprocketLayout::ComputeChildSizes(aBox, aState, aGivenSize, aBoxSizes, aComputedBoxSizes); 
-  }
+  /*
+  nsCOMPtr<nsIMonument> parent;
+  nsCOMPtr<nsIBox> parentBox;
+  GetParentMonument(aBox, parentBox, getter_AddRefs(parent));
+  parent->DesecrateMonuments(aBox, aState);
+  */
+
+  if (mOtherMonumentList)
+     mOtherMonumentList->MarkDirty(aState);
+
+  return NS_OK;
 }
-*/
 
 void
 nsObeliskLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aBoxSizes, nsComputedBoxSize*& aComputedBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes)
@@ -304,4 +299,58 @@ nsObeliskLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxS
   }
 }
 
+void 
+nsObeliskLayout::WillBeDestroyed(nsIBox* aBox, nsBoxLayoutState& aState,  nsBoxSizeList& aList)
+{
+   Desecrated(aBox, aState, aList);
+   mOtherMonumentList = nsnull;
+}
 
+void 
+nsObeliskLayout::Desecrated(nsIBox* aBox, nsBoxLayoutState& aState,  nsBoxSizeList& aList)
+{
+  NS_ASSERTION(&aList == mOtherMonumentList,"Wrong list!!");
+  if (mOtherMonumentList) {
+    nsCOMPtr<nsIBoxLayout> layout;
+    aBox->GetLayoutManager(getter_AddRefs(layout));
+    aBox->SetLayoutManager(nsnull);
+    aBox->MarkDirty(aState);
+    aBox->SetLayoutManager(layout);
+  }
+}
+
+NS_IMETHODIMP
+nsObeliskLayout::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aPrevBox, nsIBox* aChildList)
+{
+  nsCOMPtr<nsIMonument> parent;
+  nsCOMPtr<nsIBox> parentBox;
+  GetParentMonument(aBox, parentBox, getter_AddRefs(parent));
+  if (parent) 
+     return parent->DesecrateMonuments(aBox, aState);
+  else
+     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsObeliskLayout::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
+{
+  nsCOMPtr<nsIMonument> parent;
+  nsCOMPtr<nsIBox> parentBox;
+  GetParentMonument(aBox, parentBox, getter_AddRefs(parent));
+  if (parent) 
+     return parent->DesecrateMonuments(aBox, aState);
+  else
+     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsObeliskLayout::ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
+{
+  nsCOMPtr<nsIMonument> parent;
+  nsCOMPtr<nsIBox> parentBox;
+  GetParentMonument(aBox, parentBox, getter_AddRefs(parent));
+  if (parent) 
+     return parent->DesecrateMonuments(aBox, aState);
+  else
+     return NS_OK;
+}

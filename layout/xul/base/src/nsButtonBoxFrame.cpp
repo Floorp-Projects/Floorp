@@ -54,7 +54,15 @@ NS_NewButtonBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 
 nsButtonBoxFrame::nsButtonBoxFrame(nsIPresShell* aPresShell)
 :nsBoxFrame(aPresShell, PR_FALSE)
-{}
+{
+}
+
+NS_IMETHODIMP
+nsButtonBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
+{
+  aMouseThrough = PR_FALSE;
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsButtonBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                     const nsPoint& aPoint, 

@@ -39,11 +39,13 @@ public:
 
   friend nsresult NS_NewStackFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayout = nsnull);
 
+#ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
       aResult = "Stack";
       return NS_OK;
   }
+#endif
 
       // Paint one child frame
   virtual void PaintChild(nsIPresContext*      aPresContext,

@@ -52,7 +52,7 @@ protected:
 private:
   nsCOMPtr<nsITimerCallback> mCallback;
   nsCOMPtr<nsITimer>         mRepeatTimer;
-  static nsRepeatService*    gInstance;
+  static nsCOMPtr<nsITimerCallback> gInstance;
 
 }; // class nsRepeatService
 

@@ -238,7 +238,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     aBox->GetChildBox(&child);
 
     PRInt32 count = 0;
-    while (child) 
+    while (child || (childBoxSize && childBoxSize->bogus))
     {    
       nscoord width = clientRect.width;
       nscoord height = clientRect.height;
@@ -247,21 +247,17 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       nsSize minSize(0,0);
       nsSize maxSize(0,0);
 
-      if (!(frameState & NS_STATE_AUTO_STRETCH)) {
-         child->GetPrefSize(aState, prefSize);
-         child->GetMinSize(aState, minSize);
-         child->GetMaxSize(aState, maxSize);
-         nsBox::BoundsCheck(minSize, prefSize, maxSize);
-
-         /*
-         if (width < minSize.width)
-            width = minSize.width;
-         if (height < minSize.height)
-            height = minSize.height;
-         */
-         AddMargin(child, prefSize);
-         width = prefSize.width > originalClientRect.width ? originalClientRect.width : prefSize.width;
-         height = prefSize.height > originalClientRect.height ? originalClientRect.height : prefSize.height;
+      if (!childBoxSize->bogus) {
+        if (!(frameState & NS_STATE_AUTO_STRETCH)) {
+           child->GetPrefSize(aState, prefSize);
+           child->GetMinSize(aState, minSize);
+           child->GetMaxSize(aState, maxSize);
+           nsBox::BoundsCheck(minSize, prefSize, maxSize);
+       
+           AddMargin(child, prefSize);
+           width = prefSize.width > originalClientRect.width ? originalClientRect.width : prefSize.width;
+           height = prefSize.height > originalClientRect.height ? originalClientRect.height : prefSize.height;
+        }
       }
 
       // figure our our child's computed width and height
@@ -277,16 +273,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       nsRect childRect(x, y, width, height);
 
       if (!childBoxSize->collapsed) {
-        /*
-        if (childRect.width > originalClientRect.width || childRect.height > originalClientRect.height) {
-           if (childRect.width > originalClientRect.width)
-              originalClientRect.width = childRect.width;
-
-            if (childRect.height > originalClientRect.height)
-              originalClientRect.height = childRect.height;
-        }
-        */
-
+        
         if (childRect.width > clientRect.width || childRect.height > clientRect.height) {
            if (childRect.width > clientRect.width)
               clientRect.width = childRect.width;
@@ -310,12 +297,22 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       childRect.x = x;
       childRect.y = y;
 
-      nsMargin margin(0,0,0,0);
-      child->GetMargin(margin);
+      if (childBoxSize->bogus) 
+      {
+        childComputedBoxSize = childComputedBoxSize->next;
+        childBoxSize = childBoxSize->next;
+        count++;
+        x = nextX;
+        y = nextY;
+        continue;
+      }
 
-      childRect.Deflate(margin);
+      nsMargin margin(0,0,0,0);
 
       PRBool layout = PR_TRUE;
+
+      child->GetMargin(margin);
+      childRect.Deflate(margin);
 
       if (passes > 0) {
         layout = PR_FALSE;
@@ -331,12 +328,13 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       }
 
       nsRect oldRect(0,0,0,0);
-      child->GetBounds(oldRect);
-      child->SetBounds(aState, childRect);
+      PRBool sizeChanged = PR_FALSE;
 
-      
-
-      PRBool sizeChanged = (childRect.width != oldRect.width || childRect.height != oldRect.height);
+      if (!childBoxSize->collapsed || layout) {
+        child->GetBounds(oldRect);
+        child->SetBounds(aState, childRect);
+        sizeChanged = (childRect.width != oldRect.width || childRect.height != oldRect.height);
+      }
 
       if (sizeChanged) {
          nsSize maxSize;
@@ -362,10 +360,13 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       if (layout || sizeChanged) {
         child->Layout(aState);
       }
-
+      
       // make collapsed children not show up
       if (childBoxSize && childBoxSize->collapsed) {
-        child->Collapse(aState);
+        if (layout || sizeChanged) 
+            child->Collapse(aState);
+        else
+            child->SetBounds(aState, nsRect(0,0,0,0));
       } else {
           // if the child was html it may have changed its rect. Lets look
           nsRect newChildRect;
@@ -424,8 +425,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
               if (count == 0)
                  finished = PR_TRUE;
           }
-
-        
+      
         x = nextX;
         y = nextY;
       }
@@ -1376,6 +1376,7 @@ nsBoxSize::Clear()
   right = 0;
   flex = 0;
   next = nsnull;
+  bogus = PR_FALSE;
 }
 
 

@@ -83,7 +83,7 @@ public:
                          nsEventStatus* aEventStatus);
 
  
-  ~nsTitledButtonFrame();
+  virtual ~nsTitledButtonFrame();
 protected:
 
   void CacheSizes(nsBoxLayoutState& aBoxLayoutState);
