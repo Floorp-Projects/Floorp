@@ -39,21 +39,15 @@ Contributors:
 
     <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
     <script type="application/x-javascript" src="chrome://messenger/content/am-offline.js"/>
+    
+    <broadcaster id="bc_notDownload"/>
+    <broadcaster id="bc_downloadMsg"/>
+    <broadcaster id="bc_keepMsg"/>
+    <broadcaster id="bc_removeBody"/>
 
     <text hidden="true" wsm_persist="true" id="server.type"/>  
 
     <hbox id="headertitle" class="box-smallheader"/>
-
-    <groupbox orient="vertical" id="offlinepop.titlebox" hidable="true" hidefor="imap,nntp">
-      <html iscontrolcontainer="true">&offlinePopDesc.label;</html>
-      <hbox iscontrolcontainer="true" autostretch="never">
-        <checkbox  wsm_persist="true" id="offline.notDownload" 
-            label="&offlineNotDownload.label;" accesskey="&offlineNotDownload.accesskey;"/>
-        <textbox wsm_persist="true" id="offline.notDownloadMin" size="5" value="50"/> 
-        <text class="label" value="&kb.label;"/>
-      </hbox>
-
-    </groupbox>
 
     <groupbox orient="vertical" id="offline.titlebox"  hidable="true" hidefor="pop3">
       <label value="&offlineGroupTitle.label;"/>
@@ -81,24 +75,24 @@ Contributors:
     </groupbox>    
     
     <separator class="thin"/>
-    <groupbox orient="vertical" id="diskspace.titlebox"  hidable="true" hidefor="pop3">
+    <groupbox orient="vertical" id="diskspace.titlebox">
       <label value="&diskspaceGroupTitle.label;"/>
 
     <html iscontrolcontainer="true" hidable="true" hidefor="pop3">&offlineMsg.label;</html>
+    <html iscontrolcontainer="true" hidable="true" hidefor="imap,nntp">&offlinePopDesc.label;</html>
 
-    <hbox iscontrolcontainer="true" autostretch="never">
+    <hbox autostretch="never">
         <checkbox  wsm_persist="true" id="offline.notDownload"
-            label="&offlineNotDownload.label;" accesskey="&offlineNotDownload.accesskey;"/>
-        <textbox wsm_persist="true" id="offline.notDownloadMin" size="5" value="50"/> 
+            label="&offlineNotDownload.label;" accesskey="&offlineNotDownload.accesskey;" oncommand="onCheckItem('bc_notDownload', 'offline.notDownload');"/>
+        <textbox wsm_persist="true" id="offline.notDownloadMin" size="5" value="50"  observes="bc_notDownload"/> 
         <text class="label" value="&kb.label;"/>
     </hbox>
-
-    
+        
     <checkbox iscontrolcontainer="true" hidable="true" hidefor="pop3,imap" 
          wsm_persist="true" id="nntp.downloadUnread" label="&nntpDownloadUnread.label;" accesskey="&nntpDownloadUnread.accesskey;"/>
     <hbox iscontrolcontainer="true" hidable="true" hidefor="pop3,imap" autostretch="never">
-        <checkbox wsm_persist="true" id="nntp.downloadMsg" label="&nntpDownloadMsg.label;" accesskey="&nntpDownloadMsg.accesskey;"/>
-        <textbox wsm_persist="true" id="nntp.downloadMsgMin" size="5" value="30"/>
+        <checkbox wsm_persist="true" id="nntp.downloadMsg" label="&nntpDownloadMsg.label;" accesskey="&nntpDownloadMsg.accesskey;" oncommand="onCheckItem('bc_downloadMsg', 'nntp.downloadMsg');"/>
+        <textbox wsm_persist="true" id="nntp.downloadMsgMin" size="5" value="30" observes="bc_downloadMsg"/>
         <text class="label" value="&daysAgo.label;"/>
     </hbox>
 
@@ -108,22 +102,22 @@ Contributors:
 
     <radiogroup orient="vertical"  wsm_persist="true" id="nntp.keepMsg" pref="true" preftype="int" prefattribute="data">
         <hbox flex="1">
-            <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepOldMsg" data="2" label="&nntpKeepMsg.label;"/>
-            <textbox wsm_persist="true" id="nntp.keepOldMsgMin" size="5" value="30"/>
+            <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepOldMsg" data="2" label="&nntpKeepMsg.label;" oncommand="onCheckKeepMsg();"/>
+            <textbox wsm_persist="true" id="nntp.keepOldMsgMin" size="5" value="30" observes="bc_keepMsg"/>
             <text class="label" value="&days.label;"/>
         </hbox>
-        <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepAllMsg" data="1" label="&nntpKeepAll.label;"/>
+        <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepAllMsg" data="1" label="&nntpKeepAll.label;" oncommand="onCheckKeepMsg();"/>
         <hbox flex="1">
-            <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepNewMsg" data="3" label="&nntpKeepNew.label;"/>
-            <textbox wsm_persist="true" id="nntp.keepNewMsgMin" size="5" value="30"/>
+            <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepNewMsg" data="3" label="&nntpKeepNew.label;" oncommand="onCheckKeepMsg();"/>
+            <textbox wsm_persist="true" id="nntp.keepNewMsgMin" size="5" value="30" observes="bc_keepMsg"/>
             <text class="label" value="&message.label;"/>
         </hbox>
     </radiogroup>
 
     <checkbox  wsm_persist="true" id="nntp.keepUnread" label="&nntpKeepUnread.label;" checked="true"/>
     <hbox flex="1">
-        <checkbox wsm_persist="true" id="nntp.removeBody" label="&nntpRemoveBody.label;"/>
-        <textbox wsm_persist="true" id="nntp.removeBodyMin" size="5" value="30"/>
+        <checkbox wsm_persist="true" id="nntp.removeBody" label="&nntpRemoveBody.label;" oncommand="onCheckItem('bc_removeBody','nntp.removeBody');"/>
+        <textbox wsm_persist="true" id="nntp.removeBodyMin" size="5" value="30" observes="bc_removeBody"/>
         <text class="label" value="&days.label;"/>
     </hbox>
     </vbox>

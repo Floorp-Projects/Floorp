@@ -231,7 +231,8 @@ function SetupRenameMenuItem(targetFolder, numSelected, isServer, serverType, sp
   var canRename = (targetFolder.getAttribute('CanRename') == "true");
 
   ShowMenuItem("folderPaneContext-rename", (numSelected <= 1) && !isServer && (specialFolder == "none") && canRename);
-  EnableMenuItem("folderPaneContext-rename", !isServer);
+  var folder = GetMsgFolderFromNode(targetFolder);
+  EnableMenuItem("folderPaneContext-rename", !isServer && folder.isCommandEnabled("cmd_renameFolder"));
 
   if(canRename)
   {
@@ -248,8 +249,11 @@ function SetupRemoveMenuItem(targetFolder, numSelected, isServer, serverType, sp
 
 
   ShowMenuItem("folderPaneContext-remove", showRemove);
-  EnableMenuItem("folderPaneContext-remove", true);
-
+  if(showRemove)
+  {
+    var folder = GetMsgFolderFromNode(targetFolder);
+    EnableMenuItem("folderPaneContext-remove", folder.isCommandEnabled("cmd_delete"));
+  }
   if(isMail && !isSpecialFolder)
   {
     SetMenuItemLabel("folderPaneContext-remove", gMessengerBundle.getString("removeFolder"));
@@ -260,7 +264,8 @@ function SetupCompactMenuItem(targetFolder, numSelected)
 {
     var canCompact = (targetFolder.getAttribute('CanCompact') == "true");
   ShowMenuItem("folderPaneContext-compact", (numSelected <=1) && canCompact);
-  EnableMenuItem("folderPaneContext-compact", true );
+  var folder = GetMsgFolderFromNode(targetFolder);
+  EnableMenuItem("folderPaneContext-compact", folder.isCommandEnabled("cmd_compactFolder"));
 
   if(canCompact)
   {

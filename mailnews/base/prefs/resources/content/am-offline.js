@@ -31,6 +31,10 @@ function onInit()
         initRetentionSettings();
         initDownloadSettings();
     }
+    onCheckItem("bc_notDownload", "offline.notDownload");
+    onCheckItem("bc_downloadMsg", "nntp.downloadMsg");
+    onCheckItem("bc_removeBody", "nntp.removeBody");
+    onCheckKeepMsg();
 }
 
 function initServerSettings()
@@ -47,7 +51,7 @@ function initServerSettings()
         document.getElementById("offline.downloadBodiesOnGetNewMail").checked =  gImapIncomingServer.downloadBodiesOnGetNewMail;
         document.getElementById("offline.newFolder").checked =  gImapIncomingServer.offlineDownload;
     }
-    onLockPreference();	
+   // onLockPreference();	
 }
   
 function initRetentionSettings()
@@ -56,7 +60,7 @@ function initRetentionSettings()
     var retentionSettings =  gIncomingServer.retentionSettings; 
 
     document.getElementById("nntp.keepUnread").checked =  retentionSettings.keepUnreadMessagesOnly;
-    document.getElementById("nntp.removeBody").checked =  retentionSettings.cleanupBodiesByDates;
+    document.getElementById("nntp.removeBody").checked =  retentionSettings.cleanupBodiesByDays;
     document.getElementById("nntp.keepMsg").setAttribute("value", retentionSettings.retainByPreference);
     if(retentionSettings.daysToKeepHdrs > 0)
         document.getElementById("nntp.keepOldMsgMin").setAttribute("value", retentionSettings.daysToKeepHdrs);
@@ -215,7 +219,7 @@ function onSave()
     retentionSettings.daysToKeepBodies = document.getElementById("nntp.removeBodyMin").value;
     retentionSettings.numHeadersToKeep = document.getElementById("nntp.keepNewMsgMin").value;
     retentionSettings.keepUnreadMessagesOnly = document.getElementById("nntp.keepUnread").checked;
-    retentionSettings.cleanupBodiesByDates = document.getElementById("nntp.removeBody").checked;
+    retentionSettings.cleanupBodiesByDays = document.getElementById("nntp.removeBody").checked;
 
     downloadSettings.downloadByDate = document.getElementById("nntp.downloadMsg").checked;
     downloadSettings.downloadUnreadOnly = document.getElementById("nntp.downloadUnread").checked;
@@ -283,4 +287,38 @@ is known, it needs to be added to the array.  See bugs 91560 and 79561
     { prefstring:"", id:"nntp.removeBody" }
 */
 } 
+
+function onCheckItem(broadcasterElementId, checkElementId)
+{
+    var broadcaster = document.getElementById(broadcasterElementId);
+    var checked = document.getElementById(checkElementId).checked;
+    if(checked) {
+        broadcaster.removeAttribute("disabled");
+    }
+    else {
+        broadcaster.setAttribute("disabled", "true");
+    }
+
+} 
+
+function onCheckKeepMsg()
+{
+    var broadcaster_keepMsg = document.getElementById("bc_keepMsg");
+    var checkedOld = document.getElementById("nntp.keepOldMsg").checked;
+    var checkedNew = document.getElementById("nntp.keepNewMsg").checked;
+    var checkedAll = document.getElementById("nntp.keepAllMsg").checked;
+    if(checkedAll) {
+        broadcaster_keepMsg.setAttribute("disabled", "true");
+    }
+    else if(checkedOld) {
+        document.getElementById("nntp.keepOldMsgMin").removeAttribute("disabled");
+        document.getElementById("nntp.keepNewMsgMin").setAttribute("disabled", "true");
+    }
+    else if(checkedNew) {
+        document.getElementById("nntp.keepNewMsgMin").removeAttribute("disabled");
+        document.getElementById("nntp.keepOldMsgMin").setAttribute("disabled", "true");
+    }
+
+
+}
 
