@@ -55,6 +55,7 @@ IS_COMPONENT	= 1
 REQUIRES	= xpcom \
 		  string \
 		  dom \
+		  js \
 		  gfx \
 		  layout \
 		  content \
