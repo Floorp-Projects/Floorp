@@ -1941,10 +1941,6 @@ nsPrefMigration::SetPremigratedFilePref(const char *pref_name, nsIFileSpec *path
 
 static const char *prefsToConvert[] = {
       "browser.cache.directory",
-      "browser.bookmark_file",
-      "browser.history_file",
-      "browser.sarcache.directory",
-      "browser.user_history_file",
       "custtoolbar.personal_toolbar_folder",
       "editor.image_editor",
       "editor.html_editor",

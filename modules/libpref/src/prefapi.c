@@ -1131,9 +1131,6 @@ PREF_SetSpecialPrefsLocal(void)
 {
 	static char *prefName[] = {
 	"browser.bookmark_columns_win",
-	"browser.history_file",
-	"browser.sarcache.directory",
-	"browser.user_history_file",
 	"editor.html_editor",
 	"editor.template_history_0",
 	"editor.template_last_loc",
