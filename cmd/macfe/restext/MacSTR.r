@@ -1156,9 +1156,11 @@ resource 'STR ' ( MISC_ERROR_LAUNCH, "", purgeable ) {
 	"An unknown error occurred trying to open ^0."
 };
 
+/*
 resource 'STR ' ( ERROR_LAUNCH_IBM3270, "", purgeable ) {
 	"Could not launch IBM Host-on-Demand because the file " IBM3270_FILE " in the folder " IBM3270_FOLDER " could not be found.";
 };
+*/
 
 resource 'STR ' ( ERROR_OPEN_PROFILE_MANAGER, "", purgeable ) {
 	"Please quit "PROGRAM_NAME" before opening the Profile Manager.";
