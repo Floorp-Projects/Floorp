@@ -100,7 +100,7 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
       try {
           var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
       } catch ( e ) {
-          alert( "The ICAL Componenet is not registered properly. Please file a bug at http://bugzilla.mozilla.org and add in the following information.\nError returned:"+e+"\n" );
+          alert( "The ICAL Componenet is not registered properly. Please add yourself to the cc list at http://bugzilla.mozilla.org/show_bug.cgi?id=134432.\nError returned:"+e+"\n" );
           return;
       }
             
