@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secvfy.c,v 1.4 2001/01/05 01:38:09 nelsonb%netscape.com Exp $
+ * $Id: secvfy.c,v 1.5 2001/05/01 23:59:27 relyea%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -109,7 +109,7 @@ DecryptSigBlock(int *tagp, unsigned char *digest, SECKEYPublicKey *key,
 typedef enum { VFY_RSA, VFY_DSA} VerifyType;
 
 struct VFYContextStr {
-    int alg;
+    SECOidTag alg;
     VerifyType type;
     SECKEYPublicKey *key;
     /* digest holds the full dsa signature... 40 bytes */
@@ -117,7 +117,88 @@ struct VFYContextStr {
     void * wincx;
     void *hashcx;
     const SECHashObject *hashobj;
+    SECOidTag sigAlg;
+    PRBool hasSignature;
 };
+
+/*
+ * decode the DSA signature from it's DER wrapping.
+ */
+static SECStatus
+decodeDSASignature(SECOidTag algid, SECItem *sig, unsigned char *digest) {
+    SECItem *dsasig = NULL;
+    SECStatus rv=SECSuccess;
+
+    /* if this is a DER encoded signature, decode it first */
+    if ((algid == SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST) ||
+	(algid == SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST) ||
+	(algid == SEC_OID_ANSIX9_DSA_SIGNATURE)) {
+	dsasig = DSAU_DecodeDerSig(sig);
+	if ((dsasig == NULL) || (dsasig->len != DSA_SIGNATURE_LEN)) {
+	    rv = SECFailure;
+	    goto loser;
+	}
+	PORT_Memcpy(digest, dsasig->data, dsasig->len);
+    } else {
+	if (sig->len != DSA_SIGNATURE_LEN) {
+	    rv = SECFailure;
+	    goto loser;
+	}
+	PORT_Memcpy(digest, sig->data, sig->len);
+    }
+
+loser:
+    if (dsasig != NULL)
+	SECITEM_FreeItem(dsasig, PR_TRUE);
+    return rv;
+     
+}
+/*
+ * Pulls the hash algorithm, signing algorithm, and key type out of a
+ * composite algorithm.
+ *
+ * alg: the composite algorithm to dissect.
+ * hashalg: address of a SECOidTag which will be set with the hash algorithm.
+ * signalg: address of a SECOidTag which will be set with the signing alg.
+ * keyType: address of a KeyType which will be set with the key type.
+ * Returns: SECSuccess if the algorithm was acceptable, SECFailure if the
+ *	algorithm was not found or was not a signing algorithm.
+ */
+static SECStatus
+decodeSigAlg(SECOidTag alg, SECOidTag *hashalg)
+{
+    PR_ASSERT(hashalg!=NULL);
+
+    switch (alg) {
+      /* We probably shouldn't be generating MD2 signatures either */
+      case SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION:
+        *hashalg = SEC_OID_MD2;
+	return SECSuccess;
+      case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
+        *hashalg = SEC_OID_MD5;
+	return SECSuccess;
+      case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
+      case SEC_OID_ISO_SHA_WITH_RSA_SIGNATURE:
+        *hashalg = SEC_OID_SHA1;
+	return SECSuccess;
+      /* what about normal DSA? */
+      case SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST:
+      case SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST:
+        *hashalg = SEC_OID_SHA1;
+	return SECSuccess;
+      case SEC_OID_MISSI_DSS:
+      case SEC_OID_MISSI_KEA_DSS:
+      case SEC_OID_MISSI_KEA_DSS_OLD:
+      case SEC_OID_MISSI_DSS_OLD:
+        *hashalg = SEC_OID_SHA1;
+	return SECSuccess;
+      /* we don't implement MD4 hashes */
+      case SEC_OID_PKCS1_MD4_WITH_RSA_ENCRYPTION:
+      default:
+        return SECFailure;
+    }
+    PR_ASSERT(PR_FALSE); /* shouldn't get here */
+}
 
 VFYContext *
 VFY_CreateContext(SECKEYPublicKey *key, SECItem *sig, SECOidTag algid,
@@ -125,38 +206,34 @@ VFY_CreateContext(SECKEYPublicKey *key, SECItem *sig, SECOidTag algid,
 {
     VFYContext *cx;
     SECStatus rv;
-    SECItem *dsasig = NULL;
 
     cx = (VFYContext*) PORT_ZAlloc(sizeof(VFYContext));
     if (cx) {
-        cx->wincx = cx;
+        cx->wincx = wincx;
+	cx->hasSignature = (sig != NULL);
+	cx->sigAlg = algid;
+	rv = SECSuccess;
 	switch (key->keyType) {
 	  case rsaKey:
 	    cx->type = VFY_RSA;
-	    cx->key = NULL; /* extra safety precautions */
-	    rv = DecryptSigBlock(&cx->alg, &cx->digest[0], key, sig, (char*)wincx);
+	    cx->key = SECKEY_CopyPublicKey(key); /* extra safety precautions */
+	    if (sig) {
+		int hashid;
+	    	rv = DecryptSigBlock(&hashid, &cx->digest[0], 
+						key, sig, (char*)wincx);
+		cx->alg = hashid;
+	    } else {
+		rv = decodeSigAlg(algid,&cx->alg);
+	    }
 	    break;
 	  case fortezzaKey:
 	  case dsaKey:
 	    cx->type = VFY_DSA;
 	    cx->alg = SEC_OID_SHA1;
 	    cx->key = SECKEY_CopyPublicKey(key);
-	    /* if this is a DER encoded signature, decode it first */
-	    if ((algid == SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST) ||
-		(algid == SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST) ||
-		(algid == SEC_OID_ANSIX9_DSA_SIGNATURE)) {
-		dsasig = DSAU_DecodeDerSig(sig);
-		if ((dsasig == NULL) || (dsasig->len != DSA_SIGNATURE_LEN)) {
-		    goto loser;
-		}
-		PORT_Memcpy(&cx->digest[0], dsasig->data, dsasig->len);
-	    } else {
-		if (sig->len != DSA_SIGNATURE_LEN) {
-		    goto loser;
-		}
-		PORT_Memcpy(&cx->digest[0], sig->data, sig->len);
+	    if (sig) {
+	    	rv = decodeDSASignature(algid,sig,&cx->digest[0]);
 	    }
-	    rv = SECSuccess;
 	    break;
 	  default:
 	    rv = SECFailure;
@@ -176,8 +253,6 @@ VFY_CreateContext(SECKEYPublicKey *key, SECItem *sig, SECOidTag algid,
     return cx;
 
   loser:
-    if (dsasig != NULL)
-	SECITEM_FreeItem(dsasig, PR_TRUE);
     VFY_DestroyContext(cx, PR_TRUE);
     return 0;
 }
@@ -242,11 +317,18 @@ VFY_Update(VFYContext *cx, unsigned char *input, unsigned inputLen)
 }
 
 SECStatus
-VFY_End(VFYContext *cx)
+VFY_EndWithSignature(VFYContext *cx, SECItem *sig)
 {
     unsigned char final[32];
     unsigned part;
-    SECItem hash,sig;
+    SECItem hash,dsasig;
+    unsigned char *digest;
+    SECStatus rv;
+
+    if ((cx->hasSignature == PR_FALSE) && (sig == NULL)) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
 
     if (cx->hashcx == NULL) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -255,16 +337,32 @@ VFY_End(VFYContext *cx)
     (*cx->hashobj->end)(cx->hashcx, final, &part, sizeof(final));
     switch (cx->type) {
       case VFY_DSA:
-	sig.data = cx->digest;
-	sig.len = DSA_SIGNATURE_LEN; /* magic size of dsa signature */
+	if (sig) {
+	    rv = decodeDSASignature(cx->sigAlg,sig,&cx->digest[0]);
+	    if (rv != SECSuccess) {
+		PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
+		return SECFailure;
+	    }
+	} 
+	dsasig.data = cx->digest;
+	dsasig.len = DSA_SIGNATURE_LEN; /* magic size of dsa signature */
 	hash.data = final;
 	hash.len = part;
-	if (PK11_Verify(cx->key,&sig,&hash,cx->wincx) != SECSuccess) {
+	if (PK11_Verify(cx->key,&dsasig,&hash,cx->wincx) != SECSuccess) {
 		PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
 		return SECFailure;
 	}
 	break;
       case VFY_RSA:
+	if (sig) {
+	    int hashid;
+	    rv = DecryptSigBlock(&hashid, &cx->digest[0], 
+					    cx->key, sig, (char*)cx->wincx);
+	    if ((rv != SECSuccess) || (hashid != cx->alg)) {
+		PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
+		return SECFailure;
+	    }
+	}
 	if (PORT_Memcmp(final, cx->digest, part)) {
 	    PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
 	    return SECFailure;
@@ -275,6 +373,12 @@ VFY_End(VFYContext *cx)
 	return SECFailure; /* shouldn't happen */
     }
     return SECSuccess;
+}
+
+SECStatus
+VFY_End(VFYContext *cx)
+{
+    return VFY_EndWithSignature(cx,NULL);
 }
 
 /************************************************************************/

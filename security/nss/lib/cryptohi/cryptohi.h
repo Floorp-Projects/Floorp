@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: cryptohi.h,v 1.2 2001/01/04 00:44:23 wtc%netscape.com Exp $
+ * $Id: cryptohi.h,v 1.3 2001/05/01 23:59:27 relyea%netscape.com Exp $
  */
 
 #ifndef _CRYPTOHI_H_
@@ -164,7 +164,9 @@ extern void SEC_DestroySignedData(CERTSignedData *sd, PRBool freeit);
 /*
 ** Create a signature verification context.
 **	"key" the public key to verify with
-**	"sig" the encrypted signature data
+**	"sig" the encrypted signature data if sig is NULL then
+**	   VFY_EndWithSignature must be called with the correct signature at
+**	   the end of the processing.
 **	"algid" specifies the signing algorithm to use.  This must match
 **	    the key type.
 **	"wincx" void pointer to the window context
@@ -200,6 +202,20 @@ extern SECStatus VFY_Update(VFYContext *cx, unsigned char *input,
 ** 	"cx" the context
 */
 extern SECStatus VFY_End(VFYContext *cx);
+
+/*
+** Finish the verification process. The return value is a status which
+** indicates success or failure. On success, the SECSuccess value is
+** returned. Otherwise, SECFailure is returned and the error code found
+** using PORT_GetError() indicates what failure occurred. If signature is
+** supplied the verification uses this signature to verify, otherwise the
+** signature passed in VFY_CreateContext() is used. 
+** VFY_EndWithSignature(cx,NULL); is identical to VFY_End(cx);.
+** 	"cx" the context
+** 	"sig" the encrypted signature data
+*/
+extern SECStatus VFY_EndWithSignature(VFYContext *cx, SECItem *sig);
+
 
 /*
 ** Verify the signature on a block of data for which we already have
