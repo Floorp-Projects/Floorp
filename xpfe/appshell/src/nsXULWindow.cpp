@@ -690,6 +690,7 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
             specY = temp;
          }
 
+      mWindow->ConstrainPosition(&specX, &specY);
       if((specX != curX) || (specY != curY))
          SetPosition(specX, specY);
       }
