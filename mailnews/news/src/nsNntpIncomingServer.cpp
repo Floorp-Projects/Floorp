@@ -20,6 +20,7 @@
  * Contributor(s): 
  * Seth Spitzer <sspitzer@netscape.com>
  * David Bienvenu <bienvenu@netscape.com>
+ * Henrik Gemal <gemal@gemal.dk>
  */
 
 #include "nsNntpIncomingServer.h"
@@ -725,7 +726,7 @@ nsNntpIncomingServer::WriteHostInfoFile()
 	printf("xxx todo missing some formatting, need to fix this, see nsNNTPHost.cpp\n");
 #endif
 
-    hostinfoStream << "# Netscape newshost information file." << MSG_LINEBREAK;
+    hostinfoStream << "# News host information file." << MSG_LINEBREAK;
 	hostinfoStream << "# This is a generated file!  Do not edit." << MSG_LINEBREAK;
 	hostinfoStream << "" << MSG_LINEBREAK;
 	hostinfoStream << "version=1" << MSG_LINEBREAK;

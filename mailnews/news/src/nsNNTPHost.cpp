@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Henrik Gemal <gemal@gemal.dk>
  */
 
 #include "nsNNTPHost.h"
@@ -510,7 +511,7 @@ nsNNTPHost::CreateFileHeader()
 	LL_L2I(firstnewdate, m_firstnewdate);
 	
 	PR_snprintf(m_block, m_blockSize,
-				"# Netscape newshost information file." MSG_LINEBREAK
+				"# News host information file." MSG_LINEBREAK
 				"# This is a generated file!  Do not edit." MSG_LINEBREAK
 				"" MSG_LINEBREAK
 				"version=1" MSG_LINEBREAK
