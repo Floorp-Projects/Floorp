@@ -40,10 +40,19 @@
 #include "nsIFileChannel.h"
 #include "nsIStringBundle.h"
 
+/* Item structure */
+typedef struct _MyData
+{
+   PAPSZ    papszIFilterList;
+   ULONG    ulCurExt;
+   ULONG    ulNumFilters;
+}MYDATA, *PMYDATA;
+
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
+MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2);
 MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2);
 
 //-------------------------------------------------------------------------
@@ -58,6 +67,7 @@ nsFilePicker::nsFilePicker()
   mUnicodeEncoder = nsnull;
   mUnicodeDecoder = nsnull;
   mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
+  pszFDFileExists[0] = '\0';
 }
 
 //-------------------------------------------------------------------------
@@ -67,6 +77,9 @@ nsFilePicker::nsFilePicker()
 //-------------------------------------------------------------------------
 nsFilePicker::~nsFilePicker()
 {
+  mFilters.Clear();
+  mTitles.Clear();
+
   NS_IF_RELEASE(mUnicodeEncoder);
   NS_IF_RELEASE(mUnicodeDecoder);
 }
@@ -99,15 +112,18 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
   mFile.SetLength(0);
 
+  FILEDLG filedlg;
+  memset(&filedlg, 0, sizeof(FILEDLG));
+  filedlg.cbSize = sizeof(FILEDLG);
+  filedlg.pszTitle = title;
+
   if (mMode == modeGetFolder) {
-    FILEDLG filedlg;
- 
-    memset(&filedlg, 0, sizeof(FILEDLG));
-    filedlg.cbSize = sizeof(FILEDLG);
     filedlg.fl = FDS_OPEN_DIALOG | FDS_CENTER;
-    filedlg.pfnDlgProc = FileDialogProc;
+    filedlg.pfnDlgProc = DirDialogProc;
     strcpy(filedlg.szFullFile, "^");
+    DosError(FERR_DISABLEHARDERR);
     WinFileDlg(HWND_DESKTOP, mWnd, &filedlg);
+    DosError(FERR_ENABLEHARDERR);
     char* tempptr = strstr(filedlg.szFullFile, "^");
     *tempptr = '\0';
     if (filedlg.lReturn == DID_OK) {
@@ -117,65 +133,112 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     }
   }
   else {
-
-    OPENFILENAME ofn;
-    memset(&ofn, 0, sizeof(ofn));
-
-    ofn.lStructSize = sizeof(ofn);
-
-    PRInt32 l = (mFilterList.Length()+2)*2;
-    char *filterBuffer = (char*) nsMemory::Alloc(l);
-    int len = gWidgetModuleData->WideCharToMultiByte(0,
-                                          mFilterList.get(),
-                                          mFilterList.Length(),
-                                          filterBuffer,
-                                          l);
-    filterBuffer[len] = NULL;
-    filterBuffer[len+1] = NULL;
-                                  
-    if (initialDir && *initialDir) {
-      ofn.lpstrInitialDir = initialDir;
+    filedlg.fl = FDS_CENTER;
+    if (mMode == modeSave) {
+       filedlg.fl |= FDS_SAVEAS_DIALOG | FDS_ENABLEFILELB;
+    } else {
+       filedlg.fl |= FDS_OPEN_DIALOG;
     }
-
-    ofn.lpstrTitle   = title;
-    ofn.lpstrFilter  = filterBuffer;
-    ofn.nFilterIndex = 1;
-    ofn.hwndOwner    = mWnd;
-    ofn.lpstrFile    = fileBuffer;
-    ofn.nMaxFile     = MAX_PATH;
-
-    // XXX use OFN_NOCHANGEDIR  for M5
-    ofn.Flags = OFN_SHAREAWARE | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
-
-    LONG rv;
-    if (mMode == modeOpen) {
-      // FILE MUST EXIST!
-      ofn.Flags |= OFN_FILEMUSTEXIST;
+    PMYDATA pmydata;
+    pmydata = (PMYDATA)malloc(sizeof(MYDATA));
+    memset(pmydata, 0, sizeof(MYDATA));
+    filedlg.ulUser = (ULONG)pmydata;
+    filedlg.pfnDlgProc = FileDialogProc;
+    if (initialDir[0]) {
+      strcpy(filedlg.szFullFile, initialDir);
+      strcat(filedlg.szFullFile, "\\");
     }
-    if( DaxOpenSave( (mMode == modeSave), &rv, &ofn, NULL) )
+    strcat(filedlg.szFullFile, fileBuffer);
+
+    int i;
+
+    PSZ *apszTypeList;
+    apszTypeList = (PSZ *)malloc(mTitles.Count()*sizeof(PSZ)+1);
+    for (i = 0; i < mTitles.Count(); i++)
+    {
+      const nsString& typeWide = *mTitles[i];
+      apszTypeList[i] = ToNewCString(typeWide);
+    }
+    apszTypeList[i] = 0;
+    filedlg.papszITypeList = (PAPSZ)apszTypeList;
+
+    PSZ *apszFilterList;
+    apszFilterList = (PSZ *)malloc(mFilters.Count()*sizeof(PSZ)+1);
+    for (i = 0; i < mFilters.Count(); i++)
+    {
+      const nsString& filterWide = *mFilters[i];
+      apszFilterList[i] = ToNewCString(filterWide);
+    }
+    apszFilterList[i] = 0;
+    pmydata->papszIFilterList = (PAPSZ)apszFilterList;
+
+    PRBool fileExists;
+    do {
+      DosError(FERR_DISABLEHARDERR);
+      WinFileDlg(HWND_DESKTOP, mWnd, &filedlg);
+      DosError(FERR_ENABLEHARDERR);
+      if ((filedlg.lReturn == DID_OK) && (mMode == modeSave)) {
+         PRFileInfo64 fileinfo64;
+         PRStatus status = PR_GetFileInfo64(filedlg.szFullFile, &fileinfo64);
+         if (status == PR_SUCCESS) {
+            fileExists = PR_TRUE;
+         } else {
+            fileExists = PR_FALSE;
+         }
+         if (fileExists) {
+            if (!pszFDFileExists[0]) {
+              HMODULE hmod;
+              char LoadError[CCHMAXPATH];
+              DosLoadModule(LoadError, CCHMAXPATH, "PMSDMRI", &hmod);
+              WinLoadString((HAB)0, hmod, 1110, 256, pszFDSaveCaption);
+              WinLoadString((HAB)0, hmod, 1135, 256, pszFDFileExists);
+              int i;
+              for (i=0;i<256 && pszFDFileExists[i];i++ ) {
+                if (pszFDFileExists[i] == '%') {
+                  pszFDFileExists[i+1] = 's';
+                  break;
+                }
+              }
+              DosFreeModule(hmod);
+
+            }
+            char pszFullText[256+CCHMAXPATH];
+            sprintf(pszFullText, pszFDFileExists, filedlg.szFullFile);
+            ULONG ulResponse = WinMessageBox(HWND_DESKTOP, mWnd, pszFullText,
+                                             pszFDSaveCaption, 0,
+                                             MB_YESNO | MB_MOVEABLE | MB_WARNING);
+            if (ulResponse == MBID_YES) {
+               fileExists = PR_FALSE;
+            }
+         }
+      }
+    } while (mMode == modeSave && fileExists && filedlg.lReturn == DID_OK);
+
+    for (i = 0; i < mTitles.Count(); i++)
+    {
+      nsMemory::Free(*(filedlg.papszITypeList[i]));
+    }
+    free(filedlg.papszITypeList);
+
+    for (i = 0; i < mFilters.Count(); i++)
+    {
+      nsMemory::Free(*(pmydata->papszIFilterList[i]));
+    }
+    free(pmydata->papszIFilterList);
+    free(pmydata);
+
+
+    if (filedlg.lReturn == DID_OK) {
       result = PR_TRUE;
+      mFile.Append(filedlg.szFullFile);
 
-
-    // Remember what filter type the user selected
-    mSelectedType = (PRInt16)ofn.nFilterIndex;
-
-    // Store the current directory in mDisplayDirectory
-    char* newCurrentDirectory = NS_STATIC_CAST( char*, nsMemory::Alloc( MAX_PATH+1 ) );
-    VERIFY(gWidgetModuleData->GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
-    mDisplayDirectory->InitWithPath(newCurrentDirectory);
-    nsMemory::Free( newCurrentDirectory );
-
-    // Clean up filter buffers
-    if (filterBuffer)
-      nsMemory::Free( filterBuffer );
-
-    // Set user-selected location of file or directory
-    if (result == PR_TRUE) {
-      // I think it also needs a conversion here (to unicode since appending to nsString) 
-      // but doing that generates garbage file name, weird.
-      mFile.Append(fileBuffer);
+      // Store the current directory in mDisplayDirectory
+      char* newCurrentDirectory = NS_STATIC_CAST( char*, nsMemory::Alloc( MAX_PATH+1 ) );
+      VERIFY(gWidgetModuleData->GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
+      mDisplayDirectory->InitWithPath(newCurrentDirectory);
+      nsMemory::Free( newCurrentDirectory );
+      mSelectedType = (PRInt16)pmydata->ulCurExt;
     }
-
   }
 
   if (title)
@@ -396,15 +459,13 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
 NS_IMETHODIMP
 nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
 {
-  mFilterList.Append(aTitle);
-  mFilterList.Append(PRUnichar('\0'));
-  mFilterList.Append(aFilter);
-  mFilterList.Append(PRUnichar('\0'));
-
+  mFilters.AppendString(nsDependentString(aFilter));
+  mTitles.AppendString(nsDependentString(aTitle));
+  
   return NS_OK;
 }
 
-MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
+MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
    switch ( msg ) {
       case WM_INITDLG:
@@ -489,8 +550,6 @@ MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2
          WinShowWindow(WinWindowFromID(hwndDlg,DID_FILTER_TXT), FALSE);
          WinShowWindow(WinWindowFromID(hwndDlg, DID_FILENAME_ED), FALSE);
          WinShowWindow(WinWindowFromID(hwndDlg, 0x503D), FALSE);
-         // Set Titlebar to nothing
-         WinSetWindowText(hwndDlg, "");
          }
          break;
       case WM_CONTROL:
@@ -503,4 +562,58 @@ MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2
          break;
    }      
    return WinDefFileDlgProc(hwndDlg, msg, mp1, mp2);
+}
+
+MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
+{
+  MRESULT mr;
+  PFILEDLG pfiledlg;
+  HWND hwndTypeCombo;
+  HWND hwndFileEF;
+  PSZ pszTemp;
+  INT i;
+  SWP swp;
+  PMYDATA pmydata;
+
+  switch ( msg ) {
+    case WM_INITDLG:
+       /* Create another dropdown that we manage */
+       mr = WinDefFileDlgProc(hwndDlg, msg, mp1, mp2);
+       hwndTypeCombo = WinWindowFromID(hwndDlg, DID_FILTER_CB);
+       WinQueryWindowPos(hwndTypeCombo, &swp);
+       WinSetWindowPos(hwndTypeCombo, NULLHANDLE, 0, 0, 0, 0, SWP_HIDE);
+       hwndTypeCombo = WinCreateWindow( hwndDlg, WC_COMBOBOX, "",
+                                        WS_VISIBLE | WS_PARENTCLIP | WS_SYNCPAINT | WS_TABSTOP | CBS_DROPDOWNLIST,
+                                        swp.x, swp.y,
+                                        swp.cx, swp.cy, hwndDlg, swp.hwndInsertBehind, 290,
+                                        NULL, NULL );
+       WinSendMsg( hwndTypeCombo, LM_DELETEALL, (MPARAM)0, (MPARAM)0 );
+       pfiledlg = (PFILEDLG)WinQueryWindowULong( hwndDlg, QWL_USER );
+       i = 0;
+       while (*(pfiledlg->papszITypeList[i]) != NULL) {
+           WinSendMsg( hwndTypeCombo, LM_INSERTITEM, (MPARAM)LIT_END, (MPARAM)*(pfiledlg->papszITypeList[i]) );
+           i++;
+       }
+       WinSendMsg( hwndTypeCombo, LM_SELECTITEM, (MPARAM)0, (MPARAM)TRUE );
+
+       return mr;
+    case WM_CONTROL:
+       {
+         if ((SHORT1FROMMP(mp1) == 290) &&
+           (SHORT2FROMMP(mp1) == CBN_LBSELECT)) {
+           hwndTypeCombo = WinWindowFromID(hwndDlg, 290);
+           pfiledlg = (PFILEDLG)WinQueryWindowULong( hwndDlg, QWL_USER );
+           pmydata = (PMYDATA)pfiledlg->ulUser;
+           pmydata->ulCurExt = (ULONG)WinSendMsg( hwndTypeCombo, LM_QUERYSELECTION, (MPARAM)LIT_FIRST, (MPARAM)0 );
+           if (pfiledlg->fl & FDS_OPEN_DIALOG) {
+             WinSetWindowText(WinWindowFromID(hwndDlg,DID_FILENAME_ED), *(pmydata->papszIFilterList[pmydata->ulCurExt]));
+             WinSendMsg(WinWindowFromID(hwndDlg,DID_FILENAME_ED), EM_SETSEL, MPFROM2SHORT(0, 32000), (MPARAM)0 );
+             WinSendMsg(hwndDlg, WM_CONTROL, MPFROM2SHORT(DID_FILTER_CB, CBN_LBSELECT), (MPARAM)0 );
+           }
+           return (MRESULT)TRUE;
+         }
+       }
+       break;
+  }      
+  return WinDefFileDlgProc(hwndDlg, msg, mp1, mp2);
 }

@@ -560,7 +560,9 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
         nsprPath = temp;
     }
 
+    DosError(FERR_DISABLEHARDERR);
     PRStatus status = PR_GetFileInfo64(nsprPath, &mFileInfo64);
+    DosError(FERR_ENABLEHARDERR);
     if ( status == PR_SUCCESS )
     {
         if (!resolveTerminal)
@@ -604,7 +606,9 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 	mResolvedPath.Assign(resolvePath);
     nsMemory::Free(resolvePath);
 
+    DosError(FERR_DISABLEHARDERR);
     status = PR_GetFileInfo64(mResolvedPath.get(), &mFileInfo64);
+    DosError(FERR_ENABLEHARDERR);
     
     if ( status == PR_SUCCESS )
 		mDirty = PR_FALSE;
