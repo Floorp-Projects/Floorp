@@ -62,6 +62,8 @@
 
 #define MAX_PATH _MAX_PATH
 #define INCL_WINWORKPLACE
+#define INCL_DOSMISC
+#define INCL_WINSHELLDATA
 #include <os2.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -292,7 +294,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                              &ulBootDrive, sizeof ulBootDrive);
             buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
 
-            return NS_NewNativeLocalFile(nsDependentCString(MakeUpperCase(path)), 
+            return NS_NewNativeLocalFile(nsDependentCString(buffer),
                                          PR_TRUE, 
                                          aFile);
         }
@@ -329,7 +331,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                 if( c) strcpy( buffer, c);
              }
 
-            return NS_NewNativeLocalFile(nsDependentCString(MakeUpperCase(buffer)), 
+            return NS_NewNativeLocalFile(nsDependentCString(buffer), 
                                          PR_TRUE, 
                                          aFile);
           } 
