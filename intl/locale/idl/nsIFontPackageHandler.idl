@@ -1,0 +1,54 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ * Frank Yung-Fong Tang <ftang@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(6712FDD1-F978-11d4-A144-005004832142)]
+interface nsIFontPackageHandler : nsISupports {
+   /**
+    * Set the font package handler for Gecko
+    * @param aFontPackID a font package ID.
+    * The id have the following naming convenation 
+    *  name_space:name
+    * we currently define one name space
+    *    lang - a font package for a particular language group
+    * and udnder the lang name space, we use the language code to identify
+    * the package, below are the defined packages
+    *   ja - Japanese font package ("lang:ja")
+    *   ko - Korean font package ("lang:ko")
+    *   zh-TW - Traditional Chinese font package ("lang:zh-TW")
+    *   zh-CN - Simplified Chinese font package ("lang:zh-CN")
+    * In the future, we may want to add
+    *    ar - Arabic font packges ("lang:ar")
+    *    he - Hebrew font packages ("lang:he")
+    *    th - Thai font package ("lang:th")
+    * other name space are reserved for now.
+    * After the installation, the font package handler should call
+    * nsIFontPackageService::FontPackageHandled and pass back the aFontPackID
+    * 
+    * This interface sould be implemented by the embedding application
+    * In the other hand the nsIFontPackageProxy is internal to Gecko
+    */
+   void NeedFontPackage( in string aFontPackID );
+};
+
