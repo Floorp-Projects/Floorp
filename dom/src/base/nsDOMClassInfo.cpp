@@ -5162,14 +5162,14 @@ nsHTMLExternalObjSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
   rv = GetPluginJSObject(cx, obj, pi, &pi_obj, &pi_proto);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!pi_obj || !pi_proto) {
+  if (!pi_obj) {
     // Didn't get a plugin instance JSObject, nothing we can do then.
 
     return NS_OK;
   }
 
   if (IsObjInProtoChain(cx, obj, pi_obj)) {
-    // We must have re-enterd ::PostCreate() from nsObjectFrame()
+    // We must have re-entered ::PostCreate() from nsObjectFrame()
     // (through the FlushPendingNotifications() call in
     // GetPluginInstance()), this means that we've already done what
     // we're about to do in this function so we can just return here.
@@ -5192,41 +5192,66 @@ nsHTMLExternalObjSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
     return NS_ERROR_UNEXPECTED;
   }
 
-  // Set 'pi.__proto__.__proto__' to the original 'this.__proto__'
-  if (!::JS_SetPrototype(cx, pi_proto, my_proto)) {
-    return NS_ERROR_UNEXPECTED;
+  if (pi_proto && JS_GET_CLASS(cx, pi_proto) != sObjectClass) {
+    // The plugin wrapper has a proto that's not Object.prototype, set
+    // 'pi.__proto__.__proto__' to the original 'this.__proto__'
+    if (!::JS_SetPrototype(cx, pi_proto, my_proto)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+  } else {
+    // 'pi' didn't have a prototype, or pi's proto was 'Object.prototype'
+    // (i.e. pi is an LiveConnect wrapped Java applet), set
+    // 'pi.__proto__' to the original 'this.__proto__'
+    if (!::JS_SetPrototype(cx, pi_obj, my_proto)) {
+      return NS_ERROR_UNEXPECTED;
+    }
   }
 
   // Before this proto dance the objects involved looked like this:
   //
   // this.__proto__.__proto__
   //   ^      ^         ^
-  //   |      |         |__ Object
+  //   |      |         |__ Object.prototype
   //   |      |
   //   |      |__ xpc embed wrapper proto (shared)
   //   |
   //   |__ xpc wrapped native embed node
-  // 
+  //
   // pi.__proto__.__proto__
   // ^      ^         ^
-  // |      |         |__ Object
+  // |      |         |__ Object.prototype
   // |      |
-  // |      |__ xpc plugin wrapper proto (not shared)
+  // |      |__ plugin proto (not shared in the xpc wrapper case)
   // |
   // |__ xpc wrapped native pi (plugin instance)
-  // 
-  // Now, after the above prototype setup the prototype chanin should
-  // look like this:
+  //
+  // Now, after the above prototype setup the prototype chain should
+  // look like this if the plugin had a proto (other than
+  // Object.prototype):
   //
   // this.__proto__.__proto__.__proto__.__proto__
   //   ^      ^         ^         ^         ^
-  //   |      |         |         |         |__ Object
+  //   |      |         |         |         |__ Object.prototype
   //   |      |         |         |
   //   |      |         |         |__ xpc embed wrapper proto (shared)
   //   |      |         |
-  //   |      |         |__ xpc plugin wrapper proto (not shared)
+  //   |      |         |__ plugin proto (not shared in the xpc wrapper case)
   //   |      |
-  //   |      |__ xpc wrapped native pi
+  //   |      |__ xpc wrapped native pi (plugin instance)
+  //   |
+  //   |__ xpc wrapped native embed node
+  //
+  // If the plugin's proto was Object.prototype, the prototype chain
+  // should look like this:
+  //
+  // this.__proto__.__proto__.__proto__
+  //   ^      ^         ^         ^
+  //   |      |         |         |__ Object.prototype
+  //   |      |         |
+  //   |      |         |__ xpc embed wrapper proto (shared)
+  //   |      |
+  //   |      |__ pi (plugin instance) wrapper, most likely wrapped
+  //   |          by LiveConnect
   //   |
   //   |__ xpc wrapped native embed node
   //
@@ -5274,12 +5299,7 @@ nsHTMLAppletElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
     return NS_OK;
   }
 
-  rv = manager->WrapJavaObject(cx, appletObject, plugin_obj);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *plugin_proto = ::JS_GetPrototype(cx, *plugin_obj);
-
-  return rv;
+  return manager->WrapJavaObject(cx, appletObject, plugin_obj);
 }
 
 
