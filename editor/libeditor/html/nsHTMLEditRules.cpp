@@ -1171,7 +1171,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
       // see if we are in an "empty" node.
       // Note: do NOT delete table elements this way.
       PRBool bIsEmptyNode;
-      res = IsEmptyNode(node, &bIsEmptyNode, PR_TRUE, PR_FALSE);
+      res = mEditor->IsEmptyNode(node, &bIsEmptyNode, PR_TRUE, PR_FALSE);
       if (bIsEmptyNode && !mEditor->IsTableElement(node))
         nodeToDelete = node;
       else 
@@ -1511,7 +1511,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
     else if (mEditor->IsInlineNode(curNode) && mEditor->IsContainer(curNode)) 
     {
       PRBool bEmpty;
-      res = IsEmptyNode( curNode, &bEmpty);
+      res = mEditor->IsEmptyNode(curNode, &bEmpty);
       if (NS_FAILED(res)) return res;
       if (bEmpty)
       {
@@ -2196,7 +2196,7 @@ nsHTMLEditRules::IsEmptyBlock(nsIDOMNode *aNode,
 //  looks like I forgot to finish this.  Wonder what I was going to do?
 
   if (!nodeToTest) return NS_ERROR_NULL_POINTER;
-  return IsEmptyNode(nodeToTest, outIsEmptyBlock,
+  return mEditor->IsEmptyNode(nodeToTest, outIsEmptyBlock,
                      aMozBRDoesntCount, aListItemsNotEmpty);
 }
 
@@ -3350,7 +3350,7 @@ nsHTMLEditRules::ReturnInHeader(nsIDOMSelection *aSelection,
   if (prevItem && nsHTMLEditUtils::IsHeader(prevItem))
   {
     PRBool bIsEmptyNode;
-    res = IsEmptyNode(prevItem, &bIsEmptyNode);
+    res = mEditor->IsEmptyNode(prevItem, &bIsEmptyNode);
     if (NS_FAILED(res)) return res;
     if (bIsEmptyNode)
     {
@@ -3607,7 +3607,7 @@ nsHTMLEditRules::ReturnInListItem(nsIDOMSelection *aSelection,
   if (prevItem && nsHTMLEditUtils::IsListItem(prevItem))
   {
     PRBool bIsEmptyNode;
-    res = IsEmptyNode(prevItem, &bIsEmptyNode);
+    res = mEditor->IsEmptyNode(prevItem, &bIsEmptyNode);
     if (NS_FAILED(res)) return res;
     if (bIsEmptyNode)
     {
@@ -4184,7 +4184,7 @@ nsHTMLEditRules::AdjustSpecialBreaks()
     if (!node) return NS_ERROR_FAILURE;
     
     PRBool bIsEmptyNode;
-    res = IsEmptyNode(node, &bIsEmptyNode, PR_FALSE, PR_FALSE);
+    res = mEditor->IsEmptyNode(node, &bIsEmptyNode, PR_FALSE, PR_FALSE);
     if (NS_FAILED(res)) return res;
     if (bIsEmptyNode
         && (nsHTMLEditUtils::IsListItem(node) || mEditor->IsTableCell(node)))
@@ -4551,7 +4551,7 @@ nsHTMLEditRules::RemoveEmptyNodes()
       if (!node) return NS_ERROR_FAILURE;
       
       PRBool bIsEmptyNode;
-      res = IsEmptyNode(node, &bIsEmptyNode, PR_FALSE, PR_TRUE);
+      res = mEditor->IsEmptyNode(node, &bIsEmptyNode, PR_FALSE, PR_TRUE);
       if (NS_FAILED(res)) return res;
       if (bIsEmptyNode && !nsHTMLEditUtils::IsBody(node))
       {
@@ -4984,7 +4984,7 @@ nsHTMLEditRules::InsertMozBRIfNeeded(nsIDOMNode *aNode)
   
   PRBool isEmpty;
   nsCOMPtr<nsIDOMNode> brNode;
-  nsresult res = IsEmptyNode(aNode, &isEmpty);
+  nsresult res = mEditor->IsEmptyNode(aNode, &isEmpty);
   if (NS_FAILED(res)) return res;
   if (isEmpty)
   {

@@ -396,6 +396,8 @@ protected:
   PRBool AllCellsInRowSelected(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32 aNumberOfColumns);
   PRBool AllCellsInColumnSelected(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32 aNumberOfRows);
 
+  PRBool IsEmptyCell(nsIDOMElement *aCell);
+
   // Most insert methods need to get the same basic context data
   // Any of the pointers may be null if you don't need that datum (for more efficiency)
   // Input: *aCell is a known cell,
@@ -549,6 +551,9 @@ protected:
   nsresult IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast);
   nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
   nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
+  nsresult IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyBlock, 
+                       PRBool aMozBRDoesntCount = PR_FALSE,
+                       PRBool aListOrCellNotEmpty = PR_FALSE);
 
   nsresult GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver);
 

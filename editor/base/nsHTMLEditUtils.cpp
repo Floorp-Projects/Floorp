@@ -38,12 +38,15 @@ PRBool
 nsHTMLEditUtils::IsBody(nsIDOMNode *node)
 {
   NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsBody");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("body"))
+  if (node)
   {
-    return PR_TRUE;
+    nsAutoString tag;
+    nsEditor::GetTagString(node,tag);
+    tag.ToLowerCase();
+    if (tag.EqualsWithConversion("body"))
+    {
+      return PR_TRUE;
+    }
   }
   return PR_FALSE;
 }
