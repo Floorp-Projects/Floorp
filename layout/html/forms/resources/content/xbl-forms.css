@@ -77,6 +77,8 @@ xul|*.select-outlinerbody {
 
 input[type="checkbox"] {
   -moz-binding: url("chrome://forms/content/checkbox.xml#checkbox");
+  display: -moz-box;
+  margin: 3px 3px 3px 4px;
 
   /* override these values from the input rule */
   background-color: transparent;
@@ -85,9 +87,9 @@ input[type="checkbox"] {
   cursor: default;
   font: inherit;
   text-align: inherit;
-  vertical-align: inherit;
-  -moz-box-sizing: content-box; /* XXX ??? */
-  padding: none;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  -moz-box-sizing: border-box;
 }
 
 /*
