@@ -245,7 +245,7 @@ print "
   <OPTION SELECTED>\"Importance\"
   <OPTION>Assignee
 </SELECT></NOBR>
-<INPUT TYPE=\"submit\" VALUE=\"Submit\">
+<INPUT TYPE=\"submit\" VALUE=\"Submit query\">
 <INPUT TYPE=\"reset\" VALUE=\"Reset back to the default query\">
 <INPUT TYPE=hidden name=form_name VALUE=query>
 <BR>Give me a <A HREF=\"help.html\">clue</A> about how to use this form.
