@@ -812,7 +812,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
-  nscoord smallestMinWidth = onePixel;
+  nscoord smallestMinWidth = 0;
   if (eCompatibility_NavQuirks == compatMode) {
     if ((pos->mWidth.GetUnit() != eStyleUnit_Coord)   &&
         (pos->mWidth.GetUnit() != eStyleUnit_Percent)) {
