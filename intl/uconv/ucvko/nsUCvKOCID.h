@@ -27,10 +27,20 @@
 NS_DECLARE_ID(kEUCKRToUnicodeCID,
   0x379c2775, 0xec77, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
+// Class ID for our ISO2022KRToUnicode charset converter
+// {BA61519f-1DFA-11d3-B3BF-00805F8A6670}
+NS_DECLARE_ID(kISO2022KRToUnicodeCID,
+0xba61519f, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
+
 // Class ID for our UnicodeToEUCKR charset converter
 // {379C2778-EC77-11d2-8AAC-00600811A836}
 NS_DECLARE_ID(kUnicodeToEUCKRCID, 
   0x379c2778, 0xec77, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our UnicodeToISO2022KR charset converter
+// {BA6151A0-1DFA-11d3-B3BF-00805F8A6670}
+NS_DECLARE_ID(kUnicodeToISO2022KRCID, 
+0xba6151a0, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
 
 // Class ID for our UnicodeToKSC5601 charset converter
 // {BA615194-1DFA-11d3-B3BF-00805F8A6670}
