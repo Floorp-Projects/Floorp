@@ -80,6 +80,12 @@
     </rows>
   </grid>
   
+  <separator class="thin"/>
+  
+  <box autostretch="never">
+    <checkbox id="outgoingDefault" label="&outgoingDefault.label;" accesskey="&outgoingDefault.accesskey;" disabled="true"/>
+  </box>
+  
   <separator/>
   
   <box id="okCancelButtonsRight"/>
