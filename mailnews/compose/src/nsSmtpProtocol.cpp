@@ -231,9 +231,9 @@ nsSmtpProtocol::nsSmtpProtocol(nsIURI * aURL)
 nsSmtpProtocol::~nsSmtpProtocol()
 {
 	// free our local state
-	PR_FREEIF(m_addressCopy);
-	PR_FREEIF(m_verifyAddress);
-	PR_FREEIF(m_dataBuf);
+	PR_Free(m_addressCopy);
+	PR_Free(m_verifyAddress);
+	PR_Free(m_dataBuf);
 }
 
 void nsSmtpProtocol::Initialize(nsIURI * aURL)
@@ -543,7 +543,6 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
   return(status);
 }
     
-
 PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 length)
 {
 	PRInt32 status = 0;
@@ -699,6 +698,9 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 
             if (m_responseText.Find("EXTERNAL", PR_TRUE, 5) >= 0)  
                 SetFlag(SMTP_AUTH_EXTERNAL_ENABLED);
+            if (m_responseText.Find("CRAM-MD5", PR_TRUE, 5) >= 0)  
+                SetFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
+
         }
         startPos = endPos + 1;
     } while (endPos >= 0);
@@ -904,7 +906,10 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
                           strlen((const char*)username), nsnull);
   } 
   if (base64Str) {
-	  if (TestFlag(SMTP_AUTH_PLAIN_ENABLED))
+		// if cram md5 available, let's use it.
+		if (TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED))
+		  PR_snprintf(buffer, sizeof(buffer), "AUTH CRAM-MD5" CRLF);
+	  else if (TestFlag(SMTP_AUTH_PLAIN_ENABLED))
 		  PR_snprintf(buffer, sizeof(buffer), "AUTH PLAIN %.256s" CRLF, base64Str);
 	  else if (TestFlag(SMTP_AUTH_LOGIN_ENABLED))
 		  PR_snprintf(buffer, sizeof(buffer), "AUTH LOGIN %.256s" CRLF, base64Str);
@@ -949,11 +954,51 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
 
   if (!password.IsEmpty()) 
   {
-    char *base64Str = PL_Base64Encode(password.get(), password.Length(), nsnull);
-
     char buffer[512];
-    PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
-    nsCRT::free(base64Str);
+    if (TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED))
+    {
+      unsigned char digest[16];
+      char * decodedChallenge = PL_Base64Decode(m_responseText.get(), 
+        m_responseText.Length() - 2 /* subtract CRLF */, nsnull);
+      
+      if (decodedChallenge)
+        rv = MSGCramMD5(decodedChallenge, strlen(decodedChallenge), password.get(), password.Length(), digest);
+      else
+        return -1;
+      
+      PR_Free(decodedChallenge);
+      if (NS_SUCCEEDED(rv) && digest)
+      {
+        nsCAutoString encodedDigest;
+        PRUint32 digestLength = strlen((const char *) digest);
+        char hexVal[8];
+        
+        for (PRUint32 j=0; j<digestLength; j++) 
+        {
+          PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)digest[j]);
+          encodedDigest.Append(hexVal); 
+        }
+        
+        nsCOMPtr<nsISmtpServer> smtpServer;
+        rv = m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  
+        nsXPIDLCString userName;
+        rv = smtpServer->GetUsername(getter_Copies(userName));
+
+        PR_snprintf(buffer, sizeof(buffer), "%s %s", userName.get(), encodedDigest.get());
+        char *base64Str = PL_Base64Encode(buffer, strlen(buffer), nsnull);
+        PR_snprintf(buffer, sizeof(buffer), "%s" CRLF, base64Str);
+        PR_Free(base64Str);
+      }
+    }
+		else
+		{
+			char *base64Str = PL_Base64Encode(password.get(), password.Length(), nsnull);
+
+			PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
+			nsCRT::free(base64Str);
+		}
     nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
     status = SendData(url, buffer, PR_TRUE);
     m_nextState = SMTP_RESPONSE;

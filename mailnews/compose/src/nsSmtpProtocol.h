@@ -72,7 +72,8 @@ SMTP_SEND_AUTH_LOGIN_PASSWORD,                      // 17
 SMTP_AUTH_LOGIN_RESPONSE,                           // 18
 SMTP_TLS_RESPONSE,                                  // 19
 SMTP_AUTH_EXTERNAL_RESPONSE,                        // 20
-SMTP_AUTH_PROCESS_STATE                             // 21
+SMTP_AUTH_PROCESS_STATE,                            // 21
+SMTP_AUTH_CRAM_MD5_CHALLENGE_RESPONSE,							// 22
 } SmtpState;
 
 // State Flags (Note, I use the word state in terms of storing 
@@ -100,6 +101,7 @@ SMTP_AUTH_PROCESS_STATE                             // 21
 // for login redirection information.
 #define SMTP_USE_LOGIN_REDIRECTION  0x00000100
 #define SMTP_ESMTP_SERVER           0x00000200
+#define SMTP_AUTH_CRAM_MD5_ENABLED  0x00000400
 
 typedef enum _PrefAuthMethod {
     PREF_AUTH_NONE = 0,
@@ -220,14 +222,14 @@ private:
 	PRInt32 AuthLoginPassword();
 	PRInt32 AuthLoginResponse(nsIInputStream * stream, PRUint32 length);
 
-    PRInt32 SendTLSResponse();
+  PRInt32 SendTLSResponse();
 	PRInt32 SendVerifyResponse(); // mscott: this one is apparently unimplemented...
 	PRInt32 SendMailResponse();
 	PRInt32 SendRecipientResponse();
 	PRInt32 SendDataResponse();
 	PRInt32 SendPostData();
 	PRInt32 SendMessageResponse();
-
+	PRInt32 CramMD5LoginResponse();
 	PRInt32 ProcessAuth();
 
 
