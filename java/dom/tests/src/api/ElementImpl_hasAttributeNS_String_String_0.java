@@ -74,6 +74,7 @@ public class ElementImpl_hasAttributeNS_String_String_0 extends BWBaseTest imple
 
       String os = System.getProperty("OS");
       osRoutine(os);
+      setUnsupported();
 
       Document d = (Document)tobj;
       if (d != null)

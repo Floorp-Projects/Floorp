@@ -74,6 +74,7 @@ public class ElementImpl_hasAttribute_String_0 extends BWBaseTest implements Exe
 
       String os = System.getProperty("OS");
       osRoutine(os);
+      setUnsupported();
 
       Document d = (Document)tobj;
       if (d != null)

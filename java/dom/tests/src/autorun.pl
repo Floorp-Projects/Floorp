@@ -163,6 +163,9 @@ sub constructHTMLHeader() {
 #########################################################################
 sub constructHTMLBody() {
 	
+    $x=`sort -u $LOGTXT > $LOGTXT.tmp`;
+    $y=`rename $LOGTXT.tmp $LOGTXT`;
+
     open( MYLOG, $LOGTXT );
     @all_lines = <MYLOG>;
     close( MYLOG );
