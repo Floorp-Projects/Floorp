@@ -157,6 +157,7 @@
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
 static nsIPrefBranch       *gPrefBranch                = nsnull;
 static PRInt32              gRefCnt                    = 0;
+static PRInt32              gOpenPopupSpamCount        = 0;
 nsIXPConnect *GlobalWindowImpl::sXPConnect             = nsnull;
 nsIScriptSecurityManager *GlobalWindowImpl::sSecMan    = nsnull;
 nsIFactory *GlobalWindowImpl::sComputedDOMStyleFactory = nsnull;
@@ -186,6 +187,44 @@ static const char kDOMSecurityWarningsBundleURL[] = "chrome://communicator/local
 static const char kCryptoContractID[] = NS_CRYPTO_CONTRACTID;
 static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
 
+// CheckForAbusePoint return values:
+enum {
+  openAllow = 0,    // open that window without worries
+  openControlled,   // it's a popup, but allow it
+  openAbused,       // it's a popup. disallow it, but allow domain override.
+  openAbuseOverride // disallow window open
+};
+
+// return true if eventName is contained within events, delimited by spaces
+static PRBool
+ContainsEventName(const char *eventName, const nsAFlatCString& events)
+{
+  nsAFlatCString::const_iterator start, end;
+  events.BeginReading(start);
+  events.EndReading(end);
+
+  nsAFlatCString::const_iterator startiter(start);
+
+  while (startiter != end) {
+    nsAFlatCString::const_iterator enditer(end);
+
+    if (!FindInReadable(nsDependentCString(eventName), startiter, enditer))
+      return PR_FALSE;
+
+    // the match is surrounded by spaces, or at a string boundary
+    if ((startiter == start || *--startiter == ' ') &&
+        (enditer == end || *enditer == ' '))
+      return PR_TRUE;
+
+    /* Move on and see if there are other matches. (The delimitation
+       requirement makes it pointless to begin the next search before
+       the end of the invalid match just found.) */
+    startiter = enditer;
+  }
+
+  return PR_FALSE;
+}
+
 //*****************************************************************************
 //***    GlobalWindowImpl: Object Management
 //*****************************************************************************
@@ -203,9 +242,11 @@ GlobalWindowImpl::GlobalWindowImpl()
     mFullScreen(PR_FALSE),
     mIsClosed(PR_FALSE),
     mOpenerWasCleared(PR_FALSE),
+    mIsPopupSpam(PR_FALSE),
     mLastMouseButtonAction(LL_ZERO),
     mGlobalObjectOwner(nsnull),
     mDocShell(nsnull),
+    mCurrentEvent(0),
     mMutationBits(0),
     mChromeEventHandler(nsnull),
     mFrameElement(nsnull)
@@ -287,6 +328,13 @@ GlobalWindowImpl::CleanUp()
   mOpener = nsnull;             // Forces Release
   mContext = nsnull;            // Forces Release
   mChromeEventHandler = nsnull; // Forces Release
+
+  PRBool popup;
+  IsPopupSpamWindow(&popup);
+  if (popup) {
+    SetPopupSpamWindow(PR_FALSE);
+    --gOpenPopupSpamCount;
+  }
 }
 
 void
@@ -755,6 +803,9 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
   nsIDOMEvent *domEvent = nsnull;
   static PRUint32 count = 0;
 
+  nsEvent *oldEvent = mCurrentEvent;
+  mCurrentEvent = aEvent;
+
   /* mChromeEventHandler and mContext go dangling in the middle of this
      function under some circumstances (events that destroy the window)
      without this addref. */
@@ -926,6 +977,7 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
+  mCurrentEvent = oldEvent;
   return ret;
 }
 
@@ -2974,13 +3026,12 @@ GlobalWindowImpl::CanSetProperty(const char *aPrefName)
 
 /*
  * Examine the current document state to see if we're in a way that is
- * typically abused by web designers. This routine returns PR_TRUE if
- * we're running a top level script, running an onload or onunload
- * handler, or running a timeout. The window.open code uses this
- * routine to determine wether or not to allow the new window.
+ * typically abused by web designers. The window.open code uses this
+ * routine to determine whether to allow the new window.
+ * Returns a value from the CheckAbusePoint enum.
  */
-PRBool
-GlobalWindowImpl::CheckForAbusePoint ()
+PRUint32
+GlobalWindowImpl::CheckForAbusePoint()
 {
   nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(mDocShell));
 
@@ -2988,44 +3039,161 @@ GlobalWindowImpl::CheckForAbusePoint ()
     PRInt32 type = nsIDocShellTreeItem::typeChrome;
 
     item->GetItemType(&type);
-
     if (type != nsIDocShellTreeItem::typeContent)
-      return PR_FALSE;
+      return openAllow;
   }
 
-  if (!gPrefBranch) {
-    return PR_FALSE;
-  }
+  if (!gPrefBranch)
+    return openAllow;
 
-  if (!mIsDocumentLoaded || mRunningTimeout) {
-    return PR_TRUE;
-  }
+  PRInt32 intPref = 0;
 
-  PRInt32 clickDelay = 0;
-  gPrefBranch->GetIntPref("dom.disable_open_click_delay", &clickDelay);
-  if (clickDelay) {
-    PRTime now, ll_delta;
-    PRInt32 delta;
-    now = PR_Now();
+  // disallow windows after a user-defined click delay
+  gPrefBranch->GetIntPref("dom.disable_open_click_delay", &intPref);
+  if (intPref != 0) {
+    PRTime now = PR_Now();
+    PRTime ll_delta;
+    PRUint32 delta;
     LL_SUB(ll_delta, now, mLastMouseButtonAction);
-    LL_L2I(delta, ll_delta);
-    delta /= 1000;
-    if (delta > clickDelay) {
-      return PR_TRUE;
+    LL_L2UI(delta, ll_delta);
+    if (delta/1000 > (PRUint32) intPref)
+      return openAbuseOverride;
+  }
+
+  // limit the number of simultaneously open popups
+  intPref = 0;
+  gPrefBranch->GetIntPref("dom.popup_maximum", &intPref);
+  if (intPref > 0 && gOpenPopupSpamCount >= intPref)
+    return openAbuseOverride;
+
+  // is a timer running?
+  if (mRunningTimeout)
+    return openAbused;
+
+  // is the document being loaded or unloaded?
+  if (!mIsDocumentLoaded)
+    return openAbused;
+
+  // we'll need to know what DOM event is being processed now, if any
+  nsEvent *currentEvent = mCurrentEvent;
+  if (!currentEvent && mDocShell) {
+    /* The DOM window's current event is accurate for events that make it
+       all the way to the window. But it doesn't see events handled directly
+       by a target element. For those, check the EventStateManager. */
+    nsCOMPtr<nsIPresShell> presShell;
+    mDocShell->GetPresShell(getter_AddRefs(presShell));
+    if (presShell) {
+      nsCOMPtr<nsIPresContext> presContext;
+      presShell->GetPresContext(getter_AddRefs(presContext));
+      if (presContext) {
+        nsCOMPtr<nsIEventStateManager> esManager;
+        presContext->GetEventStateManager(getter_AddRefs(esManager));
+        if (esManager)
+          esManager->GetCurrentEvent(&currentEvent);
+      }
     }
   }
 
-  return PR_FALSE;
+  // fetch pref string detailing which events are allowed
+  nsXPIDLCString eventPref;
+  gPrefBranch->GetCharPref("dom.popup_allowed_events",
+                           getter_Copies(eventPref));
+  nsCAutoString eventPrefStr(eventPref);
+
+  // generally if an event handler is running, new windows are disallowed.
+  // check for exceptions:
+  if (currentEvent) {
+    PRBool prefMatch = PR_FALSE;
+    switch(currentEvent->eventStructType) {
+      case NS_EVENT :
+        switch(currentEvent->message) {
+          case NS_FORM_SELECTED :
+            prefMatch = ::ContainsEventName("select", eventPref);
+            break;
+          case NS_RESIZE_EVENT :
+            prefMatch = ::ContainsEventName("resize", eventPref);
+            break;
+        }
+        break;
+      case NS_GUI_EVENT :
+        switch(currentEvent->message) {
+          case NS_FORM_INPUT :
+            prefMatch = ::ContainsEventName("input", eventPref);
+            break;
+        }
+        break;
+      case NS_INPUT_EVENT :
+        switch(currentEvent->message) {
+          case NS_FORM_CHANGE :
+            prefMatch = ::ContainsEventName("change", eventPref);
+            break;
+        }
+        break;
+      case NS_KEY_EVENT :
+        switch(currentEvent->message) {
+          case NS_KEY_PRESS :
+            prefMatch = ::ContainsEventName("keypress", eventPref);
+            break;
+          case NS_KEY_UP :
+            prefMatch = ::ContainsEventName("keyup", eventPref);
+            break;
+          case NS_KEY_DOWN :
+            prefMatch = ::ContainsEventName("keydown", eventPref);
+            break;
+        }
+        break;
+      case NS_MOUSE_EVENT :
+        switch(currentEvent->message) {
+          case NS_MOUSE_LEFT_BUTTON_UP :
+            prefMatch = ::ContainsEventName("mouseup", eventPref);
+            break;
+          case NS_MOUSE_LEFT_BUTTON_DOWN :
+            prefMatch = ::ContainsEventName("mousedown", eventPref);
+            break;
+          case NS_MOUSE_LEFT_CLICK :
+            prefMatch = ::ContainsEventName("click", eventPref);
+            break;
+          case NS_MOUSE_LEFT_DOUBLECLICK :
+            prefMatch = ::ContainsEventName("dblclick", eventPref);
+            break;
+        }
+        break;
+      case NS_SCRIPT_ERROR_EVENT :
+        switch(currentEvent->message) {
+          case NS_SCRIPT_ERROR :
+            prefMatch = ::ContainsEventName("error", eventPref);
+            break;
+        }
+        break;
+      case NS_FORM_EVENT :
+        switch(currentEvent->message) {
+          case NS_FORM_SUBMIT :
+            prefMatch = ::ContainsEventName("submit", eventPref);
+            break;
+          case NS_FORM_RESET :
+            prefMatch = ::ContainsEventName("reset", eventPref);
+            break;
+        }
+        break;
+    }
+    return prefMatch ? openControlled : openAbused;
+  }
+
+  // damn. nothing? then allow the new window.
+  return openAllow;
 }
 
 /* Allow or deny a window open based on whether popups are suppressed.
-   This method assumes we're in a popup situation; otherwise why call it?
+   A popup generally will be allowed if it's from a white-listed domain,
+   or if its target is an extant window.
    Returns PR_TRUE if the window should be opened. */
-PRBool GlobalWindowImpl::CheckOpenAllow(const nsAString &aName)
+PRBool GlobalWindowImpl::CheckOpenAllow(PRUint32 aAbuseLevel,
+                                        const nsAString &aName)
 {
   PRBool allowWindow = PR_TRUE;
   
-  if (IsPopupBlocked(mDocument)) {
+  if (aAbuseLevel == openAbuseOverride ||
+      aAbuseLevel == openAbused && IsPopupBlocked(mDocument)) {
     allowWindow = PR_FALSE;
     // However it might still not be blocked.
     // Special case items that don't actually open new windows.
@@ -3124,18 +3292,27 @@ GlobalWindowImpl::Open(const nsAString& aUrl,
                        const nsAString& aOptions,
                        nsIDOMWindow **_retval)
 {
-  PRBool   abusedWindow = CheckForAbusePoint();
   nsresult rv;
 
-  if (abusedWindow && !CheckOpenAllow(aName)) {
+  PRUint32 abuseLevel = CheckForAbusePoint();
+  if (!CheckOpenAllow(abuseLevel, aName)) {
     FireAbuseEvents(PR_TRUE, PR_FALSE, aUrl);
     return NS_ERROR_FAILURE; // unlike the public Open method, return an error
   }
 
   rv = OpenInternal(aUrl, aName, aOptions, PR_FALSE, nsnull, 0, nsnull,
                       _retval);
-  if (NS_SUCCEEDED(rv) && abusedWindow)
-    FireAbuseEvents(PR_FALSE, PR_TRUE, aUrl);
+  if (NS_SUCCEEDED(rv)) {
+    if (abuseLevel >= openControlled) {
+      nsCOMPtr<nsPIDOMWindow> opened(do_QueryInterface(*_retval));
+      if (opened) {
+        opened->SetPopupSpamWindow(PR_TRUE);
+        ++gOpenPopupSpamCount;
+      }
+    }
+    if (abuseLevel >= openAbused)
+      FireAbuseEvents(PR_FALSE, PR_TRUE, aUrl);
+  }
   return rv;
 }
 
@@ -3180,8 +3357,8 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
     }
   }
 
-  PRBool abusedWindow = CheckForAbusePoint();
-  if (abusedWindow && !CheckOpenAllow(name)) {
+  PRUint32 abuseLevel = CheckForAbusePoint();
+  if (!CheckOpenAllow(abuseLevel, name)) {
     FireAbuseEvents(PR_TRUE, PR_FALSE, url);
     return NS_OK; // don't open the window, but also don't throw a JS exception
   }
@@ -3213,7 +3390,14 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
       (*_retval)->GetDocument(getter_AddRefs(doc));
     }
     
-    if (abusedWindow)
+    if (abuseLevel >= openControlled) {
+      nsCOMPtr<nsPIDOMWindow> opened(do_QueryInterface(*_retval));
+      if (opened) {
+        opened->SetPopupSpamWindow(PR_TRUE);
+        ++gOpenPopupSpamCount;
+      }
+    }
+    if (abuseLevel >= openAbused)
       FireAbuseEvents(PR_FALSE, PR_TRUE, url);
   }
 
@@ -3545,6 +3729,20 @@ NS_IMETHODIMP
 GlobalWindowImpl::IsLoadingOrRunningTimeout(PRBool* aResult)
 {
   *aResult = !mIsDocumentLoaded || mRunningTimeout;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::IsPopupSpamWindow(PRBool *aResult)
+{
+  *aResult = mIsPopupSpam;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetPopupSpamWindow(PRBool aPopup)
+{
+  mIsPopupSpam = aPopup;
   return NS_OK;
 }
 
