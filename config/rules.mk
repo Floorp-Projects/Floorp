@@ -495,6 +495,9 @@ ifeq ($(OS_ARCH),OpenVMS)
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/lib/components
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/bin/components
 endif
+ifdef BEOS_ADDON_WORKAROUND
+	( cd $(DIST)/bin/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
+endif
 else # ! IS_COMPONENT
 ifeq ($(OS_ARCH),OS2)
 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
@@ -506,10 +509,10 @@ ifeq ($(OS_ARCH),OpenVMS)
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/lib
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/bin
 endif
-endif # IS_COMPONENT
 ifdef BEOS_ADDON_WORKAROUND
-	( cd $(DIST)/bin/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
+	( cd $(DIST)/bin && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
+endif # IS_COMPONENT
 endif # SHARED_LIBRARY
 ifdef PROGRAM
 	$(INSTALL) $(IFLAGS2) $(PROGRAM) $(DIST)/bin
