@@ -97,6 +97,12 @@ RTL_FLAGS=-MT          # Statically linked multithreaded RTL
 RTL_FLAGS=-MTd         # Statically linked multithreaded MSVC4.0 debug RTL
 !endif
 
+!else ifdef USE_NON_MT_LIBS
+RTL_FLAGS=-ML          # Statically linked non-multithreaded LIBC RTL
+!ifdef MOZ_DEBUG
+RTL_FLAGS=-MLd         # Statically linked non-multithreaded LIBC debug RTL
+!endif
+
 !else
 RTL_FLAGS=-MD          # Dynamically linked, multithreaded RTL
 
