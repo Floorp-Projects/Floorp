@@ -44,14 +44,14 @@ interface nsIBrowserProfileMigrator : nsISupports
   /**
    * profile items to migrate. use with migrate().
    */
-  const unsigned long ALL         = 0x0000;
-  const unsigned long SETTINGS	  = 0x0001;
-  const unsigned long COOKIES     = 0x0002;
-  const unsigned long HISTORY     = 0x0004;
-  const unsigned long FORMDATA    = 0x0008;
-  const unsigned long PASSWORDS   = 0x0010;
-  const unsigned long BOOKMARKS   = 0x0020;
-  const unsigned long OTHERDATA   = 0x0040;
+  const unsigned short ALL         = 0x0000;
+  const unsigned short SETTINGS    = 0x0001;
+  const unsigned short COOKIES     = 0x0002;
+  const unsigned short HISTORY     = 0x0004;
+  const unsigned short FORMDATA    = 0x0008;
+  const unsigned short PASSWORDS   = 0x0010;
+  const unsigned short BOOKMARKS   = 0x0020;
+  const unsigned short OTHERDATA   = 0x0040;
 
   /**
    * Copy user profile information to the current active profile.
@@ -59,7 +59,7 @@ interface nsIBrowserProfileMigrator : nsISupports
    * @param aReplace replace or append current data where applicable. 
    * @param aProfile profile to migrate from, if there is more than one.
    */
-  void migrate(in unsigned long aItems, in boolean aReplace, in wstring aProfile);
+  void migrate(in unsigned short aItems, in boolean aReplace, in wstring aProfile);
 
   /**
    * A bit field containing profile items that this migrator
@@ -70,7 +70,7 @@ interface nsIBrowserProfileMigrator : nsISupports
    *          data mode (automigration, before profile has started)
    * @returns bit field containing profile items (see above)
    */
-  unsigned long getMigrateData(in wstring aProfile, in boolean aReplace);
+  unsigned short getMigrateData(in wstring aProfile, in boolean aReplace);
 
   /** 
    * Whether or not there is any data that can be imported from this 

@@ -104,7 +104,7 @@ nsOperaProfileMigrator::~nsOperaProfileMigrator()
 }
 
 NS_IMETHODIMP
-nsOperaProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* aProfile)
+nsOperaProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
 
@@ -126,7 +126,7 @@ nsOperaProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnicha
 NS_IMETHODIMP
 nsOperaProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
                                        PRBool aReplace,
-                                       PRUint32* aResult)
+                                       PRUint16* aResult)
 {
   if (!mOperaProfile)
     GetOperaProfile(aProfile, getter_AddRefs(mOperaProfile));

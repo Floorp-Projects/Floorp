@@ -77,7 +77,7 @@ nsSafariProfileMigrator::~nsSafariProfileMigrator()
 // nsIBrowserProfileMigrator
 
 NS_IMETHODIMP
-nsSafariProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* aProfile)
+nsSafariProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
 
@@ -96,7 +96,7 @@ nsSafariProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnich
 NS_IMETHODIMP
 nsSafariProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
                                         PRBool aReplace, 
-                                        PRUint32* aResult)
+                                        PRUint16* aResult)
 {
   *aResult = 0; // XXXben implement me
   return NS_OK;

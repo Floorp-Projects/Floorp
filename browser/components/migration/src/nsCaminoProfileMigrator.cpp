@@ -62,7 +62,7 @@ nsCaminoProfileMigrator::~nsCaminoProfileMigrator()
 // nsIBrowserProfileMigrator
 
 NS_IMETHODIMP
-nsCaminoProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* aProfile)
+nsCaminoProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
 
@@ -76,7 +76,7 @@ nsCaminoProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnich
 NS_IMETHODIMP
 nsCaminoProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
                                         PRBool aReplace, 
-                                        PRUint32* aResult)
+                                        PRUint16* aResult)
 {
   *aResult = 0; // XXXben implement me
   return NS_OK;

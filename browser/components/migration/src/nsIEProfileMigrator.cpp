@@ -427,7 +427,7 @@ user_pref("font.size.variable.x-western", 15);
 ///////////////////////////////////////////////////////////////////////////////
 // nsIBrowserProfileMigrator
 NS_IMETHODIMP
-nsIEProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* aProfile) 
+nsIEProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile) 
 {
   nsresult rv = NS_OK;
 
@@ -448,7 +448,7 @@ nsIEProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* 
 NS_IMETHODIMP
 nsIEProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
                                     PRBool aReplace,
-                                    PRUint32* aResult)
+                                    PRUint16* aResult)
 {
   // There's no harm in assuming everything is available.
   *aResult = nsIBrowserProfileMigrator::SETTINGS | nsIBrowserProfileMigrator::COOKIES | 

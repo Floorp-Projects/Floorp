@@ -106,7 +106,7 @@ nsDogbertProfileMigrator::~nsDogbertProfileMigrator()
 // nsIBrowserProfileMigrator
 
 NS_IMETHODIMP
-nsDogbertProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* aProfile)
+nsDogbertProfileMigrator::Migrate(PRUint16 aItems, PRBool aReplace, const PRUnichar* aProfile)
 {
   nsresult rv = NS_OK;
 
@@ -139,7 +139,7 @@ nsDogbertProfileMigrator::GetSourceProfile(const PRUnichar* aProfile)
 NS_IMETHODIMP
 nsDogbertProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
                                          PRBool aReplace,
-                                         PRUint32* aResult)
+                                         PRUint16* aResult)
 {
   if (!mSourceProfile) 
     GetSourceProfile(aProfile);
