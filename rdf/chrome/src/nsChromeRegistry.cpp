@@ -992,7 +992,8 @@ nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL,
   }
 
   // Retrieve the mInner data source.
-  nsCAutoString overlayFile( aIsOverlay ? "overlays.rdf" : "stylesheets.rdf" );
+  const nsACString& overlayFile = aIsOverlay ?
+    NS_LITERAL_CSTRING("overlays.rdf") : NS_LITERAL_CSTRING("stylesheets.rdf");
   return LoadDataSource(overlayFile, aResult, aUseProfile, nsnull);
 }
 
