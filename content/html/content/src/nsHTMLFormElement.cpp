@@ -347,6 +347,7 @@ protected:
 class nsFormControlEnumerator : public nsISimpleEnumerator {
 public:
   nsFormControlEnumerator(nsHTMLFormElement* aForm);
+  virtual ~nsFormControlEnumerator() { };
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
