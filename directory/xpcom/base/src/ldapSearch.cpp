@@ -153,7 +153,7 @@ lds(class nsLDAPChannel *chan, const char *url)
 
 	// XXX is 0 the right value?
 	//
-	rv = myOperation->Result(LDAP_MSG_ONE, (PRTime)0,
+	rv = myOperation->Result(LDAP_MSG_ONE, (PRIntervalTime)0,
 				 getter_AddRefs(myMessage), &returnCode);
 
 	switch (returnCode) {

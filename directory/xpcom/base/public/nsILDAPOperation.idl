@@ -36,6 +36,8 @@
 
 interface nsILDAPMessage;
 
+typedef PRUint32 PRIntervalTime;
+
 [scriptable, uuid(fd3d413b-14b0-49c4-8348-a4fc0edba9ff)]
 interface nsILDAPOperation : nsISupports
 {
@@ -56,5 +58,6 @@ interface nsILDAPOperation : nsISupports
     // XXX - timeout currently ignored
     // XXX - should add consts for all param
     //
-    long result(in long all, in PRTime timeout, out nsILDAPMessage message);
+    long result(in long all, in PRIntervalTime timeout, 
+		out nsILDAPMessage message);
 };

@@ -105,7 +105,7 @@ nsLDAPOperation::SimpleBind(const char *who, const char *passwd)
 // wrapper for ldap_result
 NS_IMETHODIMP
 nsLDAPOperation::Result(PRInt32 aAll, 
-			PRTime timeout, 
+			PRIntervalTime aTimeout, 
 			nsILDAPMessage* *aMessage,
 			PRInt32 *_retval)
 {
@@ -118,6 +118,7 @@ nsLDAPOperation::Result(PRInt32 aAll,
     NS_ENSURE_ARG_POINTER(_retval);
 
     // make the call
+    // XXX use aTimeout, not sNullTimeval
     //
     *_retval =	ldap_result(mConnectionHandle, mMsgId,
 			    aAll, &sNullTimeval, &msgHandle);

@@ -81,9 +81,6 @@ housecleaning
   thread-crossing operations (side benefit: also exposes more LDAPy
   goodness to JS) 
 
-* change timeout value from PRTime to PRIntervalTime (wouldn't require
-  LL_* macros).
-
 * are we using the right constructs for -lldap40 and -llber40 in 
   Makefile.in?  (maybe should set up MOZ_LDAP_LIBS?)
 
