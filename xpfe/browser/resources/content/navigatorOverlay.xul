@@ -181,12 +181,12 @@ Contributor(s): ______________________________________. -->
 		  </menu>
    
       <menuseparator />
-      <menuitem value="&enlargeTextSizeCmd.label;" 
+      <menuitem value="&enlargeTextSizeCmd.label;" disabled="true"
         oncommand="BrowserReload();"/>
-      <menuitem value="&reduceTextSizeCmd.label;"
+      <menuitem value="&reduceTextSizeCmd.label;" disabled="true"
         oncommand="BrowserReload();"/>
       <menuseparator />
-      <menu value="&useStyleSheetMenu.label;" oncommand="BrowserReload();">
+      <menu value="&useStyleSheetMenu.label;" disabled="true" oncommand="BrowserReload();">
         <menupopup>
           <menuitem type="radio" name="stylesheet_group"
                     value="&useStyleSheetDefaultCmd.label;"
@@ -205,7 +205,7 @@ Contributor(s): ______________________________________. -->
       </menu>
       <menuseparator />
       <menuitem  id="menuitem-reload" value="&reloadCmd.label;" observes="canReload" />
-      <menuitem value="&showImagesCmd.label;" oncommand="BrowserReload();"/>
+      <menuitem value="&showImagesCmd.label;" disabled="true" oncommand="BrowserReload();"/>
       <menuitem value="&stopCmd.label;" id="menuitem-stop" 
         oncommand="BrowserStop();"/>
       <menuseparator />
