@@ -44,7 +44,6 @@
 #include "nsIDocument.h"
 #include "nsWeakReference.h"
 #include "nsWeakPtr.h"
-#include "nsIArena.h"
 #include "nsVoidArray.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMDocumentView.h"
@@ -242,8 +241,6 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
-  NS_IMETHOD GetArena(nsIArena** aArena);
 
   NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
   NS_IMETHOD ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup);
@@ -598,7 +595,6 @@ protected:
   nsDocument();
   virtual ~nsDocument();
 
-  nsCOMPtr<nsIArena> mArena;
   nsString mDocumentTitle;
   nsCString mLastModified;
   nsCOMPtr<nsIURI> mDocumentURL;
