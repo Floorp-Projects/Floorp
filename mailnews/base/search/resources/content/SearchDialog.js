@@ -50,7 +50,6 @@ function addStringComparators(selWidget) {
     var opt1=createOption("contains", "contains");
     var opt2=createOption("doesn't contain", "nocontain");
 
-    dump("adding " + opt1.text + "\n");
     selWidget.add(opt1, null);
     selWidget.add(opt2, null);
 }
@@ -124,14 +123,13 @@ function OnLess(event) {
 }
 function OnFieldSelect(event) {
     var selWidget = event.target;
-    var selectedValue = selWidget.options[selWidget.selectedIndex].value;
+    var selectedValue = selWidget.value;
     dump(selectedValue + " was just selected\n");
 
-    var comp = selWidget.nextSibling;
-    // clear out the widget
-    while (comp.length != 0) {
-        comp.remove(0);
-    }
+    dump("event.target is " + event.target + "\n");
+    var comp = selWidget.parentNode;
+    while (selWidget.length)
+        selWidget.remove(0);
     
     if (selectedValue == "subject" ||
         selectedValue == "sender" ||
@@ -149,7 +147,7 @@ function OnFieldSelect(event) {
 function OnComparatorSelect(event) {
     var selWidget = event.target;
 
-    var selectedValue = selWidget.options[selWidget.selectedIndex].value;
+    var selectedValue = selWidget.value;
     dump(selectedValue + " was just selected\n");
     
 }
