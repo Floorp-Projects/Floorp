@@ -240,16 +240,17 @@ nsLocalFile::Clone(nsIFile **file)
 {
     CHECK_mPath();
     NS_ENSURE_ARG(file);
-    *file = nsnull;
-    
-    // Just copy-construct ourselves
-    nsCOMPtr<nsILocalFile> localFile = new nsLocalFile(*this);
-    if (localFile == NULL)
-      return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCOMPtr<nsILocalFile> localFile = new nsLocalFile();
+    if (!localFile)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = localFile->InitWithPath(mPath);
+    if (NS_FAILED(rv))
+        return rv;
 
     *file = localFile;
     NS_ADDREF(*file);
-        
     return NS_OK;
 }
 
