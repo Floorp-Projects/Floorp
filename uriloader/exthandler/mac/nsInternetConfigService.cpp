@@ -271,7 +271,11 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
   if (info)
   {
     nsCAutoString mimetype ((char *)&entry.MIMEType[1], entry.MIMEType[0]);
-    info->SetMIMEType(mimetype.get());
+    // check if entry.MIMEType is empty, if so, set mime type to APPLICATION_OCTET_STREAM
+    if (entry.MIMEType[0])
+      info->SetMIMEType(mimetype.get());
+    else
+      info->SetMIMEType(APPLICATION_OCTET_STREAM);
     
     // convert entry.extension which is a Str255 
     // don't forget to remove the '.' in front of the file extension....
