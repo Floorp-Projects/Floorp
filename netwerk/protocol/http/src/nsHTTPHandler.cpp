@@ -46,6 +46,8 @@
 #endif
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
+#include "nsICategoryManager.h"
+#include "nsISupportsPrimitives.h"
 
 #if defined(PR_LOGGING)
 //
@@ -69,6 +71,70 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kAuthUrlParserCID, NS_AUTHORITYURLPARSER_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
+/*
+ * CategoryCreateService()
+ * Given a category, this convenience functions enumerates the category and creates
+ * a service of every CID or ProgID registered under the category
+ * @category: Input category
+ * @return: returns error if any CID or ProgID registered failed to create.
+ */
+static nsresult
+CategoryCreateService( const char *category )
+{
+    nsresult rv = NS_OK;
+    int nFailed = 0;
+
+    nsCOMPtr<nsICategoryManager> categoryManager = do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    rv = categoryManager->EnumerateCategory(category, getter_AddRefs(enumerator));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISupports> entry;
+    while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(entry))))
+    {
+        // From here on just skip any error we get.
+        nsCOMPtr<nsISupportsString> catEntry = do_QueryInterface(entry, &rv);
+        if (NS_FAILED(rv))
+        {
+            nFailed++;
+            continue;
+        }
+        nsXPIDLCString cidString;
+        rv = catEntry->GetData(getter_Copies(cidString));
+        if (NS_FAILED(rv))
+        {
+            nFailed++;
+            continue;
+        }
+        nsCID cid;
+        rv = cid.Parse(cidString);
+        if (NS_SUCCEEDED(rv))
+        {
+#ifdef DEBUG_dp
+            printf("CategoryCreateInstance: Instantiating cid: %s in category %s.\n",
+                   (const char *)cidString, category);
+#endif /* DEBUG_dp */
+            // Create a service from the cid
+            nsCOMPtr<nsISupports> instance = do_GetService(cid, &rv);
+        }
+        else
+        {
+#ifdef DEBUG_dp
+            printf("HTTP Handler: Instantiating progid %s in http startup category.\n", (const char *)cidString);
+#endif /* DEBUG_dp */
+            // This might be a progid. Try that too.
+            nsCOMPtr<nsISupports> instance = do_GetService(cidString, &rv);
+        }
+        if (NS_FAILED(rv))
+        {
+            nFailed++;
+        }
+    }
+    return (nFailed ? NS_ERROR_FAILURE : NS_OK);
+}
 
 // TODO Add an Init method on the handler instead of doing everything 
 // in the constructor
@@ -172,6 +238,10 @@ nsHTTPHandler::nsHTTPHandler():
             }
         }
     }
+
+    // Startup the http category
+    // Bring alive the objects in the http-protocol-startup category
+    (void) CategoryCreateService(NS_HTTP_STARTUP_CATEGORY);
 }
 
 nsHTTPHandler::~nsHTTPHandler()
