@@ -60,7 +60,6 @@ mail-emailaddress {
   color: blue;
   text-decoration: underline;
   cursor: pointer;
-  max-height: 16px;
   min-height: 16px;
 }
 
@@ -85,7 +84,6 @@ text.headerdisplayname
     font-weight           : bold; 
     margin-right          : 0.5em; 
     margin-left           : 0.5em; 
-    max-height: 16px;
     min-height: 16px;
   }
 
@@ -143,7 +141,6 @@ text.collapsedHeaderDisplayName
 { 
   font-weight: bold; 
   margin-left: .7em;
-  max-height: 16px;
   min-height: 16px;
 }
 
