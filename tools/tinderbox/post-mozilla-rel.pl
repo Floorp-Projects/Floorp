@@ -74,8 +74,12 @@ sub packit {
     }
 
     # the one operation we care about saving status of
-    $status = TinderUtils::run_shell_command "make -C $packaging_dir installer";
-    
+    if ($Settings::sea_installer || $Settings::stub_installer) {
+      $status = TinderUtils::run_shell_command "make -C $packaging_dir installer";
+    } else {
+      $status = 1;
+    }
+
     if (is_windows()) {
       $ENV{PATH} = $save_path;
       #my $dos_stagedir = `cygpath -w $stagedir`;
