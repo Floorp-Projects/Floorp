@@ -515,6 +515,14 @@ nsJSChannel::InternalOpen(PRBool aIsAsync, nsIStreamListener *aListener,
 {
     nsCOMPtr<nsILoadGroup> loadGroup;
 
+    // Temporarily set the LOAD_BACKGROUND flag to suppress load group observer
+    // notifications (and hence nsIWebProgressListener notifications) from
+    // being dispatched.  This is required since we suppress LOAD_DOCUMENT_URI,
+    // which means that the DocLoader would not generate document start and
+    // stop notifications (see bug 257875).
+    PRUint32 oldLoadFlags = mLoadFlags;
+    mLoadFlags |= LOAD_BACKGROUND;
+
     // Add the javascript channel to its loadgroup so that we know if
     // network loads were canceled or not...
     mStreamChannel->GetLoadGroup(getter_AddRefs(loadGroup));
@@ -533,6 +541,9 @@ nsJSChannel::InternalOpen(PRBool aIsAsync, nsIStreamListener *aListener,
     if (loadGroup) {
         loadGroup->RemoveRequest(this, aContext, rv);
     }
+
+    // Reset load flags to their original value...
+    mLoadFlags = oldLoadFlags;
 
     // We're no longer active, it's now up to the stream channel to do
     // the loading, if needed.
