@@ -17,3 +17,15 @@
 <!ENTITY  deleteCell.accesskey                  "s">
 <!ENTITY  deleteContent.label                   "delete only cell content">
 <!ENTITY  deleteContent.accesskey               "c">
+
+<!ENTITY  savingFiles.title           "When Saving Files">
+<!ENTITY  preserveExistingFormatting  "Preserve Existing HTML structure **(string to change)">
+
+<!ENTITY  saving                    "Saving">
+<!ENTITY  AutoSaveCheck             "Automatically save every">
+<!ENTITY  minText                   "minutes">
+
+<!ENTITY  exterLegend.label         "External Editors">
+<!ENTITY  htmlSource                "HTML Source:">
+<!ENTITY  imageeditor               "Images:">
+<!ENTITY  chooseButton.label        "Choose">
