@@ -43,12 +43,6 @@
 #include "nsIFrameManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
-// begin includes for controllers 
-#include "nsIDOMNSHTMLInputElement.h"
-#include "nsIDOMNSHTMLTextAreaElement.h"
-#include "nsIDOMXULCommandDispatcher.h"
-#include "nsIControllers.h"
-// end includes for controllers
 #include "nsIScrollbar.h"
 
 #include "nsCSSRendering.h"
@@ -95,6 +89,8 @@
 #include "nsIControllers.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMXULCommandDispatcher.h"
+
 #include "nsLayoutAtoms.h"
 
 
@@ -425,6 +421,39 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
           focusListener = do_QueryInterface(mEventListener);
           if (focusListener)
             er->RemoveEventListenerByIID(focusListener, nsIDOMFocusListener::GetIID());
+        }
+      }
+    }
+  }
+
+  result = NS_OK;
+  // if there is a controller, remove the editor from it
+  nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
+  nsCOMPtr<nsIDOMNSHTMLInputElement>    inputElement = do_QueryInterface(mContent);
+  nsCOMPtr<nsIControllers> controllers;
+  if (textAreaElement)
+    result = textAreaElement->GetControllers(getter_AddRefs(controllers));
+  else if (inputElement)
+    result = inputElement->GetControllers(getter_AddRefs(controllers));
+  else
+    result = NS_ERROR_FAILURE;
+  if (NS_SUCCEEDED(result))
+  {
+    PRUint32 count;
+    PRBool found = PR_FALSE;
+    result = controllers->GetControllerCount(&count);
+    NS_ASSERTION((NS_SUCCEEDED(result)), "bad result in gfx text control destructor");
+    for (PRUint32 i = 0; i < count; i ++)
+    {
+      nsCOMPtr<nsIController> controller;
+      result = controllers->GetControllerAt(i, getter_AddRefs(controller));
+      if (NS_SUCCEEDED(result) && controller)
+      {
+        nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
+        if (editController)
+        {
+          editController->SetEditor(nsnull);
+          found = PR_TRUE;
         }
       }
     }
@@ -1396,7 +1425,23 @@ void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
       NS_RELEASE(viewer);
     }
   }
-  else {
+  else 
+  {
+    /* experimental code, since mWebshell->removeFocus is a noop */
+    /* this code doesn't seem to have any effect either.  bug 19392
+    nsIView*  view;
+    GetView(mFramePresContext, &view);
+    if (view)
+    {
+      nsCOMPtr<nsIWidget> widget;
+      view->GetWidget(*(getter_AddRefs(widget)));
+      if (widget) {
+        widget->SetFocus();
+      }
+    }
+    */
+    // since the embedded webshell is not in the webshell hierarchy, RemoveFocus has no effect
+    // that's why we find the widget attached to this and set focus on it explicitly
     mWebShell->RemoveFocus();
   }
 }
