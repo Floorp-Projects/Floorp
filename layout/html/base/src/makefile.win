@@ -31,6 +31,7 @@ CPPSRCS=			\
  nsGlobalVariables.cpp		\
  nsHRPart.cpp			\
  nsHTMLAtoms.cpp		\
+ nsHTMLBullet.cpp		\
  nsHTMLContainer.cpp		\
  nsHTMLContainerFrame.cpp	\
  nsHTMLContent.cpp		\
@@ -41,7 +42,6 @@ CPPSRCS=			\
  nsInlineFrame.cpp		\
  nsLeafFrame.cpp		\
  nsLineLayout.cpp		\
- nsListItemFrame.cpp		\
  nsPageFrame.cpp		\
  nsPlaceholderFrame.cpp		\
  nsRootPart.cpp			\
@@ -61,6 +61,7 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsGlobalVariables.obj	\
  .\$(OBJDIR)\nsHRPart.obj		\
  .\$(OBJDIR)\nsHTMLAtoms.obj		\
+ .\$(OBJDIR)\nsHTMLBullet.obj		\
  .\$(OBJDIR)\nsHTMLContainer.obj	\
  .\$(OBJDIR)\nsHTMLContainerFrame.obj	\
  .\$(OBJDIR)\nsHTMLContent.obj		\
@@ -72,7 +73,6 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsInlineFrame.obj		\
  .\$(OBJDIR)\nsLeafFrame.obj		\
  .\$(OBJDIR)\nsLineLayout.obj		\
- .\$(OBJDIR)\nsListItemFrame.obj	\
  .\$(OBJDIR)\nsPageFrame.obj		\
  .\$(OBJDIR)\nsPlaceholderFrame.obj	\
  .\$(OBJDIR)\nsRootPart.obj		\
