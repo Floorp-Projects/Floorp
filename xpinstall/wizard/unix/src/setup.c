@@ -72,39 +72,93 @@ next_cb (GtkWidget * widget, gpointer data)
 GtkWidget *create_license_page()
 {
   GtkWidget *text;
+  char *foo = "hear mozilla roar!";
   text = gtk_text_new(NULL, NULL);
-  //  gtk_box_pack_start (GTK_BOX(vbox), text, FALSE, FALSE, 0);
   gtk_widget_show(text);
+  gtk_text_insert(GTK_TEXT(text), NULL, NULL, NULL, foo, strlen(foo));
   return text;
 }
 
 GtkWidget *create_folder_page()
 {
+  GtkWidget *vbox;
+  GtkWidget *frame;
   GtkWidget *label;
-  label =  gtk_label_new("select folder");
+  GtkWidget *hbox;
+  GtkWidget *button;
+
+  vbox = gtk_vbox_new(FALSE, 0);
+  gtk_widget_show(vbox);
+
+  frame = gtk_frame_new("");
+  gtk_container_set_border_width(GTK_CONTAINER(frame), 5);
+  gtk_widget_show(frame);
+
+  gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);
+
+  frame = gtk_frame_new("Installation Location");
+  gtk_container_set_border_width(GTK_CONTAINER(frame), 5);
+  gtk_widget_show(frame);
+  gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);
+
+  hbox = gtk_hbox_new(FALSE, 5);
+  gtk_widget_show(hbox);
+  gtk_container_add(GTK_CONTAINER(frame), hbox);
+
+  label = gtk_label_new("in folder /foo");
   gtk_widget_show(label);
-  return label;
+  gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+
+  button = gtk_button_new_with_label("Select folder...");
+  gtk_widget_show(button);
+  gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+
+  return vbox;
 }
 
 GtkWidget *create_components_page()
 {
+  GtkWidget *vbox;
   GtkWidget *clist;
+  GtkWidget *label;
+  GtkWidget *frame;
+
   gchar foo[256];
-  gchar *text[1];
-  text[0] = foo;
-  clist =  gtk_clist_new(1);
+  gchar *text[2];
+  text[0] = "x";
+  text[1] = foo;
+
+  vbox = gtk_vbox_new(FALSE, 0);
+  gtk_widget_show(vbox);
+
+  clist =  gtk_clist_new(2);
   gtk_widget_show(clist);
 
+  label = gtk_label_new("Please select the components you wish to install:");
+  gtk_widget_show(label);
+  gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+
+  gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), clist, FALSE, FALSE, 0);
+
   gtk_clist_freeze(GTK_CLIST(clist));
-  sprintf(text[0], "mozilla");
+  sprintf(text[1], "mozilla");
   gtk_clist_append(GTK_CLIST(clist), text);
-  sprintf(text[0], "blah blah");
+  sprintf(text[1], "blah blah");
   gtk_clist_append(GTK_CLIST(clist), text);
-  sprintf(text[0], "blah blah blah");
+  sprintf(text[1], "blah blah blah");
   gtk_clist_append(GTK_CLIST(clist), text);
   gtk_clist_thaw(GTK_CLIST(clist));
 
-  return clist;
+
+  frame = gtk_frame_new("Description");
+  gtk_widget_show(frame);
+  gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);
+  label = gtk_label_new("apprunner, etc.");
+  gtk_widget_show(label);
+  gtk_container_add(GTK_CONTAINER(frame), label);
+
+  return vbox;
 }
 
 void create_main_window()
@@ -119,75 +173,76 @@ void create_main_window()
   GtkWidget *bbox;
 
   win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_widget_set_usize(win,543,319);
-  vbox = gtk_vbox_new(FALSE, 0);
+  gtk_widget_set_usize(win, 543, 319);
+  gtk_container_set_border_width(GTK_CONTAINER(win), 5);
+  vbox = gtk_vbox_new(FALSE, 5);
   gtk_widget_show(vbox);
 
   gtk_container_add(GTK_CONTAINER(win), vbox);
 
-  gpix = gdk_pixmap_create_from_xpm_d (NULL /* GdkWindow  *window */ ,
-				       &gmask,
-				       NULL,
-				       logo_xpm);
+  gpix = gdk_pixmap_create_from_xpm_d(NULL /* GdkWindow  *window */ ,
+                                      &gmask,
+                                      NULL,
+                                      logo_xpm);
 
 
   pixmap = gtk_pixmap_new(gpix, gmask);
+  gtk_misc_set_alignment(GTK_MISC(pixmap), 0.5, 0.0);
   gtk_widget_show(pixmap);
 
-  
-  hbox = gtk_hbox_new(FALSE, 0);
+  hbox = gtk_hbox_new(FALSE, 5);
   gtk_widget_show(hbox);
   gtk_container_add(GTK_CONTAINER(vbox), hbox);
 
-  gtk_box_pack_start (GTK_BOX(hbox), pixmap, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(hbox), pixmap, FALSE, FALSE, 0);
 
-  notebook = gtk_notebook_new ();
+  notebook = gtk_notebook_new();
   gtk_widget_show(notebook);
-  gtk_notebook_set_show_tabs (GTK_NOTEBOOK (notebook), FALSE);
-  gtk_notebook_set_show_border (GTK_NOTEBOOK (notebook), FALSE);
+  gtk_notebook_set_show_tabs(GTK_NOTEBOOK (notebook), FALSE);
+  gtk_notebook_set_show_border(GTK_NOTEBOOK (notebook), FALSE);
 
   /* add notebook pages */
 
   label = gtk_label_new ("welcome");
-  gtk_notebook_append_page (GTK_NOTEBOOK (notebook),
-			    create_license_page (),
-			    label);
+  gtk_notebook_append_page(GTK_NOTEBOOK (notebook),
+                           create_license_page (),
+                           label);
 
-  label = gtk_label_new ("select destination");
-  gtk_notebook_append_page (GTK_NOTEBOOK (notebook),
-			    create_folder_page (),
-			    label);
+  label = gtk_label_new("select destination");
+  gtk_notebook_append_page(GTK_NOTEBOOK (notebook),
+                           create_folder_page (),
+                           label);
 
-  label = gtk_label_new ("select components");
-  gtk_notebook_append_page (GTK_NOTEBOOK (notebook),
-			    create_components_page (),
-			    label);
+  label = gtk_label_new("select components");
+  gtk_notebook_append_page(GTK_NOTEBOOK (notebook),
+                           create_components_page (),
+                           label);
 
-  gtk_box_pack_start (GTK_BOX(hbox), notebook, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(hbox), notebook, TRUE, TRUE, 0);
 
 
   /* create navigation buttons */
   prevButton = gtk_button_new_with_label("Previous");
-  gtk_signal_connect (GTK_OBJECT (prevButton),
-		      "clicked",
-		      (GtkSignalFunc) prev_cb,
-		      notebook);
+  gtk_signal_connect(GTK_OBJECT (prevButton),
+                     "clicked",
+                     (GtkSignalFunc) prev_cb,
+                     notebook);
   gtk_widget_set_sensitive (prevButton, FALSE);
   gtk_widget_show(prevButton);
 
   nextButton = gtk_button_new_with_label("Next");
-  gtk_signal_connect (GTK_OBJECT (nextButton),
-		      "clicked",
-		      (GtkSignalFunc) next_cb,
-		      notebook);
+  gtk_signal_connect(GTK_OBJECT (nextButton),
+                     "clicked",
+                     (GtkSignalFunc) next_cb,
+                     notebook);
   gtk_widget_show(nextButton);
 
   bbox = gtk_hbutton_box_new();
   gtk_widget_show(bbox);
-  gtk_box_pack_start (GTK_BOX(vbox), bbox, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(vbox), bbox, FALSE, FALSE, 0);
 
-  gtk_box_pack_start (GTK_BOX(bbox), prevButton, FALSE, FALSE, 0);
-  gtk_box_pack_start (GTK_BOX(bbox), nextButton, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(bbox), prevButton, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(bbox), nextButton, FALSE, FALSE, 0);
 
 
   gtk_widget_show(win);
