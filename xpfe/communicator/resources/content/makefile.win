@@ -32,6 +32,9 @@ CHROME_MISC = \
 
 CHROME_CONTENT = \
 	.\communicatorOverlay.xul \
+	.\utilityOverlay.xul \
+	.\utilityOverlay.js \
+	.\utilityOverlay.css \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
