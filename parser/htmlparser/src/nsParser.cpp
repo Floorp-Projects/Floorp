@@ -102,12 +102,13 @@ public:
     //Note: To cut down on startup time/overhead, we defer the construction of non-html DTD's. 
 
     nsIDTD* theDTD;
+
     NS_NewNavHTMLDTD(&theDTD);    //do this as a default HTML DTD...
     mDTDDeque.Push(theDTD);
-#if 1
+
     NS_NewOtherHTMLDTD(&theDTD);  //do this as the default DTD for strict documents...
     mDTDDeque.Push(theDTD);
-#endif
+
     mHasViewSourceDTD=PR_FALSE;
     mHasRTFDTD=mHasXMLDTD=PR_FALSE;
   }
@@ -485,7 +486,7 @@ nsDTDMode nsParser::GetParseMode(void){
  *  @return  parsermode (define in nsIParser.h)
  */
 static 
-void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& aDocType) {
+void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& aDocType,const nsString& aMimeType) {
   const char* theModeStr= PR_GetEnv("PARSE_MODE");
 
   aParseMode = eDTDMode_unknown;
@@ -613,8 +614,18 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
     }
   }
   else if(kNotFound<(theIndex=aBuffer.Find("?XML",PR_TRUE,0,128))) {
-    aDocType=eXMLText;
     aParseMode=eDTDMode_strict;
+    if(aMimeType.EqualsWithConversion(kHTMLTextContentType)) {
+      //this is here to prevent a crash if someone gives us an XML document,
+      //but necko tells us it's a text/html mimetype. 
+      aDocType=eHTML4Text;
+      aParseMode=eDTDMode_strict;
+    }
+    else aDocType=eXMLText;
+  }
+  else if(aMimeType.EqualsWithConversion(kPlainTextContentType)) {
+    aDocType=ePlainText;
+    aParseMode=eDTDMode_quirks;
   }
 
   if(theModeStr) {
@@ -754,7 +765,11 @@ nsresult nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
       nsDTDMode      theDTDMode=eDTDMode_unknown;
       eParserDocType theDocType=ePlainText;
 
-      DetermineParseMode(*aDocTypeStr,theDTDMode,theDocType);
+      if(!aMimeType) {
+        nsAutoString temp;
+        DetermineParseMode(*aDocTypeStr,theDTDMode,theDocType,temp);
+      } 
+      else DetermineParseMode(*aDocTypeStr,theDTDMode,theDocType,*aMimeType);
 
       NS_ASSERTION(aDTDMode==eDTDMode_unknown || aDTDMode==theDTDMode,"aDTDMode overrides the mode selected from the DOCTYPE ");
 
@@ -945,7 +960,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
     while(*theDocType) {
       nsAutoString theType;
       theType.AssignWithConversion(*theDocType);
-      DetermineParseMode(theType,theParseMode,theDocumentType);
+      DetermineParseMode(theType,theParseMode,theDocumentType,mParserContext->mMimeType);
       theDocType++;
     }
   }
@@ -957,7 +972,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
       mMinorIteration=-1; 
       
       nsString& theBuffer=mParserContext->mScanner->GetBuffer();
-      DetermineParseMode(theBuffer,mParserContext->mDTDMode,mParserContext->mDocType);  
+      DetermineParseMode(theBuffer,mParserContext->mDTDMode,mParserContext->mDocType,mParserContext->mMimeType);
 
       if(PR_TRUE==FindSuitableDTD(*mParserContext,theBuffer)) {
         mParserContext->mDTD->WillBuildModel( *mParserContext,mSink);

@@ -22,8 +22,9 @@
 
 //#define ENABLE_CRC
 //#define RICKG_DEBUG 
-#define ENABLE_RESIDUALSTYLE  
 //#define ALLOW_TR_AS_CHILD_OF_TABLE  //by setting this to true, TR is allowable directly in TABLE.
+
+#define ENABLE_RESIDUALSTYLE  
 
 #ifdef  RICKG_DEBUG
 #include  <fstream.h>  
@@ -266,12 +267,24 @@ CNavDTD::~CNavDTD(){
 /**
  * Call this method if you want the DTD to construct a fresh 
  * instance of itself. 
- * @update  gess7/23/98
+ * @update  gess 25May2000
  * @param 
  * @return
  */
 nsresult CNavDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
-  return NS_NewNavHTMLDTD(aInstancePtrResult);
+
+  nsresult result=NS_NewNavHTMLDTD(aInstancePtrResult);
+
+  if(aInstancePtrResult) {
+    CNavDTD *theOtherDTD=(CNavDTD*)*aInstancePtrResult;
+    if(theOtherDTD) {
+      theOtherDTD->mDTDMode=mDTDMode;
+      theOtherDTD->mParserCommand=mParserCommand;
+      theOtherDTD->mDocType=mDocType;
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -827,16 +840,44 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
       {
         PRInt32   theCount=mBodyContext->GetCount();
         eHTMLTags theGrandParentTag=mBodyContext->TagAt(theCount-2);
-        PRInt32   theCounter=mBodyContext->IncrementCounter(theGrandParentTag);
-
-        nsString  theNumber;
-        theNumber.AppendInt(theCounter);
+        
+        nsAutoString  theNumber;
+        PRInt32   theCounter=mBodyContext->IncrementCounter(theGrandParentTag,aNode,theNumber);
         CTextToken theToken(theNumber);
         PRInt32 theLineNumber=0;
         nsCParserNode theNode(&theToken,theLineNumber);
         result=mSink->AddLeaf(theNode);
       }
       break;
+
+    case eHTMLTag_meta:
+      {
+          //we should only enable user-defined entities in debug builds...
+
+        PRInt32 theCount=aNode.GetAttributeCount();
+        const nsString* theNamePtr=0;
+        const nsString* theValuePtr=0;
+
+        if(theCount) {
+          PRInt32 theIndex=0;
+          for(theIndex=0;theIndex<theCount;theIndex++){
+            const nsString& theKey=aNode.GetKeyAt(theIndex);
+            if(theKey.EqualsWithConversion("ENTITY",PR_TRUE)) {
+              const nsString& theName=aNode.GetValueAt(theIndex);
+              theNamePtr=&theName;
+            }
+            else if(theKey.EqualsWithConversion("VALUE",PR_TRUE)) {
+              //store the named enity with the context...
+              const nsString& theValue=aNode.GetValueAt(theIndex);
+              theValuePtr=&theValue;
+            }
+          }
+        }
+        if(theNamePtr && theValuePtr) {
+          mBodyContext->RegisterEntity(*theNamePtr,*theValuePtr);
+        }
+      }
+      break; 
 
     default:
       break;
@@ -1846,6 +1887,27 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   nsresult  result=NS_OK;
+
+  nsString& theStr=aToken->GetStringValueXXX();
+  PRUnichar theChar=theStr.CharAt(0);
+  if((kHashsign!=theChar) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
+
+    //before we just toss this away as a bogus entity, let's check...
+    CNamedEntity *theEntity=mBodyContext->GetEntity(theStr);
+    CToken *theToken=0;
+    if(theEntity) {
+      theToken=new CTextToken(theEntity->mValue);
+    }
+    else {
+      //if you're here we have a bogus entity.
+      //convert it into a text token.
+      nsAutoString temp; temp.AssignWithConversion("&");
+      temp.Append(theStr);
+      theToken=new CTextToken(temp);
+    }
+    return HandleStartToken(theToken);
+  }
+
   eHTMLTags theParentTag=mBodyContext->Last();
 
   nsCParserNode* theNode=mNodeRecycler->CreateNode();

@@ -340,7 +340,6 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
 protected:
 
 		nsresult        CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
-		nsresult        CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
     nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
     nsresult        DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
     nsCParserNode*  CreateNode(void);
@@ -349,9 +348,7 @@ protected:
 
     nsIHTMLContentSink* mSink;
 
-    nsDTDContext*       mHeadContext;
     nsDTDContext*       mBodyContext;
-    nsDTDContext*       mFormContext;
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
     PRInt32             mHasOpenHead;
@@ -364,10 +361,7 @@ protected:
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
     CTokenRecycler*     mTokenRecycler;
-    nsDeque             mMisplacedContent;
-    nsDeque             mSkippedContent;
     PRBool              mHasOpenScript;
-    PRBool              mSaveBadTokens;
     eHTMLTags           mSkipTarget;
     nsDeque             mSharedNodes;
     nsresult            mDTDState;
@@ -377,9 +371,8 @@ protected:
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;
     nsAutoString        mScratch;  //used for various purposes; non-persistent
-    PRBool              mStyleHandlingEnabled;
-    PRBool              mEnableStrict;
     eParserDocType      mDocType;
+    PRBool              mEnableStrict;
 
 #ifdef NS_DEBUG
     PRInt32 gNodeCount;

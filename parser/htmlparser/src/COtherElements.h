@@ -705,17 +705,19 @@ public:
       case eHTMLTag_tr:
       case eHTMLTag_th:
     
-        if(!aContext->HasOpenContainer(eHTMLTag_tbody)) {
-          nsCParserNode* theNode=new nsCParserNode();
-          CToken* theToken=new CStartToken(eHTMLTag_tbody);
-          theNode->Init(theToken,0,0);  //this will likely leak...
+        if(aContext->mTableStates) {
+          if(aContext->mTableStates->CanOpenTBody()) {
+            nsCParserNode* theNode=new nsCParserNode();
+            CToken* theToken=new CStartToken(eHTMLTag_tbody);
+            theNode->Init(theToken,0,0);  //this will likely leak...
 
-          result=HandleStartToken(theNode,eHTMLTag_tbody,aContext,aSink);
-        }
-        if(NS_SUCCEEDED(result)) {
-          CElement *theElement=GetElement(eHTMLTag_tbody);
-          if(theElement) {
-            result=theElement->HandleStartToken(aNode,aTag,aContext,aSink);
+            result=HandleStartToken(theNode,eHTMLTag_tbody,aContext,aSink);
+          }
+          if(NS_SUCCEEDED(result)) {
+            CElement *theElement=GetElement(eHTMLTag_tbody);
+            if(theElement) {
+              result=theElement->HandleStartToken(aNode,aTag,aContext,aSink);
+            }
           }
         }
 
@@ -738,6 +740,7 @@ public:
         case eHTMLTag_caption:
         case eHTMLTag_col:
         case eHTMLTag_colgroup:
+        case eHTMLTag_tr:
         case eHTMLTag_thead:
         case eHTMLTag_tfoot:
         case eHTMLTag_tbody:      
@@ -928,23 +931,26 @@ public:
     return CElement::HandleStartToken(aNode,aTag,aContext,aSink);
   }
 
+
   /**********************************************************
     this gets called after each tag is opened in the given context
    **********************************************************/
   virtual nsresult OpenContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
     OpenContext(aNode,aTag,aContext,aSink);
+    
     nsresult result=OpenContainer(aNode,aTag,aContext,aSink);
     if(NS_SUCCEEDED(result)) {
       PRInt32   theCount=aContext->GetCount();
       eHTMLTags theGrandParentTag=aContext->TagAt(theCount-2);
-      PRInt32   theCounter=aContext->IncrementCounter(theGrandParentTag);
 
-      nsString  theNumber;
-      theNumber.AppendInt(theCounter);
+      nsCParserNode *theNode=(nsCParserNode*)aNode;
+      nsAutoString  theNumber;
+      PRInt32   theCounter=aContext->IncrementCounter(theGrandParentTag,*theNode,theNumber);
+
       CTextToken theToken(theNumber);
       PRInt32 theLineNumber=0;
-      nsCParserNode theNode(&theToken,theLineNumber);
-      result=aSink->AddLeaf(theNode);
+      nsCParserNode theNewNode(&theToken,theLineNumber);
+      result=aSink->AddLeaf(theNewNode);
     }
     return result;
   }
@@ -1284,18 +1290,19 @@ public:
   virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
-    if(aContext->HasOpenContainer(eHTMLTag_html)) {
-      aSink->OpenHead(*aNode);
-      result=CTextContainer::NotifyClose(aNode,aTag,aContext,aSink);
-      aSink->CloseHead(*aNode);
-    }
-    else {
+    if(aContext->HasOpenContainer(eHTMLTag_body)) {
       //add the script to the body
       CScriptToken theToken(mText);  
       PRInt32 theLineNumber=0;
       nsCParserNode theNode(&theToken,theLineNumber);
       theNode.SetSkippedContent(mText);
       result=aSink->AddLeaf(theNode);
+    }
+    else {
+        //add it to the head...
+      aSink->OpenHead(*aNode);
+      result=CTextContainer::NotifyClose(aNode,aTag,aContext,aSink);
+      aSink->CloseHead(*aNode);
     }
     mText.Truncate(0);
     return result;
@@ -1628,6 +1635,28 @@ public:
     CElement::Initialize(*this,aTag,CHTMLElement::GetGroup(),CHTMLElement::GetContainedGroups());
   }
 
+  /**********************************************************
+    HTML handles the opening of it's own children
+   **********************************************************/
+  nsresult HandleDoctypeDecl( nsIParserNode* aNode,
+                              eHTMLTags aTag,
+                              nsDTDContext* aContext,
+                              nsIHTMLContentSink* aSink) {
+
+    nsCParserNode *theNode=(nsCParserNode*)aNode;
+    nsresult result=NS_OK;
+    if(theNode) {
+      nsString  theStr=theNode->mToken->GetStringValueXXX();
+      PRInt32   theLen=theStr.Length();
+      PRInt32   thePos=theStr.RFindChar(kGreaterThan);
+
+      theStr.Truncate(theLen-1);
+      theStr.Cut(0,2);
+  
+      result = aSink->AddDocTypeDecl(*aNode,eDTDMode_strict);
+    }
+    return result;
+  }
 
   /**********************************************************
     HTML handles the opening of it's own children
@@ -1639,6 +1668,10 @@ public:
     nsresult result=NS_OK;
 
     switch(aTag) {
+      case eHTMLTag_markupDecl:
+        result=HandleDoctypeDecl(aNode,aTag,aContext,aSink);
+        break;
+
       case eHTMLTag_body:
         result=aSink->OpenBody(*aNode);
         result=OpenContext(aNode,aTag,aContext,aSink);
@@ -1794,7 +1827,9 @@ public:
 
     switch(aTag) {
 
-      case eHTMLTag_div:
+      case eHTMLTag_script:
+        result=OpenContext(aNode,aTag,aContext,aSink);
+        break;
     
       default:
         //for now, let's drop other elements onto the floor.
@@ -1802,7 +1837,7 @@ public:
         if(NS_SUCCEEDED(result)) {
           nsCParserNode *theNode=(nsCParserNode*)aNode;
           CStartToken *theToken=(CStartToken*)theNode->mToken;
-          if(theToken->IsEmpty()){
+          if(theToken->IsEmpty() && (aTag==aContext->Last())){
             result=CElement::HandleEndToken(aNode,aTag,aContext,aSink);
           }
         }
@@ -1817,7 +1852,15 @@ public:
     a really convenient break point for debugging purposes.
    **********************************************************/
   virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    return CElement::HandleEndToken(aNode,aTag,aContext,aSink);
+    nsresult result=NS_OK;
+    switch(aTag) {
+      case eHTMLTag_script:
+        result=CloseContext(aNode,aTag,aContext,aSink);
+        break;
+      default:
+        result=CElement::HandleEndToken(aNode,aTag,aContext,aSink);
+    }
+    return result;
   }
 
   /**********************************************************
