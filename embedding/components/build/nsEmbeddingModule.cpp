@@ -25,18 +25,21 @@
 #include "nsPromptService.h"
 #include "nsWindowWatcher.h"
 #include "nsAppStartupNotifier.h"
+#include "nsWebBrowserFind.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPromptService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowWatcher, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppStartupNotifier)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserFind)
 
-static nsModuleComponentInfo components[] = {
+static nsModuleComponentInfo gComponents[] = {
 
   { "Dialog ParamBlock", NS_DIALOGPARAMBLOCK_CID, NS_DIALOGPARAMBLOCK_CONTRACTID, nsDialogParamBlockConstructor },
   { "Prompt Service", NS_PROMPTSERVICE_CID, NS_PROMPTSERVICE_CONTRACTID, nsPromptServiceConstructor },
   { "Window Watcher", NS_WINDOWWATCHER_CID, NS_WINDOWWATCHER_CONTRACTID, nsWindowWatcherConstructor },
+  { "Find",           NS_WEB_BROWSER_FIND_CID, NS_WEB_BROWSER_FIND_CONTRACTID, nsWebBrowserFindConstructor },
   { NS_APPSTARTUPNOTIFIER_CLASSNAME, NS_APPSTARTUPNOTIFIER_CID, NS_APPSTARTUPNOTIFIER_CONTRACTID, nsAppStartupNotifierConstructor }
 };
 
-NS_IMPL_NSGETMODULE("embedcomponents", components)
+NS_IMPL_NSGETMODULE("embedcomponents", gComponents)
