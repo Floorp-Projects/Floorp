@@ -18,7 +18,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "nsAppshellNameSet.h"
+#include "nsAppShellNameSet.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIDOMXPConnectFactory.h"
