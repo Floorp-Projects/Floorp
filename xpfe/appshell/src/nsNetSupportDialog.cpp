@@ -201,6 +201,58 @@ static nsresult GetCheckboxValue( nsIWebShell *shell,
     }
     return rv;
 }
+
+
+static nsresult SetCheckboxValue( nsIWebShell *shell, 
+                              const char *id, 
+                               PRBool value ) { 
+    nsresult rv = NS_OK; 
+
+    nsCOMPtr<nsIContentViewer> cv; 
+    rv = shell->GetContentViewer(getter_AddRefs(cv)); 
+    if ( cv ) { 
+        // Up-cast. 
+        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv)); 
+        if ( docv ) { 
+            // Get the document from the doc viewer. 
+            nsCOMPtr<nsIDocument> doc; 
+            rv = docv->GetDocument(*getter_AddRefs(doc)); 
+            if ( doc ) { 
+                // Up-cast. 
+                nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) ); 
+                if ( xulDoc ) { 
+                    // Find specified element. 
+                    nsCOMPtr<nsIDOMElement> elem; 
+                    rv = xulDoc->GetElementById( id, getter_AddRefs(elem) ); 
+                    if ( elem ) { 
+                      nsCOMPtr<nsIDOMHTMLInputElement>  element( do_QueryInterface( elem ) ); 
+           if ( element ){ 
+
+             element->SetChecked(value); 
+
+            }else 
+            { 
+             if (APP_DEBUG) printf(" Get  nsIDOMHTMLInputElement failed, rv=0x%X\n",(int)rv); 
+            } 
+
+                   } else { 
+                        if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv); 
+                    } 
+                } else { 
+                    if (APP_DEBUG) printf("Upcast to nsIDOMXULDocument failed\n"); 
+                } 
+            } else { 
+                if (APP_DEBUG) printf("GetDocument failed, rv=0x%X\n",(int)rv); 
+            } 
+        } else { 
+            if (APP_DEBUG) printf("Upcast to nsIDocumentViewer failed\n"); 
+        } 
+    } else { 
+        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv); 
+    } 
+    return rv; 
+} 
+
 static nsresult findDOMNode( nsIWebShell *shell,
                               const char *id,
                               nsIDOMElement **node )
@@ -357,6 +409,8 @@ nsresult nsNetSupportDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
 	 	 	AddMouseEventListener( mOKButton );
 	 if ( mCancelButton )
 			AddMouseEventListener( mCancelButton );
+	 if ( mCheckValue ) 
+			SetCheckboxValue( mWebShell, "checkbox", *mCheckValue ); 
 	return NS_OK;
 }
 
@@ -416,6 +470,8 @@ void nsNetSupportDialog::OnOK()
 void nsNetSupportDialog::OnCancel()
 {
 	*mReturnValue = kCancelButton;
+	if ( mCheckValue ) 
+		GetCheckboxValue( mWebShell, "checkbox", *mCheckValue ); 
 	mWebShellWindow->Close();
 }
 
