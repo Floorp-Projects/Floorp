@@ -508,7 +508,7 @@ nsStreamIOChannel::OnProgress(nsIRequest *request, nsISupports *context,
                               PRUint32 progress, PRUint32 progressMax)
 {
     if (mProgressSink)
-        mProgressSink->OnProgress(request, context, progress, progressMax);
+        mProgressSink->OnProgress(this, context, progress, progressMax);
     return NS_OK;
 }
 
@@ -517,7 +517,7 @@ nsStreamIOChannel::OnStatus(nsIRequest *request, nsISupports *context,
                             nsresult status, const PRUnichar *statusText)
 {
     if (mProgressSink)
-        mProgressSink->OnStatus(request, context, status, statusText);
+        mProgressSink->OnStatus(this, context, status, statusText);
     return NS_OK;
 }
 
