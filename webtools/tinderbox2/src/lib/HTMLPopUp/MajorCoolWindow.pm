@@ -12,8 +12,8 @@
 #	 http://www.webreference.com/dhtml/hiermenus/
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/08/30 02:17:19 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/09/01 18:39:49 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MajorCoolWindow.pm,v $ 
 # $Name:  $ 
@@ -92,6 +92,7 @@ sub page_header {
 $header .=<<EOF;
 <HTML>
         <!-- This file was automatically created by $main::0  -->
+        <!-- version: $main::$VERSION -->
         <!-- at $main::LOCALTIME -->
 <HEAD>
 	$refresh

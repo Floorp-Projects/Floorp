@@ -15,8 +15,8 @@
 
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:19:57 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/09/01 18:39:54 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm,v $ 
 # $Name:  $ 
@@ -81,6 +81,7 @@ sub page_header {
 $header .=<<EOF;
 <HTML>
         <!-- This file was automatically created by $main::0  -->
+        <!-- version: $main::$VERSION -->
         <!-- at $main::LOCALTIME -->
 <HEAD>
 	$refresh
