@@ -11,4 +11,4 @@
 #
 # add client auth versions here...
 #
-#     0       -r  -n_"Test_User"_-w_bogus     TLS Request don't require client auth (bad password)
+#     0       -r  -w_bogus_-n_"Test_User"     TLS Request don't require client auth (bad password)
