@@ -326,7 +326,7 @@ nsresult
 NS_NewScrollPortFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewGfxScrollFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIDocument* aDocument, PRBool aIsRoot);
+NS_NewGfxScrollFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot);
 
 nsresult
 NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
@@ -5791,7 +5791,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell*            aPresSh
   nsRefPtr<nsStyleContext> contentStyle = aContentStyle;
 
   if (!gfxScrollFrame) {
-    NS_NewGfxScrollFrame(aPresShell, &gfxScrollFrame, aDocument, aIsRoot);
+    NS_NewGfxScrollFrame(aPresShell, &gfxScrollFrame, aIsRoot);
 
     InitAndRestoreFrame(aPresContext, aState, aContent, 
                         aParentFrame, contentStyle, nsnull, gfxScrollFrame);
