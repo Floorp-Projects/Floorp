@@ -150,6 +150,12 @@ interface oeIICal : nsISupports
 	nsISimpleEnumerator getEventsForRange(in PRTime begindate, in PRTime enddate, out nsISimpleEnumerator datelist );
 	nsISimpleEnumerator getNextNEvents(in PRTime begindate, in long count, out nsISimpleEnumerator datelist );
 	nsISimpleEnumerator getFirstEventsForRange(in PRTime begindate, in PRTime enddate );
+
+	string addTodo( in oeIICalTodo icaltodo );
+	string modifyTodo( in oeIICalTodo icaltodo );
+	void deleteTodo( in string id );
+	oeIICalTodo fetchTodo( in string id );
+	nsISimpleEnumerator getAllTodos();
 };
 
 
@@ -158,6 +164,8 @@ extern nsresult
 NS_NewICal(oeIICal** inst);
 extern nsresult
 NS_NewICalEvent(oeIICalEvent** inst);
+extern nsresult
+NS_NewICalTodo(oeIICalTodo** inst);
 extern nsresult
 NS_NewDateTime(oeIDateTime** inst);
 extern nsresult

@@ -1162,9 +1162,15 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     icalcomponent *vevent=nsnull;
     icalcomponent_kind kind = icalcomponent_isa( comp );
 
-    if( kind == ICAL_VCALENDAR_COMPONENT )
+    if( kind == ICAL_VCALENDAR_COMPONENT ) {
 	    vevent = icalcomponent_get_first_component( comp , ICAL_VEVENT_COMPONENT );
+        if ( !vevent ) {
+            icalcomponent_get_first_component( comp , ICAL_VTODO_COMPONENT );
+        }
+    }
     else if( kind == ICAL_VEVENT_COMPONENT )
+        vevent = comp;
+    else if( kind == ICAL_VTODO_COMPONENT )
         vevent = comp;
 
     if ( !vevent ) {

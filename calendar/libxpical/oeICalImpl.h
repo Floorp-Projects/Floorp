@@ -38,6 +38,7 @@
 #include <vector>
 #include "nsITimer.h"
 #include "oeICalEventImpl.h"
+#include "oeICalTodoImpl.h"
 
 #define OE_ICAL_CID \
 { 0x0a8c5de7, 0x0d19, 0x4b95, { 0x82, 0xf4, 0xe0, 0xaf, 0x92, 0x45, 0x32, 0x27 } }
@@ -112,6 +113,61 @@ public:
     }*/
 };
 
+class TodoList {
+public:
+    oeIICalTodo* todo;
+    TodoList* next;
+    TodoList() {
+        todo = nsnull;
+        next = nsnull;
+    }
+    ~TodoList() {
+        if( todo )
+            todo->Release();
+        if( next )
+            delete next;
+    }
+    void Add( oeIICalTodo* e) {
+        if( !todo ) {
+            todo = e;
+        } else {
+            if( !next ) {
+                next = new TodoList();
+            }
+            next->Add( e );
+        }
+    }
+    oeIICalTodo* GetTodoById( const char *id ) {
+        if( !todo )
+            return nsnull;
+        if( ((oeICalTodoImpl *)todo)->matchId( id ) )
+            return todo;
+        if( next )
+            return next->GetTodoById( id );
+        return nsnull;
+    }
+    void Remove( const char *id ) {
+        if( !todo )
+            return;
+        if( ((oeICalTodoImpl *)todo)->matchId( id ) ) {
+            todo->Release();
+            if( next ) {
+                todo = next->todo;
+                TodoList *tmp = next;
+                next = next->next;
+                tmp->next = nsnull;
+                tmp->todo = nsnull;
+                delete tmp;
+            } else {
+                todo = nsnull;
+            }
+        } else {
+            if( next )
+                next->Remove( id );
+        }
+    }
+};
+
 class oeICalImpl : public oeIICal
 {
  public:
@@ -145,6 +201,7 @@ private:
     std::vector<oeIICalObserver*> m_observerlist;
     bool m_batchMode;
     EventList m_eventlist;
+    TodoList m_todolist;
     nsITimer *m_alarmtimer;
     char serveraddr[200];
 };

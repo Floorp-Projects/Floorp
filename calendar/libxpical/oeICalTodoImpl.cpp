@@ -104,7 +104,12 @@ oeICalTodoImpl::~oeICalTodoImpl()
         m_due->Release();
     if( m_completed )
         m_completed->Release();
+    mEvent->Release();
     mEvent = nsnull;
+}
+
+bool oeICalTodoImpl::matchId( const char *id ) {
+    return mEvent->matchId( id );
 }
 
 /* readonly attribute oeIDateTime due; */
@@ -182,10 +187,6 @@ bool oeICalTodoImpl::ParseIcalComponent( icalcomponent *comp )
     printf( "ParseIcalComponent()\n" );
 #endif
 
-    //something like this first
-    //mEvent->ParseIcalComponent( comp );
-    //then go on with the extra properties
-
     icalcomponent *vtodo=nsnull;
     icalcomponent_kind kind = icalcomponent_isa( comp );
 
@@ -201,7 +202,12 @@ bool oeICalTodoImpl::ParseIcalComponent( icalcomponent *comp )
         return false;
     }
 
-//percent
+    //First parse all basic properties
+    ((oeICalEventImpl *)mEvent)->ParseIcalComponent( vtodo );
+
+    //then go on with the extra properties
+
+    //percent
     icalproperty *prop = icalcomponent_get_first_property( vtodo, ICAL_PERCENTCOMPLETE_PROPERTY );
     if ( prop != 0) {
         m_percent = icalproperty_get_percentcomplete( prop );
@@ -209,7 +215,7 @@ bool oeICalTodoImpl::ParseIcalComponent( icalcomponent *comp )
         m_percent = 0;
     }
 
-//completed
+    //completed
     prop = icalcomponent_get_first_property( vtodo, ICAL_COMPLETED_PROPERTY );
     if (prop != 0) {
         icaltimetype completed;
@@ -217,6 +223,16 @@ bool oeICalTodoImpl::ParseIcalComponent( icalcomponent *comp )
         m_completed->m_datetime = completed;
     } else {
         m_completed->m_datetime = icaltime_null_time();
+    }
+
+    //due
+    prop = icalcomponent_get_first_property( vtodo, ICAL_DUE_PROPERTY );
+    if (prop != 0) {
+        icaltimetype due;
+        due = icalproperty_get_due( prop );
+        m_due->m_datetime = due;
+    } else {
+        m_due->m_datetime = icaltime_null_time();
     }
 
     return true;
@@ -232,21 +248,55 @@ icalcomponent* oeICalTodoImpl::AsIcalComponent()
     newcalendar = icalcomponent_new_vcalendar();
     if ( !newcalendar ) {
         #ifdef ICAL_DEBUG
-        printf( "oeICalEventImpl::AsIcalComponent() failed: Cannot create VCALENDAR!\n" );
+        printf( "oeICalTodoImpl::AsIcalComponent() failed: Cannot create VCALENDAR!\n" );
         #endif
         return nsnull;
     }
+    icalcomponent *basevcal = ((oeICalEventImpl *)mEvent)->AsIcalComponent();
+    if ( !basevcal ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalTodoImpl::AsIcalComponent() failed: Cannot create ical component from mEvent!\n" );
+        #endif
+        icalcomponent_free( newcalendar );
+        return nsnull;
+    }
+    
     icalcomponent *vtodo = icalcomponent_new_vtodo();
+    icalcomponent *vevent = icalcomponent_get_first_component( basevcal, ICAL_VEVENT_COMPONENT );
+    icalproperty *prop;
+    for( prop = icalcomponent_get_first_property( vevent, ICAL_ANY_PROPERTY );
+         prop != 0 ;
+         prop = icalcomponent_get_next_property( vevent, ICAL_ANY_PROPERTY ) ) {
+        icalproperty *newprop;
+        icalproperty_kind propkind = icalproperty_isa( prop );
+        if( propkind == ICAL_X_PROPERTY ) {
+            //do nothing
+/*            newprop = icalproperty_new_x( icalproperty_get_value_as_string( prop ) );
+            icalparameter *oldpar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
+            icalparameter *newpar = icalparameter_new_clone( oldpar );
+            icalproperty_add_parameter( newprop, newpar );*/
+            continue;
+        } else if( propkind == ICAL_DTEND_PROPERTY || propkind == ICAL_RRULE_PROPERTY) {
+            //do nothing
+            continue;
+        } else {
+            newprop = icalproperty_new_clone( prop );
+        }
+        icalcomponent_add_property( vtodo, newprop );
+    }
 
     //percent
-    icalproperty *prop = icalproperty_new_percentcomplete( m_percent );
+    prop = icalproperty_new_percentcomplete( m_percent );
     icalcomponent_add_property( vtodo, prop );
 
     //Create due if does not exist
     if( icaltime_is_null_time( m_due->m_datetime ) ) {
-        //Set to the same as start date 23:59
-//MUST USE mEvent's STARTDATE        m_due->m_datetime = m_start->m_datetime;
-        m_due->SetHour( 23 ); m_due->SetMinute( 59 );
+        prop = icalcomponent_get_first_property( vtodo, ICAL_DTSTART_PROPERTY );
+        if( prop ) {
+            m_due->m_datetime = icalproperty_get_dtstart( prop );
+            //Set to the same as start date 23:59
+            m_due->SetHour( 23 ); m_due->SetMinute( 59 );
+        }
     }
 
     //due
@@ -267,9 +317,6 @@ icalcomponent* oeICalTodoImpl::AsIcalComponent()
 
     //add event to newcalendar
     icalcomponent_add_component( newcalendar, vtodo );
-
-    //!!!!!!!!!!!!!!
-    //NOW FIND A WAY TO ADD PROPERTIES FROM mEvent
 
     return newcalendar;
 }

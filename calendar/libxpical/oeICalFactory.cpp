@@ -45,6 +45,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalImpl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalEventImpl);
+NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalTodoImpl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(oeDateTimeImpl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalStartupHandler);
 
@@ -64,6 +65,11 @@ static const nsModuleComponentInfo pModuleInfo[] =
     OE_DATETIME_CID,
     OE_DATETIME_CONTRACTID,
     oeDateTimeImplConstructor,
+  },
+  { "ICal Todo",
+    OE_ICALTODO_CID,
+    OE_ICALTODO_CONTRACTID,
+    oeICalTodoImplConstructor,
   },
   {
     "Calendar Startup Handler",

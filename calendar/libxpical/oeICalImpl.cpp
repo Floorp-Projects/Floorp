@@ -103,11 +103,12 @@ oeEventEnumerator : public nsISimpleEnumerator
     // nsISimpleEnumerator interface
     NS_DECL_NSISIMPLEENUMERATOR
 
-    NS_IMETHOD AddEvent( oeIICalEvent *event );
+    NS_IMETHOD AddEvent( nsISupports *event );
 
   private:
     PRUint32 mCurrentIndex;
-    std::vector<oeIICalEvent *> mEventVector;
+//    std::vector<oeIICalEvent *> mEventVector;
+    std::vector<nsISupports *> mEventVector;
 };
 
 oeEventEnumerator::oeEventEnumerator( ) 
@@ -166,10 +167,10 @@ oeEventEnumerator::GetNext(nsISupports **_retval)
     }
     else
     {
-        oeIICalEvent* event = mEventVector[ mCurrentIndex ];
-        nsresult rv = NS_NewICalEventDisplay( event, (oeIICalEventDisplay**) _retval );
+        nsISupports* event = mEventVector[ mCurrentIndex ];
+        event->AddRef();
+        *_retval = event;
         ++mCurrentIndex;
-        return rv;
     }
     
     return NS_OK;
@@ -177,7 +178,7 @@ oeEventEnumerator::GetNext(nsISupports **_retval)
 
 
 NS_IMETHODIMP
-oeEventEnumerator::AddEvent(oeIICalEvent* event)
+oeEventEnumerator::AddEvent( nsISupports* event)
 {
     mEventVector.push_back( event );
     return NS_OK;
@@ -1054,7 +1055,7 @@ oeICalImpl::DeleteEvent( const char *id )
     icalfileset_mark( stream ); //Make sure stream is marked as dirty
 	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
         #ifdef ICAL_DEBUG
-	    printf( "oeICalImpl::ModifyEvent() : WARNING icalfileset_commit() unsuccessful\n" );
+	    printf( "oeICalImpl::DeleteEvent() : WARNING icalfileset_commit() unsuccessful\n" );
         #endif
     }
     icalfileset_free(stream);
@@ -1714,3 +1715,269 @@ void oeICalImpl::SetupAlarmManager() {
             m_alarmtimer->Init( AlarmTimerCallback, this, timediff*1000, PR_TRUE, NS_TYPE_ONE_SHOT );
     }
 }
+
+/**
+*
+*   AddTodo
+*
+*   DESCRIPTION: Adds a TODO component
+*
+*   PARAMETERS: 
+*	icaltodo - The XPCOM component representing a TODO
+*	retid   - Place to store the returned id
+*
+*/
+NS_IMETHODIMP oeICalImpl::AddTodo(oeIICalTodo *icaltodo,char **retid)
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::AddTodo()\n" );
+#endif
+    icalfileset *stream;
+    icalcomponent *vcalendar,*fetchedcal;
+
+    stream = icalfileset_new(serveraddr);
+    if ( !stream ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::AddTodo() failed: Cannot open stream: %s!\n", serveraddr );
+        #endif
+        return NS_OK;
+    }
+    
+    ((oeICalTodoImpl *)icaltodo)->GetId( retid );
+
+    if( *retid == nsnull ) {
+        char uidstr[10];
+        do {
+            unsigned long newid;
+            newid = 900000000 + ((rand()%0x4ff) << 16) + rand()%0xFFFF;
+            sprintf( uidstr, "%lu", newid );
+        } while ( (fetchedcal = icalfileset_fetch( stream, uidstr )) != 0 );
+
+        ((oeICalTodoImpl *)icaltodo)->SetId( uidstr );
+        ((oeICalTodoImpl *)icaltodo)->GetId( retid );
+    }
+
+    vcalendar = ((oeICalTodoImpl *)icaltodo)->AsIcalComponent();
+	
+    icalfileset_add_component( stream, vcalendar );
+
+	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
+        #ifdef ICAL_DEBUG
+	    printf( "oeICalImpl::AddTodo() : WARNING icalfileset_commit() unsuccessful\n" );
+        #endif
+    }
+    icalfileset_free( stream );
+
+    icaltodo->AddRef();
+    m_todolist.Add( icaltodo );
+
+    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
+        m_observerlist[i]->OnAddItem( icaltodo );
+    }
+
+//    SetupAlarmManager();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+oeICalImpl::GetAllTodos(nsISimpleEnumerator **resultList )
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::GetAllTodos()\n" );
+#endif
+    nsCOMPtr<oeEventEnumerator> todoEnum = new oeEventEnumerator();
+    
+    if (!todoEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    TodoList *tmplistptr = &m_todolist;
+    while( tmplistptr ) {
+        if( tmplistptr->todo ) {
+            todoEnum->AddEvent( tmplistptr->todo );
+        }
+        tmplistptr = tmplistptr->next;
+    }
+
+    // bump ref count
+    return todoEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
+}
+
+NS_IMETHODIMP
+oeICalImpl::DeleteTodo( const char *id )
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::DeleteTodo( %s )\n", id );
+#endif
+    icalfileset *stream;
+    
+    stream = icalfileset_new(serveraddr);
+    if ( !stream ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::DeleteEvent() failed: Cannot open stream: %s!\n", serveraddr );
+        #endif
+        return NS_OK;
+    }
+    
+    if( id == nsnull ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::DeleteEvent() - Invalid Id.\n" );
+        #endif
+        icalfileset_free(stream);
+        return NS_OK;
+    }
+
+    icalcomponent *fetchedvcal = icalfileset_fetch( stream, id );
+    
+    if( !fetchedvcal ) {
+        icalfileset_free(stream);
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::DeleteEvent() - WARNING Event not found.\n" );
+        #endif
+        return NS_OK;
+    }
+    icalcomponent *fetchedvevent = icalcomponent_fetch( fetchedvcal, id );
+    
+    if( !fetchedvevent ) {
+        icalfileset_free(stream);
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::DeleteEvent() - WARNING Event not found.\n" );
+        #endif
+        return NS_OK;
+    }
+
+    icalcomponent_remove_component( fetchedvcal, fetchedvevent );
+    icalcomponent_free( fetchedvevent );
+    if ( !icalcomponent_get_first_real_component( fetchedvcal ) ) {
+        icalfileset_remove_component( stream, fetchedvcal );
+        icalcomponent_free( fetchedvcal );
+    }
+	
+    icalfileset_mark( stream ); //Make sure stream is marked as dirty
+	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
+        #ifdef ICAL_DEBUG
+	    printf( "oeICalImpl::DeleteEvent() : WARNING icalfileset_commit() unsuccessful\n" );
+        #endif
+    }
+    icalfileset_free(stream);
+	
+    oeIICalTodo *icalevent;
+    FetchTodo( id , &icalevent );
+
+    m_todolist.Remove( id );
+    
+    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
+        m_observerlist[i]->OnDeleteItem( icalevent );
+    }
+
+    icalevent->Release();
+
+//    SetupAlarmManager();
+	return NS_OK;
+}
+
+NS_IMETHODIMP oeICalImpl::FetchTodo( const char *id, oeIICalTodo **ev)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalImpl::FetchTodo()\n" );
+#endif
+
+    if( id == nsnull ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::FetchEvent() - Invalid Id.\n" );
+        #endif
+        *ev = nsnull;
+        return NS_OK;
+    }
+
+    oeIICalTodo* event = m_todolist.GetTodoById( id );
+    if( event != nsnull ) {
+        event->AddRef();
+    }
+    *ev = event;
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::ModifyEvent()\n" );
+#endif
+    icalfileset *stream;
+    icalcomponent *vcalendar;
+
+    stream = icalfileset_new(serveraddr);
+    if ( !stream ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::ModifyEvent() failed: Cannot open stream: %s!\n", serveraddr );
+        #endif
+        return NS_OK;
+    }
+    
+    icalevent->GetId( retid );
+    if( *retid == nsnull ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::ModifyEvent() - Invalid Id.\n" );
+        #endif
+        icalfileset_free(stream);
+        return NS_OK;
+    }
+    
+    icalcomponent *fetchedvcal = icalfileset_fetch( stream, *retid );
+    
+    oeICalTodoImpl *oldevent=nsnull;
+    if( fetchedvcal ) {
+        icalcomponent *fetchedvevent = icalcomponent_fetch( fetchedvcal, *retid );
+        if( fetchedvevent ) {
+            icalcomponent_remove_component( fetchedvcal, fetchedvevent );
+            if ( !icalcomponent_get_first_real_component( fetchedvcal ) ) {
+                icalfileset_remove_component( stream, fetchedvcal );
+                icalcomponent_free( fetchedvcal );
+            }
+            nsresult rv;
+            if( NS_FAILED( rv = NS_NewICalTodo((oeIICalTodo**) &oldevent ))) {
+                nsMemory::Free( *retid );
+                *retid = nsnull;
+                icalfileset_free(stream);
+                return rv;
+            }
+            oldevent->ParseIcalComponent( fetchedvevent );
+            icalcomponent_free( fetchedvevent );
+        } else {
+            #ifdef ICAL_DEBUG
+            printf( "oeICalImpl::ModifyEvent() - WARNING Event not found.\n" );
+            #endif
+            nsMemory::Free( *retid );
+            *retid = nsnull;
+            icalfileset_free(stream);
+            return NS_OK;
+        }
+    } else {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::ModifyEvent() - WARNING Event not found.\n" );
+        #endif
+        nsMemory::Free( *retid );
+        *retid = nsnull;
+        icalfileset_free(stream);
+        return NS_OK;
+    }
+    
+    vcalendar = ((oeICalTodoImpl *)icalevent)->AsIcalComponent();
+    icalfileset_add_component( stream, vcalendar );
+    
+	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
+        #ifdef ICAL_DEBUG
+	    printf( "oeICalImpl::ModifyEvent() : WARNING icalfileset_commit() unsuccessful\n" );
+        #endif
+    }
+    icalfileset_free(stream);
+    
+    for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
+        m_observerlist[i]->OnModifyItem( icalevent, oldevent );
+    }
+
+    oldevent->Release();
+
+//    SetupAlarmManager();
+    return NS_OK;
+}
+

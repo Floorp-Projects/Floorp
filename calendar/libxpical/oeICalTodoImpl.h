@@ -66,6 +66,7 @@ public:
   bool ParseIcalComponent( icalcomponent *vcalendar );
   icalcomponent *AsIcalComponent();
   NS_IMETHOD Clone(oeIICalTodo **_retval);
+  bool matchId( const char *id );
 private:
 /*    char *m_id;
     char *m_syncid;
@@ -96,7 +97,8 @@ private:
     int m_percent;
     oeDateTimeImpl *m_completed;
     oeDateTimeImpl *m_due;
-    nsCOMPtr<oeIICalEvent> mEvent;
+//    nsCOMPtr<oeIICalEvent> mEvent;
+    oeICalEventImpl *mEvent;
 };
 
 #endif
