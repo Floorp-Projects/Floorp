@@ -48,6 +48,7 @@
 
 #if defined(XP_MAC)
 #include "macstdlibextras.h"
+#include <TextServices.h>
   // Set up the toolbox and (if DEBUG) the console.  Do this in a static initializer,
   // to make it as unlikely as possible that somebody calls printf() before we get initialized.
 static struct MacInitializer { MacInitializer() { InitializeMacToolbox(); } } gInitializer;
@@ -523,6 +524,9 @@ done:
 
     nsServiceManager::ReleaseService(kFileLocatorCID, locator);
 
+#ifdef XP_MAC
+	(void)CloseTSMAwareApplication();
+#endif
   /* 
    * Translate the nsresult into an appropriate platform-specific return code.
    */
