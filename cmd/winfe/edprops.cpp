@@ -6746,6 +6746,7 @@ void CImagePage::AutoFillAltText()
             m_csAltText = XP_STRDUP(pName);
             XP_FREE(pName);
         }
+        SetOKEnable();
     }
 }
 void CImagePage::OnEditImage() 
