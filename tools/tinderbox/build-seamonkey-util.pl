@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.205 $ ';
+$::UtilsVersion = '$Revision: 1.206 $ ';
 
 package TinderUtils;
 
@@ -1676,11 +1676,12 @@ sub run_all_tests {
     }
 
     # QA test: Client-side JS, DOM/HTML/Views, form submission.
-    #if ($Settings::QATest and $test_result eq 'success') {
-    #    $test_result = QATest("QATest",
-    #                          $build_dir,
-    #                          [$binary, "-P", $Settings::MozProfileName]);
-    #}
+    if ($Settings::QATest and $test_result eq 'success') {
+        $test_result = QATest("QATest",
+                              $build_dir,
+                              $binary_dir,
+                              [$binary, "-P", $Settings::MozProfileName]);
+    }
 
 
     # xul window open test.
@@ -1691,7 +1692,7 @@ sub run_all_tests {
         my $binary_log = "$build_dir/$test_name.log";
 
         # Settle OS.
-        run_system_cmd("sync; sleep 10", 35);
+        run_system_cmd("sync; sleep 5", 35);
 
         my @urlargs = (-chrome,"file:$build_dir/mozilla/xpfe/test/winopen.xul");
         if($test_result eq 'success') {
@@ -1847,13 +1848,14 @@ sub FileBasedTest {
     print_logfile($binary_log, $test_name);
 
     if (($result->{timed_out}) and (!$timeout_is_ok)) {
-        print_log "Error: $test_name timed out after $timeout_secs seconds.\n";
-        return 'testfailed';
+      print_log "Error: $test_name timed out after $timeout_secs seconds.\n";
+      return 'testfailed';
     } elsif ($result->{exit_value} != 0) {
-        print_test_errors($result, $test_name);
-        return 'testfailed';
+      print_log "Error: $test_name exited with status $result->{exit_value}\n";
+      print_test_errors($result, $test_name);
+      return 'testfailed';
     } else {
-        print_log "$test_name exited normally\n";
+      print_log "$test_name exited normally\n";
     }
 
     my $found_token = file_has_token($binary_log, $status_token);
@@ -1882,7 +1884,7 @@ sub LayoutPerformanceTest {
     my $url = "http://$Settings::pageload_server/page-loader/loader.pl?delay=1000&nocache=0&maxcyc=4&timeout=$Settings::LayoutPerformanceTestPageTimeout&auto=1";
     
     # Settle OS.
-    run_system_cmd("sync; sleep 10", 35);
+    run_system_cmd("sync; sleep 5", 35);
     
     $layout_time = AliveTestReturnToken($test_name,
                                         $build_dir,
@@ -1948,25 +1950,29 @@ sub LayoutPerformanceTest {
 # Client-side JavaScript, DOM Core/HTML/Views, and Form Submission tests.
 # Currently only available inside netscape firewall.
 sub QATest {
-    my ($test_name, $build_dir, $args) = @_;
+    my ($test_name, $build_dir, $binary_dir, $args) = @_;
     my $binary_log = "$build_dir/$test_name.log";
     my $url = "http://geckoqa.mcom.com/ngdriver/cgi-bin/ngdriver.cgi?findsuites=suites&tbox=1";
     
     # Settle OS.
-    run_system_cmd("sync; sleep 10", 35);
+    run_system_cmd("sync; sleep 5", 35);
     
     my $rv;
-    $rv = FileBasedTest($test_name,
-                        $build_dir,
-                        [@$args, $url],
-                        $Settings::QATestTimeout,
-                        "FAILED_XXX", # No failure here, post-process the data.
-                        0, 0); # Timeout means failure
+    #$rv = FileBasedTest($test_name, $build_dir, $binary_dir,
+    #                    [@$args, $url], $Settings::QATestTimeout,
+    #                    "FAILED_XXX", # No failure here, post-process the data.
+    #                    0, 
+    #                    1); # Timeout ok
+    
+    $rv = AliveTest("QATest", $build_dir,
+                    [@$args, $url],
+                    $Settings::QATestTimeout);
+
 
     # Post-process log of test output.
 
 
-    return 'success';  # Hard-coded for now.
+    return $rv;  # Hard-coded for now.
 }
 
 
