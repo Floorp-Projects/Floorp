@@ -121,6 +121,8 @@ nsMsgQuickSearchDBView::OnSearchDone(nsresult status)
     m_sortValid = PR_FALSE;       //sort the results 
     Sort(m_sortType, m_sortOrder);
     RestoreSelection(&preservedSelection);
+    if (mTree) 
+      mTree->Invalidate();
   }
   return NS_OK;
 }
