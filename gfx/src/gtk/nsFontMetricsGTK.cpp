@@ -1169,7 +1169,6 @@ void nsFontMetricsGTK::RealizeFont()
   mDeviceContext->GetDevUnitsToAppUnits(f);
 
   nscoord lineSpacing = nscoord((fontInfo->ascent + fontInfo->descent) * f);
-  // XXXldb Shouldn't we get mEmHeight from the metrics?
   mEmHeight = PR_MAX(1, nscoord(mWesternFont->mSize * f));
   if (lineSpacing > mEmHeight) {
     mLeading = lineSpacing - mEmHeight;
@@ -1912,6 +1911,10 @@ nsFontGTK::LoadFont(void)
   gdk_error_trap_pop();
   if (gdkFont) {
     XFontStruct* xFont = (XFontStruct*) GDK_FONT_XFONT(gdkFont);
+
+    mMaxAscent = xFont->ascent;
+    mMaxDescent = xFont->descent;
+
     if (mCharSetInfo == &ISO106461) {
       mCCMap = GetMapFor10646Font(xFont);
       if (!mCCMap) {
