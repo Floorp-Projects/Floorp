@@ -186,6 +186,7 @@ nsresult nsImapProtocol::GlobalInitialization()
                        &gHideOtherUsersFromList);
     prefs->GetBoolPref("mail.imap.hide_unused_namespaces",
                        &gHideUnusedNamespaces);
+    prefs->GetIntPref("mail.imap.noop_check_count", &gPromoteNoopToCheckCount);
   }
   gInitialized = PR_TRUE;
   return rv;
