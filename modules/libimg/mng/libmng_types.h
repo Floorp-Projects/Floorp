@@ -135,7 +135,7 @@
 #endif
 /* B003 */
 #else
-#ifdef BSD
+#if defined(BSD) && !defined(XP_OS2)
 #include <strings.h>                   /* defines "memcpy" for BSD (?) */
 #else
 #include <string.h>                    /* defines "memcpy" for all others (???) */
