@@ -475,7 +475,16 @@ nsPlainTextSerializer::CloseContainer(const nsHTMLTag aTag)
 {
   return DoCloseContainer(aTag);
 }
- 
+
+NS_IMETHODIMP 
+nsPlainTextSerializer::AddHeadContent(const nsIParserNode& aNode)
+{
+  OpenHead(aNode);
+  nsresult rv = AddLeaf(aNode);
+  CloseHead();
+  return rv;
+}
+
 NS_IMETHODIMP 
 nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
 {

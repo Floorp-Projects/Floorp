@@ -256,6 +256,7 @@ public:
   // nsIHTMLContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
+  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
@@ -305,6 +306,7 @@ public:
   PRBool IsTimeToNotify();
   PRBool IsInScript();
 
+  nsresult SetDocumentTitle(const nsAString& aTitle);
   nsresult AddAttributes(const nsIParserNode& aNode, nsIHTMLContent* aContent,
                          PRBool aNotify = PR_FALSE);
   nsresult CreateContentObject(const nsIParserNode& aNode, nsHTMLTag aNodeType,
@@ -460,6 +462,8 @@ public:
                              nsIHTMLContent* aContent = nsnull);
   nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
 
+  nsresult OpenHeadContext();
+  nsresult CloseHeadContext();
   // Script processing related routines
   nsresult ResumeParsing();
   PRBool PreEvaluateScript();
@@ -3028,51 +3032,17 @@ HTMLContentSink::SetTitle(const nsString& aValue)
 {
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::SetTitle()\n"));
   MOZ_TIMER_START(mWatch);
-  NS_ASSERTION(mCurrentContext == mHeadContext, "SetTitle not in head");
 
-  if (!mTitle.IsEmpty()) {
-    // If the title was already set then don't try to overwrite it
-    // when a new title is encountered - For backwards compatiblity
-    //*mTitle = aValue;
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::SetTitle()\n"));
-    MOZ_TIMER_STOP(mWatch);
-
-    return NS_OK;
+  nsresult rv = OpenHeadContext();
+  if (NS_SUCCEEDED(rv)) {
+    rv = SetDocumentTitle(aValue);
   }
-
-  mTitle.Assign(aValue);
-  mTitle.CompressWhitespace(PR_TRUE, PR_TRUE);
-
-  nsCOMPtr<nsIDOMHTMLDocument> domDoc(do_QueryInterface(mHTMLDocument));
-  if (domDoc) {
-    domDoc->SetTitle(mTitle);
-  }
-
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::title, nsnull,
-                                              kNameSpaceID_None,
-                                              *getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIHTMLContent> it;
-  rv = NS_NewHTMLTitleElement(getter_AddRefs(it), nodeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsITextContent> text;
-  rv = NS_NewTextNode(getter_AddRefs(text));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  text->SetText(mTitle, PR_TRUE);
-
-  it->AppendChildTo(text, PR_FALSE, PR_FALSE);
-  text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-
-  mHead->AppendChildTo(it, PR_FALSE, PR_FALSE);
+  CloseHeadContext();
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::SetTitle()\n"));
   MOZ_TIMER_STOP(mWatch);
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3136,42 +3106,12 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
                   "HTMLContentSink::OpenHead", 
                   eHTMLTag_head, 0, this);
 
-  nsresult rv = NS_OK;
-
-  // Flush everything in the current context so that we don't have
-  // to worry about insertions resulting in inconsistent frame creation.
-  //
-  // Try to do this only if needed (costly), i.e., only if we are sure
-  // we are changing contexts from some other context to the head.
-  //
-  // PERF: This call causes approximately a 2% slowdown in page load time
-  // according to jrgm's page load tests, but seems to be a necessary evil
-  if (mCurrentContext && (mCurrentContext != mHeadContext)) {
-    mCurrentContext->FlushTags(PR_TRUE);
+  nsresult rv = OpenHeadContext();
+  if (NS_FAILED(rv)) {
+    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenHead()\n"));
+    MOZ_TIMER_STOP(mWatch);
+    return rv;
   }
-
-  if (!mHeadContext) {
-    mHeadContext = new SinkContext(this);
-    if (!mHeadContext) {
-      MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenHead()\n"));
-      MOZ_TIMER_STOP(mWatch);
-
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    mHeadContext->SetPreAppend(PR_TRUE);
-
-    rv = mHeadContext->Begin(eHTMLTag_head, mHead, 0, -1);
-    if (NS_FAILED(rv)) {
-      MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenHead()\n"));
-      MOZ_TIMER_STOP(mWatch);
-
-      return rv;
-    }
-  }
-
-  mContextStack.AppendElement(mCurrentContext);
-  mCurrentContext = mHeadContext;
 
   if (mHead && aNode.GetNodeType() == eHTMLTag_head) {
     rv = AddAttributes(aNode, mHead);
@@ -3191,11 +3131,7 @@ HTMLContentSink::CloseHead()
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseHead", 
                   eHTMLTag_head, 0, this);
-
-  PRInt32 n = mContextStack.Count() - 1;
-
-  mCurrentContext = (SinkContext*) mContextStack.ElementAt(n);
-  mContextStack.RemoveElementAt(n);
+  CloseHeadContext();
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseHead()\n"));
   MOZ_TIMER_STOP(mWatch);
@@ -3583,6 +3519,37 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
 }
 
 NS_IMETHODIMP
+HTMLContentSink::AddHeadContent(const nsIParserNode& aNode)
+{
+  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::AddHeadContent()\n"));
+  MOZ_TIMER_START(mWatch);
+
+  nsresult rv = OpenHeadContext();
+  if (NS_SUCCEEDED(rv)) {
+    nsHTMLTag type = nsHTMLTag(aNode.GetNodeType());
+    if (eHTMLTag_title == type) {
+      nsCOMPtr<nsIDTD> dtd;
+      mParser->GetDTD(getter_AddRefs(dtd));
+      if (dtd) {
+        nsAutoString title;
+        PRInt32 lineNo = 0;
+        dtd->CollectSkippedContent(eHTMLTag_title, title, lineNo);
+        rv = SetDocumentTitle(title);
+      }
+    }
+    else {
+      rv = AddLeaf(aNode);
+    }
+    CloseHeadContext();
+  }
+   
+  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::AddHeadContent()\n"));
+  MOZ_TIMER_STOP(mWatch);
+  return rv;
+}
+
+
+NS_IMETHODIMP
 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 {
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::AddLeaf()\n"));
@@ -3631,6 +3598,58 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   MOZ_TIMER_STOP(mWatch);
 
   return rv;
+}
+
+nsresult 
+HTMLContentSink::SetDocumentTitle(const nsAString& aTitle)
+{
+  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::SetDocumentTitle()\n"));
+  MOZ_TIMER_START(mWatch);
+  NS_ASSERTION(mCurrentContext == mHeadContext, "title not in head");
+
+  if (!mTitle.IsEmpty()) {
+    // If the title was already set then don't try to overwrite it
+    // when a new title is encountered - For backwards compatiblity
+    //*mTitle = aValue;
+    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::SetDocumentTitle()\n"));
+    MOZ_TIMER_STOP(mWatch);
+
+    return NS_OK;
+  }
+
+  mTitle.Assign(aTitle);
+  mTitle.CompressWhitespace(PR_TRUE, PR_TRUE);
+
+  nsCOMPtr<nsIDOMHTMLDocument> domDoc(do_QueryInterface(mHTMLDocument));
+  if (domDoc) {
+    domDoc->SetTitle(mTitle);
+  }
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsresult rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::title, nsnull,
+                                              kNameSpaceID_None,
+                                              *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHTMLContent> it;
+  rv = NS_NewHTMLTitleElement(getter_AddRefs(it), nodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsITextContent> text;
+  rv = NS_NewTextNode(getter_AddRefs(text));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  text->SetText(mTitle, PR_TRUE);
+
+  it->AppendChildTo(text, PR_FALSE, PR_FALSE);
+  text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+
+  mHead->AppendChildTo(it, PR_FALSE, PR_FALSE);
+
+  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::SetDocumentTitle()\n"));
+  MOZ_TIMER_STOP(mWatch);
+
+  return NS_OK;
 }
 
 /**
@@ -4437,6 +4456,50 @@ HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
 
     mBaseHREF = aBaseHref;
   }
+}
+
+nsresult
+HTMLContentSink::OpenHeadContext()
+{
+  nsresult rv = NS_OK;
+
+  // Flush everything in the current context so that we don't have
+  // to worry about insertions resulting in inconsistent frame creation.
+  //
+  // Try to do this only if needed (costly), i.e., only if we are sure
+  // we are changing contexts from some other context to the head.
+  //
+  // PERF: This call causes approximately a 2% slowdown in page load time
+  // according to jrgm's page load tests, but seems to be a necessary evil
+  if (mCurrentContext && (mCurrentContext != mHeadContext)) {
+    mCurrentContext->FlushTags(PR_TRUE);
+  }
+
+  if (!mHeadContext) {
+    mHeadContext = new SinkContext(this);
+    NS_ENSURE_TRUE(mHeadContext, NS_ERROR_OUT_OF_MEMORY);
+
+    mHeadContext->SetPreAppend(PR_TRUE);
+    rv = mHeadContext->Begin(eHTMLTag_head, mHead, 0, -1);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  mContextStack.AppendElement(mCurrentContext);
+  mCurrentContext = mHeadContext;
+
+  return NS_OK;
+}
+
+nsresult
+HTMLContentSink::CloseHeadContext()
+{
+  NS_ASSERTION(mCurrentContext == mHeadContext, "context mismatch!");
+  PRInt32 n = mContextStack.Count() - 1;
+
+  mCurrentContext = (SinkContext*) mContextStack.ElementAt(n);
+  mContextStack.RemoveElementAt(n);
+
+  return NS_OK;
 }
 
 nsresult

@@ -95,6 +95,7 @@ public:
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD CloseTopmostContainer();
+  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
@@ -283,6 +284,11 @@ NS_IMETHODIMP RobotSink::CloseContainer(const nsHTMLTag aTag)
 }
 
 NS_IMETHODIMP RobotSink::CloseTopmostContainer()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP RobotSink::AddHeadContent(const nsIParserNode& aNode)
 {
   return NS_OK;
 }

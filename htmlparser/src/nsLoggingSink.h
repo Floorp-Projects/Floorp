@@ -68,6 +68,7 @@ public:
   NS_IMETHOD SetParser(nsIParser* aParser);
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
+  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
