@@ -154,6 +154,9 @@ nsSVGPathGeometryFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyR
 #ifdef DEBUG
   //printf("nsSVGPathGeometryFrame(%p)::Paint\n", this);
 #endif
+  if (!GetStyleVisibility()->IsVisible())
+    return NS_OK;
+
   GetGeometry()->Render(canvas);
   return NS_OK;
 }
@@ -456,24 +459,28 @@ nsSVGPathGeometryFrame::GetHittestMask(PRUint16 *aHittestMask)
     case NS_STYLE_POINTER_EVENTS_NONE:
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
-      // XXX inspect 'visible' property
-      if (((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mType != eStyleSVGPaintType_None)
-        *aHittestMask |= HITTEST_MASK_FILL;
-      if (((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mType != eStyleSVGPaintType_None)
-        *aHittestMask |= HITTEST_MASK_STROKE;
+      if (GetStyleVisibility()->IsVisible()) {
+        if (((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mType != eStyleSVGPaintType_None)
+          *aHittestMask |= HITTEST_MASK_FILL;
+        if (((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mType != eStyleSVGPaintType_None)
+          *aHittestMask |= HITTEST_MASK_STROKE;
+      }
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
-      // XXX inspect 'visible' property
-      *aHittestMask |= HITTEST_MASK_FILL;
+      if (GetStyleVisibility()->IsVisible()) {
+        *aHittestMask |= HITTEST_MASK_FILL;
+      }
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
-      // XXX inspect 'visible' property
-      *aHittestMask |= HITTEST_MASK_STROKE;
+      if (GetStyleVisibility()->IsVisible()) {
+        *aHittestMask |= HITTEST_MASK_STROKE;
+      }
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLE:
-      // XXX inspect 'visible' property
-      *aHittestMask |= HITTEST_MASK_FILL;
-      *aHittestMask |= HITTEST_MASK_STROKE;
+      if (GetStyleVisibility()->IsVisible()) {
+        *aHittestMask |= HITTEST_MASK_FILL;
+        *aHittestMask |= HITTEST_MASK_STROKE;
+      }
       break;
     case NS_STYLE_POINTER_EVENTS_PAINTED:
       if (((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mType != eStyleSVGPaintType_None)
