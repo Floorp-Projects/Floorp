@@ -2129,7 +2129,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
             // click open the download manager and the items they downloaded will have
             // been removed. 
             alerts->ShowAlertNotification(DOWNLOAD_MANAGER_ALERT_ICON, title, message, !removeWhenDone, 
-                                          NS_LITERAL_STRING("").get(), NS_STATIC_CAST(nsIAlertListener*, mDownloadManager));
+                                          EmptyString().get(), NS_STATIC_CAST(nsIAlertListener*, mDownloadManager));
           }
         }
       }

@@ -521,7 +521,7 @@ nsPasswordManager::FindEntryEnumerator(const nsACString& aKey,
   rv = manager->FindPasswordEntryInternal(aEntry->head,
                                           context->username,
                                           context->password,
-                                          nsString(),
+                                          EmptyString(),
                                           &entry);
 
   if (NS_SUCCEEDED(rv) && entry) {
@@ -552,7 +552,7 @@ nsPasswordManager::FindPasswordEntry(const nsACString& aHostURI,
       nsresult rv = FindPasswordEntryInternal(hashEnt->head,
                                               aUsername,
                                               aPassword,
-                                              nsString(),
+                                              EmptyString(),
                                               &entry);
 
       if (NS_SUCCEEDED(rv) && entry) {
@@ -1713,7 +1713,7 @@ nsPasswordManager::EnsureDecoderRing()
     token->GetNeedsUserInit(&needUserInit);
 
     if (needUserInit)
-      token->InitPassword(NS_LITERAL_STRING("").get());
+      token->InitPassword(EmptyString().get());
   }
 }
 
@@ -1813,7 +1813,7 @@ nsPasswordManager::FillPassword(nsIDOMEvent* aEvent)
     return NS_OK;
 
   SignonDataEntry* foundEntry;
-  FindPasswordEntryInternal(hashEnt->head, userValue, nsString(),
+  FindPasswordEntryInternal(hashEnt->head, userValue, EmptyString(),
                             fieldName, &foundEntry);
 
   if (!foundEntry)

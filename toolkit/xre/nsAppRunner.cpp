@@ -454,7 +454,7 @@ static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
 static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
                            PRInt32 aWidth, PRInt32 aHeight)
 {
-  return OpenWindow(aChromeURL, NS_LITERAL_STRING(""), aWidth, aHeight);
+  return OpenWindow(aChromeURL, EmptyString(), aWidth, aHeight);
 }
 
 static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
