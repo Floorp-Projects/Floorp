@@ -24,6 +24,7 @@ var param = null;
 var defaultAction = msgCompSendFormat.PlainText;
 var recommended_as_default = true;
 var display_recommendation = true;
+var useDefault =false;
 
 var prefs = Components.classes["@mozilla.org/preferences;1"].getService();
 if (prefs) {
@@ -31,6 +32,7 @@ if (prefs) {
   if (prefs) {
     try {
       defaultAction = prefs.GetIntPref("mail.asksendformat.default");
+      useDefault = true;
     } catch (ex) {}
     try {
       recommended_as_default = prefs.GetBoolPref("mail.asksendformat.recommended_as_default");
@@ -87,7 +89,13 @@ function Startup()
       var recommlabels = document.getElementById("hiddenLabels");
       var label;
       var haveRecommendation = false;
-      switch (param.action)
+
+      if (useDefault)
+        var radioSelect=defaultAction;
+      else
+        var radioSelect=param.action;
+
+      switch (radioSelect)
       {
         case msgCompSendFormat.AskUser:
           //haveRecommendation = false;
