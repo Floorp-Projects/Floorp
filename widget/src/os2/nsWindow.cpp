@@ -60,6 +60,8 @@
 #include "nsXPIDLString.h"
 #include "nsIFile.h"
 
+#include "nsOS2Uni.h"
+
 #include <stdlib.h>
 #include <ctype.h>
 
@@ -1522,8 +1524,6 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 {
    if( mToolkit) // called from print-routine (XXX check)
    {
-      const char *fontname = gWidgetModuleData->ConvertFromUcs( aFont.name);
-   
       // jump through hoops to convert the size in the font (in app units)
       // into points. 
       float dev2twip, app2twip;
@@ -1532,18 +1532,27 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
       app2twip *= dev2twip;
    
       int points = NSTwipsToFloorIntPoints( nscoord( aFont.size * app2twip));
-   
-      char *buffer = new char [ strlen( fontname) + 6];
-      sprintf( buffer, "%d.%s", points, fontname);
 
-      BOOL rc = WinSetPresParam( mWnd, PP_FONTNAMESIZE,
-                                 strlen( buffer) + 1, buffer);
-#ifdef DEBUG
-      if( !rc)
-         printf( "WinSetPresParam PP_FONTNAMESIZE %s failed\n", buffer);
-#endif
+      int length = aFont.name.Length() * 2 + 1;
+      char * fontname = new char[length];
+      if (fontname) {
+        int outlen = ::WideCharToMultiByte( 0, 
+                       aFont.name.get(), aFont.name.Length(),
+                       fontname, length);
+        if ( outlen >= 0) {
+          fontname[outlen] = '\0';
+        }
    
-      delete [] buffer;
+        char *buffer = new char [ strlen( fontname) + 6];
+        if (buffer) {
+          sprintf( buffer, "%d.%s", points, fontname);
+   
+          BOOL rc = WinSetPresParam( mWnd, PP_FONTNAMESIZE,
+                                     strlen( buffer) + 1, buffer);
+          delete [] buffer;
+        }
+        delete [] fontname;
+      }
    }
 
    if( !mFont)
@@ -2119,7 +2128,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
       inbuf[1] = '\0';
       outbuf[0] = (UniChar)0;
 
-      gWidgetModuleData->ConvertToUcs( (char *)inbuf, (PRUnichar *)outbuf, 4);
+      MultiByteToWideChar(0, (const char*)inbuf, 2, outbuf, 4);
 
       event.charCode = outbuf[0];
 
@@ -3162,6 +3171,9 @@ PRBool nsWindow::OnHScroll( MPARAM mp1, MPARAM mp2)
     return PR_FALSE;
 }
 
+/* On OS/2, if you pass a titlebar > 512 characters, it doesn't display at all. */
+/* We are going to limit our titlebars to 256 just to be on the safe side */
+#define MAX_TITLEBAR_LENGTH 256
 
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle) 
 {
@@ -3174,12 +3186,24 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
    }
    else if( mWnd)
    {
-      /* On OS/2, if you pass a titlebar > 512 characters, it doesn't display at all. */
-      /* We are going to limit our titlebars to 256 just to be on the safe side */
-      nsAutoString left;
-      aTitle.Left(left, 256);
-      WinSetWindowText( GetMainWindow(),
-                        gWidgetModuleData->ConvertFromUcs(left));
+     int length = aTitle.Length() * 2 + 1;
+     char * title = new char[length];
+     if (title)
+     {
+       int outlen = ::WideCharToMultiByte( 0, 
+                      aTitle.get(), aTitle.Length(),
+                      title, length);
+       if ( outlen >= 0) {
+         if (outlen > MAX_TITLEBAR_LENGTH) {
+           title[MAX_TITLEBAR_LENGTH] = '\0';
+         } else {
+           title[outlen] = '\0';
+         }
+       }
+       WinSetWindowText( GetMainWindow(),
+                        title );
+       delete [] title;
+     }
    }
    return NS_OK;
 } 

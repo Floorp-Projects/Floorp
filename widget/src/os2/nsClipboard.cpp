@@ -31,6 +31,8 @@
 #include "nsXPIDLString.h"
 #include "prmem.h"
 
+#include "nsOS2Uni.h"
+
 #include <unidef.h>     // for UniStrlen
 
 inline ULONG RegisterClipboardFormat(PCSZ pcszFormat)
@@ -130,7 +132,7 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
 
         pTempBuf = nsMemory::Alloc( NumOfBytes + sizeof(UniChar) );
         TempBufAllocated = PR_TRUE;
-        NumOfChars = gWidgetModuleData->ConvertToUcs( NS_STATIC_CAST(char*, pDataMem), NS_STATIC_CAST(PRUnichar*, pTempBuf), NumOfChars + 1 );
+        NumOfChars = MultiByteToWideChar(0, NS_STATIC_CAST(char*, pDataMem), NumOfChars, NS_STATIC_CAST(PRUnichar*, pTempBuf), NumOfChars);
         NumOfBytes = NumOfChars * sizeof(UniChar);
         pDataMem = pTempBuf;
       }
@@ -254,7 +256,7 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
         if (DosAllocSharedMem( NS_REINTERPRET_CAST(PPVOID, &pByteMem), nsnull, NumOfBytes + 1, 
                                PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
         {
-          gWidgetModuleData->ConvertFromUcs( NS_STATIC_CAST(PRUnichar*, pMozData), pByteMem, NumOfBytes + 1 );
+          WideCharToMultiByte(0, NS_STATIC_CAST(PRUnichar*, pMozData), NumOfBytes, pByteMem, NumOfBytes);
           pByteMem [NumOfBytes] = '\0';
 
           WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pByteMem), CF_TEXT, CFI_POINTER );
