@@ -70,6 +70,7 @@
 #include "nsIURI.h"
 #include "nsGUIEvent.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsISupportsPrimitives.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -606,6 +607,7 @@ NS_INTERFACE_MAP_BEGIN(nsHTMLScrollFrame)
 #endif
   NS_INTERFACE_MAP_ENTRY(nsIScrollableFrame)
   NS_INTERFACE_MAP_ENTRY(nsIScrollableViewProvider)
+  NS_INTERFACE_MAP_ENTRY(nsIStatefulFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 //----------nsXULScrollFrame-------------------------------------------
@@ -1119,6 +1121,7 @@ NS_INTERFACE_MAP_BEGIN(nsXULScrollFrame)
 #endif
   NS_INTERFACE_MAP_ENTRY(nsIScrollableFrame)
   NS_INTERFACE_MAP_ENTRY(nsIScrollableViewProvider)
+  NS_INTERFACE_MAP_ENTRY(nsIStatefulFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
@@ -1133,16 +1136,16 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsBoxFrame* aOuter)
     mOnePixel(20),
     mOuter(aOuter),
     mMaxElementWidth(0),
+    mRestoreRect(-1, -1, -1, -1),
+    mLastPos(-1, -1),
     mLastDir(-1),
     mNeverHasVerticalScrollbar(PR_FALSE),
     mNeverHasHorizontalScrollbar(PR_FALSE),
     mHasVerticalScrollbar(PR_FALSE), 
     mHasHorizontalScrollbar(PR_FALSE),
-    mFirstPass(PR_FALSE),
-    mIsRoot(PR_FALSE),
-    mNeverReflowed(PR_TRUE),
     mViewInitiatedScroll(PR_FALSE),
-    mFrameInitiatedScroll(PR_FALSE)
+    mFrameInitiatedScroll(PR_FALSE),
+    mDidHistoryRestore(PR_FALSE)
 {
 }
 
@@ -1208,10 +1211,65 @@ nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
   return result;
 }
 
+  /**
+   * this code is resposible for restoring the scroll position back to some
+   * saved positon. if the user has not moved the scroll position manually
+   * we keep scrolling down until we get to our orignally position. keep in
+   * mind that content could incrementally be coming in. we only want to stop
+   * when we reach our new position.
+   */
 void
 nsGfxScrollFrameInner::ScrollToRestoredPosition()
 {
-  NS_STATIC_CAST(nsScrollBoxFrame*, mScrollAreaBox)->ScrollToRestoredPosition();
+  nsIScrollableView* scrollingView = GetScrollableView();
+  if (!scrollingView) {
+    return;
+  }
+  if (mRestoreRect.y == -1 || mLastPos.x == -1 || mLastPos.y == -1) {
+    return;
+  }
+  // make sure our scroll position did not change for where we last put
+  // it. if it does then the user must have moved it, and we no longer
+  // need to restore.
+  nscoord x = 0;
+  nscoord y = 0;
+  scrollingView->GetScrollPosition(x, y);
+
+  // if we didn't move, we still need to restore
+  if (x == mLastPos.x && y == mLastPos.y) {
+    nsRect childRect(0, 0, 0, 0);
+    nsIView* child = nsnull;
+    nsresult rv = scrollingView->GetScrolledView(child);
+    if (NS_SUCCEEDED(rv) && child)
+      childRect = child->GetBounds();
+
+    PRInt32 cx, cy, x, y;
+    scrollingView->GetScrollPosition(cx,cy);
+
+    x = (int)
+      (((float)childRect.width / mRestoreRect.width) * mRestoreRect.x);
+    y = (int)
+      (((float)childRect.height / mRestoreRect.height) * mRestoreRect.y);
+
+    // if our position is greater than the scroll position, scroll.
+    // remember that we could be incrementally loading so we may enter
+    // and scroll many times.
+    if (y > cy || x > cx) {
+      scrollingView->ScrollTo(x, y, 0);
+      // scrollpostion goes from twips to pixels. this fixes any roundoff
+      // problems.
+      scrollingView->GetScrollPosition(mLastPos.x, mLastPos.y);
+    } else {
+      // if we reached the position then stop
+      mRestoreRect.y = -1;
+      mLastPos.x = -1;
+      mLastPos.y = -1;
+    }
+  } else {
+    // user moved the position, so we won't need to restore
+    mLastPos.x = -1;
+    mLastPos.y = -1;
+  }
 }
 
 void
@@ -2032,6 +2090,8 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
     }
   }
   
+  ScrollToRestoredPosition();
+
   return NS_OK;
 }
 
@@ -2134,4 +2194,112 @@ nsGfxScrollFrameInner::GetIntegerAttribute(nsIBox* aBox, nsIAtom* atom, PRInt32 
     }
 
     return defaultValue;
+}
+
+already_AddRefed<nsIPresState>
+nsGfxScrollFrameInner::SaveState()
+{
+  nsCOMPtr<nsIScrollbarMediator> mediator;
+  nsIFrame* first = GetScrolledFrame();
+  mediator = do_QueryInterface(first);
+  if (mediator) {
+    // Child manages its own scrolling. Bail.
+    return nsnull;
+  }
+
+  nsIScrollableView* scrollingView = GetScrollableView();
+  PRInt32 x,y;
+  scrollingView->GetScrollPosition(x,y);
+  // Don't save scroll position if we are at (0,0)
+  if (!x && !y) {
+    return nsnull;
+  }
+
+  nsIView* child = nsnull;
+  scrollingView->GetScrolledView(child);
+  if (!child) {
+    return nsnull;
+  }
+
+  nsRect childRect = child->GetBounds();
+  nsCOMPtr<nsIPresState> state;
+  nsresult rv = NS_NewPresState(getter_AddRefs(state));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsCOMPtr<nsISupportsPRInt32> xoffset;
+  nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
+    nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(xoffset));
+  if (xoffset) {
+    rv = xoffset->SetData(x);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+    state->SetStatePropertyAsSupports(NS_LITERAL_STRING("x-offset"), xoffset);
+  }
+
+  nsCOMPtr<nsISupportsPRInt32> yoffset;
+  nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
+    nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(yoffset));
+  if (yoffset) {
+    rv = yoffset->SetData(y);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+    state->SetStatePropertyAsSupports(NS_LITERAL_STRING("y-offset"), yoffset);
+  }
+
+  nsCOMPtr<nsISupportsPRInt32> width;
+  nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
+    nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(width));
+  if (width) {
+    rv = width->SetData(childRect.width);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+    state->SetStatePropertyAsSupports(NS_LITERAL_STRING("width"), width);
+  }
+
+  nsCOMPtr<nsISupportsPRInt32> height;
+  nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
+    nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(height));
+  if (height) {
+    rv = height->SetData(childRect.height);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+    state->SetStatePropertyAsSupports(NS_LITERAL_STRING("height"), height);
+  }
+  nsIPresState* result = state;
+  NS_ADDREF(result);
+  return result;
+}
+
+void
+nsGfxScrollFrameInner::RestoreState(nsIPresState* aState)
+{
+  nsCOMPtr<nsISupportsPRInt32> xoffset;
+  nsCOMPtr<nsISupportsPRInt32> yoffset;
+  nsCOMPtr<nsISupportsPRInt32> width;
+  nsCOMPtr<nsISupportsPRInt32> height;
+  aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("x-offset"), getter_AddRefs(xoffset));
+  aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("y-offset"), getter_AddRefs(yoffset));
+  aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("width"), getter_AddRefs(width));
+  aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("height"), getter_AddRefs(height));
+
+  if (xoffset && yoffset) {
+    PRInt32 x,y,w,h;
+    nsresult rv = xoffset->GetData(&x);
+    if (NS_SUCCEEDED(rv))
+      rv = yoffset->GetData(&y);
+    if (NS_SUCCEEDED(rv))
+      rv = width->GetData(&w);
+    if (NS_SUCCEEDED(rv))
+      rv = height->GetData(&h);
+
+    mLastPos.x = -1;
+    mLastPos.y = -1;
+    mRestoreRect.SetRect(-1, -1, -1, -1);
+
+    // don't do it now, store it later and do it in layout.
+    if (NS_SUCCEEDED(rv)) {
+      mRestoreRect.SetRect(x, y, w, h);
+      nsIScrollableView* scrollingView = GetScrollableView();
+      if (scrollingView) {
+        scrollingView->GetScrollPosition(mLastPos.x, mLastPos.y);
+        mDidHistoryRestore = PR_TRUE;
+      }
+    }
+  }
 }

@@ -42,6 +42,8 @@
 #include "nsBoxFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollPositionListener.h"
+#include "nsIPresState.h"
+#include "nsIStatefulFrame.h"
 
 class nsISupportsArray;
 class nsIScrollableView;
@@ -110,6 +112,9 @@ public:
 
   void ScrollToRestoredPosition();
 
+  already_AddRefed<nsIPresState> SaveState();
+  void RestoreState(nsIPresState* aState);
+
   nsIFrame* GetScrolledFrame() const {
     nsIBox* childBox;
     nsIFrame* frame;
@@ -136,6 +141,9 @@ public:
   nsBoxFrame* mOuter;
   nscoord mMaxElementWidth;
 
+  nsRect mRestoreRect;
+  nsPoint mLastPos;
+
   // The last dir value we saw in AddHorizontalScrollbar.  Use PRInt16
   // so we can fit all the possible values of a PRUint8 and have a -1
   // value that indicates "not set")
@@ -146,11 +154,9 @@ public:
 
   PRPackedBool mHasVerticalScrollbar;
   PRPackedBool mHasHorizontalScrollbar;
-  PRPackedBool mFirstPass;
-  PRPackedBool mIsRoot;
-  PRPackedBool mNeverReflowed;
   PRPackedBool mViewInitiatedScroll;
   PRPackedBool mFrameInitiatedScroll;
+  PRPackedBool mDidHistoryRestore;
 };
 
 /**
@@ -164,7 +170,8 @@ public:
  */
 class nsHTMLScrollFrame : public nsBoxFrame,
                           public nsIScrollableFrame,
-                          public nsIAnonymousContentCreator {
+                          public nsIAnonymousContentCreator,
+                          public nsIStatefulFrame {
 public:
   friend nsresult NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
                                         PRBool aIsRoot);
@@ -248,6 +255,18 @@ public:
 
   virtual void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType);
 
+  // nsIStatefulFrame
+  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState) {
+    NS_ENSURE_ARG_POINTER(aState);
+    *aState = mInner.SaveState().get();
+    return NS_OK;
+  }
+  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState) {
+    NS_ENSURE_ARG_POINTER(aState);
+    mInner.RestoreState(aState);
+    return NS_OK;
+  }
+
   virtual void ScrollToRestoredPosition() {
     mInner.ScrollToRestoredPosition();
   }
@@ -268,6 +287,8 @@ public:
 #endif
 
   virtual nsresult GetContentOf(nsIContent** aContent);
+
+  PRBool DidHistoryRestore() { return mInner.mDidHistoryRestore; }
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -293,7 +314,8 @@ private:
  */
 class nsXULScrollFrame : public nsBoxFrame,
                          public nsIScrollableFrame,
-                         public nsIAnonymousContentCreator {
+                         public nsIAnonymousContentCreator,
+                         public nsIStatefulFrame {
 public:
   friend nsresult NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
                                        PRBool aIsRoot);
@@ -376,6 +398,18 @@ public:
   virtual nsIBox* GetScrollbarBox(PRBool aVertical);
 
   virtual void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType);
+
+  // nsIStatefulFrame
+  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState) {
+    NS_ENSURE_ARG_POINTER(aState);
+    *aState = mInner.SaveState().get();
+    return NS_OK;
+  }
+  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState) {
+    NS_ENSURE_ARG_POINTER(aState);
+    mInner.RestoreState(aState);
+    return NS_OK;
+  }
 
   virtual void ScrollToRestoredPosition() {
     mInner.ScrollToRestoredPosition();

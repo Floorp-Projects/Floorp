@@ -52,7 +52,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
-#include "nsIStatefulFrame.h"
 #include "nsIDOMEventListener.h"
 #include "nsIPresState.h"
 #include "nsIContent.h"
@@ -77,7 +76,6 @@ class nsListEventListener;
 class nsListControlFrame : public nsHTMLScrollFrame,
                            public nsIFormControlFrame, 
                            public nsIListControlFrame,
-                           public nsIStatefulFrame,
                            public nsISelectControlFrame
 {
 public:
@@ -190,10 +188,6 @@ public:
   NS_IMETHOD GetDummyFrame(nsIFrame** aFrame);
   NS_IMETHOD SetDummyFrame(nsIFrame* aFrame);
 
-  //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState);
-
   // mouse event listeners
   nsresult MouseDown(nsIDOMEvent* aMouseEvent);
   nsresult MouseUp(nsIDOMEvent* aMouseEvent);
@@ -231,7 +225,7 @@ protected:
   PRBool     IsClickingInCombobox(nsIDOMEvent* aMouseEvent);
   void       AdjustIndexForDisabledOpt(PRInt32 aStartIndex, PRInt32 &anNewIndex,
                                        PRInt32 aNumOptions, PRInt32 aDoAdjustInc, PRInt32 aDoAdjustIncNext);
-  virtual void ResetList();
+  virtual void ResetList(PRBool aAllowScrolling);
 
   nsListControlFrame(nsIPresShell* aShell, nsIDocument* aDocument);
   virtual ~nsListControlFrame();
@@ -282,6 +276,7 @@ protected:
   PRPackedBool mIsAllFramesHere;
   PRPackedBool mHasBeenInitialized;
   PRPackedBool mNeedToReset;
+  PRPackedBool mPostChildrenLoadedReset;
 
   PRPackedBool mOverrideReflowOpt;
 
