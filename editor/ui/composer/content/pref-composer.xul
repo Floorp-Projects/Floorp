@@ -59,7 +59,9 @@
   <groupbox>
     <caption label="&recentFiles.title;"/>
     <hbox align="center">
-      <label value="&documentsInMenu;" accesskey="&documentsInMenu.accesskey;" control="recentFiles"/>
+      <label value = "&documentsInMenu.label;"
+        accesskey  = "&documentsInMenu.accesskey;"
+        control    = "recentFiles"/>
       <textbox
         id="recentFiles"
         name="recent string" 
@@ -76,27 +78,19 @@
   <groupbox>
     <caption label="&savingFiles.title;"/>
     <spacer class="spacer"/>
-    <radiogroup
-      id            = "preserveFormatting"
-      preftype      = "bool"
-      prefstring    = "editor.prettyprint">
-      <radio 
-        value       = "false"
-        label      = "&preserveExistingFormatting;" 
-        accesskey  = "&preserveExistingFormatting.accesskey;"
-        tooltiptext= "&preserveExistingFormatting.tooltip;"
-      />
-      <radio 
-        value       = "true"
-        label      = "&reformat.label;" 
-        accesskey  = "&reformat.accesskey;"
-        tooltiptext= "&reformat.tooltip;"
-      />
-    </radiogroup>
-    <separator class="thin"/>
+    <checkbox
+      label       = "&preserveExisting.label;"
+      id          = "preserveFormatting"
+      accesskey   = "&preserveExisting.accesskey;"
+      tooltiptext = "&preserveExisting.tooltip;"
+      preftype    = "bool"
+      prefstring  = "editor.prettyprint"
+      reversed    = "true"
+    />
     <checkbox 
       label      = "&saveAssociatedFiles.label;"
       id         = "saveAssociatedFiles"
+      accesskey  = "&saveAssociatedFiles.accesskey;"
       preftype   = "bool" 
       prefindex  = "0" 
       prefstring = "editor.save_associated_files"
@@ -104,6 +98,7 @@
     <checkbox 
       label      = "&showPublishDialog.label;"
       id         = "showPublishDialog"
+      accesskey  = "&showPublishDialog.accesskey;"
       preftype   = "bool" 
       prefindex  = "0" 
       prefstring = "editor.always_show_publish_dialog"
@@ -111,15 +106,26 @@
   </groupbox>
   
   <groupbox align="start">
-    <caption label="&tableEditing.label;"/>
+    <caption label = "&composerEditing.label;"/>
     <checkbox 
-      label     = "&maintainTableStructure.label;"
-      id        = "maintainTableStructure" 
-      accesskey = "&maintainStructure.accesskey;"
-      tooltiptext="&maintainTableStructure.tooltip;"
-      prefstring= "editor.table.maintain_structure"
+      label       = "&maintainStructure.label;"
+      id          = "maintainTableStructure" 
+      accesskey   = "&maintainStructure.accesskey;"
+      tooltiptext = "&maintainStructure.tooltip;"
+      prefstring  = "editor.table.maintain_structure"
     />
-    <separator class = "thin"/>
+    <checkbox
+      label      = "&useCSS.label;"
+      id         = "useCSS"
+      accesskey  = "&useCSS.accesskey;"
+      prefstring = "editor.use_css"
+    />
+    <checkbox
+      label      = "&crInPCreatesNewP.label;"
+      id         = "crInPCreatesNewP"
+      accesskey  = "&crInPCreatesNewP.accesskey;"
+      prefstring = "editor.CR_creates_new_p"
+      />
   </groupbox>
 
 <!-- Take out Auto-Save; not supported at this time
@@ -184,21 +190,4 @@
 
   </groupbox>
   -->
-  <groupbox>
-    <caption label="&cssEditing.label;"/>
-    <checkbox
-      label      = "&useCSS.label;"
-      id         = "useCSS"
-      prefstring = "editor.use_css"
-    />
-  </groupbox>
-
-  <groupbox>
-    <caption label="&carriageReturns.label;"/>
-    <checkbox
-      label      = "&crInPCreatesNewP.label;"
-      id         = "crInPCreatesNewP"
-      prefstring = "editor.CR_creates_new_p"
-      />
-  </groupbox>
 </page>
