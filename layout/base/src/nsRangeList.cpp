@@ -1370,7 +1370,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         if (FetchFocusNode() != aParentNode || FetchFocusOffset() != aOffset ){//if collapsed diff dont do anything
           //select from a to 2
           res |= difRange->SetEnd(aParentNode, aOffset);
-          res = difRange->SetStart(FetchFocusNode(), FetchFocusOffset());
+          res = difRange->SetStart(FetchAnchorNode(), FetchAnchorOffset());
           if (NS_FAILED(res))
             return res;
           selectFrames(difRange , PR_TRUE);
@@ -1384,7 +1384,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
           if (NS_FAILED(res))
             return res;
           selectFrames(difRange , PR_FALSE);
-          difRange->SetEnd(aParentNode,aOffset);
+          difRange->SetStart(aParentNode,aOffset);
           selectFrames(difRange, PR_TRUE);//must reselect last node
         }
       }
@@ -1398,9 +1398,9 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
           selectFrames(difRange, 0);
         }
         if (FetchAnchorNode() != aParentNode || FetchAnchorOffset() != aOffset ){//if collapsed diff dont do anything
-          //select from a to 2
-          res |= difRange->SetEnd(aParentNode, aOffset);
-          res = difRange->SetStart(FetchAnchorNode(), FetchAnchorOffset());
+          //select from 2 to a
+          res |= difRange->SetEnd(FetchAnchorNode(), FetchAnchorOffset());
+          res = difRange->SetStart(aParentNode, aOffset);
           if (NS_FAILED(res))
             return res;
           selectFrames(difRange , PR_TRUE);
