@@ -102,7 +102,7 @@
             </bindings>
             <action>
               <box uri="?panel" class="box-texttab texttab-sidebar"
-                oncommand="SidebarSelectPanel(this,false,false)" align="left" 
+                onclick="SidebarSelectPanel(this,false,false)" align="left" 
                 hidden="true" value="?title" exclude="?exclude" />
               <box uri="?panel" flex='1*' hidden="true" orient="vertical"
                 loadstate="never loaded">
