@@ -3419,7 +3419,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
               PRInt32 millis;
               if (urlLoc > 1) {
                   nsString2 seconds;
-                  result.Left(seconds, urlLoc-2);
+                  result.Left(seconds, urlLoc-1);
                   millis = seconds.ToInteger(&loc) * 1000;
               } else {
                   millis = result.ToInteger(&loc) * 1000;
