@@ -45,6 +45,7 @@ nsMsgSearchSession::nsMsgSearchSession()
 	m_handlingError = PR_FALSE;
 	m_pSearchParam = nsnull;
   m_searchPaused = PR_FALSE;
+  NS_NewISupportsArray(getter_AddRefs(m_termList));
 
 }
 
@@ -81,10 +82,12 @@ nsMsgSearchSession::AppendTerm(nsIMsgSearchTerm *aTerm)
 }
 
 NS_IMETHODIMP
-nsMsgSearchSession::AddSearchTermArray(nsISupportsArray *searchTerms)
+nsMsgSearchSession::GetSearchTerms(nsISupportsArray **aResult)
 {
-  m_termList = searchTerms;
-  return NS_OK;
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = m_termList;
+    NS_ADDREF(*aResult);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -594,7 +597,7 @@ void nsMsgSearchSession::DestroyScopeList()
 
 void nsMsgSearchSession::DestroyTermList ()
 {
-  m_termList = nsnull; // don't really need this now that caller owns term list.
+    m_termList->Clear();
 }
 
 nsMsgSearchScopeTerm *nsMsgSearchSession::GetRunningScope()

@@ -45,29 +45,29 @@ interface nsIMsgSearchSession :  nsISupports {
                        in boolean BooleanAND, /* set to true if associated boolean operator is AND */
                        in string arbitraryHeader); /* user defined arbitrary header. ignored unless attrib = attribOtherHeader */
 
-	void AddSearchTermArray (in nsISupportsArray searchTerms);
+    readonly attribute nsISupportsArray searchTerms;
 
 	nsIMsgSearchTerm createTerm ();
     void appendTerm(in nsIMsgSearchTerm term);
 
-	void RegisterListener (in nsIMsgSearchNotify listener);
-	void UnregisterListener (in nsIMsgSearchNotify listener);
+	void registerListener (in nsIMsgSearchNotify listener);
+	void unregisterListener (in nsIMsgSearchNotify listener);
 
     readonly attribute unsigned long numSearchTerms;
 
 	readonly attribute nsIMsgSearchAdapter runningAdapter;
 
-    void GetNthSearchTerm(in long whichTerm,
+    void getNthSearchTerm(in long whichTerm,
                           in nsMsgSearchAttribValue attrib,
                           in nsMsgSearchOpValue op,
                           in nsIMsgSearchValue value); // wrong, should be out
 
-    long CountSearchScopes();
+    long countSearchScopes();
 
-    void GetNthSearchScope(in long which,out nsMsgSearchScopeValue scopeId, out nsIMsgFolder folder);
+    void getNthSearchScope(in long which,out nsMsgSearchScopeValue scopeId, out nsIMsgFolder folder);
 
 	/* add a scope (e.g. a mail folder) to the search */
-    void AddScopeTerm(in nsMsgSearchScopeValue attrib,
+    void addScopeTerm(in nsMsgSearchScopeValue attrib,
                       in nsIMsgFolder folder);
 
     /* special cases for LDAP since LDAP isn't really a folderInfo */
@@ -88,16 +88,16 @@ interface nsIMsgSearchSession :  nsISupports {
     /* add all scopes of a given type to the search */
     void AddAllScopes(in nsMsgSearchScopeValue attrib);
     
-    void Search(in nsIMsgWindow aWindow);
-    void InterruptSearch();
+    void search(in nsIMsgWindow aWindow);
+    void interruptSearch();
 
 	// these two methods are used when the search session is using
 	// a timer to do local search, and the search adapter needs
 	// to run a url (e.g., to reparse a local folder) and wants to
 	// pause the timer while running the url. This will fail if the
 	// current adapter is not using a timer.
-    void PauseSearch();
-	void ResumeSearch();
+    void pauseSearch();
+	void resumeSearch();
 
     [noscript] readonly attribute voidPtr searchParam;
     readonly attribute nsMsgSearchType searchType;
@@ -107,7 +107,7 @@ interface nsIMsgSearchSession :  nsISupports {
 
 	[noscript] void AddResultElement(in nsMsgResultElement element);
 
-	void AddSearchHit(in nsIMsgDBHdr header, in nsIMsgFolder folder);
+	void addSearchHit(in nsIMsgDBHdr header, in nsIMsgFolder folder);
 
     readonly attribute long numResults;
 	attribute nsIMsgWindow window;
