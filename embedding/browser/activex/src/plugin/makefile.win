@@ -1,0 +1,163 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+!if "$(MSSDK)" == ""
+!message This module requires the MS Platform SDK to be installed.
+!else
+
+DLLNAME = npax
+QUIET =
+DEPTH =..\..\..
+
+
+# The default is to include control support unless told to do otherwise
+!ifndef MOZ_ACTIVEX_NO_CONTROL_SUPPORT
+MOZ_ACTIVEX_CONTROL_SUPPORT = 1
+!endif
+
+!ifndef MOZ_ACTIVEX_NO_PLUGIN_SUPPORT
+# MOZ_ACTIVEX_PLUGIN_SUPPORT = 1
+!endif
+
+
+MAKE_OBJ_TYPE = DLL
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+RESFILE = MozillaControl.res
+DEFFILE = npmozctl.def
+
+OBJS =                                 \
+	.\$(OBJDIR)\StdAfx.obj             \
+	.\$(OBJDIR)\ControlSite.obj        \
+	.\$(OBJDIR)\ControlSiteIPFrame.obj \
+	.\$(OBJDIR)\ItemContainer.obj      \
+	.\$(OBJDIR)\PropertyBag.obj        \
+	.\$(OBJDIR)\MozillaControl.obj     \
+#	.\$(OBJDIR)\ActiveXPlugin.obj      \
+#	.\$(OBJDIR)\ActiveXPluginInstance.obj \
+	.\$(OBJDIR)\ActiveScriptSite.obj   \
+	.\$(OBJDIR)\LegacyPlugin.obj       \
+	.\$(OBJDIR)\npwin.obj              \
+	$(NULL)
+
+# most of these have to be here for nsSetupRegistry.cpp...
+
+LINCS=  \
+!ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+  -I$(MOZ_PLUGINSDK)\include \
+!endif
+  -I$(PUBLIC)\raptor \
+  -I$(PUBLIC)\xpcom \
+  -I$(PUBLIC)\dom \
+  -I$(PUBLIC)\js \
+  -I$(PUBLIC)\netlib \
+  -I$(PUBLIC)\java \
+  -I$(PUBLIC)\plugin \
+  -I$(PUBLIC)\caps \
+  -I$(PUBLIC)\oji \
+  -I$(PUBLIC)\editor \
+  -I$(PUBLIC)\uconv \
+  -I$(PUBLIC)\intl \
+  -I$(PUBLIC)\locale \
+  -I$(PUBLIC)\lwbrk \
+  -I$(PUBLIC)\unicharutil \
+  -I$(PUBLIC)\pref \
+  -I$(PUBLIC)\wallet \
+  -I$(PUBLIC)\rdf \
+  -I$(PUBLIC)\profile \
+  $(NULL) 
+
+LLIBS=                         \
+!ifdef MOZ_ACTIVEX_CONTROL_SUPPORT
+ $(DIST)\lib\gkgfxwin.lib   \
+ $(DIST)\lib\gkweb.lib      \
+ $(DIST)\lib\xpcom.lib        \
+ $(LIBNSPR)                     \
+!endif
+ $(NULL)
+
+WIN_LIBS = \
+ comdlg32.lib                   \
+ ole32.lib                      \
+ oleaut32.lib                   \
+ uuid.lib                       \
+ shell32.lib                    \
+ $(NULL)
+
+
+LCFLAGS = /D "WIN32" /GX /FR /U "ClientWallet"
+LLFLAGS = -SUBSYSTEM:windows /DLL
+
+include <$(DEPTH)\config\rules.mak>
+
+!ifdef MOZ_NO_DEBUG_RTL
+LCFLAGS = $(LCFLAGS) -DMOZ_NO_DEBUG_RTL
+!endif
+
+!ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_PLUGIN_SUPPORT
+!endif
+
+!ifdef MOZ_ACTIVEX_CONTROL_SUPPORT
+LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_CONTROL_SUPPORT
+!endif
+
+install:: $(DLL)
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
+	$(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
+	regsvr32 /s /c $(DIST)\bin\$(DLLNAME).dll
+
+$(DEFFILE) : mkctldef.bat
+	mkctldef.bat $(DEFFILE)
+
+MozillaControl_i.c MozillaControl.h: MozillaControl.idl
+	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c MozillaControl.idl
+
+ActiveScriptSite.cpp: StdAfx.h ActiveScriptSite.h
+
+LegacyPlugin.cpp \
+ActiveXPlugin.cpp \
+ActiveXPluginInstance.cpp: StdAfx.h ActiveXPlugin.h ActiveXPluginInstance.h
+
+npwin.cpp: $(MOZ_PLUGINSDK)/common/npwin.cpp
+	-cp -f $(MOZ_PLUGINSDK)/common/npwin.cpp .
+
+ControlSite.cpp \
+ControlSiteIPFrame.cpp \
+PropertyBag.cpp : StdAfx.h PropertyBag.h ControlSite.h ControlSiteIPFrame.h
+
+ItemContainer.cpp : StdAfx.h ItemContainer.h
+
+guids.cpp: StdAfx.h guids.h
+
+control_and_plugin:
+	nmake /f makefile.win MOZ_ACTIVEX_PLUGIN_SUPPORT=1 MOZ_ACTIVEX_CONTROL_SUPPORT=1
+
+plugin_only::
+	nmake /f makefile.win MOZ_ACTIVEX_PLUGIN_SUPPORT=1 MOZ_ACTIVEX_NO_CONTROL_SUPPORT=1
+
+control_only::
+	nmake /f makefile.win MOZ_ACTIVEX_CONTROL_SUPPORT=1 MOZ_ACTIVEX_NO_PLUGIN_SUPPORT=1
+
+clobber::
+	-regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
+	-del $(DEFFILE)
+
+!endif

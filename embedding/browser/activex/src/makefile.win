@@ -1,0 +1,7 @@
+#!nmake
+
+DEPTH=..\..\..\..
+
+DIRS=control 
+
+include <$(DEPTH)\config\rules.mak>
