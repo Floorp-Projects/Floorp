@@ -25,4 +25,12 @@
 void ToLowerCase( nsAString& );
 void ToUpperCase( nsAString& );
 
-PRBool CaseInsensitiveFindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
+PRBool CaseInsensitiveFindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator& );
+
+class nsCaseInsensitiveStringComparator
+    : public nsStringComparator
+  {
+    public:
+      virtual int operator()( const PRUnichar*, const PRUnichar*, PRUint32 aLength ) const;
+  };
+
