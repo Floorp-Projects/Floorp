@@ -39,6 +39,7 @@ CPPSRCS= \
 	nsFileLocations.cpp     \
 	nsDefaultHelper.cpp \
 	nsNetSupportDialog.cpp \
+	nsWindowMediator.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
