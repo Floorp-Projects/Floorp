@@ -258,7 +258,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
             ((httpEquivValue[0]=='\"') &&
              (httpEquivValue[lastIdx]=='\"'))) && 
            (0==nsCRT::strncasecmp(httpEquivValue+1,
-                      contenttype.GetUnicode(),
+                      contenttype.get(),
                       contenttype.Length()))
           )) &&
          ((0==nsCRT::strcasecmp(contentValue,texthtml.get())) ||
