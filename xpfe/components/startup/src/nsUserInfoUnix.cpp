@@ -27,7 +27,10 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/utsname.h>
+
 #include "nsString.h"
+#include "nsXPIDLString.h"
 
 nsUserInfo::nsUserInfo()
 {
@@ -45,12 +48,14 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
 {
     struct passwd *pw = nsnull;
 
-    pw = getpwuid (geteuid ());
+    pw = getpwuid (geteuid());
+
+    // do I need to free pw? 
 
     if (!pw || !pw->pw_gecos) return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_sspitzer
-    printf("name = %s\n", pw->pw_gecos);
+    printf("fullname = %s\n", pw->pw_gecos);
 #endif
 
     nsAutoString fullname(pw->pw_gecos);
@@ -63,18 +68,65 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GetEmailAddress(char * *aEmailAddress)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP GetUsername(char * *aUsername)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    struct passwd *pw = nsnull;
+
+    pw = getpwuid(geteuid());
+
+    // do I need to free pw? 
+
+    if (!pw || !pw->pw_name) return NS_ERROR_FAILURE;
+
+#ifdef DEBUG_sspitzer
+    printf("username = %s\n", pw->pw_name);
+#endif
+
+    *aUsername = nsCRT::strdup(pw->pw_name);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP GetDomain(char * *aDomain)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    struct utsname buf;
+    
+    if (uname(&buf)) { 
+        return NS_ERROR_FAILURE; 
+    }
+    
+    *aDomain = nsCRT::strdup(buf.__domainname);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP GetEmailAddress(char * *aEmailAddress)
+{
+    // use username + "@" + domain for the email address
+
+    nsresult rv;
+
+    nsCAutoString emailAddress;
+    nsXPIDLCString username;
+    nsXPIDLCString domain;
+
+    rv = GetUsername(getter_Copies(username));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = GetDomain(getter_Copies(domain));
+    if (NS_FAILED(rv)) return rv;
+
+    if ((const char *)username && (const char*)domain && nsCRT::strlen((const char *)username) && nsCRT::strlen((const char *)domain)) {
+        emailAddress = (const char *)username;
+        emailAddress += "@";
+        emailAddress += (const char *)domain;
+    }
+    else {
+        return NS_ERROR_FAILURE;
+    }
+
+    *aEmailAddress = nsCRT::strdup((const char *)emailAddress);
+    
+    return NS_OK;
 }
 
