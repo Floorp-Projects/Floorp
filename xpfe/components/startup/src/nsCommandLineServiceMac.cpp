@@ -60,8 +60,10 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include <EPPC.h>
 
 // PowerPlant
+#ifdef MOZ_POWERPLANT
 #include <UAppleEventsMgr.h>
 #include <UExtractFromAEDesc.h>
+#endif // MOZ_POWERPLANT
 
 #include "nsAppShellCIDs.h"
 static NS_DEFINE_IID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
@@ -284,8 +286,10 @@ nsAppleEventHandler::nsAppleEventHandler()
         // We must not throw out of here.
         try
         {
+#ifdef MOZ_POWERPLANT
                 UAppleEventsMgr::InstallAEHandlers(
                         NewAEEventHandlerProc(nsAppleEventHandler::AppleEventHandler));
+#endif
         }
         catch(...)
         {
@@ -312,9 +316,11 @@ pascal OSErr nsAppleEventHandler::AppleEventHandler(
         // We must not throw out of here.
         try
         {
+#ifdef MOZ_POWERPLANT
                 StAEDescriptor resultDesc;
                 err = sAppleEventHandler->HandleAppleEvent(
                                 *inAppleEvent, *outAEReply, resultDesc, inRefCon);
+#endif
         }
         catch(...)
         {
@@ -338,6 +344,7 @@ OSErr nsAppleEventHandler::HandleAppleEvent(
 //      Out: Event Handled by CAppleEvent
 //----------------------------------------------------------------------------------------
 {
+#ifdef MOZ_POWERPLANT
         OSErr err = errAEEventNotHandled;
         switch (inAENumber)
         {
@@ -404,6 +411,7 @@ OSErr nsAppleEventHandler::HandleAppleEvent(
                         //CFrontApp::sApplication->LDocApplication::HandleAppleEvent( inAppleEvent, outAEReply, outResult, inAENumber );
                         break;
         }
+#endif
         return noErr;
 } // nsAppleEventHandler::HandleAppleEvent
 
@@ -443,10 +451,12 @@ OSErr nsAppleEventHandler::HandleAEOpenOrPrintDoc(
                 CInfoPBRec info;
                 nsspec.GetCatInfo(info);
                 OSType fileType = info.hFileInfo.ioFlFndrInfo.fdType;
+#ifdef MOZ_POWERPLANT
                 if (inAENumber == ae_OpenDoc)
                         err = HandleOpen1Doc(spec, fileType);
                 else
                         err = HandlePrint1Doc(spec, fileType);
+#endif
         }
 Clean:
         ::AEDisposeDesc(&docList);
@@ -977,6 +987,7 @@ void MoreExtractFromAEDesc::GetCString(const AppleEvent &inAppleEvent,
 //----------------------------------------------------------------------------------------
 {
         s = nil;
+#ifdef MOZ_POWERPLANT
         StAEDescriptor desc;
         OSErr err = ::AEGetParamDesc(&inAppleEvent,keyword,typeWildCard,&desc.mDesc);
         
@@ -987,6 +998,7 @@ void MoreExtractFromAEDesc::GetCString(const AppleEvent &inAppleEvent,
                         return;
         }
         TheCString(desc, s);
+#endif
 }
 
 //----------------------------------------------------------------------------------------
@@ -1025,7 +1037,7 @@ void MoreExtractFromAEDesc::TheCString(const AEDesc &inDesc, char * & outPtr)
                         return;
         }
         
-        Int32 strLength = GetHandleSize(dataH);
+        PRInt32 strLength = GetHandleSize(dataH);
         outPtr = (char *)PR_MALLOC(strLength+1);        // +1 for nsnull ending
         if (!outPtr)
                 return;
@@ -1051,11 +1063,13 @@ void MoreExtractFromAEDesc::MakeErrorReturn(
 //      Out: keyErrorNum and keyErrorSting AEDescs are added to the Event.
 //----------------------------------------------------------------------------------------
 {
+#ifdef MOZ_POWERPLANT
         StAEDescriptor  errorNum(errorCode);
         StAEDescriptor  errorText((ConstStringPtr)errorString);
         // We can ignore the errors. If error occurs, it only means that the reply is not handled
         OSErr err = ::AEPutParamDesc(&event, keyErrorNumber, &errorNum.mDesc);
         err = ::AEPutParamDesc(&event, keyErrorString, &errorText.mDesc);       
+#endif
 }
 
 //----------------------------------------------------------------------------------------
@@ -1108,9 +1122,9 @@ ProcessSerialNumber     MoreExtractFromAEDesc::ExtractAESender(const AppleEvent 
 
         OSErr err = AEGetAttributePtr(&inAppleEvent, keyAddressAttr, typeTargetID, &realType, 
                                                                         &target, sizeof(target), &realSize);
-        ThrowIfOSErr_(err);
+        // ThrowIfOSErr_(err);
         err = ::GetProcessSerialNumberFromPortName(&target.name,&psn);
-        ThrowIfOSErr_(err);
+        // ThrowIfOSErr_(err);
         return psn;
 }
 
@@ -1120,7 +1134,7 @@ void MoreExtractFromAEDesc::DispatchURLDirectly(const AppleEvent &inAppleEvent)
 {
         char *url = nsnull;
         MoreExtractFromAEDesc::GetCString(inAppleEvent, keyDirectObject, url);
-        ThrowIfNil_(url);
+        // ThrowIfNil_(url);
         NS_NOTYETIMPLEMENTED("Write Me");
 #if 0
         URL_Struct * request = NET_CreateURLStruct(url, NET_DONT_RELOAD);
