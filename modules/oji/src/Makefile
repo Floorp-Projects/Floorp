@@ -4,7 +4,7 @@
 #//
 #//------------------------------------------------------------------------
 
-NS_DEPTH        = ../../..
+DEPTH        = ../../..
 
 MODULE		= oji
 
@@ -20,5 +20,5 @@ endif # MOZ_OJI
 
 EXPORTS         = nsjvm.h jvmmgr.h nsscd.h
 
-include $(NS_DEPTH)/config/rules.mk
+include $(DEPTH)/config/rules.mk
 
