@@ -560,10 +560,13 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
     PRInt32   contentOffset;
     PRInt32   offsetused = beginoffset;
     nsIFrame *frameused;
+    nsSelectionAmount amount = eSelectCharacter;
     result = frame->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
     if (NS_FAILED(result)){
       return result;
     }
+    if (keyEvent->isControl)
+      amount = eSelectWord;
     switch (keyEvent->keyCode){
       case nsIDOMEvent::VK_LEFT  : 
         //we need to look for the previous PAINTED location to move the cursor to.
@@ -580,7 +583,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
           offsetused = beginoffset;
           frameused = anchor;
         }
-        if (NS_SUCCEEDED(frameused->PeekOffset(eSelectCharacter, eDirPrevious, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
+        if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirPrevious, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
           result = TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
         break;
@@ -599,7 +602,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
           offsetused = endoffset;
           frameused = frame;
         }
-        if (NS_SUCCEEDED(frameused->PeekOffset(eSelectCharacter, eDirNext, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
+        if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirNext, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
           result = TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
       case nsIDOMEvent::VK_UP : 
