@@ -108,8 +108,8 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 -->
 
 <popupset>
-  <popup id="TextColorPicker"/>
-  <popup id="BackColorPicker"/>
+  <popup id="TextColorPopup"/>
+  <popup id="BackColorPopup"/>
 </popupset>
 
 <!-- box id="toolbar" align="vertical" style="width:100%;height:100%" -->
