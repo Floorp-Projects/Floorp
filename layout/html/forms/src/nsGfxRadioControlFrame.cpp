@@ -219,9 +219,9 @@ nsGfxRadioControlFrame::SetChecked(nsIPresContext* aPresContext, PRBool aValue, 
 {
   if (aSetInitialValue) {
     if (aValue) {
-      mContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::checked, NS_ConvertASCIItoUCS2("1"), PR_FALSE); // XXX should be "empty" value
+      mContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::checked, NS_LITERAL_STRING("1"), PR_FALSE); // XXX should be "empty" value
     } else {
-      mContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::checked, NS_ConvertASCIItoUCS2("0"), PR_FALSE);
+      mContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::checked, NS_LITERAL_STRING("0"), PR_FALSE);
     }
   }
 

@@ -980,7 +980,7 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
     break;
     
     case NS_FORM_SELECTED:
-      return UpdateTextControlCommands(NS_ConvertASCIItoUCS2("select"));
+      return UpdateTextControlCommands(NS_LITERAL_STRING("select"));
       break;
   }
   return NS_OK;
@@ -1417,7 +1417,7 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
     if (!htmlElement) { return NS_ERROR_NULL_POINTER; }
       // create the head
 
-    nimgr->GetNodeInfo(NS_ConvertASCIItoUCS2("head"), nsnull,
+    nimgr->GetNodeInfo(NS_LITERAL_STRING("head"), nsnull,
                        kNameSpaceID_None, *getter_AddRefs(nodeInfo));
 
     rv = NS_NewHTMLHeadElement(getter_AddRefs(headElement), nodeInfo);
@@ -3411,7 +3411,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     if (NS_FAILED(result)) { return result; }
     if (!selection) { return NS_ERROR_NULL_POINTER; }
     nsCOMPtr<nsIDOMNode>bodyNode;
-    result = GetFirstNodeOfType(NS_ConvertASCIItoUCS2("body"), aDoc,
+    result = GetFirstNodeOfType(NS_LITERAL_STRING("body"), aDoc,
                                 getter_AddRefs(bodyNode));
     if (NS_SUCCEEDED(result) && bodyNode)
     {
@@ -3506,13 +3506,13 @@ nsGfxTextControlFrame::InternalContentChanged()
   return mContent->HandleDOMEvent(mFramePresContext, &theEvent, nsnull, NS_EVENT_FLAG_INIT, &status); 
 }
 
-nsresult nsGfxTextControlFrame::UpdateTextControlCommands(const nsString& aCommand)
+nsresult nsGfxTextControlFrame::UpdateTextControlCommands(const nsAString& aCommand)
 {
   nsresult rv = NS_OK;
   
   if (mEditor)
   {  
-    if (aCommand == NS_ConvertASCIItoUCS2("select"))   // optimize select updates
+    if (aCommand == NS_LITERAL_STRING("select"))   // optimize select updates
     {
       nsCOMPtr<nsISelection> domSelection;
       rv = mEditor->GetSelection(getter_AddRefs(domSelection));
@@ -3624,7 +3624,7 @@ nsGfxTextControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aS
            nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakContent);
   NS_ASSERTION(NS_SUCCEEDED(res), "Converting linebreaks failed!");  
   
-  (*aState)->SetStateProperty(NS_ConvertASCIItoUCS2("value"), theString);
+  (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), theString);
   return res;
 }
 
@@ -3632,7 +3632,7 @@ NS_IMETHODIMP
 nsGfxTextControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
   nsAutoString stateString;
-  aState->GetStateProperty(NS_ConvertASCIItoUCS2("value"), stateString);
+  aState->GetStateProperty(NS_LITERAL_STRING("value"), stateString);
   nsresult res = SetProperty(aPresContext, nsHTMLAtoms::value, stateString);
   return res;
 }
@@ -4651,7 +4651,7 @@ NS_IMETHODIMP nsEnderEventListener::DidDo(nsITransactionManager *aManager,
     if (undoCount == 1)
     {
       if (mFirstDoOfFirstUndo)
-        gfxFrame->UpdateTextControlCommands(NS_ConvertASCIItoUCS2("undo"));
+        gfxFrame->UpdateTextControlCommands(NS_LITERAL_STRING("undo"));
  
       mFirstDoOfFirstUndo = PR_FALSE;
     }
@@ -4678,7 +4678,7 @@ NS_IMETHODIMP nsEnderEventListener::DidUndo(nsITransactionManager *aManager,
     if (undoCount == 0)
       mFirstDoOfFirstUndo = PR_TRUE;    // reset the state for the next do
 
-    gfxFrame->UpdateTextControlCommands(NS_ConvertASCIItoUCS2("undo"));
+    gfxFrame->UpdateTextControlCommands(NS_LITERAL_STRING("undo"));
   }
   
   return NS_OK;
@@ -4697,7 +4697,7 @@ NS_IMETHODIMP nsEnderEventListener::DidRedo(nsITransactionManager *aManager,
   nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
   if (gfxFrame)
   {
-    gfxFrame->UpdateTextControlCommands(NS_ConvertASCIItoUCS2("undo"));
+    gfxFrame->UpdateTextControlCommands(NS_LITERAL_STRING("undo"));
   }
 
   return NS_OK;

@@ -156,7 +156,7 @@ nsGfxCheckboxControlFrame::Init(nsIPresContext*  aPresContext,
 
   // give the attribute a default value so it's always present, if we're a tristate
   if ( IsTristateCheckbox() )
-    mContent->SetAttr ( kNameSpaceID_None, GetTristateValueAtom(), NS_ConvertASCIItoUCS2("0"), PR_FALSE );
+    mContent->SetAttr ( kNameSpaceID_None, GetTristateValueAtom(), NS_LITERAL_STRING("0"), PR_FALSE );
   
   return NS_OK;
 }
