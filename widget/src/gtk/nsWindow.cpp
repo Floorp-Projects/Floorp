@@ -3765,6 +3765,12 @@ NS_IMETHODIMP nsWindow::ResetInputState()
       return NS_OK;
     }
 
+    // while no focus on this widget, reseting IM status 
+    // should not be done
+    if (mHasFocus == PR_FALSE) {
+      return NS_OK;
+    }
+
     // if no composed text, should just return
     if(xic->IsPreeditComposing() == PR_FALSE) {
       IMEComposeEnd(nsnull);
