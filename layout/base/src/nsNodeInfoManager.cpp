@@ -229,9 +229,9 @@ nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
   NS_WARN_IF_FALSE(aNodeInfo, "Trying to remove null nodeinfo from manager!");
 
   if (aNodeInfo) {
-    PRBool ret = PL_HashTableRemove(mNodeInfoHash, aNodeInfo);
+    PRBool ret = PL_HashTableRemove(mNodeInfoHash, &aNodeInfo->mInner);
 
-    NS_WARN_IF_FALSE(!ret, "Can't find nsINodeInfo to remove!!!");
+    NS_WARN_IF_FALSE(ret, "Can't find nsINodeInfo to remove!!!");
   }
 }
 
