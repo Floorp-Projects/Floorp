@@ -46,8 +46,9 @@ XPIDLSRCS	= \
 		nsIController.idl \
 		nsIControllers.idl \
 		nsIControllerCommand.idl \
-		xulstubs.idl \
 		nsIXULSortService.idl \
+		nsIXULTemplateBuilder.idl \
+		xulstubs.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
