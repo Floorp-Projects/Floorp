@@ -377,7 +377,7 @@ nsHTMLImageElement::GetY(PRInt32* aY)
 nsSize
 nsHTMLImageElement::GetWidthHeight()
 {
-  nsSize size;
+  nsSize size(0,0);
 
   if (mDocument) {
     // Flush all pending notifications so that our frames are up to date.
