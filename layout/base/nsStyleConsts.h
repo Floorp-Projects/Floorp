@@ -301,6 +301,8 @@
 #define NS_STYLE_CURSOR_COUNT_UP                24
 #define NS_STYLE_CURSOR_COUNT_DOWN              25
 #define NS_STYLE_CURSOR_COUNT_UP_DOWN           26
+#define NS_STYLE_CURSOR_MOZ_ZOOM_IN             27
+#define NS_STYLE_CURSOR_MOZ_ZOOM_OUT            28
 
 
 // See nsStyleDisplay

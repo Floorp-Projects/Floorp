@@ -815,6 +815,9 @@ NS_IMETHODIMP nsWidget::SetBackgroundColor(const nscolor &aColor)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
 {
+#ifdef DEBUG
+  printf("nsWidget::SetCursor\n");
+#endif
   if (!mWidget || !mWidget->window)
     return NS_ERROR_FAILURE;
 
@@ -905,7 +908,7 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
       case eCursor_context_menu:
         // XXX: these CSS3 cursors need to be implemented
         // For CSS3 Cursor Definitions, See:
-        // www.w3.org/TR/css3-userint
+        // http://www.w3.org/TR/css3-ui/
         break;
 
       case eCursor_cell:
@@ -925,6 +928,10 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
       case eCursor_count_down:
       case eCursor_count_up_down:
         // XXX: these CSS3 cursors need to be implemented
+        break;
+
+      case eCursor_zoom_in:
+      case eCursor_zoom_out:
         break;
 
       default:

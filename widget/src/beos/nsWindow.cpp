@@ -1530,6 +1530,18 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 				newCursor = (BCursor *)gCursorArray.SafeElementAt(12);
 				break;
 	
+			case eCursor_copy:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(15);
+				break;
+	
+			case eCursor_alias:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(16);
+				break;
+
+			case eCursor_context_menu:
+			case eCursor_cell:
+				break;
+
 			case eCursor_grab:
 				newCursor = (BCursor *)gCursorArray.SafeElementAt(13);
 				break;
@@ -1538,18 +1550,18 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 				newCursor = (BCursor *)gCursorArray.SafeElementAt(14);
 				break;
 	
-			case eCursor_copy:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(15);
-				break;
-	
-			case eCursor_alias:
-				newCursor = (BCursor *)gCursorArray.SafeElementAt(16);
-				break;
 	
 			case eCursor_spinning:
 				newCursor = (BCursor *)gCursorArray.SafeElementAt(17);
 				break;
 	
+			case eCursor_count_up:
+			case eCursor_count_down:
+			case eCursor_count_up_down:
+			case eCursor_zoom_in:
+			case eCursor_zoom_out:
+				break;
+
 			default:
 				NS_ASSERTION(0, "Invalid cursor type");
 				break;

@@ -239,7 +239,7 @@ protected:
 protected:
   PRBool       mListenForResizes;     // If we're native we want to listen.
   static       nsHashtable *          gsWindowList;
-  static       Cursor                 gsXlibCursorCache[eCursor_count_up_down + 1];
+  static       Cursor                 gsXlibCursorCache[eCursorCount];
 
   // Variables for infomation about the current popup window and its listener
   static nsCOMPtr<nsIRollupListener> gRollupListener;

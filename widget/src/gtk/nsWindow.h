@@ -253,7 +253,7 @@ protected:
 
   // this is the last window that had a drag event happen on it.
   static nsWindow  *mLastDragMotionWindow;
-  static GdkCursor *gsGtkCursorCache[eCursor_count_up_down + 1];
+  static GdkCursor *gsGtkCursorCache[eCursorCount];
 
   void   InitDragEvent(nsMouseEvent &aEvent);
   void   UpdateDragStatus(nsMouseEvent &aEvent,
