@@ -433,6 +433,8 @@ function MsgSynchronize() {}
 function MsgGetSelectedMsg() {}
 function MsgGetFlaggedMsg() {}
 
+/* FIX ME - this should be handled in JS controllers
+
 function MsgEditUndo() 
 {
     messenger.Undo();
@@ -447,6 +449,7 @@ function MsgEditCut() {}
 function MsgEditCopy() {}
 function MsgEditPaste() {}
 function MsgSelectAll() {}
+*/
 function MsgSelectThread() {}
 function MsgSelectFlaggedMsg() {}
 function MsgFind() {}

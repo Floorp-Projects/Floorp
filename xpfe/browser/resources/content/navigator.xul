@@ -183,13 +183,13 @@ Contributor(s): ______________________________________. -->
   
 <broadcasterset id="broadcasterset">
   <!-- Edit Menu -->
-  <broadcaster id="cmd_undo" oncommand="EditUndo()"/>
-  <broadcaster id="cmd_redo" oncommand="EditRedo()"/>
-  <broadcaster id="cmd_cut" oncommand="EditCut()"/>
-  <broadcaster id="cmd_copy" oncommand="EditCopy()"/>
-  <broadcaster id="cmd_paste" oncommand="EditPaste()"/>
-  <broadcaster id="cmd_delete" oncommand="Delete()"/>
-  <broadcaster id="cmd_selectAll" oncommand="SelectAll()"/>
+	<broadcaster id="cmd_undo"/>
+	<broadcaster id="cmd_redo"/>
+	<broadcaster id="cmd_cut"/>
+	<broadcaster id="cmd_copy"/>
+	<broadcaster id="cmd_paste"/>
+	<broadcaster id="cmd_delete"/>
+	<broadcaster id="cmd_selectAll"/>
 </broadcasterset>
 	
 <!-- HELLO!! IS ANYONE READING THIS?  In case you are reading this,

@@ -72,13 +72,13 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 	<broadcaster id="cmd_close" oncommand="CloseWindow()"/>
  	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
-	<broadcaster id="cmd_undo" oncommand="ComposeNYI()"/>
-	<broadcaster id="cmd_redo" oncommand="ComposeNYI()"/>
-	<broadcaster id="cmd_cut" oncommand="ComposeNYI()"/>
-	<broadcaster id="cmd_copy" oncommand="ComposeNYI()"/>
-	<broadcaster id="cmd_paste" oncommand="ComposeNYI()"/>
-	<broadcaster id="cmd_delete" oncommand="ComposeNYI()"/>
-	<broadcaster id="cmd_selectAll" oncommand="ComposeNYI()"/>
+	<broadcaster id="cmd_undo"/>
+	<broadcaster id="cmd_redo"/>
+	<broadcaster id="cmd_cut"/>
+	<broadcaster id="cmd_copy"/>
+	<broadcaster id="cmd_paste"/>
+	<broadcaster id="cmd_delete"/>
+	<broadcaster id="cmd_selectAll"/>
 </broadcasterset>
 
 <keyset id="keyset">

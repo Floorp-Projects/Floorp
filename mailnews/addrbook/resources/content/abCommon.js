@@ -5,7 +5,6 @@ var ResultsPaneController =
 {
 	IsCommandEnabled: function(command)
 	{
-		dump("IsCommandEnabled" + "\n");
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -51,7 +50,6 @@ var DirPaneController =
 {
 	IsCommandEnabled: function(command)
 	{
-		dump("IsCommandEnabled" + "\n");
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -80,7 +78,7 @@ var DirPaneController =
 
 			case "cmd_delete":
 				if ( dirTree )
-					top.addressbook.DeleteAddressBooks(tree.database, tree, tree.selectedItems);
+					top.addressbook.DeleteAddressBooks(dirTree.database, dirTree, dirTree.selectedItems);
 				break;
 		}
 	}

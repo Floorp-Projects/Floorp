@@ -53,18 +53,16 @@ Rights Reserved.
  	<broadcaster id="cmd_close" oncommand="AbClose()"/>
  	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
-	<broadcaster id="cmd_undo" oncommand="AbEditUndo()"/>
-	<broadcaster id="cmd_redo" oncommand="AbEditRedo()"/>
-	<broadcaster id="cmd_cut" oncommand="AbEditCut()"/>
-	<broadcaster id="cmd_copy" oncommand="AbEditCopy()"/>
-	<broadcaster id="cmd_paste" oncommand="AbEditPaste()"/>
+	<broadcaster id="cmd_undo"/>
+	<broadcaster id="cmd_redo"/>
+	<broadcaster id="cmd_cut"/>
+	<broadcaster id="cmd_copy"/>
+	<broadcaster id="cmd_paste"/>
 	<broadcaster id="cmd_delete"
-				 oncommand="goDoCommand('cmd_delete')"
-				 onchange="goUpdateCommand('cmd_delete')"
 				 valueDefault="&deleteCmd.label;"
 				 valueAddressBook="&deleteAbCmd.label;"
 				 valueCard="&deleteCardCmd.label;"/>
-	<broadcaster id='cmd_selectAll' oncommand="goDoCommand('cmd_selectAll')" onchange="goUpdateCommand('cmd_selectAll')"/>
+	<broadcaster id='cmd_selectAll'/>
 </broadcasterset>
 
 <keyset id="keyset">
