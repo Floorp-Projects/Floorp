@@ -253,7 +253,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char * aMIMEType,
       return nsnull;
 
     if (aMIMEType && *aMIMEType)
-      mimeInfo->SetMIMEType(aType);
+      mimeInfo->SetMIMEType(aMIMEType);
     if (aFileExt && *aFileExt)
       mimeInfo->AppendExtension(aFileExt);
   }
