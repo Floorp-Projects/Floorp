@@ -598,15 +598,8 @@ DefParam("allowuserdeletion",
          "b",
          0);
 
-
-DefParam("strictvaluechecks",
-         "Do stricter integrity checking on both form submission values and values read in from the database.",
-         "b",
-         0);
-
-
 DefParam("browserbugmessage",
-         "If strictvaluechecks is on, and the bugzilla gets unexpected data from the browser, in addition to displaying the cause of the problem, it will output this HTML as well.",
+         "If bugzilla gets unexpected data from the browser, in addition to displaying the cause of the problem, it will output this HTML as well.",
          "l",
          "this may indicate a bug in your browser.\n");
 

@@ -142,23 +142,21 @@ if (!exists $::FORM{'target_milestone'}) {
     $::FORM{'target_milestone'} = FetchOneColumn();
 }
 
-if ( Param("strictvaluechecks") ) {
-    GetVersionTable();  
-    CheckFormField(\%::FORM, 'product', \@::legal_product);
-    CheckFormField(\%::FORM, 'version', \@{$::versions{$::FORM{'product'}}});
-    CheckFormField(\%::FORM, 'target_milestone',
-                   \@{$::target_milestone{$::FORM{'product'}}});
-    CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
-    CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
-    CheckFormField(\%::FORM, 'priority', \@::legal_priority);
-    CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
-    CheckFormFieldDefined(\%::FORM, 'assigned_to');
-    CheckFormField(\%::FORM, 'bug_status', \@::legal_bug_status);
-    CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
-    CheckFormField(\%::FORM, 'component', 
-                   \@{$::components{$::FORM{'product'}}});
-    CheckFormFieldDefined(\%::FORM, 'comment');
-}
+GetVersionTable();
+CheckFormField(\%::FORM, 'product', \@::legal_product);
+CheckFormField(\%::FORM, 'version', \@{$::versions{$::FORM{'product'}}});
+CheckFormField(\%::FORM, 'target_milestone',
+               \@{$::target_milestone{$::FORM{'product'}}});
+CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
+CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
+CheckFormField(\%::FORM, 'priority', \@::legal_priority);
+CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
+CheckFormFieldDefined(\%::FORM, 'assigned_to');
+CheckFormField(\%::FORM, 'bug_status', \@::legal_bug_status);
+CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
+CheckFormField(\%::FORM, 'component', 
+               \@{$::components{$::FORM{'product'}}});
+CheckFormFieldDefined(\%::FORM, 'comment');
 
 my @used_fields;
 foreach my $f (@bug_fields) {

@@ -597,7 +597,7 @@ sub make_options {
         }
     }
     if (!$found && $default ne "") {
-      if ( Param("strictvaluechecks") && $::CheckOptionValues &&
+      if ( $::CheckOptionValues &&
            ($default ne $::dontchange) && ($default ne "-All-") &&
            ($default ne "DUPLICATE") ) {
         print "Possible bug database corruption has been detected.  " .
