@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsHTMLFrame.h"
+#include "nsFrame.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsViewsCID.h"
@@ -41,11 +42,24 @@ nsHTMLFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
       nsIFrame* parent;
       aFrame->GetGeometricParent(parent);
       if (nsnull != parent) {
-        nsStyleColor* color = (nsStyleColor*)
+        // Get my nsStyleColor
+        nsStyleColor* myColor = (nsStyleColor*)
           aStyleContext->GetData(eStyleStruct_Color);
-        if (color->mOpacity < 1.0f) {
+
+        // Get parent's nsStyleColor
+        nsIStyleContext* parentSC;
+        parent->GetStyleContext(aPresContext, parentSC);
+        nsStyleColor* parentColor = (nsStyleColor*)
+          parentSC->GetData(eStyleStruct_Color);
+
+        // If the opacities are different then I need a view
+        if (myColor->mOpacity != parentColor->mOpacity) {
+          NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+            ("nsHTMLFrame::CreateViewForFrame: frame=%p opacity=%g parentOpacity=%g",
+             aFrame, myColor->mOpacity, parentColor->mOpacity));
           aForce = PR_TRUE;
         }
+        NS_RELEASE(parentSC);
       }
     }
 
@@ -54,10 +68,14 @@ nsHTMLFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
       nsStylePosition* position = (nsStylePosition*)
         aStyleContext->GetData(eStyleStruct_Position);
       if (NS_STYLE_POSITION_RELATIVE == position->mPosition) {
+        NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+          ("nsHTMLFrame::CreateViewForFrame: frame=%p relatively positioned",
+           aFrame));
         aForce = PR_TRUE;
       }
     }
 
+#if 0
     // See if the frame is supposed to scroll
     if (!aForce) {
       nsStyleDisplay* display = (nsStyleDisplay*)
@@ -67,6 +85,7 @@ nsHTMLFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
         scrollView = PR_TRUE;
       }
     }
+#endif
 
     if (aForce) {
       // Create a view
@@ -108,6 +127,9 @@ nsHTMLFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
       NS_RELEASE(view);
       NS_RELEASE(parView);
 
+      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+        ("nsHTMLFrame::CreateViewForFrame: frame=%p view=%p",
+         aFrame));
       return result;
     }
   }
