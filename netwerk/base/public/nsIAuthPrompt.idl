@@ -1,0 +1,65 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsIPrompt;
+
+[scriptable, uuid(2f977d45-5485-11d4-87e2-0010a4e75ef2)]
+interface nsIAuthPrompt : nsISupports
+{         
+    const PRUint32 SAVE_PASSWORD_NEVER             = 0;
+    const PRUint32 SAVE_PASSWORD_FOR_SESSION       = 1;
+    const PRUint32 SAVE_PASSWORD_PERMANENTLY       = 2;
+
+    /**
+     * Puts up a text input dialog with OK and Cancel buttons.
+     * @return true for OK, false for Cancel
+     */
+    boolean prompt(in wstring dialogTitle,
+                   in wstring text,
+                   in wstring passwordRealm,
+                   in PRUint32 savePassword,
+                   in wstring defaultText, 
+                   out wstring result);
+
+    /**
+     * Puts up a username/password dialog with OK and Cancel buttons.
+     * @return true for OK, false for Cancel
+     */
+    boolean promptUsernameAndPassword(in wstring dialogTitle,
+                                      in wstring text,
+                                      in wstring passwordRealm,
+                                      in PRUint32 savePassword,
+                                      out wstring user, 
+                                      out wstring pwd);
+
+    /**
+     * Puts up a password dialog with OK and Cancel buttons.
+     * @return true for OK, false for Cancel
+     */
+    boolean promptPassword(in wstring dialogTitle,
+                           in wstring text,
+                           in wstring passwordRealm,
+                           in PRUint32 savePassword,
+                           out wstring pwd);
+};
