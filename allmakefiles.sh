@@ -109,6 +109,7 @@ gfx/src/motif/Makefile
 gfx/src/photon/Makefile
 gfx/src/rhapsody/Makefile
 gfx/src/xlib/Makefile
+gfx/src/xlibrgb/Makefile
 gfx/tests/Makefile
 htmlparser/Makefile
 htmlparser/robot/Makefile
