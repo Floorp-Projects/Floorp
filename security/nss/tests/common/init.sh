@@ -19,7 +19,10 @@ PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$PATH
 fi
 export PATH
 LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
-export LD_LIBRARY_PATH
+SHLIB_PATH=${DIST}/${OBJDIR}/lib
+LIBPATH=${DIST}/${OBJDIR}/lib
+export LD_LIBRARY_PATH SHLIB_PATH LIBPATH
+echo SHLIB_PATH $SHLIB_PATH
 echo "Creating ${TESTDIR}"
 if [ ! -d ${TESTDIR} ]; then
    mkdir -p ${TESTDIR}
