@@ -44,6 +44,7 @@
 //////////// global variables /////////////////////
 
 var viewer;
+var gEntityConverter;
 
 //////////// global constants ////////////////////
 
@@ -357,7 +358,7 @@ DOMViewer.prototype =
   
       for (i = 0; i < aNode.attributes.length; ++i) {
         var a = aNode.attributes[i];
-        var attr = " " + a.localName + "=\"" + a.nodeValue + "\"";
+        var attr = " " + a.localName + '="' + unicodeToEntity(a.nodeValue) + '"';
         if (line.length + attr.length > 80) {
           s += line + (i < aNode.attributes.length-1 ? "\n"+attrIndent : "");
           line = "";
@@ -376,9 +377,9 @@ DOMViewer.prototype =
         s += indent + "</" + aNode.localName + ">\n";
       }
     } else if (aNode.nodeType == Node.TEXT_NODE) {
-      s += aNode.nodeValue;
+      s += unicodeToEntity(aNode.data);
     } else if (aNode.nodeType == Node.COMMENT_NODE) {
-      s += line + "<!--" + aNode.nodeValue + "-->\n";
+      s += line + "<!--" + unicodeToEntity(aNode.data) + "-->\n";
     }
     
     return s;
@@ -946,3 +947,44 @@ function dumpDOM2(aNode)
   dump(DOMViewer.prototype.toXML(aNode));
 }
 
+function unicodeToEntity(text)
+{
+  if (!gEntityConverter) {
+    try {
+      gEntityConverter = Components.classes["@mozilla.org/intl/entityconverter;1"]
+                                   .createInstance(Components.interfaces.nsIEntityConverter);
+    } catch (ex) { }
+  }
+  var entityVersion = Components.interfaces.nsIEntityConverter.html40 |
+                      Components.interfaces.nsIEntityConverter.mathml20;
+
+  var str = '';
+  for (var i = 0; i < text.length; ++i) {
+    if ((text.charCodeAt(i) > 0x7F) && gEntityConverter) {
+      try {
+        str += gEntityConverter.ConvertToEntity(text[i], entityVersion);
+      } catch (ex) {
+        str += text[i];
+      }
+      continue;
+    }
+    switch (text[i]) {
+      case '<':
+        str += "&lt;";
+        break;
+      case '>':
+        str += "&gt;";
+        break;
+      case '&':
+        str += "&amp;";
+        break;
+      case '"':
+        str += "&quot;";
+        break;
+      default:
+        str += text[i];
+        break;
+    }
+  }
+  return str;
+}
