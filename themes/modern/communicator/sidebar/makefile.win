@@ -44,10 +44,6 @@ install::
 	$(MAKE_INSTALL) sbgrippy-left.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sbgrippy-right-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sbgrippy-right.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) sbgrippy-up-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) sbgrippy-up.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) sbgrippy-down-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
-	$(MAKE_INSTALL) sbgrippy-down.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sidebar-close-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sidebar-close.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sidebar-open-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar

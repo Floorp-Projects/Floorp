@@ -73,55 +73,6 @@
        url("chrome://communicator/skin/sidebar/sbgrippy-right-hover.gif"); 
 }
 
-.sidebar-header-grippy {
-    background-color: transparent;
-    margin: 0px;
-    padding: 0px;
-    background-image:
-       url("chrome://communicator/skin/sidebar/sbgrippy-down.gif"); 
-    background-repeat: no-repeat;
-    background-position: 50% 50%;
-}
-
-.sidebar-header-grippy:hover,
-.sidebar-header-grippy:active {
-    background-color: transparent;
-    background-image:
-       url("chrome://communicator/skin/sidebar/sbgrippy-down-hover.gif"); 
-}
-
-#sidebar-title-box[state="collapsed"] > .sidebar-header-grippy {
-    background-color: transparent;
-    background-image:
-       url("chrome://communicator/skin/sidebar/sbgrippy-up.gif"); 
-}
-
-#sidebar-title-box[state="collapsed"] > .sidebar-header-grippy:hover,
-#sidebar-title-box[state="collapsed"] > .sidebar-header-grippy:active {
-    background-image:
-       url("chrome://communicator/skin/sidebar/sbgrippy-up-hover.gif"); 
-}
-
-#sidebar-status-grippy {
-    padding: 2px 2px 2px 0px;
-    background-color: #003366;
-    background-image:
-       url("chrome://communicator/skin/sidebar/sidebar-open.gif"); 
-}
-#sidebar-status-grippy:hover {
-    background-image:
-       url("chrome://communicator/skin/sidebar/sidebar-open-hover.gif"); 
-}
-#sidebar-status-grippy[open="true"] {
-    background-image:
-       url("chrome://communicator/skin/sidebar/sidebar-close.gif"); 
-}
-#sidebar-status-grippy[open="true"]:hover {
-    background-image:
-       url("chrome://communicator/skin/sidebar/sidebar-close-hover.gif"); 
-}
-
-
 /**/
 
 #sidebar-box {
@@ -136,6 +87,9 @@
 .image-panel-loading {
     margin: 5px;
     list-style-image: url("chrome://global/skin/loading.gif"); 
+}
+box[loadstate="stopped"] > box > box >  .image-panel-loading {
+    visibility: hidden;
 }
 
 /*
