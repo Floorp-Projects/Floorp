@@ -77,6 +77,8 @@ public:
                              PRBool &aFirst, PRBool &aAny, PRBool &aAll);
 
   NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttribute);
+  NS_IMETHOD GetTypingState(nsIAtom *aProperty, PRBool &aSet);
+  NS_IMETHOD GetTypingStateValue(nsIAtom *aProperty, nsString &aValue);
 
   NS_IMETHOD InsertBreak();
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
