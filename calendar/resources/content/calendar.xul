@@ -77,6 +77,7 @@
    onunload="calendarFinish()"
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   height="640px"
    persist="screenX screenY width height"
    > 
  
@@ -122,14 +123,6 @@
 
 <popupset>
  <popup  id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
-
- <popup id="unifinder-options-menu" position="end_before">
-     <!--
-     <menuitem id="unifinder-newcategory-menu" label="&calendar.menu.options.newcategory;" oncommand="unifinderNewCategoryCommand()" />
-     -->
-     <menuitem id="unifinder-modify-menu"      observes="modify_command" label="&calendar.menu.options.modify;"      oncommand="unifinderModifyCommand()" />
-     <menuitem id="unifinder-remove-menu"      observes="delete_command" label="&calendar.menu.options.remove;"      oncommand="unifinderRemoveCommand()" />
- </popup>
 </popupset>
 
 <commandset id="commands"/>
