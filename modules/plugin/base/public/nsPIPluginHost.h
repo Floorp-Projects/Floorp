@@ -56,6 +56,39 @@ public:
   */
   NS_IMETHOD
   SetIsScriptableInstance(nsCOMPtr<nsIPluginInstance> aPluginInstance, PRBool aScriptable) = 0;
+
+
+ /**
+  * This method parses post buffer to find out case insensitive "Content-length" string
+  * and CR or LF some where after that, then it assumes there is http headers in
+  * the input buffer and continue to search for end of headers (CRLFCRLF or LFLF).
+  * It will *always malloc()* output buffer (caller is responsible to free it) 
+  * if input buffer starts with LF, which comes from 4.x spec 
+  * http://developer.netscape.com/docs/manuals/communicator/plugin/pgfn2.htm#1007754
+  * "If no custom headers are required, simply add a blank
+  * line ('\n') to the beginning of the file or buffer.",
+  * it skips that '\n' and considers rest of the input buffer as data.
+  * If "Content-length" string and end of headers is found 
+  *   it substitutes single LF with CRLF in the headers, so the end of headers
+  *   always will be CRLFCRLF (single CR in headers, if any, remain untouched)
+  * else
+  *   it puts "Content-length: "+size_of_data+CRLFCRLF at the beginning of the output buffer
+  * and memcpy data to the output buffer 
+  *
+  * On failure outPostData and outPostDataLen will be set in 0.  
+  * @param inPostData, the post data
+  * @param the length of inPostData
+  * @param outPostData the buffer.
+  * @param outPostDataLen the length of outPostData
+  **/
+  NS_IMETHOD
+  ParsePostBufferToFixHeaders(const char *inPostData, PRUint32 inPostDataLen, 
+              char **outPostData, PRUint32 *outPostDataLen) = 0;
+ /*
+  * To create tmp file with Content len header in, it will use by http POST
+  */
+   NS_IMETHOD
+  CreateTmpFileToPost(const char *postDataURL, char **pTmpFileName) = 0;
 };
 
 #endif /* nsPIPluginHost_h___ */

@@ -110,93 +110,51 @@ public:
  * account that it could be binary and full of nulls, see bug 105417. Also, we need 
  * to make a copy of the buffer because the plugin may have allocated it on the stack.
  * For an example of this, see Shockwave registration or bug 108966
+ * We malloc only for headers here, buffer for data itself is malloced by ParsePostBufferToFixHeaders()
  */
+
 inline nsresult
 NS_NewPluginPostDataStream(nsIInputStream **result,
                            const char *data,
                            PRUint32 contentLength,
                            PRBool isFile = PR_FALSE,
                            PRBool headers = PR_FALSE)
-
 {
+  nsresult rv = NS_ERROR_UNEXPECTED;
   if (!data)
-    return NS_ERROR_UNEXPECTED;
-
-  nsresult rv = NS_ERROR_FAILURE;
+    return rv;
 
   if (!isFile) { // do raw data case first
     if (contentLength < 1)
-      return NS_ERROR_UNEXPECTED;
-
-    char * buf = nsnull;
-
-    /** 
-     * makes the buffer correct according to the assumption of nsHTTPRequest.cpp 
-     * that postData include "\r\n\r\n". 
-     * This will search for "\r\n\n", which indicates the end of 
-     * the last header. It will then search for the first non-whitespace 
-     * character after the last header. It will then create a new buffer 
-     * with the existing headers, a correct "\r\n\r\n", then the post data.  
-     * If no "\r\n" is found, the data does not contain headers, and a simple 
-     * "\r\n\r\n" is prepended to the buffer. See bug 60228 for more info.
-     * ...but not for headers!
-     */
-
-    if (!headers && !PL_strnstr(data, "\r\n\r\n", contentLength)) {
-      const char *crlf = nsnull;
-      const char *crlfcrlf = "\r\n\r\n";
-      const char *t;
-      char *newBuf;
-      PRInt32 headersLen = 0, dataLen = 0;
-
-      if (!(newBuf = (char*)nsMemory::Alloc(contentLength + 4))) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      nsCRT::memset(newBuf, 0, contentLength + 4);
-
-      if (!(crlf = PL_strnstr(data, "\r\n\n", contentLength))) {
-        nsMemory::Free(newBuf);
-        return NS_ERROR_NULL_POINTER;
-      }
-      headersLen = crlf - data;
-
-      // find the next non-whitespace char
-      t = crlf + 3;
-      while (*t == '\r' || *t == '\n' || *t == '\t' || *t == ' ' && *t) {
-        t++;
-      }
-      if (*t) {
-        // copy the headers
-        memcpy(newBuf, data, headersLen);
-        // copy the correct crlfcrlf
-        memcpy(newBuf + headersLen, crlfcrlf, 4);
-        // copy the rest of the postData
-        dataLen = contentLength - (t - data);
-        memcpy(newBuf + headersLen + 4, t, dataLen);
-        contentLength = headersLen + 4 + dataLen;
-        buf = newBuf;
-      } else {
-        nsMemory::Free(newBuf);
-        return NS_ERROR_NULL_POINTER;
-      }
-    } else {
-
-      // We got correctly formated data passed in!
-
+      return rv;
+    
+    char *buf = (char*) data;
+    if (headers) {
+      // in assumption we got correctly formated headers just passed in
       if (!(buf = (char*)nsMemory::Alloc(contentLength)))
         return NS_ERROR_OUT_OF_MEMORY;
-
       memcpy(buf, data, contentLength);
     }
     nsCOMPtr<nsIStringInputStream> sis = do_CreateInstance("@mozilla.org/io/string-input-stream;1",&rv);
     if (NS_SUCCEEDED(rv)) {
       sis->AdoptData(buf, contentLength);  // let the string stream manage our data
-
       rv = CallQueryInterface(sis, result);
     }
-  } else
-    rv = NS_NewPostDataStream(result, isFile, data, 0);  // used only for disk data
-
+  } else {
+    nsCOMPtr<nsILocalFile> file; // tmp file will be deleted on release of stream
+    nsCOMPtr<nsIInputStream> fileStream;
+    if (NS_SUCCEEDED(rv = NS_NewLocalFile(data, PR_FALSE, getter_AddRefs(file))) &&
+        NS_SUCCEEDED(rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream),
+                                     file,
+                                     PR_RDONLY,
+                                     0600,
+                                     PR_TRUE))
+                                     ) 
+    {
+      // wrap the file stream with a buffered input stream
+      return NS_NewBufferedInputStream(result, fileStream, 8192);
+    }
+  }
   return rv;
 }
 
