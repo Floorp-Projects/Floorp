@@ -208,12 +208,17 @@ DOMViewer.prototype =
 
   setWhitespaceNodes: function(aValue)
   {
+    // Do this first so we ensure the checkmark is set in the case
+    // we are starting with whitespace nodes enabled.
+    this.mPanel.panelset.setCommandAttribute("cmd:toggleWhitespaceNodes", "checked", aValue);
+
+    // The rest of the stuff is redundant to do if we are not changing
+    // the value, so just bail here if we're setting the same value.
     if (this.mDOMView.showWhitespaceNodes == aValue) {
       return;
     }
 
     this.mDOMView.showWhitespaceNodes = aValue;
-    this.mPanel.panelset.setCommandAttribute("cmd:toggleWhitespaceNodes", "checked", aValue);
     PrefUtils.setPref("inspector.dom.showWhitespaceNodes", aValue);
     this.rebuild();
   },
