@@ -17,18 +17,18 @@
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDLSRCS = nsIProfile.idl
-MODULE = profile
+MODULE		= profile
 
-EXPORTS	= \
-		profileSwitch.h \
-		$(NULL)
+EXPORTS		= profileSwitch.h
+
+XPIDLSRCS	= nsIProfile.idl
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
+

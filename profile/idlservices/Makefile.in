@@ -22,8 +22,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= profileservices
 MODULE		= profileservices
+LIBRARY_NAME	= profileservices
 IS_COMPONENT	= 1
 
 REQUIRES	= profileservices raptor xpcom

@@ -17,20 +17,21 @@
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=prefmigr
+MODULE		= prefmigr
 
-XPIDLSRCS = 	nsIPrefMigrationProgress.idl	\
-		nsIPrefMigration.idl	\
-		$(NULL)
+EXPORTS		= nsPrefMigrationCIDs.h
 
-EXPORTS=	nsPrefMigrationCIDs.h  \
+XPIDLSRCS	= \
+		nsIPrefMigrationProgress.idl \
+		nsIPrefMigration.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
+

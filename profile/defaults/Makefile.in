@@ -22,12 +22,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-FILES		= bookmarks.html
-
-FILES		:= $(addprefix $(srcdir)/, $(FILES))
-
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) $(FILES) $(DIST)/bin/defaults
+	$(INSTALL) $(srcdir)/bookmarks.html $(DIST)/bin/defaults
 

@@ -40,10 +40,8 @@ FILES		= \
 		test-tab4.xul \
 		$(NULL)
 
-FILES		:= $(addprefix $(srcdir)/, $(FILES))
-
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) $(FILES) $(DIST)/bin/res/profile
+	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/res/profile
 
