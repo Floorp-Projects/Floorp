@@ -100,6 +100,20 @@ extern nsresult INTL_DecodeMimePartIIStr(const nsString& header, nsString& chars
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
+#ifdef XP_UNIX
+#define TEMP_PATH_DIR "/usr/tmp/"
+#endif
+
+#ifdef XP_PC
+#define TEMP_PATH_DIR "c:\\temp\\"
+#endif
+
+#ifdef XP_MAC
+#define TEMP_PATH_DIR ""
+#endif
+#define TEMP_MESSAGE_IN  "tempMessage.eml"
+#define TEMP_MESSAGE_OUT  "tempMessage.html"
+
 class nsComposeAppCore : public nsIDOMComposeAppCore,
                          public nsIScriptObjectOwner,
 						 public nsIXULWindowCallbacks
@@ -383,22 +397,16 @@ nsComposeAppCore::HackToGetBody(PRInt32 what)
     char *buffer = (char *) PR_CALLOC(1024);
     if (buffer)
     {
-#ifdef XP_UNIX
-#define MESSAGE_PATH "/usr/tmp/tempMessage.eml"
-#endif
-
-#ifdef XP_PC
-#define MESSAGE_PATH  "c:\\temp\\tempMessage.eml"
-#endif
-
-#ifdef XP_MAC
-#define MESSAGE_PATH  "tempMessage.eml"
-#endif
-        nsFileSpec fileSpec(MESSAGE_PATH);
+    	nsString fileName(TEMP_PATH_DIR);
+    	fileName += TEMP_MESSAGE_IN;
+   
+        nsFileSpec fileSpec(fileName);
         nsInputFileStream fileStream(fileSpec);
-        nsString msgBody = what == 2 ? "--------Original Message--------\r\n" 
+
+        nsString msgBody = (what == 2 && !mUseHtml) ? "--------Original Message--------\r\n" 
             : ""; 
 
+		// skip RFC822 header
         while (!fileStream.eof() && !fileStream.failed() &&
                fileStream.is_open())
         {
@@ -406,13 +414,70 @@ nsComposeAppCore::HackToGetBody(PRInt32 what)
             if (*buffer == 0)
                 break;
         }
+		// copy message body
         while (!fileStream.eof() && !fileStream.failed() &&
                fileStream.is_open())
         {
             fileStream.readline(buffer, 1024);
-            if (what == 1)
+            if (what == 1 && ! mUseHtml)
                 msgBody += "> ";
             msgBody += buffer;
+            msgBody += MSG_LINEBREAK;
+        }
+        
+        if (mUseHtml)
+        {
+        	nsString lowerMsgBody (msgBody);
+        	lowerMsgBody.ToLowerCase();
+        	
+        	PRInt32 startBodyOffset;
+        	PRInt32 endBodyOffset = -1;
+        	PRInt32 offset;
+        	startBodyOffset = lowerMsgBody.Find("<html>");
+        	if (startBodyOffset != -1)	//it's an HTML body
+        	{
+        		//Does it have a <body> tag?
+        		offset = lowerMsgBody.Find("<body");
+        		if (offset != -1)
+        		{
+        			offset = lowerMsgBody.Find('>', offset);
+           			if (offset != -1)
+           			{
+           				startBodyOffset = offset + 1;
+        				endBodyOffset = lowerMsgBody.RFind("</body>");
+        			}
+        		}
+        		if (endBodyOffset == -1)
+        			endBodyOffset = lowerMsgBody.RFind("</html>");        			
+        	}
+        	
+        	if (startBodyOffset == -1)
+        		startBodyOffset = 0;
+    		if (endBodyOffset == -1)
+    			endBodyOffset = lowerMsgBody.Length();
+    		
+    		msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
+    		if (startBodyOffset == 0)
+    		{
+    			msgBody.Insert("</html>", endBodyOffset);
+    			msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
+    		}
+    		msgBody.Insert("</blockquote>", endBodyOffset);
+     		msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
+    		
+    		msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
+    		msgBody.Insert("<blockquote TYPE=CITE>", startBodyOffset);
+    		msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
+    		if (startBodyOffset == 0)
+    		{
+    			msgBody.Insert("<html>", startBodyOffset);
+    			msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
+    			msgBody.Insert("<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">", startBodyOffset);
+     		}
+        }
+        else
+        {
+			//ducarroz: today, we are not converting HTML to plain text if needed!
         }
 
 		// mMsgCompFields->SetBody(msgBody.ToNewCString(), NULL);
@@ -460,15 +525,31 @@ nsComposeAppCore::SetWindowFields(nsIDOMDocument *domDoc, nsString& msgTo, nsStr
 				}
 			}
         }
-        // ****** We need to find a way to query for nsIDOMEditorAppCore
-        // interface from either a nsIWebShell or nsIDOMDocument instead of
-        // relying on setting the mEditor pointer from the JavaScript. We tend
-        // to set to the wrong instance of nsComposeAppCore. In theory we
-        // should have only one nsComposeAppCore running at a given time. We
-        // seems not being able to achieve this at the moment.
         if (mEditor)
         {
-			mEditor->InsertText(msgBody);
+        	if (msgBody.Length())
+        	{
+	    		nsString fileName(TEMP_PATH_DIR);
+	    		fileName += TEMP_MESSAGE_OUT;
+	    		
+	    		nsFileSpec aPath(fileName);
+	    		nsOutputFileStream tempFile(aPath);
+	    		
+	    		if (tempFile.is_open())
+	    		{
+	    			tempFile.write(nsAutoCString(msgBody), msgBody.Length());
+	    			tempFile.close();
+	    			
+	        		mEditor->LoadUrl(nsFileURL(aPath).GetURLString());
+	    		}
+	    	}
+	    	else
+	    	{
+	    		if (mUseHtml)
+	        		mEditor->LoadUrl("chrome://messengercompose/content/defaultHtmlBody.html");
+	        	else
+	        		mEditor->LoadUrl("chrome://messengercompose/content/defaultTextBody.html");
+	    	}
         }
     }
 }
