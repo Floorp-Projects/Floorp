@@ -144,15 +144,13 @@ enum {
 //
 // XXX may want to pass other information here.
 //
-class ipcmMessageClientHello : public ipcMessage_DWORD_STR
+class ipcmMessageClientHello : public ipcMessage_DWORD
 {
 public:
     static const PRUint32 MSG_TYPE;
 
-    ipcmMessageClientHello(const char *primaryName)
-        : ipcMessage_DWORD_STR(IPCM_TARGET, MSG_TYPE, primaryName) {}
-
-    const char *PrimaryName() const { return Second(); }
+    ipcmMessageClientHello()
+        : ipcMessage_DWORD(IPCM_TARGET, MSG_TYPE) {}
 };
 
 //

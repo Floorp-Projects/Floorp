@@ -59,13 +59,11 @@
 //-----------------------------------------------------------------------------
 
 nsresult
-ipcTransport::Init(const nsACString &appName,
-                   ipcTransportObserver *obs)
+ipcTransport::Init(ipcTransportObserver *obs)
 {
-    mAppName = appName;
-    mObserver = obs;
+    LOG(("ipcTransport::Init\n"));
 
-    LOG(("ipcTransport::Init [app-name=%s]\n", mAppName.get()));
+    mObserver = obs;
 
 #ifdef XP_UNIX
     nsresult rv = InitUnix();

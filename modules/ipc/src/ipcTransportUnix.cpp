@@ -142,7 +142,7 @@ ipcTransport::OnStartRequest(nsIRequest *req)
         //
         // send CLIENT_HELLO; expect CLIENT_ID in response.
         //
-        SendMsg_Internal(new ipcmMessageClientHello(mAppName.get()));
+        SendMsg_Internal(new ipcmMessageClientHello());
         mSentHello = PR_TRUE;
     }
 }
