@@ -24,7 +24,109 @@
         </template>
 
         <menupopup>
-  	    <menu value="More"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
+  	    <menu value="&charsetMenuMore1.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore1CharsetMenuRoot">
+            <template>
+                <rule>
+		            <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+			        </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+  	    <menu value="&charsetMenuMore2.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore2CharsetMenuRoot">
+            <template>
+                <rule>
+		            <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+			        </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+  	    <menu value="&charsetMenuMore3.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore3CharsetMenuRoot">
+            <template>
+                <rule>
+		            <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+			        </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+  	    <menu value="&charsetMenuMore4.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore4CharsetMenuRoot">
+            <template>
+                <rule>
+		            <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+			        </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+  	    <menu value="&charsetMenuMore5.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore5CharsetMenuRoot">
+            <template>
+                <rule>
+		            <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+			        </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+  	    <menu value="&charsetMenuMore6.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore6CharsetMenuRoot">
+            <template>
+                <rule>
+		            <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+			        </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+  	    <menu value="&charsetMenuMore.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
+            <template>
+                <rule>
+		            <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+			        </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+        </menupopup>
+	</menu>
+
+	<menu id="charsetMenu2" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot">
+        <template>
+            <rule>
+	            <menupopup>
+                <menuitem type="checkbox" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+	            </menupopup>
+            </rule>
+        </template>
+
+        <menupopup>
+  	    <menu value="&charsetMenuMore.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
+            <template>
+                <rule>
+		            <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+			        </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+
+  	    <menu value="&charsetMenuMore.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
             <template>
                 <rule>
 		            <menupopup>
