@@ -85,9 +85,9 @@ sub domakefile {
 
   # find the Makefile.in by scanning Makefile for the srcdir
   my $srcdir;
-  open MAKE, "<$dir/Makefile" or die "huh? $dir/Makefile";
+  open MAKE, "<$dir/Makefile" or die "Couldn't find file 'Makefile' in $dir";
   while ( <MAKE> ) {
-    if ( m#^\s*srcdir\s*=\s*(\S*)# ) {
+    if ( m#^\s*srcdir\s*=\s*(\S*\/(mozilla|ns)\/\S*)# ) {
       $srcdir = $1;
       last;
     }
@@ -96,12 +96,13 @@ sub domakefile {
 
   $srcdir or die "No srcdir found in file $dir/Makefile";
 
-  open MAKE, "<$srcdir/Makefile.in" or die "huh? $dir/Makefile, $srcdir/Makefile.in";
+  open MAKE, "<$srcdir/Makefile.in" or die "Couldn't find file 'Makefile.in' in $srcdir";
 
   my @lastLines; # buffer to store last three lines in (to emulate diff -B3)
   my $i;
   my $j = 3;
   my $lastLine = "";
+  my $modified = 0;
   my @requiresLines = (); # array to contain REQUIRES line(s) we're removing
   while ( <MAKE> ) {
     $lastLine = $lastLine.$_;
@@ -118,29 +119,59 @@ sub domakefile {
       my $modules = $2;
       my @reqs = split /\s+/, $modules;
       my $line = "";
-      foreach my $item (@reqs) {
-        if ( $item =~ m#^\$\(.*\)$# ) { # always copy "$(FOO_REQUIRES)"
-          $line = $line.$item." ";
+
+      if ( $reqs[$#reqs] ne '$(NULL)' ) {
+        $reqs[$#reqs + 1] = '$(NULL)';
+      }
+
+      for ( my $index = 0; $index < $#reqs; $index++ ) {
+        my $item = $reqs[$index];
+        if ( $item =~ m#^\$\(.*\)$# ) { # always copy "$(XXX)"
+          # keep it
         }
-        elsif ( $req->{$item} ) {     # copy if the module was referenced in .deps
-          $line = $line.$item." ";
-          delete($req{$item});    # this filters duplicate entries
+        elsif ( $req->{$item} ) {       # copy if the module was referenced in .deps
+          # keep it
+          delete($req{$item});          # this filters duplicate entries
+        }
+        else {
+          splice(@reqs, $index, 1);     # if it's not in .deps, don't write it out
+          $modified = 1;
         }
       }
-      $line =~ s/ $//;
-      if ( $line eq $modules ) {
+
+      if ( $modified == 0 ) {
         last;
+      }
+
+      foreach my $index ( 0 .. $#reqs ) {
+        if ( $index == 0 ) {
+          $reqs[$index] = "REQUIRES\t= ".$reqs[$index];
+        }
+        else {
+          $reqs[$index] = "\t\t  ".$reqs[$index];
+        }
+
+        if ( $index < $#reqs ) {
+          $reqs[$index] = $reqs[$index]." \\\n";
+        }
+        else {
+          $reqs[$index] = $reqs[$index]."\n";
+        }
       }
 
       # And here's the start of making it look like a cvs diff -u
       # I chose this approach because it allows a final manual editing pass over
       # the generated diff before actually modifying the Makefile.ins. We may want
       # to replace this at some point with direct editing.
+      # Instead of replicating the diff algorithm, this code just removes all of
+      # the old REQUIRES and emits the new REQUIRES, use cvs diff to see the
+      # actual changes.
+
       print "Index: $dir/Makefile.in\n";
       print "===================================================================\n";
       print "--- $dir/Makefile.in\t2001/01/01 00:00:00\n";
       print "+++ $dir/Makefile.in\t2001/01/01 00:00:00\n";
-      print "@@ -".($i-2).",".(7+$#requiresLines)." +".($i-2).",7 @@\n";
+      print "@@ -".($i-2).",".(7+$#requiresLines)." +".($i-2).",".(7+$#reqs)." @@\n";
 
       while ( $j ) {
         print " ".$lastLines[($i - $j--) % 3]; 
@@ -148,7 +179,9 @@ sub domakefile {
       foreach my $i ( @requiresLines ) {
         print "-".$i;
       } 
-      print "+$requires$line\n";
+      foreach my $i ( @reqs ) {
+        print "+".$i;
+      } 
 
       while ( <MAKE> ) {
         if ( $j++ == 3 ) {
