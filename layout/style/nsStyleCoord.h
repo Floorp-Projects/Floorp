@@ -74,7 +74,7 @@ public:
   void  AppendToString(nsString& aBuffer) const;
   void  ToString(nsString& aBuffer) const;
 
-protected:
+public:
   nsStyleUnit   mUnit;
   nsStyleUnion  mValue;
 };
