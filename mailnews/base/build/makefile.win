@@ -85,13 +85,15 @@ MSGLIBS=				\
 
 # These are the libraries we need to link with to create the dll
 LLIBS=										\
-			$(LLIBS)						\
+			$(MSGLIBS)						\
 			$(DIST)\lib\xpcom32.lib			\
 			$(DIST)\lib\xplib.lib       	\
 #			$(DIST)\lib\netlib.lib	    	\
 			$(DIST)\lib\libplc21.lib		\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\msgcore.lib			\
+			$(DIST)\lib\msglocal.lib		\
+#			$(DIST)\lib\compose.lib			\
 			$(LIBNSPR)						\
 			$(NULL)
 

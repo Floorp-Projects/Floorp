@@ -20,23 +20,25 @@
 #include "nsISupports.h"
 #include "msgCore.h"
 #include "nsMsgBaseCID.h"
+#include "pratom.h"
+#include "nsRepository.h"
 
 /* Include all of the interfaces our factory can generate components for */
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgRFC822Parser.h"
 
-#include "nsIDOMMsgAppCore.h"
-#include "nsMsgAppCore.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
+static NS_DEFINE_IID(kCMsgFolderEventCID, NS_MSGFOLDEREVENT_CID);
 
-static NS_DEFINE_IID(kCMsgAppCoreCID, NS_MSGCORE_CID);
 
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
+static PRInt32 g_InstanceCount = 0;
+static PRInt32 g_LockCount = 0;
 
 class nsMsgFactory : public nsIFactory
 {   
@@ -64,7 +66,7 @@ nsMsgFactory::nsMsgFactory(const nsCID &aClass)
 }   
 
 nsMsgFactory::~nsMsgFactory()   
-{   
+{
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
@@ -113,13 +115,10 @@ nsresult nsMsgFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, vo
 		if (NS_FAILED(res))  // was there a problem creating the object ?
 		  return res;   
 	}
-  // this is the main messenger interface
-  if (mClassID.Equals(kCMsgAppCoreCID))  {
-    res = NS_NewMsgAppCore((nsIDOMMsgAppCore **) &inst);
-    if (NS_FAILED(res))
-      return res;
-
-  }
+	else if(mClassID.Equals(kCMsgFolderEventCID))
+	{
+		return NS_OK;
+	}
 
 	// End of checking the interface ID code....
 	if (inst)
@@ -139,7 +138,12 @@ nsresult nsMsgFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, vo
 
 nsresult nsMsgFactory::LockFactory(PRBool aLock)  
 {  
-  // Not implemented in simplest case.  
+	if (aLock) { 
+		PR_AtomicIncrement(&g_LockCount); 
+	} else { 
+		PR_AtomicDecrement(&g_LockCount); 
+	} 
+
   return NS_OK;
 }  
 
@@ -159,5 +163,37 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
 		return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory); // they want a Factory Interface so give it to them
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
+}
+
+extern "C" NS_EXPORT PRBool NSCanUnload() 
+{
+    return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
+}
+
+extern "C" NS_EXPORT nsresult
+NSRegisterSelf(const char* path)
+{
+  nsresult ret;
+
+  ret = nsRepository::RegisterFactory(kCMsgFolderEventCID, path, PR_TRUE,
+    PR_TRUE);
+  if (NS_FAILED(ret)) {
+    return ret;
+  }
+
+  return ret;
+}
+
+extern "C" NS_EXPORT nsresult
+NSUnregisterSelf(const char* path)
+{
+  nsresult ret;
+
+  ret = nsRepository::UnregisterFactory(kCMsgFolderEventCID, path);
+  if (NS_FAILED(ret)) {
+    return ret;
+  }
+
+  return ret;
 }
 
