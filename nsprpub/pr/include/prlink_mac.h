@@ -28,12 +28,33 @@
 PR_BEGIN_EXTERN_C
 
 /*
-** Doc me!
+** PR_LoadNamedFragment
+** 
+** Load a code fragment by fragment name from the data fork of the specified file.
+** The fragment name is an internal name which uniquely identifies a code
+** fragment; this call opens the 'cfrg' resource in the file to find the
+** offsets of the named fragment.
+** 
+** If the specified fragment exists, it is loaded and an entry created
+** in the load map (keyed by fragment name).
+** 
+** If fileSpec points to an alias, the alias is resolved by this call.
 */
 PR_EXTERN(PRLibrary*) PR_LoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName);
 
 /*
-** Doc me!
+** PR_LoadIndexedFragment
+** 
+** Load a code fragment by fragment index from the data fork of the specified file
+** (since Mac shared libraries can contain multiple code fragments).
+** This call opens the 'cfrg' resource in the file to find the offsets
+** of the named fragment.
+** 
+** If the specified fragment exists, it is loaded and an entry created
+** in the load map (keyed by fragment name).
+** 
+** If fileSpec points to an alias, the alias is resolved by this call.
+** 
 */
 PR_EXTERN(PRLibrary*) PR_LoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragIndex);
 
