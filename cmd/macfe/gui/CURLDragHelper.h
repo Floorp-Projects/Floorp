@@ -61,10 +61,22 @@ public:
 	static void DoDragSendData ( const char* inURL, char* inTitle, FlavorType inFlavor,
 									ItemReference inItemRef, DragReference inDragRef) ;
 
+	// Extracts the url and title from a bookmark drag (url\rtitle). Will throw if
+	// can't get the right data.
+	static void ExtractURLAndTitle ( DragReference inDragRef, ItemReference inItemRef, 
+										string & outURL, string & outTitle ) ;
+
+	// Extracts the file url from a file drag. Will throw if can't get the right data.
+	static void ExtractFileURL ( DragReference inDragRef, ItemReference inItemRef, 
+										string & outFileName, HFSFlavor & outData ) ;
+
 	// Make sure the caption for an icon isn't too long so that it leaves turds.
 	// handles middle truncation, etc if title is too long
 	static string MakeIconTextValid ( const char* inTitle );
 
+	// build a url/title pair for the bookmark flavor.
+	static string CreateBookmarkFlavorURL ( const char* inURL, const char* inTitle ) ;
+	
 }; // CURLDragHelper
 
 
@@ -88,7 +100,7 @@ protected:
 	virtual void ReceiveDragItem ( DragReference inDragRef, DragAttributes /*inDragAttrs*/,
 											ItemReference inItemRef, Rect & /*inItemBounds*/ ) ;
 	virtual bool FindBestFlavor ( DragReference inDragRef, ItemReference inItemRef,
-											FlavorType & oFlavor ) ;
+											FlavorType & oFlavor ) const;
 
 		// must override to do the right thing
 	virtual void HandleDropOfPageProxy ( const char* inURL, const char* inTitle ) = 0;
@@ -132,5 +144,8 @@ protected:
 
 		// must override to do the right thing
 	virtual void HandleDropOfHTResource ( HT_Resource node ) = 0;
+
+		// help to determine if HT will accept all the items dropped on this pane
+	virtual bool NodeCanAcceptDrop ( DragReference inDragRef, HT_Resource inTargetNode ) const;
 
 }; // CHTAwareURLDragMixin

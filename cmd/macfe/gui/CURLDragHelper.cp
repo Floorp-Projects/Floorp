@@ -34,6 +34,7 @@
 #include "CURLDispatcher.h"
 #include "macutil.h"
 #include "FSpCompat.h"
+#include "CAutoPtrXP.h"
 
 
 //
@@ -197,29 +198,8 @@ CURLDragHelper :: DoDragSendData( const char* inURL, char* inTitle, FlavorType i
 			
 		case emBookmarkDrag:
 			{
-				string urlAndTitle(inURL);
-/*
-				if (theElement->type == LO_IMAGE)
-				{
-					urlAndTitle += "\r[Image]";
-				}
-				else if (theElement->type == LO_TEXT)
-*/
-				{
-					urlAndTitle += "\r";
-					string title;
-					
-					if (inTitle)
-					{
-						urlAndTitle += inTitle;
-					}
-					else
-					{
-						urlAndTitle += inURL;
-					}
-				}			
-				
 				// send url<CR>title with the null terminator
+				string urlAndTitle = CreateBookmarkFlavorURL ( inURL, inTitle );				
 				::SetDragItemFlavorData(inDragRef, inItemRef, inFlavor, urlAndTitle.c_str(), urlAndTitle.length() + 1, 0);
 			}
 			break;	
@@ -262,6 +242,110 @@ CURLDragHelper :: MakeIconTextValid ( const char* inText )
 } // MakeIconTextValid
 
 
+//
+// ExtractURLAndTitle
+// THROWS errorCode (int)
+//
+// Extracts the url and title from a bookmark drag (url\rtitle). Will throw if
+// can't get the right data.
+//
+void
+CURLDragHelper :: ExtractURLAndTitle ( DragReference inDragRef, ItemReference inItemRef, 
+										string & outURL, string & outTitle )
+{
+	Size theDataSize = 0;
+	OSErr err = ::GetFlavorDataSize(inDragRef, inItemRef, emBookmarkDrag, &theDataSize);
+	if ( err && err != badDragFlavorErr )
+		throw(err);
+	else if ( theDataSize ) {
+		vector<char> urlAndTitle ( theDataSize + 1 );
+		ThrowIfOSErr_( ::GetFlavorData( inDragRef, inItemRef, emBookmarkDrag,
+										urlAndTitle.begin(), &theDataSize, 0 ) );
+		urlAndTitle[theDataSize] = NULL;
+		char* title = find(urlAndTitle.begin(), urlAndTitle.end(), '\r');
+		if ( title != urlAndTitle.end() ) {
+			// hack up the data string into it's components
+			title[0] = NULL;
+			title++;
+			char* url = urlAndTitle.begin();
+			
+			// assign those components to the output parameters
+			outURL = url;
+			outTitle = title;
+		}
+		else {
+			outURL = urlAndTitle.begin();
+			outTitle = "";
+		}
+	}
+	else
+		throw(0);
+
+} // ExtractURLAndTitle
+
+
+//
+// ExtractFileURL
+// THROWS errorcode (int)
+//
+// Extracts the file url from a file drag.
+void
+CURLDragHelper :: ExtractFileURL ( DragReference inDragRef, ItemReference inItemRef, 
+										string & outFileName, HFSFlavor & outData )
+{
+	Boolean ignore1, ignore2;
+	Size theDataSize = 0;
+
+	::GetFlavorDataSize(inDragRef, inItemRef, flavorTypeHFS, &theDataSize);
+	OSErr anError = ::GetFlavorData(inDragRef, inItemRef, flavorTypeHFS, &outData, &theDataSize, nil);
+	if ( anError == badDragFlavorErr )
+		ThrowIfOSErr_( ::GetHFSFlavorFromPromise (inDragRef, inItemRef, &outData, true) );
+
+	// if there's an error resolving the alias, the local file url will refer to the alias itself.
+	::ResolveAliasFile(&outData.fileSpec, true, &ignore1, &ignore2);
+	CAutoPtrXP<char> localURL = CFileMgr::GetURLFromFileSpec(outData.fileSpec);
+	if ( localURL.get() )
+		outFileName = localURL.get();
+	else
+		throw(0);
+
+} // ExtractFileURL
+
+
+//
+// CreateBookmarkFlavorURL
+//
+// build a url/title pair for the bookmark flavor. This is of the form: URL <CR> title.
+//
+string
+CURLDragHelper :: CreateBookmarkFlavorURL ( const char* inURL, const char* inTitle ) 
+{
+	string urlAndTitle(inURL);
+/*
+	if (theElement->type == LO_IMAGE)
+	{
+		urlAndTitle += "\r[Image]";
+	}
+	else if (theElement->type == LO_TEXT)
+*/
+	{
+		urlAndTitle += "\r";
+		
+		if (inTitle)
+		{
+			urlAndTitle += inTitle;
+		}
+		else
+		{
+			urlAndTitle += inURL;
+		}
+	}			
+
+	return urlAndTitle;
+
+} // CreateBookmarkFlavorURL
+
+
 #pragma mark -
 
 
@@ -300,28 +384,13 @@ CURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAttributes /*inD
 		
 			case emBookmarkDrag:
 			{
-				OSErr err = ::GetFlavorDataSize(inDragRef, inItemRef, emBookmarkDrag, &theDataSize);
-				if ( err && err != badDragFlavorErr )
-					throw(err);
-				else if ( theDataSize ) {
-					vector<char> urlAndTitle ( theDataSize + 1 );
-					try {
-						ThrowIfOSErr_( ::GetFlavorData( inDragRef, inItemRef, emBookmarkDrag,
-														urlAndTitle.begin(), &theDataSize, 0 ) );
-						urlAndTitle[theDataSize] = NULL;
-						char* title = find(urlAndTitle.begin(), urlAndTitle.end(), '\r');
-						if ( title != urlAndTitle.end() ) {
-							title[0] = NULL;
-							title++;
-							char* url = urlAndTitle.begin();
-							HandleDropOfPageProxy ( url, title );
-						}
-						else
-							throw(0);
-					}
-					catch ( ... ) { 
-						DebugStr ( "\pError getting flavor data for proxy drag" );
-					}
+				try {
+					string url, title;
+					CURLDragHelper::ExtractURLAndTitle ( inDragRef, inItemRef, url, title ) ;
+					HandleDropOfPageProxy ( url.c_str(), title.c_str() );
+				}
+				catch ( ... ) { 
+					DebugStr ( "\pError getting flavor data for proxy drag" );
 				}
 			}
 			break;
@@ -329,21 +398,14 @@ CURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAttributes /*inD
 			case flavorTypeHFS:
 			case flavorTypePromiseHFS:
 			{
-				HFSFlavor theData;
-				Boolean ignore1, ignore2;
-				
-				::GetFlavorDataSize(inDragRef, inItemRef, flavorTypeHFS, &theDataSize);
-				OSErr anError = ::GetFlavorData(inDragRef, inItemRef, flavorTypeHFS, &theData, &theDataSize, nil);
-				if ( anError == badDragFlavorErr )
-					ThrowIfOSErr_( ::GetHFSFlavorFromPromise (inDragRef, inItemRef, &theData, true) );
-				
-				// if there's an error resolving the alias, the local file url will refer to the alias itself.
-				::ResolveAliasFile(&theData.fileSpec, true, &ignore1, &ignore2);
-				char* localURL = CFileMgr::GetURLFromFileSpec(theData.fileSpec);
-				Assert_(localURL != nil);
-				if ( localURL ) {
-					HandleDropOfLocalFile ( localURL, CStr255(theData.fileSpec.name), theData );
-					XP_FREE(localURL);
+				try {
+					string url;
+					HFSFlavor theData;
+					CURLDragHelper::ExtractFileURL ( inDragRef, inItemRef, url, theData ) ;
+					HandleDropOfLocalFile ( url.c_str(), CStr255(theData.fileSpec.name), theData );
+				}
+				catch ( ... ) { 
+					DebugStr ( "\pError getting flavor data for proxy drag" );
 				}
 			}
 			break;
@@ -390,7 +452,7 @@ CURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAttributes /*inD
 //
 bool
 CURLDragMixin :: FindBestFlavor ( DragReference inDragRef, ItemReference inItemRef,
-										FlavorType & oFlavor )
+										FlavorType & oFlavor ) const
 {
 	// a function object which implements the body of the find_if() loop below. Returns
 	// true if the flavor given is present in the drag item
@@ -475,3 +537,101 @@ CHTAwareURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAttribute
 	}
 
 } // ReceiveDragItem
+
+
+//
+// NodeCanAcceptDrop
+//
+// Check each item in the drop to see if it can be dropped on the particular node given in |inTargetNode|.
+// This will _and_ together the results for all the items in a drag so that if any of of them succeeds,
+// they all do. Is this the right behavior?
+//
+bool
+CHTAwareURLDragMixin :: NodeCanAcceptDrop ( DragReference inDragRef, HT_Resource inTargetNode ) const
+{
+	Uint16 itemCount;
+	::CountDragItems(inDragRef, &itemCount);
+	bool acceptableDrop = true;
+	bool targetIsContainer = HT_IsContainer ( inTargetNode );
+	
+	for ( Uint16 item = 1; item <= itemCount; item++ ) {
+		ItemReference itemRef;
+		::GetDragItemReferenceNumber(inDragRef, item, &itemRef);
+
+		try {
+			FlavorType useFlavor;
+			FindBestFlavor ( inDragRef, itemRef, useFlavor );
+			switch ( useFlavor ) {
+			
+				case emHTNodeDrag:
+				{
+					try {
+						HT_Resource draggedNode = NULL;
+						Size theDataSize = sizeof(HT_Resource);
+						ThrowIfOSErr_(::GetFlavorData( inDragRef, itemRef, emHTNodeDrag, &draggedNode, &theDataSize, 0 ));
+						if ( targetIsContainer )
+							acceptableDrop &= HT_CanDropHTROn ( inTargetNode, draggedNode );		// FIX TO CHANGE CURSOR
+						else
+							acceptableDrop &= HT_CanDropHTRAtPos ( inTargetNode, draggedNode, PR_TRUE );
+					}
+					catch ( ... ) {
+						acceptableDrop = false;
+					}
+				}
+				break;
+					
+				case emBookmarkDrag:
+				{
+					try {
+						string url, title;
+						CURLDragHelper::ExtractURLAndTitle ( inDragRef, itemRef, url, title );
+						char* castURL = const_cast<char*>(url.c_str());		// lame.
+						if ( targetIsContainer )
+							acceptableDrop &= HT_CanDropURLOn ( inTargetNode, castURL );	// FIX TO CHANGE CURSOR
+						else
+							acceptableDrop &= HT_CanDropURLAtPos ( inTargetNode, castURL, PR_TRUE );
+					}
+					catch ( ... ) {
+						acceptableDrop = false;
+					}
+				}
+				break;
+					
+				case flavorTypeHFS:
+				case flavorTypePromiseHFS:
+				{
+					try {
+						string url;
+						HFSFlavor ignored;
+						CURLDragHelper::ExtractFileURL ( inDragRef, itemRef, url, ignored );
+						char* castURL = const_cast<char*>(url.c_str());		// lame.
+						if ( targetIsContainer )
+							acceptableDrop &= HT_CanDropURLOn ( inTargetNode, castURL );	// FIX TO CHANGE CURSOR....
+						else
+							acceptableDrop &= HT_CanDropURLAtPos ( inTargetNode, castURL, PR_TRUE );
+					}
+					catch ( ... ) {
+						acceptableDrop = false;
+					}
+				}
+				break;
+					
+				case 'TEXT':
+					break;
+				
+				default:
+					// throw? 
+					break;
+			}
+		}
+		catch ( ... ) {
+			#if DEBUG
+				DebugStr("\pDrag with no recognized flavors; g");
+			#endif
+		}
+
+	} // for each file
+
+	return acceptableDrop;
+
+} // NodeCanAcceptDrop
