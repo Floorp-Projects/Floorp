@@ -26,7 +26,7 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
 CPPSRCS=				\
-	nsAbsoluteContainingBlock.cpp		\
+	nsAbsoluteContainingBlock.cpp	\
 	nsAreaFrame.cpp			\
 	nsBRFrame.cpp			\
 	nsBlockBandData.cpp		\
@@ -34,6 +34,7 @@ CPPSRCS=				\
 	nsBlockReflowContext.cpp	\
 	nsBulletFrame.cpp		\
 	nsContainerFrame.cpp		\
+	nsFirstLetterFrame.cpp		\
 	nsFrame.cpp			\
 	nsHRFrame.cpp			\
 	nsHTMLAtoms.cpp			\
@@ -63,42 +64,43 @@ CPPSRCS=				\
 	nsWBRFrame.cpp			\
 	$(NULL)
 
-CPP_OBJS=					\
-	.\$(OBJDIR)\nsAbsoluteContainingBlock.obj		\
-	.\$(OBJDIR)\nsAreaFrame.obj		\
-	.\$(OBJDIR)\nsBRFrame.obj		\
-	.\$(OBJDIR)\nsBlockBandData.obj		\
-	.\$(OBJDIR)\nsBlockFrame.obj		\
-	.\$(OBJDIR)\nsBlockReflowContext.obj	\
-	.\$(OBJDIR)\nsBulletFrame.obj		\
-	.\$(OBJDIR)\nsContainerFrame.obj	\
-	.\$(OBJDIR)\nsFrame.obj			\
-	.\$(OBJDIR)\nsHRFrame.obj		\
-	.\$(OBJDIR)\nsHTMLAtoms.obj		\
-	.\$(OBJDIR)\nsHTMLContainerFrame.obj	\
-	.\$(OBJDIR)\nsHTMLFrame.obj		\
-	.\$(OBJDIR)\nsHTMLImageLoader.obj	\
-	.\$(OBJDIR)\nsHTMLIIDs.obj		\
-	.\$(OBJDIR)\nsHTMLReflowCommand.obj	\
-	.\$(OBJDIR)\nsHTMLReflowState.obj	\
-	.\$(OBJDIR)\nsImageFrame.obj		\
-	.\$(OBJDIR)\nsImageMap.obj		\
-	.\$(OBJDIR)\nsInlineFrame.obj		\
-	.\$(OBJDIR)\nsLeafFrame.obj		\
-	.\$(OBJDIR)\nsLineBox.obj		\
-	.\$(OBJDIR)\nsLineLayout.obj		\
-	.\$(OBJDIR)\nsObjectFrame.obj		\
-	.\$(OBJDIR)\nsPageFrame.obj		\
-	.\$(OBJDIR)\nsPlaceholderFrame.obj	\
-	.\$(OBJDIR)\nsPresShell.obj		\
-	.\$(OBJDIR)\nsSimplePageSequence.obj	\
-	.\$(OBJDIR)\nsScrollFrame.obj		\
-	.\$(OBJDIR)\nsSpacerFrame.obj		\
-	.\$(OBJDIR)\nsSplittableFrame.obj	\
-	.\$(OBJDIR)\nsTextFrame.obj		\
-	.\$(OBJDIR)\nsTextTransformer.obj	\
-	.\$(OBJDIR)\nsViewportFrame.obj	\
-	.\$(OBJDIR)\nsWBRFrame.obj		\
+CPP_OBJS=						\
+	.\$(OBJDIR)\nsAbsoluteContainingBlock.obj	\
+	.\$(OBJDIR)\nsAreaFrame.obj			\
+	.\$(OBJDIR)\nsBRFrame.obj			\
+	.\$(OBJDIR)\nsBlockBandData.obj			\
+	.\$(OBJDIR)\nsBlockFrame.obj			\
+	.\$(OBJDIR)\nsBlockReflowContext.obj		\
+	.\$(OBJDIR)\nsBulletFrame.obj			\
+	.\$(OBJDIR)\nsContainerFrame.obj		\
+	.\$(OBJDIR)\nsFirstLetterFrame.obj		\
+	.\$(OBJDIR)\nsFrame.obj				\
+	.\$(OBJDIR)\nsHRFrame.obj			\
+	.\$(OBJDIR)\nsHTMLAtoms.obj			\
+	.\$(OBJDIR)\nsHTMLContainerFrame.obj		\
+	.\$(OBJDIR)\nsHTMLFrame.obj			\
+	.\$(OBJDIR)\nsHTMLImageLoader.obj		\
+	.\$(OBJDIR)\nsHTMLIIDs.obj			\
+	.\$(OBJDIR)\nsHTMLReflowCommand.obj		\
+	.\$(OBJDIR)\nsHTMLReflowState.obj		\
+	.\$(OBJDIR)\nsImageFrame.obj			\
+	.\$(OBJDIR)\nsImageMap.obj			\
+	.\$(OBJDIR)\nsInlineFrame.obj			\
+	.\$(OBJDIR)\nsLeafFrame.obj			\
+	.\$(OBJDIR)\nsLineBox.obj			\
+	.\$(OBJDIR)\nsLineLayout.obj			\
+	.\$(OBJDIR)\nsObjectFrame.obj			\
+	.\$(OBJDIR)\nsPageFrame.obj			\
+	.\$(OBJDIR)\nsPlaceholderFrame.obj		\
+	.\$(OBJDIR)\nsPresShell.obj			\
+	.\$(OBJDIR)\nsSimplePageSequence.obj		\
+	.\$(OBJDIR)\nsScrollFrame.obj			\
+	.\$(OBJDIR)\nsSpacerFrame.obj			\
+	.\$(OBJDIR)\nsSplittableFrame.obj		\
+	.\$(OBJDIR)\nsTextFrame.obj			\
+	.\$(OBJDIR)\nsTextTransformer.obj		\
+	.\$(OBJDIR)\nsViewportFrame.obj			\
+	.\$(OBJDIR)\nsWBRFrame.obj			\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
