@@ -33,6 +33,7 @@ class CRDFNotificationHandler
 protected:
 
 	virtual HT_Pane CreateHTPane ( HT_Resource inResource ) ;
+	virtual HT_Pane CreateHTPane ( RDF_Resource inResource ) ;
 	virtual HT_Pane CreateHTPane ( const char* inURL, unsigned int inCount, 
 										char** inParamNames, char** inParamValues ) ;
 	virtual HT_Pane	CreateHTPane();

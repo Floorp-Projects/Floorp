@@ -43,9 +43,15 @@ CRDFNotificationHandler::CreateHTPane()
 HT_Pane
 CRDFNotificationHandler::CreateHTPane ( HT_Resource inResource )
 {
+	return CreateHTPane ( HT_GetRDFResource(inResource) );
+}
+
+HT_Pane
+CRDFNotificationHandler::CreateHTPane ( RDF_Resource inResource )
+{
 	HT_Notification notifyStruct = CreateNotificationStruct();
 	if (notifyStruct)
-		return HT_PaneFromResource(HT_GetRDFResource(inResource), notifyStruct, false, false, false);
+		return HT_PaneFromResource(inResource, notifyStruct, false, true, true);
 	else
 		return NULL;
 }
