@@ -424,7 +424,7 @@ nsHTMLInputElement::SetValue(const nsAReadableString& aValue)
     if (NS_FORM_INPUT_FILE == type) {
       nsresult result;
       NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
-                      NS_SCRIPTSECURITYMANAGER_PROGID, &result);
+                      NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
       if (NS_FAILED(result)) 
         return result;
       PRBool enabled;
@@ -1356,7 +1356,7 @@ nsHTMLInputElement::GetControllers(nsIControllers** aResult)
       if (!mControllers) { return NS_ERROR_NULL_POINTER; }
 
       nsresult rv;
-      nsCOMPtr<nsIController> controller = do_CreateInstance("component://netscape/editor/editorcontroller", &rv);
+      nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/editor/editorcontroller;1", &rv);
       if (NS_FAILED(rv)) return rv;
       nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller, &rv);
       if (NS_FAILED(rv)) return rv;

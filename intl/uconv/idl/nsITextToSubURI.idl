@@ -26,7 +26,7 @@
 %{C++
 // {8B042E22-6F87-11d3-B3C8-00805F8A6670}
 #define NS_TEXTTOSUBURI_CID { 0x8b042e22, 0x6f87, 0x11d3, { 0xb3, 0xc8, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
-#define NS_ITEXTTOSUBURI_PROGID "component://netscape/intl/texttosuburi"
+#define NS_ITEXTTOSUBURI_CONTRACTID "@mozilla.org/intl/texttosuburi;1"
 %}
 
 [scriptable, uuid(8B042E24-6F87-11d3-B3C8-00805F8A6670)]

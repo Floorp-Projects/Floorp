@@ -52,7 +52,7 @@ extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
              const char *aClassName,
-             const char *aProgID,
+             const char *aContractID,
              nsIFactory **aFactory)
 {
     nsresult rv;

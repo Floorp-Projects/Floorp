@@ -84,13 +84,13 @@ function AddTestData() {
 		if ( p.match(/Method/) ) {
 			AddTestCase(
 				"child."+p+"()",
-				"xpcTestChild3 method",
+				"@mozilla.org/js/xpc/test/Child3;1 method",
 				child[p]() );
 
 		} else if (p.match(/Attribute/)) {
 			AddTestCase(
 				"child." +p,
-				"xpcTestChild3 attribute",
+				"@mozilla.org/js/xpc/test/Child3;1 attribute",
 				child[p] );
 		}
 	}
@@ -116,13 +116,13 @@ function AddTestData() {
 		if ( p.match(/Method/) ) {
 			AddTestCase(
 				"child."+p+"()",
-				"xpcTestChild3 method",
+				"@mozilla.org/js/xpc/test/Child3;1 method",
 				child[p]() );
 
 		} else if (p.match(/Attribute/)) {
 			AddTestCase(
 				"child." +p,
-				"xpcTestChild3 attribute",
+				"@mozilla.org/js/xpc/test/Child3;1 attribute",
 				child[p] );
 		}
 	}		

@@ -36,17 +36,17 @@ class nsIDOMXPConnectFactory : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXPCONNECTFACTORY_IID; return iid; }
 
-  NS_IMETHOD    CreateInstance(const nsString& aProgID, nsISupports** aReturn)=0;
+  NS_IMETHOD    CreateInstance(const nsString& aContractID, nsISupports** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMXPCONNECTFACTORY   \
-  NS_IMETHOD    CreateInstance(const nsString& aProgID, nsISupports** aReturn);  \
+  NS_IMETHOD    CreateInstance(const nsString& aContractID, nsISupports** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMXPCONNECTFACTORY(_to)  \
-  NS_IMETHOD    CreateInstance(const nsString& aProgID, nsISupports** aReturn) { return _to##CreateInstance(aProgID, aReturn); }  \
+  NS_IMETHOD    CreateInstance(const nsString& aContractID, nsISupports** aReturn) { return _to##CreateInstance(aContractID, aReturn); }  \
 
 
 extern "C" NS_APPSHELL nsresult NS_InitXPConnectFactoryClass(nsIScriptContext *aContext, void **aPrototype);

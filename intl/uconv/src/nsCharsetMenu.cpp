@@ -611,7 +611,7 @@ nsresult nsCharsetMenu::InitResources()
   mCCManager = do_GetService(kCharsetConverterManagerCID, &res);
   if (NS_FAILED(res)) return res;
 
-  mPrefService = do_GetService(NS_PREF_PROGID, &res);
+  mPrefService = do_GetService(NS_PREF_CONTRACTID, &res);
   if (NS_FAILED(res)) return res;
 
   return res;

@@ -66,7 +66,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsI18nCompatibility)
 static nsModuleComponentInfo components[] = 
 {
  { "I18n compatibility", NS_I18NCOMPATIBILITY_CID, 
-    NS_I18NCOMPATIBILITY_PROGID, nsI18nCompatibilityConstructor}
+    NS_I18NCOMPATIBILITY_CONTRACTID, nsI18nCompatibilityConstructor}
 };
 
 NS_IMPL_NSGETMODULE("I18nCompatibility", components)

@@ -48,34 +48,34 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
-// information like the function to create an instance, progid, and
+// information like the function to create an instance, contractid, and
 // class name.
 //
 static nsModuleComponentInfo components[] = {
 #ifdef ENABLE_EDITOR_API_LOG
     { "HTML Editor", NS_HTMLEDITOR_CID,
-      "component://netscape/editor/htmleditor", nsHTMLEditorLogConstructor, },
+      "@mozilla.org/editor/htmleditor;1", nsHTMLEditorLogConstructor, },
 #else
     { "HTML Editor", NS_HTMLEDITOR_CID,
-      "component://netscape/editor/htmleditor", nsHTMLEditorConstructor, },
+      "@mozilla.org/editor/htmleditor;1", nsHTMLEditorConstructor, },
 #endif
     { "Editor Controller", NS_EDITORCONTROLLER_CID,
-      "component://netscape/editor/editorcontroller", nsEditorControllerConstructor, },
+      "@mozilla.org/editor/editorcontroller;1", nsEditorControllerConstructor, },
     { "Composer Controller", NS_COMPOSERCONTROLLER_CID,
-      "component://netscape/editor/composercontroller", nsComposerControllerConstructor, },
+      "@mozilla.org/editor/composercontroller;1", nsComposerControllerConstructor, },
     { "Editor Shell Component", NS_EDITORSHELL_CID,
-      "component://netscape/editor/editorshell", nsEditorShellConstructor, },
+      "@mozilla.org/editor/editorshell;1", nsEditorShellConstructor, },
     { "Editor Shell Spell Checker", NS_EDITORSHELL_CID,
-      "component://netscape/editor/editorspellcheck", nsEditorShellConstructor, },
+      "@mozilla.org/editor/editorspellcheck;1", nsEditorShellConstructor, },
     { "Editor Service", NS_EDITORSERVICE_CID,
-      "component://netscape/editor/editorservice", nsEditorServiceConstructor,},
+      "@mozilla.org/editor/editorservice;1", nsEditorServiceConstructor,},
     { "Editor Startup Handler", NS_EDITORSERVICE_CID,
-      "component://netscape/commandlinehandler/general-startup-editor",
+      "@mozilla.org/commandlinehandler/general-startup;1?type=editor",
       nsEditorServiceConstructor,
       nsEditorService::RegisterProc,
       nsEditorService::UnregisterProc, },
     { "Edit Startup Handler", NS_EDITORSERVICE_CID,
-      "component://netscape/commandlinehandler/general-startup-edit",
+      "@mozilla.org/commandlinehandler/general-startup;1?type=edit",
       nsEditorServiceConstructor, },
 };
 

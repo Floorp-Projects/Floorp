@@ -195,15 +195,15 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieHTTPNotify, Init)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
-// information like the function to create an instance, progid, and
+// information like the function to create an instance, contractid, and
 // class name.
 //
 static nsModuleComponentInfo components[] = {
     { "CookieService", NS_COOKIESERVICE_CID,
-      NS_COOKIESERVICE_PROGID, nsCookieServiceConstructor, },	// XXX Singleton
+      NS_COOKIESERVICE_CONTRACTID, nsCookieServiceConstructor, },	// XXX Singleton
     { NS_COOKIEHTTPNOTIFY_CLASSNAME,
       NS_COOKIEHTTPNOTIFY_CID,
-      NS_COOKIEHTTPNOTIFY_PROGID,
+      NS_COOKIEHTTPNOTIFY_CONTRACTID,
       nsCookieHTTPNotifyConstructor,
       nsCookieHTTPNotify::RegisterProc,
       nsCookieHTTPNotify::UnregisterProc

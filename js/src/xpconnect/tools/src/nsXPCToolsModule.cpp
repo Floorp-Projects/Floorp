@@ -53,8 +53,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCToolsProfiler)
         { 0x8f, 0x69, 0x0, 0x10, 0xa4, 0xe7, 0x3d, 0x9a } }
 
 static nsModuleComponentInfo components[] = {
- {nsnull, COMPILER_CID, XPCTOOLS_COMPILER_PROGID, nsXPCToolsCompilerConstructor},
- {nsnull, PROFILER_CID, XPCTOOLS_PROFILER_PROGID, nsXPCToolsProfilerConstructor}
+ {nsnull, COMPILER_CID, XPCTOOLS_COMPILER_CONTRACTID, nsXPCToolsCompilerConstructor},
+ {nsnull, PROFILER_CID, XPCTOOLS_PROFILER_CONTRACTID, nsXPCToolsProfilerConstructor}
 };
 
 NS_IMPL_NSGETMODULE("xpctools", components)

@@ -209,7 +209,7 @@ PRInt32 nsRegisterItem::Complete()
         {
             // not in the wizard, so ask the directory service where it is
             NS_WITH_SERVICE(nsIProperties, directoryService,
-                            NS_DIRECTORY_SERVICE_PROGID, &rv);
+                            NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
             if(NS_SUCCEEDED(rv) && directoryService)
             {
                 directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR,

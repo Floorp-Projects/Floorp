@@ -210,7 +210,7 @@ nsPrefBranch::getFileSpecPrefInternal(const char *real_pref_name,
         return NS_ERROR_NULL_POINTER;        
 
         nsresult rv = nsComponentManager::CreateInstance(
-        	(const char*)NS_FILESPEC_PROGID,
+        	(const char*)NS_FILESPEC_CONTRACTID,
         	(nsISupports*)nsnull,
         	(const nsID&)NS_GET_IID(nsIFileSpec),
         	(void**)value);
@@ -267,7 +267,7 @@ nsPrefBranch::setFileSpecPrefInternal(const char *real_pref_name,
         // nsPersistentFileDescriptor requires an existing
         // object. Make it first. COM makes this difficult, of course...
 	    nsIFileSpec* tmp = nsnull;
-        rv = nsComponentManager::CreateInstance(NS_FILESPEC_PROGID,
+        rv = nsComponentManager::CreateInstance(NS_FILESPEC_CONTRACTID,
         	nsnull,
         	NS_GET_IID(nsIFileSpec),
         	(void**)&tmp);

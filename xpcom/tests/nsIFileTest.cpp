@@ -72,7 +72,7 @@ NS_SetupRegistry()
 void InitTest(char* creationPath, char* appendPath)
 {
     nsILocalFile* file = nsnull;
-    nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+    nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
                                               nsnull, 
                                               NS_GET_IID(nsILocalFile), 
                                               (void**)&file);
@@ -125,7 +125,7 @@ void CreationTest(char* creationPath, char* appendPath,
 {
     nsCOMPtr<nsILocalFile> file;
     nsresult rv = 
-    nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+    nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
                                               nsnull, 
                                               NS_GET_IID(nsILocalFile), 
                                               (void **)getter_AddRefs(file));
@@ -177,7 +177,7 @@ void CreateUniqueTest(char* creationPath, char* appendPath,
 {
     nsCOMPtr<nsILocalFile> file;
     nsresult rv = 
-    nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+    nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
                                               nsnull, 
                                               NS_GET_IID(nsILocalFile), 
                                               (void **)getter_AddRefs(file));
@@ -234,7 +234,7 @@ CopyTest(char *testFile, char *targetDir)
   printf("start copy test\n");
 
   nsresult rv =
-    nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, NULL,
+    nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, NULL,
 				       NS_GET_IID(nsILocalFile), 
 				       (void**)getter_AddRefs(file));
     
@@ -247,7 +247,7 @@ CopyTest(char *testFile, char *targetDir)
   rv = file->InitWithPath(testFile);
   VerifyResult(rv);
   
-  rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, NULL,
+  rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, NULL,
 					  NS_GET_IID(nsILocalFile), 
 					  (void**)getter_AddRefs(dir));
 
@@ -271,7 +271,7 @@ DeletionTest(char* creationPath, char* appendPath, PRBool recursive)
 {
     nsCOMPtr<nsILocalFile> file;
     nsresult rv = 
-      nsComponentManager::CreateInstance(NS_FILE_PROGID, NULL,
+      nsComponentManager::CreateInstance(NS_FILE_CONTRACTID, NULL,
 					 NS_GET_IID(nsILocalFile),
 					 (void**)getter_AddRefs(file));
     

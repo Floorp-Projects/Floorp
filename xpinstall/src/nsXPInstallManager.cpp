@@ -613,7 +613,7 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
     url.Mid( leaf, pos+1, url.Length() );
 
     NS_WITH_SERVICE(nsIProperties, directoryService,
-                    NS_DIRECTORY_SERVICE_PROGID, &rv);
+                    NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
 
     if (mChromeType == 0 )
     {

@@ -1292,7 +1292,7 @@ void
 nsBoxFrameInner::GetDebugPref(nsIPresContext* aPresContext)
 {
     gDebug = PR_FALSE;
-    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
     if (pref) {
 	    pref->GetBoolPref("xul.debug.box", &gDebug);
     }

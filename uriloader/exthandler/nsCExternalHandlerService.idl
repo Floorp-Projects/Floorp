@@ -34,13 +34,13 @@ nsIExternalHelperAppService
 #define NS_EXTERNALHELPERAPPSERVICE_CID   \
  { 0xa7f800e0, 0x4306, 0x11d4, { 0x98, 0xd0, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
 
-#define NS_EXTERNALHELPERAPPSERVICE_PROGID \
-"component://netscape/uriloader/external-helper-app-service"
+#define NS_EXTERNALHELPERAPPSERVICE_CONTRACTID \
+"@mozilla.org/uriloader/external-helper-app-service;1"
 
-#define NS_EXTERNALPROTOCOLSERVICE_PROGID \
-"component://netscape/uriloader/external-protocol-service"
+#define NS_EXTERNALPROTOCOLSERVICE_CONTRACTID \
+"@mozilla.org/uriloader/external-protocol-service;1"
 
-#define NS_MIMESERVICE_PROGID \
-"component:||netscape|mime"
+#define NS_MIMESERVICE_CONTRACTID \
+"@mozilla.org/mime;1"
 
 %}

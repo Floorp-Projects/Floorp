@@ -368,7 +368,7 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XUL content utils");
 
 		// get a locale service 
-		nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_PROGID, &rv);
+		nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv))
 		{
 			nsCOMPtr<nsILocale>	locale;

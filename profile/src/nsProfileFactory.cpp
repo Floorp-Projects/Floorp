@@ -30,7 +30,7 @@ static nsModuleComponentInfo components[] =
 {
     { "Profile Manager", 
       NS_PROFILE_CID,
-      NS_PROFILE_PROGID, 
+      NS_PROFILE_CONTRACTID, 
       nsProfileConstructor,
      }
 };

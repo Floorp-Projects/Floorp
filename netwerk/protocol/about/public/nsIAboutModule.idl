@@ -46,8 +46,8 @@ interface nsIAboutModule : nsISupports
 
 %{C++
 
-#define NS_ABOUT_MODULE_PROGID        "component://netscape/network/protocol/about" 
-#define NS_ABOUT_MODULE_PROGID_PREFIX NS_ABOUT_MODULE_PROGID "?what=" 
-#define NS_ABOUT_MODULE_PROGID_LENGTH 49      // nsCRT::strlen(NS_ABOUT_MODULE_PROGID_PREFIX)
+#define NS_ABOUT_MODULE_CONTRACTID        "@mozilla.org/network/protocol/about;1" 
+#define NS_ABOUT_MODULE_CONTRACTID_PREFIX NS_ABOUT_MODULE_CONTRACTID "?what=" 
+#define NS_ABOUT_MODULE_CONTRACTID_LENGTH 49      // nsCRT::strlen(NS_ABOUT_MODULE_CONTRACTID_PREFIX)
 
 %}

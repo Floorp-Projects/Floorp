@@ -74,7 +74,7 @@
             initDialog();
 
             // Get find component.
-            finder = Components.classes[ "component://netscape/appshell/component/find" ].getService();
+            finder = Components.classes[ "@mozilla.org/appshell/component/find;1" ].getService();
             finder = finder.QueryInterface( Components.interfaces.nsIFindComponent );
             if ( !finder ) {
                 alert( "Error accessing find component\n" );

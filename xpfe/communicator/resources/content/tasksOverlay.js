@@ -37,7 +37,7 @@ function toHistory()
 {
   // Use a single sidebar history dialog
 
-  var cwindowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+  var cwindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
   var iwindowManager = Components.interfaces.nsIWindowMediator;
   var windowManager  = cwindowManager.QueryInterface(iwindowManager);
 
@@ -70,7 +70,7 @@ function toJavaConsole()
 {
 	try{
 		var cid =
-			Components.classes['component://netscape/oji/jvm-mgr'];
+			Components.classes['@mozilla.org/oji/jvm-mgr;1'];
 		var iid = Components.interfaces.nsIJVMManager;
 		var jvmMgr = cid.getService(iid);
 		jvmMgr.ShowJavaConsole();
@@ -81,7 +81,7 @@ function toJavaConsole()
 
 function toOpenWindowByType( inType, uri )
 {
-	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
 
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 
@@ -98,7 +98,7 @@ function OpenBrowserWindow()
 {
   dump("In OpenBrowserWindw()...\n");
   var charsetArg = new String();
-  var handler = Components.classes['component://netscape/commandlinehandler/general-startup-browser'];
+  var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser'];
   handler = handler.getService();
   handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
   var startpage = handler.defaultArgs;
@@ -140,7 +140,7 @@ function newWindowOfType( aType )
 
 function CycleWindow( aType, aChromeURL )
 {
-  var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+  var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
   var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 
   var topWindowOfType = windowManagerInterface.getMostRecentWindow( aType );
@@ -174,7 +174,7 @@ function toEditor()
 
 function ShowWindowFromResource( node )
 {
-	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
 	dump("got window Manager \n");
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
     dump("got interface \n");
@@ -290,7 +290,7 @@ function WalletAction( action )
 {
   var strings = document.getElementById("personalManagers");
   if (action == "password" || action == "expire" || action == "clear") {
-    wallet = Components.classes['component://netscape/wallet/wallet-service'];
+    wallet = Components.classes['@mozilla.org/wallet/wallet-service;1'];
     wallet = wallet.getService();
     wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
 
@@ -313,7 +313,7 @@ function WalletAction( action )
   }
 
   if (action == "encrypt" || action == "obscure") {
-    wallet = Components.classes['component://netscape/wallet/wallet-service'];
+    wallet = Components.classes['@mozilla.org/wallet/wallet-service;1'];
     wallet = wallet.getService();
     wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
     wallet.WALLET_InitReencryptCallback(window._content);
@@ -329,7 +329,7 @@ function WalletAction( action )
       action == "imageAllow" || action == "imageBlock") {
 
     var cookieViewer =
-      Components.classes["component://netscape/cookieviewer/cookieviewer-world"]
+      Components.classes["@mozilla.org/cookieviewer/cookieviewer-world;1"]
         .createInstance(Components.interfaces["nsICookieViewer"]);
 
     COOKIEPERMISSION = 0;

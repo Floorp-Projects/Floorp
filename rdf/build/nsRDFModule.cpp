@@ -116,32 +116,32 @@ static nsModuleComponentInfo components[] =
     { 
      "RDF Composite Data Source", 
      NS_RDFCOMPOSITEDATASOURCE_CID,
-     NS_RDF_DATASOURCE_PROGID_PREFIX "composite-datasource", 
+     NS_RDF_DATASOURCE_CONTRACTID_PREFIX "composite-datasource", 
      CreateNewRDFCompositeDataSource
     },
 
     { 
      "RDF File System Data Source", 
      NS_RDFFILESYSTEMDATASOURCE_CID,
-     NS_RDF_DATASOURCE_PROGID_PREFIX "files", 
+     NS_RDF_DATASOURCE_CONTRACTID_PREFIX "files", 
      CreateNewRDFFileSystemDataSource
     },
     
     { "RDF In-Memory Data Source", 
       NS_RDFINMEMORYDATASOURCE_CID,
-      NS_RDF_DATASOURCE_PROGID_PREFIX "in-memory-datasource", 
+      NS_RDF_DATASOURCE_CONTRACTID_PREFIX "in-memory-datasource", 
       NS_NewRDFInMemoryDataSource
     },
 
     { "Local Store", 
       NS_LOCALSTORE_CID,
-      NS_RDF_DATASOURCE_PROGID_PREFIX "local-store", 
+      NS_RDF_DATASOURCE_CONTRACTID_PREFIX "local-store", 
       CreateNewLocalStore
     },
     
     { "RDF XML Data Source", 
       NS_RDFXMLDATASOURCE_CID,
-      NS_RDF_DATASOURCE_PROGID_PREFIX "xml-datasource", 
+      NS_RDF_DATASOURCE_CONTRACTID_PREFIX "xml-datasource", 
       CreateNewRDFXMLDataSource
     },
 
@@ -149,98 +149,98 @@ static nsModuleComponentInfo components[] =
     { "RDF Default Resource Factory", 
       NS_RDFDEFAULTRESOURCE_CID,
       // Note: default resource factory has no name= part
-      NS_RDF_RESOURCE_FACTORY_PROGID, 
+      NS_RDF_RESOURCE_FACTORY_CONTRACTID, 
       CreateNewRDFDefaultResource
     },
 
     // register all the other rdf components:
     { "RDF Content Sink", 
       NS_RDFCONTENTSINK_CID,
-      NS_RDF_PROGID "/content-sink", 
+      NS_RDF_CONTRACTID "/content-sink;1", 
       CreateNewRDFContentSink
     },
     
     { "RDF Container", 
       NS_RDFCONTAINER_CID,
-      NS_RDF_PROGID "/container", 
+      NS_RDF_CONTRACTID "/container;1", 
       CreateNewRDFContainer
     },
     
     { "RDF Container Utilities", 
       NS_RDFCONTAINERUTILS_CID,
-      NS_RDF_PROGID "/container-utils", 
+      NS_RDF_CONTRACTID "/container-utils;1", 
       CreateNewRDFContainerUtils
     },
     
     { "RDF Service", 
       NS_RDFSERVICE_CID,
-      NS_RDF_PROGID "/rdf-service",
+      NS_RDF_CONTRACTID "/rdf-service;1",
       CreateNewRDFService 
     },
     
     { "XUL Sort Service", 
       NS_XULSORTSERVICE_CID,
-      NS_RDF_PROGID "/xul-sort-service", 
+      NS_RDF_CONTRACTID "/xul-sort-service;1", 
       CreateNewXULSortService
     },
         
     { "XUL Template Builder", 
       NS_XULTEMPLATEBUILDER_CID,
-      NS_RDF_PROGID "/xul-template-builder", 
+      NS_RDF_CONTRACTID "/xul-template-builder;1", 
       CreateNewXULTemplateBuilder      
     },
     
     { "XUL Content Sink", 
       NS_XULCONTENTSINK_CID,
-      NS_RDF_PROGID "/xul-content-sink", 
+      NS_RDF_CONTRACTID "/xul-content-sink;1", 
       CreateNewXULContentSink
     },
     
     { "XUL Document", 
       NS_XULDOCUMENT_CID,
-      NS_RDF_PROGID "/xul-document", 
+      NS_RDF_CONTRACTID "/xul-document;1", 
       CreateNewXULDocument
     },
     
     { "XUL PopupListener", 
       NS_XULPOPUPLISTENER_CID,
-      NS_RDF_PROGID "/xul-popup-listener", 
+      NS_RDF_CONTRACTID "/xul-popup-listener;1", 
       CreateNewXULPopupListener
     },
     
     { "XUL KeyListener", 
       NS_XULKEYLISTENER_CID,
-      NS_RDF_PROGID "/xul-key-listener", 
+      NS_RDF_CONTRACTID "/xul-key-listener;1", 
       CreateNewXULKeyListener
     },
     
     { "XUL Controllers", 
       NS_XULCONTROLLERS_CID,
-      NS_RDF_PROGID "/xul-controllers", 
+      NS_RDF_CONTRACTID "/xul-controllers;1", 
       NS_NewXULControllers
     },
 
     { "XUL Content Utilities", 
       NS_XULCONTENTUTILS_CID ,
-      NS_RDF_PROGID "/xul-content-utils", 
+      NS_RDF_CONTRACTID "/xul-content-utils;1", 
       NS_NewXULContentUtils
     },
     
     { "XUL Prototype Cache", 
       NS_XULPROTOTYPECACHE_CID,
-      NS_RDF_PROGID "/xul-prototype-cache", 
+      NS_RDF_CONTRACTID "/xul-prototype-cache;1", 
       NS_NewXULPrototypeCache
     },
 
     { "XUL Element Factory",
       NS_XULELEMENTFACTORY_CID,
-      NS_ELEMENT_FACTORY_PROGID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+      NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
       CreateNewXULElementFactory
     },
 
     { "Controller Command Manager",
       NS_CONTROLLERCOMMANDMANAGER_CID,
-      NS_RDF_PROGID "/controller-command-manager",
+      NS_RDF_CONTRACTID "/controller-command-manager;1",
       CreateNewControllerCommandManager
     },
 };

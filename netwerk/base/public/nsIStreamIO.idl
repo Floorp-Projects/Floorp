@@ -89,7 +89,7 @@ interface nsIFileIO : nsIStreamIO
 #include "nsIComponentManager.h"
 
 #define NS_FILEIO_CLASSNAME     "File I/O"
-#define NS_FILEIO_PROGID        "component://netscape/network/file-io"
+#define NS_FILEIO_CONTRACTID        "@mozilla.org/network/file-io;1"
 
 #define NS_FILEIO_CID                                \
 { /* 0965ce3e-0d06-11d4-986e-00c04fa0cf4a */         \
@@ -145,7 +145,7 @@ interface nsIInputStreamIO : nsIStreamIO
 %{C++
 
 #define NS_INPUTSTREAMIO_CLASSNAME "Input Stream I/O"
-#define NS_INPUTSTREAMIO_PROGID    "component://netscape/network/input-stream-io"
+#define NS_INPUTSTREAMIO_CONTRACTID    "@mozilla.org/network/input-stream-io;1"
 
 #define NS_INPUTSTREAMIO_CID                         \
 { /* 0f5e1198-0d06-11d4-986e-00c04fa0cf4a */         \

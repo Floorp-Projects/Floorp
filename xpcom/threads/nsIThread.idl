@@ -33,7 +33,7 @@
     {0xa1, 0x81, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
 }
 
-#define NS_THREAD_PROGID "component://netscape/thread"
+#define NS_THREAD_CONTRACTID "@mozilla.org/thread;1"
 #define NS_THREAD_CLASSNAME "Thread"
 #if 0
 %}

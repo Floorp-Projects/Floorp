@@ -255,7 +255,7 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
     {
         // later on put this in a member variable TODO
         nsCOMPtr<nsIProxyAutoConfig> pac = 
-            do_CreateInstance(NS_PROXY_AUTO_CONFIG_PROGID, &rv);
+            do_CreateInstance(NS_PROXY_AUTO_CONFIG_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
             nsXPIDLCString p_host;

@@ -27,7 +27,7 @@
 
 var gHTMLEditorCommandManager = null;
 var gComposerWindowCommandManager = null;
-var commonDialogsService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+var commonDialogsService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
 commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
 //-----------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ function SetupComposerWindowCommands()
 
   if (!gComposerWindowCommandManager) return;
 
-  var composerController = Components.classes["component://netscape/editor/composercontroller"].createInstance();
+  var composerController = Components.classes["@mozilla.org/editor/composercontroller;1"].createInstance();
   if (!composerController)
   {
     dump("Failed to create composerController\n");
@@ -235,7 +235,7 @@ var nsOpenCommand =
 
   doCommand: function(aCommand)
   {
-    var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
     fp.init(window, window.editorShell.GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
   
     // When loading into Composer, direct user to prefer HTML files and text files,

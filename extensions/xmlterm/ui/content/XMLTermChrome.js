@@ -25,7 +25,7 @@ function StartupXMLTerm() {
 
    dump("Trying to make an XMLTerm Shell through the component manager...\n");
 
-   var xmltshell = Components.classes["component://mozilla/xmlterm/xmltermshell"].createInstance();
+   var xmltshell = Components.classes["@mozilla.org/xmlterm/xmltermshell;1"].createInstance();
 
    dump("Interface xmltshell1 = " + xmltshell + "\n");
 

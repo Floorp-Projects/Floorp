@@ -114,7 +114,7 @@ function loadDialog()
   var print_file = default_file;
 
   try {
-    prefs = Components.classes["component://netscape/preferences"];
+    prefs = Components.classes["@mozilla.org/preferences;1"];
     if (prefs) {
       prefs = prefs.getService();
       if (prefs)
@@ -267,7 +267,7 @@ function onChooseFile()
     return;
   }
   try {
-    var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
     fp.init(window, document.getElementById("fpDialog").getAttribute("value"), nsIFilePicker.modeSave);
     fp.appendFilters(nsIFilePicker.filterAll);
     fp.show();

@@ -85,7 +85,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
         convmgr = aConvMgr;
       }
       else {
-        convmgr = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID);
+        convmgr = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
       }
 
       if (! convmgr)
@@ -167,7 +167,7 @@ nsHTMLUtils::AddRef()
     nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
                                  NS_REINTERPRET_CAST(nsISupports**, &IOService));
 
-    nsServiceManager::GetService(NS_CHARSETCONVERTERMANAGER_PROGID,
+    nsServiceManager::GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID,
                                  NS_GET_IID(nsICharsetConverterManager),
                                  NS_REINTERPRET_CAST(nsISupports**, &CharsetMgr));
   }
@@ -178,7 +178,7 @@ void
 nsHTMLUtils::Release()
 {
   if (--gRefCnt == 0) {
-    nsServiceManager::ReleaseService(NS_CHARSETCONVERTERMANAGER_PROGID, CharsetMgr);
+    nsServiceManager::ReleaseService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, CharsetMgr);
     nsServiceManager::ReleaseService(kIOServiceCID, IOService);
   }
 }

@@ -826,7 +826,7 @@ NS_IMETHODIMP nsFileLocator::ForgetProfileDir()
         gProfileDir = nsnull;
         
         nsresult rv;
-        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
     
         directoryService->Undefine("app.profile.user.directory.5"); 
@@ -845,7 +845,7 @@ nsFileLocationProvider::nsFileLocationProvider()
   NS_INIT_REFCNT();
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIDirectoryService, dirService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+  NS_WITH_SERVICE(nsIDirectoryService, dirService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
 
   if (dirService)
       dirService->RegisterProvider( NS_STATIC_CAST(nsIDirectoryServiceProvider*, this) );

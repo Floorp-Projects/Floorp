@@ -37,7 +37,7 @@ nsresult
 NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
              const char* aClassName,
-             const char* aProgID,
+             const char* aContractID,
              nsIFactory **aFactory)
 {
   nsresult rv=NS_OK;
@@ -70,7 +70,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
 
   rv = compMgr->RegisterComponent(kRDFDataSourceCID,
                                   "Generic DataSource DataSource",
-                                  NS_RDF_DATASOURCE_PROGID_PREFIX "datasource",
+                                  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "datasource",
                                   aPath, PR_TRUE, PR_TRUE);
 
   return rv;

@@ -31,7 +31,7 @@
 { 0x12bb8f15, 0x2389, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
 
 
-#define NS_STRCDETECTOR_PROGID_BASE "component://netscape/intl/stringcharsetdetect?type="
+#define NS_STRCDETECTOR_CONTRACTID_BASE "@mozilla.org/intl/stringcharsetdetect;1?type="
 
 /*
   This interface is similar to nsICharsetDetector

@@ -23,7 +23,7 @@
 #include "nsTransformMediator.h"
 #include "nsIComponentManager.h"
 
-const char* kTransformerProgIDPrefix = "component://netscape/document-transformer?type=";
+const char* kTransformerContractIDPrefix = "@mozilla.org/document-transformer;1?type=";
 
 nsresult
 NS_NewTransformMediator(nsITransformMediator** aResult,                     
@@ -57,10 +57,10 @@ nsTransformMediator::~nsTransformMediator()
 }
 
 static
-nsresult ConstructProgID(nsString& aProgID, const nsString& aMimeType)
+nsresult ConstructContractID(nsString& aContractID, const nsString& aMimeType)
 {
-  aProgID.AssignWithConversion(kTransformerProgIDPrefix);
-  aProgID.Append(aMimeType);
+  aContractID.AssignWithConversion(kTransformerContractIDPrefix);
+  aContractID.Append(aMimeType);
 
   return NS_OK;
 }
@@ -68,21 +68,21 @@ nsresult ConstructProgID(nsString& aProgID, const nsString& aMimeType)
 nsresult
 nsTransformMediator::Init(const nsString& aMimeType)
 {
-  nsString progID;  
+  nsString contractID;  
   nsresult rv = NS_OK;
 
   // Construct prog ID for the document tranformer component
-  rv = ConstructProgID(progID, aMimeType);
+  rv = ConstructContractID(contractID, aMimeType);
   if (NS_SUCCEEDED(rv)) {
     nsCID cid;
-    char* progIDStr = (char*)progID.ToNewCString();
-    rv = nsComponentManager::ProgIDToClassID((const char*)progIDStr, &cid);
+    char* contractIDStr = (char*)contractID.ToNewCString();
+    rv = nsComponentManager::ContractIDToClassID((const char*)contractIDStr, &cid);
     if (NS_SUCCEEDED(rv)) {
       // Try to find a component that implements the nsIDocumentTransformer interface
       rv = nsComponentManager::CreateInstance(cid, nsnull,
         NS_GET_IID(nsIDocumentTransformer), (void**) &mTransformer);
     }
-    delete [] progIDStr;
+    delete [] contractIDStr;
   }
 
   return rv;

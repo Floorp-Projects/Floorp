@@ -27,19 +27,19 @@ var nsJSSupportsUtils = {
 
   createSupportsArray: function ()
     {
-      return nsJSComponentManager.createInstance("component://netscape/supports-array",
+      return nsJSComponentManager.createInstance("@mozilla.org/supports-array;1",
                                                  "nsISupportsArray");
     },
 
   createSupportsWString: function ()
     {  
-      return nsJSComponentManager.createInstance("component://netscape/supports-wstring",
+      return nsJSComponentManager.createInstance("@mozilla.org/supports-wstring;1",
                                                  "nsISupportsWString");
     },
     
   createSupportsString: function ()
     {
-      return nsJSComponentManager.createInstance("component://netscape/supports-string",
+      return nsJSComponentManager.createInstance("@mozilla.org/supports-string;1",
                                                  "nsISupportsString");
     }                                                 
 

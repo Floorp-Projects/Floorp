@@ -40,7 +40,7 @@ interface nsIFilePath;
 interface nsIOutputStream;
 interface nsIInputStream;
 
-// Define Progid and CID
+// Define Contractid and CID
 %{C++
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
@@ -51,7 +51,7 @@ interface nsIInputStream;
 #define NS_FILESPEC_CID \
 { 0xa5740fa2, 0x146e, 0x11d3, { 0xb0, 0xd, 0x0, 0xc0, 0x4f, 0xc2, 0xe7, 0x9b } }
 
-#define NS_FILESPEC_PROGID "component://netscape/filespec"
+#define NS_FILESPEC_CONTRACTID "@mozilla.org/filespec;1"
 #define NS_FILESPEC_CLASSNAME "File Spec"
 
 %}
@@ -142,13 +142,13 @@ interface nsIFileSpec : nsISupports
 	
 };
 	
-// Define Progid and CID
+// Define Contractid and CID
 %{C++
 // {a3020981-2018-11d3-915f-a957795b7ebc}
 #define NS_DIRECTORYITERATOR_CID \
 { 0xa3020981, 0x2018, 0x11d3, { 0x91, 0x5f, 0xa9, 0x57, 0x79, 0x5b, 0x7e, 0xbc } }
 
-#define NS_DIRECTORYITERATOR_PROGID "component://netscape/directoryiterator"
+#define NS_DIRECTORYITERATOR_CONTRACTID "@mozilla.org/directoryiterator;1"
 #define NS_DIRECTORYITERATOR_CLASSNAME "nsIDirectoryIterator"
 %}
 

@@ -34,7 +34,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
-// information like the function to create an instance, progid, and
+// information like the function to create an instance, contractid, and
 // class name.
 //
 static nsModuleComponentInfo components[] = {

@@ -25,13 +25,13 @@
        - Gagan Saksena 04/24/00 
 */
 
-const kPAC_PROGID = "component://netscape/network/proxy_autoconfig";
-const kIOSERVICE_PROGID = "component://netscape/network/io-service";
-const kDNS_PROGID = "component://netscape/network/dns-service";
+const kPAC_CONTRACTID = "@mozilla.org/network/proxy_autoconfig;1";
+const kIOSERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
+const kDNS_CONTRACTID = "@mozilla.org/network/dns-service;1";
 const kPAC_CID = Components.ID("{63ac8c66-1dd2-11b2-b070-84d00d3eaece}");
 const nsIProxyAutoConfig = Components.interfaces.nsIProxyAutoConfig;
 const nsIIOService = Components.interfaces['nsIIOService'];
-const nsIDNSService = Components.interfaces['nsIDNSService'];
+const nsIDNSService = Components.interfaces['@mozilla.org/js/xpc/ID;1NSService'];
 
 function debug(msg)
 {
@@ -74,7 +74,7 @@ pacModule.registerSelf =
         dump("*** Registering Proxy Auto Config (a Javascript module!) \n");
         compMgr.registerComponentWithType(kPAC_CID,
             "Proxy Auto Config",
-            kPAC_PROGID,
+            kPAC_CONTRACTID,
             fileSpec, location, 
             true, true, type);
     }
@@ -155,8 +155,8 @@ function dnsDomainLevels(host) {
     return host.split('.').length-1;
 }
 
-var ios = Components.classes[kIOSERVICE_PROGID].getService(nsIIOService);
-var dns = Components.classes[kDNS_PROGID].getService(nsIDNSService);
+var ios = Components.classes[kIOSERVICE_CONTRACTID].getService(nsIIOService);
+var dns = Components.classes[kDNS_CONTRACTID].getService(nsIDNSService);
 
 function dnsResolve(host) {
     try {

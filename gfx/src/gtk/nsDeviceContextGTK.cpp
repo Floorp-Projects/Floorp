@@ -105,7 +105,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   // XXXRight now this will only get the primary monitor.
 
   nsresult ignore;
-  nsCOMPtr<nsIScreenManager> sm ( do_GetService("component://netscape/gfx/screenmanager", &ignore) );
+  nsCOMPtr<nsIScreenManager> sm ( do_GetService("@mozilla.org/gfx/screenmanager;1", &ignore) );
   if ( sm ) {
     nsCOMPtr<nsIScreen> screen;
     sm->GetPrimaryScreen ( getter_AddRefs(screen) );

@@ -85,7 +85,7 @@ nsEditorBoxObject::~nsEditorBoxObject()
 NS_IMETHODIMP nsEditorBoxObject::GetEditorShell(nsIEditorShell** aResult)
 {
   if (!mEditorShell) {
-    mEditorShell = do_CreateInstance("component://netscape/editor/editorshell");
+    mEditorShell = do_CreateInstance("@mozilla.org/editor/editorshell;1");
   }
 
   *aResult = mEditorShell;

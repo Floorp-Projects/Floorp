@@ -32,7 +32,7 @@
 #define NS_VIXENSHELL_CID \
 { 0x5029a73a, 0x8ff6, 0x4d30, {0x99, 0xdf, 0xf5, 0x3c, 0xd4, 0x4f, 0x25, 0x42} }
 
-#define NS_VIXENSHELL_PROGID "component://netscape/vixen/shell"
+#define NS_VIXENSHELL_CONTRACTID "@mozilla.org/vixen/shell;1"
 
 class VxChangeAttributeTxn;
 class VxRemoveAttributeTxn;

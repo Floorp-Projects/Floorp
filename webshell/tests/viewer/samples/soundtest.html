@@ -5,11 +5,11 @@
 
 <body>
 <script>
-var url = Components.classes["component://netscape/network/standard-url"].createInstance();
+var url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance();
 url = url.QueryInterface(Components.interfaces.nsIURL);
 url.spec = "resource:/res/samples/test.wav";
 
-var sample = Components.classes["component://netscape/sound"].createInstance();
+var sample = Components.classes["@mozilla.org/sound;1"].createInstance();
 sample = sample.QueryInterface(Components.interfaces.nsISound);
 </script>
 

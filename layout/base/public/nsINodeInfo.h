@@ -60,7 +60,7 @@ class nsString;
 { 0xb622469b, 0x4dcf, 0x45c4, \
   {0xb0, 0xb9, 0xa7, 0x32, 0xbc, 0xee, 0xa5, 0xcc} }
 
-#define NS_NODEINFOMANAGER_PROGID "component://netscape/layout/nodeinfomanager"
+#define NS_NODEINFOMANAGER_CONTRACTID "@mozilla.org/layout/nodeinfomanager;1"
 
 
 class nsINodeInfo : public nsISupports

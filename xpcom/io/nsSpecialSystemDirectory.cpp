@@ -907,7 +907,7 @@ void nsSpecialSystemDirectory::operator = (OSType folderType)
     // not availble use desktop folder
     if (folderType == kDefaultDownloadFolderType)
     {
-      nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_PROGID));
+      nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
       if (icService)
       {
         if (NS_SUCCEEDED(icService->GetDownloadFolder(&mSpec)))

@@ -269,7 +269,7 @@ nsProfile::nsProfile()
          sApp_MessengerFolderCache50   = NS_NewAtom(NS_APP_MESSENGER_FOLDER_CACHE_50_DIR);
          
          nsresult rv;
-         NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+         NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
          if (NS_SUCCEEDED(rv))
             directoryService->RegisterProvider(this);
     }
@@ -481,7 +481,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
     rv = prefs->ReadUserPrefs();
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsICategoryManager, catman, NS_CATEGORYMANAGER_PROGID, &rv);
+    NS_WITH_SERVICE(nsICategoryManager, catman, NS_CATEGORYMANAGER_CONTRACTID, &rv);
 
     if(NS_SUCCEEDED(rv) && catman) 
     {
@@ -491,15 +491,15 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
         {
            while (PR_TRUE) 
            {
-               nsCOMPtr<nsISupportsString> progid;
+               nsCOMPtr<nsISupportsString> contractid;
 
-               rv = enumItem->GetNext(getter_AddRefs(progid));
-               if (NS_FAILED(rv) || !progid) break;
+               rv = enumItem->GetNext(getter_AddRefs(contractid));
+               if (NS_FAILED(rv) || !contractid) break;
 
-               nsXPIDLCString progidString;
-               progid->ToString (getter_Copies(progidString));
+               nsXPIDLCString contractidString;
+               contractid->ToString (getter_Copies(contractidString));
         
-               nsCOMPtr <nsIProfileStartupListener> listener = do_CreateInstance(progidString, &rv);
+               nsCOMPtr <nsIProfileStartupListener> listener = do_CreateInstance(contractidString, &rv);
         
                if (listener) 
                    listener->OnProfileStartup(currentProfileStr);

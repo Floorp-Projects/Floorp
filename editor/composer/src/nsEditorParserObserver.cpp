@@ -104,7 +104,7 @@ NS_IMETHODIMP nsEditorParserObserver::Start()
   nsresult res = NS_OK;
   nsAutoString parserService; parserService.AssignWithConversion("text/html");
 
-  nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_PROGID, &res);
+  nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
   if (NS_FAILED(res)) return res;
    
   return anObserverService->AddObserver(this, parserService.GetUnicode());
@@ -115,7 +115,7 @@ NS_IMETHODIMP nsEditorParserObserver::End()
   nsresult res = NS_OK;
   nsAutoString parserService; parserService.AssignWithConversion("text/html");
 
-  nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_PROGID, &res);
+  nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
   if (NS_FAILED(res)) return res;
    
   return anObserverService->RemoveObserver(this, parserService.GetUnicode());

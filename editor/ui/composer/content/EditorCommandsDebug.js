@@ -307,7 +307,7 @@ function EditorExecuteScript(fileSpec)
 
 function EditorGetScriptFileSpec()
 {
-  var fs = Components.classes["component://netscape/filespec"].createInstance();
+  var fs = Components.classes["@mozilla.org/filespec;1"].createInstance();
   fs = fs.QueryInterface(Components.interfaces.nsIFileSpec);
   fs.unixStyleFilePath = "journal.js";
   return fs;

@@ -41,8 +41,8 @@ static NS_DEFINE_CID( knsSanePluginInst,        NS_SANE_PLUGIN_CID         );
 
 nsSanePluginFactoryImpl::nsSanePluginFactoryImpl( const nsCID &aClass,
                                                   const char* className,
-                                                  const char* progID )
-    : mClassID(aClass), mClassName(className), mProgID(progID)
+                                                  const char* contractID )
+    : mClassID(aClass), mClassName(className), mContractID(contractID)
 {
 #ifdef DEBUG
     printf("nsSanePluginFactoryImpl::nsSanePluginFactoryImpl()\n");
@@ -215,7 +215,7 @@ nsSanePluginFactoryImpl::CreatePluginInstance( nsISupports *aOuter,
 
 /**
  * The XPCOM runtime will call this to get a new factory object for the
- * CID/progID it passes in.  XPCOM is responsible for caching the resulting
+ * CID/contractID it passes in.  XPCOM is responsible for caching the resulting
  * factory.
  *
  * return the proper factory to the caller
@@ -224,7 +224,7 @@ extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory( nsISupports* aServMgr,
               const nsCID &aClass,
               const char *aClassName,
-              const char *aProgID,
+              const char *aContractID,
               nsIFactory **aFactory)
 {
     if (! aFactory)
@@ -232,7 +232,7 @@ NSGetFactory( nsISupports* aServMgr,
   
     nsSanePluginFactoryImpl* factory = new nsSanePluginFactoryImpl(aClass, 
                                                                    aClassName,
-                                                                   aProgID);
+                                                                   aContractID);
     if ( factory == nsnull )
         return NS_ERROR_OUT_OF_MEMORY;
   
@@ -260,16 +260,16 @@ NSRegisterSelf( nsISupports* aServMgr, const char* aPath )
     // Register the plugin control portion.
     rv = compMgr->RegisterComponent(knsSanePluginControlCID,
                                     "SANE Plugin Control",
-                                    "component://netscape/plugins/sane-control",
+                                    "@mozilla.org/plugins/sane-control;1",
                                     aPath, PR_TRUE, PR_TRUE );
   
     // Register the plugin portion.
-    nsString progID;
-    progID.AssignWithConversion( NS_INLINE_PLUGIN_PROGID_PREFIX );
+    nsString contractID;
+    contractID.AssignWithConversion( NS_INLINE_PLUGIN_CONTRACTID_PREFIX );
 
-    progID.AppendWithConversion(PLUGIN_MIME_TYPE);
+    contractID.AppendWithConversion(PLUGIN_MIME_TYPE);
     buf = ( char * )calloc( 2000, sizeof( char ) );
-    progID.ToCString( buf, 1999 );
+    contractID.ToCString( buf, 1999 );
   
     rv = compMgr->RegisterComponent( knsSanePluginInst,
                                      "SANE Plugin Component",

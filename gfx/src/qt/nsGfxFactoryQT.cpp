@@ -182,7 +182,7 @@ nsresult nsGfxFactoryQT::LockFactory(PRBool aLock)
 extern "C" NS_GFXNONXP nsresult NSGetFactory(nsISupports* servMgr,
                                              const nsCID &aClass,
                                              const char *aClassName,
-                                             const char *aProgID,
+                                             const char *aContractID,
                                              nsIFactory **aFactory)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("NSGetFactory()\n"));

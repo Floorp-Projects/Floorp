@@ -65,7 +65,7 @@ static NS_DEFINE_CID(kPropertyElementCID, NS_IPROPERTYELEMENT_CID);
   { 0x9b, 0x8b, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
 static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 
-#define NS_PERSISTENTPROPERTIES_PROGID "component://netscape/persistent-properties"
+#define NS_PERSISTENTPROPERTIES_CONTRACTID "@mozilla.org/persistent-properties;1"
 #define NS_PERSISTENTPROPERTIES_CLASSNAME "Persistent Properties"
 
 class nsIPersistentProperties : public nsIProperties

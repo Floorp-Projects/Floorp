@@ -30,8 +30,8 @@
 {0x74254499, 0x171a, 0x11d4, {0x98, 0x70, 0x0, 0xc0, 0x4f, 0xa0, 0x2f, 0x40}}
 
 
-#define NS_URLBARHISTORY_PROGID "component://netscape/browser/urlbarhistory"
-#define NS_URLBARAUTOCOMPLETE_PROGID "component://netscape/autocompleteSession&type=urlbar"
+#define NS_URLBARHISTORY_CONTRACTID "@mozilla.org/browser/urlbarhistory;1"
+#define NS_URLBARAUTOCOMPLETE_CONTRACTID "@mozilla.org/autocompleteSession;1?type=urlbar"
 #define UBHISTORY_MAX_ENTRIES = 15;
 %}
 

@@ -75,7 +75,7 @@ public:
   static nsresult GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult);
   static nsIDOMScriptObjectFactory *gScriptObjectFactory;
   static nsIPrincipal* GetScriptPrincipal(JSContext *cx);
-  static const char *kPSMComponentProgID;
+  static const char *kPSMComponentContractID;
 
  private:
 

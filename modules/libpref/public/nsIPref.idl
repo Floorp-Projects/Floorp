@@ -38,8 +38,8 @@ typedef void (*PrefEnumerationFunc)(const char *, void *);
     { 0xa9, 0xa4, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xc4 } \
   }
 
-#define NS_PREF_PROGID \
-  "component://netscape/preferences" 
+#define NS_PREF_CONTRACTID \
+  "@mozilla.org/preferences;1" 
 
 #define NS_PREF_CLASSNAME "Preferences Service"
  

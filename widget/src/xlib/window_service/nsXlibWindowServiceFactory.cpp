@@ -97,7 +97,7 @@ extern "C" NS_EXPORT nsresult
 NSGetFactory(nsISupports *servMgr,
 	     const nsCID &aClass,
 	     const char *aClassName,
-	     const char *aProgID,
+	     const char *aContractID,
 	     nsIFactory **aFactory)
 {
   if (nsnull == aFactory) {
@@ -137,7 +137,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
   
   rv = compMgr->RegisterComponent(kCXlibWindowServiceCID,
                                   "Xlib Window Service",
-                                  NS_XLIB_WINDOW_SERVICE_PROGID,
+                                  NS_XLIB_WINDOW_SERVICE_CONTRACTID,
                                   fullpath,
                                   PR_TRUE,
                                   PR_TRUE);

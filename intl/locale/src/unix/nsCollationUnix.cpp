@@ -82,7 +82,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
 
   nsresult res;
 
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID);
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
   if (prefs) {
     res = prefs->GetBoolPref("intl.collationKeyAsCodePoint", &mKeyAsCodePoint);
   }
@@ -141,7 +141,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       }
     }
 
-    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &res);
+    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);

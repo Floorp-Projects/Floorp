@@ -25,15 +25,15 @@
  */
 
 const nsILocalFile        = Components.interfaces.nsILocalFile;
-const nsILocalFile_PROGID = "component://mozilla/file/local";
+const nsILocalFile_CONTRACTID = "@mozilla.org/file/local;1";
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
 const nsIDirectoryServiceProvider = Components.interfaces.nsIDirectoryServiceProvider;
-const nsIDirectoryServiceProvider_PROGID = "component://netscape/file/directory_service";
-const nsStdURL_PROGID     = "component://netscape/network/standard-url";
+const nsIDirectoryServiceProvider_CONTRACTID = "@mozilla.org/file/directory_service;1";
+const nsStdURL_CONTRACTID     = "@mozilla.org/network/standard-url;1";
 const nsIFileURL          = Components.interfaces.nsIFileURL;
 const NC_NAMESPACE_URI = "http://home.netscape.com/NC-rdf#";
 
-var sfile = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
+var sfile = Components.classes[nsILocalFile_CONTRACTID].createInstance(nsILocalFile);
 var retvals;
 var filePickerMode;
 var currentFilter;
@@ -111,7 +111,7 @@ function onLoad() {
   doSetOKCancel(onOK, onCancel);
 
   // get the home dir
-  var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_PROGID].getService().QueryInterface(nsIDirectoryServiceProvider);
+  var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_CONTRACTID].getService().QueryInterface(nsIDirectoryServiceProvider);
   var persistent = new Object();
   homeDir = dirServiceProvider.getFile("Home", persistent);
 
@@ -309,7 +309,7 @@ function onDirectoryChanged(target)
 {
   var path = target.getAttribute("value");
 
-  var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
+  var file = Components.classes[nsILocalFile_CONTRACTID].createInstance(nsILocalFile);
   file.initWithPath(path);
 
   gotoDirectory(file);
@@ -368,13 +368,13 @@ function gotoDirectory(directory) {
 }
 
 function fileToURL(aFile) {
-  var newDirectoryURL = Components.classes[nsStdURL_PROGID].createInstance().QueryInterface(nsIFileURL);
+  var newDirectoryURL = Components.classes[nsStdURL_CONTRACTID].createInstance().QueryInterface(nsIFileURL);
   newDirectoryURL.file = aFile;
   return newDirectoryURL;
 }
 
 function URLpathToFile(aURLstr) {
-  var fileURL = Components.classes[nsStdURL_PROGID].createInstance().QueryInterface(nsIFileURL);
+  var fileURL = Components.classes[nsStdURL_CONTRACTID].createInstance().QueryInterface(nsIFileURL);
   fileURL.spec = aURLstr;
   return fileURL.file;
 }

@@ -231,62 +231,62 @@ nsCharDetModule::GetClassObject(nsIComponentManager *aCompMgr,
 struct Components {
   const char* mDescription;
   const nsID* mCID;
-  const char* mProgID;
+  const char* mContractID;
 };
 
 // The list of components we register
 static Components gComponents[] = {
   { "Meta Charset", &kMetaCharsetCID,
-    NS_META_CHARSET_PROGID, },
+    NS_META_CHARSET_CONTRACTID, },
   { "Document Charset Info", &kDocumentCharsetInfoCID,
     NS_DOCUMENTCHARSETINFO_PID, },
   { "XML Encoding", &kXMLEncodingCID,
-    NS_XML_ENCODING_PROGID, },
+    NS_XML_ENCODING_CONTRACTID, },
   { "Charset Detection Adaptor", &kCharsetDetectionAdaptorCID,
-    NS_CHARSET_DETECTION_ADAPTOR_PROGID, },
+    NS_CHARSET_DETECTION_ADAPTOR_CONTRACTID, },
   { "PSM based Japanese Charset Detector", &kJAPSMDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "ja_parallel_state_machine", },
+    NS_CHARSET_DETECTOR_CONTRACTID_BASE "ja_parallel_state_machine", },
   { "PSM based Japanese String Charset Detector", &kJAStringPSMDetectorCID,
-    NS_STRCDETECTOR_PROGID_BASE "ja_parallel_state_machine", },
+    NS_STRCDETECTOR_CONTRACTID_BASE "ja_parallel_state_machine", },
   { "PSM based Korean Charset Detector", &kKOPSMDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "ko_parallel_state_machine", },
+    NS_CHARSET_DETECTOR_CONTRACTID_BASE "ko_parallel_state_machine", },
   { "PSM based Korean String Charset Detector", &kKOStringPSMDetectorCID,
-    NS_STRCDETECTOR_PROGID_BASE "ko_parallel_state_machine", },
+    NS_STRCDETECTOR_CONTRACTID_BASE "ko_parallel_state_machine", },
   { "PSM based Traditional Chinese Charset Detector", &kZHTWPSMDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "zhtw_parallel_state_machine", },
+    NS_CHARSET_DETECTOR_CONTRACTID_BASE "zhtw_parallel_state_machine", },
   { "PSM based Traditional Chinese String Charset Detector",
     &kZHTWStringPSMDetectorCID, 
-    NS_STRCDETECTOR_PROGID_BASE "zhtw_parallel_state_machine", },
+    NS_STRCDETECTOR_CONTRACTID_BASE "zhtw_parallel_state_machine", },
   { "PSM based Simplified Chinese Charset Detector", &kZHCNPSMDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "zhcn_parallel_state_machine", },
+    NS_CHARSET_DETECTOR_CONTRACTID_BASE "zhcn_parallel_state_machine", },
   { "PSM based Simplified Chinese String Charset Detector",
     &kZHCNStringPSMDetectorCID, 
-    NS_STRCDETECTOR_PROGID_BASE "zhcn_parallel_state_machine", },
+    NS_STRCDETECTOR_CONTRACTID_BASE "zhcn_parallel_state_machine", },
   { "PSM based Chinese Charset Detector", &kZHPSMDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "zh_parallel_state_machine", },
+    NS_CHARSET_DETECTOR_CONTRACTID_BASE "zh_parallel_state_machine", },
   { "PSM based Chinese String Charset Detector", &kZHStringPSMDetectorCID,
-    NS_STRCDETECTOR_PROGID_BASE "zh_parallel_state_machine", },
+    NS_STRCDETECTOR_CONTRACTID_BASE "zh_parallel_state_machine", },
   { "PSM based CJK Charset Detector", &kCJKPSMDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "cjk_parallel_state_machine", },
+    NS_CHARSET_DETECTOR_CONTRACTID_BASE "cjk_parallel_state_machine", },
   { "PSM based CJK String Charset Detector", &kCJKStringPSMDetectorCID,
-    NS_STRCDETECTOR_PROGID_BASE "cjk_parallel_state_machine", },
+    NS_STRCDETECTOR_CONTRACTID_BASE "cjk_parallel_state_machine", },
   { "Probability based Russian Charset Detector", &kRUProbDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "ruprob", },
+    NS_CHARSET_DETECTOR_CONTRACTID_BASE "ruprob", },
   { "Probability based Ukrainian Charset Detector", &kUKProbDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "ukprob", },
+    NS_CHARSET_DETECTOR_CONTRACTID_BASE "ukprob", },
   { "Probability based Russian String Charset Detector",
     &kRUStringProbDetectorCID, 
-    NS_STRCDETECTOR_PROGID_BASE "ruprob", },
+    NS_STRCDETECTOR_CONTRACTID_BASE "ruprob", },
   { "Probability based Ukrainian String Charset Detector",
     &kUKStringProbDetectorCID, 
-    NS_STRCDETECTOR_PROGID_BASE "ukprob", },
+    NS_STRCDETECTOR_CONTRACTID_BASE "ukprob", },
 #ifdef INCLUDE_DBGDETECTOR
   { "Debuging Detector 1st block", &k1stBlkDbgDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "1stblkdbg", },
+    NS_CHARSET_DETECTOR_CONTRACTID_BASE "1stblkdbg", },
   { "Debuging Detector 2nd block", &k2ndBlkDbgDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "2ndblkdbg", },
+    NS_CHARSET_DETECTOR_CONTRACTID_BASE "2ndblkdbg", },
   { "Debuging Detector last block", &klastBlkDbgDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "lastblkdbg", },
+    NS_CHARSET_DETECTOR_CONTRACTID_BASE "lastblkdbg", },
 #endif /* INCLUDE_DBGDETECTOR */
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
@@ -307,7 +307,7 @@ nsCharDetModule::RegisterSelf(nsIComponentManager *aCompMgr,
   Components* end = cp + NUM_COMPONENTS;
   while (cp < end) {
     rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                         cp->mProgID, aPath, PR_TRUE,
+                                         cp->mContractID, aPath, PR_TRUE,
                                          PR_TRUE);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
@@ -322,7 +322,7 @@ nsCharDetModule::RegisterSelf(nsIComponentManager *aCompMgr,
   // get the registry
   nsRegistryKey key;
   nsIRegistry* registry;
-  rv = nsServiceManager::GetService(NS_REGISTRY_PROGID,
+  rv = nsServiceManager::GetService(NS_REGISTRY_CONTRACTID,
                                     NS_GET_IID(nsIRegistry),
                                     (nsISupports**)&registry);
   if (NS_FAILED(rv)) {
@@ -393,7 +393,7 @@ nsCharDetModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
  done:
   if(nsnull != registry) {
-      nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
+      nsServiceManager::ReleaseService(NS_REGISTRY_CONTRACTID, registry);
   }
 
   return rv;

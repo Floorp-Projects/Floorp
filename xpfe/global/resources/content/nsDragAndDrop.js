@@ -62,7 +62,7 @@ var nsDragAndDrop = {
 
   get mDragService()
     {
-      return nsJSComponentManager.getService("component://netscape/widget/dragservice",
+      return nsJSComponentManager.getService("@mozilla.org/widget/dragservice;1",
                                              "nsIDragService");
     },
 

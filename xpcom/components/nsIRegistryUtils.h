@@ -22,7 +22,7 @@
 #ifndef __nsIRegistryUtils_h
 #define __nsIRegistryUtils_h
 
-#define NS_REGISTRY_PROGID "component://netscape/registry"
+#define NS_REGISTRY_CONTRACTID "@mozilla.org/registry;1"
 #define NS_REGISTRY_CLASSNAME "Mozilla Registry"
 /* be761f00-a3b0-11d2-996c-0080c7cb1081 */
 #define NS_REGISTRY_CID \

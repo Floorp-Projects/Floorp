@@ -25,7 +25,7 @@ function ShowLastPageVisted() {
 
     var lastpagevisited = "failure...not set";
     
-    var history = Components.classes['component://netscape/browser/global-history'];
+    var history = Components.classes['@mozilla.org/browser/global-history;1'];
     if (history) {
       history = history.getService();
     }

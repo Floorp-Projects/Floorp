@@ -15,7 +15,7 @@ function init_sidebar(name, uri, width) {
 
   // Open/close sidebar based on saved pref.
   // This may be replaced by another system by hyatt.
-  prefs = Components.classes['component://netscape/preferences'];
+  prefs = Components.classes['@mozilla.org/preferences;1'];
   if (prefs) {
     prefs = prefs.getService();
   }

@@ -1135,7 +1135,7 @@ printf("waiting...\n");
     else {
 printf("starting timer\n");
       // timer hasn't started yet, kick it off. Remember, this timer is a one-shot
-      mAutoScrollTimer = do_CreateInstance("component://netscape/timer");
+      mAutoScrollTimer = do_CreateInstance("@mozilla.org/timer;1");
       if ( mAutoScrollTimer ) {
         mAutoScrollTimer->Init(this, 100);
         mAutoScrollTimerStarted = PR_TRUE;

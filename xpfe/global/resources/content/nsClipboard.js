@@ -30,7 +30,7 @@
 var nsClipboard = {
   get mClipboard()
     {
-      return nsJSComponentManager.getService("component://netscape/widget/clipboard",
+      return nsJSComponentManager.getService("@mozilla.org/widget/clipboard;1",
                                              "nsIClipboard");
     },
     

@@ -393,7 +393,7 @@ XULPopupListenerImpl::MouseMove(nsIDOMEvent* aMouseEvent)
   if (mPopupContent || mTooltipTimer)
     return NS_OK;
   
-  mTooltipTimer = do_CreateInstance("component://netscape/timer");
+  mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
   if ( mTooltipTimer ) {
     nsCOMPtr<nsIDOMEventTarget> eventTarget;
     aMouseEvent->GetTarget(getter_AddRefs(eventTarget));

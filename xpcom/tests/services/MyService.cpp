@@ -142,7 +142,7 @@ extern "C" NS_EXPORT nsresult
 NSGetFactory(nsISupports* serviceMgr,
              const nsCID &aClass,
              const char *aClassName,
-             const char *aProgID,
+             const char *aContractID,
              nsIFactory **aFactory)
 {
     if (!aClass.Equals(kIMyServiceCID))

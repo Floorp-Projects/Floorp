@@ -5,7 +5,7 @@
 
 <body>
 <script>
-var sample = Components.classes["component://netscape/sound"].createInstance();
+var sample = Components.classes["@mozilla.org/sound;1"].createInstance();
 sample = sample.QueryInterface(Components.interfaces.nsISound);
 dump("sample = " + sample + "\n");
 

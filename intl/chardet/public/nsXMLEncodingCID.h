@@ -25,7 +25,7 @@
 
 #include "nscore.h"
 
-#define NS_XML_ENCODING_PROGID "component://netscape/intl/xmlencoding"
+#define NS_XML_ENCODING_CONTRACTID "@mozilla.org/intl/xmlencoding;1"
 
 // {12BB8F16-2389-11d3-B3BF-00805F8A6670}
 #define NS_XML_ENCODING_CID \

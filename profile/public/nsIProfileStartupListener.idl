@@ -32,8 +32,8 @@
     { 0x98, 0x75, 0x00, 0xc0, 0x4f, 0xa0, 0xd2, 0x8b } \
   }
 
-#define NS_PROFILE_STARTUP_LISTENER_PROGID	\
-	"component://netscape/profile/startuplistener"
+#define NS_PROFILE_STARTUP_LISTENER_CONTRACTID	\
+	"@mozilla.org/profile/startuplistener;1"
 %}
 
 [scriptable, uuid(6962ca8f-0b8b-11d4-9875-00c04fa0d28b)]

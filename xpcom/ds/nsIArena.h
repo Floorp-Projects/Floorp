@@ -32,7 +32,7 @@
 #define NS_IARENA_IID         \
 { 0xa24fdad0, 0x93b4, 0x11d1, \
   {0x89, 0x5b, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
-#define NS_ARENA_PROGID "component://netscape/arena"
+#define NS_ARENA_CONTRACTID "@mozilla.org/arena;1"
 #define NS_ARENA_CLASSNAME "Arena"
 
 /** Interface to a memory arena abstraction. Arena's use large blocks

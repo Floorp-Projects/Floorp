@@ -24,7 +24,7 @@
 interface nsIURI;
 
 %{C++
-#define NS_CODEBASEPRINCIPAL_PROGID "component://netscape/codebaseprincipal"
+#define NS_CODEBASEPRINCIPAL_CONTRACTID "@mozilla.org/codebaseprincipal;1"
 #define NS_CODEBASEPRINCIPAL_CLASSNAME "codebaseprincipal"
 %}
 

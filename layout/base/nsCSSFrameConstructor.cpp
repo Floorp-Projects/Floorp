@@ -3989,7 +3989,7 @@ nsCSSFrameConstructor::HasGfxScrollbars()
 {
   // Get the Prefs
   if (!mGotGfxPrefs) {
-    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
     if (pref) {
       pref->GetBoolPref("nglayout.widget.gfxscrollbars", &mHasGfxScrollbars);
       pref->GetBoolPref("nglayout.widget.gfxlistbox", &mDoGfxListbox);
@@ -5255,7 +5255,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
   if (!ui->mBehavior.IsEmpty()) {
     // Get the XBL loader.
     nsresult rv;
-    NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+    NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
     if (!xblService)
       return rv;
 
@@ -5490,7 +5490,7 @@ nsCSSFrameConstructor::CreateAnonymousTableCellFrames(nsIPresShell*        aPres
   if (!ui->mBehavior.IsEmpty()) {
     // Get the XBL loader.
     nsresult rv;
-    NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+    NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
     if (!xblService)
       return rv;
 
@@ -7452,7 +7452,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
     if (!ui->mBehavior.IsEmpty()) {
       // Get the XBL loader.
       nsresult rv;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+      NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
       if (!xblService)
         return rv;
 

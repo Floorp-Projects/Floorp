@@ -121,22 +121,22 @@ public:
                    nsIShutdownListener* shutdownListener = nsnull) = 0;
 
     ////////////////////////////////////////////////////////////////////////////
-    // let's do it again, this time with ProgIDs...
+    // let's do it again, this time with ContractIDs...
 
     NS_IMETHOD
-    RegisterService(const char* aProgID, nsISupports* aService) = 0;
+    RegisterService(const char* aContractID, nsISupports* aService) = 0;
 
     NS_IMETHOD
-    UnregisterService(const char* aProgID) = 0;
+    UnregisterService(const char* aContractID) = 0;
 
     NS_IMETHOD
-    GetService(const char* aProgID, const nsIID& aIID,
+    GetService(const char* aContractID, const nsIID& aIID,
                nsISupports* *result,
                nsIShutdownListener* shutdownListener = nsnull) = 0;
 
     /* OBSOLETE */
     NS_IMETHOD
-    ReleaseService(const char* aProgID, nsISupports* service,
+    ReleaseService(const char* aContractID, nsISupports* service,
                    nsIShutdownListener* shutdownListener = nsnull) = 0;
 
 };
@@ -187,22 +187,22 @@ public:
                    nsIShutdownListener* shutdownListener = nsnull);
 
     ////////////////////////////////////////////////////////////////////////////
-    // let's do it again, this time with ProgIDs...
+    // let's do it again, this time with ContractIDs...
 
     static nsresult
-    RegisterService(const char* aProgID, nsISupports* aService);
+    RegisterService(const char* aContractID, nsISupports* aService);
 
     static nsresult
-    UnregisterService(const char* aProgID);
+    UnregisterService(const char* aContractID);
 
     static nsresult
-    GetService(const char* aProgID, const nsIID& aIID,
+    GetService(const char* aContractID, const nsIID& aIID,
                nsISupports* *result,
                nsIShutdownListener* shutdownListener = nsnull);
 
     /* OBSOLETE: use NS_RELEASE(service) instead. */
     static nsresult
-    ReleaseService(const char* aProgID, nsISupports* service,
+    ReleaseService(const char* aContractID, nsISupports* service,
                    nsIShutdownListener* shutdownListener = nsnull);
 
     ////////////////////////////////////////////////////////////////////////////
@@ -251,11 +251,11 @@ do_GetService( const nsCID& aCID, nsISupports* aServiceManager, nsresult* error 
     return nsGetServiceByCID(aCID, aServiceManager, error);
   }
 
-class NS_COM nsGetServiceByProgID : public nsCOMPtr_helper
+class NS_COM nsGetServiceByContractID : public nsCOMPtr_helper
   {
     public:
-      nsGetServiceByProgID( const char* aProgID, nsISupports* aServiceManager, nsresult* aErrorPtr )
-          : mProgID(aProgID),
+      nsGetServiceByContractID( const char* aContractID, nsISupports* aServiceManager, nsresult* aErrorPtr )
+          : mContractID(aContractID),
             mServiceManager( do_QueryInterface(aServiceManager) ),
             mErrorPtr(aErrorPtr)
         {
@@ -264,26 +264,26 @@ class NS_COM nsGetServiceByProgID : public nsCOMPtr_helper
 
   	  virtual nsresult operator()( const nsIID&, void** ) const;
 
-	virtual ~nsGetServiceByProgID() {};
+	virtual ~nsGetServiceByContractID() {};
 
     private:
-      const char*                 mProgID;
+      const char*                 mContractID;
       nsCOMPtr<nsIServiceManager> mServiceManager;
       nsresult*                   mErrorPtr;
   };
 
 inline
-const nsGetServiceByProgID
-do_GetService( const char* aProgID, nsresult* error = 0 )
+const nsGetServiceByContractID
+do_GetService( const char* aContractID, nsresult* error = 0 )
   {
-    return nsGetServiceByProgID(aProgID, 0, error);
+    return nsGetServiceByContractID(aContractID, 0, error);
   }
 
 inline
-const nsGetServiceByProgID
-do_GetService( const char* aProgID, nsISupports* aServiceManager, nsresult* error = 0 )
+const nsGetServiceByContractID
+do_GetService( const char* aContractID, nsISupports* aServiceManager, nsresult* error = 0 )
   {
-    return nsGetServiceByProgID(aProgID, aServiceManager, error);
+    return nsGetServiceByContractID(aContractID, aServiceManager, error);
   }
 
 class NS_COM nsGetServiceFromCategory : public nsCOMPtr_helper

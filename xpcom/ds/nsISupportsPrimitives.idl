@@ -167,112 +167,112 @@ interface nsISupportsVoid : nsISupports
 #define NS_SUPPORTS_ID_CID \
 { 0xacf8dc40, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_ID_PROGID "component://netscape/supports-id"
+#define NS_SUPPORTS_ID_CONTRACTID "@mozilla.org/supports-id;1"
 #define NS_SUPPORTS_ID_CLASSNAME "Supports ID"
 
 // {ACF8DC41-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_STRING_CID \
 { 0xacf8dc41, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_STRING_PROGID "component://netscape/supports-string"
+#define NS_SUPPORTS_STRING_CONTRACTID "@mozilla.org/supports-string;1"
 #define NS_SUPPORTS_STRING_CLASSNAME "Supports String"
 
 // {ACF8DC42-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_WSTRING_CID \
 { 0xacf8dc42, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_WSTRING_PROGID "component://netscape/supports-wstring"
+#define NS_SUPPORTS_WSTRING_CONTRACTID "@mozilla.org/supports-wstring;1"
 #define NS_SUPPORTS_WSTRING_CLASSNAME "Supports WString"
 
 // {ACF8DC43-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_PRBOOL_CID \
 { 0xacf8dc43, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRBOOL_PROGID "component://netscape/supports-PRBool"
+#define NS_SUPPORTS_PRBOOL_CONTRACTID "@mozilla.org/supports-PRBool;1"
 #define NS_SUPPORTS_PRBOOL_CLASSNAME "Supports PRBool"
 
 // {ACF8DC44-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_PRUINT8_CID \
 { 0xacf8dc44, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRUINT8_PROGID "component://netscape/supports-PRUint8"
+#define NS_SUPPORTS_PRUINT8_CONTRACTID "@mozilla.org/supports-PRUint8;1"
 #define NS_SUPPORTS_PRUINT8_CLASSNAME "Supports PRUint8"
 
 // {ACF8DC46-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_PRUINT16_CID \
 { 0xacf8dc46, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRUINT16_PROGID "component://netscape/supports-PRUint16"
+#define NS_SUPPORTS_PRUINT16_CONTRACTID "@mozilla.org/supports-PRUint16;1"
 #define NS_SUPPORTS_PRUINT16_CLASSNAME "Supports PRUint16"
 
 // {ACF8DC47-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_PRUINT32_CID \
 { 0xacf8dc47, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRUINT32_PROGID "component://netscape/supports-PRUint32"
+#define NS_SUPPORTS_PRUINT32_CONTRACTID "@mozilla.org/supports-PRUint32;1"
 #define NS_SUPPORTS_PRUINT32_CLASSNAME "Supports PRUint32"
 
 // {ACF8DC48-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_PRUINT64_CID \
 { 0xacf8dc48, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRUINT64_PROGID "component://netscape/supports-PRUint64"
+#define NS_SUPPORTS_PRUINT64_CONTRACTID "@mozilla.org/supports-PRUint64;1"
 #define NS_SUPPORTS_PRUINT64_CLASSNAME "Supports PRUint64"
 
 // {ACF8DC49-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_PRTIME_CID \
 { 0xacf8dc49, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRTIME_PROGID "component://netscape/supports-PRTime"
+#define NS_SUPPORTS_PRTIME_CONTRACTID "@mozilla.org/supports-PRTime;1"
 #define NS_SUPPORTS_PRTIME_CLASSNAME "Supports PRTime"
 
 // {ACF8DC4A-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_CHAR_CID \
 { 0xacf8dc4a, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_CHAR_PROGID "component://netscape/supports-char"
+#define NS_SUPPORTS_CHAR_CONTRACTID "@mozilla.org/supports-char;1"
 #define NS_SUPPORTS_CHAR_CLASSNAME "Supports Char"
 
 // {ACF8DC4B-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_PRINT16_CID \
 { 0xacf8dc4b, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRINT16_PROGID "component://netscape/supports-PRInt16"
+#define NS_SUPPORTS_PRINT16_CONTRACTID "@mozilla.org/supports-PRInt16;1"
 #define NS_SUPPORTS_PRINT16_CLASSNAME "Supports PRInt16"
 
 // {ACF8DC4C-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_PRINT32_CID \
 { 0xacf8dc4c, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRINT32_PROGID "component://netscape/supports-PRInt32"
+#define NS_SUPPORTS_PRINT32_CONTRACTID "@mozilla.org/supports-PRInt32;1"
 #define NS_SUPPORTS_PRINT32_CLASSNAME "Supports PRInt32"
 
 // {ACF8DC4D-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_PRINT64_CID \
 { 0xacf8dc4d, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_PRINT64_PROGID "component://netscape/supports-PRInt64"
+#define NS_SUPPORTS_PRINT64_CONTRACTID "@mozilla.org/supports-PRInt64;1"
 #define NS_SUPPORTS_PRINT64_CLASSNAME "Supports PRInt64"
 
 // {CBF86870-4AC0-11d3-BAEA-00805F8A5DD7}
 #define NS_SUPPORTS_FLOAT_CID \
 { 0xcbf86870, 0x4ac0, 0x11d3, \
     { 0xba, 0xea, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
-#define NS_SUPPORTS_FLOAT_PROGID "component://netscape/supports-float"
+#define NS_SUPPORTS_FLOAT_CONTRACTID "@mozilla.org/supports-float;1"
 #define NS_SUPPORTS_FLOAT_CLASSNAME "Supports float"
 
 // {CBF86871-4AC0-11d3-BAEA-00805F8A5DD7}
 #define NS_SUPPORTS_DOUBLE_CID \
 { 0xcbf86871, 0x4ac0, 0x11d3, \
     { 0xba, 0xea, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
-#define NS_SUPPORTS_DOUBLE_PROGID "component://netscape/supports-double"
+#define NS_SUPPORTS_DOUBLE_CONTRACTID "@mozilla.org/supports-double;1"
 #define NS_SUPPORTS_DOUBLE_CLASSNAME "Supports double"
 
 // {AF10F3E0-568D-11d3-BAF8-00805F8A5DD7}
 #define NS_SUPPORTS_VOID_CID \
 { 0xaf10f3e0, 0x568d, 0x11d3, \
     { 0xba, 0xf8, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
-#define NS_SUPPORTS_VOID_PROGID "component://netscape/supports-void"
+#define NS_SUPPORTS_VOID_CONTRACTID "@mozilla.org/supports-void;1"
 #define NS_SUPPORTS_VOID_CLASSNAME "Supports void"
 
 extern	NS_COM nsresult NS_NewISupportsPRBool (nsISupportsPRBool ** aResult);

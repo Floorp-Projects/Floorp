@@ -35,8 +35,8 @@
     {0xbc, 0xf8, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53} \
 }
 
-#define NS_JAR_PROGID \
-  "component://netscape/libjar"
+#define NS_JAR_CONTRACTID \
+  "@mozilla.org/libjar;1"
 
 #define NS_IJARFactory_IID                    \
 { /* 04501DB4-0409-11d3-BCF8-00805F0E1353 */         \

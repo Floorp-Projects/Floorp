@@ -119,7 +119,7 @@ nsresult nsLocaleDllFactory::CreateInstance( nsISupports *aOuter,
 extern "C" NS_EXPORT nsresult NSGetFactory( nsISupports *aServiceMgr,
                                             const nsCID &aClass,
                                             const char  *aClassName,
-                                            const char  *aProgID,
+                                            const char  *aContractID,
                                             nsIFactory **aFactory)
 {
    if( !aFactory || !aServiceMgr)

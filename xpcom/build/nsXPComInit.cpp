@@ -172,13 +172,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomService);
 
 static nsresult
 RegisterGenericFactory(nsIComponentManager* compMgr, const nsCID& cid, const char* className,
-                       const char *progid, nsIGenericFactory::ConstructorProcPtr constr)
+                       const char *contractid, nsIGenericFactory::ConstructorProcPtr constr)
 {
     nsresult rv;
     nsIGenericFactory* fact;
     rv = NS_NewGenericFactory(&fact, constr);
     if (NS_FAILED(rv)) return rv;
-    rv = compMgr->RegisterFactory(cid, className, progid, fact, PR_TRUE);
+    rv = compMgr->RegisterFactory(cid, className, contractid, fact, PR_TRUE);
     NS_RELEASE(fact);
     return rv;
 }
@@ -308,7 +308,7 @@ nsresult NS_COM NS_InitXPCOM2(const char* productName,
 
     rv = compMgr->RegisterFactory(kRegistryCID,
                                   NS_REGISTRY_CLASSNAME,
-                                  NS_REGISTRY_PROGID,
+                                  NS_REGISTRY_CONTRACTID,
                                   registryFactory, PR_TRUE);
     NS_RELEASE(registryFactory);
     if (NS_FAILED(rv)) return rv;
@@ -323,7 +323,7 @@ nsresult NS_COM NS_InitXPCOM2(const char* productName,
 
       rv = compMgr->RegisterFactory(kCategoryManagerCID,
                                     NS_CATEGORYMANAGER_CLASSNAME,
-                                    NS_CATEGORYMANAGER_PROGID,
+                                    NS_CATEGORYMANAGER_CONTRACTID,
                                     categoryManagerFactory,
                                     PR_TRUE);
       if ( NS_FAILED(rv) )
@@ -332,247 +332,247 @@ nsresult NS_COM NS_InitXPCOM2(const char* productName,
 
     rv = RegisterGenericFactory(compMgr, kMemoryCID,
                                 NS_MEMORY_CLASSNAME,
-                                NS_MEMORY_PROGID,
+                                NS_MEMORY_CONTRACTID,
                                 nsMemoryImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kErrorServiceCID,
                                 NS_ERRORSERVICE_NAME,
-                                NS_ERRORSERVICE_PROGID,
+                                NS_ERRORSERVICE_CONTRACTID,
                                 nsErrorService::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kArenaCID,
                                 NS_ARENA_CLASSNAME,
-                                NS_ARENA_PROGID,
+                                NS_ARENA_CONTRACTID,
                                 ArenaImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
 #if 0
     rv = RegisterGenericFactory(compMgr, kBufferCID,
                                 NS_BUFFER_CLASSNAME,
-                                NS_BUFFER_PROGID,
+                                NS_BUFFER_CONTRACTID,
                                 nsBuffer::Create);
     if (NS_FAILED(rv)) return rv;
 #endif
 
     rv = RegisterGenericFactory(compMgr, kByteBufferCID,
                                 NS_BYTEBUFFER_CLASSNAME,
-                                NS_BYTEBUFFER_PROGID,
+                                NS_BYTEBUFFER_CONTRACTID,
                                 ByteBufferImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kScriptableInputStreamCID,
                                 NS_SCRIPTABLEINPUTSTREAM_CLASSNAME,
-                                NS_SCRIPTABLEINPUTSTREAM_PROGID,
+                                NS_SCRIPTABLEINPUTSTREAM_CONTRACTID,
                                 nsScriptableInputStream::Create);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef PAGE_MANAGER
     rv = RegisterGenericFactory(compMgr, kPageManagerCID,
                                 NS_PAGEMANAGER_CLASSNAME,
-                                NS_PAGEMANAGER_PROGID,
+                                NS_PAGEMANAGER_CONTRACTID,
                                 nsPageMgr::Create);
     if (NS_FAILED(rv)) return rv;
 #endif
 
     rv = RegisterGenericFactory(compMgr, kPropertiesCID,
                                 NS_PROPERTIES_CLASSNAME,
-                                NS_PROPERTIES_PROGID,
+                                NS_PROPERTIES_CONTRACTID,
                                 nsProperties::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kPersistentPropertiesCID,
                                 NS_PERSISTENTPROPERTIES_CLASSNAME,
-                                NS_PERSISTENTPROPERTIES_PROGID,
+                                NS_PERSISTENTPROPERTIES_CONTRACTID,
                                 nsPersistentProperties::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsArrayCID,
                                 NS_SUPPORTSARRAY_CLASSNAME,
-                                NS_SUPPORTSARRAY_PROGID,
+                                NS_SUPPORTSARRAY_CONTRACTID,
                                 nsSupportsArray::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kConsoleServiceCID,
                                 NS_CONSOLESERVICE_CLASSNAME,
-                                NS_CONSOLESERVICE_PROGID,
+                                NS_CONSOLESERVICE_CONTRACTID,
                                 nsConsoleServiceConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kAtomServiceCID,
                                 NS_ATOMSERVICE_CLASSNAME,
-                                NS_ATOMSERVICE_PROGID,
+                                NS_ATOMSERVICE_CONTRACTID,
                                 nsAtomServiceConstructor);
     if (NS_FAILED(rv)) return rv;
     
     rv = RegisterGenericFactory(compMgr, nsObserver::GetCID(), 
                                 NS_OBSERVER_CLASSNAME,
-                                NS_OBSERVER_PROGID,
+                                NS_OBSERVER_CONTRACTID,
                                 nsObserver::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, nsObserverService::GetCID(),
                                 NS_OBSERVERSERVICE_CLASSNAME,
-                                NS_OBSERVERSERVICE_PROGID,
+                                NS_OBSERVERSERVICE_CONTRACTID,
                                 nsObserverService::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kGenericFactoryCID,
                                 NS_GENERICFACTORY_CLASSNAME,
-                                NS_GENERICFACTORY_PROGID,
+                                NS_GENERICFACTORY_CONTRACTID,
                                 nsGenericFactory::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kEventQueueServiceCID,
                                 NS_EVENTQUEUESERVICE_CLASSNAME,
-                                NS_EVENTQUEUESERVICE_PROGID,
+                                NS_EVENTQUEUESERVICE_CONTRACTID,
                                 nsEventQueueServiceImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kEventQueueCID,
                                 NS_EVENTQUEUE_CLASSNAME,
-                                NS_EVENTQUEUE_PROGID,
+                                NS_EVENTQUEUE_CONTRACTID,
                                 nsEventQueueImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kThreadCID,
                                 NS_THREAD_CLASSNAME,
-                                NS_THREAD_PROGID,
+                                NS_THREAD_CONTRACTID,
                                 nsThread::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kThreadPoolCID,
                                 NS_THREADPOOL_CLASSNAME,
-                                NS_THREADPOOL_PROGID,
+                                NS_THREADPOOL_CONTRACTID,
                                 nsThreadPool::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, 
                                 kProxyObjectManagerCID, 
                                 NS_XPCOMPROXY_CLASSNAME,
-                                NS_XPCOMPROXY_PROGID,
+                                NS_XPCOMPROXY_CONTRACTID,
                                 nsProxyObjectManager::Create);
     if (NS_FAILED(rv)) return rv;
 
 
     rv = RegisterGenericFactory(compMgr, kSupportsIDCID,
                                 NS_SUPPORTS_ID_CLASSNAME,
-                                NS_SUPPORTS_ID_PROGID,
+                                NS_SUPPORTS_ID_CONTRACTID,
                                 nsSupportsIDImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsStringCID,
                                 NS_SUPPORTS_STRING_CLASSNAME,
-                                NS_SUPPORTS_STRING_PROGID,
+                                NS_SUPPORTS_STRING_CONTRACTID,
                                 nsSupportsStringImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsWStringCID,
                                 NS_SUPPORTS_WSTRING_CLASSNAME,
-                                NS_SUPPORTS_WSTRING_PROGID,
+                                NS_SUPPORTS_WSTRING_CONTRACTID,
                                 nsSupportsWStringImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsPRBoolCID,
                                 NS_SUPPORTS_PRBOOL_CLASSNAME,
-                                NS_SUPPORTS_PRBOOL_PROGID,
+                                NS_SUPPORTS_PRBOOL_CONTRACTID,
                                 nsSupportsPRBoolImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsPRUint8CID,
                                 NS_SUPPORTS_PRUINT8_CLASSNAME,
-                                NS_SUPPORTS_PRUINT8_PROGID,
+                                NS_SUPPORTS_PRUINT8_CONTRACTID,
                                 nsSupportsPRUint8ImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsPRUint16CID,
                                 NS_SUPPORTS_PRUINT16_CLASSNAME,
-                                NS_SUPPORTS_PRUINT16_PROGID,
+                                NS_SUPPORTS_PRUINT16_CONTRACTID,
                                 nsSupportsPRUint16ImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsPRUint32CID,
                                 NS_SUPPORTS_PRUINT32_CLASSNAME,
-                                NS_SUPPORTS_PRUINT32_PROGID,
+                                NS_SUPPORTS_PRUINT32_CONTRACTID,
                                 nsSupportsPRUint32ImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsPRUint64CID,
                                 NS_SUPPORTS_PRUINT64_CLASSNAME,
-                                NS_SUPPORTS_PRUINT64_PROGID,
+                                NS_SUPPORTS_PRUINT64_CONTRACTID,
                                 nsSupportsPRUint64ImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsPRTimeCID,
                                 NS_SUPPORTS_PRTIME_CLASSNAME,
-                                NS_SUPPORTS_PRTIME_PROGID,
+                                NS_SUPPORTS_PRTIME_CONTRACTID,
                                 nsSupportsPRTimeImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsCharCID,
                                 NS_SUPPORTS_CHAR_CLASSNAME,
-                                NS_SUPPORTS_CHAR_PROGID,
+                                NS_SUPPORTS_CHAR_CONTRACTID,
                                 nsSupportsCharImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsPRInt16CID,
                                 NS_SUPPORTS_PRINT16_CLASSNAME,
-                                NS_SUPPORTS_PRINT16_PROGID,
+                                NS_SUPPORTS_PRINT16_CONTRACTID,
                                 nsSupportsPRInt16ImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsPRInt32CID,
                                 NS_SUPPORTS_PRINT32_CLASSNAME,
-                                NS_SUPPORTS_PRINT32_PROGID,
+                                NS_SUPPORTS_PRINT32_CONTRACTID,
                                 nsSupportsPRInt32ImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsPRInt64CID,
                                 NS_SUPPORTS_PRINT64_CLASSNAME,
-                                NS_SUPPORTS_PRINT64_PROGID,
+                                NS_SUPPORTS_PRINT64_CONTRACTID,
                                 nsSupportsPRInt64ImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsFloatCID,
                                 NS_SUPPORTS_FLOAT_CLASSNAME,
-                                NS_SUPPORTS_FLOAT_PROGID,
+                                NS_SUPPORTS_FLOAT_CONTRACTID,
                                 nsSupportsFloatImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsDoubleCID,
                                 NS_SUPPORTS_DOUBLE_CLASSNAME,
-                                NS_SUPPORTS_DOUBLE_PROGID,
+                                NS_SUPPORTS_DOUBLE_CONTRACTID,
                                 nsSupportsDoubleImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsVoidCID,
                                 NS_SUPPORTS_VOID_CLASSNAME,
-                                NS_SUPPORTS_VOID_PROGID,
+                                NS_SUPPORTS_VOID_CONTRACTID,
                                 nsSupportsVoidImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, nsLocalFile::GetCID(),
                                 NS_LOCAL_FILE_CLASSNAME,
-                                NS_LOCAL_FILE_PROGID,
+                                NS_LOCAL_FILE_CONTRACTID,
                                 nsLocalFile::nsLocalFileConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, nsDirectoryService::GetCID(),
                                 NS_DIRECTORY_SERVICE_CLASSNAME,
-                                NS_DIRECTORY_SERVICE_PROGID,
+                                NS_DIRECTORY_SERVICE_CONTRACTID,
                                 nsDirectoryService::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kFileSpecCID,
                                 NS_FILESPEC_CLASSNAME,
-                                NS_FILESPEC_PROGID,
+                                NS_FILESPEC_CONTRACTID,
                                 nsFileSpecImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kDirectoryIteratorCID,
                                 NS_DIRECTORYITERATOR_CLASSNAME,
-                                NS_DIRECTORYITERATOR_PROGID,
+                                NS_DIRECTORYITERATOR_CONTRACTID,
                                 nsDirectoryIteratorImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
@@ -598,7 +598,7 @@ nsresult NS_COM NS_InitXPCOM2(const char* productName,
 // - Release the Component Manager
 //   - Release all factories cached by the Component Manager
 //   - Unload Libraries
-//   - Release Progid Cache held by Component Manager
+//   - Release Contractid Cache held by Component Manager
 //   - Release dll abstraction held by Component Manager
 //   - Release the Registry held by Component Manager
 //   - Finally, release the component manager itself
@@ -612,7 +612,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     {
         // Block it so that the COMPtr will get deleted before we hit
         // servicemanager shutdown
-        NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+        NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
             nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager

@@ -312,7 +312,7 @@ nsXBLBinding::nsXBLBinding(const nsCString& aDocURI, const nsCString& aID)
     kBindingDetachedAtom = NS_NewAtom("bindingdetached");
     kInheritStyleAtom = NS_NewAtom("inheritstyle");
 
-    nsServiceManager::GetService("component://netscape/xbl",
+    nsServiceManager::GetService("@mozilla.org/xbl;1",
                                    NS_GET_IID(nsIXBLService),
                                    (nsISupports**) &gXBLService);
     
@@ -361,7 +361,7 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kBindingAttachedAtom);
     NS_RELEASE(kInheritStyleAtom);
 
-    nsServiceManager::ReleaseService("component://netscape/xbl", gXBLService);
+    nsServiceManager::ReleaseService("@mozilla.org/xbl;1", gXBLService);
     gXBLService = nsnull;
 
     EventHandlerMapEntry* entry = kEventHandlerMap;

@@ -32,7 +32,7 @@
 #define NS_COOKIEHTTPNOTIFY_CID \
 { 0x6bc1f522, 0x1f45, 0x11d3, { 0x8a, 0xd4, 0x0, 0x10, 0x5a, 0x1b, 0x88, 0x60 } }
 
-#define NS_COOKIEHTTPNOTIFY_PROGID "component://netscape/cookie-notifier"
+#define NS_COOKIEHTTPNOTIFY_CONTRACTID "@mozilla.org/cookie-notifier;1"
 #define NS_COOKIEHTTPNOTIFY_CLASSNAME "Cookie Notifier"
 
 class nsCookieHTTPNotify : public nsIHTTPNotify {

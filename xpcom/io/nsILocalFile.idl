@@ -105,7 +105,7 @@ interface nsILocalFile : nsIFile
 
 %{C++
 
-#define NS_LOCAL_FILE_PROGID "component://mozilla/file/local"
+#define NS_LOCAL_FILE_CONTRACTID "@mozilla.org/file/local;1"
 #define NS_LOCAL_FILE_CLASSNAME "Local File Specification"
 
 extern "C" NS_EXPORT nsresult

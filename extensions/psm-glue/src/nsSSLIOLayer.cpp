@@ -559,7 +559,7 @@ nsSSLIOLayerNewSocket( const char *host,
         nsSSLIOLayerMethods.write   = nsSSLIOLayerWrite;
         
         
-        nsresult result = nsServiceManager::GetService( PSM_COMPONENT_PROGID,
+        nsresult result = nsServiceManager::GetService( PSM_COMPONENT_CONTRACTID,
                                                         NS_GET_IID(nsIPSMComponent), 
                                                         (nsISupports**)&gPSMService);  
         if (NS_FAILED(result))
@@ -646,7 +646,7 @@ nsSSLIOLayerAddToSocket( const char *host,
         nsSSLIOLayerMethods.write   = nsSSLIOLayerWrite;
         
         
-        nsresult result = nsServiceManager::GetService( PSM_COMPONENT_PROGID,
+        nsresult result = nsServiceManager::GetService( PSM_COMPONENT_CONTRACTID,
                                                         NS_GET_IID(nsIPSMComponent), 
                                                         (nsISupports**)&gPSMService);  
         if (NS_FAILED(result))

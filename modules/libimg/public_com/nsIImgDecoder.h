@@ -32,7 +32,7 @@
 { 0xf00c22b0, 0xbbd2, 0x11d2, \
 { 0x80, 0x2c, 0x00, 0x60, 0x08, 0x8f, 0x91, 0xa3 } }
 
-#define NS_IIMGDECODER_BASE_PROGID "component://netscape/image/decoder&type="
+#define NS_IIMGDECODER_BASE_CONTRACTID "@mozilla.org/image/decoder;1?type="
 
 class nsIImgDecoder : public nsISupports
 {

@@ -69,22 +69,22 @@ NS_IMETHODIMP nsCNativeAppImpl::CreateEventLoop(const PRUnichar* EventLoopName,
 {
 	NS_ENSURE_ARG_POINTER(eventLoop);
 			  
-	char* progID = nsnull;
+	char* contractID = nsnull;
 
 	switch(type)
 		{
 		case nsEventLoopTypes::MainAppLoop:
 			NS_ENSURE_FALSE(GetLoop(type), NS_ERROR_UNEXPECTED);
-			progID = NS_EVENTLOOP_APP_PROGID;
+			contractID = NS_EVENTLOOP_APP_CONTRACTID;
 			break;
 
 		case nsEventLoopTypes::ThreadLoop:
 			NS_ENSURE_FALSE(GetLoop(PR_CurrentThread()), NS_ERROR_UNEXPECTED);
-			progID = NS_EVENTLOOP_THREAD_PROGID;
+			contractID = NS_EVENTLOOP_THREAD_CONTRACTID;
 			break;
 
 		case nsEventLoopTypes::AppBreathLoop:
-			progID = NS_EVENTLOOP_BREATH_PROGID;
+			contractID = NS_EVENTLOOP_BREATH_CONTRACTID;
 			break;
 
 		default:
@@ -94,7 +94,7 @@ NS_IMETHODIMP nsCNativeAppImpl::CreateEventLoop(const PRUnichar* EventLoopName,
 
 	nsCOMPtr<nsIEventLoop> loop;
 
-	nsresult rv = nsComponentManager::CreateInstance(progID, nsnull, 
+	nsresult rv = nsComponentManager::CreateInstance(contractID, nsnull, 
 		NS_GET_IID(nsIEventLoop), getter_AddRefs(loop));
 
 	NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);

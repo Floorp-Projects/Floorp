@@ -109,7 +109,7 @@ LocationImpl::CheckURL(nsIURI* aURL, nsIDocShellLoadInfo** aLoadInfo)
 {
   nsresult result;
   // Get JSContext from stack.
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", 
                   &result);
   if (NS_FAILED(result))
     return NS_ERROR_FAILURE;
@@ -119,7 +119,7 @@ LocationImpl::CheckURL(nsIURI* aURL, nsIDocShellLoadInfo** aLoadInfo)
 
   // Get security manager.
   NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &result);
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
   if (NS_FAILED(result)) 
     return NS_ERROR_FAILURE;
 
@@ -766,7 +766,7 @@ CheckHrefAccess(JSContext *aContext, JSObject *aObj, PRBool isWrite)
 {
   nsresult rv;
   NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     rv = NS_ERROR_DOM_SECMAN_ERR;
   else

@@ -79,7 +79,7 @@ void test_internal_tables(void);
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
-                                           const char *aProgID,
+                                           const char *aContractID,
                                            nsIFactory **aFactory)
 {
 	nsIFactory*	factoryInstance;
@@ -171,7 +171,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 	// register the generic factory
 	//
 	rv = compMgr->RegisterComponent(kLocaleFactoryCID,"nsLocale component",
-		NS_LOCALE_PROGID,path,PR_TRUE,PR_TRUE);
+		NS_LOCALE_CONTRACTID,path,PR_TRUE,PR_TRUE);
 	NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: RegisterFactory failed.");
 	if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
@@ -179,7 +179,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 	// register the service 
 	//
 	rv = compMgr->RegisterComponent(kLocaleServiceCID,"nsLocaleService component",
-		NS_LOCALESERVICE_PROGID,path,PR_TRUE,PR_TRUE);
+		NS_LOCALESERVICE_CONTRACTID,path,PR_TRUE,PR_TRUE);
 	if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
 
@@ -215,7 +215,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 	// register the scriptable date time formatter
 	//
 	rv = compMgr->RegisterComponent(kScriptableDateFormatCID, "Scriptable Date Format", 
-    NS_SCRIPTABLEDATEFORMAT_PROGID, path, PR_TRUE, PR_TRUE);
+    NS_SCRIPTABLEDATEFORMAT_CONTRACTID, path, PR_TRUE, PR_TRUE);
 	NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: Register ScriptableDateFormat failed.");
   if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
@@ -223,7 +223,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   // register the language atom service
   //
   rv = compMgr->RegisterComponent(kLanguageAtomServiceCID,
-    "Language Atom Service", NS_LANGUAGEATOMSERVICE_PROGID, path, PR_TRUE,
+    "Language Atom Service", NS_LANGUAGEATOMSERVICE_CONTRACTID, path, PR_TRUE,
     PR_TRUE);
   NS_ASSERTION(NS_SUCCEEDED(rv),
     "nsLocaleTest: Register LanguageAtomService failed.");

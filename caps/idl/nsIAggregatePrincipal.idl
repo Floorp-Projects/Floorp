@@ -23,7 +23,7 @@
 /* Defines an interface for aggregate principals. */
 
 %{C++
-#define NS_AGGREGATEPRINCIPAL_PROGID "component://netscape/aggregateprincipal"
+#define NS_AGGREGATEPRINCIPAL_CONTRACTID "@mozilla.org/aggregateprincipal;1"
 #define NS_AGGREGATEPRINCIPAL_CLASSNAME "aggregateprincipal"
 %}
 

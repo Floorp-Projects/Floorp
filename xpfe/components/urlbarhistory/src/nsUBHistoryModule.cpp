@@ -38,9 +38,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
 static nsModuleComponentInfo gUBHistoryModuleInfo[] = 
 {
    { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
-      NS_URLBARHISTORY_PROGID, nsUrlbarHistoryConstructor },
+      NS_URLBARHISTORY_CONTRACTID, nsUrlbarHistoryConstructor },
    { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
-      NS_URLBARAUTOCOMPLETE_PROGID, nsUrlbarHistoryConstructor }
+      NS_URLBARAUTOCOMPLETE_CONTRACTID, nsUrlbarHistoryConstructor }
 };
 
 NS_IMPL_NSGETMODULE("Urlbar History Module", gUBHistoryModuleInfo)

@@ -134,9 +134,9 @@ interface nsINetDataCache : nsISupports
 };
 
 %{ C++
-// ProgID prefix for Components that implement this interface
-#define NS_NETWORK_CACHE_PROGID "component://netscape/network/cache"
-#define NS_NETWORK_MEMORY_CACHE_PROGID NS_NETWORK_CACHE_PROGID "?name=memory-cache"
-#define NS_NETWORK_FLAT_CACHE_PROGID   NS_NETWORK_CACHE_PROGID "?name=flat-cache"
-#define NS_NETWORK_FILE_CACHE_PROGID   NS_NETWORK_CACHE_PROGID "?name=file-cache"
+// ContractID prefix for Components that implement this interface
+#define NS_NETWORK_CACHE_CONTRACTID "@mozilla.org/network/cache;1"
+#define NS_NETWORK_MEMORY_CACHE_CONTRACTID NS_NETWORK_CACHE_CONTRACTID "?name=memory-cache"
+#define NS_NETWORK_FLAT_CACHE_CONTRACTID   NS_NETWORK_CACHE_CONTRACTID "?name=flat-cache"
+#define NS_NETWORK_FILE_CACHE_CONTRACTID   NS_NETWORK_CACHE_CONTRACTID "?name=file-cache"
 %}

@@ -96,7 +96,7 @@ struct nsXBLBindingRequest
 
     gRefCnt++;
     if (gRefCnt == 1) {
-      nsServiceManager::GetService("component://netscape/xbl",
+      nsServiceManager::GetService("@mozilla.org/xbl;1",
                                    NS_GET_IID(nsIXBLService),
                                    (nsISupports**) &gXBLService);
     }
@@ -106,7 +106,7 @@ struct nsXBLBindingRequest
   {
     gRefCnt--;
     if (gRefCnt == 0) {
-      nsServiceManager::ReleaseService("component://netscape/xbl", gXBLService);
+      nsServiceManager::ReleaseService("@mozilla.org/xbl;1", gXBLService);
       gXBLService = nsnull;
     }
   }
@@ -217,12 +217,12 @@ nsXBLStreamListener::nsXBLStreamListener(nsIStreamListener* aInner, nsIDocument*
   mBindingDocument = aBindingDocument;
   gRefCnt++;
   if (gRefCnt == 1) {
-    nsresult rv = nsServiceManager::GetService("component://netscape/rdf/xul-content-utils",
+    nsresult rv = nsServiceManager::GetService("@mozilla.org/rdf/xul-content-utils;1",
                                       NS_GET_IID(nsIXULContentUtils),
                                       (nsISupports**) &gXULUtils);
     if (NS_FAILED(rv)) return;
 
-    rv = nsServiceManager::GetService("component://netscape/rdf/xul-prototype-cache",
+    rv = nsServiceManager::GetService("@mozilla.org/rdf/xul-prototype-cache;1",
                                       NS_GET_IID(nsIXULPrototypeCache),
                                       (nsISupports**) &gXULCache);
     if (NS_FAILED(rv)) return;
@@ -235,12 +235,12 @@ nsXBLStreamListener::~nsXBLStreamListener()
   gRefCnt--;
   if (gRefCnt == 0) {
     if (gXULUtils) {
-      nsServiceManager::ReleaseService("component://netscape/rdf/xul-content-utils", gXULUtils);
+      nsServiceManager::ReleaseService("@mozilla.org/rdf/xul-content-utils;1", gXULUtils);
       gXULUtils = nsnull;
     }
 
     if (gXULCache) {
-      nsServiceManager::ReleaseService("component://netscape/rdf/xul-prototype-cache", gXULCache);
+      nsServiceManager::ReleaseService("@mozilla.org/rdf/xul-prototype-cache;1", gXULCache);
       gXULCache = nsnull;
     }
   }
@@ -524,7 +524,7 @@ nsXBLService::nsXBLService(void)
     kInputAtom = NS_NewAtom("input");
 
     // Find out if the XUL cache is on or off
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       prefs->GetBoolPref(kDisableChromeCachePref, &gDisableChromeCache);
 
@@ -534,12 +534,12 @@ nsXBLService::nsXBLService(void)
     // so it can flush the LRU list in low-memory situations.
     nsMemory::RegisterObserver(this);
 
-    rv = nsServiceManager::GetService("component://netscape/rdf/xul-content-utils",
+    rv = nsServiceManager::GetService("@mozilla.org/rdf/xul-content-utils;1",
                                       NS_GET_IID(nsIXULContentUtils),
                                       (nsISupports**) &gXULUtils);
     if (NS_FAILED(rv)) return;
 
-    rv = nsServiceManager::GetService("component://netscape/rdf/xul-prototype-cache",
+    rv = nsServiceManager::GetService("@mozilla.org/rdf/xul-prototype-cache;1",
                                       NS_GET_IID(nsIXULPrototypeCache),
                                       (nsISupports**) &gXULCache);
     if (NS_FAILED(rv)) return;
@@ -575,12 +575,12 @@ nsXBLService::~nsXBLService(void)
     nsMemory::UnregisterObserver(this);
 
     if (gXULUtils) {
-      nsServiceManager::ReleaseService("component://netscape/rdf/xul-content-utils", gXULUtils);
+      nsServiceManager::ReleaseService("@mozilla.org/rdf/xul-content-utils;1", gXULUtils);
       gXULUtils = nsnull;
     }
 
     if (gXULCache) {
-      nsServiceManager::ReleaseService("component://netscape/rdf/xul-prototype-cache", gXULCache);
+      nsServiceManager::ReleaseService("@mozilla.org/rdf/xul-prototype-cache;1", gXULCache);
       gXULCache = nsnull;
     }
   }
@@ -1004,7 +1004,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
       // Finally, if all lines of defense fail, we go and fetch the binding
       // document.
       nsCOMPtr<nsIURL> uri;
-      nsComponentManager::CreateInstance("component://netscape/network/standard-url",
+      nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1",
                                          nsnull,
                                          NS_GET_IID(nsIURL),
                                          getter_AddRefs(uri));

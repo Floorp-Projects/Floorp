@@ -46,8 +46,8 @@
 
 StartTest( "nsISupports Primitives" );
 
-// prefix used by all these progids
-progid_prefix = "component://netscape/";
+// prefix used by all these contractids
+contractid_prefix = "@mozilla.org/";
 
 // an iid to use to test nsISupportsID
 var iface_test = Components.interfaces.nsISupports;
@@ -60,7 +60,7 @@ var same = Object;
 // the table of data...
 
 // columns are:
-// 1) progid suffix
+// 1) contractid suffix
 // 2) interface name
 // 3) value
 // 4) string to use to compare for toString ('same' mans use original value)
@@ -129,13 +129,13 @@ function regular_compare(v1, v2)
     return v1 == v2;    
 }    
 
-function test(progid, iid, d, string_val, val_compare_fn, str_compare_fn)
+function test(contractid, iid, d, string_val, val_compare_fn, str_compare_fn)
 {
     var test1_result;    
     var test2_result;    
-    var full_progid = progid_prefix+progid;
-//    println("checking... "+progid+" "+iid+ " with "+d);
-    var clazz = Components.classes[full_progid];
+    var full_contractid = contractid_prefix+contractid;
+//    println("checking... "+contractid+" "+iid+ " with "+d);
+    var clazz = Components.classes[full_contractid];
 
 	
 	var result1 = (clazz) ? true : false;
@@ -147,7 +147,7 @@ function test(progid, iid, d, string_val, val_compare_fn, str_compare_fn)
 	if ( ! result1 ) {
 		// need to add empty test cases so that the # of test cases is
 		// constant
-		println("failed for... "+progid+" with "+d+" returned "+v.data);
+		println("failed for... "+contractid+" with "+d+" returned "+v.data);
 		AddTestCase( "str_compare_fun", true, false );
 		AddTestCase( "val_compare_fun", true, false );
 		return;

@@ -297,7 +297,7 @@ nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream,
 
   // Get some prefs
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && prefs)
   {
     rv = prefs->GetBoolPref(PREF_STRUCTS, &mStructs);

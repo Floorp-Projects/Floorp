@@ -56,7 +56,7 @@ function onLoadViewSource()
 function createBrowserInstance()
 {
   appCore = Components
-    .classes[ "component://netscape/appshell/component/browser/instance" ]
+    .classes[ "@mozilla.org/appshell/component/browser/instance;1" ]
     .createInstance( Components.interfaces.nsIBrowserInstance );
   if ( !appCore ) {
     dump("Error creating browser instance\n");

@@ -26,7 +26,7 @@
 static nsModuleComponentInfo gResComponents[] = {
     { "The Keyword Protocol Handler", 
       NS_KEYWORDPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "keyword",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "keyword",
       nsKeywordProtocolHandler::Create
     }
 };

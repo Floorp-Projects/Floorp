@@ -51,5 +51,5 @@ interface nsIXPCToolsCompiler : nsISupports
 };
 
 %{ C++
-#define XPCTOOLS_COMPILER_PROGID "xpctools.compiler.1"
+#define XPCTOOLS_COMPILER_CONTRACTID "xpctools.compiler.1"
 %}

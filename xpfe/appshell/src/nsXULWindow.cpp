@@ -217,7 +217,7 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
    mContinueModalLoop = PR_TRUE;
    EnableParent(PR_FALSE);
 
-   nsCOMPtr<nsIJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+   nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
    nsresult rv = NS_OK;
    if(stack  && NS_SUCCEEDED(stack->Push(nsnull)))
       {
@@ -422,7 +422,7 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, PRBool aScreen, PRBoo
   if (!aScreen && !aRelative)
     return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsIScreenManager> screenmgr = do_GetService("component://netscape/gfx/screenmanager", &result);
+  nsCOMPtr<nsIScreenManager> screenmgr = do_GetService("@mozilla.org/gfx/screenmanager;1", &result);
   if (NS_FAILED(result))
     return result;
 
@@ -1097,7 +1097,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    webShellWindow->GetLockedState(locked);
 
    // Push nsnull onto the JSContext stack before we dispatch a native event.
-   nsCOMPtr<nsIJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+   nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
    if(stack && NS_SUCCEEDED(stack->Push(nsnull)))
       {
       nsresult looprv = NS_OK;
@@ -1128,14 +1128,14 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
 }
 
 // XXX can this switch now?
-/// This should rightfully be somebody's PROGID?
+/// This should rightfully be somebody's CONTRACTID?
 // Will switch when the "app shell browser component" arrives.
-static const char *prefix = "component://netscape/appshell/component/browser/window";
+static const char *prefix = "@mozilla.org/appshell/component/browser/window;1";
 
 NS_IMETHODIMP nsXULWindow::NotifyObservers(const PRUnichar* aTopic, 
    const PRUnichar* aData)
 {
-   nsCOMPtr<nsIObserverService> service(do_GetService(NS_OBSERVERSERVICE_PROGID));
+   nsCOMPtr<nsIObserverService> service(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
 
    if(!service)
       return NS_ERROR_FAILURE;

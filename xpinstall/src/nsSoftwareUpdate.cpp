@@ -140,7 +140,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     
 
     nsresult rv;
-    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     
     if(!directoryService) return;
     
@@ -652,7 +652,7 @@ RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
 {
     // get the registry
     nsIRegistry* registry;
-    nsresult rv = nsServiceManager::GetService(NS_REGISTRY_PROGID,
+    nsresult rv = nsServiceManager::GetService(NS_REGISTRY_CONTRACTID,
                                                NS_GET_IID(nsIRegistry),
                                                (nsISupports**)&registry);
     if ( NS_SUCCEEDED( rv ) ) 
@@ -671,7 +671,7 @@ RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
         rv = registry->AddSubtree( nsIRegistry::Common,
                                    buffer,
                                    &key );
-        nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
+        nsServiceManager::ReleaseService(NS_REGISTRY_CONTRACTID, registry);
     }
     return rv;
 
@@ -683,33 +683,33 @@ static nsModuleComponentInfo components[] =
 {
     { "SoftwareUpdate Component", 
        NS_SoftwareUpdate_CID,
-       NS_IXPINSTALLCOMPONENT_PROGID,
+       NS_IXPINSTALLCOMPONENT_CONTRACTID,
        nsSoftwareUpdateConstructor,
        RegisterSoftwareUpdate
     },
 	   
     { "InstallTrigger Component", 
        NS_SoftwareUpdateInstallTrigger_CID,
-       NS_INSTALLTRIGGERCOMPONENT_PROGID, 
+       NS_INSTALLTRIGGERCOMPONENT_CONTRACTID, 
        nsInstallTriggerConstructor
     },
     
     { "InstallVersion Component", 
        NS_SoftwareUpdateInstallVersion_CID,
-       NS_INSTALLVERSIONCOMPONENT_PROGID,
+       NS_INSTALLVERSIONCOMPONENT_CONTRACTID,
        nsInstallVersionConstructor 
     },
 
     { "XPInstall Content Handler",
       NS_SoftwareUpdateInstallTrigger_CID,
-      NS_CONTENT_HANDLER_PROGID_PREFIX"application/x-xpinstall",
+      NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-xpinstall",
       nsInstallTriggerConstructor 
     },
 
 #if NOTIFICATION_ENABLED 
     { "XPInstall Update Notifier", 
       NS_XPI_UPDATE_NOTIFIER_CID,
-      NS_XPI_UPDATE_NOTIFIER_PROGID, 
+      NS_XPI_UPDATE_NOTIFIER_CONTRACTID, 
       nsXPINotifierImpl::New
     },
 #endif

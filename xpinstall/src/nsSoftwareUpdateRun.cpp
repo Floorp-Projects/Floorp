@@ -90,7 +90,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
      * error, then log it with the console service.
      */
     nsCOMPtr<nsIScriptError>
-        errorObject(do_CreateInstance("mozilla.scripterror.1"));
+        errorObject(do_CreateInstance("@mozilla.org/scripterror;1"));
     
     if (consoleService != nsnull && errorObject != nsnull && report != nsnull) {
         /*
@@ -395,7 +395,7 @@ extern "C" void RunInstallOnThread(void *data)
         {
             PRBool ownRuntime = PR_FALSE;
 
-            NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
+            NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "@mozilla.org/js/xpc/RuntimeService;1", &rv);
             if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)))
             {
                 // service not available (wizard context?)

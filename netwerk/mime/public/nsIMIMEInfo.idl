@@ -140,5 +140,5 @@ interface nsIMIMEInfo : nsISupports {
     { 0xa1, 0x2b, 0xa6, 0x6e, 0xf6, 0x62, 0xf0, 0xbc } \
 }
 
-#define NS_MIMEINFO_PROGID "component://netscape/mime-info"
+#define NS_MIMEINFO_CONTRACTID "@mozilla.org/mime-info;1"
 %}

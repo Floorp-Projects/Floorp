@@ -26,7 +26,7 @@ function debug(str)
 function LoadDetectorsMenu()
   {
     debug("run LoadDetectorsMenu()\n");
-    var Registry = Components.classes['component://netscape/registry-viewer'].createInstance();
+    var Registry = Components.classes['@mozilla.org/registry-viewer;1'].createInstance();
     Registry = Registry.QueryInterface(Components.interfaces.nsIRegistryDataSource);
 
     Registry.openWellKnownRegistry(Registry.ApplicationComponentRegistry);
@@ -43,7 +43,7 @@ function SelectDetectors( event )
   {
    uri =  event.target.getAttribute("id");
    debug(uri + "\n");
-   pref = Components.classes['component://netscape/preferences'];
+   pref = Components.classes['@mozilla.org/preferences;1'];
    prefvalue = uri.substring(
                      'urn:mozilla-registry:key:/software/netscape/intl/charsetdetector/'.length
                      ,uri.length);

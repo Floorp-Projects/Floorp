@@ -24,12 +24,12 @@
  */
 
 var nsJSComponentManager = {
-  createInstance: function (aProgID, aIID)
+  createInstance: function (aContractID, aIID)
     {
       try
         {
           var iid = Components.interfaces[aIID];
-          return Components.classes[aProgID].createInstance(iid);
+          return Components.classes[aContractID].createInstance(iid);
         }
       catch(e)
         {
@@ -50,12 +50,12 @@ var nsJSComponentManager = {
         return null;
     },
         
-  getService: function (aProgID, aIID)
+  getService: function (aContractID, aIID)
     {
       try
         {
           var iid = Components.interfaces[aIID];
-          return Components.classes[aProgID].getService(iid);
+          return Components.classes[aContractID].getService(iid);
         }
       catch(e)
         {

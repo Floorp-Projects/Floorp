@@ -60,7 +60,7 @@ void print_err(nsresult err)
 nsresult Register(const char *path) 
 { 
   nsCOMPtr<nsILocalFile> spec;
-  nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+  nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
                                                    nsnull, 
                                                    NS_GET_IID(nsILocalFile), 
                                                    getter_AddRefs(spec));
@@ -80,7 +80,7 @@ nsresult Register(const char *path)
 nsresult Unregister(const char *path) 
 {
   nsCOMPtr<nsILocalFile> spec;
-  nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+  nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
                                                    nsnull, 
                                                    NS_GET_IID(nsILocalFile), 
                                                    getter_AddRefs(spec));

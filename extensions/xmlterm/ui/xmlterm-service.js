@@ -35,26 +35,26 @@
  */
 
 /* components defined in this file */
-const CLINE_SERVICE_PROGID =
-    "component://netscape/commandlinehandler/general-startup-terminal";
+const CLINE_SERVICE_CONTRACTID =
+    "@mozilla.org/commandlinehandler/general-startup;1?type=terminal";
 const CLINE_SERVICE_CID =
     Components.ID("{0eb82bE0-43a2-11d3-8e76-006008948af5}");
-const TELNETCNT_HANDLER_PROGID =
-    "component://netscape/uriloader/content-handler?type=x-application-telnet";
+const TELNETCNT_HANDLER_CONTRACTID =
+    "@mozilla.org/uriloader/content-handler;1?type=x-application-telnet";
 const TELNETCNT_HANDLER_CID =
     Components.ID("{0eb82bE1-43a2-11d3-8e76-006008948af5}");
-const TELNETPROT_HANDLER_PROGID =
-    "component://netscape/network/protocol?name=telnet";
+const TELNETPROT_HANDLER_CONTRACTID =
+    "@mozilla.org/network/protocol;1?name=telnet";
 const TELNETPROT_HANDLER_CID =
     Components.ID("{0eb82bE2-43a2-11d3-8e76-006008948af5}");
 
 /* components used in this file */
-const MEDIATOR_PROGID =
-    "component://netscape/rdf/datasource?name=window-mediator"
-const SIMPLEURI_PROGID = 
-    "component://netscape/network/simple-uri";
-const ASS_PROGID =
-    "component://netscape/appshell/appShellService";
+const MEDIATOR_CONTRACTID =
+    "@mozilla.org/rdf/datasource;1?name=window-mediator"
+const SIMPLEURI_CONTRACTID = 
+    "@mozilla.org/network/simple-uri;1";
+const ASS_CONTRACTID =
+    "@mozilla.org/appshell/appShellService;1";
 
 /* interafces used in this file */
 const nsIWindowMediator  = Components.interfaces.nsIWindowMediator;
@@ -120,7 +120,7 @@ function (aContentType, aCommand, aWindowTarget, aSourceContext, aChannel)
     dump("telnetLoader:xmltermChromeURL = " + xmltermChromeURL + "\n");
 
     var windowManager =
-        Components.classes[MEDIATOR_PROGID].getService(nsIWindowMediator);
+        Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
 
     var w = windowManager.getMostRecentWindow("terminal:xmlterm");
 
@@ -133,7 +133,7 @@ function (aContentType, aCommand, aWindowTarget, aSourceContext, aChannel)
 //    } else
 
     // Create new XMLterm window
-    var ass = Components.classes[ASS_PROGID].getService(nsIAppShellService);
+    var ass = Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
     var w = ass.getHiddenDOMWindow();
     w.open(xmltermChromeURL, "_blank", "chrome,menubar,toolbar,resizable");
     
@@ -170,7 +170,7 @@ function (aSpec, aBaseURI)
         return null;
     }
     
-    var uri = Components.classes[SIMPLEURI_PROGID].createInstance(nsIURI);
+    var uri = Components.classes[SIMPLEURI_CONTRACTID].createInstance(nsIURI);
     uri.spec = aSpec;
     
     return uri;
@@ -278,25 +278,25 @@ function (compMgr, fileSpec, location, type)
     dump("*** Registering -terminal handler.\n");
     compMgr.registerComponentWithType(CLINE_SERVICE_CID,
                                       "XMLterm CommandLine Service",
-                                      CLINE_SERVICE_PROGID, fileSpec,
+                                      CLINE_SERVICE_CONTRACTID, fileSpec,
                                       location, true, true, type);
     
 	catman = Components.classes["mozilla.categorymanager.1"]
         .getService(nsICategoryManager);
 	catman.addCategoryEntry("command-line-argument-handlers",
                             "xmlterm command line handler",
-                            CLINE_SERVICE_PROGID, true, true);
+                            CLINE_SERVICE_CONTRACTID, true, true);
 
     dump("*** Registering x-application-telnet handler.\n");
     compMgr.registerComponentWithType(TELNETCNT_HANDLER_CID,
                                       "Telnet Content Handler",
-                                      TELNETCNT_HANDLER_PROGID, fileSpec,
+                                      TELNETCNT_HANDLER_CONTRACTID, fileSpec,
                                       location, true, true, type);
 
     dump("*** Registering telnet protocol handler.\n");
     compMgr.registerComponentWithType(TELNETPROT_HANDLER_CID,
                                       "Telnet protocol handler",
-                                      TELNETPROT_HANDLER_PROGID, fileSpec, location,
+                                      TELNETPROT_HANDLER_CONTRACTID, fileSpec, location,
                                       true, true, type);
 
 }
@@ -308,7 +308,7 @@ function(compMgr, fileSpec, location)
 	catman = Components.classes["mozilla.categorymanager.1"]
         .getService(nsICategoryManager);
 	catman.deleteCategoryEntry("command-line-argument-handlers",
-                               CLINE_SERVICE_PROGID, true);
+                               CLINE_SERVICE_CONTRACTID, true);
 }
 
 XMLtermModule.getClassObject =

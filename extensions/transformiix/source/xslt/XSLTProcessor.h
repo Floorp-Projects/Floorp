@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.11 2000/07/06 12:35:42 axel%pike.org Exp $
+ * $Id: XSLTProcessor.h,v 1.12 2000/09/13 23:51:15 rayw%netscape.com Exp $
  */
 
 
@@ -66,8 +66,8 @@
 #define TRANSFORMIIX_XSLT_PROCESSOR_CID   \
 { 0xbacd8ad0, 0x552f, 0x11d3, {0xa9, 0xf7, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} }
 
-#define TRANSFORMIIX_XSLT_PROCESSOR_PROGID \
-"component://netscape/document-transformer?type=text/xsl"
+#define TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID \
+"@mozilla.org/document-transformer;1?type=text/xsl"
 
 #endif
 
@@ -75,7 +75,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.11 $ $Date: 2000/07/06 12:35:42 $
+ * @version $Revision: 1.12 $ $Date: 2000/09/13 23:51:15 $
 **/
 class XSLTProcessor
 #ifdef MOZ_XSL

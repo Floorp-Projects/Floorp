@@ -267,7 +267,7 @@ NS_IMPL_ISUPPORTS(nsReporter, NS_GET_IID(nsICharsetDetectionObserver))
 nsresult GetDetector(const char* key, nsICharsetDetector** det)
 {
   char buf[128];
-  strcpy(buf, NS_CHARSET_DETECTOR_PROGID_BASE);
+  strcpy(buf, NS_CHARSET_DETECTOR_CONTRACTID_BASE);
   strcat(buf, key);
   return nsComponentManager::CreateInstance(
             buf,

@@ -580,7 +580,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
    mDocShell->SetParentURIContentListener(mContentListener);
 
    if(!mInitInfo->sessionHistory)
-      mInitInfo->sessionHistory = do_CreateInstance(NS_SHISTORY_PROGID);
+      mInitInfo->sessionHistory = do_CreateInstance(NS_SHISTORY_CONTRACTID);
    NS_ENSURE_TRUE(mInitInfo->sessionHistory, NS_ERROR_FAILURE);
    mDocShellAsNav->SetSessionHistory(mInitInfo->sessionHistory);
       

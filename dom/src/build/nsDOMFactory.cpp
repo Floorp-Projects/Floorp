@@ -730,14 +730,14 @@ extern "C" NS_DOM nsresult
 NSGetFactory_DOM_DLL(nsISupports* servMgr,
                      const nsCID &aClass, 
                      const char *aClassName,
-                     const char *aProgID,
+                     const char *aContractID,
                      nsIFactory **aFactory)
 #else
 extern "C" NS_DOM nsresult
 NSGetFactory(nsISupports* servMgr,
              const nsCID &aClass, 
              const char *aClassName,
-             const char *aProgID,
+             const char *aContractID,
              nsIFactory **aFactory)
 #endif
 {

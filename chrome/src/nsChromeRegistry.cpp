@@ -186,7 +186,7 @@ NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
 
   nsCOMPtr<nsIURL> url;
   
-  rv = nsComponentManager::CreateInstance("component://netscape/network/standard-url",
+  rv = nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1",
                                           nsnull,
                                           NS_GET_IID(nsIURL),
                                           getter_AddRefs(url));
@@ -622,7 +622,7 @@ nsChromeRegistry::FindProvider(const nsCString& aPackage,
 
   // wrap it in a container
   nsCOMPtr<nsIRDFContainer> container;
-  rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+  rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
                                           nsnull,
                                           NS_GET_IID(nsIRDFContainer),
                                           getter_AddRefs(container));
@@ -687,7 +687,7 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
 
   // wrap aPackageList in a container
   nsCOMPtr<nsIRDFContainer> container;
-  rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+  rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
                                           nsnull,
                                           NS_GET_IID(nsIRDFContainer),
                                           getter_AddRefs(container));
@@ -851,7 +851,7 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOve
   if (installSource)
   {
     nsCOMPtr<nsIRDFContainer> container;
-    rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+    rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
                                             nsnull,
                                             NS_GET_IID(nsIRDFContainer),
                                             getter_AddRefs(container));
@@ -863,7 +863,7 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOve
   if (profileSource)
   {
     nsCOMPtr<nsIRDFContainer> container;
-    rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+    rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
                                             nsnull,
                                             NS_GET_IID(nsIRDFContainer),
                                             getter_AddRefs(container));
@@ -1050,7 +1050,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 
   // Flush the style sheet cache completely.
   // XXX For now flush everything.  need a better call that only flushes style sheets.
-  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "component://netscape/rdf/xul-prototype-cache", &rv);
+  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "@mozilla.org/rdf/xul-prototype-cache;1", &rv);
   if (NS_SUCCEEDED(rv) && xulCache) {
     xulCache->Flush();
   }
@@ -1256,7 +1256,7 @@ NS_IMETHODIMP nsChromeRegistry::WriteInfoToDataSource(const char *aDocURI,
   nsresult rv;
   nsCOMPtr<nsIURL> url;
   
-  rv = nsComponentManager::CreateInstance("component://netscape/network/standard-url",
+  rv = nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1",
                                           nsnull,
                                           NS_GET_IID(nsIURL),
                                           getter_AddRefs(url));
@@ -1285,7 +1285,7 @@ NS_IMETHODIMP nsChromeRegistry::WriteInfoToDataSource(const char *aDocURI,
   if (NS_FAILED(rv)) return rv;
   if (!container) {
     // Already exists. Create a container instead.
-    rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+    rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
                                       nsnull,
                                       NS_GET_IID(nsIRDFContainer),
                                       getter_AddRefs(container));
@@ -1327,7 +1327,7 @@ NS_IMETHODIMP nsChromeRegistry::UpdateDynamicDataSource(nsIRDFDataSource *aDataS
   nsCOMPtr<nsIRDFContainer> container;
   nsresult rv;
 
-  rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+  rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
                                           nsnull,
                                           NS_GET_IID(nsIRDFContainer),
                                           getter_AddRefs(container));
@@ -1388,7 +1388,7 @@ NS_IMETHODIMP nsChromeRegistry::UpdateDynamicDataSources(nsIRDFDataSource *aData
   if (!resource)
     return NS_OK;
 
-  nsCOMPtr<nsIRDFContainer> container(do_CreateInstance("component://netscape/rdf/container"));
+  nsCOMPtr<nsIRDFContainer> container(do_CreateInstance("@mozilla.org/rdf/container;1"));
   if (!container)
     return NS_OK;
 
@@ -1568,7 +1568,7 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCString& aProvider,
 
   // Build an RDF container to wrap the SEQ
   nsCOMPtr<nsIRDFContainer> container;
-  rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+  rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
                                           nsnull,
                                           NS_GET_IID(nsIRDFContainer),
                                           getter_AddRefs(container));
@@ -1831,7 +1831,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
       }
      
       nsCOMPtr<nsIRDFContainer> container;
-      rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+      rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
                                             nsnull,
                                             NS_GET_IID(nsIRDFContainer),
                                             getter_AddRefs(container));
@@ -1846,7 +1846,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
         if (NS_FAILED(rv)) return rv;
         if (!installContainer) {
           // Already exists. Create a container instead.
-          rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+          rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
                                             nsnull,
                                             NS_GET_IID(nsIRDFContainer),
                                             getter_AddRefs(installContainer));
@@ -2025,7 +2025,7 @@ nsChromeRegistry::GetProfileRoot(nsCString& aFileURL)
 { 
   nsCOMPtr<nsIFileLocator> fl;
   
-  nsresult rv = nsComponentManager::CreateInstance("component://netscape/filelocator",
+  nsresult rv = nsComponentManager::CreateInstance("@mozilla.org/filelocator;1",
                                           nsnull,
                                           NS_GET_IID(nsIFileLocator),
                                           getter_AddRefs(fl));
@@ -2056,7 +2056,7 @@ nsChromeRegistry::GetInstallRoot(nsCString& aFileURL)
 { 
   nsresult rv;
   nsCOMPtr<nsIFileLocator> fl;
-  rv = nsComponentManager::CreateInstance("component://netscape/filelocator",
+  rv = nsComponentManager::CreateInstance("@mozilla.org/filelocator;1",
                                           nsnull,
                                           NS_GET_IID(nsIFileLocator),
                                           getter_AddRefs(fl));
@@ -2086,7 +2086,7 @@ nsChromeRegistry::ReloadChrome()
 
   // Flush the cache completely.
   nsCOMPtr<nsIXULPrototypeCache> xulCache = 
-    do_GetService("component://netscape/rdf/xul-prototype-cache", &rv);
+    do_GetService("@mozilla.org/rdf/xul-prototype-cache;1", &rv);
   if (NS_SUCCEEDED(rv) && xulCache) {
     rv = xulCache->Flush();
     if (NS_FAILED(rv)) return rv;
@@ -2139,7 +2139,7 @@ nsChromeRegistry::GetArcs(nsIRDFDataSource* aDataSource,
                           nsISimpleEnumerator** aResult)
 {
   nsCOMPtr<nsIRDFContainer> container;
-  nsresult rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+  nsresult rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
                                           nsnull,
                                           NS_GET_IID(nsIRDFContainer),
                                           getter_AddRefs(container));
@@ -2173,7 +2173,7 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
 {
   nsresult rv = NS_OK;
   if (!mChromeDataSource) {
-    rv = nsComponentManager::CreateInstance("component://netscape/rdf/datasource?name=composite-datasource",
+    rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/datasource;1?name=composite-datasource",
                                             nsnull,
                                             NS_GET_IID(nsIRDFCompositeDataSource),
                                             getter_AddRefs(mChromeDataSource));
@@ -2299,7 +2299,7 @@ nsChromeRegistry::GetUserSheets(PRBool aIsChrome, nsISupportsArray **aResult)
 nsresult nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString& aURL)
 {
   nsCOMPtr<nsIURL> url;
-  nsresult rv = nsComponentManager::CreateInstance("component://netscape/network/standard-url",
+  nsresult rv = nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1",
                                                    nsnull,
                                                    NS_GET_IID(nsIURL),
                                                    getter_AddRefs(url));
@@ -2411,7 +2411,7 @@ nsChromeRegistry::CheckForNewChrome()
 
   // open the installed-chrome file
   nsCOMPtr<nsIFileLocator> locator;
-  rv = nsComponentManager::CreateInstance("component://netscape/filelocator",
+  rv = nsComponentManager::CreateInstance("@mozilla.org/filelocator;1",
                                           nsnull,
                                           NS_GET_IID(nsIFileLocator),
                                           getter_AddRefs(locator));

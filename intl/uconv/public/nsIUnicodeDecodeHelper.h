@@ -43,7 +43,7 @@ NS_DECLARE_ID(kUnicodeDecodeHelperCID,
 #define NS_UNICODEDECODEHELPER_CID \
 {  0x9cc39ff1, 0xdd5d, 0x11d2, {0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
 
-#define NS_UNICODEDECODEHELPER_PROGID "component://netscape/intl/unicode/decodehelper"
+#define NS_UNICODEDECODEHELPER_CONTRACTID "@mozilla.org/intl/unicode/decodehelper;1"
 
 #define NS_ERROR_UDEC_NOHELPER  \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x41)

@@ -1039,8 +1039,8 @@ XPCConvert::JSValToXPCException(JSContext* cx,
             nsISupportsDouble* data;
             nsIComponentManager* cm;
             if(NS_FAILED(NS_GetGlobalComponentManager(&cm)) || !cm ||
-               NS_FAILED(cm->CreateInstanceByProgID(
-                                NS_SUPPORTS_DOUBLE_PROGID,
+               NS_FAILED(cm->CreateInstanceByContractID(
+                                NS_SUPPORTS_DOUBLE_CONTRACTID,
                                 nsnull,
                                 NS_GET_IID(nsISupportsDouble),
                                 (void**)&data)))

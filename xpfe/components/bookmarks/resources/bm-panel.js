@@ -63,7 +63,7 @@ function OpenBookmarkURL(event, node, datasources)
 	try
 	{
 		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
-		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 		if (rdf) rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 		if (rdf && datasources) {
 			var src = rdf.GetResource(url, true);
@@ -86,8 +86,8 @@ function OpenBookmarkURL(event, node, datasources)
   
 	if (!window._content)
 	{
-        const WM_PROGID = "component://netscape/rdf/datasource?name=window-mediator";
-        var wm = nsJSComponentManager.getService(WM_PROGID, "nsIWindowMediator");
+        const WM_CONTRACTID = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+        var wm = nsJSComponentManager.getService(WM_CONTRACTID, "nsIWindowMediator");
         if (wm)
         {
           navWindow = wm.getMostRecentWindow("navigator:browser");

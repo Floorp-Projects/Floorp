@@ -119,7 +119,7 @@ static void GetFileSystemCharset(nsString & fileSystemCharset)
   nsresult rv;
 
   if (aCharset.Length() < 1) {
-    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
 	  if (NS_SUCCEEDED(rv)) 
 		  rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
 

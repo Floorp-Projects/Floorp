@@ -47,12 +47,12 @@ enum
 %}
 
 %{C++
-// Define Progid and CID
+// Define Contractid and CID
 // {2EA2E7D0-4095-11d3-9144-006008A6EDF6}
 #define NS_SCRIPTABLEDATEFORMAT_CID \
 { 0x2ea2e7d0, 0x4095, 0x11d3, { 0x91, 0x44, 0x0, 0x60, 0x8, 0xa6, 0xed, 0xf6 } }
 
-#define NS_SCRIPTABLEDATEFORMAT_PROGID "component://netscape/intl/scriptabledateformat"
+#define NS_SCRIPTABLEDATEFORMAT_CONTRACTID "@mozilla.org/intl/scriptabledateformat;1"
 
 extern nsISupports *NEW_SCRIPTABLE_DATEFORMAT(void);
 %}

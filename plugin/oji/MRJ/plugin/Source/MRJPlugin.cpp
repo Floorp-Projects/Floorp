@@ -74,7 +74,7 @@ const char* MRJPlugin::PLUGIN_VERSION = "eerieQuarkDoll.v.b1";
 
 #pragma export on
 
-nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const char *aClassName, const char *aProgID, nsIFactory **aFactory)
+nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const char *aClassName, const char *aContractID, nsIFactory **aFactory)
 {
 	nsresult result = NS_OK;
 

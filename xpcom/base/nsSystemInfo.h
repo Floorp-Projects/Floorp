@@ -30,7 +30,7 @@
     { 0xbf, 0xa1, 0x83, 0x12, 0x5c, 0x3f, 0x38, 0x87 }}
 
 #define NS_SYSTEMINFO_CLASSNAME "System Info Service"
-#define NS_SYSTEMINFO_PROGID    "mozilla.sysinfo.1"
+#define NS_SYSTEMINFO_CONTRACTID    "mozilla.sysinfo.1"
 
 class nsSystemInfo : public nsISystemInfo
 {

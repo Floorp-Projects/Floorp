@@ -500,7 +500,7 @@ nsDiskCacheRecordChannel::GetContentType(char * *aContentType)
     rv = url->SetSpec((char*)urlStr);
     if (NS_FAILED(rv)) 
         return rv;
-    nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_PROGID, &rv));
+    nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = MIMEService->GetTypeFromURI(url, aContentType);

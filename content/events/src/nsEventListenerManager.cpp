@@ -673,7 +673,7 @@ nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *a
   // You'd think it'd work just to get the JSContext from aContext, but that's actually the
   // JSContext whose private object parents the object in aScriptObjectOwner.
   nsresult rv;
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", 
                   &rv);
   if (NS_FAILED(rv))
       return rv;
@@ -684,7 +684,7 @@ nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *a
   if (NS_FAILED(rv = aScriptObjectOwner->GetScriptObject(aContext, (void**)&jsobj)))
     return rv;
   NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv))
       return rv;
   if (NS_FAILED(rv = securityManager->CheckScriptAccess(cx, jsobj,

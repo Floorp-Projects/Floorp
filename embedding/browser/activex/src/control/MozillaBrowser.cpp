@@ -872,7 +872,7 @@ HRESULT CMozillaBrowser::CreateBrowser()
 	PRBool aAllowPlugins = PR_TRUE;
 
 	// Create web shell
-	mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID, &rv);
+	mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID, &rv);
 	if (NS_FAILED(rv))
 	{
 		NG_ASSERT(0);

@@ -161,7 +161,7 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection 
   trans->SetConverter(mXIF);
   
   nsCOMPtr<nsISupportsWString> dataWrapper;
-  rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
+  rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, nsnull, 
                                           NS_GET_IID(nsISupportsWString),
                                           getter_AddRefs(dataWrapper));
   if (NS_FAILED(rv))

@@ -48,8 +48,8 @@ public:
 
 extern NS_EXPORT nsresult NS_NewPICS(nsIPICS** aPICS);
 
-/* ProgID prefixes for PICS DLL registration. */
-#define NS_PICS_PROGID "component://netscape/pics"
+/* ContractID prefixes for PICS DLL registration. */
+#define NS_PICS_CONTRACTID "@mozilla.org/pics;1"
 #define NS_PICS_CLASSNAME "PICS Service"
 
 

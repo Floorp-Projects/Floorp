@@ -11,7 +11,7 @@ var applicationLocale = null;
 var systemLocale = null;
 
 function get_locale_service() {
-      localeService = Components.classes["component://netscape/intl/nslocaleservice"].createInstance();
+      localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].createInstance();
       localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
       applicationLocale = localeService.GetApplicationLocale();
       systemLocale = localeService.GetSystemLocale();

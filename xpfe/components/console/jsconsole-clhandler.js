@@ -27,8 +27,8 @@
  * Constants
  */
 
-const JSCONSOLEHANDLER_PROGID =
-    "component://netscape/commandlinehandler/general-startup-jsconsole";
+const JSCONSOLEHANDLER_CONTRACTID =
+    "@mozilla.org/commandlinehandler/general-startup;1?type=jsconsole";
 
 const JSCONSOLEHANDLER_CID = 
     Components.ID('{1698ef18-c128-41a1-b4d0-7f9acd2ae86c}');
@@ -60,12 +60,12 @@ var jsConsoleHandlerModule = {
     registerSelf: function(compMgr, fileSpec, location, type) {
         compMgr.registerComponentWithType(JSCONSOLEHANDLER_CID, 
             'JS Console Commandline Handler component',
-            JSCONSOLEHANDLER_PROGID, fileSpec,
+            JSCONSOLEHANDLER_CONTRACTID, fileSpec,
             location, true, true, type);
         var catman = Components.classes["mozilla.categorymanager.1"]
             .getService(Components.interfaces.nsICategoryManager);
         catman.addCategoryEntry("command-line-argument-handlers", "jsconsole command line handler",
-            JSCONSOLEHANDLER_PROGID,
+            JSCONSOLEHANDLER_CONTRACTID,
             true, true);
     },
 
@@ -74,7 +74,7 @@ var jsConsoleHandlerModule = {
         var catman = Components.classes["mozilla.categorymanager.1"]
             .getService(Components.interfaces.nsICategoryManager);
         catman.deleteCategoryEntry("command-line-argument-handlers",
-            JSCONSOLEHANDLER_PROGID, true);
+            JSCONSOLEHANDLER_CONTRACTID, true);
     },
 
     getClassObject: function(compMgr, cid, iid) {

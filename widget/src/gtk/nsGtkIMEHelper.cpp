@@ -78,7 +78,7 @@ void nsGtkIMEHelper::SetupUnicodeDecoder()
 {
   mDecoder = nsnull;
   nsresult result = NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsIPlatformCharset, platform, NS_PLATFORMCHARSET_PROGID,
+  NS_WITH_SERVICE(nsIPlatformCharset, platform, NS_PLATFORMCHARSET_CONTRACTID,
                   &result);
   if (platform && NS_SUCCEEDED(result)) {
     nsAutoString charset;

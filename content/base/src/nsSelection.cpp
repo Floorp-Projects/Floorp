@@ -492,7 +492,7 @@ public:
     if (!mTimer)
     {
       nsresult result;
-      mTimer = do_CreateInstance("component://netscape/timer", &result);
+      mTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
 
       if (NS_FAILED(result))
         return result;
@@ -859,14 +859,14 @@ nsSelection::nsSelection()
   // Check to see if the autocopy pref is enabled
   //   and add the autocopy listener if it is
   nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+	NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
 	if (NS_SUCCEEDED(rv) && prefs)
   {
     static char pref[] = "clipboard.autocopy";
 	  PRBool autoCopy = PR_FALSE;
     if (NS_SUCCEEDED(prefs->GetBoolPref(pref, &autoCopy)) && autoCopy)
     {
-      NS_WITH_SERVICE(nsIAutoCopyService, autoCopyService, "component://netscape/autocopy", &rv);
+      NS_WITH_SERVICE(nsIAutoCopyService, autoCopyService, "@mozilla.org/autocopy;1", &rv);
 
       if (NS_SUCCEEDED(rv) && autoCopyService)
       {
@@ -1574,7 +1574,7 @@ nsDOMSelection::ToString(const nsAReadableString& aFormatType, PRUint32 aFlags, 
   nsresult rv = NS_OK;
   
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  nsCAutoString formatType( NS_DOC_ENCODER_PROGID_BASE );
+  nsCAutoString formatType( NS_DOC_ENCODER_CONTRACTID_BASE );
   formatType.AppendWithConversion(aFormatType);
   rv = nsComponentManager::CreateInstance(formatType,
                                           nsnull,

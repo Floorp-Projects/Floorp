@@ -306,7 +306,7 @@ nsLayoutModule::GetClassObject(nsIComponentManager *aCompMgr,
 struct Components {
   const char* mDescription;
   nsID mCID;
-  const char* mProgID;
+  const char* mContractID;
 };
 
 // The HTML namespace.
@@ -331,10 +331,10 @@ static Components gComponents[] = {
   { "CSS parser", NS_CSSPARSER_CID, nsnull, },
   { "CSS loader", NS_CSS_LOADER_CID, nsnull, },
 
-  { "HTML element factory", NS_HTML_ELEMENT_FACTORY_CID, NS_HTML_ELEMENT_FACTORY_PROGID, },
+  { "HTML element factory", NS_HTML_ELEMENT_FACTORY_CID, NS_HTML_ELEMENT_FACTORY_CONTRACTID, },
   { "Text element", NS_TEXTNODE_CID, nsnull, },
 
-  { "XML element factory", NS_XML_ELEMENT_FACTORY_CID, NS_XML_ELEMENT_FACTORY_PROGID, },
+  { "XML element factory", NS_XML_ELEMENT_FACTORY_CID, NS_XML_ELEMENT_FACTORY_CONTRACTID, },
 
   { "Selection", NS_SELECTION_CID, nsnull, },
   { "Frame selection", NS_FRAMESELECTION_CID, nsnull, },
@@ -352,30 +352,30 @@ static Components gComponents[] = {
   // XXX end ick
 
   { "HTML document encoder", NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_PROGID_BASE "text/html", },
+    NS_DOC_ENCODER_CONTRACTID_BASE "text/html", },
   { "Plaintext document encoder", NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_PROGID_BASE "text/plain", },
+    NS_DOC_ENCODER_CONTRACTID_BASE "text/plain", },
   { "XIF document encoder", NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_PROGID_BASE "text/xif", },
+    NS_DOC_ENCODER_CONTRACTID_BASE "text/xif", },
 
-  { "XBL Service", NS_XBLSERVICE_CID, "component://netscape/xbl" },
-  { "XBL Binding Manager", NS_BINDINGMANAGER_CID, "component://netscape/xbl/binding-manager" },
+  { "XBL Service", NS_XBLSERVICE_CID, "@mozilla.org/xbl;1" },
+  { "XBL Binding Manager", NS_BINDINGMANAGER_CID, "@mozilla.org/xbl/binding-manager;1" },
   
-  { "XUL Box Object", NS_BOXOBJECT_CID, "component://netscape/layout/xul-boxobject" },
-  { "XUL Tree Box Object", NS_TREEBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-tree" },
-  { "XUL Menu Box Object", NS_MENUBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-menu" },
-  { "XUL PopupSet Box Object", NS_POPUPSETBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-popupset" },
-  { "XUL Browser Box Object", NS_BROWSERBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-browser" },
-  { "XUL Editor Box Object", NS_EDITORBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-editor" },
-  { "XUL Iframe Object", NS_IFRAMEBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-iframe" },
-  { "XUL ScrollBox Object", NS_SCROLLBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-scrollbox" },
+  { "XUL Box Object", NS_BOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject;1" },
+  { "XUL Tree Box Object", NS_TREEBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-tree;1" },
+  { "XUL Menu Box Object", NS_MENUBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-menu;1" },
+  { "XUL PopupSet Box Object", NS_POPUPSETBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-popupset;1" },
+  { "XUL Browser Box Object", NS_BROWSERBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-browser;1" },
+  { "XUL Editor Box Object", NS_EDITORBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-editor;1" },
+  { "XUL Iframe Object", NS_IFRAMEBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-iframe;1" },
+  { "XUL ScrollBox Object", NS_SCROLLBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-scrollbox;1" },
 
-  { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "component://netscape/autocopy" },
-  { "Content policy service", NS_CONTENTPOLICY_CID, NS_CONTENTPOLICY_PROGID },
+  { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "@mozilla.org/autocopy;1" },
+  { "Content policy service", NS_CONTENTPOLICY_CID, NS_CONTENTPOLICY_CONTRACTID },
   { "XIF Converter", NS_XIFCONVERTER_CID, nsnull },
-  { "NodeInfoManager", NS_NODEINFOMANAGER_CID, NS_NODEINFOMANAGER_PROGID },
+  { "NodeInfoManager", NS_NODEINFOMANAGER_CID, NS_NODEINFOMANAGER_CONTRACTID },
   { "DOM CSS Computed Style Declaration", NS_COMPUTEDDOMSTYLE_CID,
-    "component://netscape/DOM/Level2/CSS/computedStyleDeclaration" }
+    "@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1" }
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
@@ -395,7 +395,7 @@ nsLayoutModule::RegisterSelf(nsIComponentManager *aCompMgr,
   Components* end = cp + NUM_COMPONENTS;
   while (cp < end) {
     rv = aCompMgr->RegisterComponentSpec(cp->mCID, cp->mDescription,
-                                         cp->mProgID, aPath, PR_TRUE, PR_TRUE);
+                                         cp->mContractID, aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
       printf("nsLayoutModule: unable to register %s component => %x\n",

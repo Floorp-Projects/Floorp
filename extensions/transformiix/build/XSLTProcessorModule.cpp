@@ -34,7 +34,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(XSLTProcessor)
 static nsModuleComponentInfo components[] = {
     { "Transformiix XSLT Processor",
       TRANSFORMIIX_XSLT_PROCESSOR_CID,
-      TRANSFORMIIX_XSLT_PROCESSOR_PROGID,
+      TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID,
       XSLTProcessorConstructor }
 };
 

@@ -60,5 +60,5 @@ interface nsISignatureVerifier : nsISupports
 
 
 %{C++
-#define SIGNATURE_VERIFIER_PROGID "component://netscape/psm"
+#define SIGNATURE_VERIFIER_CONTRACTID "@mozilla.org/psm;1"
 %}

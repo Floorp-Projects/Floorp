@@ -76,19 +76,19 @@ static nsModuleComponentInfo components[] =
 {
   { 
     ENCODER_NAME_BASE "Big5" , NS_UNICODETOBIG5_CID, 
-    NS_UNICODEENCODER_PROGID_BASE "Big5",
+    NS_UNICODEENCODER_CONTRACTID_BASE "Big5",
     nsUnicodeToBIG5Constructor, 
     nsUnicodeToBIG5RegSelf, nsUnicodeToBIG5UnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-x-big5" , NS_UNICODETOBIG5NOASCII_CID, 
-    NS_UNICODEENCODER_PROGID_BASE "x-x-big5",
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-x-big5",
     nsUnicodeToBIG5NoAsciiConstructor,
     nsUnicodeToBIG5NoAsciiRegSelf, nsUnicodeToBIG5NoAsciiUnRegSelf
   },
   { 
     DECODER_NAME_BASE "Big5" , NS_BIG5TOUNICODE_CID, 
-    NS_UNICODEDECODER_PROGID_BASE "Big5",
+    NS_UNICODEDECODER_CONTRACTID_BASE "Big5",
     nsBIG5ToUnicodeConstructor ,
     nsBIG5ToUnicodeRegSelf , nsBIG5ToUnicodeUnRegSelf 
   }

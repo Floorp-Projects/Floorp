@@ -455,7 +455,7 @@ nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey,
   if (NS_FAILED(res)) goto done;
 
   // get the registry
-  res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
+  res = nsServiceManager::GetService(NS_REGISTRY_CONTRACTID, 
     NS_GET_IID(nsIRegistry), (nsISupports**)&registry);
   if (NS_FAILED(res)) goto done;
 
@@ -521,7 +521,7 @@ done1:
   // finish and clean up
 done:
   if (registry != NULL) {
-    nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
+    nsServiceManager::ReleaseService(NS_REGISTRY_CONTRACTID, registry);
   }
   if (sbServ != NULL) nsServiceManager::ReleaseService(
       kStringBundleServiceCID, sbServ);
@@ -1006,8 +1006,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAcceptLang)
 
 static nsModuleComponentInfo components[] =
 {
-  { "String Bundle", NS_STRINGBUNDLESERVICE_CID, NS_STRINGBUNDLE_PROGID, nsStringBundleServiceConstructor},
-  { "Accept Language", NS_ACCEPTLANG_CID, NS_ACCEPTLANG_PROGID, nsAcceptLangConstructor}
+  { "String Bundle", NS_STRINGBUNDLESERVICE_CID, NS_STRINGBUNDLE_CONTRACTID, nsStringBundleServiceConstructor},
+  { "Accept Language", NS_ACCEPTLANG_CID, NS_ACCEPTLANG_CONTRACTID, nsAcceptLangConstructor}
 };
 
 NS_IMPL_NSGETMODULE("nsStringBundleModule", components)

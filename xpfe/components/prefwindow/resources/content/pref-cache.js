@@ -10,7 +10,7 @@ function prefCacheSelectFolder()
 function prefClearMemCache()
 {
 	dump("prefClearMemCache \n");
-	var cache = Components.classes['component://netscape/network/cache?name=manager'].getService();
+	var cache = Components.classes['@mozilla.org/network/cache;1?name=manager'].getService();
   var	cacheService = cache.QueryInterface( Components.interfaces.nsINetDataCacheManager);
 	cacheService.clear( 2 );
 }
@@ -18,7 +18,7 @@ function prefClearMemCache()
 function prefClearDiskCache()
 {
 	dump("prefClearDiskCache \n");
-	var cache = Components.classes['component://netscape/network/cache?name=manager'].getService();
+	var cache = Components.classes['@mozilla.org/network/cache;1?name=manager'].getService();
   var	cacheService = cache.QueryInterface( Components.interfaces.nsINetDataCacheManager);
 	cacheService.clear( 12 );
 }

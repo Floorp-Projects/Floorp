@@ -74,7 +74,7 @@ function SelectDetector(event, doReload)
         prefvalue = "";
     }
 
-    var pref = Components.classes['component://netscape/preferences'];
+    var pref = Components.classes['@mozilla.org/preferences;1'];
     if (pref) {
         pref = pref.getService();
         pref = pref.QueryInterface(Components.interfaces.nsIPref);
@@ -96,7 +96,7 @@ function ComposerSelectDetector(event)
         prefvalue = "";
     }
 
-    var pref = Components.classes['component://netscape/preferences'];
+    var pref = Components.classes['@mozilla.org/preferences;1'];
     if (pref) {
         pref = pref.getService();
         pref = pref.QueryInterface(Components.interfaces.nsIPref);
@@ -147,7 +147,7 @@ function UpdateCurrentMailCharset()
 
 function UpdateCharsetDetector()
 {
-    var pref = Components.classes['component://netscape/preferences'];
+    var pref = Components.classes['@mozilla.org/preferences;1'];
     if (pref) {
         pref = pref.getService();
         pref = pref.QueryInterface(Components.interfaces.nsIPref);
@@ -181,7 +181,7 @@ function UpdateMailMenus(event)
 
 function charsetLoadListener (event)
 {
-    var menu = Components.classes['component://netscape/rdf/datasource?name=charset-menu'];
+    var menu = Components.classes['@mozilla.org/rdf/datasource;1?name=charset-menu'];
 
     if (menu) {
         menu = menu.getService();
@@ -201,7 +201,7 @@ function charsetLoadListener (event)
 
 function mailCharsetLoadListener (event)
 {
-    var menu = Components.classes['component://netscape/rdf/datasource?name=charset-menu'];
+    var menu = Components.classes['@mozilla.org/rdf/datasource;1?name=charset-menu'];
 
     if (menu) {
         menu = menu.getService();

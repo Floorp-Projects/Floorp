@@ -43,7 +43,7 @@ interface nsIComponentLoader : nsISupports {
      * annotate the registry and such.
      */
     void onRegister(in nsIIDRef aCID, in string aType,
-                    in string aClassName, in string aProgID,
+                    in string aClassName, in string aContractID,
                     in string aLocation, in boolean aReplace,
                     in boolean aPersist);
 

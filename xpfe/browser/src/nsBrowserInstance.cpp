@@ -229,7 +229,7 @@ public:
     mBuffer[avail] = '\0';
     mCursor = mBuffer;
 
-    NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_PROGID, &rv);
+    NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsString topic; topic.AssignWithConversion("EndDocumentLoad");
     rv = obsServ->AddObserver(this, topic.GetUnicode());
@@ -317,7 +317,7 @@ public:
   {
     nsresult rv=NS_OK;
     if (mTimeoutValue > 0){
-      mShutdownTimer = do_CreateInstance("component://netscape/timer", &rv);
+      mShutdownTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create timer for PageCycler...");
       if (NS_SUCCEEDED(rv) && mShutdownTimer){
         mShutdownTimer->Init(TimesUp, (void *)this, mTimeoutValue*1000);
@@ -397,7 +397,7 @@ nsBrowserInstance::nsBrowserInstance() : mIsClosed(PR_FALSE)
   if (gRefCnt == 1) {
     nsresult rv;
     // Add callback listeners for toolbar buttons showing/hiding.
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       prefs->RegisterCallback(kShowToolbarElts, ButtonShowHideCallback, nsnull);
     }    
@@ -411,7 +411,7 @@ nsBrowserInstance::~nsBrowserInstance()
   if (gRefCnt == 0) {
     // Remove callback listeners for toolbar buttons showing/hiding.
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       prefs->UnregisterCallback(kShowToolbarElts, ButtonShowHideCallback, nsnull);
     }    
@@ -1073,7 +1073,7 @@ nsBrowserInstance::Init()
 
   // register ourselves as a content listener with the uri dispatcher service
   rv = NS_OK;
-  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_PROGID, &rv);
+  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) 
     rv = dispatcher->RegisterContentListener(this);
 
@@ -1121,7 +1121,7 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindowInternal* aWin)
   	  sessionHistory = mSessionHistory;
     }
     else {
-      sessionHistory = (do_CreateInstance(NS_SHISTORY_PROGID, &rv));
+      sessionHistory = (do_CreateInstance(NS_SHISTORY_CONTRACTID, &rv));
       mSessionHistory = sessionHistory;
       if (!mSessionHistory) {
   	    if (APP_DEBUG) printf("#### Error initialising Session History ####\n");
@@ -1157,7 +1157,7 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindowInternal* aWin)
     if (APP_DEBUG) {
       printf("Attaching to Content WebShell [%s]\n", (const char *)str);
     }
-    nsCOMPtr<nsIUrlbarHistory>  ubHistory = do_GetService(NS_URLBARHISTORY_PROGID, &rv);
+    nsCOMPtr<nsIUrlbarHistory>  ubHistory = do_GetService(NS_URLBARHISTORY_CONTRACTID, &rv);
 	
 	  NS_ENSURE_TRUE(ubHistory, NS_ERROR_FAILURE);
 	  mUrlbarHistory = ubHistory;
@@ -1457,7 +1457,7 @@ nsBrowserInstance::Close()
   // unregister ourselves with the uri loader because
   // we can no longer accept new content!
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_PROGID, &rv);
+  NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) 
     rv = dispatcher->UnRegisterContentListener(this);
 
@@ -1503,7 +1503,7 @@ nsBrowserInstance::Find()
     PRBool   found = PR_FALSE;
     
     // Get find component.
-    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_PROGID, &rv);
+    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     if (!finder) return NS_ERROR_FAILURE;
 
@@ -1530,7 +1530,7 @@ nsBrowserInstance::FindNext()
     PRBool   found = PR_FALSE;
 
     // Get find component.
-    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_PROGID, &rv);
+    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     if (!finder) return NS_ERROR_FAILURE;
 
@@ -1564,7 +1564,7 @@ nsBrowserInstance::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL,
 
   // Notify observers that a document load has started in the
   // content window.
-  NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_PROGID, &rv);
+  NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   char* url;
@@ -1672,7 +1672,7 @@ nsBrowserInstance::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* cha
 
       // Notify observers that a document load has started in the
       // content window.
-      NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_PROGID, &rv);
+      NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_CONTRACTID, &rv);
       if (NS_FAILED(rv)) return rv;
 
       nsCOMPtr<nsIDOMWindowInternal> contentWindow;
@@ -2290,7 +2290,7 @@ nsBrowserContentHandler::~nsBrowserContentHandler()
 {
 }
 
-CMDLINEHANDLER_OTHERS_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","Start with browser.",NS_BROWSERSTARTUPHANDLER_PROGID,"Browser Startup Handler", PR_TRUE, PR_FALSE)
+CMDLINEHANDLER_OTHERS_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","Start with browser.",NS_BROWSERSTARTUPHANDLER_CONTRACTID,"Browser Startup Handler", PR_TRUE, PR_FALSE)
 
 NS_IMETHODIMP nsBrowserContentHandler::GetChromeUrlForTask(char **aChromeUrlForTask) {
 
@@ -2480,74 +2480,74 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
 static nsModuleComponentInfo components[] = {
   { "nsBrowserInstance",
     NS_BROWSERINSTANCE_CID,
-    NS_BROWSERINSTANCE_PROGID, 
+    NS_BROWSERINSTANCE_CONTRACTID, 
     nsBrowserInstanceConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_PROGID_PREFIX"text/html", 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/html", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_PROGID_PREFIX"text/xul", 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/xul", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_PROGID_PREFIX"text/rdf", 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/rdf", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_PROGID_PREFIX"text/xml", 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/xml", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_PROGID_PREFIX"text/css", 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/css", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_PROGID_PREFIX"text/plain", 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/plain", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_PROGID_PREFIX"image/gif", 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/gif", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_PROGID_PREFIX"image/jpeg", 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/jpeg", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_PROGID_PREFIX"image/png", 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/png", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_PROGID_PREFIX"image/tiff", 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/tiff", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_PROGID_PREFIX"application/http-index-format", 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/http-index-format", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Startup Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_BROWSERSTARTUPHANDLER_PROGID, 
+    NS_BROWSERSTARTUPHANDLER_CONTRACTID, 
     nsBrowserContentHandlerConstructor,
     nsBrowserContentHandler::RegisterProc,
     nsBrowserContentHandler::UnregisterProc,
   },
   { "Chrome Startup Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    "component://netscape/commandlinehandler/general-startup-chrome",
+    "@mozilla.org/commandlinehandler/general-startup;1?type=chrome",
     nsBrowserContentHandlerConstructor,
   } 
   
@@ -2562,7 +2562,7 @@ NS_IMPL_NSGETMODULE("nsBrowserModule", components)
 int PR_CALLBACK ButtonShowHideCallback(const char* aPref, void* aClosure)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return 0;
 

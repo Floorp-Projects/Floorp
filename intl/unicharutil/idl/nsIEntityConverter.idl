@@ -25,7 +25,7 @@
 %{C++
 // {8C4506A1-55E6-11d3-91D9-00105AA3F7DC}
 #define NS_ENTITYCONVERTER_CID { 0x8c4506a1, 0x55e6, 0x11d3, {0x91, 0xd9, 0x0, 0x10, 0x5a, 0xa3, 0xf7, 0xdc}}
-#define NS_ENTITYCONVERTER_PROGID "component://netscape/intl/entityconverter"
+#define NS_ENTITYCONVERTER_CONTRACTID "@mozilla.org/intl/entityconverter;1"
 %}
 
 [scriptable, uuid(D14C7111-55E0-11d3-91D9-00105AA3F7DC)]

@@ -790,7 +790,7 @@ NS_IMETHODIMP_(void) nsScrollingView::Notify(nsITimer * aTimer)
   }
 
   nsresult rv;
-  mScrollingTimer = do_CreateInstance("component://netscape/timer", &rv);
+  mScrollingTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_SUCCEEDED(rv))
     mScrollingTimer->Init(this, 25);
 }

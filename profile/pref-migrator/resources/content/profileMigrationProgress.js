@@ -33,7 +33,7 @@ function onLoad(oldProfilePath, newProfilePath) {
 
 	
   dump("start of pref migration\n");
-  var prefmigrator = Components.classes['component://netscape/profile/migration'].createInstance(Components.interfaces.nsIPrefMigration);
+  var prefmigrator = Components.classes['@mozilla.org/profile/migration;1'].createInstance(Components.interfaces.nsIPrefMigration);
   if (prefmigrator) 
   {
 	try {

@@ -85,7 +85,7 @@ nsFileSpecWithUIImpl::nsFileSpecWithUIImpl()
 {
     NS_INIT_REFCNT();
 	nsresult rv = nsComponentManager::CreateInstance(
-		(const char*)NS_FILESPEC_PROGID,
+		(const char*)NS_FILESPEC_CONTRACTID,
 		(nsISupports*)nsnull,
 		(const nsID&)NS_GET_IID(nsIFileSpec),
 		(void**)getter_AddRefs(mBaseFileSpec));

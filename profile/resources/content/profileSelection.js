@@ -26,7 +26,7 @@
 
 var selected    = null;
 var currProfile = "";
-var profile     = Components.classes["component://netscape/profile/manager"].createInstance();
+var profile     = Components.classes["@mozilla.org/profile/manager;1"].createInstance();
 if (profile)
   profile       = profile.QueryInterface(Components.interfaces.nsIProfile);
 var unset       = true;
@@ -40,7 +40,7 @@ function StartUp()
   if(window.location && window.location.search && window.location.search == "?manage=true" )
     SwitchProfileManagerMode();
 
-  var dirServ = Components.classes['component://netscape/file/directory_service'].createInstance();
+  var dirServ = Components.classes['@mozilla.org/file/directory_service;1'].createInstance();
   dirServ = dirServ.QueryInterface(Components.interfaces.nsIProperties);
   
   // "AggRegF" stands for Application Registry File.
@@ -48,7 +48,7 @@ function StartUp()
   // application registry file....
   var regFile = dirServ.get("AppRegF", Components.interfaces.nsIFile);
 
-  Registry = Components.classes['component://netscape/registry'].createInstance();
+  Registry = Components.classes['@mozilla.org/registry;1'].createInstance();
   Registry = Registry.QueryInterface(Components.interfaces.nsIRegistry);
   Registry.open(regFile.path);
  
@@ -217,7 +217,7 @@ function onExit()
 function ExitApp()
 {
   // Need to call this to stop the event loop
-  var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
+  var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
   appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
   appShell.Quit();
 }

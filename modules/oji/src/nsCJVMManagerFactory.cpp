@@ -32,7 +32,7 @@ static nsModuleComponentInfo components[] =
 {
     { "JVM Manager Service", 
       NS_JVMMANAGER_CID,  
-      "component://netscape/oji/jvm-mgr", 
+      "@mozilla.org/oji/jvm-mgr;1", 
       nsJVMManager::Create
     },
 };
@@ -86,7 +86,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr,
 
     rv = compMgr->RegisterComponent(kJVMManagerCID,
                                     "JVM Manager Service",
-                                    "component://netscape/oji/jvm-mgr",
+                                    "@mozilla.org/oji/jvm-mgr;1",
                                     path, 
                                     PR_TRUE, PR_TRUE);
 
@@ -127,7 +127,7 @@ extern "C" NS_EXPORT nsresult
 NSGetFactory(nsISupports* serviceMgr,
              const nsCID &aClass,
              const char *aClassName,
-             const char *aProgID,
+             const char *aContractID,
              nsIFactory **aFactory)
 {
     if (!aClass.Equals(kJVMManagerCID)) {

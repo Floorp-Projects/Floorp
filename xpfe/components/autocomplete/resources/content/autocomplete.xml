@@ -42,7 +42,7 @@
 		<property name="autoCompleteSession">
         <![CDATA[
             if (this.getAttribute('searchSessionType') != "") {
-                var searchSession = unescape('component:%2F%2Fnetscape%2FautocompleteSession%26type=');
+                var searchSession = unescape('@mozilla%2Eorg%2FautocompleteSession%3B1%3Ftype=');
                 searchSession = searchSession + this.getAttribute('searchSessionType');
                 try {
                     Components.classes[searchSession].getService(Components.interfaces.nsIAutoCompleteSession);
@@ -72,7 +72,7 @@
 
         <property name="lastResults">
         <![CDATA[
-            var results = Components.classes["component://netscape/autocomplete/results"].createInstance();
+            var results = Components.classes["@mozilla.org/autocomplete/results;1"].createInstance();
             results.QueryInterface(Components.interfaces.nsIAutoCompleteResults);
         ]]>
         </property>

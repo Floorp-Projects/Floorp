@@ -1415,7 +1415,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mWindow->GetClientBounds(r);
 
   // Create web shell
-  mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID);
+  mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
   NS_ENSURE_TRUE(mWebBrowser, NS_ERROR_FAILURE);
 
   r.x = r.y = 0;
@@ -3199,7 +3199,7 @@ nsBrowserWindow::ToggleBoolPrefAndRefresh(const char * aPrefName)
 {
   NS_ASSERTION(nsnull != aPrefName,"null pref name");
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_PROGID));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs && nsnull != aPrefName)
   {
     PRBool value;
@@ -3218,7 +3218,7 @@ nsBrowserWindow::SetBoolPref(const char * aPrefName, PRBool aValue)
 {
   NS_ASSERTION(nsnull != aPrefName,"null pref name");
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_PROGID));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs && nsnull != aPrefName)
   {
     prefs->SetBoolPref(aPrefName, aValue);
@@ -3231,7 +3231,7 @@ nsBrowserWindow::SetStringPref(const char * aPrefName, const nsString& aValue)
 {
   NS_ASSERTION(nsnull != aPrefName, "null pref name");
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_PROGID));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (nsnull != prefs && nsnull != aPrefName)
   {
     char * prefStr = aValue.ToNewCString();
@@ -3247,7 +3247,7 @@ nsBrowserWindow::GetStringPref(const char * aPrefName, nsString& aValue)
 {
   NS_ASSERTION(nsnull != aPrefName, "null pref name");
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_PROGID));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (nsnull != prefs && nsnull != aPrefName)
   {
     char* prefCharVal;
@@ -3561,7 +3561,7 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
 void 
 nsBrowserWindow::SetCompatibilityMode(PRUint32 aMode)
 {
-  nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
+  nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
   if (pref) { 
     int32 prefInt = USE_DTD;
     if (STANDARD == aMode) {

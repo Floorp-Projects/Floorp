@@ -845,7 +845,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsRegistryDataSource, Init)
 // The list of components we register
 static nsModuleComponentInfo components[] = {
     { "Registry Viewer", NS_REGISTRYVIEWER_CID,
-      "component://netscape/registry-viewer", nsRegistryDataSourceConstructor,
+      "@mozilla.org/registry-viewer;1", nsRegistryDataSourceConstructor,
     },
 };
 

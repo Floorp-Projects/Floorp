@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     nsString topicB; topicB.AssignWithConversion( "topic-B" );
     nsresult rv;
 
-    nsresult res = nsComponentManager::CreateInstance(NS_OBSERVERSERVICE_PROGID,
+    nsresult res = nsComponentManager::CreateInstance(NS_OBSERVERSERVICE_CONTRACTID,
                                                 NULL,
                                                  NS_GET_IID(nsIObserverService),
                                                 (void **) &anObserverService);

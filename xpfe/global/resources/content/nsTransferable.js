@@ -150,7 +150,7 @@ var nsTransferable = {
    **/    
   createTransferable: function ()
     {
-      return nsJSComponentManager.createInstance("component://netscape/widget/transferable",
+      return nsJSComponentManager.createInstance("@mozilla.org/widget/transferable;1",
                                                  "nsITransferable");
     },
 

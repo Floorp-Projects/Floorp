@@ -24,8 +24,8 @@
 
 %{C++
 
-#define NS_PROFILEMIGRATION_PROGID "component://netscape/profile/migration"
-#define NS_PREFCONVERTER_PROGID "component://netscape/migration/pref-converter"
+#define NS_PROFILEMIGRATION_CONTRACTID "@mozilla.org/profile/migration;1"
+#define NS_PREFCONVERTER_CONTRACTID "@mozilla.org/migration/pref-converter;1"
 #define NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, 1) 
 
 /* these are hard coded, in ascii, as they will be used for directory folder names on disk.  NEW_LOCAL_MAIL_DIR_NAME is also used as the host name for the local folders account */

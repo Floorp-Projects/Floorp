@@ -59,10 +59,10 @@ interface nsIGlobalHistory : nsISupports
 #define NS_GLOBALHISTORY_CID \
 { 0x9491c382, 0xe3c4, 0x11d2, { 0xbd, 0xbe, 0x0, 0x50, 0x4, 0xa, 0x9b, 0x44} }
 
-#define NS_GLOBALHISTORY_PROGID \
-    "component://netscape/browser/global-history"
+#define NS_GLOBALHISTORY_CONTRACTID \
+    "@mozilla.org/browser/global-history;1"
 
-#define NS_GLOBALHISTORY_DATASOURCE_PROGID \
-    "component://netscape/rdf/datasource?name=history"
+#define NS_GLOBALHISTORY_DATASOURCE_CONTRACTID \
+    "@mozilla.org/rdf/datasource;1?name=history"
 %}
 

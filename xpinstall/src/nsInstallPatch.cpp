@@ -537,7 +537,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
     // apply patch to the source file
     //dd->fSrc = PR_Open ( realfile, PR_RDONLY, 0666);
     //dd->fOut = PR_Open ( outFile, PR_RDWR|PR_CREATE_FILE|PR_TRUNCATE, 0666);
-    nsCOMPtr<nsILocalFile> realFileLocal = do_CreateInstance(NS_LOCAL_FILE_PROGID);;
+    nsCOMPtr<nsILocalFile> realFileLocal = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);;
     realFileLocal->InitWithPath(realfile);
 
     realFileLocal->OpenNSPRFileDesc(PR_RDONLY, 0666, &dd->fSrc);

@@ -5,7 +5,7 @@
 
 <body>
 <script>
-var Account = Components.classes["component://netscape/profile/Account-services"].createInstance();
+var Account = Components.classes["@mozilla.org/profile/Account-services;1"].createInstance();
 Account = Account.QueryInterface(Components.interfaces.nsIAccountServices);
 dump("Account = " + Account + "\n");
 nameGlobal = new Array();

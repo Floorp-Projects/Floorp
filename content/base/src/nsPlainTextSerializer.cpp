@@ -145,7 +145,7 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn)
     mLineBreak.AssignWithConversion(NS_LINEBREAK);         // Platform/default
 
   // Get some prefs
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && prefs)
   {
     prefs->GetBoolPref(PREF_STRUCTS, &mStructs);

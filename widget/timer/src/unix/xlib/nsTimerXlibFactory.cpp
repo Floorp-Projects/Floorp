@@ -44,7 +44,7 @@ static nsModuleComponentInfo components[] =
 {
   { "XLIB timer",
     NS_TIMER_XLIB_CID,
-    "component://netscape/timer", 
+    "@mozilla.org/timer;1", 
     nsTimerXlibConstructor }
 };
 

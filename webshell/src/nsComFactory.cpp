@@ -52,13 +52,13 @@ static HMODULE g_DllInst = NULL;
 //
 // Windows Registry keys and values...
 //
-#define WEBSHELL_GLOBAL_PROGID_KEY          "nsWebShell"
-#define WEBSHELL_GLOBAL_PROGID_DESC         "Netscape NGLayout WebShell Component"
+#define WEBSHELL_GLOBAL_CONTRACTID_KEY          "nsWebShell"
+#define WEBSHELL_GLOBAL_CONTRACTID_DESC         "Netscape NGLayout WebShell Component"
 
-#define WEBSHELL_PROGID_KEY                 WEBSHELL_GLOBAL_PROGID_KEY ## "1.0"
-#define WEBSHELL_PROGID_DESC                WEBSHELL_GLOBAL_PROGID_KEY ## " Version 1.0"
+#define WEBSHELL_CONTRACTID_KEY                 WEBSHELL_GLOBAL_CONTRACTID_KEY ## "1.0"
+#define WEBSHELL_CONTRACTID_DESC                WEBSHELL_GLOBAL_CONTRACTID_KEY ## " Version 1.0"
 
-#define WEBSHELL_CLSID_DESC                 WEBSHELL_PROGID_DESC
+#define WEBSHELL_CLSID_DESC                 WEBSHELL_CONTRACTID_DESC
 
 
 
@@ -276,8 +276,8 @@ STDAPI DllRegisterServer(void)
     //      nsWebShell1.0
     //      nsWebShell1.0/CLSID
     //
-    RegisterKey(WEBSHELL_PROGID_KEY, NULL,    WEBSHELL_PROGID_DESC);
-    RegisterKey(WEBSHELL_PROGID_KEY, "CLSID", WebShellCLSID);
+    RegisterKey(WEBSHELL_CONTRACTID_KEY, NULL,    WEBSHELL_CONTRACTID_DESC);
+    RegisterKey(WEBSHELL_CONTRACTID_KEY, "CLSID", WebShellCLSID);
 
     //
     // Register/Create the following registry keys:
@@ -285,21 +285,21 @@ STDAPI DllRegisterServer(void)
     //      nsWebShell/CurVer
     //      nsWebShell/CLSID
     //
-    RegisterKey(WEBSHELL_GLOBAL_PROGID_KEY, NULL,     WEBSHELL_GLOBAL_PROGID_DESC);
-    RegisterKey(WEBSHELL_GLOBAL_PROGID_KEY, "CurVer", WEBSHELL_PROGID_KEY);
-    RegisterKey(WEBSHELL_GLOBAL_PROGID_KEY, "CLSID",  WebShellCLSID);
+    RegisterKey(WEBSHELL_GLOBAL_CONTRACTID_KEY, NULL,     WEBSHELL_GLOBAL_CONTRACTID_DESC);
+    RegisterKey(WEBSHELL_GLOBAL_CONTRACTID_KEY, "CurVer", WEBSHELL_CONTRACTID_KEY);
+    RegisterKey(WEBSHELL_GLOBAL_CONTRACTID_KEY, "CLSID",  WebShellCLSID);
 
     //
     // Register/Create the following registry keys:
     //      CLSID/{ CLSID }
-    //      CLSID/{ CLSID }/ProgID
-    //      CLSID/{ CLSID }/VersionIndependentProgID
+    //      CLSID/{ CLSID }/ContractID
+    //      CLSID/{ CLSID }/VersionIndependentContractID
     //      CLSID/{ CLSID }/NotInsertable
     //      CLSID/{ CLSID }/InprocServer32
     //
     RegisterKey(WebShellCLSIDkey, NULL,                       WEBSHELL_CLSID_DESC);
-    RegisterKey(WebShellCLSIDkey, "ProgID",                   WEBSHELL_PROGID_KEY);
-    RegisterKey(WebShellCLSIDkey, "VersionIndependentProgID", WEBSHELL_GLOBAL_PROGID_KEY);
+    RegisterKey(WebShellCLSIDkey, "ContractID",                   WEBSHELL_CONTRACTID_KEY);
+    RegisterKey(WebShellCLSIDkey, "VersionIndependentContractID", WEBSHELL_GLOBAL_CONTRACTID_KEY);
     RegisterKey(WebShellCLSIDkey, "NotInsertable",            NULL);
     RegisterKey(WebShellCLSIDkey, "InprocServer32",           WebShellDLLPath);
     RegisterKey(WebShellCLSIDkey, "InprocServer32",           "Apartment", "ThreadingModel");
@@ -347,8 +347,8 @@ STDAPI DllUnregisterServer(void)
     //      nsWebShell1.0/CLSID
     //      nsWebShell1.0
     //
-    UnRegisterKey(WEBSHELL_PROGID_KEY, "CLSID");
-    UnRegisterKey(WEBSHELL_PROGID_KEY, NULL);
+    UnRegisterKey(WEBSHELL_CONTRACTID_KEY, "CLSID");
+    UnRegisterKey(WEBSHELL_CONTRACTID_KEY, NULL);
 
     //
     // Remove the following registry keys:
@@ -356,22 +356,22 @@ STDAPI DllUnregisterServer(void)
     //      nsWebShell/CurVer
     //      nsWebShell
     //
-    UnRegisterKey(WEBSHELL_GLOBAL_PROGID_KEY, "CLSID");
-    UnRegisterKey(WEBSHELL_GLOBAL_PROGID_KEY, "CurVer");
-    UnRegisterKey(WEBSHELL_GLOBAL_PROGID_KEY, NULL);
+    UnRegisterKey(WEBSHELL_GLOBAL_CONTRACTID_KEY, "CLSID");
+    UnRegisterKey(WEBSHELL_GLOBAL_CONTRACTID_KEY, "CurVer");
+    UnRegisterKey(WEBSHELL_GLOBAL_CONTRACTID_KEY, NULL);
 
     //
     // Remove the following registry keys:
     //      CLSID/{ CLSID }/InprocServer32
     //      CLSID/{ CLSID }/NotInsertable
-    //      CLSID/{ CLSID }/VersionIndependentProgID
-    //      CLSID/{ CLSID }/ProgID
+    //      CLSID/{ CLSID }/VersionIndependentContractID
+    //      CLSID/{ CLSID }/ContractID
     //      CLSID/{ CLSID }
     //
     UnRegisterKey(WebShellCLSIDkey, "InprocServer32");
     UnRegisterKey(WebShellCLSIDkey, "NotInsertable");
-    UnRegisterKey(WebShellCLSIDkey, "VersionIndependentProgID");
-    UnRegisterKey(WebShellCLSIDkey, "ProgID");
+    UnRegisterKey(WebShellCLSIDkey, "VersionIndependentContractID");
+    UnRegisterKey(WebShellCLSIDkey, "ContractID");
     UnRegisterKey(WebShellCLSIDkey, NULL);
 
     // Free up memory...

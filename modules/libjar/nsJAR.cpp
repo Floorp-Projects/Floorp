@@ -334,7 +334,7 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
 
   //-- Get the signature verifier service
   nsresult rv;
-  NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_PROGID, &rv);
+  NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) // No signature verifier available
     return NS_OK;
 

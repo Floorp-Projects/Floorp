@@ -73,7 +73,7 @@ interface nsIErrorService : nsISupports
 
 // The global nsIErrorService:
 #define NS_ERRORSERVICE_NAME   "Error Service" 
-#define NS_ERRORSERVICE_PROGID "component://netscape/xpcom/error-service"
+#define NS_ERRORSERVICE_CONTRACTID "@mozilla.org/xpcom/error-service;1"
 #define NS_ERRORSERVICE_CID                          \
 { /* 744afd5e-5f8c-11d4-9877-00c04fa0cf4a */         \
     0x744afd5e,                                      \

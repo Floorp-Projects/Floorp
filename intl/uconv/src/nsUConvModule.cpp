@@ -154,25 +154,25 @@ nsUConvModule::GetClassObject(nsIComponentManager *aCompMgr,
 struct Components {
   const char* mDescription;
   const nsID* mCID;
-  const char* mProgID;
+  const char* mContractID;
 };
 
 // The list of components we register
 static Components gComponents[] = {
   { "Charset Conversion Manager", &kCharsetConverterManagerCID,
-    NS_CHARSETCONVERTERMANAGER_PROGID, },
+    NS_CHARSETCONVERTERMANAGER_CONTRACTID, },
   { "Unicode Decode Helper", &kUnicodeDecodeHelperCID,
-    NS_UNICODEDECODEHELPER_PROGID, },
+    NS_UNICODEDECODEHELPER_CONTRACTID, },
   { "Unicode Encode Helper", &kUnicodeEncodeHelperCID,
-    NS_UNICODEENCODEHELPER_PROGID, },
+    NS_UNICODEENCODEHELPER_CONTRACTID, },
   { "Platform Charset Information", &kPlatformCharsetCID,
-    NS_PLATFORMCHARSET_PROGID, },
+    NS_PLATFORMCHARSET_CONTRACTID, },
   { "Charset Alias Information",  &kCharsetAliasCID,
-    NS_CHARSETALIAS_PROGID, },
+    NS_CHARSETALIAS_CONTRACTID, },
   { NS_CHARSETMENU_PID, &kCharsetMenuCID,
-    NS_RDF_DATASOURCE_PROGID_PREFIX NS_CHARSETMENU_PID, },
+    NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID, },
   { "Text To Sub URI Helper", &kTextToSubURICID,
-    NS_ITEXTTOSUBURI_PROGID, },
+    NS_ITEXTTOSUBURI_CONTRACTID, },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
@@ -192,7 +192,7 @@ nsUConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
   Components* end = cp + NUM_COMPONENTS;
   while (cp < end) {
     rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                         cp->mProgID, aPath, PR_TRUE,
+                                         cp->mContractID, aPath, PR_TRUE,
                                          PR_TRUE);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG

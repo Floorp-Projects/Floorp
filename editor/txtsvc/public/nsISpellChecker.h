@@ -25,7 +25,7 @@
 
 #include "nsISupports.h"
 
-#define NS_SPELLCHECKER_PROGID "mozilla.spellchecker.1"
+#define NS_SPELLCHECKER_CONTRACTID "@mozilla.org/spellchecker;1"
 
 #define NS_ISPELLCHECKER_IID                    \
 { /* F72A52F1-F83B-11d2-8D54-000064657374 */    \

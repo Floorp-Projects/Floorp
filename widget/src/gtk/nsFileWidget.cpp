@@ -417,7 +417,7 @@ NS_IMETHODIMP nsFileWidget::Create(nsIWidget *aParent,
   if (nsnull == gUnicodeEncoder) {
       nsAutoString localeCharset;
 
-      nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+      nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv)) {
         rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, localeCharset);
       }

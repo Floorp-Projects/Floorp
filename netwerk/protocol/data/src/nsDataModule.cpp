@@ -28,7 +28,7 @@
 static nsModuleComponentInfo components[] = {
     { "Data Protocol Handler", 
       NS_DATAHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "data", 
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "data", 
       nsDataHandler::Create},
 };
 

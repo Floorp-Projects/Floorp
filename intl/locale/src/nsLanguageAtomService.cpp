@@ -129,7 +129,7 @@ nsLanguageAtomService::InitLangGroupTable()
     nsCOMPtr<nsIInputStream> in;
     NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(in), uri), NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(
-      NS_PERSISTENTPROPERTIES_PROGID, nsnull,
+      NS_PERSISTENTPROPERTIES_CONTRACTID, nsnull,
       NS_GET_IID(nsIPersistentProperties), getter_AddRefs(mLangGroups)),
       NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(mLangGroups->Load(in), NS_ERROR_FAILURE);
@@ -213,7 +213,7 @@ nsLanguageAtomService::LookupCharSet(const PRUnichar* aCharSet,
     NS_ENSURE_SUCCESS(InitLangTable(), NS_ERROR_OUT_OF_MEMORY);
   }
   if (!mCharSets) {
-    mCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID);
+    mCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
     NS_ENSURE_TRUE(mCharSets, NS_ERROR_FAILURE);
   }
   if (!mUnicode) {
@@ -271,7 +271,7 @@ nsLanguageAtomService::GetLocaleLanguageGroup(nsIAtom** aResult)
 
   if (!mLocaleLangGroup) {
     nsCOMPtr<nsILocaleService> localeService;
-    localeService = do_GetService(NS_LOCALESERVICE_PROGID);
+    localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID);
     NS_ENSURE_TRUE(localeService, NS_ERROR_FAILURE);
     nsCOMPtr<nsILocale> locale;
     res = localeService->GetApplicationLocale(getter_AddRefs(locale));

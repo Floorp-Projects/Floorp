@@ -50,7 +50,7 @@ extern "C" NS_EXPORT
 nsresult NSGetFactory(nsISupports* serviceMgr,
                                    const nsCID &aCID,
                                    const char *aClassName,
-                                   const char *aProgID,
+                                   const char *aContractID,
                                    nsIFactory **aFactory)
 {
   dbgOut1("NSGetFactory");
@@ -99,11 +99,11 @@ nsresult NSRegisterSelf(nsISupports *serviceMgr, const char *path)
 
   char buf[255];
 
-  nsCString progID(NS_INLINE_PLUGIN_PROGID_PREFIX);
+  nsCString contractID(NS_INLINE_PLUGIN_CONTRACTID_PREFIX);
 
   // We will use the service manager to obtain the component
   // manager, which will enable us to register a component
-  // with a ProgID (text string) instead of just the CID.
+  // with a ContractID (text string) instead of just the CID.
   nsIServiceManager *sm;
 
   // We can get the IID of an interface with the static GetIID() method as well
@@ -122,8 +122,8 @@ nsresult NSRegisterSelf(nsISupports *serviceMgr, const char *path)
     return rv;
   }
 
-  progID += PLUGIN_MIME_TYPE;
-  progID.ToCString(buf, 255);
+  contractID += PLUGIN_MIME_TYPE;
+  contractID.ToCString(buf, 255);
 
   rv = cm->RegisterComponent(kBasicPluginCID, PLUGIN_NAME, buf, path, PR_TRUE, PR_TRUE);
 

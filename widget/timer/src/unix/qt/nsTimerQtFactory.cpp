@@ -104,7 +104,7 @@ nsresult
 NSGetFactory(nsISupports* servMgr,
              const nsCID &aClass,
              const char *aClassName,
-             const char *aProgID,
+             const char *aContractID,
              nsIFactory **aFactory)
 {
   if (nsnull == aFactory) {
@@ -145,7 +145,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
 
   rv = compMgr->RegisterComponent(kCTimerQt,
                                   "QT timer",
-                                  "component://netscape/timer/unix/qt",
+                                  "@mozilla.org/timer/unix/qt;1",
                                   fullpath,
                                   PR_TRUE, 
                                   PR_TRUE);

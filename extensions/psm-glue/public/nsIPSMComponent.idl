@@ -54,7 +54,7 @@ interface nsIPSMComponent : nsISupports
 };
 
 %{C++
-#define PSM_COMPONENT_PROGID "component://netscape/psm"
+#define PSM_COMPONENT_CONTRACTID "@mozilla.org/psm;1"
 #define PSM_COMPONENT_CLASSNAME "Mozilla PSM Component"
 %}
 

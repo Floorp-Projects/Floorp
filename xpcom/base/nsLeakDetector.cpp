@@ -115,7 +115,7 @@ NS_METHOD nsLeakDetector::MarkObject(nsISupports* object, PRBool marked)
 
 #define NS_CLEAKDETECTOR_CID_STR "bb1ba360-1dd1-11b2-b30e-aa2314429f54"
 #define NS_CLEAKDETECTOR_CID {0xbb1ba360, 0x1dd1, 0x11b2, {0xb3, 0x0e, 0xaa, 0x23, 0x14, 0x42, 0x9f, 0x54}}
-#define NS_CLEAKDETECTOR_PROGID "component://netscape/xpcom/leakdetector"
+#define NS_CLEAKDETECTOR_CONTRACTID "@mozilla.org/xpcom/leakdetector;1"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLeakDetector)
 
@@ -137,7 +137,7 @@ nsresult NS_InitLeakDetector()
 		return rv;
 
 	// register this factory with the component manager.
-	rv = nsComponentManager::RegisterFactory(kCLeakDetectorCID, "LeakDetector", NS_CLEAKDETECTOR_PROGID, factory, PR_TRUE);
+	rv = nsComponentManager::RegisterFactory(kCLeakDetectorCID, "LeakDetector", NS_CLEAKDETECTOR_CONTRACTID, factory, PR_TRUE);
 	return rv;
 }
 

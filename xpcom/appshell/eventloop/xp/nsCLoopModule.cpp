@@ -27,13 +27,13 @@
 
 static nsModuleComponentInfo components[] =
 {
-  { "Native App Service", NS_EVENTLOOP_APP_CID, NS_EVENTLOOP_APP_PROGID,
+  { "Native App Service", NS_EVENTLOOP_APP_CID, NS_EVENTLOOP_APP_CONTRACTID,
     nsCAppLoop::Create
   },
-  { "Native App Service", NS_EVENTLOOP_THREAD_CID, NS_EVENTLOOP_THREAD_PROGID,
+  { "Native App Service", NS_EVENTLOOP_THREAD_CID, NS_EVENTLOOP_THREAD_CONTRACTID,
     nsCThreadLoop::Create
   },
-  { "Native App Service", NS_EVENTLOOP_BREATH_CID, NS_EVENTLOOP_BREATH_PROGID,
+  { "Native App Service", NS_EVENTLOOP_BREATH_CID, NS_EVENTLOOP_BREATH_CONTRACTID,
     nsCBreathLoop::Create
   }
 };

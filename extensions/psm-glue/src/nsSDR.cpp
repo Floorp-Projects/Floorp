@@ -56,7 +56,7 @@ init()
   nsresult rv;
   nsISupports *psm;
 
-  rv = nsServiceManager::GetService(kPSMComponentProgID, NS_GET_IID(nsIPSMComponent),
+  rv = nsServiceManager::GetService(kPSMComponentContractID, NS_GET_IID(nsIPSMComponent),
                                     &psm);
   if (rv != NS_OK) goto loser;  /* Should promote error */
 
@@ -317,4 +317,4 @@ loser:
 #endif
 }
 
-const char * nsSecretDecoderRing::kPSMComponentProgID = PSM_COMPONENT_PROGID;
+const char * nsSecretDecoderRing::kPSMComponentContractID = PSM_COMPONENT_CONTRACTID;

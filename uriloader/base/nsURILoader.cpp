@@ -51,7 +51,7 @@
 #include "nsIUnkContentTypeHandler.h"
 #include "nsDOMError.h"
 
-#include "nsCExternalHandlerService.h" // contains progids for the helper app service
+#include "nsCExternalHandlerService.h" // contains contractids for the helper app service
 
 static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -369,7 +369,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
         PRBool abortProcess = PR_FALSE;
         aChannel->GetURI(getter_AddRefs(uri));
         nsCOMPtr<nsIStreamListener> contentStreamListener;
-        nsCOMPtr<nsIExternalHelperAppService> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_PROGID));
+        nsCOMPtr<nsIExternalHelperAppService> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID));
         if (helperAppService)
         {
             rv = helperAppService->DoContent(contentType, uri, m_originalContext, &abortProcess, getter_AddRefs(contentStreamListener));
@@ -400,7 +400,7 @@ nsresult nsDocumentOpenInfo::InvokeUnknownContentHandler(nsIChannel * aChannel, 
   NS_ENSURE_ARG(aChannel);
   NS_ENSURE_ARG(aDomWindow);
 
-  nsCOMPtr<nsIUnknownContentTypeHandler> handler (do_GetService(NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID));
+  nsCOMPtr<nsIUnknownContentTypeHandler> handler (do_GetService(NS_IUNKNOWNCONTENTTYPEHANDLER_CONTRACTID));
   NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
 
   return handler->HandleUnknownContentType( aChannel, aContentType, aDomWindow );
@@ -717,7 +717,7 @@ nsresult nsURILoader::SetupLoadCookie(nsISupports * aWindowContext,
       // If there is no parent DocLoader, then use the global DocLoader
       // service as the parent...
       if (!parentDocLoader) {
-        parentDocLoader = do_GetService(NS_DOCUMENTLOADER_SERVICE_PROGID, &rv);
+        parentDocLoader = do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID, &rv);
       }
       if (NS_FAILED(rv)) return rv;
 
@@ -849,11 +849,11 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   // eventually we want to hit up the category manager so we can allow people to
   // over ride the default content type handlers....for now...i'm skipping that part.
 
-  nsCAutoString handlerProgID (NS_CONTENT_HANDLER_PROGID_PREFIX);
-  handlerProgID += aContentType;
+  nsCAutoString handlerContractID (NS_CONTENT_HANDLER_CONTRACTID_PREFIX);
+  handlerContractID += aContentType;
   
   nsCOMPtr<nsIContentHandler> aContentHandler;
-  rv = nsComponentManager::CreateInstance(handlerProgID, nsnull, NS_GET_IID(nsIContentHandler), getter_AddRefs(aContentHandler));
+  rv = nsComponentManager::CreateInstance(handlerContractID, nsnull, NS_GET_IID(nsIContentHandler), getter_AddRefs(aContentHandler));
   if (NS_SUCCEEDED(rv)) // we did indeed have a content handler for this type!! yippee...
   {
       rv = aContentHandler->HandleContent(aContentType, "view", aWindowTarget, aSrcWindowContext, aChannel);

@@ -44,7 +44,7 @@
 
 #include "nsIHelperAppLauncherDialog.h"
 
-#include "nsCExternalHandlerService.h" // contains progids for the helper app service
+#include "nsCExternalHandlerService.h" // contains contractids for the helper app service
 
 #ifdef XP_MAC
 #include "nsILocalFileMac.h"
@@ -361,7 +361,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeType(const char * aConten
     if (NS_SUCCEEDED(rv) && target)
     {
        // create a mime info object and we'll fill it in based on the values from the data source
-       nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_PROGID));
+       nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
        rv = FillTopLevelProperties(aContentType, contentTypeNodeResource, rdf, mimeInfo);
        NS_ENSURE_SUCCESS(rv, rv);
        rv = FillContentHandlerProperties(aContentType, contentTypeNodeResource, rdf, mimeInfo);
@@ -377,7 +377,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeType(const char * aConten
   if (!*aMIMEInfo)
   {
     // try the old mime service.
-    nsCOMPtr<nsIMIMEService> mimeService (do_GetService("component:||netscape|mime"));
+    nsCOMPtr<nsIMIMEService> mimeService (do_GetService("@mozilla.org/mime;1"));
     if (mimeService)
       mimeService->GetFromMIMEType(aContentType, aMIMEInfo);
     // if it doesn't have an entry then we really know nothing about this type...
@@ -489,7 +489,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   mTempFile->Append(tempLeafName); // make this file unique!!!
   mTempFile->CreateUnique(nsnull, nsIFile::NORMAL_FILE_TYPE, 0644);
 
-  nsCOMPtr<nsIFileChannel> fileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_PROGID);
+  nsCOMPtr<nsIFileChannel> fileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_CONTRACTID);
   if (fileChannel)
   {
     rv = fileChannel->Init(mTempFile, -1, 0);
@@ -523,7 +523,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
     mReceivedDispostionInfo = PR_FALSE; 
 
     // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog service
-    nsCOMPtr<nsIHelperAppLauncherDialog> dlgService( do_GetService( NS_IHELPERAPPLAUNCHERDLG_PROGID ) );
+    nsCOMPtr<nsIHelperAppLauncherDialog> dlgService( do_GetService( NS_IHELPERAPPLAUNCHERDLG_CONTRACTID ) );
     if ( dlgService ) 
       rv = dlgService->Show( this, mWindowContext );
 
@@ -622,7 +622,7 @@ NS_IMETHODIMP nsExternalAppHandler::GetMIMEInfo(nsIMIMEInfo ** aMIMEInfo)
 nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile)
 {
   // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog service
-  nsCOMPtr<nsIHelperAppLauncherDialog> dlgService( do_GetService( NS_IHELPERAPPLAUNCHERDLG_PROGID ) );
+  nsCOMPtr<nsIHelperAppLauncherDialog> dlgService( do_GetService( NS_IHELPERAPPLAUNCHERDLG_CONTRACTID ) );
   nsresult rv = NS_OK;
   if ( dlgService ) 
     rv = dlgService->PromptForSaveToFile(mWindowContext, aDefaultFile, NS_ConvertASCIItoUCS2(mTempFileExtension).get(), aNewFile);
@@ -680,7 +680,7 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   nsresult rv = NS_OK;
   if (mStopRequestIssued)
   {
-    nsCOMPtr<nsPIExternalAppLauncher> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_PROGID));
+    nsCOMPtr<nsPIExternalAppLauncher> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID));
     if (helperAppService)
     {
       rv = helperAppService->LaunchAppWithTempFile(mMimeInfo, mTempFile);
@@ -719,7 +719,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromExtension(const char *aFileExt,
 {
   nsresult rv = NS_OK;
   // temporary implementation --> call through to original implementation...
-  nsCOMPtr<nsIMIMEService> oldService (do_GetService("component:||netscape|mimeold"));
+  nsCOMPtr<nsIMIMEService> oldService (do_GetService("@mozilla.org/mimeold;1"));
   NS_ENSURE_TRUE(oldService, NS_ERROR_FAILURE);
   
   return oldService->GetFromExtension(aFileExt, _retval);
@@ -731,7 +731,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromMIMEType(const char *aMIMEType,
 {
   nsresult rv = NS_OK;
   // temporary implementation --> call through to original implementation...
-  nsCOMPtr<nsIMIMEService> oldService (do_GetService("component:||netscape|mimeold"));
+  nsCOMPtr<nsIMIMEService> oldService (do_GetService("@mozilla.org/mimeold;1"));
   NS_ENSURE_TRUE(oldService, NS_ERROR_FAILURE);
   
   return oldService->GetFromMIMEType(aMIMEType, _retval);
@@ -741,7 +741,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFile
 {
   nsresult rv = NS_OK;
   // temporary implementation --> call through to original implementation...
-  nsCOMPtr<nsIMIMEService> oldService (do_GetService("component:||netscape|mimeold"));
+  nsCOMPtr<nsIMIMEService> oldService (do_GetService("@mozilla.org/mimeold;1"));
   NS_ENSURE_TRUE(oldService, NS_ERROR_FAILURE);
   
   return oldService->GetTypeFromExtension(aFileExt, aContentType);  
@@ -751,7 +751,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aC
 {
   nsresult rv = NS_OK;
   // temporary implementation --> call through to original implementation...
-  nsCOMPtr<nsIMIMEService> oldService (do_GetService("component:||netscape|mimeold"));
+  nsCOMPtr<nsIMIMEService> oldService (do_GetService("@mozilla.org/mimeold;1"));
   NS_ENSURE_TRUE(oldService, NS_ERROR_FAILURE);
   
   return oldService->GetTypeFromURI(aURI, aContentType);  
@@ -761,7 +761,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile( nsIFile* aFile, char 
 {
   nsresult rv = NS_OK;
   // temporary implementation --> call through to original implementation...
-  nsCOMPtr<nsIMIMEService> oldService (do_GetService("component:||netscape|mimeold"));
+  nsCOMPtr<nsIMIMEService> oldService (do_GetService("@mozilla.org/mimeold;1"));
   NS_ENSURE_TRUE(oldService, NS_ERROR_FAILURE);
   
   return oldService->GetTypeFromFile(aFile, aContentType);  

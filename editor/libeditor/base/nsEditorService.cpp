@@ -38,4 +38,4 @@ NS_IMPL_QUERY_INTERFACE2(nsEditorService,
                          nsIEditorService,
                          nsICmdLineHandler) 
 
-CMDLINEHANDLER_IMPL(nsEditorService,"-edit","general.startup.editor","chrome://editor/content/editor.xul","Start with editor.","component://netscape/commandlinehandler/general-startup-editor","Editor Startup Handler", PR_TRUE,"about:blank", PR_TRUE)
+CMDLINEHANDLER_IMPL(nsEditorService,"-edit","general.startup.editor","chrome://editor/content/editor.xul","Start with editor.","@mozilla.org/commandlinehandler/general-startup;1?type=editor","Editor Startup Handler", PR_TRUE,"about:blank", PR_TRUE)

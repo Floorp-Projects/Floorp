@@ -2456,7 +2456,7 @@ HTMLContentSink::WillInterrupt()
           mNotificationTimer->Cancel();
         }
         
-        mNotificationTimer = do_CreateInstance("component://netscape/timer", &result);
+        mNotificationTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
         if (NS_SUCCEEDED(result)) {
           SINK_TRACE(SINK_TRACE_REFLOW,
                      ("HTMLContentSink::WillInterrupt: setting up timer with delay %d", delay));
@@ -2992,7 +2992,7 @@ HTMLContentSink::OpenNoscript(const nsIParserNode& aNode) {
   
   nsresult result=mCurrentContext->OpenContainer(aNode);
   if(NS_SUCCEEDED(result)) {
-    NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &result);
+    NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &result);
     if(NS_SUCCEEDED(result)) {
       PRBool jsEnabled;
       result=prefs->GetBoolPref("javascript.enabled", &jsEnabled);
@@ -3625,7 +3625,7 @@ HTMLContentSink::ProcessBaseHref(const nsString& aBaseHref)
   //-- Make sure this page is allowed to load this URL
   nsresult rv;
   NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return;
   nsCOMPtr<nsIURI> baseHrefURI;
   rv = NS_NewURI(getter_AddRefs(baseHrefURI), aBaseHref, nsnull);
@@ -4315,7 +4315,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 if (NS_SUCCEEDED(rv)) {
                     NS_WITH_SERVICE(nsIScriptSecurityManager,
                                     securityManager, 
-                                    NS_SCRIPTSECURITYMANAGER_PROGID,
+                                    NS_SCRIPTSECURITYMANAGER_CONTRACTID,
                                     &rv);
                     if (NS_SUCCEEDED(rv)) {
                         rv = securityManager->CheckLoadURI(baseURI,
@@ -4335,7 +4335,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 }
             } // END refresh
             else if (!header.CompareWithConversion("set-cookie", PR_TRUE)) {
-                nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
+                nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
                 if (NS_FAILED(rv)) return rv;
 
                 nsCOMPtr<nsIURI> baseURI;
@@ -4896,7 +4896,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 
       // Check that this page is allowed to load this URI.
       NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                      NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                      NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
       if (NS_FAILED(rv)) 
           return rv;
       rv = securityManager->CheckLoadURI(mDocumentBaseURL, mScriptURI, PR_FALSE);

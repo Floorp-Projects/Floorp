@@ -233,7 +233,7 @@ GtkMozEmbedPrivate::Init(GtkMozEmbed *aEmbed)
 {
 
   // create an nsIWebBrowser object
-  mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID);
+  mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
   NS_ENSURE_TRUE(mWebBrowser, NS_ERROR_FAILURE);
 
   // create our glue widget
@@ -299,7 +299,7 @@ GtkMozEmbedPrivate::Init(GtkMozEmbed *aEmbed)
   mChromeNav = do_QueryInterface(mWebBrowser);
 
   // create our session history object for the inner content area
-  mSessionHistory = do_CreateInstance(NS_SHISTORY_PROGID);
+  mSessionHistory = do_CreateInstance(NS_SHISTORY_CONTRACTID);
 
   return NS_OK;
 }
@@ -396,7 +396,7 @@ GtkMozEmbedPrivate::LoadChrome(void)
   subShell->Spinup();
 
   // Push nsnull onto the JSContext stack before we dispatch a native event.
-  nsCOMPtr<nsIJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+  nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
   if(stack && NS_SUCCEEDED(stack->Push(nsnull)))
   {
     // until both the content and chrome areas are loaded, don't

@@ -107,7 +107,7 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
 
     nsresult rv      = NS_OK;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
     if (NS_FAILED(rv) || !secMan) return PR_FALSE;
 
 
@@ -153,7 +153,7 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
 
     nsresult rv      = NS_OK;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
     if (NS_FAILED(rv) || !secMan) return PR_FALSE;
 
 
@@ -196,7 +196,7 @@ nsCSecurityContext::nsCSecurityContext(JSContext* cx)
 
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
     if (NS_FAILED(rv) || !secMan) return;
 
     // Do early evaluation of "UniversalJavaPermission" capability.

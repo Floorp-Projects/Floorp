@@ -117,6 +117,6 @@ interface nsIFindComponent : nsIAppShellComponent
 };
 
 %{C++
-#define NS_IFINDCOMPONENT_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/find"
+#define NS_IFINDCOMPONENT_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/find;1"
 #define NS_IFINDCOMPONENT_CLASSNAME "Mozilla Find Component"
 %}

@@ -27,8 +27,8 @@ class nsIProxyCreateInstance : public nsISupports {
   /* void CreateInstanceByIID (in nsIIDRef cid, in nsISupports aOuter, in nsIIDRef iid, out voidStar result); */
   NS_IMETHOD CreateInstanceByIID(const nsIID & cid, nsISupports *aOuter, const nsIID & iid, void * *result) = 0;
 
-  /* void CreateInstanceByProgID (in string aProgID, in nsISupports aOuter, in nsIIDRef iid, out voidStar result); */
-  NS_IMETHOD CreateInstanceByProgID(const char *aProgID, nsISupports *aOuter, const nsIID & iid, void * *result) = 0;
+  /* void CreateInstanceByContractID (in string aContractID, in nsISupports aOuter, in nsIIDRef iid, out voidStar result); */
+  NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aOuter, const nsIID & iid, void * *result) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

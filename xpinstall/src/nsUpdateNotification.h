@@ -42,7 +42,7 @@
 #define NS_XPI_UPDATE_NOTIFIER_CID \
 { 0x68a24e36, 0x042d, 0x11d4, { 0xac, 0x85, 0x0, 0xc0, 0x4f, 0xa0, 0xd2, 0x6b } }
 
-#define NS_XPI_UPDATE_NOTIFIER_PROGID "component://mozilla/xpinstall/notifier"
+#define NS_XPI_UPDATE_NOTIFIER_CONTRACTID "@mozilla.org/xpinstall/notifier;1"
 
 #define BASE_DATASOURCE_URL "chrome://communicator/content/xpinstall/SoftwareUpdates.rdf"
 

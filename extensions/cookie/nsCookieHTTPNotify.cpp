@@ -67,7 +67,7 @@ NS_METHOD nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString prevEntry;
-    rv = catman->AddCategoryEntry(NS_HTTP_STARTUP_CATEGORY, "Http Cookie Notify", NS_COOKIEHTTPNOTIFY_PROGID,
+    rv = catman->AddCategoryEntry(NS_HTTP_STARTUP_CATEGORY, "Http Cookie Notify", NS_COOKIEHTTPNOTIFY_CONTRACTID,
                                   PR_TRUE, PR_TRUE, getter_Copies(prevEntry));
 
     return NS_OK;
@@ -83,7 +83,7 @@ NS_METHOD nsCookieHTTPNotify::UnregisterProc(nsIComponentManager *aCompMgr,
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString prevEntry;
-    rv = catman->DeleteCategoryEntry(NS_HTTP_STARTUP_CATEGORY, NS_COOKIEHTTPNOTIFY_PROGID, PR_TRUE,
+    rv = catman->DeleteCategoryEntry(NS_HTTP_STARTUP_CATEGORY, NS_COOKIEHTTPNOTIFY_CONTRACTID, PR_TRUE,
                                      getter_Copies(prevEntry));
 
     // Return value is not used from this function.
@@ -104,11 +104,11 @@ nsCookieHTTPNotify::Init()
     nsresult rv = NS_OK;
     nsCOMPtr<nsINetModuleMgr> pNetModuleMgr = do_GetService(kINetModuleMgrCID, &rv); 
     if (NS_FAILED(rv)) return rv;
-    rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID,
+    rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_CONTRACTID,
                                        (nsIHTTPNotify *)this);
     if (NS_FAILED(rv)) return rv;
 
-    rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID,
+    rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_CONTRACTID,
                                        (nsIHTTPNotify *)this);
     return rv;
 }
@@ -132,7 +132,7 @@ nsCookieHTTPNotify::SetupCookieService()
     nsresult rv = NS_OK;
     if (!mCookieService)
     {
-      mCookieService = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
+      mCookieService = do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
     }
     return rv;
 }

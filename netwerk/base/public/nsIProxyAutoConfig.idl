@@ -52,7 +52,7 @@ interface nsIProxyAutoConfig : nsISupports
     {0xb0, 0x70, 0x84, 0xd0, 0x0d, 0x3e, 0xae, 0xce} \
 }
 
-#define NS_PROXY_AUTO_CONFIG_PROGID \
-    "component://mozilla/network/proxy_autoconfig" 
+#define NS_PROXY_AUTO_CONFIG_CONTRACTID \
+    "@mozilla.org/network/proxy_autoconfig;1" 
 
 %}

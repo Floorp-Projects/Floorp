@@ -93,7 +93,7 @@ function saveSearch()
 
 	dump("Bookmark search URL: " + searchURL + "\n");
 
-	var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+	var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
 	if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
 
 	var searchTitle = "Search: '" + gText + "' using " + gSites;

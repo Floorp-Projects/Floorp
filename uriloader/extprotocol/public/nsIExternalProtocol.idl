@@ -53,8 +53,8 @@ interface nsIExternalProtocol : nsIProtocolHandler
 	0x364d6c20, 0x0e16, 0x11d4,							\
 	{ 0x9a, 0xd2, 0x0, 0x60, 0x1d, 0xf0, 0x50, 0x68 }	\
 }
-#define NS_EXTERNALMAILTO_PROGID \
-	"component://mozilla/externalprotocol/mailto"
+#define NS_EXTERNALMAILTO_CONTRACTID \
+	"@mozilla.org/externalprotocol/mailto;1"
 
 
 #define NS_ERROR_EXTERNAL_LAUNCH    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 100)

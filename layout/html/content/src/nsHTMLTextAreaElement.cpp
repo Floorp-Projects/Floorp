@@ -681,7 +681,7 @@ nsHTMLTextAreaElement::GetControllers(nsIControllers** aResult)
     if (!mControllers) { return NS_ERROR_NULL_POINTER; }
 
     nsresult rv;
-    nsCOMPtr<nsIController> controller = do_CreateInstance("component://netscape/editor/editorcontroller", &rv);
+    nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/editor/editorcontroller;1", &rv);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller, &rv);
     if (NS_FAILED(rv)) return rv;

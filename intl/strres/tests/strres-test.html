@@ -5,7 +5,7 @@
 
 <body>
 <script>
-var sample = Components.classes["component://netscape/sample/sample-world"].createInstance();
+var sample = Components.classes["@mozilla.org/sample/sample-world;1"].createInstance();
 sample = sample.QueryInterface(Components.interfaces.nsISample);
 dump("sample = " + sample + "\n");
 

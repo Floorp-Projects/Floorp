@@ -96,7 +96,7 @@ NS_IMETHODIMP CBrowserShell::CommonConstruct()
 {
   nsresult  rv;
   
-  mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID, &rv);
+  mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
    
   nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(mWebBrowser));

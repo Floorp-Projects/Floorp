@@ -3917,7 +3917,7 @@ nsGfxListControlFrame::SaveStateInternal(nsIPresContext* aPresContext, nsIPresSt
       res = GetOptionSelected(i, &selected);
       if (NS_SUCCEEDED(res) && selected) {
         nsCOMPtr<nsISupportsPRInt32> thisVal;
-        res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
+        res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
 	                       nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(thisVal));
         if (NS_SUCCEEDED(res) && thisVal) {
           res = thisVal->SetData(i);
@@ -4230,7 +4230,7 @@ public:
     if (!mTimer)
     {
       nsresult result;
-      mTimer = do_CreateInstance("component://netscape/timer", &result);
+      mTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
 
       if (NS_FAILED(result))
         return result;

@@ -314,7 +314,7 @@ nsViewerApp::Initialize(int argc, char** argv)
     NS_ASSERTION(PR_FALSE, "Could not create nsAppFileLocationProvider\n");
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+  NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   if (!directoryService) {
     NS_ASSERTION(PR_FALSE, "failed to get directory service");
     return rv;

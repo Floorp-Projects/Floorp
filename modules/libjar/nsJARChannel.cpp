@@ -435,7 +435,7 @@ nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable,
 
 #ifdef NS_USE_CACHE_MANAGER_FOR_JAR
 
-    cacheMgr = do_GetService(NS_NETWORK_CACHE_MANAGER_PROGID, &rv);
+    cacheMgr = do_GetService(NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) goto error;
 
     rv = mJARBaseURI->GetSpec(getter_Copies(jarBaseSpec));
@@ -680,7 +680,7 @@ nsJARChannel::GetContentType(char* *aContentType)
             }
 
             if (ext) {
-                nsCOMPtr<nsIMIMEService> mimeServ (do_GetService(NS_MIMESERVICE_PROGID, &rv));
+                nsCOMPtr<nsIMIMEService> mimeServ (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
                 if (NS_SUCCEEDED(rv)) {
                     rv = mimeServ->GetTypeFromExtension(ext, &mContentType);
                 }

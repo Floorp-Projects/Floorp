@@ -76,7 +76,7 @@ function chooseProfileFolder( aRootFolder )
 {
   if( !aRootFolder ) {
     try {
-      var fp = Components.classes["component://mozilla/filepicker"].createInstance(Components.interfaces.nsIFilePicker);
+      var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
       fp.init(window, bundle.GetStringFromName("chooseFolder"), Components.interfaces.nsIFilePicker.modeGetFolder);
       fp.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
       fp.show();
@@ -109,14 +109,14 @@ function clearFolderDisplay()
 function updateProfileName()
 {
   const nsILocalFile = Components.interfaces.nsILocalFile; 
-  const nsILocalFile_PROGID = "component://mozilla/file/local";
+  const nsILocalFile_CONTRACTID = "@mozilla.org/file/local;1";
 
   var profileName = document.getElementById( "ProfileName" );
   var folderDisplayElement = document.getElementById( "ProfileDir" );
   var rootFolder = folderDisplayElement.getAttribute( "rootFolder" );
   try {
 
-    var sfile = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile); 
+    var sfile = Components.classes[nsILocalFile_CONTRACTID].createInstance(nsILocalFile); 
     if ( sfile ) {
       // later change to 
       sfile.initWithUnicodePath(rootFolder);

@@ -549,7 +549,7 @@ void TimerCallback(nsITimer* aTimer, void* aClosure)
   }
   flag = !flag;
 
-  gPeriodicTimer = do_CreateInstance("component://netscape/timer", &rv);
+  gPeriodicTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_SUCCEEDED(rv)) {
     gPeriodicTimer->Init(TimerCallback, nsnull, 1000*5);
   }
@@ -638,7 +638,7 @@ main(int argc, char* argv[])
   // Start up the timer to test Suspend/Resume APIs on the transport...
   //
   nsresult rv;
-  gPeriodicTimer = do_CreateInstance("component://netscape/timer", &rv);
+  gPeriodicTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_SUCCEEDED(rv)) {
     gPeriodicTimer->Init(TimerCallback, nsnull, 1000);
   }

@@ -18,7 +18,7 @@
  * Rights Reserved.
  */
 
-var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
+var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
 var domds;

@@ -153,7 +153,7 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
     // init the screen manager and compute our client rect based on the
     // screen objects. We'll save the result 
     nsresult ignore;
-    mScreenManager = do_GetService("component://netscape/gfx/screenmanager", &ignore);   
+    mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1", &ignore);   
     if ( !sNumberOfScreens )
       mScreenManager->GetNumberOfScreens(&sNumberOfScreens);
   } // if this dc is not a print device

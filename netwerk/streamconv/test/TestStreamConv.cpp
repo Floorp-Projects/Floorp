@@ -165,58 +165,58 @@ main(int argc, char* argv[])
     rv = convFactory1->QueryInterface(NS_GET_IID(nsIFactory), (void**)&convFactSup1);
     if (NS_FAILED(rv)) return rv;
 
-    // register the TestConverter with the component manager. One progid registration
+    // register the TestConverter with the component manager. One contractid registration
     // per conversion pair (from - to pair).
     rv = nsComponentManager::RegisterFactory(kTestConverterCID,
                                              "TestConverter",
-                                             NS_ISTREAMCONVERTER_KEY "?from=a/foo?to=b/foo",
+                                             NS_ISTREAMCONVERTER_KEY "?from=a/foo&to=b/foo",
                                              convFactSup,
                                              PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     rv = nsComponentManager::RegisterFactory(kTestConverter1CID,
                                              "TestConverter1",
-                                             NS_ISTREAMCONVERTER_KEY "?from=b/foo?to=c/foo",
+                                             NS_ISTREAMCONVERTER_KEY "?from=b/foo&to=c/foo",
                                              convFactSup1,
                                              PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     rv = nsComponentManager::RegisterFactory(kTestConverterCID,
                                              "TestConverter",
-                                             NS_ISTREAMCONVERTER_KEY "?from=b/foo?to=d/foo",
+                                             NS_ISTREAMCONVERTER_KEY "?from=b/foo&to=d/foo",
                                              convFactSup,
                                              PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     rv = nsComponentManager::RegisterFactory(kTestConverterCID,
                                              "TestConverter",
-                                             NS_ISTREAMCONVERTER_KEY "?from=c/foo?to=d/foo",
+                                             NS_ISTREAMCONVERTER_KEY "?from=c/foo&to=d/foo",
                                              convFactSup,
                                              PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     rv = nsComponentManager::RegisterFactory(kTestConverterCID,
                                              "TestConverter",
-                                             NS_ISTREAMCONVERTER_KEY "?from=d/foo?to=e/foo",
+                                             NS_ISTREAMCONVERTER_KEY "?from=d/foo&to=e/foo",
                                              convFactSup,
                                              PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     rv = nsComponentManager::RegisterFactory(kTestConverterCID,
                                              "TestConverter",
-                                             NS_ISTREAMCONVERTER_KEY "?from=d/foo?to=f/foo",
+                                             NS_ISTREAMCONVERTER_KEY "?from=d/foo&to=f/foo",
                                              convFactSup,
                                              PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     rv = nsComponentManager::RegisterFactory(kTestConverterCID,
                                              "TestConverter",
-                                             NS_ISTREAMCONVERTER_KEY "?from=t/foo?to=k/foo",
+                                             NS_ISTREAMCONVERTER_KEY "?from=t/foo&to=k/foo",
                                              convFactSup,
                                              PR_TRUE);
     if (NS_FAILED(rv)) return rv;
     
-    // register the converters with the registry. One progid registration
+    // register the converters with the registry. One contractid registration
     // per conversion pair.
     NS_WITH_SERVICE(nsIRegistry, registry, kRegistryCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -230,28 +230,28 @@ main(int argc, char* argv[])
 
     rv = registry->AddSubtree(nsIRegistry::Common, NS_ISTREAMCONVERTER_KEY, &key);
     if (NS_FAILED(rv)) return rv;
-    rv = registry->AddSubtreeRaw(key, "?from=a/foo?to=b/foo", &key1);
+    rv = registry->AddSubtreeRaw(key, "?from=a/foo&to=b/foo", &key1);
     if (NS_FAILED(rv)) return rv;
 
-    rv = registry->AddSubtreeRaw(key, "?from=b/foo?to=c/foo", &key1);
+    rv = registry->AddSubtreeRaw(key, "?from=b/foo&to=c/foo", &key1);
     if (NS_FAILED(rv)) return rv;
 
-    rv = registry->AddSubtreeRaw(key, "?from=multipart/x-mixed-replace?to=text/html", &key1);
+    rv = registry->AddSubtreeRaw(key, "?from=multipart/x-mixed-replace&to=text/html", &key1);
     if (NS_FAILED(rv)) return rv;
 
-    rv = registry->AddSubtreeRaw(key, "?from=b/foo?to=d/foo", &key1);
+    rv = registry->AddSubtreeRaw(key, "?from=b/foo&to=d/foo", &key1);
     if (NS_FAILED(rv)) return rv;
 
-    rv = registry->AddSubtreeRaw(key, "?from=c/foo?to=d/foo", &key1);
+    rv = registry->AddSubtreeRaw(key, "?from=c/foo&to=d/foo", &key1);
     if (NS_FAILED(rv)) return rv;
 
-    rv = registry->AddSubtreeRaw(key, "?from=d/foo?to=e/foo", &key1);
+    rv = registry->AddSubtreeRaw(key, "?from=d/foo&to=e/foo", &key1);
     if (NS_FAILED(rv)) return rv;
 
-    rv = registry->AddSubtreeRaw(key, "?from=d/foo?to=f/foo", &key1);
+    rv = registry->AddSubtreeRaw(key, "?from=d/foo&to=f/foo", &key1);
     if (NS_FAILED(rv)) return rv;
 
-    rv = registry->AddSubtreeRaw(key, "?from=t/foo?to=k/foo", &key1);
+    rv = registry->AddSubtreeRaw(key, "?from=t/foo&to=k/foo", &key1);
     if (NS_FAILED(rv)) return rv;
 
     registry = 0; // close the registry

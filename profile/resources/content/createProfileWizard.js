@@ -23,7 +23,7 @@
 
 // The WIZARD of GORE
 
-var profile = Components.classes["component://netscape/profile/manager"].createInstance();
+var profile = Components.classes["@mozilla.org/profile/manager;1"].createInstance();
 profile = profile.QueryInterface(Components.interfaces.nsIProfile); 
 
 // Navigation Set for pages contained in wizard 
@@ -79,7 +79,7 @@ function onCancel()
 function selectLocale(langcode)
 {
   try {
-    var chromeRegistry = Components.classes["component://netscape/chrome/chrome-registry"].getService();
+    var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
     if ( chromeRegistry ) {
       chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
     }
@@ -165,7 +165,7 @@ function processCreateProfileData( aProfName, aProfDir, langcode)
     // Adding code to see if the profile directory already exists....
     // XXXX - Further modifications like adding propmt dialog are required - XXXX
     var useExistingDir = false;
-    var fileSpec = Components.classes["component://mozilla/file/local"].createInstance();
+    var fileSpec = Components.classes["@mozilla.org/file/local;1"].createInstance();
     if ( fileSpec )
         fileSpec = fileSpec.QueryInterface( Components.interfaces.nsILocalFile );
 
@@ -197,7 +197,7 @@ function processCreateProfileData( aProfName, aProfDir, langcode)
 function ExitApp()
 {
   // Need to call this to stop the event loop
-  var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
+  var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
   appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
   appShell.Quit();
 }

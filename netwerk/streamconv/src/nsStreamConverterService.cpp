@@ -96,12 +96,12 @@ nsStreamConverterService::Init() {
 // Builds the graph represented as an adjacency list (and built up in 
 // memory using an nsHashtable and nsVoidArray combination).
 //
-// :BuildGraph() consults the registry for all stream converter PROGIDS then fills the
+// :BuildGraph() consults the registry for all stream converter CONTRACTIDS then fills the
 // adjacency list with edges.
 // An edge in this case is comprised of a FROM and TO MIME type combination.
 // 
-// PROGID format:
-// component://netscape/strmconv?from=text/html?to=text/plain
+// CONTRACTID format:
+// component://netscape/strmconv?from=text/html&to=text/plain
 // XXX curently we only handle a single from and to combo, we should repeat the 
 // XXX registration process for any series of from-to combos.
 // XXX can use nsTokenizer for this.
@@ -115,7 +115,7 @@ nsStreamConverterService::BuildGraph() {
     nsIRegistry *registry = nsnull;
     nsRegistryKey key;
     nsIEnumerator *components = nsnull;
-    rv = nsServiceManager::GetService(NS_REGISTRY_PROGID,
+    rv = nsServiceManager::GetService(NS_REGISTRY_CONTRACTID,
                                       NS_GET_IID(nsIRegistry),
                                       (nsISupports**)&registry);
     if (NS_FAILED(rv)) return rv;
@@ -148,11 +148,11 @@ nsStreamConverterService::BuildGraph() {
         rv = node->GetNameUTF8(&name);
         if (NS_FAILED(rv)) return rv;
 
-        nsCString actualProgID(NS_ISTREAMCONVERTER_KEY);
-        actualProgID.Append(name);
+        nsCString actualContractID(NS_ISTREAMCONVERTER_KEY);
+        actualContractID.Append(name);
 
-        // now we've got the PROGID, let's parse it up.
-        rv = AddAdjacency(actualProgID.GetBuffer());
+        // now we've got the CONTRACTID, let's parse it up.
+        rv = AddAdjacency(actualContractID.GetBuffer());
 
         // cleanup
         nsCRT::free(name);
@@ -162,7 +162,7 @@ nsStreamConverterService::BuildGraph() {
     }
 
     NS_IF_RELEASE( components );
-    nsServiceManager::ReleaseService( NS_REGISTRY_PROGID, registry );
+    nsServiceManager::ReleaseService( NS_REGISTRY_CONTRACTID, registry );
 
     return NS_OK;
 }
@@ -173,12 +173,12 @@ nsStreamConverterService::BuildGraph() {
 // XXX not programatically prohibited, it's just that results are un-predictable
 // XXX right now.
 nsresult
-nsStreamConverterService::AddAdjacency(const char *aProgID) {
+nsStreamConverterService::AddAdjacency(const char *aContractID) {
     nsresult rv;
     // first parse out the FROM and TO MIME-types.
 
     nsCString fromStr, toStr;
-    rv = ParseFromTo(aProgID, fromStr, toStr);
+    rv = ParseFromTo(aContractID, fromStr, toStr);
     if (NS_FAILED(rv)) return rv;
 
     // Each MIME-type is a vertex in the graph, so first lets make sure
@@ -269,18 +269,18 @@ nsStreamConverterService::AddAdjacency(const char *aProgID) {
 }
 
 nsresult
-nsStreamConverterService::ParseFromTo(const char *aProgID, nsCString &aFromRes, nsCString &aToRes) {
+nsStreamConverterService::ParseFromTo(const char *aContractID, nsCString &aFromRes, nsCString &aToRes) {
 
-    nsCString ProgIDStr(aProgID);
+    nsCString ContractIDStr(aContractID);
 
-    PRInt32 fromLoc = ProgIDStr.Find("from=") + 5;
-    PRInt32 toLoc   = ProgIDStr.Find("to=") + 3;
+    PRInt32 fromLoc = ContractIDStr.Find("from=") + 5;
+    PRInt32 toLoc   = ContractIDStr.Find("to=") + 3;
     if (-1 == fromLoc || -1 == toLoc ) return NS_ERROR_FAILURE;
 
     nsCString fromStr, toStr;
 
-    ProgIDStr.Mid(fromStr, fromLoc, toLoc - 4 - fromLoc);
-    ProgIDStr.Mid(toStr, toLoc, ProgIDStr.Length() - toLoc);
+    ContractIDStr.Mid(fromStr, fromLoc, toLoc - 4 - fromLoc);
+    ContractIDStr.Mid(toStr, toLoc, ContractIDStr.Length() - toLoc);
 
     aFromRes.Assign(fromStr);
     aToRes.Assign(toStr);
@@ -331,10 +331,10 @@ static PRBool PR_CALLBACK DeleteBFSEntry(nsHashKey *aKey, void *aData, void *clo
 // walks the graph using a breadth-first-search algorithm which generates a discovered
 // verticies tree. This tree is then walked up (from destination vertex, to origin vertex)
 // and each link in the chain is added to an nsStringArray. A direct lookup for the given
-// PROGID should be made prior to calling this method in an attempt to find a direct
+// CONTRACTID should be made prior to calling this method in an attempt to find a direct
 // converter rather than walking the graph.
 nsresult
-nsStreamConverterService::FindConverter(const char *aProgID, nsCStringArray **aEdgeList) {
+nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray **aEdgeList) {
     nsresult rv;
     if (!aEdgeList) return NS_ERROR_NULL_POINTER;
 
@@ -352,7 +352,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsCStringArray **aE
 
     // This is our source vertex; our starting point.
     nsCString fromC, toC;
-    rv = ParseFromTo(aProgID, fromC, toC);
+    rv = ParseFromTo(aContractID, fromC, toC);
     if (NS_FAILED(rv)) return rv;
 
     nsCStringKey *source = new nsCStringKey(fromC.GetBuffer());
@@ -419,11 +419,11 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsCStringArray **aE
     // first parse out the FROM and TO MIME-types being registered.
 
     nsCString fromStr, toStr;
-    rv = ParseFromTo(aProgID, fromStr, toStr);
+    rv = ParseFromTo(aContractID, fromStr, toStr);
     if (NS_FAILED(rv)) return rv;
 
-    // get the root PROGID
-    nsCString ProgIDPrefix(NS_ISTREAMCONVERTER_KEY);
+    // get the root CONTRACTID
+    nsCString ContractIDPrefix(NS_ISTREAMCONVERTER_KEY);
     nsCStringArray *shortestPath = new nsCStringArray();
     //nsVoidArray *shortestPath = new nsVoidArray();
     nsCStringKey *toMIMEType = new nsCStringKey(toStr);
@@ -447,22 +447,22 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsCStringArray **aE
             return NS_OK;
         }
 
-        // reconstruct the PROGID.
+        // reconstruct the CONTRACTID.
         // Get the predecessor.
         SCTableData *predecessorData = (SCTableData*)lBFSTable.Get(curState->predecessor);
         if (!predecessorData) break; // no predecessor, chain doesn't exist.
 
-        // build out the PROGID.
-        nsCString *newProgID = new nsCString(ProgIDPrefix);
-        newProgID->Append("?from=");
+        // build out the CONTRACTID.
+        nsCString *newContractID = new nsCString(ContractIDPrefix);
+        newContractID->Append("?from=");
 
-        newProgID->Append(predecessorData->keyString->GetBuffer());
+        newContractID->Append(predecessorData->keyString->GetBuffer());
 
-        newProgID->Append("?to=");
-        newProgID->Append(data->keyString->GetBuffer());
+        newContractID->Append("&to=");
+        newContractID->Append(data->keyString->GetBuffer());
     
-        // Add this PROGID to the chain.
-        rv = shortestPath->AppendCString(*newProgID) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
+        // Add this CONTRACTID to the chain.
+        rv = shortestPath->AppendCString(*newContractID) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
         NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
 
         // move up the tree.
@@ -488,20 +488,20 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
     nsresult rv;
 
     // first determine whether we can even handle this covnversion
-    // build a PROGID
-    nsCString progID(NS_ISTREAMCONVERTER_KEY);
-    progID.Append("?from=");
-    progID.AppendWithConversion(aFromType);
-    progID.Append("?to=");
-    progID.AppendWithConversion(aToType);
-    const char *cProgID = progID.GetBuffer();
+    // build a CONTRACTID
+    nsCString contractID(NS_ISTREAMCONVERTER_KEY);
+    contractID.Append("?from=");
+    contractID.AppendWithConversion(aFromType);
+    contractID.Append("&to=");
+    contractID.AppendWithConversion(aToType);
+    const char *cContractID = contractID.GetBuffer();
 
     nsIComponentManager *comMgr;
     rv = NS_GetGlobalComponentManager(&comMgr);
     if (NS_FAILED(rv)) return rv;
 
     nsISupports *converter = nsnull;
-    rv = comMgr->CreateInstanceByProgID(cProgID, nsnull,
+    rv = comMgr->CreateInstanceByContractID(cContractID, nsnull,
                                         NS_GET_IID(nsIStreamConverter),
                                         (void**)&converter);
     if (NS_FAILED(rv)) {
@@ -511,7 +511,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
 
         nsCStringArray *converterChain = nsnull;
 
-        rv = FindConverter(cProgID, &converterChain);
+        rv = FindConverter(cContractID, &converterChain);
         if (NS_FAILED(rv)) {
             // can't make this conversion.
             // XXX should have a more descriptive error code.
@@ -529,14 +529,14 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
         NS_ADDREF(dataToConvert);
 
         for (PRInt32 i = edgeCount-1; i >= 0; i--) {
-            nsCString *progIDStr = converterChain->CStringAt(i);
-            if (!progIDStr) {
+            nsCString *contractIDStr = converterChain->CStringAt(i);
+            if (!contractIDStr) {
                 delete converterChain;
                 return NS_ERROR_FAILURE;
             }
-            const char *lProgID = progIDStr->GetBuffer();
+            const char *lContractID = contractIDStr->GetBuffer();
 
-            rv = comMgr->CreateInstanceByProgID(lProgID, nsnull,
+            rv = comMgr->CreateInstanceByContractID(lContractID, nsnull,
                                                 NS_GET_IID(nsIStreamConverter),
                                                 (void**)&converter);
 
@@ -546,7 +546,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
             }
 
             nsCString fromStr, toStr;
-            rv = ParseFromTo(lProgID, fromStr, toStr);
+            rv = ParseFromTo(lContractID, fromStr, toStr);
             if (NS_FAILED(rv)) {
                 delete converterChain;
                 return rv;
@@ -602,20 +602,20 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
     nsresult rv;
 
     // first determine whether we can even handle this covnversion
-    // build a PROGID
-    nsCString progID(NS_ISTREAMCONVERTER_KEY);
-    progID.Append("?from=");
-    progID.AppendWithConversion(aFromType);
-    progID.Append("?to=");
-    progID.AppendWithConversion(aToType);
-    const char *cProgID = progID.GetBuffer();
+    // build a CONTRACTID
+    nsCString contractID(NS_ISTREAMCONVERTER_KEY);
+    contractID.Append("?from=");
+    contractID.AppendWithConversion(aFromType);
+    contractID.Append("&to=");
+    contractID.AppendWithConversion(aToType);
+    const char *cContractID = contractID.GetBuffer();
 
     nsIComponentManager *comMgr;
     rv = NS_GetGlobalComponentManager(&comMgr);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStreamConverter> listener;
-    rv = comMgr->CreateInstanceByProgID(cProgID, nsnull,
+    rv = comMgr->CreateInstanceByContractID(cContractID, nsnull,
                                         NS_GET_IID(nsIStreamConverter),
                                         getter_AddRefs(listener));
     if (NS_FAILED(rv)) {
@@ -625,7 +625,7 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
 
         nsCStringArray *converterChain = nsnull;
 
-        rv = FindConverter(cProgID, &converterChain);
+        rv = FindConverter(cContractID, &converterChain);
         if (NS_FAILED(rv)) {
             // can't make this conversion.
             // XXX should have a more descriptive error code.
@@ -642,21 +642,21 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
         nsCOMPtr<nsIStreamListener> fromListener;
 
         for (int i = 0; i < edgeCount; i++) {
-            nsCString *progIDStr = converterChain->CStringAt(i);
-            if (!progIDStr) {
+            nsCString *contractIDStr = converterChain->CStringAt(i);
+            if (!contractIDStr) {
                 delete converterChain;
                 return NS_ERROR_FAILURE;
             }
-            const char *lProgID = progIDStr->GetBuffer();
+            const char *lContractID = contractIDStr->GetBuffer();
 
             nsCOMPtr<nsIStreamConverter> converter;
-            rv = comMgr->CreateInstanceByProgID(lProgID, nsnull,
+            rv = comMgr->CreateInstanceByContractID(lContractID, nsnull,
                                                 NS_GET_IID(nsIStreamConverter),
                                                 getter_AddRefs(converter));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "graph construction problem, built a progid that wasn't registered");
+            NS_ASSERTION(NS_SUCCEEDED(rv), "graph construction problem, built a contractid that wasn't registered");
 
             nsCString fromStr, toStr;
-            rv = ParseFromTo(lProgID, fromStr, toStr);
+            rv = ParseFromTo(lContractID, fromStr, toStr);
             if (NS_FAILED(rv)) {
                 delete converterChain;
                 return rv;

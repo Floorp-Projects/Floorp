@@ -267,19 +267,19 @@ nsViewModule::RegisterSelf(nsIComponentManager *aCompMgr,
 #endif
 
     rv = aCompMgr->RegisterComponentSpec(kCViewManager, "View Manager",
-                                         "component://netscape/view-manager",
+                                         "@mozilla.org/view-manager;1",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
     rv = aCompMgr->RegisterComponentSpec(kCView, "View",
-                                         "component://netscape/view",
+                                         "@mozilla.org/view;1",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
     rv = aCompMgr->RegisterComponentSpec(kCScrollingView, "Scrolling View",
-                                         "component://netscape/scrolling-view",
+                                         "@mozilla.org/scrolling-view;1",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
     rv = aCompMgr->RegisterComponentSpec(kCScrollPortView, "Scroll Port View",
-                                         "component://netscape/scroll-port-view",
+                                         "@mozilla.org/scroll-port-view;1",
                                          aPath, PR_TRUE, PR_TRUE);
 #ifdef DEBUG_dp
     printf("done.\n");

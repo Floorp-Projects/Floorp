@@ -49,28 +49,28 @@ interface nsIComponentManager : nsISupports
     [noscript] voidPtr getClassObject(in nsCIDRef aClass, in nsIIDRef aIID);
 
     /**
-     * progIDToClassID
+     * contractIDToClassID
      *
-     * Get the ClassID for a given ProgID. Many ClassIDs may implement a
-     * ProgID. In such a situation, this returns the preferred ClassID, which
+     * Get the ClassID for a given ContractID. Many ClassIDs may implement a
+     * ContractID. In such a situation, this returns the preferred ClassID, which
      * happens to be the last registered ClassID.
      * 
-     * @param aProgID : Progid for which ClassID is requested
+     * @param aContractID : Contractid for which ClassID is requested
      * @return aClass : ClassID return
      */
-    [noscript] void progIDToClassID(in string aProgID, out nsCID aClass);
+    [noscript] void contractIDToClassID(in string aContractID, out nsCID aClass);
 
     /**
-     * classIDToProgid
+     * classIDToContractid
      *
-     * Get the ProgID for a given ClassID. A ClassIDs may implement multiple
-     * ProgIDs. This function return the last registered ProgID.
+     * Get the ContractID for a given ClassID. A ClassIDs may implement multiple
+     * ContractIDs. This function return the last registered ContractID.
      *
-     * @param aClass : ClassID for which ProgID is requested.
+     * @param aClass : ClassID for which ContractID is requested.
      * @return aClassName : returns class name asssociated with aClass
-     * @return : ProgID last registered for aClass
+     * @return : ContractID last registered for aClass
      */
-    string CLSIDToProgID(in nsCIDRef aClass, out string aClassName);
+    string CLSIDToContractID(in nsCIDRef aClass, out string aClassName);
 
     /**
      * createInstance
@@ -86,17 +86,17 @@ interface nsIComponentManager : nsISupports
                                       in nsIIDRef aIID);
 
     /**
-     * createInstanceByProgID
+     * createInstanceByContractID
      *
-     * Create an instance of the CID that implements aProgID and return the
+     * Create an instance of the CID that implements aContractID and return the
      * interface aIID. This is a convenience function that effectively does
-     * ProgIDToClassID() followed by CreateInstance().
+     * ContractIDToClassID() followed by CreateInstance().
      *
-     * @param aProgID : aProgID of object instance requested
+     * @param aContractID : aContractID of object instance requested
      * @param aDelegate : Used for aggregation
      * @param aIID : IID of interface requested
      */
-    [noscript] voidPtr createInstanceByProgID(in string aProgID,
+    [noscript] voidPtr createInstanceByContractID(in string aContractID,
                                               in nsISupports aDelegate,
                                               in nsIIDRef IID);
     /**
@@ -121,17 +121,17 @@ interface nsIComponentManager : nsISupports
     /**
      * registerFactory
      *
-     * Register a factory and ProgID associated with CID aClass
+     * Register a factory and ContractID associated with CID aClass
      *
      * @param aClass : CID of object
      * @param aClassName : Class Name of CID
-     * @param aProgID : ProgID associated with CID aClass
+     * @param aContractID : ContractID associated with CID aClass
      * @param aFactory : Factory that will be registered for CID aClass
      * @param aReplace : Boolean that indicates whether to replace a previous
      *                   registration for the CID aClass.
      */
     void registerFactory(in nsCIDRef aClass, in string aClassName,
-                         in string aProgID, in nsIFactory aFactory,
+                         in string aContractID, in nsIFactory aFactory,
                          in boolean aReplace);
 
     /**
@@ -139,12 +139,12 @@ interface nsIComponentManager : nsISupports
      *
      * Register a native dll module via its registry representation as returned
      * by registryLocationForSpec() as the container of CID implemenation
-     * aClass and associate aProgID and aClassName to the CID aClass. Native
+     * aClass and associate aContractID and aClassName to the CID aClass. Native
      * dll component type is assumed.
      *
      * @param aClass : CID implemenation contained in module
      * @param aClassName : Class name associated with CID aClass
-     * @param aProgID : ProgID associated with CID aClass
+     * @param aContractID : ContractID associated with CID aClass
      * @param aLocation : Location of module (dll). Format of this is the
      *                    registry representation as returned by
      *                    registryLocationForSpec()
@@ -153,7 +153,7 @@ interface nsIComponentManager : nsISupports
      * @param aPersist : Remember this registration across sessions.
      */
     void registerComponent(in nsCIDRef aClass, in string aClassName,
-                           in string aProgID, in string aLocation,
+                           in string aContractID, in string aLocation,
                            in boolean aReplace, in boolean aPersist);
 
     /**
@@ -161,11 +161,11 @@ interface nsIComponentManager : nsISupports
      *
      * Register a module's location via its registry representation
      * as returned by registryLocationForSpec() as the container of CID implemenation
-     * aClass of type aType and associate aProgID and aClassName to the CID aClass.
+     * aClass of type aType and associate aContractID and aClassName to the CID aClass.
      *
      * @param aClass : CID implemenation contained in module
      * @param aClassName : Class name associated with CID aClass
-     * @param aProgID : ProgID associated with CID aClass
+     * @param aContractID : ContractID associated with CID aClass
      * @param aSpec : Filename spec for module's location.
      * @param aLocation : Location of module of type aType. Format of this string
      *                    is the registry representation as returned by
@@ -176,7 +176,7 @@ interface nsIComponentManager : nsISupports
      * @param aType : Component Type of CID aClass.
      */
     void registerComponentWithType(in nsCIDRef aClass, in string aClassName,
-                                   in string aProgID, in nsIFile aSpec,
+                                   in string aContractID, in nsIFile aSpec,
                                    in string aLocation, in boolean aReplace,
                                    in boolean aPersist, in string aType);
 
@@ -184,39 +184,39 @@ interface nsIComponentManager : nsISupports
      * registerComponentSpec
      *
      * Register a native dll module via its file specification as the container
-     * of CID implemenation aClass and associate aProgID and aClassName to the
+     * of CID implemenation aClass and associate aContractID and aClassName to the
      * CID aClass. Native dll component type is assumed.
      *
      * @param aClass : CID implemenation contained in module
      * @param aClassName : Class name associated with CID aClass
-     * @param aProgID : ProgID associated with CID aClass
+     * @param aContractID : ContractID associated with CID aClass
      * @param aLibrary : File specification Location of module (dll).
      * @param aReplace : Boolean that indicates whether to replace a previous
      *                   module registration for aClass.
      * @param aPersist : Remember this registration across sessions.
      */
     void registerComponentSpec(in nsCIDRef aClass, in string aClassName,
-                               in string aProgID, in nsIFile aLibrary,
+                               in string aContractID, in nsIFile aLibrary,
                                in boolean aReplace, in boolean aPersist);
 
     /**
      * registerComponentLib
      *
      * Register a native dll module via its dll name (not full path) as the
-     * container of CID implemenation aClass and associate aProgID and aClassName
+     * container of CID implemenation aClass and associate aContractID and aClassName
      * to the CID aClass. Native dll component type is assumed and the system
      * services will be used to load this dll.
      *
      * @param aClass : CID implemenation contained in module
      * @param aClassName : Class name associated with CID aClass
-     * @param aProgID : ProgID associated with CID aClass
+     * @param aContractID : ContractID associated with CID aClass
      * @param aDllNameLocation : Dll name of module.
      * @param aReplace : Boolean that indicates whether to replace a previous
      *                   module registration for aClass.
      * @param aPersist : Remember this registration across sessions.
      */
     void registerComponentLib(in nsCIDRef aClass, in string aClassName,
-                              in string aProgID, in string aDllName,
+                              in string aContractID, in string aDllName,
                               in boolean aReplace, in boolean aPersist);
 
     /**
@@ -319,13 +319,13 @@ interface nsIComponentManager : nsISupports
     nsIEnumerator enumerateCLSIDs();
 
     /**
-     * enumerateProgIDs
+     * enumerateContractIDs
      *
-     * Enumerate the list of all registered ProgIDs.
+     * Enumerate the list of all registered ContractIDs.
      *
-     * @return : enumerator for ProgIDs.
+     * @return : enumerator for ContractIDs.
      */
-    nsIEnumerator enumerateProgIDs();
+    nsIEnumerator enumerateContractIDs();
 
 };
 

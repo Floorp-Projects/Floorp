@@ -66,6 +66,6 @@ interface nsIRemoteBrowserControl : nsISupports
 };
 
 %{C++
-#define NS_REMOTEBROWSERCONTROL_PROGID \
-    "component://netscape/browser/remote-browser-control"
+#define NS_REMOTEBROWSERCONTROL_CONTRACTID \
+    "@mozilla.org/browser/remote-browser-control;1"
 %}

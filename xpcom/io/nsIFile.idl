@@ -304,7 +304,7 @@ interface nsIFile : nsISupports
 };
 
 %{C++
-#define NS_FILE_PROGID "component://netscape/file"
+#define NS_FILE_CONTRACTID "@mozilla.org/file;1"
 #define NS_FILE_CLASSNAME "File Specification"
 
 ////////////////////////////////////////////////////////////////////////////////

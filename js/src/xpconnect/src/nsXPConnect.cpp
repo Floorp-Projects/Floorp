@@ -138,23 +138,23 @@ nsXPConnect::nsXPConnect()
     mInterfaceInfoManager = XPTI_GetInterfaceInfoManager();
     mThrower = new XPCJSThrower(JS_TRUE);
 
-    nsServiceManager::GetService("nsThreadJSContextStack",
+    nsServiceManager::GetService("@mozilla.org/js/xpc/ContextStack;1",
                                  NS_GET_IID(nsIThreadJSContextStack),
                                  (nsISupports **)&mContextStack);
 
 #ifdef XPC_TOOLS_SUPPORT
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID);
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
     if(prefs)
     {
         char* filename;
         if(NS_SUCCEEDED(prefs->CopyCharPref("xpctools.profiler.outputfilename",
                                             &filename)) && filename)
         {
-            mProfilerOutputFile = do_CreateInstance(NS_LOCAL_FILE_PROGID);         
+            mProfilerOutputFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);         
             if(mProfilerOutputFile && 
                NS_SUCCEEDED(mProfilerOutputFile->InitWithPath(filename)))
             {
-                mProfiler = do_GetService(XPCTOOLS_PROFILER_PROGID);
+                mProfiler = do_GetService(XPCTOOLS_PROFILER_CONTRACTID);
                 if(mProfiler)
                 {
                     if(NS_SUCCEEDED(mProfiler->Start()))
@@ -401,7 +401,7 @@ nsXPConnect::CreateRuntime()
 {
     NS_ASSERTION(!mRuntime,"CreateRuntime called but mRuntime already init'd");
     nsresult rv;
-    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
+    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "@mozilla.org/js/xpc/RuntimeService;1", &rv);
     if(NS_SUCCEEDED(rv) && rtsvc)
     {
         mRuntime = XPCJSRuntime::newXPCJSRuntime(this, rtsvc);
@@ -810,7 +810,7 @@ nsXPConnect::DebugDumpJSStack(PRBool showArgs, PRBool showLocals, PRBool showThi
 #ifdef DEBUG
     JSContext* cx;
     nsresult rv;
-    NS_WITH_SERVICE(nsIThreadJSContextStack, stack, "nsThreadJSContextStack", &rv);
+    NS_WITH_SERVICE(nsIThreadJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
     if(NS_FAILED(rv) || !stack)
         printf("failed to get nsIThreadJSContextStack service!\n");
     else if(NS_FAILED(stack->Peek(&cx)))
@@ -830,7 +830,7 @@ nsXPConnect::DebugDumpEvalInJSStackFrame(PRUint32 aFrameNumber, const char *aSou
 #ifdef DEBUG
     JSContext* cx;
     nsresult rv;
-    NS_WITH_SERVICE(nsIThreadJSContextStack, stack, "nsThreadJSContextStack", &rv);
+    NS_WITH_SERVICE(nsIThreadJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
     if(NS_FAILED(rv) || !stack)
         printf("failed to get nsIThreadJSContextStack service!\n");
     else if(NS_FAILED(stack->Peek(&cx)))

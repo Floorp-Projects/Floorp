@@ -43,10 +43,10 @@
   * These values come from xpctest_attributes.idl and xpctest_attributes.cpp
   */
 
- var PROGID = "xpcTestObjectReadOnly";
+ var CONTRACTID = "@mozilla.org/js/xpc/test/ObjectReadOnly;1";
  var INAME   = Components.interfaces["nsIXPCTestObjectReadOnly"];
 
- var o = Components.classes[PROGID].createInstance();
+ var o = Components.classes[CONTRACTID].createInstance();
  o = o.QueryInterface( INAME );
 
  AddTestCase( "o.boolReadOnly", true, o.boolReadOnly );

@@ -143,7 +143,7 @@ nsresult nsWidget::PrimeICSpotTimer ()
 {
    KillICSpotTimer();
    nsresult err;
-   mICSpotTimer = do_CreateInstance("component://netscape/timer", &err);
+   mICSpotTimer = do_CreateInstance("@mozilla.org/timer;1", &err);
    if (NS_FAILED(err))
      return err;
    mICSpotTimer->Init(ICSpotCallback, this, 1000);

@@ -36,7 +36,7 @@ NS_DEFINE_CID(kJPGDecoderCID, NS_IMGDECODER_CID);
 class ImgFactoryImpl : public nsIFactory
 {
 public:
-    ImgFactoryImpl(const nsCID &aClass, const char* className, const char* progID);
+    ImgFactoryImpl(const nsCID &aClass, const char* className, const char* contractID);
 
     NS_DECL_ISUPPORTS
 
@@ -52,15 +52,15 @@ protected:
 protected:
     nsCID       mClassID;
     const char* mClassName;
-    const char* mProgID;
+    const char* mContractID;
 };
 
 /*---------------------*/
 
 ImgFactoryImpl::ImgFactoryImpl(const nsCID &aClass, 
                                const char* className,
-                               const char* progID)
-    : mClassID(aClass), mClassName(className), mProgID(progID)
+                               const char* contractID)
+    : mClassID(aClass), mClassName(className), mContractID(contractID)
 {
     NS_INIT_REFCNT();
 }
@@ -150,13 +150,13 @@ extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory(nsISupports* serviceMgr,
              const nsCID &aClass,
              const char *aClassName,
-             const char *aProgID,
+             const char *aContractID,
              nsIFactory **aFactory)
 {
     if (! aFactory)
         return NS_ERROR_NULL_POINTER;
 
-    ImgFactoryImpl* factory = new ImgFactoryImpl(aClass, aClassName, aProgID);
+    ImgFactoryImpl* factory = new ImgFactoryImpl(aClass, aClassName, aContractID);
     if (factory == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 

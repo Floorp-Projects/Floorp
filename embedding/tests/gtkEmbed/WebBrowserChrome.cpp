@@ -120,7 +120,7 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, nsIWebB
    NS_ENSURE_ARG_POINTER(aWebBrowser);
    *aWebBrowser = nsnull;
 
-    mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID);
+    mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
     
 	if (!mWebBrowser)
         return NS_ERROR_FAILURE;

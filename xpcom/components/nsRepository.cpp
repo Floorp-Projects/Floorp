@@ -49,24 +49,24 @@ nsComponentManager::GetClassObject(const nsCID &aClass, const nsIID &aIID,
 }
 
 nsresult
-nsComponentManager::ProgIDToClassID(const char *aProgID,
+nsComponentManager::ContractIDToClassID(const char *aContractID,
                                   nsCID *aClass)
 {
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->ProgIDToClassID(aProgID, aClass);
+    return cm->ContractIDToClassID(aContractID, aClass);
 }
   
 nsresult
-nsComponentManager::CLSIDToProgID(nsCID *aClass,
+nsComponentManager::CLSIDToContractID(nsCID *aClass,
                                   char* *aClassName,
-                                  char* *aProgID)
+                                  char* *aContractID)
 {
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->CLSIDToProgID(*aClass, aClassName, aProgID);
+    return cm->CLSIDToContractID(*aClass, aClassName, aContractID);
 }
   
 nsresult
@@ -82,7 +82,7 @@ nsComponentManager::CreateInstance(const nsCID &aClass,
 }
 
 nsresult
-nsComponentManager::CreateInstance(const char *aProgID,
+nsComponentManager::CreateInstance(const char *aContractID,
                                    nsISupports *aDelegate,
                                    const nsIID &aIID,
                                    void **aResult)
@@ -90,27 +90,27 @@ nsComponentManager::CreateInstance(const char *aProgID,
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->CreateInstanceByProgID(aProgID, aDelegate, aIID, aResult);
+    return cm->CreateInstanceByContractID(aContractID, aDelegate, aIID, aResult);
 }
 
 nsresult
 nsComponentManager::RegisterFactory(const nsCID &aClass,
                                     const char *aClassName,
-                                    const char *aProgID,
+                                    const char *aContractID,
                                     nsIFactory *aFactory,
                                     PRBool aReplace)
 {
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->RegisterFactory(aClass, aClassName, aProgID,
+    return cm->RegisterFactory(aClass, aClassName, aContractID,
                                aFactory, aReplace);
 }
 
 nsresult
 nsComponentManager::RegisterComponent(const nsCID &aClass,
                                       const char *aClassName,
-                                      const char *aProgID,
+                                      const char *aContractID,
                                       const char *aLibraryPersistentDescriptor,
                                       PRBool aReplace,
                                       PRBool aPersist)
@@ -118,14 +118,14 @@ nsComponentManager::RegisterComponent(const nsCID &aClass,
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->RegisterComponent(aClass, aClassName, aProgID,
+    return cm->RegisterComponent(aClass, aClassName, aContractID,
                                  aLibraryPersistentDescriptor, aReplace, aPersist);
 }
 
 nsresult
 nsComponentManager::RegisterComponentSpec(const nsCID &aClass,
                                       const char *aClassName,
-                                      const char *aProgID,
+                                      const char *aContractID,
                                       nsIFile *aLibrary,
                                       PRBool aReplace,
                                       PRBool aPersist)
@@ -133,14 +133,14 @@ nsComponentManager::RegisterComponentSpec(const nsCID &aClass,
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->RegisterComponentSpec(aClass, aClassName, aProgID,
+    return cm->RegisterComponentSpec(aClass, aClassName, aContractID,
                                      aLibrary, aReplace, aPersist);
 }
 
 nsresult
 nsComponentManager::RegisterComponentLib(const nsCID &aClass,
                                          const char *aClassName,
-                                         const char *aProgID,
+                                         const char *aContractID,
                                          const char *adllName,
                                          PRBool aReplace,
                                          PRBool aPersist)
@@ -148,7 +148,7 @@ nsComponentManager::RegisterComponentLib(const nsCID &aClass,
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->RegisterComponentLib(aClass, aClassName, aProgID,
+    return cm->RegisterComponentLib(aClass, aClassName, aContractID,
                                      adllName, aReplace, aPersist);
 }
 
@@ -240,12 +240,12 @@ nsComponentManager::EnumerateCLSIDs(nsIEnumerator** aEmumerator)
 }
 
 nsresult 
-nsComponentManager::EnumerateProgIDs(nsIEnumerator** aEmumerator)
+nsComponentManager::EnumerateContractIDs(nsIEnumerator** aEmumerator)
 {
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->EnumerateProgIDs(aEmumerator);
+    return cm->EnumerateContractIDs(aEmumerator);
 }
 
 

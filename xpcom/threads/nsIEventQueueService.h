@@ -38,7 +38,7 @@
 { 0xbe761f00, 0xa3b0, 0x11d2, \
   {0x99, 0x6c, 0x00, 0x80, 0xc7, 0xcb, 0x10, 0x80} }
 
-#define NS_EVENTQUEUESERVICE_PROGID "component://netscape/event-queue-service"
+#define NS_EVENTQUEUESERVICE_CONTRACTID "@mozilla.org/event-queue-service;1"
 #define NS_EVENTQUEUESERVICE_CLASSNAME "Event Queue Service"
 
 #define NS_CURRENT_THREAD    ((PRThread*)0)

@@ -24,7 +24,7 @@
  *
  */
 const MAX_HISTORY_MENU_ITEMS = 15;
-var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 var localstore = rdf.GetDataSource("rdf:localstore");
 

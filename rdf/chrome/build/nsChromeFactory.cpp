@@ -53,13 +53,13 @@ static nsModuleComponentInfo components[] =
 {
     { "Chrome Registry", 
       NS_CHROMEREGISTRY_CID,
-      "component://netscape/chrome/chrome-registry", 
+      "@mozilla.org/chrome/chrome-registry;1", 
       NS_ConstructChromeRegistry
     },
 
     { "Chrome Protocol Handler", 
       NS_CHROMEPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "chrome", 
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "chrome", 
       nsChromeProtocolHandler::Create
     },
 };

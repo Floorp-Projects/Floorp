@@ -33,11 +33,11 @@ static nsModuleComponentInfo components[] =
 {
   { "MNG Decoder",
      NS_MNGDECODER_CID,
-     "component://netscape/image/decoder&type=video/x-mng",
+     "@mozilla.org/image/decoder;1?type=video/x-mng",
      MNGDecoder::Create },
   { "JNG Decoder",
      NS_MNGDECODER_CID,
-     "component://netscape/image/decoder&type=image/x-jng",
+     "@mozilla.org/image/decoder;1?type=image/x-jng",
      MNGDecoder::Create }
 };
 

@@ -698,30 +698,30 @@ RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
         }
         else {
             // Try to find a factory using the component manager.
-            static const char kRDFResourceFactoryProgIDPrefix[]
-                = NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX;
+            static const char kRDFResourceFactoryContractIDPrefix[]
+                = NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX;
 
             PRInt32 pos = p - aURI;
-            PRInt32 len = pos + sizeof(kRDFResourceFactoryProgIDPrefix) - 1;
+            PRInt32 len = pos + sizeof(kRDFResourceFactoryContractIDPrefix) - 1;
 
             // Safely convert to a C-string for the XPCOM APIs
             char buf[128];
-            char* progID = buf;
+            char* contractID = buf;
             if (len >= PRInt32(sizeof buf))
-                progID = (char *)nsMemory::Alloc(len + 1);
+                contractID = (char *)nsMemory::Alloc(len + 1);
 
-            if (progID == nsnull)
+            if (contractID == nsnull)
                 return NS_ERROR_OUT_OF_MEMORY;
 
-            PL_strcpy(progID, kRDFResourceFactoryProgIDPrefix);
-            PL_strncpy(progID + sizeof(kRDFResourceFactoryProgIDPrefix) - 1, aURI, pos);
-            progID[len] = '\0';
+            PL_strcpy(contractID, kRDFResourceFactoryContractIDPrefix);
+            PL_strncpy(contractID + sizeof(kRDFResourceFactoryContractIDPrefix) - 1, aURI, pos);
+            contractID[len] = '\0';
 
             nsCID cid;
-            rv = nsComponentManager::ProgIDToClassID(progID, &cid);
+            rv = nsComponentManager::ContractIDToClassID(contractID, &cid);
 
-            if (progID != buf)
-                nsCRT::free(progID);
+            if (contractID != buf)
+                nsCRT::free(contractID);
 
             if (NS_SUCCEEDED(rv)) {
                 rv = nsComponentManager::FindFactory(cid, getter_AddRefs(factory));
@@ -1148,30 +1148,30 @@ RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
         nsAutoString dataSourceName;
         rdfName.Right(dataSourceName, rdfName.Length() - (pos + sizeof(kRDFPrefix) - 1));
 
-        nsAutoString progIDStr; progIDStr.AssignWithConversion(NS_RDF_DATASOURCE_PROGID_PREFIX);
-        progIDStr.Append(dataSourceName);
+        nsAutoString contractIDStr; contractIDStr.AssignWithConversion(NS_RDF_DATASOURCE_CONTRACTID_PREFIX);
+        contractIDStr.Append(dataSourceName);
 
         // Safely convert it to a C-string for the XPCOM APIs
         char buf[64];
-        char* progID = buf, *p;
-        if (progIDStr.Length() >= PRInt32(sizeof buf))
-            progID = (char *)nsMemory::Alloc(progIDStr.Length() + 1);
+        char* contractID = buf, *p;
+        if (contractIDStr.Length() >= PRInt32(sizeof buf))
+            contractID = (char *)nsMemory::Alloc(contractIDStr.Length() + 1);
 
-        if (progID == nsnull)
+        if (contractID == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        progIDStr.ToCString(progID, progIDStr.Length() + 1);
+        contractIDStr.ToCString(contractID, contractIDStr.Length() + 1);
 
-        /* strip params to get ``base'' progID for data source */
-        p = PL_strchr(progID, ';');
+        /* strip params to get ``base'' contractID for data source */
+        p = PL_strchr(contractID, ';');
         if (p)
             *p = '\0';
 
         nsCOMPtr<nsISupports> isupports;
-        rv = nsServiceManager::GetService(progID, kISupportsIID, getter_AddRefs(isupports), nsnull);
+        rv = nsServiceManager::GetService(contractID, kISupportsIID, getter_AddRefs(isupports), nsnull);
 
-        if (progID != buf)
-            nsCRT::free(progID);
+        if (contractID != buf)
+            nsCRT::free(contractID);
 
         if (NS_FAILED(rv)) return rv;
 

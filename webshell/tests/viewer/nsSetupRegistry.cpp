@@ -180,23 +180,23 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCPopUpCID,NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCToolkitCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kClipboardCID,            "Clipboard", "component://netscape/widget/clipboard", WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCTransferableCID,        "Transferable", "component://netscape/widget/transferable", WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kClipboardCID,            "Clipboard", "@mozilla.org/widget/clipboard;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCTransferableCID,        "Transferable", "@mozilla.org/widget/transferable;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kDataFlavorCID,           NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCXIFFormatConverterCID,  NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCDragServiceCID,          "Drag Service", "component://netscape/widget/dragservice", WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCDragServiceCID,          "Drag Service", "@mozilla.org/widget/dragservice;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFontRetrieverServiceCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "component://netscape/sound", WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "@mozilla.org/sound;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kFileSpecWithUICID, NS_FILESPECWITHUI_CLASSNAME, 
-                                           NS_FILESPECWITHUI_PROGID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCFilePickerCID, "FilePicker", "component://mozilla/filepicker", WIDGET_DLL, PR_FALSE, PR_FALSE);
+                                           NS_FILESPECWITHUI_CONTRACTID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCFilePickerCID, "FilePicker", "@mozilla.org/filepicker;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
 #ifdef XP_PC
-  nsComponentManager::RegisterComponentLib(kCTimerCID, "Timer", "component://netscape/timer", WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCTimerCID, "Timer", "@mozilla.org/timer;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCTimerManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
 
 #ifdef XP_MAC
-  nsComponentManager::RegisterComponentLib(kCTimerCID, "Timer", "component://netscape/timer", WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCTimerCID, "Timer", "@mozilla.org/timer;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
 
   // WIDGETS
@@ -229,18 +229,18 @@ NS_SetupRegistry()
 
   // GFXWIN
 #ifndef XP_UNIX
-  nsComponentManager::RegisterComponentLib(kCRenderingContextCID, "Rendering Context", "component://netscape/gfx/renderingcontext", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCDeviceContextCID, "Device Context", "component://netscape/gfx/devicecontext", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCFontMetricsCID, "Font Metrics", "component://netscape/gfx/fontmetrics", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCFontEnumeratorCID, "Font Enumerator", "component://netscape/gfx/fontenumerator", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCImageCID, "Image", "component://netscape/gfx/image", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCRenderingContextCID, "Rendering Context", "@mozilla.org/gfx/renderingcontext;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCDeviceContextCID, "Device Context", "@mozilla.org/gfx/devicecontext;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCFontMetricsCID, "Font Metrics", "@mozilla.org/gfx/fontmetrics;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCFontEnumeratorCID, "Font Enumerator", "@mozilla.org/gfx/fontenumerator;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCImageCID, "Image", "@mozilla.org/gfx/image;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCRegionCID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCScriptableRegionCID, "Region", "component://netscape/gfx/region", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCBlenderCID, "Blender", "component://netscape/gfx/blender", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCDeviceContextSpecCID, "Device Context Spec", "component://netscape/gfx/devicecontextspec", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCDeviceContextSpecFactoryCID, "Device Context Spec Factory", "component://netscape/gfx/devicecontextspecfactory", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kImageManagerCID, "Image Manager", "component://netscape/gfx/imagemanager", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kScreenManagerCID, "Screen Manager", "component://netscape/gfx/screenmanager", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCScriptableRegionCID, "Region", "@mozilla.org/gfx/region;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCBlenderCID, "Blender", "@mozilla.org/gfx/blender;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCDeviceContextSpecCID, "Device Context Spec", "@mozilla.org/gfx/devicecontextspec;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCDeviceContextSpecFactoryCID, "Device Context Spec Factory", "@mozilla.org/gfx/devicecontextspecfactory;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kImageManagerCID, "Image Manager", "@mozilla.org/gfx/imagemanager;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kScreenManagerCID, "Screen Manager", "@mozilla.org/gfx/screenmanager;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
 #endif
 
   // VIEW
@@ -254,7 +254,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCScriptNameSetRegistry, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
 
 #ifdef OJI
-  nsComponentManager::RegisterComponentLib(kCLiveconnectCID, "LiveConnect", "component://netscape/javascript/liveconnect", LIVECONNECT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCJVMManagerCID, "JVMManager", "component://netscape/oji/jvmmanager", OJI_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCLiveconnectCID, "LiveConnect", "@mozilla.org/javascript/liveconnect;1", LIVECONNECT_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCJVMManagerCID, "JVMManager", "@mozilla.org/oji/jvmmanager;1", OJI_DLL, PR_FALSE, PR_FALSE);
 #endif
 }

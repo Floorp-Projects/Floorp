@@ -85,7 +85,7 @@ nsCodebasePrincipal::CanEnableCapability(const char *capability,
     // check to see if the codebase principal pref is enabled.
     static char pref[] = "signed.applets.codebase_principal_support";
     nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+	NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &rv);
 	if (NS_FAILED(rv))
 		return NS_ERROR_FAILURE;
 	PRBool enabled;

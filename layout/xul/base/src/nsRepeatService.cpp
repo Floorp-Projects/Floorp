@@ -63,7 +63,7 @@ void nsRepeatService::Start(nsITimerCallback* aCallback)
 
   mCallback = aCallback;
   nsresult rv;
-  mRepeatTimer = do_CreateInstance("component://netscape/timer", &rv);
+  mRepeatTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 
   if (NS_OK == rv)  {
     mRepeatTimer->Init(this, INITAL_REPEAT_DELAY);
@@ -94,7 +94,7 @@ NS_IMETHODIMP_(void) nsRepeatService::Notify(nsITimer *timer)
 
   // start timer again.
   if (mRepeatTimer) {
-     mRepeatTimer = do_CreateInstance("component://netscape/timer");
+     mRepeatTimer = do_CreateInstance("@mozilla.org/timer;1");
      mRepeatTimer->Init(this, REPEAT_DELAY);
   }
 

@@ -61,7 +61,7 @@ class TestConverter1 : public TestConverter {
 class TestConverterFactory : public nsIFactory
 {
 public:
-    TestConverterFactory(const nsCID &aClass, const char* className, const char* progID);
+    TestConverterFactory(const nsCID &aClass, const char* className, const char* contractID);
 
     // nsISupports methods
     NS_DECL_ISUPPORTS
@@ -79,5 +79,5 @@ protected:
 protected:
     nsCID       mClassID;
     const char* mClassName;
-    const char* mProgID;
+    const char* mContractID;
 };

@@ -28,7 +28,7 @@ function SetSecurityButton()
 {
     dump("in SetSecurityButton\n");
 
-    var ui = Components.classes["component://netscape/secure_browser_ui"].createInstance();
+    var ui = Components.classes["@mozilla.org/secure_browser_ui;1"].createInstance();
     securityUI = ui.QueryInterface(Components.interfaces.nsSecureBrowserUI);
 
     var button  = document.getElementById('security-button');

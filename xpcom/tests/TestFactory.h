@@ -41,7 +41,7 @@
 { 0x8b330f22, 0xa24a, 0x11d1,    \
   { 0xa9, 0x61, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4 } }
 
-#define NS_TESTLOADEDFACTORY_PROGID "xpcom.dynamic-test.1"
+#define NS_TESTLOADEDFACTORY_CONTRACTID "@mozilla.org/xpcom/dynamic-test;1"
 
 class ITestClass: public nsISupports {
 public:

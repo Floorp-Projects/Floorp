@@ -99,7 +99,7 @@ nsPSMComponent::~nsPSMComponent()
     if (mCertContentListener) {
       nsresult rv = NS_ERROR_FAILURE;
       
-      NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_PROGID, &rv);
+      NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv)) {
         rv = dispatcher->UnRegisterContentListener(mCertContentListener);
       }
@@ -143,9 +143,9 @@ nsPSMComponent::RegisterCertContentListener()
 {
   nsresult rv = NS_OK;
   if (mCertContentListener == nsnull) {
-    NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_PROGID, &rv);
+    NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-      mCertContentListener = do_CreateInstance(NS_CERTCONTENTLISTEN_PROGID);
+      mCertContentListener = do_CreateInstance(NS_CERTCONTENTLISTEN_CONTRACTID);
       rv = dispatcher->RegisterContentListener(mCertContentListener);
     }
   }
@@ -484,7 +484,7 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         if (mControl == nsnull)
         {
             nsCOMPtr<nsILocalFile> psmAppFile;
-            NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+            NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
 
             directoryService->Get( NS_XPCOM_CURRENT_PROCESS_DIR,
@@ -513,7 +513,7 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         if (mControl == nsnull)
         {
             nsCOMPtr<nsILocalFile> psmAppFile;
-            NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+            NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
 
             directoryService->Get( NS_XPCOM_CURRENT_PROCESS_DIR,
@@ -1113,7 +1113,7 @@ nsPSMComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
   //-- Get a principal
   nsresult rv;
   NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   rv = secMan->GetCertificatePrincipal((const char*)fingerprint.data,
                                        aPrincipal);

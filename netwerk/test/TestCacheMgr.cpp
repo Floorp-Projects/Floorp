@@ -583,7 +583,7 @@ main(int argc, char* argv[])
     rv = NS_AutoregisterComponents();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't register XPCOM components");
 
-    rv = nsComponentManager::CreateInstance(NS_NETWORK_CACHE_MANAGER_PROGID,
+    rv = nsComponentManager::CreateInstance(NS_NETWORK_CACHE_MANAGER_CONTRACTID,
                                             nsnull,
                                             NS_GET_IID(nsINetDataCacheManager),
                                             getter_AddRefs(cache));

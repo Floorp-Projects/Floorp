@@ -83,7 +83,7 @@ static JSContext *
 GetCurrentContext() {
     // Get JSContext from stack.
     nsresult rv;
-    nsCOMPtr<nsIJSContextStack> stack = do_GetService("nsThreadJSContextStack", &rv);
+    nsCOMPtr<nsIJSContextStack> stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
     if (NS_FAILED(rv))
         return nsnull;
     JSContext *cx;
@@ -100,7 +100,7 @@ nsScriptSecurityManager::GetCurrentContextQuick() {
     // Get JSContext from stack.
     nsresult rv;
     if (!mThreadJSContextStack) {
-        mThreadJSContextStack = do_GetService("nsThreadJSContextStack", &rv);
+        mThreadJSContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
     }
     if (!mThreadJSContextStack)
         return nsnull;
@@ -117,7 +117,7 @@ static JSContext *
 GetSafeContext() {
     // Get the "safe" JSContext: our JSContext of last resort
     nsresult rv;
-    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+    NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", 
                     &rv);
     if (NS_FAILED(rv))
         return nsnull;
@@ -185,7 +185,7 @@ netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc,
     if (cap) {
         nsresult rv;
         NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                        NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv)) {
             NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
             rv = securityManager->IsCapabilityEnabled(cap, &result);
@@ -207,7 +207,7 @@ netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
         return JS_FALSE;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
         return JS_FALSE;
     NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
@@ -225,7 +225,7 @@ netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
         return JS_FALSE;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
         return JS_FALSE;
     NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
@@ -243,7 +243,7 @@ netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc,
         return JS_FALSE;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
         return JS_FALSE;
     NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
@@ -263,7 +263,7 @@ netscape_security_setCanEnablePrivilege(JSContext *cx, JSObject *obj, uintN argc
         return JS_FALSE;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
         return JS_FALSE;
     NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
@@ -282,7 +282,7 @@ netscape_security_invalidate(JSContext *cx, JSObject *obj, uintN argc,
         return JS_FALSE;
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
         return JS_FALSE;
     NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
@@ -1186,7 +1186,7 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
     if (!mSystemCertificate)
     {
         nsCOMPtr<nsIFile> systemCertFile;
-        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (!directoryService) return NS_ERROR_FAILURE;
         rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), 
                               getter_AddRefs(systemCertFile));
@@ -1434,7 +1434,7 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
     NS_INIT_REFCNT();
     memset(hasDomainPolicyVector, 0, sizeof(hasDomainPolicyVector));
     InitPrefs();
-    mThreadJSContextStack = do_GetService("nsThreadJSContextStack");
+    mThreadJSContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
 }
 
 nsScriptSecurityManager::~nsScriptSecurityManager(void)

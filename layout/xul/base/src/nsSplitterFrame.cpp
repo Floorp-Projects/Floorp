@@ -826,7 +826,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     childFrame->GetContent(getter_AddRefs(content));
     nsCOMPtr<nsIAtom> atom;
     nsresult rv;
-    NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+    NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
 
     if (NS_SUCCEEDED(rv) && xblService) {
       PRInt32 dummy;

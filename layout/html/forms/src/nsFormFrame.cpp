@@ -781,7 +781,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     } else {
       // Get security manager, check to see if access to action URI is allowed.
       NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
-                      NS_SCRIPTSECURITYMANAGER_PROGID, &result);
+                      NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
       nsCOMPtr<nsIURI> actionURL;
       if (NS_FAILED(result)) return result;
 
@@ -852,7 +852,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
     // Notify observers that the form is being submitted.
     result = NS_OK;
-    NS_WITH_SERVICE(nsIObserverService, service, NS_OBSERVERSERVICE_PROGID, &result);
+    NS_WITH_SERVICE(nsIObserverService, service, NS_OBSERVERSERVICE_CONTRACTID, &result);
     if (NS_FAILED(result)) return result;
 
     nsString  theTopic; theTopic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
@@ -1093,7 +1093,7 @@ NS_IMETHODIMP nsFormFrame::GetPlatformEncoder(nsIUnicodeEncoder** encoder)
 
   if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
 
-     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
 
      if (NS_SUCCEEDED(rv)) {
         rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, localeCharset);
@@ -1233,7 +1233,7 @@ nsFormFrame::GetContentType(char* aPathName, char** aContentType)
       fileExt--;
     }
     if (fileExt) {
-      nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_PROGID, &rv));
+      nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
       if (NS_FAILED(rv)) return rv;
       if (NS_SUCCEEDED(MIMEService->GetTypeFromExtension(++fileExt, aContentType)))
           return NS_OK;

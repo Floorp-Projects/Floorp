@@ -24,7 +24,7 @@ function Startup()
 function chooseApp()
 {
   const nsIFilePicker = Components.interfaces.nsIFilePicker;
-  var filePicker = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+  var filePicker = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
   if (filePicker) {
     const FP = Components.interfaces.nsIFilePicker
     var windowTitle = gBundle.GetStringFromName("chooseHandler");
@@ -47,11 +47,11 @@ var gDS = null;
 function onOK()
 {
   const mimeTypes = "UMimTyp";
-  var fileLocator = Components.classes["component://netscape/file/directory_service"].getService();
+  var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService();
   if (fileLocator)
     fileLocator = fileLocator.QueryInterface(Components.interfaces.nsIProperties);
   var file = fileLocator.get(mimeTypes, Components.interfaces.nsIFile);
-  var file_url = Components.classes["component://netscape/network/standard-url"].createInstance(Components.interfaces.nsIFileURL);
+  var file_url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
   if (file_url)
     file_url.file = file;
   gDS = gRDF.GetDataSource(file_url.spec);
@@ -64,7 +64,7 @@ function onOK()
     var titleMsg = gBundle.GetStringFromName("handlerExistsTitle");
     var dialogMsg = gBundle.GetStringFromName("handlerExists");
     dialogMsg = dialogMsg.replace(/%mime%/g, gMIMEField.value);
-    var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
+    var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                                               "nsICommonDialogs");
     var replace = commonDialogService.Confirm(window, titleMsg, dialogMsg);
     if (!replace)
@@ -91,7 +91,7 @@ function onOK()
   handlerInfo.saveToDisk = false;
   handlerInfo.handleInternal = false;
   handlerInfo.alwaysAsk = true;
-  var file = Components.classes["component://mozilla/file/local"].createInstance();
+  var file = Components.classes["@mozilla.org/file/local;1"].createInstance();
   if (file)
     file = file.QueryInterface(Components.interfaces.nsILocalFile);
   if (file) {

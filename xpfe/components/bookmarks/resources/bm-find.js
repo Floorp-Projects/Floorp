@@ -147,7 +147,7 @@ function saveFind()
 	var searchTitle = "Find: " + gMatchName + " " + gMethodName + " '" + gTextName + "' in " + gDatasourceName;
 	debug("Title: " + searchTitle + "\n\n");
 
-	var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+	var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
 	if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
 	if (bmks)	bmks.AddBookmark(searchURL, searchTitle, bmks.BOOKMARK_FIND_TYPE, null);
 
@@ -174,7 +174,7 @@ function getAbsoluteID(root, node)
 
 		// add support for anonymous resources such as Internet Search results,
 		// IE favorites under Win32, and NetPositive URLs under BeOS
-		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 		if (rdf && ds)
 		{
@@ -248,7 +248,7 @@ function doSort(sortColName, naturalOrderResource)
 		}
 	}
 
-	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+	var isupports = Components.classes["@mozilla.org/rdf/xul-sort-service;1"].getService();
 	if (!isupports)    return(false);
 	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
 	if (!xulSortService)    return(false);

@@ -94,7 +94,7 @@ get_applocale(void)
 	PRUnichar *lc_name_unichar;
 
 	// get a locale service 
-	nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_PROGID, &result);
+	nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &result);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: get locale service failed");
 
 	//

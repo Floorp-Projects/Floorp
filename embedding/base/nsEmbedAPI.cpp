@@ -98,7 +98,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
                 return NS_ERROR_OUT_OF_MEMORY;
             NS_ADDREF(appFileLocProvider);
         }
-        NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+        NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (NS_FAILED(rv))
             return rv;
         rv = directoryService->RegisterProvider(appFileLocProvider);
@@ -135,7 +135,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
     // CreateThreadEventQueue(...) will fail...
     // CreateThread0ueue(...) will fail...
     nsCOMPtr<nsIEventQueueService> eventQService;
-    rv = sServiceManager->GetService(NS_EVENTQUEUESERVICE_PROGID, 
+    rv = sServiceManager->GetService(NS_EVENTQUEUESERVICE_CONTRACTID, 
                                      nsIEventQueueService::GetIID(), 
                                      getter_AddRefs(eventQService));
     if (NS_FAILED(rv))
@@ -146,7 +146,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
 #ifdef HACK_AROUND_THREADING_ISSUES
     // XXX force certain objects to be created on the main thread
     nsCOMPtr<nsIStringBundleService> sBundleService;
-    rv = sServiceManager->GetService(NS_STRINGBUNDLE_PROGID,
+    rv = sServiceManager->GetService(NS_STRINGBUNDLE_CONTRACTID,
                                      nsIStringBundleService::GetIID(), 
                                      getter_AddRefs(sBundleService));
     if (NS_SUCCEEDED(rv))
@@ -161,7 +161,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
 
     // Init the chrome registry.
     nsCOMPtr<nsIChromeRegistry> chromeReg;
-    rv = sServiceManager->GetService("component://netscape/chrome/chrome-registry", 
+    rv = sServiceManager->GetService("@mozilla.org/chrome/chrome-registry;1", 
                                      nsIChromeRegistry::GetIID(), 
                                      getter_AddRefs(chromeReg));
     NS_ASSERTION(chromeReg, "chrome check couldn't get the chrome registry");
@@ -188,7 +188,7 @@ nsresult NS_TermEmbedding()
     sInitCounter = 0;
 
     nsCOMPtr<nsIEventQueueService> eventQService;
-    sServiceManager->GetService(NS_EVENTQUEUESERVICE_PROGID, 
+    sServiceManager->GetService(NS_EVENTQUEUESERVICE_CONTRACTID, 
                                 nsIEventQueueService::GetIID(), 
                                 getter_AddRefs(eventQService));
     if (eventQService)

@@ -36,7 +36,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebShell);
 static nsModuleComponentInfo gDocShellModuleInfo[] = {
     { "WebShell", 
       NS_WEB_SHELL_CID,
-      "component://netscape/webshell",
+      "@mozilla.org/webshell;1",
       nsWebShellConstructor }
 };
 

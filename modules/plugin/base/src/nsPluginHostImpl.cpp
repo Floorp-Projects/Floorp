@@ -1980,7 +1980,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
     // notify Java DOM component 
     nsresult res;
-    NS_WITH_SERVICE(nsIPluginInstanceOwner, javaDOM, "component://netscape/blackwood/java-dom", &res);
+    NS_WITH_SERVICE(nsIPluginInstanceOwner, javaDOM, "@mozilla.org/blackwood/java-dom;1", &res);
     if (NS_SUCCEEDED(res) && javaDOM)
       javaDOM->SetInstance(instance);
 
@@ -2067,7 +2067,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
       // notify Java DOM component 
       nsresult res;
-      NS_WITH_SERVICE(nsIPluginInstanceOwner, javaDOM, "component://netscape/blackwood/java-dom", &res);
+      NS_WITH_SERVICE(nsIPluginInstanceOwner, javaDOM, "@mozilla.org/blackwood/java-dom;1", &res);
       if (NS_SUCCEEDED(res) && javaDOM)
         javaDOM->SetInstance(instance);
 
@@ -2231,12 +2231,12 @@ nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * plugi
   {
     static NS_DEFINE_CID(kPluginDocLoaderFactoryCID, NS_PLUGINDOCLOADERFACTORY_CID);
 
-    nsCAutoString progid(NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "view/");
-    progid += pluginTag->mMimeTypeArray[i];
+    nsCAutoString contractid(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=");
+    contractid += pluginTag->mMimeTypeArray[i];
 
     rv = compManager->RegisterComponentSpec(kPluginDocLoaderFactoryCID,
                                             "Plugin Loader Stub",
-                                            progid,
+                                            contractid,
                                             path,
                                             PR_TRUE,
                                             PR_FALSE);
@@ -2253,7 +2253,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
        nsIPluginInstance* instance = NULL;
 	nsIPlugin* plugin = NULL;
 	const char* mimetype;
-       nsString strProgID; strProgID.AssignWithConversion (NS_INLINE_PLUGIN_PROGID_PREFIX);
+       nsString strContractID; strContractID.AssignWithConversion (NS_INLINE_PLUGIN_CONTRACTID_PREFIX);
        char buf[255];  // todo: need to use a const
 		
 	if(!aURL)
@@ -2279,8 +2279,8 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 	else
 		mimetype = aMimeType;
 
-    strProgID.AppendWithConversion(mimetype);
-    strProgID.ToCString(buf, 255);     // todo: need to use a const
+    strContractID.AppendWithConversion(mimetype);
+    strContractID.ToCString(buf, 255);     // todo: need to use a const
   
     result = nsComponentManager::CreateInstance(buf,
                                                 nsnull,
@@ -2296,7 +2296,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
         NS_RELEASE(plugin);
       }
       if (NS_FAILED(result)) {
-          NS_WITH_SERVICE(nsIPlugin, plugin, "component://netscape/blackwood/pluglet-engine",&result);
+          NS_WITH_SERVICE(nsIPlugin, plugin, "@mozilla.org/blackwood/pluglet-engine;1",&result);
 	  if (NS_SUCCEEDED(result)) {
 	      result = plugin->CreatePluginInstance(NULL, kIPluginInstanceIID, aMimeType,(void **)&instance);
 	  }
@@ -2347,7 +2347,7 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
   nsIPluginInstance* instance = NULL;
   nsIPlugin* plugin = NULL;
   const char* mimetype;
-  nsString strProgID; strProgID.AssignWithConversion (NS_INLINE_PLUGIN_PROGID_PREFIX);
+  nsString strContractID; strContractID.AssignWithConversion (NS_INLINE_PLUGIN_CONTRACTID_PREFIX);
   char buf[255];  // todo: need to use a const
 		
   if(!aURL)
@@ -2355,8 +2355,8 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
 
   mimetype = aMimeType;
 
-  strProgID.AppendWithConversion("*");
-  strProgID.ToCString(buf, 255);     // todo: need to use a const
+  strContractID.AppendWithConversion("*");
+  strContractID.ToCString(buf, 255);     // todo: need to use a const
   
   result = nsComponentManager::CreateInstance(buf, nsnull, nsIPluginInstance::GetIID(), (void**)&instance);
 
@@ -2730,7 +2730,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 			nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory");
 			if(nsGetFactory != nsnull)
 			{
-			    rv = nsGetFactory(serviceManager, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ProgID
+			    rv = nsGetFactory(serviceManager, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ContractID
                             (nsIFactory**)&pluginTag->mEntryPoint);
 			    plugin = pluginTag->mEntryPoint;
 			    if (plugin != NULL)

@@ -46,7 +46,7 @@
 {0x97c06c30, 0xa145, 0x11d3, \
 {0x8c, 0x7c, 0x00, 0x60, 0x97, 0x92, 0x27, 0x8c}}
 
-#define NS_SECURE_BROWSER_DOCOBSERVER_PROGID "component://netscape/secure_browser_docobserver"
+#define NS_SECURE_BROWSER_DOCOBSERVER_CONTRACTID "@mozilla.org/secure_browser_docobserver;1"
 
 
 class nsSecureBrowserUIImpl : public nsSecureBrowserUI, 

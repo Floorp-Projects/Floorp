@@ -663,7 +663,7 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
     if (NS_FAILED(rv)) return rv;
 
     // Notify observers, if any, of autoregistration work
-    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
       nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
@@ -819,7 +819,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
 
 
         // Notify observers, if any, of autoregistration work
-        NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+        NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
           nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
@@ -967,7 +967,7 @@ nsNativeComponentLoader::RegisterDeferredComponents(PRInt32 aWhen,
 nsresult
 nsNativeComponentLoader::OnRegister(const nsIID &aCID, const char *aType,
                                     const char *aClassName,
-                                    const char *aProgID, const char *aLocation,
+                                    const char *aContractID, const char *aLocation,
                                     PRBool aReplace, PRBool aPersist)
 {
     return NS_OK;
@@ -1191,13 +1191,13 @@ nsNativeComponentLoader::GetFactoryFromNSGetFactory(nsDll *aDll,
             aDll->GetDisplayPath()));
 
     /*
-     * There was a time when CLSIDToProgID was used to get className
-     * and progID, but that day is long past.  This code is not long
+     * There was a time when CLSIDToContractID was used to get className
+     * and contractID, but that day is long past.  This code is not long
      * for this earth, so we just pass nsnull.
      */
 
     return getFactory(aServMgr, aCID, nsnull /*className */,
-                      nsnull /* progID */, aFactory);
+                      nsnull /* contractID */, aFactory);
 
 #else /* !XPCOM_USE_NSGETFACTORY */
     return NS_ERROR_FACTORY_NOT_LOADED;

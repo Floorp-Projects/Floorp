@@ -459,7 +459,7 @@ function Save()
 
     if (!prefInt) {
 		
-        prefInt = Components.classes["component://netscape/preferences"];
+        prefInt = Components.classes["@mozilla.org/preferences;1"];
 
 		    if (prefInt) {
 			    prefInt = prefInt.getService();

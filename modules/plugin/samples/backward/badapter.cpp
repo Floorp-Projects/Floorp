@@ -154,7 +154,7 @@ public:
                    nsIShutdownListener* shutdownListener = NULL);
 
     NS_IMETHOD
-    GetService(const char* aProgID, const nsIID& aIID,
+    GetService(const char* aContractID, const nsIID& aIID,
                nsISupports* *result,
                nsIShutdownListener* shutdownListener = NULL)
     {
@@ -162,7 +162,7 @@ public:
 	}
 
     NS_IMETHOD
-    ReleaseService(const char* aProgID, nsISupports* service,
+    ReleaseService(const char* aContractID, nsISupports* service,
                    nsIShutdownListener* shutdownListener = NULL)
     {
     	return NS_ERROR_NOT_IMPLEMENTED;

@@ -79,7 +79,7 @@ NS_IMETHODIMP nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
 {
   // cache the screen manager service for later
   nsresult ignore;
-  mScreenManager = do_GetService("component://netscape/gfx/screenmanager", &ignore);
+  mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1", &ignore);
   NS_ASSERTION ( mScreenManager, "No screen manager, we're in trouble" );
   if ( !mScreenManager )
     return NS_ERROR_FAILURE;

@@ -112,7 +112,7 @@ function Startup()
   // create the embedding command handler
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var commandHandlerInit = Components
-      .classes["component://netscape/embedding/browser/nsCommandHandler"]
+      .classes["@mozilla.org/embedding/browser/nsCommandHandler;1"]
       .createInstance(Components.interfaces.nsICommandHandlerInit);
 
   // Attach it to the window
@@ -132,7 +132,7 @@ function Shutdown()
 function createBrowserInstance()
 {
   appCore = Components
-      .classes[ "component://netscape/appshell/component/browser/instance" ]
+      .classes[ "@mozilla.org/appshell/component/browser/instance;1" ]
       .createInstance( Components.interfaces.nsIBrowserInstance );
   if ( !appCore ) {
       alert( "Error creating browser instance\n" );

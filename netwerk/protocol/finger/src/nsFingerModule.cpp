@@ -26,7 +26,7 @@
 static nsModuleComponentInfo gResComponents[] = {
     { "The Finger Protocol Handler", 
       NS_FINGERHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "finger",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "finger",
       nsFingerHandler::Create
     }
 };

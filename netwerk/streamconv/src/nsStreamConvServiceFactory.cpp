@@ -84,7 +84,7 @@ static nsModuleComponentInfo components[] =
 {
     { "Stream Converter Service", 
       NS_STREAMCONVERTERSERVICE_CID,
-      "component:||netscape|streamConverters", 
+      "@mozilla.org/streamConverters;1", 
       CreateNewStreamConv
     },
 };

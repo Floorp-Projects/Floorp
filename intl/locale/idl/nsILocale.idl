@@ -30,7 +30,7 @@
 #define NSILOCALE_TIME "NSILOCALE_TIME"
 #define NSILOCALE_MESSAGE "NSILOCALE_MESSAGES"
 
-#define NS_LOCALE_PROGID "component://netscape/intl/nslocale"
+#define NS_LOCALE_CONTRACTID "@mozilla.org/intl/nslocale;1"
 %}
 
 [scriptable, uuid(21035ee0-4556-11d3-91cd-00105aa3f7dc)]

@@ -36,16 +36,16 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(InternetSearchDataSource, Init)
 static nsModuleComponentInfo components[] =
 {
     { "Local Search", NS_RDFFINDDATASOURCE_CID,
-      NS_LOCALSEARCH_SERVICE_PROGID, LocalSearchDataSourceConstructor,
+      NS_LOCALSEARCH_SERVICE_CONTRACTID, LocalSearchDataSourceConstructor,
     },
     { "Local Search", NS_RDFFINDDATASOURCE_CID,
-      NS_LOCALSEARCH_DATASOURCE_PROGID, LocalSearchDataSourceConstructor,
+      NS_LOCALSEARCH_DATASOURCE_CONTRACTID, LocalSearchDataSourceConstructor,
     },
     { "Internet Search", NS_RDFSEARCHDATASOURCE_CID,
-      NS_INTERNETSEARCH_SERVICE_PROGID, InternetSearchDataSourceConstructor,
+      NS_INTERNETSEARCH_SERVICE_CONTRACTID, InternetSearchDataSourceConstructor,
     },
     { "Internet Search", NS_RDFSEARCHDATASOURCE_CID,
-      NS_INTERNETSEARCH_DATASOURCE_PROGID, InternetSearchDataSourceConstructor,
+      NS_INTERNETSEARCH_DATASOURCE_CONTRACTID, InternetSearchDataSourceConstructor,
     },
 };
 

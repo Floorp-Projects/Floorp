@@ -137,7 +137,7 @@ nsEvaluateStringProxy::EvaluateString(char **aRetValue, PRBool *aIsUndefined)
         rv = mChannel->GetURI(getter_AddRefs(uri));
         if (NS_FAILED(rv) || !uri) return NS_ERROR_FAILURE;
         NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
-                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                        NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
         rv = securityManager->GetCodebasePrincipal(uri, getter_AddRefs(principal));
         if (NS_FAILED(rv) || !principal) return NS_ERROR_FAILURE;
@@ -513,7 +513,7 @@ nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 static nsModuleComponentInfo gJSModuleInfo[] = {
     { "JavaScript Protocol Handler",
       NS_JSPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "javascript",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "javascript",
       nsJSProtocolHandler::Create }
 };
 

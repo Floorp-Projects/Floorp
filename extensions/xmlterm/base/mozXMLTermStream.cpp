@@ -275,12 +275,12 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
   // Determine Class ID for viewing specified mimetype
   nsCID classID;
   static const char command[] = "view";
-  nsCAutoString progID(NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX);
-  progID += command;
-  progID += "/";
-  progID += contentType;
+  nsCAutoString contractID(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX);
+  contractID += command;
+  contractID += "/";
+  contractID += contentType;
 
-  result = nsComponentManager::ProgIDToClassID(progID.GetBuffer(),
+  result = nsComponentManager::ContractIDToClassID(contractID.GetBuffer(),
                                              &classID);
   if (NS_FAILED(result))
     return result;

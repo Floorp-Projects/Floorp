@@ -328,7 +328,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCSample_HookerUpper)
 static nsModuleComponentInfo components[] = {
 { "sample xpc component",
   { 0x97380cf0, 0xc21b, 0x11d3, { 0x98, 0xc9, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } },
-  NS_NSXPCSAMPLE_HOOKERUPPER_PROGID,
+  NS_NSXPCSAMPLE_HOOKERUPPER_CONTRACTID,
   nsXPCSample_HookerUpperConstructor }
 };
 

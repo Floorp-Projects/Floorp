@@ -79,7 +79,7 @@ function OpenURL(event, node)
 		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
 		if (url.indexOf("file://") == 0)
 		{
-			var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+			var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 			if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 			if (rdf)
 			{
@@ -227,7 +227,7 @@ function CloseEditNode(saveChangeFlag)
 
         if (saveNode && saveChangeFlag)
         {
-            var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+            var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
             RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
             var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
             dump("Got bookmarks datasource.\n");
@@ -374,7 +374,7 @@ function fillContextMenu(name)
     var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
     if (!compositeDB)    return(false);
 
-    var isupports = Components.classes["component://netscape/rdf/rdf-service"].getService();
+    var isupports = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
     if (!isupports)    return(false);
     var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
     if (!rdf)    return(false);
@@ -480,7 +480,7 @@ function doContextCmd(cmdName)
 	var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	if (!compositeDB)    return(false);
 
-	var isupports = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	var isupports = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	if (!isupports)    return(false);
 	var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
 	if (!rdf)    return(false);
@@ -497,11 +497,11 @@ function doContextCmd(cmdName)
 	dump("# of Nodes selected: " + select_list.length + "\n\n");
 
 	// set up selection nsISupportsArray
-	var selectionInstance = Components.classes["component://netscape/supports-array"].createInstance();
+	var selectionInstance = Components.classes["@mozilla.org/supports-array;1"].createInstance();
 	var selectionArray = selectionInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
 	// set up arguments nsISupportsArray
-	var argumentsInstance = Components.classes["component://netscape/supports-array"].createInstance();
+	var argumentsInstance = Components.classes["@mozilla.org/supports-array;1"].createInstance();
 	var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
 	// get argument (parent)

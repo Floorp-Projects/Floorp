@@ -2816,7 +2816,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAt
   aAttributes->GetAttribute(nsHTMLAtoms::lang, value);
   if (value.GetUnit() == eHTMLUnit_String) {
     if (!gLangService) {
-      nsServiceManager::GetService(NS_LANGUAGEATOMSERVICE_PROGID,
+      nsServiceManager::GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID,
         NS_GET_IID(nsILanguageAtomService), (nsISupports**) &gLangService);
       if (!gLangService) {
         return;

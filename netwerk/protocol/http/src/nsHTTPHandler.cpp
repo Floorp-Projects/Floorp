@@ -114,9 +114,9 @@ nsHTTPHandler::GetScheme(char * *o_Scheme)
 /*
  * CategoryCreateService()
  * Given a category, this convenience functions enumerates the category and 
- * creates a service of every CID or ProgID registered under the category
+ * creates a service of every CID or ContractID registered under the category
  * @category: Input category
- * @return: returns error if any CID or ProgID registered failed to create.
+ * @return: returns error if any CID or ContractID registered failed to create.
  */
 static nsresult
 CategoryCreateService( const char *category )
@@ -150,8 +150,8 @@ CategoryCreateService( const char *category )
             nFailed++;
             continue;
         }
-		nsXPIDLCString progID;
-		rv = categoryManager->GetCategoryEntry(category,(const char *)entryString, getter_Copies(progID));
+		nsXPIDLCString contractID;
+		rv = categoryManager->GetCategoryEntry(category,(const char *)entryString, getter_Copies(contractID));
 		if (NS_FAILED(rv))
         {
             nFailed++;
@@ -159,10 +159,10 @@ CategoryCreateService( const char *category )
         }
 
 #ifdef DEBUG_HTTP_STARTUP_CATEGORY
-        printf("HTTP Handler: Instantiating progid %s \
-                in http startup category.\n", (const char *)progID);
+        printf("HTTP Handler: Instantiating contractid %s \
+                in http startup category.\n", (const char *)contractID);
 #endif /* DEBUG_HTTP_STARTUP_CATEGORY */
-        nsCOMPtr<nsISupports> instance = do_GetService(progID, &rv);
+        nsCOMPtr<nsISupports> instance = do_GetService(contractID, &rv);
         if (NS_FAILED(rv))
         {
             nFailed++;
@@ -208,7 +208,7 @@ nsHTTPHandler::NewChannel(nsIURI* i_URL, nsIChannel **o_Instance)
     {
         // Check for filtering
         nsCOMPtr<nsIWebFilters> filters = 
-            do_GetService(NS_WEBFILTERS_PROGID, &rv);
+            do_GetService(NS_WEBFILTERS_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
             PRBool allowLoading = PR_TRUE;

@@ -41,27 +41,27 @@
 #include "nsIGenericFactory.h"
 #include "nsCRT.h"
 
-// XXX progids need to be standardized!
+// XXX contractids need to be standardized!
 static nsModuleComponentInfo components[] = {
-  {nsnull, NS_ECHO_CID,                   "nsEcho",                 xpctest::ConstructEcho                  },
-  {nsnull, NS_CHILD_CID,                  "nsChild",                xpctest::ConstructChild                 },
-  {nsnull, NS_NOISY_CID,                  "nsNoisy",                xpctest::ConstructNoisy                 },
-  {nsnull, NS_STRING_TEST_CID,            "nsStringTest",           xpctest::ConstructStringTest            },
-  {nsnull, NS_OVERLOADED_CID,             "nsOverloaded",           xpctest::ConstructOverloaded            },
-  {nsnull, NS_XPCTESTOBJECTREADONLY_CID,  "xpcTestObjectReadOnly",  xpctest::ConstructXPCTestObjectReadOnly },
-  {nsnull, NS_XPCTESTOBJECTREADWRITE_CID, "xpcTestObjectReadWrite", xpctest::ConstructXPCTestObjectReadWrite},
-  {nsnull, NS_XPCTESTIN_CID,              "xpcTestIn",              xpctest::ConstructXPCTestIn             },
-  {nsnull, NS_XPCTESTOUT_CID,             "xpcTestOut",             xpctest::ConstructXPCTestOut            },
-  {nsnull, NS_XPCTESTINOUT_CID,           "xpcTestInOut",           xpctest::ConstructXPCTestInOut          },
-  {nsnull, NS_XPCTESTCONST_CID,           "xpcTestConst",           xpctest::ConstructXPCTestConst          },
-  {nsnull, NS_XPCTESTCALLJS_CID,          "xpcTestCallJS",          xpctest::ConstructXPCTestCallJS         },
-  {nsnull, NS_XPCTESTPARENTONE_CID,       "xpcTestParentOne",       xpctest::ConstructXPCTestParentOne      },
-  {nsnull, NS_XPCTESTPARENTTWO_CID,       "xpcTestParentTwo",       xpctest::ConstructXPCTestParentTwo      },
-  {nsnull, NS_XPCTESTCHILD2_CID,          "xpcTestChild2",          xpctest::ConstructXPCTestChild2         },
-  {nsnull, NS_XPCTESTCHILD3_CID,          "xpcTestChild3",          xpctest::ConstructXPCTestChild3         },
-  {nsnull, NS_XPCTESTCHILD4_CID,          "xpcTestChild4",          xpctest::ConstructXPCTestChild4         },
-  {nsnull, NS_XPCTESTCHILD5_CID,          "xpcTestChild5",          xpctest::ConstructXPCTestChild5         },
-  {nsnull, NS_ARRAY_CID,                  "nsArrayTest",            xpctest::ConstructArrayTest             }
+  {nsnull, NS_ECHO_CID,                   "@mozilla.org/js/xpc/test/Echo;1",                 xpctest::ConstructEcho                  },
+  {nsnull, NS_CHILD_CID,                  "@mozilla.org/js/xpc/test/Child;1",                xpctest::ConstructChild                 },
+  {nsnull, NS_NOISY_CID,                  "@mozilla.org/js/xpc/test/Noisy;1",                xpctest::ConstructNoisy                 },
+  {nsnull, NS_STRING_TEST_CID,            "@mozilla.org/js/xpc/test/StringTest;1",           xpctest::ConstructStringTest            },
+  {nsnull, NS_OVERLOADED_CID,             "@mozilla.org/js/xpc/test/Overloaded;1",           xpctest::ConstructOverloaded            },
+  {nsnull, NS_XPCTESTOBJECTREADONLY_CID,  "@mozilla.org/js/xpc/test/ObjectReadOnly;1",  xpctest::ConstructXPCTestObjectReadOnly },
+  {nsnull, NS_XPCTESTOBJECTREADWRITE_CID, "@mozilla.org/js/xpc/test/ObjectReadWrite;1", xpctest::ConstructXPCTestObjectReadWrite},
+  {nsnull, NS_XPCTESTIN_CID,              "@mozilla.org/js/xpc/test/In;1",              xpctest::ConstructXPCTestIn             },
+  {nsnull, NS_XPCTESTOUT_CID,             "@mozilla.org/js/xpc/test/Out;1",             xpctest::ConstructXPCTestOut            },
+  {nsnull, NS_XPCTESTINOUT_CID,           "@mozilla.org/js/xpc/test/InOut;1",           xpctest::ConstructXPCTestInOut          },
+  {nsnull, NS_XPCTESTCONST_CID,           "@mozilla.org/js/xpc/test/Const;1",           xpctest::ConstructXPCTestConst          },
+  {nsnull, NS_XPCTESTCALLJS_CID,          "@mozilla.org/js/xpc/test/CallJS;1",          xpctest::ConstructXPCTestCallJS         },
+  {nsnull, NS_XPCTESTPARENTONE_CID,       "@mozilla.org/js/xpc/test/ParentOne;1",       xpctest::ConstructXPCTestParentOne      },
+  {nsnull, NS_XPCTESTPARENTTWO_CID,       "@mozilla.org/js/xpc/test/ParentTwo;1",       xpctest::ConstructXPCTestParentTwo      },
+  {nsnull, NS_XPCTESTCHILD2_CID,          "@mozilla.org/js/xpc/test/Child2;1",          xpctest::ConstructXPCTestChild2         },
+  {nsnull, NS_XPCTESTCHILD3_CID,          "@mozilla.org/js/xpc/test/Child3;1",          xpctest::ConstructXPCTestChild3         },
+  {nsnull, NS_XPCTESTCHILD4_CID,          "@mozilla.org/js/xpc/test/Child4;1",          xpctest::ConstructXPCTestChild4         },
+  {nsnull, NS_XPCTESTCHILD5_CID,          "@mozilla.org/js/xpc/test/Child5;1",          xpctest::ConstructXPCTestChild5         },
+  {nsnull, NS_ARRAY_CID,                  "@mozilla.org/js/xpc/test/ArrayTest;1",            xpctest::ConstructArrayTest             }
 };
                                                                
 NS_IMPL_NSGETMODULE("xpconnect test", components)

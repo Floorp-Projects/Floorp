@@ -494,7 +494,7 @@ nsContextMenu.prototype = {
     // Return true if "imageBlocker.enabled" pref is set and image is not already blocked.
     isBlockingImages: function () {
         /* determine if "imageBlocker.enabled" pref is set */
-        var pref = this.getService( 'component://netscape/preferences', 'nsIPref' );
+        var pref = this.getService( '@mozilla.org/preferences;1', 'nsIPref' );
         var result = false;
         try {
            result = pref.GetBoolPref( "imageblocker.enabled" );
@@ -507,7 +507,7 @@ nsContextMenu.prototype = {
 
         /* determine if image is already being blocked */
         var cookieViewer = this.createInstance
-          ("component://netscape/cookieviewer/cookieviewer-world", "nsICookieViewer");
+          ("@mozilla.org/cookieviewer/cookieviewer-world;1", "nsICookieViewer");
         var list = cookieViewer.GetPermissionValue(1);
         var permissionList  = list.split(list[0]);
         for(var i = 1; i < permissionList.length; i+=2) {
@@ -527,7 +527,7 @@ nsContextMenu.prototype = {
     },
     // Block image from loading in the future.
     blockImage : function () {
-        var cookieViewer = this.createInstance( "component://netscape/cookieviewer/cookieviewer-world",
+        var cookieViewer = this.createInstance( "@mozilla.org/cookieviewer/cookieviewer-world;1",
                                                 "nsICookieViewer" );
         cookieViewer.BlockImage(this.imageURL);
     },
@@ -536,15 +536,15 @@ nsContextMenu.prototype = {
     // Utilities //
     ///////////////
 
-    // Create instance of component given progId and iid (as string).
-    createInstance : function ( progId, iidName ) {
+    // Create instance of component given contractId and iid (as string).
+    createInstance : function ( contractId, iidName ) {
         var iid = Components.interfaces[ iidName ];
-        return Components.classes[ progId ].createInstance( iid );
+        return Components.classes[ contractId ].createInstance( iid );
     },
-    // Get service given progId and iid (as string).
-    getService : function ( progId, iidName ) {
+    // Get service given contractId and iid (as string).
+    getService : function ( contractId, iidName ) {
         var iid = Components.interfaces[ iidName ];
-        return Components.classes[ progId ].getService( iid );
+        return Components.classes[ contractId ].getService( iid );
     },
     // Show/hide one item (specified via name or the item element itself).
     showItem : function ( itemOrId, show ) {
@@ -684,17 +684,17 @@ nsContextMenu.prototype = {
     // Copy link/image url to clipboard.
     copyToClipboard : function ( text ) {
         // Get clipboard.
-        var clipboard = this.getService( "component://netscape/widget/clipboard",
+        var clipboard = this.getService( "@mozilla.org/widget/clipboard;1",
                                          "nsIClipboard" );
 
         // Create tranferable that will transfer the text.
-        var transferable = this.createInstance( "component://netscape/widget/transferable",
+        var transferable = this.createInstance( "@mozilla.org/widget/transferable;1",
                                                 "nsITransferable" );
 
         if ( clipboard && transferable ) {
           transferable.addDataFlavor( "text/unicode" );
           // Create wrapper for text.
-          var data = this.createInstance( "component://netscape/supports-wstring",
+          var data = this.createInstance( "@mozilla.org/supports-wstring;1",
                                           "nsISupportsWString" );
           if ( data ) {
             data.data = text;
@@ -706,13 +706,13 @@ nsContextMenu.prototype = {
 
         // Create a second transferable to copy selection.  Unix needs this,
         // other OS's will probably map to a no-op.
-        var transferableForSelection = this.createInstance( "component://netscape/widget/transferable",
+        var transferableForSelection = this.createInstance( "@mozilla.org/widget/transferable;1",
                                                          "nsITransferable" );
         
         if ( clipboard && transferableForSelection ) {
           transferableForSelection.addDataFlavor( "text/unicode" );
           // Create wrapper for text.
-          var selectionData = this.createInstance( "component://netscape/supports-wstring",
+          var selectionData = this.createInstance( "@mozilla.org/supports-wstring;1",
                                           "nsISupportsWString" );
           if ( selectionData ) {
             selectionData.data = text;
@@ -737,7 +737,7 @@ nsContextMenu.prototype = {
             }
         }
         // Use stream xfer component to prompt for destination and save.
-        var xfer = this.getService( "component://netscape/appshell/component/xfer",
+        var xfer = this.getService( "@mozilla.org/appshell/component/xfer;1",
                                     "nsIStreamTransfer" );
         try {
             xfer.SelectFileAndTransferLocationSpec( url, window, "", "", doNotValidate, postData );

@@ -24,12 +24,12 @@
 
 
 %{C++
-// Define Progid and CID
+// Define Contractid and CID
 // {93941450-664A-11d3-9151-006008A6EDF6}
 #define NS_I18NCOMPATIBILITY_CID \
 { 0x93941450, 0x664a, 0x11d3, { 0x91, 0x51, 0x0, 0x60, 0x8, 0xa6, 0xed, 0xf6 } }
 
-#define NS_I18NCOMPATIBILITY_PROGID "component://netscape/intl/compatibility"
+#define NS_I18NCOMPATIBILITY_CONTRACTID "@mozilla.org/intl/compatibility;1"
 
 %}
 

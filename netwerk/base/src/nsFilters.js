@@ -28,7 +28,7 @@
        - Gagan Saksena 05/04/00 
 */
 
-const kFILTERS_PROGID = "component://mozilla/network/filters";
+const kFILTERS_CONTRACTID = "@mozilla.org/network/filters;1";
 const kFILTERS_CID = Components.ID("{4677ea1e-1dd2-11b2-8654-e836efb6995c}");
 const nsIWebFilters = Components.interfaces.nsIWebFilters;
 const nsIURI = Components.interfaces.nsIURI;
@@ -54,7 +54,7 @@ filterModule.registerSelf =
         dump("*** Registering Web Filters (a Javascript module!)\n");
         compMgr.registerComponentWithType(kFILTERS_CID,
             "Javascript Web Filters",
-            kFILTERS_PROGID,
+            kFILTERS_CONTRACTID,
             fileSpec, location, 
             true, true, type);
     }

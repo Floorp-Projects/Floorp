@@ -22,7 +22,7 @@
  *  - Ben Goodger <ben@netscape.com>
  */
 
-var gRDFService = nsJSComponentManager.getService("component://netscape/rdf/rdf-service",
+var gRDFService = nsJSComponentManager.getService("@mozilla.org/rdf/rdf-service;1",
                                                   "nsIRDFService"); 
 
 function RDF(aType) 
@@ -68,7 +68,7 @@ function isBookmark(aURI)
 
 function isPToolbarDNDEnabled()
   {
-    var prefs = nsJSComponentManager.getService("component://netscape/preferences",
+    var prefs = nsJSComponentManager.getService("@mozilla.org/preferences;1",
                                                 "nsIPref");
     var dragAndDropEnabled = false;                                                  
     try {
@@ -120,7 +120,7 @@ var personalToolbarObserver = {
       var personalToolbarRes = RDFUtils.getResource("NC:PersonalToolbarFolder");
       
       var childDB = document.getElementById("innermostBox").database;
-      var rdfContainer = nsJSComponentManager.createInstance("component://netscape/rdf/container",
+      var rdfContainer = nsJSComponentManager.createInstance("@mozilla.org/rdf/container;1",
                                                              "nsIRDFContainer");
       rdfContainer.Init(childDB, personalToolbarRes);
       
@@ -154,7 +154,7 @@ var personalToolbarObserver = {
         break;
       case 0:
         // do something here to drop into subfolders
-        var childContainer = nsJSComponentManager.createInstance("component://netscape/rdf/container",
+        var childContainer = nsJSComponentManager.createInstance("@mozilla.org/rdf/container;1",
                                                                  "nsIRDFContainer");
         childContainer.Init(childDB, dropElementRes);
         childContainer.AppendElement(elementRes);
@@ -442,7 +442,7 @@ var homeButtonObserver = {
       var setHomepage;
       if (showDialog)
         {
-          var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
+          var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                                                     "nsICommonDialogs");
           var block = nsJSComponentManager.createInstanceByID("c01ad085-4915-11d3-b7a0-85cf-55c3523c",
                                                               "nsIDialogParamBlock");
@@ -521,7 +521,7 @@ function retrieveURLFromData (aData)
           var dataObj = aData.data.data.QueryInterface(Components.interfaces.nsIFile);
           if (dataObj)
             {
-              var fileURL = nsJSComponentManager.createInstance("component://netscape/network/standard-url",
+              var fileURL = nsJSComponentManager.createInstance("@mozilla.org/network/standard-url;1",
                                                                 "nsIFileURL");
               fileURL.file = dataObj;
               return fileURL.spec;

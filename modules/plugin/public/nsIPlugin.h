@@ -49,8 +49,8 @@
 #define NS_PLUGIN_CID \
 { 0xffc63200, 0xcf09, 0x11d2, { 0xa5, 0xa0, 0xbc, 0x8f, 0x7a, 0xd2, 0x1d, 0xfc } }
 
-// Prefix for ProgID of all plugins
-#define NS_INLINE_PLUGIN_PROGID_PREFIX "component://netscape/inline-plugin/"
+// Prefix for ContractID of all plugins
+#define NS_INLINE_PLUGIN_CONTRACTID_PREFIX "@mozilla.org/inline-plugin/"
 
 /**
  * The nsIPlugin interface is the minimum interface plugin developers need to 

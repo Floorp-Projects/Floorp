@@ -32,7 +32,7 @@
 { 0xccd4d371, 0xccdc, 0x11d2, \
     { 0xb3, 0xb1, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } };
 
-#define NS_TEXTTRANSFORM_PROGID_BASE "component://netscape/intl/texttransform?type="
+#define NS_TEXTTRANSFORM_CONTRACTID_BASE "@mozilla.org/intl/texttransform;1?type="
 
 class nsITextTransform : public nsISupports {
 

@@ -108,7 +108,7 @@ static nsresult GetElementFactoryService(nsIElementFactory **aFactory)
 {
   nsresult rv(NS_OK);
   static nsWeakPtr sElementFactory = getter_AddRefs( NS_GetWeakReference(nsCOMPtr<nsIElementFactory>(do_GetService(
-                     NS_ELEMENT_FACTORY_PROGID_PREFIX"http://www.w3.org/1999/xhtml", &rv) )));
+                     NS_ELEMENT_FACTORY_CONTRACTID_PREFIX"http://www.w3.org/1999/xhtml", &rv) )));
   if (sElementFactory)
   {
     nsCOMPtr<nsIElementFactory> fac(do_QueryReferent(sElementFactory));

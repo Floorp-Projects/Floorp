@@ -240,7 +240,7 @@ static void mozilla_defaults( PtWidget_t *widget )
 	strcpy(moz->url, "www.mozilla.org");
 	moz->embed_private = new MozEmbedPrivate();
 	// create an nsIWebBrowser object
-	moz->embed_private->webBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID);
+	moz->embed_private->webBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
 	// create our glue widget
 	moz->chrome = new MozEmbedChrome();
 	moz->embed_private->embed = do_QueryInterface((nsISupports *)(nsIPhEmbed *) moz->chrome);

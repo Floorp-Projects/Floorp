@@ -64,11 +64,11 @@ interface nsIRDFResource : nsIRDFNode {
      * If no delegate exists for the specified key, this method will
      * attempt to create one using the component manager. Specifically,
      * it will combine aKey with the resource's URI scheme to produce
-     * a ProgID as follows:
+     * a ContractID as follows:
      *
      *   component:/rdf/delegate-factory/[key]/[scheme]
      *
-     * This ProgID will be used to locate a factory using the
+     * This ContractID will be used to locate a factory using the
      * FindFactory() method of nsIComponentManager. If the nsIFactory
      * exists, it will be used to create a "delegate factory"; that
      * is, an object that supports nsIRDFDelegateFactory. The delegate

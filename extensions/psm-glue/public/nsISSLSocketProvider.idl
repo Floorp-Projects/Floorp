@@ -29,15 +29,15 @@ interface nsISSLSocketProvider : nsISocketProvider {
 };
 
 %{C++
-#define NS_ISSLSOCKETPROVIDER_PROGID     NS_NETWORK_SOCKET_PROGID_PREFIX "ssl"
+#define NS_ISSLSOCKETPROVIDER_CONTRACTID     NS_NETWORK_SOCKET_CONTRACTID_PREFIX "ssl"
 #define NS_ISSLSOCKETPROVIDER_CLASSNAME  "Mozilla SSL Socket Provider Component"
 
 /* this code behaves just like the above, but has to force a handshake */
-#define NS_ISSLFHSOCKETPROVIDER_PROGID     NS_NETWORK_SOCKET_PROGID_PREFIX "ssl-forcehandshake"
+#define NS_ISSLFHSOCKETPROVIDER_CONTRACTID     NS_NETWORK_SOCKET_CONTRACTID_PREFIX "ssl-forcehandshake"
 #define NS_ISSLFHSOCKETPROVIDER_CLASSNAME  "Mozilla SSL-FH Socket Provider Component"
 
 /* this code behaves just like the above, but has to force a handshake */
-#define NS_TLSSOCKETPROVIDER_PROGID     NS_NETWORK_SOCKET_PROGID_PREFIX "tls"
+#define NS_TLSSOCKETPROVIDER_CONTRACTID     NS_NETWORK_SOCKET_CONTRACTID_PREFIX "tls"
 #define NS_TLSSOCKETPROVIDER_CLASSNAME  "Mozilla TLS Socket Provider Component"
 
 %}

@@ -243,7 +243,7 @@ DeviceContextImpl::GetLocaleLangGroup(void)
 {
   if (!mLocaleLangGroup) {
     nsCOMPtr<nsILanguageAtomService> langService;
-    langService = do_GetService(NS_LANGUAGEATOMSERVICE_PROGID);
+    langService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
     if (langService) {
       langService->GetLocaleLanguageGroup(getter_AddRefs(mLocaleLangGroup));
     }

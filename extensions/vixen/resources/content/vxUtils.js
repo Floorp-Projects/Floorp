@@ -37,8 +37,8 @@ function _ddf(aString, aValue)
 var vxUtils = {
   getWindow: function (aWindowType)
   {
-    const WM_PROGID = "component://netscape/rdf/datasource?name=window-mediator";
-    var wm = nsJSComponentManager.getService(WM_PROGID, "nsIWindowMediator");
+    const WM_CONTRACTID = "@mozilla.org/rdf/datasource?name=window-mediator;1";
+    var wm = nsJSComponentManager.getService(WM_CONTRACTID, "nsIWindowMediator");
     return wm.getMostRecentWindow(aWindowType);
   }
   

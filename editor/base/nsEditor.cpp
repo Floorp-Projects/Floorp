@@ -6037,7 +6037,7 @@ nsEditor::CreateHTMLContent(const nsString& aTag, nsIContent** aContent)
   nsresult rv;
 
   NS_WITH_SERVICE(nsIElementFactory, elementFactory,
-    NS_ELEMENT_FACTORY_PROGID_PREFIX"http://www.w3.org/1999/xhtml" , &rv);
+    NS_ELEMENT_FACTORY_CONTRACTID_PREFIX"http://www.w3.org/1999/xhtml" , &rv);
   if (!elementFactory)
     return NS_ERROR_FAILURE;
 

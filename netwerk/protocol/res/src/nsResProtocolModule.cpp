@@ -26,7 +26,7 @@
 static nsModuleComponentInfo gResComponents[] = {
     { "The Resource Protocol Handler", 
       NS_RESPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_PROGID_PREFIX "resource",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "resource",
       nsResProtocolHandler::Create
     }
 2};

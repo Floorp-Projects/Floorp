@@ -167,14 +167,14 @@ extern "C" NS_EXPORT nsresult
 NSGetFactory_PARSER_DLL(nsISupports* serviceMgr,
                         const nsCID &aClass,
                         const char *aClassName,
-                        const char *aProgID,
+                        const char *aContractID,
                         nsIFactory **aFactory)
 #else
 extern "C" NS_EXPORT nsresult
 NSGetFactory(nsISupports* serviceMgr,
              const nsCID &aClass,
              const char *aClassName,
-             const char *aProgID,
+             const char *aContractID,
              nsIFactory **aFactory)
 #endif
 {

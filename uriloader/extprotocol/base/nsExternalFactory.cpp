@@ -48,14 +48,14 @@ static NS_IMETHODIMP nsExternalMailtoConstructor(nsISupports *aOuter, REFNSIID a
 static nsModuleComponentInfo components[] = {
     {	"External protocol handler", 
 		NS_EXTERNALPROTOCOL_CID,
-		"component://mozilla/externalprotocol/default", 
+		"@mozilla.org/externalprotocol/default;1", 
 		nsExternalProtocolConstructor,
 		nsnull,
 		nsnull
 	},
     {	"External mailto protocol handler", 
 		NS_EXTERNALMAILTO_CID,
-		NS_EXTERNALMAILTO_PROGID, 
+		NS_EXTERNALMAILTO_CONTRACTID, 
 		nsExternalMailtoConstructor,
 		nsnull,
 		nsnull

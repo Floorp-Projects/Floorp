@@ -2213,7 +2213,7 @@ nsPrefConverter::GetPlatformCharset(nsAutoString& aCharset)
   nsresult rv;
 
   // we may cache it since the platform charset will not change through application life
-  nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+  nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && platformCharset) {
    rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
   }

@@ -51,7 +51,7 @@ interface nsICommandHandler : nsISupports
 //	{3A449110-66FD-11d4-9528-0020183BF181} - 
 #define NS_COMMANDHANDLER_CID \
 { 0x3a449110, 0x66fd, 0x11d4, { 0x95, 0x28, 0x0, 0x20, 0x18, 0x3b, 0xf1, 0x81 } }
-#define NS_COMMANDHANDLER_PROGID \
-"component://netscape/embedding/browser/nsCommandHandler"
+#define NS_COMMANDHANDLER_CONTRACTID \
+"@mozilla.org/embedding/browser/nsCommandHandler;1"
 %}
 

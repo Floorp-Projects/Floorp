@@ -40,11 +40,11 @@ static nsModuleComponentInfo components[] =
 {
   { "HTTP Handler",
     NS_IHTTPHANDLER_CID,
-    NS_NETWORK_PROTOCOL_PROGID_PREFIX "http",
+    NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http",
     nsHTTPHandlerConstructor },
   { "HTTPS Handler",
     NS_HTTPS_HANDLER_FACTORY_CID,
-    NS_NETWORK_PROTOCOL_PROGID_PREFIX "https",
+    NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "https",
     nsHTTPSHandler::Create }
 };
   

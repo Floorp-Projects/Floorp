@@ -21,7 +21,7 @@ function fillContextMenu(name, treeName)
     var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
     if (!compositeDB)    return(false);
 
-    var isupports = Components.classes["component://netscape/rdf/rdf-service"].getService();
+    var isupports = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
     if (!isupports)    return(false);
     var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
     if (!rdf)    return(false);
@@ -214,7 +214,7 @@ function doContextCmd(cmdName, treeName)
 	var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	if (!compositeDB)    return(false);
 
-	var isupports = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	var isupports = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	if (!isupports)    return(false);
 	var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
 	if (!rdf)    return(false);
@@ -226,11 +226,11 @@ function doContextCmd(cmdName, treeName)
 	if (!cmdResource)        return(false);
 
 	// set up selection nsISupportsArray
-	var selectionInstance = Components.classes["component://netscape/supports-array"].createInstance();
+	var selectionInstance = Components.classes["@mozilla.org/supports-array;1"].createInstance();
 	var selectionArray = selectionInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
 	// set up arguments nsISupportsArray
-	var argumentsInstance = Components.classes["component://netscape/supports-array"].createInstance();
+	var argumentsInstance = Components.classes["@mozilla.org/supports-array;1"].createInstance();
 	var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
 	// get argument (parent)
@@ -331,7 +331,7 @@ function doSort(sortColName, naturalOrderResource)
 		}
 	}
 
-	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+	var isupports = Components.classes["@mozilla.org/rdf/xul-sort-service;1"].getService();
 	if (!isupports)    return(false);
 	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
 	if (!xulSortService)    return(false);
@@ -356,7 +356,7 @@ function setInitialSort(node, sortDirection)
 
 	try
 	{
-		var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+		var isupports = Components.classes["@mozilla.org/rdf/xul-sort-service;1"].getService();
 		if (!isupports)    return(false);
 		var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
 		if (!xulSortService)    return(false);

@@ -843,7 +843,7 @@ pre_call_clean_up:
                     {
                         // No luck getting one from the exception, so
                         // try to cook one up.
-                        scriptError = do_CreateInstance("mozilla.scripterror.1");
+                        scriptError = do_CreateInstance("@mozilla.org/scripterror;1");
                         if(nsnull != scriptError)
                         {
                             char* exn_string;

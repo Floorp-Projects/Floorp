@@ -241,7 +241,7 @@ nsConsoleService::RegisterListener(nsIConsoleListener *listener) {
      * originating thread.  JavaScript is the motivating example.
      */
     nsCOMPtr<nsIProxyObjectManager> proxyManager =
-        (do_GetService(NS_XPCOMPROXY_PROGID));
+        (do_GetService(NS_XPCOMPROXY_CONTRACTID));
 
     if (proxyManager == nsnull)
         return NS_ERROR_NOT_AVAILABLE;

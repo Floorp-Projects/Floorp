@@ -225,14 +225,14 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsIFileSpec **aResul
         *aResult = 0;
 
         // Prompt user for file name.
-        nsCOMPtr<nsIFilePicker> picker = do_CreateInstance( "component://mozilla/filepicker" );
+        nsCOMPtr<nsIFilePicker> picker = do_CreateInstance( "@mozilla.org/filepicker;1" );
       
         if ( picker ) {
             // Prompt for file name.
             nsCOMPtr<nsILocalFile> startDir;
 
             // Pull in the user's preferences and get the default download directory.
-            NS_WITH_SERVICE( nsIPref, prefs, NS_PREF_PROGID, &rv );
+            NS_WITH_SERVICE( nsIPref, prefs, NS_PREF_CONTRACTID, &rv );
             if ( NS_SUCCEEDED( rv ) && prefs ) {
                 prefs->GetFileXPref( "browser.download.dir", getter_AddRefs( startDir ) );
                 if ( startDir ) {
@@ -368,5 +368,5 @@ nsCString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *su
 // Generate base nsIAppShellComponent implementation.
 NS_IMPL_IAPPSHELLCOMPONENT( nsStreamTransfer,
                             nsIStreamTransfer,
-                            NS_ISTREAMTRANSFER_PROGID,
+                            NS_ISTREAMTRANSFER_CONTRACTID,
                             0 )

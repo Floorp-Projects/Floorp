@@ -49,8 +49,8 @@ interface nsIFileLocator : nsISupports
 { 0x78043e01, 0xe603, 0x11d2, \
   {0x91, 0x5f, 0xf0, 0x8a, 0x20, 0x86, 0x28, 0xfc} }
 
-#define NS_FILELOCATOR_PROGID \
-    "component://netscape/filelocator"
+#define NS_FILELOCATOR_CONTRACTID \
+    "@mozilla.org/filelocator;1"
 
 // Factory method used in NSGetFactory for appshell.
 extern "C" NS_APPSHELL nsresult
@@ -61,7 +61,7 @@ inline nsIFileSpec* NS_LocateFileOrDirectory(PRUint32 selector)
 {
     nsresult rv;
     nsIFileSpec* spec = nsnull;
-    NS_WITH_SERVICE(nsIFileLocator, locator, NS_FILELOCATOR_PROGID, &rv);
+    NS_WITH_SERVICE(nsIFileLocator, locator, NS_FILELOCATOR_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv) && locator)
         locator->GetFileLocation(selector, &spec);
     return spec;

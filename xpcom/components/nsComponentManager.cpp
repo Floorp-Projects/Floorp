@@ -91,7 +91,7 @@ PRLogModuleInfo* nsComponentManagerLog = NULL;
 
 // Common Key Names 
 const char xpcomKeyName[]="software/mozilla/XPCOM";
-const char classesKeyName[]="progID";
+const char classesKeyName[]="contractID";
 const char classIDKeyName[]="classID";
 const char componentsKeyName[]="components";
 const char componentLoadersKeyName[]="componentLoaders";
@@ -103,7 +103,7 @@ const char versionValueName[]="VersionString";
 const char lastModValueName[]="LastModTimeStamp";
 const char fileSizeValueName[]="FileSize";
 const char componentCountValueName[]="ComponentsCount";
-const char progIDValueName[]="ProgID";
+const char contractIDValueName[]="ContractID";
 const char classNameValueName[]="ClassName";
 const char inprocServerValueName[]="InprocServer";
 const char componentTypeValueName[]="ComponentType";
@@ -114,7 +114,7 @@ const static char XPCOM_RELCOMPONENT_PREFIX[] = "rel:";
 const char XPCOM_LIB_PREFIX[]          = "lib:";
 
 // We define a CID that is used to indicate the non-existence of a
-// progid in the hash table.
+// contractid in the hash table.
 #define NS_NO_CID { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
 static NS_DEFINE_CID(kNoCID, NS_NO_CID);
 
@@ -140,12 +140,12 @@ nsCreateInstanceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) cons
     }
 
 nsresult
-nsCreateInstanceByProgID::operator()( const nsIID& aIID, void** aInstancePtr ) const
+nsCreateInstanceByContractID::operator()( const nsIID& aIID, void** aInstancePtr ) const
     {
         nsresult status;
-        if ( mProgID )
+        if ( mContractID )
             {
-              if ( !NS_SUCCEEDED(status = nsComponentManager::CreateInstance(mProgID, mOuter, aIID, aInstancePtr)) )
+              if ( !NS_SUCCEEDED(status = nsComponentManager::CreateInstance(mContractID, mOuter, aIID, aInstancePtr)) )
                   *aInstancePtr = 0;
           }
         else
@@ -162,12 +162,12 @@ nsCreateInstanceFromCategory::operator()( const nsIID& aIID,
 {
     /*
      * If I were a real man, I would consolidate this with
-     * nsGetServiceFromProgID::operator().
+     * nsGetServiceFromContractID::operator().
      */
     nsresult status;
     nsXPIDLCString value;
     nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_PROGID, &status);
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &status);
 
     if (NS_FAILED(status)) goto error;
 
@@ -177,7 +177,7 @@ nsCreateInstanceFromCategory::operator()( const nsIID& aIID,
         goto error;
     }
     
-    /* find the progID for category.entry */
+    /* find the contractID for category.entry */
     status = catman->GetCategoryEntry(mCategory, mEntry,
                                       getter_Copies(value));
     if (NS_FAILED(status)) goto error;
@@ -242,7 +242,7 @@ nsFactoryEntry::~nsFactoryEntry(void)
 
 
 nsComponentManagerImpl::nsComponentManagerImpl()
-    : mFactories(NULL), mProgIDs(NULL), mLoaders(0), mMon(NULL), 
+    : mFactories(NULL), mContractIDs(NULL), mLoaders(0), mMon(NULL), 
       mRegistry(NULL), mPrePopulationDone(PR_FALSE),
       mNativeComponentLoader(0), mShuttingDown(NS_SHUTDOWN_NEVERHAPPENED)
 {
@@ -289,11 +289,11 @@ nsresult nsComponentManagerImpl::Init(void)
         if (mFactories == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
-    if (mProgIDs == NULL) {
-        mProgIDs = new nsObjectHashtable(nsnull, nsnull,      // should never be copied
+    if (mContractIDs == NULL) {
+        mContractIDs = new nsObjectHashtable(nsnull, nsnull,      // should never be copied
                                          nsCID_Destroy, nsnull,
                                          256, /* Thread Safe */ PR_TRUE);
-        if (mProgIDs == NULL)
+        if (mContractIDs == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -354,9 +354,9 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     // Unload libraries
     UnloadLibraries(NULL, NS_Shutdown);
 
-    // Release Progid hash tables
-    if (mProgIDs)
-        delete mProgIDs;
+    // Release Contractid hash tables
+    if (mContractIDs)
+        delete mContractIDs;
 
 #ifdef USE_REGISTRY
     // Release registry
@@ -592,7 +592,7 @@ nsComponentManagerImpl::PlatformMarkNoComponents(nsDll *dll)
 nsresult
 nsComponentManagerImpl::PlatformRegister(const char *cidString,
                                          const char *className,
-                                         const char * progID, nsDll *dll)
+                                         const char * contractID, nsDll *dll)
 {
     // Preconditions
     PR_ASSERT(cidString != NULL);
@@ -607,19 +607,19 @@ nsComponentManagerImpl::PlatformRegister(const char *cidString,
 
 
     rv = mRegistry->SetStringUTF8(IDkey,classNameValueName, className);
-    if (progID)
+    if (contractID)
     {
-        rv = mRegistry->SetStringUTF8(IDkey,progIDValueName, progID);        
+        rv = mRegistry->SetStringUTF8(IDkey,contractIDValueName, contractID);        
     }
     rv = mRegistry->SetBytesUTF8(IDkey, inprocServerValueName, 
             strlen(dll->GetPersistentDescriptorString()) + 1, 
             NS_REINTERPRET_CAST(char*, dll->GetPersistentDescriptorString()));
     
-    if (progID)
+    if (contractID)
     {
-        nsRegistryKey progIDKey;
-        rv = mRegistry->AddSubtreeRaw(mClassesKey, progID, &progIDKey);
-        rv = mRegistry->SetStringUTF8(progIDKey, classIDValueName, cidString);
+        nsRegistryKey contractIDKey;
+        rv = mRegistry->AddSubtreeRaw(mClassesKey, contractID, &contractIDKey);
+        rv = mRegistry->SetStringUTF8(contractIDKey, classIDValueName, cidString);
     }
 
     nsRegistryKey dllPathKey;
@@ -658,12 +658,12 @@ nsComponentManagerImpl::PlatformUnregister(const char *cidString,
     nsRegistryKey cidKey;
     rv = mRegistry->AddSubtreeRaw(mCLSIDKey, cidString, &cidKey);
 
-    char *progID = NULL;
-    rv = mRegistry->GetStringUTF8(cidKey, progIDValueName, &progID);
+    char *contractID = NULL;
+    rv = mRegistry->GetStringUTF8(cidKey, contractIDValueName, &contractID);
     if(NS_SUCCEEDED(rv))
     {
-        mRegistry->RemoveSubtreeRaw(mClassesKey, progID);
-        PR_FREEIF(progID);
+        mRegistry->RemoveSubtreeRaw(mClassesKey, contractID);
+        PR_FREEIF(contractID);
     }
 
     mRegistry->RemoveSubtree(mCLSIDKey, cidString);
@@ -746,19 +746,19 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
 }
 
 nsresult
-nsComponentManagerImpl::PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass) 
+nsComponentManagerImpl::PlatformContractIDToCLSID(const char *aContractID, nsCID *aClass) 
 {
     PR_ASSERT(aClass != NULL);
     PR_ASSERT(mRegistry);
 
     nsresult rv;
         
-    nsRegistryKey progIDKey;
-    rv = mRegistry->GetSubtreeRaw(mClassesKey, aProgID, &progIDKey);
+    nsRegistryKey contractIDKey;
+    rv = mRegistry->GetSubtreeRaw(mClassesKey, aContractID, &contractIDKey);
     if (NS_FAILED(rv)) return NS_ERROR_FACTORY_NOT_REGISTERED;
 
     char *cidString;
-    rv = mRegistry->GetStringUTF8(progIDKey, classIDValueName, &cidString);
+    rv = mRegistry->GetStringUTF8(contractIDKey, classIDValueName, &cidString);
     if(NS_FAILED(rv)) return rv;
     if (!(aClass->Parse(cidString)))
     {
@@ -770,8 +770,8 @@ nsComponentManagerImpl::PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass
 }
 
 nsresult
-nsComponentManagerImpl::PlatformCLSIDToProgID(const nsCID *aClass,
-                                              char* *aClassName, char* *aProgID)
+nsComponentManagerImpl::PlatformCLSIDToContractID(const nsCID *aClass,
+                                              char* *aClassName, char* *aContractID)
 {
         
     PR_ASSERT(aClass);
@@ -790,10 +790,10 @@ nsComponentManagerImpl::PlatformCLSIDToProgID(const nsCID *aClass,
     if(NS_FAILED(rv)) return rv;
     *aClassName = classnameString;
 
-    char* progidString;
-    rv = mRegistry->GetStringUTF8(cidKey,progIDValueName,&progidString);
+    char* contractidString;
+    rv = mRegistry->GetStringUTF8(cidKey,contractIDValueName,&contractidString);
     if (NS_FAILED(rv)) return rv;
-    *aProgID = progidString;
+    *aContractID = contractidString;
 
     return NS_OK;
 
@@ -860,12 +860,12 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         mFactories->Put(&key, entry);
     }
 
-    // Finally read in PROGID -> CID mappings
-    nsCOMPtr<nsIEnumerator> progidEnum;
-    rv = mRegistry->EnumerateSubtrees( mClassesKey, getter_AddRefs(progidEnum));
+    // Finally read in CONTRACTID -> CID mappings
+    nsCOMPtr<nsIEnumerator> contractidEnum;
+    rv = mRegistry->EnumerateSubtrees( mClassesKey, getter_AddRefs(contractidEnum));
     if (NS_FAILED(rv)) return rv;
 
-    regEnum = do_QueryInterface(progidEnum, &rv);
+    regEnum = do_QueryInterface(contractidEnum, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = regEnum->First();
@@ -873,20 +873,20 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
          NS_SUCCEEDED(rv) && (regEnum->IsDone() != NS_OK);
          rv = regEnum->Next())
     {
-        const char *progidString;
-        nsRegistryKey progidKey;
+        const char *contractidString;
+        nsRegistryKey contractidKey;
         /*
          * CurrentItemInPlaceUTF8 will give us back a _shared_ pointer in 
-         * progidString.  This is bad XPCOM practice.  It is evil, and requires
-         * great care with the relative lifetimes of progidString and regEnum.
+         * contractidString.  This is bad XPCOM practice.  It is evil, and requires
+         * great care with the relative lifetimes of contractidString and regEnum.
          *
          * It is also faster, and less painful in the allocation department.
          */
-        rv = regEnum->CurrentItemInPlaceUTF8(&progidKey, &progidString);
+        rv = regEnum->CurrentItemInPlaceUTF8(&contractidKey, &contractidString);
         if (NS_FAILED(rv)) continue;
 
         nsXPIDLCString cidString;
-        rv = mRegistry->GetStringUTF8(progidKey, classIDValueName,
+        rv = mRegistry->GetStringUTF8(contractidKey, classIDValueName,
                                       getter_Copies(cidString));
         if (NS_FAILED(rv)) continue;
 
@@ -898,10 +898,10 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
             continue;
         }
 
-        // put the {progid, Cid} mapping into our map
-        nsCStringKey key(progidString);
-        mProgIDs->Put(&key, aClass);
-        //  printf("Populating [ %s, %s ]\n", cidString, progidString);
+        // put the {contractid, Cid} mapping into our map
+        nsCStringKey key(contractidString);
+        mContractIDs->Put(&key, aClass);
+        //  printf("Populating [ %s, %s ]\n", cidString, contractidString);
     }
 
     (void)mRegistry->SetBufferSize( 10*1024 );
@@ -913,18 +913,18 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
 #endif /* USE_REGISTRY */
 
 //
-// HashProgID
+// HashContractID
 //
 nsresult 
-nsComponentManagerImpl::HashProgID(const char *aProgID, const nsCID &aClass)
+nsComponentManagerImpl::HashContractID(const char *aContractID, const nsCID &aClass)
 {
-    if(!aProgID)
+    if(!aContractID)
     {
         return NS_ERROR_NULL_POINTER;
     }
     
-    nsCStringKey key(aProgID);
-    nsCID* cid = (nsCID*) mProgIDs->Get(&key);
+    nsCStringKey key(aContractID);
+    nsCID* cid = (nsCID*) mContractIDs->Get(&key);
     if (cid)
     {
         if (cid == &kNoCID)
@@ -943,7 +943,7 @@ nsComponentManagerImpl::HashProgID(const char *aProgID, const nsCID &aClass)
         return NS_ERROR_OUT_OF_MEMORY;
     }
         
-    mProgIDs->Put(&key, cid);
+    mContractIDs->Put(&key, cid);
     return NS_OK;
 }
 
@@ -1065,16 +1065,16 @@ nsComponentManagerImpl::GetClassObject(const nsCID &aClass, const nsIID &aIID,
 }
 
 /**
- * ProgIDToClassID()
+ * ContractIDToClassID()
  *
- * Mapping function from a ProgID to a classID. Directly talks to the registry.
+ * Mapping function from a ContractID to a classID. Directly talks to the registry.
  *
  */
 nsresult
-nsComponentManagerImpl::ProgIDToClassID(const char *aProgID, nsCID *aClass) 
+nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aClass) 
 {
-    NS_PRECONDITION(aProgID != NULL, "null ptr");
-    if (! aProgID)
+    NS_PRECONDITION(aContractID != NULL, "null ptr");
+    if (! aContractID)
         return NS_ERROR_NULL_POINTER;
 
     NS_PRECONDITION(aClass != NULL, "null ptr");
@@ -1084,11 +1084,11 @@ nsComponentManagerImpl::ProgIDToClassID(const char *aProgID, nsCID *aClass)
     nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
 
 #ifdef USE_REGISTRY
-    nsCStringKey key(aProgID);
-    nsCID* cid = (nsCID*) mProgIDs->Get(&key);
+    nsCStringKey key(aContractID);
+    nsCID* cid = (nsCID*) mContractIDs->Get(&key);
     if (cid) {
         if (cid == &kNoCID) {
-            // we've already tried to map this ProgID to a CLSID, and found
+            // we've already tried to map this ContractID to a CLSID, and found
             // that there _was_ no such mapping in the registry.
         }
         else {
@@ -1098,9 +1098,9 @@ nsComponentManagerImpl::ProgIDToClassID(const char *aProgID, nsCID *aClass)
     }
     else {
         // This is the first time someone has asked for this
-        // ProgID. Go to the registry to find the CID.
+        // ContractID. Go to the registry to find the CID.
         if (!mPrePopulationDone)
-            res = PlatformProgIDToCLSID(aProgID, aClass);
+            res = PlatformContractIDToCLSID(aContractID, aClass);
 
         if (NS_SUCCEEDED(res)) {
             // Found it. So put it into the cache.
@@ -1108,13 +1108,13 @@ nsComponentManagerImpl::ProgIDToClassID(const char *aProgID, nsCID *aClass)
             if (!cid)
                 return NS_ERROR_OUT_OF_MEMORY;
 
-            mProgIDs->Put(&key, cid);
+            mContractIDs->Put(&key, cid);
         }
         else {
             // Didn't find it. Put a special CID in the cache so we
             // don't need to hit the registry on subsequent requests
-            // for the same ProgID.
-            mProgIDs->Put(&key, (void *)&kNoCID);
+            // for the same ContractID.
+            mContractIDs->Put(&key, (void *)&kNoCID);
         }
     }
 #endif /* USE_REGISTRY */
@@ -1124,7 +1124,7 @@ nsComponentManagerImpl::ProgIDToClassID(const char *aProgID, nsCID *aClass)
         if (NS_SUCCEEDED(res))
             buf = aClass->ToString();
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("nsComponentManager: ProgIDToClassID(%s)->%s", aProgID,
+               ("nsComponentManager: ContractIDToClassID(%s)->%s", aContractID,
                 NS_SUCCEEDED(res) ? buf : "[FAILED]"));
         if (NS_SUCCEEDED(res))
             delete [] buf;
@@ -1134,30 +1134,30 @@ nsComponentManagerImpl::ProgIDToClassID(const char *aProgID, nsCID *aClass)
 }
 
 /**
- * CLSIDToProgID()
+ * CLSIDToContractID()
  *
- * Translates a classID to a {ProgID, Class Name}. Does direct registry
+ * Translates a classID to a {ContractID, Class Name}. Does direct registry
  * access to do the translation.
  *
  * NOTE: Since this isn't heavily used, we arent caching this.
  */
 nsresult
-nsComponentManagerImpl::CLSIDToProgID(const nsCID &aClass,
+nsComponentManagerImpl::CLSIDToContractID(const nsCID &aClass,
                                       char* *aClassName,
-                                      char* *aProgID)
+                                      char* *aContractID)
 {
     nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
 
 #ifdef USE_REGISTRY
-    res = PlatformCLSIDToProgID(&aClass, aClassName, aProgID);
+    res = PlatformCLSIDToContractID(&aClass, aClassName, aContractID);
 #endif /* USE_REGISTRY */
 
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
         char *buf = aClass.ToString();
         PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-               ("nsComponentManager: CLSIDToProgID(%s)->%s", buf,
-                NS_SUCCEEDED(res) ? *aProgID : "[FAILED]"));
+               ("nsComponentManager: CLSIDToContractID(%s)->%s", buf,
+                NS_SUCCEEDED(res) ? *aContractID : "[FAILED]"));
         delete [] buf;
     }
 
@@ -1220,22 +1220,22 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
 }
 
 /**
- * CreateInstanceByProgID()
+ * CreateInstanceByContractID()
  *
  * A variant of CreateInstance() that creates an instance of the object that
- * implements the interface aIID and whose implementation has a progID aProgID.
+ * implements the interface aIID and whose implementation has a contractID aContractID.
  *
  * This is only a convenience routine that turns around can calls the
  * CreateInstance() with classid and iid.
  */
 nsresult
-nsComponentManagerImpl::CreateInstanceByProgID(const char *aProgID,
+nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
                                                nsISupports *aDelegate,
                                                const nsIID &aIID,
                                                void **aResult)
 {
     nsCID clsid;
-    nsresult rv = ProgIDToClassID(aProgID, &clsid);
+    nsresult rv = ContractIDToClassID(aContractID, &clsid);
     if (NS_FAILED(rv)) return rv; 
     return CreateInstance(clsid, aDelegate, aIID, aResult);
 }
@@ -1365,7 +1365,7 @@ nsComponentManagerImpl::SpecForRegistryLocation(const char *aLocation,
  * RegisterFactory()
  *
  * Register a factory to be responsible for creation of implementation of
- * classID aClass. Plus creates as association of aClassName and aProgID
+ * classID aClass. Plus creates as association of aClassName and aContractID
  * to the classID. If replace is PR_TRUE, we replace any existing registrations
  * with this one.
  *
@@ -1380,7 +1380,7 @@ nsComponentManagerImpl::SpecForRegistryLocation(const char *aLocation,
 nsresult
 nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
                                         const char *aClassName,
-                                        const char *aProgID,
+                                        const char *aContractID,
                                         nsIFactory *aFactory, 
                                         PRBool aReplace)
 {
@@ -1394,7 +1394,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
         char *buf = aClass.ToString();
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: RegisterFactory(%s, %s)", buf,
-                (aProgID ? aProgID : "(null)")));
+                (aContractID ? aContractID : "(null)")));
         delete [] buf;
 
     }
@@ -1419,20 +1419,20 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
     }
     mFactories->Put(&key, newEntry);
 
-    // Update the ProgID->CLSID Map
-    if (aProgID) {
-        nsresult rv = HashProgID(aProgID, aClass);
+    // Update the ContractID->CLSID Map
+    if (aContractID) {
+        nsresult rv = HashContractID(aContractID, aClass);
         if(NS_FAILED(rv)) {
             PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                    ("\t\tFactory register succeeded. "
-                    "Hashing progid (%s) FAILED.", aProgID));
+                    "Hashing contractid (%s) FAILED.", aContractID));
             return rv;
         }
     }
         
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-           ("\t\tFactory register succeeded progid=%s.",
-            aProgID ? aProgID : "<none>"));
+           ("\t\tFactory register succeeded contractid=%s.",
+            aContractID ? aContractID : "<none>"));
         
     return NS_OK;
 }
@@ -1440,12 +1440,12 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
 nsresult
 nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
                                           const char *aClassName,
-                                          const char *aProgID,
+                                          const char *aContractID,
                                           const char *aPersistentDescriptor,
                                           PRBool aReplace,
                                           PRBool aPersist)
 {
-    return RegisterComponentCommon(aClass, aClassName, aProgID,
+    return RegisterComponentCommon(aClass, aClassName, aContractID,
                                    aPersistentDescriptor, aReplace, aPersist,
                                    nativeComponentType);
 }
@@ -1453,14 +1453,14 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
 nsresult
 nsComponentManagerImpl::RegisterComponentWithType(const nsCID &aClass,
                                                   const char *aClassName,
-                                                  const char *aProgID,
+                                                  const char *aContractID,
                                                   nsIFile *aSpec,
                                                   const char *aLocation,
                                                   PRBool aReplace,
                                                   PRBool aPersist,
                                                   const char *aType)
 {
-    return RegisterComponentCommon(aClass, aClassName, aProgID, 
+    return RegisterComponentCommon(aClass, aClassName, aContractID, 
                                    aLocation,
                                    aReplace, aPersist,
                                    aType);
@@ -1472,7 +1472,7 @@ nsComponentManagerImpl::RegisterComponentWithType(const nsCID &aClass,
 nsresult
 nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
                                               const char *aClassName,
-                                              const char *aProgID,
+                                              const char *aContractID,
                                               nsIFile *aLibrarySpec,
                                               PRBool aReplace,
                                               PRBool aPersist)
@@ -1482,7 +1482,7 @@ nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
     if (NS_FAILED(rv))
         return rv;
 
-    rv = RegisterComponentWithType(aClass, aClassName, aProgID, aLibrarySpec,
+    rv = RegisterComponentWithType(aClass, aClassName, aContractID, aLibrarySpec,
                                    registryName,
                                    aReplace, aPersist,
                                    nativeComponentType);
@@ -1499,7 +1499,7 @@ nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
 nsresult
 nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
                                              const char *aClassName,
-                                             const char *aProgID,
+                                             const char *aContractID,
                                              const char *aDllName,
                                              PRBool aReplace,
                                              PRBool aPersist)
@@ -1508,7 +1508,7 @@ nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
     nsresult rv = RegistryNameForLib(aDllName, getter_Copies(registryName));
     if (NS_FAILED(rv))
         return rv;
-    return RegisterComponentCommon(aClass, aClassName, aProgID, registryName,
+    return RegisterComponentCommon(aClass, aClassName, aContractID, registryName,
                                    aReplace, aPersist, nativeComponentType);
 }
 
@@ -1522,7 +1522,7 @@ nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
 nsresult
 nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
                                                 const char *aClassName,
-                                                const char *aProgID,
+                                                const char *aContractID,
                                                 const char *aRegistryName,
                                                 PRBool aReplace,
                                                 PRBool aPersist,
@@ -1537,7 +1537,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     PRBool sanity;
 
     // Normalize proid and classname
-    const char *progID = (aProgID && *aProgID) ? aProgID : NULL;
+    const char *contractID = (aContractID && *aContractID) ? aContractID : NULL;
     const char *className = (aClassName && *aClassName) ? aClassName : NULL;
 
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
@@ -1546,7 +1546,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
                ("nsComponentManager: RegisterComponentCommon(%s, %s, %s, %s)",
                 buf,
-                progID ? progID : "(null)",
+                contractID ? contractID : "(null)",
                 aRegistryName, aType));
         delete [] buf;
     }
@@ -1561,11 +1561,11 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
 #ifdef USE_REGISTRY
     if (aPersist) {
         /* Add to the registry */
-        rv = AddComponentToRegistry(aClass, className, progID,
+        rv = AddComponentToRegistry(aClass, className, contractID,
                                     aRegistryName, aType);
         if (NS_FAILED(rv)) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-           ("\t\tadding %s %s to registry FAILED", className, progID));
+           ("\t\tadding %s %s to registry FAILED", className, contractID));
             goto out;
     }
     }
@@ -1599,27 +1599,27 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     /* we've put the new entry in the hash table, so don't delete on error */
     newEntry = nsnull;
  
-   // Update the ProgID->CLSID Map
-    if (progID
+   // Update the ContractID->CLSID Map
+    if (contractID
 #ifdef USE_REGISTRY
         && (mPrePopulationDone || !aPersist)
 #endif
         ) {
-        rv = HashProgID(progID, aClass);
+        rv = HashContractID(contractID, aClass);
         if (NS_FAILED(rv)) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-           ("\t\tHashProgID(%s) FAILED\n", progID));
+           ("\t\tHashContractID(%s) FAILED\n", contractID));
             goto out;
     }
     }
 
     // Let the loader do magic things now
-    rv = loader->OnRegister(aClass, aType, className, progID, aRegistryName,
+    rv = loader->OnRegister(aClass, aType, className, contractID, aRegistryName,
                             aReplace, aPersist);
     if (NS_FAILED(rv)) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                ("\t\tloader->OnRegister FAILED for %s \"%s\" %s %s", aType,
-                className, progID, aRegistryName));
+                className, contractID, aRegistryName));
         goto out;
     }
     
@@ -1666,7 +1666,7 @@ nsComponentManagerImpl::GetLoaderForType(const char *aType,
 nsresult
 nsComponentManagerImpl::AddComponentToRegistry(const nsCID &aClass,
                                                const char *aClassName,
-                                               const char *aProgID,
+                                               const char *aContractID,
                                                const char *aRegistryName,
                                                const char *aType)
 {
@@ -1708,16 +1708,16 @@ nsComponentManagerImpl::AddComponentToRegistry(const nsCID &aClass,
     if (NS_FAILED(rv))
         goto out;
 
-    if (aProgID) {
-        rv = mRegistry->SetStringUTF8(IDKey, progIDValueName, aProgID);
+    if (aContractID) {
+        rv = mRegistry->SetStringUTF8(IDKey, contractIDValueName, aContractID);
         if (NS_FAILED(rv))
             goto out;
 
-        nsRegistryKey progIDKey;
-        rv = mRegistry->AddSubtreeRaw(mClassesKey, aProgID, &progIDKey);
+        nsRegistryKey contractIDKey;
+        rv = mRegistry->AddSubtreeRaw(mClassesKey, aContractID, &contractIDKey);
         if (NS_FAILED(rv))
             goto out;
-        rv = mRegistry->SetStringUTF8(progIDKey, classIDValueName, cidString);
+        rv = mRegistry->SetStringUTF8(contractIDKey, classIDValueName, cidString);
         if (NS_FAILED(rv))
             goto out;
     }
@@ -1968,7 +1968,7 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
         dir = inDirSpec;
     
         // Set components' directory for AutoRegisterInterfces to query
-        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
 
         // Don't care if undefining fails
@@ -1979,7 +1979,7 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
     else 
     {
         // Do default components directory
-        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
 
         rv = directoryService->Get(NS_XPCOM_COMPONENT_DIR, NS_GET_IID(nsIFile), getter_AddRefs(dir));
@@ -1993,7 +1993,7 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
         return NS_ERROR_UNEXPECTED;    
     
     // Notify observers of xpcom autoregistration start
-    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
     {
 
@@ -2016,7 +2016,7 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsISimpleEnumerator> loaderEnum;
@@ -2173,7 +2173,7 @@ ConvertFactoryEntryToCID(nsHashKey *key, void *data, void *convert_data,
     nsISupportsID* cidHolder;
 
     if(NS_SUCCEEDED(rv = 
-                    compMgr->CreateInstanceByProgID(NS_SUPPORTS_ID_PROGID,
+                    compMgr->CreateInstanceByContractID(NS_SUPPORTS_ID_CONTRACTID,
                                                     nsnull, 
                                                     NS_GET_IID(nsISupportsID),
                                                     (void **)&cidHolder)))
@@ -2189,7 +2189,7 @@ ConvertFactoryEntryToCID(nsHashKey *key, void *data, void *convert_data,
 }
 
 static NS_IMETHODIMP
-ConvertProgIDKeyToString(nsHashKey *key, void *data, void *convert_data,
+ConvertContractIDKeyToString(nsHashKey *key, void *data, void *convert_data,
                          nsISupports **retval)
 {
     nsComponentManagerImpl *compMgr = (nsComponentManagerImpl*) convert_data;
@@ -2198,7 +2198,7 @@ ConvertProgIDKeyToString(nsHashKey *key, void *data, void *convert_data,
     nsISupportsString* strHolder;
 
 
-    rv = compMgr->CreateInstanceByProgID(NS_SUPPORTS_STRING_PROGID, nsnull, 
+    rv = compMgr->CreateInstanceByContractID(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
                                          NS_GET_IID(nsISupportsString),
                                          (void **)&strHolder);
     if(NS_SUCCEEDED(rv))
@@ -2236,7 +2236,7 @@ nsComponentManagerImpl::EnumerateCLSIDs(nsIEnumerator** aEmumerator)
 }
 
 nsresult
-nsComponentManagerImpl::EnumerateProgIDs(nsIEnumerator** aEmumerator)
+nsComponentManagerImpl::EnumerateContractIDs(nsIEnumerator** aEmumerator)
 {
     if(!aEmumerator)
     {
@@ -2254,7 +2254,7 @@ nsComponentManagerImpl::EnumerateProgIDs(nsIEnumerator** aEmumerator)
             return rv;
     }
 
-    return NS_NewHashtableEnumerator(mProgIDs, ConvertProgIDKeyToString,
+    return NS_NewHashtableEnumerator(mContractIDs, ConvertContractIDKeyToString,
                                      this, aEmumerator);
 }
 

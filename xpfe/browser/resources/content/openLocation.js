@@ -105,17 +105,17 @@ function open()
      return false;
   }
 
-function createInstance( progid, iidName ) 
+function createInstance( contractid, iidName ) 
   {
     var iid = Components.interfaces[iidName];
-    return Components.classes[ progid ].createInstance( iid );
+    return Components.classes[ contractid ].createInstance( iid );
   }
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function onChooseFile() 
 {
   try {
-    var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
     fp.init(window, bundle.GetStringFromName("chooseFileDialogTitle"), nsIFilePicker.modeOpen);
 
     if (dialog.openAppList.data == "2")

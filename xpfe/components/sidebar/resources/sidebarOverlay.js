@@ -42,7 +42,7 @@
 const SB_DEBUG = false;
 
 // The rdf service
-const RDF_URI = 'component://netscape/rdf/rdf-service';
+const RDF_URI = '@mozilla.org/rdf/rdf-service;1';
 var RDF = Components.classes[RDF_URI].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
@@ -580,7 +580,7 @@ function sidebar_open_default_panel(wait, tries) {
 
 function sidebar_get_panels_file() {
   try {
-    var locator_service = Components.classes["component://netscape/file/directory_service"].getService();
+    var locator_service = Components.classes["@mozilla.org/file/directory_service;1"].getService();
     if (locator_service)
       locator_service = locator_service.QueryInterface(Components.interfaces.nsIProperties);
     // Use the fileLocator to look in the profile directory to find
@@ -627,7 +627,7 @@ function sidebar_revert_to_default_panels() {
 function get_sidebar_datasource_uri() {
   try {
     var sidebar_file = sidebar_get_panels_file();
-    var file_url = Components.classes["component://netscape/network/standard-url"].createInstance(Components.interfaces.nsIFileURL);
+    var file_url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
     file_url.file = sidebar_file;
     return file_url.spec;
   } catch (ex) {
@@ -643,7 +643,7 @@ function get_sidebar_datasource_uri() {
 //     %VERSION% --> Sidebar file format version (e.g. 0.0).
 function get_remote_datasource_url() {
   var url = '';
-  var prefs = Components.classes['component://netscape/preferences'];
+  var prefs = Components.classes['@mozilla.org/preferences;1'];
   if (prefs) {
     prefs = prefs.getService();
   }
@@ -665,8 +665,8 @@ function get_remote_datasource_url() {
         debug("No lang code pref, intl.content.langcode.");
         debug("Use locale from user agent string instead");
 
-        var locale_progid = 'component://netscape/intl/nslocaleservice';
-        var syslocale = Components.classes[locale_progid].getService();
+        var locale_contractid = '@mozilla.org/intl/nslocaleservice;1';
+        var syslocale = Components.classes[locale_contractid].getService();
         syslocale = syslocale.QueryInterface(Components.interfaces.nsILocaleService);
         locale = syslocale.GetLocaleComponentForUserAgent();
 	  } catch(ex) {
@@ -759,7 +759,7 @@ function enable_customize() {
 // Bring up the Sidebar customize dialog.
 function SidebarCustomize() {
   // Use a single sidebar customize dialog
-  var cwindowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+  var cwindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
   var iwindowManager = Components.interfaces.nsIWindowMediator;
   var windowManager  = cwindowManager.QueryInterface(iwindowManager);
 

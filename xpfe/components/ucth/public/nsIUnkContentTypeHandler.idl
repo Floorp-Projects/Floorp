@@ -50,6 +50,6 @@ interface nsIUnknownContentTypeHandler : nsIAppShellComponent {
 
 
 %{C++
-#define NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/unknownContentType"
+#define NS_IUNKNOWNCONTENTTYPEHANDLER_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/unknownContentType;1"
 #define NS_IUNKNOWNCONTENTTYPEHANDLER_CLASSNAME "Mozilla Unknown Content-Type Handler Component"
 %}

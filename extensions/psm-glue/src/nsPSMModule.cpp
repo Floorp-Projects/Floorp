@@ -38,7 +38,7 @@
 #include "nsFSDR.h"
 #include "nsCrypto.h"
 #include "nsKeygenHandler.h"
-//For the NS_CRYPTO_PROGID define
+//For the NS_CRYPTO_CONTRACTID define
 #include "nsDOMCID.h"
 
 #include "nsCURILoader.h"
@@ -59,35 +59,35 @@ static nsModuleComponentInfo components[] =
     { 
         PSM_COMPONENT_CLASSNAME,  
         NS_PSMCOMPONENT_CID, 
-        PSM_COMPONENT_PROGID,   
+        PSM_COMPONENT_CONTRACTID,   
         nsPSMComponent::CreatePSMComponent
     },
     
     { 
         "PSM Content Handler - application/x-x509-ca-cert",  
         NS_PSMCOMPONENT_CID, 
-        NS_CONTENT_HANDLER_PROGID_PREFIX"application/x-x509-ca-cert",   
+        NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-x509-ca-cert",   
         nsPSMComponent::CreatePSMComponent
     },
     
     { 
         "PSM Content Handler - application/x-x509-server-cert",  
         NS_PSMCOMPONENT_CID, 
-        NS_CONTENT_HANDLER_PROGID_PREFIX"application/x-x509-server-cert",   
+        NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-x509-server-cert",   
         nsPSMComponent::CreatePSMComponent
     },
 
     { 
         "PSM Content Handler - application/x-x509-user-cert",  
         NS_PSMCOMPONENT_CID, 
-        NS_CONTENT_HANDLER_PROGID_PREFIX"application/x-x509-user-cert",   
+        NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-x509-user-cert",   
         nsPSMComponent::CreatePSMComponent
     },
     
     { 
         "PSM Content Handler - application/x-x509-email-cert",  
         NS_PSMCOMPONENT_CID, 
-        NS_CONTENT_HANDLER_PROGID_PREFIX"application/x-x509-email-cert",   
+        NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-x509-email-cert",   
         nsPSMComponent::CreatePSMComponent
     },
 
@@ -95,81 +95,81 @@ static nsModuleComponentInfo components[] =
     { 
         PSM_UI_HANLDER_CLASSNAME, 
         NS_PSMUIHANDLER_CID, 
-        PSM_UI_HANLDER_PROGID,  
+        PSM_UI_HANLDER_CONTRACTID,  
         nsPSMUIHandlerImpl::CreatePSMUIHandler
     },
 
     { 
         NS_SECURE_BROWSER_UI_CLASSNAME, 
         NS_SECURE_BROWSER_UI_CID, 
-        NS_SECURE_BROWSER_UI_PROGID, 
+        NS_SECURE_BROWSER_UI_CONTRACTID, 
         nsSecureBrowserUIImpl::Create 
     },
 
     { 
         NS_SECURE_BROWSER_DOCOBSERVER_CLASSNAME, 
         NS_SECURE_BROWSER_DOCOBSERVER_CID, 
-        NS_SECURE_BROWSER_DOCOBSERVER_PROGID, 
+        NS_SECURE_BROWSER_DOCOBSERVER_CONTRACTID, 
         nsSecureBrowserUIImpl::Create
     },
 
     { 
         NS_ISSLSOCKETPROVIDER_CLASSNAME,
         NS_SSLSOCKETPROVIDER_CID,
-        NS_ISSLSOCKETPROVIDER_PROGID,
+        NS_ISSLSOCKETPROVIDER_CONTRACTID,
         nsSSLSocketProvider::Create 
     },
 
     { 
         NS_ISSLFHSOCKETPROVIDER_CLASSNAME,
         NS_SSLSOCKETPROVIDER_CID,
-        NS_ISSLFHSOCKETPROVIDER_PROGID,
+        NS_ISSLFHSOCKETPROVIDER_CONTRACTID,
         nsSSLSocketProvider::Create 
     },
 
     { 
         NS_TLSSOCKETPROVIDER_CLASSNAME,
         NS_TLSSOCKETPROVIDER_CID,
-        NS_TLSSOCKETPROVIDER_PROGID,
+        NS_TLSSOCKETPROVIDER_CONTRACTID,
         nsTLSSocketProvider::Create 
     },
 
     {
         NS_SDR_CLASSNAME,
         NS_SDR_CID,
-        NS_SDR_PROGID,
+        NS_SDR_CONTRACTID,
         nsSecretDecoderRingConstructor
     },
 
     {
         NS_FSDR_CLASSNAME,
         NS_FSDR_CID,
-        NS_FSDR_PROGID,
+        NS_FSDR_CONTRACTID,
         nsFSecretDecoderRingConstructor
     },
     
     {
         NS_CRYPTO_CLASSNAME,
         NS_CRYPTO_CID,
-        NS_CRYPTO_PROGID,
+        NS_CRYPTO_CONTRACTID,
         nsCryptoConstructor
     },
     {
         NS_PKCS11_CLASSNAME,
         NS_PKCS11_CID,
-        NS_PKCS11_PROGID,
+        NS_PKCS11_CONTRACTID,
         nsPkcs11Constructor
     },
     {
       "Generic Certificate Content Handler",
       NS_CERTCONTENTLISTEN_CID,
-      NS_CERTCONTENTLISTEN_PROGID,
+      NS_CERTCONTENTLISTEN_CONTRACTID,
       CertContentListenerConstructor
     },
     {
       "Form Processor",
       NS_FORMPROCESSOR_CID,
-      NS_FORMPROCESSOR_PROGID,
+      NS_FORMPROCESSOR_CONTRACTID,
       nsKeygenFormProcessor::Create
     }
 };

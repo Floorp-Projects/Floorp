@@ -26,7 +26,7 @@
 
 #ifdef XPTI_HAS_ZIP_SUPPORT
 
-static const char gCacheProgID[] = "component://netscape/libjar/zip-reader-cache";
+static const char gCacheContractID[] = "@mozilla.org/libjar/zip-reader-cache;1";
 
 static const PRUint32 gCacheSize = 1;
 
@@ -40,7 +40,7 @@ xptiZipLoader::GetZipReader(nsILocalFile* file)
     
     if(!gCache)
     {
-        gCache = do_CreateInstance(gCacheProgID);
+        gCache = do_CreateInstance(gCacheContractID);
         if(!gCache || NS_FAILED(gCache->Init(gCacheSize)))
             return nsnull;
     }

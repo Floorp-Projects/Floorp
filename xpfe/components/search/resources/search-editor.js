@@ -28,7 +28,7 @@
 
 // global(s)
 var bundle = srGetStrBundle("chrome://communicator/locale/search/search-editor.properties");
-var commonDialogsService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+var commonDialogsService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
 commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 var pref = null;
 var RDF = null;
@@ -39,16 +39,16 @@ var internetSearchDS = null;
 
 try
 {
-	pref = Components.classes["component://netscape/preferences"].getService();
+	pref = Components.classes["@mozilla.org/preferences;1"].getService();
 	if (pref)	pref = pref.QueryInterface( Components.interfaces.nsIPref );
 
-	RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
 	if (RDF)	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
-	RDFC = Components.classes["component://netscape/rdf/container"].getService();
+	RDFC = Components.classes["@mozilla.org/rdf/container;1"].getService();
 	if (RDFC)	RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
 
-	RDFCUtils = Components.classes["component://netscape/rdf/container-utils"].getService();
+	RDFCUtils = Components.classes["@mozilla.org/rdf/container-utils;1"].getService();
 	if (RDFCUtils)	RDFCUtils = RDFCUtils.QueryInterface(Components.interfaces.nsIRDFContainerUtils);
 }
 catch(e)
@@ -74,7 +74,7 @@ function doLoad()
 	doSetOKCancel(Commit);
   
   // adjust category popup
-	var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+	var internetSearch = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].getService();
 	if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
 	if (internetSearch)
 	{
@@ -103,7 +103,7 @@ function doLoad()
 	var lastCategoryName = "";
 	try
 	{
-		var pref = Components.classes["component://netscape/preferences"].getService();
+		var pref = Components.classes["@mozilla.org/preferences;1"].getService();
 		if (pref)	pref = pref.QueryInterface( Components.interfaces.nsIPref );
 		if (pref)	lastCategoryName = pref.CopyCharPref( "browser.search.last_search_category" );
 
@@ -223,7 +223,7 @@ function doSort(sortColName, naturalOrderResource)
 		}
 	}
 
-	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+	var isupports = Components.classes["@mozilla.org/rdf/xul-sort-service;1"].getService();
 	if (!isupports)    return(false);
 	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
 	if (!xulSortService)    return(false);

@@ -931,7 +931,7 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
 {
   nsresult result;
   NS_WITH_SERVICE(nsICharsetConverterManager, manager,
-    NS_CHARSETCONVERTERMANAGER_PROGID, &result);
+    NS_CHARSETCONVERTERMANAGER_CONTRACTID, &result);
   if (manager && NS_SUCCEEDED(result)) {
     nsAutoString charset(NS_ConvertASCIItoUCS2(aSelf->mCharSet));
     nsIUnicodeEncoder* converter = nsnull;

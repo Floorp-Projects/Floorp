@@ -38,7 +38,7 @@ static nsModuleComponentInfo components[] =
 {
   { "GFX Postscript Device Context",
     NS_DEVICECONTEXTXP_CID,
-    "component://netscape/gfx/decidecontext/xprt",
+    "@mozilla.org/gfx/decidecontext/xprt;1",
     nsDeviceContextXPConstructor }  
 };
 

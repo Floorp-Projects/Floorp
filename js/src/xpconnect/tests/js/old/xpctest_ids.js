@@ -66,7 +66,7 @@ data = [
 
  // now we check those the 'Components' knows about
  [Components.interfaces.nsISupports  , "nsISupports"],
- [Components.classes.nsEcho          , "nsEcho"],
+ [Components.classes.nsEcho          , "@mozilla.org/js/xpc/test/Echo;1"],
  [Components.classes.nsEcho.number   , "{ed132c20-eed1-11d2-baa4-00805f8a5dd7}"],
 
  // now a bogus one
@@ -76,7 +76,7 @@ data = [
  [Components.interfaces["{00000000-0000-0000-c000-000000000046}"] , "undefined"],
  [Components.classes.nsEcho["{ed132c20-eed1-11d2-baa4-00805f8a5dd7}"], "undefined"],
 
- // we *don't* expect bare CLSIDs to resolve to progids    
+ // we *don't* expect bare CLSIDs to resolve to contractids    
  [NS_ECHO_UPPER                      , "{ed132c20-eed1-11d2-baa4-00805f8a5dd7}"],
  [NS_ECHO                            , "{ed132c20-eed1-11d2-baa4-00805f8a5dd7}"],
  [NS_ECHO_UPPER.number               , "{ed132c20-eed1-11d2-baa4-00805f8a5dd7}"],
@@ -93,7 +93,7 @@ data = [
  // does not work with bogus CID
  [Components.classesByID["{35fb7000-4d23-11d3-9893-006008962422}"], "undefined"],
 
- // classesByID should not resolve the number to the progid
+ // classesByID should not resolve the number to the contractid
  [Components.classesByID["{ed132c20-eed1-11d2-baa4-00805f8a5dd7}"].name,  ""],
  // ...though it is clearly the same object...
  [Components.classesByID["{ed132c20-eed1-11d2-baa4-00805f8a5dd7}"].equals(Components.classes.nsEcho), true],

@@ -430,7 +430,7 @@ nsFileChannel::GetContentType(char * *aContentType)
             mContentType = "application/http-index-format";
         }
         else {
-            nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_PROGID, &rv));
+            nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
             if (NS_FAILED(rv)) return rv;
 
             rv = MIMEService->GetTypeFromFile(mFile, aContentType);

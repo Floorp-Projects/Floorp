@@ -89,7 +89,7 @@ PRInt32 main(PRInt32 argc, char *argv[])
 
     nsComponentManager::RegisterComponent(kCParserCID, NULL, NULL, RAPTORHTMLPARS_DLL, PR_FALSE, PR_FALSE);
 
-    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
+    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_CONTRACTID, 
                                 NS_GET_IID(nsIObserverService), 
                                 (nsISupports **)&anObserverService);
     

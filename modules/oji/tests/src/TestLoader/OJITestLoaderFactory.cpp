@@ -34,7 +34,7 @@ static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kOJITestLoaderCID, OJITESTLOADER_CID);
 
-static const char* loaderRegistryPath = "component://netscape/oji/test/api/loader";
+static const char* loaderRegistryPath = "@mozilla.org/oji/test/api/loader;1";
 static const char* loaderRegistryDesc = "OJI API Test Loader";
 
 // The list of components we register
@@ -107,7 +107,7 @@ extern "C" NS_EXPORT nsresult
 NSGetFactory(nsISupports* serviceMgr,
              const nsCID &aClass,
              const char *aClassName,
-             const char *aProgID,
+             const char *aContractID,
              nsIFactory **aFactory)
 {
     if (!aClass.Equals(kOJITestLoaderCID)) {

@@ -76,21 +76,21 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsSocketProviderService, NS_GET_IID(nsISocketProvid
 
 #define MAX_TYPE_LENGTH 128
 
-#define MAX_SOCKET_TYPE_PROGID_LENGTH   (MAX_TYPE_LENGTH + NS_NETWORK_SOCKET_PROGID_PREFIX_LENGTH + 1)
+#define MAX_SOCKET_TYPE_CONTRACTID_LENGTH   (MAX_TYPE_LENGTH + NS_NETWORK_SOCKET_CONTRACTID_PREFIX_LENGTH + 1)
 
 NS_IMETHODIMP
 nsSocketProviderService::GetSocketProvider(const char *aSocketType, nsISocketProvider **_result)
 {
   nsresult rv;
 
-  char buf[MAX_SOCKET_TYPE_PROGID_LENGTH];
+  char buf[MAX_SOCKET_TYPE_CONTRACTID_LENGTH];
 
-    // STRING USE WARNING: perhaps |progID| should be an |nsCAutoString| -- scc
-  nsAutoString progID;
-  progID.AssignWithConversion(NS_NETWORK_SOCKET_PROGID_PREFIX);
+    // STRING USE WARNING: perhaps |contractID| should be an |nsCAutoString| -- scc
+  nsAutoString contractID;
+  contractID.AssignWithConversion(NS_NETWORK_SOCKET_CONTRACTID_PREFIX);
 
-  progID.AppendWithConversion(aSocketType);
-  progID.ToCString(buf, MAX_SOCKET_TYPE_PROGID_LENGTH);
+  contractID.AppendWithConversion(aSocketType);
+  contractID.ToCString(buf, MAX_SOCKET_TYPE_CONTRACTID_LENGTH);
 
   rv = nsServiceManager::GetService(buf, NS_GET_IID(nsISocketProvider), (nsISupports **)_result);
   if (NS_FAILED(rv)) 

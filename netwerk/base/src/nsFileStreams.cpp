@@ -152,7 +152,7 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
         *contentLength = -1;
     }
     else {
-        nsCOMPtr<nsIMIMEService> mimeServ (do_GetService(NS_MIMESERVICE_PROGID, &rv));
+        nsCOMPtr<nsIMIMEService> mimeServ (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
         if (NS_SUCCEEDED(rv)) {
             rv = mimeServ->GetTypeFromFile(mFile, contentType);
         }

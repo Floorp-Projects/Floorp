@@ -290,15 +290,15 @@ static void DumpArbitraryHelp()
         rv = catEntry->GetData(getter_Copies(entryString));
         if (NS_FAILED(rv) || !((const char *)entryString)) break;
 
-        nsXPIDLCString progidString;
-        rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,(const char *)entryString, getter_Copies(progidString));
-        if (NS_FAILED(rv) || !((const char *)progidString)) break;
+        nsXPIDLCString contractidString;
+        rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,(const char *)entryString, getter_Copies(contractidString));
+        if (NS_FAILED(rv) || !((const char *)contractidString)) break;
 
 #ifdef DEBUG_CMD_LINE
-        printf("cmd line handler progid = %s\n", (const char *)progidString);
+        printf("cmd line handler contractid = %s\n", (const char *)contractidString);
 #endif /* DEBUG_CMD_LINE */
 
-        nsCOMPtr <nsICmdLineHandler> handler = do_GetService((const char *)progidString, &rv);
+        nsCOMPtr <nsICmdLineHandler> handler = do_GetService((const char *)contractidString, &rv);
 
         if (handler) {
           nsXPIDLCString commandLineArg;
@@ -330,11 +330,11 @@ static void DumpArbitraryHelp()
 }
 
 static
-nsresult LaunchApplication(const char *progID, PRInt32 height, PRInt32 width)
+nsresult LaunchApplication(const char *contractID, PRInt32 height, PRInt32 width)
 {
   nsresult rv = NS_OK;
 
-  nsCOMPtr <nsICmdLineHandler> handler = do_GetService(progID, &rv);
+  nsCOMPtr <nsICmdLineHandler> handler = do_GetService(contractID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   if (!handler) return NS_ERROR_FAILURE;
@@ -359,13 +359,13 @@ nsresult LaunchApplication(const char *progID, PRInt32 height, PRInt32 width)
   return rv;
 }
 
-static nsresult LaunchApplicationWithArgs(const char *commandLineArg, nsICmdLineService *cmdLineArgs, const char *progID, PRInt32 height, PRInt32 width)
+static nsresult LaunchApplicationWithArgs(const char *commandLineArg, nsICmdLineService *cmdLineArgs, const char *contractID, PRInt32 height, PRInt32 width)
 {
   nsresult rv;
-  if (!progID || !commandLineArg || !cmdLineArgs) return NS_ERROR_FAILURE;
+  if (!contractID || !commandLineArg || !cmdLineArgs) return NS_ERROR_FAILURE;
 	nsXPIDLCString cmdResult;
 
-  nsCOMPtr <nsICmdLineHandler> handler = do_GetService(progID, &rv);
+  nsCOMPtr <nsICmdLineHandler> handler = do_GetService(contractID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   if (!handler) return NS_ERROR_FAILURE;
@@ -469,14 +469,14 @@ void startupPrefEnumerationFunction(const char *prefName, void *data)
   if (PL_strlen(prefName) <= prefixLen) return;
 
   if (prefValue) {
-    // this is the progid prefix that all the command line handlers register
-    nsCAutoString progID("component://netscape/commandlinehandler/general-startup-");
-    progID += (prefName + prefixLen);
+    // this is the contractid prefix that all the command line handlers register
+    nsCAutoString contractID("@mozilla.org/commandlinehandler/general-startup;1?type=");
+    contractID += (prefName + prefixLen);
 
 #ifdef DEBUG_CMD_LINE
-    printf("progid = %s\n", (const char *)progID);
+    printf("contractid = %s\n", (const char *)contractID);
 #endif /* DEBUG_CMD_LINE */
-    rv = LaunchApplication((const char *)progID, closure->height, closure->width);
+    rv = LaunchApplication((const char *)contractID, closure->height, closure->width);
   }
   return;
 }
@@ -548,7 +548,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
       printf("XXX argv[%d] = %s\n",i,argv[i]);
 #endif /* DEBUG_CMD_LINE */
       if (IsStartupCommand(argv[i])) {
-        nsCAutoString progID("component://netscape/commandlinehandler/general-startup-");
+        nsCAutoString contractID("@mozilla.org/commandlinehandler/general-startup;1?type=");
 
         // skip over the - (or / on windows)
         char *command = argv[i] + 1;
@@ -558,9 +558,9 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
           command = argv[i] + 2;
         }
 #endif /* XP_UNIX */
-        progID += (const char *)command;
+        contractID += (const char *)command;
         // this can fail, as someone could do -foo, where -foo is not handled
-        rv = LaunchApplicationWithArgs((const char *)(argv[i]), cmdLineArgs, (const char *)progID, height, width);
+        rv = LaunchApplicationWithArgs((const char *)(argv[i]), cmdLineArgs, (const char *)contractID, height, width);
       }
     }
   }
@@ -600,7 +600,7 @@ static nsresult DoOnShutdown()
   // has already been shutdown by the time the clipboard is shut down.
   {
     // scoping this in a block to force release
-    nsCOMPtr<nsIClipboard> clipService = do_GetService("component://netscape/widget/clipboard", &rv);
+    nsCOMPtr<nsIClipboard> clipService = do_GetService("@mozilla.org/widget/clipboard;1", &rv);
     if (NS_SUCCEEDED(rv))
       clipService->ForceDataToClipboard(nsIClipboard::kGlobalClipboard);
   }
@@ -612,7 +612,7 @@ static nsresult DoOnShutdown()
 static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsICmdLineHandler, handler, NS_BROWSERSTARTUPHANDLER_PROGID, &rv);
+    NS_WITH_SERVICE(nsICmdLineHandler, handler, NS_BROWSERSTARTUPHANDLER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString chromeUrlForTask;
@@ -631,7 +631,7 @@ static void	InitCachePrefs()
 	const char * const CACHE_DIR_PREF   = "browser.cache.directory";
 	nsresult rv;
   PRBool isDir = PR_FALSE;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
 	if (NS_FAILED(rv)) return;
 		
 	// If the pref is already set don't do anything
@@ -709,7 +709,7 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 
 nsresult CheckForNewChrome(void) {
 
-  nsCOMPtr <nsIChromeRegistry> chromeReg = do_GetService("component://netscape/chrome/chrome-registry");
+  nsCOMPtr <nsIChromeRegistry> chromeReg = do_GetService("@mozilla.org/chrome/chrome-registry;1");
   NS_ASSERTION(chromeReg, "chrome check couldn't get the chrome registry");
 
   if (chromeReg)
@@ -730,7 +730,7 @@ static nsresult CreateAndRegisterDirectoryService()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsCOMPtr<nsIDirectoryService> directoryService = do_GetService(NS_DIRECTORY_SERVICE_PROGID, &rv);
+  nsCOMPtr<nsIDirectoryService> directoryService = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   if (!directoryService) {
     NS_ASSERTION(PR_FALSE, "failed to get directory service");
     return rv;
@@ -791,7 +791,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   // Setup an autoreg obserer, so that we can update a progress
   // string in the splash screen
-  nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_PROGID);
+  nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   if (obsService)
   {
     nsCOMPtr<nsIObserver> splashScreenObserver = do_QueryInterface(nativeApp);

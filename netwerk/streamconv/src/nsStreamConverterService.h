@@ -69,10 +69,10 @@ public:
 
 private:
     // Responsible for finding a converter for the given MIME-type.
-    nsresult FindConverter(const char *aProgID, nsCStringArray **aEdgeList);
+    nsresult FindConverter(const char *aContractID, nsCStringArray **aEdgeList);
     nsresult BuildGraph(void);
-    nsresult AddAdjacency(const char *aProgID);
-    nsresult ParseFromTo(const char *aProgID, nsCString &aFromRes, nsCString &aToRes);
+    nsresult AddAdjacency(const char *aContractID);
+    nsresult ParseFromTo(const char *aContractID, nsCString &aFromRes, nsCString &aToRes);
 
     // member variables
     nsHashtable              *mAdjacencyList;

@@ -40,7 +40,7 @@ static NS_DEFINE_CID(kLineTermCID,         MOZLINETERM_CID);
 class XMLTermFactory : public nsIFactory
 {
 public:
-  XMLTermFactory(const nsCID &aClass, const char* className, const char* progID);
+  XMLTermFactory(const nsCID &aClass, const char* className, const char* contractID);
 
   // nsISupports methods
   NS_DECL_ISUPPORTS
@@ -58,7 +58,7 @@ protected:
 protected:
   nsCID       mClassID;
   const char* mClassName;
-  const char* mProgID;
+  const char* mContractID;
 };
 
 /////////////////////////////////////////////////////////////////////////
@@ -71,10 +71,10 @@ static PRInt32 gInstanceCnt = 0;
 
 XMLTermFactory::XMLTermFactory(const nsCID &aClass, 
                                const char* className,
-                               const char* progID):
+                               const char* contractID):
   mClassID(aClass),
   mClassName(className),
-  mProgID(progID)
+  mContractID(contractID)
 {
   // Zero reference counter
   NS_INIT_REFCNT();
@@ -180,7 +180,7 @@ extern "C" NS_EXPORT nsresult
 NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
              const char *aClassName,
-             const char *aProgID,
+             const char *aContractID,
              nsIFactory **aFactory)
 {
   static PRBool ltermInitialized = PR_FALSE;
@@ -234,7 +234,7 @@ NSGetFactory(nsISupports* aServMgr,
   *aFactory = nsnull;
 
   XMLTermFactory* factory = new XMLTermFactory(aClass, aClassName,
-                                               aProgID);
+                                               aContractID);
   if (factory == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -259,7 +259,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 
   result = compMgr->RegisterComponent(kLineTermCID,
                                       "LineTerm Component",
-                                      "component://mozilla/xmlterm/lineterm",
+                                      "@mozilla.org/xmlterm/lineterm;1",
                                       aPath, PR_TRUE, PR_TRUE);
 
   if (NS_FAILED(result)) return result;
@@ -268,7 +268,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 
   result = compMgr->RegisterComponent(kXMLTermShellCID,
                                       "XMLTerm Shell Component",
-                                      "component://mozilla/xmlterm/xmltermshell",
+                                      "@mozilla.org/xmlterm/xmltermshell;1",
                                       aPath, PR_TRUE, PR_TRUE);
 
   if (NS_FAILED(result)) return result;

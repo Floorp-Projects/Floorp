@@ -56,7 +56,7 @@ NS_IMETHODIMP macro_class::GetChromeUrlForTask(char **aChromeUrlForTask) \
     return NS_OK; \
 }
 
-#define CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)\
+#define CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)\
 NS_IMETHODIMP macro_class::GetCommandLineArgument(char **aCommandLineArgument) \
 { \
     if (!aCommandLineArgument) return NS_ERROR_FAILURE; \
@@ -93,7 +93,7 @@ NS_METHOD macro_class::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPat
     nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv); \
     if (NS_FAILED(rv)) return rv; \
     nsXPIDLCString prevEntry; \
-    rv = catman->AddCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_pretty_name, macro_progid, PR_TRUE, PR_TRUE, getter_Copies(prevEntry)); \
+    rv = catman->AddCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_pretty_name, macro_contractid, PR_TRUE, PR_TRUE, getter_Copies(prevEntry)); \
 	return NS_OK; \
 } \
 NS_METHOD macro_class::UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation) \
@@ -102,22 +102,22 @@ NS_METHOD macro_class::UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aP
     nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv); \
     if (NS_FAILED(rv)) return rv; \
     nsXPIDLCString prevEntry; \
-    rv = catman->DeleteCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_progid, PR_TRUE, getter_Copies(prevEntry)); \
+    rv = catman->DeleteCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_contractid, PR_TRUE, getter_Copies(prevEntry)); \
     return NS_OK; \
 }
 
-#define CMDLINEHANDLER2_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_open_window_with_args) \
-CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)\
+#define CMDLINEHANDLER2_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_open_window_with_args) \
+CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)\
 CMDLINEHANDLER_GETCHROMEURL_IMPL(macro_class,macro_chrome_url)
 
-#define CMDLINEHANDLER_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_default_args, macro_open_window_with_args) \
+#define CMDLINEHANDLER_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_default_args, macro_open_window_with_args) \
 CMDLINEHANDLER_GETDEFAULTARGS_IMPL(macro_class,macro_default_args)\
-CMDLINEHANDLER2_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)
+CMDLINEHANDLER2_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)
 
 //Creates a version without the GetChromeUrlForTaskFunction
-#define CMDLINEHANDLER3_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_default_args, macro_open_window_with_args)\
+#define CMDLINEHANDLER3_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_default_args, macro_open_window_with_args)\
 CMDLINEHANDLER_GETDEFAULTARGS_IMPL(macro_class,macro_default_args)\
-CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_progid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)\
+CMDLINEHANDLER_OTHERS_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_help_text, macro_contractid, macro_pretty_name, macro_handles_args, macro_open_window_with_args)\
 
 
 %}

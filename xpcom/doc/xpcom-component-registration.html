@@ -172,11 +172,11 @@ CLSID</tt>
 <br><tt><nobr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 InprocServer (S)&nbsp; = <font color="#CC0000">/home/dp/dist/bin/components/libnfs-protocol.so</font></nobr></tt>
 <br><tt><nobr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-ProgID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (S)&nbsp; = <b><font color="#CC0000">component://netscape/network-protocol&amp;type=nfs</font></b></nobr></tt>
+ContractID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (S)&nbsp; = <b><font color="#CC0000">@mozilla.org/network-protocol;1?type=nfs</font></b></nobr></tt>
 <br><tt><nobr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ClassName&nbsp;&nbsp;&nbsp; (S)&nbsp; = <b><font color="#CC0000">NFS Protocol
 Handler</font></b></nobr></tt>
-<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#CC0000">component://netscape/network-protocol&amp;type=nfs</font></tt>
+<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#CC0000">@mozilla.org/network-protocol;1?type=nfs</font></tt>
 <br><tt><nobr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 CLSID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (S)&nbsp; = <font color="#CC0000">{108d75a0-bab5-11d2-96c4-0060b0fb9956}</font></nobr></tt>
 <p><tt><i>&nbsp;&nbsp;&nbsp; </i>Software</tt>
@@ -225,8 +225,8 @@ follows:
 The CLSID of the component that would need to create the object instance
 is identified.</li>
 
-<ol>Callers use <tt>nsIRepository::ProgIDToCLSID()</tt> to convert the
-ProgID string to the CLSID.</ol>
+<ol>Callers use <tt>nsIRepository::ContractIDToCLSID()</tt> to convert the
+ContractID string to the CLSID.</ol>
 
 <li>
 Load the dll associated with the CLSID after consulting the Registry</li>
@@ -300,8 +300,8 @@ do to salvage this situation other than warning the user of possible instability
 and advice a restart upon which the re-registration will happen.
 <h3>
 
-<hr WIDTH="100%"><a NAME="ProgID Spec"></a>ProgID Spec</h3>
-The general format of ProgIDs is <i><b><font color="#990000">component://</font></b>netscape<b><font color="#990000">/</font></b>compname<b><font color="#990000">?</font></b>var<b><font color="#990000">=</font></b>value<b><font color="#990000">;</font></b>var<b><font color="#990000">=</font></b>value<b><font color="#990000">;</font></b>var<b><font color="#990000">=</font></b>value...</i>
+<hr WIDTH="100%"><a NAME="ContractID Spec"></a>ContractID Spec</h3>
+The general format of ContractIDs is <i><b><font color="#990000">@</font></b>mozilla.org<b><font color="#990000">/</font></b>compname<b><font color="#990000">&amp;</font>version</b><b><font color="#990000">?</font></b>var<b><font color="#990000">=</font></b>value<b><font color="#990000">&amp;</font></b>var<b><font color="#990000">=</font></b>value<b><font color="#990000">&amp;</font></b>var<b><font color="#990000">=</font></b>value...</i>
 <p>Let us consider some more examples:
 <ol>
 <li>
@@ -324,32 +324,32 @@ A helperapp that deals with application/postscript</li>
 </ol>
 All the above have what type they are and one or more arguments on what
 they particularly do.
-<p>The ProgID for these would look like
+<p>The ContractID for these would look like
 <ol>
 <li>
-<tt>component://netscape/network-protocol?type=nfs</tt></li>
+<tt>@mozilla.org/network-protocol;1?type=nfs</tt></li>
 
 <li>
-<tt>component://netscape/data-converter?type=application/x-zip</tt></li>
+<tt>@mozilla.org/data-converter;1?type=application/x-zip</tt></li>
 
 <li>
-<tt>component://netscape/plugin?type=image/gif;name=ImageMedia%20Gif%20Image%20Plugin;Description=Renders%20GIF%20Images....</tt></li>
+<tt>@mozilla.org/plugin;1?description=Renders GIF Images....&amp;name=ImageMedia Gif Image Plugin&amp;type=image/gif</tt></li>
 
 <li>
-<tt>component://netscape/widget?type=toolbar</tt></li>
+<tt>@mozilla.org/widget;1?type=toolbar</tt></li>
 
 <li>
-<tt>component://netscape/rdf/datsource?type=mail</tt></li>
+<tt>@mozilla.org/rdf/datsource;1?type=mail</tt></li>
 
 <li>
-<tt>component://netscape/helperapp?type=application/postscript</tt></li>
+<tt>@mozilla.org/helperapp;1?type=application/postscript</tt></li>
 </ol>
 {Assume proper escaping of all above URI}
-<p>The above semantics would let ProgID be an extensible mechanism that
+<p>The above semantics would let ContractID be an extensible mechanism that
 could be searched on multiple ways. And
-<br>query on a progid should match only whatever was passed in. So a query
+<br>query on a contractid should match only whatever was passed in. So a query
 for
-<br>component://netscape/plugin?type=image/gif should pass for the progid
+<br>@mozilla.org/plugin;1?type=image/gif should pass for the contractid
 specified above. We could extend this
 <br>mechanism with wildcards, but I dont want to go there yet... :-)
 <br>&nbsp;
@@ -408,7 +408,7 @@ No more hacking in calls to <tt>nsIRepository::RegisterFactory()</tt></li>
 No need to know the CLSID of components that you want to instantiate. Component
 creation can happen like this</li>
 
-<br><tt>nsIRepository::CreateInstance(<b>"<font color="#CC0000">component://netscape/network-protocol&amp;type=nfs</font>"</b>,
+<br><tt>nsIRepository::CreateInstance(<b>"<font color="#CC0000">@mozilla.org/network-protocol;1?type=nfs</font>"</b>,
 NULL, kProtocolIID, &amp;result);</tt>
 <br>instead of
 <br><strike>nsIRepository::CreateInstance(NFS_PROTOCOL_CID, NULL, domIID,
@@ -428,7 +428,7 @@ directory</li>
 nsRepository is a global object. Not nsIRepository exists.</li>
 
 <li>
-nsRepository::ProgIDToCLSID() implemented</li>
+nsRepository::ContractIDToCLSID() implemented</li>
 </ul>
 
 <h3>
@@ -438,11 +438,11 @@ happening</h3>
 
 <ul>
 <li>
-API changes to get ProgID in entire registration process for factories
+API changes to get ContractID in entire registration process for factories
 and components</li>
 
 <li>
-ProgID cache to improve performance of ProgID queries</li>
+ContractID cache to improve performance of ContractID queries</li>
 
 <li>
 Notion of Component dlls living in a <b>Components directory </b>and autoregistration
@@ -457,10 +457,10 @@ the app. <b>To make this happen we need a list of these.</b></li>
 Service Manager and Repository: Merge them</li>
 
 <li>
-Convenience function to createIntance(progid)</li>
+Convenience function to createIntance(contractid)</li>
 
 <li>
-Base ProgID in the interface ID header file</li>
+Base ContractID in the interface ID header file</li>
 </ul>
 
 <h3>
@@ -485,7 +485,7 @@ if your component lives in a DLL</li>
 <p><br><b><font color="#CC0000">Component Users</font></b>
 <ul>
 <li>
-Create all your components using ProgID rather than CID</li>
+Create all your components using ContractID rather than CID</li>
 
 <li>
 If you were thinking of managing creation of components yourself, think
@@ -516,7 +516,7 @@ Enumerate all interfaces supported by a CLSID</li>
 </ol>
 
 <li>
-Resolving naming conflicts between ProgID</li>
+Resolving naming conflicts between ContractID</li>
 
 <li>
 Store component specific name-values under <tt>ROOTKEY_COMMON\\<i>component.class.version\\</i></tt></li>

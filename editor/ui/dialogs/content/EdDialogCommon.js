@@ -549,7 +549,7 @@ function GetTreelistValueAt(tree, index)
 // forceInteger by petejc (pete@postpagan.com)
 
 // No one likes the beep!
-//var sysBeep = Components.classes["component://netscape/sound"].createInstance();
+//var sysBeep = Components.classes["@mozilla.org/sound;1"].createInstance();
 //sysBeep     = sysBeep.QueryInterface(Components.interfaces.nsISound);
 
 function forceInteger(elementID)
@@ -744,7 +744,7 @@ function GetPrefs()
 {
   var prefs;
   try {
-    prefs = Components.classes['component://netscape/preferences'];
+    prefs = Components.classes['@mozilla.org/preferences;1'];
     if (prefs) prefs = prefs.getService();
     if (prefs) prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
     if (prefs)
@@ -762,7 +762,7 @@ function GetPrefs()
 
 function GetScriptFileSpec()
 {
-  var fs = Components.classes["component://netscape/filespec"].createInstance();
+  var fs = Components.classes["@mozilla.org/filespec;1"].createInstance();
   fs = fs.QueryInterface(Components.interfaces.nsIFileSpec);
   fs.unixStyleFilePath = "journal.js";
   return fs;
@@ -772,7 +772,7 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
 function GetLocalFileURL(filterType)
 {
-  var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
   fp.init(window, editorShell.GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
 
   if (filterType == "img")

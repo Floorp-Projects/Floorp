@@ -47,6 +47,6 @@ interface nsIHelperAppLauncherDialog : nsISupports {
 
 
 %{C++
-#define NS_IHELPERAPPLAUNCHERDLG_PROGID    "mozilla.helperapplauncherdialog.1"
+#define NS_IHELPERAPPLAUNCHERDLG_CONTRACTID    "@mozilla.org/helperapplauncherdialog;1"
 #define NS_IHELPERAPPLAUNCHERDLG_CLASSNAME "Mozilla Helper App Launcher Confirmation Dialog"
 %}

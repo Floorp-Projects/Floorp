@@ -36,10 +36,10 @@
 
 
 const DEBUG = true; /* set to false to suppress debug messages */
-const FILEPICKER_PROGID     = "component://mozilla/filepicker";
+const FILEPICKER_CONTRACTID     = "@mozilla.org/filepicker;1";
 const FILEPICKER_CID        = Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}");
 
-const APPSHELL_SERV_PROGID  = "component://netscape/appshell/appShellService";
+const APPSHELL_SERV_CONTRACTID  = "@mozilla.org/appshell/appShellService;1";
 const nsIAppShellService    = Components.interfaces.nsIAppShellService;
 const nsILocalFile          = Components.interfaces.nsILocalFile;
 const nsIFileURL            = Components.interfaces.nsIFileURL;
@@ -75,7 +75,7 @@ nsFilePicker.prototype = {
   set fileURL(a) { throw "readonly property"; },
   get fileURL()  { 
     if (this.mFile) {
-      var url = Components.classes["component://netscape/network/standard-url"].createInstance(nsIFileURL);
+      var url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(nsIFileURL);
       url.file = this.mFile;
       return url;
     }
@@ -142,7 +142,7 @@ nsFilePicker.prototype = {
     o.filters.types = this.mFilters;
     o.retvals = new Object();
 
-    dump("nsIDOMWindow id value = " + nsIDOMWindow.id + "\n");
+    dump("@mozilla.org/js/xpc/ID;1OMWindow id value = " + nsIDOMWindow.id + "\n");
 
     var parent;
     try {
@@ -152,7 +152,7 @@ nsFilePicker.prototype = {
         parent = window;
       } else {
         try {
-          var appShellService = Components.classes[APPSHELL_SERV_PROGID].getService(nsIAppShellService);
+          var appShellService = Components.classes[APPSHELL_SERV_CONTRACTID].getService(nsIAppShellService);
           parent = appShellService.getHiddenDOMWindow();
         } catch(ex) {
           dump("Can't get parent.  xpconnect hates me so we can't get one from the appShellService.\n");
@@ -187,7 +187,7 @@ function (compMgr, fileSpec, location, type)
 {
     debug("registering (all right -- a JavaScript module!)");
     compMgr.registerComponentWithType(FILEPICKER_CID, "FilePicker JS Component",
-                                      FILEPICKER_PROGID, fileSpec, location,
+                                      FILEPICKER_CONTRACTID, fileSpec, location,
                                       true, true, type);
 }
 
@@ -241,7 +241,7 @@ function srGetAppLocale()
   var localeService = null;
   var applicationLocale = null;
 
-  localeService = Components.classes["component://netscape/intl/nslocaleservice"].createInstance();
+  localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].createInstance();
   if (!localeService) {
     dump("\n--** localeService createInstance 1 failed **--\n");
 	return null;
@@ -264,7 +264,7 @@ function srGetStrBundleWithLocale(path, locale)
   var strBundle = null;
 
   strBundleService =
-    Components.classes["component://netscape/intl/stringbundle"].createInstance(); 
+    Components.classes["@mozilla.org/intl/stringbundle;1"].createInstance(); 
 
   if (!strBundleService) {
     dump("\n--** strBundleService createInstance 1 failed **--\n");
@@ -307,7 +307,7 @@ function localeSwitching(winType, baseDirectory, providerName)
     dump("\n ** rdf = document.rdf ** \n");
   }
   else if(Components) {
-    var isupports = Components.classes['component://netscape/rdf/rdf-service'].getService();
+    var isupports = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
     rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
     dump("\n ** rdf = Components... ** \n");
   }

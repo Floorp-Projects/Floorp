@@ -48,7 +48,7 @@ interface nsIStopwatchService : nsIProperties
     {0x93, 0xbd, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} \
 }
 
-#define NS_STOPWATCHSERVICE_PROGID        "component://netscape/stopwatch-service"
+#define NS_STOPWATCHSERVICE_CONTRACTID        "@mozilla.org/stopwatch-service;1"
 #define NS_STOPWATCHSERVICE_CLASSNAME     "Stopwatch Service"
 %}
 
@@ -102,7 +102,7 @@ interface nsIStopwatch : nsISupports
     0x11d3,                                          \
     {0x93, 0xbb, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
-#define NS_STOPWATCH_PROGID        "component://netscape/stopwatch"
+#define NS_STOPWATCH_CONTRACTID        "@mozilla.org/stopwatch;1"
 #define NS_STOPWATCH_CLASSNAME     "Stopwatch"
 
 ////////////////////////////////////////////////////////////////////////////////

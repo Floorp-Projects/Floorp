@@ -8,7 +8,7 @@ const DEBUG_USE_PROFILE = true;
 
 
 try {
-  var chromeRegistry = Components.classes["component://netscape/chrome/chrome-registry"].getService();
+  var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
   if ( chromeRegistry )
     chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
 }

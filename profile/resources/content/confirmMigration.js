@@ -1,5 +1,5 @@
 var bundle;
-var profile = Components.classes["component://netscape/profile/manager"].getService();
+var profile = Components.classes["@mozilla.org/profile/manager;1"].getService();
 profile = profile.QueryInterface(Components.interfaces.nsIProfile);
 
 function handleOKButton()

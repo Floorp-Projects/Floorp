@@ -72,9 +72,9 @@ try {
 }
 
 function AddTestData() {
-	Check( parentOne, "xpcTestParentOne", c_p1 );
-	Check( parentTwo, "xpcTestParentTwo", c_p2 );
-	Check( cChild, "xpcTestChild4", c_c4 );
+	Check( parentOne, "@mozilla.org/js/xpc/test/ParentOne;1", c_p1 );
+	Check( parentTwo, "@mozilla.org/js/xpc/test/ParentTwo;1", c_p2 );
+	Check( cChild, "@mozilla.org/js/xpc/test/Child4;1", c_c4 );
 }
 
 function Check(parent,parentName,child) {
