@@ -124,7 +124,7 @@ function NewCardOKButton()
 		{
 			SetCardValues(cardproperty, document);
 		
-			cardproperty.AddCardToDatabase(uri);
+			cardproperty.addCardToDatabase(uri);
 		}
 	}	
 	
