@@ -73,6 +73,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 REQUIRES	+= intl profile appcomps
 endif
 
+ifdef NS_TRACE_MALLOC
+REQUIRES	+= tracemalloc
+endif
+
 include $(topsrcdir)/config/config.mk
 
 ifeq ($(USE_SHORT_LIBNAME),1)
@@ -107,6 +111,10 @@ EXTRA_DSO_LIBS += jsj
 endif
 endif
 
+ifdef NS_TRACE_MALLOC
+EXTRA_DSO_LIBS	+= tracemalloc
+endif
+
 else
 include $(topsrcdir)/config/static-config.mk
 
@@ -129,10 +137,6 @@ XP_LIBS		+= \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
-
-ifdef NS_TRACE_MALLOC
-DEFINES		+= -DNS_TRACE_MALLOC
-endif
 
 ifdef MOZ_JPROF
 XP_LIBS         += -ljprof
@@ -327,7 +331,7 @@ $(EXE_DEF_FILE):
 	@echo 	WinQueryProperty		= PMMERGE.5450 >>$(EXE_DEF_FILE)
 	@echo 	WinRemoveProperty		= PMMERGE.5451 >>$(EXE_DEF_FILE)
 	@echo 	WinSetProperty			= PMMERGE.5452 >>$(EXE_DEF_FILE)
-	
+
 LDFLAGS += /NOE
 endif
 endif

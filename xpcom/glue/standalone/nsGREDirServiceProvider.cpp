@@ -121,12 +121,20 @@ nsGREDirServiceProvider::GetGREDirectoryPath()
 {
   char *pGreLocation = nsnull;
   
+#ifndef XP_UNIX
   // If there exists a file named ".gre.conf" in the current working directory,
   // then we will not use any GRE.  The assumption here is that the GRE is in the
   // same directory as the executable.
-  
+
+  // we only do this on non-unix platforms per blizzard.  
   struct stat configStat;
   if (stat(".gre.config", &configStat) != -1)
+    return nsnull;
+#endif
+
+  // if USE_LOCAL_GRE is set, we just fall back on using no gre or rather,
+  // the Gecko bits that sit next to the application or in the LD_LIBRARY_PATH
+  if (PR_GetEnv("USE_LOCAL_GRE"))
     return nsnull;
 
   // check in the HOME directory

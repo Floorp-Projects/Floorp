@@ -41,6 +41,10 @@ REQUIRES	= xpcom \
 		  util \
 		  $(NULL)
 
+ifdef NS_TRACE_MALLOC
+REQUIRES	+= tracemalloc
+endif
+
 CPPSRCS		= \
 		nsGtkMain.cpp \
 		nsGtkMenu.cpp \

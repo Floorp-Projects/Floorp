@@ -64,23 +64,17 @@ EXPORTS		= \
 		nsWeakPtr.h \
 		$(NULL)
 
-ifdef NS_TRACE_MALLOC
-CSRCS           += nsTraceMalloc.c
-CPPSRCS         += nsTypeInfo.cpp 
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS		+= nsDebugHelpWin32.cpp nsWinTraceMalloc.cpp
-endif
-EXPORTS         += nsTraceMalloc.h
-DEFINES         += -DNS_TRACE_MALLOC
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 ifdef MOZ_DEBUG
 CSRCS		+= pure_api.c
 EXPORTS		+= pure.h
 endif
+CPPSRCS		+= nsStackFrameWin.cpp
 endif
 
+ifneq ($(OS_ARCH),WINNT)
+CPPSRCS		+= nsStackFrameUnix.cpp
+endif
 
 SDK_XPIDLSRCS   = \
 		nsIInterfaceRequestor.idl  \

@@ -63,6 +63,10 @@ REQUIRES = \
 	webbrwsr \
 	$(NULL)
 
+ifdef NS_TRACE_MALLOC
+REQUIRES	+= tracemalloc
+endif
+
 CPPSRCS		= \
 		CCustomPromptDialog.cpp     \
 		CMarginHeaderFooter.cpp     \
@@ -86,6 +90,10 @@ CPPSRCS		= \
 		$(NULL)
 
 EXTRA_DSO_LIBS	= embed_base_s gkgfx mfcEmbedComponents
+
+ifdef NS_TRACE_MALLOC
+EXTRA_DSO_LIBS	+= tracemalloc
+endif
 
 LIBS		= \
 		$(EXTRA_DSO_LIBS) \

@@ -90,9 +90,6 @@
 #include "pure.h"
 #endif
 #include "pldhash.h"
-#ifdef NS_TRACE_MALLOC
-#include "nsTraceMalloc.h"
-#endif
 #include "nsVariant.h"
 
 #ifdef DEBUG
@@ -182,17 +179,5 @@ void XXXNeverCalled()
     nsCOMArray<nsISupports> dummyArray;
     NS_NewArray(nsnull, dummyArray);
     NS_NewArrayEnumerator(nsnull, dummyArray);
-#ifdef NS_TRACE_MALLOC
-    NS_TraceMallocStartup(0);
-    NS_TraceMallocStartupArgs(0, NULL);
-    NS_TraceMallocShutdown();
-    NS_TraceMallocDisable();
-    NS_TraceMallocEnable();
-    NS_TraceMallocChangeLogFD(0);
-    NS_TraceMallocCloseLogFD(0);
-    NS_TraceMallocLogTimestamp(NULL);
-    NS_TraceMallocDumpAllocations(NULL);
-    NS_TraceMallocFlushLogfiles();
-#endif
     nsVariant();
 }

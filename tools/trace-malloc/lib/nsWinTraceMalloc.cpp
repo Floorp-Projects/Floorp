@@ -7,6 +7,7 @@
 #include "nscore.h"
 #include "nsAutoLock.h"
 
+#include "nsStackFrameWin.h"
 #include "nsDebugHelpWin32.h"
 #include "nsTraceMallocCallbacks.h"
 
@@ -15,7 +16,7 @@
 static PRBool GetSymbolFromAddress(uint32 addr, char* outBuf)
 {
     PRBool ok;
-    ok = dhwEnsureSymInitialized();
+    ok = EnsureSymInitialized();
     if(!ok)
         return ok;
 
@@ -26,10 +27,10 @@ static PRBool GetSymbolFromAddress(uint32 addr, char* outBuf)
 
     DWORD displacement;
 
-    ok = dhwSymGetSymFromAddr(::GetCurrentProcess(),
-                              addr,
-                              &displacement,
-                              symbol);
+    ok = SymGetSymFromAddr(::GetCurrentProcess(),
+                           addr,
+                           &displacement,
+                           symbol);
 
     if(ok)
     {
@@ -45,7 +46,7 @@ static PRBool GetSymbolFromAddress(uint32 addr, char* outBuf)
 static PRBool GetModuleFromAddress(uint32 addr, char* outBuf)
 {
     PRBool ok;
-    ok = dhwEnsureSymInitialized();
+    ok = EnsureSymInitialized();
     if(!ok)
         return ok;
 
@@ -53,9 +54,9 @@ static PRBool GetModuleFromAddress(uint32 addr, char* outBuf)
     IMAGEHLP_MODULE module;
     module.SizeOfStruct = sizeof(IMAGEHLP_MODULE);
 
-    ok = dhwSymGetModuleInfo(::GetCurrentProcess(),
-                             addr,
-                             &module);
+    ok = SymGetModuleInfo(::GetCurrentProcess(),
+                          addr,
+                          &module);
 
     if(ok)
         strcat(outBuf, module.ModuleName);
@@ -368,7 +369,7 @@ private:
 PR_IMPLEMENT(void)
 StartupHooker()
 {
-  if (!dhwEnsureSymInitialized())
+  if (!EnsureSymInitialized())
     return;
 
   //run through get all hookers

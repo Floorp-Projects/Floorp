@@ -55,10 +55,6 @@ endif
 # and then the static data cells used for locking no longer work.
 FORCE_SHARED_LIB = 1
 
-ifdef NS_TRACE_MALLOC
-REQUIRES	= xpcom
-endif
-
 CSRCS		= \
 		jsapi.c \
 		jsarena.c \

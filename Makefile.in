@@ -130,6 +130,10 @@ tier_2_dirs	+= \
 		xpcom \
 		$(NULL)
 
+ifdef NS_TRACE_MALLOC
+tier_2_dirs	+= tools/trace-malloc/lib tools/trace-malloc
+endif
+
 #
 # tier 9 - core components (necko,gecko)
 #
@@ -206,10 +210,6 @@ tier_9_dirs	+= xpfe xpinstall
 
 ifdef MOZ_LEAKY
 tier_9_dirs        += tools/leaky
-endif
-
-ifdef NS_TRACE_MALLOC
-tier_9_dirs	+= tools/trace-malloc
 endif
 
 ifdef MOZ_MAPINFO

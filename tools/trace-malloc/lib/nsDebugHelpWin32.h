@@ -104,7 +104,7 @@
 
 /***************************************************************************/
 // Global declarations of entry points into ImgHelp functions
-
+#if 0
 DHW_DECLARE_FUN_TYPE_AND_GLOBAL(SYMINITIALIZEPROC, SymInitialize, \
                                 BOOL, __stdcall, (HANDLE, LPSTR, BOOL));
 
@@ -120,12 +120,13 @@ DHW_DECLARE_FUN_TYPE_AND_GLOBAL(SYMGETMODULEINFO, SymGetModuleInfo, \
 DHW_DECLARE_FUN_TYPE_AND_GLOBAL(SYMGETSYMFROMADDRPROC, SymGetSymFromAddr, \
                                 BOOL, __stdcall, (HANDLE, DWORD, PDWORD, PIMAGEHLP_SYMBOL));
 
+#endif
+
 DHW_DECLARE_FUN_TYPE_AND_GLOBAL(ENUMERATELOADEDMODULES, EnumerateLoadedModules, \
                                 BOOL, __stdcall, (HANDLE, PENUMLOADED_MODULES_CALLBACK, PVOID));
 
 DHW_DECLARE_FUN_TYPE_AND_GLOBAL(IMAGEDIRECTORYENTRYTODATA, ImageDirectoryEntryToData, \
                                 PVOID, __stdcall, (PVOID, BOOL, USHORT, PULONG));
-
 
 // We aren't using any of the below yet...
 
@@ -166,9 +167,6 @@ DHW_DECLARE_FUN_TYPE_AND_GLOBAL(SYMGETLINEFROMADDR, SymGetLineFromAddr, \
 
 extern PRBool
 dhwEnsureImageHlpInitialized();
-
-extern PRBool
-dhwEnsureSymInitialized();
 
 /***************************************************************************/
 

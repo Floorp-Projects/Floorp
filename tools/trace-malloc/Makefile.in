@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 REQUIRES	= xpcom \
+		  tracemalloc \
 		  $(NULL)
 
 SIMPLECSRCS	+= \
@@ -51,9 +52,12 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
+EXTRA_DSO_LIBS	= tracemalloc
+
 LIBS		+= \
 		$(LIBS_DIR) \
 		tmreader.$(OBJ_SUFFIX) \
+		$(EXTRA_DSO_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Win32 x86 code for stack walking, symbol resolution, and function hooking */
 
 #if defined(_WIN32) && defined(_M_IX86)
 // This is the .cpp file where the globals live
@@ -48,19 +47,23 @@
 #include "plstr.h"
 #include "prlock.h"
 #include "nscore.h"
-#include "nsAutoLock.h"
 #include "nsDebugHelpWin32.h"
+#include "nsStackFrameWin.h"
 #else
 #error "nsDebugHelpWin32.cpp should only be built in Win32 x86 builds"
 #endif
 
 
 
+/***************************************************************************/
 
 
+PRLock*           DHWImportHooker::gLock  = nsnull;
+DHWImportHooker*  DHWImportHooker::gHooks = nsnull;
+GETPROCADDRESS    DHWImportHooker::gRealGetProcAddress = nsnull;
 
 
-PRBool
+static PRBool
 dhwEnsureImageHlpInitialized()
 {
   static PRBool gInitialized = PR_FALSE;
@@ -82,23 +85,8 @@ dhwEnsureImageHlpInitialized()
     dhw##name_ = (typename_) ::GetProcAddress(module, #name_); \
     if(!dhw##name_) return PR_FALSE;
 
-    INIT_PROC(SYMINITIALIZEPROC, SymInitialize);
-    INIT_PROC(SYMSETOPTIONS, SymSetOptions);
-    INIT_PROC(SYMGETOPTIONS, SymGetOptions);
-    INIT_PROC(SYMGETMODULEINFO, SymGetModuleInfo);
-    INIT_PROC(SYMGETSYMFROMADDRPROC, SymGetSymFromAddr);
     INIT_PROC(ENUMERATELOADEDMODULES, EnumerateLoadedModules);
     INIT_PROC(IMAGEDIRECTORYENTRYTODATA, ImageDirectoryEntryToData);
-
-//    INIT_PROC(SYMGETLINEFROMADDR, SymGetLineFromAddr);
-//    INIT_PROC(SYMCLEANUPPROC, SymCleanup);
-//    INIT_PROC(STACKWALKPROC, StackWalk);
-//    INIT_PROC(SYMFUNCTIONTABLEACCESSPROC, SymFunctionTableAccess);
-//    INIT_PROC(SYMGETMODULEBASEPROC, SymGetModuleBase);
-//    INIT_PROC(SYMLOADMODULE, SymLoadModule);
-//    INIT_PROC(UNDECORATESYMBOLNAME, UnDecorateSymbolName);
-//    INIT_PROC(SYMUNDNAME, SymUnDName);
-
 
 #undef INIT_PROC
 
@@ -108,33 +96,6 @@ dhwEnsureImageHlpInitialized()
   return gInitialized;
 } 
 
-PRBool
-dhwEnsureSymInitialized()
-{  
-  static PRBool gInitialized = PR_FALSE;
-
-  if (! gInitialized) {
-    if (! dhwEnsureImageHlpInitialized())
-      return PR_FALSE;
-    dhwSymSetOptions(
-#if defined(NS_TRACE_MALLOC)
-        SYMOPT_LOAD_LINES |
-#endif
-        SYMOPT_UNDNAME);
-    // dhwSymSetOptions(SYMOPT_UNDNAME);
-    if (! dhwSymInitialize(::GetCurrentProcess(), NULL, TRUE))
-        return PR_FALSE;
-    gInitialized = PR_TRUE;
-  }
-  return gInitialized;
-}
-
-/***************************************************************************/
-
-
-PRLock*           DHWImportHooker::gLock  = nsnull;
-DHWImportHooker*  DHWImportHooker::gHooks = nsnull;
-GETPROCADDRESS    DHWImportHooker::gRealGetProcAddress = nsnull;
 
 DHWImportHooker&
 DHWImportHooker::getGetProcAddressHooker()
@@ -201,9 +162,10 @@ DHWImportHooker::DHWImportHooker(const char* aModuleName,
 
     if(!gLock)
         gLock = PR_NewLock();
-    nsAutoLock lock(gLock);
+    PR_Lock(gLock);
 
-    dhwEnsureImageHlpInitialized();
+    EnsureImageHlpInitialized();
+    dhwEnsureImageHlpInitialized(); // for the extra ones we care about.
 
     if(!gRealGetProcAddress)
         gRealGetProcAddress = ::GetProcAddress;
@@ -215,11 +177,13 @@ DHWImportHooker::DHWImportHooker(const char* aModuleName,
     gHooks = this;
 
     PatchAllModules();
+
+    PR_Unlock(gLock);
 }   
 
 DHWImportHooker::~DHWImportHooker()
 {
-    nsAutoLock lock(gLock);
+    PR_Lock(gLock);
 
     mHooking = PR_FALSE;
     PatchAllModules();
@@ -236,16 +200,18 @@ DHWImportHooker::~DHWImportHooker()
                 break;
             }
         }
-        NS_ASSERTION(cur, "we were not in the list!");        
+        PR_ASSERT(cur); //we were not in the list!       
     }
 
     if(!gHooks)
     {
         PRLock* theLock = gLock;
         gLock = nsnull;
-        lock.unlock();
+        PR_Unlock(theLock);
         PR_DestroyLock(theLock);
     }
+    if (gLock)
+        PR_Unlock(gLock);
 }    
 
 static BOOL CALLBACK ModuleEnumCallback(LPSTR ModuleName,
@@ -351,11 +317,12 @@ DHWImportHooker::ModuleLoaded(HMODULE aModule, DWORD flags)
     //printf("ModuleLoaded\n");
     if(aModule && !(flags & LOAD_LIBRARY_AS_DATAFILE))
     {
-        nsAutoLock lock(gLock);
+        PR_Lock(gLock);
         // We don't know that the newly loaded module didn't drag in implicitly
         // linked modules, so we patch everything in sight.
         for(DHWImportHooker* cur = gHooks; cur; cur = cur->mNext)
             cur->PatchAllModules();
+        PR_Unlock(gLock);
     }
     return PR_TRUE;
 }
@@ -413,7 +380,7 @@ DHWImportHooker::GetProcAddress(HMODULE aModule, PCSTR aFunctionName)
     
     if(pfn)
     {
-        nsAutoLock lock(gLock);
+        PR_Lock(gLock);
         for(DHWImportHooker* cur = gHooks; cur; cur = cur->mNext)
         {
             if(pfn == cur->mOriginal)
@@ -422,75 +389,9 @@ DHWImportHooker::GetProcAddress(HMODULE aModule, PCSTR aFunctionName)
                 break;
             }    
         }
+        PR_Unlock(gLock);
     }
     return pfn;
 }
 
-/***************************************************************************/
-#if 0
 
-static _CRT_ALLOC_HOOK defaultDbgAllocHook = nsnull;
-static DHWAllocationSizeDebugHook* gAllocationSizeHook = nsnull;
-
-int __cdecl dhw_DbgAllocHook(int nAllocType, void *pvData, 
-                             size_t nSize, int nBlockUse, long lRequest, 
-                             const unsigned char * szFileName, int nLine )
-{
-    DHWAllocationSizeDebugHook* hook = gAllocationSizeHook;
-
-    if(hook)
-    {
-        PRBool res;
-        _CrtSetAllocHook(defaultDbgAllocHook);
-
-        switch(nAllocType)
-        {
-        case _HOOK_ALLOC:  
-            res = hook->AllocHook(nSize);
-            break;
-        case _HOOK_REALLOC:    
-            res = hook->ReallocHook(nSize, pvData ? 
-                                    _msize_dbg(pvData, nBlockUse) : 0);
-            break;
-        case _HOOK_FREE:    
-            res = hook->FreeHook(pvData ?
-                                    _msize_dbg(pvData, nBlockUse) : 0);
-            break;
-        default:
-            NS_ASSERTION(0,"huh?");
-            res = PR_TRUE;
-            break;
-        }
-
-        _CrtSetAllocHook(dhw_DbgAllocHook);
-        return (int) res;
-    }
-    return 1;
-}
-
-PRBool 
-dhwSetAllocationSizeDebugHook(DHWAllocationSizeDebugHook* hook)
-{
-    if(!hook || gAllocationSizeHook)
-        return PR_FALSE;
-    
-    gAllocationSizeHook = hook;    
-    
-    if(!defaultDbgAllocHook)
-        defaultDbgAllocHook = _CrtSetAllocHook(dhw_DbgAllocHook);
-    else
-        _CrtSetAllocHook(dhw_DbgAllocHook);
-    
-    return PR_TRUE;
-}
-
-PRBool 
-dhwClearAllocationSizeDebugHook()
-{
-    if(!gAllocationSizeHook)
-        return PR_FALSE;
-    gAllocationSizeHook = nsnull;
-    _CrtSetAllocHook(defaultDbgAllocHook);
-    return PR_TRUE;
-}
-#endif //0

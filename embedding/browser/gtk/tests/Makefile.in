@@ -31,6 +31,10 @@ REQUIRES	= xpcom \
 		  dom \
 		  $(NULL)
 
+ifdef NS_TRACE_MALLOC
+REQUIRES	+= tracemalloc
+endif
+
 CPPSRCS		= \
 		TestGtkEmbed.cpp \
 		TestGtkEmbedNotebook.cpp \
@@ -76,6 +80,11 @@ EXTRA_LIBS	+= -L$(DEPTH)/dist/lib/components
 EXTRA_LIBS	+= $(EXTRA_DSO_LIBS) $(STATIC_EXTRA_LIBS)
 
 endif
+
+ifdef NS_TRACE_MALLOC
+EXTRA_LIBS	+= -ltracemalloc
+endif
+
 
 EXTRA_LIBS	+= $(MOZ_JS_LIBS)
 EXTRA_LIBS	+= $(MOZ_COMPONENT_LIBS)
