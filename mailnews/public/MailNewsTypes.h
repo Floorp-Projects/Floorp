@@ -91,6 +91,15 @@ enum nsMsgViewType {
 };
 
 
+typedef enum
+{
+  nsMsgBiffState_NewMail,		/* User has new mail waiting. */
+  nsMsgBiffState_NoMail,        /* No new mail is waiting. */
+  nsMsgBiffState_Unknown        /* We dunno whether there is new mail. */
+} nsMsgBiffState;
+
+
+
 /* Flags about a single message.  These values are used in the MSG_MessageLine
    struct and in a folder's mozilla-status line. The summary file database
    should use the same set of flags..
