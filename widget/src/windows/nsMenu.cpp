@@ -494,6 +494,8 @@ nsEventStatus nsMenu::MenuConstruct(
     nsCOMPtr<nsIDOMNode> menuitemNode;
     ((nsIDOMNode*)mDOMNode)->GetFirstChild(getter_AddRefs(menuitemNode));
 
+	unsigned short menuIndex = 0;
+
     while (menuitemNode) {
       nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
       if (menuitemElement) {
@@ -502,7 +504,7 @@ nsEventStatus nsMenu::MenuConstruct(
         menuitemElement->GetNodeName(menuitemNodeType);
         if (menuitemNodeType.Equals("menuitem")) {
           // LoadMenuItem
-          LoadMenuItem(this, menuitemElement, menuitemNode, (nsIWebShell*)aWebShell);
+          LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
         } else if (menuitemNodeType.Equals("separator")) {
           AddSeparator();
         } else if (menuitemNodeType.Equals("menu")) {
@@ -510,6 +512,7 @@ nsEventStatus nsMenu::MenuConstruct(
           LoadSubMenu(this, menuitemElement, menuitemNode);
         }
       }
+	  ++menuIndex;
       nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
       oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
     } // end menu item innner loop
@@ -532,11 +535,15 @@ void nsMenu::LoadMenuItem(
   nsIMenu *    pParentMenu,
   nsIDOMElement * menuitemElement,
   nsIDOMNode *    menuitemNode,
+  unsigned short  menuitemIndex,
   nsIWebShell *   aWebShell)
 {
+  static const char* NS_STRING_TRUE = "true";
+  nsString disabled;
   nsString menuitemName;
   nsString menuitemCmd;
 
+  menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
   menuitemElement->GetAttribute(nsAutoString("name"), menuitemName);
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
   // Create nsMenuItem
@@ -570,6 +577,9 @@ void nsMenu::LoadMenuItem(
 	// code. 
     pnsMenuItem->SetWebShell(mWebShell);
     pnsMenuItem->SetDOMElement(domElement);
+
+	if(disabled == NS_STRING_TRUE )
+		::EnableMenuItem(mMenu, menuitemIndex, MF_BYPOSITION | MF_GRAYED);
     //menuDelegate->SetMenuItem(pnsMenuItem);
     //nsIXULCommand * icmd;
     //if (NS_OK == menuDelegate->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
@@ -633,6 +643,8 @@ void nsMenu::LoadSubMenu(
 	pnsMenu->SetDOMNode(menuNode);
 
     // Begin menuitem inner loop
+	unsigned short menuIndex = 0;
+
     nsCOMPtr<nsIDOMNode> menuitemNode;
     menuNode->GetFirstChild(getter_AddRefs(menuitemNode));
     while (menuitemNode) {
@@ -647,7 +659,7 @@ void nsMenu::LoadSubMenu(
 
         if (menuitemNodeType.Equals("menuitem")) {
           // Load a menuitem
-          LoadMenuItem(pnsMenu, menuitemElement, menuitemNode, mWebShell);
+          LoadMenuItem(pnsMenu, menuitemElement, menuitemNode, menuIndex, mWebShell);
         } else if (menuitemNodeType.Equals("separator")) {
           pnsMenu->AddSeparator();
         } else if (menuitemNodeType.Equals("menu")) {
@@ -655,6 +667,7 @@ void nsMenu::LoadSubMenu(
           LoadSubMenu(pnsMenu, menuitemElement, menuitemNode);
         }
       }
+	  ++menuIndex;
       nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
       oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
     } // end menu item innner loop
