@@ -29,7 +29,8 @@
 #include "prio.h"
 #include "nsIFileStream.h"
 #include "nsFileSpec.h"
-#include "nsIByteBufferInputStream.h"
+#include "nsIBuffer.h"
+#include "nsIBufferInputStream.h"
 #include "nsIThread.h"
 #include "nsISupportsArray.h"
 #include "nsIChannel.h"
@@ -113,7 +114,7 @@ public:
     }
 
     NS_IMETHOD OnDataAvailable(nsISupports* context,
-                               nsIInputStream *aIStream, 
+                               nsIBufferInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength) {
         PR_EnterMonitor(mMonitor);
@@ -204,7 +205,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     nsresult rv;
     nsISupports* fs;
     nsIInputStream* fileStr = nsnull;
-    nsIByteBufferInputStream* bufStr = nsnull;
+    nsIBufferInputStream* bufStr = nsnull;
     nsFileSpec spec(path);
     PRUint32 sourceOffset = 0;
 
@@ -218,7 +219,9 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     NS_RELEASE(fs);
     if (NS_FAILED(rv)) goto done;
 
-    rv = NS_NewByteBufferInputStream(&bufStr, PR_FALSE, NS_FILE_TRANSPORT_BUFFER_SIZE);
+    nsIBuffer* buf;
+    rv = NS_NewBuffer(&buf, NS_FILE_TRANSPORT_BUFFER_SIZE, NS_FILE_TRANSPORT_BUFFER_SIZE);
+    rv = NS_NewBufferInputStream(&bufStr, buf);
     if (NS_FAILED(rv)) goto done;
 
     if ( spec.GetFileSize() == 0) goto done;
@@ -226,7 +229,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     while (PR_TRUE) {
         PRUint32 amt;
 		/* id'l change to FillFrom... */
-        rv = bufStr->Fill(fileStr, spec.GetFileSize(), &amt);
+        rv = bufStr->FillFrom(fileStr, spec.GetFileSize(), &amt);
         if (rv == NS_BASE_STREAM_EOF) {
             rv = NS_OK;
             break;

@@ -22,8 +22,8 @@
 #include "nsIChannel.h"
 #include "nsISocketTransportService.h"
 #include "nsIURI.h"
-
-#include "nsIByteBufferInputStream.h" // for our internal stream state
+#include "nsIBuffer.h"
+#include "nsIBufferInputStream.h" // for our internal stream state
 #include "nsIInputStream.h"
 
 #include "prprf.h"
@@ -825,9 +825,11 @@ nsFtpConnectionThread::Run() {
                     // We're receiving a directory listing.
                     // Read it from the data stream.
                     PRUint32 bytes = 0, len = 0;
-                    nsIByteBufferInputStream* in;
+                    nsIBufferInputStream* in;
 
-                    rv = NS_NewByteBufferInputStream(&in);
+                    nsIBuffer* buf;
+                    rv = NS_NewBuffer(&buf, 4 * 1024, 16 * 1024);
+                    rv = NS_NewBufferInputStream(&in, buf);
                     if (NS_FAILED(rv)) {
                         mState = FTP_ERROR;
                         break;
@@ -938,9 +940,11 @@ nsFtpConnectionThread::Run() {
                     // We're receiving a file.
                     // Read it from the data stream.
                     PRUint32 bytes = 0, len = 0;
-                    nsIByteBufferInputStream* in;
+                    nsIBufferInputStream* in;
 
-                    rv = NS_NewByteBufferInputStream(&in);
+                    nsIBuffer* buf;
+                    rv = NS_NewBuffer(&buf, 4 * 1024, 16 * 1024);
+                    rv = NS_NewBufferInputStream(&in, buf);
                     if (NS_FAILED(rv)) {
                         mState = FTP_ERROR;
                         break;

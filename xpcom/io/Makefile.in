@@ -30,16 +30,16 @@ MODULE = xpcom
 
 XPIDL_MODULE = xpcom_io
 
-XPIDLSRCS =		    \
-	nsIFileSpec.idl	    \
-        nsIBaseStream.idl   \
-        nsIInputStream.idl  \
-        nsIOutputStream.idl \
-        nsIBufferInputStream.idl \
+XPIDLSRCS =			  \
+	nsIFileSpec.idl		  \
+        nsIBaseStream.idl	  \
+        nsIInputStream.idl	  \
+        nsIOutputStream.idl	  \
+        nsIBufferInputStream.idl  \
+        nsIBufferOutputStream.idl \
 	$(NULL)
 
 CPPSRCS =			     \
-	nsByteBufferInputStream.cpp  \
 	nsEscape.cpp                 \
 	nsFileSpec.cpp               \
 	nsFileSpecStreaming.cpp      \
@@ -58,7 +58,6 @@ EXPORTS = \
 	nsFileSpecImpl.h           \
 	nsFileSpecStreaming.h      \
 	nsFileStream.h             \
-	nsIByteBufferInputStream.h \
 	nsIFileStream.h            \
 	nsIStringStream.h          \
 	nsIUnicharInputStream.h    \

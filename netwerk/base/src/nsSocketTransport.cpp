@@ -28,6 +28,10 @@
 #include "nsSocketTransport.h"
 #include "nsSocketTransportService.h"
 #include "nsSocketTransportStreams.h"
+#include "nsIBuffer.h"
+#include "nsIBufferInputStream.h"
+#include "nsIBufferOutputStream.h"
+#include "nsAutoLock.h"
 
 //
 // This is the State table which maps current state to next state
@@ -253,7 +257,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
   // Enter the socket transport lock...  
   // This lock protects access to socket transport member data...
   //
-  Lock();
+  nsAutoLock lock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("+++ Entering nsSocketTransport::Process() [this=%x].\t"
@@ -389,9 +393,6 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
          ("--- Leaving nsSocketTransport::Process() [this=%x]. rv = %x.\t"
           "CurrentState = %d\n\n",
           this, rv, mCurrentState));
-
-  // Leave the socket transport lock...
-  Unlock();
 
   return rv;
 }
@@ -868,7 +869,7 @@ nsSocketTransport::Suspend(void)
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...
-  Lock();
+  nsAutoLock lock(mLock);
 
   mSuspendCount += 1;
   //
@@ -886,9 +887,6 @@ nsSocketTransport::Suspend(void)
           "mSuspendCount = %d.\n",
           this, rv, mSuspendCount));
 
-  // Leave the socket transport lock...
-  Unlock();
-
   return rv;
 }
 
@@ -899,7 +897,7 @@ nsSocketTransport::Resume(void)
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...
-  Lock();
+  nsAutoLock lock(mLock);
 
   if (mSuspendCount) {
     mSuspendCount -= 1;
@@ -920,9 +918,6 @@ nsSocketTransport::Resume(void)
           "mSuspendCount = %d.\n",
           this, rv, mSuspendCount));
 
-  // Leave the socket transport lock...
-  Unlock();
-
   return rv;
 }
 
@@ -942,7 +937,7 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...
-  Lock();
+  nsAutoLock lock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("+++ Entering nsSocketTransport::AsyncRead() [this=%x].\n", this));
@@ -983,9 +978,6 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
          ("--- Leaving nsSocketTransport::AsyncRead() [this=%x]. rv = %x.\n",
           this, rv));
 
-  // Leave the socket transport lock...
-  Unlock();
-
   return rv;
 }
 
@@ -1001,7 +993,7 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...
-  Lock();
+  nsAutoLock lock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("+++ Entering nsSocketTransport::AsyncWrite() [this=%x].\n", this));
@@ -1012,7 +1004,10 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    mWriteStream = aFromStream;
+    nsIBufferInputStream* str;
+    rv = aFromStream->QueryInterface(nsIBufferInputStream::GetIID(), (void**)&str);    // XXX not sure this is the right thing here
+    if (NS_FAILED(rv)) return rv;
+    mWriteStream = str;
     NS_ADDREF(mWriteStream);
 
     NS_IF_RELEASE(mWriteContext);
@@ -1035,9 +1030,6 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
          ("--- Leaving nsSocketTransport::AsyncWrite() [this=%x]. rv = %x.\n",
           this, rv));
 
-  // Leave the socket transport lock...
-  Unlock();
-
   return rv;
 }
 
@@ -1048,7 +1040,7 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...
-  Lock();
+  nsAutoLock lock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("+++ Entering nsSocketTransport::OpenInputStream() [this=%x].\n", 
@@ -1084,9 +1076,6 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
           "rv = %x.\n",
           this, rv));
 
-  // Leave the socket transport lock...
-  Unlock();
-
   return rv;
 }
 
@@ -1097,7 +1086,7 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...
-  Lock();
+  nsAutoLock lock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("+++ Entering nsSocketTransport::OpenOutputStream() [this=%x].\n", 
@@ -1118,9 +1107,10 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
   	// is called.
 
     // XXX not sure if this should be blocking (PR_TRUE) or non-blocking.
-    rv = NS_NewPipe(&mWriteStream,
-           result,
-           PR_FALSE, MAX_IO_BUFFER_SIZE);
+    nsIBufferOutputStream* out = nsnull;
+    rv = NS_NewPipe2(&mWriteStream, &out,
+                     MAX_IO_BUFFER_SIZE, MAX_IO_BUFFER_SIZE);
+    *result = out;
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1133,9 +1123,6 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
          ("--- Leaving nsSocketTransport::OpenOutputStream() [this=%x].\t"
           "rv = %x.\n",
           this, rv));
-
-  // Leave the socket transport lock...
-  Unlock();
 
   return rv;
 }

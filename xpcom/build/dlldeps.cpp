@@ -23,7 +23,7 @@
 #include "nsIAtom.h"
 #include "nsFileSpec.h"
 #include "nsIBuffer.h"
-#include "nsIByteBufferInputStream.h"
+//#include "nsIByteBufferInputStream.h"
 #include "nsFileStream.h"
 #include "nsFileSpecStreaming.h"
 #include "nsSpecialSystemDirectory.h"
@@ -50,7 +50,7 @@ void XXXNeverCalled()
     nsVoidArray();
     NS_GetNumberOfAtoms();
     nsFileURL(NULL);
-    NS_NewPipe(NULL, NULL);
+//    NS_NewPipe(NULL, NULL);
     NS_NewPipe2(NULL, NULL, 0, 0);
     nsFileSpec s;
     NS_NewIOFileStream(NULL, s, 0, 0);

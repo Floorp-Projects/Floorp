@@ -318,7 +318,13 @@ nsBuffer::WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeC
 
         PRUint32 readCount;
         rv = fromStream->Read(writeBuf, PR_MIN(writeBufLen, count), &readCount);
-        if (NS_FAILED(rv)) {
+        if (rv == NS_BASE_STREAM_EOF) {
+            // If the input stream ends, set EOF on the buffer so that
+            // nsBuffer::Read later notices it.
+            SetEOF();
+            return NS_OK;
+        }
+        else if (NS_FAILED(rv)) {
             // if we failed to read just report what we were
             // able to write so far
             return NS_OK;

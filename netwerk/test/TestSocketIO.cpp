@@ -29,8 +29,8 @@
 #include "nsIChannel.h"
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
-#include "nsIInputStream.h"
-#include "nsIByteBufferInputStream.h"
+#include "nsIBuffer.h"
+#include "nsIBufferInputStream.h"
 #include "nsCRT.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -55,7 +55,7 @@ public:
   NS_IMETHOD OnStartBinding(nsISupports* context);
 
   NS_IMETHOD OnDataAvailable(nsISupports* context,
-                             nsIInputStream *aIStream, 
+                             nsIBufferInputStream *aIStream, 
                              PRUint32 aSourceOffset,
                              PRUint32 aLength);
 
@@ -100,7 +100,7 @@ InputTestConsumer::OnStartBinding(nsISupports* context)
 
 NS_IMETHODIMP
 InputTestConsumer::OnDataAvailable(nsISupports* context,
-                                   nsIInputStream *aIStream, 
+                                   nsIBufferInputStream *aIStream, 
                                    PRUint32 aSourceOffset,
                                    PRUint32 aLength)
 {
@@ -235,10 +235,12 @@ main(int argc, char* argv[])
   if (NS_FAILED(rv)) return rv;
 
   // Create a stream for the data being written to the server...
-  nsIByteBufferInputStream* stream;
+  nsIBufferInputStream* stream;
   PRUint32 bytesWritten;
 
-  rv = NS_NewByteBufferInputStream(&stream);
+  nsIBuffer* buf;
+  rv = NS_NewBuffer(&buf, 1024, 4096);
+  rv = NS_NewBufferInputStream(&stream, buf);
   if (NS_FAILED(rv)) return rv;
 
   char *buffer = PR_smprintf("GET %s HTML/1.0%s%s", fileName, CRLF, CRLF);

@@ -18,7 +18,7 @@
 
 #include "nsIBuffer.h"
 #include "nsIBufferInputStream.h"
-#include "nsIOutputStream.h"
+#include "nsIBufferOutputStream.h"
 #include "nsAutoLock.h"
 
 class nsBufferInputStream;
@@ -39,6 +39,8 @@ public:
 
     // nsIBufferInputStream methods:
     NS_IMETHOD GetBuffer(nsIBuffer* *result);
+    NS_IMETHOD Fill(const char *buf, PRUint32 count, PRUint32 *_retval);
+    NS_IMETHOD FillFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval);
 
     // nsBufferInputStream methods:
     nsBufferInputStream(nsIBuffer* buf, PRBool blocking);
@@ -63,7 +65,7 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsBufferOutputStream : public nsIOutputStream
+class nsBufferOutputStream : public nsIBufferOutputStream
 {
 public:
     NS_DECL_ISUPPORTS
@@ -73,9 +75,12 @@ public:
 
     // nsIOutputStream methods:
     NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount); 
+    NS_IMETHOD Flush(void);
+
+    // nsIBufferOutputStream methods:
+    NS_IMETHOD GetBuffer(nsIBuffer * *aBuffer);
     NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
                          PRUint32 *aWriteCount);
-    NS_IMETHOD Flush(void);
 
     // nsBufferOutputStream methods:
     nsBufferOutputStream(nsIBuffer* buf, PRBool blocking);
@@ -110,7 +115,8 @@ nsBufferInputStream::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
     if (aInstancePtr == nsnull)
         return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(nsIInputStream::GetIID()) ||
+    if (aIID.Equals(nsIBufferInputStream::GetIID()) ||
+        aIID.Equals(nsIInputStream::GetIID()) ||
         aIID.Equals(nsIBaseStream::GetIID()) ||
         aIID.Equals(nsISupports::GetIID())) {
         *aInstancePtr = this;
@@ -181,9 +187,30 @@ nsBufferInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
 NS_IMETHODIMP
 nsBufferInputStream::GetBuffer(nsIBuffer* *result)
 {
+    if (mBuffer == nsnull)
+        return NS_BASE_STREAM_CLOSED;
+
     *result = mBuffer;
     NS_ADDREF(mBuffer);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBufferInputStream::Fill(const char* buf, PRUint32 count, PRUint32 *result)
+{
+    if (mBuffer == nsnull)
+        return NS_BASE_STREAM_CLOSED;
+
+    return mBuffer->Write(buf, count, result);
+}
+
+NS_IMETHODIMP
+nsBufferInputStream::FillFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *result)
+{
+    if (mBuffer == nsnull)
+        return NS_BASE_STREAM_CLOSED;
+
+    return mBuffer->WriteFrom(inStr, count, result);
 }
 
 nsresult
@@ -238,7 +265,8 @@ nsBufferInputStream::Fill()
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_COM nsresult
-NS_NewBufferInputStream(nsIInputStream* *result, nsIBuffer* buffer, PRBool blocking)
+NS_NewBufferInputStream(nsIBufferInputStream* *result,
+                        nsIBuffer* buffer, PRBool blocking)
 {
     nsBufferInputStream* str = new nsBufferInputStream(buffer, blocking);
     if (str == nsnull)
@@ -272,7 +300,8 @@ nsBufferOutputStream::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
     if (aInstancePtr == nsnull)
         return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(nsIOutputStream::GetIID()) ||
+    if (aIID.Equals(nsIBufferOutputStream::GetIID()) ||
+        aIID.Equals(nsIOutputStream::GetIID()) ||
         aIID.Equals(nsIBaseStream::GetIID()) ||
         aIID.Equals(nsISupports::GetIID())) {
         *aInstancePtr = this;
@@ -388,10 +417,19 @@ nsBufferOutputStream::Flush(void)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBufferOutputStream::GetBuffer(nsIBuffer * *aBuffer)
+{
+    *aBuffer = mBuffer;
+    NS_ADDREF(mBuffer);
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_COM nsresult
-NS_NewBufferOutputStream(nsIOutputStream* *result, nsIBuffer* buffer, PRBool blocking)
+NS_NewBufferOutputStream(nsIBufferOutputStream* *result,
+                         nsIBuffer* buffer, PRBool blocking)
 {
     nsBufferOutputStream* ostr = new nsBufferOutputStream(buffer, blocking);
     if (ostr == nsnull)
@@ -404,13 +442,13 @@ NS_NewBufferOutputStream(nsIOutputStream* *result, nsIBuffer* buffer, PRBool blo
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_COM nsresult
-NS_NewPipe2(nsIInputStream* *inStrResult,
-           nsIOutputStream* *outStrResult,
+NS_NewPipe2(nsIBufferInputStream* *inStrResult,
+           nsIBufferOutputStream* *outStrResult,
            PRUint32 growBySize, PRUint32 maxSize)
 {
     nsresult rv;
-    nsIInputStream* inStr = nsnull;
-    nsIOutputStream* outStr = nsnull;
+    nsIBufferInputStream* inStr = nsnull;
+    nsIBufferOutputStream* outStr = nsnull;
     nsIBuffer* buf = nsnull;
     
     rv = NS_NewPageBuffer(&buf, growBySize, maxSize);

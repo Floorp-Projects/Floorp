@@ -22,7 +22,8 @@
 #include "nsHeaderPair.h"
 #include "kHTTPHeaders.h"
 #include "nsHTTPEnums.h"
-#include "nsIByteBufferInputStream.h"
+#include "nsIBuffer.h"
+#include "nsIBufferInputStream.h"
 #include "plstr.h"
 #include "nsString.h"
 #include "nsIChannel.h"
@@ -73,9 +74,15 @@ NS_IMPL_ADDREF(nsHTTPRequest);
 nsresult
 nsHTTPRequest::Build()
 {
+    nsresult rv;
+
     if (m_Request)
         NS_ERROR("Request already built!");
-    nsresult rv = NS_NewByteBufferInputStream(&m_Request);
+
+    nsIBuffer* buf;
+    rv = NS_NewBuffer(&buf, 4 * 1024, 16 * 1024);
+    if (NS_FAILED(rv)) return rv;
+    rv = NS_NewBufferInputStream(&m_Request, buf);
     if (NS_SUCCEEDED(rv))
     {
 

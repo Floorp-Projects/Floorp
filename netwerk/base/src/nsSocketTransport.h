@@ -25,7 +25,7 @@
 
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
-#include "nsIByteBufferInputStream.h"
+#include "nsIBufferInputStream.h"
 
 //
 // This is the size of the global buffer used by all nsSocketTransport 
@@ -108,10 +108,6 @@ protected:
   nsresult doRead(PRInt16 aSelectFlags);
   nsresult doWrite(PRInt16 aSelectFlags);
 
-  // Inline helpers...
-  void Lock  (void) { NS_ASSERTION(mLock, "Lock null."); PR_Lock(mLock);   }
-  void Unlock(void) { NS_ASSERTION(mLock, "Lock null."); PR_Unlock(mLock); }
-
 protected:
   PRCList           mListLink;
 
@@ -134,7 +130,7 @@ protected:
 
   nsISupports*              mWriteContext;
   nsIStreamObserver*        mWriteObserver;
-  nsIInputStream*           mWriteStream;
+  nsIBufferInputStream*     mWriteStream;
   
   PRUint32 mSourceOffset;
 

@@ -17,8 +17,7 @@
  */
 
 #include "nsFtpStreamListenerEvent.h"
-#include "nsIInputStream.h"
-
+#include "nsIBufferInputStream.h"
 #include "nscore.h"
 #include "nsIString.h"
 
@@ -117,7 +116,7 @@ nsFtpOnDataAvailableEvent::~nsFtpOnDataAvailableEvent()
 }
 
 nsresult
-nsFtpOnDataAvailableEvent::Init(nsIInputStream* aIStream, 
+nsFtpOnDataAvailableEvent::Init(nsIBufferInputStream* aIStream, 
                                 PRUint32 aSourceOffset, PRUint32 aLength)
 {
     mLength = aLength;
@@ -136,7 +135,7 @@ nsFtpOnDataAvailableEvent::HandleEvent()
 /*
 NS_IMETHODIMP 
 nsMarshalingStreamListener::OnDataAvailable(nsISupports* context,
-                                            nsIInputStream *aIStream, 
+                                            nsIBufferInputStream *aIStream, 
                                             PRUint32 aSourceOffset,
                                             PRUint32 aLength)
 {

@@ -16,11 +16,11 @@
  * Reserved.
  */
 
-
+#include "nsIBuffer.h"
 
 //
 // --------------------------------------------------------------------------
-// Private implementation of a nsIByteBufferInputStream used by the
+// Private implementation of a nsIBufferInputStream used by the
 // nsSocketTransport implementation
 // --------------------------------------------------------------------------
 //
@@ -103,8 +103,10 @@ nsresult nsSocketTransportStream::Init(nsSocketTransport* aTransport,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = NS_NewByteBufferInputStream(&mStream, PR_FALSE, 
-                                     MAX_IO_BUFFER_SIZE);
+    nsIBuffer* buf;
+    rv = NS_NewBuffer(&buf, MAX_IO_BUFFER_SIZE, MAX_IO_BUFFER_SIZE);
+    if (NS_FAILED(rv)) return rv;
+    rv = NS_NewBufferInputStream(&mStream, buf);
   }
 
   return rv;
@@ -138,7 +140,7 @@ nsresult nsSocketTransportStream::BlockTransport(void)
 //
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsSocketTransportStream, 
-                             nsIByteBufferInputStream::GetIID());
+                             nsIBufferInputStream::GetIID());
 
 
 //
@@ -218,14 +220,20 @@ nsSocketTransportStream::Read(char * aBuf, PRUint32 aCount,
 
 //
 // --------------------------------------------------------------------------
-// nsIByteBufferInputStream implementation...
+// nsIBufferInputStream implementation...
 // --------------------------------------------------------------------------
 //
 
 NS_IMETHODIMP
-nsSocketTransportStream::Fill(nsIInputStream* aStream, 
-                              PRUint32 aCount, 
-                              PRUint32 *aWriteCount)
+nsSocketTransportStream::GetBuffer(nsIBuffer* *result)
+{
+  return mStream->GetBuffer(result);
+}
+
+NS_IMETHODIMP
+nsSocketTransportStream::FillFrom(nsIInputStream* aStream, 
+                                  PRUint32 aCount, 
+                                  PRUint32 *aWriteCount)
 {
   nsresult rv;
 
@@ -237,7 +245,7 @@ nsSocketTransportStream::Fill(nsIInputStream* aStream,
           "aCount=%d\n",
           this, aCount));
 
-  rv = mStream->Fill(aStream, aCount, aWriteCount);
+  rv = mStream->FillFrom(aStream, aCount, aWriteCount);
 
   if (mIsStreamBlocking && (NS_BASE_STREAM_WOULD_BLOCK != rv)) {
     Notify();

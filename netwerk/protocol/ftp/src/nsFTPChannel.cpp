@@ -21,7 +21,7 @@
 #include "nsFTPChannel.h"
 #include "nscore.h"
 #include "nsIServiceManager.h"
-#include "nsIByteBufferInputStream.h"
+#include "nsIBufferInputStream.h"
 #include "nsFtpConnectionThread.h"
 #include "nsIEventQueueService.h"
 #include "nsIProgressEventSink.h"
@@ -260,9 +260,9 @@ nsFTPChannel::OnStopRequest(nsISupports* context,
 
 NS_IMETHODIMP
 nsFTPChannel::OnDataAvailable(nsISupports* context,
-                                         nsIInputStream *aIStream, 
-                                         PRUint32 aSourceOffset,
-                                         PRUint32 aLength) {
+                              nsIBufferInputStream *aIStream, 
+                              PRUint32 aSourceOffset,
+                              PRUint32 aLength) {
     // Fill in the buffer w/ the new data.
     return NS_ERROR_NOT_IMPLEMENTED;
 }

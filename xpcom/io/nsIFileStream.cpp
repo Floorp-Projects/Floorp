@@ -154,11 +154,6 @@ class FileImpl
 								            *aWriteCount = bytesWrit;
 								            return NS_OK;
 								        }
-        NS_IMETHOD                      WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
-                                                  PRUint32 *aWriteCount)
-                                        {
-                                            return NS_ERROR_NOT_IMPLEMENTED;
-                                        }
         NS_IMETHOD                      Flush();
 
         NS_IMETHOD                      GetAtEOF(PRBool* outAtEOF)

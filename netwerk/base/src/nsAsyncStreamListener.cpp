@@ -18,7 +18,7 @@
 
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
-#include "nsIInputStream.h"
+#include "nsIBufferInputStream.h"
 #include "nsIString.h"
 #include "nsCRT.h"
 #include "nsIEventQueue.h"
@@ -97,7 +97,7 @@ public:
     }
 
     NS_IMETHOD OnDataAvailable(nsISupports* context,
-                               nsIInputStream *aIStream, 
+                               nsIBufferInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
 
@@ -451,14 +451,14 @@ public:
           mIStream(nsnull), mLength(0) {}
     virtual ~nsOnDataAvailableEvent();
 
-    nsresult Init(nsIInputStream* aIStream, PRUint32 aSourceOffset,
+    nsresult Init(nsIBufferInputStream* aIStream, PRUint32 aSourceOffset,
                   PRUint32 aLength);
     NS_IMETHOD HandleEvent();
 
 protected:
-    nsIInputStream*     mIStream;
-    PRUint32            mSourceOffset;
-    PRUint32            mLength;
+    nsIBufferInputStream*       mIStream;
+    PRUint32                    mSourceOffset;
+    PRUint32                    mLength;
 };
 
 nsOnDataAvailableEvent::~nsOnDataAvailableEvent()
@@ -467,7 +467,7 @@ nsOnDataAvailableEvent::~nsOnDataAvailableEvent()
 }
 
 nsresult
-nsOnDataAvailableEvent::Init(nsIInputStream* aIStream, PRUint32 aSourceOffset,
+nsOnDataAvailableEvent::Init(nsIBufferInputStream* aIStream, PRUint32 aSourceOffset,
                              PRUint32 aLength)
 {
     mSourceOffset = aSourceOffset;
@@ -486,9 +486,9 @@ nsOnDataAvailableEvent::HandleEvent()
 
 NS_IMETHODIMP 
 nsAsyncStreamListener::OnDataAvailable(nsISupports* context,
-                                            nsIInputStream *aIStream, 
-                                            PRUint32 aSourceOffset,
-                                            PRUint32 aLength)
+                                       nsIBufferInputStream *aIStream, 
+                                       PRUint32 aSourceOffset,
+                                       PRUint32 aLength)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;

@@ -20,7 +20,7 @@
 #include "nsIStreamListener.h"
 #include "nsHTTPResponseListener.h"
 #include "nsIChannel.h"
-#include "nsIInputStream.h"
+#include "nsIBufferInputStream.h"
 #include "nsHTTPChannel.h"
 #include "nsHTTPResponse.h"
 #include "nsIHttpEventSink.h"
@@ -50,9 +50,9 @@ NS_IMPL_ISUPPORTS(nsHTTPResponseListener,nsIStreamListener::GetIID());
 
 NS_IMETHODIMP
 nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
-                            nsIInputStream *i_pStream, 
-                            PRUint32 i_SourceOffset,
-                            PRUint32 i_Length)
+                                        nsIBufferInputStream *i_pStream, 
+                                        PRUint32 i_SourceOffset,
+                                        PRUint32 i_Length)
 {
     nsIInputStream* inStr = nsnull;
 

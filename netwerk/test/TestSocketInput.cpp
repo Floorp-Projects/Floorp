@@ -27,7 +27,7 @@
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
-#include "nsIInputStream.h"
+#include "nsIBufferInputStream.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
@@ -48,7 +48,7 @@ public:
   NS_IMETHOD OnStartBinding(nsISupports* context);
 
   NS_IMETHOD OnDataAvailable(nsISupports* context,
-                             nsIInputStream *aIStream, 
+                             nsIBufferInputStream *aIStream, 
                              PRUint32 aSourceOffset,
                              PRUint32 aLength);
 
@@ -93,7 +93,7 @@ InputTestConsumer::OnStartBinding(nsISupports* context)
 
 NS_IMETHODIMP
 InputTestConsumer::OnDataAvailable(nsISupports* context,
-                                   nsIInputStream *aIStream, 
+                                   nsIBufferInputStream *aIStream, 
                                    PRUint32 aSourceOffset,
                                    PRUint32 aLength)
 {

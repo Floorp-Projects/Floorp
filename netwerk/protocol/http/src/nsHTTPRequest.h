@@ -27,7 +27,7 @@
 class nsIInputStream;
 class nsIURL;
 class nsVoidArray;
-class nsIByteBufferInputStream;
+class nsIBufferInputStream;
 class nsIChannel;
 class nsHTTPChannel;
 
@@ -298,7 +298,7 @@ protected:
     HTTPVersion                 m_Version;
     HTTPMethod                  m_Method;
     // The actual request stream! 
-    nsIByteBufferInputStream*   m_Request; 
+    nsIBufferInputStream*       m_Request; 
     nsVoidArray*                m_pArray;
     nsIChannel*                 m_pTransport;
     nsHTTPChannel*              m_pConnection;

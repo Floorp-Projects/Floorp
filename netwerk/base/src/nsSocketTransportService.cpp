@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -19,7 +19,7 @@
 
 #include "nsSocketTransportService.h"
 #include "nsSocketTransport.h"
-
+#include "nsAutoLock.h"
 
 #define MAX_OPEN_CONNECTIONS 50
 
@@ -166,17 +166,18 @@ nsresult nsSocketTransportService::AddToWorkQ(nsSocketTransport* aTransport)
   nsresult rv = NS_OK;
   PRCList* qp;
 
-  Lock();
-  //
-  // Only add the transport if it is *not* already on the list...
-  //
-  qp = aTransport->GetListNode();
-  if (PR_CLIST_IS_EMPTY(qp)) {
-    NS_ADDREF(aTransport);
-    bFireEvent = PR_CLIST_IS_EMPTY(&mWorkQ);
-    PR_APPEND_LINK(qp, &mWorkQ);
+  {
+    nsAutoLock lock(mThreadLock);
+    //
+    // Only add the transport if it is *not* already on the list...
+    //
+    qp = aTransport->GetListNode();
+    if (PR_CLIST_IS_EMPTY(qp)) {
+      NS_ADDREF(aTransport);
+      bFireEvent = PR_CLIST_IS_EMPTY(&mWorkQ);
+      PR_APPEND_LINK(qp, &mWorkQ);
+    }
   }
-  Unlock();
   //
   // Only fire an event if this is the first entry in the workQ.  Otherwise,
   // the event has already been fired and the transport thread will process
@@ -204,7 +205,7 @@ nsresult nsSocketTransportService::ProcessWorkQ(void)
   // XXX:  Need a way to restart the ProcessWorkQ(...) when space becomes
   //       available in the select set...
   //
-  Lock();
+  nsAutoLock lock(mThreadLock);
   while (!PR_CLIST_IS_EMPTY(&mWorkQ) && 
          (MAX_OPEN_CONNECTIONS > mSelectFDSetCount)) {
     nsSocketTransport* transport;
@@ -229,7 +230,6 @@ nsresult nsSocketTransportService::ProcessWorkQ(void)
     // Release the transport object (since it is no longer on the WorkQ).
     NS_RELEASE(transport);
   }
-  Unlock();
 
   return rv;
 }
