@@ -95,7 +95,7 @@ MangleKeywordIntoHTTPURL(const char *aSpec) {
     nsCAutoString query;
 
     // pull out the "go" action word, or '?', if any
-    char one = aSpec[10], two = aSpec[11];
+    char one = aSpec[0], two = aSpec[1];
     if ( ((one == '?') && (two == ' ')) ) {      // "? blah"
         query = aSpec+2;
     } else if ( (one == 'g' || one == 'G')       //
