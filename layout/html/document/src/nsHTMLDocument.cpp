@@ -931,8 +931,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     //the caller total control over process, and decoupling
     //parser from any given grammar.
 
-//        nsIDTD* theDTD=0;
-//        NS_NewNavHTMLDTD(&theDTD);
+//        nsCOMPtr<nsIDTD> theDTD;
+//        NS_NewNavHTMLDTD(getter_AddRefs(theDTD));
 //        mParser->RegisterDTD(theDTD);
 
     if(cdetflt)
@@ -2099,8 +2099,8 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
         result = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURL, webShell);
 
         if (NS_OK == result) {
-          nsIDTD* theDTD=0;
-          NS_NewNavHTMLDTD(&theDTD);
+          nsCOMPtr<nsIDTD> theDTD;
+          NS_NewNavHTMLDTD(getter_AddRefs(theDTD));
           mParser->RegisterDTD(theDTD);
           mParser->SetContentSink(sink); 
         }
