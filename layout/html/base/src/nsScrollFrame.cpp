@@ -510,8 +510,61 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Get the scrollbar dimensions (width of the vertical scrollbar and the
   // height of the horizontal scrollbar) in twips
-  nscoord   sbWidth, sbHeight;
-  GetScrollbarDimensions(aPresContext, sbWidth, sbHeight);
+  nscoord   sbWidth = 0, sbHeight = 0;
+  PRBool    getScrollBarDimensions = PR_TRUE;
+
+  // XXX: Begin Temporary Hack.
+  //
+  //      The style system needs to be modified so we can
+  //      independently hide the horizontal scrollbar, the
+  //      vertical scrollbar, or both, but still be able to
+  //      scroll the view.
+  //
+  //      An example of this would be a Gfx textfield, which
+  //      has no scrollbars, but must be able to scroll as the
+  //      cursor moves through the text it contains.
+  //
+  //      Right now the only way for us to create a scrolling
+  //      frame with no scrollbars is to create one with scrollbars,
+  //      then hide them by setting the scroll preference in the
+  //      scrolling view to nsScrollPreference_kNeverScroll. Doing
+  //      this makes the scroll frame's style info and the scrolling
+  //      view's scroll preference out of sync, allowing the view
+  //      size calculations below to incorrectly include the scrollbar
+  //      dimensions in the size calculation.
+  //
+  //      This hack gets around the problem, but goes against the
+  //      defined flow of control between the scroll frame and it's
+  //      view, so this hack should be removed when the style system
+  //      adds the support described above.
+  //
+  //      troy@netscape.com allowed me to check this hack in so that
+  //      we can get Gfx textfields working without waiting for the
+  //      support from the style system.
+  //
+  //      For more info contact: kin@netscape.com
+  //
+  nsIView   *view = 0;
+
+  GetView(&view);
+
+  if (view) {
+    nsresult rv = NS_OK;
+    nsIScrollableView *scrollableView = 0;
+    
+    rv = view->QueryInterface(nsIScrollableView::GetIID(), (void **)&scrollableView);
+
+    if (NS_SUCCEEDED(rv) && scrollableView) {
+      nsScrollPreference scrollPref = nsScrollPreference_kAuto;
+      rv = scrollableView->GetScrollPreference(scrollPref);
+      if (NS_SUCCEEDED(rv) && scrollPref == nsScrollPreference_kNeverScroll)
+        getScrollBarDimensions = PR_FALSE;
+    }
+  }
+  // XXX: End Temporary Hack.
+
+  if (getScrollBarDimensions)
+    GetScrollbarDimensions(aPresContext, sbWidth, sbHeight);
 
   // Compute the scroll area size (area inside of the border edge and inside
   // of any vertical and horizontal scrollbars), and whether space was left
