@@ -1583,7 +1583,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
 /* saves out the HTTP cookies to disk */
 PUBLIC nsresult
 COOKIE_Write() {
-  if (!cookie_changed || !cookie_list) {
+  if (!cookie_changed) {
     return NS_OK;
   }
   cookie_CookieStruct * cookie_s;
@@ -1619,7 +1619,7 @@ COOKIE_Write() {
    * expires is a time_t integer
    * cookie can have tabs
    */
-  PRInt32 count = cookie_list->Count();
+  PRInt32 count = cookie_list ? cookie_list->Count() : 0;
   for (PRInt32 i = 0; i < count; ++i) {
     cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
     NS_ASSERTION(cookie_s, "corrupt cookie list");
