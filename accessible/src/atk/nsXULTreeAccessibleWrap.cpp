@@ -210,8 +210,10 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::CellRefAt(PRInt32 aRow, PRInt32 aColumn, 
   rv = header->CellRefAt(0, aColumn, getter_AddRefs(column));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(column));
+  NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
   nsCOMPtr<nsIDOMNode> columnNode;
-  rv = column->GetDOMNode(getter_AddRefs(columnNode));
+  rv = accessNode->GetDOMNode(getter_AddRefs(columnNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMElement> columnElement(do_QueryInterface(columnNode, &rv));

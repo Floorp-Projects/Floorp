@@ -636,13 +636,6 @@ NS_IMETHODIMP nsAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessibl
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsAccessible::GetDOMNode(nsIDOMNode **_retval)
-{
-    *_retval = mDOMNode;
-    NS_IF_ADDREF(*_retval);
-    return NS_OK;
-}
-
 void nsAccessible::GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect)
 {
   aRect->x = aRect->y = 0;
