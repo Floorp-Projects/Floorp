@@ -407,8 +407,6 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 void
 RDFTreeBuilderImpl::Notify(nsITimer *timer)
 {
-	NS_VERIFY(NS_SUCCEEDED(NS_NewTimer(&mTimer)),
-		"couldn't get timer");
 	if (!mTimer)	return;
 
 	if (mRoot)
@@ -440,9 +438,19 @@ RDFTreeBuilderImpl::Notify(nsITimer *timer)
 			NS_RELEASE(treeBody);
 		}
 	}
+	mTimer->Cancel();
+	NS_RELEASE(mTimer);
+	mTimer = nsnull;
 
-	// reschedule
-	mTimer->Init(this, /* PR_TRUE, */ BUILDER_NOTIFY_MINIMUM_TIMEOUT);
+	// reschedule timer (if document still around)
+	if (mDocument)
+	{
+		NS_VERIFY(NS_SUCCEEDED(NS_NewTimer(&mTimer)), "couldn't get timer");
+		if (mTimer)
+		{
+			mTimer->Init(this, /* PR_TRUE, */ BUILDER_NOTIFY_MINIMUM_TIMEOUT);
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////
