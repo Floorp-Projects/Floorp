@@ -312,7 +312,7 @@ updateViewItem(HT_Resource node)
 PR_PUBLIC_API(PRBool)
 HT_IsLocalData (HT_Resource node)
 {
-	PRBool		isLocal = PR_FALSE;
+	PRBool		isLocal = PR_TRUE;
 	char		*origin;
 
 	XP_ASSERT(node != NULL);
@@ -321,10 +321,10 @@ HT_IsLocalData (HT_Resource node)
 	{
 		if ((origin = node->dataSource) != NULL)
 		{
-			if (startsWith("rdf:lfs", origin) ||
-				startsWith("rdf:localStore", origin))
+			if ((!startsWith("rdf:lfs", origin)) &&
+				(!startsWith("rdf:localStore", origin)))
 			{
-				isLocal = PR_TRUE;
+				isLocal = PR_FALSE;
 			}
 		}
 	}
