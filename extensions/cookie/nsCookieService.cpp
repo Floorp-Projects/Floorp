@@ -110,10 +110,16 @@ nsCookieService::SetCookieString(nsIURI *aURL, nsIDocument* aDoc, const nsString
   char *cookie = aCookie.ToNewCString();
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj;
-  aDoc->GetScriptGlobalObject(getter_AddRefs(globalObj));
-  nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(globalObj));
   nsCOMPtr<nsIPrompt> prompt;
-  window->GetPrompter(getter_AddRefs(prompt));
+  if (aDoc) {
+    aDoc->GetScriptGlobalObject(getter_AddRefs(globalObj));
+    if (globalObj) {
+      nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(globalObj));
+      if (window) {
+        window->GetPrompter(getter_AddRefs(prompt));
+      }
+    }
+  }
 
   COOKIE_SetCookieString((char *)spec, prompt, cookie);
   nsCRT::free(spec);
