@@ -1101,7 +1101,7 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 				parser.Parse(kNC_IEFavoritesRoot, kNC_IEFavorite);
 				
 				nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
-				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
+				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle.GetUnicode(), getter_AddRefs(ieTitleLiteral))))
 				{
 					rv = mInner->Assert(kNC_IEFavoritesRoot, kNC_Name, ieTitleLiteral, PR_TRUE);
 				}
