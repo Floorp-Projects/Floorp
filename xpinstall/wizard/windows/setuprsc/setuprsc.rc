@@ -1,0 +1,371 @@
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ *
+ * Contributors:
+ *     Sean Su <ssu@netscape.com>
+ */
+
+//Microsoft Developer Studio generated resource script.
+//
+#include "setuprsc.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "setuprsc.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_WELCOME DIALOGEX 51, 56, 315, 205
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Next >",ID_WIZNEXT,188,186,53,12
+    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,12
+    LTEXT           "",IDC_STATIC0,127,11,176,37,NOT WS_GROUP
+    LTEXT           "",IDC_STATIC1,127,53,176,37,NOT WS_GROUP
+    LTEXT           "",IDC_STATIC2,127,96,176,37,NOT WS_GROUP
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,80,160,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
+                    WS_EX_STATICEDGE
+END
+
+DLG_SETUP_TYPE DIALOGEX 51, 56, 315, 205
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_RADIO_ST0,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,102,31,65,8
+    CONTROL         "",IDC_RADIO_ST1,"Button",BS_AUTORADIOBUTTON,102,59,65,8
+    CONTROL         "",IDC_RADIO_ST2,"Button",BS_AUTORADIOBUTTON,102,86,64,8
+    CONTROL         "",IDC_RADIO_ST3,"Button",BS_AUTORADIOBUTTON,102,114,64,
+                    8
+    LTEXT           "",IDC_STATIC_ST0_DESCRIPTION,175,31,126,24
+    LTEXT           "",IDC_STATIC_ST3_DESCRIPTION,175,114,126,25
+    LTEXT           "",IDC_STATIC_ST1_DESCRIPTION,175,59,126,24
+    LTEXT           "",IDC_STATIC_ST2_DESCRIPTION,175,86,126,24
+    GROUPBOX        "&Destination Directory",IDC_STATIC,101,147,204,27
+    EDITTEXT        IDC_EDIT_DESTINATION,106,157,144,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse...",IDC_BUTTON_BROWSE,255,157,46,12
+    PUSHBUTTON      "< &Back",ID_WIZBACK,134,186,53,12
+    DEFPUSHBUTTON   "&Next >",ID_WIZNEXT,188,186,53,12
+    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,12
+    LTEXT           "",IDC_STATIC_MSG0,101,11,204,17,NOT WS_GROUP
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,80,160,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
+                    WS_EX_STATICEDGE
+END
+
+DLG_SELECT_COMPONENTS DIALOGEX 51, 56, 315, 205
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "< &Back",ID_WIZBACK,134,186,53,12
+    DEFPUSHBUTTON   "&Next >",ID_WIZNEXT,188,186,53,12
+    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,12
+    LTEXT           "Select the components you want to install, clear the components you do not want to install. ",
+                    IDC_STATIC,101,10,204,19,NOT WS_GROUP
+    LTEXT           "C&omponents",IDC_STATIC,101,32,204,8
+    GROUPBOX        "Description",IDC_STATIC,101,112,204,22
+    LTEXT           "Component Description",IDC_STATIC_DESCRIPTION,106,121,
+                    195,8
+    GROUPBOX        "&Disk space information",IDC_STATIC,101,140,204,33
+    LTEXT           "Space Required on",IDC_STATIC,106,150,94,8,NOT WS_GROUP
+    LTEXT           "DRIVE",IDC_STATIC_DRIVE_SPACE_REQUIRED,106,160,94,8,NOT 
+                    WS_GROUP
+    LTEXT           "Space Available on",IDC_STATIC,207,150,94,8,NOT 
+                    WS_GROUP
+    LTEXT           "DRIVE",IDC_STATIC_DRIVE_SPACE_AVAILABLE,207,160,94,8,
+                    NOT WS_GROUP
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,80,160,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
+                    WS_EX_STATICEDGE
+    LISTBOX         IDC_LIST_COMPONENTS,101,42,204,64,LBS_OWNERDRAWFIXED | 
+                    LBS_HASSTRINGS | LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP
+END
+
+DLG_WINDOWS_INTEGRATION DIALOGEX 51, 56, 315, 205
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "Check0",IDC_CHECK0,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+                    BS_MULTILINE | WS_TABSTOP,101,32,205,17
+    CONTROL         "Check1",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+                    BS_MULTILINE | WS_TABSTOP,101,53,205,17
+    CONTROL         "Check2",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+                    BS_MULTILINE | WS_TABSTOP,101,73,205,17
+    CONTROL         "Check3",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+                    BS_MULTILINE | WS_TABSTOP,101,94,205,17
+    LTEXT           "",IDC_MESSAGE1,101,117,205,54,NOT WS_GROUP
+    PUSHBUTTON      "< &Back",ID_WIZBACK,134,186,53,12
+    DEFPUSHBUTTON   "&Next >",ID_WIZNEXT,188,186,53,12
+    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,12
+    LTEXT           "",IDC_MESSAGE0,101,11,204,17,NOT WS_GROUP
+    CONTROL         108,IDC_PICT0,"Static",SS_BITMAP,11,11,80,160,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_STATIC0,"Static",SS_ETCHEDHORZ,11,179,295,1,
+                    WS_EX_STATICEDGE
+END
+
+DLG_PROGRAM_FOLDER DIALOGEX 51, 56, 315, 205
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT_PROGRAM_FOLDER,101,64,204,12,ES_AUTOHSCROLL
+    LISTBOX         IDC_LIST,101,94,204,77,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "< &Back",ID_WIZBACK,134,186,53,12
+    DEFPUSHBUTTON   "&Next >",ID_WIZNEXT,188,186,53,12
+    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,12
+    LTEXT           "Click the type of Setup you prefer, then click Next.",
+                    IDC_MESSAGE0,101,11,204,33,NOT WS_GROUP
+    LTEXT           "&Program Folder:",IDC_STATIC,101,54,105,8
+    LTEXT           "E&xisting Folders:",IDC_STATIC,101,84,163,8
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
+                    WS_EX_STATICEDGE
+END
+
+DLG_LICENSE DIALOGEX 51, 56, 315, 205
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Next >",ID_WIZNEXT,188,186,53,12
+    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,12
+    EDITTEXT        IDC_EDIT_LICENSE,11,29,295,119,ES_MULTILINE | 
+                    ES_OEMCONVERT | ES_READONLY | WS_VSCROLL | WS_GROUP
+    PUSHBUTTON      "< &Back",ID_WIZBACK,134,186,53,12
+    LTEXT           "Click the type of Setup you prefer, then click Next.",
+                    -1,11,8,295,17,NOT WS_GROUP
+    LTEXT           "Static",IDC_STATIC_DESCRIPTION,11,152,295,19,NOT 
+                    WS_GROUP
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ,11,179,295,1,
+                    WS_EX_STATICEDGE
+END
+
+DLG_START_INSTALL DIALOGEX 51, 56, 315, 205
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT_CURRENT_SETTINGS,101,67,204,104,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "< &Back",ID_WIZBACK,134,186,53,12
+    DEFPUSHBUTTON   "&Install",ID_WIZNEXT,188,186,53,12
+    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,12
+    LTEXT           "Click the type of Setup you prefer, then click Next.",
+                    IDC_MESSAGE0,101,11,204,33,NOT WS_GROUP
+    LTEXT           "Current Settings:",IDC_STATIC,101,57,163,8,NOT WS_GROUP
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,80,160,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
+                    WS_EX_STATICEDGE
+END
+
+DLG_BROWSE_DIR DIALOGEX 147, 23, 190, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select a directory"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT_DESTINATION,8,16,177,12,ES_AUTOHSCROLL | 
+                    ES_OEMCONVERT | NOT WS_BORDER,WS_EX_CLIENTEDGE
+    LISTBOX         1121,8,37,120,68,LBS_SORT | LBS_OWNERDRAWFIXED | 
+                    LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    COMBOBOX        1137,8,118,121,68,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",1,135,43,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,135,63,50,14,WS_GROUP
+    LTEXT           "&Directories:",-1,8,6,92,9
+    LTEXT           "Dri&ves:",1091,8,108,92,9
+END
+
+DLG_RESTART DIALOG FIXED IMPURE  133, 69, 226, 110
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Setup has finished copying files to your computer.  Before you can use the program, you must restart Windows or your computer.\n\n Choose one of the following options and click OK to finish setup.",
+                    202,10,10,209,36,SS_NOPREFIX
+    CONTROL         "Yes, I want to restart my computer now.",IDC_RADIO_YES,
+                    "Button",BS_AUTORADIOBUTTON,26,52,191,12
+    CONTROL         "No, I will restart my computer later.",IDC_RADIO_NO,
+                    "Button",BS_AUTORADIOBUTTON,26,68,191,12
+    DEFPUSHBUTTON   "OK",IDOK,169,88,50,14,WS_GROUP
+END
+
+DLG_MESSAGE DIALOG DISCARDABLE  0, 0, 236, 34
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           "",IDC_MESSAGE,0,0,236,34,SS_CENTERIMAGE
+END
+
+DLG_EXTRACTING DIALOG DISCARDABLE  0, 0, 193, 73
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Extracting..."
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_STATUS1,34,10,25,8
+    CONTROL         "",IDC_GAUGE_FILE,"GaugeFile",0x0,9,37,175,11
+    LTEXT           "",IDC_STATUS2,45,22,139,8
+    LTEXT           "",IDC_STATUS0,9,10,21,8
+    LTEXT           "",IDC_STATUS3,9,22,31,8
+    CONTROL         "",IDC_GAUGE_ARCHIVE,"GaugeArchive",0x0,9,55,175,11
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SETUP               ICON    DISCARDABLE     "setup.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BOX_UNCHECKED       BITMAP  FIXED IMPURE    "box_unch.bmp"
+IDB_BOX_CHECKED         BITMAP  FIXED IMPURE    "box_chec.bmp"
+IDB_BITMAP_WELCOME      BITMAP  DISCARDABLE     "bitmap1.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    DLG_EXTRACTING, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 61
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_DIALOG_CREATE "Could not create %s dialog."
+    IDS_ERROR_FAILED        "%s failed."
+    IDS_ERROR_FILE_NOT_FOUND "File not found: %s"
+    IDS_ERROR_GET_SYSTEM_DIRECTORY_FAILED "GetSystemDirectory() failed."
+    IDS_ERROR_GET_WINDOWS_DIRECTORY_FAILED "GetWindowsDirectory() failed."
+    IDS_DLGQUITTITLE        "Question"
+    IDS_DLGQUITMSG          "Are you sure you want to cancel Setup?"
+    IDS_DLG_REBOOT_TITLE    "Restarting Windows"
+    IDS_ERROR_GETPROCADDRESS "GetProcAddress() of %s failed."
+    IDS_ERROR_WRITEPRIVATEPROFILESTRING 
+                            "WritePrivateProfileString() failed for file %s"
+    IDS_MSG_RETRIEVE_CONFIGINI 
+                            "Please wait while Setup is attempting to retrieve Config.ini, required by Setup, from the Web..."
+    IDS_ERROR_CREATE_TEMP_DIR 
+                            "Setup was unable to create the TEMP directory: %s"
+    IDS_DLGBROWSETITLE      "Select a directory"
+    IDS_ERROR_DETERMINING_DISK_SPACE 
+                            "Could not determine available disk space for: %s"
+    IDS_DLG_DISK_SPACE_CHECK_TITLE "Disk space check"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DLG_DISK_SPACE_CHECK_SYS_MSG 
+                            "Setup has detected insufficient disk space on: %s Required: %s Available: %sThis folder is where some Windows related files need to be installed to.  You will need to make available more disk space by uninstalling some software.  You if have already done so, you can click Retry, or if you would like to cancel the setup, click Cancel."
+    IDS_DLG_DISK_SPACE_CHECK_MSG 
+                            "Setup has detected insufficient disk space on: %s Required: %s Available: %sfor the selection[s] chosen.  Would you like to go back and make changes to either the destination folder or other selection[s]?"
+    IDS_ERROR_CREATE_DIRECTORY 
+                            "Could not create folder: %sMake sure you have access to create the folder."
+    IDS_STR_FILE_NUMBER     "File #:"
+    IDS_STR_FILENAME        "Filename:"
+    IDS_MSG_SMARTUPDATE_START "Initializing SmartUpdate, please wait..."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
