@@ -129,7 +129,10 @@ nsresult nsCollation::CreateSortKey(nsICollation *inst, const nsCollationStrengt
     if (nsnull != aKey) {
       res = inst->CreateRawSortKey(strength, stringIn, aKey, &aLength);
       if (NS_SUCCEEDED(res)) {
-        key.SetString((PRUnichar *) aKey, aLength / sizeof(PRUnichar));
+        // set as char* makes every byte to be casted to PRUnichar
+        // which doubles the key size, use CreateRawSortKey instead 
+        // to avoid this to happen
+        key.SetString((char *) aKey, aLength / sizeof(char));
       }
       delete [] aKey;
     }
