@@ -24,22 +24,119 @@
 
 typedef Uint16 unicode;
 
+
+Int32 NameMangler::mangleUnicodeChar(Int32 ch, char *bufptr, char *bufend) 
+{
+  int x, len = bufend - bufptr;
+
+  // We always want 6 characters plus a null.
+  switch (len)
+    {
+    case 0:
+      return 0;
+
+    default:
+      len = 7;
+      x = ch & 0x0f;
+      bufptr[5] = x < 10 ? x + '0' : x + 'a';
+    case 6:
+      x = (ch >> 4) & 0x0f;
+      bufptr[4] = x < 10 ? x + '0' : x + 'a';
+    case 5:
+      x = (ch >> 8) & 0x0f;
+      bufptr[3] = x < 10 ? x + '0' : x + 'a';
+    case 4:
+      x = (ch >> 12) & 0x0f;
+      bufptr[2] = x < 10 ? x + '0' : x + 'a';
+    case 3:
+      bufptr[1] = '0';
+    case 2:
+      bufptr[0] = '_';
+    case 1:;
+    }
+  bufptr[--len] = '\0';
+  return len;
+}
+
 Int32 NameMangler::mangleUTFString(const char *name, 
 				   char *buffer, 
 				   int buflen, 
 				   NameMangler::MangleUTFType type)
 {
-    // IMPLEMENT
-    PR_ASSERT(0);
+  if (buflen == 0)
     return 0;
-}
 
-Int32 NameMangler::mangleUnicodeChar(Int32 ch, char *bufptr, 
-				     char *bufend) 
-{
-  char temp[10];
-  PR_snprintf(temp, 10, "_%.5x", ch);  /* six characters always plus null */
-  (void) PR_snprintf(bufptr, bufend - bufptr, "%s", temp);
-  return PL_strlen(bufptr);
-}
+  switch (type)
+    {
+    case mangleUTFClass:
+      // Just transform '/' to '_'.
+      {
+        strncpy(buffer, name, buflen-1);
+        buffer[buflen-1] = '\0';
 
+        char *p = buffer;
+        while ((p = strchr(p, '/')) != 0)
+          *p = '_';
+        break;
+      }
+
+    case mangleUTFFieldStub:
+    case mangleUTFSignature:
+      // These don't appear to be used, and the header doesn't
+      // decribe exactly what they mean.
+      PR_ASSERT(0);
+      return 0;
+
+    case mangleUTFJNI:
+      // See http://java.sun.com/products/jdk/1.2/docs/guide/jni/spec/design.doc.html#615
+      {
+        char *p = buffer;
+        char *bufend = buffer + buflen - 1;
+
+	// Don't include the leading ( of a function sig in the mangle.
+	if (*name == '(')
+	  name++;
+
+        while (*name && p < bufend)
+          {
+            unsigned char c = *name++;
+            unsigned char alt;
+
+            if (c & 0x80)
+              {
+                unicode full;
+                if ((c & 0xE0) == 0xC0)
+                  full = ((unicode)c & 0x1f) << 6;
+                else
+                  {
+                    full = ((unicode)c & 0xf) << 12;
+                    full |= (*name++ & 0x3f) << 6;
+                  }
+                full |= *name++ & 0x3f;
+
+                if (mangleUnicodeChar(full, p, bufend+1) == 0)
+                  break;
+                p += 6;
+              }
+            else if (c == '/')
+              *p++ = '_';
+            else if ((alt = '1', c == '_')
+                     || (alt = '2', c == ';')
+                     || (alt = '3', c == '['))
+              {
+                if (p+1 >= bufend)
+                  break;
+                *p++ = '_';
+                *p++ = alt;
+              }
+            else
+            *p++ = c;
+          }
+
+        *p = '\0';
+        break;
+      }
+    }
+
+  return strlen(buffer);
+}
