@@ -31,6 +31,7 @@
  * 06/15/2000       IBM Corp.      Added NS2PM for rectangles
  * 06/21/2000       IBM Corp.      Added CaptureMouse
  *
+ * Rich Walsh <dragtext@e-vertise.com>
  */
 
 #ifndef _nswindow_h
@@ -252,6 +253,7 @@ protected:
    BOOL      mInSetFocus;
    BOOL      mChromeHidden;
    nsContentType mContentType;
+   HPS       mDragHps;        // retrieved by DrgGetPS() during a drag
 
    HWND      GetParentHWND() const;
    HWND      GetHWND() const   { return mWnd; }
@@ -293,8 +295,10 @@ protected:
    virtual PRBool DispatchResizeEvent( PRInt32 aClientX, PRInt32 aClientY);
    void GetNonClientBounds(nsRect &aRect);
    void    DeferPosition( HWND, HWND, long, long, long, long, ULONG);
+   void ConstrainZLevel(HWND *aAfter);
 
-    void ConstrainZLevel(HWND *aAfter);
+   PRUint32 GetDragStatus(PRUint32 aState, HPS * oHps);
+   HPS      ReleaseDragHPS(HPS hps);
 
    // Enumeration of the methods which are accessable on the PM thread
    enum {
