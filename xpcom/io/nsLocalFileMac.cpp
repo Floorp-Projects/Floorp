@@ -910,10 +910,10 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 		// Resolve the alias to the original file.
 		FSSpec	spec = mResolvedSpec;
 		err = ::ResolveAliasFile(&spec, TRUE, &mResolvedWasFolder, &mResolvedWasAlias);
-		if (err != noErr)
-			return MacErrorMapper(err);
-		else
-			mTargetSpec = spec;
+		if (err == noErr || err == fnfErr) {// fnfErr means target spec is valid but doesn't exist
+ 			mTargetSpec = spec;
+ 			err = noErr;
+ 	    }
 	}		
 		
 	
@@ -2562,18 +2562,22 @@ NS_IMETHODIMP nsLocalFile::GetResolvedFSSpec(FSSpec *fileSpec)
 {
 	NS_ENSURE_ARG(fileSpec);
 	nsresult rv = ResolveAndStat(PR_TRUE);
-	if (NS_FAILED(rv)) return rv;
-	*fileSpec = mResolvedSpec;
-	return NS_OK;
+	if (rv == NS_ERROR_FILE_NOT_FOUND)
+	    rv = NS_OK;
+	if (NS_SUCCEEDED(rv))
+	    *fileSpec = mResolvedSpec;
+	return rv;
 }
 
 NS_IMETHODIMP nsLocalFile::GetTargetFSSpec(FSSpec *fileSpec)
 {
 	NS_ENSURE_ARG(fileSpec);
 	nsresult rv = ResolveAndStat(PR_TRUE);
-	if (NS_FAILED(rv)) return rv;
-	*fileSpec = mTargetSpec;
-	return NS_OK;
+	if (rv == NS_ERROR_FILE_NOT_FOUND)
+	    rv = NS_OK;
+	if (NS_SUCCEEDED(rv))
+	    *fileSpec = mTargetSpec;
+	return rv;
 }
 
 NS_IMETHODIMP nsLocalFile::SetAppendedPath(const char *aPath)
