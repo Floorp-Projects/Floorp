@@ -2678,6 +2678,19 @@ nsGfxTextControlFrame::InstallEditor()
     result = mEditor->Init(mDoc, presShell, editorFlags);
     if (NS_FAILED(result)) { return result; }
 
+    nsCOMPtr<nsIPresShell> framePresShell;
+    mFramePresContext->GetShell(getter_AddRefs(framePresShell));
+    nsCOMPtr<nsIDocument> frameDocument;
+    framePresShell->GetDocument(getter_AddRefs(frameDocument));
+
+    nsCOMPtr<nsIDocument>  eDocument;
+    presShell->GetDocument(getter_AddRefs(eDocument));
+
+    // This allows the mousewheel code to scroll the main document
+    // when the pointer is over the editor control
+
+    eDocument->SetParentDocument(frameDocument);
+
     // set data from the text control into the editor
     result = InitializeTextControl(presShell, mDoc);
     if (NS_FAILED(result)) { return result; }
