@@ -81,6 +81,14 @@ SECMODModule *SECMOD_NewModule(void) {
     newMod->refCount = 1;
     newMod->ssl[0] = 0;
     newMod->ssl[1] = 0;
+    newMod->libraryParams = NULL;
+    newMod->moduleDBFunc = NULL;
+    newMod->parent = NULL;
+    newMod->isCritical = PR_FALSE;
+    newMod->isModuleDB = PR_FALSE;
+    newMod->moduleDBOnly = PR_FALSE;
+    newMod->trustOrder = 0;
+    newMod->cipherOrder = 0;
 #ifdef PKCS11_USE_THREADS
     newMod->refLock = (void *)PZ_NewLock(nssILockRefLock);
     if (newMod->refLock == NULL) {

@@ -117,6 +117,7 @@ struct PK11SlotInfoStr {
     char slot_name[65];
     char token_name[33];
     PRBool hasRootCerts;
+    PRBool hasRootTrust;
     PRBool hasRSAInfo;
     CK_FLAGS RSAInfoFlags;
 };
@@ -131,6 +132,7 @@ struct PK11PreSlotInfoStr {
     int askpw;			/* slot specific password bits */
     long timeout;		/* slot specific timeout value */
     char hasRootCerts;		/* is this the root cert PKCS #11 module? */
+    char hasRootTrust;		/* is this the root cert PKCS #11 module? */
 };
 
 /* Symetric Key structure. Reference Counted */

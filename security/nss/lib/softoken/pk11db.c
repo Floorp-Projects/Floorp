@@ -181,11 +181,12 @@ struct secmodDataStr {
     unsigned char ssl[8];
     unsigned char trustOrder[4];
     unsigned char cipherOrder[4];
-    unsigned char hasParameters;
+    unsigned char reserved1;
     unsigned char isModuleDB;
     unsigned char isModuleDBOnly;
-    unsigned char reserved;
-    unsigned char names[4];	/* enough space for the length fields */
+    unsigned char isCritical;
+    unsigned char reserved[4];
+    unsigned char names[6];	/* enough space for the length fields */
 };
 
 struct secmodSlotDataStr {
@@ -220,94 +221,134 @@ struct secmodSlotDataStr {
 			( (unsigned long) (src)[2] << 8) | \
 			(unsigned long) (src)[3]))
 
-#ifdef notdef
 /*
  * build a data base entry from a module 
  */
-static SECStatus secmod_EncodeData(DBT *data, SECMODModule * module) {
-    secmodData *encoded;
+static SECStatus secmod_EncodeData(DBT *data, char * module) {
+    secmodData *encoded = NULL;
     secmodSlotData *slot;
     unsigned char *dataPtr;
-    unsigned short len, len2 = 0,count = 0;
+    unsigned short len, len2 = 0, len3 = 0;
+    int count = 0;
     unsigned short offset;
     int dataLen, i, si;
+    unsigned long order;
+    unsigned long  ssl[2];
+    char *commonName = NULL , *dllName = NULL, *param = NULL, *nss = NULL;
+    char *slotParams, *ciphers;
+    PK11PreSlotInfo *slotInfo = NULL;
+    SECStatus rv = SECFailure;
 
-    len = PORT_Strlen(module->commonName);
-    if (module->dllName) {
-    	len2 = PORT_Strlen(module->dllName);
+    rv = pk11_argParseModuleSpec(module,&dllName,&commonName,&param,&nss);
+    if (rv != SECSuccess) return rv;
+    rv = SECFailure;
+
+    if (commonName == NULL) {
+	/* set error */
+	goto loser;
     }
-    if (module->slotCount != 0) {
-	for (i=0; i < module->slotCount; i++) {
-	    if (module->slots[i]->defaultFlags != 0) {
-		count++;
-	    }
-	}
-    } else {
-	count = module->slotInfoCount;
+
+    len = PORT_Strlen(commonName);
+    if (dllName) {
+    	len2 = PORT_Strlen(dllName);
     }
-    dataLen = sizeof(secmodData) + len + len2 + 2 +
+    if (param) {
+	len3 = PORT_Strlen(param);
+    }
+
+    slotParams = pk11_argGetParamValue("slotParams",nss); 
+    slotInfo = pk11_argParseSlotInfo(NULL,slotParams,&count);
+    if (slotParams) PORT_Free(slotParams);
+
+    if (count && slotInfo == NULL) {
+	/* set error */
+	goto loser;
+    }
+
+    dataLen = sizeof(secmodData) + len + len2 + len3 +
 				 count*sizeof(secmodSlotData);
 
-    data->data = (unsigned char *)
-			PORT_Alloc(dataLen);
+    data->data = (unsigned char *) PORT_ZAlloc(dataLen);
     encoded = (secmodData *)data->data;
     dataPtr = (unsigned char *) data->data;
     data->size = dataLen;
 
-    if (encoded == NULL) return SECFailure;
+    if (encoded == NULL) {
+	/* set error */
+	goto loser;
+    }
 
     encoded->major = SECMOD_DB_VERSION_MAJOR;
     encoded->minor = SECMOD_DB_VERSION_MINOR;
-    encoded->internal = (unsigned char) (module->internal ? 1 : 0);
-    encoded->fips = (unsigned char) (module->isFIPS ? 1 : 0);
-    SECMOD_PUTLONG(encoded->ssl,module->ssl[0]);
-    SECMOD_PUTLONG(&encoded->ssl[4],module->ssl[1]);
+    encoded->internal = (unsigned char) 
+			(pk11_argHasFlag("flags","internal",nss) ? 1 : 0);
+    encoded->fips = (unsigned char) 
+			(pk11_argHasFlag("flags","FIPS",nss) ? 1 : 0);
+    encoded->isModuleDB = (unsigned char) 
+			(pk11_argHasFlag("flags","isModuleDB",nss) ? 1 : 0);
+    encoded->isModuleDBOnly = (unsigned char) 
+			(pk11_argHasFlag("flags","isModuleDBOnly",nss) ? 1 : 0);
+    encoded->isCritical = (unsigned char) 
+			(pk11_argHasFlag("flags","isCritical",nss) ? 1 : 0);
+
+    order = pk11_argReadLong("trustOrder",nss);
+    SECMOD_PUTLONG(encoded->trustOrder,order);
+    order = pk11_argReadLong("cipherOrder",nss);
+    SECMOD_PUTLONG(encoded->cipherOrder,order);
+
+   
+    ciphers = pk11_argGetParamValue("ciphers",nss); 
+    pk11_argSetNewCipherFlags(&ssl[0], ciphers);
+    SECMOD_PUTLONG(encoded->ssl,ssl[0]);
+    SECMOD_PUTLONG(&encoded->ssl[4],ssl[1]);
 
     offset = (unsigned long) &(((secmodData *)0)->names[0]);
     SECMOD_PUTSHORT(encoded->nameStart,offset);
-    offset = offset +len + len2 + 4;
+    offset = offset + len + len2 + len3 + 3*sizeof(unsigned short);
     SECMOD_PUTSHORT(encoded->slotOffset,offset);
 
 
-    SECMOD_PUTSHORT(&dataPtr[offset],count);
-    slot = (secmodSlotData *)(dataPtr+offset+2);
+    SECMOD_PUTSHORT(&dataPtr[offset],((unsigned short)count));
+    slot = (secmodSlotData *)(dataPtr+offset+sizeof(unsigned short));
 
+    offset = 0;
     SECMOD_PUTSHORT(encoded->names,len);
-    PORT_Memcpy(&encoded->names[2],module->commonName,len);
+    offset += sizeof(unsigned short);
+    PORT_Memcpy(&encoded->names[offset],commonName,len);
+    offset += len;
 
 
-    SECMOD_PUTSHORT(&encoded->names[len+2],len2);
-    if (len2) PORT_Memcpy(&encoded->names[len+4],module->dllName,len2);
+    SECMOD_PUTSHORT(&encoded->names[offset],len2);
+    offset += sizeof(unsigned short);
+    if (len2) PORT_Memcpy(&encoded->names[offset],dllName,len2);
+    offset += len2;
 
-    if (module->slotCount) {
-      for (i=0,si=0; i < module->slotCount; i++) {
-	if (module->slots[i]->defaultFlags) {
-	    SECMOD_PUTLONG(slot[si].slotID, module->slots[i]->slotID);
-	    SECMOD_PUTLONG(slot[si].defaultFlags,
-					     module->slots[i]->defaultFlags);
-	    SECMOD_PUTLONG(slot[si].timeout,module->slots[i]->timeout);
-	    slot[si].askpw = module->slots[i]->askpw;
-	    slot[si].hasRootCerts = module->slots[i]->hasRootCerts;
-	    PORT_Memset(slot[si].reserved, 0, sizeof(slot[si].reserved));
-	    si++;
-	}
-      }
-    } else {
-	for (i=0; i < module->slotInfoCount; i++) {
-	    SECMOD_PUTLONG(slot[i].slotID, module->slotInfo[i].slotID);
+    SECMOD_PUTSHORT(&encoded->names[offset],len3);
+    offset += sizeof(unsigned short);
+    if (len3) PORT_Memcpy(&encoded->names[offset],param,len3);
+    offset += len3;
+
+    if (count) {
+	for (i=0; i < count; i++) {
+	    SECMOD_PUTLONG(slot[i].slotID, slotInfo[i].slotID);
 	    SECMOD_PUTLONG(slot[i].defaultFlags,
-					module->slotInfo[i].defaultFlags);
-	    SECMOD_PUTLONG(slot[i].timeout,module->slotInfo[i].timeout);
-	    slot[i].askpw = module->slotInfo[i].askpw;
-	    slot[i].hasRootCerts = module->slotInfo[i].hasRootCerts;
+					slotInfo[i].defaultFlags);
+	    SECMOD_PUTLONG(slot[i].timeout,slotInfo[i].timeout);
+	    slot[i].askpw = slotInfo[i].askpw;
+	    slot[i].hasRootCerts = slotInfo[i].hasRootCerts;
 	    PORT_Memset(slot[i].reserved, 0, sizeof(slot[i].reserved));
 	}
     }
+    rv = SECSuccess;
 
-    return SECSuccess;
+loser:
+    if (commonName) PORT_Free(commonName);
+    if (dllName) PORT_Free(dllName);
+    if (param) PORT_Free(param);
+    if (slotInfo) PORT_Free(slotInfo);
+    return rv;
 
 }
-#endif
 
 static void 
 secmod_FreeData(DBT *data)
@@ -337,13 +378,13 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     unsigned short offset;
     PRBool isOldVersion  = PR_FALSE;
     PRBool internal, isFIPS, isModuleDB=PR_FALSE, isModuleDBOnly=PR_FALSE;
-    PRBool hasParameters=PR_FALSE,extended=PR_FALSE;
+    PRBool extended=PR_FALSE;
     PRBool hasRootCerts=PR_FALSE,hasRootTrust=PR_FALSE;
     unsigned long trustOrder=0, cipherOrder=0;
     unsigned long ssl0=0, ssl1=0;
-    char **slotInfo = NULL;
+    char **slotStrings = NULL;
     unsigned long slotID,defaultFlags,timeout;
-    char *askpw,*flags,*rootFlags,*slotStrings,*nssFlags,*ciphers,*nss,*params;
+    char *nss,*moduleSpec;
     int i,slotLen;
 
     PLArenaPool *arena;
@@ -371,7 +412,6 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	(encoded->minor >= SECMOD_DB_EXT1_VERSION_MINOR)) {
 	trustOrder = SECMOD_GETLONG(encoded->trustOrder);
 	cipherOrder = SECMOD_GETLONG(encoded->cipherOrder);
-	hasParameters = (encoded->hasParameters != 0) ? PR_TRUE: PR_FALSE;
 	isModuleDB = (encoded->isModuleDB != 0) ? PR_TRUE: PR_FALSE;
 	isModuleDBOnly = (encoded->isModuleDBOnly != 0) ? PR_TRUE: PR_FALSE;
 	extended = PR_TRUE;
@@ -398,16 +438,18 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	PORT_Memcpy(dllName,&names[2],len);
 	dllName[len] = 0;
     }
-    if (!internal && hasParameters) {
+    if (!internal && extended) {
 	names += len+2;
 	len = SECMOD_GETSHORT(names);
-	parameters = (char*)PORT_ArenaAlloc(arena,len + 1);
-	if (parameters == NULL) {
-	    PORT_FreeArena(arena,PR_TRUE);
-	    return NULL;
+	if (len) {
+	    parameters = (char*)PORT_ArenaAlloc(arena,len + 1);
+	    if (parameters == NULL) {
+		PORT_FreeArena(arena,PR_TRUE);
+		return NULL;
+	    }
+	    PORT_Memcpy(parameters,&names[2],len);
+	    parameters[len] = 0;
 	}
-	PORT_Memcpy(parameters,&names[2],len);
-	parameters[len] = 0;
     }
     if (internal) {
 	parameters = PORT_ArenaStrdup(arena,defParams);
@@ -418,7 +460,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     ssl1 = SECMOD_GETLONG(&encoded->ssl[4]);
 
     /*  slotCount; */
-    slotInfo = (char **)PORT_ArenaAlloc(arena, slotCount * sizeof(char *));
+    slotStrings = (char **)PORT_ArenaAlloc(arena, slotCount * sizeof(char *));
     for (i=0; i < (int) slotCount; i++) {
 	slotID = SECMOD_GETLONG(slots[i].slotID);
 	defaultFlags = SECMOD_GETLONG(slots[i].defaultFlags);
@@ -426,64 +468,22 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 		defaultFlags |= internalFlags;
 	}
 	timeout = SECMOD_GETLONG(slots[i].timeout);
-	switch (slots[i].askpw) {
-	case 0xff:
-		askpw = "every";
-		break;
-	case 1:
-		askpw = "timeout";
-		break;
-	default:
-		askpw = "any";
-		break;
-	}
 	hasRootCerts = slots[i].hasRootCerts;
 	if (hasRootCerts && !extended) {
 	    trustOrder = 20;
 	}
-	flags = pk11_makeSlotFlags(arena,defaultFlags);
-	rootFlags = pk11_makeRootFlags(arena,hasRootCerts,hasRootTrust);
-	slotInfo[i] = PR_smprintf("0x%08x=[slotFlags=%s askpw=%s timeout=%d rootFlags=%s]",slotID,flags,askpw,timeout,rootFlags);
+
+        slotStrings[i] = pk11_mkSlotString(slotID,defaultFlags,
+			timeout,slots[i].askpw,hasRootCerts,hasRootTrust);
     }
 
-    /* now let's build up the string
-     * first the slot infos
-     */
-    slotLen=0;
-    for (i=0; i < (int)slotCount; i++) {
-	slotLen += strlen(slotInfo[i])+1;
-    }
-
-    slotStrings = (char *)PORT_ArenaAlloc(arena,slotLen);
-    PORT_Memset(slotStrings,0,slotLen);
-    for (i=0; i < (int)slotCount; i++) {
-	PORT_Strcat(slotStrings,slotInfo[i]);
-	PORT_Strcat(slotStrings," ");
-	PR_smprintf_free(slotInfo[i]);
-	slotInfo[i]=NULL;
-    }
-    
-    /*
-     * now the NSS structure
-     */
-    nssFlags = pk11_makeNSSFlags(arena,internal,isFIPS,isModuleDB,
-	isModuleDBOnly,internal); 
-	/* for now only the internal module is critical */
-    ciphers = pk11_makeCipherFlags(arena, ssl0, ssl1);
-    nss = PR_smprintf("NSS=\"trustOrder=%d cipherOrder=%d Flags='%s' slotParams={%s} ciphers='%s'\"",trustOrder,cipherOrder,nssFlags,slotStrings,ciphers);
-
-    /*
-     * now the final spec
-     */
-    if (hasParameters) {
-	params = PR_smprintf("library=\"%s\" name=\"%s\" parameters=\"%s\" NSS=\"%s\"",dllName,commonName,parameters,nss);
-    } else {
-	params = PR_smprintf("library=\"%s\" name=\"%s\" NSS=\"%s\"",dllName,commonName,nss);
-    }
+    nss = pk11_mkNSS(slotStrings, slotCount, internal, isFIPS, isModuleDB, 
+	isModuleDBOnly, internal, trustOrder, cipherOrder, ssl0, ssl1);
+    moduleSpec = pk11_mkNewModuleSpec(dllName,commonName,parameters,nss);
     PR_smprintf_free(nss);
     PORT_FreeArena(arena,PR_TRUE);
 
-    return (params);
+    return (moduleSpec);
 }
 
 
@@ -614,7 +614,6 @@ SECMOD_AddPermDB(char *dbname, char *module, PRBool rw) {
     int ret;
 
 
-#ifdef notdef
     if (!rw) return SECFailure;
 
     /* make sure we have a db handle */
@@ -641,6 +640,5 @@ SECMOD_AddPermDB(char *dbname, char *module, PRBool rw) {
 
 done:
     secmod_CloseDB(pkcs11db);
-#endif
     return rv;
 }

@@ -83,6 +83,67 @@ pk11_CreateModule(char *library, char *moduleName, char *parameters, char *nss)
 
     return mod;
 }
+
+static char *
+pk11_mkModuleSpec(SECMODModule * module)
+{
+    char *nss = NULL, *modSpec = NULL, **slotStrings = NULL;
+    int slotCount, i, si;
+
+    /* allocate target slot info strings */
+    slotCount = 0;
+    if (module->slotCount) {
+	for (i=0; i < module->slotCount; i++) {
+	    if (module->slots[i]->defaultFlags !=0) {
+		slotCount++;
+	    }
+	}
+    } else {
+	slotCount = module->slotInfoCount;
+    }
+
+    slotStrings = (char **)PORT_ZAlloc(slotCount*sizeof(char *));
+    if (slotStrings == NULL) {
+	goto loser;
+    }
+
+
+    /* build the slot info strings */
+    if (module->slotCount) {
+	for (i=0, si= 0; i < module->slotCount; i++) {
+	    if (module->slots[i]->defaultFlags) {
+		PORT_Assert(si < slotCount);
+		if (si >= slotCount) break;
+		slotStrings[si] = pk11_mkSlotString(module->slots[i]->slotID,
+			module->slots[i]->defaultFlags,
+			module->slots[i]->timeout,
+			module->slots[i]->askpw,
+			module->slots[i]->hasRootCerts,
+			module->slots[i]->hasRootTrust);
+		si++;
+	    }
+	}
+     } else {
+	for (i=0; i < slotCount; i++) {
+		slotStrings[i] = pk11_mkSlotString(module->slotInfo[i].slotID,
+			module->slotInfo[i].defaultFlags,
+			module->slotInfo[i].timeout,
+			module->slotInfo[i].askpw,
+			module->slotInfo[i].hasRootCerts,
+			module->slotInfo[i].hasRootTrust);
+	}
+    }
+
+    nss = pk11_mkNSS(slotStrings,slotCount,module->internal, module->isFIPS,
+	module->isModuleDB, module->moduleDBOnly, module->isCritical,
+	module->trustOrder,module->cipherOrder,module->ssl[0],module->ssl[1]);
+    modSpec= pk11_mkNewModuleSpec(module->dllName,module->commonName,
+						module->libraryParams,nss);
+    PORT_Free(slotStrings);
+    PR_smprintf_free(nss);
+loser:
+    return (modSpec);
+}
     
 
 char **
@@ -94,6 +155,43 @@ pk11_getModuleSpecList(SECMODModule *module)
 		module->libraryParams,NULL);
     }
     return NULL;
+}
+
+SECStatus
+pk11_AddPermDB(SECMODModule *module)
+{
+    SECMODModuleDBFunc func;
+    char *moduleSpec;
+    char **retString;
+
+    if (module->parent == NULL) return SECFailure;
+
+    func  = (SECMODModuleDBFunc) module->parent->moduleDBFunc;
+    if (func) {
+	moduleSpec = pk11_mkModuleSpec(module);
+	retString = (*func)(SECMOD_MODULE_DB_FUNCTION_ADD,
+		module->parent->libraryParams,moduleSpec);
+	PORT_Free(moduleSpec);
+	if (retString != NULL) return SECSuccess;
+    }
+    return SECFailure;
+}
+
+SECStatus
+pk11_DeletePermDB(SECMODModule *module)
+{
+    SECMODModuleDBFunc func;
+    char **retString;
+
+    if (module->parent == NULL) return SECFailure;
+
+    func  = (SECMODModuleDBFunc) module->parent->moduleDBFunc;
+    if (func) {
+	retString = (*func)(SECMOD_MODULE_DB_FUNCTION_DEL,
+		module->parent->libraryParams,module->commonName);
+	if (retString != NULL) return SECSuccess;
+    }
+    return SECFailure;
 }
 
 pk11_freeModuleSpecList(char **moduleSpecList)
