@@ -262,8 +262,7 @@ Rights Reserved.
         <tree id="resultsTree" flex="1" style="height:0px"/>
       </vbox>
       
-      <splitter id="results-splitter" collapse="after" persist="state"
-              orient="vertical" autostretch="never">
+      <splitter id="results-splitter" collapse="after" persist="state">
         <grippy/>
       </splitter>
       
