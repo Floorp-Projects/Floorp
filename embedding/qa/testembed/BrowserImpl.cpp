@@ -102,6 +102,8 @@ CBrowserImpl::~CBrowserImpl()
 {
 }
 
+extern storage getSupportObj;
+
 // It's very important that the creator of this CBrowserImpl object
 // Call on this Init() method with proper values after creation
 //
@@ -540,6 +542,11 @@ NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
 	if (!ctxt)
 		QAOutput("We did NOT get the context object.\n");
 
+	if (ctxt == getSupportObj.sup)
+		QAOutput("Context objects equal each other.\n");
+	else
+		QAOutput("Context objects don't equal each other.\n");
+
 	RequestName(request, stringMsg, 1);
 
 	// these are for nsIChannel tests found in nsichanneltests.cpp (post AsyncOpen() tests)
@@ -629,7 +636,7 @@ NS_IMETHODIMP CBrowserImpl::OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
 {
 	QAOutput("nsIURIContentListener->OnStartURIOpen()",1);
 
-	GetTheUri(aURI, 1);
+	GetTheURI(aURI, 1);
 	// set return boolean to false so uriOpen doesn't abort
 	*_retval = PR_FALSE;
 	FormatAndPrintOutput("_retval set to = ", *_retval, 1);

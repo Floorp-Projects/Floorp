@@ -67,43 +67,43 @@ class CBrowserView;
 // CBrowserImpl::nsISHistoryListener methods
 //*****************************************************************************   
 
-NS_IMETHODIMP CBrowserImpl::OnHistoryNewEntry(nsIURI *theUri)
+NS_IMETHODIMP CBrowserImpl::OnHistoryNewEntry(nsIURI *theURI)
 {
 	QAOutput("nsIHistoryListener::OnHistoryNewEntry()", 2);
-    GetTheUri(theUri, 1);
+    GetTheURI(theURI, 1);
 	return NS_OK;
 }
 
 
-NS_IMETHODIMP CBrowserImpl::OnHistoryGoBack(nsIURI *theUri, PRBool *notify)
+NS_IMETHODIMP CBrowserImpl::OnHistoryGoBack(nsIURI *theURI, PRBool *notify)
 {
 	QAOutput("nsIHistoryListener::OnHistoryGoBack()", 2);
 
-    GetTheUri(theUri, 1);
+    GetTheURI(theURI, 1);
 	*notify = PR_TRUE;
 	FormatAndPrintOutput("OnHistoryGoBack() notification = ", *notify, 1);
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl::OnHistoryGoForward(nsIURI *theUri, PRBool *notify)
+NS_IMETHODIMP CBrowserImpl::OnHistoryGoForward(nsIURI *theURI, PRBool *notify)
 {
 	QAOutput("nsIHistoryListener::OnHistoryGoForward()", 2);
 
-	GetTheUri(theUri, 1);
+	GetTheURI(theURI, 1);
 	*notify = PR_TRUE;
 	FormatAndPrintOutput("OnHistoryGoForward() notification = ", *notify, 1);
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl::OnHistoryReload(nsIURI *theUri, PRUint32 reloadFlags, PRBool *notify)
+NS_IMETHODIMP CBrowserImpl::OnHistoryReload(nsIURI *theURI, PRUint32 reloadFlags, PRBool *notify)
 {
 	char flagString[200];
 
 	QAOutput("nsIHistoryListener::OnHistoryReload()", 2);
 
-	GetTheUri(theUri, 1);
+	GetTheURI(theURI, 1);
 	*notify = PR_TRUE;
 	FormatAndPrintOutput("OnHistoryReload() notification = ", *notify, 1);
 
@@ -132,11 +132,11 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryReload(nsIURI *theUri, PRUint32 reloadFlags
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl::OnHistoryGotoIndex(PRInt32 theIndex, nsIURI *theUri, PRBool *notify)
+NS_IMETHODIMP CBrowserImpl::OnHistoryGotoIndex(PRInt32 theIndex, nsIURI *theURI, PRBool *notify)
 {
 	QAOutput("nsIHistoryListener::OnHistoryGotoIndex()", 2);
 
-    GetTheUri(theUri, 1);
+    GetTheURI(theURI, 1);
 	*notify = PR_TRUE;
 	FormatAndPrintOutput("OnHistoryGotoIndex() notification = ", *notify, 1);
 

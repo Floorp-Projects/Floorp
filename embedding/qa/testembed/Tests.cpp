@@ -585,7 +585,7 @@ void CTests::OnTestsAddUriContentListenerByOpenUri()
 		rv = NS_NewURI(getter_AddRefs(theURI), theStr);
 		RvTestResult(rv, "For OpenURI(): NS_NewURI() test", 1);
 		FormatAndPrintOutput("theStr = ", theStr, 1);
-		GetTheUri(theURI, 1);
+		GetTheURI(theURI, 1);
 		rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
 		RvTestResult(rv, "For OpenURI(): NS_NewChannel() test", 1);
 	}
@@ -652,7 +652,7 @@ void CTests::OnTestsIOServiceNewURI()
 		if (!theURI)
 			QAOutput("We didn't get the nsIURI object for IOService test.", 2);
 		else {
-			retURI = GetTheUri(theURI, 1);
+			retURI = GetTheURI(theURI, 1);
 			FormatAndPrintOutput("The ioService->NewURI() output uri = ", retURI, 2);
 		}
 	}
@@ -697,7 +697,7 @@ void CTests::OnTestsProtocolHandlerNewURI()
 
 		RvTestResult(rv, "protocolHandler->NewURI() test", 2);
 
-	    retStr = GetTheUri(theReturnURI, 1);
+	    retStr = GetTheURI(theReturnURI, 1);
 
 	   // simple string compare to see if input & output URLs match
 	    if (strcmp(myDialog.m_urlfield, retStr.get()) == 0)
@@ -810,7 +810,7 @@ void CTests::OnToolsRemoveAllGH()
 
 void CTests::OnToolsViewLogfile()
 {
-	char theUri[1024];
+	char theURI[1024];
 
 	CStdioFile myFile; 
     CFileException e; 
@@ -819,8 +819,8 @@ void CTests::OnToolsViewLogfile()
 			   | CStdioFile::modeNoTruncate, &e );               
 	myFile.Close();
 
-	strcpy(theUri, "file://C|/temp/TestOutput.txt");
-	rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUri).get(),
+	strcpy(theURI, "file://C|/temp/TestOutput.txt");
+	rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theURI).get(),
 		 nsIWebNavigation::LOAD_FLAGS_NONE, nsnull,nsnull, nsnull);
 }
 
@@ -893,7 +893,7 @@ void CTests::OnVerifybugs169617()
 	rv = NS_NewURI(getter_AddRefs(theURI), theStr);
 	RvTestResult(rv, "NS_NewURI() test for file url", 1);
 
-	GetTheUri(theURI, 1);
+	GetTheURI(theURI, 1);
 
 	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
 	RvTestResult(rv, "NS_NewChannel() test for file url", 1);
@@ -914,7 +914,7 @@ void CTests::OnVerifybugs170274()
 	rv = NS_NewURI(getter_AddRefs(theURI), theStr);
 	RvTestResult(rv, "NS_NewURI() test for data url", 1);
 
-	GetTheUri(theURI, 1);
+	GetTheURI(theURI, 1);
 
 	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
 	RvTestResult(rv, "NS_NewChannel() test for data url", 1);

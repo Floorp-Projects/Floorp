@@ -91,7 +91,7 @@ Element ReqTable[] = {
 	{"file://C|/Program Files/", 1, 1, 1, 1, 0, 1, 1},
 	{"ftp://ftp.netscape.com/",  1, 1, 1, 1, 0, 1, 1},
 	{"ftp://ftp.mozilla.org/",   0, 0, 0, 0, 1, 0, 0},
-}; 
+};
 
 void CNsIRequest::OnStartTests(UINT nMenuID)
 {
@@ -231,7 +231,7 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	   return nsnull;
 	}
 	else {
-	   retURI = GetTheUri(theURI, 1);
+	   retURI = GetTheURI(theURI, 1);
 	   // simple string compare to see if input & output URLs match
 	   if (strcmp(ReqTable[i].theUrl, retURI.get()) == 0)
 		  QAOutput("The in/out URIs MATCH.", 1);
