@@ -77,7 +77,10 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccDefaultAction(PRUnichar **_retval)
 
     PRBool checked = PR_FALSE;
     element->GetChecked(&checked);
-    *_retval = ToNewUnicode(checked ? NS_LITERAL_STRING("Check") : NS_LITERAL_STRING("UnCheck"));
+    if (checked)
+        *_retval = ToNewUnicode(NS_LITERAL_STRING("Check"));
+    else
+        *_retval = ToNewUnicode(NS_LITERAL_STRING("UnCheck"));
 
     return NS_OK;
 }
