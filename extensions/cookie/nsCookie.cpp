@@ -573,6 +573,14 @@ cookie_RemoveAllCookies() {
   cookie_UnlockCookieList();
 }
 
+PUBLIC void
+COOKIE_RemoveAllCookies()
+{
+
+	cookie_RemoveAllPermissions();
+	cookie_RemoveAllCookies();
+}
+
 PRIVATE void
 cookie_RemoveOldestCookie(void) {
   cookie_CookieStruct * cookie_s;
@@ -2138,7 +2146,7 @@ cookie_FindValueInArgs(nsAutoString results, char* name) {
   PRInt32 start, length;
   start = results.Find(name);
 //  XP_ASSERT(start >= 0);
-  NS_ASSERTION(start < 0, "bad data");
+  NS_ASSERTION(start >= 0, "bad data");
   if (start < 0) {
     return nsAutoString("").ToNewCString();
   }

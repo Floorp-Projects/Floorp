@@ -47,6 +47,7 @@ public:
 
   NS_IMETHOD GetCookieString(nsIURI *aURL, nsString& aCookie);
   NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie);
+  NS_IMETHOD Cookie_RemoveAllCookies(void);
   NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results);
   NS_IMETHOD Cookie_GetCookieListForViewer(nsString& aCookieList);
   NS_IMETHOD Cookie_GetPermissionListForViewer(nsString& aPermissionList);
@@ -173,6 +174,11 @@ nsCookieService::SetCookieString(nsIURI *aURL, const nsString& aCookie) {
   COOKIE_SetCookieString((char *)spec, cookie);
   nsCRT::free(spec);
   delete []cookie;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCookieService::Cookie_RemoveAllCookies(void) {
+  ::COOKIE_RemoveAllCookies();
   return NS_OK;
 }
 

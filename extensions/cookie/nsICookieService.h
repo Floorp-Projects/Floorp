@@ -54,6 +54,12 @@ public:
    */
   NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie)=0;
 
+  /* 
+   * Blows away all permissions currently in the cookie permissions list,
+   * and then blows away all cookies currently in the cookie list.
+   */
+  NS_IMETHOD Cookie_RemoveAllCookies(void)=0;
+
   /*
    * Interface routines for cookie viewer
    */
