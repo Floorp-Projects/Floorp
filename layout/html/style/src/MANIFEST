@@ -2,7 +2,13 @@ nsDOMCSSDeclaration.h
 nsCSSProps.h
 nsCSSPropIDs.h
 nsCSSValue.h
+nsICSSRule.h
+nsICSSGroupRule.h
 nsICSSStyleRule.h
+nsICSSCharsetRule.h
+nsICSSImportRule.h
+nsICSSMediaRule.h
+nsICSSNameSpaceRule.h
 nsICSSDeclaration.h
 nsIHTMLCSSStyleSheet.h
 nsIHTMLStyleSheet.h

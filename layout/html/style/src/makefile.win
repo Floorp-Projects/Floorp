@@ -27,7 +27,13 @@ EXPORTS =			\
 	nsCSSProps.h 		\
 	nsCSSPropIDs.h 		\
 	nsCSSValue.h 		\
+	nsICSSRule.h 	\
+	nsICSSGroupRule.h 	\
 	nsICSSStyleRule.h 	\
+  nsICSSCharsetRule.h \
+  nsICSSImportRule.h \
+  nsICSSMediaRule.h \
+  nsICSSNameSpaceRule.h \
 	nsICSSDeclaration.h 	\
 	nsIHTMLCSSStyleSheet.h 	\
         nsIHTMLStyleSheet.h     \
@@ -46,7 +52,9 @@ CPPSRCS=				\
 	nsCSSProps2.cpp 		\
 	nsCSSRendering.cpp 		\
 	nsCSSScanner.cpp 		\
+	nsCSSRule.cpp 		\
 	nsCSSStyleRule.cpp 		\
+	nsCSSRules.cpp 		\
 	nsCSSStyleSheet.cpp 		\
 	nsCSSValue.cpp			\
 	nsHTMLAttributes.cpp 		\
@@ -68,7 +76,9 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsCSSProps2.obj 		\
 	.\$(OBJDIR)\nsCSSRendering.obj 		\
 	.\$(OBJDIR)\nsCSSScanner.obj 		\
+	.\$(OBJDIR)\nsCSSRule.obj 		\
 	.\$(OBJDIR)\nsCSSStyleRule.obj 		\
+	.\$(OBJDIR)\nsCSSRules.obj 		\
 	.\$(OBJDIR)\nsCSSStyleSheet.obj 	\
 	.\$(OBJDIR)\nsCSSValue.obj 		\
 	.\$(OBJDIR)\nsHTMLAttributes.obj 	\
