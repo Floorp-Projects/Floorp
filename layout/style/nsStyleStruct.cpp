@@ -931,8 +931,15 @@ nsStyleTableBorder::nsStyleTableBorder(const nsStyleTableBorder& aSource)
 
 nsChangeHint nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther) const
 {
-  if ((mBorderCollapse == aOther.mBorderCollapse) &&
-      (mCaptionSide == aOther.mCaptionSide) &&
+  // Border-collapse changes need a reframe, because we use a different frame
+  // class for table cells in the collapsed border model.  This is used to
+  // conserve memory when using the separated border model (collapsed borders
+  // require extra state to be stored).
+  if (mBorderCollapse != aOther.mBorderCollapse) {
+    return NS_STYLE_HINT_FRAMECHANGE;
+  }
+  
+  if ((mCaptionSide == aOther.mCaptionSide) &&
       (mBorderSpacingX == aOther.mBorderSpacingX) &&
       (mBorderSpacingY == aOther.mBorderSpacingY)) {
     if (mEmptyCells == aOther.mEmptyCells)
