@@ -93,6 +93,8 @@ private:
   nsresult SetImageData();
   nsresult SetAlphaData();
 
+  PRUint32 CalcAlphaRowSize();
+
 private:
   nsCOMPtr<imgIDecoderObserver> mObserver;
   nsCOMPtr<imgIContainer> mImage;

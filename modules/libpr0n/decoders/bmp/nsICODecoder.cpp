@@ -64,22 +64,58 @@ NS_IMPL_ISUPPORTS1(nsICODecoder, imgIDecoder)
 // Actual Data Processing
 // ----------------------------------------
 
-inline nsresult nsICODecoder::SetImageData()
+nsresult nsICODecoder::SetImageData()
 {
   PRUint32 bpr;
   mFrame->GetImageBytesPerRow(&bpr);
-  for (PRUint32 offset = 0, i = 0; i < mDirEntry.mHeight; ++i, offset += bpr)
-    mFrame->SetImageData(mDecodedBuffer+offset, bpr, offset);
+ 
+  // Since the ICO is decoded into an exact sized array, the frame may use
+  // more bytes per row of pixels than the decoding array.
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  PRUint32 decodedLineLen = mDirEntry.mWidth * 4;
+#else
+  PRUint32 decodedLineLen = mDirEntry.mWidth * 3;
+#endif
+
+  PRUint8* decodeBufferPos = mDecodedBuffer;
+  PRUint32 frameOffset = 0;
+
+  for (PRUint32 i = 0;
+       i < mDirEntry.mHeight;
+       ++i, frameOffset += bpr, decodeBufferPos += decodedLineLen) {
+    mFrame->SetImageData(decodeBufferPos, decodedLineLen, frameOffset);
+  }
   return NS_OK;
 }
 
-inline nsresult nsICODecoder::SetAlphaData()
+nsresult nsICODecoder::SetAlphaData()
 {
   PRUint32 bpr;
   mFrame->GetAlphaBytesPerRow(&bpr);
-  for (PRUint32 offset = 0, i = 0; i < mDirEntry.mHeight; ++i, offset += bpr)
-    mFrame->SetAlphaData(mAlphaBuffer+offset, bpr, offset);
+
+  PRUint32 decoderRowSize = CalcAlphaRowSize();
+
+  // In case the decoder and frame have different sized alpha buffers, we
+  // take the smaller of the two row length values as the row length to copy.
+  PRUint32 rowCopyLen = PR_MIN(bpr, decoderRowSize);
+
+  PRUint8* alphaBufferPos = mAlphaBuffer;
+  PRUint32 frameOffset = 0;
+
+  for (PRUint32 i = 0;
+       i < mDirEntry.mHeight;
+       ++i, frameOffset += bpr, alphaBufferPos += decoderRowSize) {
+    mFrame->SetAlphaData(alphaBufferPos, rowCopyLen, frameOffset);
+  }
   return NS_OK;
+}
+
+PRUint32 nsICODecoder::CalcAlphaRowSize()
+{
+  PRUint32 rowSize = (mDirEntry.mWidth + 7) / 8; // +7 to round up
+  if (rowSize % 4)
+    rowSize += (4 - (rowSize % 4)); // Pad to DWORD Boundary
+  return rowSize;
 }
 
 nsICODecoder::nsICODecoder()
@@ -401,10 +437,8 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
   }
 
   if (mDecodingAndMask) {
-    PRUint32 rowSize = (mDirEntry.mWidth + 7) / 8; // +7 to round up
-    if (rowSize % 4)
-      rowSize += (4 - (rowSize % 4)); // Pad to DWORD Boundary
-    
+    PRUint32 rowSize = CalcAlphaRowSize();
+
     if (mPos == (1 + mImageOffset + BITMAPINFOSIZE + mNumColors*4)) {
       mPos++;
       mRowBytes = 0;
