@@ -27,207 +27,37 @@
     // for |NS_PRECONDITION|
 #endif
 
+#ifndef nscore_h___
+	#include "nscore.h"
+		// for |NS_REINTERPRET_CAST|
+#endif
+
 #ifndef nsISupports_h___
   #include "nsISupports.h"
     // for |nsresult|, |NS_ADDREF|, et al
 #endif
 
+/*
+	Having problems?
+	
+  See the User Manual at:
+    <http://www.meer.net/ScottCollins/doc/nsCOMPtr.html>, or
+    <http://www.mozilla.org/projects/xpcom/nsCOMPtr.html>
+*/
+
+
+
 
 /*
   TO DO...
   
-    + make alternative function for |getter_AddRefs| (or something)
+  	+ make StartAssignment optionally inlined
     + make constructor for |nsQueryInterface| explicit (suddenly construct/assign from raw pointer becomes illegal)
     + Improve internal documentation
       + mention *&
       + alternatives for comparison
       + do_QueryInterface
 */
-
-
-
-/* USER MANUAL
-
-  See also:
-    <http://www.meer.net/ScottCollins/doc/nsCOMPtr.html>, or
-    <http://www.mozilla.org/projects/xpcom/nsCOMPtr.html>
-
-  What is |nsCOMPtr|?
-
-    |nsCOMPtr| is a `smart-pointer'.  It is a template class that acts, syntactically,
-    just like an ordinary pointer in C or C++, i.e., you can apply |*| or |->| to it to
-    `get to' what it points at.  |nsCOMPtr| is smart in that, unlike a raw COM
-    interface pointer, |nsCOMPtr| manages |AddRef|, |Release|, and |QueryInterface|
-    _for_ you.
-
-    For instance, here is a typical snippet of code (at its most compact) where you assign
-    a COM interface pointer into a member variable:
-
-      NS_IF_RELEASE(mFoop);  // If I have one already, I must release it before over-writing it.
-      if ( mFooP = aPtr )    // Now it's safe to assign it in, and, if it's not NULL
-        mFooP->AddRef();     // I must |AddRef| it, since I'll be holding on to it.
-
-    If our member variable |mFooP| were a |nsCOMPtr|, however, the snippet above
-    would look like this:
-
-      mFoop = aPtr;        // Note: automatically |Release|s the old and |AddRef|s the new
-
-    |nsCOMPtr| helps you write code that is leak-proof, exception safe, and significantly
-    less verbose than you would with raw COM interface pointers.  With |nsCOMPtr|, you
-    may never have to call |AddRef|, |Release|, or |QueryInterface| by hand.
-
-
-    You still have to understand COM.  You still have to know which functions return
-    interface pointers that have already been |AddRef|ed and which don't.  You still
-    have to ensure your program logic doesn't produce circularly referencing garbage.
-    |nsCOMPtr| is not a panacea.  It is, however, helpful, easy to use, well-tested,
-    and polite.  It doesn't require that a function author cooperate with you, nor does
-    your use force others to use it.
-
-
-  Where should I use |nsCOMPtr|?
-
-    ...
-
-
-  Where _shouldn't_ I use |nsCOMPtr|?
-
-    In public interfaces... [[others]]
-
-
-  How does a |nsCOMPtr| differ from a raw pointer?
-
-    A |nsCOMPtr| differs, syntactically, from a raw COM interface pointer in three
-    ways:
-
-      + It's declared differently, e.g.,
-
-        // instead of saying                // you say
-        IFoo* fooP;                         nsCOMPtr<IFoo> fooP;
-
-
-      + You can't call |AddRef| or |Release| through it,
-
-        fooP->AddRef();   // OK             fooP->AddRef();   // Error: no permission
-        fooP->Release();  // OK             fooP->Release();  // Error: no permission
-
-
-      + You can't just apply an |&| to it to pass it to the typical `getter' function
-
-        AcquireFoo(&fooP);                  AcquireFoo( getter_AddRefs(fooP) );
-        GetFoo(&fooP);                      GetFoo( getter_doesnt_AddRef(fooP) );
-
-
-  How do I use |nsCOMPtr|?
-
-    Typically, you can use a |nsCOMPtr| exactly as you would a standard COM
-    interface pointer:
-
-      IFoo* fooP;                           nsCOMPtr<IFoo> fooP;
-      // ...                                // ...
-      fooP->SomeFunction(x, y, z);          fooP->SomeFunction(x, y, z);
-      AnotherFunction(fooP);                AnotherFunction(fooP);
-
-      if ( fooP )                           if ( fooP )
-        // ...                                // ...
-
-      if ( fooP == barP )                   if ( fooP == barP )
-        // ...                                // ...
-
-    There are some differences, though.  In particular, you can't call |AddRef| or |Release|
-    through a |nsCOMPtr| directly, nor would you need to.  |AddRef| is called for you
-    whenever you assign a COM interface pointer _into_ a |nsCOMPtr|.  |Release| is
-    called on the old value, and also when the |nsCOMPtr| goes out of scope.  Trying
-    to call |AddRef| or |Release| yourself will generate a compile-time error.
-
-      fooP->AddRef();                       // fooP->AddRef();  // ERROR: no permission
-      fooP->Release();                      // fooP->Release(); // ERROR: no permission
-
-    The final difference is that a bare |nsCOMPtr| (or rather a pointer to it) can't
-    be supplied as an argument to a function that `fills in' a COM interface pointer.
-    Rather it must be wrapped with a utility call that says whether the function calls
-    |AddRef| before returning, e.g.,
-
-      ...->QueryInterface(riid, &fooP)      ...->QueryInterface(riid, getter_AddRefs(fooP))
-
-      LookupFoo(&fooP);                     LookupFoo( getter_doesnt_AddRef(fooP) );
-
-    Don't worry.  It's a compile-time error if you forget to wrap it.
-
-    Compare the raw-pointer way...
-
-      IFoo* foo = 0;
-      nsresult status = CreateIFoo(&foo);
-      if ( NS_SUCCEEDED(status) )
-        {
-          IBar* bar = 0;
-          if ( NS_SUCCEEDED(status = foo->QueryInterface(riid, &bar)) )
-            {
-              IFooBar* foobar = 0;
-              if ( NS_SUCCEEDED(status = CreateIFooBar(foo, bar, &foobar)) )
-                {
-                  foobar->DoTheReallyHardThing();
-                  foobar->Release();
-                }
-              bar->Release();
-            }
-          foo->Release();
-        }
-
-
-
-    To the smart-pointer way...
-
-      nsCOMPtr<IFoo> fooP;
-      nsresult status = CreateIFoo( getter_AddRefs(fooP) );
-      if ( NS_SUCCEEDED(status) )
-        if ( nsCOMPtr<IBar> barP( fooP ) )
-          {
-            nsCOMPtr<IFooBar> fooBarP;
-            if ( NS_SUCCEEDED(status = CreateIFooBar(fooP, barP, getter_AddRefs(fooBarP))) )
-              fooBarP->DoTheReallyHardThing();
-          }
-
-    
-  Is there an easy way to convert my current code?
-
-    ...
-
-
-  What do I have to beware of?
-
-    VC++ < 6.0 _can't_ handle the following situation
-
-      class nsIFoo;          // forward declare some class
-      // ...
-      nsCOMPtr<nsIFoo> bar;  // ERROR: incomplete type nsIFoo, etc.
- 
-    Instead, you must make sure that you actually defined the underlying interface class, e.g.,
-
-      #include "nsIFoo.h"    // fully defines |class nsIFoo|
-      // ...
-      nsCOMPtr<nsIFoo> bar;  // no problem
-
-    Why is this?  It's because VC++ tries to instantiate every member of the template
-    as soon as it sees the template declarations.  Bad compiler.  No cookie!
-    [[Thanks to mjudge, waterson, and pinkerton on this one.]]
-
-
-  Why does |getter_AddRefs| have such a funny name?  I.e., why doesn't it follow our
-  naming conventions?
-
-    |getter_AddRefs| and |getter_doesnt_AddRef| use underscores for the same
-    reason our special macros do, quoting from our coding conventions "...to make them
-    stick out like a sore thumb".  Note also that since |AddRef| is one word,
-    |getter_AddRefs| and |getter_doesnt_AddRef| couldn't have the right spacing if only inter-
-    caps were used. 
-*/
-
-
-
-
-
-
 
 /*
   WARNING:
@@ -239,83 +69,42 @@
 
   /*
     Set up some |#define|s to turn off a couple of troublesome C++ features.
-    Interestingly, none of the compilers barf on template stuff.
-
-    Ideally, we would want declarations like these in a configuration file
-    that everybody would get.  Deciding exactly how to do that should
-    be part of the process of moving from experimental to production.
-
-    Update: ramiro is working on getting these into the configuration system.
+    Interestingly, none of the compilers barf on template stuff.  These are set up automatically
+    by the autoconf system for all Unixes.  (Temporarily, I hope) I have to define them
+    myself for Mac and Windows.
   */
 
-#ifndef HAVE_CPP_EXPLICIT
-#define NSCAP_NO_EXPLICIT
+	// under Metrowerks (Mac), we don't have autoconf yet
+#ifdef __MWERKS__
+	#define HAVE_CPP_USING
+	#define HAVE_CPP_EXPLICIT
+	#define HAVE_CPP_NEW_CASTS
 #endif
 
-#ifndef HAVE_CPP_USING
-#define NSCAP_NO_MEMBER_USING_DECLARATIONS
-#endif
+	// under VC++ (Windows), we don't have autoconf yet
+#ifdef _MSC_VER
+	#define HAVE_CPP_EXPLICIT
+	#define HAVE_CPP_USING
+	#define HAVE_CPP_NEW_CASTS
 
-/* HAVE_CPP_NEW_CASTS test is not strict enough yet. scc? */
-#if 0
-#ifndef HAVE_CPP_NEW_CASTS
-#define NSCAP_NO_NEW_CASTS
-#endif
-#endif
-
-#ifdef NEED_CPP_UNUSED_IMPLEMENTATIONS
-#define NSCAP_NEED_UNUSED_VIRTUAL_IMPLEMENTATIONS
-#endif
-
-#if defined(__GNUG__) && (__GNUC_MINOR__ <= 90) && !defined(SOLARIS)
-  #define NSCAP_NO_MEMBER_USING_DECLARATIONS
-
-  #if (defined(LINUX) || defined(__bsdi__)) && (__GNUC_MINOR__ <= 7)
-    #define NSCAP_NEED_UNUSED_VIRTUAL_IMPLEMENTATIONS
-  #endif
-#endif
-
-#if defined(SOLARIS) && !defined(__GNUG__)
-  #define NSCAP_NO_EXPLICIT
-  #define NSCAP_NO_NEW_CASTS
-  #define NSCAP_NO_MEMBER_USING_DECLARATIONS
-#endif
-
-#if defined(_MSC_VER)
   #if (_MSC_VER<1100)
 		  // before 5.0, VC++ couldn't handle explicit
-    #define NSCAP_NO_EXPLICIT
+    #undef HAVE_CPP_EXPLICIT
   #elif (_MSC_VER==1100)
       // VC++5.0 has an internal compiler error (sometimes) without this
-    #define NSCAP_NO_MEMBER_USING_DECLARATIONS
+    #undef HAVE_CPP_USING
   #endif
 #endif
 
-#if defined(IRIX) || defined(AIX)
-  #define NSCAP_NO_MEMBER_USING_DECLARATIONS
-  #define NSCAP_NO_EXPLICIT
-  #define NSCAP_NO_NEW_CASTS
-#endif
 
-#if defined(HPUX)
-  #define NSCAP_NO_MEMBER_USING_DECLARATIONS
-  #define NSCAP_NO_NEW_CASTS
-#endif
+	/*
+		If the compiler doesn't support |explicit|, we'll just make it go away, trusting
+		that the builds under compilers that do have it will keep us on the straight and narrow.
 
-#if defined(AIX)
-  #define NSCAP_NO_EXPLICIT
-  #define NSCAP_NO_NEW_CASTS
-  #define NSCAP_NO_MEMBER_USING_DECLARATIONS
-#endif
-
-#ifdef NSCAP_NO_EXPLICIT
+		This should probably be moved to "nscore.h".
+	*/
+#ifndef HAVE_CPP_EXPLICIT
   #define explicit
-#endif
-
-#ifndef NSCAP_NO_NEW_CASTS
-  #define NSCAP_REINTERPRET_CAST(T,x)  reinterpret_cast<T>(x)
-#else
-  #define NSCAP_REINTERPRET_CAST(T,x)  ((T)(x))
 #endif
 
 #ifdef NSCAP_FEATURE_DEBUG_MACROS
@@ -351,7 +140,7 @@ class nsDerivedSafe : public T
     */
   {
     private:
-#ifndef NSCAP_NO_MEMBER_USING_DECLARATIONS
+#ifdef HAVE_CPP_USING
       using T::AddRef;
       using T::Release;
 #else
@@ -359,14 +148,14 @@ class nsDerivedSafe : public T
       NS_IMETHOD_(nsrefcnt) Release(void);
 #endif
 
-      void operator delete( void* );                    // NOT TO BE IMPLEMENTED
+      void operator delete( void*, size_t );                  // NOT TO BE IMPLEMENTED
         // declaring |operator delete| private makes calling delete on an interface pointer a compile error
 
       nsDerivedSafe<T>& operator=( const nsDerivedSafe<T>& ); // NOT TO BE IMPLEMENTED
         // you may not call |operator=()| through a dereferenced |nsCOMPtr|, because you'd get the wrong one
   };
 
-#if defined(NSCAP_NO_MEMBER_USING_DECLARATIONS) && defined(NSCAP_NEED_UNUSED_VIRTUAL_IMPLEMENTATIONS)
+#if !defined(HAVE_CPP_USING) && defined(NEED_CPP_UNUSED_IMPLEMENTATIONS)
 template <class T>
 nsrefcnt
 nsDerivedSafe<T>::AddRef()
@@ -415,7 +204,7 @@ dont_QueryInterface( T* aRawPtr )
 
 struct nsQueryInterface
   {
-    // explicit
+    explicit
     nsQueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
         : mRawPtr(aRawPtr),
           mErrorPtr(error)
@@ -507,7 +296,6 @@ class nsCOMPtr_base
 
 
 
-
 template <class T>
 class nsCOMPtr : private nsCOMPtr_base
     /*
@@ -583,7 +371,7 @@ class nsCOMPtr : private nsCOMPtr_base
       get() const
           // returns a |nsDerivedSafe<T>*| to deny clients the use of |AddRef| and |Release|
         {
-          return NSCAP_REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
+          return NS_REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
         }
 
       nsDerivedSafe<T>*
@@ -625,7 +413,7 @@ class nsCOMPtr : private nsCOMPtr_base
       T**
       StartAssignment()
         {
-          return NSCAP_REINTERPRET_CAST(T**, begin_assignment());
+          return NS_REINTERPRET_CAST(T**, begin_assignment());
         }
   };
 
@@ -658,7 +446,7 @@ class nsGetterAddRefs
       operator void**()
         {
           // NS_PRECONDITION(mTargetSmartPtr != 0, "getter_AddRefs into no destination");
-          return NSCAP_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
+          return NS_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
         }
 
       T*&

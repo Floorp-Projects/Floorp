@@ -32,7 +32,7 @@ void
 nsCOMPtr_base::assign_with_QueryInterface( nsISupports* rawPtr, const nsIID& iid, nsresult* result )
   {
     nsresult status = NS_OK;
-    if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryInterface(iid, NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
+    if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryInterface(iid, NS_REINTERPRET_CAST(void**, &rawPtr)) ) )
       rawPtr = 0;
 
     if ( mRawPtr )
@@ -50,5 +50,5 @@ nsCOMPtr_base::begin_assignment()
     if ( mRawPtr )
       NSCAP_RELEASE(mRawPtr);
     mRawPtr = 0;
-    return NSCAP_REINTERPRET_CAST(void**, &mRawPtr);
+    return NS_REINTERPRET_CAST(void**, &mRawPtr);
   }
