@@ -1643,26 +1643,54 @@ nsWebShell::ReleaseScriptContext(nsIScriptContext *aContext)
 NS_IMETHODIMP
 nsWebShell::OnConnectionsComplete()
 {
-  nsresult ret = NS_ERROR_FAILURE;
+  nsIDocumentViewer* docViewer;
+  nsresult rv = NS_ERROR_FAILURE;
   
   if (nsnull != mScriptGlobal) {
-    nsIDocumentViewer *mDocViewer;
     if (nsnull != mContentViewer && 
-        NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&mDocViewer)) {
-      nsIPresContext *mPresContext;
-      if (NS_OK == mDocViewer->GetPresContext(mPresContext)) {
-        nsEventStatus mStatus = nsEventStatus_eIgnore;
-        nsMouseEvent mEvent;
-        mEvent.eventStructType = NS_EVENT;
-        mEvent.message = NS_PAGE_LOAD;
-        ret = mScriptGlobal->HandleDOMEvent(*mPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
+        NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
+      nsIPresContext *presContext;
+      if (NS_OK == docViewer->GetPresContext(presContext)) {
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event;
+        event.eventStructType = NS_EVENT;
+        event.message = NS_PAGE_LOAD;
+        rv = mScriptGlobal->HandleDOMEvent(*presContext, &event, nsnull, DOM_EVENT_INIT, status);
 
-        NS_RELEASE(mPresContext);
+        NS_RELEASE(presContext);
       }
-      NS_RELEASE(mDocViewer);
+      NS_RELEASE(docViewer);
     }
   }
-  return ret;
+  
+  /*
+   *Fire the EndLoadURL(...) notification...
+   */
+  if ((nsnull != mContainer) && (nsnull != mContentViewer)) {
+    nsIDocument* document;
+
+    rv = mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer);
+    if (NS_SUCCEEDED(rv)) {
+      rv = docViewer->GetDocument(document);
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoString urlString;
+        nsIURL* url;
+
+        url = document->GetDocumentURL();
+        if (nsnull != url) {
+          urlString = url->GetSpec();
+
+          /* XXX: The load status needs to be passed in... */
+          rv = mContainer->EndLoadURL(this, urlString, /* XXX */ 0 );
+          NS_RELEASE(url);
+        }
+        NS_RELEASE(document);
+      }
+      NS_RELEASE(docViewer);
+    }
+  }
+  
+  return rv;
 }
 
 /* For use with redirect/refresh url api */
@@ -1832,12 +1860,6 @@ nsWebShell::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg)
 
   if (nsnull != mObserver) {
     rv = mObserver->OnStopBinding(aURL, aStatus, aMsg);
-  }
-
-  if (nsnull != mContainer) {
-    nsAutoString urlString(aURL->GetSpec());
-
-    rv = mContainer->EndLoadURL(this, urlString, aStatus);
   }
   return rv;
 }
