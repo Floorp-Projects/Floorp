@@ -368,7 +368,6 @@ LINK_LIBS= \
     $(DIST)\lib\libnspr21.lib \
     $(DIST)\lib\libplds21.lib \
     $(DIST)\lib\libplc21.lib \
-    $(DIST)\lib\libmsgc21.lib \
 !endif
 !if defined(MOZ_JAVA)
     $(DIST)\lib\jrt32$(VERSION_NUMBER).lib \
@@ -1734,9 +1733,6 @@ install:    \
 !IF EXIST($(DIST)\bin\libplc21.dll)
 	    $(OUTDIR)\libplc21.dll    \
 !ENDIF
-!IF EXIST($(DIST)\bin\libmsgc21.dll)
-	    $(OUTDIR)\libmsgc21.dll    \
-!ENDIF
 !endif
 !IF EXIST($(DIST)\bin\js32$(VERSION_NUMBER).dll)
 	    $(OUTDIR)\js32$(VERSION_NUMBER).dll    \
@@ -1885,9 +1881,6 @@ install:    \
 !ENDIF
 !IF EXIST($(DIST)\lib\plc21.dll)
 	    $(OUTDIR)\plc21.dll    \
-!ENDIF
-!IF EXIST($(DIST)\lib\msgc21.dll)
-	    $(OUTDIR)\msgc21.dll    \
 !ENDIF
 !endif
 !IF EXIST($(DIST)\bin\js16$(VERSION_NUMBER).dll)
@@ -2086,8 +2079,6 @@ $(OUTDIR)\libplds21.dll:   $(DIST)\bin\libplds21.dll
     @IF EXIST $(DIST)\bin\libplds21.dll copy $(DIST)\bin\libplds21.dll $(OUTDIR)\libplds21.dll
 $(OUTDIR)\libplc21.dll:   $(DIST)\bin\libplc21.dll
     @IF EXIST $(DIST)\bin\libplc21.dll copy $(DIST)\bin\libplc21.dll $(OUTDIR)\libplc21.dll
-$(OUTDIR)\libmsgc21.dll:   $(DIST)\bin\libmsgc21.dll
-    @IF EXIST $(DIST)\bin\libmsgc21.dll copy $(DIST)\bin\libmsgc21.dll $(OUTDIR)\libmsgc21.dll
 !endif
 
 $(OUTDIR)\js32$(VERSION_NUMBER).dll:   $(DIST)\bin\js32$(VERSION_NUMBER).dll
@@ -2200,8 +2191,6 @@ $(OUTDIR)\plds21.dll:   $(DIST)\lib\plds21.dll
     @IF EXIST $(DIST)\bin\plds21.dll copy $(DIST)\bin\plds21.dll $(OUTDIR)\plds21.dll
 $(OUTDIR)\plc21.dll:   $(DIST)\lib\plc21.dll
     @IF EXIST $(DIST)\bin\plc21.dll copy $(DIST)\bin\plc21.dll $(OUTDIR)\plc21.dll
-$(OUTDIR)\msgc21.dll:   $(DIST)\lib\msgc21.dll
-    @IF EXIST $(DIST)\bin\msgc21.dll copy $(DIST)\bin\msgc21.dll $(OUTDIR)\msgc21.dll
 !endif
 
 $(OUTDIR)\js16$(VERSION_NUMBER).dll:   $(DIST)\bin\js16$(VERSION_NUMBER).dll
@@ -2565,7 +2554,6 @@ LINK_CL:
     $(DIST)\lib\nspr21.lib +
     $(DIST)\lib\plds21.lib +
     $(DIST)\lib\plc21.lib +
-    $(DIST)\lib\msgc21.lib +
 !else
     $(DIST)\lib\pr16$(VERSION_NUMBER).lib +
 !endif
