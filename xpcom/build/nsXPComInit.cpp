@@ -629,29 +629,6 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
     return okay ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult NS_COM
-NS_GetFrozenFunctions(XPCOMFunctions *functions)
-{
-    if (!functions)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (functions->version != XPCOM_GLUE_VERSION)
-        return NS_ERROR_FAILURE;
-
-    functions->init = &NS_InitXPCOM2;
-    functions->shutdown = &NS_ShutdownXPCOM;
-    functions->getServiceManager = &NS_GetServiceManager;
-    functions->getComponentManager = &NS_GetComponentManager;
-    functions->getComponentRegistrar = &NS_GetComponentRegistrar;
-    functions->getMemoryManager = &NS_GetMemoryManager;
-    functions->newLocalFile = &NS_NewLocalFile;
-    functions->newNativeLocalFile = &NS_NewNativeLocalFile;
-
-    functions->registerExitRoutine = &NS_RegisterXPCOMExitRoutine;
-    functions->unregisterExitRoutine = &NS_UnregisterXPCOMExitRoutine;
-
-    return NS_OK;
-}
 
 //
 // NS_ShutdownXPCOM()
@@ -795,3 +772,100 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
 
 
+/* 
+   Some symbol loaders use the address of the function defined in the 
+   application, not the "real" function defined by xpcom.  We need to return
+   the address of something in *this* library.  Here, we create some stubs
+   and return them in NS_GetFrozenFunctions.
+*/
+
+static nsresult 
+internal_InitXPCOM2(nsIServiceManager* *result,
+                    nsIFile* binDirectory,
+                    nsIDirectoryServiceProvider* appFileLocationProvider)
+{
+    return NS_InitXPCOM2(result, binDirectory, appFileLocationProvider);
+}
+
+static nsresult 
+internal_ShutdownXPCOM(nsIServiceManager* servMgr)
+{
+    return NS_ShutdownXPCOM(servMgr);
+}
+
+static nsresult 
+internal_GetServiceManager(nsIServiceManager* *result)
+{
+    return NS_GetServiceManager(result);
+}
+
+static nsresult 
+internal_GetComponentManager(nsIComponentManager* *result)
+{
+    return NS_GetComponentManager(result);
+}
+
+static nsresult
+internal_GetComponentRegistrar(nsIComponentRegistrar* *result)
+{
+    return NS_GetComponentRegistrar(result);
+}
+
+static nsresult 
+internal_GetMemoryManager(nsIMemory* *result)
+{
+    return NS_GetMemoryManager(result);
+}
+static nsresult 
+internal_NewLocalFile(const nsAString &path, 
+                      PRBool followLinks, 
+                      nsILocalFile* *result)
+{
+    return NS_NewLocalFile(path, followLinks, result);
+} 
+
+static nsresult
+internal_NewNativeLocalFile(const nsACString &path, 
+                            PRBool followLinks, 
+                            nsILocalFile* *result)
+{
+    return NS_NewNativeLocalFile(path, followLinks, result);
+}
+
+
+static nsresult
+internal_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, 
+                                  PRUint32 priority)
+{
+    return NS_RegisterXPCOMExitRoutine(exitRoutine, priority);
+}
+
+nsresult NS_COM
+internal_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
+{
+    return NS_UnregisterXPCOMExitRoutine(exitRoutine);
+}
+
+nsresult NS_COM
+NS_GetFrozenFunctions(XPCOMFunctions *functions)
+{
+    if (!functions)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (functions->version != XPCOM_GLUE_VERSION)
+        return NS_ERROR_FAILURE;
+
+    functions->init = &internal_InitXPCOM2;
+    functions->shutdown = &internal_ShutdownXPCOM;
+    functions->getServiceManager = &internal_GetServiceManager;
+    functions->getComponentManager = &internal_GetComponentManager;
+    functions->getComponentRegistrar = &internal_GetComponentRegistrar;
+    functions->getMemoryManager = &internal_GetMemoryManager;
+    functions->newLocalFile = &internal_NewLocalFile;
+    functions->newNativeLocalFile = &internal_NewNativeLocalFile;
+
+    functions->registerExitRoutine = &internal_RegisterXPCOMExitRoutine;
+    functions->unregisterExitRoutine = &internal_UnregisterXPCOMExitRoutine;
+
+    return NS_OK;
+}
