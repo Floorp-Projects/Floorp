@@ -42,6 +42,7 @@
 #include "nsAString.h"
 #include "nsIPresContext.h"
 #include "nsIImageFrame.h"
+#include "nsIIOService.h"
 
 #include "nsTransform2D.h"
 #include "imgIRequest.h"
@@ -136,6 +137,8 @@ public:
   NS_IMETHOD GetImageMap(nsIPresContext *aPresContext, nsIImageMap **aImageMap);
 
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize);
+
+  static void ReleaseGlobals() { NS_IF_RELEASE(sIOService); }
 
 protected:
   // nsISupports
@@ -247,6 +250,8 @@ private:
   nsMargin            mBorderPadding;
 
   nsIPresContext*     mPresContext;  // weak ref
+
+  static nsIIOService* sIOService;
 
   /* loading / broken image icon support */
 

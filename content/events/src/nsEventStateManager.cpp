@@ -1366,8 +1366,7 @@ nsEventStateManager::GenerateDragGesture(nsIPresContext* aPresContext,
     static PRInt32 pixelThresholdY = 0;
 
     if (!pixelThresholdX) {
-      nsCOMPtr<nsILookAndFeel> lf;
-      aPresContext->GetLookAndFeel(getter_AddRefs(lf));
+      nsILookAndFeel *lf = aPresContext->LookAndFeel();
       lf->GetMetric(nsILookAndFeel::eMetric_DragThresholdX, pixelThresholdX);
       lf->GetMetric(nsILookAndFeel::eMetric_DragThresholdY, pixelThresholdY);
       if (!pixelThresholdX)

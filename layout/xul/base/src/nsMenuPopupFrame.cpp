@@ -78,8 +78,6 @@
 #include "nsISound.h"
 #endif
 
-static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
 
@@ -173,13 +171,10 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
 
   // lookup if we're allowed to overlap the OS bar (menubar/taskbar) from the
   // look&feel object
-  nsCOMPtr<nsILookAndFeel> lookAndFeel;
-  aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
-  if ( lookAndFeel ) {
-    PRBool tempBool;
-    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, tempBool);
-    mMenuCanOverlapOSBar = tempBool;
-  }
+  PRBool tempBool;
+  aPresContext->LookAndFeel()->
+    GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, tempBool);
+  mMenuCanOverlapOSBar = tempBool;
   
   // XXX Hack
   mPresContext = aPresContext;
@@ -1481,12 +1476,8 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
       KillCloseTimer(); // Ensure we don't have another stray waiting closure.
       PRInt32 menuDelay = 300;   // ms
 
-      nsILookAndFeel * lookAndFeel;
-      if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, 
-                      NS_GET_IID(nsILookAndFeel), (void**)&lookAndFeel)) {
-        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_SubmenuDelay, menuDelay);
-       NS_RELEASE(lookAndFeel);
-      }
+      mPresContext->LookAndFeel()->
+        GetMetric(nsILookAndFeel::eMetric_SubmenuDelay, menuDelay);
 
       // Kick off the timer.
       mCloseTimer = do_CreateInstance("@mozilla.org/timer;1");

@@ -1655,10 +1655,7 @@ nsTreeBodyFrame::CreateTimer(const nsILookAndFeel::nsMetricID aID,
   // Get the delay from the look and feel service.
   PRInt32 delay = 0;
   nsCOMPtr<nsILookAndFeel> lookAndFeel;
-  mPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
-  if (lookAndFeel) {
-    lookAndFeel->GetMetric(aID, delay);
-  }
+  mPresContext->LookAndFeel()->GetMetric(aID, delay);
 
   nsCOMPtr<nsITimer> timer;
 
@@ -3758,15 +3755,11 @@ nsTreeBodyFrame::ComputeDropPosition(nsIDOMEvent* aEvent, PRInt32* aRow, PRInt16
     if (CanAutoScroll(*aRow)) {
       // Get the max value from the look and feel service.
       PRInt32 scrollLinesMax = 0;
-      nsCOMPtr<nsILookAndFeel> lookAndFeel;
-      mPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
-      if (lookAndFeel) {
-        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TreeScrollLinesMax,
-                               scrollLinesMax);
-        scrollLinesMax--;
-        if (scrollLinesMax < 0)
-          scrollLinesMax = 0;
-      }
+      mPresContext->LookAndFeel()->
+        GetMetric(nsILookAndFeel::eMetric_TreeScrollLinesMax, scrollLinesMax);
+      scrollLinesMax--;
+      if (scrollLinesMax < 0)
+        scrollLinesMax = 0;
 
       // Determine if we're w/in a margin of the top/bottom of the tree during a drag.
       // This will ultimately cause us to scroll, but that's done elsewhere.

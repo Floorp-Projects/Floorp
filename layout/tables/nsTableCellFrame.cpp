@@ -344,11 +344,9 @@ nsTableCellFrame::DecorateForSelection(nsIPresContext* aPresContext,
             bordercolor = NS_RGB(176,176,176);// disabled color
           }
           else {
-  	        nsILookAndFeel* look = nsnull;
-	          if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
-	            look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, bordercolor);
-	            NS_RELEASE(look);
-	          }
+            aPresContext->LookAndFeel()->
+              GetColor(nsILookAndFeel::eColor_TextSelectBackground,
+                       bordercolor);
           }
           float t2pfloat;
           if (NS_SUCCEEDED(aPresContext->GetPixelsToTwips(&t2pfloat)))

@@ -70,7 +70,6 @@ class nsString;
 class nsIEventStateManager;
 class nsIURI;
 class nsILookAndFeel;
-class nsIIOService;
 class nsICSSPseudoComparator;
 class nsILanguageAtom;
 class nsITheme;
@@ -161,19 +160,10 @@ public:
   virtual void SetImageAnimationMode(PRUint16 aMode) = 0;
 
   /**
-   * Get an special load flags for images for this context
+   * Get cached look and feel service.  This is faster than obtaining it
+   * through the service manager.
    */
-  NS_IMETHOD GetImageLoadFlags(nsLoadFlags& aLoadFlags) = 0;
-
-  /**
-   * Get cached look and feel service.
-   */
-  NS_IMETHOD GetLookAndFeel(nsILookAndFeel** aLookAndFeel) = 0;
-
-  /**
-   * Get cached IO service.
-   */
-  NS_IMETHOD GetIOService(nsIIOService** aIOService) = 0;
+  nsILookAndFeel* LookAndFeel() { return mLookAndFeel; }
 
   /** 
    * Get base url for presentation
@@ -577,6 +567,7 @@ protected:
                                         // since there is no dependency
                                         // from gfx back to layout.
   nsIEventStateManager* mEventManager;  // [STRONG]
+  nsILookAndFeel*       mLookAndFeel;   // [STRONG]
 
   nsCompatibility       mCompatibilityMode;
   PRUint16              mImageAnimationMode;

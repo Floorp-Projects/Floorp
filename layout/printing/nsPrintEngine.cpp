@@ -2603,7 +2603,11 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
 
 
   // init it with the DC
-  (aPO->mPresContext)->Init(mPrt->mPrintDocDC);
+  rv = aPO->mPresContext->Init(mPrt->mPrintDocDC);
+  if (NS_FAILED(rv)) {
+    aPO->mPresContext = nsnull;
+    return rv;
+  }
 
   rv = mDocViewerPrint->CreateStyleSet(aPO->mDocument, &aPO->mStyleSet);
   NS_ENSURE_SUCCESS(rv, rv);

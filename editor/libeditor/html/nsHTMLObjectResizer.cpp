@@ -66,8 +66,11 @@
 
 #include "nsIPresContext.h"
 #include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"
 
 class nsHTMLEditUtils;
+
+static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 // ==================================================================
 // DocumentResizeEventListener
@@ -911,19 +914,12 @@ nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
     mouseEvent->GetClientX(&clientX);
     mouseEvent->GetClientY(&clientY);
 
-    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-    if (!ps) return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIPresContext> pcontext;
-    ps->GetPresContext(getter_AddRefs(pcontext));
-    if (!pcontext) return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsILookAndFeel> look;
-    nsresult res = pcontext->GetLookAndFeel(getter_AddRefs(look));
+    nsCOMPtr<nsILookAndFeel> look = do_GetService(kLookAndFeelCID);
+    NS_ASSERTION(look, "Look and feel service must be implemented for this toolkit");
 
     PRInt32 xThreshold=1, yThreshold=1;
-    if (NS_SUCCEEDED(res) && look) {
-      look->GetMetric(nsILookAndFeel::eMetric_DragThresholdX, xThreshold);
-      look->GetMetric(nsILookAndFeel::eMetric_DragThresholdY, yThreshold);
-    }
+    look->GetMetric(nsILookAndFeel::eMetric_DragThresholdX, xThreshold);
+    look->GetMetric(nsILookAndFeel::eMetric_DragThresholdY, yThreshold);
 
     if (PR_ABS(clientX - mOriginalX ) * 2 >= xThreshold ||
         PR_ABS(clientY - mOriginalY ) * 2 >= yThreshold) {

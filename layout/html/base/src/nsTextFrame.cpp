@@ -568,12 +568,11 @@ public:
       // Get colors from look&feel
       mSelectionBGColor = NS_RGB(0, 0, 0);
       mSelectionTextColor = NS_RGB(255, 255, 255);
-	    nsILookAndFeel* look = nsnull;
-	    if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
-	      look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, mSelectionBGColor);
-	      look->GetColor(nsILookAndFeel::eColor_TextSelectForeground, mSelectionTextColor);
-	      NS_RELEASE(look);
-	    }
+      nsILookAndFeel* look = aPresContext->LookAndFeel();
+      look->GetColor(nsILookAndFeel::eColor_TextSelectBackground,
+                     mSelectionBGColor);
+      look->GetColor(nsILookAndFeel::eColor_TextSelectForeground,
+                     mSelectionTextColor);
 
       // Get the word and letter spacing
       mWordSpacing = 0;
@@ -1021,15 +1020,15 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
     }
 
     // Get background colors for disabled selection at attention-getting selection (used with type ahead find)
-    nsCOMPtr<nsILookAndFeel> look;
-    if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(look))) && look) {
-      look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundAttention, mAttentionColor);
-      look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundDisabled, mDisabledColor);
-      mDisabledColor  = EnsureDifferentColors(mDisabledColor, mOldStyle.mSelectionBGColor);
-      mAttentionColor = EnsureDifferentColors(mAttentionColor, mOldStyle.mSelectionBGColor);
-    }
-    else 
-      mDisabledColor = mAttentionColor = mOldStyle.mSelectionBGColor;
+    nsILookAndFeel *look = aPresContext->LookAndFeel();
+    look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundAttention,
+                   mAttentionColor);
+    look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundDisabled,
+                   mDisabledColor);
+    mDisabledColor  = EnsureDifferentColors(mDisabledColor,
+                                            mOldStyle.mSelectionBGColor);
+    mAttentionColor = EnsureDifferentColors(mAttentionColor,
+                                            mOldStyle.mSelectionBGColor);
 
     if (!aSelDetails)
     {
