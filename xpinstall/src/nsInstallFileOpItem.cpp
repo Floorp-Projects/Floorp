@@ -737,9 +737,11 @@ nsInstallFileOpItem::NativeFileOpFileRenameAbort()
 PRInt32
 nsInstallFileOpItem::NativeFileOpFileCopyPrepare()
 {
-  PRBool flagExists, flagIsFile;
+  PRBool flagExists, flagIsFile, flagIsWritable;
   char* leafName;
+  nsresult rv;
   nsCOMPtr<nsIFile> tempVar;
+  nsCOMPtr<nsIFile> targetParent;
 
   // XXX needs to check file attributes to make sure
   // user has proper permissions to delete file.
@@ -754,22 +756,39 @@ nsInstallFileOpItem::NativeFileOpFileCopyPrepare()
     {
       mTarget->Exists(&flagExists);
       if(!flagExists)
-        return nsInstall::DOES_NOT_EXIST;
+      {
+        //Assume mTarget is a file
+        //Make sure mTarget's parent exists otherwise, error.
+        rv = mTarget->GetParent(getter_AddRefs(targetParent));
+        if(NS_FAILED(rv)) return rv;
+        rv = targetParent->Exists(&flagExists);
+        if(NS_FAILED(rv)) return rv;
+        if(!flagExists)
+          return nsInstall::DOES_NOT_EXIST;
+      }
       else
       {
         mTarget->IsFile(&flagIsFile);
         if(flagIsFile)
-          return nsInstall::IS_FILE;
+        {
+          mTarget->IsWritable(&flagIsWritable);
+          if (!flagIsWritable)
+            return nsInstall::ACCESS_DENIED;
+        }
         else
         {
           mTarget->Clone(getter_AddRefs(tempVar));
           mSrc->GetLeafName(&leafName);
           tempVar->Append(leafName);
+          tempVar->Exists(&flagExists);
+          if(flagExists)
+          {
+            tempVar->IsWritable(&flagIsWritable);
+            if (!flagIsWritable)
+              return nsInstall::ACCESS_DENIED;
+          }
         }
 
-        tempVar->Exists(&flagExists);
-        if(flagExists)
-          return nsInstall::ALREADY_EXISTS;
       }
 
       return nsInstall::SUCCESS;
@@ -784,17 +803,47 @@ nsInstallFileOpItem::NativeFileOpFileCopyPrepare()
 PRInt32
 nsInstallFileOpItem::NativeFileOpFileCopyComplete()
 {
-  PRInt32 ret;
+  PRInt32 rv = NS_OK;
+  PRBool flagIsFile, flagExists;
   char* leafName;
+  nsCOMPtr<nsIFile> parent;
 
   mAction = nsInstallFileOpItem::ACTION_FAILED;
 
-  mSrc->GetLeafName(&leafName);
-  ret = mSrc->CopyTo(mTarget, leafName);
-  if(nsInstall::SUCCESS == ret)
+  mTarget->Exists(&flagExists);
+  if(flagExists)
+  {
+    mTarget->IsFile(&flagIsFile); //Target is file that is already on the system
+    if (flagIsFile)
+    {
+      rv = mTarget->Delete(PR_FALSE);
+      if (NS_FAILED(rv)) return rv;
+      rv = mTarget->GetParent(getter_AddRefs(parent));
+      if (NS_FAILED(rv)) return rv;
+      rv = mTarget->GetLeafName(&leafName);
+      if (NS_FAILED(rv)) return rv;
+      rv = mSrc->CopyTo(parent, leafName);
+    }
+    else //Target is a directory
+    {
+      rv = mSrc->GetLeafName(&leafName);
+      if (NS_FAILED(rv)) return rv;
+      rv = mSrc->CopyTo(mTarget, leafName);
+    }
+  }
+  else //Target is a file but isn't on the system
+  {
+    mTarget->GetParent(getter_AddRefs(parent));
+    if (NS_FAILED(rv)) return rv;
+    mTarget->GetLeafName(&leafName);
+    if (NS_FAILED(rv)) return rv;
+    rv = mSrc->CopyTo(parent, leafName);
+  }
+
+  if(nsInstall::SUCCESS == rv)
     mAction = nsInstallFileOpItem::ACTION_SUCCESS;
 
-  return ret;
+  return rv;
 }
 
 PRInt32
