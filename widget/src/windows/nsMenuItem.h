@@ -29,6 +29,7 @@
 
 class nsIMenu;
 class nsIPopUpMenu;
+class nsIMenuListener;
 
 /**
  * Native Win32 MenuItem wrapper
@@ -53,10 +54,16 @@ public:
   NS_IMETHOD GetCommand(PRUint32 & aCommand);
   NS_IMETHOD GetTarget(nsIWidget *& aTarget);
   NS_IMETHOD GetNativeData(void*& aData);
+  NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
+  NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
 
   // nsIMenuListener interface
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   
+  // Need for Native Impl
+  void SetCmdId(PRInt32 aId);
+  PRInt32 GetCmdId();
+
 protected:
   nsIWidget * GetMenuBarParent(nsISupports * aParent);
 
@@ -64,6 +71,8 @@ protected:
   PRUint32    mCommand;
   nsIWidget * mTarget;
   nsIMenu   * mMenu;
+  nsIMenuListener * mListener;
+  PRInt32     mCmdId;
 };
 
 #endif // nsMenuItem_h__

@@ -58,12 +58,15 @@ public:
   NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void*& aData);
   NS_IMETHOD Paint();
+
 protected:
   PRUint32    mNumMenus;
   HMENU       mMenu;
   nsIWidget * mParent;
 
   PRBool      mIsMenuBarAdded;
+
+  nsVoidArray mItems;
 
 };
 

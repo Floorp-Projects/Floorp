@@ -81,8 +81,9 @@ NS_IMPL_RELEASE(nsMenuItem)
 nsMenuItem::nsMenuItem() : nsIMenuItem()
 {
   NS_INIT_REFCNT();
-  mMenu   = nsnull;
-  mTarget = nsnull;
+  mMenu     = nsnull;
+  mTarget   = nsnull;
+  mListener = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -207,12 +208,39 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
   aData = (void *)mMenu;
   return NS_OK;
 }
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
+{
+  mListener = aMenuListener;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::RemoveMenuListener(nsIMenuListener * aMenuListener)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+void nsMenuItem::SetCmdId(PRInt32 aId)
+{
+  mCmdId = aId;
+}
+
+//-------------------------------------------------------------------------
+PRInt32 nsMenuItem::GetCmdId()
+{
+  return mCmdId;
+}
 
 //-------------------------------------------------------------------------
 // nsIMenuListener interface
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  	return nsEventStatus_eIgnore;
+  if (mListener) {
+    mListener->MenuSelected(aMenuEvent);
+  }
+  return nsEventStatus_eIgnore;
 }
 
