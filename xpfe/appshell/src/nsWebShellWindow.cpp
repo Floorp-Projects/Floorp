@@ -102,9 +102,11 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIWindowMediator.h"
 
 //hack for M8 should go away after NECKO lands
+#ifndef NECKO
 #include "nsIObserverService.h"
 #include "nsIMsgComposeService.h"
 #include "nsMsgCompCID.h"
+#endif   /* NECKO  */
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
@@ -127,7 +129,10 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 static NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
 static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
+
+#ifndef NECKO
 static NS_DEFINE_CID(kMsgComposeServiceCID, NS_MSGCOMPOSESERVICE_CID);
+#endif   /* NECKO  */
 
 
 /* Define Interface IDs */
@@ -2799,6 +2804,7 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSp
   if (offset2 == 0) {
     topic += "mailto";
 
+#ifndef NECKO
     //What a dirty hack. 
     nsresult rv;
     NS_WITH_SERVICE(nsIMsgComposeService, msgcompose, kMsgComposeServiceCID, &rv);
@@ -2806,6 +2812,7 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSp
         return rv;
     }
     rv = msgcompose->OpenComposeWindow(nsnull, nsnull, 0, 0, nsnull);
+#endif  /* NECKO */
   }
   else {
     topic += "browser";
