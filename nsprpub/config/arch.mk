@@ -60,6 +60,11 @@ endif
 ifeq ($(OS_ARCH),UNIX_System_V)
 OS_ARCH		:= NEC
 endif
+ifneq (,$(findstring POSIX_for_OpenVMS,$(OS_ARCH)))
+OS_ARCH		:= OpenVMS
+CPU_ARCH	:= $(shell uname -Wh)
+OS_RELEASE	:= $(shell uname -v)
+endif
 ifeq ($(OS_ARCH),QNX)
 OS_RELEASE	:= $(shell uname -v | sed 's/^\([0-9]\)\([0-9]*\)$$/\1.\2/')
 endif
