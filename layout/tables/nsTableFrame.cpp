@@ -3894,14 +3894,11 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext&          aPresContext
   NS_ASSERTION(mCellMap, "never ever call me until the cell map is built!");
   nscoord result = aDefaultHeight;
 
-  const nsStyleTable* tableStyle;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  nscoord tableSpecifiedHeight=-1;
+  nscoord tableSpecifiedHeight;
   GetTableSpecifiedHeight(tableSpecifiedHeight, aReflowState);
-  if (-1!=tableSpecifiedHeight)
-  {
-    if (tableSpecifiedHeight>aDefaultHeight)
-    { // proportionately distribute the excess height to each row
+  if (-1 != tableSpecifiedHeight) {
+    if (tableSpecifiedHeight > aDefaultHeight) { 
+      // proportionately distribute the excess height to each row
       result = tableSpecifiedHeight;
       nscoord excess = tableSpecifiedHeight - aDefaultHeight;
       nscoord sumOfRowHeights = 0;
@@ -4943,12 +4940,12 @@ PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
                                       const nsHTMLReflowState& aReflowState,
                                       nscoord& aSpecifiedTableWidth)
 {
-  if (aReflowState.mComputedWidth > 0 &&
-      aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) {
-    aSpecifiedTableWidth = aReflowState.mComputedWidth;
-    return PR_FALSE;
-  }
-
+  // XXX the following 5 lines is proposed by Hyatt
+  //if (aReflowState.mComputedWidth > 0 &&
+  //    aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) {
+  //  aSpecifiedTableWidth = aReflowState.mComputedWidth;
+  //  return PR_FALSE;
+  //}
   NS_ASSERTION(nsnull != aTableStyle, "bad arg - aTableStyle");
   PRBool result = PR_TRUE;  // the default
   if (aTableStyle) {

@@ -915,9 +915,9 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
     // First reflow the inner table
     nsHTMLReflowState   innerReflowState(aPresContext, aReflowState, mInnerTableFrame,
                                          nsSize(tableWidth, aReflowState.availableHeight));
-    innerReflowState.mComputedWidth = aReflowState.mComputedWidth;
-    innerReflowState.mComputedHeight = aReflowState.mComputedHeight;
-
+    // XXX the following 2 lines is Hyatt's proposal
+    //innerReflowState.mComputedWidth = aReflowState.mComputedWidth;
+    //innerReflowState.mComputedHeight = aReflowState.mComputedHeight;
     nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
 
     rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState, aStatus);
