@@ -218,6 +218,7 @@
 #define NS_STYLE_CLEAR_BLOCK                    5
 #define NS_STYLE_CLEAR_COLUMN                   6
 #define NS_STYLE_CLEAR_PAGE                     7
+#define NS_STYLE_CLEAR_LAST_VALUE NS_STYLE_CLEAR_PAGE
 
 // See
 #define NS_STYLE_CONTENT_OPEN_QUOTE             0
