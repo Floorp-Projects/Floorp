@@ -47,6 +47,7 @@ class nsIImapMockChannel;
     { 0x80, 0x6c, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
 
 #define IMAP_PORT 143
+#define SECURE_IMAP_PORT 993
 
 class nsIMsgIncomingServer; 
 

@@ -138,9 +138,6 @@
 
 #define MK_NNTP_RESPONSE_TYPE(x) (x/100)
 
-#define NEWS_PORT 119
-#define SECURE_NEWS_PORT 563
-
 // the following used to be defined in allxpstr.h. Until we find a new values for these, 
 // I'm defining them here because I don't want to link against xplib.lib...(mscott)
 
