@@ -43,7 +43,8 @@
 
 #define OE_ICAL_CONTRACTID "@mozilla.org/ical;1"
 
-main()
+int
+main(PRInt32 argc, char *argv[])
 {
     nsresult rv;
 
