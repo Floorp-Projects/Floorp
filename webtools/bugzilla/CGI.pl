@@ -1070,7 +1070,7 @@ Actions:
     }
     
     $html .=
-        qq{ | <INPUT TYPE=SUBMIT VALUE="Find"> bug \# <INPUT NAME=id SIZE=6>};
+        qq{ <BR> <INPUT TYPE=SUBMIT VALUE="Find"> bug \# <INPUT NAME=id SIZE=6>};
 
     $html .= " | <a href='reports.cgi'>Reports</a></TD>\n";
     if ($loggedin) {
