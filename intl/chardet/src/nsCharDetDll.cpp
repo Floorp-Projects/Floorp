@@ -148,7 +148,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 {
   nsresult rv;
   nsIRegistry * registry = nsnull;
-  nsIRegistry::Key key;
+  nsRegistryKey key;
 
   nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
