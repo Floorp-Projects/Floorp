@@ -28,6 +28,37 @@
 #include "nscore.h"
 #include "nsInstallResources.h"
 
+static nsXPIResourceTableItem XPIResTable[] = 
+{
+    /*---------------------------------------------------------------------*
+     *   Install Actions 
+     *---------------------------------------------------------------------*/
+    { "InstallFile",        "Installing: %s" },
+    { "ReplaceFile",        "Replacing: %s" },
+    { "DeleteFile",         "Deleting file: %s" },
+    { "DeleteComponent",    "Deleting component: %s" },
+    { "Execute",            "Executing: %s" },
+    { "ExecuteWithArgs",    "Executing: %s with argument: %s" },
+    { "Patch",              "Patching: %s" },
+    { "Uninstall",          "Uninstalling: %s" },
+
+    // XXX FileOp*() action strings
+    // XXX WinReg and WinProfile action strings
+
+    /*---------------------------------------------------------------------*
+     *   Dialog Messages 
+     *---------------------------------------------------------------------*/
+    { "ShouldWeInstallMsg",  "Attempting to download and install software. Do you feel lucky punk?" },
+    { "FinishingInstallMsg", "Finishing install... please wait." },
+
+    /*---------------------------------------------------------------------*
+     *    Miscellaneous 
+     *---------------------------------------------------------------------*/
+    { "ERROR", "ERROR" },
+
+    { NS_XPI_EOT, "" }
+};
+
 char* 
 nsInstallResources::GetDefaultVal(const char* aResName)
 {
