@@ -774,7 +774,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   // VerticallyAlignChild() we'll move it if it turns out to be wrong. This
   // avoids excessive movement and is more stable
   nsPoint kidOrigin;
-  if (eReflowReason_Initial == aReflowState.reason) {
+  if (isStyleChanged || (eReflowReason_Initial == aReflowState.reason)) {
     kidOrigin.MoveTo(leftInset, topInset);
   } else {
     // handle percent padding-left which was 0 during initial reflow
