@@ -965,7 +965,7 @@ public class NativeFunction extends ScriptableObject implements Function {
 
     public int jsGet_length() {
         Context cx = Context.getContext();
-        if (cx.getLanguageVersion() != Context.VERSION_1_2)
+        if (cx != null && cx.getLanguageVersion() != Context.VERSION_1_2)
             return argCount;
         NativeCall activation = getActivation(cx);
         if (activation == null)
@@ -978,14 +978,14 @@ public class NativeFunction extends ScriptableObject implements Function {
     }
 
     public String jsGet_name() {
-        if (names != null && names[0].length() > 0)
-            return names[0];
-        
-        Context cx = Context.getCurrentContext();
-        if (cx != null && cx.getLanguageVersion() == Context.VERSION_1_2) {
+        if (names == null)
             return "";
+        if (names[0].equals("anonymous")) {
+            Context cx = Context.getCurrentContext();
+            if (cx != null && cx.getLanguageVersion() == Context.VERSION_1_2)
+                return "";
         }
-        return "anonymous";
+        return names[0];
     }
 
     private NativeCall getActivation(Context cx) {
