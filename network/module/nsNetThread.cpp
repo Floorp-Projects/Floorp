@@ -311,7 +311,12 @@ void nsNetlibThread::NetlibMainLoop(void)
 #else
 void nsNetlibThread::NetlibMainLoop()
 {
-    PR_ASSERT(0);
+  while (mIsNetlibThreadRunning) {
+    if (NET_IsCallNetlibAllTheTimeSet(NULL, NULL))
+      NET_ProcessNet(NULL, NET_EVERYTIME_TYPE);
+    else
+      NET_PollSockets();
+  }
 }
 #endif /* ! XP_PC */
 
