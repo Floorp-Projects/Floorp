@@ -330,9 +330,9 @@ extern char* vr_findVerRegName()
             err = FSpGetFullPath(&regSpec, &pathLen, &thePath);
             if (err == noErr && thePath)
             {
-             #ifdef STANDALONE_REGISTRY
                // we have no idea if this moves memory, so better lock the handle
                 HLock(thePath);
+             #if defined(STANDALONE_REGISTRY) || defined(USE_STDIO_MODES)
                 verRegName = XP_ALLOC(pathLen + 1);
                 XP_STRNCPY(verRegName, *thePath, pathLen);
                 verRegName[pathLen] = '\0';
@@ -340,8 +340,6 @@ extern char* vr_findVerRegName()
                 /* Since we're now using NSPR, this HAS to be a unix path! */
                 const char* src;
                 char* dst;
-               // we have no idea if this moves memory, so better lock the handle
-                HLock(thePath);
                 verRegName = (char*)XP_ALLOC(pathLen + 2);
                 src = *(char**)thePath;
                 dst = verRegName;
