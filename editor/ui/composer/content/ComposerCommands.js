@@ -3100,19 +3100,14 @@ var nsSetSmiley =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return ( window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
-
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
-  doCommandParams: function(aCommand, aParams, aRefCon) {},
-
-  doCommand: function(aCommand)
+  doCommandParams: function(aCommand, aParams, aRefCon)
   {
-	
-    var commandNode = document.getElementById(aCommand);
-    var smileyCode = commandNode.getAttribute("state");
-
+    var smileyCode = aParams.getCStringValue("state_attribute");
+    
     var strSml;
     switch(smileyCode)
     {
@@ -3136,36 +3131,29 @@ var nsSetSmiley =
 
     try 
     {
-      var selection = window.editorShell.editorSelection;
-
-      if (!selection)
-        return;
-	
-      var extElement = editorShell.CreateElementWithDefaults("span");
-      if (!extElement)
-        return;
-	
+      var editor = GetCurrentEditor();
+      var selection = editor.selection;
+      var extElement = editor.createElementWithDefaults("span");
       extElement.setAttribute("class", "moz-smiley-" + strSml);
 
-	
-      var intElement = editorShell.CreateElementWithDefaults("span");
+      var intElement = editor.createElementWithDefaults("span");
       if (!intElement)
         return;
 
-	  //just for mailnews, because of the way it removes HTML
+      //just for mailnews, because of the way it removes HTML
       var smileButMenu = document.getElementById('smileButtonMenu');      
       if (smileButMenu.getAttribute("padwithspace"))
          smileyCode = " " + smileyCode + " ";
 
-      var txtElement =  document.createTextNode(smileyCode);
+      var txtElement =  editor.document.createTextNode(smileyCode);
       if (!txtElement)
-		return;
+        return;
 
       intElement.appendChild (txtElement);
       extElement.appendChild (intElement);
 
 
-      editorShell.InsertElementAtSelection(extElement,true);
+      editor.insertElementAtSelection(extElement,true);
       window._content.focus();		
 
     } 
@@ -3173,9 +3161,9 @@ var nsSetSmiley =
     {
         dump("Exception occured in smiley InsertElementAtSelection\n");
     }
-	
-  }
-
+  },
+  // This is now deprecated in favor of "doCommandParams"
+  doCommand: function(aCommand) {}
 };
 
 

@@ -43,20 +43,20 @@
 
 function EditorGetText()
 {
-  if (editorShell) {
+  try {
     dump("Getting text\n");
     var  outputText = GetCurrentEditor().outputToString("text/plain", 2);
     dump("<<" + outputText + ">>\n");
-  }
+  } catch (e) {}
 }
 
 function EditorGetHTML()
 {
-  if (editorShell) {
+  try {
     dump("Getting HTML\n");
     var  outputHTML = GetCurrentEditor().outputToString("text/html", 256);
     dump(outputHTML + "\n");
-  }
+  } catch (e) {}
 }
 
 function EditorDumpContent()
