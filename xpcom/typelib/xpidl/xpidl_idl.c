@@ -282,7 +282,7 @@ NextIsComment(struct input_callback_data *data, char **startp, int *lenp)
 	int skippedLines;
 
 	/* get current lineno */
-	IDL_file_get(NULL,&data->lineno);
+	IDL_file_get(NULL,(int *)&data->lineno);
 
 	*startp = data->point;
 
@@ -344,7 +344,7 @@ NextIsInclude(struct input_callback_stack *stack, char **startp, int *lenp)
         }
         
         /* make sure we have accurate line info */
-        IDL_file_get(&scratch, &data->lineno);
+        IDL_file_get(&scratch, (int *)&data->lineno);
         fprintf(stderr,
                 "%s:%d: didn't find end of quoted include name %*s\n",
                 scratch, data->lineno, end - start, start);
@@ -352,7 +352,7 @@ NextIsInclude(struct input_callback_stack *stack, char **startp, int *lenp)
     }
 
     if (*end == '\r' || *end == '\n')
-	IDL_file_set(NULL,++(int)data->lineno);
+	IDL_file_set(NULL,(int)(++data->lineno));
 
     *end = '\0';
     *startp = end + 1;
@@ -375,7 +375,7 @@ NextIsInclude(struct input_callback_stack *stack, char **startp, int *lenp)
         g_hash_table_insert(stack->includes, filename, file_basename);
         new_data = new_input_callback_data(filename, stack->include_path);
         if (!new_data) {
-	    IDL_file_get(&scratch, &data->lineno);
+	    IDL_file_get(&scratch, (int *)&data->lineno);
 #ifdef XP_MAC
 	    static char warning_message[1024];
 	    sprintf(warning_message, "%s:%d: can't open included file %s for reading\n", scratch,
@@ -391,7 +391,7 @@ NextIsInclude(struct input_callback_stack *stack, char **startp, int *lenp)
 
         new_data->next = data;
         IDL_inhibit_push();
-        IDL_file_get(&scratch, &data->lineno);
+        IDL_file_get(&scratch, (int *)&data->lineno);
         data = stack->top = new_data;
         IDL_file_set(data->filename, (int)data->lineno);
     }
@@ -571,18 +571,18 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
          */
 
         /* XXX should check for errors here, too */
-        rv = NextIsRaw(data, &start, &len);
+        rv = NextIsRaw(data, &start, (int *)&len);
         if (rv == -1) return -1;
         if (!rv) {
-            rv = NextIsComment(data, &start, &len);
+            rv = NextIsComment(data, &start, (int *)&len);
             if (rv == -1) return -1;
             if (!rv) {
                 /* includes might need to push a new file */
-                rv = NextIsInclude(stack, &start, &len);
+                rv = NextIsInclude(stack, &start, (int *)&len);
                 if (rv == -1) return -1;
                 if (!rv)
                     /* FindSpecial can't fail? */
-                    FindSpecial(data, &start, &len);
+                    FindSpecial(data, &start, (int *)&len);
             }
         }
 
