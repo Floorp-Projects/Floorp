@@ -31,6 +31,7 @@
 #include "prlog.h"
 #include "prprf.h"
 #include <stdarg.h>
+#include "nsIPtr.h"
 
 #define DO_SELECTION 0
 
@@ -39,6 +40,9 @@
 #include "nsDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsIPresShell.h"
+
+NS_DEF_PTR(nsIView);
+NS_DEF_PTR(nsIViewManager);
 
 // Kludged Content stuff
 nsIFrame   * fFrameArray[1024];
@@ -1255,6 +1259,26 @@ NS_METHOD nsFrame::GetWindow(nsIWidget*& aWindow) const
   return NS_OK;
 }
 
+void nsFrame::Invalidate(const nsRect& aDamageRect) const
+{
+  nsIViewManagerPtr viewManager;
+
+  if (nsnull != mView) {
+    viewManager = mView->GetViewManager();
+    viewManager->UpdateView(mView, aDamageRect, 0);
+    
+  } else {
+    nsRect      rect(aDamageRect);
+    nsPoint     offset;
+    nsIViewPtr  view;
+  
+    GetOffsetFromView(offset, view.AssignRef());
+    NS_ASSERTION(nsnull != view, "no view");
+    rect += offset;
+    viewManager = view->GetViewManager();
+    viewManager->UpdateView(view, rect, 0);
+  }
+}
 
 // Style sizing methods
 NS_METHOD nsFrame::IsPercentageBase(PRBool& aBase) const
