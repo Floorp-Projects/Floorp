@@ -537,8 +537,8 @@ CBrowserView::DoDragReceive(DragReference	inDragRef)
 			char*		theData = nil;
 			
 			::GetFlavorDataSize(inDragRef, itemRef, 'TEXT', &theDataSize);
-			if (theDataSize > 255)				// ¥¥¥Êare there any limits to the URL string length?
-				theDataSize = 255;
+			if (theDataSize > 1024)				// ¥¥¥Êare there any limits to the URL string length?
+				theDataSize = 1024;
 			
 			theData = (char*) ::NewPtr(theDataSize+1);
 			// assert(theData != nil);
