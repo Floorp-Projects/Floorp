@@ -156,6 +156,7 @@ class nsWidget : public nsBaseWidget
     void              UpdateWidgetDamage();
     static int        WorkProc( void *data );
     void              InitDamageQueue();
+    void              GetParentClippedArea( nsRect &rect );
 
     PtWidget_t *mWidget;
     nsIWidget  *mParent;

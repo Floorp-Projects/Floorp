@@ -610,24 +610,41 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 
   if( mWidget )
   {
-    mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height );
+    PtArg_t  arg;
+    PhArea_t *area;
+    nsRect   rect = mBounds;
 
-    if (aIsSynchronous)
+    // Just to be safe, get the real widget coords & set mBounds
+    PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
+    if( PtGetResources( mWidget, 1, &arg ) == 0 )
     {
-#if 0
-//      ::gtk_widget_draw(mWidget, NULL);
-      mUpdateArea.SetRect(0, 0, 1, 1);
-      PtDamageWidget( mWidget );
-      PtFlush();
-      mUpdateArea.SetRect(0, 0, 0, 0);
-#endif
-      UpdateWidgetDamage();
+      rect.x = area->pos.x;
+      rect.y = area->pos.y;
+      rect.width  = area->size.w;
+      rect.height = area->size.h;
+      mBounds = rect;
+    }
+
+    GetParentClippedArea( rect );
+
+    if( rect.width && rect.height )
+    {
+//      mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height );
+//printf( "update area = %d,%d,%d,%d\n", rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
+      mUpdateArea.SetRect( rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
+
+      if (aIsSynchronous)
+      {
+        UpdateWidgetDamage();
+      }
+      else
+      {
+        QueueWidgetDamage();
+      }
     }
     else
     {
-//      ::gtk_widget_queue_draw(mWidget);
-//      mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height);
-      QueueWidgetDamage();
+      mCreateHold = PR_FALSE; // Should do this even if we get a bad (hidden) rect
     }
   }
   else
@@ -643,33 +660,51 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
   if( mWidget )
   {
-    mUpdateArea.UnionRect(mUpdateArea, aRect);
+//    PtArg_t  arg;
+//    PhArea_t *area;
+    nsRect   rect = aRect;
 
-    if( aIsSynchronous)
+/*
+    // Just to be safe, get the real widget coords
+    PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
+    if( PtGetResources( mWidget, 1, &arg ) == 0 )
     {
-#if 0
-      PhRect_t extent;
-      PhArea_t area;
+      mBounds.x = area->pos.x;
+      mBounds.y = area->pos.y;
+      mBounds.width  = area->size.w;
+      mBounds.height = area->size.h;
+    }
+*/
 
-      PtWidgetArea( mWidget, &area );
+//printf( "Invalidate w/ rect: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
+//    rect.x += mBounds.x;
+//    rect.y += mBounds.y;
+//printf( "  new origin: %d,%d\n", rect.x, rect.y );
 
-      extent.ul.x = aRect.x + area.pos.x;
-      extent.ul.y = aRect.y + area.pos.y;
-      extent.lr.x = extent.ul.x + aRect.width - 1;
-      extent.lr.y = extent.ul.y + aRect.height - 1;
-      mUpdateArea.SetRect(0, 0, 1, 1);
-      PtDamageExtent( mWidget, &extent );
-      PtFlush();
-      mUpdateArea.SetRect(0, 0, 0, 0);
-#endif
-      UpdateWidgetDamage();
+    GetParentClippedArea( rect );
+
+//printf( "  rect clipped: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
+
+    if( rect.width && rect.height )
+    {
+//      mUpdateArea.UnionRect(mUpdateArea, aRect);
+//      rect.x -= mBounds.x;
+//      rect.y -= mBounds.y;
+
+      mUpdateArea.UnionRect( mUpdateArea, rect );
+
+      if( aIsSynchronous)
+      {
+        UpdateWidgetDamage();
+      }
+      else
+      {
+        QueueWidgetDamage();
+      }
     }
     else
     {
-      QueueWidgetDamage();
-  //      ::gtk_widget_queue_draw_area(mWidget,
-  //                                   aRect.x, aRect.y,
-  //                                   aRect.width, aRect.height);
+      mCreateHold = PR_FALSE; // Should do this even if we get a bad (hidden) rect
     }
   }
   else
@@ -677,6 +712,92 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
   return NS_OK;
 }
+
+
+void nsWidget::GetParentClippedArea( nsRect &rect )
+{
+// Traverse parent heirarchy and clip the passed-in rect bounds
+
+  PtArg_t    arg;
+  PhArea_t   *area;
+  PtWidget_t *parent;
+  PhPoint_t  offset;
+  nsRect     rect2;
+
+//printf( "Clipping widget (%p) rect: %d,%d,%d,%d\n", this, rect.x, rect.y, rect.width, rect.height );
+
+  // convert passed-in rect to absolute window coords first...
+  PtWidgetOffset( mWidget, &offset );
+  rect.x += offset.x;
+  rect.y += offset.y;
+
+//printf( "  screen coords: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
+
+  parent = PtWidgetParent( mWidget );
+  while( parent )
+  {
+    PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
+    if( PtGetResources( parent, 1, &arg ) == 0 )
+    {
+      PtWidgetOffset( parent, &offset );
+      rect2.x = area->pos.x + offset.x;
+      rect2.y = area->pos.y + offset.y;
+      rect2.width = area->size.w;
+      rect2.height = area->size.h;
+
+//printf( "  parent at: %d,%d,%d,%d\n", rect2.x, rect2.y, rect2.width, rect2.height );
+
+      if( ( rect.x >= ( rect2.x + rect2.width )) ||   // rect is out of bounds to right
+          (( rect.x + rect.width ) <= rect2.x ) ||   // rect is out of bounds to left
+          ( rect.y >= ( rect2.y + rect2.height )) ||  // rect is out of bounds to bottom
+          (( rect.y + rect.height ) <= rect2.y ) )   // rect is out of bounds to top
+      {
+        rect.width = 0;
+        rect.height = 0;
+//printf( "  Out of bounds !\n" );
+        break;
+      }
+      else
+      {
+        if( rect.x < rect2.x )
+        {
+          rect.width -= ( rect2.x - rect.x );
+          rect.x = rect2.x;
+        }
+
+        if( rect.y < rect2.y )
+        {
+          rect.height -= ( rect2.y - rect.y );
+          rect.y = rect2.y;
+        }
+
+        if(( rect.x + rect.width ) > ( rect2.x + rect2.width ))
+        {
+          rect.width = (rect2.x + rect2.width) - rect.x;
+        }
+
+        if(( rect.y + rect.height ) > ( rect2.y + rect2.height ))
+        {
+          rect.height = (rect2.y + rect2.height) - rect.y;
+        }
+
+//printf( "  new widget coords: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
+
+      }
+    }
+
+    parent = PtWidgetParent( parent );
+  }
+
+
+  // convert rect back to widget coords...
+  PtWidgetOffset( mWidget, &offset );
+  rect.x -= offset.x;
+  rect.y -= offset.y;
+
+//printf( "  final widget coords: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
+}
+
 
 
 NS_METHOD nsWidget::Update(void)
@@ -1030,7 +1151,7 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
 
   if( !( event ) || !( event->widget ))
   {
-    printf( "  event or event->widget is NULL!\n" ); fflush(stdout);
+//    printf( "  event or event->widget is NULL!\n" ); fflush(stdout);
     return NS_ERROR_FAILURE;
   }
 
