@@ -60,6 +60,12 @@ ifdef GNU_CC
 MODULE_OPTIMIZE_FLAGS = -O3
 endif
 
+ifndef MOZ_AUTO_DEPS
+ifndef MOZ_NATIVE_MAKEDEPEND
+DIRS		+= mkdepend
+endif
+endif
+
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
