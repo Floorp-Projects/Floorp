@@ -79,7 +79,10 @@ CC			= $(DEPTH)/build/hcc
 CCC			= $(DEPTH)/build/hcpp
 EMACS			= /bin/true
 WHOAMI			= /usr/ucb/whoami
-PERL			= $(LOCAL_BIN)perl
+
+ifdef NETSCAPE_HIERARCHY
+PERL			= perl5
+endif
 
 ######################################################################
 # Other

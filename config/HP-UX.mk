@@ -94,7 +94,10 @@ endif
 BSDECHO			= $(DIST)/bin/bsdecho
 DLL_SUFFIX		= sl
 EMACS			= /bin/true
-PERL			= $(LOCAL_BIN)perl
+
+ifdef NETSCAPE_HIERARCHY
+PERL			= perl5
+endif
 
 ifdef BUILD_OPT
 ifdef NS_USE_GCC

@@ -88,7 +88,6 @@ CCC			= CC -woff 3247
 endif
 
 ifeq ($(OS_RELEASE)$(OS_VERSION),5.3)
-PERL			= $(LOCAL_BIN)perl5
 ifndef NS_USE_GCC
 XGOT_FLAG		= -xgot
 #
@@ -117,6 +116,10 @@ endif
 WHOAMI			= /bin/whoami
 UNZIP_PROG		= $(NS_BIN)unzip
 ZIP_PROG		= $(NS_BIN)zip
+
+ifdef NETSCAPE_HIERARCHY
+PERL			= perl5
+endif
 
 ######################################################################
 # Other

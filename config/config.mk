@@ -215,7 +215,7 @@ else
 JAVA_PROG	= $(LOCAL_BIN)java
 JAVAC_ZIP	= $(JAVA_LIB)/javac.zip
 endif
-PERL		= $(NS_BIN)perl
+PERL		= perl
 TAR		= tar
 EMACS		= xemacs
 WHOAMI		= /usr/bin/whoami

@@ -111,6 +111,10 @@ PROCESSOR_ARCHITECTURE	= _$(CPU_ARCH)
 UNZIP_PROG		= $(NS_BIN)unzip
 ZIP_PROG		= $(NS_BIN)zip
 
+ifdef NETSCAPE_HIERARCHY
+PERL			= perl5
+endif
+
 ######################################################################
 # Other
 ######################################################################
