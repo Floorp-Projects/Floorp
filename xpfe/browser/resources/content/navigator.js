@@ -17,8 +17,6 @@
  */
 
   var appCore = null;
-  var useOldAppCore = false; // Set this to true to use the old browser app core.
-  var appCoreName = "";
   var defaultStatus = "default status text";
   var explicitURL = false;
 
@@ -239,7 +237,7 @@ function UpdateBookmarksLastVisitedDate(event)
                 .classes[ "component://netscape/appshell/component/browser/instance" ]
                   .createInstance( Components.interfaces.nsIBrowserInstance );
     if ( !appCore ) {
-        dump( "Error creating browser instance (window)\n" );
+        alert( "Error creating browser instance\n" );
     }
   }
 
@@ -251,7 +249,8 @@ function UpdateBookmarksLastVisitedDate(event)
     var y = win.getAttribute( "y" );
     dump(" move to "+x+" "+y+"\n");
     window.moveTo( x, y );
-  //  TileWindow();
+
+    //  TileWindow();
     // Make sure window fits on screen initially
    // FitToScreen();
 	
@@ -276,27 +275,17 @@ function UpdateBookmarksLastVisitedDate(event)
       }
 
 	
-    if ( useOldAppCore ) {
-        dump("Doing Startup...\n");
-        dump("Creating browser app core\n");
-        appCore = new BrowserAppCore();
-        if (appCore != null) {
-            dump("BrowserAppCore has been created.\n");
-            appCoreName = "BrowserAppCore." + ( new Date() ).getTime().toString();
-            appCore.Init( appCoreName );
-            appCore.setWebShellWindow(window);
-            appCore.setToolbarWindow(window);
-            tryToSetContentWindow();
-        }
-    } else {
-        dump("Doing navigator.js Startup...\n");
-        createBrowserInstance();
-        if (appCore != null) {
-            appCore.setWebShellWindow(window);
-            appCore.setToolbarWindow(window);
-            tryToSetContentWindow();
-        }
+    // Create the browser instance component.
+    createBrowserInstance();
+    if (appCore == null) {
+        // Give up.
+        window.close();
     }
+
+    // Initialize browser instance..
+    appCore.setWebShellWindow(window);
+    appCore.setToolbarWindow(window);
+    tryToSetContentWindow();
 
     // Add a capturing event listener to the content window so we'll
     // be notified when onloads complete.
@@ -305,7 +294,6 @@ function UpdateBookmarksLastVisitedDate(event)
 
     // Check for window.arguments[0].  If present, go to that url.
     if ( window.arguments && window.arguments[0] ) {
-        dump( "Got new-fashioned arg:" + window.arguments[0] + "\n" );
         // Load it using yet another psuedo-onload handler.
         onLoadViaOpenDialog();
     }
@@ -318,8 +306,6 @@ function UpdateBookmarksLastVisitedDate(event)
     var h = window.outerHeight;
     var w = window.outerWidth;
 	
-	
-	
     // Store these into the window attributes (for persistence).
     var win = document.getElementById( "main-window" );
     win.setAttribute( "x", x );
@@ -330,10 +316,6 @@ function UpdateBookmarksLastVisitedDate(event)
     // Close the app core.
     if ( appCore ) {
         appCore.close();
-        if ( useOldAppCore ) {
-            // Remove app core from app core manager.
-            XPAppCoresManager.Remove( appCore );
-        }
     }
   }
 
@@ -796,66 +778,49 @@ function OpenSearch(tabName, searchStr)
     }
   }
 
-  function BrowserNewEditorWindow()
-  {
-    core = XPAppCoresManager.Find("toolkitCore");
-    if ( !core ) {
-        core = new ToolkitCore();
-        if ( core ) {
-            core.Init("toolkitCore");
-        }
-    }
-    if ( core ) {
-        core.ShowWindowWithArgs( "chrome://editor/content", window, "resource:/res/html/empty_doc.html" );
-    } else {
-        dump("Error; can't create toolkitCore\n");
-    }
-  }
-  
-
-  
   function BrowserEditPage(url)
   {
-    core = XPAppCoresManager.Find("toolkitCore");
-    if ( !core ) {
-        core = new ToolkitCore();
-        if ( core ) {
-            core.Init("toolkitCore");
-        }
-    }
-    if ( core ) {
-        core.ShowWindowWithArgs( "chrome://editor/content", window, url);
-    } else {
-        dump("Error; can't create toolkitCore\n");
-    }
+    window.openDialog( "chrome://editor/content", "_new", "chrome,all,dialog=no", url );
+  }
+  
+  function BrowserNewEditorWindow()
+  {
+    // Open editor window to default page.
+    BrowserEditPage( "resource:/res/html/empty_doc.html" );
   }
   
   function BrowserOpenWindow()
   {
     //opens a window where users can select a web location to open
-    window.openDialog( "chrome://navigator/content/openLocation.xul", null, "chrome", appCore );
+    window.openDialog( "chrome://navigator/content/openLocation.xul", "_new", "chrome", appCore );
+  }
+  
+  function createInstance( progid, iidName ) {
+      var iid = eval( "Components.interfaces." + iidName );
+      return Components.classes[ progid ].createInstance( iid );
+  }
+
+  function openNewWindowWith( url ) {
+    var newWin = window.openDialog( "chrome://navigator/content/navigator.xul", "_new", "chrome,all,dialog=no", url );
+
+    // Fix new window.    
+    newWin.saveFileAndPos = true;
   }
   
   function BrowserOpenFileWindow()
   {
-    //opens an OS based file selector window
-    appCore.openWindow();
+    // Get filespecwithui component.            
+    var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
+    var url = fileSpec.chooseFile( "Open File" );
+    if ( url != "" ) {
+        openNewWindowWith( url );
+    }
   }
 
   function OpenFile(url) {
-    // This is invoked from the browser app core.
-    core = XPAppCoresManager.Find("toolkitCore");
-    if ( !core ) {
-        core = new ToolkitCore();
-        if ( core ) {
-            core.Init("toolkitCore");
-        }
-    }
-    if ( core ) {
-        core.ShowWindowWithArgs( "chrome://navigator/content/navigator.xul", window, url );
-    } else {
-        dump("Error; can't create toolkitCore\n");
-    }
+    // Obsolete (called from C++ code that is no longer called).
+    dump( "OpenFile called?\n" );
+    openNewWindowWith( url );
   }
 
   function BrowserCopy()
@@ -1093,22 +1058,13 @@ function OpenSearch(tabName, searchStr)
 
   function MsgNewMessage()
   {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
-      }
-    }
-    if (toolkitCore) {
-      // We need to use ShowWindowWithArgs because message compose depend on callback
-      toolkitCore.ShowWindowWithArgs("chrome://messengercompose/content/", window, "");
-    }
+    // Open message compose window.
+    window.openDialog( "chrome://messengercompose/content/", "_new", "chrome,all,dialog=no", "" );
   }
   
   function BrowserViewSource()
   {
-    window.openDialog( "chrome://navigator/content/viewSource.xul", null, "all,dialog=no", window.content.location );
+    window.openDialog( "chrome://navigator/content/viewSource.xul", "_new", "chrome,all,dialog=no", window.content.location );
   }
 
 
