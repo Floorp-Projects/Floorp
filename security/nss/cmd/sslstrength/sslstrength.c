@@ -48,7 +48,6 @@
 
 /* Security library files */
 #include "cert.h"
-#include "cdbhdl.h"
 #include "ssl.h"
 #include "sslproto.h"
 
