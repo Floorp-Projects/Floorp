@@ -625,7 +625,7 @@ js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v)
     }
     lrs->rootCount = n + 1;
     lrc->roots[m] = v;
-    return (int) m;
+    return (int) n;
 }
 
 void
