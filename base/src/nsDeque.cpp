@@ -245,8 +245,7 @@ const void* nsDeque::ForEach(nsDequeFunctor& aFunctor) const{
  * @param   aQueue is the deque object to be iterated
  * @param   anIndex is the starting position for your iteration
  */
-nsDequeIterator::nsDequeIterator(const nsDeque& aQueue,int anIndex): mDeque(aQueue) {
-  mIndex=anIndex; 
+nsDequeIterator::nsDequeIterator(const nsDeque& aQueue,int anIndex):  mIndex(anIndex), mDeque(aQueue) {
 }
 
 /**
@@ -256,9 +255,7 @@ nsDequeIterator::nsDequeIterator(const nsDeque& aQueue,int anIndex): mDeque(aQue
  * @param   aCopy is another iterator to copy from
  * @return
  */
-nsDequeIterator::nsDequeIterator(const nsDequeIterator& aCopy) : 
-  mDeque(aCopy.mDeque),
-  mIndex(aCopy.mIndex) {
+nsDequeIterator::nsDequeIterator(const nsDequeIterator& aCopy) : mIndex(aCopy.mIndex), mDeque(aCopy.mDeque) {
 }
 
 /**

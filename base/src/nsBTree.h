@@ -150,7 +150,7 @@ public:
 friend class nsBTreeIterator;
   
   nsBTree();
-  ~nsBTree();
+  virtual ~nsBTree();
 
   /** 
    * Add given node reference into our tree.

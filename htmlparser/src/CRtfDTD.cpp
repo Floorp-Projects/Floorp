@@ -55,11 +55,6 @@ static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_RTF_DTD_IID); 
 
 
-static const char* kNullURL = "Error: Null URL given";
-static const char* kNullFilename= "Error: Null filename given";
-static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
-static const char* kNullToken = "Error: Null token given";
-static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static const char* kRTFTextContentType = "application/rtf";
 static const char* kRTFDocHeader= "{\\rtf0";
 static nsString     gAlphaChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
@@ -119,7 +114,6 @@ static RTFEntry gRTFTable[] = {
  * @return
  */
 const char* GetTagName(eRTFTags aTag) {
-  const    char* result=0;
   PRInt32  cnt=sizeof(gRTFTable)/sizeof(RTFEntry);
   PRInt32  low=0; 
   PRInt32  high=cnt-1;

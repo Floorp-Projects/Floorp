@@ -161,7 +161,7 @@ class nsXIFDTD : public nsIDTD {
      * @param 
      * @return
      */
-    NS_IMETHOD WillBuildModel(nsString& aFileName,PRInt32 aLevel);
+    NS_IMETHOD WillBuildModel(nsString& aFileName,PRBool aNotifySink);
 
     /**
      *  
@@ -169,7 +169,7 @@ class nsXIFDTD : public nsIDTD {
      * @param 
      * @return
      */
-    NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel,PRInt32 aLevel);
+    NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel,PRBool aNotifySink);
 
     /**
      *  

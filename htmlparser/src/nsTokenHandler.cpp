@@ -30,7 +30,6 @@
 #include "nsToken.h"
 #include "nsParserTypes.h"
 
-static const char* kNullParserGiven = "Error: Null parser given as argument";
 
 /**
  *  

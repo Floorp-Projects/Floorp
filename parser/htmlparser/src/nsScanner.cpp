@@ -403,7 +403,6 @@ nsresult CScanner::ReadWhile(nsString& aString,
                              PRBool addTerminal){
   PRUnichar theChar=0;
   nsresult   result=NS_OK;
-  PRInt32   wrPos=0;
 
   while(NS_OK==result) {
     result=GetChar(theChar);

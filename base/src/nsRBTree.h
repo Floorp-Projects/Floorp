@@ -64,7 +64,7 @@ friend class NS_BASE nsRBTreeIterator;
    * 
    * @update gess 4/11/98
    */
-  ~nsRBTree();
+  virtual ~nsRBTree();
 
   /**
    * Given a node, we're supposed to add it into 

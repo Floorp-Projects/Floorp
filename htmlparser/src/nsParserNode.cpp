@@ -59,7 +59,7 @@ nsCParserNode::~nsCParserNode() {
  *  @return  
  */
 void nsCParserNode::AddAttribute(CToken* aToken) {
-  NS_PRECONDITION(mAttributeCount<sizeof(mAttributes), "Buffer overrun!");
+  NS_PRECONDITION(mAttributeCount<PRInt32(sizeof(mAttributes)), "Buffer overrun!");
   NS_PRECONDITION(0!=aToken, "Error: Token shouldn't be null!");
   if(aToken) {
     mAttributes[mAttributeCount++]=aToken;
@@ -78,7 +78,7 @@ void nsCParserNode::AddAttribute(CToken* aToken) {
  *  @return  nada
  */
 void nsCParserNode::SetSkippedContent(CToken* aToken){
-  NS_PRECONDITION(mAttributeCount<sizeof(mAttributes)-1, "Buffer overrun!");
+  NS_PRECONDITION(mAttributeCount<PRInt32(sizeof(mAttributes)-1), "Buffer overrun!");
   NS_PRECONDITION(0!=aToken, "Error: Token shouldn't be null!");
   if(aToken) {
     mAttributes[mAttributeCount++]=aToken;

@@ -560,7 +560,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode, ostream& a
 void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode, ostream& aStream)
 {
   eHTMLTags         tag = (eHTMLTags)aNode.GetNodeType();
-  const nsString&   name = aNode.GetText();
+//  const nsString&   name = aNode.GetText();
   nsString          tagName;
 
   if (tag == eHTMLTag_unknown)
@@ -743,7 +743,7 @@ NS_IMETHODIMP
 nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode){
   if(mOutput) {
     AddStartTag(aNode,*mOutput);
-    eHTMLTags  tag = (eHTMLTags)aNode.GetNodeType();
+//    eHTMLTags  tag = (eHTMLTags)aNode.GetNodeType();
   }
   return NS_OK;
 }
@@ -884,8 +884,12 @@ PRBool nsHTMLContentSinkStream::IsInline(eHTMLTags aTag) const
     case  eHTMLTag_var:
     case  eHTMLTag_wbr:
            
-    result = PR_TRUE;
-    break;
+      result = PR_TRUE;
+      break;
+
+    default:
+      break;
+
   }
   return result;
 }
@@ -928,7 +932,11 @@ PRBool nsHTMLContentSinkStream::BreakAfterOpen(eHTMLTags aTag) const {
     case eHTMLTag_tbody:
     case eHTMLTag_style:
       result = PR_TRUE;
-    break;
+      break;
+
+    default:
+      break;
+
   }
   return result;
 }
@@ -950,7 +958,11 @@ PRBool nsHTMLContentSinkStream::BreakBeforeClose(eHTMLTags aTag) const {
     case eHTMLTag_tbody:
     case eHTMLTag_style:
       result = PR_TRUE;
-    break;
+      break;
+
+    default:
+      break;
+
   }
   return result;
 }
@@ -984,13 +996,6 @@ PRBool nsHTMLContentSinkStream::IndentChildren(eHTMLTags aTag) const {
 
   switch (aTag)
   {
-    case eHTMLTag_html:
-    case eHTMLTag_pre:
-    case eHTMLTag_body:
-    case eHTMLTag_style:
-      result = PR_FALSE;
-    break;
-
     case eHTMLTag_table:
     case eHTMLTag_ul:
     case eHTMLTag_ol:
@@ -998,11 +1003,11 @@ PRBool nsHTMLContentSinkStream::IndentChildren(eHTMLTags aTag) const {
     case eHTMLTag_form:
     case eHTMLTag_frameset:
       result = PR_TRUE;      
-    break;
+      break;
 
     default:
       result = PR_FALSE;
-    break;
+      break;
   }
   return result;  
 }

@@ -31,7 +31,7 @@ static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 class nsHTMLNullSink : public nsIHTMLContentSink {
 public:
   nsHTMLNullSink();
-  ~nsHTMLNullSink();
+  virtual ~nsHTMLNullSink();
 
   enum eSection {eNone=0,eHTML,eHead,eBody,eContainer};
 

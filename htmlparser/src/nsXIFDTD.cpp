@@ -407,7 +407,7 @@ eAutoDetectResult nsXIFDTD::AutoDetectContentType(nsString& aBuffer,nsString& aT
  * @param 
  * @return
  */
-nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRInt32 aLevel){
+nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink){
   nsresult result=NS_OK;
 
   if(mSink)
@@ -432,7 +432,7 @@ nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRInt32 aLevel){
  * @param 
  * @return
  */
-nsresult nsXIFDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel){
+nsresult nsXIFDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
   nsresult result=NS_OK;
 
   if(mSink) 
@@ -930,7 +930,10 @@ PRBool nsXIFDTD::IsHTMLContainer(eHTMLTags aTag) const {
     case eHTMLTag_br:
     case eHTMLTag_hr:
       result=PR_FALSE;
-    break;
+      break;
+    default:
+      break;
+
   }
   return result;
 }
@@ -957,6 +960,10 @@ eXIFTags nsXIFDTD::GetDefaultParentTagFor(eXIFTags aTag) const{
     case eXIFTag_section_body:
     case eXIFTag_section_head:
       result=eXIFTag_section; break;
+
+    default:
+      break;
+
    }
   return result;
 }

@@ -55,12 +55,12 @@ static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_VALID_DTD_IID); 
 
 
-static const char* kNullURL = "Error: Null URL given";
-static const char* kNullFilename= "Error: Null filename given";
-static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
-static const char* kNullToken = "Error: Null token given";
-static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-static const char* kRTFTextContentType = "text/xml";
+//static const char* kNullURL = "Error: Null URL given";
+//static const char* kNullFilename= "Error: Null filename given";
+//static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
+//static const char* kNullToken = "Error: Null token given";
+//static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
+static const char* kXMLTextContentType = "text/xml";
 
 static nsAutoString gEmpty;
 
@@ -166,7 +166,7 @@ nsresult CValidDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
 PRBool CValidDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
-  PRBool result=aContentType.Equals(kRTFTextContentType);
+  PRBool result=aContentType.Equals(kXMLTextContentType);
   return result;
 }
 
@@ -201,7 +201,7 @@ eAutoDetectResult CValidDTD::AutoDetectContentType(nsString& aBuffer,nsString& a
  * @param 
  * @return
  */
-NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel){
+NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
   nsresult result=NS_OK;
   return result;
 }
@@ -212,7 +212,7 @@ NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel){
  * @param 
  * @return
  */
-NS_IMETHODIMP CValidDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel){
+NS_IMETHODIMP CValidDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
   nsresult result=NS_OK;
 
   return result;
