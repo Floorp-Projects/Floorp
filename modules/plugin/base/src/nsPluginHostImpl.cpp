@@ -2636,14 +2636,15 @@ nsPluginHostImpl::~nsPluginHostImpl()
 }
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS7(nsPluginHostImpl,
+NS_IMPL_ISUPPORTS8(nsPluginHostImpl,
                    nsIPluginManager,
                    nsIPluginManager2,
                    nsIPluginHost,
                    nsIFileUtilities,
                    nsICookieStorage,
                    nsIObserver,
-                   nsPIPluginHost);
+                   nsPIPluginHost,
+                   nsIWeakReference);
 ////////////////////////////////////////////////////////////////////////
 NS_METHOD
 nsPluginHostImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
