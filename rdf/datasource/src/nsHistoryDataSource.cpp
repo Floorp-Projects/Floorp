@@ -78,6 +78,7 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, URL);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, VisitCount);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Title);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Page);
@@ -135,7 +136,8 @@ protected:
 
 static	  PRInt32		gRefCnt;
 static    nsIRDFResource*    mResourcePage;
-static    nsIRDFResource*    mResourceDate;    
+static    nsIRDFResource*    mResourceDate;
+static    nsIRDFResource*    mResourceVisitCount;
 static    nsIRDFResource*    mResourceTitle;
 static    nsIRDFResource*    mResourceReferer;
 static    nsIRDFResource*    mResourceChild;
@@ -145,7 +147,7 @@ static    nsIRDFResource*    mResourceHistoryByDate;
 
     nsresult ReadHistory(void);
     nsresult ReadOneHistoryFile(nsInputFileStream& aStream, const char *fileURL);
-    nsresult AddPageToGraph(const char* url, const PRUnichar* title, const char* referer, PRTime date);
+    nsresult AddPageToGraph(const char* url, const PRUnichar* title, const char* referer, PRUint32 visitCount, PRTime date);
     nsresult AddToDateHierarchy (PRTime date, const char *url);
     nsresult getSiteOfURL(const char* url, nsIRDFResource** resource);
 
@@ -310,6 +312,7 @@ PRInt32			nsHistoryDataSource::gRefCnt;
 
 nsIRDFResource		*nsHistoryDataSource::mResourcePage;
 nsIRDFResource		*nsHistoryDataSource::mResourceDate;
+nsIRDFResource		*nsHistoryDataSource::mResourceVisitCount;
 nsIRDFResource		*nsHistoryDataSource::mResourceTitle;
 nsIRDFResource		*nsHistoryDataSource::mResourceReferer;
 nsIRDFResource		*nsHistoryDataSource::mResourceChild;
@@ -334,6 +337,7 @@ nsHistoryDataSource::nsHistoryDataSource(void)
 
 		gRDFService->GetResource(kURINC_Page,                    &mResourcePage);
 		gRDFService->GetResource(kURINC_Date,                    &mResourceDate);
+		gRDFService->GetResource(kURINC_VisitCount,              &mResourceVisitCount);
 		gRDFService->GetResource(kURINC_Name,                    &mResourceTitle);
 		gRDFService->GetResource(kURINC_Referer,                 &mResourceReferer);
 		gRDFService->GetResource(kURINC_child,                   &mResourceChild);
@@ -354,6 +358,7 @@ nsHistoryDataSource::~nsHistoryDataSource(void)
 		NS_IF_RELEASE(mInner);
 		NS_IF_RELEASE(mResourcePage);
 		NS_IF_RELEASE(mResourceDate);
+		NS_IF_RELEASE(mResourceVisitCount);
 		NS_IF_RELEASE(mResourceTitle);
 		NS_IF_RELEASE(mResourceReferer);
 		NS_IF_RELEASE(mResourceChild);
@@ -483,7 +488,8 @@ nsHistoryDataSource::SetPageTitle (const char* aURI, const PRUnichar* aTitle)
 			PR_ExplodeTime(wr->date, PR_LocalTimeParameters, &etime);
 			PR_FormatTimeUSEnglish(timeBuffer, 256, "%a %b %d %H:%M:%S %Y", &etime);
 
-			char *buffer = PR_smprintf("%s\t%s\t%s\t%s\n", wr->url, aTitle, wr->referer, timeBuffer);
+			char *buffer = PR_smprintf("%s\t%s\t%s\t%lu\t%s\n", wr->url, aTitle,
+					((wr->referer) ? wr->referer : ""), 1L, timeBuffer);
 			if (buffer)
 			{
 				nsOutputFileStream out(mCurrentFileSpec, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744);
@@ -494,7 +500,7 @@ nsHistoryDataSource::SetPageTitle (const char* aURI, const PRUnichar* aTitle)
 			}
 
 			mPendingWrites.RemoveElement(wr);
-			AddPageToGraph(wr->url, aTitle, wr->referer,  PR_Now()) ;
+			AddPageToGraph(wr->url, aTitle, wr->referer, 1L, PR_Now());
 			delete wr;
 
 			return NS_OK;
@@ -575,7 +581,7 @@ nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, const char *
 		else
 		{
 			int n = 0;
-			char *title, *url, *referer, *date;
+			char *title, *url, *referer, *visitcount, *date;
 			PRTime time;
 			PRTime fileTime = LL_ZERO;
 
@@ -587,7 +593,9 @@ nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, const char *
 				*(title - 1) = '\0';
 				referer = strchr(title, '\t') + 1;
 				*(referer - 1) = '\0';
-				date = strchr(referer, '\t') + 1;         
+				visitcount = strchr(referer, '\t') + 1;
+				*(visitcount - 1) = '\0';
+				date = strchr(visitcount, '\t') + 1;
 				*(date -1 ) = '\0';
 				PR_ParseTimeString (date, 0, &time);
 				if (LL_IS_ZERO(fileTime))
@@ -596,10 +604,10 @@ nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, const char *
 					fileTime = time;
 					PR_ExplodeTime(time, PR_LocalTimeParameters, &etime);
 					if (etime.tm_yday == mSessionTime.tm_yday)
-                        mCurrentFileSpec = fileURL;
+						mCurrentFileSpec = fileURL;
 				}
 
-				AddPageToGraph(url, nsAutoString(title), referer,  time);
+				AddPageToGraph(url, nsAutoString(title), referer, (PRUint32) atol(visitcount), time);
 				delete [] aLine;
 			}
 
@@ -644,7 +652,7 @@ nsHistoryDataSource::getSiteOfURL(const char* url, nsIRDFResource** resource)
 
 nsresult 
 nsHistoryDataSource::AddPageToGraph(const char* url, const PRUnichar* title, 
-                                    const char* referer, PRTime date)
+                                    const char* referer, PRUint32 visitCount, PRTime date)
 {
 	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
 	char *histURL = PR_smprintf("hst://%s", url);
@@ -657,16 +665,19 @@ nsHistoryDataSource::AddPageToGraph(const char* url, const PRUnichar* title,
 			nsCOMPtr<nsIRDFResource> pageResource, refererResource, histResource;
 			nsCOMPtr<nsIRDFLiteral>  titleLiteral;
 			nsCOMPtr<nsIRDFDate>     dateLiteral;
+			nsCOMPtr<nsIRDFInt>      visitCountLiteral;
 
 			gRDFService->GetResource(url, getter_AddRefs(pageResource));
 			gRDFService->GetResource(histURL, getter_AddRefs(histResource));
 			if (referer)
 				gRDFService->GetResource(referer, getter_AddRefs(refererResource));
 			gRDFService->GetDateLiteral(date, getter_AddRefs(dateLiteral));
+			gRDFService->GetIntLiteral(visitCount, getter_AddRefs(visitCountLiteral));
 			nsAutoString ptitle(title);
 			gRDFService->GetLiteral(ptitle, getter_AddRefs(titleLiteral));
 			mInner->Assert(histResource,  mResourcePage, pageResource, 1);
 			mInner->Assert(histResource,  mResourceDate, dateLiteral, 1);
+			mInner->Assert(histResource,  mResourceVisitCount, visitCountLiteral, 1);
 			mInner->Assert(pageResource,  mResourceTitle, titleLiteral, 1);
 			if (referer)
 				mInner->Assert(histResource,  mResourceReferer, refererResource, 1);
