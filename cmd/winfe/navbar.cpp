@@ -84,12 +84,12 @@ void CNavTitleBar::OnPaint( )
 	// Foreground color
 	HT_GetTemplateData(topNode, gNavCenter->controlStripFGColor, HT_COLUMN_STRING, &data);
 	if (data)
-		WFE_ParseColor((char*)data, &m_ForegroundColor);
+		WFE_ParseColor((char*)data, &m_ControlStripForegroundColor);
 	
 	// background color
 	HT_GetTemplateData(topNode, gNavCenter->controlStripBGColor, HT_COLUMN_STRING, &data);
 	if (data)
-		WFE_ParseColor((char*)data, &m_BackgroundColor);
+		WFE_ParseColor((char*)data, &m_ControlStripBackgroundColor);
 	
 	// Background image URL
 	HT_GetTemplateData(topNode, gNavCenter->controlStripBGURL, HT_COLUMN_STRING, &data);
@@ -221,7 +221,7 @@ void CNavTitleBar::OnPaint( )
 	::SelectObject(dc.m_hDC, smallFont);
 
 	// The ADD button
-	CString addText("Add"); // Will use an extensible HT mechanism eventually.  Hardcode for now.
+	CString addText("Add Page"); // Will use an extensible HT mechanism eventually.  Hardcode for now.
 	//HT_GetTemplateData(topNode, gNavCenter->controlStripModeText, HT_COLUMN_STRING, &data);
 	//if (data)
 	//	modeText = (char*)data;
@@ -248,7 +248,7 @@ void CNavTitleBar::OnPaint( )
 	cachedAddRect.right = addRect.right + 3;
 
 	// The MANAGE button
-	CString modeText("Manage"); // Will use an extensible HT mechanism eventually.  Hardcode for now.
+	CString modeText("Edit Bookmarks"); // Will use an extensible HT mechanism eventually.  Hardcode for now.
 	//HT_GetTemplateData(topNode, gNavCenter->controlStripModeText, HT_COLUMN_STRING, &data);
 	//if (data)
 	//	modeText = (char*)data;
@@ -261,8 +261,8 @@ void CNavTitleBar::OnPaint( )
 		// Don't write into the close box area!
 		modeRect.right = modeRect.left + (rect.Width() - 9);
 	}
-	modeRect.left += cachedAddRect.right + 6;	// account for add rect and indent slightly horizontally
-	modeRect.right += cachedAddRect.right + 6;
+	modeRect.left += cachedAddRect.right + 10;	// account for add rect and indent slightly horizontally
+	modeRect.right += cachedAddRect.right + 10;
 
 	// Center the text vertically.
 	modeRect.top = (controlStripRect.Height() - smallHeight) / 2;
@@ -271,7 +271,7 @@ void CNavTitleBar::OnPaint( )
 
 	// Cache the rect
 	cachedModeRect.top = 0;
-	cachedModeRect.left = cachedAddRect.right + 2;
+	cachedModeRect.left = cachedAddRect.right + 6;
 	cachedModeRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
 	cachedModeRect.right = cachedModeRect.left + modeRect.Width() + 3;
 

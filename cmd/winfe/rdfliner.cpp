@@ -686,7 +686,7 @@ CRDFImage* DrawRDFImage(CRDFImage* pImage, int left, int top, int imageWidth, in
 					width, height,
 					0, 0, width, height,
 					pImage->bits, pImage->bmpInfo,
-					pImage->maskbits, FALSE, bkColor);
+					pImage->maskbits, FALSE, 0);
 			}
 			else 
 			{
@@ -1112,8 +1112,9 @@ void CRDFOutliner::DisplayURL()
 	if (HT_Launch(m_Node, pCX->GetContext()))
 		return;
 
-	// Shell execute all local file URLs.
-	if (IsLocalFile(url))
+	// Shell execute all local file URLs. (Disable for bookmarks until we have a concrete plan.)
+	if (IsLocalFile(url) && HT_GetParent(m_Node) != NULL 
+		&& IsLocalFile(HT_GetNodeURL(HT_GetParent(m_Node))))
 	{
 		char* pLocalName = NULL;
 		XP_ConvertUrlToLocalFile(url, &pLocalName);

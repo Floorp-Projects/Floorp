@@ -315,7 +315,7 @@ public:
 
 	void SetBackgroundImage(CRDFImage* p) { m_pBackgroundImage = p; }
 
-	void LoadComplete(HT_Resource r) { Invalidate(); }
+	void LoadComplete(HT_Resource r);
 
 	void ChangeButtonSizes(void); // Overridden to prevent separators and url bars from changing size.
 

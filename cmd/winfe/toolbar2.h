@@ -136,6 +136,9 @@ public:
 	void SetButtonsSameWidth(BOOL bButtonsSameWidth);
 	BOOL GetButtonsSameWidth(void) { return m_bButtonsSameWidth; }
 
+	BOOL CheckMaxButtonSizeChanged(CToolbarButton *pButton, BOOL bAdd);
+	void ChangeButtonSizes(void);
+	
 	void ReplaceButtonBitmapIndex(UINT nID, UINT nIndex);
 
 	BOOL OnCommand( WPARAM wParam, LPARAM lParam );
@@ -167,8 +170,6 @@ protected:
 	int  FindButton(CWnd *pButton);
 	int	 FindButton(UINT nCommand);
 	void MoveButton(int nIndex);
-	BOOL CheckMaxButtonSizeChanged(CToolbarButton *pButton, BOOL bAdd);
-	void ChangeButtonSizes(void);
 	BOOL FindLargestButton(void);
 	//Given an index, this says where a button starts and where it ends
 	void GetButtonXPosition(int nSelection,int & nStart,int & nEnd);

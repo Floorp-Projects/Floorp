@@ -1028,6 +1028,27 @@ BOOL CRDFToolbarButton::NeedsUpdate()
 void CRDFToolbarButton::LoadComplete(HT_Resource r)
 {
 	Invalidate();
+
+	if (foundOnRDFToolbar())
+	{
+		CRDFToolbar* pToolbar = (CRDFToolbar*)GetParent();
+		
+		CSize buttonSize = GetMinimalButtonSize();
+		int nRowHeight = pToolbar->GetRowHeight();
+		
+		if (buttonSize.cy > nRowHeight)
+		{
+			pToolbar->SetRowHeight(buttonSize.cy);
+			GetParentFrame()->RecalcLayout();
+		}
+
+		if(pToolbar->CheckMaxButtonSizeChanged(this, TRUE) && !HT_IsURLBar(m_Node) && 
+			!HT_IsSeparator(m_Node))
+		{
+			pToolbar->ChangeButtonSizes();
+		}
+		else pToolbar->LayoutButtons(-1);
+	}
 }
 
 void CRDFToolbarButton::DrawCustomIcon(HDC hDC, int x, int y)
@@ -2241,6 +2262,14 @@ void CRDFToolbar::ComputeColorsForSeparators()
 	SetShadowColor(shadowColor);
 }
 
+void CRDFToolbar::LoadComplete(HT_Resource r)
+{
+	Invalidate();
+	CWnd* pWnd = GetParent();
+	if (pWnd)
+		pWnd->Invalidate();
+}
+
 void CRDFToolbar::OnPaint(void)
 {
 	CRect rcClient, updateRect, buttonRect, intersectRect;
@@ -2327,7 +2356,10 @@ void CRDFToolbar::OnPaint(void)
 	if (GetBackgroundImage() && 
 		GetBackgroundImage()->FrameSuccessfullyLoaded())
 	{
-		PaintBackground(dcPaint.m_hDC, &rcClient, GetBackgroundImage(), 0);
+		CWnd* pParent = GetParent();
+		CRect offsetRect(rcClient);
+		MapWindowPoints(pParent, &offsetRect);
+		PaintBackground(dcPaint.m_hDC, &rcClient, GetBackgroundImage(), offsetRect.left, offsetRect.top);
 	}
 	else
 	{
@@ -2510,12 +2542,23 @@ void CRDFDragToolbar::OnPaint(void)
 
 	// Use our toolbar background color (or background image TODO)
 	CRDFToolbar* pToolbar = (CRDFToolbar*)m_pToolbar->GetToolbar();
-
-	HBRUSH brFace = (HBRUSH) ::CreateSolidBrush(pToolbar->GetBackgroundColor());
-				
-	::FillRect(dcPaint.m_hDC, &rect, brFace);
-
-	VERIFY(::DeleteObject(brFace));
+	HBRUSH hRegBrush = (HBRUSH) ::CreateSolidBrush(pToolbar->GetBackgroundColor());
+	if (pToolbar->GetBackgroundImage() == NULL ||
+		(pToolbar->GetBackgroundImage() != NULL && 
+		!pToolbar->GetBackgroundImage()->FrameSuccessfullyLoaded()))
+	{
+		// Fill with our background color.
+		::FillRect(dcPaint.m_hDC, rect, hRegBrush);
+	}
+	else 
+	{
+		// There is a background. Let's do a tile on the rect.
+		
+		// Now we want to fill the given rectangle.
+		PaintBackground(dcPaint.m_hDC, rect, pToolbar->GetBackgroundImage(), 0);
+	}
+			
+	VERIFY(::DeleteObject(hRegBrush));
 
 	CDC *pDC = &dcPaint;
 	HPALETTE hOldPal = ::SelectPalette(pDC->m_hDC, WFE_GetUIPalette(GetParentFrame()), FALSE);
@@ -2684,6 +2727,7 @@ CIsomorphicCommandMap* CIsomorphicCommandMap::InitializeCommandMap(const CString
 		result->AddItem("command:home", ID_GO_HOME);
 		result->AddItem("command:print", ID_FILE_PRINT);
 		result->AddItem("command:stop", ID_NAVIGATE_INTERRUPT);
+		result->AddItem("command:search", ID_NETSEARCH);
 	}
 	else if (initType == "Command Toolbar Bitmap Indices")
 	{
@@ -2693,6 +2737,7 @@ CIsomorphicCommandMap* CIsomorphicCommandMap::InitializeCommandMap(const CString
 		result->AddItem("command:home", 3);
 		result->AddItem("command:print", 7);
 		result->AddItem("command:stop", 11);
+		result->AddItem("command:search", 4);
 	}
 	return result;
 }
