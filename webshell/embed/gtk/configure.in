@@ -1,0 +1,66 @@
+AC_INIT(lib/gtkmozilla.h)
+
+AM_INIT_AUTOMAKE(gtkmozilla, 0.1)
+
+dnl Specify a header configuration file
+AM_CONFIG_HEADER(config.h)
+
+dnl Initialize maintainer mode
+AM_MAINTAINER_MODE
+
+dnl Initialize libtool
+AM_DISABLE_STATIC
+AM_PROG_LIBTOOL
+
+dnl Build time sanity check
+AM_SANITY_CHECK
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_ISC_POSIX
+
+dnl Checks for libraries.
+AM_PATH_GTK(1.2.0)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+
+AC_ARG_ENABLE(debug, 
+[  --enable-debug=[no/minimum/yes] turn on debugging [default=minimum]],
+  ,
+  enable_debug=minimum)
+
+if test "x$enable_debug" = "xyes"; then
+  DEBUG_FLAGS="-g -DENABLE_DEBUG"
+else
+  if test "x$enable_debug" = "xno"; then
+    DEBUG_FLAGS=""
+  else
+    DEBUG_FLAGS=""
+  fi
+fi
+AC_SUBST(DEBUG_FLAGS)
+
+dnl Check for Mozilla.
+dnl ========================================================
+AC_ARG_WITH(mozilla,
+[  --with-mozilla=\$dir        location of mozilla directory],
+        MOZ_DIR=$withval,
+	AC_MSG_ERROR(You must specify where mozilla lives with --with-mozilla.))
+
+MOZILLA_DIR="${MOZ_DIR}"
+
+AC_SUBST(MOZILLA_DIR)
+
+AC_OUTPUT(
+Makefile
+lib/Makefile
+examples/Makefile
+examples/simplebrowser/Makefile
+examples/helpbrowser/Makefile
+examples/helpbrowser/help_data/Makefile
+)
