@@ -27,7 +27,7 @@ CHROME_CONTENT_DIR = communicator\content
 CHROME_CONTENT = \
 	.\platformBrowserBindings.xul \
 	.\platformEditorBindings.xul \
-	.\platformGlobalOverlay.xul \
+	.\platformCommunicatorOverlay.xul \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -1,10 +1,10 @@
 <?xml version="1.0"?> 
-<!-- win version of platformGlobalOverlay.xul -->
+<!-- os2 version of platformCommunicatorOverlay.xul -->
 
-<!DOCTYPE window SYSTEM "chrome://global-platform/locale/platformGlobalOverlay.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd">
 
 
-<overlay id="platformGlobalOverlay"
+<overlay id="platformCommunicatorOverlay"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- close -->
