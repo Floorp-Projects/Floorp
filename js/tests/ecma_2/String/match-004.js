@@ -118,9 +118,9 @@ function AddRegExpCases(
         index,
         string.match(regexp).index );
 
-    AddTestCase(
+	AddTestCase(
         "( " + string + " ).match(" + str_regexp +").input",
-        string,
+        str_string,
         string.match(regexp).input );
 
     var limit = matches_array.length > string.match(regexp).length ?
