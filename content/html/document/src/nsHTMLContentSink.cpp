@@ -42,6 +42,10 @@
 
 #include "nsRepository.h"
 
+#include "nsIScrollableView.h"
+#include "nsHTMLAtoms.h"
+#include "nsIFrame.h"
+
 #include "nsIWebShell.h"
 extern nsresult NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
                                  nsIAtom* aTag, nsIWebShell* aWebShell);  // XXX move
@@ -92,6 +96,7 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 
 //----------------------------------------------------------------------
 
+static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 
@@ -218,6 +223,8 @@ protected:
   nsresult LoadStyleSheet(nsIURL* aURL,
                           nsIUnicharInputStream* aUIN);
 
+  void ScrollToRef();
+
   nsIDocument* mDocument;
   nsIURL* mDocumentURL;
 
@@ -245,6 +252,11 @@ protected:
   PRInt32 mInMonolithicContainer;
   nsIWebShell* mWebShell;
 
+  nsString* mRef;
+  nsScrollPreference mOriginalScrollPreference;
+  PRBool mNotAtRef;
+  nsIHTMLContent* mRefContent;
+
   // XXX The parser needs to keep track of body tags and frameset tags 
   // and tell the content sink if they are to be ignored. For example, in nav4
   // <html><body><frameset> ignores the frameset and 
@@ -262,6 +274,8 @@ HTMLContentSink::HTMLContentSink()
 
   // Set the first update delta to be 50ms
   LL_I2L(mUpdateDelta, PR_USEC_PER_MSEC * 50);
+
+  mNotAtRef = PR_TRUE;
 }
  
 HTMLContentSink::~HTMLContentSink()
@@ -278,9 +292,13 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mCurrentSelect);
   NS_IF_RELEASE(mCurrentOption);
   NS_IF_RELEASE(mWebShell);
+  NS_IF_RELEASE(mRefContent);
 
   if (nsnull != mTitle) {
     delete mTitle;
+  }
+  if (nsnull != mRef) {
+    delete mRef;
   }
 }
 
@@ -786,6 +804,20 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
   if (nsnull != container) {
     container->SetDocument(mDocument);
     rv = AddAttributes(aNode, container);
+    if ((eHTMLTag_a == nodeType) && (nsnull != mRef) &&
+        (nsnull == mRefContent)) {
+      nsHTMLValue value;
+      container->GetAttribute(nsHTMLAtoms::name, value);
+      if (eHTMLUnit_String == value.GetUnit()) {
+        nsAutoString tmp;
+        value.GetStringValue(tmp);
+        if (mRef->EqualsIgnoreCase(tmp)) {
+          // Winner. We just found the content that is the named anchor
+          mRefContent = container;
+          NS_ADDREF(container);
+        }
+      }
+    }
     mStackPos++;
   }
 
@@ -993,7 +1025,8 @@ HTMLContentSink::WillResume(void)
 
 //----------------------------------------------------------------------
 
-void HTMLContentSink::StartLayout()
+void
+HTMLContentSink::StartLayout()
 {
   if (!mLayoutStarted) {
     PRInt32 i, ns = mDocument->GetNumberOfShells();
@@ -1012,35 +1045,109 @@ void HTMLContentSink::StartLayout()
         NS_RELEASE(shell);
       }
     }
+
+    // If the document we are loading has a reference, disable the
+    // scroll bars on the views.
+    const char* ref = mDocumentURL->GetRef();
+    if (nsnull != ref) {
+      mRef = new nsString(ref);
+      // XXX support more than one presentation-shell here
+
+      // Get initial scroll preference and save it away; disable the
+      // scroll bars.
+      PRInt32 i, ns = mDocument->GetNumberOfShells();
+      for (i = 0; i < ns; i++) {
+        nsIPresShell* shell = mDocument->GetShellAt(i);
+        if (nsnull != shell) {
+          nsIViewManager* vm = shell->GetViewManager();
+          if (nsnull != vm) {
+            nsIView* rootView = vm->GetRootView();
+            if (nsnull != rootView) {
+              nsIScrollableView* sview = nsnull;
+              rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);
+              if (nsnull != sview) {
+                mOriginalScrollPreference = sview->GetScrollPreference();
+                sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
+                NS_RELEASE(sview);
+              }
+              NS_RELEASE(rootView);
+            }
+            NS_RELEASE(vm);
+          }
+          NS_RELEASE(shell);
+        }
+      }
+    }
+
     mLayoutStarted = PR_TRUE;
   }
 }
 
-void HTMLContentSink::ReflowNewContent()
+void
+HTMLContentSink::ReflowNewContent()
 {
-#if 0
-  PRInt32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsIPresShell* shell = mDocument->GetShellAt(i);
-    if (nsnull != shell) {
-      nsIPresContext* cx = shell->GetPresContext();
-      nsRect r;
-      cx->GetVisibleArea(r);
-      shell->ResizeReflow(r.width, r.height);
-      NS_RELEASE(cx);
-      NS_RELEASE(shell);
-    }
-  }
-#else
   // Trigger reflows in each of the presentation shells
   mDocument->ContentAppended(mBody);
-#endif
+  ScrollToRef();
 }
 
-nsIHTMLContent* HTMLContentSink::GetCurrentContainer(eHTMLTags* aType)
+void
+HTMLContentSink::ScrollToRef()
+{
+  if (mNotAtRef && (nsnull != mRef) && (nsnull != mRefContent)) {
+    // See if the ref content has been reflowed by finding it's frame
+    PRInt32 i, ns = mDocument->GetNumberOfShells();
+    for (i = 0; i < ns; i++) {
+      nsIPresShell* shell = mDocument->GetShellAt(i);
+      if (nsnull != shell) {
+        nsIFrame* frame = shell->FindFrameWithContent(mRefContent);
+        if (nsnull != frame) {
+          nsIViewManager* vm = shell->GetViewManager();
+          if (nsnull != vm) {
+            nsIView* rootView = vm->GetRootView();
+            if (nsnull != rootView) {
+              nsIScrollableView* sview = nsnull;
+              rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);
+              if (nsnull != sview) {
+                // Determine the x,y scroll offsets for the given
+                // frame. The offsets are relative to the
+                // ScrollableView's upper left corner so we need frame
+                // coordinates that are relative to that.
+                nsPoint offset;
+                nsIView* view;
+                frame->GetOffsetFromView(offset, view);
+                if (view == rootView) {
+printf("view==rootView ");
+                }
+                NS_IF_RELEASE(view);
+                nscoord x = 0;
+                nscoord y = offset.y;
+nsIPresContext* cx = shell->GetPresContext();
+float t2p = cx->GetTwipsToPixels();
+printf("x=%d y=%d\n", nscoord(x * t2p), nscoord(y * t2p));
+NS_RELEASE(cx);
+                sview->SetScrollPreference(mOriginalScrollPreference);
+                sview->ScrollTo(x, y, NS_VMREFRESH_IMMEDIATE);
+
+                // Note that we did this so that we don't bother doing it again
+                mNotAtRef = PR_FALSE;
+              }
+              NS_RELEASE(rootView);
+            }
+            NS_RELEASE(vm);
+          }
+        }
+        NS_RELEASE(shell);
+      }
+    }
+  }
+}
+
+nsIHTMLContent*
+HTMLContentSink::GetCurrentContainer(eHTMLTags* aType)
 {
   nsIHTMLContent* parent;
-  if (mStackPos <= 2) {         // assume HTML and BODY/FRAMESET are on the stack
+  if (mStackPos <= 2) {     // assume HTML and BODY/FRAMESET are on the stack
     if (mBody) {
       parent = mBody;
       *aType = eHTMLTag_body;
@@ -1279,6 +1386,9 @@ HTMLContentSink::AppendToCorrectParent(nsHTMLTag aParentTag,
   }
 
   realParent->AppendChild(aChild, aAllowReflow);
+  if (aAllowReflow) {
+    ScrollToRef();
+  }
 }
 
 // Find the parent of the currently open table
