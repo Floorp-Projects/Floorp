@@ -57,7 +57,6 @@ import grendel.ui.UIAction;
 import grendel.view.ViewedMessage;
 import grendel.widgets.CollapsiblePanel;
 import grendel.widgets.GrendelToolBar;
-import grendel.widgets.Splitter;
 import grendel.widgets.Spring;
 import grendel.widgets.StatusEvent;
 import grendel.widgets.TreePath;
@@ -147,10 +146,16 @@ class UnifiedMessageFrame extends GeneralFrame {
   JSplitPane    splitter1 = null, splitter2 = null;
   String        fLayout = null;
   JToolBar      fToolBar1 = null;
-  int folderX = 350;
-  int folderY = 225;
-  int threadX = 200;
-  int threadY = 200;
+  static final int FOLDERX = 350;
+  static final int FOLDERY = 225;
+  static final int THREADX = 200;
+  static final int THREADY = 200;
+  int folderX = FOLDERX;
+  int folderY = FOLDERY;
+  int threadX = THREADX;
+  int threadY = THREADX;
+
+  boolean relayout = false;
 
   public UnifiedMessageFrame() {
     super("appNameLabel", "mail.multi_pane");
@@ -258,41 +263,48 @@ class UnifiedMessageFrame extends GeneralFrame {
       }
       
       fLayout = layout;
-      if (fLayout.equals(UnifiedMessageDisplayManager.STACKED)) {
-	remove(splitter1);
-      } else {
-	remove(splitter1);
-	remove(splitter2);
+      remove(splitter1);
+      remove(splitter2);
+    }
+    fPanel.remove(splitter1);
+    splitter1 = new JSplitPane();
+    splitter2 = new JSplitPane();
+
+
+    if (relayout == false) {
+      Preferences prefs = PreferencesFactory.Get();
+
+      // read dimensions out of preferences
+      try {
+        int tx, ty, fx, fy; // temporary dimensions
+        fx = 
+          Integer.parseInt(prefs.getString("mail.multi_pane.folder_x", 
+                                           Integer.toString(folderX)));
+        fy =
+          Integer.parseInt(prefs.getString("mail.multi_pane.folder_y",
+                                           Integer.toString(folderY)));
+        tx = 
+          Integer.parseInt(prefs.getString("mail.multi_pane.thread_x",
+                                           Integer.toString(threadX)));
+        ty =
+          Integer.parseInt(prefs.getString("mail.multi_pane.thread_y",
+                                           Integer.toString(threadY)));
+        folderX = fx;
+        folderY = fy;
+        threadX = tx;
+        threadY = ty;
+        // if the try bails, we use default
+      } catch (NumberFormatException nf_ty) { 
+        nf_ty.printStackTrace();
+      } finally {
+        relayout = true;
       }
-      fPanel.remove(splitter1);
+    } else {
+      folderX = FOLDERX;
+      folderY = FOLDERY;
+      threadX = THREADX;
+      threadY = THREADY;
     }
-
-    Preferences prefs = PreferencesFactory.Get();
-
-    // read dimensions out of preferences
-    try {
-      int tx, ty, fx, fy; // temporary dimensions
-      fx = 
-	Integer.parseInt(prefs.getString("mail.multi_pane.folder_x", 
-					 Integer.toString(folderX)));
-      fy =
-	Integer.parseInt(prefs.getString("mail.multi_pane.folder_y",
-					 Integer.toString(folderY)));
-      tx = 
-	Integer.parseInt(prefs.getString("mail.multi_pane.thread_x",
-					 Integer.toString(threadX)));
-      ty =
-	Integer.parseInt(prefs.getString("mail.multi_pane.thread_y",
-					 Integer.toString(threadY)));
-      folderX = fx;
-      folderY = fy;
-      threadX = tx;
-      threadY = ty;
-      // if the try bails, we use default
-    } catch (NumberFormatException nf_ty) { 
-      nf_ty.printStackTrace();
-    }
-
 
     if (layout.equals(UnifiedMessageDisplayManager.STACKED)) {
       splitter1.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -300,12 +312,9 @@ class UnifiedMessageFrame extends GeneralFrame {
 
       splitter1.setTopComponent(fFolders);
       splitter1.setBottomComponent(splitter2);
+
       splitter2.setTopComponent(fThreads);
       splitter2.setBottomComponent(fMessage);
-
-      fFolders.setPreferredSize(new Dimension(folderX, folderY));
-      fThreads.setPreferredSize(new Dimension(threadX, threadY));
-
       //      fStackedLayoutAction.setSelected(IUICmd.kSelected);
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_LEFT)) {
       splitter1.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
@@ -316,6 +325,7 @@ class UnifiedMessageFrame extends GeneralFrame {
 
       splitter1.setTopComponent(splitter2);
       splitter1.setBottomComponent(fMessage);
+
       //      fSplitLeftLayoutAction.setSelected(IUICmd.kSelected);
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_RIGHT)) {
       splitter2.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -336,14 +346,12 @@ class UnifiedMessageFrame extends GeneralFrame {
       
       splitter1.setTopComponent(splitter2);
       splitter1.setBottomComponent(fMessage);
-
-      fFolders.setPreferredSize(new Dimension(folderX, folderY));
-      fThreads.setPreferredSize(new Dimension(threadX, threadY));
-
       //      fSplitTopLayoutAction.setSelected(IUICmd.kSelected);
     }
 
-    fPanel.add("Center", splitter1);
+    fFolders.setPreferredSize(new Dimension(folderX, folderY));
+    fThreads.setPreferredSize(new Dimension(threadX, threadY));
+    fPanel.add(splitter1, BorderLayout.CENTER);
 
     invalidate();
     validate();
