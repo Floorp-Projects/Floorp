@@ -496,16 +496,10 @@ LocationImpl::SetSearch(const nsString& aSearch)
 NS_IMETHODIMP    
 LocationImpl::Reload(JSContext *cx, jsval *argv, PRUint32 argc)
 {
-  nsAutoString url;
-  PRInt32 index;
   nsresult result = NS_OK;
 
   if (nsnull != mWebShell) {
-    mWebShell->GetHistoryIndex(index);
-    result = mWebShell->GetURL(index, url);
-    if (NS_OK == result) {
-      result = mWebShell->LoadURL(url, nsnull, PR_FALSE);
-    }
+    result = mWebShell->Reload();
   }
 
   return result;
