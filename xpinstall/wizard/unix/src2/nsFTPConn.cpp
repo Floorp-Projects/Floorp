@@ -76,7 +76,7 @@ nsFTPConn::Open()
     err = IssueCmd(cmd, resp, RESP_BUF_SIZE, mCntlFd);
 
     /* issue PASS command on control connection */
-    sprintf(cmd, "PASS linux@installer.sbg\r\n");
+    sprintf(cmd, "PASS -linux@installer.sbg\r\n");
     ERR_CHECK(IssueCmd(cmd, resp, RESP_BUF_SIZE, mCntlFd));
 
     mState = OPEN;
@@ -203,7 +203,6 @@ int
 nsFTPConn::Close()
 {
     int err = OK;
-    char cmd[CMD_BUF_SIZE], resp[RESP_BUF_SIZE];
 
     if (mState != OPEN)
         return E_NOT_OPEN;
@@ -230,16 +229,20 @@ nsFTPConn::IssueCmd(char *aCmd, char *aResp, int aRespSize, int aFd)
     int err = OK;
     int len;
 
-    DUMP("IssueCmd");
-
     /* send command */
     len = strlen(aCmd);
     ERR_CHECK(RawSend((unsigned char *)aCmd, &len, aFd));
     DUMP(aCmd);
 
     /* receive response */
-    ERR_CHECK(RawRecv((unsigned char *)aResp, &aRespSize, aFd));
-    DUMP(aResp);
+    do
+    {
+        err = RawRecv((unsigned char *)aResp, &aRespSize, aFd);
+        if (err !=OK && err != E_READ_MORE)
+            goto BAIL;
+        DUMP(aResp);
+    }
+    while (err == E_READ_MORE);
 
     /* alternate interpretation of err codes */
     if ( (strncmp(aCmd, "APPE", 4) == 0) ||
@@ -455,8 +458,6 @@ nsFTPConn::RawSend(unsigned char *aBuf, int *aBufSize, int aFd)
     int timeout = 0; 
     fd_set selset;
 
-    DUMP("RawSend");
-
     if (!aBuf || aBufSize <= 0)
         return E_PARAM;
 
@@ -511,6 +512,7 @@ nsFTPConn::RawRecv(unsigned char *aBuf, int *aBufSize, int aFd)
     int bytesrd = 0;
     struct timeval seltime;
     fd_set selset;
+    int bufsize;
 
     if (!aBuf || *aBufSize <= 0)
         return E_PARAM;
@@ -519,7 +521,7 @@ nsFTPConn::RawRecv(unsigned char *aBuf, int *aBufSize, int aFd)
     for ( ; ; )
     {
         /* return if we anticipate overflowing caller's buffer */
-        if (bytesrd + READ_BUF_SIZE > *aBufSize)
+        if (bytesrd >= *aBufSize)
             return E_READ_MORE;
 
         memset(&lbuf, 0, READ_BUF_SIZE); 
@@ -544,7 +546,8 @@ nsFTPConn::RawRecv(unsigned char *aBuf, int *aBufSize, int aFd)
         if (!FD_ISSET(aFd, &selset))
             continue;           /* not ready to read; retry */
             
-        err = read(aFd, lbuf, READ_BUF_SIZE);
+        bufsize = *aBufSize - bytesrd;
+        err = read(aFd, lbuf, bufsize);
         if (err == 0) /* EOF encountered */
         {
             err = OK;
@@ -561,9 +564,19 @@ nsFTPConn::RawRecv(unsigned char *aBuf, int *aBufSize, int aFd)
         {
             memcpy(aBuf + bytesrd, lbuf, err);
             bytesrd += err;
-            if (err < READ_BUF_SIZE)
+            if (err <= bufsize)
             {
-                err = OK;
+                FD_ZERO(&selset);
+                FD_SET(aFd, &selset);
+                seltime.tv_sec = 0;
+                seltime.tv_usec = TIMEOUT_SELECT_USECS;
+
+                /* check if we still need to read from this socket */
+                err = select(aFd+1, &selset, NULL, NULL, &seltime);
+                if (err == 1)
+                    err = E_READ_MORE;
+                else
+                    err = OK;
                 break;
             }
         }
