@@ -1,0 +1,41 @@
+ftp> open ftp.webstar.com
+Connected to ftp.webstar.com.
+220 FTP server ready.
+Name (ftp.webstar.com:cyp): 
+331 Anonymous login OK, send login as password.
+230 User logged in.
+Remote system type is UNIX.
+ftp> pwd
+257 "/" is the current directory.
+ftp> syst
+215 UNIX WebSTAR FTP.
+ftp> cd products
+250 CWD OK, "/products".
+ftp> cd WebStar
+250 CWD OK, "/products/WebStar".
+ftp> cd Updates
+250 CWD OK, "/products/WebStar/Updates".
+ftp> ls
+200 PORT OK, IP address 134.93.247.34 port 49247
+150 Opening data connection.
+drwx------  0  owner  group         1 Jan 30 17:16 bundleup
+drwx------  0  owner  group         2 Nov 08  2001 docs
+drwx------  0  owner  group        12 Nov 08  2001 extending_webstar
+drwx------  0  owner  group         2 Apr 25 09:40 Products
+drwx------  0  owner  group         1 Jan 30 16:20 updates
+drwx------  0  owner  group        11 Jan 30 17:16 webstar_dev
+drwx------  0  owner  group         2 May 01 15:46 WebSTAR
+drwx------  0  owner  group        15 May 13 09:54 Installers
+drwx------  0  owner  group         8 Apr 25 09:59 Updates
+drwx------  0  owner  group         7 Apr 25 10:00 Plug-ins
+drwx------  0  owner  group         2 Apr 06  2001 SSL
+-rwx------  0  owner  group   1605421 Mar 30  2001 webstar1.3.2_updater.sea.hqx
+-rwx------  0  owner  group   6883859 Mar 30  2001 WebSTAR211installer.sea.hqx
+-rwx------  0  owner  group   7366223 Mar 30  2001 WebSTAR211updater.sea.hqx
+-rwx------  0  owner  group  13415184 Mar 30  2001 WebSTAR302updater.sea.hqx
+drwx------  0  owner  group         4 Apr 05  2001 WebSTAR_44
+drwx------  0  owner  group         2 Apr 25 10:00 WebSTAR_V
+226 Transfer complete.
+ftp> close
+221 Goodbye.
+ftp> 

@@ -1,0 +1,84 @@
+ftp> open casper.cs.uct.ac.za
+Connected to casper.cs.uct.ac.za.
+220 casper.cs.uct.ac.za FTP server (Version 6.00LS) ready.
+Name (ftp.cs.uct.ac.za:cyp):
+331 Guest login ok, send your email address as password.
+230- Welcome to
+230-   __ _                              _
+230-  / _| |_ _ __   ___ ___  _   _  ___| |_   __ _  ___   ______ _
+230- | |_| __| '_ \ / __/ __|| | | |/ __| __| / _` |/ __| |_  / _` |
+230- |  _| |_| |_) | (__\__ \| |_| | (__| |_ | (_| | (__ _ / / (_| |
+230- |_|  \__| .__(_)___|___(_)__,_|\___|\__(_)__,_|\___(_)___\__,_|
+230-         |_|
+230- 
+230- Publicly available downloads can be found in /pub.
+230- 
+230- Do not put anything in /incoming unless it is by prior arrangement.
+230- If we do not know what it is, it will be deleted.
+230- 
+230- A complete listing of available files can be found in /pub/ls-lR.gz
+230- and /pub/ls-lR.  This list is updated daily at 02:00 SAST.
+230- 
+230- Contents of /pub:
+230-   CVC/                - Collaborative Visual Computing Laboratory
+230-   DB/                 - Database Laboratory
+230-   DNA/                - The Data Network Architectures Laboratory
+230-   FreeBSD/            - The FreeBSD Operating System
+230-       distfiles/          - ports source tarball's
+230-       releases/           - self-made releases
+230-   OpenBSD/            - The OpenBSD Operating System
+230-   windows/            - Software for Microsoft Windows
+230-       ssh/                - secure shell clients
+230- 
+230- This FTP site is also searchable via archie,
+230- and the web: http://ftp.cs.uct.ac.za:8000/ftpsearch
+230- 
+230- UCT/UNINET users should also peruse the following
+230- anonymous FTP servers for additional resources:
+230- 
+230-   ftp://ftp.leg.uct.ac.za/         [ http://www.leg.uct.ac.za/ ]
+230-   ftp://ftp.adamastor.ac.za/     [ http://ftp.adamastor.ac.za/ ]
+230-   ftp://cabbagewrath.its.uct.ac.za/ [ don't ask about the name ]
+230- 
+230- --
+230- ftp-admin@cs.uct.ac.za
+230 Guest login ok, access restrictions apply.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> syst
+215 UNIX Type: L8 Version: BSD-199506
+ftp> ls
+200 PORT command successful.
+150 Opening ASCII mode data connection for '/bin/ls'.
+total 1092
+drwxr-xr-x  2 0  0  512 May 28 22:17 etc
+drwx-wx-wt  2 0  0  512 Jul  1 02:15 incoming
+drwx--x--x  2 0  0  512 Jul  3 12:19 private
+drwxr-xr-x  9 0  0  512 Jul 11 01:02 pub
+drwxr-xr-x  2 0  5     512 May 28 22:24 CVC
+drwxr-xr-x  2 0  5     512 Jul 31  2000 DB
+drwxr-xr-x  5 0  5     512 May 28 22:24 DNA
+drwxr-xr-x  4 0  0     512 Jun 12 22:13 FreeBSD
+drwxr-xr-x  3 0  5     512 May 28 22:24 OpenBSD
+drwxr-xr-x  2 0  5     512 Jun  3 15:51 Solaris
+-rw-r--r--  1 0  0  158918 Jul 11 01:02 ls-lR
+-rw-r--r--  1 0  0   26569 Jul 11 01:02 ls-lR.gz
+drwxr-xr-x  3 0  5     512 May 28 22:24 windows
+lrwx------  1 0  0      25 Jun 12 22:10 4.6-RELEASE -> releases/i386/4.6-RELEASE
+lrwx------  1 0  0      24 Jun 12 22:13 ISO-IMAGES -> releases/i386/ISO-IMAGES
+-rw-r--r--  1 0  5     157 May 28 22:27 README.TXT
+-rw-r--r--  1 0  5  872048 Sep 23  2001 cvsup-16.1e.tgz
+lrwxr-xr-x  1 0  0      15 May 28 22:26 distfiles -> ports/distfiles
+lrwxr-xr-x  1 0  0      14 Jun  6 17:12 packages -> ports/packages
+drwxr-xr-x  5 0  0     512 Jun 23 18:47 ports
+drwxr-xr-x  3 0  0     512 May 28 22:27 releases
+-rw-r--r--  1 0  0  1538 Mar 15  2001 ftpmotd
+ftp> cd incoming
+250 CWD command successful.
+ftp> ls
+200 PORT command successful.
+150 Opening ASCII mode data connection for '/bin/ls'.
+ftpd: .: Permission denied
+226 Transfer complete.
+ftp> close
+221 Goodbye.
