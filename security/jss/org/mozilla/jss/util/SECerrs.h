@@ -378,7 +378,7 @@ ER3(SEC_ERROR_OLD_KRL,	     			(SEC_ERROR_BASE + 110),
 ER3(SEC_ERROR_CKL_CONFLICT,	     		(SEC_ERROR_BASE + 111),
 "New CKL has different issuer than current CKL.  Delete current CKL.")
 
-#if 0 /* This was defined AFTER HCL 1.5 was released. */
+#if 0 /* This was defined AFTER NSS 1.5 was released. */
 ER3(SEC_ERROR_CERT_NOT_IN_NAME_SPACE, 		(SEC_ERROR_BASE + 112),
 "The Certifying Authority for this certifcate is not permitted to issue a \
 certifcate with this name.")

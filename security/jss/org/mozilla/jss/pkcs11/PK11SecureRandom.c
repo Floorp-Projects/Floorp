@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * HCL header files
+ * NSS and NSPR header files
  */
 
 #include <pk11func.h>

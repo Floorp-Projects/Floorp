@@ -78,7 +78,7 @@ public final class PK11KeyPairGenerator
             if( token.doesAlgorithm( algorithm.getAlgFamily() ) &&
                 token.isWritable() )
             {
-                // HCL will do the keygen on the internal module
+                // NSS will do the keygen on the internal module
                 // and move the key to the token. We'll say this is
                 // OK for now.
                 mKeygenOnInternalToken = true;
