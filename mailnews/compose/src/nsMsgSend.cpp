@@ -2804,6 +2804,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
       rv = mWebShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
       netPrompt = do_QueryInterface(topLevelWindow, &rv);
     }
+/**** RICHIE - will have to be null for now
     else
     {
       NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
@@ -2826,6 +2827,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
         }
       }
     }
+*****/
 
     // Tell the user we are sending the message!
     PRUnichar *msg = ComposeGetStringByID(NS_MSG_SENDING_MESSAGE);
