@@ -51,7 +51,7 @@
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-#define XLIB_DEFAULT_FONT1 "-*-helvetica-medium-r-*-*-*-140-*-*-*-*-iso8859-1"
+#define XLIB_DEFAULT_FONT1 "-*-helvetica-medium-r-*--*-120-*-*-*-*-iso8859-1"
 #define XLIB_DEFAULT_FONT2 "-*-fixed-medium-r-*-*-*-120-*-*-*-*-*-*"
 
 #ifdef PR_LOGGING 
