@@ -17,8 +17,10 @@ class nsISupportsArray;
   IBOutlet NSButton *mEditWhitelist;
   
   IBOutlet id mWhitelistPanel;
-  IBOutlet ExtendedTableView* mWhitelistTable;
-  IBOutlet NSTextField* mAddField;
+  IBOutlet ExtendedTableView*   mWhitelistTable;
+  IBOutlet NSTextField*         mAddField;
+  IBOutlet NSButton*            mAddButton;
+
   nsIPermissionManager* mManager;         // STRONG (should be nsCOMPtr)  
   nsISupportsArray* mCachedPermissions;		// parallel list of permissions for speed, STRONG (should be nsCOMPtr)
   

@@ -28,6 +28,7 @@
             CLASS = OrgMozillaChimeraPreferenceWebFeatures; 
             LANGUAGE = ObjC; 
             OUTLETS = {
+                mAddButton = NSButton; 
                 mAddField = NSTextField; 
                 mEditWhitelist = NSButton; 
                 mEnableAnnoyanceBlocker = NSButton; 

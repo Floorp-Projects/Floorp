@@ -154,6 +154,8 @@
   [mWhitelistTable setDeleteAction:@selector(removeWhitelistSite:)];
   [mWhitelistTable setTarget:self];
   
+  [mAddButton setEnabled:NO];
+
   // we shouldn't need to do this, but the scrollbar won't enable unless we
   // force the table to reload its data. Oddly it gets the number of rows correct,
   // it just forgets to tell the scrollbar. *shrug*
@@ -252,6 +254,11 @@
   }
   
   return retVal;
+}
+
+- (void)controlTextDidChange:(NSNotification*)notification
+{
+  [mAddButton setEnabled:[[mAddField stringValue] length] > 0];
 }
 
 //
