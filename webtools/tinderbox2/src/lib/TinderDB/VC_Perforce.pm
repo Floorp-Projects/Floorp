@@ -75,8 +75,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.23 $ 
-# $Date: 2004/06/08 00:12:16 $ 
+# $Revision: 1.24 $ 
+# $Date: 2004/06/08 03:42:50 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Perforce.pm,v $ 
 # $Name:  $ 
@@ -156,7 +156,7 @@ use Utils;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.23 $ )[1];
+$VERSION = ( qw $Revision: 1.24 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -422,6 +422,326 @@ sub status_table_header {
 }
 
 
+# Return the data which would appear in a cell if we were to render
+# it.  The checkin data comes back in a datastructure and we return
+# the oldest treestate found in this cell.  The reason for another
+# data structure is that this one is keyed on authors while the main
+# data structure is keyed on time.
+
+sub cell_data {
+    my ($tree, $db_index, $last_time) = @_;
+
+    my (%authors) = ();
+    my $last_treestate;
+
+    while (1) {
+        my ($time) = $DB_TIMES[$db_index];
+        
+        # find the DB entries which are needed for this cell
+        ($time < $last_time) && last;
+ 
+        ($db_index >= $#DB_TIMES) && last;
+
+        $db_index++;
+        
+        if (defined($DATABASE{$tree}{$time}{'treestate'})) {
+            $last_treestate = $DATABASE{$tree}{$time}{'treestate'};
+        }
+
+        # Inside each cell, we want all the posts by the same author to
+        # appear together.  The previous data structure allowed us to find
+        # out what data was in each cell.
+        
+        if (defined( $DATABASE{$tree}{$time}{'author'} )) {
+            my $recs = $DATABASE{$tree}{$time}{'author'};
+            foreach $author (keys %{ $recs }) {
+                $authors{'author'}{$author} = 1;
+
+                my($affected_files_ref, $jobs_fixed_ref, 
+                   $change_num, $workspace, $comment) = 
+                       @{ $recs->{$author} };
+
+                $authors{'change_nums'}{$author}{$change_num} = 1;
+            }
+        }
+        
+        if (defined( $DATABASE{$tree}{$time}{'bugs'} )) {
+            $recs = $DATABASE{$tree}{$time}{'bugs'};
+            foreach $author (keys %{ $recs }) {
+                foreach $bug (keys %{ $recs->{$author} }) {
+                    $authors{'bugs'}{$author}{$bug} = 1;
+                }
+            }
+        }
+
+    } # while (1)
+
+    return ($db_index, $last_treestate, \%authors,);
+}
+
+
+
+# Produce the HTML which goes with the already computed author data.
+
+sub render_authors {
+    my ($tree, $last_treestate, $authors, $mindate, $maxdate,) = @_;
+
+    # Now invert the data structure.
+    my %authors = %{$authors};
+    
+    my ($cell_color) = TreeData::TreeState2color($last_treestate);
+    my ($char) = TreeData::TreeState2char($last_treestate);
+    
+    my $cell_options = '';
+    my $text_browser_color_string;
+    
+    if ( ($last_treestate) && ($cell_color) ) {
+        $cell_options = "bgcolor=$cell_color ";
+        
+        $text_browser_color_string = 
+          HTMLPopUp::text_browser_color_string($cell_color, $char);
+    }
+    
+    my $query_links = '';
+    if ($text_browser_color_string) {
+        $query_links.=  "\t\t".$text_browser_color_string."\n";
+    }
+
+    if ( scalar(%authors) ) {
+        
+        # find the times which bound the cell so that we can set up a
+        # VC query.
+        
+        my ($format_maxdate) = HTMLPopUp::timeHTML($maxdate);
+        my ($format_mindate) = HTMLPopUp::timeHTML($mindate);
+        my ($time_interval_str) = "$format_maxdate to $format_mindate",
+
+        my $filespec = TreeData::Tree2Filespec($tree);
+
+        # define a table, to show what was checked in for each author
+        
+        foreach $author (sort keys %{ $authors{'author'} }) {
+            
+            my $display_author=$author;
+
+            my $mailto_author=$author;
+            $mailto_author = TreeData::VCName2MailAddress($author);
+            
+            my @bug_numbers = keys %{ $authors{'bugs'}{$author} };
+
+            # sort numerically descending
+            my @change_nums = sort {$b <=> $a}
+            keys %{ $authors{'change_nums'}{$author} };
+            
+            # create a string of all VC data for displaying with the
+            # checkin table
+            
+            my ($vc_info);
+            $vc_info .= "Filespec: $filespec <br>\n";
+            $vc_info .= "Changes: @change_nums <br>\n";
+            
+            # The Link Choices inside the popup.
+
+            my $link_choices = "Checkins by <b>$author</b><br>";
+            $link_choices .= " for $vc_info \n<br>";
+            $link_choices .= 
+              VCDisplay::query(
+                               'tree' => $tree,
+                               'mindate' => $mindate,
+                               'maxdate' => $maxdate,
+                               'who' => $author,
+                               
+                               "linktxt" => "This check-in",
+                               );
+
+            $link_choices .= "<br>";
+            $link_choices .= 
+              VCDisplay::query(
+                               'tree' => $tree,
+                               'mindate' => $mindate - $main::SECONDS_PER_DAY,
+                               'maxdate' => $maxdate,
+                               'who' => $author,
+                               
+                               "linktxt" => "Check-ins within 24 hours",
+                               );
+
+            $link_choices .= "<br>";
+            $link_choices .= 
+              VCDisplay::query(
+                               'tree' => $tree,
+                               'mindate' => $mindate - $main::SECONDS_PER_WEEK,
+                               'maxdate' => $maxdate,
+                               'who' => $author,
+                               
+                               "linktxt" => "Check-ins within 7 days",
+                               );
+
+            $link_choices .= "<br>";
+            $link_choices .= 
+              HTMLPopUp::Link(
+                              "href" => "mailto:$mailto_author",
+                              "linktxt" => "Send Mail to $author",
+                              );
+
+            $link_choices .= "<br>";
+
+            my ($href) = (FileStructure::get_filename($tree, 'tree_URL').
+                          "/all_vc.html#$mindate");
+
+            $link_choices .= 
+              HTMLPopUp::Link(
+                              "href" => $href,
+                              "linktxt" => "Tinderbox Checkin Data",
+                              );
+
+            $link_choices .= "<br>";
+
+
+            foreach $bug_number (@bug_numbers) {
+                my $href = BTData::bug_id2bug_url($bug_number);
+                $link_choices .= 
+                    HTMLPopUp::Link(
+                                    "href" => $href,
+                                    "linktxt" => "\t\tBug: $bug_number",
+                                    );
+                $link_choices .= "<br>";
+            }
+
+            # we display the list of names in 'teletype font' so that the
+            # names do not bunch together. It seems to make a difference if
+            # there is a <cr> between each link or not, but it does make a
+            # difference if we close the <tt> for each author or only for
+            # the group of links.
+            
+            my (%popup_args) = (
+                                "windowtxt" => $link_choices,
+                                "windowtitle" => ("$VC_NAME Info ".
+                                                  "Author: $author ".
+                                                  "$time_interval_str "),
+                                );
+            
+            my ($query_link) = "";
+            
+            $query_link .= 
+                  VCDisplay::query(
+                                   'tree' => $tree,
+                                   'mindate' => $mindate,
+                                   'maxdate' => $maxdate,
+                                   'who' => $author,
+                                   
+                                   "linktxt" => "\t\t<tt>$display_author</tt>",
+                                   %popup_args,
+                                   );
+
+            my $bug_links = '';
+            foreach $bug_number (@bug_numbers) {
+                my $href = BTData::bug_id2bug_url($bug_number);
+                $bug_links .= 
+                    HTMLPopUp::Link(
+                                    "href" => $href,
+                                    "linktxt" => "\t\t<tt>$bug_number</tt>",
+                                    
+                                    %popup_args,
+                                    );
+            }
+            $query_link .= $bug_links;
+
+            # put each link on its own line and add good comments so we
+            # can debug the HTML.
+            
+            my ($date_str) = localtime($mindate)."-".localtime($maxdate);
+            
+            if ($DEBUG) {
+                $query_links .= (
+                                 "\t\t<!-- VC_Perforce: ".
+                                 ("Author: $author, ".
+                                  "Bug_Numbers: '@bug_numbers', ".
+                                  "Time: '$date_str', ".
+                                  "Tree: $tree, ".
+                                  "").
+                                 "  -->\n".
+                                 "");
+            }
+
+            $query_links .= "\t\t".$query_link."\n";
+            
+        } # foreach %author
+    } # if %authors
+
+    my $notice = $NOTICE->Notice_Link(
+                                      $maxdate,
+                                      $tree,
+                                      $VC_NAME,
+                                      );
+    if ($notice) {
+        $query_links.= "\t\t".$notice."\n";
+    }
+
+    if ($text_browser_color_string) {
+        $query_links.=  "\t\t".$text_browser_color_string."\n";
+    }
+
+    @outrow = (
+               "\t<!-- VC_Perforce: authors -->\n".               
+               "\t<td align=center $cell_options>\n".
+               $query_links.
+               "\t</td>\n".
+               "");
+    
+    return @outrow;
+}
+
+
+# Create one cell (possibly taking up many rows) which will show
+# that:
+#       No authors have checked in during this time.
+#       The tree state has not changed during this time.
+#       There were no notices posted during this time.
+
+sub render_empty_cell {
+    my ($last_treestate, $till_time, $rowspan, $tree) = @_;
+
+    my $local_till_time = localtime($till_time);
+    my ($cell_color) = TreeData::TreeState2color($last_treestate);
+    my ($char) = TreeData::TreeState2char($last_treestate);
+    
+    my $cell_options = '';
+    my $text_browser_color_string;
+    
+    if ( ($last_treestate) && ($cell_color) ) {
+        $cell_options = "bgcolor=$cell_color ";
+        
+        $text_browser_color_string = 
+          HTMLPopUp::text_browser_color_string($cell_color, $char) ;
+    }
+
+    my $cell_contents;
+    if ($text_browser_color_string) {
+        $cell_contents .= $text_browser_color_string;
+    }
+
+    if (!($cell_contents)) {
+        $cell_contents = "\n\t\t".$HTMLPopUp::EMPTY_TABLE_CELL."\n";
+    }
+
+    my @outrow =();
+    if ($DEBUG) {
+        push @outrow, ("\t<!-- VC_Perforce: empty data. ".
+                       "tree: $tree, ".
+                       "last_treestate: $last_treestate, ".
+                       "filling till: $local_till_time, ".
+                       "-->\n");
+    }
+            
+    push @outrow, (
+                   "\t\t<td align=center rowspan=$rowspan $cell_options>".
+                   "$cell_contents</td>\n");
+
+    return @outrow;
+}
+
+
+
 
 # clear data structures in preparation for printing a new table
 
@@ -452,288 +772,106 @@ sub status_table_start {
 }
 
 
-
-
-
 sub status_table_row {
   my ($self, $row_times, $row_index, $tree, ) = @_;
 
   my (@outrow) = ();
 
-  # we assume that tree states only change rarely so there are very
-  # few cells which have more then one state associated with them.
-  # It does not matter what we do with those cells.
-  
-  # find all the authors who changed code at any point in this cell
-  # find the tree state for this cell.
+  # skip this column because it is part of a multi-row missing data
+  # cell?
 
-  my ($affected_files, $jobs_fixed);
-  my (@authors,  @change_nums, @workspaces, );
-  
-  while (1) {
-   my ($time) = $DB_TIMES[$NEXT_DB];
-
-    # find the DB entries which are needed for this cell
-    ($time < $row_times->[$row_index]) && last;
-
-    $NEXT_DB++;
-
-    if (defined($DATABASE{$tree}{$time}{'treestate'})) {
-      $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
-    }
-
-   # Now invert the data structure.
-
-   # Inside each cell, we want all the posts by the same author to
-   # appear together.  The previous data structure allowed us to find
-   # out what data was in each cell.
-
-   if (defined($DATABASE{$tree}{$time}{'author'})) {
-       foreach $author (keys %{ $DATABASE{$tree}{$time}{'author'} }) {
-           
-           my($affected_files_ref, $jobs_fixed_ref, 
-              $change_num, $workspace, $comment) = 
-                  @{ $DATABASE{$tree}{$time}{'author'}{$author} };
-           
-           push @authors, $author;
-           push @change_nums, $change_num;
-           push @workspaces, $workspace;
-       }
-   }
-
-   if (defined( $DATABASE{$tree}{$time}{'bugs'} )) {
-       $recs = $DATABASE{$tree}{$time}{'bugs'};
-       foreach $bug (keys %{ $recs }) {
-           $bugs{$bug} =1;
-       }
-   }
-   
-} # while (1)
-  
-  @workspaces = main::uniq(@workspace);
-
-  # If there is no treestate, then the tree state has not changed
-  # since an early time.  The earliest time was assigned a state in
-  # apply_db_updates().  It is possible that there are no treestates at
-  # all this should not prevent the VC column from being rendered.
-
-  if (!($LAST_TREESTATE)) {
-      $LAST_TREESTATE = $TinderHeader::HEADER2DEFAULT_HTML{'TreeState'};
+  if ( $NEXT_ROW{$tree} != $row_index ) {
+      if ($DEBUG) {
+          push @outrow, ("\t<!-- VC_Perforce: skipping. ".
+                         "tree: $tree, ".
+                         "additional_skips: ".
+                         ($NEXT_ROW{$tree} -  $row_index).", ".
+                         " -->\n");
+      }
+      return @outrow;
   }
 
-  my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
-  my ($char) = TreeData::TreeState2char($LAST_TREESTATE);
+  
+  # Find all the authors who changed code at any point in this cell
+  # Find the tree state for this cell.
 
-  my $cell_options = '';
-  my $text_browser_color_string;
-  my $empty_cell_contents = $HTMLPopUp::EMPTY_TABLE_CELL;
+  my ($db_index, $last_treestate, $authors,) =
+      cell_data($tree, $NEXT_DB{$tree}, $row_times->[$row_index]);
 
-  if ( ($LAST_TREESTATE) && ($cell_color) ) {
-       $cell_options = "bgcolor=$cell_color ";
+  # Track the treestate between calls with a global variable.
 
-       $text_browser_color_string = 
-         HTMLPopUp::text_browser_color_string($cell_color, $char);
+  # This initalization may not be correct.  If we are creating a page
+  # for a few days ago, when we start making the page, we do not know
+  # the treestate. It is not so easy to find out the right tree state
+  # for the first few rows, so fake it with the current state.
 
-       # for those who like empty cells to be truly empty, we need to
-       # be sure that they see the different cell colors when they
-       # change.
+  $LAST_TREESTATE{$tree} = ( 
+                             $last_treestate || 
+                             $LAST_TREESTATE{$tree} || 
+                             TinderHeader::gettree_header('TreeState', $tree) 
+                             );
 
-       if (
-           ($cell_color !~ m/white/) &&
-           (!($text_browser_color_string)) &&
-           (!($empty_cell_contents)) &&
-           1) {
-               $empty_cell_contents = "&nbsp;";
-           }
-  }
+  if (scalar(%{$authors})) {
 
-  my $query_links = '';
-  if ($text_browser_color_string) {
-      $query_links.=  "\t\t".$text_browser_color_string."\n";
-  }
+      $NEXT_DB{$tree} = $db_index;
+      $NEXT_ROW{$tree} = $row_index + 1;
 
-  if ( scalar(@authors) ) {
-    
-      # find the times which bound the cell so that we can set up a
-      # VC query.
-      
-      my ($mindate) = $row_times->[$row_index];
-      
+      my ($mindate) = $row_times->[$row_index], 
       my ($maxdate);
       if ($row_index > 0){
           $maxdate = $row_times->[$row_index - 1];
       } else {
           $maxdate = $main::TIME;
       }
-      my ($format_maxdate) = HTMLPopUp::timeHTML($maxdate);
-      my ($format_mindate) = HTMLPopUp::timeHTML($mindate);
-      my ($time_interval_str) = "$format_maxdate to $format_mindate",
-      
-      # create a string of all VC data for displaying with the checkin table
-      
-      my ($vc_info);
 
-      my $filespec = TreeData::Tree2Filespec($tree);
-      $vc_info .= "Filespec: $filespec <br>\n";
+      my @html = render_authors(
+                                $tree,
+                                $LAST_TREESTATE{$tree},
+                                $authors,
+                                $mindate,
+                                $maxdate,
+                                );
+      return @html;
+  }
 
-      $vc_info .= "Changes: @change_nums <br>\n";
-      
-      foreach $author (@authors) {
-          
-          my $display_author=$author;
-            
-          my $mailto_author=$author;
-          $mailto_author = TreeData::VCName2MailAddress($author);
-          
-          @bug_numbers = main::uniq(@bug_numbers);
-          
-          # The Link Choices inside the popup.
-          
-          my $link_choices = "Checkins by <b>$author</b><br>";
-          $link_choices .= " for $vc_info \n<br>";
-          $link_choices .= 
-              VCDisplay::query(
-                               'tree' => $tree,
-                               'mindate' => $mindate,
-                               'maxdate' => $maxdate,
-                               'who' => $author,
-                               
-                               "linktxt" => "This check-in",
-                               );
-          
-          $link_choices .= "<br>";
-          $link_choices .= 
-              VCDisplay::query(
-                               'tree' => $tree,
-                               'mindate' => $mindate - $main::SECONDS_PER_DAY,
-                               'maxdate' => $maxdate,
-                               'who' => $author,
-                               
-                               "linktxt" => "Check-ins within 24 hours",
-                               );
-          
-          $link_choices .= "<br>";
-          $link_choices .= 
-              VCDisplay::query(
-                               'tree' => $tree,
-                               'mindate' => $mindate - $main::SECONDS_PER_WEEK,
-                               'maxdate' => $maxdate,
-                               'who' => $author,
-                               
-                               "linktxt" => "Check-ins within 7 days",
-                               );
-          
-          $link_choices .= "<br>";
-          $link_choices .= 
-              HTMLPopUp::Link(
-                              "href" => "mailto:$mailto_author",
-                              "linktxt" => "Send Mail to $author",
-                              );
-          
-          $link_choices .= "<br>";
-          
-          my ($href) = (FileStructure::get_filename($tree, 'tree_URL').
-                        "/all_vc.html#$mindate");
-          
-          $link_choices .= 
-              HTMLPopUp::Link(
-                              "href" => $href,
-                              "linktxt" => "Tinderbox Checkin Data",
-                              );
-          
-          $link_choices .= "<br>";
-          
-          foreach $bug_number (@bug_numbers) {
-              my $href = BTData::bug_id2bug_url($bug_number);
-                $link_choices .= 
-                    HTMLPopUp::Link(
-                                    "href" => $href,
-                                    "linktxt" => "\t\tBug: $bug_number",
-                                    );
-                $link_choices .= "<br>";
-          }
-          
-          # we display the list of names in 'teletype font' so that the
-          # names do not bunch together. It seems to make a difference if
-          # there is a <cr> between each link or not, but it does make a
-          # difference if we close the <tt> for each author or only for
-          # the group of links.
-          
-          my (%popup_args) = (
-                              "windowtxt" => $link_choices,
-                              "windowtitle" => ("$VC_NAME Info ".
-                                                "Author: $author ".
-                                                "$time_interval_str "),
-                              );
-          
-          my ($query_link) = "";
-          $query_link .= 
-              VCDisplay::query(
-                               'tree' => $tree,
-                               'mindate' => $mindate,
-                               'maxdate' => $maxdate,
-                               'who' => $author,
-                               
-                               "linktxt" => "\t\t<tt>$display_author</tt>",
-                               %popup_args,
-                               );
-          
-          my $bug_links = '';
-          foreach $bug_number (@bug_numbers) {
-              my $href = BTData::bug_id2bug_url($bug_number);
-              $bug_links .= 
-                  HTMLPopUp::Link(
-                                  "href" => $href,
-                                  "linktxt" => "\t\t<tt>$bug_number</tt>",
-                                  
-                                  %popup_args,
-                                    );
-          }
-          $query_link .= $bug_links;
-          
-          # put each link on its own line and add good comments so we
-          # can debug the HTML.
-          
-          my ($date_str) = localtime($mindate)."-".localtime($maxdate);
-          
-          if ($DEBUG) {
-              $query_links .= (
-                               "\t\t<!-- VC_Perforce: ".
-                               ("Author: $author, ".
-                                "Bug_Numbers: '@bug_numbers', ".
-                                "Time: '$date_str', ".
-                                "Tree: $tree, ".
-                                "").
-                               "  -->\n".
-                               "");
-          }
-          
-          $query_links .= "\t\t".$query_link."\n";
-          
-      } # foreach @author
-  } # if @authors
+  # Create a multi-row dummy cell for missing data.
+  # Cell stops if there is author data in the following cell or the
+  # treestate changes.
   
-  my $notice = $NOTICE->Notice_Link(
-                                    $maxdate,
-                                    $tree,
-                                    $VC_NAME,
-                                    );
-  if ($notice) {
-      $query_links.= "\t\t".$notice."\n";
+  my $rowspan = 0;
+  my ($next_db_index, $next_treestate, $next_authors);
+  $next_db_index = $db_index;
+    
+  while (
+         ($row_index+$rowspan <= $#{ $row_times }) &&
+
+         ( (!($next_authors)) || (!(scalar(%{$next_authors}))) ) &&
+
+         (
+          !defined($next_treestate) ||
+          ( $LAST_TREESTATE{$tree} eq $next_treestate)
+          )
+
+
+         ) {
+      
+      $db_index = $next_db_index;
+      $rowspan++ ;
+      
+      ($next_db_index, $next_treestate, $next_authors,) =
+          cell_data($tree, $db_index, 
+                    $row_times->[$row_index+$rowspan]);
+      
   }
   
-  $query_links.=  "\t\t".$text_browser_color_string."\n";
+  $NEXT_ROW{$tree} = $row_index + $rowspan;
+  $NEXT_DB{$tree} = $db_index;
   
-  @outrow = (
-             "\t<!-- VC_Perforce: authors -->\n".               
-             "\t<td align=center $cell_options>\n".
-             $query_links.
-             "\t</td>\n".
-             "");
-  
-  return @outrow; 
+  my @html= render_empty_cell($LAST_TREESTATE{$tree}, 
+                              $row_times->[$row_index+$rowspan], 
+                              $rowspan, $tree);
+  return @html;
 }
-
 
 
 # convert perforce string time into unix time.
@@ -864,7 +1002,7 @@ sub apply_db_updates {
 
             if ($comment =~ m/$VC_BUGNUM_REGEXP/) {
                 my $bug_number = $1;
-                $DATABASE{$tree}{$time}{'bugs'}{$bug_number} = 1;
+                $DATABASE{$tree}{$time}{'bugs'}{$author}{$bug_number} = 1;
             }
 
         } # each change
