@@ -80,8 +80,10 @@ public:
   // nsIStyledContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   
-protected:
+  // nsISVGContent specializations:
   virtual void ParentChainChanged();
+
+protected:
 
   already_AddRefed<nsISVGTextContentMetrics> GetTextContentMetrics();
   
@@ -365,7 +367,7 @@ nsSVGTextElement::IsAttributeMapped(const nsIAtom* name) const
 }
 
 //----------------------------------------------------------------------
-// 
+// nsISVGContent methods
 
 void nsSVGTextElement::ParentChainChanged()
 {
@@ -409,7 +411,13 @@ void nsSVGTextElement::ParentChainChanged()
     
     lengthlist->SetContext(ctx);
   }
+
+  // recurse into child content:
+  nsSVGTextElementBase::ParentChainChanged();
 }  
+
+//----------------------------------------------------------------------
+// implementation helpers:
 
 already_AddRefed<nsISVGTextContentMetrics>
 nsSVGTextElement::GetTextContentMetrics()

@@ -53,11 +53,13 @@
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
 #include "nsISVGStyleValue.h"
+#include "nsISVGContent.h"
 
 class nsSVGElement : public nsGenericElement,    // :nsIHTMLContent:nsIXMLContent:nsIStyledContent:nsIContent
                      public nsIDOMSVGElement,    // :nsIDOMElement:nsIDOMNode
                      public nsISVGValueObserver, 
-                     public nsSupportsWeakReference // :nsISupportsWeakReference
+                     public nsSupportsWeakReference, // :nsISupportsWeakReference
+                     public nsISVGContent
 {
 protected:
   nsSVGElement();
@@ -132,11 +134,13 @@ public:
 
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
+
+  // nsISVGContent
+  virtual void ParentChainChanged(); 
   
 protected:
 
   nsresult CopyNode(nsSVGElement* dest, PRBool deep);
-  virtual void ParentChainChanged(){}; 
   
   nsSVGAttributes*             mAttributes;
   nsCOMPtr<nsISVGStyleValue>   mStyle;
