@@ -186,6 +186,25 @@ NS_METHOD nsContainerFrame::FirstChild(nsIFrame*& aFirstChild) const
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// Style support
+
+NS_IMETHODIMP
+nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
+                                        nsIStyleContext* aNewParentContext)
+{
+  nsIStyleContext*  oldContext = mStyleContext;
+  nsresult result = nsFrame::ReResolveStyleContext(aPresContext, aNewParentContext);
+  if (oldContext != mStyleContext) {
+    nsIFrame* child = mFirstChild;
+    while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
+      result = child->ReResolveStyleContext(aPresContext, nsnull);
+      child->GetNextSibling(child);
+    }
+  }
+  return result;
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // Painting
 
 NS_IMETHODIMP
