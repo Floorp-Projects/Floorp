@@ -89,7 +89,7 @@ public:
 
   /*virtual nsresult Focus(nsIDOMEvent* aEvent);
   virtual nsresult Blur(nsIDOMEvent* aEvent);
-  virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
   NS_IMETHOD AddEventListener(nsIDOMNode * aNode);
   NS_IMETHOD RemoveEventListener(nsIDOMNode * aNode);
 

@@ -61,6 +61,7 @@ nsGenericDOMDataNode::nsGenericDOMDataNode()
   mScriptObject = nsnull;
   mListenerManager = nsnull;
   mRangeList = nsnull;
+  mCapturer = nsnull;
 }
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
@@ -428,13 +429,13 @@ nsGenericDOMDataNode::GetNewListenerManager(nsIEventListenerManager** aResult)
 } 
 
 nsresult
-nsGenericDOMDataNode::AddEventListener(nsIDOMEventListener* aListener,
+nsGenericDOMDataNode::AddEventListenerByIID(nsIDOMEventListener* aListener,
                                        const nsIID& aIID)
 {
   nsIEventListenerManager *manager;
 
   if (NS_OK == GetListenerManager(&manager)) {
-    manager->AddEventListener(aListener, aIID);
+    manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
     NS_RELEASE(manager);
     return NS_OK;
   }
@@ -442,11 +443,42 @@ nsGenericDOMDataNode::AddEventListener(nsIDOMEventListener* aListener,
 }
 
 nsresult
-nsGenericDOMDataNode::RemoveEventListener(nsIDOMEventListener* aListener,
+nsGenericDOMDataNode::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
                                           const nsIID& aIID)
 {
   if (nsnull != mListenerManager) {
-    mListenerManager->RemoveEventListener(aListener, aIID);
+    mListenerManager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsGenericDOMDataNode::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                       PRBool aPostProcess, PRBool aUseCapture)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
+                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+
+    manager->AddEventListenerByType(aListener, aType, flags);
+    NS_RELEASE(manager);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsGenericDOMDataNode::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                          PRBool aPostProcess, PRBool aUseCapture)
+{
+  if (nsnull != mListenerManager) {
+    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
+                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+
+    mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -652,26 +684,35 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext& aPresContext,
                                      nsEventStatus& aEventStatus)
 {
   nsresult ret = NS_OK;
-  
   nsIDOMEvent* domEvent = nsnull;
-  if (DOM_EVENT_INIT == aFlags) {
+
+  if (NS_EVENT_FLAG_INIT == aFlags) {
     aDOMEvent = &domEvent;
+
+    //Initiate capturing phase.  Special case first call to document
+    if (nsnull != mDocument) {
+      mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+    }
   }
   
-  //Capturing stage
+  //Capturing stage evaluation
+  //Always pass capturing up the tree before local evaulation
+  if (NS_EVENT_FLAG_BUBBLE != aFlags && nsnull != mCapturer) {
+    mCapturer->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+  }
   
   //Local handling stage
   if (nsnull != mListenerManager) {
-    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
+    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
   }
 
   //Bubbling stage
-  if (DOM_EVENT_CAPTURE != aFlags && mParent != nsnull) {
+  if (NS_EVENT_FLAG_CAPTURE != aFlags && mParent != nsnull) {
     ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                  DOM_EVENT_BUBBLE, aEventStatus);
+                                  NS_EVENT_FLAG_BUBBLE, aEventStatus);
   }
 
-  if (DOM_EVENT_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT == aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event,
     // release here.
     if (nsnull != *aDOMEvent) {

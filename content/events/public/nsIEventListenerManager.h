@@ -51,8 +51,29 @@ public:
   * @param an event listener
   */
 
-  virtual nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
+  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 flags) = 0;
   
+  /**
+  * Removes events listeners of all types. 
+  * @param an event listener
+  */
+
+  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 flags) = 0;
+
+  /**
+  * Sets events listeners of all types. 
+  * @param an event listener
+  */
+
+  virtual nsresult AddEventListenerByType(nsIDOMEventListener *aListener, const nsString& type, PRInt32 flags) = 0;
+  
+  /**
+  * Removes events listeners of all types. 
+  * @param an event listener
+  */
+
+  virtual nsresult RemoveEventListenerByType(nsIDOMEventListener *aListener, const nsString& type, PRInt32 flags) = 0;
+
   /**
   * Creates a script event listener for the given script object with name mName and function
   * content mFunc.
@@ -71,20 +92,15 @@ public:
                                                REFNSIID aIID) = 0;
 
   /**
-  * Removes events listeners of all types. 
-  * @param an event listener
-  */
-
-  virtual nsresult RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
-
-  /**
   * Causes a check for event listeners and processing by them if they exist.
+  * Event flags live in nsGUIEvent.h
   * @param an event listener
   */
 
   virtual nsresult HandleEvent(nsIPresContext& aPresContext,
                                nsEvent* aEvent,
                                nsIDOMEvent** aDOMEvent,
+                               PRUint32 aFlags,
                                nsEventStatus& aEventStatus) = 0;
 
   /**

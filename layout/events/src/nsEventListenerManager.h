@@ -23,7 +23,16 @@
 #include "jsapi.h"
 
 class nsIDOMEvent;
- 
+
+typedef struct {
+  nsIDOMEventListener* mListener;
+  PRUint8 mFlags;
+  PRUint8 mSubType;
+} nsListenerStruct;
+
+//Flag must live higher than all event flags in nsGUIEvent.h
+#define NS_PRIV_EVENT_FLAG_SCRIPT 0x10
+
 /*
  * Event listener manager
  */
@@ -52,7 +61,11 @@ public:
   * @param an event listener
   */
 
-  virtual nsresult AddEventListener(nsIDOMEventListener *aListener, REFNSIID aIID);
+  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags);
+  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags);
+  virtual nsresult AddEventListenerByType(nsIDOMEventListener *aListener, const nsString& type, PRInt32 aFlags);
+  virtual nsresult RemoveEventListenerByType(nsIDOMEventListener *aListener, const nsString& type, PRInt32 aFlags) ;
+
   virtual nsresult AddScriptEventListener(nsIScriptContext* aContext, 
                                           nsIScriptObjectOwner *aScriptObjectOwner, 
                                           nsIAtom *aName, 
@@ -62,14 +75,14 @@ public:
                                                nsIScriptObjectOwner *aScriptObjectOwner, 
                                                const nsIID& aIID);
 
-  virtual nsresult RemoveEventListener(nsIDOMEventListener *aListener, REFNSIID aIID);
 
   virtual nsresult CaptureEvent(nsIDOMEventListener *aListener);
   virtual nsresult ReleaseEvent(nsIDOMEventListener *aListener);
 
   virtual nsresult HandleEvent(nsIPresContext& aPresContext, 
                                nsEvent* aEvent, 
-                               nsIDOMEvent** aDOMEvent, 
+                               nsIDOMEvent** aDOMEvent,
+                               PRUint32 aFlags,
                                nsEventStatus& aEventStatus);
 
   virtual nsresult CreateEvent(nsIPresContext& aPresContext, 
@@ -78,6 +91,9 @@ public:
 
 protected:
   nsresult SetJSEventListener(nsIScriptContext *aContext, JSObject *aObject, REFNSIID aIID);
+  nsresult GetIdentifiersForType(const nsString& aType, nsIID& aIID, PRInt32* aSubType);
+  nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags, PRInt32 aSubType);
+  nsresult RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags, PRInt32 aSubType);
 
   nsVoidArray* mEventListeners;
   nsVoidArray* mMouseListeners;
@@ -91,5 +107,62 @@ protected:
   nsVoidArray* mTextListeners;
 
 };
+
+
+//Set of defines for distinguishing event hanlders within listener groupings
+//XXX Current usage allows no more than 7 types per listener grouping
+
+#define NS_EVENT_BITS_NONE    0x00
+
+//nsIDOMMouseListener
+#define NS_EVENT_BITS_MOUSE_NONE        0x00
+#define NS_EVENT_BITS_MOUSE_MOUSEDOWN   0x01
+#define NS_EVENT_BITS_MOUSE_MOUSEUP     0x02
+#define NS_EVENT_BITS_MOUSE_CLICK       0x04
+#define NS_EVENT_BITS_MOUSE_DBLCLICK    0x08
+#define NS_EVENT_BITS_MOUSE_MOUSEOVER   0x10
+#define NS_EVENT_BITS_MOUSE_MOUSEOUT    0x20
+
+//nsIDOMMouseMotionListener
+#define NS_EVENT_BITS_MOUSEMOTION_NONE        0x00
+#define NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE   0x01
+#define NS_EVENT_BITS_MOUSEMOTION_DRAGMOVE    0x02
+
+//nsIDOMKeyListener
+#define NS_EVENT_BITS_KEY_NONE      0x00
+#define NS_EVENT_BITS_KEY_KEYDOWN   0x01
+#define NS_EVENT_BITS_KEY_KEYUP     0x02
+#define NS_EVENT_BITS_KEY_KEYPRESS  0x04
+
+//nsIDOMTextListener
+#define NS_EVENT_BITS_TEXT_NONE      0x00
+#define NS_EVENT_BITS_TEXT_TEXT      0x01
+
+//nsIDOMFocusListener
+#define NS_EVENT_BITS_FOCUS_NONE    0x00
+#define NS_EVENT_BITS_FOCUS_FOCUS   0x01
+#define NS_EVENT_BITS_FOCUS_BLUR    0x02
+
+//nsIDOMFormListener
+#define NS_EVENT_BITS_FORM_NONE     0x00
+#define NS_EVENT_BITS_FORM_SUBMIT   0x01
+#define NS_EVENT_BITS_FORM_RESET    0x02
+#define NS_EVENT_BITS_FORM_CHANGE   0x04
+
+//nsIDOMLoadListener
+#define NS_EVENT_BITS_LOAD_NONE     0x00
+#define NS_EVENT_BITS_LOAD_LOAD     0x01
+#define NS_EVENT_BITS_LOAD_UNLOAD   0x02
+#define NS_EVENT_BITS_LOAD_ABORT    0x04
+#define NS_EVENT_BITS_LOAD_ERROR    0x08
+
+//nsIDOMDragListener
+#define NS_EVENT_BITS_DRAG_NONE     0x00
+#define NS_EVENT_BITS_DRAG_START    0x01
+#define NS_EVENT_BITS_DRAG_DROP     0x02
+
+//nsIDOMPaintListener
+#define NS_EVENT_BITS_PAINT_NONE    0x00
+#define NS_EVENT_BITS_PAINT_PAINT   0x01
 
 #endif // nsEventListenerManager_h__

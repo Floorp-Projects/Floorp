@@ -63,6 +63,7 @@ NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
+NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
 NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -206,6 +207,7 @@ nsGenericElement::GetDOMSlots()
     mDOMSlots->mStyle = nsnull;
     mDOMSlots->mAttributeMap = nsnull;
     mDOMSlots->mRangeList = nsnull;
+    mDOMSlots->mCapturer = nsnull;
   }
   
   return mDOMSlots;
@@ -737,24 +739,36 @@ nsGenericElement::HandleDOMEvent(nsIPresContext& aPresContext,
   nsresult ret = NS_OK;
   
   nsIDOMEvent* domEvent = nsnull;
-  if (DOM_EVENT_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT == aFlags) {
     aDOMEvent = &domEvent;
+
+    //Initiate capturing phase
+    //Initiate capturing phase.  Special case first call to document
+    if (nsnull != mDocument) {
+      mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+    }
   }
   
-  //Capturing stage
+  //Capturing stage evaluation
+  //Always pass capturing up the tree before local evaulation
+  if (NS_EVENT_FLAG_BUBBLE != aFlags) {
+    if (nsnull != mDOMSlots && nsnull != mDOMSlots->mCapturer) {
+      mDOMSlots->mCapturer->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+    } 
+  }
   
   //Local handling stage
   if (nsnull != mListenerManager) {
-    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
+    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
   }
 
   //Bubbling stage
-  if ((DOM_EVENT_CAPTURE != aFlags) && (mParent != nsnull) && (mDocument != nsnull)) {
+  if ((NS_EVENT_FLAG_CAPTURE != aFlags) && (mParent != nsnull) && (mDocument != nsnull)) {
     ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                  DOM_EVENT_BUBBLE, aEventStatus);
+                                  NS_EVENT_FLAG_BUBBLE, aEventStatus);
   }
 
-  if (DOM_EVENT_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT == aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event,
     // release here.
     if (nsnull != *aDOMEvent) {
@@ -948,13 +962,13 @@ nsGenericElement::GetNewListenerManager(nsIEventListenerManager** aResult)
 } 
 
 nsresult
-nsGenericElement::AddEventListener(nsIDOMEventListener* aListener,
+nsGenericElement::AddEventListenerByIID(nsIDOMEventListener* aListener,
                                    const nsIID& aIID)
 {
   nsIEventListenerManager *manager;
 
   if (NS_OK == GetListenerManager(&manager)) {
-    manager->AddEventListener(aListener, aIID);
+    manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
     NS_RELEASE(manager);
     return NS_OK;
   }
@@ -962,11 +976,42 @@ nsGenericElement::AddEventListener(nsIDOMEventListener* aListener,
 }
 
 nsresult
-nsGenericElement::RemoveEventListener(nsIDOMEventListener* aListener,
+nsGenericElement::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
                                       const nsIID& aIID)
 {
   if (nsnull != mListenerManager) {
-    mListenerManager->RemoveEventListener(aListener, aIID);
+    mListenerManager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsGenericElement::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                   PRBool aPostProcess, PRBool aUseCapture)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
+                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+
+    manager->AddEventListenerByType(aListener, aType, flags);
+    NS_RELEASE(manager);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsGenericElement::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                      PRBool aPostProcess, PRBool aUseCapture)
+{
+  if (nsnull != mListenerManager) {
+    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
+                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+
+    mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;

@@ -468,9 +468,9 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
           if ((NS_OK == aPresContext->GetEventStateManager(&eventStateManager)) &&
               (nsnull != eventStateManager)) {
-            nsLinkEventState  state;
-            if (NS_OK == eventStateManager->GetLinkState(aContent, state)) {
-              if (0 != (state & eLinkState_Active)) {
+            PRInt32 state;
+            if (NS_OK == eventStateManager->GetContentState(aContent, state)) {
+              if (0 != (state & NS_EVENT_STATE_ACTIVE)) {
                 aResults->AppendElement(mActiveRule);
                 matchCount++;
               }

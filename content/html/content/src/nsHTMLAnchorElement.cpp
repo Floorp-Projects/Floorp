@@ -283,39 +283,30 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
     if (NS_CONTENT_ATTR_HAS_VALUE == result) {
       switch (aEvent->message) {
       case NS_MOUSE_LEFT_BUTTON_DOWN:
-      {
-        nsIEventStateManager *stateManager;
-        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
-          stateManager->SetActiveLink(this);
-          NS_RELEASE(stateManager);
+        {
+          nsIEventStateManager *stateManager;
+          if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+            stateManager->SetActiveContent(this);
+            NS_RELEASE(stateManager);
+          }
+          aEventStatus = nsEventStatus_eConsumeNoDefault; 
         }
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
-      }
-      break;
+        break;
 
       case NS_MOUSE_LEFT_CLICK:
       {
-        nsIEventStateManager *stateManager;
-        nsLinkEventState linkState;
-        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
-          stateManager->GetLinkState(this, linkState);
-          NS_RELEASE(stateManager);
-        }
-
-        if (eLinkState_Active == linkState) {
-          if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
-            nsAutoString target;
-            nsIURL* baseURL = nsnull;
-            GetBaseURL(baseURL);
-            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
-            if (target.Length() == 0) {
-              GetBaseTarget(target);
-            }
-            mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
-                               baseURL, href, target, PR_TRUE);
-            NS_IF_RELEASE(baseURL);
-            aEventStatus = nsEventStatus_eConsumeNoDefault; 
+        if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
+          nsAutoString target;
+          nsIURL* baseURL = nsnull;
+          GetBaseURL(baseURL);
+          GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
+          if (target.Length() == 0) {
+            GetBaseTarget(target);
           }
+          mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
+                             baseURL, href, target, PR_TRUE);
+          NS_IF_RELEASE(baseURL);
+          aEventStatus = nsEventStatus_eConsumeNoDefault; 
         }
       }
       break;

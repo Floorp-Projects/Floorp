@@ -136,45 +136,36 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
       {
         nsIEventStateManager *stateManager;
         if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
-          stateManager->SetActiveLink(this);
+          stateManager->SetActiveContent(this);
           NS_RELEASE(stateManager);
         }
         aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       break;
 
-    case NS_MOUSE_LEFT_BUTTON_UP:
+    case NS_MOUSE_LEFT_CLICK:
       {
-        nsIEventStateManager *stateManager;
-        nsLinkEventState linkState;
-        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
-          stateManager->GetLinkState(this, linkState);
-          NS_RELEASE(stateManager);
-        }
-
-        if (eLinkState_Active == linkState) {
-          if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
-            nsAutoString show, href, target;
-            nsIURL* baseURL = nsnull;
-	          nsLinkVerb verb = eLinkVerb_Replace;
-	          target.Truncate();
-            GetAttribute(kNameSpaceID_None, kHrefAtom, href);
-            GetAttribute(kNameSpaceID_None, kShowAtom, show);
-	          // XXX Should probably do this using atoms 
-	          if (show.Equals("new")) {
-	            verb = eLinkVerb_New;
-	          }
-	          else if (show.Equals("embed")) {
-	            verb = eLinkVerb_Embed;
-	          }
-            
-            if (nsnull != mInner.mDocument) {
-              baseURL = mInner.mDocument->GetDocumentURL();
-            }
-            mInner.TriggerLink(aPresContext, verb, baseURL, href, target, PR_TRUE);
-            NS_IF_RELEASE(baseURL);
-            aEventStatus = nsEventStatus_eConsumeNoDefault; 
+        if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
+          nsAutoString show, href, target;
+          nsIURL* baseURL = nsnull;
+	        nsLinkVerb verb = eLinkVerb_Replace;
+	        target.Truncate();
+          GetAttribute(kNameSpaceID_None, kHrefAtom, href);
+          GetAttribute(kNameSpaceID_None, kShowAtom, show);
+	        // XXX Should probably do this using atoms 
+	        if (show.Equals("new")) {
+	          verb = eLinkVerb_New;
+	        }
+	        else if (show.Equals("embed")) {
+	          verb = eLinkVerb_Embed;
+	        }
+          
+          if (nsnull != mInner.mDocument) {
+            baseURL = mInner.mDocument->GetDocumentURL();
           }
+          mInner.TriggerLink(aPresContext, verb, baseURL, href, target, PR_TRUE);
+          NS_IF_RELEASE(baseURL);
+          aEventStatus = nsEventStatus_eConsumeNoDefault; 
         }
       }
       break;
@@ -184,7 +175,6 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
       break;
 
     case NS_MOUSE_ENTER:
-      //mouse enter doesn't work yet.  Use move until then.
       {
         nsAutoString href, target;
         nsIURL* baseURL = nsnull;

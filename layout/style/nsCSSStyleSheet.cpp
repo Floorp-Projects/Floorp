@@ -1050,7 +1050,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
       // first-child, lang, active, focus, hover, link, outOfDate, visited
       // XXX disabled, enabled, selected, selection
       nsAtomList* pseudoClass = aSelector->mPseudoClassList;
-      nsLinkEventState eventState = eLinkState_Unspecified;
+      PRInt32 eventState = NS_EVENT_STATE_UNSPECIFIED;
       nsLinkState linkState = nsLinkState(-1);  // not a link
       nsILinkHandler* linkHandler = nsnull;
       nsIEventStateManager* eventStateManager = nsnull;
@@ -1092,18 +1092,17 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
           if (! eventStateManager) {
             aPresContext->GetEventStateManager(&eventStateManager);
             if (eventStateManager) {
-              eventStateManager->GetLinkState(aContent, eventState);
+              eventStateManager->GetContentState(aContent, eventState);
             }
           }
           if (nsCSSAtoms::activePseudo == pseudoClass->mAtom) {
-            result = PRBool(0 != (eventState & eLinkState_Active));
+            result = PRBool(0 != (eventState & NS_EVENT_STATE_ACTIVE));
           }
           else if (nsCSSAtoms::focusPseudo == pseudoClass->mAtom) {
-//            result = PRBool(0 != (eventState & eLinkState_Focus));
-            result = PR_FALSE;
+            result = PRBool(0 != (eventState & NS_EVENT_STATE_FOCUS));
           }
           else if (nsCSSAtoms::hoverPseudo == pseudoClass->mAtom) {
-            result = PRBool(0 != (eventState & eLinkState_Hover));
+            result = PRBool(0 != (eventState & NS_EVENT_STATE_HOVER));
           }
         }
         else if (IsLinkPseudo(pseudoClass->mAtom)) {

@@ -53,12 +53,12 @@ static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 nsEventStateManager::nsEventStateManager() {
   mLastMouseOverFrame = nsnull;
   mCurrentTarget = nsnull;
-  mLastLeftMouseDownFrame = nsnull;
-  mLastMiddleMouseDownFrame = nsnull;
-  mLastRightMouseDownFrame = nsnull;
+  mLastLeftMouseDownContent = nsnull;
+  mLastMiddleMouseDownContent = nsnull;
+  mLastRightMouseDownContent = nsnull;
 
-  mActiveLink = nsnull;
-  mHoverLink = nsnull;
+  mActiveContent = nsnull;
+  mHoverContent = nsnull;
   mCurrentFocus = nsnull;
   mDocument = nsnull;
   mPresContext = nsnull;
@@ -67,10 +67,13 @@ nsEventStateManager::nsEventStateManager() {
 }
 
 nsEventStateManager::~nsEventStateManager() {
-  NS_IF_RELEASE(mActiveLink);
-  NS_IF_RELEASE(mHoverLink);
+  NS_IF_RELEASE(mActiveContent);
+  NS_IF_RELEASE(mHoverContent);
   NS_IF_RELEASE(mCurrentFocus);
   NS_IF_RELEASE(mDocument);
+  NS_IF_RELEASE(mLastLeftMouseDownContent);
+  NS_IF_RELEASE(mLastMiddleMouseDownContent);
+  NS_IF_RELEASE(mLastRightMouseDownContent);
 }
 
 NS_IMPL_ADDREF(nsEventStateManager)
@@ -98,7 +101,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
     GenerateMouseEnterExit(aPresContext, aEvent);
     break;
   case NS_MOUSE_EXIT:
-    //GenerateMouseEnterExit(aPresContext, aEvent, aTargetFrame);
+    GenerateMouseEnterExit(aPresContext, aEvent);
     break;
   case NS_GOTFOCUS:
     //XXX Do we need window related focus change stuff here?
@@ -126,6 +129,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
   case NS_MOUSE_RIGHT_BUTTON_DOWN: 
     {
+      ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+  
       nsIContent* newFocus;
       mCurrentTarget->GetContent(&newFocus);
       if (newFocus) {
@@ -137,12 +142,12 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
         NS_RELEASE(newFocus);
       }
     }
-    //Break left out on purpose
+    break;
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_UP:
-    mCurrentTarget = aTargetFrame;
     ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+    SetActiveContent(nsnull);
     break;
   case NS_KEY_DOWN:
     ret = DispatchKeyPressEvent(aPresContext, (nsKeyEvent*)aEvent, aStatus);
@@ -181,15 +186,6 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
   }
   if (aFrame == mCurrentTarget) {
     mCurrentTarget = nsnull;
-  }
-  if (aFrame == mLastLeftMouseDownFrame) {
-    mLastLeftMouseDownFrame = nsnull;
-  }
-  if (aFrame == mLastMiddleMouseDownFrame) {
-    mLastMiddleMouseDownFrame = nsnull;
-  }
-  if (aFrame == mLastRightMouseDownFrame) {
-    mLastRightMouseDownFrame = nsnull;
   }
   return NS_OK;
 }
@@ -274,7 +270,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
           if (lastContent != targetContent) {
             //XXX This event should still go somewhere!!
             if (nsnull != lastContent) {
-              lastContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+              lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
             }
           }
 
@@ -296,7 +292,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         if (lastContent != targetContent) {
           //XXX This event should still go somewhere!!
           if (nsnull != targetContent) {
-            targetContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+            targetContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
           }
         }
 
@@ -329,7 +325,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         mLastMouseOverFrame->GetContent(&lastContent);
 
         if (nsnull != lastContent) {
-          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
           NS_RELEASE(lastContent);
         }
 
@@ -352,35 +348,44 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
 {
   nsresult ret = NS_OK;
   nsMouseEvent event;
+  nsIContent* mouseContent;
   PRBool fireClick = PR_FALSE;
+
+  mCurrentTarget->GetContent(&mouseContent);
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
-    mLastLeftMouseDownFrame = mCurrentTarget;
+    mLastLeftMouseDownContent = mouseContent;
+    NS_IF_ADDREF(mLastLeftMouseDownContent);
     break;
   case NS_MOUSE_LEFT_BUTTON_UP:
-    if (mLastLeftMouseDownFrame == mCurrentTarget) {
+    if (mLastLeftMouseDownContent == mouseContent) {
       fireClick = PR_TRUE;
       event.message = NS_MOUSE_LEFT_CLICK;
     }
+    NS_IF_RELEASE(mLastLeftMouseDownContent);
     break;
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-    mLastMiddleMouseDownFrame = mCurrentTarget;
+    mLastMiddleMouseDownContent = mouseContent;
+    NS_IF_ADDREF(mLastMiddleMouseDownContent);
     break;
   case NS_MOUSE_MIDDLE_BUTTON_UP:
-    if (mLastMiddleMouseDownFrame == mCurrentTarget) {
+    if (mLastMiddleMouseDownContent == mouseContent) {
       fireClick = PR_TRUE;
       event.message = NS_MOUSE_MIDDLE_CLICK;
     }
+    NS_IF_RELEASE(mLastMiddleMouseDownContent);
     break;
   case NS_MOUSE_RIGHT_BUTTON_DOWN:
-    mLastRightMouseDownFrame = mCurrentTarget;
+    mLastRightMouseDownContent = mouseContent;
+    NS_IF_ADDREF(mLastRightMouseDownContent);
     break;
   case NS_MOUSE_RIGHT_BUTTON_UP:
-    if (mLastRightMouseDownFrame == mCurrentTarget) {
+    if (mLastRightMouseDownContent == mouseContent) {
       fireClick = PR_TRUE;
       event.message = NS_MOUSE_RIGHT_CLICK;
     }
+    NS_IF_RELEASE(mLastRightMouseDownContent);
     break;
   }
 
@@ -389,17 +394,9 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
     event.eventStructType = NS_MOUSE_EVENT;
     event.widget = nsnull;
 
-    nsIContent *content;
-    mCurrentTarget->GetContent(&content);
-
-    if (nsnull != content) {
-      ret = content->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, aStatus); 
-      NS_RELEASE(content);
-    }
-
-    //Now dispatch to the frame
-    if (nsnull != mCurrentTarget) {
-      mCurrentTarget->HandleEvent(aPresContext, &event, aStatus);   
+    if (nsnull != mouseContent) {
+      ret = mouseContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, aStatus); 
+      NS_RELEASE(mouseContent);
     }
   }
   return ret;
@@ -423,7 +420,7 @@ nsEventStateManager::DispatchKeyPressEvent(nsIPresContext& aPresContext,
   mCurrentTarget->GetContent(&content);
 
   if (nsnull != content) {
-    ret = content->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, aStatus); 
+    ret = content->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, aStatus); 
     NS_RELEASE(content);
   }
 
@@ -679,39 +676,45 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
 }
 
 NS_IMETHODIMP
-nsEventStateManager::GetLinkState(nsIContent *aLink, nsLinkEventState& aState)
+nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
 {
-  if (aLink == mActiveLink) {
-    aState = eLinkState_Active;
+  aState = NS_EVENT_STATE_UNSPECIFIED;
+
+  if (aContent == mActiveContent) {
+    aState |= NS_EVENT_STATE_ACTIVE;
   }
-  else if (aLink == mHoverLink) {
-    aState = eLinkState_Hover;
+  if (aContent == mHoverContent) {
+    aState |= NS_EVENT_STATE_HOVER;
   }
-  else {
-    aState = eLinkState_Unspecified;
+  if (aContent == mCurrentFocus) {
+    aState |= NS_EVENT_STATE_FOCUS;
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsEventStateManager::SetActiveLink(nsIContent *aLink)
+nsEventStateManager::SetActiveContent(nsIContent *aActive)
 {
   nsIDocument *mDocument;
 
-  if (nsnull != mActiveLink) {
-    if (NS_OK == mActiveLink->GetDocument(mDocument)) {
-      mDocument->ContentStateChanged(mActiveLink);
+  if (nsnull != mActiveContent) {
+    //transferring ref to lastActive from mActiveContent
+    nsIContent *lastActive = mActiveContent;
+
+    if (NS_OK == mActiveContent->GetDocument(mDocument)) {
+      mActiveContent = nsnull;
+      mDocument->ContentStateChanged(lastActive);
       NS_RELEASE(mDocument);
     }
+    NS_RELEASE(lastActive);
   }
-  NS_IF_RELEASE(mActiveLink);
 
-  mActiveLink = aLink;
+  mActiveContent = aActive;
+  NS_IF_ADDREF(mActiveContent);
 
-  NS_IF_ADDREF(mActiveLink);
-  if (nsnull != mActiveLink) {
-    if (NS_OK == mActiveLink->GetDocument(mDocument)) {
-      mDocument->ContentStateChanged(mActiveLink);
+  if (nsnull != mActiveContent) {
+    if (NS_OK == mActiveContent->GetDocument(mDocument)) {
+      mDocument->ContentStateChanged(mActiveContent);
       NS_RELEASE(mDocument);
     }
   }
@@ -720,24 +723,28 @@ nsEventStateManager::SetActiveLink(nsIContent *aLink)
 }
 
 NS_IMETHODIMP
-nsEventStateManager::SetHoverLink(nsIContent *aLink)
+nsEventStateManager::SetHoverContent(nsIContent *aHover)
 {
   nsIDocument *mDocument;
 
-  if (nsnull != mHoverLink) {
-    if (NS_OK == mHoverLink->GetDocument(mDocument)) {
-      mDocument->ContentStateChanged(mHoverLink);
+  if (nsnull != mHoverContent) {
+    //transferring ref to lastHover from mActiveContent
+    nsIContent *lastHover = mHoverContent;
+
+    if (NS_OK == mHoverContent->GetDocument(mDocument)) {
+      mHoverContent = nsnull;
+      mDocument->ContentStateChanged(lastHover);
       NS_RELEASE(mDocument);
     }
+    NS_RELEASE(lastHover);
   }
-  NS_IF_RELEASE(mHoverLink);
 
-  mHoverLink = aLink;
+  mHoverContent = aHover;
 
-  NS_IF_ADDREF(mHoverLink);
-  if (nsnull != mHoverLink) {
-    if (NS_OK == mHoverLink->GetDocument(mDocument)) {
-      mDocument->ContentStateChanged(mHoverLink);
+  NS_IF_ADDREF(mHoverContent);
+  if (nsnull != mHoverContent) {
+    if (NS_OK == mHoverContent->GetDocument(mDocument)) {
+      mDocument->ContentStateChanged(mHoverContent);
       NS_RELEASE(mDocument);
     }
   }
@@ -762,7 +769,7 @@ nsEventStateManager::SetFocusedContent(nsIContent *aContent)
     event.message = NS_BLUR_CONTENT;
 
     if (nsnull != mPresContext) {
-      mCurrentFocus->HandleDOMEvent(*mPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+      mCurrentFocus->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
     }
     NS_RELEASE(mCurrentFocus);
   }
@@ -774,7 +781,7 @@ nsEventStateManager::SetFocusedContent(nsIContent *aContent)
   event.message = NS_FOCUS_CONTENT;
 
   if (nsnull != mPresContext) {
-    aContent->HandleDOMEvent(*mPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+    aContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
   }
 
   nsAutoString tabIndex;

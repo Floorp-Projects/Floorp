@@ -677,6 +677,12 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(kIDOMEventTargetIID)) {
+    nsIDOMEventTarget* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kIDOMNodeIID)) {
     nsIDOMNode* tmp = this;
     *aInstancePtr = (void*) tmp;
@@ -1773,32 +1779,30 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
   nsresult mRet = NS_OK;
   nsIDOMEvent* mDOMEvent = nsnull;
 
-  if (DOM_EVENT_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT == aFlags) {
     aDOMEvent = &mDOMEvent;
   }
   
   //Capturing stage
-  /*if (mEventCapturer) {
-    mEventCapturer->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
-  }*/
+  if (NS_EVENT_FLAG_BUBBLE != aFlags) {
+    //XXX Check window capture here
+  }
   
   //Local handling stage
   if (nsnull != mListenerManager) {
-    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
+    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
   }
 
   //Bubbling stage
-  if (DOM_EVENT_CAPTURE != aFlags && nsnull != mScriptContextOwner) {
+  if (NS_EVENT_FLAG_CAPTURE != aFlags && nsnull != mScriptContextOwner) {
     nsIScriptGlobalObject* mGlobal;
     if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(&mGlobal)) {
-      mGlobal->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, DOM_EVENT_BUBBLE, aEventStatus);
+      mGlobal->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
       NS_RELEASE(mGlobal);
     }
   }
 
-  /*Need to go to window here*/
-
-  if (DOM_EVENT_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT == aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event, release here.
     if (nsnull != *aDOMEvent) {
       nsrefcnt rc;
@@ -1819,22 +1823,51 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
   return mRet;
 }
 
-nsresult nsDocument::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+nsresult nsDocument::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-  nsIEventListenerManager *mManager;
+  nsIEventListenerManager *manager;
 
-  if (NS_OK == GetListenerManager(&mManager)) {
-    mManager->AddEventListener(aListener, aIID);
-    NS_RELEASE(mManager);
+  if (NS_OK == GetListenerManager(&manager)) {
+    manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+    NS_RELEASE(manager);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsDocument::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+nsresult nsDocument::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
   if (nsnull != mListenerManager) {
-    mListenerManager->RemoveEventListener(aListener, aIID);
+    mListenerManager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsDocument::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                      PRBool aPostProcess, PRBool aUseCapture)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
+                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+
+    manager->AddEventListenerByType(aListener, aType, flags);
+    NS_RELEASE(manager);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsDocument::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                         PRBool aPostProcess, PRBool aUseCapture)
+{
+  if (nsnull != mListenerManager) {
+    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
+                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+
+    mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;

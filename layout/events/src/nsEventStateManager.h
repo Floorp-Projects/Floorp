@@ -50,10 +50,9 @@ public:
 
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame);
 
-  NS_IMETHOD GetLinkState(nsIContent *aLink, nsLinkEventState& aState);
-  NS_IMETHOD SetActiveLink(nsIContent *aLink);
-  NS_IMETHOD SetHoverLink(nsIContent *aLink);
-
+  NS_IMETHOD GetContentState(nsIContent *aContent, PRInt32& aState);
+  NS_IMETHOD SetActiveContent(nsIContent *aActive);
+  NS_IMETHOD SetHoverContent(nsIContent *aHover);
   NS_IMETHOD SetFocusedContent(nsIContent *aContent);
 
 protected:
@@ -69,12 +68,13 @@ protected:
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
   nsIFrame* mLastMouseOverFrame;
-  nsIFrame* mLastLeftMouseDownFrame;
-  nsIFrame* mLastMiddleMouseDownFrame;
-  nsIFrame* mLastRightMouseDownFrame;
 
-  nsIContent* mActiveLink;
-  nsIContent* mHoverLink;
+  nsIContent* mLastLeftMouseDownContent;
+  nsIContent* mLastMiddleMouseDownContent;
+  nsIContent* mLastRightMouseDownContent;
+
+  nsIContent* mActiveContent;
+  nsIContent* mHoverContent;
   nsIContent* mCurrentFocus;
   PRInt32 mCurrentTabIndex;
 
