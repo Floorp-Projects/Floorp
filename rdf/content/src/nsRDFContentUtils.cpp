@@ -54,13 +54,6 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsIScriptableDateFormat.h"
 
-/* sspitzer: temporary */
-#ifdef XP_UNIX
-#include "nsIPref.h"
-#define PREF_TEST_10412_FIX "test.10412.fix"
-static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
-#endif
-
 static NS_DEFINE_IID(kIContentIID,     NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,  NS_IRDFLITERAL_IID);
@@ -311,33 +304,15 @@ nsRDFContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
     else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFDateIID, getter_AddRefs(dateLiteral)))) {
 	PRInt64		theDate;
         if (NS_SUCCEEDED(rv = dateLiteral->GetValue( &theDate ))) {
-/* sspitzer:  temporary code until I can verify my fix for #10412.  I can't reproduce the bug on my box, so I can't be 100% certain I fixed the problem until jay or ester test it.  This way, they can test the fix in a release build by setting a pref. this temporary code will go away soon. */
-		PRBool test_10412_fix = PR_FALSE;
-#ifdef XP_UNIX
-		NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
-		if (NS_FAILED(rv) || !prefs) return rv;
-		rv = prefs->GetBoolPref(PREF_TEST_10412_FIX, &test_10412_fix);
-		if (NS_FAILED(rv)) { test_10412_fix = PR_FALSE; rv = NS_OK;}
-#endif /* XP_UNIX */
-		
-		if (!test_10412_fix) {
-			PRExplodedTime	dateData;
-			PR_ExplodeTime(theDate, PR_LocalTimeParameters, &dateData);
-			char		dateBuf[128];
-			PR_FormatTime(dateBuf, sizeof(dateBuf)-1, "%c", &dateData);
-			aResult = dateBuf;
-		}
-		else {
-			// XXX can we cache this somehow instead of creating/destroying it all the time?
-			nsCOMPtr <nsIDateTimeFormat> aDateTimeFormat;
-			rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
-				      nsIDateTimeFormat::GetIID(), getter_AddRefs(aDateTimeFormat));
-			if (NS_SUCCEEDED(rv) && aDateTimeFormat)
-			{
-				rv = aDateTimeFormat->FormatPRTime(nsnull /* nsILocale* locale */, kDateFormatLong, kTimeFormatSeconds, (PRTime)theDate, aResult);
-				if (NS_FAILED(rv)) {
-					aResult.Truncate();
-				}
+		// XXX can we cache this somehow instead of creating/destroying it all the time?
+		nsCOMPtr <nsIDateTimeFormat> aDateTimeFormat;
+		rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
+			      nsIDateTimeFormat::GetIID(), getter_AddRefs(aDateTimeFormat));
+		if (NS_SUCCEEDED(rv) && aDateTimeFormat)
+		{
+			rv = aDateTimeFormat->FormatPRTime(nsnull /* nsILocale* locale */, kDateFormatLong, kTimeFormatSeconds, (PRTime)theDate, aResult);
+			if (NS_FAILED(rv)) {
+				aResult.Truncate();
 			}
 		}
         }
