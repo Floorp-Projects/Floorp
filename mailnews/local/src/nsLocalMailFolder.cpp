@@ -267,13 +267,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	if (NS_FAILED(rv))
 		return rv;
 
-  nsCOMPtr<nsIDBFolderInfo> folderInfo;
-  nsCOMPtr<nsIMsgDatabase> folderDB;
-  rv = folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo),
-                                    getter_AddRefs(folderDB));
-  if (NS_SUCCEEDED(rv) && folderInfo)
-    folderInfo->GetFlags(&flags);
-  folderInfo = null_nsCOMPtr();
+  folder->GetFlags((PRUint32 *)&flags);
 
   flags |= MSG_FOLDER_FLAG_MAIL;
 

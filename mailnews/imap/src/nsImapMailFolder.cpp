@@ -252,13 +252,9 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name,
 	if (NS_FAILED(rv))
 		return rv;        
 
-    nsCOMPtr<nsIDBFolderInfo> folderInfo;
-    nsCOMPtr<nsIMsgDatabase> folderDB;
-    rv = folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo),
-                                      getter_AddRefs(folderDB));
-    if (NS_SUCCEEDED(rv) && folderInfo)
-        folderInfo->GetFlags(&flags);
-    folderInfo = null_nsCOMPtr();
+    nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(folder);
+
+    folder->GetFlags((PRUint32 *)&flags);
 
     folder->SetParent(this);
 	nsAllocator::Free(uriStr);
@@ -296,7 +292,6 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name,
 		mSubFolders->AppendElement(supports);
 	*child = folder;
 	NS_IF_ADDREF(*child);
-    nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(folder);
 	return rv;
 }
 
@@ -527,7 +522,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
         }
         selectFolder = PR_FALSE;
     }
-    rv = GetDatabase(nsnull);
+    rv = GetDatabase(msgWindow);
 
 	// don't run select if we're already running a url/select...
 	if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
@@ -761,6 +756,7 @@ NS_IMETHODIMP nsImapMailFolder::GetHierarchyDelimiter(PRUnichar *aHierarchyDelim
 NS_IMETHODIMP nsImapMailFolder::SetBoxFlags(PRInt32 aBoxFlags)
 {
 	m_boxFlags = aBoxFlags;
+
     mFlags |= MSG_FOLDER_FLAG_IMAPBOX;
 
 	if (m_boxFlags & kNoinferiors)
@@ -791,24 +787,6 @@ NS_IMETHODIMP nsImapMailFolder::SetBoxFlags(PRInt32 aBoxFlags)
         mFlags |= MSG_FOLDER_FLAG_IMAP_PERSONAL;
     else
         mFlags &= ~MSG_FOLDER_FLAG_IMAP_PERSONAL;
-
-
-    {
-        nsCOMPtr<nsIMsgDatabase> db;
-        nsCOMPtr<nsIDBFolderInfo> folderInfo;
-        nsresult rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo),
-                                           getter_AddRefs(db));
-        if (NS_SUCCEEDED(rv) && folderInfo)
-        {
-            PRInt32 flags = 0;
-            rv = folderInfo->GetFlags(&flags);
-            if ((PRUint32)flags != mFlags)
-            {
-                folderInfo->SetFlags((PRInt32)mFlags);
-                db->Commit(nsMsgDBCommitType::kLargeCommit);
-            }
-        }
-    }
 
 	return NS_OK;
 }

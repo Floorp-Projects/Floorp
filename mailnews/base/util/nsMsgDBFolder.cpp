@@ -351,7 +351,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 
 	// don't need to reload from cache if we've already read from cache,
 	// and, we might get stale info, so don't do it.
-	if (!(mPrefFlags & MSG_FOLDER_PREF_CACHED))
+	if (!mInitializedFromCache)
 	{
 		nsCOMPtr <nsIFileSpec> dbPath;
 
@@ -370,7 +370,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 //	if (m_master->InitFolderFromCache (this))
 //		return err;
 
-	if (force || !(mPrefFlags & MSG_FOLDER_PREF_CACHED))
+	if (force || !mInitializedFromCache)
     {
         nsCOMPtr<nsIDBFolderInfo> folderInfo;
         nsCOMPtr<nsIMsgDatabase> db; 
@@ -381,9 +381,8 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
             if (folderInfo)
             {
 
-	            folderInfo->GetFlags(&mPrefFlags);
-                mPrefFlags |= MSG_FOLDER_PREF_CACHED;
-                folderInfo->SetFlags(mPrefFlags);
+	            folderInfo->GetFlags((PRInt32 *)&mFlags);
+              mInitializedFromCache = PR_TRUE;
 
 				folderInfo->GetNumMessages(&mNumTotalMessages);
 				folderInfo->GetNumNewMessages(&mNumUnreadMessages);
@@ -703,12 +702,20 @@ NS_IMETHODIMP nsMsgDBFolder::ManyHeadersToDownload(PRBool *retval)
 }
 
 
+NS_IMETHODIMP nsMsgDBFolder::GetFlags(PRUint32 *_retval)
+{
+  ReadDBFolderInfo(PR_FALSE);
+	*_retval = mFlags;
+	return NS_OK;
+}
+
+
 NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element)
 {
 	nsresult rv = NS_OK;
 	char *charset;
 
-	element->GetInt32Property("flags", &mPrefFlags);
+	element->GetInt32Property("flags", (PRInt32 *) &mFlags);
 	element->GetInt32Property("totalMsgs", &mNumTotalMessages);
 	element->GetInt32Property("totalUnreadMsgs", &mNumUnreadMessages);
 
@@ -724,7 +731,7 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
 	mCharset = charset;
 	PR_FREEIF(charset);
 
-    mPrefFlags |= MSG_FOLDER_PREF_CACHED;
+  mInitializedFromCache = PR_TRUE;
 	return rv;
 }
 
@@ -820,7 +827,7 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *el
 {
 	nsresult rv = NS_OK;
 
-	element->SetInt32Property("flags", mPrefFlags);
+	element->SetInt32Property("flags", (PRInt32) mFlags);
 	element->SetInt32Property("totalMsgs", mNumTotalMessages);
 	element->SetInt32Property("totalUnreadMsgs", mNumUnreadMessages);
 

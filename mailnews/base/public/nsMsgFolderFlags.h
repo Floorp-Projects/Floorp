@@ -127,6 +127,4 @@
 
 #define MSG_FOLDER_FLAG_IMAP_NOINFERIORS 0x4000000 /* this imap folder cannot have children :-( */
 
-#define MSG_FOLDER_PREF_CACHED  0x80000000			/* we've retrieved prefs from db */
-
 #endif

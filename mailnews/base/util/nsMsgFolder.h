@@ -127,7 +127,6 @@ public:
   NS_IMETHOD ToggleFlag(PRUint32 flag);
   NS_IMETHOD OnFlagChange(PRUint32 flag);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
-  NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD GetFoldersWithFlag(PRUint32 flags, PRUint32 resultsize, PRUint32 *numFolders, nsIMsgFolder **result);
   NS_IMETHOD GetExpansionArray(nsISupportsArray *expansionArray);
   // NS_IMETHOD DeleteMessages(nsISupportsArray *message, nsITransactionManager *txnMgr, PRBool deleteStorage);
@@ -261,7 +260,7 @@ protected:
   nsVoidArray *mListeners; //This can't be an nsISupportsArray because due to
 													 //ownership issues, listeners can't be AddRef'd
 
-  PRInt32 mPrefFlags;       // prefs like MSG_PREF_OFFLINE, MSG_PREF_ONE_PANE, etc
+  PRBool mInitializedFromCache;
   nsISupports *mSemaphoreHolder; // set when the folder is being written to
 								//Due to ownership issues, this won't be AddRef'd.
 

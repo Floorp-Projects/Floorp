@@ -67,7 +67,7 @@ nsMsgFolder::nsMsgFolder(void)
     mFlags(0),
     mNumUnreadMessages(-1),
     mNumTotalMessages(-1),
-    mPrefFlags(0),
+    mInitializedFromCache(PR_FALSE),
     mBiffState(nsMsgBiffState_NoMail),
     mNumNewBiffMessages(0),
     mHaveParsedURI(PR_FALSE),
@@ -1454,12 +1454,6 @@ NS_IMETHODIMP nsMsgFolder::SetFlags(PRUint32 aFlags)
 {
   mFlags = aFlags;
   return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFolder::GetFlags(PRUint32 *_retval)
-{
-	*_retval = mFlags;
-	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, PRUint32 resultsize, PRUint32 *numFolders, nsIMsgFolder **result)

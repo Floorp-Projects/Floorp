@@ -60,7 +60,7 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, 
 		return(NS_OK);
 	}
 
-#ifdef DEBUG_bienvenu
+#if defined(DEBUG_bienvenu) || defined(DEBUG_jefft)
     printf("really opening db in nsImapMailDatabase::Open(%s, %s, %p, %s) -> %s\n",
            (const char*)folderName, create ? "TRUE":"FALSE",
            pMessageDB, upgrading ? "TRUE":"FALSE", (const char*)folderName);
