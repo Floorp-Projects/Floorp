@@ -59,10 +59,11 @@ extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
 nsNSSSocketInfo::nsNSSSocketInfo()
-  : mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
+  : mChannel(nsnull),
+    mFd(nsnull),
+    mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
     mForceHandshake(PR_FALSE),
-    mUseTLS(PR_FALSE),
-    mChannel(nsnull)
+    mUseTLS(PR_FALSE)
 { 
   NS_INIT_ISUPPORTS();
 }
@@ -238,6 +239,24 @@ nsNSSSocketInfo::ProxyStepUp()
 NS_IMETHODIMP
 nsNSSSocketInfo::TLSStepUp()
 {
+  if (SECSuccess != SSL_OptionSet(mFd, SSL_SECURITY, PR_TRUE))
+    return NS_ERROR_FAILURE;
+
+  if (SECSuccess != SSL_ResetHandshake(mFd, PR_FALSE))
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+nsresult nsNSSSocketInfo::GetFileDescPtr(PRFileDesc** aFilePtr)
+{
+  *aFilePtr = mFd;
+  return NS_OK;
+}
+
+nsresult nsNSSSocketInfo::SetFileDescPtr(PRFileDesc* aFilePtr)
+{
+  mFd = aFilePtr;
   return NS_OK;
 }
 
@@ -508,6 +527,7 @@ nsSSLIOLayerAddToSocket(const char* host,
     goto loser;
   }
 
+  infoObject->SetFileDescPtr(sslSock);
   SSL_SetPKCS11PinArg(sslSock, (nsIInterfaceRequestor*)infoObject);
   SSL_HandshakeCallback(sslSock, HandshakeCallback, infoObject);
   SSL_GetClientAuthDataHook(sslSock, (SSLGetClientAuthData)NSS_GetClientAuthData,
@@ -534,9 +554,10 @@ nsSSLIOLayerAddToSocket(const char* host,
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Socket set up\n", (void*)sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));
-  if (SECSuccess != SSL_OptionSet(sslSock, SSL_SECURITY, PR_TRUE)) {
+  if (useTLS &&
+      SECSuccess != SSL_OptionSet(sslSock, SSL_SECURITY, PR_FALSE))
     goto loser;
-  }
+
   if (SECSuccess != SSL_OptionSet(sslSock, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {
     goto loser;
   }
