@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="EditorDialog.css" type="text/css"?>
+<!DOCTYPE dialog>
+<window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/TR/REC-html40">
+
+  <table xmlns="http://www.w3.org/TR/REC-html40" cellspacing=20>
+    <tr>
+      <td>
+        image
+      </td>
+
+      <td>
+        <xul:label>The number you have entered is out of range.</xul:label>
+        <p/>
+        <xul:label>Please enter a number between:</xul:label>
+        <br/>
+        <xul:label>Minimum Number:  1</xul:label>
+        <br/>
+        <xul:label>Maximum Number:  100</xul:label>
+      </td>
+    </tr>
+
+    <tr>
+      <td></td>
+      <td>
+        <p/>
+        <input type="button" id="okbutton" value=" OK " disabled />
+      </td>
+    </tr>
+  </table>
+
+</window>

@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="EditorDialog.css" type="text/css"?>
+<!DOCTYPE dialog>
+<window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/TR/REC-html40">
+
+  <table xmlns="http://www.w3.org/TR/REC-html40">
+    <tr>
+      <td>
+        <xul:label> Paragraph Alignment </xul:label>
+      </td>
+      <td>
+        <select size="1" name="paragraph.alignment">
+          <optgroup label="alignment">
+            <option label="Left" value="Left">Left</option>
+            <option label="Center" value="Center">Center</option>
+            <option label="Right" value="Right">Right</option>
+          </optgroup>
+        </select>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <xul:label>Paragraph Style</xul:label>
+      </td>
+      <td>
+        <select size="1" name="paragraph.style">
+          <optgroup label="parastyle">
+            <option label="Normal" value="Normal">Normal</option>
+            <option label="Heading 1" value="Heading 1">Heading 1</option>
+            <option label="Heading 2" value="Heading 2">Heading 2</option>
+            <option label="Heading 3" value="Heading 3">Heading 3</option>
+            <option label="Heading 4" value="Heading 4">Heading 4</option>
+            <option label="Heading 5" value="Heading 5">Heading 5</option>
+            <option label="Heading 6" value="Heading 6">Heading 6</option>
+            <option label="Address" value="Address">Address</option>
+            <option label="Formatted" value="Formatted">Formatted</option>
+            <option label="Bulleted List" value="Bulleted List">Bulleted List</option>
+            <option label="Numbered List" value="Numbered List">Numbered List</option>
+            <option label="Definition Title" value="Definition Title">Definition Title</option>
+            <option label="Definition Text" value="Definition Text">Definition Text</option>
+          </optgroup>
+        </select>
+      </td>
+    </tr>
+
+    <tr>
+      <td/>
+      <td>
+        <xul:checkbox value="Indent paragraph with Blockquote" />
+        <xul:label>Indent paragraph with Blockquote</xul:label>
+        <xul:label> &nbsp;&nbsp;&nbsp; </xul:label>
+        <xul:label>Indent level</xul:label>
+        <input type="text" size="2" length="2" maxlength="2" name="paragraph.indent" />
+      </td>
+    </tr>
+
+    <tr>
+      <td/>
+      <td>
+        <fieldset><legend> List Styles </legend>
+          <table>
+            <tr>
+              <td>
+                <xul:label>Numbered List Style</xul:label>
+              </td>
+              <td>
+                <select size="1" name="number.style">
+                  <optgroup label="numberstyle">
+                    <option label="Automatic" value="Automatic">Automatic</option>
+                    <option label="1, 2, 3..." value="1, 2, 3...">1, 2, 3...</option>
+                    <option label="I, II, III..." value="I, II, III...">I, II, III...</option>
+                    <option label="i, ii, iii..." value="i, ii, iii...">i, ii, iii...</option>
+                    <option label="A, B, C..." value="A, B, C...">A, B, C...</option>
+                    <option label="a, b, c..." value="a, b, c...">a, b, c...</option>
+                  </optgroup>
+                </select>
+              </td>
+              <td>
+                <xul:label>Starting Number</xul:label>
+                <input type="text" size="5" length="5" maxlength="5" name="paragraph.liststartnumber" />
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <p/>
+                <xul:label>Bulleted List Style</xul:label>
+              </td>
+
+              <td>
+                <p/>
+                <select size="1" name="bullet.style">
+                  <optgroup label="bulletstyle">
+                    <option label="Automatic" value="Automatic">Automatic</option>
+                    <option label="Solid Circle" value="Solid Circle">Solid Circle</option>
+                    <option label="Open Circle" value="Open Circle">Open Circle</option>
+                    <option label="Open Squares" value="Open Squares">Open Squares</option>
+                  </optgroup>
+                </select>
+              </td>
+            </tr>
+          </table>
+        </fieldset>
+      </td>
+    </tr>
+  </table>
+
+</window>
