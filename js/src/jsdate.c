@@ -431,7 +431,7 @@ static JSClass date_class = {
 
 /* for use by date_parse */
 
-static char* wtb[] = {
+static const char* wtb[] = {
     "am", "pm",
     "monday", "tuesday", "wednesday", "thursday", "friday",
     "saturday", "sunday",
@@ -1131,7 +1131,7 @@ date_makeTime(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      * d.setMilliseconds()" returns NaN.  Blech.
      */
     if (argc == 0)
-	argc = 1;   /* should be safe, because length of all settors is 1 */
+	argc = 1;   /* should be safe, because length of all setters is 1 */
     else if (argc > maxargs)
 	argc = maxargs;  /* clamp argc */
 
@@ -1260,7 +1260,7 @@ date_makeDate(JSContext *cx, JSObject *obj, uintN argc,
 
     /* see complaint about ECMA in date_MakeTime */
     if (argc == 0)
-	argc = 1;   /* should be safe, because length of all settors is 1 */
+	argc = 1;   /* should be safe, because length of all setters is 1 */
     else if (argc > maxargs)
 	argc = maxargs;   /* clamp argc */
 
