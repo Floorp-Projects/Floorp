@@ -129,7 +129,7 @@ NS_METHOD nsMenu::AddItem(const nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::AddItem(nsIMenuItem * aMenuItem)
+NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 {
   PRUint32 command;
   nsString name;

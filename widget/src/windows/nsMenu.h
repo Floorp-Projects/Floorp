@@ -24,6 +24,7 @@
 #include "nsSwitchToUIThread.h"
 
 #include "nsIMenu.h"
+#include "nsVoidArray.h"
 
 /**
  * Native Win32 button wrapper
@@ -46,7 +47,7 @@ public:
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetLabel(nsString &aText);
   NS_IMETHOD AddItem(const nsString &aText);
-  NS_IMETHOD AddItem(nsIMenuItem * aMenuItem);
+  NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
   NS_IMETHOD AddSeparator();
   NS_IMETHOD GetItemCount(PRUint32 &aCount);

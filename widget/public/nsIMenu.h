@@ -79,7 +79,7 @@ class nsIMenu : public nsISupports {
     * Adds a Menu Item
     *
     */
-    NS_IMETHOD AddItem(nsIMenuItem * aMenuItem) = 0;
+    NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem) = 0;
     
    /**
     * Adds a Cascading Menu 

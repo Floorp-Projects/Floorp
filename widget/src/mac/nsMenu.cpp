@@ -19,6 +19,7 @@
 #include "nsMenu.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
+#include "nsIMenuItem.h"
 
 #include "nsString.h"
 #include "nsStringUtil.h"
@@ -33,6 +34,8 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kMenuIID, NS_IMENU_IID);
 NS_IMPL_ISUPPORTS(nsMenu, kMenuIID)
+
+PRUint32 nsMenu::mMacMenuID = 256;
 
 //-------------------------------------------------------------------------
 //
@@ -127,7 +130,7 @@ NS_METHOD nsMenu::Create(nsIMenuBar *aParent, const nsString &aLabel)
   //Create(GetNativeParent(), aLabel);
 
 
-  aParent->AddMenu(this);
+  //aParent->AddMenu(this);
     
   return NS_OK;
 }
@@ -139,7 +142,7 @@ NS_METHOD nsMenu::Create(nsIMenu *aParent, const nsString &aLabel)
   NS_ADDREF(mMenuParent);
 
   //Create(GetNativeParent(), aLabel);
-  aParent->AddMenu(this);
+  //aParent->AddMenu(this);
 
   return NS_OK;
 }
@@ -170,12 +173,15 @@ NS_METHOD nsMenu::SetLabel(nsString &aText)
 {
    mLabel = aText;
    
-  // Mac Menu id may be 1-255
-  //mMacMenuHandle = ::NewMenu(1, (unsigned char *)mName.ToNewCString() );
+  mMacMenuHandle = nsnull;
+  mMacMenuHandle = ::NewMenu(mMacMenuID, c2pstr(mLabel.ToNewCString()) );
+  mMacMenuID++;
+  /*
   Str255 test;
   strcpy((char*)&test, "test");
   c2pstr((char*)test);
   mMacMenuHandle = ::NewMenu(500, test);
+  */
   
   return NS_OK;
 }
@@ -187,10 +193,15 @@ NS_METHOD nsMenu::AddItem(const nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::AddItem(nsIMenuItem * aMenuItem)
+NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 {
   // XXX add aMenuItem to internal data structor list
-
+  mMenuItemVoidArrary.AppendElement(aMenuItem);
+  
+  nsString label;
+  aMenuItem->GetLabel(label);
+  ::InsertMenuItem(mMacMenuHandle, c2pstr(label.ToNewCString()), mNumMenuItems );
+  mNumMenuItems++;
   return NS_OK;
 }
 
@@ -258,7 +269,7 @@ NS_METHOD nsMenu::RemoveAll()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::GetNativeData(void *& aData)
 {
-  //aData = (void *)mMenu;
+  aData = (void *)mMacMenuHandle;
   return NS_OK;
 }
 
