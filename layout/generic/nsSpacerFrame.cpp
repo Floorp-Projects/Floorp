@@ -21,7 +21,6 @@
 #include "nsLineLayout.h"
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
-#include "nsIPresShell.h"
 #include "nsHTMLAtoms.h"
 #include "nsUnitConversion.h"
 #include "nsIStyleContext.h"
