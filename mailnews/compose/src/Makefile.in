@@ -32,6 +32,9 @@ EXPORTS = \
 	$(NULL)
 
 CPPSRCS = \
+	nsMsgCompFields.cpp	\
+	nsMsgCompose.cpp	\
+	MsgCompGlue.cpp	\
 	nsSmtpUrl.cpp \
 	nsSmtpProtocol.cpp \
 	$(NULL)

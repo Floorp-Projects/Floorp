@@ -20,7 +20,7 @@ public:
 class MSG_Master
 {
 public:
-	GetFolderTree(void) {;}
+    GetFolderTree(void) {return 0;}
 	HJ97882
 //	msg_HostTable* GetHostTable() {return m_hosttable;}
 
@@ -35,7 +35,7 @@ public:
 	MSG_Master* m_master;
 
 	MSG_Pane()	{;}
-	~MSG_Pane()	{;}
+	virtual ~MSG_Pane()	{;}
 
 	void MSG_PaneCreate(MWContext* context, MSG_Master* master)	{;}
 	MSG_Prefs* GetPrefs() {return m_prefs;}

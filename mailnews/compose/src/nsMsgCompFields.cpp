@@ -36,6 +36,7 @@ JFD*/
    (nsISupports and nsIMsgCompose) so we want to define constants for these two interfaces */
 static NS_DEFINE_IID(kIMsgCompFields, NS_IMSGCOMPFIELDS_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIMsgCompFieldsIID, NS_IMSGCOMPFIELDS_IID);
 
 extern "C" {
     extern int MK_OUT_OF_MEMORY;
@@ -63,7 +64,7 @@ nsresult NS_NewMsgCompFields(nsIMsgCompFields** aInstancePtrResult)
 
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgCompFields, NS_IMSGCOMPFIELDS_IID);
+NS_IMPL_ISUPPORTS(nsMsgCompFields, kIMsgCompFieldsIID);
 
 nsMsgCompFields::nsMsgCompFields()
 {
@@ -597,7 +598,7 @@ nsMsgCompFields::AppendBody(const char* value)
     if (!m_body) {
 		return SetBody(value);
     } else {
-		char* tmp = (char*) PR_MALLOC(nsCRT::PL_strlen(m_body) + nsCRT::PL_strlen(value) + 1);
+		char* tmp = (char*) PR_MALLOC(nsCRT::strlen(m_body) + nsCRT::strlen(value) + 1);
 		if (tmp) {
 			tmp = nsCRT::strdup(m_body);
 			PL_strcat(tmp, value);
@@ -706,7 +707,7 @@ PRInt16 nsMsgCompFields::AddForwardURL(const char* url)
 		delete [] m_forwardurl;
 		m_forwardurl = tmp;
 	}
-	m_forwardurl[m_numforward] = new char[nsCRT::PL_strlen(url) + 1];
+	m_forwardurl[m_numforward] = new char[nsCRT::strlen(url) + 1];
 	if (!m_forwardurl[m_numforward]) return MK_OUT_OF_MEMORY;
 	m_forwardurl[m_numforward] = nsCRT::strdup(url);
 	m_numforward++;

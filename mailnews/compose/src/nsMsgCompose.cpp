@@ -24,7 +24,7 @@
    (nsISupports and nsIMsgCompose) so we want to define constants for these two interfaces */
 static NS_DEFINE_IID(kIMsgCompose, NS_IMSGCOMPOSE_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
+static NS_DEFINE_IID(kIMsgComposeIID, NS_IMSGCOMPOSE_IID);
 
 /*JFD
 #include "msg.h"
@@ -401,7 +401,7 @@ nsMsgCompose::~nsMsgCompose()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgCompose, NS_IMSGCOMPOSE_IID);
+NS_IMPL_ISUPPORTS(nsMsgCompose, kIMsgComposeIID);
 
 #if 0 //JFD
 nsMsgCompose::MSG_CompositionPaneCreate(MWContext* context,
