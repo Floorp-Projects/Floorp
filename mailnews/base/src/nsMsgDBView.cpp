@@ -2199,6 +2199,10 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
     nsVoidArray ptrs;
     PRUint32 arraySize = GetSize();
 
+    if (!arraySize) {
+       return NS_OK;
+    } /* endif */
+
     nsCOMPtr <nsISupportsArray> folders;
     GetFolders(getter_AddRefs(folders));
 

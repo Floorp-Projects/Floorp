@@ -131,6 +131,9 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
   SaveSelection(&preservedSelection);
   
   PRInt32 rowCountBeforeSort = GetSize();
+
+  if (!rowCountBeforeSort)
+    return NS_OK;
   
   // if the client wants us to forget our cached id arrays, they
   // should build a new view. If this isn't good enough, we

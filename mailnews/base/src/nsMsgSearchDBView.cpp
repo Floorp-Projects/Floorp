@@ -417,6 +417,9 @@ NS_IMETHODIMP nsMsgSearchDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgView
     SaveSelection(&preservedSelection);
     PRInt32 rowCountBeforeSort = GetSize();
 
+    if (!rowCountBeforeSort)
+        return NS_OK;
+
     rv = nsMsgDBView::Sort(sortType,sortOrder);
 
     // the sort may have changed the number of rows
