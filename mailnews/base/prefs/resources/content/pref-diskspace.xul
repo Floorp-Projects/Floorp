@@ -10,6 +10,8 @@
 		    onload="parent.initPanel('chrome://messenger/content/pref-diskspace.xul');"
 		    orient="vertical">
         
+  <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="JavaScript" src="chrome://communicator/content/pref/prefutilities.js"></script>
   <script language="javascript">
   <![CDATA[
     var _elementIDs = ["limitMessageSize", "maxSize" ];
@@ -21,22 +23,39 @@
 	<titledbox orient="vertical">
 		<title><text value="&allMsg.label;"/></title>
 		
-    <box autostretch="never">
-      <checkbox id="limitMessageSize" value="&storeMsgLimit.label;" accesskey="&storeMsgLimit.accesskey;"
+    <box autostretch="never" valign="top">
+      <checkbox id="limitMessageSize" value="" accesskey="&storeMsgLimit.accesskey;"
                 pref="true" preftype="bool" prefstring="mail.limit_message_size" 
                 prefattribute="checked"/>
-      <textfield id="maxSize" size="4" pref="true" preftype="int"
-                 prefstring="mail.max_size" prefattribute="value"/>
-      <text class="label" value="&kb.label;"/>
+      <box orient="vertical">
+        <text class="label" value="&storeMsgLimit.label;"/>
+
+        <box>
+          <text class="label" value="&storeMsgLimit2.label;"/>
+          <textfield id="maxSize" size="4" pref="true" preftype="int"
+                     prefstring="mail.max_size" prefattribute="value"/>
+          <text class="label" value="&kb.label;"/>
+        </box>
+
+      </box>
     </box>                                 
   
-	  <box autostretch="never">
-      <checkbox id="promptPurgeThreshold" value="&autoCompact.label;" accesskey="&autoCompact.accesskey;"
+    <separator class="thin"/>
+
+    <box autostretch="never" valign="top">
+      <checkbox id="promptPurgeThreshold" value="" accesskey="&autoCompact.accesskey;"
                 pref="true" preftype="bool" prefstring="mail.prompt_purge_threshold"
                 prefattribute="checked"/>
-      <textfield id="purgeThreshhold" size="4" pref="true" preftype="int"
-                 prefstring="mail.purge_threshhold" prefattribute="value"/>
-      <text class="label" value="&kb.label;"/>
+      <box orient="vertical">
+        <text class="label" value="&autoCompact.label;"/>
+
+        <box>
+          <text class="label" value="&autoCompact2.label;"/>
+          <textfield id="purgeThreshhold" size="4" pref="true" preftype="int"
+                     prefstring="mail.purge_threshhold" prefattribute="value"/>
+          <text class="label" value="&kb.label;"/>
+        </box>
+      </box>
     </box>                                   
 	</titledbox>
 

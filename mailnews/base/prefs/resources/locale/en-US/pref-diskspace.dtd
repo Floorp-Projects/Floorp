@@ -23,10 +23,12 @@ Rights Reserved.
 <!ENTITY pane.description               "Manage the amount of disk space taken by messages">
 <!ENTITY allMsg.label                   "All Messages">
 <!-- LOCALIZATION NOTE storeMsgLimit.label: This string is followed by a number, then by kb.label -->
-<!ENTITY storeMsgLimit.label            "Do not store messages locally that are larger than">
+<!ENTITY storeMsgLimit.label            "Do not store messages locally">
+<!ENTITY storeMsgLimit2.label           "that are larger than">
 <!ENTITY storeMsgLimit.accesskey        "s">
 <!-- LOCALIZATION NOTE autoCompact.label: This string is followed by a number, then by kb.label -->
-<!ENTITY autoCompact.label              "Automatically compact folders when it will save over">
+<!ENTITY autoCompact.label              "Automatically compact folders">
+<!ENTITY autoCompact2.label             "when it will save over">
 <!ENTITY autoCompact.accesskey          "c">
 <!ENTITY kb.label                       "kB">
 <!ENTITY newgroupMsgOnly.label          "Newsgroup Messages Only">
