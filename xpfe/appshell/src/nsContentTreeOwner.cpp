@@ -412,15 +412,23 @@ NS_IMETHODIMP nsContentTreeOwner::GetChromeFlags(PRUint32* aChromeFlags)
 {
   NS_ENSURE_ARG_POINTER(aChromeFlags);
 
-  // use scrollbar status from the content shell window to update flags
+  *aChromeFlags = mChromeFlags;
+
+  /* mChromeFlags is kept up to date, except for scrollbar visibility.
+     That can be changed directly by the content DOM window, which
+     doesn't know to update the chrome window. So that we must check
+     separately. */
+
+  // however, it's pointless to ask if the window isn't set up yet
+  if (!mXULWindow->mChromeLoaded)
+    return NS_OK;
+
   PRBool scrollbarVisibility = mXULWindow->GetContentScrollbarVisibility();
   if (scrollbarVisibility)
-    mChromeFlags |= nsIWebBrowserChrome::CHROME_SCROLLBARS;
+    *aChromeFlags |= nsIWebBrowserChrome::CHROME_SCROLLBARS;
   else
-    mChromeFlags &= ~nsIWebBrowserChrome::CHROME_SCROLLBARS;
+    *aChromeFlags &= ~nsIWebBrowserChrome::CHROME_SCROLLBARS;
 
-  // the rest of mChromeFlags is kept up to date
-  *aChromeFlags = mChromeFlags;
   return NS_OK;
 }
 
@@ -632,7 +640,11 @@ NS_IMETHODIMP nsContentTreeOwner::ApplyChromeFlags()
                                      nsIWebBrowserChrome::CHROME_MENUBAR ? 
                                    PR_TRUE : PR_FALSE);
 
-  // scrollbars have their own special treatment
+  /* Scrollbars have their own special treatment. (note here we *do* use
+     mChromeFlags directly, without going through the accessor. This method
+     is intended to be used right after setting mChromeFlags, so this is
+     where the content window's scrollbar state is set to match mChromeFlags
+     in the first place. */
   mXULWindow->SetContentScrollbarVisibility(mChromeFlags &
                                               nsIWebBrowserChrome::CHROME_SCROLLBARS ?
                                             PR_TRUE : PR_FALSE);
