@@ -3050,4 +3050,16 @@ todo need to handle namespace prefix not found in XML look for namespace type in
         }
     }
 
+    /**
+     * See ECMA 357, 11_2_2_1, Semantics, 3_f.
+     */
+    public Scriptable getExtraMethodSource(Context cx)
+    {
+        if (hasSimpleContent()) {
+            String src = toString();
+            return ScriptRuntime.toObject(cx, src);
+        }
+        return null;
+    }
+
 }

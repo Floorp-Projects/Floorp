@@ -77,6 +77,12 @@ public abstract class XMLObject extends IdScriptableObject
     public abstract boolean ecmaDelete(Context cx, Object id);
 
     /**
+     * Return an additional object to look for methods that runtime should
+     * consider during method search. Return null if no such object available.
+     */
+    public abstract Scriptable getExtraMethodSource(Context cx);
+
+    /**
      * Generic reference to implement x.@y, x..y etc.
      */
     public abstract Reference memberRef(Context cx, Object elem,

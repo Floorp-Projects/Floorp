@@ -1546,6 +1546,17 @@ class XMLList extends XMLObjectImpl implements Function
         }
     }
 
+    /**
+     * See ECMA 357, 11_2_2_1, Semantics, 3_e.
+     */
+    public Scriptable getExtraMethodSource(Context cx)
+    {
+        if (length() == 1) {
+            return getXmlFromAnnotation(0);
+        }
+        return null;
+    }
+
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
     {

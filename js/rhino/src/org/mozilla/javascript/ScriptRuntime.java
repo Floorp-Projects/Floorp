@@ -838,6 +838,14 @@ public class ScriptRuntime {
         return toObject(Context.getContext(), scope, val);
     }
 
+    public static Scriptable toObject(Context cx, Object val)
+    {
+        if (val instanceof Scriptable && val != Undefined.instance) {
+            return (Scriptable)val;
+        }
+        return toObject(cx, getTopCallScope(cx), val);
+    }
+
     /**
      * @deprecated Use {@link #toObject(Scriptable, Object)} instead.
      */
@@ -1278,7 +1286,7 @@ public class ScriptRuntime {
         if (obj instanceof Scriptable) {
             sobj = (Scriptable)obj;
         } else {
-            sobj = toObject(cx, scope, obj);
+            sobj = toObject(cx, obj);
         }
         return getObjectElem(sobj, elem, cx);
     }
@@ -1321,7 +1329,7 @@ public class ScriptRuntime {
         if (obj instanceof Scriptable) {
             sobj = (Scriptable)obj;
         } else {
-            sobj = toObject(cx, scope, obj);
+            sobj = toObject(cx, obj);
         }
         return getObjectProp(sobj, property, cx);
     }
@@ -1356,7 +1364,7 @@ public class ScriptRuntime {
         if (obj instanceof Scriptable) {
             sobj = (Scriptable)obj;
         } else {
-            sobj = toObject(cx, scope, obj);
+            sobj = toObject(cx, obj);
         }
 
         int index = (int)dblIndex;
@@ -1397,7 +1405,7 @@ public class ScriptRuntime {
         if (obj instanceof Scriptable) {
             sobj = (Scriptable)obj;
         } else {
-            sobj = toObject(cx, scope, obj);
+            sobj = toObject(cx, obj);
         }
         return setObjectElem(sobj, elem, value, cx);
     }
@@ -1436,7 +1444,7 @@ public class ScriptRuntime {
         if (obj instanceof Scriptable) {
             sobj = (Scriptable)obj;
         } else {
-            sobj = toObject(cx, scope, obj);
+            sobj = toObject(cx, obj);
         }
         return setObjectProp(sobj, property, value, cx);
     }
@@ -1468,7 +1476,7 @@ public class ScriptRuntime {
         if (obj instanceof Scriptable) {
             sobj = (Scriptable)obj;
         } else {
-            sobj = toObject(cx, scope, obj);
+            sobj = toObject(cx, obj);
         }
 
         int index = (int)dblIndex;
@@ -1572,8 +1580,7 @@ public class ScriptRuntime {
     public static Object delete(Context cx, Scriptable scope,
                                 Object obj, Object id)
     {
-        Scriptable sobj = (obj instanceof Scriptable)
-                          ? (Scriptable)obj : toObject(cx, scope, obj);
+        Scriptable sobj = toObject(cx, obj);
         boolean result = deleteObjectElem(sobj, id, cx);
         return wrapBoolean(result);
     }
@@ -1946,20 +1953,34 @@ public class ScriptRuntime {
                                                   Context cx,
                                                   Scriptable scope)
     {
+        String s = toStringIdOrIndex(cx, elem);
+        if (s != null) {
+            return getPropFunctionAndThis(obj, s, cx, scope);
+        }
+        int index = lastIndexResult(cx);
+
         if (obj == null || obj == Undefined.instance) {
-            throw undefReadError(obj, elem);
+            throw undefReadError(obj, String.valueOf(index));
         }
-        Scriptable thisObj;
-        if (obj instanceof Scriptable) {
-            thisObj = (Scriptable)obj;
-        } else {
-            thisObj = toObject(cx, scope, obj);
+        Scriptable thisObj = toObject(cx, obj);
+
+        Object value;
+        for (;;) {
+            // Ignore XML lookup as requred by ECMA 357, 11.2.2.1
+            value = ScriptableObject.getProperty(thisObj, index);
+            if (value != Scriptable.NOT_FOUND) {
+                break;
+            }
+            if (!(thisObj instanceof XMLObject)) {
+                break;
+            }
+            XMLObject xmlObject = (XMLObject)thisObj;
+            Scriptable extra = xmlObject.getExtraMethodSource(cx);
+            if (extra == null) {
+                break;
+            }
+            thisObj = extra;
         }
-
-        // Do NOT check for XMLObject: x.elem() calls are resolved via normal
-        // Scriptable machinery
-
-        Object value = getObjectElem(thisObj, elem, cx);
         if (!(value instanceof Function)) {
             throw notFunctionError(value, elem);
         }
@@ -1983,14 +2004,26 @@ public class ScriptRuntime {
         if (obj == null || obj == Undefined.instance) {
             throw undefReadError(obj, property);
         }
-        Scriptable thisObj;
-        if (obj instanceof Scriptable) {
-            thisObj = (Scriptable)obj;
-        } else {
-            thisObj = toObject(cx, scope, obj);
+        Scriptable thisObj = toObject(cx, obj);
+
+        Object value;
+        for (;;) {
+            // Ignore XML lookup as requred by ECMA 357, 11.2.2.1
+            value = ScriptableObject.getProperty(thisObj, property);
+            if (value != Scriptable.NOT_FOUND) {
+                break;
+            }
+            if (!(thisObj instanceof XMLObject)) {
+                break;
+            }
+            XMLObject xmlObject = (XMLObject)thisObj;
+            Scriptable extra = xmlObject.getExtraMethodSource(cx);
+            if (extra == null) {
+                break;
+            }
+            thisObj = extra;
         }
 
-        Object value = getObjectProp(thisObj, property, cx);
         if (!(value instanceof Function)) {
             throw notFunctionError(value, property);
         }
@@ -2133,7 +2166,7 @@ public class ScriptRuntime {
         if (L == 0 || args[0] == null || args[0] == Undefined.instance) {
             callThis = ScriptableObject.getTopLevelScope(scope);
         } else {
-            callThis = ScriptRuntime.toObject(cx, scope, args[0]);
+            callThis = toObject(cx, args[0]);
         }
 
         Object[] callArgs;
