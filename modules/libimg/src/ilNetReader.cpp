@@ -50,6 +50,8 @@ public:
   
   virtual PRBool IsMulti();
 
+  NS_IMETHOD FlushImgBuffer();
+
     // XXX Need to fix this to make sure return type is nsresult
   il_container *GetContainer() {return ilContainer;};
  // il_container *SetContainer(il_container *ic) {ilContainer=ic; return ic;};
@@ -162,6 +164,18 @@ NetReaderImpl::IsMulti()
     else {
         return PR_FALSE;
     }
+}
+
+NS_IMETHODIMP  
+NetReaderImpl::FlushImgBuffer()
+{
+    if (ilContainer != NULL) {
+        il_flush_image_data(ilContainer);
+        return NS_OK;
+    }
+    else 
+        return NS_ERROR_FAILURE;
+    
 }
 
 ilINetReader *
