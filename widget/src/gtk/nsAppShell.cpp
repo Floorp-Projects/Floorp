@@ -91,7 +91,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
   gdk_rgb_init();
   gdk_rgb_set_verbose(PR_TRUE);
 
-  path = g_strdup_printf(g_get_home_dir(),"/.gtkrc");
+  path = g_strdup_printf("%s%s", g_get_home_dir(),"/.gtkrc");
   gtk_rc_parse(path);
   g_free(path);
 
