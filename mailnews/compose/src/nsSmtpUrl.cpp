@@ -44,8 +44,11 @@
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "nsEscape.h"
+#include "nsIMimeConverter.h"
+#include "nsMsgMimeCID.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 /////////////////////////////////////////////////////////////////////////////////////
 // mailto url definition
@@ -190,19 +193,62 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 		} // while we still have part of the url to parse...
 	} // if rest && *rest
 
-	// Now unescape any fields that need escaped...
+  nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID);
+  nsXPIDLCString decodedString;
+
+  // Now unescape any fields that need escaped...
 	if (!m_toPart.IsEmpty())
+  {
 		nsUnescape(NS_CONST_CAST(char*, m_toPart.get()));
+    if (mimeConverter)
+    {
+      if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_toPart.get(),
+                                                       getter_Copies(decodedString),
+                                                       "UTF-8", PR_FALSE))
+                                                       && decodedString)
+        m_toPart = decodedString;
+    }
+  }
 	if (!m_ccPart.IsEmpty())
+  {
 		nsUnescape(NS_CONST_CAST(char*, m_ccPart.get()));
+    if (mimeConverter)
+    {
+      if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_ccPart.get(),
+                                                       getter_Copies(decodedString),
+                                                       "UTF-8", PR_FALSE))
+                                                       && decodedString)
+        m_ccPart = decodedString;
+    }
+  }
 	if (!m_subjectPart.IsEmpty())
-		nsUnescape(NS_CONST_CAST(char*, m_subjectPart.get()));
+  {
+    nsUnescape(NS_CONST_CAST(char*, m_subjectPart.get()));
+    if (mimeConverter)
+    {
+      if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_subjectPart.get(),
+                                                       getter_Copies(decodedString),
+                                                       "UTF-8", PR_FALSE))
+                                                       && decodedString)
+        m_subjectPart = decodedString;
+    }
+  }
 	if (!m_newsgroupPart.IsEmpty())
 		nsUnescape(NS_CONST_CAST(char*, m_newsgroupPart.get()));
 	if (!m_referencePart.IsEmpty())
 		nsUnescape(NS_CONST_CAST(char*, m_referencePart.get()));
 	if (!m_bodyPart.IsEmpty())
+  {
 		nsUnescape(NS_CONST_CAST(char*, m_bodyPart.get()));
+    if (mimeConverter)
+    {
+      if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_bodyPart.get(),
+                                                       getter_Copies(decodedString),
+                                                       "UTF-8", PR_FALSE))
+                                                       && decodedString)
+        m_bodyPart = decodedString;
+    }
+  }
 	if (!m_newsHostPart.IsEmpty())
 		nsUnescape(NS_CONST_CAST(char*, m_newsHostPart.get()));
 
