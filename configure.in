@@ -393,16 +393,6 @@ fi
 
 AC_PROG_MAKE_SET
 
-dnl Support for X11 makedepend, if found on the system
-dnl ========================================================
-AC_PATH_PROG(SYSTEM_MAKEDEPEND,makedepend)
-
-AC_PATH_PROGS(EMACS, xemacs lemacs emacs, :)
-AC_PATH_PROGS(PERL, perl5 perl, :)
-AC_PATH_PROG(WHOAMI, whoami, :)
-AC_PATH_PROG(UNZIP, unzip, :)
-AC_PATH_PROG(ZIP, zip, :)
-
 AC_PATH_XTRA
 
 dnl ========================================================
@@ -612,6 +602,41 @@ case "$target" in
 	CFLAGS="$CFLAGS -mieee"
 	CXXFLAGS="$CXXFLAGS -mieee"
         ;;
+    esac
+    ;;
+
+*-mingw*)
+    AC_DEFINE(_WINDOWS)
+    TARGET_MD_ARCH=win32
+    if test -z "$GNU_CC"; then
+	OBJ_SUFFIX=obj
+	LIB_SUFFIX=lib
+	DLL_SUFFIX=dll
+    fi
+    MKSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $(LIBRARY_NAME).dll --output-lib $@'
+    MKCSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $(LIBRARY_NAME).dll --output-lib $@'
+    MKSHLIB_FORCE_ALL=
+    MKSHLIB_UNFORCE_ALL=
+    DSO_LDOPTS=
+    DSO_CFLAGS=
+    DSO_PIC_CFLAGS=
+    OS_TARGET=WINNT
+    dnl Hardcode to win95 for now - cls
+    TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
+    
+    case "$target" in
+    i?86-*)
+	AC_DEFINE(_X86_)
+	;;
+    alpha-*)
+	AC_DEFINE(_ALPHA_)
+	;;
+    mips-*)
+	AC_DEFINE(_MIPS_)
+	;;
+    *)
+	AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
+	;;
     esac
     ;;
 
@@ -1641,19 +1666,19 @@ AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr$NSPR_VERSION with thread lib"
 AC_MSG_RESULT("$result")
 fi
 
-dnl AC_CHECK_LIB(nspr$NSPR_VERSION, PR_GetUniqueIdentity, NSPR_LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS",
-dnl	[MISSING_NSPR="$MISSING_NSPR -lnspr$NSPR_VERSION"], $NSPR_LIBS)
-
-AC_CHECK_LIB(plc$NSPR_VERSION, PL_CreateOptState, NSPR_LIBS="-lplc$NSPR_VERSION $NSPR_LIBS",
+if test "$cross_compiling" = "yes"; then
+    NSPR_LIBS="-lplds$NSPR_VERSION -lplc$NSPR_VERSION $NSPR_LIBS"
+else
+    AC_CHECK_LIB(plc$NSPR_VERSION, PL_CreateOptState, NSPR_LIBS="-lplc$NSPR_VERSION $NSPR_LIBS",
 	[MISSING_NSPR="$MISSING_NSPR -lplc$NSPR_VERSION"], $NSPR_LIBS)
-AC_CHECK_LIB(plds$NSPR_VERSION, PL_GetEvent, NSPR_LIBS="-lplds$NSPR_VERSION $NSPR_LIBS",
+    AC_CHECK_LIB(plds$NSPR_VERSION, PL_GetEvent, NSPR_LIBS="-lplds$NSPR_VERSION $NSPR_LIBS",
 	[MISSING_NSPR="$MISSING_NSPR -lplds$NSPR_VERSION"], $NSPR_LIBS)
-
+fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
-fi
+fi # ! CROSS_COMPILE
 
 if test "${NSPR_DIR}" -a -d "${NSPR_DIR}"; then
     NSPR_INCLUDE_DIR="${NSPR_DIR}/include"
@@ -2916,7 +2941,6 @@ if test !"$MODULAR_NETLIB"; then
   AC_DEFINE(CookieManagement)
 fi
 
-AC_SUBST(OS_TARGET)
 if test "$OS_TARGET" = "OS2"; then
   AC_DEFINE(XP_PC)
 elif test "$OS_TARGET" = "WINNT"; then
