@@ -24,7 +24,6 @@
  *   David Bienvenu <bienvenu@netscape.com>
  *   Jeff Tsai <jefft@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
- *
  */
 
 #define FORCE_PR_LOG /* Allow logging in the release build (sorry this breaks the PCH) */
@@ -1990,45 +1989,61 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
         }
 
         if (NS_SUCCEEDED(rv) && group_name) {
-			//  the right thing todo is:  
-            //  get the right docshell, gotten from the nsIMsgWindow
-            //  build up a data url
-            //  call (docshell)->LoadURL() with that data url
-#ifdef NOT_WORKING_YET
-        	char outputBuffer[OUTPUT_BUFFER_SIZE];
-            PRUint32 count = 0;
-            
+            nsXPIDLString titleStr;
+			rv = GetNewsStringByName("htmlNewsErrorTitle", getter_Copies(titleStr));
+            NS_ENSURE_SUCCESS(rv,rv);
+
             nsXPIDLString newsErrorStr;
-			GetNewsStringByName("htmlNewsError", getter_Copies(newsErrorStr));
-			nsCAutoString cString(newsErrorStr);
-            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, (const char *) cString, m_responseText);
-			mDisplayOutputStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
-            
-			GetNewsStringByName("articleExpired", getter_Copies(newsErrorStr));
-			nsCAutoString cString2(newsErrorStr);
-            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, (const char *) cString2);
-			mDisplayOutputStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+			rv = GetNewsStringByName("htmlNewsError", getter_Copies(newsErrorStr));
+            NS_ENSURE_SUCCESS(rv,rv);
+            nsAutoString errorHtml;
+            errorHtml.Append(newsErrorStr);
+
+            errorHtml.Append(NS_LITERAL_STRING("<b>").get());
+            errorHtml.AppendWithConversion(m_responseText);
+            errorHtml.Append(NS_LITERAL_STRING("</b><p>").get());
+
+			rv = GetNewsStringByName("articleExpired", getter_Copies(newsErrorStr));
+            NS_ENSURE_SUCCESS(rv,rv);
+            errorHtml.Append(newsErrorStr);
             
 			nsMsgKey key = nsMsgKey_None;
 			rv = m_runningURL->GetMessageKey(&key);
+            NS_ENSURE_SUCCESS(rv,rv);
+
+            char outputBuffer[OUTPUT_BUFFER_SIZE];
+
             NS_ASSERTION(m_messageID && (key != nsMsgKey_None), "unexpected");
 			if (m_messageID && (key != nsMsgKey_None)) {
-				PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P>&lt;%.512s&gt; (%lu)", m_messageID, key);
-				mDisplayOutputStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+                PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P>&lt;%.512s&gt; (%lu)", m_messageID, key);
+                errorHtml.AppendWithConversion(outputBuffer);
 			}
 
-			GetNewsStringByName("removeExpiredArtLinkText", getter_Copies(newsErrorStr));
-			nsCAutoString cString3(newsErrorStr);
             if (m_userName) {
-                PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s@%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_userName, (const char *)m_hostName, 
-					(const char *) group_name, (const char *) cString3);
+                PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s@%s/%s?list-ids\">", kNewsRootURI, (const char *)m_userName, (const char *)m_hostName, 
+					(const char *) group_name);
             }
             else {
-                PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_hostName, 
-					(const char *) group_name, (const char *) cString3);
+                PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s/%s?list-ids\">", kNewsRootURI, (const char *)m_hostName, (const char *) group_name);
             }
-			mDisplayOutputStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
-#endif /* NOT_WORKING_YET */
+
+            errorHtml.AppendWithConversion(outputBuffer);
+
+			rv = GetNewsStringByName("removeExpiredArtLinkText", getter_Copies(newsErrorStr));
+            NS_ENSURE_SUCCESS(rv,rv);
+            errorHtml.Append(newsErrorStr);
+            errorHtml.Append(NS_LITERAL_STRING("</A> </P>").get());
+
+            if (!m_msgWindow) {
+                nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+                if (mailnewsurl) {
+                    rv = mailnewsurl->GetMsgWindow(getter_AddRefs(m_msgWindow));
+                    NS_ENSURE_SUCCESS(rv,rv);
+                }
+            }
+            if (!m_msgWindow) return NS_ERROR_FAILURE;
+            rv = m_msgWindow->DisplayHTMLInMessageWindow((const PRUnichar *)titleStr, errorHtml.GetUnicode());
+            NS_ENSURE_SUCCESS(rv,rv);
         }
 		return MK_NNTP_SERVER_ERROR;
       }
@@ -4581,6 +4596,7 @@ PRInt32 nsNNTPProtocol::ListGroup()
 	char outputBuffer[OUTPUT_BUFFER_SIZE];
 	PRInt32 status = 0; 
     rv = m_newsgroup->GetName(getter_Copies(group_name));
+    NS_ENSURE_SUCCESS(rv,rv);
     
 	PR_snprintf(outputBuffer, 
 			OUTPUT_BUFFER_SIZE, 
@@ -4590,9 +4606,10 @@ PRInt32 nsNNTPProtocol::ListGroup()
                                             nsnull,
                                             NS_GET_IID(nsINNTPArticleList),
                                             getter_AddRefs(m_articleList));
-    if (NS_FAILED(rv)) return -1;  // ???
+    NS_ENSURE_SUCCESS(rv,rv);
 
-    m_articleList->Initialize(m_newsHost, m_newsgroup);
+    rv = m_articleList->Initialize(m_newsHost, m_newsgroup);
+    NS_ENSURE_SUCCESS(rv,rv);
 	
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 	if (mailnewsurl)

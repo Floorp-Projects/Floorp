@@ -42,6 +42,10 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 
+#include "plbase64.h"
+#include "nsMsgI18N.h"
+#include "nsIWebNavigation.h"
+
 // XXX Remove
 #include "nsIWebShell.h"
 
@@ -494,4 +498,50 @@ NS_IMETHODIMP nsMsgWindow::GetPromptDialog(nsIPrompt **aPrompt)
   }
   else
       return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP 
+nsMsgWindow::DisplayHTMLInMessageWindow(const PRUnichar *title, const PRUnichar *body)
+{
+    nsresult rv;
+
+    nsCAutoString charSet;
+    charSet.AssignWithConversion(nsMsgI18NFileSystemCharset());
+
+    nsAutoString htmlStr;
+    htmlStr.Append(NS_LITERAL_STRING("<html><head>").get());
+    htmlStr.Append(NS_LITERAL_STRING("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=").get());
+    htmlStr.AppendWithConversion(charSet);
+    htmlStr.Append(NS_LITERAL_STRING("\">").get());
+    htmlStr.Append(NS_LITERAL_STRING("</head><body>").get());
+    htmlStr.Append(body);
+    htmlStr.Append(NS_LITERAL_STRING("</body></html>").get());
+
+    nsCAutoString convertedHtml;
+    rv = nsMsgI18NConvertFromUnicode(charSet,htmlStr,convertedHtml);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    char *encodedHtml = PL_Base64Encode((const char *)convertedHtml, 0, nsnull);
+    if (!encodedHtml) return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCAutoString dataSpec;
+    dataSpec = "data:text/html;base64,";
+    dataSpec += encodedHtml;
+
+    PR_FREEIF(encodedHtml);
+
+    nsCOMPtr <nsIURI> uri = do_CreateInstance("@mozilla.org/network/simple-uri;1");
+    if (!uri) return NS_ERROR_UNEXPECTED;
+
+    rv = uri->SetSpec((const char *)dataSpec);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr <nsIDocShell> docShell;
+    GetMessageWindowDocShell(getter_AddRefs(docShell));
+    if (!docShell) return NS_ERROR_UNEXPECTED;
+
+    rv = docShell->LoadURI(uri,nsnull,nsIWebNavigation::LOAD_FLAGS_NONE);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    return NS_OK;
 }
