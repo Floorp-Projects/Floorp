@@ -136,7 +136,6 @@ public:
   static nsIAtom* kMethodAtom;
   static nsIAtom* kParameterAtom;
   static nsIAtom* kBodyAtom;
-  static nsIAtom* kPropertyAtom;
   static nsIAtom* kOnSetAtom;
   static nsIAtom* kOnGetAtom;
   static nsIAtom* kGetterAtom;

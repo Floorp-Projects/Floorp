@@ -1519,15 +1519,6 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(nsIContent* aElement)
 
     nsMemory::Free(str);
   }
-
-  // Recur into our children.
-  PRInt32 childCount;
-  aElement->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    aElement->ChildAt(i, *getter_AddRefs(child));
-    ConstructAttributeTable(child);
-  }
 }
 
 void

@@ -1407,8 +1407,14 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS;
       GetWrappedJS(aContent, getter_AddRefs(wrappedJS));
 
-      if (wrappedJS)
-        return wrappedJS->AggregatedQueryInterface(aIID, aResult);
+      if (wrappedJS) {
+        nsresult rv = wrappedJS->AggregatedQueryInterface(aIID, aResult);
+        if (*aResult)
+          return rv;
+        
+        // No result was found, so this must be another XBL interface.
+        // Fall through to create a new wrapper.
+      }
 
       // We have never made a wrapper for this implementation.
       // Create an XPC wrapper for the script object and hand it back.

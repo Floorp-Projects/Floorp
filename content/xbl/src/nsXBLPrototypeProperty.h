@@ -61,6 +61,7 @@ protected:
   static nsIAtom* kParameterAtom;
   static nsIAtom* kBodyAtom;
   static nsIAtom* kPropertyAtom;
+  static nsIAtom* kFieldAtom;
   static nsIAtom* kOnSetAtom;
   static nsIAtom* kOnGetAtom;
   static nsIAtom* kGetterAtom;
@@ -71,11 +72,11 @@ protected:
   JSObject * mJSMethodObject; // precompiled JS for a method
   JSObject * mJSGetterObject; // precompiled JS for a getter property
   JSObject * mJSSetterObject; // precompiled JS for a setter property
-  nsString mLiteralPropertyString; // the property is just a literal string
+  nsString mFieldString; // a field's raw value.
 
   JSObject* mClassObject;
   
-  nsString mName;         // name of the property
+  nsString mName;         // name of the property or field
 
   uintN mJSAttributes;
   nsWeakPtr mPrototypeBinding; // weak reference back to the proto type binding which owns us.
@@ -87,9 +88,9 @@ protected:
 
 protected:
   nsresult GetTextData(nsIContent *aParent, nsString& aResult);
-  nsresult ParseMethod(nsIScriptContext * aContext, nsIContent * aNode, const char * aClassStr);
-  nsresult ParseProperty(nsIScriptContext * aContext, nsIContent * aNode, const char * aClassStr);
-  nsresult ParseLiteral(nsIScriptContext * aContext, nsIContent* aPropertyElement);
+  nsresult ParseMethod(nsIScriptContext * aContext);
+  nsresult ParseProperty(nsIScriptContext * aContext);
+  nsresult ParseField(nsIScriptContext * aContext);
 
   nsresult DelayedPropertyConstruction();
 };
