@@ -20,6 +20,8 @@
  */
 
 #include "nsISupports.h"
+#include "nsCOMPtr.h"
+#include "nsIOutputStream.h"
 #include "nsIInputStream.h"
 
 class GtkMozEmbedStream : public nsIInputStream 
@@ -28,6 +30,8 @@ class GtkMozEmbedStream : public nsIInputStream
 
   GtkMozEmbedStream();
   virtual ~GtkMozEmbedStream();
+  NS_METHOD Init();
+  NS_METHOD Append(const char *aData, PRUint32 aLen); 
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -36,11 +40,8 @@ class GtkMozEmbedStream : public nsIInputStream
   // nsIBaseStream
   NS_DECL_NSIBASESTREAM
 
-  NS_METHOD Append(const char *aData, PRUint32 aLen); 
-
  private:
+  nsCOMPtr<nsIOutputStream> mOutputStream;
+  nsCOMPtr<nsIInputStream>  mInputStream;
 
-  char *    mBuffer;
-  PRUint32  mLength;
-  PRUint32  mBufLen;
 };

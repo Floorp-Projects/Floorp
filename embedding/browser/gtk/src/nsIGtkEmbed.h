@@ -24,6 +24,8 @@
 
 #include <gtk/gtk.h>
 #include "nsIWebBrowser.h"
+#include "nsIWebProgress.h"
+#include "nsIRequest.h"
 
 #define NS_IGTKEMBED_IID_STR "ebe19ea4-1dd1-11b2-bc20-8e8105516b2f"
 
@@ -31,17 +33,34 @@
  {0xebe19ea4, 0x1dd1, 0x11b2, \
    { 0xbc, 0x20, 0x8e, 0x81, 0x05, 0x51, 0x6b, 0x2f }}
 
-typedef nsresult (GtkMozEmbedChromeCB)          (PRUint32 chromeMask, nsIWebBrowser **_retval, void *aData);
-typedef void     (GtkMozEmbedDestroyCB)         (void *aData);
-typedef void     (GtkMozEmbedVisibilityCB)      (PRBool aVisibility, void *aData);
-typedef void     (GtkMozEmbedLinkCB)            (void *aData);
-typedef void     (GtkMozEmbedJSStatusCB)        (void *aData);
-typedef void     (GtkMozEmbedLocationCB)        (void *aData);
-typedef void     (GtkMozEmbedTitleCB)           (void *aData);
-typedef void     (GtkMozEmbedProgressCB)        (void *aData, PRInt32 aProgressTotal,
-						 PRInt32 aProgressCurrent);
-typedef void     (GtkMozEmbedNetCB)             (void *aData, PRInt32 aFlags, nsresult aStatus);
-typedef PRBool   (GtkMozEmbedStartOpenCB)       (const char *aURI, void *aData);
+class GtkEmbedListener
+{
+ public:
+  enum GtkEmbedListenerMessageType
+  {
+    MessageLink = 0,
+    MessageJSStatus,
+    MessageLocation,
+    MessageTitle
+  };
+  virtual nsresult NewBrowser(PRUint32 chromeMask, 
+			      nsIWebBrowser **_retval) = 0;
+  virtual void     Destroy(void) = 0;
+  virtual void     Visibility(PRBool aVisibility) = 0;
+  virtual void     Message(GtkEmbedListenerMessageType aType,
+			   const char *aMessage) = 0;
+  virtual void     ProgressChange(nsIWebProgress *aProgress,
+				  nsIRequest *aRequest,
+				  PRInt32 curSelfProgress,
+				  PRInt32 maxSelfProgress,
+				  PRInt32 curTotalProgress,
+				  PRInt32 maxTotalProgress) = 0;
+  virtual void     Net(nsIWebProgress *aProgress,
+		       nsIRequest *aRequest,
+		       PRInt32 aFlags, nsresult aStatus) = 0;
+  virtual PRBool   StartOpen(const char *aURI) = 0;
+  virtual void     SizeTo(PRInt32 width, PRInt32 height) = 0;
+};
 
 class nsIGtkEmbed : public nsISupports
 {
@@ -50,16 +69,7 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IGTKEMBED_IID)
   
   NS_IMETHOD Init                         (GtkWidget *aOwningWidget) = 0;
-  NS_IMETHOD SetNewBrowserCallback        (GtkMozEmbedChromeCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetDestroyCallback           (GtkMozEmbedDestroyCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetVisibilityCallback        (GtkMozEmbedVisibilityCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetLinkChangeCallback        (GtkMozEmbedLinkCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetJSStatusChangeCallback    (GtkMozEmbedJSStatusCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetLocationChangeCallback    (GtkMozEmbedLocationCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetTitleChangeCallback       (GtkMozEmbedTitleCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetProgressCallback          (GtkMozEmbedProgressCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetNetCallback               (GtkMozEmbedNetCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetStartOpenCallback         (GtkMozEmbedStartOpenCB *aCallback, void *aData) = 0;
+  NS_IMETHOD SetEmbedListener             (GtkEmbedListener *aListener) = 0;
   NS_IMETHOD GetLinkMessage               (char **retval) = 0;
   NS_IMETHOD GetJSStatus                  (char **retval) = 0;
   NS_IMETHOD GetLocation                  (char **retval) = 0;
