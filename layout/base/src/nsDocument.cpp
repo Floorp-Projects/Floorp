@@ -31,6 +31,17 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIParser.h"
 
+
+#include "nsCSSPropIDs.h"
+#include "nsCSSProps.h"
+#include "nsICSSStyleSheet.h"
+#include "nsICSSStyleRule.h"
+#include "nsICSSDeclaration.h"
+#include "nsIHTMLCSSStyleSheet.h"
+
+#include "nsHTMLValue.h"
+#include "nsXIFConverter.h"
+
 #include "nsSelection.h"
 #include "nsIDOMText.h"
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
@@ -47,8 +58,9 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
-
 static NS_DEFINE_IID(kIPostDataIID, NS_IPOSTDATA_IID);
+static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
+
 
 NS_LAYOUT nsresult
 NS_NewPostData(PRBool aIsFile, char* aData, 
@@ -978,4 +990,237 @@ void nsDocument::GetSelectionText(nsString & aText) {
 
   PRBool inRange = PR_FALSE;
   TraverseTree(aText, mRootContent, startPnt->GetContent(), endPnt->GetContent(), inRange);
+}
+
+
+void nsDocument::CSSSelectorToXIF(nsXIFConverter& aConverter, nsCSSSelector& aSelector)
+{
+  nsString s;
+
+  nsCSSSelector* next = aSelector.mNext;
+
+  if (nsnull != next)
+    CSSSelectorToXIF(aConverter,*next);
+
+  aConverter.BeginCSSSelector();
+ 
+  if (aSelector.mTag != nsnull)
+  {
+    aSelector.mTag->ToString(s);
+    aConverter.AddCSSTag(s);
+  }
+
+  if (aSelector.mID != nsnull)
+  {
+    aSelector.mID->ToString(s);
+    aConverter.AddCSSID(s);
+  }
+  
+  if (aSelector.mClass != nsnull)
+  {
+    aSelector.mClass->ToString(s);
+    aConverter.AddCSSClass(s);
+  }
+  
+  if (aSelector.mPseudoClass != nsnull)
+  {
+    aSelector.mPseudoClass->ToString(s);
+    aConverter.AddCSSPsuedoClass(s);
+  }
+  aConverter.EndCSSSelector();
+
+}
+
+
+void nsDocument::CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDeclaration& aDeclaration)
+{
+  PRInt32    propId;
+  nsCSSValue value;
+  nsString   name;
+  nsString   str;
+
+
+
+  aConverter.BeginCSSDeclarationList();
+  for (propId = 0; propId < PROP_MAX; propId++)
+  {
+    switch(propId)
+    {
+      case PROP_BACKGROUND:
+      case PROP_BORDER:
+      case PROP_CLIP:
+      case PROP_FONT:
+      case PROP_LIST_STYLE:
+      case PROP_MARGIN:
+      case PROP_PADDING:
+      case PROP_BACKGROUND_POSITION:
+      case PROP_BORDER_TOP:
+      case PROP_BORDER_RIGHT:
+      case PROP_BORDER_BOTTOM:
+      case PROP_BORDER_LEFT:
+      case PROP_BORDER_COLOR:
+      case PROP_BORDER_STYLE:
+      case PROP_BORDER_WIDTH:
+        break;
+
+      default:
+        aDeclaration.GetValue(propId,value);
+        if (value.GetUnit() != eHTMLUnit_Null)
+        {
+          aConverter.BeginCSSDeclaration();
+          name = nsCSSProps::kNameTable[propId].name;
+          value.ToCSSString(str,propId);
+          aConverter.AddCSSDeclaration(name,str);
+          aConverter.EndCSSDeclaration();
+        }
+    }
+  }
+  aConverter.EndCSSDeclarationList();
+}
+
+
+void nsDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
+{
+ 
+  PRInt32     count = GetNumberOfStyleSheets();
+  nsIURL&      docURL = *mDocumentURL;
+
+  for (PRInt32 index = 0; index < count; index++)
+  {
+    nsIStyleSheet*          sheet = GetStyleSheetAt(index);
+    nsICSSStyleSheet*       cssSheet = nsnull;
+    
+    if (sheet != nsnull)
+    {
+      nsIURL& sheetURL = *sheet->GetURL();
+      
+      if (!(sheetURL == docURL))
+        break;
+      
+      nsresult  isCss = sheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssSheet);
+      if ((isCss == NS_OK) && (cssSheet != nsnull))
+      {
+        PRInt32           ruleCount = cssSheet->StyleRuleCount();
+        PRInt32           ruleIndex;
+        nsICSSStyleRule*  rule = nsnull;
+
+        aConverter.BeginCSSStyleSheet();
+        for (ruleIndex = 0; ruleIndex < ruleCount; ruleIndex++)
+        {
+          if (NS_OK == cssSheet->GetStyleRuleAt(ruleIndex, rule))
+          {
+            aConverter.BeginCSSRule();
+
+              if (nsnull != rule)
+              {
+                nsCSSSelector* selector = rule->FirstSelector();
+          
+                if (nsnull != selector)
+                  CSSSelectorToXIF(aConverter,*selector);
+  
+                nsICSSDeclaration* declaration = rule->GetDeclaration();
+                if (nsnull != declaration)
+                  CSSDeclarationToXIF(aConverter,*declaration);
+
+                NS_IF_RELEASE(declaration);
+                NS_IF_RELEASE(rule);
+              } // ruleAt
+
+            aConverter.EndCSSRule();
+          } // for loop
+        }
+        aConverter.EndCSSStyleSheet();
+        NS_RELEASE(cssSheet);
+      } // css_sheet
+      NS_RELEASE(sheet);
+    } // sheet
+  }
+}
+
+
+
+void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+{
+  nsIContent* content = nsnull;
+  nsresult isContent = aNode->QueryInterface(kIContentIID, (void**)&content);
+  nsIDOMElement* element = nsnull;
+  nsresult isElement = aNode->QueryInterface(kIDOMElementIID, (void**)&element);
+  PRBool isSynthetic = PR_TRUE;
+
+  // Begin Conversion
+  if (NS_OK == isContent) 
+  {
+    content->IsSynthetic(isSynthetic);
+    if (PR_FALSE == isSynthetic)
+    {
+      content->BeginConvertToXIF(aConverter);
+      content->DoConvertToXIF(aConverter);
+    }
+  }
+  
+  
+  // Iterate through the children, convertion child nodes
+  nsresult result = NS_OK;
+  nsIDOMNode* node = nsnull;
+  result = aNode->GetFirstChild(&node);
+    
+  while ((result == NS_OK) && (node != nsnull))
+  { 
+    nsIDOMNode* temp = node;
+    ToXIF(aConverter,node);
+    result = node->GetNextSibling(&node);
+    NS_RELEASE(temp);
+  }
+
+  if (NS_OK == isContent && PR_FALSE == isSynthetic)
+  {
+    nsIAtom* tag = content->GetTag();
+    if (tag != nsnull)
+    {
+      if (tag != nsnull) 
+      {
+        nsString str;
+        tag->ToString(str);
+        if (str.EqualsIgnoreCase("Head"))
+          StyleSheetsToXIF(aConverter);
+      }
+    }
+  }
+
+  if (NS_OK == isContent) 
+  {
+    if (PR_FALSE == isSynthetic)
+      content->FinishConvertToXIF(aConverter);
+    NS_RELEASE(content);
+  }
+  if (NS_OK == isElement)
+  {
+    NS_RELEASE(element);
+  }
+}
+
+void nsDocument::ToXIF(nsString & aBuffer, PRBool aUseSelection)
+{
+  
+  nsXIFConverter  converter(aBuffer);
+  nsIDOMNode *root = nsnull;
+  // call the function
+
+  converter.AddStartTag("section");
+  
+  converter.AddStartTag("section_head");
+  converter.AddEndTag("section_head");
+
+  converter.AddStartTag("section_body");
+  if (NS_OK == GetFirstChild(&root)) 
+  {
+    ToXIF(converter,root);
+    NS_RELEASE(root);
+  }
+  converter.AddEndTag("section_body");
+
+  converter.AddEndTag("section");
+
+  converter.Write();
+  
 }

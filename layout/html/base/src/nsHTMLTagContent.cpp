@@ -32,12 +32,94 @@
 #include "nsIURL.h"
 #include "nsICSSParser.h"
 #include "nsISupportsArray.h"
+#include "nsXIFConverter.h"
 #include "nsISizeOfHandler.h"
+
+#include "nsXIFConverter.h"
 
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwner, NS_ISCRIPTOBJECTOWNER_IID);
+
+
+/**
+ * Translate the content object into the (XIF) XML Interchange Format
+ * XIF is an intermediate form of the content model, the buffer
+ * will then be parsed into any number of formats including HTML, TXT, etc.
+ * These methods must be called in the following order:
+   
+      BeginConvertToXIF
+        DoConvertToXIF
+      EndConvertToXIF
+ */
+
+void nsHTMLTagContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
+{
+  if (nsnull != mTag)
+  {
+    nsAutoString name;
+    mTag->ToString(name);
+
+
+    PRBool    isLeaf = CanContainChildren() == PR_FALSE;
+    if (isLeaf)
+      aConverter.BeginLeaf(name);    
+    else
+      aConverter.BeginContainer(name);
+  }
+}
+
+
+void nsHTMLTagContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
+{
+  if (nsnull != mTag)
+  {
+    PRBool  isLeaf = CanContainChildren() == PR_FALSE;
+  
+    nsAutoString name;
+    mTag->ToString(name);
+
+    if (isLeaf)
+      aConverter.EndLeaf(name);    
+    else
+      aConverter.EndContainer(name);
+  }
+}
+
+/**
+ * Translate the content object into the (XIF) XML Interchange Format
+ * XIF is an intermediate form of the content model, the buffer
+ * will then be parsed into any number of formats including HTML, TXT, etc.
+ */
+void nsHTMLTagContent::DoConvertToXIF(nsXIFConverter& aConverter) const
+{
+
+  // Add all attributes to the convert
+  if (nsnull != mAttributes) 
+  {
+    nsISupportsArray* attrs;
+    nsresult rv = NS_NewISupportsArray(&attrs);
+    if (NS_OK == rv) 
+    {
+      mAttributes->GetAllAttributeNames(attrs);
+      PRInt32 i, n = attrs->Count();
+      nsAutoString name, value;
+      for (i = 0; i < n; i++) 
+      {
+        nsIAtom* atom = (nsIAtom*) attrs->ElementAt(i);
+        atom->ToString(name);
+
+        value.Truncate();
+        GetAttribute(name, value);
+        
+        aConverter.AddHTMLAttribute(name,value);
+      }
+      NS_RELEASE(attrs);
+    }
+  }
+}
+
 
 nsHTMLTagContent::nsHTMLTagContent()
 {
@@ -145,6 +227,9 @@ void nsHTMLTagContent::ToHTMLString(nsString& aBuf) const
 
   aBuf.Append('>');
 }
+
+
+
 
 void nsHTMLTagContent::SetAttribute(const nsString& aName,
                                     const nsString& aValue)

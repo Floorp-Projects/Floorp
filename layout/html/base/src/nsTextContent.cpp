@@ -39,6 +39,7 @@
 #include "prprf.h"
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
+#include "nsXIFConverter.h"
 
 // Selection includes
 #include "nsISelection.h"
@@ -286,6 +287,28 @@ public:
   NS_IMETHOD    JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2, nsIDOMText** aReturn);
 
   void ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
+
+  
+  /**
+   * Translate the content object into the (XIF) XML Interchange Format
+   * XIF is an intermediate form of the content model, the buffer
+   * will then be parsed into any number of formats including HTML, TXT, etc.
+
+   * Pattern for Containers
+   * BeginConvertToXIF -- opens a container
+   * DoConvertToXIF -- writes out element attribute information (if any exists)
+   * FinishConvertToXIF -- closes a container
+
+   * Pattern for Leafs
+   * BeginConvertToXIF -- does nothing
+   * DoConvertToXIF -- writes out the element and any attribute information (if any exists)
+   * FinishConvertToXIF -- does nothing
+
+  */
+  virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void DoConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
+
 
   PRUnichar* mText;
   PRInt32 mLength;
@@ -1447,6 +1470,26 @@ void Text::ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const
     }
   }
 }
+void Text::BeginConvertToXIF(nsXIFConverter& aConverter) const
+{
+}
+
+void Text::FinishConvertToXIF(nsXIFConverter& aConverter) const
+{
+}
+
+/**
+ * Translate the content object into the (XIF) XML Interchange Format
+ * XIF is an intermediate form of the content model, the buffer
+ * will then be parsed into any number of formats including HTML, TXT, etc.
+ */
+void Text::DoConvertToXIF(nsXIFConverter& aConverter) const
+{
+  nsString  buffer;
+  buffer.Append(mText, mLength);
+  aConverter.AddContent(buffer);
+}
+
 
 #if 0
 // From nsITextContent; might want this later

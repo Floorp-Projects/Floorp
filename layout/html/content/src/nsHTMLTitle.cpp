@@ -19,6 +19,7 @@
 #include "nsHTMLContainer.h"
 #include "nsFrame.h"
 #include "nsHTMLIIDs.h"
+#include "nsXIFConverter.h"
 
 #define nsHTMLTitleSuper nsHTMLTagContent
 
@@ -32,6 +33,10 @@ public:
                                nsIFrame*&       aResult);
 
   virtual void List(FILE* out, PRInt32 aIndent) const;
+
+
+  virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
 
 protected:
   virtual ~nsHTMLTitle();
@@ -99,4 +104,38 @@ NS_NewHTMLTitle(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
+}
+
+/**
+ * Translate the content object into the (XIF) XML Interchange Format
+ * XIF is an intermediate form of the content model, the buffer
+ * will then be parsed into any number of formats including HTML, TXT, etc.
+ * These methods must be called in the following order:
+   
+      BeginConvertToXIF
+        DoConvertToXIF
+      EndConvertToXIF
+ */
+
+void nsHTMLTitle::BeginConvertToXIF(nsXIFConverter& aConverter) const
+{
+  if (nsnull != mTag)
+  {
+    nsAutoString name;
+    mTag->ToString(name);
+    aConverter.BeginContainer(name);
+  }
+  aConverter.AddContent(mTitle);
+
+}
+
+
+void nsHTMLTitle::FinishConvertToXIF(nsXIFConverter& aConverter) const
+{
+  if (nsnull != mTag)
+  {  
+    nsAutoString name;
+    mTag->ToString(name);
+    aConverter.EndContainer(name);
+  }
 }

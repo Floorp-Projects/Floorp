@@ -38,6 +38,7 @@ CPPSRCS =				\
 	nsStyleCoord.cpp		\
 	nsStyleContext.cpp		\
 	nsStyleSet.cpp			\
+	nsXIFConverter.cpp			\
 	$(NULL)
 
 MODULE = raptor
@@ -45,6 +46,7 @@ MODULE = raptor
 EXPORTS = \
 	nsSelectionRange.h \
 	nsSelectionPoint.h \
+	nsXIFConverter.h \
 	$(NULL)
 
 REQUIRES = xpcom raptor dom netlib js

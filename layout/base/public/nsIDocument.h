@@ -201,6 +201,17 @@ public:
    */
   virtual void GetSelectionText(nsString & aText) = 0;
 
+  /**
+    * Converts the document or a selection of the 
+    * document to XIF (XML Interchange Format)
+    * and places the result in aBuffer.
+    
+    * NOTE: we may way to place the result in a stream,
+    * but we will use a string for now -- gpk
+  */
+  virtual void ToXIF(nsString & aBuffer, PRBool aUseSelection) = 0;
+
+
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
                                   nsGUIEvent* aEvent, 
                                   nsIDOMEvent* aDOMEvent,

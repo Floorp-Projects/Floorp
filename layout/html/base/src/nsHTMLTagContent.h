@@ -43,6 +43,27 @@ public:
   virtual void ToHTMLString(nsString& out) const;
 
   /**
+   * Translate the content object into the (XIF) XML Interchange Format
+   * XIF is an intermediate form of the content model, the buffer
+   * will then be parsed into any number of formats including HTML, TXT, etc.
+
+   * Pattern for Containers
+   * BeginConvertToXIF -- opens a container
+   * DoConvertToXIF -- writes out element attribute information (if any exists)
+   * FinishConvertToXIF -- closes a container
+
+   * Pattern for Leafs
+   * BeginConvertToXIF -- does nothing
+   * DoConvertToXIF -- writes out the element and any attribute information (if any exists)
+   * FinishConvertToXIF -- does nothing
+
+  */
+  virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void DoConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
+
+  
+  /**
    * Generic implementation of SetAttribute that translates aName into
    * an uppercase'd atom and invokes SetAttribute(atom, aValue).
    */

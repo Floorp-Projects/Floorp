@@ -95,6 +95,7 @@ public:
   PRBool    IsSplittable() const {return mIsSplittable;}
   void      SetIsSplittable(PRBool aIsSplittable) {mIsSplittable = aIsSplittable;}
 
+
 private:
   nscoord mWidth, mHeight;
   PRBool  mIsSplittable;

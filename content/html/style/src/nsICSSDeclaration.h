@@ -114,6 +114,8 @@ public:
 
   void  AppendToString(nsString& aBuffer, PRInt32 aPropID = -1) const;
   void  ToString(nsString& aBuffer, PRInt32 aPropID = -1) const;
+  void  AppendToCSSString(nsString& aBuffer, PRInt32 aPropID = -1) const;
+  void  ToCSSString(nsString& aBuffer, PRInt32 aPropID = -1) const;
 
 protected:
   nsCSSUnit mUnit;
