@@ -1310,112 +1310,124 @@ void
 PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   nsFontCharSet* aCharSet)
 {
-  nsFontGTK* s;
-  nsFontGTK* begin = aStretch->mSizes;
-  nsFontGTK* end = &aStretch->mSizes[aStretch->mSizesCount];
+  nsFontGTK* s = nsnull;
+  nsFontGTK* begin;
+  nsFontGTK* end;
   nsFontMetricsGTK* m = aSearch->mMetrics;
   int desiredSize = m->mPixelSize;
+  int scalable = 0;
 
-  for (s = begin; s < end; s++) {
-    if (s->mSize >= desiredSize) {
-      break;
-    }
-  }
-  if (s == end) {
-    s--;
-  }
-  else if (s != begin) {
-    if ((s->mSize - desiredSize) > (desiredSize - (s - 1)->mSize)) {
-      s--;
-    }
-  }
-
-  if (!s->mFont) {
-    s->LoadFont(aCharSet, m);
-    if (!s->mFont) {
-      return;
-    }
-  }
-  if (s->mActualSize > desiredSize) {
-    for (; s >= begin; s--) {
-      if (!s->mFont) {
-        s->LoadFont(aCharSet, m);
-        if (!s->mFont) {
-          return;
-        }
-      }
-      if (s->mActualSize <= desiredSize) {
-        if (((s + 1)->mActualSize - desiredSize) <=
-            (desiredSize - s->mActualSize)) {
-          s++;
-        }
-        break;
-      }
-    }
-    if (s < begin) {
-      s = begin;
-    }
-  }
-  else if (s->mActualSize < desiredSize) {
-    for (; s < end; s++) {
-      if (!s->mFont) {
-        s->LoadFont(aCharSet, m);
-        if (!s->mFont) {
-          return;
-        }
-      }
-      if (s->mActualSize >= desiredSize) {
-        if ((s->mActualSize - desiredSize) >
-            (desiredSize - (s - 1)->mActualSize)) {
-          s--;
-        }
+  if (aStretch->mSizes) {
+    begin = aStretch->mSizes;
+    end = &aStretch->mSizes[aStretch->mSizesCount];
+    for (s = begin; s < end; s++) {
+      if (s->mSize >= desiredSize) {
         break;
       }
     }
     if (s == end) {
       s--;
     }
-  }
-
-  if (aStretch->mScalable) {
-    double ratio = (s->mActualSize / ((double) desiredSize));
-    if ((ratio > 1.2) || (ratio < 0.8)) {
-      begin = aStretch->mScaledFonts;
-      end = &aStretch->mScaledFonts[aStretch->mScaledFontsCount];
-      for (s = begin; s < end; s++) {
-        if (s->mSize == desiredSize) {
+    else if (s != begin) {
+      if ((s->mSize - desiredSize) > (desiredSize - (s - 1)->mSize)) {
+        s--;
+      }
+    }
+  
+    if (!s->mFont) {
+      s->LoadFont(aCharSet, m);
+      if (!s->mFont) {
+        return;
+      }
+    }
+    if (s->mActualSize > desiredSize) {
+      for (; s >= begin; s--) {
+        if (!s->mFont) {
+          s->LoadFont(aCharSet, m);
+          if (!s->mFont) {
+            return;
+          }
+        }
+        if (s->mActualSize <= desiredSize) {
+          if (((s + 1)->mActualSize - desiredSize) <=
+              (desiredSize - s->mActualSize)) {
+            s++;
+          }
+          break;
+        }
+      }
+      if (s < begin) {
+        s = begin;
+      }
+    }
+    else if (s->mActualSize < desiredSize) {
+      for (; s < end; s++) {
+        if (!s->mFont) {
+          s->LoadFont(aCharSet, m);
+          if (!s->mFont) {
+            return;
+          }
+        }
+        if (s->mActualSize >= desiredSize) {
+          if ((s->mActualSize - desiredSize) >
+              (desiredSize - (s - 1)->mActualSize)) {
+            s--;
+          }
           break;
         }
       }
       if (s == end) {
-        if (aStretch->mScaledFontsCount == aStretch->mScaledFontsAlloc) {
-          int newSize = 2 *
-            (aStretch->mScaledFontsAlloc ? aStretch->mScaledFontsAlloc : 1);
-          nsFontGTK* newPointer = new nsFontGTK[newSize];
-          if (newPointer) {
-            for (int i = aStretch->mScaledFontsAlloc - 1; i >= 0; i--) {
-              newPointer[i] = aStretch->mScaledFonts[i];
-            }
-            aStretch->mScaledFontsAlloc = newSize;
-            delete [] aStretch->mScaledFonts;
-            aStretch->mScaledFonts = newPointer;
+        s--;
+      }
+    }
+
+    if (aStretch->mScalable) {
+      double ratio = (s->mActualSize / ((double) desiredSize));
+      if ((ratio > 1.2) || (ratio < 0.8)) {
+        scalable = 1;
+      }
+    }
+  }
+  else {
+    scalable = 1;
+  }
+
+  if (scalable) {
+    begin = aStretch->mScaledFonts;
+    end = &aStretch->mScaledFonts[aStretch->mScaledFontsCount];
+    for (s = begin; s < end; s++) {
+      if (s->mSize == desiredSize) {
+        break;
+      }
+    }
+    if (s == end) {
+      if (aStretch->mScaledFontsCount == aStretch->mScaledFontsAlloc) {
+        int newSize = 2 *
+          (aStretch->mScaledFontsAlloc ? aStretch->mScaledFontsAlloc : 1);
+        nsFontGTK* newPointer = new nsFontGTK[newSize];
+        if (newPointer) {
+          for (int i = aStretch->mScaledFontsAlloc - 1; i >= 0; i--) {
+            newPointer[i] = aStretch->mScaledFonts[i];
           }
-          else {
-            return;
-          }
+          aStretch->mScaledFontsAlloc = newSize;
+          delete [] aStretch->mScaledFonts;
+          aStretch->mScaledFonts = newPointer;
         }
-        s = &aStretch->mScaledFonts[aStretch->mScaledFontsCount++];
-        s->mName = PR_smprintf(aStretch->mScalable, desiredSize);
-        if (!s->mName) {
+        else {
           return;
         }
-        s->mSize = desiredSize;
-        s->mBaselineAdjust = 0;
-        s->mCharSetInfo = aCharSet->mInfo;
-        s->LoadFont(aCharSet, m);
-        if (!s->mFont) {
-          return;
-        }
+      }
+      s = &aStretch->mScaledFonts[aStretch->mScaledFontsCount++];
+      s->mName = PR_smprintf(aStretch->mScalable, desiredSize);
+      if (!s->mName) {
+        return;
+      }
+      s->mSize = desiredSize;
+      s->mBaselineAdjust = 0;
+      s->mCharSetInfo = aCharSet->mInfo;
+      s->LoadFont(aCharSet, m);
+      if (!s->mFont) {
+        return;
       }
     }
   }
