@@ -1650,7 +1650,7 @@ int main(int argc, char* argv[])
   if (!StartOS2App(argc, argv))
     return 1;
 
-  ScopedFPHandler handler();
+  ScopedFPHandler handler;
 #endif /* XP_OS2 */
 
 #if defined(XP_BEOS)
