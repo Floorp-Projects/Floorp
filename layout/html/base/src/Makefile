@@ -28,6 +28,7 @@ CPPSRCS =				\
 	nsGlobalVariables.cpp		\
 	nsHRPart.cpp			\
 	nsHTMLAtoms.cpp			\
+	nsHTMLBullet.cpp		\
 	nsHTMLContainer.cpp		\
 	nsHTMLContainerFrame.cpp	\
 	nsHTMLContent.cpp		\
@@ -38,7 +39,6 @@ CPPSRCS =				\
 	nsImageMap.cpp			\
 	nsInlineFrame.cpp		\
 	nsLeafFrame.cpp			\
-	nsListItemFrame.cpp		\
 	nsPageFrame.cpp			\
 	nsPlaceholderFrame.cpp		\
 	nsRootPart.cpp			\
