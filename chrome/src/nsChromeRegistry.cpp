@@ -3294,64 +3294,115 @@ NS_IMETHODIMP nsChromeRegistry::AllowScriptsForSkin(nsIURI* aChromeURI, PRBool *
   return NS_OK;
 }
 
+static nsresult
+GetFileAndLastModifiedTime(nsIProperties *aDirSvc,
+                           const char *aDirKey,
+                           const nsCSubstring &aLeafName,
+                           nsCOMPtr<nsILocalFile> &aFile,
+                           PRTime *aLastModified)
+{
+  *aLastModified = LL_ZERO;
+
+  nsresult rv;
+  rv = aDirSvc->Get(aDirKey, NS_GET_IID(nsILocalFile), getter_AddRefs(aFile));
+  if (NS_FAILED(rv))
+    return rv;
+  rv = aFile->AppendNative(aLeafName);
+  if (NS_SUCCEEDED(rv)) {
+    // if the file does not exist, this returns zero
+    aFile->GetLastModifiedTime(aLastModified);
+  }
+  return rv;
+}
+
 NS_IMETHODIMP
 nsChromeRegistry::CheckForNewChrome()
 {
   nsresult rv;
 
   rv = LoadInstallDataSource();
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
-  // open the installed-chrome file
-  nsCOMPtr<nsILocalFile> listFile;
-  nsCOMPtr<nsIProperties> directoryService =
+  nsCOMPtr<nsIProperties> dirSvc =
            do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
-  rv = directoryService->Get(NS_APP_CHROME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(listFile));
+
+  nsCOMPtr<nsILocalFile> cacheFile, listFile;
+  nsInt64 cacheDate, listDate;
+
+  // check the application directory first.
+  GetFileAndLastModifiedTime(dirSvc, NS_APP_CHROME_DIR, kChromeFileName,
+                             cacheFile, &cacheDate.mValue);
+  GetFileAndLastModifiedTime(dirSvc, NS_APP_CHROME_DIR, kInstalledChromeFileName,
+                             listFile, &listDate.mValue);
+  if (listDate > cacheDate)
+    ProcessNewChromeFile(listFile);
+
+  // check the extra chrome directories
+  nsCOMPtr<nsISimpleEnumerator> chromeDL;
+  rv = dirSvc->Get(NS_APP_CHROME_DIR_LIST, NS_GET_IID(nsISimpleEnumerator),
+                   getter_AddRefs(chromeDL));
+  if (NS_SUCCEEDED(rv)) {
+    // we assume that any other list files will only reference chrome that
+    // should be installed in the profile directory.  we might want to add
+    // some actual checks to this effect.
+    GetFileAndLastModifiedTime(dirSvc, NS_APP_USER_CHROME_DIR, kChromeFileName,
+                               cacheFile, &cacheDate.mValue);
+    PRBool hasMore;
+    while (NS_SUCCEEDED(chromeDL->HasMoreElements(&hasMore)) && hasMore) {
+      nsCOMPtr<nsISupports> element;
+      chromeDL->GetNext(getter_AddRefs(element));
+      if (!element)
+        continue;
+      listFile = do_QueryInterface(element);
+      if (!listFile)
+        continue;
+      rv = listFile->AppendNative(kInstalledChromeFileName);
+      if (NS_FAILED(rv))
+        continue;
+      listFile->GetLastModifiedTime(&listDate.mValue);
+      if (listDate > cacheDate)
+        ProcessNewChromeFile(listFile);
+    }
+  }
+
+  return rv;
+}
+
+nsresult
+nsChromeRegistry::ProcessNewChromeFile(nsILocalFile *aListFile)
+{
+  nsresult rv;
+
+  PRFileDesc *file;
+  rv = aListFile->OpenNSPRFileDesc(PR_RDONLY, 0, &file);
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIFile> chromeFile;
-  rv = listFile->Clone(getter_AddRefs(chromeFile));
-  if (NS_FAILED(rv)) return rv;
-  rv = chromeFile->AppendNative(kChromeFileName);
-  if (NS_FAILED(rv)) return rv;
-  // XXXldb For the case where the file is nonexistent, we're depending
-  // on the fact that the nsInt64 constructor initializes to 0 and
-  // |GetLastModifiedTime| doesn't touch the out parameter.
-  nsInt64 chromeDate;
-  (void)chromeFile->GetLastModifiedTime(&chromeDate.mValue);
+  PRInt32 n, size;
+  char *buf;
 
-  rv = listFile->AppendRelativeNativePath(kInstalledChromeFileName);
-  if (NS_FAILED(rv)) return rv;
-  nsInt64 listFileDate;
-  (void)listFile->GetLastModifiedTime(&listFileDate.mValue);
-
-  if (listFileDate < chromeDate)
-    return NS_OK;
-
-  PRFileDesc *file;
-  rv = listFile->OpenNSPRFileDesc(PR_RDONLY, 0, &file);
-  if (NS_FAILED(rv)) return rv;
-
-  // file is open.
-
-  PRFileInfo finfo;
-
-  if (PR_GetOpenFileInfo(file, &finfo) == PR_SUCCESS) {
-    char *dataBuffer = new char[finfo.size+1];
-    if (dataBuffer) {
-      PRInt32 bufferSize = PR_Read(file, dataBuffer, finfo.size);
-      if (bufferSize > 0) {
-        rv = ProcessNewChromeBuffer(dataBuffer, bufferSize);
-      }
-      delete [] dataBuffer;
-    }
+  size = PR_Available(file);
+  if (size == -1) {
+    rv = NS_ERROR_UNEXPECTED;
+    goto end;
   }
-  PR_Close(file);
-  // listFile->Remove(PR_FALSE);
 
+  buf = (char *) malloc(size + 1);
+  if (!buf) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    goto end;
+  }
+
+  n = PR_Read(file, buf, size);
+  if (n > 0)
+    rv = ProcessNewChromeBuffer(buf, size);
+  free(buf);
+
+end:
+  PR_Close(file);
   return rv;
 }
 
