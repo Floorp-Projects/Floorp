@@ -199,6 +199,9 @@ PRBool nsMsgMdnGenerator::ProcessSendMode()
         if (!accountDomain)
             return m_reallySendMdn;
 
+        if (MailAddrMatch(m_email.get(), m_dntRrt.get())) // return address is self, don't send
+          return PR_FALSE;
+
         // *** fix me see Bug 132504 for more information
         // *** what if the message has been filtered to different account
         if (!PL_strcasestr(m_dntRrt, accountDomain))
@@ -841,11 +844,10 @@ nsresult nsMsgMdnGenerator::OutputAllHeaders()
     
         if (end > start && *end == 0)
         {
-            // strip out private X-Mozilla-Status header & X-Mozilla-Draft-Info
+            // strip out private X-Mozilla-Status header & X-Mozilla-Draft-Info && envelope header
             if (!PL_strncasecmp(start, X_MOZILLA_STATUS, X_MOZILLA_STATUS_LEN)
-                || 
-                !PL_strncasecmp(start, X_MOZILLA_DRAFT_INFO,
-                                X_MOZILLA_DRAFT_INFO_LEN))
+                || !PL_strncasecmp(start, X_MOZILLA_DRAFT_INFO, X_MOZILLA_DRAFT_INFO_LEN)
+                || !PL_strncasecmp(start, "From ", 5))
             {
                 while ( end < buf_end && 
                         (*end == nsCRT::LF || *end == nsCRT::CR || *end == 0))
