@@ -229,10 +229,19 @@ sub pushit {
 
   TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $upload_path";
   TinderUtils::run_shell_command "scp $scp_opts -r $upload_directory $Settings::ssh_user\@$ssh_server:$upload_path";
+
+  for my $longName (<$upload_directory/*>) {
+    my $prettyName = $longName;
+    if ($prettyName =~ s/^([a-z])([a-z]+)-((?:\d+\w*\.)+\d+\w*)\.([a-z]{2,3}-[A-Z]{2})\.win32\.installer\.exe$/\u$1$2 Setup $3 $4.exe/ ||
+        $prettyName =~ s/^([a-z])([a-z]+)-((?:\d+\w*\.)+\d+\w*)\.([a-z]{2,3}-[A-Z]{2})\.mac\.dmg\.gz$/\u$1$2 $3 $4.dmg.gz/) {
+      TinderUtils::run_shell_command "ssh $ssh_opts -l $Setting::ssh_user $ssh_server ln -s $longName $upload_path/$short_ud/$prettyName";
+    }
+  }
+
   TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $upload_path/$short_ud";
 
   if ($cachebuild) {
-    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server cp -pf $upload_path/$short_ud/* $upload_path/latest-$Settings::milestone/";
+    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server cp -dpf $upload_path/$short_ud/* $upload_path/latest-$Settings::milestone/";
   }
   return 1;
 }
