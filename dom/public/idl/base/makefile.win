@@ -21,7 +21,8 @@ DEPTH=..\..\..\..
 MODULE=raptor 
 
 IDLSRCS= Navigator.idl Location.idl WindowCollection.idl Screen.idl History.idl \
-	BarProp.idl PluginArray.idl MimeTypeArray.idl Plugin.idl MimeType.idl
+	BarProp.idl PluginArray.idl MimeTypeArray.idl Plugin.idl MimeType.idl \
+	DOMException.idl
 
 GLOBAL_IDLSRC= Window.idl
 

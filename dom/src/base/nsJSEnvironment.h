@@ -31,6 +31,7 @@ private:
   PRBool mIsInitialized;
   PRUint32 mNumEvaluations;
   nsIScriptSecurityManager *mSecurityManager;
+  nsIScriptContextOwner* mOwner;
 
 public:
   nsJSContext(JSRuntime *aRuntime);
@@ -56,6 +57,8 @@ public:
   NS_IMETHOD GetSecurityManager(nsIScriptSecurityManager** aInstancePtr);
 
   NS_IMETHOD ScriptEvaluated(void);
+  NS_IMETHOD SetOwner(nsIScriptContextOwner* owner);
+  NS_IMETHOD GetOwner(nsIScriptContextOwner** owner);
 
   nsresult InitializeExternalClasses();
   nsresult InitializeLiveConnectClasses();

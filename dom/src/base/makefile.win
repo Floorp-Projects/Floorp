@@ -24,7 +24,9 @@ DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS =			 \
 	nsBarProps.cpp           \
+	nsDOMException.cpp 	 \
 	nsJSBarProp.cpp          \
+	nsJSDOMException.cpp	\
 	nsJSEnvironment.cpp	 \
 	nsJSWindow.cpp           \
 	nsJSNavigator.cpp        \
@@ -54,7 +56,9 @@ REQUIRES=xpcom raptor js netlib caps oji
 
 CPP_OBJS= \
 	.\$(OBJDIR)\nsBarProps.obj		\
+	.\$(OBJDIR)\nsDOMException.obj		\
 	.\$(OBJDIR)\nsJSBarProp.obj		\
+	.\$(OBJDIR)\nsJSDOMException.obj	\
 	.\$(OBJDIR)\nsJSEnvironment.obj		\
 	.\$(OBJDIR)\nsJSWindow.obj		\
 	.\$(OBJDIR)\nsGlobalWindow.obj		\

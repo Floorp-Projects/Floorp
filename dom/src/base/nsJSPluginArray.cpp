@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -56,6 +57,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMPluginArray *a = (nsIDOMPluginArray*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -67,7 +69,7 @@ GetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
@@ -76,27 +78,28 @@ GetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.length", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRUint32 prop;
-        if (NS_SUCCEEDED(a->GetLength(&prop))) {
+        result = a->GetLength(&prop);
+        if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
       default:
       {
         nsIDOMPlugin* prop;
-        if (NS_OK == a->Item(JSVAL_TO_INT(id), &prop)) {
+        result = a->Item(JSVAL_TO_INT(id), &prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
       }
     }
@@ -114,7 +117,8 @@ GetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       name.SetString("");
     }
 
-    if (NS_OK == a->NamedItem(name, &prop)) {
+    result = a->NamedItem(name, &prop);
+    if (NS_SUCCEEDED(result)) {
       if (NULL != prop) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
@@ -124,7 +128,7 @@ GetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
     }
     else {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, result);
     }
   }
   else {
@@ -142,6 +146,7 @@ PR_STATIC_CALLBACK(JSBool)
 SetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMPluginArray *a = (nsIDOMPluginArray*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -153,7 +158,7 @@ SetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
@@ -207,6 +212,7 @@ PR_STATIC_CALLBACK(JSBool)
 PluginArrayItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMPluginArray *nativeThis = (nsIDOMPluginArray*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMPlugin* nativeRet;
   PRUint32 b0;
 
@@ -215,14 +221,13 @@ PluginArrayItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.item",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -233,17 +238,16 @@ PluginArrayItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function item requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
     }
 
-    if (NS_OK != nativeThis->Item(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->Item(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -260,6 +264,7 @@ PR_STATIC_CALLBACK(JSBool)
 PluginArrayNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMPluginArray *nativeThis = (nsIDOMPluginArray*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMPlugin* nativeRet;
   nsAutoString b0;
 
@@ -268,14 +273,13 @@ PluginArrayNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.nameditem",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -286,14 +290,14 @@ PluginArrayNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function namedItem requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->NamedItem(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->NamedItem(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -310,6 +314,7 @@ PR_STATIC_CALLBACK(JSBool)
 PluginArrayRefresh(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMPluginArray *nativeThis = (nsIDOMPluginArray*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   PRBool b0;
 
   *rval = JSVAL_NULL;
@@ -317,14 +322,13 @@ PluginArrayRefresh(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.refresh",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -335,16 +339,16 @@ PluginArrayRefresh(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function refresh requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (!nsJSUtils::nsConvertJSValToBool(&b0, cx, argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);
     }
 
-    if (NS_OK != nativeThis->Refresh(b0)) {
-      return JS_FALSE;
+    result = nativeThis->Refresh(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;

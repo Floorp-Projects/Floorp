@@ -28,3 +28,4 @@ nsIDOMMimeTypeArray.h
 nsIDOMPlugin.h
 nsIDOMPluginArray.h
 nsIDOMBarProp.h
+nsIDOMDOMException.h

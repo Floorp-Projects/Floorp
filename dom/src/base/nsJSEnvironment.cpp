@@ -18,6 +18,7 @@
 
 #include "nsJSEnvironment.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectData.h"
 #include "nsIDOMWindow.h"
@@ -56,40 +57,38 @@ static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID)
 static NS_DEFINE_CID(kXPConnectCID,              NS_XPCONNECT_CID);
 
 void PR_CALLBACK
-NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
+NS_ScriptErrorReporter(JSContext *cx, 
+                       const char *message, 
+                       JSErrorReport *report)
 {
-	if (nsnull != report) {
-		printf("JavaScript error: ");
-		
-		if(message) {
-			printf("%s\n", message);
-		}
-		
-		if(report->filename) {
-			printf("URL: %s ", report->filename);
-		}
-		
-		if(report->lineno) {
-			printf("LineNo: %u", report->lineno);
-		}
-		
-		printf("\n");
-		
-		if(report->linebuf) {
-			printf("Line text: '%s', ", report->linebuf);
-		}
-		
-		if(report->tokenptr) {
-			printf("Error text: '%s'", report->tokenptr);
-		}
-		
-		printf("\n");
-		
-	} else if(message) {
-		printf("JavaScript error: %s\n", message);
-	} else {
-		printf("JavaScript error: <unknown>\n");
-	}
+  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
+  nsIScriptContextOwner* owner;
+
+  if (context) {
+    nsresult result = context->GetOwner(&owner);
+    if (NS_SUCCEEDED(result)) {
+      const char* error;
+      if (message) {
+        error = message;
+      }
+      else {
+        error = "<unknown>";
+      }
+ 
+      if (report) {
+        owner->ReportScriptError(error, 
+                                 report->filename, 
+                                 report->lineno,
+                                 report->linebuf);
+      }
+      else {
+        owner->ReportScriptError(error, nsnull, 0, nsnull);
+      }
+      NS_RELEASE(owner);
+    }
+  }
+
+  JS_ClearPendingException(cx);
 }
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
@@ -100,7 +99,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 	mNameSpaceManager = nsnull;
 	mIsInitialized = PR_FALSE;
 	mNumEvaluations = 0;
-        mSecurityManager = nsnull;
+  mSecurityManager = nsnull;
+  mOwner = nsnull;
 }
 
 nsJSContext::~nsJSContext()
@@ -389,6 +389,25 @@ nsJSContext::GetSecurityManager(nsIScriptSecurityManager **aInstancePtr)
     *aInstancePtr = mSecurityManager;
     NS_ADDREF(*aInstancePtr);
     return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsJSContext::SetOwner(nsIScriptContextOwner* owner)
+{
+  // The owner should not be addrefed!! We'll be told
+  // when the owner goes away.
+  mOwner = owner;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsJSContext::GetOwner(nsIScriptContextOwner** owner)
+{
+  *owner = mOwner;
+  NS_IF_ADDREF(mOwner);
+
+  return NS_OK;
 }
 
 nsJSEnvironment *nsJSEnvironment::sTheEnvironment = nsnull;

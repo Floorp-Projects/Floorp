@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -54,6 +55,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMCSSStyleDeclaration *a = (nsIDOMCSSStyleDeclaration*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -64,7 +66,7 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case CSSSTYLEDECLARATION_CSSTEXT:
@@ -72,15 +74,15 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.csstext", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetCssText(prop))) {
+        result = a->GetCssText(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -89,26 +91,27 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.length", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRUint32 prop;
-        if (NS_SUCCEEDED(a->GetLength(&prop))) {
+        result = a->GetLength(&prop);
+        if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
       default:
       {
         nsAutoString prop;
-        if (NS_OK == a->Item(JSVAL_TO_INT(id), prop)) {
+        result = a->Item(JSVAL_TO_INT(id), prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
       }
     }
@@ -128,6 +131,7 @@ PR_STATIC_CALLBACK(JSBool)
 SetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMCSSStyleDeclaration *a = (nsIDOMCSSStyleDeclaration*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -138,7 +142,7 @@ SetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case CSSSTYLEDECLARATION_CSSTEXT:
@@ -146,8 +150,7 @@ SetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.csstext", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -205,6 +208,7 @@ PR_STATIC_CALLBACK(JSBool)
 CSSStyleDeclarationGetPropertyValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleDeclaration *nativeThis = (nsIDOMCSSStyleDeclaration*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsAutoString nativeRet;
   nsAutoString b0;
 
@@ -213,14 +217,13 @@ CSSStyleDeclarationGetPropertyValue(JSContext *cx, JSObject *obj, uintN argc, js
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.getpropertyvalue",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -231,14 +234,14 @@ CSSStyleDeclarationGetPropertyValue(JSContext *cx, JSObject *obj, uintN argc, js
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function getPropertyValue requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->GetPropertyValue(b0, nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->GetPropertyValue(b0, nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
@@ -255,6 +258,7 @@ PR_STATIC_CALLBACK(JSBool)
 CSSStyleDeclarationGetPropertyPriority(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleDeclaration *nativeThis = (nsIDOMCSSStyleDeclaration*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsAutoString nativeRet;
   nsAutoString b0;
 
@@ -263,14 +267,13 @@ CSSStyleDeclarationGetPropertyPriority(JSContext *cx, JSObject *obj, uintN argc,
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.getpropertypriority",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -281,14 +284,14 @@ CSSStyleDeclarationGetPropertyPriority(JSContext *cx, JSObject *obj, uintN argc,
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function getPropertyPriority requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->GetPropertyPriority(b0, nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->GetPropertyPriority(b0, nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
@@ -305,6 +308,7 @@ PR_STATIC_CALLBACK(JSBool)
 CSSStyleDeclarationSetProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleDeclaration *nativeThis = (nsIDOMCSSStyleDeclaration*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsAutoString b0;
   nsAutoString b1;
   nsAutoString b2;
@@ -314,14 +318,13 @@ CSSStyleDeclarationSetProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.setproperty",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -332,16 +335,16 @@ CSSStyleDeclarationSetProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *
 
   {
     if (argc < 3) {
-      JS_ReportError(cx, "Function setProperty requires 3 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
-    if (NS_OK != nativeThis->SetProperty(b0, b1, b2)) {
-      return JS_FALSE;
+    result = nativeThis->SetProperty(b0, b1, b2);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -358,6 +361,7 @@ PR_STATIC_CALLBACK(JSBool)
 CSSStyleDeclarationItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleDeclaration *nativeThis = (nsIDOMCSSStyleDeclaration*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsAutoString nativeRet;
   PRUint32 b0;
 
@@ -366,14 +370,13 @@ CSSStyleDeclarationItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.item",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -384,17 +387,16 @@ CSSStyleDeclarationItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function item requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
     }
 
-    if (NS_OK != nativeThis->Item(b0, nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->Item(b0, nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);

@@ -25,6 +25,8 @@
 
 #include "nsJSUtils.h"
 #include "jsapi.h"
+#include "jsdbgapi.h"
+#include "prprf.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIJSScriptObject.h"
@@ -36,11 +38,105 @@
 #include "nsIScriptEventListener.h"
 #include "nsIServiceManager.h"
 #include "nsIXPConnect.h"
+#include "nsIDOMDOMException.h"
+#include "nsDOMError.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
+
+struct ResultMap {nsresult rv; const char* name; const char* format;} map[] = {
+#define DOM_MSG_DEF(val, format) \
+    {(val), #val, format},
+#include "domerr.msg"
+#undef DOM_MSG_DEF
+    {0,0,0}   // sentinel to mark end of array
+};
+
+PRBool
+nsJSUtils::NameAndFormatForNSResult(nsresult rv,
+                                    const char** name,
+                                    const char** format)
+{
+  for (ResultMap* p = map; p->name; p++)
+  {
+    if (rv == p->rv)
+    {
+      if (name) *name = p->name;
+      if (format) *format = p->format;
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+NS_EXPORT JSBool
+nsJSUtils::nsReportError(JSContext* aContext, 
+                         nsresult aResult,
+                         const char* aMessage)
+{
+  const char* name = nsnull;
+  const char* format = nsnull;
+  char* location = nsnull;
+
+  // Get the name and message
+  if (aMessage) {
+    format = aMessage;
+  }
+  else {
+    NameAndFormatForNSResult(aResult, &name, &format);
+  }
+
+  // Get the current filename and line number
+  JSStackFrame* frame = nsnull;
+  JSScript* script = nsnull;
+  do {
+    frame = JS_FrameIterator(aContext, &frame);
+    if (frame) {
+      script = JS_GetFrameScript(aContext, frame);
+    }
+  } while ((nsnull != frame) && (nsnull == script));
+
+  if (script) {
+    const char* filename = JS_GetScriptFilename(aContext, script);
+    if (filename) {
+      PRUint32 lineNo = 0;
+      jsbytecode* bytecode = JS_GetFramePC(aContext, frame);
+      if (bytecode) {
+        lineNo = JS_PCToLineNumber(aContext, script, bytecode);
+      }
+      location = PR_smprintf("%s Line: %d", filename, lineNo);
+    }
+  }
+  
+  nsCOMPtr<nsIDOMDOMException> exc;
+  nsresult rv = NS_NewDOMException(getter_AddRefs(exc), 
+                                   aResult,
+                                   name, 
+                                   format,
+                                   location);
+  
+  if (location) {
+    PR_smprintf_free(location);
+  }
+    
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(exc);
+    
+    if (owner) {
+      JSObject* obj;
+      nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+      rv = owner->GetScriptObject(scriptCX, (void**)&obj);
+      if (NS_SUCCEEDED(rv)) {
+        JS_SetPendingException(aContext, OBJECT_TO_JSVAL(obj));
+      }
+    }
+  }
+
+  return JS_FALSE;
+}
 
 NS_EXPORT PRBool 
 nsJSUtils::nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
@@ -457,3 +553,4 @@ nsJSUtils::nsGetNativeThis(JSContext* aContext, JSObject* aObj)
 	}
 	return nsnull;
 }
+
