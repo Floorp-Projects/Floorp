@@ -875,13 +875,13 @@ NS_IMETHODIMP nsImapMailFolder::GetNoSelect(PRBool *aResult)
   NS_ENSURE_ARG_POINTER(aResult);
   return GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, aResult);
 }
-NS_IMETHODIMP nsImapMailFolder::Compact()
+NS_IMETHODIMP nsImapMailFolder::Compact(nsIUrlListener *aListener)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
     if (NS_SUCCEEDED(rv) && imapService)
     {
-        rv = imapService->Expunge(m_eventQueue, this, nsnull, nsnull);
+        rv = imapService->Expunge(m_eventQueue, this, aListener, nsnull);
     }
     return rv;
 }
