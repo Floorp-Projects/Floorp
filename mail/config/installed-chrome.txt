@@ -48,7 +48,7 @@ locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/mozapps/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/navigator/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/communicator/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/global/
-locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/US/global-region/
+locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/global-region/
 #ifdef XP_WIN
 locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/global-platform/
 locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/communicator-platform/

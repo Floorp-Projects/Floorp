@@ -92,7 +92,7 @@ locale/en-US/editor/EdConvertToTable.dtd,                 en-US/locale/en-US/edi
 # US
 #################################################################################################
 locale/en-US/messenger-region,                            US/locale/US/messenger-region
-locale/US/global-region,                                  en-US/locale/global-region
+locale/en-US/global-region,                               US/locale/US/global-region
 
 #################################################################################################
 # crypto
