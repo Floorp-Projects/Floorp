@@ -151,10 +151,10 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
 NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 {
 	nsresult rv = NS_OK;
-
+#if 0
   // use internet config to launch the uri
 	nsXPIDLCString	uriStr;
-	pUri->GetSpec( getter_Copies( uriStr));
+	aURL->GetSpec( getter_Copies( uriStr));
 
 	OSStatus err;
 	ICInstance inst;
@@ -174,7 +174,7 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 		}
  		(void) ICStop(inst);
  	}
-  
+  #endif
   return rv;
 }
 
