@@ -61,7 +61,6 @@ if (exists $form{rebuildguilty} or exists $form{showall}) {
   system ("./buildwho.pl -days 7 $tree > /dev/null");
   undef $form{rebuildguilty};
 }
-
 &show_tree_selector,  exit if $form{tree} eq '';
 &do_quickparse,       exit if $form{quickparse};
 &do_express,          exit if $form{express};
@@ -464,13 +463,13 @@ sub who_menu {
   my ($td, $mindate, $maxdate, $who) = @_;
   my $treeflag;
 
-  $qr = "../registry/who.cgi?email=$e"
+  $qr = "${rel_path}../registry/who.cgi?email=$who"
        ."&t0=". &url_encode("What did $who check into the source tree")
        ."&u0=". &url_encode( &query_ref2($td,$mindate,$maxdate,$who))
        ."&t1=". &url_encode("What has $who been checking in in the last day")
        ."&u1=". &url_encode( &query_ref2($td,$mindate,$maxdate,$who));
 
-  return "<a href='$rel_path$qr' onclick=\"return js_who_menu("
+  return "<a href='$qr' onclick=\"return js_who_menu("
         ."$td->{num},'$who',event,$mindate,$maxdate);\">";
 }
 
@@ -520,7 +519,7 @@ sub tree_open {
 
 sub print_javascript {
 
-  print <<'__ENDJS';
+  print <<"__ENDJS";
     <script>
 
     if (parseInt(navigator.appVersion) < 4) {
@@ -528,7 +527,7 @@ sub print_javascript {
     }
 
     function js_who_menu(tree,n,d,mindate,maxdate) {
-      var who_link = "../registry/who.cgi?email=" + escape(n)
+      var who_link = "${rel_path}../registry/who.cgi?email=" + escape(n)
                    + "&t0=" + escape("Last check-in")
                    + "&u0=" + escape(js_qr(tree,mindate,maxdate,n))
                    + "&t1=" + escape("Check-ins within 24 hours")
@@ -539,7 +538,6 @@ sub print_javascript {
         document.location = who_link;
         return false;
       }
-
       var l = document.layers['popup'];
       l.src = who_link;
       l.top = d.target.y - 6;
@@ -625,9 +623,6 @@ sub print_javascript {
       q.visibility="show"; 
       q.document.write("<TABLE BORDER=1><TR><TD><B>"
         + build[buildindex] + "</B><BR>"
-__ENDJS
-
-  print <<"__ENDJS";
         + "<A HREF=$rel_path" + logurl + ">View Brief Log</A><BR>"
         + "<A HREF=$rel_path" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
         + "<A HREF=$rel_path" + commenturl + ">Add a Comment</A><BR>"
