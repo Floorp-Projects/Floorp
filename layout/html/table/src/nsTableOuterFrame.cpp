@@ -1667,7 +1667,8 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
   // If the incremental reflow command is a StyleChanged reflow and
   // it's target is the current frame, then make sure we send
   // StyleChange reflow reasons down to the children so that they
-  // don't over-optimize their reflow.
+  // don't over-optimize their reflow.  Also make sure we reflow the caption.
+  PRBool reflowCaption = PR_FALSE;
   nsReflowReason reflowReason = eReflowReason_Incremental;
   nsHTMLReflowCommand* command = aOuterRS.path->mReflowCommand;
   if (command) {
@@ -1675,6 +1676,7 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
     command->GetType(type);
     if (eReflowType_StyleChanged == type) {
       reflowReason = eReflowReason_StyleChange;
+      reflowCaption = PR_TRUE;
     }
   }
   nscoord capMin = mMinCaptionWidth;
@@ -1698,9 +1700,11 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
     nsPoint captionOrigin;
     nsRect prevCaptionRect = mCaptionFrame->GetRect();
 
-    if (priorInnerSize.width != innerMet.width) {
+    reflowCaption = reflowCaption ||
+                    priorInnerSize.width != innerMet.width;
+
+    if (reflowCaption) {
       nsMargin ignorePadding;
-      // XXX only need to reflow if the caption is auto width
       nsHTMLReflowMetrics captionMet(eReflowReason_StyleChange == reflowReason);
       nscoord availWidth = GetCaptionAvailWidth(aPresContext, mCaptionFrame, aOuterRS, captionMargin,
                                                 ignorePadding, &innerSize.width, &innerMarginNoAuto);
