@@ -3003,7 +3003,7 @@ nsMsgComposeSendListener::RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBo
     }
 
     // Reset draft (uid) url with the new uid.
-    if (msgFolder && newUid)
+    if (msgFolder && newUid != nsMsgKey_None)
     {
       rv = msgFolder->GenerateMessageURI(newUid, getter_Copies(newDraftIdURL));
       NS_ENSURE_SUCCESS(rv, rv);
