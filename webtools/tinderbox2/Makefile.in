@@ -101,7 +101,7 @@ gen_test: compile_bin_code
 	perl $(builddir)/test/genbuilds.tst
 	perl $(builddir)/test/gennotices.tst
 	perl $(builddir)/test/genbugs.tst
-	$(builddir)/bin/tinder.cgi --daemon-mode
+	perl $(builddir)/bin/tinder.cgi --daemon-mode
 
 link_test:
 	find $(builddir) -type f -print | \
