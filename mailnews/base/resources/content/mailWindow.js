@@ -92,20 +92,20 @@ function OnMailWindowUnload()
 
 function CreateMailWindowGlobals()
 {
-	// get the messenger instance
-	messenger = Components.classes[messengerContractID].createInstance();
-	messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
+  // get the messenger instance
+  messenger = Components.classes[messengerContractID].createInstance();
+  messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 
-	pref = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
+  pref = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
 
-	//Create windows status feedback
+  //Create windows status feedback
   // set the JS implementation of status feedback before creating the c++ one..
   window.MsgStatusFeedback = new nsMsgStatusFeedback();
   // double register the status feedback object as the xul browser window implementation 
   window.XULBrowserWindow = window.MsgStatusFeedback;
 
-	statusFeedback           = Components.classes[statusFeedbackContractID].createInstance();
-	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
+  statusFeedback           = Components.classes[statusFeedbackContractID].createInstance();
+  statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
 
   // try to create and register ourselves with a security icon...
   var securityIcon = document.getElementById("security-button");
@@ -167,7 +167,6 @@ function InitMsgWindow()
 	msgWindow.msgHeaderSink = messageHeaderSink;
 	msgWindow.SetDOMWindow(window);
 	mailSession.AddMsgWindow(msgWindow);
-
 }
 
 function AddDataSources()
@@ -236,14 +235,18 @@ nsMsgStatusFeedback.prototype =
   throbber      : null,
   stopMenu      : null,
   stopButton    : null,
+  startTimeoutID : null,
+  stopTimeoutID  : null,
+  pendingStartRequests : 0,
+  meteorsSpinning : false,
 
   ensureStatusFields : function()
     {
       if (!this.statusTextFld ) this.statusTextFld = document.getElementById("statusText");
       if (!this.statusBar) this.statusBar = document.getElementById("statusbar-icon");
       if(!this.throbber)   this.throbber = document.getElementById("navigator-throbber");
-	    if(!this.stopButton) this.stopButton = document.getElementById("button-stop");
-	    if(!this.stopMenu)   this.stopMenu = document.getElementById("stopMenuitem");
+	  if(!this.stopButton) this.stopButton = document.getElementById("button-stop");
+	  if(!this.stopMenu)   this.stopMenu = document.getElementById("stopMenuitem");
     },
 
   // nsIXULBrowserWindow implementation
@@ -272,29 +275,31 @@ nsMsgStatusFeedback.prototype =
   onLocationChange : function(location)
     {
     },
-
-	QueryInterface : function(iid)
-		{
-	    if(iid.equals(Components.interfaces.nsIMsgStatusFeedback))
-		    return this;
-      if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
-        return this;
-	    throw Components.results.NS_NOINTERFACE;
-      return null;
-		},
+  QueryInterface : function(iid)
+   {
+     if(iid.equals(Components.interfaces.nsIMsgStatusFeedback))
+	   return this;
+     if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
+      return this;
+	  throw Components.results.NS_NOINTERFACE;
+     return null;
+    },
 
   // nsIMsgStatusFeedback implementation.
-	showStatusString : function(statusText)
-		{
-       this.ensureStatusFields();
-
-       if ( statusText == "" )
-          statusText = defaultStatus;
-       this.statusTextFld.value = statusText;
-		},
-	startMeteors : function()
-		{
+  showStatusString : function(statusText)
+    {
       this.ensureStatusFields();
+      if ( statusText == "" )
+        statusText = defaultStatus;
+      this.statusTextFld.value = statusText;
+	},
+  _startMeteors : function()
+    {
+      dump('starting meteors\n');
+      this.ensureStatusFields();
+
+      this.meteorsSpinning = true;
+      this.startTimeoutID = null;
 
       // Turn progress meter on.
       this.statusBar.setAttribute("mode","undetermined");
@@ -302,19 +307,35 @@ nsMsgStatusFeedback.prototype =
       // turn throbber on 
       this.throbber.setAttribute("busy", true);
 
-	    //turn on stop button and menu
-	    this.stopButton.setAttribute("disabled", false);
-	    this.stopMenu.setAttribute("disabled", false);
+      //turn on stop button and menu
+	  this.stopButton.setAttribute("disabled", false);
+	  this.stopMenu.setAttribute("disabled", false);
       
       // Remember when loading commenced.
-    	this.startTime = (new Date()).getTime();
-		},
-	stopMeteors : function()
-		{
+      this.startTime = (new Date()).getTime();     
+    },
+  startMeteors : function()
+    {
+      this.pendingStartRequests++;
+      // if we don't already have a start meteor timeout pending
+      // and the meteors aren't spinning, then kick off a start
+      if (!this.startTimeoutID && !this.meteorsSpinning)
+        this.startTimeoutID = setTimeout('window.MsgStatusFeedback._startMeteors();', 500);
+      
+      // since we are going to start up the throbber no sense in processing
+      // a stop timeout...
+      if (this.stopTimeoutID)
+      {
+        clearTimeout(this.stopTimeoutID);
+        this.stopTimeoutID = null;
+      }
+	},
+   _stopMeteors : function()
+    {
+      dump('stopping meteors\n');
       this.ensureStatusFields();
-
-			// Record page loading time.
-			var elapsed = ( (new Date()).getTime() - this.startTime ) / 1000;
+	  // Record page loading time.
+	  var elapsed = ( (new Date()).getTime() - this.startTime ) / 1000;
       var msg = Bundle.GetStringFromName("documentDonePrefix") +
                 elapsed + Bundle.GetStringFromName("documentDonePostfix");
 
@@ -327,12 +348,22 @@ nsMsgStatusFeedback.prototype =
       this.statusBar.setAttribute("mode","normal");
       this.statusBar.value = 0;  // be sure to clear the progress bar
       this.statusBar.progresstext = "";
-	    this.stopButton.setAttribute("disabled", true);
-	    this.stopMenu.setAttribute("disabled", true);
+	  this.stopButton.setAttribute("disabled", true);
+	  this.stopMenu.setAttribute("disabled", true);
 
-		},
-	showProgress : function(percentage)
-		{
+      this.meteorsSpinning = false;
+      this.stopTimeoutID = null;
+    },
+   stopMeteors : function()
+    {
+      if (this.pendingStartRequests > 0)
+        this.pendingStartRequests--;
+
+      if (this.pendingStartRequests == 0 && !this.stopTimeoutID)
+        this.stopTimeoutID = setTimeout('window.MsgStatusFeedback._stopMeteors();', 500);
+	},
+  showProgress : function(percentage)
+    {
       this.ensureStatusFields();
       if (percentage >= 0)
       {
@@ -340,10 +371,10 @@ nsMsgStatusFeedback.prototype =
         this.statusBar.value = percentage; 
         this.statusBar.progresstext = Math.round(percentage) + "%";
       }
-		},
-	closeWindow : function(percent)
-		{
-		}
+    },
+  closeWindow : function(percent)
+    {
+	}
 }
 
 
