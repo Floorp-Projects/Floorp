@@ -329,8 +329,8 @@ calMemoryCalendar.prototype = {
         //  if aCount != 0, we don't attempt to sort anything, and
         //  instead return the first aCount items that match.
 
-        for (var i in this.mItems) {
-            var item = this.mItems[i];
+        for (var itemIndex in this.mItems) {
+            var item = this.mItems[itemIndex];
             var itemtoadd = null;
             if (itemTypeFilter && !(item instanceof itemTypeFilter))
                 continue;
