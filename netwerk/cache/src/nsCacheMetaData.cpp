@@ -167,11 +167,11 @@ nsCacheMetaData::FlattenMetaData(char * buffer, PRUint32 bufSize)
 }
 
 nsresult
-nsCacheMetaData::UnflattenMetaData(char * data, PRUint32 size)
+nsCacheMetaData::UnflattenMetaData(const char * data, PRUint32 size)
 {
     if (size == 0) return NS_OK;
 
-    char* limit = data + size;
+    const char* limit = data + size;
     MetaElement * last = nsnull;
 
     while (data < limit) {

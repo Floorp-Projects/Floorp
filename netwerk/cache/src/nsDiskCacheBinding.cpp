@@ -111,11 +111,7 @@ ClearEntry(PLDHashTable *      /* table */,
 nsDiskCacheBinding *
 GetCacheEntryBinding(nsCacheEntry * entry)
 {
-    nsCOMPtr<nsISupports> data;
-    nsresult rv = entry->GetData(getter_AddRefs(data));
-    if (NS_FAILED(rv))  return nsnull;
-    
-    return (nsDiskCacheBinding *)data.get();
+    return (nsDiskCacheBinding *) entry->Data();
 }
 
 
@@ -219,10 +215,9 @@ nsDiskCacheBindery::CreateBinding(nsCacheEntry *       entry,
                                   nsDiskCacheRecord *  record)
 {
     NS_ASSERTION(initialized, "nsDiskCacheBindery not initialized");
-    nsCOMPtr<nsISupports> data;
-    nsresult rv = entry->GetData(getter_AddRefs(data));
-    if (NS_FAILED(rv) || data) {
-        NS_ASSERTION(!data, "cache entry already has bind data");
+    nsCOMPtr<nsISupports> data = entry->Data();
+    if (data) {
+        NS_ERROR("cache entry already has bind data");
         return nsnull;
     }
     
@@ -233,7 +228,7 @@ nsDiskCacheBindery::CreateBinding(nsCacheEntry *       entry,
     entry->SetData(binding);
     
     // add binding to collision detection system
-    rv = AddBinding(binding);
+    nsresult rv = AddBinding(binding);
     if (NS_FAILED(rv)) {
         entry->SetData(nsnull);
         return nsnull;

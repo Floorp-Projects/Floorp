@@ -235,13 +235,10 @@ nsMemoryCacheDevice::OpenInputStreamForEntry( nsCacheEntry *    entry,
     NS_ENSURE_ARG_POINTER(entry);
     NS_ENSURE_ARG_POINTER(result);
 
-    nsCOMPtr<nsISupports> data;
     nsCOMPtr<nsIStorageStream> storage;
+    nsresult rv;
 
-    nsresult rv = entry->GetData(getter_AddRefs(data));
-    if (NS_FAILED(rv))
-        return rv;
-
+    nsISupports *data = entry->Data();
     if (data) {
         storage = do_QueryInterface(data, &rv);
         if (NS_FAILED(rv))
@@ -267,13 +264,10 @@ nsMemoryCacheDevice::OpenOutputStreamForEntry( nsCacheEntry *     entry,
     NS_ENSURE_ARG_POINTER(entry);
     NS_ENSURE_ARG_POINTER(result);
 
-    nsCOMPtr<nsISupports> data;
     nsCOMPtr<nsIStorageStream> storage;
+    nsresult rv;
 
-    nsresult rv = entry->GetData(getter_AddRefs(data));
-    if (NS_FAILED(rv))
-        return rv;
-
+    nsISupports *data = entry->Data();
     if (data) {
         storage = do_QueryInterface(data, &rv);
         if (NS_FAILED(rv))
