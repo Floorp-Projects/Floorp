@@ -46,6 +46,7 @@
 #undef SetPort  // XXX Windows!
 
 #define PREF_NETWORK_HOSTS_NNTP_SERVER	"network.hosts.nntp_server"
+#define PREF_MAIL_ROOT_NNTP 	"mail.root.nntp"
 
 static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
@@ -968,13 +969,24 @@ NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, nsIURI *aURI, nsILoadG
 }
 
 NS_IMETHODIMP
+nsNntpService::SetDefaultLocalPath(nsIFileSpec *aPath)
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->SetFilePref(PREF_MAIL_ROOT_NNTP, aPath, PR_FALSE /* set default */);
+    return rv;
+}
+
+NS_IMETHODIMP
 nsNntpService::GetDefaultLocalPath(nsIFileSpec ** aResult)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = prefs->GetFilePref("mail.root.nntp", aResult);
+    rv = prefs->GetFilePref(PREF_MAIL_ROOT_NNTP, aResult);
     if (NS_SUCCEEDED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIProfile, profile, NS_PROFILE_PROGID, &rv);

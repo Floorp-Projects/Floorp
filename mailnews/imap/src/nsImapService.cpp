@@ -40,6 +40,8 @@
 #include "nsIPref.h"
 #include "nsIProfile.h"
 
+#define PREF_MAIL_ROOT_IMAP "mail.root.imap"
+
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -2171,13 +2173,24 @@ NS_IMETHODIMP nsImapService::NewChannel(const char *verb, nsIURI *aURI, nsILoadG
 }
 
 NS_IMETHODIMP
+nsImapService::SetDefaultLocalPath(nsIFileSpec *aPath)
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->SetFilePref(PREF_MAIL_ROOT_IMAP, aPath, PR_FALSE /* set default */);
+    return rv;
+}       
+
+NS_IMETHODIMP
 nsImapService::GetDefaultLocalPath(nsIFileSpec ** aResult)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = prefs->GetFilePref("mail.root.imap", aResult);
+    rv = prefs->GetFilePref(PREF_MAIL_ROOT_IMAP, aResult);
     if (NS_SUCCEEDED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIProfile, profile, NS_PROFILE_PROGID, &rv);

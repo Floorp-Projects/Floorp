@@ -36,6 +36,8 @@
 
 #define POP3_PORT 110 // The IANA port for Pop3
 
+#define PREF_MAIL_ROOT_POP3 "mail.root.pop3"
+
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
@@ -269,6 +271,18 @@ NS_IMETHODIMP nsPop3Service::NewChannel(const char *verb, nsIURI *aURI, nsILoadG
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+NS_IMETHODIMP
+nsPop3Service::SetDefaultLocalPath(nsIFileSpec *aPath)
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->SetFilePref(PREF_MAIL_ROOT_POP3, aPath, PR_FALSE /* set default */);
+    return rv;
+}     
+
 NS_IMETHODIMP
 nsPop3Service::GetDefaultLocalPath(nsIFileSpec ** aResult)
 {
@@ -276,7 +290,7 @@ nsPop3Service::GetDefaultLocalPath(nsIFileSpec ** aResult)
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = prefs->GetFilePref("mail.root.pop3", aResult);
+    rv = prefs->GetFilePref(PREF_MAIL_ROOT_POP3, aResult);
     if (NS_SUCCEEDED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
