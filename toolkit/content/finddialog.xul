@@ -37,7 +37,6 @@
   onload="onLoad();"
   onunload="onUnload();"
   ondialogaccept="return onAccept();"
-  style="width: 30em;"
   buttons="accept,cancel"
   title="&findDialog.title;"
   persist="screenX screenY">
