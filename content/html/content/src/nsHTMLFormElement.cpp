@@ -450,13 +450,13 @@ nsHTMLFormElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::method) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      EnumValueToString(aValue, kFormMethodTable, aResult);
+      EnumValueToString(aValue, kFormMethodTable, aResult, PR_FALSE);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::enctype) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      EnumValueToString(aValue, kFormEnctypeTable, aResult);
+      EnumValueToString(aValue, kFormEnctypeTable, aResult, PR_FALSE);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
