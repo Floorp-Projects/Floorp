@@ -293,7 +293,8 @@ function doLogin()
                        bundle.GetStringFromName("devinfo_stat_notloggedin"));
     }
   } catch (e) {
-    alert("failed to login");
+    var alertStr = bundle.GetStringFromName("login_failed"); 
+    alert(alertStr);
   }
   enableButtons();
 }
