@@ -425,6 +425,11 @@ public:
   NS_IMETHOD DoCopyImageContents(nsIDOMNode* aNode) = 0;
 
   /**
+   * Get the doc or the selection as text or html.
+   */
+  NS_IMETHOD DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aSelectionOnly, nsAString& outValue) = 0;
+
+  /**
    * Get the caret, if it exists. AddRefs it.
    */
   NS_IMETHOD GetCaret(nsICaret **aOutCaret) = 0;

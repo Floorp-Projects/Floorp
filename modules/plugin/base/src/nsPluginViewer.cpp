@@ -820,6 +820,20 @@ NS_IMETHODIMP PluginViewerImpl::GetPasteable(PRBool *aPasteable)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* AString getContents (in string mimeType, in boolean selectionOnly); */
+NS_IMETHODIMP PluginViewerImpl::GetContents(const char *mimeType, PRBool selectionOnly, nsAString & _retval)
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute boolean canGetContents; */
+NS_IMETHODIMP PluginViewerImpl::GetCanGetContents(PRBool *aCanGetContents)
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* ========================================================================================
  * nsIWebBrowserPrint
  * ======================================================================================== */

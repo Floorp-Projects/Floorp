@@ -2095,6 +2095,29 @@ NS_IMETHODIMP DocumentViewerImpl::GetPasteable(PRBool *aPasteable)
   return NS_OK;
 }
 
+/* AString getContents (in string mimeType, in boolean selectionOnly); */
+NS_IMETHODIMP DocumentViewerImpl::GetContents(const char *mimeType, PRBool selectionOnly, nsAString& aOutValue)
+{
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
+  return mPresShell->DoGetContents(nsDependentCString(mimeType), 0, selectionOnly, aOutValue);
+}
+
+/* readonly attribute boolean canGetContents; */
+NS_IMETHODIMP DocumentViewerImpl::GetCanGetContents(PRBool *aCanGetContents)
+{
+  NS_ENSURE_ARG_POINTER(aCanGetContents);
+
+  nsCOMPtr<nsISelection> selection;
+  nsresult rv = GetDocumentSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+  
+  PRBool isCollapsed;
+  selection->GetIsCollapsed(&isCollapsed);
+  
+  *aCanGetContents = !isCollapsed;
+  return NS_OK;
+}
+
 #ifdef XP_MAC
 #pragma mark -
 #endif
