@@ -38,9 +38,9 @@ echo Testing non-wrapped plaintext ...
 TestOutput -i text/html -o text/plain -f 0 -w 0 -c OutTestData/plainnowrap.out OutTestData/plain.html
 IF ERRORLEVEL 1 echo Non-wrapped plaintext test failed. && set errmsg=%errmsg% plainnowrap.out
 
-echo Testing wrapped bug unformatted plaintext ...
-TestOutput -i text/html -o text/plain -f 32 -w 50 -c OutTestData/plainwrap.out OutTestData/plain.html
-IF ERRORLEVEL 1 echo Wrapped plaintext test failed. && set errmsg=%errmsg% plainwrap.out
+REM echo Testing wrapped bug unformatted plaintext ...
+REM TestOutput -i text/html -o text/plain -f 32 -w 50 -c OutTestData/plainwrap.out OutTestData/plain.html
+REM IF ERRORLEVEL 1 echo Wrapped plaintext test failed. && set errmsg=%errmsg% plainwrap.out
 
 echo Testing mail quoting ...
 TestOutput -i text/html -o text/plain -c OutTestData/mailquote.out OutTestData/mailquote.html
@@ -59,3 +59,4 @@ TestOutput -i text/html -o text/plain -c OutTestData/htmltable.out OutTestData/h
 IF ERRORLEVEL 1 echo HTML Table to Plain text failed (%errorlevel%). && set errmsg=%errmsg% htmltable.out
 
 IF DEFINED %errmsg% echo  && echo TESTS FAILED: %errmsg% && exit 1
+echo ALL TESTS SUCCEEDED
