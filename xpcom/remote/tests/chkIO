@@ -1,0 +1,3 @@
+echo diff clientInOut.res serverInOut.res
+diff clientInOut.res serverInOut.res
+

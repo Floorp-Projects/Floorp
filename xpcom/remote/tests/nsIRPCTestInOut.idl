@@ -1,40 +1,34 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Sun Microsystems,
- * Inc. Portions created by Sun are
- * Copyright (C) 1999 Sun Microsystems, Inc. All
- * Rights Reserved.
- *
- * Contributor(s): 
- */
 #include "nsISupports.idl"
 
-[scriptable, uuid(e284f6a0-b701-11d3-ad26-005004159574)]
+[scriptable, uuid(16d17950-cdf5-11d3-ad2e-005004159574)]
 interface nsIRPCTestInOut : nsISupports
 {
-    void test1(inout boolean bool);
-    void test2(inout octet oct);
-    void test3(inout short s);
-    void test4(inout long l);
-    void test5(inout long long ll);
-    void test6(inout unsigned short us);
-    void test7(inout unsigned long ul);
-    void test8(inout unsigned long long ull);
-    void test9(inout float f);
-    void test10(inout double d);
-    void test11(inout char c);
-    void test12(inout wchar wc);
-    void test13(inout string str);
-//    void test14(inout wstring wstr);
+    void testInOut1(inout boolean bool);
+    void testInOut2(inout octet oct); //FAILED in IN (0)
+    void testInOut3(inout short s); // FAILED in IN (0)
+    void testInOut4(inout long l);
+    void testInOut5(inout long long ll);
+    void testInOut6(inout unsigned short us); //FAILED in IN (0)
+    void testInOut7(inout unsigned long ul);
+    void testInOut8(inout unsigned long long ull);
+    void testInOut9(inout float f);
+    void testInOut10(inout double d);
+    void testInOut11(inout char c);
+    void testInOut12(inout wchar wc); //FAILED core dump
+    void testInOut13(inout string str);
+    void testInOut14(inout wstring wstr);
+    void testInOut15(inout unsigned long count, [array, size_is(count)] inout char array);
+    void testInOut16(inout boolean bBool, inout char cChar, 
+                    inout unsigned short nUShort,
+                    inout long nLong, inout unsigned long nULong,
+                    inout long long nHyper, inout unsigned long long nUHyper,
+                    inout float fFloat, inout double fDouble,
+                    inout string aString);
+    void testInOut17(inout unsigned long count, [array, size_is(count)] inout long array);
+    void testInOut18(inout boolean bBool, inout char cChar, inout octet nByte,
+                    inout short nShort, inout unsigned short nUShort,
+                    inout long nLong, inout unsigned long nULong,
+                    inout long long nHyper, inout unsigned long long nUHyper,
+                    inout float fFloat, inout double fDouble,
+                    inout string aString);
 };
