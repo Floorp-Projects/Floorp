@@ -17,6 +17,11 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/* This is my generic cpp file to aid in creating a new class. This file
+ * declares the implementation of nsGeneric class. This class is cool...
+ * -Gagan Saksena 09/15/98 
+ */
+
 #include "nsGeneric.h"
 
 nsGeneric::nsGeneric()

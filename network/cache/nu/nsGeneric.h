@@ -20,6 +20,9 @@
 #ifndef nsGeneric_h__
 #define nsGeneric_h__
 
+/* This is a generic header file for creating new classes. It is not
+ * part of the build system. -Gagan Saksena 09/15/98 
+ */
 #include "nsISupports.h"
 
 class nsGeneric: public nsISupports
