@@ -7,7 +7,7 @@
 
 NS_BEGIN_EXTERN_C
 
-nsresult NS_NewNNTPHost(nsINNTPHost **aInstancePtrResult);
+nsresult NS_NewNNTPHost(nsINNTPHost **aInstancePtrResult, const char * name, PRUint32 port);
 
 NS_END_EXTERN_C
 
