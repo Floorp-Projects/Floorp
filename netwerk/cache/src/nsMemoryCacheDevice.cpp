@@ -215,6 +215,13 @@ nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
 
 
 nsresult
+nsMemoryCacheDevice::Visit(nsICacheVisitor * visitor)
+{
+    return NS_OK;
+}
+
+
+nsresult
 nsMemoryCacheDevice::AdjustMemoryLimits(PRUint32  softLimit, PRUint32  hardLimit)
 {
     mSoftLimit = softLimit;

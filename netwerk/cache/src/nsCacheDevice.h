@@ -31,7 +31,7 @@
 
 
 class nsCacheEntry;
-
+class nsICacheVisitor;
 
 class nsCacheDevice {
 public:
@@ -53,6 +53,8 @@ public:
     virtual nsresult OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize ) = 0;
 
     // XXX need to define methods for enumerating entries
+    
+    virtual nsresult Visit(nsICacheVisitor * visitor) = 0;
 };
 
 #endif // _nsCacheDevice_h_
