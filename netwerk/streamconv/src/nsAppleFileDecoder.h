@@ -39,7 +39,7 @@
 #ifndef nsAppleFileDecoder_h__
 #define nsAppleFileDecoder_h__
 
-#include "nsIAppleFIleDecoder.h"
+#include "nsIAppleFileDecoder.h"
 #include "nsILocalFileMac.h"
 
 /*
