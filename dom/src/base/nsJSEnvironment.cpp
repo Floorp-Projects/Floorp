@@ -159,7 +159,7 @@ NS_ScriptErrorReporter(JSContext *cx,
 
           errorevent.fileName = fileName.get();
           errorevent.errorMsg = msg.get();
-          errorevent.lineNr = report ? report->lineno : -1;
+          errorevent.lineNr = report ? report->lineno : 0;
 
           // HandleDOMEvent() must be synchronous for the recursion block
           // (errorDepth) to work.
@@ -534,7 +534,7 @@ nsJSContext::EvaluateStringWithValue(const nsAReadableString& aScript,
   jsval val;
 
   if (ok) {
-    JSVersion newVersion;
+    JSVersion newVersion = JSVERSION_UNKNOWN;
 
     // SecurityManager said "ok", but don't execute if aVersion is specified
     // and unknown.  Do execute with the default version (and avoid thrashing
@@ -542,7 +542,7 @@ nsJSContext::EvaluateStringWithValue(const nsAReadableString& aScript,
     ok = (!aVersion ||
           (newVersion = ::JS_StringToVersion(aVersion)) != JSVERSION_UNKNOWN);
     if (ok) {
-      JSVersion oldVersion;
+      JSVersion oldVersion = JSVERSION_UNKNOWN;
 
       if (aVersion)
         oldVersion = ::JS_SetVersion(mContext, newVersion);
@@ -652,7 +652,7 @@ nsJSContext::EvaluateString(const nsAReadableString& aScript,
   jsval val;
 
   if (ok) {
-    JSVersion newVersion;
+    JSVersion newVersion = JSVERSION_UNKNOWN;
 
     // SecurityManager said "ok", but don't execute if aVersion is specified
     // and unknown.  Do execute with the default version (and avoid thrashing
@@ -660,7 +660,7 @@ nsJSContext::EvaluateString(const nsAReadableString& aScript,
     ok = (!aVersion ||
           (newVersion = ::JS_StringToVersion(aVersion)) != JSVERSION_UNKNOWN);
     if (ok) {
-      JSVersion oldVersion;
+      JSVersion oldVersion = JSVERSION_UNKNOWN;
 
       if (aVersion)
         oldVersion = ::JS_SetVersion(mContext, newVersion);
@@ -740,14 +740,14 @@ nsJSContext::CompileScript(const PRUnichar* aText,
 
   *aScriptObject = nsnull;
   if (ok) {
-    JSVersion newVersion;
+    JSVersion newVersion = JSVERSION_UNKNOWN;
 
     // SecurityManager said "ok", but don't compile if aVersion is specified
     // and unknown.  Do compile with the default version (and avoid thrashing
     // the context's version) if aVersion is not specified.
     if (!aVersion ||
         (newVersion = ::JS_StringToVersion(aVersion)) != JSVERSION_UNKNOWN) {
-      JSVersion oldVersion;
+      JSVersion oldVersion = JSVERSION_UNKNOWN;
       if (aVersion)
         oldVersion = ::JS_SetVersion(mContext, newVersion);
 
