@@ -388,6 +388,25 @@ PRBool VerifyContextVector(PRInt32 aTags[],PRInt32 count,nsIDTD* aDTD) {
   return result;
 }
 
+/**
+ *  This debug routine sets the verification directory.  It overrides
+ *  the value from PR_GetEnv()
+ *
+ *  @update  jevering 5/19/98
+ *  @param   
+ *  @return 
+ */
+
+#if defined(NS_DEBUG)
+extern "C" NS_EXPORT void SetVerificationDirectory(char * verify_dir)
+{
+   if (verify_dir && PL_strlen(verify_dir))
+      gVerificationOutputDir = verify_dir;
+   else
+      gVerificationOutputDir = NULL;
+   
+}
+#endif /* NS_DEBUG */
 
 /**
  *  This is where we loop over the tokens created in the 

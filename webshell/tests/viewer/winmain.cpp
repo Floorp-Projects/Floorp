@@ -46,12 +46,14 @@
 #include "nsViewsCID.h"
 #include "nsString.h"
 #include "plevent.h"
+#include "prenv.h"
 #include <malloc.h>
 #include "nsIScriptContext.h"
 #include "nsDocLoader.h"
 
 // DebugRobot call
-extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList,  nsIWebWidget * ww);
+extern "C" NS_EXPORT int DebugRobot(
+   nsVoidArray * workList, nsIWebWidget * ww, int imax, char * verify_dir, void (*yieldProc)(const char *));
 
 // Selection Repaint includes
 #include "nsIPresShell.h"
@@ -70,6 +72,13 @@ static char* class2Name = "PrintPreview";
 static HANDLE gInstance, gPrevInstance;
 static char* startURL;
 static nsVoidArray* gWindows;
+
+// Debug Robot options
+static int gDebugRobotLoads = 5000;
+static char gVerifyDir[_MAX_PATH];
+static BOOL gVisualDebug = TRUE;
+
+#define DEBUG_EMPTY "(none)"
 
 // Temporary Netlib stuff...
 /* XXX: Don't include net.h... */
@@ -375,11 +384,16 @@ CopyTextContent(WindowData* wd, HWND aHWnd)
   }
 }
 
+void yieldProc(const char * str)
+{
+}
+
 long PASCAL
 WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
 {
   HMENU hMenu;
   PRBool bVisual = PR_FALSE;
+  BOOL CreateRobotDialog(HWND hParent);
 
   if (msg == WM_CREATE) {
     LPCREATESTRUCT lpcs = (LPCREATESTRUCT) lparam;
@@ -468,21 +482,25 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
         wd->ww->DumpStyleContexts();
       }
       break;
-
-    case VIEWER_DEBUGROBOT_UPDATE:
-      bVisual = PR_TRUE;
     case VIEWER_DEBUGROBOT:
       if ((nsnull != wd) && (nsnull != wd->ww)) {
-         nsIDocument* doc = wd->ww->GetDocument();
-         if (nsnull!=doc) {
-            const char * str = doc->GetDocumentURL()->GetSpec();
-            nsVoidArray * gWorkList = new nsVoidArray();
-            gWorkList->AppendElement(new nsString(str));
-            DebugRobot(gWorkList, bVisual ? wd->ww : nsnull);
+         if (CreateRobotDialog(hWnd))
+         {
+            nsIDocument* doc = wd->ww->GetDocument();
+            if (nsnull!=doc) {
+               const char * str = doc->GetDocumentURL()->GetSpec();
+               nsVoidArray * gWorkList = new nsVoidArray();
+               gWorkList->AppendElement(new nsString(str));
+               DebugRobot( 
+                  gWorkList, 
+                  gVisualDebug ? wd->ww : nsnull, 
+                  gDebugRobotLoads, 
+                  PL_strdup(gVerifyDir),
+                  yieldProc);
+            }
          }
       }
       break;
-
     case VIEWER_ONE_COLUMN:
     case VIEWER_TWO_COLUMN:
     case VIEWER_THREE_COLUMN:
@@ -740,6 +758,53 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
   return msg.wParam;
 }
 
+
+/* Debug Robot Dialog options */
+
+BOOL CALLBACK DlgProc(HWND hDlg, UINT msg, WPARAM wParam,LPARAM lParam)
+{
+   BOOL translated = FALSE;
+   HWND hwnd;
+   switch (msg)
+   {
+      case WM_INITDIALOG:
+         {
+            SetDlgItemInt(hDlg,IDC_PAGE_LOADS,5000,FALSE);
+            char * text = PR_GetEnv("VERIFY_PARSER");
+            SetDlgItemText(hDlg,IDC_VERIFICATION_DIRECTORY,text ? text : DEBUG_EMPTY);
+            hwnd = GetDlgItem(hDlg,IDC_UPDATE_DISPLAY);
+            SendMessage(hwnd,BM_SETCHECK,TRUE,0);
+         }
+         return FALSE;
+      case WM_COMMAND:
+         switch (LOWORD(wParam))
+         {
+            case IDOK:
+               gDebugRobotLoads = GetDlgItemInt(hDlg,IDC_PAGE_LOADS,&translated,FALSE);
+               GetDlgItemText(hDlg, IDC_VERIFICATION_DIRECTORY, gVerifyDir, sizeof(gVerifyDir));
+               if (!strcmp(gVerifyDir,DEBUG_EMPTY))
+                  gVerifyDir[0] = '\0';
+               hwnd = GetDlgItem(hDlg,IDC_UPDATE_DISPLAY);
+               gVisualDebug = (BOOL)SendMessage(hwnd,BM_GETCHECK,0,0);
+               EndDialog(hDlg,IDOK);
+               break;
+            case IDCANCEL:
+               EndDialog(hDlg,IDCANCEL);
+               break;
+         }
+         break;
+      default:
+         return FALSE;
+   }
+   return TRUE;
+}
+
+BOOL CreateRobotDialog(HWND hParent)
+{
+   BOOL result = (DialogBox(gInstance,MAKEINTRESOURCE(IDD_DEBUGROBOT),hParent,(DLGPROC)DlgProc) == IDOK);
+   return result;
+}
+
 void main(int argc, char **argv)
 {
   if (argc > 1) {
@@ -747,3 +812,5 @@ void main(int argc, char **argv)
   }
   WinMain(GetModuleHandle(NULL), NULL, 0, SW_SHOW);
 }
+
+
