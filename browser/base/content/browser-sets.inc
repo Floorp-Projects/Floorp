@@ -207,18 +207,20 @@
     <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
 
 #ifdef XP_WIN
-    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
-    <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
-    <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
     <key keycode="VK_BACK" command="cmd_handleBackspace"/>
     <key keycode="VK_BACK" command="Browser:Forward" modifiers="shift"/>
-
-    <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
-
-    <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
+#endif
+#ifdef XP_UNIX
+    <key key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
+    <key key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
+#ifdef XP_MACOSX
+    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
 #else
     <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="alt"/>
-    
+#endif
+#else
+    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
+#endif
 #ifdef XP_MACOSX
     <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="accel"/>
     <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="accel"/>
@@ -226,13 +228,8 @@
     <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
     <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
 #endif
-
-    <key key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
-    <key key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
-
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
     <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
-#endif
     <key keycode="VK_F5" oncommand="BrowserReload();"/>
     <key keycode="VK_F5" modifiers="control" oncommand="BrowserReloadSkipCache();"/>
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
@@ -250,12 +247,12 @@
     <key keycode="&findAgainCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
 
     <key id="addBookmarkAsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
-    <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
-
 #ifdef XP_WIN
 # Ctrl+I is conventially mapped to Info on MacOS X, thus it should not be 
 # overridden for other purposes there. 
     <key id="viewBookmarksSidebarKb" key="&manBookmarksWinCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
+#else
+    <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 #endif
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
