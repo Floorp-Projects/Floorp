@@ -1282,7 +1282,7 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
         goto done;
 
     GetHost(&hostName);
-    m_server->GetUserName(&userName);
+    m_server->GetUsername(&userName);
 
     hostSessionList->GetOnlineDirForHost(hostName, userName, aString); 
     // First we have to check to see if we should strip off an online server

@@ -715,7 +715,7 @@ NS_IMETHODIMP nsImapMailFolder::GetUsersName(char** userName)
 	rv = GetServer(getter_AddRefs(server));
  
     if (NS_SUCCEEDED(rv)) 
-          rv = server->GetUserName(userName);
+          rv = server->GetUsername(userName);
 #else  // **** for the future
     nsCOMPtr<nsIFolder> aFolder(do_QueryInterface((nsIMsgFolder*) this, &rv));
     if (NS_FAILED(rv)) return rv;

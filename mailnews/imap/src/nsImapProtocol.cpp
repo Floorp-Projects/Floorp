@@ -355,7 +355,7 @@ nsImapProtocol::GetImapUserName()
 {
 	nsIMsgIncomingServer * server = m_server;
 	if (!m_userName && server)
-		server->GetUserName(&m_userName);
+		server->GetUsername(&m_userName);
 	return m_userName;
 }
 
@@ -1158,7 +1158,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
             char * urlUserName = nsnull;
             rv = server->GetHostName(&urlHostName);
             if (NS_FAILED(rv)) return rv;
-            rv = server->GetUserName(&urlUserName);
+            rv = server->GetUsername(&urlUserName);
             if (NS_FAILED(rv)) return rv;
             if ((!GetImapHostName() || 
                  PL_strcasecmp(urlHostName, GetImapHostName()) == 0) &&
@@ -5122,7 +5122,7 @@ PRBool nsImapProtocol::TryToLogon()
 	if (NS_SUCCEEDED(rv) && server)
 	{
 		rv = server->GetPassword(&password);
-		rv = server->GetUserName(&userName);
+		rv = server->GetUsername(&userName);
 
 	}
 
