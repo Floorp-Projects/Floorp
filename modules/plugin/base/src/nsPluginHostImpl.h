@@ -64,6 +64,8 @@ public:
 
   ~nsPluginTag();
 
+  void TryUnloadPlugin();
+
   nsPluginTag   *mNext;
   char          *mName;
   char          *mDescription;
@@ -75,6 +77,7 @@ public:
   PRBool        mCanUnloadLibrary;
   nsIPlugin     *mEntryPoint;
   PRUint32      mFlags;
+  PRBool        mXPConnected;
   char          *mFileName;
 };
 
@@ -83,14 +86,14 @@ struct nsActivePlugin
   nsActivePlugin*        mNext;
   char*                  mURL;
   nsIPluginInstancePeer* mPeer;
-  nsCOMPtr<nsIPlugin>    mPlugin;
+  nsPluginTag*           mPluginTag;
   nsIPluginInstance*     mInstance;
   PRBool                 mStopped;
   PRTime                 mllStopTime;
   PRBool                 mDefaultPlugin;
   PRBool                 mXPConnected;
 
-  nsActivePlugin(nsCOMPtr<nsIPlugin> aPlugin,
+  nsActivePlugin(nsPluginTag* aPluginTag,
                  nsIPluginInstance* aInstance, 
                  char * url,
                  PRBool aDefaultPlugin);
@@ -111,7 +114,7 @@ public:
 
   void shut();
   PRBool add(nsActivePlugin * plugin);
-  PRBool remove(nsActivePlugin * plugin, PRBool * lastInstance = nsnull);
+  PRBool remove(nsActivePlugin * plugin, PRBool * aUnloadLibraryLater);
   nsActivePlugin * find(nsIPluginInstance* instance);
   nsActivePlugin * find(char * mimetype);
   nsActivePlugin * findStopped(char * url);
@@ -126,17 +129,16 @@ public:
 // we need to keep some libs in memory when we destroy mPlugins list
 // during refresh with reload if the plugin is currently running
 // on the page. They should be unloaded later, see bug #61388
-// The list is only created during plugins.refresh(1) and should
-// go away when we hit a page with a plugin again. It should not
-// exist under any other circumstances
-class nsUnloadedLibrary
+// There could also be other reasons to have this list. XPConnected
+// plugins e.g. may still be held at the time we normally unload the library
+class nsUnusedLibrary
 {
 public:
-  nsUnloadedLibrary *mNext;
+  nsUnusedLibrary *mNext;
   PRLibrary *mLibrary;
 
-  nsUnloadedLibrary(PRLibrary * aLibrary);
-  ~nsUnloadedLibrary();
+  nsUnusedLibrary(PRLibrary * aLibrary);
+  ~nsUnusedLibrary();
 };
 
 #define NS_PLUGIN_FLAG_ENABLED    0x0001    //is this plugin enabled?
@@ -406,7 +408,8 @@ private:
                        PRBool checkForUnwantedPlugins = PR_FALSE);
 
   PRBool IsRunningPlugin(nsPluginTag * plugin);
-  void CleanUnloadedLibraries();
+  void AddToUnusedLibraryList(PRLibrary * aLibrary);
+  void CleanUnusedLibraries();
 
   char        *mPluginPath;
   nsPluginTag *mPlugins;
@@ -415,7 +418,7 @@ private:
   PRBool      mIsDestroyed;
 
   nsActivePluginList mActivePluginList;
-  nsUnloadedLibrary *mUnloadedLibraries;
+  nsUnusedLibrary *mUnusedLibraries;
 };
 
 #endif
