@@ -959,6 +959,7 @@ mail/extensions/smime/skin/Makefile
 mail/extensions/offline/Makefile
 mail/extensions/inspector/Makefile
 mail/config/Makefile
+mail/installer/Makefile
 mail/installer/windows/Makefile
 xpfe/components/build2/Makefile
 "
