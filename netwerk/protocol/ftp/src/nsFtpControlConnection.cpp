@@ -117,7 +117,7 @@ nsFtpControlConnection::nsFtpControlConnection(nsITransport* socketTransport)
     NS_INIT_REFCNT();
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection created", this));
     mServerType = 0;
-    mConnected = mList = PR_FALSE;
+    mConnected =  PR_FALSE;
 
     mLock = PR_NewLock();
     NS_ASSERTION(mLock, "null lock");

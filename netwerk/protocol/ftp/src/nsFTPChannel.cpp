@@ -461,7 +461,11 @@ nsFTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
 NS_IMETHODIMP
 nsFTPChannel::OnProgress(nsIRequest *request, nsISupports* aContext,
                                   PRUint32 aProgress, PRUint32 aProgressMax) {
-    return mEventSink ? mEventSink->OnProgress(this, mUserContext, aProgress, (PRUint32) mContentLength) : NS_OK;
+    if (!mEventSink)
+        return NS_OK;
+
+    return mEventSink->OnProgress(this, mUserContext, 
+                                  aProgress, (PRUint32) mContentLength);
 }
 
 
