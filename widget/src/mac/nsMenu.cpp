@@ -27,6 +27,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentObserver.h"
 #include "nsIComponentManager.h"
+#include "nsIDocShell.h"
 
 #include "nsMenu.h"
 #include "nsIMenu.h"
@@ -120,8 +121,10 @@ nsMenu::~nsMenu()
   OSErr		err;
   NS_IF_RELEASE(mListener);
 
+     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+     
   	  nsCOMPtr<nsIContentViewer> cv;
-	  mWebShell->GetContentViewer(getter_AddRefs(cv));
+	  docShell->GetContentViewer(getter_AddRefs(cv));
 	  if (cv) {
 	   
 	    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
@@ -967,9 +970,10 @@ NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
     mWebShell = aWebShell;
     
     // add ourself as a document observer
-    
+     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+
 	  nsCOMPtr<nsIContentViewer> cv;
-	  mWebShell->GetContentViewer(getter_AddRefs(cv));
+	  docShell->GetContentViewer(getter_AddRefs(cv));
 	  if (cv) {
 	   
 	    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
@@ -1713,8 +1717,10 @@ MenuHelpers :: WebShellToPresContext ( nsIWebShell* inWebShell, nsIPresContext**
   
   nsresult retval = NS_OK;
   
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(inWebShell));
+
   nsCOMPtr<nsIContentViewer> contentViewer;
-  inWebShell->GetContentViewer(getter_AddRefs(contentViewer));
+  docShell->GetContentViewer(getter_AddRefs(contentViewer));
   if ( contentViewer ) {
     nsCOMPtr<nsIDocumentViewer> docViewer ( do_QueryInterface(contentViewer) );
     if ( docViewer )
