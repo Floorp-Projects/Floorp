@@ -71,7 +71,6 @@ EXTRA_DSO_LDOPTS = \
 		$(NSPR_LIBS) \
 		-lxpcom \
 		-lmozjs \
-		-lsecfree \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
