@@ -2485,7 +2485,6 @@ nsLineLayout::ComputeJustificationWeights(PerSpanData* aPSD,
   PRInt32 numLetters = 0;
 
   for (PerFrameData* pfd = aPSD->mFirstFrame; pfd != nsnull; pfd = pfd->mNext) {
-    nscoord dw = 0;
 
     if (PR_TRUE == pfd->GetFlag(PFD_ISTEXTFRAME)) {
       numSpaces += pfd->mJustificationNumSpaces;
