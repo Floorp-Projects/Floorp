@@ -2002,3 +2002,4 @@ nsFtpConnectionThread::SetDirMIMEType(nsString& aString) {
         aString.Append("generic");
     }
 }
+
