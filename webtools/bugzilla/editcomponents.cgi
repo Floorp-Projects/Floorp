@@ -386,6 +386,10 @@ if ($action eq 'new') {
     }
 
     my $initialowner = trim($::FORM{initialowner} || '');
+	#
+	# Now validating to make sure it's too an existing account
+	#
+	DBNameToIdAndCheck($initialowner);
 
     if ($initialowner eq '') {
         print "You must enter an initial owner for the component '$component'. Please press\n";
@@ -394,9 +398,12 @@ if ($action eq 'new') {
         exit;
     }
     #+++
-    #DBNameToIdAndCheck($initialowner, 0);
 
     my $initialqacontact = trim($::FORM{initialqacontact} || '');
+	#
+	# Now validating to make sure it's too an existing account
+	#
+	DBNameToIdAndCheck($initialqacontact);
 
     if (Param('useqacontact')) {
         if ($initialqacontact eq '') {
