@@ -60,7 +60,7 @@ public:
                              nsIDOMNode * aNewNode,
                              nsIDOMNode * aParent);
 
-  static nsresult EditTxn::JoinNodes(nsIDOMNode * aNodeToKeep,
+  static nsresult JoinNodes(nsIDOMNode * aNodeToKeep,
                                      nsIDOMNode * aNodeToJoin,
                                      nsIDOMNode * aParent,
                                      PRBool       aNodeToKeepIsFirst);
