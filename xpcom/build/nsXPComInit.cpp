@@ -459,10 +459,12 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     rv = nsMemoryImpl::Startup();
     if (NS_FAILED(rv)) return rv;
 
+#ifndef WINCE
     // If the locale hasn't already been setup by our embedder,
     // get us out of the "C" locale and into the system 
     if (strcmp(setlocale(LC_ALL, NULL), "C") == 0)
         setlocale(LC_ALL, "");
+#endif
 
 #if defined(XP_UNIX) || defined(XP_OS2)
     NS_StartupNativeCharsetUtils();

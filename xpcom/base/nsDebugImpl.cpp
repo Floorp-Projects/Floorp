@@ -140,6 +140,7 @@
 typedef WINBASEAPI BOOL (WINAPI* LPFNISDEBUGGERPRESENT)();
 PRBool InDebugger()
 {
+#ifndef WINCE
    PRBool fReturn = PR_FALSE;
    LPFNISDEBUGGERPRESENT lpfnIsDebuggerPresent = NULL;
    HINSTANCE hKernel = LoadLibrary("Kernel32.dll");
@@ -156,6 +157,9 @@ PRBool InDebugger()
       }
 
    return fReturn;
+#else
+   return PR_FALSE;
+#endif
 }
 
 #endif /* WIN32*/
@@ -205,7 +209,7 @@ nsDebugImpl::Assertion(const char *aStr, const char *aExpr, const char *aFile, P
    char* assertBehavior = getenv("XPCOM_DEBUG_BREAK");
    if (assertBehavior && strcmp(assertBehavior, "warn") == 0)
      return NS_OK;
-
+#ifndef WINCE // we really just want to crash for now
    if(!InDebugger())
       {
       DWORD code = IDRETRY;
@@ -255,6 +259,7 @@ nsDebugImpl::Assertion(const char *aStr, const char *aExpr, const char *aFile, P
             // Fall Through
          }
       }
+#endif // WINCE
 #endif
 
 #if defined(XP_OS2)

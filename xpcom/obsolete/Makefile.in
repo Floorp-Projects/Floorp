@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom_obsolete
 LIBRARY_NAME	= xpcom_compat
-ifneq ($(OS_ARCH),WINNT)
+ifneq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 SHORT_LIBNAME	= xpcomct
 endif
 
@@ -71,7 +71,7 @@ CPPSRCS         = \
 		nsSpecialSystemDirectory.cpp \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 REQUIRES	+= libreg
 ifndef MOZ_ENABLE_LIBXUL
 CPPSRCS		+= dlldeps-obs.cpp
@@ -95,6 +95,7 @@ LOCAL_INCLUDES	= \
 XPIDLSRCS	= nsIFileSpec.idl \
 		  nsIRegistry.idl \
 		 $(NULL)
+
 # Force use of PIC
 FORCE_USE_PIC	= 1 
 

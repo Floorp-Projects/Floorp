@@ -132,7 +132,7 @@ static HINSTANCE gShell32DLLInst = NULL;
 #endif
 NS_COM void StartupSpecialSystemDirectory()
 {
-#if defined (XP_WIN)
+#if defined (XP_WIN) && !defined (WINCE)
     /* On windows, the old method to get file locations is incredibly slow.
        As of this writing, 3 calls to GetWindowsFolder accounts for 3% of mozilla
        startup. Replacing these older calls with a single call to SHGetSpecialFolderPath
@@ -326,10 +326,16 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #endif
             
         case OS_TemporaryDirectory:
-#if defined (XP_WIN)
+#if defined (XP_WIN) && !defined (WINCE)
         {
             DWORD len = GetTempPath(_MAX_PATH, path);
             return NS_NewNativeLocalFile(nsDependentCString(path), 
+                                         PR_TRUE, 
+                                         aFile);
+        }
+#elif defined (WINCE)
+        {
+            return NS_NewNativeLocalFile(NS_LITERAL_CSTRING("\\Temp"), 
                                          PR_TRUE, 
                                          aFile);
         }
@@ -590,6 +596,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         {
             return GetWindowsFolder(CSIDL_TEMPLATES, aFile);
         }
+#ifndef WINCE
         case Win_Common_Startmenu:
         {
             return GetWindowsFolder(CSIDL_COMMON_STARTMENU, aFile);
@@ -606,10 +613,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         {
             return GetWindowsFolder(CSIDL_COMMON_DESKTOPDIRECTORY, aFile);
         }
-        case Win_Appdata:
-        {
-            return GetWindowsFolder(CSIDL_APPDATA, aFile);
-        }
         case Win_Printhood:
         {
             return GetWindowsFolder(CSIDL_PRINTHOOD, aFile);
@@ -617,6 +620,11 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         case Win_Cookies:
         {
             return GetWindowsFolder(CSIDL_COOKIES, aFile);
+        }
+#endif
+        case Win_Appdata:
+        {
+            return GetWindowsFolder(CSIDL_APPDATA, aFile);
         }
 #endif  // XP_WIN
 

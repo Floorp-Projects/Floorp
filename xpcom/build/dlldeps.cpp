@@ -130,7 +130,7 @@ void XXXNeverCalled()
     NS_ProxyRelease(nsnull, nsnull, PR_FALSE);
     XPT_DoString(nsnull, nsnull, nsnull);
     XPT_DoHeader(nsnull, nsnull, nsnull);
-#ifdef DEBUG
+#if defined (DEBUG) && !defined (WINCE)
     PurePrintf(0);
 #endif
     XPTC_InvokeByIndex(nsnull, 0, 0, nsnull);

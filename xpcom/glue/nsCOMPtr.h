@@ -1520,7 +1520,9 @@ operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
 // prevents us from using these.  (It also, fortunately, has the bug
 // that we don't need them either.)
 #if defined(_MSC_VER) && (_MSC_VER < 1310)
+#ifndef NSCAP_DONT_PROVIDE_NONCONST_OPEQ
 #define NSCAP_DONT_PROVIDE_NONCONST_OPEQ
+#endif
 #endif
 
 #ifndef NSCAP_DONT_PROVIDE_NONCONST_OPEQ

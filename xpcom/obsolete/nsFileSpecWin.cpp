@@ -57,11 +57,13 @@ DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
 #include <shellapi.h>
 #include <shlguid.h>
 
+#ifndef WINCE
 #ifdef UNICODE
 #define CreateDirectoryW  CreateDirectory
 #else
 #define CreateDirectoryA  CreateDirectory
 #endif 
+#endif
 
 //----------------------------------------------------------------------------------------
 void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
@@ -289,7 +291,7 @@ PRBool nsFileSpec::IsSymlink() const
     IShellLink* psl; 
     
     PRBool isSymlink = PR_FALSE;
-    
+#ifndef WINCE
     CoInitialize(NULL);
     // Get a pointer to the IShellLink interface. 
     hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void**)&psl); 
@@ -322,7 +324,7 @@ PRBool nsFileSpec::IsSymlink() const
     }
 
     CoUninitialize();
-
+#endif
     return isSymlink;
 }
 
@@ -332,7 +334,7 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasSymlink)
 //----------------------------------------------------------------------------------------
 {
     wasSymlink = PR_FALSE;  // assume failure
-
+#ifndef WINCE
 	if (Exists())
 		return NS_OK;
 
@@ -399,6 +401,9 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasSymlink)
         return NS_OK;
 
     return NS_FILE_FAILURE;
+#else
+    return NS_OK;
+#endif //WINCE
 }
 
 
@@ -628,6 +633,7 @@ nsresult nsFileSpec::MoveToDir(const nsFileSpec& inNewParentDirectory)
 nsresult nsFileSpec::Execute(const char* inArgs ) const
 //----------------------------------------------------------------------------------------
 {    
+#ifndef WINCE
     if (!IsDirectory())
     {
         nsSimpleCharString fileNameWithArgs = "\"";
@@ -636,6 +642,7 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
         if (execResult > 31)
             return NS_OK;
     }
+#endif
     return NS_FILE_FAILURE;
 } // nsFileSpec::Execute
 
@@ -644,6 +651,7 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
 PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
+#ifndef WINCE
     PRInt64 int64;
     
     LL_I2L(int64 , LONG_MAX);
@@ -704,6 +712,9 @@ PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
         nBytes = (double)dwFreeClus*(double)dwSecPerClus*(double) dwBytesPerSec;
     }
     return (PRInt64)nBytes;
+#else
+    return (PRInt64)0;
+#endif
 }
 
 

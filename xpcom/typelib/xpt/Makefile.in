@@ -44,7 +44,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 
-DIRS		= public src tools
+DIRS		= public src 
+
+ifndef WINCE
+DIRS        += tools
+endif
 
 include $(topsrcdir)/config/rules.mk
 
