@@ -49,7 +49,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeV
 
 NS_IMETHODIMP nsMsgThreadedDBView::Close()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return nsMsgDBView::Close();
 }
 
 nsresult nsMsgThreadedDBView::InitThreadedView(PRInt32 *pCount)

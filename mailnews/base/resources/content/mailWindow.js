@@ -64,6 +64,11 @@ var gIsEditableMsgFolder = false;
 
 function OnMailWindowUnload()
 {
+  var dbview = GetDBView();
+  if (dbview) {
+    dbview.close(); 
+  }
+
   var mailSession = Components.classes[mailSessionContractID].getService();
   if(mailSession)
   {
