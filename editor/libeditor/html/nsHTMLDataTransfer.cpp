@@ -624,7 +624,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
             {
               stuffToPaste.AssignWithConversion ( "<IMG src=\"", 10);
               stuffToPaste.AppendWithConversion ( urltext, len );
-              stuffToPaste.AppendWithConversion ( "\">" );
+              stuffToPaste.AppendWithConversion ( "\" alt=\"\" >" );
             }
             else /* insert as link */
             {
