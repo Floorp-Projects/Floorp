@@ -2079,12 +2079,12 @@
 		};
 		F5807369023A1514010001CA = {
 			isa = PBXFileReference;
-			path = SplashScreenWindow.h;
+			path = CHSplashScreenWindow.h;
 			refType = 4;
 		};
 		F580736A023A1514010001CA = {
 			isa = PBXFileReference;
-			path = SplashScreenWindow.m;
+			path = CHSplashScreenWindow.m;
 			refType = 4;
 		};
 		F580736B023A1514010001CA = {
