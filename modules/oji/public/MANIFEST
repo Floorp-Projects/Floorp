@@ -32,3 +32,4 @@ nsISecureEnv.h
 ProxyJNI.h
 nsIThreadManager.h
 nsIJVMWindow.h
+nsILiveConnectManager.h
