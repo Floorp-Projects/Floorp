@@ -232,7 +232,7 @@ protected:
                         nsIFrame* aParentFrame,
                         nsISupportsArray* aResults);
   void  List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets);
-  void  ListContexts(FILE* out, PRInt32 aIndent);
+  void  ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt32 aIndent);
 
   nsISupportsArray* mOverrideSheets;
   nsISupportsArray* mDocSheets;
@@ -785,8 +785,9 @@ static PRInt32 ListNode(ContextNode* aNode, FILE* out, PRInt32 aIndent)
   return count;
 }
 
-void StyleSetImpl::ListContexts(FILE* out, PRInt32 aIndent)
+void StyleSetImpl::ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt32 aIndent)
 {
+#if USE_CONTEXT_HASH
   mStyleContexts.Enumerate(GatherContexts);
   NS_ASSERTION(gRootNode->mNext == nsnull, "dangling orphan");
 
@@ -795,6 +796,9 @@ void StyleSetImpl::ListContexts(FILE* out, PRInt32 aIndent)
 
   delete gRootNode;
   gRootNode = nsnull;
+#else
+  aRootContext->List(out, aIndent);
+#endif
 }
 
 
