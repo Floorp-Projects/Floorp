@@ -58,16 +58,14 @@ mailing address.
 
 */
 
-#include "if_struct.h"
+#include "nsIImgDecoder.h"
 #include "il.h"
 #include "prmem.h"
 
 #include "merrors.h"
 #include "dllcompat.h"
 #include "gif.h"
-#include "nsGIFDecoder.h"
-#include "nsGIFCallback.h"
-#include "nsIImgDecoder.h"
+#include "nsIImgDCallbk.h"
 
 #include "ilISystemServices.h"
 

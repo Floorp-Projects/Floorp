@@ -30,10 +30,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= img
 
 
-EXPORTS		= il.h dllcompat.h if_struct.h il_utilp.h \
-                    nsIImgDecoder.h nsImgDecCID.h nsImgDecoder.h \
-		    nsImgDCallbk.h  \
-		  $(NULL)
+# XXX nsImgDCallbk.h should go into libimg/src instead of being here
+EXPORTS		=	il.h dllcompat.h if_struct.h il_utilp.h \
+			nsIImgDecoder.h nsIImgDCallbk.h \
+			nsImgDCallbk.h \
+			$(NULL)
 
 EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
 

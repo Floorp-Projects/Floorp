@@ -21,7 +21,7 @@
  */
 
 
-
+#if 0 // OBSOLETE
 
 #include "nsJPGCallback.h"
 
@@ -32,3 +32,4 @@ NS_IMPL_ISUPPORTS(JPGCallbk, kImgDCallbkIID)
 
 /*-----------------------------*/
 
+#endif /* 0 */

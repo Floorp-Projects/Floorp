@@ -21,7 +21,7 @@
  */
 
 
-#include "if_struct.h"
+#include "nsIImgDecoder.h" // include if_struct.h Needs to be first
 #include "prmem.h"
 #include "merrors.h"
 
@@ -29,9 +29,6 @@
 #include "dllcompat.h"
 #include "pngdec.h"
 #include "nsPNGDecoder.h"
-#include "nsImgDecCID.h"
-#include "nsIImgDecoder.h"  /* interface class */
-#include "nsImgDecoder.h"   /* factory */
 #include "nscore.h"
 
 /*--- needed for autoregistry ---*/
@@ -62,8 +59,8 @@ public:
   NS_IMETHOD ImgDComplete();
   NS_IMETHOD ImgDAbort();
 
-  il_container *SetContainer(il_container *ic){ilContainer = ic; return ic;}
-  il_container *GetContainer() {return ilContainer;}
+  NS_IMETHOD_(il_container *) SetContainer(il_container *ic){ilContainer = ic; return ic;}
+  NS_IMETHOD_(il_container *) GetContainer() {return ilContainer;}
 
   
 private:
@@ -91,10 +88,11 @@ PNGDecoder::QueryInterface(const nsIID& aIID, void** aInstPtr)
     return NS_ERROR_NULL_POINTER;
   }
 
-NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  NS_DEFINE_IID(kIImgDecoderIID, NS_IIMGDECODER_IID);
 
   if (aIID.Equals(kPNGDecoderIID) ||  
-      aIID.Equals(kImgDecoderIID) ||
+      aIID.Equals(kIImgDecoderIID) ||
       aIID.Equals(kISupportsIID)) {
 	  *aInstPtr = (void*) this;
     NS_INIT_REFCNT();
@@ -163,7 +161,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char *path)
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-     if ((rv = nsRepository::RegisterComponent(kPNGDecoderCID, 
+     if ((rv = compMgr->RegisterComponent(kPNGDecoderCID, 
        "Netscape PNGDec", 
        "component://netscape/image/decoder&type=image/png", path, PR_TRUE, PR_TRUE)
 				  ) != NS_OK) {

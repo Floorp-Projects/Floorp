@@ -8,5 +8,4 @@ il.h
 il_utilp.h
 nsIImgDecoder.h
 nsImgDCallbk.h
-nsImgDecCID.h
-nsImgDecoder.h
+nsIImgDCallbk.h

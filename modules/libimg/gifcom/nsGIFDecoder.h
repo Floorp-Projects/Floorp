@@ -22,7 +22,6 @@
 #ifndef _nsGIFDec_h
 #define _nsGIFDec_h
 
-
 #define NS_GIFDECODER_CID \
 { 0x0d471b70, 0xbaf5, 0x11d2, \
 { 0x80, 0x2c, 0x00, 0x60, 0x08, 0x8f, 0x91, 0xa3 } }
@@ -31,10 +30,5 @@
 #define NS_GIFDECODER_IID \
 { 0x402b190, 0xbbd0, 0x11d2, \
 { 0x80, 0x2c, 0x00, 0x60, 0x08, 0x8f, 0x91, 0xa3 } }
-
-
-static NS_DEFINE_IID(kGIFDecoderIID, NS_GIFDECODER_IID);
-static NS_DEFINE_CID(kGIFDecoderCID, NS_GIFDECODER_CID);
-
 
 #endif

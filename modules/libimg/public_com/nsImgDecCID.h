@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#if 0 // OBSOLETE
+
 #ifndef nsImgDecCIID_h__
 #define nsImgDecCIID_h__
 
@@ -54,8 +56,5 @@ NS_DEFINE_IID(kImgDecoderCID, NS_IMGDECODER_CID);
 { 0xd34a2f20, 0xcd9f, 0x11d2, \
 { 0x80, 0x2c, 0x00, 0x60, 0x08, 0x8f, 0x91, 0xa3 } }
 
-
-
-
 #endif
-
+#endif /* 0 */

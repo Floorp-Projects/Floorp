@@ -26,9 +26,9 @@
 
 #include "nsIImgDecoder.h"
 #include "nsImgDCallbk.h"
+#include "nsIComponentManager.h"
 #include "xpcompat.h"
 
-#include "nsImgDecCID.h"
 #include "prtypes.h"
 
 #include "il_strm.h"
@@ -52,33 +52,6 @@ int il_debug=0;
 /* Global list of image group contexts. */
 static IL_GroupContext *il_global_img_cx_list = NULL;
 
-
-/*-------------------------------------------------*/
-class ImgDecoder : public nsIImgDecoder {
-	
-public:
-
-  NS_DECL_ISUPPORTS
-  
-  il_container *GetContainer() {return ilContainer;};
-  il_container *SetContainer(il_container *ic) {ilContainer=ic; return ic;};
-
-  ImgDecoder(il_container *aContainer){ NS_INIT_ISUPPORTS(); ilContainer=aContainer;};
-  virtual ~ImgDecoder(); 
-
-private:
-  il_container* ilContainer;
-};
-
-NS_IMPL_ISUPPORTS(ImgDecoder, kImgDecoderIID)
-
-ImgDecoder:: ~ImgDecoder()
-{
-  if(ilContainer)
-    delete ilContainer;
-  return;
-}
-/*-----------------------------------------*/
 /*-----------------------------------------*/
 NS_IMETHODIMP ImgDCallbk::ImgDCBSetupColorspaceConverter()
 {  
@@ -212,8 +185,6 @@ ImgDCallbk :: ImgDCBClearTimeout(void *timer_id)
   return 0;
 }
 
-/*-------------------------------------------------*/
-ImgDecoder *imgdec;
 /*********************** Image Observer Notification. *************************
 *
 * These functions are used to send messages to registered observers of an
@@ -1045,7 +1016,7 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 	  ic->expires = ic->url->GetExpires();
 
 
-  ImgDecoder *imgdec;	
+  nsIImgDecoder *imgdec;	
 
   char imgtype[150];
   char imgtypestr[200];
@@ -1061,18 +1032,18 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 
     sprintf(imgtypestr, "component://netscape/image/decoder&type=image/%s"
             , imgtype );
- 
-  result = nsRepository::CreateInstance(imgtypestr,
-                                           NULL,    
-                                           kImgDecoderIID,
-                                       (void **)&imgdec);
+
+    static NS_DEFINE_IID(kIImgDecoderIID, NS_IIMGDECODER_IID);
+    result = nsComponentManager::CreateInstance(imgtypestr, NULL,    
+                                                kIImgDecoderIID, // XXX was previously kImgDecoderIID
+                                                (void **)&imgdec);
 
   if (NS_FAILED(result))
     return MK_IMAGE_LOSSAGE;
- NS_ADDREF(imgdec);
   
   
   imgdec->SetContainer(ic);
+  // NS_ADDREF(imgdec); Dont need this as we aren't releasing the addref from CreateInstance
   ic->imgdec = imgdec;
   
   ret = imgdec->ImgDInit();

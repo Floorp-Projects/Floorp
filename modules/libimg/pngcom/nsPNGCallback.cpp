@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#if 0 // OBSOLETE
+
 /* -*- Mode: C; tab-width: 4 -*-
  *   nsPNGDecoder.cpp --- interface to png decoder
  */
@@ -32,3 +34,4 @@ NS_IMPL_ISUPPORTS(PNGCallbk, kImgDCallbkIID)
 
 /*-----------------------------*/
 
+#endif /* 0 */

@@ -16,13 +16,15 @@
  * Reserved.
  */
 
+#if 0 // OBSOLETE
+
 /* -*- Mode: C; tab-width: 4 -*-
  *   nsJPGDecoder.cpp --- interface to jpg decoder
  */
 #ifndef _nsJPGCallbk_h
 #define _nsJPGCallbk_h
 
-
+#include "nsIImgDCallbk.h"
 #include "nsIImgDecoder.h"
 #include "nsJPGDecoder.h"
 
@@ -54,3 +56,5 @@ private:
 };
 
 #endif
+
+#endif /* 0 */
