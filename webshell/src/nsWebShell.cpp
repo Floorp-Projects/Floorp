@@ -499,7 +499,6 @@ nsWebShell::nsWebShell()
   mScrollPref = nsScrollPreference_kAuto;
   mScriptGlobal = nsnull;
   mScriptContext = nsnull;
-//  mURLListener = nsnull;
   InitFrameData(PR_TRUE);
   mIsFrame = PR_FALSE;
 	mWebShellType = nsWebShellContent;
@@ -524,7 +523,6 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mContentViewer);
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mPrefs);
-//  NS_IF_RELEASE(mURLListener);
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mObserver);
   NS_IF_RELEASE(mNetSupport);
@@ -875,7 +873,6 @@ nsWebShell::Destroy()
   // Stop any URLs that are currently being loaded...
   Stop();
 
-//  SetURLListener(nsnull);
   SetContainer(nsnull);
   SetObserver(nsnull);
   SetDocLoaderObserver(nsnull);
@@ -1026,18 +1023,6 @@ nsWebShell::SetContentViewer(nsIContentViewer* aViewer)
   return NS_OK;
 }
 
-#if 0
-NS_IMETHODIMP
-nsWebShell::SetURLListener(nsIURLListener* aURLListener)
-{
-  NS_IF_RELEASE(mURLListener);
-  mURLListener = aURLListener;
-  NS_IF_ADDREF(aURLListener);
-  return NS_OK;
-}
-
-#endif  /* 0 */
-
 NS_IMETHODIMP
 nsWebShell::SetContainer(nsIWebShellContainer* aContainer)
 {
@@ -1046,17 +1031,6 @@ nsWebShell::SetContainer(nsIWebShellContainer* aContainer)
   NS_IF_ADDREF(aContainer);
   return NS_OK;
 }
-
-#if 0
-NS_IMETHODIMP
-nsWebShell::GetURLListener(nsIURLListener *& aResult)
-{
-  aResult = mURLListener;
-  NS_IF_ADDREF(mURLListener);
-  return NS_OK;
-}
-#endif  /* 0 */
-
 
 NS_IMETHODIMP
 nsWebShell::GetContainer(nsIWebShellContainer*& aResult)
@@ -1535,16 +1509,6 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
     }
   }
 
-#if 0
-  // Tell URL listener we are loading a new url.
-  if (nsnull != mURLListener) {
-      nsresult rv = mURLListener->BeginLoadURL(this, aUrlSpec);
-      if (NS_FAILED(rv)) {
-          return rv;
-      }
-  }
-#endif  /* 0 */
-
  /* WebShell was primarily passing the buck when it came to streamObserver.
   * So, pass on the observer which is already a streamObserver to DocLoder.
   *  - Radha
@@ -1613,16 +1577,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
       return rv;
     }
   }
-
-#if 0
-  // Give URL listener right of refusal.
-  if (nsnull != mURLListener) {
-      rv = mURLListener->WillLoadURL(this, urlSpec, nsLoadURL);
-      if (NS_FAILED(rv)) {
-          return rv;
-      }
-  }
-#endif  /* 0 */
 
   nsString* url = new nsString(urlSpec);
   if (aModifyHistory) {
@@ -1730,16 +1684,6 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
         return rv;
       }
     }
-
-#if 0
-    // Give URL listener right of refusal
-    if (nsnull != mURLListener) {
-        rv = mURLListener->WillLoadURL(this, urlSpec, nsLoadHistory);
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
-    }
-#endif  /* 0 */
 
     printf("Goto %d\n", aHistoryIndex);
     mHistoryIndex = aHistoryIndex;
@@ -2435,74 +2379,6 @@ nsWebShell::OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
 
   return NS_OK;
 }
-
-
-#if 0
-NS_IMETHODIMP
-nsWebShell::OnConnectionsComplete()
-{
-  nsIDocumentViewer* docViewer;
-  nsresult rv = NS_ERROR_FAILURE;
-  
-  if (nsnull != mScriptGlobal) {
-    if (nsnull != mContentViewer && 
-        NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
-      nsIPresContext *presContext;
-      if (NS_OK == docViewer->GetPresContext(presContext)) {
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_EVENT;
-        event.message = NS_PAGE_LOAD;
-        rv = mScriptGlobal->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
-
-        NS_RELEASE(presContext);
-      }
-      NS_RELEASE(docViewer);
-    }
-  }
-  
-  /*
-   *Fire the EndLoadURL(...) notification...
-   */
-  if (((nsnull != mURLListener) || (nsnull != mContainer)) && (nsnull != mContentViewer)) {
-    nsIDocument* document;
-
-    rv = mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer);
-    if (NS_SUCCEEDED(rv)) {
-      rv = docViewer->GetDocument(document);
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoString urlString;
-        nsIURL* url;
-
-        url = document->GetDocumentURL();
-        if (nsnull != url) {
-          const char* spec;
-          rv = url->GetSpec(&spec);
-
-          /* XXX: The load status needs to be passed in... */
-          if (NS_SUCCEEDED(rv)) {
-            urlString = spec;
-            if (nsnull != mContainer) {
-                rv = mContainer->EndLoadURL(this, urlString, /* XXX */ 0 );
-            }
-            if (NS_SUCCEEDED(rv) && nsnull != mURLListener) {
-                rv = mURLListener->EndLoadURL(this, urlString, /* XXX */ 0 );
-            }
-          }
-          NS_RELEASE(url);
-        }
-        NS_RELEASE(document);
-      }
-      NS_RELEASE(docViewer);
-    }
-  }
-  
-  return rv;
-
-}
-
-#endif  /* 0 */
-
 
 /* For use with redirect/refresh url api */
 class refreshData : public nsITimerCallback 
