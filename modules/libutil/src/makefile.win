@@ -18,12 +18,17 @@
 MODULE=util 
 DEPTH=..\..\.. 
 CSRCS=obs.c 
-!if defined(MOZ_PERF)
-CPPSRCS=stopwatch.cpp
-CPP_OBJS=.\$(OBJDIR)\stopwatch.obj
-!endif
 REQUIRES=nspr util 
 LIBRARY_NAME=util 
+!if defined(MOZ_PERF)
+DEFINES=-DRAPTOR_PERF_METRICS
+CPPSRCS=stopwatch.cpp
+CPP_OBJS=.\$(OBJDIR)\stopwatch.obj
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+!endif
 C_OBJS=.\$(OBJDIR)\obs.obj 
 
 

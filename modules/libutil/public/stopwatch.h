@@ -1,4 +1,5 @@
 #include "nscore.h"
+#include "prlog.h"
 
 const double gTicks = 1.0e-7;
 
@@ -24,6 +25,21 @@ const double gTicks = 1.0e-7;
 #  define NS_STOP_STOPWATCH(_sw)
 #  define NS_SAVE_STOPWATCH_STATE(_sw)
 #  define NS_RESTORE_STOPWATCH_STATE(_sw)
+#endif
+
+
+#ifdef RAPTOR_PERF_METRICS
+static PRLogModuleInfo* gLogStopwatchModule = PR_NewLogModule("gecko_timing");
+
+#define RAPTOR_TRACE_STOPWATCHES        0x1
+
+#define RAPTOR_STOPWATCH_TRACE(_args)                               \
+  PR_BEGIN_MACRO                                                    \
+  PR_LOG(gLogStopwatchModule, RAPTOR_TRACE_STOPWATCHES, _args);     \
+  PR_END_MACRO
+#else
+#define RAPTOR_TRACE_STOPWATCHES 
+#define RAPTOR_STOPWATCH_TRACE(_args) 
 #endif
 
 class Stopwatch {
