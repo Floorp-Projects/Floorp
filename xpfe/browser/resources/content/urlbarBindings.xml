@@ -127,9 +127,6 @@
 
       <property name="mInputListener"><![CDATA[
         (function(aEvent) {
-          this.resultsPopup.mSearchBox.searchValue = this.currentSearchString;
-          return;
-          
           // "this" is the textbox, not the popup
           if (this.mSearchInputTO)
             window.clearTimeout(this.mSearchInputTO);
@@ -139,21 +136,13 @@
 
       <property name="mInputTimeout"><![CDATA[
         (function(me) {
-          me.resultsPopup.mSearchBox.searchValue = me.currentSearchString;
+          me.resultsPopup.mSearchBox.searchValue = me.value;
           me.mSearchInputTO = 0;
         });
       ]]></property>
 
       <property name="mEnginesReady">false</property>
       
-      <!-- initialize the columns in the outliner -->
-      <method name="initColumns">
-        <body><![CDATA[
-          this.addColumn({id: "value", flex: 2});
-          this.addColumn({id: "comment", flex: 1});
-        ]]></body>
-      </method>
-
       <method name="getOverrideValue">
         <body><![CDATA[
           if (this.mSearchBox.selectedIndex != null)

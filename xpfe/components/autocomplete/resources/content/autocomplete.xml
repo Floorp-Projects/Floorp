@@ -154,6 +154,12 @@
                 onset="return this.setAttribute('autoFillAfterMatch', val);"
                 onget="return this.getAttribute('autoFillAfterMatch') == 'true';"/>
                 
+      <!-- adds a second column to the results list which contains the string
+           in the comment field of each autocomplete result -->
+      <property name="showCommentColumn"
+                onset="return this.setAttribute('showCommentColumn', val);"
+                onget="return this.getAttribute('showCommentColumn') == 'true';"/>
+                
       <!-- option for completing to the default result whenever the user hits
            enter or the textbox loses focus -->
       <property name="forceComplete"
@@ -808,7 +814,9 @@
           if (!aSessionName || aSessionName != this.getDefaultSession())
             return;
             
-          if (!this.mFinishAfterSearch && this.autoFill && this.mLastKeyCode != 8) {
+          if (!this.mFinishAfterSearch && this.autoFill && 
+              this.mLastKeyCode != KeyEvent.DOM_VK_BACK_SPACE &&
+              this.mLastKeyCode != KeyEvent.DOM_VK_DELETE) {
             if (aResults.defaultItemIndex != -1) {
               var resultValue = this.getSessionValueAt(aSessionName, aResults.defaultItemIndex);
               var match = resultValue.toLowerCase();
@@ -1154,7 +1162,11 @@
       <!-- initialize the columns in the outliner -->
       <method name="initColumns">
         <body><![CDATA[
-          this.addColumn({id: "value", flex: 1});
+          if (this.textbox.showCommentColumn) {
+            this.addColumn({id: "value", flex: 2});
+            this.addColumn({id: "comment", flex: 1});
+          } else
+            this.addColumn({id: "value", flex: 1});
         ]]></body>
       </method>
 
