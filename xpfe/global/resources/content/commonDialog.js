@@ -8,11 +8,11 @@ function commonDialogOnLoad()
 		dump( " error getting param block interface\n" );
 	
 	var msg = param.GetString( 0 );
-	dump("message: "+ msg +"\n");
+//	dump("message: "+ msg +"\n");
 	SetElementText("info.txt", msg ); 
 	
 	msg = param.GetString( 3 );
-	dump("title message: "+ msg +"\n");
+//	dump("title message: "+ msg +"\n");
 	SetElementText("info.header", msg ); 
 	
 	
@@ -26,7 +26,7 @@ function commonDialogOnLoad()
 	var buttonText = param.GetString( 8 );
 	if ( buttonText != "" )
 	{
-		dump( "Setting OK Button to "+buttonText+"\n");
+//		dump( "Setting OK Button to "+buttonText+"\n");
 		var okButton = document.getElementById("ok");
 		okButton.setAttribute("value", buttonText);
 	}
@@ -35,7 +35,7 @@ function commonDialogOnLoad()
 	if ( buttonText != "" )
 	{
 	
-		dump( "Setting Cancel Button to"+buttonText+"\n");
+//		dump( "Setting Cancel Button to"+buttonText+"\n");
 		var cancelButton = document.getElementById("cancel");
 		cancelButton.setAttribute( "value",buttonText);
 	}
@@ -47,25 +47,25 @@ function commonDialogOnLoad()
 		var element = document.getElementById("cancel");
 		if ( element )
 		{
-			dump( "hide button \n" );
+//			dump( "hide button \n" );
 			element.setAttribute("style", "display:none;"  );
 		}
 		else
 		{
-			dump( "couldn't find button \n");	
+//			dump( "couldn't find button \n");	
 		}
 	}
 	
 	// Set the Checkbox
-	dump(" set checkbox \n");
+//	dump(" set checkbox \n");
 	var checkMsg = param.GetString(  1 );
-	dump("check box msg is "+ checkMsg +"\n");
+//	dump("check box msg is "+ checkMsg +"\n");
 	if ( checkMsg != "" )
 	{	
 		var prompt = (document.getElementById("checkboxLabel"));
     	if ( prompt )
     	{
-    		dump(" setting message \n" );
+ //   		dump(" setting message \n" );
     		prompt.childNodes[1].nodeValue = checkMsg;
     	}
 		var checkValue = param.GetInt( 1 );
@@ -75,12 +75,12 @@ function commonDialogOnLoad()
 	}
 	else
 	{
-		dump("not visibile \n");
+//		dump("not visibile \n");
 		var element = document.getElementById("checkboxLabel");
 		element.setAttribute("style","display: none;" );
 	}
 	// handle the edit fields
-	dump("set editfields \n");
+//	dump("set editfields \n");
 	
 	
 	
@@ -101,19 +101,19 @@ function commonDialogOnLoad()
 	 		var editfield1Password = param.GetInt( 4 );
 	 		if ( editfield1Password == 1 )
 		 	 {
-		 	 	dump("hiding password");
+//		 	 	dump("hiding password");
 		 		var element = document.getElementById("loginEditField");
 				element.setAttribute("style","display: none;" );
 				// Now hide the meanless text
 				var element = document.getElementById("password.text");
 				element.setAttribute("style", "display:none;"  );
 				var element = document.getElementById("dialog.password");
-				dump("give keyboard focus to password edit field \n");
+//				dump("give keyboard focus to password edit field \n");
 				element.focus();
 		 	 }
 		 	 else
 		 	 {
-		 		dump("hiding password");
+//		 		dump("hiding password");
 		 		var element = document.getElementById("passwordEditfield");
 				element.setAttribute("style","display: none;" );
 				// Now hide the meanless text
@@ -123,7 +123,7 @@ function commonDialogOnLoad()
 			}
 			break;
 	 	case 0:
-	 		dump("hide editfields \n");
+//	 		dump("hide editfields \n");
 			var element = document.getElementById("editFields");
 			element.setAttribute("style","display: none;" );
 			
@@ -140,12 +140,12 @@ function onCheckboxClick()
 	
 	var element = document.getElementById("checkbox" );
 	param.SetInt( 1, element.checked );
-	dump("setting checkbox to "+ element.checked+"\n");
+//	dump("setting checkbox to "+ element.checked+"\n");
 }
 
 function SetElementText( elementID, text )
 {
-	dump("setting "+elementID+" to "+text +"\n");
+//	dump("setting "+elementID+" to "+text +"\n");
 	var element = document.getElementById(elementID);
 	if( element )
 		element.childNodes[0].nodeValue = text;
@@ -156,21 +156,21 @@ function SetElementText( elementID, text )
 
 function commonDialogOnOK()
 {
-	dump("commonDialogOnOK \n");
+//	dump("commonDialogOnOK \n");
 	param.SetInt(0, 0 );
 	var element = document.getElementById("dialog.loginname");
 	param.SetString( 6, element.value );
-	dump(" login name - "+ element.value+ "\n");
+//	dump(" login name - "+ element.value+ "\n");
 	
 	element = document.getElementById("dialog.password");
 	param.SetString( 7, element.value );
-	dump(" password - "+ element.value+ "\n");
+//	dump(" password - "+ element.value+ "\n");
 	return true;
 }
 
 function commonDialogOnCancel()
 {
-	dump("commonDialogOnCancel \n");
+//	dump("commonDialogOnCancel \n");
 	param.SetInt(0, 1 );
 	return true;
 }
