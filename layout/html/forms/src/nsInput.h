@@ -65,7 +65,7 @@ public:
 
   // nsIFormControl methods
 
-  PRBool GetContent(nsString& aResult) const;
+  virtual PRBool GetContent(nsString& aResult) const;
 
   /**
     * @see nsIFormControl GetFormManager
