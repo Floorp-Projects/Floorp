@@ -160,7 +160,7 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
 
   // display the results
   tree.treeBoxObject.invalidate();
-  if (selectedRow>0) {
+  if (selectedRow >= 0) {
     tree.treeBoxObject.ensureRowIsVisible(selectedRow)
   }
 
