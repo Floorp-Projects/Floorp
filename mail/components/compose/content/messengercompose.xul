@@ -448,7 +448,7 @@
            toolbarname="Compose" 
            fullscreentoolbar="true" mode="icons"
            customizable="true"
-           defaultset="button-send,spacer,button-address,button-attach,button-security,spacer,button-save,spring,throbber-box">
+           defaultset="button-send,spacer,button-address,spacer,spellingButton,spacer,button-attach,button-security,spacer,button-save,spring,throbber-box">
   </toolbar>
 
   <toolbarset id="customToolbars" context="toolbar-context-menu"/>
