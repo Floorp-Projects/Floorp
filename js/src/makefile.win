@@ -55,7 +55,7 @@ DEFFILE		= $(DLLNAME).def
 !endif
 
 LLIBS=$(LIBNSPR)
-LCFLAGS= $(LCFLAGS) -DEXPORT_JS_API
+LCFLAGS= $(LCFLAGS) -DEXPORT_JS_API -DJS_THREADSAFE
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
 !endif
