@@ -23,7 +23,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMSelection.h"
-#include "nsIHighLevelHTMLEditor.h"
+#include "nsIHTMLEditor.h"
 #include "nsTextServicesDocument.h"
 
 #define LOCK_DOC(doc)
@@ -1954,7 +1954,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     return result;
   }
 
-  nsCOMPtr<nsIHighLevelHTMLEditor> htmlEditor = do_QueryInterface(mEditor, &result);
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor, &result);
   if (htmlEditor)
     result = htmlEditor->InsertText(*aText);
 
