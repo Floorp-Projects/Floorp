@@ -49,7 +49,6 @@
 #include "nsIPref.h"
 #include "prenv.h" /* for PR_GetEnv */
 
-#include "nsIAppShellComponentImpl.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDialogParamBlock.h"
 #include "nsISupportsPrimitives.h"
