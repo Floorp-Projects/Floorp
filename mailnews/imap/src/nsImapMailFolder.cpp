@@ -2554,6 +2554,7 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
     if (mDatabase && (!m_msgMovedByFilter || ShowDeletedMessages()))
       mDatabase->AddNewHdrToDB(newMsgHdr, PR_TRUE);
     m_msgParser->Clear(); // clear out parser, because it holds onto a msg hdr.
+    m_msgParser->SetMailDB(nsnull); // tell it to let go of the db too.
     // I don't think we want to do this - it does bad things like set the size incorrectly.
 //    m_msgParser->FinishHeader();
   }
