@@ -84,6 +84,7 @@ private:
 
     nsresult WriteAttributes(PRInt32 attrCount);
     nsresult GenerateSummary();
+    void StartNewPreBlock(void);
 
 protected:
 
@@ -119,10 +120,12 @@ protected:
     nsString            mFilename;
     nsString            mTags;
     nsString            mErrors;
-    PRBool              mShowErrors;
-    PRBool              mHasOpenRoot;
-    PRBool              mHasOpenBody;
-    PRBool              mInCDATAContainer;
+    PRPackedBool        mShowErrors;
+    PRPackedBool        mHasOpenRoot;
+    PRPackedBool        mHasOpenBody;
+    PRPackedBool        mInCDATAContainer;
+
+    PRUint32            mTokenCount;
 };
 
 extern nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);

@@ -50,6 +50,12 @@ html {
 #viewsource.wrap {
   white-space: -moz-pre-wrap;
 }
+pre {
+  font: inherit;
+  color: inherit;
+  white-space: inherit; 
+  margin: 0;
+}
 .start-tag {
  color: purple;
  font-weight: bold;
