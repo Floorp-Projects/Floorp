@@ -1165,40 +1165,27 @@ pk11_AddAttribute(PK11Object *object,PK11Attribute *attribute)
 }
 
 /* 
- * copy an unsigned attribute into a 'signed' SECItem. Secitem is allocated in
+ * copy an unsigned attribute into a SECItem. Secitem is allocated in
  * the specified arena.
  */
 CK_RV
 pk11_Attribute2SSecItem(PLArenaPool *arena,SECItem *item,PK11Object *object,
                                       CK_ATTRIBUTE_TYPE type)
 {
-    int len;
     PK11Attribute *attribute;
     unsigned char *start;
-    int real_len;
+
+    item->data = NULL;
 
     attribute = pk11_FindAttribute(object, type);
     if (attribute == NULL) return CKR_TEMPLATE_INCOMPLETE;
-    real_len = len = attribute->attrib.ulValueLen;
-    if ((*((unsigned char *)attribute->attrib.pValue) & 0x80) != 0) {
-	real_len++;
-    }
 
-    if (arena) {
-	start = item->data = (unsigned char *) PORT_ArenaAlloc(arena,real_len);
-    } else {
-	start = item->data = (unsigned char *) PORT_Alloc(real_len);
-    }
+    (void)SECITEM_AllocItem(arena, item, attribute->attrib.ulValueLen);
     if (item->data == NULL) {
 	pk11_FreeAttribute(attribute);
 	return CKR_HOST_MEMORY;
     }
-    item->len = real_len;
-    if (real_len != len) {
-	*start = 0;
-	start++;
-    }
-    PORT_Memcpy(start, attribute->attrib.pValue, len);
+    PORT_Memcpy(item->data, attribute->attrib.pValue, item->len);
     pk11_FreeAttribute(attribute);
     return CKR_OK;
 }

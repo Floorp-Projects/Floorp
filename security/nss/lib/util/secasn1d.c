@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.13 2002/01/11 00:33:08 relyea%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.14 2002/01/14 23:20:42 ian.mcgreer%sun.com Exp $
  */
 
 #include "secasn1.h"
@@ -1324,6 +1324,7 @@ sec_asn1d_parse_leaf (sec_asn1d_state *state,
 		      const char *buf, unsigned long len)
 {
     SECItem *item;
+    unsigned long bufLen;
 
     if (len == 0) {
 	state->top->status = needBytes;
@@ -1333,16 +1334,27 @@ sec_asn1d_parse_leaf (sec_asn1d_state *state,
     if (state->pending < len)
 	len = state->pending;
 
+    bufLen = len;
+
     item = (SECItem *)(state->dest);
     if (item != NULL && item->data != NULL) {
+	/* Strip leading zeroes */
+	if (state->underlying_kind == SEC_ASN1_INTEGER && /* INTEGER   */
+	    item->len == 0)                               /* MSB       */
+	{
+	    while (len > 1 && buf[0] == 0) {              /* leading 0 */
+		buf++;
+		len--;
+	    }
+	}
 	PORT_Memcpy (item->data + item->len, buf, len);
 	item->len += len;
     }
-    state->pending -= len;
+    state->pending -= bufLen;
     if (state->pending == 0)
 	state->place = beforeEndOfContents;
 
-    return len;
+    return bufLen;
 }
 
 
