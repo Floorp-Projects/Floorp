@@ -127,9 +127,9 @@ nsAString::SetIsVoid( PRBool )
   }
 
 PRBool
-nsAString::Equals( const char_type* rhs ) const
+nsAString::Equals( const char_type* rhs, const nsStringComparator& aComparator ) const
   {
-    return Equals(nsDependentString(rhs));
+    return Equals(nsDependentString(rhs), aComparator);
   }
 
 
@@ -648,9 +648,9 @@ nsACString::SetIsVoid( PRBool )
   }
 
 PRBool
-nsACString::Equals( const char_type* rhs ) const
+nsACString::Equals( const char_type* rhs, const nsCStringComparator& aComparator ) const
   {
-    return Equals(nsDependentCString(rhs));
+    return Equals(nsDependentCString(rhs), aComparator);
   }
 
 nsACString::char_type
