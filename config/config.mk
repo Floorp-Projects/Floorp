@@ -27,7 +27,7 @@ topsrcdir	= $(DEPTH)
 endif
 
 ifndef USE_AUTOCONF
-include $(topsrcdir)/config/autoconf.mk
+include $(DEPTH)/config/autoconf.mk
 endif
 
 #
