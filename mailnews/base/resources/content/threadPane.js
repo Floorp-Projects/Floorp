@@ -40,28 +40,33 @@ function ThreadPaneOnClick(event)
     if (t.localName == "treecol") {
        HandleColumnClick(t.id);
     }
-    else if (event.detail == 2 && t.localName == "treechildren") {
-       var row = new Object;
-       var colID = new Object;
-       var childElt = new Object;
+    else if (t.localName == "treechildren") {
+      var row = new Object;
+      var colID = new Object;
+      var childElt = new Object;
 
-       var tree = GetThreadTree();
-       // figure out what cell the click was in
-       tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
-       if (row.value == -1)
-         return;
+      var tree = GetThreadTree();
+      // figure out what cell the click was in
+      tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+      if (row.value == -1)
+       return;
 
-       // if the cell is in a "cycler" column
-       // or if the user double clicked on the twisty,
-       // don't open the message in a new window
-       var col = document.getElementById(colID.value);
-       if (col && col.getAttribute("cycler") != "true" && (childElt.value != "twisty")) {
-         ThreadPaneDoubleClick();
-         // double clicking should not toggle the open / close state of the 
-         // thread.  this will happen if we don't prevent the event from
-         // bubbling to the default handler in tree.xml
-	 event.preventBubble();
-       }
+      // if the cell is in a "cycler" column
+      // or if the user double clicked on the twisty,
+      // don't open the message in a new window
+      var col = document.getElementById(colID.value);
+      if (col) {
+        if (event.detail == 2 && col.getAttribute("cycler") != "true" && (childElt.value != "twisty")) {
+          ThreadPaneDoubleClick();
+          // double clicking should not toggle the open / close state of the 
+          // thread.  this will happen if we don't prevent the event from
+          // bubbling to the default handler in tree.xml
+          event.preventBubble();
+        }
+        else if (colID.value == "junkStatusCol") {
+          MsgJunkMailInfo(true);
+        }
+      }      
     }
 }
 

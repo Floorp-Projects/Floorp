@@ -482,6 +482,7 @@ function analyze(aMsgHdr, aNextFunction)
 
 function analyzeFolderForJunk()
 {
+  MsgJunkMailInfo(true);
   var view = GetDBView();
 
   // need to expand all threads, so we analyze everything
@@ -531,12 +532,14 @@ function analyzeMessages(messages)
 
 function JunkSelectedMessages(setAsJunk)
 {
+    MsgJunkMailInfo(true);
     gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk
                       : nsMsgViewCommandType.unjunk);
 }
 
 function deleteJunkInFolder()
 {
+  MsgJunkMailInfo(true);
   var view = GetDBView();
 
   // need to expand all threads, so we find everything

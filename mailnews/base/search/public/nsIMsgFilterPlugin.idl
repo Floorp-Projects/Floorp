@@ -118,4 +118,6 @@ interface nsIJunkMailPlugin : nsIMsgFilterPlugin
         in nsMsgJunkStatus aNewClassification,
         in nsIMsgWindow aMsgWindow,
         in nsIJunkMailClassificationListener aListener);
+
+    readonly attribute boolean userHasClassified;
 };

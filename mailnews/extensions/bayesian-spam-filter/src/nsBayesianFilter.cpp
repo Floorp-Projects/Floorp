@@ -991,6 +991,13 @@ void nsBayesianFilter::readTrainingData()
     fclose(stream);
 }
 
+NS_IMETHODIMP nsBayesianFilter::GetUserHasClassified(PRBool *aResult)
+{
+  *aResult = (mGoodCount && mGoodTokens.countTokens() ||
+              mBadCount && mBadTokens.countTokens());
+  return NS_OK;
+}
+
 /* void setMessageClassification (in string aMsgURL, in long aOldClassification, in long aNewClassification); */
 NS_IMETHODIMP nsBayesianFilter::SetMessageClassification(const char *aMsgURL,
                                                          nsMsgJunkStatus aOldClassification,
