@@ -118,18 +118,6 @@ void nsWidget::GetLastEventTime(guint32 *aTime)
     *aTime = sLastEventTime;
 }
 
-void nsWidget::DragStarted(void)
-{
-  if (sButtonMotionTarget)
-  {
-    sButtonMotionTarget = nsnull;
-    sButtonMotionRootX = -1;
-    sButtonMotionRootY = -1;
-    sButtonMotionWidgetX = -1;
-    sButtonMotionWidgetY = -1;
-  }
-}
-
 #ifdef USE_XIM
 nsresult nsWidget::KillICSpotTimer ()
 {
@@ -409,7 +397,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
 
   // we don't want people sending us events if we are the button motion target
   if (sButtonMotionTarget == this)
-    sButtonMotionTarget = nsnull;
+    DropMotionTarget();
 
   // ok, set our state
   mIsDestroying = PR_TRUE;
@@ -1757,7 +1745,7 @@ nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
   //
   // XXX ramiro - Same as above.
   //
-  if (sButtonMotionTarget)
+  if (nsnull != sButtonMotionTarget)
   {
     return;
   }
@@ -2051,14 +2039,7 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
   theWidget->DispatchMouseEvent(event);
   NS_IF_RELEASE(theWidget);
 
-
-  if (sButtonMotionTarget)
-  {
-    sButtonMotionTarget = nsnull;
-
-    sButtonMotionRootX = -1;
-    sButtonMotionRootY = -1;
-  }
+  DropMotionTarget();
 }
 //////////////////////////////////////////////////////////////////////
 /* virtual */ void
