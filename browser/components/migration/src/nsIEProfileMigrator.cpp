@@ -773,6 +773,8 @@ nsIEProfileMigrator::GetSignonsListFromPStore(IPStore* aPStore, nsVoidArray* aSi
 {
   HRESULT hr;
 
+  NS_ENSURE_ARG_POINTER(aPStore);
+
   IEnumPStoreItemsPtr enumItems;
   hr = aPStore->EnumItems(0, &IEPStoreGUID, &IEPStoreGUID, 0, &enumItems);
   if (SUCCEEDED(hr)) {
@@ -974,8 +976,10 @@ nsIEProfileMigrator::CopyFormData(PRBool aReplace)
   }
 
   PStoreCreateInstancePtr PStoreCreateInstance = (PStoreCreateInstancePtr)::GetProcAddress(pstoreDLL, "PStoreCreateInstance");
-  IPStorePtr PStore;
+  IPStorePtr PStore = NULL;
   hr = PStoreCreateInstance(&PStore, 0, 0, 0);
+  if (FAILED(hr) || PStore == NULL)
+    return NS_OK;
 
   IEnumPStoreItemsPtr enumItems;
   hr = PStore->EnumItems(0, &IEPStoreGUID, &IEPStoreGUID, 0, &enumItems);
