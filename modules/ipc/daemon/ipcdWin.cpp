@@ -200,7 +200,7 @@ IPC_SendMessageNow(ipcClient *client, const ipcMessage *msg)
 //-----------------------------------------------------------------------------
 
 static LRESULT CALLBACK
-ipcWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LOG(("got message [msg=%x wparam=%x lparam=%x]\n", uMsg, wParam, lParam));
 
@@ -230,6 +230,47 @@ ipcWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
+//-----------------------------------------------------------------------------
+// daemon startup synchronization
+//-----------------------------------------------------------------------------
+
+static HANDLE ipcSyncEvent;
+
+static PRBool
+AcquireLock()
+{
+    ipcSyncEvent = CreateEvent(NULL, FALSE, FALSE,
+                               IPC_SYNC_EVENT_NAME);
+    if (!ipcSyncEvent) {
+        LOG(("CreateEvent failed [%u]\n", GetLastError()));
+        return PR_FALSE;
+    }
+
+    if (ipcSyncEvent) {
+        // check to see if event already existed prior to this call.
+        if (GetLastError() == ERROR_ALREADY_EXISTS) {
+            LOG(("  lock already set; exiting...\n"));
+            return PR_FALSE;
+        }
+    }
+    
+    LOG(("  acquired lock\n"));
+    return PR_TRUE;
+}
+
+static void
+ReleaseLock()
+{
+    if (ipcSyncEvent) {
+        CloseHandle(ipcSyncEvent);
+        ipcSyncEvent = NULL;
+    }
+}
+
+//-----------------------------------------------------------------------------
+// main
+//-----------------------------------------------------------------------------
+
 int
 main(int argc, char **argv)
 {
@@ -237,6 +278,9 @@ main(int argc, char **argv)
     IPC_InitLog("###");
 #endif
     LOG(("daemon started...\n"));
+
+    if (!AcquireLock())
+        return 0;
 
     ipcClients = ipcClientArray;
     ipcClientCount = 0;
@@ -246,7 +290,7 @@ main(int argc, char **argv)
     //
     WNDCLASS wc;
     memset(&wc, 0, sizeof(wc));
-    wc.lpfnWndProc = ipcWindowProc;
+    wc.lpfnWndProc = WindowProc;
     wc.lpszClassName = IPC_WINDOW_CLASS;
 
     RegisterClass(&wc);
@@ -269,6 +313,8 @@ main(int argc, char **argv)
     MSG msg;
     while (GetMessage(&msg, ipcHwnd, 0, 0))
         DispatchMessage(&msg);
+
+    ReleaseLock();
 
     LOG(("exiting\n"));
     return 0;
