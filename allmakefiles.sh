@@ -408,3 +408,7 @@ fi
 if [ "$MOZ_MAIL_NEWS" ]; then
   add_makefiles < ${srcdir}/mailnews/makefiles
 fi
+
+if [ -d ${srcdir}/netwerk ]; then
+  add_makefiles < ${srcdir}/netwerk/makefiles
+fi
