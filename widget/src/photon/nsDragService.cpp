@@ -55,6 +55,8 @@ NS_IMPL_QUERY_INTERFACE2(nsDragService, nsIDragService, nsIDragSession)
 char *nsDragService::mDndEvent = NULL;
 int nsDragService::mDndEventLen;
 
+#define kMimeCustom			"text/_moz_htmlcontext"
+
 //-------------------------------------------------------------------------
 //
 // DragService constructor
@@ -65,8 +67,9 @@ nsDragService::nsDragService()
   mDndWidget = nsnull;
   mDndEvent = nsnull;
 	mNativeCtrl = nsnull;
-	mflavorStr = nsnull;
-	mData = nsnull;
+	mRawData = nsnull;
+	mFlavourStr = nsnull;
+	mTransportFile = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -77,7 +80,11 @@ nsDragService::nsDragService()
 nsDragService::~nsDragService()
 {
 	if( mNativeCtrl ) PtReleaseTransportCtrl( mNativeCtrl );
-	if( mflavorStr ) free( mflavorStr );
+	if( mFlavourStr ) free( mFlavourStr );
+	if( mTransportFile ) {
+		unlink( mTransportFile );
+		free( mTransportFile );
+		}
 }
 
 NS_IMETHODIMP nsDragService::SetNativeDndData( PtWidget_t *widget, PhEvent_t *event ) {
@@ -90,16 +97,20 @@ NS_IMETHODIMP nsDragService::SetNativeDndData( PtWidget_t *widget, PhEvent_t *ev
 	return NS_OK;
 	}
 
-NS_IMETHODIMP nsDragService::SetDropData( char *data, PRUint32 tmpDataLen, char *aflavorStr ) {
+NS_IMETHODIMP nsDragService::SetDropData( char *data ) {
 
-	mtmpDataLen = tmpDataLen;
+	if( mRawData ) free( mRawData );
 
-	if( mData ) free( mData );
-	mData = ( char * ) malloc( tmpDataLen );
-	memcpy( mData, data, tmpDataLen );
+	/* data is the filename used for passing the data */
+	FILE *fp = fopen( data, "r" );
+	PRUint32 n;
+	fread( &n, sizeof( PRUint32 ), 1, fp );
+	mRawData = ( char * ) malloc( n );
+	if( !mRawData ) { fclose( fp ); return NS_ERROR_FAILURE; }
 
-	if( mflavorStr ) free( mflavorStr );
-	mflavorStr = strdup( aflavorStr );
+	fseek( fp, 0, SEEK_SET );
+	fread( mRawData, 1, n, fp );
+	fclose( fp );
 
   return NS_OK;
   }
@@ -136,39 +147,91 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
 #endif
   nsBaseDragService::InvokeDragSession (aDOMNode, aArrayTransferables, aRegion, aActionType);
 
-  // make sure that we have an array of transferables to use
   if(!aArrayTransferables) return NS_ERROR_INVALID_ARG;
 
-  nsresult rv;
-  PRUint32 numItemsToDrag = 0;
-  rv = aArrayTransferables->Count(&numItemsToDrag);
-  if ( !numItemsToDrag )
-    return NS_ERROR_FAILURE;
+	/*  this will also addref the transferables since we're going to hang onto this beyond the length of this call */
+	mSourceDataItems = aArrayTransferables;
 
-	mActionType = aActionType;
-
-	PRUint32 tmpDataLen = 0;
-	nsCOMPtr<nsISupports> genericDataWrapper;
-	char aflavorStr[100];
-	GetRawData( aArrayTransferables, getter_AddRefs( genericDataWrapper ), &tmpDataLen, aflavorStr );
-
+  PRUint32 numDragItems = 0;
+  mSourceDataItems->Count(&numDragItems);
+  if ( ! numDragItems ) return NS_ERROR_FAILURE;
 
 	/* cancel a previous drag ( PhInitDrag ) if one is in place */
 	CancelDrag( PtWidgetRid( mDndWidget ), ((PhEvent_t*)mDndEvent)->input_group );
 
-	void *data;
-	nsPrimitiveHelpers::CreateDataFromPrimitive ( aflavorStr, genericDataWrapper, &data, tmpDataLen );
+	mActionType = aActionType;
 
-	mNativeCtrl = PtCreateTransportCtrl( );
-	static char * dupdata;
-	if( dupdata ) free( dupdata );
-	dupdata = (char*) calloc( 1, tmpDataLen + 4 + 100 );
-	if( dupdata ) {
-		*(int*)dupdata = tmpDataLen;
-		strcpy( dupdata+4, aflavorStr );
-		memcpy( dupdata+4+100, data, tmpDataLen );
-		PtTransportType( mNativeCtrl, "Mozilla", "dnddata", 0, Ph_TRANSPORT_INLINE, "raw", dupdata, tmpDataLen+4+100, 0 );
+	PRUint32 pDataLen = sizeof( PRUint32 ) + sizeof( PRUint32 ), totalItems = 0;
+	char *pdata = ( char * ) malloc( pDataLen ); /* we reserve space for a total size and totalItems */
+	if( !pdata ) return NS_ERROR_FAILURE;
 
+
+  for(PRUint32 itemIndex = 0; itemIndex < numDragItems; ++itemIndex) {
+    nsCOMPtr<nsISupports> genericItem;
+    mSourceDataItems->GetElementAt(itemIndex, getter_AddRefs(genericItem));
+    nsCOMPtr<nsITransferable> currItem (do_QueryInterface(genericItem));
+    if(currItem) {
+      nsCOMPtr <nsISupportsArray> flavorList;
+      currItem->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
+      if(flavorList) {
+        PRUint32 numFlavors;
+        flavorList->Count( &numFlavors );
+        for( PRUint32 flavorIndex = 0; flavorIndex < numFlavors ; ++flavorIndex ) {
+          nsCOMPtr<nsISupports> genericWrapper;
+          flavorList->GetElementAt (flavorIndex, getter_AddRefs(genericWrapper));
+          nsCOMPtr<nsISupportsCString> currentFlavor;
+          currentFlavor = do_QueryInterface(genericWrapper);
+          if(currentFlavor) {
+            nsXPIDLCString flavorStr;
+            currentFlavor->ToString ( getter_Copies(flavorStr) );
+						const char *FlavourStr = ( const char * ) flavorStr;
+						if( !strcmp( FlavourStr, kUnicodeMime ) || !strcmp( FlavourStr, kTextMime ) ||
+								!strcmp( FlavourStr, kURLMime ) || !strcmp( FlavourStr, kHTMLMime ) ) {
+							nsCOMPtr<nsISupports> data;
+							PRUint32 tmpDataLen = 0;
+							nsresult rv = currItem->GetTransferData( FlavourStr, getter_AddRefs(data), &tmpDataLen );
+							if( NS_SUCCEEDED( rv ) ) {
+								/* insert FlavourStr, data into the PtTransportCtrl_t */
+								int len = sizeof( PRUint32 ) + sizeof( PRUint32 ) + strlen( FlavourStr ) + 1 + tmpDataLen;
+								/* we reserve space for itemIndex|tmpDataLen|flavorStr|data */
+								len = ( ( len + 3 ) / 4 ) * 4;
+								pdata = ( char * ) realloc( pdata, len + pDataLen );
+								if( pdata ) {
+									char *p = pdata + pDataLen;
+									PRUint32 *d = ( PRUint32 * ) p;
+									d[0] = itemIndex; /* copy itemIndex*/
+									d[1] = tmpDataLen; /* copy PRUint32 tmpDataLen */
+									strcpy( p + sizeof( PRUint32 ) + sizeof( PRUint32 ), FlavourStr ); /* copy flavorStr */
+	
+									void *mem_data;
+									nsPrimitiveHelpers::CreateDataFromPrimitive ( FlavourStr, data, &mem_data, tmpDataLen );
+	
+									memcpy( p + sizeof( PRUint32 ) + sizeof( PRUint32 ) + strlen( FlavourStr ) + 1, mem_data, tmpDataLen ); /* copy the data */
+									pDataLen += len;
+									totalItems++;
+									}
+								}
+            	}
+						}
+          }
+        }
+      }
+    }
+
+	if( totalItems ) {
+		PRUint32 *p = ( PRUint32 * ) pdata;
+		p[0] = pDataLen;
+		p[1] = totalItems;
+		mNativeCtrl = PtCreateTransportCtrl( );
+
+		if( !mTransportFile ) mTransportFile = strdup( (char*) tmpnam( NULL ) );
+
+		FILE *fp = fopen( mTransportFile, "w" );
+		fwrite( pdata, 1, pDataLen, fp );
+		fclose( fp );
+		free( pdata );
+
+		PtTransportType( mNativeCtrl, "Mozilla", "dnddata", 1, Ph_TRANSPORT_INLINE, "string", (void*)mTransportFile, 0, 0 );
 		PtInitDnd( mNativeCtrl, mDndWidget, (PhEvent_t*)mDndEvent, NULL, 0 );
 		}
 
@@ -189,73 +252,87 @@ NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
 NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 aItemIndex ) {
 	nsresult rv = NS_ERROR_FAILURE;
 	nsCOMPtr<nsISupports> genericDataWrapper;
-	if( mData ) {
-		nsPrimitiveHelpers::CreatePrimitiveForData( mflavorStr, mData, mtmpDataLen, getter_AddRefs( genericDataWrapper ) );
-		rv = aTransferable->SetTransferData( mflavorStr, genericDataWrapper, mtmpDataLen );
+
+	if( mRawData ) {
+		PRUint32 *d = ( PRUint32 * ) mRawData, totalItems = d[1];
+		PRUint32 i, pdataLen = sizeof( PRUint32 ) + sizeof( PRUint32 );
+
+		/* search for aItemIndex */
+		for( i=0; i<totalItems; i++ ) {
+			char *p = mRawData + pdataLen;
+			PRUint32 *d = ( PRUint32 * ) p;
+
+			char *flavorStr = p + sizeof( PRUint32 ) + sizeof( PRUint32 );
+			PRUint32 this_len = sizeof( PRUint32 ) + sizeof( PRUint32 ) + strlen( flavorStr ) + 1 + d[1];
+			this_len = ( ( this_len + 3 ) / 4 ) * 4;
+			char *raw_data = flavorStr + strlen( flavorStr ) + 1;
+
+			if( d[0] == aItemIndex && !strcmp( mFlavourStr, flavorStr ) ) {
+				nsPrimitiveHelpers::CreatePrimitiveForData( flavorStr, raw_data, d[1], getter_AddRefs( genericDataWrapper ) );
+				rv = aTransferable->SetTransferData( flavorStr, genericDataWrapper, d[1] );
+				break;
+				}
+
+			pdataLen += this_len;
+			}
 		}
 	return rv;
 	}
-
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsDragService::GetRawData( nsISupportsArray* aArrayTransferables, nsISupports **data, PRUint32 *tmpDataLen, char *aflavorStr ) {
-
-	int aItemIndex = 0;
-
-	// get the item with the right index
-	nsCOMPtr<nsISupports> genericItem;
-	aArrayTransferables->GetElementAt(aItemIndex, getter_AddRefs(genericItem));
-	nsCOMPtr<nsITransferable> aTransferable (do_QueryInterface(genericItem));
-
-  // get flavor list that includes all acceptable flavors (including
-  // ones obtained through conversion). Flavors are nsISupportsCStrings
-  // so that they can be seen from JS.
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsISupportsArray> flavorList;
-  rv = aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
-  if (NS_FAILED(rv))
-    return rv;
-
-  // count the number of flavors
-  PRUint32 cnt;
-  flavorList->Count (&cnt);
-  unsigned int i;
-
-  // Now walk down the list of flavors. When we find one that is
-  // actually present, copy out the data into the transferable in that
-  // format. SetTransferData() implicitly handles conversions.
-  for ( i = 0; i < cnt; ++i ) {
-    nsCOMPtr<nsISupports> genericWrapper;
-    flavorList->GetElementAt(i,getter_AddRefs(genericWrapper));
-    nsCOMPtr<nsISupportsCString> currentFlavor;
-    currentFlavor = do_QueryInterface(genericWrapper);
-    if (currentFlavor) {
-      // find our gtk flavor
-      nsXPIDLCString flavorStr;
-      currentFlavor->ToString ( getter_Copies(flavorStr) );
-
-     // get the item with the right index
-     nsCOMPtr<nsISupports> genericItem;
-     aArrayTransferables->GetElementAt( aItemIndex, getter_AddRefs(genericItem));
-     nsCOMPtr<nsITransferable> item (do_QueryInterface(genericItem));
-     if (item) {
-       rv = item->GetTransferData(flavorStr, data, tmpDataLen);
-       if( NS_SUCCEEDED( rv ) ) {
-					strcpy( aflavorStr, flavorStr );
-					break;
-					}
-			 }
-    	}
-  	} // foreach flavor
-
-  return NS_OK;
-  
-}
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 {
   if (!aDataFlavor || !_retval)
     return NS_ERROR_FAILURE;
-	*_retval = PR_TRUE;
+
+	// set this to no by default
+	*_retval = PR_FALSE;
+
+	const char *ask;
+	if( !strcmp( aDataFlavor, kMimeCustom ) )  ask = kHTMLMime;
+	else ask = aDataFlavor;
+
+	if( strcmp( ask, kUnicodeMime ) && strcmp( ask, kTextMime ) &&
+    strcmp( ask, kURLMime ) && strcmp( ask, kHTMLMime ) ) return NS_OK;
+
+	if(!mSourceDataItems) return NS_OK;
+	PRUint32 numDragItems = 0;
+	mSourceDataItems->Count(&numDragItems);
+	for(PRUint32 itemIndex = 0; itemIndex < numDragItems; ++itemIndex) {
+  	nsCOMPtr<nsISupports> genericItem;
+  	mSourceDataItems->GetElementAt(itemIndex, getter_AddRefs(genericItem));
+  	nsCOMPtr<nsITransferable> currItem (do_QueryInterface(genericItem));
+  	if(currItem) {
+  	  nsCOMPtr <nsISupportsArray> flavorList;
+  	  currItem->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
+  	  if(flavorList) {
+  	    PRUint32 numFlavors;
+  	    flavorList->Count( &numFlavors );
+  	    for( PRUint32 flavorIndex = 0; flavorIndex < numFlavors ; ++flavorIndex ) {
+  	      nsCOMPtr<nsISupports> genericWrapper;
+  	      flavorList->GetElementAt (flavorIndex, getter_AddRefs(genericWrapper));
+  		    nsCOMPtr<nsISupportsCString> currentFlavor;
+  	      currentFlavor = do_QueryInterface(genericWrapper);
+ 		      if(currentFlavor) {
+  	        nsXPIDLCString flavorStr;
+  	        currentFlavor->ToString ( getter_Copies(flavorStr) );
+						if(strcmp(flavorStr, ask) == 0) {
+  						*_retval = PR_TRUE;
+							if( mFlavourStr ) free( mFlavourStr );
+							mFlavourStr = strdup( ask );
+							}
+						}
+					}
+				}
+			}
+		}
+
   return NS_OK;
+}
+
+void
+nsDragService::SourceEndDrag(void)
+{
+  // this just releases the list of data items that we provide
+  mSourceDataItems = 0;
 }
