@@ -664,7 +664,7 @@ retry:
 
     if (JS7_ISDEC(c) || (c == '.' && JS7_ISDEC(PeekChar(ts)))) {
 	jsint radix;
-	jschar *endptr;
+	const jschar *endptr;
 	jsdouble dval;
 
 	radix = 10;
@@ -725,16 +725,13 @@ retry:
 	FINISH_TOKENBUF(&ts->tokenbuf);
 
 	if (radix == 10) {
-	    /* Let js_strtod() do the hard work and validity checks. */
-	    if (!js_strtod(ts->tokenbuf.base, &endptr, &dval)) {
-		js_ReportCompileError(cx, ts,
-				      "floating point literal out of range");
+	    if (!js_strtod(cx, ts->tokenbuf.base, &endptr, &dval)) {
+		js_ReportCompileError(cx, ts, "out of memory");
 		RETURN(TOK_ERROR);
 	    }
 	} else {
-	    /* Let js_strtol() do the hard work, then check for overflow */
-	    if (!js_strtol(ts->tokenbuf.base, &endptr, radix, &dval)) {
-		js_ReportCompileError(cx, ts, "integer literal too large");
+	    if (!js_strtointeger(cx, ts->tokenbuf.base, &endptr, radix, &dval)) {
+		js_ReportCompileError(cx, ts, "out of memory");
 		RETURN(TOK_ERROR);
 	    }
 	}
