@@ -347,7 +347,6 @@ PRBool nsClipboard::DoRealConvert(GdkAtom type, GdkAtom aSelectionAtom)
 #ifdef DEBUG_CLIPBOARD
   g_print("    nsClipboard::DoRealConvert(%li)\n    {\n", type);
 #endif
-  int e = 0;
   // Set a flag saying that we're blocking waiting for the callback:
   mBlocking = PR_TRUE;
 
@@ -362,23 +361,41 @@ PRBool nsClipboard::DoRealConvert(GdkAtom type, GdkAtom aSelectionAtom)
                         type,
                         GDK_CURRENT_TIME);
 
-  gtk_grab_add(sWidget);
 
-  // Now we need to wait until the callback comes in ...
-  // i is in case we get a runaway (yuck).
+  /* because Gtk is smart, it checks in gtk_selection_convert to see if
+     the widget we are converting owns the selection, and if it does it
+     doesn't bother going to X, so it will be done and mBlocking will be
+     set to FALSE by this point, so only poll X if we have to.  (pav)
+  */
+  if (mBlocking) {
+    gtk_grab_add(sWidget);
+    // Now we need to wait until the callback comes in ...
+    // i is in case we get a runaway (yuck).
 #ifdef DEBUG_CLIPBOARD
-  g_print("      Waiting for the callback... mBlocking = %d\n", mBlocking);
+    g_print("      Waiting for the callback... mBlocking = %d\n", mBlocking);
 #endif /* DEBUG_CLIPBOARD */
-  for (e=0; mBlocking == PR_TRUE && e < 1000; ++e)
-  {
-    gtk_main_iteration_do(PR_TRUE);
-  }
 
-  gtk_grab_remove(sWidget);
+    XEvent xevent;
+    while (!XCheckTypedWindowEvent(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(sWidget->window), SelectionNotify, &xevent));
+
+    GdkEvent event;
+    event.selection.type = GDK_SELECTION_NOTIFY;
+    event.any.window = gdk_window_lookup(xevent.xany.window);
+    event.any.send_event = xevent.xany.send_event ? TRUE : FALSE;
+    event.selection.window = event.any.window;
+    event.selection.selection = xevent.xselection.selection;
+    event.selection.target = xevent.xselection.target;
+    event.selection.property = xevent.xselection.property;
+    event.selection.time = xevent.xselection.time;
+    
+    gtk_widget_event(sWidget, &event);
 
 #ifdef DEBUG_CLIPBOARD
-  g_print("    }\n");
+    g_print("    }\n");
 #endif
+
+    gtk_grab_remove(sWidget);
+  }
 
   if (mSelectionData.length > 0)
     return PR_TRUE;
@@ -1122,7 +1139,6 @@ PRBool nsClipboard::GetTargets(GdkAtom aSelectionAtom)
 #ifdef DEBUG_CLIPBOARD
   g_print("    nsClipboard::GetTargets(%d)\n    {\n", aSelectionAtom);
 #endif
-  int e = 0;
   // Set a flag saying that we're blocking waiting for the callback:
   mBlocking = PR_TRUE;
 
@@ -1143,10 +1159,21 @@ PRBool nsClipboard::GetTargets(GdkAtom aSelectionAtom)
 #ifdef DEBUG_CLIPBOARD
   g_print("      Waiting for the callback... mBlocking = %d\n", mBlocking);
 #endif /* DEBUG_CLIPBOARD */
-  for (e=0; mBlocking == PR_TRUE && e < 1000; ++e)
-  {
-    gtk_main_iteration_do(PR_TRUE);
-  }
+
+  XEvent xevent;
+  while (!XCheckTypedWindowEvent(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(sWidget->window), SelectionNotify, &xevent));
+
+  GdkEvent event;
+  event.selection.type = GDK_SELECTION_NOTIFY;
+  event.any.window = gdk_window_lookup (xevent.xany.window);
+  event.any.send_event = xevent.xany.send_event ? TRUE : FALSE;
+  event.selection.window = event.any.window;
+  event.selection.selection = xevent.xselection.selection;
+  event.selection.target = xevent.xselection.target;
+  event.selection.property = xevent.xselection.property;
+  event.selection.time = xevent.xselection.time;
+
+  gtk_widget_event(sWidget, &event);
 
   gtk_grab_remove(sWidget);
 
