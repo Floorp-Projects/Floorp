@@ -125,6 +125,13 @@ nsInterfaceState::NotifyDocumentStateChanged(PRBool aNowDirty)
 NS_IMETHODIMP
 nsInterfaceState::NotifySelectionChanged()
 {
+  return ForceUpdate();
+}
+
+
+NS_IMETHODIMP
+nsInterfaceState::ForceUpdate()
+{
   nsresult  rv;
   
   // we don't really care if any of these fail.
@@ -148,6 +155,25 @@ nsInterfaceState::NotifySelectionChanged()
   return NS_OK;
 }
 
+PRBool
+nsInterfaceState::SelectionIsCollapsed()
+{
+  nsresult rv;
+  // we don't care too much about failures here.
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIDOMSelection> domSelection;
+    rv = editor->GetSelection(getter_AddRefs(domSelection));
+    if (NS_SUCCEEDED(rv))
+    {    
+      PRBool selectionCollapsed = PR_FALSE;
+      rv = domSelection->GetIsCollapsed(&selectionCollapsed);
+      return selectionCollapsed;
+    }
+  }
+  return PR_FALSE;
+}
 
 nsresult
 nsInterfaceState::UpdateParagraphState(const char* observerName, const char* attributeName, nsString& ioParaFormat)
@@ -227,8 +253,15 @@ nsInterfaceState::UpdateFontFace(const char* observerName, const char* attribute
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom("font"));
   nsAutoString faceStr("face");
   
-  rv = mEditor->GetInlineProperty(styleAtom, &faceStr, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
-  
+  if (SelectionIsCollapsed())
+  {
+    rv = mEditor->GetTypingStateValue(styleAtom, ioFontString);
+  }
+  else
+  {
+    rv = mEditor->GetInlineProperty(styleAtom, &faceStr, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
+  }
+  // XXX this needs finishing.
   return rv;
 }
 
@@ -237,23 +270,35 @@ nsresult
 nsInterfaceState::UpdateTextState(const char* tagName, const char* observerName, const char* attributeName, PRInt8& ioState)
 {
   nsresult  rv;
-  
-  PRBool    firstOfSelectionHasProp = PR_FALSE;
-  PRBool    anyOfSelectionHasProp = PR_FALSE;
-  PRBool    allOfSelectionHasProp = PR_FALSE;
-  
+    
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom(tagName));
 
-  rv = mEditor->GetInlineProperty(styleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
- 
-  PRBool    &behaviour = allOfSelectionHasProp;			// change this to alter the behaviour
-  if (behaviour != ioState)
+  PRBool testBoolean;
+  if (SelectionIsCollapsed())
   {
-    rv = SetNodeAttribute(observerName, attributeName, behaviour ? "true" : "false");
+    PRBool    stateHasProp = PR_FALSE;
+    
+    rv = mEditor->GetTypingState(styleAtom, stateHasProp);
+    testBoolean = stateHasProp;
+  }
+  else
+  {
+    PRBool    firstOfSelectionHasProp = PR_FALSE;
+    PRBool    anyOfSelectionHasProp = PR_FALSE;
+    PRBool    allOfSelectionHasProp = PR_FALSE;
+
+    rv = mEditor->GetInlineProperty(styleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
+    testBoolean = allOfSelectionHasProp;			// change this to alter the behaviour
+  }
+  if (NS_FAILED(rv)) return rv;
+
+  if (testBoolean != ioState)
+  {
+    rv = SetNodeAttribute(observerName, attributeName, testBoolean ? "true" : "false");
 	  if (NS_FAILED(rv))
 	    return rv;
 	  
-	  ioState = behaviour;
+	  ioState = testBoolean;
   }
   
   return rv;
