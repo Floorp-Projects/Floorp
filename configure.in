@@ -2990,6 +2990,12 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$SYSTEM_PNG" = 1; then
     PNG_LIBS="-L${PNG_DIR}/lib ${PNG_LIBS}"
 fi
 
+
+dnl Disable profile at startup, hack for tinderbox.
+if test "$MOZ_BYPASS_PROFILE_AT_STARTUP"; then
+  AC_DEFINE(MOZ_BYPASS_PROFILE_AT_STARTUP)
+fi
+
 dnl system FullCircle/Talkback support (Crash-reporting mechanism)
 dnl ==============================================================
 
