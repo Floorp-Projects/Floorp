@@ -82,8 +82,9 @@ public:
 
   // The computed collapsed top margin value that the frame did not
   // apply but is passing out to the frames parent so that the parent
-  // can perform generational margin collapsing.
-  nscoord mCollapsedTopMargin;
+  // can perform generational margin collapsing. This value ends up
+  // being copied into the nsHTMLReflowMetrics.mCarriedOutTopMargin.
+  nscoord mCarriedOutTopMargin;
 
   // The previous child frames collapsed bottom margin value.
   nscoord mPrevBottomMargin;

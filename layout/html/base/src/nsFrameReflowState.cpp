@@ -589,7 +589,7 @@ nsFrameReflowState::nsFrameReflowState(nsIPresContext& aPresContext,
   if ((0 != mBorderPadding.top) || (0 != mBorderPadding.bottom)) {
     mIsMarginRoot = PR_TRUE;
   }
-  mCollapsedTopMargin = 0;
+  mCarriedOutTopMargin = 0;
   mPrevBottomMargin = 0;
   mCarriedOutMarginFlags = 0;
 }
