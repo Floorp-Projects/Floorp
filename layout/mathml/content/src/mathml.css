@@ -38,11 +38,11 @@ math {
   font-family: CMSY10, CMEX10, Symbol, Times, Lucida Sans Unicode, MT Extra, Math1, Math2, Math3, Math4, Math5, serif;
 }
 
-math[mode="inline"] {
+math[mode="inline"], math[display="inline"] {
   display: inline;
 }
 
-math[mode="display"] {
+math[mode="display"], math[display="block"] {
   display: block;
   text-align: -moz-center;
 }
@@ -267,14 +267,14 @@ mi {
    fonts, e.g.,
 
    To request the use of TeX fonts, you can do:
-   <mo mathfont="tex">...</mo> with the associated CSS declaration
+   <mo myfonts="tex">...</mo> with the associated CSS declaration
    mo[myfonts="tex"]:-moz-math-font-style-stretchy { 
      font-family: CMSY10, CMEX10;
    }
  
    To request the use of Mathematica fonts, you can do:
    <mo myfonts="mathematica">...</mo> with the associated CSS declaration
-   mo[mathfont="mathematica"]:-moz-math-font-style-stretchy {
+   mo[myfonts="mathematica"]:-moz-math-font-style-stretchy {
      font-family: Math1, Math2, Math4;
    }
 
