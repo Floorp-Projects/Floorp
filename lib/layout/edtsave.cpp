@@ -1469,7 +1469,7 @@ char *CEditSaveObject::FixupLinks(){
 
     // We now support > 1 FontDefURLs
     int iFontDefCount = m_pBuffer->m_FontDefURL.Size();
-    for( int i; i < iFontDefCount; i++ )
+    for( int i=0; i < iFontDefCount; i++ )
         FixupLink(m_FontDefIndex[i], &m_pBuffer->m_FontDefURL[i], pDestPathURL, &badLinks);
 
     // regular images.
