@@ -55,19 +55,19 @@ Rights Reserved.
 		windowtype="mail:3pane">
 
 
-<script src="chrome://global/content/strres.js"/>
-<script src="chrome://messenger/content/widgetglue.js"/>
-<script src="chrome://messenger/content/commandglue.js"/>
-<script src="chrome://messenger/content/shareglue.js"/>
-<script src="chrome://messenger/content/msgViewNavigation.js"/>
-<script src="chrome://messenger/content/mailWindow.js"/>
-<script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
-<script src="chrome://messenger/content/mail3PaneWindowCommands.js"/>
-<script src="chrome://messenger/content/mailContextMenus.js"/>
-<script src="chrome://messenger/content/messengerdnd.js"/>
-<script src="chrome://messenger/content/accountUtils.js"/>
-<script src="chrome://navigator/content/nsContextMenu.js"/>
-<script src="chrome://navigator/content/navigator.js"/>
+<script src="chrome://global/content/strres.js"></script>
+<script src="chrome://messenger/content/widgetglue.js"></script>
+<script src="chrome://messenger/content/commandglue.js"></script>
+<script src="chrome://messenger/content/shareglue.js"></script>
+<script src="chrome://messenger/content/msgViewNavigation.js"></script>
+<script src="chrome://messenger/content/mailWindow.js"></script>
+<script src="chrome://messenger/content/msgMail3PaneWindow.js"></script>
+<script src="chrome://messenger/content/mail3PaneWindowCommands.js"></script>
+<script src="chrome://messenger/content/mailContextMenus.js"></script>
+<script src="chrome://messenger/content/messengerdnd.js"></script>
+<script src="chrome://messenger/content/accountUtils.js"></script>
+<script src="chrome://navigator/content/nsContextMenu.js"></script>
+<script src="chrome://navigator/content/navigator.js"></script>
 
 <commands id="commands">
 	<commandset id="CommandUpdate_Mail"
@@ -314,20 +314,15 @@ Rights Reserved.
 	<popup id="folderTooltip"/>
 </popupset>
 
-
-
-
   <toolbox id="mailToolbarToolbox" class="toolbox-top">
     <menubar id="mailMenubar"/>
   </toolbox>
 
-  <!-- The main mail three pane frame -->
+	<box style="height:100px" flex="1">
 
-
-	<box align="horizontal" style="height:100px" flex="1">
 		<box id="sidebar-box">
-			<sidebarheader class="sidebarheader-main" value="&mail-sidebar-header.label;"/>
-			<tree id="folderTree" flex="1000" context="folderPaneContext" />
+			<sidebarheader type="box" class="sidebarheader-main" value="&mail-sidebar-header.label;"/>
+			<tree id="folderTree" flex="1000" context="folderPaneContext"/>
 		</box>
           
 		<splitter id="sidebar-splitter"/>
@@ -336,15 +331,12 @@ Rights Reserved.
      
 			<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext"/>
 
-			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
 			<splitter id="gray_horizontal_splitter" collapse="after" persist="state"
 			 onclick="OnClickThreadAndMessagePaneSplitter()"/>
 			
-			<!-- msg header view -->
 			<box id="messagepanebox" align="vertical" flex="3" persist="collapsed">
 				<toolbox id="msgHeaderView"/>
     
-				<!-- message view -->
 				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
 			</box>	
 			<statusbar id="status-bar">
@@ -352,6 +344,7 @@ Rights Reserved.
 				<statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
 			</statusbar>
 		</box>
+
 	</box>
 
 	<box id="taskbar" class="toolbox-bottom"/>
