@@ -581,7 +581,6 @@ NS_METHOD nsWidget::Enable(PRBool bState)
       PtSetArg( &arg, Pt_ARG_FLAGS, 0, Pt_BLOCKED );
     else
       PtSetArg( &arg, Pt_ARG_FLAGS, Pt_BLOCKED, Pt_BLOCKED );
-//kedl      PtSetArg( &arg, Pt_ARG_FLAGS, 0, Pt_BLOCKED );
 
     PtSetResources( mWidget, 1, &arg );
   }
@@ -812,7 +811,7 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
   }
 
   nsRect   rect = mBounds;
-  PtWidget_t *aWidget = GetNativeData(NS_NATIVE_WIDGET);
+  PtWidget_t *aWidget = (PtWidget_t *)GetNativeData(NS_NATIVE_WIDGET);
   long widgetFlags = PtWidgetFlags(aWidget);
 
 //  if (Pt_DISJOINT && widgetFlags)
@@ -876,7 +875,7 @@ NS_METHOD nsWidget::doPaint()
 {
   nsresult res = NS_OK;
   PhTile_t * nativeRegion = nsnull;
-  PtWidget_t *widget = GetNativeData(NS_NATIVE_WIDGET);  
+  PtWidget_t *widget = (PtWidget_t *)GetNativeData(NS_NATIVE_WIDGET);  
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::doPaint this=<%p> mWidget=<%p> widget=<%p> PtWidgetIsRealized(widget)=<%d>\n", this, mWidget, widget,PtWidgetIsRealized(widget) ));
 
@@ -888,7 +887,7 @@ NS_METHOD nsWidget::doPaint()
 
         mUpdateArea->GetNativeRegion((void *&) nativeRegion );
 
-        PtWidget_t *widget = GetNativeData(NS_NATIVE_WIDGET);
+        PtWidget_t *widget = (PtWidget_t *)GetNativeData(NS_NATIVE_WIDGET);
 
         printf("nsWidget::doPaint mWidget before RawDrawFunc mWidget=<%p> widget=<%p>\n", mWidget, widget);
         nsWindow::RawDrawFunc(widget, PhCopyTiles(nativeRegion));
@@ -1933,10 +1932,13 @@ int nsWidget::RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
   // Get the window which caused the event and ask it to process the message
   nsWidget *someWidget = (nsWidget*) data;
 
-  if( nsnull != someWidget )
+  // kedl, shouldn't handle events if the window is being destroyed
+  if ( (someWidget) &&
+        (someWidget->mIsDestroying == PR_FALSE) &&
+        (someWidget->HandleEvent( cbinfo ))
+      )
   {
-    if( someWidget->HandleEvent( cbinfo ))
-      return( Pt_END ); // Event was consumed
+      return( Pt_END ); // Event was consumed  
   }
 
   return( Pt_CONTINUE );
@@ -1950,6 +1952,19 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
   int     err;
 
     PhEvent_t* event = aCbInfo->event;
+
+//printf("nsWidget::HandleEvent entering...\n");
+
+#if defined(PHOTON2_ONLY)
+    /* Photon 2 added a Consumed flag which indicates a  previous receiver of the */
+    /* event has processed it */
+	if (event->processing_flags & Ph_CONSUMED)
+	{
+        printf("nsWidget::HandleEvent Ignoring Event, already consumed event=<%d>\n",  event->type);
+		return PR_TRUE;
+	}
+#endif
+
     switch ( event->type )
     {
       case Ph_EV_KEY:
@@ -2061,13 +2076,13 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
        {
 	    PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
         nsMouseEvent   theMouseEvent;
-		
+
 		//printf("nsWidget::HandleEvent Ph_EV_BUT_PRESS this=<%p>\n", this);
 
         if (gRollupWidget && gRollupListener)
         {
-          PtWidget_t *rollupWidget =  gRollupWidget->GetNativeData(NS_NATIVE_WIDGET);
-          PtWidget_t *thisWidget = GetNativeData(NS_NATIVE_WIDGET);
+          PtWidget_t *rollupWidget =  (PtWidget_t *)gRollupWidget->GetNativeData(NS_NATIVE_WIDGET);
+          PtWidget_t *thisWidget = (PtWidget_t *)GetNativeData(NS_NATIVE_WIDGET);
  
           printf("nsWidget::HandleEvent Ph_EV_BUT_PRESS rollupWidget=%p thisWidget=%p\n", rollupWidget, thisWidget);
           printf("nsWidget::HandleEvent Ph_EV_BUT_PRESS PtFindDisjoint(thisWidget)=%p\n", PtFindDisjoint(thisWidget));
@@ -2079,13 +2094,7 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
           }
         }
 
-/* Photon 2 Bug when clicking on any page, two widgets get the event but */
-/* only one has the focus */
-#if defined(PHOTON2_ONLY)
-        if ( (ptrev) && (PtIsFocused(mWidget) != 2) )
-#else
         if (ptrev)
-#endif
         {
           printf( "nsWidget::HandleEvent Ph_EV_BUT_PRES before translation: (%ld,%ld) mWidget=<%p> PtIsFocused(mWidget)=<%d> \n", ptrev->pos.x, ptrev->pos.y, mWidget, PtIsFocused(mWidget) );
           ScreenToWidget( ptrev->pos );
@@ -2116,8 +2125,8 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
 
 		printf("nsWidget::HandleEvent Ph_EV_BUT_RELEASE this=<%p> event->subtype=<%d>\n", this,event->subtype);
 
-        if (event->subtype==Ph_EV_RELEASE_REAL)
-		{
+        if (event->subtype==Ph_EV_RELEASE_REAL || event->subtype==Ph_EV_RELEASE_PHANTOM)
+	{
           if (ptrev)
           {
             ScreenToWidget( ptrev->pos );
@@ -2129,7 +2138,6 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
               InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MIDDLE_BUTTON_UP );
 
             result = DispatchMouseEvent(theMouseEvent);
-
           }
         }
        }
@@ -2468,9 +2476,8 @@ int nsWidget::WorkProc( void *data )
         nsRect           temp_rect;
 
         PtWidgetArea( dqe->widget, &area ); // parent coords
-PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> area=<%d,%d,%d,%d>\n", dqe->widget, area.pos.x, area.pos.y, area.size.w, area.size.h));
-
-printf("nsWidget::WorkProc PtWindow origin at (%d,%d) IsEmpty=<%d>\n", area.pos.x, area.pos.y, dqe->inst->mUpdateArea->IsEmpty());
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> area=<%d,%d,%d,%d>\n", dqe->widget, area.pos.x, area.pos.y, area.size.w, area.size.h));
+//printf("nsWidget::WorkProc PtWindow origin at (%d,%d) IsEmpty=<%d>\n", area.pos.x, area.pos.y, dqe->inst->mUpdateArea->IsEmpty());
 
 // this was enabled... what was it doing?
 #if 0
@@ -2493,7 +2500,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> mUpdate
 
           PtWidget_t *aPtWidget;
 		  nsWidget   *aWidget = GetInstance( (PtWidget_t *) dqe->widget );
-          aPtWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);		  
+          aPtWidget = (PtWidget_t *)aWidget->GetNativeData(NS_NATIVE_WIDGET);		  
           PtDamageExtent( aPtWidget, &extent);
           PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> %d PtDamageExtent=<%d,%d,%d,%d> next=<%p>\n",  aPtWidget, i, extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y, dqe->next));
 		}
@@ -2515,7 +2522,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> mUpdate
 		
             PtWidget_t *aPtWidget;
 		    nsWidget   *aWidget = GetInstance( (PtWidget_t *) dqe->widget );
-            aPtWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);		  
+            aPtWidget = (PtWidget_t *)aWidget->GetNativeData(NS_NATIVE_WIDGET);		  
             PtDamageExtent( aPtWidget, &extent);
 
             PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> %d PtDamageExtent=<%d,%d,%d,%d> next=<%p>\n", aPtWidget, i, extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y, dqe->next));
