@@ -54,7 +54,7 @@ use Carp;
 
 $|++;
 
-my $VERSION = "1.11"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.12"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 
@@ -375,7 +375,7 @@ sub do_headlines {
 
 sub bot_slashdot {
     my ($nick, $cmd, $rest) = (@_);
-    do_headlines($nick, "Headlines from http://slashdot.org/", \@slashdot);
+    do_headlines($nick, "Headlines from Slashdot (http://slashdot.org/)", \@slashdot);
 }
 
 
