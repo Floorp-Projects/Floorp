@@ -230,7 +230,7 @@ nsDOMStyleSheetList::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
   if (mDocument) {
     PRInt32 count = 0;
     mDocument->GetNumberOfStyleSheets(PR_FALSE, &count);
-    if (aIndex < count) {
+    if (aIndex < (PRUint32)count) {
       nsCOMPtr<nsIStyleSheet> sheet;
       mDocument->GetStyleSheetAt(aIndex, PR_FALSE, getter_AddRefs(sheet));
       NS_ASSERTION(sheet, "Must have a sheet");
