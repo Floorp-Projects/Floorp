@@ -408,12 +408,13 @@ PRInt32
 nsTableCellMap::GetEffectiveColSpan(PRInt32                 aColIndex, 
                                     const nsTableCellFrame* aCell)
 {
+  nsTableCellFrame* cellFrame = (nsTableCellFrame*)aCell->GetFirstInFlow();
   PRInt32 rowIndex;
-  aCell->GetRowIndex(rowIndex);
+  cellFrame->GetRowIndex(rowIndex);
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     if (cellMap->GetRowCount() > rowIndex) {
-      return cellMap->GetEffectiveColSpan(rowIndex, aColIndex, mCols.Count(), aCell);
+      return cellMap->GetEffectiveColSpan(rowIndex, aColIndex, mCols.Count(), cellFrame);
     }
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
