@@ -33,13 +33,33 @@
 CORE_DEPTH = ../..
 DEPTH      = ../..
 
-DIRS = crmf jar \
-    certhigh pk11wrap cryptohi \
-    softoken certdb crypto \
-    util freebl nss pkcs12 fortcrypt \
-    base ckfw pkcs7 smime ssl
+DIRS =            \
+	base      \
+	asn1      \
+	dev       \
+	pki       \
+	pki1      \
+	crmf      \
+	jar       \
+	certhigh  \
+	pk11wrap  \
+	cryptohi  \
+	softoken  \
+	certdb    \
+	crypto    \
+	util      \
+	freebl    \
+	nss       \
+	pkcs12    \
+	fortcrypt \
+	pkcs7     \
+	smime     \
+	ssl       \
+	ckfw      \
+	$(NULL)
 
-ifdef BUILD_STAN
+# NSS 4.0 build - pure stan libraries
+ifdef PURE_STAN_BUILD
 DIRS = base asn1 dev pki pki1
 endif
 
