@@ -121,7 +121,7 @@ public:
                                              nscoord aCharWidth) const;
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
-  NS_IMETHOD SelectionChanged(PRBool aDoDispatchEvent);// Called when the selection has changed. 
+  NS_IMETHOD SelectionChanged();// Called when the selection has changed. 
                                                        // If the the same item in the list is selected
                                                        // it is NOT called.
 

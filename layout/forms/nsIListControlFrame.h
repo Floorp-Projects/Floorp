@@ -91,6 +91,11 @@ public:
    */
   NS_IMETHOD AboutToRollup() = 0;
 
+  /**
+   *
+   */
+  NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, nsIContent* aContent) = 0;
+
 };
 
 #endif

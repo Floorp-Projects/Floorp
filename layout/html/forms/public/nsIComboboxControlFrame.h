@@ -84,6 +84,13 @@ public:
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex) = 0;
 
   /**
+   * Asks the Combobox to update the display frame when the selection has
+   * changed
+   *
+   */
+  NS_IMETHOD SelectionChanged() = 0;
+
+  /**
    *
    */
   NS_IMETHOD AbsolutelyPositionDropDown() = 0;
