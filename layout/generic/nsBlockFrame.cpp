@@ -1478,7 +1478,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   case eReflowReason_Dirty:    
     break;
 
-  case eReflowReason_Incremental:
+  case eReflowReason_Incremental:  // should call GetNext() ?
     aReflowState.reflowCommand->GetTarget(target);
     if (this == target) {
       nsIReflowCommand::ReflowType type;
@@ -1513,8 +1513,37 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       printf("\n");
 #endif
 
-      // Now do the reflow
+#ifdef OLD_BLOCK_INCREMENTAL_REFLOW
+      // the old way...
+      // in the normal case, this just marks the line dirty
+      // but, it causes an incremental reflow targeted at a frame
+      // inside a continued span to get dropped on the floor.  see bug 25510
+      rv = PrepareChildIncrementalReflow(state); 
+#else
+      // this code does a correct job of propogating incremental reflows (bug 25510)
+      // and has the potential to be very efficient.  we should be able to 
+      // terminate reflow after the incremental reflow if we can detect that
+      // nothing significant has changed.  
+      PRBool isFloater; 
+      nsLineBox* prevLine; 
+      nsLineBox* line = FindLineFor(state.mNextRCFrame, &prevLine, &isFloater); 
+      if (line && (PR_FALSE==line->IsBlock())) 
+      { 
+        nsBlockReflowState incrState(aReflowState, aPresContext, this, aMetrics, 
+                                     NS_BLOCK_MARGIN_ROOT & mState); 
+        incrState.mNextRCFrame = state.mNextRCFrame; 
+        PRBool keepGoing; 
+        rv = ReflowLine(incrState, line, &keepGoing, PR_TRUE); 
+        state.mNextRCFrame = nsnull; 
+      } 
+      // XXX To Do: we need to check some metrics here to see if anything changed
+      // if nothing changed, we're done
+      // otherwise, we should mark the line and the previous line both dirty
+      // and do a resize reflow
+      // Now just mark the line dirty every time. We call PrepareChildIncrementalReflow
+      // because it includes a hack for floaters that we don't want to duplicate here.
       rv = PrepareChildIncrementalReflow(state);
+#endif
     }
     break;
 
@@ -1728,6 +1757,50 @@ HaveAutoWidth(const nsHTMLReflowState& aReflowState)
     }
     rs = prs;
     pos = prs->mStylePosition;
+  }
+
+  return PR_FALSE;
+}
+
+
+static PRBool
+IsPercentageUnitSides(const nsStyleSides* aSides)
+{
+  return eStyleUnit_Percent == aSides->GetLeftUnit()
+      || eStyleUnit_Percent == aSides->GetRightUnit()
+      || eStyleUnit_Percent == aSides->GetTopUnit()
+      || eStyleUnit_Percent == aSides->GetBottomUnit();
+}
+
+static PRBool
+IsPercentageAwareChild(const nsIFrame* aFrame)
+{
+  const nsStyleSpacing* space;
+  nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct*&) space);
+  if (NS_FAILED(rv)) {
+    return PR_TRUE; // just to be on the safe side
+  }
+
+  if (IsPercentageUnitSides(&space->mMargin)
+    || IsPercentageUnitSides(&space->mPadding)
+    || IsPercentageUnitSides(&space->mBorderRadius)) {
+    return PR_TRUE;
+  }
+
+  const nsStylePosition* pos;
+  rv = aFrame->GetStyleData(eStyleStruct_Position,(const nsStyleStruct*&) pos);
+  if (NS_FAILED(rv)) {
+    return PR_TRUE; // just to be on the safe side
+  }
+
+  if (eStyleUnit_Percent == pos->mWidth.GetUnit()
+    || eStyleUnit_Percent == pos->mMaxWidth.GetUnit()
+    || eStyleUnit_Percent == pos->mMinWidth.GetUnit()
+    || eStyleUnit_Percent == pos->mHeight.GetUnit()
+    || eStyleUnit_Percent == pos->mMinHeight.GetUnit()
+    || eStyleUnit_Percent == pos->mMaxHeight.GetUnit()
+    || IsPercentageUnitSides(&pos->mOffset)) { // XXX need more here!!!
+    return PR_TRUE;
   }
 
   return PR_FALSE;
@@ -3771,6 +3844,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   PRUint8 lineReflowStatus = LINE_REFLOW_OK;
   PRInt32 i;
   nsIFrame* frame = aLine->mFirstChild;
+  aLine->SetHasPercentageChild(PR_FALSE); // To be set by ReflowInlineFrame below
   for (i = 0; i < aLine->GetChildCount(); i++) {      
     rv = ReflowInlineFrame(aState, aLineLayout, aLine, frame,
                            &lineReflowStatus);
@@ -3879,6 +3953,11 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   nsFrame::ListTag(stdout, aFrame);
   printf(" reflowingFirstLetter=%s\n", reflowingFirstLetter ? "on" : "off");
 #endif
+
+  // Remember if we have a percentage aware child on this line
+  if (IsPercentageAwareChild(aFrame)) {
+    aLine->SetHasPercentageChild(PR_TRUE);
+  }
 
   // Reflow the inline frame
   nsReflowStatus frameReflowStatus;
