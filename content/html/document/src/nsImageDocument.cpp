@@ -19,13 +19,19 @@
  *
  * Contributor(s): 
  */
+
 #include "nsCOMPtr.h"
 #include "nsHTMLDocument.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
+#ifdef USE_IMG2
+#include "imgIRequest.h"
+#include "imgILoader.h"
+#else
 #include "nsIImageGroup.h"
 #include "nsIImageRequest.h"
+#endif
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsHTMLValue.h"
@@ -78,15 +84,20 @@ public:
 
   nsresult CreateSyntheticDocument();
 
+#ifndef USE_IMG2
   nsresult StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener);
+#endif
   nsresult EndLayout(nsISupports *ctxt, 
                         nsresult status, 
                         const PRUnichar *errorMsg);
   nsresult UpdateTitle( void );
 
   void StartLayout();
-
+#ifdef USE_IMG2
+  nsCOMPtr<imgIRequest> mImageRequest;
+#else
   nsIImageRequest*  mImageRequest;
+#endif
   nscolor           mBlack;
   nsWeakPtr         mContainer;
 };
@@ -106,7 +117,11 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
   nsImageDocument* mDocument;
-  nsIStreamListener* mNextStream;
+#ifdef USE_IMG2
+  nsCOMPtr<nsIStreamListener> mNextStream;
+#else
+  nsIStreamListener *mNextStream;
+#endif
 };
 
 ImageListener::ImageListener(nsImageDocument* aDoc)
@@ -119,7 +134,9 @@ ImageListener::ImageListener(nsImageDocument* aDoc)
 ImageListener::~ImageListener()
 {
   NS_RELEASE(mDocument);
+#ifndef USE_IMG2
   NS_IF_RELEASE(mNextStream);
+#endif
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(ImageListener, nsIStreamListener)
@@ -136,7 +153,22 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   rv = channel->GetURI(&uri);
   if (NS_FAILED(rv)) return rv;
   
+#ifdef USE_IMG2
+  nsCOMPtr<nsIStreamListener> kungFuDeathGrip(this);
+  nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
+  il->LoadImageWithChannel(channel, nsnull, nsnull, getter_AddRefs(mNextStream), 
+                           getter_AddRefs(mDocument->mImageRequest));
+
+  // XXX
+  // if we get a cache hit, and we cancel the channel in the above function,
+  // do we call OnStopRequest before we call StartLayout?
+  // if so, should LoadImageWithChannel() not call channel->Cancel() ?
+
+  mDocument->StartLayout();
+
+#else
   mDocument->StartImageLoad(uri, mNextStream);
+#endif
   NS_RELEASE(uri);
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
@@ -181,13 +213,17 @@ NS_NewImageDocument(nsIDocument** aInstancePtrResult)
 
 nsImageDocument::nsImageDocument()
 {
+#ifndef USE_IMG2
   mImageRequest = nsnull;
+#endif
   mBlack = NS_RGB(0, 0, 0);
 }
 
 nsImageDocument::~nsImageDocument()
 {
+#ifndef USE_IMG2
   NS_IF_RELEASE(mImageRequest);
+#endif
 }
 
 NS_IMETHODIMP
@@ -229,6 +265,7 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
   return NS_OK;
 }
 
+#ifndef USE_IMG2
 nsresult
 nsImageDocument::StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener)
 {
@@ -238,6 +275,8 @@ nsImageDocument::StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener)
   // Tell image group to load the stream now. This will get the image
   // hooked up to the open stream and return the underlying listener
   // so that we can pass it back upwards.
+
+
   nsIPresShell* shell = GetShellAt(0);
   if (nsnull != shell) {
     nsCOMPtr<nsIPresContext> cx;
@@ -264,13 +303,13 @@ nsImageDocument::StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener)
     }
     NS_RELEASE(shell);
   }
-
   
   // Finally, start the layout going
   StartLayout();
 
   return NS_OK;
 }
+#endif
 
 nsresult
 nsImageDocument::CreateSyntheticDocument()
@@ -433,6 +472,8 @@ nsresult nsImageDocument::UpdateTitle( void )
     nsCOMPtr<nsILocale> locale = nsnull;
     rv = stringService->CreateBundle(NSIMAGEDOCUMENT_PROPERTIES_URI, locale, getter_AddRefs(bundle));
   }
+  // XXX this shouldn't be ifndef'd
+#ifndef USE_IMG2
   if (NS_SUCCEEDED(rv) && bundle) {
     nsAutoString key;
     nsXPIDLString valUni;
@@ -459,5 +500,6 @@ nsresult nsImageDocument::UpdateTitle( void )
       SetTitle(titleStr);
     }
   }
+#endif
   return NS_OK;
 }
