@@ -207,7 +207,7 @@ class ConvertUTF8toUTF16
 
 /**
  * A character sink (see |copy_string| in nsAlgorithm.h) for computing
- * the length of a UTF-8 string.
+ * the length of the UTF-16 string equivalent to a UTF-8 string.
  */
 class CalculateUTF8Length
   {
@@ -238,6 +238,16 @@ class CalculateUTF8Length
                 p += 3;
             else if ( UTF8traits::is4byte(*p) ) {
                 p += 4;
+                // Because a UTF-8 sequence of 4 bytes represents a codepoint
+                // greater than 0xFFFF, it will become a surrogate pair in the
+                // UTF-16 string, so add 1 more to mLength.
+                // This doesn't happen with is5byte and is6byte because they
+                // are illegal UTF-8 sequences (greater than 0x10FFFF) so get
+                // converted to a single replacement character.
+                //
+                // XXX: if the 4-byte sequence is an illegal non-shortest form,
+                //      it also gets converted to a replacement character, so
+                //      mLength will be off by one in this case.
                 ++mLength;
             }
             else if ( UTF8traits::is5byte(*p) )
