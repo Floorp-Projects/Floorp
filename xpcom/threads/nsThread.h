@@ -40,6 +40,8 @@
 #include "prcvar.h"
 #include "nsCOMPtr.h"
 
+class nsThreadPoolBusyBody;
+
 class nsThread : public nsIThread 
 {
 public:
@@ -74,6 +76,7 @@ protected:
 
 class nsThreadPool : public nsIThreadPool
 {
+friend class nsThreadPoolBusyBody;
 public:
     NS_DECL_ISUPPORTS
 
@@ -85,8 +88,6 @@ public:
     virtual ~nsThreadPool();
 
     nsIRunnable* GetRequest(nsIThread* currentThread);
-    nsresult AddThread();
-    nsresult RemoveThread(nsIThread* currentThread);
     static PRBool InterruptThreads(nsISupports* aElement, 
                                    void *aData);
 
@@ -94,6 +95,9 @@ public:
     Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
     
 protected:
+    nsresult AddThread();
+    nsresult RemoveThread(nsIThread* currentThread);
+
     nsCOMPtr<nsISupportsArray>  mThreads;
     nsCOMPtr<nsISupportsArray>  mRequests;
     
@@ -109,6 +113,7 @@ protected:
 
     PRUint32                    mMinThreads;
     PRUint32                    mMaxThreads;
+    PRUint32                    mBusyThreads;
     PRBool                      mShuttingDown;
 };
 

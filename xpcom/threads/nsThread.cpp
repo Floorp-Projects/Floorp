@@ -352,8 +352,43 @@ nsThread::Shutdown()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* nsThreadPoolBusyBody implements an increment/decrement of
+   nsThreadPool's mBusyThreads member variable
+*/
+class nsThreadPoolBusyBody {
+public:
+  nsThreadPoolBusyBody(nsThreadPool *aPool);
+  ~nsThreadPoolBusyBody();
+
+private:
+  void* operator new(size_t) { return 0; } // local variable, only!
+  nsThreadPool *mPool;
+};
+
+inline nsThreadPoolBusyBody::nsThreadPoolBusyBody(nsThreadPool *aPool) {
+
+  nsAutoLock lock(aPool->mLock);
+#ifdef DEBUG
+  PRUint32 threadCount;
+  if (NS_SUCCEEDED(aPool->mThreads->Count(&threadCount)))
+    NS_ASSERTION(aPool->mBusyThreads < threadCount, "thread busy count exceeded thread count");
+#endif
+  aPool->mBusyThreads++;
+  mPool = aPool;
+}
+
+inline nsThreadPoolBusyBody::~nsThreadPoolBusyBody() {
+
+  nsAutoLock lock(mPool->mLock);
+  NS_ASSERTION(mPool->mBusyThreads > 0, "thread busy count < 0");
+  mPool->mBusyThreads--;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 nsThreadPool::nsThreadPool()
-    : mMinThreads(0), mMaxThreads(0), mShuttingDown(PR_FALSE)
+    : mMinThreads(0), mMaxThreads(0), mBusyThreads(0),
+      mShuttingDown(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -400,7 +435,7 @@ nsThreadPool::DispatchRequest(nsIRunnable* runnable)
         rv = mThreads->Count(&threadCount);
         if (NS_FAILED(rv)) goto exit;
         
-        if ((requestCnt >= threadCount) && (threadCount < mMaxThreads)) {
+        if (requestCnt >= threadCount-mBusyThreads && threadCount < mMaxThreads) {
             PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
                    ("nsIThreadPool thread %p: %d threads in pool, max = %d, requests = %d, creating new thread...\n",
                     th.get(), threadCount, mMaxThreads, requestCnt));
@@ -724,6 +759,7 @@ nsThreadPoolRunnable::Run()
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
                ("nsIThreadPool thread %p running %p\n", 
                 currentThread.get(), request));
+        nsThreadPoolBusyBody bumpBusyCount(mPool);
         rv = request->Run();
         NS_ASSERTION(NS_SUCCEEDED(rv), "runnable failed");
 
