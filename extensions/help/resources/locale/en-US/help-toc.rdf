@@ -1466,14 +1466,6 @@ nc:link="chrome://help/locale/mail_help.html#mail-account-receipts"/> </rdf:li>
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#mail-doc-account-settings">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> <rdf:Description ID="free_webmail" nc:name="Free Webmail"  nc:link="chrome://help/locale/mail_help.html#free_webmail"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
 
   <rdf:Description about="#mail">
     <nc:subheadings>

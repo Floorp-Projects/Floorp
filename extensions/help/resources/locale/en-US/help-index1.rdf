@@ -746,16 +746,6 @@
 <rdf:Description about="#Mail_and_Newsgroups">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="Mail_and_Newsgroups:AOL_Mail_and_Webmail_syncing"
-         nc:name="AOL Mail and Webmail syncing"
-	 nc:link="mail_help.html#Mail_and_Newsgroups:AOL_Mail_and_Webmail_syncingIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Mail_and_Newsgroups">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:attaching_files"
          nc:name="attaching files"
 	 nc:link="mail_help.html#Mail_and_Newsgroups:attaching_filesIDX"/>
@@ -1279,26 +1269,6 @@
        <rdf:Description ID="Navigator:start_page"
          nc:name="start page"
 	 nc:link="customize_help.html#Navigator:start_pageIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-indexAZ.rdf#n">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Netscape_WebMail"
-         nc:name="Netscape WebMail"
-	 nc:link="mail_help.html#Netscape_WebMail:setting_upIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Netscape_WebMail">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Netscape_WebMail:setting_up"
-         nc:name="setting up"
-	 nc:link="mail_help.html#Netscape_WebMail:setting_upIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
