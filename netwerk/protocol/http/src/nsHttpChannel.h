@@ -119,6 +119,7 @@ private:
     nsCOMPtr<nsIHttpEventSink>        mHttpEventSink;
     nsCOMPtr<nsIInputStream>          mUploadStream;
     nsCOMPtr<nsIURI>                  mReferrer;
+    nsCOMPtr<nsISupports>             mSecurityInfo;
 
     nsHttpRequestHead                 mRequestHead;
     nsHttpResponseHead               *mResponseHead;
