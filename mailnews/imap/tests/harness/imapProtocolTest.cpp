@@ -37,6 +37,8 @@
 #include "nsIUrlListener.h"
 
 #include "nsIPref.h"
+#include "nsIFileLocator.h"
+
 #include "nsIImapUrl.h"
 #include "nsIImapProtocol.h"
 #include "nsIImapLog.h"
@@ -64,14 +66,16 @@
 #define XPCOM_DLL  "xpcom32.dll"
 #define PREF_DLL	 "xppref32.dll"
 #define MSGIMAP_DLL "msgimap.dll"
+#define APPSHELL_DLL "nsappshell.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
-#define PREF_DLL	 "pref.so"   // mscott: is this right?
+#define PREF_DLL	"libpref.so"   // mscott: is this right?
 #define MSGIMAP_DLL "libmsgimap.so"
+#define APPCORES_DLL  "libappcores.so"
 #endif
 #endif
 
@@ -97,9 +101,10 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
+
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCImapDB, NS_IMAPDB_CID);
-
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -1653,10 +1658,9 @@ int main()
     nsresult result;
 
 	// register all the components we might need - what's the imap service going to be called?
-//    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-//	nsComponentManager::RegisterComponent(kRDFServiceCID, nsnull, nsnull, RDF_DLL, PR_TRUE, PR_TRUE);
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
+	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 	// IMAP Service goes here?
     nsComponentManager::RegisterComponent(kImapUrlCID, nsnull, nsnull,
                                           MSGIMAP_DLL, PR_FALSE, PR_FALSE);
@@ -1664,15 +1668,7 @@ int main()
     nsComponentManager::RegisterComponent(kImapProtocolCID, nsnull, nsnull,
                                           MSGIMAP_DLL, PR_FALSE, PR_FALSE);
 
-	// make sure prefs get initialized and loaded..
-	// mscott - this is just a bad bad bad hack right now until prefs
-	// has the ability to take nsnull as a parameter. Once that happens,
-	// prefs will do the work of figuring out which prefs file to load...
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
-//	if (NS_SUCCEEDED(result) && prefs)
-//	{
-//		prefs->Startup("prefs50.js");
-//	}
 
 	// Create the Event Queue for the test app thread...a standin for the ui thread
     nsIEventQueueService* pEventQService;
