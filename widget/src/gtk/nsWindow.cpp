@@ -1598,7 +1598,6 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   case eWindowType_popup:
     mIsToplevel = PR_TRUE;
     mShell = gtk_window_new(GTK_WINDOW_POPUP);
-    //    gtk_widget_set_app_paintable(mShell, PR_TRUE);
     // create the mozarea.  this will be the single child of the
     // toplevel window
     mMozArea = gtk_mozarea_new();
@@ -1682,20 +1681,19 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
 
   gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
 
-  // XXX fix this later...
-  if (mIsToplevel)
-  {
-    if (parentWidget && GTK_IS_WIDGET(parentWidget))
-    {
-      GtkWidget *tlw = gtk_widget_get_toplevel(GTK_WIDGET(parentWidget));
-      if (GTK_IS_WINDOW(tlw))
-      {
-        gtk_window_set_transient_for(GTK_WINDOW(mShell), GTK_WINDOW(tlw));
-      }
-    }
-  }
-
   if (mShell) {
+    if (parentWidget) {
+      GdkWindow *topLevelParent = nsnull;
+      if (GTK_IS_WIDGET(parentWidget)) {
+        topLevelParent = gdk_window_get_toplevel(GTK_WIDGET(parentWidget)->window);
+      }
+      else if (GDK_IS_SUPERWIN(parentWidget)) {
+        topLevelParent = gdk_window_get_toplevel(GDK_SUPERWIN(parentWidget)->shell_window);
+      }
+      if (topLevelParent)
+        gdk_window_set_transient_for(mShell->window, topLevelParent);
+    }
+
     // install the drag and drop signals for the toplevel window.
     InstallToplevelDragBeginSignal();
     InstallToplevelDragMotionSignal();
@@ -2449,20 +2447,11 @@ NS_IMETHODIMP nsWindow::GetAttention(void)
 /* virtual */ void
 nsWindow::OnRealize(GtkWidget *aWidget)
 {
-  if (aWidget == mShell)
-  {
+  if (aWidget == mShell) {
     SetIcon();
-
-    // we were just realized, so we better have a window, but we will make sure...
-    if (mShell->window)
-    {
-      // XXX bug 8002
-      //    gdk_window_raise(mShell->window);
-
-      gint wmd = ConvertBorderStyles(mBorderStyle);
-      if (wmd != -1)
-        gdk_window_set_decorations(mShell->window, (GdkWMDecoration)wmd);
-    }
+    gint wmd = ConvertBorderStyles(mBorderStyle);
+    if (wmd != -1)
+      gdk_window_set_decorations(mShell->window, (GdkWMDecoration)wmd);
   }
 }
 
