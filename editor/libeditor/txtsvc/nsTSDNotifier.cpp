@@ -167,3 +167,44 @@ nsTSDNotifier::DidJoinNodes(nsIDOMNode  *aLeftNode,
 
   return mDoc->JoinNodes(aLeftNode, aRightNode, aParent);
 }
+
+// -------------------------------
+// stubs for unused listen methods
+// -------------------------------
+
+NS_IMETHODIMP
+nsTSDNotifier::WillCreateNode(const nsString& aTag, nsIDOMNode *aParent, PRInt32 aPosition)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTSDNotifier::DidCreateNode(const nsString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTSDNotifier::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTSDNotifier::DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTSDNotifier::WillDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTSDNotifier::DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength, nsresult aResult)
+{
+  return NS_OK;
+}
+

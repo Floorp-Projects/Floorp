@@ -30,7 +30,7 @@ var documentModified;
 var EditorDisplayMode = 0;  // Normal Editor mode
 
 // These must be kept in synch with the XUL <options> lists
-var gParagraphTagNames = new Array("P","H1","H2","H3","H4","H5","H6","BLOCKQUOTE","ADDRESS","PRE","DT","DD");
+var gParagraphTagNames = new Array("","P","H1","H2","H3","H4","H5","H6","BLOCKQUOTE","ADDRESS","PRE","DT","DD");
 var gFontFaceNames = new Array("","tt","Arial, Helvetica","Times","Courier");
 var gFontSizeNames = new Array("-2","-1","0","+1","+2","+3","+4");
 

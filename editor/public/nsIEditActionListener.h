@@ -26,6 +26,8 @@
 #include "nscore.h"
 
 class nsIDOMNode;
+class nsString;
+class nsIDOMCharacterData;
 
 /*
 Editor Action Listener interface to outside world
@@ -49,6 +51,34 @@ Editor Action Listener interface to outside world
 class nsIEditActionListener : public nsISupports{
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IEDITACTIONLISTENER_IID; return iid; }
+
+  /** 
+   * Called before the editor creates a node.
+   * @param aTag      The tag name of the DOM Node to create.
+   * @param aParent   The node to insert the new object into
+   * @param aPosition The place in aParent to insert the new node
+   *                  0=first child, 1=second child, etc.
+   *                  any number > number of current children = last child
+   */
+  NS_IMETHOD WillCreateNode(const nsString& aTag,
+                            nsIDOMNode     *aParent,
+                            PRInt32         aPosition)=0;
+
+  /** 
+   * Called after the editor creates a node.
+   * @param aTag      The tag name of the DOM Node to create.
+   * @param aNode     The DOM Node that was created.
+   * @param aParent   The node to insert the new object into
+   * @param aPosition The place in aParent to insert the new node
+   *                  0=first child, 1=second child, etc.
+   *                  any number > number of current children = last child
+   * @param aResult   The result of the create node operation.
+   */
+  NS_IMETHOD DidCreateNode(const nsString& aTag,
+                           nsIDOMNode     *aNode,
+                           nsIDOMNode     *aParent,
+                           PRInt32         aPosition,
+                           nsresult        aResult)=0;
 
   /** 
    * Called before the editor inserts a node.
@@ -122,7 +152,7 @@ public:
                            nsIDOMNode  *aParent)=0;
 
   /** 
-   * Called before the editor joins 2 nodes.
+   * Called after the editor joins 2 nodes.
    * @param aLeftNode   This node will be merged into the right node
    * @param aRightNode  The node that will be merged into.
    *                    There is no requirement that the two nodes be of
@@ -134,6 +164,51 @@ public:
                           nsIDOMNode  *aRightNode,
                           nsIDOMNode  *aParent,
                           nsresult    aResult)=0;
+
+  /** 
+   * Called before the editor inserts text.
+   * @param aTextNode   This node getting inserted text
+   * @param aOffset     The offset in aTextNode to insert at.
+   * @param aString     The string that gets inserted.
+   */
+  NS_IMETHOD WillInsertText(nsIDOMCharacterData  *aTextNode,
+                            PRInt32               aOffset,
+                            const nsString       &aString)=0;
+
+  /** 
+   * Called after the editor inserts text.
+   * @param aTextNode   This node getting inserted text
+   * @param aOffset     The offset in aTextNode to insert at.
+   * @param aString     The string that gets inserted.
+   * @param aResult     The result of the insert text operation.
+   */
+  NS_IMETHOD DidInsertText(nsIDOMCharacterData  *aTextNode,
+                           PRInt32               aOffset,
+                           const nsString       &aString,
+                           nsresult              aResult)=0;
+
+  /** 
+   * Called before the editor deletes text.
+   * @param aTextNode   This node getting text deleted
+   * @param aOffset     The offset in aTextNode to delete at.
+   * @param aLength     The amount of text to delete.
+   */
+  NS_IMETHOD WillDeleteText(nsIDOMCharacterData  *aTextNode,
+                            PRInt32               aOffset,
+                            PRInt32               aLength)=0;
+
+  /** 
+   * Called before the editor deletes text.
+   * @param aTextNode   This node getting text deleted
+   * @param aOffset     The offset in aTextNode to delete at.
+   * @param aLength     The amount of text to delete.
+   * @param aResult     The result of the delete text operation.
+   */
+  NS_IMETHOD DidDeleteText(nsIDOMCharacterData  *aTextNode,
+                           PRInt32               aOffset,
+                           PRInt32               aLength,
+                           nsresult              aResult)=0;
+
 };
 
 #endif //nsIEditActionListener_h__
