@@ -127,15 +127,13 @@ nsTString_CharT::FindCharInSet( const char* aSet, PRInt32 aOffset ) const
 PRInt32
 nsTString_CharT::RFindCharInSet( const CharT* aSet, PRInt32 aOffset ) const
   {
-    if (aOffset < 0)
-      aOffset = 0;
-    else if (aOffset >= PRInt32(mLength))
-      return kNotFound;
-    
-    PRInt32 result = ::RFindCharInSet(mData + aOffset, mLength - aOffset, aSet);
-    if (result != kNotFound)
-      result += aOffset;
-    return result;
+    // We want to pass a "data length" to ::RFindCharInSet
+    if (aOffset < 0 || aOffset > PRInt32(mLength))
+      aOffset = mLength;
+    else
+      ++aOffset;
+
+    return ::RFindCharInSet(mData, aOffset, aSet);
   }
 
 

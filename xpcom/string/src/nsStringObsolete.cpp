@@ -780,7 +780,7 @@ RFindCharInSet( const CharT* data, PRUint32 dataLen, const SetCharT* set )
   {
     CharT filter = nsBufferRoutines<CharT>::get_find_in_set_filter(set);
 
-    for (const CharT* iter = data + dataLen; iter >= data; --iter)
+    for (const CharT* iter = data + dataLen - 1; iter >= data; --iter)
       {
         CharT currentChar = *iter;
         if (currentChar & filter)
