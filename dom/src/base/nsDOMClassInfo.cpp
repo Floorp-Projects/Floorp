@@ -2322,7 +2322,7 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsresult rv = NS_OK;
 
   if (needsSecurityCheck(cx, wrapper)) {
-    doCheckReadAccess(cx, obj, id, wrapper);
+    rv = doCheckReadAccess(cx, obj, id, wrapper);
 
     if (NS_FAILED(rv)) {
       // Security check failed. The security manager set a JS
