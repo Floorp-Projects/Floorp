@@ -968,15 +968,13 @@ sub insert
   # Make existing attachments obsolete.
   my $fieldid = GetFieldID('attachments.isobsolete');
   foreach my $obsolete_id (@{$::MFORM{'obsolete'}}) {
+      # If the obsolete attachment has request flags, cancel them.
+      # This call must be done before updating the 'attachments' table.
+      Bugzilla::Flag::CancelRequests($::FORM{'bugid'}, $obsolete_id, $sql_timestamp);
+
       SendSQL("UPDATE attachments SET isobsolete = 1 WHERE attach_id = $obsolete_id");
       SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
                VALUES ($::FORM{'bugid'}, $obsolete_id, $::userid, $sql_timestamp, $fieldid, '0', '1')");
-      # If the obsolete attachment has pending flags, migrate them to the new attachment.
-      if (Bugzilla::Flag::count({ 'attach_id' => $obsolete_id ,
-                                  'status' => 'pending',
-                                  'is_active' => 1 })) {
-        Bugzilla::Flag::migrate($obsolete_id, $attachid, $timestamp);
-      }
   }
 
   # Assign the bug to the user, if they are allowed to take it
@@ -1150,8 +1148,17 @@ sub update
   my $quotedcontenttype = SqlQuote($::FORM{'contenttype'});
   my $quotedfilename = SqlQuote($::FORM{'filename'});
 
+  # Figure out when the changes were made.
+  SendSQL("SELECT NOW()");
+  my $timestamp = FetchOneColumn();
+    
+  # Update flags. These calls must be done before updating the
+  # 'attachments' table due to the deletion of request flags
+  # on attachments being obsoleted.
+  my $target = Bugzilla::Flag::GetTarget(undef, $::FORM{'id'});
+  Bugzilla::Flag::process($target, $timestamp, \%::FORM);
+
   # Update the attachment record in the database.
-  # Sets the creation timestamp to itself to avoid it being updated automatically.
   SendSQL("UPDATE  attachments 
            SET     description = $quoteddescription ,
                    mimetype = $quotedcontenttype ,
@@ -1162,10 +1169,6 @@ sub update
            WHERE   attach_id = $::FORM{'id'}
          ");
 
-  # Figure out when the changes were made.
-  SendSQL("SELECT NOW()");
-  my $timestamp = FetchOneColumn();
-    
   # Record changes in the activity table.
   my $sql_timestamp = SqlQuote($timestamp);
   if ($olddescription ne $::FORM{'description'}) {
@@ -1202,10 +1205,6 @@ sub update
              VALUES ($bugid, $::FORM{'id'}, $::userid, $sql_timestamp, $fieldid, $oldisprivate, $::FORM{'isprivate'})");
   }
   
-  # Update flags.
-  my $target = Bugzilla::Flag::GetTarget(undef, $::FORM{'id'});
-  Bugzilla::Flag::process($target, $timestamp, \%::FORM);
-
   # Unlock all database tables now that we are finished updating the database.
   $dbh->bz_unlock_tables();
 

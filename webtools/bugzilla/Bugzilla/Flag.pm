@@ -19,6 +19,7 @@
 #
 # Contributor(s): Myk Melez <myk@mozilla.org>
 #                 Jouni Heikniemi <jouni@heikniemi.net>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 ################################################################################
 # Module Initialization
@@ -236,33 +237,47 @@ sub validate {
     }
 }
 
+sub snapshot {
+    my ($bug_id, $attach_id) = @_;
+
+    my $flags = match({ 'bug_id'    => $bug_id,
+                        'attach_id' => $attach_id,
+                        'is_active' => 1 });
+    my @summaries;
+    foreach my $flag (@$flags) {
+        my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
+        $summary .= "(" . $flag->{'requestee'}->login . ")" if $flag->{'requestee'};
+        push(@summaries, $summary);
+    }
+    return @summaries;
+}
+
 sub process {
     # Processes changes to flags.
 
     # The target is the bug or attachment this flag is about, the timestamp
     # is the date/time the bug was last touched (so that changes to the flag
-    # can be stamped with the same date/time), the data is the form data
-    # with flag fields that the user submitted, the old bug is the bug record
-    # before the user made changes to it, and the new bug is the bug record
-    # after the user made changes to it.
+    # can be stamped with the same date/time), and the data is the form data
+    # with flag fields that the user submitted.
     
-    my ($target, $timestamp, $data, $oldbug, $newbug) = @_;
+    my ($target, $timestamp, $data) = @_;
+
+    my $dbh = Bugzilla->dbh;
+    my $bug_id = $target->{'bug'}->{'id'};
+    my $attach_id = $target->{'attachment'}->{'id'};
 
     # Use the date/time we were given if possible (allowing calling code
     # to synchronize the comment's timestamp with those of other records).
     $timestamp = ($timestamp ? &::SqlQuote($timestamp) : "NOW()");
     
     # Take a snapshot of flags before any changes.
-    my $flags = match({ 'bug_id'    => $target->{'bug'}->{'id'} , 
-                        'attach_id' => $target->{'attachment'}->{'id'} ,
-                        'is_active' => 1 });
-    my @old_summaries;
-    foreach my $flag (@$flags) {
-        my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
-        $summary .= "(" . $flag->{'requestee'}->login . ")" if $flag->{'requestee'};
-        push(@old_summaries, $summary);
-    }
+    my @old_summaries = snapshot($bug_id, $attach_id);
     
+    # Cancel old request flags if we are obsoleting an attachment.
+    if ($attach_id && $data->{'isobsolete'}) {
+        CancelRequests($bug_id, $attach_id);
+    }
+
     # Create new flags and update existing flags.
     my $new_flags = FormToNewFlags($target, $data);
     foreach my $flag (@$new_flags) { create($flag, $timestamp) }
@@ -270,56 +285,61 @@ sub process {
     
     # In case the bug's product/component has changed, clear flags that are
     # no longer valid.
-    &::SendSQL("
-        SELECT flags.id 
+    my $flag_ids = $dbh->selectcol_arrayref(
+        "SELECT flags.id 
         FROM (flags INNER JOIN bugs ON flags.bug_id = bugs.bug_id)
           LEFT OUTER JOIN flaginclusions i
             ON (flags.type_id = i.type_id 
             AND (bugs.product_id = i.product_id OR i.product_id IS NULL)
             AND (bugs.component_id = i.component_id OR i.component_id IS NULL))
-        WHERE bugs.bug_id = $target->{'bug'}->{'id'} 
+        WHERE bugs.bug_id = ?
         AND flags.is_active = 1
-        AND i.type_id IS NULL
-    ");
-    clear(&::FetchOneColumn()) while &::MoreSQLData();
-    &::SendSQL("
-        SELECT flags.id 
+        AND i.type_id IS NULL",
+        undef, $bug_id);
+
+    foreach my $flag_id (@$flag_ids) {
+        clear($flag_id);
+    }
+
+    $flag_ids = $dbh->selectcol_arrayref(
+        "SELECT flags.id 
         FROM flags, bugs, flagexclusions e
-        WHERE bugs.bug_id = $target->{'bug'}->{'id'}
+        WHERE bugs.bug_id = ?
         AND flags.bug_id = bugs.bug_id
         AND flags.type_id = e.type_id
         AND flags.is_active = 1 
         AND (bugs.product_id = e.product_id OR e.product_id IS NULL)
-        AND (bugs.component_id = e.component_id OR e.component_id IS NULL)
-    ");
-    clear(&::FetchOneColumn()) while &::MoreSQLData();
-    
-    # Take a snapshot of flags after changes.
-    $flags = match({ 'bug_id'    => $target->{'bug'}->{'id'} , 
-                     'attach_id' => $target->{'attachment'}->{'id'} ,
-                     'is_active' => 1 });
-    my @new_summaries;
-    foreach my $flag (@$flags) {
-        my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
-        $summary .= "(" . $flag->{'requestee'}->login . ")" if $flag->{'requestee'};
-        push(@new_summaries, $summary);
+        AND (bugs.component_id = e.component_id OR e.component_id IS NULL)",
+        undef, $bug_id);
+
+    foreach my $flag_id (@$flag_ids) {
+        clear($flag_id);
     }
 
-    my $old_summaries = join(", ", @old_summaries);
-    my $new_summaries = join(", ", @new_summaries);
+    # Take a snapshot of flags after changes.
+    my @new_summaries = snapshot($bug_id, $attach_id);
+
+    update_activity($bug_id, $attach_id, $timestamp, \@old_summaries, \@new_summaries);
+}
+
+sub update_activity {
+    my ($bug_id, $attach_id, $timestamp, $old_summaries, $new_summaries) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    $attach_id ||= 'NULL';
+    $old_summaries = join(", ", @$old_summaries);
+    $new_summaries = join(", ", @$new_summaries);
     my ($removed, $added) = diff_strings($old_summaries, $new_summaries);
     if ($removed ne $added) {
         my $sql_removed = &::SqlQuote($removed);
         my $sql_added = &::SqlQuote($added);
         my $field_id = &::GetFieldID('flagtypes.name');
-        my $attach_id = $target->{'attachment'}->{'id'} || 'NULL';
-        &::SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, " . 
-                   "bug_when, fieldid, removed, added) VALUES " . 
-                   "($target->{'bug'}->{'id'}, $attach_id, $::userid, " . 
-                   "$timestamp, $field_id, $sql_removed, $sql_added)");
+        $dbh->do("INSERT INTO bugs_activity
+                  (bug_id, attach_id, who, bug_when, fieldid, removed, added)
+                  VALUES ($bug_id, $attach_id, $::userid, $timestamp,
+                  $field_id, $sql_removed, $sql_added)");
     }
 }
-
 
 sub create {
     # Creates a flag record in the database.
@@ -640,6 +660,37 @@ sub notify {
     }
 
     Bugzilla::BugMail::MessageToMTA($message);
+}
+
+# Cancel all request flags from the attachment being obsoleted.
+sub CancelRequests {
+    my ($bug_id, $attach_id, $timestamp) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    my $request_ids =
+        $dbh->selectcol_arrayref("SELECT flags.id
+                                  FROM flags
+                                  LEFT JOIN attachments ON flags.attach_id = attachments.attach_id
+                                  WHERE flags.attach_id = ?
+                                  AND flags.status = '?'
+                                  AND flags.is_active = 1
+                                  AND attachments.isobsolete = 0",
+                                  undef, $attach_id);
+
+    return if (!scalar(@$request_ids));
+
+    # Take a snapshot of flags before any changes.
+    my @old_summaries = snapshot($bug_id, $attach_id) if ($timestamp);
+    foreach my $flag (@$request_ids) {
+        clear($flag);
+    }
+
+    # If $timestamp is undefined, do not update the activity table
+    return unless ($timestamp);
+
+    # Take a snapshot of flags after any changes.
+    my @new_summaries = snapshot($bug_id, $attach_id);
+    update_activity($bug_id, $attach_id, $timestamp, \@old_summaries, \@new_summaries);
 }
 
 ################################################################################
