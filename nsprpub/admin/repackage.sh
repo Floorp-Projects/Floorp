@@ -151,17 +151,21 @@ for OBJDIR in $WIN_OBJDIRS; do
     mkdir $NSPRDIR/include/obsolete
 
     # copy headers and adjust unix line-end to Windows line-end
+    # Note: Watch out for the "sed" command line.
+    # when editing the command, take care to preserve the "^M" as the literal
+    # cntl-M character! in vi, use "cntl-v cntl-m" to enter it!
+    #
     headers=`ls $FROMTOP/$OBJDIR/include/*.h`
     for header in $headers; do
-        sed -e 's/$/^M/g' $header > $NSPRDIR/include/`basename $header`
+        sed -e 's/$//g' $header > $NSPRDIR/include/`basename $header`
     done
     headers=`ls $FROMTOP/$OBJDIR/include/obsolete/*.h`
     for header in $headers; do
-        sed -e 's/$/^M/g' $header > $NSPRDIR/include/obsolete/`basename $header`
+        sed -e 's/$//g' $header > $NSPRDIR/include/obsolete/`basename $header`
     done
     headers=`ls $FROMTOP/$OBJDIR/include/private/*.h`
     for header in $headers; do
-        sed -e 's/$/^M/g' $header > $NSPRDIR/include/private/`basename $header`
+        sed -e 's/$//g' $header > $NSPRDIR/include/private/`basename $header`
     done
 
     echo "copying $FROMTOP/$OBJDIR/lib"
