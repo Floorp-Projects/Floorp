@@ -883,6 +883,7 @@ sub init {
                 }
             }
             if (@orlist) {
+                @orlist = map("($_)", @orlist) if (scalar(@orlist) > 1);
                 push(@andlist, "(" . join(" OR ", @orlist) . ")");
             }
         }
