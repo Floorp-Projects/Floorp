@@ -4393,8 +4393,12 @@ nsDocShell::CreateAboutBlankContentViewer()
   nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
   if (!catMan)
     return NS_ERROR_FAILURE;
+
   nsXPIDLCString contractId;
-  catMan->GetCategoryEntry("Gecko-Content-Viewers", "text/html", getter_Copies(contractId));
+  rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", "text/html", getter_Copies(contractId));
+  if (NS_FAILED(rv))
+    return rv;
+
   nsCOMPtr<nsIDocumentLoaderFactory> docFactory(do_GetService(contractId));
   if (docFactory) {
 
@@ -4533,8 +4537,11 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
     nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
     if (NS_FAILED(rv))
       return rv;
+    
     nsXPIDLCString contractId;
-    catMan->GetCategoryEntry("Gecko-Content-Viewers", aContentType, getter_Copies(contractId));
+    rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", aContentType, getter_Copies(contractId));
+    if (NS_FAILED(rv))
+      return rv;
 
     // Create an instance of the document-loader-factory
     nsCOMPtr<nsIDocumentLoaderFactory>
@@ -4551,8 +4558,11 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
         if (NS_ERROR_PLUGINS_PLUGINSNOTCHANGED == pluginManager->ReloadPlugins(PR_FALSE))
             return NS_ERROR_FAILURE;
 
-        catMan->GetCategoryEntry("Gecko-Content-Viewers", aContentType,
+        rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", aContentType,
                                  getter_Copies(contractId));
+        if (NS_FAILED(rv))
+          return rv;
+
         docLoaderFactory = do_GetService(contractId.get());
 
         if (!docLoaderFactory)
