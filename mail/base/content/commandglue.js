@@ -214,7 +214,7 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
     var server = msgfolder.server;
     if (gPrefs.getBoolPref("mail.password_protect_local_cache"))
     {
-      showMessagesAfterLoading = !server.isAuthenticated;
+      showMessagesAfterLoading = server.passwordPromptRequired;
       // servers w/o passwords (like local mail) will always be non-authenticated.
       // So we need to use the account manager for that case.
     }

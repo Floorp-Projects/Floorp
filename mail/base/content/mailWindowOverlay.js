@@ -1933,7 +1933,7 @@ function GetMessagesForAllAuthenticatedAccounts()
       var currentServer = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
       var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" +
                            currentServer.type].getService(Components.interfaces.nsIMsgProtocolInfo);
-      if (protocolinfo.canGetMessages && currentServer.isAuthenticated) {
+      if (protocolinfo.canGetMessages && !currentServer.passwordPromptRequired) {
         // Get new messages now
         GetMessagesForInboxOnServer(currentServer);
       }
