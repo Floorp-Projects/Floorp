@@ -74,6 +74,10 @@
 #include "nsIRenderingContext.h"
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
+#include "npapi.h"
+#include "nsIPrintOptions.h"
+#include "nsGfxCIID.h"
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -89,7 +93,7 @@
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
 
-//~~~ For mime types
+// For mime types
 #include "nsMimeTypes.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
@@ -110,6 +114,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 #undef KeyPress
 #endif
 
+static nsresult GetContainingBlock(nsIFrame *aFrame, nsIFrame **aContainingBlock);
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo2,
@@ -247,10 +252,8 @@ public:
 
   NS_IMETHOD Init(nsIPresContext *aPresContext, nsObjectFrame *aFrame);
 
-  nsresult GetContainingBlock(nsIFrame *aFrame, nsIFrame **aContainingBlock);
-  
   nsPluginPort* GetPluginPort();
-  void ReleasePluginPort(nsPluginPort * pluginPort);//~~~
+  void ReleasePluginPort(nsPluginPort * pluginPort);
 
   void SetPluginHost(nsIPluginHost* aHost);
 
@@ -353,7 +356,6 @@ nsObjectFrame::GetSkipSides() const
   return 0;
 }
 
-//~~~
 #define IMAGE_EXT_GIF "gif"
 #define IMAGE_EXT_JPG "jpg"
 #define IMAGE_EXT_PNG "png"
@@ -742,68 +744,96 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aMetrics)
 {
-  // Determine our size stylistically
-  PRBool haveWidth = PR_FALSE;
-  PRBool haveHeight = PR_FALSE;
-  PRUint32 width = EMBED_DEF_WIDTH;
-  PRUint32 height = EMBED_DEF_HEIGHT;
-
-  if (IsHidden()) {
-    // If we're hidden, then width and height are zero.
-    haveWidth = haveHeight = PR_TRUE;
-    aMetrics.width = aMetrics.height = 0;
-  }
-  else {
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
-      aMetrics.width = aReflowState.mComputedWidth;
-      haveWidth = PR_TRUE;
-    }
-    else if(mInstanceOwner != nsnull) {
-      if(NS_OK != mInstanceOwner->GetWidth(&width)) {
-        width = EMBED_DEF_WIDTH;
-        haveWidth = PR_FALSE;
-      }
-      else
-        haveWidth = PR_FALSE;    
-    }
-    
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
-      aMetrics.height = aReflowState.mComputedHeight;
-      haveHeight = PR_TRUE;
-    }
-    else if(mInstanceOwner != nsnull) {
-      if(NS_OK != mInstanceOwner->GetHeight(&height)) {
-        height = EMBED_DEF_HEIGHT;
-        haveHeight = PR_FALSE;
-      }
-      else
-        haveHeight = PR_FALSE;
-    }
-  }
-
-  // XXX Temporary auto-sizing logic
-  if (!haveWidth) {
-    if (haveHeight) {
-      aMetrics.width = aMetrics.height;
-    }
-    else {
-      float p2t;
-      aPresContext->GetScaledPixelsToTwips(&p2t);
-      aMetrics.width = NSIntPixelsToTwips(width, p2t);
-    }
-  }
-  if (!haveHeight) {
-    if (haveWidth) {
-      aMetrics.height = aMetrics.width;
-    }
-    else {
-      float p2t;
-      aPresContext->GetScaledPixelsToTwips(&p2t);
-      aMetrics.height = NSIntPixelsToTwips(height, p2t);
-    }
-  }
-  aMetrics.ascent = aMetrics.height;
+  // By default, we have no area
+  aMetrics.width = 0;
+  aMetrics.height = 0;
+  aMetrics.ascent = 0;
   aMetrics.descent = 0;
+
+  // for EMBED and APPLET, default to 240x200 for compatibility
+  nsIAtom *atom;
+  mContent->GetTag(atom);
+  if ( nsnull != atom &&
+     ((atom == nsHTMLAtoms::applet) || (atom == nsHTMLAtoms::embed))) {
+    
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(&p2t);
+    aMetrics.width  = NSIntPixelsToTwips(EMBED_DEF_WIDTH,  p2t);
+    aMetrics.height = NSIntPixelsToTwips(EMBED_DEF_HEIGHT, p2t);
+  }
+
+  // now find out size stylisticly
+  const nsStylePosition*  position;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+
+  // width
+  nsStyleUnit unit = position->mWidth.GetUnit();
+  if (eStyleUnit_Coord == unit) {
+    aMetrics.width = position->mWidth.GetCoordValue();
+  }
+  else if (eStyleUnit_Percent == unit) 
+  {
+    float factor = position->mWidth.GetPercentValue();
+
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)
+      aMetrics.width = NSToCoordRound (factor * aReflowState.availableWidth);
+    else {  // unconstrained percent case
+      nsRect rect;
+      aPresContext->GetVisibleArea(rect);
+      nscoord w = rect.width;
+      // now make it nicely fit counting margins
+      nsIFrame *containingBlock = nsnull;
+      if (NS_SUCCEEDED(GetContainingBlock(this, &containingBlock)) && containingBlock) {
+        containingBlock->GetRect(rect);
+        w -= 2*rect.x;
+        // XXX: this math seems suspect to me.  Is the parent's margin really twice the x-offset?
+        //      in CSS, a frame can have independent top and bottom margins
+        // but for now, let's just copy what we had before
+      }
+      aMetrics.width = NSToCoordRound (factor * w);
+    }
+  }
+
+  // height
+  unit = position->mHeight.GetUnit();
+  if (eStyleUnit_Coord == unit) {
+    aMetrics.height = position->mHeight.GetCoordValue();
+  }
+  else if (eStyleUnit_Percent == unit) 
+  {
+    float factor = position->mHeight.GetPercentValue();
+
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)
+      aMetrics.height = NSToCoordRound (factor * aReflowState.availableHeight);
+    else {  // unconstrained percent case
+      nsRect rect;
+      aPresContext->GetVisibleArea(rect);
+      nscoord h = rect.height;
+      // now make it nicely fit counting margins
+      nsIFrame *containingBlock = nsnull;
+      if (NS_SUCCEEDED(GetContainingBlock(this, &containingBlock)) && containingBlock) {
+        containingBlock->GetRect(rect);
+        h -= 2*rect.y;
+        // XXX: this math seems suspect to me.  Is the parent's margin really twice the x-offset?
+        //      in CSS, a frame can have independent top and bottom margins
+        // but for now, let's just copy what we had before
+      }
+      aMetrics.height = NSToCoordRound (factor * h);
+    }
+  }
+  // accent
+  aMetrics.ascent = aMetrics.height;
+  
+  if (aMetrics.width || aMetrics.height) {
+    // Make sure that the other dimension is non-zero
+    if (!aMetrics.width) aMetrics.width = 1;
+    if (!aMetrics.height) aMetrics.height = 1;
+  }
+
+  if (nsnull != aMetrics.maxElementSize) {
+    aMetrics.maxElementSize->width = aMetrics.width;
+    aMetrics.maxElementSize->height = aMetrics.height;
+  }
 }
 
 
@@ -820,13 +850,8 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Get our desired size
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
-  // initialize max element size if present
-  if (aMetrics.maxElementSize) {
-    aMetrics.maxElementSize->width  = 0;
-    aMetrics.maxElementSize->height = 0;
-  }
 
-  // handle an image elsewhere
+  // handle an image or iframes elsewhere
   nsIFrame * child = mFrames.FirstChild();
   if(child != nsnull)
     return HandleChild(aPresContext, aMetrics, aReflowState, aStatus, child);
@@ -1474,7 +1499,6 @@ nsObjectFrame::DidReflow(nsIPresContext* aPresContext,
           NS_RELEASE(inst);
         }
 
-        //~~~
         mInstanceOwner->ReleasePluginPort((nsPluginPort *)window->window);
 
         if (mWidget)
@@ -1495,24 +1519,162 @@ nsObjectFrame::Paint(nsIPresContext* aPresContext,
                      const nsRect& aDirtyRect,
                      nsFramePaintLayer aWhichLayer)
 {
-  // determine if we are a printcontext
-  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
-  if  (thePrinterContext) {
-    // we are printing bail for now
-    return NS_OK;
-  }
-
-
   const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
   if ((vis != nsnull) && !vis->IsVisibleOrCollapsed()) {
     return NS_OK;
   }
   
   nsIFrame * child = mFrames.FirstChild();
-  if (child != NULL) {    // This is an image
+  if (child) {    // if we have children, we are probably not really a plugin
     nsObjectFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
     return NS_OK;
   }
+
+  // determine if we are printing
+  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
+  if  (thePrinterContext) {
+    // we only want to print on the content layer pass
+    if (eFramePaintLayer_Content != aWhichLayer)
+      return NS_OK;
+
+    // if we are printing, we need to get the correct nsIPluginInstance
+    // for THIS content node in order to call ->Print() on the right plugin
+
+    // first, we need to get the document
+    nsCOMPtr<nsIDocument> doc;
+    mContent->GetDocument(*getter_AddRefs(doc));
+    NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
+
+    // now we need to get the shell for the screen
+    // XXX assuming that the shell at zero will always be the screen one
+    nsCOMPtr<nsIPresShell> shell;
+    doc->GetShellAt(0, getter_AddRefs(shell));
+    NS_ENSURE_TRUE(shell, NS_ERROR_NULL_POINTER);
+
+    // then the shell can give us the screen frame for this content node
+    nsIFrame* frame = nsnull;
+    shell->GetPrimaryFrameFor(mContent, &frame);
+    NS_ENSURE_TRUE(frame, NS_ERROR_NULL_POINTER);
+
+    // make sure this is REALLY an nsIObjectFrame
+    // we may need to go through the children to get it
+    nsIObjectFrame* objectFrame = nsnull;
+    CallQueryInterface(frame,&objectFrame);
+    if (!objectFrame)
+      GetNextObjectFrame(aPresContext,frame,&objectFrame);
+    NS_ENSURE_TRUE(objectFrame,NS_ERROR_FAILURE);
+
+    // finally we can get our plugin instance
+    nsCOMPtr<nsIPluginInstance> pi;
+    if (NS_FAILED(objectFrame->GetPluginInstance(*getter_AddRefs(pi))) || !pi)
+      return NS_ERROR_FAILURE;
+
+    // now we need to setup the correct location for printing
+    nsresult rv;
+    nsPluginWindow    window;
+    nsIView          *parentWithView;
+    nsPoint           origin;
+    float             t2p;
+    nsMargin          margin(0,0,0,0);
+    window.window =   nsnull;
+
+    // prepare embedded mode printing struct
+    nsPluginPrint npprint;
+    npprint.mode = nsPluginMode_Embedded;
+
+    // we need to find out if we are windowless or not
+    PRBool    windowless;
+    pi->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
+    window.type  =  windowless ? nsPluginWindowType_Drawable : nsPluginWindowType_Window;
+
+    // get a few things
+    nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
+    NS_ENSURE_TRUE(printService, NS_ERROR_FAILURE);
+    printService->GetMarginInTwips(margin);
+
+    aPresContext->GetTwipsToPixels(&t2p);
+    GetOffsetFromView(aPresContext, origin, &parentWithView);
+
+    // set it all up
+    // XXX is windowless different?
+    window.x = NSToCoordRound((origin.x + margin.left) * t2p);
+    window.y = NSToCoordRound((origin.y + margin.top ) * t2p);
+    window.width = NSToCoordRound(mRect.width * t2p);
+    window.height= NSToCoordRound(mRect.height * t2p);
+    window.clipRect.bottom = 0; window.clipRect.top = 0;
+    window.clipRect.left = 0; window.clipRect.right = 0;
+    
+// XXX platform specific printing code
+#if defined(XP_MAC) && !TARGET_CARBON
+    // Mac does things a little differently.
+    GrafPort *curPort;
+    ::GetPort(&curPort);  // get the current port
+
+    nsPluginPort port;
+    port.port = (CGrafPort*)curPort;
+    port.portx = window.x;
+    port.porty = window.y;
+
+    RgnHandle curClip = ::NewRgn();
+    NS_ENSURE_TRUE(curClip, NS_ERROR_NULL_POINTER);
+    ::GetClip(curClip); // save old clip
+    
+    ::SetOrigin(-window.x,-window.y); // port must be set correctly prior to telling plugin to print
+    Rect r = {0,0,window.height,window.width};
+    ::ClipRect(&r);  // also set the clip
+    
+    window.window = &port;
+    npprint.print.embedPrint.platformPrint = (void*)window.window;
+
+#elif defined (XP_UNIX)
+    // UNIX does things completely differently
+    PRUnichar *printfile = nsnull;
+    printService->GetToFileName(&printfile);
+    if (!printfile) 
+      return NS_OK; // XXX what to do on UNIX when we don't have a PS file???? 
+
+    NPPrintCallbackStruct npPrintInfo;
+    npPrintInfo.type = NP_PRINT;
+    npPrintInfo.fp = (FILE*)printfile;    
+    npprint.print.embedPrint.platformPrint = (void*) &npPrintInfo;
+
+#else  // Windows and non-UNIX, non-Mac(Classic) cases
+    // we need the native printer device context to pass to plugin
+    // On Windows, this will be the HDC
+    PRUint32 pDC = 0;
+    aRenderingContext.RetrieveCurrentNativeGraphicData(&pDC);
+
+    if (!pDC)
+      return NS_OK;  // no dc implemented so quit
+
+    npprint.print.embedPrint.platformPrint = (void*)pDC;
+#endif 
+
+
+    npprint.print.embedPrint.window = window;
+    // send off print info to plugin
+    rv = pi->Print(&npprint);
+
+
+#if defined(XP_MAC) && !TARGET_CARBON
+    // Clean-up on Mac
+    ::SetOrigin(0,0);
+    ::SetClip(curClip);  // restore previous clip
+    ::DisposeRgn(curClip);
+#endif
+
+    // XXX Nav 4.x always sent a SetWindow call after print. Should we do the same?
+    nsCOMPtr<nsIPresContext> screenPcx;
+    shell->GetPresContext(getter_AddRefs(screenPcx));
+    nsDidReflowStatus status = NS_FRAME_REFLOW_FINISHED; // should we use a special status?
+    frame->DidReflow(screenPcx, status);  // DidReflow will take care of it
+
+    return rv;  // done with printing
+  }
+
+
+// ---------------------------------------------------------------------------
+// Screen painting code
 
 #if defined (XP_MAC)
     // delegate all painting to the plugin instance.
@@ -1550,7 +1712,6 @@ nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
    NS_ENSURE_ARG_POINTER(anEventStatus);
     nsresult rv = NS_OK;
 
-//~~~
   //FIX FOR CRASHING WHEN NO INSTANCE OWVER
   if (!mInstanceOwner)
     return NS_ERROR_NULL_POINTER;
@@ -1676,6 +1837,32 @@ nsObjectFrame::NotifyContentObjectWrapper()
   // wrapper for mContent so that this plugin becomes part of the DOM
   // object.
   return helper->PostCreate(wrapper, cx, obj);
+}
+
+nsresult
+nsObjectFrame::GetNextObjectFrame(nsIPresContext* aPresContext,
+                                  nsIFrame* aRoot,
+                                  nsIObjectFrame** outFrame)
+{
+  NS_ENSURE_ARG_POINTER(outFrame);
+
+  nsIFrame * child;
+  aRoot->FirstChild(aPresContext, nsnull, &child);
+
+  while (child != nsnull) {
+    *outFrame = nsnull;
+    CallQueryInterface(child, outFrame);
+    if (nsnull != *outFrame) {
+      nsCOMPtr<nsIPluginInstance> pi;
+      (*outFrame)->GetPluginInstance(*getter_AddRefs(pi));  // make sure we have a REAL plugin
+      if (pi) return NS_OK;
+    }
+
+    GetNextObjectFrame(aPresContext, child, outFrame);
+    child->GetNextSibling(&child);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -2625,9 +2812,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
 
 // it would indicate a serious error in the frame model if aContainingBlock were null when 
 // GetContainingBlock returns
-nsresult
-nsPluginInstanceOwner::GetContainingBlock(nsIFrame *aFrame, 
-                                          nsIFrame **aContainingBlock)
+static nsresult
+GetContainingBlock(nsIFrame *aFrame, nsIFrame **aContainingBlock)
 {
   NS_ENSURE_ARG_POINTER(aFrame);
   NS_ENSURE_ARG_POINTER(aContainingBlock);
@@ -3008,7 +3194,6 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
     }
 #endif
 
-//~~~
 #ifdef XP_WIN
         nsPluginEvent * pPluginEvent = (nsPluginEvent *)anEvent.nativeMsg;
         PRBool eventHandled = PR_FALSE;
@@ -3119,7 +3304,6 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
     }
 #endif
 
-//~~~
 #ifdef XP_WIN
     nsPluginEvent pluginEvent;
   pluginEvent.event = 0x000F; //!!! This is bad, but is it better to include <windows.h> for WM_PAINT only?
@@ -3251,7 +3435,7 @@ nsPluginPort* nsPluginInstanceOwner::GetPluginPort()
 
   nsPluginPort* result = NULL;
     if (mWidget != NULL)
-  {//~~~
+  {
 #ifdef XP_WIN
     if(mPluginWindow.type == nsPluginWindowType_Drawable)
       result = (nsPluginPort*) mWidget->GetNativeData(NS_NATIVE_GRAPHIC);
@@ -3262,7 +3446,6 @@ nsPluginPort* nsPluginInstanceOwner::GetPluginPort()
     return result;
 }
 
-//~~~
 void nsPluginInstanceOwner::ReleasePluginPort(nsPluginPort * pluginPort)
 {
 #ifdef XP_WIN
@@ -3312,7 +3495,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
         if (PR_TRUE == windowless)
         {
           mPluginWindow.type = nsPluginWindowType_Drawable;
-          mPluginWindow.window = nsnull; //~~~ this needs to be a HDC according to the spec,
+          mPluginWindow.window = nsnull; // this needs to be a HDC according to the spec,
                                          // but I do not see the right way to release it
                                          // so let's postpone passing HDC till paint event
                                          // when it is really needed. Change spec?

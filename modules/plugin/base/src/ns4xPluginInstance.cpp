@@ -964,6 +964,27 @@ nsresult ns4xPluginInstance::NewNotifyStream(nsIPluginStreamListener** listener,
 
 NS_IMETHODIMP ns4xPluginInstance::Print(nsPluginPrint* platformPrint)
 {
+  NS_ENSURE_TRUE(platformPrint, NS_ERROR_NULL_POINTER);
+
+  NPPrint* thePrint = (NPPrint *)platformPrint;
+
+  NS_TRY_SAFE_CALL_VOID(CallNPP_PrintProc(fCallbacks->print,
+                                          &fNPP,
+                                          thePrint), fLibrary);
+
+  NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
+  ("NPP PrintProc called: this=%p, pDC=%p, [x=%d,y=%d,w=%d,h=%d], clip[t=%d,b=%d,l=%d,r=%d]\n",
+  this,
+  platformPrint->print.embedPrint.platformPrint,
+  platformPrint->print.embedPrint.window.x,
+  platformPrint->print.embedPrint.window.y,
+  platformPrint->print.embedPrint.window.width,
+  platformPrint->print.embedPrint.window.height,
+  platformPrint->print.embedPrint.window.clipRect.top,
+  platformPrint->print.embedPrint.window.clipRect.bottom,
+  platformPrint->print.embedPrint.window.clipRect.left,
+  platformPrint->print.embedPrint.window.clipRect.right));
+
   return NS_OK;
 }
 
