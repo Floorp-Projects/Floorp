@@ -623,7 +623,7 @@ HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
   const nsString& value = aNode.GetValueAt(aIndex); 
   aResult.Truncate();
   aResult.Append(value);
-  aResult.Trim(" \b\r\t\n",PR_TRUE,PR_TRUE,PR_TRUE);
+  aResult.Trim("\b\r\t\n",PR_TRUE,PR_TRUE,PR_TRUE);
 
   // Strip quotes if present
   PRUnichar first = aResult.First();
