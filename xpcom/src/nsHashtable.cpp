@@ -186,7 +186,7 @@ void nsHashtable::Reset() {
 nsCStringKey::nsCStringKey(const char* str)
   : mStr(mBuf)
 {
-  PRInt32 len = PL_strlen(str);
+  PRUint32 len = PL_strlen(str);
   if (len >= sizeof(mBuf)) {
     mStr = PL_strdup(str);
     NS_ASSERTION(mStr, "out of memory");

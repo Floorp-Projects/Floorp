@@ -66,7 +66,7 @@ struct nsRegistry : public nsIRegistry {
 
     // ctor/dtor
     nsRegistry();
-    ~nsRegistry();
+    virtual ~nsRegistry();
 
 protected:
     HREG   mReg; // Registry handle.
