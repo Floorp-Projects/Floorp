@@ -48,11 +48,6 @@ $build_table = [];
 $who_list = [];
 @note_array = ();
 
-# Yeah, more globals.
-$bloaty_by_log = {};
-$bloaty_min_leaks = 0;
-$bloaty_min_bloat = 0;
-
 $gzip = '/usr/local/bin/gzip';
 
 $data_dir='data';
@@ -135,7 +130,7 @@ sub tb_load_data {
 
   &make_build_table($td, $build_list);
 
-  ($bloaty_min_leaks, $bloaty_min_bloat) = load_bloaty($td);
+  $td->{bloaty} = load_bloaty($td);
 
   return $td;
 }
@@ -372,40 +367,35 @@ sub load_who {
   #}
 }
     
+
 # Load data about code bloat
 #   File format: <build_time>|<build_name>|<leak_delta>|<bloat_delta>
 #
 sub load_bloaty {
   my $treedata = $_[0];
   local $_;
-  open(BLOATLOG, "<$treedata->{name}/bloat.dat");
-  my $leaks_list = [];
-  my $bloat_list = [];
-  my $index = 0;
-  my $list_max = 5;   # only take the minimum over the last few entries
 
+  my $bloaty = {};
+  my ($bloat_baseline,  $leaks_baseline)  = (0,0);
+
+  open(BLOATLOG, "<$treedata->{name}/bloat.dat");
   while (<BLOATLOG>) {
     chomp;
     my ($logfile, $leaks, $bloat) = split /\|/;
-    $bloaty_by_log->{$logfile} = [ $leaks, $bloat ];
-    $leaks_list[$index] = $leaks;
-    $bloat_list[$index] = $bloat;
-    $index++;
-    $index = 0 unless $index < $list_max;
-  }
-  my $leaks_min = $leaks_list[0];
-  my $bloat_min = $bloat_list[0];
-  for ($index = 1; $index < $list_max; $index++) {
-    if ($leaks_list[$index] < $leaks_min) {
-      $leaks_min = $leaks_list[$index];
-    }
-    if ($bloat_list[$index] < $bloat_min) {
-      $bloat_min = $bloat_list[$index];
-    }
-  }
-  return ($leaks_min, $bloat_min);
-}
+
+    # Allow 1k of noise
+    my $leaks_cmp = int(($leaks - $leaks_baseline) / 1000);
+    my $bloat_cmp = int(($bloat - $bloat_baseline) / 1000);
     
+    # If there was a rise or drop, set a new baseline
+    $leaks_baseline = $leaks unless $leaks_cmp == 0;
+    $bloat_baseline = $bloat unless $bloat_cmp == 0;
+
+    $bloaty->{$logfile} = [ $leaks, $bloat, $leaks_cmp, $bloat_cmp ];
+  }
+  return $bloaty;
+}
+
 sub get_build_name_index {
   my ($build_list) = @_;
 

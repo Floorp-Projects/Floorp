@@ -154,10 +154,10 @@ sub do_static {
 }
 
 sub do_tinderbox {
-  &tb_load_data;
+  my $tinderbox_data = &tb_load_data;
   &print_page_head;
   &print_table_header;
-  &print_table_body;
+  &print_table_body($tinderbox_data);
   &print_table_footer;
 }
 
@@ -232,18 +232,17 @@ sub print_page_head {
 }
 
 sub print_table_body {
+  my $tinderbox_data = $_[0];
   for (my $tt=0; $tt < $time_count; $tt++) {
     last if $build_time_times->[$tt] < $mindate;
-    print_table_row($tt);    
+    print_table_row($tinderbox_data, $tt);
   }
 }
 
 sub print_bloat_delta {
-  my ($value, $min) = @_;
-  # this function rounds off, and prints bad (> min) values in red
-
-  my $worse = ($value - $min) > 1000;    # heuristic -- allow 1k of noise
+  my ($value, $compare) = @_;
   my $units = 'b';
+
   if ($value >= 1000000) {
     $value = int($value / 1000000);
     $min =   int($min / 1000000);
@@ -254,10 +253,12 @@ sub print_bloat_delta {
     $units = 'K';
   }
 
-  if ($worse) {
-    return sprintf('<b><font color="#FF0000">%d%s</font></b>', $value, $units);
+  if ($compare > 0) {
+    return "<b><font color='red'>$value$units</font></b>";
+  } elsif ($compare < 0) {
+    return "<b><font color='blue'>$value$units</font></b>";
   } else {
-    return sprintf('%d%s', $value, $units);
+    return "$value$units";
   }
 }
 
@@ -266,7 +267,7 @@ BEGIN {
   my $lasthour = ''; 
 
   sub print_table_row {
-    my ($tt) = @_;
+    my ($td, $tt) = @_;
 
     # Time column
     # 
@@ -355,12 +356,11 @@ BEGIN {
       
       # Leak/Bloat
       #
-      if (defined $bloaty_by_log->{$logfile}) {
-        my ($leaks, $bloat);
-        ($leaks, $bloat) = @{ $bloaty_by_log->{$logfile} };
-        printf "<br>Lk:%s<br>Bl:%s", 
-        print_bloat_delta($leaks, $bloaty_min_leaks), 
-        print_bloat_delta($bloat, $bloaty_min_bloat);
+      if (defined $td->{bloaty}{$logfile}) {
+        my ($leaks, $bloat, $leaks_cmp, $bloat_cmp)
+            = @{ $td->{bloaty}{$logfile} };
+        print "<br>Lk:", print_bloat_delta($leaks, $leaks_cmp),
+              "<br>Bl:", print_bloat_delta($bloat, $bloat_cmp);
       }
 
       # Binary
