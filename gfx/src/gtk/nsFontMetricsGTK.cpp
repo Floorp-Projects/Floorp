@@ -803,6 +803,7 @@ FreeGlobals(void)
   }
   NS_IF_RELEASE(gPref);
   if (gSpecialCharSets) {
+    gSpecialCharSets->Reset(FreeCharSetMap, nsnull);
     delete gSpecialCharSets;
     gSpecialCharSets = nsnull;
   }
