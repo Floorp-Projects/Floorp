@@ -153,10 +153,8 @@ public:
    * DeleteNode removes aChild from aParent.
    * If aChild is not a child of aParent, nothing is done and an error is returned.
    * @param aChild    The node to delete
-   * @param aParent   The parent of aChild
    */
-  virtual nsresult DeleteNode(nsIDOMNode * aParent,
-                              nsIDOMNode * aChild)=0;
+  virtual nsresult DeleteNode(nsIDOMNode * aChild)=0;
 
   /** 
    * DeleteSelection removes all nodes in the current selection.
