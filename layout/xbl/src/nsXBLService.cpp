@@ -118,6 +118,9 @@ class nsXBLService: public nsIXBLService
   // onto the element.
   NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL);
 
+  // This function clears out the bindings on a given content node.
+  NS_IMETHOD FlushBindings(nsIContent* aContent);
+
   // For a given element, returns a flat list of all the anonymous children that need
   // frames built.
   NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement);
@@ -259,7 +262,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
   nsCOMPtr<nsIXBLBinding> binding;
   bindableContent->GetBinding(getter_AddRefs(binding));
   if (binding)
-    bindableContent->SetBinding(nsnull); // Flush old bindings
+    return NS_OK;
 
   nsCAutoString url = aURL;
   if (NS_FAILED(rv = GetBinding(url, getter_AddRefs(binding)))) {
@@ -323,10 +326,21 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult, n
 }
 
 NS_IMETHODIMP
+nsXBLService::FlushBindings(nsIContent* aContent)
+{
+  nsCOMPtr<nsIBindableContent> bindable(do_QueryInterface(aContent));
+  if (!bindable)
+    return NS_ERROR_FAILURE;
+
+  bindable->SetBinding(nsnull); // Flush old bindings
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXBLService::GetBaseTag(nsIContent* aContent, nsIAtom** aResult)
 {
   *aResult = nsnull;
-  nsCOMPtr<nsIBindableContent> bindable = do_QueryInterface(aContent);
+  nsCOMPtr<nsIBindableContent> bindable(do_QueryInterface(aContent));
   if (!bindable)
     return NS_ERROR_FAILURE;
 
