@@ -124,6 +124,7 @@ public:
 
   NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode);
 
+
   NS_IMETHOD SplitNode(nsIDOMNode * aExistingRightNode,
                        PRInt32      aOffset,
                        nsIDOMNode ** aNewLeftNode);
@@ -298,6 +299,7 @@ protected:
 // document after a change via the DOM - gpk 2/13/99
   void HACKForceRedraw(void);
 
+  NS_IMETHOD DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode);
 
 };
 

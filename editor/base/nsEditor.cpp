@@ -1277,7 +1277,32 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
 }
 
 
-NS_IMETHODIMP nsEditor::DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode)
+NS_IMETHODIMP nsEditor::DeleteSelectionAndCreateNode(const nsString& aTag,
+                                                     nsIDOMNode ** aNewNode)
+{
+  nsCOMPtr<nsIDOMNode> parentSelectedNode;
+  PRInt32 offsetOfNewNode;
+  nsresult result = DeleteSelectionAndPrepareToCreateNode(parentSelectedNode,
+                                                          offsetOfNewNode);
+  if (!NS_SUCCEEDED(result))
+    return result;
+
+  nsCOMPtr<nsIDOMNode> newNode;
+  result = CreateNode(aTag, parentSelectedNode, offsetOfNewNode,
+                      getter_AddRefs(newNode));
+  
+  *aNewNode = newNode;
+
+  // we want the selection to be just after the new node
+  nsCOMPtr<nsIDOMSelection> selection;
+  result = GetSelection(getter_AddRefs(selection));
+  if ((NS_SUCCEEDED(result)) && selection)
+    selection->Collapse(parentSelectedNode, offsetOfNewNode+1);
+
+  return result;
+}
+
+NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDOMSelection> selection;
@@ -1313,12 +1338,10 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndCreateNode(const nsString& aTag, nsIDO
 #endif
     }
     // split the selected node
-    nsCOMPtr<nsIDOMNode> parentSelectedNode;
     PRInt32 offsetOfSelectedNode;
     result = selection->GetAnchorNodeAndOffset(getter_AddRefs(parentSelectedNode), &offsetOfSelectedNode);
     if ((NS_SUCCEEDED(result)) && parentSelectedNode)
     {
-      PRInt32 offsetOfNewNode;
       nsCOMPtr<nsIDOMNode> selectedNode;
       PRUint32 selectedNodeContentCount=0;
       nsCOMPtr<nsIDOMCharacterData>selectedParentNodeAsText;
@@ -1399,14 +1422,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndCreateNode(const nsString& aTag, nsIDO
         }
       }
 
-      if (NS_SUCCEEDED(result))
-      { 
-        nsCOMPtr<nsIDOMNode> newNode;
-        result = CreateNode(aTag, parentSelectedNode, offsetOfNewNode, getter_AddRefs(newNode));
-        // we want the selection to be just after the new node
-        selection->Collapse(parentSelectedNode, offsetOfNewNode+1); 
-        *aNewNode = newNode;
-      }
+      // Here's where the new node was inserted
     }
     else {
       printf("InsertBreak into an empty document is not yet supported\n");

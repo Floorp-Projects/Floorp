@@ -20,6 +20,7 @@
 #include "nsHTMLEditor.h"
 #include "nsHTMLEditRules.h"
 #include "nsEditorEventListeners.h"
+#include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMKeyListener.h" 
@@ -432,39 +433,89 @@ nsHTMLEditor::InsertImage(nsString& aURL,
                           nsString& aAlignment)
 {
   nsresult res;
-
-  (void)nsEditor::BeginTransaction();
-
   nsCOMPtr<nsIDOMNode> newNode;
-  nsAutoString tag("IMG");
-  res = nsEditor::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
-  if (!NS_SUCCEEDED(res) || !newNode)
+
+  nsCOMPtr<nsIDOMDocument>doc;
+  res = GetDocument(getter_AddRefs(doc));
+  if (NS_SUCCEEDED(res))
   {
-    (void)nsEditor::EndTransaction();
+    nsAutoString tag("IMG");
+    nsCOMPtr<nsIDOMElement>newElement;
+    res = doc->CreateElement(tag, getter_AddRefs(newElement));
+    if (NS_SUCCEEDED(res) && newElement)
+    {
+      newNode = do_QueryInterface(newElement);
+      nsCOMPtr<nsIDOMHTMLImageElement> image (do_QueryInterface(newNode));
+      // Set all the attributes now, before we insert into the tree:
+      if (image)
+      {
+        if (NS_SUCCEEDED(res = image->SetSrc(aURL)))
+          if (NS_SUCCEEDED(res = image->SetWidth(aWidth)))
+            if (NS_SUCCEEDED(res = image->SetHeight(aHeight)))
+              if (NS_SUCCEEDED(res = image->SetAlt(aAlt)))
+                if (NS_SUCCEEDED(res = image->SetBorder(aBorder)))
+                  if (NS_SUCCEEDED(res = image->SetAlign(aAlignment)))
+                    if (NS_SUCCEEDED(res = image->SetHspace(aHspace)))
+                      if (NS_SUCCEEDED(res = image->SetVspace(aVspace)))
+                        ;
+      }
+    }
+  }
+
+  // If any of these failed, then don't insert the new node into the tree
+  if (!NS_SUCCEEDED(res))
+  {
+#ifdef DEBUG_akkana
+    printf("Some failure creating the new image node\n");
+#endif
     return res;
   }
 
-  nsCOMPtr<nsIDOMHTMLImageElement> image (do_QueryInterface(newNode));
-  if (!image)
-  {
-#ifdef DEBUG_akkana
-    printf("Not an image element\n");
-#endif
-    (void)nsEditor::EndTransaction();
-    return NS_NOINTERFACE;
-  }
+  //
+  // Now we're ready to insert the new image node:
+  // Starting now, don't return without ending the transaction!
+  //
+  (void)nsEditor::BeginTransaction();
 
-  // Can't return from any of these intermediates
-  // because then we won't hit the EndTransaction()
-  if (NS_SUCCEEDED(res = image->SetSrc(aURL)))
-    if (NS_SUCCEEDED(res = image->SetWidth(aWidth)))
-      if (NS_SUCCEEDED(res = image->SetHeight(aHeight)))
-        if (NS_SUCCEEDED(res = image->SetAlt(aAlt)))
-          if (NS_SUCCEEDED(res = image->SetBorder(aBorder)))
-            if (NS_SUCCEEDED(res = image->SetAlign(aAlignment)))
-              if (NS_SUCCEEDED(res = image->SetHspace(aHspace)))
-                if (NS_SUCCEEDED(res = image->SetVspace(aVspace)))
-                  ;
+  nsCOMPtr<nsIDOMNode> parentNode;
+  PRInt32 offsetOfNewNode;
+  res = nsEditor::DeleteSelectionAndPrepareToCreateNode(parentNode,
+                                                        offsetOfNewNode);
+  if (NS_SUCCEEDED(res))
+  {
+    // and insert it into the right place in the tree:
+    // this code kiped from what CreateElementTxn does
+
+    //
+    // XXX BUG!  This is not undoable since it's not its own transaction!
+    // Need to fix this after M4!
+    //
+    nsCOMPtr<nsIDOMNodeList> childNodes;
+    res = parentNode->GetChildNodes(getter_AddRefs(childNodes));
+    if ((NS_SUCCEEDED(res)) && (childNodes))
+    {
+      PRUint32 count;
+      childNodes->GetLength(&count);
+      if (offsetOfNewNode > (PRInt32)count)
+        offsetOfNewNode = count;
+      nsCOMPtr<nsIDOMNode> resultNode;
+      nsCOMPtr<nsIDOMNode> refNode;
+      res = childNodes->Item(offsetOfNewNode, getter_AddRefs(refNode));
+      if (NS_SUCCEEDED(res)) // note, it's ok for mRefNode to be null.  that means append
+      {
+        res = parentNode->InsertBefore(newNode, refNode,
+                                       getter_AddRefs(resultNode));
+        if (NS_SUCCEEDED(res))
+        {
+          nsCOMPtr<nsIDOMSelection> selection;
+          if (NS_SUCCEEDED(GetSelection(getter_AddRefs(selection))))
+            (void)selection->Collapse(parentNode, offsetOfNewNode);
+        }
+      }
+    }
+  }
+//    res = nsEditor::CreateNode(aTag, parentSelectedNode, offsetOfNewNode,
+//                               getter_AddRefs(newNode));
 
   (void)nsEditor::EndTransaction();  // don't return this result!
 
