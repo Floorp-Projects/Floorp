@@ -139,7 +139,7 @@ protected:
   nsCString mInstallRoot;
 
   nsCOMPtr<nsIRDFCompositeDataSource> mChromeDataSource;
-  nsIRDFDataSource* mUIDataSource; // [WEAK] Composite holds on to us.
+  nsCOMPtr<nsIRDFDataSource> mUIDataSource;
 
   nsSupportsHashtable* mDataSourceTable;
   nsIRDFService* mRDFService;
