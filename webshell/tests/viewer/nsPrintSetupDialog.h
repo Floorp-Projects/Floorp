@@ -45,7 +45,7 @@ public:
   PRBool    mDatePrinted;
   nsString  mFooterText;
 
-  PrintSetupInfo() : mHeaderText(""), mFooterText("") {}
+  PrintSetupInfo() {}
   PrintSetupInfo(const PrintSetupInfo & aPSI);
 
 };
