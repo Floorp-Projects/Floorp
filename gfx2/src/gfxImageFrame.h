@@ -57,17 +57,17 @@ protected:
 private:
   /* private members */
   nsCOMPtr<nsIImage> mImage;
-  nsPoint mOffset;
+
+  PRPackedBool mInitalized;
+  PRPackedBool mMutable;
+  PRPackedBool mHasBackgroundColor;
+  PRPackedBool mHasTransparentColor;
+  gfx_format   mFormat;
 
   PRInt32 mTimeout; // -1 means display forever
+  nsPoint mOffset;
 
-  PRPackedBool mInitalized;   // 8 bits
-  gfx_format mFormat;         // 16 bits
-  
-  PRBool mHasBackgroundColor;
   gfx_color mBackgroundColor;
-  
-  PRBool mHasTransparentColor;
   gfx_color mTransparentColor;
 
   PRInt32   mDisposalMethod;

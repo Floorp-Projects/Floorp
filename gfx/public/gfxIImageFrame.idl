@@ -60,16 +60,11 @@ interface gfxIImageFrame : nsISupports
             in nscoord aHeight,
             in gfx_format aFormat);
 
-
   /**
-   * Blit this frame into another frame. Used for GIF animation compositing
-   * @param mask If true, unlock the mask bits, else unlock image pixels.
+   * TRUE by default.  When set to FALSE, you will no longer be able to make any modifications
+   * to the data of the image.  Any attempts will fail.
    */
-  void drawTo(in gfxIImageFrame aDst, 
-              in nscoord aDX, 
-              in nscoord aDY, 
-              in nscoord aDWidth, 
-              in nscoord aDHeight);
+  attribute boolean mutable;
 
   /**
    * The x-offset of the image.
@@ -138,7 +133,6 @@ interface gfxIImageFrame : nsISupports
 
 
 
-
   /* alpha stuff.. used for _A1 and _A8 formated images */
   readonly attribute unsigned long alphaBytesPerRow;
 
@@ -167,6 +161,18 @@ interface gfxIImageFrame : nsISupports
    */
   void unlockAlphaData();
 
+
+
+  /* GIF Specific methods.  These should be in a different class or interface. */
+
+  /**
+   * Blit this frame into another frame. Used for GIF animation compositing
+   */
+  void drawTo(in gfxIImageFrame aDst, 
+              in nscoord aDX, 
+              in nscoord aDY, 
+              in nscoord aDWidth, 
+              in nscoord aDHeight);
 
   /**
    * Represents the number of milliseconds until the next frame should be displayed.
