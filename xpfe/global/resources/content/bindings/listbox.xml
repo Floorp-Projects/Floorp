@@ -736,8 +736,11 @@
       <![CDATA[
         if (event.button != 0) return;
         var targetItem = event.target;
-        if (targetItem) {
-          if (event.ctrlKey || event.metaKey) {
+        if (targetItem.localName == "listitem") {
+          if (parentNode.selType != "multiple") {
+            parentNode.selectItem(targetItem);
+          }
+          else if (event.ctrlKey || event.metaKey) {
             parentNode.toggleItemSelection(targetItem);
             parentNode.currentItem = targetItem;
           }
@@ -768,6 +771,10 @@
             if (didSuppressSelect)
               parentNode._suppressOnSelect = false;
           }
+        }
+        else {
+          if (parentNode.selType != "multiple" || (!event.ctrlKey && !event.shiftKey && !event.metaKey))
+            parentNode.clearSelection();
         }
       ]]>
       </handler>
