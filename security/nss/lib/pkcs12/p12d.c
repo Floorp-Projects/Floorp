@@ -2411,7 +2411,8 @@ sec_pkcs12_add_cert(sec_PKCS12SafeBag *cert, PRBool keyExists, void *wincx)
     if(keyExists) {
 	CERTCertificate *newCert;
 
-	newCert = CERT_DecodeDERCertificate( derCert, PR_FALSE, NULL);
+	newCert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+	                                  derCert, NULL, PR_FALSE, PR_FALSE);
 	if(!newCert) {
 	     if(nickName) SECITEM_ZfreeItem(nickName, PR_TRUE);
 	     cert->error = SEC_ERROR_NO_MEMORY;
@@ -2593,7 +2594,9 @@ SEC_PKCS12DecoderGetCerts(SEC_PKCS12DecoderContext *p12dcx)
 		CERTCertificate *tempCert = NULL;
 
 		if (derCert == NULL) continue;
-    		tempCert=CERT_DecodeDERCertificate(derCert, PR_TRUE, NULL);
+    		tempCert=CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+		                                 derCert, NULL, 
+		                                 PR_FALSE, PR_TRUE);
 
 		if (tempCert) {
 		    CERT_AddCertToListTail(certList,tempCert);

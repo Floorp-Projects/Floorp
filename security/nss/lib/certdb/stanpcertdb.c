@@ -232,7 +232,12 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 	return NULL;
     }
     c->object = *pkio;
-    NSSITEM_FROM_SECITEM(&c->encoding, derCert);
+    if (copyDER) {
+	nssItem_Create(c->object.arena, &c->encoding, 
+	               derCert->len, derCert->data);
+    } else {
+	NSSITEM_FROM_SECITEM(&c->encoding, derCert);
+    }
     /* Forces a decoding of the cert in order to obtain the parts used
      * below
      */
@@ -583,7 +588,9 @@ CERT_DestroyCertificate(CERTCertificate *cert)
 	    }
 	    /* delete the NSSCertificate */
 	    NSSCertificate_Destroy(tmp);
-	} 
+	} else {
+	    PORT_FreeArena(cert->arena, PR_FALSE);
+	}
 #endif
     }
     return;

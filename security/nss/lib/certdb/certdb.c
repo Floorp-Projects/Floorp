@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.30 2002/04/25 21:10:09 wtc%netscape.com Exp $
+ * $Id: certdb.c,v 1.31 2002/05/02 18:59:55 ian.mcgreer%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -1659,6 +1659,7 @@ CERT_IsCADERCert(SECItem *derCert, unsigned int *type) {
     CERTCertificate *cert;
     PRBool isCA;
 
+    /* This is okay -- only looks at extensions */
     cert = CERT_DecodeDERCertificate(derCert, PR_FALSE, NULL);
     if (cert == NULL) return PR_FALSE;
 
