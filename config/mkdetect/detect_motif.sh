@@ -431,17 +431,21 @@ fi
 ##
 for d in $MOTIF_SEARCH_PATH
 do
-	if [ -d $d/include/Xm -a -f $d/include/Xm/Xm.h ]
+	# Check for $d that exists and is readable
+	if [ -d $d -a -r $d ]
 	then
-		MOTIF_INCLUDE_DIR=$d/include
-		break;
+		if [ -d $d/include/Xm -a -f $d/include/Xm/Xm.h ]
+		then
+			MOTIF_INCLUDE_DIR=$d/include
+			break;
+		fi
 	fi
 done
 
 ##
 ## Make sure the <Xm/Xm.h> header was found.
 ##
-if [ -z $MOTIF_INCLUDE_DIR ]
+if [ "$MOTIF_INCLUDE_DIR" = "unknown" ]
 then
 	echo
 	echo "Could not find <Xm/Xm.h> anywhere on your system."
