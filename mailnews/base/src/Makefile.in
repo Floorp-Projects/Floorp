@@ -30,6 +30,7 @@ EXPORTS = \
 	nsMsgGroupRecord.h \
 	nsMsgRFC822Parser.h \
 	nsNewsSet.h \
+	nsLocalFolderSummarySpec.h	\
 	nsUInt32Array.h \
 	$(NULL)
 
@@ -40,6 +41,7 @@ CPPSRCS = \
 	nsMsgLocalMailFolder.cpp \
 	nsNewsSet.cpp \
 	nsMsg.cpp \
+	nsLocalFolderSummarySpec.cpp	\
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -34,6 +34,7 @@ CPPSRCS=                         \
 	nsMsgLocalMailFolder.cpp \
 	nsMsgGroupRecord.cpp     \
 	nsMsgRDFFolder.cpp       \
+	nsLocalFolderSummarySpec.cpp	\
 	nsNewsSet.cpp            \
 	nsMsg.cpp                \
 	$(NULL)
@@ -43,6 +44,7 @@ CPP_OBJS=                                    \
 	.\$(OBJDIR)\nsUInt32Array.obj        \
 	.\$(OBJDIR)\nsMsgKeyArray.obj        \
 	.\$(OBJDIR)\nsMsgFolder.obj          \
+	.\$(OBJDIR)\nsLocalFolderSummarySpec.obj	\
 	.\$(OBJDIR)\nsMsgLocalMailFolder.obj \
 	.\$(OBJDIR)\nsMsgGroupRecord.obj     \
 	.\$(OBJDIR)\nsMsgRDFFolder.obj       \
