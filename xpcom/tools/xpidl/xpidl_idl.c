@@ -147,7 +147,8 @@ fopen_from_includes(const char *filename, const char *mode,
     char *filebuf = NULL;
     FILE *file = NULL;
     for (; include_path && !file; include_path = include_path->next) {
-        filebuf = g_strdup_printf("%s/%s", include_path->directory, filename);
+        filebuf = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s", 
+                                  include_path->directory, filename);
         if (!filebuf)
             return NULL;
 #ifdef DEBUG_shaver_bufmgmt

@@ -104,4 +104,7 @@ xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data);
 void XPIDL_add_output_file(char *fn);
 void XPIDL_cleanup_on_error();
 
+gboolean process_node(TreeState *state);
+
+
 #endif /* __xpidl_h */
