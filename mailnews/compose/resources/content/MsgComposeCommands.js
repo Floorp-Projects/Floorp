@@ -1570,7 +1570,16 @@ function ComposeCanClose()
       {
         var promptTitle = gComposeMsgsBundle.getString("quitComposeWindowTitle");
         var promptMsg = gComposeMsgsBundle.getString("quitComposeWindowMessage");
-        if (gPromptService.confirm(window, promptTitle, promptMsg))
+        var quitButtonLabel = gComposeMsgsBundle.getString("quitComposeWindowQuitButtonLabel");
+        var waitButtonLabel = gComposeMsgsBundle.getString("quitComposeWindowWaitButtonLabel");
+
+        var result = {value:0};
+        gPromptService.confirmEx(window, promptTitle, promptMsg,
+          (gPromptService.BUTTON_TITLE_IS_STRING*gPromptService.BUTTON_POS_0) +
+          (gPromptService.BUTTON_TITLE_IS_STRING*gPromptService.BUTTON_POS_1),
+          waitButtonLabel, quitButtonLabel, null, null, {value:0}, result);
+
+        if (result.value == 1)
           {
             msgCompose.abort();
             return true;
