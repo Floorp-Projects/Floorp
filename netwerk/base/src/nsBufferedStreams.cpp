@@ -251,8 +251,13 @@ nsBufferedInputStream::Close()
 NS_IMETHODIMP
 nsBufferedInputStream::Available(PRUint32 *result)
 {
-    *result = mFillPoint - mCursor;
-    return NS_OK;
+    nsresult rv = NS_OK;
+    *result = 0;
+    if (mStream) {
+        rv = Source()->Available(result);
+    }
+    *result += (mFillPoint - mCursor);
+    return rv;
 }
 
 NS_IMETHODIMP

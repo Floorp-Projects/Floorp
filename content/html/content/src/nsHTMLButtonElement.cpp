@@ -48,6 +48,7 @@
 #include "nsIPresContext.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
+#include "nsIFormSubmission.h"
 #include "nsIURL.h"
 
 #include "nsIFrame.h"
@@ -90,12 +91,8 @@ public:
   // overrided nsIFormControl method
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Reset();
-  NS_IMETHOD IsSuccessful(nsIContent* aSubmitElement, PRBool *_retval);
-  NS_IMETHOD GetMaxNumValues(PRInt32 *_retval);
-  NS_IMETHOD GetNamesValues(PRInt32 aMaxNumValues,
-                            PRInt32& aNumValues,
-                            nsString* aValues,
-                            nsString* aNames);
+  NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                               nsIContent* aSubmitElement);
 
   // nsIContent overrides...
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -126,7 +123,6 @@ private:
   // The analogue of defaultValue in the DOM for input and textarea
   nsresult SetDefaultValue(const nsAReadableString& aDefaultValue);
   nsresult GetDefaultValue(nsAWritableString& aDefaultValue);
-
 };
 
 
@@ -582,63 +578,56 @@ nsHTMLButtonElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
   return SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue, PR_TRUE);
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLButtonElement::Reset()
 {
   return NS_OK;
 }
 
-nsresult
-nsHTMLButtonElement::IsSuccessful(nsIContent* aSubmitElement,
-                                  PRBool *_retval)
+NS_IMETHODIMP
+nsHTMLButtonElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                                       nsIContent* aSubmitElement)
 {
-  *_retval = PR_FALSE;
+  nsresult rv = NS_OK;
+
+  //
+  // We only submit if we were the button pressed
+  //
   if (aSubmitElement != this) {
     return NS_OK;
   }
 
-  // if it's disabled, it won't submit
+  //
+  // Disabled elements don't submit
+  //
   PRBool disabled;
-  nsresult rv = GetDisabled(&disabled);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (disabled) {
-    return NS_OK;
+  rv = GetDisabled(&disabled);
+  if (NS_FAILED(rv) || disabled) {
+    return rv;
   }
 
-  // If there is no name, it won't submit
-  nsAutoString val;
-  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, val);
-  *_retval = rv != NS_CONTENT_ATTR_NOT_THERE;
-  return NS_OK;
-}
-
-nsresult
-nsHTMLButtonElement::GetMaxNumValues(PRInt32 *_retval)
-{
-  *_retval = 1;
-  return NS_OK;
-}
-
-nsresult
-nsHTMLButtonElement::GetNamesValues(PRInt32 aMaxNumValues,
-                                    PRInt32& aNumValues,
-                                    nsString* aValues,
-                                    nsString* aNames)
-{
-  NS_ENSURE_TRUE(aMaxNumValues >= 1, NS_ERROR_UNEXPECTED);
-
-  // We'll of course use the name of the control for the submit
+  //
+  // Get the name (if no name, no submit)
+  //
   nsAutoString name;
-  nsresult rv = GetName(name);
-  NS_ENSURE_SUCCESS(rv, rv);
+  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
+  if (NS_FAILED(rv) || rv == NS_CONTENT_ATTR_NOT_THERE) {
+    return rv;
+  }
 
+  //
+  // Get the value
+  //
   nsAutoString value;
   rv = GetValue(value);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  aNames[0] = name;
-  aValues[0] = value;
-  aNumValues = 1;
-  return NS_OK;
+  //
+  // Submit
+  //
+  rv = aFormSubmission->AddNameValuePair(this, name, value);
+
+  return rv;
 }

@@ -59,6 +59,7 @@
 #include "nsIHTMLAttributes.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
+#include "nsIFormSubmission.h"
 #include "nsIGfxTextControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
@@ -90,6 +91,14 @@
 #include "nsMutationEvent.h"
 
 #include "nsRuleNode.h"
+
+// input type=file
+#include "nsIMIMEService.h"
+#include "nsCExternalHandlerService.h"
+#include "nsIFile.h"
+#include "nsILocalFile.h"
+#include "nsIFileStreams.h"
+
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
@@ -142,12 +151,8 @@ public:
   // Overriden nsIFormControl methods
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Reset();
-  NS_IMETHOD IsSuccessful(nsIContent* aSubmitElement, PRBool *_retval);
-  NS_IMETHOD GetMaxNumValues(PRInt32 *_retval);
-  NS_IMETHOD GetNamesValues(PRInt32 aMaxNumValues,
-                            PRInt32& aNumValues,
-                            nsString* aValues,
-                            nsString* aNames);
+  NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                               nsIContent* aSubmitElement);
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
@@ -218,8 +223,7 @@ public:
 
 protected:
   // Helper method
-  void SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
-                           PRBool aValue);
+  void SetPresStateChecked(nsIHTMLContent * aHTMLContent, PRBool aValue);
   NS_IMETHOD SetValueSecure(const nsAReadableString& aValue,
                             nsIGfxTextControlFrame2* aFrame,
                             PRBool aCheckSecurity);
@@ -243,6 +247,8 @@ protected:
   }
 
   void FireOnChange();
+
+  static nsresult GetContentType(const char* aPathName, char** aContentType);
 
   nsCOMPtr<nsIControllers> mControllers;
 
@@ -1848,207 +1854,215 @@ nsHTMLInputElement::Reset()
   return rv;
 }
 
-nsresult
-nsHTMLInputElement::IsSuccessful(nsIContent* aSubmitElement,
-                                 PRBool *_retval)
+NS_IMETHODIMP
+nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                                      nsIContent* aSubmitElement)
 {
-  *_retval = PR_FALSE;
+  nsresult rv = NS_OK;
 
-  // if it's disabled, it won't submit
+  //
+  // Disabled elements don't submit
+  //
   PRBool disabled;
-  nsresult rv = GetDisabled(&disabled);
-  if (disabled) {
-    return NS_OK;
+  rv = GetDisabled(&disabled);
+  if (NS_FAILED(rv) || disabled) {
+    return rv;
   }
 
+  //
+  // Get the type (many ops depend on the type)
+  //
   PRInt32 type;
-  GetType(&type);
+  rv = GetType(&type);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  // if it dosn't have a name it we don't submit
-  if (type != NS_FORM_INPUT_IMAGE) {
-    nsAutoString val;
-    rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, val);
-    if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-      return NS_OK;
+  //
+  // For type=reset, and type=button, we just never submit, period.
+  //
+  if (type == NS_FORM_INPUT_RESET || type == NS_FORM_INPUT_BUTTON) {
+    return rv;
+  }
+
+  //
+  // For type=image and type=button, we only submit if we were the button
+  // pressed
+  //
+  if ((type == NS_FORM_INPUT_SUBMIT || type == NS_FORM_INPUT_IMAGE)
+      && aSubmitElement != this) {
+    return rv;
+  }
+
+  //
+  // For type=radio and type=checkbox, we only submit if checked=true
+  //
+  if (type == NS_FORM_INPUT_RADIO || type == NS_FORM_INPUT_CHECKBOX) {
+    PRBool checked;
+    rv = GetChecked(&checked);
+    if (NS_FAILED(rv) || !checked) {
+      return rv;
     }
   }
 
-  switch (type) {
-    case NS_FORM_INPUT_CHECKBOX:
-    case NS_FORM_INPUT_RADIO:
-    {
-      GetChecked(_retval);
-      break;
-    }
-    case NS_FORM_INPUT_HIDDEN:
-    case NS_FORM_INPUT_PASSWORD:
-    case NS_FORM_INPUT_TEXT:
-    case NS_FORM_INPUT_FILE:
-    {
-      *_retval = PR_TRUE;
-      break;
-    }
-    case NS_FORM_INPUT_RESET:
-    case NS_FORM_INPUT_BUTTON:
-    {
-      *_retval = PR_FALSE;
-      break;
-    }
-    case NS_FORM_INPUT_SUBMIT:
-    case NS_FORM_INPUT_IMAGE:
-    {
-      *_retval = (this == aSubmitElement);
-    }
+  //
+  // Get the name
+  //
+  nsAutoString name;
+  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
+  PRBool nameThere = (rv != NS_CONTENT_ATTR_NOT_THERE);
 
-  return NS_OK;
-}
-
-nsresult
-nsHTMLInputElement::GetMaxNumValues(PRInt32 *_retval)
-{
-  PRInt32 type;
-  GetType(&type);
+  //
+  // Submit .x, .y for input type=image
+  //
   if (type == NS_FORM_INPUT_IMAGE) {
-    nsAutoString name;
-    nsAutoString value;
-    GetName(name);
-    GetValue(value);
-    if (name.IsEmpty() || value.IsEmpty()) {
-      *_retval = 2;
-    } else {
-      *_retval = 3;
-    }
-  } else {
-    *_retval = 1;
-  }
-  return NS_OK;
-}
+    // Go to the frame to find out where it was clicked.  This is the only
+    // case where I can actually see using the frame, because you're talking
+    // about a value--mouse click--that is rightfully the domain of the frame.
+    //
+    // If the frame isn't there or isn't an ImageControlFrame, then we're not
+    // submitting these values no matter *how* nicely you ask.
+    PRInt32 clickedX;
+    PRInt32 clickedY;
+    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
-nsresult
-nsHTMLInputElement::GetNamesValues(PRInt32 aMaxNumValues,
-                                   PRInt32& aNumValues,
-                                   nsString* aValues,
-                                   nsString* aNames)
-{
-  nsresult rv;
+    nsCOMPtr<nsIImageControlFrame> imageControlFrame(
+        do_QueryInterface(formControlFrame));
+    if (imageControlFrame) {
+      imageControlFrame->GetClickedX(&clickedX);
+      imageControlFrame->GetClickedY(&clickedY);
 
-  PRInt32 type;
-  GetType(&type);
-  
-  switch (type) {
-    case NS_FORM_INPUT_CHECKBOX:
-    case NS_FORM_INPUT_RADIO:
-    {
-      NS_ENSURE_TRUE(aMaxNumValues >= 1, NS_ERROR_UNEXPECTED);
-      
-      GetName(aNames[0]);
-      GetValue(aValues[0]);
-      aNumValues = 1;
-      
-      break;
-    }
-    case NS_FORM_INPUT_HIDDEN:
-    case NS_FORM_INPUT_PASSWORD:
-    case NS_FORM_INPUT_TEXT:
-    {
-      NS_ENSURE_TRUE(aMaxNumValues >= 1, NS_ERROR_UNEXPECTED);
-      
-      GetName(aNames[0]);
-      GetValue(aValues[0]);
-      aNumValues = 1;
-      
-      break;
-    }
-    case NS_FORM_INPUT_FILE:
-    {
-      NS_ENSURE_TRUE(aMaxNumValues >= 1, NS_ERROR_UNEXPECTED);
-      
-      GetName(aNames[0]);
-      GetValue(aValues[0]);
-      aNumValues = 1;
-      
-      break;
-    }
-    case NS_FORM_INPUT_IMAGE:
-    {
-      NS_ENSURE_TRUE(aMaxNumValues >= 2, NS_ERROR_UNEXPECTED);
-
-      // Go to the frame to find out where it was clicked.  This is the only
-      // case where I can actually see using the frame, because you're talking
-      // about a value--mouse click--that is rightfully the domain of the frame.
-      //
-      // If the frame isn't there or isn't an ImageControlFrame, then we're not
-      // submitting these values no matter *how* nicely you ask.
-      PRInt32 clickedX;
-      PRInt32 clickedY;
-      nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
-
-      nsCOMPtr<nsIImageControlFrame> imageControlFrame(
-          do_QueryInterface(formControlFrame));
-      if (imageControlFrame) {
-        imageControlFrame->GetClickedX(&clickedX);
-        imageControlFrame->GetClickedY(&clickedY);
-      } else {
-        aNumValues = 0;
-        return NS_OK;
-      }
-     
       // Convert the values to strings for submission
       char buf[20];
       sprintf(&buf[0], "%d", clickedX);
-      aValues[0].AssignWithConversion(&buf[0]);
+      nsAutoString xVal = NS_ConvertASCIItoUCS2(buf);
       sprintf(&buf[0], "%d", clickedY);
-      aValues[1].AssignWithConversion(&buf[0]);
-  
-      // Figure out the proper name of the x and y values
-      nsAutoString name;
-      rv = GetName(name);
+      nsAutoString yVal = NS_ConvertASCIItoUCS2(buf);
+
       if (!name.IsEmpty()) {
-        aNames[0] = name;
-        aNames[0].Append(NS_LITERAL_STRING(".x"));
-        aNames[1] = name;
-        aNames[1].Append(NS_LITERAL_STRING(".y"));
-        nsAutoString value;
-        rv = GetValue(value);
-        if (!value.IsEmpty()) {
-          aNames[2] = name;
-          aValues[2] = value;
-          aNumValues = 3;
-        } else {
-          aNumValues = 2;
-        }
+        aFormSubmission->AddNameValuePair(this,
+                                          name + NS_LITERAL_STRING(".x"), xVal);
+        aFormSubmission->AddNameValuePair(this,
+                                          name + NS_LITERAL_STRING(".y"), yVal);
       } else {
         // If the Image Element has no name, simply return x and y
         // to Nav and IE compatability.
-        aNames[0] = NS_LITERAL_STRING("x");
-        aNames[1] = NS_LITERAL_STRING("y");
-        aNumValues = 2;
+        aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("x"), xVal);
+        aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("y"), yVal);
       }
-
-      break;
-    }
-    case NS_FORM_INPUT_RESET:
-    case NS_FORM_INPUT_BUTTON:
-    {
-      aNumValues = 0;
-
-      break;
-    }
-    case NS_FORM_INPUT_SUBMIT:
-    {
-      NS_ENSURE_TRUE(aMaxNumValues >= 1, NS_ERROR_UNEXPECTED);
-      
-      GetName(aNames[0]);
-      GetValue(aValues[0]);
-      aNumValues = 1;
-
-      break;
     }
   }
 
-  return NS_OK;
+  //
+  // Submit name=value
+  //
+
+  // If name not there, don't submit
+  if (!nameThere) {
+    return rv;
+  }
+
+  // Get the value
+  nsAutoString value;
+  rv = GetValue(value);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  //
+  // Submit file if it's input type=file and this encoding method accepts files
+  //
+  PRBool submittedValue = PR_FALSE;
+  if (type == NS_FORM_INPUT_FILE) {
+
+    //
+    // Open the file
+    //
+    nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID,
+                                                  &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = file->InitWithUnicodePath(value.get());
+    if (NS_SUCCEEDED(rv)) {
+
+      //
+      // Get the leaf path name (to be submitted as the value)
+      //
+      PRUnichar* leafNameChars = nsnull;
+      rv = file->GetUnicodeLeafName(&leafNameChars);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (leafNameChars) {
+        nsAutoString filename;
+        filename.Adopt(leafNameChars);
+
+        PRBool acceptsFiles = PR_FALSE;
+        aFormSubmission->AcceptsFiles(&acceptsFiles);
+
+        if (acceptsFiles) {
+          //
+          // Get content type
+          //
+          nsCOMPtr<nsIMIMEService> MIMEService =
+            do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          char * contentTypeChars = nsnull;
+          rv = MIMEService->GetTypeFromFile(file, &contentTypeChars);
+
+          nsCAutoString contentType;
+          if (contentTypeChars) {
+            contentType.Adopt(contentTypeChars);
+          } else {
+            contentType = NS_LITERAL_CSTRING("application/octet-stream");
+          }
+
+          //
+          // Get input stream
+          //
+          nsCOMPtr<nsIInputStream> rawStream;
+          rv = NS_NewLocalFileInputStream(getter_AddRefs(rawStream), file);
+          if (rawStream) {
+            nsCOMPtr<nsIInputStream> bufferedStream;
+            rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                           rawStream, 8192);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            //
+            // Submit
+            //
+            aFormSubmission->AddNameFilePair(this, name, filename,
+                                             bufferedStream, contentType,
+                                             PR_FALSE);
+            submittedValue = PR_TRUE;
+          }
+        }
+
+        //
+        // If we don't submit as a file, at least submit the truncated filename.
+        //
+        if (!submittedValue) {
+          aFormSubmission->AddNameValuePair(this, name, filename);
+          submittedValue = PR_TRUE;
+        }
+      }
+    }
+  }
+
+  if (!submittedValue) {
+    // Submit
+    // (for type=image, only submit if value is non-null)
+    if (type != NS_FORM_INPUT_IMAGE || !value.IsEmpty()) {
+      rv = aFormSubmission->AddNameValuePair(this, name, value);
+    }
+  }
+
+  return rv;
 }
+
 
 NS_IMETHODIMP
 nsHTMLInputElement::SaveState(nsIPresContext* aPresContext,
@@ -2109,4 +2123,3 @@ nsHTMLInputElement::RestoreState(nsIPresContext* aPresContext,
 
   return rv;
 }
-

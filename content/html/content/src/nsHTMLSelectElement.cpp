@@ -52,6 +52,7 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIForm.h"
+#include "nsIFormSubmission.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
@@ -175,12 +176,8 @@ public:
   // Overriden nsIFormControl methods
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Reset();
-  NS_IMETHOD IsSuccessful(nsIContent* aSubmitElement, PRBool *_retval);
-  NS_IMETHOD GetMaxNumValues(PRInt32 *_retval);
-  NS_IMETHOD GetNamesValues(PRInt32 aMaxNumValues,
-                            PRInt32& aNumValues,
-                            nsString* aValues,
-                            nsString* aNames);
+  NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                               nsIContent* aSubmitElement);
 
   // nsISelectElement
   NS_DECL_NSISELECTELEMENT
@@ -1977,59 +1974,36 @@ nsHTMLSelectElement::InitializeOption(nsIDOMHTMLOptionElement * aOption,
   return NS_OK;
 }
 
-// Since this is multivalued, IsSuccessful here only really says whether
-// we're *allowed* to submit options here.  There still may be no successful
-// options and nothing will submit.
-nsresult
-nsHTMLSelectElement::IsSuccessful(nsIContent* aSubmitElement,
-                                  PRBool *_retval)
+NS_IMETHODIMP
+nsHTMLSelectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                                       nsIContent* aSubmitElement)
 {
-  // if it's disabled, it won't submit
-  PRBool disabled;
-  nsresult rv = GetDisabled(&disabled);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = NS_OK;
 
-  if (disabled) {
-    *_retval = PR_FALSE;
-    return NS_OK;
+  //
+  // Disabled elements don't submit
+  //
+  PRBool disabled;
+  rv = GetDisabled(&disabled);
+  if (NS_FAILED(rv) || disabled) {
+    return rv;
   }
 
-  // If there is no name, it won't submit
-  nsAutoString val;
-  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, val);
-  *_retval = rv != NS_CONTENT_ATTR_NOT_THERE;
-
-  return NS_OK;
-}
-
-nsresult
-nsHTMLSelectElement::GetMaxNumValues(PRInt32 *_retval)
-{
-  PRUint32 length;
-  nsresult rv = GetLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *_retval = length;
-
-  return NS_OK;
-}
-
-nsresult
-nsHTMLSelectElement::GetNamesValues(PRInt32 aMaxNumValues,
-                                    PRInt32& aNumValues,
-                                    nsString* aValues,
-                                    nsString* aNames)
-{
+  //
+  // Get the name (if no name, no submit)
+  //
   nsAutoString name;
-  nsresult rv = GetName(name);
+  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
+  if (NS_FAILED(rv) || rv == NS_CONTENT_ATTR_NOT_THERE) {
+    return rv;
+  }
 
-  PRInt32 sentOptions = 0;
-
+  //
+  // Submit
+  //
   PRUint32 len;
   GetLength(&len);
 
-  // We loop through the cached list of selected items because it's
-  // hella faster than looping through all options
   for (PRUint32 optIndex = 0; optIndex < len; optIndex++) {
     // Don't send disabled options
     PRBool disabled;
@@ -2040,30 +2014,24 @@ nsHTMLSelectElement::GetNamesValues(PRInt32 aMaxNumValues,
 
     nsCOMPtr<nsIDOMHTMLOptionElement> option;
     mOptions->ItemAsOption(optIndex, getter_AddRefs(option));
-    if (option) {
-      PRBool isSelected;
-      rv = option->GetSelected(&isSelected);
-      if (NS_FAILED(rv) || !isSelected) {
-        continue;
-      }
+    NS_ENSURE_TRUE(option, NS_ERROR_UNEXPECTED);
 
-      nsCOMPtr<nsIOptionElement> optionElement = do_QueryInterface(option);
-      if (optionElement) {
-        nsAutoString value;
-        rv = optionElement->GetValueOrText(value);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // If the value is not there
-        if (sentOptions < aMaxNumValues) {
-          aNames[sentOptions] = name;
-          aValues[sentOptions] = value;
-          sentOptions++;
-        }
-      }
+    PRBool isSelected;
+    rv = option->GetSelected(&isSelected);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!isSelected) {
+      continue;
     }
-  }
 
-  aNumValues = sentOptions;
+    nsCOMPtr<nsIOptionElement> optionElement = do_QueryInterface(option);
+    NS_ENSURE_TRUE(optionElement, NS_ERROR_UNEXPECTED);
+
+    nsAutoString value;
+    rv = optionElement->GetValueOrText(value);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aFormSubmission->AddNameValuePair(this, name, value);
+  }
 
   return NS_OK;
 }

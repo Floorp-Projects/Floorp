@@ -45,6 +45,7 @@ class nsIPresState;
 class nsIContent;
 class nsString;
 class nsIFormProcessor;
+class nsIFormSubmission;
 
 #define NS_FORM_BROWSE          0
 #define NS_FORM_BUTTON_BUTTON   1
@@ -97,6 +98,8 @@ public:
   /**
    * Set the form for this form control.
    * @param aForm the form
+   * @param aRemoveFromForm set false if you do not want this element removed
+   *                        from the form.  (Used by evil DemoteForm() method.)
    * @return NS_OK
    */
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
@@ -109,16 +112,21 @@ public:
    */
   NS_IMETHOD GetType(PRInt32* aType) = 0;
 
+  /**
+   * Reset this form control
+   */
   NS_IMETHOD Reset() = 0;
 
-  NS_IMETHOD IsSuccessful(nsIContent* aSubmitElement, PRBool *_retval) = 0;
-
-  NS_IMETHOD GetMaxNumValues(PRInt32 *_retval) = 0;
-
-  NS_IMETHOD GetNamesValues(PRInt32 aMaxNumValues,
-                            PRInt32& aNumValues,
-                            nsString* aValues,
-                            nsString* aNames) = 0;
+  /**
+   * Tells the form control to submit its names and values to the form
+   * submission object
+   * @param aFormSubmission the form submission to notify of names/values/files
+   *                       to submit
+   * @param aSubmitElement the element that was pressed to submit (possibly
+   *                       null)
+   */
+  NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                               nsIContent* aSubmitElement) = 0;
 
   /**
    * Save to presentation state

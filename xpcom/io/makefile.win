@@ -62,6 +62,7 @@ XPIDLSRCS =                             \
         .\nsIInputStreamTee.idl         \
         .\nsILineInputStream.idl        \
         .\nsILocalFile.idl              \
+        .\nsIMultiplexInputStream.idl   \
         .\nsIObjectInputStream.idl      \
         .\nsIObjectOutputStream.idl     \
         .\nsIOutputStream.idl           \
@@ -97,6 +98,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsLinebreakConverter.obj      \
         .\$(OBJDIR)\nsLocalFileCommon.obj         \
         .\$(OBJDIR)\nsLocalFileWin.obj            \
+        .\$(OBJDIR)\nsMultiplexInputStream.obj    \
         .\$(OBJDIR)\nsPipe2.obj                   \
         .\$(OBJDIR)\nsScriptableInputStream.obj   \
         .\$(OBJDIR)\nsSegmentedBuffer.obj         \

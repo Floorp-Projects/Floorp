@@ -87,6 +87,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
 #include "nsStringStream.h"
+#include "nsMultiplexInputStream.h"
 
 #include "nsFastLoadService.h"
 
@@ -278,6 +279,7 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(DIRECTORYITERATOR, nsDirectoryIteratorImpl::Create),
 
     COMPONENT(STRINGINPUTSTREAM, nsStringInputStreamConstructor),
+    COMPONENT(MULTIPLEXINPUTSTREAM, nsMultiplexInputStreamConstructor),
 
     COMPONENT(FASTLOADSERVICE, nsFastLoadService::Create),
     COMPONENT(VARIANT, nsVariantConstructor),

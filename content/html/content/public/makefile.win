@@ -32,6 +32,7 @@ EXPORTS= \
 	nsIOptionElement.h \
 	nsIScriptElement.h \
 	nsITextControlElement.h \
+	nsIFormSubmission.h \
 	$(NULL)
 
 MODULE=content 

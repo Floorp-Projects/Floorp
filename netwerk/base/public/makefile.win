@@ -40,6 +40,7 @@ XPIDLSRCS =                             \
         .\nsIFileTransportService.idl   \
         .\nsIIOService.idl              \
         .\nsILoadGroup.idl              \
+        .\nsIMIMEInputStream.idl        \
         .\nsINetModRegEntry.idl         \
         .\nsINetModuleMgr.idl           \
         .\nsINetNotify.idl              \

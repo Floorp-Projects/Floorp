@@ -59,7 +59,7 @@ CPPSRCS		= \
 		nsGenericHTMLElement.cpp \
 		nsGenericDOMHTMLCollection.cpp \
 		GenericElementCollection.cpp \
-		nsFormSubmitter.cpp \
+		nsFormSubmission.cpp \
 		nsHTMLAnchorElement.cpp \
 		nsHTMLAppletElement.cpp \
 		nsHTMLAreaElement.cpp \
