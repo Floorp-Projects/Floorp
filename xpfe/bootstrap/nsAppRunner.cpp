@@ -975,12 +975,12 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   rv = InitializeProfileService(cmdLineArgs);
   if (NS_FAILED(rv)) return rv;
 
+  // Enumerate AppShellComponenets
+  appShell->EnumerateAndInitializeComponents();
+
   // rjc: now must explicitly call appshell's CreateHiddenWindow() function AFTER profile manager.
   //      if the profile manager ever switches to using nsIDOMWindowInternal stuff, this might have to change
   appShell->CreateHiddenWindow();
-
-	// Enumerate AppShellComponenets
-	appShell->EnumerateAndInitializeComponents();
 
 	// This will go away once Components are handling there own commandlines
 	// if we have no command line arguments, we need to heed the
