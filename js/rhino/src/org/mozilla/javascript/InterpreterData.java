@@ -95,7 +95,6 @@ class InterpreterData implements Serializable {
         return -1;
     }
 
-    boolean isFunction;
     String itsName;
     String itsSource;
     String itsSourceFile;
@@ -103,7 +102,7 @@ class InterpreterData implements Serializable {
     boolean itsFromEvalCode;
     boolean itsUseDynamicScope;
     boolean itsCheckThis;
-    byte itsFunctionType;
+    int itsFunctionType;
 
     String[] itsStringTable;
     int itsStringTableIndex;

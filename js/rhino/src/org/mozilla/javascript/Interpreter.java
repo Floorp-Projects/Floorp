@@ -85,11 +85,10 @@ public class Interpreter extends LabelTable {
         itsData = new InterpreterData(securityDomain,
                     cx.hasCompileFunctionsWithDynamicScope(), false);
         if (tree instanceof FunctionNode) {
-            itsData.isFunction = true;
             FunctionNode f = (FunctionNode) tree;
+            itsData.itsFunctionType = f.getFunctionType();
             InterpretedFunction result =
                 generateFunctionICode(cx, scope, f, securityDomain);
-            result.itsData.itsFunctionType = f.getFunctionType();
             createFunctionObject(result, scope, false);
             return result;
         }
@@ -108,8 +107,8 @@ public class Interpreter extends LabelTable {
         for (int i = 0; i < itsLabelTableTop; i++) {
             itsLabelTable[i].fixGotos(itsData.itsICode);
         }
-        if (!itsData.isFunction) {
-            // function should always have return statement
+        // add END_ICODE only to scripts as function always ends with RETURN
+        if (itsData.itsFunctionType == 0) {
             theICodeTop = addByte(END_ICODE, theICodeTop);
         }
         itsData.itsICodeTop = theICodeTop;
@@ -192,7 +191,6 @@ public class Interpreter extends LabelTable {
             jsi.itsData = new InterpreterData(securityDomain,
                             cx.hasCompileFunctionsWithDynamicScope(),
                             def.getCheckThis());
-            jsi.itsData.isFunction = true;
             jsi.itsData.itsFunctionType = def.getFunctionType();
             jsi.itsInFunctionFlag = true;
             jsi.debugSource = debugSource;
@@ -1400,37 +1398,33 @@ public class Interpreter extends LabelTable {
                                              Scriptable scope,
                                              boolean fromEvalCode)
     {
-        fn.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
+        fn.setPrototype(ScriptableObject.getFunctionPrototype(scope));
         fn.setParentScope(scope);
         InterpreterData id = fn.itsData;
-        if (id.itsName.length() == 0)
+        String fnName = id.itsName;
+        if (fnName.length() == 0)
             return;
-        boolean callSetProp = false;
+        boolean callPut = false;
         if ((id.itsFunctionType == FunctionNode.FUNCTION_STATEMENT &&
              fn.itsClosure == null))
         {
             if (fromEvalCode) {
-                callSetProp = true;
+                callPut = true;
             } else {
-                try {
-                    // ECMA specifies that functions defined in global and
-                    // function scope should have DONTDELETE set.
-                    ((ScriptableObject) scope).defineProperty(
-                        fn.itsData.itsName, fn, ScriptableObject.PERMANENT);
-                } catch (ClassCastException e) {
-                    callSetProp = true;
-                }
+                // ECMA specifies that functions defined in global and
+                // function scope should have DONTDELETE set.
+                ScriptableObject.defineProperty(scope,
+                        fnName, fn, ScriptableObject.PERMANENT);
             }
         }
 
         if (id.itsFunctionType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT &&
             fn.itsClosure != null)
         {
-            callSetProp = true;
+            callPut = true;
         }
-
-        if (callSetProp) {
-            ScriptRuntime.setProp(scope, fn.itsData.itsName, fn, scope);
+        if (callPut) {
+            scope.put(fnName, scope, fn);
         }
     }
 
@@ -1490,7 +1484,7 @@ public class Interpreter extends LabelTable {
             stack[VAR_SHFT + i] = undefined;
         }
 
-        if (theData.isFunction) {
+        if (theData.itsFunctionType != 0) {
             if (fnOrScript.itsClosure != null) {
                 scope = fnOrScript.itsClosure;
             }else if (!theData.itsUseDynamicScope) {
@@ -1512,6 +1506,8 @@ public class Interpreter extends LabelTable {
         }
 
         if (theData.itsNestedFunctions != null) {
+            if (theData.itsFunctionType != 0 && !theData.itsNeedsActivation)
+                Context.codeBug();
             for (int i = 0; i < theData.itsNestedFunctions.length; i++)
                 createFunctionObject(theData.itsNestedFunctions[i], scope,
                                      theData.itsFromEvalCode);
