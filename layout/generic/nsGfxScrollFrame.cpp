@@ -1468,8 +1468,8 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext*          aPresContext
       //SetAttribute(mHScrollbarFrame, nsXULAtoms::curpos, curX);
       SetAttribute(mVScrollbarFrame, nsXULAtoms::maxpos, maxY);
       SetAttribute(mHScrollbarFrame, nsXULAtoms::maxpos, maxX);
-      SetAttribute(mVScrollbarFrame, nsXULAtoms::pageincrement, nscoord(float(scrollAreaSize.height)*0.8));
-      SetAttribute(mHScrollbarFrame, nsXULAtoms::pageincrement, nscoord(float(scrollAreaSize.width)*0.8));
+      SetAttribute(mVScrollbarFrame, nsXULAtoms::pageincrement, nscoord(scrollAreaSize.height - fontHeight));
+      SetAttribute(mHScrollbarFrame, nsXULAtoms::pageincrement, nscoord(scrollAreaSize.width - 10*mOnePixel));
 
       SetAttribute(mVScrollbarFrame, nsXULAtoms::increment, fontHeight);
       nsIScrollableView* scrollable = GetScrollableView(aPresContext);
