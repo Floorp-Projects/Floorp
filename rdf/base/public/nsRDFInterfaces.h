@@ -18,7 +18,7 @@
 #include "prtime.h" // for PRTime
 
 
-/* starting interface nsIRDFNode */
+/* starting interface:    nsIRDFNode */
 
 /* {0F78DA50-8321-11d2-8EAC-00805F29F370} */
 #define NS_IRDFNODE_IID_STR "0F78DA50-8321-11d2-8EAC-00805F29F370"
@@ -42,7 +42,7 @@ class nsIRDFNode : public nsISupports {
 #endif
 };
 
-/* starting interface nsIRDFResource */
+/* starting interface:    nsIRDFResource */
 
 /* {E0C493D1-9542-11d2-8EB8-00805F29F370} */
 #define NS_IRDFRESOURCE_IID_STR "E0C493D1-9542-11d2-8EB8-00805F29F370"
@@ -75,7 +75,7 @@ class nsIRDFResource : public nsIRDFNode {
 #endif
 };
 
-/* starting interface nsIRDFLiteral */
+/* starting interface:    nsIRDFLiteral */
 
 /* {E0C493D2-9542-11d2-8EB8-00805F29F370} */
 #define NS_IRDFLITERAL_IID_STR "E0C493D2-9542-11d2-8EB8-00805F29F370"
@@ -102,7 +102,7 @@ class nsIRDFLiteral : public nsIRDFNode {
 #endif
 };
 
-/* starting interface nsIRDFDate */
+/* starting interface:    nsIRDFDate */
 
 /* {E13A24E1-C77A-11d2-80BE-006097B76B8E} */
 #define NS_IRDFDATE_IID_STR "E13A24E1-C77A-11d2-80BE-006097B76B8E"
@@ -129,7 +129,7 @@ class nsIRDFDate : public nsIRDFNode {
 #endif
 };
 
-/* starting interface nsIRDFInt */
+/* starting interface:    nsIRDFInt */
 
 /* {E13A24E3-C77A-11d2-80BE-006097B76B8E} */
 #define NS_IRDFINT_IID_STR "E13A24E3-C77A-11d2-80BE-006097B76B8E"
@@ -157,7 +157,7 @@ class nsIRDFInt : public nsIRDFNode {
 };
 class nsIRDFDataSource; /* forward decl */
 
-/* starting interface nsIRDFCursor */
+/* starting interface:    nsIRDFCursor */
 
 /* {1C2ABDB0-4CEF-11D2-BC16-00805F912FE7} */
 #define NS_IRDFCURSOR_IID_STR "1C2ABDB0-4CEF-11D2-BC16-00805F912FE7"
@@ -187,7 +187,7 @@ class nsIRDFCursor : public nsISupports {
 #endif
 };
 
-/* starting interface nsIRDFAssertionCursor */
+/* starting interface:    nsIRDFAssertionCursor */
 
 /* {1ED57100-9904-11d2-8EBA-00805F29F370} */
 #define NS_IRDFASSERTIONCURSOR_IID_STR "1ED57100-9904-11d2-8EBA-00805F29F370"
@@ -220,7 +220,7 @@ class nsIRDFAssertionCursor : public nsIRDFCursor {
 #endif
 };
 
-/* starting interface nsIRDFArcsInCursor */
+/* starting interface:    nsIRDFArcsInCursor */
 
 /* {1ED57102-9904-11d2-8EBA-00805F29F370} */
 #define NS_IRDFARCSINCURSOR_IID_STR "1ED57102-9904-11d2-8EBA-00805F29F370"
@@ -247,7 +247,7 @@ class nsIRDFArcsInCursor : public nsIRDFCursor {
 #endif
 };
 
-/* starting interface nsIRDFArcsOutCursor */
+/* starting interface:    nsIRDFArcsOutCursor */
 
 /* {1ED57101-9904-11d2-8EBA-00805F29F370} */
 #define NS_IRDFARCSOUTCURSOR_IID_STR "1ED57101-9904-11d2-8EBA-00805F29F370"
@@ -274,7 +274,7 @@ class nsIRDFArcsOutCursor : public nsIRDFCursor {
 #endif
 };
 
-/* starting interface nsIRDFResourceCursor */
+/* starting interface:    nsIRDFResourceCursor */
 
 /* {C2850C10-B0CF-11d2-A684-00104BDE6048} */
 #define NS_IRDFRESOURCECURSOR_IID_STR "C2850C10-B0CF-11d2-A684-00104BDE6048"
@@ -298,7 +298,7 @@ class nsIRDFResourceCursor : public nsIRDFCursor {
 #endif
 };
 
-/* starting interface nsIRDFObserver */
+/* starting interface:    nsIRDFObserver */
 
 /* {3CC75360-484A-11D2-BC16-00805F912FE7} */
 #define NS_IRDFOBSERVER_IID_STR "3CC75360-484A-11D2-BC16-00805F912FE7"
@@ -325,7 +325,7 @@ class nsIRDFObserver : public nsISupports {
 #endif
 };
 
-/* starting interface nsIRDFDataSource */
+/* starting interface:    nsIRDFDataSource */
 
 /* {0F78DA58-8321-11d2-8EAC-00805F29F370} */
 #define NS_IRDFDATASOURCE_IID_STR "0F78DA58-8321-11d2-8EAC-00805F29F370"
@@ -400,7 +400,7 @@ class nsIRDFDataSource : public nsISupports {
 #endif
 };
 
-/* starting interface nsIRDFCompositeDataSource */
+/* starting interface:    nsIRDFCompositeDataSource */
 
 /* {96343820-307C-11D2-BC15-00805F912FE7} */
 #define NS_IRDFCOMPOSITEDATASOURCE_IID_STR "96343820-307C-11D2-BC15-00805F912FE7"
@@ -427,7 +427,7 @@ class nsIRDFCompositeDataSource : public nsIRDFDataSource {
 #endif
 };
 
-/* starting interface nsIRDFService */
+/* starting interface:    nsIRDFService */
 
 /* {BFD05261-834C-11d2-8EAC-00805F29F370} */
 #define NS_IRDFSERVICE_IID_STR "BFD05261-834C-11d2-8EAC-00805F29F370"
