@@ -59,6 +59,8 @@
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 
+#include "nsIChromeRegistry.h" // chromeReg
+
 // Interfaces Needed
 #include "nsIDocShell.h"
 #include "nsIWebShell.h"
@@ -129,6 +131,7 @@ static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
 static NS_DEFINE_CID(kPrefConverterCID, NS_PREFCONVERTER_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
+static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
 
 static
 nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
@@ -996,6 +999,13 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
         if (tmpdir.Exists())
             defaultsDirSpec = tmpdir;
 
+        nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            nsFileURL fileURL(dirSpec);
+            const char* fileStr = fileURL.GetURLString();
+            rv = chromeRegistry->SelectLocaleForProfile(langcode, 
+                                                        NS_ConvertUTF8toUCS2(fileStr));
+        }
     }
     // Copy contents from defaults folder.
     if (defaultsDirSpec.Exists() && (!useExistingDir))
@@ -1006,7 +1016,6 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
     gProfileDataAccess->mNumProfiles++;
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry();
-
     return NS_OK;
 }
 

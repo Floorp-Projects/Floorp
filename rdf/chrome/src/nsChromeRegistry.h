@@ -78,7 +78,7 @@ protected:
 
 private:
   NS_IMETHOD LoadDataSource(const nsCString &aFileName, nsIRDFDataSource **aResult,
-                            PRBool aUseProfileDirOnly = PR_FALSE);
+                            PRBool aUseProfileDirOnly = PR_FALSE, const char *aProfilePath = nsnull);
 
   NS_IMETHOD GetProfileRoot(nsCString& aFileURL);
   NS_IMETHOD GetInstallRoot(nsCString& aFileURL);
@@ -109,13 +109,16 @@ private:
   NS_IMETHOD SetProvider(const nsCString& aProvider,
                          nsIRDFResource* aSelectionArc,
                          const PRUnichar* aProviderName,
-                         PRBool aAllUsers, PRBool aIsAdding);
+                         PRBool aAllUsers, 
+                         const char *aProfilePath, 
+                         PRBool aIsAdding);
 
   NS_IMETHOD SetProviderForPackage(const nsCString& aProvider,
                                    nsIRDFResource* aPackageResource, 
                                    nsIRDFResource* aProviderPackageResource, 
                                    nsIRDFResource* aSelectionArc, 
-                                   PRBool aAllUsers, PRBool aIsAdding);
+                                   PRBool aAllUsers, const char *aProfilePath, 
+                                   PRBool aIsAdding);
 
   NS_IMETHOD SelectProviderForPackage(const nsCString& aProviderType,
                                         const PRUnichar *aProviderName, 
