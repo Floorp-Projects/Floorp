@@ -715,15 +715,6 @@
     You must specify a component to help determine the new owner of these 
     [% terms.bugs %].
 
-  [% ELSIF error == "need_numeric_value" %]
-    [% title = "Numeric Value Required" %]
-    Hours requires a numeric value.
-
-  [% ELSIF error == "need_positive_number" %]
-    [% title = "Positive Number Required" %]
-    The <em>[% field_descs.$field FILTER html %]</em> field requires a positive
-    number.
-
   [% ELSIF error == "need_product" %]
     [% title = "Product Required" %]
     You must specify a product to help determine the new owner of these [% terms.bugs %].
@@ -799,6 +790,24 @@
     [% title = "No Products" %]
     Either no products have been defined to enter [% terms.bugs %] against or you have not
     been given access to any.
+
+  [% ELSIF error == "number_not_numeric" %]
+    [% title = "Numeric Value Required" %]
+    The value '[% num FILTER html %]' in the 
+    <em>[% field_descs.$field FILTER html %]</em> field 
+    is not a numeric value.
+
+  [% ELSIF error == "number_too_large" %]
+    [% title = "Number Too Large" %]
+    The value '[% num FILTER html %]' in the 
+    <em>[% field_descs.$field FILTER html %]</em> field 
+    is more than the maximum allowable value of '[% max_num FILTER html %]'.
+
+  [% ELSIF error == "number_too_small" %]
+    [% title = "Number Too Small" %]
+    The value '[% num FILTER html %]' 
+    in the <em>[% field_descs.$field FILTER html %]</em> field 
+    is less than the minimum allowable value of '[% min_num FILTER html %]'.
 
   [% ELSIF error == "old_password_incorrect" %]
     [% title = "Incorrect Old Password" %]

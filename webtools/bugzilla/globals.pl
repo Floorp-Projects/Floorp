@@ -109,22 +109,18 @@ $::SIG{PIPE} = 'IGNORE';
 sub AppendComment {
     my ($bugid, $who, $comment, $isprivate, $timestamp, $work_time) = @_;
     $work_time ||= 0;
-    
+
+    if ($work_time) {
+        require Bugzilla::Bug;
+        Bugzilla::Bug::ValidateTime($work_time, "work_time");
+    }
+
     # Use the date/time we were given if possible (allowing calling code
     # to synchronize the comment's timestamp with those of other records).
     $timestamp = ($timestamp ? SqlQuote($timestamp) : "NOW()");
-    
+
     $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
     $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
-
-    # allowing negatives though so people can back out errors in time reporting
-    if (defined $work_time) {
-       # regexp verifies one or more digits, optionally followed by a period and
-       # zero or more digits, OR we have a period followed by one or more digits
-       if ($work_time !~ /^-?(?:\d+(?:\.\d*)?|\.\d+)$/) { 
-          ThrowUserError("need_numeric_value", {}, "abort");
-       }
-    } else { $work_time = 0 };
 
     if ($comment =~ /^\s*$/) {  # Nothin' but whitespace
         return;
