@@ -57,11 +57,11 @@ typedef union {
     double value;
     struct {
 #ifdef IS_LITTLE_ENDIAN
-        u_int32_t lsw;
-        u_int32_t msw;
+        uint32 lsw;
+        uint32 msw;
 #else
-        u_int32_t msw;
-        u_int32_t lsw;
+        uint32 msw;
+        uint32 lsw;
 #endif
     } parts;
 } js_ieee_double_shape_type;
