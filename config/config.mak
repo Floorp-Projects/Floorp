@@ -64,10 +64,6 @@ LCFLAGS=$(LCFLAGS) -DNECKO
 MOZ_OJI = 1             # on by default now
 !endif
 
-!ifdef XPIDL_JS_STUBS
-LCFLAGS=$(LCFLAGS) -DXPIDL_JS_STUBS
-!endif
-
 !ifdef MOZ_LIBTEST
 MOZ_LIBTEST = 1
 LCFLAGS=$(LCFLAGS) -DLAYPROBE_API

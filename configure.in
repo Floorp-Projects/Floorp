@@ -1949,14 +1949,6 @@ MOZ_ARG_DISABLE_BOOL(dtd-debug,
   MOZ_DISABLE_DTD_DEBUG=1 
   AC_DEFINE(MOZ_DISABLE_DTD_DEBUG) )
 
-
-dnl commenting this out
-dnl according to waterson it is obsolete.
-dnl I'll remove it once I hear back from jband.  
-dnl MOZ_ARG_ENABLE_BOOL(js-stubs,
-dnl [  --enable-js-stubs       Use XPIDL JavaScript Stubs.],
-dnl   AC_DEFINE(XPIDL_JS_STUBS))
-
 dnl ========================================================
 dnl =
 dnl = Untested or Broken Options
