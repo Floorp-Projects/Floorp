@@ -365,10 +365,9 @@ var gExtensionsViewController = {
     
     cmd_update: function ()
     {
-      if (gWindowState == "extensions")
-        gExtensionManager.updateExtension(gExtensionsView.selected ? stripPrefix(gExtensionsView.selected.id) : null);
-      else if (gWindowState == "themes")
-        gExtensionManager.updateTheme(gExtensionsView.selected ? stripPrefix(gExtensionsView.selected.id) : null);
+      openDialog("chrome://mozapps/content/extensions/update.xul", "", "chrome,modal", 
+                 gWindowState, gExtensionManager, 
+                 gExtensionsView.selected ? stripPrefix(gExtensionsView.selected.id) : null);
     },
     
     cmd_uninstall: function ()
