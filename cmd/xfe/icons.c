@@ -1269,8 +1269,8 @@ fe_init_document_icons (MWContext *c)
 		  Desk_JavaConsole.mask_bits,
 		  True);
 #endif /* JAVA */
-  fe_globalData.force_mono_p = save;
 #endif /* NETSCAPE_PRIV */
+  fe_globalData.force_mono_p = save;
 }
 
 static void
