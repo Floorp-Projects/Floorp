@@ -182,7 +182,7 @@ MSG_DEF(JSMSG_COLON_AFTER_ID,         106, 0, JSEXN_SYNTAXERR, "missing : after 
 MSG_DEF(JSMSG_CURLY_AFTER_LIST,       107, 0, JSEXN_SYNTAXERR, "missing } after property list")
 MSG_DEF(JSMSG_PAREN_IN_PAREN,         108, 0, JSEXN_SYNTAXERR, "missing ) in parenthetical")
 MSG_DEF(JSMSG_SEMI_BEFORE_STMNT,      109, 0, JSEXN_SYNTAXERR, "missing ; before statement")
-MSG_DEF(JSMSG_NO_RETURN_VALUE,        110, 0, JSEXN_TYPEERR, "function does not always return a value")
+MSG_DEF(JSMSG_NO_RETURN_VALUE,        110, 1, JSEXN_TYPEERR, "function {0} does not always return a value")
 MSG_DEF(JSMSG_DUPLICATE_FORMAL,       111, 1, JSEXN_TYPEERR, "duplicate formal argument {0}")
 MSG_DEF(JSMSG_EQUAL_AS_ASSIGN,        112, 1, JSEXN_NONE, "test for equality (==) mistyped as assignment (=)?{0}")
 MSG_DEF(JSMSG_BAD_IMPORT,             113, 0, JSEXN_SYNTAXERR, "invalid import expression")
@@ -229,3 +229,4 @@ MSG_DEF(JSMSG_CANT_DESCRIBE_PROPS,    153, 1, JSEXN_NONE, "can't describe non-na
 MSG_DEF(JSMSG_BAD_APPLY_ARGS,         154, 0, JSEXN_TYPEERR, "second argument to Function.prototype.apply must be an array")
 MSG_DEF(JSMSG_REDECLARED_VAR,         155, 2, JSEXN_TYPEERR, "redeclaration of {0} {1}")
 MSG_DEF(JSMSG_UNDECLARED_VAR,         156, 1, JSEXN_TYPEERR, "assignment to undeclared variable {0}")
+MSG_DEF(JSMSG_ANON_NO_RETURN_VALUE,   157, 0, JSEXN_TYPEERR, "anonymous function does not always return a value")

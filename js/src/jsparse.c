@@ -371,8 +371,14 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
     /* Check for falling off the end of a function that returns a value. */
     if (pn && JS_HAS_STRICT_OPTION(cx) && (tc->flags & TCF_RETURN_EXPR)) {
 	if (!CheckFinalReturn(pn)) {
-	    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
-					JSMSG_NO_RETURN_VALUE);
+            if (fun->atom) {
+                char *name = js_GetStringBytes(ATOM_TO_STRING(fun->atom));
+                js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+                                            JSMSG_NO_RETURN_VALUE, name);
+            } else {
+                js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+                                            JSMSG_ANON_NO_RETURN_VALUE);
+            }
 	    pn = NULL;
 	}
     }
@@ -1155,8 +1161,12 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
             pn3->pn_expr = NULL;
 #if JS_HAS_CATCH_GUARD
-	    if (js_PeekToken(cx, ts) == TOK_COLON) {
-		(void)js_GetToken(cx, ts); /* eat `:' */
+            /*
+             * We use `catch (x if x === 5)' (not `catch (x : x === 5)') to
+             * avoid conflicting with the JS2/ECMA2 proposed catchguard syntax.
+             */
+	    if (js_PeekToken(cx, ts) == TOK_IF) {
+		(void)js_GetToken(cx, ts); /* eat `if' */
 		pn3->pn_expr = Expr(cx, ts, tc);
 		if (!pn3->pn_expr)
 		    return NULL;
@@ -1369,8 +1379,25 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	if (JS_HAS_STRICT_OPTION(cx) &&
             (tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) ==
 	    (TCF_RETURN_EXPR | TCF_RETURN_VOID)) {
-	    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
-					JSMSG_NO_RETURN_VALUE);
+            JSStackFrame *fp = cx->fp;
+            JSFunction *fun;
+
+            while (fp && !(fun = fp->fun))
+                fp = fp->down;
+            /*
+             * We must first find a frame with a non-native function, because
+             * we're compiling one.  We test against non-null fp above so that
+             * we actually trip this assertion if something goes horribly wrong.
+             */
+            JS_ASSERT(fp && fun && !fun->call);
+            if (fun->atom) {
+                char *name = js_GetStringBytes(ATOM_TO_STRING(fun->atom));
+                js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+                                            JSMSG_NO_RETURN_VALUE, name);
+            } else {
+                js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+                                            JSMSG_ANON_NO_RETURN_VALUE);
+            }
 	    return NULL;
 	}
 	break;
