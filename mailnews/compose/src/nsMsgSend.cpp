@@ -56,8 +56,9 @@
 #include "nsIDOMDocument.h"
 #include "nsMsgCompCID.h"
 #include "nsIFileSpec.h"
+#include "nsIAbAddressCollecter.h"
+#include "nsAbBaseCID.h"
 #include "nsCOMPtr.h"
-
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
 // for these two interfaces 
@@ -68,6 +69,7 @@ static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
+static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
 
 #ifdef XP_MAC
 #include "xp.h"                 // mac only 
@@ -2500,17 +2502,33 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     return NS_ERROR_OUT_OF_MEMORY;
 	}
 
+	nsresult rv;
+
+	NS_WITH_SERVICE(nsIAbAddressCollecter, addressCollecter,
+					kCAddressCollecter, &rv);
+
+	if (!NS_SUCCEEDED(rv))
+		addressCollecter = nsnull;
+
 	PL_strcpy (buf, "");
 	buf2 = buf + PL_strlen (buf);
 	if (mCompFields->GetTo() && *mCompFields->GetTo())
+	{
 		PL_strcat (buf2, mCompFields->GetTo());
+		if (addressCollecter)
+			addressCollecter->CollectAddress(mCompFields->GetTo());
+	}
 	if (mCompFields->GetCc() && *mCompFields->GetCc()) {
 		if (*buf2) PL_strcat (buf2, ",");
 			PL_strcat (buf2, mCompFields->GetCc());
+		if (addressCollecter)
+			addressCollecter->CollectAddress(mCompFields->GetCc());
 	}
 	if (mCompFields->GetBcc() && *mCompFields->GetBcc()) {
 		if (*buf2) PL_strcat (buf2, ",");
 			PL_strcat (buf2, mCompFields->GetBcc());
+		if (addressCollecter)
+			addressCollecter->CollectAddress(mCompFields->GetBcc());
 	}
 
   // Ok, now MIME II encode this to prevent 8bit problems...
@@ -2532,7 +2550,6 @@ nsMsgComposeAndSend::DeliverFileAsMail()
       buf = convbuf;
   }
   
-  nsresult rv = NS_OK;
   NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && smtpService)
   {
