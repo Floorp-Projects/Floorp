@@ -215,8 +215,12 @@ nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
       shortcutKey.ToUpperCase();
       if (shortcutKey.Length() > 0) {
         // We've got something.
-        PRUnichar shortcutChar = shortcutKey.CharAt(0);
-        if (shortcutChar == aLetter) {
+        char tempChar[2];
+        tempChar[0] = aLetter;
+        tempChar[1] = 0;
+        nsAutoString tempChar2 = tempChar;
+  
+        if (shortcutKey.EqualsIgnoreCase(tempChar2)) {
           // We match!
           nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
           if (menuFrame)

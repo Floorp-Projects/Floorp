@@ -100,6 +100,38 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
+nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
+{
+#ifndef XP_UNIX
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+  PRUint32 theChar;
+	keyEvent->GetKeyCode(&theChar);
+
+  if (mAltKeyDown && (theChar != NS_VK_ALT)) {
+    mAltKeyDown = PR_FALSE;
+
+    // Do shortcut navigation.
+    // A letter was pressed. We want to see if a shortcut gets matched. If
+    // so, we'll know the menu got activated.
+    keyEvent->GetCharCode(&theChar);
+
+    PRBool active = PR_FALSE;
+    mMenuBarFrame->ShortcutNavigation(theChar, active);
+
+    if (active) {
+	    aKeyEvent->PreventBubble();
+      aKeyEvent->PreventCapture();
+      aKeyEvent->PreventDefault();
+    }
+    
+    return NS_ERROR_BASE; // I am consuming event
+  } 
+#endif
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+nsresult
 nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
 #ifndef XP_UNIX
@@ -125,35 +157,9 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
       // The ALT key just went down by itself. Track this.
       mAltKeyDown = PR_TRUE;
     }
-    return NS_OK;
   }
-  
-  if (mAltKeyDown) {
-    mAltKeyDown = PR_FALSE;
-
-    // Do shortcut navigation.
-    // A letter was pressed. We want to see if a shortcut gets matched. If
-    // so, we'll know the menu got activated.
-    PRBool active = PR_FALSE;
-    mMenuBarFrame->ShortcutNavigation(theChar, active);
-
-    if (active) {
-	    aKeyEvent->PreventBubble();
-      aKeyEvent->PreventCapture();
-      aKeyEvent->PreventDefault();
-    }
-    
-    return NS_ERROR_BASE; // I am consuming event
-  } 
 #endif
 
-  return NS_OK; // means I am NOT consuming event
-}
-
-////////////////////////////////////////////////////////////////////////
-nsresult
-nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
-{
   return NS_OK; // means I am NOT consuming event
 }
 
