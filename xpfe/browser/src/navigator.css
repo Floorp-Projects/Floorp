@@ -86,23 +86,30 @@ toolbar#taskbar {
 
 
 box[class=insecure] {
-   border-top: 2px transparent;
+   border-top: 2px solid transparent;
 }
 
 box[class=secure] {
    border-top: 2px solid yellow;
 }
 
+box#statusbar {
+	margin:0px;
+	padding: 0px;
+}
+
 box#status-bar titledbutton {
 		border-color: 1px solid transparent;
      font: inherit;
+     margin-top: 0px;
+     margin-bottom: 0px;
 }
 
-titledbutton[class=secure] {
+titledbutton[class~=secure] {
   background-color: yellow;
 }
 
-titledbutton[class=insecure] {
+titledbutton[class~=insecure] {
   display: none;
 }
  

@@ -1,7 +1,7 @@
- /** this should only contain XUL dialog widget defaults. Defaults for widgets of
+ /** this should only contain XUL dialog and document window widget defaults. Defaults for widgets of
     a particular application should be in that application's style sheet.
 	For example style definitions for navigator can be found in navigator.css
-	REVISION 2
+
 **/
 
 window { 
@@ -56,7 +56,7 @@ spring {
 
 
 toolbox { 
-      background-color:inherit;
+      background-color:darkgray;
 		display: block;
 }
 
@@ -65,27 +65,22 @@ toolbox {
 	background-image: url("resource:/res/toolbar/TB_Tab.gif");
 	background-repeat: no-repeat;
 	color: lightgray;
-	border-top: 1px solid #ccccff;
-	border-bottom: none;
-	border-left: none;
-	border-right: none;
+	border: solid darkGray 1px;
+
 }
 
 :toolbox-rollover {
 	background-color: #ccccff;
 	background-image: url("resource:/res/toolbar/TB_Tab_mo.gif");
 	background-repeat: no-repeat;
-	border-top: 1px solid white;
-	border-bottom: 1px solid #9999CC;
-	border-left: 1px solid white;
-	border-right: 1px solid #9999CC;
+	color: green;
+	border: outset #ccccff 1px;
 }
 
 toolbar {
     display:block;
-    background-color: inherit;
-    background-image: none;
-    border-top: 1px solid #9999cc;
+    background-color: #CCCCDD;
+    border-bottom: 1px solid #9999cc;
     font: inherit;
     min-height: 2em;
     width: 100%;
@@ -222,7 +217,7 @@ progressmeter {
         display:inline;
         border: 1px grey;
         color : #9999CC; 
-        height: 0.7em;        
+        height: 1em;        
 }
 
 div.pmBackground {
@@ -340,8 +335,10 @@ titledbutton {
   font: inherit;
   background-color:inherit;
   background-image: inherit;
-  min-width: 5em;
-  min-height: 1.25em;
+}
+
+window.dialog titledbutton{
+	min-width: 5em;
 }
 
 titledbutton[class~=popup] {
@@ -407,52 +404,91 @@ titledbutton[disabled]:active {
 	text-decoration: none;
 }
 
-/* special class for borderless buttons */
-/* titled button on toolbars are automatically set to be borderless (see below) */
+/* special class for plain titledbuttons */
 
-titledbutton.borderless {
+titledbutton[class~=plain] {
   border: 1px solid transparent;
-  min-width: 3.5em;
+  padding: 2px;
+  font: inherit;
 }
 
-titledbutton.borderless:hover {
-  border: 1px outset white;
-  color:#333366;
-  text-decoration: underline;
+titledbutton[class~=plain]:hover {
+  border: 1px solid transparent;
+  padding: 2px;
+  text-decoration: none;
+  color: inherit;
 }
  
-titledbutton.borderless:hover:-moz-outline {
-   border : 1px solid black;
-}
- 
-titledbutton.borderless:active {
-  text-decoration:none;
-  border: 1px inset;
+titledbutton[class~=plain]:active {
+  border: 1px solid transparent;
+  padding: 2px;
+   text-decoration: none;
+  color: inherit;
 }
 
-titledbutton.borderless:active:-moz-outline {
-   border : 1px solid black;
-}
- 
-titledbutton.borderless[disabled] {
+titledbutton[class~=plain][disabled] {
 	border: 1px solid transparent;
+	padding: 2px;
 }
 
-titledbutton.borderless[disabled]:hover {
+titledbutton[class~=plain][disabled]:hover {
 	border: 1px solid transparent;
+	padding: 2px;
 }
 
-titledbutton.borderless[disabled]:active {
+titledbutton[class~=plain][disabled]:active {
 	border: 1px solid transparent;
 	padding: 2px;
 }
 
 
+/* special class for borderless buttons */
+/* titled button on toolbars are automatically set to be borderless (see below) */
+
+titledbutton[class~=borderless] {
+  border: 1px solid transparent;
+}
+
+titledbutton[class~=borderless]:hover {
+  border: 1px outset white;
+  color:#333366;
+  text-decoration: underline;
+}
+ 
+titledbutton[class~=borderless]:hover:-moz-outline {
+   border : 1px solid black;
+}
+ 
+titledbutton[class~=borderless]:active {
+  text-decoration:none;
+  border: 1px inset;
+}
+
+titledbutton[class~=borderless]:active:-moz-outline {
+   border : 1px solid black;
+}
+ 
+titledbutton[class~=borderless][disabled] {
+	border: 1px solid transparent;
+}
+
+titledbutton[class~=borderless][disabled]:hover {
+	border: 1px solid transparent;
+}
+
+titledbutton[class~=borderless][disabled]:active {
+	border: 1px solid transparent;
+	padding: 2px;
+}
+
 /* as a convenience predefined for toolbar as being same as class borderless */
 
 toolbar titledbutton {
   border: 1px solid transparent;
-  min-width: 3.5em;
+}
+
+toolbar.main-bar titledbutton[align="bottom"]{
+	min-width: 3.5em;
 }
 
 toolbar titledbutton:hover {
