@@ -29,6 +29,7 @@
 #include "nsIDOMMailCore.h"
 #include "nsIDOMToolbarCore.h"
 #include "nsIDOMBrowserAppCore.h"
+#include "nsIDOMEditorAppCore.h"
 #include "nsAppCoresCIDs.h" 
 
 
@@ -38,6 +39,7 @@ static NS_DEFINE_IID(kToolkitCoreCID,        NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kMailCoreCID,           NS_MAILCORE_CID);
 static NS_DEFINE_IID(kToolbarCoreCID,        NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,     NS_BROWSERAPPCORE_CID);
+static NS_DEFINE_IID(kEditorAppCoreCID,      NS_EDITORAPPCORE_CID);
 
 nsAppCoresNameSet::nsAppCoresNameSet()
 {
@@ -64,6 +66,7 @@ nsAppCoresNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
     result = NS_InitMailCoreClass(aScriptContext, nsnull);
     result = NS_InitToolbarCoreClass(aScriptContext, nsnull);
     result = NS_InitBrowserAppCoreClass(aScriptContext, nsnull);
+    result = NS_InitEditorAppCoreClass(aScriptContext, nsnull);
     result = NS_InitToolkitCoreClass(aScriptContext, nsnull);
 
     return result;
@@ -101,6 +104,12 @@ nsAppCoresNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 
         result = manager->RegisterGlobalName("BrowserAppCore", 
                                              kBrowserAppCoreCID, 
+                                             PR_TRUE);
+
+        if (NS_OK != result) return result;
+
+        result = manager->RegisterGlobalName("EditorAppCore", 
+                                             kEditorAppCoreCID, 
                                              PR_TRUE);
 
         if (NS_OK != result) return result;
