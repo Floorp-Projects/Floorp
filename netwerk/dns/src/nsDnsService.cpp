@@ -598,7 +598,7 @@ nsDNSLookup::ConvertHostEntry()
     mStatus = NS_ERROR_OUT_OF_MEMORY;
     
     // copy name
-    len = nsCRT::strlen(mInetHostInfo.name);
+    len = strlen(mInetHostInfo.name);
     mHostEntry.hostEnt.h_name = BufAlloc(len + 1, &mHostEntry.bufPtr, &mHostEntry.bufLen, 0);
     NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_name,"nsHostEnt buffer full.");
     if (mHostEntry.hostEnt.h_name == nsnull)  return;

@@ -815,7 +815,7 @@ NS_IMETHODIMP nsWindowsHooks::StartupRemoveOption(const char* option) {
         PRInt32 optionlocation = launchcommand.Find(option, PR_TRUE);
         // modify by one to get rid of the space we prepended in StartupAddOption
         if (optionlocation != kNotFound)
-            launchcommand.Cut(optionlocation - 1, nsCRT::strlen(option) + 1);
+            launchcommand.Cut(optionlocation - 1, strlen(option) + 1);
     }
 	
     if (launchcommand.IsEmpty())
