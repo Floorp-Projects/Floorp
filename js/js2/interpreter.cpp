@@ -123,13 +123,13 @@ namespace JavaScript {
                 case LOAD_NAME:
                     {
                         LoadName* ln = static_cast<LoadName*>(instruction);
-                        (*registers)[dst(ln)] = mGlobal[*src1(ln)];
+                        (*registers)[dst(ln)] = (*mGlobal)[*src1(ln)];
                     }
                     break;
                 case SAVE_NAME:
                     {
                         SaveName* sn = static_cast<SaveName*>(instruction);
-                        mGlobal[*dst(sn)] = (*registers)[src1(sn)];
+                        (*mGlobal)[*dst(sn)] = (*registers)[src1(sn)];
                     }
                     break;
                 case NEW_OBJECT:
@@ -296,7 +296,7 @@ namespace JavaScript {
                     break;
                 case NOT:
                     {
-                        Move* nt = static_cast<Move*>(instruction);
+                        Not* nt = static_cast<Not*>(instruction);
                         (*registers)[dst(nt)].i32 = !(*registers)[src1(nt)].i32;
                     }
                     break;

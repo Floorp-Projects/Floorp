@@ -216,7 +216,7 @@ namespace Shell {
     static float64 testFunctionCall(World &world, float64 n)
     {
         JSObject glob;
-        Context cx(world, glob);
+        Context cx(world, &glob);
         uint32 position = 0;
         //StringAtom& global = world.identifiers[widenCString("global")];
         StringAtom& sum = world.identifiers[widenCString("sum")];
@@ -266,7 +266,7 @@ namespace Shell {
     static float64 testFactorial(World &world, float64 n)
     {
         JSObject glob;
-        Context cx(world, glob);
+        Context cx(world, &glob);
         // generate code for factorial, and interpret it.
         uint32 position = 0;
         ICodeGenerator icg;
@@ -327,7 +327,7 @@ namespace Shell {
     static float64 testObjects(World &world, int32 n)
     {
         JSObject glob;
-        Context cx(world, glob);
+        Context cx(world, &glob);
         // create some objects, put some properties, and retrieve them.
         uint32 position = 0;
         ICodeGenerator initCG;

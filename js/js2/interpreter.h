@@ -31,26 +31,26 @@ namespace JavaScript {
 
     class Context : public gc_base {
     public:
-        explicit Context(World& /*world */, JSObject& aGlobal) :
-            mGlobal(aGlobal) {};
+        explicit Context(World& /*world */, JSObject* aGlobal) :
+            mGlobal(aGlobal) {}
 
         JSValue interpret(ICodeModule* iCode, const JSValues& args);
 
-        JSObject& setGlobalObject(JSObject& aGlobal)
+        JSObject* setGlobalObject(JSObject* aGlobal)
         {
-            JSObject &t = mGlobal;
+            JSObject* t = mGlobal;
             mGlobal = aGlobal;
             return t;
         }
 
-        JSObject& getGlobalObject() 
+        JSObject* getGlobalObject() 
         {
             return mGlobal;
         }
 
     private:
         /* World mWorld; */
-        JSObject& mGlobal;
+        JSObject* mGlobal;
         
     }; /* class Interpreter */
 } /* namespace JavaScript */
