@@ -983,6 +983,8 @@ static bool generatedBoolean(ExprNode *p)
     case ExprNode::logicalXor:
     case ExprNode::logicalOr:
         return true;
+    default:
+        assert (0); /* quiet linux warnings */
     }
     return false;
 }
