@@ -7,3 +7,4 @@ nsIListControlFrame.h
 nsIFormControlFrame.h
 nsIRadioControlFrame.h
 nsIFormSubmitObserver.h
+nsISelectControlFrame.h
