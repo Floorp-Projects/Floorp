@@ -382,7 +382,9 @@ nsWSDLLoadRequest::LoadDefinition(const nsAReadableString& aURI)
         }
       }
       else if (IsElementOfNamespace(element,
-                                    NS_LITERAL_STRING(NS_WSDL_SCHEMA_NAMESPACE))) {
+                             NS_LITERAL_STRING(SCHEMA_2001_NAMESPACE)) ||
+               IsElementOfNamespace(element,
+                             NS_LITERAL_STRING(SCHEMA_1999_NAMESPACE))) {
         nsCOMPtr<nsISchema> schema;
         rv = mSchemaLoader->ProcessSchemaElement(element, 
                                                  getter_AddRefs(schema));
@@ -467,7 +469,9 @@ nsWSDLLoadRequest::HandleEvent(nsIDOMEvent *event)
           }
         }
         else if (IsElementOfNamespace(element,
-                                      NS_LITERAL_STRING(NS_WSDL_SCHEMA_NAMESPACE))) {
+                                NS_LITERAL_STRING(SCHEMA_2001_NAMESPACE)) ||
+                 IsElementOfNamespace(element,
+                                NS_LITERAL_STRING(SCHEMA_1999_NAMESPACE))) {
           nsCOMPtr<nsISchema> schema;
           rv = mSchemaLoader->ProcessSchemaElement(element, 
                                                    getter_AddRefs(schema));
@@ -679,7 +683,8 @@ nsWSDLLoadRequest::GetSchemaType(const nsAReadableString& aName,
                                  const nsAReadableString& aNamespace,
                                  nsISchemaType** aSchemaComponent)
 {
-  if (aNamespace.Equals(NS_LITERAL_STRING(NS_WSDL_SCHEMA_NAMESPACE))) {
+  if (aNamespace.Equals(NS_LITERAL_STRING(SCHEMA_2001_NAMESPACE)) ||
+      aNamespace.Equals(NS_LITERAL_STRING(SCHEMA_1999_NAMESPACE))) {
     nsCOMPtr<nsISchemaCollection> collection(do_QueryInterface(mSchemaLoader));
     return collection->GetType(aName, aNamespace, aSchemaComponent);
   }
@@ -822,13 +827,17 @@ nsWSDLLoadRequest::ProcessImportElement(nsIDOMElement* aElement,
   return NS_OK;
 }
 
+static const char* kSchemaNamespaces[] = {SCHEMA_1999_NAMESPACE, 
+                                          SCHEMA_2001_NAMESPACE};
+static PRUint32 kSchemaNamespacesLength = sizeof(kSchemaNamespaces) / sizeof(const char*);
+
 nsresult
 nsWSDLLoadRequest::ProcessTypesElement(nsIDOMElement* aElement)
 {
   nsresult rv = NS_OK;
 
   nsChildElementIterator iterator(aElement, 
-                                  NS_LITERAL_STRING(NS_WSDL_SCHEMA_NAMESPACE));
+                                  kSchemaNamespaces, kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
   
