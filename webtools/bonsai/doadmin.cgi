@@ -19,6 +19,7 @@
 
 
 require 'CGI.pl';
+require 'adminfuncs.pl';
 
 print "Content-type: text/html\n\n";
 
