@@ -39,25 +39,9 @@ public:
   //nsISupports
   NS_DECL_ISUPPORTS
   
-  //nsIDragService
-  NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType);
-  NS_IMETHOD GetCurrentSession (nsIDragSession ** aSession);
-  NS_IMETHOD StartDragSession ();
-  NS_IMETHOD EndDragSession ();
-
-  // nsIDragSession
-  NS_IMETHOD SetCanDrop (PRBool aCanDrop); 
-  NS_IMETHOD GetCanDrop (PRBool * aCanDrop); 
-
-  NS_IMETHOD SetDragAction (PRUint32 anAction); 
-  NS_IMETHOD GetDragAction (PRUint32 * anAction); 
-
-  NS_IMETHOD SetTargetSize (nsSize aDragTargetSize); 
-  NS_IMETHOD GetTargetSize (nsSize * aDragTargetSize); 
-
-  NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex);
-  NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems);
-  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
+  //nsIDragSession and nsIDragService
+  NS_DECL_NSIDRAGSERVICE
+  NS_DECL_NSIDRAGSESSION
 
 protected:
 
