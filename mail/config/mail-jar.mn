@@ -152,6 +152,10 @@ content/global/customizeToolbar.xul,                  toolkit/content/global/cus
 content/global/customizeToolbar.js,                   toolkit/content/global/customizeToolbar.js
 content/global/customizeToolbar.css,                  toolkit/content/global/customizeToolbar.css
 
+#from mozapps
+content/mozapps/downloads,                            toolkit/content/mozapps/downloads
+content/mozapps/contents.rdf,                         toolkit/content/mozapps/contents.rdf
+
 # from xpfe\components
 content/global/console.js,                            toolkit/content/global/console.js
 content/global/console.xul,                           toolkit/content/global/console.xul

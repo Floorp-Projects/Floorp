@@ -48,4 +48,7 @@ content,install,url,jar:resource:/chrome/mail.jar!/content/messenger-region/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/US/messenger-region/
 locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/messenger-mapi/
+content,install,url,jar:resource:/chrome/mail.jar!/content/mozapps/
+skin,install,url,jar:resource:/chrome/qute.jar!/skin/classic/mozapps/
+locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/mozapps/
 skin,install,select,classic/1.0

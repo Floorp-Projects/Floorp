@@ -8,6 +8,7 @@
 <!ENTITY mailonly.label "General">
 <!ENTITY viewingMessages.label "Display">
 <!ENTITY composingMessages.label "Composition">
+<!ENTITY attachments.label "Attachments">
 <!ENTITY fonts.label "Fonts">
 <!ENTITY themes.label "Themes">
 <!ENTITY extensions.label "Extensions">

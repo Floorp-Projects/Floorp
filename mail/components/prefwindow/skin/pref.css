@@ -122,6 +122,11 @@
   -moz-image-region: rect(0px, 256px, 32px, 224px)
 }
 
+#attachments {
+  list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
+  -moz-image-region: rect(0px 128px 32px 96px);
+}
+
 .indent {
   margin-left: 23px;
   margin-right: 23px;
@@ -188,4 +193,8 @@
 {
   margin: 5px;
   padding: 5px;
+}
+
+expander { 
+  margin: 2px;
 }

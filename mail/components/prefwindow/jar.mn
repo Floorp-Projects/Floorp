@@ -31,6 +31,7 @@ en-US.jar:
 +   locale/en-US/messenger/pref-advanced.dtd                           (locale/pref-advanced.dtd)
 +   locale/en-US/communicator/pref/pref-themes.dtd                     (locale/pref-themes.dtd)
 +   locale/en-US/communicator/pref/pref-extensions.dtd                 (locale/pref-extensions.dtd)
++   locale/en-US/mozapps/downloads/pref-downloads.dtd                  (locale/pref-downloads.dtd)
 
 classic.jar:
 +   skin/classic/communicator/pref/pref.css                            (skin/pref.css)

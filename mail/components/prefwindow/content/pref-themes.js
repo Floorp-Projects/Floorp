@@ -47,7 +47,7 @@ catch(e) {}
 
 function Startup()
 {
-  gData = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-themes.xul"];
+  gData = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-themes.xul"].userData;
   var list = document.getElementById( "skinsList" );
   if ("loaded" in gData && "themeIndex" in gData) {
     list.selectedIndex = gData.themeIndex;    
@@ -85,7 +85,7 @@ function Startup()
 
 function applySkin()
 {
-  var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-themes.xul"];
+  var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-themes.xul"].userData;
   if (data.name == null)
     return;
 
