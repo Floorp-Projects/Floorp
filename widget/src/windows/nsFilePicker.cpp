@@ -233,7 +233,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
         result = nsToolkit::mGetOpenFileName(&ofn);
       }
       else if (mMode == modeSave) {
-        ofn.Flags |= OFN_NOREADONLYRETURN;
+        ofn.Flags |= OFN_NOREADONLYRETURN | OFN_NODEREFERENCELINKS;
         result = nsToolkit::mGetSaveFileName(&ofn);
         if (!result) {
           // Error, find out what kind.
@@ -344,6 +344,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       //   we must check if file already exists
       PRBool exists = PR_FALSE;
       file->Exists(&exists);
+
       if (exists)
         returnOKorReplace = returnReplace;
     }
