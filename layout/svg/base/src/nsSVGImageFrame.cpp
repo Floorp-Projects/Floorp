@@ -436,6 +436,11 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
   
   aNewFrame->GetAlphaData(&alpha, &length);
   aNewFrame->GetAlphaBytesPerRow(&abpr);
+
+#ifdef XP_WIN
+  // nsImageWin returns either 3bpp or 4bpp, depending on optimization
+  PRUint32 bpp = bpr/width;
+#endif
   
   if (!alpha) {
     for (PRInt32 y=0; y<height; y++) {
@@ -445,9 +450,9 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
         target = data + stride * (1 - height) + stride * y;
       for (PRInt32 x=0; x<width; x++) {
 #ifdef XP_WIN
-        *target++ = rgb[y*bpr + 3*x];
-        *target++ = rgb[y*bpr + 3*x + 1];
-        *target++ = rgb[y*bpr + 3*x + 2];
+        *target++ = rgb[y*bpr + bpp*x];
+        *target++ = rgb[y*bpr + bpp*x + 1];
+        *target++ = rgb[y*bpr + bpp*x + 2];
 #else
         *target++ = rgb[y*bpr + 3*x + 2];
         *target++ = rgb[y*bpr + 3*x + 1];
@@ -467,9 +472,9 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
         for (PRInt32 x=0; x<width; x++) {
           PRUint32 a = alpha[y*abpr + x];
 #ifdef XP_WIN
-          FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + 3*x] * a);
-          FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + 3*x + 1] * a);
-          FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + 3*x + 2] * a);
+          FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + bpp*x] * a);
+          FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + bpp*x + 1] * a);
+          FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + bpp*x + 2] * a);
 #else
           FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + 3*x + 2] * a);
           FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + 3*x + 1] * a);
@@ -490,9 +495,9 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
         for (PRUint32 x=0; x<width; x++) {
           if (NS_GET_BIT(alphaRow, x)) {
 #ifdef XP_WIN
-            *target++ = rgb[y*bpr + 3*x];
-            *target++ = rgb[y*bpr + 3*x + 1];
-            *target++ = rgb[y*bpr + 3*x + 2];
+            *target++ = rgb[y*bpr + bpp*x];
+            *target++ = rgb[y*bpr + bpp*x + 1];
+            *target++ = rgb[y*bpr + bpp*x + 2];
 #else
             *target++ = rgb[y*bpr + 3*x + 2];
             *target++ = rgb[y*bpr + 3*x + 1];
