@@ -50,6 +50,7 @@ static NS_DEFINE_CID(kRDFHTMLBuilderCID,         NS_RDFHTMLBUILDER_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFMenuBuilderCID,         NS_RDFMENUBUILDER_CID);
+static NS_DEFINE_CID(kRDFToolbarBuilderCID,      NS_RDFTOOLBARBUILDER_CID);
 static NS_DEFINE_CID(kRDFTreeBuilderCID,         NS_RDFTREEBUILDER_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXULBuilderCID,          NS_RDFXULBUILDER_CID);
@@ -180,6 +181,10 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kRDFMenuBuilderCID)) {
         if (NS_FAILED(rv = NS_NewRDFMenuBuilder((nsIRDFContentModelBuilder**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kRDFToolbarBuilderCID)) {
+        if (NS_FAILED(rv = NS_NewRDFToolbarBuilder((nsIRDFContentModelBuilder**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kRDFTreeBuilderCID)) {
@@ -318,6 +323,10 @@ NSRegisterSelf(nsISupports* serviceMgr, const char* aPath)
     rv = nsRepository::RegisterComponent(kRDFMenuBuilderCID,
                                          "RDF Menu Builder",
                                          NS_RDF_PROGID "|menu-builder",
+                                         aPath, PR_TRUE, PR_TRUE);
+    rv = nsRepository::RegisterComponent(kRDFToolbarBuilderCID,
+                                         "RDF Toolbar Builder",
+                                         NS_RDF_PROGID "|toolbar-builder",
                                          aPath, PR_TRUE, PR_TRUE);
     rv = nsRepository::RegisterComponent(kRDFXULBuilderCID,
                                          "RDF XUL Builder",
