@@ -127,6 +127,8 @@ public:
   NS_IMETHOD  SetQuality(nsContentQuality aQuality);
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
                     PRUint32 aPaintFlags, PRBool &Result);
+  NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsIRegion& region,
+                    PRUint32 aPaintFlags, PRBool &aResult);
 
   void  Show(PRBool aShow, PRBool aRethink);
 
@@ -301,6 +303,15 @@ NS_IMETHODIMP CornerView::Paint(nsIRenderingContext& rc, const nsRect& rect,
   aResult = PR_TRUE;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+CornerView::Paint(nsIRenderingContext& rc, const nsIRegion& region,
+                    PRUint32 aPaintFlags, PRBool &aResult)
+{
+   // Corner View Paint is overridden to get rid of compiler warnings caused
+   // by overloading Paint then overriding Paint.
+  return nsView::Paint(rc, region, aPaintFlags, aResult);
 }
 
 
