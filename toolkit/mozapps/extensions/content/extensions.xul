@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is The Extension Manager.
+# 
+# The Initial Developer of the Original Code is Ben Goodger. 
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#   Ben Goodger <ben@bengoodger.com>
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/content/extensions/extensions.css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/extensions/extensions.css"?>
+
+<!DOCTYPE window [
+<!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
+%extensionsDTD;
+]>
+
+<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="extensionsManager" windowtype="Extension:Manager"
+        orient="vertical" title="&extensions.title;" statictitle="&extensions.title;"
+        width="400" height="300" screenX="10" screenY="10"
+        persist="width height screenX screenY sizeMode"
+        onload="Startup();" onunload="Shutdown();"
+        onclose="return closeWindow(false);">
+      
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://mozapps/content/extensions/extensions.js"/>
+  
+  <stringbundleset id="extensionsSet">
+    <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
+  </stringbundleset>
+    
+  <keyset id="extensionsKeys">
+    <key id="key_close"   key="&cmd.close.commandKey;" oncommand="closeWindow(true);"       modifiers="accel"/>
+    <key id="key_info"    key="&cmd.info.commandKey;"  oncommand="onExtensionsShowInfo();"  modifiers="accel"/>
+  </keyset>
+  
+  <vbox id="contextMenuPalette" hidden="true">
+    <menuitem id="menuitem_options" default="true"
+              label="&cmd.options.label;" accesskey="&cmd.options.accesskey;"
+              oncommand="fireEventForElement(gExtensionsView.selected, 'show-options');"/>
+    <menuitem id="menuitem_homepage" 
+              label="&cmd.homepage.label;" accesskey="&cmd.homepage.accesskey;"
+              oncommand="fireEventForElement(gExtensionsView.selected, 'show-homepage');"/>
+    <menuitem id="menuitem_about" 
+              label="&cmd.about.label;" accesskey="&cmd.about.accesskey;"
+              oncommand="fireEventForElement(gExtensionsView.selected, 'show-info');"/>
+    <menuseparator id="menuseparator_1"/>
+    <menuitem id="menuitem_uninstall" 
+              label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;"
+              oncommand="fireEventForElement(gExtensionsView.selected, 'uninstall');"/>
+    <menuitem id="menuitem_update" 
+              label="&cmd.update.label;" accesskey="&cmd.update.accesskey;"
+              oncommand="fireEventForElement(gExtensionsView.selected, 'update');"/>
+    <menuitem id="menuitem_disable" 
+              label="&cmd.disable.label;" accesskey="&cmd.disable.accesskey;"
+              oncommand="fireEventForElement(gExtensionsView.selected, 'disable');"/>
+    <menuseparator id="menuseparator_2"/>
+    <menuitem id="menuitem_moveTop" 
+              label="&cmd.moveToTop.label;" accesskey="&cmd.moveToTop.accesskey;"
+              oncommand="fireEventForElement(gExtensionsView.selected, 'move-top');"/>
+    <menuitem id="menuitem_moveUp" 
+              label="&cmd.moveUp.label;" accesskey="&cmd.moveUp.accesskey;"
+              oncommand="fireEventForElement(gExtensionsView.selected, 'move-up');"/>
+    <menuitem id="menuitem_moveDn" 
+              label="&cmd.moveDn.label;" accesskey="&cmd.moveDn.accesskey;"
+              oncommand="fireEventForElement(gExtensionsView.selected, 'move-dn');"/>
+  </vbox>
+  
+  <popup id="extensionContextMenu" onpopupshowing="return buildContextMenu(event);"/>
+
+  <view id="extensionsView" flex="1" style="overflow: auto;"
+        datasources="rdf:null">
+    <template>
+      <rule>
+        <conditions>
+          <content uri="?uri"/>
+          <member container="?uri" child="?extension"/>
+          <triple subject="?extension"
+                  predicate="http://www.mozilla.org/2004/em-rdf#name"
+                  object="?name"/>
+          <triple subject="?extension"
+                  predicate="http://www.mozilla.org/2004/em-rdf#version"
+                  object="?version"/>
+        </conditions>
+        <bindings>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#creator"
+                   object="?creator"/>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#iconURL"
+                   object="?icon"/>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#optionsURL"
+                   object="?options-url"/>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#aboutURL"
+                   object="?about-url"/>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#updateURL"
+                   object="?update-url"/>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#homepageURL"
+                   object="?homepage-url"/>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#description"
+                   object="?description"/>
+        </bindings>            
+        <action>
+          <extension uri="?extension" context="extensionContextMenu"
+                     image="?icon" name="?name" version="?version" 
+                     description="?description" creator="?creator"
+                     optionsURL="?options-url" homepageURL="?homepage-url"
+                     aboutURL="?about-url" updateURL="?update-url"/>
+        </action>
+      </rule>
+    </template>
+  </view> 
+  <hbox>
+    <hbox id="commandBar" flex="1">
+      <button id="uninstallButton" 
+              label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;" tooltiptext="&cmd.uninstall.tooltip;" 
+              command="cmd_uninstall"/>
+      <separator id="commandBarSeparator"/>              
+      <button id="updateButton" 
+              label="&cmd.update.label;" accesskey="&cmd.update.accesskey;" tooltiptext="&cmd.update.tooltip;"
+              oncommand="onSoftwareUpdateCheck();"/>
+    </hbox>
+    
+    <resizer id="windowResizer" dir="bottomright"/>
+  </hbox>  
+
+</window>
+

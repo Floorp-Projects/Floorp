@@ -1,0 +1,21 @@
+view {
+  -moz-binding: url("chrome://mozapps/skin/shared/richview.xml#richview");
+}
+
+extension {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension");
+  -moz-box-orient: vertical;
+}
+
+extension[install-state="pending"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-pending");
+}
+
+extension[install-state="downloading"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-downloading");
+}
+
+extension[install-state="installing"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-installing");
+}
+

@@ -1,0 +1,87 @@
+<!ENTITY name.label                       "Name">
+<!ENTITY progress.label                   "Progress">
+<!ENTITY status.label                     "Status">
+<!ENTITY timeremaining.label              "Time Remaining">
+<!ENTITY transferred.label                "Transferred">
+<!ENTITY transferrate.label               "Speed">
+<!ENTITY timeelapsed.label                "Time Elapsed">
+<!ENTITY status.label                     "Status">
+<!--<!ENTITY progresstext.label           "&#37;">-->
+<!ENTITY source.label                     "Source">
+
+<!ENTITY done.label                       "Done">
+<!ENTITY cancel.label                     "Cancel">
+<!ENTITY canceled.label                   "Canceled">
+<!ENTITY launch.label                     "Launch">
+<!ENTITY divider.label                    "-">
+<!ENTITY show.label                       "Show">
+<!ENTITY open.label                       "Open">
+<!ENTITY retry.label                      "Retry">
+<!ENTITY remove.label                     "Remove">
+<!ENTITY pause.label                      "Pause">
+<!ENTITY resume.label                     "Resume">
+
+<!ENTITY installing.label                 "Installing...">
+<!ENTITY pending.label                    "Queued, please wait...">
+<!ENTITY failed.label                     "Failed">
+
+<!ENTITY extensions.title                 "Extensions">
+
+<!ENTITY cmd.pause.label                  "Pause">
+<!ENTITY cmd.pause.accesskey              "P">
+<!ENTITY cmd.resume.label                 "Resume">
+<!ENTITY cmd.resume.accesskey             "R">
+<!ENTITY cmd.cancel.label                 "Cancel">
+<!ENTITY cmd.cancel.accesskey             "C">
+<!ENTITY cmd.show.label                   "Show">
+<!ENTITY cmd.show.accesskey               "S">
+<!ENTITY cmd.show.tooltipWin              "Show this file in Explorer">
+<!ENTITY cmd.show.tooltipMac              "Show this file in Finder">
+<!ENTITY cmd.show.tooltipUnix             "Show this file in a browser window">
+<!ENTITY cmd.open.label                   "Open">
+<!ENTITY cmd.open.accesskey               "O">
+<!ENTITY cmd.openWith.label               "Open With...">
+<!ENTITY cmd.openWith.accesskey           "h">
+<!ENTITY cmd.retry.label                  "Retry">
+<!ENTITY cmd.retry.accesskey              "R">
+<!ENTITY cmd.remove.label                 "Remove">
+<!ENTITY cmd.remove.accesskey             "e">
+<!ENTITY cmd.properties.label             "Properties">
+<!ENTITY cmd.properties.accesskey         "i">
+<!ENTITY cmd.info.commandKey              "i">
+
+<!ENTITY cmd.close.commandKey             "w">
+
+<!-- Command Bar items -->
+<!ENTITY cmd.uninstall.label              "Uninstall">
+<!ENTITY cmd.uninstall.tooltip            "Uninstalls the selected Extension">
+<!ENTITY cmd.uninstall.accesskey          "i">
+<!ENTITY cmd.update.label                 "Update">
+<!ENTITY cmd.update.accesskey             "U">
+<!ENTITY cmd.update.tooltip               "Checks for Updates to your Extensions">
+
+<!-- Context Menu Options: Extension -->
+<!ENTITY cmd.options.label                "Options">
+<!ENTITY cmd.options.accesskey            "O">
+<!ENTITY cmd.homepage.label               "Visit Home Page">
+<!ENTITY cmd.homepage.accesskey           "H">
+<!ENTITY cmd.about.label                  "About this Extension">
+<!ENTITY cmd.about.accesskey              "E">
+<!ENTITY cmd.uninstall.label              "Uninstall">
+<!ENTITY cmd.uninstall.accesskey          "i">
+<!ENTITY cmd.update.label                 "Update">
+<!ENTITY cmd.update.accesskey             "U">
+<!ENTITY cmd.disable.label                "Disable">
+<!ENTITY cmd.disable.accesskey            "D">
+<!ENTITY cmd.moveToTop.label              "Move to Top">
+<!ENTITY cmd.moveToTop.accesskey          "T">
+<!ENTITY cmd.moveUp.label                 "Move Up">
+<!ENTITY cmd.moveUp.accesskey             "p">
+<!ENTITY cmd.moveDn.label                 "Move Down">
+<!ENTITY cmd.moveDn.accesskey             "w">
+
+<!-- Extension Items -->
+<!ENTITY options.tooltip                  "Options">
+<!ENTITY about.tooltip                    "About">
+<!ENTITY homepage.tooltip                 "Home Page">
+
