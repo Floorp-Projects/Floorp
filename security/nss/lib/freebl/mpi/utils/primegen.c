@@ -42,7 +42,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- * $Id: primegen.c,v 1.2 2000/07/22 05:54:21 nelsonb%netscape.com Exp $
+ * $Id: primegen.c,v 1.3 2000/07/25 00:16:57 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -63,8 +63,17 @@
 
 #define NUM_TESTS 5  /* Number of Rabin-Miller iterations to test with */
 
-unsigned long ntries;
 
+/* Produce table of composites from list of primes and trial value.  
+** trial must be odd. List of primes must not include 2.
+** sieve should have dimension >= MAXPRIME/2, where MAXPRIME is largest 
+** prime in list of primes.  After this function is finished,
+** if sieve[i] is non-zero, then (trial + 2*i) is composite.
+** Each prime used in the sieve costs one division of trial, and eliminates
+** one or more values from the search space. (3 eliminates 1/3 of the values
+** alone!)  Each value left in the search space costs 1 or more modular 
+** exponentations.  So, these divisions are a bargain!
+*/
 mp_err mpp_sieve(mp_int *trial, const mp_digit *primes, unsigned int nPrimes, 
 		 unsigned char *sieve, unsigned int nSieve)
 {
@@ -94,7 +103,8 @@ mp_err mpp_sieve(mp_int *trial, const mp_digit *primes, unsigned int nPrimes,
   return MP_OKAY;
 }
 
-mp_err mpp_make_prime(mp_int *start, unsigned int nBits, unsigned int strong)
+mp_err mpp_make_prime(mp_int *start, unsigned int nBits, unsigned int strong,
+		      unsigned long * nTries)
 {
   mp_digit      np;
   mp_err        res;
@@ -199,7 +209,8 @@ mp_err mpp_make_prime(mp_int *start, unsigned int nBits, unsigned int strong)
     mp_exch(&trial, start);
 loser:
   mp_clear(&trial);
-  ntries += i;
+  if (nTries)
+    *nTries += i;
   return res;
 }
 
@@ -207,6 +218,7 @@ int main(int argc, char *argv[])
 {
   unsigned char *raw;
   char          *out;
+  unsigned long nTries;
   int		rawlen, bits, outlen, ngen, ix, jx;
   int           g_strong = 0;
   mp_int	testval;
@@ -251,17 +263,17 @@ int main(int argc, char *argv[])
   if(argc > 3 && strcmp(argv[3], "strong") == 0)
     g_strong = 1;
 
-  /* testval - candidate being tested; ntries - number tried so far */
+  /* testval - candidate being tested; nTries - number tried so far */
   if ((res = mp_init(&testval)) != MP_OKAY) {
     fprintf(stderr, "%s: error: %s\n", argv[0], mp_strerror(res));
     return 1;
   }
   
   if(g_strong) {
-    printf("Requested %d strong prime values of at least %d bits.\n", 
+    printf("Requested %d strong prime value(s) of %d bits.\n", 
 	   ngen, bits);
   } else {
-    printf("Requested %d prime values of at least %d bits.\n", ngen, bits);
+    printf("Requested %d prime value(s) of %d bits.\n", ngen, bits);
   }
 
   rawlen = (bits / CHAR_BIT) + ((bits % CHAR_BIT) ? 1 : 0) + 1;
@@ -290,11 +302,11 @@ int main(int argc, char *argv[])
     mp_read_raw(&testval, (char *)raw, rawlen);
 
     /* Initialize candidate counter */
-    ntries = 0;
+    nTries = 0;
 
     start = clock(); /* time generation for this prime */
     do {
-      res = mpp_make_prime(&testval, bits, g_strong);
+      res = mpp_make_prime(&testval, bits, g_strong, &nTries);
       if (res != MP_NO)
 	break;
       /* This code works whether digits are 16 or 32 bits */
@@ -318,7 +330,7 @@ int main(int argc, char *argv[])
     printf("16: %s\n\n", out);
     free(out);
     
-    printf("Number of candidates tried: %d\n", ntries);
+    printf("Number of candidates tried: %lu\n", nTries);
     printf("This computation took %ld clock ticks (%.2f seconds)\n",
 	   (end - start), ((double)(end - start) / CLOCKS_PER_SEC));
     
