@@ -353,3 +353,9 @@ bin\chrome\icons\default\winInspectorMain.ico
 bin\defaults\pref\inspector.js
 bin\res\inspector\viewer-registry.rdf
 bin\res\inspector\search-registry.rdf
+
+[spellcheck]
+bin\components\myspell.dll
+bin\components\spellchk.dll
+bin\components\spellchecker.xpt
+bin\components\myspell\*

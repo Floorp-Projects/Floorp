@@ -32,7 +32,7 @@ Message=$ProductName$ is detected to be currently running.  Please quit $Product
 
 ; These keys are not normally necessary for checking instances.  They are
 ; set here because Mozilla requires a way to shut down it's turbo mode.
-Extra Cmd Parameter=-kill
+Extra Cmd0 Parameter=-kill
 
 [Check Instance1]
 Process Name=mozturbo.exe
