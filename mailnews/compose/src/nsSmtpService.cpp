@@ -121,19 +121,7 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 	nsresult rv = NS_OK;
 
   nsCOMPtr<nsISmtpServer> smtpServer;
-
-  // first try the identity's preferred server
-  if (aSenderIdentity) {
-      nsXPIDLCString smtpServerKey;
-      rv = aSenderIdentity->GetSmtpServerKey(getter_Copies(smtpServerKey));
-      if (NS_SUCCEEDED(rv) && !(smtpServerKey.IsEmpty()))
-          rv = GetServerByKey(smtpServerKey,
-                                           getter_AddRefs(smtpServer));
-  }
-
-  // fallback to the default
-  if (NS_FAILED(rv) || !smtpServer)
-      rv = GetDefaultServer(getter_AddRefs(smtpServer));
+  rv = GetSmtpServerByIdentity(aSenderIdentity, getter_AddRefs(smtpServer));
 
   if (NS_SUCCEEDED(rv) && smtpServer)
   {
@@ -904,4 +892,24 @@ nsSmtpService::FindServer(const char *aUsername,
     NS_IF_ADDREF(*aResult);
     
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpService::GetSmtpServerByIdentity(nsIMsgIdentity *aSenderIdentity, nsISmtpServer **aSmtpServer)
+{
+  NS_ENSURE_ARG_POINTER(aSmtpServer);
+  nsresult rv;
+
+  // First try the identity's preferred server
+  if (aSenderIdentity) {
+      nsXPIDLCString smtpServerKey;
+      rv = aSenderIdentity->GetSmtpServerKey(getter_Copies(smtpServerKey));
+      if (NS_SUCCEEDED(rv) && !(smtpServerKey.IsEmpty()))
+          rv = GetServerByKey(smtpServerKey, aSmtpServer);
+  }
+
+  // Fallback to the default
+  if (NS_FAILED(rv) || !(*aSmtpServer))
+      rv = GetDefaultServer(aSmtpServer);
+  return rv;
 }

@@ -80,6 +80,12 @@ interface nsISmtpService : nsISupports {
 					             out nsIRequest aRequest);
 
   /**
+   * Return the SMTP server that is associated with an identity.
+   */
+  void GetSmtpServerByIdentity(in nsIMsgIdentity aSenderIdentity,
+                               out nsISmtpServer aServer);
+
+  /**
    * A copy of the array of SMTP servers, as stored in the preferences
    */
   readonly attribute nsISupportsArray smtpServers;

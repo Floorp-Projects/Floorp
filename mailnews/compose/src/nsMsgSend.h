@@ -211,6 +211,7 @@ public:
   NS_IMETHOD  DeliverFileAsMail();
   NS_IMETHOD  DeliverFileAsNews();
   void        DoDeliveryExitProcessing(nsIURI * aUrl, nsresult aExitCode, PRBool aCheckForMail);
+  nsresult    FormatStringWithSMTPHostNameByID(PRInt32 aMsgId, PRUnichar **aString);
 
   nsresult    DoFcc();
   nsresult    StartMessageCopyOperation(nsIFileSpec        *aFileSpec, 

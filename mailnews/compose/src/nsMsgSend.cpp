@@ -101,6 +101,7 @@
 #include "nsMsgUtils.h"
 #include "nsIRDFService.h"
 #include "nsIMsgMdnGenerator.h"
+#include "nsISmtpServer.h"
 
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
@@ -3365,6 +3366,32 @@ nsMsgComposeAndSend::Fail(nsresult failure_code, const PRUnichar * error_msg, ns
   return NS_OK;
 }
 
+nsresult
+nsMsgComposeAndSend::FormatStringWithSMTPHostNameByID(PRInt32 aMsgId, PRUnichar **aString)
+{
+  NS_ENSURE_ARG(aString);
+
+  nsresult rv;
+  nsCOMPtr<nsISmtpService> smtpService(do_GetService(kSmtpServiceCID, &rv));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // Get the smtp hostname and format the string.
+  nsXPIDLCString smtpHostName;
+  nsCOMPtr<nsISmtpServer> smtpServer;
+  rv = smtpService->GetSmtpServerByIdentity(mUserIdentity, getter_AddRefs(smtpServer));
+  if (NS_SUCCEEDED(rv))
+    smtpServer->GetHostname(getter_Copies(smtpHostName));
+
+  nsAutoString hostStr;
+  hostStr.AssignWithConversion(smtpHostName.get());
+  const PRUnichar *params[] = { hostStr.get() };
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = mComposeBundle->GetBundle(getter_AddRefs(bundle));
+  if (NS_SUCCEEDED(rv))
+    bundle->FormatStringFromID(NS_ERROR_GET_CODE(aMsgId), params, 1, aString);
+  return rv;
+}
+
 void
 nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode, PRBool aCheckForMail)
 {  
@@ -3377,6 +3404,9 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
 #endif
 
     nsXPIDLString eMsg; 
+    if (aExitCode == NS_ERROR_SMTP_SEND_FAILED || aExitCode == NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER)
+      FormatStringWithSMTPHostNameByID(aExitCode, getter_Copies(eMsg));
+    else
     mComposeBundle->GetStringByID(aExitCode, getter_Copies(eMsg));
     
     Fail(aExitCode, eMsg, &aExitCode);
