@@ -955,7 +955,7 @@ StyleSetImpl::FileRules(nsISupportsArrayEnumFunc aCollectorFunc,
     mStyleRuleSupplier->WalkRules(this, aCollectorFunc, aData);
     mStyleRuleSupplier->UseDocumentRules(aData->mContent, &useRuleProcessors);
   }
-  if (mDocRuleProcessors) {
+  if (mDocRuleProcessors && useRuleProcessors) {
     mDocRuleProcessors->EnumerateForwards(aCollectorFunc, aData);
   }
   lastDocRN = mRuleWalker->GetCurrentNode();
