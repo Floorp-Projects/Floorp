@@ -461,7 +461,22 @@
 
       get the buglist as comma-separated values, for import into e.g.
       a spreadsheet.</member>
-      
+     
+      <member>
+      <emphasis>RSS</emphasis>
+
+      get the buglist as a RSS 1.0 feed. It is used by setting up your 
+      buglist query and then copying this links url into your RSS reader. If
+      you are using firefox, you can also save the buglist as a live
+      bookmark. If you would like to limit the number of RSS items, add
+      a limit=n url parameter.</memeber>
+
+      <member>
+      <emphasis>iCalendar</emphasis>
+
+      Get the buglist as an iCalendar file. Each bug is represented as a 
+      to-do item in the imported calendar.</member>
+     
       <member>
       <emphasis>Change Columns:</emphasis>
 
@@ -493,6 +508,17 @@
       in your page footer giving you quick access to run it again later.
       </member>
     </simplelist>
+    </para>
+
+    <para>
+      If you would like to access the bug list from another program 
+      it is often useful to have the list returned in something other
+      than HTML. By adding the ctype=type parameter into the bug list URL
+      you can specify several alternate formats. The supported formats
+      are: Comma Separated Values (ctype=csv), iCalendar (ctype=ics),
+      RDF Site Summary (RSS) 1.0 (ctype=rss), ECMAScript, also known
+      as JavaScript (ctype=js), and finally Resource Description Framework
+      RDF/XML (ctype=rdf).
     </para>
   </section>
 

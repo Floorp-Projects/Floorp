@@ -48,6 +48,7 @@
 [% PROCESS global/header.html.tmpl
   title = title
   style = style
+  rsslink = "buglist.cgi?$urlquerypart&ctype=rss" 
 %]
 
 <div align="center">
@@ -149,6 +150,8 @@
       <td valign="middle">
         <a href="buglist.cgi?
         [% urlquerypart FILTER html %]&amp;ctype=csv">CSV</a> |
+        <a href="buglist.cgi?
+        [% urlquerypart FILTER html %]&amp;ctype=rss">RSS</a> |
         <a href="buglist.cgi?
         [% urlquerypart FILTER html %]&amp;ctype=ics">iCalendar</a> |
         <a href="colchange.cgi?

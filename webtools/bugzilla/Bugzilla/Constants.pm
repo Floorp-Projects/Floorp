@@ -126,10 +126,11 @@ use constant LOGOUT_KEEP_CURRENT => 2;
 
 use constant contenttypes =>
   {
-   "html" => "text/html" , 
+   "html"=> "text/html" , 
    "rdf" => "application/rdf+xml" , 
+   "rss" => "application/rss+xml" ,
    "xml" => "application/xml" , 
-   "js" => "application/x-javascript" , 
+   "js"  => "application/x-javascript" , 
    "csv" => "text/plain" ,
    "png" => "image/png" ,
    "ics" => "text/calendar" ,
