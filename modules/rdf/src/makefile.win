@@ -87,9 +87,7 @@ LINCS=-I$(XPDIST)\public\nspr -I$(XPDIST)\public\dbm \
     -I$(XPDIST)\public\htmldlgs -I$(XPDIST)\public\util \
     -I$(XPDIST)\public\img -I$(XPDIST)\public\layer \
     -I$(XPDIST)\public\ldap \
-!ifdef NU_CACHE
     -I$(XPDIST)\public\cache \
-!endif
     -I$(XPDIST)\public\pref \
     -I$(XPDIST)\public\network \
     -I$(XPDIST)\public\parse
