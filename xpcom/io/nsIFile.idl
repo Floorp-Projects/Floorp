@@ -177,3 +177,8 @@ interface nsIFile : nsISupports
      */
     boolean isEqual([const] in nsIFile inFile);
 };
+
+%{C++
+#define NS_FILE_PROGID "component://netscape/file"
+#define NS_FILE_CLASSNAME "File Specification"
+%}

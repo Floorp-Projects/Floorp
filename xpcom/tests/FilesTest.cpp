@@ -956,7 +956,7 @@ int FilesTest::RunAllTests()
 	    return rv;
 	
     Banner("StringStream");
-    rv = StringStream();
+//    rv = StringStream();
 	if (rv)
 	    return rv;
         

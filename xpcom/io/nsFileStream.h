@@ -302,7 +302,7 @@ class NS_COM nsFileClient
 :    public virtual nsErrorProne
 {
 public:
-                                      nsFileClient(const nsCOMPtr<nsIFile>& inFile)
+                                      nsFileClient(const nsCOMPtr<nsIOpenFile>& inFile)
                                       :   mFile(do_QueryInterface(inFile))
                                       {
                                       }
@@ -335,7 +335,7 @@ protected:
                                       }
 // DATA
 protected:
-    nsCOMPtr<nsIFile>                 mFile;
+    nsCOMPtr<nsIOpenFile>                 mFile;
 }; // class nsFileClient
 
 //========================================================================================

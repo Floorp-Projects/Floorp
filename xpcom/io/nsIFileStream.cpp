@@ -22,6 +22,8 @@
 
 #include "prerror.h"
 
+#include "nsSegmentedBuffer.h"
+
 #ifdef XP_MAC
 #include "pprio.h" // To get PR_ImportFile
 #else
@@ -38,7 +40,7 @@ class FileImpl
     : public nsIRandomAccessStore
     , public nsIFileOutputStream
     , public nsIFileInputStream
-    , public nsIFile
+    , public nsIOpenFile
 //========================================================================================
 {
     public:
@@ -50,6 +52,13 @@ class FileImpl
                                             , mLength(-1)
                                         {
                                             NS_INIT_REFCNT();
+
+                                            nsresult rv = mOutBuffer.Init(4096, 4096);
+                                            if (NS_FAILED(rv)) mFailed = PR_TRUE;
+
+                                            mWriteCursor = nsnull;
+                                            mWriteLimit  = nsnull;
+
                                         }
                                         FileImpl(
                                             const nsFileSpec& inFile,
@@ -62,6 +71,13 @@ class FileImpl
                                             , mLength(-1)
                                         {
                                             NS_INIT_REFCNT();
+
+                                            nsresult rv = mOutBuffer.Init(4096, 4096);
+                                            if (NS_FAILED(rv)) mFailed = PR_TRUE;
+    
+                                            mWriteCursor = nsnull;
+                                            mWriteLimit  = nsnull;
+
                                             Open(inFile, nsprMode, accessMode);
                                         }
         virtual                         ~FileImpl()
@@ -72,7 +88,7 @@ class FileImpl
         // nsISupports interface
                                         NS_DECL_ISUPPORTS
 
-		// nsIFile interface
+		// nsIOpenFile interface
         NS_IMETHOD                      Open(
                                             const nsFileSpec& inFile,
                                             int nsprMode,
@@ -133,7 +149,8 @@ class FileImpl
 								        {
 								            NS_PRECONDITION(aBuf != nsnull, "null ptr");
 								            NS_PRECONDITION(aWriteCount != nsnull, "null ptr");
-
+                                            
+                                            *aWriteCount = 0;
 
 								#ifdef XP_MAC
 								            // Calling PR_Write on stdout is sure suicide.
@@ -148,14 +165,39 @@ class FileImpl
 								                return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
 								            if (mFailed)
 								               return NS_ERROR_FAILURE;
-								            PRInt32 bytesWrit = PR_Write(mFileDesc, aBuf, aCount);
-								            if (bytesWrit != (PRInt32)aCount)
-								            {
-								                mFailed = PR_TRUE;
-								                *aWriteCount = 0;
-								                return NS_FILE_RESULT(PR_GetError());
-								            }
-								            *aWriteCount = bytesWrit;
+
+                                            PRUint32 bufOffset = 0;
+                                            
+                                            while (aCount > 0) 
+                                            {
+                                                if (mWriteCursor == nsnull || mWriteCursor == mWriteLimit)
+                                                {
+                                                    char* seg = mOutBuffer.AppendNewSegment();
+                                                    if (seg == nsnull) 
+                                                    {
+                                                        // buffer is full, try again
+                                                        Flush();
+                                                        seg = mOutBuffer.AppendNewSegment();
+                                                        if (seg == nsnull)
+                                                            return NS_ERROR_OUT_OF_MEMORY;
+                                                    }
+                                                    mWriteCursor = seg;
+                                                    mWriteLimit  = seg + mOutBuffer.GetSegmentSize();
+                                                }
+                                                
+                                                // move
+                                                
+                                                *aWriteCount = mWriteLimit - mWriteCursor;
+                                                
+                                                if (aCount < *aWriteCount)
+                                                    *aWriteCount = aCount;
+
+                                                memcpy(mWriteCursor, (aBuf + bufOffset), *aWriteCount);
+                                                
+                                                aCount    -= *aWriteCount;
+                                                bufOffset += *aWriteCount;
+                                                mWriteCursor += *aWriteCount;                                          
+                                            }								            
 								            return NS_OK;
 								        }
         NS_IMETHOD                      Flush();
@@ -178,13 +220,18 @@ class FileImpl
         PRBool                          mFailed;
         PRBool                          mEOF;
         PRInt32                         mLength;
+
+        nsSegmentedBuffer               mOutBuffer;
+        char*                           mWriteCursor;
+        char*                           mWriteLimit;
+
 }; // class FileImpl
 
 NS_IMPL_RELEASE(FileImpl)
 NS_IMPL_ADDREF(FileImpl)
 
 NS_IMPL_QUERY_HEAD(FileImpl)
-  NS_IMPL_QUERY_BODY(nsIFile)
+  NS_IMPL_QUERY_BODY(nsIOpenFile)
   NS_IMPL_QUERY_BODY(nsIRandomAccessStore)
   NS_IMPL_QUERY_BODY(nsIOutputStream)
   NS_IMPL_QUERY_BODY(nsIInputStream)
@@ -336,6 +383,8 @@ NS_IMETHODIMP FileImpl::Tell(PRIntn* outWhere)
 NS_IMETHODIMP FileImpl::Close()
 //----------------------------------------------------------------------------------------
 {
+    Flush();
+
     if (mFileDesc==PR_STDIN || mFileDesc==PR_STDOUT || mFileDesc==PR_STDERR || !mFileDesc) 
        return NS_OK;
     if (PR_Close(mFileDesc) == PR_SUCCESS)
@@ -359,11 +408,35 @@ NS_IMETHODIMP FileImpl::Flush()
     if (!mFileDesc) 
         return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
     
+    PRInt32 segCount = mOutBuffer.GetSegmentCount();
+    PRUint32 segSize = mOutBuffer.GetSegmentSize();
+
+    for (PRInt32 i = 0; i < segCount; i++) 
+    {
+        char* seg = mOutBuffer.GetSegment(i);
+
+        // if it is the last buffer, it may not be completely full.  
+        if(i == (segCount-1))
+            segSize = (mWriteCursor - seg);
+
+        PRInt32 bytesWrit = PR_Write(mFileDesc, seg, segSize);
+        if (bytesWrit != (PRInt32)segSize)
+		{
+			mFailed = PR_TRUE;
+			return NS_FILE_RESULT(PR_GetError());
+		}
+    }
+
+    mOutBuffer.Empty();
+    mWriteCursor = nsnull;
+    mWriteLimit  = nsnull;
+
 #ifdef XP_MAC
     // On unix, it seems to fail always.
     if (PR_Sync(mFileDesc) != PR_SUCCESS)
         mFailed = PR_TRUE;
 #endif
+                                                
     return NS_OK;
 } // FileImpl::flush
 
