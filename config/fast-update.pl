@@ -7,7 +7,6 @@ my $branch;
 my $module="SeaMonkeyAll";
 my $maxdirs=5;
 my $rootdir = "";
-my $tempfile;
 
 # pull out the current directory
 # if there is no such file, this will all just fail, which is ok
@@ -51,9 +50,12 @@ if (!$branch) {
 }
 
 
-my $url = "http://bonsai.mozilla.org/cvsquery.cgi?module=${module}&branch=${branch}&branchtype=match&dir=${rootdir}&sortby=File&date=hours&hours=${hours}&cvsroot=%2Fcvsroot";
+my $url = "http://bonsai.mozilla.org/cvsquery.cgi?module=${module}&branch=${branch}&branchtype=match&sortby=File&date=hours&hours=${hours}&cvsroot=%2Fcvsroot";
 
-print "Contacting bonsai for updates to ${module} on the ${branch} branch in the last ${hours} hours, within the $rootdir directory..\n";
+print "Contacting bonsai for updates to ${module} ";
+print "on the ${branch} branch " if ($branch);
+print "in the last ${hours} hours ";
+print "within the $rootdir directory..\n" if ($rootdir);
 
 # first try wget, then try lynx
 
@@ -94,20 +96,30 @@ my @uniquedirs;
 
 foreach $dir (sort @dirlist) {
   next if ($lastdir eq $dir);
+
+  my $strippeddir = "";
   $lastdir = $dir;
 
   # now strip out $rootdir
   if ($rootdir) {
-    if ($dir eq $rootdir) {
-      $strippeddir = ".";
-    } else {
-      $strippeddir = substr($dir, (length $rootdir) + 1 );
+
+    # only deal with directories that start with $rootdir
+    if (substr($dir, 0, (length $rootdir)) eq $rootdir) {
+
+      if ($dir eq $rootdir) {
+        $strippeddir = ".";
+      } else {
+        $strippeddir = substr($dir,(length $rootdir) + 1 );
+      }
+
     }
   } else {
     $strippeddir = $dir;
   }
 
-  push @uniquedirs, $strippeddir;
+  if ($strippeddir) {
+    push @uniquedirs, $strippeddir;
+  }
 }
 
 if ($#uniquedirs < 0) {
@@ -123,7 +135,6 @@ foreach $dir (sort @uniquedirs) {
   $dirlist .= "$dir ";
   $i++;
   if ($i == 5) {
-    print "$dirlist:\n";
     system "cvs up -l $dirlist\n";
     $dirlist = "";
     $i=0;
@@ -134,12 +145,6 @@ if ($i < 5) {
 }
 
 close CHECKINS;
-
-if ($tempfile) {
-  print "removing $tempfile\n";
-  
-  unlink $tempfile;
-}
 
 print "done.\n";
 
