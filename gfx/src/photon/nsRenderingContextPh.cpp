@@ -483,7 +483,7 @@ NS_IMETHODIMP nsRenderingContextPh :: PopState( PRBool &aClipEmpty )
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::PopState\n"));
 
   PRUint32 cnt = mStateCache->Count();
-  PRBool bEmpty;
+  PRBool bEmpty = PR_FALSE;
   
   if( cnt > 0)
   {
