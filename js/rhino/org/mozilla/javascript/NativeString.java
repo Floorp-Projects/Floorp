@@ -726,7 +726,7 @@ public class NativeString extends ScriptableObject {
     private static RegExpProxy checkReProxy(Context cx) {
         RegExpProxy result = cx.getRegExpProxy();
         if (result == null) {
-            throw cx.reportRuntimeError(cx.getMessage("msg.no.regexp", null));
+            throw cx.reportRuntimeError0("msg.no.regexp");
         }
         return result;
     }

@@ -144,11 +144,10 @@ public class NativeNumber extends ScriptableObject {
 	    } else {
 			precision = ScriptRuntime.toInt32(arg);
 	        if (precision < precisionMin || precision > precisionMax) {
-				Object args[] = new Object[1];
-				args[0] = Integer.toString(precision);
 			    throw NativeGlobal.constructError(
 			               Context.getCurrentContext(), "RangeError",
-			               ScriptRuntime.getMessage("msg.bad.precision", args),
+                           ScriptRuntime.getMessage1(
+                               "msg.bad.precision", Integer.toString(precision)),
 			               this);
 			}
 		}

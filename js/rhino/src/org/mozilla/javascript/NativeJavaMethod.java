@@ -180,9 +180,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             Class c = methods[0].getDeclaringClass();
             String sig = c.getName() + "." + names[0] + "(" +
                          scriptSignature(args) + ")";
-            Object errArgs[] = { sig };
-            throw Context.reportRuntimeError(
-                Context.getMessage("msg.java.no_such_method", errArgs));
+            throw Context.reportRuntimeError1("msg.java.no_such_method", sig);
         }
 
         // OPT: already retrieved in findFunction, so we should inline that
@@ -201,9 +199,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             while (!(o instanceof Wrapper)) {
                 o = o.getPrototype();
                 if (o == null) {
-                    Object errArgs[] = { names[0] };
-                    throw Context.reportRuntimeError(
-                        Context.getMessage("msg.nonjava.method", errArgs));
+                    throw Context.reportRuntimeError1(
+                        "msg.nonjava.method", names[0]);
                 }
             }
             javaObject = ((Wrapper) o).unwrap();        

@@ -222,10 +222,10 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     {
         Function converter = getConverter(converterName);
         if (converter == null) {
-            Object[] errArgs = { converterName, javaObject.getClass().getName() };
-            throw Context.reportRuntimeError(
-                    Context.getMessage("msg.java.conversion.implicit_method",
-                                       errArgs));
+            String className = javaObject.getClass().getName();
+            throw Context.reportRuntimeError2
+                ("msg.java.conversion.implicit_method",
+                 converterName, className);
         }
         return callConverter(converter);
     }
@@ -243,8 +243,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         } catch (JavaScriptException jse) {
             // fall through to error message
         }
-        throw Context.reportRuntimeError(
-            Context.getMessage("msg.default.value", null));
+        throw Context.reportRuntimeError0("msg.default.value");
     }
 
 
@@ -888,11 +887,9 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     }
 
     static void reportConversionError(Object value, Class type) {
-        Object[] args = { value.toString(),
-                          NativeJavaMethod.javaSignature(type)
-                        };
-        throw Context.reportRuntimeError(
-            Context.getMessage("msg.conversion.not.allowed", args));
+        throw Context.reportRuntimeError2
+            ("msg.conversion.not.allowed", 
+             value.toString(), NativeJavaMethod.javaSignature(type));
     }
 
     public static void initJSObject() {

@@ -635,10 +635,8 @@ public class TokenStream {
 
     public void ungetToken(int tt) {
         if (this.pushbackToken != EOF && tt != ERROR) {
-            Object[] errArgs = { tokenToString(tt),
-                                 tokenToString(this.pushbackToken) };
-            String message = Context.getMessage("msg.token.replaces.pushback",
-                                                errArgs);
+            String message = Context.getMessage2("msg.token.replaces.pushback",
+                tokenToString(tt), tokenToString(this.pushbackToken));
             throw new RuntimeException(message);
         }
         this.pushbackToken = tt;

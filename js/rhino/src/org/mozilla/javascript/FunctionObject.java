@@ -138,10 +138,8 @@ public class FunctionObject extends NativeFunction {
                     types[2] != ScriptRuntime.FunctionClass ||
                     types[3] != Boolean.TYPE)
                 {
-                    String[] args = { methodName };
-                    String message = Context.getMessage("msg.varargs.ctor",
-                                                        args);
-                    throw Context.reportRuntimeError(message);
+                    throw Context.reportRuntimeError1(
+                        "msg.varargs.ctor", methodName);
                 }
                 parmsLength = VARARGS_CTOR;
             } else {
@@ -151,10 +149,8 @@ public class FunctionObject extends NativeFunction {
                     types[2].getComponentType() != ScriptRuntime.ObjectClass ||
                     types[3] != ScriptRuntime.FunctionClass)
                 {
-                    String[] args = { methodName };
-                    String message = Context.getMessage("msg.varargs.fun",
-                                                        args);
-                    throw Context.reportRuntimeError(message);
+                    throw Context.reportRuntimeError1(
+                        "msg.varargs.fun", methodName);
                 }
                 parmsLength = VARARGS_METHOD;
             }
@@ -176,10 +172,9 @@ public class FunctionObject extends NativeFunction {
                     type != Float.TYPE && 
                     type != Double.TYPE)
                 {
-                    // Note that long is not supported; see comments above
-                    Object[] errArgs = { methodName };
-                    throw Context.reportRuntimeError(
-                        Context.getMessage("msg.bad.parms", errArgs));
+                    // Note that long is not supported.
+                    throw Context.reportRuntimeError1("msg.bad.parms", 
+                                                      methodName);
                 }
             }
             length = parmsLength;
@@ -426,9 +421,8 @@ public class FunctionObject extends NativeFunction {
         
         // Note that the long type is not supported; see the javadoc for
         // the constructor for this class
-        Object[] errArgs = { desired.getName() };
-        throw Context.reportRuntimeError(
-                Context.getMessage("msg.cant.convert", errArgs));
+        throw Context.reportRuntimeError1
+            ("msg.cant.convert", desired.getName());
     }
 
     /**
@@ -463,8 +457,8 @@ public class FunctionObject extends NativeFunction {
                 thisObj = thisObj.getPrototype();
                 if (thisObj == null || !useDynamicScope) {
                     // Couldn't find an object to call this on.
-                    Object[] errArgs = { names[0] };
-                    String msg = Context.getMessage("msg.incompat.call", errArgs);
+                    String msg = Context.getMessage1
+                        ("msg.incompat.call", names[0]);
                     throw NativeGlobal.constructError(cx, "TypeError", msg, scope);
                 }
             }

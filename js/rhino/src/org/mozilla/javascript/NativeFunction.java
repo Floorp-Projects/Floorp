@@ -117,9 +117,8 @@ public class NativeFunction extends ScriptableObject implements Function {
         if (protoProp instanceof Scriptable && protoProp != Undefined.instance) {
             return ScriptRuntime.jsDelegatesTo(instance, (Scriptable)protoProp);
         }
-        Object[] args = { names[0] };
-        String m = ScriptRuntime.getMessage("msg.instanceof.bad.prototype", 
-                                            args);
+        String m = ScriptRuntime.getMessage1("msg.instanceof.bad.prototype", 
+                                             names[0]);
         throw NativeGlobal.constructError(Context.getContext(), "TypeError",
                                           m, instance);
     }
@@ -404,15 +403,13 @@ public class NativeFunction extends ScriptableObject implements Function {
                     if (names != null && names.length > 0
                         && names[0].length() > 0)
                     {
-                        Object[] errArgs = { new Integer((int)source.charAt(i)),
-                                             names[0] };
-                        message = Context.getMessage
-                            ("msg.no.function.ref.found.in", errArgs);
+                        message = Context.getMessage2
+                            ("msg.no.function.ref.found.in", 
+                             new Integer((int)source.charAt(i)), names[0]);
                     } else {
-                        Object[] errArgs
-                            = { new Integer((int)source.charAt(i)) };
-                        message = Context.getMessage
-                            ("msg.no.function.ref.found", errArgs);
+                        message = Context.getMessage1
+                            ("msg.no.function.ref.found", 
+                             new Integer((int)source.charAt(i)));
                     }
                     throw Context.reportRuntimeError(message);
                 }
@@ -844,9 +841,8 @@ public class NativeFunction extends ScriptableObject implements Function {
     {
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
         if (!(val instanceof NativeFunction)) {
-            Object[] errArgs = { "toString" };
-            String message = Context.getMessage("msg.incompat.call", errArgs);
-            throw NativeGlobal.constructError(cx, "TypeError", message, funObj);
+            String m = Context.getMessage1("msg.incompat.call", "toString");
+            throw NativeGlobal.constructError(cx, "TypeError", m, funObj);
         }
         if (val instanceof NativeJavaMethod) {
             return "\nfunction " + ((NativeFunction) val).jsGet_name() +
@@ -932,7 +928,7 @@ public class NativeFunction extends ScriptableObject implements Function {
             else
                 throw NativeGlobal.constructError(
                         cx, "TypeError",
-                        ScriptRuntime.getMessage("msg.arg.isnt.array", null),
+                        ScriptRuntime.getMessage0("msg.arg.isnt.array"),
                         thisObj);            
         }
         else

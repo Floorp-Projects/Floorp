@@ -145,8 +145,7 @@ public class NativeJavaPackage extends ScriptableObject {
     }
 
     public void put(int index, Scriptable start, Object value) {
-        throw Context.reportRuntimeError(
-            Context.getMessage("msg.pkg.int", null));
+        throw Context.reportRuntimeError0("msg.pkg.int");
     }
 
     public Object get(String id, Scriptable start) {
@@ -230,7 +229,7 @@ public class NativeJavaPackage extends ScriptableObject {
             }
         }
         throw Context.reportRuntimeError(
-            Context.getMessage("msg.not.java.obj", null));
+            Context.getMessage0("msg.not.java.obj"));
     }
 
     private String packageName;

@@ -133,7 +133,6 @@ public class Undefined implements Scriptable {
     }
 
     private RuntimeException reportError() {
-        String message = Context.getMessage("msg.undefined", null);
-        return Context.reportRuntimeError(message);
+        return Context.reportRuntimeError0("msg.undefined");
     }
 }

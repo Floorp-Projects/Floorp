@@ -91,9 +91,7 @@ public final class NativeCall extends ScriptableObject {
                                        Function ctorObj, boolean inNewExpr)
     {
         if (!inNewExpr) {
-            Object[] errArgs = { "Call" };
-            throw Context.reportRuntimeError(Context.getMessage
-                                             ("msg.only.from.new", errArgs));
+            throw Context.reportRuntimeError1("msg.only.from.new", "Call");
         }
         ScriptRuntime.checkDeprecated(cx, "Call");
         NativeCall result = new NativeCall();

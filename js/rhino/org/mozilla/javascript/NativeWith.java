@@ -141,18 +141,14 @@ public class NativeWith implements Scriptable {
     public static Object jsConstructor(Context cx, Object[] args, 
                                        Function ctorObj, boolean inNewExpr)
     {
-        Object[] msgArgs = { "With" };
-        throw Context.reportRuntimeError(
-            Context.getMessage("msg.cant.call.indirect", msgArgs));
+        throw Context.reportRuntimeError1("msg.cant.call.indirect", "With");
     }
 
     public static Object newWithSpecial(Context cx, Object[] args, 
                                         Function ctorObj, boolean inNewExpr)
     {
         if (!inNewExpr) {
-            Object[] errArgs = { "With" };
-            throw Context.reportRuntimeError(Context.getMessage
-                                             ("msg.only.from.new", errArgs));
+            throw Context.reportRuntimeError1("msg.only.from.new", "With");
         }
         
         ScriptRuntime.checkDeprecated(cx, "With");

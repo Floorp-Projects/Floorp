@@ -133,9 +133,8 @@ public class NodeTransformer {
                     if (n.getType() == TokenStream.LABEL) {
                         String otherId = (String)n.getProp(Node.LABEL_PROP);
                         if (id.equals(otherId)) {
-                            Object[] errArgs = { id };
-                            String message = Context.getMessage("msg.dup.label",
-                                                                errArgs);
+                            String message = Context.getMessage1(
+                                "msg.dup.label", id);
                             reportMessage(Context.getContext(), message, node, 
                                           tree, true, scope);
                             break typeswitch;
@@ -361,8 +360,7 @@ public class NodeTransformer {
                                 ("msg.bad.break", null);
                         }
                     } else if (loop != null) {
-                        message = Context.getMessage("msg.continue.nonloop", 
-                                                     null);
+                        message = Context.getMessage0("msg.continue.nonloop");
                     } else {
                         Object[] errArgs = { id };
                         message = Context.getMessage

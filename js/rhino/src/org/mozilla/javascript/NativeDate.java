@@ -1148,8 +1148,8 @@ public class NativeDate extends ScriptableObject {
                                             Function funObj) {
         if (obj == null || !(obj instanceof NativeDate)) {
             Context cx = Context.getCurrentContext();
-            Object[] args = { ((NativeFunction) funObj).names[0] };
-            String msg = Context.getMessage("msg.incompat.call", args);
+            String name = ((NativeFunction) funObj).names[0];
+            String msg = Context.getMessage1("msg.incompat.call", name);
             throw NativeGlobal.constructError(cx, "TypeError", msg, funObj);
         }
         return (NativeDate) obj;

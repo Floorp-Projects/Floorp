@@ -90,8 +90,7 @@ public class VariableTable {
             LocalVariable p = (LocalVariable)
                                 (itsVariables.elementAt(pIndex.intValue()));
             if (p.isParameter()) {
-                Object[] errorArgs = { pName };
-                String message = Context.getMessage("msg.dup.parms", errorArgs);
+                String message = Context.getMessage1("msg.dup.parms", pName);
                 Context.reportWarning(message, null, 0, null, 0);
             }
             else {  // there's a local variable with this name, blow it off

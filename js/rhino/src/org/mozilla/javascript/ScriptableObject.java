@@ -356,8 +356,7 @@ public abstract class ScriptableObject implements Scriptable {
     {
         int slotIndex = getSlot(name, name.hashCode());
         if (slotIndex == SLOT_NOT_FOUND) {
-            throw new PropertyException(
-                Context.getMessage("msg.prop.not.found", null));
+            throw PropertyException.withMessage0("msg.prop.not.found");
         }
         return slots[slotIndex].attributes;
     }
@@ -381,8 +380,7 @@ public abstract class ScriptableObject implements Scriptable {
     {
         int slotIndex = getSlot(null, index);
         if (slotIndex == SLOT_NOT_FOUND) {
-            throw new PropertyException(
-                Context.getMessage("msg.prop.not.found", null));
+            throw PropertyException.withMessage0("msg.prop.not.found");
         }
         return slots[slotIndex].attributes;
     }
@@ -418,8 +416,7 @@ public abstract class ScriptableObject implements Scriptable {
         attributes &= mask; // mask out unused bits
         int slotIndex = getSlot(name, name.hashCode());
         if (slotIndex == SLOT_NOT_FOUND) {
-            throw new PropertyException(
-                Context.getMessage("msg.prop.not.found", null));
+            throw PropertyException.withMessage0("msg.prop.not.found");
         }
         slots[slotIndex].attributes = (short) attributes;
     }
@@ -444,8 +441,7 @@ public abstract class ScriptableObject implements Scriptable {
     {
         int slotIndex = getSlot(null, index);
         if (slotIndex == SLOT_NOT_FOUND) {
-            throw new PropertyException(
-                Context.getMessage("msg.prop.not.found", null));
+            throw PropertyException.withMessage0("msg.prop.not.found");
         }
         slots[slotIndex].attributes = (short) attributes;
     }
@@ -562,9 +558,8 @@ public abstract class ScriptableObject implements Scriptable {
                              typeHint == Double.TYPE)
                         hint = "number";
                     else {
-                        Object[] args = { typeHint.toString() };
-                        throw Context.reportRuntimeError(
-                            Context.getMessage("msg.invalid.type", args));
+                        throw Context.reportRuntimeError1(
+                            "msg.invalid.type", typeHint.toString());
                     }
                     Object v = getProperty(this, "valueOf");
                     if (!(v instanceof Function))
@@ -596,10 +591,9 @@ public abstract class ScriptableObject implements Scriptable {
             // fall through to error 
         }
         Object arg = typeHint == null ? "undefined" : typeHint.toString();
-        Object[] args = { arg };
         throw NativeGlobal.constructError(
                     Context.getContext(), "TypeError",
-                    ScriptRuntime.getMessage("msg.default.value", args),
+                    ScriptRuntime.getMessage1("msg.default.value", arg),
                     this);
     }
 
@@ -782,9 +776,8 @@ public abstract class ScriptableObject implements Scriptable {
             }
         }
         if (protoCtor == null) {
-            Object[] args = { clazz.getName() };
             throw new ClassDefinitionException(
-                    Context.getMessage("msg.zero.arg.ctor", args));
+                    Context.getMessage1("msg.zero.arg.ctor", clazz.getName()));
         }
 
         Scriptable proto = (Scriptable) 
@@ -808,9 +801,9 @@ public abstract class ScriptableObject implements Scriptable {
         Member ctorMember = null;
         if (ctorMeths != null) {
             if (ctorMeths.length > 1) {
-                Object[] args = { ctorMeths[0], ctorMeths[1] };
                 throw new ClassDefinitionException(
-                    Context.getMessage("msg.multiple.ctors", args));
+                    Context.getMessage2("msg.multiple.ctors", 
+                                        ctorMeths[0], ctorMeths[1]));
             }
             ctorMember = ctorMeths[0];
         }
@@ -841,9 +834,9 @@ public abstract class ScriptableObject implements Scriptable {
             }
             if (name.equals(className)) {
                 if (ctorMember != null) {
-                    Object[] args = { ctorMember, methods[i] };
                     throw new ClassDefinitionException(
-                        Context.getMessage("msg.multiple.ctors", args));
+                        Context.getMessage2("msg.multiple.ctors", 
+                                            ctorMember, methods[i]));
                 }
                 ctorMember = methods[i];
             }
@@ -859,17 +852,16 @@ public abstract class ScriptableObject implements Scriptable {
                     ctorMember = ctors[0];
             }
             if (ctorMember == null) {
-                Object[] args = { clazz.getName() };
                 throw new ClassDefinitionException(
-                    Context.getMessage("msg.ctor.multiple.parms", args));
+                    Context.getMessage1("msg.ctor.multiple.parms",
+                                        clazz.getName()));
             }
         }
 
         FunctionObject ctor = new FunctionObject(className, ctorMember, scope);
         if (ctor.isVarArgsMethod()) {
-            Object[] args = { ctorMember.getName() };
-            String message = Context.getMessage("msg.varargs.ctor", args);
-            throw Context.reportRuntimeError(message);
+            throw Context.reportRuntimeError1
+                ("msg.varargs.ctor", ctorMember.getName());
         }
         ctor.addAsConstructor(scope, proto);
 
@@ -928,17 +920,15 @@ public abstract class ScriptableObject implements Scriptable {
                 continue;   // deal with set when we see get
             if (prefix != null && prefix.equals(getterPrefix)) {
                 if (!(proto instanceof ScriptableObject)) {
-                    Object[] args = { proto.getClass().toString(), name };
-                    throw new PropertyException(
-                        Context.getMessage("msg.extend.scriptable", args));
+                    throw PropertyException.withMessage2
+                        ("msg.extend.scriptable",                                                         proto.getClass().toString(), name);
                 }
                 Method[] setter = FunctionObject.findMethods(
                                     clazz,
                                     setterPrefix + name);
                 if (setter != null && setter.length != 1) {
-                    Object[] errArgs = { name, clazz.getName() };
-                    throw new PropertyException(
-                        Context.getMessage("msg.no.overload", errArgs));
+                    throw PropertyException.withMessage2
+                        ("msg.no.overload", name, clazz.getName());
                 }
                 int attr = ScriptableObject.PERMANENT |
                            ScriptableObject.DONTENUM  |
@@ -956,9 +946,9 @@ public abstract class ScriptableObject implements Scriptable {
                                 prefix.equals(staticFunctionPrefix))))
             {
                 if (!(proto instanceof ScriptableObject)) {
-                    Object[] args = { proto.getClass().toString(), name };
-                    throw new PropertyException(
-                        Context.getMessage("msg.extend.scriptable", args));
+                    throw PropertyException.withMessage2
+                        ("msg.extend.scriptable",
+                         proto.getClass().toString(), name);
                 }
                 if (name.startsWith("set"))
                     continue;   // deal with set when we see get
@@ -976,9 +966,8 @@ public abstract class ScriptableObject implements Scriptable {
                                     hasPrefix ? genericPrefix + setterName
                                               : setterName);
                 if (setter != null && setter.length != 1) {
-                    Object[] errArgs = { name, clazz.getName() };
-                    throw new PropertyException(
-                        Context.getMessage("msg.no.overload", errArgs));
+                    throw PropertyException.withMessage2
+                        ("msg.no.overload", name, clazz.getName());
                 }
                 if (setter == null && hasPrefix)
                     setter = FunctionObject.findMethods(
@@ -996,9 +985,8 @@ public abstract class ScriptableObject implements Scriptable {
             }
             FunctionObject f = new FunctionObject(name, methods[i], proto);
             if (f.isVarArgsConstructor()) {
-                Object[] args = { ctorMember.getName() };
-                String message = Context.getMessage("msg.varargs.fun", args);
-                throw Context.reportRuntimeError(message);
+                throw Context.reportRuntimeError1
+                    ("msg.varargs.fun", ctorMember.getName());
             }
             Scriptable dest = prefix == staticFunctionPrefix
                               ? ctor
@@ -1087,9 +1075,8 @@ public abstract class ScriptableObject implements Scriptable {
         if (setter == null)
             attributes |= ScriptableObject.READONLY;
         if (getter.length != 1 || (setter != null && setter.length != 1)) {
-            Object[] errArgs = { propertyName, clazz.getName() };
-            throw new PropertyException(
-                Context.getMessage("msg.no.overload", errArgs));
+            throw PropertyException.withMessage2
+                ("msg.no.overload", propertyName, clazz.getName());
         }
         defineProperty(propertyName, null, getter[0],
                        setter == null ? null : setter[0], attributes);
@@ -1150,43 +1137,36 @@ public abstract class ScriptableObject implements Scriptable {
             if (parmTypes.length != 1 ||
                 parmTypes[0] != ScriptableObject.class)
             {
-                Object[] args = { getter.toString() };
-                throw new PropertyException(
-                    Context.getMessage("msg.bad.getter.parms", args));
+                throw PropertyException.withMessage1
+                    ("msg.bad.getter.parms", getter.toString());
             }
         } else if (delegateTo != null) {
-            Object[] args = { getter.toString() };
-            throw new PropertyException(
-                Context.getMessage("msg.obj.getter.parms", args));
+            throw PropertyException.withMessage1
+                ("msg.obj.getter.parms", getter.toString());
         }
         if (setter != null) {
             flags |= Slot.HAS_SETTER;
             if ((delegateTo == HAS_STATIC_ACCESSORS) !=
                 (Modifier.isStatic(setter.getModifiers())))
             {
-                throw new PropertyException(
-                    Context.getMessage("msg.getter.static", null));
+                throw PropertyException.withMessage0("msg.getter.static");
             }
             parmTypes = setter.getParameterTypes();
             if (parmTypes.length == 2) {
                 if (parmTypes[0] != ScriptableObject.class) {
-                    throw new PropertyException(
-                        Context.getMessage("msg.setter2.parms", null));
+                    throw PropertyException.withMessage0("msg.setter2.parms");
                 }
                 if (delegateTo == null) {
-                    Object[] args = { setter.toString() };
-                    throw new PropertyException(
-                        Context.getMessage("msg.setter1.parms", args));
+                    throw PropertyException.withMessage1
+                        ("msg.setter1.parms", setter.toString());
                 }
             } else if (parmTypes.length == 1) {
                 if (delegateTo != null) {
-                    Object[] args = { setter.toString() };
-                    throw new PropertyException(
-                        Context.getMessage("msg.setter2.expected", args));
+                    throw PropertyException.withMessage1
+                        ("msg.setter2.expected", setter.toString());
                 }
             } else {
-                throw new PropertyException(
-                    Context.getMessage("msg.setter.parms", null));
+                throw PropertyException.withMessage0("msg.setter.parms");
             }
         }
         int slotIndex = getSlotToSet(propertyName,
@@ -1226,14 +1206,12 @@ public abstract class ScriptableObject implements Scriptable {
             String name = names[i];
             Method[] m = FunctionObject.findMethods(clazz, name);
             if (m == null) {
-                Object[] errArgs = { name, clazz.getName() };
-                throw new PropertyException(
-                    Context.getMessage("msg.method.not.found", errArgs));
+                throw PropertyException.withMessage2
+                    ("msg.method.not.found", name, clazz.getName());
             }
             if (m.length > 1) {
-                Object[] errArgs = { name, clazz.getName() };
-                throw new PropertyException(
-                    Context.getMessage("msg.no.overload", errArgs));
+                throw PropertyException.withMessage2
+                    ("msg.no.overload", name, clazz.getName());
             }
             FunctionObject f = new FunctionObject(name, m[0], this);
             defineProperty(name, f, attributes);
@@ -1639,8 +1617,7 @@ public abstract class ScriptableObject implements Scriptable {
     private synchronized int addSlot(String id, int index, boolean getterSlot)
     {
         if (count == -1)
-            throw Context.reportRuntimeError(Context.getMessage
-                                             ("msg.add.sealed", null));
+            throw Context.reportRuntimeError0("msg.add.sealed");
         int start = (index & 0x7fffffff) % slots.length;
         int i = start;
         do {
@@ -1678,8 +1655,7 @@ public abstract class ScriptableObject implements Scriptable {
      */
     private synchronized void removeSlot(String name, int index) {
         if (count == -1)
-            throw Context.reportRuntimeError(Context.getMessage
-                                             ("msg.remove.sealed", null));
+            throw Context.reportRuntimeError0("msg.remove.sealed");
         int slotIndex = getSlot(name, index);
         if (slotIndex == SLOT_NOT_FOUND)
             return;

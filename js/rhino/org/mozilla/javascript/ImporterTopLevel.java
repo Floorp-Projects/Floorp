@@ -106,10 +106,8 @@ public class ImporterTopLevel extends ScriptableObject {
                 if (result == NOT_FOUND) {
                     result = v;
                 } else {
-                    String[] args = { result.toString(), v.toString() };
-                    throw Context.reportRuntimeError(
-                        Context.getMessage("msg.ambig.import", 
-                        args));
+                    throw Context.reportRuntimeError2(
+                        "msg.ambig.import", result.toString(), v.toString());
                 }
             }
         }
@@ -121,15 +119,14 @@ public class ImporterTopLevel extends ScriptableObject {
         for (int i=0; i<args.length; i++) {
             Object cl = args[i];
             if (!(cl instanceof NativeJavaClass)) {
-                String[] eargs = { Context.toString(cl) };
-                throw Context.reportRuntimeError(Context.getMessage("msg.not.class", eargs));
+                throw Context.reportRuntimeError1(
+                    "msg.not.class", Context.toString(cl));
             }
             String s = ((NativeJavaClass) cl).getClassObject().getName();
             String n = s.substring(s.lastIndexOf('.')+1);
             Object val = thisObj.get(n, thisObj);
             if (val != NOT_FOUND && val != cl) {
-                String[] eargs = { n };
-                throw Context.reportRuntimeError(Context.getMessage("msg.prop.defined", eargs));
+                throw Context.reportRuntimeError1("msg.prop.defined", n);
             }
             //thisObj.defineProperty(n, cl, DONTENUM);
             thisObj.put(n,thisObj,cl);
@@ -150,8 +147,8 @@ public class ImporterTopLevel extends ScriptableObject {
         for (int i=0; i<args.length; i++) {
             Object pkg = args[i];
             if (!(pkg instanceof NativeJavaPackage)) {
-                String[] eargs = { Context.toString(pkg) };
-                throw Context.reportRuntimeError(Context.getMessage("msg.not.pkg", eargs));
+                throw Context.reportRuntimeError1(
+                    "msg.not.pkg", Context.toString(pkg));
             }
             Object[] elements = cx.getElements(importedPackages);
             for (int j=0; j < elements.length; j++) {

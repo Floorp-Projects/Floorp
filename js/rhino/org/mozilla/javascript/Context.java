@@ -532,6 +532,28 @@ public final class Context {
         }
     }
 
+    static EvaluatorException reportRuntimeError0(String messageId) {
+        return reportRuntimeError(getMessage0(messageId));
+    }
+
+    static EvaluatorException reportRuntimeError1
+        (String messageId, Object arg1) 
+    {
+        return reportRuntimeError(getMessage1(messageId, arg1));
+    }
+
+    static EvaluatorException reportRuntimeError2
+        (String messageId, Object arg1, Object arg2) 
+    {
+        return reportRuntimeError(getMessage2(messageId, arg1, arg2));
+    }
+
+    static EvaluatorException reportRuntimeError3
+        (String messageId, Object arg1, Object arg2, Object arg3) 
+    {
+        return reportRuntimeError(getMessage3(messageId, arg1, arg2, arg3));
+    }
+
     /**
      * Report a runtime error using the error reporter for the current thread.
      *
@@ -1010,13 +1032,11 @@ public final class Context {
     {
         Object ctorVal = ScriptRuntime.getTopLevelProp(scope, constructorName);
         if (ctorVal == Scriptable.NOT_FOUND) {
-            Object[] errArgs = { constructorName };
-            String message = getMessage("msg.ctor.not.found", errArgs);
+            String message = getMessage1("msg.ctor.not.found", constructorName);
             throw new PropertyException(message);
         }
         if (!(ctorVal instanceof Function)) {
-            Object[] errArgs = { constructorName };
-            String message = getMessage("msg.not.ctor", errArgs);
+            String message = getMessage1("msg.not.ctor", constructorName);
             throw new NotAFunctionException(message);
         }
         Function ctor = (Function) ctorVal;
@@ -1528,6 +1548,26 @@ public final class Context {
     }
     
 
+
+    static String getMessage0(String messageId) {
+        return getMessage(messageId, null);
+    }
+
+    static String getMessage1(String messageId, Object arg1) {
+        Object[] arguments = {arg1};
+        return getMessage(messageId, arguments);
+    }
+
+    static String getMessage2(String messageId, Object arg1, Object arg2) {
+        Object[] arguments = {arg1, arg2};
+        return getMessage(messageId, arguments);
+    }
+
+    static String getMessage3
+        (String messageId, Object arg1, Object arg2, Object arg3) {
+        Object[] arguments = {arg1, arg2, arg3};
+        return getMessage(messageId, arguments);
+    }
     /**
      * Internal method that reports an error for missing calls to
      * enter().

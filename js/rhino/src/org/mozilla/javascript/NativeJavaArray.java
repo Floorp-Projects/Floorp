@@ -88,11 +88,8 @@ public class NativeJavaArray extends NativeJavaObject {
         if (result == NOT_FOUND && 
             !ScriptRuntime.hasProp(getPrototype(), id)) 
         {
-            Object errArgs[] = { array.getClass().getName(), 
-                                 id };
-            throw Context.reportRuntimeError(
-                Context.getMessage("msg.java.member.not.found",
-                                   errArgs));
+            throw Context.reportRuntimeError2(
+                "msg.java.member.not.found", array.getClass().getName(), id);
         }
         return result;  
     }

@@ -47,4 +47,19 @@ public class PropertyException extends Exception {
         super(detail);
     }
 
+    static PropertyException withMessage0(String messageId) {
+        return new PropertyException(Context.getMessage0(messageId));
+    }
+
+    static PropertyException withMessage1(String messageId, Object arg1) {
+        return new PropertyException(Context.getMessage1(messageId, arg1));
+    }
+
+    static PropertyException withMessage2
+        (String messageId, Object arg1, Object arg2) 
+    {
+        return new PropertyException
+            (Context.getMessage2(messageId, arg1, arg2));
+    }
+
 }

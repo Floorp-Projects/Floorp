@@ -219,8 +219,7 @@ public class NativeArray extends ScriptableObject {
             else {
                 long len = ScriptRuntime.toUint32(args[0]);
                 if (len != (((Number)(args[0])).doubleValue()))
-                    throw Context.reportRuntimeError(Context.getMessage
-                                     ("msg.arraylength.bad", null));
+                    throw Context.reportRuntimeError0("msg.arraylength.bad");
                 return new NativeArray(len);
             }
         }
@@ -242,13 +241,11 @@ public class NativeArray extends ScriptableObject {
          */
 
         if (!(val instanceof Number))
-            throw Context.reportRuntimeError(Context.getMessage
-                                     ("msg.arraylength.bad", null));
+            throw Context.reportRuntimeError0("msg.arraylength.bad");
         
         long longVal = ScriptRuntime.toUint32(val);
         if (longVal != (((Number)val).doubleValue()))
-            throw Context.reportRuntimeError(Context.getMessage
-                             ("msg.arraylength.bad", null));
+            throw Context.reportRuntimeError0("msg.arraylength.bad");
 
         if (longVal < length) {
             // remove all properties between longVal and length

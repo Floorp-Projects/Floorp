@@ -386,8 +386,7 @@ public class NativeGlobal {
                               Object[] args, Function funObj)
         throws JavaScriptException
     {
-        Object[] a = { "eval" };
-        String m = ScriptRuntime.getMessage("msg.cant.call.indirect", a);
+        String m = ScriptRuntime.getMessage1("msg.cant.call.indirect", "eval");
         throw NativeGlobal.constructError(cx, "EvalError", m, funObj);
     }
     
@@ -405,7 +404,7 @@ public class NativeGlobal {
             return Undefined.instance;
         Object x = args[0];
         if (!(x instanceof String)) {
-            String message = Context.getMessage("msg.eval.nonstring", null);
+            String message = Context.getMessage0("msg.eval.nonstring");
             Context.reportWarning(message);
             return x;
         }
@@ -435,7 +434,7 @@ public class NativeGlobal {
             // infinite looping on while(true) { eval('foo bar') } -
             // so we throw an EvaluatorException.
             if (script == null) {
-                String message = Context.getMessage("msg.syntax", null);
+                String message = Context.getMessage0("msg.syntax");
                 throw new EvaluatorException(message);
             }
 
@@ -544,21 +543,18 @@ public class NativeGlobal {
                 R.append(C);
             } else {
                 if ((C >= 0xDC00) && (C <= 0xDFFF)) {
-                    throw cx.reportRuntimeError(
-                        cx.getMessage("msg.bad.uri", null));
+                    throw cx.reportRuntimeError0("msg.bad.uri");
                 }
                 if ((C < 0xD800) || (C > 0xDBFF))
                     V = C;
                 else {
                     k++;
                     if (k == str.length()) {
-                        throw cx.reportRuntimeError(
-                            cx.getMessage("msg.bad.uri", null));
+                        throw cx.reportRuntimeError0("msg.bad.uri");
                     }
                     C2 = str.charAt(k);
                     if ((C2 < 0xDC00) || (C2 > 0xDFFF)) {
-                        throw cx.reportRuntimeError(
-                            cx.getMessage("msg.bad.uri", null));
+                        throw cx.reportRuntimeError0("msg.bad.uri");
                     }
                     V = ((C - 0xD800) << 10) + (C2 - 0xDC00) + 0x10000;
                 }
@@ -607,11 +603,9 @@ public class NativeGlobal {
             if (C == '%') {
                 start = k;
                 if ((k + 2) >= str.length())
-                    throw cx.reportRuntimeError(
-                        cx.getMessage("msg.bad.uri", null));
+                    throw cx.reportRuntimeError0("msg.bad.uri");
                 if (!isHex(str.charAt(k + 1)) || !isHex(str.charAt(k + 2)))
-                    throw cx.reportRuntimeError(
-                        cx.getMessage("msg.bad.uri", null));
+                    throw cx.reportRuntimeError0("msg.bad.uri");
                 B = unHex(str.charAt(k + 1)) * 16 + unHex(str.charAt(k + 2));
                 k += 2;
                 if ((B & 0x80) == 0)
@@ -620,26 +614,21 @@ public class NativeGlobal {
                     n = 1;
                     while ((B & (0x80 >>> n)) != 0) n++;
                     if ((n == 1) || (n > 6))
-                        throw cx.reportRuntimeError(
-                            cx.getMessage("msg.bad.uri", null));
+                        throw cx.reportRuntimeError0("msg.bad.uri");
                     octets[0] = (char)B;
                     if ((k + 3 * (n - 1)) >= str.length())
-                        throw cx.reportRuntimeError(
-                            cx.getMessage("msg.bad.uri", null));
+                        throw cx.reportRuntimeError0("msg.bad.uri");
                     for (j = 1; j < n; j++) {
                         k++;
                         if (str.charAt(k) != '%')
-                            throw cx.reportRuntimeError(
-                                cx.getMessage("msg.bad.uri", null));
+                            throw cx.reportRuntimeError0("msg.bad.uri");
                         if (!isHex(str.charAt(k + 1)) 
                             || !isHex(str.charAt(k + 2)))
-                            throw cx.reportRuntimeError(
-                                cx.getMessage("msg.bad.uri", null));
+                            throw cx.reportRuntimeError0("msg.bad.uri");
                         B = unHex(str.charAt(k + 1)) * 16 
                             + unHex(str.charAt(k + 2));
                         if ((B & 0xC0) != 0x80)
-                            throw cx.reportRuntimeError(
-                                cx.getMessage("msg.bad.uri", null));
+                            throw cx.reportRuntimeError0("msg.bad.uri");
                         k += 2;
                         octets[j] = (char)B;
                     }
@@ -647,8 +636,7 @@ public class NativeGlobal {
                     if (V >= 0x10000) {
                         V -= 0x10000;
                         if (V > 0xFFFFF)
-                            throw cx.reportRuntimeError(
-                                cx.getMessage("msg.bad.uri", null));
+                            throw cx.reportRuntimeError0("msg.bad.uri");
                         C = (char)((V & 0x3FF) + 0xDC00);
                         H = (char)((V >>> 10) + 0xD800);
                         R.append(H);

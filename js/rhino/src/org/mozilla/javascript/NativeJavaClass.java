@@ -172,9 +172,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 	        Constructor ctor = (Constructor) member;
 	        if (ctor == null) {
 	            String sig = NativeJavaMethod.scriptSignature(args);
-	            Object errArgs[] = { classObject.getName(), sig };
-	            throw Context.reportRuntimeError(Context.getMessage(
-	                "msg.no.java.ctor", errArgs));
+                throw Context.reportRuntimeError2(
+                    "msg.no.java.ctor", classObject.getName(), sig);
 	        }
 
 	        // Found the constructor, so try invoking it.
@@ -200,10 +199,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                     if (m != null)
                         msg = m;
                 }
-	              Object[] errArgs = { msg, classObject.getName() };
-	              throw Context.reportRuntimeError(Context.getMessage
-	                                         ("msg.cant.instantiate",
-	                                          errArgs));
+                  throw Context.reportRuntimeError2(
+                      "msg.cant.instantiate", msg, classObject.getName());
         }
     }
 
@@ -230,24 +227,19 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                                                    classObject);
 
         } catch (InstantiationException instEx) {
-            Object[] errArgs = { instEx.getMessage(), 
-                                 classObject.getName() };
-            throw Context.reportRuntimeError(Context.getMessage
-                                             ("msg.cant.instantiate",
-                                              errArgs));
+            throw Context.reportRuntimeError2(
+                "msg.cant.instantiate", 
+                instEx.getMessage(), classObject.getName());
         } catch (IllegalArgumentException argEx) {
             String signature = NativeJavaMethod.scriptSignature(args);
             String ctorString = ctor.toString();
-            Object[] errArgs = { argEx.getMessage(),ctorString,signature };
-            throw Context.reportRuntimeError(Context.getMessage
-                                             ("msg.bad.ctor.sig",
-                                              errArgs));
+            throw Context.reportRuntimeError3(
+                "msg.bad.ctor.sig", argEx.getMessage(), ctorString, signature);
         } catch (InvocationTargetException e) {
             throw JavaScriptException.wrapException(scope, e);
         } catch (IllegalAccessException accessEx) {
-            Object[] errArgs = { accessEx.getMessage() };
-            throw Context.reportRuntimeError(Context.getMessage
-                                             ("msg.java.internal.private", errArgs));
+            throw Context.reportRuntimeError1(
+                "msg.java.internal.private", accessEx.getMessage());
         }
     }
 

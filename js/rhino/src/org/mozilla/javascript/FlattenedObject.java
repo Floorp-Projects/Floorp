@@ -306,8 +306,7 @@ public class FlattenedObject {
                JavaScriptException
     {
         if (!hasProperty(id)) {
-            throw new PropertyException(
-                Context.getMessage("msg.prop.not.found", null));
+            throw PropertyException.withMessage0("msg.prop.not.found");
         }
         Object o = getProperty(id);
         if (o instanceof FlattenedObject)

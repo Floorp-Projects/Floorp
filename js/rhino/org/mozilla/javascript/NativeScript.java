@@ -120,9 +120,8 @@ public class NativeScript extends NativeFunction implements Script {
     }
 
     public Object jsFunction_exec() throws JavaScriptException {
-        Object[] msgArgs = { "exec" };
-        throw Context.reportRuntimeError(
-            Context.getMessage("msg.cant.call.indirect", msgArgs));
+        throw Context.reportRuntimeError1
+            ("msg.cant.call.indirect", "exec");
     }
 
     public static Object jsFunction_toString(Context cx, Scriptable thisObj,
@@ -163,8 +162,7 @@ public class NativeScript extends NativeFunction implements Script {
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
         throws JavaScriptException
     {
-        String message = Context.getMessage("msg.script.is.not.constructor", null);
-        throw Context.reportRuntimeError(message);
+        throw Context.reportRuntimeError0("msg.script.is.not.constructor");
     }
 
     private Script script;

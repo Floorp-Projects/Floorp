@@ -1036,10 +1036,10 @@ public class IRFactory {
         if (scope != null)
             throw NativeGlobal.constructError(
                         Context.getContext(), "SyntaxError",
-                        ScriptRuntime.getMessage(msgResource, null),
+                        ScriptRuntime.getMessage0(msgResource),
                         scope);
         else {
-            String message = Context.getMessage(msgResource, null);
+            String message = Context.getMessage0(msgResource);
             Context.reportError(message, ts.getSourceName(), ts.getLineno(), 
                                 ts.getLine(), ts.getOffset());
         }
