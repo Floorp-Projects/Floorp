@@ -195,7 +195,8 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
 	  pathResult +=path;
 #endif
 
-  pathResult += folder;
+  if (folder != "")
+	pathResult += folder;
   return NS_OK;
 }
 
