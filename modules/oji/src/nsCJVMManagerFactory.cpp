@@ -31,9 +31,7 @@ static NS_DEFINE_IID(kIServiceManagerIID,    NS_ISERVICEMANAGER_IID);
 static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCJVMManagerCID,  NS_JVMMANAGER_CID);
 
-nsIFactory  *nsCJVMManagerFactory::m_pNSIFactory = NULL;
-nsIServiceManager  *g_pNSIServiceManager = NULL;
-
+nsIServiceManager  *theServiceManager = NULL;
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
  * NSGetFactory:
@@ -47,21 +45,25 @@ NSGetFactory(nsISupports* serviceMgr,
              const char *aProgID,
              nsIFactory **aFactory)
 {
-    nsresult res = NS_OK;    
     if (!aClass.Equals(kCJVMManagerCID)) {
         return NS_ERROR_FACTORY_NOT_LOADED;     // XXX right error?
     }
+
+	// first off, cache a reference to the service manager for later use.
+	if (theServiceManager == NULL) {
+		if (serviceMgr->QueryInterface(kIServiceManagerIID, (void**)&theServiceManager) != NS_OK)
+			theServiceManager = NULL;
+	}
+    
+    // now, create the JVM manager factory.
     nsCJVMManagerFactory* factory = new nsCJVMManagerFactory();
     if (factory == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
+        
     NS_ADDREF(factory);
     *aFactory = factory;
-    res = serviceMgr->QueryInterface(kIServiceManagerIID, (void**)&g_pNSIServiceManager);
-    if ((NS_OK == res) && (nsnull != g_pNSIServiceManager))
-    {
-      return NS_OK;
-    }
-    return res;
+    
+    return NS_OK;
 }
 
 extern "C" NS_EXPORT PRBool
@@ -132,37 +134,8 @@ nsCJVMManagerFactory::LockFactory(PRBool aLock)
 nsCJVMManagerFactory::nsCJVMManagerFactory(void)
 {
       NS_INIT_REFCNT();
-
-// this code is totally bogus in the new service manager world.
-#if 0
-      if( m_pNSIFactory != NULL)
-      {
-         return;
-      }
-
-      nsresult     err         = NS_OK;
-      NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
-      err = this->QueryInterface(kIFactoryIID, (void**)&m_pNSIFactory);
-      if ( (err == NS_OK) && (m_pNSIFactory != NULL) )
-      {
-         NS_DEFINE_CID(kCJVMManagerCID, NS_CCAPSMANAGER_CID);
-         nsComponentManager::RegisterFactory(kCJVMManagerCID, NULL, NULL,
-                                     m_pNSIFactory, PR_FALSE);
-      }
-#endif
 }
 
 nsCJVMManagerFactory::~nsCJVMManagerFactory()
 {
-// this code is totally wrong. we're in a destructor, and whatever our reference count is our object is going
-// away.
-#if 0
-    if(mRefCnt == 0)
-    {
-      NS_DEFINE_CID(kCJVMManagerCID, NS_CCAPSMANAGER_CID);
-      nsComponentManager::UnregisterFactory(kCJVMManagerCID, (nsIFactory *)m_pNSIFactory);
-      
-    }
-#endif
 }
