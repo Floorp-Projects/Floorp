@@ -1222,14 +1222,19 @@ NS_IMETHODIMP nsWebShell::Create()
   WEB_TRACE(WEB_TRACE_CALLS,
             ("nsWebShell::Init: this=%p", this));
 
-  // HACK....force the uri loader to give us a load cookie for this webshell...then get it's
+  // HACK....force the uri loader to give us a load cookie for this webshell...then get its
   // doc loader and store it...as more of the docshell lands, we'll be able to get rid
   // of this hack...
-  nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID);
-  uriLoader->GetDocumentLoaderForContext(NS_STATIC_CAST(nsIWebShell*, this),
-                                         getter_AddRefs(mDocLoader));
+  nsresult rv;
+  nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContentViewerContainer> shellAsContainer = do_QueryInterface(NS_STATIC_CAST(nsIWebShell*, this));
+  rv = uriLoader->GetDocumentLoaderForContext(NS_STATIC_CAST(nsIWebShell*, this),
+                                              getter_AddRefs(mDocLoader));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContentViewerContainer> shellAsContainer;
+  CallQueryInterface(this, NS_STATIC_CAST(nsIContentViewerContainer**, getter_AddRefs(shellAsContainer)));
   // Set the webshell as the default IContentViewerContainer for the loader...
   mDocLoader->SetContainer(shellAsContainer);
 

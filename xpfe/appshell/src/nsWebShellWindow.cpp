@@ -327,7 +327,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                          nsnull,
                          nsnull,
                          nsnull);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
                      
   return rv;
