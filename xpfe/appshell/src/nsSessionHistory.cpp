@@ -27,6 +27,7 @@
 #include "nsIFactory.h"
 #include "nsCRT.h"
 #include "nscore.h"
+#include "nsCOMPtr.h"
 
 // Interface ID for nsIHistoryEntry
 #define NS_IHISTORY_ENTRY_IID \
@@ -197,7 +198,7 @@ nsHistoryEntry::~nsHistoryEntry()
    NS_IF_RELEASE(mHistoryList);
    NS_IF_RELEASE(mHistoryState);
 
-   DestroyChildren();
+  DestroyChildren();
 }
 
 //NS_IMPL_ADDREF(nsHistoryEntry)
@@ -249,7 +250,9 @@ nsHistoryEntry::GetWebShell(nsIWebShell *& aResult)
 nsresult
 nsHistoryEntry::SetWebShell(nsIWebShell * aWebShell)
 {
+  NS_IF_RELEASE(mWS);
   mWS = aWebShell;
+  NS_IF_ADDREF(aWebShell);
   return NS_OK;
 }
 
@@ -424,14 +427,14 @@ GenerateTree(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISessionHistor
 /* Get the historyentry corresponding to a WebShell */
 nsHistoryEntry *
 nsHistoryEntry::GetHistoryForWS(nsIWebShell * aWebShell) {
-  nsIWebShell * cWS = nsnull;
+  nsCOMPtr<nsIWebShell> cWS = nsnull;
   nsHistoryEntry * result = nsnull;
 
 
   /* Get the webshell  for the current entry */
-  GetWebShell(cWS);
+  GetWebShell(*getter_AddRefs(cWS));
 
-  if (cWS == aWebShell) {
+  if ((cWS.get()) == aWebShell) {
      return this;
   }
 
@@ -508,13 +511,14 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
          if ((isInSHist && isLoadingDoc) || aIsReload) {
             if (APP_DEBUG) printf("SessionHistory::Load Loading URL %s in webshell %x\n", cSURL->ToNewCString(), (unsigned int) prev);
 
-            /* Get the child count of the webshell for a later use */
-            PRInt32  ccount=0;
-            prev->GetChildCount(ccount);
+            /* Get the child count of the current page and previous page */
+            PRInt32  pcount=0, ccount=0;
+            prev->GetChildCount(pcount);
+			ccount = cur->GetChildCnt();
             nsISupports * historyObject = nsnull;
 			GetHistoryState(&historyObject);
             prev->LoadURL(cURL, nsnull, PR_FALSE, (nsLoadFlags) (aIsReload?nsIChannel::LOAD_NORMAL:LOAD_HISTORY), 0, historyObject);
-            if (aIsReload && (ccount > 0)) {
+            if (aIsReload && (pcount > 0)) {
               /* If this is a reload, on a page with frames, you want to return
                * true so that consecutive calls by the frame children in to 
                * session History will get compared properly. We must fall into
@@ -523,6 +527,8 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
                if (APP_DEBUG)  printf("Returning from Load(). Located a webshell with frame children\n");
                return PR_TRUE;
             }
+
+			
          }
          else if (!isInSHist && isLoadingDoc) {
            prev->SetURL(cURL);
