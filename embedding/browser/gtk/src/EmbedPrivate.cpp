@@ -168,8 +168,7 @@ EmbedPrivate::Realize(PRBool *aAlreadyRealized)
   *aAlreadyRealized = PR_FALSE;
 
   // create the offscreen window if we have to
-  if (!sOffscreenWindow)
-    CreateOffscreenWindow();
+  EnsureOffscreenWindow();
 
   // Have we ever been initialized before?  If so then just reparetn
   // from the offscreen window.
@@ -786,8 +785,10 @@ EmbedPrivate::ShutdownProfile(void)
 
 /* static */
 void
-EmbedPrivate::CreateOffscreenWindow(void)
+EmbedPrivate::EnsureOffscreenWindow(void)
 {
+  if (sOffscreenWindow)
+    return;
   sOffscreenWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_widget_realize(sOffscreenWindow);
   sOffscreenFixed = gtk_fixed_new();
@@ -799,6 +800,8 @@ EmbedPrivate::CreateOffscreenWindow(void)
 void
 EmbedPrivate::DestroyOffscreenWindow(void)
 {
+  if (!sOffscreenWindow)
+    return;
   gtk_widget_destroy(sOffscreenWindow);
   sOffscreenWindow = 0;
 }
