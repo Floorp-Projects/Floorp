@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/skin/default
 
 EXPORT_RESOURCE_SAMPLES = \
-		newsHost.gif \
+		newshost.gif \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

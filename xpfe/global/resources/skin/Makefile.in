@@ -31,12 +31,12 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/moreCols.gif \
 		$(srcdir)/moreCols_mo.gif \
 		$(srcdir)/moreCols_dis.gif \
-		$(srcdir)/scrollUp.gif \
-		$(srcdir)/scrollUp_mo.gif \
-		$(srcdir)/scrollUp_dis.gif \
-		$(srcdir)/scrollDown.gif \
-		$(srcdir)/scrollDown_mo.gif \
-		$(srcdir)/scrollDown_dis.gif \
+		$(srcdir)/scroll-up.gif \
+		$(srcdir)/scroll-up-hover.gif \
+		$(srcdir)/scroll-up-disabled.gif \
+		$(srcdir)/scroll-down.gif \
+		$(srcdir)/scroll-down-hover.gif \
+		$(srcdir)/scroll-down-disabled.gif \
 		$(srcdir)/scroll-left.gif \
 		$(srcdir)/scroll-left-hover.gif \
 		$(srcdir)/scroll-left-disabled.gif \
@@ -49,12 +49,12 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/scroll-thumb-vert.gif \
 		$(srcdir)/scroll-thumb-vert-hover.gif \
 		$(srcdir)/scroll-thumb-vert-disabled.gif \
-		$(srcdir)/menuArrow.gif \
-		$(srcdir)/menuArrow_mo.gif \
-		$(srcdir)/menuArrow_dis.gif \
-		$(srcdir)/menuCheck.gif \
-		$(srcdir)/menuCheck_mo.gif \
-		$(srcdir)/menuCheck_dis.gif \
+		$(srcdir)/menu-arrow.gif \
+		$(srcdir)/menu-arrow-hover.gif \
+		$(srcdir)/menu-arrow-disabled.gif \
+		$(srcdir)/menu-check.gif \
+		$(srcdir)/menu-check-hover.gif \
+		$(srcdir)/menu-check-disabled.gif \
 		$(srcdir)/opentwisty.gif \
 		$(srcdir)/closedtwisty.gif \
 		$(srcdir)/alert-icon.gif \
@@ -68,14 +68,14 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/grippy-horizontal-before.gif \
 		$(srcdir)/grippy-vertical-after.gif \
 		$(srcdir)/grippy-vertical-before.gif \
-		$(srcdir)/TB_MiniAddr.gif \
-		$(srcdir)/TB_MiniComp.gif \
-		$(srcdir)/TB_MiniMail.gif \
-		$(srcdir)/TB_MiniNav.gif \
-		$(srcdir)/TB_MiniTab.gif \
-		$(srcdir)/TB_Tab.gif \
-		$(srcdir)/TB_popup.gif \
-		$(srcdir)/TB_Tab_mo.gif \
+		$(srcdir)/taskbar-addressbook.gif \
+		$(srcdir)/taskbar-composer.gif \
+		$(srcdir)/taskbar-mail.gif \
+		$(srcdir)/taskbar-navigator.gif \
+		$(srcdir)/taskbar-tab-minimized.gif \
+		$(srcdir)/taskbar-tab.gif \
+		$(srcdir)/taskbar-popup-arrow.gif \
+		$(srcdir)/taskbar-tab-hover.gif \
 		$(NULL)
 
 EXPORT_CHROME	= $(srcdir)/xul.css
