@@ -349,33 +349,33 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::GetGrayscale(PRBool &aGrayscale)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecXlib::GetLandscape(PRBool &landscape)
+NS_IMETHODIMP nsDeviceContextSpecXlib::GetLandscape(PRBool &aLandscape)
 {
-  landscape = (mOrientation == NS_LANDSCAPE);
+  aLandscape = (mOrientation == NS_LANDSCAPE);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecXlib::GetTopMargin(float &value)      
+NS_IMETHODIMP nsDeviceContextSpecXlib::GetTopMargin(float &aValue)      
 {
-  value = mTop;
+  aValue = mTop;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecXlib::GetBottomMargin(float &value)      
+NS_IMETHODIMP nsDeviceContextSpecXlib::GetBottomMargin(float &aValue)      
 {
-  value = mBottom;
+  aValue = mBottom;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecXlib::GetRightMargin(float &value)      
+NS_IMETHODIMP nsDeviceContextSpecXlib::GetRightMargin(float &aValue)      
 {
-  value = mRight;
+  aValue = mRight;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecXlib::GetLeftMargin(float &value)      
+NS_IMETHODIMP nsDeviceContextSpecXlib::GetLeftMargin(float &aValue)      
 {
-  value = mLeft;
+  aValue = mLeft;
   return NS_OK;
 }
 
