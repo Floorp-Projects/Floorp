@@ -422,7 +422,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     NS_ASSERTION(profileDirSet, "Invalid profileDirSet");   
 
     nsresult rv;
-    char* cmdResult = nsnull;
+    nsXPIDLCString cmdResult;
     nsFileSpec currProfileDirSpec;
 
 #ifdef DEBUG_profile_verbose
@@ -435,7 +435,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     // apprunner -P profilename 
     // runs the app using the profile <profilename> 
     // remembers profile for next time
-    rv = cmdLineArgs->GetCmdLineValue(PROFILE_CMD_LINE_ARG, &cmdResult);
+    rv = cmdLineArgs->GetCmdLineValue(PROFILE_CMD_LINE_ARG, getter_Copies(cmdResult));
     if (NS_SUCCEEDED(rv))
     {
         if (cmdResult) {
@@ -490,11 +490,11 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     // runs app using that profile 
     // remembers profile for next time
 
-    rv = cmdLineArgs->GetCmdLineValue(CREATE_PROFILE_CMD_LINE_ARG, &cmdResult);
+    rv = cmdLineArgs->GetCmdLineValue(CREATE_PROFILE_CMD_LINE_ARG, getter_Copies(cmdResult));
     if (NS_SUCCEEDED(rv))
     {
         if (cmdResult) {
-            nsAutoString currProfileName; currProfileName.AssignWithConversion(strtok(cmdResult, " "));
+            nsAutoString currProfileName; currProfileName.AssignWithConversion(strtok(NS_CONST_CAST(char*,(const char*)cmdResult), " "));
             nsAutoString currProfileDirString; currProfileDirString.AssignWithConversion(strtok(NULL, " "));
         
             if (!currProfileDirString.IsEmpty()) {
@@ -539,7 +539,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     }
 
     // Start Profile Manager
-    rv = cmdLineArgs->GetCmdLineValue(PROFILE_MANAGER_CMD_LINE_ARG, &cmdResult);
+    rv = cmdLineArgs->GetCmdLineValue(PROFILE_MANAGER_CMD_LINE_ARG, getter_Copies(cmdResult));
     if (NS_SUCCEEDED(rv))
     {        
         if (cmdResult) {
@@ -548,7 +548,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     }
     
     // Start Profile Selection
-    rv = cmdLineArgs->GetCmdLineValue(PROFILE_SELECTION_CMD_LINE_ARG, &cmdResult);
+    rv = cmdLineArgs->GetCmdLineValue(PROFILE_SELECTION_CMD_LINE_ARG, getter_Copies(cmdResult));
     if (NS_SUCCEEDED(rv))
     {        
         if (cmdResult) {
@@ -558,7 +558,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     
     
     // Start Profile Wizard
-    rv = cmdLineArgs->GetCmdLineValue(PROFILE_WIZARD_CMD_LINE_ARG, &cmdResult);
+    rv = cmdLineArgs->GetCmdLineValue(PROFILE_WIZARD_CMD_LINE_ARG, getter_Copies(cmdResult));
     if (NS_SUCCEEDED(rv))
     {        
         if (cmdResult) {
@@ -567,7 +567,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     }
 
     // Start Migaration activity
-    rv = cmdLineArgs->GetCmdLineValue(INSTALLER_CMD_LINE_ARG, &cmdResult);
+    rv = cmdLineArgs->GetCmdLineValue(INSTALLER_CMD_LINE_ARG, getter_Copies(cmdResult));
     if (NS_SUCCEEDED(rv))
     {        
         if (cmdResult) {
