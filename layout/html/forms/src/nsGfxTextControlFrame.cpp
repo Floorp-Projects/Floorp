@@ -560,7 +560,6 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   mWebShell->SetMarginHeight(0);
   nsCompatibility mode;
   aPresContext.GetCompatibilityMode(&mode);
-  mWebShell->SetScrolling(NS_STYLE_OVERFLOW_AUTO);
   mWebShell->SetIsFrame(PR_TRUE);
   
   /* XXX
@@ -903,6 +902,22 @@ nsGfxTextControlFrame::InstallEditor()
     result = GetPresShellFor(mWebShell, getter_AddRefs(presShell));
     if (NS_FAILED(result)) { return result; }
     if (!presShell) { return NS_ERROR_NULL_POINTER; }
+
+    // set the scrolling behavior
+    if (PR_TRUE==IsSingleLineTextControl())
+    {
+      nsCOMPtr<nsIViewManager> vm;
+      presShell->GetViewManager(getter_AddRefs(vm));
+      if (vm) 
+      {
+        nsCOMPtr<nsIScrollableView> sv;
+        vm->GetRootScrollableView(getter_AddRefs(sv));
+        if (sv) {
+          sv->SetScrollPreference(nsScrollPreference_kNeverScroll);
+        }
+      }
+    }
+
     nsCOMPtr<nsIDOMDocument> domDoc; 
     nsCOMPtr<nsIDocument> doc; 
     presShell->GetDocument(getter_AddRefs(doc));
@@ -1194,7 +1209,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame::ContentChanged()
+nsGfxTextControlFrame::InternalContentChanged()
 {
   if (PR_FALSE==IsInitialized()) { return NS_ERROR_NOT_INITIALIZED; }
   nsAutoString value;
@@ -1317,7 +1332,7 @@ NS_IMETHODIMP nsEnderDocumentObserver::ContentChanged(nsIDocument *aDocument,
 {
   nsresult result = NS_OK;
   if (mFrame) {
-    result = mFrame->ContentChanged();
+    result = mFrame->InternalContentChanged();
   }
   return result;
 }
@@ -1338,7 +1353,7 @@ NS_IMETHODIMP nsEnderDocumentObserver::ContentAppended(nsIDocument *aDocument,
 {
   nsresult result = NS_OK;
   if (mFrame) {
-    result = mFrame->ContentChanged();
+    result = mFrame->InternalContentChanged();
   }
   return result;
 }
@@ -1350,7 +1365,7 @@ NS_IMETHODIMP nsEnderDocumentObserver::ContentInserted(nsIDocument *aDocument,
 {
   nsresult result = NS_OK;
   if (mFrame) {
-    result = mFrame->ContentChanged();
+    result = mFrame->InternalContentChanged();
   }
   return result;
 }
@@ -1363,7 +1378,7 @@ NS_IMETHODIMP nsEnderDocumentObserver::ContentReplaced(nsIDocument *aDocument,
 {
   nsresult result = NS_OK;
   if (mFrame) {
-    result = mFrame->ContentChanged();
+    result = mFrame->InternalContentChanged();
   }
   return result;
 }
@@ -1375,7 +1390,7 @@ NS_IMETHODIMP nsEnderDocumentObserver::ContentRemoved(nsIDocument *aDocument,
 {
   nsresult result = NS_OK;
   if (mFrame) {
-    result = mFrame->ContentChanged();
+    result = mFrame->InternalContentChanged();
   }
   return result;
 }
