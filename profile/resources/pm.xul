@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome:/global/skin/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
 <?xml-stylesheet href="pm.css" type="text/css"?>
 
 <window
@@ -10,11 +10,16 @@
 <html:script>
 var profileCore = "";
 var selected    = null;
+var currProfile = "";
 
 function CreateProfile()
 {
 	// Need to call CreateNewProfile xuls
-	this.location = "resource:/res/profile/cpwManager.xul";
+	// var win = window.openDialog('resource://res/profile/cpwManager.xul', 'Creator', 'chrome');
+	dump("\ngot here\n");
+	//this.location.replace(this.location);
+	this.location.replace("resource:/res/profile/cpwManager.xul");
+	//this.location = "resource:/res/profile/cpwManager.xul";
 }
 
 function MigrateProfile(override)
@@ -38,9 +43,8 @@ function MigrateProfile(override)
 		return;
 	}
 
-	//profileCore.MigrateProfile(name);
-	//this.location.replace(this.location);
-	dump("Would have migrated " + name + ".\n");
+	profileCore.MigrateProfile(name);
+	this.location.replace(this.location);
 }
 
 function MigrateAllProfiles()
@@ -49,6 +53,7 @@ function MigrateAllProfiles()
 	var child = body.firstChild;
 	while (child)
 	{
+		dump("Child : " + child);
 		if (child.getAttribute("rowMigrate") == "true")
 			MigrateProfile(child);
 		child = child.nextSibling;
@@ -63,8 +68,6 @@ function RenameProfile(w)
 		return;
 	}
 
-	dump("RenameProfile\n");
-
 	var newName = w.document.getElementById("NewName").value;
 	var oldName = selected.getAttribute("rowName");
 	var migrate = selected.getAttribute("rowMigrate");
@@ -75,7 +78,7 @@ function RenameProfile(w)
 		return;
 	}
 
-	dump("RenameProfile : " + oldName + " to " + newName + "\n");
+	//dump("RenameProfile : " + oldName + " to " + newName + "\n");
 	profileCore.RenameProfile(oldName, newName);
 	this.location.replace(this.location);
 }
@@ -91,7 +94,7 @@ function DeleteProfile()
 	var migrate = selected.getAttribute("rowMigrate");
 
 	var name = selected.getAttribute("rowName");
-	dump("Delete '" + name + "'\n");
+	//dump("Delete '" + name + "'\n");
 	profileCore.DeleteProfile(name);
 	this.location.replace(this.location);
 }
@@ -111,15 +114,28 @@ function ExitApp()
 	}
 }
 
+function showSelection(node)
+{
+	// (see tree's onclick definition)
+	// Tree events originate in the smallest clickable object which is the cell.  The object 
+	// originating the event is available as event.target.  We want the cell's row, so we go 
+	// one further and get event.target.parentNode.
+	selected = node;
+	var num = node.getAttribute("rowNum");
+	var name = node.getAttribute("rowName");
+	//dump("Selected " + num + " : " + name + "\n");
+}
+
 function addTreeItem(num, name, migrate)
 {
   dump("Adding element " + num + " : " + name + "\n");
   var body = document.getElementById("theTreeBody");
 
   var newitem = document.createElement('treeitem');
-  newitem.setAttribute("rowNum", num);
-  newitem.setAttribute("rowName", name);
-  newitem.setAttribute("rowMigrate", migrate);
+  var newrow = document.createElement('treerow');
+  newrow.setAttribute("rowNum", num);
+  newrow.setAttribute("rowName", name);
+  newrow.setAttribute("rowMigrate", migrate);
 
   var elem = document.createElement('treecell');
 
@@ -130,54 +146,46 @@ function addTreeItem(num, name, migrate)
 	  var text = document.createTextNode('');
 
   elem.appendChild(text);
-  newitem.appendChild(elem);
+  newrow.appendChild(elem);
 
   var elem = document.createElement('treecell');
   var text = document.createTextNode(name);
   elem.appendChild(text);
-  newitem.appendChild(elem);
+  newrow.appendChild(elem);
 
+  newitem.appendChild(newrow);
   body.appendChild(newitem);
-}
-
-function showSelection(node)
-{
-	// (see tree's onclick definition)
-	// Tree events originate in the smallest clickable object which is the cell.  The object 
-	// originating the event is available as event.target.  We want the cell's row, so we go 
-	// one further and get event.target.parentNode.
-	selected = node;
-	var num = node.getAttribute("rowNum");
-	var name = node.getAttribute("rowName");
-	dump("Selected " + num + " : " + name + "\n");
 }
 
 function loadElements()
 {
-	dump("hacked onload handler adds elements to tree widget\n");
+	//dump("hacked onload handler adds elements to tree widget\n");
 	var profileList = "";
 
 	profileCore = XPAppCoresManager.Find("ProfileCore");
 	if (!profileCore)
 	{
-		dump("!profileCore\n");
 		profileCore = new ProfileCore();
 
 		if (profileCore) {
-			dump("after ! yes profileCore in if loop\n");
 			profileCore.Init("ProfileCore");
 		}
 		else {
-			dump("profile not created\n");
+			dump("profileCore not created\n");
 		}
 	}
 	if (profileCore)
 		profileList = profileCore.GetProfileList();	
 
+	//dump("Got profile list of '" + profileList + "'\n");
 	profileList = profileList.split(",");
+	currProfile = profileCore.GetCurrentProfile();
 
 	for (var i=0; i &lt; profileList.length; i++)
-		addTreeItem(i, profileList[i], (i%2==0));
+	{
+		var pvals = profileList[i].split(" - ");
+		addTreeItem(i, pvals[0], (pvals[1] == "migrate"));
+	}
 }
 
 // -------------------------------------------- begin Hack for OnLoad handling
@@ -243,17 +251,17 @@ bookmarks, and stored messages in your personal profile.
 </html:table>
 
 <tree id="tree" onclick="return showSelection(event.target.parentNode);">
-  <treecol style="width: 100"/>
-  <treecol style="width: 300"/>
+  <treecol style="width: 25%;"/>
+  <treecol style="width: 75%; align: left;"/>
   <treehead>
-    <treeitem>
+    <treerow>
       <treecell>Migration</treecell>
-      <treecell>User Name</treecell>
-    </treeitem>
+      <treecell style="align: left;">User Name</treecell>
+	</treerow>
   </treehead>
 
-  <treebody id="theTreeBody">
-  </treebody>
+  <treechildren id="theTreeBody">
+  </treechildren>
 </tree>
 
 <titledbutton value="New" class="push" onclick="CreateProfile();" />
