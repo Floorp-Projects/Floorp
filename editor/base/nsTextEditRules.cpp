@@ -541,7 +541,11 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTa
 	if (NS_FAILED(res)) return res;
 	if (!newStyleNode) return NS_ERROR_NULL_POINTER;
 
-  res = mEditor->CreateNode(nsEditor::GetTextNodeTag(), newStyleNode, 0, getter_AddRefs(newTextNode));
+  nsAutoString textNodeTag;
+  res = nsEditor::GetTextNodeTag(textNodeTag);
+  if (NS_FAILED(res)) { return res; }
+
+  res = mEditor->CreateNode(textNodeTag, newStyleNode, 0, getter_AddRefs(newTextNode));
 	if (NS_FAILED(res)) return res;
 	if (!newTextNode) return NS_ERROR_NULL_POINTER;
 
@@ -888,7 +892,10 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
 		if (!mBogusNode) return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsIDOMNode>newTNode;
-    res = mEditor->CreateNode(nsEditor::GetTextNodeTag(), mBogusNode, 0, 
+    nsAutoString textNodeTag;
+    res = nsEditor::GetTextNodeTag(textNodeTag);
+    if (NS_FAILED(res)) { return res; }
+    res = mEditor->CreateNode(textNodeTag, mBogusNode, 0, 
                                  getter_AddRefs(newTNode));
     if (NS_FAILED(res)) return res;
     if (!newTNode) return NS_ERROR_NULL_POINTER;
@@ -986,6 +993,7 @@ nsTextEditRules::EchoInsertionToPWBuff(nsIDOMSelection *aSelection, nsString *aO
   // change the output to '*' only
   PRInt32 length = aOutString->Length();
   PRInt32 i;
+  *aOutString = "";
   for (i=0; i<length; i++)
     *aOutString += '*';
 
