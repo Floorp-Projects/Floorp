@@ -76,6 +76,7 @@ enum nsStyleStructID {
   eStyleStruct_Border         = 18,
   eStyleStruct_Outline        = 19,
   eStyleStruct_XUL            = 20,
+  eStyleStruct_Min            = eStyleStruct_Font,
   eStyleStruct_Max            = eStyleStruct_XUL,
   eStyleStruct_BorderPaddingShortcut = 21       // only for use in GetStyle()
 };
@@ -112,6 +113,11 @@ enum nsStyleStructID {
 // A bit to test whether or not we have any text decorations.
 #define NS_STYLE_HAS_TEXT_DECORATIONS     0x200000
 
+#define NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(the_sid) \
+  static const nsStyleStructID GetStyleStructID() {return the_sid;}
+
+#define NS_GET_STYLESTRUCTID(type) (type::GetStyleStructID())
+
 // The actual structs start here
 struct nsStyleStruct {
 };
@@ -121,6 +127,8 @@ struct nsStyleStruct {
 struct nsStyleFont : public nsStyleStruct {
   nsStyleFont(void);
   ~nsStyleFont(void) {};
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Font)
 
   PRInt32 CalcDifference(const nsStyleFont& aOther) const;
   static PRInt32 CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2);
@@ -145,6 +153,8 @@ struct nsStyleColor : public nsStyleStruct {
   nsStyleColor(const nsStyleColor& aOther);
   ~nsStyleColor(void) {};
 
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Color)
+
   PRInt32 CalcDifference(const nsStyleColor& aOther) const;
   
   void* operator new(size_t sz, nsIPresContext* aContext) {
@@ -166,6 +176,8 @@ struct nsStyleBackground : public nsStyleStruct {
   nsStyleBackground(nsIPresContext* aPresContext);
   nsStyleBackground(const nsStyleBackground& aOther);
   ~nsStyleBackground() {};
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Background)
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
@@ -209,6 +221,8 @@ struct nsStyleMargin: public nsStyleStruct {
   nsStyleMargin(const nsStyleMargin& aMargin);
   ~nsStyleMargin(void) {};
 
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Margin)
+
   void* operator new(size_t sz, nsIPresContext* aContext);
   void Destroy(nsIPresContext* aContext);
 
@@ -239,6 +253,8 @@ struct nsStylePadding: public nsStyleStruct {
   nsStylePadding(void);
   nsStylePadding(const nsStylePadding& aPadding);
   ~nsStylePadding(void) {};
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Padding)
 
   void* operator new(size_t sz, nsIPresContext* aContext);
   void Destroy(nsIPresContext* aContext);
@@ -271,6 +287,8 @@ struct nsStyleBorder: public nsStyleStruct {
   nsStyleBorder(nsIPresContext* aContext);
   nsStyleBorder(const nsStyleBorder& aBorder);
   ~nsStyleBorder(void) {};
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Border)
 
   void* operator new(size_t sz, nsIPresContext* aContext);
   void Destroy(nsIPresContext* aContext);
@@ -366,6 +384,9 @@ struct nsStyleBorderPadding: public nsStyleStruct {
   nsStyleBorderPadding(void) { mHasCachedBorderPadding = PR_FALSE; };
   ~nsStyleBorderPadding(void) {};
 
+  // No accessor for this struct, since it's not a real struct.  At
+  // least not for now...
+
   PRBool GetBorderPadding(nsMargin& aBorderPadding) const {
     if (mHasCachedBorderPadding) {
       aBorderPadding = mCachedBorderPadding;
@@ -389,6 +410,8 @@ struct nsStyleOutline: public nsStyleStruct {
   nsStyleOutline(nsIPresContext* aPresContext);
   nsStyleOutline(const nsStyleOutline& aOutline);
   ~nsStyleOutline(void) {};
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Outline)
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
@@ -472,6 +495,8 @@ struct nsStyleList : public nsStyleStruct {
   nsStyleList(const nsStyleList& aStyleList);
   ~nsStyleList(void);
 
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_List)
+
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
     aContext->AllocateFromShell(sz, &result);
@@ -493,6 +518,8 @@ struct nsStylePosition : public nsStyleStruct {
   nsStylePosition(void);
   nsStylePosition(const nsStylePosition& aOther);
   ~nsStylePosition(void);
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Position)
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
@@ -523,6 +550,8 @@ struct nsStyleTextReset : public nsStyleStruct {
   nsStyleTextReset(const nsStyleTextReset& aOther);
   ~nsStyleTextReset(void);
 
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_TextReset)
+
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
     aContext->AllocateFromShell(sz, &result);
@@ -547,6 +576,8 @@ struct nsStyleText : public nsStyleStruct {
   nsStyleText(void);
   nsStyleText(const nsStyleText& aOther);
   ~nsStyleText(void);
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Text)
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
@@ -579,6 +610,8 @@ struct nsStyleVisibility : public nsStyleStruct {
   nsStyleVisibility(const nsStyleVisibility& aVisibility);
   ~nsStyleVisibility() {};
 
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Visibility)
+
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
     aContext->AllocateFromShell(sz, &result);
@@ -610,6 +643,8 @@ struct nsStyleDisplay : public nsStyleStruct {
   nsStyleDisplay();
   nsStyleDisplay(const nsStyleDisplay& aOther); 
   ~nsStyleDisplay() {};
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Display)
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
@@ -662,6 +697,8 @@ struct nsStyleTable: public nsStyleStruct {
   nsStyleTable(const nsStyleTable& aOther);
   ~nsStyleTable(void);
 
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Table)
+
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
     aContext->AllocateFromShell(sz, &result);
@@ -685,6 +722,8 @@ struct nsStyleTableBorder: public nsStyleStruct {
   nsStyleTableBorder(nsIPresContext* aContext);
   nsStyleTableBorder(const nsStyleTableBorder& aOther);
   ~nsStyleTableBorder(void);
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_TableBorder)
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
@@ -734,6 +773,8 @@ struct nsStyleQuotes : public nsStyleStruct {
   nsStyleQuotes();
   nsStyleQuotes(const nsStyleQuotes& aQuotes);
   ~nsStyleQuotes();
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Quotes)
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
@@ -793,6 +834,8 @@ struct nsStyleContent: public nsStyleStruct {
   nsStyleContent(void);
   nsStyleContent(const nsStyleContent& aContent);
   ~nsStyleContent(void);
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Content)
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
@@ -931,6 +974,8 @@ struct nsStyleUIReset: public nsStyleStruct {
   nsStyleUIReset(const nsStyleUIReset& aOther);
   ~nsStyleUIReset(void);
 
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_UIReset)
+
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
     aContext->AllocateFromShell(sz, &result);
@@ -952,6 +997,8 @@ struct nsStyleUserInterface: public nsStyleStruct {
   nsStyleUserInterface(void);
   nsStyleUserInterface(const nsStyleUserInterface& aOther);
   ~nsStyleUserInterface(void);
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_UserInterface)
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
@@ -978,6 +1025,8 @@ struct nsStyleXUL : public nsStyleStruct {
   nsStyleXUL();
   nsStyleXUL(const nsStyleXUL& aSource);
   ~nsStyleXUL();
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_XUL)
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
@@ -1051,6 +1100,24 @@ inline nsBorderEdges::nsBorderEdges()
   mOutsideEdge = PR_TRUE;
 };
 
+// typesafe mechanisms for accessing style data
+class nsIFrame;
+class nsIStyleContext;
+
+template <class T>
+inline void
+GetStyleData(nsIFrame* aFrame, const T** aStyleStruct)
+{
+    aFrame->GetStyleData(NS_GET_STYLESTRUCTID(T),
+                    *NS_REINTERPRET_CAST(const nsStyleStruct**, aStyleStruct));
+}
+
+template <class T>
+inline void
+GetStyleData(nsIStyleContext* aStyleContext, const T** aStyleStruct)
+{
+    *aStyleStruct = NS_STATIC_CAST(const T*,
+                         aStyleContext->GetStyleData(NS_GET_STYLESTRUCTID(T)));
+}
 
 #endif /* nsStyleStruct_h___ */
-
