@@ -38,6 +38,8 @@
 #ifndef nsComponentManager_h__
 #define nsComponentManager_h__
 
+#include "nsXPCOM.h"
+
 #include "nsIComponentLoader.h"
 #include "nsNativeComponentLoader.h"
 #include "nsIComponentManager.h"
@@ -84,39 +86,15 @@ class nsComponentManagerImpl
       public nsIInterfaceRequestor {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICOMPONENTMANAGER
     NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSICOMPONENTMANAGER
+    NS_DECL_NSISERVICEMANAGER
 
-    // Service Manager
-    NS_IMETHOD
-    RegisterService(const nsCID& aClass, nsISupports* aService);
-
-    NS_IMETHOD
-    UnregisterService(const nsCID& aClass);
-
-    NS_IMETHOD
-    GetService(const nsCID& aClass, const nsIID& aIID,
-               nsISupports* *result,
-               nsIShutdownListener* shutdownListener = NULL);
-
-    NS_IMETHOD
-    ReleaseService(const nsCID& aClass, nsISupports* service,
-                   nsIShutdownListener* shutdownListener = NULL);
-
-    NS_IMETHOD
-    RegisterService(const char* aContractID, nsISupports* aService);
-
-    NS_IMETHOD
-    UnregisterService(const char* aContractID);
-
-    NS_IMETHOD
-    GetService(const char* aContractID, const nsIID& aIID,
-               nsISupports* *result,
-               nsIShutdownListener* shutdownListener = NULL);
-
-    NS_IMETHOD
-    ReleaseService(const char* aContractID, nsISupports* service,
-                   nsIShutdownListener* shutdownListener = NULL);
+    // to be moved when nsIComponentManager is frozen.
+    NS_IMETHOD RegisterService(const nsCID & aClass, nsISupports *aService); 
+    NS_IMETHOD RegisterServiceByContractID(const char *aContractID, nsISupports *aService);
+    NS_IMETHOD UnregisterService(const nsCID & aClass); 
+    NS_IMETHOD UnregisterServiceByContractID(const char *aContractID);
 
     // nsComponentManagerImpl methods:
     nsComponentManagerImpl();
@@ -127,12 +105,15 @@ public:
     nsresult PlatformPrePopulateRegistry();
     nsresult Shutdown(void);
 
+    nsresult FreeServices();
+
     friend class nsFactoryEntry;
     friend class nsServiceManager;
+
     friend nsresult
     NS_GetService(const char *aContractID, const nsIID& aIID, PRBool aDontCreate, nsISupports** result);
+
 protected:
-    nsresult FetchService(const char *aContractID, const nsIID& aIID, nsISupports** result);
     nsresult RegistryNameForLib(const char *aLibName, char **aRegistryName);
     nsresult RegisterComponentCommon(const nsCID &aClass,
                                      const char *aClassName,
@@ -161,7 +142,6 @@ protected:
     nsresult HashContractID(const char *acontractID, const nsCID &aClass, nsIDKey &cidKey, nsFactoryEntry **fe_ptr = NULL);
     nsresult UnloadLibraries(nsIServiceManager *servmgr, PRInt32 when);
     
-    nsresult FreeServices();
     // The following functions are the only ones that operate on the persistent
     // registry
     nsresult PlatformInit(void);

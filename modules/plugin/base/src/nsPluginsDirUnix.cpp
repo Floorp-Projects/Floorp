@@ -420,8 +420,8 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 
     // No, this doesn't leak. GetGlobalServiceManager() doesn't addref
     // it's out pointer. Maybe it should.
-    nsIServiceManager* mgr;
-    nsServiceManager::GetGlobalServiceManager(&mgr);
+    nsIServiceManagerObsolete* mgr;
+    nsServiceManager::GetGlobalServiceManager((nsIServiceManager**)&mgr);
 
     nsFactoryProc nsGetFactory =
         (nsFactoryProc) PR_FindSymbol(pLibrary, "NSGetFactory");

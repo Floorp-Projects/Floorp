@@ -60,7 +60,7 @@ main(int argc, char* argv[])
     nsresult rv;
     nsCOMPtr<nsILocalFile> topDir;
 
-    rv = NS_InitXPCOM(nsnull, nsnull);
+    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv)) return -1;
     
     nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL);

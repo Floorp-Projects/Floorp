@@ -269,7 +269,7 @@ main( int argc, char* argv[] ) {
 
     // Initialize XPCOM.
     printf( "Initializing XPCOM...\n" );
-    rv = NS_InitXPCOM( 0, 0 );
+    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if ( NS_SUCCEEDED( rv ) ) {
         printf( "...XPCOM initialized OK\n" );
 

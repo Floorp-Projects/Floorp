@@ -5,3 +5,4 @@ nsIComponentLoader.idl
 nsIComponentManager.idl
 nsIFactory.idl
 nsIRegistry.idl
+nsIServiceManager.idl

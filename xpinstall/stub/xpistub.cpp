@@ -108,7 +108,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
 	if (binDir)
 	{
         binDir->InitWithFSSpec(&aXPIStubDir);
-        rv = NS_InitXPCOM(&gServiceMgr, binDir);
+        rv = NS_InitXPCOM2(&gServiceMgr, binDir, nsnull);
     }
     else
         return NS_ERROR_FAILURE;
@@ -128,11 +128,11 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     nsCOMPtr<nsILocalFile> file;
     NS_NewLocalFile(componentPath, PR_TRUE, getter_AddRefs(file));
     
-    rv = NS_InitXPCOM(&gServiceMgr, file); 
+    rv = NS_InitXPCOM2(&gServiceMgr, file, nsnull); 
 
 #elif defined(XP_UNIX)
 
-    rv = NS_InitXPCOM(&gServiceMgr, nsnull); 
+    rv = NS_InitXPCOM2(&gServiceMgr, nsnull, nsnull); 
 
     char cwd[1024];
     char compDirPath[1024];
@@ -147,7 +147,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
 
 #else
 
-    rv = NS_InitXPCOM(&gServiceMgr, NULL);
+    rv = NS_InitXPCOM2(&gServiceMgr, NULL, NULL);
 
 #endif
 

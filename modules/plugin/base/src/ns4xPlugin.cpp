@@ -43,6 +43,7 @@
 #include "ns4xPluginInstance.h"
 #include "ns4xPluginStreamListener.h"
 #include "nsIServiceManager.h"
+
 #include "nsIMemory.h"
 #include "nsIPluginStreamListener.h"
 #include "nsPluginsDir.h"
@@ -79,7 +80,7 @@ static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 ////////////////////////////////////////////////////////////////////////
 // Globals
 NPNetscapeFuncs ns4xPlugin::CALLBACKS;
-static nsIServiceManager* gServiceMgr = nsnull;
+static nsIServiceManagerObsolete* gServiceMgr = nsnull;
 static nsIMemory* gMalloc = nsnull;
 
 ////////////////////////////////////////////////////////////////////////
@@ -127,7 +128,7 @@ ns4xPlugin::CheckClassInitialized(void)
 // nsISupports stuff
 NS_IMPL_ISUPPORTS2(ns4xPlugin, nsIPlugin, nsIFactory);
 
-ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr)
+ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManagerObsolete* serviceMgr)
 {
   NS_INIT_REFCNT();
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
@@ -225,7 +226,7 @@ void ns4xPlugin::SetPluginRefNum(short aRefNum)
 //One ns4xPlugin object exists per Plugin (not instance).
 
 nsresult
-ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
+ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
                          const char* aFileName,
                          PRLibrary* aLibrary,
                          nsIPlugin** aResult)
@@ -1119,10 +1120,10 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
   case NPNVserviceManager: {
     // GetGlobalServiceManager does not AddRef, so we do here.
-    nsIServiceManager* serviceManager;
-    res = nsServiceManager::GetGlobalServiceManager(&serviceManager);
+    nsIServiceManagerObsolete* serviceManager;
+    res = nsServiceManager::GetGlobalServiceManager((nsIServiceManager**)&serviceManager);
     if (NS_SUCCEEDED(res)) {
-      *(nsIServiceManager**)result = serviceManager;
+      *(nsIServiceManagerObsolete**)result = serviceManager;
       NS_ADDREF(serviceManager);
       return NPERR_NO_ERROR;
     } else

@@ -1598,7 +1598,7 @@ int main(int argc, char* argv[])
 
   NS_TIMELINE_MARK("InitXPCom...");
 
-  rv = NS_InitXPCOM(NULL, NULL);
+  rv = NS_InitXPCOM2(NULL, NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
   NS_TIMELINE_MARK("...InitXPCOM done");

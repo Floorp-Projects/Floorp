@@ -43,6 +43,7 @@
 #include "nsIFactory.h"
 #include "nsIRegistry.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIObserver.h"
 #include "nsComponentManager.h"
 
 #include "nsHashtableEnumerator.h"
@@ -584,3 +585,68 @@ NS_CategoryManagerGetFactory( nsIFactory** aFactory )
 
     return status;
   }
+
+
+
+/*
+ * CreateServicesFromCategory()
+ *
+ * Given a category, this convenience functions enumerates the category and 
+ * creates a service of every CID or ContractID registered under the category.
+ * If observerTopic is non null and the service implements nsIObserver,
+ * this will attempt to notify the observer with the origin, observerTopic string
+ * as parameter.
+ */
+nsresult
+NS_CreateServicesFromCategory(const char *category,
+                              nsISupports *origin,
+                              const PRUnichar *observerTopic)
+{
+    nsresult rv = NS_OK;
+    
+    int nFailed = 0; 
+    nsCOMPtr<nsICategoryManager> categoryManager = 
+        do_GetService("@mozilla.org/categorymanager;1", &rv);
+    if (!categoryManager) return rv;
+
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    rv = categoryManager->EnumerateCategory(category, 
+            getter_AddRefs(enumerator));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISupports> entry;
+    while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(entry)))) {
+        // From here on just skip any error we get.
+        nsCOMPtr<nsISupportsString> catEntry = do_QueryInterface(entry, &rv);
+        if (NS_FAILED(rv)) {
+            nFailed++;
+            continue;
+        }
+        nsXPIDLCString entryString;
+        rv = catEntry->GetData(getter_Copies(entryString));
+        if (NS_FAILED(rv)) {
+            nFailed++;
+            continue;
+        }
+        nsXPIDLCString contractID;
+        rv = categoryManager->GetCategoryEntry(category,(const char *)entryString, getter_Copies(contractID));
+        if (NS_FAILED(rv)) {
+            nFailed++;
+            continue;
+        }
+        
+        nsCOMPtr<nsISupports> instance = do_GetService(contractID, &rv);
+        if (NS_FAILED(rv)) {
+            nFailed++;
+            continue;
+        }
+
+        if (observerTopic) {
+            // try an observer, if it implements it.
+            nsCOMPtr<nsIObserver> observer = do_QueryInterface(instance, &rv);
+            if (NS_SUCCEEDED(rv) && observer)
+                observer->Observe(origin, observerTopic, NS_LITERAL_STRING("").get());
+        }
+    }
+    return (nFailed ? NS_ERROR_FAILURE : NS_OK);
+}

@@ -100,6 +100,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIFormSubmitObserver.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
+#include "nsICategoryManager.h"
 
 // Get base target for submission
 #include "nsIHTMLContent.h"

@@ -178,7 +178,7 @@ int main(int argc, char **argv)
 		return 1;
 
 	// Init XPCOM
-	nsresult rv = NS_InitXPCOM(nsnull, nsnull);
+	nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
 	if (NS_SUCCEEDED(rv)) {
 

@@ -34,6 +34,10 @@ REQUIRES	= libreg \
 		  string \
 		  $(NULL)
 
+EXPORTS		= \
+		nsXPCOM.h \
+		$(NULL)			
+
 CPPSRCS		= nsXPComInit.cpp
 
 ifdef XPCOM_USE_LEA

@@ -146,13 +146,7 @@ NS_METHOD nsLeakDetector::MarkObject(nsISupports* object, PRBool marked)
 
 NS_METHOD nsLeakDetector::GetServices(nsISupports* *result)
 {
-    nsIServiceManager* serviceManager = nsnull;
-    nsresult rv = nsServiceManager::GetGlobalServiceManager(&serviceManager);
-    if (rv == NS_OK) {
-        *result = serviceManager;
-        NS_ADDREF(*result);
-    }
-    return rv;
+    return NS_GetServiceManager(result);
 }
 
 #define NS_CLEAKDETECTOR_CID_STR "bb1ba360-1dd1-11b2-b30e-aa2314429f54"

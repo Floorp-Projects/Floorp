@@ -25,7 +25,7 @@
 
 int main(int argc, char **argv)
 {
-  NS_InitXPCOM(nsnull, nsnull);
+  NS_InitXPCOM2(nsnull, nsnull, nsnull);
 
   nsCOMPtr <nsIChromeRegistry> chromeReg = 
     do_GetService("@mozilla.org/chrome/chrome-registry;1");

@@ -835,8 +835,8 @@ mozJSComponentLoader::AttemptRegistration(nsIFile *component,
             do_GetService(kObserverServiceContractID);
       if (observerService)
       {
-        nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
-        rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+        nsCOMPtr<nsIServiceManager> mgr;
+        rv = NS_GetServiceManager(getter_AddRefs(mgr));
         if (NS_SUCCEEDED(rv))
         {
           // this string can't come from a string bundle, because we don't have string
@@ -900,8 +900,8 @@ mozJSComponentLoader::UnregisterComponent(nsIFile *component)
             do_GetService(kObserverServiceContractID);
       if (observerService)
       {
-        nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
-        rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+        nsCOMPtr<nsIServiceManager> mgr;
+        rv = NS_GetServiceManager(getter_AddRefs(mgr));
         if (NS_SUCCEEDED(rv))
         {
           (void) observerService->Notify(mgr,

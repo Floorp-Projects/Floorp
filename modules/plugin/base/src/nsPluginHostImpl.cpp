@@ -4206,8 +4206,8 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
     {
       // No, this is not a leak. GetGlobalServiceManager() doesn't
       // addref the pointer on the way out. It probably should.
-      nsIServiceManager* serviceManager;
-      nsServiceManager::GetGlobalServiceManager(&serviceManager);
+      nsIServiceManagerObsolete* serviceManager;
+      nsServiceManager::GetGlobalServiceManager((nsIServiceManager**)&serviceManager);
 
       // need to get the plugin factory from this plugin.
       nsFactoryProc nsGetFactory = nsnull;

@@ -54,7 +54,7 @@ main(void)
     nsresult rv;
 
     // Initialize XPCOM
-    rv = NS_InitXPCOM(nsnull, nsnull);
+    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv))
     {
         printf("ERROR: XPCOM intialization error [%x].\n", rv);

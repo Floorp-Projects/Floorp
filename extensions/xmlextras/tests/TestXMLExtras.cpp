@@ -126,7 +126,7 @@ int main (int argc, char* argv[])
 
   nsIServiceManager *servMgr;
 
-  rv = NS_InitXPCOM(&servMgr, nsnull);
+  rv = NS_InitXPCOM2(&servMgr, nsnull, nsnull);
   if (NS_FAILED(rv)) return rv;
 
   if (argc > 2) {

@@ -31,6 +31,9 @@
 #include <stdlib.h>
 #include "nscore.h"
 #include "nsISupports.h"
+#include "nsCRT.h"
+#include "nspr.h"
+
 // this after nsISupports, to pick up IID
 // so that xpt stuff doesn't try to define it itself...
 #include "xptinfo.h"
@@ -38,9 +41,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
-#include "nsCRT.h"
+
 #include "nsIEnumerator.h"
 #include "nsIModule.h"
 #include "nsHashtableEnumerator.h"
@@ -51,20 +53,10 @@
 
 #include "nsIObserverService.h"
 
-#include "nsILocalFile.h"
 #include "nsLocalFile.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 
-#include "plstr.h"
-#include "prlink.h"
-#include "prsystem.h"
-#include "prprf.h"
-#include "xcDll.h"
-#include "prerror.h"
-#include "prmem.h"
-#include "nsIFile.h"
-//#include "mozreg.h"
 #include "NSReg.h"
 
 #include "prcmon.h"
@@ -133,9 +125,7 @@ static nsFactoryEntry * kNonExistentContractID = (nsFactoryEntry*) 1;
 
 NS_DEFINE_CID(kEmptyCID, NS_EMPTY_IID);
 
-
-nsIServiceManager* gServiceManager = NULL;
-PRBool gShuttingDown = PR_FALSE;
+extern PRBool gXPCOMShuttingDown;
 
 // Build is using USE_NSREG to turn off xpcom using registry
 // but internally we use USE_REGISTRY. Map them propertly.
@@ -217,15 +207,17 @@ nsCreateInstanceFromCategory::operator()( const nsIID& aIID,
 nsresult
 nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
   {
-    nsresult status;
-    	// Too bad |nsServiceManager| isn't an |nsIServiceManager|, then this could have been one call
-    if ( mServiceManager )
-    	status = mServiceManager->GetService(mCID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
-    else
-    	status = nsServiceManager::GetService(mCID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
-
-		if ( !NS_SUCCEEDED(status) )
-			*aInstancePtr = 0;
+    nsresult status = NS_ERROR_FAILURE;
+    if ( mServiceManager ) {
+        status = mServiceManager->GetService(mCID, aIID, (void**)aInstancePtr);
+    } else {
+        nsCOMPtr<nsIServiceManager> mgr;
+        NS_GetServiceManager(getter_AddRefs(mgr));
+        if (mgr)
+            status = mgr->GetService(mCID, aIID, (void**)aInstancePtr);
+    }
+    if ( !NS_SUCCEEDED(status) )
+        *aInstancePtr = 0;
 
     if ( mErrorPtr )
       *mErrorPtr = status;
@@ -235,25 +227,23 @@ nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
 nsresult
 nsGetServiceByContractID::operator()( const nsIID& aIID, void** aInstancePtr ) const
   {
-    nsresult status;
-    if ( mContractID )
-    	{
-    			// Too bad |nsServiceManager| isn't an |nsIServiceManager|, then this could have been one call
-    		if ( mServiceManager )
-    			status = mServiceManager->GetService(mContractID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
-    		else
-    			status = nsServiceManager::GetService(mContractID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
-
-        if ( !NS_SUCCEEDED(status) )
-      		*aInstancePtr = 0;
-      }
-    else
-      status = NS_ERROR_NULL_POINTER;
+    nsresult status = NS_ERROR_FAILURE;
+    if ( mServiceManager ) {
+        status = mServiceManager->GetServiceByContractID(mContractID, aIID, (void**)aInstancePtr);
+    } else {
+        nsCOMPtr<nsIServiceManager> mgr;
+        NS_GetServiceManager(getter_AddRefs(mgr));
+        if (mgr)
+            status = mgr->GetServiceByContractID(mContractID, aIID, (void**)aInstancePtr);
+    }
+ 
+    if ( !NS_SUCCEEDED(status) )
+        *aInstancePtr = 0;
 
     if ( mErrorPtr )
       *mErrorPtr = status;
     return status;
-  }
+}
 
 nsresult
 nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr)
@@ -281,18 +271,15 @@ nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr)
     goto error;
   }
   
-  // Too bad |nsServiceManager| isn't an |nsIServiceManager|, then
-  // this could have been one call.
-  if ( mServiceManager )
-    status =
-      mServiceManager->GetService(value, aIID,
-                                  NS_REINTERPRET_CAST(nsISupports**,
-                                                      aInstancePtr), 0);
-  else
-    status =
-      nsServiceManager::GetService(value, aIID,
-                                   NS_REINTERPRET_CAST(nsISupports**,
-                                                       aInstancePtr), 0);
+  if ( mServiceManager ) {
+    status = mServiceManager->GetServiceByContractID(value, aIID, (void**)aInstancePtr);
+  } else {
+    nsCOMPtr<nsIServiceManager> mgr;
+    NS_GetServiceManager(getter_AddRefs(mgr));
+    if (mgr)
+        status = mgr->GetServiceByContractID(value, aIID, (void**)aInstancePtr);
+    }
+
   if (NS_FAILED(status)) {
   error:
     *aInstancePtr = 0;
@@ -301,133 +288,6 @@ nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr)
   *mErrorPtr = status;
   return status;
 }
-
-
-/*
- * CreateServicesFromCategory()
- *
- * Given a category, this convenience functions enumerates the category and 
- * creates a service of every CID or ContractID registered under the category.
- * If observerTopic is non null and the service implements nsIObserver,
- * this will attempt to notify the observer with the origin, observerTopic string
- * as parameter.
- */
-nsresult
-NS_CreateServicesFromCategory(const char *category,
-                              nsISupports *origin,
-                              const PRUnichar *observerTopic)
-{
-    nsresult rv = NS_OK;
-    
-    int nFailed = 0; 
-    nsCOMPtr<nsICategoryManager> categoryManager = 
-        do_GetService("@mozilla.org/categorymanager;1", &rv);
-    if (!categoryManager) return rv;
-
-    nsCOMPtr<nsISimpleEnumerator> enumerator;
-    rv = categoryManager->EnumerateCategory(category, 
-            getter_AddRefs(enumerator));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsISupports> entry;
-    while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(entry)))) {
-        // From here on just skip any error we get.
-        nsCOMPtr<nsISupportsString> catEntry = do_QueryInterface(entry, &rv);
-        if (NS_FAILED(rv)) {
-            nFailed++;
-            continue;
-        }
-        nsXPIDLCString entryString;
-        rv = catEntry->GetData(getter_Copies(entryString));
-        if (NS_FAILED(rv)) {
-            nFailed++;
-            continue;
-        }
-        nsXPIDLCString contractID;
-        rv = categoryManager->GetCategoryEntry(category,(const char *)entryString, getter_Copies(contractID));
-        if (NS_FAILED(rv)) {
-            nFailed++;
-            continue;
-        }
-        
-        nsCOMPtr<nsISupports> instance = do_GetService(contractID, &rv);
-        if (NS_FAILED(rv)) {
-            nFailed++;
-            continue;
-        }
-
-        if (observerTopic) {
-            // try an observer, if it implements it.
-            nsCOMPtr<nsIObserver> observer = do_QueryInterface(instance, &rv);
-            if (NS_SUCCEEDED(rv) && observer)
-                observer->Observe(origin, observerTopic, NS_LITERAL_STRING("").get());
-        }
-    }
-    return (nFailed ? NS_ERROR_FAILURE : NS_OK);
-}
-
-// Get a service with control to not create it
-// The right way to do this is to add this into the nsIServiceManager
-// api. Changing the api however will break a whole bunch of modules -
-// plugins and other embedding clients. So until we figure out how to 
-// make new apis and maintain backward compabitility etc, we are adding
-// this api.
-//
-// WARNING: USE AT YOUR OWN RISK. THIS FUNCTION WILL NOT BE SUPPORTED
-//          IN FUTURE RELEASES.
-NS_COM nsresult
-NS_GetService(const char *aContractID, const nsIID& aIID, PRBool aDontCreate, nsISupports** result)
-{
-    if (!aDontCreate) {
-        // This is the same as the old get service.
-        return nsServiceManager::GetService(aContractID, aIID, result, nsnull);
-    }
-    nsComponentManagerImpl* mgr;
-    nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager **)&mgr);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return mgr->FetchService(aContractID, aIID, result);
-}
-
-nsresult
-nsComponentManagerImpl::FetchService(const char *aContractID, const nsIID& aIID, nsISupports** result)
-{
-    // Now we want to get the service if we already got it. If not, we dont want
-    // to create an instance of it. mmh!
-
-    // test this first, since there's no point in returning a service during
-    // shutdown -- whether it's available or not would depend on the order it
-    // occurs in the list
-    if (gShuttingDown) {
-        // When processing shutdown, dont process new GetService() requests
-        NS_WARNING("Creating new service on shutdown. Denied.");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    nsresult rv = NS_ERROR_SERVICE_NOT_FOUND;
-    nsCStringKey key(aContractID);
-    nsFactoryEntry *entry = (nsFactoryEntry *) mContractIDs->Get(&key);
-    nsServiceEntry* serviceEntry;
-    if (entry && entry != kNonExistentContractID && entry->mServiceEntry) {
-        serviceEntry = entry->mServiceEntry;
-
-        if (!serviceEntry->mObject)
-            return NS_ERROR_NULL_POINTER;
-        nsISupports* service; // keep as raw point (avoid extra addref/release)
-        rv = serviceEntry->mObject->QueryInterface(aIID, (void**)&service);
-        *result = service;
-        // If someone else requested the service to be shut down, 
-        // and we just asked to get it again before it could be 
-        // released, then cancel their shutdown request:
-        if (serviceEntry->mShuttingDown) {
-            serviceEntry->mShuttingDown = PR_FALSE;
-            NS_ADDREF(service);      // Released in UnregisterService
-        }
-    }
-    return rv;
-}
-
 
 /* prototypes for the Mac */
 PRBool PR_CALLBACK
@@ -448,11 +308,7 @@ nsServiceEntry::nsServiceEntry(nsISupports* service, nsFactoryEntry* factEntry)
 nsServiceEntry::~nsServiceEntry()
 {
     NotifyListeners();
-
-    //special case the nsComponentManagerImpl.
-    // XXX review-notes we need to see why we need to do this
-    if ((void*)mObject != (void*)nsComponentManagerImpl::gComponentManager)
-        NS_IF_RELEASE(mObject);
+    NS_IF_RELEASE(mObject);
 }
 
 nsresult
@@ -746,11 +602,11 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
 }
 
-NS_IMPL_ISUPPORTS4(nsComponentManagerImpl, 
-                   nsIComponentManager, 
-                   nsIServiceManager,
-                   nsISupportsWeakReference, 
-                   nsIInterfaceRequestor)
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsComponentManagerImpl, 
+                              nsIComponentManager, 
+                              nsIServiceManager,
+                              nsISupportsWeakReference, 
+                              nsIInterfaceRequestor)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Platform methods
@@ -1585,7 +1441,7 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
     // test this first, since there's no point in creating a component during
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
-    if (gShuttingDown) {
+    if (gXPCOMShuttingDown) {
         // When processing shutdown, dont process new GetService() requests
 #ifdef DEBUG_dp
         NS_WARN_IF_FALSE(PR_FALSE, "Creating new instance on shutdown. Denied.");
@@ -1642,7 +1498,7 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
     // test this first, since there's no point in creating a component during
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
-    if (gShuttingDown) {
+    if (gXPCOMShuttingDown) {
         // When processing shutdown, dont process new GetService() requests
 #ifdef DEBUG_dp
         NS_WARN_IF_FALSE(PR_FALSE, "Creating new instance on shutdown. Denied.");
@@ -1704,16 +1560,16 @@ nsComponentManagerImpl::FreeServices()
     return NS_OK;
 }
 NS_IMETHODIMP
-nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
-                                   nsISupports* *result,
-                                   nsIShutdownListener* shutdownListener)
+nsComponentManagerImpl::GetService(const nsCID& aClass, 
+                                   const nsIID& aIID,
+                                   void* *result)
 {
     nsAutoMonitor mon(mMon);
 
     // test this first, since there's no point in returning a service during
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
-    if (gShuttingDown) {
+    if (gXPCOMShuttingDown) {
         // When processing shutdown, dont process new GetService() requests
         NS_WARNING("Creating new service on shutdown. Denied.");
         return NS_ERROR_UNEXPECTED;
@@ -1734,14 +1590,6 @@ nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
         if (NS_SUCCEEDED(rv)) {
             // The refcount acquired in QI() above is "returned" to
             // the caller.
-            if (shutdownListener) {
-                rv = serviceEntry->AddListener(shutdownListener);
-                if (NS_FAILED(rv)) {
-                    NS_RELEASE(service);
-                    return rv;
-                }
-            }
-            
             *result = service;
 
             // If someone else requested the service to be shut down, 
@@ -1778,58 +1626,10 @@ nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
         return NS_ERROR_OUT_OF_MEMORY;       
     }
 
-    if (shutdownListener) {
-        rv = serviceEntry->AddListener(shutdownListener);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(service);
-            delete serviceEntry;
-            return rv;
-        }
-    }
     entry->mServiceEntry = serviceEntry; // deleted in nsFactoryEntry's destructor
     *result = service; // transfer ownership
     return rv;
 }
-
-NS_IMETHODIMP
-nsComponentManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
-                                     nsIShutdownListener* shutdownListener)
-{
-    PRBool serviceFound = PR_FALSE;
-    nsresult rv = NS_OK;
-
-#ifndef NS_DEBUG
-    // Do entry lookup only if there is a shutdownlistener to be removed.
-    //
-    // For Debug builds, Consistency check for entry always. Releasing service
-    // when the service is not with the servicemanager is mostly wrong.
-    if (shutdownListener)
-#endif
-    {
-        nsAutoMonitor mon(mMon);
-        nsIDKey key(aClass);
-        nsFactoryEntry* entry = (nsFactoryEntry*)mFactories->Get(&key);
-
-        if (entry && entry->mServiceEntry) {
-            rv = entry->mServiceEntry->RemoveListener(shutdownListener);
-            serviceFound = PR_TRUE;
-        }
-    }
-    
-    nsrefcnt cnt;
-    NS_RELEASE2(service, cnt);
-
-    // Consistency check: Service ref count cannot go to zero because of the
-    // extra addref the service manager does, unless the service has been
-    // unregistered (ie) not found in the service managers hash table.
-    // 
-    NS_ASSERTION(cnt > 0 || !serviceFound,
-                 "*** Service in hash table but is being deleted. Dangling pointer\n"
-                 "*** in service manager hash table.");
-
-    return rv;
-}
-
 
 NS_IMETHODIMP
 nsComponentManagerImpl::RegisterService(const nsCID& aClass, nsISupports* aService)
@@ -1878,7 +1678,7 @@ nsComponentManagerImpl::UnregisterService(const nsCID& aClass)
 }
 
 NS_IMETHODIMP
-nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aService)
+nsComponentManagerImpl::RegisterServiceByContractID(const char* aContractID, nsISupports* aService)
 {
     nsAutoMonitor mon(mMon);
 
@@ -1909,8 +1709,90 @@ nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aS
     return NS_OK;
 }
 
+
+NS_IMETHODIMP 
+nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
+                                              const nsIID& aIID,
+                                              PRBool *result)
+{
+    // Now we want to get the service if we already got it. If not, we dont want
+    // to create an instance of it. mmh!
+
+    // test this first, since there's no point in returning a service during
+    // shutdown -- whether it's available or not would depend on the order it
+    // occurs in the list
+    if (gXPCOMShuttingDown) {
+        // When processing shutdown, dont process new GetService() requests
+        NS_WARNING("Creating new service on shutdown. Denied.");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    nsresult rv = NS_ERROR_SERVICE_NOT_FOUND;
+    nsIDKey key(aClass);
+    nsFactoryEntry *entry = (nsFactoryEntry *) mFactories->Get(&key);
+    nsServiceEntry* serviceEntry;
+    if (entry && entry->mServiceEntry) {
+        serviceEntry = entry->mServiceEntry;
+
+        if (!serviceEntry->mObject)
+            return NS_ERROR_NULL_POINTER;
+        nsISupports* service; // keep as raw point (avoid extra addref/release)
+        rv = serviceEntry->mObject->QueryInterface(aIID, (void**)&service);
+        *result =(service!=nsnull);
+        // If someone else requested the service to be shut down, 
+        // and we just asked to get it again before it could be 
+        // released, then cancel their shutdown request:
+        if (serviceEntry->mShuttingDown) {
+            serviceEntry->mShuttingDown = PR_FALSE;
+            NS_ADDREF(service);      // Released in UnregisterService
+        }
+    }
+    return rv;
+
+}
+
+NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const char *aContractID, 
+                                                                        const nsIID& aIID,
+                                                                        PRBool *result)
+{
+    // Now we want to get the service if we already got it. If not, we dont want
+    // to create an instance of it. mmh!
+
+    // test this first, since there's no point in returning a service during
+    // shutdown -- whether it's available or not would depend on the order it
+    // occurs in the list
+    if (gXPCOMShuttingDown) {
+        // When processing shutdown, dont process new GetService() requests
+        NS_WARNING("checking for new service on shutdown. Denied.");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    nsresult rv = NS_ERROR_SERVICE_NOT_FOUND;
+    nsCStringKey key(aContractID);
+    nsFactoryEntry *entry = (nsFactoryEntry *) mContractIDs->Get(&key);
+    nsServiceEntry* serviceEntry;
+    if (entry && entry != kNonExistentContractID && entry->mServiceEntry) {
+        serviceEntry = entry->mServiceEntry;
+
+        if (!serviceEntry->mObject)
+            return NS_ERROR_NULL_POINTER;
+        nsISupports* service; // keep as raw point (avoid extra addref/release)
+        rv = serviceEntry->mObject->QueryInterface(aIID, (void**)&service);
+        *result =(service!=nsnull);
+        // If someone else requested the service to be shut down, 
+        // and we just asked to get it again before it could be 
+        // released, then cancel their shutdown request:
+        if (serviceEntry->mShuttingDown) {
+            serviceEntry->mShuttingDown = PR_FALSE;
+            NS_ADDREF(service);      // Released in UnregisterService
+        }
+    }
+    return rv;
+}
+
+
 NS_IMETHODIMP
-nsComponentManagerImpl::UnregisterService(const char* aContractID)
+nsComponentManagerImpl::UnregisterServiceByContractID(const char* aContractID)
 {
     nsresult rv = NS_OK;
     nsAutoMonitor mon(mMon);
@@ -1927,16 +1809,16 @@ nsComponentManagerImpl::UnregisterService(const char* aContractID)
 }
 
 NS_IMETHODIMP
-nsComponentManagerImpl::GetService(const char* aContractID, const nsIID& aIID,
-                                 nsISupports* *result,
-                                 nsIShutdownListener* shutdownListener)
+nsComponentManagerImpl::GetServiceByContractID(const char* aContractID, 
+                                               const nsIID& aIID,
+                                               void* *result)
 {
     nsAutoMonitor mon(mMon);
 
     // test this first, since there's no point in returning a service during
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
-    if (gShuttingDown) {
+    if (gXPCOMShuttingDown) {
         // When processing shutdown, dont process new GetService() requests
         NS_WARNING("Creating new service on shutdown. Denied.");
         return NS_ERROR_UNEXPECTED;
@@ -1957,14 +1839,6 @@ nsComponentManagerImpl::GetService(const char* aContractID, const nsIID& aIID,
         if (NS_SUCCEEDED(rv)) {
             // The refcount acquired in QI() above is "returned" to
             // the caller.
-            if (shutdownListener) {
-                rv = serviceEntry->AddListener(shutdownListener);
-                if (NS_FAILED(rv)) {
-                    NS_RELEASE(service);
-                    return rv;
-                }
-            }
-            
             *result = service;
 
             // If someone else requested the service to be shut down, 
@@ -2001,58 +1875,10 @@ nsComponentManagerImpl::GetService(const char* aContractID, const nsIID& aIID,
         return NS_ERROR_OUT_OF_MEMORY;       
     }
 
-    if (shutdownListener) {
-        rv = serviceEntry->AddListener(shutdownListener);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(service);
-            delete serviceEntry;
-            return rv;
-        }
-    }
     entry->mServiceEntry = serviceEntry; // deleted in nsFactoryEntry's destructor
     *result = service; // transfer ownership
     return rv;
 }
-
-NS_IMETHODIMP
-nsComponentManagerImpl::ReleaseService(const char* aContractID, nsISupports* service,
-                                     nsIShutdownListener* shutdownListener)
-{
-    PRBool serviceFound = PR_FALSE;
-    nsresult rv = NS_OK;
-
-#ifndef NS_DEBUG
-    // Do entry lookup only if there is a shutdownlistener to be removed.
-    //
-    // For Debug builds, Consistency check for entry always. Releasing service
-    // when the service is not with the servicemanager is mostly wrong.
-    if (shutdownListener)
-#endif
-    {
-        nsAutoMonitor mon(mMon);
-        nsCStringKey key(aContractID);
-        nsFactoryEntry* entry = (nsFactoryEntry*)mContractIDs->Get(&key);
-
-        if (entry && entry->mServiceEntry) {
-            rv = entry->mServiceEntry->RemoveListener(shutdownListener);
-            serviceFound = PR_TRUE;
-        }
-    }
-    
-    nsrefcnt cnt;
-    NS_RELEASE2(service, cnt);
-
-    // Consistency check: Service ref count cannot go to zero because of the
-    // extra addref the service manager does, unless the service has been
-    // unregistered (ie) not found in the service managers hash table.
-    // 
-    NS_ASSERTION(cnt > 0 || !serviceFound,
-                 "*** Service in hash table but is being deleted. Dangling pointer\n"
-                 "*** in service manager hash table.");
-
-    return rv;
-}
-
 
 
 /*
@@ -2632,11 +2458,7 @@ nsComponentManagerImpl::UnregisterComponentSpec(const nsCID &aClass,
 nsresult
 nsComponentManagerImpl::FreeLibraries(void) 
 {
-    nsIServiceManager* serviceMgr = NULL;
-    nsresult rv = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
-    if (NS_FAILED(rv)) return rv;
-    rv = UnloadLibraries(serviceMgr, NS_Timer); // XXX when
-    return rv;
+    return UnloadLibraries(NS_STATIC_CAST(nsIServiceManager*, this), NS_Timer); // XXX when
 }
 
 // Private implementation of unloading libraries
@@ -2746,15 +2568,11 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
              do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
     {
-
-        nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
-        rv = nsServiceManager::GetGlobalServiceManager(&mgr);
-        if (NS_SUCCEEDED(rv))
-        {
-            (void) observerService->Notify(mgr,
-                NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
-                NS_ConvertASCIItoUCS2("Starting component registration").get());
-        }
+        // NO COMPtr as we dont release the service manager
+        nsIServiceManager *mgr = NS_STATIC_CAST(nsIServiceManager*, this);
+        (void) observerService->Notify(mgr,
+                                       NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
+                                       NS_ConvertASCIItoUCS2("Starting component registration").get());
     }
 
     /* do the native loader first, so we can find other loaders */
@@ -2822,16 +2640,12 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
             }
         } while (NS_SUCCEEDED(rv) && registered);
     }
-
-  	nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
-  	rv = nsServiceManager::GetGlobalServiceManager(&mgr);
-  	if (NS_SUCCEEDED(rv))
-  	{
-      (void) observerService->Notify(mgr,
-          NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
-          NS_ConvertASCIItoUCS2("Component registration finished").get());
-  	}
-
+    
+    // NO COMPtr as we dont release the service manager
+    nsIServiceManager *mgr = NS_STATIC_CAST(nsIServiceManager*, this);
+    (void) observerService->Notify(mgr,
+                                   NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
+                                   NS_ConvertASCIItoUCS2("Component registration finished").get());
     return rv;
 }
 
@@ -2983,16 +2797,14 @@ nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
     nsresult rv = NS_OK;
     if (uuid.Equals(NS_GET_IID(nsIServiceManager)))
     {
-        // Return the global service manager
-        rv = nsServiceManager::GetGlobalServiceManager((nsIServiceManager **)result);
+        *result = NS_STATIC_CAST(nsIServiceManager*, this);
+        NS_ADDREF_THIS(); // dougt? extra addrefs??? 
+        return NS_OK;
     }
-    else
-    {
-        // fall through to QI as anything QIable is a superset of what canbe
-        // got via the GetInterface()
-        rv = QueryInterface(uuid, result);
-    }
-    return rv;
+    
+    // fall through to QI as anything QIable is a superset of what canbe
+    // got via the GetInterface()
+    return  QueryInterface(uuid, result);
 }
 
 // Convert a loader type string into an index into the component data
@@ -3058,7 +2870,7 @@ NS_GetGlobalComponentManager(nsIComponentManager* *result)
     if (nsComponentManagerImpl::gComponentManager == NULL)
     {
         // XPCOM needs initialization.
-        rv = NS_InitXPCOM(NULL, NULL);
+        rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     }
 
     if (NS_SUCCEEDED(rv))
@@ -3068,6 +2880,27 @@ NS_GetGlobalComponentManager(nsIComponentManager* *result)
     }
 
     return rv;
+}
+
+NS_COM nsresult
+NS_GetServiceManager(nsIServiceManager* *result)
+{
+    nsresult rv = NS_OK;
+
+    if (nsComponentManagerImpl::gComponentManager == NULL)
+    {
+        // XPCOM needs initialization.
+        rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    }
+
+    if (NS_FAILED(rv))
+        return rv;
+  
+  
+    *result = NS_STATIC_CAST(nsIServiceManager*, 
+                             nsComponentManagerImpl::gComponentManager);
+    NS_IF_ADDREF(*result);
+    return NS_OK;
 }
 
 
@@ -3301,133 +3134,3 @@ nsComponentManager::EnumerateContractIDs(nsIEnumerator** aEmumerator)
     return cm->EnumerateContractIDs(aEmumerator);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-// Global service manager interface (see nsIServiceManager.h)
-
-nsresult
-nsServiceManager::GetGlobalServiceManager(nsIServiceManager* *result)
-{
-    if (gShuttingDown)
-        return NS_ERROR_UNEXPECTED;
-
-    nsresult rv = NS_OK;
-    if (gServiceManager == NULL) {
-        // XPCOM not initialized yet. Let us do initialization of our module.
-        rv = NS_InitXPCOM(NULL, NULL);
-    }
-    // No ADDREF as we are advicing no release of this.
-    if (NS_SUCCEEDED(rv))
-        *result = gServiceManager;
-
-    return rv;
-}
-
-nsresult
-nsServiceManager::ShutdownGlobalServiceManager(nsIServiceManager* *result)
-{
-    if (gServiceManager != NULL) {
-        nsrefcnt cnt;
-
-        nsComponentManagerImpl* compImpl = NS_STATIC_CAST(nsComponentManagerImpl*, gServiceManager);
-        compImpl->FreeServices();
-
-        NS_RELEASE2(gServiceManager, cnt);
-        // the only reference at this point should be the component manager.
-        NS_ASSERTION(cnt == 1, "Service Manager being held past XPCOM shutdown.");
-        gServiceManager = NULL;
-    }
-    return NS_OK;
-}
-
-nsresult
-nsServiceManager::GetService(const nsCID& aClass, const nsIID& aIID,
-                             nsISupports* *result,
-                             nsIShutdownListener* shutdownListener)
-{
-    nsIServiceManager* mgr;
-    nsresult rv = GetGlobalServiceManager(&mgr);
-    if (NS_FAILED(rv)) return rv;
-    return mgr->GetService(aClass, aIID, result, shutdownListener);
-}
-
-nsresult
-nsServiceManager::ReleaseService(const nsCID& aClass, nsISupports* service,
-                                 nsIShutdownListener* shutdownListener)
-{
-    // Don't create the global service manager here because we might be shutting
-    // down, and releasing all the services in its destructor
-    if (gServiceManager) 
-        return gServiceManager->ReleaseService(aClass, service, shutdownListener);
-    // If there wasn't a global service manager, just release the object:
-    NS_RELEASE(service);
-    return NS_OK;
-}
-
-nsresult
-nsServiceManager::RegisterService(const nsCID& aClass, nsISupports* aService)
-{
-    nsIServiceManager* mgr;
-    nsresult rv = GetGlobalServiceManager(&mgr);
-    if (NS_FAILED(rv)) return rv;
-    return mgr->RegisterService(aClass, aService);
-}
-
-nsresult
-nsServiceManager::UnregisterService(const nsCID& aClass)
-{
-    nsIServiceManager* mgr;
-    nsresult rv = GetGlobalServiceManager(&mgr);
-    if (NS_FAILED(rv)) return rv;
-    return mgr->UnregisterService(aClass);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// let's do it again, this time with ContractIDs...
-
-nsresult
-nsServiceManager::GetService(const char* aContractID, const nsIID& aIID,
-                             nsISupports* *result,
-                             nsIShutdownListener* shutdownListener)
-{
-    nsIServiceManager* mgr;
-    nsresult rv = GetGlobalServiceManager(&mgr);
-    if (NS_FAILED(rv)) return rv;
-    return mgr->GetService(aContractID, aIID, result, shutdownListener);
-}
-
-nsresult
-nsServiceManager::ReleaseService(const char* aContractID, nsISupports* service,
-                                 nsIShutdownListener* shutdownListener)
-{
-    // Don't create the global service manager here because we might
-    // be shutting down, and releasing all the services in its
-    // destructor
-    if (gServiceManager)
-        return gServiceManager->ReleaseService(aContractID, service, shutdownListener);
-    // If there wasn't a global service manager, just release the object:
-    NS_RELEASE(service);
-    return NS_OK;
-}
-
-nsresult
-nsServiceManager::RegisterService(const char* aContractID, nsISupports* aService)
-{
-    nsIServiceManager* mgr;
-    nsresult rv = GetGlobalServiceManager(&mgr);
-    if (NS_FAILED(rv)) return rv;
-    return mgr->RegisterService(aContractID, aService);
-}
-
-nsresult
-nsServiceManager::UnregisterService(const char* aContractID)
-{
-    // Don't create the global service manager here because we might
-    // be shutting down, and releasing all the services in its
-    // destructor
-    if (gServiceManager) 
-        return gServiceManager->UnregisterService(aContractID);
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////

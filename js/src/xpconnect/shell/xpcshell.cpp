@@ -834,7 +834,7 @@ main(int argc, char **argv)
     gErrFile = stderr;
     gOutFile = stdout;
 
-    rv = NS_InitXPCOM(NULL, NULL);
+    rv = NS_InitXPCOM2(NULL, NULL, NULL);
     if (NS_FAILED(rv)) {
         printf("NS_InitXPCOM failed!\n");
         return 1;

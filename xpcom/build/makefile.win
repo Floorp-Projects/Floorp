@@ -34,6 +34,10 @@ MAKE_OBJ_TYPE=DLL
 LIBNAME = .\$(OBJDIR)\xpcom
 DLL = $(LIBNAME).dll
 
+EXPORTS =         \
+	nsXPCOM.h \
+        $(NULL)			
+
 # if we ever add a .def file for x86 we need to deal with this.
 !if "$(CPU)" == "ALPHA"
 DEFFILE = xpcom_alpha.def
