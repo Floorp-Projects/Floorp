@@ -40,7 +40,6 @@
 #import "NSString+Utils.h"
 
 #import "BrowserTabView.h"
-#import "CHIconTabViewItem.h"
 #import "BookmarksService.h"
 #import "BookmarksDataSource.h"
 
@@ -61,7 +60,10 @@
 @interface BrowserTabView (Private)
 
 - (void)showOrHideTabsAsAppropriate;
-- (void)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url;
+- (BOOL)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url;
+- (BrowserTabViewItem*)getTabViewItemFromWindowPoint:(NSPoint)point;
+- (void)showDragDestinationIndicator;
+- (void)hideDragDestinationIndicator;
 
 @end
 
@@ -93,29 +95,43 @@
 
 - (BOOL)isOpaque
 {
-    if ( ([self tabViewType] == NSNoTabsBezelBorder) && (NSAppKitVersionNumber < 633) ) {
-        return NO;
-    } else {
-        return [super isOpaque];
-    }
+  if ( ([self tabViewType] == NSNoTabsBezelBorder) && (NSAppKitVersionNumber < 633) )
+    return NO;
+
+  return [super isOpaque];
+}
+
+- (void)drawRect:(NSRect)aRect
+{
+  if (mIsDropTarget)
+  {
+    NSRect	hilightRect = aRect;
+    hilightRect.size.height = 18.0;		// no need to move origin.y; our coords are flipped
+    NSBezierPath* dropTargetOutline = [NSBezierPath bezierPathWithRect:hilightRect];
+
+    [[[NSColor colorForControlTint:NSDefaultControlTint] colorWithAlphaComponent:0.5] set];
+    [dropTargetOutline fill];
+  }
+
+  [super drawRect:aRect];
 }
 
 - (void)addTabViewItem:(NSTabViewItem *)tabViewItem
 {
-    [super addTabViewItem:tabViewItem];
-    [self showOrHideTabsAsAppropriate];
+  [super addTabViewItem:tabViewItem];
+  [self showOrHideTabsAsAppropriate];
 }
 
 - (void)removeTabViewItem:(NSTabViewItem *)tabViewItem
 {
-    [super removeTabViewItem:tabViewItem];
-    [self showOrHideTabsAsAppropriate];
+  [super removeTabViewItem:tabViewItem];
+  [self showOrHideTabsAsAppropriate];
 }
 
 - (void)insertTabViewItem:(NSTabViewItem *)tabViewItem atIndex:(int)index
 {
-    [super insertTabViewItem:tabViewItem atIndex:index];
-    [self showOrHideTabsAsAppropriate];
+  [super insertTabViewItem:tabViewItem atIndex:index];
+  [self showOrHideTabsAsAppropriate];
 }
 
 /******************************************/
@@ -155,36 +171,91 @@
 // Only to be used with the 2 types of tab view which we use in Chimera.
 - (void)showOrHideTabsAsAppropriate
 {
-//    if ( autoHides == YES ) {
-        if ( [[self tabViewItems] count] < 2) {
-            if ( [self tabViewType] != NSNoTabsBezelBorder ) {
-                [self setFrameSize:NSMakeSize( NSWidth([self frame]), NSHeight([self frame]) + 10 )];
-            }
-            [self setTabViewType:NSNoTabsBezelBorder];
-        } else {
-            if ( [self tabViewType] != NSTopTabsBezelBorder ) {
-                [self setFrameSize:NSMakeSize( NSWidth([self frame]), NSHeight([self frame]) - 10 )];
-            }
-            [self setTabViewType:NSTopTabsBezelBorder];
-        }
-        [self display];
-//    }
+  //if ( autoHides == YES )
+  {
+    BOOL tabVisibilityChanged = NO;
+    BOOL tabsVisible = NO;
+    
+    if ( [[self tabViewItems] count] < 2)
+    {
+      if ( [self tabViewType] != NSNoTabsBezelBorder )
+        [self setFrameSize:NSMakeSize( NSWidth([self frame]), NSHeight([self frame]) + 10 )];
+
+      [self setTabViewType:NSNoTabsBezelBorder];
+      tabVisibilityChanged = YES;
+      tabsVisible = NO;
+    }
+    else
+    {
+      if ( [self tabViewType] != NSTopTabsBezelBorder )
+        [self setFrameSize:NSMakeSize( NSWidth([self frame]), NSHeight([self frame]) - 10 )];
+
+      [self setTabViewType:NSTopTabsBezelBorder];
+      tabVisibilityChanged = YES;
+      tabsVisible = YES;
+    }
+
+    // tell the tabs that visibility changed
+    NSArray* tabViewItems = [self tabViewItems];
+    for (unsigned int i = 0; i < [tabViewItems count]; i ++)
+    {
+      NSTabViewItem* tabItem = [tabViewItems objectAtIndex:i];
+      if ([tabItem isMemberOfClass:[BrowserTabViewItem class]])
+        [(BrowserTabViewItem*)tabItem updateTabVisibility:tabsVisible];
+    }
+
+    [self display];
+	}
 }
 
 
-- (void)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url
+- (BOOL)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url
 {
-  if (overTabViewItem) {
+  if (overTabViewItem) 
+  {
     [[overTabViewItem view] loadURI: url referrer:nil flags: NSLoadFlagsNone activate:NO];
-  } else if (overContentArea) {
+    return YES;
+  }
+  else if (overContentArea)
+  {
     [[[self selectedTabViewItem] view] loadURI: url referrer:nil flags: NSLoadFlagsNone activate:NO];
-  } else if ([self canMakeNewTabs]) {
+    return YES;
+  }
+  else if ([self canMakeNewTabs])
+  {
     [self addTabForURL:url referrer:nil];
-  } else {
-    NSLog(@"Can't make new tab for drop");
+    return YES;
   }
   
+  return NO;  
 }
+
+- (BrowserTabViewItem*)getTabViewItemFromWindowPoint:(NSPoint)point
+{
+  NSPoint         localPoint      = [self convertPoint: point fromView: nil];
+  NSTabViewItem*  overTabViewItem = [self tabViewItemAtPoint: localPoint];
+  return (BrowserTabViewItem*)overTabViewItem;
+}
+
+- (void)showDragDestinationIndicator
+{
+  if (!mIsDropTarget)
+  {
+    mIsDropTarget = YES;
+    [self setNeedsDisplay:YES];
+  }
+}
+
+- (void)hideDragDestinationIndicator
+{
+  if (mIsDropTarget)
+  {
+    mIsDropTarget = NO;
+    [self setNeedsDisplay:YES];
+  }
+}
+
+#pragma mark -
 
 // NSDraggingDestination ///////////
 
@@ -194,9 +265,13 @@
   NSTabViewItem*  overTabViewItem = [self tabViewItemAtPoint: localPoint];
   BOOL            overContentArea = NSPointInRect(localPoint, [self contentRect]);
 
-  if (!overTabViewItem && !overContentArea && ![self canMakeNewTabs])
+  if (overTabViewItem)
+    return NSDragOperationNone;	// the tab will handle it
+
+  if (!overContentArea && ![self canMakeNewTabs])
     return NSDragOperationNone;
   
+  [self showDragDestinationIndicator];	// XXX optimize
   return NSDragOperationGeneric;
 }
 
@@ -206,10 +281,22 @@
   NSTabViewItem*  overTabViewItem = [self tabViewItemAtPoint: localPoint];
   BOOL            overContentArea = NSPointInRect(localPoint, [self contentRect]);
 
-  if (!overTabViewItem && !overContentArea && ![self canMakeNewTabs])
-    return NSDragOperationNone;
+  if (overTabViewItem)
+    return NSDragOperationNone;	// the tab will handle it
 
+  if (!overContentArea && ![self canMakeNewTabs])
+  {
+    [self hideDragDestinationIndicator];
+    return NSDragOperationNone;
+  }
+
+  [self showDragDestinationIndicator];
   return NSDragOperationGeneric;
+}
+
+- (void)draggingExited:(id <NSDraggingInfo>)sender
+{
+  [self hideDragDestinationIndicator];
 }
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
@@ -224,6 +311,8 @@
   NSTabViewItem*  overTabViewItem = [self tabViewItemAtPoint: localPoint];
   BOOL            overContentArea = NSPointInRect(localPoint, [self contentRect]);
   NSArray*        pasteBoardTypes = [[sender draggingPasteboard] types];
+
+  [self hideDragDestinationIndicator];
 
   if ([pasteBoardTypes containsObject: @"MozBookmarkType"])
   {
@@ -246,7 +335,7 @@
         if (!group.IsEmpty()) {
           BookmarksService::OpenBookmarkGroup(self, bookmarkElt);
         } else {
-          [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:url];
+          return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:url];
         }
       }	// for each item
     }
@@ -257,38 +346,47 @@
     NSDictionary* data = [[sender draggingPasteboard] propertyListForType: @"MozURLType"];
     if (data) {
       NSString*	urlString = [data objectForKey:@"url"];
-      [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
+      return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
     }
   }
   else if ([pasteBoardTypes containsObject: NSStringPboardType])
   {
     NSString*	urlString = [[sender draggingPasteboard] stringForType: NSStringPboardType];
-    [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
+    return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
   }
   else if ([pasteBoardTypes containsObject: NSURLPboardType])
   {
     NSURL*	urlData = [NSURL URLFromPasteboard:[sender draggingPasteboard]];
-    [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[urlData absoluteString]];
+    return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[urlData absoluteString]];
   }
   else if ([pasteBoardTypes containsObject: NSFilenamesPboardType])
   {
     NSString*	urlString = [[sender draggingPasteboard] stringForType: NSFilenamesPboardType];
-    [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
+    return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
   }
   
-  return YES;    
+  return NO;    
 }
+
+#pragma mark -
 
 -(void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer
 {
   // We need to make a new tab.
-  CHIconTabViewItem *tabViewItem= [[[CHIconTabViewItem alloc] initWithIdentifier: nil] autorelease];
+  BrowserTabViewItem *tabViewItem= [BrowserTabView makeNewTabItem];
   CHBrowserWrapper *newView = [[[CHBrowserWrapper alloc] initWithTab: tabViewItem andWindow: [self window]] autorelease];
   [tabViewItem setLabel: NSLocalizedString(@"UntitledPageTitle", @"")];
   [tabViewItem setView: newView];
   [self addTabViewItem: tabViewItem];
 
   [[tabViewItem view] loadURI: aURL referrer:aReferrer flags: NSLoadFlagsNone activate:NO];
+}
+
+#pragma mark -
+
++ (BrowserTabViewItem*)makeNewTabItem
+{
+  return [[[BrowserTabViewItem alloc] init] autorelease];
 }
 
 @end

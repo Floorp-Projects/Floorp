@@ -18,12 +18,16 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "BrowserTabViewItem.h"
 
 @interface BrowserTabView : NSTabView
 {
   BOOL autoHides;
+  BOOL mIsDropTarget;
   int  maxNumberOfTabs;			// 0 means 'no max'
 }
+
++ (BrowserTabViewItem*)makeNewTabItem;
 
 //  Behavior: Autohiding overrides the default tab visibility state.
 //            To switch back to usual tabView behavior, setAutoHides:NO.
