@@ -1549,7 +1549,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
       aRenderingContext.SetColor(aTextStyle.mColor->mColor);
       aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
       PaintTextDecorations(aRenderingContext, aStyleContext,
-                           aTextStyle, dx, dy, width, (PRUnichar *)text, details,0,textLength);
+                           aTextStyle, dx, dy, width, rawPaintBuf, details,0,textLength);
       sdptr = details;
       if (details){
         while(sdptr = details->mNext){
