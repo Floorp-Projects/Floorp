@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.25 $ 
-# $Date: 2003/05/26 13:39:57 $ 
+# $Revision: 1.26 $ 
+# $Date: 2003/08/16 18:29:00 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -174,6 +174,16 @@ sub text_browser_color_string {
 sub timeHTML {
   my ($t) = @_;
   my ($sec,$minute,$hour,$mday,$mon,$ignore) = localtime($t);
+  my ($out) = sprintf("%02d/%02d&nbsp;%02d:%02d",$mon+1,$mday,$hour,$minute);
+  return $out;
+}
+
+# Turn a time in 'time() format' into a string suitable for html
+# printing using the GMT timezone. eg '05/31&nbsp;14:59'
+
+sub gmtimeHTML {
+  my ($t) = @_;
+  my ($sec,$minute,$hour,$mday,$mon,$ignore) = gmtime($t);
   my ($out) = sprintf("%02d/%02d&nbsp;%02d:%02d",$mon+1,$mday,$hour,$minute);
   return $out;
 }
