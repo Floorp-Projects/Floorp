@@ -84,6 +84,28 @@ ifdef GC_LEAK_DETECTOR
 LIBS += -lboehm
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
+BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
+CPPSRCS += nsNativeAppSupportPh.cpp
+LIBS += -lphexlib
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CPPSRCS += nsNativeAppSupportOS2.cpp
+CPPSRCS += nsNativeAppSupportBase.cpp
+OS2_PROGRAM_RESOURCE = $(srcdir)/splashos2.rc
+endif
+
+#ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
+#CPPSRCS += nsNativeAppSupportGtk.cpp
+#LIBS += $(MOZ_GTK_LDFLAGS) -lgdk -lglib -lX11 
+#endif
+
+include $(topsrcdir)/config/rules.mk
+
 # This code removes the console from release builds
 # (unless you've set MOZ_WINCONSOLE=1).
 ifndef MOZ_WINCONSOLE
@@ -107,28 +129,6 @@ ifeq ($(MOZ_OS2_TOOLS),EMX)
 BIN_FLAGS	:= -Zlinker /PM:PM -Zlinker /Stack:0x30000
 endif
 endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
-CPPSRCS += nsNativeAppSupportPh.cpp
-LIBS += -lphexlib
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-CPPSRCS += nsNativeAppSupportOS2.cpp
-CPPSRCS += nsNativeAppSupportBase.cpp
-OS2_PROGRAM_RESOURCE = $(srcdir)/splashos2.rc
-endif
-
-#ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
-#CPPSRCS += nsNativeAppSupportGtk.cpp
-#LIBS += $(MOZ_GTK_LDFLAGS) -lgdk -lglib -lX11 
-#endif
-
-include $(topsrcdir)/config/rules.mk
 
 XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
 
