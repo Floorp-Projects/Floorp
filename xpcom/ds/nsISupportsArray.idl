@@ -39,6 +39,14 @@
 #include "nsISupports.idl"
 #include "nsICollection.idl"
 
+/*
+ * This entire interface is deprecated and should not be used.
+ * See nsIArray and nsIMutableArray for the new implementations.
+ *
+ * http://groups.google.com/groups?q=nsisupportsarray+group:netscape.public.mozilla.xpcom&hl=en&lr=&ie=UTF-8&oe=UTF-8&selm=3D779491.3050506%40netscape.com&rnum=2
+ * http://groups.google.com/groups?q=nsisupportsarray+group:netscape.public.mozilla.xpcom&hl=en&lr=&ie=UTF-8&oe=UTF-8&selm=al8412%245ab2%40ripley.netscape.com&rnum=8
+ */
+
 native nsISupportsArrayEnumFunc(nsISupportsArrayEnumFunc);
 
 %{C++
