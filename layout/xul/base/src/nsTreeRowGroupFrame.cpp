@@ -701,14 +701,6 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
 
   mCurrentIndex = aNewIndex;
 
-  // XXX This could cause problems because of async reflow.
-  // Eventually we need to make the code smart enough to look at a content chain
-  // when building ANOTHER content chain.
-  /*if (mContentChain) {
-    NS_ERROR("This is bad!");
-    return NS_OK;
-  }*/
-
   // Get our row count.
   PRInt32 rowCount;
   GetRowCount(rowCount);
@@ -726,6 +718,17 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
 
   // Get our presentation context.
   if (delta < rowCount) {
+    if (mContentChain) {
+      // XXX This could cause problems because of async reflow.
+      // Eventually we need to make the code smart enough to look at a content chain
+      // when building ANOTHER content chain.
+  
+      // Ensure all reflows happen first.
+      nsCOMPtr<nsIPresShell> shell;
+      aPresContext->GetShell(getter_AddRefs(shell));
+      shell->ProcessReflowCommands(PR_FALSE);
+    }
+
     PRInt32 loseRows = delta;
 
     // scrolling down
@@ -733,7 +736,6 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
       // Figure out how many rows we have to lose off the top.
       DestroyRows(tableFrame, aPresContext, loseRows);
     }
-
     // scrolling up
     else {
       // Get our first row content.
