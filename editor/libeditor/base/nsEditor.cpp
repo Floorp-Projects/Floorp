@@ -3058,6 +3058,42 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
   return PR_TRUE;
 }
 
+PRUint32
+nsEditor::CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount) 
+{
+  outCount = 0;
+  if (!aNode) { return NS_ERROR_NULL_POINTER; }
+  nsresult res=NS_OK;
+  PRBool hasChildNodes;
+  aNode->HasChildNodes(&hasChildNodes);
+  if (PR_TRUE==hasChildNodes)
+  {
+    nsCOMPtr<nsIDOMNodeList>nodeList;
+    PRUint32 len;
+    PRInt32 i;
+    res = aNode->GetChildNodes(getter_AddRefs(nodeList));
+    if (NS_SUCCEEDED(res) && nodeList) 
+    {
+      nodeList->GetLength(&len);
+      for (i=0 ; i<len; i++)
+      {
+        nsCOMPtr<nsIDOMNode> child;
+        res = nodeList->Item(i, getter_AddRefs(child));
+        if ((NS_SUCCEEDED(res)) && (child))
+        {
+          if (IsEditable(child))
+          {
+            outCount++;
+          }
+        }
+      }
+    }
+    else if (!nodeList)
+      res = NS_ERROR_NULL_POINTER;
+  }
+  return res;
+}
+
 //END nsEditor static utility methods
 
 

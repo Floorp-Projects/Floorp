@@ -87,6 +87,7 @@ protected:
   static PRBool IsBreak(nsIDOMNode *aNode);
   static PRBool IsBody(nsIDOMNode *aNode);
   static PRBool IsBlockquote(nsIDOMNode *aNode);
+  static PRBool IsDiv(nsIDOMNode *aNode);
 
   static PRBool IsFirstNode(nsIDOMNode *aNode);
   static PRBool IsLastNode(nsIDOMNode *aNode);
@@ -94,7 +95,8 @@ protected:
                                   PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
   
   nsresult ReplaceContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, nsString &aNodeType);
-  nsresult InsertContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, nsString &aNodeType);
+  nsresult RemoveContainer(nsIDOMNode *inNode);
+  nsresult InsertContainerAbove(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, nsString &aNodeType);
 
 };
 

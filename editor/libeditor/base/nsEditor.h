@@ -513,6 +513,9 @@ public:
   /** returns PR_TRUE if aNode is an editable node */
   static PRBool IsEditable(nsIDOMNode *aNode);
 
+  /** counts number of editable child nodes */
+  static nsresult CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount);
+  
   /** Find the deep first and last children */
   static nsCOMPtr<nsIDOMNode> GetDeepFirstChild(nsCOMPtr<nsIDOMNode> aRoot);
   static nsCOMPtr<nsIDOMNode> GetDeepLastChild(nsCOMPtr<nsIDOMNode> aRoot);

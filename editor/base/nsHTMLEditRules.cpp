@@ -525,6 +525,13 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
     if (NS_FAILED(res)) return res;
   }
   
+  // if we ended up with any nodes in the list that aren't blocknodes, 
+  // find their block parent instead and use that.
+  
+    // i started writing this and then the sky fell.  there are big questions
+    // about what to do here.  i may need to switch rom think about an array of
+    // nodes to act on to instead think of an array of ranges to act on.
+  
   // Next we remove all the <br>'s in the array.  This won't prevent <br>'s 
   // inside of <p>'s from being significant - those <br>'s are not hit by 
   // the subtree iterator, since they are enclosed in a <p>.
@@ -536,8 +543,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
   list->Count(&listCount);
   for (i=listCount-1; i>=0; i--)
   {
-    nsISupports *thingy;
-    thingy = list->ElementAt(i);
+    nsISupports *thingy = list->ElementAt(i);
     nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(thingy) );
     if (IsBreak(testNode))
     {
@@ -549,7 +555,39 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
     }
   }
   
-  
+  // if there is only one node in the array, and it is a list, div, or blockquote,
+  // then look inside of it until we find what we want to make a list out of.
+  if (listCount == 1)
+  {
+    nsISupports *thingy;
+    thingy = list->ElementAt(0);
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(thingy) );
+    
+    while (IsDiv(curNode) || IsOrderedList(curNode) || IsUnorderedList(curNode) || IsBlockquote(curNode))
+    {
+      // dive as long as there is only one child, and it is a list, div, or blockquote
+      PRInt32 numChildren;
+      res = nsEditor::CountEditableChildren(curNode, numChildren);
+      if (NS_FAILED(res)) return res;
+      
+      if (numChildren == 1)
+      {
+        // keep diving
+        nsCOMPtr <nsIDOMNode> tmpNode = nsEditor::GetChildAt(curNode, 0);
+        // check editablility XXX moose
+        curNode = tmpNode;
+      }
+      else
+      {
+        // stop diving
+        break;
+      }
+    }
+    // we've found innermost list/blockquote/div: 
+    // replace the one node in the array with this node
+    list->ReplaceElementAt(curNode, 0);
+  }
+
   // Next we detect all the transitions in the array, where a transition
   // means that adjacent nodes in the array don't have the same parent.
   
@@ -576,102 +614,108 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
   }
   
   
-  // Ok, now go through all the lodes and put then in the list, 
+  // Ok, now go through all the nodes and put then in the list, 
   // or whatever is approriate.  Wohoo!
-  
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curList;
-  for (i=0; i<listCount; i++)
-  {
-    // here's where we actually figure out what to do
-    nsISupports *thingy;
-    thingy = list->ElementAt(i);
-    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(thingy) );
-    PRInt32 offset;
-    res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
-    if (NS_FAILED(res)) return res;
     
-    if (transitionList[i] && ((i+1)<listCount) && transitionList[i+1])
+    for (i=0; i<listCount; i++)
     {
-      // the parent of this node has no other children on the 
-      // list of nodes to make a list out of.  So if this node
-      // is a list, change it's list type if needed instead of 
-      // reparenting it 
-      nsCOMPtr<nsIDOMNode> newBlock;
-      if (IsUnorderedList(curNode))
-      {
-        if (aOrdered)
-        {
-          // make a new ordered list, insert it where the current unordered list is,
-          // and move all the children to the new list, and remove the old list
-          nsAutoString blockType("ol");
-          res = ReplaceContainer(curNode,&newBlock,blockType);
-          if (NS_FAILED(res)) return res;
-          curList = newBlock;
-          continue;
-        }
-        else
-        {
-          // do nothing, we are already the right kind of list
-          curList = newBlock;
-          continue;
-        }
-      }
-      else if (IsOrderedList(curNode))
-      {
-        if (!aOrdered)
-        {
-          // make a new unordered list, insert it where the current ordered list is,
-          // and move all the children to the new list, and remove the old list
-          nsAutoString blockType("ul");
-          ReplaceContainer(curNode,&newBlock,blockType);
-          if (NS_FAILED(res)) return res;
-          curList = newBlock;
-          continue;
-        }
-        else
-        {
-          // do nothing, we are already the right kind of list
-          curList = newBlock;
-          continue;
-        }
-      }
-    }  // lonely node
-    
-    // need to make a list to put things in if we haven't already,
-    // or if this node doesn't go in list we used earlier.
-    if (!curList || transitionList[i])
-    {
-      nsAutoString listType;
-      if (aOrdered) listType = "ol";
-      else listType = "ul";
-      res = mEditor->CreateNode(listType, curParent, offset, getter_AddRefs(curList));
+      // here's where we actually figure out what to do
+      nsISupports *thingy;
+      thingy = list->ElementAt(i);
+      nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(thingy) );
+      PRInt32 offset;
+      res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
       if (NS_FAILED(res)) return res;
-      // curList is now the correct thing to put curNode in
-    }
     
-    // if curNode isn't a list item, we must wrap it in one
-    nsCOMPtr<nsIDOMNode> listItem;
-    if (!IsListItem(curNode))
-    {
-      nsAutoString listItemType = "li";
-      res = InsertContainer(curNode, &listItem, listItemType);
+      if (transitionList[i] &&                             // transition node
+          ((((i+1)<listCount) && transitionList[i+1]) ||   // and next node is transistion node
+          ( i+1 >= listCount)))                            // or there is no next node
+      {
+        // the parent of this node has no other children on the 
+        // list of nodes to make a list out of.  So if this node
+        // is a list, change it's list type if needed instead of 
+        // reparenting it 
+        nsCOMPtr<nsIDOMNode> newBlock;
+        if (IsUnorderedList(curNode))
+        {
+          if (aOrdered)
+          {
+            // make a new ordered list, insert it where the current unordered list is,
+            // and move all the children to the new list, and remove the old list
+            nsAutoString blockType("ol");
+            res = ReplaceContainer(curNode,&newBlock,blockType);
+            if (NS_FAILED(res)) return res;
+            curList = newBlock;
+            continue;
+          }
+          else
+          {
+            // do nothing, we are already the right kind of list
+            curList = newBlock;
+            continue;
+          }
+        }
+        else if (IsOrderedList(curNode))
+        {
+          if (!aOrdered)
+          {
+            // make a new unordered list, insert it where the current ordered list is,
+            // and move all the children to the new list, and remove the old list
+            nsAutoString blockType("ul");
+            ReplaceContainer(curNode,&newBlock,blockType);
+            if (NS_FAILED(res)) return res;
+            curList = newBlock;
+            continue;
+          }
+          else
+          {
+            // do nothing, we are already the right kind of list
+            curList = newBlock;
+            continue;
+          }
+        }
+        else if (IsDiv(curNode) || IsBlockquote(curNode))
+        {
+          // XXX moose
+        }
+      }  // lonely node
+    
+      // need to make a list to put things in if we haven't already,
+      // or if this node doesn't go in list we used earlier.
+      if (!curList || transitionList[i])
+      {
+        nsAutoString listType;
+        if (aOrdered) listType = "ol";
+        else listType = "ul";
+        res = mEditor->CreateNode(listType, curParent, offset, getter_AddRefs(curList));
+        if (NS_FAILED(res)) return res;
+        // curList is now the correct thing to put curNode in
+      }
+    
+      // if curNode isn't a list item, we must wrap it in one
+      nsCOMPtr<nsIDOMNode> listItem;
+      if (!IsListItem(curNode))
+      {
+        nsAutoString listItemType = "li";
+        res = InsertContainerAbove(curNode, &listItem, listItemType);
+        if (NS_FAILED(res)) return res;
+      }
+      else
+      {
+        listItem = curNode;
+      }
+    
+      // tuck the listItem into the end of the active list
+      PRUint32 listLen;
+      res = mEditor->GetLengthOfDOMNode(curList, listLen);
+      if (NS_FAILED(res)) return res;
+      res = mEditor->DeleteNode(listItem);
+      if (NS_FAILED(res)) return res;
+      res = mEditor->InsertNode(listItem, curList, listLen);
       if (NS_FAILED(res)) return res;
     }
-    else
-    {
-      listItem = curNode;
-    }
-    
-    // tuck the listItem into the end of the active list
-    PRUint32 listLen;
-    res = mEditor->GetLengthOfDOMNode(curList, listLen);
-    if (NS_FAILED(res)) return res;
-    res = mEditor->DeleteNode(listItem);
-    if (NS_FAILED(res)) return res;
-    res = mEditor->InsertNode(listItem, curList, listLen);
-    if (NS_FAILED(res)) return res;
-  }
 
   return res;
 }
@@ -946,7 +990,7 @@ nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel)
     
     if (transitionList[i])
     {
-      // look for a blockquote somewhere above us and make it a div
+      // look for a blockquote somewhere above us and remove it.
       // this is a hack until i think about outdent for real.
       nsCOMPtr<nsIDOMNode> n = curNode;
       nsCOMPtr<nsIDOMNode> tmp;
@@ -954,8 +998,7 @@ nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel)
       {
         if (IsBlockquote(n))
         {
-          nsAutoString divType("div");
-          ReplaceContainer(n,&tmp,divType);
+          RemoveContainer(n);
           break;
         }
         n->GetParentNode(getter_AddRefs(tmp));
@@ -1089,6 +1132,18 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection, const nsString *alignTyp
     PRInt32 offset;
     res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
     if (NS_FAILED(res)) return res;
+    
+    // if it's a div, don't nest it, just set the alignment
+    if (IsDiv(curNode))
+    {
+      nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(curNode);
+      nsAutoString attr("align");
+      res = mEditor->SetAttribute(divElem, attr, *alignType);
+      if (NS_FAILED(res)) return res;
+      // clear out curDiv so that we don't put nodes after this one into it
+      curDiv = 0;
+      continue;
+    }
     
     // need to make a div to put things in if we haven't already,
     // or if this node doesn't go in div we used earlier.
@@ -1304,6 +1359,23 @@ nsHTMLEditRules::IsBlockquote(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// IsDiv: true if node an html div node
+//                  
+PRBool 
+nsHTMLEditRules::IsDiv(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditRules::IsDiv");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  if (tag == "div")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // GetTabAsNBSPs: stuff the right number of nbsp's into outString
 //                       
 nsresult
@@ -1486,18 +1558,52 @@ nsHTMLEditRules::ReplaceContainer(nsIDOMNode *inNode,
     inNode->HasChildNodes(&bHasMoreChildren);
     offset++;
   }
-  return NS_OK;
+  res = mEditor->DeleteNode(inNode);
+  return res;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// InsertContainer:  insert a new parent for inNode, returned in outNode,
+// RemoveContainer: remove inNode, reparenting it's children into their
+//                  the parent of inNode
+//
+nsresult
+nsHTMLEditRules::RemoveContainer(nsIDOMNode *inNode)
+{
+  if (!inNode)
+    return NS_ERROR_NULL_POINTER;
+  if (IsBody(inNode))
+    return NS_ERROR_UNEXPECTED;
+  nsresult res;
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset;
+  res = nsEditor::GetNodeLocation(inNode, &parent, &offset);
+  if (NS_FAILED(res)) return res;
+  PRBool bHasMoreChildren;
+  inNode->HasChildNodes(&bHasMoreChildren);
+  nsCOMPtr<nsIDOMNode> child;
+  while (bHasMoreChildren)
+  {
+    inNode->GetLastChild(getter_AddRefs(child));
+    res = mEditor->DeleteNode(child);
+    if (NS_FAILED(res)) return res;
+    res = mEditor->InsertNode(child, parent, offset);
+    if (NS_FAILED(res)) return res;
+    inNode->HasChildNodes(&bHasMoreChildren);
+  }
+  res = mEditor->DeleteNode(inNode);
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// InsertContainerAbove:  insert a new parent for inNode, returned in outNode,
 //                   which is contructed to be of type aNodeType.  outNode becomes
 //                   a child of inNode's earlier parent.
 //                   Callers responsibility to make sure inNode's can be child
 //                   of outNode, and outNode can be child of old parent.
 nsresult
-nsHTMLEditRules::InsertContainer(nsIDOMNode *inNode, 
+nsHTMLEditRules::InsertContainerAbove(nsIDOMNode *inNode, 
                                   nsCOMPtr<nsIDOMNode> *outNode, 
                                   nsString &aNodeType)
 {
@@ -1521,6 +1627,8 @@ nsHTMLEditRules::InsertContainer(nsIDOMNode *inNode,
 
   return NS_OK;
 }
+
+
 
 
 /********************************************************
