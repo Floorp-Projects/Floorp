@@ -3,9 +3,9 @@
 <!ENTITY  newMessageCmd.label             "Message">
 <!ENTITY  newMessageCmd.accesskey         "m">
 
-<!ENTITY sendPage.label                   "Send Page">
+<!ENTITY sendPage.label                   "Send Page...">
 <!ENTITY sendPage.accesskey               "g">
 
-<!ENTITY sendLinkCmd.label                "Send Link"> 
+<!ENTITY sendLinkCmd.label                "Send Link..."> 
 <!ENTITY sendLinkCmd.accesskey            "i">
 
