@@ -129,7 +129,7 @@ function initCommands()
          ["exit",             "quit",                              CMD_CONSOLE],
          ["exit-mozilla",     "quit-mozilla",                      CMD_CONSOLE],
          ["desc",             "pref desc",                         CMD_CONSOLE],
-         ["name",             "pref name",                         CMD_CONSOLE],
+         ["name",             "pref username",                     CMD_CONSOLE],
          ["part",             "leave",                             CMD_CONSOLE],
          ["j",                "join",                              CMD_CONSOLE],
          ["toggle-oas",       "open-at-startup toggle",                      0],
