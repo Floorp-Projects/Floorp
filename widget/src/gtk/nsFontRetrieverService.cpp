@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -28,9 +28,7 @@
 #include "nsVoidArray.h"
 #include "nsFontSizeIterator.h"
  
-NS_IMPL_ADDREF(nsFontRetrieverService)
-NS_IMPL_RELEASE(nsFontRetrieverService)
-
+NS_IMPL_ISUPPORTS2(nsFontRetrieverService, nsIFontRetrieverService, nsIFontNameIterator)
 
 //----------------------------------------------------------
 nsFontRetrieverService::nsFontRetrieverService()
@@ -59,35 +57,6 @@ nsFontRetrieverService::~nsFontRetrieverService()
   NS_IF_RELEASE(mSizeIter);
 }
 
-/**
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
-nsresult nsFontRetrieverService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsresult rv = NS_NOINTERFACE;
-
-  if (aIID.Equals(nsIFontRetrieverService::GetIID())) {
-    *aInstancePtr = (void*) ((nsIFontRetrieverService*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(nsIFontNameIterator::GetIID())) {
-    *aInstancePtr = (void*) ((nsIFontNameIterator*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return rv;
-}
 
 
 //----------------------------------------------------------

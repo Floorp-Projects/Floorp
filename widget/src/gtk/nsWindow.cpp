@@ -136,9 +136,9 @@ NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 
 NS_METHOD nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
-    g_print("nsWidget::ScreenToWidget\n");
-    NS_NOTYETIMPLEMENTED("nsWidget::ScreenToWidget");
-    return NS_OK;
+  g_print("nsWidget::ScreenToWidget\n");
+  NS_NOTYETIMPLEMENTED("nsWidget::ScreenToWidget");
+  return NS_OK;
 }
 
 
@@ -264,21 +264,6 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 }
 
 
-// Drag & Drop stuff.
-enum {
-  TARGET_STRING,
-  TARGET_ROOTWIN
-};
-
-static GtkTargetEntry target_table[] = {
-  { "STRING",     0, TARGET_STRING },
-  { "text/plain", 0, TARGET_STRING },
-  { "application/x-rootwin-drop", 0, TARGET_ROOTWIN }
-};
-
-static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
-
-
 gint nsWindow::ConvertBorderStyles(nsBorderStyle bs)
 {
   gint w = 0;
@@ -331,7 +316,6 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                  GDK_POINTER_MOTION_MASK |
                  GDK_POINTER_MOTION_HINT_MASK);
 
-
   switch(mWindowType)
   {
   case eWindowType_dialog:
@@ -378,12 +362,6 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   default:
     break;
   }
-
-  // Initialize this window instance as a drag target.
-  gtk_drag_dest_set (mWidget,
-                     GTK_DEST_DEFAULT_ALL,
-                     target_table, n_targets - 1, /* no rootwin */
-                     GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
 
 
   if (mIsToplevel)
@@ -558,7 +536,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID,
                                                     nsnull,
-                                                    nsCOMTypeInfo<nsIRenderingContext>::GetIID(),
+                                                    NS_GET_IID(nsIRenderingContext),
                                                     (void **)&event.renderingContext))
     {
       event.renderingContext->Init(mContext, this);
@@ -685,7 +663,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
    
     // For some strange reason, gtk_widget_hide() does not seem to
     // unmap the window.
-    gtk_widget_unmap(mWidget);
+    //    gtk_widget_unmap(mWidget);
   }
 
   mShown = bState;
@@ -812,23 +790,11 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     // toplevel window?  if so, we should resize it as well.
     if (mIsToplevel && mShell)
     {
-      // XXX HACK FIXME
-      // gtk does not want to resize windows using set_default_size on a window after is is shown
-      // work around this behavior as we should always resize before we show.
-      if (GTK_WIDGET_VISIBLE(mShell))
-      {
-        gtk_widget_hide(mShell);
-        gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
-        gtk_widget_show(mShell);
-      }
-      else
-        gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
-      //      gtk_widget_set_usize(mShell, aWidth, aHeight);
+      gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
     }
 
     gtk_widget_set_usize(mWidget, aWidth, aHeight);
   }
-
 
   // XXX pav
   // call the size allocation handler directly to avoid code duplication

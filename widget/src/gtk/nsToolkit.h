@@ -33,16 +33,17 @@ class nsToolkit : public nsIToolkit
 
 public:
   nsToolkit();
-  virtual		~nsToolkit();
+  virtual ~nsToolkit();
   
   NS_DECL_ISUPPORTS
-  NS_IMETHOD            Init(PRThread *aThread);
 
-  void			CreateSharedGC(void);
-  GdkGC			*GetSharedGC(void);
+  NS_IMETHOD    Init(PRThread *aThread);
+
+  void          CreateSharedGC(void);
+  GdkGC         *GetSharedGC(void);
   
 private:
-  GdkGC			*mSharedGC;
+  GdkGC         *mSharedGC;
 };
 
 

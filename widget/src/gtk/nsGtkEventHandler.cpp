@@ -43,11 +43,11 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,
 #include "stdio.h"
 #include "ctype.h"
 
-#define DBG 0
-
 #include <gdk/gdkkeysyms.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+
+#define DEBUG_EVENTS 1
 
 struct EventInfo {
   nsWidget *widget;  // the widget

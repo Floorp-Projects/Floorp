@@ -39,7 +39,7 @@ static PRLibrary *lib = nsnull;
 /* used to play the sounds from the find symbol call */
 typedef int (PR_CALLBACK *EsdPlayFileType)(const char *, const char *, int);
 
-NS_IMPL_ISUPPORTS(nsSound, nsCOMTypeInfo<nsISound>::GetIID());
+NS_IMPL_ISUPPORTS1(nsSound, nsISound);
 
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()

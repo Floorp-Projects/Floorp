@@ -30,6 +30,7 @@ nsFileWidget::nsFileWidget() : nsIFileWidget()
 {
   NS_INIT_REFCNT();
   mWidget = nsnull;
+  mDisplayDirectory = nsnull;
   mFilterMenu = nsnull;
   mOptionMenu = nsnull;
   mNumberOfFilters = 0;
@@ -100,6 +101,11 @@ PRBool nsFileWidget::Show()
     }
     else
       gtk_widget_hide(mOptionMenu);
+
+#if 0
+    if (mDisplayDirectory)
+      gtk_file_selection_complete(fs, "/");
+#endif
 
     //    gtk_window_set_modal(GTK_WINDOW(mWidget), PR_TRUE);
     gtk_widget_show(mWidget);

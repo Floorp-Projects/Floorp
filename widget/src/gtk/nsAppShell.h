@@ -32,31 +32,31 @@ struct PRLock;
 
 class nsAppShell : public nsIAppShell
 {
-  public:
-    nsAppShell();
-    virtual ~nsAppShell();
+public:
+  nsAppShell();
+  virtual ~nsAppShell();
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-    // nsIAppShellInterface
-    NS_IMETHOD		Create(int* argc, char ** argv);
-    NS_IMETHOD		Run(); 
-    NS_IMETHOD          Spinup();
-    NS_IMETHOD          Spindown();
-    NS_IMETHOD          PushThreadEventQueue();
-    NS_IMETHOD          PopThreadEventQueue();
-    NS_IMETHOD          GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
-    NS_IMETHOD          DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
-    NS_IMETHOD          EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
-                          nsIWidget *aWidget, PRBool *aForWindow);
-    NS_IMETHOD		Exit();
-    NS_IMETHOD		SetDispatchListener(nsDispatchListener* aDispatchListener);
-    virtual void*	GetNativeData(PRUint32 aDataType);
+  // nsIAppShellInterface
+  NS_IMETHOD		Create(int* argc, char ** argv);
+  NS_IMETHOD		Run(); 
+  NS_IMETHOD    Spinup();
+  NS_IMETHOD    Spindown();
+  NS_IMETHOD    PushThreadEventQueue();
+  NS_IMETHOD    PopThreadEventQueue();
+  NS_IMETHOD    GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
+  NS_IMETHOD    DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
+  NS_IMETHOD    EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
+                                      nsIWidget *aWidget, PRBool *aForWindow);
+  NS_IMETHOD		Exit();
+  NS_IMETHOD		SetDispatchListener(nsDispatchListener* aDispatchListener);
+  virtual void*	GetNativeData(PRUint32 aDataType);
 
-  private:
-    nsDispatchListener   *mDispatchListener;
-    PRLock               *mLock;
-    EventQueueTokenQueue *mEventQueueTokens;
+private:
+  nsDispatchListener   *mDispatchListener;
+  PRLock               *mLock;
+  EventQueueTokenQueue *mEventQueueTokens;
 };
 
 #endif // nsAppShell_h__

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -26,7 +26,8 @@ class nsVoidArray;
 class nsFontSizeIterator;
 
 class nsFontRetrieverService: public nsIFontRetrieverService, 
-                              public nsIFontNameIterator {
+                              public nsIFontNameIterator
+{
 public:
   nsFontRetrieverService();
   virtual ~nsFontRetrieverService();
@@ -34,16 +35,16 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIFontRetrieverService
-	NS_IMETHOD CreateFontNameIterator( nsIFontNameIterator** aIterator );
+  NS_IMETHOD CreateFontNameIterator( nsIFontNameIterator** aIterator );
 
-	NS_IMETHOD CreateFontSizeIterator( const nsString & aFontName, nsIFontSizeIterator** aIterator );
-	NS_IMETHOD IsFontScalable( const nsString & aFontName, PRBool* aResult );
+  NS_IMETHOD CreateFontSizeIterator( const nsString & aFontName, nsIFontSizeIterator** aIterator );
+  NS_IMETHOD IsFontScalable( const nsString & aFontName, PRBool* aResult );
 
   // nsIFontNameIterator
 
-	NS_IMETHOD Reset();
-	NS_IMETHOD Get( nsString* aFontName );
-	NS_IMETHOD Advance();
+  NS_IMETHOD Reset();
+  NS_IMETHOD Get( nsString* aFontName );
+  NS_IMETHOD Advance();
 
 
 

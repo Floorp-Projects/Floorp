@@ -42,11 +42,14 @@ public:
   NS_IMETHOD ForceDataToClipboard();
 
 
+  // invisible widget.  also used by dragndrop
+  static GtkWidget *sWidget;
+
 protected:
   NS_IMETHOD SetNativeClipboardData();
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
 
-  PRBool            mIgnoreEmptyNotification;
+  PRBool  mIgnoreEmptyNotification;
 
   void AddTarget(GdkAtom aAtom);
 
@@ -58,8 +61,6 @@ protected:
   PRBool DoConvert(gint format);
 
   void Init(void);
-
-  static GtkWidget  *sWidget;
 
   // Used for communicating pasted data
   // from the asynchronous X routines back to a blocking paste:
