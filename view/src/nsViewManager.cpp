@@ -1068,18 +1068,34 @@ NS_IMETHODIMP nsViewManager :: GetViewClipAbsolute(nsIView *aView, nsRect *rect,
 
 NS_IMETHODIMP nsViewManager :: SetViewContentTransparency(nsIView *aView, PRBool aTransparent)
 {
-  UpdateTransCnt(aView, nsnull);
-  aView->SetContentTransparency(aTransparent);
-  UpdateTransCnt(nsnull, aView);
+  PRBool trans;
+
+  aView->HasTransparency(trans);
+
+  if (trans != aTransparent)
+  {
+    UpdateTransCnt(aView, nsnull);
+    aView->SetContentTransparency(aTransparent);
+    UpdateTransCnt(nsnull, aView);
+    UpdateView(aView, nsnull, 0);
+  }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager :: SetViewOpacity(nsIView *aView, float aOpacity)
 {
-  UpdateTransCnt(aView, nsnull);
-  aView->SetOpacity(aOpacity);
-  UpdateTransCnt(nsnull, aView);
+  float opacity;
+
+  aView->GetOpacity(opacity);
+
+  if (opacity != aOpacity)
+  {
+    UpdateTransCnt(aView, nsnull);
+    aView->SetOpacity(aOpacity);
+    UpdateTransCnt(nsnull, aView);
+    UpdateView(aView, nsnull, 0);
+  }
 
   return NS_OK;
 }
