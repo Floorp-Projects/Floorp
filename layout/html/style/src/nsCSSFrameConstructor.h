@@ -298,10 +298,11 @@ protected:
                                    nsIFrame*&               aNewCellInnerFrame,
                                    PRBool&                  aIsPseudoParent);
 
-  PRBool MustGeneratePseudoParent(nsIPresContext* aPresContext,
-                                  nsIFrame*       aParentFrame,
-                                  nsIAtom*        aTag,
-                                  nsIContent*     aContent);
+  PRBool MustGeneratePseudoParent(nsIPresContext*  aPresContext,
+                                  nsIFrame*        aParentFrame,
+                                  nsIAtom*         aTag,
+                                  nsIContent*      aContent,
+                                  nsIStyleContext* aContext);
 
   nsresult ConstructTableForeignFrame(nsIPresShell*            aPresShell, 
                                       nsIPresContext*          aPresContext,
