@@ -65,6 +65,8 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
     rv = sbs->CreateBundle("chrome://necko/locale/necko.properties",
                            getter_AddRefs(mBundle));
 
+    mRowCount = 0;
+
     return rv;
 }
 
@@ -84,6 +86,8 @@ nsIndexedToHTML::AsyncConvertData(const PRUnichar *aFromType,
                                   nsISupports *aCtxt) {
     return Init(aListener);
 }
+
+static NS_NAMED_LITERAL_STRING(tableHeading,"<table border=\"0\" cellpadding=\"2\">\n");
 
 NS_IMETHODIMP
 nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
@@ -210,7 +214,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     if (NS_FAILED(rv)) return rv;
     
     buffer.Append(title);
-    buffer.Append(NS_LITERAL_STRING("</h1>\n<hr><table border=\"0\" cellpadding=\"2\">\n"));
+    buffer.Append(NS_LITERAL_STRING("</h1>\n<hr>") + tableHeading);
 
     //buffer.Append(NS_LITERAL_STRING("<tr><th>Name</th><th>Size</th><th>Last modified</th></tr>\n"));
 
@@ -280,6 +284,10 @@ nsIndexedToHTML::OnDataAvailable(nsIRequest *aRequest,
                                  PRUint32 aCount) {
     return mParser->OnDataAvailable(aRequest, aCtxt, aInput, aOffset, aCount);
 }
+
+// This defines the number of rows we are going to have per table
+// splitting this up makes things faster, by helping layout
+#define ROWS_PER_TABLE 250
 
 NS_IMETHODIMP
 nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
@@ -367,6 +375,13 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     }
 
     pushBuffer.Append(NS_LITERAL_STRING("</tt></td>\n</tr>\n"));
+
+    // Split this up to avoid slow layout performance with large tables
+    // - bug 85381
+    if (++mRowCount > ROWS_PER_TABLE) {
+        pushBuffer.Append(NS_LITERAL_STRING("</table>\n") + tableHeading);
+        mRowCount = 0;
+    }
     
     nsCOMPtr<nsIInputStream> inputData;
     nsCOMPtr<nsISupports>    inputDataSup;
