@@ -238,7 +238,6 @@ Contributor(s): ______________________________________. -->
     <key                          key="&textZoomResetCmd.commandkey;"    command="cmd_textZoomReset"   modifiers="accel"/>
     <key id="key_history" key="&historyCmd.commandkey;" modifiers="accel" command="cmd_history"/>    
     <keyset id="navigationKeys"/>  
-    <keyset id="tasksKeys"/>
   </keyset>
   
   <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
@@ -505,7 +504,7 @@ Contributor(s): ______________________________________. -->
                 <menuitem id="menu_textZoomOther" type="radio" name="textZoom" accesskey="&textZoomOtherCmd.accesskey;" oncommand="setTextZoomOther();"/>
               </menupopup>
             </menu>
-            <menu id="charsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot" oncommand="MultiplexHandler(event)"
+            <menu label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot" oncommand="MultiplexHandler(event)"
                   onpopupshowing="CreateMenu('browser');UpdateMenus(event)" onpopupshown="CreateMenu('more-menu');"
                   observes="isImage">
                 <template>
@@ -810,7 +809,7 @@ Contributor(s): ______________________________________. -->
            rdf:type="http://home.netscape.com/NC-rdf#Folder"
            oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)">
         <tooltip id="ptTooltip" noautohide="true" onpopupshowing="return FillInPTTooltip(document.tooltipNode)">
-          <vbox id="ptTooltipTextBox" flex="1">  
+          <vbox flex="1">  
             <label id="ptTitleText" />
             <label id="ptUrlText" />
           </vbox>
