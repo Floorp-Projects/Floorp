@@ -305,6 +305,7 @@ nsTableCellMap::InsertRows(nsIPresContext*       aPresContext,
   while (cellMap) {
     if (cellMap->GetRowGroup() == &aParent) {
       cellMap->InsertRows(aPresContext, *this, aRows, rowIndex, aConsiderSpans);
+      //Dump("after InsertRows");
       return;
     }
     rowIndex -= cellMap->GetRowCount();
@@ -312,8 +313,6 @@ nsTableCellMap::InsertRows(nsIPresContext*       aPresContext,
   }
   
   NS_ASSERTION(PR_FALSE, "Attempt to insert row into wrong map.");
-  /*if (mFirstMap)
-    mFirstMap->InsertRows(*this, aRows, aFirstRowIndex, aConsiderSpans);*/
 }
 
 void
@@ -332,6 +331,7 @@ nsTableCellMap::RemoveRows(nsIPresContext* aPresContext,
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
   }
+  //Dump("after RemoveRows");
 }
 
 PRInt32
@@ -364,16 +364,19 @@ nsTableCellMap::AppendCell(nsTableCellFrame& aCellFrame,
   rgFrame->GetParent(&rgFrame);   // get the row group
   if (!rgFrame) return 0;
 
+  PRInt32 result = 0;
   PRInt32 rowIndex = aRowIndex;
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     if (cellMap->GetRowGroup() == rgFrame) {
-      return cellMap->AppendCell(*this, aCellFrame, rowIndex, aRebuildIfNecessary);
+      result = cellMap->AppendCell(*this, aCellFrame, rowIndex, aRebuildIfNecessary);
+      break;
     }
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
   }
-  return 0;
+  //Dump("after AppendCell");
+  return result;
 }
 
 
@@ -392,6 +395,7 @@ nsTableCellMap::InsertCells(nsVoidArray&          aCellFrames,
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
   }
+  //Dump("after InsertCells");
 }
 
 
@@ -411,6 +415,7 @@ nsTableCellMap::RemoveCell(nsTableCellFrame* aCellFrame,
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
   }
+  //Dump("after RemoveCell");
 }
 
 PRInt32 
@@ -428,8 +433,10 @@ nsTableCellMap::GetNumCellsOriginatingInCol(PRInt32 aColIndex) const
 
 #ifdef NS_DEBUG
 void 
-nsTableCellMap::Dump() const
+nsTableCellMap::Dump(char* aString) const
 {
+  if (aString) 
+    printf("%s \n", aString);
   printf("***** START TABLE CELL MAP DUMP ***** %p\n", this);
   // output col info
   PRInt32 colCount = mCols.Count();
