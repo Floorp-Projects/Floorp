@@ -114,7 +114,7 @@ void nsMarkupDocument::CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDec
   aDeclaration.ToString(list);
 
   PRInt32 start = 0;
-  PRInt32 semiColon = list.Find(';');
+  PRInt32 semiColon = list.FindChar(';');
 
   while (-1 < semiColon) {
     decl.Truncate();
@@ -124,7 +124,7 @@ void nsMarkupDocument::CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDec
       // XXX need to append comment
     }
     else {
-      PRInt32 colon = decl.Find(':');
+      PRInt32 colon = decl.FindChar(':');
       nsAutoString  property;
       nsAutoString  value;
 
@@ -140,7 +140,7 @@ void nsMarkupDocument::CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDec
     }
 
     start = ++semiColon;
-    semiColon = list.Find(';', start);
+    semiColon = list.FindChar(';', PR_FALSE,start);
   }
   aConverter.EndCSSDeclarationList();
 }

@@ -2860,7 +2860,7 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
   // Temporary
   PRBool   doReplace = PR_FALSE;
   nsString replacementStr("xxxx");
-  PRInt32 inx = mSearchStr->Find('/');
+  PRInt32 inx = mSearchStr->FindChar('/');
   if (inx > -1) {
     if (inx == mSearchStr->Length()-1) {
       replacementStr.SetLength(0);
