@@ -1045,6 +1045,9 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
+  const nsStyleVisibility* vis;
+  GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+
 #ifdef IBMBIDI
   // Retrieve the scrollbar's width and height
   float sbWidth  = 0.0;
@@ -1054,9 +1057,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   dc->GetScrollBarDimensions(sbWidth, sbHeight);
   // Convert to nscoord's by rounding
   nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
-
-  const nsStyleVisibility* vis;
-  GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
 
   if (vis->mDirection == NS_STYLE_DIRECTION_RTL) {
     nscoord bidiScrolledAreaWidth = scrolledAreaDesiredSize.maxElementSize->width;
@@ -1101,6 +1101,16 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width  = aDesiredSize.width;
 	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
+
+  // Set the visibility of the scrollbars
+  // although this may "turn on" both scrollbars everythime
+  // they do get adjusted back and show correctly
+  nsIScrollableView* scrollableView;
+  GetScrollableView(scrollableView);
+  if (scrollableView) {
+    PRBool isVis = vis->IsVisible();
+    scrollableView->SetScrollbarVisibility(isVis, isVis);
   }
 
   aStatus = NS_FRAME_COMPLETE;
