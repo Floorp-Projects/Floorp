@@ -16,141 +16,43 @@
  * Reserved.
  */
 
+#include "nsGlobalWindow.h"
 #include "nscore.h"
+#include "nslayout.h"
 #include "prmem.h"
 #include "prtime.h"
 #include "plstr.h"
 #include "prinrval.h"
 #include "nsIFactory.h"
-#include "nsISupports.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNavigator.h"
 #include "nsINetService.h"
 #include "nsINetContainerApplication.h"
 #include "nsITimer.h"
+#include "nsEventListenerManager.h"
+#include "nsIEventStateManager.h"
+#include "nsDOMEvent.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMKeyListener.h"
+#include "nsIDOMMouseMotionListener.h"
+#include "nsIScriptEventListener.h"
+#include "nsIPrivateDOMEvent.h"
 
 #include "jsapi.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMWindowIID, NS_IDOMWINDOW_IID);
 static NS_DEFINE_IID(kIDOMNavigatorIID, NS_IDOMNAVIGATOR_IID);
-
-typedef struct nsTimeoutImpl nsTimeoutImpl;
-
-// Global object for scripting
-class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObject, public nsIDOMWindow
-{
-public:
-  GlobalWindowImpl();
-  ~GlobalWindowImpl();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
-
-  NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext);
-  NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument);
-
-  NS_IMETHOD    GetWindow(nsIDOMWindow** aWindow);
-  NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf);
-  NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);
-  NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator);
-  NS_IMETHOD    Dump(const nsString& aStr);
-  NS_IMETHOD    Alert(const nsString& aStr);
-  NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);
-  NS_IMETHOD    ClearInterval(PRInt32 aTimerID);
-  NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, 
-                           PRInt32* aReturn);
-  NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, 
-                            PRInt32* aReturn);
-
-  friend void nsGlobalWindow_RunTimeout(nsITimer *aTimer, void *aClosure);
-
-protected:
-  void          RunTimeout(nsTimeoutImpl *aTimeout);
-  nsresult      ClearTimeoutOrInterval(PRInt32 aTimerID);
-  nsresult      SetTimeoutOrInterval(JSContext *cx, jsval *argv, 
-                                     PRUint32 argc, PRInt32* aReturn, 
-                                     PRBool aIsInterval);
-  void          InsertTimeoutIntoList(nsTimeoutImpl **aInsertionPoint,
-                                      nsTimeoutImpl *aTimeout);
-  void          ClearAllTimeouts();
-  void          DropTimeout(nsTimeoutImpl *aTimeout);
-  void          HoldTimeout(nsTimeoutImpl *aTimeout);
-
-  nsIScriptContext *mContext;
-  void *mScriptObject;
-  nsIDOMDocument *mDocument;
-  nsIDOMNavigator *mNavigator;
-  
-  nsTimeoutImpl *mTimeouts;
-  nsTimeoutImpl **mTimeoutInsertionPoint;
-  nsTimeoutImpl *mRunningTimeout;
-  PRUint32 mTimeoutPublicIdCounter;
-};
-
-/* 
- * Timeout struct that holds information about each JavaScript
- * timeout.
- */
-struct nsTimeoutImpl {
-  PRInt32             ref_count;      /* reference count to shared usage */
-  GlobalWindowImpl    *window;        /* window for which this timeout fires */
-  char                *expr;          /* the JS expression to evaluate */
-  JSObject            *funobj;        /* or function to call, if !expr */
-  nsITimer            *timer;         /* The actual timer object */
-  jsval               *argv;          /* function actual arguments */
-  PRUint16            argc;           /* and argument count */
-  PRUint16            spare;          /* alignment padding */
-  PRUint32            public_id;      /* Returned as value of setTimeout() */
-  PRInt32             interval;       /* Non-zero if repetitive timeout */
-  PRInt64             when;           /* nominal time to run this timeout */
-  JSVersion           version;        /* Version of JavaScript to execute */
-  JSPrincipals        *principals;    /* principals with which to execute */
-  char                *filename;      /* filename of setTimeout call */
-  PRUint32            lineno;         /* line number of setTimeout call */
-  nsTimeoutImpl       *next;
-};
-
-
-// Script "navigator" object
-class NavigatorImpl : public nsIScriptObjectOwner, public nsIDOMNavigator {
-public:
-  NavigatorImpl();
-  ~NavigatorImpl();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
-
-  NS_IMETHOD    GetUserAgent(nsString& aUserAgent);
-
-  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName);
-
-  NS_IMETHOD    GetAppVersion(nsString& aAppVersion);
-
-  NS_IMETHOD    GetAppName(nsString& aAppName);
-
-  NS_IMETHOD    GetLanguage(nsString& aLanguage);
-
-  NS_IMETHOD    GetPlatform(nsString& aPlatform);
-
-  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy);
-
-  NS_IMETHOD    JavaEnabled(PRBool* aReturn);
-
-protected:
-  void *mScriptObject;
-};
-
+static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
+static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
+static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
+static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
+static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
+static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
+static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 
 GlobalWindowImpl::GlobalWindowImpl()
 {
@@ -164,6 +66,7 @@ GlobalWindowImpl::GlobalWindowImpl()
   mTimeoutInsertionPoint = nsnull;
   mRunningTimeout = nsnull;
   mTimeoutPublicIdCounter = 1;
+  mListenerManager = nsnull;
 }
 
 GlobalWindowImpl::~GlobalWindowImpl() 
@@ -182,6 +85,7 @@ GlobalWindowImpl::~GlobalWindowImpl()
   }
   
   NS_IF_RELEASE(mNavigator);
+  NS_IF_RELEASE(mListenerManager);
 }
 
 NS_IMPL_ADDREF(GlobalWindowImpl)
@@ -212,6 +116,16 @@ GlobalWindowImpl::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtrResult = (void*)(nsISupports*)(nsIScriptGlobalObject*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIJSScriptObjectIID)) {
+    *aInstancePtrResult = (void*)(nsISupports*)(nsIJSScriptObject*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMEventCapturerIID)) {
+    *aInstancePtrResult = (void*)(nsISupports*)(nsIDOMEventCapturer*)this;
     AddRef();
     return NS_OK;
   }
@@ -759,6 +673,225 @@ GlobalWindowImpl::SetInterval(JSContext *cx,
                               PRInt32* aReturn)
 {
   return SetTimeoutOrInterval(cx, argv, argc, aReturn, PR_TRUE);
+}
+
+PRBool    GlobalWindowImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return PR_TRUE;
+}
+
+PRBool    GlobalWindowImpl::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return PR_TRUE;
+}
+
+PRBool    GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return PR_TRUE;
+}
+
+PRBool    GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
+    nsAutoString mPropName, mPrefix;
+    mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
+    mPrefix.SetString(mPropName, 2);
+    if (mPrefix == "on") {
+      if (mPropName == "onmousedown" || mPropName == "onmouseup" || mPropName ==  "onclick" ||
+         mPropName == "onmouseover" || mPropName == "onmouseout") {
+        if (NS_OK != SetScriptEventListener(aContext, kIDOMMouseListenerIID)) {
+          return PR_FALSE;
+        }
+      }
+      else if (mPropName == "onkeydown" || mPropName == "onkeyup" || mPropName == "onkeypress" ) {
+        if (NS_OK != SetScriptEventListener(aContext, kIDOMKeyListenerIID)) {
+          return PR_FALSE;
+        }
+      }
+      else if (mPropName == "onmousemove" ) {
+        if (NS_OK != SetScriptEventListener(aContext, kIDOMMouseMotionListenerIID)) {
+          return PR_FALSE;
+        }
+      }
+    }
+  }
+  return PR_TRUE;
+}
+
+PRBool    GlobalWindowImpl::EnumerateProperty(JSContext *aContext)
+{
+  return PR_TRUE;
+}
+
+PRBool    GlobalWindowImpl::Resolve(JSContext *aContext, jsval aID)
+{
+  return PR_TRUE;
+}
+
+PRBool    GlobalWindowImpl::Convert(JSContext *aContext, jsval aID)
+{
+  return PR_TRUE;
+}
+
+void      GlobalWindowImpl::Finalize(JSContext *aContext)
+{
+}
+
+nsresult GlobalWindowImpl::SetScriptEventListener(JSContext *aContext, REFNSIID aListenerTypeIID)
+{
+  //First get the mScriptObject or make one if we don't have one.
+  nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+
+  if (nsnull == mScriptObject) {
+    GetScriptObject(mScriptCX, &mScriptObject);
+  }
+
+  if (nsnull != mScriptObject) {
+    nsIEventListenerManager *mManager = nsnull;
+    nsVoidArray *mListeners;
+
+    if (NS_OK == GetListenerManager(&mManager) && 
+        NS_OK == mManager->GetEventListeners(&mListeners, aListenerTypeIID)) {
+      //Run through the listeners for this IID and see if a script listener is registered
+      //If so, we're set.
+      if (nsnull != mListeners) {
+        nsIScriptEventListener *mScriptListener;
+        nsIDOMEventListener *mEventListener;
+        for (int i=0; i<mListeners->Count(); i++) {
+          mEventListener = (nsIDOMEventListener*)mListeners->ElementAt(i);
+          if (NS_OK == mEventListener->QueryInterface(kIScriptEventListenerIID, (void**)&mScriptListener)) {
+            NS_RELEASE(mScriptListener);
+            NS_RELEASE(mManager);
+            return NS_OK;
+          }
+        }
+      }
+      //If we didn't find a script listener or no listeners existed create and add a new one.
+      nsIDOMEventListener *mScriptListener;
+      if (NS_OK == NS_NewScriptEventListener(&mScriptListener, mScriptCX, mScriptObject)) {
+        mManager->AddEventListener(mScriptListener, aListenerTypeIID);
+        NS_RELEASE(mScriptListener);
+        NS_RELEASE(mManager);
+        return NS_OK;
+      }
+    }
+    NS_IF_RELEASE(mManager);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult GlobalWindowImpl::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
+{
+  if (nsnull != mListenerManager) {
+    return mListenerManager->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult);;
+  }
+  //This is gonna get ugly.  Can't use NS_NewEventListenerManager because of a circular link problem.
+  nsIDOMEventCapturer *mDoc;
+  if (nsnull != mDocument && NS_OK == mDocument->QueryInterface(kIDOMEventCapturerIID, (void**)&mDoc)) {
+    if (NS_OK == mDoc->GetNewListenerManager(aInstancePtrResult)) {
+      mListenerManager = *aInstancePtrResult;
+      NS_ADDREF(mListenerManager);
+      NS_RELEASE(mDoc);
+      return NS_OK;
+    }
+  }
+  NS_IF_RELEASE(mDoc);
+  return NS_ERROR_FAILURE;
+}
+
+//XXX I need another way around the circular link problem.
+nsresult GlobalWindowImpl::GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult)
+{
+  return NS_ERROR_FAILURE;
+}
+
+nsresult GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext, 
+                                    nsEvent* aEvent, 
+                                    nsIDOMEvent** aDOMEvent,
+                                    PRUint32 aFlags,
+                                    nsEventStatus& aEventStatus)
+{
+  nsresult mRet = NS_OK;
+
+  if (DOM_EVENT_INIT == aFlags) {
+    nsIEventStateManager *mManager;
+    if (NS_OK == aPresContext.GetEventStateManager(&mManager)) {
+      mManager->SetEventTarget((nsIDOMWindow*)this);
+      NS_RELEASE(mManager);
+    }
+ 
+    nsIDOMEvent* mDOMEvent = nsnull;
+    aDOMEvent = &mDOMEvent;
+  }
+  
+  //Capturing stage
+  
+  //Local handling stage
+  if (nsnull != mListenerManager) {
+    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
+  }
+
+  //Bubbling stage
+  /*Up to frames?*/
+
+  if (DOM_EVENT_INIT == aFlags) {
+    // We're leaving the DOM event loop so if we created a DOM event, release here.
+    if (nsnull != *aDOMEvent) {
+      if (0 != (*aDOMEvent)->Release()) {
+      //Okay, so someone in the DOM loop (a listener, JS object) still has a ref to the DOM Event but
+      //the internal data hasn't been malloc'd.  Force a copy of the data here so the DOM Event is still valid.
+        nsIPrivateDOMEvent *mPrivateEvent;
+        if (NS_OK == (*aDOMEvent)->QueryInterface(kIPrivateDOMEventIID, (void**)&mPrivateEvent)) {
+          mPrivateEvent->DuplicatePrivateData();
+          NS_RELEASE(mPrivateEvent);
+        }
+      }
+    }
+  }
+
+  return mRet;
+}
+
+nsresult GlobalWindowImpl::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+{
+  nsIEventListenerManager *mManager;
+
+  if (NS_OK == GetListenerManager(&mManager)) {
+    mManager->AddEventListener(aListener, aIID);
+    NS_RELEASE(mManager);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult GlobalWindowImpl::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+{
+  if (nsnull != mListenerManager) {
+    mListenerManager->RemoveEventListener(aListener, aIID);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult GlobalWindowImpl::CaptureEvent(nsIDOMEventListener *aListener)
+{
+  nsIEventListenerManager *mManager;
+
+  if (NS_OK == GetListenerManager(&mManager)) {
+    mManager->CaptureEvent(aListener);
+    NS_RELEASE(mManager);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult GlobalWindowImpl::ReleaseEvent(nsIDOMEventListener *aListener)
+{
+  if (nsnull != mListenerManager) {
+    mListenerManager->ReleaseEvent(aListener);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 extern "C" NS_DOM nsresult
