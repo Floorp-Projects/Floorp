@@ -127,8 +127,10 @@ NSPR_API(void) _MD_os2_map_listen_error(PRInt32 err);
 NSPR_API(void) _MD_os2_map_shutdown_error(PRInt32 err);
 #define	_PR_MD_MAP_SHUTDOWN_ERROR	_MD_os2_map_shutdown_error
 
+#ifndef XP_OS2_VACPP
 NSPR_API(void) _MD_os2_map_socketpair_error(int err);
 #define	_PR_MD_MAP_SOCKETPAIR_ERROR	_MD_os2_map_socketpair_error
+#endif
 
 NSPR_API(void) _MD_os2_map_getsockname_error(PRInt32 err);
 #define	_PR_MD_MAP_GETSOCKNAME_ERROR	_MD_os2_map_getsockname_error
