@@ -605,7 +605,14 @@ BtnUp(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 	{
 		_XfeBmActionWithoutDrawing(w,btn_up_action,event,params,nparams);
 
-		AccentUpdate(w,XfeACCENT_OUTSIDE);
+        /*
+         * The action can trigger a callback which could destroy
+         * the widget.  In thet case, dont update the accent.
+         */
+        if (_XfeIsAlive(w))
+        {
+			AccentUpdate(w,XfeACCENT_OUTSIDE);
+        }
 	}
 	else
 	{
