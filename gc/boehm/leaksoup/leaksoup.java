@@ -299,7 +299,7 @@ public class leaksoup {
 	
 		public int compare(Object obj1, Object obj2) {
 			Type t1 = (Type) obj1, t2 = (Type) obj2;
-			return (hist.count(t2) * t1.mSize - hist.count(t2) * t2.mSize);
+			return (hist.count(t1) * t1.mSize - hist.count(t2) * t2.mSize);
 		}
 	}
 
