@@ -58,7 +58,6 @@
 #include "nsIXPConnect.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsTextFormatter.h"
-#include "nsIIOService.h"
 #include "nsIStringBundle.h"
 #include "nsNetUtil.h"
 #include "nsDirectoryService.h"
@@ -80,8 +79,6 @@
 #include "nsIJSRuntimeService.h"
 #include "nsIObserverService.h"
 
-static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCScriptNameSetRegistryCID,
@@ -112,7 +109,6 @@ IsDOMClass(nsIClassInfo* aClassInfo)
 
     return NS_SUCCEEDED(rv) && (classFlags & nsIClassInfo::DOM_OBJECT);
 }
-
 
 // Convenience method to get the current js context stack.
 // Uses cached JSContextStack service instead of calling through
@@ -374,7 +370,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 #endif
 
     //-- Initialize policies if necessary
-    if (!mDefaultPolicy)
+    if (mPolicyPrefsChanged)
     {
         rv = InitPolicies();
         if (NS_FAILED(rv))
@@ -740,7 +736,7 @@ nsScriptSecurityManager::GetPropertyPolicy(jsval aProperty, ClassPolicy* aClassP
     if (aClassPolicy && aClassPolicy != NO_POLICY_FOR_CLASS)
     {
         ppolicy = 
-          (PropertyPolicy*) PL_DHashTableOperate(&aClassPolicy->mPolicy,
+          (PropertyPolicy*) PL_DHashTableOperate(aClassPolicy->mPolicy,
                                                  NS_REINTERPRET_CAST(void*, aProperty),
                                                  PL_DHASH_LOOKUP);
         if (!PL_DHASH_ENTRY_IS_LIVE(ppolicy))
@@ -748,14 +744,14 @@ nsScriptSecurityManager::GetPropertyPolicy(jsval aProperty, ClassPolicy* aClassP
             if (aClassPolicy->mWildcard)
             {
                 ppolicy = NS_REINTERPRET_CAST(PropertyPolicy*,
-                  PL_DHashTableOperate(&aClassPolicy->mWildcard->mPolicy,
+                  PL_DHashTableOperate(aClassPolicy->mWildcard->mPolicy,
                                        NS_REINTERPRET_CAST(void*, aProperty),
                                        PL_DHASH_LOOKUP));
             }
             if (!PL_DHASH_ENTRY_IS_LIVE(ppolicy) && aClassPolicy->mDefault)
             {   // Now look for a default policy
                 ppolicy = NS_REINTERPRET_CAST(PropertyPolicy*,
-                  PL_DHashTableOperate(&aClassPolicy->mDefault->mPolicy,
+                  PL_DHashTableOperate(aClassPolicy->mDefault->mPolicy,
                                        NS_REINTERPRET_CAST(void*, aProperty),
                                        PL_DHASH_LOOKUP));
             }
@@ -1192,8 +1188,8 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     //-- Check for a per-site policy
     static const char jsPrefGroupName[] = "javascript";
 
-    // Initialize policies if necessary
-    if (!mDefaultPolicy)
+    //-- Initialize policies if necessary
+    if (mPolicyPrefsChanged)
     {
         rv = InitPolicies();
         if (NS_FAILED(rv))
@@ -1679,96 +1675,27 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
 
 #define PROPERTIES_URL "chrome://communicator/locale/security/caps.properties"
 
-nsresult
-Localize(const char *genericString, nsString &result)
+PRBool
+nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrincipal,
+                                            PRBool *checkValue)
 {
-    nsresult ret;
+    nsresult rv;
+    *checkValue = PR_FALSE;
 
-    /* create a URL for the string resource file */
-    nsIIOService *pNetService = nsnull;
-    ret = nsServiceManager::GetService(kIOServiceCID, kIIOServiceIID,
-                                       (nsISupports**) &pNetService);
-    if (NS_FAILED(ret))
-    {
-        NS_WARNING("cannot get net service\n");
-        return ret;
-    }
-    nsIURI *uri = nsnull;
-    ret = pNetService->NewURI(NS_LITERAL_CSTRING(PROPERTIES_URL), nsnull, nsnull, &uri);
-    if (NS_FAILED(ret))
-    {
-        NS_WARNING("cannot create URI\n");
-        nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
-        return ret;
-    }
-
-    nsIURI *url = nsnull;
-    ret = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
-    nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
-
-    if (NS_FAILED(ret))
-    {
-        NS_WARNING("cannot create URL\n");
-        return ret;
-    }
-
-    /* create a bundle for the localization */
-    nsIStringBundleService *pStringService = nsnull;
-    ret = nsServiceManager::GetService(kStringBundleServiceCID,
-        kIStringBundleServiceIID, (nsISupports**) &pStringService);
-    if (NS_FAILED(ret))
-    {
-        NS_WARNING("cannot get string service\n");
-        return ret;
-    }
-    nsCAutoString spec;
-    ret = url->GetAsciiSpec(spec);
-    if (NS_FAILED(ret))
-    {
-        NS_WARNING("cannot get url spec\n");
-        nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
-        return ret;
-    }
-    nsIStringBundle *bundle = nsnull;
-    ret = pStringService->CreateBundle(spec.get(), &bundle);
-    nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
-    if (NS_FAILED(ret))
-    {
-        NS_WARNING("cannot create instance\n");
-        return ret;
-    }
-
-    /* localize the given string */
-    nsAutoString strtmp;
-    strtmp.AssignWithConversion(genericString);
-
-    nsXPIDLString ptrv;
-    ret = bundle->GetStringFromName(strtmp.get(), getter_Copies(ptrv));
-    NS_RELEASE(bundle);
-
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(ret), "cannot get string from name\n");
-
-    result.Assign(ptrv);
-
-    return ret;
-}
-
-static PRBool
-CheckConfirmDialog(JSContext* cx, const PRUnichar *szMessage, const PRUnichar *szCheckMessage,
-                   PRBool *checkValue)
-{
-    nsresult res;
     //-- Get a prompter for the current window.
     nsCOMPtr<nsIPrompt> prompter;
-    nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
-    if (scriptContext)
+    if (cx)
     {
-        nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
-        NS_ASSERTION(globalObject, "script context has no global object");
-        nsCOMPtr<nsIDOMWindowInternal> domWin(do_QueryInterface(globalObject));
-        if (domWin)
-            domWin->GetPrompter(getter_AddRefs(prompter));
+        nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
+        if (scriptContext)
+        {
+            nsCOMPtr<nsIScriptGlobalObject> globalObject;
+            scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
+            NS_ASSERTION(globalObject, "script context has no global object");
+            nsCOMPtr<nsIDOMWindowInternal> domWin(do_QueryInterface(globalObject));
+            if (domWin)
+                domWin->GetPrompter(getter_AddRefs(prompter));
+        }
     }
 
     if (!prompter)
@@ -1777,27 +1704,50 @@ CheckConfirmDialog(JSContext* cx, const PRUnichar *szMessage, const PRUnichar *s
         nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
         if (wwatch)
           wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-    }
-    if (!prompter)
-    {
-        *checkValue = 0;
-        return PR_FALSE;
+        if (!prompter)
+            return PR_FALSE;
     }
 
-    PRInt32 buttonPressed = 1; /* in case user exits dialog by clicking X */
-    nsAutoString dialogTitle;
-    if (NS_FAILED(res = Localize("Titleline", dialogTitle)))
+    // create a bundle for the localization
+    nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(kStringBundleServiceCID, &rv));
+    if (NS_FAILED(rv))
         return PR_FALSE;
 
-    res = prompter->ConfirmEx(dialogTitle.get(), szMessage,
-                              (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                              (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
-                              nsnull, nsnull, nsnull, szCheckMessage, checkValue, &buttonPressed);
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = bundleService->CreateBundle(PROPERTIES_URL, getter_AddRefs(bundle));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
 
-    if (NS_FAILED(res))
-        *checkValue = 0;
-    if (*checkValue != 0 && *checkValue != 1)
-        *checkValue = 0; /* this should never happen but it is happening!!! */
+    //-- Localize the dialog text
+    nsXPIDLString query, check, title;
+    rv = bundle->GetStringFromName(NS_LITERAL_STRING("EnableCapabilityQuery").get(),
+                                   getter_Copies(query));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+    rv = bundle->GetStringFromName(NS_LITERAL_STRING("CheckMessage").get(),
+                                   getter_Copies(check));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+    rv = bundle->GetStringFromName(NS_LITERAL_STRING("Titleline").get(),
+                                   getter_Copies(title));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    nsXPIDLCString source;
+    rv = aPrincipal->ToUserVisibleString(getter_Copies(source));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+    nsXPIDLString message;
+    message.Assign(nsTextFormatter::smprintf(query.get(), source.get()));
+
+    PRInt32 buttonPressed = 1; // If the user exits by clicking the close box, assume No (button 1)
+    rv = prompter->ConfirmEx(title.get(), message.get(),
+                             (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
+                             (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+                             nsnull, nsnull, nsnull, check.get(), checkValue, &buttonPressed);
+
+    if (NS_FAILED(rv))
+        *checkValue = PR_FALSE;
     return (buttonPressed == 0);
 }
 
@@ -1810,24 +1760,12 @@ nsScriptSecurityManager::RequestCapability(nsIPrincipal* aPrincipal,
     if (*canEnable == nsIPrincipal::ENABLE_WITH_USER_PERMISSION)
     {
         // Prompt user for permission to enable capability.
-        // "Remember This Decision" is unchecked by default.
-        static PRBool remember = PR_FALSE;
-        nsAutoString query, check;
-        if (NS_FAILED(Localize("EnableCapabilityQuery", query)))
-            return NS_ERROR_FAILURE;
-        if (NS_FAILED(Localize("CheckMessage", check)))
-            return NS_ERROR_FAILURE;
-        char *source;
-        if (NS_FAILED(aPrincipal->ToUserVisibleString(&source)))
-            return NS_ERROR_FAILURE;
-        PRUnichar *message = nsTextFormatter::smprintf(query.get(), source);
-        Recycle(source);
-        JSContext *cx = GetCurrentJSContext();
-        if (CheckConfirmDialog(cx, message, check.get(), &remember))
+        JSContext* cx = GetCurrentJSContext();
+        PRBool remember;
+        if (CheckConfirmDialog(cx, aPrincipal, &remember))
             *canEnable = nsIPrincipal::ENABLE_GRANTED;
         else
             *canEnable = nsIPrincipal::ENABLE_DENIED;
-        PR_FREEIF(message);
         if (remember)
         {
             //-- Save principal to prefs and to mPrincipals
@@ -2146,7 +2084,7 @@ nsScriptSecurityManager::CheckXPCPermissions(nsISupports* aObj,
 // Method implementing nsIObserver //
 /////////////////////////////////////
 static const char sPrincipalPrefix[] = "capability.principal";
-static const char sProfileChangeMsg[] = "profile-after-change";
+static NS_NAMED_LITERAL_CSTRING(sPolicyPrefix, "capability.policy.");
 
 NS_IMETHODIMP
 nsScriptSecurityManager::Observe(nsISupports* aObject, const char* aTopic,
@@ -2159,6 +2097,8 @@ nsScriptSecurityManager::Observe(nsISupports* aObject, const char* aTopic,
     static const char jsPrefix[] = "javascript.";
     if(PL_strncmp(message, jsPrefix, sizeof(jsPrefix)-1) == 0)
         JSEnabledPrefChanged(mSecurityPref);
+    if(PL_strncmp(message, sPolicyPrefix.get(), sPolicyPrefix.Length()) == 0)
+        mPolicyPrefsChanged = PR_TRUE; // This will force re-initialization of the pref table
     else if((PL_strncmp(message, sPrincipalPrefix, sizeof(sPrincipalPrefix)-1) == 0) &&
             !mIsWritingPrefs)
     {
@@ -2172,8 +2112,6 @@ nsScriptSecurityManager::Observe(nsISupports* aObject, const char* aTopic,
             rv = InitPrincipals(1, idPrefArray, mSecurityPref);
         }
     }
-    else if((PL_strcmp(aTopic, sProfileChangeMsg) == 0))
-        rv = InitPolicies();
     return rv;
 }
 
@@ -2188,7 +2126,8 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       mIsJavaScriptEnabled(PR_FALSE),
       mIsMailJavaScriptEnabled(PR_FALSE),
       mIsWritingPrefs(PR_FALSE),
-      mNameSetRegistered(PR_FALSE)
+      mNameSetRegistered(PR_FALSE),
+      mPolicyPrefsChanged(PR_TRUE)
 
 {
     NS_ASSERTION(sizeof(long) == sizeof(void*), "long and void* have different lengths on this platform. This may cause a security failure.");
@@ -2287,25 +2226,20 @@ nsScriptSecurityManager::SystemPrincipalSingletonConstructor()
     return NS_STATIC_CAST(nsSystemPrincipal*, sysprin);
 }
 
-NS_IMETHODIMP
-nsScriptSecurityManager::ReloadSecurityPolicies()
-{
-    nsresult rv;
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = xpc->ClearAllWrappedNativeSecurityPolicies();
-    if (NS_FAILED(rv)) return rv;
-
-    return InitPolicies();
-}
-
-static NS_NAMED_LITERAL_CSTRING(policyPrefPrefix, "capability.policy.");
-
 nsresult
 nsScriptSecurityManager::InitPolicies()
 {
     nsresult rv;
+
+    // Reset the "dirty" flag
+    mPolicyPrefsChanged = PR_FALSE;
+
+    // Clear any policies cached on XPConnect wrappers
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+    if (NS_FAILED(rv)) return rv;
+    rv = xpc->ClearAllWrappedNativeSecurityPolicies();
+    if (NS_FAILED(rv)) return rv;
+
     //-- Reset mOriginToPolicyMap
     delete mOriginToPolicyMap;
     mOriginToPolicyMap =
@@ -2359,9 +2293,8 @@ nsScriptSecurityManager::InitPolicies()
         morePolicies = (*policyCurrent != '\0');
         *policyCurrent = '\0';
         policyCurrent++;
-        
-        //XXX use better concatenation?
-        nsCAutoString sitesPrefName(policyPrefPrefix +
+
+        nsCAutoString sitesPrefName(sPolicyPrefix +
 				    nsDependentCString(nameBegin) +
 				    NS_LITERAL_CSTRING(".sites"));
         nsXPIDLCString domainList;
@@ -2448,7 +2381,7 @@ nsScriptSecurityManager::InitDomainPolicy(JSContext* cx,
                                           DomainPolicy* aDomainPolicy)
 {
     nsresult rv;
-    nsCAutoString policyPrefix(policyPrefPrefix +
+    nsCAutoString policyPrefix(sPolicyPrefix +
 			       nsDependentCString(aPolicyName) +
 			       NS_LITERAL_CSTRING("."));
     PRUint32 prefixLength = policyPrefix.Length() - 1; // subtract the '.'
@@ -2530,7 +2463,7 @@ nsScriptSecurityManager::InitDomainPolicy(JSContext* cx,
 
         // Store this property in the class policy
         PropertyPolicy* ppolicy = 
-          (PropertyPolicy*) PL_DHashTableOperate(&cpolicy->mPolicy,
+          (PropertyPolicy*) PL_DHashTableOperate(cpolicy->mPolicy,
                                                  (void*)STRING_TO_JSVAL(propertyKey),
                                                  PL_DHASH_ADD);
         if (!ppolicy)
@@ -2595,16 +2528,11 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
                                         nsISecurityPref* aSecurityPref)
 {
     /* This is the principal preference syntax:
-     * capability.principal.[codebase|codebaseTrusted|certificate].<name>.[id|granted|denied]
+     * capability.principal.[codebase|certificate].<name>.[id|granted|denied]
      * For example:
      * user_pref("capability.principal.certificate.p1.id","12:34:AB:CD");
      * user_pref("capability.principal.certificate.p1.granted","Capability1 Capability2");
      * user_pref("capability.principal.certificate.p1.denied","Capability3");
-     */
-
-    /* codebaseTrusted means a codebase principal that can enable capabilities even if
-     * codebase principals are disabled. Don't use trustedCodebase except with unspoofable
-     * URLs such as HTTPS URLs.
      */
 
     static const char idSuffix[] = ".id";
@@ -2646,9 +2574,8 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
         }
 
         //-- Create a principal based on the prefs
-        static const char certificateName[] = "capability.principal.certificate";
-        static const char codebaseName[] = "capability.principal.codebase";
-        static const char codebaseTrustedName[] = "capability.principal.codebaseTrusted";
+        static const char certificateName[] = "capability.principal.certificate.";
+        static const char codebaseName[] = "capability.principal.codebase.";
         nsCOMPtr<nsIPrincipal> principal;
         if (PL_strncmp(aPrefNames[c], certificateName,
                        sizeof(certificateName)-1) == 0)
@@ -2667,11 +2594,8 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
             nsCodebasePrincipal *codebase = new nsCodebasePrincipal();
             if (codebase) {
                 NS_ADDREF(codebase);
-                PRBool trusted = (PL_strncmp(aPrefNames[c], codebaseTrustedName,
-                                             sizeof(codebaseTrustedName)-1) == 0);
                 if (NS_SUCCEEDED(codebase->InitFromPersistent(aPrefNames[c], id,
-                                                              grantedList, deniedList,
-                                                              trusted)))
+                                                              grantedList, deniedList)))
                     principal = do_QueryInterface((nsBasePrincipal*)codebase);
                 NS_RELEASE(codebase);
             }
@@ -2732,14 +2656,8 @@ nsScriptSecurityManager::InitPrefs()
     PRUint32 prefCount;
     char** prefNames;
 
-    // Registering the security manager as an observer to the
-    // profile-after-change topic. We will build up the policy table
-    // after the initial profile loads and after profile switches.
-    nsCOMPtr<nsIObserverService> observerService
-        (do_GetService("@mozilla.org/observer-service;1", &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = observerService->AddObserver(this, sProfileChangeMsg, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Set a callback for policy pref changes
+    prefBranchInternal->AddObserver(sPolicyPrefix.get(), this, PR_FALSE);
 
     //-- Initialize the principals database from prefs
     rv = mPrefBranch->GetChildList(sPrincipalPrefix, &prefCount, &prefNames);
@@ -2795,7 +2713,7 @@ PrintClassPolicy(PLDHashTable *table, PLDHashEntryHdr *entry,
     ClassPolicy* cp = (ClassPolicy*)entry;
     printf("    %s\n", cp->key);
 
-    PL_DHashTableEnumerate(&cp->mPolicy, PrintPropertyPolicy, arg);
+    PL_DHashTableEnumerate(cp->mPolicy, PrintPropertyPolicy, arg);
     return PL_DHASH_NEXT;
 }
 

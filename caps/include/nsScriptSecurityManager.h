@@ -157,9 +157,9 @@ ClearPropertyPolicyEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 struct ClassPolicy : public PLDHashEntryHdr
 {
     char*  key;
-    PLDHashTable mPolicy;
-    ClassPolicy* mDefault;
-    ClassPolicy* mWildcard;
+    PLDHashTable* mPolicy;
+    ClassPolicy*  mDefault;
+    ClassPolicy*  mWildcard;
 };
 
 PR_STATIC_CALLBACK(PRBool)
@@ -180,7 +180,7 @@ ClearClassPolicyEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
         PL_strfree(cp->key);
         cp->key = nsnull;
     }
-    PL_DHashTableFinish(&cp->mPolicy);
+    PL_DHashTableDestroy(cp->mPolicy);
 }
 
 PR_STATIC_CALLBACK(void)
@@ -203,8 +203,9 @@ InitClassPolicyEntry(PLDHashTable *table,
 
     ClassPolicy* cp = (ClassPolicy*)entry;
     cp->key = PL_strdup((const char*)key);
-    PL_DHashTableInit(&cp->mPolicy, &classPolicyOps, nsnull,
-                      sizeof(PropertyPolicy), 16);
+    cp->mPolicy = PL_NewDHashTable(&classPolicyOps, nsnull,
+                  sizeof(PropertyPolicy), 16);
+    NS_ASSERTION(cp->mPolicy, "Failed to create hashtable - out of memory?");
 }
 
 // Domain Policy
@@ -333,7 +334,7 @@ private:
     CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);
 
     nsresult
-    GetSubjectPrincipal(JSContext* aCx, nsIPrincipal** result);
+    GetSubjectPrincipal(JSContext* cx, nsIPrincipal** result);
 
     nsresult
     GetFramePrincipal(JSContext* cx, JSStackFrame* fp, nsIPrincipal** result);
@@ -349,6 +350,9 @@ private:
     GetPrincipalAndFrame(JSContext *cx,
                          nsIPrincipal** result,
                          JSStackFrame** frameResult);
+
+    static PRBool
+    CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrincipal, PRBool *checkValue);
 
     nsresult
     SavePrincipal(nsIPrincipal* aToSave);
@@ -367,7 +371,7 @@ private:
     InitPolicies();
 
     nsresult
-    InitDomainPolicy(JSContext* cx,const char* aPolicyName,
+    InitDomainPolicy(JSContext* cx, const char* aPolicyName,
                      DomainPolicy* aDomainPolicy);
 
     nsresult
@@ -403,6 +407,7 @@ private:
     PRBool mIsWritingPrefs;
     nsCOMPtr<nsIThreadJSContextStack> mJSContextStack;
     PRBool mNameSetRegistered;
+    PRBool mPolicyPrefsChanged;
 };
 
 #endif /*_NS_SCRIPT_SECURITY_MANAGER_H_*/
