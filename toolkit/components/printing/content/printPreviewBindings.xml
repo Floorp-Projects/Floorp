@@ -48,7 +48,7 @@
   <binding id="printpreviewtoolbar" 
            extends="chrome://global/content/widgets/toolbar.xml#toolbar">
     <resources>
-      <stylesheet src="chrome://global/skin/printpreview.css"/>
+      <stylesheet src="chrome://global/skin/printPreview.css"/>
     </resources>
 
     <content>
@@ -56,7 +56,7 @@
         oncommand="PrintUtils.print();"/>
 
       <xul:button label="&pageSetup.label;" accesskey="&pageSetup.accesskey;"
-        oncommand="this.doPageSetup();"/>
+        oncommand="this.parentNode.doPageSetup();"/>
 
       <xul:vbox align="center" pack="center">
         <xul:label value="&page.label;"/>
