@@ -34,7 +34,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsNativeAppSupport.h"
+
 #include "nsString.h"
 
 #include <Gestalt.h>
