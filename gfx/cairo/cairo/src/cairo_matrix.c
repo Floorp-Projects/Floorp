@@ -620,6 +620,29 @@ _cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double 
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* Compute the min/max expansion factors.  See the comment in
+ * cairo-pen.c for the derivation */
+cairo_status_t
+_cairo_matrix_compute_expansion_factors (cairo_matrix_t *matrix,
+					 double *min, double *max)
+{
+    double  a = matrix->m[0][0],   c = matrix->m[0][1];
+    double  b = matrix->m[1][0],   d = matrix->m[1][1];
+
+    double  i = a*a + c*c;
+    double  j = b*b + d*d;
+
+    double  f = 0.5 * (i + j);
+    double  g = 0.5 * (i - j);
+    double  h = a*b + c*d;
+
+    *max = sqrt (f + sqrt (g*g+h*h));
+
+    *min = sqrt (f - sqrt (g*g+h*h));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 cairo_bool_t 
 _cairo_matrix_is_integer_translation(cairo_matrix_t *mat, 
 				     int *itx, int *ity)

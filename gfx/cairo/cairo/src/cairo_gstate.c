@@ -89,6 +89,8 @@ _cairo_gstate_init (cairo_gstate_t *gstate)
     gstate->dash = NULL;
     gstate->num_dashes = 0;
     gstate->dash_offset = 0.0;
+    gstate->max_dash_length = 0.0;
+    gstate->fraction_dash_lit = 0.0;
 
     gstate->font_family = NULL;
     gstate->font_slant = CAIRO_FONT_SLANT_DEFAULT;
@@ -543,6 +545,9 @@ _cairo_gstate_current_line_join (cairo_gstate_t *gstate)
 cairo_status_t
 _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, double offset)
 {
+    double length = 0.0, lit = 0.0;
+    int i;
+
     if (gstate->dash) {
 	free (gstate->dash);
 	gstate->dash = NULL;
@@ -555,6 +560,16 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, double *dash, int num_dashes, do
 	    gstate->num_dashes = 0;
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
+
+	gstate->max_dash_length = 0.0;
+	for (i = 0; i < num_dashes; i++) {
+	    gstate->max_dash_length = MAX(dash[i], gstate->max_dash_length);
+
+	    if (!(i & 1))
+		lit += dash[i];
+	    length += dash[i];
+	}
+	gstate->fraction_dash_lit = lit/length;
     }
 
     memcpy (gstate->dash, dash, gstate->num_dashes * sizeof (double));
@@ -1322,24 +1337,49 @@ _cairo_gstate_pattern_init_copy (cairo_gstate_t        *gstate,
     _cairo_pattern_set_alpha (&pattern->base, gstate->alpha);
 }
 
+static cairo_bool_t
+_dashes_invisible (cairo_gstate_t *gstate)
+{
+    if (gstate->dash) {
+	double min, max;
+
+	_cairo_matrix_compute_expansion_factors (&gstate->ctm, &min, &max);
+
+	/* Quick and dirty applicaton of Nyquist sampling limit */
+
+	if (min * gstate->max_dash_length < 0.5f)
+	    return TRUE;
+    }
+
+    return FALSE;
+}
+
 cairo_status_t
 _cairo_gstate_stroke (cairo_gstate_t *gstate)
 {
     cairo_status_t status;
     cairo_traps_t traps;
+    double *dash = NULL;
+    double alpha = 0.0;
 
     if (gstate->line_width <= 0.0)
 	return CAIRO_STATUS_SUCCESS;
+
+    if (_dashes_invisible(gstate)) {
+	dash = gstate->dash;
+	gstate->dash = NULL;
+
+	alpha = gstate->alpha;
+	gstate->alpha *= gstate->fraction_dash_lit;
+    }
 
     _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
 
     _cairo_traps_init (&traps);
 
     status = _cairo_path_stroke_to_traps (&gstate->path, gstate, &traps);
-    if (status) {
-	_cairo_traps_fini (&traps);
-	return status;
-    }
+    if (status)
+	goto BAIL;
 
     _cairo_gstate_clip_and_composite_trapezoids (gstate,
                                                  gstate->pattern,
@@ -1347,11 +1387,17 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate)
                                                  gstate->surface,
                                                  &traps);
 
+ BAIL:
     _cairo_traps_fini (&traps);
 
     _cairo_gstate_new_path (gstate);
 
-    return CAIRO_STATUS_SUCCESS;
+    if (dash) {
+	gstate->dash = dash;
+	gstate->alpha = alpha;
+    }
+
+    return status;
 }
 
 cairo_status_t
@@ -1700,9 +1746,15 @@ _cairo_gstate_stroke_extents (cairo_gstate_t *gstate,
     cairo_status_t status;
     cairo_traps_t traps;
     cairo_box_t extents;
+    double *dash = NULL;
+  
+    if (_dashes_invisible(gstate)) {
+	dash = gstate->dash;
+	gstate->dash = NULL;
+    }
 
     _cairo_pen_init (&gstate->pen_regular, gstate->line_width / 2.0, gstate);
-  
+
     _cairo_traps_init (&traps);
   
     status = _cairo_path_stroke_to_traps (&gstate->path, gstate, &traps);
@@ -1721,6 +1773,9 @@ _cairo_gstate_stroke_extents (cairo_gstate_t *gstate,
   
 BAIL:
     _cairo_traps_fini (&traps);
+
+    if (dash)
+	gstate->dash = dash;
   
     return status;
 }

@@ -19,3 +19,5 @@ PATCHES:
   xlib.diff - include X11/xlib.h in cairo-xlib.h - needed for Solaris.
 
   stroke-extent.diff - fix calculation of stroke extents.
+
+  dash-dos.diff - prevent DOS attack with dasharray.
