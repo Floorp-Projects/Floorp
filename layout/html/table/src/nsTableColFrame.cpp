@@ -32,10 +32,16 @@ static const PRBool gsDebug = PR_FALSE;
 #endif
 
 nsTableColFrame::nsTableColFrame()
-  : nsFrame()
+  : nsFrame(), mIsAnonymous(PR_FALSE), mProportion(WIDTH_NOT_SET)
 {
   // note that all fields are initialized to 0 by nsFrame::operator new
-  mWidthSource = eWIDTH_SOURCE_NONE;
+  for (PRInt32 widthX = 0; widthX < NUM_WIDTHS; widthX++) {
+    mWidths[widthX] = WIDTH_NOT_SET;
+  }
+}
+
+nsTableColFrame::~nsTableColFrame()
+{
 }
 
 NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
@@ -89,14 +95,63 @@ PRInt32 nsTableColFrame::GetSpan()
   return tableStyle->mSpan;
 }
 
-nscoord nsTableColFrame::GetColWidthForComputation()
+nscoord nsTableColFrame::GetWidth(PRUint32 aWidthType)
 {
-  const nsStylePosition* position;
-  GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)position));
-  if (eStyleUnit_Coord==position->mWidth.GetUnit())
-    return position->mWidth.GetCoordValue();
-  else
-    return GetEffectiveMaxColWidth();
+  NS_ASSERTION(aWidthType < NUM_WIDTHS, "GetWidth: bad width type");
+  return mWidths[aWidthType];
+}
+
+void nsTableColFrame::SetWidth(PRUint32 aWidthType,
+                               nscoord  aWidth)
+{
+  NS_ASSERTION(aWidthType < NUM_WIDTHS, "SetWidth: bad width type");
+  mWidths[aWidthType] = aWidth;
+#ifdef MY_DEBUG
+  if (aWidth > 0) {
+    nscoord minWidth = GetMinWidth();
+    if ((MIN_CON != aWidthType) && (aWidth < minWidth)) {
+      printf("non min width set to lower than min \n");
+    }
+  }
+#endif
+}
+
+nscoord nsTableColFrame::GetMinWidth()
+{
+  return PR_MAX(mWidths[MIN_CON], mWidths[MIN_ADJ]);
+}
+
+nscoord nsTableColFrame::GetDesWidth()
+{
+  return PR_MAX(mWidths[DES_CON], mWidths[DES_ADJ]);
+}
+
+nscoord nsTableColFrame::GetFixWidth()
+{
+  return PR_MAX(mWidths[FIX], mWidths[FIX_ADJ]);
+}
+
+nscoord nsTableColFrame::GetPctWidth()
+{
+  return PR_MAX(mWidths[PCT], mWidths[PCT_ADJ]);
+}
+
+void nsTableColFrame::Dump(PRInt32 aIndent)
+{
+  char* indent = new char[aIndent + 1];
+  for (PRInt32 i = 0; i < aIndent + 1; i++) {
+    indent[i] = ' ';
+  }
+  indent[aIndent] = 0;
+
+  printf("%s**START COL DUMP** colIndex=%d isAnonymous=%d constraint=%d",
+    indent, mColIndex, mIsAnonymous, mConstraint);
+  printf("\n%s widths=", indent);
+  for (PRInt32 widthX = 0; widthX < NUM_WIDTHS; widthX++) {
+    printf("%d ", mWidths[widthX]);
+  }
+  printf(" **END COL DUMP** ");
+  delete [] indent;
 }
 
 /* ----- global methods ----- */

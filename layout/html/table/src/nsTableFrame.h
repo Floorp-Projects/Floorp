@@ -47,6 +47,7 @@ struct nsStyleSpacing;
 #define NS_TABLE_FRAME_COLGROUP_LIST_INDEX 0
 #define NS_TABLE_FRAME_LAST_LIST_INDEX    NS_TABLE_FRAME_COLGROUP_LIST_INDEX
 
+
 /* ============================================================================ */
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
@@ -90,14 +91,6 @@ public:
 
   /** @see nsIFrame::Destroy */
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
-
-  /** helper method for determining if this is a nested table or not 
-    * @param aReflowState The reflow state for this inner table frame
-    * @param aPosition    [OUT] The position style struct for the parent table, if nested.
-    *                     If not nested, undefined.
-    * @return  PR_TRUE if this table is nested inside another table.
-    */
-  PRBool IsNested(const nsHTMLReflowState& aReflowState, const nsStylePosition *& aPosition) const;
 
   /** helper method to find the table parent of any table frame object */
   // TODO: today, this depends on display types.  This should be changed to rely
@@ -377,6 +370,7 @@ public:
     *          of the table.
     */
   virtual PRInt32  GetEffectiveRowSpan(PRInt32 aRowIndex, nsTableCellFrame *aCell);
+  virtual PRInt32  GetEffectiveRowSpan(nsTableCellFrame *aCell);
 
   /** return the col span of a cell, taking into account col span magic at the edge
     * of a table.
@@ -388,6 +382,7 @@ public:
     *          of the table.
     */
   virtual PRInt32  GetEffectiveColSpan(PRInt32 aColIndex, nsTableCellFrame *aCell);
+  virtual PRInt32  GetEffectiveColSpan(nsTableCellFrame *aCell);
 
   /** return the value of the COLS attribute, adjusted for the 
     * actual number of columns in the table
@@ -399,22 +394,23 @@ public:
     */
   PRInt32 GetNextAvailRowIndex() const;
 
-  /** return the index of the next column in aRowIndex after aColIndex 
-    * that does not have a cell assigned to it.
-    * If aColIndex is past the end of the row, it is returned.
-    * If the row is not initialized, 0 is returned.
-    */
-  PRInt32 GetNextAvailColIndex(PRInt32 aRowIndex, PRInt32 aColIndex) const;
-
   /** build as much of the CellMap as possible from the info we have so far 
     */
-  virtual void AddCellToTable (nsTableRowFrame  *aRowFrame, 
-                               nsTableCellFrame *aCellFrame,
-                               PRBool            aAddRow);
+  virtual PRInt32 AddCellToTable (nsTableCellFrame* aCellFrame,
+                                  PRInt32           aRowIndex);
+  virtual void RemoveCellFromTable (nsTableCellFrame* aCellFrame,
+                                    PRInt32           aRowIndex);
 
   virtual void AddColumnFrame (nsTableColFrame *aColFrame);
 
   static PRBool IsFinalPass(const nsReflowState& aReflowState);
+
+  void GetCellInfoAt(PRInt32            aRowX, 
+                     PRInt32            aColX, 
+                     nsTableCellFrame*& aCellFrame, 
+                     PRBool&            aOriginates, 
+                     PRInt32&           aColSpan);
+  PRInt32 GetNumCellsOriginatingIn(PRInt32 aColIndex);
 
   NS_METHOD GetBorderPlusMarginPadding(nsMargin& aResult);
 
@@ -432,6 +428,14 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
   virtual PRBool ParentDisablesSelection() const; //override default behavior
+
+  /** helper method for determining if this is a nested table or not 
+    * @param aReflowState The reflow state for this inner table frame
+    * @param aPosition    [OUT] The position style struct for the parent table, if nested.
+    *                     If not nested, undefined.
+    * @return  PR_TRUE if this table is nested inside another table.
+    */
+  PRBool IsNested(const nsHTMLReflowState& aReflowState, const nsStylePosition *& aPosition) const;
 
 public:
   /** first pass of ResizeReflow.  
@@ -700,14 +704,15 @@ protected:
   void      MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 
-  /** called whenever the number of columns changes, to increase the storage in mCellMap 
-    */
-  virtual void GrowCellMap(PRInt32 aColCount);
-
   /** returns PR_TRUE if the cached pass 1 data is still valid */
   virtual PRBool IsCellMapValid() const;
 
 public:
+  /** Get the cell map for this table frame.  It is not always mCellMap.
+    * Only the firstInFlow has a legit cell map
+    */
+  virtual nsCellMap *GetCellMap() const;
+
   /** ResetCellMap is called when the cell structure of the table is changed.
     * Call with caution, only when changing the structure of the table such as 
     * inserting or removing rows, changing the rowspan or colspan attribute of a cell, etc.
@@ -718,19 +723,9 @@ protected:
   /** iterates all child frames and creates a new cell map */
   NS_IMETHOD ReBuildCellMap();
 
-  /** Get the cell map for this table frame.  It is not always mCellMap.
-    * Only the firstInFlow has a legit cell map
-    */
-  virtual nsCellMap *GetCellMap() const;
-
   void SetColumnDimensions(nscoord aHeight);
 
 #ifdef NS_DEBUG
-  /** for debugging only
-    * prints out information about the cell map
-    */
-  void DumpCellMap();
-
   /** for debugging only
     * prints out info about the table layout state, printing columns and their cells
     */
@@ -743,9 +738,6 @@ protected:
     */ 
   virtual void EnsureColumns (nsIPresContext& aPresContext);
 
-  /** Set the min col span for every column in the table.  Scans the whole table. */
-  virtual void SetMinColSpanForTable();
-
   virtual void BuildColumnCache(nsIPresContext&          aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState,
@@ -755,16 +747,6 @@ protected:
   virtual void SetColumnStylesFromCells(nsIPresContext& aPresContext, nsIFrame* aRowGroupFrame);
 
   virtual void CacheColFramesInCellMap();
-
-  /** called every time we discover we have a new cell to add to the table.
-    * This could be because we got actual cell content, because of rowspan/colspan attributes, etc.
-    * This method changes mCellMap as necessary to account for the new cell.
-    *
-    * @param aCell     the content object created for the cell
-    * @param aRowIndex the row into which the cell is to be inserted
-    * @param aColIndex the col into which the cell is to be inserted
-    */
-  virtual void BuildCellIntoMap (nsTableCellFrame *aCell, PRInt32 aRowIndex, PRInt32 aColIndex);
 
   /** return the number of columns as specified by the input. 
     * has 2 side effects:<br>
@@ -786,13 +768,9 @@ public: /* ----- Cell Map public methods ----- */
     */
   virtual PRInt32 GetRowCount() const;
 
-  /** returns the number of columns in this table. */
-  virtual PRInt32 GetColCount();
-
-  /** adjust the col count for screwy table attributes.
-    * currently just handles excess colspan at end of table
+  /** returns the number of columns in this table after redundant columns have been removed 
     */
-  virtual void SetEffectiveColCount();
+  virtual PRInt32 GetColCount();
 
   /** return the column frame at colIndex.
     * returns nsnull if the col frame has not yet been allocated, or if aColIndex is out of range
@@ -805,37 +783,16 @@ public: /* ----- Cell Map public methods ----- */
     */
   nsTableCellFrame * GetCellFrameAt(PRInt32 aRowIndex, PRInt32 aColIndex);
 
-  /** returns PR_TRUE if the row at aRowIndex has any cells that are the result
-    * of a row-spanning cell above it.
-	* @see nsCellMap::RowIsSpannedInto
-    */
-  PRBool RowIsSpannedInto(PRInt32 aRowIndex);
-
-  /** returns PR_TRUE if the row at aRowIndex has any cells that have a rowspan>1
-    * that originate in aRowIndex.
-    * @see nsCellMap::RowHasSpanningCells
-    */
-  PRBool RowHasSpanningCells(PRInt32 aRowIndex);
-
-	/** returns PR_TRUE if the col at aColIndex has any cells that are the result
-	  * of a col-spanning cell.
-	  * @see nsCellMap::ColIsSpannedInto
-	  */
-	PRBool ColIsSpannedInto(PRInt32 aColIndex);
-
-	/** returns PR_TRUE if the row at aColIndex has any cells that have a colspan>1
-	  * @see nsCellMap::ColHasSpanningCells
-	  */
-	PRBool ColHasSpanningCells(PRInt32 aColIndex);
-
   /** return the minimum width of the table caption.  Return 0 if there is no caption. */
   nscoord GetMinCaptionWidth();
 
-  /** return the minimum width of the table.  Return 0 if the min width is unknown. */
-  nscoord GetMinTableWidth();
+  /** return the minimum contend width of the table (excludes borders and padding).  
+      Return 0 if the min width is unknown. */
+  nscoord GetMinTableContentWidth();
 
-  /** return the maximum width of the table caption.  Return 0 if the max width is unknown. */
-  nscoord GetMaxTableWidth();
+  /** return the maximum content width of the table (excludes borders and padding). 
+      Return 0 if the max width is unknown. */
+  nscoord GetMaxTableContentWidth();
 
   /** compute the max-element-size for the table
     * @param aMaxElementSize  [OUT] width field set to the min legal width of the table
@@ -847,6 +804,7 @@ public: /* ----- Cell Map public methods ----- */
 
 public:
   static nsIAtom* gColGroupAtom;
+  void Dump(PRBool aDumpCols, PRBool aDumpCellMap);
 
 protected:
   void DebugPrintCount() const; // Debugging routine
@@ -862,7 +820,6 @@ protected:
   PRBool       mIsInvariantWidth;   // PR_TRUE if table width cannot change
   PRBool       mHasScrollableRowGroup; // PR_TRUE if any section has overflow == "auto" or "scroll"
   PRInt32      mColCount;           // the number of columns in this table
-  PRInt32      mEffectiveColCount;  // the number of columns in this table adjusted for weird table attributes
   nsCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
   ColumnInfoCache *mColCache;       // cached information about the table columns
   nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame

@@ -20,8 +20,35 @@
 
 #include "nscore.h"
 #include "nsContainerFrame.h"
+#include "nsTableFrame.h"
 
 class nsVoidArray;
+
+// this is used to index arrays of widths in nsColFrame and to group important widths
+// for calculations. It is important that the order: min, desired, fixed be maintained
+// for each category (con, adj).
+// XXX MIN_ADJ, DES_ADJ, PCT_ADJ, DES_PRO can probably go away and be replaced
+// by MIN_CON, DES_CON, PCT_CON, DES_CON saving 16 bytes per col frame
+#define WIDTH_NOT_SET   -1
+#define NUM_WIDTHS       9
+#define NUM_MAJOR_WIDTHS 3 // MIN, DES, FIX
+#define MIN_CON          0 // minimum width required of the content + padding
+#define DES_CON          1 // desired width of the content + padding
+#define FIX              2 // fixed width either from the content or cell, col, etc. + padding
+#define MIN_ADJ          3 // minimum width + padding due to col spans
+#define DES_ADJ          4 // desired width + padding due to col spans
+#define FIX_ADJ          5 // fixed width + padding due to col spans
+#define PCT              6 // percent width of cell or col 
+#define PCT_ADJ          7 // percent width of cell or col from percent colspan
+#define MIN_PRO          8 // desired width due to proportional <col>s or cols attribute
+
+enum nsColConstraint {
+  eNoConstraint          = 0,
+  ePixelConstraint       = 1,      // pixel width 
+  ePercentConstraint     = 2,      // percent width
+  eProportionConstraint  = 3,      // 1*, 2*, etc. cols attribute assigns 1*
+  e0ProportionConstraint = 4       // 0*, means to force to min width
+};
 
 class nsTableColFrame : public nsFrame {
 public:
@@ -67,57 +94,48 @@ public:
   /** convenience method, calls into cellmap */
   nsVoidArray * GetCells();
 
-  nscoord GetMaxColWidth();
-  void SetMaxColWidth(nscoord aMaxColWidth);
-
-  nscoord GetMinColWidth();
-  void SetMinColWidth(nscoord aMinColWidth);
-
-  nscoord GetEffectiveMaxColWidth();
-  void SetEffectiveMaxColWidth(nscoord aMaxColWidth);
-
-  nscoord GetEffectiveMinColWidth();
-  void SetEffectiveMinColWidth(nscoord aMinColWidth);
-
   // return the min width for this column after provisions for col spans have
   // been included. The adj min width is >= the min width.
   nscoord GetAdjustedMinColWidth();
   void SetAdjustedMinColWidth(nscoord aMinColWidth);
 
-  // Return true if the column has a width either from HTML width attribute,
-  // from a style rule on the column, from a width attr/style on a cell 
-  // that has colspan==1.
-  PRBool HasConstrainedWidth();
-  void SetHasConstrainedWidth(PRBool aIsConstrained);
+  nscoord GetWidth(PRUint32 aWidthType);
+  void GetWidths(nscoord* aWidths);
+  void SetWidth(PRUint32 aWidthType,
+                nscoord  aWidth);
+  nscoord GetMinWidth();
+  nscoord GetDesWidth();
+  nscoord GetFixWidth();
+  nscoord GetPctWidth();
 
-  PRInt32 GetWidthSource();
-  void SetWidthSource(PRInt32 aMinColWidth);
-
-  nscoord GetColWidthForComputation();
+  void    SetConstraint(nsColConstraint aConstraint);
+  nsColConstraint GetConstraint() const;
 
   /** convenience method, calls into cellmap */
   PRInt32 Count() const;
 
+  /** Return true if this col was constructed implicitly due to cells needing a col.
+    * Return false if this col was constructed due to content having display type of table-col
+    */
+  PRBool IsAnonymous();
+  void SetIsAnonymous(PRBool aValue);
+
+  void Dump(PRInt32 aIndent);
+
 protected:
 
   nsTableColFrame();
+  ~nsTableColFrame();
 
   /** the starting index of the column (starting at 0) that this col object represents */
   PRInt32  mColIndex;
 
+  PRBool  mIsAnonymous;
 
-  nscoord mMaxColWidth;
-  nscoord mMinColWidth;
-
-  nscoord mMaxEffectiveColWidth;
-  nscoord mMinEffectiveColWidth;
-
-  nscoord mMinAdjustedColWidth;
-
-  PRBool  mHasConstrainedWidth;
-
-  PRInt32 mWidthSource;
-
+  // Widths including MIN_CON, DES_CON, FIX_CON, MIN_ADJ, DES_ADJ, FIX_ADJ
+  nscoord mWidths[NUM_WIDTHS];
+  nscoord mProportion; // proportion for porportional width col
+  nsColConstraint mConstraint;
 };
 
 
@@ -133,46 +151,17 @@ inline PRInt32 nsTableColFrame::GetColumnIndex()
 inline void nsTableColFrame::SetColumnIndex (int aColIndex)
 {  mColIndex = aColIndex;}
 
-inline nscoord nsTableColFrame::GetMaxColWidth()
-{ return mMaxColWidth; }
+inline nsColConstraint nsTableColFrame::GetConstraint() const
+{ return mConstraint; }
 
-inline void nsTableColFrame::SetMaxColWidth(nscoord aMaxColWidth)
-{ mMaxColWidth = aMaxColWidth; }
+inline void nsTableColFrame::SetConstraint(nsColConstraint aConstraint)
+{  mConstraint = aConstraint;}
 
-inline nscoord nsTableColFrame::GetMinColWidth()
-{ return mMinColWidth; }
+inline PRBool nsTableColFrame::IsAnonymous()
+{ return mIsAnonymous; }
 
-inline void nsTableColFrame::SetMinColWidth(nscoord aMinColWidth)
-{ mMinColWidth = aMinColWidth; }
+inline void nsTableColFrame::SetIsAnonymous(PRBool aIsAnonymous)
+{ mIsAnonymous = aIsAnonymous; }
 
-inline nscoord nsTableColFrame::GetEffectiveMaxColWidth()
-{ return mMaxEffectiveColWidth; }
-
-inline void nsTableColFrame::SetEffectiveMaxColWidth(nscoord aMaxColWidth)
-{ mMaxEffectiveColWidth = aMaxColWidth; }
-
-inline nscoord nsTableColFrame::GetEffectiveMinColWidth()
-{ return mMinEffectiveColWidth; }
-
-inline void nsTableColFrame::SetEffectiveMinColWidth(nscoord aMinEffectiveColWidth)
-{ mMinEffectiveColWidth = aMinEffectiveColWidth; }
-
-inline nscoord nsTableColFrame::GetAdjustedMinColWidth()
-{ return mMinAdjustedColWidth; }
-
-inline PRBool nsTableColFrame::HasConstrainedWidth()
-{ return mHasConstrainedWidth; }
-
-inline void nsTableColFrame::SetHasConstrainedWidth(PRBool aIsConstrained)
-{ mHasConstrainedWidth = aIsConstrained; }
-
-inline void nsTableColFrame::SetAdjustedMinColWidth(nscoord aMinAdjustedColWidth)
-{ mMinAdjustedColWidth = aMinAdjustedColWidth; }
-
-inline PRInt32 nsTableColFrame::GetWidthSource()
-{ return mWidthSource; }
-
-inline void nsTableColFrame::SetWidthSource(PRInt32 aWidthSource)
-{ mWidthSource = aWidthSource; }
 #endif
 

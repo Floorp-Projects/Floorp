@@ -468,15 +468,13 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
                                                      kidRect.height);
         PRInt32 colCount = aReflowState.tableFrame->GetColCount();
         PRInt32 colIndex = 0;
-        nsIFrame *cellFrame = aReflowState.tableFrame->GetCellFrameAt(rowIndex, colIndex);
-        while (colIndex<colCount)
-        {
-          if (nsnull!=cellFrame)
-          {
+        nsIFrame *cellFrame;
+        for (colIndex = 0; colIndex < colCount; colIndex++) {
+          cellFrame = aReflowState.tableFrame->GetCellFrameAt(rowIndex, colIndex);
+          if (cellFrame) {
             const nsStyleDisplay *cellDisplay;
             cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
-            if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay)
-            {
+            if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay) {
               ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_LEFT,
                                                                      rowIndex,
                                                                      kidRect.height);
@@ -485,8 +483,6 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
                                                                      kidRect.height);
             }
           }
-          colIndex++;
-          cellFrame = aReflowState.tableFrame->GetCellFrameAt(rowIndex, colIndex);
         }
       }
     }
@@ -668,7 +664,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
               // the avail height needs to reduce by top and bottom margins
               nscoord availHeightOfRowsSpanned = heightOfRowsSpanned - cellSpacingY - cellSpacingY;
               if (gsDebug) printf("TRGF CalcRowH:   availHeightOfRowsSpanned=%d\n", availHeightOfRowsSpanned);
-        
               /* if the cell height fits in the rows, expand the spanning cell's height and slap it in */
               nsSize  cellFrameSize;
               cellFrame->GetSize(cellFrameSize);
