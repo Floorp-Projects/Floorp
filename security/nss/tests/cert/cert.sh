@@ -604,6 +604,7 @@ cert_fips()
 
   echo "$SCRIPTNAME: Enable FIPS mode on database -----------------------"
   CU_ACTION="Enable FIPS mode on database for ${CERTNAME}"
+  echo "modutil -dbdir ${PROFILEDIR} -fips true "
   modutil -dbdir ${PROFILEDIR} -fips true 2>&1 <<MODSCRIPT
 y
 MODSCRIPT
