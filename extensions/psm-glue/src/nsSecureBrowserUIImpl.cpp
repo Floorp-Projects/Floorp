@@ -148,11 +148,12 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
     PR_FREEIF(mLastPSMStatus);
 }
 
-NS_IMPL_ISUPPORTS4(nsSecureBrowserUIImpl, 
+NS_IMPL_ISUPPORTS5(nsSecureBrowserUIImpl, 
                    nsSecureBrowserUI, 
                    nsIWebProgressListener, 
                    nsIFormSubmitObserver,
-                   nsIObserver); 
+                   nsIObserver,
+                   nsISupportsWeakReference); 
 
 
 NS_IMETHODIMP
