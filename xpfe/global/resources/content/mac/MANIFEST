@@ -2,6 +2,6 @@ platformDialogOverlay.xul
 platformGlobalOverlay.xul
 platformBrowserBindings.xul
 platformInputBindings.xul
-platformTextFieldBindings.xul
+platformTextAreaBindings.xul
 platformEditorBindings.xul
 
