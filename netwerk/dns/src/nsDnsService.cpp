@@ -183,43 +183,34 @@ nsDNSService::Lookup(nsISupports*    ctxt,
         netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));
         status = PR_StringToNetAddr(hostname, netAddr);
         if (PR_SUCCESS == status) {
-            // If it is numeric and could be converted then try to
-            // look it up, otherwise try it as normal hostname
-            status = PR_GetHostByAddr(netAddr, 
-                                      hostentry->buffer, 
-                                      PR_NETDB_BUF_SIZE, 
-                                      &hostentry->hostEnt);
-            if (PR_FAILURE == status) {
-                // reverse lookup failed. slam the IP in and move on.
-                PRHostEnt *ent = &(hostentry->hostEnt);
-                PRIntn bufLen = PR_NETDB_BUF_SIZE;
-                char *buffer = hostentry->buffer;
-                ent->h_name = (char*)BufAlloc(PL_strlen(hostname) + 1,
+            // slam the IP in and move on.
+            PRHostEnt *ent = &(hostentry->hostEnt);
+            PRIntn bufLen = PR_NETDB_BUF_SIZE;
+            char *buffer = hostentry->buffer;
+            ent->h_name = (char*)BufAlloc(PL_strlen(hostname) + 1,
+                                       &buffer,
+                                       &bufLen,
+                                       0);
+            memcpy(ent->h_name, hostname, PL_strlen(hostname) + 1);
+
+            ent->h_aliases = (char**)BufAlloc(1 * sizeof(char*),
                                            &buffer,
                                            &bufLen,
-                                           0);
-                memcpy(ent->h_name, hostname, PL_strlen(hostname) + 1);
+                                           sizeof(char **));
+            ent->h_aliases[0] = '\0';
 
-                ent->h_aliases = (char**)BufAlloc(1 * sizeof(char*),
+            ent->h_addrtype = 2;
+            ent->h_length = 4;
+            ent->h_addr_list = (char**)BufAlloc(2 * sizeof(char*),
+                                             &buffer,
+                                             &bufLen,
+                                             sizeof(char **));
+            ent->h_addr_list[0] = (char*)BufAlloc(ent->h_length,
                                                &buffer,
                                                &bufLen,
-                                               sizeof(char **));
-                ent->h_aliases[0] = '\0';
-
-                ent->h_addrtype = 2;
-                ent->h_length = 4;
-                ent->h_addr_list = (char**)BufAlloc(2 * sizeof(char*),
-                                                 &buffer,
-                                                 &bufLen,
-                                                 sizeof(char **));
-                ent->h_addr_list[0] = (char*)BufAlloc(ent->h_length,
-                                                   &buffer,
-                                                   &bufLen,
-                                                   0);
-                memcpy(ent->h_addr_list[0], &netAddr->inet.ip, ent->h_length);
-                ent->h_addr_list[1] = '\0';
-                status = PR_SUCCESS;
-            }
+                                               0);
+            memcpy(ent->h_addr_list[0], &netAddr->inet.ip, ent->h_length);
+            ent->h_addr_list[1] = '\0';
         } else {
             // If the hostname is numeric, but we couldn't create
             // a net addr out of it, we're dealing w/ a purely numeric
