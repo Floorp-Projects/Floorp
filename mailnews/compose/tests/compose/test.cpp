@@ -40,7 +40,6 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
 	if (res == NS_OK && pMsgCompFields) { 
 		printf("We succesfully obtained a nsIMsgCompFields interface....\n");
-/* 		pMsgCompFields->Test(); */
 
 /*
 		const char * value;
@@ -103,7 +102,8 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
    if (res == NS_OK && pMsgCompose) {
 	 printf("We succesfully obtained a nsIMsgCompose interface....\n");
-/* 	 pMsgCompose->Test(); */
+
+	 pMsgCompose->CreateAndInitialize(NULL, NULL, NULL, NULL, NULL);
 
 	 printf("Releasing the interface now...\n");
      pMsgCompose->Release(); 
@@ -116,14 +116,13 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
 	if (res == NS_OK && pMsgSend) { 
 		printf("We succesfully obtained a nsIMsgSend interface....\n");
-/*		pMsgSend->Test(); */
 
 		res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, 
 													NULL, 
 													kIMsgCompFieldsIID, 
 													(void **) &pMsgCompFields); 
 		if (res == NS_OK && pMsgCompFields) { 
-			pMsgCompFields->SetFrom("qatest02@netscape.com", NULL);
+			pMsgCompFields->SetFrom(", qatest02@netscape.com, ", NULL);
 			pMsgCompFields->SetTo("qatest02@netscape.com", NULL);
 			pMsgCompFields->SetSubject("[spam] test", NULL);
 			pMsgCompFields->SetBody("Sample message sent with Mozilla\n\nPlease do not reply, thanks\n\nJean-Francois\n", NULL);
