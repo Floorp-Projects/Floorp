@@ -539,7 +539,33 @@ nsXPConnect::WrapJS(JSContext * aJSContext, JSObject * aJSObj, const nsIID & aII
 
     nsresult rv;
     if(!XPCConvert::JSObject2NativeInterface(aJSContext, result, aJSObj, 
-                                             &aIID, &rv))
+                                             &aIID, nsnull, &rv))
+        return rv;
+    return NS_OK;
+}
+
+/* void wrapJSAggregatedToNative (in nsISupports aOuter, in JSContextPtr aJSContext, in JSObjectPtr aJSObj, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult result); */
+NS_IMETHODIMP 
+nsXPConnect::WrapJSAggregatedToNative(nsISupports *aOuter, JSContext * aJSContext, JSObject * aJSObj, const nsIID & aIID, void * *result)
+{
+    NS_ENSURE_ARG_POINTER(aOuter);
+    NS_ENSURE_ARG_POINTER(aJSContext);
+    NS_ENSURE_ARG_POINTER(aJSObj);
+    NS_ENSURE_ARG_POINTER(result);
+
+    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
+    *result = nsnull;
+
+    // This also ensures that we have a valid runtime
+    XPCContext* xpcc = GetContext(aJSContext, this);
+    if(!xpcc)
+        return NS_ERROR_FAILURE;
+
+    SET_CALLER_NATIVE(xpcc);
+
+    nsresult rv;
+    if(!XPCConvert::JSObject2NativeInterface(aJSContext, result, aJSObj, 
+                                             &aIID, aOuter, &rv))
         return rv;
     return NS_OK;
 }

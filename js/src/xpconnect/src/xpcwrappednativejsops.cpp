@@ -772,6 +772,14 @@ WrappedNative_Finalize(JSContext *cx, JSObject *obj)
     if(!wrapper || !wrapper->IsValid())
         return;
 
+#ifdef DEBUG
+    {
+        static const int FREQUENCY = 50;
+        static int hit_count = 0;
+        //if(!(++hit_count % FREQUENCY))
+           // NS_ASSERTION(0, "ignore me and see me crash!");
+    }
+#endif
     // Defer this push until we know we have a valid wrapper to work with.
     // This call can *startup* XPConnect after it has been shutdown!
     AUTO_PUSH_JSCONTEXT(cx);

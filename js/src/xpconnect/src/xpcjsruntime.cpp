@@ -277,6 +277,7 @@ XPCJSRuntime::SyncXPCContextList(JSContext* cx /* = nsnull */)
         if(cx && cx == cur)
             found = xpcc;
     }
+
     return found;
 }
 

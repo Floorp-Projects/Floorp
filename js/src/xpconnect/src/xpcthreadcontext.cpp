@@ -222,8 +222,10 @@ xpcPerThreadData::Cleanup()
 
     if(mOwnSafeJSContext)
     {
+        JS_SetContextThread(mOwnSafeJSContext);
         JS_DestroyContext(mOwnSafeJSContext);
         mOwnSafeJSContext = nsnull;
+        SyncJSContexts();
     }
 }
 
@@ -310,6 +312,7 @@ xpcPerThreadData::GetSafeJSContext()
                 mSafeJSContext = JS_NewContext(rt, 8192);
                 if(mSafeJSContext)
                 {
+                    AutoJSRequest req(mSafeJSContext); // scoped JS Request  
                     JSObject *glob;
                     glob = JS_NewObject(mSafeJSContext, &global_class, NULL, NULL);
                     if(!glob || 
@@ -342,6 +345,7 @@ xpcPerThreadData::SetSafeJSContext(JSContext *cx)
     {
         JS_DestroyContext(mOwnSafeJSContext);
         mOwnSafeJSContext = nsnull;
+        SyncJSContexts();
     }
 
     mSafeJSContext = cx;
@@ -421,3 +425,10 @@ xpcPerThreadData::CleanupAllThreads()
         PR_SetThreadPrivate(gTLSIndex, nsnull);
 }
 
+void 
+xpcPerThreadData::SyncJSContexts()
+{
+    nsCOMPtr<nsXPConnect> xpc = dont_AddRef(nsXPConnect::GetXPConnect());
+    if(xpc)
+        xpc->SyncJSContexts();
+}

@@ -91,14 +91,10 @@ nsXPCWrappedJSClass::GetNewOrUsedClass(XPCJSRuntime* rt,
         nsAutoLock lock(rt->GetMapLock());  
         IID2WrappedJSClassMap* map = rt->GetWrappedJSClassMap();
         clazz = map->Find(aIID);
+        NS_IF_ADDREF(clazz);
     }
 
-
-    if(clazz)
-    {
-        NS_ADDREF(clazz);
-    }
-    else
+    if(!clazz)
     {
         nsCOMPtr<nsIInterfaceInfoManager> iimgr =
             dont_AddRef(nsXPConnect::GetInterfaceInfoManager());
@@ -279,18 +275,15 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
                                              REFNSIID aIID,
                                              void** aInstancePtr)
 {
-    nsXPCWrappedJS* sibling;
-
-    // This includes checking for nsISupports and the iid of self.
-    // And it also checks for other wrappers that have been constructed
-    // for this object.
-    if(nsnull != (sibling = self->Find(aIID)))
+    if(aIID.Equals(NS_GET_IID(nsIXPConnectJSObjectHolder)))
     {
-        NS_ADDREF(sibling);
-        *aInstancePtr = (void*) sibling;
+        NS_ADDREF(self);
+        *aInstancePtr = (void*) NS_STATIC_CAST(nsIXPConnectJSObjectHolder*,self);
         return NS_OK;
     }
 
+    // Objects internal to xpconnect are the only objects that even know *how*
+    // to ask for this iid. And none of them bother refcoutning the thing.
     if(aIID.Equals(NS_GET_IID(WrappedJSIdentity)))
     {
         // asking to find out if this is a wrapper object
@@ -298,40 +291,36 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         return NS_OK;
     }
 
-    // else...
+    nsXPCWrappedJS* sibling;
 
-    // check if asking for an interface that we inherit from
-
-    nsCOMPtr<nsIInterfaceInfo> current = GetInterfaceInfo();
-    nsCOMPtr<nsIInterfaceInfo> parent;
-
-    while(NS_SUCCEEDED(current->GetParent(getter_AddRefs(parent))) && parent)
+    // Checks for any existing wrapper explicitly constructed for this iid.
+    // This includes the current 'self' wrapper. This also deals with the
+    // nsISupports case (for which it returns mRoot).
+    if(nsnull != (sibling = self->Find(aIID)))
     {
-        current = parent;
-
-        nsIID* iid;
-        if(NS_SUCCEEDED(current->GetIID(&iid)) && iid)
-        {
-            PRBool found = aIID.Equals(*iid);
-            nsMemory::Free(iid);
-            if(found)
-            {
-                *aInstancePtr = (void*) self;
-                NS_ADDREF(self);
-                return NS_OK;
-            }
-        }
+        NS_ADDREF(sibling);
+        *aInstancePtr = (void*) sibling;
+        return NS_OK;
     }
 
-    // else...
+    // Check if asking for an interface from which one of our wrappers inherits.
+    if(nsnull != (sibling = self->FindInherited(aIID)))
+    {
+        NS_ADDREF(sibling);
+        *aInstancePtr = (void*) sibling;
+        return NS_OK;
+    }
+
+    // else we do the more expensive stuff...
+
     // check if the JSObject claims to implement this interface
     JSObject* jsobj = CallQueryInterfaceOnJSObject(self->GetJSObject(), aIID);
     if(jsobj)
     {
         AutoPushCompatibleJSContext autoContext(mRuntime->GetJSRuntime());
         JSContext* cx = autoContext.GetJSContext();
-        if(cx && XPCConvert::JSObject2NativeInterface(cx, aInstancePtr,
-                                                      jsobj, &aIID, nsnull))
+        if(cx && XPCConvert::JSObject2NativeInterface(cx, aInstancePtr, jsobj, 
+                                                      &aIID, nsnull, nsnull))
             return NS_OK;
     }
 

@@ -40,6 +40,29 @@
 
 // NOTE: much of the fancy footwork is done in xpcstubs.cpp
 
+
+NS_IMETHODIMP 
+nsXPCWrappedJS::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+    NS_ASSERTION(IsAggregatedToNative(), "bad AggregatedQueryInterface call");
+
+    if(!IsValid())
+        return NS_ERROR_UNEXPECTED;
+
+    // Put this here rather that in DelegatedQueryInterface because it needs
+    // to be in QueryInterface before the possible delegation to 'outer', but
+    // we don't want to do this check twice in one call in the normal case: 
+    // once in QueryInterface and once in DelegatedQueryInterface.
+    if(aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS)))
+    {
+        NS_ADDREF(this);
+        *aInstancePtr = (void*) NS_STATIC_CAST(nsIXPConnectWrappedJS*,this);
+        return NS_OK;
+    }
+
+    return mClass->DelegatedQueryInterface(this, aIID, aInstancePtr);
+}
+
 NS_IMETHODIMP
 nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -52,24 +75,24 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
 
+    // Always check for this first so that our 'outer' can get this interface
+    // from us without recurring into a call to the outer's QI!
     if(aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS)))
     {
-        NS_ADDREF_THIS();
+        NS_ADDREF(this);
         *aInstancePtr = (void*) NS_STATIC_CAST(nsIXPConnectWrappedJS*,this);
         return NS_OK;
     }
 
-    if(aIID.Equals(NS_GET_IID(nsIXPConnectJSObjectHolder)))
-    {
-        NS_ADDREF_THIS();
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsIXPConnectJSObjectHolder*,this);
-        return NS_OK;
-    }
+    nsISupports* outer = GetAggregatedNativeObject();
+    if(outer)
+        return outer->QueryInterface(aIID, aInstancePtr);
 
     // else...
 
     return mClass->DelegatedQueryInterface(this, aIID, aInstancePtr);
 }
+
 
 // do chained ref counting
 
@@ -90,6 +113,11 @@ nsXPCWrappedJS::Release(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
     NS_PRECONDITION(0 != mRefCnt, "dup release");
+
+#ifdef DEBUG_jband
+    NS_ASSERTION(IsValid(), "post xpconnect shutdown call of nsXPCWrappedJS::Release");
+#endif
+
     nsrefcnt cnt = (nsrefcnt) PR_AtomicDecrement((PRInt32*)&mRefCnt);
     NS_LOG_RELEASE(this, cnt, "nsXPCWrappedJS");
     if(0 == cnt)
@@ -121,7 +149,8 @@ nsXPCWrappedJS::GetJSObject(JSObject** aJSObj)
 nsXPCWrappedJS*
 nsXPCWrappedJS::GetNewOrUsedWrapper(XPCContext* xpcc,
                                     JSObject* aJSObj,
-                                    REFNSIID aIID)
+                                    REFNSIID aIID,
+                                    nsISupports* aOuter)
 {
     JSObject2WrappedJSMap* map;
     JSObject* rootJSObj;
@@ -173,7 +202,8 @@ nsXPCWrappedJS::GetNewOrUsedWrapper(XPCContext* xpcc,
         if(rootJSObj == aJSObj)
         {
             // the root will do double duty as the interface wrapper
-            wrapper = root = new nsXPCWrappedJS(xpcc, aJSObj, clazz, nsnull);
+            wrapper = root = new nsXPCWrappedJS(xpcc, aJSObj, clazz, nsnull, 
+                                                aOuter);
             if(root)
             {   // scoped lock
                 nsAutoLock lock(rt->GetMapLock());  
@@ -190,7 +220,7 @@ nsXPCWrappedJS::GetNewOrUsedWrapper(XPCContext* xpcc,
             if(!rootClazz)
                 goto return_wrapper;
 
-            root = new nsXPCWrappedJS(xpcc, rootJSObj, rootClazz, nsnull);
+            root = new nsXPCWrappedJS(xpcc, rootJSObj, rootClazz, nsnull, aOuter);
             NS_RELEASE(rootClazz);
 
             if(!root)
@@ -208,7 +238,7 @@ nsXPCWrappedJS::GetNewOrUsedWrapper(XPCContext* xpcc,
 
     if(!wrapper)
     {
-        wrapper = new nsXPCWrappedJS(xpcc, aJSObj, clazz, root);
+        wrapper = new nsXPCWrappedJS(xpcc, aJSObj, clazz, root, aOuter);
         if(!wrapper)
             goto return_wrapper;
     }
@@ -229,11 +259,13 @@ return_wrapper:
 nsXPCWrappedJS::nsXPCWrappedJS(XPCContext* xpcc,
                                JSObject* aJSObj,
                                nsXPCWrappedJSClass* aClass,
-                               nsXPCWrappedJS* root)
+                               nsXPCWrappedJS* root,
+                               nsISupports* aOuter)
     : mJSObj(aJSObj),
       mClass(aClass),
       mRoot(root ? root : this),
-      mNext(nsnull)
+      mNext(nsnull),
+      mOuter(root ? nsnull : aOuter)
 {
 #ifdef DEBUG_stats_jband
     static int count = 0;
@@ -245,6 +277,7 @@ nsXPCWrappedJS::nsXPCWrappedJS(XPCContext* xpcc,
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
     NS_ADDREF(aClass);
+    NS_IF_ADDREF(mOuter);
     NS_ASSERTION(xpcc && xpcc->GetJSContext(), "bad context");
     JS_AddNamedRoot(xpcc->GetJSContext(), &mJSObj,
                     "nsXPCWrappedJS::mJSObj");
@@ -271,6 +304,9 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
             JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
         }
         NS_IF_RELEASE(mClass);
+        // XXX Should this moved out of the 'if' block? 
+        // XXX   OR... Should this called in SystemIsBeingShutDown?
+        NS_IF_RELEASE(mOuter);
     }
     if(mNext)
         NS_DELETEXPCOM(mNext);  // cascaded delete
@@ -282,13 +318,37 @@ nsXPCWrappedJS::Find(REFNSIID aIID)
     if(aIID.Equals(NS_GET_IID(nsISupports)))
         return mRoot;
 
-    nsXPCWrappedJS* cur = mRoot;
-    do
+    for(nsXPCWrappedJS* cur = mRoot; cur; cur = cur->mNext)
     {
         if(aIID.Equals(cur->GetIID()))
             return cur;
+    }
 
-    } while(nsnull != (cur = cur->mNext));
+    return nsnull;
+}
+
+// check if asking for an interface that some wrapper in the chain inherits from
+nsXPCWrappedJS*
+nsXPCWrappedJS::FindInherited(REFNSIID aIID)
+{
+    NS_ASSERTION(!aIID.Equals(NS_GET_IID(nsISupports)), "bad call sequence");
+
+    for(nsXPCWrappedJS* cur = mRoot; cur; cur = cur->mNext)
+    {
+        nsCOMPtr<nsIInterfaceInfo> iface = cur->GetClass()->GetInterfaceInfo();
+        nsCOMPtr<nsIInterfaceInfo> iface_parent;
+
+        // Skip the first iface - we know we don't care about nsISupports here.
+        while(NS_SUCCEEDED(iface->GetParent(getter_AddRefs(iface_parent))) && 
+              iface_parent)
+        {
+            iface = iface_parent;
+        
+            PRBool found;
+            if(NS_SUCCEEDED(iface->IsIID(&aIID, &found)) && found)
+                return cur;
+        }
+    }
 
     return nsnull;
 }
@@ -391,4 +451,3 @@ nsXPCWrappedJS::DebugDump(PRInt16 depth)
 #endif
     return NS_OK;
 }
-

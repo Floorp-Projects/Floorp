@@ -91,6 +91,16 @@ static void SetupRegistry()
 
 /***************************************************************************/
 
+#ifdef JS_THREADSAFE
+#define DoBeginRequest(cx) JS_BeginRequest((cx))
+#define DoEndRequest(cx)   JS_EndRequest((cx))
+#else
+#define DoBeginRequest(cx) ((void)0)
+#define DoEndRequest(cx)   ((void)0)
+#endif
+
+/***************************************************************************/
+
 #define EXITCODE_RUNTIME_ERROR 3
 #define EXITCODE_FILE_NOT_FOUND 4
 
@@ -226,6 +236,7 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
         argv[i] = STRING_TO_JSVAL(str);
         filename = JS_GetStringBytes(str);
+        DoBeginRequest(cx);
         script = JS_CompileFile(cx, obj, filename);
         if (!script)
             ok = JS_FALSE;
@@ -233,6 +244,7 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             ok = JS_ExecuteScript(cx, obj, script, &result);
             JS_DestroyScript(cx, script);
         }
+        DoEndRequest(cx);
         if (!ok)
             return JS_FALSE;
     }
@@ -475,11 +487,13 @@ Process(JSContext *cx, JSObject *obj, char *filename)
             }
         }
         ungetc(ch, fh);
+        DoBeginRequest(cx);
         script = JS_CompileFileHandle(cx, obj, filename, fh);
         if (script) {
             (void)JS_ExecuteScript(cx, obj, script, &result);
             JS_DestroyScript(cx, script);
         }
+        DoEndRequest(cx);
         return;
     }
 
@@ -504,8 +518,9 @@ Process(JSContext *cx, JSObject *obj, char *filename)
             }
             bufp += strlen(bufp);
             lineno++;
-        } while (!JS_BufferIsCompilableUnit(cx, obj,
-                                            buffer, strlen(buffer)));
+        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, strlen(buffer)));
+        
+        DoBeginRequest(cx);
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
         script = JS_CompileScript(cx, obj, buffer, strlen(buffer),
@@ -542,6 +557,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 #endif
             JS_DestroyScript(cx, script);
         }
+        DoEndRequest(cx);
     } while (!hitEOF && !gQuitting);
     fprintf(gOutFile, "\n");
     return;

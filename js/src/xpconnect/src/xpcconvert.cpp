@@ -692,7 +692,8 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             if(!JSVAL_IS_OBJECT(s) || !(obj = JSVAL_TO_OBJECT(s)))
                 return JS_FALSE;
 
-            return JSObject2NativeInterface(cx, (void**)d, obj, iid, pErr);
+            return JSObject2NativeInterface(cx, (void**)d, obj, iid, 
+                                            nsnull, pErr);
         }
         default:
             NS_ASSERTION(0, "bad type");
@@ -810,7 +811,9 @@ XPCConvert::NativeInterface2JSObject(JSContext* cx,
 JSBool 
 XPCConvert::JSObject2NativeInterface(JSContext* cx,
                                      void** dest, JSObject* src,
-                                     const nsID* iid, nsresult* pErr)
+                                     const nsID* iid, 
+                                     nsISupports* aOuter,
+                                     nsresult* pErr)
 {
     NS_ASSERTION(cx, "bad param");
     NS_ASSERTION(dest, "bad param");
@@ -842,8 +845,12 @@ XPCConvert::JSObject2NativeInterface(JSContext* cx,
 
     // else...
 
-    // does the JSObject have 'nsISupportness'? (as do DOM objects)
-    if(GetISupportsFromJSObject(cx, src, &iface))
+    // Does the JSObject have 'nsISupportness'? (as do DOM objects.)
+    // Note that if we have a non-null aOuter then it means that we are
+    // forcing the creation of a wrapper even if the object *does* have
+    // 'nsISupportness'. This allows wrapJSAggregatedToNative to work
+    // with JSObjects that happen to have 'nsISupportness'.
+    if(!aOuter && GetISupportsFromJSObject(cx, src, &iface))
     {
         if(iface)
             return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
@@ -858,7 +865,7 @@ XPCConvert::JSObject2NativeInterface(JSContext* cx,
     if(xpcc)
     {
         nsXPCWrappedJS* wrappedJS = 
-            nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, src, *iid);
+            nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, src, *iid, aOuter);
         if(wrappedJS)
         {
             *dest = NS_STATIC_CAST(nsXPTCStubBase*, wrappedJS);
@@ -973,7 +980,8 @@ XPCConvert::JSValToXPCException(JSContext* cx,
                 {
                     return NS_REINTERPRET_CAST(nsIXPCException*, 
                         nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, obj,
-                                                NS_GET_IID(nsIXPCException)));
+                                                NS_GET_IID(nsIXPCException),
+                                                nsnull));
                 }
             }
 

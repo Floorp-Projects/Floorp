@@ -163,6 +163,9 @@ interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
     readonly attribute nsIIDPtr         IID;
 
     void debugDump(in short depth);
+
+    void aggregatedQueryInterface(in nsIIDRef uuid, 
+                                  [iid_is(uuid),retval] out nsQIResult result);
 };
 
 /***************************************************************************/
@@ -436,5 +439,27 @@ interface nsIXPConnect : nsISupports
     * context to use to execute JavaScript.
     */
     void setSafeJSContextForCurrentThread(in JSContextPtr cx);
+
+    /**
+    * wrapJSAggregatedToNative is just like wrapJS except it is used in cases 
+    * where the JSObject is also aggregated to some native xpcom Object.
+    * At present XBL is the only system that might want to do this.
+    *
+    * XXX write more!
+    *
+    * Returns:
+    *   success:
+    *     NS_OK
+    *    failure:
+    *       NS_ERROR_XPC_BAD_CONVERT_JS
+    *       NS_ERROR_FAILURE
+    */
+    void
+    wrapJSAggregatedToNative(in nsISupports  aOuter,
+                             in JSContextPtr aJSContext,
+                             in JSObjectPtr  aJSObj,
+                             in nsIIDRef     aIID,
+                             [iid_is(aIID),retval] out nsQIResult result);
 };
+
 
