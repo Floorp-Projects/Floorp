@@ -1046,21 +1046,24 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   // can use our rect (the border edge) since if the border style
   // changed, the reflow would have been targeted at us so we'd satisfy
   // condition 1.
-  if (NS_SUCCEEDED(rv) &&
-      mAbsoluteContainer.HasAbsoluteFrames() &&
-      (eReflowReason_Incremental != aReflowState.reason ||
-       aReflowState.path->mReflowCommand ||
-       mRect != oldRect)) {
-    nscoord containingBlockWidth;
-    nscoord containingBlockHeight;
-    nsRect  childBounds;
+  if (NS_SUCCEEDED(rv) && mAbsoluteContainer.HasAbsoluteFrames()) {
+    nsRect childBounds;
+    if (eReflowReason_Incremental != aReflowState.reason ||
+        aReflowState.path->mReflowCommand ||
+        mRect != oldRect) {
+      nscoord containingBlockWidth;
+      nscoord containingBlockHeight;
 
-    CalculateContainingBlock(aReflowState, aMetrics.width, aMetrics.height,
-                             containingBlockWidth, containingBlockHeight);
+      CalculateContainingBlock(aReflowState, aMetrics.width, aMetrics.height,
+                               containingBlockWidth, containingBlockHeight);
 
-    rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
-                                   containingBlockWidth, containingBlockHeight,
-                                   childBounds);
+      rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
+                                     containingBlockWidth,
+                                     containingBlockHeight,
+                                     childBounds);
+    } else {
+      mAbsoluteContainer.CalculateChildBounds(aPresContext, childBounds);
+    }
 
     // Factor the absolutely positioned child bounds into the overflow area
     aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
@@ -4973,22 +4976,6 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
   VerifyLines(PR_TRUE);
 #endif
   return NS_OK;
-}
-
-
-void
-nsBlockFrame::FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame)
-{
-  while (aFrame) {
-    nsIFrame* oldParent;
-    aFrame->GetParent(&oldParent);
-    aFrame->SetParent(this);
-    if (this != oldParent) {
-      nsHTMLContainerFrame::ReparentFrameView(aPresContext, aFrame, oldParent, this);
-      aPresContext->ReParentStyleContext(aFrame, mStyleContext);
-    }
-    aFrame->GetNextSibling(&aFrame);
-  }
 }
 
 NS_IMETHODIMP
