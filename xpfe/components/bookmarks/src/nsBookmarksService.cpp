@@ -175,6 +175,7 @@ PRInt32			gRefCnt=0;
 nsIRDFService		*gRDF;
 nsIRDFContainerUtils	*gRDFC;
 nsICharsetAlias		*gCharsetAlias;
+PRBool      gLoadedBookmarks=PR_FALSE;
 
 static nsresult
 bm_AddRefGlobals()
@@ -1773,9 +1774,9 @@ nsBookmarksService::Init()
         observerService->AddObserver(this, "profile-do-change", PR_TRUE);
     }
 
-	// read in bookmarks AFTER trying to get string bundle
-	rv = ReadBookmarks();
-	if (NS_FAILED(rv))	return(rv);
+  rv = initDatasource();
+  if (NS_FAILED(rv))
+    return rv;
 
 	/* timer initialization */
 	busyResource = nsnull;
@@ -2519,7 +2520,7 @@ NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const char *aTo
   else if (!nsCRT::strcmp(aTopic, "profile-do-change"))
   {
     // The profile has aleady changed.
-    rv = ReadBookmarks();
+    rv = LoadBookmarks();
   }
 
   return rv;
@@ -4120,13 +4121,21 @@ nsBookmarksService::ReadFavorites()
 
 #endif
 
-
-
 NS_IMETHODIMP
 nsBookmarksService::ReadBookmarks()
 {
-	nsresult	rv;
+  if (!gLoadedBookmarks) {
+    LoadBookmarks();
+    gLoadedBookmarks = PR_TRUE;
+  }
+  return(NS_OK);
+}
 
+nsresult
+nsBookmarksService::initDatasource()
+{
+  nsresult rv;
+  
 	// the profile manager might call Readbookmarks() in certain circumstances
 	// so we need to forget about any previous bookmarks
 	mInner = nsnull;
@@ -4137,6 +4146,24 @@ nsBookmarksService::ReadBookmarks()
 	rv = mInner->AddObserver(this);
 	if (NS_FAILED(rv)) return rv;
 
+	rv = gRDFC->MakeSeq(mInner, kNC_BookmarksRoot, nsnull);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to make NC:BookmarksRoot a sequence");
+	if (NS_FAILED(rv)) return rv;
+
+	// Make sure bookmark's root has the correct type
+	rv = mInner->Assert(kNC_BookmarksRoot, kRDF_type, kNC_Folder, PR_TRUE);
+  return(rv);
+}
+
+nsresult
+nsBookmarksService::LoadBookmarks()
+{
+	nsresult	rv;
+
+  rv = initDatasource();
+  if (NS_FAILED(rv))
+    return NS_OK;
+
 	nsFileSpec	bookmarksFile;
 	rv = GetBookmarksFile(&bookmarksFile);
 
@@ -4144,14 +4171,6 @@ nsBookmarksService::ReadBookmarks()
 	// aren't any bookmarks to read in.
 	if (NS_FAILED(rv))
 	    return NS_OK;
-
-	rv = gRDFC->MakeSeq(mInner, kNC_BookmarksRoot, nsnull);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to make NC:BookmarksRoot a sequence");
-	if (NS_FAILED(rv)) return rv;
-
-	// Make sure bookmark's root has the correct type
-	rv = mInner->Assert(kNC_BookmarksRoot, kRDF_type, kNC_Folder, PR_TRUE);
-	if (NS_FAILED(rv)) return rv;
 
 	PRBool	foundIERoot = PR_FALSE;
 
