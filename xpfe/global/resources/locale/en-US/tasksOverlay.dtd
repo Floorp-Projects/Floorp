@@ -16,7 +16,7 @@
 <!ENTITY javaConsoleCmd.label					"Java Console">
 
 <!-- LOCALIZATION NOTE (walletMenu.label): DONT_TRANSLATE -->
-<!ENTITY walletMenu.label "My Wallet">
+<!ENTITY walletMenu.label "Personal Managers">
 <!ENTITY autoFill.label "AutoFill">
 <!ENTITY walletPasswordManager.label "Password Manager">
 <!ENTITY walletSafeFillCmd.label "Safe Form Fill">
