@@ -6635,38 +6635,39 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
       if (NS_FAILED(res)) return res;
       
       // iterate range and build up array
-      iter->Init(range);
-      while (NS_ENUMERATOR_FALSE == iter->IsDone())
+      res = iter->Init(range);
+      if (NS_SUCCEEDED(res))
       {
-        res = iter->CurrentNode(getter_AddRefs(content));
-        if (NS_FAILED(res)) return res;
-        node = do_QueryInterface(content);
-        if (!node) return NS_ERROR_FAILURE;
-        if (IsEditable(node))
-        { 
-          isupports = do_QueryInterface(node);
-          arrayOfNodes->AppendElement(isupports);
+        while (NS_ENUMERATOR_FALSE == iter->IsDone())
+        {
+          res = iter->CurrentNode(getter_AddRefs(content));
+          if (NS_FAILED(res)) return res;
+          node = do_QueryInterface(content);
+          if (!node) return NS_ERROR_FAILURE;
+          if (IsEditable(node))
+          { 
+            isupports = do_QueryInterface(node);
+            arrayOfNodes->AppendElement(isupports);
+          }
+          iter->Next();
         }
-        res = iter->Next();
-        if (NS_FAILED(res)) return res;
-      }
-      
-      // MOOSE: workaround for selection bug:
-      //selection->ClearSelection();
+        
+        // MOOSE: workaround for selection bug:
+        //selection->ClearSelection();
 
-      // now that we have the list, do the font size change on each node
-      PRUint32 listCount;
-      PRUint32 j;
-      arrayOfNodes->Count(&listCount);
-      for (j = 0; j < listCount; j++)
-      {
-        isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
-        node = do_QueryInterface(isupports);
-        res = RelativeFontChangeOnNode(aSizeChange, node);
-        if (NS_FAILED(res)) return res;
-        arrayOfNodes->RemoveElementAt(0);
+        // now that we have the list, do the font size change on each node
+        PRUint32 listCount;
+        PRUint32 j;
+        arrayOfNodes->Count(&listCount);
+        for (j = 0; j < listCount; j++)
+        {
+          isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+          node = do_QueryInterface(isupports);
+          res = RelativeFontChangeOnNode(aSizeChange, node);
+          if (NS_FAILED(res)) return res;
+          arrayOfNodes->RemoveElementAt(0);
+        }
       }
-      
       // now check the start and end parents of the range to see if they need to 
       // be seperately handled (they do if they are text nodes, due to how the
       // subtree iterator works - it will not have reported them).
