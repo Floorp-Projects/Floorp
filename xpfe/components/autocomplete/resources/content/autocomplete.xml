@@ -183,23 +183,20 @@
         ({
 
             onMenuCommand: function(me, popupSetElem) {
-				var inputElement = document.getAnonymousNodes(me)[0].firstChild;
-				var popupElem = popupSetElem.firstChild;
-				for (var i = 0; i < popupElem.childNodes.length; i ++)
-				{
-					var menuitem = popupElem.childNodes[i];
-					if (menuitem.getAttribute("menuactive") == "true")
-					{
-            me.ignoreInputEvent = true;
-						inputElement.value = menuitem.getAttribute("value");
-						inputElement = document.getAnonymousNodes(me)[0].firstChild;
-                        inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
-						needToAutocomplete = false;
-						me.privatefunc.selectedItemIndex = i;
-            me.ignoreInputEvent = false;
-						return;
-					}
-				}
+                var inputElement = document.getAnonymousNodes(me)[0].firstChild;
+                var popupElem = popupSetElem.firstChild;
+
+                me.ignoreInputEvent = true;
+
+                inputElement.value = popupElem.activeChild.getAttribute("value");
+                inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
+
+                needToAutocomplete = false;
+                me.privatefunc.selectedItemIndex = popupElem.activeChild.getAttribute("data");
+
+                me.ignoreInputEvent = false;
+
+                return;
             },
 
 			callListener: function(me, action) {
