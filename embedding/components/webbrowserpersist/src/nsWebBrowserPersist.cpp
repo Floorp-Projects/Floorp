@@ -899,6 +899,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStatus(
         case NS_NET_STATUS_CONNECTED_TO:
         case NS_NET_STATUS_SENDING_TO:
         case NS_NET_STATUS_RECEIVING_FROM:
+        case NS_NET_STATUS_WAITING_FOR:
             break;
 
         default:

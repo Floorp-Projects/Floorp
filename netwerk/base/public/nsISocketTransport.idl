@@ -109,4 +109,5 @@ interface nsISocketTransport : nsITransport
 #define NS_NET_STATUS_SENDING_TO     nsISocketTransport::STATUS_SENDING_TO
 #define NS_NET_STATUS_RECEIVING_FROM nsISocketTransport::STATUS_RECEIVING_FROM
 #define NS_NET_STATUS_CONNECTING_TO  nsISocketTransport::STATUS_CONNECTING_TO
+#define NS_NET_STATUS_WAITING_FOR    nsISocketTransport::STATUS_WAITING_FOR
 %}
