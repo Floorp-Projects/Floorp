@@ -297,6 +297,7 @@ nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
     "default-style",
     "content-style-type",
     "content-language",
+    "content-disposition",
     // add more http headers if you need
     // XXXbz don't add content-location support without reading bug
     // 238654 and its dependencies/dups first.

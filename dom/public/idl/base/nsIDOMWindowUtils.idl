@@ -43,7 +43,7 @@
  * content script. Access this interface by calling getInterface on a DOMWindow.
  */
 
-[scriptable, uuid(7e1ec6ff-2e67-4b26-aa39-a3eb2a3b8a4e)]
+[scriptable, uuid(8a157a4f-a81e-489f-baf2-bc8970d60472)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -63,5 +63,12 @@ interface nsIDOMWindowUtils : nsISupports {
    *       this is not recursive to subwindows.
    * @see imgIContainer
    */
-           attribute unsigned short imageAnimationMode;
+  attribute unsigned short imageAnimationMode;
+
+  /**
+   * Function to get metadata associated with the window's current document
+   * @param aName the name of the metadata.  This should be all lowercase.
+   * @return the value of the metadata, or the empty string if it's not set
+   */
+  AString getDocumentMetadata(in AString aName);
 };

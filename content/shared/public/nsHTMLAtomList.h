@@ -154,6 +154,7 @@ HTML_ATOM(h5, "h5")
 HTML_ATOM(h6, "h6")
 HTML_ATOM(handler, "handler") //XML Events
 HTML_ATOM(head, "head")
+HTML_ATOM(headerContentDisposition, "content-disposition")
 HTML_ATOM(headerContentLanguage, "content-language")
 HTML_ATOM(headerContentScriptType, "content-script-type")
 HTML_ATOM(headerContentStyleType, "content-style-type")
