@@ -29,11 +29,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEInfoImpl, nsIMIMEInfo);
 // nsMIMEInfoImpl methods
 nsMIMEInfoImpl::nsMIMEInfoImpl() {
     NS_INIT_REFCNT();
-    mPreferredAction = 0;
+    mPreferredAction = nsIMIMEInfo::saveToDisk;
+    mAlwaysAskBeforeHandling = PR_TRUE;
 }
 
 nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType) :mMIMEType( aMIMEType ){
     NS_INIT_REFCNT();
+    mPreferredAction = nsIMIMEInfo::saveToDisk;
+    mAlwaysAskBeforeHandling = PR_TRUE;
 }
 
 PRUint32
@@ -213,8 +216,6 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetPreferredApplicationHandler(nsIFile * aPreferre
   return NS_OK;
 }
 
-nsMIMEInfoHandleAction mPreferredAction; // preferred action to associate with this type
-
 NS_IMETHODIMP nsMIMEInfoImpl::GetPreferredAction(nsMIMEInfoHandleAction * aPreferredAction)
 {
   *aPreferredAction = mPreferredAction;
@@ -224,5 +225,17 @@ NS_IMETHODIMP nsMIMEInfoImpl::GetPreferredAction(nsMIMEInfoHandleAction * aPrefe
 NS_IMETHODIMP nsMIMEInfoImpl::SetPreferredAction(nsMIMEInfoHandleAction aPreferredAction)
 {
   mPreferredAction = aPreferredAction;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMIMEInfoImpl::GetAlwaysAskBeforeHandling(PRBool * aAlwaysAsk)
+{
+  *aAlwaysAsk = mAlwaysAskBeforeHandling;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMIMEInfoImpl::SetAlwaysAskBeforeHandling(PRBool aAlwaysAsk)
+{
+  mAlwaysAskBeforeHandling = aAlwaysAsk;
   return NS_OK;
 }

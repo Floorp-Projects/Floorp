@@ -41,15 +41,16 @@ public:
     PRUint32 GetExtCount();           // returns the number of extensions associated.
 
     // member variables
-    nsCStringArray       mExtensions; // array of file extensions associated w/ this MIME obj
+    nsCStringArray      mExtensions; // array of file extensions associated w/ this MIME obj
     nsAutoString        mDescription; // human readable description
     nsCOMPtr<nsIURI>    mURI;         // URI pointing to data associated w/ this obj      
 		PRUint32						mMacType, mMacCreator; // Mac file type and creator
 protected:
-    nsCString					 mMIMEType;
-    nsCOMPtr<nsIFile>  mPreferredApplication; // preferred application associated with this type.
+    nsCString					     mMIMEType;
+    nsCOMPtr<nsIFile>      mPreferredApplication; // preferred application associated with this type.
     nsMIMEInfoHandleAction mPreferredAction; // preferred action to associate with this type
     nsString               mPreferredAppDescription;
+    PRBool                 mAlwaysAskBeforeHandling; 
 };
 
 #endif //__nsmimeinfoimpl_h___

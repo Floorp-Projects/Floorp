@@ -117,12 +117,18 @@ interface nsIMIMEInfo : nsISupports {
     const long alwaysAsk = 1;
     const long useHelperApp = 2;
 	const long handleInternally = 3;
+	const long useSystemDefault = 4;
 
 	/* preferredAction is how the user specified they would like to handle
-	 * this content type: save to disk, use specified helper app or always ask.
-	 * do we need a separate flag for handle internally?
+	 * this content type: save to disk, use specified helper app, use OS
+	 * default handler or handle using navigator.
 	 */
 	attribute nsMIMEInfoHandleAction preferredAction;
+
+	/* alwaysAskBeforeHandling: if true, we should always give the user a dialog
+	 * asking how to dispose of this content. 
+	 */
+	attribute boolean alwaysAskBeforeHandling;
 };
 
 %{C++
