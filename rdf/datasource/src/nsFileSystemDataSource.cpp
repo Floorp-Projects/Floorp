@@ -177,7 +177,7 @@ public:
     static PRBool isFileURI(nsIRDFResource* aResource);
 
     static nsresult GetVolumeList(nsISimpleEnumerator **aResult);
-    static nsresult GetFolderList(nsIRDFResource *source, nsISimpleEnumerator **aResult);
+    static nsresult GetFolderList(nsIRDFResource *source, PRBool allowHidden, nsISimpleEnumerator **aResult);
     static nsresult GetName(nsIRDFResource *source, nsIRDFLiteral** aResult);
     static nsresult GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
     static PRBool   isVisible(const nsNativeFileSpec& file);
@@ -492,7 +492,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		{
 			// Oh this is evil. Somebody kill me now.
 			nsCOMPtr<nsISimpleEnumerator> children;
-			rv = GetFolderList(source, getter_AddRefs(children));
+			rv = GetFolderList(source, PR_FALSE, getter_AddRefs(children));
 			if (NS_FAILED(rv)) return rv;
 
 			PRBool hasMore;
@@ -565,7 +565,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 	{
 		if (property == kNC_Child)
 		{
-			return GetFolderList(source, targets);
+			return GetFolderList(source, PR_FALSE, targets);
 		}
 		else if (property == kNC_Name)
 		{
@@ -1015,7 +1015,7 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
 		isValid = PR_FALSE;
 
 		nsCOMPtr<nsISimpleEnumerator>	folderEnum;
-		if (NS_SUCCEEDED(rv = GetFolderList(source, getter_AddRefs(folderEnum))))
+		if (NS_SUCCEEDED(rv = GetFolderList(source, PR_TRUE, getter_AddRefs(folderEnum))))
 		{
 			PRBool		hasAny = PR_FALSE, hasMore;
 			while (NS_SUCCEEDED(folderEnum->HasMoreElements(&hasMore)) &&
@@ -1037,6 +1037,9 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
 				if (NS_FAILED(rv = nameLiteral->GetValueConst(&uniName)))
 					break;
 				nsAutoString			name(uniName);
+
+				// An empty folder, or a folder that contains just "desktop.ini",
+				// is considered to be a IE Favorite; otherwise, its a folder
 				if (!name.EqualsIgnoreCase("desktop.ini"))
 				{
 					isValid = PR_TRUE;
@@ -1053,7 +1056,7 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
 
 
 nsresult
-FileSystemDataSource::GetFolderList(nsIRDFResource *source, nsISimpleEnumerator** aResult)
+FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden, nsISimpleEnumerator** aResult)
 {
 	nsresult	rv;
 	nsCOMPtr<nsISupportsArray> nameArray;
@@ -1069,7 +1072,12 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, nsISimpleEnumerator*
 	for (nsDirectoryIterator i(nativeDir, PR_FALSE); i.Exists(); i++)
 	{
 		const nsNativeFileSpec	nativeSpec = (const nsNativeFileSpec &)i;
-		if (!isVisible(nativeSpec))	continue;
+
+		if (allowHidden == PR_FALSE)
+		{
+			if (!isVisible(nativeSpec))	continue;
+		}
+
 		nsFileURL		fileURL(nativeSpec);
 		const char		*childURL = fileURL.GetAsString();
 		if (childURL != nsnull)
