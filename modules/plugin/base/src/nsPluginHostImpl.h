@@ -116,10 +116,10 @@ public:
   char          **mMimeDescriptionArray;
   char          **mExtensionsArray;
   PRLibrary     *mLibrary;
-  PRBool        mCanUnloadLibrary;
   nsIPlugin     *mEntryPoint;
   PRUint32      mFlags;
-  PRBool        mXPConnected;
+  PRPackedBool  mCanUnloadLibrary;
+  PRPackedBool  mXPConnected;
   char          *mFileName;
   char          *mFullPath;
   PRInt64       mLastModifiedTime;
@@ -132,10 +132,10 @@ struct nsActivePlugin
   nsIPluginInstancePeer* mPeer;
   nsPluginTag*           mPluginTag;
   nsIPluginInstance*     mInstance;
-  PRBool                 mStopped;
   PRTime                 mllStopTime;
-  PRBool                 mDefaultPlugin;
-  PRBool                 mXPConnected;
+  PRPackedBool           mStopped;
+  PRPackedBool           mDefaultPlugin;
+  PRPackedBool           mXPConnected;
   //Array holding all opened stream listeners for this entry
   nsCOMPtr <nsISupportsArray>  mStreams; 
 
@@ -488,11 +488,18 @@ private:
   char        *mPluginPath;
   nsPluginTag *mPlugins;
   nsPluginTag *mCachedPlugins;
-  PRBool      mPluginsLoaded;
-  PRBool      mDontShowBadPluginMessage;
-  PRBool      mIsDestroyed;
-  PRBool      mOverrideInternalTypes; // set by pref plugin.override_internal_types
-  PRBool      mAllowAlienStarHandler;  // set by pref plugin.allow_alien_star_handler
+  PRPackedBool mPluginsLoaded;
+  PRPackedBool mDontShowBadPluginMessage;
+  PRPackedBool mIsDestroyed;
+
+  // set by pref plugin.override_internal_types
+  PRPackedBool mOverrideInternalTypes;
+
+  // set by pref plugin.allow_alien_star_handler
+  PRPackedBool mAllowAlienStarHandler;
+
+  // set by pref plugin.default_plugin_disabled
+  PRPackedBool mDefaultPluginDisabled;
 
   nsActivePluginList mActivePluginList;
   nsVoidArray mUnusedLibraries;

@@ -158,6 +158,8 @@
 #include "nsDefaultPlugin.h"
 #include "nsWeakReference.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMHTMLObjectElement.h"
+#include "nsIDOMHTMLEmbedElement.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIWebNavigation.h"
@@ -1923,7 +1925,8 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
 
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aContext)
+nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
+                                           nsISupports* aContext)
 {
   nsresult  rv = NS_OK;
 
@@ -1932,17 +1935,6 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
   }
 
   mHaveFiredOnStartRequest = PR_TRUE;
-
-  // do a little sanity check to make sure our frame isn't gone
-  // by getting the tag type and checking for an error, we can determine if
-  // the frame is gone
-  if (mOwner) {
-    nsCOMPtr<nsIPluginTagInfo2> pti2 = do_QueryInterface(mOwner);
-    NS_ENSURE_TRUE(pti2, NS_ERROR_FAILURE);
-    nsPluginTagType tagType;
-    if (NS_FAILED(pti2->GetTagType(&tagType)))
-      return NS_ERROR_FAILURE;  // something happened to our object frame, so bail!
-  }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
@@ -1961,20 +1953,50 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
       mRequestFailed = PR_TRUE;
       return NS_ERROR_FAILURE;
     }
-
-    // Get the notification callbacks from the channel and save it as week ref
-    // we'll use it in nsPluginStreamInfo::RequestRead()
-    // when we'll create channel for byte range request.
-    nsCOMPtr<nsIInterfaceRequestor> callbacks;
-    channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-    if (callbacks)
-      mWeakPtrChannelCallbacks = do_GetWeakReference(callbacks);
-
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    channel->GetLoadGroup(getter_AddRefs(loadGroup));
-    if (loadGroup)
-      mWeakPtrChannelLoadGroup = do_GetWeakReference(loadGroup);
   }
+
+  nsCAutoString contentType;
+  rv = channel->GetContentType(contentType);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  // do a little sanity check to make sure our frame isn't gone
+  // by getting the tag type and checking for an error, we can determine if
+  // the frame is gone
+  if (mOwner) {
+    nsCOMPtr<nsIPluginTagInfo2> pti2 = do_QueryInterface(mOwner);
+    NS_ENSURE_TRUE(pti2, NS_ERROR_FAILURE);
+    nsPluginTagType tagType;
+    if (NS_FAILED(pti2->GetTagType(&tagType)))
+      return NS_ERROR_FAILURE;  // something happened to our object frame, so bail!
+
+    // Now that we know the content type, tell the DOM element.
+    nsCOMPtr<nsIDOMElement> element;
+    pti2->GetDOMElement(getter_AddRefs(element));
+
+    nsCOMPtr<nsIDOMHTMLObjectElement> object(do_QueryInterface(element));
+    if (object) {
+      object->SetType(NS_ConvertASCIItoUTF16(contentType));
+    } else {
+      nsCOMPtr<nsIDOMHTMLEmbedElement> embed(do_QueryInterface(element));
+      if (embed) {
+        embed->SetType(NS_ConvertASCIItoUTF16(contentType));
+      }
+    }
+  }
+
+  // Get the notification callbacks from the channel and save it as
+  // week ref we'll use it in nsPluginStreamInfo::RequestRead() when
+  // we'll create channel for byte range request.
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+  if (callbacks)
+    mWeakPtrChannelCallbacks = do_GetWeakReference(callbacks);
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  channel->GetLoadGroup(getter_AddRefs(loadGroup));
+  if (loadGroup)
+    mWeakPtrChannelLoadGroup = do_GetWeakReference(loadGroup);
 
   PRInt32 length;
   rv = channel->GetContentLength(&length);
@@ -2502,6 +2524,7 @@ nsPluginHostImpl::nsPluginHostImpl()
   mOverrideInternalTypes = PR_FALSE;
   mAllowAlienStarHandler = PR_FALSE;
   mUnusedLibraries.Clear();
+  mDefaultPluginDisabled = PR_FALSE;
 
   gActivePluginList = &mActivePluginList;
 
@@ -2509,8 +2532,15 @@ nsPluginHostImpl::nsPluginHostImpl()
   // full page mode for certain image mime types that we handle internally
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (mPrefService) {
-    mPrefService->GetBoolPref("plugin.override_internal_types", &mOverrideInternalTypes);
-    mPrefService->GetBoolPref("plugin.allow_alien_star_handler", &mAllowAlienStarHandler);
+    PRBool tmp;
+    mPrefService->GetBoolPref("plugin.override_internal_types", &tmp);
+    mOverrideInternalTypes = tmp;
+
+    mPrefService->GetBoolPref("plugin.allow_alien_star_handler", &tmp);
+    mAllowAlienStarHandler = tmp;
+
+    mPrefService->GetBoolPref("plugin.default_plugin_disabled", &tmp);
+    mDefaultPluginDisabled = tmp;
   }
 
   nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
@@ -3714,9 +3744,9 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
 
 
   nsresult result = NS_ERROR_FAILURE;
-  nsIPluginInstance* instance = NULL;
+  nsCOMPtr<nsIPluginInstance> instance;
   nsCOMPtr<nsIPlugin> plugin;
-  const char* mimetype;
+  const char* mimetype = nsnull;
 
   if(!aURL)
     return NS_ERROR_FAILURE;
@@ -3733,8 +3763,15 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
     // if we don't have an extension or no plugin for this extension,
     // return failure as there is nothing more we can do
     if (fileExtension.IsEmpty() ||
-        NS_FAILED(IsPluginEnabledForExtension(fileExtension.get(), mimetype)))
+        NS_FAILED(IsPluginEnabledForExtension(fileExtension.get(),
+                                              mimetype))) {
+
+      if (mDefaultPluginDisabled) {
+        aOwner->PluginNotAvailable(aMimeType ? aMimeType : mimetype);
+      }
+
       return NS_ERROR_FAILURE;
+    }
   }
   else
     mimetype = aMimeType;
@@ -3789,93 +3826,79 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
 
   GetPluginFactory(mimetype, getter_AddRefs(plugin));
 
-  result = CallCreateInstance(contractID.get(), &instance);
+  instance = do_CreateInstance(contractID.get(), &result);
 
-    // couldn't create an XPCOM plugin, try to create wrapper for a legacy plugin
-    if (NS_FAILED(result))
-    {
-      if(plugin)
-      {
+  // couldn't create an XPCOM plugin, try to create wrapper for a
+  // legacy plugin
+  if (NS_FAILED(result)) {
+    if(plugin) {
 #ifdef XP_WIN
-        static BOOL firstJavaPlugin = FALSE;
-        BOOL restoreOrigDir = FALSE;
-        char origDir[_MAX_PATH];
-        if (isJavaPlugin && !firstJavaPlugin)
-        {
-          DWORD dw = ::GetCurrentDirectory(_MAX_PATH, origDir);
-          NS_ASSERTION(dw <= _MAX_PATH, "Falied to obtain the current directory, which may leads to incorrect class laoding");
-          nsCOMPtr<nsIFile> binDirectory;
-          result = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
-                                          getter_AddRefs(binDirectory));
+      static BOOL firstJavaPlugin = FALSE;
+      BOOL restoreOrigDir = FALSE;
+      char origDir[_MAX_PATH];
+      if (isJavaPlugin && !firstJavaPlugin) {
+        DWORD dw = ::GetCurrentDirectory(_MAX_PATH, origDir);
+        NS_ASSERTION(dw <= _MAX_PATH, "Falied to obtain the current directory, which may leads to incorrect class laoding");
+        nsCOMPtr<nsIFile> binDirectory;
+        result = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                                        getter_AddRefs(binDirectory));
 
-          if (NS_SUCCEEDED(result))
-          {
-              nsCAutoString path;
-              binDirectory->GetNativePath(path);
-              restoreOrigDir = ::SetCurrentDirectory(path.get());
-          }
-        }
-#endif
-        result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance);
-
-#ifdef XP_WIN
-        if (!firstJavaPlugin && restoreOrigDir)
-        {
-          BOOL bCheck = :: SetCurrentDirectory(origDir);
-          NS_ASSERTION(bCheck, " Error restoring driectoy");
-          firstJavaPlugin = TRUE;
-        }
-#endif
-      }
-      if (NS_FAILED(result))
-      {
-        nsCOMPtr<nsIPlugin> bwPlugin =
-                 do_GetService("@mozilla.org/blackwood/pluglet-engine;1", &result);
-        if (NS_SUCCEEDED(result))
-        {
-          result = bwPlugin->CreatePluginInstance(NULL,
-                                                  kIPluginInstanceIID,
-                                                  aMimeType,
-                                                  (void **)&instance);
+        if (NS_SUCCEEDED(result)) {
+          nsCAutoString path;
+          binDirectory->GetNativePath(path);
+          restoreOrigDir = ::SetCurrentDirectory(path.get());
         }
       }
+#endif
+      result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)getter_AddRefs(instance));
+
+#ifdef XP_WIN
+      if (!firstJavaPlugin && restoreOrigDir) {
+        BOOL bCheck = :: SetCurrentDirectory(origDir);
+        NS_ASSERTION(bCheck, " Error restoring driectoy");
+        firstJavaPlugin = TRUE;
+      }
+#endif
     }
 
-    // neither an XPCOM or legacy plugin could be instantiated,
-    // so return the failure
-    if (NS_FAILED(result))
-      return result;
-
-    // it is adreffed here
-    aOwner->SetInstance(instance);
-
-    nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
-    if(peer == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    // set up the peer for the instance
-    peer->Initialize(aOwner, mimetype);
-
-    nsCOMPtr<nsIPluginInstancePeer> pIpeer;
-    peer->QueryInterface(kIPluginInstancePeerIID, getter_AddRefs(pIpeer));
-    if (!pIpeer) {
-      delete peer;
-      return NS_ERROR_NO_INTERFACE;
+    if (NS_FAILED(result)) {
+      nsCOMPtr<nsIPlugin> bwPlugin =
+        do_GetService("@mozilla.org/blackwood/pluglet-engine;1", &result);
+      if (NS_SUCCEEDED(result)) {
+        result = bwPlugin->CreatePluginInstance(NULL,
+                                                kIPluginInstanceIID,
+                                                aMimeType,
+                                                (void **)getter_AddRefs(instance));
+      }
     }
+  }
 
-    result = instance->Initialize(pIpeer);  // this should addref the peer but not the instance or owner
-    if (NS_FAILED(result))                 // except in some cases not Java, see bug 140931
-      return result;       // our COM pointer will free the peer
+  // neither an XPCOM or legacy plugin could be instantiated,
+  // so return the failure
+  if (NS_FAILED(result))
+    return result;
 
-    // instance and peer will be addreffed here
-    result = AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE, pIpeer);
+  // it is adreffed here
+  aOwner->SetInstance(instance);
 
-    //release what was addreffed in Create(Plugin)Instance
-    NS_RELEASE(instance);
+  nsRefPtr<nsPluginInstancePeerImpl> peer = new nsPluginInstancePeerImpl();
+  if (!peer)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // set up the peer for the instance
+  peer->Initialize(aOwner, mimetype);
+
+  result = instance->Initialize(peer);  // this should addref the peer but not the instance or owner
+  if (NS_FAILED(result))                 // except in some cases not Java, see bug 140931
+    return result;       // our COM pointer will free the peer
+
+  // instance and peer will be addreffed here
+  result = AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE, peer);
 
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec2;
-  if(aURL != nsnull) (void)aURL->GetSpec(urlSpec2);
+  if (aURL)
+    aURL->GetSpec(urlSpec2);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
         ("nsPluginHostImpl::TrySetupPluginInstance Finished mime=%s, rv=%d, owner=%p, url=%s\n",
@@ -3884,31 +3907,37 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   PR_LogFlush();
 #endif
 
-    return result;
+  return result;
 }
 
 
 ////////////////////////////////////////////////////////////////////////
-nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsIURI *aURL,
-                                                      nsIPluginInstanceOwner *aOwner)
+nsresult
+nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType,
+                                             nsIURI *aURL,
+                                             nsIPluginInstanceOwner *aOwner)
 {
-  nsresult result = NS_ERROR_FAILURE;
+  if (mDefaultPluginDisabled) {
+    // The default plugin is disabled, don't load it.
+
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIPluginInstance> instance;
-  nsCOMPtr<nsIPlugin> plugin;
+  nsCOMPtr<nsIPlugin> plugin = NULL;
+  const char* mimetype = aMimeType;
 
   if(!aURL)
     return NS_ERROR_FAILURE;
 
-  nsCAutoString mimetype;
-  if (aMimeType)
-    mimetype = aMimeType;
-
   GetPluginFactory("*", getter_AddRefs(plugin));
 
+  nsresult result;
   instance = do_CreateInstance(NS_INLINE_PLUGIN_CONTRACTID_PREFIX "*",
                                &result);
 
-  // couldn't create an XPCOM plugin, try to create wrapper for a legacy plugin
+  // couldn't create an XPCOM plugin, try to create wrapper for a
+  // legacy plugin
   if (NS_FAILED(result))
   {
     if(plugin)
@@ -3916,48 +3945,44 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
                                       getter_AddRefs(instance));
   }
 
-  // neither an XPCOM or legacy plugin could be instantiated, so return the failure
+  // neither an XPCOM or legacy plugin could be instantiated, so
+  // return the failure
   if(NS_FAILED(result))
     return result;
 
   // it is adreffed here
   aOwner->SetInstance(instance);
 
-  nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
-  if(peer == nsnull)
+  nsRefPtr<nsPluginInstancePeerImpl> peer = new nsPluginInstancePeerImpl();
+  if (!peer)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // if we don't have a mimetype, check by file extension
   nsXPIDLCString mt;
-  if(mimetype.IsEmpty())
+  if (!mimetype || !*mimetype)
   {
     nsresult res = NS_OK;
     nsCOMPtr<nsIMIMEService> ms (do_GetService(NS_MIMESERVICE_CONTRACTID, &res));
     if(NS_SUCCEEDED(res))
     {
-      nsCAutoString mt;
       res = ms->GetTypeFromURI(aURL, mt);
       if(NS_SUCCEEDED(res))
-        mimetype = mt;
+        mimetype = mt.get();
     }
   }
 
   // set up the peer for the instance
-  peer->Initialize(aOwner, mimetype.get());
+  peer->Initialize(aOwner, mimetype);
 
-  nsCOMPtr<nsIPluginInstancePeer> pIpeer;
-  peer->QueryInterface(kIPluginInstancePeerIID, getter_AddRefs(pIpeer));
-  if (!pIpeer) {
-    delete peer;
-    return NS_ERROR_NO_INTERFACE;
-  }
-
-  result = instance->Initialize(pIpeer);  // this should addref the peer but not the instance or owner
-  if (NS_FAILED(result))                 // except in some cases not Java, see bug 140931
-    return result;       // our COM pointer will free the peer
+  // this should addref the peer but not the instance or owner except
+  // in some cases not Java, see bug 140931 our COM pointer will free
+  // the peer
+  result = instance->Initialize(peer);
+  if (NS_FAILED(result))
+    return result;
 
   // instance and peer will be addreffed here
-  result = AddInstanceToActiveList(plugin, instance, aURL, PR_TRUE, pIpeer);
+  result = AddInstanceToActiveList(plugin, instance, aURL, PR_TRUE, peer);
 
   return result;
 }

@@ -60,29 +60,29 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
-                  nsIFrame*        aPrevInFlow);
-  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
+                                 nsIAtom* aListName,
+                                 nsIFrame* aChildList);
+  NS_IMETHOD Init(nsPresContext* aPresContext,
+                  nsIContent* aContent,
+                  nsIFrame* aParent,
+                  nsStyleContext* aContext,
+                  nsIFrame* aPrevInFlow);
+  NS_IMETHOD Reflow(nsPresContext* aPresContext,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-  NS_IMETHOD DidReflow(nsPresContext*           aPresContext,
-                       const nsHTMLReflowState*  aReflowState,
-                       nsDidReflowStatus         aStatus);
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
+                    nsReflowStatus& aStatus);
+  NS_IMETHOD DidReflow(nsPresContext* aPresContext,
+                       const nsHTMLReflowState* aReflowState,
+                       nsDidReflowStatus aStatus);
+  NS_IMETHOD Paint(nsPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer,
+                   PRUint32 aFlags = 0);
 
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext,
-                          nsGUIEvent*     aEvent,
-                          nsEventStatus*  aEventStatus);
+                          nsGUIEvent* aEvent,
+                          nsEventStatus* aEventStatus);
 
   virtual nsIAtom* GetType() const;
   virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
@@ -97,12 +97,13 @@ public:
 
   /* fail on any requests to get a cursor from us because plugins set their own! see bug 118877 */
   NS_IMETHOD GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) 
-  { return NS_ERROR_NOT_IMPLEMENTED;  };
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  };
 
   //i18n helper
-  nsresult MakeAbsoluteURL(nsIURI* *aFullURI, 
-                          nsString aSrc,
-                          nsIURI* aBaseURI);
+  nsresult MakeAbsoluteURL(nsIURI* *aFullURI, nsString aSrc,
+                           nsIURI* aBaseURI);
   // accessibility support
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -112,11 +113,12 @@ public:
 #endif
 
   //local methods
-  nsresult CreateWidget(nscoord aWidth,
-                        nscoord aHeight,
-                        PRBool  aViewOnly);
-  nsIURI* GetFullURL() { return mFullURL; }
-  
+  nsresult CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly);
+  nsIURI* GetFullURL()
+  {
+    return mFullURL;
+  }
+
   static PRBool IsSupportedImage(nsIContent* aContent);
   static PRBool IsSupportedDocument(nsIContent* aContent);
 
@@ -125,6 +127,23 @@ public:
                                             nsIFrame* aRoot);
 
   void FixUpURLS(const nsString &name, nsAString &value);
+
+  void PluginNotAvailable(const char *aMimeType);
+
+  // Returns true if this object frame links to content that we have
+  // no enabled plugin for, that means not even the default plugin.
+  PRBool IsBroken() const
+  {
+    return mIsBrokenPlugin;
+  }
+
+  virtual PRBool IsContainingBlock() const
+  {
+    // Broken plugins are containing blocks.
+
+    return IsBroken();
+  }
+
 
 protected:
   // nsISupports
@@ -141,13 +160,13 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       nsHTMLReflowMetrics& aDesiredSize);
 
-  nsresult InstantiateWidget(nsPresContext*          aPresContext,
-                             nsHTMLReflowMetrics&     aMetrics,
+  nsresult InstantiateWidget(nsPresContext* aPresContext,
+                             nsHTMLReflowMetrics& aMetrics,
                              const nsHTMLReflowState& aReflowState,
                              nsCID aWidgetCID);
 
-  nsresult InstantiatePlugin(nsPresContext*          aPresContext,
-                             nsHTMLReflowMetrics&     aMetrics,
+  nsresult InstantiatePlugin(nsPresContext* aPresContext,
+                             nsHTMLReflowMetrics& aMetrics,
                              const nsHTMLReflowState& aReflowState,
                              nsIPluginHost* aPluginHost, 
                              const char* aMimetype,
@@ -157,11 +176,11 @@ protected:
                                nsHTMLReflowMetrics& aMetrics, 
                                const nsHTMLReflowState& aReflowState);
 
-  nsresult HandleChild(nsPresContext*          aPresContext,
-                       nsHTMLReflowMetrics&     aMetrics,
+  nsresult HandleChild(nsPresContext* aPresContext,
+                       nsHTMLReflowMetrics& aMetrics,
                        const nsHTMLReflowState& aReflowState,
-                       nsReflowStatus&          aStatus,
-                       nsIFrame*                child);
+                       nsReflowStatus& aStatus,
+                       nsIFrame* child);
  
   // check attributes and optionally CSS to see if we should display anything
   PRBool IsHidden(PRBool aCheckVisibilityStyle = PR_TRUE) const;
@@ -170,6 +189,10 @@ protected:
 
   nsPoint GetWindowOriginInPixels(PRBool aWindowless);
 
+  void CreateDefaultFrames(nsPresContext *aPresContext,
+                           nsHTMLReflowMetrics& aMetrics,
+                           const nsHTMLReflowState& aReflowState);
+
   friend class nsPluginInstanceOwner;
 private:
   nsPluginInstanceOwner *mInstanceOwner;
@@ -177,6 +200,7 @@ private:
   nsIFrame              *mFirstChild;
   nsCOMPtr<nsIWidget>   mWidget;
   nsRect                mWindowlessRect;
+  PRPackedBool          mIsBrokenPlugin;
 };
 
 

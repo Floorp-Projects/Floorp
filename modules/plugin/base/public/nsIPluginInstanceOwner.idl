@@ -128,4 +128,9 @@ interface nsIPluginInstanceOwner : nsISupports
    * Get the specified variable
    */
   void getValue(in nsPluginInstancePeerVariable aVariable, in voidPtr aValue);
+
+  /**
+   * Inform the owner that no plugin for the given mime type was found.
+   */
+  void pluginNotAvailable(in string aMimeType);
 };

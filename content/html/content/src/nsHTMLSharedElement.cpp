@@ -121,6 +121,9 @@ public:
                                nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+
+protected:
+  nsCString mType;
 };
 
 
@@ -180,7 +183,7 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Height, height)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Width, width)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Name, name)
-NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Type, type)
+//NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Src, src)
 
 // nsIDOMHTMLParamElement
@@ -203,6 +206,30 @@ NS_IMPL_URI_ATTR(nsHTMLSharedElement, Cite, cite)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Color, color)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Face, face)
 NS_IMPL_INT_ATTR(nsHTMLSharedElement, Size, size)
+
+NS_IMETHODIMP
+nsHTMLSharedElement::GetType(nsAString& aType)
+{
+  if (!mNodeInfo->Equals(nsHTMLAtoms::embed) || mType.IsEmpty()) {
+    GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType);
+  } else {
+    CopyUTF8toUTF16(mType, aType);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLSharedElement::SetType(const nsAString& aType)
+{
+  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
+    CopyUTF16toUTF8(aType, mType);
+  } else {
+    SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType, PR_TRUE);
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsHTMLSharedElement::GetForm(nsIDOMHTMLFormElement** aForm)
