@@ -374,7 +374,7 @@ CWebShellContainer::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **_retval)
 }
 
 NS_IMETHODIMP
-CWebShellContainer::FindNamedBrowser(const PRUnichar *aName, nsIWebBrowser **_retval)
+CWebShellContainer::FindNamedBrowserItem(const PRUnichar *aName, nsIDocShellTreeItem **_retval)
 {
 	return NS_ERROR_FAILURE;
 }
