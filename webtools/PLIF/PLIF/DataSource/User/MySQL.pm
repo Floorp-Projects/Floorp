@@ -355,7 +355,7 @@ sub setupInstall {
                                   userID integer unsigned auto_increment NOT NULL PRIMARY KEY,
                                   password varchar(255) NOT NULL,
                                   mode integer unsigned NOT NULL DEFAULT 0,
-                                  adminMessage varchar(255),
+                                  adminMessage varchar(255)
                                   )
         ');
         # +-------------------+
