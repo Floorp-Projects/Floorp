@@ -81,15 +81,15 @@ primary_expression[boolean initial] returns [ExpressionNode e]
 
 simple_expression returns [ExpressionNode e]
     { e = null; }
-	:	"null"      { e = new JSObject("null", null); }             // XXX
+	:	"null"      { e = new JSObject("null"); }
 	|	"true"      { e = JSBoolean.JSTrue; }
 	|	"false"     { e = JSBoolean.JSFalse; }
 	|	opN:NUMBER  { e = new JSDouble(opN.getText()); }
 	|	opS:STRING  { e = new JSString(opS.getText()); }
-	|	"this"      { e = new JSObject("this", null); }             // XXX
-	|	"super"     { e = new JSObject("super", null); }            // XXX
+	|	"this"      { e = new JSObject("this"); }
+	|	"super"     { e = new JSObject("super"); }
 	|	e = qualified_identifier_or_parenthesized_expression[true]
-	|	opR:REGEXP  { e = new JSObject(opR.getText(), null); }      // XXX
+	|	opR:REGEXP  { e = new JSObject(opR.getText()); }
 	|	e = array_literal
 	;
 
@@ -841,12 +841,12 @@ result_signature
 
 traditional_function returns [ExpressionNode e]
     { e = null; JSIdentifier id = null; ControlNodeGroup c = new ControlNodeGroup(); }
-	: "traditional" "function" id = identifier "(" traditional_parameter_list ")" block[BlockScope, c]
-	    { e = new FunctionNode(id, c); }
+	: "traditional" "function" id = identifier "(" e = traditional_parameter_list ")" block[BlockScope, c]
+	    { e = new FunctionNode(id, c, e); }
 	;
 
-traditional_parameter_list
-    { ExpressionNode e = null; ExpressionNode e2 = null; }
+traditional_parameter_list returns [ExpressionNode e]
+    { e = null; ExpressionNode e2 = null; }
     :	(e = identifier ("," e2 = identifier { e = new BinaryNode(",", e, e2); } )* )?
 	;
 

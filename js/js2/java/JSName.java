@@ -13,12 +13,26 @@ class JSName extends ExpressionNode {
 
     JSReference evalLHS(Environment theEnv)
     {
-        return new JSReference(theEnv.scope, id);
+        JSScope scope = theEnv.scope;
+        while (scope != null) {
+            if (scope.hasProp(theEnv, id))
+                return new JSReference(scope, id);
+            else
+                scope = scope.parent;
+        }
+        return new JSReference(theEnv.globalScope, id);
     }
     
     JSValue eval(Environment theEnv)
     {
-        return theEnv.scope.getProp(theEnv, id);
+        JSScope scope = theEnv.scope;
+        while (scope != null) {
+            if (scope.hasProp(theEnv, id))
+                return scope.getProp(theEnv, id);
+            else
+                scope = scope.parent;
+        }
+        throw new JSException(new JSString(id.s + " undefined"));
     }
     
     JSIdentifier id;
