@@ -32,6 +32,7 @@
 #include "nsAgg.h"
 #include "jsjava.h"
 #include "nsVector.h"
+#include "nsILiveConnectManager.h"
 
 class nsSymantecDebugManager;
 
@@ -42,7 +43,7 @@ class nsSymantecDebugManager;
  * nsIJVMManager is the more limited interface what the JVM plugin sees.
  ******************************************************************************/
 
-struct nsJVMManager : public nsIJVMManager, public nsIThreadManager {
+struct nsJVMManager : public nsIJVMManager, public nsIThreadManager, public nsILiveConnectManager {
 public:
 
     NS_DECL_AGGREGATED
@@ -119,6 +120,38 @@ public:
 	NS_IMETHOD
 	CreateThread(PRUint32* threadID, nsIRunnable* runnable);
 
+	/* from nsILiveConnectManager: */
+
+	/**
+	 * Attempts to start LiveConnect using the specified JSRuntime.
+	 */
+	NS_IMETHOD
+    StartupLiveConnect(JSRuntime* runtime, PRBool& outStarted)
+    {
+    	outStarted = MaybeStartupLiveConnect();
+    	return NS_OK;
+    }
+    
+	/**
+	 * Attempts to stop LiveConnect using the specified JSRuntime.
+	 */
+	NS_IMETHOD
+    ShutdownLiveConnect(JSRuntime* runtime, PRBool& outShutdown)
+    {
+    	outShutdown = MaybeShutdownLiveConnect();
+    	return NS_OK;
+    }
+
+	/**
+	 * Indicates whether LiveConnect can be used.
+	 */
+	NS_IMETHOD
+    IsLiveConnectEnabled(PRBool& outEnabled)
+    {
+    	outEnabled = IsLiveConnectEnabled();
+    	return NS_OK;
+    }
+
     /* JVMMgr specific methods: */
 
     /* ====> From here on are things only called by the browser, not the plugin... */
@@ -150,8 +183,9 @@ public:
 
 
     nsJVMManager(nsISupports* outer);
-protected:    
     virtual ~nsJVMManager(void);
+
+protected:    
 
     void        EnsurePrefCallbackRegistered(void);
     const char* GetJavaErrorString(JRIEnv* env);
