@@ -86,23 +86,6 @@ fi
 
 
 #
-#   Exclude certain path patterns.
-#   Be sure to modify the grep command below as well.
-#
-EXCLUDE_PATTERN_01="test"
-EXCLUDE_PATTERN_02="tsv"
-
-EXCLUDE_NAMES="-not -name viewer"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name spacetrace"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name xpidl"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name bloadblame"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name leakstats"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name codesighs"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name htmlrobot"
-EXCLUDE_NAMES="$EXCLUDE_NAMES -not -name DumpColors"
-
-
-#
 #   Stash our arguments away.
 #
 COPYSORTTSV="$1"
