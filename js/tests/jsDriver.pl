@@ -49,6 +49,7 @@ my $opt_suite_path;
 my $opt_trace = 0;
 my $opt_classpath = "";
 my $opt_rhino_interp = 0;
+my $opt_rhino_ms = 0;
 my @opt_engine_list;
 my $opt_engine_type = "";
 my $opt_user_output_file = 0;
@@ -455,7 +456,7 @@ sub usage {
        "(-e|--engine) <type> ...  Specify the type of engine(s) to test.\n" .
        "                          <type> is one or more of\n" .
        "                          (smopt|smdebug|lcopt|lcdebug|xpcshell|" .
-       "rhino|rhinoi).\n" .
+       "rhino|rhinoi|rhinoms|rhinomsi).\n" .
        "(-f|--file) <file>        Redirect output to file named <file>.\n" .
        "                          (default is " .
        "results-<engine-type>-<date-stamp>.html)\n" .
@@ -486,10 +487,22 @@ sub get_engine_command {
     if ($opt_engine_type eq "rhino") {
         &dd ("getting rhino engine command.");
         $opt_rhino_interp = 0;
+        $opt_rhino_ms = 0;
         $retval = &get_rhino_engine_command;
     } elsif ($opt_engine_type eq "rhinoi") {
         &dd ("getting rhinoi engine command.");
         $opt_rhino_interp = 1;
+        $opt_rhino_ms = 0;
+        $retval = &get_rhino_engine_command;
+    } elsif ($opt_engine_type eq "rhinoms") {
+        &dd ("getting rhinoms engine command.");
+        $opt_rhino_interp = 0;
+        $opt_rhino_ms = 1;
+        $retval = &get_rhino_engine_command;
+    } elsif ($opt_engine_type eq "rhinomsi") {
+        &dd ("getting rhinomsi engine command.");
+        $opt_rhino_interp = 1;
+        $opt_rhino_ms = 1;
         $retval = &get_rhino_engine_command;
     } elsif ($opt_engine_type eq "xpcshell") {
         &dd ("getting xpcshell engine command.");
@@ -514,7 +527,7 @@ sub get_engine_command {
 # get the shell command used to run rhino
 #
 sub get_rhino_engine_command {    
-    my $retval = $opt_java_path . "java ";
+    my $retval = $opt_java_path . ($opt_rhino_ms ? "jview " : "java ");
     
     if ($opt_shell_path) {
         $opt_classpath = ($opt_classpath) ?
@@ -523,7 +536,7 @@ sub get_rhino_engine_command {
     }
     
     if ($opt_classpath) {
-        $retval .= "-classpath $opt_classpath ";
+        $retval .= ($opt_rhino_ms ? "/cp:p" : "-classpath") . " $opt_classpath ";
     }
     
     $retval .= "org.mozilla.javascript.tools.shell.Main";
