@@ -227,8 +227,7 @@ PRBool 	result;
 void
 nsScrollbar::DrawWidget()
 {
-PRInt16							thumbwidth,thumbheight;
-PRInt16							width,x,y,tw;
+PRInt32							offx,offy;
 nsRect							therect,tr;
 Rect								macrect;
 GrafPtr							theport;
@@ -236,8 +235,10 @@ RGBColor						blackcolor = {0,0,0};
 RgnHandle						thergn;
 
 
+	CalcOffset(offx,offy);
 	GetPort(&theport);
 	::SetPort(mWindowPtr);
+	::SetOrigin(-offx,-offy);
 	GetBounds(therect);
 	nsRectToMacRect(therect,macrect);
 	thergn = ::NewRgn();
@@ -271,6 +272,7 @@ RgnHandle						thergn;
 		
 	::PenSize(1,1);
 	::SetClip(thergn);
+	::SetOrigin(0,0);
 	::SetPort(theport);
 }
 
@@ -433,10 +435,9 @@ PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 //-------------------------------------------------------------------------
 int nsScrollbar::AdjustScrollBarPosition(int aPosition) 
 {
-  int maxRange;
-  int sliderSize;
+  int maxRange=0,cap,sliderSize=0;
 
-  int cap = maxRange - sliderSize;
+	cap = maxRange - sliderSize;
   return aPosition > cap ? cap : aPosition;
 }
 
@@ -448,7 +449,7 @@ int nsScrollbar::AdjustScrollBarPosition(int aPosition)
 PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
 PRBool 	result = PR_TRUE;
-int 		newPosition;
+int 		newPosition=0;
 int			range;
 
 	switch (aEvent.message) 
