@@ -766,7 +766,8 @@ NS_METHOD nsWindow::Destroy()
 		toolkit->CallMethod(&info);
 		return NS_ERROR_FAILURE;
 	}
-
+	if(eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+		DealWithPopups(DESTROY,nsPoint(0,0));
 	// disconnect from the parent
 	if (!mIsDestroying) {
 		nsBaseWidget::Destroy();
@@ -1855,7 +1856,8 @@ bool nsWindow::CallMethod(MethodInfo *info)
 	case nsWindow::ONRESIZE :
 		{
 			NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
-
+                       if(eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+				DealWithPopups(ONRESIZE,nsPoint(0,0));
 			nsRect r;
 			r.width=(nscoord)info->args[0];
 			r.height=(nscoord)info->args[1];
@@ -1884,6 +1886,8 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			bool active = (bool)info->args[0];
 			if(!active) 
 			{
+				if(eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+					DealWithPopups(ONACTIVATE,nsPoint(0,0));
 				gJustGotDeactivate = PR_TRUE;
 			} 
 			else 
@@ -1897,13 +1901,20 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 	case nsWindow::ONMOVE:
 		NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
+		if(eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+			DealWithPopups(ONMOVE,nsPoint(0,0));
 		PRInt32 aX,  aY;
 		aX=(nscoord)info->args[0];
 		aY=(nscoord)info->args[1];
 		OnMove(aX,aY);
 		break;
 
-	default:
+	case ONWORKSPACE:
+		NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
+		if(eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+			DealWithPopups(ONWORKSPACE,nsPoint(0,0));
+			
+		break;	default:
 		bRet = FALSE;
 		break;
 	}
@@ -3075,8 +3086,7 @@ void nsWindowBeOS::WindowActivated(bool active)
 		gLastActiveWindow = this;
 	nsWindow        *w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
-	t = w->GetToolkit();
-	if(w &&  t!= 0)
+	if(w && (t = w->GetToolkit()) != 0)
 	{
 		uint32	args[1];
 		args[0] = (uint32)active;
@@ -3085,6 +3095,23 @@ void nsWindowBeOS::WindowActivated(bool active)
 		t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
+}
+
+void  nsWindowBeOS::WorkspacesChanged(uint32 oldworkspace, uint32 newworkspace)
+{
+	if (oldworkspace == newworkspace)
+		return;
+	nsWindow        *w = (nsWindow *)GetMozillaWidget();
+	nsToolkit	*t;
+	if(w && (t = w->GetToolkit()) != 0)
+	{
+		uint32	args[2];
+		args[0] = neworkspace;
+		args[1] = oldworkspace;
+		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONWORKSPACE, 2, args);
+		t->CallMethodAsync(info);
+		NS_RELEASE(t);
+	}	
 }
 
 //----------------------------------------------------
