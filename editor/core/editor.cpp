@@ -17,8 +17,8 @@
  */
 
 
-#include "editor.h"
 #include "nsIDOMDocument.h"
+#include "editor.h"
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
