@@ -1970,19 +1970,29 @@ nsresult
 nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
 {
   PRInt32       readSize;
+  PRInt32       nGot;
   char          *readBuf;
+  char          *ptr;
 
   nsInputFileStream tempFile(fSpec);
   if (!tempFile.is_open())
     return NS_MSG_ERROR_WRITING_FILE;        
   
   readSize = fSpec.GetFileSize();
-  readBuf = (char *)PR_Malloc(readSize + 1);
-  if (!readBuf)
+  ptr = readBuf = (char *)PR_Malloc(readSize + 1);  if (!readBuf)
     return NS_ERROR_OUT_OF_MEMORY;
   nsCRT::memset(readBuf, 0, readSize + 1);
 
-  readSize = tempFile.read(readBuf, readSize);
+  while (readSize) {
+    nGot = tempFile.read(ptr, readSize);
+    if (nGot > 0) {
+      readSize -= nGot;
+      ptr += nGot;
+    }
+    else {
+      readSize = 0;
+    }
+  }
   tempFile.close();
 
   if (NS_FAILED(ConvertToUnicode(nsMsgI18NFileSystemCharset(), readBuf, sigData)))
