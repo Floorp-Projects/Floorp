@@ -479,9 +479,11 @@ SetFunctionSlot(JSContext *cx, JSObject *obj, JSPropertyOp setter, jsid id,
     JSScope *scope;
     JSScopeProperty *sprop;
     JSString *str;
-    JSBool ok;
+    JSBool ok, done;
+    JSFunction *fun;
 
     slot = (uintN) JSID_TO_INT(id);
+    origobj = obj;
     if (OBJ_GET_CLASS(cx, obj) != &js_FunctionClass) {
         /*
          * Given a non-function object obj that has a function object in its
@@ -492,7 +494,6 @@ SetFunctionSlot(JSContext *cx, JSObject *obj, JSPropertyOp setter, jsid id,
          * function's "static property" names and arg or var names, believe it
          * or not.
          */
-        origobj = obj;
         do {
             obj = OBJ_GET_PROTO(cx, obj);
             if (!obj)
@@ -532,26 +533,46 @@ SetFunctionSlot(JSContext *cx, JSObject *obj, JSPropertyOp setter, jsid id,
      * allocating a slot in obj to hold v.
      */
     ok = JS_TRUE;
-    JS_LOCK_OBJ(cx, obj);
-    scope = OBJ_SCOPE(obj);
-    for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
-        if (sprop->setter == setter && (uintN) sprop->shortid == slot) {
-            if (sprop->attrs & JSPROP_SHARED) {
-                sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop,
-                                                     0, ~JSPROP_SHARED,
-                                                     sprop->getter, setter);
-                if (!sprop) {
-                    ok = JS_FALSE;
-                } else {
-                    /* See js_SetProperty, near the bottom. */
-                    GC_POKE(cx, pval);
-                    LOCKED_OBJ_SET_SLOT(obj, sprop->slot, v);
+    done = JS_FALSE;
+    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    do {
+        JS_LOCK_OBJ(cx, obj);
+        scope = OBJ_SCOPE(obj);
+        for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
+            if (sprop->setter == setter && (uintN) sprop->shortid == slot) {
+                if (sprop->attrs & JSPROP_SHARED) {
+                    if (obj == origobj) {
+                        sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop,
+                                                             0, ~JSPROP_SHARED,
+                                                             sprop->getter,
+                                                             setter);
+                        if (!sprop) {
+                            ok = JS_FALSE;
+                            break;
+                        }
+
+                        /* See js_SetProperty, near the bottom. */
+                        LOCKED_OBJ_SET_SLOT(origobj, sprop->slot, v);
+                    } else {
+                        ok = js_DefineNativeProperty(cx, origobj, sprop->id, v,
+                                                     sprop->getter,
+                                                     sprop->setter,
+                                                     sprop->attrs &
+                                                     ~JSPROP_SHARED,
+                                                     sprop->flags,
+                                                     sprop->shortid, NULL);
+                        if (!ok)
+                            break;
+                    }
                 }
+                done = JS_TRUE;
+                break;
             }
-            break;
         }
-    }
-    JS_UNLOCK_OBJ(cx, obj);
+        JS_UNLOCK_OBJ(cx, obj);
+    } while (ok && !done && (obj = OBJ_GET_PROTO(cx, obj)) != NULL &&
+             OBJ_GET_CLASS(cx, obj) == &js_FunctionClass &&
+             (JSFunction *) JS_GetPrivate(cx, obj) == fun);
     return ok;
 }
 
