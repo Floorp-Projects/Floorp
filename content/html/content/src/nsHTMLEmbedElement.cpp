@@ -351,6 +351,7 @@ nsHTMLEmbedElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, 
   return mInner.GetProperty(aContext, aObj, aID, aVp);
 }
 
+PRBool    
 nsHTMLEmbedElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   return mInner.SetProperty(aContext, aObj, aID, aVp);
