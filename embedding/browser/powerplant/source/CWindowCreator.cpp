@@ -110,6 +110,8 @@ LWindow* CWindowCreator::CreateWindowInternal(PRUint32 inChromeFlags,
                                               PRInt32 width, PRInt32 height)
 {
     const SInt16 kStatusBarHeight = 16;
+    const SDimension16 kMinimumWindowDimension = { 300, 150 };
+    const SInt16 kStdSizeVertMargin = 100;
     
     LWindow         *theWindow;
     PRUint32        chromeFlags;
@@ -148,6 +150,7 @@ LWindow* CWindowCreator::CreateWindowInternal(PRUint32 inChromeFlags,
         {
             windowDefProc = kWindowGrowDocumentProc;
             windowAttrs |= windAttr_Resizable;
+            windowAttrs |= windAttr_Zoomable;
         }
         else
             windowDefProc = kWindowDocumentProc;            
@@ -163,6 +166,28 @@ LWindow* CWindowCreator::CreateWindowInternal(PRUint32 inChromeFlags,
     
     theWindow = new CBrowserWindow(LCommander::GetTopCommander(), globalBounds, "\p", windowDefProc, windowAttrs, window_InFront);
     ThrowIfNil_(theWindow);
+    
+    if (windowAttrs & windAttr_Resizable)
+    {
+        Rect stdBounds, minMaxBounds;
+        SDimension16 stdSize;
+        
+        theWindow->CalcStandardBounds(stdBounds);
+        stdSize.width = stdBounds.right - stdBounds.left;
+        stdSize.height = stdBounds.bottom - stdBounds.top;
+        stdSize.width -= kStdSizeVertMargin; // Leave a vertical strip of desktop exposed
+        theWindow->SetStandardSize(stdSize);
+        minMaxBounds.left = kMinimumWindowDimension.width;
+        minMaxBounds.top = kMinimumWindowDimension.height;
+        
+        Rect	deskRect;
+        ::GetRegionBounds(::GetGrayRgn(), &deskRect);
+        minMaxBounds.left = kMinimumWindowDimension.width;
+        minMaxBounds.top = kMinimumWindowDimension.height;
+        minMaxBounds.right = deskRect.right - deskRect.left;
+        minMaxBounds.bottom = deskRect.bottom - deskRect.top;
+        theWindow->SetMinMaxSize(minMaxBounds);
+    }
 
     SDimension16 windowSize, toolBarSize;
     theWindow->GetFrameSize(windowSize);
