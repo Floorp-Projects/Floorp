@@ -452,7 +452,7 @@ EmbedPrivate::ApplyChromeMask()
 
 
 void
-EmbedPrivate::SetChromeMask (PRUint32 aChromeMask)
+EmbedPrivate::SetChromeMask(PRUint32 aChromeMask)
 {
    mChromeMask = aChromeMask;
 
