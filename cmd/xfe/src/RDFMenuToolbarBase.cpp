@@ -1379,12 +1379,14 @@ XFE_RDFMenuToolbarBase::formatItem(HT_Resource        entry,
   {
       strcpy (buf, "-------------------------");
   }
+#if DONT_HACK
   // hack hack hack
   else if (HT_IsURLBar(entry))
   {
       strcpy (buf, "<URLBar RSN>" );
   }
   // end hack hack hack
+#endif
   else if (title || url)
   {
       fe_FormatDocTitle (title, url, buf, 1024);
