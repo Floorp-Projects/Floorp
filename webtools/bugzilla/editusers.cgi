@@ -73,9 +73,10 @@ sub CheckUser ($)
 # Displays the form to edit a user parameters
 #
 
-sub EmitFormElements ($$$$$)
+sub EmitFormElements ($$$$$$)
 {
-    my ($user, $password, $realname, $groupset, $emailnotification) = @_;
+    my ($user, $password, $realname, $groupset, $emailnotification,
+        $disabledtext) = @_;
 
     print "  <TH ALIGN=\"right\">Login name:</TH>\n";
     print "  <TD><INPUT SIZE=64 MAXLENGTH=255 NAME=\"user\" VALUE=\"$user\"></TD>\n";
@@ -102,6 +103,15 @@ sub EmitFormElements ($$$$$)
         print qq{<OPTION$selectpart VALUE="$tag">$desc\n};
     }
     print "</SELECT></TD>\n";
+    print "</TR><TR>\n";
+    print "  <TH ALIGN=\"right\">Disable text:</TH>\n";
+    print "  <TD ROWSPAN=2><TEXTAREA NAME=\"disabledtext\" ROWS=10 COLS=60>" .
+        value_quote($disabledtext) . "</TEXTAREA>\n";
+    print "  </TD>\n";
+    print "</TR><TR>\n";
+    print "  <TD VALIGN=\"top\">If non-empty, then the account will\n";
+    print "be disabled, and this text should explain why.</TD>\n";
+
 
     SendSQL("SELECT bit,name,description,bit & $groupset != 0
 	     FROM groups
@@ -182,7 +192,7 @@ my $candelete = Param('allowuserdeletion');
 unless ($action) {
     PutHeader("Select match string");
     print qq{
-<FORM METHOD=POST ACTION="editusers.cgi">
+<FORM METHOD=GET ACTION="editusers.cgi">
 <INPUT TYPE=HIDDEN NAME="action" VALUE="list">
 List users with login name matching: 
 <INPUT SIZE=32 NAME="matchstr">
@@ -205,7 +215,8 @@ List users with login name matching:
 
 if ($action eq 'list') {
     PutHeader("Select user");
-    my $query = "SELECT login_name,realname FROM profiles WHERE login_name ";
+    my $query = "SELECT login_name,realname,disabledtext " .
+        "FROM profiles WHERE login_name ";
     if ($::FORM{'matchtype'} eq 'substr') {
         $query .= "like";
         $::FORM{'matchstr'} = '%' . $::FORM{'matchstr'} . '%';
@@ -234,11 +245,17 @@ if ($action eq 'list') {
         if ($count % 100 == 0) {
             print "</table>$header";
         }
-	my ($user, $realname) = FetchSQLData();
+	my ($user, $realname, $disabledtext) = FetchSQLData();
+        my $s = "";
+        my $e = "";
+        if ($disabledtext) {
+            $s = "<STRIKE>";
+            $e = "</STRIKE>";
+        }
 	$realname ||= "<FONT COLOR=\"red\">missing</FONT>";
 	print "<TR>\n";
-	print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=edit&user=", url_quote($user), "\"><B>$user</B></A></TD>\n";
-	print "  <TD VALIGN=\"top\">$realname</TD>\n";
+	print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=edit&user=", url_quote($user), "\"><B>$s$user$e</B></A></TD>\n";
+	print "  <TD VALIGN=\"top\">$s$realname$e</TD>\n";
         if ($candelete) {
             print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=del&user=", url_quote($user), "\">Delete</A></TD>\n";
         }
@@ -273,7 +290,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', 0, 'ExcludeSelfChanges');
+    EmitFormElements('', '', '', 0, 'ExcludeSelfChanges', '');
 
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
@@ -298,6 +315,7 @@ if ($action eq 'new') {
     # Cleanups and valididy checks
     my $realname = trim($::FORM{realname} || '');
     my $password = trim($::FORM{password} || '');
+    my $disabledtext = trim($::FORM{disabledtext} || '');
 
     unless ($user) {
         print "You must enter a name for the new user. Please press\n";
@@ -335,13 +353,15 @@ if ($action eq 'new') {
 
     # Add the new user
     SendSQL("INSERT INTO profiles ( " .
-          "login_name, password, cryptpassword, realname, groupset" .
-          " ) VALUES ( " .
-          SqlQuote($user) . "," .
-          SqlQuote($password) . "," .
-          "encrypt(" . SqlQuote($password) . ")," .
-          SqlQuote($realname) . "," .
-          $bits . ")" );
+            "login_name, password, cryptpassword, realname, groupset, " .
+            "disabledtext" .
+            " ) VALUES ( " .
+            SqlQuote($user) . "," .
+            SqlQuote($password) . "," .
+            "encrypt(" . SqlQuote($password) . ")," .
+            SqlQuote($realname) . "," .
+            $bits . "," .
+            SqlQuote($disabledtext) . ")" );
 
     #+++ send e-mail away
 
@@ -525,16 +545,18 @@ if ($action eq 'edit') {
     CheckUser($user);
 
     # get data of user
-    SendSQL("SELECT password, realname, groupset, emailnotification
+    SendSQL("SELECT password, realname, groupset, emailnotification,
+                    disabledtext
 	     FROM profiles
 	     WHERE login_name=" . SqlQuote($user));
-    my ($password, $realname, $groupset, $emailnotification) = FetchSQLData();
+    my ($password, $realname, $groupset, $emailnotification,
+        $disabledtext) = FetchSQLData();
 
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
     EmitFormElements($user, $password, $realname, $groupset,
-                     $emailnotification);
+                     $emailnotification, $disabledtext);
     
     print "</TR></TABLE>\n";
 
@@ -543,6 +565,8 @@ if ($action eq 'edit') {
     print "<INPUT TYPE=HIDDEN NAME=\"realnameold\" VALUE=\"$realname\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"groupsetold\" VALUE=\"$groupset\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"emailnotificationold\" VALUE=\"$emailnotification\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"disabledtextold\" VALUE=\"" .
+        value_quote($disabledtext) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
 
@@ -568,6 +592,8 @@ if ($action eq 'update') {
     my $passwordold           = trim($::FORM{passwordold}          || '');
     my $emailnotification     = trim($::FORM{emailnotification}    || '');
     my $emailnotificationold  = trim($::FORM{emailnotificationold} || '');
+    my $disabledtext          = trim($::FORM{disabledtext}         || '');
+    my $disabledtextold       = trim($::FORM{disabledtextold}      || '');
     my $groupsetold           = trim($::FORM{groupsetold}          || '');
 
     my $groupset = "0";
@@ -608,6 +634,18 @@ if ($action eq 'update') {
 		 SET realname=" . SqlQuote($realname) . "
 		 WHERE login_name=" . SqlQuote($userold));
 	print "Updated real name.<BR>\n";
+    }
+    if ($disabledtext ne $disabledtextold) {
+        SendSQL("UPDATE profiles
+		 SET disabledtext=" . SqlQuote($disabledtext) . "
+		 WHERE login_name=" . SqlQuote($userold));
+        SendSQL("SELECT userid
+	         FROM profiles
+	         WHERE login_name=" . SqlQuote($user));
+        my $userid = FetchOneColumn();
+        SendSQL("DELETE FROM logincookies
+	         WHERE userid=" . $userid);
+	print "Updated disabled text.<BR>\n";
     }
     if ($user ne $userold) {
 	unless ($user) {

@@ -487,6 +487,7 @@ sub PasswordForLogin {
 sub quietly_check_login() {
     $::usergroupset = '0';
     my $loginok = 0;
+    $::disabledreason = '';
     if (defined $::COOKIE{"Bugzilla_login"} &&
 	defined $::COOKIE{"Bugzilla_logincookie"}) {
         ConnectToDatabase();
@@ -499,16 +500,23 @@ sub quietly_check_login() {
 		" and profiles.cryptpassword = logincookies.cryptpassword " .
 		"and logincookies.hostname = " .
 		SqlQuote($ENV{"REMOTE_HOST"}) .
+                ", profiles.disabledtext " .
 		" from profiles,logincookies where logincookies.cookie = " .
 		SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
 		" and profiles.userid = logincookies.userid");
         my @row;
         if (@row = FetchSQLData()) {
-            $loginok = $row[2];
-            if ($loginok) {
-                $::usergroupset = $row[0];
-                $::COOKIE{"Bugzilla_login"} = $row[1]; # Makes sure case is in
-                                                       # canonical form.
+            my ($groupset, $loginname, $ok, $disabledtext) = (@row);
+            if ($ok) {
+                if ($disabledtext eq '') {
+                    $loginok = 1;
+                    $::usergroupset = $groupset;
+                    $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
+                                                              # is in
+                                                              # canonical form.
+                } else {
+                    $::disabledreason = $disabledtext;
+                }
             }
         }
     }
@@ -639,6 +647,22 @@ sub confirm_login {
     my $loginok = quietly_check_login();
 
     if ($loginok != 1) {
+        if ($::disabledreason) {
+            print "Set-Cookie: Bugzilla_login= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
+Set-Cookie: Bugzilla_logincookie= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
+Set-Cookie: Bugzilla_password= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
+Content-type: text/html
+
+";
+            PutHeader("Your account has been disabled");
+            print $::disabledreason;
+            print "<HR>\n";
+            print "If you believe your account should be restored, please\n";
+            print "send email to " . Param("maintainer") . " explaining\n";
+            print "why.\n";
+            PutFooter();
+            exit();
+        }
         print "Content-type: text/html\n\n";
         PutHeader("Login", undef, undef, undef, 1);
         print "I need a legitimate e-mail address and password to continue.\n";

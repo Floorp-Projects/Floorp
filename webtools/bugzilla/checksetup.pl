@@ -625,6 +625,7 @@ $table{profiles} =
     realname varchar(255),
     groupset bigint not null,
     emailnotification enum("ExcludeSelfChanges", "CConly", "All") not null default "ExcludeSelfChanges",
+    disabledtext mediumtext not null,
 
     index(login_name)';
 
@@ -1024,7 +1025,13 @@ if (!GetFieldDef('bugs', 'keywords')) {
         push(@list, $k);
     }
 }
-        
+
+
+# 2000-01-18 Added a "disabledtext" field to the profiles table.  If not
+# empty, then this account has been disabled, and this field is to contain
+# text describing why.
+
+AddField('profiles', 'disabledtext',  'mediumtext not null');
 
 
 
