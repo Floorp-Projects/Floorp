@@ -530,7 +530,7 @@ PR_NormalizeTime(PRExplodedTime *time, PRTimeParamFn params)
 #define MT_safe_localtime(timer, result) \
         (localtime_r(timer, result) == 0 ? result : NULL)
 
-#elif defined(SOLARIS) || defined(IRIX) \
+#elif (defined(SOLARIS) && defined(_REENTRANT)) || defined(IRIX) \
         || (defined(AIX) && !defined(AIX4_1) && defined(_THREAD_SAFE)) \
         || defined(OSF1V4) \
         || defined(HPUX10_30) || defined(HPUX11)
