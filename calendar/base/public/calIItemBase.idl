@@ -100,7 +100,7 @@ interface calIItemBase : nsISupports
   readonly attribute calIDateTime creationDate;
 
   // last time any attribute was modified on this item, in UTC
-  attribute PRTime lastModifiedTime;
+  readonly attribute calIDateTime lastModifiedTime;
 
   // the calICalendar to which this event belongs
   attribute calICalendar parent;
