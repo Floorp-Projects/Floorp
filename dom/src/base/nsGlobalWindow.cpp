@@ -121,8 +121,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
 
 
-static const char *kCryptoContractID = NS_CRYPTO_CONTRACTID;
-static const char *kPkcs11ContractID = NS_PKCS11_CONTRACTID;
+static const char * const kCryptoContractID = NS_CRYPTO_CONTRACTID;
+static const char * const kPkcs11ContractID = NS_PKCS11_CONTRACTID;
 
 //*****************************************************************************
 //***    GlobalWindowImpl: Object Management
@@ -3031,8 +3031,8 @@ void GlobalWindowImpl::CloseWindow(nsISupports *aWindow)
 // GlobalWindowImpl: Timeout Functions
 //*****************************************************************************
 
-static const char *kSetIntervalStr = "setInterval";
-static const char *kSetTimeoutStr = "setTimeout";
+static const char * const kSetIntervalStr = "setInterval";
+static const char * const kSetTimeoutStr = "setTimeout";
 
 NS_IMETHODIMP GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
                                                      jsval *argv, PRUint32 argc,
@@ -4415,44 +4415,44 @@ NS_IMETHODIMP NavigatorImpl::Preference(JSContext *cx, jsval *argv,
 
 #ifdef DOM_CONTROLLER
 // nsDOMWindowController
-const char *sCopyString = "cmd_copy";
-const char *sCutString = "cmd_cut";
-const char *sPasteString = "cmd_paste";
-const char *sSelectAllString = "cmd_selectAll";
+const char * const sCopyString = "cmd_copy";
+const char * const sCutString = "cmd_cut";
+const char * const sPasteString = "cmd_paste";
+const char * const sSelectAllString = "cmd_selectAll";
 
-const char *sScrollTopString = "cmd_scrollTop";
-const char *sScrollBottomString = "cmd_scrollBottom";
-const char *sScrollPageUpString = "cmd_scrollPageUp";
-const char *sScrollPageDownString = "cmd_scrollPageDown";
-const char *sScrollLineUpString = "cmd_scrollLineUp";
-const char *sScrollLineDownString = "cmd_scrollLineDown";
-const char *sScrollLeftString = "cmd_scrollLeft";
-const char *sScrollRightString = "cmd_scrollRight";
+const char * const sScrollTopString = "cmd_scrollTop";
+const char * const sScrollBottomString = "cmd_scrollBottom";
+const char * const sScrollPageUpString = "cmd_scrollPageUp";
+const char * const sScrollPageDownString = "cmd_scrollPageDown";
+const char * const sScrollLineUpString = "cmd_scrollLineUp";
+const char * const sScrollLineDownString = "cmd_scrollLineDown";
+const char * const sScrollLeftString = "cmd_scrollLeft";
+const char * const sScrollRightString = "cmd_scrollRight";
 
 // These are so the browser can use editor navigation key bindings
 // helps with accessibility (boolean pref accessibility.browsewithcaret)
 
-const char *sSelectCharPreviousString = "cmd_selectCharPrevious";
-const char *sSelectCharNextString = "cmd_selectCharNext";
+const char * const sSelectCharPreviousString = "cmd_selectCharPrevious";
+const char * const sSelectCharNextString = "cmd_selectCharNext";
 
-const char *sWordPreviousString = "cmd_wordPrevious";
-const char *sWordNextString = "cmd_wordNext";
-const char *sSelectWordPreviousString = "cmd_selectWordPrevious";
-const char *sSelectWordNextString = "cmd_selectWordNext";
+const char * const sWordPreviousString = "cmd_wordPrevious";
+const char * const sWordNextString = "cmd_wordNext";
+const char * const sSelectWordPreviousString = "cmd_selectWordPrevious";
+const char * const sSelectWordNextString = "cmd_selectWordNext";
 
-const char *sBeginLineString = "cmd_beginLine";
-const char *sEndLineString = "cmd_endLine";
-const char *sSelectBeginLineString = "cmd_selectBeginLine";
-const char *sSelectEndLineString = "cmd_selectEndLine";
+const char * const sBeginLineString = "cmd_beginLine";
+const char * const sEndLineString = "cmd_endLine";
+const char * const sSelectBeginLineString = "cmd_selectBeginLine";
+const char * const sSelectEndLineString = "cmd_selectEndLine";
 
-const char *sSelectLinePreviousString = "cmd_selectLinePrevious";
-const char *sSelectLineNextString = "cmd_selectLineNext";
+const char * const sSelectLinePreviousString = "cmd_selectLinePrevious";
+const char * const sSelectLineNextString = "cmd_selectLineNext";
 
-const char *sSelectPagePreviousString = "cmd_selectPagePrevious";
-const char *sSelectPageNextString = "cmd_selectPageNext";
+const char * const sSelectPagePreviousString = "cmd_selectPagePrevious";
+const char * const sSelectPageNextString = "cmd_selectPageNext";
 
-const char *sSelectMoveTopString = "cmd_selectMoveTop";
-const char *sSelectMoveBottomString = "cmd_selectMoveBottom";
+const char * const sSelectMoveTopString = "cmd_selectMoveTop";
+const char * const sSelectMoveBottomString = "cmd_selectMoveBottom";
 
 NS_IMPL_ADDREF(nsDOMWindowController)
 NS_IMPL_RELEASE(nsDOMWindowController)
@@ -4528,10 +4528,8 @@ nsDOMWindowController::GetSelectionController(nsISelectionController **aSelCon)
 
 
 
-NS_IMETHODIMP nsDOMWindowController::IsCommandEnabled(const PRUnichar *aCommand,
-                                                      PRBool *aResult)
+NS_IMETHODIMP nsDOMWindowController::IsCommandEnabled(const nsAReadableString & aCommand, PRBool *aResult)
 {
-  NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_ARG_POINTER(aResult);
 
   *aResult = PR_FALSE;
@@ -4542,16 +4540,18 @@ NS_IMETHODIMP nsDOMWindowController::IsCommandEnabled(const PRUnichar *aCommand,
   if (NS_FAILED(rv))
     return rv;
 
-  if (nsCAutoString(sCopyString).EqualsWithConversion(aCommand)) {
+	nsCAutoString		commandName; commandName.AssignWithConversion(aCommand);
+	
+  if (commandName.Equals(sCopyString)) {
     rv = editInterface->GetCopyable(aResult);
   }
-  else if (nsCAutoString(sCutString).EqualsWithConversion(aCommand)) {
+  else if (commandName.Equals(sCutString)) {
     rv = editInterface->GetCutable(aResult);
   }
-  else if (nsCAutoString(sPasteString).EqualsWithConversion(aCommand)) {
+  else if (commandName.Equals(sPasteString)) {
     rv = editInterface->GetPasteable(aResult);
   }
-  else if (nsCAutoString(sSelectAllString).EqualsWithConversion(aCommand)) {
+  else if (commandName.Equals(sSelectAllString)) {
     *aResult = PR_TRUE;
     rv = NS_OK;
   }
@@ -4559,63 +4559,64 @@ NS_IMETHODIMP nsDOMWindowController::IsCommandEnabled(const PRUnichar *aCommand,
 
 }
 
-NS_IMETHODIMP nsDOMWindowController::SupportsCommand(const PRUnichar *aCommand,
-                                                     PRBool *aResult)
+NS_IMETHODIMP nsDOMWindowController::SupportsCommand(const nsAReadableString & aCommand, PRBool *outSupported)
 {
-  NS_ENSURE_ARG_POINTER(aCommand);
-  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_ARG_POINTER(outSupported);
 
-  *aResult = PR_FALSE;
+  *outSupported = PR_FALSE;
 
-  if (nsCAutoString(sCopyString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectAllString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sCutString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sPasteString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollTopString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollBottomString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollPageUpString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollPageDownString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollLineUpString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollLineDownString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollLeftString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollRightString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectCharPreviousString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectCharNextString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sWordPreviousString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sWordNextString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectWordPreviousString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectWordNextString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sBeginLineString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sEndLineString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectBeginLineString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectEndLineString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectLinePreviousString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectLineNextString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectPagePreviousString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectPageNextString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectMoveTopString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectMoveBottomString).EqualsWithConversion(aCommand)
+	nsCAutoString		commandName; commandName.AssignWithConversion(aCommand);
+
+  if (commandName.Equals(sCopyString) ||
+      commandName.Equals(sSelectAllString) ||
+      commandName.Equals(sCutString) ||
+      commandName.Equals(sPasteString) ||
+      commandName.Equals(sScrollTopString) ||
+      commandName.Equals(sScrollBottomString) ||
+      commandName.Equals(sScrollPageUpString) ||
+      commandName.Equals(sScrollPageDownString) ||
+      commandName.Equals(sScrollLineUpString) ||
+      commandName.Equals(sScrollLineDownString) ||
+      commandName.Equals(sScrollLeftString) ||
+      commandName.Equals(sScrollRightString) ||
+      commandName.Equals(sSelectCharPreviousString) ||
+      commandName.Equals(sSelectCharNextString) ||
+      commandName.Equals(sWordPreviousString) ||
+      commandName.Equals(sWordNextString) ||
+      commandName.Equals(sSelectWordPreviousString) ||
+      commandName.Equals(sSelectWordNextString) ||
+      commandName.Equals(sBeginLineString) ||
+      commandName.Equals(sEndLineString) ||
+      commandName.Equals(sSelectBeginLineString) ||
+      commandName.Equals(sSelectEndLineString) ||
+      commandName.Equals(sSelectLinePreviousString) ||
+      commandName.Equals(sSelectLineNextString) ||
+      commandName.Equals(sSelectPagePreviousString) ||
+      commandName.Equals(sSelectPageNextString) ||
+      commandName.Equals(sSelectMoveTopString) ||
+      commandName.Equals(sSelectMoveBottomString)
       ) {
-      *aResult=PR_TRUE;
+      *outSupported=PR_TRUE;
       }
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDOMWindowController::DoCommand(const PRUnichar *aCommand)
+NS_IMETHODIMP nsDOMWindowController::DoCommand(const nsAReadableString & aCommand)
 {
-  NS_ENSURE_ARG_POINTER(aCommand);
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIContentViewerEdit> editInterface;
   rv = GetEditInterface(getter_AddRefs(editInterface));
   if (!editInterface)
     return rv;
 
-  if (nsCAutoString(sCopyString).EqualsWithConversion(aCommand))
+	nsCAutoString		commandName; commandName.AssignWithConversion(aCommand);
+
+  if (commandName.Equals(sCopyString))
     return editInterface->CopySelection();
-  if (nsCAutoString(sSelectAllString).EqualsWithConversion(aCommand))
+  if (commandName.Equals(sSelectAllString))
     return editInterface->SelectAll();
-  if (nsCAutoString(sCutString).EqualsWithConversion(aCommand))
+  if (commandName.Equals(sCutString))
     return editInterface->CutSelection();
 
   nsCOMPtr<nsISelectionController> selCont;
@@ -4623,59 +4624,59 @@ NS_IMETHODIMP nsDOMWindowController::DoCommand(const PRUnichar *aCommand)
   if (!selCont)
     return rv;
 
-  if (nsCAutoString(sPasteString).EqualsWithConversion(aCommand))
+  if (commandName.Equals(sPasteString))
     rv = editInterface->Paste();
-  else if (nsCAutoString(sScrollTopString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sScrollTopString))
     rv = (mBrowseWithCaret? selCont->CompleteMove(PR_FALSE, PR_FALSE): selCont->CompleteScroll(PR_FALSE));
-  else if (nsCAutoString(sScrollBottomString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sScrollBottomString))
     rv = (mBrowseWithCaret? selCont->CompleteMove(PR_TRUE, PR_FALSE): selCont->CompleteScroll(PR_TRUE));
-  else if (nsCAutoString(sScrollPageUpString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sScrollPageUpString))
     rv = (mBrowseWithCaret? selCont->PageMove(PR_FALSE, PR_FALSE): selCont->ScrollPage(PR_FALSE));
-  else if (nsCAutoString(sScrollPageDownString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sScrollPageDownString))
     rv = (mBrowseWithCaret? selCont->PageMove(PR_TRUE, PR_FALSE): selCont->ScrollPage(PR_TRUE));
-  else if (nsCAutoString(sScrollLineUpString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sScrollLineUpString))
     rv = (mBrowseWithCaret? selCont->LineMove(PR_FALSE, PR_FALSE): selCont->ScrollLine(PR_FALSE));
-  else if (nsCAutoString(sScrollLineDownString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sScrollLineDownString))
     rv = (mBrowseWithCaret? selCont->LineMove(PR_TRUE, PR_FALSE): selCont->ScrollLine(PR_TRUE));
-  else if (nsCAutoString(sScrollLeftString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sScrollLeftString))
     rv = (mBrowseWithCaret? selCont->CharacterMove(PR_FALSE, PR_FALSE): selCont->ScrollHorizontal(PR_TRUE));
-  else if (nsCAutoString(sScrollRightString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sScrollRightString))
     rv = (mBrowseWithCaret? selCont->CharacterMove(PR_TRUE, PR_FALSE): selCont->ScrollHorizontal(PR_FALSE));
   // These commands are so the browser can use editor navigation key bindings -
   // Helps with accessibility - aaronl@chorus.net
-  else if (nsCAutoString(sSelectCharPreviousString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sSelectCharPreviousString))
     rv = selCont->CharacterMove(PR_FALSE, PR_TRUE);
-  else if (nsCAutoString(sSelectCharNextString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sSelectCharNextString))
     rv = selCont->CharacterMove(PR_TRUE, PR_TRUE);
-  else if (nsCAutoString(sWordPreviousString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sWordPreviousString))
     rv = selCont->WordMove(PR_FALSE, PR_FALSE);
-  else if (nsCAutoString(sWordNextString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sWordNextString))
     rv = selCont->WordMove(PR_TRUE, PR_FALSE);
-  else if (nsCAutoString(sSelectWordPreviousString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sSelectWordPreviousString))
     rv = selCont->WordMove(PR_FALSE, PR_TRUE);
-  else if (nsCAutoString(sSelectWordNextString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sSelectWordNextString))
     rv = selCont->WordMove(PR_TRUE, PR_TRUE);
-  else if (nsCAutoString(sBeginLineString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sBeginLineString))
     rv = selCont->IntraLineMove(PR_FALSE, PR_FALSE);
-  else if (nsCAutoString(sEndLineString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sEndLineString))
     rv = selCont->IntraLineMove(PR_TRUE, PR_FALSE);
-  else if (nsCAutoString(sSelectBeginLineString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sSelectBeginLineString))
     rv = selCont->IntraLineMove(PR_FALSE, PR_TRUE);
-  else if (nsCAutoString(sSelectEndLineString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sSelectEndLineString))
     rv = selCont->IntraLineMove(PR_TRUE, PR_TRUE);
-  else if (nsCAutoString(sSelectLinePreviousString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sSelectLinePreviousString))
     rv = selCont->LineMove(PR_FALSE, PR_TRUE);
-  else if (nsCAutoString(sSelectLineNextString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sSelectLineNextString))
     rv = selCont->LineMove(PR_TRUE, PR_TRUE);
-  else if (nsCAutoString(sSelectMoveTopString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sSelectMoveTopString))
     rv = selCont->CompleteMove(PR_FALSE, PR_TRUE);
-  else if (nsCAutoString(sSelectMoveBottomString).EqualsWithConversion(aCommand))
+  else if (commandName.Equals(sSelectMoveBottomString))
     rv = selCont->CompleteMove(PR_TRUE, PR_TRUE);
   return rv;
 }
 
 
-NS_IMETHODIMP nsDOMWindowController::OnEvent(const PRUnichar *aEventName)
+NS_IMETHODIMP nsDOMWindowController::OnEvent(const nsAReadableString & aEventName)
 {
   return NS_OK;
 }

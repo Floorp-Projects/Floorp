@@ -1181,8 +1181,11 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 #endif
 
 nsresult
-nsWebShell :: GetControllerForCommand ( const nsAReadableString & inCommand, nsIController** outController )
+nsWebShell::GetControllerForCommand ( const nsAReadableString & inCommand, nsIController** outController )
 {
+  NS_ENSURE_ARG_POINTER(outController);
+  *outController = nsnull;
+  
   nsresult rv = NS_ERROR_FAILURE;
   
   nsCOMPtr<nsPIDOMWindow> window ( do_QueryInterface(mScriptGlobal) );
@@ -1190,7 +1193,7 @@ nsWebShell :: GetControllerForCommand ( const nsAReadableString & inCommand, nsI
     nsCOMPtr<nsIFocusController> focusController;
     rv = window->GetRootFocusController ( getter_AddRefs(focusController) );
     if ( focusController )
-      rv = focusController->GetControllerForCommand ( inCommand, getter_AddRefs(outController) ) ;
+      rv = focusController->GetControllerForCommand ( inCommand, getter_AddRefs(outController) );
   } // if window
 
   return rv;
@@ -1199,28 +1202,31 @@ nsWebShell :: GetControllerForCommand ( const nsAReadableString & inCommand, nsI
 
 
 nsresult
-nsWebShell :: IsCommandEnabled ( const nsAReadableString & inCommand, PRBool* outEnabled )
+nsWebShell::IsCommandEnabled ( const nsAReadableString & inCommand, PRBool* outEnabled )
 {
+  NS_ENSURE_ARG_POINTER(outEnabled);
+  *outEnabled = PR_FALSE;
+
   nsresult rv = NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIController> controller;
   rv = GetControllerForCommand ( inCommand, getter_AddRefs(controller) );
   if ( controller )
-    rv = controller->IsCommandEnabled(PromiseFlatString(inCommand).get(), outEnabled);
+    rv = controller->IsCommandEnabled(inCommand, outEnabled);
   
   return rv;
 }
 
 
 nsresult
-nsWebShell :: DoCommand ( const nsAReadableString & inCommand )
+nsWebShell::DoCommand ( const nsAReadableString & inCommand )
 {
   nsresult rv = NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIController> controller;
   rv = GetControllerForCommand ( inCommand, getter_AddRefs(controller) );
   if ( controller )
-    rv = controller->DoCommand(PromiseFlatString(inCommand).get());
+    rv = controller->DoCommand(inCommand);
   
   return rv;
 }

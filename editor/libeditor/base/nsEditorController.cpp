@@ -22,6 +22,7 @@
  *   Ryan Cassin <rcassin@supernova.org>
  */
 
+#include "nsString.h"
 #include "nsIComponentManager.h"
 #include "nsEditorController.h"
 #include "nsIEditor.h"
@@ -98,7 +99,7 @@ NS_IMETHODIMP nsEditorController::GetInterface(const nsIID & aIID, void * *resul
     _cmdClass* theCmd;                                                                    \
     NS_NEWXPCOM(theCmd, _cmdClass);                                                       \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
-    rv = inCommandManager->RegisterCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(),  \
+    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName),                   \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
   }
 
@@ -107,15 +108,15 @@ NS_IMETHODIMP nsEditorController::GetInterface(const nsIID & aIID, void * *resul
     _cmdClass* theCmd;                                                                    \
     NS_NEWXPCOM(theCmd, _cmdClass);                                                       \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
-    rv = inCommandManager->RegisterCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(),  \
+    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName),                   \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));
 
 #define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                                     \
-    rv = inCommandManager->RegisterCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(),  \
+    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName),                   \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));
 
 #define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                                     \
-    rv = inCommandManager->RegisterCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(),  \
+    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName),                   \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
   }
 
@@ -185,27 +186,25 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandManager 
  * nsIController
  * ======================================================================= */
 
-NS_IMETHODIMP nsEditorController::IsCommandEnabled(const PRUnichar *aCommand, PRBool *aResult)
+NS_IMETHODIMP nsEditorController::IsCommandEnabled(const nsAReadableString & aCommand, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   return mCommandManager->IsCommandEnabled(aCommand, mCommandRefCon, aResult);
 }
 
-NS_IMETHODIMP nsEditorController::SupportsCommand(const PRUnichar *aCommand, PRBool *aResult)
+NS_IMETHODIMP nsEditorController::SupportsCommand(const nsAReadableString & aCommand, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   return mCommandManager->SupportsCommand(aCommand, mCommandRefCon, aResult);
 }
 
-NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
+NS_IMETHODIMP nsEditorController::DoCommand(const nsAReadableString & aCommand)
 {
   return mCommandManager->DoCommand(aCommand, mCommandRefCon);
 }
 
-NS_IMETHODIMP nsEditorController::OnEvent(const PRUnichar *aEventName)
+NS_IMETHODIMP nsEditorController::OnEvent(const nsAReadableString & aEventName)
 {
-  NS_ENSURE_ARG_POINTER(aEventName);
-
   return NS_OK;
 }
 
@@ -282,7 +281,7 @@ NS_IMETHODIMP nsComposerController::Init(nsISupports *aCommandRefCon)
   {                                                                                       \
     _cmdClass* theCmd = new _cmdClass(_styleTag);                                         \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
-    rv = inCommandManager->RegisterCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(),  \
+    rv = inCommandManager->RegisterCommand(NS_LITERAL_STRING(_cmdName),                   \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
   }
   

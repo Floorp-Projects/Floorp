@@ -20,7 +20,7 @@
  * Contributor(s): 
  */
 
-
+#include "nsString.h"
 #include "nsControllerCommandManager.h"
 
 // prototype;
@@ -48,15 +48,15 @@ NS_IMPL_ISUPPORTS2(nsControllerCommandManager, nsIControllerCommandManager, nsIS
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::RegisterCommand(const PRUnichar *commandName, nsIControllerCommand *aCommand)
+nsControllerCommandManager::RegisterCommand(const nsAReadableString & aCommandName, nsIControllerCommand *aCommand)
 {
-  nsStringKey commandKey(commandName);
+  nsStringKey commandKey(aCommandName);
   
   if (mCommandsTable.Put (&commandKey, aCommand))
   {
 #if DEBUG
     nsCAutoString msg("Replacing existing command -- ");
-    msg.AppendWithConversion(commandName);
+    msg.AppendWithConversion(aCommandName);
     NS_WARNING(msg);
 #endif
   }  
@@ -65,9 +65,9 @@ nsControllerCommandManager::RegisterCommand(const PRUnichar *commandName, nsICon
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::UnregisterCommand(const PRUnichar *commandName, nsIControllerCommand *aCommand)
+nsControllerCommandManager::UnregisterCommand(const nsAReadableString & aCommandName, nsIControllerCommand *aCommand)
 {
-  nsStringKey commandKey(commandName);
+  nsStringKey commandKey(aCommandName);
 
   PRBool any_object_actually_removed_p = mCommandsTable.Remove (&commandKey);
   return any_object_actually_removed_p? NS_OK : NS_ERROR_FAILURE;
@@ -75,7 +75,7 @@ nsControllerCommandManager::UnregisterCommand(const PRUnichar *commandName, nsIC
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::FindCommandHandler(const PRUnichar *aCommandName, nsIControllerCommand **outCommand)
+nsControllerCommandManager::FindCommandHandler(const nsAReadableString & aCommandName, nsIControllerCommand **outCommand)
 {
   NS_ENSURE_ARG_POINTER(outCommand);
   
@@ -93,9 +93,8 @@ nsControllerCommandManager::FindCommandHandler(const PRUnichar *aCommandName, ns
 
 /* boolean isCommandEnabled (in wstring command); */
 NS_IMETHODIMP
-nsControllerCommandManager::IsCommandEnabled(const PRUnichar *aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
+nsControllerCommandManager::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
 {
-  NS_ENSURE_ARG_POINTER(aCommandName);
   NS_ENSURE_ARG_POINTER(aResult);
 
   *aResult = PR_FALSE;
@@ -118,10 +117,8 @@ nsControllerCommandManager::IsCommandEnabled(const PRUnichar *aCommandName, nsIS
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::UpdateCommandState(const PRUnichar *aCommandName, nsISupports *aCommandRefCon)
+nsControllerCommandManager::UpdateCommandState(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon)
 {
-  NS_ENSURE_ARG_POINTER(aCommandName);
-      
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
   FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));  
@@ -150,9 +147,8 @@ nsControllerCommandManager::UpdateCommandState(const PRUnichar *aCommandName, ns
 }
 
 NS_IMETHODIMP
-nsControllerCommandManager::SupportsCommand(const PRUnichar *aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
+nsControllerCommandManager::SupportsCommand(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
 {
-  NS_ENSURE_ARG_POINTER(aCommandName);
   NS_ENSURE_ARG_POINTER(aResult);
 
   // XXX: need to check the readonly and disabled states
@@ -169,10 +165,8 @@ nsControllerCommandManager::SupportsCommand(const PRUnichar *aCommandName, nsISu
 
 /* void doCommand (in wstring command); */
 NS_IMETHODIMP
-nsControllerCommandManager::DoCommand(const PRUnichar *aCommandName, nsISupports *aCommandRefCon)
+nsControllerCommandManager::DoCommand(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon)
 {
-  NS_ENSURE_ARG_POINTER(aCommandName);
-
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
  FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));
@@ -188,7 +182,6 @@ nsControllerCommandManager::DoCommand(const PRUnichar *aCommandName, nsISupports
   
   return commandHandler->DoCommand(aCommandName, aCommandRefCon);
 }
-
 
 nsresult
 NS_NewControllerCommandManager(nsIControllerCommandManager** aResult)

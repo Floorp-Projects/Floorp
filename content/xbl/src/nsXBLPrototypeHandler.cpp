@@ -277,7 +277,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
     else GetController(aReceiver, getter_AddRefs(controller)); // We're attached to the receiver possibly.
 
     if (controller)
-      controller->DoCommand(command.GetUnicode());
+      controller->DoCommand(command);
 
     return NS_OK;
   }
