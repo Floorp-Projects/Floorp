@@ -94,9 +94,7 @@ BRFrame::Reflow(nsIPresContext& aPresContext,
   aReflowState.lineLayout->SetBRFrame(this);
 
   // Return our reflow status
-  const nsStyleDisplay* display = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-  PRUint32 breakType = display->mBreakType;
+  PRUint32 breakType = aReflowState.mStyleDisplay->mBreakType;
   if (NS_STYLE_CLEAR_NONE == breakType) {
     breakType = NS_STYLE_CLEAR_LINE;
   }
