@@ -867,6 +867,13 @@ if [ "$USE_IMG2" ]; then
         gfx2/public/Makefile
         gfx2/src/Makefile
 "
+ 
+    MAKEFILES_accessible="
+       accessible/Makefile
+       accessible/public/Makefile
+       accessible/src/Makefile
+       accessible/build/Makefile
+"
 fi
 
 if [ ! "$SYSTEM_JPEG" ]; then
@@ -1069,6 +1076,7 @@ $MAKEFILES_extensions
 $MAKEFILES_gc
 $MAKEFILES_gfx
 $MAKEFILES_gfx2
+$MAKEFILES_accessible
 $MAKEFILES_htmlparser
 $MAKEFILES_intl
 $MAKEFILES_java_supplement
