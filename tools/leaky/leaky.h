@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include "dict.h"
 #include "strset.h"
+#include "xpcom-config.h" // for CPP_NEW_THROW
 
 typedef unsigned int u_int;
 
