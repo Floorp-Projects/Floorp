@@ -60,7 +60,8 @@ enum {FORWARD  =1, BACKWARD = 0};
 #define DEBUG_OUT_RANGE(x)  
 #endif //MOZ_DEBUG
 
-//#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
+#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
+//#define DEBUG_NAVIGATION
 
 class nsRangeListIterator;
 
@@ -566,11 +567,7 @@ nsRangeList::HandleTextEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGUIEvent)
 
 		nsTextEvent *textEvent = (nsTextEvent *)aGUIEvent; //this is ok. It really is a textevent
 
-		nsIFrame *resultFrame;
-		PRInt32   frameOffset;
-		PRInt32   contentOffset;
 		PRInt32   offsetused = beginoffset;
-		nsIFrame *frameused;
 		nsSelectionAmount amount = eSelectCharacter;		// for now
 		result = frame->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
 
@@ -617,7 +614,9 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
     switch (keyEvent->keyCode){
       case nsIDOMEvent::VK_LEFT  : 
         //we need to look for the previous PAINTED location to move the cursor to.
+#ifdef DEBUG_NAVIGATION
         printf("debug vk left\n");
+#endif
         if (keyEvent->isShift || (endoffset < beginoffset)){ //f,a
           offsetused = endoffset;
           frameused = frame;
@@ -636,7 +635,9 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
         break;
       case nsIDOMEvent::VK_RIGHT : 
         //we need to look for the next PAINTED location to move the cursor to.
+#ifdef DEBUG_NAVIGATION
         printf("debug vk right\n");
+#endif
         if (!keyEvent->isShift && (endoffset < beginoffset)){ //f,a
           result = anchor->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
           if (NS_FAILED(result)){
@@ -654,7 +655,9 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
         }
         break;
       case nsIDOMEvent::VK_UP : 
+#ifdef DEBUG_NAVIGATION
         printf("debug vk up\n");
+#endif
         break;
     default :break;
     }
