@@ -272,3 +272,10 @@ Java_org_mozilla_jss_pkcs11_PK11Cipher_initContextWithKeyBits;
 ;+    local:
 ;+       *;
 ;+};
+;+JSS_3.5 {       # JSS 3.5 release
+;+    global:
+Java_org_mozilla_jss_SecretDecoderRing_KeyManager_generateUniqueNamedKeyNative;
+Java_org_mozilla_jss_SecretDecoderRing_KeyManager_lookupUniqueNamedKeyNative;
+;+    local:
+;+       *;
+;+};
