@@ -139,7 +139,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // Macros to help detect thread-safety:
 
-#ifdef NS_DEBUG
+#if defined(NS_DEBUG) && !defined(NS_MT_SUPPORTED)
 
 extern "C" NS_EXPORT void* NS_CurrentThread(void);
 
@@ -148,13 +148,13 @@ extern "C" NS_EXPORT void* NS_CurrentThread(void);
 #define NS_ASSERT_OWNINGTHREAD(_class) \
     NS_ASSERTION(_mOwningThread == NS_CurrentThread(), #_class " not thread-safe");
 
-#else // !NS_DEBUG
+#else // !(defined(NS_DEBUG) && !defined(NS_MT_SUPPORTED))
 
 #define NS_DECL_OWNINGTHREAD     /* nothing */
 #define NS_IMPL_OWNINGTHREAD()   ((void)0)
 #define NS_ASSERT_OWNINGTHREAD(_class) ((void)0)
 
-#endif // !NS_DEBUG
+#endif // !(defined(NS_DEBUG) && !defined(NS_MT_SUPPORTED))
 
 ////////////////////////////////////////////////////////////////////////////////
 
