@@ -22,7 +22,9 @@
 #define alphabetize 1
 #include "libi18n.h"            /* For the character code set conversions */
 #include "secnav.h"             /* For SECNAV_UnMungeString and SECNAV_MungeString */
-//#include "allxpstr.h"		/* Already included in wallet.cpp */
+#ifndef ClientWallet
+#include "allxpstr.h"		/* Already included in wallet.cpp */
+#endif
 #include "xp_file.h"
 
 #ifdef XP_MAC
