@@ -61,10 +61,15 @@ struct BMPFILEHEADER {
 
     PRUint32 bihsize;
 };
+#define BFH_LENGTH 18 // Note: For our purposes, we include bihsize in the BFH
+
+#define OS2_BIH_LENGTH 12 // This is the real BIH size (as contained in the bihsize field of BMPFILEHEADER)
+#define OS2_HEADER_LENGTH (BFH_LENGTH + 8)
+#define WIN_HEADER_LENGTH (BFH_LENGTH + 36)
 
 struct BMPINFOHEADER {
-    PRInt32 width;
-    PRInt32 height;
+    PRInt32 width; // Uint16 in OS/2 BMPs
+    PRInt32 height; // Uint16 in OS/2 BMPs
     PRUint16 planes; // =1
     PRUint16 bpp; // Bits per pixel.
     // The rest of the header is not available in OS/2 BMP Files
@@ -93,6 +98,8 @@ struct bitFields {
     PRUint8 blueLeftShift;
     PRUint8 blueRightShift;
 };
+
+#define BITFIELD_LENGTH 12 // Length of the bitfields structure in the bmp file
 
 #if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN
 // We must ensure that the entity is unsigned
@@ -135,16 +142,19 @@ struct bitFields {
 #define RLE_ESCAPE_EOF   1
 #define RLE_ESCAPE_DELTA 2
 
-// enums for mState
+/// enums for mState
 enum ERLEState {
     eRLEStateInitial,
     eRLEStateNeedSecondEscapeByte,
     eRLEStateNeedXDelta,
-    eRLEStateNeedYDelta,    // mStateData will hold x delta
-    eRLEStateAbsoluteMode,  // mStateData will hold count of existing data to read
-    eRLEStateAbsoluteModePadded // As above, but another byte of data has to be read as padding
+    eRLEStateNeedYDelta,    ///< mStateData will hold x delta
+    eRLEStateAbsoluteMode,  ///< mStateData will hold count of existing data to read
+    eRLEStateAbsoluteModePadded ///< As above, but another byte of data has to be read as padding
 };
 
+/**
+ * Decoder for BMP-Files, as used by Windows and OS/2
+ */
 class nsBMPDecoder : public imgIDecoder
 {
 public:
@@ -152,7 +162,7 @@ public:
     NS_DECL_IMGIDECODER
     
     nsBMPDecoder();
-    virtual ~nsBMPDecoder();
+    ~nsBMPDecoder();
 
 private:
     /** Callback for ReadSegments to avoid copying the data */
@@ -190,25 +200,31 @@ private:
     BMPINFOHEADER mBIH;
     char mRawBuf[36];
 
-    PRUint32 mLOH; // Length of the header
+    PRUint32 mLOH; ///< Length of the header
 
-    PRUint32 mNumColors;
+    PRUint32 mNumColors; ///< The number of used colors, i.e. the number of entries in mColors
     colorTable *mColors;
 
     bitFields mBitFields;
 
-    PRUint8 *mRow; // Holds one raw line of the image
-    PRUint32 mRowBytes; // How many bytes of the row were already received
-    PRInt32 mCurLine;
-    PRUint8 *mAlpha;    // Holds one line of unpacked alpha data
-    PRUint8 *mAlphaPtr; // Pointer within unpacked alpha data
-    PRUint8 *mDecoded;  // Holds one line of color image data
-    PRUint8 *mDecoding; // Pointer within image data
+    PRUint8 *mRow;      ///< Holds one raw line of the image
+    PRUint32 mRowBytes; ///< How many bytes of the row were already received
+    PRInt32 mCurLine;   ///< Index of the line of the image that's currently being decoded
+    PRUint8 *mAlpha;    ///< Holds one line of unpacked alpha data
+    PRUint8 *mAlphaPtr; ///< Pointer within unpacked alpha data
+    PRUint8 *mDecoded;  ///< Holds one line of color image data
+    PRUint8 *mDecoding; ///< Pointer within image data
 
-    ERLEState mState;   // Maintains the current state of the RLE decoding
-    PRUint32 mStateData;// Decoding information that is needed depending on mState
+    ERLEState mState;   ///< Maintains the current state of the RLE decoding
+    PRUint32 mStateData;///< Decoding information that is needed depending on mState
 
+    PRUint32 mBpr;      ///< Cached image bytes per row
+
+    /** Set mBFH from the raw data in mRawBuf, converting from little-endian
+     * data to native data as necessary */
     void ProcessFileHeader();
+    /** Set mBIH from the raw data in mRawBuf, converting from little-endian
+     * data to native data as necessary */
     void ProcessInfoHeader();
 };
 

@@ -52,7 +52,9 @@
 
 #include "prlog.h"
 
+#ifdef PR_LOGGING
 PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
+#endif
 
 NS_IMPL_ISUPPORTS1(nsBMPDecoder, imgIDecoder)
 
@@ -65,11 +67,17 @@ nsBMPDecoder::nsBMPDecoder()
     mState = eRLEStateInitial;
     mStateData = 0;
     mAlpha = mAlphaPtr = mDecoded = mDecoding = nsnull;
+    mLOH = WIN_HEADER_LENGTH;
 }
 
 nsBMPDecoder::~nsBMPDecoder()
 {
-    Close();
+    delete[] mColors;
+    delete[] mRow;
+    if (mAlpha)
+        free(mAlpha);
+    if (mDecoded)
+        free(mDecoded);
 }
 
 NS_IMETHODIMP nsBMPDecoder::Init(imgILoad *aLoad)
@@ -77,43 +85,21 @@ NS_IMETHODIMP nsBMPDecoder::Init(imgILoad *aLoad)
     PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Init(%p)\n", aLoad));
     mObserver = do_QueryInterface(aLoad);
 
-    mImage = do_CreateInstance("@mozilla.org/image/container;1");
-    if (!mImage)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv;
+    mImage = do_CreateInstance("@mozilla.org/image/container;1", &rv);
+    if (NS_FAILED(rv))
+        return rv;
 
-    mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-    if (!mFrame)
-        return NS_ERROR_OUT_OF_MEMORY;
+    mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2", &rv);
+    if (NS_FAILED(rv))
+        return rv;
 
-    nsresult rv = aLoad->SetImage(mImage);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mLOH = 54;
-
-    return NS_OK;
+    return aLoad->SetImage(mImage);
 }
 
 NS_IMETHODIMP nsBMPDecoder::Close()
 {
     PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Close()\n"));
-    mPos = 0;
-    delete[] mColors;
-    mColors = nsnull;
-    mNumColors = 0;
-    delete[] mRow;
-    mRow = nsnull;
-    mRowBytes = 0;
-    mCurLine = 1;
-    if (mAlpha)
-        free(mAlpha);
-    mAlpha = nsnull;
-    if (mDecoded)
-        free(mDecoded);
-    mDecoded = nsnull;
-
-    mState = eRLEStateInitial;
-    mStateData = 0;
-
     if (mObserver) {
         mObserver->OnStopContainer(nsnull, mImage);
         mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
@@ -151,38 +137,25 @@ NS_IMETHODIMP nsBMPDecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount, P
 
 nsresult nsBMPDecoder::SetData()
 {
-    nsresult rv;
-    PRUint32 bpr;
-
-    rv = mFrame->GetImageBytesPerRow(&bpr);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     PRInt32 line = (mBIH.height < 0) ? (-mBIH.height - mCurLine--) : --mCurLine;
-    rv = mFrame->SetImageData(mDecoded, bpr, line * bpr);
+    nsresult rv = mFrame->SetImageData(mDecoded, mBpr, line * mBpr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRect r(0, line, mBIH.width, 1);
-    rv = mObserver->OnDataAvailable(nsnull, mFrame, &r);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
+    return mObserver->OnDataAvailable(nsnull, mFrame, &r);
 }
 
 nsresult nsBMPDecoder::WriteRLERows(PRUint32 rows)
 {
-    nsresult rv;
-    PRUint32 bpr, alpha, cnt, line;
-    PRUint8 byte, bit;
+    PRUint32 alpha, cnt, line;
+    PRUint8 bit;
     PRUint8* pos = mAlpha;
 
-    rv = mFrame->GetImageBytesPerRow(&bpr);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // First pack the alpha data
-    rv = mFrame->GetAlphaBytesPerRow(&alpha);
+    nsresult rv = mFrame->GetAlphaBytesPerRow(&alpha);
     NS_ENSURE_SUCCESS(rv, rv);
     for (cnt = 0; cnt < alpha; cnt++) {
-        byte = 0;
+        PRUint8 byte = 0;
         for (bit = 128; bit; bit >>= 1)
             byte |= *pos++ & bit;
         mAlpha[cnt] = byte;
@@ -192,11 +165,11 @@ nsresult nsBMPDecoder::WriteRLERows(PRUint32 rows)
         line = (mBIH.height < 0) ? (-mBIH.height - mCurLine--) : --mCurLine;
         rv = mFrame->SetAlphaData(mAlpha, alpha, line * alpha);
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = mFrame->SetImageData(mDecoded, bpr, line * bpr);
+        rv = mFrame->SetImageData(mDecoded, mBpr, line * mBpr);
         NS_ENSURE_SUCCESS(rv, rv);
         if (cnt == 0) {
             memset(mAlpha, 0, mBIH.width);
-            memset(mDecoded, 0, bpr);
+            memset(mDecoded, 0, mBpr);
         }
     }
 
@@ -248,8 +221,8 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         return NS_OK;
 
     nsresult rv;
-    if (mPos < 18) { /* In BITMAPFILEHEADER */
-        PRUint32 toCopy = 18 - mPos;
+    if (mPos < BFH_LENGTH) { /* In BITMAPFILEHEADER */
+        PRUint32 toCopy = BFH_LENGTH - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
         memcpy(mRawBuf + mPos, aBuffer, toCopy);
@@ -257,20 +230,20 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         aCount -= toCopy;
         aBuffer += toCopy;
     }
-    if (mPos == 18) {
+    if (mPos == BFH_LENGTH) {
         rv = mObserver->OnStartDecode(nsnull);
         NS_ENSURE_SUCCESS(rv, rv);
         ProcessFileHeader();
         if (mBFH.signature[0] != 'B' || mBFH.signature[1] != 'M')
             return NS_ERROR_FAILURE;
-        if (mBFH.bihsize == 12)
-            mLOH = 26;
+        if (mBFH.bihsize == OS2_BIH_LENGTH)
+            mLOH = OS2_HEADER_LENGTH;
     }
-    if (mPos >= 18 && mPos < mLOH) { /* In BITMAPINFOHEADER */
+    if (mPos >= BFH_LENGTH && mPos < mLOH) { /* In BITMAPINFOHEADER */
         PRUint32 toCopy = mLOH - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
-        memcpy(mRawBuf + (mPos - 18), aBuffer, toCopy);
+        memcpy(mRawBuf + (mPos - BFH_LENGTH), aBuffer, toCopy);
         mPos += toCopy;
         aCount -= toCopy;
         aBuffer += toCopy;
@@ -279,23 +252,13 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         ProcessInfoHeader();
         PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP image is %lix%lix%lu. compression=%lu\n",
             mBIH.width, mBIH.height, mBIH.bpp, mBIH.compression));
+        // Verify we support this bit depth
+        if (mBIH.bpp != 1 && mBIH.bpp != 4 && mBIH.bpp != 8 &&
+            mBIH.bpp != 16 && mBIH.bpp != 24 && mBIH.bpp != 32)
+          return NS_ERROR_UNEXPECTED;
 
         if (mBIH.bpp <= 8) {
-            switch (mBIH.bpp) {
-                case 1:
-                    mNumColors = 2;
-                    break;
-                case 4:
-                    mNumColors = 16;
-                    break;
-                case 8:
-                    mNumColors = 256;
-                    break;
-                default:
-                    return NS_ERROR_FAILURE;
-            }
-            if (mBIH.colors)
-                mNumColors = mBIH.colors;
+            mNumColors = mBIH.colors ? mBIH.colors : 1 << mBIH.bpp;
 
             mColors = new colorTable[mNumColors];
             if (!mColors)
@@ -336,11 +299,13 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         NS_ENSURE_SUCCESS(rv, rv);
         mObserver->OnStartFrame(nsnull, mFrame);
         NS_ENSURE_SUCCESS(rv, rv);
+        rv = mFrame->GetImageBytesPerRow(&mBpr);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     PRUint8 bpc; // bytes per color
-    bpc = (mBFH.bihsize == 12) ? 3 : 4; // OS/2 Bitmaps have no padding byte
+    bpc = (mBFH.bihsize == OS2_BIH_LENGTH) ? 3 : 4; // OS/2 Bitmaps have no padding byte
     if (mColors && (mPos >= mLOH && (mPos < (mLOH + mNumColors * bpc)))) {
-        // We will receive (mNumColors * 4) bytes of color data
+        // We will receive (mNumColors * bpc) bytes of color data
         PRUint32 colorBytes = mPos - mLOH; // Number of bytes already received
         PRUint8 colorNum = colorBytes / bpc; // Color which is currently received
         PRUint8 at = colorBytes % bpc;
@@ -364,16 +329,18 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             at = (at + 1) % bpc;
         }
     }
-    else if (aCount && mBIH.compression == BI_BITFIELDS && mPos < (mLOH + 12)) {
-        PRUint32 toCopy = (mLOH + 12) - mPos;
+    else if (aCount && mBIH.compression == BI_BITFIELDS && mPos < (WIN_HEADER_LENGTH + BITFIELD_LENGTH)) {
+        // If compression is used, this is a windows bitmap, hence we can
+        // use WIN_HEADER_LENGTH instead of mLOH
+        PRUint32 toCopy = (WIN_HEADER_LENGTH + BITFIELD_LENGTH) - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
-        memcpy(mRawBuf + (mPos - mLOH), aBuffer, toCopy);
+        memcpy(mRawBuf + (mPos - WIN_HEADER_LENGTH), aBuffer, toCopy);
         mPos += toCopy;
         aBuffer += toCopy;
         aCount -= toCopy;
     }
-    if (mBIH.compression == BI_BITFIELDS && mPos == mLOH+12) {
+    if (mBIH.compression == BI_BITFIELDS && mPos == WIN_HEADER_LENGTH + BITFIELD_LENGTH) {
         mBitFields.red = LITTLE_TO_NATIVE32(*(PRUint32*)mRawBuf);
         mBitFields.green = LITTLE_TO_NATIVE32(*(PRUint32*)(mRawBuf + 4));
         mBitFields.blue = LITTLE_TO_NATIVE32(*(PRUint32*)(mRawBuf + 8));
@@ -402,10 +369,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                 }
                 if ((rowSize - mRowBytes) == 0) {
                     if (!mDecoded) {
-                        PRUint32 bpr;
-                        rv = mFrame->GetImageBytesPerRow(&bpr);
-                        NS_ENSURE_SUCCESS(rv, rv);
-                        mDecoded = (PRUint8*)malloc(bpr);
+                        mDecoded = (PRUint8*)malloc(mBpr);
                         if (!mDecoded)
                             return NS_ERROR_OUT_OF_MEMORY;
                     }
@@ -462,8 +426,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                         }
                         break;
                       default:
-                        // This is probably the wrong place to check this...
-                        return NS_ERROR_FAILURE;
+                        NS_NOTREACHED("Unsupported color depth, but earlier check didn't catch it");
                     }
                       
                     nsresult rv = SetData();
@@ -496,10 +459,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             }
 
             if (!mDecoded) {
-                PRUint32 bpr;
-                rv = mFrame->GetImageBytesPerRow(&bpr);
-                NS_ENSURE_SUCCESS(rv, rv);
-                mDecoded = (PRUint8*)calloc(bpr, 1);
+                mDecoded = (PRUint8*)calloc(mBpr, 1);
                 if (!mDecoded)
                   return NS_ERROR_OUT_OF_MEMORY;
                 mDecoding = mDecoded;
