@@ -148,7 +148,7 @@ Rights Reserved.
 
   <hbox style="height:100px" flex="1">
     <vbox id="sidebar-box">
-      <outliner id="folderOutliner" flex="1" context="folderPaneContext"/>
+      <outliner id="folderOutliner" persist="height width" flex="1" context="folderPaneContext"/>
     </vbox>
           
     <splitter id="sidebar-splitter"/>

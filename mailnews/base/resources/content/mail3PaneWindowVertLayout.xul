@@ -151,7 +151,7 @@ Rights Reserved.
     <vbox flex="1">
       <hbox id="mail3PaneVertLayoutBox" persist="collapsed height" flex="1">
         <vbox id="folderPaneBox" flex="1" autostretch="always" persist="width">
-          <outliner id="folderOutliner" flex="1" style="width:0px;" context="folderPaneContext" persist="collapsed width"/>
+          <outliner id="folderOutliner" flex="1" style="width:0px;" context="folderPaneContext" persist="collapsed width height"/>
         </vbox>
         <splitter id="gray_vertical_splitter" collapse="before"  persist="state"/>
 
