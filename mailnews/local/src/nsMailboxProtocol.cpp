@@ -108,7 +108,7 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
 			{
 				m_runningUrl->GetFile(&fileName);
 				rv = pNetService->CreateFileSocketTransport(&m_transport, fileName);
-                (void)nsServiceManager::GetService(kNetServiceCID, pNetService)
+                (void)nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
 			}
 		}
 	}

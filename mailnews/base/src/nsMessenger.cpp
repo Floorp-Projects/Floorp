@@ -99,6 +99,7 @@ nsMessengerBootstrap::Initialize()
 {
   nsresult rv;
 
+  nsIScriptNameSetRegistry* registry;
   rv = nsServiceManager::GetService(kCScriptNameSetRegistryCID, 
                                     nsIScriptNameSetRegistry::GetIID(),
                                     (nsISupports**)&registry);
