@@ -205,6 +205,22 @@ static XmSyntheticResource syn_resources[] =
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeArrow translations												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static char arrow_translations[] ="\
+<Key>space:					ArmAndActivate()\n\
+c<Btn1Down>:				Focus()\n\
+<Btn1Down>:					Arm()\n\
+<Btn1Up>:					Activate() Disarm()\n\
+~c ~s ~a ~m<Key>Return:		ArmAndActivate()\n\
+~c ~s ~a ~m<Key>space:		ArmAndActivate()\n\
+:<Key>osfHelp:				Help()\n\
+<Enter>:					Enter()\n\
+<Leave>:					Leave()";
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeArrow widget class record initialization							*/
 /*																		*/
 /*----------------------------------------------------------------------*/

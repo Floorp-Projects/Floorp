@@ -740,3 +740,34 @@ XfeRepTypeRegister(String rep_type,String * names)
     XmRepTypeRegister(rep_type,names,NULL,num_names);
 }
 /*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Translation / Action functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeOverrideTranslations(Widget w,String table)
+/*----------------------------------------------------------------------*/
+{
+	XtTranslations parsed = NULL;
+
+	assert( _XfeIsAlive(w) );
+	assert( table != NULL );
+	
+	parsed = XtParseTranslationTable(table);
+	
+	XtOverrideTranslations(w,parsed);
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeAddActions(Widget w,XtActionList actions,Cardinal num_actions)
+/*----------------------------------------------------------------------*/
+{
+	assert( _XfeIsAlive(w) );
+	assert( actions != NULL );
+	assert( num_actions > 0 );
+
+	XtAppAddActions(XtWidgetToApplicationContext(w),actions,num_actions);
+}
+/*----------------------------------------------------------------------*/

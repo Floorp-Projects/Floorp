@@ -106,7 +106,6 @@ CSRCS			= \
 				SetValues.c \
 				ShellUtil.c \
 				StringUtil.c \
-				Translations.c \
 				Util.c \
 				WmUtil.c \
 				$(NULL)

@@ -232,6 +232,18 @@ static XtResource resources[] =
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeLabel translations												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static char default_translations[] ="\
+<Btn1Down>:					Btn1Down()\n\
+c<Btn1Down>:				Focus()\n\
+:<Key>osfHelp:				Help()\n\
+<Enter>:					Enter()\n\
+<Leave>:					Leave()";
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeButton actions													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -277,7 +289,7 @@ _XFE_WIDGET_CLASS_RECORD(label,Label) =
 		NULL,                                   /* accept_focus       	*/
 		XtVersion,                              /* version            	*/
 		NULL,                                   /* callback_private   	*/
-		_XfeLabelDefaultTranslations,			/* tm_table           	*/
+		default_translations,					/* tm_table           	*/
 		XtInheritQueryGeometry,					/* query_geometry     	*/
 		XtInheritDisplayAccelerator,            /* display accel      	*/
 		NULL,                                   /* extension          	*/

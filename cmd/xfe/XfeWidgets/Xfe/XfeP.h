@@ -310,22 +310,6 @@ if (_XfeIsAlive(_w) && XtIsRealized(_w)) \
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Widget translations													*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-extern char _XfeArrowDefaultTranslations[];
-extern char _XfeBmButtonExtraTranslations[];
-extern char _XfeButtonDefaultTranslations[];
-extern char _XfeButtonMotionAddTranslations[];
-extern char _XfeButtonMotionRemoveTranslations[];
-extern char _XfeBypassShellDefaultTranslations[];
-extern char _XfeLabelDefaultTranslations[];
-extern char _XfePrimitiveDefaultTranslations[];
-extern char _XfeToolBarExtraTranslations[];
-/*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
 /* Callbacks															*/
 /*																		*/
 /*----------------------------------------------------------------------*/

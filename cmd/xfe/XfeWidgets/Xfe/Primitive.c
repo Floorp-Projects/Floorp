@@ -431,6 +431,17 @@ static XmPrimitiveClassExtRec primClassExtRec =
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfePrimitive translations											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static char default_translations[] ="\
+c<Btn1Down>:				Focus()\n\
+:<Key>osfHelp:				Help()\n\
+<Enter>:					Enter()\n\
+<Leave>:					Leave()";
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfePrimitive widget class record initialization						*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -466,7 +477,7 @@ _XFE_WIDGET_CLASS_RECORD(primitive,Primitive) =
 		NULL,								/* accept_focus				*/
 		XtVersion,							/* version					*/
 		NULL,								/* callback_private			*/
-		_XfePrimitiveDefaultTranslations,	/* tm_table					*/
+		default_translations,				/* tm_table					*/
 		QueryGeometry,						/* query_geometry			*/
 		XtInheritDisplayAccelerator,		/* display accel			*/
 		NULL,								/* extension				*/

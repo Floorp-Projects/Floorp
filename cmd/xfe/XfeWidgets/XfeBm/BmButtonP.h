@@ -118,6 +118,13 @@ _XfeBmProcWithoutDrawing		(Widget				w,
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeBmButton translations which are shared with XfeBmCacade.			*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern char _XfeBmButtonExtraTranslations[];
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Means the cursor is outside the target accent button/cascade.		*/
 /*																		*/
 /*----------------------------------------------------------------------*/

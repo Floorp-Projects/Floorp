@@ -267,6 +267,15 @@ static XtActionsRec actions[] =
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeBypassShell translations											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static char default_translations[] ="\
+<BtnUp>:					BtnUp()\n\
+<BtnDown>:					BtnDown()";
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Widget Class Record Initialization                                   */
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -306,7 +315,7 @@ _XFE_WIDGET_CLASS_RECORD(bypassshell,BypassShell) =
 		NULL,                                   /* access_focus			*/
 		XtVersion,                              /* version				*/
 		NULL,                                   /* callback_private		*/
-		_XfeBypassShellDefaultTranslations,		/* tm_table				*/
+		default_translations,					/* tm_table				*/
 		NULL,									/* query_geometry		*/
 		NULL,									/* display accelerator	*/
 		NULL,									/* extension			*/

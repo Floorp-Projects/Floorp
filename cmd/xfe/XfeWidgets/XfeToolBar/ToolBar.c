@@ -483,6 +483,14 @@ static XtActionsRec actions[] =
     { "Btn3Up",		Btn3Up			},
 };
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeToolBar extra translations										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static char extra_translations[] ="\
+<Btn3Down>:					Btn3Down()\n\
+<Btn3Up>:					Btn3Up()";
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -736,7 +744,7 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	}
 
 	/* Add Button3 translations */
-	XfeOverrideTranslations(nw,_XfeToolBarExtraTranslations);
+	XfeOverrideTranslations(nw,extra_translations);
 
     /* Initialize private members */
 #if 0

@@ -559,6 +559,30 @@ static XtActionsRec actions[] =
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeButton translations												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static char default_translations[] ="\
+<Key>space:					ArmAndActivate()\n\
+c<Btn1Down>:				Focus()\n\
+<Btn1Down>:					Arm()\n\
+<Btn1Up>:					Activate() Disarm()\n\
+<Btn3Down>:					Btn3Down()\n\
+<Btn3Up>:					Btn3Up()\n\
+~c ~s ~a ~m<Key>Return:		ArmAndActivate()\n\
+~c ~s ~a ~m<Key>space:		ArmAndActivate()\n\
+:<Key>osfHelp:				Help()\n\
+<Enter>:					Enter()\n\
+<Leave>:					Leave()";
+
+static char motion_add_translations[] ="\
+<Motion>:					Motion()";
+
+static char _XfeButtonMotionRemoveTranslations[] ="\
+<Motion>:					";
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeButton widget class record initialization							*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -594,7 +618,7 @@ _XFE_WIDGET_CLASS_RECORD(button,Button) =
 		NULL,                                   /* accept_focus       	*/
 		XtVersion,                              /* version            	*/
 		NULL,                                   /* callback_private   	*/
-		_XfeButtonDefaultTranslations,			/* tm_table           	*/
+		default_translations,					/* tm_table           	*/
 		XtInheritQueryGeometry,					/* query_geometry     	*/
 		XtInheritDisplayAccelerator,            /* display accel      	*/
 		NULL,                                   /* extension          	*/
@@ -819,7 +843,7 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	/* Need to track motion if trigger is not anywhere */
 	if (bp->button_trigger != XmBUTTON_TRIGGER_ANYWHERE)
 	{
-		XfeOverrideTranslations(nw,_XfeButtonMotionAddTranslations);
+		XfeOverrideTranslations(nw,motion_add_translations);
 	}
 
     /* Finish of initialization */
@@ -902,7 +926,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		/* Yes motion tracking */
 		else
 		{
-			XfeOverrideTranslations(nw,_XfeButtonMotionAddTranslations);
+			XfeOverrideTranslations(nw,motion_add_translations);
 		}
     }
 
