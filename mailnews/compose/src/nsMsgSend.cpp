@@ -1009,7 +1009,7 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
 	char            *hdrs = 0;
 	nsMsgSendPart   *part = nsnull;
 
-	// If at this point we *still* don't have an content-type, then
+	// If at this point we *still* don't have a content-type, then
 	// we're never going to get one.
 	if (ma->m_type == nsnull) 
   {
@@ -1630,7 +1630,11 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
         // If we still don't have a content type, we should really try sniff one out!
         if ((!m_attachments[newLoc].m_type) || (!*m_attachments[newLoc].m_type))
         {
-          m_attachments[newLoc].PickEncoding(mCompFields->GetCharacterSet());
+          m_attachments[newLoc].AnalyzeSnarfedFile();
+          if ( (m_attachments[newLoc].m_unprintable_count > 0) || (m_attachments[newLoc].m_highbit_count > 0) )
+            m_attachments[newLoc].m_type = nsCRT::strdup(APPLICATION_OCTET_STREAM);
+          else
+            m_attachments[newLoc].m_type = nsCRT::strdup(TEXT_PLAIN);
         }
 
         // For local files, if they are HTML docs and we don't have a charset, we should
