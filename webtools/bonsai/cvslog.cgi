@@ -215,13 +215,13 @@ print qq(
         </TD>
        </TR><TR>
         <TD>
-         <A HREF="cvsview2.cgi?command=DIRECTORY&subdir=$rcs_path&files=$file_tail">diff</A>
+         <A HREF="cvsview2.cgi?command=DIRECTORY&subdir=$rcs_path&files=$file_tail&branch=$::opt_rev">diff</A>
         </TD><TD NOWRAP>
          Compare any two version.
         </TD>
        </TR><TR>
         <TD>
-         <A HREF="cvsblame.cgi?file=$filename$revstr">blame</A>&nbsp;
+         <A HREF="cvsblame.cgi?file=$filename&rev=$::opt_rev&cvsroot=$root">blame</A>&nbsp;
         </TD><TD NOWRAP>
          Annotate the author of each line.
         </TD>
@@ -295,23 +295,23 @@ foreach $revision (@revisions)
     $output .= "<TR$bgcolor VALIGN=TOP><TD>"
         ."<A NAME=$revision>";
 
-    my $anchor = "cvsview2.cgi";
+    my $anchor = "<A HREF=cvsview2.cgi";
 
     if (defined($::prev_revision{$revision})) {
-        $anchor .= "?diff_mode=context&whitespace_mode=show&file=$file_tail"
+        $anchor .= "?diff_mode=context&whitespace_mode=show&file=$file_tail&branch=$::opt_rev"
             ."&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET"
             ."&rev1=$::prev_revision{$revision}&rev2=$revision";
     } else {
         $anchor .= "?files=$file_tail"
-            ."&root=$root&subdir=$rcs_path\&command=DIRECTORY\&rev2=$revision";
+            ."&root=$root&subdir=$rcs_path\&command=DIRECTORY\&rev2=$revision&branch=$::opt_rev";
         $anchor .= "&branch=$browse_revtag" unless $browse_revtag eq 'HEAD';
     }
 
     $anchor = &url_encode3($anchor);
 
-    $output .= "<A HREF=\"$anchor";
+    $output .= $anchor;
 
-    $output .= "\">$revision</A>"
+    $output .= ">$revision</A>"
         .'&nbsp' x ($max_rev_length - length($revision)).'</TD>';
 
     $output .= "<TD>".$author
@@ -513,8 +513,8 @@ sub print_useful_links {
 
     my $lxr_path = $path;
     my $lxr_link = Fix_LxrLink($lxr_path);
-    my $diff_link = "$diff_base?command=DIRECTORY\&subdir=$dir\&files=$file";
-    my $blame_link = "$blame_base?root=$::CVS_ROOT\&file=$path";
+    my $diff_link = "$diff_base?command=DIRECTORY\&subdir=$dir\&files=$file\&branch=$::opt_rev";
+    my $blame_link = "$blame_base?root=$::CVS_ROOT\&file=$path\&rev=$::opt_rev";
 
 print "<DIV ALIGN=RIGHT>
  <TABLE BORDER CELLPADDING=10 CELLSPACING=0>
