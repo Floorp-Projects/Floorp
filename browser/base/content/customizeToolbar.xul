@@ -65,6 +65,10 @@
 </menulist>
 <checkbox label="&useSmallIcons.label;"/>
 <button label="&restoreDefaultSet.label;"/>
+<spacer flex="1"/>
+<button label="TRASH"
+        ondragover="nsDragAndDrop.dragOver(event, trashObserver);"
+        ondragdrop="nsDragAndDrop.drop(event, trashObserver);"/>
 </box>
 
 <separator class="groove"/>
