@@ -888,7 +888,7 @@ nsHTTPIndexParser::ParseData(nsString* values, const char *encodingStr,
             if (NS_SUCCEEDED(rv = gTextToSubURI->UnEscapeAndConvert(encodingStr, filename,
                                                                     &result)) && (result))
             {
-                if (nsCRT::strlen(result) > 0)
+                if (result[0])
                 {
                     values[i].Assign(result);
                     success = PR_TRUE;
