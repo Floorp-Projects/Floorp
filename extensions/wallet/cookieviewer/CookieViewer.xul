@@ -60,6 +60,7 @@
             onkeypress="HandleKeyPress(event)">
             <treecolgroup>
               <treecol flex="3" width="0"/>
+              <splitter class="tree-splitter"/>
               <treecol flex="7" width="0"/>
             </treecolgroup>
             <treehead>
@@ -129,6 +130,7 @@
                 multiple="true" onclick="ViewPermissionSelected();">
             <treecolgroup>
               <treecol flex="5" width="0"/>
+              <splitter class="tree-splitter"/>
               <treecol flex="5" width="0"/>
             </treecolgroup>
             <treehead>
@@ -157,6 +159,7 @@
                 multiple="true" onclick="ViewImageSelected();">
             <treecolgroup>
               <treecol flex="5" width="0"/>
+              <splitter class="tree-splitter"/>
               <treecol flex="5" width="0"/>
             </treecolgroup>
             <treehead>
