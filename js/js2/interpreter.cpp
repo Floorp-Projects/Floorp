@@ -198,12 +198,16 @@ static JSValue add_Default(const JSValue& r1, const JSValue& r2)
         return JSValue(num1.f64 + num2.f64);
     }
 }
+
+/*
 static JSValue add_String1(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(num1.f64 + num2.f64);
 }
+*/
+
 static JSValue subtract_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
@@ -592,7 +596,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                         src != end; ++src, ++i) {
                             argv[i] = (*registers)[src->first];
                         }
-                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(argv);
+                        /*JSValue result = static_cast<JSNativeFunction*>(target)->mCode(argv);*/
                         break;
                     }
                     else {

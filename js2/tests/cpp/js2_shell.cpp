@@ -104,7 +104,11 @@ const Reader *ResolveFile (const String& fileName)
     if (fileName == ConsoleName)
         return sourceReader;
     else
+    {
+        stdErr << "Could not locate source for file '" << fileName << "'\n";
         return 0;
+    }
+    
 }
 
 JavaScript::Debugger::Shell jsd(world, stdin, JavaScript::stdOut,

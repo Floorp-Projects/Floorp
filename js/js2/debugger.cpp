@@ -154,7 +154,8 @@ namespace Debugger {
         ICodeModule *iCode = cx->getICode();
         
         if (iCode->mInstructionMap->begin() == iCode->mInstructionMap->end())
-            NOT_REACHED ("Instruction map is empty, waah.");
+            return NotABanana;
+            /*NOT_REACHED ("Instruction map is empty, waah.");*/
 
         InstructionMap::iterator pos_iter =
             iCode->mInstructionMap->upper_bound (pc - iCode->its_iCode->begin());
@@ -184,6 +185,12 @@ namespace Debugger {
         }
         
         uint32 pos = getClosestSourcePosForPC(cx, pc);
+        if (pos == NotABanana)
+        {
+            mErr << "Map is empty, cannot display source.\n";
+            return;
+        }
+            
         uint32 lineNum = reader->posToLineNum (pos);
         const char16 *lineBegin, *lineEnd;
 

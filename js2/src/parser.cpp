@@ -3149,7 +3149,7 @@ JS::StmtNode *JS::Parser::parseTry(uint32 pos)
 //
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
 // After parseStatement finishes, the next token might have been peeked with preferRegExp set to true.
-JS::StmtNode *JS::Parser::parseStatement(bool topLevel, bool inSwitch, SemicolonState &semicolonState)
+JS::StmtNode *JS::Parser::parseStatement(bool /*topLevel*/, bool inSwitch, SemicolonState &semicolonState)
 {
 	StmtNode *s;
 	ExprNode *e = 0;
