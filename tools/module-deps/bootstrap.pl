@@ -26,6 +26,7 @@
 
 
 use strict;
+use English;
 use File::Find();
 
 # For --option1, --option2, ...
@@ -282,8 +283,15 @@ sub FindMakefiles {
 
   #
   # Construct a build/unix/modules.mk file, this let's us do
-  # a top-level build instead of n gmake -C <dir> commands.
+  # a top-level build instead of n $makecmd -C <dir> commands.
   #
+
+  my $makecmd = "gmake";
+  if( "$OSNAME" eq "cygwin" ) {
+    # Cygwin likes to use "make" for win32.
+    $makecmd = "make";
+  }
+
 
   chdir("$basedir");
 
@@ -332,25 +340,25 @@ sub FindMakefiles {
   #
 
   # Build nspr
-  print "gmake -C mozilla/nsprpub\n";
-  system("gmake -C mozilla/nsprpub");
+  print "$makecmd -C mozilla/nsprpub\n";
+  system("$makecmd -C mozilla/nsprpub");
 
   # Build config
-  print "gmake -C mozilla/config\n";
-  system("gmake -C mozilla/config");
+  print "$makecmd -C mozilla/config\n";
+  system("$makecmd -C mozilla/config");
 
   # Build xpidl
-  print "gmake -C mozilla/xpcom/typelib\n";
-  system("gmake -C mozilla/xpcom/typelib");
+  print "$makecmd -C mozilla/xpcom/typelib\n";
+  system("$makecmd -C mozilla/xpcom/typelib");
 
   # Now try the modules.
 
   chdir("$basedir/mozilla");
 
   # Export-phase first.  Export IDL stuff first to avoid IDL order problems.
-  # system("gmake export-idl"); # testing, not part of make system yet.
-  system("gmake export");  # run_shell_command("gmake export");
+  # system("$makecmd export-idl"); # testing, not part of make system yet.
+  system("$makecmd export");  # run_shell_command("$makecmd export");
 
   # Libs-phase next.
-  system("gmake libs");  # run_shell_command("gmake libs");
+  system("$makecmd libs");  # run_shell_command("$makecmd libs");
 }
