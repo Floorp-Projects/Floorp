@@ -604,7 +604,7 @@ function OpenInboxForServer(server)
         var inboxFolder = GetInboxFolder(server);
         SelectFolder(inboxFolder.URI);
 
-        if(CheckOnline())	{
+        if(CheckOnline()) {
             if (server.type != "imap")
                 GetMessagesForInboxOnServer(server);
         }
