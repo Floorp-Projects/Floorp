@@ -124,11 +124,9 @@ NS_METHOD nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
 
 NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
-  gchar *buf = aItem.ToNewCString();
-
   if (mCList) {
     gchar *text[2];
-    text[0] = buf;
+    text[0] = (gchar*)((const char *)nsAutoCString(aItem));
     text[1] = (gchar*)NULL;
     gtk_clist_insert(GTK_CLIST(mCList), (int)aPosition, text);
 
@@ -137,8 +135,6 @@ NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
     gtk_clist_set_row_data(GTK_CLIST(mCList), aPosition, (gpointer)&aItem);
   }
   
-  delete [] buf;
-
   return NS_OK;
 }
 
