@@ -52,8 +52,8 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  nsStreamLoader() { };
-  virtual ~nsStreamLoader() {};
+  nsStreamLoader() { }
+  ~nsStreamLoader() {}
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
