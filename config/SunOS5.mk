@@ -132,6 +132,10 @@ PLATFORM_FLAGS		+= -Wall -Wno-format
 OS_LIBS			+= -L$(NS_LIB)
 ifneq ($(CPU_ARCH),x86)
 ASFLAGS			+= -x assembler-with-cpp
+else
+ifndef BUILD_OPT
+OPTIMIZER		= -Wa,-s -gstabs
+endif
 endif
 OS_GPROF_FLAGS		= -pg
 DSO_CFLAGS		= -fPIC
