@@ -784,10 +784,11 @@ nsresult nsScanner::ReadTagIdentifier(nsString& aString) {
   current = mCurrentPosition;
   end = mEndPosition;
 
-  while(current != end) {
+  // Loop until we find an illegal character. Everything is then appended
+  // later.
+  while(current != end && !found) {
     theChar=*current;
 
-    found = PR_TRUE;
     switch(theChar) {
       case '\n':
       case '\r':
@@ -800,20 +801,20 @@ nsresult nsScanner::ReadTagIdentifier(nsString& aString) {
       case '>':
       case '/':
       case '\0':
-        found = PR_FALSE;
+        found = PR_TRUE;
         break;
       default:
         break;
     }
 
-    if(!found) {
-      // If the current character isn't a valid character for
-      // the identifier, we're done. Append the results to
-      // the string passed in.
-      AppendUnicodeTo(mCurrentPosition, current, aString);
-      break;
+    if (!found) {
+      ++current;
     }
-    ++current;
+  }
+
+  // Don't bother appending nothing.
+  if (current != mCurrentPosition) {
+    AppendUnicodeTo(mCurrentPosition, current, aString);
   }
 
   // Drop NULs on the floor since nobody really likes them.
