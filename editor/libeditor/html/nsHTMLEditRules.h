@@ -117,10 +117,12 @@ protected:
                         PRBool *outIsEmptyBlock, 
                         PRBool aMozBRDoesntCount = PR_FALSE,
                         PRBool aListItemsNotEmpty = PR_FALSE);
+#if 0
   nsresult IsEmptyNode(nsIDOMNode *aNode, 
                        PRBool *outIsEmptyBlock, 
                        PRBool aMozBRDoesntCount = PR_FALSE,
                        PRBool aListItemsNotEmpty = PR_FALSE);
+#endif
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);
   PRBool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);

@@ -160,6 +160,10 @@ protected:
 
   nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
 
+  nsresult IsEmptyNode(nsIDOMNode *aNode, 
+                       PRBool *outIsEmptyBlock, 
+                       PRBool aMozBRDoesntCount = PR_FALSE,
+                       PRBool aListItemsNotEmpty = PR_FALSE);
 
   // data members
   nsHTMLEditor *mEditor;  // note that we do not refcount the editor
