@@ -62,7 +62,7 @@ echo >$RSH_FILE
 TMPFILES="$TMPFILES $WARNINGLIST $RSH_FILE "
 RSH_WAIT_TIME=80 #maximum time allowed for the 2 rsh to finish...
 #TOTAL_TESTS=106
-TOTAL_TESTS=122
+TOTAL_TESTS=123
 
 Debug "NTDIST $NTDIST"
 Debug "UXDIST $UXDIST"
@@ -651,6 +651,7 @@ CURRENT_TABLE="BC"   #so html_line can determine which fields to write
   for w in `ls */results.html`
   do
       diff -b $w bct/$w  2>>$BCMISSINGLIST | 
+           grep -v "Create objsign cert .signtool -G.*Passed" |
            grep -v "Listing signed files in jar .signtool -v.*Passed" |
            grep -v "Listing signed files in jar .signtool -w.*Passed" |
            grep -v "backward compatibility" |
