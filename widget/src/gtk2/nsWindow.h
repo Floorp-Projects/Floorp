@@ -204,16 +204,14 @@ private:
 
     GtkWindowGroup     *mWindowGroup;
 
-    PRPackedBool        mContainerGotFocus;
-    PRPackedBool        mContainerLostFocus;
-    PRPackedBool        mContainerBlockFocus;
-    PRPackedBool        mHasFocus;
-
-    PRPackedBool        mInKeyRepeat;
-
-    PRPackedBool        mIsVisible;
-    PRPackedBool        mRetryPointerGrab;
-    PRPackedBool        mRetryKeyboardGrab;
+    PRUint32            mContainerGotFocus : 1,
+                        mContainerLostFocus : 1,
+                        mContainerBlockFocus : 1,
+                        mHasFocus : 1,
+                        mInKeyRepeat : 1,
+                        mIsVisible : 1,
+                        mRetryPointerGrab : 1,
+                        mRetryKeyboardGrab : 1;
     GtkWindow          *mTransientParent;
     PRInt32             mSizeState;
 
