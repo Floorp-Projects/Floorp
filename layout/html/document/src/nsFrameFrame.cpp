@@ -689,7 +689,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   
   nsString frameName;
   if (GetName(content, frameName)) {
-    mWebShell->SetName(frameName);
+    mWebShell->SetName(frameName.GetUnicode());
   }
 
   // If our container is a web-shell, inform it that it has a new
@@ -825,7 +825,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
         nsString absURL;
         TempMakeAbsURL(content, url, absURL);
 
-        rv = mWebShell->LoadURL(absURL);  // URL string with a default nsnull value for post Data
+        rv = mWebShell->LoadURL(absURL.GetUnicode());  // URL string with a default nsnull value for post Data
       }
     } else {
       mCreatingViewer = PR_TRUE;
@@ -881,7 +881,7 @@ nsHTMLFrameInnerFrame::ReloadURL()
         nsString absURL;
         TempMakeAbsURL(content, url, absURL);
 
-        rv = mWebShell->LoadURL(absURL);  // URL string with a default nsnull value for post Data
+        rv = mWebShell->LoadURL(absURL.GetUnicode());  // URL string with a default nsnull value for post Data
       }
     } else {
       mCreatingViewer = PR_TRUE;

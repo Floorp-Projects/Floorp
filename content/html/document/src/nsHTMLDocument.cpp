@@ -352,7 +352,7 @@ NS_IMETHODIMP nsHTMLDocument::SetTitle(const nsString& aTitle)
         nsIWebShell* ws = nsnull;
         container->QueryInterface(kIWebShellIID, (void**) &ws);
         if (nsnull != ws) {
-          ws->SetTitle(aTitle);
+          ws->SetTitle(aTitle.GetUnicode());
           NS_RELEASE(ws);
         }
         NS_RELEASE(container);

@@ -2315,7 +2315,7 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData
   
   stringList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList;
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.GetUnicode();
   PRUnichar* end   = start;
   PRUnichar* last  = start;
   PRUnichar  endCh;
@@ -3098,7 +3098,7 @@ static PRBool EnumerateMediaString(const nsString& aStringList, nsStringEnumFunc
 
   stringList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList;
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.GetUnicode();
   PRUnichar* end   = start;
 
   while (running && (kNullCh != *start)) {
