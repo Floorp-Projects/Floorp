@@ -31,7 +31,6 @@
 
 #include "nsIExternalHelperAppService.h"
 #include "nsIExternalProtocolService.h"
-#include "nsIURIContentListener.h"
 #include "nsIWebProgressListener.h"
 #include "nsIHelperAppLauncherDialog.h"
 
@@ -275,8 +274,6 @@ protected:
  */
 class nsExternalAppHandler : public nsIStreamListener,
                              public nsIHelperAppLauncher,
-                             public nsIURIContentListener,
-                             public nsIInterfaceRequestor,
                              public nsIObserver
 {
 public:
@@ -284,8 +281,6 @@ public:
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIHELPERAPPLAUNCHER
-  NS_DECL_NSIURICONTENTLISTENER
-  NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIOBSERVER
 
   nsExternalAppHandler();
@@ -346,7 +341,7 @@ protected:
    * using the window which initiated the load....RetargetLoadNotifications
    * contains that information...
    */
-  nsresult RetargetLoadNotifications(nsIRequest *request); 
+  void RetargetLoadNotifications(nsIRequest *request); 
   /**
    * If the user tells us how they want to dispose of the content and
    * we still haven't finished downloading while they were deciding,
@@ -406,7 +401,6 @@ protected:
    */
   void SendStatusChange(ErrorType type, nsresult aStatus, nsIRequest *aRequest, const nsAFlatString &path);
   
-  nsCOMPtr<nsISupports>           mLoadCookie;    /**< load cookie used by the uri loader when we fetch the url */
   nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
   nsCOMPtr<nsIChannel> mOriginalChannel; /**< in the case of a redirect, this will be the pre-redirect channel. */
   nsCOMPtr<nsIHelperAppLauncherDialog> mDialog;
