@@ -206,6 +206,8 @@ protected:
     mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, tmp);
     return tmp.EqualsIgnoreCase("image");
   }
+
+  PRBool mHandlingClick;
 };
 
 // construction, destruction
@@ -233,6 +235,7 @@ nsHTMLInputElement::nsHTMLInputElement(nsINodeInfo *aNodeInfo)
   mForm = nsnull;
   mSkipFocusEvent = PR_FALSE;
   //nsTraceRefcnt::Create((nsIFormControl*)this, "nsHTMLFormControlElement", __FILE__, __LINE__);
+  mHandlingClick = PR_FALSE;
 }
 
 nsHTMLInputElement::~nsHTMLInputElement()
@@ -740,6 +743,9 @@ nsHTMLInputElement::Click()
 {
   nsresult rv = NS_OK;
 
+  if (mHandlingClick)   // Fixes crash as in bug 41599 --heikki@netscape.com
+      return rv;
+
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
   if (NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled)) {
@@ -775,12 +781,18 @@ nsHTMLInputElement::Click()
             event.isMeta = PR_FALSE;
             event.clickCount = 0;
             event.widget = nsnull;
+            
+            mHandlingClick = PR_TRUE;
+
             rv = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+
+            mHandlingClick = PR_FALSE;
           }
         }
       }
     }
   }
+  
   return rv;
 }
 
