@@ -56,17 +56,17 @@ Contributor(s):
     <description>&chooseExp.label;</description>
 
     <separator class="thin"/>
+
     <hbox align="center">
       <checkbox id="mailnewsConfirmMoveFoldersToTrash" label="&confirmMove.label;"
                 prefstring="mailnews.confirm.moveFoldersToTrash"/>
     </hbox>
-    <separator class="thin"/>
+
     <hbox align="center">
       <checkbox id="mailWarnOnSendAccelKey" label="&warnOnSendAccelKey.label;"
                 prefstring="mail.warn_on_send_accel_key"
                 accesskey="&warnOnSendAccelKey.accesskey;" />
     </hbox>
-    <separator class="thin"/>
     
     <hbox align="start" id="mapi"/>
 
@@ -94,8 +94,6 @@ Contributor(s):
         <checkbox id="mailnewsStartPageEnabled" label="&enableStartPage.label;"
                   prefstring="mailnews.start_page.enabled"/>
       </hbox>
-
-      <separator class="thin"/>
 
       <hbox align="center">
         <label value="&location.label;" accesskey="&location.accesskey;" 
