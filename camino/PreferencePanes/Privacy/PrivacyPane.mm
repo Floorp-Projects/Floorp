@@ -232,7 +232,7 @@ const int kDisableAllCookies = 2;
         // website url column
         nsCAutoString host;
         perm->GetHost(host);
-        retVal = [NSString stringWithCString:host];
+        retVal = [NSString stringWithCString:host.get()];
       }
       else {
         // allow/deny column
