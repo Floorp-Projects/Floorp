@@ -2505,6 +2505,13 @@ public:
     void ClearRecentContext()
         {mMostRecentJSContext = nsnull; mMostRecentXPCContext = nsnull;}
 
+#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
+    JSUint32  IncrementWrappedNativeThreadsafetyReportDepth()
+        {return ++mWrappedNativeThreadsafetyReportDepth;}
+    void      ClearWrappedNativeThreadsafetyReportDepth()
+        {mWrappedNativeThreadsafetyReportDepth = 0;}
+#endif
+
 private:
     XPCPerThreadData();
 
@@ -2521,6 +2528,9 @@ private:
     nsIExceptionManager* mExceptionManager;
     nsIException*        mException;
     JSBool               mExceptionManagerNotAvailable;
+#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
+    JSUint32             mWrappedNativeThreadsafetyReportDepth;
+#endif
 
     static PRLock*           gLock;
     static XPCPerThreadData* gThreads;

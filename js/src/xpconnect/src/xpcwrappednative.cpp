@@ -781,10 +781,10 @@ XPCWrappedNative::AddRef(void)
     NS_LOG_ADDREF(this, cnt, "XPCWrappedNative", sizeof(*this));
     if(2 == cnt && IsValid())
     {
-        XPCCallContext ccx(NATIVE_CALLER);
-        if(ccx.IsValid())
-            JS_AddNamedRoot(ccx, &mFlatJSObject,
-                            "XPCWrappedNative::mFlatJSObject");
+        XPCJSRuntime* rt = GetRuntime();
+        if(rt)
+            JS_AddNamedRootRT(rt->GetJSRuntime(), &mFlatJSObject,
+                              "XPCWrappedNative::mFlatJSObject");
     }
     return cnt;
 }
@@ -2671,6 +2671,10 @@ void DEBUG_ReportWrapperThreadSafetyError(XPCCallContext& ccx,
                                           const char* msg,
                                           const XPCWrappedNative* wrapper)
 {
+    XPCPerThreadData* tls = ccx.GetThreadData();
+    if(1 != tls->IncrementWrappedNativeThreadsafetyReportDepth())
+        return;
+
     printf("---------------------------------------------------------------\n");
     printf("!!!!! XPConnect wrapper thread use error...\n");
 
@@ -2686,7 +2690,8 @@ void DEBUG_ReportWrapperThreadSafetyError(XPCCallContext& ccx,
     printf("  JS call stack...\n");
     xpc_DumpJSStack(ccx, JS_TRUE, JS_TRUE, JS_TRUE);
     printf("---------------------------------------------------------------\n");
-
+    
+    tls->ClearWrappedNativeThreadsafetyReportDepth();
 }
 
 void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper)
@@ -2710,8 +2715,9 @@ void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper)
     {
         XPCCallContext ccx(NATIVE_CALLER);
         DEBUG_ReportWrapperThreadSafetyError(ccx,
-            "Wrapper accessed on multiple threads without having an "
-            "nsIClassInfo that set the 'THREADSAFE' flag", wrapper);
+            "XPConnect WrappedNative is being accessed on multiple threads but "
+            "the underlying native xpcom object does not have a "
+            "nsIClassInfo with the 'THREADSAFE' flag set", wrapper);
     }
 }
 #endif

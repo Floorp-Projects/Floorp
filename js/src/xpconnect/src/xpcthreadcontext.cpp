@@ -347,7 +347,9 @@ XPCPerThreadData::XPCPerThreadData()
         mExceptionManager(nsnull),
         mException(nsnull),
         mExceptionManagerNotAvailable(JS_FALSE)
-
+#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
+      , mWrappedNativeThreadsafetyReportDepth(0)
+#endif
 {
     if(gLock)
     {
