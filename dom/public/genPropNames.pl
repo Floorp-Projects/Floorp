@@ -68,14 +68,27 @@ print OUT <<'EOF';
 #define NS_DOM_PROP_NAMES \
 EOF
 
+$last = "";
+
 while (<IN>) {
 	if (/NS_DOM_PROP_MAX/) {
 		last;
 	}
+	$save = $_;
+	s/,.*/", \\/;
 	s/NS_DOM_PROP_/"/;
 	s/_/./;
-	s/,.*/", \\/;
-	print OUT lc($_);
+	$_ = lc($_);
+	print OUT $_;
+	# Check order of names and make sure they are sorted.
+	# It's important we check after the subsitution of '.' for '_'
+	# since it's the sort order of the names we care about and '.'
+	# and '_' sort differently with respect to letters.
+	if ($last ne "" && ($last gt $_)) {
+		die "Name $lastsave and $save are out of order in nsDOMPropEnums.h.\n";
+	}
+	$last = $_;
+	$lastsave = $save;
 }
 
 print OUT <<EOF;

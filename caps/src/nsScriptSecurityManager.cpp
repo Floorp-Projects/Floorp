@@ -1595,6 +1595,14 @@ nsScriptSecurityManager::InitFromPrefs()
     NS_ASSERTION(NS_DOM_PROP_MAX == sizeof(domPropNames)/sizeof(domPropNames[0]), 
                  "mismatch in property name count");
 
+    // The DOM property names had better be sorted for binary search to work
+#ifdef DEBUG
+    for (unsigned i=1; i < sizeof(domPropNames)/sizeof(domPropNames[0]); i++) {
+        NS_ASSERTION(strcmp(domPropNames[i-1], domPropNames[i]) < 0,
+                     "DOM properties are not properly sorted");
+    }
+#endif 
+
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_FAILED(rv))
