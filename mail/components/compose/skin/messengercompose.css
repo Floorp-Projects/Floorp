@@ -231,6 +231,36 @@ toolbar[iconsize="small"] #quoteButton[disabled="true"] {
   -moz-image-region: rect(40px 140px 60px 120px) !important;
 }
 
+toolbar[iconsize="small"] .toolbarbutton-1 {
+  padding: 2px;
+}
+
+toolbar[iconsize="small"] .toolbarbutton-1:hover:active,
+toolbar[iconsize="small"] .toolbarbutton-1[open="true"] {
+  padding: 3px 1px 1px 3px;
+}
+
+toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"],
+toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"]:hover,
+toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"]:hover:active,
+toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"][open="true"] {
+  padding: 2px;
+}
+
+toolbar[iconsize="small"] .toolbarbutton-1[checked="true"] {
+  padding: 3px 1px 1px 3px !important;
+}
+
+toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"],
+toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"]:hover,
+toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"]:hover:active,
+toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][open="true"],
+toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"],
+toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:hover,
+toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:hover:active {
+  padding: 0;
+}
+
 /* ::::: special toolbar colors ::::: */
 
 #content-frame {
