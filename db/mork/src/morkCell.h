@@ -39,7 +39,7 @@ public:
   morkAtom*    mCell_Atom;    // content in this cell
   
 public:
-  morkCell() : mCell_Atom( 0 ), mCell_Delta( 0 ) { }
+  morkCell() : mCell_Delta( 0 ), mCell_Atom( 0 ) { }
 
   morkCell(const morkCell& c)
   : mCell_Atom( c.mCell_Atom ), mCell_Delta( c.mCell_Delta ) { }
