@@ -452,8 +452,6 @@ function newEvent( startDate, endDate )
    {
       calendarEvent.end.setTime( endDate.getTime() );
    }
-   // open the dialog non modally
-   //openDialog( "chrome://calendar/content/calendarEventDialog.xul", "caNewEvent", "chrome,modal", args );
    editNewEvent( calendarEvent );
 }
 
@@ -473,7 +471,7 @@ function editNewEvent( calendarEvent )
    args.calendarEvent = calendarEvent;
 
    // open the dialog modally
-   openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome", args );
+   openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
 }
 
 

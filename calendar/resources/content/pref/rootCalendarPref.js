@@ -56,7 +56,6 @@ function calendarPreferences( CalendarWindow )
    this.calendarWindow = CalendarWindow;
 
    this.arrayOfPrefs = new Object();
-   this.arrayOfPrefs.showalarms = true;
    
    this.calendarPref = prefService.getBranch("calendar."); // preferences mozgest node
    
