@@ -54,6 +54,9 @@ elsif( $command eq 'set_sheriff' ){
 }
 elsif( $command eq 'disable_builds' ){
     &disable_builds;
+}
+elsif( $command eq 'scrape_builds' ){
+    &scrape_builds;
 } else {
     print "Unknown command: \"$command\".";
 }
@@ -151,11 +154,8 @@ sub create_tree {
 
 sub disable_builds {
     my $i,%buildnames;
-    $build_name = $form{'build'};
 
-    #
-    # Trim build.dat
-    #
+    # Read build.dat
     open(BD, "<$tree/build.dat");
     while( <BD> ){
         ($mailtime,$buildtime,$bname) = split( /\|/ );
@@ -180,8 +180,41 @@ sub disable_builds {
     print IGNORE "\t};\n";
 
     chmod( 0777, "$tree/ignorebuilds.pl");
-    print "<h2><a href=showbuilds.cgi?tree=$treename>Build state Changed</a></h2>\n";
+    print "<h2><a href=showbuilds.cgi?tree=$tree>Build state Changed</a></h2>\n";
 }
+
+
+sub scrape_builds {
+    my $i,%buildnames;
+
+    # Read build.dat
+    open(BD, "<$tree/build.dat");
+    while( <BD> ){
+        ($mailtime,$buildtime,$bname) = split( /\|/ );
+        $buildnames{$bname} = 1;
+    }
+    close( BD );
+
+    for $i (keys %form) {
+        if ($i =~ /^build_/ ){
+            $i =~ s/^build_//;
+            $buildnames{$i} = 0;
+        }
+    }
+
+    open(SCRAPE, ">$tree/scrapebuilds.pl");
+    print SCRAPE '$scrape_builds = {' . "\n";
+    for $i ( sort keys %buildnames ){
+        if( $buildnames{$i} == 0 ){
+            print SCRAPE "\t\t'$i' => 1,\n";
+        }
+    }
+    print SCRAPE "\t};\n";
+
+    chmod( 0777, "$tree/scrapebuilds.pl");
+    print "<h2><a href=showbuilds.cgi?tree=$tree>Build state Changed</a></h2>\n";
+}
+
 
 sub set_sheriff {
     $m = $form{'sheriff'};
