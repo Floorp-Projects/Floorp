@@ -37,6 +37,7 @@ import org.mozilla.webclient.DocumentLoadListener;
 import java.awt.event.MouseListener;
 import org.mozilla.webclient.WebclientEvent;
 import org.mozilla.webclient.WebclientEventListener;
+import org.mozilla.webclient.UnimplementedException;
 
 public class NativeEventThread extends Thread 
 {
@@ -143,6 +144,7 @@ public void delete()
     }
     // PENDING(ashuk): do any necessary cleanup.
     listenersToAdd = null;
+    doRemoveListeners();
     listenersToRemove = null;
     nativeWebShell = -1;
     windowControl = null;
@@ -193,6 +195,7 @@ public void run()
 
     while (true) {
         synchronized (this) {
+
             // this has to be inside the synchronized block!
             if (null == this.browserControlCanvas) {
                 return;
@@ -205,12 +208,49 @@ public void run()
                 tempEnum = listenersToAdd.elements();
                 while (tempEnum.hasMoreElements()) {
                     nativeAddListener(nativeWebShell,
-                                          (WebclientEventListener)
+                                      (WebclientEventListener)
                                       tempEnum.nextElement());
                 }
                 listenersToAdd.clear();
             }
+            doRemoveListeners();
         }
+    }
+}
+
+//
+// private methods
+//
+
+/**
+
+ *  this was broken out into a separate method due to the complexity of
+ *  handling the case where we are to remove all listeners.
+
+ */
+
+private void doRemoveListeners()
+{
+    if (null != listenersToRemove && !listenersToRemove.isEmpty()) {
+        tempEnum = listenersToRemove.elements();
+        while (tempEnum.hasMoreElements()) {
+            Object listenerObj = tempEnum.nextElement();
+            String listenerString;
+            if (listenerObj instanceof String) {
+                listenerString = (String) listenerObj;
+                if (listenerString.equals("all")) {
+                    nativeRemoveAllListeners(nativeWebShell);
+                }
+                else {
+                    throw new UnimplementedException("Webclient doesn't understand how to remove " + ((String)listenerObj) + ".");
+                }
+            }
+            else {
+                throw new UnimplementedException("Webclient nativeRemoveListener not yet implemented");
+            }
+            
+        }
+        listenersToRemove.clear();
     }
 }
 
@@ -239,6 +279,34 @@ void addListener(WebclientEventListener newListener)
         }
         listenersToAdd.add(newListener);
     }
+}
+
+/**
+
+ * remove a listener
+
+ * @param newListener if null, removes all listeners
+
+ */
+
+void removeListener(WebclientEventListener newListener)
+{
+    Assert.assert(-1 != nativeWebShell);
+    Assert.assert(null != windowControl);
+
+    synchronized (this) {
+        if (null == listenersToRemove) {
+            listenersToRemove = new Vector();
+        }
+        if (null == newListener) {
+            String all = "all";
+            listenersToRemove.add(all);
+        }
+        else {
+            listenersToRemove.add(newListener);
+        }
+    }
+
 }
 
 /**
@@ -335,5 +403,13 @@ public native void nativeProcessEvents(int webShellPtr);
 
 public native void nativeAddListener(int webShellPtr,
                                      WebclientEventListener typedListener);
+
+/**
+
+ * Called from Java to allow the native code to remove all listeners.
+
+ */ 
+
+public native void nativeRemoveAllListeners(int webShellPrt);
 
 } // end of class NativeEventThread

@@ -90,9 +90,8 @@ public EventRegistrationImpl(WrapperFactory yourFactory,
 
 public void delete()
 {
-    // PENDING(ashuk): remove all listeners, making sure to set
-    // references to null
-
+    // this removes all listeners
+    nativeEventThread.removeListener(null);
     nativeEventThread = null;
     
     super.delete();
@@ -176,7 +175,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("EventRegistrationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.4 2000/05/25 23:51:43 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.5 2000/05/31 21:58:35 ashuk%eng.sun.com Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
