@@ -200,7 +200,7 @@ else
 # mv'ing a link causes the file itself to move, not the link.
 	rm -f $(includedir)/$(MDCPUCFG_H)
 	rm -f $(includedir)/prcpucfg.h
-	ln -fs `pwd`/$(MDCPUCFG_H) $(includedir)/prcpucfg.h
+	ln -fs $(srcdir)/$(MDCPUCFG_H) $(includedir)/prcpucfg.h
 endif
 endif
 

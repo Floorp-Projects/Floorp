@@ -463,6 +463,7 @@ else
 endif
 ifeq ($(OS_ARCH), OpenVMS)
 	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(libdir)
+	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(bindir)
 endif
 endif
 ifeq ($(MOZ_BITS),16)

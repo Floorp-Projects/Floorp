@@ -334,6 +334,10 @@ if test "$OS_ARCH" = "IRIX64"; then
     OS_ARCH=IRIX
 fi
 
+if test "$OS_ARCH" = "POSIX_for_OpenVMS_AXP"; then
+    OS_ARCH=OpenVMS
+fi
+
 #######################################################################
 # Master "Core Components" macros for getting the OS target           #
 #######################################################################
@@ -1173,13 +1177,19 @@ mips-sony-newsos*)
     AC_DEFINE(VMS)
     AC_DEFINE(VMS_AS_IS)
     AC_DEFINE(GENERIC_PTHREAD_REDEFINES)
+    RESOLVE_LINK_SYMBOLS=1
     CROSS_COMPILE=1
+    _HAVE_PTHREADS=1
     HOST_CC=c89
     HOST_CXX=cxx
     HOST_CFLAGS=-O
     HOST_CXXFLAGS=-O
+    CC=ccc
+    CXX=ccc
     CFLAGS="$CFLAGS -Wc,names=\(short,as\)"
     CXXFLAGS="$CXXFLAGS -Wc,names=\(short,as\)"
+    MDCPUCFG_H=_openvms.cfg
+    PR_MD_CSRCS=openvms.c
     MKSHLIB='vmsld $(OPTIMIZER)'
     ;;
 
