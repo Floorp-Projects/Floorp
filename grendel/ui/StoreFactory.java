@@ -1,4 +1,4 @@
-/* -*- Mode: java; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+7/* -*- Mode: java; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -110,10 +110,21 @@ public class StoreFactory {
       Class c = null;
       if (proto.equalsIgnoreCase("berkeley")) {
         c = Class.forName("grendel.storage.BerkeleyStore");
-      //} else if (proto.equalsIgnoreCase("pop3")) {
-      //  c = Class.forName("grendel.storage.PopStore");
-      } else if (proto.equalsIgnoreCase("news")) {
+      // Two pop3 providers  
+      } else if (proto.equalsIgnoreCase("gpop3")) {
+        c = Class.forName("grendel.storage.PopStore");
+      } else if (proto.equalsIgnoreCase("spop3")) {
+        c = Class.forName("com.sun.mail.pop3.POP3Store;");
+      // Two news providers  
+      } else if (proto.equalsIgnoreCase("gnews")) {
+        c = Class.forName("grendel.storage.NewsStore");
+      } else if (proto.equalsIgnoreCase("dnews")) {
         c = Class.forName("dog.mail.nntp.NNTPStore");
+      // Defaults
+      } else if (proto.equalsIgnoreCase("pop3")) {
+        c = Class.forName("com.sun.mail.pop3.POP3Store;");
+      } else if (proto.equalsIgnoreCase("news")) {
+        c = Class.forName("grendel.storage.NewsStore");
       }
 
       if (c != null) {
