@@ -102,7 +102,9 @@ public:
 /*******************************************************************************
  * nsHTMLFrameOuterFrame
  ******************************************************************************/
-class nsHTMLFrameOuterFrame : public nsHTMLContainerFrame {
+#define nsHTMLFrameOuterFrameSuper nsHTMLContainerFrame
+
+class nsHTMLFrameOuterFrame : public nsHTMLFrameOuterFrameSuper {
 
 public:
   nsHTMLFrameOuterFrame();
@@ -113,6 +115,12 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
+
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -132,7 +140,7 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
   virtual PRIntn GetSkipSides() const;
-  PRBool *mIsInline;
+  PRBool mIsInline;
 };
 
 /*******************************************************************************
@@ -198,16 +206,32 @@ protected:
 nsHTMLFrameOuterFrame::nsHTMLFrameOuterFrame()
   : nsHTMLContainerFrame()
 {
-  mIsInline = nsnull;
+  mIsInline = PR_FALSE;
 }
 
 nsHTMLFrameOuterFrame::~nsHTMLFrameOuterFrame()
 {
   //printf("nsHTMLFrameOuterFrame destructor %X \n", this);
-  if (mIsInline) {
-    delete mIsInline;
-  }
 }
+
+NS_IMETHODIMP
+nsHTMLFrameOuterFrame::Init(nsIPresContext&  aPresContext,
+                            nsIContent*      aContent,
+                            nsIFrame*        aParent,
+                            nsIStyleContext* aContext,
+                            nsIFrame*        aPrevInFlow)
+{
+  // determine if we are a <frame> or <iframe>
+  nsIDOMHTMLFrameElement* frameElem = nsnull;
+  if (aContent) {
+    aContent->QueryInterface(kIDOMHTMLIFrameElementIID, (void**) &frameElem);
+    mIsInline = (frameElem) ? PR_TRUE : PR_FALSE;
+    NS_IF_RELEASE(frameElem);
+  }
+  return nsHTMLFrameOuterFrameSuper::Init(aPresContext, aContent, aParent,
+                                          aContext, aPrevInFlow);
+}
+
 
 PRBool
 nsHTMLFrameOuterFrame::HasBorder()
@@ -259,17 +283,7 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
 PRBool nsHTMLFrameOuterFrame::IsInline()
 { 
-  if (nsnull == mIsInline) {
-    nsIDOMHTMLFrameElement* frame = nsnull;
-    mContent->QueryInterface(kIDOMHTMLIFrameElementIID, (void**) &frame);
-    if (nsnull != frame) {
-      mIsInline = new PRBool(PR_TRUE);
-      NS_RELEASE(frame);
-    } else {
-      mIsInline = new PRBool(PR_FALSE);
-    }
-  }
-  return *mIsInline;
+  return mIsInline;
 }
 
 NS_IMETHODIMP
@@ -595,12 +609,18 @@ nsHTMLFrameInnerFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 }
 
 NS_IMETHODIMP
-nsHTMLFrameInnerFrame::Paint(nsIPresContext& aPresContext,
+nsHTMLFrameInnerFrame::Paint(nsIPresContext&      aPresContext,
                              nsIRenderingContext& aRenderingContext,
-                             const nsRect& aDirtyRect,
-                             nsFramePaintLayer aWhichLayer)
+                             const nsRect&        aDirtyRect,
+                             nsFramePaintLayer    aWhichLayer)
 {
   //printf("inner paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  // if there is not web shell paint all white.
+  if (!mWebShell) {
+    nscolor white = NS_RGB(255, 255, 255);
+    aRenderingContext.SetColor(white);
+    aRenderingContext.FillRect(mRect);
+  }
   return NS_OK;
 }
 
