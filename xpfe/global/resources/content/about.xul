@@ -33,17 +33,17 @@ Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
 
 <box align="vertical" flex="100%" style="margin: 0.5em;">
 
-<tabcontrol flex="100%" align="vertical">
-  <tabbox>
+<tabbox orient="vertical" flex="100%">
+  <tabs>
     <tab label="&aboutTab.label;"/>
     <tab label="&contributorsTab.label;"/>
-  </tabbox>
+  </tabs>
 
-  <tabpanel align="vertical" flex="100%">
+  <tabpanels orient="vertical" flex="100%">
     <iframe style="border: 1px inset gray;" src="about:"/>
     <iframe style="border: 1px inset gray;" src="credits.html"/>
-  </tabpanel>
-</tabcontrol>
+  </tabpanels>
+</tabbox>
 
 <box align="horizontal" style="margin-top: 1em;">
   <spring flex="100%"/>

@@ -4,7 +4,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="tabcontrol" extends="xul:box">
+  <binding id="tabbox" extends="xul:box">
     <content orient="vertical"/>
     <!-- pass-through implementation -->
     <implementation>
@@ -13,22 +13,22 @@
         <![CDATA[
           if (!val)
             throw Components.results.NS_ERROR_NULL_POINTER;
-          var tabbox = this.getElementsByTagNameNS(
+          var tabs = this.getElementsByTagNameNS(
               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-              "tabbox");
-          tabbox = tabbox.length ? tabbox[0] : null;
-          if (tabbox)
-            tabbox.selectedTab = val;
+              "tabs");
+          tabs = tabs.length ? tabs[0] : null;
+          if (tabs)
+            tabs.selectedTab = val;
           return val;
         ]]>
         </setter>
         <getter>
         <![CDATA[
-          var tabbox = this.getElementsByTagNameNS(
+          var tabs = this.getElementsByTagNameNS(
               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-              "tabbox");
-          tabbox = tabbox.length ? tabbox[0] : null;
-          return tabbox ? tabbox.selectedTab : null;
+              "tabs");
+          tabs = tabs.length ? tabs[0] : null;
+          return tabs ? tabs.selectedTab : null;
         ]]>
         </getter>
       </property>
@@ -36,28 +36,28 @@
     <handlers>
     <handler event="keypress" keycode="vk_tab" modifiers="control">
       <![CDATA[
-       var tabbox = this.getElementsByTagNameNS(
+       var tabs = this.getElementsByTagNameNS(
                                                 "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                "tabbox");
-       tabbox = tabbox.length ? tabbox[0] : null;
-       if (tabbox)
-         tabbox.advanceSelectedTab(1);
+                                                "tabs");
+       tabs = tabs.length ? tabs[0] : null;
+       if (tabs)
+         tabs.advanceSelectedTab(1);
        ]]>
     </handler>
     <handler event="keypress" keycode="vk_tab" modifiers="control,shift">
       <![CDATA[
-       var tabbox = this.getElementsByTagNameNS(
+       var tabs = this.getElementsByTagNameNS(
                                                 "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                "tabbox");
-       tabbox = tabbox.length ? tabbox[0] : null;
-       if (tabbox)
-         tabbox.advanceSelectedTab(-1);
+                                                "tabs");
+       tabs = tabs.length ? tabs[0] : null;
+       if (tabs)
+         tabs.advanceSelectedTab(-1);
        ]]>
     </handler>
     </handlers>
   </binding>
 
-  <binding id="tabbox" extends="xul:box">
+  <binding id="tabs" extends="xul:box">
     <implementation>
       <property name="selectedTab">
         <getter>
@@ -85,12 +85,12 @@
                 selectedIndex = i;
             }
           }
-          var tabpanel = this.parentNode.getElementsByTagNameNS(
+          var tabpanels = this.parentNode.getElementsByTagNameNS(
                                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                               "tabpanel");
-          tabpanel = tabpanel.length ? tabpanel[0] : null;
-          if (tabpanel)
-            tabpanel.index = selectedIndex;
+                               "tabpanels");
+          tabpanels = tabpanels.length ? tabpanels[0] : null;
+          if (tabpanels)
+            tabpanels.index = selectedIndex;
           return val;
         ]]>
         </setter>
@@ -132,7 +132,7 @@
     </implementation>
   </binding>
   
-  <binding id="tabpanel" extends="xul:deck">
+  <binding id="tabpanels" extends="xul:deck">
     <implementation>
       <!-- should be defined on deck! -->
       <property name="index"
@@ -158,9 +158,9 @@
           return val;
         </setter>
       </property>
-      <property name="tabbox" 
-                onget="return this.getAttribute('tabbox');"
-                onset="this.setAttribute('tabbox', val); return val;"/>
+      <property name="tabs" 
+                onget="return this.getAttribute('tabs');"
+                onset="this.setAttribute('tabs', val); return val;"/>
       <!-- XXX -->                
       <property name="selected">
         <getter>
@@ -179,13 +179,13 @@
     <handlers>
       <handler event="click" button="0">
       <![CDATA[
-        var tabbox = this.parentNode;
+        var tabs = this.parentNode;
         do {
-          if (tabbox.localName == "tabbox")
+          if (tabs.localName == "tabs")
             break;
-          tabbox = tabbox.parentNode;
-        } while(tabbox.localName != "tabcontrol");
-        tabbox.selectedTab = this;
+          tabs = tabs.parentNode;
+        } while(tabs.localName != "tabbox");
+        tabs.selectedTab = this;
         if (!this.selected) this.selected = true;
       ]]>
       </handler>

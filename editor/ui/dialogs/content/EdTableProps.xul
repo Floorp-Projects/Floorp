@@ -46,12 +46,12 @@
   <broadcaster id="args" value=""/>
   <keyset id="dialogKeys"/>
 
-  <tabcontrol align="vertical" orient="vertical">
-    <tabbox flex="1">
+  <tabbox orient="vertical">
+    <tabs flex="1">
       <tab id="TableTab" oncommand="SelectTableTab()" label="&tableTab.label;"/>
       <tab id="CellTab" oncommand="SelectCellTab()" label="&cellTab.label;"/>
-    </tabbox>
-    <tabpanel orient="vertical" id="TabPanel">
+    </tabs>
+    <tabpanels orient="vertical" id="TabPanels">
 
       <!-- TABLE PANEL -->
       <box id="TablePanel" orient="vertical">
@@ -271,7 +271,7 @@
         <spring flex="1"/>
       </box><!-- Cell Panel -->
 
-    </tabpanel> 
+    </tabpanels> 
     <spring class="spacer"/>
     <!-- from EdDialogOverlay -->
     <box>
@@ -279,5 +279,5 @@
       <button class="dialog" label="&applyButton.label;" oncommand="Apply();"/>
       <box id="okCancelButtons"/> 
     </box>
-  </tabcontrol>
+  </tabbox>
 </window>

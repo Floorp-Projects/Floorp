@@ -13,10 +13,10 @@
 
   <script type="application/x-javascript" src="chrome://inspector/content/prefs/InspectorPrefs.js"/>
 
-  <tabcontrol flex="1">
-    <tabbox id="tbxPrefs"/>
-    <tabpanel id="tbpPrefs" flex="1"/>
-  </tabcontrol>
+  <tabbox flex="1">
+    <tabs id="tabsPrefs"/>
+    <tabpanels id="tabpanelsPrefs" flex="1"/>
+  </tabbox>
 
   <box id="okCancelButtonsRight"/>
 </window>

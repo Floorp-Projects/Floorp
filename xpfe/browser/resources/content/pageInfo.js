@@ -68,11 +68,11 @@ function onLoadPageInfo()
 
     if (tabName)
     {
-      var tabControl = document.getElementById("tabcontrol");
+      var tabbox = document.getElementById("tabbox");
       var tab = document.getElementById(tabName);
 
-      if (tabControl && tab) {
-        tabControl.selectedTab = tab;
+      if (tabbox && tab) {
+        tabbox.selectedTab = tab;
       }
     }
   }

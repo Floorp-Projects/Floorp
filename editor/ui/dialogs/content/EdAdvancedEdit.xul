@@ -64,13 +64,13 @@
   
   <separator class="thin"/>
   
-  <tabcontrol align="vertical" orient="vertical" flex="1">
-    <tabbox>
+  <tabbox orient="vertical" flex="1">
+    <tabs>
       <tab label="&tabHTML.label;"/>
       <tab label="&tabCSS.label;"/>
       <tab label="&tabJSE.label;"/>
-    </tabbox>
-    <tabpanel flex="1">
+    </tabs>
+    <tabpanels flex="1">
       <!-- ============================================================== -->
       <!--                        HTML Attributes                         -->
       <!-- ============================================================== -->
@@ -191,8 +191,8 @@
         </box>
       </box>
       <!-- ============================================================== -->
-    </tabpanel>
-  </tabcontrol>
+    </tabpanels>
+  </tabbox>
   <spring class="spacer"/>
   <box id="okCancelButtonsRight"/> 
 
