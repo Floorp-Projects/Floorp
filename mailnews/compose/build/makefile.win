@@ -84,7 +84,6 @@ LLIBS=										\
 			$(DIST)\lib\raptorbase.lib		\
 			$(DIST)\lib\plc3.lib			\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
-#			$(DIST)\lib\msgcoreutil.lib		\
 			$(DIST)\lib\msgcompose.lib		\
 			$(DIST)\lib\appcores.lib		\
 			$(DIST)\lib\netlib.lib			\
