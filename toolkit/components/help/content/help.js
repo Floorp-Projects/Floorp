@@ -39,7 +39,6 @@
 
 # Global Variables
 var helpBrowser;
-var helpWindow;
 var helpSearchPanel;
 var emptySearch;
 var emptySearchText
@@ -117,7 +116,6 @@ function displayTopic(topic) {
 # Initialize the Help window
 function init() {
     // Cache panel references.
-    helpWindow = document.getElementById("help");
     helpSearchPanel = document.getElementById("help-search-panel");
     helpTocPanel = document.getElementById("help-toc-panel");
     helpIndexPanel = document.getElementById("help-index-panel");
@@ -184,8 +182,7 @@ function loadHelpRDF() {
             log("Help file: " + helpFileURI + " was not found.");
         }
         try {
-            helpWindow.setAttribute("title",
-                getAttribute(helpFileDS, RDF_ROOT, NC_TITLE, ""));
+            document.title = getAttribute(helpFileDS, RDF_ROOT, NC_TITLE, "");
             helpBaseURI = getAttribute(helpFileDS, RDF_ROOT, NC_BASE, helpBaseURI);
             defaultTopic = getAttribute(helpFileDS,
                 RDF_ROOT, NC_DEFAULTTOPIC, "welcome");
