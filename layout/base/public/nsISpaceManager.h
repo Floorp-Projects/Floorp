@@ -106,7 +106,7 @@ public:
   /**
    * Returns the y-most of the bottommost band or 0 if there are no bands.
    *
-   * @return  NS_OK if there are bands and NS_COMFALSE if there are
+   * @return  NS_OK if there are bands and NS_ERROR_ABORT if there are
    *          no bands
    */
   NS_IMETHOD YMost(nscoord& aYMost) const = 0;

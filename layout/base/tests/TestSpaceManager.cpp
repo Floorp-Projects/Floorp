@@ -728,7 +728,7 @@ PRBool MySpaceManager::TestGetBandData()
   NS_ASSERTION(mBandList.IsEmpty(), "clear regions failed");
 
   // Make sure YMost() returns the correct result
-  if (YMost(yMost) != NS_COMFALSE) {
+  if (NS_ERROR_ABORT != YMost(yMost)) {
     printf("TestGetBandData: YMost() returned wrong result (#1)\n");
     return PR_FALSE;
   }
@@ -744,7 +744,7 @@ PRBool MySpaceManager::TestGetBandData()
   NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
 
   // Verify that YMost() is correct
-  if ((YMost(yMost) != NS_OK) || (yMost != 200)) {
+  if ((NS_OK != YMost(yMost)) || (yMost != 200)) {
     printf("TestGetBandData: YMost() returned wrong value (#2)\n");
     return PR_FALSE;
   }
