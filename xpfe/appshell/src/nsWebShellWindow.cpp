@@ -439,12 +439,8 @@ nsWebShellWindow::Close()
     shellAsWin->Destroy();
     NS_RELEASE(mWebShell);
   }
-
  
-   	
   NS_IF_RELEASE(mWindow);
-  
-
 
   return rv;
 }
@@ -478,11 +474,23 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
        * For size events, the WebShell must be resized to fill the entire
        * client area of the window...
        */
+      case NS_MOVE:
+        void* data;
+        nsWebShellWindow *win;
+        aEvent->widget->GetClientData(data);
+        win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
+        win->StoreBoundsToXUL(PR_TRUE, PR_FALSE);
+        break;
       case NS_SIZE: {
+        void* data;
+        nsWebShellWindow *win;
         nsSizeEvent* sizeEvent = (nsSizeEvent*)aEvent;
         nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(webShell));
         shellAsWin->SetPositionAndSize(0, 0, sizeEvent->windowSize->width, 
           sizeEvent->windowSize->height, PR_FALSE);  
+        aEvent->widget->GetClientData(data);
+        win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
+        win->StoreBoundsToXUL(PR_FALSE, PR_TRUE);
         result = nsEventStatus_eConsumeNoDefault;
         break;
       }
@@ -1977,10 +1985,9 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   ShowAppropriateChrome();
   LoadContentAreas();
   
+  SetBoundsFromXUL(PR_TRUE, PR_TRUE /* !mIntrinsicallySized */);
   if (mIntrinsicallySized)
     mWebShell->SizeToContent();
-  else
-    SetSizeFromXUL();
 
   // Here's where we service the "show" request initially given in Initialize()
   if (mCreatedVisible)
@@ -2197,44 +2204,128 @@ void nsWebShellWindow::ExecuteStartupCode()
 /* This simply reads attributes from the window tag and blindly sets the size
    to whatever it finds within.
 */
-void nsWebShellWindow::SetSizeFromXUL()
+void nsWebShellWindow::SetBoundsFromXUL(PRBool aPosition, PRBool aSize)
 {
   nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
   nsIWidget *windowWidget = GetWidget();
   nsCOMPtr<nsIDOMElement> webshellElement;
-  nsString sizeString;
+  nsAutoString sizeString;
   PRInt32 errorCode,
-          specWidth, specHeight,
+          specX, specY, specWidth, specHeight,
           specSize;
-  nsRect  currentSize;
+  nsRect  currentBounds;
 
   if (webshellNode)
     webshellElement = do_QueryInterface(webshellNode);
   if (!webshellElement || !windowWidget) // it's hopeless
     return;
 
-  // first guess: use current size
-  mWindow->GetBounds(currentSize);
-  specWidth = currentSize.width;
-  specHeight = currentSize.height;
+  mWindow->GetBounds(currentBounds);
 
-  // read "height" attribute
-  if (NS_SUCCEEDED(webshellElement->GetAttribute("height", sizeString))) {
-    specSize = sizeString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode) && specSize > 0)
-      specHeight = specSize;
+  if (aPosition) {
+    // first guess: use current position
+    specX = currentBounds.x;
+    specY = currentBounds.y;
+
+    // read position attributes
+    if (NS_SUCCEEDED(webshellElement->GetAttribute("screenX", sizeString))) {
+      specSize = sizeString.ToInteger(&errorCode);
+      if (NS_SUCCEEDED(errorCode) && specSize > 0)
+        specX = specSize;
+    }
+    if (NS_SUCCEEDED(webshellElement->GetAttribute("screenY", sizeString))) {
+      specSize = sizeString.ToInteger(&errorCode);
+      if (NS_SUCCEEDED(errorCode) && specSize > 0)
+        specY = specSize;
+    }
+
+    // position the window
+    if (specX != currentBounds.x || specY != currentBounds.y)
+      MoveTo(specX, specY);
   }
 
-  // read "width" attribute
-  if (NS_SUCCEEDED(webshellElement->GetAttribute("width", sizeString))) {
-    specSize = sizeString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode) || specSize > 0)
-      specWidth = specSize;
+  if (aSize) {
+    // first guess: use current size
+    specWidth = currentBounds.width;
+    specHeight = currentBounds.height;
+
+    // read "height" attribute
+    if (NS_SUCCEEDED(webshellElement->GetAttribute("height", sizeString))) {
+      specSize = sizeString.ToInteger(&errorCode);
+      if (NS_SUCCEEDED(errorCode) && specSize > 0) {
+        specHeight = specSize;
+        mIntrinsicallySized = PR_FALSE;
+      }
+    }
+
+    // read "width" attribute
+    if (NS_SUCCEEDED(webshellElement->GetAttribute("width", sizeString))) {
+      specSize = sizeString.ToInteger(&errorCode);
+      if (NS_SUCCEEDED(errorCode) || specSize > 0) {
+        specWidth = specSize;
+        mIntrinsicallySized = PR_FALSE;
+      }
+    }
+
+    if (specWidth != currentBounds.width || specHeight != currentBounds.height)
+      windowWidget->Resize(specWidth, specHeight, PR_TRUE);
+  }
+} // SetBoundsFromXUL
+
+
+/* copy the window's size and position to the window tag */
+void nsWebShellWindow::StoreBoundsToXUL(PRBool aPosition, PRBool aSize)
+{
+  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
+  nsCOMPtr<nsIDOMElement> webshellElement;
+  nsAutoString sizeString,
+               persistString;
+  char         sizeBuf[10];
+  nsRect       currentSize;
+
+  if (webshellNode)
+    webshellElement = do_QueryInterface(webshellNode);
+  if (!webshellElement) // it's hopeless
+    return;
+
+  GetWindowBounds(currentSize);
+  // (But only for size elements which are persisted.)
+  /* Note we use the same cheesy way to determine that as in
+     nsXULDocument.cpp. Some day that'll be fixed and there will
+     be an obscure bug here. */
+  /* Note that storing sizes which are not persisted makes it
+     difficult to distinguish between windows intrinsically sized
+     and not. */
+  webshellElement->GetAttribute("persist", persistString);
+
+  if (aPosition) {
+    if (persistString.Find("screenX") >= 0) {
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long) currentSize.x);
+      sizeString = sizeBuf;
+      webshellElement->SetAttribute("screenX", sizeString);
+    }
+
+    if (persistString.Find("screenY") >= 0) {
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long) currentSize.y);
+      sizeString = sizeBuf;
+      webshellElement->SetAttribute("screenY", sizeString);
+    }
   }
 
-  if (specWidth != currentSize.width || specHeight != currentSize.height)
-    windowWidget->Resize(specWidth, specHeight, PR_TRUE);
-} // SetSizeFromXUL
+  if (aSize) {
+    if (persistString.Find("width") >= 0) {
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long) currentSize.width);
+      sizeString = sizeBuf;
+      webshellElement->SetAttribute("width", sizeString);
+    }
+
+    if (persistString.Find("height") >= 0) {
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long) currentSize.height);
+      sizeString = sizeBuf;
+      webshellElement->SetAttribute("height", sizeString);
+    }
+  }
+} // StoreBoundsToXUL
 
 
 void nsWebShellWindow::SetTitleFromXUL()
@@ -2662,8 +2753,9 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
  
 NS_IMETHODIMP nsWebShellWindow::MoveTo(PRInt32 aX, PRInt32 aY)
 {
-   mWindow->Move(aX, aY);
-   return NS_OK;
+  mWindow->Move(aX, aY);
+  StoreBoundsToXUL(PR_TRUE, PR_FALSE);
+  return NS_OK;
 }
  
 NS_IMETHODIMP nsWebShellWindow::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight)
@@ -2671,9 +2763,10 @@ NS_IMETHODIMP nsWebShellWindow::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight)
   // XXX We have to look at the delta between our content shell's 
   // size and the size passed in and then resize ourselves based on that
   // delta.
-   mIntrinsicallySized = PR_FALSE; // We got changed. No more intrinsic sizing here.
-   mWindow->Resize(aWidth, aHeight, PR_TRUE);
-   return NS_OK;
+  mIntrinsicallySized = PR_FALSE; // We got changed. No more intrinsic sizing here.
+  mWindow->Resize(aWidth, aHeight, PR_TRUE);
+  StoreBoundsToXUL(PR_FALSE, PR_TRUE);
+  return NS_OK;
 }
  
 NS_IMETHODIMP nsWebShellWindow::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
@@ -2687,12 +2780,15 @@ NS_IMETHODIMP nsWebShellWindow::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
      contentAsWin->GetPositionAndSize(&x, & y, &width, &height);
      widthDelta = aWidth - width;
      heightDelta = aHeight - height;
-   
-     nsRect windowBounds;
-     mWindow->GetBounds(windowBounds);
-     mWindow->Resize(windowBounds.width + widthDelta, 
-                     windowBounds.height + heightDelta,
-                     PR_TRUE);
+
+     if (widthDelta != 0 || heightDelta != 0) {
+       nsRect windowBounds;
+       mWindow->GetBounds(windowBounds);
+       mWindow->Resize(windowBounds.width + widthDelta, 
+                       windowBounds.height + heightDelta,
+                       PR_TRUE);
+       StoreBoundsToXUL(PR_FALSE, PR_TRUE);
+     }
    }
    return NS_OK;
 }
