@@ -145,13 +145,13 @@ Rights Reserved.
   </toolbox>
 
   <hbox style="height:100px" flex="1">
-    <tree id="folderTree" style="min-width: 200px;" persist="height width" flex="1" context="folderPaneContext"/>
+    <tree id="folderTree" style="min-width: 100px;" persist="height width" flex="1" context="folderPaneContext"/>
       
     <splitter id="gray_vertical_splitter" collapse="before" persist="state">
       <grippy/>
     </splitter>
     
-    <vbox flex="1">
+    <vbox id="messengerBox" flex="1" persist="width">
       <vbox id="accountCentralBox" flex="1">
         <iframe name="accountCentralPane" flex="1" src="about:blank"/>
       </vbox>
