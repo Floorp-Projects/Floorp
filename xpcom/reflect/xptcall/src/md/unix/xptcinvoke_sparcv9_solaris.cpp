@@ -71,7 +71,6 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount, nsXPTCVariant* s)
       case nsXPTType::T_FLOAT  : *((float*)l_d) = l_s->val.f;      break;
       case nsXPTType::T_DOUBLE :
       {
-        if (regCount < 5) regCount++;
         *((double*)l_d) = l_s->val.d;
         break;
       }
