@@ -1438,6 +1438,14 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
         msgId = NS_LITERAL_STRING("accessError");
         break;
 
+    case NS_ERROR_FILE_NOT_FOUND:
+        // Helper app not found, let's verify this happened on launch
+        if (type == kLaunchError) {
+          msgId = NS_LITERAL_STRING("helperAppNotFound");
+          break;
+        }
+        // fall through
+
     default:
         // Generic read/write/launch error message.
         switch(type)
