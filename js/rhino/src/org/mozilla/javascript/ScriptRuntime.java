@@ -1204,7 +1204,8 @@ public class ScriptRuntime {
     }
 
     private static Object callOrNewSpecial(Context cx, Scriptable scope,
-                                           Object fun, Object jsThis, Object thisArg,
+                                           Object fun, Object jsThis, 
+                                           Object thisArg,
                                            Object[] args, boolean isCall,
                                            String filename, int lineNumber)
         throws JavaScriptException
@@ -1212,13 +1213,25 @@ public class ScriptRuntime {
         if (fun instanceof IdFunction) {
             IdFunction f = (IdFunction)fun;
             String name = f.getFunctionName();
-            Class cl = f.master.getClass();
-            if (name.equals("eval") && cl == NativeGlobal.class) {
-                return NativeGlobal.evalSpecial(cx, scope, thisArg, args,
-                                                filename, lineNumber);
-            }
-            if (name.equals("With") && cl == NativeWith.class) {
-                return NativeWith.newWithSpecial(cx, args, f, !isCall);
+            if (name.length() == 4) {
+                if (name.equals("eval")) {
+                    if (f.master.getClass() == NativeGlobal.class) {
+                        return NativeGlobal.evalSpecial(cx, scope, 
+                                                        thisArg, args,
+                                                        filename, lineNumber);
+                    }
+                }
+                else if (name.equals("With")) {
+                    if (f.master.getClass() == NativeWith.class) {
+                        return NativeWith.newWithSpecial(cx, args, f, !isCall);
+                    }
+                }
+                else if (name.equals("exec")) {
+                    if (f.master.getClass() == NativeScript.class) {
+                        return ((NativeScript)jsThis).
+                            exec(cx, ScriptableObject.getTopLevelScope(scope));
+                    }
+                }
             }
         }
         else if (fun instanceof FunctionObject) {
@@ -1226,8 +1239,6 @@ public class ScriptRuntime {
             Member m = fo.method;
             Class cl = m.getDeclaringClass();
             String name = m.getName();
-            if (name.equals("jsFunction_exec") && cl == NativeScript.class)
-                return ((NativeScript)jsThis).exec(cx, ScriptableObject.getTopLevelScope(scope));
             if (name.equals("exec")
                         && (cx.getRegExpProxy() != null)
                         && (cx.getRegExpProxy().isRegExp(jsThis)))
@@ -1887,8 +1898,9 @@ public class ScriptRuntime {
             script.exec(cx, global);
         } catch (JavaScriptException e) {
             throw new Error(e.toString());
+        } finally {
+            Context.exit();
         }
-        Context.exit();
         return global;
     }
 

@@ -43,7 +43,13 @@ package org.mozilla.javascript;
  * @see org.mozilla.javascript.Arguments
  * @author Norris Boyd
  */
-public final class NativeCall extends ScriptableObject {
+public final class NativeCall extends IdScriptable {
+
+    static void init(Context cx, Scriptable scope, boolean sealed) {
+        NativeCall obj = new NativeCall();
+        obj.prototypeFlag = true;
+        obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
+    }
 
     NativeCall(Context cx, Scriptable scope, NativeFunction funObj, 
                Scriptable thisObj, Object[] args)
@@ -79,16 +85,15 @@ public final class NativeCall extends ScriptableObject {
         cx.currentActivation = this;
     }
     
-    // Needed in order to use this class with ScriptableObject.defineClass
-    public NativeCall() {
+    NativeCall() {
     }
 
     public String getClassName() {
         return "Call";
     }
     
-    public static Object jsConstructor(Context cx, Object[] args, 
-                                       Function ctorObj, boolean inNewExpr)
+    private static Object jsConstructor(Context cx, Object[] args, 
+                                        Function ctorObj, boolean inNewExpr)
     {
         if (!inNewExpr) {
             throw Context.reportRuntimeError1("msg.only.from.new", "Call");
@@ -125,9 +130,47 @@ public final class NativeCall extends ScriptableObject {
         return thisObj;
     }
     
+    public int methodArity(int methodId) {
+        if (prototypeFlag) {
+            if (methodId == Id_constructor) return 1;
+        }
+        return super.methodArity(methodId);
+    }
+
+    public Object execMethod
+        (int methodId, IdFunction f,
+         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
+        throws JavaScriptException
+    {
+        if (prototypeFlag) {
+            if (methodId == Id_constructor) {
+                return jsConstructor(cx, args, f, thisObj == null);
+            }
+        }
+        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+    }
+
+    protected String getIdName(int id) {
+        if (prototypeFlag) {
+            if (id == Id_constructor) return "constructor";
+        }
+        return null;        
+    }
+    
+    protected int mapNameToId(String s) {
+        if (!prototypeFlag) { return 0; }
+        return s.equals("constructor") ? Id_constructor : 0;
+    }
+
+    private static final int
+        Id_constructor   = 1,
+        MAX_PROTOTYPE_ID = 1;
+
     NativeCall caller;
     NativeFunction funObj;
     Scriptable thisObj;
     Object[] originalArgs;
     public int debugPC;
+
+    private boolean prototypeFlag;
 }

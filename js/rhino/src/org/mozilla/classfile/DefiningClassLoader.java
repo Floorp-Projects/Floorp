@@ -21,6 +21,7 @@
  * Norris Boyd
  * Roger Lawrence
  * Patrick Beard
+ * Igor Bukanov
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -55,11 +56,10 @@ public class DefiningClassLoader extends ClassLoader {
         if (clazz == null) {
             ClassLoader loader = getClass().getClassLoader();
             if (loader != null) {
-                clazz = ClassManager.loadClass(loader, name, resolve);
-                if (clazz != null)
-                    return clazz;
+                clazz = loader.loadClass(name);
+            } else {
+                clazz = findSystemClass(name);
             }
-            clazz = findSystemClass(name);
         }
         if (resolve)
             resolveClass(clazz);

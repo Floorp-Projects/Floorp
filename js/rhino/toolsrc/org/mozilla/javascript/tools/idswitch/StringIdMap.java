@@ -47,11 +47,13 @@ public class StringIdMap {
     
     private static final String SWITCH_TAG_STR = "string_id_map";
     private static final String GENERATED_TAG_STR = "generated";
+    private static final String STRING_TAG_STR = "string";
     
     private static final int 
         NORMAL_LINE        = 0,
         SWITCH_TAG         = 1,
-        GENERATED_TAG      = 2;
+        GENERATED_TAG      = 2,
+        STRING_TAG         = 3;
 
     private final Vector all_pairs = new Vector();
 
@@ -61,6 +63,14 @@ public class StringIdMap {
     private String source_file;
     
     private int tag_definition_end;
+
+    private int tag_value_start;
+    private int tag_value_end;
+    
+    private static boolean is_value_type(int id) {
+        if (id == STRING_TAG) { return true; }
+        return false;
+    }
     
     private static String tag_name(int id) {
         switch (id) {
@@ -137,7 +147,10 @@ public class StringIdMap {
                     break;
                 case SWITCH_TAG:
                     if (tag_id == 0) {
-                        look_for_id_definitions(buffer, begin, end);
+                        look_for_id_definitions(buffer, begin, end, false);
+                    }
+                    else if (tag_id == STRING_TAG) {
+                        look_for_id_definitions(buffer, begin, end, true);
                     }
                     else if (tag_id == GENERATED_TAG) {
                         if (generated_begin >= 0) { bad_tag = true; }
@@ -222,33 +235,61 @@ public class StringIdMap {
     private int extract_line_tag_id(char[] array, int cursor, int end) {
         int id = 0;
         cursor = skip_white_space(array, cursor, end);
-        if (cursor + 2 <= end) {
-            if (array[cursor] == '/' || array[cursor + 1] == '/') {
-                cursor += 2;
-                cursor = skip_white_space(array, cursor, end);
-                if (cursor != end && array[cursor] == '#') {
-                    ++cursor;
-                    
-                    boolean end_tag = false;
-                    if (cursor != end && array[cursor] == '/') {
-                        ++cursor; end_tag = true;
-                    }
-                    
-                    int tag_start = cursor;
-                    
-                    for (; cursor != end; ++cursor) {
-                        int c = array[cursor];
-                        if (c == '#' || is_white_space(c)) { break; }
-                    }
-                    
+        int after_leading_white_space = cursor;
+        cursor = look_for_slash_slash(array, cursor, end);
+        if (cursor != end) {
+            boolean at_line_start = (after_leading_white_space + 2 == cursor);
+            cursor = skip_white_space(array, cursor, end);
+            if (cursor != end && array[cursor] == '#') {
+                ++cursor;
+
+                boolean end_tag = false;
+                if (cursor != end && array[cursor] == '/') {
+                    ++cursor; end_tag = true;
+                }
+
+                int tag_start = cursor;
+
+                for (; cursor != end; ++cursor) {
+                    int c = array[cursor];
+                    if (c == '#' || c == '=' ||is_white_space(c)) { break; }
+                }
+
+                if (cursor != end) {
+                    int tag_end = cursor;
+                    cursor = skip_white_space(array, cursor, end);
                     if (cursor != end) {
-                        int tag_end = cursor;
-                        cursor = skip_white_space(array, cursor, end);
-                        if (cursor != end && array[cursor] == '#') {
-                            id = get_tag_id(array, tag_start, tag_end);
+                        int c = array[cursor];
+                        if (c == '=' || c == '#') {
+                            id = get_tag_id
+                                (array, tag_start, tag_end, at_line_start);
                             if (id != 0) {
-                                if (end_tag) { id = -id; }
-                                tag_definition_end = cursor + 1;
+                                String bad = null;
+                                if (c == '#') {
+                                    if (end_tag) { 
+                                        id = -id; 
+                                        if (is_value_type(id)) {
+                                            bad = "msg.idswitch.no_end_usage";
+                                        }
+                                    }
+                                    tag_definition_end = cursor + 1;
+                                }
+                                else  {
+                                    if (end_tag) {
+                                        bad = "msg.idswitch.no_end_with_value";
+                                    }
+                                    else if (!is_value_type(id)) {
+                                        bad = "msg.idswitch.no_value_allowed";
+                                    }
+                                    id = extract_tag_value
+                                        (array, cursor + 1, end, id);
+                                }
+                                if (bad != null) {
+                                    String s = R.getMessage(bad, tag_name(id));
+                                    throw R.runtimeError
+                                        (s, source_file, body.getLineNumber(),
+                                         null, 0);
+                                }
                             }
                         }
                     }
@@ -258,17 +299,65 @@ public class StringIdMap {
         return id;
     }
 
-    private int get_tag_id(char[] array, int begin, int end) {
-        if (equals(SWITCH_TAG_STR, array, begin, end)) {
-            return SWITCH_TAG;
+// Return position after first of // or end if not found    
+    private int look_for_slash_slash(char[] array, int cursor, int end) {
+        while (cursor + 2 <= end) {
+            int c = array[cursor++];
+            if (c == '/') {
+                c = array[cursor++];
+                if (c == '/') {
+                    return cursor;
+                }
+            }
         }
-        if (equals(GENERATED_TAG_STR, array, begin, end)) {
-            return GENERATED_TAG;
+        return end;
+    }
+
+
+    private int extract_tag_value(char[] array, int cursor, int end, int id) {
+        // cursor points after #[^#=]+= 
+        // ALERT: implement support for quoted strings
+        boolean found = false;
+        cursor = skip_white_space(array, cursor, end);
+        if (cursor != end) {
+            int value_start = cursor;
+            for (; cursor != end; ++cursor) {
+                int c = array[cursor];
+                if (c == '#' || is_white_space(c)) { break; }
+            }
+            if (cursor != end) {
+                int value_end = cursor;
+                cursor = skip_white_space(array, cursor, end);
+                if (cursor != end && array[cursor] == '#') {
+                       found = true;
+                    tag_value_start = value_start;
+                    tag_value_end = value_end;
+                    tag_definition_end = cursor + 1;
+                }
+            }
+        }
+        return (found) ? id : 0;
+    }
+    
+    private int get_tag_id
+        (char[] array, int begin, int end, boolean at_line_start)
+    {
+        if (at_line_start) {
+            if (equals(SWITCH_TAG_STR, array, begin, end)) {
+                return SWITCH_TAG;
+            }
+            if (equals(GENERATED_TAG_STR, array, begin, end)) {
+                return GENERATED_TAG;
+            }
+        }
+        if (equals(STRING_TAG_STR, array, begin, end)) {
+            return STRING_TAG;
         }
         return 0;
     }
 
-    private void look_for_id_definitions(char[] array, int begin, int end) 
+    private void look_for_id_definitions
+        (char[] array, int begin, int end, boolean use_tag_value_as_string) 
     {
     // Look for the pattern
     // '^[ \t]+Id_([a-zA-Z0-9_]+)[ \t]*=.*$'
@@ -287,8 +376,13 @@ public class StringIdMap {
                 cursor = skip_white_space(array, cursor, end);
                 if (cursor != end) {
                     if (array[cursor] == '=') {
+                        int id_end = name_end;
+                        if (use_tag_value_as_string) {
+                            name_start = tag_value_start;
+                            name_end = tag_value_end;
+                        }
                         // Got the match
-                        add_id(array, id_start, name_end, name_start, name_end);
+                        add_id(array, id_start, id_end, name_start, name_end);
                     }
                 }
             }

@@ -59,7 +59,27 @@ import java.io.IOException;
 
 public class NativeScript extends NativeFunction implements Script {
 
+    public static void init(Context cx, Scriptable scope, boolean sealed) {
+        NativeScript obj = new NativeScript();
+        obj.scopeInit(cx, scope, sealed);
+    }
+
     public NativeScript() {
+    }
+
+    private void scopeInit(Context cx, Scriptable scope, boolean sealed) {
+        // prototypeIdShift != 0 serves as indicator of prototype instance
+        // and as id offset to take into account ids present in each instance
+        // of the base class NativeFunction. 
+        // Not to depend on the assumption NativeFunction.maxInstanceId() != 0,
+        // 1 is added super.maxInstanceId() to make sure that 
+        // prototypeIdShift != 0 in the NativeScript prototype.
+        // In a similar way the following methods use 
+        // methodId - prototypeIdShift + 1, not methodId - prototypeIdShift
+        // to unshift prototype id to [1 .. MAX_PROTOTYPE_ID] interval
+        prototypeIdShift = super.maxInstanceId() + 1;
+        addAsPrototype(MAX_PROTOTYPE_ID + prototypeIdShift - 1, 
+                       cx, scope, sealed);
     }
 
     /**
@@ -78,19 +98,63 @@ public class NativeScript extends NativeFunction implements Script {
     public void initScript(Scriptable scope) {
     }
 
+    public int methodArity(int methodId) {
+        if (prototypeIdShift != 0) {
+            switch (methodId - prototypeIdShift + 1) {
+                case Id_constructor: return 1;
+                case Id_toString:    return 0;
+                case Id_exec:        return 0;
+                case Id_compile:     return 1;
+            }
+        }
+        return super.methodArity(methodId);
+    }
+
+    public Object execMethod(int methodId, IdFunction f, Context cx,
+                             Scriptable scope, Scriptable thisObj, 
+                             Object[] args)
+        throws JavaScriptException
+    {
+        if (prototypeIdShift != 0) {
+            switch (methodId - prototypeIdShift + 1) {
+                case Id_constructor:
+                    return jsConstructor(cx, scope, args);
+
+                case Id_toString:
+                    return realThis(thisObj, f, true).
+                        jsFunction_toString(cx, args);
+
+                case Id_exec:
+                    return realThis(thisObj, f, true).jsFunction_exec();
+
+                case Id_compile:
+                    return realThis(thisObj, f, false).
+                        jsFunction_compile(ScriptRuntime.toString(args, 0));
+            }
+        }
+
+        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+    }
+
+    private NativeScript realThis(Scriptable thisObj, IdFunction f, 
+                                  boolean readOnly)
+    {
+        while (!(thisObj instanceof NativeScript)) {
+            thisObj = nextInstanceCheck(thisObj, f, readOnly);
+        }
+        return (NativeScript)thisObj;
+    }
+
     /**
      * The Java method defining the JavaScript Script constructor.
      *
      */
-    public static Object jsConstructor(Context cx, Object[] args,
-                                       Function ctorObj, boolean inNewExpr)
+    private static Object jsConstructor(Context cx, Scriptable scope, 
+                                        Object[] args)
     {
         String source = args.length == 0
                         ? ""
                         : ScriptRuntime.toString(args[0]);
-        Scriptable scope = cx.ctorScope;
-        if (scope == null)
-            scope = ctorObj;
         return compile(scope, source);
     }
 
@@ -114,23 +178,21 @@ public class NativeScript extends NativeFunction implements Script {
         }
     }
 
-    public Scriptable jsFunction_compile(String source) {
+    private Scriptable jsFunction_compile(String source) {
         script = compile(null, source);
         return this;
     }
 
-    public Object jsFunction_exec() throws JavaScriptException {
+    private Object jsFunction_exec() throws JavaScriptException {
         throw Context.reportRuntimeError1
             ("msg.cant.call.indirect", "exec");
     }
 
-    public static Object jsFunction_toString(Context cx, Scriptable thisObj,
-                                             Object[] args, Function funObj)
+    private Object jsFunction_toString(Context cx, Object[] args)
     {
-        Script thisScript = ((NativeScript) thisObj).script;
-        if (thisScript == null)
-            thisScript = (Script) thisObj;
-        Scriptable scope = getTopLevelScope(thisObj);
+        Script thisScript = script;
+        if (thisScript == null) { thisScript = this; }
+        Scriptable scope = getTopLevelScope(this);
         return cx.decompileScript(thisScript, scope, 0);
     }
     
@@ -165,6 +227,60 @@ public class NativeScript extends NativeFunction implements Script {
         throw Context.reportRuntimeError0("msg.script.is.not.constructor");
     }
 
+    protected String getIdName(int id) {
+        if (prototypeIdShift != 0) {
+            switch (id - prototypeIdShift + 1) {
+                case Id_constructor: return "constructor";
+                case Id_toString:    return "toString";
+                case Id_exec:        return "exec";
+                case Id_compile:     return "compile";
+            }
+        }
+        return super.getIdName(id);
+    }
+
+    protected int mapNameToId(String s) {
+        if (prototypeIdShift != 0) {
+            int id = toPrototypeId(s);
+            if (id != 0) { 
+                // Shift [1, MAX_PROTOTYPE_ID] to
+                // [super.maxInstanceId() + 1,
+                //    super.maxInstanceId() + MAX_PROTOTYPE_ID]
+                return id + prototypeIdShift - 1; 
+            }
+        }
+        return super.mapNameToId(s);
+    }
+
+// #string_id_map#
+
+    private static int toPrototypeId(String s) {
+        int id;
+// #generated# Last update: 2001-05-23 13:25:01 GMT+02:00
+        L0: { id = 0; String X = null;
+            L: switch (s.length()) {
+            case 4: X="exec";id=Id_exec; break L;
+            case 7: X="compile";id=Id_compile; break L;
+            case 8: X="toString";id=Id_toString; break L;
+            case 11: X="constructor";id=Id_constructor; break L;
+            }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
+        }
+// #/generated#
+        return id;
+    }
+
+    private static final int
+        Id_constructor    = 1,
+        Id_toString       = 2,
+        Id_compile        = 3,
+        Id_exec           = 4,
+        MAX_PROTOTYPE_ID  = 4;
+
+// #/string_id_map#
+
     private Script script;
+
+    private int prototypeIdShift;
 }
 

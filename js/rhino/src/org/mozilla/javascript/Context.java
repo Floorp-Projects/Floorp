@@ -657,25 +657,30 @@ public class Context {
         NativeNumber.init(this, scope, sealed);
         NativeDate.init(this, scope, sealed);
         NativeMath.init(this, scope, sealed);
+
         NativeWith.init(this, scope, sealed);
+        NativeCall.init(this, scope, sealed);
+        NativeScript.init(this, scope, sealed);
 
-        String[] classes = {
-            "org.mozilla.javascript.NativeCall",          "Call",
-            "org.mozilla.javascript.regexp.NativeRegExp", "RegExp",
-            "org.mozilla.javascript.NativeScript",        "Script",
+        new LazilyLoadedCtor(scope, 
+                             "RegExp",
+                             "org.mozilla.javascript.regexp.NativeRegExp",
+                             sealed);
 
-            // This creates the Packages and java package roots.
-            "org.mozilla.javascript.NativeJavaPackage",   "Packages",
-            "org.mozilla.javascript.NativeJavaPackage",   "java",
-            "org.mozilla.javascript.NativeJavaPackage",   "getClass",
-        };
-
-        for (int i=0; i < classes.length; i+=2) {
-            String property = classes[i+1];
-            String javaClass = classes[i];
-            new LazilyLoadedCtor(scope, property, javaClass, sealed);
-        }
-
+        // This creates the Packages and java package roots.
+        new LazilyLoadedCtor(scope, 
+                             "Packages",
+                             "org.mozilla.javascript.NativeJavaPackage",
+                             sealed);
+        new LazilyLoadedCtor(scope, 
+                             "java", 
+                             "org.mozilla.javascript.NativeJavaPackage",
+                             sealed);
+        new LazilyLoadedCtor(scope, 
+                             "getClass",
+                             "org.mozilla.javascript.NativeJavaPackage",
+                             sealed);
+ 
         // Define the JavaAdapter class, allowing it to be overridden.
         String adapterClass = "org.mozilla.javascript.JavaAdapter";
         String adapterProperty = "JavaAdapter";
@@ -694,7 +699,7 @@ public class Context {
 
         return scope;
     }
-
+    
     /**
      * Get the singleton object that represents the JavaScript Undefined value.
      */
@@ -1904,7 +1909,6 @@ public class Context {
     Hashtable iterating;
             
     Object interpreterSecurityDomain;
-    Scriptable ctorScope;
 
     int version;
     int errorCount;

@@ -1,0 +1,147 @@
+Notes on StringIdMap (main class org.mozilla.javascript.tools.idswitch.StringIdMap) utility
+
+The main purpose of this utility is to generate Java code to map strings to some ids that can be used, for example, in switch statement. 
+
+The utility scans the file for lines with the following structure: 
+
+// #string_id_map#
+... <DEFINITION AREA>
+// #generated#
+...<GENERATED AREA>
+// #/generated#
+... <DEFINITION AREA>
+// #/string_id_map#
+
+Then every line in <DEFINITION AREA> is scanned for the pattern:
+^[ \t]*Id_([0-9a-zA-Z_]+)[ \t]*=.*$
+
+Each such patterns adds a mapping form string $1 to Id_\$ or if the line also contains the pattern //\s*#string=\s*([^#]+)\s*#, then it adds map of $1 in this pattern to Id_\$
+
+After that lines in <GENERATED AREA> are replaced by a code block that sets variable "id" to Id_<name> if variable "s" equals <name> or 0 otherwise. 
+If the new code is not identical to the old one, then time stamp is appended after #generated#.
+
+For example, if file x.java contains:
+
+// #string_id_map#
+
+    private int getId(String s) {
+        int id;
+// #generated# Initial version
+// #/generated#
+        return id;
+    }
+    
+    private static final int
+        Id_x     = 1,
+        Id_y     = 2,
+        Id_hello = 3,
+        Id_nice  = 4,
+        Id_world = 5,
+        Id_for   = 6,
+        Id_bar   = 7;
+    
+// #/string_id_map#
+
+....
+
+    private double getFieldValue(String s) {
+
+// #string_id_map#
+    final int 
+        Id_field1 = 1,
+        Id_field2 = 2,
+        Id_field3 = 3,
+        Id_one_more_field = 4;
+
+        int id;
+// #generated# Initial version
+// #/generated#
+// #/string_id_map#
+        switch (id) {
+            case Id_field1: return field1;
+            case Id_field2: return field2;
+            case Id_field3: return field3;
+            case Id_one_more_field: return one_more_field;
+        }
+        throw new RuntimeException("No such field");
+    }
+    
+
+then invocation
+java org.mozilla.javascript.tools.string_switch.StringIdMap x.java
+would replace that by a code fragment similar to:
+
+// #string_id_map#
+
+    private int getId(String s) {
+        int id;
+// #generated# Last update: 2001-03-23 13:34:10 GMT+01:00
+        L0: { id = 0; String X = null; int c;
+            L: switch (s.length()) {
+            case 1: c=s.charAt(0);
+                if (c=='x') { id=Id_x; break L0; }
+                else if (c=='y') { id=Id_y; break L0; }
+                break L;
+            case 3: c=s.charAt(0);
+                if (c=='b') { if (s.charAt(2)=='r' && s.charAt(1)=='a') {id=Id_bar; break L0;} }
+                else if (c=='f') { if (s.charAt(2)=='r' && s.charAt(1)=='o') {id=Id_for; break L0;} }
+                break L;
+            case 4: X="nice";id=Id_nice; break L;
+            case 5: c=s.charAt(0);
+                if (c=='h') { X="hello";id=Id_hello; }
+                else if (c=='w') { X="world";id=Id_world; }
+                break L;
+            }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
+        }
+// #/generated#
+        return id;
+    }
+    
+    private static final int
+        Id_x     = 1,
+        Id_y     = 2,
+        Id_hello = 3,
+        Id_nice  = 4,
+        Id_world = 5,
+        Id_for   = 6,
+        Id_bar   = 7;
+    
+// #/string_id_map#
+
+....
+
+    private double getFieldValue(String s) {
+
+// #string_id_map#
+    final int 
+        Id_field1 = 1,
+        Id_field2 = 2,
+        Id_field3 = 3,
+        Id_one_more_field = 4;
+
+        int id;
+// #generated# Last update: 2001-03-23 13:34:10 GMT+01:00
+        L0: { id = 0; String X = null; int c;
+            int s_length = s.length();
+            if (s_length==6) {
+                c=s.charAt(5);
+                if (c=='1') { X="field1";id=Id_field1; }
+                else if (c=='2') { X="field2";id=Id_field2; }
+                else if (c=='3') { X="field3";id=Id_field3; }
+            }
+            else if (s_length==14) { X="one_more_field";id=Id_one_more_field; }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
+        }
+// #/generated#
+// #/string_id_map#
+        switch (id) {
+            case Id_field1: return field1;
+            case Id_field2: return field2;
+            case Id_field3: return field3;
+            case Id_one_more_field: return one_more_field;
+        }
+        throw new RuntimeException("No such field");
+    }
+    
+
