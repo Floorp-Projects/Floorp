@@ -2024,7 +2024,13 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
-
+    
+    if(pauseForMoreData)
+	{
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
+	}
+	
 	if(status > 1)
 	{
 #ifdef UNREADY_CODE
