@@ -563,9 +563,19 @@ nsFrameImageLoader::DamageRepairFrames(const nsRect* aDamageRect)
   while (nsnull != pfd) {
     nsIFrame* frame = pfd->mFrame;
 
-    if (nsnull == aDamageRect) {
+    // NOTE: It is not sufficient to invalidate only the size of the image:
+    //       the image may be tiled! 
+    //       The best option is to call into the frame, however lacking this
+    //       we have to at least invalidate the frame's bounds, hence
+    //       as long as we have a frame we'll use its size.
+    //
+    // XXX - Add a NotifyImageLoaded to nsIFrame and call that, passing the 
+    //       damage rect (image size)
+
+    NS_ASSERTION(frame, "Frame should not be null and be remembered");
+    if (frame) {
       // Invalidate the entire frame
-      // XXX We really only need to invalidate the clientg area of the frame...
+      // XXX We really only need to invalidate the client area of the frame...
       frame->GetRect(bounds);
       bounds.x = bounds.y = 0;
     }
