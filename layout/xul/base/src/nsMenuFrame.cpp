@@ -243,8 +243,12 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
         if (isActive) cancel = PR_FALSE;
       }
       
-      if (cancel)
-        mMenuParent->SetCurrentMenuItem(nsnull);
+      if (cancel) {
+        if (IsMenu() && !isMenuBar && mMenuOpen) {
+          // Submenus don't get closed up.
+        }
+        else mMenuParent->SetCurrentMenuItem(nsnull);
+      }
     }
   }
   else if (aEvent->message == NS_MOUSE_MOVE && mMenuParent) {
@@ -480,14 +484,19 @@ void
 nsMenuFrame::Notify(nsITimer* aTimer)
 {
   // Our timer has fired.
-  if (!mMenuOpen && mMenuParent) {
-    nsAutoString active = "";
-    mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, active);
-    if (active == "true") {
-      // We're still the active menu.
-      OpenMenu(PR_TRUE);
+  if (aTimer == mOpenTimer.get()) {
+    if (!mMenuOpen && mMenuParent) {
+      nsAutoString active = "";
+      mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, active);
+      if (active == "true") {
+        // We're still the active menu.
+        OpenMenu(PR_TRUE);
+      }
     }
+    mOpenTimer->Cancel();
+    mOpenTimer = nsnull;
   }
+  
   mOpenTimer = nsnull;
 }
 

@@ -486,11 +486,16 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 
     aHandledFlag = PR_TRUE;
   }
-  else if (aDirection == NS_VK_LEFT && mCurrentMenu &&
-           menuFrame->IsMenu()) {
-    // Close it up.
+  else if (mCurrentMenu && menuFrame->IsMenu() && menuFrame->IsOpen()) {
     aHandledFlag = PR_TRUE;
-    menuFrame->OpenMenu(PR_FALSE);
+    if (aDirection == NS_VK_LEFT) {
+      // Close it up.
+      menuFrame->OpenMenu(PR_FALSE);
+    }
+    else if (aDirection == NS_VK_RIGHT) {
+      // Select the first item.
+      menuFrame->SelectFirstItem();
+    }
   }
 }
 
