@@ -111,7 +111,7 @@ sub check_password {
 sub change_password {
     my ($class, $userid, $password) = @_;
     my $dbh = Bugzilla->dbh;
-    my $cryptpassword = Crypt($password);
+    my $cryptpassword = bz_crypt($password);
     $dbh->do("UPDATE profiles SET cryptpassword = ? WHERE userid = ?", 
              undef, $cryptpassword, $userid);
 }

@@ -28,6 +28,7 @@ use lib qw(.);
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Search;
+use Bugzilla::Auth;
 
 require "CGI.pl";
 
@@ -94,7 +95,7 @@ sub SaveAccount {
               || ThrowUserError("new_password_missing");
             ValidatePassword($pwd1, $pwd2);
         
-            my $cryptedpassword = SqlQuote(Crypt($pwd1));
+            my $cryptedpassword = SqlQuote(bz_crypt($pwd1));
             SendSQL("UPDATE profiles 
                      SET    cryptpassword = $cryptedpassword 
                      WHERE  userid = $userid");

@@ -38,6 +38,7 @@ require "globals.pl";
 use Bugzilla;
 use Bugzilla::User;
 use Bugzilla::Constants;
+use Bugzilla::Auth;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
@@ -452,7 +453,7 @@ if ($action eq 'new') {
             "emailflags, disabledtext" .
             " ) VALUES ( " .
             SqlQuote($user) . "," .
-            SqlQuote(Crypt($password)) . "," .
+            SqlQuote(bz_crypt($password)) . "," .
             SqlQuote($realname) . "," .
             SqlQuote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS) . "," .
             SqlQuote($disabledtext) . ")" );
@@ -784,7 +785,7 @@ if ($action eq 'update') {
     if ( $editall && $password ) {
         my $passworderror = ValidatePassword($password);
         if ( !$passworderror ) {
-            my $cryptpassword = SqlQuote(Crypt($password));
+            my $cryptpassword = SqlQuote(bz_crypt($password));
             my $loginname = SqlQuote($userold);
             SendSQL("UPDATE  profiles
                      SET     cryptpassword = $cryptpassword

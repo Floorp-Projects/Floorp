@@ -33,6 +33,7 @@ use vars qw($template $vars);
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Auth;
 
 my $cgi = Bugzilla->cgi;
 
@@ -192,7 +193,7 @@ sub cancelChangePassword {
 
 sub changePassword {
     # Quote the password and token for inclusion into SQL statements.
-    my $cryptedpassword = Crypt($cgi->param('password'));
+    my $cryptedpassword = bz_crypt($cgi->param('password'));
     my $quotedpassword = SqlQuote($cryptedpassword);
 
     # Get the user's ID from the tokens table.

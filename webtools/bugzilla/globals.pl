@@ -34,6 +34,7 @@ use Bugzilla::Util;
 # Bring ChmodDataFile in until this is all moved to the module
 use Bugzilla::Config qw(:DEFAULT ChmodDataFile $localconfig $datadir);
 use Bugzilla::BugMail;
+use Bugzilla::Auth;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
@@ -414,7 +415,7 @@ sub InsertNewUser {
 
     # Generate a new random password for the user.
     my $password = GenerateRandomPassword();
-    my $cryptpassword = Crypt($password);
+    my $cryptpassword = bz_crypt($password);
 
 
     my $defaultflagstring = SqlQuote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS); 
@@ -694,39 +695,6 @@ sub ValidatePassword {
     } elsif ((defined $matchpassword) && ($password ne $matchpassword)) {
         ThrowUserError("passwords_dont_match");
     }
-}
-
-
-sub Crypt {
-    # Crypts a password, generating a random salt to do it.
-    # Random salts are generated because the alternative is usually
-    # to use the first two characters of the password itself, and since
-    # the salt appears in plaintext at the beginning of the crypted
-    # password string this has the effect of revealing the first two
-    # characters of the password to anyone who views the crypted version.
-
-    my ($password) = @_;
-
-    # The list of characters that can appear in a salt.  Salts and hashes
-    # are both encoded as a sequence of characters from a set containing
-    # 64 characters, each one of which represents 6 bits of the salt/hash.
-    # The encoding is similar to BASE64, the difference being that the
-    # BASE64 plus sign (+) is replaced with a forward slash (/).
-    my @saltchars = (0..9, 'A'..'Z', 'a'..'z', '.', '/');
-
-    # Generate the salt.  We use an 8 character (48 bit) salt for maximum
-    # security on systems whose crypt uses MD5.  Systems with older
-    # versions of crypt will just use the first two characters of the salt.
-    my $salt = '';
-    for ( my $i=0 ; $i < 8 ; ++$i ) {
-        $salt .= $saltchars[rand(64)];
-    }
-
-    # Crypt the password.
-    my $cryptedpassword = crypt($password, $salt);
-
-    # Return the crypted password.
-    return $cryptedpassword;
 }
 
 sub DBID_to_real_or_loginname {

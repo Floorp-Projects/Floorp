@@ -1464,6 +1464,14 @@ if ($^O !~ /MSWin32/i) {
 # The only use for loading globals.pl is for Crypt(), which should at some
 # point probably be factored out into Bugzilla::Auth::*
 
+# XXX - bug 278792: Crypt has been moved to Bugzilla::Auth::bz_crypt.
+# This section is probably no longer needed, but we need to make sure
+# that things still work if we remove globals.pl. So that's for later.
+
+# It's safe to use Bugzilla::Auth here because parameters have now been
+# defined.
+use Bugzilla::Auth;
+
 # globals.pl clears the PATH, but File::Find uses Cwd::cwd() instead of
 # Cwd::getcwd(), which we need to do because `pwd` isn't in the path - see
 # http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-09/msg00115.html
@@ -2776,7 +2784,7 @@ if (GetFieldDef('bugs', 'long_desc')) {
                                  "(login_name, cryptpassword," .
                                  " disabledtext) VALUES (" .
                                  $dbh->quote($name) .
-                                 ", " . $dbh->quote(Crypt('okthen')) . ", " . 
+                                 ", " . $dbh->quote(bz_crypt('okthen')) . ", " . 
                                  "'Account created only to maintain database integrity')");
                         $s2 = $dbh->prepare("SELECT LAST_INSERT_ID()");
                         $s2->execute();
@@ -3200,7 +3208,7 @@ ENDTEXT
 
     print "Fixing password #1... ";
     while (my ($userid, $password) = $sth->fetchrow_array()) {
-        my $cryptpassword = $dbh->quote(Crypt($password));
+        my $cryptpassword = $dbh->quote(bz_crypt($password));
         $dbh->do("UPDATE profiles SET cryptpassword = $cryptpassword WHERE userid = $userid");
         ++$i;
         # Let the user know where we are at every 500 records.
@@ -4474,7 +4482,7 @@ if ($sth->rows == 0) {
     }
 
     # Crypt the administrator's password
-    my $cryptedpassword = Crypt($pass1);
+    my $cryptedpassword = bz_crypt($pass1);
 
     if ($^O !~ /MSWin32/i) {
         system("stty","echo"); # re-enable input echoing
