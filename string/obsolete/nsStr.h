@@ -27,6 +27,8 @@
        We chose the option B for performance reasons. 
 
     2  Our internal buffer always holds capacity+1 bytes.
+    3. Note that our internal format for this class makes our memory 
+       layout compatible with BStrings.
 
     The nsStr struct is a simple structure (no methods) that contains
     the necessary info to be described as a string. This simple struct
@@ -42,12 +44,41 @@
 #ifndef _nsStr
 #define _nsStr
 
-#include "nsCore.h"
+#include "prtypes.h"
+#include "nscore.h"
 
 //----------------------------------------------------------------------------------------
 
 enum  eCharSize {eOneByte=0,eTwoByte=1};
 #define kDefaultCharSize eTwoByte
+
+
+union UStrPtr { 
+  char*       mCharBuf;
+  PRUnichar*  mUnicharBuf;
+}; 
+
+/**************************************************************************
+  Here comes the nsBufDescriptor class which describes buffer properties.
+ **************************************************************************/
+
+struct nsBufDescriptor {
+  nsBufDescriptor(char* aBuffer,PRUint32 aBufferSize,eCharSize aCharSize,PRBool aOwnsBuffer) {
+    mStr=aBuffer;
+    mMultibyte=aCharSize;
+    mCapacity=(aBufferSize>>mMultibyte)-1;
+    mOwnsBuffer=aOwnsBuffer;
+  }
+
+  PRUint32        mCapacity;
+  PRBool          mOwnsBuffer;
+  eCharSize       mMultibyte;
+//  UStrPtr         mStr;
+  union { 
+    char*         mStr;
+    PRUnichar*    mUStr;
+  };
+};
 
 
 class nsIMemoryAgent;
@@ -65,15 +96,6 @@ struct nsStr {
   * @param  aCharSize tells us the requested char size (1 or 2 bytes)
   */
   static void Initialize(nsStr& aDest,eCharSize aCharSize);
-
- /**
-  * This method initializes an nsStr for use
-  *
-  * @update	gess 01/04/99
-  * @param  aString is the nsStr to be initialized
-  * @param  aCharSize tells us the requested char size (1 or 2 bytes)
-  */
-  static void Initialize(nsStr& aDest,char* aCString,PRUint32 aCapacity,PRUint32 aLength,eCharSize aCharSize,PRBool aOwnsBuffer);
 
  /**
   * This method destroys the given nsStr, and *MAY* 
@@ -144,7 +166,7 @@ struct nsStr {
   * @param  aCount tells us the (max) # of chars to delete
   * @param  anAgent is the allocator to be used for alloc/free operations
   */
-  static void Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount,nsIMemoryAgent* anAgent=0);
+  static void Delete(nsStr& aDest,PRUint32 aDestOffset,PRInt32 aCount,nsIMemoryAgent* anAgent=0);
 
  /**
   * This method is used to truncate the given string.
@@ -232,20 +254,21 @@ struct nsStr {
   static PRInt32 RFindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRUint32 anOffset);
   static PRInt32 RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRUint32 anOffset);
 
+ /**
+  * This method is used to access a given char in the given string
+  *
+  * @update	gess 01/04/99
+  * @param  aDest is the nsStr to be appended to
+  * @param  anIndex tells us where in dest to get the char from
+  * @return the given char, or 0 if anIndex is out of range
+  */
+  static PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex);
 
-#ifdef  NS_DEBUG
-  PRUint32        mLength;
-  eCharSize       mMultibyte;
-  PRUint32        mCapacity;
-  PRUint32        mOwnsBuffer;
-  PRUint32        mUnused;
-#else
-  PRUint32        mLength:      30;
-  eCharSize       mMultibyte:    2;
+  PRUint32        mLength   :   30;
+  eCharSize       mMultibyte :   2;
   PRUint32        mCapacity:    30;
-  PRUint32        mOwnsBuffer:   1;
-  PRUint32        mUnused:       1;
-#endif
+  PRUint32        mOwnsBuffer:  1;
+  PRUint32        mUnused:      1;
   union { 
     char*         mStr;
     PRUnichar*    mUStr;
@@ -284,21 +307,6 @@ inline void AddNullTerminator(nsStr& aDest) {
   else aDest.mStr[aDest.mLength]=0;
 }
 
-/**
-* This method is used to access a given char in the given string
-*
-* @update	gess 01/04/99
-* @param  aDest is the nsStr to be appended to
-* @param  anIndex tells us where in dest to get the char from
-* @return the given char, or 0 if anIndex is out of range
-*/
-inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex){
-  if(anIndex<aDest.mLength)  {
-    return (eTwoByte==aDest.mMultibyte) ? aDest.mUStr[anIndex] : aDest.mStr[anIndex];
-  }//if
-  return 0;
-}
-
 //----------------------------------------------------------------------------------------
 
 class nsIMemoryAgent {
@@ -309,18 +317,25 @@ public:
 };
 
 class nsMemoryAgent : public nsIMemoryAgent {
-protected:
-  enum eDelta{eDefaultSize=16};
+  enum eDelta{eGrowthDelta=8};
 public:
-
   virtual PRBool Alloc(nsStr& aDest,PRInt32 aCount) {
     
-    //we're given the acount value in charunits; now scale up to next multiple.
-  	PRInt32	theNewCapacity=eDefaultSize;
-    while(theNewCapacity<aCount){ 
-		  theNewCapacity<<=1;
+    //we're given the acount value in charunits; we have to scale up by the charsize.
+
+    PRInt32 theNewCapacity;
+    if (aDest.mCapacity > 64) {
+      // When the string starts getting large, double the capacity as we grow.
+      theNewCapacity = aDest.mCapacity * 2;
+      if (theNewCapacity < aCount) {
+        theNewCapacity = aDest.mCapacity + aCount;
+      }
+    } else {
+      // When the string is small, keep it's capacity a multiple of kGrowthDelta
+      PRInt32 unitDelta=(aCount/eGrowthDelta)+1;
+      theNewCapacity=unitDelta*eGrowthDelta;
     }
-	  
+
     aDest.mCapacity=theNewCapacity++;
     size_t theSize=(theNewCapacity<<aDest.mMultibyte);
     aDest.mStr=new char[theSize];
@@ -346,6 +361,7 @@ public:
   }
 
 };
+
 
 #endif
 
