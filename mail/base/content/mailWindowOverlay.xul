@@ -40,7 +40,6 @@
 
 <script src="chrome://messenger/content/mailCommands.js"/>
 <script src="chrome://messenger/content/mailWindowOverlay.js"/>
-<script src="chrome://messenger/content/commandglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailCore.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
