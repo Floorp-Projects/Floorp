@@ -782,20 +782,14 @@ nsTextFrame::ContentChanged(nsIPresContext* aPresContext,
     }
   }
 
-  // Generate a reflow command with this frame as the target frame
-  nsIReflowCommand* cmd;
-  nsresult          rv;
-                                                
-  rv = NS_NewHTMLReflowCommand(&cmd, targetTextFrame,
-                               nsIReflowCommand::ContentChanged);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPresShell> shell;
-    rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && shell) {
-      shell->AppendReflowCommand(cmd);
-      NS_RELEASE(cmd);
-    }
+  // Ask the parent frame to reflow me.  
+  nsresult rv;                                                    
+  nsCOMPtr<nsIPresShell> shell;
+  rv = aPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell && mParent) {
+    mParent->ReflowDirtyChild(shell, this);
   }
+  
 
   return rv;
 }
@@ -3278,7 +3272,8 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   // bounds.
   // XXX We need a finer granularity than this, but it isn't clear what
   // has actually changed...
-  if (eReflowReason_Incremental == aReflowState.reason) {
+  if (eReflowReason_Incremental == aReflowState.reason ||
+      eReflowReason_Dirty == aReflowState.reason) {
     Invalidate(aPresContext, mRect);
   }
 

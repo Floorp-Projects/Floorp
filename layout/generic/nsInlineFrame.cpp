@@ -102,12 +102,8 @@ nsInlineFrame::AppendFrames(nsIPresContext* aPresContext,
   if (aFrameList) {
     mFrames.AppendFrames(this, aFrameList);
 
-    // generate a reflow command for this frame
-    nsCOMPtr<nsIReflowCommand> reflowCmd;
-    NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this, nsIReflowCommand::ReflowDirty);
-    if (reflowCmd) {
-      aPresShell.AppendReflowCommand(reflowCmd);
-    }
+    // Ask the parent frame to reflow me.
+    ReflowDirtyChild(&aPresShell, nsnull);
   }
   return NS_OK;
 }
@@ -126,12 +122,8 @@ nsInlineFrame::InsertFrames(nsIPresContext* aPresContext,
     // Insert frames after aPrevFrame
     mFrames.InsertFrames(this, aPrevFrame, aFrameList);
 
-    // generate a reflow command for this frame
-    nsCOMPtr<nsIReflowCommand> reflowCmd;
-    NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this, nsIReflowCommand::ReflowDirty);
-    if (reflowCmd) {
-      aPresShell.AppendReflowCommand(reflowCmd);
-    }
+    // Ask the parent frame to reflow me.
+    ReflowDirtyChild(&aPresShell, nsnull);
   }
   return NS_OK;
 }
@@ -179,12 +171,8 @@ nsInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
     }
 
     if (generateReflowCommand) {
-      // generate a reflow command for "this"
-      nsCOMPtr<nsIReflowCommand> reflowCmd;
-      NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this, nsIReflowCommand::ReflowDirty);
-      if (reflowCmd) {
-        aPresShell.AppendReflowCommand(reflowCmd);
-      }
+      // Ask the parent frame to reflow me.
+      ReflowDirtyChild(&aPresShell, nsnull);
     }
   }
 
@@ -209,12 +197,8 @@ nsInlineFrame::ReplaceFrame(nsIPresContext* aPresContext,
   mFrames.ReplaceFrame(this, aOldFrame, aNewFrame);
   aOldFrame->Destroy(aPresContext);
 
-  // generate a reflow command for "this"
-  nsCOMPtr<nsIReflowCommand> reflowCmd;
-  NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this, nsIReflowCommand::ReflowDirty);
-  if (reflowCmd) {
-    aPresShell.AppendReflowCommand(reflowCmd);
-  }
+  // Ask the parent frame to reflow me.
+  ReflowDirtyChild(&aPresShell, nsnull);
 
   return NS_OK;
 }

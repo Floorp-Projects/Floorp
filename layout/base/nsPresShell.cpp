@@ -1925,8 +1925,7 @@ PresShell::ProcessReflowCommands()
 
         LL_I2L(maxTime, gMaxRCProcessingTime);
         if (LL_CMP(totalTime, >, maxTime))
-          break;
-          
+          break;          
       }
     }
     NS_IF_RELEASE(rcx);
