@@ -577,7 +577,8 @@ CSSLoaderImpl::Cleanup(URLKey& aKey, SheetLoadData* aLoadData)
   } while (data);
     
   if (! aLoadData->mIsInline) { // inline sheets don't go in loading table
-    mLoadingSheets.Remove(&aKey);
+    SheetLoadData* oldData = (SheetLoadData*)mLoadingSheets.Remove(&aKey);
+    NS_ASSERTION(oldData == aLoadData, "broken loading table");
   }
 
   // unblock parser
@@ -610,7 +611,6 @@ CSSLoaderImpl::Cleanup(URLKey& aKey, SheetLoadData* aLoadData)
     }
   }
 
-
   delete aLoadData; // delete data last, it may have last ref on loader...
 }
 
@@ -623,7 +623,8 @@ CSSLoaderImpl::SheetComplete(nsICSSStyleSheet* aSheet, SheetLoadData* aLoadData)
 
   if (! aLoadData->mIsInline) { // don't remember inline sheets
     NS_ADDREF(aSheet);  // add ref for table
-    mLoadedSheets.Put(&key, aSheet);
+    nsICSSStyleSheet* oldSheet = (nsICSSStyleSheet*)mLoadedSheets.Put(&key, aSheet);
+    NS_IF_RELEASE(oldSheet);  // relase predecessor (was dirty)
   }
 
   SheetLoadData* data = aLoadData;
@@ -685,6 +686,7 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aIn,
       mParsingData.RemoveElementAt(mParsingData.Count() - 1);
 
       if (NS_SUCCEEDED(result)) {
+        aSheet->SetModified(PR_FALSE);  // make it clean from the load
         failed = PR_FALSE;
         if (0 == aLoadData->mPendingChildren) { // sheet isn't still loading children
           if (aLoadData->mIsInline) {
@@ -1070,10 +1072,11 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
     URLKey  key(aURL);
 
     nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mLoadedSheets.Get(&key);
-      // XXX need to make sure it hasn't been modified via DOM
-      // if so, load a new one
+    if (sheet && (NS_COMFALSE == sheet->IsUnmodified())) {  // if dirty, forget it
+      sheet = nsnull;
+    }
 
-    if (sheet) {  // already have one fully loaded
+    if (sheet) {  // already have one fully loaded and unmodified
       nsICSSStyleSheet* clone = nsnull;
       result = sheet->Clone(clone);
       if (NS_SUCCEEDED(result)) {
@@ -1121,10 +1124,11 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
     URLKey  key(aURL);
 
     nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mLoadedSheets.Get(&key);
-    // XXX need to verify hasn't been modified via DOM
-    // otherwise load a new one
+    if (sheet && (NS_COMFALSE == sheet->IsUnmodified())) {  // if dirty, forget it
+      sheet = nsnull;
+    }
 
-    if (sheet) {  // already have one loaded
+    if (sheet) {  // already have one loaded and unmodified
       nsICSSStyleSheet* clone = nsnull;
       result = sheet->Clone(clone);
       if (NS_SUCCEEDED(result)) {
