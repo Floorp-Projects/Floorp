@@ -37,6 +37,8 @@
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
 
+#include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsSpecialSystemDirectory.h"
 
 #include "VerReg.h"
@@ -313,9 +315,36 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, const nsString& aVers
     return CompareVersion(aRegName, &inVersion, aReturn);
 }
 
+NS_IMETHODIMP
+nsInstallTrigger::InitRegistry(void)
+{
+    nsresult rv;
+
+    NR_StartupRegistry();   /* startup the registry; if already started, this will essentially be a noop */
+    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    
+    if(!directoryService)
+        return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsILocalFile> dir;
+    directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(dir));
+    if (dir)
+    {
+        char* nativePath;
+        dir->GetPath(&nativePath);
+        // EVIL version registry does not take a nsIFile.;
+        VR_SetRegDirectory( nativePath );
+        if (nativePath)
+            nsMemory::Free(nativePath);
+            
+    }
+    return NS_OK;
+}
+
 NS_IMETHODIMP    
 nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)
 {
+    nsresult rv;
     *aReturn = EQUAL;  // assume failure.
 
     PRBool enabled;
@@ -329,6 +358,10 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
     REGERR               status;
     nsInstallVersion     regNameVersion;
     
+    rv = InitRegistry();
+    if(rv != NS_OK)
+        return rv;
+
     status = VR_GetVersion( NS_CONST_CAST(char *, regName.get()), &cVersion );
 
     /* if we got the version */
@@ -357,6 +390,7 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
 NS_IMETHODIMP    
 nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
 {
+    nsresult rv;
     PRBool enabled;
 
     UpdateEnabled(&enabled);
@@ -367,6 +401,10 @@ nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
     NS_ConvertUCS2toUTF8 regName(component);
     REGERR               status;
     
+    rv = InitRegistry();
+    if(rv != NS_OK)
+        return rv;
+
     status = VR_GetVersion( NS_CONST_CAST(char *, regName.get()), &cVersion );
 
     version.Truncate();
