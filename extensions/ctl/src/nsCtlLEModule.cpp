@@ -24,6 +24,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 
 #include "nsIFactory.h"
 #include "nsIGenericFactory.h"
