@@ -62,6 +62,7 @@
 #include "nsIServiceManager.h"
 
 nsHashtable *nsRepository::factories = NULL;
+nsHashtable *nsRepository::progIDs   = NULL;
 PRMonitor *nsRepository::monitor = NULL;
 
 /**
@@ -192,21 +193,41 @@ FactoryEntry::~FactoryEntry(void)
 
 /***************************************************************************/
 
-class IDKey: public nsHashKey {
+class ProgIDKey : public nsHashKey {
 private:
-	nsID id;
-	
+    char  mProgIDBuf[64];
+    char* mProgID;
+
 public:
-	IDKey(const nsID &aID) { id = aID; }
-	
-	PRUint32 HashValue(void) const { return id.m0; }
-	
-	PRBool Equals(const nsHashKey *aKey) const
-	{
-		return (id.Equals(((const IDKey *) aKey)->id));
-	}
-	
-	nsHashKey *Clone(void) const { return new IDKey(id); }
+    ProgIDKey(const char* aProgID) : mProgID(mProgIDBuf)
+    {
+        PRInt32 len = PL_strlen(aProgID);
+        if (len >= sizeof(mProgIDBuf)) {
+            mProgID = new char[PL_strlen(aProgID) + 1];
+            NS_ASSERTION(mProgID, "out of memory");
+            if (! mProgID)
+                return;
+        }
+
+        PL_strcpy(mProgID, aProgID);
+    }
+
+    virtual ~ProgIDKey() {
+        if (mProgID != mProgIDBuf)
+            delete[] mProgID;
+    }
+
+    virtual PRUint32 HashValue(void) const {
+        return (PRUint32) PL_HashString((const void*) mProgID);
+    }
+
+    virtual PRBool Equals(const nsHashKey* aKey) const {
+        return PL_strcmp( ((ProgIDKey*)aKey)->mProgID, mProgID ) == 0;
+    }
+
+    virtual nsHashKey* Clone() const {
+        return new ProgIDKey(mProgID);
+    }
 };
 
 /***************************************************************************/
@@ -801,7 +822,9 @@ nsresult nsRepository::loadFactory(FactoryEntry *aEntry,
 	{
         char* className = NULL;
         char* progID = NULL;
-        (void)CLSIDToProgID(&aEntry->cid, &className, &progID);
+
+        // XXX dp, warren: deal with this!
+        //(void)CLSIDToProgID(&aEntry->cid, &className, &progID);
 
 		nsIServiceManager* serviceMgr = NULL;
 		nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
@@ -855,12 +878,18 @@ nsresult nsRepository::FindFactory(const nsCID &aClass,
 	{
 		PR_LOG(logmodule, PR_LOG_ALWAYS, ("\t\tnot found in factory cache. Looking in registry"));
 		entry = platformFind(aClass);
+
+        // XXX This should go into platformFind(), and platformFind()
+        // should just become a static method on nsRepository.
+
 		// If we got one, cache it in our hashtable
 		if (entry != NULL)
 		{
 			PR_LOG(logmodule, PR_LOG_ALWAYS, ("\t\tfound in registry."));
 			factories->Put(&key, entry);
 		}
+
+        // XXX update ProgID cache, if necessary
 	}
 	else
 	{
@@ -902,14 +931,60 @@ nsresult nsRepository::FindFactory(const nsCID &aClass,
 nsresult nsRepository::ProgIDToCLSID(const char *aProgID,
                                      nsCID *aClass) 
 {
+    NS_PRECONDITION(aProgID != NULL, "null ptr");
+    if (! aProgID)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aClass != NULL, "null ptr");
+    if (! aClass)
+        return NS_ERROR_NULL_POINTER;
+
 	nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
 
 	checkInitialized();
 
 #ifdef USE_REGISTRY
-    res = platformProgIDToCLSID(aProgID, aClass);
-#endif /* USE_REGISTRY */
+    // XXX This isn't quite the best way to do this: we should
+    // probably move an nsArray<ProgID> into the FactoryEntry class,
+    // and then have the construct/destructor of the factory entry
+    // keep the ProgID to CID cache up-to-date. However, doing this
+    // significantly improves performance, so it'll do for now.
 
+#define NS_NO_CID { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
+static NS_DEFINE_CID(kNoCID, NS_NO_CID);
+
+    ProgIDKey key(aProgID);
+    nsCID* cid = (nsCID*) progIDs->Get(&key);
+    if (cid) {
+        if (cid == &kNoCID) {
+            // we've already tried to map this ProgID to a CLSID, and found
+            // that there _was_ no such mapping in the registry.
+        }
+        else {
+            *aClass = *cid;
+            res = NS_OK;
+        }
+    }
+    else {
+        // This is the first time someone has asked for this
+        // ProgID. Go to the registry to find the CID.
+        res = platformProgIDToCLSID(aProgID, aClass);
+
+        if (NS_SUCCEEDED(res)) {
+            // Found it. So put it into the cache.
+            if (! (cid = new nsCID(*aClass)))
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            progIDs->Put(&key, cid);
+        }
+        else {
+            // Didn't find it. Put a special CID in the cache so we
+            // don't need to hit the registry on subsequent requests
+            // for the same ProgID.
+            progIDs->Put(&key, (void*) &kNoCID);
+        }
+    }
+#endif /* USE_REGISTRY */
 	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
     {
         char *buf;
@@ -995,6 +1070,10 @@ nsresult nsRepository::Initialize(void)
 	{
 		factories = new nsHashtable();
 	}
+    if (progIDs == NULL)
+    {
+        progIDs = new nsHashtable();
+    }
 	if (monitor == NULL)
 	{
 		monitor = PR_NewMonitor();
@@ -1189,6 +1268,8 @@ nsresult nsRepository::RegisterFactory(const nsCID &aClass,
 
 	nsIDKey key(aClass);
 	factories->Put(&key, new FactoryEntry(aClass, aFactory));
+
+    // XXX update ProgID to CID cache as well, if necessary
 	
 	PR_ExitMonitor(monitor);
 	
@@ -1255,6 +1336,9 @@ nsresult nsRepository::RegisterComponent(const nsCID &aClass,
 		nsIDKey key(aClass);
 		factories->Put(&key, new FactoryEntry(aClass, aLibrary,
 			dll->GetLastModifiedTime(), dll->GetSize()));
+
+        // XXX Update ProgID to CID cache as well, if necessary.
+
 		delete dll;
 	}
 	
