@@ -1277,7 +1277,6 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 				while(PR_TRUE)
 				{
 					delta = delta / 2;
-					if (delta == 0)	delta = 1;
 
 					if (last == -1)
 					{
@@ -1285,10 +1284,12 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 					}
 					else if (direction > 0)
 					{
+						if (delta == 0)	delta = 1;
 						current = last + delta;
 					}
 					else
 					{
+						if (delta == 0)	delta = 1;
 						current = last - delta;
 					}
 
@@ -1311,7 +1312,7 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 						else
 						{
 							container->InsertChildAt(node,
-								((direction > 0) ? current + 1: (current > 0) ? current-1 : 0),
+								((direction > 0) ? current + 1: (current >= 0) ? current : 0),
 								PR_TRUE);
 						}
 						childAdded = PR_TRUE;
