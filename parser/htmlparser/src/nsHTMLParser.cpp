@@ -462,7 +462,7 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL){
   char*       theModeStr= PR_GetEnv("PARSE_MODE");
 
   if(theModeStr) 
-    if(0==strnicmp("other",theModeStr,5))
+    if(0==nsCRT::strncasecmp("other",theModeStr,5))
       theMode=eParseMode_other;
 
   return Parse(aURL,theMode);
