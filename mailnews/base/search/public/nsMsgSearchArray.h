@@ -23,7 +23,7 @@
 
 class nsMsgSearchTerm;
 class nsMsgSearchScopeTerm;
-class nsMsgSearchValue;
+struct nsMsgSearchValue;
 
 class nsMsgSearchTermArray : public nsVoidArray
 {

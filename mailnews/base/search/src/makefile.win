@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=msgsearch
+LIBRARY_NAME=msgsearch_s
 MODULE=msgsearch
 
 DEFINES=-D_IMPL_NS_HTML
