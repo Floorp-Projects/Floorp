@@ -22,9 +22,8 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
-#include "nsXtEventHandler.h"
-#include <Xm/ToggleB.h>
-#include <Xm/RowColumn.h>
+#include "nsGtkEventHandler.h"
+#include <gtk/gtk.h>
 
 NS_IMPL_ADDREF(nsRadioButton)
 NS_IMPL_RELEASE(nsRadioButton)
@@ -83,12 +82,12 @@ NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
                       nsWidgetInitData *aInitData)
 {
   aParent->AddChild(this);
-  GtkWidget parentWidget = nsnull;
+  GtkWidget *parentWidget = nsnull;
 
   if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    parentWidget = (GtkWidget *) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    parentWidget = (GtkWidget *) aAppShell->GetNativeData(NS_NATIVE_SHELL);
   }
 
   InitToolkit(aToolkit, aParent);
