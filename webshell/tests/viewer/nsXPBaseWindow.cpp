@@ -74,13 +74,6 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 
-
-#if defined(WIN32) || defined(XP_OS2_VACPP)
-#include <strstrea.h>
-#else
-#include <strstream.h>
-#endif
-
 #include <ctype.h> // tolower
 
 // XXX For font setting below

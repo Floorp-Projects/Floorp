@@ -2320,7 +2320,7 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(PRInt16 depth)
 {
 #ifdef DEBUG
     depth-- ;
-    XPC_LOG_ALWAYS(("XPCWrappedNative @ %x with mRefCnt = %d", this, mRefCnt));
+    XPC_LOG_ALWAYS(("XPCWrappedNative @ %x with mRefCnt = %d", this, mRefCnt.get()));
     XPC_LOG_INDENT();
 
         if(HasProto())

@@ -178,7 +178,7 @@ nsXMLNotation::List(FILE* out, PRInt32 aIndent) const
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fprintf(out, "Notation refcount=%d<!NOTATION ", mRefCnt);
+  fprintf(out, "Notation refcount=%d<!NOTATION ", mRefCnt.get());
 
   nsAutoString tmp(mName);
   if (!mPublicId.IsEmpty()) {

@@ -159,7 +159,7 @@ nsXMLProcessingInstruction::List(FILE* out, PRInt32 aIndent) const
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fprintf(out, "Processing instruction refcount=%d<", mRefCnt);
+  fprintf(out, "Processing instruction refcount=%d<", mRefCnt.get());
 
   nsAutoString tmp;
   ToCString(tmp, 0, mText.GetLength());

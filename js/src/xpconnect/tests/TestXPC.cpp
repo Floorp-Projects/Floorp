@@ -472,8 +472,8 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 
     if(!JS_ConvertArguments(jscontext, 5, argv, "s %ip %iv %is s",
                             &a_out, 
-                            getter_AddRefs(b_out), 
-                            getter_AddRefs(c_out),
+                            NS_STATIC_CAST(nsISupports**, getter_AddRefs(b_out)), 
+                            NS_STATIC_CAST(nsIVariant**, getter_AddRefs(c_out)),
                             NS_STATIC_CAST(nsAString*, &d_out), 
                             &e_out))
     {
