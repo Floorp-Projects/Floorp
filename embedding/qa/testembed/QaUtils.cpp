@@ -345,7 +345,7 @@ nsCAutoString GetTheUri(nsIURI *theURI, int displayMethod)
 
 	if (!theURI) {
         QAOutput("nsIURI object is null. return failure.");
-		return nsnull;
+		return uriString;  //dep 3/30
 	}
 	rv = theURI->GetSpec(uriString);
     RvTestResult(rv, "nsIURI::GetSpec() test", displayMethod);
