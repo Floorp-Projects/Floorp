@@ -172,6 +172,12 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsID
 
   result = aSrc->Lock(aSX, aSY, aWidth, aHeight, (void**)&srcBytes, &srcRowBytes, &srcSpan, NS_LOCK_SURFACE_READ_ONLY);
   if (NS_SUCCEEDED(result)) {
+
+    // Compute depth like this to make sure it's consistent with the memory layout.
+    // For example on Win32 at least 24-bit bitmaps are used regardless of the device context depth. 
+    // See bug 228399 for more information.
+    PRUint32 depth = (srcRowBytes / aWidth) * 8;
+
     result = aDst->Lock(aDX, aDY, aWidth, aHeight, (void**)&destBytes, &destRowBytes, &destSpan, 0);
     if (NS_SUCCEEDED(result)) {
       NS_ASSERTION(srcSpan == destSpan, "Mismatched bitmap formats (src/dest) in Blender");
@@ -185,7 +191,7 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsID
               result = Blend(srcBytes, srcRowBytes,
                              destBytes, destRowBytes,
                              secondSrcBytes,
-                             srcSpan, aHeight, aSrcOpacity);
+                             srcSpan, aHeight, aSrcOpacity, depth);
             }
             
             aSecondSrc->Unlock();
@@ -196,7 +202,7 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsID
           result = Blend(srcBytes, srcRowBytes,
                          destBytes, destRowBytes,
                          secondSrcBytes,
-                         srcSpan, aHeight, aSrcOpacity);
+                         srcSpan, aHeight, aSrcOpacity, depth);
         }
       }
 
@@ -442,13 +448,11 @@ static void Do8Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
 nsresult nsBlender::Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride,
                           PRUint8 *aDestBits, PRInt32 aDestStride,
                           PRUint8 *aSecondSrcBits,
-                          PRInt32 aSrcBytes, PRInt32 aLines, float aOpacity)
+                          PRInt32 aSrcBytes, PRInt32 aLines, float aOpacity,
+                          PRUint8 aDepth)
 {
   nsresult result = NS_OK;
-  PRUint32 depth;
-  mContext->GetDepth(depth);
-  // now do the blend
-  switch (depth){
+  switch (aDepth) {
     case 32:
         Do32Blend(aOpacity, aLines, aSrcBytes, aSrcBits, aDestBits,
                   aSecondSrcBits, aSrcStride, aDestStride, nsHighQual);

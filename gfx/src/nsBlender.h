@@ -90,7 +90,8 @@ protected:
   nsresult Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride,
                  PRUint8 *aDestBits, PRInt32 aDestStride,
                  PRUint8 *aSecondSrcBits,
-                 PRInt32 aSrcBytes, PRInt32 aLines, float aOpacity);
+                 PRInt32 aSrcBytes, PRInt32 aLines, float aOpacity,
+                 PRUint8 aDepth);
 
   /** --------------------------------------------------------------------------
    * Blend two 32 bit image arrays
