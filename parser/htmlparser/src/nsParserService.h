@@ -25,8 +25,6 @@
 #include "nsDTDUtils.h"
 #include "nsVoidArray.h"
 
-extern "C" int MOZ_XMLCheckQName(const char* ptr, const char* end,
-                                 int ns_aware, const char** colon);
 extern "C" int MOZ_XMLIsLetter(const char* ptr);
 extern "C" int MOZ_XMLIsNCNameChar(const char* ptr);
 
