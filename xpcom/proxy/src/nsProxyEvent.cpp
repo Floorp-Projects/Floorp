@@ -36,6 +36,8 @@
 #include "nsIEventQueueService.h"
 #include "nsIThread.h"
 
+#include "nsAutoLock.h"
+
 #include "nsIAtom.h"  //hack!  Need a way to define a component as threadsafe (ie. sta).
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -52,6 +54,11 @@ nsProxyObjectCallInfo::nsProxyObjectCallInfo( nsProxyObject* owner,
                                               PRUint32 parameterCount, 
                                               PLEvent *event)
 {
+    NS_ASSERTION(owner, "No nsProxyObject!");
+    NS_ASSERTION(methodInfo, "No nsXPTMethodInfo!");
+    NS_ASSERTION(parameterList, "No parameterList!");
+    NS_ASSERTION(event, "No PLEvent!");
+    
     mCompleted        = 0;
     mMethodIndex      = methodIndex;
     mParameterList    = parameterList;
@@ -61,7 +68,7 @@ nsProxyObjectCallInfo::nsProxyObjectCallInfo( nsProxyObject* owner,
     mCallersEventQ    = nsnull;
 
     mOwner            = owner;
-
+    
     RefCountInInterfacePointers(PR_TRUE);
     if (mOwner->GetProxyType() & PROXY_ASYNC)
         CopyStrings(PR_TRUE);
@@ -204,10 +211,11 @@ nsProxyObject::nsProxyObject()
 nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject)
 {
     NS_INIT_REFCNT();
-
+    
     mRealObject      = realObject;
     mDestQueue       = do_QueryInterface(destQueue);
     mProxyType       = proxyType;
+    mLock            = PR_NewLock();
 }
 
 
@@ -222,6 +230,7 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const
 
     mDestQueue       = do_QueryInterface(destQueue);
     mProxyType       = proxyType;
+    mLock            = PR_NewLock();
 }
 
 nsProxyObject::~nsProxyObject()
@@ -231,6 +240,7 @@ nsProxyObject::~nsProxyObject()
     
     mRealObject = 0;
     mDestQueue  = 0;
+    PR_DestroyLock(mLock);
 }
 
 // GetRealObject
@@ -432,7 +442,7 @@ void DestroyHandler(PLEvent *self)
 {
     nsProxyObjectCallInfo* owner = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
     nsProxyObject* proxyObject = owner->GetProxyObject();
-
+    
     if (proxyObject == nsnull)
         return;
 
@@ -456,6 +466,8 @@ void* EventHandler(PLEvent *self)
         
     if (proxyObject)
     {
+        nsAutoLock lock(proxyObject->GetLock());
+        
         // invoke the magic of xptc...
         nsresult rv = XPTC_InvokeByIndex( proxyObject->GetRealObject(), 
                                           info->GetMethodIndex(),
