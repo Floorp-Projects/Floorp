@@ -29,6 +29,7 @@
 #include "nsIDocumentStateListener.h"
 #include "nsITransactionListener.h"
 #include "nsIWebShell.h"
+#include "nsITimerCallback.h"
 
 class nsIHTMLEditor;
 class nsIDOMXULDocument;
@@ -38,7 +39,8 @@ class nsIDOMXULDocument;
 
 class nsInterfaceState : public nsIDOMSelectionListener,
                          public nsIDocumentStateListener,
-                         public nsITransactionListener
+                         public nsITransactionListener,
+                         public nsITimerCallback
 {
 public:
 
@@ -55,10 +57,12 @@ public:
   
   // nsIDOMSelectionListener interface
   NS_IMETHOD    NotifySelectionChanged();
-  NS_IMETHOD TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset);
+  NS_IMETHOD    TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset);
 
   NS_DECL_NSIDOCUMENTSTATELISTENER
   
+  // nsITimerCallback interfaces
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
 
   /** nsITransactionListener interfaces
     */
@@ -100,6 +104,9 @@ protected:
   
   nsresult      CallUpdateCommands(const nsString& aCommand);
   
+  nsresult      PrimeUpdateTimer();
+  void          TimerCallback();
+
   // this class should not hold references to the editor or editorShell. Doing
   // so would result in cirular reference chains.
   
@@ -107,6 +114,8 @@ protected:
   nsIDOMXULDocument*  mChromeDoc;  // XUL document for the chrome area
 
   nsIDOMWindow*       mDOMWindow;   // nsIDOMWindow used for calling UpdateCommands
+  
+  nsCOMPtr<nsITimer>  mUpdateTimer;
   
   // current state
   PRInt8        mBoldState;

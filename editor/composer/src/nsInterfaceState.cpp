@@ -38,6 +38,7 @@
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
+#include "nsITimer.h"
 
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
@@ -63,11 +64,14 @@ nsInterfaceState::nsInterfaceState()
 
 nsInterfaceState::~nsInterfaceState()
 {
+  // cancel any outstanding udpate timer
+  if (mUpdateTimer)
+    mUpdateTimer->Cancel();
 }
 
 NS_IMPL_ADDREF(nsInterfaceState);
 NS_IMPL_RELEASE(nsInterfaceState);
-NS_IMPL_QUERY_INTERFACE3(nsInterfaceState, nsIDOMSelectionListener, nsIDocumentStateListener, nsITransactionListener);
+NS_IMPL_QUERY_INTERFACE4(nsInterfaceState, nsIDOMSelectionListener, nsIDocumentStateListener, nsITransactionListener, nsITimerCallback);
 
 NS_IMETHODIMP
 nsInterfaceState::Init(nsIHTMLEditor* aEditor, nsIDOMXULDocument *aChromeDoc)
@@ -113,16 +117,12 @@ nsInterfaceState::NotifyDocumentStateChanged(PRBool aNowDirty)
 NS_IMETHODIMP
 nsInterfaceState::NotifySelectionChanged()
 {
-  // if the selection state has changed, update stuff
-  PRBool isCollapsed = SelectionIsCollapsed();
-  if (isCollapsed != mSelectionCollapsed)
-  {
-    CallUpdateCommands(nsAutoString("select"));
-    mSelectionCollapsed = isCollapsed;
-  }
-  
-  return ForceUpdate();
+  return PrimeUpdateTimer();
 }
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 
 NS_IMETHODIMP nsInterfaceState::WillDo(nsITransactionManager *aManager,
@@ -144,7 +144,7 @@ NS_IMETHODIMP nsInterfaceState::DidDo(nsITransactionManager *aManager,
       CallUpdateCommands(nsAutoString("undo"));
     mFirstDoOfFirstUndo = PR_FALSE;
   }
-
+	
   return NS_OK;
 }
 
@@ -217,6 +217,44 @@ NS_IMETHODIMP nsInterfaceState::DidMerge(nsITransactionManager *aManager,
   return NS_OK;
 }
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+
+nsresult nsInterfaceState::PrimeUpdateTimer()
+{
+  nsresult rv = NS_OK;
+    
+  if (mUpdateTimer)
+  {
+    // i'd love to be able to just call SetDelay on the existing timer, but
+    // i think i have to tear it down and make a new one.
+    mUpdateTimer->Cancel();
+    mUpdateTimer = NULL;      // free it
+  }
+  
+  rv = NS_NewTimer(getter_AddRefs(mUpdateTimer));
+  if (NS_FAILED(rv)) return rv;
+
+  const PRUint32 kUpdateTimerDelay = 150;
+  return mUpdateTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kUpdateTimerDelay);
+}
+
+
+void nsInterfaceState::TimerCallback()
+{
+  // if the selection state has changed, update stuff
+  PRBool isCollapsed = SelectionIsCollapsed();
+  if (isCollapsed != mSelectionCollapsed)
+  {
+    CallUpdateCommands(nsAutoString("select"));
+    mSelectionCollapsed = isCollapsed;
+  }
+  
+  (void)ForceUpdate();
+}
+
 
 nsresult nsInterfaceState::CallUpdateCommands(const nsString& aCommand)
 {
@@ -252,13 +290,16 @@ nsInterfaceState::ForceUpdate()
   
   // update bold
   rv = UpdateTextState("b", "Editor:Bold", "bold", mBoldState);
+  
   // update italic
   rv = UpdateTextState("i", "Editor:Italic", "italic", mItalicState);
+
   // update underline
   rv = UpdateTextState("u", "Editor:Underline", "underline", mUnderlineState);
   
   // update the paragraph format popup
   rv = UpdateParagraphState("Editor:Paragraph:Format", "format", mParagraphFormat);
+
   // udpate the font face
   rv = UpdateFontFace("Editor:Font:Face", "font", mFontString);
   
@@ -471,6 +512,24 @@ nsInterfaceState::UnsetNodeAttribute(const char* nodeID, const char* attributeNa
   
   return elem->RemoveAttribute(attributeName);
 }
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+
+void
+nsInterfaceState::Notify(nsITimer *timer)
+{
+  NS_ASSERTION(timer == mUpdateTimer.get(), "Hey, this ain't my timer!");
+  mUpdateTimer = NULL;    // release my hold  
+  TimerCallback();
+}
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 
 nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMXULDocument* aChromeDoc, nsIDOMSelectionListener** aInstancePtrResult)
