@@ -431,6 +431,8 @@ protected:
   // Cache the box object
   void EnsureBoxObject();
 
+  void EnsureView();
+
   // Get the base element, <tree> or <select>
   nsresult GetBaseElement(nsIContent** aElement);
 

@@ -383,65 +383,7 @@ nsTreeBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
 NS_IMETHODIMP
 nsTreeBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
-  if (!mView) {
-    EnsureBoxObject();
-    nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mTreeBoxObject);
-    if (box) {
-      nsCOMPtr<nsISupports> suppView;
-      box->GetPropertyAsSupports(NS_LITERAL_STRING("view").get(), getter_AddRefs(suppView));
-      nsCOMPtr<nsITreeView> treeView(do_QueryInterface(suppView));
-
-      if (treeView) {
-        nsXPIDLString rowStr;
-        box->GetProperty(NS_LITERAL_STRING("topRow").get(), getter_Copies(rowStr));
-        nsAutoString rowStr2(rowStr);
-        PRInt32 error;
-        PRInt32 rowIndex = rowStr2.ToInteger(&error);
-
-        // Set our view.
-        SetView(treeView);
-
-        // Scroll to the given row.
-        // XXX is this optimal if we haven't laid out yet?
-        ScrollToRow(rowIndex);
-
-        // Clear out the property info for the top row, but we always keep the
-        // view current.
-        box->RemoveProperty(NS_LITERAL_STRING("topRow").get());
-      }
-    }
-
-    if (!mView) {
-      // If we don't have a box object yet, or no view was set on it,
-      // look for a XULTreeBuilder or create a content view.
-      
-      nsCOMPtr<nsIContent> parent;
-      mContent->GetParent(*getter_AddRefs(parent));
-      nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(parent);
-      if (xulele) {
-        nsCOMPtr<nsITreeView> view;
-
-        // See if there is a XUL tree builder associated with
-        // the parent element.
-        nsCOMPtr<nsIXULTemplateBuilder> builder;
-        xulele->GetBuilder(getter_AddRefs(builder));
-        if (builder)
-          view = do_QueryInterface(builder);
-
-        if (!view) {
-          // No tree builder, create an tree content view.
-          nsCOMPtr<nsITreeContentView> contentView;
-          NS_NewTreeContentView(getter_AddRefs(contentView));
-          if (contentView)
-            view = do_QueryInterface(contentView);
-        }
-
-        // Hook up the view.
-        if (view)
-          SetView(view);
-      }
-    }
-  }
+  EnsureView();
 
   nsCOMPtr<nsIContent> baseElement;
   GetBaseElement(getter_AddRefs(baseElement));
@@ -581,6 +523,70 @@ nsTreeBodyFrame::EnsureBoxObject()
   }
 }
 
+void
+nsTreeBodyFrame::EnsureView()
+{
+  if (!mView) {
+    EnsureBoxObject();
+    nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mTreeBoxObject);
+    if (box) {
+      nsCOMPtr<nsISupports> suppView;
+      box->GetPropertyAsSupports(NS_LITERAL_STRING("view").get(), getter_AddRefs(suppView));
+      nsCOMPtr<nsITreeView> treeView(do_QueryInterface(suppView));
+
+      if (treeView) {
+        nsXPIDLString rowStr;
+        box->GetProperty(NS_LITERAL_STRING("topRow").get(), getter_Copies(rowStr));
+        nsAutoString rowStr2(rowStr);
+        PRInt32 error;
+        PRInt32 rowIndex = rowStr2.ToInteger(&error);
+
+        // Set our view.
+        SetView(treeView);
+
+        // Scroll to the given row.
+        // XXX is this optimal if we haven't laid out yet?
+        ScrollToRow(rowIndex);
+
+        // Clear out the property info for the top row, but we always keep the
+        // view current.
+        box->RemoveProperty(NS_LITERAL_STRING("topRow").get());
+      }
+    }
+
+    if (!mView) {
+      // If we don't have a box object yet, or no view was set on it,
+      // look for a XULTreeBuilder or create a content view.
+      
+      nsCOMPtr<nsIContent> parent;
+      mContent->GetParent(*getter_AddRefs(parent));
+      nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(parent);
+      if (xulele) {
+        nsCOMPtr<nsITreeView> view;
+
+        // See if there is a XUL tree builder associated with
+        // the parent element.
+        nsCOMPtr<nsIXULTemplateBuilder> builder;
+        xulele->GetBuilder(getter_AddRefs(builder));
+        if (builder)
+          view = do_QueryInterface(builder);
+
+        if (!view) {
+          // No tree builder, create an tree content view.
+          nsCOMPtr<nsITreeContentView> contentView;
+          NS_NewTreeContentView(getter_AddRefs(contentView));
+          if (contentView)
+            view = do_QueryInterface(contentView);
+        }
+
+        // Hook up the view.
+        if (view)
+          SetView(view);
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect)
 {
@@ -618,6 +624,7 @@ AdjustForBorderPadding(nsIStyleContext* aContext, nsRect& aRect)
 
 NS_IMETHODIMP nsTreeBodyFrame::GetView(nsITreeView * *aView)
 {
+  EnsureView();
   *aView = mView;
   NS_IF_ADDREF(*aView);
   return NS_OK;
