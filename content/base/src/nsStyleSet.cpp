@@ -533,6 +533,8 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
 {
   nsIStyleContext*  result = nsnull;
 
+  NS_ASSERTION(aContent, "must have content"); // XXX ??? is this true?
+
   // want to check parent frame's context for cached child context first
   if ((nsnull != aParentContext) && (nsnull != aContent)) {
 //XXX Disabled this for the dom, as per peter's note
