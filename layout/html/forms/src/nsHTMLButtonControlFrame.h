@@ -87,6 +87,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
+  
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
