@@ -19,15 +19,8 @@
 #ifndef	nsIRDFRelatedLinks_h__
 #define	nsIRDFRelatedLinks_h__
 
-#include "nscore.h"
-#include "nsISupports.h"
-#include "nsVoidArray.h"
-#include "nsIRDFNode.h"
-
-#include "nsIURL.h"
-#include "nsIInputStream.h"
+#include "nsIRDFDataSource.h"
 #include "nsIStreamListener.h"
-
 
 #define NS_IRDFRELATEDLINKSDATAOURCE_IID \
 { 0xdc2fb181, 0xf7ff, 0x11d2, { 0x98, 0x20, 0xf6, 0x5e, 0xa6, 0x52, 0xae, 0x3c } }
