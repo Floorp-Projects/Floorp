@@ -121,9 +121,9 @@ public class Main {
 
     static Context enterContext() {
         Context cx = new Context();
-		if (securityImpl != null) {
-        	cx.setSecurityController(securityImpl);
-		}
+        if (securityImpl != null) {
+            cx.setSecurityController(securityImpl);
+        }
         return Context.enter(cx);
     }
 
