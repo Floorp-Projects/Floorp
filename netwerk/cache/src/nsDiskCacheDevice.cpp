@@ -23,26 +23,97 @@
 
 #include "nsDiskCacheDevice.h"
 #include "nsICacheService.h"
+#include "nsIFileTransportService.h"
 
+static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
+
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+// I don't want to have to use preferences to obtain this, rather, I would
+// rather be initialized with this information. To get started, the same
+// mechanism
+
+#include "nsIPref.h"
+
+static const char CACHE_DIR_PREF[] = { "browser.cache.directory" };
+
+static int PR_CALLBACK cacheDirectoryChanged(const char *pref, void *closure)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+	if (NS_FAILED(rv))
+		return rv;
+    
+	nsCOMPtr<nsILocalFile> cacheDirectory;
+    rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs( cacheDirectory ));
+	if (NS_FAILED(rv))
+		return rv;
+
+    nsDiskCacheDevice* device = NS_STATIC_CAST(nsDiskCacheDevice*, closure);
+    device->setCacheDirectory(cacheDirectory);
+    
+    return NS_OK;
+}
+
+static nsresult InstallPrefListeners(nsDiskCacheDevice* device)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+	if (NS_FAILED(rv))
+		return rv;
+	rv = prefs->RegisterCallback(CACHE_DIR_PREF, cacheDirectoryChanged, device); 
+	if (NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsILocalFile> cacheDirectory;
+    rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs( cacheDirectory ));
+    if (NS_FAILED(rv)) {
+        // XXX use a hard coded cache directory during development only.
+        rv = NS_NewLocalFile("JMachine:Documents:Mozilla:Cache", PR_FALSE, getter_AddRefs(cacheDirectory));
+    	if (NS_FAILED(rv))
+    		return rv;
+        rv = prefs->SetFileXPref(CACHE_DIR_PREF, cacheDirectory);
+    	if (NS_FAILED(rv))
+    		return rv;
+    }
+    
+    // cause the preference to be set up initially.
+    device->setCacheDirectory(cacheDirectory);
+    
+    return NS_OK;
+}
+
+static nsresult RemovePrefListeners(nsDiskCacheDevice* device)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+	if ( NS_FAILED (rv ) )
+		return rv;
+
+	rv = prefs->UnregisterCallback(CACHE_DIR_PREF, cacheDirectoryChanged, device);
+	if ( NS_FAILED( rv ) )
+		return rv;
+
+    return NS_OK;
+}
+
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 nsDiskCacheDevice::nsDiskCacheDevice()
 {
-
 }
-
 
 nsDiskCacheDevice::~nsDiskCacheDevice()
 {
-
+    RemovePrefListeners(this);
 }
-
 
 nsresult
 nsDiskCacheDevice::Init()
 {
+    nsresult rv = InstallPrefListeners(this);
     return  NS_OK;
 }
-
 
 nsresult
 nsDiskCacheDevice::Create(nsCacheDevice **result)
@@ -70,13 +141,29 @@ nsDiskCacheDevice::GetDeviceID()
 nsCacheEntry *
 nsDiskCacheDevice::FindEntry(nsCString * key)
 {
-    return  nsnull;
+    nsCacheEntry * entry = mInactiveEntries.GetEntry(key);
+    if (!entry)  return nsnull;
+
+    //** need entry->UpdateFrom(ourEntry);
+    entry->MarkActive(); // so we don't evict it
+    //** find eviction element and move it to the tail of the queue
+    
+    return entry;;
 }
 
 
 nsresult
 nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 {
+    nsCString * key = entry->Key();
+
+    nsCacheEntry * ourEntry = mInactiveEntries.GetEntry(key);
+    NS_ASSERTION(ourEntry, "DeactivateEntry called for an entry we don't have!");
+    if (!ourEntry)
+        return NS_ERROR_INVALID_POINTER;
+
+    //** need ourEntry->UpdateFrom(entry);
+    //** MarkInactive(); // to make it evictable again
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -84,9 +171,13 @@ nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 nsresult
 nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+    nsresult  rv = mInactiveEntries.AddEntry(entry);
+    if (NS_FAILED(rv))
+        return rv;
 
+    //** add size of entry to memory totals
+    return NS_OK;
+}
 
 nsresult
 nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
@@ -94,18 +185,63 @@ nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult
+nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
+                                        nsITransport ** result)
+{
+    NS_ENSURE_ARG_POINTER(entry);
+    NS_ENSURE_ARG_POINTER(result);
+
+    nsCOMPtr<nsISupports> data;
+    nsresult rv = entry->GetData(getter_AddRefs(data));
+    if (NS_SUCCEEDED(rv) && data) {
+        rv = CallQueryInterface(data, result);
+    } else {
+        NS_WITH_SERVICE(nsIFileTransportService, service, kFileTransportServiceCID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            // XXX generate the name of the cache entry from the hash code of its key, modulo the number
+            nsCOMPtr<nsIFile> entryFile;
+            rv = getFileForEntry(entry, getter_AddRefs(entryFile));
+            if (NS_SUCCEEDED(rv)) {
+                nsCOMPtr<nsITransport> transport;
+                rv = service->CreateTransport(entryFile, PR_RDONLY, PR_IRUSR | PR_IWUSR,
+                                              getter_AddRefs(transport));
+                if (NS_SUCCEEDED(rv)) {
+                    entry->SetData(transport.get());
+                    NS_ADDREF(*result = transport);
+                }
+            }
+        }
+    }
+    return rv;
+}
 
 nsresult
-nsDiskCacheDevice::GetTransportForEntry( nsCacheEntry * entry,
-                                           nsITransport **transport )
+nsDiskCacheDevice::OnDataSizeChanged(nsCacheEntry * entry)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
-nsDiskCacheDevice::OnDataSizeChanged( nsCacheEntry * entry )
+void nsDiskCacheDevice::setCacheDirectory(nsILocalFile* cacheDirectory)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mCacheDirectory = cacheDirectory;
+}
+
+nsresult nsDiskCacheDevice::getFileForEntry(nsCacheEntry * entry, nsIFile ** result)
+{
+    if (mCacheDirectory) {
+        nsCOMPtr<nsIFile> entryFile;
+        nsresult rv = mCacheDirectory->Clone(getter_AddRefs(entryFile));
+    	if (NS_FAILED(rv))
+    		return rv;
+        // generate the hash code for this entry, and use that as a file name.
+        PLDHashNumber hash = ::PL_DHashStringKey(NULL, entry->Key()->get());
+        char name[32];
+        ::sprintf(name, "%08X", hash);
+        entryFile->Append(name);
+        NS_ADDREF(*result = entryFile);
+    }
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 //** need methods for enumerating entries
