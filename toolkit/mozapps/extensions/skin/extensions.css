@@ -64,6 +64,15 @@ extension {
 
 extension[disabled="true"] {
   color: GrayText;
+  background-image: none;
+}
+
+extension[disabled="true"][selected="true"] {
+  background-image: url("chrome://mozapps/skin/shared/itemSelected.png");
+}
+
+extension[disabled="true"] .extension-icon {
+  opacity: 0.3;
 }
 
 .extension-item-name {

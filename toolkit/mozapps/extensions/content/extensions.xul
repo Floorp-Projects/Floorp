@@ -63,41 +63,48 @@
   </stringbundleset>
     
   <keyset id="extensionsKeys">
-    <key id="key_close"   key="&cmd.close.commandKey;"    oncommand="closeWindow(true);"        modifiers="accel"/>
-    <key id="key_info"    key="&cmd.info.commandKey;"     oncommand="onExtensionViewAbout();"   modifiers="accel"/>
-    <key id="key_options" key="&cmd.options.commandKey;"  oncommand="onExtensionViewOptions();" modifiers="accel"/>
+    <key id="key_close"   key="&cmd.close.commandKey;"    modifiers="accel" command="cmd_close"/>
+    <key id="key_about"   key="&cmd.info.commandKey;"     modifiers="accel" command="cmd_about"/>
+    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options"/>
   </keyset>
   
+  <commandset id="extensionsCommands"
+              events="richview-select"
+              commandupdater="true"
+              oncommandupdate="gExtensionsViewController.onCommandUpdate();">
+    <command id="cmd_close"       oncommand="closeWindow(true);"/>
+    <command id="cmd_options"     oncommand="onExtensionViewOptions();"/>
+    <command id="cmd_about"       oncommand="onExtensionViewAbout();"/>
+    <command id="cmd_homepage"    oncommand="onExtensionViewHomepage();"/>
+    <command id="cmd_uninstall"   oncommand="onExtensionUninstall();"/>
+    <command id="cmd_update"      oncommand="onExtensionUpdate();"/>
+    <command id="cmd_disable"     oncommand="onExtensionEnableDisable();"/>
+    <command id="cmd_movetop"     oncommand="onExtensionMoveTop();"/>
+    <command id="cmd_moveup"      oncommand="onExtensionMoveUp();"/>
+    <command id="cmd_movedn"      oncommand="onExtensionMoveDn();"/>
+  </commandset>
+  
   <vbox id="contextMenuPalette" hidden="true">
-    <menuitem id="menuitem_options" default="true"
-              label="&cmd.options.label;" accesskey="&cmd.options.accesskey;"
-              oncommand="fireEventForElement(gExtensionsView.selected, 'show-options');"/>
-    <menuitem id="menuitem_homepage" 
-              label="&cmd.homepage.label;" accesskey="&cmd.homepage.accesskey;"
-              oncommand="fireEventForElement(gExtensionsView.selected, 'show-homepage');"/>
-    <menuitem id="menuitem_about" 
-              label="&cmd.about.label;" accesskey="&cmd.about.accesskey;"
-              oncommand="fireEventForElement(gExtensionsView.selected, 'show-info');"/>
+    <menuitem id="menuitem_options" default="true" command="cmd_options"
+              label="&cmd.options.label;" accesskey="&cmd.options.accesskey;"/>
+    <menuitem id="menuitem_homepage" command="cmd_homepage"
+              label="&cmd.homepage.label;" accesskey="&cmd.homepage.accesskey;"/>
+    <menuitem id="menuitem_about" command="cmd_about"
+              label="&cmd.about.label;" accesskey="&cmd.about.accesskey;"/>
     <menuseparator id="menuseparator_1"/>
-    <menuitem id="menuitem_uninstall" 
-              label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;"
-              oncommand="fireEventForElement(gExtensionsView.selected, 'uninstall');"/>
-    <menuitem id="menuitem_update" 
-              label="&cmd.update.label;" accesskey="&cmd.update.accesskey;"
-              oncommand="fireEventForElement(gExtensionsView.selected, 'update');"/>
-    <menuitem id="menuitem_disable" 
-              label="&cmd.disable.label;" accesskey="&cmd.disable.accesskey;"
-              oncommand="fireEventForElement(gExtensionsView.selected, 'disable');"/>
+    <menuitem id="menuitem_uninstall" command="cmd_uninstall"
+              label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;"/>
+    <menuitem id="menuitem_update" command="cmd_update"
+              label="&cmd.update.label;" accesskey="&cmd.update.accesskey;"/>
+    <menuitem id="menuitem_disable" command="cmd_disable"
+              label="&cmd.disable.label;" accesskey="&cmd.disable.accesskey;"/>
     <menuseparator id="menuseparator_2"/>
-    <menuitem id="menuitem_moveTop" 
-              label="&cmd.moveToTop.label;" accesskey="&cmd.moveToTop.accesskey;"
-              oncommand="fireEventForElement(gExtensionsView.selected, 'move-top');"/>
-    <menuitem id="menuitem_moveUp" 
-              label="&cmd.moveUp.label;" accesskey="&cmd.moveUp.accesskey;"
-              oncommand="fireEventForElement(gExtensionsView.selected, 'move-up');"/>
-    <menuitem id="menuitem_moveDn" 
-              label="&cmd.moveDn.label;" accesskey="&cmd.moveDn.accesskey;"
-              oncommand="fireEventForElement(gExtensionsView.selected, 'move-dn');"/>
+    <menuitem id="menuitem_moveTop" command="cmd_movetop"
+              label="&cmd.moveToTop.label;" accesskey="&cmd.moveToTop.accesskey;"/>
+    <menuitem id="menuitem_moveUp" command="cmd_moveup"
+              label="&cmd.moveUp.label;" accesskey="&cmd.moveUp.accesskey;"/>
+    <menuitem id="menuitem_moveDn" command="cmd_movedn"
+              label="&cmd.moveDn.label;" accesskey="&cmd.moveDn.accesskey;"/>
   </vbox>
   
   <popup id="extensionContextMenu" onpopupshowing="return buildContextMenu(event);"/>
@@ -133,16 +140,23 @@
                    predicate="http://www.mozilla.org/2004/em-rdf#updateURL"
                    object="?update-url"/>
           <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#disabled"
+                   object="?disabled"/>
+          <binding subject="?extension"
                    predicate="http://www.mozilla.org/2004/em-rdf#homepageURL"
                    object="?homepage-url"/>
           <binding subject="?extension"
                    predicate="http://www.mozilla.org/2004/em-rdf#description"
                    object="?description"/>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#blockUninstall"
+                   object="?block-uninstall"/>
         </bindings>            
         <action>
           <extension uri="?extension" context="extensionContextMenu"
                      image="?icon" name="?name" version="?version" 
                      description="?description" creator="?creator"
+                     disabled="?disabled" blockUninstall="?block-uninstall"
                      optionsURL="?options-url" homepageURL="?homepage-url"
                      aboutURL="?about-url" updateURL="?update-url"/>
         </action>
