@@ -2999,7 +2999,7 @@ CEditView :: HandleDropOfComposerFlavor ( const char* inData, bool inDoCopy, SPo
 		EDT_PositionCaret( *GetContext(), inMouseLoc.h, inMouseLoc.v );
 	else
 		EDT_DeleteSelectionAndPositionCaret( *GetContext(), inMouseLoc.h, inMouseLoc.v );
-	EDT_PasteHTML( *GetContext(), const_cast<char*>(inData), 0 );
+	EDT_PasteHTML( *GetContext(), const_cast<char*>(inData), ED_PASTE_NORMAL );
 	EDT_EndBatchChanges( *GetContext() );
 
 } // HandleDropOfComposerFlavor
@@ -3728,7 +3728,7 @@ void CEditView::HandlePaste()
 			LClipboard::GetClipboard()->GetData( 'EHTM', htmlHandle );
 			::HLock( htmlHandle );
 			(*htmlHandle)[ dataLength ] = '\0';
-			int result = EDT_PasteHTML( *GetContext(), *htmlHandle, 0 );
+			int result = EDT_PasteHTML( *GetContext(), *htmlHandle, ED_PASTE_NORMAL );
 			::DisposeHandle( htmlHandle );
 			return;
 		}
