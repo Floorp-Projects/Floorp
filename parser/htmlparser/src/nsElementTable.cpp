@@ -122,7 +122,7 @@ TagList  gCaptionAutoClose={1,{eHTMLTag_tbody}};
 TagList  gLIAutoClose={2,{eHTMLTag_p,eHTMLTag_li}};
 TagList  gPAutoClose={2,{eHTMLTag_p,eHTMLTag_li}};
 TagList  gHRAutoClose={1,{eHTMLTag_p}};
-TagList  gOLAutoClose={3,{eHTMLTag_p,eHTMLTag_ol,eHTMLTag_ul}};
+TagList  gOLAutoClose={2,{eHTMLTag_p,eHTMLTag_ol}};
 TagList  gDivAutoClose={1,{eHTMLTag_p}};
 
 TagList  gHeadingTags={6,{eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLTag_h5,eHTMLTag_h6}};
@@ -132,6 +132,7 @@ TagList  gTRCloseTags={3,{eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th}};
 TagList  gTDCloseTags={2,{eHTMLTag_td,eHTMLTag_th}};
 TagList  gDTCloseTags={3,{eHTMLTag_dt,eHTMLTag_dd,eHTMLTag_p}};
 TagList  gULCloseTags={1,{eHTMLTag_li}};
+TagList  gULAutoClose={2,{eHTMLTag_p,eHTMLTag_ul}}; //fix bug 50261..
 
 
 TagList  gExcludableParents={1,{eHTMLTag_pre}}; // Ref Bug 22913
@@ -948,7 +949,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPreformatted, kFlowEntity, kNone,	//I'm allowing WAY too much in here. Spec says inline.
+      /*parent,incl,exclgroups*/          kPreformatted, (kSelf|kFlowEntity), kNone,	//I'm allowing WAY too much in here. Spec says inline.
       /*special props, prop-range*/       0, kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gPreKids,eHTMLTag_unknown);
 
@@ -1209,7 +1210,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_ul,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gOLRootTags,&gOLRootTags,	
-      /*autoclose starttags and endtags*/ &gOLAutoClose,&gULCloseTags,0,0,
+      /*autoclose starttags and endtags*/ &gULAutoClose,&gULCloseTags,0,0,
       /*parent,incl,exclgroups*/          kList, (kFlowEntity|kSelf), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown);
@@ -1888,10 +1889,22 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
 
   int theCount=aContext.GetCount();
   int theIndex=theCount;
+
   if(IsMemberOf(kPhrase)){
+
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
       eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag!=mTagID) {
+
+          //fixes a derivative of bug 22842...
+        if(CanContainType(kBlock)) { //INS/DEL can contain blocks.
+          if(gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kBlockEntity)) {
+            if(HasOptionalEndTag(theTag)) {
+              continue; //then I can close it.
+            }
+          }
+        }
+
         //phrasal elements can close other phrasals, along with fontstyle and special tags...
         if(!gHTMLElements[theTag].IsMemberOf(kSpecial|kFontStyle|kPhrase)) {
           break; //it's not something I can close
@@ -1903,17 +1916,27 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
       }
     }
   }
+  
   else if(IsMemberOf(kSpecial)){
+
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
       eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag!=mTagID) {
         //phrasal elements can close other phrasals, along with fontstyle and special tags...
 
         if(gHTMLElements[theTag].IsSpecialEntity() || gHTMLElements[theTag].IsFontStyleEntity()) {
-//        if(TestBits(gHTMLElements[theTag].mParentBits,kSpecial) || 
-//           TestBits(gHTMLElements[theTag].mParentBits,kFontStyle)) {
+          continue;
         }
         else {
+
+            //fixes bug 22842...
+          if(CanContainType(kBlock)) {
+            if(gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kBlockEntity)) {
+              if(HasOptionalEndTag(theTag)) {
+                continue; //then I can close it.
+              }
+            }
+          }
           break; //it's not something I can close
         }
       }
@@ -1923,7 +1946,9 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
       }
     }
   }
+
   else if(IsMemberOf(kFormControl|kExtensions|kPreformatted)){
+
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
       eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag!=mTagID) {
@@ -1937,7 +1962,9 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
       }
     }
   }
+
   else if(IsMemberOf(kList)){
+
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
       eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag!=mTagID) {
@@ -1951,6 +1978,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
       }
     }
   }
+
   else if(IsResidualStyleTag(mTagID)){
 
     // Ref. bug 37618

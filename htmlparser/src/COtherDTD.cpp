@@ -416,7 +416,7 @@ nsresult COtherDTD::WillBuildModel(  const CParserContext& aParserContext,nsICon
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::WillBuildModel(), this=%p\n", this));
 
     mDocType=aParserContext.mDocType;
-    mBodyContext->mTransitional=PRBool(aParserContext.mDTDMode==eDTDMode_transitional);
+    mBodyContext->mFlags.mTransitional=PRBool(aParserContext.mDTDMode==eDTDMode_transitional);
 
     if(aSink && (!mSink)) {
       result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);

@@ -344,7 +344,7 @@ protected:
 
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;
-    nsAutoString        mScratch;  //used for various purposes; non-persistent
+    nsString            mScratch;  //used for various purposes; non-persistent
     eParserDocType      mDocType;
     PRBool              mEnableStrict;
 

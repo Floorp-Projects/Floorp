@@ -61,8 +61,8 @@ CHTMLToken::CHTMLToken(const nsString& aName,eHTMLTags aTag) : CToken(aName) {
  *  @return  
  */
 CHTMLToken::CHTMLToken(eHTMLTags aTag) : CToken(aTag) {
-
 }
+
 
 CHTMLToken::~CHTMLToken() {
 
@@ -108,6 +108,7 @@ CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
   mAttributed=PR_FALSE;
   mEmpty=PR_FALSE;
   mOrigin=-1;
+  mContainerInfo=eFormUnknown;
 }
 
 /*
@@ -121,12 +122,14 @@ CStartToken::CStartToken(const nsString& aString) : CHTMLToken(aString) {
   mAttributed=PR_FALSE;
   mEmpty=PR_FALSE;
   mOrigin=-1;
+  mContainerInfo=eFormUnknown;
 }
 
 CStartToken::CStartToken(const nsString& aName,eHTMLTags aTag) : CHTMLToken(aName,aTag) {
   mAttributed=PR_FALSE;
   mEmpty=PR_FALSE;
   mOrigin=-1;
+  mContainerInfo=eFormUnknown;
 }
 
 /**
@@ -142,6 +145,7 @@ void CStartToken::Reinitialize(PRInt32 aTag, const nsString& aString){
   mEmpty=PR_FALSE;
   mOrigin=-1;
   mTrailingContent.Truncate();
+  mContainerInfo=eFormUnknown;
 }
 
 nsresult CStartToken::GetIDAttributeAtom(nsIAtom** aResult)
@@ -271,7 +275,12 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode
   }
   else {
     mTextValue.Assign(aChar);
-    result=aScanner.ReadIdentifier(mTextValue);
+
+    //added PR_TRUE to readId() call below to fix bug 46083. The problem was that the tag given
+    //was written <title_> but since we didn't respect the '_', we only saw <title>. Then 
+    //we searched for end title, which never comes (they give </title_>). 
+
+    result=aScanner.ReadIdentifier(mTextValue,PR_TRUE);  
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
 
