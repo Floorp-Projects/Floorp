@@ -21,7 +21,6 @@
  */
 #include "jsstddef.h"
 #include <math.h>
-#include <string.h>
 #include <stdlib.h>
 #include "jstypes.h"
 #include "jsprf.h"
@@ -1570,6 +1569,7 @@ date_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
 }
 
 #if JS_HAS_TOSOURCE
+#include <string.h>
 #include "jsdtoa.h"
 
 static JSBool
