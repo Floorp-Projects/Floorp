@@ -233,7 +233,6 @@ main(int argc, char *argv[], char *envp[])
 {
     char *               certDir      = NULL;
     char *               progName     = NULL;
-    char *               cipherString = NULL;
     CERTCertificate *    cert;
     CERTCertificate *    firstCert    = NULL;
     CERTCertDBHandle *   defaultDB    = NULL;
