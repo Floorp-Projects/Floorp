@@ -28,7 +28,7 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 #include "nsILinkHandler.h"

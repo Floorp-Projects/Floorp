@@ -42,7 +42,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIView.h"
 #include "nsIViewManager.h"

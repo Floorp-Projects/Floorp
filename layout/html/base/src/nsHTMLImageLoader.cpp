@@ -22,7 +22,7 @@
 #include "nsHTMLImageLoader.h"
 #include "nsFrame.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING

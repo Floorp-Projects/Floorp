@@ -30,7 +30,7 @@
 #include "nsIDeviceContext.h"
 #include "nsCURILoader.h"
 #include "nsLayoutCID.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsRect.h"
 #include "prprf.h"
 #include "nsIFrame.h"

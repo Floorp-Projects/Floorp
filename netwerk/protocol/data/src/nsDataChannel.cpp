@@ -25,7 +25,7 @@
 #include "nsDataChannel.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsIIOService.h"
+#include "nsNetUtil.h"
 #include "nsILoadGroup.h"
 #include "plbase64.h"
 #include "nsIInterfaceRequestor.h"
@@ -300,12 +300,9 @@ nsDataChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     nsIEventQueue *eventQ;
     nsIStreamListener *listener;
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     // we'll just fire everything off at once because we've already got all
     // the data.
-    rv = serv->NewAsyncStreamListener(aListener, nsnull, &listener);
+    rv = NS_NewAsyncStreamListener(aListener, nsnull, &listener);
     NS_RELEASE(eventQ);
     if (NS_FAILED(rv)) return rv;
 

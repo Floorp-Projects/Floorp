@@ -76,12 +76,6 @@ CACHELIBNAME=netcache.lib
 
 LLIBS = \
  $(DIST)\lib\xpcom.lib \
-!ifdef NECKO
- $(DIST)\lib\neckoutil_s.lib	\
-!else
- $(DIST)\lib\netlib.lib	\
- $(DIST)\lib\$(CACHELIBNAME) \
-!endif
  $(DIST)\lib\xppref32.lib \
  $(LIBNSPR)  
 

@@ -28,7 +28,7 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsIURL.h"
 #include "nsIUnicharStreamLoader.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
@@ -1940,7 +1940,10 @@ HTMLContentSink::~HTMLContentSink()
   }
 }
 
-NS_IMPL_ISUPPORTS2(HTMLContentSink, nsIHTMLContentSink, nsIUnicharStreamLoaderObserver)
+NS_IMPL_ISUPPORTS3(HTMLContentSink, 
+                   nsIHTMLContentSink,
+                   nsIContentSink,
+                   nsIUnicharStreamLoaderObserver)
 
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
@@ -3634,10 +3637,11 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
 NS_IMETHODIMP
 HTMLContentSink::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
                                          nsresult aStatus,
+                                         PRUint32 stringLen,
                                          const PRUnichar* string)
 {
   nsresult rv = NS_OK;
-  nsString aData(string);
+  nsString aData(string, stringLen);
 
   if (NS_OK == aStatus) {
     PRBool bodyPresent = PreEvaluateScript();

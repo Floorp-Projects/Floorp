@@ -39,7 +39,6 @@ CPPSRCS		= \
 		nsJSXPConnectFactory.cpp \
 		nsAppShellNameSet.cpp \
 		nsFileLocations.cpp \
-		nsDefaultHelper.cpp \
 		nsNetSupportDialog.cpp \
 		nsWindowMediator.cpp \
 		nsSessionHistory.cpp \

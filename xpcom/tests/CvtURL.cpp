@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include "nsIUnicharInputStream.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsCRT.h"
 #include "nsString.h"
 #include "prprf.h"

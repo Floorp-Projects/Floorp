@@ -30,7 +30,7 @@
 #include "nsILinkHandler.h"
 #include "nsIStreamListener.h"
 #include "nsIPrompt.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
 #include "nsIDNSService.h"
 #include "nsIRefreshURI.h"

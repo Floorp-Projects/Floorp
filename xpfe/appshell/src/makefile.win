@@ -38,7 +38,6 @@ CPPSRCS=                                \
  nsAppShellNameSet.cpp                 \
  nsFileLocations.cpp                    \
  nsNetSupportDialog.cpp		\
- nsDefaultHelper.cpp	\
  nsWindowMediator.cpp \
  nsSessionHistory.cpp \
  nsDialogParamBlock.cpp \
@@ -57,7 +56,6 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsAppShellNameSet.obj     \
  .\$(OBJDIR)\nsFileLocations.obj        \
   .\$(OBJDIR)\nsNetSupportDialog.obj        \
-   .\$(OBJDIR)\nsDefaultHelper.obj        \
      .\$(OBJDIR)\nsWindowMediator.obj        \
      .\$(OBJDIR)\nsSessionHistory.obj \
     .\$(OBJDIR)\nsDialogParamBlock.obj \
@@ -101,11 +99,6 @@ LLIBS=                          \
  $(DIST)\lib\xpcom.lib        \
  $(DIST)\lib\timer_s.lib    \
  $(DIST)\lib\gkgfxwin.lib   \
-!ifdef NECKO
- $(DIST)\lib\neckoutil_s.lib         \
-!else
- $(DIST)\lib\netlib.lib         \
-!endif
  $(DIST)\lib\js3250.lib        \
  $(DIST)\lib\jsdombase_s.lib   \
  $(DIST)\lib\jsdomevents_s.lib   \

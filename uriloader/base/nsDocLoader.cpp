@@ -38,7 +38,7 @@
 
 #include "nsILoadGroup.h"
 
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
 #include "nsIHTTPChannel.h"
@@ -309,7 +309,7 @@ nsDocLoaderImpl::Init(nsDocLoaderImpl *aParent)
 {
     nsresult rv;
 
-    rv = NS_NewLoadGroup(nsnull, this, getter_AddRefs(mLoadGroup));
+    rv = NS_NewLoadGroup(this, getter_AddRefs(mLoadGroup));
     if (NS_FAILED(rv)) return rv;
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 

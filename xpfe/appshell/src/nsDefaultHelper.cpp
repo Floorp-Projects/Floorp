@@ -21,7 +21,6 @@
  */
 
 
-#include "nsIBlockingNotification.h"
 #include "nsIURL.h"
 #include "nsNetSupportDialog.h"
 

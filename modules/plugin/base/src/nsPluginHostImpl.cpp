@@ -40,10 +40,9 @@
 #include "nsIURL.h"
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
-#include "nsNeckoUtil.h"
 
 #include "nsIServiceManager.h"
 #include "nsICookieStorage.h"

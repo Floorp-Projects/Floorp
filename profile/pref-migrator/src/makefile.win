@@ -56,11 +56,6 @@ LINCS= \
 
 LLIBS =                      \
     $(DIST)\lib\xpcom.lib    \
-!ifndef NECKO
-    $(DIST)\lib\netlib.lib  \
-!else
-    $(DIST)\lib\neckoutil_s.lib \
-!endif
     $(DIST)\lib\js3250.lib        \
     $(DIST)\lib\jsdombase_s.lib   \
     $(DIST)\lib\jsdomevents_s.lib   \

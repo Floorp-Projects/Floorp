@@ -30,7 +30,7 @@
 #include "nsIPICS.h"
 #include "nsIPref.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"

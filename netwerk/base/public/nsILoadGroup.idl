@@ -83,7 +83,7 @@ interface nsILoadGroup : nsIRequest
      */
     readonly attribute nsISimpleEnumerator channels;
 
-	attribute nsIStreamObserver groupObserver;
+    attribute nsIStreamObserver groupObserver;
 
     attribute nsILoadGroupListenerFactory groupListenerFactory;
 

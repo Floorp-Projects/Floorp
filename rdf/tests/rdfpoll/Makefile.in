@@ -30,7 +30,6 @@ PROGRAM		= rdfpoll
 CPPSRCS		= rdfpoll.cpp
 
 LIBS		= \
-		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		-lmozjs \
 		-lxpcom \

@@ -128,11 +128,6 @@ LLIBS=				\
  $(DIST)\lib\js3250.lib	\
  $(DIST)\lib\gkparser.lib		\
  $(DIST)\lib\raptorwidget_s.lib		\
-!ifdef NECKO
- $(DIST)\lib\neckoutil_s.lib           \
-!else
- $(DIST)\lib\netlib.lib           \
-!endif
  $(LIBNSPR)  
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib

@@ -32,7 +32,6 @@ DIRS		= \
 		socket \
 		build \
 		protocol \
-		util \
 		mime \
 		streamconv \
 		$(NULL)

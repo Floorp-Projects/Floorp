@@ -23,7 +23,7 @@
 #include "nsLayoutModule.h"
 #include "nsLayoutCID.h"
 #include "nsIComponentManager.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoader.h"
 #include "nsHTMLAtoms.h"

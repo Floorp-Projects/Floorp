@@ -20,17 +20,14 @@
  * Contributor(s): 
  */
 
-#include "nsIStreamObserver.h"
-#include "nsIStreamListener.h"
+#include "nsAsyncStreamListener.h"
 #include "nsIBufferInputStream.h"
 #include "nsString.h"
 #include "nsCRT.h"
-#include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
-#include "nsCOMPtr.h"
 #include "prlog.h"
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -38,77 +35,6 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 #if defined(PR_LOGGING)
 PRLogModuleInfo* gStreamEventLog = 0;
 #endif
-
-class nsAsyncStreamObserver : public nsIStreamObserver
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    // nsIStreamObserver methods:
-    NS_DECL_NSISTREAMOBSERVER
-
-    // nsAsyncStreamObserver methods:
-    nsAsyncStreamObserver() 
-        : mStatus(NS_OK) 
-    { 
-        NS_INIT_REFCNT();
-    }
-    
-    virtual ~nsAsyncStreamObserver();
-
-    nsresult Init(nsIStreamObserver* aObserver, nsIEventQueue* aEventQ) {
-        nsresult rv = NS_OK;
-        mReceiver = aObserver;
-        
-        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-        if (NS_FAILED(rv)) 
-            return rv;
-        
-        rv = eventQService->ResolveEventQueue(aEventQ, getter_AddRefs(mEventQueue));
-        return rv;
-    }
-
-    nsISupports* GetReceiver()      { return mReceiver.get(); }
-    nsresult GetStatus()            { return mStatus; }
-    void SetStatus(nsresult value)  { mStatus = value; }
-
-protected:
-    nsCOMPtr<nsIEventQueue>     mEventQueue;
-    nsCOMPtr<nsIStreamObserver> mReceiver;
-    nsresult                    mStatus;
-};
-
-
-class nsAsyncStreamListener : public nsAsyncStreamObserver,
-                              public nsIStreamListener
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-
-    // nsIStreamListener methods:
-    NS_IMETHOD OnStartRequest(nsIChannel* channel,
-                              nsISupports* context) 
-    { 
-        return nsAsyncStreamObserver::OnStartRequest(channel, context); 
-    }
-
-    NS_IMETHOD OnStopRequest(nsIChannel* channel,
-                             nsISupports* context, 
-                             nsresult aStatus,
-                             const PRUnichar* aMsg) 
-    { 
-        return nsAsyncStreamObserver::OnStopRequest(channel, context, aStatus, aMsg); 
-    }
-
-    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
-                               nsIInputStream *aIStream, 
-                               PRUint32 aSourceOffset,
-                               PRUint32 aLength);
-
-    // nsAsyncStreamListener methods:
-    nsAsyncStreamListener() {}
-
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -202,12 +128,45 @@ nsAsyncStreamObserver::~nsAsyncStreamObserver()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsAsyncStreamObserver, 
-                             NS_GET_IID(nsIStreamObserver));
+NS_IMPL_THREADSAFE_ADDREF(nsAsyncStreamObserver)
+NS_IMPL_THREADSAFE_RELEASE(nsAsyncStreamObserver)
+NS_IMPL_QUERY_INTERFACE2(nsAsyncStreamObserver,
+                         nsIAsyncStreamObserver,
+                         nsIStreamObserver)
 
-NS_IMPL_ISUPPORTS_INHERITED(nsAsyncStreamListener, 
-                            nsAsyncStreamObserver, 
-                            nsIStreamListener);
+NS_IMPL_ADDREF_INHERITED(nsAsyncStreamListener, nsAsyncStreamObserver);
+NS_IMPL_RELEASE_INHERITED(nsAsyncStreamListener, nsAsyncStreamObserver);
+
+NS_IMETHODIMP 
+nsAsyncStreamListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+  if (aIID.Equals(NS_GET_IID(nsIAsyncStreamListener))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIAsyncStreamListener*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIStreamListener))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return nsAsyncStreamObserver::QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP
+nsAsyncStreamObserver::Init(nsIStreamObserver* aObserver, nsIEventQueue* aEventQ)
+{
+    nsresult rv = NS_OK;
+    mReceiver = aObserver;
+        
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+    if (NS_FAILED(rv)) 
+    return rv;
+        
+    rv = eventQService->ResolveEventQueue(aEventQ, getter_AddRefs(mEventQueue));
+    return rv;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -231,7 +190,7 @@ nsOnStartRequestEvent::HandleEvent()
 {
 #if defined(PR_LOGGING)
   if (!gStreamEventLog)
-    gStreamEventLog = PR_NewLogModule("netlibStreamEvent");
+      gStreamEventLog = PR_NewLogModule("netlibStreamEvent");
   PR_LOG(gStreamEventLog, PR_LOG_DEBUG,
          ("netlibEvent: Handle Start [event=%x]", this));
 #endif
@@ -446,42 +405,32 @@ nsAsyncStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports* context
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_NET nsresult
-NS_NewAsyncStreamObserver(nsIStreamObserver* *result,
-                          nsIEventQueue* eventQueue,
-                          nsIStreamObserver* receiver)
+NS_METHOD
+nsAsyncStreamObserver::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    nsAsyncStreamObserver* l =
-        new nsAsyncStreamObserver();
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+    nsAsyncStreamObserver* l = new nsAsyncStreamObserver();
     if (l == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(l);
-    nsresult rv = l->Init(receiver, eventQueue);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(l);
-        return rv;
-    }
-    *result = l;
-    return NS_OK;
+    nsresult rv = l->QueryInterface(aIID, aResult);
+    NS_RELEASE(l);
+    return rv;
 }
 
-NS_NET nsresult
-NS_NewAsyncStreamListener(nsIStreamListener* *result,
-                          nsIEventQueue* eventQueue,
-                          nsIStreamListener* receiver)
+NS_METHOD
+nsAsyncStreamListener::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    nsAsyncStreamListener* l =
-        new nsAsyncStreamListener();
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+    nsAsyncStreamListener* l = new nsAsyncStreamListener();
     if (l == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(l);
-    nsresult rv = l->Init(receiver, eventQueue);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(l);
-        return rv;
-    }
-    *result = l;
-    return NS_OK;
+    nsresult rv = l->QueryInterface(aIID, aResult);
+    NS_RELEASE(l);
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

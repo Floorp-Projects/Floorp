@@ -30,7 +30,6 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 LLIBS= $(LLIBS)                     \
 	$(LIBNSPR)                  \
 	$(DIST)\lib\xpcom.lib       \
-	$(DIST)\lib\neckoutil_s.lib \
 	$(DIST)\lib\plc3.lib        \
 	$(DIST)\lib\zlib.lib        \
 	$(NULL)

@@ -45,26 +45,26 @@ OBJS =                                  \
 	$(NULL)
 
 EXPORTS= nsIRenderingContextWin.h \
-		nsIDrawingSurfaceWin.h
+        nsIDrawingSurfaceWin.h
 
 LINCS= \
-		-I..\
+        -I..\
         -I$(PUBLIC)\raptor \
         -I$(PUBLIC)\xpcom \
         -I$(PUBLIC)\dom \
         -I$(PUBLIC)\js \
 !if defined(NGLAYOUT_DDRAW)
 !if "$(MOZ_VCVER)" == "50"
-		-I$(NGLAYOUT_DDRAW)\include \
+        -I$(NGLAYOUT_DDRAW)\include \
 !else
-		-I$(NGLAYOUT_DDRAW)\inc \
+        -I$(NGLAYOUT_DDRAW)\inc \
 !endif
 !endif
         $(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \
-		$(DEFINES) \
+        $(DEFINES) \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -37,21 +37,60 @@ interface nsIStreamListener : nsIStreamObserver
                          in unsigned long count);
 };
 
+/**
+ * An asynchronous stream listener is used to ship data over to another thread specified
+ * by the thread's event queue. The receiver stream listener is then used to receive
+ * the notifications on the other thread. 
+ *
+ * This interface only provides the initialization needed after construction. Otherwise,
+ * these objects are used simply as nsIStreamListener.
+ */
+[scriptable, uuid(1b012ade-91bf-11d3-8cd9-0060b0fc14a3)]
+interface nsIAsyncStreamListener : nsIStreamListener
+{
+    /**
+     * Initializes an nsIAsyncStreamListener. 
+     * @param eventQueue - may be null indicating the calling thread's event queue
+     */
+    void init(in nsIStreamListener receiver,
+              in nsIEventQueue eventQueue);
+};
+
+/**
+ * A synchronous stream listener pushes data through a pipe that ends up
+ * in an input stream to be read by another thread.
+ *
+ * This interface only provides the initialization needed after construction. Otherwise,
+ * these objects are used simply as nsIStreamListener.
+ */
+[scriptable, uuid(1f9fb93e-91bf-11d3-8cd9-0060b0fc14a3)]
+interface nsISyncStreamListener : nsIStreamListener
+{
+    /**
+     * Initializes an nsISyncStreamListener. 
+     */
+    void init(out nsIInputStream inStream,
+              out nsIBufferOutputStream outStream);
+};
+
 %{C++
 
-// An asynchronous stream listener is used to ship data over to another thread specified
-// by the thread's event queue. The receiver stream listener is then used to receive
-// the data on the other thread.
-extern NS_NET nsresult
-NS_NewAsyncStreamListener(nsIStreamListener* *result,
-                          nsIEventQueue* eventQueue,
-                          nsIStreamListener* receiver);
+// Use this CID to construct an nsIAsyncStreamListener
+#define NS_ASYNCSTREAMLISTENER_CID                   \
+{ /* 60047bb2-91c0-11d3-8cd9-0060b0fc14a3 */         \
+    0x60047bb2,                                      \
+    0x91c0,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
 
-// A synchronous stream listener pushes data through a pipe that ends up
-// in an input stream to be read by another thread.
-extern NS_NET nsresult
-NS_NewSyncStreamListener(nsIInputStream **inStream,
-                         nsIBufferOutputStream **outStream,
-                         nsIStreamListener **listener);
+// Use this CID to construct an nsISyncStreamListener
+#define NS_SYNCSTREAMLISTENER_CID                    \
+{ /* 65fa5cb2-91c0-11d3-8cd9-0060b0fc14a3 */         \
+    0x65fa5cb2,                                      \
+    0x91c0,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
 
 %}

@@ -20,47 +20,14 @@
  * Contributor(s): 
  */
 
-#include "nsIStreamListener.h"
+#include "nsSyncStreamListener.h"
 #include "nsCRT.h"
-#include "nsIBufferInputStream.h"
-#include "nsIBufferOutputStream.h"
 #include "nsIPipe.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsSyncStreamListener : public nsIStreamListener
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    // nsIStreamObserver methods:
-    NS_DECL_NSISTREAMOBSERVER
-
-    // nsIStreamListener methods:
-    NS_DECL_NSISTREAMLISTENER
-
-    // nsSyncStreamListener methods:
-    nsSyncStreamListener()
-        : mOutputStream(nsnull) {
-        NS_INIT_REFCNT();
-    }
-    virtual ~nsSyncStreamListener();
-
-    nsresult Init(nsIInputStream* *result);
-
-    nsIBufferOutputStream* GetOutputStream() { return mOutputStream; }
-
-protected:
-    nsIBufferOutputStream*      mOutputStream;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-#define NS_SYNC_STREAM_LISTENER_SEGMENT_SIZE    (4 * 1024)
-#define NS_SYNC_STREAM_LISTENER_BUFFER_SIZE     (32 * 1024)
-
 nsresult 
-nsSyncStreamListener::Init(nsIInputStream* *result)
+nsSyncStreamListener::Init(nsIInputStream* *inStr, nsIBufferOutputStream* *outStr)
 {
     nsresult rv;
     nsIBufferInputStream* in;
@@ -70,7 +37,9 @@ nsSyncStreamListener::Init(nsIInputStream* *result)
                     NS_SYNC_STREAM_LISTENER_BUFFER_SIZE);
     if (NS_FAILED(rv)) return rv;
 
-    *result = in;
+    *inStr = in;
+    *outStr = mOutputStream;
+    NS_ADDREF(mOutputStream);
     return NS_OK;
 }
 
@@ -79,22 +48,10 @@ nsSyncStreamListener::~nsSyncStreamListener()
     NS_IF_RELEASE(mOutputStream);
 }
 
-NS_IMPL_ADDREF(nsSyncStreamListener);
-NS_IMPL_RELEASE(nsSyncStreamListener);
-
-NS_IMETHODIMP
-nsSyncStreamListener::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(NS_GET_IID(nsIStreamListener)) ||
-        aIID.Equals(NS_GET_IID(nsIStreamObserver)) ||
-        aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE; 
-}
+NS_IMPL_ISUPPORTS3(nsSyncStreamListener, 
+                   nsISyncStreamListener,
+                   nsIStreamListener,
+                   nsIStreamObserver)
 
 NS_IMETHODIMP 
 nsSyncStreamListener::OnStartRequest(nsIChannel* channel, nsISupports* context)
@@ -131,26 +88,18 @@ nsSyncStreamListener::OnDataAvailable(nsIChannel* channel,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_NET nsresult
-NS_NewSyncStreamListener(nsIInputStream **inStream,
-                         nsIBufferOutputStream **outStream,
-                         nsIStreamListener **listener)
+NS_METHOD
+nsSyncStreamListener::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
     nsSyncStreamListener* l = new nsSyncStreamListener();
     if (l == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv = l->Init(inStream);
-    if (NS_FAILED(rv)) {
-        delete l;
-        return rv;
-    }
-
     NS_ADDREF(l);
-    *listener = l;
-    *outStream = l->GetOutputStream();
-    NS_ADDREF(*outStream);
-    return NS_OK;
+    nsresult rv = l->QueryInterface(aIID, aResult);
+    NS_RELEASE(l);
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

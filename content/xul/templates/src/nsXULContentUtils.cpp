@@ -55,7 +55,7 @@
 #include "nsIXULContentUtils.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsLayoutCID.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"

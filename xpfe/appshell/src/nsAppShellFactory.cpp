@@ -34,13 +34,10 @@
 #include "nsIDialogParamBlock.h"
 #include "nsAbout.h"
 #include "nsIGenericFactory.h"
+
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult);
-
-nsresult NS_NewDefaultProtocolHelperFactory(nsIFactory** aResult);
-
-
 
 static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kCmdLineServiceCID,   NS_COMMANDLINE_SERVICE_CID);
@@ -137,9 +134,6 @@ NSGetFactory(nsISupports* serviceMgr,
   }
   else if (aClass.Equals(kXPConnectFactoryCID)) {
     rv = NS_NewXPConnectFactoryFactory(aFactory);
-  }
-  else if (aClass.Equals(kProtocolHelperCID)) {
-    rv = NS_NewDefaultProtocolHelperFactory(aFactory);
   }
   else if ( aClass.Equals( kNetSupportDialogCID ) )
   {

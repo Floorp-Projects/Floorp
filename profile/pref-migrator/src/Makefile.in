@@ -40,7 +40,6 @@ EXPORTS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		$(MOZ_NECKO_UTIL_LIBS) \
 		-L$(DIST)/bin \
 		$(NSPR_LIBS) \
 		-lxpcom \

@@ -95,11 +95,6 @@ LLIBS=                         \
  $(DIST)\lib\xpcom.lib        \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib \
  $(LIBNSPR)                     \
-!ifdef NECKO
- $(DIST)\lib\neckoutil_s.lib \
-!else
- $(DIST)\lib\netlib.lib \
-!endif
  $(DIST)\lib\jsdom.lib          \
 !ifdef MOZ_FULLCIRCLE
  $(MOZ_TOOLS)\lib\fulls32.lib \

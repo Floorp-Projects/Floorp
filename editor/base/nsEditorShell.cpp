@@ -46,7 +46,7 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsIStyleSet.h"
 #include "nsIURI.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"

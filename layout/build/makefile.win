@@ -55,11 +55,6 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
 !ifdef MOZ_MATHML
 	-I..\mathml\content\src \
 !endif
-!ifdef NECKO
-	-I$(PUBLIC)\necko \
-!else
-	-I$(PUBLIC)\netlib \
-!endif
         -I$(PUBLIC)\rdf
 
 # These are the libraries we need to link with to create the dll
@@ -87,11 +82,6 @@ LLIBS=					\
  $(DIST)\lib\gkgfxwin.lib		\
  $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\jsdom.lib		        \
-!ifdef NECKO
- $(DIST)\lib\neckoutil_s.lib	        \
-!else
- $(DIST)\lib\netlib.lib		        \
-!endif
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 !if defined(MOZ_DEBUG) && defined(GLOWCODE) && "$(MOZ_BITS)"=="32"
  $(GLOWDIR)\glowcode.lib                \

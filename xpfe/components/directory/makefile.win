@@ -66,7 +66,6 @@ LCFLAGS = \
 # These are the libraries we need to link with to create the DLL
 LLIBS=                          \
  $(DIST)\lib\js3250.lib         \
- $(DIST)\lib\neckoutil_s.lib    \
  $(DIST)\lib\xpcom.lib          \
  $(LIBNSPR)                     \
  $(NULL)

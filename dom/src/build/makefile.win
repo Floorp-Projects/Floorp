@@ -53,11 +53,6 @@ LLIBS=							\
 	$(DIST)\lib\jsdomhtml_s.lib			\
 	$(DIST)\lib\jsdomcss_s.lib			\
 	$(DIST)\lib\gkgfxwin.lib			\
-!ifdef NECKO
-	$(DIST)\lib\neckoutil_s.lib			\
-!else
-	$(DIST)\lib\netlib.lib				\
-!endif
 	$(DIST)\lib\js32$(VERSION_NUMBER).lib		\
 	$(DIST)\lib\xpcom.lib				\
 	$(DIST)\lib\plds3.lib				\

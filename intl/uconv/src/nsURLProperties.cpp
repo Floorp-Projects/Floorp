@@ -24,8 +24,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
-
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 

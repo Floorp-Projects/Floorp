@@ -25,7 +25,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 //
 // guids

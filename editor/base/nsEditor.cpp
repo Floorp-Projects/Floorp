@@ -63,7 +63,7 @@
 #include "nsIStringStream.h"
 #include "nsITextContent.h"
 
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 #include "nsIContent.h"
 #include "nsIContentIterator.h"

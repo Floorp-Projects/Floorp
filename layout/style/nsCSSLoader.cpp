@@ -37,7 +37,7 @@
 #include "nsIURL.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
@@ -593,9 +593,10 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
 NS_IMETHODIMP
 SheetLoadData::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
                                        nsresult aStatus,
+                                       PRUint32 stringLen,
                                        const PRUnichar* string)
 {
-  nsString aStyleData(string);
+  nsString aStyleData(string, stringLen);
   mLoader->DidLoadStyle(aLoader, aStyleData, this, aStatus);
 
   // We added a reference when the loader was created. This

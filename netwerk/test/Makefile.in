@@ -48,7 +48,6 @@ endif
 LIBS		= \
 		-lmozjs \
 		-lxpcom \
-		$(MOZ_NECKO_UTIL_LIBS) \
 		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)

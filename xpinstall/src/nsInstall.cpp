@@ -54,7 +54,7 @@
 #include "nsInstallPatch.h"
 #include "nsInstallUninstall.h"
 #include "nsInstallResources.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 #include "nsProxiedService.h"
 #include "nsINetSupportDialogService.h"

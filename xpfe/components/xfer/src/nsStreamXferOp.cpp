@@ -36,7 +36,7 @@
 // For opening input/output streams.
 #include "nsIFileTransportService.h"
 #include "nsIOutputStream.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 #include "prprf.h"
 

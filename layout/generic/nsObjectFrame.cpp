@@ -35,7 +35,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsIHTMLContent.h"
 #include "nsISupportsArray.h"

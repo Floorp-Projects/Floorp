@@ -557,8 +557,10 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     NS_PurgeAtomTable();
 
+#ifdef DEBUG
     nsTraceRefcnt::DumpStatistics();
     nsTraceRefcnt::ResetStatistics();
+#endif
 
 #ifdef GC_LEAK_DETECTOR
 	// Shutdown the Leak detector.

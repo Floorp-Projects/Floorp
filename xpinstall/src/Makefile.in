@@ -67,7 +67,6 @@ CPPSRCS		= \
 LOCAL_INCLUDES	= -I$(srcdir)/../public
 
 EXTRA_DSO_LDOPTS = \
-		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_REGISTRY_LIBS) \
 		-L$(DIST)/bin \
 		-ljsdom \

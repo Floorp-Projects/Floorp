@@ -23,7 +23,7 @@
 #include "nsUnicharStreamLoader.h"
 #include "nsIInputStream.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIBufferInputStream.h"
 #include "nsCOMPtr.h"
 #include "nsILoadGroup.h"
@@ -66,7 +66,8 @@ nsUnicharStreamLoader::Init(nsIURI* aURL,
   NS_RELEASE(channel);
 
   if (NS_FAILED(rv) && mObserver) {
-    nsresult rv2 = mObserver->OnUnicharStreamComplete(this, rv, mData->GetUnicode());
+    nsresult rv2 = mObserver->OnUnicharStreamComplete(this, rv, mData->Length(), 
+                                                      mData->GetUnicode());
     if (NS_FAILED(rv2))
       rv = rv2; // take the user's error instead
   }
@@ -122,7 +123,8 @@ NS_IMETHODIMP
 nsUnicharStreamLoader::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
                                      nsresult status, const PRUnichar *errorMsg)
 {
-  nsresult rv = mObserver->OnUnicharStreamComplete(this, status, mData->GetUnicode());
+  nsresult rv = mObserver->OnUnicharStreamComplete(this, status, mData->Length(), 
+                                                   mData->GetUnicode());
 ///  return mLoadGroup->RemoveChannel(channel, ctxt, status, errorMsg);
   return rv;
 }

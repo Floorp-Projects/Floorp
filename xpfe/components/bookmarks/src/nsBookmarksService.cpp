@@ -71,7 +71,7 @@
 #include "nsIAppShell.h"
 
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 #include "nsIHTTPChannel.h"

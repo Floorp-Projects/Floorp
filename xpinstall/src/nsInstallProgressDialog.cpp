@@ -35,7 +35,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMElement.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIURL.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
