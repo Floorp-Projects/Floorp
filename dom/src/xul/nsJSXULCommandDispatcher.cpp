@@ -36,8 +36,8 @@
 #include "nsString.h"
 #include "nsIController.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIDOMXULCommandDispatcher.h"
 #include "nsIControllers.h"
 
 
@@ -46,8 +46,8 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIControllerIID, NS_ICONTROLLER_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIWindowInternalIID, NS_IDOMWINDOWINTERNAL_IID);
 static NS_DEFINE_IID(kIXULCommandDispatcherIID, NS_IDOMXULCOMMANDDISPATCHER_IID);
-static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 
 //
@@ -199,7 +199,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
         if (NS_SUCCEEDED(rv)) {
           nsIDOMWindowInternal* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kIWindowIID, NS_ConvertASCIItoUCS2("Window"),
+                                                  kIWindowInternalIID, NS_ConvertASCIItoUCS2("WindowInternal"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
             break;
