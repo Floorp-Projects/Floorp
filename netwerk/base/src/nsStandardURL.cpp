@@ -1416,6 +1416,9 @@ nsStandardURL::SetQuery(const char *query)
         mSpec.Insert('?', mQuery.mPos);
         mQuery.mPos++;
         mQuery.mLen = 0;
+        // the insertion pushes these out by 1
+        mPath.mLen++;
+        mRef.mPos++;
     }
 
     // escape query if necessary
