@@ -155,6 +155,10 @@ typedef PRUcs2 PRUnichar;
 #undef HAS_C_PLUS_PLUS_CASTS
 #endif
 
+#if defined(AIX)
+#undef HAS_C_PLUS_PLUS_CASTS
+#endif
+
 #if defined(HAS_C_PLUS_PLUS_CASTS)
 #define NS_STATIC_CAST(__type, __ptr)      static_cast<__type>(__ptr)
 #define NS_CONST_CAST(__type, __ptr)       const_cast<__type>(__ptr)
