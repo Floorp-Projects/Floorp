@@ -700,8 +700,8 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
             if ((channelContentLength - (aOffset + aLength)) == 0)
             {
                 // we're done with this pass; see if we need to do upload
-                nsXPIDLCString contentType;
-                channel->GetContentType(getter_Copies(contentType));
+                nsCAutoString contentType;
+                channel->GetContentType(contentType);
                 // if we don't have the right type of output stream then it's a local file
                 nsCOMPtr<nsIStorageStream> storStream(do_QueryInterface(data->mStream));
                 if (storStream)
@@ -1455,17 +1455,20 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
         NS_ENSURE_TRUE(mMIMEService, NS_ERROR_FAILURE);
     }
 
-    nsXPIDLCString contentType;
+    nsCAutoString contentType;
 
     // Get the content type from the channel
-    aChannel->GetContentType(getter_Copies(contentType));
+    aChannel->GetContentType(contentType);
 
     // Get the content type from the MIME service
     if (contentType.Length() == 0)
     {
         nsCOMPtr<nsIURI> uri;
         aChannel->GetOriginalURI(getter_AddRefs(uri));
-        rv = mMIMEService->GetTypeFromURI(uri, getter_Copies(contentType));
+        nsXPIDLCString mimeType;
+        rv = mMIMEService->GetTypeFromURI(uri, getter_Copies(mimeType));
+        if (NS_SUCCEEDED(rv))
+            contentType = mimeType;
     }
 
     // Append the extension onto the file

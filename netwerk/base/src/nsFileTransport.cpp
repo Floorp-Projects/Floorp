@@ -245,13 +245,18 @@ nsFileTransport::Init(nsFileTransportService *aService, nsIFile* file, PRInt32 i
 }
 
 nsresult
-nsFileTransport::Init(nsFileTransportService *aService, const char* name, nsIInputStream* inStr,
-                      const char* contentType, PRInt32 contentLength, PRBool closeStreamWhenDone)
+nsFileTransport::Init(nsFileTransportService *aService,
+                      const nsACString &name,
+                      nsIInputStream* inStr,
+                      const nsACString &contentType,
+                      const nsACString &contentCharset,
+                      PRInt32 contentLength,
+                      PRBool closeStreamWhenDone)
 {
     nsresult rv;
     nsCOMPtr<nsIInputStreamIO> io;
-    rv = NS_NewInputStreamIO(getter_AddRefs(io),
-                             name, inStr, contentType, contentLength);
+    rv = NS_NewInputStreamIO(getter_AddRefs(io), name, inStr,
+                             contentType, contentCharset, contentLength);
     if (NS_FAILED(rv)) return rv;
     mCloseStreamWhenDone = closeStreamWhenDone;
     return Init(aService, io);
@@ -267,9 +272,7 @@ nsFileTransport::Init(nsFileTransportService *aService, nsIStreamIO* io)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     mStreamIO = io;
-    nsXPIDLCString name;
-    rv = mStreamIO->GetName(getter_Copies(name));
-    mStreamName = NS_STATIC_CAST(const char*, name);
+    rv = mStreamIO->GetName(mStreamName);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetName failed");
 
     NS_ADDREF(mService = aService);
@@ -317,10 +320,10 @@ nsFileTransport::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFileTransport::GetName(PRUnichar* *result)
+nsFileTransport::GetName(nsACString &result)
 {
-    *result = ToNewUnicode(mStreamName);
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    result = mStreamName;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -646,7 +649,9 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
 
     switch (mXferState) {
       case OPEN_FOR_READ: { 
-        mStatus = mStreamIO->Open(&mTotalAmount);
+        mStatus = mStreamIO->Open();
+        if (NS_SUCCEEDED(mStatus))
+            mStreamIO->GetContentLength(&mTotalAmount);
         LOG(("nsFileTransport: OPEN_FOR_READ [this=%x %s] status=%x\n", this, mStreamName.get(), mStatus));
         if (mListener) {
             nsresult rv = mListener->OnStartRequest(this, mContext);  // always send the start notification
@@ -836,7 +841,9 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
       case OPEN_FOR_WRITE: {
         LOG(("nsFileTransport: OPEN_FOR_WRITE [this=%x %s]\n",
             this, mStreamName.get()));
-        mStatus = mStreamIO->Open(&mTotalAmount);
+        mStatus = mStreamIO->Open();
+        if (NS_SUCCEEDED(mStatus)) // XXX why do we care about this when writing?
+            mStatus = mStreamIO->GetContentLength(&mTotalAmount);
         
         if (mStatus == NS_ERROR_FILE_NOT_FOUND)
             mStatus = NS_OK;

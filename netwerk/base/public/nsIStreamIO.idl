@@ -51,10 +51,10 @@ interface nsIFile;
 interface nsIStreamIO : nsISupports
 {
     /**
-     * Logically opens a stream I/O object, returning its content length
-     * If this is unknown, the value -1 is returned.
+     * Logically opens a stream I/O object.  This method may block the
+     * calling thread pending i/o or other delays.
      */
-    void open(out long contentLength);
+    void open();
 
     /**
      * Logically closes a stream I/O object. A status value is passed in
@@ -76,12 +76,22 @@ interface nsIStreamIO : nsISupports
      * The 'name' of a stream I/O object. This name is often
      * used for display purposes.
      */
-    readonly attribute string name;
+    readonly attribute AUTF8String name;
 
     /**
      * Associated content type, if any.
-     **/
-    readonly attribute string contentType; 
+     */
+    readonly attribute ACString contentType; 
+
+    /**
+     * Associated content charset, if any.
+     */
+    readonly attribute ACString contentCharset;
+
+    /**
+     * Associated content length; -1 if unknown.
+     */
+    readonly attribute long contentLength;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,9 +165,10 @@ NS_NewFileIO(nsIFileIO **result,
 [scriptable, uuid(2d64af08-0d06-11d4-986e-00c04fa0cf4a)]
 interface nsIInputStreamIO : nsIStreamIO 
 {
-    void init(in string name,
+    void init(in AUTF8String name,
               in nsIInputStream input,
-              in string contentType, 
+              in ACString contentType, 
+              in ACString contentCharset,
               in long contentLength);
 };
 
@@ -176,9 +187,10 @@ interface nsIInputStreamIO : nsIStreamIO
 
 inline nsresult
 NS_NewInputStreamIO(nsIInputStreamIO* *result,
-                    const char* name,
+                    const nsACString &name,
                     nsIInputStream* inStr,
-                    const char* contentType,
+                    const nsACString &contentType,
+                    const nsACString &contentCharset,
                     PRInt32 contentLength)
 {
     nsresult rv;
@@ -189,7 +201,7 @@ NS_NewInputStreamIO(nsIInputStreamIO* *result,
                                             NS_GET_IID(nsIInputStreamIO),
                                             getter_AddRefs(io));
     if (NS_FAILED(rv)) return rv;
-    rv = io->Init(name, inStr, contentType, contentLength);
+    rv = io->Init(name, inStr, contentType, contentCharset, contentLength);
     if (NS_FAILED(rv)) return rv;
 
     *result = io;

@@ -64,7 +64,6 @@ PRLogModuleInfo* gJarProtocolLog = nsnull;
 
 nsJARChannel::nsJARChannel()
     : mLoadFlags(LOAD_NORMAL)
-    , mContentType(nsnull)
     , mContentLength(-1)
     , mStatus(NS_OK)
 #ifdef DEBUG
@@ -86,8 +85,6 @@ nsJARChannel::nsJARChannel()
 
 nsJARChannel::~nsJARChannel()
 {
-    if (mContentType)
-        nsCRT::free(mContentType);
     NS_IF_RELEASE(mJARProtocolHandler);
 }
 
@@ -133,14 +130,9 @@ nsJARChannel::Init(nsJARProtocolHandler* aHandler, nsIURI* uri)
 // nsIRequest methods
 
 NS_IMETHODIMP
-nsJARChannel::GetName(PRUnichar* *result)
+nsJARChannel::GetName(nsACString &result)
 {
-    nsresult rv;
-    nsCAutoString urlStr;
-    rv = mURI->GetSpec(urlStr);
-    if (NS_FAILED(rv)) return rv;
-    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(urlStr));
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return mURI->GetSpec(result);
 }
 
 NS_IMETHODIMP
@@ -240,7 +232,7 @@ nsJARChannel::OpenJARElement()
 {
     nsresult rv;
     nsAutoCMonitor mon(this);
-    rv = Open((PRInt32*) nsnull); // is there a better way....  where is my C++ book?!
+    rv = Open();
     if (NS_SUCCEEDED(rv))
         rv = GetInputStream(getter_AddRefs(mSynchronousInputStream));
     mon.Notify();       // wake up nsIChannel::Open
@@ -388,10 +380,10 @@ nsJARChannel::SetLoadFlags(PRUint32 aLoadFlags)
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetContentType(char* *aContentType)
+nsJARChannel::GetContentType(nsACString &aContentType)
 {
     nsresult rv = NS_OK;
-    if (mContentType == nsnull) {
+    if (mContentType.IsEmpty()) {
         if (mJAREntry.IsEmpty())
             return NS_ERROR_NOT_AVAILABLE;
         const char *ext = nsnull, *fileName = mJAREntry.get();
@@ -405,46 +397,61 @@ nsJARChannel::GetContentType(char* *aContentType)
         if (ext) {
             nsIMIMEService* mimeServ = mJARProtocolHandler->GetCachedMimeService();
             if (mimeServ) {
-                rv = mimeServ->GetTypeFromExtension(ext, &mContentType);
+                nsXPIDLCString mimeType;
+                rv = mimeServ->GetTypeFromExtension(ext, getter_Copies(mimeType));
+                if (NS_SUCCEEDED(rv))
+                    mContentType = mimeType;
             }
         }
         else
             rv = NS_ERROR_NOT_AVAILABLE;
 
         if (NS_FAILED(rv)) {
-            mContentType = strdup(UNKNOWN_CONTENT_TYPE);
-            if (mContentType == nsnull)
-                rv = NS_ERROR_OUT_OF_MEMORY;
-            else
-                rv = NS_OK;
+            mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+            rv = NS_OK;
         }
     }
-    if (NS_SUCCEEDED(rv)) {
-        *aContentType = strdup(mContentType);
-        if (*aContentType == nsnull)
-            rv = NS_ERROR_OUT_OF_MEMORY;
-    }
+    if (NS_SUCCEEDED(rv))
+        aContentType = mContentType;
+    else
+        aContentType.Truncate();
     return rv;
 }
 
 NS_IMETHODIMP
-nsJARChannel::SetContentType(const char *aContentType)
+nsJARChannel::SetContentType(const nsACString &aContentType)
 {
-    if (mContentType) {
-        nsCRT::free(mContentType);
-    }
+    mContentType = aContentType;
+    return NS_OK;
+}
 
-    mContentType = nsCRT::strdup(aContentType);
-    if (!mContentType) return NS_ERROR_OUT_OF_MEMORY;
+NS_IMETHODIMP
+nsJARChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    aContentCharset = mContentCharset;
+    return NS_OK;
+}
 
+NS_IMETHODIMP
+nsJARChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    mContentCharset = aContentCharset;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARChannel::GetContentLength(PRInt32* aContentLength)
 {
-    if (mContentLength == -1)
-        return NS_ERROR_FAILURE;
+    NS_ENSURE_ARG_POINTER(aContentLength);
+    if (mContentLength == -1) {
+        nsresult rv;
+        nsCOMPtr<nsIZipEntry> entry;
+        rv = mJAR->GetEntry(mJAREntry.get(), getter_AddRefs(entry));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = entry->GetRealSize((PRUint32*)&mContentLength);
+        if (NS_FAILED(rv)) return rv;
+    }
     *aContentLength = mContentLength;
     return NS_OK;
 }
@@ -646,12 +653,15 @@ nsJARChannel::EnsureZipReader()
 }
 
 NS_IMETHODIMP
-nsJARChannel::Open(PRInt32 *contentLength) 
+nsJARChannel::Open()
 {
-    nsresult rv;
-    rv = EnsureZipReader();
-    if (NS_FAILED(rv)) return rv;
+    return EnsureZipReader();
+}
 
+/*
+NS_IMETHODIMP
+nsJARChannel::GetContentLength(PRInt32 *length)
+{
     nsCOMPtr<nsIZipEntry> entry;
     rv = mJAR->GetEntry(mJAREntry.get(), getter_AddRefs(entry));
     if (NS_FAILED(rv)) return rv;
@@ -663,6 +673,7 @@ nsJARChannel::Open(PRInt32 *contentLength)
 
     return rv;
 }
+*/
 
 NS_IMETHODIMP
 nsJARChannel::Close(nsresult status) 

@@ -92,13 +92,9 @@ nsWyciwygChannel::GetInterface(const nsIID &aIID, void **aResult)
 ///////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsWyciwygChannel::GetName(PRUnichar**aName)
+nsWyciwygChannel::GetName(nsACString &aName)
 {
-  NS_ENSURE_ARG_POINTER(aName);
-  nsCAutoString spec;
-  mURI->GetSpec(spec);
-  *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(spec));
-  return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return mURI->GetSpec(aName);
 }
  
 NS_IMETHODIMP
@@ -275,15 +271,27 @@ nsWyciwygChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::GetContentType(char* *aContentType)
+nsWyciwygChannel::GetContentType(nsACString &aContentType)
 {
-  NS_ENSURE_ARG_POINTER(aContentType);
-  *aContentType = nsCRT::strdup(wyciwyg_TYPE);
+  aContentType = NS_LITERAL_CSTRING(wyciwyg_TYPE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::SetContentType(const char *aContentType)
+nsWyciwygChannel::SetContentType(const nsACString &aContentType)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsWyciwygChannel::GetContentCharset(nsACString &aContentCharset)
+{
+  aContentCharset.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWyciwygChannel::SetContentCharset(const nsACString &aContentCharset)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

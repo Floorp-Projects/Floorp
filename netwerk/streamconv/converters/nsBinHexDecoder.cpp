@@ -545,7 +545,7 @@ nsresult nsBinHexDecoder::SetContentType(nsIRequest * aRequest, const char * fil
         {
           rv = mimeService->GetTypeFromExtension(fileExt.get(), getter_Copies(contentType));
           if (NS_SUCCEEDED(rv) && *(contentType.get()))
-          mContentType = contentType;
+            mContentType = contentType;
         }
       }
     }
@@ -556,11 +556,11 @@ nsresult nsBinHexDecoder::SetContentType(nsIRequest * aRequest, const char * fil
   // content type and still think it's mac binhex, then reset to unknown.
   if (mContentType.IsEmpty() || mContentType.Equals("application/mac-binhex40")) 
   {
-    mContentType = UNKNOWN_CONTENT_TYPE;
+    mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
   }
 
   // now set the content type on the channel.
-  channel->SetContentType(mContentType.get());
+  channel->SetContentType(mContentType);
 
   return NS_OK;
 }

@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 #include "nsHttpResponseHead.h"
+#include "nsPrintfCString.h"
 #include "prprf.h"
 #include "prtime.h"
 
@@ -32,16 +33,16 @@
 //-----------------------------------------------------------------------------
 
 nsresult
-nsHttpResponseHead::SetHeader(nsHttpAtom hdr, const char *val)
+nsHttpResponseHead::SetHeader(nsHttpAtom hdr, const nsACString &val)
 {
     nsresult rv = mHeaders.SetHeader(hdr, val);
     if (NS_FAILED(rv)) return rv;
 
     // response to changes in these headers
     if (hdr == nsHttp::Cache_Control)
-        ParseCacheControl(val);
+        ParseCacheControl(PromiseFlatCString(val).get());
     else if (hdr == nsHttp::Pragma)
-        ParsePragma(val);
+        ParsePragma(PromiseFlatCString(val).get());
 
     return NS_OK;
 }
@@ -51,12 +52,9 @@ nsHttpResponseHead::SetContentLength(PRInt32 len)
 {
     mContentLength = len;
     if (len < 0)
-        SetHeader(nsHttp::Content_Length, nsnull);
-    else {
-        nsCAutoString buf;
-        buf.AppendInt(len);
-        SetHeader(nsHttp::Content_Length, buf.get());
-    }
+        SetHeader(nsHttp::Content_Length, NS_LITERAL_CSTRING(""));
+    else
+        SetHeader(nsHttp::Content_Length, nsPrintfCString("%d", len));
 }
 
 void
@@ -158,7 +156,7 @@ nsHttpResponseHead::ParseStatusLine(char *line)
     
     if ((mVersion == NS_HTTP_VERSION_0_9) || !(line = PL_strchr(line, ' '))) {
         mStatus = 200;
-        mStatusText = nsCRT::strdup("OK");
+        mStatusText = NS_LITERAL_CSTRING("OK");
     }
     else {
         // Status-Code
@@ -171,14 +169,14 @@ nsHttpResponseHead::ParseStatusLine(char *line)
         // Reason-Phrase is whatever is remaining of the line
         if (!(line = PL_strchr(line, ' '))) {
             LOG(("mal-formed response status line; assuming statusText = 'OK'\n"));
-            mStatusText = nsCRT::strdup("OK");
+            mStatusText = NS_LITERAL_CSTRING("OK");
         }
         else
-            mStatusText = nsCRT::strdup(++line);
+            mStatusText = ++line;
     }
 
     LOG(("Have status line [version=%u status=%u statusText=%s]\n",
-        PRUintn(mVersion), PRUintn(mStatus), mStatusText));
+        PRUintn(mVersion), PRUintn(mStatus), mStatusText.get()));
 }
 
 void
@@ -418,10 +416,10 @@ nsHttpResponseHead::UpdateHeaders(nsHttpHeaderArray &headers)
             LOG(("new response header [%s: %s]\n", header.get(), val));
 
             // delete the current header value (if any)
-            mHeaders.SetHeader(header, nsnull);
+            mHeaders.SetHeader(header, NS_LITERAL_CSTRING(""));
 
             // copy the new header value...
-            mHeaders.SetHeader(header, val);
+            mHeaders.SetHeader(header, nsDependentCString(val));
         }
     }
 
@@ -441,9 +439,9 @@ nsHttpResponseHead::Reset()
     mCacheControlNoStore = PR_FALSE;
     mCacheControlNoCache = PR_FALSE;
     mPragmaNoCache = PR_FALSE;
-    CRTFREEIF(mStatusText);
-    CRTFREEIF(mContentType);
-    CRTFREEIF(mContentCharset);
+    mStatusText.Truncate();
+    mContentType.Truncate();
+    mContentCharset.Truncate();
 }
 
 nsresult
@@ -551,24 +549,24 @@ nsHttpResponseHead::ParseContentType(char *type)
 
     // a response could have multiple content type headers... we'll honor
     // the last one.
-    CRTFREEIF(mContentCharset);
-    CRTFREEIF(mContentType);
+    mContentCharset.Truncate();
+    mContentType.Truncate();
 
     // we don't care about comments (although they are invalid here)
-    char *p = PL_strchr(type, '(');
+    char *p = (char *) strchr(type, '(');
     if (p)
         *p = 0;
 
     // check if the content-type has additional fields...
-    if ((p = PL_strchr(type, ';')) != nsnull) {
+    if ((p = (char *) strchr(type, ';')) != nsnull) {
         char *p2, *p3;
         // is there a charset field?
         if ((p2 = PL_strcasestr(p, "charset=")) != nsnull) {
             p2 += 8;
 
             // check end of charset parameter
-            if ((p3 = PL_strchr(p2, ';')) == nsnull)
-                p3 = p2 + PL_strlen(p2);
+            if ((p3 = (char *) strchr(p2, ';')) == nsnull)
+                p3 = p2 + strlen(p2);
 
             // trim any trailing whitespace
             do {
@@ -576,11 +574,11 @@ nsHttpResponseHead::ParseContentType(char *type)
             } while ((*p3 == ' ') || (*p3 == '\t'));
             *++p3 = 0; // overwrite first char after the charset field
 
-            mContentCharset = nsCRT::strdup(p2);
+            mContentCharset = p2;
         }
     }
     else
-        p = type + PL_strlen(type);
+        p = type + strlen(type);
 
     // trim any trailing whitespace
     while (--p >= type && ((*p == ' ') || (*p == '\t')))
@@ -593,7 +591,7 @@ nsHttpResponseHead::ParseContentType(char *type)
 
     // If the server sent "*/*", it is meaningless, so do not store it.
     if (PL_strcmp(type, "*/*"))
-        mContentType = nsCRT::strdup(type);
+        mContentType = type;
 }
 
 void

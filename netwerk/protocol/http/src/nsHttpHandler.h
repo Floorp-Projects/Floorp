@@ -83,14 +83,15 @@ public:
                                        PRBool useProxy);
     PRBool   IsAcceptableEncoding(const char *encoding);
 
-    const char   *UserAgent();
-    nsHttpVersion DefaultVersion()     { return mHttpVersion; }
-    PRUint8       ReferrerLevel()      { return mReferrerLevel; }
-    PRBool        SendSecureXSiteReferrer() { return mSendSecureXSiteReferrer; }
-    PRUint8       RedirectionLimit()   { return mRedirectionLimit; }
-    PRUint16      IdleTimeout()        { return mIdleTimeout; }
-    PRUint16      MaxRequestAttempts() { return mMaxRequestAttempts; }
-    nsIIDNService *IDNConverter()      { return mIDNConverter; }
+    const nsAFlatCString &UserAgent();
+
+    nsHttpVersion  DefaultVersion()          { return mHttpVersion; }
+    PRUint8        ReferrerLevel()           { return mReferrerLevel; }
+    PRBool         SendSecureXSiteReferrer() { return mSendSecureXSiteReferrer; }
+    PRUint8        RedirectionLimit()        { return mRedirectionLimit; }
+    PRUint16       IdleTimeout()             { return mIdleTimeout; }
+    PRUint16       MaxRequestAttempts()      { return mMaxRequestAttempts; }
+    nsIIDNService *IDNConverter()            { return mIDNConverter; }
 
     nsHttpAuthCache *AuthCache() { return mAuthCache; }
 

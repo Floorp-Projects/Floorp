@@ -352,7 +352,7 @@ protected:
    
     nsString            mFilename; 
     nsString            mScratch;  //used for various purposes; non-persistent
-    nsAutoString        mMimeType;  //ok as an autostring; these are short.
+    nsCString           mMimeType;
 
     nsNodeAllocator     mNodeAllocator;
     nsDTDMode           mDTDMode;

@@ -133,7 +133,10 @@ nsAddbookProtocolHandler::GenerateXMLOutputChannel( nsString &aOutput,
   rv = NS_NewCStringInputStream(getter_AddRefs(inStr), utf8String);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = NS_NewInputStreamChannel(&channel, aURI, inStr, "text/xml", utf8String.Length());
+  rv = NS_NewInputStreamChannel(&channel, aURI, inStr,
+                                NS_LITERAL_CSTRING("text/xml"),
+                                NS_LITERAL_CSTRING(""),
+                                utf8String.Length());
   NS_ENSURE_SUCCESS(rv, rv);
   
   *_retval = channel;

@@ -59,7 +59,7 @@ imgRequest::imgRequest() :
   mObservers(0),
   mLoading(PR_FALSE), mProcessing(PR_FALSE),
   mImageStatus(imgIRequest::STATUS_NONE), mState(0),
-  mContentType(nsnull), mCacheId(0), mValidator(nsnull), mIsMultiPartChannel(PR_FALSE)
+  mCacheId(0), mValidator(nsnull), mIsMultiPartChannel(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -68,8 +68,6 @@ imgRequest::imgRequest() :
 imgRequest::~imgRequest()
 {
   /* destructor code */
-  if (mContentType)
-    nsCRT::free(mContentType);
 }
 
 nsresult imgRequest::Init(nsIChannel *aChannel,
@@ -547,9 +545,10 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
       mChannel = do_QueryInterface(aRequest);
   }
 
-  nsXPIDLCString mContentType;
-  mChannel->GetContentType(getter_Copies(mContentType));
-  if (PL_strcasecmp("multipart/x-mixed-replace", mContentType.get()) == 0)
+  nsCAutoString contentType;
+  mChannel->GetContentType(contentType);
+  if (contentType.Equals(NS_LITERAL_CSTRING("multipart/x-mixed-replace"),
+                         nsCaseInsensitiveCStringComparator()))
       mIsMultiPartChannel = PR_TRUE;
 
   /* set our state variables to their initial values. */
@@ -685,15 +684,14 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     /* NS_WARNING if the content type from the channel isn't the same if the sniffing */
 #endif
 
-    if (!mContentType) {
+    if (mContentType.IsEmpty()) {
       LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable |sniffing of mimetype failed|");
 
-      nsXPIDLCString contentType;
       nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
 
       nsresult rv = NS_ERROR_FAILURE;
       if (chan) {
-        rv = chan->GetContentType(getter_Copies(contentType));
+        rv = chan->GetContentType(mContentType);
       }
 
       if (NS_FAILED(rv)) {
@@ -707,14 +705,11 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
       }
 
       LOG_MSG(gImgLog, "imgRequest::OnDataAvailable", "Got content type from the channel");
-
-      mContentType = nsCRT::strdup(contentType.get());
     }
 
-    LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "content type", mContentType);
+    LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "content type", mContentType.get());
 
-    nsCAutoString conid("@mozilla.org/image/decoder;2?type=");
-    conid += mContentType;
+    nsCAutoString conid(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;2?type=") + mContentType);
 
     mDecoder = do_CreateInstance(conid.get());
 
@@ -786,13 +781,10 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
 {
   /* Is it a GIF? */
 
-  if (mContentType) {
-    nsCRT::free(mContentType);
-    mContentType = nsnull;
-  }
+  mContentType.Truncate();
 
   if (len >= 4 && !nsCRT::strncmp(buf, "GIF8", 4))  {
-    mContentType = nsCRT::strndup("image/gif", 9);
+    mContentType = NS_LITERAL_CSTRING("image/gif");
     return;
   }
 
@@ -802,7 +794,7 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
                    (unsigned char)buf[2]==0x4E &&
                    (unsigned char)buf[3]==0x47))
   { 
-    mContentType = nsCRT::strndup("image/png", 9);
+    mContentType = NS_LITERAL_CSTRING("image/png");
     return;
   }
 
@@ -818,7 +810,7 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
      ((unsigned char)buf[1])==0xD8 &&
      ((unsigned char)buf[2])==0xFF)
   {
-    mContentType = nsCRT::strndup("image/jpeg", 10);
+    mContentType = NS_LITERAL_CSTRING("image/jpeg");
     return;
   }
 
@@ -831,18 +823,18 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
    ((unsigned char) buf[1])==0x47 &&
    ((unsigned char) buf[4])==0x00 )
   {
-    mContentType = nsCRT::strndup("image/x-jg", 10);
+    mContentType = NS_LITERAL_CSTRING("image/x-jg");
     return;
   }
 
   if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
-    mContentType = nsCRT::strndup("image/bmp", 9);
+    mContentType = NS_LITERAL_CSTRING("image/bmp");
     return;
   }
 
   // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
   if (len >= 4 && !memcmp(buf, "\000\000\001\000", 4)) {
-    mContentType = nsCRT::strndup("image/x-icon", 12);
+    mContentType = NS_LITERAL_CSTRING("image/x-icon");
     return;
   }
 
@@ -851,7 +843,7 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
                    (unsigned char)buf[2]==0x4E &&
                    (unsigned char)buf[3]==0x47))
   { 
-    mContentType = nsCRT::strndup("video/x-mng", 11);
+    mContentType = NS_LITERAL_CSTRING("video/x-mng");
     return;
   }
 
@@ -860,7 +852,7 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
                    (unsigned char)buf[2]==0x4E &&
                    (unsigned char)buf[3]==0x47))
   { 
-    mContentType = nsCRT::strndup("image/x-jng", 11);
+    mContentType = NS_LITERAL_CSTRING("image/x-jng");
     return;
   }
 

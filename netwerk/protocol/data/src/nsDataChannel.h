@@ -80,6 +80,7 @@ protected:
     PRUint32                            mLoadFlags;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCString                           mContentType;
+    nsCString                           mContentCharset;
     PRInt32                             mContentLength;
     nsCOMPtr<nsISupports>               mOwner; 
     nsCOMPtr<nsIStreamListener>         mListener;

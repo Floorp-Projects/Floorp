@@ -237,7 +237,7 @@ nsHttpHandler::Init()
     LOG(("> product = %s\n", mProduct.get()));
     LOG(("> product-sub = %s\n", mProductSub.get()));
     LOG(("> product-comment = %s\n", mProductComment.get()));
-    LOG(("> user-agent = %s\n", UserAgent()));
+    LOG(("> user-agent = %s\n", UserAgent().get()));
 #endif
 
     mSessionStartTime = NowInSeconds();
@@ -288,22 +288,22 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
 
     // MIME based content negotiation lives!
     // Add the "Accept" header
-    rv = request->SetHeader(nsHttp::Accept, mAccept.get());
+    rv = request->SetHeader(nsHttp::Accept, mAccept);
     if (NS_FAILED(rv)) return rv;
 
     // Add the "Accept-Language" header
     if (!mAcceptLanguages.IsEmpty()) {
         // Add the "Accept-Language" header
-        rv = request->SetHeader(nsHttp::Accept_Language, mAcceptLanguages.get());
+        rv = request->SetHeader(nsHttp::Accept_Language, mAcceptLanguages);
         if (NS_FAILED(rv)) return rv;
     }
 
     // Add the "Accept-Encoding" header
-    rv = request->SetHeader(nsHttp::Accept_Encoding, mAcceptEncodings.get());
+    rv = request->SetHeader(nsHttp::Accept_Encoding, mAcceptEncodings);
     if (NS_FAILED(rv)) return rv;
 
     // Add the "Accept-Charset" header
-    rv = request->SetHeader(nsHttp::Accept_Charset, mAcceptCharsets.get());
+    rv = request->SetHeader(nsHttp::Accept_Charset, mAcceptCharsets);
     if (NS_FAILED(rv)) return rv;
 
     // RFC2616 section 19.6.2 states that the "Connection: keep-alive"
@@ -317,22 +317,17 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
     
     const char* connectionType = "close";
     if (caps & NS_HTTP_ALLOW_KEEPALIVE) {
-        char buf[32];
-        
-        PR_snprintf(buf, sizeof(buf), "%u", (PRUintn) mIdleTimeout);
-        
-        rv = request->SetHeader(nsHttp::Keep_Alive, buf);
+        rv = request->SetHeader(nsHttp::Keep_Alive, nsPrintfCString("%u", mIdleTimeout));
         if (NS_FAILED(rv)) return rv;
-        
         connectionType = "keep-alive";
     } else if (useProxy) {
         // Bug 92006
-        request->SetHeader(nsHttp::Connection, "close");
+        request->SetHeader(nsHttp::Connection, NS_LITERAL_CSTRING("close"));
     }
 
     const nsHttpAtom &header =
         useProxy ? nsHttp::Proxy_Connection : nsHttp::Connection;
-    return request->SetHeader(header, connectionType);
+    return request->SetHeader(header, nsDependentCString(connectionType));
 }
 
 PRBool
@@ -666,12 +661,12 @@ nsHttpHandler::OnExamineResponse(nsIHttpChannel *chan)
 // nsHttpHandler <private>
 //-----------------------------------------------------------------------------
 
-const char *
+const nsAFlatCString &
 nsHttpHandler::UserAgent()
 {
     if (mUserAgentOverride) {
         LOG(("using general.useragent.override : %s\n", mUserAgentOverride.get()));
-        return mUserAgentOverride.get();
+        return mUserAgentOverride;
     }
 
     if (mUserAgentIsDirty) {
@@ -679,7 +674,7 @@ nsHttpHandler::UserAgent()
         mUserAgentIsDirty = PR_FALSE;
     }
 
-    return mUserAgent.get();
+    return mUserAgent;
 }
 
 nsresult
@@ -967,12 +962,29 @@ nsHttpHandler::BuildUserAgent()
 {
     LOG(("nsHttpHandler::BuildUserAgent\n"));
 
-    NS_ASSERTION(mAppName &&
-                 mAppVersion &&
-                 mPlatform &&
-                 mSecurity &&
-                 mOscpu,
+    NS_ASSERTION(!mAppName.IsEmpty() &&
+                 !mAppVersion.IsEmpty() &&
+                 !mPlatform.IsEmpty() &&
+                 !mSecurity.IsEmpty() &&
+                 !mOscpu.IsEmpty(),
                  "HTTP cannot send practical requests without this much");
+
+    // preallocate to worst-case size, which should always be better
+    // than if we didn't preallocate at all.
+    mUserAgent.SetCapacity(mAppName.Length() + 
+                           mAppVersion.Length() + 
+                           mPlatform.Length() + 
+                           mSecurity.Length() +
+                           mOscpu.Length() +
+                           mLanguage.Length() +
+                           mMisc.Length() +
+                           mProduct.Length() +
+                           mProductSub.Length() +
+                           mProductComment.Length() +
+                           mVendor.Length() +
+                           mVendorSub.Length() +
+                           mVendorComment.Length() +
+                           22);
 
     // Application portion
     mUserAgent.Assign(mAppName);
@@ -987,25 +999,25 @@ nsHttpHandler::BuildUserAgent()
     mUserAgent += mSecurity;
     mUserAgent += "; ";
     mUserAgent += mOscpu;
-    if (mLanguage) {
+    if (!mLanguage.IsEmpty()) {
         mUserAgent += "; ";
         mUserAgent += mLanguage;
     }
-    if (mMisc) {
+    if (!mMisc.IsEmpty()) {
         mUserAgent += "; ";
         mUserAgent += mMisc;
     }
     mUserAgent += ')';
 
     // Product portion
-    if (mProduct) {
+    if (!mProduct.IsEmpty()) {
         mUserAgent += ' ';
         mUserAgent += mProduct;
-        if (mProductSub) {
+        if (!mProductSub.IsEmpty()) {
             mUserAgent += '/';
             mUserAgent += mProductSub;
         }
-        if (mProductComment) {
+        if (!mProductComment.IsEmpty()) {
             mUserAgent += " (";
             mUserAgent += mProductComment;
             mUserAgent += ')';
@@ -1013,14 +1025,14 @@ nsHttpHandler::BuildUserAgent()
     }
 
     // Vendor portion
-    if (mVendor) {
+    if (!mVendor.IsEmpty()) {
         mUserAgent += ' ';
         mUserAgent += mVendor;
-        if (mVendorSub) {
+        if (!mVendorSub.IsEmpty()) {
             mUserAgent += '/';
             mUserAgent += mVendorSub;
         }
-        if (mVendorComment) {
+        if (!mVendorComment.IsEmpty()) {
             mUserAgent += " (";
             mUserAgent += mVendorComment;
             mUserAgent += ')';
@@ -1520,7 +1532,7 @@ nsHttpHandler::SetAcceptLanguages(const char *aAcceptLanguages)
     nsCString buf;
     nsresult rv = PrepareAcceptLanguages(aAcceptLanguages, buf);
     if (NS_SUCCEEDED(rv))
-        mAcceptLanguages.Assign(buf.get());
+        mAcceptLanguages.Assign(buf);
     return rv;
 }
 
@@ -1648,7 +1660,7 @@ nsHttpHandler::SetAcceptCharsets(const char *aAcceptCharsets)
     nsCString buf;
     nsresult rv = PrepareAcceptCharsets(aAcceptCharsets, buf);
     if (NS_SUCCEEDED(rv))
-        mAcceptCharsets.Assign(buf.get());
+        mAcceptCharsets.Assign(buf);
     return rv;
 }
 
@@ -1792,135 +1804,148 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpHandler::GetUserAgent(char **aUserAgent)
+nsHttpHandler::GetUserAgent(nsACString &value)
 {
-    return DupString(UserAgent(), aUserAgent);
+    value = UserAgent();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetAppName(char **aAppName)
+nsHttpHandler::GetAppName(nsACString &value)
 {
-    return DupString(mAppName, aAppName);
+    value = mAppName;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetAppVersion(char **aAppVersion)
+nsHttpHandler::GetAppVersion(nsACString &value)
 {
-    return DupString(mAppVersion, aAppVersion);
+    value = mAppVersion;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetVendor(char **aVendor)
+nsHttpHandler::GetVendor(nsACString &value)
 {
-    return DupString(mVendor, aVendor);
+    value = mVendor;
+    return NS_OK;
 }
 NS_IMETHODIMP
-nsHttpHandler::SetVendor(const char *aVendor)
+nsHttpHandler::SetVendor(const nsACString &value)
 {
-    mVendor.Adopt(aVendor ? nsCRT::strdup(aVendor) : 0);
+    mVendor = value;
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetVendorSub(char **aVendorSub)
+nsHttpHandler::GetVendorSub(nsACString &value)
 {
-    return DupString(mVendorSub, aVendorSub);
+    value = mVendorSub;
+    return NS_OK;
 }
 NS_IMETHODIMP
-nsHttpHandler::SetVendorSub(const char *aVendorSub)
+nsHttpHandler::SetVendorSub(const nsACString &value)
 {
-    mVendorSub.Adopt(aVendorSub ? nsCRT::strdup(aVendorSub) : 0);
+    mVendorSub = value;
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetVendorComment(char **aVendorComment)
+nsHttpHandler::GetVendorComment(nsACString &value)
 {
-    return DupString(mVendorComment, aVendorComment);
+    value = mVendorComment;
+    return NS_OK;
 }
 NS_IMETHODIMP
-nsHttpHandler::SetVendorComment(const char *aVendorComment)
+nsHttpHandler::SetVendorComment(const nsACString &value)
 {
-    mVendorComment.Adopt(aVendorComment ? nsCRT::strdup(aVendorComment) : 0);
+    mVendorComment = value;
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetProduct(char **aProduct)
+nsHttpHandler::GetProduct(nsACString &value)
 {
-    return DupString(mProduct, aProduct);
+    value = mProduct;
+    return NS_OK;
 }
 NS_IMETHODIMP
-nsHttpHandler::SetProduct(const char *aProduct)
+nsHttpHandler::SetProduct(const nsACString &value)
 {
-    mProduct.Adopt(aProduct ? nsCRT::strdup(aProduct) : 0);
+    mProduct = value;
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetProductSub(char **aProductSub)
+nsHttpHandler::GetProductSub(nsACString &value)
 {
-    return DupString(mProductSub, aProductSub);
+    value = mProductSub;
+    return NS_OK;
 }
 NS_IMETHODIMP
-nsHttpHandler::SetProductSub(const char *aProductSub)
+nsHttpHandler::SetProductSub(const nsACString &value)
 {
-    mProductSub.Adopt(aProductSub ? nsCRT::strdup(aProductSub) : 0);
+    mProductSub = value;
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetProductComment(char **aProductComment)
+nsHttpHandler::GetProductComment(nsACString &value)
 {
-    return DupString(mProductComment, aProductComment);
+    mProductComment = value;
+    return NS_OK;
 }
 NS_IMETHODIMP
-nsHttpHandler::SetProductComment(const char *aProductComment)
+nsHttpHandler::SetProductComment(const nsACString &value)
 {
-    mProductComment.Adopt(aProductComment ? nsCRT::strdup(aProductComment) : 0);
+    mProductComment = value;
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetPlatform(char **aPlatform)
+nsHttpHandler::GetPlatform(nsACString &value)
 {
-    return DupString(mPlatform, aPlatform);
+    mPlatform = value;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetOscpu(char **aOscpu)
+nsHttpHandler::GetOscpu(nsACString &value)
 {
-    return DupString(mOscpu, aOscpu);
+    value = mOscpu;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetLanguage(char **aLanguage)
+nsHttpHandler::GetLanguage(nsACString &value)
 {
-    return DupString(mLanguage, aLanguage);
+    value = mLanguage;
+    return NS_OK;
 }
 NS_IMETHODIMP
-nsHttpHandler::SetLanguage(const char *aLanguage)
+nsHttpHandler::SetLanguage(const nsACString &value)
 {
-    mLanguage.Adopt(aLanguage ? nsCRT::strdup(aLanguage) : 0);
+    mLanguage = value;
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetMisc(char **aMisc)
+nsHttpHandler::GetMisc(nsACString &value)
 {
-    return DupString(mMisc, aMisc);
+    value = mMisc;
+    return NS_OK;
 }
 NS_IMETHODIMP
-nsHttpHandler::SetMisc(const char *aMisc)
+nsHttpHandler::SetMisc(const nsACString &value)
 {
-    mMisc.Adopt(aMisc ? nsCRT::strdup(aMisc) : 0);
+    mMisc = value;
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }

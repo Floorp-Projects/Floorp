@@ -123,6 +123,7 @@ MangleKeywordIntoHTTPURL(const char *aSpec, const char *aHTTPURL) {
     if(unescaped == nsnull) 
        return nsnull;
 
+    // XXX this doesn't play nicely w/ i18n URLs
     nsUnescape(unescaped);
 
     // build up a request to the keyword server.

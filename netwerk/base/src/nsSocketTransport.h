@@ -185,7 +185,7 @@ public:
     //
     // request helpers
     //
-    nsresult GetName(PRUnichar **);
+    nsresult GetName(nsACString &);
     nsresult Dispatch(nsSocketRequest *);
 
     // 

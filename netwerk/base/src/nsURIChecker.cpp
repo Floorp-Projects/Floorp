@@ -119,7 +119,7 @@ nsURIChecker::AsyncCheckURI(const nsACString &aURI,
     // See if it's an http channel, which needs special treatment:
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
     if (httpChannel)
-        httpChannel->SetRequestMethod("HEAD");
+        httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("HEAD"));
 
     // Hook us up to listen to redirects and the like
     mChannel->SetNotificationCallbacks(this);
@@ -138,7 +138,7 @@ nsURIChecker::GetBaseRequest(nsIRequest** aRequest)
 // nsIRequest methods
 //
 NS_IMETHODIMP
-nsURIChecker::GetName(PRUnichar** aName)
+nsURIChecker::GetName(nsACString &aName)
 {
     return mChannel->GetName(aName);
 }
@@ -234,10 +234,11 @@ nsURIChecker::OnStartRequest(nsIRequest *aRequest, nsISupports *aCtxt)
         // We don't want to read the actual data, so cancel now:
         aRequest->Cancel(NS_BINDING_ABORTED);
 
-        char* server = 0;
-        rv = httpChannel->GetResponseHeader("Server", &server);
+        nsCAutoString server;
+        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Server"), server);
         if (NS_SUCCEEDED(rv)) {
-            if (!PL_strcasecmp(server, "Netscape-Enterprise/3.6")) {
+            if (server.Equals(NS_LITERAL_CSTRING("Netscape-Enterprise/3.6"),
+                              nsCaseInsensitiveCStringComparator())) {
                 mStatus = NS_OK;
                 // Open a new channel for a real (not head) request:
                 nsCOMPtr<nsIIOService> ios (do_GetIOService(&rv));
@@ -279,12 +280,9 @@ nsURIChecker::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
                                PRUint32 aCount)
 {
 #ifdef DEBUG_akkana
-    PRUnichar* uri;
-    GetName(&uri);
-    nsString uristr(uri);
-    char* cstr = ToNewCString(uristr);
-    printf("OnDataAvailable: %s\n", cstr);
-    Recycle(cstr);
+    nsCAutoString name;
+    GetName(name);
+    printf("OnDataAvailable: %s\n", name.get());
 #endif
     // If we've gotten here, something went wrong with the previous cancel,
     // so return a failure code to cancel the request:

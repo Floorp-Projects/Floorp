@@ -38,8 +38,10 @@
 #ifndef nsNetUtil_h__
 #define nsNetUtil_h__
 
-#include "nsIURI.h"
+#include "nsString.h"
+#include "nsReadableUtils.h"
 #include "netCore.h"
+#include "nsIURI.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIStreamListener.h"
@@ -48,8 +50,6 @@
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
@@ -325,17 +325,18 @@ inline nsresult
 NS_NewInputStreamChannel(nsIChannel **result,
                          nsIURI* uri,
                          nsIInputStream* inStr,
-                         const char* contentType,
+                         const nsACString &contentType,
+                         const nsACString &contentCharset,
                          PRInt32 contentLength)
 {
     nsresult rv;
     nsCAutoString spec;
-    rv = uri->GetAsciiSpec(spec);
+    rv = uri->GetSpec(spec);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStreamIO> io;
-    rv = NS_NewInputStreamIO(getter_AddRefs(io), spec.get(), inStr, 
-                             contentType, contentLength);
+    rv = NS_NewInputStreamIO(getter_AddRefs(io), spec, inStr, 
+                             contentType, contentCharset, contentLength);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStreamIOChannel> channel;
@@ -801,6 +802,31 @@ NS_ExamineForProxy(const char* scheme, const char* host, PRInt32 port,
     if (NS_FAILED(rv)) return rv;
 
     return pps->ExamineForProxy(uri, proxyInfo);
+}
+
+inline nsresult
+NS_ParseContentType(const nsACString &rawContentType,
+                    nsCString &contentType,
+                    nsCString &contentCharset)
+{
+    // contentCharset is left untouched if not present in rawContentType
+    nsACString::const_iterator begin, it, end;
+    it = rawContentType.BeginReading(begin);
+    rawContentType.BeginReading(end);
+    if (FindCharInReadable(';', it, end)) {
+        contentType = Substring(begin, it);
+        // now look for "charset=FOO" and extract "FOO"
+        begin = ++it;
+        if (FindInReadable(NS_LITERAL_CSTRING("charset="), begin, it = end)) {
+            contentCharset = Substring(it, end);
+            contentCharset.StripWhitespace();
+        }
+    }
+    else
+        contentType = rawContentType;
+    ToLowerCase(contentType);
+    contentType.StripWhitespace();
+    return NS_OK;
 }
 
 #endif // nsNetUtil_h__

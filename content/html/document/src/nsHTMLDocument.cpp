@@ -685,24 +685,24 @@ nsHTMLDocument::TryWeakDocTypeDefault(PRInt32& aCharsetSource,
 }
 
 PRBool 
-nsHTMLDocument::TryHttpHeaderCharset(nsIHttpChannel *aHttpChannel, 
-                                     PRInt32& aCharsetSource, 
-                                     nsAString& aCharset)
+nsHTMLDocument::TryChannelCharset(nsIChannel *aChannel, 
+                                  PRInt32& aCharsetSource, 
+                                  nsAString& aCharset)
 {
-  if(kCharsetFromHTTPHeader <= aCharsetSource)
+  if(kCharsetFromChannel <= aCharsetSource)
     return PR_TRUE;
 
-  if (aHttpChannel) {
-    nsXPIDLCString charsetheader;
-    nsresult rv = aHttpChannel->GetCharset(getter_Copies(charsetheader));
+  if (aChannel) {
+    nsCAutoString charsetVal;
+    nsresult rv = aChannel->GetContentCharset(charsetVal);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsICharsetAlias> calias(do_CreateInstance(kCharsetAliasCID, &rv));
-      if(calias) {
+      if (calias) {
         nsAutoString preferred;
-        rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetheader), preferred);
+        rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetVal), preferred);
         if(NS_SUCCEEDED(rv)) {
           aCharset = preferred;
-          aCharsetSource = kCharsetFromHTTPHeader;
+          aCharsetSource = kCharsetFromChannel;
           return PR_TRUE;
         }  
       }
@@ -819,26 +819,22 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
 
   if (httpChannel) {
-    nsXPIDLCString lastModHeader;
-    rv = httpChannel->GetResponseHeader("last-modified", 
-                                        getter_Copies(lastModHeader));
+    nsCAutoString lastModHeader;
+    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"),
+                                        lastModHeader);
 
     if (NS_SUCCEEDED(rv)) {
-      lastModified.AssignWithConversion(NS_STATIC_CAST(const char*,
-                                                       lastModHeader));
+      CopyASCIItoUCS2(lastModHeader, lastModified);
       SetLastModified(lastModified);
     }
 
-    nsXPIDLCString referrerHeader;
+    nsCAutoString referrerHeader;
     // The misspelled key 'referer' is as per the HTTP spec
-    rv = httpChannel->GetRequestHeader("referer", 
-                                       getter_Copies(referrerHeader));
+    rv = httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("referer"),
+                                       referrerHeader);
 
     if (NS_SUCCEEDED(rv)) {
-      nsAutoString referrer;
-      referrer.AssignWithConversion(referrerHeader);
-
-      SetReferrer(referrer);
+      SetReferrer(NS_ConvertASCIItoUCS2(referrerHeader));
     }
 
     mHttpChannel = httpChannel;
@@ -966,10 +962,10 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (! TryUserForcedCharset(muCV, dcInfo, charsetSource, charset)) {
     TryHintCharset(muCV, charsetSource, charset);
     TryParentCharset(dcInfo, charsetSource, charset);
-    if (TryHttpHeaderCharset(httpChannel, charsetSource, charset)) {
-      // Use the header's charset.
+    if (TryChannelCharset(aChannel, charsetSource, charset)) {
+      // Use the channel's charset (e.g., charset from HTTP "Content-Type" header).
     }
-    else if (nsCRT::strcasecmp("about", scheme.get()) &&          // don't try to access bookmarks for about:blank
+    else if (!scheme.Equals(NS_LITERAL_CSTRING("about")) &&          // don't try to access bookmarks for about:blank
              TryBookmarkCharset(&urlSpec, charsetSource, charset)) {
       // Use the bookmark's charset.
     }
@@ -2458,7 +2454,7 @@ nsHTMLDocument::Close()
     mWriteLevel++;
     result = mParser->Parse(NS_LITERAL_STRING("</HTML>"),
                             NS_GENERATE_PARSER_KEY(), 
-                            NS_LITERAL_STRING("text/html"), PR_FALSE,
+                            NS_LITERAL_CSTRING("text/html"), PR_FALSE,
                             PR_TRUE);
     mWriteLevel--;
     mIsWriting = 0;
@@ -2521,9 +2517,9 @@ nsHTMLDocument::WriteCommon(const nsAReadableString& aText,
   } 
 
   rv = mParser->Parse(text ,
-                        NS_GENERATE_PARSER_KEY(),
-                        NS_LITERAL_STRING("text/html"), PR_FALSE,
-                        (!mIsWriting || (mWriteLevel > 1)));
+                      NS_GENERATE_PARSER_KEY(),
+                      NS_LITERAL_CSTRING("text/html"), PR_FALSE,
+                      (!mIsWriting || (mWriteLevel > 1)));
 
   mWriteLevel--;
 

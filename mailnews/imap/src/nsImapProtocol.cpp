@@ -7524,7 +7524,7 @@ NS_IMETHODIMP nsImapMockChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
   return NS_OK;       // don't fail when trying to set this
 }
 
-NS_IMETHODIMP nsImapMockChannel::GetContentType(char * *aContentType)
+NS_IMETHODIMP nsImapMockChannel::GetContentType(nsACString &aContentType)
 {
   if (m_ContentType.IsEmpty())
   {
@@ -7538,19 +7538,31 @@ NS_IMETHODIMP nsImapMockChannel::GetContentType(char * *aContentType)
       }
     } 
     if (imapAction == nsIImapUrl::nsImapSelectFolder)
-      *aContentType = nsCRT::strdup("x-application-imapfolder");
+      aContentType = NS_LITERAL_CSTRING("x-application-imapfolder");
     else
-      *aContentType = nsCRT::strdup("message/rfc822");
+      aContentType = NS_LITERAL_CSTRING("message/rfc822");
   }
   else
-    *aContentType = ToNewCString(m_ContentType);
+    aContentType = m_ContentType;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapMockChannel::SetContentType(const char *aContentType)
+NS_IMETHODIMP nsImapMockChannel::SetContentType(const nsACString &aContentType)
 {
   m_ContentType = aContentType;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMockChannel::GetContentCharset(nsACString &aContentCharset)
+{
+  aContentCharset.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMockChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+  NS_NOTREACHED("nsImapMockChannel::SetContentCharset");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsImapMockChannel::GetContentLength(PRInt32 * aContentLength)
@@ -7595,7 +7607,7 @@ NS_IMETHODIMP nsImapMockChannel::SetSecurityInfo(nsISupports *aSecurityInfo)
 // From nsIRequest
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsImapMockChannel::GetName(PRUnichar* *result)
+NS_IMETHODIMP nsImapMockChannel::GetName(nsACString &result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

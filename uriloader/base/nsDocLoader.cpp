@@ -80,17 +80,12 @@ PRLogModuleInfo* gDocLoaderLog = nsnull;
 
 
 #if defined(DEBUG)
-void GetURIStringFromRequest(nsIRequest* request, nsXPIDLCString &aStr)
+void GetURIStringFromRequest(nsIRequest* request, nsACString &name)
 {
-    aStr.Adopt(nsCRT::strdup("???"));
-
-    if (request) {
-        nsXPIDLString name;
-        request->GetName(getter_Copies(name));
-
-        if (name)
-            *getter_Copies(aStr) = ToNewUTF8String(nsDependentString(name));
-    }
+    if (request)
+        request->GetName(name);
+    else
+        name = NS_LITERAL_CSTRING("???");
 }
 #endif /* DEBUG */
 
@@ -431,8 +426,8 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 
 #ifdef PR_LOGGING
   if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
-    nsXPIDLString name;
-    request->GetName(getter_Copies(name));
+    nsCAutoString name;
+    request->GetName(name);
 
     PRUint32 count = 0;
     if (mLoadGroup)
@@ -440,7 +435,7 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG,
            ("DocLoader:%p: OnStartRequest[%p](%s) mIsLoadingDocument=%s, %u active URLs",
-            this, request, NS_ConvertUCS2toUTF8(name).get(),
+            this, request, name.get(),
             (mIsLoadingDocument ? "true" : "false"),
             count));
   }
@@ -516,8 +511,8 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest,
 
 #ifdef PR_LOGGING
   if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
-    nsXPIDLString name;
-    aRequest->GetName(getter_Copies(name));
+    nsCAutoString name;
+    aRequest->GetName(name);
 
     PRUint32 count = 0;
     if (mLoadGroup)
@@ -525,7 +520,7 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest,
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG,
            ("DocLoader:%p: OnStopRequest[%p](%s) status=%x mIsLoadingDocument=%s, %u active URLs",
-           this, aRequest, NS_ConvertUCS2toUTF8(name).get(),
+           this, aRequest, name.get(),
            aStatus, (mIsLoadingDocument ? "true" : "false"),
            count));
   }
@@ -655,13 +650,13 @@ void nsDocLoaderImpl::doStartDocumentLoad(void)
 {
 
 #if defined(DEBUG)
-  nsXPIDLCString buffer;
+  nsCAutoString buffer;
 
   GetURIStringFromRequest(mDocumentRequest, buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: ++ Firing OnStateChange for start document load (...)."
           "\tURI: %s \n",
-          this, (const char *) buffer));
+          this, buffer.get()));
 #endif /* DEBUG */
 
   // Fire an OnStatus(...) notification STATE_START.  This indicates
@@ -679,13 +674,13 @@ void nsDocLoaderImpl::doStartDocumentLoad(void)
 void nsDocLoaderImpl::doStartURLLoad(nsIRequest *request)
 {
 #if defined(DEBUG)
-  nsXPIDLCString buffer;
+  nsCAutoString buffer;
 
   GetURIStringFromRequest(request, buffer);
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
           ("DocLoader:%p: ++ Firing OnStateChange start url load (...)."
            "\tURI: %s\n",
-            this, (const char *) buffer));
+            this, buffer.get()));
 #endif /* DEBUG */
 
   FireOnStateChange(this,
@@ -698,13 +693,13 @@ void nsDocLoaderImpl::doStartURLLoad(nsIRequest *request)
 void nsDocLoaderImpl::doStopURLLoad(nsIRequest *request, nsresult aStatus)
 {
 #if defined(DEBUG)
-  nsXPIDLCString buffer;
+  nsCAutoString buffer;
 
   GetURIStringFromRequest(request, buffer);
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
           ("DocLoader:%p: ++ Firing OnStateChange for end url load (...)."
            "\tURI: %s status=%x\n",
-            this, (const char *) buffer, aStatus));
+            this, buffer.get(), aStatus));
 #endif /* DEBUG */
 
   FireOnStateChange(this,
@@ -718,13 +713,13 @@ void nsDocLoaderImpl::doStopDocumentLoad(nsIRequest *request,
                                          nsresult aStatus)
 {
 #if defined(DEBUG)
-  nsXPIDLCString buffer;
+  nsCAutoString buffer;
 
   GetURIStringFromRequest(request, buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: ++ Firing OnStateChange for end document load (...)."
          "\tURI: %s Status=%x\n",
-          this, (const char *) buffer, aStatus));
+          this, buffer.get(), aStatus));
 #endif /* DEBUG */
 
   //
@@ -939,12 +934,12 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIRequest *aRequest, nsISupports* ctx
   //
   else {
 #if defined(DEBUG)
-    nsXPIDLCString buffer;
+    nsCAutoString buffer;
 
     GetURIStringFromRequest(aRequest, buffer);
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader:%p OOPS - No Request Info for: %s\n",
-            this, (const char *)buffer));
+            this, buffer.get()));
 #endif /* DEBUG */
 
     return NS_OK;
@@ -1007,12 +1002,12 @@ void nsDocLoaderImpl::FireOnProgressChange(nsDocLoaderImpl *aLoadInitiator,
   }
 
 #if defined(DEBUG)
-  nsXPIDLCString buffer;
+  nsCAutoString buffer;
 
   GetURIStringFromRequest(request, buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: Progress (%s): curSelf: %d maxSelf: %d curTotal: %d maxTotal %d\n",
-          this, (const char *)buffer, aProgress, aProgressMax, aTotalProgress, aMaxTotalProgress));
+          this, buffer.get(), aProgress, aProgressMax, aTotalProgress, aMaxTotalProgress));
 #endif /* DEBUG */
 
   /*
@@ -1075,12 +1070,12 @@ void nsDocLoaderImpl::FireOnStateChange(nsIWebProgress *aProgress,
   }
 
 #if defined(DEBUG)
-  nsXPIDLCString buffer;
+  nsCAutoString buffer;
 
   GetURIStringFromRequest(aRequest, buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: Status (%s): code: %x\n",
-         this, (const char *)buffer, aStateFlags));
+         this, buffer.get(), aStateFlags));
 #endif /* DEBUG */
 
   NS_ASSERTION(aRequest, "Firing OnStateChange(...) notification with a NULL request!");
@@ -1355,15 +1350,15 @@ void nsDocLoaderImpl::DumpChannelInfo()
     info = (nsChannelInfo *)mChannelInfoList.ElementAt(i);
 
 #if defined(DEBUG)
-    nsXPIDLCString buffer;
+    nsCAutoString buffer;
     nsresult rv = NS_OK;
     if (info->mURI) {
-      rv = info->mURI->GetSpec(getter_Copies(buffer));
+      rv = info->mURI->GetSpec(buffer);
     }
 
     printf("  [%d] current=%d  max=%d [%s]\n", i,
            info->mCurrentProgress, 
-           info->mMaxProgress, (const char *)buffer);
+           info->mMaxProgress, buffer.get());
 #endif /* DEBUG */
 
     current += info->mCurrentProgress;

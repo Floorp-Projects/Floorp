@@ -126,10 +126,10 @@ nsP3PService::ProcessResponseHeader(nsIHttpChannel* aHttpChannel)
   
   nsresult result = NS_OK;
   
-  nsXPIDLCString p3pHeader;
-  aHttpChannel->GetResponseHeader("P3P",getter_Copies(p3pHeader));
+  nsCAutoString p3pHeader;
+  aHttpChannel->GetResponseHeader(NS_LITERAL_CSTRING("P3P"), p3pHeader);
 
-  if (p3pHeader) {
+  if (!p3pHeader.IsEmpty()) {
     nsCOMPtr<nsIURI> uri;
     aHttpChannel->GetURI(getter_AddRefs(uri));
       
@@ -139,10 +139,10 @@ nsP3PService::ProcessResponseHeader(nsIHttpChannel* aHttpChannel)
         NS_ENSURE_TRUE(mCompactPolicy,NS_ERROR_OUT_OF_MEMORY);
       }
 
-      nsXPIDLCString spec;
+      nsCAutoString spec;
       uri->GetSpec(spec);
 
-      result = mCompactPolicy->OnHeaderAvailable(p3pHeader,spec);
+      result = mCompactPolicy->OnHeaderAvailable(p3pHeader.get(), spec.get());
     }
   }
 

@@ -524,7 +524,7 @@ NS_IMETHODIMP nsMsgProtocol::SetLoadFlags(nsLoadFlags aLoadFlags)
   return NS_OK;       // don't fail when trying to set this
 }
 
-NS_IMETHODIMP nsMsgProtocol::GetContentType(char * *aContentType)
+NS_IMETHODIMP nsMsgProtocol::GetContentType(nsACString &aContentType)
 {
   // as url dispatching matures, we'll be intelligent and actually start
   // opening the url before specifying the content type. This will allow
@@ -532,16 +532,28 @@ NS_IMETHODIMP nsMsgProtocol::GetContentType(char * *aContentType)
   // a part in the message that has a content type that is not message/rfc822
 
   if (m_ContentType.IsEmpty())
-	  *aContentType = nsCRT::strdup("message/rfc822");
+	  aContentType = NS_LITERAL_CSTRING("message/rfc822");
   else
-    *aContentType = ToNewCString(m_ContentType);
+    aContentType = m_ContentType;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgProtocol::SetContentType(const char *aContentType)
+NS_IMETHODIMP nsMsgProtocol::SetContentType(const nsACString &aContentType)
 {
     m_ContentType = aContentType;
     return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgProtocol::GetContentCharset(nsACString &aContentCharset)
+{
+  aContentCharset.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgProtocol::SetContentCharset(const nsACString &aContentCharset)
+{
+  NS_NOTREACHED("nsMsgProtocol::SetContentCharset");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgProtocol::GetContentLength(PRInt32 * aContentLength)
@@ -556,7 +568,7 @@ NS_IMETHODIMP nsMsgProtocol::GetSecurityInfo(nsISupports * *aSecurityInfo)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgProtocol::GetName(PRUnichar * *aName)
+NS_IMETHODIMP nsMsgProtocol::GetName(nsACString &aName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -37,7 +37,7 @@ interface nsIHttpChannel : nsIChannel
     /**
      * The request method is case insensitive
      */
-    attribute string requestMethod;
+    attribute ACString requestMethod;
 
     /**
      * Get/set the referrer URI on the request.  This is the address (URI) of
@@ -59,13 +59,12 @@ interface nsIHttpChannel : nsIChannel
      */
     attribute nsIURI documentURI;
 
-
     /**
      * Header strings are case insensitive
      */
-    string getRequestHeader(in string header);
-    void   setRequestHeader(in string header, in string value);
-    void   visitRequestHeaders(in nsIHttpHeaderVisitor visitor);
+    ACString getRequestHeader(in ACString header);
+    void     setRequestHeader(in ACString header, in ACString value);
+    void     visitRequestHeaders(in nsIHttpHeaderVisitor visitor);
 
     /**
      * Get the stream (to be) uploaded by this HTTP channel.
@@ -77,14 +76,14 @@ interface nsIHttpChannel : nsIChannel
      */
 
     readonly attribute unsigned long responseStatus;
-    readonly attribute string responseStatusText;
+    readonly attribute ACString responseStatusText;
 
     /**
      * Header strings are case insensitive
      */
-    string getResponseHeader(in string header);
-    void   setResponseHeader(in string header, in string value);
-    void   visitResponseHeaders(in nsIHttpHeaderVisitor visitor);
+    ACString getResponseHeader(in ACString header);
+    void     setResponseHeader(in ACString header, in ACString value);
+    void     visitResponseHeaders(in nsIHttpHeaderVisitor visitor);
 
     /**
      * True if the server sent a "Cache-control: no-store" response header.
@@ -97,12 +96,6 @@ interface nsIHttpChannel : nsIChannel
      * no-cache" and "Expires" with a date-value in the past.
      */
     boolean isNoCacheResponse();
-
-    /**
-     * Get the charset for the response, which may be NULL if not specified
-     * by the server (ie. the Content-Type header may not specify a charset).
-     */
-    readonly attribute string charset;
 
     /**
      * This attribute holds the MIME types corresponding to the content
@@ -141,5 +134,8 @@ interface nsIHttpChannel : nsIChannel
 [scriptable, uuid(0cf40717-d7c1-4a94-8c1e-d6c9734101bb)]
 interface nsIHttpHeaderVisitor : nsISupports
 {
-    void visitHeader(in string header, in string value);
+    /**
+     * @throw any exception to terminate enumeration
+     */
+    void visitHeader(in ACString header, in ACString value);
 };

@@ -1462,8 +1462,8 @@ static nsresult DumpVersion(char *appname)
   nsCOMPtr <nsIHttpProtocolHandler> httpHandler(do_GetService("@mozilla.org/network/protocol;1?name=http", &rv));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsXPIDLCString agent;
-  httpHandler->GetUserAgent(getter_Copies(agent));
+  nsCAutoString agent;
+  httpHandler->GetUserAgent(agent);
 
   printf("%s", agent.get());
 

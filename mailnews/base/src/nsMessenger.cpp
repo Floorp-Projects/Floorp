@@ -186,8 +186,7 @@ ConvertBufToPlainText(nsString &aConBuf)
 
     parser->SetContentSink(sink);
 
-    nsAutoString mimeStr(NS_LITERAL_STRING("text/html").get());
-    parser->Parse(aConBuf, 0, mimeStr, PR_FALSE, PR_TRUE);
+    parser->Parse(aConBuf, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
 
     //
     // Now if we get here, we need to get from ASCII text to 
@@ -990,9 +989,10 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
             aListener->m_channel = nsnull;
             rv = NS_NewInputStreamChannel(getter_AddRefs(aListener->m_channel),
                                           aURL, 
-                                          nsnull,      // inputStream
-                                          nsnull,      // contentType
-                                          -1);         // contentLength
+                                          nsnull,                 // inputStream
+                                          NS_LITERAL_CSTRING(""), // contentType
+                                          NS_LITERAL_CSTRING(""), // contentCharset
+                                          -1);                    // contentLength
             if (NS_FAILED(rv)) goto done;
 
             aListener->m_outputFormat.AssignWithConversion(saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN);

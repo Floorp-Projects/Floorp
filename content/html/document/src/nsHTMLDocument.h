@@ -68,7 +68,6 @@ class nsIURI;
 class nsIMarkupDocumentViewer;
 class nsIDocumentCharsetInfo;
 class nsICacheEntryDescriptor;
-class nsIHttpChannel;
 
 class nsHTMLDocument : public nsMarkupDocument,
                        public nsIHTMLDocument,
@@ -269,9 +268,9 @@ protected:
                                  nsAString& aCharset);
   static PRBool TryWeakDocTypeDefault(PRInt32& aCharsetSource, 
                                       nsAString& aCharset);
-  static PRBool TryHttpHeaderCharset(nsIHttpChannel *aHttpChannel, 
-                                     PRInt32& aCharsetSource, 
-                                     nsAString& aCharset);
+  static PRBool TryChannelCharset(nsIChannel *aChannel, 
+                                  PRInt32& aCharsetSource, 
+                                  nsAString& aCharset);
   static PRBool TryUserDefaultCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                       PRInt32& aCharsetSource, 
                                       nsAString& aCharset);

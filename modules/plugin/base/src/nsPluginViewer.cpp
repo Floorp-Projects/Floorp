@@ -344,10 +344,9 @@ PluginViewerImpl::StartLoad(nsIRequest* request, nsIStreamListener*& aResult)
   NS_ADDREF(mChannel);
 
 #ifdef DEBUG
-  char* contentType;
-  channel->GetContentType(&contentType);
-  printf("PluginViewerImpl::StartLoad: content-type=%s\n", contentType);
-  nsCRT::free(contentType);
+  nsCAutoString contentType;
+  channel->GetContentType(contentType);
+  printf("PluginViewerImpl::StartLoad: content-type=%s\n", contentType.get());
 #endif
 
   aResult = nsnull;
@@ -415,14 +414,12 @@ PluginViewerImpl::CreatePlugin(nsIRequest* request, nsIPluginHost* aHost, const 
     if (NS_FAILED(rv)) return rv;
     NS_ConvertUTF8toUCS2 str(spec);
 
-    char* ct;
+    nsCAutoString ct;
   
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    channel->GetContentType(&ct);
+    channel->GetContentType(ct);
     if (NS_FAILED(rv)) return rv;
-    rv = aHost->InstantiateFullPagePlugin(ct, str, aResult, mOwner);
-   
-    delete[] ct;
+    rv = aHost->InstantiateFullPagePlugin(ct.get(), str, aResult, mOwner);
   }
 
   return rv;
@@ -976,14 +973,7 @@ NS_IMETHODIMP
 PluginListener::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
   nsresult rv;
-  char* contentType = nsnull;
 
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  rv = channel->GetContentType(&contentType);
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
   rv = mViewer->StartLoad(request, mNextStream);
 
   if (NS_FAILED(rv)) {

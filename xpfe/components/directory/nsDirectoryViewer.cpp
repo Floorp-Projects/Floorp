@@ -1437,7 +1437,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
     NS_ADDREF(*aDocListenerResult);
 
     // ... and set the original channel's content type up
-    (void)aChannel->SetContentType("application/vnd.mozilla.xul+xml");
+    (void)aChannel->SetContentType(NS_LITERAL_CSTRING("application/vnd.mozilla.xul+xml"));
     
     return NS_OK;
   }
@@ -1487,7 +1487,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   NS_ADDREF(*aDocListenerResult);
 
   // ... and set the original channel's content type up
-  (void)aChannel->SetContentType("text/html");
+  (void)aChannel->SetContentType(NS_LITERAL_CSTRING("text/html"));
 
   return NS_OK;
 }

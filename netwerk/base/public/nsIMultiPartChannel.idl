@@ -33,7 +33,6 @@ interface nsIChannel;
 [scriptable, uuid(62d77f66-8ad0-4a7f-91a1-bb048b136490)]
 interface nsIMultiPartChannel : nsISupports
 {
-
     /**
      * readonly attribute to access the underlying channel
      */
@@ -44,5 +43,5 @@ interface nsIMultiPartChannel : nsISupports
      * a multipart message.  This allows getting the preferred
      * handling method, preferred filename, etc.  See RFC 2183.
      */
-    attribute string contentDisposition;
+    attribute ACString contentDisposition;
 };

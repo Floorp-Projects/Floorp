@@ -109,8 +109,6 @@ nsAbSyncPostEngine::nsAbSyncPostEngine()
   // Init member variables...
   mTotalWritten = 0;
   mStillRunning = PR_TRUE;
-  mContentType = nsnull;
-  mCharset = nsnull;
 
   mListenerArray = nsnull;
   mListenerArrayCount = 0;
@@ -130,8 +128,6 @@ nsAbSyncPostEngine::nsAbSyncPostEngine()
 nsAbSyncPostEngine::~nsAbSyncPostEngine()
 {
   mStillRunning = PR_FALSE;
-  PR_FREEIF(mContentType);
-  PR_FREEIF(mCharset);
 
   PR_FREEIF(mSyncProtocolRequest);
   PR_FREEIF(mSyncProtocolRequestPrefix);
@@ -449,23 +445,18 @@ nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */,
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (channel)
   {
-    char    *contentType = nsnull;
-    char    *charset = nsnull;
+    nsCAutoString contentType;
+    nsCAutoString charset;
 
-    if (NS_SUCCEEDED(channel->GetContentType(&contentType)) && contentType)
+    if (NS_SUCCEEDED(channel->GetContentType(contentType)) &&
+        !contentType.Equals(NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE)))
     {
-      if (PL_strcasecmp(contentType, UNKNOWN_CONTENT_TYPE))
-      {
-        mContentType = contentType;
-      }
+      mContentType = contentType;
     }
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
-    if (httpChannel)
+
+    if (NS_SUCCEEDED(channel->GetContentCharset(charset)) && !charset.IsEmpty())
     {
-      if (NS_SUCCEEDED(httpChannel->GetCharset(&charset)) && charset)
-      {
-        mCharset = charset;
-      }
+      mCharset = charset;
     }
   }  
 

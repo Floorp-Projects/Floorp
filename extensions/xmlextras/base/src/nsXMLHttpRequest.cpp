@@ -48,6 +48,7 @@
 #include "nsIPrivateDOMImplementation.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsPrintfCString.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "nsNetUtil.h"
@@ -335,18 +336,15 @@ nsXMLHttpRequest::DetectCharset(nsAWritableString& aCharset)
 {
   aCharset.Truncate();
   nsresult rv;
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel,&rv));
-  if(httpChannel) {
-    nsXPIDLCString charsetheader;
-    rv = httpChannel->GetCharset(getter_Copies(charsetheader));
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
-      if(NS_SUCCEEDED(rv) && calias) {
-        nsAutoString preferred;
-        rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetheader), preferred);
-        if(NS_SUCCEEDED(rv)) {
-          aCharset.Assign(preferred);        
-        }
+  nsCAutoString charsetVal;
+  rv = mChannel->GetContentCharset(charsetVal);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
+    if(NS_SUCCEEDED(rv) && calias) {
+      nsAutoString preferred;
+      rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetVal), preferred);
+      if(NS_SUCCEEDED(rv)) {
+        aCharset.Assign(preferred);        
       }
     }
   }
@@ -479,10 +477,15 @@ nsXMLHttpRequest::GetStatusText(char * *aStatusText)
   NS_ENSURE_ARG_POINTER(aStatusText);
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
-  if (httpChannel) {
-    return httpChannel->GetResponseStatusText(aStatusText);
-  }
   *aStatusText = nsnull;
+
+  if (httpChannel) {
+    nsCAutoString text;
+    nsresult rv = httpChannel->GetResponseStatusText(text);
+    if (NS_FAILED(rv)) return rv;
+    *aStatusText = ToNewCString(text);
+    return *aStatusText ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  }
   
   return NS_OK;
 }
@@ -535,8 +538,13 @@ nsXMLHttpRequest::GetResponseHeader(const char *header, char **_retval)
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
   *_retval = nsnull;
-  if (httpChannel)
-    return httpChannel->GetResponseHeader(header, _retval);
+  if (httpChannel) {
+    nsCAutoString buf;
+    nsresult rv = httpChannel->GetResponseHeader(nsDependentCString(header), buf);
+    if (NS_FAILED(rv)) return rv;
+    *_retval = ToNewCString(buf);
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  }
   
   return NS_OK;
 }
@@ -584,7 +592,7 @@ nsXMLHttpRequest::OpenRequest(const char *method,
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (httpChannel) {
-    rv = httpChannel->SetRequestMethod(method);
+    rv = httpChannel->SetRequestMethod(nsDependentCString(method));
   }
 
   ChangeState(XML_HTTP_REQUEST_OPENED);
@@ -719,14 +727,13 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
   }
   
   // If no content type header was set by the client, we set it to text/xml.
-  nsXPIDLCString header;
-  if( NS_OK != httpChannel->GetRequestHeader("Content-Type", getter_Copies(header)) )  
-    httpChannel->SetRequestHeader("Content-Type", "text/xml" );
+  nsCAutoString header;
+  if( NS_FAILED(httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), header)) )  
+    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
+                                  NS_LITERAL_CSTRING("text/xml") );
 
   // set the content length header
-  char charLengthBuf [32];
-  PR_snprintf(charLengthBuf, sizeof(charLengthBuf), "%d", charLength);
-  httpChannel->SetRequestHeader("Content-Length", charLengthBuf );
+  httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Content-Length"), nsPrintfCString("%d", charLength) );
 
   // Shove in the trailing and leading CRLF
   postData[0] = nsCRT::CR;
@@ -822,7 +829,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     request->GetStatus(&status);
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
     if (channel && NS_SUCCEEDED(status)) {
-      channel->SetContentType(mOverrideMimeType.get());
+      channel->SetContentType(mOverrideMimeType);
     }
   }
   return mXMLParserStreamListener->OnStartRequest(request,ctxt);
@@ -975,14 +982,14 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   }
 
   // Ignore argument if method is GET, there is no point in trying to upload anything
-  nsXPIDLCString method;
+  nsCAutoString method;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
   if (httpChannel) {
-    httpChannel->GetRequestMethod(getter_Copies(method)); // If GET, method name will be uppercase
+    httpChannel->GetRequestMethod(method); // If GET, method name will be uppercase
   }
 
-  if (aBody && httpChannel && nsCRT::strcmp("GET", method.get()) != 0) {
+  if (aBody && httpChannel && !method.Equals(NS_LITERAL_CSTRING("GET"))) {
     nsXPIDLString serial;
     nsCOMPtr<nsIInputStream> postDataStream;
 
@@ -1204,7 +1211,8 @@ nsXMLHttpRequest::SetRequestHeader(const char *header, const char *value)
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
   if (httpChannel)
-    return httpChannel->SetRequestHeader(header, value);
+    return httpChannel->SetRequestHeader(nsDependentCString(header),
+                                         nsDependentCString(value));
   
   return NS_OK;
 }
@@ -1385,7 +1393,7 @@ nsXMLHttpRequest::ChangeState(nsXMLHttpRequestState aState, PRBool aBroadcast)
 NS_IMPL_ISUPPORTS1(nsXMLHttpRequest::nsHeaderVisitor, nsIHttpHeaderVisitor)
 
 NS_IMETHODIMP nsXMLHttpRequest::
-nsHeaderVisitor::VisitHeader(const char *header, const char *value)
+nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 {
     mHeaders.Append(header);
     mHeaders.Append(": ");

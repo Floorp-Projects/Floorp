@@ -29,14 +29,14 @@
 //-----------------------------------------------------------------------------
 
 nsresult
-nsHttpHeaderArray::SetHeader(nsHttpAtom header, const char *value)
+nsHttpHeaderArray::SetHeader(nsHttpAtom header, const nsACString &value)
 {
     nsEntry *entry = nsnull;
     PRInt32 index;
 
-    // If a NULL value is passed in, then delete the header entry...
+    // If an empty value is passed in, then delete the header entry...
     index = LookupEntry(header, &entry);
-    if (!value || !*value) {
+    if (value.IsEmpty()) {
         if (entry) {
             mHeaders.RemoveElementAt(index);
             delete entry;
@@ -83,10 +83,14 @@ nsHttpHeaderArray::PeekHeader(nsHttpAtom header)
 }
 
 nsresult
-nsHttpHeaderArray::GetHeader(nsHttpAtom header, char **result)
+nsHttpHeaderArray::GetHeader(nsHttpAtom header, nsACString &result)
 {
-    const char *val = PeekHeader(header);
-    return val ? DupString(val, result) : NS_ERROR_NOT_AVAILABLE;
+    nsEntry *entry = nsnull;
+    LookupEntry(header, &entry);
+    if (!entry)
+        return NS_ERROR_NOT_AVAILABLE;
+    result = entry->value;
+    return NS_OK;
 }
 
 nsresult
@@ -96,7 +100,7 @@ nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor)
     PRInt32 i, count = mHeaders.Count();
     for (i=0; i<count; ++i) {
         nsEntry *entry = (nsEntry *) mHeaders[i];
-        if (NS_FAILED(visitor->VisitHeader(entry->header, entry->value.get())))
+        if (NS_FAILED(visitor->VisitHeader(nsDependentCString(entry->header), entry->value)))
             break;
     }
     return NS_OK;
@@ -146,7 +150,7 @@ nsHttpHeaderArray::ParseHeaderLine(char *line, nsHttpAtom *hdr, char **val)
             if (val) *val = p;
 
             // assign response header
-            SetHeader(atom, p);
+            SetHeader(atom, nsDependentCString(p));
         }
         else
             LOG(("unknown header; skipping\n"));

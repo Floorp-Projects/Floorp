@@ -154,13 +154,12 @@ nsLDAPChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 // nsIRequest methods
 
 NS_IMETHODIMP
-nsLDAPChannel::GetName(PRUnichar* *result)
+nsLDAPChannel::GetName(nsACString &result)
 {
-    nsCAutoString name;
     if (mURI)
-        mURI->GetSpec(name);
-    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(name));
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+        return mURI->GetSpec(result);
+    result.Truncate();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -312,24 +311,30 @@ nsLDAPChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 // most likely wants to verify with the actual data. 
 //
 NS_IMETHODIMP
-nsLDAPChannel::GetContentType(char* *aContentType)
+nsLDAPChannel::GetContentType(nsACString &aContentType)
 {
-    if (!aContentType) {
-        return NS_ERROR_ILLEGAL_VALUE;
-    }
-
-    *aContentType = nsCRT::strdup(TEXT_PLAIN);
-    if (!*aContentType) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    } else {
-        return NS_OK;
-    }
+    aContentType = NS_LITERAL_CSTRING(TEXT_PLAIN);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLDAPChannel::SetContentType(const char *contenttype)
+nsLDAPChannel::SetContentType(const nsACString &aContentType)
 {
     NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetContentType");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsLDAPChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    aContentCharset.Truncate();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::SetContentCharset");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

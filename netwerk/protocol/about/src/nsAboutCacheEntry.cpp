@@ -130,11 +130,14 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor,
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString spec;
-    rv = uri->GetAsciiSpec(spec);
+    rv = uri->GetSpec(spec);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStreamIO> io;
-    rv = NS_NewInputStreamIO(getter_AddRefs(io), spec.get(), inStr, "text/html", size);
+    rv = NS_NewInputStreamIO(getter_AddRefs(io), spec, inStr,
+                             NS_LITERAL_CSTRING("text/html"),
+                             NS_LITERAL_CSTRING(""),
+                             size);
 
     nsCOMPtr<nsIStreamIOChannel> chan = do_QueryInterface(mStreamChannel, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -150,7 +153,7 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsAboutCacheEntry::GetName(PRUnichar **result)
+nsAboutCacheEntry::GetName(nsACString &result)
 {
     NS_ENSURE_TRUE(mStreamChannel, NS_ERROR_NOT_INITIALIZED);
     return mStreamChannel->GetName(result);
@@ -280,17 +283,31 @@ nsAboutCacheEntry::GetSecurityInfo(nsISupports **value)
 }
 
 NS_IMETHODIMP
-nsAboutCacheEntry::GetContentType(char **value)
+nsAboutCacheEntry::GetContentType(nsACString &value)
 {
     NS_ENSURE_TRUE(mStreamChannel, NS_ERROR_NOT_INITIALIZED);
     return mStreamChannel->GetContentType(value);
 }
 
 NS_IMETHODIMP
-nsAboutCacheEntry::SetContentType(const char *value)
+nsAboutCacheEntry::SetContentType(const nsACString &value)
 {
     NS_ENSURE_TRUE(mStreamChannel, NS_ERROR_NOT_INITIALIZED);
     return mStreamChannel->SetContentType(value);
+}
+
+NS_IMETHODIMP
+nsAboutCacheEntry::GetContentCharset(nsACString &value)
+{
+    NS_ENSURE_TRUE(mStreamChannel, NS_ERROR_NOT_INITIALIZED);
+    return mStreamChannel->GetContentCharset(value);
+}
+
+NS_IMETHODIMP
+nsAboutCacheEntry::SetContentCharset(const nsACString &value)
+{
+    NS_ENSURE_TRUE(mStreamChannel, NS_ERROR_NOT_INITIALIZED);
+    return mStreamChannel->SetContentCharset(value);
 }
 
 NS_IMETHODIMP

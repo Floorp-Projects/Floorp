@@ -244,7 +244,7 @@ nsresult nsEventQueueServiceImpl::GetYoungestEventQueue(nsIEventQueue *queue, ns
   if (queue) {
     nsCOMPtr<nsPIEventQueueChain> ourChain(do_QueryInterface(queue));
     if (ourChain)
-      ourChain->GetYoungest(getter_AddRefs(answer));
+      ourChain->GetYoungestActive(getter_AddRefs(answer));
     else
       answer = queue;
   }

@@ -4580,14 +4580,14 @@ nsEditorShell::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 nsresult nsEditorShell::StartPageLoad(nsIChannel *aChannel)
 {
-  nsXPIDLCString  contentType;
-  aChannel->GetContentType(getter_Copies(contentType));
+  nsCAutoString contentType;
+  aChannel->GetContentType(contentType);
   
   // save the original MIME type; we'll use it later
-  if (contentType.get())
+  if (!contentType.IsEmpty())
     mContentMIMEType.Assign(contentType);
   
-  if (nsCRT::strcmp(contentType, "text/html") == 0)
+  if (contentType.Equals(NS_LITERAL_CSTRING("text/html")))
   {
     // fine, do nothing
     mContentTypeKnown = PR_TRUE;
@@ -4595,11 +4595,11 @@ nsresult nsEditorShell::StartPageLoad(nsIChannel *aChannel)
   else
   {
     PRBool canBeText;
-    IsSupportedTextType(contentType, &canBeText);
+    IsSupportedTextType(contentType.get(), &canBeText);
     if (canBeText)
     {
       // set the mime type to text/plain so that it renders as text
-      aChannel->SetContentType("text/plain");
+      aChannel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
       mContentTypeKnown = PR_TRUE;
     }
     else
@@ -4669,10 +4669,10 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
       // if we didn't get the content-type at the start of the load, get it now
       if (!mContentTypeKnown)
       {
-        nsXPIDLCString  contentType;
-        aChannel->GetContentType(getter_Copies(contentType));
+        nsCAutoString  contentType;
+        aChannel->GetContentType(contentType);
 
-        if (contentType.get())
+        if (!contentType.IsEmpty())
           mContentMIMEType.Assign(contentType);
       }
     }    

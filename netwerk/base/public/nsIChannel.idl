@@ -43,96 +43,109 @@ interface nsIInputStream;
 interface nsIStreamListener;
 
 /**
- * The nsIChannel interface allows the user to construct GET requests for
- * specific protocols, and manage them in a uniform way. Once a channel
- * is created (via nsIIOService::NewChannel), parameters for that request
- * may be set by using the channel attributes, or by QI'ing to a subclass
- * of nsIChannel for protocol-specific parameters. Then the actual request
- * can be issued via Open or AsyncOpen.
+ * The nsIChannel interface allows clients to construct "GET" requests for
+ * specific protocols, and manage them in a uniform way.  Once a channel is
+ * created (via nsIIOService::newChannel), parameters for that request may
+ * be set by using the channel attributes, or by QI'ing to a subclass of
+ * nsIChannel for protocol-specific parameters.  Then, the URI can be fetched
+ * by calling nsIChannel::open or nsIChannel::asyncOpen.
  *
- * After a request has been completed, the channel is still valid for
- * accessing protocol-specific results. For example, QI'ing to nsIHTTPChannel
- * allows response headers to be retrieved for the http transaction. 
+ * After a request has been completed, the channel is still valid for accessing
+ * protocol-specific results.  For example, QI'ing to nsIHttpChannel allows
+ * response headers to be retrieved for the corresponding http transaction. 
+ *
+ * @status UNDER_REVIEW
  */
 [scriptable, uuid(1788e79e-f947-11d3-8cda-0060b0fc14a3)]
 interface nsIChannel : nsIRequest
 {
     /**
-     * Returns the original URL used to construct the channel.
-     * This is used in the case of a redirect or URI "resolution" (e.g. 
-     * resolving a resource: URI to a file: URI) so that the original
-     * pre-redirect URI can still be obtained. 
+     * The original URI used to construct the channel. This is used in the case
+     * of a redirect or URI "resolution" (e.g. resolving a resource: URI to a
+     * file: URI) so that the original pre-redirect URI can still be obtained. 
      *
-     * Note that this is distinctly different from the http referrer
-     * (referring URI) which is typically the page that contained the 
-     * original URI (accessible from nsIHTTPChannel).
+     * NOTE: this is distinctly different from the http Referer (referring URI),
+     * which is typically the page that contained the original URI (accessible
+     * from nsIHttpChannel).
      */
     attribute nsIURI originalURI;
 
     /**
-     * Returns the URL to which the channel currently refers. If a redirect
-     * or URI resolution occurs, this accessor returns the current location
-     * to which the channel is referring.
+     * The URI corresponding to the channel.  Its value is immutable.
      */
     readonly attribute nsIURI URI;
 
     /**
-     * Accesses the owner corresponding to the entity that is 
-     * responsible for this channel. Used by security code to grant
-     * or deny privileges to mobile code loaded from this channel. 
+     * The owner, corresponding to the entity that is responsible for this
+     * channel.  Used by the security manager to grant or deny privileges to
+     * mobile code loaded from this channel.
      *
-     * Note: This is a strong reference to the owner, so if the owner is also
-     * holding a pointer to the channel, care must be taken to explicitly drop
-     * its reference to the channel -- otherwise a leak will result.
+     * NOTE: this is a strong reference to the owner, so if the owner is also
+     * holding a strong reference to the channel, care must be taken to 
+     * explicitly drop its reference to the channel.
      */
     attribute nsISupports owner;
 
     /**
-     * Accesses the capabilities callbacks of the channel. This is set by clients
-     * who wish to provide a means to receive progress, status and protocol-specific 
-     * notifications.  Interfaces commonly requested include: nsIProgressEventSink
-     * and nsIPrompt.
+     * The notification callbacks for the channel.  This is set by clients, who
+     * wish to provide a means to receive progress, status and protocol-specific 
+     * notifications.  If this value is NULL, the channel implementation may use
+     * the notification callbacks from its load group.
+     * 
+     * Interfaces commonly requested include: nsIProgressEventSink, nsIPrompt,
+     * and nsIAuthPrompt.
      */
     attribute nsIInterfaceRequestor notificationCallbacks;
 
     /**
-     * Any security information about this channel.  This can be null.
+     * Transport-level security information (if any) corresponding to the channel.
      */
     readonly attribute nsISupports securityInfo;
 
     /**
-     * Returns the content MIME type of the channel if available. Note that the 
-     * content type can often be wrongly specified (wrong file extension, wrong
-     * MIME type, wrong document type stored on a server, etc.) and the caller
-     * most likely wants to verify with the actual data. 
+     * The MIME type of the channel's content if available. 
+     * 
+     * NOTE: the content type can often be wrongly specified (e.g., wrong file
+     * extension, wrong MIME type, wrong document type stored on a server, etc.),
+     * and the caller most likely wants to verify with the actual data. 
      */
-    attribute string contentType;
+    attribute ACString contentType;
 
     /**
-     * Returns the length of the data associated with the channel if available.
-     * If the length is unknown then -1 is returned.
+     * The character set of the channel's content if available and if applicable.
+     * This attribute only applies to textual data.
+     */
+    attribute ACString contentCharset;
+
+    /**
+     * The length of the data associated with the channel if available.  A value
+     * of -1 indicates that the content length is unknown.
      */
     attribute long contentLength;
 
     /**
-     * Synchronously open this channel.  Returns a blocking input stream to this
-     * channel's data.
+     * Synchronously open the channel.  
+     *
+     * @return blocking input stream to the channel's data.
      */
     nsIInputStream open();
 
     /**
      * Asynchronously open this channel.  Data is fed to the specified stream
      * listener as it becomes available.
+     *
+     * @param aListener the nsIStreamListener implementation
+     * @param aContext an opaque parameter forwarded to aListener's methods
      */
-    void asyncOpen(in nsIStreamListener listener, in nsISupports ctxt);
+    void asyncOpen(in nsIStreamListener aListener, in nsISupports aContext);
 
     /**************************************************************************
      * Channel specific load flags:
      */
 
     /**
-     * Used exclusively by the uriloader and docshell to indicate whether or
-     * not this request corresponds to the toplevel document.
+     * Used (e.g., by the uriloader and docshell) to indicate whether or not
+     * the channel corresponds to the toplevel document.
      */
     const unsigned long LOAD_DOCUMENT_URI = 1 << 16;
 
@@ -148,16 +161,4 @@ interface nsIChannel : nsIRequest
      * used by the multipart/replace stream converter.
 	 */
 	const unsigned long LOAD_REPLACE = 1 << 18;
-
-    /**************************************************************************
-     * This flag is OBSOLETE and will be removed once the old cache is
-     * removed from the code base.  Support for CACHE_AS_FILE is now provided
-     * via nsICachingChannel.
-     */
-    const unsigned long CACHE_AS_FILE = 1 << 19;
 };
-
-%{C++
-// There is no content available (when asyncOpen is called)
-#define NS_ERROR_NO_CONTENT NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 17)
-%}

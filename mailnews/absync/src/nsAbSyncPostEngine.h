@@ -108,8 +108,8 @@ private:
   PRInt32                         mTotalWritten;      // Size counter variable
   nsString                        mProtocolResponse;  // Protocol response
 
-  char                            *mContentType;  // The content type retrieved from the server
-  char                            *mCharset;      // The charset retrieved from the server
+  nsCString                       mContentType;  // The content type retrieved from the server
+  nsCString                       mCharset;      // The charset retrieved from the server
 
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we post the url
   char                            *mCookie;

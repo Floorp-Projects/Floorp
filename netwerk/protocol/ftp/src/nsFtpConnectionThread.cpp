@@ -1408,24 +1408,24 @@ nsFtpState::SetContentType()
     switch (mListFormat) {
     case nsIDirectoryListing::FORMAT_RAW:
         {
-            nsAutoString  fromStr(NS_LITERAL_STRING("text/ftp-dir-"));
+            nsAutoString fromStr(NS_LITERAL_STRING("text/ftp-dir-"));
             SetDirMIMEType(fromStr);
 
-            contentType.Assign("text/ftp-dir-");
+            contentType = NS_LITERAL_CSTRING("text/ftp-dir-");
         }
         break;
     default:
         NS_WARNING("Unknown directory type");
         // fall through
     case nsIDirectoryListing::FORMAT_HTML:
-        contentType.Assign(TEXT_HTML);
+        contentType = NS_LITERAL_CSTRING(TEXT_HTML);
         break;
     case nsIDirectoryListing::FORMAT_HTTP_INDEX:
-        contentType.Assign(APPLICATION_HTTP_INDEX_FORMAT);
+        contentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
         break;
     }
 
-    return mChannel->SetContentType(contentType.get());
+    return mChannel->SetContentType(contentType);
 }
 
 nsresult
@@ -1820,14 +1820,9 @@ nsFtpState::R_pasv() {
 // nsIRequest methods:
 
 NS_IMETHODIMP
-nsFtpState::GetName(PRUnichar* *result)
+nsFtpState::GetName(nsACString &result)
 {
-    nsresult rv;
-    nsCAutoString urlStr;
-    rv = mURL->GetSpec(urlStr);
-    if (NS_FAILED(rv)) return rv;
-    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(urlStr));
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return mURL->GetSpec(result);
 }
 
 NS_IMETHODIMP

@@ -32,6 +32,7 @@
 #include "prlog.h"
 #include "prtime.h"
 #include "nsISupportsUtils.h"
+#include "nsPromiseFlatString.h"
 
 #if defined(PR_LOGGING)
 //
@@ -99,6 +100,7 @@ struct nsHttp
 
     // will dynamically add atoms to the table if they don't already exist
     static nsHttpAtom ResolveAtom(const char *);
+    static nsHttpAtom ResolveAtom(const nsACString &s) { return ResolveAtom(PromiseFlatCString(s).get()); }
 
     /* Declare all atoms
      *

@@ -637,7 +637,6 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   if (stringLen) {
     nsAutoString characterSet, preferred;
     nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
-    nsCOMPtr<nsIHttpChannel> httpChannel;
 
     nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsIRequest> req;
@@ -646,14 +645,12 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     if (NS_FAILED(rv)) return rv;
 
     channel = do_QueryInterface(req);
-
-    httpChannel = do_QueryInterface(channel);
-    if (httpChannel) {
-      nsXPIDLCString charsetheader;
-      rv = httpChannel->GetCharset(getter_Copies(charsetheader));
+    if (channel) {
+      nsCAutoString charsetVal;
+      rv = channel->GetContentCharset(charsetVal);
     
       if (NS_SUCCEEDED(rv)) {
-        characterSet = NS_ConvertASCIItoUCS2(charsetheader);      
+        characterSet = NS_ConvertASCIItoUCS2(charsetVal);      
         nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
 
         if(NS_SUCCEEDED(rv) && calias) {

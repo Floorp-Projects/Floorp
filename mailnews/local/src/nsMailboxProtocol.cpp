@@ -158,8 +158,11 @@ nsresult nsMailboxProtocol::OpenFileSocketForReuse(nsIURI * aURL, PRUint32 aStar
   LL_L2UI( length, fileSize );  
 
   // probably should pass in the file size instead of aReadCount
-  rv = fts->CreateTransportFromStream("mailbox", m_multipleMsgMoveCopyStream,
-                            "", length, PR_FALSE, getter_AddRefs(m_transport));
+  rv = fts->CreateTransportFromStream(NS_LITERAL_CSTRING("mailbox"),
+                            m_multipleMsgMoveCopyStream,
+                            NS_LITERAL_CSTRING(""),
+                            NS_LITERAL_CSTRING(""),
+                            length, PR_FALSE, getter_AddRefs(m_transport));
   m_socketIsOpen = PR_FALSE;
 
 	return rv;

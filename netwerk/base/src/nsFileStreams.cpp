@@ -169,15 +169,12 @@ nsFileIO::GetFile(nsIFile* *aFile)
 }
 
 NS_IMETHODIMP
-nsFileIO::Open(PRInt32 *contentLength)
+nsFileIO::Open()
 {
     NS_ASSERTION(mFile, "File must not be null");
     if (mFile == nsnull)
         return NS_ERROR_NOT_INITIALIZED;
 
-    if (contentLength)
-        *contentLength = 0;
- 
     nsresult rv = NS_OK;
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mFile, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -196,31 +193,16 @@ nsFileIO::Open(PRInt32 *contentLength)
         return NS_ERROR_FILE_NOT_FOUND;
     }
 
-    if (contentLength) {
-        // We'll try to use the file's length, if it has one. If not,
-        // assume the file to be special, and set the content length
-        // to -1, which means "read the stream until exhausted".
-        PRInt64 size;
-        rv = mFile->GetFileSize(&size);
-        if (NS_SUCCEEDED(rv)) {
-            *contentLength = nsInt64(size);
-        if (! *contentLength)
-            *contentLength = -1;
-        }
-        else 
-            *contentLength = -1;
-    }
     PR_LOG(gFileIOLog, PR_LOG_DEBUG,
            ("nsFileIO: logically opening %s", mSpec));
     return rv;
 }
 
-
 NS_IMETHODIMP 
-nsFileIO::GetContentType(char * *aContentType)
+nsFileIO::GetContentType(nsACString &result)
 {
     if (!mContentType.IsEmpty()) {
-        *aContentType = ToNewCString(mContentType);
+        result = mContentType;
         return NS_OK;
     }
 
@@ -232,20 +214,49 @@ nsFileIO::GetContentType(char * *aContentType)
     nsFileTransportService* fileTransportService = nsFileTransportService::GetInstance();
     if (fileTransportService) {
         mimeServ = fileTransportService->GetCachedMimeService();
-        if (mimeServ)
-            rv = mimeServ->GetTypeFromFile(mFile, aContentType);
+        if (mimeServ) {
+            nsXPIDLCString mimeType; // XXX fix mime service to use |ACString|
+            rv = mimeServ->GetTypeFromFile(mFile, getter_Copies(mimeType));
+            if (NS_SUCCEEDED(rv))
+                result = mimeType;
+        }
     }
         
     if (!mimeServ || (NS_FAILED(rv))) {
         // if all else fails treat it as text/html?
-        *aContentType = nsCRT::strdup(UNKNOWN_CONTENT_TYPE);
-        if (*aContentType == nsnull)
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        else
-            rv = NS_OK;
+        result = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
     }
 
-    mContentType.Assign(*aContentType);
+    mContentType = result;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileIO::GetContentCharset(nsACString &result)
+{
+    result.Truncate();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileIO::GetContentLength(PRInt32 *result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    *result = -1;
+
+    if (!mFile)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    // We'll try to use the file's length, if it has one. If not,
+    // assume the file to be special, and set the content length
+    // to -1, which means "read the stream until exhausted".
+    PRInt64 size;
+    nsresult rv = mFile->GetFileSize(&size);
+    if (NS_SUCCEEDED(rv)) {
+        *result = nsInt64(size);
+        if (*result == 0)
+            *result = -1;
+    }
     return rv;
 }
 
@@ -272,7 +283,7 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
     nsresult rv;
 
     if (!mFD) {
-        rv = Open(nsnull);        
+        rv = Open();        
         if (NS_FAILED(rv))  // file or directory does not exist
             return rv;
     }
@@ -325,7 +336,7 @@ nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
     nsresult rv;
 
     if (!mFD) {
-        rv = Open(nsnull);
+        rv = Open();
         if (NS_FAILED(rv))  // file or directory does not exist
             return rv;
     }
@@ -361,13 +372,18 @@ nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
 }
 
 NS_IMETHODIMP
-nsFileIO::GetName(char* *aName)
+nsFileIO::GetName(nsACString &aName)
 {
     NS_ASSERTION(mFile, "File must not be null");
     if (mFile == nsnull)
         return NS_ERROR_NOT_INITIALIZED;
 
-    return mFile->GetPath(aName);
+    nsXPIDLCString path;
+    nsresult rv = mFile->GetPath(getter_Copies(path));
+    if (NS_FAILED(rv)) return rv;
+
+    aName = path;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

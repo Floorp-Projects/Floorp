@@ -620,20 +620,19 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
   if (aString && aStringLen>0) {
     nsCOMPtr<nsIRequest> request;
     aLoader->GetRequest(getter_AddRefs(request));
-    nsXPIDLCString contentType;
+    nsCAutoString contentType;
     if (! (mLoader->mNavQuirkMode)) {
       nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
       if (channel) {
-        channel->GetContentType(getter_Copies(contentType));
+        channel->GetContentType(contentType);
       }
     }
     if (mLoader->mNavQuirkMode ||
-        contentType.Equals(NS_LITERAL_CSTRING("text/css"),
-                           nsCaseInsensitiveCStringComparator()) ||
+        contentType.Equals(NS_LITERAL_CSTRING("text/css")) ||
         contentType.IsEmpty()) {
       /*
        * First determine the charset (if one is indicated)
-       * 1)  Check HTTP charset
+       * 1)  Check nsIChannel::contentCharset
        * 2)  Check @charset rules
        * 3)  Check "charset" attribute of the <LINK> or <?xml-stylesheet?>
        *
@@ -641,16 +640,16 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
        * default (document charset or ISO-8859-1 if we have no document
        * charset)
        */
-      nsAutoString strHTTPCharset;
-      nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
-      if (httpChannel) {
-        nsXPIDLCString httpCharset;
-        httpChannel->GetCharset(getter_Copies(httpCharset));
-        CopyASCIItoUCS2(httpCharset, strHTTPCharset);
+      nsAutoString strChannelCharset;
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+      if (channel) {
+        nsCAutoString charsetVal;
+        channel->GetContentCharset(charsetVal);
+        CopyASCIItoUCS2(charsetVal, strChannelCharset);
       }
       result = NS_ERROR_NOT_AVAILABLE;
-      if (! strHTTPCharset.IsEmpty()) {
-        result = mLoader->SetCharset(strHTTPCharset);
+      if (! strChannelCharset.IsEmpty()) {
+        result = mLoader->SetCharset(strChannelCharset);
       }
       if (NS_FAILED(result)) {
         //  We have no charset or the HTTP charset is not recognized.

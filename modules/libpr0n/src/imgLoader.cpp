@@ -555,10 +555,10 @@ NS_IMETHODIMP ProxyListener::OnStartRequest(nsIRequest *aRequest, nsISupports *c
 
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (channel) {
-    nsXPIDLCString contentType;
-    nsresult rv = channel->GetContentType(getter_Copies(contentType));
+    nsCAutoString contentType;
+    nsresult rv = channel->GetContentType(contentType);
 
-    if (contentType.get()) {
+    if (!contentType.IsEmpty()) {
      /* If multipart/x-mixed-replace content, we'll insert a MIME decoder
         in the pipeline to handle the content and pass it along to our
         original listener.

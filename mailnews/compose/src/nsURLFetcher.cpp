@@ -494,32 +494,22 @@ NS_IMETHODIMP nsURLFetcherStreamConsumer::OnStopRequest(nsIRequest *aRequest, ns
     return NS_ERROR_FAILURE;
 
   // Check the content type!
-  char    *contentType = nsnull;
-  char    *charset = nsnull;
+  nsCAutoString contentType;
+  nsCAutoString charset;
 
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aRequest);
   if(!aChannel) return NS_ERROR_FAILURE;
 
-  if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
-    if (PL_strcasecmp(contentType, UNKNOWN_CONTENT_TYPE) != 0)
-      {
-        mURLFetcher->mContentType.Adopt(contentType);
-        contentType = 0;
-      }
+  if (NS_SUCCEEDED(aChannel->GetContentType(contentType)) &&
+      !contentType.Equals(NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE)))
+  {
+    mURLFetcher->mContentType = contentType;
+  }
 
-  if (contentType)
-    nsCRT::free(contentType);
-
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel)
-    if (NS_SUCCEEDED(httpChannel->GetCharset(&charset)) && charset)
-      {
-        mURLFetcher->mCharset.Adopt(charset);
-        charset = 0;
-      }
-
-  if (charset)
-    nsCRT::free(charset);
+  if (NS_SUCCEEDED(aChannel->GetContentCharset(charset)) && !charset.IsEmpty())
+  {
+    mURLFetcher->mCharset = charset;
+  }
 
   return NS_OK;
 }

@@ -98,9 +98,11 @@ public:
 NS_IMPL_ISUPPORTS1(HeaderVisitor, nsIHttpHeaderVisitor)
 
 NS_IMETHODIMP
-HeaderVisitor::VisitHeader(const char *header, const char *value)
+HeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 {
-  printf("%s: %s\n", header, value);
+  printf("%s: %s\n",
+    PromiseFlatCString(header).get(),
+    PromiseFlatCString(value).get());
   return NS_OK;
 }
 
@@ -218,7 +220,7 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
   if (gVerbose)
     printf("\nStarted loading: %s\n", info ? info->Name() : "UNKNOWN URL");
 
-  nsXPIDLCString value;
+  nsCAutoString value;
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (channel) {
@@ -226,8 +228,12 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
     channel->GetStatus(&status);
     if (NS_SUCCEEDED(status)) {
       printf("Channel Info:\n");
-      channel->GetContentType(getter_Copies(value));
-      printf("\tContent-Type: %s\n", (const char*)value);
+
+      channel->GetContentType(value);
+      printf("\tContent-Type: %s\n", value.get());
+
+      channel->GetContentCharset(value);
+      printf("\tContent-Charset: %s\n", value.get());
 
       PRInt32 length = -1;
       if (NS_SUCCEEDED(channel->GetContentLength(&length)))
@@ -243,9 +249,6 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
     if (!visitor)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(visitor);
-
-    httpChannel->GetCharset(getter_Copies(value));
-    printf("\tCharset: %s\n", (const char*)value);
 
     printf("\nHTTP request headers:\n");
     httpChannel->VisitRequestHeaders(visitor);
@@ -466,7 +469,8 @@ nsresult StartLoadingURL(const char* aUrlString)
 
         if (pHTTPCon) {
             // Setting a sample header.
-            rv = pHTTPCon->SetRequestHeader("sample-header", "Sample-Value");
+            rv = pHTTPCon->SetRequestHeader(NS_LITERAL_CSTRING("sample-header"),
+                                            NS_LITERAL_CSTRING("Sample-Value"));
             if (NS_FAILED(rv)) return rv;
         }            
         InputTestConsumer* listener;

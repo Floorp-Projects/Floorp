@@ -39,7 +39,6 @@
 #include "nsMemory.h"
 #include "plstr.h"
 #include "nsIHttpChannel.h"
-#include "nsIAtom.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
@@ -82,6 +81,7 @@ protected:
   nsCOMPtr<nsILoadGroup>  mLoadGroup;
 
   nsCString               mContentType;
+  nsCString               mContentCharset;
   nsCString               mContentDisposition;
   PRInt32                 mContentLength;
 
@@ -140,7 +140,7 @@ NS_INTERFACE_MAP_END
 //
 
 NS_IMETHODIMP
-nsPartChannel::GetName(PRUnichar * *aResult)
+nsPartChannel::GetName(nsACString &aResult)
 {
     return mMultipartChannel->GetName(aResult);
 }
@@ -291,16 +291,30 @@ nsPartChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentType(char * *aContentType)
+nsPartChannel::GetContentType(nsACString &aContentType)
 {
-    *aContentType = ToNewCString(mContentType);
+    aContentType = mContentType;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetContentType(const char *aContentType)
+nsPartChannel::SetContentType(const nsACString &aContentType)
 {
-    mContentType.Assign(aContentType);
+    NS_ParseContentType(aContentType, mContentType, mContentCharset);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    aContentCharset = mContentCharset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    mContentCharset = aContentCharset;
     return NS_OK;
 }
 
@@ -319,16 +333,16 @@ nsPartChannel::SetContentLength(PRInt32 aContentLength)
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentDisposition(char * *aContentDisposition)
+nsPartChannel::GetContentDisposition(nsACString &aContentDisposition)
 {
-    *aContentDisposition = ToNewCString(mContentDisposition);
+    aContentDisposition = mContentDisposition;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetContentDisposition(const char *aContentDisposition)
+nsPartChannel::SetContentDisposition(const nsACString &aContentDisposition)
 {
-    mContentDisposition.Assign(aContentDisposition);
+    mContentDisposition = aContentDisposition;
     return NS_OK;
 }
 
@@ -412,7 +426,7 @@ NS_IMETHODIMP
 nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
                                   nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count) {
 
-    if (!mToken.get()) // no token, no love.
+    if (mToken.IsEmpty()) // no token, no love.
         return NS_ERROR_FAILURE;
 
     nsresult rv = NS_OK;
@@ -457,7 +471,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         // boundary token in for the server.
         mFirstOnData = PR_FALSE;
         NS_ASSERTION(!mBufLen, "this is our first time through, we can't have buffered data");
-        const char * token = mToken;
+        const char * token = mToken.get();
            
         PushOverLine(cursor, bufLen);
 
@@ -594,9 +608,9 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
 NS_IMETHODIMP
 nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
 	// we're assuming the content-type is available at this stage
-	NS_ASSERTION(!mToken, "a second on start???");
-    char *bndry = nsnull;
-    nsXPIDLCString delimiter;
+	NS_ASSERTION(mToken.IsEmpty(), "a second on start???");
+    const char *bndry = nsnull;
+    nsCAutoString delimiter;
     nsresult rv = NS_OK;
     mContext = ctxt;
 
@@ -609,24 +623,23 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     // ask the HTTP channel for the content-type and extract the boundary from it.
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = httpChannel->GetResponseHeader("content-type", getter_Copies(delimiter));
+        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-type"), delimiter);
         if (NS_FAILED(rv)) return rv;
     } else {
         // try asking the channel directly
-        rv = channel->GetContentType(getter_Copies(delimiter));
-        if (!delimiter || NS_FAILED(rv)) return NS_ERROR_FAILURE;
+        rv = channel->GetContentType(delimiter);
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     }
 
-    if (!delimiter) return NS_ERROR_FAILURE;
-    bndry = PL_strstr(delimiter, "boundary");
+    bndry = strstr(delimiter.get(), "boundary");
     if (!bndry) return NS_ERROR_FAILURE;
 
-    bndry = PL_strchr(bndry, '=');
+    bndry = strchr(bndry, '=');
     if (!bndry) return NS_ERROR_FAILURE;
 
     bndry++; // move past the equals sign
 
-    char *attrib = PL_strchr(bndry, ';');
+    char *attrib = (char *) strchr(bndry, ';');
     if (attrib) *attrib = '\0';
 
     nsCAutoString boundaryString(bndry);
@@ -634,10 +647,10 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
 
     boundaryString.Trim(" \"");
 
-    mToken.Adopt(nsCRT::strdup(boundaryString.get()));
+    mToken = boundaryString;
     mTokenLen = boundaryString.Length();
     
-    if (mTokenLen == 0 || !boundaryString.get())
+    if (mTokenLen == 0)
         return NS_ERROR_FAILURE;
 
     return NS_OK;
@@ -647,7 +660,7 @@ NS_IMETHODIMP
 nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                                 nsresult aStatus) {
 
-    if (!mToken.get())  // no token, no love.
+    if (mToken.IsEmpty())  // no token, no love.
         return NS_ERROR_FAILURE;
 
     if (mPartChannel) {
@@ -721,7 +734,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     nsresult rv = NS_OK;
 
     if (mContentType.IsEmpty())
-        mContentType = UNKNOWN_CONTENT_TYPE;
+        mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
 
     // if we already have an mPartChannel, that means we never sent a Stop()
     // before starting up another "part." that would be bad.
@@ -741,7 +754,10 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     // Set up the new part channel...
     mPartChannel = newChannel;
 
-    rv = mPartChannel->SetContentType(mContentType.get());
+    rv = mPartChannel->SetContentType(mContentType);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mPartChannel->SetContentCharset(mContentCharset);
     if (NS_FAILED(rv)) return rv;
 
     rv = mPartChannel->SetContentLength(mContentLength);
@@ -749,7 +765,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
 
     nsCOMPtr<nsIMultiPartChannel> partChannel(do_QueryInterface(mPartChannel));
     if (partChannel) {
-        rv = partChannel->SetContentDisposition(mContentDisposition.get());
+        rv = partChannel->SetContentDisposition(mContentDisposition);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -803,7 +819,7 @@ nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
 
     if (mContentLength != -1) {
         // make sure that we don't send more than the mContentLength
-        if ((aLen + mTotalSent) > mContentLength)
+        if ((aLen + mTotalSent) > PRUint32(mContentLength))
             aLen = mContentLength - mTotalSent;
 
         if (aLen == 0)
@@ -869,7 +885,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
 
         if (newLine == cursor) {
             // move the newLine beyond the double linefeed marker
-            if ( (newLine - cursor) <= ((PRInt32)cursorLen - lineFeedIncrement) ) {
+            if (cursorLen >= lineFeedIncrement) {
                 newLine += lineFeedIncrement;
             }
             cursorLen -= (newLine - cursor);
@@ -893,9 +909,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
 
             // examine header
             if (headerStr.EqualsIgnoreCase("content-type")) {
-                char *tmpString = ToNewCString(headerVal);
-                ParseContentType(tmpString);
-                nsCRT::free(tmpString);
+                NS_ParseContentType(headerVal, mContentType, mContentCharset);
             } else if (headerStr.EqualsIgnoreCase("content-length")) {
                 mContentLength = atoi(headerVal.get());
             } else if (headerStr.EqualsIgnoreCase("content-disposition")) {
@@ -906,7 +920,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                 // it's header observers.
                 nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
                 if (httpChannel) {
-                    rv = httpChannel->SetResponseHeader(headerStr.get(), headerVal.get());
+                    rv = httpChannel->SetResponseHeader(headerStr, headerVal);
                     if (NS_FAILED(rv)) return rv;
                 }
             } else if (headerStr.EqualsIgnoreCase("content-range") || 
@@ -957,62 +971,10 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
     return rv;
 }
 
-// This code is duplicated in nsHttpResponseHead.cpp.  If you change it
-// here, change it there, too!
-
-nsresult
-nsMultiMixedConv::ParseContentType(char *type)
-{
-    // don't bother with an empty content-type header - bug 83465
-    if (!*type)
-        return NS_OK;
-
-    // we don't care about comments (although they are invalid here)
-    char *p = PL_strchr(type, '(');
-    if (p)
-        *p = 0;
-
-    // check if the content-type has additional fields...
-    if ((p = PL_strchr(type, ';')) != nsnull) {
-        char *p2, *p3;
-        // is there a charset field?
-        if ((p2 = PL_strcasestr(p, "charset=")) != nsnull) {
-            p2 += 8;
-
-            // check end of charset parameter
-            if ((p3 = PL_strchr(p2, ';')) == nsnull)
-                p3 = p2 + PL_strlen(p2);
-
-            // trim any trailing whitespace
-            do {
-                --p3;
-            } while ((*p3 == ' ') || (*p3 == '\t'));
-            *++p3 = 0; // overwrite first char after the charset field
-
-            mContentCharset = p2;
-        }
-    }
-    else
-        p = type + PL_strlen(type);
-
-    // trim any trailing whitespace
-    while (--p >= type && ((*p == ' ') || (*p == '\t')))
-        ;
-    *++p = 0; // overwrite first char after the media type
-
-    // force the content-type to lowercase
-    while (--p >= type)
-        *p = nsCRT::ToLower(*p);
-
-    mContentType = type;
-
-    return NS_OK;
-}
-
 char *
 nsMultiMixedConv::FindToken(char *aCursor, PRUint32 aLen) {
     // strnstr without looking for null termination
-    const char *token = mToken;
+    const char *token = mToken.get();
     char *cur = aCursor;
 
     NS_ASSERTION(token && aCursor && *token, "bad data");
@@ -1029,9 +991,8 @@ nsMultiMixedConv::FindToken(char *aCursor, PRUint32 aLen) {
                         aLen += 2;
 
                         // we're playing w/ double dash tokens, adjust.
-                        nsCString newToken("--");
-                        newToken.Append(mToken);
-                        mToken.Adopt(nsCRT::strdup(newToken.get()));
+                        nsCAutoString newToken(NS_LITERAL_CSTRING("--") + mToken);
+                        mToken = newToken;
                         mTokenLen += 2;
                     }
                 }

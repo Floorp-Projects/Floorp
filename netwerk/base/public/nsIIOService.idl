@@ -43,10 +43,6 @@ interface nsIURI;
 interface nsIURLParser;
 interface nsIFile;
 
-%{C++
-#include "nsAString.h"
-%}
-
 [scriptable, uuid(ab7c3a84-d488-11d3-8cda-0060b0fc14a3)]
 interface nsIIOService : nsISupports
 {

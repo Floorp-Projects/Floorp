@@ -412,13 +412,25 @@ NS_IMETHODIMP nsMailtoChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMailtoChannel::GetContentType(char * *aContentType)
+NS_IMETHODIMP nsMailtoChannel::GetContentType(nsACString &aContentType)
 {
-	*aContentType = nsCRT::strdup("x-application-mailto");
+	aContentType = NS_LITERAL_CSTRING("x-application-mailto");
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMailtoChannel::SetContentType(const char *aContentType)
+NS_IMETHODIMP nsMailtoChannel::SetContentType(const nsACString &aContentType)
+{
+    // Do not allow the content type to change...
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsMailtoChannel::GetContentCharset(nsACString &aContentCharset)
+{
+	aContentCharset.Truncate();
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMailtoChannel::SetContentCharset(const nsACString &aContentCharset)
 {
     // Do not allow the content type to change...
     return NS_ERROR_FAILURE;
@@ -460,7 +472,7 @@ NS_IMETHODIMP nsMailtoChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 ////////////////////////////////////////////////////////////////////////////////
 
 /* readonly attribute wstring name; */
-NS_IMETHODIMP nsMailtoChannel::GetName(PRUnichar * *aName)
+NS_IMETHODIMP nsMailtoChannel::GetName(nsACString &aName)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -415,7 +415,7 @@ nsDNSRequest::FireStop(nsresult  status)
 
 
 NS_IMETHODIMP
-nsDNSRequest::GetName(PRUnichar **  result)
+nsDNSRequest::GetName(nsACString & result)
 {
     NS_NOTREACHED("nsDNSRequest::GetName");
     return NS_ERROR_NOT_IMPLEMENTED;

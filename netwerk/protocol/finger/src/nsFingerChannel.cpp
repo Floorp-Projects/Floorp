@@ -113,7 +113,7 @@ nsFingerChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 // nsIRequest methods:
 
 NS_IMETHODIMP
-nsFingerChannel::GetName(PRUnichar* *result)
+nsFingerChannel::GetName(nsACString &result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -251,20 +251,32 @@ nsFingerChannel::SetLoadFlags(PRUint32 aLoadFlags)
 #define FINGER_TYPE TEXT_HTML
 
 NS_IMETHODIMP
-nsFingerChannel::GetContentType(char* *aContentType) {
-    if (!aContentType) return NS_ERROR_NULL_POINTER;
-
-    *aContentType = nsCRT::strdup(FINGER_TYPE);
-    if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
+nsFingerChannel::GetContentType(nsACString &aContentType)
+{
+    aContentType = NS_LITERAL_CSTRING(FINGER_TYPE);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFingerChannel::SetContentType(const char *aContentType)
+nsFingerChannel::SetContentType(const nsACString &aContentType)
 {
     //It doesn't make sense to set the content-type on this type
     // of channel...
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    aContentCharset.Truncate();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    NS_NOTREACHED("nsFingerChannel::SetContentCharset");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

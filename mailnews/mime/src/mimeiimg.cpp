@@ -166,7 +166,7 @@ MimeInlineImage_parse_begin (MimeObject *obj)
     mime_stream_data  *msd = (mime_stream_data *) (obj->options->stream_closure);
     if ( (msd) && (msd->channel) )
     {
-      msd->channel->SetContentType(obj->content_type);
+      msd->channel->SetContentType(nsDependentCString(obj->content_type));
     }
   }
 

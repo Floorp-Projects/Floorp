@@ -102,8 +102,8 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWin
     if (NS_FAILED(rv)) return rv;
 
     // Content type comes straight from channel.
-    nsXPIDLCString contentType;
-    aChannel->GetContentType( getter_Copies( contentType ) );
+    nsCAutoString contentType;
+    aChannel->GetContentType( contentType );
     
     // Suggested name derived from content-disposition response header.
     nsCAutoString suggestedName;
@@ -112,11 +112,10 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWin
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface( aChannel );
     if ( httpChannel ) {
         // Get content-disposition response header.
-        nsXPIDLCString disp; 
-        rv = httpChannel->GetResponseHeader( "content-disposition", getter_Copies( disp ) );
-        if ( NS_SUCCEEDED( rv ) && disp ) {
+        nsCAutoString contentDisp; 
+        rv = httpChannel->GetResponseHeader( NS_LITERAL_CSTRING("content-disposition"), contentDisp );
+        if ( NS_SUCCEEDED( rv ) && !contentDisp.IsEmpty() ) {
             // Parse out file name.
-            nsCAutoString contentDisp(NS_STATIC_CAST(const char*, disp));
             // Remove whitespace.
             contentDisp.StripWhitespace();
             // Look for ";filename=".
@@ -124,7 +123,7 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWin
             PRInt32 i = contentDisp.Find( key );
             if ( i != kNotFound ) {
                 // Name comes after that.
-                suggestedName = contentDisp.get() + i + PL_strlen( key ) + 1;
+                suggestedName = contentDisp.get() + i + strlen( key ) + 1;
             }
         }
     }
@@ -217,7 +216,7 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
                         NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
                         uploadChannel->SetUploadStream( postData, nsnull, -1);
-                        httpChannel->SetRequestMethod("POST");
+                        httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
                     }
                 }
             }

@@ -103,7 +103,7 @@ protected:
     nsDTDMode           mDTDMode;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
     eParserDocType      mDocType;
-    nsAutoString        mMimeType;  
+    nsCString           mMimeType;  
     PRInt32             mErrorCount;
     PRInt32             mTagCount;
 

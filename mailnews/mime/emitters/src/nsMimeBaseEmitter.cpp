@@ -558,15 +558,15 @@ nsMimeBaseEmitter::UpdateCharacterSet(const char *aCharset)
         (PL_strcasecmp(aCharset, "ISO-8859-1")) &&
         (PL_strcasecmp(aCharset, "UTF-8")) )
   {
-    char    *contentType = nsnull;
+    nsCAutoString contentType;
     
-    if (NS_SUCCEEDED(mChannel->GetContentType(&contentType)) && contentType)
+    if (NS_SUCCEEDED(mChannel->GetContentType(contentType)) && !contentType.IsEmpty())
     {
-      char *cPtr = (char *) PL_strcasestr(contentType, "charset=");
+      char *cPtr = (char *) PL_strcasestr(contentType.get(), "charset=");
 
       if (cPtr)
       {
-        char  *ptr = contentType;
+        char  *ptr = (char *) contentType.get();
         while (*ptr)
         {
           if ( (*ptr == ' ') || (*ptr == ';') ) 
@@ -582,14 +582,9 @@ nsMimeBaseEmitter::UpdateCharacterSet(const char *aCharset)
         }
       }
 
-      char *newContentType = (char *) PR_smprintf("%s; charset=%s", contentType, aCharset);
-      if (newContentType)
-      {
-        mChannel->SetContentType(newContentType); 
-        PR_FREEIF(newContentType);
-      }
-      
-      PR_FREEIF(contentType);
+      // have to recompute strlen since contentType could have an embedded null byte
+      mChannel->SetContentType(nsDependentCString(contentType.get()));
+      mChannel->SetContentCharset(nsDependentCString(aCharset));
     }
   }
 

@@ -433,23 +433,22 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     aContentType = nsnull;
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if(httpChannel) {
-    nsXPIDLCString charsetheader;
-    rv = httpChannel->GetCharset(getter_Copies(charsetheader));
+  { // check channel's charset...
+    nsCAutoString charsetVal;
+    rv = aChannel->GetContentCharset(charsetVal);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
 
       if(NS_SUCCEEDED(rv) && (nsnull != calias) ) {
         nsAutoString preferred;
-        rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetheader), preferred);
+        rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetVal), preferred);
         if(NS_SUCCEEDED(rv)){            
           charset = preferred;
-          charsetSource = kCharsetFromHTTPHeader;
+          charsetSource = kCharsetFromChannel;
         }
       }
     }
-  } //end of checking http channel
+  } //end of checking channel's charset
 
   static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 

@@ -65,12 +65,10 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(nsISupports* aWebShell,
    if (NS_SUCCEEDED(res)) {
      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel,&res));
      if (NS_SUCCEEDED(res)) {
-       nsXPIDLCString method;
-       httpChannel->GetRequestMethod(getter_Copies(method));
-       if (method) {
-         if (!PL_strcasecmp(method, "POST")) {
-            return NS_OK;
-         }
+       nsCAutoString method;
+       httpChannel->GetRequestMethod(method);
+       if (method.Equals(NS_LITERAL_CSTRING("POST"), nsCaseInsensitiveCStringComparator())) {
+         return NS_OK;
        }
      }
    }

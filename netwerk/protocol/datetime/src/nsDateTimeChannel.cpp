@@ -102,7 +102,7 @@ nsDateTimeChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult
 // nsIRequest methods:
 
 NS_IMETHODIMP
-nsDateTimeChannel::GetName(PRUnichar* *result)
+nsDateTimeChannel::GetName(nsACString &result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -243,20 +243,32 @@ nsDateTimeChannel::SetLoadFlags(PRUint32 aLoadFlags)
 #define DATETIME_TYPE "text/plain"
 
 NS_IMETHODIMP
-nsDateTimeChannel::GetContentType(char* *aContentType) {
-    if (!aContentType) return NS_ERROR_NULL_POINTER;
-
-    *aContentType = nsCRT::strdup(DATETIME_TYPE);
-    if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
+nsDateTimeChannel::GetContentType(nsACString &aContentType)
+{
+    aContentType = NS_LITERAL_CSTRING(DATETIME_TYPE);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDateTimeChannel::SetContentType(const char *aContentType)
+nsDateTimeChannel::SetContentType(const nsACString &aContentType)
 {
-    //It doesn't make sense to set the content-type on this type
+    // It doesn't make sense to set the content-type on this type
     // of channel...
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDateTimeChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    aContentCharset.Truncate();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDateTimeChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    NS_NOTREACHED("nsDateTimeChannel::SetContentCharset");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

@@ -62,7 +62,7 @@ inBitmapChannel::Init(nsIURI* uri)
 // nsIRequest
 
 NS_IMETHODIMP 
-inBitmapChannel::GetName(PRUnichar* *result)
+inBitmapChannel::GetName(nsACString &result)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -196,17 +196,24 @@ NS_IMETHODIMP inBitmapChannel::SetLoadFlags(PRUint32 aLoadAttributes)
   return NS_OK;
 }
 
-NS_IMETHODIMP inBitmapChannel::GetContentType(char* *aContentType) 
+NS_IMETHODIMP inBitmapChannel::GetContentType(nsACString &aContentType) 
 {
-  if (!aContentType) return NS_ERROR_NULL_POINTER;
-
-  *aContentType = nsCRT::strdup("image/inspector-bitmap");
-  if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
+  aContentType = NS_LITERAL_CSTRING("image/inspector-bitmap");
   return NS_OK;
 }
 
-NS_IMETHODIMP
-inBitmapChannel::SetContentType(const char *aContentType)
+NS_IMETHODIMP inBitmapChannel::SetContentType(const nsACString &aContentType)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP inBitmapChannel::GetContentCharset(nsACString &aContentCharset)
+{
+  aContentCharset.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP inBitmapChannel::SetContentCharset(const nsACString &aContentCharset)
 {
   return NS_ERROR_FAILURE;
 }

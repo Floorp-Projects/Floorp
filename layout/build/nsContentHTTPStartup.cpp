@@ -65,10 +65,10 @@ nsContentHTTPStartup::Observe( nsISupports *aSubject,
     nsCOMPtr<nsIHttpProtocolHandler> http(do_QueryInterface(aSubject));
     if (NS_FAILED(rv)) return rv;
     
-    rv = http->SetProduct(PRODUCT_NAME);
+    rv = http->SetProduct(NS_LITERAL_CSTRING(PRODUCT_NAME));
     if (NS_FAILED(rv)) return rv;
     
-    rv = http->SetProductSub((char*) PRODUCT_VERSION);
+    rv = http->SetProductSub(NS_LITERAL_CSTRING(PRODUCT_VERSION));
     if (NS_FAILED(rv)) return rv;
     
     return NS_OK;

@@ -138,6 +138,7 @@ protected:
     PRInt32                         mAmount;
     nsCOMPtr<nsILoadGroup>          mLoadGroup;
     nsCString                       mContentType;
+    nsCString                       mContentCharset;
     PRInt32                         mContentLength;
     nsCOMPtr<nsISupports>           mOwner;
 

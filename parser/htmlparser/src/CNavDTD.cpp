@@ -327,19 +327,19 @@ CNavDTD::CanParse(CParserContext& aParserContext,
   eAutoDetectResult result=eUnknownDetect;
 
   if(aParserContext.mParserCommand != eViewSource) {
-    if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
+    if(PR_TRUE==aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType))) {
       result=ePrimaryDetect;
     }
-    else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
+    else if(PR_TRUE==aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kPlainTextContentType))) {
       result=ePrimaryDetect;
     } 
-    else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kTextCSSContentType)) {
+    else if(PR_TRUE==aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kTextCSSContentType))) {
       result=ePrimaryDetect;
     } 
-    else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kApplicationJSContentType)) {
+    else if(PR_TRUE==aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kApplicationJSContentType))) {
       result=ePrimaryDetect;
     } 
-    else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kTextJSContentType)) {
+    else if(PR_TRUE==aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kTextJSContentType))) {
       result=ePrimaryDetect;
     } 
     else {
@@ -348,7 +348,7 @@ CNavDTD::CanParse(CParserContext& aParserContext,
       if(BufferContainsHTML(aBuffer,theBufHasXML)){
         result = eValidDetect ;
         if(0==aParserContext.mMimeType.Length()) {
-          aParserContext.SetMimeType(NS_ConvertASCIItoUCS2(kHTMLTextContentType, sizeof(kHTMLTextContentType)));
+          aParserContext.SetMimeType(NS_LITERAL_CSTRING(kHTMLTextContentType));
           if(!theBufHasXML) {
             switch(aParserContext.mDTDMode) {
               case eDTDMode_strict:

@@ -116,7 +116,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
   nsCAutoString path;
-  nsXPIDLCString httpMethod;
+  nsCAutoString httpMethod;
 
   rv = httpChannel->GetURI(getter_AddRefs(uri));
   if (NS_FAILED(rv)) return rv;
@@ -124,7 +124,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
   rv = uri->GetPath(path);
   if (NS_FAILED(rv)) return rv;
 
-  rv = httpChannel->GetRequestMethod(getter_Copies(httpMethod));
+  rv = httpChannel->GetRequestMethod(httpMethod);
   if (NS_FAILED(rv)) return rv;
 
   nsCAutoString realm, domain, nonce, opaque;

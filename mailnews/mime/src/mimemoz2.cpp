@@ -1975,11 +1975,11 @@ ResetChannelCharset(MimeObject *obj)
     char *ct = MimeHeaders_get (obj->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE); 
     if ( (ct) && (msd) && (msd->channel) ) 
     { 
-      char *ptr = PL_strstr(ct, "charset="); 
+      char *ptr = strstr(ct, "charset="); 
       if (ptr)
       {
         // First, setup the channel!
-        msd->channel->SetContentType(ct); 
+        msd->channel->SetContentType(nsDependentCString(ct));
 
         // Second, if this is a Save As operation, then we need to convert
         // to override the output charset!

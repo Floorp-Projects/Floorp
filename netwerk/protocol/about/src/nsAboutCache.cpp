@@ -147,7 +147,10 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     if (NS_FAILED(rv)) return rv;
 
     nsIChannel* channel;
-    rv = NS_NewInputStreamChannel(&channel, aURI, inStr, "text/html", size);
+    rv = NS_NewInputStreamChannel(&channel, aURI, inStr,
+                                  NS_LITERAL_CSTRING("text/html"),
+                                  NS_LITERAL_CSTRING(""),
+                                  size);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

@@ -40,10 +40,8 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIFileTransportService.h"
-#include "netCore.h"
 #include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
-#include "nsNetCID.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 
@@ -55,16 +53,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsInputStreamIO,
                               nsIStreamIO)
 
 nsInputStreamIO::nsInputStreamIO()
-    : mName(nsnull), mContentType(nsnull), mContentLength(-1), mStatus(NS_OK)
+    : mContentLength(-1), mStatus(NS_OK)
 {
     NS_INIT_REFCNT();
 }
 
 nsInputStreamIO::~nsInputStreamIO()
 {
-    (void)Close(NS_OK);
-    if (mName) nsCRT::free(mName);
-    if (mContentType) nsCRT::free(mContentType);
+    Close(NS_OK);
 }
 
 NS_METHOD
@@ -82,44 +78,45 @@ nsInputStreamIO::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
 
 NS_IMETHODIMP
-nsInputStreamIO::Init(const char* name, nsIInputStream* input,
-                      const char* contentType, PRInt32 contentLength)
+nsInputStreamIO::Init(const nsACString &name,
+                      nsIInputStream* input,
+                      const nsACString &contentType,
+                      const nsACString &contentCharset,
+                      PRInt32 contentLength)
 {
-    mName = nsCRT::strdup(name);
-    if (mName == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    mName = name;
     mInputStream = input;
-    if (contentType) { 
-        mContentType = nsCRT::strdup(contentType);
-        const char *constContentType = mContentType;
-        if (!constContentType) return NS_ERROR_OUT_OF_MEMORY;
-        char* semicolon = PL_strchr(constContentType, ';');
-        CBufDescriptor cbd(constContentType,
-                           PR_TRUE,
-                           semicolon ? (semicolon-constContentType) + 1: PL_strlen(constContentType), // capacity 
-                           semicolon ? (semicolon-constContentType) : PL_strlen(constContentType)); 
-        nsCAutoString str(cbd);
-        ToLowerCase(str);
-    } 
     mContentLength = contentLength;
+    mContentCharset = contentCharset;
+    // mContentCharset is unchanged if not parsed
+    NS_ParseContentType(contentType, mContentType, mContentCharset);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamIO::Open(PRInt32 *contentLength)
+nsInputStreamIO::Open()
 {
-    *contentLength = mContentLength;
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsInputStreamIO::GetContentType(nsACString &aContentType)
+{
+    aContentType = mContentType;
+    return NS_OK;
+}
 
 NS_IMETHODIMP 
-nsInputStreamIO::GetContentType(char * *aContentType)
+nsInputStreamIO::GetContentCharset(nsACString &aContentCharset)
 {
-    *aContentType = nsCRT::strdup(mContentType);
-    if (*aContentType == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    aContentCharset = mContentCharset;
+    return NS_OK;
+}
 
+NS_IMETHODIMP
+nsInputStreamIO::GetContentLength(PRInt32 *aContentLength)
+{
+    *aContentLength = mContentLength;
     return NS_OK;
 }
 
@@ -129,7 +126,6 @@ nsInputStreamIO::Close(nsresult status)
     mStatus = status;
     if (mInputStream)
         return mInputStream->Close();
-
     return NS_OK;
 }
 
@@ -137,7 +133,7 @@ NS_IMETHODIMP
 nsInputStreamIO::GetInputStream(nsIInputStream * *aInputStream)
 {
     *aInputStream = mInputStream;
-    NS_ADDREF(*aInputStream);
+    NS_IF_ADDREF(*aInputStream);
     return NS_OK;
 }
 
@@ -150,17 +146,17 @@ nsInputStreamIO::GetOutputStream(nsIOutputStream * *aOutputStream)
 }
 
 NS_IMETHODIMP
-nsInputStreamIO::GetName(char* *aName)
+nsInputStreamIO::GetName(nsACString &aName)
 {
-    *aName = nsCRT::strdup(mName);
-    return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    aName = mName;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsStreamIOChannel methods:
 
 nsStreamIOChannel::nsStreamIOChannel()
-    : mContentType(nsnull), mContentLength(-1),
+    : mContentLength(-1),
       mBufferSegmentSize(0), mBufferMaxSize(0),
       mLoadFlags(LOAD_NORMAL), mStatus(NS_OK)
 {
@@ -169,7 +165,6 @@ nsStreamIOChannel::nsStreamIOChannel()
 
 nsStreamIOChannel::~nsStreamIOChannel()
 {
-    if (mContentType) nsCRT::free(mContentType);
 }
 
 NS_METHOD
@@ -211,14 +206,9 @@ NS_IMPL_THREADSAFE_ADDREF(nsStreamIOChannel)
 NS_IMPL_THREADSAFE_RELEASE(nsStreamIOChannel)
 
 NS_IMETHODIMP
-nsStreamIOChannel::GetName(PRUnichar* *result)
+nsStreamIOChannel::GetName(nsACString &result)
 {
-    nsresult rv;
-    nsCAutoString urlStr;
-    rv = mURI->GetSpec(urlStr);
-    if (NS_FAILED(rv)) return rv;
-    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(urlStr));
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return mURI->GetSpec(result);
 }
 
 NS_IMETHODIMP
@@ -299,6 +289,7 @@ nsStreamIOChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP
 nsStreamIOChannel::Open(nsIInputStream **result)
 {
+    // XXX not calling mStreamIO->Open(), does that matter?
     return mStreamIO->GetInputStream(result);
 }
 
@@ -415,35 +406,39 @@ nsStreamIOChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 }
 
 NS_IMETHODIMP
-nsStreamIOChannel::GetContentType(char * *aContentType)
+nsStreamIOChannel::GetContentType(nsACString &aContentType)
 {
-    nsresult rv;
-    if (mContentType)
-    {
-        *aContentType = nsCRT::strdup(mContentType);
-        if (*aContentType == nsnull) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-        return NS_OK;
+    if (mContentType.IsEmpty()) {
+        nsresult rv = mStreamIO->GetContentType(mContentType);
+        if (NS_FAILED(rv)) return rv;
     }
-    if (mStreamIO) {
-        rv = mStreamIO->GetContentType(&mContentType);
-        *aContentType = nsCRT::strdup(mContentType);
-        if (*aContentType == nsnull) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-        return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
+    aContentType = mContentType;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStreamIOChannel::SetContentType(const char *aContentType)
+nsStreamIOChannel::SetContentType(const nsACString &aContentType)
 {
-    mContentType = nsCRT::strdup(aContentType);
-    if (*aContentType == nsnull) {
-        return NS_ERROR_OUT_OF_MEMORY;
+    // mContentCharset is unchanged if not parsed
+    NS_ParseContentType(aContentType, mContentType, mContentCharset);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStreamIOChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    if (mContentCharset.IsEmpty()) {
+        nsresult rv = mStreamIO->GetContentCharset(mContentCharset);
+        if (NS_FAILED(rv)) return rv;
     }
+    aContentCharset = mContentCharset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStreamIOChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    mContentCharset = aContentCharset;
     return NS_OK;
 }
 
@@ -451,15 +446,9 @@ NS_IMETHODIMP
 nsStreamIOChannel::GetContentLength(PRInt32 *aContentLength)
 {
     nsresult rv;
-    if (mContentLength == -1) 
-    {
-
-        // this is broken - should not have to do an open.  content 
-        // length should be an attribute of the nsIStreamIO.
-        
-        rv = mStreamIO->Open(&mContentLength);
-        if (NS_FAILED(rv))
-            return rv;
+    if (mContentLength == -1) {
+        rv = mStreamIO->GetContentLength(&mContentLength);
+        if (NS_FAILED(rv)) return rv;
     }
     *aContentLength = mContentLength;
      return NS_OK;

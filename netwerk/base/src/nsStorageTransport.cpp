@@ -27,6 +27,7 @@
 #include "nsCRT.h"
 #include "prmem.h"
 #include "netCore.h"
+#include "nsAString.h"
 
 #define MAX_IO_CHUNK 8192 // maximum count reported per OnDataAvailable
 #define MAX_COUNT ((PRUint32) -1)
@@ -526,10 +527,9 @@ nsStorageTransport::nsReadRequest::GetTransport(nsITransport **aTransport)
 }
 
 NS_IMETHODIMP
-nsStorageTransport::nsReadRequest::GetName(PRUnichar **aName)
+nsStorageTransport::nsReadRequest::GetName(nsACString &aName)
 {
-    NS_ENSURE_ARG_POINTER(aName);
-    *aName = nsnull;
+    aName.Truncate();
     return NS_OK;
 }
 

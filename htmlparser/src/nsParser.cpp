@@ -1083,9 +1083,9 @@ static
 void DetermineParseMode(nsString& aBuffer,
                         nsDTDMode& aParseMode,
                         eParserDocType& aDocType,
-                        const nsString& aMimeType)
+                        const nsACString& aMimeType)
 {
-  if (aMimeType.EqualsWithConversion(kHTMLTextContentType)) {
+  if (aMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType))) {
     // For XML (XHTML) documents served as text/html, we will use strict
     // mode.  XML declarations must be the first thing in the document,
     // and must be lowercase.  (XXX What about a byte order mark?)
@@ -1096,10 +1096,10 @@ void DetermineParseMode(nsString& aBuffer,
     } else {
       DetermineHTMLParseMode(aBuffer, aParseMode, aDocType);
     }
-  } else if (aMimeType.EqualsWithConversion(kPlainTextContentType) ||
-             aMimeType.EqualsWithConversion(kTextCSSContentType) ||
-             aMimeType.EqualsWithConversion(kApplicationJSContentType) ||
-             aMimeType.EqualsWithConversion(kTextJSContentType)) {
+  } else if (aMimeType.Equals(NS_LITERAL_CSTRING(kPlainTextContentType)) ||
+             aMimeType.Equals(NS_LITERAL_CSTRING(kTextCSSContentType)) ||
+             aMimeType.Equals(NS_LITERAL_CSTRING(kApplicationJSContentType)) ||
+             aMimeType.Equals(NS_LITERAL_CSTRING(kTextJSContentType))) {
     aDocType = ePlainText;
     aParseMode = eDTDMode_quirks;
   } else { // Some form of XML
@@ -1484,7 +1484,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIRequestObserver* aListener,PRBool aVeri
  * @param   aStream is the i/o source
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIInputStream& aStream,const nsAReadableString& aMimeType,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode){
+nsresult nsParser::Parse(nsIInputStream& aStream,const nsACString& aMimeType,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode){
 
   if (aVerifyEnabled) {
     mFlags |= NS_PARSER_FLAG_DTD_VERIFICATION;
@@ -1532,7 +1532,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,const nsAReadableString& aMimeT
  * @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::Parse(const nsAReadableString& aSourceBuffer, void* aKey,
-                         const nsAReadableString& aMimeType,
+                         const nsACString& aMimeType,
                          PRBool aVerifyEnabled, PRBool aLastCall,
                          nsDTDMode aMode){ 
 
@@ -1645,7 +1645,7 @@ nsresult nsParser::ParseFragment(const nsAReadableString& aSourceBuffer,
                                  void* aKey,
                                  nsVoidArray& aTagStack,
                                  PRUint32 anInsertPos,
-                                 const nsAReadableString& aMimeType,
+                                 const nsACString& aMimeType,
                                  nsDTDMode aMode){
 
   nsresult result = NS_OK;
@@ -1918,18 +1918,17 @@ nsresult nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
   mParserContext->mRequest = request;
 
   nsresult rv;
-  char* contentType = nsnull;
+  nsCAutoString contentType;
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   NS_ASSERTION(channel, "parser needs a channel to find a dtd");
 
-  rv = channel->GetContentType(&contentType);
+  rv = channel->GetContentType(contentType);
   if (NS_SUCCEEDED(rv))
   {
-    mParserContext->SetMimeType( NS_ConvertASCIItoUCS2(contentType) );
-	  nsCRT::free(contentType);
+    mParserContext->SetMimeType(contentType);
   }
   else
-    NS_ASSERTION(contentType, "parser needs a content type to find a dtd");
+    NS_NOTREACHED("parser needs a content type to find a dtd");
 
 #ifdef rickgdebug
   gOutFile= new fstream("c:/temp/out.file",ios::trunc);
@@ -2128,7 +2127,7 @@ nsParser::DetectMetaTag(const char* aBytes,
 
   // XXX Only look inside HTML documents for now. For XML
   // documents we should be looking inside the XMLDecl.
-  if (!mParserContext->mMimeType.Equals(NS_ConvertASCIItoUCS2(kHTMLTextContentType))) {
+  if (!mParserContext->mMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType))) {
     return PR_FALSE;
   }
 
@@ -2411,7 +2410,7 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     //If you're here, then OnDataAvailable() never got called. 
     //Prior to necko, we never dealt with this case, but the problem may have existed.
     //What we'll do (for now at least) is construct a blank HTML document.
-    if (!mParserContext->mMimeType.EqualsWithConversion(kPlainTextContentType))
+    if (!mParserContext->mMimeType.Equals(NS_LITERAL_CSTRING(kPlainTextContentType)))
     {
       temp.Assign(NS_LITERAL_STRING("<html><body></body></html>"));
     }

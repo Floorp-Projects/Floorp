@@ -2112,7 +2112,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 					if (httpChannel)
 					{
 						bmks->htmlSize = 0;
-                        httpChannel->SetRequestMethod("HEAD");
+                        httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("HEAD"));
 						if (NS_SUCCEEDED(rv = channel->AsyncOpen(bmks, nsnull)))
 						{
 							bmks->busySchedule = PR_TRUE;
@@ -2187,14 +2187,14 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 	{
         nsAutoString            eTagValue, lastModValue, contentLengthValue;
 
-        nsXPIDLCString val;
-        if (NS_SUCCEEDED(httpChannel->GetResponseHeader("ETag", getter_Copies(val))))
+        nsCAutoString val;
+        if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("ETag"), val)))
             CopyASCIItoUCS2(val, eTagValue);
-        if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Last-Modified", getter_Copies(val))))
+        if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Last-Modified"), val)))
             CopyASCIItoUCS2(val, lastModValue);
-        if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Content-Length", getter_Copies(val))))
+        if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Length"), val)))
             CopyASCIItoUCS2(val, contentLengthValue);
-        val.Adopt(0);
+        val.Truncate();
 
 		PRBool		changedFlag = PR_FALSE;
 

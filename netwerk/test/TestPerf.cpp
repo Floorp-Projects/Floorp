@@ -104,9 +104,9 @@ NS_IMETHODIMP
 MyListener::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
 {
     if (NS_FAILED(status)) {
-        nsXPIDLString spec;
-        req->GetName(getter_Copies(spec));
-        fprintf(stderr, "*** failed loading %s\n", NS_ConvertUCS2toUTF8(spec).get());
+        nsCAutoString spec;
+        req->GetName(spec);
+        fprintf(stderr, "*** failed loading %s\n", spec.get());
     }
     if (--gRequestCount == 0) {
         // post shutdown event
