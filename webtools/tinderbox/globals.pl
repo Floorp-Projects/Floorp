@@ -223,7 +223,6 @@ sub load_buildlog {
             }
         }
     }
-    @{$build_list} = reverse @{$build_list};
 }
 
 sub load_who {
@@ -344,7 +343,7 @@ sub make_build_table {
     #
     # Populate the build table with build data
     #
-    for $br (@{$build_list}) {
+    for $br (reverse @{$build_list}) {
         $ti = $build_time_index->{$br->{buildtime}};
         $bi = $build_name_index->{$br->{buildname}};
         $build_table->[$ti][$bi] = $br;
