@@ -14,7 +14,7 @@ function Startup()
   var selectedRegion = window.arguments.length ? window.arguments[1] : null;
   var list = document.getElementById("regionList");
   if (selectedRegion) {
-    var elements = list.getElementsByAttribute("value", selectedRegion);
+    elements = list.getElementsByAttribute("value", selectedRegion);
     if (elements.length)
       list.selectedItem = elements[0];
   } else {
@@ -36,7 +36,7 @@ function onAccept()
 
   //cache region on the parent window
   var list = document.getElementById("regionList");
-  var selectedItem = list.selectedItem;
+  selectedItem = list.selectedItem;
   if (selectedItem) {
     var regionName = selectedItem.getAttribute("value");
     var regionStore = opener.document.getElementById("ProfileRegion");
