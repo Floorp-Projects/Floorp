@@ -18,7 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *    Gordon Sheridan, 22-February-2001
+ *    Gordon Sheridan <gordon@netscape.com>
  */
 
 
@@ -44,7 +44,6 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
       mExpirationTime(NO_EXPIRATION_TIME),
       mFlags(0),
       mDataSize(0),
-      mMetaSize(0),
       mCacheDevice(nsnull),
       mData(nsnull)
 {
@@ -127,30 +126,6 @@ nsCacheEntry::TouchData()
 {
     mLastModified = SecondsFromPRTime(PR_Now());
     MarkDataDirty();
-}
-
-
-nsresult
-nsCacheEntry::SetMetaDataElement( const char * key, 
-                                  const char * value)
-{
-    nsresult rv = mMetaData.SetElement(key, value);
-    if (NS_FAILED(rv))
-        return rv;
-
-    mMetaSize = mMetaData.Size();                // calc new meta data size
-    return rv;
-}
-
-
-nsresult
-nsCacheEntry::UnflattenMetaData(char * buffer, PRUint32 bufSize)
-{
-    NS_ASSERTION(mMetaData.IsEmpty(), "meta data not empty");
-    nsresult rv = mMetaData.UnflattenMetaData(buffer, bufSize);
-    if (NS_SUCCEEDED(rv))
-        mMetaSize = mMetaData.Size();
-    return rv;
 }
 
 
