@@ -610,5 +610,5 @@ PRBool nsDeviceContextMac::DisplayVerySmallFonts()
 		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
 
-	return mPixelsPerInch;
+	return mDisplayVerySmallFonts;
 }
