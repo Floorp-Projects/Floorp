@@ -1844,7 +1844,7 @@ PresShell::GetActiveAlternateStyleSheet(nsString& aSheetTitle)
   if (mStyleSet) {
     PRInt32 count = mStyleSet->GetNumberOfDocStyleSheets();
     PRInt32 index;
-    nsAutoString textHtml; textHtml.AssignWithConversion("text/html");
+    NS_NAMED_LITERAL_STRING(textHtml, "text/html");
     for (index = 0; index < count; index++) {
       nsIStyleSheet* sheet = mStyleSet->GetDocStyleSheetAt(index);
       if (nsnull != sheet) {
@@ -1872,7 +1872,7 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
     PRInt32 count = 0;
     mDocument->GetNumberOfStyleSheets(&count);
     PRInt32 index;
-    nsAutoString textHtml; textHtml.AssignWithConversion("text/html");
+    NS_NAMED_LITERAL_STRING(textHtml,"text/html");
     for (index = 0; index < count; index++) {
       nsCOMPtr<nsIStyleSheet> sheet;
       mDocument->GetStyleSheetAt(index, getter_AddRefs(sheet));
@@ -1883,7 +1883,7 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
           nsAutoString  title;
           sheet->GetTitle(title);
           if (0 < title.Length()) {
-            if (title.EqualsIgnoreCase(aSheetTitle)) {
+            if (title.Equals(aSheetTitle)) {
               mStyleSet->AddDocStyleSheet(sheet, mDocument);
             }
             else {
@@ -1905,7 +1905,7 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
     PRInt32 count = 0;
     mDocument->GetNumberOfStyleSheets(&count);
     PRInt32 index;
-    nsAutoString textHtml; textHtml.AssignWithConversion("text/html");
+    NS_NAMED_LITERAL_STRING(textHtml,"text/html");
     for (index = 0; index < count; index++) {
       nsCOMPtr<nsIStyleSheet> sheet;
       mDocument->GetStyleSheetAt(index, getter_AddRefs(sheet));
@@ -1916,7 +1916,7 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
           nsAutoString  title;
           sheet->GetTitle(title);
           if (0 < title.Length()) {
-            if (-1 == aTitleList.IndexOfIgnoreCase(title)) {
+            if (-1 == aTitleList.IndexOf(title)) {
               aTitleList.AppendString(title);
             }
           }
@@ -3185,7 +3185,7 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
     return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIDOMNodeList>nodeList; 
-  nsAutoString bodyTag; bodyTag.AssignWithConversion("body"); 
+  NS_NAMED_LITERAL_STRING(bodyTag, "body");
 
   nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(document);
   if (!doc) 
@@ -3850,7 +3850,7 @@ PresShell::GoToAnchor(const nsString& aAnchorName)
         nsAutoString tagName;
         if (element && NS_SUCCEEDED(element->GetTagName(tagName))) {
           tagName.ToLowerCase();
-          if (tagName.EqualsWithConversion("a")) {
+          if (tagName.Equals(NS_LITERAL_STRING("a"))) {
             content = do_QueryInterface(element);
             break;
           }
@@ -4176,7 +4176,7 @@ NS_IMETHODIMP PresShell::DoCopyLinkLocation(nsIDOMNode* aNode)
         if (element) {
           NS_NAMED_LITERAL_STRING(xlinkNS,"http://www.w3.org/1999/xlink");
           element->GetAttributeNS(xlinkNS,NS_LITERAL_STRING("type"),xlinkType);
-          if (xlinkType.EqualsWithConversion("simple")) {
+          if (xlinkType.Equals(NS_LITERAL_STRING("simple"))) {
             element->GetAttributeNS(xlinkNS,NS_LITERAL_STRING("href"),anchorText);
             if (!anchorText.IsEmpty()) {
               // Resolve the full URI using baseURI property
@@ -4206,7 +4206,7 @@ NS_IMETHODIMP PresShell::DoCopyLinkLocation(nsIDOMNode* aNode)
     }
   }
 
-  if (anchor || area || link || xlinkType.EqualsWithConversion("simple")) {
+  if (anchor || area || link || xlinkType.Equals(NS_LITERAL_STRING("simple"))) {
     // get the clipboard helper
     nsCOMPtr<nsIClipboardHelper>
       clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
@@ -6298,7 +6298,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
     }
   }
   else {
-    name.AssignWithConversion("(null)");
+    name.Assign(NS_LITERAL_STRING("(null)"));
   }
   fputs(name, stdout);
 
@@ -6313,7 +6313,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
     }
   }
   else {
-    name.AssignWithConversion("(null)");
+    name.Assign(NS_LITERAL_STRING("(null)"));
   }
   fputs(name, stdout);
 
