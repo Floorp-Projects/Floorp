@@ -39,7 +39,13 @@ window.dialog {
  * XUL widgets
  **********************************/
 
-/******** Box *********
+/******** Browser, editor, iframe ********/
+
+browser, editor, iframe {
+  border: 2px solid black;
+}
+
+/******** Box *********/
 
 
 /* Conditional debug */

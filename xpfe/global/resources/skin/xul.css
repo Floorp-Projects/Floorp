@@ -42,6 +42,11 @@ window {
  * XUL widgets
  **********************************/
 
+/******** Browser, editor, iframe ********/
+
+browser, editor, iframe {
+  display: inline;
+}
 
 /******** Box *******/
 
