@@ -411,7 +411,7 @@ interface nsIEditorShell : nsISupports
 
   /** Get cell at a location in the layout's cellmap
     * returns null when past last cell in a row or column
-    * Get a cell and associated data from the layout frame  based on cell map coordinates (0 index)
+    * If tableElement is null, it will try to find enclosing table of selection anchor
     */
   nsIDOMElement GetCellAt(in nsIDOMElement tableElement, in PRInt32 rowIndex, in PRInt32 colIndex);
 
@@ -419,6 +419,7 @@ interface nsIEditorShell : nsISupports
     * returns null when past last cell in a row or column 
     * Note that rowSpan and/or colSpan may be 0 (for extending across entire table),
     * so actualRowSpan and actualColSpan are the real number of cells spanned
+    * If tableElement is null, it will try to find enclosing table of selection anchor
     */
   nsIDOMElement GetCellDataAt(in nsIDOMElement tableElement, in PRInt32 rowIndex, in PRInt32 colIndex,
                               out PRInt32 startRowIndex, out PRInt32 startColIndex,
