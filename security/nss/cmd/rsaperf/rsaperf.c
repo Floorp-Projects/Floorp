@@ -264,7 +264,7 @@ main(int argc, char **argv)
 	    secDir = PORT_Strdup(optstate->value);
 	    break;
 	case 'i':
-	    iters = atol(optstate->value);
+	    iters = (atol(optstate->value)>0?atol(optstate->value):iters);
 	    break;
 	case 's':
 	    doPriv = PR_TRUE;
