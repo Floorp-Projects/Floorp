@@ -40,7 +40,7 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
 	if (res == NS_OK && pMsgCompFields) { 
 		printf("We succesfully obtained a nsIMsgCompFields interface....\n");
-		pMsgCompFields->Test();
+/* 		pMsgCompFields->Test(); */
 
 /*
 		const char * value;
@@ -103,7 +103,7 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
    if (res == NS_OK && pMsgCompose) {
 	 printf("We succesfully obtained a nsIMsgCompose interface....\n");
-	 pMsgCompose->Test();
+/* 	 pMsgCompose->Test(); */
 
 	 printf("Releasing the interface now...\n");
      pMsgCompose->Release(); 
@@ -116,7 +116,7 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
 	if (res == NS_OK && pMsgSend) { 
 		printf("We succesfully obtained a nsIMsgSend interface....\n");
-		pMsgSend->Test();
+/*		pMsgSend->Test(); */
 
 		res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
 													NULL, 
