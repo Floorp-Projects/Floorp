@@ -277,7 +277,7 @@ public:
   NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; return NS_OK; }
   NS_IMETHOD GetOptionsContainer(nsIPresContext* aPresContext, nsIFrame** aFrame);
   NS_IMETHOD FireOnChange();
-  
+  NS_IMETHOD ComboboxFinish(PRInt32 aIndex);
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
@@ -362,7 +362,6 @@ protected:
 
   // Dropped down stuff
   void     SetComboboxItem(PRInt32 aIndex);
-  void     ComboboxFinish(PRInt32 aIndex);
   PRBool   IsInDropDownMode();
 
   // Selection

@@ -125,6 +125,13 @@ public:
   NS_IMETHOD GetOptionsContainer(nsIPresContext* aPresContext,
                                  nsIFrame** aFrame) = 0;
 
+  /**
+   * Tell the selected list to roll up and ensure that the proper index is
+   * selected, possibly firing onChange if the index has changed
+   *
+   * @param aIndex the index to actually select
+   */
+  NS_IMETHOD ComboboxFinish(PRInt32 aIndex) = 0;
 };
 
 #endif

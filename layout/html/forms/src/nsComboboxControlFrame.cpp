@@ -510,20 +510,20 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   } else {
     mFocused = nsnull;
     if (mDroppedDown) {
-      ToggleList(mPresContext);
-    }
-
-    // Fire onChange if selected index has changed due to keyboard
-    // (see nsListControlFrame::UpdateSelection)
-    if (mNeedToFireOnChange) {
-      PRInt32 selectedIndex;
-      mListControlFrame->GetSelectedIndex(&selectedIndex);
-      if (selectedIndex != mRecentSelectedIndex) {
-        // mNeedToFireOnChange will be set to false from within FireOnChange
-        mListControlFrame->FireOnChange();
-      } else {
-        // Need to set it to false anyway ... just in case
-        SetNeedToFireOnChange(PR_FALSE);
+      mListControlFrame->ComboboxFinish(mDisplayedIndex);
+    } else {
+      // Fire onChange if selected index has changed due to keyboard
+      // (see nsListControlFrame::UpdateSelection)
+      if (mNeedToFireOnChange) {
+        PRInt32 selectedIndex;
+        mListControlFrame->GetSelectedIndex(&selectedIndex);
+        if (selectedIndex != mRecentSelectedIndex) {
+          // mNeedToFireOnChange will be set to false from within FireOnChange
+          mListControlFrame->FireOnChange();
+        } else {
+          // Need to set it to false anyway ... just in case
+          SetNeedToFireOnChange(PR_FALSE);
+        }
       }
     }
   }
