@@ -1858,8 +1858,8 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
              attributeName.EqualsIgnoreCase("onunload") ||
              attributeName.EqualsIgnoreCase("onabort") ||
              attributeName.EqualsIgnoreCase("onerror") ||
-             attributeName.EqualsIgnoreCase("onconstruct") ||
-             attributeName.EqualsIgnoreCase("ondestruct"))
+             attributeName.EqualsIgnoreCase("oncreate") ||
+             attributeName.EqualsIgnoreCase("ondestroy"))
         AddScriptEventListener(aName, aValue, kIDOMLoadListenerIID);
     else if (attributeName.EqualsIgnoreCase("onfocus") ||
              attributeName.EqualsIgnoreCase("onblur"))
