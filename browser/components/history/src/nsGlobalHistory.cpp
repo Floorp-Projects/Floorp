@@ -3914,7 +3914,6 @@ nsGlobalHistory::StopSearch()
 nsresult
 nsGlobalHistory::AutoCompleteTypedSearch(nsIAutoCompleteMdbResult **aResult)
 {
-  printf("typed search\n");
   // Get a cursor to iterate through all rows in the database
   nsCOMPtr<nsIMdbTableRowCursor> rowCursor;
   mdb_err err = mTable->GetTableRowCursor(mEnv, -1, getter_AddRefs(rowCursor));
@@ -3933,7 +3932,6 @@ nsGlobalHistory::AutoCompleteTypedSearch(nsIAutoCompleteMdbResult **aResult)
     if (!row) break;
     
     if (HasCell(mEnv, row, kToken_TypedColumn)) {
-      printf("row\n");
       result->AddRow(row);
     }
   } while (row);
