@@ -106,6 +106,10 @@ extern nsresult
 SINGSIGN_RemoveReject
     (const char* host);
 
+extern nsresult
+SINGSIGN_AddReject
+    (const char* host);
+
 extern PRBool
 SINGSIGN_StorePassword
     (const char* passwordRealm, const PRUnichar *userName, const PRUnichar *password);

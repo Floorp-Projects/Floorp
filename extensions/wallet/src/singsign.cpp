@@ -855,6 +855,16 @@ SINGSIGN_RemoveReject(const char *host) {
   return rv;
 }
 
+PRIVATE void
+si_PutReject(const char * passwordRealm, const nsString& userName, PRBool save);
+
+PUBLIC nsresult
+SINGSIGN_AddReject(const char *host /*, const char *userName*/) {
+  si_PutReject(host, nsString(/*thisParameter_isObsolete*/), PR_TRUE);
+// @see http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla/extensions/wallet/src/singsign.cpp&rev=1.212&mark=1693#1650
+  return NS_OK;
+}
+
 /* Determine if a specified url/user exists */
 PRIVATE PRBool
 si_CheckForUser(const char *passwordRealm, const nsString& userName) {
