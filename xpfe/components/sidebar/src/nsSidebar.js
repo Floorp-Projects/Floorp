@@ -125,7 +125,7 @@ function (aTitle, aContentURL, aCustomizeURL)
     var panel_resource = 
         this.rdf.GetResource("urn:sidebar:3rdparty-panel:" + aContentURL);
     var panel_index = container.IndexOf(panel_resource);
-    var stringBundle, brandStringBundle, titleMessage, dialogMessage, promptService ;
+    var stringBundle, brandStringBundle, titleMessage, dialogMessage, promptService;
     if (panel_index != -1)
     {
         try {
