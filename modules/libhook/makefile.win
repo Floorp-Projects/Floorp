@@ -22,5 +22,5 @@ IGNORE_MANIFEST=1
 DEPTH=..\.. 
 DIRS=public src 
 
-!include $(MOZ_SRC)\ns\config\rules.mak
+!include $(DEPTH)\config\rules.mak
 

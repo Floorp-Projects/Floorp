@@ -23,5 +23,5 @@ MODULE=hook
 DEPTH=..\..\.. 
 EXPORTS=hk_types.h hk_funcs.h 
 
-!include $(MOZ_SRC)\ns\config\rules.mak
+!include $(DEPTH)\config\rules.mak
 

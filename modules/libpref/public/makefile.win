@@ -22,4 +22,4 @@ MODULE=pref
 DEPTH=..\..\.. 
 EXPORTS=prefapi.h prefldap.h 
 
-include <$(MOZ_SRC)\ns\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>

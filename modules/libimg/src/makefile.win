@@ -30,7 +30,7 @@ LOCAL_JMC_SUBDIR = .
 
 
 #LIBRARY_NAME = img$(MOZ_BITS)
-IMGSRC=	$(MOZ_SRC)\ns\modules\libimg\src\_jmc
+IMGSRC=	$(DEPTH)\modules\libimg\src\_jmc
 
 #
 # Make sure we have MOZILLA_CLIENT defined so we get the
@@ -86,7 +86,7 @@ LINCS=-I$(XPDIST)\public\jtools -I$(XPDIST)\public\java \
     -I$(XPDIST)\public\js 
 !endif
 
-include <$(MOZ_SRC)\ns\config\rules.mak> 
+include <$(DEPTH)\config\rules.mak> 
 
 $(JMC_GEN_DIR)\MIMGCB.h: $(JMCSRCDIR)\IMGCB.class
     $(JMC) -d $(JMC_GEN_DIR) -interface $(JMC_GEN_FLAGS) $(?F:.class=)

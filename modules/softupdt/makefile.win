@@ -20,12 +20,12 @@ DEPTH=..\..
 
 DIRS=classes src include 
 
-include <$(MOZ_SRC)\ns\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>
 
 build_classes: 
-        cd $(MOZ_SRC)\ns\modules\softupdt
+        cd $(DEPTH)\modules\softupdt
         $(NMAKE) -f makefile.win
-        cd $(MOZ_SRC)\ns\sun-java\classsrc
+        cd $(DEPTH)\sun-java\classsrc
         $(NMAKE) -f makefile.win java40.jar
-        cd $(MOZ_SRC)\ns\cmd\winfe\mkfiles32
+        cd $(DEPTH)\cmd\winfe\mkfiles32
         $(NMAKE) -f mozilla.mak

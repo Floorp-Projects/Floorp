@@ -37,7 +37,7 @@ LINCS=-I$(XPDIST)\public\libxp -I$(XPDIST)\public\util \
     -I$(XPDIST)\public\dbm -I$(XPDIST)\public\nspr 
 !endif
 
-!include $(MOZ_SRC)\ns\config\rules.mak
+!include $(DEPTH)\config\rules.mak
 
 #
 # JMC doesn't install the module library that we make on windows

@@ -20,4 +20,4 @@
 DEPTH=..\.. 
 DIRS=png classes public src 
 
-!include $(MOZ_SRC)\ns\config\rules.mak
+!include $(DEPTH)\config\rules.mak

@@ -51,6 +51,6 @@ JSRCS=FolderSpec.java \
       WinReg.java \
       WinRegItem.java \
       WinRegValue.java 
-CLASSROOT=y:\ns\modules\softupdt\classes 
+CLASSROOT=$(DEPTH)\modules\softupdt\classes 
 
-include <$(MOZ_SRC)\ns\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>
