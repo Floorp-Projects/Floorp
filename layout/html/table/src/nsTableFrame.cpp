@@ -754,24 +754,18 @@ void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
     }
     NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
 
-    // New reflow the new column frames
-    nsIFrame* firstChild;
-    lastColGroupFrame->FirstChild(firstChild);
-    if (nsnull == firstChild) {
-      lastColGroupFrame->Init(*aPresContext, firstNewColFrame);
-      lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, aReflowState, aStatus);
-    } else {
-      // Generate an appended reflow command.
-      // XXX This is really yucky...
-      nsIReflowCommand* reflowCmd;
+    // Generate an appended reflow command
+    // XXX This is really yucky...
+    nsIReflowCommand* reflowCmd;
 
-      NS_NewHTMLReflowCommand(&reflowCmd, lastColGroupFrame, nsIReflowCommand::FrameAppended,
-                              firstNewColFrame);
-      nsReflowState incrReflowState(lastColGroupFrame, aReflowState, aReflowState.maxSize);
-      incrReflowState.reflowCommand = reflowCmd;
-      incrReflowState.reason = eReflowReason_Incremental;
-      lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, incrReflowState, aStatus);
-    }
+    NS_NewHTMLReflowCommand(&reflowCmd, lastColGroupFrame, nsIReflowCommand::FrameAppended,
+                            firstNewColFrame);
+    nsReflowState incrReflowState(lastColGroupFrame, aReflowState, aReflowState.maxSize);
+    incrReflowState.reflowCommand = reflowCmd;
+    incrReflowState.reason = eReflowReason_Incremental;
+
+    // Reflow the frames
+    lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, incrReflowState, aStatus);
   }
 }
 
