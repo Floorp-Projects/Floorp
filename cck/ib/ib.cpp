@@ -925,6 +925,7 @@ BOOL ProcessMailNews() //CString xpifile, browser.xpi,bin/netscp.cfg,bin/default
 			// if remoteadmin, save in .jsc file, otherwise save in .js file
 
             CString strTarget = bMailRemoteAdmin ? remoteAdminFile : gstrPlainPrefFile;
+			BOOL bLocked      = bMailRemoteAdmin ? TRUE : FALSE;
 
             // only use .realhostname if pref is locked/remote, otherwise use .hostname
 
@@ -933,21 +934,21 @@ BOOL ProcessMailNews() //CString xpifile, browser.xpi,bin/netscp.cfg,bin/default
 			else
 				strPref.Format("mail.server.%s.hostname",strServer);  // i.e. mail.server.server9991.hostname
 
-            ModifyJS(strTarget, strPref, strMailAcctServer, FALSE);
+            ModifyJS(strTarget, strPref, strMailAcctServer, bLocked);
 
 			strPref.Format("mail.server.%s.name",strServer);  // i.e. mail.server.server9991.name
-            ModifyJS(strTarget, strPref, strMailAcctDisplayName, FALSE);
+            ModifyJS(strTarget, strPref, strMailAcctDisplayName, bLocked);
 
 			strPref.Format("mail.server.%s.port",strServer);  // i.e. mail.server.server9991.port
-            ModifyJS2(strTarget, strPref, strMailAcctPortNumber, FALSE);
+            ModifyJS2(strTarget, strPref, strMailAcctPortNumber, bLocked);
 
 			strPref.Format("mail.server.%s.type",strServer);  // i.e. mail.server.server9991.type
-            ModifyJS(strTarget, strPref, strMailAcctServerType, FALSE);
+            ModifyJS(strTarget, strPref, strMailAcctServerType, bLocked);
 
 			if (bIsPop)
 			{
 				strPref.Format("mail.server.%s.leave_on_server",strServer);  // i.e. mail.server.server9991.type
-				ModifyJS2(strTarget, strPref, strMailAcctPopLeaveMsg, FALSE); 
+				ModifyJS2(strTarget, strPref, strMailAcctPopLeaveMsg, bLocked); 
 			}
 		
 		}
@@ -1020,6 +1021,7 @@ BOOL ProcessMailNews() //CString xpifile, browser.xpi,bin/netscp.cfg,bin/default
 			// if remoteadmin, save in .jsc file, otherwise save in .js file
 
             CString strTarget = bNewsRemoteAdmin ? remoteAdminFile : gstrPlainPrefFile;
+			BOOL bLocked      = bMailRemoteAdmin ? TRUE : FALSE;
 
             // only use .realhostname if pref is locked/remote, otherwise use .hostname
 
@@ -1028,15 +1030,15 @@ BOOL ProcessMailNews() //CString xpifile, browser.xpi,bin/netscp.cfg,bin/default
 			else
 				strPref.Format("mail.server.%s.hostname",strServer);  // i.e. mail.server.server9992.hostname
 
-            ModifyJS(strTarget, strPref, strNewsAcctServer, FALSE);
+            ModifyJS(strTarget, strPref, strNewsAcctServer, bLocked);
 
 			strPref.Format("mail.server.%s.name",strServer);  // i.e. mail.server.server9991.name
-            ModifyJS(strTarget, strPref, strNewsAcctDisplayName, FALSE);
+            ModifyJS(strTarget, strPref, strNewsAcctDisplayName, bLocked);
 
 			if (strNewsAcctPortNumber.GetLength())
 			{
 				strPref.Format("mail.server.%s.port",strServer);  // i.e. mail.server.server9991.port
-				ModifyJS2(strTarget, strPref, strNewsAcctPortNumber, FALSE);
+				ModifyJS2(strTarget, strPref, strNewsAcctPortNumber, bLocked);
 			}
 
 		}
