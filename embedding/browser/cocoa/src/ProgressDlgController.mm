@@ -48,7 +48,8 @@
 #include "nsIWebProgressListener.h"
 #include "nsIDownload.h"
 #include "nsIComponentManager.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 static NSString *SaveFileToolbarIdentifier        = @"Save File Dialog Toolbar";
 static NSString *CancelToolbarItemIdentifier      = @"Cancel Toolbar Item";
@@ -97,7 +98,7 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
   mDownloadIsComplete = NO;
 
   if (!mIsFileSave) {
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     PRBool save = PR_FALSE;
     prefs->GetBoolPref("browser.download.progressDnldDialog.keepAlive", &save);
     mSaveFileDialogShouldStayOpen = save;
@@ -273,7 +274,7 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
         [leaveOpenToggleToolbarItem setImage:[NSImage imageNamed:@"saveLeaveOpenNO"]];
     }
     
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     prefs->SetBoolPref("browser.download.progressDnldDialog.keepAlive", mSaveFileDialogShouldStayOpen);
 }
 
