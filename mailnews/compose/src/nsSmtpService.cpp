@@ -41,6 +41,7 @@
 #include "nsReadableUtils.h"
 #include "nsIPref.h"
 #include "nsIIOService.h"
+#include "nsIPipe.h"
 #include "nsNetCID.h"
 #include "nsEscape.h"
 #include "nsNetUtil.h"
@@ -357,221 +358,6 @@ NS_IMETHODIMP nsSmtpService::GetProtocolFlags(PRUint32 *result)
     return NS_OK; 	
 }
 
-//////////////////////////////////////////////////////////////////////////
-// This is just a little stub channel class for mailto urls. Mailto urls
-// don't really have any data for the stream calls in nsIChannel to make much sense.
-// But we need to have a channel to return for nsSmtpService::NewChannel
-// that can simulate a real channel such that the uri loader can then get the
-// content type for the channel.
-class nsMailtoChannel : public nsIChannel
-{
-public:
-
-	  NS_DECL_ISUPPORTS
-    NS_DECL_NSICHANNEL
-    NS_DECL_NSIREQUEST
-
-    nsMailtoChannel(nsIURI * aURI);
-	  virtual ~nsMailtoChannel();
-
-protected:
-  nsCOMPtr<nsIURI> m_url;
-  nsresult mStatus;
-  nsCOMPtr<nsILoadGroup> mLoadGroup;
-};
-
-nsMailtoChannel::nsMailtoChannel(nsIURI * aURI)
-    : m_url(aURI), mStatus(NS_OK)
-{
-}
-
-nsMailtoChannel::~nsMailtoChannel()
-{}
-
-NS_IMPL_ISUPPORTS2(nsMailtoChannel, nsIChannel, nsIRequest);
-
-NS_IMETHODIMP nsMailtoChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
-{
-  *aLoadGroup = mLoadGroup;
-  NS_IF_ADDREF(*aLoadGroup);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMailtoChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
-{
-  mLoadGroup = aLoadGroup;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMailtoChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
-{
-  NS_NOTREACHED("GetNotificationCallbacks");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsMailtoChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
-{
-	return NS_OK;       // don't fail when trying to set this
-}
-
-NS_IMETHODIMP nsMailtoChannel::GetOriginalURI(nsIURI* *aURI)
-{
-  *aURI = nsnull;
-  return NS_OK; 
-}
- 
-NS_IMETHODIMP nsMailtoChannel::SetOriginalURI(nsIURI* aURI)
-{
-  return NS_OK;
-}
- 
-NS_IMETHODIMP nsMailtoChannel::GetURI(nsIURI* *aURI)
-{
-  *aURI = m_url;
-  NS_IF_ADDREF(*aURI);
-  return NS_OK; 
-}
- 
-NS_IMETHODIMP nsMailtoChannel::Open(nsIInputStream **_retval)
-{
-  NS_NOTREACHED("Open");
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsMailtoChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
-{
-  // Add to the load group to fire start event
-  if (mLoadGroup) {
-    mLoadGroup->AddRequest(this, ctxt);
-  }
-
-  mStatus = listener->OnStartRequest(this, ctxt);
-
-  // If OnStartRequest(...) failed, then propagate the error code...
-  if (NS_SUCCEEDED(mStatus)) {
-    // Otherwise, indicate that no content is available...
-    mStatus = NS_ERROR_NO_CONTENT;
-  }
-
-  // Call OnStopRequest(...) for correct-ness.
-  (void) listener->OnStopRequest(this, ctxt, mStatus);
-
-  // Remove from the load group to fire stop event
-  if (mLoadGroup) {
-    mLoadGroup->RemoveRequest(this, ctxt, mStatus);
-  }
-
-  // Always return NS_ERROR_NO_CONTENT since this channel never provides
-  // data...
-  return NS_ERROR_NO_CONTENT;
-}
-
-NS_IMETHODIMP nsMailtoChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
-{
-  *aLoadFlags = 0;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMailtoChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMailtoChannel::GetContentType(nsACString &aContentType)
-{
-	aContentType = NS_LITERAL_CSTRING("x-application-mailto");
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMailtoChannel::SetContentType(const nsACString &aContentType)
-{
-    // Do not allow the content type to change...
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsMailtoChannel::GetContentCharset(nsACString &aContentCharset)
-{
-	aContentCharset.Truncate();
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMailtoChannel::SetContentCharset(const nsACString &aContentCharset)
-{
-    // Do not allow the content type to change...
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsMailtoChannel::GetContentLength(PRInt32 * aContentLength)
-{
-  *aContentLength = -1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMailtoChannel::SetContentLength(PRInt32 aContentLength)
-{
-    NS_NOTREACHED("SetContentLength");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsMailtoChannel::GetOwner(nsISupports * *aPrincipal)
-{
-    NS_NOTREACHED("GetOwner");
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsMailtoChannel::SetOwner(nsISupports * aPrincipal)
-{
-    NS_NOTREACHED("SetOwner");
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsISupports securityInfo; */
-NS_IMETHODIMP nsMailtoChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// From nsIRequest
-////////////////////////////////////////////////////////////////////////////////
-
-/* readonly attribute wstring name; */
-NS_IMETHODIMP nsMailtoChannel::GetName(nsACString &aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsMailtoChannel::IsPending(PRBool *result)
-{
-    *result = PR_FALSE;
-    return NS_OK; 
-}
-
-NS_IMETHODIMP nsMailtoChannel::GetStatus(nsresult *status)
-{
-    *status = mStatus;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsMailtoChannel::Cancel(nsresult status)
-{
-    mStatus = status;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsMailtoChannel::Suspend()
-{
-    NS_NOTREACHED("Suspend");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsMailtoChannel::Resume()
-{
-    NS_NOTREACHED("Resume");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // the smtp service is also the protocol handler for mailto urls....
 
 NS_IMETHODIMP nsSmtpService::NewURI(const nsACString &aSpec,
@@ -603,15 +389,17 @@ NS_IMETHODIMP nsSmtpService::NewURI(const nsACString &aSpec,
 
 NS_IMETHODIMP nsSmtpService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
-  nsresult rv = NS_OK;
-  nsMailtoChannel * aMailtoChannel = new nsMailtoChannel(aURI);
-  if (aMailtoChannel)
-  {
-      rv = aMailtoChannel->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
-  }
-  else
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  return rv;
+  // create an empty pipe for use with the input stream channel.
+  nsCOMPtr<nsIInputStream> pipeIn;
+  nsCOMPtr<nsIOutputStream> pipeOut;
+  nsresult rv = NS_NewPipe(getter_AddRefs(pipeIn),
+                           getter_AddRefs(pipeOut));
+  if (NS_FAILED(rv)) return rv;
+
+  pipeOut->Close();
+
+  return NS_NewInputStreamChannel(_retval, aURI, pipeIn,
+                                  NS_LITERAL_CSTRING("x-application-mailto"));
 }
 
 

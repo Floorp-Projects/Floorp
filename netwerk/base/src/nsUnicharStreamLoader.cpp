@@ -146,9 +146,16 @@ nsUnicharStreamLoader::OnStopRequest(nsIRequest *request,
                                      nsISupports *ctxt,
                                      nsresult aStatus)
 {
-  nsresult rv = NS_OK;
-  NS_ASSERTION(mObserver, "No way we can not have an mObserver here!");
+  // if we trigger this assertion, then it means that the channel called
+  // OnStopRequest before returning from AsyncOpen, which is totally
+  // unexpected behavior.
+  if (!mObserver) {
+    NS_ERROR("No way we should not have an mObserver here!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
   if (mInputStream) {
+    nsresult rv;
     // We got some data at some point.  I guess we should tell our
     // observer about it or something....
 
@@ -199,7 +206,7 @@ nsUnicharStreamLoader::OnStopRequest(nsIRequest *request,
   mContext = nsnull;
   mInputStream = nsnull;
   mOutputStream = nsnull;
-  return rv;
+  return NS_OK;
 }
 
 /* nsIStreamListener implementation */
