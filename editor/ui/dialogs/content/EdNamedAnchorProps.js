@@ -24,6 +24,7 @@ var insertNew = true;
 var tagName = "anchor";
 var anchorElement = null;
 var nameInput;
+var name;
 
 // dialog initialization code
 function Startup()
@@ -44,7 +45,7 @@ function Startup()
     // We found an element and don't need to insert one
     insertNew = false;
     dump("Found existing anchor\n");
-    nameInput.value = anchorElement.getAttribute("name");
+    name = anchorElement.getAttribute("name");
   } else {
     insertNew = true;
     // We don't have an element selected, 
@@ -61,8 +62,6 @@ function Startup()
     //Be sure the name is unique to the document
     if (AnchorNameExists(name))
       name += "_"
-
-    nameInput.value = name;
   }
 
   if(!anchorElement)
@@ -70,8 +69,17 @@ function Startup()
     dump("Failed to get selected element or create a new one!\n");
     window.close();
   }
+  // Make a copy to use for AdvancedEdit
+  globalElement = anchorElement.cloneNode;
+
+  InitDialog();
   
   nameInput.focus();
+}
+
+function InitDialog()
+{
+  nameInput.value = name;
 }
 
 function AnchorNameExists(name)
@@ -86,6 +94,13 @@ function AnchorNameExists(name)
     }
   }
   return false;
+}
+
+function onAdvancedEdit()
+{
+  dump("\n\n Need to write onAdvancedEdit for Named Anchor dialog\n\n");
+}
+
 }
 
 function onOK()

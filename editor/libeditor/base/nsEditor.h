@@ -213,7 +213,7 @@ protected:
 
   //NOTE: Most callers are dealing with Nodes,
   //  but these objects must supports nsIDOMElement
-  NS_IMETHOD CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode);
+  NS_IMETHOD CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode);
   /*
   NS_IMETHOD SetProperties(nsVoidArray *aPropList);
   NS_IMETHOD GetProperties(nsVoidArray *aPropList);

@@ -1275,7 +1275,7 @@ nsEditor::GetBodyElement(nsIDOMElement **aBodyElement)
 
 // Objects must be DOM elements
 NS_IMETHODIMP
-nsEditor::CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
+nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
 {
   nsresult result=NS_OK;
 
@@ -1336,7 +1336,7 @@ nsEditor::CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
             // Do we ever get here?
             destElement->RemoveAttribute(sourceAttrName);
 #if DEBUG_cmanske
-            printf("Attribute in NamedNodeMap has empty value in nsEditor::CopyAttributes()\n");
+            printf("Attribute in NamedNodeMap has empty value in nsEditor::CloneAttributes()\n");
 #endif
           }
         }        

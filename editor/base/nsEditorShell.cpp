@@ -1305,6 +1305,30 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
 }
 
 NS_IMETHODIMP
+nsEditorShell::CloneAttributes(nsIDOMNode *destNode, nsIDOMNode *sourceNode)
+{
+  if (!destNode || !sourceNode) { return NS_ERROR_NULL_POINTER; }
+  nsresult  rv = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
+        if (editor)
+          rv = editor->CloneAttributes(destNode, sourceNode);
+      }
+      break;
+
+    default:
+      rv = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsEditorShell::NodeIsBlock(nsIDOMNode *node, PRBool *_retval)
 {
   if (!node || !_retval) { return NS_ERROR_NULL_POINTER; }

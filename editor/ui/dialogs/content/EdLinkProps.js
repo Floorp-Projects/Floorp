@@ -55,31 +55,6 @@ function Startup()
     dump("Not all dialog controls were found!!!\n");
   }
   
-  // Set data for the dialog controls
-  initDialog();
-
-  // Set initial focus
-
-  if (insertNew) {
-    dump("Setting focus to linkTextInput\n");
-    // We will be using the HREF inputbox, so text message
-    linkTextInput.focus();
-  } else {
-    dump("Setting focus to linkTextInput\n");
-    hrefInput.focus();
-
-    // We will not insert a new link at caret, so remove link text input field
-    parentNode = linkTextInput.parentNode;
-    if (parentNode) {
-      dump("Removing link text input field.\n");
-      parentNode.removeChild(linkTextInput);
-      linkTextInput = null;
-    }
-  }
-}
-
-function initDialog()
-{
   // Get a single selected anchor element
   anchorElement = editorShell.GetSelectedElement(tagName);
 
@@ -101,8 +76,9 @@ function initDialog()
     editorShell.SelectElement(anchorElement);
     selection = editorShell.editorSelection;
 
-    hrefInput.value = anchorElement.getAttribute("href");
-    dump("Current HREF: "+hrefInput.value+"\n");
+// Moved to InitDialog()
+//    hrefInput.value = anchorElement.getAttribute("href");
+//    dump("Current HREF: "+hrefInput.value+"\n");
   } else {
     // See if we have a selected image instead of text
     imageElement = editorShell.GetSelectedElement("img");
@@ -165,6 +141,33 @@ function initDialog()
     insertLinkAroundSelection = true;
     dump("insertLinkAroundSelection is TRUE\n");
   }
+
+  // Set data for the dialog controls
+  InitDialog();
+
+  // Set initial focus
+  if (insertNew) {
+    dump("Setting focus to linkTextInput\n");
+    // We will be using the HREF inputbox, so text message
+    linkTextInput.focus();
+  } else {
+    dump("Setting focus to linkTextInput\n");
+    hrefInput.focus();
+
+    // We will not insert a new link at caret, so remove link text input field
+    parentNode = linkTextInput.parentNode;
+    if (parentNode) {
+      dump("Removing link text input field.\n");
+      parentNode.removeChild(linkTextInput);
+      linkTextInput = null;
+    }
+  }
+}
+
+function InitDialog()
+{
+  hrefInput.value = anchorElement.getAttribute("href");
+  dump("Current HREF: "+hrefInput.value+"\n");
 }
 
 function ChooseFile()
@@ -182,6 +185,11 @@ function RemoveLink()
 {
   // Simple clear the input field!
   hrefInput.value = "";
+}
+
+function onAdvancedEdit()
+{
+  dump("\n\n Need to write onAdvancedEdit for Link dialog\n\n");
 }
 
 function onOK()
