@@ -47,8 +47,6 @@ NS_METHOD nsButton::Create(nsIWidget        *aParent,
                       nsIToolkit       *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-  GtkRequisition size;
-
   aParent->AddChild(this);
   GtkWidget *parentWidget = nsnull;
 
@@ -62,8 +60,6 @@ NS_METHOD nsButton::Create(nsIWidget        *aParent,
   InitDeviceContext(aContext, parentWidget);
 
   mWidget = gtk_button_new_with_label("");
-  size.width = aRect.width;
-  size.height = aRect.height;
 
   gtk_widget_set_usize(GTK_WIDGET(mWidget), aRect.width, aRect.height);
   gtk_widget_show(mWidget);
