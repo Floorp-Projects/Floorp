@@ -35,10 +35,7 @@
 
 #include "nsVoidArray.h"
 
-//#define DRAG_DROP
-#ifdef DRAG_DROP
-class nsIDragTarget;
-class nsIDragSource;
+#ifdef NEW_DRAG_AND_DROP
 class nsNativeDragTarget;
 #endif
 
@@ -226,8 +223,7 @@ protected:
 
     // Drag & Drop
 
-#ifdef DRAG_DROP
-    //nsIDragSource * mDragSource;
+#ifdef NEW_DRAG_AND_DROP
     nsNativeDragTarget * mNativeDragTarget;
 #endif
     // Enumeration of the methods which are accessable on the "main GUI thread"
