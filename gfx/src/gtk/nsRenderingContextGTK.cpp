@@ -1409,12 +1409,6 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
 {
   nscoord x, y, w, h;
 
-  if (!mClipRegion) {
-    return NS_ERROR_FAILURE;
-  } else if (mClipRegion->IsEmpty()) {
-    return NS_ERROR_FAILURE;
-  }
-
   x = aX;
   y = aY;
   w = aWidth;
@@ -1445,12 +1439,6 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
                                                const nsRect& aDRect)
 {
   nsRect	sr,dr;
-
-  if (!mClipRegion) {
-    return NS_ERROR_FAILURE;
-  } else if (mClipRegion->IsEmpty()) {
-    return NS_ERROR_FAILURE;
-  }
 
   sr = aSRect;
   mTMatrix->TransformCoord(&sr.x, &sr.y,
