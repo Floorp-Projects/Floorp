@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -44,6 +45,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIFullScreen.h"
 #include "nsIServiceManagerUtils.h"
+#include "nsIScreenManager.h"
 
 #ifdef DEBUG
 #include "nsIServiceManager.h"
@@ -526,20 +528,29 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(PRBool aFullScreen)
     if (!mOriginalBounds)
       mOriginalBounds = new nsRect();
     GetScreenBounds(*mOriginalBounds);
-    PRInt32 screenWidth, screenHeight;
-    mContext->GetDeviceSurfaceDimensions(screenWidth, screenHeight);
-    float t2p;
-    mContext->GetAppUnitsToDevUnits(t2p);
-    screenWidth = NSToIntRound(screenWidth * t2p);
-    screenHeight = NSToIntRound(screenHeight * t2p);
 
-    // Move to (0,0) and size to the screen dimensions
-    SetSizeMode(nsSizeMode_Normal);
-    Resize(0, 0, screenWidth, screenHeight, PR_TRUE);
+    // Move to top-left corner of screen and size to the screen dimensions
+    nsCOMPtr<nsIScreenManager> screenManager;
+    screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1"); 
+    NS_ASSERTION(screenManager, "Unable to grab screenManager.");
+    if (screenManager) {
+      nsCOMPtr<nsIScreen> screen;
+      screenManager->ScreenForRect(mOriginalBounds->x, mOriginalBounds->y,
+                                   mOriginalBounds->width, mOriginalBounds->height,
+                                   getter_AddRefs(screen));
+      if (screen) {
+        PRInt32 left, top, width, height;
+        if (NS_SUCCEEDED(screen->GetRect(&left, &top, &width, &height))) {
+          SetSizeMode(nsSizeMode_Normal);
+          Resize(left, top, width, height, PR_TRUE);
+    
+          // Hide all of the OS chrome
+          if (fullScreen)
+            fullScreen->HideAllOSChrome();
+        }
+      }
+    }
 
-    // Hide all of the OS chrome
-    if (fullScreen)
-      fullScreen->HideAllOSChrome();
   } else if (mOriginalBounds) {
     Resize(mOriginalBounds->x, mOriginalBounds->y, mOriginalBounds->width,
            mOriginalBounds->height, PR_TRUE);
