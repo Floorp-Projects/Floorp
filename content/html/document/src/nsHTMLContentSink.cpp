@@ -2214,21 +2214,33 @@ HTMLContentSink::ProcessBaseTarget(const nsString& aBaseTarget)
 nsresult
 HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
 {
+  nsresult result = NS_OK;
   nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
-  PRInt32 ac = aNode.GetAttributeCount();
-  for (PRInt32 i = 0; i < ac; i++) {
-    const nsString& key = aNode.GetKeyAt(i);
-    nsAutoString value;
-    if (key.EqualsIgnoreCase("href")) {
-      GetAttributeValueAt(aNode, i, value, sco);
-      ProcessBaseHref(value);
-    } else if (key.EqualsIgnoreCase("target")) {
-      GetAttributeValueAt(aNode, i, value, sco);
-      ProcessBaseTarget(value);
+
+  // Create content object
+  nsAutoString tag("BASE");
+  nsIHTMLContent* element = nsnull;
+  result = NS_CreateHTMLElement(&element, tag);
+  if (NS_SUCCEEDED(result)) {
+    // Add in the attributes and add the style content object to the
+    // head container.
+    element->SetDocument(mDocument, PR_FALSE);
+    result = AddAttributes(aNode, element, sco);
+    if (NS_SUCCEEDED(result)) {
+      mHead->AppendChildTo(element, PR_FALSE);
+
+      nsAutoString value;
+      if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
+        ProcessBaseHref(value);
+      }
+      if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, value)) {
+        ProcessBaseTarget(value);
+      }
     }
   }
-  NS_RELEASE(sco);
-  return NS_OK;
+  
+  NS_IF_RELEASE(sco);
+  return result;
 }
 
 
