@@ -65,14 +65,11 @@ all: export
 export: $(DETECT_NAME)
 detect: $(DETECT_NAME)
 
-clean:
+realclean clobber clobber_all clean:
 	@rm -f $(DETECT_NAME)
 	@$(DETECT_X11) --cleanup 
 	@$(DETECT_MOTIF) --cleanup 
 	@$(DETECT_GLIBC) --cleanup
-
-clobber: clean
-realclean: clean
 
 # This is needed for DETECT_MOTIF to work
 X11_INCLUDE_FLAGS=$(shell $(DETECT_X11) -if)
