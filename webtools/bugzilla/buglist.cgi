@@ -619,6 +619,15 @@ if ($db_order =~ /bugs.target_milestone/) {
     $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product_id = bugs.product_id WHERE /;
 }
 
+# Even more disgusting hack: if we are doing a full text search,
+# order by relevance instead of anything else, and limit to 200 results.
+if ($search->{'sorted_by_relevance'}) {
+    $db_order = $order = "relevance DESC LIMIT 200";
+    $vars->{'sorted_by_relevance'} = 1;
+}
+
+
+
 $query .= " ORDER BY $db_order " if ($order);
 
 

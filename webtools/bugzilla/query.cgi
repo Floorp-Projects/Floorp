@@ -130,7 +130,7 @@ sub PrefillForm {
                       "chfieldto", "chfieldvalue", "target_milestone",
                       "email", "emailtype", "emailreporter",
                       "emailassigned_to", "emailcc", "emailqa_contact",
-                      "emaillongdesc",
+                      "emaillongdesc", "content",
                       "changedin", "votes", "short_desc", "short_desc_type",
                       "long_desc", "long_desc_type", "bug_file_loc",
                       "bug_file_loc_type", "status_whiteboard",
@@ -389,6 +389,7 @@ if (($::FORM{'query_format'} || $::FORM{'format'}) eq "create-series") {
 $vars->{'default'} = \%default;
 
 $vars->{'format'} = $::FORM{'format'};
+$vars->{'query_format'} = $::FORM{'query_format'};
 
 # Generate and return the UI (HTML page) from the appropriate template.
 # If we submit back to ourselves (for e.g. boolean charts), we need to

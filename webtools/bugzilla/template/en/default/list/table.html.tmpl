@@ -85,8 +85,12 @@
       <th>&nbsp;</th>
       [% END %]
       <th colspan="[% splitheader ? 2 : 1 %]">
-        <a href="buglist.cgi?
-                  [% urlquerypart FILTER html %]&amp;order=bugs.bug_id">ID</a>
+        [% IF sorted_by_relevance %]
+          ID
+        [% ELSE %]
+          <a href="buglist.cgi?
+                    [% urlquerypart FILTER html %]&amp;order=bugs.bug_id">ID</a>
+        [% END %]
       </th>
 
       [% IF splitheader %]
@@ -119,10 +123,14 @@
 
 [% BLOCK columnheader %]
   <th colspan="[% splitheader ? 2 : 1 %]">
-    <a href="buglist.cgi?[% urlquerypart FILTER html %]&amp;order=
-      [% column.name FILTER url_quote FILTER html %]
-      [% ",$qorder" FILTER html IF order %]">
-        [%- abbrev.$id.title || field_descs.$id || column.title -%]</a>
+    [% IF sorted_by_relevance %]
+      [%- abbrev.$id.title || field_descs.$id || column.title -%]
+    [% ELSE %]
+      <a href="buglist.cgi?[% urlquerypart FILTER html %]&amp;order=
+        [% column.name FILTER url_quote FILTER html %]
+        [% ",$qorder" FILTER html IF order %]">
+          [%- abbrev.$id.title || field_descs.$id || column.title -%]</a>
+    [% END %]
   </th>
 [% END %]
 

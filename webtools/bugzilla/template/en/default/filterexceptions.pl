@@ -95,6 +95,15 @@
   'button_name', #
 ],
 
+'search/search-specific.html.tmpl' => [
+  's',
+],
+
+'search/tabs.html.tmpl' => [
+  'tab.name',
+  'tab.description',
+],
+
 'request/queue.html.tmpl' => [
   'column_headers.$group_field', 
   'column_headers.$column', 

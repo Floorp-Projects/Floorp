@@ -1590,6 +1590,8 @@ $table{bugs} =
     index (target_milestone),
     index (qa_contact),
     index (votes),
+
+    fulltext (short_desc),
     
     unique(alias)';
 
@@ -1618,7 +1620,8 @@ $table{longdescs} =
     isprivate tinyint not null default 0,
     index(bug_id),
     index(who),
-    index(bug_when)';
+    index(bug_when),
+    fulltext (thetext)';
 
 
 $table{components} =
@@ -2042,6 +2045,8 @@ AddFDef("requesters.login_name", "Flag Requester", 0);
 AddFDef("setters.login_name", "Flag Setter", 0);
 AddFDef("work_time", "Hours Worked", 0);
 AddFDef("percentage_complete", "Percentage Complete", 0);
+
+AddFDef("content", "Content", 0);
 
 ###########################################################################
 # Detect changed local settings
@@ -4044,6 +4049,15 @@ if ($sth->rows == 0) {
   print "\n$login is now set up as an administrator account.\n";
 }
 
+# Add fulltext indexes for bug summaries and descriptions/comments.
+if (!defined GetIndexDef('bugs', 'short_desc')) {
+    print "Adding full-text index for short_desc column in bugs table...\n";
+    $dbh->do('ALTER TABLE bugs ADD FULLTEXT (short_desc)');
+}
+if (!defined GetIndexDef('longdescs', 'thetext')) {
+    print "Adding full-text index for thetext column in longdescs table...\n";
+    $dbh->do('ALTER TABLE longdescs ADD FULLTEXT (thetext)');
+}
 
 # 2002 November, myk@mozilla.org, bug 178841:
 #

@@ -1,0 +1,101 @@
+<!-- 1.0@bugzilla.org -->
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+[% PROCESS global/header.html.tmpl 
+  title = "Find a Specific Bug"
+  h1 = ""
+  style = "td.selected_tab {
+             border-width: 2px 2px 0px;
+             border-style: solid; 
+           }
+           td.unselected_tab, td.spacer {
+             border-width: 0px 0px 2px 0px;
+             border-style: solid; 
+           }"
+%]
+
+[% PROCESS search/tabs.html.tmpl %]
+
+<p>
+Find a specific bug by entering words that describe it.  Bugzilla will search
+bug summaries, descriptions, and comments for those words and return a list
+of matching bugs sorted by relevance.
+</p>
+
+<p>
+For example, if the bug you are looking for is a browser crash when you go 
+to a secure web site with an embedded Flash animation, you might search for 
+"crash secure SSL flash".
+</p>
+
+<form method="get" action="buglist.cgi">
+<input type="hidden" name="query_format" value="specific">
+
+<table>
+  <tr>
+    <td align="right" valign="baseline">
+      <b><label for="bug_status">Status:</label></b>
+    </td>
+    <td>
+      <select name="bug_status">
+        [% FOREACH s = ['open', 'closed', 'all'] %]
+            <option value="__[% s %]__" 
+                  [% " selected" IF default.bug_status.0 == "__${s}__" %]>
+            [% s %]
+          </option>
+        [% END %]
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td align="right" valign="baseline">
+      <b><label for="product">Product:</label></b>
+    </td>
+    <td>
+      <select name="product">
+        <option value="">All</option>
+        [% FOREACH p = product %]
+          <option value="[% p.name FILTER html %]"
+            [% " selected" IF lsearch(default.product, p.name) != -1 %]>
+            [% p.name FILTER html %]</option>
+        [% END %]
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td align="right" valign="baseline">
+      <b><label for="content">Words:</label></b>
+    </td>
+    <td>
+      <input name="content" size="40" 
+             value="[% default.content.0 FILTER html %]">
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>
+      <input type="submit" value="Search">
+    </td>
+
+</form>
+
+[% PROCESS global/footer.html.tmpl %]
+

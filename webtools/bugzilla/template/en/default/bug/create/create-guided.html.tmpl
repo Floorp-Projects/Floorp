@@ -152,26 +152,11 @@ function PutDescription() {
     For example: <tt><b>pop3 mail</b></tt> or <tt><b>copy paste</b></tt>.
   </p>
 
-  <script type="text/javascript" language="JavaScript">
-    [%# Tell QuickSearch to use the custom-supplied load_relative_url()
-        function. This was originally designed for the sidebar, hence the
-        variable name. %]
-    var sidebar = 1;
-
-    function load_relative_url(url) {
-        frames['somebugs'].location.href = url + "&format=simple";
-    }
-  </script>
-
-  <script type="text/javascript" language="JavaScript"
-          src="localconfig.js"></script>
-  <script type="text/javascript" language="JavaScript"
-          src="quicksearch.js"></script>
-
-  <form name="f" action="show_bug.cgi" method="get"
-      onsubmit="QuickSearch(f.id.value); return false;">
-
-    <input type="text" name="id" size="40">
+  <form action="buglist.cgi" method="get" target="somebugs">
+    <input type="hidden" name="format" value="simple">
+    <input type="hidden" name="bug_status" value="__open__">
+    <input type="hidden" name="product" value="[% product FILTER html %]">
+    <input type="text" name="content" size="40">
     <input type="submit" value="Search">
   </form>
 

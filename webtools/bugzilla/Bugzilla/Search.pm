@@ -121,11 +121,22 @@ sub init {
 
     # If the user has selected all of either status or resolution, change to
     # selecting none. This is functionally equivalent, but quite a lot faster.
+    # Also, if the status is __open__ or __closed__, translate those
+    # into their equivalent lists of open and closed statuses.
     if ($params->param('bug_status')) {
         my @bug_statuses = $params->param('bug_status');
-        
-        if (scalar(@bug_statuses) == scalar(@::legal_bug_status)) {
+        if (scalar(@bug_statuses) == scalar(@::legal_bug_status) 
+            || $bug_statuses[0] eq "__all__")
+        {
             $params->delete('bug_status');
+        }
+        elsif ($bug_statuses[0] eq '__open__') {
+            $params->param('bug_status', map(&::IsOpenedState($_) ? $_ : undef, 
+                                             @::legal_bug_status));
+        }
+        elsif ($bug_statuses[0] eq "__closed__") {
+            $params->param('bug_status', map(&::IsOpenedState($_) ? undef : $_, 
+                                             @::legal_bug_status));
         }
     }
     
@@ -288,6 +299,10 @@ sub init {
         }
     }
 
+    if (defined $params->param('content')) {
+        push(@specialchart, ['content', 'matches', $params->param('content')]);
+    }
+
     my $chartid;
     my $sequence = 0;
     # $type_id is used by the code that queries for attachment flags.
@@ -364,6 +379,55 @@ sub init {
              push(@supptables, "longdescs $table");
              push(@wherepart, "$table.bug_id = bugs.bug_id");
              $term = "$table.bug_when > " . &::SqlQuote(SqlifyDate($v));
+         },
+         "^content,matches" => sub {
+             # "content" is an alias for columns containing text for which we
+             # can search a full-text index and retrieve results by relevance, 
+             # currently just bug comments (and summaries to some degree).
+             # There's only one way to search a full-text index
+             # ("MATCH (...) AGAINST (...)"), so we only accept the "matches"
+             # operator, which is specific to full-text index searches.
+
+             # Add the longdescs table to the query so we can search comments.
+             my $table = "longdescs_$chartid";
+             push(@supptables, "INNER JOIN longdescs $table ON bugs.bug_id " . 
+                               "= $table.bug_id");
+             if (Param("insidergroup") 
+                 && !&::UserInGroup(Param("insidergroup")))
+             {
+                 push(@wherepart, "$table.isprivate < 1");
+             }
+             push(@wherepart, "$table.bug_id = bugs.bug_id");
+
+             # Create search terms to add to the SELECT and WHERE clauses.
+             # $term1 searches comments.
+             # $term2 searches summaries, which contributes to the relevance
+             # ranking in SELECT but doesn't limit which bugs get retrieved.
+             my $term1 = "MATCH($table.thetext) AGAINST(".&::SqlQuote($v).")";
+             my $term2 = "MATCH(bugs.short_desc) AGAINST(".&::SqlQuote($v).")";
+
+             # The term to use in the WHERE clause.
+             $term = $term1;
+
+             # In order to sort by relevance, we SELECT the relevance value
+             # and give it an alias so we can add it to the SORT BY clause
+             # when we build that clause in buglist.cgi.  We also flag the
+             # query in Bugzilla with the "sorted_by_relevance" flag
+             # so buglist.cgi knows to sort by relevance instead of anything
+             # else the user selected.
+             #
+             # Note: MySQL calculates relevance for each comment separately,
+             # so we need to do some additional calculations to get an overall
+             # relevance value, which we do by calculating the average (mean)
+             # comment relevance and then adding the summary relevance, if any.
+             # This weights summary relevance heavily, which makes sense
+             # since summaries are short and thus highly significant.
+             #
+             # Note: We should be calculating the average relevance of all
+             # comments for a bug, not just matching comments, but that's hard
+             # (see http://bugzilla.mozilla.org/show_bug.cgi?id=145588#c35).
+             push(@fields, "(SUM($term1)/COUNT($term1) + $term2) AS relevance");
+             $self->{'sorted_by_relevance'} = 1;
          },
          "^long_?desc," => sub {
              my $table = "longdescs_$chartid";
