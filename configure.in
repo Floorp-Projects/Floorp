@@ -2297,6 +2297,23 @@ if test "$ac_cv_cpp_namespace_std" = yes ; then
    AC_DEFINE(HAVE_CPP_NAMESPACE_STD)
 fi
 
+dnl Older compilers are overly ambitious with respect to using the standard
+dnl template library's |operator!=()| when |operator==()| is defined. In
+dnl which case, defining |operator!=()| in addition to |operator==()| causes
+dnl ambiguity at compile-time. This test checks for that case.
+AC_CACHE_CHECK(for unambiguous standard template operator!=(),
+               ac_cv_cpp_unambiguous_std_notequal,
+               [AC_TRY_COMPILE([#include <algorithm>
+                                struct T1 {};
+                                int operator==(const T1&, const T1&) { return 0; }
+                                int operator!=(const T1&, const T1&) { return 0; }],
+                               [T1 a,b; return a != b;],
+                               ac_cv_cpp_unambiguous_std_notequal=unambiguous,
+                               ac_cv_cpp_unambiguous_std_notequal=ambiguous)])
+if test "$ac_cv_cpp_unambiguous_std_notequal" = unambiguous ; then
+  AC_DEFINE(HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL)
+fi
+
 
 AC_CACHE_CHECK(for C++ reinterpret_cast,
                ac_cv_cpp_reinterpret_cast,
