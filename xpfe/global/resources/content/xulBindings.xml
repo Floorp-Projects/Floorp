@@ -554,5 +554,33 @@
     </interface>
   </binding>
 
+  <binding id="titledbox">
+    <content>
+	  <xul:box class="titledbox-title">
+	    <children includes="title"/>
+	  </xul:box>
+	  <xul:box flex="1" class="titledbox-body" inherits="orient,autostretch,align,valign">
+        <children/>
+	  </xul:box>
+    </content>    
+  </binding>
+
+  <binding id="titledboxvalue">
+    <content>
+	  <xul:box class="titledbox-title">
+	    <xul:title inherits="value"/>
+	  </xul:box>
+	  <xul:box flex="1" class="titledbox-body" inherits="orient,autostretch,align,valign">
+        <children/>
+	  </xul:box>
+    </content>    
+  </binding>
+
+  <binding id="title">
+     <content>
+	    <xul:text inherits="value"/>
+	 </content>
+  </binding>
+
 </bindings>
 

@@ -37,27 +37,30 @@ class nsGridLayout;
 class nsBoxLayoutState;
 class nsIPresShell;
 
+#define PARENT_STACK_SIZE 100
+
 class nsLayoutIterator
 {
 public:
   nsLayoutIterator(nsIBox* aBox);
   virtual void Reset();
-  virtual PRBool GetNextLayout(nsIBoxLayout** aLayout);
+  virtual PRBool GetNextLayout(nsIBoxLayout** aLayout, PRBool aSearchChildren = PR_FALSE);
   virtual void GetBox(nsIBox** aBox) { *aBox = mBox; }
+  virtual PRBool DigDeep(nsIBoxLayout** aLayout, PRBool aSearchChildren);
 
 protected:
   nsIBox* mBox;
   nsIBox* mStartBox;
-  PRInt32 mScrollFrameCount;
-  nsIBox* mScrollFrames[100];
+  PRInt32 mParentCount;
+  nsIBox* mParents[PARENT_STACK_SIZE];
 };
 
 class nsMonumentIterator: public nsLayoutIterator
 {
 public:
   nsMonumentIterator(nsIBox* aBox);
-  virtual PRBool GetNextMonument(nsIMonument** aMonument);
-
+  virtual PRBool GetNextMonument(nsIMonument** aMonument, PRBool aSearchChildren = PR_FALSE);
+  virtual PRBool GetNextObelisk(nsObeliskLayout** aObelisk, PRBool aSearchChildren = PR_FALSE);
 };
 
 class nsBoxSizeListNodeImpl : public nsBoxSizeList

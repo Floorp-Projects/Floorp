@@ -85,6 +85,23 @@ browser, editor, iframe {
 
 /******** Box *******/
 
+/******** TitledBox *******/
+
+box.titledbox-title {
+}
+
+box.titledbox-body {
+   vertical-align: inherit;
+   text-align: inherit;
+}
+
+titledbox {
+  behavior: url(resource:/chrome/xulBindings.xml#titledbox);
+}
+
+title {
+  behavior: url(resource:/chrome/xulBindings.xml#title);  
+}
 
 /******* ToolBox & ToolBar *******/
 

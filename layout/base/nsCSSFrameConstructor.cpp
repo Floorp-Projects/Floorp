@@ -75,7 +75,6 @@
 #include "nsIAttributeContent.h"
 #include "nsIPref.h"
 #include "nsLegendFrame.h"
-#include "nsTitleFrame.h"
 #include "nsIContentIterator.h"
 #include "nsBoxLayoutState.h"
 #include "nsIBindingManager.h"
@@ -208,9 +207,6 @@ NS_NewTextBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewTitledBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-
-nsresult
-NS_NewTitledBoxInnerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewTitleFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
@@ -4565,6 +4561,7 @@ nsCSSFrameConstructor::ConstructTitledBoxFrame(nsIPresShell*        aPresShell,
                                           nsIStyleContext*         aStyleContext,
                                           nsIFrame*&               aNewFrame)
 {
+  /*
   nsIFrame * newFrame;
   nsresult rv = NS_NewTitledBoxFrame(aPresShell, &newFrame);
   if (!NS_SUCCEEDED(rv)) {
@@ -4637,7 +4634,7 @@ nsCSSFrameConstructor::ConstructTitledBoxFrame(nsIPresShell*        aPresShell,
 
     // our new frame retured is the top frame which is the list frame. 
     aNewFrame = newFrame; 
-
+*/
   return NS_OK;
 }
 
@@ -5811,8 +5808,10 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
     else if (aTag == nsXULAtoms::titledbox) {
 
-          ConstructTitledBoxFrame(aPresShell, aPresContext, aState, aContent, aParentFrame, aTag, aStyleContext, newFrame);
-          processChildren = PR_FALSE;
+          rv = NS_NewTitledBoxFrame(aPresShell, &newFrame);
+ 
+          //ConstructTitledBoxFrame(aPresShell, aPresContext, aState, aContent, aParentFrame, aTag, aStyleContext, newFrame);
+          processChildren = PR_TRUE;
           isReplaced = PR_TRUE;
 
           const nsStyleDisplay* display = (const nsStyleDisplay*)
