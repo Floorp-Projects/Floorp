@@ -489,17 +489,14 @@ DateFormater.prototype.formatInterval = function( startDateTime, endDateTime, is
           : (sameDay
              ? (sameTime
                 // just one date time
-                ? (this.getFormatedDate(startDateTime) +
-                   " "+ this.getFormatedTime(startDateTime))
+                ? this.formatDateTime(startDateTime)
                 // range of times on same day
-                : (this.getFormatedDate(startDateTime)+
-                   " " + this.makeRange(this.getFormatedTime(startDateTime),
-                                        this.getFormatedTime(endDateTime))))
+                : this.formatDateTime(startDateTime, false, 
+                                      this.makeRange(this.getFormatedTime(startDateTime),
+                                                     this.getFormatedTime(endDateTime))))
              // range across different days
-             : this.makeRange(this.getFormatedDate(startDateTime) +
-                              " "+ this.getFormatedTime(startDateTime),
-                              this.getFormatedDate(endDateTime) +
-                              " "+ this.getFormatedTime(endDateTime))));
+             : this.makeRange(this.formatDateTime(startDateTime) +
+                              this.formatDateTime(endDateTime))));
 }
 
 /** PRIVATE makeRange takes two strings and concatenates them with
@@ -518,3 +515,37 @@ DateFormater.prototype.makeRange = function makeRange(fromString, toString) {
   else
     return fromString + " -- "+ toString;
 }
+
+/** PUBLIC formatDateTime formats both date and time from datetime in pref order.
+    If timeString is not null (such as "All Day"), it is used instead of time. 
+    if omitDateIfToday is true, date is omitted if date is today.
+    If date is not today, date is more relevant than time, so default is
+    formatted DATE TIME so date is visible in columns too narrow to show both,
+    Override by setting preference calendar.date.formatTimeBeforeDate=true.
+
+   "DDD, DD MMM YYYY" "HH:mm"
+    Tue, 31 Dec 1999 21:00
+    Tue, 31 Dec 1999 All Day      (called with "All Day" timeString)
+    Tue, 31 Dec 1999 21:00--22:00 (called by formatInterval with "21:00--22:00" timeString)
+    21:00   (called with datetime 21:00 today, with omitDateIfToday true, and no timeString)
+    All Day (called with datetime 0:00 today, with omitDateIfToday true, with timeString "All Day")
+ **/
+DateFormater.prototype.formatDateTime = function formatDateTime(datetime, omitDateIfToday, timeString) { 
+  var formattedTime = (timeString || this.getFormatedTime( datetime ));
+  if (omitDateIfToday) { 
+    var today = new Date();
+    if (datetime.getFullYear() == today.getFullYear() &&
+        datetime.getMonth() == today.getMonth() &&
+        datetime.getDate() == today.getDate()) {
+      // if today, just show time (or "All day")
+      return formattedTime;
+    }
+  }
+  var formattedDate = this.getFormatedDate( datetime );
+  if ( getBoolPref(gCalendarWindow.calendarPreferences.calendarPref, "date.formatTimeBeforeDate", false )) { 
+    return formattedTime+" "+formattedDate;
+  } else { // default
+    return formattedDate+" "+formattedTime; 
+  }
+}
+

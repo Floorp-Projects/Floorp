@@ -219,25 +219,18 @@ function finishCalendarUnifinder( )
    gICalLib.removeObserver( unifinderEventDataSourceObserver  );
 }
 
-
 /**
-*   Helper function to display event dates in the unifinder
+*   Helper function to display event datetimes in the unifinder
 */
 
-function formatUnifinderEventDate( date )
+function formatUnifinderEventDateTime( datetime, isAllDay )
 {
-   return( gCalendarWindow.dateFormater.getFormatedDate( date ) );
+  var allDayString = (isAllDay && gCalendarBundle.getString("AllDay"));
+  return gCalendarWindow.dateFormater.formatDateTime( datetime, true, allDayString );
 }
 
 
-/**
-*   Helper function to display event times in the unifinder
-*/
 
-function formatUnifinderEventTime( time )
-{
-   return( gCalendarWindow.dateFormater.getFormatedTime( time ) );
-}
 
 /**
 *  This is attached to the ondblclik attribute of the events shown in the unifinder
@@ -537,34 +530,18 @@ var treeView =
          
          case "unifinder-search-results-tree-col-startdate":
             var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
-            var startTime = formatUnifinderEventTime( eventStartDate );
-            var startDate = formatUnifinderEventDate( eventStartDate );
-            if( calendarEvent.allDay )
-            {
-	      return(gCalendarBundle.getFormattedString("unifinderAlldayEventDate", [startDate]));
-            }
-            else
-            {
-	      return(gCalendarBundle.getFormattedString("unifinderNormalEventDate", [startDate, startTime]));
-            }
+            return formatUnifinderEventDateTime(eventStartDate, calendarEvent.allDay);
          
          case "unifinder-search-results-tree-col-enddate":
             var eventEndDate = getNextOrPreviousRecurrence( calendarEvent );
             var eventLength = calendarEvent.end.getTime() - calendarEvent.start.getTime();
             var actualEndDate = eventEndDate.getTime() + eventLength;
-            var endDate, endTime;
             eventEndDate = new Date( actualEndDate );
-            if( calendarEvent.allDay ) {
+            if (calendarEvent.allDay) // display enddate is ical enddate - 1
                //user-enddate is ical-enddate - 1
                eventEndDate.setDate( eventEndDate.getDate() - 1 );
-               endDate = formatUnifinderEventDate( eventEndDate );
-               return(gCalendarBundle.getFormattedString("unifinderAlldayEventDate", [endDate]));
-            } else {
-               endTime = formatUnifinderEventTime( eventEndDate );
-               endDate = formatUnifinderEventDate( eventEndDate );
-               return(gCalendarBundle.getFormattedString("unifinderNormalEventDate", [endDate, endTime]));
-            }
-         
+            return formatUnifinderEventDateTime(eventEndDate, calendarEvent.allDay);         
+
          case "unifinder-search-results-tree-col-categories":
             return( calendarEvent.categories );
          

@@ -121,6 +121,14 @@ function finishCalendarToDoUnifinder( )
    gICalLib.removeTodoObserver( unifinderToDoDataSourceObserver  );
 }
 
+/**
+*   Helper function to display todo datetimes in the unifinder
+*/
+
+function formatUnifinderToDoDateTime( datetime )
+{
+  return gCalendarWindow.dateFormater.formatDateTime( datetime, true );
+}
 
 /**
 *   Called by event observers to update the display
@@ -403,11 +411,11 @@ var toDoTreeView =
                titleText = calendarToDo.title;
             return( titleText );
          case "unifinder-todo-tree-col-startdate":
-            return( formatUnifinderEventDate( new Date( calendarToDo.start.getTime() ) ) );
+            return( formatUnifinderToDoDateTime( new Date( calendarToDo.start.getTime() ) ) );
          case "unifinder-todo-tree-col-duedate":
-            return( formatUnifinderEventDate( new Date( calendarToDo.due.getTime() ) ) );
+            return( formatUnifinderToDoDateTime( new Date( calendarToDo.due.getTime() ) ) );
          case "unifinder-todo-tree-col-completeddate":
-            return( formatUnifinderEventDate( new Date( calendarToDo.completed.getTime() ) ) );
+            return( formatUnifinderToDoDateTime( new Date( calendarToDo.completed.getTime() ) ) );
          case "unifinder-todo-tree-col-percentcomplete":
             return( calendarToDo.percent+"%" );
          case "unifinder-todo-tree-col-categories":
