@@ -31,9 +31,15 @@
 #include "nsIFileStreams.h"
 #include "nsIOutputStream.h"
 #include "nsString.h"
+
+#include "nsIRDFDataSource.h"
+#include "nsIRDFResource.h"
 #include "nsCOMPtr.h"
 
 class nsExternalAppHandler;
+class nsIMIMEInfo;
+class nsIRDFService;
+class nsIMIMEInfo;
 
 class nsExternalHelperAppService : public nsIExternalHelperAppService, public nsPIExternalAppLauncher, public nsIExternalProtocolService
 {
@@ -45,13 +51,53 @@ public:
 
   nsExternalHelperAppService();
   virtual ~nsExternalHelperAppService();
+  nsresult Init();
 
+  // CreateNewExternalHandler is implemented only by the base class...
   // create an external app handler and bind it with a cookie that came from the OS specific
   // helper app service subclass.
   // aFileExtension --> the extension we need to append to our temp file INCLUDING the ".". i.e. .mp3
-  virtual nsExternalAppHandler * CreateNewExternalHandler(nsISupports * aAppCookie, const char * aFileExtension);
+  nsExternalAppHandler * CreateNewExternalHandler(nsISupports * aAppCookie, const char * aFileExtension);
+ 
+  // GetMIMEInfoForMimeType --> this will eventually be part of an interface but for now
+  // it's only used internally. Given a content type, look up the user override information to 
+  // see if we have a mime info object representing this content type
+  nsresult GetMIMEInfoForMimeType(const char * aContentType, nsIMIMEInfo ** aMIMEInfo);
+
+  // GetFileTokenForPath must be implemented by each platform. 
+  // platformAppPath --> a platform specific path to an application that we got out of the 
+  //                     rdf data source. This can be a mac file spec, a unix path or a windows path depending on the platform
+  // aFile --> an nsIFile representation of that platform application path.
+  virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile) = 0;
+
+  // CreateStreamListenerWithApp --> must be implemented by each platform.
+  // aApplicationToUse --> the application the user wishes to launch with the incoming data
+  // aFileExtensionForData --> the extension we are going to use for the temp file in the external app handler
+  // aStreamListener --> the stream listener (really a external app handler) we're going to use for retrieving the data
+  virtual nsresult CreateStreamListenerWithApp(nsIFile * aApplicationToUse, const char * aFileExtensionForData, nsIStreamListener ** aStreamListener) = 0;
 
 protected:
+  nsCOMPtr<nsIRDFDataSource> mOverRideDataSource;
+
+	nsCOMPtr<nsIRDFResource> kNC_Description;
+	nsCOMPtr<nsIRDFResource> kNC_Value;
+	nsCOMPtr<nsIRDFResource> kNC_FileExtensions;
+  nsCOMPtr<nsIRDFResource> kNC_Path;
+  nsCOMPtr<nsIRDFResource> kNC_SaveToDisk;
+  nsCOMPtr<nsIRDFResource> kNC_AlwaysAsk;
+  nsCOMPtr<nsIRDFResource> kNC_HandleInternal;
+  nsCOMPtr<nsIRDFResource> kNC_PrettyName;
+
+  // helper routines for digesting the data source and filling in a mime info object for a given
+  // content type inside that data source.
+  nsresult FillTopLevelProperties(const char * aContentType, nsIRDFResource * aContentTypeNodeResource, 
+                                  nsIRDFService * aRDFService, nsIMIMEInfo * aMIMEInfo);
+  nsresult FillContentHandlerProperties(const char * aContentType, nsIRDFResource * aContentTypeNodeResource, 
+                                        nsIRDFService * aRDFService, nsIMIMEInfo * aMIMEInfo);
+
+  // a small helper function which gets the target for a given source and property...QIs to a literal
+  // and returns a CONST ptr to the string value of that target
+  nsresult FillLiteralValueFromTarget(nsIRDFResource * aSource, nsIRDFResource * aProperty, const PRUnichar ** aLiteralValue);
 
 };
 
