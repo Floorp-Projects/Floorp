@@ -219,6 +219,10 @@
 <!ENTITY calendar.events.filter.month.label "翌月のイベント">
 <!ENTITY calendar.events.filter.future.label "すべてのこれからのイベント">
 <!ENTITY calendar.events.filter.current.label "今、選択中の日">
+<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
+<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
+<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
 
 <!ENTITY calendar.unifinder.tree.done.label          "完了">
 <!ENTITY calendar.unifinder.tree.priority.label      "優先度">

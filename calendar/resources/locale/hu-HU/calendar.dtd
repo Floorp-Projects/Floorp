@@ -218,6 +218,10 @@
 <!ENTITY calendar.events.filter.month.label "Események a jövő hónapban">
 <!ENTITY calendar.events.filter.future.label "Az összes jövőbeli esemény">
 <!ENTITY calendar.events.filter.current.label "A most kiválasztott nap">
+<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
+<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
+<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Kész">
 <!ENTITY calendar.unifinder.tree.priority.label      "Prioritás">

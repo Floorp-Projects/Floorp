@@ -213,6 +213,10 @@
 <!ENTITY calendar.events.filter.month.label "Ereignisse des nächsten Monats">
 <!ENTITY calendar.events.filter.future.label "Alle zukünftigen Ereignisse">
 <!ENTITY calendar.events.filter.current.label "Momentan gewählter Tag">
+<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
+<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
+<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Erledigt">
 <!ENTITY calendar.unifinder.tree.priority.label      "Priorität">

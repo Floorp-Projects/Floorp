@@ -24,6 +24,7 @@
  *						 Colin Phillips <colinp@oeone.com>
  *                 ArentJan Banck <ajbanck@planet.nl>
  *                 Eric Belhaire <eric.belhaire@ief.u-psud.fr>
+ *                 Matthew Willis <mattwillis@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -410,18 +411,27 @@ function getAndSetEventTable( )
          EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 ) - 1 );
          return( gEventSource.getEventsForRange( StartDate, EndDate ) );
          
-      case "week":
+      case "next7Days":
          EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 * 8 ) );
          return( gEventSource.getEventsForRange( StartDate, EndDate ) );
          
-      case "2weeks":
+      case "next14Days":
          EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 * 15 ) );
          return( gEventSource.getEventsForRange( StartDate, EndDate ) );
          
-      case "month":
+      case "next31Days":
          EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 * 32 ) );
          return( gEventSource.getEventsForRange( StartDate, EndDate ) );
          
+      case "thisCalendarMonth":
+         // midnight on first day of this month
+         var startOfMonth = new Date( Today.getFullYear(), Today.getMonth(), 1, 0, 0, 0 );
+         // midnight on first day of next month
+         var startOfNextMonth = new Date( Today.getFullYear(), (Today.getMonth() + 1), 1, 0, 0, 0 );
+         // 23:59:59 on last day of this month
+         var endOfMonth = new Date( startOfNextMonth.getTime() - 1000 );
+         return( gEventSource.getEventsForRange( startOfMonth, endOfMonth ) );
+
       case "future":
          return( gEventSource.getAllFutureEvents() );
       

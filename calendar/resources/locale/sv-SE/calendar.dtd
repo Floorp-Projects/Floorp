@@ -217,6 +217,10 @@
 <!ENTITY calendar.events.filter.month.label "Händelser Den Kommande Månaden">
 <!ENTITY calendar.events.filter.future.label "Alla Framtida Händelser">
 <!ENTITY calendar.events.filter.current.label "Den Valda Dagens Händelser">
+<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
+<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
+<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Klar">
 <!ENTITY calendar.unifinder.tree.priority.label      "Prioritet">
