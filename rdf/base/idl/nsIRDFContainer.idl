@@ -25,6 +25,8 @@
 // A wrapper for manipulating RDF containers
 [scriptable, uuid(D4214E90-FB94-11D2-BDD8-00104BDE6048)]
 interface nsIRDFContainer : nsISupports {
+    readonly attribute nsIRDFDataSource DataSource;
+    readonly attribute nsIRDFResource   Resource;
 
     // Initialize the container wrapper to the specified resource
     // using the specified datasource for context.

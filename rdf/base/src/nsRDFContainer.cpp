@@ -45,6 +45,8 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFContainer interface
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** _retval);
+    NS_IMETHOD GetResource(nsIRDFResource** _retval);
     NS_IMETHOD Init(nsIRDFDataSource *aDataSource, nsIRDFResource *aContainer);
     NS_IMETHOD GetCount(PRInt32 *_retval);
     NS_IMETHOD GetElements(nsISimpleEnumerator **_retval);
@@ -88,6 +90,24 @@ NS_IMPL_ISUPPORTS(RDFContainerImpl, nsIRDFContainer::GetIID());
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFContainer interface
+
+NS_IMETHODIMP
+RDFContainerImpl::GetDataSource(nsIRDFDataSource** _retval)
+{
+    *_retval = mDataSource;
+    NS_IF_ADDREF(*_retval);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFContainerImpl::GetResource(nsIRDFResource** _retval)
+{
+    *_retval = mContainer;
+    NS_IF_ADDREF(*_retval);
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 RDFContainerImpl::Init(nsIRDFDataSource *aDataSource, nsIRDFResource *aContainer)
