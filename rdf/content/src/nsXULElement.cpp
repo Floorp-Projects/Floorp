@@ -2534,7 +2534,7 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
     // Check to see if the STYLE attribute is being set.  If so, we need to create a new
     // style rule based off the value of this attribute, and we need to let the document
     // know about the StyleRule change.
-    if ((aNameSpaceID == kNameSpaceID_None) && (aName == kStyleAtom)) {
+    if ((aNameSpaceID == kNameSpaceID_None) && (aName == kStyleAtom) && (mDocument != nsnull)) {
         nsCOMPtr <nsIURI> docURL;
         mDocument->GetBaseURL(*getter_AddRefs(docURL));
         Attributes()->UpdateStyleRule(docURL, aValue);
