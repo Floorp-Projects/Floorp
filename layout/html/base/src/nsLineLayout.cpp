@@ -37,6 +37,8 @@
 #include "nsIContent.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
+#include "nsHTMLAtoms.h" 
+#include "nsINameSpaceManager.h"
 
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
@@ -490,6 +492,7 @@ nsLineLayout::NewPerSpanData(PerSpanData** aResult)
   psd->mLastFrame = nsnull;
   psd->mContainsFloater = PR_FALSE;
   psd->mZeroEffectiveSpanBox = PR_FALSE;
+  psd->mIgnoreMinLineHeight = PR_FALSE;
 
 #ifdef DEBUG
   mSpansAllocated++;
@@ -766,6 +769,14 @@ nsLineLayout::NewPerFrameData(PerFrameData** aResult)
   pfd->mSpan = nsnull;
   pfd->mNext = nsnull;
   pfd->mPrev = nsnull;
+  pfd->mFrame = nsnull;
+  pfd->mRelativePos = PR_FALSE;
+  pfd->mIsTextFrame = PR_FALSE;
+  pfd->mIsNonEmptyTextFrame = PR_FALSE;
+  pfd->mIsLetterFrame = PR_FALSE;
+  pfd->mIsSticky = PR_FALSE;
+
+
 #ifdef DEBUG
   pfd->mVerticalAlign = 0xFF;
   pfd->mRelativePos = PRBool(0xFF);
@@ -1184,10 +1195,8 @@ nsLineLayout::ApplyLeftMargin(PerFrameData* pfd,
   }
 
   // Adjust available width to account for the indent and the margins
-  if (aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE) {
-    aReflowState.availableWidth -= indent + pfd->mMargin.left +
-      pfd->mMargin.right;
-  }
+  aReflowState.availableWidth -= indent + pfd->mMargin.left +
+    pfd->mMargin.right;
 
   // NOTE: While the x coordinate remains relative to the parent span,
   // the y coordinate is fixed at the top edge for the line. During
@@ -1580,13 +1589,17 @@ nsLineLayout::VerticalAlignFrames(nsRect& aLineBoxResult,
       //
       // Note: This is how we hide lines that contain nothing but
       // compressed whitespace.
-      if (lineHeight < mMinLineHeight) {
-        // Apply half of the extra space to the top of the line as top
-        // leading
-        nscoord extra = mMinLineHeight - lineHeight;
-        baselineY += extra / 2;
-        lineHeight = mMinLineHeight;
+      if (PR_FALSE==psd->mIgnoreMinLineHeight) {  // factor in min line height (part of bug 24186)
+        if (lineHeight < mMinLineHeight) {
+          // Apply half of the extra space to the top of the line as top
+          // leading
+          nscoord extra = mMinLineHeight - lineHeight;
+          baselineY += extra / 2;
+          lineHeight = mMinLineHeight;
+        }
       }
+      // XXX else...I think this is where we need code to sniff out the underlying
+      // line height as given by the child <font size=x>, in quirks mode.  rest of 24186
     }
   }
 
@@ -1748,6 +1761,86 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
       PlaceTopBottomFrames(span, distanceFromTop, aLineHeight);
     }
     pfd = pfd->mNext;
+  }
+}
+
+
+/* assumptions:
+   (1) we're in quirks mode
+   (2) aFrame in an inline frame, and cannot contain block frames
+
+   what we do:
+   (1) look for <font size=x> covering every text frame that decends from aFrame
+
+   results:
+   if all conditions are met, 
+     set aOutResult to PR_TRUE
+     set aPSD->mQuirksModeFontMetrics to the largest font found 
+
+  to do:
+  (2) look for explicit line height setting
+*/
+void 
+nsLineLayout::ComputeQuirksModeLineHeightData(nsIRenderingContext *aRC, 
+                                              PerSpanData *aPSD, 
+                                              nsIFrame    *aFrame, 
+                                              PRBool      *aOutResult)
+{
+  if (!aOutResult) return;
+  *aOutResult = PR_FALSE;
+  if (!aFrame || !aRC) return;    //note, aPSD can be null
+
+  nsCOMPtr<nsIFontMetrics> largestFont;
+  nsIFrame *spanFrameWithLargestFont = aFrame;
+
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+  if (content)
+  {
+    nsCOMPtr<nsIAtom> tag;
+    content->GetTag(*(getter_AddRefs(tag)));
+    if (nsHTMLAtoms::font==tag)
+    {
+      nsAutoString resultString;
+      nsresult result;
+      result = content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::size, resultString);
+      if (NS_CONTENT_ATTR_HAS_VALUE==result) 
+      {
+        *aOutResult = PR_TRUE;
+      }
+    }
+    // if we didn't find it, let's check out it's children
+    if (PR_FALSE==*aOutResult)
+    {
+      // ComputeQuirksModeLineHeightData of all in-flow children
+      PRBool childResult = PR_FALSE;
+      nsIFrame *child;
+      aFrame->FirstChild(mPresContext, nsnull, &child);
+      while (child)
+      {
+        ComputeQuirksModeLineHeightData(aRC, aPSD, child, &childResult);
+        if (PR_FALSE==childResult) {
+          break;  // a child failed, bail
+        }
+        spanFrameWithLargestFont = child; // that's dumb for now, need to really compute this
+        child->GetNextSibling(&child);
+      }
+      *aOutResult = childResult;  // only true if all children returned true
+    }
+  }
+
+  // if we found a font, set the font to be used in quirks-mode line height calculation
+  // if the caller requested us to (by passing in a non-null aPSD
+  if (PR_TRUE==*aOutResult && aPSD)
+  {
+    NS_ASSERTION(spanFrameWithLargestFont, "failed to compute spanFrameWithLargestFont");
+    if (!spanFrameWithLargestFont)
+      return;
+    const nsStyleFont* font;
+    spanFrameWithLargestFont->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font);
+    aRC->SetFont(font->mFont);
+    // this is wrong, we should be setting this to the largest (tallest) font
+    aRC->GetFontMetrics(*getter_AddRefs(aPSD->mQuirksModeFontMetrics));
   }
 }
 
@@ -2179,6 +2272,69 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     pfd = pfd->mNext;
   }
 
+  /* This is where we fix bug 24186.
+   * In quirks mode only, in some situations we want to ignore the
+   * minimum line height on the parent block.
+   * We set psd->mIgnoreMinLineHeight as a result of this logic:
+         0) in standard mode? 
+            psd->mIgnoreMinLineHeight=false, stop
+         1) does the block have an explicit line height?  
+            psd->mIgnoreMinLineHeight=false, stop
+         2) examine each frame in the span.  
+            if all text frames are entirely enclosed by a <font size=x> tag
+            psd->mIgnoreMinLineHeight=true
+         3) otherwise, iMLH=false
+
+   * To Do:
+   *   a) cache this computation
+   */
+  if (psd == mRootSpan) 
+  {
+    psd->mIgnoreMinLineHeight=PR_TRUE;  // we'll set this to false in all the right places...
+    if (InStrictMode())
+    { // we're in standard mode
+      psd->mIgnoreMinLineHeight = PR_FALSE; // (0)
+    }
+    else 
+    {
+      // test to see if the block has an explicit line height set
+      nsIFrame *blockFrame = nsnull;
+      if (psd->mFrame)
+      {
+        blockFrame = psd->mFrame->mFrame; 
+        nsCOMPtr<nsIStyleContext> sc;
+        blockFrame->GetStyleContext(getter_AddRefs(sc));
+        if (sc) 
+        {
+          const nsStyleText* text = (const nsStyleText*)
+            sc->GetStyleData(eStyleStruct_Text);
+          if (text && eStyleUnit_Normal != text->mLineHeight.GetUnit()) 
+          {
+            psd->mIgnoreMinLineHeight = PR_FALSE; // (1)
+          }
+        }
+      }
+      // finally, look at each span in the block, and see if a line height is set
+      // or a <font size=x> is found.  For now, just look at <font size=x>
+      if (PR_TRUE==psd->mIgnoreMinLineHeight)
+      {
+        // abc PRBool ignore=PR_FALSE;  
+        PRBool ignore=PR_TRUE;  
+        PerFrameData* pfd = psd->mFirstFrame;
+        while (nsnull != pfd) 
+        {
+          ComputeQuirksModeLineHeightData(rc, psd, pfd->mFrame, &ignore);
+          // abc if (PR_TRUE==ignore) { // we found one, short-circuit the loop
+          if (PR_FALSE==ignore) { // we found one, short-circuit the loop
+            break;
+          }
+          pfd = pfd->mNext;
+        }
+        psd->mIgnoreMinLineHeight = ignore; // (2) and (3)
+      }
+    }
+  }
+
   // Factor in the minimum line-height when handling the root-span for
   // the block.
   if (psd == mRootSpan) {
@@ -2192,22 +2348,35 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     else {
       if ((psd->mX != psd->mLeftEdge) || preMode) {
 #ifdef NOISY_VERTICAL_ALIGN
+        printf("  ignoreMinLH = %d\n", psd->mIgnoreMinLineHeight);
         printf("  ==> adjusting min/maxY: currentValues: %d,%d", minY, maxY);
 #endif
-        nscoord minimumLineHeight = mMinLineHeight;
+        nscoord minimumLineHeight = 0;
+        if (PR_FALSE==psd->mIgnoreMinLineHeight) {
+          minimumLineHeight = mMinLineHeight;
+        }
         nscoord fontAscent, fontHeight;
         fm->GetMaxAscent(fontAscent);
         if (nsHTMLReflowState::UseComputedHeight()) {
           fontHeight = parentFont->mFont.size;
         }
-        else {
-          fm->GetHeight(fontHeight);
+        else 
+        {
+          if (PR_TRUE==psd->mIgnoreMinLineHeight) {
+            psd->mQuirksModeFontMetrics->GetHeight(fontHeight);
+            psd->mQuirksModeFontMetrics->GetMaxAscent(fontAscent);
+          }
+          else {
+            fm->GetHeight(fontHeight);
+          }
         }
+
         nscoord leading = minimumLineHeight - fontHeight;
         nscoord yTop = -fontAscent - leading/2;
         nscoord yBottom = yTop + minimumLineHeight;
         if (yTop < minY) minY = yTop;
         if (yBottom > maxY) maxY = yBottom;
+
 #ifdef NOISY_VERTICAL_ALIGN
         printf(" new values: %d,%d\n", minY, maxY);
 #endif
