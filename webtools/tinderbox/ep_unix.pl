@@ -32,13 +32,13 @@ BEGIN {
   
     # Special case gmake to mark the "Leaving directory"
     # line as an error too.
-    if (/^gmake(?:\[\d\d?\])?: \*\*\*/) {
+    if (/^g?make(?:\[\d\d?\])?: \*\*\*/) {
       $last_error_was_gmake = 1;
       return 1;
     }
 
     if ($last_error_was_gmake 
-        and /^gmake(?:\[\d\d?\])?: Leaving directory/) {
+        and /^g?make(?:\[\d\d?\])?: Leaving directory/) {
       return 1;
     }
 
