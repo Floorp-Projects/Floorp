@@ -333,7 +333,9 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewURI(const nsACString &aSpec,
   nsCOMPtr<nsIURI> uri = do_CreateInstance(kSimpleURICID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  uri->SetSpec(aSpec);
+  rv = uri->SetSpec(aSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   NS_ADDREF(*_retval = uri);
   return NS_OK;
 }
