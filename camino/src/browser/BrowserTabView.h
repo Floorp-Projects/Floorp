@@ -26,6 +26,7 @@
   BOOL autoHides;
   BOOL mIsDropTarget;
   BOOL mLastClickIsPotentialDrag;
+  BOOL mVisible; // YES if the view is in the hierarchy
   int  maxNumberOfTabs;			// 0 means 'no max'
   IBOutlet BrowserTabBarView * mTabBar;
 }
@@ -48,7 +49,9 @@
 
 - (BrowserTabViewItem*)itemWithTag:(int)tag;
 - (void)refreshTabBar:(BOOL)rebuild;
-
+- (BOOL)isVisible;
+// inform the view that it will be shown or hidden; e.g. prior to showing or hiding the bookmarks
+- (void)setVisible:(BOOL)show;
 - (void)windowClosed;
 
 @end

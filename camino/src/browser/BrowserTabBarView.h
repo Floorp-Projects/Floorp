@@ -56,7 +56,8 @@
   NSView *mDragDest;
   TabButtonCell *mDragDestButton;
   
-  BOOL mOverflowTabs;
+  BOOL mVisible;  // whether tabs are visible or not; used to disable creation of tracking rects when they're not
+  BOOL mOverflowTabs; // track whether there are more tabs than we can fit onscreen
   NSMutableArray *mTrackingCells; // cells which currently have tracking rects in this view
 }
 // destroy the tab bar and recreate it from the tabview
@@ -64,8 +65,12 @@
 // return the height the tab bar should be
 -(float)tabBarHeight;
 -(BrowserTabViewItem*)tabViewItemAtPoint:(NSPoint)location;
-- (void)windowClosed;
-- (IBAction)overflowMenu:(id)sender;
+-(void)windowClosed;
+-(IBAction)overflowMenu:(id)sender;
+-(BOOL)isVisible;
+// show or hide tabs- should be called if this view will be hidden, to give it a chance to register or
+// unregister tracking rects as appropriate
+-(void)setVisible:(BOOL)show;
 
 @end
 

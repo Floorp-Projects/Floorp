@@ -75,6 +75,10 @@ static const int kOverflowButtonMargin = 1;
     mActiveTabButton = nil;
     mOverflowButton = nil;
     mOverflowTabs = NO;
+    // initialize to YES so that awakeFromNib: will set the right size; awakeFromNib uses setVisible which
+    // will only be effective if visibility changes. initializing to YES causes the right thing to happen even
+    // if this view is visible in a nib file.
+    mVisible = YES;
     // this will not likely have any result here
     [self rebuildTabBar];
     [self registerForDraggedTypes:[NSArray arrayWithObjects: @"MozURLType", @"MozBookmarkType", NSStringPboardType,
@@ -85,6 +89,8 @@ static const int kOverflowButtonMargin = 1;
 
 -(void)awakeFromNib
 {
+  // start off with the tabs hidden, and allow our controller to show or hide as appropriate.
+  [self setVisible:NO];
   // this needs to be called again since our tabview should be non-nil now
   [self rebuildTabBar];
 }
@@ -261,7 +267,7 @@ static const int kOverflowButtonMargin = 1;
 // allows tab button cells to react to mouse events
 -(void)registerTabButtonsForTracking
 {
-  if ([self window]) {
+  if ([self window] && mVisible) {
     NSArray * tabItems = [mTabView tabViewItems];
     if(mTrackingCells) [self unregisterTabButtonsForTracking];
     mTrackingCells = [NSMutableArray arrayWithCapacity:[tabItems count]];
@@ -420,6 +426,38 @@ static const int kOverflowButtonMargin = 1;
   rect.size.width -= 2 * kTabBarMargin + (mOverflowTabs ? kOverflowButtonWidth : 0.0);
   return rect;
 }
+
+-(BOOL)isVisible
+{
+  return mVisible;
+}
+
+// show or hide tabs- should be called if this view will be hidden, to give it a chance to register or
+// unregister tracking rects as appropriate.
+//
+// Does not actually remove the view from the hierarchy; simply hides it.
+-(void)setVisible:(BOOL)show
+{
+  // only change anything if the new state is different from the current state
+  if (show && !mVisible) {
+    mVisible = show;
+    NSRect newFrame = [self frame];
+    newFrame.size.height = [self tabBarHeight];
+    [self setFrame:newFrame];
+    [self rebuildTabBar];
+    // set up tracking rects
+    [self registerTabButtonsForTracking];
+  } else if (!show && mVisible) { // being hi
+    mVisible = show;
+    NSRect newFrame = [self frame];
+    newFrame.size.height = 0.0;
+    [self setFrame:newFrame];
+    // destroy tracking rects
+    [self unregisterTabButtonsForTracking];
+  }
+}
+    
+    
     
 
 #pragma mark -

@@ -3250,6 +3250,8 @@ enum BWCOpenDest {
   
   // deactivate any gecko view that might think it has focus
   if ([self isResponderGeckoView:[[self window] firstResponder]]) {
+    // inform the tab view that it will be hidden so that it can perform any necessary cleanup
+    [mTabBrowser setVisible:NO];
     CHBrowserView* browserView = [mBrowserView getBrowserView];
     if (browserView)
       [browserView setActive:NO];
@@ -3277,7 +3279,11 @@ enum BWCOpenDest {
     CHBrowserView* browserView = [mBrowserView getBrowserView];
     if (browserView)
       [browserView setActive:YES];
+    // inform the tab view that it will be visible, so that it can adjust to any changes that occurred
+    // when it was out of the hierarchy
+    [mTabBrowser setVisible:YES];
   }
+  
 
   // we have to manually update the bookmarks menu items, because we
   // turn autoenabling off for that menu

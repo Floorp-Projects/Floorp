@@ -58,7 +58,6 @@
 //////////////////////////
 
 @interface BrowserTabView (Private)
-
 - (void)showOrHideTabsAsAppropriate;
 - (BOOL)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url;
 - (BrowserTabViewItem*)getTabViewItemFromWindowPoint:(NSPoint)point;
@@ -81,12 +80,14 @@
     if ( (self = [super initWithFrame:frameRect]) ) {
       autoHides = YES;
       maxNumberOfTabs = 0;		// no max
+      //mVisible = YES;
     }
     return self;
 }
 
 - (void)awakeFromNib
 {
+    mVisible = YES;
     [self showOrHideTabsAsAppropriate];
     [self registerForDraggedTypes:[NSArray arrayWithObjects:
         @"MozURLType", @"MozBookmarkType", NSStringPboardType, NSFilenamesPboardType, NSURLPboardType, nil]];
@@ -214,33 +215,32 @@
 // Only to be used with the 2 types of tab view which we use in Camino.
 - (void)showOrHideTabsAsAppropriate
 {
-  //if ( autoHides == YES )
-  {
+  // don't bother if we're not visible
+  if (mVisible) {
     BOOL tabVisibilityChanged = NO;
-    BOOL tabsVisible = NO;
+    BOOL tabsVisible = [mTabBar isVisible];
+    int numItems = [[self tabViewItems] count];
     
-    if ([[self tabViewItems] count] < 2) {
-      if ([mTabBar frame].size.height != 0)
-        tabVisibilityChanged = YES;
-      tabsVisible = NO;
-    } else {
-      if ([mTabBar frame].size.height == 0)
-        tabVisibilityChanged = YES;
-      tabsVisible = YES;
+    if (numItems < 2 && tabsVisible) {
+      tabVisibilityChanged = YES;
+      // hide the tabs and give the view a chance to kill its tracking rects
+      [mTabBar setVisible:NO];
+    } else if (numItems >= 2 && !tabsVisible) {
+      // show the tabs allow the view to set up tracking rects
+      [mTabBar setVisible:YES];
+      tabVisibilityChanged = YES;
     }
-
-    // tell the tabs that visibility changed
-    NSArray* tabViewItems = [self tabViewItems];
-    for (unsigned int i = 0; i < [tabViewItems count]; i ++) {
-      NSTabViewItem* tabItem = [tabViewItems objectAtIndex:i];
-      if ([tabItem isMemberOfClass:[BrowserTabViewItem class]])
-        [(BrowserTabViewItem*)tabItem updateTabVisibility:tabsVisible];
-    }
+    tabsVisible = [mTabBar isVisible];
     
     if (tabVisibilityChanged) {
-      NSRect newTabBarFrame = [mTabBar frame];
-      newTabBarFrame.size.height = tabsVisible ? [mTabBar tabBarHeight]:0.0;
-      [mTabBar setFrame:newTabBarFrame];
+      // tell the tabs that visibility changed
+      NSArray* tabViewItems = [self tabViewItems];
+      for (unsigned int i = 0; i < numItems; i ++) {
+        NSTabViewItem* tabItem = [tabViewItems objectAtIndex:i];
+        if ([tabItem isMemberOfClass:[BrowserTabViewItem class]])
+          [(BrowserTabViewItem*)tabItem updateTabVisibility:tabsVisible];
+      }
+      
       // tell the superview to resize its subviews
       [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
       [self setNeedsDisplay:YES];
@@ -265,7 +265,24 @@
 
 - (BOOL)tabsVisible
 {
-  return ([[self tabViewItems] count] > 1);
+  return ([mTabBar isVisible]);
+}
+
+- (BOOL)isVisible
+{
+  return mVisible;
+}
+
+// inform the view that it will be shown or hidden; e.g. prior to showing or hiding the bookmarks
+- (void)setVisible:(BOOL)show
+{
+  mVisible = show;
+  // if the tabs' visibility is different, and we're being, hidden explicitly hide them.
+  // otherwise show or hide them according to current settings
+  if (([mTabBar isVisible] != mVisible) && !mVisible)
+    [mTabBar setVisible:show];
+  else
+    [self showOrHideTabsAsAppropriate];
 }
 
 - (BOOL)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url
