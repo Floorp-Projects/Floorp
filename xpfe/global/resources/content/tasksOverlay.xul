@@ -1,0 +1,55 @@
+<?xml version="1.0"?> 
+
+<!DOCTYPE window
+[
+<!ENTITY tasksMenu.label				"Tasks">
+<!ENTITY navigatorCmd.label					"Navigator">  
+<!ENTITY messengerCmd.label					"Messenger">  
+<!ENTITY addressBookCmd.label				"Address Book">  
+<!ENTITY bookmarkMenu.label					".Bookmarks"> 
+<!ENTITY addBookmarkCmd.label					".Add Bookmark">  
+<!ENTITY fileBookmarkCmd.label					".File Bookmark">  
+<!ENTITY editBookmarkCmd.label					".Edit Bookmark">  
+<!ENTITY newsgroupsCmd.label				".Newsgroups">  
+<!ENTITY toolsMenu.label					".Tools"> 
+<!ENTITY historyCmd.label						".History">  
+<!ENTITY securityInfoCmd.label					".Security Info">  
+<!ENTITY messageCenterCmd.label					".Message Center">  
+<!ENTITY importUtilCmd.label					".Import Utility">  
+<!ENTITY javaConsoleCmd.label					".Java Console">
+<!ENTITY windowMenu.label					".Window">
+]> 
+
+
+<overlay id="tasksOverlay"
+		 xmlns:html="http://www.w3.org/TR/REC-html40"
+		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script language="JavaScript" src="chrome://global/content/tasksOverlay.js"/>
+
+	<!-- Tasks Menu -->
+	<menu id="tasksMenu" name="&tasksMenu.label;">
+		<menuitem name="&navigatorCmd.label;" onclick="goNavigatorWindow()"/>
+		<menuitem name="&messengerCmd.label;" onclick="goMessengerWindow()"/>
+		<menuitem name="&addressBookCmd.label;" onclick="goAddressBook()"/>
+		<separator/>
+		<menu name="&bookmarkMenu.label;">
+			<menuitem name="&addBookmarkCmd.label;" onclick="goAddBookmark()"/>
+			<menuitem name="&fileBookmarkCmd.label;" onclick="goFileBookmark()"/>
+			<menuitem name="&editBookmarkCmd.label;" onclick="goEditBookmark()"/>
+		</menu>
+		<menuitem name="&newsgroupsCmd.label;" onclick="goNewsgroups()"/>
+		<separator/>
+		<menu name="&toolsMenu.label;">
+			<menuitem name="&historyCmd.label;" onclick="goHistory()"/>
+			<menuitem name="&securityInfoCmd.label;" onclick="goSecurityInfo()"/>
+			<menuitem name="&messageCenterCmd.label;" onclick="goMessengerCenter()"/>
+			<menuitem name="&importUtilCmd.label;" onclick="goImport()"/>
+			<menuitem name="&javaConsoleCmd.label;" onclick="goJavaConsole()"/>
+		</menu>
+		<separator/>
+		<menu name="&windowMenu.label;">
+		</menu>
+	</menu>
+
+</overlay>		
