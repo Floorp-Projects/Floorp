@@ -26,6 +26,7 @@ EXPORTS =				\
 	nsIFrame.h			\
 	nsIFrameReflow.h		\
 	nsIFrameImageLoader.h		\
+	nsIPageSequenceFrame.h		\
 	nsIPresContext.h		\
 	nsIPresShell.h			\
 	nsIReflowCommand.h		\

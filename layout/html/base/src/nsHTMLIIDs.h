@@ -24,5 +24,6 @@ extern const nsIID kIAbsoluteItemsIID;
 extern const nsIID kIHTMLContentIID;
 extern const nsIID kIRunaroundIID;
 extern const nsIID kIHTMLReflowIID;
+extern const nsIID kIPageSequenceFrameIID;
 
 #endif /* nsHTMLIIDs_h___ */

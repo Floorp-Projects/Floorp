@@ -19,21 +19,42 @@
 #define nsSimplePageSequence_h___
 
 #include "nsHTMLContainerFrame.h"
+#include "nsIPageSequenceFrame.h"
 
 // Simple page sequence frame class. Used when we're in paginated mode
-class nsSimplePageSequenceFrame : public nsContainerFrame {
+class nsSimplePageSequenceFrame : public nsContainerFrame,
+                                  public nsIPageSequenceFrame {
 public:
+  // nsISupports
+  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+  // nsIFrameReflow
   NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
+  // nsIFrame
   NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect);
 
+  // nsIPageSequenceFrame
+  NS_IMETHOD  Print(nsIPresContext&         aPresContext,
+                    const nsPrintOptions&   aPrintOptions,
+                    nsIPrintStatusCallback* aStatusCallback);
+
   // Debugging
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
+
+protected:
+  virtual void PaintChild(nsIPresContext&      aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          const nsRect&        aDirtyRect,
+                          nsIFrame*            aFrame);
+
+  NS_IMETHOD_(nsrefcnt) AddRef(void) {return nsContainerFrame::AddRef();}
+  NS_IMETHOD_(nsrefcnt) Release(void) {return nsContainerFrame::Release();}
 };
 
 #endif /* nsSimplePageSequence_h___ */

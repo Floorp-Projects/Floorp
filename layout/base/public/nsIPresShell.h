@@ -31,6 +31,7 @@ class nsIViewManager;
 class nsIReflowCommand;
 class nsIDeviceContext;
 class nsIRenderingContext;
+class nsIPageSequenceFrame;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -93,6 +94,12 @@ public:
   NS_IMETHOD StyleChangeReflow() = 0;
 
   virtual nsIFrame* GetRootFrame() = 0;
+
+  /**
+   * Returns the page sequence frame associated with the frame hierarchy.
+   * Returns NULL if not a paginated view.
+   */
+  NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame) = 0;
 
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent) = 0;
 

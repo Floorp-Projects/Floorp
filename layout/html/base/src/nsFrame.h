@@ -365,6 +365,7 @@ protected:
 private:
   nsIView*         mView;  // must use accessor member functions
 
+protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 };

@@ -23,6 +23,26 @@
 #include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"
+#include "nsHTMLIIDs.h"
+#include "nsIDeviceContext.h"
+#include "nsIViewManager.h"
+#include "nsIPresShell.h"
+
+nsresult
+nsSimplePageSequenceFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIPageSequenceFrameIID)) {
+    *aInstancePtr = (void*)(nsIPageSequenceFrame*)this;
+    return NS_OK;
+  }
+  return nsContainerFrame::QueryInterface(aIID, aInstancePtr);
+}
+
+//----------------------------------------------------------------------
 
 // XXX Hack
 #define PAGE_SPACING_TWIPS 100
@@ -163,6 +183,8 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
+
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::GetFrameName(nsString& aResult) const
 {
@@ -175,10 +197,155 @@ nsSimplePageSequenceFrame::Paint(nsIPresContext&      aPresContext,
                                  const nsRect&        aDirtyRect)
 {
   // Paint a white background
-  // XXX Crop marks or hash marks would be nice. Use style info...
   aRenderingContext.SetColor(NS_RGB(255,255,255));
   aRenderingContext.FillRect(aDirtyRect);
+  // XXX Crop marks or hash marks would be nice. Use style info...
   return nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+}
+
+void
+nsSimplePageSequenceFrame::PaintChild(nsIPresContext&      aPresContext,
+                                      nsIRenderingContext& aRenderingContext,
+                                      const nsRect&        aDirtyRect,
+                                      nsIFrame*            aFrame)
+{
+  // Let the page paint
+  nsContainerFrame::PaintChild(aPresContext, aRenderingContext,
+                               aDirtyRect, aFrame);
+
+  // XXX Paint a one-pixel border around the page so it's easy to see where
+  // each page begins and ends when we're in print preview mode
+  nsRect  pageBounds;
+  float   p2t = aPresContext.GetPixelsToTwips();
+
+  aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+  aFrame->GetRect(pageBounds);
+  pageBounds.Inflate(p2t, p2t);
+  aRenderingContext.DrawRect(pageBounds);
+}
+
+//----------------------------------------------------------------------
+
+// Helper function that sends the progress notification. Returns PR_TRUE
+// if printing should continue and PR_FALSE otherwise
+static PRBool
+SendStatusNotification(nsIPrintStatusCallback* aStatusCallback,
+                       PRInt32                 aPageNumber,
+                       PRInt32                 aTotalPages,
+                       nsPrintStatus           aStatus)
+{
+  PRBool  ret = PR_TRUE;
+
+  if (nsnull != aStatusCallback) {
+    aStatusCallback->OnProgress(aPageNumber, aTotalPages, aStatus,ret);
+  }
+
+  return ret;
+}
+
+NS_IMETHODIMP
+nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
+                                 const nsPrintOptions&   aPrintOptions,
+                                 nsIPrintStatusCallback* aStatusCallback)
+{
+  // If printing a range of pages make sure at least the starting page
+  // number is valid
+  PRInt32 totalPages = LengthOf(mFirstChild);
+
+  if (ePrintRange_SpecifiedRange == aPrintOptions.range) {
+    if (aPrintOptions.startPage > totalPages) {
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+
+  // Send the notification that we're beginning to print the document
+  if (!SendStatusNotification(aStatusCallback, -1, totalPages,
+                              ePrintStatus_StartDoc)) {
+    return NS_ERROR_ABORT;  // indicate client cancelled printing
+  }
+
+  // Begin printing of the document
+  nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+  nsresult          rv = NS_OK;
+
+  rv = dc->BeginDocument();
+  if (NS_FAILED(rv)) {
+    if (nsnull != aStatusCallback) {
+      aStatusCallback->OnError(ePrintError_Error);
+    }
+  
+  } else {
+    nsIPresShell*     presShell = aPresContext.GetShell();
+    nsIViewManager*   vm = presShell->GetViewManager();
+    NS_RELEASE(presShell);
+  
+    // Print each specified page
+    PRInt32 pageNum = 1;
+    for (nsIFrame* page = mFirstChild;
+         nsnull != page;
+         pageNum++, page->GetNextSibling(page)) {
+
+      // If printing a range of pages check whether the page number is in the
+      // range of pages to print
+      if (ePrintRange_SpecifiedRange == aPrintOptions.range) {
+        if (pageNum < aPrintOptions.startPage) {
+          continue;
+        } else if (pageNum > aPrintOptions.endPage) {
+          break;
+        }
+      }
+  
+      // Start printing of the page
+      if (!SendStatusNotification(aStatusCallback, pageNum, totalPages,
+                                  ePrintStatus_StartPage)) {
+        rv = NS_ERROR_ABORT;
+        break;
+      }
+      rv = dc->BeginPage();
+      if (NS_FAILED(rv)) {
+        if (nsnull != aStatusCallback) {
+          aStatusCallback->OnError(ePrintError_Error);
+        }
+        break;
+      }
+  
+      // Print the page
+      nsIView*  view;
+      page->GetView(view);
+      NS_ASSERTION(nsnull != view, "no page view");
+      vm->Display(view);
+  
+      // Finish printing of the page
+      if (!SendStatusNotification(aStatusCallback, pageNum, totalPages,
+                                  ePrintStatus_EndPage)) {
+        rv = NS_ERROR_ABORT;
+        break;
+      }
+      rv = dc->EndPage();
+      if (NS_FAILED(rv)) {
+        if (nsnull != aStatusCallback) {
+          aStatusCallback->OnError(ePrintError_Error);
+        }
+        break;
+      }
+    }
+  
+    // Finish printing of the document
+    if (NS_SUCCEEDED(rv)) {
+      rv = dc->EndDocument();
+    } else {
+      // rv = dc->AbortDocument();
+    }
+    if (NS_FAILED(rv) && (nsnull != aStatusCallback)) {
+      aStatusCallback->OnError(ePrintError_Error);
+    }
+    SendStatusNotification(aStatusCallback, pageNum - 1, totalPages,
+                           ePrintStatus_EndDoc);
+    NS_RELEASE(vm);
+  }
+
+  NS_RELEASE(dc);
+  return rv;
 }
 
 //----------------------------------------------------------------------
