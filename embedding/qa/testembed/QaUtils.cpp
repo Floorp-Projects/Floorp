@@ -234,6 +234,23 @@ void GetTheUri(nsIURI *theUri, int displayMethod)
     FormatAndPrintOutput("the uri = ", uriSpec, displayMethod);
 }
 
+// used for web progress listener in BrowserImplWebPrgrsLstnr.cpp
+void onStateChangeString(char *theStateType, char *theDocType, 
+						 nsCString stringMsg, PRUint32 status, int displayMode)
+{
+	nsCString totalMsg;
+
+	totalMsg = "OnStateChange(): ";
+	totalMsg += theStateType;
+	totalMsg += ", ";
+	totalMsg += theDocType;
+	totalMsg += ", ";
+	totalMsg += stringMsg;
+	totalMsg += ", status = ";
+	totalMsg.AppendInt(status);
+	QAOutput(totalMsg.get(), displayMode);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // CShowTestResults dialog
 

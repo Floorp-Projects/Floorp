@@ -84,12 +84,14 @@ NS_IMETHODIMP CBrowserImpl::OnProgressChange(nsIWebProgress *progress, nsIReques
 	if (nProgressMax == 0)
 		nProgressMax = LONG_MAX;
 
+	FormatAndPrintOutput("OnProgressChange(): curSelfProgress value = ", curSelfProgress, 1); 
+	FormatAndPrintOutput("OnProgressChange(): maxSelfProgress value = ", maxSelfProgress, 1);
+	FormatAndPrintOutput("OnProgressChange(): curTotalProgress value = ", nProgress, 1); 
+	FormatAndPrintOutput("OnProgressChange(): maxTotalProgress value = ", nProgressMax, 1);
+
 	if (curSelfProgress == maxSelfProgress)
 	{
 		QAOutput("nsIWebProgLstnr::OnProgressChange(): Self progress complete!", 1);
-
-		FormatAndPrintOutput("OnProgressChange(): curSelfProgress value = ", curSelfProgress, 1); 
-		FormatAndPrintOutput("OnProgressChange(): maxSelfProgress value = ", maxSelfProgress, 1);
 
 		// web progress DOMWindow test
 		WebProgDOMWindowTest(progress, "OnProgressChange()", 1);
@@ -100,9 +102,6 @@ NS_IMETHODIMP CBrowserImpl::OnProgressChange(nsIWebProgress *progress, nsIReques
 		nProgress = nProgressMax; // Progress complete
 
 		QAOutput("nsIWebProgLstnr::OnProgressChange(): Progress Update complete!", 1);
-
-		FormatAndPrintOutput("OnProgressChange(): curTotalProgress value = ", nProgress, 1); 
-		FormatAndPrintOutput("OnProgressChange(): maxTotalProgress value = ", nProgressMax, 1);
 	}
 
 	m_pBrowserFrameGlue->UpdateProgress(nProgress, nProgressMax);
@@ -167,7 +166,11 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 		WebProgDOMWindowTest(progress, "OnStateChange()", 1);
 
 		}
+
+		onStateChangeString(theStateType, theDocType, stringMsg, status, displayMode);
+
 	}		// end STATE_IS_DOCUMENT
+
 	if (progressStateFlags & STATE_IS_REQUEST)		// REQUEST
 	{
 		displayMode = 1;
@@ -185,6 +188,8 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 
 		else if (progressStateFlags & STATE_STOP)
 			strcpy(theStateType, "STATE_STOP");
+		
+		onStateChangeString(theStateType, theDocType, stringMsg, status, displayMode);
 	}
 
 	if (progressStateFlags & STATE_IS_NETWORK)		// NETWORK
@@ -204,6 +209,9 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 
 		else if (progressStateFlags & STATE_STOP)
 			strcpy(theStateType, "STATE_STOP");
+		
+		onStateChangeString(theStateType, theDocType, stringMsg, status, displayMode);
+
 	}
 	if (progressStateFlags & STATE_IS_WINDOW)		// WINDOW
 	{
@@ -222,18 +230,11 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 
 		else if (progressStateFlags & STATE_STOP)
 			strcpy(theStateType, "STATE_STOP");
+		
+		onStateChangeString(theStateType, theDocType, stringMsg, status, displayMode);
+
 	}
 
-	totalMsg = "OnStateChange(): ";
-	totalMsg += theStateType;
-	totalMsg += ", ";
-	totalMsg += theDocType;
-	totalMsg += ", ";
-	totalMsg += stringMsg;
-	totalMsg += ", status = ";
-	totalMsg.AppendInt(status);
-
-	QAOutput(totalMsg.get(), displayMode);
 	QAOutput("Exiting nsIWebProgLstnr::OnStateChange().\r\n");
 
     return NS_OK;
@@ -323,10 +324,18 @@ CBrowserImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
 	RequestName(aRequest, stringMsg);
 
 	if (state & STATE_IS_SECURE)
+	{
 		QAOutput("OnSecurityChange():STATE_IS_SECURE. All docs & subdocs are https.");
+		if ((state & 0xFFFF0000) == STATE_SECURE_HIGH)
+			QAOutput("OnSecurityChange(): STATE_SECURE_HIGH state");
+		else if (state & STATE_SECURE_MED)
+			QAOutput("OnSecurityChange(): STATE_SECURE_MED state");
+		else if (state & STATE_SECURE_LOW)
+			QAOutput("OnSecurityChange(): STATE_SECURE_LOW state");
+	}
 	else if (state & STATE_IS_BROKEN)
 		QAOutput("OnSecurityChange():STATE_IS_BROKEN. Mixed: some docs are https.");
-	else if (state & STATE_IS_INSECURE)
+	else if ((state & 0xFFFF) ==  STATE_IS_INSECURE)
 		QAOutput("OnSecurityChange():STATE_IS_INSECURE. Nothing is https.");
 
 				// web progress DOMWindow test
