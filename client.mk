@@ -80,10 +80,10 @@ endif
 
 # on os2, TOPSRCDIR may have two forward slashes in a row, which doesn't
 #  work;  replace first instance with one forward slash
-TOPSRCDIR := $(shell echo $(TOPSRCDIR) | sed s%//%/%)
+TOPSRCDIR := $(shell echo "$(TOPSRCDIR)" | sed -e 's%//%/%')
 
 # if ROOTDIR equals only drive letter (i.e. "C:"), set to "/"
-DIRNAME := $(shell echo $(ROOTDIR) | sed s/^.://)
+DIRNAME := $(shell echo "$(ROOTDIR)" | sed -e 's/^.://')
 ifeq ($(DIRNAME),)
 ROOTDIR := /.
 endif
