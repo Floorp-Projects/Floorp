@@ -498,11 +498,7 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
                 this, iStatus));
 
         // Notify the HTTPChannel that the request has finished
-        nsCOMPtr<nsIStreamListener> consumer;
-
-        mConnection->GetDataConsumer(getter_AddRefs(consumer));
-
-        mConnection->ResponseCompleted(mTransport, consumer, iStatus, i_Msg);
+        mConnection->ResponseCompleted(mTransport, iStatus, i_Msg);
         mTransport = null_nsCOMPtr();
 
         rv = iStatus;
