@@ -37,6 +37,8 @@
 #include "npapi.h"
 #include "nullplugin.h"
 
+#define DIALOGID "dialog"
+
 /* Global data */
 static MimeTypeElement *head = NULL;
 
@@ -73,7 +75,10 @@ static void
 DialogOKClicked (GtkButton *button, gpointer data)
 {
     PluginInstance* This = (PluginInstance*) data;
+    GtkWidget* dialogWindow = gtk_object_get_data(GTK_OBJECT(button), DIALOGID);
     char *url;
+
+    gtk_object_remove_data(GTK_OBJECT(button), DIALOGID);
 
     if (This->pluginsFileUrl != NULL)
     {
@@ -115,7 +120,7 @@ DialogOKClicked (GtkButton *button, gpointer data)
             NPN_MemFree(url);
         }
     }
-    gtk_widget_destroy (This->dialogBox); 
+    gtk_widget_destroy (dialogWindow); 
     clearList(&head);
 }
 
@@ -211,6 +216,7 @@ makeWidget(PluginInstance *This)
 
     okButton= AddWidget(gtk_button_new_with_label (OK_BUTTON), 
                    GTK_DIALOG(dialogWindow)->action_area);
+    gtk_object_set_data(GTK_OBJECT(okButton), DIALOGID, dialogWindow);
 
     cancelButton= AddWidget(gtk_button_new_with_label (CANCEL_BUTTON), 
                    GTK_DIALOG(dialogWindow)->action_area);
