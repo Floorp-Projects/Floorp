@@ -182,8 +182,9 @@ var gComposeRecyclingListener = {
     //Clear the subject
     document.getElementById("msgSubject").value = "";
 
+
     SetContentAndBodyAsUnmodified();
-    disableEditableFields()
+    disableEditableFields();
     ReleaseGlobalVariables();
 
     //Reset Boxes size    
@@ -2257,17 +2258,27 @@ function Attachments2CompFields(compFields)
 
 function RemoveAllAttachments()
 {
+  var child;
 	var bucket = document.getElementById("attachmentBucket");
   for (var i = bucket.childNodes.length - 1; i >= 0; i--)
-	  bucket.removeChild(bucket.childNodes[i]);
+  {
+    child = bucket.removeChild(bucket.childNodes[i]);
+    // Let's release the attachment object hold by the node else it won't go away until the window is destroyed
+    child.attachment = null;
+  }
 }
 
 function RemoveSelectedAttachment()
 {
+  var child;
   var bucket = document.getElementById("attachmentBucket");
   if (bucket.selectedItems.length > 0) {
     for (var item = bucket.selectedItems.length - 1; item >= 0; item-- )
-      bucket.removeChild(bucket.selectedItems[item]);
+    {
+      child = bucket.removeChild(bucket.selectedItems[item]) = null;
+      // Let's release the attachment object hold by the node else it won't go away until the window is destroyed
+      child.attachment = null;
+    }
     gContentChanged = true;
   }
 }
