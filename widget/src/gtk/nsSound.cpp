@@ -210,7 +210,7 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
   if (NS_FAILED(rv)) 
 	return rv;
   
-  sCOMPtr<nsIURI> chromeURI;
+  nsCOMPtr<nsIURI> chromeURI;
   rv = aURI->Clone(getter_AddRefs(chromeURI));        // don't mangle the original
   if (NS_FAILED(rv)) return rv;
 
