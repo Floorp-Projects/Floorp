@@ -487,6 +487,21 @@ CalendarWindow.prototype.compareNumbers = function calWin_compareNumbers(a, b) {
    return a - b
 }
 
+
+CalendarWindow.prototype.onMouseUpCalendarViewSplitter = function calWinOnMouseUpCalendarViewSplitter()
+{
+   //check if calendar-view-splitter is collapsed
+   if( document.getElementById( "bottom-events-box" ).getAttribute( "collapsed" ) != "true" )
+   {
+      //do this because if they started with it collapsed, its not showing anything right now.
+
+      //in a setTimeout to give the pull down menu time to draw.
+      setTimeout( "refreshEventTree( false );", 10 );
+   }
+   
+   this.doResize();
+}
+
 /** PUBLIC
 *   The resize handler, used to set the size of the views so they fit the screen.
 */

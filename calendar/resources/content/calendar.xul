@@ -419,7 +419,7 @@
             </vbox>
             
             <splitter id="calendar-view-splitter" collapse="before" persist="state"
-            class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="gCalendarWindow.doResize();">
+            class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="setTimeout( 'gCalendarWindow.onMouseUpCalendarViewSplitter()', 1 );">
                <grippy class="sidebar-splitter-grippy"/>
             </splitter>
          
