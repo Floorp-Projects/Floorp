@@ -149,6 +149,8 @@ public:
 
 private:
   RDF_Cursor mCursor;
+  PRBool mHasCached;
+  RDF_NodeStruct mNextValue;
 };
 
 class rdfServiceWrapper : public nsIRDFService {
@@ -220,10 +222,6 @@ rdfDatabaseWrapper::GetResource(RDF_String id,
   *r = 0;
 
   *r = RDF_GetResource( mRDF, id, PR_FALSE );
-  if( 0 == *r ) { // XXX
-    PR_ASSERT( PR_FALSE );
-    return NS_ERROR_BASE;
-  }
 
   return NS_OK;
 }
@@ -588,7 +586,8 @@ rdfServiceWrapper::CreateDatabase(const RDF_String* url_ary,
 NS_IMPL_ISUPPORTS( rdfCursorWrapper, NS_IRDFCURSOR_IID )
 
 rdfCursorWrapper::rdfCursorWrapper(RDF_Cursor c) : mCursor(c) 
-{ 
+{
+  mHasCached = PR_FALSE;
 }
 
 rdfCursorWrapper::~rdfCursorWrapper() 
@@ -599,16 +598,31 @@ rdfCursorWrapper::~rdfCursorWrapper()
 NS_METHOD 
 rdfCursorWrapper::HasElements(PRBool& hasElements)
 {
-  // XXX
-  PR_ASSERT( PR_FALSE );
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mNextValue.type = RDF_CursorValueType( mCursor );
+  mNextValue.value.r = (RDF_Resource) RDF_NextValue( mCursor );
+
+  if( mNextValue.value.r != NULL ) {
+    hasElements = PR_FALSE;
+    mHasCached = PR_TRUE;
+  } else {
+    hasElements = PR_TRUE;
+    mHasCached = PR_FALSE;
+  }
+
+  return NS_OK;
 }
 
 NS_METHOD
 rdfCursorWrapper::Next(RDF_NodeStruct& next)
 {
-  next.type = RDF_CursorValueType( mCursor );
-  next.value.r = (RDF_Resource) RDF_NextValue( mCursor );
+  if( mHasCached == PR_TRUE ) {
+    next.type = mNextValue.type;
+    next.value.r = mNextValue.value.r;
+    mHasCached = PR_FALSE;
+  } else {
+    next.type = RDF_CursorValueType( mCursor );
+    next.value.r = (RDF_Resource) RDF_NextValue( mCursor );
+  }
 
   return NS_OK;
 }

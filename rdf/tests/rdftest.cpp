@@ -18,6 +18,12 @@
 
 #include "rdf.h"
 
+#define RDF_DB "file:///sitemap.rdf"
+#define SUCCESS 0
+#define FAILURE -1
+
+void fail(char* msg);
+
 int
 main(int argc, char** argv)
 {
@@ -27,7 +33,7 @@ main(int argc, char** argv)
   PR_ASSERT( pRDF != 0 );
 
   nsIRDFDataBase* pDB;
-  char* url[] = { "file:///sitemap.rdf", NULL };
+  char* url[] = { RDF_DB, NULL };
 
   /* turn on logging */
 
@@ -35,11 +41,38 @@ main(int argc, char** argv)
   PR_ASSERT( pDB != 0 );
 
   /* execute queries */
+  RDF_Resource resource = 0;
+  if( NS_OK != pDB->CreateResource("http://www.hotwired.com", &resource) )
+    fail("Unable to get resource on db!!!\n");
+  RDF_Resource child = 0;
+  if( NS_OK != pDB->GetResource("child", &resource) )
+    fail("Unable to get resource 'child'!!!\n");
+  PR_ASSERT( child != 0 );
+  {
+    // enumerate children
+    nsIRDFCursor* cursor;
+    if( NS_OK != pDB->GetTargets( resource, child, RDF_RESOURCE_TYPE, &cursor ) )
+	fail("Unable to get targets on db\n!!!");
+    
+    PRBool hasElements;
+    cursor->HasElements( hasElements );
+    while( hasElements ) {
+      RDF_NodeStruct node;
+      cursor->Next( node );
+      pDB->ReleaseResource( node.value.r );
+      cursor->HasElements( hasElements );
+    }
+
+  }
 
   pDB->Release(); /* destroy the DB */
-
   pRDF->Release(); /* shutdown the RDF system */
 
-  return( 0 );
+  return( SUCCESS );
 }
 
+void fail(char* msg)
+{
+  fprintf(stderr,msg);
+  exit( FAILURE );
+}
