@@ -723,6 +723,17 @@ nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
     return NS_OK;
   }
 
+  // javascript URIs are not really submissions; they just call a function.
+  // Also, they may synchronously call submit(), and we want them to be able to
+  // do so while still disallowing other double submissions. (Bug 139798)
+  // Note that any other URI types that are of equivalent type should also be
+  // added here.
+  PRBool schemeIsJavaScript = PR_FALSE;
+  if (NS_SUCCEEDED(actionURI->SchemeIs("javascript", &schemeIsJavaScript)) &&
+      schemeIsJavaScript) {
+    mIsSubmitting = PR_FALSE;
+  }
+
   nsAutoString target;
   rv = GetTarget(target);
   NS_ENSURE_SUBMIT_SUCCESS(rv);
