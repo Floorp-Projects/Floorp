@@ -4,7 +4,8 @@ my $tab = "    ";
 my $tab2 = "        ";
 my $enum_decs = "";
 my $class_decs = "";
-my $name_array = "";
+my @name_array;
+my $opcode_maxlen = 0;
 
 my $compare_op =
   {
@@ -164,6 +165,10 @@ if (!$ARGV[0]) {
 sub collect {
     my ($k) = @_;
 
+    if (length($k) > $opcode_maxlen) {
+        $opcode_maxlen = length($k);
+    }
+
     my $c = $ops{$k};
     my $opname = $k;
     my $cname = get_classname ($k);
@@ -177,11 +182,10 @@ sub collect {
     my $tostr = $tostr_list ? " << \"\\t\" << $tostr_list" : "";
     if ($super =~ /Instruction_\d/) {
         $super .= "<" . $template_list . ">";
-    }
+    }    
     
-    
+    push (@name_array, $opname);
     $enum_decs .= "$tab2$tab$opname, /* $rem */\n";
-    $name_array .= "$tab2$tab\"$opname\",\n";
     $class_decs .= ($tab2 . "class $cname : public $super {\n" .
                     $tab2 . "public:\n" .
                     $tab2 . $tab . "/* $rem */\n" .
@@ -199,9 +203,19 @@ sub collect {
 }
 
 sub spew {
-    
+    my $opname;
+
     print $tab . "enum ICodeOp {\n$enum_decs$tab};\n\n";
-    print $tab . "static char *opcodeNames[] = {\n$name_array$tab};\n\n";
+    print $tab . "static char *opcodeNames[] = {\n";
+
+    for $opname (@name_array) {
+        print "$tab$tab\"$opname";
+        for (0 .. $opcode_maxlen - length($opname) - 1) {
+            print " ";
+        }
+        print "\",\n"
+    }
+    print "$tab};\n\n";
     print $class_decs;
 }
 
