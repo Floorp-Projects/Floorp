@@ -29,7 +29,7 @@ var startY = null;
 var endX = null;
 var endY = null;
 var downTool = false;
-var currentElement = new Array();
+var currentElement = [];
 var currentTool = "pointer";
 var currentRect = null;
 var currentCir = null;
@@ -43,7 +43,7 @@ var xlock = false;
 var ylock = false;
 var resize = false;
 var currentZoom = 1;
-var clipBoard = new Array();
+var clipBoard = [];
 
 function Rect(coords, href, target, alt, construct){
   newRect = frameDoc.createElement("div");
@@ -314,7 +314,7 @@ function selectElement(el, add){
       }
     }
     currentElement = null;
-    currentElement = new Array();
+    currentElement = [];
     currentElement[0] = el;
     if (el != null){
     if (currentElement[0].getAttribute("class") != "poly"){
@@ -775,7 +775,7 @@ function zoom(direction, ratio){
 function cutCopy(cut){
   len = currentElement.length;
   if (len >= 1){
-    clipBoard = new Array();
+    clipBoard = [];
     for (i=0; i<len; i++){
       el = currentElement[i];
       if (el.className == 'rect'){

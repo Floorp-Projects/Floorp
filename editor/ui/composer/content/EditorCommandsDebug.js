@@ -149,13 +149,13 @@ function EditorTestTableLayout()
   }
     
   var cell;
-  var startRowIndexObj = new Object();
-  var startColIndexObj = new Object();
-  var rowSpanObj = new Object();
-  var colSpanObj = new Object();
-  var actualRowSpanObj = new Object();
-  var actualColSpanObj = new Object();
-  var isSelectedObj = new Object();
+  var startRowIndexObj = { value: null };
+  var startColIndexObj = { value: null };
+  var rowSpanObj = { value: null };
+  var colSpanObj = { value: null };
+  var actualRowSpanObj = { value: null };
+  var actualColSpanObj = { value: null };
+  var isSelectedObj = { value: false };
   var startRowIndex = 0;
   var startColIndex = 0;
   var rowSpan;

@@ -601,7 +601,7 @@ function GetSuggestedFileName(aDocumentURLString, aMIMEType, aHTMLDoc)
 // returns file picker result
 function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocument, aDocumentURLString)
 {
-  var dialogResult = new Object;
+  var dialogResult = {};
   dialogResult.filepickerClick = nsIFilePicker.returnCancel;
   dialogResult.resultingURI = "";
   dialogResult.resultingLocalFile = null;
@@ -3105,8 +3105,8 @@ var nsJoinTableCellsCommand =
   {
     if (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML())
     {
-      var tagNameObj = new Object;
-      var countObj = new Object;
+      var tagNameObj = { value: "" };
+      var countObj = { value: 0 };
       var cell = window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
 
       // We need a cell and either > 1 selected cell or a cell to the right
@@ -3153,8 +3153,8 @@ var nsSplitTableCellCommand =
   {
     if (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML())
     {
-      var tagNameObj = new Object;
-      var countObj = new Object;
+      var tagNameObj = { value: "" };
+      var countObj = { value: 0 };
       var cell = window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
       // We need a cell parent and there's just 1 selected cell 
       // or selection is entirely inside 1 cell

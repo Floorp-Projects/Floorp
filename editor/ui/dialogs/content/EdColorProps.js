@@ -171,12 +171,11 @@ function GetColorAndUpdate(ColorWellID)
   // Only allow selecting when in custom mode
   if (!gDialog.CustomColorsRadio.selected) return;
 
-  var colorObj = new Object;
   var colorWell = document.getElementById(ColorWellID);
   if (!colorWell) return;
 
   // Don't allow a blank color, i.e., using the "default"
-  colorObj.NoDefault = true;
+  var colorObj = { NoDefault:true, Type:"", TextColor:0, PageColor:0, Cancel:false };
 
   switch( ColorWellID )
   {

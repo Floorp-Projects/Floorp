@@ -53,7 +53,7 @@ function Startup()
   gDialog.ChangeSelectedRadio = document.getElementById("ChangeSelected");
   
   // Try to get an existing list(s)
-  var mixedObj = new Object;
+  var mixedObj = { value: null };
   gListType = editorShell.GetListState(mixedObj);
   // We may have mixed list and non-list, or > 1 list type in selection
   gMixedListSelection = mixedObj.value;

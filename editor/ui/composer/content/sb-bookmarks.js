@@ -376,7 +376,7 @@ function fillContextMenu(name)
     dump("# of Nodes selected: " + select_list.length + "\n\n");
 
     // perform intersection of commands over selected nodes
-    var cmdArray = new Array();
+    var cmdArray = [];
 
     for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
     {
@@ -389,7 +389,7 @@ function fillContextMenu(name)
         var cmdEnum = db.GetAllCmds(rdfNode);
         if (!cmdEnum)    break;
 
-        var nextCmdArray = new Array();
+        var nextCmdArray = [];
         while (cmdEnum.hasMoreElements())
         {
             var cmd = cmdEnum.getNext();

@@ -32,7 +32,7 @@ var gEditor;             // the editor we're using
 function initDialogObject()
 {
   // Create gReplaceDialog object and initialize.
-  gReplaceDialog = new Object();
+  gReplaceDialog = {};
   gReplaceDialog.findInput       = document.getElementById("dialog.findInput");
   gReplaceDialog.replaceInput    = document.getElementById("dialog.replaceInput");
   gReplaceDialog.caseSensitive   = document.getElementById("dialog.caseSensitive");
