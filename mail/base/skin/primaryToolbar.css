@@ -455,7 +455,7 @@ toolbar[iconsize="small"] #button-mark[disabled] {
 
 #remoteContentImage {
   list-style-image: url("chrome://messenger/skin/icons/remote-blocked.png"); 
-  padding-left: 3px;
+  padding: 3px;
 }
 
 #remoteContentBar {
