@@ -59,8 +59,8 @@
 <!-- LOCALIZATION NOTE sidebar.nc-panel.net.254: DONT_TRANSLATE -->
 <!ENTITY sidebar.nc-panel.net.254                 "MozillaZine">
 <!ENTITY sidebar.nc-panel.net.281                 "Civil Liberties News">
-<!-- LOCALIZATION NOTE sidebar.nc-panel.net.342: DONT_TRANSLATE -->
-<!ENTITY sidebar.nc-panel.net.342                 "SlashDot">
+<!-- LOCALIZATION NOTE sidebar.nc-panel.net.1683: DONT_TRANSLATE -->
+<!ENTITY sidebar.nc-panel.net.1683                 "SlashDot">
 <!-- LOCALIZATION NOTE sidebar.nc-panel.net.400: Do NOT localize "Sci-Fi" -->
 <!ENTITY sidebar.nc-panel.net.400                 "Sci-Fi News">
 <!-- LOCALIZATION NOTE sidebar.nc-panel.net.404: DONT_TRANSLATE -->

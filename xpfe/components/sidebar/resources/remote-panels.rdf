@@ -100,14 +100,13 @@
 
     <RDF:li>
       <RDF:Seq about="urn:sidebar:panel-group:other">
-        <RDF:li resource="urn:sidebar:nc-panel:net.342" />
+        <RDF:li resource="urn:sidebar:nc-panel:net.1683" />
         <RDF:li resource="urn:sidebar:nc-panel:net.281" />
         <RDF:li resource="urn:sidebar:nc-panel:net.1226" />
         <RDF:li resource="urn:sidebar:nc-panel:net.1096" />
         <RDF:li resource="urn:sidebar:nc-panel:net.240" />
         <RDF:li resource="urn:sidebar:nc-panel:net.229" />
         <RDF:li resource="urn:sidebar:nc-panel:net.400" />
-        <RDF:li resource="urn:sidebar:nc-panel:net.345" />
 
         <RDF:li>
           <RDF:Seq about="urn:sidebar:panel-group:technology">
@@ -283,10 +282,10 @@
     <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.281</NC:customize>
   </RDF:Description>
 
-  <RDF:Description about='urn:sidebar:nc-panel:net.342'>
-    <NC:title>&sidebar.nc-panel.net.342;</NC:title>
-    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.342</NC:content>
-    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.342</NC:customize>
+  <RDF:Description about='urn:sidebar:nc-panel:net.1683'>
+    <NC:title>&sidebar.nc-panel.net.1683;</NC:title>
+    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=net.1683</NC:content>
+    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=net.1683</NC:customize>
   </RDF:Description>
 
   <RDF:Description about='urn:sidebar:nc-panel:net.400'>

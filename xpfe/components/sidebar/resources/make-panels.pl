@@ -212,14 +212,13 @@ nc-panel|"Netcenter" Today|announcements|netscape-netcenter
 nc-panel|"Netscape" News|netscape|netscape-netcenter
 
 panel-group|Others, My Netscape Network|other|master-panel-list
-nc-panel|"Brain Sausage"|net.342|other
 nc-panel|Civil Liberties News|net.281|other
 nc-panel|Delaware River Fly Fishing|net.1226|other
 nc-panel|Intellectual Capital|net.1096|other
 nc-panel|Professional Bartender|net.240|other
 nc-panel|"Red Herring"|net.229|other
 nc-panel|"Sci-Fi" News|net.400|other
-nc-panel|"SlashDot"|net.345|other
+nc-panel|"SlashDot"|net.1683|other
 
 panel-group|Technology|technology|other
 nc-panel|"JavaWorld"|net.514|technology
