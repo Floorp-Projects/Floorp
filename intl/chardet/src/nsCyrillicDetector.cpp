@@ -107,7 +107,11 @@ void nsCyrillicDetector::HandleData(const char* aBuf, PRUint32 aLen)
    {
      for(PRUint8 j=0;j<mItems;j++)
      {
-        cls = mCyrillicClass[j][*b];
+        if( 0x80 & *b)
+           cls = mCyrillicClass[j][(*b) & 0x7F];
+        else 
+           cls = 0;
+        NS_ASSERTION( cls <= 32 , "illegal character class");
         mProb[j] += gCyrillicProb[mLastCls[j]][cls];
         mLastCls[j] = cls;
      } 
