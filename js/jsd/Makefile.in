@@ -27,30 +27,28 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= jsdebug
 LIBRARY_NAME	= jsd
 
-# Switching on MOZ_JAVA is a short-term hack. This is really for no Java/IFC
-ifdef MOZ_JAVA
-JAVA_OR_OJI = 1
-endif
-ifdef MOZ_OJI
-JAVA_OR_OJI = 1
-endif
-
-ifdef JAVA_OR_OJI
-DIRS		= classes
-endif
+DIRS 		+= jsdb
 
 REQUIRES	= java js
 
 EXPORTS		= $(srcdir)/jsdebug.h
 
+ifdef JS_THREADSAFE
+DEFINES         += -DJS_THREADSAFE
+endif
+
 CSRCS		= \
 		  jsdebug.c \
+		  jsd_atom.c \
 		  jsd_high.c \
 		  jsd_hook.c \
+		  jsd_lock.c \
+		  jsd_obj.c \
 		  jsd_scpt.c \
 		  jsd_stak.c \
+		  jsd_step.c \
 		  jsd_text.c \
-		  jsd_lock.c \
+		  jsd_val.c \
 		  $(NULL)
 
 ifndef MOZ_JSD
