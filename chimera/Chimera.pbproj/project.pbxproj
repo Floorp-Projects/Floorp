@@ -903,6 +903,18 @@
 //A72
 //A73
 //A74
+		A74F8BD203CE582D00A967F8 = {
+			isa = PBXFileReference;
+			name = libi18n.a;
+			path = ../intl/build/libi18n.a;
+			refType = 2;
+		};
+		A74F8BD303CE584F00A967F8 = {
+			fileRef = A74F8BD203CE582D00A967F8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		A7AEBEB103CB950400A967F8 = {
 			isa = PBXFileReference;
 			name = xmlextras.xpt;
@@ -1189,18 +1201,6 @@
 //F52
 //F53
 //F54
-		F506477602AD7E2701A967F3 = {
-			isa = PBXFileReference;
-			name = libunicharutil.a;
-			path = ../intl/unicharutil/src/libunicharutil.a;
-			refType = 2;
-		};
-		F506477702AD7E2801A967F3 = {
-			fileRef = F506477602AD7E2701A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F507423C02AD808201A967F3 = {
 			isa = PBXFileReference;
 			name = libcrmf.a;
@@ -1911,66 +1911,6 @@
 			name = Application;
 			path = "";
 			refType = 4;
-		};
-		F513437402DA286001A967F3 = {
-			isa = PBXFileReference;
-			name = libucvcn.a;
-			path = ../intl/uconv/ucvcn/libucvcn.a;
-			refType = 2;
-		};
-		F513437502DA286001A967F3 = {
-			isa = PBXFileReference;
-			name = libucvja.a;
-			path = ../intl/uconv/ucvja/libucvja.a;
-			refType = 2;
-		};
-		F513437602DA286001A967F3 = {
-			isa = PBXFileReference;
-			name = libucvko.a;
-			path = ../intl/uconv/ucvko/libucvko.a;
-			refType = 2;
-		};
-		F513437702DA286001A967F3 = {
-			isa = PBXFileReference;
-			name = libucvtw.a;
-			path = ../intl/uconv/ucvtw/libucvtw.a;
-			refType = 2;
-		};
-		F513437802DA286001A967F3 = {
-			isa = PBXFileReference;
-			name = libucvtw2.a;
-			path = ../intl/uconv/ucvtw2/libucvtw2.a;
-			refType = 2;
-		};
-		F513437902DA286101A967F3 = {
-			fileRef = F513437402DA286001A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F513437A02DA286101A967F3 = {
-			fileRef = F513437502DA286001A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F513437B02DA286101A967F3 = {
-			fileRef = F513437602DA286001A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F513437C02DA286101A967F3 = {
-			fileRef = F513437702DA286001A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F513437D02DA286101A967F3 = {
-			fileRef = F513437802DA286001A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F5137A1102676B9101026D05 = {
 			fileEncoding = 30;
@@ -5024,26 +4964,15 @@
 		};
 		F56F242202AC6F7101A967F3 = {
 			children = (
-				F56F242302AC706801A967F3,
-				F56F242502AC706801A967F3,
 				F56F242602AC706801A967F3,
 				F56F242702AC706801A967F3,
-				F56F242802AC706801A967F3,
-				F56F242902AC706801A967F3,
-				F56F242A02AC706801A967F3,
 				F56F242B02AC706801A967F3,
-				F56F243002AC706801A967F3,
 				F56F243202AC706801A967F3,
 				F56F243302AC706801A967F3,
 				F56F244502AC714601A967F3,
 				F56F244602AC714601A967F3,
 				F56F244702AC714601A967F3,
-				F56F244802AC714601A967F3,
 				F56F244902AC714601A967F3,
-				F56F244B02AC714601A967F3,
-				F56F244C02AC714601A967F3,
-				F56F244D02AC714601A967F3,
-				F56F244E02AC714601A967F3,
 				F56F245002AC714601A967F3,
 				F56F245102AC714601A967F3,
 				F56F246002AC723001A967F3,
@@ -5058,7 +4987,6 @@
 				F56F246B02AC723001A967F3,
 				F56F246F02AC723001A967F3,
 				F56F247002AC723001A967F3,
-				F56F247102AC723001A967F3,
 				F56F247302AC723001A967F3,
 				F56F247402AC723001A967F3,
 				F56F248B02AC729901A967F3,
@@ -5067,32 +4995,15 @@
 				F56F249002AC729901A967F3,
 				F56F249302AC729901A967F3,
 				F56F249402AC729901A967F3,
-				F506477602AD7E2701A967F3,
 				F507423C02AD808201A967F3,
 				F524EF6702AD8B9301A967F3,
 				F54AD84402C115D901A967F3,
-				F513437402DA286001A967F3,
-				F513437502DA286001A967F3,
-				F513437602DA286001A967F3,
-				F513437702DA286001A967F3,
-				F513437802DA286001A967F3,
 				F5E47654030C5FD501A967F3,
+				A74F8BD203CE582D00A967F8,
 			);
 			isa = PBXGroup;
 			name = "Gecko Static Components";
 			refType = 4;
-		};
-		F56F242302AC706801A967F3 = {
-			isa = PBXFileReference;
-			name = libchardet.a;
-			path = ../intl/chardet/src/libchardet.a;
-			refType = 2;
-		};
-		F56F242502AC706801A967F3 = {
-			isa = PBXFileReference;
-			name = liblwbrk.a;
-			path = ../intl/lwbrk/src/liblwbrk.a;
-			refType = 2;
 		};
 		F56F242602AC706801A967F3 = {
 			isa = PBXFileReference;
@@ -5106,34 +5017,10 @@
 			path = ../netwerk/build2/libnecko2.a;
 			refType = 2;
 		};
-		F56F242802AC706801A967F3 = {
-			isa = PBXFileReference;
-			name = libnkcache.a;
-			path = ../netwerk/cache/src/libnkcache.a;
-			refType = 2;
-		};
-		F56F242902AC706801A967F3 = {
-			isa = PBXFileReference;
-			name = libnslocale.a;
-			path = ../intl/locale/src/mac/libnslocale.a;
-			refType = 2;
-		};
-		F56F242A02AC706801A967F3 = {
-			isa = PBXFileReference;
-			name = libstrres.a;
-			path = ../intl/strres/src/libstrres.a;
-			refType = 2;
-		};
 		F56F242B02AC706801A967F3 = {
 			isa = PBXFileReference;
 			name = libuconv.a;
 			path = ../intl/uconv/src/libuconv.a;
-			refType = 2;
-		};
-		F56F243002AC706801A967F3 = {
-			isa = PBXFileReference;
-			name = libucvlatin.a;
-			path = ../intl/uconv/ucvlatin/libucvlatin.a;
 			refType = 2;
 		};
 		F56F243202AC706801A967F3 = {
@@ -5148,18 +5035,6 @@
 			path = ../js/src/xpconnect/src/libxpconnect.a;
 			refType = 2;
 		};
-		F56F243402AC706801A967F3 = {
-			fileRef = F56F242302AC706801A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F243602AC706801A967F3 = {
-			fileRef = F56F242502AC706801A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F56F243702AC706801A967F3 = {
 			fileRef = F56F242602AC706801A967F3;
 			isa = PBXBuildFile;
@@ -5172,32 +5047,8 @@
 			settings = {
 			};
 		};
-		F56F243902AC706801A967F3 = {
-			fileRef = F56F242802AC706801A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F243A02AC706801A967F3 = {
-			fileRef = F56F242902AC706801A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F243B02AC706801A967F3 = {
-			fileRef = F56F242A02AC706801A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F56F243C02AC706801A967F3 = {
 			fileRef = F56F242B02AC706801A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F244102AC706801A967F3 = {
-			fileRef = F56F243002AC706801A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5232,40 +5083,10 @@
 			path = ../gfx/src/mac/libgfx_mac.a;
 			refType = 2;
 		};
-		F56F244802AC714601A967F3 = {
-			isa = PBXFileReference;
-			name = libgfx2.a;
-			path = ../gfx2/src/libgfx2.a;
-			refType = 2;
-		};
 		F56F244902AC714601A967F3 = {
 			isa = PBXFileReference;
 			name = libhtmlpars.a;
 			path = ../htmlparser/src/libhtmlpars.a;
-			refType = 2;
-		};
-		F56F244B02AC714601A967F3 = {
-			isa = PBXFileReference;
-			name = libimggif.a;
-			path = ../modules/libpr0n/decoders/gif/libimggif.a;
-			refType = 2;
-		};
-		F56F244C02AC714601A967F3 = {
-			isa = PBXFileReference;
-			name = libimgjpeg.a;
-			path = ../modules/libpr0n/decoders/jpeg/libimgjpeg.a;
-			refType = 2;
-		};
-		F56F244D02AC714601A967F3 = {
-			isa = PBXFileReference;
-			name = libimglib2.a;
-			path = ../modules/libpr0n/src/libimglib2.a;
-			refType = 2;
-		};
-		F56F244E02AC714601A967F3 = {
-			isa = PBXFileReference;
-			name = libimgpng.a;
-			path = ../modules/libpr0n/decoders/png/libimgpng.a;
 			refType = 2;
 		};
 		F56F245002AC714601A967F3 = {
@@ -5298,38 +5119,8 @@
 			settings = {
 			};
 		};
-		F56F245502AC714701A967F3 = {
-			fileRef = F56F244802AC714601A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F56F245602AC714701A967F3 = {
 			fileRef = F56F244902AC714601A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F245802AC714701A967F3 = {
-			fileRef = F56F244B02AC714601A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F245902AC714701A967F3 = {
-			fileRef = F56F244C02AC714601A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F245A02AC714701A967F3 = {
-			fileRef = F56F244D02AC714601A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F245B02AC714701A967F3 = {
-			fileRef = F56F244E02AC714601A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5409,19 +5200,13 @@
 		F56F246F02AC723001A967F3 = {
 			isa = PBXFileReference;
 			name = libprofile.a;
-			path = ../profile/src/libprofile.a;
+			path = ../profile/build/libprofile.a;
 			refType = 2;
 		};
 		F56F247002AC723001A967F3 = {
 			isa = PBXFileReference;
 			name = libtxmgr.a;
 			path = ../editor/txmgr/src/libtxmgr.a;
-			refType = 2;
-		};
-		F56F247102AC723001A967F3 = {
-			isa = PBXFileReference;
-			name = libtxtsvc.a;
-			path = ../editor/txtsvc/src/libtxtsvc.a;
 			refType = 2;
 		};
 		F56F247302AC723001A967F3 = {
@@ -5504,12 +5289,6 @@
 		};
 		F56F248602AC723101A967F3 = {
 			fileRef = F56F247002AC723001A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F248702AC723101A967F3 = {
-			fileRef = F56F247102AC723001A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -7833,26 +7612,16 @@
 			files = (
 				F5BAAB9C02AC4AA701A967F3,
 				F5BAAB9D02AC4AA701A967F3,
-				F56F243402AC706801A967F3,
-				F56F243602AC706801A967F3,
+				A74F8BD303CE584F00A967F8,
 				F56F243702AC706801A967F3,
 				F56F243802AC706801A967F3,
-				F56F243902AC706801A967F3,
-				F56F243A02AC706801A967F3,
-				F56F243B02AC706801A967F3,
 				F56F243C02AC706801A967F3,
-				F56F244102AC706801A967F3,
 				F56F244302AC706801A967F3,
 				F56F244402AC706801A967F3,
 				F56F245202AC714701A967F3,
 				F56F245302AC714701A967F3,
 				F56F245402AC714701A967F3,
-				F56F245502AC714701A967F3,
 				F56F245602AC714701A967F3,
-				F56F245802AC714701A967F3,
-				F56F245902AC714701A967F3,
-				F56F245A02AC714701A967F3,
-				F56F245B02AC714701A967F3,
 				F56F245D02AC714701A967F3,
 				F56F245E02AC714701A967F3,
 				F56F247602AC723101A967F3,
@@ -7867,7 +7636,6 @@
 				F56F248102AC723101A967F3,
 				F56F248502AC723101A967F3,
 				F56F248602AC723101A967F3,
-				F56F248702AC723101A967F3,
 				F56F248902AC723101A967F3,
 				F56F248A02AC723101A967F3,
 				F56F249502AC729901A967F3,
@@ -7876,16 +7644,10 @@
 				F56F249A02AC729901A967F3,
 				F56F249D02AC729901A967F3,
 				F56F249E02AC729901A967F3,
-				F506477702AD7E2801A967F3,
 				F507423D02AD808301A967F3,
 				F524EF6802AD8B9401A967F3,
 				F5AC38BA02AD8E7B01A967F3,
 				F54AD84502C115DA01A967F3,
-				F513437902DA286101A967F3,
-				F513437A02DA286101A967F3,
-				F513437B02DA286101A967F3,
-				F513437C02DA286101A967F3,
-				F513437D02DA286101A967F3,
 				F5E47655030C5FD501A967F3,
 				F5BAAB9B02AC4AA701A967F3,
 				F5BAAB9E02AC4AA701A967F3,
