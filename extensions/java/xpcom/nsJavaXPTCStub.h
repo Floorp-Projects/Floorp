@@ -77,6 +77,10 @@ public:
   // getter for mJavaObject
   jobject GetJavaObject();
 
+  // Deletes the strong global ref for the Java object, so it can be garbage
+  // collected if necessary.  See DestroyXPTCMappingEnum().
+  void DeleteStrongRef();
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRefInternal();
   NS_IMETHOD_(nsrefcnt) ReleaseInternal();

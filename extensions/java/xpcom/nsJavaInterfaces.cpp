@@ -107,11 +107,13 @@ GECKO_NATIVE(initEmbedding) (JNIEnv* env, jclass, jobject aMozBinDirectory,
 extern "C" JX_EXPORT void JNICALL
 GECKO_NATIVE(termEmbedding) (JNIEnv *env, jclass)
 {
+  // Free globals before calling NS_TermEmbedding(), since we need some
+  // XPCOM services.
+  FreeJavaGlobals(env);
+
   nsresult rv = NS_TermEmbedding();
   if (NS_FAILED(rv))
     ThrowException(env, rv, "NS_TermEmbedding failed");
-
-  FreeJavaGlobals(env);
 }
 
 nsresult
@@ -195,11 +197,13 @@ XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jclass, jobject aServMgr)
     }
   }
 
+  // Free globals before calling NS_ShutdownXPCOM(), since we need some
+  // XPCOM services.
+  FreeJavaGlobals(env);
+
   rv = NS_ShutdownXPCOM(servMgr);
   if (NS_FAILED(rv))
     ThrowException(env, rv, "NS_ShutdownXPCOM failed");
-
-  FreeJavaGlobals(env);
 }
 
 extern "C" JX_EXPORT jobject JNICALL
