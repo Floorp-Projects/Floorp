@@ -1,5 +1,0 @@
-<!ENTITY identityAdvanced.label "Advanced Account Settings">
-<!-- LOCALIZATION NOTE (smtpDesc.label): DONT_TRANSLATE "SMTP" -->
-<!ENTITY smtpDesc.label "When sending messages from this identity, always use the following outgoing server (SMTP):">
-<!ENTITY smtpName.label "Server:">
-<!ENTITY smtpDefaultServer.label "Always use default server">

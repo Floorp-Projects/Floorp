@@ -1,9 +1,0 @@
-<!ENTITY tabHeader.label "タブ式ブラウジング">
-<!ENTITY tabDisplay.label "タブの表示">
-<!ENTITY autoHide.label "開いているタブが 1 つだけの場合はタブ バーを隠す">
-<!ENTITY background.label "リンクを背景に読み込む">
-<!ENTITY openTabs.label "次の操作で、ウィンドウの代わりにタブを開く:">
-<!ENTITY middleClick.label "Web ページでリンクを中クリックまたは Control-クリック">
-<!ENTITY urlbarWinUnix.label "場所ツールバーで Control+Enter">
-<!ENTITY urlbarMac.label "場所ツールバーで Command+Enter">
-

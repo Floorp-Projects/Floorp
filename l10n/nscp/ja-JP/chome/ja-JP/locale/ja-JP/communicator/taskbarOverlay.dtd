@@ -1,5 +1,0 @@
-<!-- taskbar -->
-<!-- taskbar popups have moved to taskbar.rdf -->
-
-<!ENTITY  openWinButton.label "Windows を開く">
-<!ENTITY taskWindowList.tooltip "開いたウィンドウのリスト">

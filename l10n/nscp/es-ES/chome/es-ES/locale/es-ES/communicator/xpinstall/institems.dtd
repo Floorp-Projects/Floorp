@@ -1,5 +1,0 @@
-<!-- extracted from institems.xul -->
-
-<!ENTITY dialog.title "Instalación de software">
-<!ENTITY warningText.label "Un sitio web solicita permiso para instalar">
-<!ENTITY warningText2.label "El software de intención ilícita puede dañar su equipo o violar su intimidad. Sólo debe instalar software de fuentes de confianza.">

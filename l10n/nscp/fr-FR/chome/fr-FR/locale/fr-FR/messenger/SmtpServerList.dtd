@@ -1,6 +1,0 @@
-<!ENTITY smtpListTitle.label "Paramètres avancés du serveur sortant (SMTP)">
-<!ENTITY smtpListDesc.label "Bien que vous puissiez spécifier plusieurs serveurs sortants (SMTP), cela n'est recommandé qu'aux utilisateurs avancés. La configuration de plusieurs serveurs SMTP peut provoquer des erreurs lors de l'envoi de messages.">
-<!ENTITY smtpListAdd.label "Ajouter...">
-<!ENTITY smtpListEdit.label "Edition...">
-<!ENTITY smtpListDelete.label "Supprimer">
-<!ENTITY smtpListSetDefault.label "Définir par défaut">

@@ -1,5 +1,0 @@
-<!-- extracted from institems.xul -->
-
-<!ENTITY dialog.title "Software-Installation">
-<!ENTITY warningText.label "Eine Web-Site erbittet Installationserlaubnis">
-<!ENTITY warningText2.label "Durch schädliche Software kann Ihr Computer beschädigt oder Ihre Privatsphäre verletzt werden. Sie sollten Software nur aus Quellen installieren, die Ihnen vertrauenswürdig erscheinen.">

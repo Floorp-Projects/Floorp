@@ -1,8 +1,0 @@
-<!-- extracted from no_space.xul -->
-
-<!ENTITY buttonCancel.label "キャンセル">
-<!ENTITY buttonRetry.label "再試行">
-<!ENTITY buttonCreateNew.label "新しいプロファイルを作成する">
-<!ENTITY noSpace.label "移動するのに必要な領域がありません。">
-<!ENTITY errorText1.label "プロファイルの移動に必要な領域がありません。">
-<!ENTITY errorText2.label "領域の一部を開けて再試行するか、新規の空のプロファイルを作成するか、またはキャンセルすることができます。">

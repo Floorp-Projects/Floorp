@@ -1,7 +1,0 @@
-<!-- extracted from aw-accname.xul -->
-
-<!ENTITY accnameTitle.label "Nombre de la cuenta">
-<!-- LOCALIZATION NOTE (accnameDesc.label) : do not translate any "&quot;" in below line -->
-<!ENTITY accnameDesc.label "Introduzca el nombre por el que desea referirse a esta cuenta (por ejemlo, &quot;Cuenta trabajo&quot;, &quot;Cuenta particular&quot; o &quot;VCuenta noticias&quot;).">
-<!ENTITY accnameExample.label "Por ejemplo, Cuenta trabajo, Cuenta particular o Cuenta noticias">
-<!ENTITY accnameLabel.label "Nombre de la cuenta:">

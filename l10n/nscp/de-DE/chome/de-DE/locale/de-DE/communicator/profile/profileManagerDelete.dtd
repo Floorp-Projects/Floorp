@@ -1,6 +1,0 @@
-<!ENTITY title "Profil löschen">
-<!ENTITY intro "Wenn Sie ein Profil aus der Liste der verfügbaren Profile löschen, kann dies nicht rückgängig gemacht werden. Wenn Sie mit dem Löschen fortfahren, können Sie Ihre Dateien, Ihre gespeicherten Nachrichten, Einstellungen und Zertifikate auch mit &brandShortName; löschen.">
-<!ENTITY question "Sollen Ihre Dateien zusammen mit Ihrem Profil gelöscht werden? (Bei Auswahl dieser Option werden alle Dateien im Profilverzeichnis gelöscht.)">
-<!ENTITY delete.yes.label "Dateien löschen">
-<!ENTITY delete.no.label "Dateien nicht löschen">
-<!ENTITY cancel.label "Abbrechen">

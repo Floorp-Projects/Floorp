@@ -1,4 +1,0 @@
-<!ENTITY title "Migrar todos los perfiles">
-<!ENTITY intro "Si suprime un perfil, lo eliminará de la lista de perfiles disponibles y no podrá deshacer la operación. Si decide seguir con la supresión, también puede elegir que &brandShortName; suprima los archivos de datos, incluidos los certificados, valores y correo guardados? ">
-<!ENTITY ok.label "Aceptar">
-<!ENTITY cancel.label "Cancelar">

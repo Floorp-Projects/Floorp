@@ -1,5 +1,0 @@
-<!-- taskbar -->
-<!-- taskbar popups have moved to taskbar.rdf -->
-
-<!ENTITY openWinButton.label "Fenêtres ouvertes">
-<!ENTITY taskWindowList.tooltip "Liste des fenêtres ouvertes">

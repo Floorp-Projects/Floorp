@@ -1,5 +1,0 @@
-<!-- extracted from ./flash.xul -->
-
-<!ENTITY tree.header.source.label      "Kilde">
-<!ENTITY tree.header.description.label "Beskrivelse">
-<!ENTITY tree.header.time.label        "Tid">

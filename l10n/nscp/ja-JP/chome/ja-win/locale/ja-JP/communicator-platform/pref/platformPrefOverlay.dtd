@@ -1,8 +1,0 @@
-<!ENTITY winhooks.label                   "システム">
-
-<!ENTITY defaultBrowserGroup.label  "標準のブラウザ">
-<!ENTITY defaultBrowserButton.label "標準のブラウザに設定">
-<!ENTITY alreadyDefaultText         "&brandShortName; はすでに標準のブラウザに設定されています。">
-<!ENTITY defaultPendingText         "［OK］をクリックすると、&brandShortName; が標準のブラウザに設定されます。">
-<!ENTITY makeDefaultText            "&brandShortName; を標準のブラウザに設定。">
-

@@ -1,9 +1,0 @@
-<!-- Translated with MozillaTranslator -->
-<!ENTITY  dialogStatus.label "( nn.nK af mm.mK bytes )">
-<!ENTITY  location "Adresse">
-<!ENTITY  saving "Gemmer">
-<!ENTITY  status "Status:">
-<!ENTITY  timeLeft "Resterende tid:">
-<!ENTITY dialogCancel.label "Annuller">
-<!ENTITY dialogTimeLeft.label "?">
-<!ENTITY downloadWindow.title "Gemmer fil">

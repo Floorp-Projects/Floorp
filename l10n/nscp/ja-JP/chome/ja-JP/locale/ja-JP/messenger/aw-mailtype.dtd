@@ -1,8 +1,0 @@
-<!-- extracted from aw-mailtype.xul -->
-
-<!-- LOCALIZATION NOTE (mailTypeTitle.label) : Do not translate "WebMail" in below line. -->
-<!ENTITY mailTypeTitle.label "WebMail またはその他のメール:">
-<!-- LOCALIZATION NOTE (mailTypeDesc.label) : Do not translate "WebMail" in below line. -->
-<!ENTITY mailTypeDesc.label "無料の Netscape WebMail アカウントか、ISP や会社のメールなど他のメール アカウントを選択してください。">
-<!ENTITY mailTypeOtherMail.label "他のメール">
-

@@ -1,8 +1,0 @@
-<!ENTITY lHeader "Téléchargements">
-<!ENTITY downloadBehavior.label "Au démarrage d'un téléchargement">
-<!ENTITY openDM.label "Ouvrir le Gestionnaire de téléchargement">
-<!ENTITY openDM.accesskey "m">
-<!ENTITY openProgressDialog.label "Ouvrir une boîte de dialogue de progression">
-<!ENTITY openProgressDialog.accesskey "u">
-<!ENTITY doNothing.label "Ne rien ouvrir">
-<!ENTITY doNothing.accesskey "r">

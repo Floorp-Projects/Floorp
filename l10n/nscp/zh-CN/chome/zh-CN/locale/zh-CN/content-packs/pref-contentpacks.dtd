@@ -1,9 +1,0 @@
-
-<!ENTITY lHeader                        "语言和内容包">
-<!ENTITY contentIntro.label             "选择新的内容包会更改“快捷栏”和“搜索”菜单中的项目，并更改主页、某些书签和其它项。在切换内容包时，不会丢失已经自定义好的书签和其它项。您必须重新启动 &brandShortName; 以使新的内容包生效。">
-<!ENTITY languageIntro.label            "选择新的语言包会更改对话框、菜单、工具栏和按钮标签中显示的语言文字。您必须重新启动 &brandShortName; 以使新的语言包生效。">
-<!ENTITY installedContentPacks.label    "已安装的内容包:">
-<!ENTITY installedLanguagePacks.label   "已安装的语言包:">
-<!ENTITY downloadContentPacks.accesskey "D">
-<!ENTITY downloadContentPacks.label     "下载其它...">
-<!ENTITY update.label                   "（需要更新）">

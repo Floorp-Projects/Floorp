@@ -1,9 +1,0 @@
-<!-- Translated with MozillaTranslator -->
-<!ENTITY gfxWidgets.label "gfx">
-<!ENTITY lHeader "Debug">
-<!ENTITY nativeWidgets.label "Systemets">
-<!ENTITY partialGfxWidgets.label "delvis-gfx">
-<!ENTITY rHeader "Debug instillinger for Layout og Rendering">
-<!ENTITY widgetFlashing.label "Blink invalidate() områder">
-<!ENTITY widgetRendering.label "Debug: Widget rendering">
-<!ENTITY window.title "Debug">

@@ -1,8 +1,0 @@
-<!-- extracted from dialogOverlay.xul -->
-<!-- OK Cancel Buttons -->
-<!ENTITY header.label "Titre court">
-<!ENTITY message.label "Exemple de texte.">
-<!ENTITY editfield0.label "Nom d'utilisateur :">
-<!ENTITY editfield1.label "Mot de passe :">
-<!ENTITY editfield2.label "Confirmer le mot de passe :">
-<!ENTITY checkbox.label "Ne pas permettre que les cookies supprimés soient réacceptés">

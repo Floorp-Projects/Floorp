@@ -1,7 +1,0 @@
-<!-- Translated with MozillaTranslator -->
-<!ENTITY enableSU.label "Aktiver SmartUpdate">
-<!ENTITY header "SmartUpdate">
-<!ENTITY requireConfirmation.label "Kræv manuel bekræftelse af hver installation">
-<!ENTITY selectUninstall.label "For at afinstallere, Vælg fra listen og klik afindstaller">
-<!ENTITY title.label "SmartUpdate">
-<!ENTITY uninstallButton.label "Afindstaller">

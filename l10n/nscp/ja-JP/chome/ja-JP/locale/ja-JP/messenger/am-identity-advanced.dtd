@@ -1,5 +1,0 @@
-<!ENTITY identityAdvanced.label "アカウントの詳細設定">
-<!-- LOCALIZATION NOTE (smtpDesc.label): DONT_TRANSLATE "SMTP" -->
-<!ENTITY smtpDesc.label "このアカウントからメールを送信するとき、常に次の送信サーバ（SMTP）を使用:">
-<!ENTITY smtpName.label "サーバ:">
-<!ENTITY smtpDefaultServer.label "常に標準サーバを使用">

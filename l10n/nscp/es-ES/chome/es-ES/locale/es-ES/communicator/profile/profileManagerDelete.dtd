@@ -1,6 +1,0 @@
-<!ENTITY title "Suprimir perfil">
-<!ENTITY intro "Si suprime un perfil, lo eliminará de la lista de perfiles disponibles y no podrá deshacer la operación. Si decide seguir con la supresión, también puede elegir que &brandShortName; suprima los archivos de datos, incluidos los certificados, valores y correo guardados.">
-<!ENTITY question "¿Desea suprimir los archivos junto con el perfil? (Si elige esta opción, suprimirá todos los archivos de la carpeta del perfil.)">
-<!ENTITY delete.yes.label "Suprimir archivos">
-<!ENTITY delete.no.label "No suprimir archivos">
-<!ENTITY cancel.label "Cancelar">

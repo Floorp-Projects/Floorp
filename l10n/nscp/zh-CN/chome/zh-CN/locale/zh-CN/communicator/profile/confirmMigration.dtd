@@ -1,7 +1,0 @@
-<!ENTITY window.title "确认迁移">
-
-<!-- LOCALIZATION NOTE (confirmMigrationPart1.label): Don't translate "&brandShortName" -->
-<!ENTITY confirmMigrationPart1.label "即将根据您在前一版本的 Netscape 简要表创建 &brandShortName; 简要表。">
-<!ENTITY confirmMigrationPart2.label "此举将复制并转换某些用前一版本的 Netscape 创建的文件，以使其能用于 &brandShortName;。您原有的 Netscape 4 简要表不会被修改。">
-<!ENTITY confirmMigrationPart3.label "若需继续转换，请单击“确定”。">
-<!ENTITY confirmMigrationPart4.label "（如果单击“取消”，则可以在以后完成此操作。）">

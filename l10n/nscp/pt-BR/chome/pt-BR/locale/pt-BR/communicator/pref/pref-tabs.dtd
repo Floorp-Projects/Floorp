@@ -1,9 +1,0 @@
-<!ENTITY tabHeader.label "Navegação em Guias">
-<!ENTITY tabDisplay.label "Exibição de Guias">
-<!ENTITY autoHide.label "Ocultar a barra de guias quando apenas uma guia estiver aberta">
-<!ENTITY background.label "Carregar links no plano de fundo">
-<!ENTITY openTabs.label "Abrir guias em vez de janelas para">
-<!ENTITY middleClick.label "Clique no botão do meio do mouse ou clique-CTRL de links de uma página da Web">
-<!ENTITY urlbarWinUnix.label "Control+Enter na Barra de Endereços">
-<!ENTITY urlbarMac.label "Command+Enter na Barra de Endereços">
-

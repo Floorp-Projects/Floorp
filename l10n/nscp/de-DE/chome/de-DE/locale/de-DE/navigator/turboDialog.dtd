@@ -1,4 +1,0 @@
-<!ENTITY exitWarningMsg.label "Quick Launch ist aktiv, sodass &brandShortName; im Arbeitsspeicher verbleibt und schnell neu gestartet werden kann. Um das Programm vollständig zu beenden, klicken Sie mit der rechten Maustaste auf das Symbol '&brandShortName;'  in der Symbolleiste und wählen Sie '&brandShortName; beenden'.">
-<!ENTITY exitWarningTitle.label "Quick Launch">
-<!ENTITY exitWarningCheckbox.label "Diese Meldung nicht wieder anzeigen">
-<!ENTITY exitWarningCheckbox.accesskey "d">

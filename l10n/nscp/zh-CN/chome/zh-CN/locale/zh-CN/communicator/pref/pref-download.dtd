@@ -1,8 +1,0 @@
-<!ENTITY lHeader "下载">
-<!ENTITY downloadBehavior.label "当开始下载时">
-<!ENTITY openDM.label "打开下载管理器">
-<!ENTITY openDM.accesskey "M">
-<!ENTITY openProgressDialog.label "打开进度对话框">
-<!ENTITY openProgressDialog.accesskey "P">
-<!ENTITY doNothing.label "不打开任何窗口">
-<!ENTITY doNothing.accesskey "D">

@@ -1,8 +1,0 @@
-
-<!--LOCALIZATION NOTE (editorCheck.label): DONT_TRANSLATE -->
-<!ENTITY editorCheck.label "编写器">
-<!ENTITY editorCheck.accesskey "C">
-
-<!ENTITY compose.label "编写器">
-<!ENTITY editing.label "新页面设置">
-<!ENTITY publish.label "发布">

@@ -1,9 +1,0 @@
-
-<!ENTITY lHeader "Sprachen- und Inhaltspakete">
-<!ENTITY contentIntro.label "Durch die Auswahl eines neuen Inhaltspakets ändern sich die Elemente in der Seitenleiste und im Suchmenü sowie die Anfangsseite, bestimmte Lesezeichen und andere Elemente. Lesezeichen oder andere Elemente, die Sie selbst angepasst haben, gehen nicht verloren, wenn Sie die Inhaltspakete ändern. Sie müssen &brandShortName; neu starten, damit ein neues Inhaltspaket wirksam werden kann.">
-<!ENTITY languageIntro.label "Durch die Auswahl eines neuen Inhaltspakets ändern sich die Elemente in der Seitenleiste und im Suchmenü sowie die Anfangsseite, bestimmte Lesezeichen und andere Elemente. Sie müssen &brandShortName; neu starten, damit ein neues Sprachpaket wirksam werden kann.">
-<!ENTITY installedContentPacks.label "Installierte Inhaltspakete:">
-<!ENTITY installedLanguagePacks.label "Installierte Sprachpakete:">
-<!ENTITY downloadContentPacks.accesskey "l">
-<!ENTITY downloadContentPacks.label "Weitere herunterladen...">
-<!ENTITY update.label "(muss aktualisiert werden)">

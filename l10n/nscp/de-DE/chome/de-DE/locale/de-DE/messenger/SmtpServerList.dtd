@@ -1,6 +1,0 @@
-<!ENTITY smtpListTitle.label "Erweiterte Ausgangs-Server (SMTP)-Einstellungen">
-<!ENTITY smtpListDesc.label "Sie können zwar mehr als einen Ausgangs-Server (SMTP) einrichten, diese Option ist jedoch nur für erfahrene Anwender vorgesehen. Die Einrichtung mehrerer SMTP-Server kann Fehler beim Senden von Nachrichten verursachen.">
-<!ENTITY smtpListAdd.label "Hinzufügen...">
-<!ENTITY smtpListEdit.label "Bearbeiten...">
-<!ENTITY smtpListDelete.label "Löschen">
-<!ENTITY smtpListSetDefault.label "Standard einstellen">

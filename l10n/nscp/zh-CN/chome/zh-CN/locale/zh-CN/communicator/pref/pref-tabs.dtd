@@ -1,9 +1,0 @@
-<!ENTITY tabHeader.label "通过选项卡浏览">
-<!ENTITY tabDisplay.label "选项卡显示">
-<!ENTITY autoHide.label "当只有一个选项卡打开时隐藏选项卡栏">
-<!ENTITY background.label "在后台载入链接">
-<!ENTITY openTabs.label "打开选项卡而不是窗口:">
-<!ENTITY middleClick.label "用鼠标中键或控制键单击网页中的链接">
-<!ENTITY urlbarWinUnix.label "在“地址”栏中用 Control+Enter 键">
-<!ENTITY urlbarMac.label "在“地址”栏中用 Command+Enter 键">
-

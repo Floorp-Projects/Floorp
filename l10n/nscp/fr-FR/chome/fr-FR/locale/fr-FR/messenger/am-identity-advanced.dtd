@@ -1,5 +1,0 @@
-<!ENTITY identityAdvanced.label "Paramètres du compte avancés">
-<!-- LOCALIZATION NOTE (smtpDesc.label): DONT_TRANSLATE "SMTP" -->
-<!ENTITY smtpDesc.label "Un seul serveur sortant (SMTP) doit être spécifié, même si vous avez plusieurs comptes de messagerie. Entrez le nom du serveur pour les messages sortants:">
-<!ENTITY smtpName.label "Serveur :">
-<!ENTITY smtpDefaultServer.label "Toujours utiliser le serveur par défaut">

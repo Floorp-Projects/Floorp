@@ -1,9 +1,0 @@
-<!ENTITY tabHeader.label "Registerkarten">
-<!ENTITY tabDisplay.label "Registerkarten-Anzeige">
-<!ENTITY autoHide.label "Registerleiste ausblenden, wenn nur eine Registerkarte geöffnet ist">
-<!ENTITY background.label "Verknüpfungen im Hintergrund laden">
-<!ENTITY openTabs.label "Registerkarten anstelle von Fenstern laden wenn">
-<!ENTITY middleClick.label "Mit der mittleren Maustaste oder mit gedrückter Strg-Taste Verknüpfungen auf einer Web-Seite angeklickt werden">
-<!ENTITY urlbarWinUnix.label "Im Adressfeld Strg+Enter gedrückt wird">
-<!ENTITY urlbarMac.label "Im Adressfeld Command+Enter gedrückt wird">
-

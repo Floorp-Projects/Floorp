@@ -1,8 +1,0 @@
-<!-- extracted from no_space.xul -->
-
-<!ENTITY buttonCancel.label "取消">
-<!ENTITY buttonRetry.label "重试">
-<!ENTITY buttonCreateNew.label "创建新简要表">
-<!ENTITY noSpace.label "没有足够空间来迁移。">
-<!ENTITY errorText1.label "没有足够的空间来迁移您的简要表。">
-<!ENTITY errorText2.label "您可以释放一些空间然后重试、创建新的空简要表或取消。">

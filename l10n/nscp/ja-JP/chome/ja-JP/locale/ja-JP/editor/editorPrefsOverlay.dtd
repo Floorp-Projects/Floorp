@@ -1,8 +1,0 @@
-
-<!--LOCALIZATION NOTE (editorCheck.label): DONT_TRANSLATE -->
-<!ENTITY editorCheck.label "Composer">
-<!ENTITY editorCheck.accesskey "c">
-
-<!ENTITY compose.label "Composer">
-<!ENTITY editing.label "新しいページの設定">
-<!ENTITY publish.label "出版">

@@ -1,8 +1,0 @@
-<!-- extracted from aw-mailtype.xul -->
-
-<!-- LOCALIZATION NOTE (mailTypeTitle.label) : Do not translate "WebMail" in below line. -->
-<!ENTITY mailTypeTitle.label "Webmail ou autre messagerie :">
-<!-- LOCALIZATION NOTE (mailTypeDesc.label) : Do not translate "WebMail" in below line. -->
-<!ENTITY mailTypeDesc.label "Sélectionnez un compte WebMail gratuit ou un autre compte de messagerie, comme la messagerie de votre FAI ou de votre organization.">
-<!ENTITY mailTypeOtherMail.label "Autre messagerie">
-

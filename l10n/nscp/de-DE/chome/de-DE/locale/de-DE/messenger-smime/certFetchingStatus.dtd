@@ -1,5 +1,0 @@
-<!--LOCALIZATION NOTE shown while obtaining certificates from a directory -->
-
-<!ENTITY title.label "Herrunterladen der Zertifikate">
-<!ENTITY info.message "Durchsuchen des Verzeichnisses nach Zertifikaten des Empfängers. Dies kann einige Minuten dauern.">
-<!ENTITY stop.label "Suche beenden">

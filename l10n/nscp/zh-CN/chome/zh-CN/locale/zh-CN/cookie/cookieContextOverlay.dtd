@@ -1,4 +1,0 @@
-<!ENTITY blockImageCmd.label          "阻止来自这个服务器的图像">
-<!ENTITY blockImageCmd.accesskey      "K">
-<!ENTITY unblockImageCmd.label        "不阻止来自此服务器的图像">
-<!ENTITY unblockImageCmd.accesskey    "U">

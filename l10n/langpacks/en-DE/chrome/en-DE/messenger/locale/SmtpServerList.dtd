@@ -1,6 +1,0 @@
-<!ENTITY smtpListTitle.label "Advanced Outgoing (SMTP) Server Settings">
-<!ENTITY smtpListDesc.label "Although you can specify more than one outgoing (SMTP) server, this is recommended only for advanced users. Setting up multiple SMTP servers can cause errors when sending mail.">
-<!ENTITY smtpListAdd.label  "Add...">
-<!ENTITY smtpListEdit.label "Edit...">
-<!ENTITY smtpListDelete.label "Delete">
-<!ENTITY smtpListSetDefault.label "Set Default">

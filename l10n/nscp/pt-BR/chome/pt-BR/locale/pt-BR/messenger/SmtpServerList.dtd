@@ -1,6 +1,0 @@
-<!ENTITY smtpListTitle.label "Definições Avançadas do Servidor de Saída (SMTP)">
-<!ENTITY smtpListDesc.label "Embora seja possível especificar mais de um servidor de saída (SMTP), isso é recomendado apenas para usuários avançados. A configuração de vários servidores SMTP pode causar erros no envio de mensagens.">
-<!ENTITY smtpListAdd.label  "Adicionar...">
-<!ENTITY smtpListEdit.label "Editar...">
-<!ENTITY smtpListDelete.label "Excluir">
-<!ENTITY smtpListSetDefault.label "Definir Padrão">

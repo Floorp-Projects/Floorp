@@ -1,8 +1,0 @@
-<!ENTITY winhooks.label                   "系统">
-
-<!ENTITY defaultBrowserGroup.label  "缺省浏览器">
-<!ENTITY defaultBrowserButton.label "设置缺省浏览器">
-<!ENTITY alreadyDefaultText         "&brandShortName; 已经是您的缺省浏览器。">
-<!ENTITY defaultPendingText         "当您单击“确定”按钮时，&brandShortName; 将被设置为您的缺省浏览器。">
-<!ENTITY makeDefaultText            "将 &brandShortName; 设置为您的缺省浏览器。">
-

@@ -1,9 +1,0 @@
-<!ENTITY tabHeader.label "Navigation par onglets">
-<!ENTITY tabDisplay.label "Affichage des onglets">
-<!ENTITY autoHide.label "Masque la barre d'onglets lorsqu'un seul onglet est ouvert">
-<!ENTITY background.label "Charger les liens en arrière-plan">
-<!ENTITY openTabs.label "Ouvrir des onglets plutôt que des fenêtres pour">
-<!ENTITY middleClick.label "Clic du bouton central ou Ctrl-clic des liens dans une page Web">
-<!ENTITY urlbarWinUnix.label "Ctrl+Entrée dans la barre d'adresse">
-<!ENTITY urlbarMac.label "Commande+Entrée dans la barre d'adresse">
-

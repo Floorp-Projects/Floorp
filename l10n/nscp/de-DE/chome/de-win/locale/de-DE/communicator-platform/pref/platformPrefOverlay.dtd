@@ -1,8 +1,0 @@
-<!ENTITY winhooks.label "System">
-
-<!ENTITY defaultBrowserGroup.label "Standard-Browser">
-<!ENTITY defaultBrowserButton.label "Standard-Browser einrichten">
-<!ENTITY alreadyDefaultText "&brandShortName; ist bereits Ihr Standard-Browser.">
-<!ENTITY defaultPendingText "&brandShortName; wird durch Klick auf OK zu Ihrem Standard-Browser.">
-<!ENTITY makeDefaultText "&brandShortName; zum Standard-Browser machen.">
-

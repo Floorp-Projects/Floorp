@@ -1,9 +1,0 @@
-<!-- address labels -->
-<!--LOCALIZATION NOTE addressingWidgetOverlay.dtd The basic mail/news composition headers as they are seen in UI -->
-<!ENTITY toAddr.label   "收件人:">
-<!ENTITY ccAddr.label   "抄送:">
-<!ENTITY bccAddr.label  "密件抄送:">
-<!ENTITY replyAddr.label   "回复地址:">
-<!ENTITY newsgroupsAddr.label   "新闻组:">
-<!ENTITY followupAddr.label   "跟踪地址:">
-

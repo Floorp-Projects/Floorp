@@ -1,8 +1,0 @@
-<!-- extracted from no_space.xul -->
-
-<!ENTITY buttonCancel.label "Cancel">
-<!ENTITY buttonRetry.label "Retry">
-<!ENTITY buttonCreateNew.label "Create New Profile">
-<!ENTITY noSpace.label "Not enough space to migrate.">
-<!ENTITY errorText1.label "There is not enough space to migrate your profile.">
-<!ENTITY errorText2.label "You can free some space and retry, create a new empty profile or cancel.">

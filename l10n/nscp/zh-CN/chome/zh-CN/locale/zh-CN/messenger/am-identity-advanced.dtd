@@ -1,5 +1,0 @@
-<!ENTITY identityAdvanced.label "高级帐户设置">
-<!-- LOCALIZATION NOTE (smtpDesc.label): DONT_TRANSLATE "SMTP" -->
-<!ENTITY smtpDesc.label "当通过该标识发送邮件时，总使用以下发送服务器（SMTP）:">
-<!ENTITY smtpName.label "服务器:">
-<!ENTITY smtpDefaultServer.label "总使用缺省服务器">

@@ -1,4 +1,0 @@
-<!ENTITY accountTitle.label "Paramètres du compte">
-<!ENTITY accountSettingsDesc.label "Les informations suivantes sont nécessaires avant que vous puissiez envoyer des messages.  Si vous ne connaissez pas les informations demandées, contactez votre administrateur système ou votre fournisseur de services Internet.">
-<!ENTITY accountName.label "Nom du compte :">
-<!ENTITY localPath.label "Répertoire local :">

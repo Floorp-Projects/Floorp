@@ -1,5 +1,0 @@
-<!-- LOCALIZATION NOTE (pnl1.p1.text): Don't translate "&brandShortName" -->
-<!ENTITY          pnl1.p1.text      "&brandShortName; 可将有关设置、个性设置、书签和邮件方面的信息存储在您的个人简要表中。">
-<!ENTITY          pnl1.p2.text      "如果与其它用户共享此 &brandShortName; 副本，则可使用简要表将每个用户的信息分开保存。为此，每个用户应创建自己的简要表。">
-<!ENTITY          pnl1.p3.text      "如果只有您一个人使用此 &brandShortName; 副本，则必须至少有一个简要表。如果您愿意，还可为自己创建多个简要表以存储不同的设置和个性设置。例如，您可为公司和您个人分别创建独立的简要表。">
-<!ENTITY          pnl1.p4.text      "若需开始创建您的简要表，请单击“下一步”。">

@@ -1,4 +1,0 @@
-<!ENTITY exitWarningMsg.label "Quick Launch está activo y &brandShortName; permanece en la memoria de modo que puede iniciarse rápidamente de nuevo. Para salir definitivamente, haga clic con el botón secundario en el icono de &brandShortName; en la bandeja del sistema y seleccione Salir &brandShortName;.">
-<!ENTITY exitWarningTitle.label "Quick Launch">
-<!ENTITY exitWarningCheckbox.label "No mostrar este mensaje otra vez">
-<!ENTITY exitWarningCheckbox.accesskey "D">

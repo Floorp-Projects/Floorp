@@ -1,8 +1,0 @@
-<!-- extracted from dialogOverlay.xul -->
-<!-- OK Cancel Buttons -->
-<!ENTITY header.label			"简短标题">
-<!ENTITY message.label		"这儿有一些示例文本。">
-<!ENTITY editfield0.label			"用户名:">
-<!ENTITY editfield1.label			"密码:">
-<!ENTITY editfield2.label			"确认密码:">
-<!ENTITY checkbox.label			"检查">

@@ -1,8 +1,0 @@
-<!ENTITY winhooks.label "System">
-
-<!ENTITY defaultBrowserGroup.label "Navegador predeterminado">
-<!ENTITY defaultBrowserButton.label "Establecer navegador predeterminado">
-<!ENTITY alreadyDefaultText "&brandShortName; ya es su navegador predeterminado.">
-<!ENTITY defaultPendingText "&brandShortName; se establecerá como su navegador predeterminado cuando haga clic en Aceptar.">
-<!ENTITY makeDefaultText "Establecer &brandShortName; como su navegador predeterminado.">
-

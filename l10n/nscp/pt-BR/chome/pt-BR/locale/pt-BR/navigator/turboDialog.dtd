@@ -1,4 +1,0 @@
-<!ENTITY            exitWarningMsg.label   "Como a Inicialização Rápida está ativa, o &brandShortName; permanece na memória e pode ser reiniciado rapidamente. Para sair completamente, clique com o botão direito do mouse no ícone &brandShortName; da bandeja de sistema e selecione Sair do &brandShortName;.">
-<!ENTITY            exitWarningTitle.label "Inicialização Rápida">
-<!ENTITY            exitWarningCheckbox.label "Não mostrar esta mensagem novamente">
-<!ENTITY            exitWarningCheckbox.accesskey "a">

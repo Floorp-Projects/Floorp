@@ -1,8 +1,0 @@
-<!-- Translated with MozillaTranslator -->
-<!ENTITY dialogCancel.label "Afbryd">
-<!ENTITY dialogMore.label "Mere Info...">
-<!ENTITY dialogPick.label "Åben med...">
-<!ENTITY dialogSave.label "Gem fil...">
-<!ENTITY helpText "Netscape kan ikke genkende denne fil. Du kan gemme den eller åbne den i et andet program.">
-<!ENTITY startDownload "Du er ved at downloade an fil af typen">
-<!ENTITY unknownWindow.title "Ukendt filtype">

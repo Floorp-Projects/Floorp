@@ -1,7 +1,0 @@
-<!-- extracted from aw-accname.xul -->
-
-<!ENTITY accnameTitle.label "アカウント名">
-<!-- LOCALIZATION NOTE (accnameDesc.label) : do not translate any "&quot;" in below line -->
-<!ENTITY accnameDesc.label "このアカウントに使用する名前を入力してください（例:&quot;ワーク アカウント&quot;、&quot;ホーム アカウント&quot;、&quot;ニュース アカウント&quot; など）">
-<!ENTITY accnameExample.label "（例:ワーク アカウント、ホーム アカウント、ニュース アカウントなど）">
-<!ENTITY accnameLabel.label "アカウント名:">

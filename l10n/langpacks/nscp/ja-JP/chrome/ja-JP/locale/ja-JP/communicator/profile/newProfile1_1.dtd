@@ -1,5 +1,0 @@
-<!-- LOCALIZATION NOTE (pnl1.p1.text): Don't translate "&brandShortName" -->
-<!ENTITY          pnl1.p1.text      "&brandShortName; は、ユーザ設定、設定、ブックマーク、メールについての情報をパーソナル プロファイルに保存します。">
-<!ENTITY          pnl1.p2.text      "他のユーザと、この &brandShortName; を共有する場合、プロファイルを使用してそれぞれの情報を別々に保存できます。そのためには、各ユーザが自分のプロファイルを作成する必要があります。">
-<!ENTITY          pnl1.p3.text      "この &brandShortName; を一人でお使いの場合でも、少なくとも 1 つはプロファイルを作成する必要があります。複数のプロファイルを作成し、それぞれ別々の設定を保存しておくこともできます。たとえば、仕事用と個人用にプロファイルを分けるような場合です。">
-<!ENTITY          pnl1.p4.text      "［次へ］をクリックすると、プロファイルの作成を開始します。">

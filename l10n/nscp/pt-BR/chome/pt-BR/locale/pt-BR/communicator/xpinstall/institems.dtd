@@ -1,5 +1,0 @@
-<!-- extracted from institems.xul -->
-
-<!ENTITY dialog.title "Instalação do Software">
-<!ENTITY warningText.label "O site da Web está pedindo permissão para instalar">
-<!ENTITY warningText2.label "Certos software mal-intencionados podem danificar seu computador ou violar sua privacidade. Instale apenas software de fonte confiáveis.">

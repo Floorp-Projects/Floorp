@@ -1,8 +1,0 @@
-
-<!--LOCALIZATION NOTE (editorCheck.label): DONT_TRANSLATE -->
-<!ENTITY editorCheck.label "Composer">
-<!ENTITY editorCheck.accesskey "s">
-
-<!ENTITY compose.label "Composer">
-<!ENTITY editing.label "Paramètres nouvelles pages">
-<!ENTITY publish.label "Publier">

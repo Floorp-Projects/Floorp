@@ -1,6 +1,0 @@
-<!ENTITY title "Delete Profile">
-<!ENTITY intro "Deleting a profile will remove the profile from the list of available profiles and cannot be undone. If you proceed with the deletion, you may also choose to have &brandShortName; delete your data files, including your saved mail, settings and certificates.">
-<!ENTITY question "Would you like to delete your files with your profile? (Choosing this option will delete all the files in your profile's folder.)">
-<!ENTITY delete.yes.label "Delete Files">
-<!ENTITY delete.no.label "Don't Delete Files">
-<!ENTITY cancel.label "Cancel">

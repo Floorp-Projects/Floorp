@@ -1,9 +1,0 @@
-
-<!ENTITY lHeader                        "言語パックとコンテンツ パック">
-<!ENTITY contentIntro.label             "新しいコンテンツ パックを選択すると、Sidebar と［検索］メニュー内の項目が変更されます。また、ホーム ページ、特定のブックマーク、およびその他の項目も変わります。 コンテンツ パックを切り替えても、カスタマイズしたブックマークや他の項目が失われることはありません。新しいコンテンツ パックを有効にするには、&brandShortName; を再起動する必要があります。">
-<!ENTITY languageIntro.label            "新しい言語パックを選択すると、ダイアログ ボックス、メニュー、ツールバー、およびボタンに表示されるテキストの言語が変わります。新しい言語パックを有効にするには、&brandShortName; を再起動する必要があります。">
-<!ENTITY installedContentPacks.label    "インストールされているコンテンツ パック:">
-<!ENTITY installedLanguagePacks.label   "インストールされている言語パック:">
-<!ENTITY downloadContentPacks.accesskey "d">
-<!ENTITY downloadContentPacks.label     "さらにダウンロード...">
-<!ENTITY update.label                   "（更新が必要）">

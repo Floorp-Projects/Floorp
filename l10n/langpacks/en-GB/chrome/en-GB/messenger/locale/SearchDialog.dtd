@@ -1,9 +1,0 @@
-<!-- extracted from SearchDialog.xul -->
-
-<!ENTITY searchHeading.label "Search for items in:">
-<!ENTITY searchSubfolders.label "Search subfolders">
-<!ENTITY searchButton.label "Search">
-<!ENTITY resetButton.label "Reset">
-<!ENTITY optionsButton.label "Options">
-<!ENTITY closeButton.label "Close">
-<!ENTITY searchDialogTitle.label "Search Messages">

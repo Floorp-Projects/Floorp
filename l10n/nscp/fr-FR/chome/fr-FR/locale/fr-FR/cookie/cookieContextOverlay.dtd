@@ -1,4 +1,0 @@
-<!ENTITY blockImageCmd.label "Bloquer les images venant de ce serveur">
-<!ENTITY blockImageCmd.accesskey "i">
-<!ENTITY unblockImageCmd.label "Débloquer les images venant de ce serveur">
-<!ENTITY unblockImageCmd.accesskey "u">

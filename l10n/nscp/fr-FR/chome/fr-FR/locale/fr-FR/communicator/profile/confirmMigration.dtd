@@ -1,7 +1,0 @@
-<!ENTITY window.title "Confirmer la Migration">
-
-<!-- LOCALIZATION NOTE (confirmMigrationPart1.label): Don't translate "&brandShortName" -->
-<!ENTITY confirmMigrationPart1.label "Vous êtes sur le point de créer un profil &brandShortName; basé sur votre profil d'une version précédente de Netscape.">
-<!ENTITY confirmMigrationPart2.label "Cette opération va copier et convertir certains de vos fichiers de profil créés par une version précédente de Netscape pour qu'ils fonctionnent avec &brandShortName;. Votre profil Netscape d'origine ne sera pas altéré.">
-<!ENTITY confirmMigrationPart3.label "Cliquez sur OK si vous voulez poursuivre la migration automatique.">
-<!ENTITY confirmMigrationPart4.label "(Si vous cliquez sur Annuler, vous pourrez toujours le faire plus tard.)">

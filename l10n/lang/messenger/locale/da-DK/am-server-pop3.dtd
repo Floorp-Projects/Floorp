@@ -1,7 +1,0 @@
-<!-- Translated with MozillaTranslator -->
-<!ENTITY deleteOnServer.label "Slet beskeder på serveren når de slettes lokalt.">
-<!ENTITY emptyTrashOnExit.label "Tøm Trash når programmet afsluttes">
-<!ENTITY hostname.label "Serverens navn">
-<!ENTITY leaveOnServer.label "Lad beskederne ligge på serveren.">
-<!ENTITY popServerTitle.label "POP server information">
-<!ENTITY username.label "Dit brugernavn:">

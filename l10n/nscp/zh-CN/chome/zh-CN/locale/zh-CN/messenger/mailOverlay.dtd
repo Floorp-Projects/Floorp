@@ -1,8 +1,0 @@
-
-<!ENTITY  newMessageCmd.key               "M">
-<!ENTITY  newMessageCmd.label             "邮件">
-<!ENTITY  newMessageCmd.accesskey         "M">
-
-<!ENTITY  newCardCmd.label                "通讯录卡...">
-<!ENTITY  newCardCmd.accesskey            "C">
-

@@ -1,7 +1,0 @@
-<!-- extracted from aw-accname.xul -->
-
-<!ENTITY accnameTitle.label "帐户名称">
-<!-- LOCALIZATION NOTE (accnameDesc.label) : do not translate any "&quot;" in below line -->
-<!ENTITY accnameDesc.label "输入访问此帐户时使用的名称（例如，“工作帐户”、“家庭帐户”或“新闻帐户”）。">
-<!ENTITY accnameExample.label "例如，工作帐户、家庭帐户或新闻帐户">
-<!ENTITY accnameLabel.label "帐户名称:">

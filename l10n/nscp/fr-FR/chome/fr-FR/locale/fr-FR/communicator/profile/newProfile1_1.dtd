@@ -1,5 +1,0 @@
-<!-- LOCALIZATION NOTE (pnl1.p1.text): Don't translate "&brandShortName" -->
-<!ENTITY pnl1.p1.text "Netscape mémorise des informations sur vos réglages, préférences, signets et messages stockés dans votre profil personnel.">
-<!ENTITY pnl1.p2.text "Si vous partagez cette copie de Netscape avec d'autres utilisateurs, vous pouvez utiliser des profils pour conserver séparément les informations sur chaque utilisateur. Pour ce faire, chaque utilisateur doit créer son propre profil et le protéger éventuellement par mot de passe.">
-<!ENTITY pnl1.p3.text "Si vous êtes le seul à utiliser cette copie de Netscape, vous devez avoir au moins un profil. Si vous le voulez, vous pouvez créer plusieurs profils pour vous-même afin de mémoriser différents ensembles de réglages et préférences. Par exemple, vous pourriez vouloir des profils séparés à usage professionnel et personnel.">
-<!ENTITY pnl1.p4.text "Pour commencer à créer votre profil, cliquez sur Suivant.">

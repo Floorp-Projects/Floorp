@@ -1,6 +1,0 @@
-<!ENTITY smtpListTitle.label "发送服务器（SMTP）高级设置">
-<!ENTITY smtpListDesc.label "尽管您可以指定多个发送服务器（SMTP），但这只建议高级用户使用。设置多个 SMTP 服务器可能会在发送邮件时引发错误。">
-<!ENTITY smtpListAdd.label  "添加...">
-<!ENTITY smtpListEdit.label "编辑...">
-<!ENTITY smtpListDelete.label "删除">
-<!ENTITY smtpListSetDefault.label "设置缺省值">

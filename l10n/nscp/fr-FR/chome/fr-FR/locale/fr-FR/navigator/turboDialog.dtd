@@ -1,4 +1,0 @@
-<!ENTITY exitWarningMsg.label "Quick Launch étant actif, &brandShortName; reste en mémoire et peut être redémarré rapidement. Pour quitter complètement, cliquez avec le bouton droit sur l'icône &brandShortName; dans la barre des tâches et sélectionnez Quitter &brandShortName;.">
-<!ENTITY exitWarningTitle.label "Quick Launch">
-<!ENTITY exitWarningCheckbox.label "Ne plus afficher ce message.">
-<!ENTITY exitWarningCheckbox.accesskey "e">

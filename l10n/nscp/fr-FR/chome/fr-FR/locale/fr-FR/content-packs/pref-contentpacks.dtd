@@ -1,9 +1,0 @@
-
-<!ENTITY lHeader "Modules de langue et de contenu">
-<!ENTITY contentIntro.label "La sélection d'un nouveau module de contenu change les éléments de la barre latérale et du menu de recherche, ainsi que la page d'accueil, certains signets et d'autres éléments. En revanche, vous ne perdrez pas vos signets ni les autres éléments que vous avez personnalisés. Vous devez redémarrer &brandShortName; pour qu'un nouveau module de contenu soit effectif.">
-<!ENTITY languageIntro.label "La sélection d'un nouveau module de langue change la langue du texte qui apparaît dans les boîtes de dialogue, menus, barres d'outils et boutons. Vous devez redémarrer &brandShortName; pour qu'un nouveau module de langue soit effectif.">
-<!ENTITY installedContentPacks.label "Modules de contenu installés :">
-<!ENTITY installedLanguagePacks.label "Modules de langue installés :">
-<!ENTITY downloadContentPacks.accesskey "s">
-<!ENTITY downloadContentPacks.label "Télécharger plus...">
-<!ENTITY update.label "(nécessite une mise à jour)">

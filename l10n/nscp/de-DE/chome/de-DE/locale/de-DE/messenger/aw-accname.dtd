@@ -1,7 +1,0 @@
-<!-- extracted from aw-accname.xul -->
-
-<!ENTITY accnameTitle.label "Konto-Name">
-<!-- LOCALIZATION NOTE (accnameDesc.label) : do not translate any "&quot;" in below line -->
-<!ENTITY accnameDesc.label "Geben Sie den Namen ein, mit dem Sie auf dieses Konto verweisen möchten (z.B. &quot;Geschäftskonto&quot;, &quot;Privatkonto&quot; oder &quot;Foren-Konto&quot;).">
-<!ENTITY accnameExample.label "Zum Beispiel: Geschäftskonto, Home-Konto oder Neuigkeitenkonto">
-<!ENTITY accnameLabel.label "Konto-Name:">

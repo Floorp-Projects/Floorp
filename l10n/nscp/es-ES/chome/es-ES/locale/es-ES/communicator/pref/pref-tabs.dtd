@@ -1,9 +1,0 @@
-<!ENTITY tabHeader.label "Exploración con tabulaciones">
-<!ENTITY tabDisplay.label "Presentación de tabulaciones">
-<!ENTITY autoHide.label "Ocultar la barra de tabulaciones si sólo hay una abierta">
-<!ENTITY background.label "Cargar enlaces en el fondo">
-<!ENTITY openTabs.label "Abrir tabulaciones en vez de ventanas para">
-<!ENTITY middleClick.label "Hacer clic con el botón central o control clic en los enlaces de la página web">
-<!ENTITY urlbarWinUnix.label "Control+Intro en la barra de ubicación">
-<!ENTITY urlbarMac.label "Comando+Intro en la barra de ubicación">
-

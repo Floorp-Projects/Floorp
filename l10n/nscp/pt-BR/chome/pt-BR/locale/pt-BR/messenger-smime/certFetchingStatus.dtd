@@ -1,5 +1,0 @@
-<!--LOCALIZATION NOTE shown while obtaining certificates from a directory -->
-
-<!ENTITY title.label "Fazendo Download de Certificados">
-<!ENTITY info.message "Buscando os certificados dos destinatários no diretório. Isso pode levar alguns minutos.">
-<!ENTITY stop.label "Parar Busca">

@@ -1,6 +1,0 @@
-
-<!-- LOCALIZATION NOTE (messengerCmd.label): DONT_TRANSLATE -->
-<!ENTITY messengerCmd.label					"&vendorShortName; Mail">
-
-<!ENTITY taskMessenger.tooltip  "&brandShortName; Mail">
-

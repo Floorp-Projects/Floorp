@@ -1,6 +1,0 @@
-<!ENTITY dialogCancel.label "取消">
-<!-- LOCALIZATION NOTE (window.title) : 'Migrating' refers to converting settings to Mozilla format. -->
-<!ENTITY window.title "正在转换...">
-<!ENTITY dialogTitle.label "正在转换用户简要表">
-<!ENTITY currentlyProcessing.text "这可能需要一些时间。">
-<!ENTITY downloadBeforeUpdate.text "">

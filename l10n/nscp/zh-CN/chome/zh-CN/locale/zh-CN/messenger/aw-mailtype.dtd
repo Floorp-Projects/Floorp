@@ -1,8 +1,0 @@
-<!-- extracted from aw-mailtype.xul -->
-
-<!-- LOCALIZATION NOTE (mailTypeTitle.label) : Do not translate "WebMail" in below line. -->
-<!ENTITY mailTypeTitle.label "网际邮件或其它邮件:">
-<!-- LOCALIZATION NOTE (mailTypeDesc.label) : Do not translate "WebMail" in below line. -->
-<!ENTITY mailTypeDesc.label "选择一个免费的“网际邮件”帐户或其它邮件帐户，例如您的 ISP 或公司邮件帐户。">
-<!ENTITY mailTypeOtherMail.label "其它邮件">
-

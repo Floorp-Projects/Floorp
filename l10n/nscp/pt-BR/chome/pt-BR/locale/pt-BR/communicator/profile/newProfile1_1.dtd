@@ -1,5 +1,0 @@
-<!-- LOCALIZATION NOTE (pnl1.p1.text): Don't translate "&brandShortName" -->
-<!ENTITY          pnl1.p1.text      "&brandShortName; armazena informações sobre suas definições, preferências, marcadores e correio no seu perfil pessoal.">
-<!ENTITY          pnl1.p2.text      "Se estiver compartilhando esta cópia de &brandShortName; com outros usuários, os perfis podem ser utilizados para manter as informações de cada usuário separadas. Para fazer isto, cada usuário deve criar seu próprio perfil.">
-<!ENTITY          pnl1.p3.text      "Se você for a única pessoa a utilizar esta cópia de &brandShortName;, é necessário ter no mínimo um perfil. Se desejar, poderão ser criados vários perfis para si mesmo para armazenar diferentes conjuntos de definições e preferências. Por exemplo, você pode ter perfis diferentes para negócios e para uso pessoal.">
-<!ENTITY          pnl1.p4.text      "Para começar a criar seu perfil, clique em 'Avançar'.">

@@ -1,7 +1,0 @@
-<!-- extracted from aw-email.xul -->
-
-<!ENTITY emailTitle.label "Dirección personal de correo electrónico:">
-<!ENTITY emailDesc.label "Introduzca su dirección de correo electrónico; esta es la dirección que utilizarán otras personas para enviarle correo">
-<!-- LOCALIZATION NOTE (emailExample.label) : do not translate "user@example.net" in below line -->
-<!ENTITY emailExample.label "(por ejemplo: usuario@ejemplo.net).">
-

@@ -1,7 +1,0 @@
-<!ENTITY window.title "移行を確認する">
-
-<!-- LOCALIZATION NOTE (confirmMigrationPart1.label): Don't translate "&brandShortName" -->
-<!ENTITY confirmMigrationPart1.label "前バージョンの Netscape プロファイルに基づいて、&brandShortName; プロファイルを作成しようとしています。">
-<!ENTITY confirmMigrationPart2.label "この操作は、前バージョンの Netscape で作成されたプロファイル ファイルをコピーし、&brandShortName; で使用できるように変換します。元の Netscape プロファイルが変更されることはありません。">
-<!ENTITY confirmMigrationPart3.label "この変換を続行する場合、［OK］をクリックします。">
-<!ENTITY confirmMigrationPart4.label "（キャンセルをクリックした場合でも、後で移行を行うことができます。）">

@@ -1,7 +1,0 @@
-<!ENTITY title "Excluir Perfil">
-<!ENTITY intro "A exclusão de um perfil irá removê-lo da lista de perfis disponíveis; a ação não poderá ser desfeita.
-Caso prossiga com a exclusão, também é possível solicitar que o &brandShortName; exclua seus arquivos de dados, incluindo correio, definições e certificados salvos.">
-<!ENTITY question "Gostaria de excluir seus arquivos com seu perfil? (A escolha dessa opção irá excluir todos os arquivos da pasta de seu perfil.)">
-<!ENTITY delete.yes.label "Excluir Arquivos">
-<!ENTITY delete.no.label "Não Excluir Arquivos">
-<!ENTITY cancel.label "Cancelar">

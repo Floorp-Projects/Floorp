@@ -1,9 +1,0 @@
-<!-- Translated with MozillaTranslator -->
-<!ENTITY emailDesc.label "Indtast din emailadresse; det er den adresse andre vil bruge for at skrive til dig.">
-<!ENTITY emailExample.label "For eksempel, test@netscape.net">
-<!ENTITY emailLabel.label "Emailadresse:">
-<!ENTITY fullnameDesc.label "Indtast dit navn som du vil have det skal tage sig i i From feltet på beskeder du sender.">
-<!ENTITY fullnameExample.label "For eksempel, John Smith">
-<!ENTITY fullnameLabel.label "Dit navn:">
-<!ENTITY identityDesc.label "Hver konto kan have sin egen identitet, som er den information andre ser når de læser dine beskeder.">
-<!ENTITY identityTitle.label "Identitet">

@@ -1,5 +1,0 @@
-<!-- extracted from institems.xul -->
-
-<!ENTITY dialog.title "软件安装">
-<!ENTITY warningText.label "有一个网站正在请求安装">
-<!ENTITY warningText2.label "恶意软件威胁您的计算机或侵犯您的隐私。应该只安装来自您信任站点的软件。">

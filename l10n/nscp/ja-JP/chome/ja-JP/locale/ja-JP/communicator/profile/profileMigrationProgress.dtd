@@ -1,6 +1,0 @@
-<!ENTITY dialogCancel.label "キャンセル">
-<!-- LOCALIZATION NOTE (window.title) : 'Migrating' refers to converting settings to Mozilla format. -->
-<!ENTITY window.title "変換中...">
-<!ENTITY dialogTitle.label "ユーザ プロファイルを変換中です。">
-<!ENTITY currentlyProcessing.text "しばらく時間がかかることがあります。">
-<!ENTITY downloadBeforeUpdate.text "">

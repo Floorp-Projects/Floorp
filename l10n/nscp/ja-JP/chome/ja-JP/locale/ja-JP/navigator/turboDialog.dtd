@@ -1,4 +1,0 @@
-<!ENTITY            exitWarningMsg.label   "簡易起動がアクティブになっています。そのため、&brandShortName; はメモリ内に残り、次回すばやく起動することができます。 完全に終了するには、システム トレイの &brandShortName; アイコンを右クリックし、［&brandShortName; を終了］を選択します。">
-<!ENTITY            exitWarningTitle.label "簡易起動 ">
-<!ENTITY            exitWarningCheckbox.label "今後このメッセージを表示しない ">
-<!ENTITY            exitWarningCheckbox.accesskey "D">

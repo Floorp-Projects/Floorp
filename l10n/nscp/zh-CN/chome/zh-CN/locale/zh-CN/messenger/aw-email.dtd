@@ -1,7 +1,0 @@
-<!-- extracted from aw-email.xul -->
-
-<!ENTITY emailTitle.label "您的电子邮件地址:">
-<!ENTITY emailDesc.label "输入您的电子邮件地址；这是其他人给您发送邮件时使用的地址">
-<!-- LOCALIZATION NOTE (emailExample.label) : do not translate "user@example.net" in below line -->
-<!ENTITY emailExample.label "（例如:user@example.net）。">
-

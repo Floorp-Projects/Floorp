@@ -1,6 +1,0 @@
-<!ENTITY title "Supprimer un profil">
-<!ENTITY intro "La suppression d'un profil éliminera le profil de la liste des profils disponibles ; cette opération ne peut pas être annulée. Si vous confirmez la suppression, vous pouvez aussi choisir de demander à &brandShortName; de supprimer vos fichiers de données, y compris le courrier enregistré, vos paramètres et vos certificats.">
-<!ENTITY question "Voulez-vous supprimer les fichiers de votre profil ? (Cette option supprimera tous les fichiers de votre dossier de profils.)">
-<!ENTITY delete.yes.label "Supprimer les fichiers">
-<!ENTITY delete.no.label "Ne pas supprimer les fichiers">
-<!ENTITY cancel.label "Annuler">

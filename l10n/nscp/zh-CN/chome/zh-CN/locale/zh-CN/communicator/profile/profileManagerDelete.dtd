@@ -1,6 +1,0 @@
-<!ENTITY title "删除简要表">
-<!ENTITY intro "删除简要表将从可用简要表列表中移除此简要表并且不可撤销。如果继续进行删除，还可以选择让 &brandShortName; 删除数据文件，包括已保存的邮件、设置和证书。">
-<!ENTITY question "您希望在删除简要表时一起删除其它文件吗?（选择此选项将删除简要表文件夹中的所有文件。）">
-<!ENTITY delete.yes.label "删除文件">
-<!ENTITY delete.no.label "不要删除文件">
-<!ENTITY cancel.label "取消">

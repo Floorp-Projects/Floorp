@@ -1,8 +1,0 @@
-<!-- extracted from dialogOverlay.xul -->
-<!-- OK Cancel Buttons -->
-<!ENTITY header.label			"簡略タイトル">
-<!ENTITY message.label		"サンプル テキストのいくつかは、ここに含まれます。">
-<!ENTITY editfield0.label			"ユーザ名:">
-<!ENTITY editfield1.label			"パスワード:">
-<!ENTITY editfield2.label			"パスワードを確認:">
-<!ENTITY checkbox.label			"確認">

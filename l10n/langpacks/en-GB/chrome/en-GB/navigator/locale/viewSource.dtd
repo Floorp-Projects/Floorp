@@ -1,9 +1,0 @@
-<!-- extracted from content/viewSource.xul -->
-
-<!-- LOCALIZATION NOTE (mainWindow.title) : DONT_TRANSLATE --> 
-<!ENTITY mainWindow.title "Mozilla"> 
-<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE --> 
-<!ENTITY mainWindow.titlemodifier "Mozilla"> 
-<!-- LOCALIZATION NOTE (mainWindow.titlemodifierseparator) : DONT_TRANSLATE -->
-<!ENTITY mainWindow.titlemodifierseparator " - ">
-<!ENTITY mainWindow.preface "Source of: ">

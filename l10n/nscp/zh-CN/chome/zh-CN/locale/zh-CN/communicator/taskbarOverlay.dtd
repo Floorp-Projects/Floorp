@@ -1,5 +1,0 @@
-<!-- taskbar -->
-<!-- taskbar popups have moved to taskbar.rdf -->
-
-<!ENTITY  openWinButton.label "打开窗口">
-<!ENTITY taskWindowList.tooltip "已打开的窗口列表">

@@ -1,9 +1,0 @@
-
-<!ENTITY lHeader                        "Pacotes de Idioma e Conteúdo">
-<!ENTITY contentIntro.label             "A seleção de um novo pacote de conteúdo altera itens da Minha Barra Lateral e do menu Buscar e, além disso, altera a página inicial, certos marcadores e outros itens. Você não perderá marcadores e outros itens que tenha personalizado ao mudar de pacote de conteúdo. É preciso reiniciar o &brandShortName; para que o novo pacote de conteúdo tenha efeito.">
-<!ENTITY languageIntro.label            "A seleção de um novo pacote de idioma altera o idioma do texto que aparece nas caixas de diálogo, nos menus, nas barras de ferramentas e nos rótulos de botões. É preciso reiniciar o &brandShortName; para que o novo pacote de idioma tenha efeito.">
-<!ENTITY installedContentPacks.label    "Pacotes de conteúdo instalados:">
-<!ENTITY installedLanguagePacks.label   "Pacotes de idioma instalados:">
-<!ENTITY downloadContentPacks.accesskey "d">
-<!ENTITY downloadContentPacks.label     "Download de mais pacotes de conteúdo...">
-<!ENTITY update.label                   "(necessita atualização)">

@@ -1,5 +1,0 @@
-<!ENTITY identityAdvanced.label "Valores de cuentas avanzados">
-<!-- LOCALIZATION NOTE (smtpDesc.label): DONT_TRANSLATE "SMTP" -->
-<!ENTITY smtpDesc.label "Al enviar mensajes desde esta identidad, utilizar siempre el siguiente servidor de salida (SMTP):">
-<!ENTITY smtpName.label "Servidor:">
-<!ENTITY smtpDefaultServer.label "Usar siempre el servidor predeterminado">

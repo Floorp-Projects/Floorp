@@ -1,5 +1,0 @@
-<!-- extracted from institems.xul -->
-
-<!ENTITY dialog.title "ソフトウェアのインストール">
-<!ENTITY warningText.label "Web サイトは次のソフトウェアをインストールするための許可を要求しています:">
-<!ENTITY warningText2.label "不当なソフトウェアは、お使いのコンピュータに損傷を与えたり、プライバシーを侵害したりする可能性があります。信頼できるソースからのソフトウェアだけをインストールするようお勧めします。">

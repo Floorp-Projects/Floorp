@@ -1,9 +1,0 @@
-<!-- Translated with MozillaTranslator -->
-<!ENTITY  LangHeader "Sprog">
-<!ENTITY  prefLangDecript "Vælg i en prioteret orden hvilke sprog du helst vil læse websider på. Websider
-  er nogle gange tilgængelige på forskellige sprog. Navigator vil presentere siderne
-  i det tilgængelige sprog du foretrækker.">
-<!ENTITY  window.title "Sprog">
-<!ENTITY addButton.label "Tilføj...">
-<!ENTITY deleteButton.label "Slet...">
-<!ENTITY engOption.label "Engelsk">

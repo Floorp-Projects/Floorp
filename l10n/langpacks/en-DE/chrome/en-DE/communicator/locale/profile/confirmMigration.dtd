@@ -1,5 +1,0 @@
-<!ENTITY window.title "Confirm Migration">
-<!ENTITY confirmMigrationPart1.label "You are about to create a &brandShortName; profile based on your Netscape 4 profile.">
-<!ENTITY confirmMigrationPart2.label "This will copy and convert some of your Netscape 4 files to work with &brandShortName;. Your Netscape 4 profile data will not be modified.">
-<!ENTITY confirmMigrationPart3.label "Click OK if you want to proceed with this conversion."> 
-<!ENTITY confirmMigrationPart4.label "(If you click Cancel, you can always do it later.)">

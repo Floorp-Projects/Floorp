@@ -1,9 +1,0 @@
-<!-- extracted from SearchOptions.xul -->
-
-<!ENTITY searchOptionsTitle.label "Search Options">
-<!ENTITY searchSubfoldersCheckbox.label "Search Subfolders">
-<!ENTITY localRemoteTitle.label "When online, search for messages:">
-<!ENTITY localSearchRadio.label "on your local system">
-<!ENTITY removeSearchRadio.label "on the specified serer">
-<!ENTITY ok.label "OK">
-<!ENTITY cancel.label "Cancel">

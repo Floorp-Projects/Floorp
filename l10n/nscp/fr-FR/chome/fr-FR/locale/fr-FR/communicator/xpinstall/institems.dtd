@@ -1,5 +1,0 @@
-<!-- extracted from institems.xul -->
-
-<!ENTITY dialog.title "Installation du logiciel">
-<!ENTITY warningText.label "Un site Web demande l'autorisation d'installer">
-<!ENTITY warningText2.label "Un logiciel malveillant peut endommager votre ordinateur ou violer votre confidentialité. N'installez des logiciels que de sources fiables.">

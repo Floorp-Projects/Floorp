@@ -1,9 +1,0 @@
-<!ENTITY more.label         "増やす">
-<!ENTITY more.accesskey     "M">
-<!ENTITY less.label         "減らす">
-<!ENTITY less.accesskey     "F">
-<!ENTITY matchAll.label     "以下の条件のすべてに一致">
-<!ENTITY matchAll.accesskey "a">
-<!ENTITY matchAny.label     "以下の条件のいずれかに一致">
-<!ENTITY matchAny.accesskey "o">
-

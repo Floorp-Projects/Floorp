@@ -1,8 +1,0 @@
-<!-- extracted from no_space.xul -->
-
-<!ENTITY buttonCancel.label "Abbrechen">
-<!ENTITY buttonRetry.label "Erneut versuchen">
-<!ENTITY buttonCreateNew.label "Neues Profil erstellen">
-<!ENTITY noSpace.label "Zuwenig Speicher für Konvertierung.">
-<!ENTITY errorText1.label "Zuwenig Speicher für die Konvertierung Ihres Profils.">
-<!ENTITY errorText2.label "Sie können Speicher freigeben und es erneut versuchen, ein neues leeres Profil erstellen oder abbrechen.">

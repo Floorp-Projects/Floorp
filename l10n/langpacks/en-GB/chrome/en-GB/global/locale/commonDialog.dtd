@@ -1,8 +1,0 @@
-<!-- extracted from dialogOverlay.xul -->
-<!-- OK Cancel Buttons -->
-<!ENTITY header.label			"Brief Title"> 
-<!ENTITY message.label		"Some sample Text goes here.">
-<!ENTITY editfield0.label			"User Name:"> 
-<!ENTITY editfield1.label			"Password:"> 
-<!ENTITY editfield2.label			"Confirm Password:"> 
-<!ENTITY checkbox.label			"check"> 

@@ -1,9 +1,0 @@
-<!-- Translated with MozillaTranslator -->
-<!ENTITY advancedSettings.label "Advancerde Indstillinger">
-<!ENTITY chooseFolderButton.label "Vælg mappe">
-<!ENTITY mailFolderLoc.label "Placering af post-mapper">
-<!ENTITY smtpDesc.label "Nogle email kontoer behøver en særskilt postserver til udgående post.">
-<!ENTITY smtpHostname.label "SMTP server navn">
-<!ENTITY smtpServer.label "SMTP server">
-<!ENTITY smtpUsername.label "SMTP server login">
-<!ENTITY storeMailHere.label "Gem post i denne mappe">
