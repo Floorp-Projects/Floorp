@@ -3432,6 +3432,9 @@ nsGfxListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     //uiEvent->GetCharCode(&code);
     //REFLOW_DEBUG_MSG3("%c %d   ", code, code);
     keyEvent->GetKeyCode(&code);
+    if (code == 0) {
+      keyEvent->GetCharCode(&code);
+    }
 #ifdef DO_REFLOW_DEBUG
     if (code >= 32) {
       REFLOW_DEBUG_MSG3("KeyCode: %c %d\n", code, code);
