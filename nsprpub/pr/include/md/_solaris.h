@@ -41,7 +41,13 @@
 
 #define PR_LINKER_ARCH	"solaris"
 #define _PR_SI_SYSNAME	"SOLARIS"
+#ifdef sparc
 #define _PR_SI_ARCHITECTURE	"sparc"
+#elif defined(i386)
+#define _PR_SI_ARCHITECTURE	"x86"
+#else
+#error unknown processor
+#endif
 #define PR_DLL_SUFFIX		".so"
 
 #define _PR_VMBASE		0x30000000
