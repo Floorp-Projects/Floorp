@@ -250,7 +250,9 @@ PR_IMPLEMENT(void) PR_GetEndFinalizeHook(GCEndFinalizeHook **hook, void **arg)
 #ifdef DEBUG
 #include "prprf.h"
 
+#if defined(WIN16)
 static FILE *tracefile = 0;
+#endif
 
 PR_IMPLEMENT(void) GCTrace(char *fmt, ...)
 {	
