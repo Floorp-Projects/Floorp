@@ -21,9 +21,9 @@
 #include "nscoord.h"
 #include "nsSpaceManager.h"
 
-class MySpaceManager: public SpaceManager {
+class MySpaceManager: public nsSpaceManager {
 public:
-  MySpaceManager(nsIFrame* aFrame) : SpaceManager(aFrame) {}
+  MySpaceManager(nsIFrame* aFrame) : nsSpaceManager(aFrame) {}
 
   PRBool  TestAddBand();
   PRBool  TestAddBandOverlap();
