@@ -36,6 +36,7 @@
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgIdentity.h"
+#include "nsMsgComposeStringBundle.h"
 
 typedef struct _findServerByKeyEntry {
     const char *key;
@@ -115,6 +116,8 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
         else
           NS_IF_RELEASE(urlToRun);
       }
+      else
+        rv = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
 		}
 	} // if we had a mail session
 
