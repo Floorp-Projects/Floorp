@@ -440,23 +440,26 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
 				// top of thread, change the keys array.
                 nsMsgViewIndex insertIndex = GetInsertIndex(msgHdr);
                 PRInt32 level = FindLevelInThread(msgHdr, insertIndex);
-				if ((flags & MSG_FLAG_ELIDED) && (level == 0)
+				if ((flags & MSG_FLAG_ELIDED)
 					&& (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) || !(msgFlags & MSG_FLAG_READ)))
 				{
-          nsMsgKey msgKey;
-          msgHdr->GetMessageKey(&msgKey);
-					m_keys.SetAt(threadIndex, msgKey);
+                    if (level == 0) {
+                      nsMsgKey msgKey;
+                      msgHdr->GetMessageKey(&msgKey);
+				   	  m_keys.SetAt(threadIndex, msgKey);
+                    }
+                    // note change, to update the parent thread's unread and total counts
 					NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
 				}
-				if (! (flags & MSG_VIEW_FLAG_HASCHILDREN))
+				if (!(flags & MSG_VIEW_FLAG_HASCHILDREN))
 				{
 					flags |= MSG_VIEW_FLAG_HASCHILDREN | MSG_VIEW_FLAG_ISTHREAD;
-          if (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly))
+                    if (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly))
 						flags |= MSG_FLAG_ELIDED;
 					m_flags[threadIndex] = flags;
 					NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
 				}
-				if (! (flags & MSG_FLAG_ELIDED))	// thread is expanded
+				if (!(flags & MSG_FLAG_ELIDED))	// thread is expanded
 				{								// insert child into thread
 					                            // levels of other hdrs may have changed!
 					PRUint32	newFlags = msgFlags;
