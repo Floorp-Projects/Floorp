@@ -36,10 +36,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
 #include "nsXMLTokenizer.h"
-
-#ifdef  EXPAT
 #include "nsExpatTokenizer.h"
-#endif
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -50,7 +47,7 @@
 #include <direct.h> //this is here for debug reasons...
 #endif
 #include "prmem.h"
-
+#include "nsSpecialSystemDirectory.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
@@ -330,20 +327,31 @@ nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
 nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
   if(!mTokenizer) {
     PRBool  theExpatState=PR_FALSE;
-
-#ifdef EXPAT
+#ifndef XP_MAC
     char* theEnvString = PR_GetEnv("EXPAT");
     if(theEnvString){
       if(('1'==theEnvString[0]) || ('Y'==toupper(theEnvString[0]))) {
         theExpatState=PR_TRUE;  //this indicates that the EXPAT flag was found in the environment.
       }
     }
-    if(theExpatState)
-      mTokenizer=(nsHTMLTokenizer*)new nsExpatTokenizer();
-    else mTokenizer=(nsHTMLTokenizer*)new nsXMLTokenizer();
 #else
-    mTokenizer=(nsHTMLTokenizer*)new nsXMLTokenizer();
+	// Check for the existence of a file called EXPAT in the current directory
+	nsSpecialSystemDirectory expatFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+	expatFile += "EXPAT";
+	theExpatState = expatFile.Exists();
 #endif
+    if(theExpatState) {
+      mTokenizer=(nsHTMLTokenizer*)new nsExpatTokenizer();
+#ifdef DEBUG
+	  printf("Using Expat for parsing XML...\n");
+#endif
+    }      
+    else {
+      mTokenizer=(nsHTMLTokenizer*)new nsXMLTokenizer();
+#ifdef DEBUG
+	  printf("Using internal parser for parsing XML...\n");
+#endif
+    }
   }
   return mTokenizer;
 }
