@@ -71,10 +71,6 @@ public:
                          nsIFrame** aFrame,
                          nsIContent** aContent,
                          PRInt32& aCursor);
-  NS_IMETHOD ContentChanged(nsIPresShell*   aShell,
-                            nsIPresContext* aPresContext,
-                            nsIContent*     aChild,
-                            nsISupports*    aSubContent);
   NS_IMETHOD AttributeChanged(nsIPresShell* aShell,
                               nsIPresContext* aPresContext,
                               nsIContent* aChild,
@@ -898,29 +894,36 @@ ImageFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-ImageFrame::ContentChanged(nsIPresShell*   aShell,
-                           nsIPresContext* aPresContext,
-                           nsIContent*     aChild,
-                           nsISupports*    aSubContent)
+ImageFrame::AttributeChanged(nsIPresShell* aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent* aChild,
+                             nsIAtom* aAttribute)
 {
-  // See if the src attribute changed; if it did then trigger a redraw
-  // by firing up a new image load request. Otherwise let our base
-  // class handle the content-changed request.
-  nsAutoString oldSRC;
-  mImageLoader.GetURL(oldSRC);
+  nsresult rv = nsLeafFrame::AttributeChanged(aShell, aPresContext, aChild,
+                                              aAttribute);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  if ((nsHTMLAtoms::width == aAttribute) ||
+      (nsHTMLAtoms::height == aAttribute)) {
+    nsHTMLContainerFrame::ApplyStyleChangeToTree(*aPresContext, this);
+    nsHTMLContainerFrame::StyleChangeReflow(*aPresContext, this);
+  }
+  else if (nsHTMLAtoms::src == aAttribute) {
+    nsAutoString oldSRC;
+    mImageLoader.GetURL(oldSRC);
+    nsAutoString newSRC;
 
-  // Get src attribute's value and construct a new absolute url from it
-  nsAutoString newSRC;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", newSRC)) {
+    aChild->GetAttribute("src", newSRC);
     if (!oldSRC.Equals(newSRC)) {
       mSizeFrozen = PR_TRUE;
-
+      
 #ifdef NS_DEBUG
       char oldcbuf[100], newcbuf[100];
       oldSRC.ToCString(oldcbuf, sizeof(oldcbuf));
       newSRC.ToCString(newcbuf, sizeof(newcbuf));
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-         ("ImageFrame::ContentChanged: new image source; old='%s' new='%s'",
+         ("ImageFrame::AttributeChanged: new image source; old='%s' new='%s'",
           oldcbuf, newcbuf));
 #endif
 
@@ -934,8 +937,8 @@ ImageFrame::ContentChanged(nsIPresShell*   aShell,
                                   PR_FALSE, loadStatus);
 
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-         ("ImageFrame::ContentChanged: loadImage status=%x",
-          loadStatus));
+                     ("ImageFrame::AttributeChanged: loadImage status=%x",
+                      loadStatus));
 
       // If the image is already ready then we need to trigger a
       // redraw because the image loader won't.
@@ -954,30 +957,8 @@ ImageFrame::ContentChanged(nsIPresShell*   aShell,
         vm->UpdateView(view, bounds, 0);
         NS_RELEASE(vm);
       }
-
-      return NS_OK;
     }
   }
 
-  return ImageFrameSuper::ContentChanged(aShell, aPresContext, aChild,
-                                         aSubContent);
-}
-
-NS_IMETHODIMP
-ImageFrame::AttributeChanged(nsIPresShell* aShell,
-                             nsIPresContext* aPresContext,
-                             nsIContent* aChild,
-                             nsIAtom* aAttribute)
-{
-  nsresult rv = nsLeafFrame::AttributeChanged(aShell, aPresContext, aChild,
-                                              aAttribute);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  if ((nsHTMLAtoms::width == aAttribute) ||
-      (nsHTMLAtoms::height == aAttribute)) {
-    nsHTMLContainerFrame::ApplyStyleChangeToTree(*aPresContext, this);
-    nsHTMLContainerFrame::StyleChangeReflow(*aPresContext, this);
-  }
   return NS_OK;
 }
