@@ -369,9 +369,13 @@ mozSanitizingHTMLSerializer::SetTitle(const nsString& aValue)
 {
   if (IsAllowedTag(eHTMLTag_title))
   {
-    //Write(NS_LITERAL_STRING("<title>"));  -- aValue already contains that
+    // See bug 195020 for a good reason to output the tags.
+    // It will make sure we have a closing tag, and a
+    // missing </title> tag won't result in everything
+    // being eaten up as the title.
+    Write(NS_LITERAL_STRING("<title>"));
     Write(aValue);
-    //Write(NS_LITERAL_STRING("</title>"));
+    Write(NS_LITERAL_STRING("</title>"));
   }
   return NS_OK;
 }
