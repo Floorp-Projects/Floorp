@@ -2856,6 +2856,7 @@ dnl The following are the only platforms I tested  -ramiro
 dnl OpenVMS added by Colin Blake
 dnl Tru64   added by Jim Nance
 dnl hpux added by John Gaunt workaround for bug 39747
+dnl irix added for bug 53471
 dnl nto added by Jerry Kirk 
 case "$target" in
     *-*-linux*)   MOZ_MONOLITHIC_TOOLKIT= ;;
@@ -2866,6 +2867,7 @@ case "$target" in
     *-*-aix*)     MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-osf*)     MOZ_MONOLITHIC_TOOLKIT= ;;
     *-hpux*)      MOZ_MONOLITHIC_TOOLKIT= ;;
+    *-irix*)      MOZ_MONOLITHIC_TOOLKIT= ;;
     *-nto*)       MOZ_MONOLITHIC_TOOLKIT= ;;
 esac
 
