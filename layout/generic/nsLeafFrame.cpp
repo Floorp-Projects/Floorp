@@ -71,6 +71,7 @@ nsLeafFrame::Reflow(nsIPresContext& aPresContext,
   nsMargin borderPadding;
   AddBordersAndPadding(&aPresContext, aReflowState, aMetrics, borderPadding);
   if (nsnull != aMetrics.maxElementSize) {
+    aMetrics.AddBorderPaddingToMaxElementSize(borderPadding);
     aMetrics.maxElementSize->width = aMetrics.width;
     aMetrics.maxElementSize->height = aMetrics.height;
   }
