@@ -100,3 +100,15 @@ void nsCellMap::DumpCellMap() const
       }
   }
 }
+
+void nsCellMap::SetCellAt(CellData *aCell, int aRow, int aColumn)
+{
+  //Assert aRow, aColumn
+  int index = (aRow*mColCount)+aColumn;
+  CellData* cell = GetCellAt(aRow,aColumn);
+  if (cell != nsnull)
+    delete cell;
+  mCells[index] = (PRInt32)aCell;
+}
+
+
