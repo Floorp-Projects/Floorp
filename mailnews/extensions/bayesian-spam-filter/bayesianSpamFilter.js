@@ -89,11 +89,6 @@ function do_CreateInstance(aContractID, aInterface)
     return Components.classes[aContractID].createInstance(aInterface);
 }
 
-const kUnknownToSpam = 0;
-const kUnknownToHam = 1;
-const kHamToSpam = 2;
-const kSpamToHam = 3;
-
 const kHamCount = 0;
 const kSpamCount = 1;
 const kSpamProb = 2;
@@ -130,23 +125,15 @@ const kDebugAll = kDebugTokenize | kDebugTokenCount |
                   kDebugCalculateProbabilities | kDebugCalculateToken
                   kDebugCalculateSpam | kDebugClassify;
 
-var gDebugLevel = kDebugCalculateToken | kDebugCalculateSpam | kDebugClassify;
-var gDebugStream = null;
+var gDebugLevel = kDebugAll;
+
 function debugOutput(aOutput)
 {
-    if (!gDebugStream) {
-        var profileMgr = do_GetService(PROFILEMGR_CTRID, nsIProfileInternal);
-        var outFile = profileMgr.getProfileDir(profileMgr.currentProfile);
-        outFile.append("bayesianspam.log");
-        var fileTransportService = do_GetService(FILETPTSVC_CTRID, nsIFileTransportService);
-        var trans = fileTransportService.createTransport(outFile, NS_RDWR |
-                        NS_CREATE_FILE |
-                        NS_APPEND, 420, false);
-        gDebugStream = trans.openOutputStream(0, -1, 0);
-    }
-    gDebugStream.write(aOutput, aOutput.length);
-    gDebugStream.flush();
+  dump(aOutput + "\n");
+
+  // XXX todo, use the nsISpamSettings logging stuff
 }
+
 // XXX DEBUG_END
 
 /**
@@ -408,16 +395,16 @@ nsBaseStatsTable.prototype =
         if (gDebugLevel & kDebugTokenCount) {
             var output = "Changing " + aToken;
             switch (aAction) {
-                case kSpamToHam:
+                case nsIMsgFilterPlugin.spamToHam:
                     output += " from spam to ham\n"
                     break;
-                case kUnknownToHam:
+                case nsIMsgFilterPlugin.unknownToSpam:
                     output += " from unknown to ham\n"
                     break;
-                case kHamToSpam:
+                case nsIMsgFilterPlugin.hamToSpam:
                     output += " from ham to spam\n"
                     break;
-                case kUnknownToSpam:
+                case nsIMsgFilterPlugin.unknownToSpam:
                     output += " from unknown to spam\n"
                     break;
             }
@@ -426,14 +413,14 @@ nsBaseStatsTable.prototype =
 // XXX DEBUG_END
 
         switch (aAction) {
-            case kSpamToHam:
+            case nsIMsgFilterPlugin.spamToHam:
                 --value[kSpamCount];
-            case kUnknownToHam:
+            case nsIMsgFilterPlugin.unknownToHam:
                 ++value[kHamCount];
                 break;
-            case kHamToSpam:
+            case nsIMsgFilterPlugin.hamToSpam:
                 --value[kHamCount];
-            case kUnknownToSpam:
+            case nsIMsgFilterPlugin.unknownToSpam:
                 ++value[kSpamCount];
                 break;
         }
@@ -741,6 +728,7 @@ nsJunkmail.prototype =
         //nsIMimeConverter);
         //}
 
+        // XXX TODO fix me, don't use raw prefs for this
         this.dummyFilterObj = new nsDummyFilter(
             gPrefs.getCharPref("mail.server." + aServerKey + ".type") +
             "://" + 
@@ -752,6 +740,8 @@ nsJunkmail.prototype =
         // this.threshhold = gPrefs.getIntPref("mail.server." + aServerKey 
         // + ".junkmail.threshhold");
 
+        // XXX TODO fix me, use the nsISpamSettings logStream for this
+        //
         // the logfile is called "junklog.txt" in the server directory
         //
         var logFile = gPrefs.getComplexValue("mail.server." 
@@ -1048,14 +1038,14 @@ nsJunkmail.prototype =
         function endData()
         {
             switch (aAction) {
-                case kSpamToHam:
+                case nsIMsgFilterPlugin.spamToHam:
                     --caller.mTable.mSpamCount;
-                case kUnknownToHam:
+                case nsIMsgFilterPlugin.unknownToHam:
                     ++caller.mTable.mHamCount;
                     break;
-                case kHamToSpam:
+                case nsIMsgFilterPlugin.hamToSpam:
                     --caller.mTable.mHamCount;
-                case kUnknownToSpam:
+                case nsIMsgFilterPlugin.unknownToSpam:
                     ++caller.mTable.mSpamCount;
                     break;
             }
@@ -1098,7 +1088,7 @@ nsJunkmail.prototype =
             score = caller.mTable.calculate(extrema);
             if (score <= 0.5) {
 /*                for (counter = 0; counter < words.length; ++counter) {
-                    caller.mTable.addTokenToHash(words[counter], kUnknownToHam);
+                    caller.mTable.addTokenToHash(words[counter], nsIMsgFilterPlugin.unknownToHam);
                 }
                 ++caller.mTable.mHamCount;
 */
@@ -1106,7 +1096,7 @@ nsJunkmail.prototype =
             }
             else {
 /*                for (counter = 0; counter < words.length; ++counter) {
-                    caller.mTable.addTokenToHash(words[counter], kUnknownToSpam);
+                    caller.mTable.addTokenToHash(words[counter], nsIMsgFilterPlugin.unknownToSpam);
                 }
                 ++caller.mTable.mSpamCount;
 */

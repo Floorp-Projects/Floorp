@@ -47,6 +47,11 @@ interface nsIStreamListener;
 [scriptable, uuid(e2e56690-a676-11d6-80c9-00008646b737)]
 interface nsIMsgFilterPlugin : nsISupports
 {
+    const long unknownToSpam = 0;
+    const long unknownToHam = 1;
+    const long hamToSpam = 2;
+    const long spamToHam = 3;
+
     /**
      * Initialize the plugin object.
      * 
