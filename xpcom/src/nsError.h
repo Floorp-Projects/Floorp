@@ -105,6 +105,9 @@
 /// Standard "it worked" return value
 #define NS_OK                              0
 
+/// The backwards COM false
+#define NS_COMFALSE                        1
+
 #define NS_ERROR_BASE                      ((nsresult) 0xC1F30000)
 
 /// Returned when an instance is not initialized
