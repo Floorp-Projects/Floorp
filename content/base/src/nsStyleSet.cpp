@@ -217,25 +217,29 @@ public:
                                nsIFrame*       aParentFrame,
                                nsIFrame*&      aFrameSubTree);
   NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
-                             nsIDocument*    aDocument,
                              nsIContent*     aContainer,
                              PRInt32         aNewIndexInContainer);
   NS_IMETHOD ContentInserted(nsIPresContext* aPresContext,
-                             nsIDocument*    aDocument,
                              nsIContent*     aContainer,
                              nsIContent*     aChild,
                              PRInt32         aIndexInContainer);
   NS_IMETHOD ContentReplaced(nsIPresContext* aPresContext,
-                             nsIDocument*    aDocument,
                              nsIContent*     aContainer,
                              nsIContent*     aOldChild,
                              nsIContent*     aNewChild,
                              PRInt32         aIndexInContainer);
   NS_IMETHOD ContentRemoved(nsIPresContext* aPresContext,
-                            nsIDocument*    aDocument,
                             nsIContent*     aContainer,
                             nsIContent*     aChild,
                             PRInt32         aIndexInContainer);
+
+  NS_IMETHOD ContentChanged(nsIPresContext*  aPresContext,
+                            nsIContent* aContent,
+                            nsISupports* aSubContent);
+  NS_IMETHOD AttributeChanged(nsIPresContext*  aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint); // See nsStyleConsts fot hint values
 
   // xxx style rules enumeration
 
@@ -749,43 +753,58 @@ NS_IMETHODIMP StyleSetImpl::ConstructFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP StyleSetImpl::ContentAppended(nsIPresContext* aPresContext,
-                                            nsIDocument*    aDocument,
                                             nsIContent*     aContainer,
                                             PRInt32         aNewIndexInContainer)
 {
-  return mFrameConstructor->ContentAppended(aPresContext, aDocument,
+  return mFrameConstructor->ContentAppended(aPresContext, 
                                             aContainer, aNewIndexInContainer);
 }
 
 NS_IMETHODIMP StyleSetImpl::ContentInserted(nsIPresContext* aPresContext,
-                                            nsIDocument*    aDocument,
                                             nsIContent*     aContainer,
                                             nsIContent*     aChild,
                                             PRInt32         aIndexInContainer)
 {
-  return mFrameConstructor->ContentInserted(aPresContext, aDocument, aContainer,
+  return mFrameConstructor->ContentInserted(aPresContext, aContainer,
                                             aChild, aIndexInContainer);
 }
 
 NS_IMETHODIMP StyleSetImpl::ContentReplaced(nsIPresContext* aPresContext,
-                                            nsIDocument*    aDocument,
                                             nsIContent*     aContainer,
                                             nsIContent*     aOldChild,
                                             nsIContent*     aNewChild,
                                             PRInt32         aIndexInContainer)
 {
-  return mFrameConstructor->ContentReplaced(aPresContext, aDocument, aContainer,
+  return mFrameConstructor->ContentReplaced(aPresContext, aContainer,
                                             aOldChild, aNewChild, aIndexInContainer);
 }
 
 NS_IMETHODIMP StyleSetImpl::ContentRemoved(nsIPresContext* aPresContext,
-                                           nsIDocument*    aDocument,
                                            nsIContent*     aContainer,
                                            nsIContent*     aChild,
                                            PRInt32         aIndexInContainer)
 {
-  return mFrameConstructor->ContentRemoved(aPresContext, aDocument, aContainer,
+  return mFrameConstructor->ContentRemoved(aPresContext, aContainer,
                                            aChild, aIndexInContainer);
+}
+
+NS_IMETHODIMP
+StyleSetImpl::ContentChanged(nsIPresContext* aPresContext,
+                             nsIContent* aContent,
+                             nsISupports* aSubContent)
+{
+  return mFrameConstructor->ContentChanged(aPresContext, 
+                                           aContent, aSubContent);
+}
+
+NS_IMETHODIMP
+StyleSetImpl::AttributeChanged(nsIPresContext* aPresContext,
+                               nsIContent* aContent,
+                               nsIAtom* aAttribute,
+                               PRInt32 aHint)
+{
+  return mFrameConstructor->AttributeChanged(aPresContext, aContent, 
+                                             aAttribute, aHint);
 }
 
 // xxx style rules enumeration
