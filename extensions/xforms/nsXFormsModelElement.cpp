@@ -271,6 +271,7 @@ nsXFormsModelElement::DoneAddingChildren()
 
   nsAutoString schemaList;
   mElement->GetAttribute(NS_LITERAL_STRING("schema"), schemaList);
+
   if (!schemaList.IsEmpty()) {
     NS_ENSURE_TRUE(mSchemas, NS_ERROR_FAILURE);
     // Parse the whitespace-separated list.
@@ -1113,6 +1114,10 @@ nsXFormsModelElement::FinishConstruction()
         nsCOMPtr<nsISchema> schema;
         nsresult rv = mSchemas->ProcessSchemaElement(element, nsnull,
                                                      getter_AddRefs(schema));
+        if (!NS_SUCCEEDED(rv)) {
+          nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaProcessError"),
+                                     nsnull, 0, node, node);
+        }
       }
     }
   }
@@ -1358,10 +1363,10 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
     if (children) {
       PRUint32 childCount = 0;
       children->GetLength(&childCount);
-      
+
       nsCOMPtr<nsIDOMNode> child;
       nsAutoString value;
-      
+
       for (PRUint32 k = 0; k < childCount; ++k) {
         children->Item(k, getter_AddRefs(child));
         if (child) {

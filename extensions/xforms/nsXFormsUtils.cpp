@@ -55,6 +55,9 @@
 #include "nsIXFormsModelElement.h"
 #include "nsIXFormsControl.h"
 #include "nsIInstanceElementPrivate.h"
+#include "nsIDOMNSDocument.h"
+#include "nsIDOMLocation.h"
+#include "nsIDOMSerializer.h"
 
 #include "nsIXFormsContextControl.h"
 #include "nsIDOMDocumentEvent.h"
@@ -75,6 +78,8 @@
 #include "nsIXFormsUtilityService.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOM3Node.h"
+#include "nsIConsoleService.h"
+#include "nsIStringBundle.h"
 
 #define CANCELABLE 0x01
 #define BUBBLES    0x02
@@ -1034,7 +1039,7 @@ nsXFormsUtils::GetInstanceNodeForData(nsIDOMNode             *aInstanceDataNode,
 }
 
 /* static */ nsresult
-nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData, 
+nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData,
                                  nsAString &aType, nsAString &aNSPrefix)
 {
   nsresult rv;
@@ -1082,9 +1087,11 @@ nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData,
 
   // split type (ns:type) into namespace and type.
   PRInt32 separator = typeAttribute.FindChar(':');
-  if ((PRUint32) separator == typeAttribute.Length()) {
+  if ((PRUint32) separator == (typeAttribute.Length() - 1)) {
+    const PRUnichar *strings[] = { typeAttribute.get() };
+    // XXX: get an element from the document this came from
+    ReportError(NS_LITERAL_STRING("missingTypeName"), strings, 1, nsnull, nsnull);
     return NS_ERROR_UNEXPECTED;
-    // xxx send error to console
   } else if (separator == kNotFound) {
     // no namespace prefix, which is valid;
     aNSPrefix.AssignLiteral("");
@@ -1096,3 +1103,92 @@ nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData,
 
   return NS_OK;
 }
+
+/* static */ void
+nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aParams,
+                           PRUint32 aParamLength, nsIDOMNode *aElement, nsIDOMNode *aContext)
+{
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+
+  if (consoleService) {
+    nsAutoString msg;
+
+    // get the string from the bundle (xforms.properties)
+    nsCOMPtr<nsIStringBundleService> bundleService =
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    if (!bundleService)
+      return;
+
+    nsCOMPtr<nsIStringBundle> bundle;
+    bundleService->CreateBundle("chrome://xforms/locale/xforms.properties",
+                                getter_AddRefs(bundle));
+    if (!bundle)
+      return;
+
+    nsXPIDLString message;
+    if (aParams) {
+      bundle->FormatStringFromName(aMessageName.get(), aParams, aParamLength,
+                                   getter_Copies(message));
+      msg.Append(message);
+    } else {
+      bundle->GetStringFromName(aMessageName.get(),
+                                getter_Copies(message));
+      msg.Append(message);
+    }
+
+    // if a context was defined, we clone (not deep) it, serialize it and append
+    // to the message.
+    if (aContext) {
+      nsCOMPtr<nsIDOMSerializer> ds = do_GetService(NS_XMLSERIALIZER_CONTRACTID);
+      if (ds) {
+        nsAutoString contextMsg;
+        nsCOMPtr<nsIDOMNode> tmpNode;
+        // SerializeToString always does a deep serialize, so we do a non-deep
+        // clone so that we don't serialize any children.
+        aContext->CloneNode(PR_FALSE, getter_AddRefs(tmpNode));
+        ds->SerializeToString(tmpNode, contextMsg);
+
+        // get the context string from the properties file
+        const PRUnichar *params[] = { contextMsg.get() };
+        bundle->FormatStringFromName(NS_LITERAL_STRING("errorContext").get(),
+                                     params, 1, getter_Copies(message));
+        msg.Append(message);
+      }
+    }
+
+    // if aElement is defined, we use it to figure out the location of the file
+    // that caused the error.
+    if (aElement) {
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      aElement->GetOwnerDocument(getter_AddRefs(domDoc));
+
+      if (domDoc) {
+        nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDoc));
+
+        if (nsDoc) {
+          nsCOMPtr<nsIDOMLocation> domLoc;
+          nsDoc->GetLocation(getter_AddRefs(domLoc));
+
+          if (domLoc) {
+            nsAutoString location;
+            nsresult rv = domLoc->GetHref(location);
+
+            if (NS_SUCCEEDED(rv)) {
+              // get the source string from the properties file
+              const PRUnichar *params[] = { location.get() };
+              bundle->FormatStringFromName(NS_LITERAL_STRING("errorSource").get(),
+                                           params, 1, getter_Copies(message));
+              msg.Append(message);
+            }
+          }
+        }
+      }
+    }
+
+    if (!msg.IsEmpty()) {
+      consoleService->LogStringMessage(msg.get());
+    }
+  }
+}
+

@@ -342,13 +342,31 @@ public:
                                                      nsIModelElementPrivate *aModel,
                                                      nsIDOMNode  **aInstanceNode);
 
-  /** 
+  /**
    * This function takes an instance data node, finds the type bound to it, and
    * returns the seperated out type (integer) and namespace prefix (xsd).
    */
   static NS_HIDDEN_(nsresult) ParseTypeFromNode(nsIDOMNode *aInstanceData,
                                                 nsAString  &aType,
                                                 nsAString  &aNSPrefix);
+
+  /**
+   * Outputs to the JavaScript console.
+   *
+   * @param aMessageName      Name of string to output, which is loaded from
+                              xforms.properties
+   * @param aParams           Optional parameters for the loaded string
+   * @param aParamLength      Amount of params in aParams
+   * @param aElement          If set, is used to determine and output the
+                              location of the file the XForm is located in
+   * @param aContext          If set, the node is used to output what element
+                              caused the error
+   */
+  static NS_HIDDEN_(void) ReportError(const nsString& aMessageName,
+                                      const PRUnichar **aParams,
+                                      PRUint32 aParamLength,
+                                      nsIDOMNode *aElement,
+                                      nsIDOMNode *aContext);
 
 };
 
