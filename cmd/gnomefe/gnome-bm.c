@@ -34,6 +34,7 @@
 void
 BMFE_BookmarkMenuInvalid(MWContext* context)
 {
+  printf("BMFE_BookmarkMenuInvalid (empty)\n");
 }
 
 
@@ -46,17 +47,20 @@ void
 BMFE_EditItem(MWContext* context,
 	      BM_Entry* entry)
 {
+  printf("BMFE_EditItem (empty)\n");
 }
 
 /* Use these to know when to allow refresh */
 void
 BMFE_StartBatch(MWContext* context)
 {
+  printf("BMFE_StartBatch (empty)\n");
 }
 
 void
 BMFE_EndBatch(MWContext* context)
 {
+  printf("BMFE_EndBatch (empty)\n");
 }
 
 /* The given entry is no longer valid (i.e., the user just deleted it).  So,
@@ -67,6 +71,7 @@ void
 BMFE_EntryGoingAway(MWContext* context,
 		    BM_Entry* entry)
 {
+  printf("BMFE_EntryGoingAway (empty)\n");
 }
 
 /* We've finished processing What's Changed.  The What's Changed window should
@@ -89,6 +94,7 @@ BMFE_FinishedWhatsChanged(MWContext* context,
 			  int32 numreached,
 			  int32 numchanged)
 {
+  printf("BMFE_FinishedWhatsChanged (empty)\n");
 }
 
 /* return the clipboard contents */
@@ -96,6 +102,7 @@ void*
 BMFE_GetClipContents(MWContext* context,
 		     int32* length)
 {
+  printf("BMFE_GetClipContents (empty)\n");
 }
 
 /* The user has requested to view the given url.  Show it to him in, using some
@@ -105,6 +112,7 @@ BMFE_GotoBookmark(MWContext* context,
 		  const char* url,
 		  const char* target)
 {
+  printf("BMFE_GotoBookmark (empty)\n");
 }
 
 /* measure the item and assign the width and height required to draw it into
@@ -116,6 +124,7 @@ BMFE_MeasureEntry(MWContext* context,
 		  uint32* width,
 		  uint32* height)
 {
+  printf("BMFE_MeasureEntry (empty)\n");
 }
 
 /* Create the bookmarks property window.  If one already exists, just bring it
@@ -124,6 +133,7 @@ BMFE_MeasureEntry(MWContext* context,
 void
 BMFE_OpenBookmarksWindow(MWContext* context)
 {
+  printf("BMFE_OpenBookmarksWindow (empty)\n");
 }
 
 /* Create the find dialog, and fill it in as specified in the given
@@ -134,6 +144,7 @@ void*
 BMFE_OpenFindWindow(MWContext* context,
 		    BM_FindInfo* findInfo)
 {
+  printf("BMFE_OpenFindWindow (empty)\n");
 }
 */
 /* Refresh each cell between and including first and last in the bookmarks
@@ -171,6 +182,7 @@ BMFE_SetClipContents(MWContext* context,
 		     void* buffer,
 		     int32 length)
 {
+  printf("BMFE_SetClipContents (empty)\n");
 }
 
 /* Resize the widget to accomodate "visibleCount" number of entries vertically
@@ -179,6 +191,7 @@ BMFE_SetClipContents(MWContext* context,
 void
 BMFE_SyncDisplay(MWContext* context)
 {
+  printf("BMFE_SyncDisplay (empty)\n");
 }
 
 /* We're in the process of doing a What's Changed operation.  The What's
@@ -211,6 +224,7 @@ BMFE_UpdateWhatsChanged(MWContext* context,
 			int32 total,
 			const char* totaltime)
 {
+  printf("BMFE_UpdateWhatsChanged (empty)\n");
 }
 
 

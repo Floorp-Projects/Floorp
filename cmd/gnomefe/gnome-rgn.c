@@ -252,11 +252,13 @@ FE_ForEachRectInRegion(FE_Region region, FE_RectInRegionFunc func,
 void
 FE_HighlightRect(void *c, XP_Rect *rect, int how_much)
 {
+  printf("FE_HighlightRect (empty)\n");
 }
 
 void
 FE_HighlightRegion(void *c, FE_Region region, int how_much)
 {
+  printf("FE_HighlightRegion (empty)\n");
 }
     
 #endif /* DEBUG */

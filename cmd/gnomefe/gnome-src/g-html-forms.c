@@ -401,12 +401,14 @@ static void
 text_select(FEFormData *fed,
 	    LO_FormElementStruct *form)
 {
+  printf("text_select (empty)\n");
 }
 
 static void
 file_create_widget(FEFormData *fed,
 		   LO_FormElementStruct *form)
 {
+	printf("file_create_widget: (not done! will crash)\n");
 }
 
 static void
@@ -414,12 +416,14 @@ file_get_value(FEFormData *fed,
 	       LO_FormElementStruct *form,
 	       XP_Bool delete_p)
 {
+  printf("file_get_value (empty)\n");
 }
 
 static void
 file_free(FEFormData *fed,
 	  LO_FormElementData *form_data)
 {
+  printf("file_free (empty)\n");
 }
 
 void
@@ -436,6 +440,7 @@ void
 checkbox_create_widget(FEFormData *fed,
 		       LO_FormElementStruct *form)
 {
+	printf("checkbox_create_widget: (not done! will crash)\n");
 }
 
 void
@@ -443,18 +448,21 @@ checkbox_get_value(FEFormData *fed,
 		   LO_FormElementStruct *form,
 		   XP_Bool hide)
 {
+  printf("checkbox_get_value (empty)\n");
 }
 
 void
 checkbox_change(FEFormData *fed,
 		LO_FormElementStruct *form)
 {
+  printf("checkbox_change (empty)\n");
 }
 
 static void
 select_create_widget(FEFormData *fed,
 		     LO_FormElementStruct *form)
 {
+	printf("select_create_widget (not done! will crash!)\n");
 }
 
 static void
@@ -462,36 +470,42 @@ select_get_value(FEFormData *fed,
 		 LO_FormElementStruct *form,
 		 XP_Bool delete_p)
 {
+  printf("select_get_value (empty)\n");
 }
 
 static void
 select_free(FEFormData *fed,
 	    LO_FormElementData *form)
 {
+  printf("select_free (empty)\n");
 }
 
 static void
 select_reset(FEFormData *fed,
 	     LO_FormElementStruct *form)
 {
+  printf("select_reset (empty)\n");
 }
 
 static void
 select_change(FEFormData *fed,
 	      LO_FormElementStruct *form)
 {
+  printf("select_change (empty)\n");
 }
 
 static void
 textarea_create_widget(FEFormData *fed,
 		       LO_FormElementStruct *form)
 {
+	printf("textarea_create_widget (not done! will crash!)\n");
 }
 
 static void
 textarea_display(FEFormData *fed,
 		 LO_FormElementStruct *form)
 {
+  printf("textarea_display (empty)\n");
 }
 
 static void
@@ -499,17 +513,20 @@ textarea_get_value(FEFormData *fed,
 		   LO_FormElementStruct *form,
 		   XP_Bool delete_p)
 {
+  printf("textarea_get_value (empty)\n");
 }
 
 static void
 textarea_reset(FEFormData *fed,
 	       LO_FormElementStruct *form)
 {
+  printf("textarea_reset (empty)\n");
 }
 
 static void
 textarea_lost_focus(FEFormData *fed)
 {
+  printf("textarea_lost_focus (empty)\n");
 }
 
 static void
@@ -546,6 +563,7 @@ static void
 form_element_is_submit(FEFormData *fed,
 		       LO_FormElementStruct *form)
 {
+  printf("form_element_is_submit (empty)\n");
 }
 
 static void
@@ -716,6 +734,7 @@ void
 moz_html_view_reset_form_element(MozHTMLView *view,
 				 LO_FormElementStruct *form_element)
 {
+  printf("moz_html_view_reset_form_element (empty)\n");
 }
 
 
@@ -724,6 +743,7 @@ moz_html_view_set_form_element_toggle(MozHTMLView *view,
 				      LO_FormElementStruct *form_element,
 				      XP_Bool toggle)
 {
+  printf("moz_html_view_set_form_element_toggle (empty)\n");
 }
 
 
@@ -755,6 +775,7 @@ void
 moz_html_view_blur_input_element(MozHTMLView *view,
 				 LO_FormElementStruct *form_element)
 {
+  printf("moz_html_view_blur_input_element (empty)\n");
 }
 
 
@@ -762,6 +783,7 @@ void
 moz_html_view_focus_input_element(MozHTMLView *view,
 				  LO_FormElementStruct *form_element)
 {
+  printf("moz_html_view_focus_input_element (empty)\n");
 }
 
 
@@ -769,6 +791,7 @@ void
 moz_html_view_select_input_element(MozHTMLView *view,
 				   LO_FormElementStruct *form_element)
 {
+  printf("moz_html_view_select_input_element (empty)\n");
 }
 
 
@@ -776,6 +799,7 @@ void
 moz_html_view_click_input_element(MozHTMLView *view,
 				  LO_FormElementStruct *form_element)
 {
+  printf("moz_html_view_click_input_element (empty)\n");
 }
 
 
@@ -783,6 +807,7 @@ void
 moz_html_view_change_input_element(MozHTMLView *view,
 				   LO_FormElementStruct *form_element)
 {
+  printf("moz_html_view_change_input_element (empty)\n");
 }
 
 
@@ -790,4 +815,5 @@ void
 moz_html_view_submit_input_element(MozHTMLView *view,
 				   LO_FormElementStruct *form_element)
 {
+  printf("moz_html_view_submit_input_element (empty)\n");
 }

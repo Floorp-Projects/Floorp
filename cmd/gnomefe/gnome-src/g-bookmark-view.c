@@ -82,10 +82,12 @@ moz_bookmark_view_refresh_cells(MozBookmarkView *view,
 				int32 last,
 				XP_Bool now)
 {
+  printf("moz_bookmark_view_refresh_cells (empty)\n");
 }
 
 void
 moz_bookmark_view_scroll_into_view(MozBookmarkView *view,
 				   BM_Entry *entry)
 {
+  printf("moz_bookmark_view_scroll_into_view (empty)\n");
 }

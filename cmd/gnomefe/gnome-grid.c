@@ -33,6 +33,7 @@ FE_LoadGridCellFromHistory(MWContext *context,
 			   NET_ReloadMethod force_reload)
 {
   XP_ASSERT(0);
+  printf("FE_LoadGridCellFromHistory (empty)\n");
 }
 
 void*
@@ -40,6 +41,7 @@ FE_FreeGridWindow(MWContext *context,
 		  XP_Bool save_history)
 {
   XP_ASSERT(0);
+  printf("FE_FreeGridWindow (empty)\n");
 }
 
 void
@@ -50,6 +52,7 @@ FE_RestructureGridWindow(MWContext *context,
 			 int32 height)
 {
   XP_ASSERT(0);
+  printf("FE_RestructureGridWindow (empty)\n");
 }
 
 MWContext *
@@ -67,6 +70,7 @@ FE_MakeGridWindow(MWContext *old_context,
 		  Bool no_edge)
 {
   XP_ASSERT(0);
+  printf("FE_MakeGridWindow (empty)\n");
 }
 
 void
@@ -75,6 +79,7 @@ FE_GetFullWindowSize(MWContext *context,
 		     int32 *height)
 {
   XP_ASSERT(0);
+  printf("FE_GetFullWindowSize (empty)\n");
 }
 
 void
@@ -82,4 +87,5 @@ FE_GetEdgeMinSize(MWContext *context,
 		  int32 *size)
 {
   XP_ASSERT(0);
+  printf("FE_GetEdgeMinSize (empty)\n");
 }

@@ -31,6 +31,7 @@ FE_GetPSIconDimensions(int icon_number,
 		       int *width,
 		       int *height)
 {
+  printf("FE_GetPSIconDimensions (empty)\n");
 }
 
 /* Fill in the bits of an icon for the PostScript front end. */
@@ -39,4 +40,5 @@ FE_GetPSIconData(int icon_number,
 		 IL_Pixmap *image,
 		 IL_Pixmap *mask)
 {
+  printf("FE_GetPSIconData (empty)\n");
 }

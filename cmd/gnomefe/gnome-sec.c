@@ -29,14 +29,17 @@ FE_SecurityDialog(MWContext* context,
 		  int message,
 		  XP_Bool* prefs_toggle)
 {
+  printf("FE_SecurityDialog (empty)\n");
 }
 
 void
 FE_SecurityOptionsChanged(MWContext *context)
 {
+  printf("FE_SecurityOptionsChanged (empty)\n");
 }
 
 void
 FE_SetPasswordEnabled(MWContext *context, PRBool usePW)
 {
+  printf("FE_SetPasswordEnabled (empty)\n");
 }

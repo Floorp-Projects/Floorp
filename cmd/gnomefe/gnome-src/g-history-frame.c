@@ -97,6 +97,7 @@ moz_history_frame_init(MozHistoryFrame *frame)
 void
 moz_history_frame_deinit(MozHistoryFrame *frame)
 {
+  printf("moz_history_frame_deinit (empty)\n");
 }
 
 /* our one history frame. */

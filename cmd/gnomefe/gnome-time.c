@@ -64,7 +64,7 @@ FE_SetTimeout(TimeoutCallbackFunction func,
 
   if (msecs == 0)
     {
-      printf ("hmmmmmmm..wefoijweoijwefoijwefoiwjef oji ==0\n");
+      printf ("hmm. FE_SetTimeout == 0\n");
       msecs = 1;
     }
 

@@ -55,6 +55,7 @@ FE_StrfTime(MWContext *context,
 	    int format,
 	    const struct tm *timeptr)
 {
+  printf("FE_StrfTime (empty)\n");
 }
 
 /*
@@ -67,6 +68,7 @@ FE_StrfTime(MWContext *context,
 int
 FE_StrColl(const char *s1, const char *s2)
 {
+  printf("FE_StrColl (empty)\n");
 }
 
 /* 
@@ -82,6 +84,7 @@ FE_StrColl(const char *s1, const char *s2)
 char *
 INTL_ResourceCharSet()
 {
+  printf("INTL_ResourceCharSet (empty)\n");
 }
 
 /*
@@ -99,6 +102,7 @@ INTL_ResourceCharSet()
 int16
 INTL_DefaultDocCharSetID(MWContext *cxt)
 {
+  printf("INTL_DefaultDocCharSetID (empty)\n");
 }
 
 /*
@@ -108,6 +112,7 @@ INTL_DefaultDocCharSetID(MWContext *cxt)
 void
 INTL_Relayout(MWContext *pContext)
 {
+  printf("INTL_Relayout (empty)\n");
 }
 
 

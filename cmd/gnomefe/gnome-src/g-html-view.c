@@ -461,7 +461,8 @@ moz_html_view_create_grid_child(MozHTMLView *parent_htmlview,
   XP_ASSERT(0);
   if (GTK_IS_FIXED(MOZ_VIEW(parent_htmlview)->subview_parent))
     {
-    }
+      printf("moz_html_view_create_grid_child (empty)\n");
+}
 }
 
 void
@@ -967,7 +968,8 @@ fe_set_drawable_dimensions(CL_Drawable *drawable, uint32 width, uint32 height)
   fe_Drawable *fe_drawable = 
     (fe_Drawable*)CL_GetDrawableClientData(drawable);
 
-  printf ("The backing store pixmap is changing size.\n");
+  printf ("fe_set_drawable_dimensions (draw %p, width %d, height %d)\n", 
+	drawable, width, height);
 
   XP_ASSERT(backing_store_refcount > 0);
   if ((width > backing_store_width) || (height > backing_store_height)) {  
@@ -1034,17 +1036,25 @@ moz_html_view_create_compositor(MozHTMLView *view)
   CL_Compositor *compositor;
   fe_Drawable *window_drawable, *backing_store_drawable;
   GdkWindow *window;
-  
+  gint dummy;
   GdkVisual *visual;
 
   window = MOZ_VIEW(view)->subview_parent->window;
   visual = gnomefe_visual;
   backing_store_depth = gnomefe_depth;
 
-  /* Create a new compositor and its default layers */
-  comp_width = 800;   /* XXX these are wrong. */
-  comp_height = 800;
 
+  gdk_window_get_geometry(window, &dummy, &dummy, &comp_width,
+                          &comp_height, &dummy);
+  
+  printf("moz_html_view_create_compositor: width %d, height %d\n",
+         comp_width, comp_height);
+
+  if(comp_width < 2) 
+    comp_width = 800;
+  if (comp_height < 2)
+    comp_height = 800;
+  
 #if 0
   if (CONTEXT_DATA(context)->vscroll && 
       XtIsManaged(CONTEXT_DATA(context)->vscroll))
@@ -1204,4 +1214,5 @@ moz_html_view_display_table(MozHTMLView *view,
 			    LO_TableStruct *table)
 {
   XP_ASSERT(0);
+  printf("moz_html_view_display_table (empty)\n");
 }

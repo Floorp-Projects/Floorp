@@ -97,6 +97,7 @@ moz_bookmark_frame_init(MozBookmarkFrame *frame)
 void
 moz_bookmark_frame_deinit(MozBookmarkFrame *frame)
 {
+  printf("moz_bookmark_frame_deinit (empty)\n");
 }
 
 /* our one bookmark frame. */

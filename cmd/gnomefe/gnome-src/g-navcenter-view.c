@@ -94,6 +94,7 @@ release_column_titles(MozNavCenterView *view,
                       int num,
                       char **titles)
 {
+  printf("release_column_titles (empty)\n");
 }
 
 static void

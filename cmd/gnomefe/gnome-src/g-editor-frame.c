@@ -28,11 +28,13 @@
 void
 moz_editor_frame_init(MozEditorFrame *frame)
 {
+  printf("moz_editor_frame_init (empty)\n");
 }
 
 void
 moz_editor_frame_deinit(MozEditorFrame *frame)
 {
+  printf("moz_editor_frame_deinit (empty)\n");
 }
 
 

@@ -26,9 +26,11 @@
 char *
 FE_GetNetHelpDir()
 {
+  printf("FE_GetNetHelpDir (empty)\n");
 }
 
 MWContext *
 FE_GetNetHelpContext()
 {
+  printf("FE_GetNetHelpContext (empty)\n");
 }

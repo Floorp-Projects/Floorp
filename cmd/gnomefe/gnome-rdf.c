@@ -26,6 +26,7 @@
 #include "ntypes.h"
 #include "g-browser-frame.h"
 
+
 MWContext*
 FE_GetRDFContext()
 {

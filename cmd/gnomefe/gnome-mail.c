@@ -31,21 +31,25 @@
 const char*
 FE_UsersMailAddress()
 {
+  printf("FE_UsersMailAddress (empty)\n");
 }
 
 const char*
 FE_UsersFullName()
 {
+  printf("FE_UsersFullName (empty)\n");
 }
 
 const char *
 FE_UsersOrganization()
 {
+  printf("FE_UsersOrganization (empty)\n");
 }
 
 const char*
 FE_UsersSignature()
 {
+  printf("FE_UsersSignature (empty)\n");
 }
 
 void
@@ -55,6 +59,7 @@ FE_ListChangeStarting(MSG_Pane* pane,
 		      MSG_ViewIndex where,
 		      int32 num)
 {
+  printf("FE_ListChangeStarting (empty)\n");
 }
 
 void
@@ -64,6 +69,7 @@ FE_ListChangeFinished(MSG_Pane* pane,
 		      MSG_ViewIndex where,
 		      int32 num)
 {
+  printf("FE_ListChangeFinished (empty)\n");
 }
 
 void
@@ -72,6 +78,7 @@ FE_PaneChanged(MSG_Pane *pane,
 	       MSG_PANE_CHANGED_NOTIFY_CODE notify_code,
 	       int32 value)
 {
+  printf("FE_PaneChanged (empty)\n");
 }
 
 char*
@@ -80,17 +87,20 @@ FE_GetTempFileFor(MWContext* context,
 		  XP_FileType ftype,
 		  XP_FileType* rettype)
 {
+  printf("FE_GetTempFileFor (empty)\n");
 }
 
 void
 FE_UpdateBiff(MSG_BIFF_STATE state)
 {
+  printf("FE_UpdateBiff (empty)\n");
 }
 
 uint32
 FE_DiskSpaceAvailable (MWContext* context,
 		       const char* dir)
 {
+  printf("FE_DiskSpaceAvailable (empty)\n");
 }
 
 MSG_Pane*
@@ -99,27 +109,32 @@ FE_CreateCompositionPane(MWContext* old_context,
 			 const char* initialText,
 			 MSG_EditorType editorType)
 {
+  printf("FE_CreateCompositionPane (empty)\n");
 }
 
 void
 FE_UpdateCompToolbar(MSG_Pane* comppane)
 {
+  printf("FE_UpdateCompToolbar (empty)\n");
 }
 
 void
 FE_DestroyMailCompositionContext(MWContext* context)
 {
+  printf("FE_DestroyMailCompositionContext (empty)\n");
 }
 
 MWContext*
 FE_GetAddressBookContext(MSG_Pane* pane,
 			 XP_Bool viewnow)
 {
+  printf("FE_GetAddressBookContext (empty)\n");
 }
 
 ABook*
 FE_GetAddressBook(MSG_Pane* pane)
 {
+  printf("FE_GetAddressBook (empty)\n");
 }
 
 int
@@ -127,26 +142,31 @@ FE_ShowPropertySheetFor (MWContext* context,
 			 ABID entryID, 
 			 PersonEntry* pPerson)
 {
+  printf("FE_ShowPropertySheetFor (empty)\n");
 }
 
 XP_List* 
 FE_GetDirServers(void)
 {
+  printf("FE_GetDirServers (empty)\n");
 }
 
 MSG_Master*
 FE_GetMaster()
 {
+  printf("FE_GetMaster (empty)\n");
 }
 
 XP_Bool
 FE_IsAltMailUsed(MWContext* context)
 {
+  printf("FE_IsAltMailUsed (empty)\n");
 }
 
 MSG_IMAPUpgradeType
 FE_PromptIMAPSubscriptionUpgrade(MWContext* context, const char *host)
 {
+  printf("FE_PromptIMAPSubscriptionUpgrade (empty)\n");
 }
 
 XP_Bool
@@ -154,17 +174,20 @@ FE_CreateSubscribePaneOnHost(MSG_Master* master,
 			     MWContext* parentContext,
 			     MSG_Host* host)
 {
+  printf("FE_CreateSubscribePaneOnHost (empty)\n");
 }
 
 const char *
 FE_UsersRealMailAddress()
 {
+  printf("FE_UsersRealMailAddress (empty)\n");
 }
 
 void
 FE_RememberPopPassword(MWContext* context,
 		       const char* password)
 {
+  printf("FE_RememberPopPassword (empty)\n");
 }
 
 XP_Bool 
@@ -172,12 +195,14 @@ FE_NewsDownloadPrompt(MWContext *context,
 		      int32 numMessagesToDownload,
 		      XP_Bool *downloadAll)
 {
+  printf("FE_NewsDownloadPrompt (empty)\n");
 }
 
 void
 FE_MsgShowHeaders(MSG_Pane *pPane,
 		  MSG_HEADER_SET mhsHeaders)
 {
+  printf("FE_MsgShowHeaders (empty)\n");
 }
 
 /* If we're set up to deliver mail/news by running a program rather
@@ -200,4 +225,5 @@ FE_MsgShowHeaders(MSG_Pane *pPane,
 int
 msg_DeliverMessageExternally(MWContext *context, const char *msg_file)
 {
+  printf("msg_DeliverMessageExternally (empty)\n");
 }

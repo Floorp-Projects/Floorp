@@ -28,6 +28,7 @@
 void
 FE_RegisterPlugins()
 {
+  printf("FE_RegisterPlugins (empty)\n");
 }
 
 NPPluginFuncs*
@@ -35,12 +36,14 @@ FE_LoadPlugin(void *plugin,
 	      NPNetscapeFuncs *funcs,
               struct _np_handle* handle)
 {
+  printf("FE_LoadPlugin (empty)\n");
 }
 
 void
 FE_UnloadPlugin(void *plugin,
                 struct _np_handle *handle)
 {
+  printf("FE_UnloadPlugin (empty)\n");
 }
 
 void
@@ -48,12 +51,14 @@ FE_EmbedURLExit(URL_Struct *urls,
 		int status,
 		MWContext *cx)
 {
+  printf("FE_EmbedURLExit (empty)\n");
 }
 
 void
 FE_ShowScrollBars(MWContext *context,
 		  XP_Bool show)
 {
+  printf("FE_ShowScrollBars (empty)\n");
 }
 
 NPError
@@ -61,5 +66,6 @@ FE_PluginGetValue(void *pdesc,
 		  NPNVariable variable,
 		  void *r_value)
 {
+  printf("FE_PluginGetValue (empty)\n");
 }
 

@@ -64,4 +64,5 @@ moz_editor_view_display_linefeed(MozEditorView *view,
 				 XP_Bool need_bg)
 {
   XP_ASSERT(0);
+  printf("moz_editor_view_display_linefeed (empty)\n");
 }

@@ -139,6 +139,8 @@ FE_PromptUsernameAndPassword(MWContext *context,
 			     char **username,
 			     char **password)
 {
+
+	printf("FE_PromptUsernameAndPassword (empty)\n");
 }
 
 
@@ -172,6 +174,8 @@ FE_PromptForFileName(MWContext *context,
 		     ReadFileNameCallbackFunction fn,
 		     void *closure)
 {
+
+	printf("FE_PromptForFileName (empty)\n");
 }
 
 /*
@@ -193,6 +197,8 @@ FE_SaveDialogCreate(MWContext *context,
 		    int file_count,
 		    ED_SaveDialogType save_type)
 {
+
+	printf("FE_SaveDialogCreate (empty)\n");
 }
 
 /*
@@ -203,6 +209,8 @@ void
 FE_SaveDialogSetFilename(MWContext *context,
 			 char *filename)
 {
+
+	printf("FE_SaveDialogSetFilename (empty)\n");
 }
 
 /*
@@ -215,6 +223,8 @@ FE_SaveDialogDestroy(MWContext *context,
 		     int status,
 		     char *filename)
 {
+
+	printf("FE_SaveDialogDestroy (empty)\n");
 }
 
 /*
@@ -230,6 +240,8 @@ ED_SaveOption
 FE_SaveFileExistsDialog(MWContext *context,
 			char *filename)
 {
+
+	printf("FE_SaveFileExistsDialog (empty)\n");
 }
 
 /*
@@ -244,4 +256,6 @@ FE_SaveErrorContinueDialog(MWContext *context,
 			   char *filename,
 			   ED_FileError error)
 {
+
+	printf("FE_SaveErrorContinueDialog (empty)\n");
 }

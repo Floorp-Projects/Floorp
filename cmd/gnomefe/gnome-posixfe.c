@@ -27,6 +27,7 @@ void fe_GetProgramDirectory(char *path, int len)
 void
 FE_ShowMinibuffer(MWContext *context)
 {
+  printf("FE_ShowMinibuffer (empty)\n");
 }
 
 void FEU_StayingAlive(void)

@@ -32,6 +32,7 @@
 #include "g-frame.h"
 #include "g-util.h"
 #include "gnomefe.h"
+#include "g-html-view.h"
 
 #ifndef NETSCAPE_PRIV
 #include "../../lib/xp/flamer.h"
@@ -135,24 +136,28 @@ static void
 GNOMEFE_CreateEmbedWindow(MWContext *context, NPEmbeddedApp *app)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_CreateEmbedWindow (empty)\n");
 }
 
 static void
 GNOMEFE_SaveEmbedWindow(MWContext *context, NPEmbeddedApp *app)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_SaveEmbedWindow (empty)\n");
 }
 
 static void
 GNOMEFE_RestoreEmbedWindow(MWContext *context, NPEmbeddedApp *app)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_RestoreEmbedWindow (empty)\n");
 }
 
 static void
 GNOMEFE_DestroyEmbedWindow(MWContext *context, NPEmbeddedApp *app)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_DestroyEmbedWindow (empty)\n");
 }
 
 static void 
@@ -161,6 +166,7 @@ GNOMEFE_GetEmbedSize (MWContext * context,
 		     NET_ReloadMethod force_reload)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_GetEmbedSize (empty)\n");
 }
 
 static void 
@@ -169,6 +175,7 @@ GNOMEFE_GetJavaAppSize (MWContext * context,
 		       NET_ReloadMethod force_reload)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_GetJavaAppSize (empty)\n");
 }
 
 static void 
@@ -176,6 +183,7 @@ GNOMEFE_FreeEmbedElement (MWContext *context,
 			 LO_EmbedStruct *embed)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_FreeEmbedElement (empty)\n");
 }
 
 static void 
@@ -183,6 +191,7 @@ GNOMEFE_FreeJavaAppElement (MWContext *context,
 			   struct LJAppletData *appletData)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_FreeJavaAppElement (empty)\n");
 }
 
 static void 
@@ -190,6 +199,7 @@ GNOMEFE_HideJavaAppElement (MWContext *context,
 			   struct LJAppletData *java_app)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_HideJavaAppElement (empty)\n");
 }
 
 static void 
@@ -197,6 +207,7 @@ GNOMEFE_FreeEdgeElement (MWContext *context,
 			LO_EdgeStruct *edge)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_FreeEdgeElement (empty)\n");
 }
 
 static void 
@@ -204,6 +215,7 @@ GNOMEFE_FormTextIsSubmit (MWContext * context,
                           LO_FormElementStruct * form_element)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_FormTextIsSubmit (empty)\n");
 }
 
 static void 
@@ -237,6 +249,7 @@ GNOMEFE_DisplayEmbed (MWContext * context,
 		     LO_EmbedStruct *embed_struct)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_DisplayEmbed (empty)\n");
 }
 
 
@@ -246,6 +259,7 @@ GNOMEFE_DisplayJavaApp (MWContext * context,
 		       LO_JavaAppStruct *java_struct)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_DisplayJavaApp (empty)\n");
 }
 
 static void 
@@ -254,6 +268,7 @@ GNOMEFE_DisplayEdge (MWContext * context,
 		    LO_EdgeStruct *edge_struct)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_DisplayEdge (empty)\n");
 }
 
 static void 
@@ -348,6 +363,7 @@ GNOMEFE_DisplayFeedback (MWContext *context,
 			int iLocation,
 			LO_Element *element)
 {
+  printf("GNOMEFE_DisplayFeedback (empty)\n");
 }
 
 static void 
@@ -381,6 +397,8 @@ GNOMEFE_SetDocPosition (MWContext *context,
 
   if (!view) return; /* XXX */
 
+  printf("GNOMEFE_SetDocPosition: X %d, y %d\n", iX, iY);
+  
   moz_html_view_set_doc_dimension(view, iX, iY);
 }
 
@@ -390,20 +408,31 @@ GNOMEFE_GetDocPosition (MWContext *context,
 		       int32 *iX,
 		       int32 *iY)
 {
-  printf ("GNOME_GetDocPosition\n");
-  XP_ASSERT(0);
+#if 0
+  MozHTMLView *view = find_html_view(context);
+
+  if (!view) return; /* XXX */
+  printf ("GNOME_GetDocPosition (old x %d, old y %d)\n", *iX, *iY);
+
+  *iX = (int32) (view->doc_x);
+  *iY = (int32) (view->doc_y);
+#endif
+  printf ("GNOME_GetDocPosition (x %d, y %d)\n", *iX, *iY);
+
 }
 
 static void 
 GNOMEFE_BeginPreSection (MWContext *context)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_BeginPreSection (empty)\n");
 }
 
 static void 
 GNOMEFE_EndPreSection (MWContext *context)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_EndPreSection (empty)\n");
 }
 
 static void
@@ -423,7 +452,7 @@ GNOMEFE_SetProgressBarPercent(MWContext *context,
 {
   MozFrame *frame = find_frame(context);
 
-  printf ("setprogressbarpercent %d\n", percent);
+  //  printf ("setprogressbarpercent %d\n", percent);
 
   if (!frame) return; /* XXX */
 
@@ -465,6 +494,7 @@ GNOMEFE_GraphProgressInit (MWContext *context,
                            int32 content_length)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_GraphProgressInit (empty)\n");
 }
 
 static void 
@@ -474,6 +504,7 @@ GNOMEFE_GraphProgressDestroy (MWContext *context,
                               int32 total_bytes_read)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_GraphProgressDestroy (empty)\n");
 }
 
 static void 
@@ -484,6 +515,7 @@ GNOMEFE_GraphProgress (MWContext *context,
                        int32 content_length)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_GraphProgress (empty)\n");
 }
 
 static XP_Bool 
@@ -630,11 +662,13 @@ GNOMEFE_PromptPassword(MWContext * context,
 static void 
 GNOMEFE_EnableClicking(MWContext* context)
 {
+  printf("GNOMEFE_EnableClicking (empty)\n");
 }
 
 static void 
 GNOMEFE_AllConnectionsComplete(MWContext * context)
 {
+  printf("GNOMEFE_AllConnectionsComplete (empty)\n");
 }
 
 static void 
@@ -649,6 +683,7 @@ GNOMEFE_EraseBackground (MWContext * context,
   MozHTMLView *view = find_html_view(context);
 
   if (!view) return;
+  printf("GNOMEFE_EraseBackground\n");
 
   moz_html_view_erase_background(view, x, y, width, height, bg);
 }
@@ -672,6 +707,7 @@ GNOMEFE_GetTextFrame (MWContext *context,
                       XP_Rect *frame)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_GetTextFrame (empty)\n");
 }
 
 /* these functions are to allow dealyed native window applet creation and transparent applet */
@@ -684,6 +720,7 @@ GNOMEFE_HandleClippingView (MWContext *pContext,
 			   int height)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_HandleClippingView (empty)\n");
 }
 
 static void 
@@ -692,6 +729,7 @@ GNOMEFE_DrawJavaApp (MWContext *pContext,
 		    LO_JavaAppStruct *pJava)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_DrawJavaApp (empty)\n");
 }
 
 static void
@@ -699,6 +737,7 @@ GNOMEFE_DisplayBuiltin (MWContext *context, int iLocation,
                         LO_BuiltinStruct *builtin_struct)
 {
   XP_ASSERT(0);
+  printf("GNOMEFE_DisplayBuiltin (empty)\n");
 }
 
 static void
@@ -720,12 +759,33 @@ static ContextFuncs _gnomefe_funcs = {
 #include "mk_cx_fn.h"
 };
 
+/* Given a mask value, returns the index of the first set bit, and the
+   number of consecutive bits set. */
+static void
+FindShift (unsigned long mask, uint8 *shiftp, uint8* bitsp)
+{
+  uint8 shift = 0;
+  uint8 bits = 0;
+  while ((mask & 1) == 0) {
+    shift++;
+    mask >>= 1;
+  }
+  while ((mask & 1) == 1) {
+    bits++;
+    mask >>= 1;
+  }
+  *shiftp = shift;
+  *bitsp = bits;
+}
+
+
 MWContext*
 GNOMEFE_CreateMWContext()
 {
   MWContext *context = XP_NewContext();
   IL_RGBBits rgb;
-
+  GdkVisual *visual = gdk_visual_get_best();
+  
   XP_ASSERT(context);
   if (!context) return NULL;
 
@@ -736,6 +796,11 @@ GNOMEFE_CreateMWContext()
   context->convertPixX = context->convertPixY = 1;
 
   memset(&rgb, '\0', sizeof(rgb));
+
+  FindShift (visual->red_mask, &rgb.red_shift, &rgb.red_bits);
+  FindShift (visual->green_mask, &rgb.green_shift, &rgb.green_bits);
+  FindShift (visual->blue_mask, &rgb.blue_shift, &rgb.blue_bits);
+
   context->color_space = IL_CreateTrueColorSpace(&rgb,
                                                  gdk_visual_get_best_depth());
 
@@ -984,6 +1049,7 @@ FE_ConnectToRemoteHost(MWContext* ctxt,
 		       char* username)
 {
   XP_ASSERT(0);
+  printf("FE_ConnectToRemoteHost (empty)\n");
 }
 
 void*
