@@ -79,6 +79,71 @@ static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 nsFormFrameTable* nsFormFrame::gFormFrameTable = new nsFormFrameTable();
 
+nsFormFrameTableEntry::
+nsFormFrameTableEntry(nsIPresContext&        aPresContext, 
+                      nsIDOMHTMLFormElement& aFormElement,
+                      nsFormFrame&           aFormFrame) : mPresContext(&aPresContext), 
+                                                           mFormElement(&aFormElement), 
+                                                           mFormFrame(&aFormFrame) 
+{
+}
+
+nsFormFrameTableEntry::~nsFormFrameTableEntry()
+{
+}
+
+nsFormFrameTable::~nsFormFrameTable() 
+{ 
+  PRInt32 count = mEntries.Count(); 
+  for (PRInt32 i = 0; i < count; i++) {
+    delete mEntries.ElementAt(i);
+  }
+  mEntries.Clear();
+}
+
+nsFormFrame* 
+nsFormFrameTable::Get(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem) 
+{
+  PRInt32 count = mEntries.Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsFormFrameTableEntry* entry = (nsFormFrameTableEntry *)mEntries.ElementAt(i);
+    if ((entry->mPresContext == &aPresContext) && (entry->mFormElement == &aFormElem)) {
+      return entry->mFormFrame;
+    }
+  }
+  return nsnull;
+}
+  
+void 
+nsFormFrameTable::Put(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem, 
+                           nsFormFrame& aFormFrame) 
+{
+  NS_ADDREF(&aFormElem);
+  mEntries.AppendElement(new nsFormFrameTableEntry(aPresContext, aFormElem, aFormFrame));
+}
+
+void
+nsFormFrameTable::Remove(nsFormFrame& aFormFrame) 
+{
+  PRInt32 hits[10];
+  PRInt32 hitIndex = 0;
+  PRInt32 count = mEntries.Count();
+  PRInt32 i;
+  for (i = 0; i < count; i++) {
+    nsFormFrameTableEntry* entry = (nsFormFrameTableEntry *)mEntries.ElementAt(i);
+    if (entry->mFormFrame == &aFormFrame) {
+      hits[hitIndex] = i;
+      hitIndex++;
+      NS_IF_RELEASE(entry->mFormElement);
+    }
+  }
+  for (i = hitIndex-1; i >= 0; i--) {
+    delete mEntries.ElementAt(i);
+    mEntries.RemoveElementAt(i);
+  }
+}
+
+
 NS_IMETHODIMP
 nsFormFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -110,6 +175,7 @@ nsFormFrame::nsFormFrame(nsIContent* aContent, nsIFrame* aParentFrame)
 nsFormFrame::~nsFormFrame()
 {
   mFormControls.Clear();
+  RemoveFormFrame(*this);
 }
 
 PRBool 
@@ -224,6 +290,7 @@ nsFormFrame::SetInitialChildList(nsIPresContext& aPresContext,
     nsresult result = mContent->QueryInterface(kIDOMHTMLFormElementIID, (void**)&content);
     if ((NS_OK == result) && (nsnull != content)) {
       nsFormFrame::PutFormFrame(aPresContext, *content, *this);
+      NS_RELEASE(content);
     }
   }
   return result;
