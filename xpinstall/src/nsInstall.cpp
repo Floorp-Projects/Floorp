@@ -1107,11 +1107,8 @@ nsInstall::GetWinProfile(const nsString& aFolder, const nsString& aFile, JSConte
 {
     *aReturn = JSVAL_NULL;
 
-    PRInt32 result = SanityCheck();
-
-    if (result != nsInstall::SUCCESS)
+    if (SanityCheck() != nsInstall::SUCCESS)
     {
-        *aReturn = SaveError( result );
         return NS_OK;
     }
 
@@ -1141,11 +1138,8 @@ nsInstall::GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aRe
 {
     *aReturn = JSVAL_NULL;
 
-    PRInt32 result = SanityCheck();
-
-    if (result != nsInstall::SUCCESS)
+    if (SanityCheck() != nsInstall::SUCCESS)
     {
-        *aReturn = SaveError( result );
         return NS_OK;
     }
 
@@ -1173,11 +1167,10 @@ nsInstall::GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aRe
 PRInt32
 nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aReturn)
 {
-    PRInt32 result = SanityCheck();
+    *aReturn = JSVAL_NULL;
 
-    if (result != nsInstall::SUCCESS)
+    if (SanityCheck() != nsInstall::SUCCESS)
     {
-        *aReturn = SaveError( result );
         return NS_OK;
     }
     nsresult ret;
@@ -1187,7 +1180,6 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     nsIEventQueueService* pEventQueueService = nsnull;
     nsIStringBundle* bundle = nsnull;
     nsCOMPtr<nsISimpleEnumerator> propEnum;
-    *aReturn = JSVAL_NULL;
     jsval v = JSVAL_NULL;
 
     // set up JSObject to return
