@@ -3654,7 +3654,7 @@ PRBool CSSParserImpl::ParseURL(nsresult& aErrorCode, nsCSSValue& aValue)
       if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
         // Set a null value on failure.  Most failure cases should be
         // NS_ERROR_MALFORMED_URI.
-        nsCSSValue::URL *url = new nsCSSValue::URL(uri, tk->mIdent.get());
+        nsCSSValue::URL *url = new nsCSSValue::URL(uri, tk->mIdent.get(), mURL);
         if (!url || !url->mString) {
           aErrorCode = NS_ERROR_OUT_OF_MEMORY;
           delete url;
