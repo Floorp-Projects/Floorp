@@ -173,6 +173,7 @@ struct nsHTMLElement {
   PRBool          IsSpecialParent(eHTMLTags aTag) const;
   PRBool          IsExcludableParent(eHTMLTags aParent) const;
   PRBool          SectionContains(eHTMLTags aTag,PRBool allowDepthSearch);
+  PRBool          ShouldVerifyHierarchy(eHTMLTags achildTag);
  
   static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild);
   static  PRBool  IsContainer(eHTMLTags aTag) ;
@@ -224,6 +225,6 @@ static const int kSaveMisplaced    = 0x0200; //If set, then children this tag ca
 static const int kNonContainer     = 0x0400; //If set, then this tag is not a container.
 static const int kHandleStrayTag   = 0x0800; //If set, we automatically open a start tag
 static const int kRequiresBody     = 0x1000; //If set, then in case of no BODY one will be opened up immediately.
-
+static const int kVerifyHierarchy  = 0x2000; //If set, check to see if the tag is a child or a sibling..
 
 #endif

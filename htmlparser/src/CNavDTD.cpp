@@ -957,33 +957,37 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
           }
 
           if(theChildAgrees && theChildIsContainer) {
-            if (!nsHTMLElement::IsResidualStyleTag(aChildTag)) { 
-              if(theParentTag!=aChildTag) {
-              
-                //trying is blockcloser to widen the set of elements that this effects, re: bug 27865...
-
-                if(nsHTMLElement::IsBlockCloser(theParentTag)) {
-                  PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
-              
-                  if((kNotFound<theChildIndex) && (theChildIndex<theIndex)) {
-
-                  /*-------------------------------------------------------------------------------------
-                    1.  Here's a tricky case from bug 22596:  <h5><li><h5>
-
-                        How do we know that the 2nd <h5> should close the <LI> rather than nest inside the <LI>?
-                        (Afterall, the <h5> is a legal child of the <LI>).
-              
-                        The way you know is that there is no root between the two, so the <h5> binds more
-                        tightly to the 1st <h5> than to the <LI>.
-
-                    2.  Also, bug 6148 shows this case: <SPAN><DIV><SPAN>
-                        From this case we learned not to execute this logic if the parent is a block.
-                   -------------------------------------------------------------------------------------*/
-
-                    theChildAgrees=CanBeContained(aChildTag,*mBodyContext);
-                  } //if
-                }//if
-              }
+            if(theParentTag!=aChildTag) {             
+              // Double check the power structure a
+              // Note: The bit is currently set on <A> and <LI>.
+              if(gHTMLElements[theParentTag].ShouldVerifyHierarchy(aChildTag)){
+                PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
+            
+                if((kNotFound<theChildIndex) && (theChildIndex<theIndex)) {
+                 
+                /*-------------------------------------------------------------------------------------
+                   1  Here's a tricky case from bug 22596:  <h5><li><h5>
+                      How do we know that the 2nd <h5> should close the <LI> rather than nest inside the <LI>?
+                      (Afterall, the <h5> is a legal child of the <LI>).
+            
+                      The way you know is that there is no root between the two, so the <h5> binds more
+                      tightly to the 1st <h5> than to the <LI>.
+                   2.  Also, bug 6148 shows this case: <SPAN><DIV><SPAN>
+                      From this case we learned not to execute this logic if the parent is a block.
+                  
+                   3. Fix for 26583
+                      Ex. <A href=foo.html><B>foo<A href-bar.html>bar</A></B></A>  <-- A legal HTML
+                      In the above example clicking on "foo" or "bar" should link to
+                      foo.html or bar.html respectively. That is, the inner <A> should be informed
+                      about the presence of an open <A> above <B>..so that the inner <A> can close out
+                      the outer <A>. The following code does it for us.
+                   
+                   4. Fix for 27865 [ similer to 22596 ]. Ex: <DL><DD><LI>one<DD><LI>two
+                 -------------------------------------------------------------------------------------*/
+                   
+                  theChildAgrees=CanBeContained(aChildTag,*mBodyContext);
+                } //if
+              }//if
             } //if
           } //if
         } //if parentcontains
@@ -1549,9 +1553,9 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
           //This is special NAV-QUIRKS code that allows users
           //to use </BR>, even though that isn't a legitimate tag.
         if(eParseMode_quirks==mParseMode) {
-          CStartToken theToken(theChildTag);  //leave this on the stack; no recycling necessary.
-          theToken.mUseCount=1;
-          result=HandleStartToken(&theToken);
+          // Use recycler and pass the token thro' HandleToken() to fix bugs like 32782.
+          CHTMLToken* theToken = (CHTMLToken*)mTokenRecycler->CreateTokenOfType(eToken_start,theChildTag);
+          result=HandleToken(theToken,mParser);
         }
       }
       break;

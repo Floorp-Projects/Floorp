@@ -219,7 +219,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kSpecial, kInlineEntity, kNone,	  
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kVerifyHierarchy,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -760,7 +760,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gLIRootTags,&gLIRootTags,	
       /*autoclose starttags and endtags*/ &gLIAutoClose,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kSelf,	        //changed this from blockentity to block during RS cleanup
-      /*special props, prop-range*/       kNoPropagate, kDefaultPropRange,
+      /*special props, prop-range*/       kNoPropagate|kVerifyHierarchy, kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gLIKids,eHTMLTag_unknown);
 
     Initialize( 
@@ -891,11 +891,11 @@ void InitializeElementTable(void) {
 
     Initialize( 
       /*tag*/                             eHTMLTag_option,
-      /*requiredAncestor*/                eHTMLTag_unknown,eHTMLTag_unknown,
+      /*requiredAncestor*/                eHTMLTag_select,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents,	 
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kPCDATA, kFlowEntity,	
-      /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
+      /*special props, prop-range*/       kNoStyleLeaksIn|kNoPropagate, kDefaultPropRange,
       /*special parents,kids,skip*/       &gOptgroupParents,&gContainsText,eHTMLTag_unknown);
 
     Initialize( 
@@ -1678,6 +1678,32 @@ PRBool nsHTMLElement::SectionContains(eHTMLTags aChild,PRBool allowDepthSearch) 
   return result;
 }
 
+/**
+ * This method should be called to determine if the a tags
+ * hierarchy needs to be validated.
+ * 
+ * @update	harishd 04/19/00
+ * @param 
+ * @return
+ */
+
+PRBool nsHTMLElement::ShouldVerifyHierarchy(eHTMLTags aChildTag) {
+  PRBool result=PR_FALSE;
+  
+  // If the tag cannot contain itself then we need to make sure that
+  // anywhere in the hierarchy we don't nest accidently.
+  // Ex: <H1><LI><H1><LI>. Inner LI has the potential of getting nested
+  // inside outer LI.If the tag can contain self, Ex: <A><B><A>,
+  // ( B can contain self )then ask the child (<A>) if it requires a containment check.
+  if(aChildTag!=eHTMLTag_userdefined) {
+    if(CanContainSelf()) {
+      result=gHTMLElements[aChildTag].HasSpecialProperty(kVerifyHierarchy);
+    }
+    else result=PR_TRUE;
+  }
+  return result;
+}
+  
 /**
  * 
  * @update	gess12/13/98
