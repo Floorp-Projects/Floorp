@@ -259,11 +259,6 @@ nsWebCrawler:: EndLoadURL(nsIWebShell* aShell,
     NS_RELEASE(shell);
   }
 
-  // Skip url post-processing for non-document urls
-  if (!mCurrentURL.Equals(tmp)) {
-    return;
-  }
-
   if ((nsnull != mFilter) || (nsnull != mOutputDir)) {
     nsIPresShell* shell = GetPresShell();
     if (nsnull != shell) {
