@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIArena.h"
 #include "nsCRT.h"
@@ -187,11 +188,12 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   PRInt32 matchCount = 0;
 
-  nsIHTMLContent* htmlContent;
+  nsIStyledContent* styledContent;
+
   // just get the one and only style rule from the content's STYLE attribute
-  if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
+  if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::IID(), (void**)&styledContent))) {
     nsIStyleRule* rule = nsnull;
-    if (NS_SUCCEEDED(htmlContent->GetInlineStyleRule(rule))) {
+    if (NS_SUCCEEDED(styledContent->GetInlineStyleRule(rule))) {
       if (nsnull != rule) {
         aResults->AppendElement(rule);
         matchCount++;
@@ -208,7 +210,8 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         NS_RELEASE(rule);
       }
     }
-    NS_RELEASE(htmlContent);
+
+    NS_RELEASE(styledContent);
   }
 
   return matchCount;
