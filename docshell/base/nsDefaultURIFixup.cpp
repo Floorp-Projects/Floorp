@@ -191,13 +191,23 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
                         uriString.EqualsIgnoreCase("ftp:", 4) ||
                         uriString.EqualsIgnoreCase("file:", 5));
 
-    // Just try to create an URL out of it
-    rv = NS_NewURI(aURI, uriString, bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
-    if (rv == NS_ERROR_UNKNOWN_PROTOCOL)
-    {
-        if (!PossiblyHostPortUrl(uriString))
-            return NS_ERROR_UNKNOWN_PROTOCOL;
+    // Check the scheme...
+    NS_LossyConvertUCS2toASCII asciiURI(uriString);
+    nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCAutoString scheme;
+    ioService->ExtractScheme(asciiURI, scheme);
+    nsCOMPtr<nsIProtocolHandler> ourHandler, extHandler;
+    
+    ioService->GetProtocolHandler(scheme.get(), getter_AddRefs(ourHandler));
+    extHandler = do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default");
+
+    if (ourHandler != extHandler || !PossiblyHostPortUrl(uriString)) {
+        // Just try to create an URL out of it
+        rv = NS_NewURI(aURI, uriString,
+                       bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
     }
+
     if (*aURI) {
         if (aFixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI)
             MakeAlternateURI(*aURI);
