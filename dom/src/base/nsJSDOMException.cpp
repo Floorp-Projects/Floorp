@@ -352,6 +352,21 @@ extern "C" NS_DOM nsresult NS_InitDOMExceptionClass(nsIScriptContext *aContext, 
       vp = INT_TO_JSVAL(nsIDOMDOMException::INUSE_ATTRIBUTE_ERR);
       JS_SetProperty(jscontext, constructor, "INUSE_ATTRIBUTE_ERR", &vp);
 
+      vp = INT_TO_JSVAL(nsIDOMDOMException::INVALID_STATE_ERR);
+      JS_SetProperty(jscontext, constructor, "INVALID_STATE_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::SYNTAX_ERR);
+      JS_SetProperty(jscontext, constructor, "SYNTAX_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::INVALID_MODIFICATION_ERR);
+      JS_SetProperty(jscontext, constructor, "INVALID_MODIFICATION_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::NAMESPACE_ERR);
+      JS_SetProperty(jscontext, constructor, "NAMESPACE_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::INVALID_ACCESS_ERR);
+      JS_SetProperty(jscontext, constructor, "INVALID_ACCESS_ERR", &vp);
+
     }
 
   }
