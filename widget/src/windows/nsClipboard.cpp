@@ -535,8 +535,24 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
             default: {
               if ( fe.cfFormat == fileDescriptorFlavor || fe.cfFormat == fileFlavor ) {
                 NS_WARNING ( "Mozilla doesn't yet understand how to read this type of file flavor" );
-              } else
-                result = GetGlobalData(stm.hGlobal, aData, aLen);
+              } 
+              else {
+                // Get the data out of the global data handle. The size we return
+                // should not include the null because the other platforms don't
+                // use nulls, so just return the length we get back from strlen(),
+                // since we know CF_UNICODETEXT is null terminated. Recall that GetGlobalData() 
+                // returns the size of the allocated buffer, not the size of the data 
+                // (on 98, these are not the same) so we can't use that.
+                //
+                // NOTE: we are assuming that anything that falls into this default case
+                //        is unicode. As we start to get more kinds of binary data, this
+                //        may become an incorrect assumption. Stay tuned.
+                PRUint32 allocLen = 0;
+                if ( NS_SUCCEEDED(GetGlobalData(stm.hGlobal, aData, &allocLen)) ) {
+                  *aLen = nsCRT::strlen(NS_REINTERPRET_CAST(PRUnichar*, *aData)) * 2;
+                  result = NS_OK;
+                }
+              }
             } break;
           } // switch
         } break;
