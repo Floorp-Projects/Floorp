@@ -31,7 +31,7 @@ Contributor(s):
 // Thai character type array
 */
 
-typedef unsigned short twb_t; // platform dependent
+typedef unsigned short twb_t; 
 extern const twb_t _TwbType[0x100-0xa0];
 
 /*
@@ -58,7 +58,9 @@ extern const twb_t _TwbType[0x100-0xa0];
 #define CHE 0x1000
 
 #define MT 0x2000
+/*
 //_#define me 0x2000
+*/
 #define M 0x4000
 
 #define T 0x8000
@@ -89,8 +91,10 @@ int TrbWordBreakPos(const th_char *pstr, int left,
                     const th_char *rstr, int right)
 /*                 const ThBreakIterator *it, const th_char **p)*/
 {
+	/*
 	//int left, right;
 	//const th_char *s = *p;
+	*/
     const th_char *lstr = pstr + left;
 	th_char _c[6];
 	twb_t _t[6];
@@ -98,30 +102,40 @@ int TrbWordBreakPos(const th_char *pstr, int left,
 	#define t(i) (_t[(i)+3])
 	int i, j;
 
+	/*
 	//left = s - it->begin; 
+	*/
 	if(left < 0) return -1;
-    //right = (it->end == NULL) ? 4 : it->begin - s;
+	/*
+        //right = (it->end == NULL) ? 4 : it->begin - s;
+	*/
 	if(right < 1) return -1;
 
+        /*
 	// get c(0), t(0)
-	c(0) = rstr[0]; // may be '\0'
+        */
+	c(0) = rstr[0]; /* may be '\0' */
     if(!th_isthai(c(0))) return -1;
 	t(0) = twbtype(c(0));
 	if(!(t(0) & A)) return -1;
 
+        /*
 	// get c(-1), t(-1)
+        */
 	if(left >= 1) { 
 		c(-1) = lstr[-1]; 
 		if(!th_isthai(c(-1))) return 0;
 		t(-1) = twbtype(c(-1)); 
-		if(!(t(-1) & A)) return 0;	// handle punctuation marks here
+		if(!(t(-1) & A)) return 0;	/* handle punctuation marks here */
 	} else { c(-1) = 0; t(-1) = 0; }
 
+	/*
 	// get c(1..2), t(1..2)
+	*/
 	for(i = 1; i <= 2; i++) {
 		if(i >= right) { c(i) = 0; t(i) = 0; }
 		else {
-			c(i) = rstr[i]; // may be '\0';
+			c(i) = rstr[i]; /* may be '\0'; */
 			if(!th_isthai(c(i))) right = i--;
 			else {
 				t(i) = twbtype(c(i));
@@ -129,7 +143,9 @@ int TrbWordBreakPos(const th_char *pstr, int left,
 			}
 		}
 	}
+	/*
 	// get c(-2..-3), t(-2..-3)
+	*/
 	for(i = -2, j = -2; i >= -3 ; j--) {
 		if(j < -left) { c(i) = 0; t(i) = 0; i--; }
 		else {
@@ -147,70 +163,82 @@ int TrbWordBreakPos(const th_char *pstr, int left,
 		}
 	}
 
+	/*
 	// prohibit the unlikely
+	*/
 	if((t(-1) & C) && (t(0) & C)) {
 	  if((t(-1) & CHE) || (t(0) & CHB)) return -1;
 	}
+	/*
 	// special case : vlao, C/ sara_a|aa, !sara_a
+	*/
 	if((t(-3) & (VLA|VLO)) && (t(-2) & C) && (c(0) != TH_SARA_A) &&
 		(c(-1) == TH_SARA_A || c(-0) == TH_SARA_AA)) return 0;
 
+	/*
 	// prohibit break
+	*/
 	if(t(0) & NB) return -1; 
 	if(t(-1) & NE) return -1;
 
 
+  /*
 	// apply 100% rules
+  */
 	if(t(-1) & VRE) {
 		if(c(-2) == TH_SARA_AA && c(-1) == TH_SARA_A) return 0;
-		return -1; // usually too short syllable, part of word
+		return -1; /* usually too short syllable, part of word */
 	}
 
 	if(t(-2) & VRE) return -1;
 
-	if((t(0) & C) && (t(1) & (VR|MT)) && (c(2) != TH_THANTHAKHAT)) { //?C, NB
-		if((t(-1) & (VRS|VRX))  && c(1) == TH_SARA_I) return -1; // exception
-		if(t(-1) & (V|M)) return 0; // !C/ C, NB
-		if(t(-2) & VRS) return 0;	// VRS, C / C, NB
-		if(!(t(0) & C2) && c(1) == TH_SARA_I) {	//	/ !C2 or /c, sara_i
-			if(t(-2) & VRX) return 0; // VRX, C / C, NB ? 100%?
-			if(t(-2) & VC) return 0;	// VC, C / C, NB ? 100%
+	if((t(0) & C) && (t(1) & (VR|MT)) && (c(2) != TH_THANTHAKHAT)) { /*?C, NB */
+		if((t(-1) & (VRS|VRX))  && c(1) == TH_SARA_I) return -1; /* exception */
+		if(t(-1) & (V|M)) return 0; /* !C/ C, NB */
+		if(t(-2) & VRS) return 0;	/* VRS, C / C, NB */
+		if(!(t(0) & C2) && c(1) == TH_SARA_I) {	/*	/ !C2 or /c, sara_i */
+			if(t(-2) & VRX) return 0; /* VRX, C / C, NB ? 100%? */
+			if(t(-2) & VC) return 0;	/* VC, C / C, NB ? 100% */
 		}
 	}
-	if((t(-1) & VRX) && (t(0) & CC)) return 0;				// VRX/ CC
-	if((t(-2) & VRS) && (t(-1) & C) && (t(0) & (V|M))) return 0;// VRS, C/ !C
+	if((t(-1) & VRX) && (t(0) & CC)) return 0;				/* VRX/ CC */
+	if((t(-2) & VRS) && (t(-1) & C) && (t(0) & (V|M))) return 0;/* VRS, C/ !C */
 
 	
 	if((t(0) & CX) && (t(1) & C2) && (c(2) != TH_THANTHAKHAT)) {
-		if((t(-2) & A) && (t(-1) & CX)) return 0; // A, CX / CX, C2
-		if((t(-2) & CX) && (t(-1) & MT)) return 0; // CX, MT / CX, C2
+		if((t(-2) & A) && (t(-1) & CX)) return 0; /* A, CX / CX, C2 */
+		if((t(-2) & CX) && (t(-1) & MT)) return 0; /* CX, MT / CX, C2 */
 	}
+	/*
 	// apply 90% rules
+	*/
 	if(t(0) & VL) return 0;
 	if(t(1) & VL) return -1;
 	if(c(-1) == TH_THANTHAKHAT && c(-2) != TH_RORUA && c(-2) != TH_LOLING) return 0;
 
+	/*
 	//return -1;
 	// apply 80% rules
+	*/
 	if(t(0) & CHE) {
-		if((t(-2) & VRS) && (t(-1) & C)) return 0;	// VRS, C/ CHE
-		//if(t(-1) & VRX) return 0;					// VRX/ CHE
-		if(t(-1) & VC) return 0;					// VC/ CHE
+		if((t(-2) & VRS) && (t(-1) & C)) return 0;	/* VRS, C/ CHE */
+		/*if(t(-1) & VRX) return 0;					// VRX/ CHE */
+		if(t(-1) & VC) return 0;					/* VC/ CHE */
 	}
 	if(t(-1) & CHB) {
-		if((t(0) & C) && (t(1) & VR)) return 0;	// CHB/ CC, VR
-		if(t(0) & VC) return 0;					// CHB/ VC
+		if((t(0) & C) && (t(1) & VR)) return 0;	/* CHB/ CC, VR */
+		if(t(0) & VC) return 0;					/* CHB/ VC */
 	}
 	
-	if((t(-2) & VL) && (t(1) & VR)) { // VL, C? C, VR
-		if(t(-2) & VLI) return 0;  // VLI,C/C,VR 
-		else { // vlao, C ? C , VR
-			if(c(1) == TH_SARA_A) return 2; // vlao, C, C, sara_a/
-			if(t(-2) & VLO) return 0; // VLO, C/ C, !sara_a
-			if(!(t(1) & VRA)) return 0;	// VLA, C/ C, !vca
+	if((t(-2) & VL) && (t(1) & VR)) { /* VL, C? C, VR */
+		if(t(-2) & VLI) return 0;  /* VLI,C/C,VR .*/
+		else { /* vlao, C ? C , VR */
+			if(c(1) == TH_SARA_A) return 2; /* vlao, C, C, sara_a/ */
+			if(t(-2) & VLO) return 0; /* VLO, C/ C, !sara_a */
+			if(!(t(1) & VRA)) return 0;	/* VLA, C/ C, !vca */
 		}
 	}
-	// C,MT,C/
+	/* C,MT,C */ 
 	if((t(-2) & C) && (t(-1) & MT) && (t(0) & CX)) return 1;
 
 	return -1;
@@ -299,7 +327,7 @@ const twb_t  _TwbType[0x100-0xa0] = {
 /* c0 À */	CS | CHE,
 /* c1 Á */	CS,
 /* c2 Â */	CS,
-/* c3 Ã */	CS | C2 | CHE, // ? add CHE 
+/* c3 Ã */	CS | C2 | CHE, /* ? add CHE  */
 /* c4 Ä */	VC | CHE,
 /* c5 Å */	CS | C2,
 /* c6 Æ */	VC | CHE,
