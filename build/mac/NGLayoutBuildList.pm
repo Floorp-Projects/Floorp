@@ -1637,6 +1637,8 @@ sub BuildMailNewsProjects()
 
 	BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.mcp",		"smime$D.shlb", "smime.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
+	BuildOneProject(":mozilla:mailnews:mime:cthandlers:signstub:macbuild:signed.mcp",		"signed$D.shlb", "signed.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
 #	BuildOneProject(":mozilla:mailnews:mime:cthandlers:calendar:macbuild:calendar.mcp",	"calendar$D.shlb", "calendar.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	print("--- MailNews projects complete ----\n")
