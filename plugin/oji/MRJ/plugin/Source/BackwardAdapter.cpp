@@ -427,6 +427,12 @@ public:
     NS_IMETHOD_(void)
     Free(void* ptr);
 
+    NS_IMETHOD
+    IsLowMemory(PRBool *_retval)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
     /**
      * Attempts to shrink the heap.
      */
