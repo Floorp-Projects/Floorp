@@ -525,11 +525,10 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
       done = PR_TRUE;
       break;
     }
-    if (NS_FRAME_COMPLETE != aStatus) {
-      if (!reflowingFirstLetter || NS_INLINE_IS_BREAK(aStatus)) {
-        done = PR_TRUE;
-        break;
-      }
+    if (NS_INLINE_IS_BREAK(aStatus) || 
+        (!reflowingFirstLetter && NS_FRAME_IS_NOT_COMPLETE(aStatus))) {
+      done = PR_TRUE;
+      break;
     }
     irs.mPrevFrame = frame;
     frame->GetNextSibling(&frame);
@@ -555,17 +554,16 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
         done = PR_TRUE;
         break;
       }
-      if (NS_FRAME_COMPLETE != aStatus) {
-        if (!reflowingFirstLetter || NS_INLINE_IS_BREAK(aStatus)) {
-          done = PR_TRUE;
-          break;
-        }
+      if (NS_INLINE_IS_BREAK(aStatus) || 
+          (!reflowingFirstLetter && NS_FRAME_IS_NOT_COMPLETE(aStatus))) {
+        done = PR_TRUE;
+        break;
       }
       irs.mPrevFrame = frame;
     }
   }
 #ifdef DEBUG
-  if (NS_FRAME_COMPLETE == aStatus) {
+  if (NS_FRAME_IS_COMPLETE(aStatus)) {
     // We can't be complete AND have overflow frames!
     nsIFrame* overflowFrames = GetOverflowFrames(aPresContext, PR_FALSE);
     NS_ASSERTION(!overflowFrames, "whoops");
