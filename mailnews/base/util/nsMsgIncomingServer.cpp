@@ -1765,17 +1765,9 @@ nsMsgIncomingServer::ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *fi
       newFilter->SetEnabled(enable);
   else if (enable)
   {
-    nsCOMPtr<nsIMsgFolder> rootFolder;
-    rv = GetRootMsgFolder(getter_AddRefs(rootFolder));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRUint32 numFolders;
-    nsCOMPtr<nsIMsgFolder> sentFolder;
-
-    rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, 1,
-                                   &numFolders,
-                                   getter_AddRefs(sentFolder));
-    if (sentFolder)
+    nsXPIDLCString actionTargetFolderUri;
+    rv = identity->GetFccFolder(getter_Copies(actionTargetFolderUri));
+    if (!actionTargetFolderUri.IsEmpty())
     {
       filterList->CreateFilter(internalReturnReceiptFilterName.get(),
                                getter_AddRefs(newFilter));
@@ -1829,18 +1821,28 @@ nsMsgIncomingServer::ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *fi
         nsCOMPtr<nsIMsgRuleAction> filterAction;
         newFilter->CreateAction(getter_AddRefs(filterAction));
         filterAction->SetType(nsMsgFilterAction::MoveToFolder);
-        nsXPIDLCString actionTargetFolderUri;
-        rv = sentFolder->GetURI(getter_Copies(actionTargetFolderUri));
-        if (NS_SUCCEEDED(rv))
-        {
           filterAction->SetTargetFolderUri(actionTargetFolderUri);
           newFilter->AppendAction(filterAction);
           filterList->InsertFilterAt(0, newFilter);
         }
       }
     }
-  }
   return rv;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::ClearTemporaryReturnReceiptsFilter()
+{
+  if (mFilterList)
+  {
+   nsCOMPtr<nsIMsgFilter> mdnFilter;
+   nsresult rv = mFilterList->GetFilterNamed(
+     NS_LITERAL_STRING("mozilla-temporary-internal-MDN-receipt-filter").get(),
+     getter_AddRefs(mdnFilter));
+   if (NS_SUCCEEDED(rv) && mdnFilter)
+     return mFilterList->RemoveFilter(mdnFilter);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -52,6 +52,9 @@
 #include "nsRDFCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgFolder.h"
+#include "nsIMsgIncomingServer.h"
+#include "nsIMsgAccountManager.h"
+#include "nsMsgBaseCID.h"
 #include "prprf.h"
 #include "nsISupportsObsolete.h"
 #include "nsISupportsPrimitives.h"
@@ -510,7 +513,27 @@ nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
     nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
     
     if (nsCRT::strcmp(prefname, "fcc_folder") == 0)
+    {
+        // Clear the temporary return receipt filter so that the new filter
+        // rule can be recreated (by ConfigureTemporaryReturnReceiptsFilter()).
+        nsCOMPtr<nsIMsgAccountManager> accountManager = 
+          do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        nsCOMPtr<nsISupportsArray> servers; 
+        rv = accountManager->GetServersForIdentity(this, getter_AddRefs(servers));
+        NS_ENSURE_SUCCESS(rv,rv);
+        PRUint32 cnt = 0;
+        servers->Count(&cnt);
+        if (cnt > 0)
+        {
+          nsCOMPtr<nsISupports> supports = getter_AddRefs(servers->ElementAt(0));
+          nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(supports,&rv);
+          if (NS_SUCCEEDED(rv))
+            server->ClearTemporaryReturnReceiptsFilter(); // okay to fail; no need to check for return code
+        }
         folderflag = MSG_FOLDER_FLAG_SENTMAIL;
+    }
     else if (nsCRT::strcmp(prefname, "draft_folder") == 0)
         folderflag = MSG_FOLDER_FLAG_DRAFTS;
     else if (nsCRT::strcmp(prefname, "stationery_folder") == 0)

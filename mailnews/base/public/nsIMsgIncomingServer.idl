@@ -364,6 +364,13 @@ interface nsIMsgIncomingServer : nsISupports {
   void configureTemporaryReturnReceiptsFilter(in nsIMsgFilterList filterList);
 
   /**
+   * If Sent folder pref is changed we need to clear the temporary 
+   * return receipt filter so that the new return receipt filter can
+   * be recreated (by ConfigureTemporaryReturnReceiptsFilter()).
+   */
+  void clearTemporaryReturnReceiptsFilter();
+
+  /**
    * spam settings
    */
   attribute nsISpamSettings spamSettings;
