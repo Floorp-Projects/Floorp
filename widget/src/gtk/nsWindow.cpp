@@ -790,9 +790,9 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
   if (aIsSynchronous)
   {
     if (mIsToplevel && mShell)
-      gtk_widget_draw(mShell, NULL);
+      gtk_widget_draw(mShell, (GdkRectangle *) NULL);
 
-    gtk_widget_draw(mWidget, NULL);
+    gtk_widget_draw(mWidget, (GdkRectangle *) NULL);
     mUpdateArea.SetRect(0, 0, 0, 0);
   }
   else
