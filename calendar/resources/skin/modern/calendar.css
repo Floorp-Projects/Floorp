@@ -355,55 +355,6 @@ button.calendar-management-button:hover:active
 }
 
 /*--------------------------------------------------------------------
- * Fix the width and height of the day name images
- *-------------------------------------------------------------------*/
-
-.month-header-image-class
-{
-   /*border: 1px solid red;*/
-}
-
-/*--------------------------------------------------------------------
- * Give each day name its image
- *-------------------------------------------------------------------*/
-
-#month-header-day-1
-{
-   list-style-image        : url("chrome://calendar/skin/sun.png");
-}
-
-#month-header-day-2
-{
-   list-style-image        : url("chrome://calendar/skin/mon.png");
-}
-
-#month-header-day-3
-{
-   list-style-image        : url("chrome://calendar/skin/tue.png");
-}
-
-#month-header-day-4
-{
-   list-style-image        : url("chrome://calendar/skin/wed.png");
-}
-
-#month-header-day-5
-{
-   list-style-image        : url("chrome://calendar/skin/thu.png");
-}
-
-#month-header-day-6
-{
-   list-style-image        : url("chrome://calendar/skin/fri.png");
-}
-
-#month-header-day-7
-{
-   list-style-image        : url("chrome://calendar/skin/sat.png");
-}
-
-
-/*--------------------------------------------------------------------
  * Box around the grid - has background image with the watch and grid
  *                       lines.
  *-------------------------------------------------------------------*/
@@ -438,6 +389,14 @@ button.calendar-management-button:hover:active
    max-width            : 93px;
 }
 
+/*--------------------------------------------------------------------
+ * Center names in day columns
+ *-------------------------------------------------------------------*/
+
+.month-column-center-day-class
+{
+    -moz-box-align       : center;
+}
 
 /*--------------------------------------------------------------------
  * Make the cells line up with the image grid lines

@@ -77,18 +77,36 @@
       
       </hbox>            
 			  
-		<vbox id="month-content-box">
+	<vbox id="month-content-box">
 			 
    		<!-- Month View: Day name header -->
    			 
    		<hbox id="month-header-box" flex="1" >
-            <image class="month-header-image-class" id="month-header-day-1" />           
-            <image class="month-header-image-class" id="month-header-day-2" />           
-            <image class="month-header-image-class" id="month-header-day-3" />           
-            <image class="month-header-image-class" id="month-header-day-4" />           
-            <image class="month-header-image-class" id="month-header-day-5" />           
-            <image class="month-header-image-class" id="month-header-day-6" />           
-            <image class="month-header-image-class" id="month-header-day-7" />        
+        		<grid id="month-header-columns" flex="1">
+        		    <columns>
+        		    	<column flex="1" class="month-column-center-day-class">
+        		            <label value="&calendar.monthview.column.1.name;"/>
+        		 	</column>
+        			<column flex="1" class="month-column-center-day-class">
+        	  		    <label value="&calendar.monthview.column.2.name;"/>
+        			</column>
+        			<column flex="1" class="month-column-center-day-class">
+        	  		    <label value="&calendar.monthview.column.3.name;"/>
+        			</column>
+        			<column flex="1" class="month-column-center-day-class">
+        	  		    <label value="&calendar.monthview.column.4.name;"/>
+        			</column>
+        			<column flex="1" class="month-column-center-day-class">
+        	  		    <label value="&calendar.monthview.column.5.name;"/>
+        			</column>
+        			<column flex="1" class="month-column-center-day-class">
+        	  		    <label value="&calendar.monthview.column.6.name;"/>
+        			</column>
+        			<column flex="1" class="month-column-center-day-class"> 
+        	  		    <label value="&calendar.monthview.column.7.name;"/>
+        			</column>
+        		    </columns>
+        		</grid>
    		</hbox>
 			 
 		   <!-- Month View: Calendar Grid -->
