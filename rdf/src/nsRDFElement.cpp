@@ -41,26 +41,24 @@
 
  */
 
-#include "nsRDFElement.h"
-#include "nsHTMLParts.h" // XXX to create a text node
-#include "nsIDocument.h"
-#include "nsIDOMNodeList.h"
+#include "nsDOMEvent.h"
 #include "nsIAtom.h"
-#include "nsIEventListenerManager.h"
-#include "nsIHTMLAttributes.h"
+#include "nsIDOMNodeList.h"
 #include "nsIDOMScriptObjectFactory.h"
-#include "nsIServiceManager.h"
-#include "nsRDFCID.h"
+#include "nsIDocument.h"
+#include "nsIEventListenerManager.h"
+#include "nsIEventStateManager.h"
+#include "nsIRDFCursor.h"
+#include "nsIRDFDataBase.h"
+#include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFResourceManager.h"
-#include "nsIRDFDocument.h"
-#include "nsIRDFDataBase.h"
-#include "nsIRDFCursor.h"
+#include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsITextContent.h"
-
-#include "nsIEventStateManager.h"
-#include "nsDOMEvent.h"
+#include "nsLayoutCID.h"
+#include "nsRDFCID.h"
+#include "nsRDFElement.h"
 
 ////////////////////////////////////////////////////////////////////////
 // RDF core vocabulary
@@ -100,6 +98,7 @@ static NS_DEFINE_IID(kITextContentIID,        NS_ITEXT_CONTENT_IID); // XXX grr.
 static NS_DEFINE_IID(kIXMLContentIID,         NS_IXMLCONTENT_IID);
 
 static NS_DEFINE_CID(kRDFResourceManagerCID,  NS_RDFRESOURCEMANAGER_CID);
+static NS_DEFINE_CID(kTextNodeCID,            NS_TEXTNODE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // Utility functions
@@ -135,8 +134,8 @@ rdf_IsContainer(nsIRDFResourceManager* mgr,
 {
     PRBool result = PR_FALSE;
 
-    nsIRDFNode* RDF_instanceOf = NULL;
-    nsIRDFNode* RDF_Bag        = NULL;
+    nsIRDFNode* RDF_instanceOf = nsnull;
+    nsIRDFNode* RDF_Bag        = nsnull;
 
     nsresult rv;
     if (NS_FAILED(rv = mgr->GetNode(kURIRDF_instanceOf, RDF_instanceOf)))
@@ -254,7 +253,7 @@ NS_NewRDFElement(nsIRDFContent** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    *result = static_cast<nsIRDFContent*>(new nsRDFElement());
+    *result = NS_STATIC_CAST(nsIRDFContent*, new nsRDFElement());
     if (! *result)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -293,23 +292,23 @@ nsRDFElement::QueryInterface(REFNSIID iid, void** result)
         iid.Equals(kIXMLContentIID) ||
         iid.Equals(kIContentIID) ||
         iid.Equals(kISupportsIID)) {
-        *result = static_cast<nsIRDFContent*>(this);
+        *result = NS_STATIC_CAST(nsIRDFContent*, this);
     }
     else if (iid.Equals(kIDOMElementIID) ||
              iid.Equals(kIDOMNodeIID)) {
-        *result = static_cast<nsIDOMElement*>(this);
+        *result = NS_STATIC_CAST(nsIDOMElement*, this);
     }
     else if (iid.Equals(kIScriptObjectOwnerIID)) {
-        *result = static_cast<nsIScriptObjectOwner*>(this);
+        *result = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
     }
     else if (iid.Equals(kIDOMEventReceiverIID)) {
-        *result = static_cast<nsIDOMEventReceiver*>(this);
+        *result = NS_STATIC_CAST(nsIDOMEventReceiver*, this);
     }
     else if (iid.Equals(kIJSScriptObjectIID)) {
-        *result = static_cast<nsIJSScriptObject*>(this);
+        *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
     }
     else {
-        *result = NULL;
+        *result = nsnull;
         return NS_NOINTERFACE;
     }
 
@@ -872,15 +871,15 @@ NS_IMETHODIMP
 nsRDFElement::GetAttribute(const nsString& aName, nsString& aResult) const
 {
     nsresult rv;
-    nsIRDFResourceManager* mgr = NULL;
+    nsIRDFResourceManager* mgr = nsnull;
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
                                                     kIRDFResourceManagerIID,
                                                     (nsISupports**) &mgr)))
         return rv;
     
-    nsIRDFDataBase* db    = NULL;
-    nsIRDFNode* property = NULL;
-    nsIRDFNode* value    = NULL;
+    nsIRDFDataBase* db    = nsnull;
+    nsIRDFNode* property = nsnull;
+    nsIRDFNode* value    = nsnull;
 
     if (NS_FAILED(rv = mDocument->GetDataBase(db)))
         goto done;
@@ -919,14 +918,14 @@ nsRDFElement::GetAllAttributeNames(nsISupportsArray* aArray, PRInt32& aResult) c
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
-    nsIRDFResourceManager* mgr = NULL;
+    nsIRDFResourceManager* mgr = nsnull;
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
                                                     kIRDFResourceManagerIID,
                                                     (nsISupports**) &mgr)))
         return rv;
     
-    nsIRDFDataBase* db       = NULL;
-    nsIRDFCursor* properties = NULL;
+    nsIRDFDataBase* db       = nsnull;
+    nsIRDFCursor* properties = nsnull;
     PRBool moreProperties;
 
     if (NS_FAILED(rv = mDocument->GetDataBase(db)))
@@ -939,7 +938,7 @@ nsRDFElement::GetAllAttributeNames(nsISupportsArray* aArray, PRInt32& aResult) c
     aResult = 0;
 
     while (NS_SUCCEEDED(rv = properties->HasMoreElements(moreProperties)) && moreProperties) {
-        nsIRDFNode* property = NULL;
+        nsIRDFNode* property = nsnull;
         PRBool tv;
 
         if (NS_FAILED(rv = properties->GetNext(property, tv /* ignored */)))
@@ -1149,7 +1148,7 @@ nsRDFElement::SetResource(const nsString& aURI)
 
     nsresult rv;
 
-    nsIRDFResourceManager* mgr = NULL;
+    nsIRDFResourceManager* mgr = nsnull;
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
                                                     kIRDFResourceManagerIID,
                                                     (nsISupports**) &mgr)))
@@ -1190,16 +1189,16 @@ nsRDFElement::SetProperty(const nsString& aPropertyURI, const nsString& aValue)
 #endif
 
     nsresult rv;
-    nsIRDFResourceManager* mgr = NULL;
+    nsIRDFResourceManager* mgr = nsnull;
 
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
                                                     kIRDFResourceManagerIID,
                                                     (nsISupports**) &mgr)))
         return rv;
     
-    nsIRDFNode* property = NULL;
-    nsIRDFNode* value = NULL;
-    nsIRDFDataBase* db = NULL;
+    nsIRDFNode* property = nsnull;
+    nsIRDFNode* value = nsnull;
+    nsIRDFDataBase* db = nsnull;
 
     if (NS_FAILED(rv = mgr->GetNode(aPropertyURI, property)))
         goto done;
@@ -1266,8 +1265,8 @@ nsRDFElement::GenerateChildren(void)
                                                     (nsISupports**) &mgr)))
         return rv;
 
-    nsIRDFDataBase* db = NULL;
-    nsIRDFCursor* properties = NULL;
+    nsIRDFDataBase* db = nsnull;
+    nsIRDFCursor* properties = nsnull;
     PRBool moreProperties;
 
     if (NS_FAILED(rv = mDocument->GetDataBase(db)))
@@ -1283,7 +1282,7 @@ nsRDFElement::GenerateChildren(void)
         goto done;
 
     while (NS_SUCCEEDED(rv = properties->HasMoreElements(moreProperties)) && moreProperties) {
-        nsIRDFNode* property = NULL;
+        nsIRDFNode* property = nsnull;
         PRBool tv;
 
         if (NS_FAILED(rv = properties->GetNext(property, tv /* ignored */)))
@@ -1312,7 +1311,7 @@ nsRDFElement::GenerateChildren(void)
 
         PRBool moreValues;
         while (NS_SUCCEEDED(rv = values->HasMoreElements(moreValues)) && moreValues) {
-            nsIRDFNode* value = NULL;
+            nsIRDFNode* value = nsnull;
             if (NS_FAILED(rv = values->GetNext(value, tv /* ignored */)))
                 break;
 
@@ -1369,7 +1368,7 @@ nsRDFElement::CreateChild(nsIRDFNode* value,
     child->mResource = value;
     NS_ADDREF(child->mResource);
 
-    child->mParent   = static_cast<nsIContent*>(const_cast<nsRDFElement*>(this));
+    child->mParent   = NS_STATIC_CAST(nsIContent*, const_cast<nsRDFElement*>(this));
     NS_ADDREF(child->mParent);
 
     result = child;
@@ -1385,11 +1384,11 @@ nsRDFElement::CreateChild(nsIRDFNode* property,
                           nsIRDFContent*& result)
 {
     nsresult rv;
-    nsRDFElement* child = NULL;
-    nsRDFElement* grandchild = NULL;
-    nsIHTMLContent* grandchild2 = NULL; // XXX should just be regular nsIContent
-    nsITextContent* text = NULL;
-    nsIDocument* doc = NULL;
+    nsRDFElement* child = nsnull;
+    nsRDFElement* grandchild = nsnull;
+    nsIContent* grandchild2 = nsnull;
+    nsITextContent* text = nsnull;
+    nsIDocument* doc = nsnull;
     nsAutoString v;
 
     child = new nsRDFElement();
@@ -1401,7 +1400,7 @@ nsRDFElement::CreateChild(nsIRDFNode* property,
     NS_ADDREF(child);
     child->mDocument = mDocument;
     child->mResource = property;
-    child->mParent   = static_cast<nsIContent*>(const_cast<nsRDFElement*>(this));
+    child->mParent   = NS_STATIC_CAST(nsIContent*, const_cast<nsRDFElement*>(this));
 
     NS_ADDREF(child->mDocument);
     NS_ADDREF(child->mResource);
@@ -1416,7 +1415,10 @@ nsRDFElement::CreateChild(nsIRDFNode* property,
         if (NS_FAILED(rv = value->GetStringValue(v)))
             goto error;
 
-        if (NS_FAILED(rv = NS_NewTextNode(&grandchild2)))
+        if (NS_FAILED(rv = nsRepository::CreateInstance(kTextNodeCID,
+                                                        nsnull,
+                                                        kIContentIID,
+                                                        (void**) &grandchild2)))
             goto error;
 
         if (NS_FAILED(rv = mDocument->QueryInterface(kIDocumentIID, (void**) &doc)))
@@ -1439,7 +1441,7 @@ nsRDFElement::CreateChild(nsIRDFNode* property,
         if (NS_FAILED(rv = grandchild2->SetParent(child)))
             goto error;
 
-        child->mChildren->AppendElement(static_cast<nsIContent*>(grandchild2));
+        child->mChildren->AppendElement(NS_STATIC_CAST(nsIContent*, grandchild2));
     }
 
     // Construct a grandchild which is another RDF node.
@@ -1451,13 +1453,13 @@ nsRDFElement::CreateChild(nsIRDFNode* property,
 
     grandchild->mDocument = mDocument;
     grandchild->mResource = value;
-    grandchild->mParent   = static_cast<nsIContent*>(const_cast<nsRDFElement*>(child));
+    grandchild->mParent   = NS_STATIC_CAST(nsIContent*, const_cast<nsRDFElement*>(child));
 
     NS_ADDREF(grandchild->mDocument);
     NS_ADDREF(grandchild->mResource);
     NS_ADDREF(grandchild->mParent);
 
-    child->mChildren->AppendElement(static_cast<nsIContent*>(grandchild));
+    child->mChildren->AppendElement(NS_STATIC_CAST(nsIContent*, grandchild));
 
     // whew!
     result = child;

@@ -198,7 +198,7 @@ nsRDFDocumentContentSink::LoadStyleSheet(nsIURL* aURL,
     nsresult rv;
     nsICSSParser* parser;
     rv = nsRepository::CreateInstance(kCSSParserCID,
-                                      NULL,
+                                      nsnull,
                                       kICSSParserIID,
                                       (void**) &parser);
 

@@ -26,15 +26,6 @@ include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME = rdf
 
-# XXX For now we have an evil dependency on the
-# Raptor HTML implementation
-INCLUDES += 						\
-        -I$(srcdir)/../../layout/base/src		\
-        -I$(srcdir)/../../layout/html/base/src		\
-        -I$(srcdir)/../../layout/html/style/src		\
-        -I$(srcdir)/../../layout/html/document/src	\
-	$(NULL)
-
 CPPSRCS =				\
         nsBookmarkDataSource.cpp	\
         nsEmptyCursor.cpp               \

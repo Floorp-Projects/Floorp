@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nscore.h"
 #include "nsIRDFCursor.h"
 
 static NS_DEFINE_IID(kIRDFCursorIID, NS_IRDFCURSOR_IID);
@@ -65,7 +66,7 @@ EmptyCursorImpl::QueryInterface(REFNSIID iid, void** result)
 
     if (iid.Equals(kIRDFCursorIID) ||
         iid.Equals(kISupportsIID)) {
-        *result = static_cast<nsIRDFCursor*>(this);
+        *result = NS_STATIC_CAST(nsIRDFCursor*, this);
         /* AddRef(); // not necessary */
         return NS_OK;
     }
@@ -84,7 +85,7 @@ EmptyCursorImpl::HasMoreElements(PRBool& result)
 NS_IMETHODIMP
 EmptyCursorImpl::GetNext(nsIRDFNode*& next, PRBool& tv)
 {
-    next = NULL;
+    next = nsnull;
     return NS_ERROR_UNEXPECTED;
 }
 

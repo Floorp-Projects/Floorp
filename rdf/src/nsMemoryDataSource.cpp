@@ -32,6 +32,7 @@
 
  */
 
+#include "nscore.h"
 #include "nsMemoryDataSource.h"
 #include "nsIRDFCursor.h"
 #include "nsIRDFNode.h"
@@ -144,7 +145,7 @@ private:
     nsIRDFNode* mNode;
 
 public:
-    NodeHashKey(void) : mNode(NULL) {
+    NodeHashKey(void) : mNode(nsnull) {
     }
 
     NodeHashKey(nsIRDFNode* aNode) : mNode(aNode) {
@@ -229,7 +230,7 @@ PropertyCursorImpl::PropertyCursorImpl(PropertyListElement* first, PRBool truthV
             break;
 
         if (mNext == mFirst) {
-            mNext = NULL; // wrapped all the way back to the start
+            mNext = nsnull; // wrapped all the way back to the start
             break;
         }
 
@@ -247,7 +248,7 @@ NS_IMPL_ISUPPORTS(PropertyCursorImpl, kIRDFCursorIID);
 NS_IMETHODIMP
 PropertyCursorImpl::HasMoreElements(PRBool& result)
 {
-    result = (mNext != NULL);
+    result = (mNext != nsnull);
     return NS_OK;
 }
 
@@ -255,7 +256,7 @@ PropertyCursorImpl::HasMoreElements(PRBool& result)
 NS_IMETHODIMP
 PropertyCursorImpl::GetNext(nsIRDFNode*& next, PRBool& tv)
 {
-    if (mNext == NULL)
+    if (mNext == nsnull)
         return NS_ERROR_UNEXPECTED;
 
     next = mNext->GetValue();
@@ -264,7 +265,7 @@ PropertyCursorImpl::GetNext(nsIRDFNode*& next, PRBool& tv)
     mNext = mNext->GetNext(); // advance past the current node
     while (1) {
         if (mNext == mFirst) {
-            mNext = NULL; // wrapped all the way back to the start
+            mNext = nsnull; // wrapped all the way back to the start
             break;
         }
 
@@ -315,7 +316,7 @@ NS_IMPL_ISUPPORTS(ArcCursorImpl, kIRDFCursorIID);
 PRBool
 ArcCursorImpl::Enumerator(nsHashKey* key, void* value, void* closure)
 {
-    nsISupportsArray* properties = static_cast<nsISupportsArray*>(closure);
+    nsISupportsArray* properties = NS_STATIC_CAST(nsISupportsArray*, closure);
     NodeHashKey* k = (NodeHashKey*) key;
     properties->AppendElement(k->GetNode());
     return PR_TRUE;
@@ -367,10 +368,10 @@ PropertyListElement*
 NodeImpl::FindPropertyValue(NodeHashKey* key, nsIRDFNode* value, PRBool tv)
 {
     PropertyListElement* head
-        = static_cast<PropertyListElement*>(mProperties.Get(key));
+        = NS_STATIC_CAST(PropertyListElement*, mProperties.Get(key));
 
     if (! head)
-        return NULL;
+        return nsnull;
 
     PropertyListElement* e = head;
     do {
@@ -380,7 +381,7 @@ NodeImpl::FindPropertyValue(NodeHashKey* key, nsIRDFNode* value, PRBool tv)
         e = e->GetNext();
     } while (e != head);
 
-    return NULL;
+    return nsnull;
 }
 
 
@@ -388,7 +389,7 @@ PRBool
 NodeImpl::HasPropertyValue(nsIRDFNode* property, nsIRDFNode* value, PRBool tv)
 {
     NodeHashKey key(property);
-    return (FindPropertyValue(&key, value, tv) != NULL);
+    return (FindPropertyValue(&key, value, tv) != nsnull);
 }
 
 nsIRDFNode*
@@ -396,10 +397,10 @@ NodeImpl::GetProperty(nsIRDFNode* property, PRBool tv)
 {
     NodeHashKey key(property);
     PropertyListElement* head
-        = static_cast<PropertyListElement*>(mProperties.Get(&key));
+        = NS_STATIC_CAST(PropertyListElement*, mProperties.Get(&key));
 
     if (! head)
-        return NULL;
+        return nsnull;
 
     PropertyListElement* e = head;
     do {
@@ -409,7 +410,7 @@ NodeImpl::GetProperty(nsIRDFNode* property, PRBool tv)
         e = e->GetNext();
     } while (e != head);
 
-    return NULL;
+    return nsnull;
 }
 
 void
@@ -423,7 +424,7 @@ NodeImpl::AddProperty(nsIRDFNode* property, nsIRDFNode* value, PRBool tv)
     // graph together. This seems wrong...
 
     PropertyListElement* head
-        = static_cast<PropertyListElement*>(mProperties.Get(&key));
+        = NS_STATIC_CAST(PropertyListElement*, mProperties.Get(&key));
 
     PropertyListElement* e
         = new PropertyListElement(value, tv);
@@ -466,7 +467,7 @@ NodeImpl::GetProperties(nsIRDFNode* property, PRBool tv)
 {
     NodeHashKey key(property);
     PropertyListElement* head
-        = static_cast<PropertyListElement*>(mProperties.Get(&key));
+        = NS_STATIC_CAST(PropertyListElement*, mProperties.Get(&key));
 
     return (head) ? (new PropertyCursorImpl(head, tv)) : gEmptyCursor;
 }
@@ -482,7 +483,7 @@ NodeImpl::GetArcLabelsOut(void)
 // nsMemoryDataSource implementation
 
 nsMemoryDataSource::nsMemoryDataSource(void)
-    : mRegistry(NULL)
+    : mRegistry(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -495,7 +496,7 @@ nsMemoryDataSource::~nsMemoryDataSource(void)
     if (mRegistry) {
         mRegistry->Unregister(this);
         nsServiceManager::ReleaseService(kRDFRegistryCID, mRegistry);
-        mRegistry = NULL;
+        mRegistry = nsnull;
     }
 }
 
@@ -548,12 +549,12 @@ nsMemoryDataSource::GetTarget(nsIRDFNode* source,
     if (!source || !property)
         return NS_ERROR_NULL_POINTER;
 
-    target = NULL; // reasonable default
+    target = nsnull; // reasonable default
 
     NodeHashKey key(source);
     NodeImpl *u;
 
-    if (! (u = static_cast<NodeImpl*>(mNodes.Get(&key))))
+    if (! (u = NS_STATIC_CAST(NodeImpl*, mNodes.Get(&key))))
         return NS_ERROR_FAILURE;
 
     target = u->GetProperty(property, tv);
@@ -578,7 +579,7 @@ nsMemoryDataSource::GetTargets(nsIRDFNode* source,
 
     NodeHashKey key(source);
     NodeImpl *u;
-    if (! (u = static_cast<NodeImpl*>(mNodes.Get(&key))))
+    if (! (u = NS_STATIC_CAST(NodeImpl*, mNodes.Get(&key))))
         return NS_OK;
 
     if (! (targets = u->GetProperties(property, tv)))
@@ -625,7 +626,7 @@ nsMemoryDataSource::Unassert(nsIRDFNode* source,
     NodeHashKey key(source);
     NodeImpl *u;
 
-    if (! (u = static_cast<NodeImpl*>(mNodes.Get(&key))))
+    if (! (u = NS_STATIC_CAST(NodeImpl*, mNodes.Get(&key))))
         return NS_OK;
 
     u->RemoveProperty(property, target);
@@ -648,10 +649,10 @@ nsMemoryDataSource::HasAssertion(nsIRDFNode* source,
     NodeHashKey key(source);
     NodeImpl *u;
 
-    if (! (u = static_cast<NodeImpl*>(mNodes.Get(&key))))
+    if (! (u = NS_STATIC_CAST(NodeImpl*, mNodes.Get(&key))))
         return NS_OK;
 
-    hasAssertion = (u->GetProperty(property, tv) != NULL);
+    hasAssertion = (u->GetProperty(property, tv) != nsnull);
     return NS_OK;
 }
 
@@ -689,7 +690,7 @@ nsMemoryDataSource::ArcLabelsOut(nsIRDFNode* source,
 
     NodeHashKey key(source);
     NodeImpl *u;
-    if (! (u = static_cast<NodeImpl*>(mNodes.Get(&key))))
+    if (! (u = NS_STATIC_CAST(NodeImpl*, mNodes.Get(&key))))
         return NS_OK;
 
     if (! (labels = u->GetArcLabelsOut()))
@@ -717,7 +718,7 @@ nsMemoryDataSource::Ensure(nsIRDFNode* node)
     // appropriate Release() on the nsIRDFNode.
 
     NodeHashKey key(node);
-    NodeImpl* result = static_cast<NodeImpl*>(mNodes.Get(&key));
+    NodeImpl* result = NS_STATIC_CAST(NodeImpl*, mNodes.Get(&key));
     if (! result) {
         result = new NodeImpl(node);
         if (result)
