@@ -1008,7 +1008,8 @@ sub LearnAboutColumns {
 sub get_legal_field_values {
     my ($field) = @_;
     my $dbh = Bugzilla->dbh;
-    my $result_ref = $dbh->selectcol_arrayref("SELECT value FROM $field");
+    my $result_ref = $dbh->selectcol_arrayref(
+                           "SELECT value FROM $field ORDER BY sortkey, value");
     return @$result_ref;
 }
 
