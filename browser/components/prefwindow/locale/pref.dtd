@@ -11,3 +11,18 @@
      XUL/FE DEVELOPERS: DO NOT MODIFY THIS VALUE. It represents the correct
      size of this window for en-US. -->
 <!ENTITY  prefWindow.size             "width: 52em; height: 41em;">
+<!--LOCALIZATION NOTE : FILE Lists preferences categories that appear on the left of the preferences dialog -->
+<!ENTITY fonts.label "Fonts and Colors">
+<!ENTITY themes.label "Themes and Extensions">
+<!--LOCALIZATION NOTE (navigator.label): DONT_TRANSLATE -->
+<!ENTITY navigator.label "General">
+<!--LOCALIZATION NOTE (smartBrowse.label): DONT_TRANSLATE -->
+<!ENTITY privacy.label "Privacy">
+<!ENTITY advance.label "Advanced">
+<!ENTITY connection.label "Connection">
+<!ENTITY popups.label "Popup Windows">
+<!ENTITY scriptsAndWindows.label "JavaScript">
+<!ENTITY tabs.label "Tabbed Browsing">
+#ifdef XP_WIN
+<!ENTITY winhooks.label                   "System">
+#endif

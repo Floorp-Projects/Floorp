@@ -1,8 +1,6 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 
-<?xul-overlay href="chrome://browser/content/pref/preftree.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://browser/locale/pref/pref.dtd" >
 
 <dialog id="prefDialog" 
@@ -51,8 +49,78 @@
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <hbox flex="1">
-    <!-- tree sidebar -->
-    <tree id="prefsTree" style="width: 13em;"/>
+    <tree id="prefsTree" seltype="single" hidecolumnpicker="true" style="width: 13em;"
+              onselect="if( hPrefWindow ) hPrefWindow.switchPage();">
+      <treecols>
+        <treecol id="categoryCol" flex="1" hideheader="true" primary="true"/>
+      </treecols>
+    
+      <treechildren id="panelChildren">
+        <treeitem id="navigator">
+          <treerow>
+            <treecell url="chrome://browser/content/pref/pref-navigator.xul" label="&navigator.label;"/>
+          </treerow>
+        </treeitem>
+    
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://browser/content/pref/pref-fonts.xul" label="&fonts.label;"/>
+          </treerow>
+        </treeitem>
+    
+        <treeitem id="themes-panel">
+          <treerow>
+            <treecell url="chrome://browser/content/pref/pref-themes.xul" label="&themes.label;"/>
+          </treerow>
+        </treeitem>
+    
+        <!-- XXX remove this when overlays.rdf works for navigator -->
+    
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://browser/content/pref/pref-privacy.xul" label="&privacy.label;" />
+          </treerow>
+        </treeitem>
+    
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://browser/content/pref/pref-connection.xul" label="&connection.label;" />
+          </treerow>
+        </treeitem>
+    
+    
+        <treeitem id="advancedItem" container="true">
+          <treerow>
+            <treecell url="chrome://browser/content/pref/pref-advanced.xul" label="&advance.label;"/>
+          </treerow>
+          <treechildren id="advancedChildren">
+            <treeitem>
+              <treerow>
+                <treecell url="chrome://browser/content/pref/pref-popups.xul" label="&popups.label;"/>
+              </treerow>
+            </treeitem>
+    
+            <treeitem>
+              <treerow>
+                <treecell url="chrome://browser/content/pref/pref-scripts.xul" label="&scriptsAndWindows.label;"/> 
+              </treerow>
+            </treeitem>
+            <treeitem>
+              <treerow>
+                <treecell url="chrome://browser/content/pref/pref-tabs.xul" label="&tabs.label;"/> 
+              </treerow>
+            </treeitem>
+    #ifdef XP_WIN
+            <treeitem id="winhooks">
+              <treerow>
+                <treecell url="chrome://browser/content/pref/pref-winhooks.xul" label="&winhooks.label;"/>
+              </treerow>
+            </treeitem> 
+    #endif
+          </treechildren>
+        </treeitem>
+      </treechildren>
+    </tree>
     <vbox flex="1">
       <dialogheader id="header"/>
       <iframe id="panelFrame" name="panelFrame" style="width: 0px" flex="1"/>
