@@ -2388,13 +2388,12 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                 net_pop3_password_pending = PR_TRUE;
             }
 #endif 
-           nsXPIDLCString apwd;
-		   GetPassword(getter_Copies(apwd));
-		   const char * cpwd = (const char *) pwd;
            if (m_username.IsEmpty() || !pwd || !*pwd)
             {
                 // net_pop3_block = PR_FALSE;
-                return NS_OK;
+                m_pop3ConData->next_state = POP3_ERROR_DONE;
+                m_pop3ConData->pause_for_read = PR_FALSE;
+                break;
             }
             
             m_pop3ConData->next_state = POP3_START_CONNECT;
