@@ -61,7 +61,6 @@ ImageManagerImpl::~ImageManagerImpl()
 {
   IL_Shutdown();
   NS_RELEASE(mSS);
-//  gImageManager = nsnull;
 }
 
 NS_IMPL_ADDREF(ImageManagerImpl)
@@ -149,4 +148,9 @@ NS_NewImageManager(nsIImageManager **aInstancePtrResult)
   }
   return gImageManager->QueryInterface(kIImageManagerIID,
                                        (void **)aInstancePtrResult);
+}
+extern "C" NS_GFX_(void)
+NS_FreeImageManager()
+{
+  NS_IF_RELEASE(gImageManager);
 }
