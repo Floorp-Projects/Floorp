@@ -37,6 +37,10 @@
 #define NS_FONT_TYPE_UNICODE           0
 #define NS_FONT_TYPE_NON_UNICODE       1
 
+
+#define NOT_SETUP 0x33
+static PRBool gIsWIN95 = NOT_SETUP;
+
 #undef USER_DEFINED
 #define USER_DEFINED "x-user-def"
 
@@ -1595,7 +1599,8 @@ public:
 
   virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength);
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
-                          const PRUnichar* aString, PRUint32 aLength);
+
+    const PRUnichar* aString, PRUint32 aLength);
 #ifdef MOZ_MATHML
   virtual nsresult
   GetBoundingMetrics(HDC                aDC,
@@ -1603,10 +1608,15 @@ public:
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics);
+
 #ifdef NS_DEBUG
   virtual void DumpFontInfo();
 #endif // NS_DEBUG
 #endif
+
+private:
+  PRBool mUnderlinedOrStrikeOut;
+
 };
 
 // Subclass for non-unicode fonts that need a mapping table and uses
@@ -3030,6 +3040,15 @@ nsFontWin::~nsFontWin()
 nsFontWinUnicode::nsFontWinUnicode(LOGFONT* aLogFont, HFONT aFont,
   PRUint32* aMap) : nsFontWin(aLogFont, aFont, aMap)
 {
+// This is used for a bug in WIN95 where it does not render
+// unicode TrueType fonts with underline or strikeout correctly.
+// @see  nsFontWinUnicode::DrawString
+  NS_ASSERTION(aLogFont != NULL, "Null logfont passed to nsFontWinUnicode constructor");
+  if ((aLogFont->lfUnderline) || (aLogFont->lfStrikeOut)) {
+    mUnderlinedOrStrikeOut = PR_TRUE;
+  } else {
+    mUnderlinedOrStrikeOut = PR_FALSE;
+  }
 }
 
 nsFontWinUnicode::~nsFontWinUnicode()
@@ -3048,7 +3067,57 @@ void
 nsFontWinUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const PRUnichar* aString, PRUint32 aLength)
 {
-  ::ExtTextOutW(aDC, aX, aY, 0, NULL, aString, aLength, NULL);
+
+  // Due to a bug in WIN95 unicode rendering of truetype fonts
+  // with underline or strikeout, we need to set a clip rect
+  // to prevent the underline and/or strikethru from being rendered
+  // too far to the right of the character string.
+  // The WIN95 bug causes the underline to be 20-30% longer than
+  // it should be. @see bugzilla bug 8322
+                           
+  // Do check for underline or strikeout first since they are rarely
+  // used. HTML text frames draw the underlines or strikeout rather
+  // than relying on loading and underline or strikeout font so very
+  // few fonts should have mUnderlinedOrStrikeOut set.
+  if (mUnderlinedOrStrikeOut)
+  {
+     //XXX: This code to test the OS version
+     //was lifted out of nsRenderingContext
+     //It really should be moved to a common location that both
+     //the rendering context and nsFontMetricsWin can access.
+     // Determine if OS = WIN95
+    if (NOT_SETUP == gIsWIN95) {
+      OSVERSIONINFO os;
+      os.dwOSVersionInfoSize = sizeof(os);
+      ::GetVersionEx(&os);
+      // XXX This may need tweaking for win98
+      if (VER_PLATFORM_WIN32_NT == os.dwPlatformId) {
+        gIsWIN95 = PR_FALSE;
+      }
+      else {
+        gIsWIN95 = PR_TRUE;
+      }
+    }
+
+    if (gIsWIN95)
+    {
+        // Clip out the extra underline/strikethru caused by the
+        // bug in WIN95.
+      SIZE size;
+      ::GetTextExtentPoint32W(aDC, aString, aLength, &size);
+      RECT clipRect;
+      clipRect.top = aY - size.cy;
+      clipRect.bottom = aY + size.cy; // Make it plenty large to allow for character descent.
+                                      // Not necessary to clip vertically, only horizontally
+      clipRect.left = aX;
+      clipRect.right = aX + size.cx;
+      ::ExtTextOutW(aDC, aX, aY, ETO_CLIPPED, &clipRect, aString, aLength, NULL); 
+      return;
+    }
+  } 
+
+  // Do normal non-WIN95 text output without clipping
+  ::ExtTextOutW(aDC, aX, aY, 0, NULL, aString, aLength, NULL);  
 }
 
 #ifdef MOZ_MATHML
