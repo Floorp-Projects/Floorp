@@ -581,12 +581,13 @@ LM_CanDoJS(MWContext *context)
         forceJSEnabled = PR_FALSE;
     }
     
-    if (!forceJSEnabled && !LM_GetMochaEnabled())
-        return JS_FALSE;
-
-    /* No JS for Editor */
-    if( EDT_IS_EDITOR(context) )
-        return JS_FALSE;
+    /* No JS for Editor unless forced on 
+     * (e.g., for Composer Plugins, which uses JS to access preferences)
+    */
+    if (!forceJSEnabled &&
+        (!LM_GetMochaEnabled() || EDT_IS_EDITOR(context))) {
+         return JS_FALSE;
+    }
 
     switch (context->type) {
       case MWContextBrowser:
