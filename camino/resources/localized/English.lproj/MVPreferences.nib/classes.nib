@@ -5,7 +5,12 @@
             ACTIONS = {showPreferences = id; }; 
             CLASS = MVPreferencesController; 
             LANGUAGE = ObjC; 
-            OUTLETS = {loadingImageView = id; loadingTextFeld = id; loadingView = id; window = id; }; 
+            OUTLETS = {
+                mLoadingImageView = NSImageView; 
+                mLoadingTextFeld = NSTextField; 
+                mLoadingView = NSView; 
+                mWindow = NSWindow; 
+            }; 
             SUPERCLASS = NSObject; 
         }
     ); 

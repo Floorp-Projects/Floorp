@@ -55,7 +55,7 @@
 #endif
 
 
-static MVPreferencesController *sharedInstance = nil;
+static MVPreferencesController *gSharedInstance = nil;
 
 NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
@@ -82,9 +82,20 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
 
 @implementation MVPreferencesController
 
-+ (MVPreferencesController *) sharedInstance
++ (MVPreferencesController *)sharedInstance
 {
-  return ( sharedInstance ? sharedInstance : [[[self alloc] init] autorelease] );
+  if (!gSharedInstance)
+    gSharedInstance = [[MVPreferencesController alloc] init];
+    
+  return gSharedInstance;
+}
+
++ (void)clearSharedInstance
+{
+  [[gSharedInstance window] performClose:nil];
+
+  [gSharedInstance release];
+  gSharedInstance = nil;
 }
 
 - (id)init
@@ -128,37 +139,38 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
 {
   NSToolbar *toolbar = [[[NSToolbar alloc] initWithIdentifier:@"preferences.toolbar"] autorelease];
 
-  [window setDelegate:self];
-  [window setFrameAutosaveName:@"CaminoPreferenceWindowFrame"];
+  [mWindow setDelegate:self];
+  [mWindow setFrameAutosaveName:@"CaminoPreferenceWindowFrame"];
 
   [toolbar setAllowsUserCustomization:NO];
   [toolbar setAutosavesConfiguration:NO];
   [toolbar setDelegate:self];
   [toolbar setAlwaysCustomizableByDrag:NO];
   [toolbar setShowsContextMenu:NO];
-  [window setToolbar:toolbar];
-  [toolbar setDisplayMode:NSToolbarDisplayModeIconAndLabel];
+  [mWindow setToolbar:toolbar];
+  [toolbar setDisplayMode:NSToolbarDisplayModeIconAndLabel];\
 }
 
-- (NSWindow *) window
+- (NSWindow *)window
 {
-  return [[window retain] autorelease];   // XXX why??
+  return mWindow;
 }
 
 - (IBAction) showPreferences:(id) sender
 {
-  if ( ![window isVisible] ) {
+  if ( ![mWindow isVisible] ) {
     // on being shown, register as a window that cares about XPCOM being active until we're done
     // with it in |windowDidClose()|. Need to ensure this is exactly balanced with |BrowserClosed()|
     // calls as it increments a refcount. As a result, we can only call it when we're making
     // the window visible. Too bad cocoa doesn't give us any notifications of this.
     CHBrowserService::InitEmbedding();
   }
+
   // If a pref pane is not showing, then show the general pane
-  if (!mCurrentPaneIdentifier && (![[window contentView] isEqual:mainView]))
+  if (!mCurrentPaneIdentifier && (![[mWindow contentView] isEqual:mMainView]))
     [self selectPreferencePaneByIdentifier:@"org.mozilla.chimera.preference.navigation"];
     
-  [window makeKeyAndOrderFront:nil];
+  [mWindow makeKeyAndOrderFront:nil];
 }
 
 - (void)selectPreferencePaneByIdentifier:(NSString *)identifier
@@ -173,7 +185,7 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
 #if DEBUG
       NSLog( @"can't unselect current" );
 #endif
-      closeWhenPaneIsReady = NO;
+      mCloseWhenPaneIsReady = NO;
       [mPendingPaneIdentifier autorelease];
       mPendingPaneIdentifier = [identifier retain];
       return;
@@ -181,13 +193,13 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
     
     [mPendingPaneIdentifier autorelease];
     mPendingPaneIdentifier = nil;
-    [loadingImageView setImage:[self imageForPaneBundle:bundle]];
-    [loadingTextFeld setStringValue:[NSString stringWithFormat:NSLocalizedString( @"Loading %@...", nil ),
+    [mLoadingImageView setImage:[self imageForPaneBundle:bundle]];
+    [mLoadingTextFeld setStringValue:[NSString stringWithFormat:NSLocalizedString( @"Loading %@...", nil ),
         [self labelForPaneBundle:bundle]]];
     
-    [window setTitle:[self labelForPaneBundle:bundle]];
-    [window setContentView:loadingView];
-    [window display];
+    [mWindow setTitle:[self labelForPaneBundle:bundle]];
+    [mWindow setContentView:mLoadingView];
+    [mWindow display];
     
     NSPreferencePane *pane = nil;
     NSView *prefView = nil;
@@ -207,22 +219,22 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
       [self resizeWindowForContentView:prefView];
 
       [[self currentPane] willUnselect];
-      [window setContentView:prefView];
+      [mWindow setContentView:prefView];
       [[self currentPane] didUnselect];
 
       [pane didSelect];
       [[NSNotificationCenter defaultCenter]
         postNotificationName: MVPreferencesWindowNotification
         object: self
-        userInfo: [NSDictionary dictionaryWithObjectsAndKeys:window, @"window", nil]];
+        userInfo: [NSDictionary dictionaryWithObjectsAndKeys:mWindow, @"window", nil]];
 
       [mCurrentPaneIdentifier autorelease];
       mCurrentPaneIdentifier = [identifier copy];
 
-      [window setInitialFirstResponder:[pane initialKeyView]];
-      [window makeFirstResponder:[pane initialKeyView]];
+      [mWindow setInitialFirstResponder:[pane initialKeyView]];
+      [mWindow makeFirstResponder:[pane initialKeyView]];
       if ([NSToolbar instancesRespondToSelector:@selector(setSelectedItemIdentifier:)])
-        [[window toolbar] setSelectedItemIdentifier:mCurrentPaneIdentifier];
+        [[mWindow toolbar] setSelectedItemIdentifier:mCurrentPaneIdentifier];
     }
     else
     {
@@ -239,7 +251,7 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
 #if DEBUG
     NSLog( @"can't unselect current" );
 #endif
-    closeWhenPaneIsReady = YES;
+    mCloseWhenPaneIsReady = YES;
     return NO;
   }
   return YES;
@@ -323,22 +335,23 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
   [self selectPreferencePaneByIdentifier:[sender itemIdentifier]];
 }
 
-- (void) doUnselect:(NSNotification *) notification
+- (void)doUnselect:(NSNotification *)notification
 {
-  if( closeWhenPaneIsReady ) [window close];
+  if (mCloseWhenPaneIsReady)
+    [mWindow close];
   [self selectPreferencePaneByIdentifier:mPendingPaneIdentifier];
 }
 
 - (void) resizeWindowForContentView:(NSView *) view
 {
-  NSRect windowFrame = [NSWindow contentRectForFrameRect:[window frame] styleMask:[window styleMask]];
+  NSRect windowFrame = [NSWindow contentRectForFrameRect:[mWindow frame] styleMask:[mWindow styleMask]];
   float  newWindowHeight = NSHeight( [view frame] );
 
-  if ( [[window toolbar] isVisible] )
-    newWindowHeight += NSHeight( [[[window toolbar] _toolbarView] frame] );
+  if ( [[mWindow toolbar] isVisible] )
+    newWindowHeight += NSHeight( [[[mWindow toolbar] _toolbarView] frame] );
     
-  NSRect newWindowFrame = [NSWindow frameRectForContentRect:NSMakeRect( NSMinX( windowFrame ), NSMaxY( windowFrame ) - newWindowHeight, NSWidth( windowFrame ), newWindowHeight ) styleMask:[window styleMask]];
-  [window setFrame:newWindowFrame display:YES animate:[window isVisible]];
+  NSRect newWindowFrame = [NSWindow frameRectForContentRect:NSMakeRect( NSMinX( windowFrame ), NSMaxY( windowFrame ) - newWindowHeight, NSWidth( windowFrame ), newWindowHeight ) styleMask:[mWindow styleMask]];
+  [mWindow setFrame:newWindowFrame display:YES animate:[mWindow isVisible]];
 }
 
 - (NSImage *)imageForPaneBundle:(NSBundle *)bundle

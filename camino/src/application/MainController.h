@@ -93,8 +93,6 @@ typedef enum EBookmarkOpenBehavior
 
     FindDlgController*      mFindDialog;
 
-    MVPreferencesController* mPreferencesController;
-
     NSString*               mStartURL;
     
     SharedMenusObj*         mSharedMenusObj;
@@ -179,7 +177,6 @@ typedef enum EBookmarkOpenBehavior
 - (void)setupBookmarkMenus:(BookmarkManager *)BookmarkManager;
 - (void)loadBookmark:(BookmarkItem*)item withWindowController:(BrowserWindowController*)browserWindowController openBehavior:(EBookmarkOpenBehavior)behavior;
 
-- (MVPreferencesController *)preferencesController;
 - (void)displayPreferencesWindow:sender;
 - (BOOL)isMainWindowABrowserWindow;
 

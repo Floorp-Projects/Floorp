@@ -271,7 +271,7 @@ const int kReuseWindowOnAE = 2;
     
   // Release before calling TermEmbedding since we need to access XPCOM
   // to save preferences
-  [mPreferencesController release];
+  [MVPreferencesController clearSharedInstance];
   
   CHBrowserService::TermEmbedding();
   
@@ -961,17 +961,9 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   [[browserWindow windowController] manageBookmarks: aSender];
 }
 
-- (MVPreferencesController *)preferencesController
-{
-    if (!mPreferencesController) {
-        mPreferencesController = [[MVPreferencesController sharedInstance] retain];
-    }
-    return mPreferencesController;
-}
-
 - (void)displayPreferencesWindow:sender
 {
-    [[self preferencesController] showPreferences:nil];
+  [[MVPreferencesController sharedInstance] showPreferences:nil];
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename

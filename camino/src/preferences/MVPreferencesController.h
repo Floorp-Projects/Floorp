@@ -40,12 +40,12 @@ extern NSString* const MVPreferencesWindowNotification;
 
 @interface MVPreferencesController : NSObject
 {
-	IBOutlet NSWindow*      window;
-	IBOutlet NSView*        loadingView;
-	IBOutlet NSImageView*   loadingImageView;
-	IBOutlet NSTextField*   loadingTextFeld;
+	IBOutlet NSWindow*      mWindow;
+	IBOutlet NSView*        mLoadingView;
+	IBOutlet NSImageView*   mLoadingImageView;
+	IBOutlet NSTextField*   mLoadingTextFeld;
 
-	NSView*                 mainView;
+	NSView*                 mMainView;
 
 	NSMutableArray*         mPanes;         // array of PreferencePaneBase
 	NSMutableDictionary*    mLoadedPanes;   // panes indexed by identifier
@@ -54,12 +54,14 @@ extern NSString* const MVPreferencesWindowNotification;
 	NSString*               mCurrentPaneIdentifier;
 	NSString*               mPendingPaneIdentifier;
 
-	BOOL                    closeWhenDoneWithSheet;
-	BOOL                    closeWhenPaneIsReady;
+	// BOOL                    mCloseWhenDoneWithSheet;
+	BOOL                    mCloseWhenPaneIsReady;
 }
 
 + (MVPreferencesController *) sharedInstance;
-- (NSWindow *) window;
++ (void)clearSharedInstance;
+
+- (NSWindow *)window;
 - (void) showPreferences:(id) sender;
 - (void) selectPreferencePaneByIdentifier:(NSString *) identifier;
 

@@ -86,7 +86,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 
 @end
 
-
+#pragma mark -
 
 @implementation PreferenceManager
 
@@ -612,7 +612,6 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
 
     do {
         if ((buf = (char*)malloc((unsigned int)size)) == NULL) {
-            NSLog (@"malloc failed in [PreferenceManager getICStringPref]");
             return nil;
         }
         error = ICGetPref (mInternetConfig, prefKey, &dummy, buf, &size);
@@ -858,7 +857,7 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
   // The parent of the terminal node in the dest path given to copyPath has to exist already.
   exists = [fileMgr fileExistsAtPath:newProfilePath isDirectory:&isDir];
   if (exists && !isDir) {
-    NSLog(@"A file exists in the place of the profile directory!");
+    NSLog(@"Can't migrate profile to %@: there's a file in the way", newProfilePath);
     return;
   }
   else if (!exists) {
