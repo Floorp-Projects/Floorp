@@ -5,7 +5,7 @@ TemplateToolkit
 
   <p>Your password has been sent.</p>
 
-  [% IF pendingCommands.defined %]
+  [% IF pendingCommands.ref %]
   <form action="" method="GET"> <!-- XXX POST -->
    <p>
     <input type="submit" value="Continue...">
