@@ -4866,15 +4866,6 @@ nsEventStateManager::ResetBrowseWithCaret()
   if (itemType == nsIDocShellTreeItem::typeChrome)
     return;  // Never browse with caret in chrome
 
-  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(shellItem));
-  if (editorDocShell) {
-    PRBool isEditable;
-    editorDocShell->GetEditable(&isEditable);
-    if (isEditable) {
-      return;  // Reset caret visibility only if browsing, not editing
-    }
-  }
-
   PRPackedBool browseWithCaret =
     nsContentUtils::GetBoolPref("accessibility.browsewithcaret");
 
