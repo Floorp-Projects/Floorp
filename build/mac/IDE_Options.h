@@ -59,6 +59,8 @@
 	#pragma readonly_strings 		on
 
 	#ifdef DEBUG
+		#pragma profile 		off							/* Turn this on to profile the application. */
+																				/* Look for more details about profiling in nsMacMessagePump.cpp.  */
 		#pragma traceback 			on
 		#pragma global_optimizer 	off
 		#pragma scheduling 			off
