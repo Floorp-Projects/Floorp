@@ -228,7 +228,8 @@ sub performFieldChange {
     my $dataSource = $self->app->getService('dataSource.user');
     my($userID, $fieldID, $newData, $password, $createTime, $type) = $dataSource->getUserFieldChangeFromChangeID($self->app, $changeID);
     # check for valid change
-    if (($userID != $self->userID) or # wrong change ID
+    if ((not defined($userID)) or # invalid change ID
+        ($userID != $self->userID) or # wrong change ID
         (not $self->app->getService('service.password')->checkPassword($candidatePassword, $password)) or # wrong password
         ($createTime < $minTime)) { # expired change
         return 0;
