@@ -118,7 +118,11 @@ else    # XP_OS2_VACPP
 #
 SHELL = GBASH.EXE
 AS = alp.exe
+ifdef BUILD_OPT
 ASFLAGS = -Od
+else
+ASFLAGS = +Od
+endif
 CCC			= icc -q -DXP_OS2 -DOS2=4 -N10
 LINK			= -ilink
 AR		= -ilib /NOL /NOI /O:$(subst /,\\,$@)
