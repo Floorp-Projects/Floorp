@@ -8,6 +8,9 @@ netwerk/dns/src/Makefile
 netwerk/util/Makefile
 netwerk/util/public/Makefile
 netwerk/util/src/Makefile
+netwerk/mime/Makefile
+netwerk/mime/public/Makefile
+netwerk/mime/src/Makefile
 netwerk/build/Makefile
 netwerk/protocol/Makefile
 netwerk/protocol/file/Makefile
