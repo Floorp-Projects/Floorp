@@ -352,13 +352,20 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
               *_retval = nsXPIDLCString::Copy(*entry);
           }
         else
-          status = NS_ERROR_INVALID_ARG;
+          status = NS_ERROR_INVALID_ARG; // ...stops us from putting the value in
       }
 
+      // If you didn't say 'replace', and there was already an entry there,
+      //  then we can't put your value in (that's why we set |status|, above),
+      //  or make it persistent (see below)
+
     if ( NS_SUCCEEDED(status) )
-      {
-          // If you didn't say 'replace', and there was already an entry there,
-          //  then we can't put your value in, or make it persistent (see below)
+      { // it's OK to put a value in
+
+          // don't leak the entry we're replacing (if any)
+        delete entry;
+
+          // now put in the new vaentrylue
         entry = new LeafNode(aValue);
         nsCStringKey entryNameKey(aEntryName);
         category->Put(&entryNameKey, entry);
