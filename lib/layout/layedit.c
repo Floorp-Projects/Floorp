@@ -1858,6 +1858,9 @@ lo_PrintLayoutElement(MWContext *pContext, lo_TopState* top_state,
                   "FORM_TYPE_KEYGEN",
                   "FORM_TYPE_READONLY",
 				  "FORM_TYPE_OBJECT"
+#ifdef ENDER
+				  ,"FORM_TYPE_HTML"
+#endif /*ENDER*/
                   };
             const char* formTypeName;
             int16 form_id;
