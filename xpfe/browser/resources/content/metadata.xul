@@ -56,6 +56,8 @@
 
   <script type="application/x-javascript" src="chrome://navigator/content/metadata.js"/>
 
+  <keyset id="dialogKeys"/>
+
   <stringbundle src="chrome://navigator/locale/metadata.properties" id="bundle_metadata"/>
   <stringbundle src="chrome://global/locale/languageNames.properties" id="bundle_languages"/>
   <stringbundle src="chrome://global/locale/regionNames.properties" id="bundle_regions"/>
