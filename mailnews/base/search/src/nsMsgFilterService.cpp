@@ -81,7 +81,8 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsFileSpec *filterFile, nsIMsgF
 
 NS_IMETHODIMP nsMsgFilterService::CloseFilterList(nsIMsgFilterList *filterList)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	NS_ASSERTION(PR_FALSE,"CloseFilterList doesn't do anything yet");
+	return NS_OK;
 }
 
 /* save without deleting */
