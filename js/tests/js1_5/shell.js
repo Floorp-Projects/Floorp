@@ -52,6 +52,22 @@ function inSection(x)
 }
 
 /*
+ * Some tests need to know if we are in Rhino as opposed to SpiderMonkey
+ */
+function inRhino()
+{
+  try
+  {
+    java;
+    return true;
+  }
+  catch(e)
+  {
+    return false;
+  }
+}
+
+/*
  * Report a failure in the 'accepted' manner
  */
 function reportFailure (msg)
