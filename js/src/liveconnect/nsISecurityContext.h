@@ -57,6 +57,26 @@ public:
      *                      -- NS_FALSE otherwise.
      */
     NS_IMETHOD Implies(const char* target, const char* action, PRBool *bAllowedAccess) = 0;
+
+    /**
+     * Get the origin associated with the context.
+     *
+     * @param buf        -- Result buffer (managed by the caller.)
+     * @param len        -- Buffer length.
+     * @return           -- NS_OK if the codebase string was obtained.
+     *                   -- NS_FALSE otherwise.
+     */
+    NS_IMETHOD GetOrigin(char* buf, int len) = 0;
+
+    /**
+     * Get the certificate associated with the context.
+     *
+     * @param buf        -- Result buffer (managed by the caller.)
+     * @param len        -- Buffer length.
+     * @return           -- NS_OK if the codebase string was obtained.
+     *                   -- NS_FALSE otherwise.
+     */
+    NS_IMETHOD GetCertificateID(char* buf, int len) = 0;
 };
 
 
