@@ -192,9 +192,9 @@ void nsWidget::DestroyNative( void ) {
   if( mWidget ) {
     // prevent the widget from causing additional events
     mEventCallback = nsnull;
-	  EnableDamage( mWidget, PR_FALSE );
+	  //EnableDamage( mWidget, PR_FALSE );
 	  PtDestroyWidget( mWidget );
-	  EnableDamage( mWidget, PR_TRUE );
+	  //EnableDamage( mWidget, PR_TRUE );
     mWidget = nsnull;
   	}
 	}
@@ -244,11 +244,11 @@ NS_METHOD nsWidget::Show( PRBool bState ) {
 			  return NS_OK;
 		  	}
 
-		  EnableDamage( mWidget, PR_FALSE );
+		  //EnableDamage( mWidget, PR_FALSE );
 		  PtRealizeWidget(mWidget);
 
 		  if( mWidget->rid == -1 ) {
-			  EnableDamage( mWidget, PR_TRUE );
+			  //EnableDamage( mWidget, PR_TRUE );
 			  NS_ASSERTION(0,"nsWidget::Show mWidget's rid == -1\n");
 			  mShown = PR_FALSE; 
 			  return NS_ERROR_FAILURE;
@@ -256,7 +256,7 @@ NS_METHOD nsWidget::Show( PRBool bState ) {
 
 		  PtSetArg(&arg, Pt_ARG_FLAGS, 0, Pt_DELAY_REALIZE);
 		  PtSetResources(mWidget, 1, &arg);
-		  EnableDamage( mWidget, PR_TRUE );
+		  //EnableDamage( mWidget, PR_TRUE );
 		  PtDamageWidget(mWidget);
 #ifdef Ph_REGION_NOTIFY			
 		  PhRegion_t region;
@@ -274,19 +274,19 @@ NS_METHOD nsWidget::Show( PRBool bState ) {
   	}
   else {
 		if( mWindowType != eWindowType_child ) {
-      EnableDamage( mWidget, PR_FALSE );
+      //EnableDamage( mWidget, PR_FALSE );
       PtUnrealizeWidget(mWidget);
 
-      EnableDamage( mWidget, PR_TRUE );
+      //EnableDamage( mWidget, PR_TRUE );
 
       PtSetArg(&arg, Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_DELAY_REALIZE);
       PtSetResources(mWidget, 1, &arg);
 			}
 		else {
-			EnableDamage( mWidget, PR_FALSE );
+			//EnableDamage( mWidget, PR_FALSE );
 			PtWidgetToBack( mWidget );
 			if( mShown ) PtUnrealizeWidget( mWidget );
-			EnableDamage( mWidget, PR_TRUE );
+			//EnableDamage( mWidget, PR_TRUE );
 			}
   	}
 
@@ -332,9 +332,9 @@ NS_METHOD nsWidget::Resize( PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint ) {
 
   if( mWidget ) {
 		PhDim_t dim = { aWidth, aHeight };
-		EnableDamage( mWidget, PR_FALSE );
+		//EnableDamage( mWidget, PR_FALSE );
 		PtSetResource( mWidget, Pt_ARG_DIM, &dim, 0 );
-		EnableDamage( mWidget, PR_TRUE );
+		//EnableDamage( mWidget, PR_TRUE );
 		}
 
 	return NS_OK;
@@ -770,9 +770,9 @@ static struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_OPEN_BRACKET,  Pk_bracketleft, PR_TRUE },
   { NS_VK_CLOSE_BRACKET, Pk_bracketright, PR_TRUE },
   { NS_VK_QUOTE,         Pk_quotedbl, PR_TRUE },
+
   { NS_VK_MULTIPLY,      Pk_KP_Multiply, PR_TRUE },
   { NS_VK_ADD,           Pk_KP_Add, PR_TRUE },
-  { NS_VK_COMMA,         Pk_KP_Separator, PR_FALSE },
   { NS_VK_SUBTRACT,      Pk_KP_Subtract, PR_TRUE },
   { NS_VK_PERIOD,        Pk_KP_Decimal, PR_TRUE },
   { NS_VK_DIVIDE,        Pk_KP_Divide, PR_TRUE },
@@ -786,12 +786,13 @@ static struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_RIGHT,         Pk_KP_6, PR_FALSE },
   { NS_VK_HOME,          Pk_KP_7, PR_FALSE },
   { NS_VK_UP,            Pk_KP_8, PR_FALSE },
-  { NS_VK_PAGE_UP,       Pk_KP_9, PR_FALSE }
+  { NS_VK_PAGE_UP,       Pk_KP_9, PR_FALSE },
+  { NS_VK_COMMA,         Pk_KP_Separator, PR_FALSE }
   };
 
 
-// Input keysym is in gtk format; output is in NS_VK format
-PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar ) {
+// Input keysym is in photon format; output is in NS_VK format
+PRUint32 nsWidget::nsConvertKey(unsigned long keysym, unsigned long keymods, PRBool *aIsChar ) {
 
   const int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
 
@@ -812,6 +813,11 @@ PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar ) {
      *aIsChar = PR_FALSE;
      return keysym - Pk_F1 + NS_VK_F1;
   	}
+
+	if( keymods & Pk_KM_Num_Lock ) {
+  	if( keysym >= Pk_KP_0 && keysym <= Pk_KP_9 )
+     	return keysym - Pk_0 + NS_VK_0;
+		}
 
   for (int i = 0; i < length; i++) {
     if( nsKeycodes[i].keysym == keysym ) {
@@ -841,8 +847,8 @@ inline void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
     PRBool IsChar;
     unsigned long vkey;
 		if( aPhKeyEvent->key_flags & Pk_KF_Sym_Valid )
-			vkey = nsConvertKey( aPhKeyEvent->key_sym, &IsChar );
-		else vkey = nsConvertKey( aPhKeyEvent->key_cap, &IsChar );
+			vkey = nsConvertKey( aPhKeyEvent->key_sym, aPhKeyEvent->key_mods, &IsChar );
+		else vkey = nsConvertKey( aPhKeyEvent->key_cap, aPhKeyEvent->key_mods, &IsChar );
 
     anEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = ( aPhKeyEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
