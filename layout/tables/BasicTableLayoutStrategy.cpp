@@ -711,6 +711,7 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
     nscoord usedWidth = 0;
     // get the correct numerator in a similar fashion to getting the divisor
     for (spanX = 0; spanX < aColSpan; spanX++) {
+      if (usedWidth >= availWidth) break;
       nsTableColFrame* colFrame = mTableFrame->GetColFrame(aColIndex + spanX);
       if (!colFrame) continue;
       nscoord minWidth = colFrame->GetMinWidth();
@@ -744,14 +745,14 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
       if (LIMIT_PCT == aLimitType) {
         if (pctLimitTotal > 0) {
           divisor   = pctTotal - pctMinTotal;
-          numerator = numeratorPct - minWidth;
+          numerator = PR_MAX(numeratorPct - minWidth, 0);
         }
       }
       // let fix cols reach their target 
       else if (LIMIT_FIX == aLimitType) {
         if (fixLimitTotal > 0) {
           divisor   = fixTotal - fixMinTotal;
-          numerator = numeratorFix - minWidth;
+          numerator = PR_MAX(numeratorFix - minWidth, 0);
         }
       }
       // let auto cols reach their target 
@@ -759,15 +760,15 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
         if (desLimitTotal > 0) {
           if (autoDesTotal > 0) { // there were auto cols
             divisor   = autoDesTotal - autoMinTotal;
-            numerator = numeratorAutoDes - minWidth;
+            numerator = PR_MAX(numeratorAutoDes - minWidth, 0);
           }
           else if (fixTotal > 0) {  // there were fix cols but no auto
             divisor   = fixTotal - fixMinTotal;
-            numerator = numeratorFix - minWidth;
+            numerator = PR_MAX(numeratorFix - minWidth, 0);
           }
           else if (pctTotal > 0) {  // there were only pct cols
             divisor   = pctTotal - pctMinTotal;
-            numerator = numeratorPct - minWidth;
+            numerator = PR_MAX(numeratorPct - minWidth, 0);
           }
           else continue;
         }
