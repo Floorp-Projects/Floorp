@@ -450,11 +450,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
     if (provider.Equals("skin")) {
       finalURL = "resource:/chrome/skins/modern/";
     }
-#ifdef XP_MAC
-    else {
-      finalURL = "resource:/chrome/";
-    }
-#else
     else if (provider.Equals("locale")) {
       finalURL = "resource:/chrome/locales/en-US/";
     }
@@ -470,7 +465,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
     else {
       finalURL = "resource:/chrome/packages/core/";
     }
-#endif
   } 
 
   finalURL += package;
