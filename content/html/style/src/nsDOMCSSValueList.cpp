@@ -60,16 +60,10 @@ NS_INTERFACE_MAP_BEGIN(nsDOMCSSValueList)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSValueList)
 NS_INTERFACE_MAP_END
 
-nsresult
+PRBool
 nsDOMCSSValueList::AppendCSSValue(nsIDOMCSSValue* aValue)
 {
-  nsresult rv = NS_OK;
-  if (!mCSSValues) {
-    rv = NS_NewISupportsArray(getter_AddRefs(mCSSValues));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return mCSSValues->AppendElement(aValue);
+  return mCSSValues.AppendObject(aValue);
 }
 
 // nsIDOMCSSValueList
@@ -77,10 +71,7 @@ nsDOMCSSValueList::AppendCSSValue(nsIDOMCSSValue* aValue)
 NS_IMETHODIMP
 nsDOMCSSValueList::GetLength(PRUint32* aLength)
 {
-  *aLength = 0;
-  if (mCSSValues) {
-    mCSSValues->Count(aLength);
-  }
+  *aLength = mCSSValues.Count();
 
   return NS_OK;
 }
@@ -90,12 +81,8 @@ nsDOMCSSValueList::Item(PRUint32 aIndex, nsIDOMCSSValue **aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  *aReturn = nsnull;
-
-  if (mCSSValues) {
-    mCSSValues->QueryElementAt(aIndex, NS_GET_IID(nsIDOMCSSValue),
-                               (void**)aReturn);
-  }
+  *aReturn = mCSSValues[aIndex];
+  NS_IF_ADDREF(*aReturn);
 
   return NS_OK;
 }
@@ -107,12 +94,7 @@ nsDOMCSSValueList::GetCssText(nsAString& aCssText)
 {
   aCssText.Truncate();
 
-  if (!mCSSValues) {
-    return NS_OK;
-  }
-
-  PRUint32 count;
-  mCSSValues->Count(&count);
+  PRUint32 count = mCSSValues.Count();
 
   nsAutoString separator;
   if (mCommaDelimited) {
@@ -125,8 +107,7 @@ nsDOMCSSValueList::GetCssText(nsAString& aCssText)
   nsCOMPtr<nsIDOMCSSValue> cssValue;
   nsAutoString tmpStr;
   for (PRUint32 i = 0; i < count; ++i) {
-    mCSSValues->QueryElementAt(i, NS_GET_IID(nsIDOMCSSValue),
-                               getter_AddRefs(cssValue));
+    cssValue = mCSSValues[i];
     NS_ASSERTION(cssValue, "Eek!  Someone filled the value list with null CSSValues!");
     if (cssValue) {
       cssValue->GetCssText(tmpStr);

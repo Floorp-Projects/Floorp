@@ -40,7 +40,7 @@
 
 #include "nsIDOMCSSValue.h"
 #include "nsIDOMCSSValueList.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 
 #include "nsCOMPtr.h"
 
@@ -59,7 +59,7 @@ public:
   nsDOMCSSValueList(PRBool aCommaDelimited, PRBool aReadonly);
   virtual ~nsDOMCSSValueList();
 
-  nsresult AppendCSSValue(nsIDOMCSSValue* aValue);
+  PRBool AppendCSSValue(nsIDOMCSSValue* aValue);
 
 private:
   PRPackedBool                mCommaDelimited;  // some value lists use a comma
@@ -68,7 +68,7 @@ private:
 
   PRPackedBool                mReadonly;    // Are we read-only?
 
-  nsCOMPtr<nsISupportsArray>  mCSSValues;
+  nsCOMArray<nsIDOMCSSValue>  mCSSValues;
 };
 
 

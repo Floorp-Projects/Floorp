@@ -3196,8 +3196,8 @@ nsComputedDOMStyle::GetBorderColorsFor(PRUint8 aSide, nsIFrame *aFrame,
           }
         }
 
-        nsresult rv = valueList->AppendCSSValue(primitive);
-        if (NS_FAILED(rv)) {
+        PRBool success = valueList->AppendCSSValue(primitive);
+        if (!success) {
           delete valueList;
           delete primitive;
 
