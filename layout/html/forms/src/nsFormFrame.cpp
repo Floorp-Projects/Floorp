@@ -237,6 +237,10 @@ nsFormFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredSize.height  = 0;
   aDesiredSize.ascent  = 0;
   aDesiredSize.descent = 0;
+  if (aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width  = 0;
+    aDesiredSize.maxElementSize->height = 0;
+  }
 }
 
 NS_IMETHODIMP

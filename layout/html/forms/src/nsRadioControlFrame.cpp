@@ -97,10 +97,10 @@ nsRadioControlFrame::GetRadioboxSize(float aPixToTwip) const
 }
 
 void 
-nsRadioControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
+nsRadioControlFrame::GetDesiredSize(nsIPresContext*        aPresContext,
                                   const nsHTMLReflowState& aReflowState,
-                                  nsHTMLReflowMetrics& aDesiredLayoutSize,
-                                  nsSize& aDesiredWidgetSize)
+                                  nsHTMLReflowMetrics&     aDesiredLayoutSize,
+                                  nsSize&                  aDesiredWidgetSize)
 {
 #ifndef NS_GFX_RENDER_FORM_ELEMENTS
   float p2t;
@@ -112,6 +112,10 @@ nsRadioControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
+  if (aDesiredLayoutSize.maxElementSize) {
+    aDesiredLayoutSize.maxElementSize->width  = aDesiredLayoutSize.width;
+    aDesiredLayoutSize.maxElementSize->height = aDesiredLayoutSize.height;
+  }
 #else
   nsFormControlFrame::GetDesiredSize(aPresContext,aReflowState,aDesiredLayoutSize,
                                   aDesiredWidgetSize);

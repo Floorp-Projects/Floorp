@@ -1001,6 +1001,11 @@ nsListControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   //  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   //}
 
+  if (aDesiredLayoutSize.maxElementSize) {
+    aDesiredLayoutSize.maxElementSize->width  = minSize.width;
+    aDesiredLayoutSize.maxElementSize->height = minSize.height;
+  }
+
   NS_RELEASE(select);
   NS_RELEASE(options);
 

@@ -165,27 +165,31 @@ nsCheckboxControlFrame::GetCheckboxSize(float aPixToTwip) const
 }
 
 void
-nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
+nsCheckboxControlFrame::GetDesiredSize(nsIPresContext*               aPresContext,
                                             const nsHTMLReflowState& aReflowState,
-                                            nsHTMLReflowMetrics& aDesiredLayoutSize,
-                                            nsSize& aDesiredWidgetSize)
+                                            nsHTMLReflowMetrics&     aDesiredLayoutSize,
+                                            nsSize&                  aDesiredWidgetSize)
 {
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
 #ifndef NS_GFX_RENDER_FORM_ELEMENTS
-   aDesiredWidgetSize.width  = GetCheckboxSize(p2t);
-   aDesiredWidgetSize.height = aDesiredWidgetSize.width;
+  aDesiredWidgetSize.width  = GetCheckboxSize(p2t);
+  aDesiredWidgetSize.height = aDesiredWidgetSize.width;
 #endif
 
 
 #ifdef NS_GFX_RENDER_FORM_ELEMENTS
-   nsFormControlFrame::GetDesiredSize(aPresContext, aReflowState, 
-     aDesiredLayoutSize, aDesiredWidgetSize);
+  nsFormControlFrame::GetDesiredSize(aPresContext, aReflowState, 
+  aDesiredLayoutSize, aDesiredWidgetSize);
 #else
-    aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
-    aDesiredLayoutSize.height = aDesiredWidgetSize.height;
-    aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
-    aDesiredLayoutSize.descent = 0;
+  aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
+  aDesiredLayoutSize.height = aDesiredWidgetSize.height;
+  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+  aDesiredLayoutSize.descent = 0;
+  if (aDesiredLayoutSize.maxElementSize) {
+    aDesiredLayoutSize.maxElementSize->width  = aDesiredLayoutSize.width;
+    aDesiredLayoutSize.maxElementSize->height = aDesiredLayoutSize.height;
+  }
 #endif
 }
 
