@@ -25,23 +25,30 @@
 #include <new>
 #include <string>
 #include <iterator>
-#include <iostream>
+#include <algorithm>
 #include <cstdio>
+#include <cstdarg>
 
 #ifndef _WIN32	// Microsoft Visual C++ 6.0 bug: standard identifiers should be in std namespace
 using std::size_t;
 using std::ptrdiff_t;
+using std::va_list;
 using std::strlen;
 using std::strcpy;
+using std::FILE;
+using std::getc;
+using std::fgets;
+using std::fputc;
+using std::fputs;
 using std::sprintf;
+using std::snprintf;
+using std::vsnprintf;
 using std::fprintf;
 #define STD std
 #else
 #define STD
 #endif
 using std::string;
-using std::istream;
-using std::ostream;
 using std::auto_ptr;
 
 namespace JavaScript {
@@ -446,6 +453,38 @@ namespace JavaScript {
 // Growable arrays
 //
 
+	// A Buffer initially points to inline storage of initialSize elements of type T.
+	// The Buffer can be expanded via the expand method to increase its size by allocating
+	// storage from the heap.
+	template <typename T, size_t initialSize>
+	class Buffer {
+	  public:
+		T *buffer;						// Pointer to the current buffer
+		size_t size;					// Gross size of the buffer
+	  private:
+		T initialBuffer[initialSize];	// Initial buffer
+	  public:
+	
+		Buffer(): buffer(initialBuffer), size(initialSize) {}
+		~Buffer() {if (buffer != initialBuffer) delete[] buffer;}
+		
+		void expand(size_t newSize);
+	};
+
+	// Expand the buffer to size newSize, which must be greater than the current size.
+	// The buffer's contents are not preserved.
+	template <typename T, size_t initialSize>
+	inline void Buffer<T, initialSize>::expand(size_t newSize) {
+		ASSERT(newSize > size);
+		if (buffer != initialBuffer) {
+			delete[] buffer;
+			buffer = 0;	// For exception safety if the allocation below fails.
+		}
+		buffer = new T[newSize];
+		size = newSize;
+	}
+
+
 	// private
 	template <typename T>
 	class ProtoArrayBuffer {
@@ -474,7 +513,7 @@ namespace JavaScript {
 	        while (p != pLimit)
 	            *q++ = *p++;
 	        if (buffer != cache)
-	            delete buffer;
+	            delete[] buffer;
 	        buffer = newBuffer.release();
 	        bufferSize = newBufferSize;
 	    }
@@ -491,14 +530,13 @@ namespace JavaScript {
 	    T cache[cacheSize];
 
 	  public:
-	    ArrayBuffer() {buffer = &cache; length = cacheSize; bufferSize = cacheSize;}
-	    ~ArrayBuffer() {if (buffer != &cache) delete buffer;}
+	    ArrayBuffer() {buffer = &cache; length = 0; bufferSize = cacheSize;}
+	    ~ArrayBuffer() {if (buffer != &cache) delete[] buffer;}
 	    
 	    int32 size() const {return length;}
 	    T *front() const {return buffer;}
 	    void append(const T *elts, int32 nElts) {ProtoArrayBuffer<T>::append(elts, nElts, cache);}
 	};
-
 
 
 //
@@ -550,33 +588,234 @@ namespace JavaScript {
 
 
 //
-// C++ I/O
+// Bit Sets
 //
 
+	template<size_t size>
+	class BitSet {
+	  #ifndef _WIN32	// Microsoft Visual C++ 6.0 bug: constants not supported
+		static const size_t nWords = (size+31)>>5;
+		static const uint32 lastWordMask = (2u<<((size-1)&31)) - 1;
+	  #else
+		enum {nWords = (size+31)>>5};
+		enum {lastWordMask = (2<<((size-1)&31)) - 1};
+	  #endif
+		uint32 words[nWords];		// Bitmap of bits.  The first word contains bits 0(LSB)...31(MSB), the second contains bits 32...63, etc.
 
-	// A class to remember the format of an ostream so that a function may modify it internally
-	// without changing it for the caller.
-	class SaveFormat {
-#ifndef __GNUC__ // The GCC libraries don't support ios_base yet.
-		ostream &o;
-		std::ios_base::fmtflags flags;
-		char fill;
-#endif
 	  public:
-		explicit SaveFormat(ostream &out);
-		~SaveFormat();
+		void clear() {zero(words, words+nWords);}
+		BitSet() {clear();}
+		// Construct a BitSet out of an array of alternating low (inclusive) and high (exclusive) ends of ranges of set bits.
+		// The array is terminated by a 0,0 range.
+		template<typename In> explicit BitSet(In a) {clear(); size_t low, high; while (low = *a++, (high = *a++) != 0) setRange(low, high);}
+		
+		bool operator[](size_t i) const {ASSERT(i < size); return static_cast<bool>(words[i>>5]>>(i&31) & 1);}
+		bool none() const;
+		bool operator==(const BitSet &s) const;
+		bool operator!=(const BitSet &s) const;
+
+		void set(size_t i) {ASSERT(i < size); words[i>>5] |= 1u<<(i&31);}
+		void reset(size_t i) {ASSERT(i < size); words[i>>5] &= ~(1u<<(i&31));}
+		void flip(size_t i) {ASSERT(i < size); words[i>>5] ^= 1u<<(i&31);}
+		void setRange(size_t low, size_t high);
+		void resetRange(size_t low, size_t high);
+		void flipRange(size_t low, size_t high);
+	};
+	
+	// Return true if all bits are clear.
+	template<size_t size>
+	inline bool BitSet<size>::none() const {
+		if (nWords == 1)
+			return !words[0];
+		else {
+			const uint32 *w = words;
+			while (w != words + nWords)
+				if (*w++)
+					return false;
+			return true;
+		}
+	}
+	
+	// Return true if the BitSets are equal.
+	template<size_t size>
+	inline bool BitSet<size>::operator==(const BitSet &s) const {
+		if (nWords == 1)
+			return words[0] == s.words[0];
+		else
+			return std::equal(words, s.words);
+	}
+
+	// Return true if the BitSets are not equal.
+	template<size_t size>
+	inline bool BitSet<size>::operator!=(const BitSet &s) const {
+		return !operator==(s);
+	}
+	
+	// Set all bits between low inclusive and high exclusive.
+	template<size_t size>
+	void BitSet<size>::setRange(size_t low, size_t high) {
+		ASSERT(low <= high && high <= size);
+		if (low != high)
+			if (nWords == 1)
+				words[0] |= (2u<<(high-1)) - (1u<<low);
+			else {
+				--high;
+				uint32 *w = words + (low>>5);
+				uint32 *wHigh = words + (high>>5);
+				uint32 l = 1u << (low&31);
+				uint32 h = 2u << (high&31);
+				if (w == wHigh)
+					*w |= h - l;
+				else {
+					*w++ |= -l;
+					while (w != wHigh)
+						*w++ = static_cast<uint32>(-1);
+					*w |= h - 1;
+				}
+			}
+	}
+
+	// Clear all bits between low inclusive and high exclusive.
+	template<size_t size>
+	void BitSet<size>::resetRange(size_t low, size_t high) {
+		ASSERT(low <= high && high <= size);
+		if (low != high)
+			if (nWords == 1)
+				words[0] &= (1u<<low) - 1 - (2u<<(high-1));
+			else {
+				--high;
+				uint32 *w = words + (low>>5);
+				uint32 *wHigh = words + (high>>5);
+				uint32 l = 1u << (low&31);
+				uint32 h = 2u << (high&31);
+				if (w == wHigh)
+					*w &= l - 1 - h;
+				else {
+					*w++ &= l - 1;
+					while (w != wHigh)
+						*w++ = 0;
+					*w &= -h;
+				}
+			}
+	}
+	
+	// Invert all bits between low inclusive and high exclusive.
+	template<size_t size>
+	void BitSet<size>::flipRange(size_t low, size_t high) {
+		ASSERT(low <= high && high <= size);
+		if (low != high)
+			if (nWords == 1)
+				words[0] ^= (2u<<(high-1)) - (1u<<low);
+			else {
+				--high;
+				uint32 *w = words + (low>>5);
+				uint32 *wHigh = words + (high>>5);
+				uint32 l = 1u << (low&31);
+				uint32 h = 2u << (high&31);
+				if (w == wHigh)
+					*w ^= h - l;
+				else {
+					*w++ ^= -l;
+					while (w != wHigh)
+						*w++ ^= static_cast<uint32>(-1);
+					*w ^= h - 1;
+				}
+			}
+	}
+
+
+//
+// Output
+//
+
+	// Print the characters between begin and end to the given file.  These characters
+	// may include nulls.
+	size_t printChars(FILE *file, const char *begin, const char *end);
+
+  #ifndef XP_MAC_MPW
+	inline size_t printChars(FILE *file, const char *begin, const char *end)
+		{ASSERT(end >= begin); return STD::fwrite(begin, 1, static_cast<size_t>(end - begin), file);}
+  #endif
+
+
+	// A Formatter is an abstract base class representing a simplified output stream.
+	// One can print text to a Formatter by using << and the various global print... methods below.
+	// Formatters accept both char and char16 text and convert as appropriate to their actual stream.
+	class Formatter {
+	  protected:
+		virtual void printChar8(char ch) = 0;
+		virtual void printChar16(char16 ch) = 0;
+		virtual void printZStr8(const char *str) = 0;
+		virtual void printStr8(const char *strBegin, const char *strEnd) = 0;
+		virtual void printStr16(const char16 *strBegin, const char16 *strEnd) = 0;
+		virtual void printString16(const String &s) = 0;
+		virtual void printVFormat8(const char *format, va_list args) = 0;
+	  public:
+
+		Formatter &operator<<(char ch) {printChar8(ch); return *this;}
+		Formatter &operator<<(char16 ch) {printChar16(ch); return *this;}
+		Formatter &operator<<(const char *str) {printZStr8(str); return *this;}
+		Formatter &operator<<(const String &s) {printString16(s); return *this;}
+
+		friend void printString(Formatter &f, const char *strBegin, const char *strEnd) {f.printStr8(strBegin, strEnd);}
+		friend void printString(Formatter &f, const char16 *strBegin, const char16 *strEnd) {f.printStr16(strBegin, strEnd);}
+		friend void printFormat(Formatter &f, const char *format, ...) {va_list args; va_start(args, format); f.printVFormat8(format, args); va_end(args);}
 	};
 
+	void printNum(Formatter &f, uint32 i, int nDigits, char pad, const char *format);
 
-	void showChar(ostream &out, char16 ch);
+	void printChar(Formatter &f, char ch, int count);
+	void printChar(Formatter &f, char16 ch, int count);
+	inline void printDec(Formatter &f, int32 i, int nDigits = 0, char pad = ' ') {printNum(f, (uint32)i, nDigits, pad, "%i");}
+	inline void printDec(Formatter &f, uint32 i, int nDigits = 0, char pad = ' ') {printNum(f, i, nDigits, pad, "%u");}
+	inline void printHex(Formatter &f, int32 i, int nDigits = 0, char pad = '0') {printNum(f, (uint32)i, nDigits, pad, "%X");}
+	inline void printHex(Formatter &f, uint32 i, int nDigits = 0, char pad = '0') {printNum(f, i, nDigits, pad, "%X");}
+	void printPtr(Formatter &f, void *p);
 
-	template<class In>
-	void showString(ostream &out, In begin, In end)
-	{
-		while (begin != end)
-			showChar(out, *begin++);
-	}
-	void showString(ostream &out, const String &str);
+
+	// An AsciiFileFormatter is a Formatter that prints to a standard ASCII file or stream.
+	// Characters with Unicode values of 256 or higher are converted to escape sequences.
+	// Selected lower characters can also be converted to escape sequences; these are specified by
+	// set bits in the BitSet passed to the constructor.
+	class AsciiFileFormatter: public Formatter {
+		FILE *file;
+		BitSet<256> filter;				// Set of first 256 characters that are to be converted to escape sequences
+		bool filterEmpty;				// True if filter passes all 256 characters
+	  public:
+		static BitSet<256> defaultFilter;// Default value of filter when not given in the constructor
+		
+		explicit AsciiFileFormatter(FILE *file, BitSet<256> *filter = 0);
+
+	  private:
+		bool filterChar(char ch) {return filter[static_cast<uchar>(ch)];}
+		bool filterChar(char16 ch) {return char16Value(ch) >= 0x100 || filter[char16Value(ch)];}
+	  protected:
+		void printChar8(char ch);
+		void printChar16(char16 ch);
+		void printZStr8(const char *str);
+		void printStr8(const char *strBegin, const char *strEnd);
+		void printStr16(const char16 *strBegin, const char16 *strEnd);
+		void printString16(const String &s);
+		void printVFormat8(const char *format, va_list args);
+	};
+
+	extern AsciiFileFormatter stdOut;
+	extern AsciiFileFormatter stdErr;
+
+
+//
+// Input
+//
+
+	class LineReader {
+		FILE *in;						// File from which currently reading
+		bool crWasLast;					// True if a CR character was the last one read
+	
+	  public:
+		explicit LineReader(FILE *in): in(in), crWasLast(false) {}
+
+		size_t readLine(string &str);
+	};
 
 
 //
@@ -587,8 +826,8 @@ namespace JavaScript {
 	// exception bad_alloc).
 	struct Exception {
 		enum Kind {
-			SyntaxError,
-			StackOverflow
+			syntaxError,
+			stackOverflow
 		};
 		
 		Kind kind;						// The exception's kind
@@ -608,12 +847,13 @@ namespace JavaScript {
 			kind(kind), message(message), sourceFile(sourceFile), lineNum(lineNum), charNum(charNum), pos(pos),
 			sourceLine(sourceLineBegin, sourceLineEnd) {}
 
+		bool hasKind(Kind k) const {return kind == k;}
 		const char *kindString() const;
 		String fullMessage() const;
 	};
 
 
-	// Throw a StackOverflow exception if the execution stack has gotten too large.
+	// Throw a stackOverflow exception if the execution stack has gotten too large.
 	inline void checkStackSize() {}
 }
 
