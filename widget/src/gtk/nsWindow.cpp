@@ -1940,6 +1940,10 @@ void * nsWindow::GetNativeData(PRUint32 aDataType)
         return NULL;
       }
     }
+    // we have to flush the X queue here so that any plugins that
+    // might be running on seperate X connections will be able to use
+    // this window in case it was just created
+    XSync(GDK_DISPLAY(), False);
     return (void *)GDK_WINDOW_XWINDOW(mSuperWin->bin_window);
   }
 
