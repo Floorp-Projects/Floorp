@@ -61,6 +61,8 @@ REQUIRES	= xpcom \
 		  chardet \
 		  transformiix \
 		  xmlextras \
+                  find \
+                  appshell \
 		  $(NULL)
 
 CPPSRCS =			\
