@@ -284,6 +284,7 @@
       <menuseparator />
       <!-- FRAME, LINK should go here, but nav must put them in global files -->
       <menuitem id="menu_preview" value="&previewCmd.label;" accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
+      <menuitem id="menu_sendPage" value="&sendPageCmd.label;" accesskey="&sendPage.accesskey;" oncommand="editorSendPage();"/>
       <menuseparator />
       <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="cmd_printSetup" />
       <menuitem accesskey="&fileprintpreview.accesskey;"                         observes="cmd_printPreview"/>

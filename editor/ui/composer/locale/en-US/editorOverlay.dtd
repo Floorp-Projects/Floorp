@@ -49,6 +49,8 @@
 <!ENTITY filesaveascharset.accesskey "h">
 <!ENTITY previewCmd.label "Preview in Browser">
 <!ENTITY filepreview.accesskey "b">
+<!ENTITY sendPageCmd.label "Send Page">
+<!ENTITY sendPage.accesskey "d">
 <!ENTITY printSetupCmd.label "Page Setup...">
 <!ENTITY fileprintsetup.accesskey "u">
 <!ENTITY printPreviewCmd.label "Print Preview">
