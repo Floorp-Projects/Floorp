@@ -3194,7 +3194,10 @@ void lo_GetImage(MWContext *context, IL_GroupContext *img_cx,
                                       trans_pixel,
                                       lo_image->width / context->convertPixX,
                                       lo_image->height / context->convertPixY,
-                                      0, net_cx);
+                                      /* Special flag for Editor so the correct stream
+                                         converter is used (see IL_ViewStream in libimg/src/external.c */
+                                      context->is_editor ? 0x000000ED : 0, 
+                                      net_cx);
 
 		if(( dummy_ireq != lo_image->lowres_image_req ) && url_to_fetch )
 			lo_image->image_req = dummy_ireq;
