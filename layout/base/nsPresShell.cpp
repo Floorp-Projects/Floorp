@@ -1749,6 +1749,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     nsresult rv=CreateRenderingContext(rootFrame, &rcx);
 	if (NS_FAILED(rv)) return rv;
 
+    mIsReflowing = PR_TRUE;
+
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_Initial, rcx, maxSize);
     nsIView*          view;
@@ -1782,6 +1784,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::InitialReflow"));
     MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::InitialReflow(), this=%p\n", this));
     MOZ_TIMER_STOP(mReflowWatch);
+
+    mIsReflowing = PR_FALSE;
   }
 
   DidCauseReflow();
