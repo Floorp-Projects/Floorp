@@ -272,8 +272,7 @@ static const char *metricToString[] = {
     "eMetric_ListVerticalInsidePadding",
 
     "eMetric_CaretBlinkTime",
-    "eMetric_SingleLineCaretWidth",
-    "eMetric_MultiLineCaretWidth",
+    "eMetric_CaretWidth",
     "eMetric_ShowCaretDuringSelection",
     "eMetric_SelectTextfieldsOnKeyFocus",
     "eMetric_SubmenuDelay",
@@ -382,8 +381,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID,PRInt32 &aMetric)
       aMetric = 500;
       break;
 
-    case eMetric_SingleLineCaretWidth:
-    case eMetric_MultiLineCaretWidth:
+    case eMetric_CaretWidth:
       aMetric = 1;
       break;
 
