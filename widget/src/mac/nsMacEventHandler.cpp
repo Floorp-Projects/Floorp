@@ -434,10 +434,10 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 			nsIMenuBar* menuBar = focusedWidget->GetMenuBar();
 			if (menuBar)
 			{
-			  MenuHandle menuHandle = nsnull;
+			  //MenuHandle menuHandle = nsnull;
 
-			  menuBar->GetNativeData((void *)menuHandle);
-			  ::SetMenuBar((Handle)menuHandle);
+			  //menuBar->GetNativeData((void *)menuHandle);
+			  //::SetMenuBar((Handle)menuHandle);
 			  menuBar->Paint();
 			}
 			else
