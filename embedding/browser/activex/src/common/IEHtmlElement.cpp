@@ -44,8 +44,9 @@
 
 #include "IEHtmlElement.h"
 #include "IEHtmlElementCollection.h"
-#include "nsIDOMNSHTMLElement.h"
 
+#include "nsIDOMHTMLElement.h"
+#include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
@@ -262,7 +263,14 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_className(BSTR __RPC_FAR *p)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::put_id(BSTR v)
 {
-    return E_NOTIMPL;
+    nsCOMPtr<nsIDOMHTMLElement> domHtmlElmt = do_QueryInterface(mDOMNode);
+    if (!domHtmlElmt)
+        return E_UNEXPECTED;
+    USES_CONVERSION;
+    nsDependentString strID(OLE2CW(v));
+    if (FAILED(domHtmlElmt->SetId(strID)))
+        return E_FAIL;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_id(BSTR __RPC_FAR *p)
@@ -709,7 +717,78 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_outerText(BSTR __RPC_FAR *p)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::insertAdjacentHTML(BSTR where, BSTR html)
 {
-    return E_NOTIMPL;
+    nsresult rv;
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    nsCOMPtr<nsIDOMRange> domRange;
+    nsCOMPtr<nsIDOMDocumentFragment> domDocFragment;
+
+    NS_ASSERTION(mDOMNode, "");
+    //Create a range:
+    mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDOMDocumentRange> domDocRange = do_QueryInterface(domDoc);
+    if (!domDocRange)
+        return E_FAIL;
+    domDocRange->CreateRange(getter_AddRefs(domRange));
+    if (!domRange)
+        return E_FAIL;
+    // Must position range first before calling CreateContextualFragment:
+    if (domRange->SetStartBefore(mDOMNode))
+        return E_FAIL;
+    USES_CONVERSION;
+    // Create doc fragment:
+    nsDependentString strAdjacentHTML(OLE2CW(html));
+    nsCOMPtr<nsIDOMNSRange> domNSRange = do_QueryInterface(domRange);
+    domNSRange->CreateContextualFragment(strAdjacentHTML, getter_AddRefs(domDocFragment));
+    if (!domDocFragment)
+        return E_FAIL;
+    if (_wcsicmp(OLE2CW(where), L"beforeBegin") == 0)
+    {
+        // Insert fragment immediately before us:
+        nsCOMPtr<nsIDOMNode> parentNode;
+        mDOMNode->GetParentNode(getter_AddRefs(parentNode));
+        nsCOMPtr<nsIDOMNode> dummyNode;
+        rv = parentNode->InsertBefore(domDocFragment, mDOMNode, getter_AddRefs(dummyNode));
+        return SUCCEEDED(rv)? S_OK: E_FAIL;
+    }
+    if (_wcsicmp(OLE2CW(where), L"afterEnd") == 0)
+    {
+        // Insert fragment immediately after us:
+        nsCOMPtr<nsIDOMNode> parentNode;
+        mDOMNode->GetParentNode(getter_AddRefs(parentNode));
+        nsCOMPtr<nsIDOMNode> dummyNode;
+        nsCOMPtr<nsIDOMNode> nextNode;
+        mDOMNode->GetNextSibling(getter_AddRefs(nextNode));
+        if (nextNode)
+        {
+            // Insert immediately before next node:
+            rv = parentNode->InsertBefore(domDocFragment, nextNode, getter_AddRefs(dummyNode));
+        }
+        else
+        {
+            // We are the last child, insert after us:
+            rv = parentNode->AppendChild(domDocFragment, getter_AddRefs(dummyNode));
+        }
+        return SUCCEEDED(rv)? S_OK: E_FAIL;
+    }
+    if (_wcsicmp(OLE2CW(where), L"afterBegin") == 0)
+    {
+        // Insert fragment immediately before first child:
+        nsCOMPtr<nsIDOMNode> firstChildNode;
+        mDOMNode->GetFirstChild(getter_AddRefs(firstChildNode));
+        if (!firstChildNode)
+            return E_FAIL; // IE fails when inserting into a tag that has no childs
+        nsCOMPtr<nsIDOMNode> dummyNode;
+        rv = mDOMNode->InsertBefore(domDocFragment, firstChildNode, getter_AddRefs(dummyNode));
+        return SUCCEEDED(rv)? S_OK: E_FAIL;
+    }
+    if (_wcsicmp(OLE2CW(where), L"beforeEnd") == 0)
+    {
+        // Insert fragment immediately as last child:
+        nsCOMPtr<nsIDOMNode> dummyNode;
+        rv = mDOMNode->AppendChild(domDocFragment, getter_AddRefs(dummyNode));
+        return SUCCEEDED(rv)? S_OK: E_FAIL;
+    }
+    return E_INVALIDARG;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::insertAdjacentText(BSTR where, BSTR text)
