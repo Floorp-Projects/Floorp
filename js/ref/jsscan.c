@@ -472,16 +472,16 @@ SkipChars(JSTokenStream *ts, intN n)
 	GetChar(ts);
 }
 
-static int32
-MatchChar(JSTokenStream *ts, int32 nextChar)
+static JSBool
+MatchChar(JSTokenStream *ts, int32 expect)
 {
     int32 c;
 
     c = GetChar(ts);
-    if (c == nextChar)
-	return 1;
+    if (c == expect)
+	return JS_TRUE;
     UngetChar(ts, c);
-    return 0;
+    return JS_FALSE;
 }
 
 void
@@ -544,7 +544,7 @@ js_ReportCompileError(JSContext *cx, JSTokenStream *ts, uintN flags,
 
 void
 js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
-		      const uintN errorNumber, ...)
+			    const uintN errorNumber, ...)
 {
     va_list ap;
     jschar *limit, lastc;

@@ -232,6 +232,7 @@ js_ReportCompileError(JSContext *cx, JSTokenStream *ts, uintN flags,
 void
 js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 		      const uintN errorNumber, ...);
+
 /*
  * Look ahead one token and return its type.
  */
