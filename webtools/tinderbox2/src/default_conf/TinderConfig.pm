@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.42 $ 
-# $Date: 2002/05/06 18:21:34 $ 
+# $Revision: 1.43 $ 
+# $Date: 2002/05/07 22:48:40 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -97,6 +97,15 @@ $TINDERBOX_HTML_DIR = "/opt/apache/htdocs/tinderbox2";
 #$TINDERBOX_DATA_DIR = "/var/spool/tinderbox";
 $TINDERBOX_DATA_DIR = "/export2/tbox2-data";
 
+
+# Where to store the compressed HTML converted log files. Typically
+# this is either the DATA_DIR or the HTML dir, though it can be
+# elsewhere.
+
+#$TINDERBOX_GZLOG_DIR = $TINDERBOX_DATA_DIR;
+$TINDERBOX_GZLOG_DIR = $TINDERBOX_HTML_DIR;
+
+
 # The full path name tinderbox will use to access the tinderbox
 # cgi scripts.
 
@@ -106,6 +115,15 @@ $TINDERBOX_CGIBIN_DIR = "/opt/tbox/public_html/cgi-bin/";
 # provide your own index file for tinderboxes web pages.
 
 $GLOBAL_INDEX_FILE = "index.html";
+
+# Tinderbox can be run without any images.  Set GIF_URL to null to
+# disable images. If you install the traditional tinderbox images on
+# your webserver then set GIF_URL to the url needed to find the
+# images. Images are used for the Notices and in the BuildStatus
+# 'header_background_gif'.
+
+$GIF_URL = 'http://lounge.mozilla.org/tinderbox2/gif';
+
 
 # Error log filename:
 
@@ -134,15 +152,6 @@ $PopUpImpl = (
 	      # 'HTMLPopUp::None',
 	      # 'HTMLPopUp::PortableLayers',
 	     );
-
-# Which string should be used in empty table cells?  If this string is
-# set to "&nbsp;" then all cell squares will have borders on them, If
-# this string is set to "" then many cells may be missing borders.  If
-# you are a first time user you may find that setting this to "&nbsp;"
-# is clearer.
-
-$EMPTY_TABLE_CELL = "&nbsp;";
-#$EMPTY_TABLE_CELL = "";
 
 
 # Use the DB implementations you wish to use.
@@ -355,7 +364,7 @@ $DEFAULT_HTML_PAGE = 'status.html';
 # This is used in TinderDB::Notice.pm
 
 #$NOTICE_AVAILABLE = "X";
-$NOTICE_AVAILABLE = "<img src='http://lounge.mozilla.org/tinderbox2/gif/star.gif' border=0>";
+$NOTICE_AVAILABLE = "<img src='$GIF_URL/star.gif' border=0>";
 
 
 # The amount of time rmlogs keeps logs on file
