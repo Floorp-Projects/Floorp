@@ -315,8 +315,7 @@ mime_set_html_state_fn (void *stream_closure,
 #ifndef MOZILLA_30
     if (layer_encapsulate_p && msd->options && !msd->options->nice_html_only_p){
       uint8 *rand_buf = msd->rand_buf;
-      RNG_GenerateGlobalRandomBytes(rand_buf, sizeof msd->rand_buf);
-
+//RICHIECSS      RNG_GenerateGlobalRandomBytes(rand_buf, sizeof msd->rand_buf);
 //RICHIECSS      buf = PR_smprintf("<ILAYER LOCKED CLIP=0,0,AUTO,AUTO "
 //RICHIECSS      ILAYER LOCKED CLIP=0,0,AUTO,AUTO "
       buf = PR_smprintf("<DIV style=\"position: 'relative';\">",

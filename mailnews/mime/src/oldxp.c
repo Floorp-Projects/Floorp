@@ -134,60 +134,6 @@ WH_FileName (const char *NetName, XP_FileType type)
     return NULL;
 }
 
-PUBLIC XP_File 
-XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
-{
-    MOZ_FUNCTION_STUB;
-    switch (type) {
-        case xpURL:
-        case xpFileToPost:
-        case xpHTTPCookie:
-        {
-            XP_File fp;
-            char* newName = WH_FileName(name, type);
-
-            if (!newName) return NULL;
-
-        	fp = fopen(newName, (char *) perm);
-            PR_Free(newName);
-            return fp;
-
-        }
-        default:
-            break;
-    }
-
-    return NULL;
-}
-
-PUBLIC XP_Dir 
-XP_OpenDir(const char * name, XP_FileType type)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-PUBLIC void 
-XP_CloseDir(XP_Dir dir)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-PUBLIC XP_DirEntryStruct * 
-XP_ReadDir(XP_Dir dir)
-{                                         
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-PUBLIC int 
-XP_FileRemove(const char * name, XP_FileType type)
-{
-    if (PR_Delete(name) == PR_SUCCESS)
-        return 0;
-    return -1;
-}
-
 /* If you want to trace netlib, set this to 1, or use CTRL-ALT-T
  * stroke (preferred method) to toggle it on and off */
 int MKLib_trace_flag=0;
@@ -213,47 +159,3 @@ void _MK_TraceMsg(char *fmt, ...) {
 
     net_Trace(buf);
 }
-
-PUBLIC int 
-XP_Stat(const char * name, XP_StatStruct * info, XP_FileType type)
-{
-    int result = -1;
-    MOZ_FUNCTION_STUB;
-
-    switch (type) {
-        case xpURL:
-        case xpFileToPost: {
-            char *newName = WH_FileName(name, type);
-    	
-            if (!newName) return -1;
-            result = _stat( newName, info );
-            PR_Free(newName);
-            break;
-        }
-        default:
-            break;
-    }
-    return result;
-}
-
-char *XP_STRNCPY_SAFE (char *dest, const char *src, size_t destLength)
-{
-	char *result = strncpy (dest, src, --destLength);
-	dest[destLength] = '\0';
-	return result;
-}
-
-int
-RNG_GenerateGlobalRandomBytes(void *dest, size_t len)
-{
-  size_t i;
-  char *ptr = (char *) dest;
-
-  for (i=0; i<len; i++)
-  {
-    *(ptr+i) = 1;
-  }
-
-  return 0;
-}
-
