@@ -44,8 +44,8 @@ public:
   
   NS_IMETHOD GetPresContext(nsIPresContext*& aResult) = 0;
 
-  // XXX Add a method to create a new doc viewer on the same content
-  // model with a specified type-of/instance-of presentation-context
+  NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
+                                       nsIDocumentViewer*& aResult) = 0;
 };
 
 // XXX temporary
