@@ -64,7 +64,7 @@ TagList  gInDL={2,{eHTMLTag_dl,eHTMLTag_body}};
 TagList  gInFrameset={1,{eHTMLTag_frameset}};
 TagList  gInNoframes={1,{eHTMLTag_noframes}};
 //Removed ADDRESS to solve 24885
-TagList  gInP={3,{eHTMLTag_span,eHTMLTag_form,eHTMLTag_table}}; // added table for bug 43678
+TagList  gInP={2,{eHTMLTag_span,eHTMLTag_table}}; // added table for bug 43678, removed FORM bug 94269
 TagList  gOptgroupParents={2,{eHTMLTag_select,eHTMLTag_optgroup}};
 TagList  gBodyParents={2,{eHTMLTag_html,eHTMLTag_noframes}};
 TagList  gColParents={2,{eHTMLTag_table,eHTMLTag_colgroup}};
@@ -453,7 +453,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_dd,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
-      /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
+      /*autoclose starttags and endtags*/ &gDTCloseTags,0,&gDLKids,0,
       /*parent,incl,exclgroups*/          kInlineEntity, kFlowEntity, kNone,
       /*special props, prop-range*/       kNoPropagate|kMustCloseSelf|kVerifyHierarchy,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown);
@@ -507,9 +507,9 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_dt,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
-      /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
+      /*autoclose starttags and endtags*/ &gDTCloseTags,0,&gDLKids,0,
       /*parent,incl,exclgroups*/          kInlineEntity, (kFlowEntity-kHeading), kNone,	// dt's parent group is inline - bug 65467
-      /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf),kDefaultPropRange,
+      /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf|kVerifyHierarchy),kDefaultPropRange,
       /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown);
 
     Initialize( 
