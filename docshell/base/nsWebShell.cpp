@@ -461,27 +461,28 @@ nsWebShell::FireUnloadEvent()
 {
   nsresult rv = NS_OK;
 
-  if (mScriptGlobal) {
-    nsIDocumentViewer* docViewer;
-    if (mContentViewer && NS_SUCCEEDED(mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer))) {
-      nsIPresContext *presContext;
-      if (NS_SUCCEEDED(docViewer->GetPresContext(presContext))) {
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_EVENT;
-        event.message = NS_PAGE_UNLOAD;
-        rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  if (!mFiredUnloadEvent) {
+    mFiredUnloadEvent = PR_TRUE;
 
-        NS_RELEASE(presContext);
+    if (mScriptGlobal) {
+      nsIDocumentViewer* docViewer;
+      if (mContentViewer && NS_SUCCEEDED(mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer))) {
+        nsIPresContext *presContext;
+        if (NS_SUCCEEDED(docViewer->GetPresContext(presContext))) {
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsMouseEvent event;
+          event.eventStructType = NS_EVENT;
+          event.message = NS_PAGE_UNLOAD;
+          rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+
+          NS_RELEASE(presContext);
+        }
+        NS_RELEASE(docViewer);
       }
-      NS_RELEASE(docViewer);
     }
   }
-
   //Fire child unloads now while our data is intact.
   rv = FireUnloadForChildren();
-
-  mFiredUnloadEvent = PR_TRUE;
 
   return rv;
 }
@@ -1075,25 +1076,13 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-   if(mScriptGlobal && (loader == mDocLoader))
-      {
-      if(mContentViewer)
-         {
-         nsCOMPtr<nsIPresContext> presContext;
-         GetPresContext(getter_AddRefs(presContext));
-         if(presContext) 
-            {
-            nsEventStatus status = nsEventStatus_eIgnore;
-            nsMouseEvent event;
-            event.eventStructType = NS_EVENT;
-            event.message = NS_PAGE_UNLOAD;
-            rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-            }
-         }
-      }
-
    if(loader == mDocLoader)
       {
+      //fire unload event to old doc
+      rv = FireUnloadEvent();
+      //reset mFiredUnloadEvent for the new doc
+      mFiredUnloadEvent = PR_FALSE;
+
       nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
 
       if(!mDocLoaderObserver && mParent)
@@ -1588,10 +1577,8 @@ NS_IMETHODIMP nsWebShell::Destroy()
 {
   nsresult rv = NS_OK;
 
-  if (!mFiredUnloadEvent) {
-    //Fire unload event before we blow anything away.
-    rv = FireUnloadEvent();
-  }
+  //Fire unload event before we blow anything away.
+  rv = FireUnloadEvent();
 
   nsDocShell::Destroy();
 

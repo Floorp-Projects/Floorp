@@ -322,22 +322,22 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
     nsIContent *formContent = nsnull;
     mFormFrame->GetContent(&formContent);
 
-    if (IsReset(type) == PR_TRUE) {
-      event.message = NS_FORM_RESET;
-      if (nsnull != formContent) {
-        formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    if (presShell) {
+      if (IsReset(type) == PR_TRUE) {
+        event.message = NS_FORM_RESET;
+        presShell->HandleEventWithTarget(&event, nsnull, formContent, &status);
+        if (nsEventStatus_eConsumeNoDefault != status && mFormFrame) {
+          mFormFrame->OnReset(aPresContext);
+        }
       }
-      if (nsEventStatus_eConsumeNoDefault != status) {
-        mFormFrame->OnReset(aPresContext);
-      }
-    }
-    else if (IsSubmit(type) == PR_TRUE) {
-      event.message = NS_FORM_SUBMIT;
-      if (nsnull != formContent) {
-        formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-      }
-      if (nsEventStatus_eConsumeNoDefault != status) {
-        mFormFrame->OnSubmit(aPresContext, this);
+      else if (IsSubmit(type) == PR_TRUE) {
+        event.message = NS_FORM_SUBMIT;
+        presShell->HandleEventWithTarget(&event, nsnull, formContent, &status);
+        if (nsEventStatus_eConsumeNoDefault != status && mFormFrame) {
+          mFormFrame->OnSubmit(aPresContext, this);
+        }
       }
     }
  

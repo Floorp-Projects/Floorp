@@ -3596,7 +3596,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, nsEventStatus* a
   nsresult rv;
 
   nsIEventStateManager *manager;
-  if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+  if (NS_OK == mPresContext->GetEventStateManager(&manager) && GetCurrentEventFrame()) {
     //1. Give event to event manager for pre event state changes and generation of synthetic events.
     rv = manager->PreHandleEvent(mPresContext, aEvent, mCurrentEventFrame, aStatus, aView);
 
