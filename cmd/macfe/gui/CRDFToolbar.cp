@@ -172,8 +172,5 @@ CRDFToolbar::notice_background_changed()
 		char* cp = 0;
 		if ( HT_GetTemplateData(HT_TopNode(_ht_view), gNavCenter->viewBGURL, HT_COLUMN_STRING, &cp) )
 			SetImageURL(string(cp));
-		else
-			SetImageURL("file:///Incoming/bk.gif");
-		Refresh();
 	}
 
