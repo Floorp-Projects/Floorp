@@ -601,10 +601,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
       }
     }
-    else if (eventType.EqualsIgnoreCase("popupshowing")) 
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUPOPUPSTART, accessible, nsnull);
-    else if (eventType.EqualsIgnoreCase("popuphiding")) 
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUPOPUPEND, accessible, nsnull);
     else if (eventType.EqualsIgnoreCase("DOMMenuBarActive")) 
       mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUSTART, accessible, nsnull);
     else if (eventType.EqualsIgnoreCase("DOMMenuBarInactive")) {
@@ -613,6 +609,20 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       if (accessible) {
         accessible->AccGetDOMNode(getter_AddRefs(targetNode));
         FireAccessibleFocusEvent(accessible, targetNode);
+      }
+    }
+    else {
+      // Menu popup events
+      PRUint32 menuEvent = 0;
+      if (eventType.EqualsIgnoreCase("popupshowing"))
+        menuEvent = nsIAccessibleEventListener::EVENT_MENUPOPUPSTART;
+      else if (eventType.EqualsIgnoreCase("popuphiding"))
+        menuEvent = nsIAccessibleEventListener::EVENT_MENUPOPUPEND;
+      if (menuEvent) {
+        PRUint32 role = ROLE_NOTHING;
+        accessible->GetAccRole(&role);
+        if (role == ROLE_MENUPOPUP)
+          mListener->HandleEvent(menuEvent, accessible, nsnull);
       }
     }
 #else
