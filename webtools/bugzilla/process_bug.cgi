@@ -260,9 +260,34 @@ my $ownerid;
 my $reporterid;
 my $qacontactid;
 
+################################################################################
+# CheckCanChangeField() defines what users are allowed to change what bugs. You
+# can add code here for site-specific policy changes, according to the 
+# instructions given in the Bugzilla Guide and below.
+#
+# CheckCanChangeField() should return true if the user is allowed to change this
+# field, and false if they are not.
+#
+# The parameters to this function are as follows:
+# $field    - name of the field in the bugs table the user is trying to change
+# $bugid    - the ID of the bug they are changing
+# $oldvalue - what they are changing it from
+# $newvalue - what they are changing it to
+#
+# Note that this function is currently not called for dependency changes 
+# (bug 141593) or CC changes, which means anyone can change those fields.
+#
+# Do not change the sections between START DO_NOT_CHANGE and END DO_NOT_CHANGE.
+################################################################################
 sub CheckCanChangeField {
-    my ($f, $bugid, $oldvalue, $newvalue) = (@_);
-    if ($f eq "assigned_to" || $f eq "reporter" || $f eq "qa_contact") {
+    # START DO_NOT_CHANGE
+    my ($field, $bugid, $oldvalue, $newvalue) = (@_);
+
+    # Convert email IDs into addresses for $oldvalue
+    if (($field eq "assigned_to") || 
+        ($field eq "reporter") || 
+        ($field eq "qa_contact")) 
+    {
         if ($oldvalue =~ /^\d+$/) {
             if ($oldvalue == 0) {
                 $oldvalue = "";
@@ -271,64 +296,106 @@ sub CheckCanChangeField {
             }
         }
     }
+    
+    # Return true if they haven't changed this field at all.
     if ($oldvalue eq $newvalue) {
         return 1;
-    }
-    if (trim($oldvalue) eq trim($newvalue)) {
-        return 1;
-    }
-    if ($f =~ /^longdesc/) {
-        return 1;
-    }
-    if ($f eq "resolution") { # always OK this.  if they really can't,
-        return 1;             # it'll flag it when "status" is checked.
-    }
-    if ($UserInEditGroupSet < 0) {
-        $UserInEditGroupSet = UserInGroup("editbugs");
-    }
-    if ($UserInEditGroupSet) {
-        return 1;
-    }
-    if ($lastbugid != $bugid) {
-        SendSQL("SELECT reporter, assigned_to, qa_contact FROM bugs " .
-                "WHERE bug_id = $bugid");
-        ($reporterid, $ownerid, $qacontactid) = (FetchSQLData());
-    }
-    # Let reporter change bug status, even if they can't edit bugs.
-    # If reporter can't re-open their bug they will just file a duplicate.
-    # While we're at it, let them close their own bugs as well.
-    if ( ($f eq "bug_status") && ($whoid eq $reporterid) ) {
-        return 1;
-    }
-    if ($f eq "bug_status" && $newvalue ne $::unconfirmedstate &&
-        IsOpenedState($newvalue)) {
-
-        # Hmm.  They are trying to set this bug to some opened state
-        # that isn't the UNCONFIRMED state.  Are they in the right
-        # group?  Or, has it ever been confirmed?  If not, then this
-        # isn't legal.
-
-        if ($UserInCanConfirmGroupSet < 0) {
-            $UserInCanConfirmGroupSet = UserInGroup("canconfirm");
-        }
-        if ($UserInCanConfirmGroupSet) {
-            return 1;
-        }
-        SendSQL("SELECT everconfirmed FROM bugs WHERE bug_id = $bugid");
-        my $everconfirmed = FetchOneColumn();
-        if ($everconfirmed) {
-            return 1;
-        }
-    } elsif ($reporterid eq $whoid || $ownerid eq $whoid ||
-             $qacontactid eq $whoid) {
+    }    
+    elsif (trim($oldvalue) eq trim($newvalue)) {
         return 1;
     }
     
-    # The user doesn't have the necessary permissions to change this field.
-    $vars->{'oldvalue'} = $oldvalue;
-    $vars->{'newvalue'} = $newvalue;
-    $vars->{'field'} = $f;
-    ThrowUserError("illegal_change", "abort");
+    # A resolution change is always accompanied by a status change. So, we 
+    # always OK resolution changes; if they really can't do this, we will 
+    # notice it when status is checked. 
+    if ($field eq "resolution") { 
+        return 1;             
+    }
+    # END DO_NOT_CHANGE
+
+    # Allow anyone to change comments.
+    if ($field =~ /^longdesc/) {
+        return 1;
+    }
+    
+    # START DO_NOT_CHANGE
+    # Find out whether the user is a member of the "editbugs" and/or
+    # "canconfirm" groups. $UserIn*GroupSet are caches of the return value of 
+    # the UserInGroup calls.
+    if ($UserInEditGroupSet < 0) {
+        $UserInEditGroupSet = UserInGroup("editbugs");
+    }
+    
+    if ($UserInCanConfirmGroupSet < 0) {
+        $UserInCanConfirmGroupSet = UserInGroup("canconfirm");
+    }
+    # END DO_NOT_CHANGE
+    
+    # Allow anyone with "editbugs" to change anything.
+    if ($UserInEditGroupSet) {
+        return 1;
+    }
+    
+    # Allow anyone with "canconfirm" to confirm bugs.
+    if (($field eq "bug_status") && 
+        ($oldvalue eq $::unconfirmedstate) &&
+        IsOpenedState($newvalue) &&
+        $UserInCanConfirmGroupSet) 
+    {
+        return 1;
+    }
+    
+    # START DO_NOT_CHANGE
+    # $reporterid, $ownerid and $qacontactid are caches of the results of
+    # the call to find out the owner, reporter and qacontact of the current bug.
+    if ($lastbugid != $bugid) {
+        SendSQL("SELECT reporter, assigned_to, qa_contact FROM bugs
+                 WHERE bug_id = $bugid");
+        ($reporterid, $ownerid, $qacontactid) = (FetchSQLData());
+    }    
+    # END DO_NOT_CHANGE
+
+    # Allow the owner to change anything.
+    if ($ownerid eq $whoid) {
+        return 1;
+    }
+    
+    # Allow the QA contact to change anything.
+    if ($qacontactid eq $whoid) {
+        return 1;
+    }
+    
+    # The reporter's a more complicated case...
+    if ($reporterid eq $whoid) {
+        # Reporter may not:
+        # - confirm his own bugs (this assumes he doesn't have canconfirm, or we
+        #   would have returned "1" earlier)
+        if (($field eq "bug_status") && 
+            ($oldvalue eq $::unconfirmedstate) &&
+             IsOpenedState($newvalue))
+        {
+            return 0;
+        }
+        
+        # - change the target milestone            
+        if  ($field eq "target_milestone")  {
+            return 0;
+        }       
+        
+        # - change the priority (unless he could have set it originally)
+        if (($field eq "priority") &&
+            !Param('letsubmitterchoosepriority'))
+        {
+            return 0;
+        }
+        
+        # Allow reporter to change anything else.
+        return 1;
+    }
+  
+    # If we haven't returned by this point, then the user doesn't have the
+    # necessary permissions to change this field.
+    return 0;
 }
 
 # Confirm that the reporter of the current bug can access the bug we are duping to.
@@ -989,7 +1056,12 @@ foreach my $id (@idlist) {
         $oldvalues[$i] ||= '';
         $oldhash{$col} = $oldvalues[$i];
         if (exists $::FORM{$col}) {
-            CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col});
+            if (!CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col})) {
+                $vars->{'oldvalue'} = $oldvalues[$i];
+                $vars->{'newvalue'} = $::FORM{$col};
+                $vars->{'field'} = $col;
+                ThrowUserError("illegal_change", "abort");            
+            }
         }
         $i++;
     }

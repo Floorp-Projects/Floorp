@@ -1176,6 +1176,100 @@
     
   </section>
 
+  <section id="cust-change-permissions">
+    <title>Change Permission Customisation</title>
+    
+    <warning>
+      <para>
+        This feature should be considered experimental; the Bugzilla code you
+        will be changing is not stable, and could change or move between 
+        versions. Be aware that if you make modifications to it, you may have
+        to re-make them or port them if Bugzilla changes internally between
+        versions.
+      </para>
+    </warning>
+       
+    <para>
+      Companies often have rules about which employees, or classes of employees,
+      are allowed to change certain things in the bug system. For example, 
+      only the bug's designated QA Contact may be allowed to VERIFY the bug.
+      Bugzilla has been
+      designed to make it easy for you to write your own custom rules to define
+      who is allowed to make what sorts of value transition.
+    </para>
+    
+    <para>
+      For maximum flexibility, customising this means editing Bugzilla's Perl 
+      code. This gives the administrator complete control over exactly who is
+      allowed to do what. The relevant function is called 
+      <filename>CheckCanChangeField()</filename>,
+      and is found in <filename>process_bug.cgi</filename> in your 
+      Bugzilla directory. If you open that file and grep for 
+      "sub CheckCanChangeField", you'll find it.
+    </para>
+    
+    <para>
+      This function has been carefully commented to allow you to see exactly
+      how it works, and give you an idea of how to make changes to it. Certain
+      marked sections should not be changed - these are the "plumbing" which
+      makes the rest of the function work. In between those sections, you'll
+      find snippets of code like:
+      <programlisting>    # Allow the owner to change anything.
+    if ($ownerid eq $whoid) {
+        return 1;
+    }</programlisting>
+      It's fairly obvious what this piece of code does.
+    </para>      
+      
+    <para>
+      So, how does one go about changing this function? Well, simple changes
+      can be made just be removing pieces - for example, if you wanted to 
+      prevent any user adding a comment to a bug, just remove the lines marked
+      "Allow anyone to change comments." And if you want the reporter to have
+      no special rights on bugs they have filed, just remove the entire section
+      which refers to him.
+    </para>
+    
+    <para>
+      More complex customisations are not much harder. Basically, you add
+      a check in the right place in the function, i.e. after all the variables
+      you are using have been set up. So, don't look at $ownerid before 
+      $ownerid has been obtained from the database. You can either add a
+      positive check, which returns 1 (allow) if certain conditions are true,
+      or a negative check, which returns 0 (deny.) E.g.:
+      <programlisting>    if ($field eq "qacontact") {
+        if (UserInGroup("quality_assurance")) {
+            return 1;
+        } 
+        else {
+            return 0;
+        }
+    }</programlisting>
+      This says that only users in the group "quality_assurance" can change
+      the QA Contact field of a bug. Getting more weird:
+      <programlisting>    if (($field eq "priority") &&
+        ($vars->{'user'}{'login'} =~ /.*\@example\.com$/))
+    {
+        if ($oldvalue eq "P1") {
+            return 1;
+        } 
+        else {
+            return 0;
+        }
+    }</programlisting>
+      This says that if the user is trying to change the priority field,
+      and their email address is @example.com, they can only do so if the
+      old value of the field was "P1". Not very useful, but illustrative.
+    </para>
+    
+    <para>
+      For a list of possible field names, look in 
+      <filename>data/versioncache</filename> for the list called 
+      <filename>@::log_columns</filename>. If you need help writing custom
+      rules for your organisation, ask in the newsgroup.
+    </para>    
+  </section>   
+  
   <section id="upgrading">
     <title>Upgrading to New Releases</title>
 
