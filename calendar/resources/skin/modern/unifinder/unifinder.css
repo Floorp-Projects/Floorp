@@ -51,7 +51,6 @@ toolbarseparator {
 
 tabpanels {
    border: none;
-  background-color: c7d0d9;
 }
 
 
@@ -71,11 +70,6 @@ tabpanels {
 .unifinder-tab-box
 {
    margin-top             : 4px 
-}
-
-.unifinder-internal-box
-{
-   background-color       : #c7d0d9;
 }
 
 /* The top box has the icons in it */
