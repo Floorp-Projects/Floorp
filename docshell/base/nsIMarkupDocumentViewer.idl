@@ -48,6 +48,9 @@ interface nsIMarkupDocumentViewer : nsISupports
 	/** if true, plugins are allowed within the doc shell.  default = true */
 	attribute boolean allowPlugins;
 
+	/** The amount by which to scale all text. Default is 1.0. */
+	attribute float textZoom;
+
 	/*
 	XXX Comment here!
 	*/
