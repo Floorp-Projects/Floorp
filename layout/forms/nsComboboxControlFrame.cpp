@@ -378,7 +378,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
 void 
 nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
 {
-  nsIWidget * widget = nsnull;
+  nsCOMPtr<nsIWidget> widget;
 
   // Get parent view
   nsIFrame * listFrame;
@@ -387,25 +387,31 @@ nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
     listFrame->GetView(aPresContext, &view);
     NS_ASSERTION(view != nsnull, "nsComboboxControlFrame view is null");
     if (view) {
-    	view->GetWidget(widget);
-    }
-    if (nsnull != widget) {
-      widget->CaptureRollupEvents((nsIRollupListener *)this, !mDroppedDown, PR_TRUE);
-      NS_RELEASE(widget);
+    	view->GetWidget(*getter_AddRefs(widget));
     }
   }
 
   if (PR_TRUE == aShowList) {
     ShowPopup(PR_TRUE);
     mDroppedDown = PR_TRUE;
+
      // The listcontrol frame will call back to the nsComboboxControlFrame's ListWasSelected
      // which will stop the capture.
     mListControlFrame->AboutToDropDown();
     mListControlFrame->CaptureMouseEvents(aPresContext, PR_TRUE);
+
   } else {
     ShowPopup(PR_FALSE);
     mDroppedDown = PR_FALSE;
   }
+
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  presShell->FlushPendingNotifications();
+
+  if (widget)
+    widget->CaptureRollupEvents((nsIRollupListener *)this, mDroppedDown, PR_TRUE);
+
 }
 
 
