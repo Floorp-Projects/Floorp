@@ -49,15 +49,15 @@ class CNavDelegate : public ITokenizerDelegate {
                           CNavDelegate();
                           CNavDelegate(CNavDelegate& aDelegate);
 
-      virtual  CToken*      GetToken(CScanner& aScanner,PRInt32& anErrorCode);
+      virtual CToken*     GetToken(CScanner& aScanner,PRInt32& anErrorCode);
       virtual PRBool      WillAddToken(CToken& aToken);
 
-      virtual  PRBool      WillTokenize();
-      virtual  PRBool      DidTokenize();
+      virtual PRBool      WillTokenize();
+      virtual PRBool      DidTokenize();
 
-      virtual eParseMode  GetParseMode() const;
+      virtual eParseMode  GetParseMode(void) const;
       virtual nsIDTD*     GetDTD(void) const;
-      static void         SelfTest();
+      static  void        SelfTest();
 
    protected:
 
@@ -80,6 +80,5 @@ class CNavDelegate : public ITokenizerDelegate {
 };
 
 #endif
-
 
 

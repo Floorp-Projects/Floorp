@@ -27,6 +27,7 @@
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
 #include "nsParserTypes.h"
+#include "nsIParser.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
@@ -98,6 +99,7 @@ NS_IMPL_RELEASE(COtherDTD)
  *  @return  
  */
 COtherDTD::COtherDTD() : nsIDTD() {
+  mParser=0;
 }
 
 /**
@@ -108,6 +110,18 @@ COtherDTD::COtherDTD() : nsIDTD() {
  *  @return  
  */
 COtherDTD::~COtherDTD(){
+}
+
+
+/**
+ * 
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return 
+ */
+void COtherDTD::SetParser(nsIParser* aParser) {
+  mParser=aParser;
 }
 
 /**
@@ -502,6 +516,8 @@ PRBool COtherDTD::CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const {
         result=PRBool(0!=strchr(okTags,aChild));
       }
       break;
+
+      result=PR_TRUE; break;
 
     default:
       break;

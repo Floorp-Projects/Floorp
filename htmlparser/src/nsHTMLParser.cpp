@@ -100,6 +100,7 @@ nsHTMLParser::nsHTMLParser() {
   nsCRT::zero(mContextStack,sizeof(mContextStack));
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   mDTD=0;
+  mHasOpenForm=PR_FALSE;
   mTokenHandlerCount=0;
   InitializeDefaultTokenHandlers();
   gVerificationOutputDir = PR_GetEnv("VERIFY_PARSER");
@@ -176,8 +177,20 @@ nsresult nsHTMLParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 eHTMLTags nsHTMLParser::NodeAt(PRInt32 aPos) const {
   NS_PRECONDITION(0 <= aPos, "bad nodeAt");
   if((aPos>-1) && (aPos<mContextStackPos))
-    return mContextStack[aPos];
-  return (eHTMLTags)kNotFound;
+    return (eHTMLTags)mContextStack[aPos];
+  return eHTMLTag_unknown;
+}
+
+/**
+ *  This method allows the caller to determine if a form
+ *  element is currently open.
+ *  
+ *  @update  gess 4/2/98
+ *  @param   
+ *  @return  
+ */
+PRBool nsHTMLParser::HasOpenForm() const {
+  return mHasOpenForm;
 }
 
 /**
@@ -190,9 +203,10 @@ eHTMLTags nsHTMLParser::NodeAt(PRInt32 aPos) const {
  */
 eHTMLTags nsHTMLParser::GetTopNode() const {
   if(mContextStackPos) 
-    return mContextStack[mContextStackPos-1];
-  return (eHTMLTags)kNotFound;
+    return (eHTMLTags)mContextStack[mContextStackPos-1];
+  return eHTMLTag_unknown;
 }
+
 
 /**
  *  Determine whether the given tag is open anywhere
@@ -326,14 +340,13 @@ nsIContentSink* nsHTMLParser::SetContentSink(nsIContentSink* aSink) {
  * @param   aDTD is the DTD we plan to ask for verification
  * @return  TRUE if we know how to handle it, else false
  */
-PRBool VerifyContextVector(eHTMLTags tags[],PRInt32 count,nsIDTD* aDTD) {
+PRBool VerifyContextVector(PRInt32 aTags[],PRInt32 count,nsIDTD* aDTD) {
 
   PRBool  result=PR_TRUE;
 
   if(0!=gVerificationOutputDir) {
   
     if(aDTD){
-      PRInt32 theArray[50];
 
 #ifdef XP_PC
       char    path[_MAX_PATH+1];
@@ -341,17 +354,16 @@ PRBool VerifyContextVector(eHTMLTags tags[],PRInt32 count,nsIDTD* aDTD) {
 #endif
 
       for(int i=0;i<count;i++){
-        theArray[i]=tags[i];
 
 #ifdef NS_WIN32
         strcat(path,"/");
-        const char* name=GetTagName(tags[i]);
+        const char* name=GetTagName(aTags[i]);
         strcat(path,name);
         mkdir(path);
 #endif
       }
       //ok, now see if we understand this vector
-      result=aDTD->VerifyContextVector(theArray,count);
+      result=aDTD->VerifyContextVector(aTags,count);
     }
     if(PR_FALSE==result){
       //add debugging code here to record the fact that we just encountered
@@ -389,9 +401,12 @@ PRBool nsHTMLParser::IterateTokens() {
     eHTMLTokenTypes type=eHTMLTokenTypes(theToken->GetTokenType());
     iteration++; //debug purposes...
 
-    switch(eHTMLTokenTypes(type)){
+    switch(type){
   
       case eToken_start: 
+      case eToken_text:
+      case eToken_newline:
+      case eToken_whitespace:
         result=HandleStartToken(theToken); break;
       
       case eToken_end:
@@ -399,11 +414,6 @@ PRBool nsHTMLParser::IterateTokens() {
       
       case eToken_entity:
         result=HandleEntityToken(theToken); break;
-
-      case eToken_text:
-      case eToken_newline:
-      case eToken_whitespace:
-        result=HandleSimpleContentToken(theToken); break;
     
       case eToken_skippedcontent:  
         //used in cases like <SCRIPT> where we skip over script content.
@@ -411,9 +421,6 @@ PRBool nsHTMLParser::IterateTokens() {
       
       case eToken_attribute:
         result=HandleAttributeToken(theToken); break;
-      
-      case eToken_script:
-        result=HandleScriptToken(theToken); break;
       
       case eToken_style:
         result=HandleStyleToken(theToken); break;
@@ -428,7 +435,7 @@ PRBool nsHTMLParser::IterateTokens() {
     }
     VerifyContextVector(mContextStack,mContextStackPos,mDTD);
     ++(*mCurrentPos);
-    done=PRBool(e==*mCurrentPos);
+    done=PRBool(!(*mCurrentPos<e));
   }
 
   //One last thing...close any open containers.
@@ -437,6 +444,7 @@ PRBool nsHTMLParser::IterateTokens() {
   }
   return result;
 }
+
 
 /**
  *  This is the main controlling routine in the parsing process. 
@@ -454,7 +462,7 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL){
   char*       theModeStr= PR_GetEnv("PARSE_MODE");
 
   if(theModeStr) 
-    if(0!=PL_strncasecmp("nav",theModeStr,3))
+    if(0==strnicmp("other",theModeStr,5))
       theMode=eParseMode_other;
 
   return Parse(aURL,theMode);
@@ -501,6 +509,8 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL,eParseMode aMode){
       return PR_FALSE;
     }
 
+    if(mDTD)
+      mDTD->SetParser(this);
     mTokenizer=new CTokenizer(aURL, theDelegate, mParseMode);
     mTokenizer->Tokenize();
     result=IterateTokens();
@@ -525,6 +535,17 @@ PRBool nsHTMLParser::ResumeParse() {
 }
 
 
+/**
+ * 
+ * @update  gess4/22/98
+ * @param 
+ * @return
+ */
+PRInt32 nsHTMLParser::GetStack(PRInt32* aStackPtr) {
+  aStackPtr=&mContextStack[0];
+  return mContextStackPos;
+}
+
 
 /**
  * 
@@ -537,15 +558,18 @@ PRInt32 nsHTMLParser::CollectAttributes(nsCParserNode& aNode){
   nsDeque&         deque=mTokenizer->GetDeque();
   nsDequeIterator  end=deque.End();
   
-  while((*mCurrentPos!=end) && (eToken_attribute==subtype)) {
+  while((*mCurrentPos<end) && (eToken_attribute==subtype)) {
     CHTMLToken* tkn=(CHTMLToken*)(++(*mCurrentPos));
-    subtype=eHTMLTokenTypes(tkn->GetTokenType());
-    if(eToken_attribute==subtype) {
-      aNode.AddAttribute(tkn);
-    } 
-    else (*mCurrentPos)--;
+    if(tkn){
+      subtype=eHTMLTokenTypes(tkn->GetTokenType());
+      if(eToken_attribute==subtype) {
+        aNode.AddAttribute(tkn);
+      } 
+      else (*mCurrentPos)--;
+    }
   }
   return aNode.GetAttributeCount();
+
 }
 
 
@@ -601,7 +625,7 @@ PRBool nsHTMLParser::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,
       //You must determine what container hierarchy you need to hold aToken,
       //and create that on the parsestack.
       result=ReduceContextStackFor(aChildTag);
-      if(PR_FALSE==mDTD->CanContain(parentTag,aChildTag)) {
+      if(PR_FALSE==mDTD->CanContain(GetTopNode(),aChildTag)) {
         //we unwound too far; now we have to recreate a valid context stack.
         result=CreateContextStackFor(aChildTag);
       }
@@ -615,35 +639,6 @@ PRBool nsHTMLParser::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,
     result=AddLeaf(aNode);
   }
   return result;
-
-/*
-  if(kNotFound!=parentTag) {
-    if(PR_FALSE==mDTD->CanContain(parentTag,aTag)){
-      //if you're here, then the new topmost container can't contain aToken.
-      //You must determine what container hierarchy you need to hold aToken,
-      //and create that on the parsestack.
-      ReduceContextStackFor(aTag);
-      if(PR_FALSE==mDTD->CanContain(parentTag,aTag)) {
-        //we unwound too far; now we have to recreate a valid context stack.
-        result=CreateContextStackFor(aTag);
-      }
-    }
-  }
-  else {
-    CreateContextStackFor(aTag);
-  }
-  //now we think the stack is correct, so fall through 
-  //and push our newest token onto the stack...
-
-  if(mDTD->IsContainer(aTag)){
-    result=OpenContainer(aNode);
-  }
-  else {
-    result=AddLeaf(aNode);
-  }
-
-  return result;
-*/
 }
 
 /**
@@ -672,6 +667,11 @@ PRBool nsHTMLParser::HandleStartToken(CToken* aToken) {
   nsCParserNode   attrNode((CHTMLToken*)aToken);
   PRInt32 attrCount=CollectAttributes(attrNode);
 
+    //now check to see if this token should be omitted...
+  if(PR_TRUE==mDTD->CanOmit(GetTopNode(),tokenTagType)) {
+    return PR_TRUE;
+  }
+  
   switch(tokenTagType) {
 
     case eHTMLTag_html:
@@ -695,7 +695,7 @@ PRBool nsHTMLParser::HandleStartToken(CToken* aToken) {
       break;
 
     case eHTMLTag_form:
-      result = mSink->OpenForm(attrNode);
+      result = OpenForm(attrNode);
       break;
 
     case eHTMLTag_meta:
@@ -718,6 +718,10 @@ PRBool nsHTMLParser::HandleStartToken(CToken* aToken) {
       }
       break;
 
+    case eHTMLTag_script:
+      result=HandleScriptToken(st); break;
+      
+
     case eHTMLTag_map:
       // Put map into the head section
       result=OpenHead(attrNode);
@@ -726,6 +730,9 @@ PRBool nsHTMLParser::HandleStartToken(CToken* aToken) {
 
     case eHTMLTag_head:
       result=PR_TRUE; break; //ignore head tags...
+
+    case eHTMLTag_select:
+      result=PR_FALSE;
 
     default:
       result=HandleDefaultStartToken(aToken,tokenTagType,attrNode);
@@ -755,6 +762,11 @@ PRBool nsHTMLParser::HandleEndToken(CToken* aToken) {
   CEndToken*  st = (CEndToken*)(aToken);
   eHTMLTags   tokenTagType=st->GetHTMLTag();
 
+    //now check to see if this token should be omitted...
+  if(PR_TRUE==mDTD->CanOmit(GetTopNode(),tokenTagType)) {
+    return PR_TRUE;
+  }
+
   nsCParserNode theNode((CHTMLToken*)aToken);
   switch(tokenTagType) {
     case eHTMLTag_html:
@@ -780,15 +792,19 @@ PRBool nsHTMLParser::HandleEndToken(CToken* aToken) {
     case eHTMLTag_form:
       {
         nsCParserNode aNode((CHTMLToken*)aToken);
-        result=mSink->CloseForm(aNode);
+        result=CloseForm(aNode);
       }
       break;
+
+    case eHTMLTag_script:
+      result=PR_TRUE; break;
+
     default:
       if(mDTD->IsContainer(tokenTagType)){
         result=CloseContainer(theNode);
       }
       result=PR_TRUE;
-      //actually, you want to push the start token and ALL it's attributes...
+      //
       break;
   }
   return result;
@@ -824,43 +840,6 @@ PRBool nsHTMLParser::HandleEntityToken(CToken* aToken) {
 PRBool nsHTMLParser::HandleCommentToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
   return PR_TRUE;
-}
-
-/**
- *  This method gets called when a text, whitespace and newline
- *  tokens have been encountered in the parse process. After 
- *  verifying that the topmost container can contain this data,  
- *  we call AddLeaf to store this token in the top container.
- *  
- *  @update  gess 3/25/98
- *  @param   aToken -- next (text) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */
-PRBool nsHTMLParser::HandleSimpleContentToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,kNullToken);
-
-  CHTMLToken*     theToken=(CHTMLToken*)aToken;
-  eHTMLTags       type=theToken->GetHTMLTag();
-  PRBool          result=PR_TRUE; 
-  nsCParserNode   aNode(theToken);
-
-  switch(type) {
-    case eHTMLTag_text:
-      result=HandleDefaultStartToken(theToken,type,aNode);
-      break;
-      
-    case eHTMLTag_newline:
-    case eHTMLTag_whitespace:
-      if((mContextStackPos>0) &&
-        (PR_FALSE==mDTD->CanOmit(mContextStack[mContextStackPos-1],type))) {  
-          result=HandleDefaultStartToken(theToken,type,aNode);
-      }
-      break;
-
-    default:
-      break;
-  } //switch
-  return result; 
 }
 
 /**
@@ -996,6 +975,7 @@ PRBool nsHTMLParser::CloseHTML(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 PRBool nsHTMLParser::OpenHead(const nsIParserNode& aNode){
+  mContextStack[mContextStackPos++]=eHTMLTag_head;
   PRBool result=mSink->OpenHead(aNode); 
   return result;
 }
@@ -1010,6 +990,7 @@ PRBool nsHTMLParser::OpenHead(const nsIParserNode& aNode){
  */
 PRBool nsHTMLParser::CloseHead(const nsIParserNode& aNode){
   PRBool result=mSink->CloseHead(aNode); 
+  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
   return result;
 }
 
@@ -1084,10 +1065,10 @@ PRBool nsHTMLParser::CloseBody(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 PRBool nsHTMLParser::OpenForm(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
-  PRBool result=mSink->OpenForm(aNode); 
-  mContextStack[mContextStackPos++]=(eHTMLTags)aNode.GetNodeType();
-  return result;
+  if(mHasOpenForm)
+    CloseForm(aNode);
+  mHasOpenForm=PR_TRUE;
+  return mSink->OpenForm(aNode); 
 }
 
 /**
@@ -1099,9 +1080,11 @@ PRBool nsHTMLParser::OpenForm(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 PRBool nsHTMLParser::CloseForm(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
-  PRBool result=mSink->CloseContainer(aNode); 
-  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
+  PRBool result=PR_TRUE;
+  if(mHasOpenForm) {
+    mHasOpenForm=PR_FALSE;
+    result=mSink->CloseForm(aNode); 
+  }
   return result;
 }
 
@@ -1230,12 +1213,12 @@ PRBool nsHTMLParser::CloseContainersTo(PRInt32 anIndex){
   PRBool result=PR_TRUE;
 
   nsAutoString empty;
-  CHTMLToken aToken(empty);
+  CEndToken aToken(empty);
   nsCParserNode theNode(&aToken);
 
   if((anIndex<mContextStackPos) && (anIndex>=0)) {
     while(mContextStackPos>anIndex) {
-      aToken.SetHTMLTag(mContextStack[mContextStackPos-1]);
+      aToken.SetHTMLTag((eHTMLTags)mContextStack[mContextStackPos-1]);
       result=CloseContainer(theNode);
     }
   }
@@ -1287,7 +1270,7 @@ PRBool nsHTMLParser::CloseTopmostContainer(){
 
   nsAutoString empty;
   CEndToken aToken(empty);
-  aToken.SetHTMLTag(mContextStack[mContextStackPos-1]);
+  aToken.SetHTMLTag((eHTMLTags)mContextStack[mContextStackPos-1]);
   nsCParserNode theNode(&aToken);
 
   return CloseContainer(theNode);
@@ -1323,14 +1306,17 @@ PRBool nsHTMLParser::CreateContextStackFor(PRInt32 aChildTag){
   PRBool result=PR_FALSE;
   PRInt32 pos=0;
   PRInt32 cnt=0;
+  PRInt32 theTop=GetTopNode();
   
-  if(PR_TRUE==mDTD->ForwardPropagate(theVector,GetTopNode(),aChildTag)){
+  if(PR_TRUE==mDTD->ForwardPropagate(theVector,theTop,aChildTag)){
     //add code here to build up context stack based on forward propagated context vector...
     pos=0;
     cnt=theVector.Length()-1;
     result=PRBool(mContextStack[mContextStackPos-1]==theVector[cnt]);
   }
-  else if(PR_TRUE==mDTD->BackwardPropagate(theVector,eHTMLTag_html,aChildTag)) {
+  else if(PR_TRUE==mDTD->BackwardPropagate(theVector,theTop,aChildTag)) {
+    if(theTop!=eHTMLTag_html)
+      mDTD->BackwardPropagate(theVector,eHTMLTag_html,theTop);
 
     //propagation worked, so pop unwanted containers, push new ones, then exit...
     pos=0;
