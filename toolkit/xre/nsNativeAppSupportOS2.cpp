@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Bill Law       law@netscape.com
  *   IBM Corp.
+ *   Rich Walsh     dragtext@e-vertise.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -760,20 +761,33 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
     NS_ENSURE_ARG( aResult );
     NS_ENSURE_TRUE( mInstance == 0, NS_ERROR_NOT_INITIALIZED );
 
-    if (getenv("MOZ_NO_REMOTE"))
-    {
-        *aResult = PR_TRUE;
-        return NS_OK;
-    }
-
     nsresult rv = NS_ERROR_FAILURE;
     *aResult = PR_FALSE;
 
-    for ( int i = 1; i < gArgc; i++ ) {
-        if ( strcmp( "-dde", gArgv[i] ) == 0 ||
-             strcmp( "/dde", gArgv[i] ) == 0 ) {
+    // see if DDE should be enabled AND remove OS/2-specific
+    // options the app's commandline handler won't recognize
+    // (-console was handled earlier by StartOS2App())
+    for (int i = 1; i < gArgc; i++) {
+        if (stricmp("-dde", gArgv[i]) == 0 ||
+            stricmp("/dde", gArgv[i]) == 0)
             mUseDDE = PR_TRUE;
-        }
+        else
+            if (stricmp("-console", gArgv[i]) != 0 &&
+                stricmp("/console", gArgv[i]) != 0)
+                continue;
+
+        for (int j = i; j < gArgc; j++)
+            gArgv[j] = gArgv[j+1];
+        gArgc--;
+        i--;
+    }
+
+    // if this is a standalone instance, turn off DDE regardless of the
+    // commandline, then skip out before we look for another instance
+    if (getenv("MOZ_NO_REMOTE")) {
+        mUseDDE = PR_FALSE;
+        *aResult = PR_TRUE;
+        return NS_OK;
     }
 
     // Grab mutex first.
@@ -793,14 +807,7 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
     HAB hab;
     HMQ hmqCurrent = WinQueryQueueInfo( HMQ_CURRENT, &mqinfo, 
                                         sizeof( MQINFO ) );
-    if( !hmqCurrent )
-    {
-        /* Set our app to be a PM app before attempting Win calls */
-        PPIB ppib;
-        PTIB ptib;
-        DosGetInfoBlocks(&ptib, &ppib);
-        ppib->pib_ultype = 3;
-
+    if( !hmqCurrent ) {
         hab = WinInitialize( 0 );
         hmqCurrent = WinCreateMsgQueue( hab, 0 );
     }
@@ -815,8 +822,9 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
         // We will be server.
         rv = msgWindow.Create();
         if ( NS_SUCCEEDED( rv ) ) {
-            // Start up DDE server.
-            this->StartDDE();
+            // Start up DDE server
+            if (mUseDDE)
+                this->StartDDE();
             // Tell caller to spin message loop.
             *aResult = PR_TRUE;
         }
@@ -1567,6 +1575,12 @@ nsNativeAppSupportOS2::HandleCommandLine(const char* aCmdLineString,
 
     rv = cmdLine->Init(argc, argv, aWorkingDir, aState);
 
+    // if these OS/2-specific flags aren't removed,
+    // any URL following them will be ignored
+    PRBool found;
+    cmdLine->HandleFlag(NS_LITERAL_STRING("console"), PR_FALSE, &found);
+    cmdLine->HandleFlag(NS_LITERAL_STRING("dde"), PR_FALSE, &found);
+
     // Cleanup.
     while ( argc ) {
         delete [] argv[ --argc ];
@@ -1740,5 +1754,90 @@ nsNativeAppSupportOS2::OpenBrowserWindow()
     NS_ENSURE_SUCCESS(rv, rv);
 
     return cmdLine->Run();
+}
+
+// This is a public function called by nsAppRunner.cpp.  Its primary
+// purpose is to determine if any commandline options require a VIO
+// ("console") window.  If so and one isn't present, it will restart
+// the app in a VIO session.  It is intended to be called as early as
+// possible during startup and before any other commandline processing.
+// It returns TRUE if the current instance should continue running and
+// FALSE if it should terminate upon this function's return.
+
+PRBool     StartOS2App(int aArgc, char **aArgv)
+{
+  PRBool    rv = PR_TRUE;
+  PPIB      ppib;
+  PTIB      ptib;
+
+  DosGetInfoBlocks(&ptib, &ppib);
+
+  // if this isn't a PM session, reset the session type to enable use
+  // of PM functions;  if it is PM, see if a VIO session is required
+  if (ppib->pib_ultype != SSF_TYPE_PM)
+    ppib->pib_ultype = SSF_TYPE_PM;
+  else {
+    for (int i = 1; i < aArgc; i++ ) {
+      char *arg = aArgv[i];
+      if (*arg != '-' && *arg != '/')
+        continue;
+      arg++;
+      if (stricmp("?", arg) == 0 ||
+        stricmp("h", arg) == 0 ||
+        stricmp("v", arg) == 0 ||
+        stricmp("help", arg) == 0 ||
+        stricmp("version", arg) == 0 ||
+        stricmp("console", arg) == 0) {
+        rv = PR_FALSE;
+        break;
+      }
+    }
+  }
+
+  // if the session type is OK, increase the number of 
+  // file handles available to the app, then exit
+  if (rv) {
+    ULONG    ulMaxFH = 0;
+    LONG     ulReqCount = 0;
+
+    DosSetRelMaxFH(&ulReqCount, &ulMaxFH);
+    if (ulMaxFH < 256)
+      DosSetMaxFH(256);
+
+    return rv;
+  }
+
+  // the app has to be restarted in a VIO session
+  char        szErrObj[64] = "";
+  STARTDATA   x;
+
+  memset(&x, 0, sizeof(x));
+  x.Length = sizeof(x);
+  (const char* const)(x.PgmTitle) = gAppData->appName;
+  x.InheritOpt = SSF_INHERTOPT_PARENT;
+  x.SessionType = SSF_TYPE_WINDOWABLEVIO;
+  x.PgmControl = SSF_CONTROL_NOAUTOCLOSE;
+  x.ObjectBuffer = szErrObj;
+  x.ObjectBuffLen = sizeof(szErrObj);
+
+  // the f/q exename is the string preceding ppib->pib_pchcmd;
+  // the original commandline is the string following it
+  char * ptr = ppib->pib_pchcmd - 2;
+  while (*ptr)
+    ptr--;
+  x.PgmName = ptr + 1;
+  x.PgmInputs = strchr(ppib->pib_pchcmd, 0) + 1;
+
+  // restart the app;  if this session is in the background, trying
+  // to start in the foreground will produce an error, but the app
+  // will still start; if DosStartSession has a real failure, forget
+  // the console and let the current instance keep running
+  ULONG ulSession;
+  PID   pid;
+  ULONG rc = DosStartSession(&x, &ulSession, &pid);
+  if (rc && rc != ERROR_SMG_START_IN_BACKGROUND)
+    rv = PR_TRUE;
+
+  return rv;
 }
 

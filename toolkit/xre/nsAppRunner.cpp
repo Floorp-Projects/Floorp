@@ -772,8 +772,8 @@ DumpHelp()
   printf("%s-ProfileManager%sStart with profile manager.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-UILocale <locale>%sStart with <locale> resources as UI Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-contentLocale <locale>%sStart with <locale> resources as content Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
-#ifdef XP_WIN
-  printf("%s-console%sStart Mozilla with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2);
+#if defined(XP_WIN) || defined(XP_OS2)
+  printf("%s-console%sStart %s with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2,gAppData->appName);
 #endif
 #ifdef MOZ_ENABLE_XREMOTE
   printf("%s-remote <command>%sExecute <command> in an already running\n"
@@ -1505,16 +1505,9 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
   gRestartArgv[argc] = nsnull;
 
 #if defined(XP_OS2)
-  ULONG    ulMaxFH = 0;
-  LONG     ulReqCount = 0;
-
-  DosSetRelMaxFH(&ulReqCount,
-                 &ulMaxFH);
-
-  if (ulMaxFH < 256) {
-    DosSetMaxFH(256);
-  }
-
+  PRBool StartOS2App(int aArgc, char **aArgv);
+  if (!StartOS2App(gArgc, gArgv))
+    return 1;
   ScopedFPHandler handler();
 #endif /* XP_OS2 */
 
