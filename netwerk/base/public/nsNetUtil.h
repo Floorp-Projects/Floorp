@@ -216,7 +216,8 @@ NS_MakeAbsoluteURI(nsString& result,
     nsMemory::Free(specStr);
     if (NS_FAILED(rv)) return rv;
 
-    result.AssignWithConversion(resultStr);
+    result.Assign(NS_ConvertUTF8toUCS2(resultStr));
+   
     nsMemory::Free(resultStr);
     return rv;
 }
