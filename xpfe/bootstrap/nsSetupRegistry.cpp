@@ -23,6 +23,7 @@
 #include "nsGfxCIID.h"
 #include "nsViewsCID.h"
 #include "nsPluginsCID.h"
+#include "nsRDFCID.h"
 
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
@@ -34,7 +35,10 @@
 #include "nsLayoutCID.h"
 #include "nsINetService.h"
 
+#include "nsIEditor.h"
+
 #include "nsIAppShellService.h"
+#include "nsBrowserCIDs.h"
 
 #ifdef XP_PC
 
@@ -48,8 +52,12 @@
 #define DOM_DLL    "jsdom.dll"
 #define LAYOUT_DLL "raptorhtml.dll"
 #define NETLIB_DLL "netlib.dll"
+#define EDITOR_DLL "ender.dll"
+#define RDF_DLL    "rdf.dll"
 
 #define APPSHELL_DLL "nsappshell.dll"
+#define BROWSER_DLL  "nsbrowser.dll"
+
 #else
 
 #ifdef XP_MAC
@@ -66,6 +74,7 @@
 #define NETLIB_DLL		"NETLIB_DLL"
 #define APPSHELL_DLL "APPSHELL_DLL"
 //#define EDITOR_DLL	"EDITOR_DLL"	// temporary
+#define RDF_DLL			"RDF_DLL"
 
 
 #else
@@ -85,6 +94,8 @@
 #define DOM_DLL    "libjsdom.so"
 #define LAYOUT_DLL "libraptorhtml.so"
 #define NETLIB_DLL "libnetlib.so"
+#define EDITOR_DLL "libender.so"
+#define RDF_DLL    "librdf.so"
 
 #define APPSHELL_DLL  "libnsappshell.so"
 
@@ -93,6 +104,7 @@
 #endif // XP_PC
 
 // Class ID's
+static NS_DEFINE_IID(kCTreeViewCID, NS_TREEVIEW_CID);
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCDialogCID, NS_DIALOG_CID);
@@ -126,6 +138,7 @@ static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
@@ -133,24 +146,33 @@ static NS_DEFINE_IID(kCHTMLDocument, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCXMLDocument, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCHTMLImageElement, NS_HTMLIMAGEELEMENT_CID);
+static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 
-static NS_DEFINE_IID(kCImageButtonCID, NS_IMAGEBUTTON_CID);
-static NS_DEFINE_IID(kCToolbarCID, NS_TOOLBAR_CID);
-static NS_DEFINE_IID(kCToolbarManagerCID, NS_TOOLBARMANAGER_CID);
-static NS_DEFINE_IID(kCToolbarItemHolderCID, NS_TOOLBARITEMHOLDER_CID);
-static NS_DEFINE_IID(kCPopUpMenuCID, NS_POPUPMENU_CID);
-static NS_DEFINE_IID(kCMenuButtonCID, NS_MENUBUTTON_CID);
-static NS_DEFINE_IID(kCMenuBarCID, NS_MENUBAR_CID);
-static NS_DEFINE_IID(kCMenuCID, NS_MENU_CID);
-static NS_DEFINE_IID(kCMenuItemCID, NS_MENUITEM_CID);
+static NS_DEFINE_CID(kRDFMemoryDataSourceCID,   NS_RDFMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFResourceManagerCID,    NS_RDFRESOURCEMANAGER_CID);
+static NS_DEFINE_CID(kRDFSimpleDataBaseCID,     NS_RDFSIMPLEDATABASE_CID);
+static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFTreeDocumentCID,       NS_RDFTREEDOCUMENT_CID);
+
+static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
+static NS_DEFINE_CID(kPresShellCID,             NS_PRESSHELL_CID);
+static NS_DEFINE_CID(kHTMLStyleSheetCID,        NS_HTMLSTYLESHEET_CID);
+static NS_DEFINE_CID(kTextNodeCID,              NS_TEXTNODE_CID);
+static NS_DEFINE_CID(kSelectionCID,             NS_SELECTION_CID);
+static NS_DEFINE_CID(kRangeListCID,				NS_RANGELIST_CID);
+static NS_DEFINE_CID(kFrameUtilCID,             NS_FRAME_UTIL_CID);
+
 
 static NS_DEFINE_IID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-
+static NS_DEFINE_IID(kCBrowserControllerCID, NS_BROWSERCONTROLLER_CID);
 
 extern "C" void
 NS_SetupRegistry()
 {
+  nsRepository::RegisterFactory(kCTreeViewCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kLookAndFeelCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -185,23 +207,34 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kWellFormedDTDCID, PARSER_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCDOMScriptObjectFactory, DOM_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCScriptNameSetRegistry, DOM_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCHTMLDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCXMLDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCImageDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCHTMLImageElement, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kNameSpaceManagerCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#ifndef XP_MAC		// temporary
+  nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
+#endif	//XP_MAC
 
-  nsRepository::RegisterFactory(kCImageButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCToolbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCToolbarManagerCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCToolbarItemHolderCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCPopUpMenuCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCMenuButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCMenuBarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCMenuCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCMenuItemCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFHTMLDocumentCID,       RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFTreeDocumentCID,       RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFMemoryDataSourceCID,   RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFResourceManagerCID,    RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFSimpleDataBaseCID,     RDF_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kCSSParserCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kPresShellCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kHTMLStyleSheetCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kTextNodeCID,       LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kSelectionCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRangeListCID,		LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kFrameUtilCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kCAppShellServiceCID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCBrowserControllerCID, BROWSER_DLL, PR_FALSE, PR_FALSE);
 }
