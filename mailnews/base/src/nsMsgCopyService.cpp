@@ -20,7 +20,7 @@
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsMsgKeyArray.h"
-#include "prmon.h"
+#include "nspr.h"
 
 #ifdef XP_PC
 #include <windows.h>
