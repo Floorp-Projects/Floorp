@@ -440,6 +440,7 @@
 				29B97327FDCFA39411CA2CEA,
 				29B97328FDCFA39411CA2CEA,
 				F56610A2039474DC01A9666E,
+				3FA0DBBF0473240900A80005,
 				29B9732BFDCFA39411CA2CEA,
 				F6BD639001B30F5301A962F7,
 				F6BD64B701B3167601A962F7,
@@ -1396,6 +1397,32 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		3FA0DBBF0473240900A80005 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "mkdir -p locale/en-US/communicator/history/ ; cp ../xpfe/components/history/resources/locale/en-US/history.properties locale/en-US/communicator/history ; zip -g ../dist/Embed/chrome/embed.jar locale/en-US/communicator/history/history.properties ; rm -rf locale";
+		};
+		3FA0DBC00473293D00A80005 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "mkdir -p locale/en-US/communicator/history/ ; cp ../xpfe/components/history/resources/locale/en-US/history.properties locale/en-US/communicator/history ; zip -g ../dist/Embed/chrome/embed.jar locale/en-US/communicator/history/history.properties ; rm -rf locale";
 		};
 		3FAD95540461E43700A80005 = {
 			isa = PBXFileReference;
@@ -7549,6 +7576,7 @@
 			buildPhases = (
 				F5BAAB1A02AC45D301A967F3,
 				F5BAAB1B02AC45D301A967F3,
+				3FA0DBC00473293D00A80005,
 				F56610A3039474F501A9666E,
 				F5BAAB1C02AC45D301A967F3,
 				F5BAABA302AC693C01A967F3,
