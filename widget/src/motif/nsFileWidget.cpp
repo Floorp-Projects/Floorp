@@ -53,7 +53,7 @@ NS_METHOD nsFileWidget::Create(nsIWidget        *aParent,
 
 //-------------------------------------------------------------------------
 NS_METHOD   nsFileWidget:: Create(nsIWidget  *aParent,
-                             nsString&   aTitle,
+                             const nsString&   aTitle,
                              nsFileDlgMode aMode,
                              nsIDeviceContext *aContext,
                              nsIAppShell *aAppShell,
@@ -223,10 +223,9 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString a
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD  nsFileWidget::GetFile(nsString& aFile)
+NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
-  aFile.SetLength(0);
-  aFile.Append(mFile);
+  aFile = mFile;
   return NS_OK;
 }
 
@@ -236,7 +235,7 @@ NS_METHOD  nsFileWidget::GetFile(nsString& aFile)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD  nsFileWidget::SetDefaultString(nsString& aString)
+NS_METHOD  nsFileWidget::SetDefaultString(const nsString& aString)
 {
   mDefault = aString;
   return NS_OK;
