@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcomsample
 XPIDL_MODULE	= xpcomsample
 LIBRARY_NAME	= xpcomsample
+SHORT_LIBNAME	= xpcomsmp
 
 IS_COMPONENT	= 1
 MODULE_NAME	= nsSampleModule
