@@ -510,7 +510,7 @@ CLASS="TIP"
 >Tip: </B
 >	  From Andrew Pearson:
 	  <A
-NAME="AEN624"
+NAME="AEN633"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -557,7 +557,7 @@ CLASS="TIP"
 >Tip: </B
 >"Brian" had this to add, about upgrading to Bugzilla 2.12 from previous versions:</P
 ><A
-NAME="AEN634"
+NAME="AEN643"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -613,11 +613,11 @@ CLASS="PROGRAMLISTING"
 		<DIV
 CLASS="EXAMPLE"
 ><A
-NAME="AEN646"
+NAME="AEN655"
 ></A
 ><P
 ><B
->Example 2-1. Removing encrypt() for Windows NT installations</B
+>Example 2-3. Removing encrypt() for Windows NT installations</B
 ></P
 ><P
 >		    Replace this:
@@ -689,6 +689,63 @@ open SENDMAIL, "|\"C:/General/Web/tools/Windmail 4.0 Beta/windmail\" -t &#62; ma
 ></OL
 ></DIV
 ></BLOCKQUOTE
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="TIP"
+><BLOCKQUOTE
+CLASS="TIP"
+><P
+><B
+>Tip: </B
+>	  This was some late breaking information from Jan Evert.  Sorry for the lack of formatting.
+	</P
+><P
+CLASS="LITERALLAYOUT"
+>I'm&nbsp;busy&nbsp;installing&nbsp;bugzilla&nbsp;on&nbsp;a&nbsp;WinNT&nbsp;machine&nbsp;and&nbsp;I&nbsp;thought&nbsp;I'd&nbsp;notify&nbsp;you<br>
+at&nbsp;this&nbsp;moment&nbsp;of&nbsp;the&nbsp;commments&nbsp;I&nbsp;have&nbsp;to&nbsp;section&nbsp;2.2.1&nbsp;of&nbsp;the&nbsp;bugzilla<br>
+guide&nbsp;(at&nbsp;http://www.trilobyte.net/barnsons/html/).<br>
+<br>
+Step&nbsp;1:<br>
+I've&nbsp;used&nbsp;apache,&nbsp;installation&nbsp;is&nbsp;really&nbsp;straightforward.<br>
+After&nbsp;reading&nbsp;the&nbsp;Unix&nbsp;installation&nbsp;instructions,&nbsp;I&nbsp;found&nbsp;that&nbsp;it&nbsp;is<br>
+necessary&nbsp;to&nbsp;add&nbsp;the&nbsp;ExecCGI&nbsp;option&nbsp;to&nbsp;the&nbsp;bugzilla&nbsp;directory.&nbsp;Also&nbsp;the<br>
+'AddHandler'&nbsp;line&nbsp;for&nbsp;.cgi&nbsp;is&nbsp;by&nbsp;default&nbsp;commented&nbsp;out.<br>
+<br>
+Step&nbsp;3:&nbsp;although&nbsp;just&nbsp;a&nbsp;detail,&nbsp;'ppm&nbsp;install&nbsp;&#60;module%gt;'&nbsp;will&nbsp;also&nbsp;work<br>
+(wihtout&nbsp;.ppd).&nbsp;And,&nbsp;it&nbsp;can&nbsp;also&nbsp;download&nbsp;these&nbsp;automatically&nbsp;from<br>
+ActiveState.<br>
+<br>
+Step&nbsp;4:&nbsp;although&nbsp;I&nbsp;have&nbsp;cygwin&nbsp;installed,&nbsp;it&nbsp;seems&nbsp;that&nbsp;it&nbsp;is&nbsp;not&nbsp;necessary.<br>
+On&nbsp;my&nbsp;machine&nbsp;cygwin&nbsp;is&nbsp;not&nbsp;in&nbsp;the&nbsp;PATH&nbsp;and&nbsp;everything&nbsp;seems&nbsp;to&nbsp;work&nbsp;as<br>
+expected.<br>
+However,&nbsp;I've&nbsp;not&nbsp;used&nbsp;everything&nbsp;yet.<br>
+<br>
+Step&nbsp;6:&nbsp;the&nbsp;'bugs_password'&nbsp;given&nbsp;in&nbsp;SQL&nbsp;command&nbsp;d&nbsp;needs&nbsp;to&nbsp;be&nbsp;edited&nbsp;into<br>
+localconfig&nbsp;later&nbsp;on&nbsp;(Step&nbsp;7)&nbsp;if&nbsp;the&nbsp;password&nbsp;is&nbsp;not&nbsp;empty.&nbsp;I've&nbsp;also&nbsp;edited<br>
+it&nbsp;into&nbsp;globals.pl,&nbsp;but&nbsp;I'm&nbsp;not&nbsp;sure&nbsp;that&nbsp;is&nbsp;needed.&nbsp;In&nbsp;both&nbsp;places,&nbsp;the<br>
+variable&nbsp;is&nbsp;named&nbsp;db_pass.<br>
+<br>
+Step&nbsp;8:&nbsp;all&nbsp;the&nbsp;sendmail&nbsp;replacements&nbsp;mentioned&nbsp;are&nbsp;not&nbsp;as&nbsp;simple&nbsp;as<br>
+described&nbsp;there.&nbsp;Since&nbsp;I&nbsp;am&nbsp;not&nbsp;familiar&nbsp;(yet)&nbsp;with&nbsp;perl,&nbsp;I&nbsp;don't&nbsp;have&nbsp;any<br>
+mail&nbsp;working&nbsp;yet.<br>
+<br>
+Step&nbsp;9:&nbsp;in&nbsp;globals.pl&nbsp;the&nbsp;encrypt()&nbsp;call&nbsp;can&nbsp;be&nbsp;replaced&nbsp;by&nbsp;just&nbsp;the<br>
+unencrypted&nbsp;password.&nbsp;In&nbsp;CGI.pl,&nbsp;the&nbsp;complete&nbsp;SQL&nbsp;command&nbsp;can&nbsp;be&nbsp;removed.<br>
+<br>
+Step&nbsp;11:&nbsp;I've&nbsp;only&nbsp;changed&nbsp;the&nbsp;#!&nbsp;lines&nbsp;in&nbsp;*.cgi.&nbsp;I&nbsp;haven't&nbsp;noticed&nbsp;problems<br>
+with&nbsp;the&nbsp;system()&nbsp;call&nbsp;yet.<br>
+There&nbsp;seem&nbsp;to&nbsp;be&nbsp;only&nbsp;four&nbsp;system()&nbsp;called&nbsp;programs:&nbsp;processmail.pl&nbsp;(handled<br>
+by&nbsp;step&nbsp;10),&nbsp;syncshadowdb&nbsp;(which&nbsp;should&nbsp;probably&nbsp;get&nbsp;the&nbsp;same&nbsp;treatment&nbsp;as<br>
+processmail.pl),&nbsp;diff&nbsp;and&nbsp;mysqldump.&nbsp;The&nbsp;last&nbsp;one&nbsp;is&nbsp;only&nbsp;needed&nbsp;with&nbsp;the<br>
+shadowdb&nbsp;feature&nbsp;(which&nbsp;I&nbsp;don't&nbsp;use).<br>
+<br>
+There&nbsp;seems&nbsp;to&nbsp;be&nbsp;one&nbsp;step&nbsp;missing:&nbsp;copying&nbsp;the&nbsp;bugzilla&nbsp;files&nbsp;somehwere<br>
+that&nbsp;apache&nbsp;can&nbsp;serve&nbsp;them.<br>
+<br>
+Just&nbsp;noticed&nbsp;the&nbsp;updated&nbsp;guide...&nbsp;Brian's&nbsp;comment&nbsp;is&nbsp;new.&nbsp;His&nbsp;first&nbsp;comment<br>
+will&nbsp;work,&nbsp;but&nbsp;opens&nbsp;up&nbsp;a&nbsp;huge&nbsp;security&nbsp;hole.<br>
+	</P
 ></BLOCKQUOTE
 ></DIV
 ></DIV

@@ -680,6 +680,54 @@
 	</answer>
       </qandaentry>
 
+
+      <qandaentry>
+	<question>
+	  <para>
+	    The index.html page doesn't show the footer.  It's really annoying to have
+	    to go to the querypage just to check my "my bugs" link.  How do I get a footer
+	    on static HTML pages?
+	  </para>
+	</question>
+	<answer>
+	  <para>
+	    This was a late-breaking question for the Guide, so I just have to
+	    quote the relevant newsgroup thread on it.
+	  </para>
+	  <literallayout>
+> AFAIK, most sites (even if they have SSI enabled) won't have #exec cmd
+> enabled.  Perhaps what would be better is a #include virtual and a
+> footer.cgi the basically has the "require 'CGI.pl' and PutFooter command.
+>
+> Please note that under most configurations, this also requires naming
+> the file from index.html to index.shtml (and making sure that it will
+> still be reconized as an index).  Personally, I think this is better on
+> a per-installation basis (perhaps add something to the FAQ that says how
+> to do this).
+
+Good point.  Yeah, easy enough to do, that it shouldn't be a big deal for
+someone to take it on if they want it.  FAQ is a good place for it.
+
+> Dave Miller wrote:
+>
+>> I did a little experimenting with getting the command menu and footer on
+>> the end of the index page while leaving it as an HTML file...
+>>
+>> I was successful. :)
+>>
+>> I added this line:
+>>
+>> <!--#exec cmd="/usr/bin/perl -e &quot;require 'CGI.pl';
+>>PutFooter();&quot;" -->
+>>
+>> Just before the &lt;/BODY&gt; &lt;/HTML&gt; at the end of the file.  And it worked.
+>>
+>> Thought I'd toss that out there.  Should I check this in?  For those that
+>> have SSI disabled, it'll act like a comment, so I wouldn't think it would
+>> break anything.
+	  </literallayout>
+	</answer>
+      </qandaentry>
       <qandaentry>
 	<question>
 	  <para>

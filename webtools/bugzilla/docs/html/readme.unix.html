@@ -851,7 +851,7 @@ CLASS="TIP"
 ><P
 ><B
 >Tip: </B
->	    HINT:  If you symlink the bugzilla directory into your Apache's
+>	    If you symlink the bugzilla directory into your Apache's
 	    HTML heirarchy, you may receive "Forbidden" errors unless you
 	    add the "FollowSymLinks" directive to the &#60;Directory&#62; entry
 	    for the HTML root.
@@ -866,11 +866,44 @@ CLASS="TIP"
 	  installation.
 	</P
 ><P
->	  Lastly, you'll need to set up a symbolic link from /usr/bonsaitools/bin
-	  to the correct location of your perl executable (probably /usr/bin/perl).
+>	  Lastly, you'll need to set up a symbolic link to /usr/bonsaitools/bin/perl
+	  for the correct location of your perl executable (probably /usr/bin/perl).
 	  Otherwise you must hack all the .cgi files to change where they look
 	  for perl.  To make future upgrades easier, you should use the symlink
 	  approach.
+	  <DIV
+CLASS="EXAMPLE"
+><A
+NAME="AEN341"
+></A
+><P
+><B
+>Example 2-1. Setting up bonsaitools symlink</B
+></P
+><P
+>	      Here's how you set up the Perl symlink on Linux to make Bugzilla work.
+	      Your mileage may vary; if you are running on Solaris, you probably need to subsitute
+	      "/usr/local/bin/perl" for "/usr/bin/perl" below; if on certain other UNIX systems,
+	      Perl may live in weird places like "/opt/perl".  As root, run these commands:
+	      <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>bash# mkdir /usr/bonsaitools
+bash# mkdir /usr/bonsaitools/bin
+bash# ln -s /usr/bin/perl /usr/bosaitools/bin/perl
+	      </PRE
+></TD
+></TR
+></TABLE
+>
+	    </P
+></DIV
+>
 	  <DIV
 CLASS="TIP"
 ><BLOCKQUOTE
@@ -893,7 +926,7 @@ CLASS="SECTION"
 ><H3
 CLASS="SECTION"
 ><A
-NAME="AEN343"
+NAME="AEN347"
 >2.1.2.14. Setting Up the MySQL Database</A
 ></H3
 ><P
@@ -1079,7 +1112,7 @@ CLASS="SECTION"
 ><H3
 CLASS="SECTION"
 ><A
-NAME="AEN379"
+NAME="AEN383"
 >2.1.2.15. Tweaking "localconfig"</A
 ></H3
 ><P
@@ -1146,11 +1179,47 @@ CLASS="NOTE"
 ><P
 ><B
 >Note: </B
->	      The second time you run checksetup.pl, it is recommended you be the same
-	      user as your web server runs under, and that you be sure you have set the
+>	      The second time you run checksetup.pl, you should become the
+	      user your web server runs as, and that you ensure you have set the
 	      "webservergroup" parameter in localconfig to match the web server's group
-	      name, if any.  Under some systems, otherwise, checksetup.pl will goof up
-	      your file permissions and make them unreadable to your web server.
+	      name, if any.  I believe, for the next release of Bugzilla, this will
+	      be fixed so that Bugzilla supports a "webserveruser" parameter in localconfig
+	      as well.
+	      <DIV
+CLASS="EXAMPLE"
+><A
+NAME="AEN403"
+></A
+><P
+><B
+>Example 2-2. Running checksetup.pl as the web user</B
+></P
+><P
+>		  Assuming your web server runs as user "apache", and Bugzilla is installed in
+		  "/usr/local/bugzilla", here's one way to run checksetup.pl as the web server user.
+		  As root, for the <EM
+>second run</EM
+> of checksetup.pl, do this:
+		  <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>bash# chown -R apache:apache /usr/local/bugzilla
+bash# su - apache
+bash# cd /usr/local/bugzilla
+bash# ./checksetup.pl
+		  </PRE
+></TD
+></TR
+></TABLE
+>
+		</P
+></DIV
+>
 	    </P
 ></BLOCKQUOTE
 ></DIV
@@ -1174,8 +1243,8 @@ CLASS="SECTION"
 ><H3
 CLASS="SECTION"
 ><A
-NAME="AEN401"
->2.1.2.16. Setting Up Maintainers Manuall (Optional)</A
+NAME="AEN410"
+>2.1.2.16. Setting Up Maintainers Manually (Optional)</A
 ></H3
 ><P
 >	  If you want to add someone else to every group by hand, you can do it
@@ -1220,7 +1289,7 @@ CLASS="SECTION"
 ><H3
 CLASS="SECTION"
 ><A
-NAME="AEN410"
+NAME="AEN419"
 >2.1.2.17. The Whining Cron (Optional)</A
 ></H3
 ><P
@@ -1258,7 +1327,7 @@ CLASS="SECTION"
 ><H3
 CLASS="SECTION"
 ><A
-NAME="AEN417"
+NAME="AEN426"
 >2.1.2.18. Bug Graphs (Optional)</A
 ></H3
 ><P
@@ -1313,7 +1382,7 @@ CLASS="SECTION"
 ><H3
 CLASS="SECTION"
 ><A
-NAME="AEN429"
+NAME="AEN438"
 >2.1.2.19. Securing MySQL</A
 ></H3
 ><P
@@ -1591,7 +1660,7 @@ CLASS="SECTION"
 ><H3
 CLASS="SECTION"
 ><A
-NAME="AEN495"
+NAME="AEN504"
 >2.1.2.20. Installation General Notes</A
 ></H3
 ><DIV
@@ -1599,7 +1668,7 @@ CLASS="SECTION"
 ><H4
 CLASS="SECTION"
 ><A
-NAME="AEN497"
+NAME="AEN506"
 >2.1.2.20.1. Modifying Your Running System</A
 ></H4
 ><P
@@ -1626,7 +1695,7 @@ CLASS="SECTION"
 ><H4
 CLASS="SECTION"
 ><A
-NAME="AEN502"
+NAME="AEN511"
 >2.1.2.20.2. Upgrading From Previous Versions</A
 ></H4
 ><P
@@ -1642,7 +1711,7 @@ CLASS="SECTION"
 ><H4
 CLASS="SECTION"
 ><A
-NAME="AEN505"
+NAME="AEN514"
 >2.1.2.20.3. UNIX Installation Instructions History</A
 ></H4
 ><P

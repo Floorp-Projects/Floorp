@@ -479,7 +479,7 @@
 	</PARA>
 	<TIP>
 	  <PARA>
-	    HINT:  If you symlink the bugzilla directory into your Apache's
+	    If you symlink the bugzilla directory into your Apache's
 	    HTML heirarchy, you may receive "Forbidden" errors unless you
 	    add the "FollowSymLinks" directive to the &lt;Directory&gt; entry
 	    for the HTML root.
@@ -493,11 +493,25 @@
 	  installation.
 	</PARA>
 	<PARA>
-	  Lastly, you'll need to set up a symbolic link from /usr/bonsaitools/bin
-	  to the correct location of your perl executable (probably /usr/bin/perl).
+	  Lastly, you'll need to set up a symbolic link to /usr/bonsaitools/bin/perl
+	  for the correct location of your perl executable (probably /usr/bin/perl).
 	  Otherwise you must hack all the .cgi files to change where they look
 	  for perl.  To make future upgrades easier, you should use the symlink
 	  approach.
+	  <EXAMPLE>
+	    <TITLE>Setting up bonsaitools symlink</TITLE>
+	    <PARA>
+	      Here's how you set up the Perl symlink on Linux to make Bugzilla work.
+	      Your mileage may vary; if you are running on Solaris, you probably need to subsitute
+	      "/usr/local/bin/perl" for "/usr/bin/perl" below; if on certain other UNIX systems,
+	      Perl may live in weird places like "/opt/perl".  As root, run these commands:
+	      <PROGRAMLISTING>
+bash# mkdir /usr/bonsaitools
+bash# mkdir /usr/bonsaitools/bin
+bash# ln -s /usr/bin/perl /usr/bosaitools/bin/perl
+	      </PROGRAMLISTING>
+	    </PARA>
+	  </EXAMPLE>
 	  <TIP>
 	    <PARA>
 	      If you don't have root access to set this symlink up, check out the
@@ -663,11 +677,26 @@
 	  <ERRORCODE>Now regenerating the shadow database for all bugs.</ERRORCODE>
 	  <NOTE>
 	    <PARA>
-	      The second time you run checksetup.pl, it is recommended you be the same
-	      user as your web server runs under, and that you be sure you have set the
+	      The second time you run checksetup.pl, you should become the
+	      user your web server runs as, and that you ensure you have set the
 	      "webservergroup" parameter in localconfig to match the web server's group
-	      name, if any.  Under some systems, otherwise, checksetup.pl will goof up
-	      your file permissions and make them unreadable to your web server.
+	      name, if any.  I believe, for the next release of Bugzilla, this will
+	      be fixed so that Bugzilla supports a "webserveruser" parameter in localconfig
+	      as well.
+	      <EXAMPLE>
+		<TITLE>Running checksetup.pl as the web user</TITLE>
+		<PARA>
+		  Assuming your web server runs as user "apache", and Bugzilla is installed in
+		  "/usr/local/bugzilla", here's one way to run checksetup.pl as the web server user.
+		  As root, for the <EMPHASIS>second run</EMPHASIS> of checksetup.pl, do this:
+		  <PROGRAMLISTING>
+bash# chown -R apache:apache /usr/local/bugzilla
+bash# su - apache
+bash# cd /usr/local/bugzilla
+bash# ./checksetup.pl
+		  </PROGRAMLISTING>
+		</PARA>
+	      </EXAMPLE>
 	    </PARA>
 	  </NOTE>
 	</PARA>
@@ -680,7 +709,7 @@
       </SECTION>
 
       <SECTION>
-	<TITLE>Setting Up Maintainers Manuall (Optional)</TITLE>
+	<TITLE>Setting Up Maintainers Manually (Optional)</TITLE>
 	<PARA>
 	  If you want to add someone else to every group by hand, you can do it
 	  by typing the appropriate MySQL commands.  Run '<COMPUTEROUTPUT>
@@ -1294,6 +1323,56 @@ open SENDMAIL, "|\"C:/General/Web/tools/Windmail 4.0 Beta/windmail\" -t > mail.l
 	    </STEP>
 	  </PROCEDURE>
 	</BLOCKQUOTE>
+      </TIP>
+      <TIP>
+	<PARA>
+	  This was some late breaking information from Jan Evert.  Sorry for the lack of formatting.
+	</PARA>
+	<LITERALLAYOUT>
+I'm busy installing bugzilla on a WinNT machine and I thought I'd notify you
+at this moment of the commments I have to section 2.2.1 of the bugzilla
+guide (at http://www.trilobyte.net/barnsons/html/).
+
+Step 1:
+I've used apache, installation is really straightforward.
+After reading the Unix installation instructions, I found that it is
+necessary to add the ExecCGI option to the bugzilla directory. Also the
+'AddHandler' line for .cgi is by default commented out.
+
+Step 3: although just a detail, 'ppm install &lt;module%gt;' will also work
+(wihtout .ppd). And, it can also download these automatically from
+ActiveState.
+
+Step 4: although I have cygwin installed, it seems that it is not necessary.
+On my machine cygwin is not in the PATH and everything seems to work as
+expected.
+However, I've not used everything yet.
+
+Step 6: the 'bugs_password' given in SQL command d needs to be edited into
+localconfig later on (Step 7) if the password is not empty. I've also edited
+it into globals.pl, but I'm not sure that is needed. In both places, the
+variable is named db_pass.
+
+Step 8: all the sendmail replacements mentioned are not as simple as
+described there. Since I am not familiar (yet) with perl, I don't have any
+mail working yet.
+
+Step 9: in globals.pl the encrypt() call can be replaced by just the
+unencrypted password. In CGI.pl, the complete SQL command can be removed.
+
+Step 11: I've only changed the #! lines in *.cgi. I haven't noticed problems
+with the system() call yet.
+There seem to be only four system() called programs: processmail.pl (handled
+by step 10), syncshadowdb (which should probably get the same treatment as
+processmail.pl), diff and mysqldump. The last one is only needed with the
+shadowdb feature (which I don't use).
+
+There seems to be one step missing: copying the bugzilla files somehwere
+that apache can serve them.
+
+Just noticed the updated guide... Brian's comment is new. His first comment
+will work, but opens up a huge security hole.
+	</LITERALLAYOUT>
       </TIP>
     </SECTION>
   </SECTION>

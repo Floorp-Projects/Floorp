@@ -64,7 +64,7 @@ Matthew P. Barnson
                     2.1.2.13. Installing the Bugzilla Files
                     2.1.2.14. Setting Up the MySQL Database
                     2.1.2.15. Tweaking "localconfig"
-                    2.1.2.16. Setting Up Maintainers Manuall (Optional)
+                    2.1.2.16. Setting Up Maintainers Manually (Optional)
                     2.1.2.17. The Whining Cron (Optional)
                     2.1.2.18. Bug Graphs (Optional)
                     2.1.2.19. Securing MySQL
@@ -179,7 +179,9 @@ Matthew P. Barnson
    Glossary
 
    List of Examples
-   2-1. Removing encrypt() for Windows NT installations
+   2-1. Setting up bonsaitools symlink
+   2-2. Running checksetup.pl as the web user
+   2-3. Removing encrypt() for Windows NT installations
    3-1. Creating some Components
    3-2. Common Use of Versions
    3-3. A Different Use of Versions
@@ -709,10 +711,10 @@ Chapter 2. Installing Bugzilla
    Bugzilla) and make sure you can access the files in that directory
    through your web server.
 
-     Tip: HINT: If you symlink the bugzilla directory into your Apache's
-     HTML heirarchy, you may receive "Forbidden" errors unless you add
-     the "FollowSymLinks" directive to the <Directory> entry for the
-     HTML root.
+     Tip: If you symlink the bugzilla directory into your Apache's HTML
+     heirarchy, you may receive "Forbidden" errors unless you add the
+     "FollowSymLinks" directive to the <Directory> entry for the HTML
+     root.
 
    Once all the files are in a web accessible directory, make that
    directory writable by your webserver's user (which may require just
@@ -720,11 +722,22 @@ Chapter 2. Installing Bugzilla
    post-install "checksetup.pl" script, which locks down your
    installation.
 
-   Lastly, you'll need to set up a symbolic link from
-   /usr/bonsaitools/bin to the correct location of your perl executable
-   (probably /usr/bin/perl). Otherwise you must hack all the .cgi files
-   to change where they look for perl. To make future upgrades easier,
-   you should use the symlink approach.
+   Lastly, you'll need to set up a symbolic link to
+   /usr/bonsaitools/bin/perl for the correct location of your perl
+   executable (probably /usr/bin/perl). Otherwise you must hack all the
+   .cgi files to change where they look for perl. To make future upgrades
+   easier, you should use the symlink approach.
+
+   Example 2-1. Setting up bonsaitools symlink
+
+   Here's how you set up the Perl symlink on Linux to make Bugzilla work.
+   Your mileage may vary; if you are running on Solaris, you probably
+   need to subsitute "/usr/local/bin/perl" for "/usr/bin/perl" below; if
+   on certain other UNIX systems, Perl may live in weird places like
+   "/opt/perl". As root, run these commands:
+bash# mkdir /usr/bonsaitools
+bash# mkdir /usr/bonsaitools/bin
+bash# ln -s /usr/bin/perl /usr/bosaitools/bin/perl
 
      Tip: If you don't have root access to set this symlink up, check
      out the "setperl.csh" utility, listed in the Patches section of
@@ -813,19 +826,30 @@ Chapter 2. Installing Bugzilla
    with multiple instances. If flock() is not fully supported, it will
    stall at: Now regenerating the shadow database for all bugs.
 
-     Note: The second time you run checksetup.pl, it is recommended you
-     be the same user as your web server runs under, and that you be
-     sure you have set the "webservergroup" parameter in localconfig to
-     match the web server's group name, if any. Under some systems,
-     otherwise, checksetup.pl will goof up your file permissions and
-     make them unreadable to your web server.
+     Note: The second time you run checksetup.pl, you should become the
+     user your web server runs as, and that you ensure you have set the
+     "webservergroup" parameter in localconfig to match the web server's
+     group name, if any. I believe, for the next release of Bugzilla,
+     this will be fixed so that Bugzilla supports a "webserveruser"
+     parameter in localconfig as well.
+
+   Example 2-2. Running checksetup.pl as the web user
+
+   Assuming your web server runs as user "apache", and Bugzilla is
+   installed in "/usr/local/bugzilla", here's one way to run
+   checksetup.pl as the web server user. As root, for the second run of
+   checksetup.pl, do this:
+bash# chown -R apache:apache /usr/local/bugzilla
+bash# su - apache
+bash# cd /usr/local/bugzilla
+bash# ./checksetup.pl
 
      Note: The checksetup.pl script is designed so that you can run it
      at any time without causing harm. You should run it after any
      upgrade to Bugzilla.
      _________________________________________________________________
 
-2.1.2.16. Setting Up Maintainers Manuall (Optional)
+2.1.2.16. Setting Up Maintainers Manually (Optional)
 
    If you want to add someone else to every group by hand, you can do it
    by typing the appropriate MySQL commands. Run ' mysql -u root -p bugs'
@@ -1125,7 +1149,7 @@ my $webservergid = 'Administrators'
 
     2. I then ran checksetup.pl
     3. I removed all the encrypt()
-       Example 2-1. Removing encrypt() for Windows NT installations
+       Example 2-3. Removing encrypt() for Windows NT installations
        Replace this:
 
 SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " .
@@ -1148,6 +1172,64 @@ log";
 
        The quotes around the dir is for the spaces. mail.log is for the
        output
+
+     Tip: This was some late breaking information from Jan Evert. Sorry
+     for the lack of formatting.
+
+     I'm busy installing bugzilla on a WinNT machine and I thought I'd n
+     otify you
+     at this moment of the commments I have to section 2.2.1 of the bugz
+     illa
+     guide (at http://www.trilobyte.net/barnsons/html/).
+     Step 1:
+     I've used apache, installation is really straightforward.
+     After reading the Unix installation instructions, I found that it i
+     s
+     necessary to add the ExecCGI option to the bugzilla directory. Also
+      the
+     'AddHandler' line for .cgi is by default commented out.
+     Step 3: although just a detail, 'ppm install <module%gt;' will also
+      work
+     (wihtout .ppd). And, it can also download these automatically from
+     ActiveState.
+     Step 4: although I have cygwin installed, it seems that it is not n
+     ecessary.
+     On my machine cygwin is not in the PATH and everything seems to wor
+     k as
+     expected.
+     However, I've not used everything yet.
+     Step 6: the 'bugs_password' given in SQL command d needs to be edit
+     ed into
+     localconfig later on (Step 7) if the password is not empty. I've al
+     so edited
+     it into globals.pl, but I'm not sure that is needed. In both places
+     , the
+     variable is named db_pass.
+     Step 8: all the sendmail replacements mentioned are not as simple a
+     s
+     described there. Since I am not familiar (yet) with perl, I don't h
+     ave any
+     mail working yet.
+     Step 9: in globals.pl the encrypt() call can be replaced by just th
+     e
+     unencrypted password. In CGI.pl, the complete SQL command can be re
+     moved.
+     Step 11: I've only changed the #! lines in *.cgi. I haven't noticed
+      problems
+     with the system() call yet.
+     There seem to be only four system() called programs: processmail.pl
+      (handled
+     by step 10), syncshadowdb (which should probably get the same treat
+     ment as
+     processmail.pl), diff and mysqldump. The last one is only needed wi
+     th the
+     shadowdb feature (which I don't use).
+     There seems to be one step missing: copying the bugzilla files some
+     hwere
+     that apache can serve them.
+     Just noticed the updated guide... Brian's comment is new. His first
+      comment
+     will work, but opens up a huge security hole.
      _________________________________________________________________
 
 Chapter 3. Administering Bugzilla
@@ -1789,14 +1871,33 @@ Chapter 3. Administering Bugzilla
        user with a name, set via your httpd.conf file.
     5. Ensure you have adequate access controls for the
        $BUGZILLA_HOME/data/ and $BUGZILLA_HOME/shadow/ directories, as
-       well as the $BUGZILLA_HOME/localconfig file. The localconfig file
-       stores your "bugs" user password, which would be terrible to have
-       in the hands of a criminal. Also some files under
-       $BUGZILLA_HOME/data/ store sensitive information, and
-       $BUGZILLA_HOME/shadow/ stores bug information for faster
-       retrieval. If you fail to secure these directories and this file,
-       you will expose bug information to those who may not be allowed to
-       see it.
+       well as the $BUGZILLA_HOME/localconfig and
+       $BUGZILLA_HOME/globals.pl files. The localconfig file stores your
+       "bugs" user password, which would be terrible to have in the hands
+       of a criminal, while the "globals.pl" stores some default
+       information regarding your installation which could aid a system
+       cracker. In addition, some files under $BUGZILLA_HOME/data/ store
+       sensitive information, and $BUGZILLA_HOME/shadow/ stores bug
+       information for faster retrieval. If you fail to secure these
+       directories and this file, you will expose bug information to
+       those who may not be allowed to see it.
+
+     Note: Bugzilla provides default .htaccess files to protect the most
+     common Apache installations. However, you should verify these are
+     adequate according to the site-wide security policy of your web
+     server, and ensure that the .htaccess files are allowed to
+     "override" default permissions set in your Apache configuration
+     files. Covering Apache security is beyond the scope of this Guide;
+     please consult the Apache documentation for details.
+     If you are using a web server that does not support the .htaccess
+     control method, you are at risk! After installing, check to see if
+     you can view the file "localconfig" in your web browser (ergo:
+     http://bugzilla.mozilla.org/localconfig. If you can read the
+     contents of this file, your web server has not secured your
+     bugzilla directory properly and you must fix this problem before
+     deploying Bugzilla. If, however, it gives you a "Forbidden" error,
+     then it probably respects the .htaccess conventions and you are
+     good to go.
        On Apache, you can use .htaccess files to protect access to these
        directories, as outlined in Bug 57161 for the localconfig file,
        and Bug 65572 for adequate protection in your data/ and shadow/
@@ -2790,76 +2891,81 @@ Appendix A. The Bugzilla FAQ
                 of fields and format of them, and the choice of
                 acceptable values?
 
-        A.4.7. Does Bugzilla provide any reporting features, metrics,
+        A.4.7. The index.html page doesn't show the footer. It's really
+                annoying to have to go to the querypage just to check my
+                "my bugs" link. How do I get a footer on static HTML
+                pages?
+
+        A.4.8. Does Bugzilla provide any reporting features, metrics,
                 graphs, etc? You know, the type of stuff that management
                 likes to see. :)
 
-        A.4.8. Is there email notification and if so, what do you see
+        A.4.9. Is there email notification and if so, what do you see
                 when you get an email? Do you see bug number and title or
                 is it only the number?
 
-        A.4.9. Can email notification be set up to send to multiple
+        A.4.10. Can email notification be set up to send to multiple
                 people, some on the To List, CC List, BCC List etc?
 
-        A.4.10. If there is email notification, do users have to have any
+        A.4.11. If there is email notification, do users have to have any
                 particular type of email application?
 
-        A.4.11. If I just wanted to track certain bugs, as they go
+        A.4.12. If I just wanted to track certain bugs, as they go
                 through life, can I set it up to alert me via email
                 whenever that bug changes, whether it be owner, status or
                 description etc.?
 
-        A.4.12. Does Bugzilla allow data to be imported and exported? If
+        A.4.13. Does Bugzilla allow data to be imported and exported? If
                 I had outsiders write up a bug report using a MS Word bug
                 template, could that template be imported into "matching"
                 fields? If I wanted to take the results of a query and
                 export that data to MS Excel, could I do that?
 
-        A.4.13. Does Bugzilla allow fields to be added, changed or
+        A.4.14. Does Bugzilla allow fields to be added, changed or
                 deleted? If I want to customize the bug submission form
                 to meet our needs, can I do that using our terminology?
 
-        A.4.14. Has anyone converted Bugzilla to another language to be
+        A.4.15. Has anyone converted Bugzilla to another language to be
                 used in other countries? Is it localizable?
 
-        A.4.15. Can a user create and save reports? Can they do this in
+        A.4.16. Can a user create and save reports? Can they do this in
                 Word format? Excel format?
 
-        A.4.16. Can a user re-run a report with a new project, same
+        A.4.17. Can a user re-run a report with a new project, same
                 query?
 
-        A.4.17. Can a user modify an existing report and then save it
+        A.4.18. Can a user modify an existing report and then save it
                 into another name?
 
-        A.4.18. Does Bugzilla have the ability to search by word, phrase,
+        A.4.19. Does Bugzilla have the ability to search by word, phrase,
                 compound search?
 
-        A.4.19. Can the admin person establish separate group and
+        A.4.20. Can the admin person establish separate group and
                 individual user privileges?
 
-        A.4.20. Does Bugzilla provide record locking when there is
+        A.4.21. Does Bugzilla provide record locking when there is
                 simultaneous access to the same bug? Does the second
                 person get a notice that the bug is in use or how are
                 they notified?
 
-        A.4.21. Are there any backup features provided?
-        A.4.22. Can users be on the system while a backup is in progress?
+        A.4.22. Are there any backup features provided?
+        A.4.23. Can users be on the system while a backup is in progress?
 
-        A.4.23. What type of human resources are needed to be on staff to
+        A.4.24. What type of human resources are needed to be on staff to
                 install and maintain Bugzilla? Specifically, what type of
                 skills does the person need to have? I need to find out
                 if we were to go with Bugzilla, what types of individuals
                 would we need to hire and how much would that cost vs
                 buying an "Out-of-the-Box" solution.
 
-        A.4.24. What time frame are we looking at if we decide to hire
+        A.4.25. What time frame are we looking at if we decide to hire
                 people to install and maintain the Bugzilla? Is this
                 something that takes hours or weeks to install and a
                 couple of hours per week to maintain and customize or is
                 this a multi-week install process, plus a full time job
                 for 1 person, 2 people, etc?
 
-        A.4.25. Is there any licensing fee or other fees for using
+        A.4.26. Is there any licensing fee or other fees for using
                 Bugzilla? Any out-of-pocket cost other than the bodies
                 needed as identified above?
 
@@ -3356,7 +3462,53 @@ Appendix A. The Bugzilla FAQ
    progression states, also require adjusting the program logic to
    compensate for the change.
 
-   A.4.7. Does Bugzilla provide any reporting features, metrics, graphs,
+   A.4.7. The index.html page doesn't show the footer. It's really
+   annoying to have to go to the querypage just to check my "my bugs"
+   link. How do I get a footer on static HTML pages?
+
+   This was a late-breaking question for the Guide, so I just have to
+   quote the relevant newsgroup thread on it.
+
+   > AFAIK, most sites (even if they have SSI enabled) won't have #exec c
+   md
+   > enabled.  Perhaps what would be better is a #include virtual and a
+   > footer.cgi the basically has the "require 'CGI.pl' and PutFooter com
+   mand.
+   >
+   > Please note that under most configurations, this also requires namin
+   g
+   > the file from index.html to index.shtml (and making sure that it wil
+   l
+   > still be reconized as an index).  Personally, I think this is better
+    on
+   > a per-installation basis (perhaps add something to the FAQ that says
+    how
+   > to do this).
+   Good point.  Yeah, easy enough to do, that it shouldn't be a big deal
+   for
+   someone to take it on if they want it.  FAQ is a good place for it.
+   > Dave Miller wrote:
+   >
+   >> I did a little experimenting with getting the command menu and foot
+   er on
+   >> the end of the index page while leaving it as an HTML file...
+   >>
+   >> I was successful. :)
+   >>
+   >> I added this line:
+   >>
+   >>
+   >>
+   >> Just before the </BODY> </HTML> at the end of the file.  And it wor
+   ked.
+   >>
+   >> Thought I'd toss that out there.  Should I check this in?  For thos
+   e that
+   >> have SSI disabled, it'll act like a comment, so I wouldn't think it
+    would
+   >> break anything.
+
+   A.4.8. Does Bugzilla provide any reporting features, metrics, graphs,
    etc? You know, the type of stuff that management likes to see. :)
 
    Yes. Look at http://bugzilla.mozilla.org/reports.cgi for basic
@@ -3371,7 +3523,7 @@ Appendix A. The Bugzilla FAQ
 
    Advanced Reporting is a Bugzilla 3.X proposed feature.
 
-   A.4.8. Is there email notification and if so, what do you see when you
+   A.4.9. Is there email notification and if so, what do you see when you
    get an email? Do you see bug number and title or is it only the
    number?
 
@@ -3379,12 +3531,12 @@ Appendix A. The Bugzilla FAQ
    bug report accompany each email notification, along with a list of the
    changes made.
 
-   A.4.9. Can email notification be set up to send to multiple people,
+   A.4.10. Can email notification be set up to send to multiple people,
    some on the To List, CC List, BCC List etc?
 
    Yes.
 
-   A.4.10. If there is email notification, do users have to have any
+   A.4.11. If there is email notification, do users have to have any
    particular type of email application?
 
    Bugzilla email is sent in plain text, the most compatible mail format
@@ -3398,7 +3550,7 @@ Appendix A. The Bugzilla FAQ
      user sends HTML-based email into Bugzilla the resulting comment
      looks downright awful.
 
-   A.4.11. If I just wanted to track certain bugs, as they go through
+   A.4.12. If I just wanted to track certain bugs, as they go through
    life, can I set it up to alert me via email whenever that bug changes,
    whether it be owner, status or description etc.?
 
@@ -3407,7 +3559,7 @@ Appendix A. The Bugzilla FAQ
    tab of the User Preferences screen in Bugzilla to the "Only those bugs
    which I am listed on the CC line" option.
 
-   A.4.12. Does Bugzilla allow data to be imported and exported? If I had
+   A.4.13. Does Bugzilla allow data to be imported and exported? If I had
    outsiders write up a bug report using a MS Word bug template, could
    that template be imported into "matching" fields? If I wanted to take
    the results of a query and export that data to MS Excel, could I do
@@ -3429,46 +3581,46 @@ Appendix A. The Bugzilla FAQ
    find an excellent example at
    http://www.mozilla.org/quality/help/bugzilla-helper.html
 
-   A.4.13. Does Bugzilla allow fields to be added, changed or deleted? If
+   A.4.14. Does Bugzilla allow fields to be added, changed or deleted? If
    I want to customize the bug submission form to meet our needs, can I
    do that using our terminology?
 
    Yes.
 
-   A.4.14. Has anyone converted Bugzilla to another language to be used
+   A.4.15. Has anyone converted Bugzilla to another language to be used
    in other countries? Is it localizable?
 
    Currently, no. Internationalization support for Perl did not exist in
    a robust fashion until the recent release of version 5.6.0; Bugzilla
    is, and likely will remain (until 3.X) completely non-localized.
 
-   A.4.15. Can a user create and save reports? Can they do this in Word
+   A.4.16. Can a user create and save reports? Can they do this in Word
    format? Excel format?
 
    Yes. No. No.
 
-   A.4.16. Can a user re-run a report with a new project, same query?
+   A.4.17. Can a user re-run a report with a new project, same query?
 
    Yes.
 
-   A.4.17. Can a user modify an existing report and then save it into
+   A.4.18. Can a user modify an existing report and then save it into
    another name?
 
    You can save an unlimited number of queries in Bugzilla. You are free
    to modify them and rename them to your heart's desire.
 
-   A.4.18. Does Bugzilla have the ability to search by word, phrase,
+   A.4.19. Does Bugzilla have the ability to search by word, phrase,
    compound search?
 
    You have no idea. Bugzilla's query interface, particularly with the
    advanced Boolean operators, is incredibly versatile.
 
-   A.4.19. Can the admin person establish separate group and individual
+   A.4.20. Can the admin person establish separate group and individual
    user privileges?
 
    Yes.
 
-   A.4.20. Does Bugzilla provide record locking when there is
+   A.4.21. Does Bugzilla provide record locking when there is
    simultaneous access to the same bug? Does the second person get a
    notice that the bug is in use or how are they notified?
 
@@ -3476,19 +3628,19 @@ Appendix A. The Bugzilla FAQ
    detection, and offers the offending user a choice of options to deal
    with the conflict.
 
-   A.4.21. Are there any backup features provided?
+   A.4.22. Are there any backup features provided?
 
    MySQL, the database back-end for Bugzilla, allows hot-backup of data.
    You can find strategies for dealing with backup considerations at
    http://www.mysql.com/doc/B/a/Backup.html
 
-   A.4.22. Can users be on the system while a backup is in progress?
+   A.4.23. Can users be on the system while a backup is in progress?
 
    Yes. However, commits to the database must wait until the tables are
    unlocked. Bugzilla databases are typically very small, and backups
    routinely take less than a minute.
 
-   A.4.23. What type of human resources are needed to be on staff to
+   A.4.24. What type of human resources are needed to be on staff to
    install and maintain Bugzilla? Specifically, what type of skills does
    the person need to have? I need to find out if we were to go with
    Bugzilla, what types of individuals would we need to hire and how much
@@ -3507,7 +3659,7 @@ Appendix A. The Bugzilla FAQ
    me three to five hours to make Bugzilla happy on a Development
    installation of Linux-Mandrake.
 
-   A.4.24. What time frame are we looking at if we decide to hire people
+   A.4.25. What time frame are we looking at if we decide to hire people
    to install and maintain the Bugzilla? Is this something that takes
    hours or weeks to install and a couple of hours per week to maintain
    and customize or is this a multi-week install process, plus a full
@@ -3520,7 +3672,7 @@ Appendix A. The Bugzilla FAQ
    UNIX or Perl skills to handle your process management and bug-tracking
    maintenance & customization.
 
-   A.4.25. Is there any licensing fee or other fees for using Bugzilla?
+   A.4.26. Is there any licensing fee or other fees for using Bugzilla?
    Any out-of-pocket cost other than the bodies needed as identified
    above?
 
