@@ -248,6 +248,7 @@ treechildren::-moz-tree-column(insertafter) {
 
 .treecol-sortdirection {
   list-style-image: none;
+  width: 8px;  /* The image's width is 7 pixels */
 }
 
 .treecol-sortdirection[sortDirection="ascending"] {
