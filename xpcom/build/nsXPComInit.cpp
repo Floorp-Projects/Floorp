@@ -49,6 +49,7 @@
 #include "nsBinaryStream.h"
 
 #include "nsMemoryImpl.h"
+#include "nsDebugImpl.h"
 #include "nsErrorService.h"
 #include "nsByteBuffer.h"
 
@@ -275,10 +276,8 @@ static PRBool gXPCOMHasGlobalsBeenInitalized = PR_TRUE;
    &NS_CLASSINFO_NAME(Class) }
 
 static const nsModuleComponentInfo components[] = {
-// ugh
-#define NS_MEMORY_CONTRACTID "@mozilla.org/xpcom/memory-service;1"
-#define NS_MEMORY_CLASSNAME  "Global Memory Service"
     COMPONENT(MEMORY, nsMemoryImpl::Create),
+    COMPONENT(DEBUG,  nsDebugImpl::Create),
 #define NS_ERRORSERVICE_CLASSNAME NS_ERRORSERVICE_NAME
     COMPONENT(ERRORSERVICE, nsErrorService::Create),
 
@@ -370,6 +369,22 @@ nsresult NS_COM NS_GetMemoryManager(nsIMemory* *result)
     NS_IF_ADDREF(*result = gMemory);
     return rv;
 }
+
+// gDebug will be freed during shutdown.
+static nsIDebug* gDebug = nsnull;
+nsresult NS_COM NS_GetDebug(nsIDebug** result)
+{
+    nsresult rv = NS_OK;
+    if (!gDebug)
+    {
+        rv = nsDebugImpl::Create(nsnull, 
+                                 NS_GET_IID(nsIDebug), 
+                                 (void**)&gDebug);
+    }
+    NS_IF_ADDREF(*result = gDebug);
+    return rv;
+}
+
 
 nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                              nsIFile* binDirectory)
@@ -770,6 +785,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     NS_ShutdownLeakDetector();
 #endif
 
+    NS_IF_RELEASE(gDebug);
+
     gXPCOMHasGlobalsBeenInitalized = PR_FALSE;
     return NS_OK;
 }
@@ -834,6 +851,12 @@ NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
         return NS_ERROR_FAILURE;
     }
     functions->unregisterExitRoutine = (UnregisterXPCOMExitRoutineFunc) PR_FindSymbol(xpcomLib, "NS_UnregisterXPCOMExitRoutine");
+    if (! functions->unregisterExitRoutine) {
+        PR_UnloadLibrary(xpcomLib);
+        return NS_ERROR_FAILURE;
+    }
+
+    functions->getDebug = (GetDebugFunc) PR_FindSymbol(xpcomLib, "NS_GetDebug");
     if (! functions->unregisterExitRoutine) {
         PR_UnloadLibrary(xpcomLib);
         return NS_ERROR_FAILURE;

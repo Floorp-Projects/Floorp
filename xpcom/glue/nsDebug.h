@@ -61,54 +61,12 @@
 
 class nsDebug {
 public:
-  /**
-   * When called, this will log a fatal abort message (to stderr and
-   * to the NSPR log file) and then abort the program. This is
-   * used by the NS_ABORT_IF_FALSE macro below when debugging is
-   * enabled.
-   */
-  static NS_COM void AbortIfFalse(const char* aStr, const char* aExpr,
-                                  const char* aFile, PRIntn aLine);
 
   /**
-   * Log a warning message when an expression is not true. Used by
-   * the NS_WARN_IF_FALSE macro below when debugging is enabled.
-   *
-   * The default behavior of this method is print a message to stderr
-   * and to log an event in the NSPR log file.
+   * Log a warning message to the debug log.
    */
-  static NS_COM void WarnIfFalse(const char* aStr, const char* aExpr,
-                                 const char* aFile, PRIntn aLine);
-
-  /**
-   * Enable flying a warning message box (if the platform supports
-   * such a thing) when WarnIfFalse is called in addition to
-   * the usual printing to stderr and the NSPR log file.
-   *
-   * If aOnOff is PR_TRUE then the message-box is enabled, otherwise
-   * the message-box is disabled.
-   *
-   * The default state for the message-box enable is "off".
-   *
-   * Note also that the implementation looks at an environment
-   * variable (for those platforms that have environment variables...)
-   * called MOZ_WARNING_MESSAGE_BOX that when set enables the
-   * warning message box by default.
-   */
-  static NS_COM void SetWarningMessageBoxEnable(PRBool aOnOff);
-
-  /**
-   * Get the current setting of the message-box enable.
-   */
-  static NS_COM PRBool GetWarningMessageBoxEnable(void);
-
-  // Note: Methods below this line are the old ones; please start using
-  // the new ones. The old ones will be removed eventually!
-
-  //////////////////////////////////////////////////////////////////////
-
-  // XXX add in log controls here
-  // XXX probably want printf type arguments
+  static NS_COM void Warning(const char* aMessage,
+                             const char* aFile, PRIntn aLine);
 
   /**
    * Abort the executing program. This works on all architectures.
@@ -121,46 +79,10 @@ public:
   static NS_COM void Break(const char* aFile, PRIntn aLine);
 
   /**
-   * Log a pre-condition message to the debug log
-   */
-  static NS_COM void PreCondition(const char* aStr, const char* aExpr,
-                                  const char* aFile, PRIntn aLine);
-
-  /**
-   * Log a post-condition message to the debug log
-   */
-  static NS_COM void PostCondition(const char* aStr, const char* aExpr,
-                                   const char* aFile, PRIntn aLine);
-
-  /**
    * Log an assertion message to the debug log
    */
   static NS_COM void Assertion(const char* aStr, const char* aExpr,
                                const char* aFile, PRIntn aLine);
-
-  /**
-   * Log a not-yet-implemented message to the debug log
-   */
-  static NS_COM void NotYetImplemented(const char* aMessage,
-                                       const char* aFile, PRIntn aLine);
-
-  /**
-   * Log a not-reached message to the debug log
-   */
-  static NS_COM void NotReached(const char* aMessage,
-                                const char* aFile, PRIntn aLine);
-
-  /**
-   * Log an error message to the debug log. This call returns.
-   */
-  static NS_COM void Error(const char* aMessage,
-                           const char* aFile, PRIntn aLine);
-
-  /**
-   * Log a warning message to the debug log.
-   */
-  static NS_COM void Warning(const char* aMessage,
-                             const char* aFile, PRIntn aLine);
 };
 
 #ifdef DEBUG
@@ -184,7 +106,7 @@ public:
 #define NS_ABORT_IF_FALSE(_expr, _msg)                        \
   PR_BEGIN_MACRO                                              \
     if (!(_expr)) {                                           \
-      nsDebug::AbortIfFalse(_msg, #_expr, __FILE__, __LINE__);\
+      nsDebug::Assertion(_msg, #_expr, __FILE__, __LINE__);   \
     }                                                         \
   PR_END_MACRO
 
@@ -199,7 +121,7 @@ public:
 #define NS_WARN_IF_FALSE(_expr,_msg)                          \
   PR_BEGIN_MACRO                                              \
     if (!(_expr)) {                                           \
-      nsDebug::WarnIfFalse(_msg, #_expr, __FILE__, __LINE__); \
+      nsDebug::Assertion(_msg, #_expr, __FILE__, __LINE__);   \
     }                                                         \
   PR_END_MACRO
 
@@ -210,7 +132,7 @@ public:
 #define NS_PRECONDITION(expr, str)                            \
   PR_BEGIN_MACRO                                              \
     if (!(expr)) {                                            \
-      nsDebug::PreCondition(str, #expr, __FILE__, __LINE__);  \
+      nsDebug::Assertion(str, #expr, __FILE__, __LINE__);     \
     }                                                         \
   PR_END_MACRO
 
@@ -232,7 +154,7 @@ public:
 #define NS_POSTCONDITION(expr, str)                           \
   PR_BEGIN_MACRO                                              \
     if (!(expr)) {                                            \
-      nsDebug::PostCondition(str, #expr, __FILE__, __LINE__); \
+      nsDebug::Assertion(str, #expr, __FILE__, __LINE__);     \
     }                                                         \
   PR_END_MACRO
 
@@ -241,20 +163,20 @@ public:
  * an attempt was made to execute some unimplimented functionality.
  */
 #define NS_NOTYETIMPLEMENTED(str)                             \
-  nsDebug::NotYetImplemented(str, __FILE__, __LINE__)
+  nsDebug::Assertion(str, "NotYetImplemented", __FILE__, __LINE__)
 
 /**
  * This macros triggers a program failure if executed. It indicates that
  * an attempt was made to execute some unimplimented functionality.
  */
 #define NS_NOTREACHED(str)                                    \
-  nsDebug::NotReached(str, __FILE__, __LINE__)
+  nsDebug::Assertion(str, "Not Reached", __FILE__, __LINE__)
 
 /**
  * Log an error message.
  */
 #define NS_ERROR(str)                                         \
-  nsDebug::Error(str, __FILE__, __LINE__)
+  nsDebug::Assertion(str, "Error", __FILE__, __LINE__)
 
 /**
  * Log a warning message.
@@ -347,5 +269,8 @@ public:
   NS_ENSURE_FALSE(outer && !iid.Equals(NS_GET_IID(nsISupports)), NS_ERROR_INVALID_ARG)
 
 ///////////////////////////////////////////////////////////////////////////////
+
+#define NS_CheckThreadSafe(owningThread, msg)                 \
+  NS_ASSERTION(owningThread == PR_GetCurrentThread(), msg)
 
 #endif /* nsDebug_h___ */

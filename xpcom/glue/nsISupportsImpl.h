@@ -45,7 +45,10 @@
 #include "nsISupportsBase.h"
 #endif
 
-#include "pratom.h" /* needed for PR_AtomicIncrement and PR_AtomicDecrement */
+#include "prthread.h" /* needed for thread-safety checks */
+#include "pratom.h"   /* needed for PR_AtomicIncrement and PR_AtomicDecrement */
+
+#include "nsDebug.h"
 
 #ifdef XPCOM_GLUE
 // nsTraceRefcnt needs a cleaning...
@@ -65,15 +68,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Macros to help detect thread-safety:
 
-#if defined(NS_DEBUG) && !defined(XPCOM_GLUE)
-
-extern "C" NS_COM void* NS_CurrentThread(void);
-extern "C" NS_COM void NS_CheckThreadSafe(void* owningThread,
-                                             const char* msg);
+#if defined(NS_DEBUG)
 
 class nsAutoOwningThread {
 public:
-    nsAutoOwningThread() { mThread = NS_CurrentThread(); }
+    nsAutoOwningThread() { mThread = PR_GetCurrentThread(); }
     void *GetThread() const { return mThread; }
 
 private:
