@@ -1166,7 +1166,7 @@ open_temp(HTAB *hashp)
 	sigset_t set, oset;
 #endif
 	char * tmpdir;
-	int    len;
+	size_t len;
 	static const char namestr[] = "/_hashXXXXXX";
 	char filename[1024];
 	char last;
