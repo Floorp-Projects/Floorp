@@ -332,6 +332,10 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
 // Perhaps there is a better, pubically supported way to get the same thing done?
 ////////
 
+// XXXbz THIS IS SO TOTALLY BROKEN.  IT WAS BROKEN IN nsCSSRendering,
+// AND IT'S EVEN MORE BROKEN HERE.  WHY IS THIS CODE ACTUALLY CHANGING
+// WHAT BACKGROUNDS THE PAGE SHOWS?????
+
 // method GetFrameForBackgroundUpdate
 //
 // If the frame (aFrame) is the HTML or BODY frame then find the canvas frame and set the
