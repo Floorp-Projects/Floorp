@@ -2019,6 +2019,10 @@ sub BuildMozilla()
 	_copy( $cmd_file_path . "Mozilla_NSPR_Log", $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
+	$cmd_file = "Mozilla JavaScript Console";
+	_copy( $cmd_file_path . "Mozilla_JavaScript_Console", $dist_dir . $cmd_file );
+	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
+
 }
 
 
