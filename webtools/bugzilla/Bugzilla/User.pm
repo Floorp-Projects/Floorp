@@ -1013,10 +1013,11 @@ sub is_available_username ($;$) {
 sub login_to_id ($) {
     my ($login) = (@_);
     my $dbh = Bugzilla->dbh;
+    # $login will only be used by the following SELECT statement, so it's safe.
+    trick_taint($login);
     my $user_id = $dbh->selectrow_array(
         "SELECT userid FROM profiles WHERE login_name = ?", undef, $login);
-    # $user_id should be a positive integer, this makes Taint mode happy
-    if (defined $user_id && detaint_natural($user_id)) {
+    if ($user_id) {
         return $user_id;
     } else {
         return 0;
