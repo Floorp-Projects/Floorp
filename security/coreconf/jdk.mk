@@ -384,7 +384,7 @@ endif
 
 # define a default JDK classpath
 ifeq ($(JDK_CLASSPATH),)
-	JDK_CLASSPATH = "$(JAVA_DESTPATH)$(PATH_SEPARATOR)$(JAVA_SOURCEPATH)$(PATH_SEPARATOR)$(JAVA_CLASSES)"
+	JDK_CLASSPATH = '$(JAVA_DESTPATH)$(PATH_SEPARATOR)$(JAVA_SOURCEPATH)$(PATH_SEPARATOR)$(JAVA_CLASSES)'
 endif
 
 # by default, override CLASSPATH environment variable using the JDK classpath option with $(JDK_CLASSPATH)
