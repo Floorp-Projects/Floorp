@@ -31,9 +31,8 @@
 
 <!ENTITY  changepassword.label    "Change Master Password">
 <!ENTITY  changepassword.text     "Your master password protects sensitive information such as web passwords and certificates.">
-<!ENTITY  changepassword.button   "Change Password">
+<!ENTITY  changepassword.button   "Change Password...">
 
 <!ENTITY  resetpassword.label    "Reset Master Password">
-<!ENTITY  resetpassword.text1    "If you have forgotten your master password, you can reset it.">
-<!ENTITY  resetpassword.text2    "All your stored web and e-mail passwords, form data, personal certificates, and private keys will be erased.">
+<!ENTITY  resetpassword.text     "If you reset your master password, all of your stored Web and e-mail passwords, form data, personal certificates, and private keys will be lost.">
 <!ENTITY  resetpassword.button   "Reset Password">

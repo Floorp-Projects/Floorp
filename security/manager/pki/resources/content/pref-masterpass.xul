@@ -97,8 +97,7 @@
   <!-- Reset Password -->
   <groupbox>
     <caption label="&resetpassword.label;"/>
-    <description>&resetpassword.text1;</description>
-    <description>&resetpassword.text2;</description>
+    <description>&resetpassword.text;</description>
     <hbox align="center">
       <button label="&resetpassword.button;"
               oncommand="ResetPW();"
