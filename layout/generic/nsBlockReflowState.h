@@ -4301,8 +4301,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       printf("PASS1 ");
     }
     ListTag(stdout);
-    printf(": line.floaters=%s%s band.floaterCount=%d\n",
-           aLine->mFloaters.NotEmpty() ? "yes" : "no",
+    printf(": line.floaters=%s band.floaterCount=%d\n",
+           //aLine->mFloaters.NotEmpty() ? "yes" : "no",
            aState.mHaveRightFloaters ? "(have right floaters)" : "",
            aState.mBand.GetFloaterCount());
 #endif
