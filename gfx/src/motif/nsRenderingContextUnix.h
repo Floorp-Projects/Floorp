@@ -131,6 +131,8 @@ public:
 protected:
 
   nscolor mCurrentColor ;
+  nsTransform2D		  *mTMatrix;		// transform that all the graphics drawn here will obey
+  float             mP2T;
 
   nsDrawingSurfaceUnix   *mOffscreenSurface;  
   nsDrawingSurfaceUnix   *mRenderingSurface;
