@@ -95,7 +95,7 @@ nsResProtocolHandler::Init()
     if (NS_FAILED(rv)) return rv;
 
     // make "res:///" == "resource:/"
-    rv = SetSpecialDir("", "system.OS_CurrentProcessDirectory");
+    rv = SetSpecialDir("", "xpcom.currentProcess");
     if (NS_FAILED(rv)) return rv;
 
     rv = SetSpecialDir("CurrentDir", "system.OS_CurrentWorkingDirectory");
@@ -128,7 +128,7 @@ nsResProtocolHandler::Init()
     // Set up the "Resource" root to point to the old resource location 
     // such that:
     //     resource://<path>  ==  res://Resource/<path>
-    rv = SetSpecialDir("Resource", "system.OS_CurrentProcessDirectory");
+    rv = SetSpecialDir("Resource", "xpcom.currentProcess");
     if (NS_FAILED(rv)) return rv;
 
     return rv;
