@@ -207,16 +207,16 @@
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="main-toolbar">
       <hbox id="main-toolbar-buttons">
-        <button class="button-toolbar-1 top" id="stop-button"
+        <toolbarbutton class="toolbarbutton-1" id="stop-button"
                 label="&Stop.label;" observes="cmd_stop"/>
         <toolbarseparator class="toolbarseparator-primary"/>
-        <button class="button-toolbar-1 top" id="cont-button"
+        <toolbarbutton class="toolbarbutton-1" id="cont-button"
                 label="&Cont.label;" observes="cmd_cont"/>
-        <button class="button-toolbar-1 top" id="step-over-button"
+        <toolbarbutton class="toolbarbutton-1" id="step-over-button"
                 label="&StepOver.label;" observes="cmd_step_over"/>
-        <button class="button-toolbar-1 top" id="step-in-button"
+        <toolbarbutton class="toolbarbutton-1" id="step-in-button"
                 label="&StepIn.label;" observes="cmd_step_in"/>
-        <button class="button-toolbar-1 top" id="step-out-button"
+        <toolbarbutton class="toolbarbutton-1" id="step-out-button"
                 label="&StepOut.label;" observes="cmd_step_out"/>
       </hbox>
     </toolbar>

@@ -54,7 +54,7 @@
 
       </hbox>
 
-      <button class="button-toolbar" label="&btnInspect.label;" observes="cmdGotoURL"/>
+      <toolbarbutton label="&btnInspect.label;" observes="cmdGotoURL"/>
     </hbox>
 
   </toolbar>

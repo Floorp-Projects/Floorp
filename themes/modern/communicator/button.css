@@ -34,6 +34,7 @@
   border: none;
   color: #323642;
   font-size: smaller;
+  min-width: 50px;
 }
 
 .toolbarbutton-1 > .toolbarbutton-box,
