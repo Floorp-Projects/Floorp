@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "xp_core.h"			//this is a hack to get it to build. MMP
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
