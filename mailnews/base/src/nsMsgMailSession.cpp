@@ -78,7 +78,6 @@ nsresult nsMsgMailSession::Init()
 
 	rv = NS_NewISupportsArray(getter_AddRefs(mWindows));
 	return rv;
-
 }
 
 nsresult nsMsgMailSession::Shutdown()
@@ -87,12 +86,13 @@ nsresult nsMsgMailSession::Shutdown()
 }
 
 
-NS_IMETHODIMP nsMsgMailSession::AddFolderListener(nsIFolderListener * listener)
+NS_IMETHODIMP nsMsgMailSession::AddFolderListener(nsIFolderListener * listener, PRUint32 notifyFlags)
 {
   NS_ASSERTION(mListeners, "no listeners");
   if (!mListeners) return NS_ERROR_FAILURE;
 
   mListeners->AppendElement(listener);
+  mListenerNotifyFlags.Add(notifyFlags);
   return NS_OK;
 }
 
@@ -100,7 +100,13 @@ NS_IMETHODIMP nsMsgMailSession::RemoveFolderListener(nsIFolderListener * listene
 {
   NS_ASSERTION(mListeners, "no listeners");
   if (!mListeners) return NS_ERROR_FAILURE;
-
+  
+  PRInt32 index;
+  nsresult rv = mListeners->GetIndexOf(listener, &index);
+  NS_ENSURE_SUCCESS(rv,rv);
+   
+  mListenerNotifyFlags.RemoveAt(index);
+  
   mListeners->RemoveElement(listener);
   return NS_OK;
 
@@ -124,10 +130,12 @@ nsMsgMailSession::OnItemPropertyChanged(nsISupports *item,
 	
 	for(PRUint32 i = 0; i < count; i++)
 	{
+          if (mListenerNotifyFlags[i] & nsIFolderListener::propertyChanged) {
 		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
 		NS_ASSERTION(listener, "listener is null");
 		if (!listener) return NS_ERROR_FAILURE;
 		listener->OnItemPropertyChanged(item, property, oldValue, newValue);
+          }
 	}
 
 	return NS_OK;
@@ -152,10 +160,12 @@ nsMsgMailSession::OnItemUnicharPropertyChanged(nsISupports *item,
 	
 	for(PRUint32 i = 0; i < count; i++)
 	{
+          if (mListenerNotifyFlags[i] & nsIFolderListener::unicharPropertyChanged) {
 		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
 		NS_ASSERTION(listener, "listener is null");
 		if (!listener) return NS_ERROR_FAILURE;
 		listener->OnItemUnicharPropertyChanged(item, property, oldValue, newValue);
+           }
 	}
 
 	return NS_OK;
@@ -180,10 +190,12 @@ nsMsgMailSession::OnItemIntPropertyChanged(nsISupports *item,
 	
 	for(PRUint32 i = 0; i < count; i++)
 	{
+          if (mListenerNotifyFlags[i] & nsIFolderListener::intPropertyChanged) {
 		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
 		NS_ASSERTION(listener, "listener is null");
 		if (!listener) return NS_ERROR_FAILURE;
 		listener->OnItemIntPropertyChanged(item, property, oldValue, newValue);
+          }
 	}
 
 	return NS_OK;
@@ -208,10 +220,12 @@ nsMsgMailSession::OnItemBoolPropertyChanged(nsISupports *item,
 	
 	for(PRUint32 i = 0; i < count; i++)
 	{
+          if (mListenerNotifyFlags[i] & nsIFolderListener::boolPropertyChanged) {
 		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
 		NS_ASSERTION(listener, "listener is null");
 		if (!listener) return NS_ERROR_FAILURE;
 		listener->OnItemBoolPropertyChanged(item, property, oldValue, newValue);
+          }
 	}
 
 	return NS_OK;
@@ -223,26 +237,26 @@ nsMsgMailSession::OnItemPropertyFlagChanged(nsISupports *item,
                                             PRUint32 oldValue,
                                             PRUint32 newValue)
 {
-	nsresult rv;
-	PRUint32 count;
+  nsresult rv;
+  PRUint32 count;
 
-	NS_ASSERTION(mListeners, "no listeners");
-	if (!mListeners) return NS_ERROR_FAILURE;
+  NS_ASSERTION(mListeners, "no listeners");
+  if (!mListeners) return NS_ERROR_FAILURE;
 
-	rv = mListeners->Count(&count);
-	if (NS_FAILED(rv)) return rv;
+  rv = mListeners->Count(&count);
+  if (NS_FAILED(rv)) return rv;
 
-	
-	for(PRUint32 i = 0; i < count; i++)
-	{
-		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
-		NS_ASSERTION(listener, "listener is null");
-		if (!listener) return NS_ERROR_FAILURE;
-		listener->OnItemPropertyFlagChanged(item, property, oldValue, newValue);
-	}
+  for(PRUint32 i = 0; i < count; i++)
+  {
+    if (mListenerNotifyFlags[i] & nsIFolderListener::propertyFlagChanged) {
+      nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
+      NS_ASSERTION(listener, "listener is null");
+      if (!listener) return NS_ERROR_FAILURE;
+      listener->OnItemPropertyFlagChanged(item, property, oldValue, newValue);
+    }
+  }
 
-	return NS_OK;
-
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailSession::OnItemAdded(nsISupports *parentItem, nsISupports *item, const char* viewString)
@@ -259,10 +273,12 @@ NS_IMETHODIMP nsMsgMailSession::OnItemAdded(nsISupports *parentItem, nsISupports
 	
 	for(PRUint32 i = 0; i < count; i++)
 	{
+          if (mListenerNotifyFlags[i] & nsIFolderListener::added) {
 		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
 		NS_ASSERTION(listener, "listener is null");
 		if (!listener) return NS_ERROR_FAILURE;
 		listener->OnItemAdded(parentItem, item, viewString);
+          }
 	}
 
 	return NS_OK;
@@ -283,10 +299,12 @@ NS_IMETHODIMP nsMsgMailSession::OnItemRemoved(nsISupports *parentItem, nsISuppor
 	
 	for(PRUint32 i = 0; i < count; i++)
 	{
+          if (mListenerNotifyFlags[i] & nsIFolderListener::removed) {
 		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
 		NS_ASSERTION(listener, "listener is null");
 		if (!listener) return NS_ERROR_FAILURE;
 		listener->OnItemRemoved(parentItem, item, viewString);
+          }
 	}
 	return NS_OK;
 
@@ -307,9 +325,11 @@ NS_IMETHODIMP nsMsgMailSession::OnItemEvent(nsIFolder *aFolder,
 
 	for(PRUint32 i = 0; i < count; i++)
 	{
+          if (mListenerNotifyFlags[i] & nsIFolderListener::event) {
 		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
 		if(listener)
 			listener->OnItemEvent(aFolder, aEvent);
+          }
 	}
 	return NS_OK;
 }

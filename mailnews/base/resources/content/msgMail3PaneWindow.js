@@ -24,8 +24,6 @@
 
 /* This is where functions related to the 3 pane window are kept */
 
-var showPerformance = false;
-
 var gFolderOutliner; 
 var gMessagePane;
 var gMessagePaneFrame;
@@ -60,49 +58,41 @@ var gDisplayStartupPage = false;
 
 // the folderListener object
 var folderListener = {
-    OnItemAdded: function(parentItem, item, view) {},
+    OnItemAdded: function(parentItem, item, view) { },
 
-	OnItemRemoved: function(parentItem, item, view){},
+    OnItemRemoved: function(parentItem, item, view) { },
 
-	OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
+    OnItemPropertyChanged: function(item, property, oldValue, newValue) { },
 
-	OnItemIntPropertyChanged: function(item, property, oldValue, newValue)
-	{
-		var currentLoadedFolder = GetThreadPaneFolder();
-        if (!currentLoadedFolder) return;
+    OnItemIntPropertyChanged: function(item, property, oldValue, newValue) {
+      var currentLoadedFolder = GetThreadPaneFolder();
+      if (!currentLoadedFolder) return;
+      var currentURI = currentLoadedFolder.URI;
 
-		var currentURI = currentLoadedFolder.URI;
+      //if we don't have a folder loaded, don't bother.
+      if(currentURI) {
+        if(property.GetUnicode() == "TotalMessages" || property.GetUnicode() == "TotalUnreadMessages") {
+          var folder = item.QueryInterface(Components.interfaces.nsIMsgFolder);
+          if(folder) {
+            var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource); 
+            if(folderResource) {
+              var folderURI = folderResource.Value;
+              if(currentURI == folderURI) {
+                UpdateStatusMessageCounts(folder);
+              }
+            }
+          }
+        }      
+      }
+    },
 
-		//if we don't have a folder loaded, don't bother.
-		if(currentURI)
-		{
-			if(property.GetUnicode() == "TotalMessages" || property.GetUnicode() == "TotalUnreadMessages")
-			{
-				var folder = item.QueryInterface(Components.interfaces.nsIMsgFolder);
-				if(folder)
-				{
-					var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-					if(folderResource)
-					{
-						var folderURI = folderResource.Value;
-						if(currentURI == folderURI)
-						{
-							UpdateStatusMessageCounts(folder);
-						}
-					}
-				}
-			}      
-		}
-	},
+    OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) { },
 
-    OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
-
-    OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue){},
-    OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
+    OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue) { },
+    OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) { },
 
     OnItemEvent: function(folder, event) {
        var eventType = event.GetUnicode();
-
        if (eventType == "FolderLoaded") {
          if (folder) {
            var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -146,10 +136,6 @@ var folderListener = {
              if(uri == gCurrentLoadingFolderURI) {
                gCurrentLoadingFolderURI = "";
                //Now let's select the first new message if there is one
-               var beforeScrollToNew;
-               if(showPerformance) {
-                 beforeScrollToNew = new Date();
-               }
                if (!scrolled) {
                  // if we didn't just scroll, scroll to the first new message
                  // don't select it though
@@ -159,15 +145,6 @@ var folderListener = {
                  if (!scrolled) {
                    EnsureRowInThreadOutlinerIsVisible(0);
                  }
-               }
-               if(showPerformance) {
-                 var afterScrollToNew = new Date();
-                 var timeToScroll = (afterScrollToNew.getTime() - beforeScrollToNew.getTime())/1000;
-
-                 var afterFolderLoadTime = new Date();
-                 var timeToLoad = (afterFolderLoadTime.getTime() - gBeforeFolderLoadTime.getTime())/1000;
-                 dump("Time to load " + uri + " is " +  timeToLoad + " seconds\n");
-                 dump("of which scrolling to new is " + timeToScroll + " seconds\n");
                }
                SetBusyCursor(window, false);
              }
@@ -418,12 +395,6 @@ var gThreePaneIncomingServerListener = {
 /* Functions related to startup */
 function OnLoadMessenger()
 {
-  showPerformance = pref.GetBoolPref('mail.showMessengerPerformance');
-  var beforeLoadMessenger;
-  if(showPerformance) {
-      beforeLoadMessenger = new Date();
-  }
-
   AddMailOfflineObserver();
   CreateMailWindowGlobals();
   Create3PaneGlobals();
@@ -499,12 +470,6 @@ function OnLoadMessenger()
 
 	//Set focus to the Thread Pane the first time the window is opened.
 	SetFocusThreadPane();
-
-	if(showPerformance) {
-	  var afterLoadMessenger = new Date();
-	  var timeToLoad = (afterLoadMessenger.getTime() - beforeLoadMessenger.getTime())/1000;
-	  dump("Time in OnLoadMessger is " +  timeToLoad + " seconds\n");
-	}
 }
 
 function OnUnloadMessenger()
@@ -651,7 +616,9 @@ function AddToSession()
     try {
         var mailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
         
-        mailSession.AddFolderListener(folderListener);
+        var nsIFolderListener = Components.interfaces.nsIFolderListener;
+        var notifyFlags = nsIFolderListener.intPropertyChanged | nsIFolderListener.event;
+        mailSession.AddFolderListener(folderListener, notifyFlags);
 	} catch (ex) {
         dump("Error adding to session\n");
     }

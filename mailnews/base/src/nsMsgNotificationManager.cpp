@@ -148,7 +148,7 @@ nsresult nsMsgNotificationManager::Init()
 	nsCOMPtr<nsIMsgMailSession> mailSession = 
 	         do_GetService(kMsgMailSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
-		rv = mailSession->AddFolderListener(this);
+		rv = mailSession->AddFolderListener(this, nsIFolderListener::propertyChanged | nsIFolderListener::propertyFlagChanged);
 
 	if(NS_FAILED(rv))
 		return rv;

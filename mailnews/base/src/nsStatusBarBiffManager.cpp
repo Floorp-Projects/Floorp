@@ -92,7 +92,7 @@ nsresult nsStatusBarBiffManager::Init()
   nsCOMPtr<nsIMsgMailSession> mailSession = 
     do_GetService(kMsgMailSessionCID, &rv); 
   if(NS_SUCCEEDED(rv))
-    mailSession->AddFolderListener(this);
+    mailSession->AddFolderListener(this, nsIFolderListener::propertyFlagChanged);
 
   mInitialized = PR_TRUE;
   return NS_OK;
@@ -121,7 +121,7 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
         if (NS_SUCCEEDED(rv) && playSoundOnBiff) {
           nsCOMPtr<nsISound> sound = do_CreateInstance("@mozilla.org/sound;1");
           if (sound) {
-            rv = sound->PlaySystemSound("Mailbeep");
+            rv = sound->PlaySystemSound("_moz_mailbeep");
           } 
         }
       }

@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 pref("mailnews.logComposePerformance", false);
-pref("mail.showMessengerPerformance", false);
 
 pref("mail.wrap_long_lines",                true);
 pref("news.wrap_long_lines",                true);
@@ -316,12 +315,7 @@ pref("mail.enable_autocomplete",true);
 pref("mailnews.html_domains","");
 pref("mailnews.plaintext_domains","");
 
-// the ui will eventually use these three prefs:
 pref("mail.biff.play_sound",true);
-pref("mail.biff.use_default_sound",true);
-pref("mail.biff.sound_file","");
-// must be an URL.  (provide this back door for mac users, until we have a UI
-pref("mail.biff.default_sound_url","");
 
 pref("mail.content_disposition_type", 0);
 

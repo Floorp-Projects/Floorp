@@ -189,10 +189,6 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
       HideAccountCentral();
   }
 
-  if (showPerformance) {
-    gBeforeFolderLoadTime = new Date();
-  }
-
   gCurrentLoadingFolderURI = uri;
   gNextMessageAfterDelete = null; // forget what message to select, if any
 

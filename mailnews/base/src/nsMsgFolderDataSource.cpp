@@ -265,14 +265,21 @@ nsresult nsMsgFolderDataSource::Init()
 {
   nsresult rv;
   
-	rv = nsMsgRDFDataSource::Init();
+  rv = nsMsgRDFDataSource::Init();
   if (NS_FAILED(rv))
     return rv;
 
   nsCOMPtr<nsIMsgMailSession> mailSession = 
-           do_GetService(kMsgMailSessionCID, &rv); 
-	if(NS_SUCCEEDED(rv))
-		mailSession->AddFolderListener(this);
+    do_GetService(kMsgMailSessionCID, &rv); 
+
+  if(NS_SUCCEEDED(rv))
+    mailSession->AddFolderListener(this, 
+      nsIFolderListener::added |
+      nsIFolderListener::removed |
+      nsIFolderListener::intPropertyChanged |
+      nsIFolderListener::boolPropertyChanged |
+      nsIFolderListener::unicharPropertyChanged |
+      nsIFolderListener::propertyFlagChanged);
 
   return NS_OK;
 }

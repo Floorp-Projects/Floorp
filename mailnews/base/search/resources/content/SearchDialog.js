@@ -471,7 +471,9 @@ function setupDatasource() {
 
     gSearchSessionFolderListener = gSearchSession.QueryInterface(Components.interfaces.nsIFolderListener);
     gMailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
-    gMailSession.AddFolderListener(gSearchSessionFolderListener);
+    var nsIFolderListener = Components.interfaces.nsIFolderListener;
+    var notifyFlags = nsIFolderListener.event;
+    gMailSession.AddFolderListener(gSearchSessionFolderListener, notifyFlags);
 
     // the datasource is a listener on the search results
     gViewSearchListener = gSearchView.QueryInterface(Components.interfaces.nsIMsgSearchNotify);

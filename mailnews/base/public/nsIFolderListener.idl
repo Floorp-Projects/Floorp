@@ -40,44 +40,55 @@
 
 interface nsIFolder;
 
+typedef unsigned long folderListenerNotifyFlagValue;
+
 [scriptable, uuid(d4ff86da-1dd1-11b2-a6f6-9fcd348bcc34)]
 interface nsIFolderListener : nsISupports {
-
-	void OnItemAdded(in nsISupports parentItem,
+  const folderListenerNotifyFlagValue added = 0x1;
+  void OnItemAdded(in nsISupports parentItem,
                    in nsISupports item,
                    in string viewString);
   
-	void OnItemRemoved(in nsISupports parentItem,
+  const folderListenerNotifyFlagValue removed = 0x2;
+  void OnItemRemoved(in nsISupports parentItem,
                      in nsISupports item,
                      in string viewString);
   
-	void OnItemPropertyChanged(in nsISupports item,
+  const folderListenerNotifyFlagValue propertyChanged = 0x4;
+  void OnItemPropertyChanged(in nsISupports item,
                              in nsIAtom property,
                              in string oldValue,
                              in string newValue);
   
-	void OnItemIntPropertyChanged(in nsISupports item,
+  const folderListenerNotifyFlagValue intPropertyChanged = 0x8;
+  void OnItemIntPropertyChanged(in nsISupports item,
                                 in nsIAtom property,
                                 in long oldValue,
                                 in long newValue);
   
-	void OnItemBoolPropertyChanged(in nsISupports item,
+  const folderListenerNotifyFlagValue boolPropertyChanged = 0x10;
+  void OnItemBoolPropertyChanged(in nsISupports item,
                                  in nsIAtom property,
                                  in boolean oldValue,
                                  in boolean newValue);
   
+  const folderListenerNotifyFlagValue unicharPropertyChanged = 0x20;
   void OnItemUnicharPropertyChanged(in nsISupports item,
                                     in nsIAtom property,
                                     in wstring oldValue,
                                     in wstring newValue);
   
-	void OnItemPropertyFlagChanged(in nsISupports item,
+  const folderListenerNotifyFlagValue propertyFlagChanged = 0x40;
+  void OnItemPropertyFlagChanged(in nsISupports item,
                                  in nsIAtom property,
                                  in unsigned long oldFlag,
                                  in unsigned long newFlag);
 
+  const folderListenerNotifyFlagValue event = 0x80;
   void OnItemEvent(in nsIFolder item, in nsIAtom event);
   
+  const folderListenerNotifyFlagValue all = 0xFFFFFFFF; 
+
   //	void OnFolderLoaded(in nsIFolder aFolder);
   //	void OnDeleteOrMoveMessagesCompleted(in nsIFolder aFolder);
 };

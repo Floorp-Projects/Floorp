@@ -56,10 +56,8 @@ interface nsIMsgWindow;
 
 [scriptable, uuid(D5124440-D59E-11d2-806A-006008128C4E)]
 interface nsIMsgMailSession : nsISupports {
-
-
   void Shutdown();
-  void AddFolderListener(in nsIFolderListener listener);
+  void AddFolderListener(in nsIFolderListener listener, in folderListenerNotifyFlagValue notifyFlags);
   void RemoveFolderListener(in nsIFolderListener listener);
   
   readonly attribute nsIMsgWindow topmostMsgWindow;

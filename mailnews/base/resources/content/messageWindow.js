@@ -35,40 +35,34 @@ var gNextMessageViewIndexAfterDelete = -1;
 var folderListener = {
   OnItemAdded: function(parentItem, item, view) {},
 
-	OnItemRemoved: function(parentItem, item, view)
-	{
-		var parentFolderResource = parentItem.QueryInterface(Components.interfaces.nsIRDFResource);
-		if(!parentFolderResource)
-			return;
+  OnItemRemoved: function(parentItem, item, view) {
+    var parentFolderResource = parentItem.QueryInterface(Components.interfaces.nsIRDFResource);
+    if(!parentFolderResource)
+      return;
 
-		var parentURI = parentFolderResource.Value;
-		if(parentURI != gCurrentFolderUri)
-			return;
+    var parentURI = parentFolderResource.Value;
+    if(parentURI != gCurrentFolderUri)
+      return;
 
-		var deletedMessageHdr = item.QueryInterface(Components.interfaces.nsIMsgDBHdr);
+    var deletedMessageHdr = item.QueryInterface(Components.interfaces.nsIMsgDBHdr);
     if (extractMsgKeyFromURI() == deletedMessageHdr.messageKey)
-			gCurrentMessageIsDeleted = true;
-	},
+      gCurrentMessageIsDeleted = true;
+  },
 
-	OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
-
-	OnItemIntPropertyChanged: function(item, property, oldValue, newValue)
-	{
-	},
-
-	OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
-
+  OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
+  OnItemIntPropertyChanged: function(item, property, oldValue, newValue) { },
+  OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
   OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue){},
-	OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
+  OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
 
   OnItemEvent: function(folder, event) {
-		  if (event.GetUnicode() == "DeleteOrMoveMsgCompleted") {
-			  HandleDeleteOrMoveMsgCompleted(folder);
-		  }     
-      else if (event.GetUnicode() == "DeleteOrMoveMsgFailed") {
-            HandleDeleteOrMoveMsgFailed(folder);
-      }
+    if (event.GetUnicode() == "DeleteOrMoveMsgCompleted") {
+      HandleDeleteOrMoveMsgCompleted(folder);
+    }     
+    else if (event.GetUnicode() == "DeleteOrMoveMsgFailed") {
+      HandleDeleteOrMoveMsgFailed(folder);
     }
+  }
 }
 
 function nsMsgDBViewCommandUpdater()
@@ -157,9 +151,11 @@ function OnLoadMessageWindow()
 	OnLoadMsgHeaderPane();
 
   try {
-    mailSession.AddFolderListener(folderListener);
-	} catch (ex) {
-    dump("Error adding to session\n");
+    var nsIFolderListener = Components.interfaces.nsIFolderListener;
+    var notifyFlags = nsIFolderListener.removed | nsIFolderListener.event;
+    mailSession.AddFolderListener(folderListener, notifyFlags);
+  } catch (ex) {
+    dump("Error adding to session: " +ex + "\n");
   }
 
   var originalView = null;

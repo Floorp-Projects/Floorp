@@ -189,7 +189,7 @@ nsMessengerWinIntegration::Init()
   NS_ENSURE_SUCCESS(rv,rv);
 
   // because we care if the unread total count changes
-  rv = mailSession->AddFolderListener(this);
+  rv = mailSession->AddFolderListener(this, nsIFolderListener::boolPropertyChanged | nsIFolderListener::intPropertyChanged);
   NS_ENSURE_SUCCESS(rv,rv);
 
   // get current profile name to fill in commandliner. 
