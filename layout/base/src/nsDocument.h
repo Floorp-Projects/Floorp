@@ -126,6 +126,8 @@ public:
    */
   NS_IMETHOD GetLineBreaker(nsILineBreaker** aResult)  ;
   NS_IMETHOD SetLineBreaker(nsILineBreaker* aLineBreaker) ;
+  NS_IMETHOD GetWordBreaker(nsIWordBreaker** aResult)  ;
+  NS_IMETHOD SetWordBreaker(nsIWordBreaker* aWordBreaker) ;
 
   /**
    * Access HTTP header data (this may also get set from other sources, like
@@ -373,6 +375,7 @@ protected:
   nsINameSpaceManager* mNameSpaceManager;
   nsDocHeaderData* mHeaderData;
   nsILineBreaker* mLineBreaker;
+  nsIWordBreaker* mWordBreaker;
 };
 
 #endif /* nsDocument_h___ */

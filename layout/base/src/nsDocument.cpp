@@ -97,9 +97,11 @@ static NS_DEFINE_IID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CI
 
 
 #include "nsILineBreakerFactory.h"
+#include "nsIWordBreakerFactory.h"
 #include "nsLWBrkCIID.h"
 static NS_DEFINE_IID(kLWBrkCID, NS_LWBRK_CID);
 static NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
+static NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_IWORDBREAKERFACTORY_IID);
 
 class nsDOMStyleSheetCollection : public nsIDOMStyleSheetCollection,
                                   public nsIScriptObjectOwner,
@@ -570,6 +572,7 @@ nsDocument::nsDocument()
   mNameSpaceManager = nsnull;
   mHeaderData = nsnull;
   mLineBreaker = nsnull;
+  mWordBreaker = nsnull;
 
   Init();/* XXX */
 }
@@ -624,6 +627,7 @@ nsDocument::~nsDocument()
     mHeaderData = nsnull;
   }
   NS_IF_RELEASE(mLineBreaker);
+  NS_IF_RELEASE(mWordBreaker);
 }
 
 nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -849,6 +853,36 @@ NS_IMETHODIMP nsDocument::SetLineBreaker(nsILineBreaker* aLineBreaker)
   NS_IF_RELEASE(mLineBreaker);
   mLineBreaker = aLineBreaker;
   NS_IF_ADDREF(mLineBreaker);
+  return NS_OK;
+}
+NS_IMETHODIMP nsDocument::GetWordBreaker(nsIWordBreaker** aResult) 
+{
+  if(nsnull == mWordBreaker ) {
+     // no line breaker, find a default one
+     nsIWordBreakerFactory *lf;
+     nsresult result;
+     result = nsServiceManager::GetService(kLWBrkCID,
+                                          kIWordBreakerFactoryIID,
+                                          (nsISupports **)&lf);
+     if (NS_SUCCEEDED(result)) {
+      nsIWordBreaker *lb = nsnull ;
+      nsAutoString lbarg("");
+      result = lf->GetBreaker(lbarg, &lb);
+      if(NS_SUCCEEDED(result)) {
+         mWordBreaker = lb;
+      }
+      result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
+     }
+  }
+  *aResult = mWordBreaker;
+  NS_IF_ADDREF(mWordBreaker);
+  return NS_OK; // XXX we should do error handling here
+}
+NS_IMETHODIMP nsDocument::SetWordBreaker(nsIWordBreaker* aWordBreaker) 
+{
+  NS_IF_RELEASE(mWordBreaker);
+  mWordBreaker = aWordBreaker;
+  NS_IF_ADDREF(mWordBreaker);
   return NS_OK;
 }
 
