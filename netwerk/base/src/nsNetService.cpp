@@ -28,7 +28,6 @@
 #include "nsConnectionGroup.h"
 #include <ctype.h>      // for isalpha
 #include "nsCOMPtr.h"
-#include "nsXPComCIID.h"
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);

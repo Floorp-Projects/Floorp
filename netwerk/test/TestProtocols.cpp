@@ -30,7 +30,6 @@
 
 #include "nspr.h"
 #include "nscore.h"
-#include "nsXPComCIID.h"
 #include "nsCOMPtr.h"
 #include "nsIEventQueueService.h"
 #include "nsINetService.h"
