@@ -1068,13 +1068,19 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
 #ifdef USE_XPRINT 
 #ifdef XPRINT_FONT_HACK
-  nsString *savedName;
+  nsString savedName;
 
+  /* We're limiting here the font search to "serif" only now
+   * until we have a fix for bug 93771 ("Mozilla uses 
+   * low-resolution bitmap fonts on high resolution X11 displays") 
+   */
   if(mPrinterMode)
   {
-    savedName = &mFont->name;
+    /* save original font name (that we can restore it later, see below)... */
+    savedName = mFont->name;
+    /* .. and replace it with "serif" for now. */
     mFont->name = NS_LITERAL_STRING("serif");
-  }  
+  }   
 #endif  /* XPRINT_FONT_HACK */
 #endif /* USE_XPRINT */
 
@@ -1180,8 +1186,9 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
 #ifdef USE_XPRINT
 #ifdef XPRINT_FONT_HACK
+  /* restore the original font name */
   if(mPrinterMode)
-    mFont->name = *savedName;
+    mFont->name = savedName;
 #endif /* XPRINT_FONT_HACK */
 #endif /* USE_XPRINT */
 
