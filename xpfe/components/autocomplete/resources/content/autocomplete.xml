@@ -1383,7 +1383,7 @@
                         oncommand="var controller = document.commandDispatcher.getControllerForCommand('cmd_delete');
                                    controller.doCommand('cmd_delete');"/>
           <xul:menuseparator/>
-          <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"
+          <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"
                         oncommand="var controller = document.commandDispatcher.getControllerForCommand('cmd_selectAll');
                                    controller.doCommand('cmd_selectAll');"/>
         </xul:menupopup>
