@@ -249,7 +249,7 @@ function DoEnabling()
 // handle key event on trees
 function HandleKeyEvent( aEvent )
 {
-  switch( aEvent.which ) 
+  switch( aEvent.keyCode ) 
   {
   case 13:
     onStart();

@@ -149,6 +149,7 @@ public:
   NS_IMETHOD    SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget);
   NS_IMETHOD    IsDispatchStopped(PRBool* aIsDispatchStopped);
   NS_IMETHOD    GetInternalNSEvent(nsEvent** aNSEvent);
+  NS_IMETHOD    GetRealTarget(nsIDOMEventTarget** aTarget);
   NS_IMETHOD    IsHandled(PRBool* aHandled);
   NS_IMETHOD    SetHandled(PRBool aHandled);
 

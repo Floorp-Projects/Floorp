@@ -545,7 +545,7 @@
 	<box align="vertical" flex="100%">
 	<spring flex="100%"/>
 	<html:input id="urlbar" type="text" style="min-width: 100px; min-height: 25px"
-	  onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
+	  onkeyup="if (event.keyCode == 13) { BrowserLoadURL(); }"/>   
 	<spring flex="100%"/>
 	</box>
 	<titledbutton id="Throbber" onclick="window.frames[0].home()">

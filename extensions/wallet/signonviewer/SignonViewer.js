@@ -408,7 +408,7 @@ function HandleEvent( event, page )
   }
   
   // keypress event
-  if( event.type == "keypress" && event.which == 46 ) {
+  if( event.type == "keypress" && event.keyCode == 46 ) {
     switch( page ) {
     case 0:
       DeleteSignon();

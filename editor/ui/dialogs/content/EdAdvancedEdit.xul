@@ -105,9 +105,9 @@
               <title><text value="&AddHTMLAttributeLabel.label;"/></title>
               <box autostretch="never">
                 <text class="label" for="AddHTMLAttributeNameInput" value="&AttName.label;"/>
-                <textfield flex="1" id="AddHTMLAttributeNameInput" onkeyup="doHTMLEnabling(event.which)" onmouseup="doHTMLEnabling(event.which)"/>
+                <textfield flex="1" id="AddHTMLAttributeNameInput" onkeyup="doHTMLEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
                 <text class="label" for="AddHTMLAttributeValueInput" value="&AttValue.label;"/>
-          	    <textfield flex="1" id="AddHTMLAttributeValueInput" onkeyup="doHTMLEnabling(event.which)"/>
+          	    <textfield flex="1" id="AddHTMLAttributeValueInput" onkeyup="doHTMLEnabling(event.keyCode)"/>
                 <button class="dialog" id="AddHTMLAttribute" oncommand="onAddHTMLAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
               </box>
             </titledbox>
@@ -136,9 +136,9 @@
               <title><text value="&AddCSSAttributeLabel.label;"/></title>
               <box autostretch="never">
                 <text class="label" for="AddCSSAttributeNameInput" value="&AttName.label;"/>
-                <textfield flex="1" id="AddCSSAttributeNameInput" onkeyup="doCSSEnabling(event.which)" onmouseup="doHTMLEnabling(event.which)"/>
+                <textfield flex="1" id="AddCSSAttributeNameInput" onkeyup="doCSSEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
                 <text class="label" for="AddCSSAttributeValueInput" value="&AttValue.label;"/>
-          	    <textfield flex="1" id="AddCSSAttributeValueInput" onkeyup="doCSSEnabling(event.which)"/>
+          	    <textfield flex="1" id="AddCSSAttributeValueInput" onkeyup="doCSSEnabling(event.keyCode)"/>
                 <button class="dialog" id="AddCSSAttribute" oncommand="onAddCSSAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
               </box>
             </titledbox>
@@ -167,9 +167,9 @@
               <title><text value="&AddJSEAttributeLabel.label;"/></title>
               <box autostretch="never">
                 <text class="label" for="AddJSEAttributeNameInput" value="&AttName.label;"/>
-                <textfield type="text" flex="1" id="AddJSEAttributeNameInput" onkeyup="doJSEEnabling(event.which)" onmouseup="doHTMLEnabling(event.which)"/>
+                <textfield type="text" flex="1" id="AddJSEAttributeNameInput" onkeyup="doJSEEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
                 <text class="label" for="AddJSEAttributeValueInput" value="&AttValue.label;"/>
-          	    <textfield flex="1" id="AddJSEAttributeValueInput" onkeyup="doJSEEnabling(event.which)"/>
+          	    <textfield flex="1" id="AddJSEAttributeValueInput" onkeyup="doJSEEnabling(event.keyCode)"/>
                 <button class="dialog" id="AddJSEAttribute" oncommand="onAddJSEAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
               </box>
             </titledbox>

@@ -149,7 +149,7 @@
 				</menupopup>
 			</menulist>
 
-			<textfield id="findtext" type="text" style="width:10em;" onkeypress="if (event.which == 13) { return doFind(); }" />
+			<textfield id="findtext" type="text" style="width:10em;" onkeypress="if (event.keyCode == 13) { return doFind(); }" />
 			<box autostretch="never">
 				<button value="&search.button.label;" onclick="return doFind();" class="dialog toolbar-non-iconic" />
 			</box>

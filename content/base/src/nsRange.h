@@ -100,7 +100,7 @@ public:
   NS_IMETHOD    ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset,
                              PRInt16* aResult);
   NS_IMETHOD    IntersectsNode(nsIDOMNode* aNode, PRBool* aReturn);
-  NS_IMETHOD    CompareNode(nsIDOMNode* aNode, PRInt16* aReturn);
+  NS_IMETHOD    CompareNode(nsIDOMNode* aNode, PRUint16* aReturn);
 /*END nsIDOMNSRange interface implementations*/
   
   NS_IMETHOD    GetHasGeneratedBefore(PRBool *aBool);

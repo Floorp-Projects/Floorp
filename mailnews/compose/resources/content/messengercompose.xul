@@ -464,15 +464,15 @@ Rights Reserved.
 					<text value="&subject.label;"/>
 					<spring style="width:0.5em"/>
 				    <textfield id="msgSubject" type="text" flex="100%"
-						onkeyup="SetComposeWindowTitle(event.which);"
-						onkeypress="if (event.which == 9) {
+						onkeyup="SetComposeWindowTitle(event.keyCode);"
+						onkeypress="if (event.keyCode == 9) {
 						                if (event.shiftKey == false) {
 						                    window._content.focus();
 						                    event.preventDefault();
 						                }
 						            }
 						            else
-						                if (event.which == 13)
+						                if (event.keyCode == 13)
 						                    window._content.focus();"
 						onchange="contentChanged=true;"
 						/>
@@ -540,7 +540,7 @@ Rights Reserved.
 
     <!-- The mail message body frame -->
     <editor type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="100%"
-		onkeypress="if (event.which == 9)
+		onkeypress="if (event.keyCode == 9)
 		                if (event.shiftKey == true) {
 		                    document.getElementById('msgSubject').focus();
 		                    event.preventDefault();

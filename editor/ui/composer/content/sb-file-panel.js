@@ -331,12 +331,12 @@ function CloseEditNode(saveChangeFlag)
 
 function EditNodeKeyPress(event)
 {
-    if (event.which == 27)
+    if (event.keyCode == 27)
     {
         CloseEditNode(false);
         return(false);
     }
-    else if (event.which == 13 || event.which == 10)
+    else if (event.keyCode == 13 || event.keyCode == 10)
     {
         CloseEditNode(true);
         return(false);

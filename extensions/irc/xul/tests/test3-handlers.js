@@ -137,7 +137,7 @@ function onToggleMunger()
 function onInputKeyUp (e)
 {
     
-    switch (e.which)
+    switch (e.keyCode)
     {        
         case 13: /* CR */
             if (e.target.id != "input")

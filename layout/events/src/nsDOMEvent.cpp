@@ -85,7 +85,7 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsSt
   mText = nsnull;
   mTextRange = nsnull;
 
-  if (aEvent->eventStructType == NS_TEXT_EVENT) {
+  if (aEvent && aEvent->eventStructType == NS_TEXT_EVENT) {
 	  //
 	  // extract the IME composition string
 	  //
@@ -164,6 +164,8 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
     return NS_OK;
   }
   
+	*aTarget = nsnull;
+
   nsIEventStateManager *manager;
   nsIContent *targetContent;  
 
@@ -181,19 +183,15 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
   }
   else {
     //Always want a target.  Use document if nothing else.
-    nsIPresShell* presShell;
-    nsIDocument* doc;
-    if (NS_SUCCEEDED(mPresContext->GetShell(&presShell))) {
-      presShell->GetDocument(&doc);
-      NS_RELEASE(presShell);
-    }
-
-    if (doc) {
-      if (NS_OK == doc->QueryInterface(NS_GET_IID(nsIDOMEventTarget), (void**)&mTarget)) {
-        *aTarget = mTarget;
-        NS_ADDREF(mTarget);
-      }      
-      NS_RELEASE(doc);
+    nsCOMPtr<nsIDocument> doc;
+		nsCOMPtr<nsIPresShell> presShell;
+		if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
+      if (NS_SUCCEEDED(presShell->GetDocument(getter_AddRefs(doc))) && doc) {
+				if (NS_SUCCEEDED(doc->QueryInterface(NS_GET_IID(nsIDOMEventTarget), (void**)&mTarget))) {
+					*aTarget = mTarget;
+					NS_ADDREF(mTarget);
+				}      
+			}
     }
   }
 
@@ -456,18 +454,13 @@ NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
   }
 
   //My god, man, there *must* be a better way to do this.
-  nsIPresShell* shell;
+  nsCOMPtr<nsIPresShell> presShell;
   nsIWidget* rootWidget = nsnull;
-  mPresContext->GetShell(&shell);
-
-  if (shell) {
-    nsIViewManager* vm;
-    shell->GetViewManager(&vm);
-    if (vm) {
+  if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
+    nsCOMPtr<nsIViewManager> vm;
+		if (NS_SUCCEEDED(presShell->GetViewManager(getter_AddRefs(vm))) && vm) {
       vm->GetWidget(&rootWidget);
-      NS_RELEASE(vm);
     }
-    NS_RELEASE(shell);
   }
 
 
@@ -501,18 +494,13 @@ NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
   }
 
   //My god, man, there *must* be a better way to do this.
-  nsIPresShell* shell;
+  nsCOMPtr<nsIPresShell> presShell;
   nsIWidget* rootWidget = nsnull;
-  mPresContext->GetShell(&shell);
-
-  if (shell) {
-    nsIViewManager* vm;
-    shell->GetViewManager(&vm);
-    if (vm) {
+  if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
+    nsCOMPtr<nsIViewManager> vm;
+		if (NS_SUCCEEDED(presShell->GetViewManager(getter_AddRefs(vm))) && vm) {
       vm->GetWidget(&rootWidget);
-      NS_RELEASE(vm);
     }
-    NS_RELEASE(shell);
   }
 
 
@@ -696,8 +684,7 @@ nsresult nsDOMEvent::GetScrollInfo(nsIScrollableView** aScrollableView,
   mPresContext->GetTwipsToPixels(aT2P);
 
   nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
-  if(presShell) {
+  if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
      nsCOMPtr<nsIViewManager> vm;
      presShell->GetViewManager(getter_AddRefs(vm));
      if(vm) {
@@ -761,7 +748,15 @@ NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
 {
   switch (mEvent->eventStructType) {
   case NS_KEY_EVENT:
-    return GetKeyCode(aWhich);
+	  switch (mEvent->message) {
+			case NS_KEY_UP:
+			case NS_KEY_DOWN:
+				return GetKeyCode(aWhich);
+			case NS_KEY_PRESS:
+				return GetCharCode(aWhich);
+			default:
+				break;
+		}
   case NS_MOUSE_EVENT:
     {
     PRUint16 button;
@@ -1036,6 +1031,12 @@ nsDOMEvent::IsDispatchStopped(PRBool* aIsDispatchStopped)
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMEvent::GetRealTarget(nsIDOMEventTarget** aRealTarget)
+{
+  return NS_OK;
+}  
 
 NS_IMETHODIMP
 nsDOMEvent::IsHandled(PRBool* aIsHandled)

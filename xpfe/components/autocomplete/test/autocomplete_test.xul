@@ -126,7 +126,7 @@ function Initialize()
 <autocomplete id="test2"
     searchSessionType="addrbook"
     timeout="300"
-    onkeypress="if (event.which == 13) dump('Done, value=' + this.value + '\n');"
+    onkeypress="if (event.keyCode == 13) dump('Done, value=' + this.value + '\n');"
 />
 
 <!--autocomplete

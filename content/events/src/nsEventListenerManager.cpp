@@ -247,9 +247,8 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
 
   PRBool found = PR_FALSE;
   nsListenerStruct* ls;
-  nsIScriptEventListener* sel = nsnull;
-
-  aListener->QueryInterface(kIScriptEventListenerIID, (void**)&sel);
+  nsresult rv;
+  nsCOMPtr<nsIScriptEventListener> sel = do_QueryInterface(aListener, &rv);
 
   for (int i=0; i<(*listeners)->Count(); i++) {
     ls = (nsListenerStruct*)(*listeners)->ElementAt(i);
@@ -259,10 +258,12 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
       break;
     }
     else if (sel) {
-      nsresult rv;
+      //Listener is an nsIScriptEventListener so we need to use its CheckIfEqual
+      //method to verify equality.
       nsCOMPtr<nsIScriptEventListener> regSel = do_QueryInterface(ls->mListener, &rv);
       if (NS_SUCCEEDED(rv) && regSel) {
-        if (NS_OK == regSel->CheckIfEqual(sel)) {
+        PRBool equal;
+        if (NS_SUCCEEDED(regSel->CheckIfEqual(sel, &equal)) && equal) {
           if (ls->mFlags & aFlags && ls->mSubType & aSubType) {
             found = PR_TRUE;
             break;
@@ -271,8 +272,6 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
       }
     }
   }
-
-  NS_IF_RELEASE(sel);
 
   if (!found) {
     ls = PR_NEW(nsListenerStruct);
@@ -302,6 +301,8 @@ nsresult nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListe
   }
 
   nsListenerStruct* ls;
+  nsresult rv;
+  nsCOMPtr<nsIScriptEventListener> sel = do_QueryInterface(aListener, &rv);
 
   for (int i=0; i<(*listeners)->Count(); i++) {
     ls = (nsListenerStruct*)(*listeners)->ElementAt(i);
@@ -314,6 +315,21 @@ nsresult nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListe
         PR_DELETE(ls);
       }
       break;
+    }
+    else if (sel) {
+      //Listener is an nsIScriptEventListener so we need to use its CheckIfEqual
+      //method to verify equality.
+      nsCOMPtr<nsIScriptEventListener> regSel = do_QueryInterface(ls->mListener, &rv);
+      if (NS_SUCCEEDED(rv) && regSel) {
+        PRBool equal;
+        if (NS_SUCCEEDED(regSel->CheckIfEqual(sel, &equal)) && equal) {
+          if (ls->mFlags & aFlags && ls->mSubType & aSubType) {
+            NS_RELEASE(ls->mListener);
+            (*listeners)->RemoveElement((void*)ls);
+            PR_DELETE(ls);
+          }
+        }
+      }
     }
   }
 

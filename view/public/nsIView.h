@@ -146,7 +146,11 @@ public:
    * @param aEventFlags see nsIView.h for flag definitions
    * @result processing status
    */
-  NS_IMETHOD  HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags, nsEventStatus* aStatus, PRBool& aHandled) = 0;
+  NS_IMETHOD  HandleEvent(nsGUIEvent *event, 
+                          PRUint32 aEventFlags, 
+                          nsEventStatus* aStatus,
+                          PRBool aForceHandle,
+                          PRBool& aHandled) = 0;
 
   /**
    * Called to indicate that the position of the view has been changed.

@@ -29,7 +29,7 @@ var hitReturnInList = false;
 
 function handleKeyPress(element, event)
 {
-	if (event.which == 13) 
+	if (event.keyCode == 13) 
 	{
 		hitReturnInList = true;
 		awReturnHit(element);

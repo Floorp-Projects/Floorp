@@ -72,7 +72,7 @@ Rights Reserved.
 											style="width:0px"
 											onkeypress="if (event.keyCode == 13)
 															awReturnHit(this);
-														else if (event.which == 9)
+														else if (event.keyCode == 9)
 															awTabFromRecipient(this, event);
 														"
 											onchange="contentChanged=true;"

@@ -1178,7 +1178,10 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
           stateManager->SetContentState(mContent, NS_EVENT_STATE_HOVER);
           NS_RELEASE(stateManager);
         }
-
+      }
+      // Set the status bar the same for focus and mouseover
+      case NS_FOCUS_CONTENT:
+      {
         nsAutoString target;
         nsIURI* baseURL = nsnull;
         GetBaseURL(baseURL);

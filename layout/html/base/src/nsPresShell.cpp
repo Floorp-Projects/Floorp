@@ -710,6 +710,7 @@ public:
   NS_IMETHOD HandleEvent(nsIView*        aView,
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus,
+  											 PRBool          aForceHandle,
                          PRBool&         aHandled);
   NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
                             nsEvent* aEvent,
@@ -3845,6 +3846,7 @@ NS_IMETHODIMP
 PresShell::HandleEvent(nsIView         *aView,
                        nsGUIEvent*     aEvent,
                        nsEventStatus*  aEventStatus,
+											 PRBool          aForceHandle,
                        PRBool&         aHandled)
 {
   void*     clientData;
@@ -3853,7 +3855,7 @@ PresShell::HandleEvent(nsIView         *aView,
   
   NS_ASSERTION(!(nsnull == aView), "null view");
 
-  aHandled = PR_TRUE;  // XXX Is this right?
+  aHandled = PR_TRUE;
 
   if (mIsDestroying || mIsReflowing) {
     return NS_OK;
@@ -3903,7 +3905,6 @@ PresShell::HandleEvent(nsIView         *aView,
             if (rv != NS_OK) {
               rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_BACKGROUND, &mCurrentEventFrame);
               if (rv != NS_OK) {
-                // XXX Is this the right thing to do?
 #ifdef XP_MAC
                 // On the Mac it is possible to be running with no windows open, only the native menu bar.
                 // In this situation, we need to handle key board events but there are no frames, so
@@ -3911,7 +3912,12 @@ PresShell::HandleEvent(nsIView         *aView,
                 mCurrentEventContent = mDocument->GetRootContent();
                 mCurrentEventFrame = nsnull;
 #else
-                mCurrentEventFrame = frame;
+								if (aForceHandle) {
+									mCurrentEventFrame = frame;
+								}
+								else {
+									mCurrentEventFrame = nsnull;
+								}
                 aHandled = PR_FALSE;
 #endif
                 rv = NS_OK;
@@ -3934,9 +3940,12 @@ PresShell::HandleEvent(nsIView         *aView,
           if (rv != NS_OK) {
             rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_BACKGROUND, &mCurrentEventFrame);
             if (rv != NS_OK) {
-              // XXX Is this the right thing to do? NO IT ISNT!
-              mCurrentEventFrame = frame;
-              //mCurrentEventFrame = nsnull;
+							if (aForceHandle) {
+								mCurrentEventFrame = frame;
+							}
+							else {
+								mCurrentEventFrame = nsnull;
+							}
               aHandled = PR_FALSE;
               rv = NS_OK;
             }

@@ -26,12 +26,12 @@
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
 #include "nsIDocument.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMText.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsRange.h"
 #include "nsIEventListenerManager.h"
 #include "nsILinkHandler.h"
@@ -71,7 +71,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutUtils.h"
-
+#include "nsIJSContextStack.h"
 
 #include "nsIServiceManager.h"
 #include "nsIPref.h" // Used by the temp pref, should be removed!
@@ -81,8 +81,8 @@ static PRBool kStrictDOMLevel2 = PR_FALSE;
 NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
+NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -2358,44 +2358,56 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
                                          REFNSIID aIID)
 {
   nsresult ret = NS_OK;
-  nsIScriptContext* context;
+  nsCOMPtr<nsIScriptContext> context = nsnull;
+  nsCOMPtr<nsIScriptGlobalObject> global = nsnull;
+  JSContext* cx = nsnull;
 
-  if (nsnull != mDocument) {
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(global));
-    if (global) {
-      if (NS_OK == global->GetContext(&context)) {
-        if (mNodeInfo->Equals(nsHTMLAtoms::body) ||
-            mNodeInfo->Equals(nsHTMLAtoms::frameset)) {
-          nsIDOMEventReceiver *receiver;
+  //Try to get context from doc
+  if (mDocument) {
+    if (NS_SUCCEEDED(mDocument->GetScriptGlobalObject(getter_AddRefs(global))) && global) {
+      NS_ENSURE_SUCCESS(global->GetContext(getter_AddRefs(context)), NS_ERROR_FAILURE);
+    }
+  }
 
-          if (nsnull != global && NS_OK == global->QueryInterface(kIDOMEventReceiverIID, (void**)&receiver)) {
-            nsIEventListenerManager *manager;
-            if (NS_OK == receiver->GetListenerManager(&manager)) {
-              nsIScriptObjectOwner *mObjectOwner;
-              if (NS_OK == global->QueryInterface(kIScriptObjectOwnerIID, (void**)&mObjectOwner)) {
-                ret = manager->AddScriptEventListener(context, mObjectOwner, aAttribute, aValue, aIID, PR_FALSE);
-                NS_RELEASE(mObjectOwner);
-              }
-              NS_RELEASE(manager);
-            }
-            NS_RELEASE(receiver);
-          }
-        }
-        else {
-          nsIEventListenerManager *manager;
-          if (NS_OK == GetListenerManager(&manager)) {
-            nsIScriptObjectOwner* cowner;
-            if (NS_OK == mContent->QueryInterface(kIScriptObjectOwnerIID,
-                                                  (void**) &cowner)) {
-              ret = manager->AddScriptEventListener(context, cowner,
-                                                    aAttribute, aValue, aIID, PR_TRUE);
-              NS_RELEASE(cowner);
-            }
-            NS_RELEASE(manager);
-          }
-        }
-        NS_RELEASE(context);
+  if (!context) {
+    // Get JSContext from stack.
+    nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+    NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(stack->Peek(&cx), NS_ERROR_FAILURE);
+
+    if(!cx) {
+      stack->GetSafeJSContext(&cx);
+      NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+    }
+    
+    nsLayoutUtils::GetDynamicScriptContext(cx, getter_AddRefs(context));
+    NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
+  }
+    
+  //Attributes on the body and frameset tags get set on the global object
+  if (mNodeInfo->Equals(nsHTMLAtoms::body) ||
+      mNodeInfo->Equals(nsHTMLAtoms::frameset)) {
+    if (!global) {
+      if (cx) {
+        nsLayoutUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
+      }
+      NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+    }
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(global));
+    nsCOMPtr<nsIEventListenerManager> manager;
+    if (receiver && NS_SUCCEEDED(receiver->GetListenerManager(getter_AddRefs(manager)))) {
+      nsCOMPtr<nsIScriptObjectOwner> objOwner(do_QueryInterface(global));
+      if (objOwner) {
+        ret = manager->AddScriptEventListener(context, objOwner, aAttribute, aValue, aIID, PR_FALSE);
+      }
+    }
+  }
+  else {
+    nsCOMPtr<nsIEventListenerManager> manager;
+    if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager)))) {
+      nsCOMPtr<nsIScriptObjectOwner> objOwner(do_QueryInterface(mContent));
+      if (objOwner) {
+        ret = manager->AddScriptEventListener(context, objOwner, aAttribute, aValue, aIID, PR_TRUE);
       }
     }
   }

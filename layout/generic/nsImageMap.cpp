@@ -22,7 +22,6 @@
 #include "nsImageMap.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
-#include "nsCoord.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
 #include "nsIURL.h"
@@ -43,6 +42,11 @@
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLIIDs.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIPresShell.h"
+#include "nsIFrame.h"
+#include "nsIViewManager.h"
+#include "nsCoord.h"
 
 class Area {
 public:
@@ -54,9 +58,11 @@ public:
   virtual PRBool IsInside(nscoord x, nscoord y) = 0;
   virtual void Draw(nsIPresContext* aCX,
                     nsIRenderingContext& aRC) = 0;
+  virtual void GetRect(nsIPresContext* aCX, nsRect& aRect) = 0;
   virtual void GetShapeName(nsString& aResult) const = 0;
 
   void ToHTML(nsString& aResult);
+  void HasFocus(PRBool aHasFocus);
 
 
   /**
@@ -85,6 +91,7 @@ public:
   PRInt32 mNumCoords;
   PRBool mSuppressFeedback;
   PRBool mHasURL;
+  PRBool mHasFocus;
 };
 
 MOZ_DECL_CTOR_COUNTER(Area);
@@ -96,6 +103,7 @@ Area::Area(nsIContent* aArea,
   MOZ_COUNT_CTOR(Area);
   mCoords = nsnull;
   mNumCoords = 0;
+  mHasFocus = PR_FALSE;
 }
 
 Area::~Area()
@@ -366,6 +374,11 @@ void Area::ToHTML(nsString& aResult)
  * will then be parsed into any number of formats including HTML, TXT, etc.
  */
 
+void Area::HasFocus(PRBool aHasFocus)
+{
+  mHasFocus = aHasFocus;
+}
+
 void Area::BeginConvertToXIF(nsIXIFConverter* aConverter) const
 {
   nsAutoString href, target, altText;
@@ -441,6 +454,7 @@ public:
   virtual PRBool IsInside(nscoord x, nscoord y);
   virtual void Draw(nsIPresContext* aCX,
                     nsIRenderingContext& aRC);
+  virtual void GetRect(nsIPresContext* aCX, nsRect& aRect);
   virtual void GetShapeName(nsString& aResult) const;
 };
 
@@ -462,6 +476,10 @@ void DefaultArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 {
 }
 
+void DefaultArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
+{
+}
+
 void DefaultArea::GetShapeName(nsString& aResult) const
 {
   aResult.AppendWithConversion("default");
@@ -477,6 +495,7 @@ public:
   virtual PRBool IsInside(nscoord x, nscoord y);
   virtual void Draw(nsIPresContext* aCX,
                     nsIRenderingContext& aRC);
+  virtual void GetRect(nsIPresContext* aCX, nsRect& aRect);
   virtual void GetShapeName(nsString& aResult) const;
 };
 
@@ -509,6 +528,27 @@ PRBool RectArea::IsInside(nscoord x, nscoord y)
 
 void RectArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 {
+  if (mHasFocus) {
+    if (mNumCoords >= 4) {
+      float p2t;
+      aCX->GetPixelsToTwips(&p2t);
+      nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
+      nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
+      nscoord x2 = NSIntPixelsToTwips(mCoords[2], p2t);
+      nscoord y2 = NSIntPixelsToTwips(mCoords[3], p2t);
+      if ((x1 > x2)|| (y1 > y2)) {
+        return;
+      }
+      aRC.DrawLine(x1, y1, x1, y2);
+      aRC.DrawLine(x1, y2, x2, y2);
+      aRC.DrawLine(x1, y1, x2, y1);
+      aRC.DrawLine(x2, y1, x2, y2);
+    }
+  }
+}
+
+void RectArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
+{
   if (mNumCoords >= 4) {
     float p2t;
     aCX->GetPixelsToTwips(&p2t);
@@ -519,7 +559,9 @@ void RectArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
     if ((x1 > x2)|| (y1 > y2)) {
       return;
     }
-    aRC.DrawRect(x1, y1, x2 - x1, y2 - y1);
+
+    nsRect tmp(x1, y1, x2, y2);
+    aRect = tmp;
   }
 }
 
@@ -538,6 +580,7 @@ public:
   virtual PRBool IsInside(nscoord x, nscoord y);
   virtual void Draw(nsIPresContext* aCX,
                     nsIRenderingContext& aRC);
+  virtual void GetRect(nsIPresContext* aCX, nsRect& aRect);
   virtual void GetShapeName(nsString& aResult) const;
 };
 
@@ -614,22 +657,46 @@ PRBool PolyArea::IsInside(nscoord x, nscoord y)
 
 void PolyArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 {
+  if (mHasFocus) {
+    if (mNumCoords >= 6) {
+      float p2t;
+      aCX->GetPixelsToTwips(&p2t);
+      nscoord x0 = NSIntPixelsToTwips(mCoords[0], p2t);
+      nscoord y0 = NSIntPixelsToTwips(mCoords[1], p2t);
+      nscoord x1, y1;
+      for (PRInt32 i = 2; i < mNumCoords; i += 2) {
+        x1 = NSIntPixelsToTwips(mCoords[i], p2t);
+        y1 = NSIntPixelsToTwips(mCoords[i+1], p2t);
+        aRC.DrawLine(x0, y0, x1, y1);
+        x0 = x1;
+        y0 = y1;
+      }
+      x1 = NSIntPixelsToTwips(mCoords[0], p2t);
+      y1 = NSIntPixelsToTwips(mCoords[1], p2t);
+      aRC.DrawLine(x0, y0, x1, y1);
+    }
+  }
+}
+
+void PolyArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
+{
   if (mNumCoords >= 6) {
     float p2t;
     aCX->GetPixelsToTwips(&p2t);
-    nscoord x0 = NSIntPixelsToTwips(mCoords[0], p2t);
-    nscoord y0 = NSIntPixelsToTwips(mCoords[1], p2t);
-    nscoord x1, y1;
+    nscoord x1, x2, y1, y2, xtmp, ytmp;
+    x1 = x2 = NSIntPixelsToTwips(mCoords[0], p2t);
+    y1 = y2 = NSIntPixelsToTwips(mCoords[1], p2t);
     for (PRInt32 i = 2; i < mNumCoords; i += 2) {
-      x1 = NSIntPixelsToTwips(mCoords[i], p2t);
-      y1 = NSIntPixelsToTwips(mCoords[i+1], p2t);
-      aRC.DrawLine(x0, y0, x1, y1);
-      x0 = x1;
-      y0 = y1;
+      xtmp = NSIntPixelsToTwips(mCoords[i], p2t);
+      ytmp = NSIntPixelsToTwips(mCoords[i+1], p2t);
+      x1 = x1 < xtmp ? x1 : xtmp;
+      y1 = y1 < ytmp ? y1 : ytmp;
+      x2 = x2 > xtmp ? x2 : xtmp;
+      y2 = y2 > ytmp ? y2 : ytmp;
     }
-    x1 = NSIntPixelsToTwips(mCoords[0], p2t);
-    y1 = NSIntPixelsToTwips(mCoords[1], p2t);
-    aRC.DrawLine(x0, y0, x1, y1);
+
+    nsRect tmp(x1, y1, x2, y2);
+    aRect = tmp;
   }
 }
 
@@ -648,6 +715,7 @@ public:
   virtual PRBool IsInside(nscoord x, nscoord y);
   virtual void Draw(nsIPresContext* aCX,
                     nsIRenderingContext& aRC);
+  virtual void GetRect(nsIPresContext* aCX, nsRect& aRect);
   virtual void GetShapeName(nsString& aResult) const;
 };
 
@@ -682,6 +750,26 @@ PRBool CircleArea::IsInside(nscoord x, nscoord y)
 
 void CircleArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 {
+  if (mHasFocus) {
+    if (mNumCoords >= 3) {
+      float p2t;
+      aCX->GetPixelsToTwips(&p2t);
+      nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
+      nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
+      nscoord radius = NSIntPixelsToTwips(mCoords[2], p2t);
+      if (radius < 0) {
+        return;
+      }
+      nscoord x = x1 - radius;
+      nscoord y = y1 - radius;
+      nscoord w = 2 * radius;
+      aRC.DrawEllipse(x, y, w, w);
+    }
+  }
+}
+
+void CircleArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
+{
   if (mNumCoords >= 3) {
     float p2t;
     aCX->GetPixelsToTwips(&p2t);
@@ -691,10 +779,9 @@ void CircleArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
     if (radius < 0) {
       return;
     }
-    nscoord x = x1 - radius;
-    nscoord y = y1 - radius;
-    nscoord w = 2 * radius;
-    aRC.DrawEllipse(x, y, w, w);
+
+    nsRect tmp(x1 - radius, y1 - radius, x1 + radius, y1 + radius);
+    aRect = tmp;
   }
 }
 
@@ -722,6 +809,20 @@ nsImageMap::nsImageMap()
 
 nsImageMap::~nsImageMap()
 {
+  //Remove all our focus listeners
+  PRInt32 i, n = mAreas.Count();
+  for (i = 0; i < n; i++) {
+    Area* area = (Area*) mAreas.ElementAt(i);
+    nsCOMPtr<nsIContent> areaContent;
+    area->GetArea(getter_AddRefs(areaContent));
+    if (areaContent) {
+      nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(areaContent));
+      if (rec) {
+        rec->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
+      }
+    }
+  }
+
   FreeAreas();
   if (nsnull != mDocument) {
     mDocument->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
@@ -731,7 +832,31 @@ nsImageMap::~nsImageMap()
   NS_IF_RELEASE(mMap);
 }
 
-NS_IMPL_ISUPPORTS(nsImageMap, kIDocumentObserverIID);
+NS_IMPL_ADDREF(nsImageMap)
+NS_IMPL_RELEASE(nsImageMap)
+
+NS_IMETHODIMP
+nsImageMap::QueryInterface(REFNSIID iid, void** result)
+{
+  if (! result)
+    return NS_ERROR_NULL_POINTER;
+
+  *result = nsnull;
+  if (iid.Equals(NS_GET_IID(nsISupports)) ||
+      iid.Equals(NS_GET_IID(nsIDocumentObserver))) {
+    *result = NS_STATIC_CAST(nsIDocumentObserver*, this);
+  }
+  else if (iid.Equals(NS_GET_IID(nsIDOMFocusListener)) ||
+           iid.Equals(NS_GET_IID(nsIDOMEventListener))) {
+    *result = NS_STATIC_CAST(nsIDOMFocusListener*, this);
+  }
+  else {
+    return NS_NOINTERFACE;
+  }
+
+  NS_ADDREF_THIS();
+  return NS_OK;
+}
 
 void
 nsImageMap::FreeAreas()
@@ -857,6 +982,12 @@ nsImageMap::AddArea(nsIContent* aArea)
   aArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::coords, coords);
   PRBool hasURL = (PRBool)(NS_CONTENT_ATTR_HAS_VALUE != aArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::nohref, noHref));
   PRBool suppress = PR_FALSE;/* XXX */
+
+  //Add focus listener to track area focus changes
+  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aArea));
+  if (rec) {
+    rec->AddEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
+  }
 
   Area* area;
   if ((0 == shape.Length()) ||
@@ -1179,6 +1310,91 @@ NS_IMETHODIMP
 nsImageMap::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
   return NS_OK;
+}
+
+nsresult
+nsImageMap::Focus(nsIDOMEvent* aEvent)
+{
+  return ChangeFocus(aEvent, PR_TRUE);
+}
+
+nsresult
+nsImageMap::Blur(nsIDOMEvent* aEvent)
+{
+  return ChangeFocus(aEvent, PR_FALSE);
+}
+
+nsresult
+nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus) {
+  //Set which one of our areas changed focus
+  nsCOMPtr<nsIDOMEventTarget> target;
+  if (NS_SUCCEEDED(aEvent->GetTarget(getter_AddRefs(target))) && target) {
+    nsCOMPtr<nsIContent> targetContent(do_QueryInterface(target));
+    if (targetContent) {
+      PRInt32 i, n = mAreas.Count();
+      for (i = 0; i < n; i++) {
+        Area* area = (Area*) mAreas.ElementAt(i);
+        nsCOMPtr<nsIContent> areaContent;
+        area->GetArea(getter_AddRefs(areaContent));
+        if (areaContent) {
+          if (areaContent.get() == targetContent.get()) {
+            //Set or Remove internal focus
+            area->HasFocus(aFocus);
+            //Now invalidate the rect
+            nsCOMPtr<nsIDocument> doc;
+            //This check is necessary to see if we're still attached to the doc
+            if (NS_SUCCEEDED(targetContent->GetDocument(*getter_AddRefs(doc))) && doc) {
+              nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
+              if (presShell) {
+                nsIFrame* imgFrame;
+                if (NS_SUCCEEDED(presShell->GetPrimaryFrameFor(targetContent, &imgFrame)) && imgFrame) {
+                  nsCOMPtr<nsIPresContext> presContext;
+                  if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(presContext))) && presContext) {
+                    nsRect dmgRect;
+                    area->GetRect(presContext, dmgRect);
+                    Invalidate(presContext, imgFrame, dmgRect);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+nsImageMap::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+nsresult
+nsImageMap::Invalidate(nsIPresContext* aPresContext, nsIFrame* aFrame, nsRect& aRect)
+{
+  nsCOMPtr<nsIViewManager> viewManager;
+  PRUint32 flags = NS_VMREFRESH_IMMEDIATE;
+  nsIView* view;
+  nsRect damageRect(aRect);
+
+  aFrame->GetView(aPresContext, &view);
+  if (view) {
+    view->GetViewManager(*getter_AddRefs(viewManager));
+    viewManager->UpdateView(view, damageRect, flags);   
+  }
+  else {
+    nsPoint   offset;
+
+    aFrame->GetOffsetFromView(aPresContext, offset, &view);
+    NS_ASSERTION(nsnull != view, "no view");
+    damageRect += offset;
+    view->GetViewManager(*getter_AddRefs(viewManager));
+    viewManager->UpdateView(view, damageRect, flags);
+  }
+  return NS_OK;
+
 }
 
 #ifdef DEBUG

@@ -266,7 +266,7 @@ function DeleteAllCookies() {
 // keypress pass-thru
 function HandleKeyPress( e )
 {
-  switch ( e.which )
+  switch ( e.keyCode )
   {
   case 13:  // enter
   case 32:  // spacebar

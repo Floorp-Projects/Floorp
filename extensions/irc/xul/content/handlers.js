@@ -305,7 +305,7 @@ function onToggleMunger()
 function onInputKeyUp (e)
 {
     
-    switch (e.which)
+    switch (e.keyCode)
     {        
         case 13: /* CR */
             e.line = e.target.value;

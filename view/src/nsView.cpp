@@ -707,7 +707,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsIRegion& region,
 }
 
 NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
-                                    nsEventStatus* aStatus, PRBool& aHandled)
+                                    nsEventStatus* aStatus, PRBool aForceHandle, PRBool& aHandled)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
 //printf(" %d %d %d %d (%d,%d) \n", this, event->widget, event->widgetSupports, 
@@ -750,7 +750,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
         event->point.x -= trect.x;
         event->point.y -= trect.y;
 
-        pKid->HandleEvent(event, NS_VIEW_FLAG_CHECK_CHILDREN, aStatus, aHandled);
+        pKid->HandleEvent(event, NS_VIEW_FLAG_CHECK_CHILDREN, aStatus, PR_FALSE, aHandled);
 
         event->point.x += trect.x;
         event->point.y += trect.y;
@@ -766,7 +766,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
     //if no child's bounds matched the event or we consumed but still want
     //default behavior check the view itself. -EDV
     if (nsnull != mClientData && nsnull != obs) {
-      obs->HandleEvent((nsIView *)this, event, aStatus, aHandled);
+      obs->HandleEvent((nsIView *)this, event, aStatus, aForceHandle, aHandled);
     }
   } 
   /* XXX Just some debug code to see what event are being thrown away because
