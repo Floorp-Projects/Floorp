@@ -1250,21 +1250,17 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 #ifdef NOISY_KIDXMOST
   printf("%p aState.mKidXMost=%d\n", this, aState.mKidXMost); 
 #endif
-  nscoord minWidth = aState.mKidXMost + borderPadding.right;
   if (!HaveAutoWidth(aReflowState)) {
     // Use style defined width
     aMetrics.width = borderPadding.left + aReflowState.mComputedWidth +
       borderPadding.right;
-    // XXX quote css1 section here
-    if ((0 == aReflowState.mComputedWidth) && (aMetrics.width < minWidth)) {
-      aMetrics.width = minWidth;
-    }
 
     // When style defines the width use it for the max-element-size
     // because we can't shrink any smaller.
     maxWidth = aMetrics.width;
   }
   else {
+    nscoord minWidth = aState.mKidXMost + borderPadding.right;
     nscoord computedWidth = minWidth;
     PRBool compact = PR_FALSE;
 #if 0
