@@ -453,9 +453,12 @@ net_ExtractURLScheme(const nsACString &inURI,
                      nsACString *scheme)
 {
     // search for something up to a colon, and call it the scheme
-    const nsPromiseFlatCString flatURI( PromiseFlatCString(inURI) );
+    const nsPromiseFlatCString &flatURI = PromiseFlatCString(inURI);
     const char* uri_start = flatURI.get();
     const char* uri = uri_start;
+
+    if (!uri)
+        return NS_ERROR_MALFORMED_URI;
 
     // skip leading white space
     while (nsCRT::IsAsciiSpace(*uri))
