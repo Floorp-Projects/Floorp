@@ -89,7 +89,7 @@ function resetAlarmDialog()
 
 function firePendingEvents()
 {
-   for( i = 0; i < gPendingEvents.length; i++ )
+   for( var i = 0; i < gPendingEvents.length; i++ )
    {
       addEventToDialog( gPendingEvents[i] );
    }
