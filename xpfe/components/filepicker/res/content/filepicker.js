@@ -363,34 +363,39 @@ function createTree(parentElement, dirArray)
 
 function getDirectoryContents(parentElement, dirContents)
 {
+  /* split up the current filter since there might be more than one thing in it */
+  var splitFilters = currentFilter.split("; ");
+  var matchAllFiles = false;
+
+  /* get just the extensions for each of the filters */
+  var extensions = new Array(splitFilters.length);
+  for (var j = 0; j < splitFilters.length; j++) {
+    var tmpStr = splitFilters[j];
+    if (tmpStr == "*") {
+      matchAllFiles = true;
+      break;
+    } else
+      extensions[j] = tmpStr.substring(1); /* chop off the '*' */
+  }
+    
   var i = 0;
   var array = new Array();
-
-  var splitFilters = currentFilter.split("; ");
 
   while (dirContents.hasMoreElements()) {
     var file = dirContents.getNext().QueryInterface(nsILocalFile);
 
-    /* split up the current filter since there might be more than one thing in it */
     try {
       /* always add directories */
-      if (file.isDirectory()) {
-        array[i] = file;
-        i++;
-      } else {
-        for (var k = 0; k < splitFilters.length; ++k) {
-          var tmpStr = splitFilters[k];
-          /* split up in to an array */
-          var matchStr;
-          if (tmpStr == "*.*") {
-            matchStr = ".*";
-          } else {
-            var tmpArray = tmpStr.match("\*\.(.*)");
-            var matchStr = ".*\\." + tmpArray[1] + "$";
-          }
-          if (file.leafName.match(matchStr)) {
-            array[i] = file;
-            i++;
+      if (file.isDirectory() || matchAllFiles)
+        array[i++] = file;
+      else {
+        for (var k = 0; k < extensions.length; k++) {
+          /* index where the match should take place */
+          var matchIndex = file.leafName.length - extensions[k].length;
+
+          if ((matchIndex >=0 ) &&
+              file.leafName.lastIndexOf(extensions[k]) == matchIndex) {
+            array[i++] = file;
             break;
           }
         }
