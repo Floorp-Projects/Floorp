@@ -31,7 +31,6 @@
 
 /* ::::: columns :::::: */
 
-
 treechildren:-moz-tree-image(activeColumn) {
   list-style-image: url("chrome://messenger/skin/icons/dot.gif");
 }
@@ -52,11 +51,8 @@ textbox {
   margin: 1px 4px;
 }
 
-listbox {
-  padding-top: 2px;
-}
-
 #FilterEditor {
   width: 560px;
   min-height:1px;
 }
+
