@@ -508,7 +508,7 @@ lo_ProcessParagraphElement(MWContext *context,
 		  lo_AlignStack *aptr;
 		  
 		  lo_SetLineBreakState(context, *state, LO_LINEFEED_BREAK_SOFT,
-							   LO_CLEAR_NONE, 1, !in_relayout);
+							   LO_CLEAR_NONE, 1, in_relayout);
 		  
 		  aptr = lo_PopAlignment(*state);
 		  if (aptr != NULL)
@@ -620,70 +620,111 @@ lo_CloseParagraph(MWContext *context, lo_DocState **state, PA_Tag *tag, intn bla
 	}
 }
 
+void
+lo_ProcessHeader(MWContext *context, lo_DocState *state,
+                 LO_HeadingStruct *header, Bool in_relayout)
+{
+  if (header->is_end)
+    {
+      Bool aligned_header;
+
+      if (state->align_stack 
+          && state->align_stack->type == P_HEADER_1)
+        aligned_header = TRUE;
+
+      if (aligned_header != FALSE)
+        {
+          lo_AlignStack *aptr;
+
+          lo_SetLineBreakState (context, state, LO_LINEFEED_BREAK_SOFT,
+                                LO_CLEAR_NONE, 1, in_relayout);
+          
+          aptr = lo_PopAlignment(state);
+          if (aptr != NULL)
+            {
+              XP_DELETE(aptr);
+            }
+        }
+
+      /*
+       * Now that we are on the line after the header, we
+       * don't want the next blank line to be the height of the probably
+       * large header, so reset it to the default here.
+       */
+      state->line_height = state->default_line_height;
+    }
+  else
+    {
+      if (header->alignment_set)
+        lo_PushAlignment(state, P_HEADER_1, header->alignment);
+    }
+}
 
 static void
 lo_OpenHeader(MWContext *context, lo_DocState *state, PA_Tag *tag)
 {
 	PA_Block buff;
 	char *str;
+    LO_HeadingStruct* header;
+
+    header = (LO_HeadingStruct*)lo_NewElement(context, state, LO_HEADING, NULL, 0);
+    XP_ASSERT(header);
+    if (!header)
+      return;
+    
+    header->lo_any.type = LO_HEADING;
+    header->lo_any.ele_id = NEXT_ELEMENT;
+    
+    header->lo_any.x = state->x;
+    header->lo_any.y = state->y;
+    header->lo_any.x_offset = 0;
+    header->lo_any.y_offset = 0;
+    header->lo_any.width = 0;
+    header->lo_any.height = 0;
+    header->lo_any.line_height = 0;
+    header->is_end = FALSE;
+    header->alignment = LO_ALIGN_DEFAULT;
 
 	buff = lo_FetchParamValue(context, tag, PARAM_ALIGN);
 	if (buff != NULL)
 	{
-		int32 alignment;
-
 		PA_LOCK(str, char *, buff);
-		alignment = (int32)lo_EvalDivisionAlignParam(str);
+		header->alignment = (int32)lo_EvalDivisionAlignParam(str);
+        header->alignment_set = TRUE;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
-
-		lo_PushAlignment(state, tag->type, alignment);
 	}
+
+    lo_AppendToLineList(context, state, (LO_Element*)header, 0);
+    lo_ProcessHeader(context, state, header, FALSE);
 }
 
 
 static void
 lo_CloseHeader(MWContext *context, lo_DocState *state)
 {
-	Bool aligned_header;
+    LO_HeadingStruct* header;
 
-	/*
-	 * Check the top of the alignment stack to see if we are closing
-	 * a header that explicitly set an alignment.
-	 */
-	aligned_header = FALSE;
-	if (state->align_stack != NULL)
-	{
-		intn type;
+    header = (LO_HeadingStruct*)lo_NewElement(context, state, LO_HEADING, NULL, 0);
+    XP_ASSERT(header);
+    if (!header)
+      return;
 
-		type = state->align_stack->type;
-		if ((type == P_HEADER_1)||(type == P_HEADER_2)||
-		    (type == P_HEADER_3)||(type == P_HEADER_4)||
-		    (type == P_HEADER_5)||(type == P_HEADER_6))
-		{
-			aligned_header = TRUE;
-		}
-	}
+    header->lo_any.type = LO_HEADING;
+    header->lo_any.ele_id = NEXT_ELEMENT;
+    
+    header->lo_any.x = state->x;
+    header->lo_any.y = state->y;
+    header->lo_any.x_offset = 0;
+    header->lo_any.y_offset = 0;
+    header->lo_any.width = 0;
+    header->lo_any.height = 0;
+    header->lo_any.line_height = 0;
+    header->is_end = TRUE;
+    header->alignment = LO_ALIGN_DEFAULT;
 
-	lo_SetLineBreakState ( context, state, FALSE, LO_LINEFEED_BREAK_HARD, 1, FALSE);
-
-	if (aligned_header != FALSE)
-	{
-		lo_AlignStack *aptr;
-
-		aptr = lo_PopAlignment(state);
-		if (aptr != NULL)
-		{
-			XP_DELETE(aptr);
-		}
-	}
-	
-	/*
-	 * Now that we are on the line after the header, we
-	 * don't want the next blank line to be the height of the probably
-	 * large header, so reset it to the default here.
-	 */
-	state->line_height = state->default_line_height;
+    lo_AppendToLineList(context, state, (LO_Element*)header, 0);
+    lo_ProcessHeader(context, state, header, FALSE);
 }
 
 static void
