@@ -57,6 +57,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/scroll-thumb-vert-hover.gif \
 		$(srcdir)/scroll-thumb-vert-disabled.gif \
 		$(srcdir)/menu-arrow.gif \
+		$(srcdir)/dialogOverlay.css \
 		$(srcdir)/menu-arrow-hover.gif \
 		$(srcdir)/menu-arrow-disabled.gif \
 		$(srcdir)/menu-check.gif \

@@ -119,6 +119,7 @@ install::
 	$(MAKE_INSTALL) animthrob_single.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) wizardOverlay.css $(DISTBROWSER)
 	$(MAKE_INSTALL) commonDialog.css $(DISTBROWSER)
+	$(MAKE_INSTALL) dialogOverlay.css $(DISTBROWSER)
 	$(MAKE_INSTALL) seltab-leftedge.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) seltab-rightedge.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) tab-leftedge.gif $(DISTBROWSER)

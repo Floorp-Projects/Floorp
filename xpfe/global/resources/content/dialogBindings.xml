@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<bindings id="dialogBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/TR/REC-html40"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding name="smallheader">
+    <content>
+      <xul:toolbar class="decorated header" autostretch="never" flex="1">
+        <xul:text class="left" inherits="title:value"/>
+        <xul:spring flex="1"/>
+        <xul:text class="right" inherits="description:value"/>
+      </xul:toolbar>
+    </content>
+  </binding>
+
+  <binding name="largeheader">
+    <content>
+      <xul:toolbar class="decorated header" align="horizontal" flex="1">
+        <xul:image inherits="src" class="circle"/>
+        <xul:box autostretch="never" class="headertext-box">
+          <xul:text class="headertext" inherits="value"/>
+        </xul:box>
+        <xul:spring flex="100%"/>
+      </xul:toolbar>
+    </content>
+  </binding>
+  
+  <binding name="status">
+    <content>
+      <xul:toolbar class="standard title" flex="1">
+        <xul:text class="statustext" inherits="value"/>
+        <xul:spring flex="1"/>
+        <xul:text class="statustext" inherits="progress:value"/>
+      </xul:toolbar>  
+    </content>
+  </binding>
+  
+</bindings>
