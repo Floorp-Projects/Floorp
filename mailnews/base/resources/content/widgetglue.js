@@ -188,7 +188,10 @@ function MsgCompactFolder(isAll)
                 else
                 {
                     ClearThreadPaneSelection();
+                    ClearThreadPane();
                     ClearMessagePane();
+                    // set this so we'll reload it when compact is done
+                    gCurrentFolderToReroot = selectedFolderUri;
                 }
             }
             var i;
