@@ -1,5 +1,5 @@
 comm.jar:
-    content/cookie/contents.rdf                    (resources/content/contents.rdf)
+*   content/cookie/contents.rdf                    (resources/content/contents.rdf)
     content/cookie/cookieTasksOverlay.xul          (resources/content/cookieTasksOverlay.xul)
     content/cookie/cookieNavigatorOverlay.xul      (resources/content/cookieNavigatorOverlay.xul)
     content/cookie/cookieContextOverlay.xul        (resources/content/cookieContextOverlay.xul)
@@ -22,7 +22,7 @@ classic.jar:
     skin/classic/communicator/cookie/status-cookie.gif          (resources/skin/classic/status-cookie.gif)
 
 en-US.jar:
-    locale/en-US/cookie/contents.rdf               (resources/locale/en-US/contents.rdf)
+*   locale/en-US/cookie/contents.rdf               (resources/locale/en-US/contents.rdf)
     locale/en-US/cookie/cookieTasksOverlay.dtd     (resources/locale/en-US/cookieTasksOverlay.dtd)
     locale/en-US/cookie/cookieNavigatorOverlay.dtd (resources/locale/en-US/cookieNavigatorOverlay.dtd)
     locale/en-US/cookie/cookieContextOverlay.dtd   (resources/locale/en-US/cookieContextOverlay.dtd)

@@ -1,6 +1,6 @@
 comm.jar:       
-      content/editor/contents.rdf                              (composer/content/contents.rdf)
-      content/editor-region/contents.rdf                       (composer/content/contents-region.rdf)
+*     content/editor/contents.rdf                              (composer/content/contents.rdf)
+*     content/editor-region/contents.rdf                       (composer/content/contents-region.rdf)
       content/editor/editor.xul                                (composer/content/editor.xul) 
       content/editor/TextEditorAppShell.xul                    (composer/content/TextEditorAppShell.xul) 
       content/editor/editor.js                                 (composer/content/editor.js) 
@@ -242,7 +242,7 @@ comm.jar:
 
 en-US.jar:
       locale/en-US/editor/editor.dtd                           (composer/locale/en-US/editor.dtd)
-      locale/en-US/editor/contents.rdf                         (composer/locale/en-US/contents.rdf)
+*     locale/en-US/editor/contents.rdf                         (composer/locale/en-US/contents.rdf)
       locale/en-US/editor/editorSmileyOverlay.dtd              (composer/locale/en-US/editorSmileyOverlay.dtd) 
       locale/en-US/editor/editorPrefsOverlay.dtd               (composer/locale/en-US/editorPrefsOverlay.dtd) 
       locale/en-US/editor/editorNavigatorOverlay.dtd           (composer/locale/en-US/editorNavigatorOverlay.dtd) 
@@ -288,5 +288,5 @@ en-US.jar:
       locale/en-US/editor/EditorPublishProgress.dtd            (dialogs/locale/en-US/EditorPublishProgress.dtd) 
 
 US.jar:
-      locale/US/editor-region/contents.rdf                     (composer/locale/en-US/contents-region.rdf)
+*     locale/US/editor-region/contents.rdf                     (composer/locale/en-US/contents-region.rdf)
       locale/US/editor-region/region.properties                (composer/locale/en-US/region.properties)

@@ -1,5 +1,5 @@
 inspector.jar:
-  content/inspector/contents.rdf                                      (resources/content/contents.rdf)
+* content/inspector/contents.rdf                                      (resources/content/contents.rdf)
   content/inspector/inspector.xul                                     (resources/content/inspector.xul)
   content/inspector/inspector.js                                      (resources/content/inspector.js)
   content/inspector/inspector.css                                     (resources/content/inspector.css)
@@ -88,7 +88,7 @@ inspector.jar:
   content/inspector/viewers/stylesheets/stylesheets.xul               (resources/content/viewers/stylesheets/stylesheets.xul)
   content/inspector/viewers/xblBindings/xblBindings.js                (resources/content/viewers/xblBindings/xblBindings.js)
   content/inspector/viewers/xblBindings/xblBindings.xul               (resources/content/viewers/xblBindings/xblBindings.xul)
-  locale/en-US/inspector/contents.rdf                                 (resources/locale/en-US/contents.rdf)
+* locale/en-US/inspector/contents.rdf                                 (resources/locale/en-US/contents.rdf)
   locale/en-US/inspector/inspector.dtd                                (resources/locale/en-US/inspector.dtd)
   locale/en-US/inspector/prefs.dtd                                    (resources/locale/en-US/prefs.dtd)
   locale/en-US/inspector/editing.dtd                                  (resources/locale/en-US/editing.dtd)

@@ -1,5 +1,5 @@
 pippki.jar:
-    content/pippki/contents.rdf              (content/contents.rdf)
+*   content/pippki/contents.rdf              (content/contents.rdf)
     content/pippki/changepassword.xul        (content/changepassword.xul)
     content/pippki/getpassword.xul           (content/getpassword.xul)
     content/pippki/password.js               (content/password.js)
@@ -73,7 +73,7 @@ pippki.jar:
     content/pippki/pref-crlupdate.js         (content/pref-crlupdate.js)
 
 en-US.jar:
-    locale/en-US/pippki/contents.rdf         (locale/en-US/contents.rdf)
+*   locale/en-US/pippki/contents.rdf         (locale/en-US/contents.rdf)
     locale/en-US/pippki/pippki.dtd           (locale/en-US/pippki.dtd)
     locale/en-US/pippki/pref-ssl.dtd         (locale/en-US/pref-ssl.dtd)
     locale/en-US/pippki/pippki.properties    (locale/en-US/pippki.properties)

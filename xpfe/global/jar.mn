@@ -1,7 +1,7 @@
 toolkit.jar:
-        content/global/contents.rdf                 (resources/content/contents.rdf)
-        content/global-platform/contents.rdf        (resources/content/contents-platform.rdf)
-        content/global-region/contents.rdf          (resources/content/contents-region.rdf)
+*       content/global/contents.rdf                 (resources/content/contents.rdf)
+*       content/global-platform/contents.rdf        (resources/content/contents-platform.rdf)
+*       content/global-region/contents.rdf          (resources/content/contents-region.rdf)
         content/global/hiddenWindow.xul             (resources/content/hiddenWindow.xul) 
         content/global/globalOverlay.xul            (resources/content/globalOverlay.xul) 
         content/global/globalOverlay.js             (resources/content/globalOverlay.js) 
@@ -75,14 +75,14 @@ toolkit.jar:
         content/global/fontpackage.js               (resources/content/fontpackage.js)
 
 en-US.jar:
-    locale/en-US/global/contents.rdf                (resources/locale/en-US/contents.rdf) 
+*   locale/en-US/global/contents.rdf                (resources/locale/en-US/contents.rdf) 
     locale/en-US/global/intl.css                    (resources/locale/en-US/intl.css) 
     locale/en-US/global/dialogOverlay.dtd           (resources/locale/en-US/dialogOverlay.dtd) 
     locale/en-US/global/commonDialog.dtd            (resources/locale/en-US/commonDialog.dtd) 
     locale/en-US/global/charsetOverlay.dtd          (resources/locale/en-US/charsetOverlay.dtd) 
     locale/en-US/global/textcontext.dtd             (resources/locale/en-US/textcontext.dtd) 
     locale/en-US/global/brand.properties            (resources/locale/en-US/brand.properties) 
-    locale/en-US/global/brand.dtd                   (resources/locale/en-US/brand.dtd) 
+*   locale/en-US/global/brand.dtd                   (resources/locale/en-US/brand.dtd) 
     locale/en-US/global/tabbrowser.dtd              (resources/locale/en-US/tabbrowser.dtd)
     locale/en-US/global/tabbrowser.properties       (resources/locale/en-US/tabbrowser.properties)
     locale/en-US/global/keys.properties             (resources/locale/en-US/keys.properties)
@@ -105,26 +105,26 @@ en-US.jar:
     locale/en-US/global/fontpackage.properties      (resources/locale/en-US/fontpackage.properties)
 
 US.jar:
-    locale/US/global-region/contents.rdf            (resources/locale/en-US/contents-region.rdf) 
-    locale/US/global-region/region.dtd              (resources/locale/en-US/region.dtd)
+*   locale/US/global-region/contents.rdf            (resources/locale/en-US/contents-region.rdf) 
+*   locale/US/global-region/region.dtd              (resources/locale/en-US/region.dtd)
     locale/US/global-region/region.properties       (resources/locale/en-US/region.properties)
     locale/US/global-region/builtinURLs.rdf         (resources/locale/en-US/builtinURLs.rdf) 
 
 en-win.jar:
-    locale/en-US/global-platform/contents.rdf 		(resources/locale/en-US/win/contents-platform.rdf)
+*   locale/en-US/global-platform/contents.rdf 		(resources/locale/en-US/win/contents-platform.rdf)
     locale/en-US/global-platform/platformDialogOverlay.dtd (resources/locale/en-US/win/platformDialogOverlay.dtd)
     locale/en-US/global-platform/platformKeys.properties   (resources/locale/en-US/win/platformKeys.properties)
     locale/en-US/global-platform/wizard.properties         (resources/locale/en-US/win/wizard.properties)
  
 en-unix.jar:
-    locale/en-US/global-platform/contents.rdf 		(resources/locale/en-US/unix/contents-platform.rdf)
+*   locale/en-US/global-platform/contents.rdf 		(resources/locale/en-US/unix/contents-platform.rdf)
     locale/en-US/global-platform/platformDialogOverlay.dtd (resources/locale/en-US/unix/platformDialogOverlay.dtd)
     locale/en-US/global-platform/platformKeys.properties   (resources/locale/en-US/unix/platformKeys.properties)
     locale/en-US/global-platform/wizard.properties         (resources/locale/en-US/unix/wizard.properties)
     locale/en-US/global-platform/printjoboptions.dtd       (resources/locale/en-US/unix/printjoboptions.dtd)
 
 en-mac.jar:
-    locale/en-US/global-platform/contents.rdf		(resources/locale/en-US/mac/contents-platform.rdf)
+*   locale/en-US/global-platform/contents.rdf		(resources/locale/en-US/mac/contents-platform.rdf)
     locale/en-US/global-platform/platformDialogOverlay.dtd (resources/locale/en-US/mac/platformDialogOverlay.dtd)
     locale/en-US/global-platform/platformKeys.properties   (resources/locale/en-US/mac/platformKeys.properties)
     locale/en-US/global-platform/wizard.properties         (resources/locale/en-US/mac/wizard.properties)
