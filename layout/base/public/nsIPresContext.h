@@ -376,6 +376,12 @@ public:
     return mLanguageSpecificTransformType;
   }
 
+  void SetViewportOverflowOverride(PRUint8 aStyle)
+  {
+    mViewportStyleOverflow = aStyle;
+  }
+  PRUint8 GetViewportOverflowOverride() { return mViewportStyleOverflow; }
+
   /**
    * Set and get methods for controling the background drawing
   */
@@ -559,6 +565,9 @@ protected:
 
   nscolor               mFocusBackgroundColor;
   nscolor               mFocusTextColor;
+
+  PRUint8               mFocusRingWidth;
+  PRUint8               mViewportStyleOverflow;
 
   nsCompatibility       mCompatibilityMode;
   PRUint16              mImageAnimationMode;

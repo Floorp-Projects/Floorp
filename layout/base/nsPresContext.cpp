@@ -162,6 +162,7 @@ nsPresContext::nsPresContext()
   mLinkHandler = nsnull;
   mContainer = nsnull;
 
+  mViewportStyleOverflow = NS_STYLE_OVERFLOW_AUTO;
 
   mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
   mBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
