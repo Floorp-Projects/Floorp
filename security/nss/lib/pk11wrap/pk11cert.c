@@ -2648,7 +2648,7 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
     CERTCertTrust *trust;
     PRBool isUnique = PR_FALSE;
     char *nickname = NULL;
-
+    unsigned int certType;
 
     if ((type == PK11CertListUnique) || (type == PK11CertListRootUnique)) {
 	isUnique = PR_TRUE;
@@ -2692,7 +2692,7 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
     }
 
     /* if we want CA certs and it ain't one, skip it */
-    if( type == PK11CertListCA  && (!isCACert(newCert)) ) {
+    if( type == PK11CertListCA  && (!CERT_IsCACert(newCert, &certType)) ) {
 	CERT_DestroyCertificate(newCert);
 	return SECSuccess;
     }
