@@ -24,9 +24,9 @@ Rights Reserved.
 <!-- Menus:  the . means that the menu item isn't implemented yet -->
 
 <!-- File Menu -->
-<!ENTITY newCard.label                                  "New Address Book Card...">
+<!ENTITY newCard.label                                  "Address Book Card...">
 <!-- LOCALIZATION NOTE (newCard.accesskey) : DONT_TRANSLATE -->  
-<!ENTITY newCard.accesskey                              "n">  
+<!ENTITY newCard.accesskey                              "C">  
 <!ENTITY newListCmd.label                               "Mailing List...">
 <!-- LOCALIZATION NOTE (newListCmd.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY newListCmd.accesskey                           "L">  
