@@ -47,6 +47,7 @@
 #include "nsIContentIterator.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIIndependentSelection.h"
+#include "nsIPref.h"
 
 #include "nsIDOMText.h"
 
@@ -803,19 +804,28 @@ nsSelection::nsSelection()
   mSelectingTableCellMode = 0;
 
   mSelectedCellIndex = 0;
-#ifdef XP_UNIX
-//AUTO COPY REGISTRATION -- FOR UNIX ONLY. 
-// TODO: Make this a pref so other platforms can use it.
-  nsresult rv;
-  NS_WITH_SERVICE(nsIAutoCopyService, autoCopyService, "component://netscape/autocopy", &rv);
 
-  if (NS_SUCCEEDED(rv) && autoCopyService)
+  // Check to see if the autocopy pref is enabled
+  //   and add the autocopy listener if it is
+  nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+	if (NS_SUCCEEDED(rv) && prefs)
   {
-    PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-    if (mDomSelections[index])
-      autoCopyService->Listen(mDomSelections[index]);
+    static char pref[] = "clipboard.autocopy";
+	  PRBool autoCopy = PR_FALSE;
+    if (NS_SUCCEEDED(prefs->GetBoolPref(pref, &autoCopy)) && autoCopy)
+    {
+      NS_WITH_SERVICE(nsIAutoCopyService, autoCopyService, "component://netscape/autocopy", &rv);
+
+      if (NS_SUCCEEDED(rv) && autoCopyService)
+      {
+        PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+        if (mDomSelections[index])
+          autoCopyService->Listen(mDomSelections[index]);
+      }
+    }
   }
-#endif
+
   mDisplaySelection = nsISelectionController::SELECTION_OFF;
 
   mDelayCaretOverExistingSelection = PR_TRUE;
