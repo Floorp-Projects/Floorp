@@ -43,20 +43,9 @@
 #define __MAI_APP_ROOT_H__
 
 #include "nsIAccessibleEventReceiver.h"
-#include "nsMaiCache.h"
 #include "nsMaiTopLevel.h"
 
 #define MAI_TYPE_APP_ROOT (MAI_TYPE_ATK_OBJECT)
-
-struct TopLevelItem
-{
-    /* nsIAccessibles for Different toplevel Windows may have same
-     * Unique ID (why so?), we need to expose only one of them
-     * "ref" here is used to trace that.
-     */
-    gint ref;
-    MaiTopLevel *maiTopLevel;
-};
 
 /* MaiAppRoot is the MaiObject class for Mozilla, the whole application. Only
  * one instance of MaiAppRoot exists for one Mozilla instance. And the one
@@ -77,12 +66,9 @@ public:
 
     virtual guint GetNSAccessibleUniqueID();
 
-    gboolean AddMaiTopLevel(MaiTopLevel *aToplevel);
-    gboolean RemoveMaiTopLevel(MaiTopLevel *aToplevel);
-    MaiTopLevel *FindMaiTopLevel(MaiTopLevel *aToplevel);
-    MaiTopLevel *FindMaiTopLevel(nsIAccessible *aToplevel);
-
-    MaiCache *GetCache(void);
+    PRBool AddMaiTopLevel(MaiTopLevel *aToplevel);
+    PRBool RemoveMaiTopLevelByID(guint aID);
+    PRBool LookupTopLevelID(guint aID);
 public:
     /* virtual functions for MaiObject */
     virtual AtkObject *GetAtkObject(void);
@@ -96,9 +82,6 @@ public:
     virtual MaiObject *RefChild(gint aChildIndex);
 private:
     GList *mTopLevelList;
-    TopLevelItem *FindTopLevelItem(nsIAccessible *aAccess);
-
-    MaiCache *mMaiCache;
 };
 
 #endif   /* __MAI_APP_ROOT_H__ */

@@ -45,123 +45,179 @@ MaiCache::MaiCache()
 {
     /* cache index always point to the last item */
     mCacheIndex = -1;
-    for (int index = 0; index < MAI_CACHE_SIZE; index++) {
-        mCache[index].uid = 0;
-        mCache[index].maiObject = NULL;
-    }
+    for (int index = 0; index < MAI_CACHE_SIZE; index++)
+        mCache[index]= 0;
 }
 
 MaiCache::~MaiCache()
 {
-    AtkObject *tmpAtkObj = NULL;
+    MaiObject *maiObj = NULL;
     for (int index = 0; index < MAI_CACHE_SIZE; index++) {
-        if (mCache[index].maiObject && mCache[index].uid != 0) {
-            tmpAtkObj = mCache[index].maiObject->GetAtkObject();
-            MAI_LOG_DEBUG(("Mai Cache: de-caching, maiAtkObj=0x%x, ref=%d\
-                            maiObj=0x%x, uid=%x\n", (guint)tmpAtkObj,
-                           G_OBJECT(tmpAtkObj)->ref_count,
-                           (guint)mCache[index].maiObject, mCache[index].uid));
-            g_object_unref(tmpAtkObj);
-            mCache[index].uid = 0;
-            mCache[index].maiObject = NULL;
+        if ((maiObj = MaiHashTable::Lookup(mCache[index]))) {
+            MAI_LOG_DEBUG(("Mai Cache: de-caching, uid=0x%x, maiObj=0x%x \n",
+                           mCache[index], maiObj));
+            mCache[index] = 0;
+            g_object_unref(maiObj->GetAtkObject());
         }
     }
 }
 
-/* more advanced replacing algorithm can be employed for performance
- * later in MaiCache::Add
- */
-gboolean
+PRBool
 MaiCache::Add(MaiObject *aMaiObj)
 {
-    g_return_val_if_fail(aMaiObj != NULL, FALSE);
-    // different nsIAccessible object can have the same ID,
-    // but we deem them equal for accessible user.
-    if (Fetch(aMaiObj)) {
-        MAI_LOG_DEBUG(("Mai Cache: already in Cache: aMaiObj=0x%x, uid=%x\n",
-                       (guint)aMaiObj, aMaiObj->GetNSAccessibleUniqueID()));
-        return TRUE;
-    }
+    g_return_val_if_fail(aMaiObj != NULL, PR_FALSE);
+
+    guint uid = aMaiObj->GetNSAccessibleUniqueID();
+    NS_ASSERTION((uid > 0), "Invalid nsAccessible ID");
+    if (uid < 0)
+        return PR_FALSE;
+
     gint counter = 0;
-    /* try to find a vacant place */
+    /* if it has been in cache */
     while (counter < MAI_CACHE_SIZE) {
-        counter++;
+        ++counter;
         mCacheIndex = (++mCacheIndex) % MAI_CACHE_SIZE;
-        if ((mCache[mCacheIndex].maiObject == NULL) &&
-            (mCache[mCacheIndex].uid == 0))
+        if ((mCache[mCacheIndex] == uid))
+            return PR_TRUE;
+    }
+
+    /* try to find a vacant place */
+    counter = 0;
+    while (counter < MAI_CACHE_SIZE) {
+        ++counter;
+        mCacheIndex = (++mCacheIndex) % MAI_CACHE_SIZE;
+        if ((mCache[mCacheIndex] == 0))
             break;
     }
-    /* if fail to find a vacant place, remove the old */
-    AtkObject *tmpAtkObj = NULL;
+    /* if fail to find a vacant place, remove an old one*/
     if (counter >= MAI_CACHE_SIZE) {
         mCacheIndex = (++mCacheIndex) % MAI_CACHE_SIZE;
-        tmpAtkObj = mCache[mCacheIndex].maiObject->GetAtkObject();
-        MAI_LOG_DEBUG(("Mai Cache: de-caching, maiAtkObj=0x%x, ref=%d \
-                        maiObj=0x%x, uid=%x\n", (guint)tmpAtkObj,
-                       G_OBJECT(tmpAtkObj)->ref_count,
-                       (guint)mCache[mCacheIndex].maiObject,
-                       (guint)mCache[mCacheIndex].uid));
+        MaiObject *tmpMaiObj = MaiHashTable::Lookup(mCache[mCacheIndex]);
+        NS_ASSERTION(tmpMaiObj, "Fail to lookup from hash table");
+
+        MAI_LOG_DEBUG(("Mai Cache: de-caching, uid=0x%x, maiObj=0x%x \n",
+                       mCache[mCacheIndex], tmpMaiObj));
         MAI_LOG_DEBUG(("Mai Cache: added in %d, replace", mCacheIndex));
-        g_object_unref(tmpAtkObj);
+        g_object_unref(tmpMaiObj->GetAtkObject());
     }
     else
         MAI_LOG_DEBUG(("Mai Cache: added in %d, vacant", mCacheIndex));
 
     g_object_ref(aMaiObj->GetAtkObject());
-    mCache[mCacheIndex].uid = aMaiObj->GetNSAccessibleUniqueID();
-    mCache[mCacheIndex].maiObject = aMaiObj;
+    mCache[mCacheIndex] = uid;
 
     MAI_LOG_DEBUG(("Mai Cache: Add in Cache, aMaiObj=0x%x, uid=%x\n",
-                   (guint)aMaiObj, mCache[mCacheIndex].uid));
+                   (guint)aMaiObj, mCache[mCacheIndex]));
 
-    return TRUE;
+    return PR_TRUE;
 }
 
-gboolean
-MaiCache::Remove(MaiObject *aMaiObj)
-{
-    g_return_val_if_fail(aMaiObj != NULL, FALSE);
-    guint uid = aMaiObj->GetNSAccessibleUniqueID();
+/**************************************
+  nsMaiHashTable
+*************************************/
 
-    for (int index = 0; index < MAI_CACHE_SIZE; index++) {
-        if (mCache[index].uid == uid && mCache[index].maiObject) {
-            g_object_unref(mCache[index].maiObject->GetAtkObject());
-            mCache[index].uid = 0;
-            mCache[index].maiObject = NULL;
-            return TRUE;
-        }
+PLHashTable *MaiHashTable::mMaiObjectHashTable = NULL;
+PRBool MaiHashTable::mInitialized = PR_FALSE;
+
+static PLHashNumber IntHashKey(PRInt32 key);
+
+#ifdef MAI_LOGGING
+static PRIntn printHashEntry(PLHashEntry *he, PRIntn index, void *arg);
+#endif
+
+PRBool
+MaiHashTable::Init()
+{
+    if (!mInitialized) {
+        mMaiObjectHashTable = PL_NewHashTable(0,
+                                              (PLHashFunction)IntHashKey,
+                                              PL_CompareValues,
+                                              PL_CompareValues,
+                                              0, 0);
+        NS_ASSERTION(mMaiObjectHashTable, "Fail to create Hash Table");
+        mInitialized = PR_TRUE;
     }
-    return FALSE;
+    return mInitialized;
 }
 
-/* the Unique ID of nsIAccessible is the only way to judge if two MaiObject
-   are equal. So the Fetch(guint uid) is the base for all the other Fetchs
-*/
-MaiObject *
-MaiCache::Fetch(guint uid)
+void
+MaiHashTable::Destroy()
 {
-    for (int index = 0; index < MAI_CACHE_SIZE; index++) {
-        if (mCache[index].uid == uid)
-            return mCache[index].maiObject;
+    if (mInitialized && mMaiObjectHashTable) {
+
+        mInitialized = PR_FALSE;
+
+#ifdef MAI_LOGGING
+        MAI_LOG_DEBUG(("Destroying hash table, but some objs are in it:\n"));
+        gint count = PL_HashTableEnumerateEntries(mMaiObjectHashTable,
+                                                  printHashEntry,
+                                                  (void*)NULL);
+        MAI_LOG_DEBUG(("Total %d entries still in the hash table\n", count));
+#endif /* #ifdef MAI_LOGGING */
+
+        PL_HashTableDestroy(mMaiObjectHashTable);
+        mMaiObjectHashTable = nsnull;
     }
-    return NULL;
+}
+
+PRBool
+MaiHashTable::Add(MaiObject *aMaiObject)
+{
+    if (!mInitialized)
+        return FALSE;
+
+    guint uid = aMaiObject->GetNSAccessibleUniqueID();
+    PLHashEntry *newEntry = PL_HashTableAdd(mMaiObjectHashTable,
+                                            GINT_TO_POINTER(uid),
+                                            GINT_TO_POINTER(aMaiObject));
+    MAI_LOG_DEBUG(("--Add in hash table uid=0x%x, obj=0x%x\n",
+                   uid, (guint)aMaiObject));
+    return newEntry ? PR_TRUE : PR_FALSE;
+}
+
+PRBool
+MaiHashTable::Remove(MaiObject *aMaiObject)
+{
+    if (!mInitialized)
+        return FALSE;
+
+    guint uid = aMaiObject->GetNSAccessibleUniqueID();
+    MAI_LOG_DEBUG(("--Remove in hash table uid=0x%x, obj=0x%x\n",
+                   uid, (guint)aMaiObject));
+    return PL_HashTableRemove(mMaiObjectHashTable, GINT_TO_POINTER(uid));
 }
 
 MaiObject *
-MaiCache::Fetch(MaiObject *aMaiObj)
+MaiHashTable::Lookup(guint uid)
 {
-    return Fetch(aMaiObj->GetNSAccessibleUniqueID());
+    if (!mInitialized)
+        return FALSE;
+
+    return NS_REINTERPRET_CAST(MaiObject*,
+                               PL_HashTableLookup(mMaiObjectHashTable,
+                                                  GINT_TO_POINTER(uid)));
 }
 
 MaiObject *
-MaiCache::Fetch(nsIAccessible *aAccess)
+MaiHashTable::Lookup(nsIAccessible *aAcc)
 {
-    return Fetch(GetNSAccessibleUniqueID(aAccess));
+    return Lookup(::GetNSAccessibleUniqueID(aAcc));
 }
 
-MaiObject *
-MaiCache::Fetch(AtkObject *aAtkObj)
+PLHashNumber
+IntHashKey(PRInt32 key)
 {
-    MAI_CHECK_ATK_OBJECT_RETURN_VAL_IF_FAIL(aAtkObj, NULL);
-    return Fetch(MAI_ATK_OBJECT(aAtkObj)->maiObject);
+    return PLHashNumber(key);
 }
+
+#ifdef MAI_LOGGING
+PRIntn
+printHashEntry(PLHashEntry *he, PRIntn index, void *arg)
+{
+    if (he) {
+        MAI_LOG_DEBUG(("         Entry: uid=0x%x, maiObj=0x%x\n",
+                       (guint)he->key, (guint)he->value));
+    }
+    return HT_ENUMERATE_NEXT;
+}
+#endif /* #ifdef MAI_LOGGING */

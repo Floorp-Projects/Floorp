@@ -40,6 +40,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMaiObject.h"
+#include "nsMaiUtil.h"
+#include "nsMaiCache.h"
 #include "nsIAccessibleEventListener.h"
 #include "nsString.h"
 
@@ -139,6 +141,7 @@ MaiObject::MaiObject(nsIAccessible *aAcc)
 #endif
     MAI_LOG_DEBUG(("====MaiObject creating this=0x%x,total =%d= created\n",
                    (unsigned int)this, num_created_mai_object));
+
 }
 
 MaiObject::~MaiObject()
@@ -323,6 +326,9 @@ finalizeCB(GObject *aObj)
     MaiObject *maiObject = MAI_ATK_OBJECT(aObj)->maiObject;
     MAI_LOG_DEBUG(("====release MaiAtkObject=0x%x, MaiObject=0x%x\n",
                    (guint)aObj, (guint)maiObject));
+
+    MaiHashTable::Remove(maiObject);
+
     maiObject->Finalize();
 
     // never call MaiObject later
@@ -385,14 +391,7 @@ refChildCB(AtkObject *aObj, gint aChildIndex)
     if (!childObject)
         return NULL;
 
-    AtkObject *childAtkObj = childObject->GetAtkObject();
-    if (childAtkObj) {
-        g_object_ref(childAtkObj);
-        if (!childAtkObj->accessible_parent)
-            //this will addref parent
-            atk_object_set_parent(childAtkObj, aObj);
-    }
-    return childAtkObj;
+    return childObject->GetAtkObject();
 }
 
 gint

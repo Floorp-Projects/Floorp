@@ -85,6 +85,8 @@ class MaiWidget: public MaiObject
 public:
     MaiWidget(nsIAccessible *aAcc);
     virtual ~MaiWidget();
+    static MaiWidget *Create(nsIAccessible *aAcc);
+
 #ifdef MAI_LOGGING
     virtual void DumpMaiObjectInfo(int aDepth);
 #endif

@@ -42,11 +42,16 @@
 #include <stdlib.h>
 
 #include "nsMaiUtil.h"
+#include "nsMaiCache.h"
 #include "nsMaiAppRoot.h"
 
 static gboolean mai_shutdown(void);
 static void mai_delete_root(void);
 static MaiAppRoot *mai_create_root(void);
+
+MaiCache *mai_create_cache(void);
+MaiCache *mai_get_cache(void);
+void mai_delete_cache(void);
 
 static void mai_util_class_init(MaiUtilClass *klass);
 
@@ -305,6 +310,9 @@ mai_init(MaiHook **aMaiHook)
     /* Initialize the MAI Utility class */
     g_type_class_unref(g_type_class_ref(MAI_TYPE_UTIL));
 
+    MaiHashTable::Init();
+    mai_create_cache();
+
     return TRUE;
 }
 
@@ -323,6 +331,9 @@ mai_shutdown(void)
     sMaiHook.RemoveTopLevelAccessible = NULL;
 
     mai_delete_root();
+    mai_delete_cache();
+    MaiHashTable::Destroy();
+
     return TRUE;
 }
 
@@ -338,6 +349,7 @@ mai_create_root(void)
     }
     if (!sRootAccessible) {
         sRootAccessible = new MaiAppRoot();
+        MaiHashTable::Add(sRootAccessible);
         NS_ASSERTION(sRootAccessible, "Fail to create MaiAppRoot");
 
         /* initialize the MAI hook
@@ -363,23 +375,41 @@ void
 mai_delete_root(void)
 {
     if (sRootAccessible) {
-        delete sRootAccessible;
+        g_object_unref(sRootAccessible->GetAtkObject());
         sRootAccessible = NULL;
     }
 }
 
 /* return the reference of MaiCache.
  */
+static MaiCache *sMaiCache = NULL;
+
 MaiCache *
-mai_get_cache(void)
+mai_create_cache(void)
 {
     if (!mai_initialized) {
         return NULL;
     }
-    MaiAppRoot *root = mai_get_root();
-    if (root)
-        return root->GetCache();
-    return NULL;
+    if (!sMaiCache) {
+        sMaiCache = new MaiCache();
+        NS_ASSERTION(sMaiCache, "Fail to create MaiCache");
+    }
+    return sMaiCache;
+}
+
+MaiCache *
+mai_get_cache(void)
+{
+    return sMaiCache;
+}
+
+void
+mai_delete_cache(void)
+{
+    if (sMaiCache) {
+        delete sMaiCache;
+        sMaiCache = NULL;
+    }
 }
 
 gboolean
@@ -387,35 +417,16 @@ mai_add_toplevel_accessible(nsIAccessible *toplevel)
 {
     g_return_val_if_fail(toplevel != NULL, TRUE);
 
-#if 1
     MaiAppRoot *root;
     root = mai_get_root();
     if (!root)
         return FALSE;
-    MaiTopLevel *mai_top_level = new MaiTopLevel(toplevel);
+
+    MaiTopLevel *mai_top_level = MaiTopLevel::Create(toplevel);
     g_return_val_if_fail(mai_top_level != NULL, PR_FALSE);
     gboolean res = root->AddMaiTopLevel(mai_top_level);
-
-    /* root will add ref for itself use */
     g_object_unref(mai_top_level->GetAtkObject());
     return res;
-#endif
-
-#if 0
-    MaiAppRoot *root;
-    root = mai_get_root();
-    if (!root)
-        return FALSE;
-
-    MaiTopLevel *mai_top_level =
-        NS_STATIC_CAST(MaiTopLevel*, MaiTopLevel::CreateAndCache(toplevel));
-
-    g_return_val_if_fail(mai_top_level != NULL, PR_FALSE);
-    gboolean res = root->AddMaiTopLevel(mai_top_level);
-
-    return res;
-#endif
-
 }
 
 gboolean
@@ -426,8 +437,9 @@ mai_remove_toplevel_accessible(nsIAccessible *toplevel)
     MaiAppRoot *root;
     root = mai_get_root();
     if (root) {
-        MaiTopLevel *mai_top_level = root->FindMaiTopLevel(toplevel);
-        return root->RemoveMaiTopLevel(mai_top_level);
+        guint uid = ::GetNSAccessibleUniqueID(toplevel);
+        gboolean res = root->RemoveMaiTopLevelByID(uid);
+        return res;
     }
     else
         return FALSE;

@@ -88,40 +88,83 @@ MaiTopLevel::~MaiTopLevel()
         receiver->RemoveAccessibleEventListener();
 }
 
+//////////////////////////////////////////////////////////////////////
+// See the comments in
+// MaiWidget::Create(nsIAccessible *aAcc);
+/////////////////////////////////////////////////////////////////////
+MaiTopLevel *
+MaiTopLevel::Create(nsIAccessible *aAcc)
+{
+    if (!aAcc)
+        return NULL;
+
+    MaiTopLevel *maiTopLevel = NS_REINTERPRET_CAST(MaiTopLevel *,
+                                                   MaiHashTable::Lookup(aAcc));
+    if (!maiTopLevel) {
+        maiTopLevel = new MaiTopLevel(aAcc);
+        NS_ASSERTION(maiTopLevel, "Fail to create Object\n");
+        NS_IF_ADDREF(maiTopLevel);
+        MaiHashTable::Add(maiTopLevel);
+    }
+    else {
+        g_object_ref(maiTopLevel->GetAtkObject());
+    }
+    return maiTopLevel;
+}
+
+//////////////////////////////////////////////////////////////////////
+// See the comments in
+// MaiWidget::CreateAndCache(nsIAccessible *aAcc);
+/////////////////////////////////////////////////////////////////////
+MaiTopLevel *
+MaiTopLevel::CreateAndCache(nsIAccessible *aAcc)
+{
+    if (!aAcc)
+        return NULL;
+
+    MaiCache *maiCache = mai_get_cache();
+    if (!maiCache)
+        return NULL;
+    MaiTopLevel *retWidget = MaiTopLevel::Create(aAcc);
+    maiCache->Add(retWidget);
+
+    return retWidget;
+}
+
 NS_IMETHODIMP
 MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
                          AccessibleEventData * aEventData)
 {
-    MaiWidget *pMaiObject;
+    nsresult rv = NS_ERROR_FAILURE;
+    MaiWidget *pMaiObject = NULL;
     AtkTableChange * pAtkTableChange;
 
     MAI_LOG_DEBUG(("\n\nReceived event: aEvent=%u, obj=0x%x, data=0x%x \n",
                    aEvent, aAccessible, aEventData));
 
-    if (mAccessible == aAccessible)
-        pMaiObject = this;
-    else
-        pMaiObject = CreateMaiWidgetFor(aAccessible);
+    pMaiObject = CreateMaiWidgetFor(aAccessible);
 
     if (!pMaiObject) {
         MAI_LOG_DEBUG(("\n\nFail to Create MaiObject for  obj=0x%x\n",
                        aAccessible));
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    MaiObject *oldMaiObj = NULL, *newMaiObj = NULL;
     switch (aEvent) {
     case nsIAccessibleEventListener::EVENT_FOCUS:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_FOCUS\n"));
         atk_focus_tracker_notify(ATK_OBJECT(pMaiObject->GetAtkObject()));
+        rv = NS_OK;
         break;
-    
+
     case nsIAccessibleEventListener::EVENT_STATE_CHANGE:
         AtkStateChange *pAtkStateChange;
         AtkStateType atkState;
 
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_STATE_CHANGE\n"));
         if (!aEventData)
-            return NS_ERROR_FAILURE;
+            break;
 
         pAtkStateChange = NS_REINTERPRET_CAST(AtkStateChange *, aEventData);
 
@@ -138,6 +181,7 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
 
         atk_object_notify_state_change(ATK_OBJECT(pMaiObject->GetAtkObject()),
                                        atkState, pAtkStateChange->enable);
+        rv = NS_OK;
         break;
       
         /*
@@ -150,37 +194,42 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
 
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_PROPERTY_CHANGE\n"));
         if (!aEventData)
-            return NS_ERROR_FAILURE;
+            break;
 
         pAtkPropChange = NS_REINTERPRET_CAST(AtkPropertyChange *, aEventData);
         values.property_name = pAtkPropertyNameArray[pAtkPropChange->type];
         
         MAI_LOG_DEBUG(("\n\nthe type of EVENT_ATK_PROPERTY_CHANGE: %d\n\n",
                        pAtkPropChange->type));
+
         switch (pAtkPropChange->type) {
         case PROP_TABLE_CAPTION:
         case PROP_TABLE_SUMMARY:
-            MaiObject *aOldMaiObj, *aNewMaiObj;
 
             if (pAtkPropChange->oldvalue)
-                aOldMaiObj = CreateMaiWidgetFor(NS_REINTERPRET_CAST
-                                                (nsIAccessible *,
-                                                 pAtkPropChange->oldvalue));
+                oldMaiObj = CreateMaiWidgetFor(NS_REINTERPRET_CAST
+                                               (nsIAccessible *,
+                                                pAtkPropChange->oldvalue));
 
             if (pAtkPropChange->newvalue)
-                aNewMaiObj = CreateMaiWidgetFor(NS_REINTERPRET_CAST
-                                                (nsIAccessible *,
-                                                 pAtkPropChange->newvalue));
+                newMaiObj = CreateMaiWidgetFor(NS_REINTERPRET_CAST
+                                               (nsIAccessible *,
+                                                pAtkPropChange->newvalue));
 
-            if (!aOldMaiObj || !aNewMaiObj )
-                return NS_ERROR_FAILURE;
+            if (oldMaiObj && newMaiObj) {
+                g_value_init(&values.old_value, G_TYPE_POINTER);
+                g_value_set_pointer(&values.old_value,
+                                    ATK_OBJECT(oldMaiObj->GetAtkObject()));
+                g_value_init(&values.new_value, G_TYPE_POINTER);
+                g_value_set_pointer(&values.new_value,
+                                    ATK_OBJECT(newMaiObj->GetAtkObject()));
+                rv = NS_OK;
+            }
+            if (oldMaiObj)
+                g_object_unref(oldMaiObj->GetAtkObject());
+            if (newMaiObj)
+                g_object_unref(newMaiObj->GetAtkObject());
 
-            g_value_init(&values.old_value, G_TYPE_POINTER);
-            g_value_set_pointer(&values.old_value,
-                                ATK_OBJECT(aOldMaiObj->GetAtkObject()));
-            g_value_init(&values.new_value, G_TYPE_POINTER);
-            g_value_set_pointer(&values.new_value,
-                                ATK_OBJECT(aNewMaiObj->GetAtkObject()));
             break;
 
         case PROP_TABLE_COLUMN_DESCRIPTION:
@@ -191,6 +240,7 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
             g_value_set_int(&values.new_value,
                             *NS_REINTERPRET_CAST(gint *,
                                                  pAtkPropChange->newvalue));
+            rv = NS_OK;
             break;
   
             //Perhaps need more cases in the future
@@ -199,12 +249,13 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
             g_value_set_pointer (&values.old_value, pAtkPropChange->oldvalue);
             g_value_init (&values.new_value, G_TYPE_POINTER);
             g_value_set_pointer (&values.new_value, pAtkPropChange->newvalue);
+            rv = NS_OK;
         }
-
-        g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
-                              g_strconcat("property_change::",
-                                          values.property_name),
-                              &values, NULL);
+        if (NS_SUCCEEDED(rv))
+            g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
+                                  g_strconcat("property_change::",
+                                              values.property_name),
+                                  &values, NULL);
 
         break;
 
@@ -212,6 +263,7 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_SELECTION_CHANGE\n"));
         g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
                               "selection_changed");
+        rv = NS_OK;
         break;
 
     case nsIAccessibleEventListener::EVENT_ATK_TEXT_CHANGE:
@@ -219,7 +271,7 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
 
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TEXT_CHANGE\n"));
         if (!aEventData)
-            return NS_ERROR_FAILURE;
+            break;
 
         pAtkTextChange = NS_REINTERPRET_CAST(AtkTextChange *, aEventData);
         g_signal_emit_by_name (ATK_OBJECT(pMaiObject->GetAtkObject()),
@@ -227,36 +279,40 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
                                "text_changed::insert":"text_changed::delete",
                                pAtkTextChange->start,
                                pAtkTextChange->length);
+        rv = NS_OK;
         break;
 
     case nsIAccessibleEventListener::EVENT_ATK_TEXT_SELECTION_CHANGE:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TEXT_SELECTION_CHANGE\n"));
         g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
                               "text_selection_changed");
+        rv = NS_OK;
         break;
 
     case nsIAccessibleEventListener::EVENT_ATK_TEXT_CARET_MOVE:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TEXT_CARET_MOVE\n"));
         if (!aEventData)
-            return NS_ERROR_FAILURE;
+            break;
 
         MAI_LOG_DEBUG(("\n\nCaret postion: %d", *(gint *)aEventData ));
         g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
                               "text_caret_moved",
                               // Curent caret position
                               *(gint *)aEventData);
+        rv = NS_OK;
         break;
 
     case nsIAccessibleEventListener::EVENT_ATK_TABLE_MODEL_CHANGE:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TABLE_MODEL_CHANGE\n"));
         g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
                               "model_changed");
+        rv = NS_OK;
         break;
 
     case nsIAccessibleEventListener::EVENT_ATK_TABLE_ROW_INSERT:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TABLE_ROW_INSERT\n"));
         if (!aEventData)
-            return NS_ERROR_FAILURE;
+            break;
 
         pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, aEventData);
 
@@ -266,12 +322,13 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
                               pAtkTableChange->index,
                               // The number of the inserted
                               pAtkTableChange->count);
+        rv = NS_OK;
         break;
         
     case nsIAccessibleEventListener::EVENT_ATK_TABLE_ROW_DELETE:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TABLE_ROW_DELETE\n"));
         if (!aEventData)
-            return NS_ERROR_FAILURE;
+            break;
 
         pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, aEventData);
 
@@ -281,18 +338,20 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
                               pAtkTableChange->index,
                               // The number of the deleted
                               pAtkTableChange->count);
+        rv = NS_OK;
         break;
         
     case nsIAccessibleEventListener::EVENT_ATK_TABLE_ROW_REORDER:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TABLE_ROW_REORDER\n"));
         g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
                               "row_reordered");
+        rv = NS_OK;
         break;
 
     case nsIAccessibleEventListener::EVENT_ATK_TABLE_COLUMN_INSERT:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TABLE_COLUMN_INSERT\n"));
         if (!aEventData)
-            return NS_ERROR_FAILURE;
+            break;
 
         pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, aEventData);
 
@@ -302,12 +361,13 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
                               pAtkTableChange->index,
                               // The number of the inserted
                               pAtkTableChange->count);
+        rv = NS_OK;
         break;
 
     case nsIAccessibleEventListener::EVENT_ATK_TABLE_COLUMN_DELETE:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TABLE_COLUMN_DELETE\n"));
         if (!aEventData)
-            return NS_ERROR_FAILURE;
+            break;
 
         pAtkTableChange = NS_REINTERPRET_CAST(AtkTableChange *, aEventData);
 
@@ -317,18 +377,21 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
                               pAtkTableChange->index,
                               // The number of the deleted
                               pAtkTableChange->count);
+        rv = NS_OK;
         break;
 
     case nsIAccessibleEventListener::EVENT_ATK_TABLE_COLUMN_REORDER:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_TABLE_COLUMN_REORDER\n"));
         g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
                               "column_reordered");
+        rv = NS_OK;
         break;
 
     case nsIAccessibleEventListener::EVENT_ATK_VISIBLE_DATA_CHANGE:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_VISIBLE_DATA_CHANGE\n"));
         g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
                               "visible_data_changed");
+        rv = NS_OK;
         break;
 
         // Is a superclass of ATK event children_changed
@@ -352,6 +415,7 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
                                    pAtkChildrenChange->index,
                                    ATK_OBJECT(childMaiObject->GetAtkObject()),
                                    NULL);
+            g_object_unref(childMaiObject->GetAtkObject());
         }
         else {
             g_signal_emit_by_name (ATK_OBJECT(pMaiObject->GetAtkObject()),
@@ -359,6 +423,7 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
                                    -1, NULL, NULL);
         }
 
+        rv = NS_OK;
         break;
 
         /*
@@ -372,12 +437,14 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
         atk_focus_tracker_notify(ATK_OBJECT(pMaiObject->GetAtkObject()));
         g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
                               "selection_changed");
+        rv = NS_OK;
         break;
 
     case nsIAccessibleEventListener::EVENT_MENUEND:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_MENUEND\n"));
         g_signal_emit_by_name(ATK_OBJECT(pMaiObject->GetAtkObject()),
                               "selection_changed");
+        rv = NS_OK;
         break;
 
     default:
@@ -386,7 +453,9 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
         break;
     }
 
-    return NS_OK;
+    if (pMaiObject)
+        g_object_unref(pMaiObject->GetAtkObject());
+    return rv;
 }
 
 /******************************************************************
@@ -398,41 +467,6 @@ MaiWidget *
 MaiTopLevel::CreateMaiWidgetFor(nsIAccessible *aAccessible)
 {
     return MaiWidget::CreateAndCache(aAccessible);
-}
-
-/*static*/
-//////////////////////////////////////////////////////////////////////
-// See the comments in
-// MaiWidget::CreateAndCache(nsIAccessible *aAcc);
-/////////////////////////////////////////////////////////////////////
-MaiTopLevel *
-MaiTopLevel::CreateAndCache(nsIAccessible *aAcc)
-{
-    if (!aAcc)
-        return NULL;
-
-    MaiCache *maiCache = mai_get_cache();
-    if (!maiCache)
-        return NULL;
-
-    MaiTopLevel *retWidget =
-        NS_STATIC_CAST(MaiTopLevel*, maiCache->Fetch(aAcc));
-    //there is a maiWidget in cache for the nsIAccessible already.
-    if (retWidget) {
-        MAI_LOG_DEBUG(("MaiTopLevel::CreateAndCache, already added\n"));
-        return retWidget;
-    }
-
-    //create one, and cache it.
-    retWidget = new MaiTopLevel(aAcc);
-    NS_ASSERTION(retWidget, "Fail to create mai object");
-    MAI_LOG_DEBUG(("MaiTopLevel::CreateAndCache, new one created\n"));
-
-    maiCache->Add(retWidget);
-    //cache should have add ref, release ours
-    g_object_unref(retWidget->GetAtkObject());
-
-    return retWidget;
 }
 
 /* static */
