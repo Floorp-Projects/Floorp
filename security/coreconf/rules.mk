@@ -418,10 +418,12 @@ else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
+ifndef XP_OS2_VACPP
 ifneq (,$(filter-out WIN%,$(OS_TARGET)))
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.s
 	@$(MAKE_OBJDIR)
 	$(AS) -o $@ $(ASFLAGS) -c $<
+endif
 endif
 
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.asm
