@@ -1543,15 +1543,24 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   }
   
   // Scroll the children (even if the widget is not visible)
-  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    // We use resize rather than move since it gives us control
-    // over repainting.  In the case of blitting, Quickdraw views
-    // draw their child widgets on the blit, so we can scroll
-    // like a bat out of hell by not wasting time invalidating
-    // the widgets, since it's completely unnecessary to do so.
-    nsRect bounds;
-    kid->GetBounds(bounds);
-    kid->Resize(bounds.x + aDx, bounds.y + aDy, bounds.width, bounds.height, PR_FALSE);
+  nsCOMPtr<nsIEnumerator> children(getter_AddRefs(GetChildren()));
+  if ( children ) {
+      children->First();
+      do {
+        nsCOMPtr<nsISupports> child;
+        if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
+            nsCOMPtr<nsIWidget> widget = do_QueryInterface(child);
+  
+            // We use resize rather than move since it gives us control
+            // over repainting.  In the case of blitting, Quickdraw views
+            // draw their child widgets on the blit, so we can scroll
+            // like a bat out of hell by not wasting time invalidating
+            // the widgets, since it's completely unnecessary to do so.
+            nsRect bounds;
+            widget->GetBounds(bounds);
+            widget->Resize(bounds.x + aDx, bounds.y + aDy, bounds.width, bounds.height, PR_FALSE);
+        }
+      } while (NS_SUCCEEDED(children->Next()));     
   }
 
   if (mVisible)

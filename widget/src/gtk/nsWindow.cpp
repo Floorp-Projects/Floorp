@@ -894,8 +894,26 @@ NS_IMETHODIMP nsWindow::Update(void)
   // The view manager also expects us to force our
   // children to update too!
 
-  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    kid->Update();
+  nsCOMPtr<nsIEnumerator> children;
+
+  children = dont_AddRef(GetChildren());
+
+  if (children) {
+    nsCOMPtr<nsISupports> isupp;
+
+    nsCOMPtr<nsIWidget> child;
+    while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp))) && isupp) {
+
+      child = do_QueryInterface(isupp);
+
+      if (child) {
+        child->Update();
+      }
+
+      if (NS_FAILED(children->Next())) {
+        break;
+      }
+    }
   }
 
   // While I'd think you should NS_RELEASE(aPaintEvent.widget) here,
@@ -2207,14 +2225,26 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   }
 
   // Update bounds on our child windows
-  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    nsRect bounds;
-    kid->GetBounds(bounds);
-    bounds.x += aDx;
-    bounds.y += aDy;
-    nsWidget* childWidget = NS_STATIC_CAST(nsWidget*, kid);
-    childWidget->SetBounds(bounds);
-    childWidget->ResetInternalVisibility();
+  nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
+  if (children) {
+    nsCOMPtr<nsISupports> isupp;
+    nsCOMPtr<nsIWidget> child;
+    while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp)) && isupp)) {
+      child = do_QueryInterface(isupp);
+
+      if (child) {
+        nsRect bounds;
+        child->GetBounds(bounds);
+        bounds.x += aDx;
+        bounds.y += aDy;
+        nsWidget* childWidget = NS_STATIC_CAST(nsWidget*, NS_STATIC_CAST(nsIWidget*, child.get()));
+        childWidget->SetBounds(bounds);
+        childWidget->ResetInternalVisibility();
+      }
+
+      if (NS_FAILED(children->Next()))
+        break;
+    }
   }
 
   return NS_OK;
@@ -2694,8 +2724,10 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   mBounds.height = aHeight;
 
   ResetInternalVisibility();
-  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    NS_STATIC_CAST(nsWidget*, kid)->ResetInternalVisibility();
+  PRInt32 childCount = mChildren.Count();
+  PRInt32 index;
+  for (index = 0; index < childCount; index++) {
+    NS_STATIC_CAST(nsWidget*, mChildren[index])->ResetInternalVisibility();
   }
 
   // code to keep the window from showing before it has been moved or resized
