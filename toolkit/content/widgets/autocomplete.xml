@@ -591,8 +591,7 @@
 
       <method name="onPopupClick">
         <body><![CDATA[
-          var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
-                             getService(Components.interfaces.nsIAutoCompleteController);
+          var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
           controller.handleEnter();
         ]]></body>
       </method>
