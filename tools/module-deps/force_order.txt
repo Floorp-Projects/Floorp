@@ -18,7 +18,6 @@
 #
 
 string                      xpcom
-necko                       mimetype
 png                         imglib2
 jpeg                        imglib2
 mng                         imglib2
