@@ -249,7 +249,7 @@ void nsWidget::OnDestroy()
 
   NS_ADDREF_THIS();
   DispatchStandardEvent(NS_DESTROY);
-  NS_ADDREF_THIS();
+  NS_RELEASE_THIS();
 }
 
 //-------------------------------------------------------------------------
@@ -338,21 +338,8 @@ the PtRealizeWidget functions */
       PtSetArg(&arg, Pt_ARG_FLAGS, 0, Pt_DELAY_REALIZE);
       PtSetResources(mWidget, 1, &arg);
 
-#if 1
 	/* Always add it to the Widget Damage Queue when it gets realized */
     QueueWidgetDamage();
-	
-#else
-    if (!mUpdateArea->IsEmpty())
-    {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show mUpdateArea not empty adding to Damage Queue this=<%p>\n", this));
-      QueueWidgetDamage();
-    }
-    else
-    {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show mUpdateArea is empty this=<%p>\n", this));
-    }
-#endif
   }
   else
   {
@@ -414,14 +401,55 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move (%p) from (%ld,%ld) to (%ld,%ld)\n", this, mBounds.x, mBounds.y, aX, aY ));
+  //printf("nsWidget::Move (%p) from (%ld,%ld) to (%ld,%ld)\n", this, mBounds.x, mBounds.y, aX, aY );
 
-  if(( mBounds.x == aX ) && ( mBounds.y == aY ))
+  if (( mBounds.x == aX ) && ( mBounds.y == aY ))
   {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  already there.\n" ));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move  already there.\n" ));
     return NS_OK;
   }
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  was at (%i,%i)\n", mBounds.x, mBounds.y ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move  was at (%i,%i)\n", mBounds.x, mBounds.y ));
+
+  /* Get the offset for Pop-up's such as Combo-Boxes */
+  PtArg_t    arg;
+  PhArea_t   *area;
+  PtWidget_t *parent;
+  PhPoint_t  offset;
+  nsRect     rect2;
+  PtWidget_t *disjoint = PtFindDisjoint( mWidget );
+
+  rect2.x = rect2.y = 0;
+
+  if (mWidget)
+  {
+    parent = PtWidgetParent( mWidget );
+    if (parent)
+    {
+      PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
+      if( PtGetResources( parent, 1, &arg ) == 0 )
+      {
+        if ( (parent == disjoint) || (PtWidgetIsClass(parent, PtWindow)) 
+              || (PtWidgetIsClass(parent, PtRegion)) )
+        {
+          rect2.x = rect2.y = 0;
+        }
+        else
+       {
+          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move Getting offeset for type=<%s>\n", mWidget->class_rec ));
+          printf ("nsWidget::Move type: %p\n",mWidget->class_rec);
+
+          PtWidgetOffset( parent, &offset );
+          if (PtWidgetIsClass(mWidget,PtRegion))
+          {
+     		printf ("nsWidget::Move offset: %d %d\n",offset.x,offset.y);
+            rect2.x = offset.x;
+            rect2.y = offset.y;
+          }
+       }
+    }
+  }
+}
 
   mBounds.x = aX;
   mBounds.y = aY;
@@ -430,7 +458,10 @@ NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
   {
     PtArg_t arg;
     PhPoint_t *oldpos;
-    PhPoint_t pos = {aX, aY};
+    PhPoint_t pos;
+    
+     pos.x = aX+rect2.x;
+     pos.y = aY+rect2.y;
 
     EnableDamage( mWidget, PR_FALSE );
 
@@ -487,11 +518,13 @@ NS_METHOD nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
         EnableDamage( mWidget, PR_TRUE );
       }
+
 #if 0
  /* GTK Does not bother doing this... */
       if (mShown)
         Invalidate( aRepaint );
 #endif
+
     }
     else
 	{
@@ -1938,7 +1971,7 @@ int nsWidget::RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
         (someWidget->HandleEvent( cbinfo ))
       )
   {
-      return( Pt_END ); // Event was consumed  
+        return( Pt_END ); // Event was consumed
   }
 
   return( Pt_CONTINUE );
@@ -1950,12 +1983,55 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
 {
   PRBool  result = PR_TRUE; // call the default nsWindow proc
   int     err;
+  char EventName[50];
+
 
     PhEvent_t* event = aCbInfo->event;
+    EventName[0] = NULL;
 
-//printf("nsWidget::HandleEvent entering...\n");
+#if defined(DEBUG) && 1
+   switch ( event->type )
+    {
+      case Ph_EV_KEY:
+        strcpy(EventName, "Ph_EV_KEY");
+        break;
+      case Ph_EV_DRAG:        
+        strcpy(EventName, "Ph_EV_DRAG");
+        break;
+      case Ph_EV_PTR_MOTION_BUTTON:
+        strcpy(EventName, "Ph_EV_BUTTON");
+        break;
+      case Ph_EV_PTR_MOTION_NOBUTTON:
+        strcpy(EventName, "Ph_EV_NOBUTTON");
+        break;
+      case Ph_EV_BUT_PRESS:
+        strcpy(EventName, "Ph_EV_BUT_PRESS");
+        break;
+      case Ph_EV_BUT_RELEASE:
+        strcpy(EventName, "Ph_EV_BUT_RELEASE");
+        break;
+      case Ph_EV_BOUNDARY:
+        strcpy(EventName, "Ph_EV_BOUNDARY");
+        break;
+      case Ph_EV_WM:
+        strcpy(EventName, "Ph_EV_WM");
+        break;
+      case Ph_EV_EXPOSE:
+        strcpy(EventName, "Ph_EV_EXPOSE");
+        break;
+      default:
+        strcpy(EventName, "UNKNOWN");
+        break;      
+    }
+#endif
 
-#if defined(PHOTON2_ONLY)
+printf("nsWidget::HandleEvent entering this=<%p> mWidget=<%p> Event Consumed=<%d>  Event=<%s>\n",
+	this, mWidget, (event->processing_flags & Ph_CONSUMED), EventName );
+ 
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::HandleEvent entering this=<%p> mWidget=<%p> Event Consumed=<%d>  Event=<%s>\n",
+	this, mWidget, (event->processing_flags & Ph_CONSUMED), EventName ));
+    
+#if defined(PHOTON2_ONLY) && 1
     /* Photon 2 added a Consumed flag which indicates a  previous receiver of the */
     /* event has processed it */
 	if (event->processing_flags & Ph_CONSUMED)

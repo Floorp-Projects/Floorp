@@ -338,7 +338,7 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 
   if (aDoCapture)
   {
-//    printf("grabbing widget\n");
+    printf("nsWindow::CaptureRollupEventsgrabbing widget\n");
     
 	/* Create a pointer region */
      mIsGrabbing = PR_TRUE;
@@ -351,7 +351,7 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   }
   else
   {
-//    printf("ungrabbing widget\n");
+    printf("nsWindow::CaptureRollupEvents ungrabbing widget\n");
 
     // make sure that the grab window is marked as released
     if (mGrabWindow == this)
@@ -777,10 +777,6 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
 #else
 #endif
 
-    // Did KEDL add this to fix the rip in the upper right hand corner?
-	mFrameLeft=2;
-	mFrameRight=2;
-
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative Frame size L,T,R,B=(%d,%d,%d,%d)\n",
 	      mFrameLeft, mFrameTop, mFrameRight, mFrameBottom ));
     }
@@ -791,26 +787,6 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     PtSetArg( &arg[arg_count++], Pt_ARG_RESIZE_FLAGS, 0, Pt_RESIZE_XY_BITS );
     PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_RENDER_FLAGS, render_flags, 0xFFFFFFFF );
 
-#if 0
-    /* Create Pop-ups as a PtWindow, this has many problems and is */
-	/* only being kept here for a little longer to make sure there are */
-	/* no problems in the PtRegion code. */
-
-    if( mWindowType == eWindowType_popup )
-    {
-      PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, 0, (Pt_HIGHLIGHTED | Pt_GETS_FOCUS));
-    }
-
-    if( parentWidget )
-	{
-      mWidget = PtCreateWidget( PtWindow, parentWidget, arg_count, arg );
-	}
-    else
-    {
-      PtSetParentWidget( nsnull );
-      mWidget = PtCreateWidget( PtWindow, nsnull, arg_count, arg );
-    }
-#else
     /* Create Pop-up Menus as a PtRegion */
 
     if (!parentWidget)
@@ -823,7 +799,7 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
 					 Ph_REGION_EV_SENSE|Ph_REGION_EV_OPAQUE
 					 |Ph_REGION_RECT;
 
-	  int   sense =  Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE | Ph_EV_BUT_REPEAT;
+	  int   sense =  Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE | Ph_EV_BUT_REPEAT | Ph_EV_KEY;
 
       PtRawCallback_t callback;
         callback.event_mask = sense;
@@ -839,6 +815,7 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
 
       PhArea_t area;
         area.pos = region.origin;
+
         area.size.w = rect.lr.x - rect.ul.x + 1;
         area.size.h = rect.lr.y - rect.ul.y + 1;
 
@@ -866,12 +843,10 @@ printf("nsWindow::CreateNative 1st region area=(%d,%d,%d,%d)\n", area.pos.x, are
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_PARENT,   mMenuRegion->rid, 0 );
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_FIELDS,   fields, fields );
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_FLAGS,    Ph_FORCE_FRONT, Ph_FORCE_FRONT );
-//        PtSetArg( &arg[arg_count++], Pt_ARG_REGION_SENSE,    sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_BUT_RELEASE, sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_BUT_RELEASE );
-//       PtSetArg( &arg[arg_count++], Pt_ARG_REGION_OPAQUE,   sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_BUT_RELEASE|Ph_EV_DRAW, sense |Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_BUT_RELEASE|Ph_EV_DRAW);
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_SENSE,    sense | Ph_EV_DRAG|Ph_EV_EXPOSE, sense | Ph_EV_DRAG|Ph_EV_EXPOSE);
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_OPAQUE,   sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW, sense |Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW);
 
-
+//printf ("create region.................................................. %p\n",parentWidget); 
         mWidget = PtCreateWidget( PtRegion, parentWidget, arg_count, arg);
 
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative PtRegion = <%p>\n", mWidget));
@@ -885,13 +860,12 @@ printf("nsWindow::CreateNative 1st region area=(%d,%d,%d,%d)\n", area.pos.x, are
 	  PtSetParentWidget( nsnull );
       mWidget = PtCreateWidget( PtWindow, nsnull, arg_count, arg );
 #else
+	  // KEDL WHY did you do this??
       PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_BLUE, 0 );
       mWidget = PtCreateWidget( PtWindow, parentWidget, arg_count, arg );
 #endif
 	}
 	
-#endif
-    
     // Must also create the client-area widget
     if( mWidget )
     {
@@ -921,11 +895,18 @@ printf("nsWindow::CreateNative 1st region area=(%d,%d,%d,%d)\n", area.pos.x, are
 #else
         PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_TRANSPARENT, 0 );
 #endif
-        mClientWidget = PtCreateWidget( PtContainer, mWidget,arg_count, arg );
+
+#if 0
+         /* Kedl and I think this is an extra unnecsaary widget.. we are taking it out for now */
+         mClientWidget = PtCreateWidget( PtContainer, mWidget,arg_count, arg );
+         mClientWidget=0; 
+#endif
 	  }
 	  
       // Create a region that is opaque to draw events and place behind
       // the client widget.
+#if 0
+       /* Removing support for Extra widget that we no longer create right above this */
       if( !mClientWidget )
       {
         PtDestroyWidget( mWidget );
@@ -933,6 +914,7 @@ printf("nsWindow::CreateNative 1st region area=(%d,%d,%d,%d)\n", area.pos.x, are
 		NS_ASSERTION(0,"nsWindow::CreateNative Error creating Client Widget\n");
 		abort();
       }
+#endif
     }
   }
 
@@ -987,8 +969,15 @@ printf("nsWindow::CreateNative 1st region area=(%d,%d,%d,%d)\n", area.pos.x, are
 	}
     else if ( !parentWidget )
     {
-      PtAddCallback(mClientWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
-      PtAddCallback(mWidget, Pt_CB_WINDOW_CLOSING, WindowCloseHandler, this ); 
+       if (mClientWidget)
+       {
+          PtAddCallback(mClientWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
+       }
+       else
+       {
+          PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
+          PtAddCallback(mWidget, Pt_CB_WINDOW_CLOSING, WindowCloseHandler, this ); 
+       }
     }
 
     // call the event callback to notify about creation
@@ -1393,8 +1382,14 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     sevent.message = NS_SIZE;
     sevent.widget = this;
     sevent.eventStructType = NS_SIZE_EVENT;
-    sevent.windowSize = new nsRect (0, 0, aWidth+2, aHeight); 	// kedl1, fix so throbber area is right
-								// size; only works first time though...
+
+#if 0
+     /* KEDL: fix so throbber area is right size; only works first time though... */
+     sevent.windowSize = new nsRect (0, 0, aWidth+2, aHeight); 	
+#else
+     sevent.windowSize = new nsRect (0, 0, aWidth, aHeight); 	
+#endif
+
     sevent.point.x = 0;
     sevent.point.y = 0;
     sevent.mWinWidth = aWidth;
@@ -1935,6 +1930,7 @@ NS_METHOD nsWindow::GetFrameSize(int *FrameLeft, int *FrameRight, int *FrameTop,
 
 
 
+/* Only called by nsWidget::Scroll */
 NS_METHOD nsWindow::GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctiles )
 {
   nsresult res = NS_ERROR_FAILURE;
@@ -1991,6 +1987,10 @@ NS_METHOD nsWindow::GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctile
             last = tile;
           }
         }
+
+//KEDL, HACK!!  to get scrolling to work with widgets again
+// KIRK whats really going on here? Aren't you just skipping this section??
+*ctiles=0;
 
         if( *ctiles )
         {
@@ -2798,29 +2798,72 @@ int nsWindow::MenuRegionCallback( PtWidget_t *widget, ApInfo_t *apinfo, PtCallba
   /* eliminate 'unreferenced' warnings */
   widget = widget, apinfo = apinfo, cbinfo = cbinfo;
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback this=<%p> widget=<%p> apinfo=<%p>\n", pWin, widget, apinfo));
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback this=<%p> widget=<%p> apinfo=<%p> mMenuRegion=<%p>\n", pWin, widget, apinfo, pWin->mMenuRegion));
 
 #if defined(DEBUG) && 1
-//  printf("nsWindow::MenuRegionCallback this=<%p> widget=<%p> apinfo=<%p> pWin2=<%p>\n", pWin, widget, apinfo, pWin2);
-//  printf("nsWindow::MenuRegionCallback cbinfo->reason=<%d>\n", cbinfo->reason);
-//  printf("nsWindow::MenuRegionCallback cbinfo->subtype=<%d>\n", cbinfo->reason_subtype);
-//  printf("nsWindow::MenuRegionCallback cbinfo->cbdata=<%d>\n", cbinfo->cbdata);
-//  printf("nsWindow::MenuRegionCallback event->type=<%d>\n", event->type);
+  char EventName[50];
+
+   EventName[0] = NULL;  
+   switch ( event->type )
+    {
+      case Ph_EV_KEY:
+        strcpy(EventName, "Ph_EV_KEY");
+        break;
+      case Ph_EV_DRAG:        
+        strcpy(EventName, "Ph_EV_DRAG");
+        break;
+      case Ph_EV_PTR_MOTION_BUTTON:
+        strcpy(EventName, "Ph_EV_BUTTON");
+        break;
+      case Ph_EV_PTR_MOTION_NOBUTTON:
+        strcpy(EventName, "Ph_EV_NOBUTTON");
+        break;
+      case Ph_EV_BUT_PRESS:
+        strcpy(EventName, "Ph_EV_BUT_PRESS");
+        break;
+      case Ph_EV_BUT_RELEASE:
+        strcpy(EventName, "Ph_EV_BUT_RELEASE");
+        break;
+      case Ph_EV_BOUNDARY:
+         strcpy(EventName, "Ph_EV_BOUNDARY");
+        break;
+      case Ph_EV_WM:
+        strcpy(EventName, "Ph_EV_WM");
+        break;
+      case Ph_EV_EXPOSE:
+        strcpy(EventName, "Ph_EV_EXPOSE");
+        break;
+      default:
+        strcpy(EventName, "UNKNOWN");
+        break;      
+    }
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback this=<%p> widget=<%p> apinfo=<%p> pWin2=<%p> EventName=<%s>\n", pWin, widget, apinfo, pWin2, EventName));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback cbinfo->reason=<%d>\n", cbinfo->reason));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback cbinfo->subtype=<%d>\n", cbinfo->reason_subtype));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback cbinfo->cbdata=<%d>\n", cbinfo->cbdata));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback event->type=<%d>\n", event->type));
 #endif
 
+#if 1
+  return (Pt_CONTINUE);
+  //return RawEventHandler(widget, apinfo, cbinfo);
+#else
   if ( (event->type == Ph_EV_BUT_PRESS) || (event->type == Ph_EV_KEY) )
   {
-//    printf("nsWindow::MenuRegionCallback event is Ph_EV_BUT_PRESS | Ph_EV_KEY\n");
-//    printf("nsWindow::MenuRegionCallback pWin->gRollupWidget=<%p> pWin->gRollupListener=<%p>\n", pWin->gRollupWidget, pWin->gRollupListener);
+    printf("nsWindow::MenuRegionCallback event is Ph_EV_BUT_PRESS | Ph_EV_KEY\n");
+    printf("nsWindow::MenuRegionCallback pWin->gRollupWidget=<%p> pWin->gRollupListener=<%p>\n", pWin->gRollupWidget, pWin->gRollupListener);
 
     if (pWin->gRollupWidget && pWin->gRollupListener)
     {
       /* Close the Window */
-      //pWin->gRollupListener->Rollup();
+      pWin->gRollupListener->Rollup();
     }
   }
 
   return (Pt_CONTINUE);
+#endif
 }
 
 NS_METHOD nsWindow::GetAttention()
