@@ -28,6 +28,7 @@ EXPORTS= \
 		nsIMsgNewsgroup.h \
 		nsIMsgXOVERParser.h\
 		nsIMsgOfflineNewsState.h \
+		nsINNTPArticleKeysState.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
