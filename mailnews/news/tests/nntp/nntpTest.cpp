@@ -233,9 +233,9 @@ nsNntpTestDriver::InitializeProtocol(const char * urlString)
         return rv;
     }
 
-    //m_url->foobar(urlString);
+    m_url->SetSpec(urlString);
 
-	// now create a protocl instance...
+	// now create a protocol instance...
 	m_nntpProtocol = new nsNNTPProtocol(m_url, m_transport);
 	m_protocolInitialized = PR_TRUE;
 

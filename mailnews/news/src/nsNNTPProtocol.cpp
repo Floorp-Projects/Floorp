@@ -472,7 +472,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
   PRBool cancel = FALSE;
   char* colon;
   nsINNTPNewsgroupPost *message=NULL;
-  char *message_id = 0;
+  //char *message_id = 0;
 
   nsresult rv = NS_OK;
 
