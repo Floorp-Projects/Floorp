@@ -885,7 +885,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   // end 0 dimensioned cells
 
   kidSize.width = PR_MAX(kidSize.width, smallestMinWidth); 
-
+  if (!tableFrame->IsAutoLayout()) {
+    // a cell in a fixed layout table is constrained to the avail width
+    kidSize.width = PR_MIN(kidSize.width, availSize.width);
+  }
   //if (eReflowReason_Resize == aReflowState.reason) {
   //  NS_ASSERTION(kidSize.width <= availSize.width, "child needed more space during resize reflow");
   //}
