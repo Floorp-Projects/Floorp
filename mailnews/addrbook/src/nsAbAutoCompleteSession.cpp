@@ -251,13 +251,13 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
   PR_Free(fullAddrStr);
 }
 
-static PRBool CommonPrefix(const PRUnichar *aString, const PRUnichar *aSubstr, PRInt32 aSubstrLen) {
-  PRUint32 len = MinInt(aSubstrLen, nsCRT::strlen(aString));
+static PRBool CommonPrefix(const PRUnichar *aString, const PRUnichar *aSubstr, PRInt32 aSubstrLen)
+{
+  if (aSubstrLen == 0 || nsCRT::strlen(aString) < aSubstrLen)
+    return PR_FALSE;
 
-  if (len == 0) return PR_FALSE;
-
-  return (Compare(nsDependentString(aString, len),
-                  nsDependentString(aSubstr, len),
+  return (Compare(nsDependentString(aString, aSubstrLen),
+                  nsDependentString(aSubstr, aSubstrLen),
                   nsCaseInsensitiveStringComparator()) == 0);
 }
 
