@@ -276,6 +276,10 @@ nsImgManager::TestPermission(nsIURI *aCurrentURI,
 
   // Third party checking
   if (mBehaviorPref == IMAGE_NOFOREIGN) {
+    // We need a requesting uri for third party checks to work.
+    if (!aFirstURI)
+      return NS_OK;
+
     // compare tails of names checking to see if they have a common domain
     // we do this by comparing the tails of both names where each tail 
     // includes at least one dot
