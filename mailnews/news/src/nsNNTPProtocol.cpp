@@ -518,7 +518,7 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 	if (MK_NNTP_RESPONSE_TYPE(m_responseCode) == MK_NNTP_RESPONSE_TYPE_OK)
 	{
 		char *line = NULL;
-        nsIMsgNewsHost *news_host = m_newsHost;
+        nsINNTPHost *news_host = m_newsHost;
 
 		status = ReadLine(inputStream, length, &line);
 
@@ -648,7 +648,7 @@ PRInt32 nsNNTPProtocol::SendListSearchHeaders()
 
 PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-    nsIMsgNewsHost* news_host = m_newsHost;
+    nsINNTPHost* news_host = m_newsHost;
 
 	char *line = NULL;
 	PRInt32 status = 0; 

@@ -25,7 +25,7 @@
 #ifndef nsNNTPNewsgroupListState_h___
 #define nsNNTPNewsgroupListState_h___
 
-#include "nsIMsgNewsHost.h"
+#include "nsINNTPHost.h"
 #include "nsINNTPNewsgroupList.h"
 
 #include "nsNNTPArticleSet.h"
@@ -34,7 +34,7 @@
    articles we've already seen in the current newsgroup. */
 
 typedef struct MSG_NewsKnown {
-	nsIMsgNewsHost* host;
+	nsINNTPHost* host;
 	char* group_name;
 	nsNNTPArticleSet* set; /* Set of articles we've already gotten
 								  from the newsserver (if it's marked
@@ -55,7 +55,7 @@ typedef struct MSG_NewsKnown {
 
 extern NS_COM nsresult
 NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResult,
-                    nsIMsgNewsHost *newsHost,
+                    nsINNTPHost *newsHost,
                     nsIMsgNewsgroup *newsgroup);
     
 #endif

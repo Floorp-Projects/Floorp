@@ -17,7 +17,7 @@
  */
 
 #include "nsNNTPArticleSet.h"
-#include "nsIMsgNewsHost.h"
+#include "nsINNTPHost.h"
 
 #include "mkutils.h"
 
@@ -79,7 +79,7 @@ extern "C" {
 
 
 
-nsNNTPArticleSet::nsNNTPArticleSet(nsIMsgNewsHost* host)
+nsNNTPArticleSet::nsNNTPArticleSet(nsINNTPHost* host)
 {
 	m_cached_value = -1;
 	m_cached_value_index = 0;
@@ -110,7 +110,7 @@ PRBool nsNNTPArticleSet::Grow()
 }
 
 
-nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, nsIMsgNewsHost* host)
+nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, nsINNTPHost* host)
 {
 	PRInt32 *head, *tail, *end;
 
@@ -198,7 +198,7 @@ nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, nsIMsgNewsHost* host)
 
 
 nsNNTPArticleSet*
-nsNNTPArticleSet::Create(nsIMsgNewsHost* host)
+nsNNTPArticleSet::Create(nsINNTPHost* host)
 {
 	nsNNTPArticleSet* set = new nsNNTPArticleSet(host);
 	if (set && set->m_data == NULL) {
@@ -210,7 +210,7 @@ nsNNTPArticleSet::Create(nsIMsgNewsHost* host)
 
 
 nsNNTPArticleSet*
-nsNNTPArticleSet::Create(const char* value, nsIMsgNewsHost* host)
+nsNNTPArticleSet::Create(const char* value, nsINNTPHost* host)
 {
 	nsNNTPArticleSet* set = new nsNNTPArticleSet(value, host);
 	if (set && set->m_data == NULL) {
@@ -456,7 +456,7 @@ nsNNTPArticleSet::GetFirstMember()
    #### This should be changed to modify the buffer in place.
 
    Also note that we never call Optimize() unless we actually changed
-   something, so it's a great place to tell the nsIMsgNewsHost* that something
+   something, so it's a great place to tell the nsINNTPHost* that something
    changed.
    */
 PRBool

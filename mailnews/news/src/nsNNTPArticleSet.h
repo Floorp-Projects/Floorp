@@ -23,19 +23,19 @@
 // read articles from a .newsrc file, but it can be used for other purposes
 // too.
 
-// If a nsIMsgNewsHost* is supplied to the creation routine, then that
-// nsIMsgNewsHost will be notified whwnever a change is made to set.
+// If a nsINNTPHost* is supplied to the creation routine, then that
+// nsINNTPHost will be notified whwnever a change is made to set.
 
-#include "nsIMsgNewsHost.h"
+#include "nsINNTPHost.h"
 
 class nsNNTPArticleSet {
 public:
 	// Creates an empty set.
-	static nsNNTPArticleSet* Create(nsIMsgNewsHost* host = NULL);
+	static nsNNTPArticleSet* Create(nsINNTPHost* host = NULL);
 
 	// Creates a set from the list of numbers, as might be found in a
 	// newsrc file.
-	static nsNNTPArticleSet* Create(const char* str, nsIMsgNewsHost* host = NULL);
+	static nsNNTPArticleSet* Create(const char* str, nsINNTPHost* host = NULL);
 	~nsNNTPArticleSet();
 
 	// FirstNonMember() returns the lowest non-member of the set that is
@@ -83,8 +83,8 @@ public:
 #endif
 
 protected:
-	nsNNTPArticleSet(nsIMsgNewsHost* host);
-	nsNNTPArticleSet(const char*, nsIMsgNewsHost* host);
+	nsNNTPArticleSet(nsINNTPHost* host);
+	nsNNTPArticleSet(const char*, nsINNTPHost* host);
 	PRBool Grow();
 	PRBool Optimize();
 
@@ -103,7 +103,7 @@ protected:
 	PRInt32 m_cached_value_index;		/* the index into `data' at which a search
 									   to determine whether `cached_value' was
 									   a member of the set ended. */
-	nsIMsgNewsHost* m_host;
+	nsINNTPHost* m_host;
 };
 
 

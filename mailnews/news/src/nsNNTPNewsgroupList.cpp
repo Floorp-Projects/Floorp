@@ -89,14 +89,14 @@ public:
   NS_METHOD InitNewsgroupList(const char *url, const char *groupName);
   
   // nsIMsgNewsArticleList
-  NS_IMETHOD GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
+  NS_IMETHOD GetRangeOfArtsToDownload(nsINNTPHost* host,
                                       const char* group_name,
                                       PRInt32 first_possible,
                                       PRInt32 last_possible,
                                       PRInt32 maxextra,
                                       PRInt32* first,
                                       PRInt32* lastprotected);
-  NS_IMETHOD AddToKnownArticles(nsIMsgNewsHost* host,
+  NS_IMETHOD AddToKnownArticles(nsINNTPHost* host,
                                 const char* group_name,
                                 PRInt32 first, PRInt32 last);
 
@@ -119,7 +119,7 @@ public:
   void			SetPane(MSG_Pane *pane) {m_pane = pane;}
 #endif
   PRBool          m_finishingXover;
-  nsIMsgNewsHost*	GetHost() {return m_host;}
+  nsINNTPHost*	GetHost() {return m_host;}
   const char *	GetGroupName() {return m_groupName;}
   const char *	GetURL() {return m_url;}
   
@@ -145,7 +145,7 @@ protected:
   PRBool			m_downloadAll;
   PRInt32			m_maxArticles;
   char			*m_groupName;
-  nsIMsgNewsHost	*m_host;
+  nsINNTPHost	*m_host;
   char			*m_url;			// url we're retrieving
 #ifdef HAVE_MASTER
   MSG_Master		*m_master;
@@ -265,7 +265,7 @@ void	nsNNTPNewsgroupList::OnAnnouncerGoingAway (ChangeAnnouncer *instigator)
 #endif
 
 nsresult
-nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
+nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsINNTPHost* host,
 							 const char* group_name,
 							 PRInt32 first_possible,
 							 PRInt32 last_possible,
@@ -434,7 +434,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgNewsHost* host,
 }
 
 nsresult
-nsNNTPNewsgroupList::AddToKnownArticles(nsIMsgNewsHost* host,
+nsNNTPNewsgroupList::AddToKnownArticles(nsINNTPHost* host,
 					   const char* group_name,
 					   PRInt32 first, PRInt32 last)
 {

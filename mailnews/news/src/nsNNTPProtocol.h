@@ -27,7 +27,7 @@
 
 #include "nsINNTPNewsgroupList.h"
 #include "nsINNTPArticleList.h"
-#include "nsIMsgNewsHost.h"
+#include "nsINNTPHost.h"
 #include "nsIMsgNewsgroup.h"
 #include "nsIMsgOfflineNewsState.h"
 
@@ -176,7 +176,7 @@ private:
     nsINNTPNewsgroupList *  m_newsgroupList;
     nsINNTPArticleList *	m_articleList;
 
-	nsIMsgNewsHost			* m_newsHost;
+	nsINNTPHost			* m_newsHost;
 	nsIMsgNewsgroup			* m_newsgroup;
 	nsIMsgOfflineNewsState  * m_offlineNewsState;
 

@@ -18,7 +18,7 @@
 
 #include "msgCore.h"
 #include "nsNNTPNewsgroupList.h"
-#include "nsIMsgNewsHost.h"
+#include "nsINNTPHost.h"
 
 /* XXX - temporary hack so this will compile */
 
@@ -30,7 +30,7 @@ class nsNNTPArticleList
 #endif
 {
 public:
-	nsNNTPArticleList(const nsIMsgNewsHost * newshost,
+	nsNNTPArticleList(const nsINNTPHost * newshost,
                       const nsIMsgNewsgroup* newsgroup);
                                   /* , MSG_Pane *pane); */
     virtual ~nsNNTPArticleList();
@@ -38,7 +38,7 @@ public:
     NS_DECL_ISUPPORTS
   
     // nsINNTPArticleKeysState
-    NS_METHOD Initialize(const nsIMsgNewsHost *newsHost,
+    NS_METHOD Initialize(const nsINNTPHost *newsHost,
                           const nsIMsgNewsgroup *newsgroup);
 	NS_IMETHOD AddArticleKey(PRInt32 key);
 	NS_IMETHOD FinishAddingArticleKeys();
@@ -51,7 +51,7 @@ protected:
 #endif
   /* formerly m_groupName */
 	nsIMsgNewsgroup			*m_newsgroup;
-	nsIMsgNewsHost			*m_host;
+	nsINNTPHost			*m_host;
 #ifdef HAVE_NEWSDB
 	NewsGroupDB				*m_newsDB;
 #endif
@@ -65,7 +65,7 @@ protected:
 	MessageKey				m_highwater;
 };
 
-nsNNTPArticleList::nsNNTPArticleList(const nsIMsgNewsHost* newsHost,
+nsNNTPArticleList::nsNNTPArticleList(const nsINNTPHost* newsHost,
                                      const nsIMsgNewsgroup* newsgroup)
 {
     NS_INIT_REFCNT();
@@ -73,7 +73,7 @@ nsNNTPArticleList::nsNNTPArticleList(const nsIMsgNewsHost* newsHost,
 }
 
 nsresult
-nsNNTPArticleList::Initialize(const nsIMsgNewsHost * newsHost,
+nsNNTPArticleList::Initialize(const nsINNTPHost * newsHost,
                               const nsIMsgNewsgroup* newsgroup)
 {
 	m_host = newsHost;
