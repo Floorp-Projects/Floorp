@@ -473,7 +473,7 @@
 
       <menuitem label="Frequently Reported Bugs" oncommand="loadURI('http://bugzilla.mozilla.org/duplicates.cgi');"/>
       <menuitem label="Bug Writing Guidelines" oncommand="loadURI('http://www.mozilla.org/quality/bug-writing-guidelines.html');"/>
-      <menuitem label="File a Bug" oncommand="loadURI('http://www.mozilla.org/quality/help/bug-form.html');"/>
+      <menuitem label="File a Bug" oncommand="loadURI('http://bugzilla.mozilla.org/enter_bug.cgi?format=guided');"/>
 
       <menuseparator />
 
