@@ -48,6 +48,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 
     if (mXPLookAndFeel)
     {
+        nsresult res;
         res = mXPLookAndFeel->GetColor(aID, aColor);
         if (NS_SUCCEEDED(res))
             return res;
