@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@netscape.com> (original author)
+ *   Andreas Otte <andreas.otte@debitel.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -1533,7 +1534,10 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
                                  &scheme.mPos, &scheme.mLen,
                                  nsnull, nsnull,
                                  nsnull, nsnull);
-    if (NS_FAILED(rv)) return rv;
+
+    // if the parser fails (for example because there is no valid scheme)
+    // reset the scheme and assume a relative url
+    if (NS_FAILED(rv)) scheme.Reset(); 
 
     if (scheme.mLen >= 0) {
         // this URL appears to be absolute
