@@ -139,6 +139,8 @@ Clean:
         pMalloc->Free(pItemIDList); 
     if (pBuffer)
         pMalloc->Free(pBuffer); 
+
+	pMalloc->Release();
 } // GetWindowsFolder
 #endif // XP_PC
 
