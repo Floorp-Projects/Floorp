@@ -978,14 +978,30 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                 rv = trashFolder->GetName(getter_Copies(idlFolderName));
                 if (NS_SUCCEEDED(rv))
                 {
+                    nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+                    nsCOMPtr <nsIDBFolderInfo> transferInfo;
+                    nsCOMPtr <nsIMsgDatabase> db;
+                    trashFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db));
+                    if (dbFolderInfo)
+                      dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
+
                     nsString folderName(idlFolderName);
                     trashFolder->SetParent(nsnull);
                     parentFolder->PropagateDelete(trashFolder, PR_TRUE, msgWindow);
                     parentFolder->CreateSubfolder(folderName.get(),nsnull);
                     nsCOMPtr<nsIMsgFolder> newTrashFolder;
                     rv = GetTrashFolder(getter_AddRefs(newTrashFolder));
+                    db=nsnull;
+                    dbFolderInfo=nsnull;
                     if (NS_SUCCEEDED(rv) && newTrashFolder)
-                      newTrashFolder->UpdateFolder(msgWindow);
+                      newTrashFolder->GetMsgDatabase(msgWindow, getter_AddRefs(db));
+
+                    if (transferInfo && db)
+                    {
+                      db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+                      if (dbFolderInfo)
+                        dbFolderInfo->InitFromTransferInfo(transferInfo);
+                    }
                 }
             }
         }
