@@ -27,7 +27,7 @@ LIBRARY_NAME	= mozreg_s
 
 REQUIRES	= libreg pref js
 
-CSRCS		= reg.c VerReg.c vr_stubs.c mmapio.c
+CSRCS		= reg.c VerReg.c vr_stubs.c 
 
 BIN_SRCS	= VerReg.c reg.c vr_stubs.c
 BIN_OBJS	= $(addprefix R_,$(BIN_SRCS:.c=.o))
@@ -43,6 +43,7 @@ include $(topsrcdir)/config/rules.mk
 # Memory mapped files are not supported under QNX and Neutrino
 ifneq ($(OS_ARCH),QNX)
 DEFINES += -DUSE_MMAP_REGISTRY_IO
+CSRCS += mmapio.c
 endif
 
 # Override gtscc when building vreg on IRIX 5.3.
@@ -64,7 +65,11 @@ else
 ifeq ($(OS_ARCH), OSF1)
 	$(CC) -o $@ $(BIN_OBJS) $(LDFLAGS)
 else
+ifeq ($(OS_TARGET), NTO)
+	$(CC) -o $@ $(BIN_OBJS) $(LDFLAGS)
+else
 	$(CCF) -o $@ $(BIN_OBJS) $(LDFLAGS)
+endif
 endif
 endif
 
