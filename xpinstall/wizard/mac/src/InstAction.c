@@ -38,6 +38,7 @@ pascal void* Install(void* unused)
 	StringPtr		coreFile;
 	THz				ourHZ;
 	Boolean 		isDir = false;
+	GrafPtr			oldPort;
 	
 #if CORRECT_DL_LOCATION == 1
 	/* get "Temporary Items" folder path */
@@ -86,11 +87,21 @@ pascal void* Install(void* unused)
 	/* call SDI_NetInstall */
 	gSDDlg = true;
 	ourHZ = GetZone();
+	GetPort(&oldPort);
 #if SDINST_IS_DLL == 1
 	gInstFunc(&sdistruct);
 #else
 	SDI_NetInstall(&sdistruct);
 #endif
+	SetPort(oldPort);
+	if (gWPtr)
+	{
+		BeginUpdate(gWPtr);
+		DrawControls(gWPtr);
+		ShowLogo(true);
+		UpdateTerminalWin();
+		EndUpdate(gWPtr);
+	}
 	SetZone(ourHZ);
 	gSDDlg = false;
 	
@@ -111,6 +122,8 @@ pascal void* Install(void* unused)
 		err = FSMakeFSSpec(vRefNum, dirID, coreFile, &coreFileSpec);
 		if (err==noErr) /* core file was downloaded */
 		{
+			InitProgressBar();
+			
 			/* extract contents of downloaded core file */
 			err = ExtractCoreFile(vRefNum, dirID);
 			if (err!=noErr) 
@@ -130,7 +143,7 @@ pascal void* Install(void* unused)
 		if (coreFile)
 			DisposePtr((Ptr)coreFile);
 	}
-	
+	 
 	/* wind down app */
 	gDone = true;
 	
@@ -324,6 +337,62 @@ AddKeyToIDI(short key, Handle val, char *ostream)
 	
 	if (keybuf)
 		DisposePtr(keybuf);
+}
+
+void
+InitProgressBar(void)
+{
+	Boolean	indeterminateFlag = true;
+	Rect	r;
+	Str255	extractingStr;
+	GrafPtr	oldPort;
+	GetPort(&oldPort);
+	
+	if (gWPtr)
+	{
+		SetPort(gWPtr);
+		
+		gControls->tw->progressBar = NULL;
+		gControls->tw->progressBar = GetNewControl(rInstProgBar, gWPtr);
+		if (gControls->tw->progressBar)
+		{
+			SetControlData(gControls->tw->progressBar, kControlNoPart, kControlProgressBarIndeterminateTag,
+							sizeof(indeterminateFlag), (Ptr) &indeterminateFlag);
+			Draw1Control(gControls->tw->progressBar);
+			
+			gControls->tw->progressMsg = NULL;
+			HLock((Handle)gControls->tw->progressBar);
+			SetRect(&r, (*gControls->tw->progressBar)->contrlRect.left,
+						(*gControls->tw->progressBar)->contrlRect.top - 42,
+						(*gControls->tw->progressBar)->contrlRect.right,
+						(*gControls->tw->progressBar)->contrlRect.top - 26 );
+			HUnlock((Handle)gControls->tw->progressBar);
+			gControls->tw->progressMsg = TENew(&r, &r);
+			if (gControls->tw->progressMsg)
+			{
+				GetIndString(extractingStr, rStringList, sExtracting);
+				TEInsert(&extractingStr[1], extractingStr[0], gControls->tw->progressMsg);	
+			}
+			
+			TextFace(normal);
+			TextSize(9);
+			TextFont(applFont);	
+			
+			gControls->tw->xpiProgressMsg = NULL;	/* used by XPInstall progress callback */
+			HLock((Handle)gControls->tw->progressBar);
+			SetRect(&r, (*gControls->tw->progressBar)->contrlRect.left,
+						(*gControls->tw->progressBar)->contrlRect.top - 21,
+						(*gControls->tw->progressBar)->contrlRect.right,
+						(*gControls->tw->progressBar)->contrlRect.top - 5 );
+			HUnlock((Handle)gControls->tw->progressBar);
+			gControls->tw->xpiProgressMsg = TENew(&r, &r);
+			
+			TextFont(systemFont);	/* restore systemFont */
+			TextSize(12);
+		}
+	}
+	
+	SetPort(oldPort);
 }
 
 Boolean

@@ -254,7 +254,7 @@ void MainEventLoop(void)
 	THz			ourHZ;
 	
 	while (!gDone) 
-	{	
+	{		
 		if (gSDDlg)			
 			YieldToAnyThread();  /* SmartDownload dialog thread */
 		

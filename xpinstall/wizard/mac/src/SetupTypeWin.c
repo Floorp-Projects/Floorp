@@ -82,7 +82,6 @@ ShowSetupTypeWin(void)
 		HUnlock((Handle)gControls->stw->instType);
 		SetControlMaximum(gControls->stw->instType, gControls->cfg->numSetupTypes);
 		SetControlValue(gControls->stw->instType, gControls->opt->instChoice);
-		//Draw1Control(gControls->stw->instType);
 	
 		// setup type desc TE init and default item desc display
 		HLock((Handle)gControls->stw->instDescBox);
@@ -384,12 +383,13 @@ DrawDiskSpaceMsgs(short vRefNum)
 	HVolumeParam	pb;
 	OSErr			err, reserr;
 	long			freeSpace;
+	short			msglen = 0;
 	TEHandle		dsAvailH, dsNeededH;
 	Rect			instDescBox, viewRect;
 	Handle			instDescRectH;
 	Str255			msg;
 	Str15			kb;
-	char 			*cmsg, *ckb, *cfreeSpace, *cSpaceNeeded;
+	char 			*cstr, *cmsg, *ckb, *cfreeSpace, *cSpaceNeeded;
 	
 	pb.ioCompletion = NULL;
 	pb.ioVolIndex = 0;
@@ -431,23 +431,36 @@ DrawDiskSpaceMsgs(short vRefNum)
 	
 	/* Get the "Disk Space Available: " string */
 	GetIndString( msg, rStringList, sDiskSpcAvail );
-	cmsg = PascalToC(msg);
+	cstr = PascalToC(msg);
+	msglen = strlen(cstr);
+	cmsg = (char*)malloc(msglen+255);
+	strncpy(cmsg, cstr, msglen);
+	cmsg[msglen] = '\0';
 	
 	/* tack on the actual disk space in KB */
 	cfreeSpace = ltoa(freeSpace);
+	msglen += strlen(cfreeSpace);
 	strcat( cmsg, cfreeSpace );
+	cmsg[msglen] = '\0';
 	
 	/* tack on the "kilobyte" string: generally "K" but is rsrc'd */
 	GetIndString( kb, rStringList, sKilobytes );
 	ckb = PascalToC(kb);
+	msglen += strlen(ckb);
 	strcat( cmsg, ckb );
+	cmsg[msglen] = '\0';
 	
 	/* draw the disk space available string */
 	TEInsert( cmsg, strlen(cmsg), dsAvailH );
 	TEUpdate( &viewRect, dsAvailH );
 	
-	/* recycle msg pointer */
-	DisposePtr((char*)cmsg);
+	/* recycle pointers */
+	if (cstr)
+		DisposePtr((Ptr)cstr);
+	if (cmsg)
+		free(cmsg);
+	if (ckb)
+		DisposePtr((Ptr)ckb);
 	
 	SetRect( &viewRect, instDescBox.right - 150, instDescBox.bottom + 2,
 						instDescBox.right, instDescBox.bottom + 12 );
@@ -461,16 +474,24 @@ DrawDiskSpaceMsgs(short vRefNum)
 	
 	/* Get the "Disk Space Needed: " string */
 	GetIndString( msg, rStringList, sDiskSpcNeeded );
-	cmsg = PascalToC(msg);
+	cstr = PascalToC(msg);
+	msglen = strlen(cstr);
+	cmsg = (char*)malloc(msglen+255);
+	strncpy(cmsg, cstr, msglen);
+	cmsg[msglen] = '\0';
 	
 	/* tack on space needed in KB */
 	cSpaceNeeded = DiskSpaceNeeded();
+	msglen += strlen(cSpaceNeeded);
 	strcat( cmsg, cSpaceNeeded );
+	cmsg[msglen] = '\0';
 	
 	/* tack on the "kilobyte" string: generally "K" but is rsrc'd */
 	GetIndString( kb, rStringList, sKilobytes );
 	ckb = PascalToC(kb);
+	msglen += strlen(ckb);
 	strcat( cmsg, ckb );
+	cmsg[msglen] = '\0';
 	
 	/* draw the disk space available string */
 	TEInsert( cmsg, strlen(cmsg), dsNeededH );
@@ -486,9 +507,11 @@ DrawDiskSpaceMsgs(short vRefNum)
 	if (cSpaceNeeded)
 		free(cSpaceNeeded);		// malloc'd, not NewPtrClear'd
 	if (cfreeSpace)
-		free(cfreeSpace);		// malloc'd, not NewPtrClear'd
+		free(cfreeSpace);
+	if (cstr)
+		DisposePtr((Ptr)cstr);
 	if (cmsg)
-		DisposePtr((Ptr)cmsg);
+		free(cmsg);
 	TextFont(systemFont);
 	TextSize(12);
 }

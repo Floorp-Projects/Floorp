@@ -96,7 +96,7 @@ if (err) 								\
 #define END_SECTION		']'
 #define KV_DELIM		'='
 
-#define TEMP_DIR		"\pTemp NSInstall"
+#define TEMP_DIR		"\pTemp NSInstall"	// XXX must go away (wrong dl location)
 
 #define kScrollBarPad	3		/* constants */	
 #define kTxtRectPad		5
@@ -125,7 +125,8 @@ if (err) 								\
 #define	kSelected		1
 #define kNotInSetupType 0	
 #define kInSetupType	1	
-#define kMaxCoreFiles	256		/* end constants */
+#define kMaxCoreFiles	256		
+#define kMaxProgUnits	100.0	/* end constants */
 
 
 #define rRootWin 		128		/* widget rsrc ids */
@@ -150,6 +151,7 @@ if (err) 								\
 #define rCompDescBox	151
 
 #define rStartMsgBox	160
+#define rInstProgBar	161
 
 #define rMBar			128		/* menu rsrc ids */
 #define mApple			150
@@ -188,7 +190,11 @@ if (err) 								\
 #define sFolderDlgMsg	18
 #define sDiskSpcAvail	19
 #define sDiskSpcNeeded	20		
-#define sKilobytes		21 		/* end i18n strings */
+#define sKilobytes		21 		
+#define sExtracting		23		
+#define sInstalling		24
+#define	sFileSp			25
+#define sSpOfSp			26		/* end i18n strings */
 
 
 #define rParseKeys		141		/* parse keys in config.ini */
@@ -341,8 +347,11 @@ typedef struct CompWin {
 } CompWin;
 
 typedef struct TermWin {
-	TEHandle	startMsg;		
-	Rect		startMsgBox;
+	TEHandle		startMsg;		
+	Rect			startMsgBox;
+	ControlHandle	progressBar;
+	TEHandle 		progressMsg;
+	TEHandle		xpiProgressMsg;
 } TermWin;
 
 typedef struct InstWiz {
@@ -441,7 +450,7 @@ void		EnableLicenseWin(void);
 void		DisableLicenseWin(void);
 void		InitLicTxt(void);
 void		ShowTxt(void);
-void		ShowLogo(void);
+void		ShowLogo(Boolean);
 void		InitScrollBar(ControlHandle);
 pascal void	DoScrollProc(ControlHandle, short);
 void		CalcChange(ControlHandle, short *);
@@ -504,6 +513,7 @@ void		DisableTerminalWin(void);
 pascal void *Install(void*);
 Boolean 	GenerateIDIFromOpt(Str255, long, short, FSSpec *);
 void		AddKeyToIDI(short, Handle, char *);
+void		InitProgressBar(void);
 Boolean		InitSDLib(void);
 Boolean		LoadSDLib(FSSpec, SDI_NETINSTALL *, EventProc *, CFragConnectionID *);
 Boolean		UnloadSDLib(CFragConnectionID *);

@@ -150,7 +150,7 @@ void HandleUpdateEvt(EventRecord* evt)
 	{
 		BeginUpdate( gWPtr );
 		DrawControls( gWPtr );
-		ShowLogo();
+		ShowLogo(false);
 	
 		switch(gCurrWin)
 		{

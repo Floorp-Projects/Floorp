@@ -76,7 +76,7 @@ ShowLicenseWin(void)
 	ShowControl( gControls->lw->licBox);
 	ShowTxt();
 	InitScrollBar( gControls->lw->scrollBar);
-	ShowLogo();
+	ShowLogo(false);
 	
 	SetPort(oldPort);
 }
@@ -209,7 +209,7 @@ ShowTxt(void)
 }
 
 void
-ShowLogo(void)
+ShowLogo(Boolean bEraseRect)
 {
 	short 		reserr;
 	Rect 		derefd, logoRect;
@@ -235,7 +235,12 @@ ShowLogo(void)
 				HUnlock(logoRectH);
 				reserr = ResError();
 				if (reserr == noErr)
-				{		
+				{
+					if (bEraseRect)
+					{
+						EraseRect(&logoRect);
+						InvalRect(&logoRect);
+					}
 					DrawPicture(logoPicH, &logoRect);
 					ReleaseResource((Handle)logoPicH);
 				}
