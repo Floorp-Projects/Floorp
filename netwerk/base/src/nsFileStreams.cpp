@@ -71,6 +71,7 @@
 #include "nsDirectoryIndexStream.h"
 #include "nsMimeTypes.h"
 #include "nsReadLine.h"
+#include "nsFileTransportService.h"
 
 #define NS_NO_INPUT_BUFFERING 1 // see http://bugzilla.mozilla.org/show_bug.cgi?id=41067
 
@@ -211,12 +212,16 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
         *contentLength = -1;
     }
     else {
-        nsCOMPtr<nsIMIMEService> mimeServ (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
-        if (NS_SUCCEEDED(rv)) {
-            rv = mimeServ->GetTypeFromFile(mFile, contentType);
+        nsIMIMEService* mimeServ = nsnull;
+        nsFileTransportService* fileTransportService = nsFileTransportService::GetInstance();
+        if (fileTransportService) {
+            mimeServ = fileTransportService->GetCachedMimeService();
+            if (mimeServ) {
+                rv = mimeServ->GetTypeFromFile(mFile, contentType);
+            }
         }
-	
-        if (NS_FAILED(rv)) {
+        
+        if (!mimeServ || (NS_FAILED(rv))) {
             // if all else fails treat it as text/html?
             *contentType = nsCRT::strdup(UNKNOWN_CONTENT_TYPE);
             if (*contentType == nsnull)

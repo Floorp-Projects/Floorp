@@ -41,6 +41,7 @@
 #include "nsIFileTransportService.h"
 #include "nsIThreadPool.h"
 #include "nsSupportsArray.h"
+#include "nsIMIMEService.h"
 
 #define NS_FILE_TRANSPORT_WORKER_COUNT_MIN  1
 #define NS_FILE_TRANSPORT_WORKER_COUNT_MAX  4//16
@@ -60,6 +61,10 @@ public:
 
     nsresult Init();
 
+    static nsFileTransportService *GetInstance() { return mInstance; }
+
+    nsIMIMEService* GetCachedMimeService();
+
     PRInt32   mConnectedTransports;
     PRInt32   mTotalTransports;
     PRInt32   mInUseTransports;
@@ -70,9 +75,11 @@ public:
     nsSupportsArray mSuspendedTransportList;
     
 protected:
-    PRBool                      mShuttingDown;
-    nsCOMPtr<nsIThreadPool>     mPool;
-    PRLock*                     mLock;
+    PRBool                          mShuttingDown;
+    nsCOMPtr<nsIThreadPool>         mPool;
+    PRLock*                         mLock;
+    nsCOMPtr<nsIMIMEService>        mMimeService;
+    static nsFileTransportService*  mInstance;
 };
 
 #endif /* nsFileTransportService_h___ */
