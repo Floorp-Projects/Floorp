@@ -349,20 +349,55 @@ static void testICG(World &world)
     delete icm;
 }
 
-static float64 testFunctionCall(float64 n)
+static float64 testFunctionCall(World &world, float64 n)
 {
     uint32 position = 0;
-    ICodeGenerator icg;
+    StringAtom& global = world.identifiers[widenCString("global")];
+    StringAtom& sum = world.identifiers[widenCString("sum")];
 
+    ICodeGenerator fun;
     // function sum(n) { if (n > 1) return 1 + sum(n - 1); else return 1; }
     // n is bound to var #0.
-    icg.beginStatement(position);
-    icg.loadVariable(0);
+    fun.beginStatement(position);
+    Register r1 = fun.op(COMPARE_GT, fun.loadVariable(0), fun.loadImmediate(1.0));
+    fun.beginIfStatement(position, r1);
+    fun.beginStatement(position);
+    r1 = fun.op(SUBTRACT, fun.loadVariable(0), fun.loadImmediate(1.0));
+    RegisterList args(1);
+    args[0] = r1;
+    r1 = fun.call(fun.loadName(sum), args);
+    fun.returnStatement(fun.op(ADD, fun.loadImmediate(1.0), r1));
+    fun.beginElseStatement(true);
+    fun.beginStatement(position);
+    fun.returnStatement(fun.loadImmediate(1.0));
+    fun.endIfStatement();
 
-    return 0.0;    
+    ICodeModule *funCode = fun.complete();
+    std::cout << fun;
+
+    // now a script : 
+    // return sum(n);
+    ICodeGenerator script;
+    script.beginStatement(position);
+    r1 = script.loadName(sum);
+    RegisterList args_2(1);
+    args_2[0] = script.loadImmediate(n);
+    script.returnStatement(script.call(r1, args_2));
+
+    std::cout << script;
+
+
+    // preset the global property "sum" to contain the above function
+    JSValue v(funCode);
+    addGlobalProperty(widenCString("sum"), v);
+
+    JSValue result = interpret(script.complete(), JSValues());
+    std::cout << "sum(" << n << ") = " << result.f64 << std::endl;
+
+    return result.f64;    
 }
 
-static float64 testFactorial(float64 n)
+static float64 testFactorial(World &world, float64 n)
 {
 	// generate code for factorial, and interpret it.
     uint32 position = 0;
@@ -402,10 +437,22 @@ static float64 testFactorial(float64 n)
     ICodeModule *icm = icg.complete();
     std::cout << icg;
 
+     // preset the global property "fact" to contain the above function
+    StringAtom& fact = world.identifiers[widenCString("fact")];
+    JSValue v(icm);
+    addGlobalProperty(fact, v);
+
+    // now a script : 
+    // return fact(n);
+    ICodeGenerator script;
+    script.beginStatement(position);
+    RegisterList args(1);
+    args[0] = script.loadImmediate(n);
+    script.returnStatement(script.call(script.loadName(fact), args));
+    std::cout << script;
+
     // test the iCode interpreter.
-    JSValues args(1);
-    args[0] = JSValue(n);
-    JSValue result = interpret(icm, args);
+    JSValue result = interpret(script.complete(), JSValues());
     std::cout << "fact(" << n << ") = " << result.f64 << std::endl;
     
     delete icm;
@@ -433,6 +480,7 @@ static float64 testObjects(World &world, int32 n)
     StringAtom& array = world.identifiers[widenCString("array")];
     initCG.beginStatement(position);
     initCG.saveName(array, initCG.newArray());
+    initCG.returnStatement();
 
     ICodeModule* initCode = initCG.complete();
     
@@ -483,9 +531,10 @@ int main(int argc, char **argv)
   #endif
 	World world;
   #if 1
-    assert(testFactorial(5) == 120);
+    assert(testFactorial(world, 5) == 120);
     assert(testObjects(world, 5) == 5);
-    testICG(world);
+//    testICG(world);
+    testFunctionCall(world, 5);
   #endif
 	readEvalPrint(stdin, world);
     return 0;

@@ -30,6 +30,7 @@
 namespace JavaScript {
 
     typedef uint32 Register;
+    enum { NotARegister = 0xFFFFFFFF };
 
     typedef std::vector<Register> RegisterList;
 
@@ -179,6 +180,7 @@ namespace JavaScript {
 
     class Return : public Instruction_1<Register> {
     public:
+        Return() : Instruction_1<Register>(RETURN, NotARegister) { }
         Return(Register result) : Instruction_1<Register>(RETURN, result) { }
     };
 
@@ -287,6 +289,7 @@ namespace JavaScript {
 
         Register op(ICodeOp op, Register source);
         Register op(ICodeOp op, Register source1, Register source2);
+        Register call(Register target, RegisterList args);
 
         Register compare(ICodeOp op, Register source1, Register source2);
  
@@ -322,7 +325,8 @@ namespace JavaScript {
         // expression statements
         void beginStatement(uint32 /*pos*/)                 { resetTopRegister(); }
     
-        void returnStatement(Register result);
+        void returnStatement()                              { iCode->push_back(new Return()); }
+        void returnStatement(Register result)               { iCode->push_back(new Return(result)); }
 
         void beginWhileStatement(uint32 pos);
         void endWhileExpression(Register condition);

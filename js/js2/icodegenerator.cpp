@@ -167,6 +167,14 @@ namespace JavaScript {
         return dest;
     }
 
+    Register ICodeGenerator::call(Register target, RegisterList args)
+    {
+        Register dest = getRegister();
+        Call *instr = new Call(dest, target, args);
+        iCode->push_back(instr);
+        return dest;
+    }
+
     void ICodeGenerator::branch(Label *label)
     {
         Branch *instr = new Branch(BRANCH, label);
@@ -555,12 +563,6 @@ namespace JavaScript {
         }
         NOT_REACHED("no continue target available");
     }
-
-    void ICodeGenerator::returnStatement(Register result)
-    {
-        Return *instr = new Return(result);
-        iCode->push_back(instr);
-    }
     
     /***********************************************************************************************/
 
@@ -597,7 +599,8 @@ namespace JavaScript {
             "branch_ne",
             "branch_ge",
             "branch_gt",
-            "return"
+            "return",
+            "call"
     };
 
     std::ostream &operator<<(std::ostream &s, StringAtom &str)
@@ -727,10 +730,24 @@ namespace JavaScript {
                          s << "R" << t->itsOperand1 << ", R" << t->itsOperand2;
                     }
                     break;
+                case CALL :
+                    {
+                         Call *t = static_cast<Call * >(instr);
+                         s << "R" << t->itsOperand1 << ", R" << t->itsOperand2 << "(";
+                         RegisterList args = t->itsOperand3;
+                         for (RegisterList::iterator r = args.begin(); r != args.end(); r++) {
+                             s << "R" << (*r);
+                             if ((r + 1) != args.end())
+                                 s << ", ";
+                         }
+                         s << ")";
+                    }
+                    break;
                 case RETURN :
                     {
                          Return *t = static_cast<Return * >(instr);
-                         s << "R" << t->itsOperand1;
+                         if (t->itsOperand1 != NotARegister)
+                            s << "R" << t->itsOperand1;
                     }
                     break;
             }

@@ -53,10 +53,12 @@ namespace JavaScript {
         float64 f64;
         JSObject* object;
         JSArray* array;
+        ICodeModule *icm;
 
         JSValue() : f64(0.0) {}
 
         explicit JSValue(float64 f64) : f64(f64) {}
+        JSValue(ICodeModule *fn) : icm(fn) {}
     };
 	
     /**
@@ -64,7 +66,10 @@ namespace JavaScript {
      */
     typedef std::vector<JSValue, gc_allocator<JSValue> > JSValues;
 
-    JSValue interpret(ICodeModule *iCode, const JSValues& args);
+    JSValue interpret(ICodeModule* iCode, const JSValues& args);
+
+    void addGlobalProperty(String name, JSValue value);
+
 }
 
 #endif /* interpreter_h */
