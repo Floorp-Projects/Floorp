@@ -27,10 +27,10 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/newProfile1_2.dtd" >
 <window 
   xmlns:html="http://www.w3.org/TR/REC-html40"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog wizardPanel"
-	width="500" height="500"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="color-dialog wizardPanel"
+  width="500" height="500"
   orient="vertical"
-	onload="initFields();parent.wizardManager.onPageLoad('newProfile1_2');"> 
+  onload="initFields();parent.wizardManager.onPageLoad('newProfile1_2');"> 
 
 	<script language="javascript" src="chrome://global/content/strres.js"></script>
   <script language="JavaScript" src="chrome://communicator/content/profile/newProfile1_2.js"></script>
