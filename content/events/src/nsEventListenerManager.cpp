@@ -97,6 +97,230 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
+typedef NS_IMETHOD_CALLBACK(nsIDOMEventListener, GenericHandler)(nsIDOMEvent*);
+
+/*
+ * Things here are not as they appear.  Namely, |ifaceListener| below is
+ * not really a pointer to the nsIDOMEventListener interface, and aMethod is
+ * not really a pointer-to-member for nsIDOMEventListener.  They both
+ * actually refer to the event-type-specific listener interface.  The casting
+ * magic allows us to use a single dispatch method.  This relies on the
+ * assumption that nsIDOMEventListener and the event type listener interfaces
+ * have the same object layout and will therefore have compatible
+ * pointer-to-member implementations.
+ */
+
+static nsresult DispatchToInterface(nsIDOMEvent* aEvent,
+                                    nsIDOMEventListener* aListener,
+                                    GenericHandler aMethod,
+                                    const nsIID& aIID,
+                                    PRBool* aHasInterface)
+{
+  nsIDOMEventListener* ifaceListener = nsnull;
+  nsresult rv = NS_OK;
+  aListener->QueryInterface(aIID, (void**) &ifaceListener);
+  if (ifaceListener) {
+    *aHasInterface = PR_TRUE;
+    rv = (ifaceListener->*aMethod)(aEvent);
+    NS_RELEASE(aListener);
+  }
+  return rv;
+}
+
+struct EventDispatchData
+{
+  PRUint32 message;
+  GenericHandler method;
+  PRUint8 bits;
+};
+
+struct EventTypeData
+{
+  const EventDispatchData* events;
+  int                      numEvents;
+  const nsIID*             iid;
+};
+
+#define HANDLER(x) NS_REINTERPRET_CAST(GenericHandler, x)
+
+static const EventDispatchData sMouseEvents[] = {
+  { NS_MOUSE_LEFT_BUTTON_DOWN,   HANDLER(&nsIDOMMouseListener::MouseDown),
+    NS_EVENT_BITS_MOUSE_MOUSEDOWN },
+  { NS_MOUSE_MIDDLE_BUTTON_DOWN, HANDLER(&nsIDOMMouseListener::MouseDown),
+    NS_EVENT_BITS_MOUSE_MOUSEDOWN },
+  { NS_MOUSE_RIGHT_BUTTON_DOWN,  HANDLER(&nsIDOMMouseListener::MouseDown),
+    NS_EVENT_BITS_MOUSE_MOUSEDOWN },
+  { NS_MOUSE_LEFT_BUTTON_UP,     HANDLER(&nsIDOMMouseListener::MouseUp),
+    NS_EVENT_BITS_MOUSE_MOUSEUP },
+  { NS_MOUSE_MIDDLE_BUTTON_UP,   HANDLER(&nsIDOMMouseListener::MouseUp),
+    NS_EVENT_BITS_MOUSE_MOUSEUP },
+  { NS_MOUSE_RIGHT_BUTTON_UP,    HANDLER(&nsIDOMMouseListener::MouseUp),
+    NS_EVENT_BITS_MOUSE_MOUSEUP },
+  { NS_MOUSE_LEFT_CLICK,         HANDLER(&nsIDOMMouseListener::MouseClick),
+    NS_EVENT_BITS_MOUSE_CLICK },
+  { NS_MOUSE_MIDDLE_CLICK,       HANDLER(&nsIDOMMouseListener::MouseClick),
+    NS_EVENT_BITS_MOUSE_CLICK },
+  { NS_MOUSE_RIGHT_CLICK,        HANDLER(&nsIDOMMouseListener::MouseClick),
+    NS_EVENT_BITS_MOUSE_CLICK },
+  { NS_MOUSE_LEFT_DOUBLECLICK,   HANDLER(&nsIDOMMouseListener::MouseDblClick),
+    NS_EVENT_BITS_MOUSE_DBLCLICK },
+  { NS_MOUSE_MIDDLE_DOUBLECLICK, HANDLER(&nsIDOMMouseListener::MouseDblClick),
+    NS_EVENT_BITS_MOUSE_DBLCLICK },
+  { NS_MOUSE_RIGHT_DOUBLECLICK,  HANDLER(&nsIDOMMouseListener::MouseDblClick),
+    NS_EVENT_BITS_MOUSE_DBLCLICK },
+  { NS_MOUSE_ENTER_SYNTH,        HANDLER(&nsIDOMMouseListener::MouseOver),
+    NS_EVENT_BITS_MOUSE_MOUSEOVER },
+  { NS_MOUSE_EXIT_SYNTH,         HANDLER(&nsIDOMMouseListener::MouseOut),
+    NS_EVENT_BITS_MOUSE_MOUSEOUT }
+};
+
+static const EventDispatchData sMouseMotionEvents[] = {
+  { NS_MOUSE_MOVE, HANDLER(&nsIDOMMouseMotionListener::MouseMove),
+    NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE }
+};
+
+static const EventDispatchData sContextMenuEvents[] = {
+  { NS_CONTEXTMENU,     HANDLER(&nsIDOMContextMenuListener::ContextMenu),
+    NS_EVENT_BITS_CONTEXT_MENU },
+  { NS_CONTEXTMENU_KEY, HANDLER(&nsIDOMContextMenuListener::ContextMenu),
+    NS_EVENT_BITS_CONTEXT_MENU }
+};
+
+static const EventDispatchData sCompositionEvents[] = {
+  { NS_COMPOSITION_START,  HANDLER(&nsIDOMCompositionListener::HandleStartComposition),
+    NS_EVENT_BITS_COMPOSITION_START },
+  { NS_COMPOSITION_END,    HANDLER(&nsIDOMCompositionListener::HandleEndComposition),
+    NS_EVENT_BITS_COMPOSITION_END },
+  { NS_COMPOSITION_QUERY,  HANDLER(&nsIDOMCompositionListener::HandleQueryComposition),
+    NS_EVENT_BITS_COMPOSITION_QUERY },
+  { NS_RECONVERSION_QUERY, HANDLER(&nsIDOMCompositionListener::HandleQueryReconversion),
+    NS_EVENT_BITS_COMPOSITION_RECONVERSION }
+};
+
+static const EventDispatchData sTextEvents[] = {
+  {NS_TEXT_EVENT,HANDLER(&nsIDOMTextListener::HandleText),NS_EVENT_BITS_TEXT_TEXT},
+};
+
+static const EventDispatchData sKeyEvents[] = {
+  {NS_KEY_UP,   HANDLER(&nsIDOMKeyListener::KeyUp),   NS_EVENT_BITS_KEY_KEYUP},
+  {NS_KEY_DOWN, HANDLER(&nsIDOMKeyListener::KeyDown), NS_EVENT_BITS_KEY_KEYDOWN},
+  {NS_KEY_PRESS,HANDLER(&nsIDOMKeyListener::KeyPress),NS_EVENT_BITS_KEY_KEYPRESS},
+};
+
+static const EventDispatchData sFocusEvents[] = {
+  {NS_FOCUS_CONTENT,HANDLER(&nsIDOMFocusListener::Focus),NS_EVENT_BITS_FOCUS_FOCUS},
+  {NS_BLUR_CONTENT, HANDLER(&nsIDOMFocusListener::Blur), NS_EVENT_BITS_FOCUS_BLUR }
+};
+
+static const EventDispatchData sFormEvents[] = {
+  {NS_FORM_SUBMIT,  HANDLER(&nsIDOMFormListener::Submit),NS_EVENT_BITS_FORM_SUBMIT},
+  {NS_FORM_RESET,   HANDLER(&nsIDOMFormListener::Reset), NS_EVENT_BITS_FORM_RESET},
+  {NS_FORM_CHANGE,  HANDLER(&nsIDOMFormListener::Change),NS_EVENT_BITS_FORM_CHANGE},
+  {NS_FORM_SELECTED,HANDLER(&nsIDOMFormListener::Select),NS_EVENT_BITS_FORM_SELECT},
+  {NS_FORM_INPUT,   HANDLER(&nsIDOMFormListener::Input), NS_EVENT_BITS_FORM_INPUT}
+};
+
+static const EventDispatchData sLoadEvents[] = {
+  {NS_PAGE_LOAD,   HANDLER(&nsIDOMLoadListener::Load),  NS_EVENT_BITS_LOAD_LOAD},
+  {NS_IMAGE_LOAD,  HANDLER(&nsIDOMLoadListener::Load),  NS_EVENT_BITS_LOAD_LOAD},
+  {NS_SCRIPT_LOAD, HANDLER(&nsIDOMLoadListener::Load),  NS_EVENT_BITS_LOAD_LOAD},
+  {NS_PAGE_UNLOAD, HANDLER(&nsIDOMLoadListener::Unload),NS_EVENT_BITS_LOAD_UNLOAD},
+  {NS_IMAGE_ERROR, HANDLER(&nsIDOMLoadListener::Error), NS_EVENT_BITS_LOAD_ERROR},
+  {NS_SCRIPT_ERROR,HANDLER(&nsIDOMLoadListener::Error), NS_EVENT_BITS_LOAD_ERROR}
+};
+
+static const EventDispatchData sPaintEvents[] = {
+  {NS_PAINT,       HANDLER(&nsIDOMPaintListener::Paint), NS_EVENT_BITS_PAINT_PAINT},
+  {NS_RESIZE_EVENT,HANDLER(&nsIDOMPaintListener::Resize),NS_EVENT_BITS_PAINT_RESIZE},
+  {NS_SCROLL_EVENT,HANDLER(&nsIDOMPaintListener::Scroll),NS_EVENT_BITS_PAINT_SCROLL}
+};
+
+static const EventDispatchData sDragEvents[] = {
+  {NS_DRAGDROP_ENTER,     HANDLER(&nsIDOMDragListener::DragEnter),  NS_EVENT_BITS_DRAG_ENTER},
+  {NS_DRAGDROP_OVER_SYNTH,HANDLER(&nsIDOMDragListener::DragOver),   NS_EVENT_BITS_DRAG_OVER},
+  {NS_DRAGDROP_EXIT_SYNTH,HANDLER(&nsIDOMDragListener::DragExit),   NS_EVENT_BITS_DRAG_EXIT},
+  {NS_DRAGDROP_DROP,      HANDLER(&nsIDOMDragListener::DragDrop),   NS_EVENT_BITS_DRAG_DROP},
+  {NS_DRAGDROP_GESTURE,   HANDLER(&nsIDOMDragListener::DragGesture),NS_EVENT_BITS_DRAG_GESTURE}
+};
+
+static const EventDispatchData sScrollEvents[] = {
+  { NS_SCROLLPORT_OVERFLOW,        HANDLER(&nsIDOMScrollListener::Overflow),
+    NS_EVENT_BITS_SCROLLPORT_OVERFLOW },
+  { NS_SCROLLPORT_UNDERFLOW,       HANDLER(&nsIDOMScrollListener::Underflow),
+    NS_EVENT_BITS_SCROLLPORT_UNDERFLOW },
+  { NS_SCROLLPORT_OVERFLOWCHANGED, HANDLER(&nsIDOMScrollListener::OverflowChanged),
+    NS_EVENT_BITS_SCROLLPORT_OVERFLOWCHANGED }
+};
+
+static const EventDispatchData sXULEvents[] = {
+  { NS_XUL_POPUP_SHOWING,  HANDLER(&nsIDOMXULListener::PopupShowing),
+    NS_EVENT_BITS_XUL_POPUP_SHOWING },
+  { NS_XUL_POPUP_SHOWN,    HANDLER(&nsIDOMXULListener::PopupShown),
+    NS_EVENT_BITS_XUL_POPUP_SHOWN },
+  { NS_XUL_POPUP_HIDING,   HANDLER(&nsIDOMXULListener::PopupHiding),
+    NS_EVENT_BITS_XUL_POPUP_HIDING },
+  { NS_XUL_POPUP_HIDDEN,   HANDLER(&nsIDOMXULListener::PopupHidden),
+    NS_EVENT_BITS_XUL_POPUP_HIDDEN },
+  { NS_XUL_CLOSE,          HANDLER(&nsIDOMXULListener::Close),
+    NS_EVENT_BITS_XUL_CLOSE },
+  { NS_XUL_COMMAND,        HANDLER(&nsIDOMXULListener::Command),
+    NS_EVENT_BITS_XUL_COMMAND },
+  { NS_XUL_BROADCAST,      HANDLER(&nsIDOMXULListener::Broadcast),
+    NS_EVENT_BITS_XUL_BROADCAST },
+  { NS_XUL_COMMAND_UPDATE, HANDLER(&nsIDOMXULListener::CommandUpdate),
+    NS_EVENT_BITS_XUL_COMMAND_UPDATE }
+};
+
+static const EventDispatchData sMutationEvents[] = {
+  { NS_MUTATION_SUBTREEMODIFIED,
+    HANDLER(&nsIDOMMutationListener::SubtreeModified),
+    NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED },
+  { NS_MUTATION_NODEINSERTED,
+    HANDLER(&nsIDOMMutationListener::NodeInserted),
+    NS_EVENT_BITS_MUTATION_NODEINSERTED },
+  { NS_MUTATION_NODEREMOVED,
+    HANDLER(&nsIDOMMutationListener::NodeRemoved),
+    NS_EVENT_BITS_MUTATION_NODEREMOVED },
+  { NS_MUTATION_NODEINSERTEDINTODOCUMENT,
+    HANDLER(&nsIDOMMutationListener::NodeInsertedIntoDocument),
+    NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT },
+  { NS_MUTATION_NODEREMOVEDFROMDOCUMENT,
+    HANDLER(&nsIDOMMutationListener::NodeRemovedFromDocument),
+    NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT },
+  { NS_MUTATION_ATTRMODIFIED,
+    HANDLER(&nsIDOMMutationListener::AttrModified),
+    NS_EVENT_BITS_MUTATION_ATTRMODIFIED },
+  { NS_MUTATION_CHARACTERDATAMODIFIED,
+    HANDLER(&nsIDOMMutationListener::CharacterDataModified),
+    NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED }
+};
+
+#define IMPL_EVENTTYPEDATA(type) \
+{ \
+  s##type##Events, \
+  NS_ARRAY_LENGTH(s##type##Events), \
+  &NS_GET_IID(nsIDOM##type##Listener) \
+}
+ 
+// IMPORTANT: indices match up with eEventArrayType_ enum values
+
+static const EventTypeData sEventTypes[] = {
+  IMPL_EVENTTYPEDATA(Mouse),
+  IMPL_EVENTTYPEDATA(MouseMotion),
+  IMPL_EVENTTYPEDATA(ContextMenu),
+  IMPL_EVENTTYPEDATA(Key),
+  IMPL_EVENTTYPEDATA(Load),
+  IMPL_EVENTTYPEDATA(Focus),
+  IMPL_EVENTTYPEDATA(Form),
+  IMPL_EVENTTYPEDATA(Drag),
+  IMPL_EVENTTYPEDATA(Paint),
+  IMPL_EVENTTYPEDATA(Text),
+  IMPL_EVENTTYPEDATA(Composition),
+  IMPL_EVENTTYPEDATA(XUL),
+  IMPL_EVENTTYPEDATA(Scroll),
+  IMPL_EVENTTYPEDATA(Mutation)
+};
+
 // Strong references to event groups
 nsIDOMEventGroup* gSystemEventGroup;
 nsIDOMEventGroup* gDOM2EventGroup;
@@ -1230,1081 +1454,64 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
      keys which cause window deletion, can destroy this object
      before we're ready. */
   nsCOMPtr<nsIEventListenerManager> kungFuDeathGrip(this);
-  nsAutoString empty;
-  nsVoidArray *listeners;
+  nsString empty;
+  nsVoidArray *listeners = nsnull;
 
-  switch(aEvent->message) {
-    case NS_USER_DEFINED_EVENT:
-      listeners = GetListenersByType(eEventArrayType_Hash, aEvent->userType, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
-        }
-        if (NS_SUCCEEDED(ret)) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, NS_EVENT_BITS_NONE, aFlags);
-            }
-          }
+  if (aEvent->message == NS_CONTEXTMENU || aEvent->message == NS_CONTEXTMENU_KEY) {
+    ret = FixContextMenuEvent(aPresContext, aCurrentTarget, aEvent, aDOMEvent);
+    if (NS_FAILED(ret)) {
+      NS_WARNING("failed to fix context menu event target");
+      ret = NS_OK;
+    }
+  }
+
+  const EventTypeData* typeData = nsnull;
+  const EventDispatchData* dispData = nsnull;
+
+  if (aEvent->message == NS_USER_DEFINED_EVENT) {
+    listeners = GetListenersByType(eEventArrayType_Hash, aEvent->userType, PR_FALSE);
+  } else {
+    for (int i = 0; i < eEventArrayType_Hash; ++i) {
+      typeData = &sEventTypes[i];
+      for (int j = 0; j < typeData->numEvents; ++j) {
+        dispData = &(typeData->events[j]);
+        if (aEvent->message == dispData->message) {
+          listeners = GetListenersByType((EventArrayType)i, nsnull, PR_FALSE);
+          goto found;
         }
       }
-      break;
+    }
+  }
 
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
-    case NS_MOUSE_LEFT_BUTTON_UP:
-    case NS_MOUSE_MIDDLE_BUTTON_UP:
-    case NS_MOUSE_RIGHT_BUTTON_UP:
-    case NS_MOUSE_LEFT_CLICK:
-    case NS_MOUSE_MIDDLE_CLICK:
-    case NS_MOUSE_RIGHT_CLICK:
-    case NS_MOUSE_LEFT_DOUBLECLICK:
-    case NS_MOUSE_MIDDLE_DOUBLECLICK:
-    case NS_MOUSE_RIGHT_DOUBLECLICK:
-    case NS_MOUSE_ENTER_SYNTH:
-    case NS_MOUSE_EXIT_SYNTH:
-      listeners = GetListenersByType(eEventArrayType_Mouse, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
-        }
-        if (NS_OK == ret) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-            
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMMouseListener> mouseListener (do_QueryInterface(ls->mListener));
-              if (mouseListener) {
-                switch(aEvent->message) {
-                  case NS_MOUSE_LEFT_BUTTON_DOWN:
-                  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-                  case NS_MOUSE_RIGHT_BUTTON_DOWN:
-                    ret = mouseListener->MouseDown(*aDOMEvent);
-                    break;
-                  case NS_MOUSE_LEFT_BUTTON_UP:
-                  case NS_MOUSE_MIDDLE_BUTTON_UP:
-                  case NS_MOUSE_RIGHT_BUTTON_UP:
-                    ret = mouseListener->MouseUp(*aDOMEvent);
-                    break;
-                  case NS_MOUSE_LEFT_CLICK:
-                  case NS_MOUSE_MIDDLE_CLICK:
-                  case NS_MOUSE_RIGHT_CLICK:
-                    ret = mouseListener->MouseClick(*aDOMEvent);
-                    break;
-                  case NS_MOUSE_LEFT_DOUBLECLICK:
-                  case NS_MOUSE_MIDDLE_DOUBLECLICK:
-                  case NS_MOUSE_RIGHT_DOUBLECLICK:
-                    ret = mouseListener->MouseDblClick(*aDOMEvent);
-                    break;
-                  case NS_MOUSE_ENTER_SYNTH:
-                    ret = mouseListener->MouseOver(*aDOMEvent);
-                    break;
-                  case NS_MOUSE_EXIT_SYNTH:
-                    ret = mouseListener->MouseOut(*aDOMEvent);
-                    break;
-                  default:
-                    break;
-                }
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = 0;
-                switch(aEvent->message) {
-                  case NS_MOUSE_LEFT_BUTTON_DOWN:
-                  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-                  case NS_MOUSE_RIGHT_BUTTON_DOWN:
-                    subType = NS_EVENT_BITS_MOUSE_MOUSEDOWN;
-                    if (ls->mSubType & NS_EVENT_BITS_MOUSE_MOUSEDOWN) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_MOUSE_LEFT_BUTTON_UP:
-                  case NS_MOUSE_MIDDLE_BUTTON_UP:
-                  case NS_MOUSE_RIGHT_BUTTON_UP:
-                    subType = NS_EVENT_BITS_MOUSE_MOUSEUP;
-                    if (ls->mSubType & NS_EVENT_BITS_MOUSE_MOUSEUP) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_MOUSE_LEFT_CLICK:
-                  case NS_MOUSE_MIDDLE_CLICK:
-                  case NS_MOUSE_RIGHT_CLICK:
-                    subType = NS_EVENT_BITS_MOUSE_CLICK;
-                    if (ls->mSubType & NS_EVENT_BITS_MOUSE_CLICK) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_MOUSE_LEFT_DOUBLECLICK:
-                  case NS_MOUSE_MIDDLE_DOUBLECLICK:
-                  case NS_MOUSE_RIGHT_DOUBLECLICK:
-                    subType = NS_EVENT_BITS_MOUSE_DBLCLICK;
-                    if (ls->mSubType & NS_EVENT_BITS_MOUSE_DBLCLICK) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_MOUSE_ENTER_SYNTH:
-                    subType = NS_EVENT_BITS_MOUSE_MOUSEOVER;
-                    if (ls->mSubType & NS_EVENT_BITS_MOUSE_MOUSEOVER) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_MOUSE_EXIT_SYNTH:
-                    subType = NS_EVENT_BITS_MOUSE_MOUSEOUT;
-                    if (ls->mSubType & NS_EVENT_BITS_MOUSE_MOUSEOUT) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
-                }
-              }
-            }
-          }
+ found:
+  if (listeners) {
+    if (!*aDOMEvent) {
+      if (aEvent->eventStructType == NS_MUTATION_EVENT)
+        ret = NS_NewDOMMutationEvent(aDOMEvent, aPresContext, aEvent);
+      else
+        ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
+    }
+
+    if (NS_SUCCEEDED(ret)) {
+      for (int k = 0; !mListenersRemoved && listeners && k < listeners->Count(); ++k) {
+        nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*, listeners->ElementAt(k));
+        if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
+          // Try the type-specific listener interface
+          PRBool hasInterface = PR_FALSE;
+          if (typeData)
+            ret = DispatchToInterface(*aDOMEvent, ls->mListener,
+                                      dispData->method, *typeData->iid,
+                                      &hasInterface);
+
+          // If it doesn't implement that, call the generic HandleEvent()
+          if (!hasInterface && (ls->mSubType == NS_EVENT_BITS_NONE ||
+                                ls->mSubType & dispData->bits))
+            ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget,
+                                     dispData ? dispData->bits : NS_EVENT_BITS_NONE,
+                                     aFlags);
         }
       }
-      break;
-  
-    case NS_MOUSE_MOVE:
-      listeners = GetListenersByType(eEventArrayType_MouseMotion, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
-        }
-        if (NS_OK == ret) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMMouseMotionListener> mousemlistener (do_QueryInterface(ls->mListener));
-              if (mousemlistener) {
-                switch(aEvent->message) {
-                  case NS_MOUSE_MOVE:
-                    ret = mousemlistener->MouseMove(*aDOMEvent);
-                    break;
-                  default:
-                    break;
-                }
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = 0;
-                switch(aEvent->message) {
-                  case NS_MOUSE_MOVE:
-                    subType = NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE;
-                    if (ls->mSubType & NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
-                }
-              }
-            }
-          }
-        }
-      }
-      break;
-
-    case NS_CONTEXTMENU:
-    case NS_CONTEXTMENU_KEY:
-      listeners = GetListenersByType(eEventArrayType_ContextMenu, nsnull, PR_FALSE);
-      if (listeners) {
-               
-        // If we're here because of the key-equiv for showing context menus, we
-        // have to reset the event target to the currently focused element. Get it
-        // from the focus controller.
-        nsCOMPtr<nsIDOMEventTarget> currentTarget ( aCurrentTarget );
-        nsCOMPtr<nsIDOMElement> currentFocus;
-        nsCOMPtr<nsIDocument> doc;
-        nsCOMPtr<nsIPresShell> shell;
-        if ( aEvent->message == NS_CONTEXTMENU_KEY ) {
-          aPresContext->GetShell(getter_AddRefs(shell));
-          shell->GetDocument(getter_AddRefs(doc));
-          if ( doc ) {
-            nsCOMPtr<nsIScriptGlobalObject> scriptObj;
-            doc->GetScriptGlobalObject(getter_AddRefs(scriptObj));
-            if ( scriptObj ) {
-              nsCOMPtr<nsPIDOMWindow> privWindow = do_QueryInterface(scriptObj);
-              if ( privWindow ) {
-                nsCOMPtr<nsIFocusController> focusController;
-                privWindow->GetRootFocusController(getter_AddRefs(focusController));
-                if ( focusController )
-                  focusController->GetFocusedElement(getter_AddRefs(currentFocus));
-              }
-            }
-          }
-        }
-
-        if (nsnull == *aDOMEvent) {        
-          // If we're here because of the key-equiv for showing context menus, we
-          // have to twiddle with the NS event to make sure the context menu comes
-          // up in the upper left of the relevant content area before we create
-          // the DOM event. Since we never call InitMouseEvent() on the event, 
-          // the client X/Y will be 0,0. We can make use of that if the widget is null.
-          if ( aEvent->message == NS_CONTEXTMENU_KEY )
-            NS_IF_RELEASE(((nsGUIEvent*)aEvent)->widget);   // nulls out widget                          
-
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
-        }
-        
-        if (NS_OK == ret) {
-          // update the target
-          if ( currentFocus ) {
-            // Reset event coordinates relative to focused frame in view
-            nsPoint targetPt;
-            GetCoordinatesFor(currentFocus, aPresContext, shell, targetPt);
-            aEvent->point.x += targetPt.x - aEvent->refPoint.x;
-            aEvent->point.y += targetPt.y - aEvent->refPoint.y;
-            aEvent->refPoint.x = targetPt.x;
-            aEvent->refPoint.y = targetPt.y;
-
-            currentTarget = do_QueryInterface(currentFocus);
-            nsCOMPtr<nsIPrivateDOMEvent> pEvent ( do_QueryInterface(*aDOMEvent) );
-            pEvent->SetTarget ( currentTarget );
-          }
-          
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMContextMenuListener> contextMenuListener (do_QueryInterface(ls->mListener));
-              if (contextMenuListener) {
-                switch(aEvent->message) {
-                  case NS_CONTEXTMENU:
-                  case NS_CONTEXTMENU_KEY:
-                    ret = contextMenuListener->ContextMenu(*aDOMEvent);
-                    break;
-                  default:
-                    break;
-                }
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = 0;
-                switch(aEvent->message) {
-                  case NS_CONTEXTMENU:
-                  case NS_CONTEXTMENU_KEY:
-                    subType = NS_EVENT_BITS_CONTEXT_MENU;
-                    if (ls->mSubType & NS_EVENT_BITS_CONTEXT_MENU) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, currentTarget, subType, aFlags);
-                }
-              }
-            }
-          }
-        }
-      }
-      break;
-
-    case NS_COMPOSITION_START:
-    case NS_COMPOSITION_END:
-    case NS_COMPOSITION_QUERY:
-    case NS_RECONVERSION_QUERY:
-      listeners = GetListenersByType(eEventArrayType_Composition, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,empty,aEvent);
-        }
-        if (NS_OK == ret) {
-          //XXX These were text listeners, seems like they should be composition
-          for(int i=0; !mListenersRemoved && listeners && i<listeners->Count();i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMCompositionListener> compositionListener (do_QueryInterface(ls->mListener));
-              if (compositionListener) {
-                switch (aEvent->message) {
-                  case NS_COMPOSITION_START:
-                    ret = compositionListener->HandleStartComposition(*aDOMEvent);
-                    break;
-                  case NS_COMPOSITION_END: 
-                    ret = compositionListener->HandleEndComposition(*aDOMEvent);
-                    break;
-                  case NS_COMPOSITION_QUERY:
-                    ret = compositionListener->HandleQueryComposition(*aDOMEvent);
-                    break;
-                  case NS_RECONVERSION_QUERY:
-                    ret = compositionListener->HandleQueryReconversion(*aDOMEvent);
-                    break;
-                }
-              }
-            }
-            else {
-              PRBool correctSubType = PR_FALSE;
-              PRUint32 subType = 0;
-              switch(aEvent->message) {
-                case NS_COMPOSITION_START:
-                  subType = NS_EVENT_BITS_COMPOSITION_START;
-                  if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_START) {
-                    correctSubType = PR_TRUE;
-                  }
-                  break;
-                case NS_COMPOSITION_END:
-                  subType = NS_EVENT_BITS_COMPOSITION_END;
-                  if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_END) {
-                    correctSubType = PR_TRUE;
-                  }
-                  break;
-                case NS_COMPOSITION_QUERY:
-                  subType = NS_EVENT_BITS_COMPOSITION_QUERY;
-                  if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_QUERY) {
-                    correctSubType = PR_TRUE;
-                  }
-                  break;
-                default:
-                  break;
-              }
-              if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
-              }
-            }
-          }
-        }
-      }
-      break;
-
-    case NS_TEXT_EVENT:
-      listeners = GetListenersByType(eEventArrayType_Text, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,empty,aEvent);
-        }
-        if (NS_OK == ret) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMTextListener> textListener (do_QueryInterface(ls->mListener));
-              if (textListener) {
-                ret = textListener->HandleText(*aDOMEvent);
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = NS_EVENT_BITS_TEXT_TEXT;
-                if (ls->mSubType & NS_EVENT_BITS_TEXT_TEXT) {
-                  correctSubType = PR_TRUE;
-                }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
-                }
-              }
-            }
-          }
-        }
-      }
-      break;
-
-    case NS_KEY_UP:
-    case NS_KEY_DOWN:
-    case NS_KEY_PRESS:
-      listeners = GetListenersByType(eEventArrayType_Key, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
-        }
-        if (NS_OK == ret) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMKeyListener> keyListener (do_QueryInterface(ls->mListener));
-              if (keyListener) {
-                switch(aEvent->message) {
-                  case NS_KEY_UP:
-                    ret = keyListener->KeyUp(*aDOMEvent);
-                    break;
-                  case NS_KEY_DOWN:
-                    ret = keyListener->KeyDown(*aDOMEvent);
-                    break;
-                  case NS_KEY_PRESS:
-                    ret = keyListener->KeyPress(*aDOMEvent);
-                    break;
-                  default:
-                    break;
-                }
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = 0;
-                switch(aEvent->message) {
-                  case NS_KEY_UP:
-                    subType = NS_EVENT_BITS_KEY_KEYUP;
-                    if (ls->mSubType & NS_EVENT_BITS_KEY_KEYUP) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_KEY_DOWN:
-                    subType = NS_EVENT_BITS_KEY_KEYDOWN;
-                    if (ls->mSubType & NS_EVENT_BITS_KEY_KEYDOWN) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_KEY_PRESS:
-                    subType = NS_EVENT_BITS_KEY_KEYPRESS;
-                    if (ls->mSubType & NS_EVENT_BITS_KEY_KEYPRESS) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
-                }
-              }
-            }
-          }
-        }
-      }
-      break;
-
-    case NS_FOCUS_CONTENT:
-    case NS_BLUR_CONTENT:
-      listeners = GetListenersByType(eEventArrayType_Focus, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
-        }
-        if (NS_OK == ret) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMFocusListener> focusListener (do_QueryInterface(ls->mListener));
-              if (focusListener) {
-                switch(aEvent->message) {
-                  case NS_FOCUS_CONTENT:
-                    ret = focusListener->Focus(*aDOMEvent);
-                    break;
-                  case NS_BLUR_CONTENT:
-                    ret = focusListener->Blur(*aDOMEvent);
-                    break;
-                  default:
-                    break;
-                }
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = 0;
-                switch(aEvent->message) {
-                  case NS_FOCUS_CONTENT:
-                    subType = NS_EVENT_BITS_FOCUS_FOCUS;
-                    if (ls->mSubType & NS_EVENT_BITS_FOCUS_FOCUS) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_BLUR_CONTENT:
-                    subType = NS_EVENT_BITS_FOCUS_BLUR;
-                    if (ls->mSubType & NS_EVENT_BITS_FOCUS_BLUR) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
-                }
-              }
-            }
-          }
-        }
-      }
-      break;
-
-    case NS_FORM_SUBMIT:
-    case NS_FORM_RESET:
-    case NS_FORM_CHANGE:
-    case NS_FORM_SELECTED:
-    case NS_FORM_INPUT:
-      listeners = GetListenersByType(eEventArrayType_Form, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
-        }
-        if (NS_OK == ret) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMFormListener> formListener(do_QueryInterface(ls->mListener));
-              if (formListener) {
-                switch(aEvent->message) {
-                  case NS_FORM_SUBMIT:
-                    ret = formListener->Submit(*aDOMEvent);
-                    break;
-                  case NS_FORM_RESET:
-                    ret = formListener->Reset(*aDOMEvent);
-                    break;
-                  case NS_FORM_CHANGE:
-                    ret = formListener->Change(*aDOMEvent);
-                    break;
-                  case NS_FORM_SELECTED:
-                    ret = formListener->Select(*aDOMEvent);
-                    break;
-                  case NS_FORM_INPUT:
-                    ret = formListener->Input(*aDOMEvent);
-                    break;
-                  default:
-                    break;
-                }
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = 0;
-                switch(aEvent->message) {
-                  case NS_FORM_SUBMIT:
-                    subType = NS_EVENT_BITS_FORM_SUBMIT;
-                    if (ls->mSubType & NS_EVENT_BITS_FORM_SUBMIT) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_FORM_RESET:
-                    subType = NS_EVENT_BITS_FORM_RESET;
-                    if (ls->mSubType & NS_EVENT_BITS_FORM_RESET) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_FORM_CHANGE:
-                    subType = NS_EVENT_BITS_FORM_CHANGE;
-                    if (ls->mSubType & NS_EVENT_BITS_FORM_CHANGE) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_FORM_SELECTED:
-                    subType = NS_EVENT_BITS_FORM_SELECT;
-                    if (ls->mSubType & NS_EVENT_BITS_FORM_SELECT) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_FORM_INPUT:
-                    subType = NS_EVENT_BITS_FORM_INPUT;
-                    if (ls->mSubType & NS_EVENT_BITS_FORM_INPUT) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
-                }
-              }
-            }
-          }
-        }
-      }
-      break;
-
-    case NS_PAGE_LOAD:
-    case NS_PAGE_UNLOAD:
-    case NS_IMAGE_LOAD:
-    case NS_IMAGE_ERROR:
-    case NS_SCRIPT_LOAD:
-    case NS_SCRIPT_ERROR:
-      listeners = GetListenersByType(eEventArrayType_Load, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
-        }
-        if (NS_OK == ret) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMLoadListener> loadListener(do_QueryInterface(ls->mListener));
-              if (loadListener) {
-                switch(aEvent->message) {
-                  case NS_PAGE_LOAD:
-                  case NS_IMAGE_LOAD:
-                  case NS_SCRIPT_LOAD: 
-                    ret = loadListener->Load(*aDOMEvent);
-                    break;
-                  case NS_PAGE_UNLOAD:
-                    ret = loadListener->Unload(*aDOMEvent);
-                    break;
-                  case NS_IMAGE_ERROR:
-                  case NS_SCRIPT_ERROR:
-                    ret = loadListener->Error(*aDOMEvent);
-                  default:
-                    break;
-                }
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = 0;
-                switch(aEvent->message) {
-                  case NS_PAGE_LOAD:
-                  case NS_IMAGE_LOAD:
-                  case NS_SCRIPT_LOAD:
-                    subType = NS_EVENT_BITS_LOAD_LOAD;
-                    if (ls->mSubType & NS_EVENT_BITS_LOAD_LOAD) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_PAGE_UNLOAD:
-                    subType = NS_EVENT_BITS_LOAD_UNLOAD;
-                    if (ls->mSubType & NS_EVENT_BITS_LOAD_UNLOAD) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_IMAGE_ERROR:
-                  case NS_SCRIPT_ERROR:
-                    subType = NS_EVENT_BITS_LOAD_ERROR;
-                    if (ls->mSubType & NS_EVENT_BITS_LOAD_ERROR) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;                    
-                  default:
-                    break;
-                }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
-                }
-              }
-            }
-          }
-        }
-      }
-      break;
-  
-    case NS_PAINT:
-    case NS_RESIZE_EVENT:
-    case NS_SCROLL_EVENT:
-      listeners = GetListenersByType(eEventArrayType_Paint, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
-        }
-        if (NS_OK == ret) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMPaintListener> paintListener(do_QueryInterface(ls->mListener));
-              if (paintListener) {
-                switch(aEvent->message) {
-                  case NS_PAINT:
-                    ret = paintListener->Paint(*aDOMEvent);
-                    break;
-                  case NS_RESIZE_EVENT:
-                    ret = paintListener->Resize(*aDOMEvent);
-                    break;
-                  case NS_SCROLL_EVENT:
-                    ret = paintListener->Scroll(*aDOMEvent);
-                    break;
-                  default:
-                    break;
-                }
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = 0;
-                switch(aEvent->message) {
-                  case NS_PAINT:
-                    subType = NS_EVENT_BITS_PAINT_PAINT;
-                    if (ls->mSubType & NS_EVENT_BITS_PAINT_PAINT) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_RESIZE_EVENT:
-                    subType = NS_EVENT_BITS_PAINT_RESIZE;
-                    if (ls->mSubType & NS_EVENT_BITS_PAINT_RESIZE) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_SCROLL_EVENT:
-                    subType = NS_EVENT_BITS_PAINT_SCROLL;
-                    if (ls->mSubType & NS_EVENT_BITS_PAINT_SCROLL) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
-                }
-              }
-            }
-          }
-        }
-      }
-      break;
-
-    case NS_DRAGDROP_ENTER:
-    case NS_DRAGDROP_OVER_SYNTH:
-    case NS_DRAGDROP_EXIT_SYNTH:
-    case NS_DRAGDROP_DROP:
-    case NS_DRAGDROP_GESTURE:
-      listeners = GetListenersByType(eEventArrayType_Drag, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
-        }
-
-        if (NS_OK == ret) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *dragStruct = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (dragStruct->mFlags & aFlags && dragStruct->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMDragListener> dragListener ( do_QueryInterface(dragStruct->mListener) );
-              if ( dragListener ) {
-                switch (aEvent->message) {
-                  case NS_DRAGDROP_ENTER:
-                    ret = dragListener->DragEnter(*aDOMEvent);
-                    break;
-                  case NS_DRAGDROP_OVER_SYNTH:
-                    ret = dragListener->DragOver(*aDOMEvent);
-                    break;
-                  case NS_DRAGDROP_EXIT_SYNTH:
-                    ret = dragListener->DragExit(*aDOMEvent);
-                    break;
-                  case NS_DRAGDROP_DROP:
-                    ret = dragListener->DragDrop(*aDOMEvent);
-                    break;
-                  case NS_DRAGDROP_GESTURE:
-                    ret = dragListener->DragGesture(*aDOMEvent);
-                    break;
-                } // switch 
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = 0;
-                switch(aEvent->message) {
-                  case NS_DRAGDROP_ENTER:
-                    subType = NS_EVENT_BITS_DRAG_ENTER;
-                    if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_ENTER)
-                      correctSubType = PR_TRUE;
-                    break;
-                  case NS_DRAGDROP_OVER_SYNTH:
-                    subType = NS_EVENT_BITS_DRAG_OVER;
-                    if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_OVER)
-                      correctSubType = PR_TRUE;
-                    break;
-                  case NS_DRAGDROP_EXIT_SYNTH:
-                    subType = NS_EVENT_BITS_DRAG_EXIT;
-                    if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_EXIT)
-                      correctSubType = PR_TRUE;
-                    break;
-                  case NS_DRAGDROP_DROP:
-                    subType = NS_EVENT_BITS_DRAG_DROP;
-                    if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_DROP)
-                      correctSubType = PR_TRUE;
-                    break;
-                  case NS_DRAGDROP_GESTURE:
-                    subType = NS_EVENT_BITS_DRAG_GESTURE;
-                    if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_GESTURE)
-                      correctSubType = PR_TRUE;
-                    break;
-                  default:
-                    break;
-                }
-                if (correctSubType || dragStruct->mSubType == NS_EVENT_BITS_DRAG_NONE)
-                  ret = HandleEventSubType(dragStruct, *aDOMEvent, aCurrentTarget, subType, aFlags);
-              }
-            }
-          }
-        }
-      }
-      break;
-    case NS_SCROLLPORT_OVERFLOW:
-    case NS_SCROLLPORT_UNDERFLOW:
-    case NS_SCROLLPORT_OVERFLOWCHANGED:
-      listeners = GetListenersByType(eEventArrayType_Scroll, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
-        }
-        if (NS_OK == ret) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMScrollListener> scrollListener(do_QueryInterface(ls->mListener));
-              if (scrollListener) {
-                switch(aEvent->message) {
-                  case NS_SCROLLPORT_OVERFLOW:
-                    ret = scrollListener->Overflow(*aDOMEvent);
-                    break;
-                  case NS_SCROLLPORT_UNDERFLOW:
-                    ret = scrollListener->Underflow(*aDOMEvent);
-                    break;
-                  case NS_SCROLLPORT_OVERFLOWCHANGED:
-                    ret = scrollListener->OverflowChanged(*aDOMEvent);
-                    break;
-                  default:
-                    break;
-                }
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = 0;
-                switch(aEvent->message) {
-                  case NS_SCROLLPORT_OVERFLOW:
-                    subType = NS_EVENT_BITS_SCROLLPORT_OVERFLOW;
-                    if (ls->mSubType & NS_EVENT_BITS_SCROLLPORT_OVERFLOW) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_SCROLLPORT_UNDERFLOW:
-                    subType = NS_EVENT_BITS_SCROLLPORT_UNDERFLOW;
-                    if (ls->mSubType & NS_EVENT_BITS_SCROLLPORT_UNDERFLOW) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_SCROLLPORT_OVERFLOWCHANGED:
-                    subType = NS_EVENT_BITS_SCROLLPORT_OVERFLOWCHANGED;
-                    if (ls->mSubType & NS_EVENT_BITS_SCROLLPORT_OVERFLOWCHANGED) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
-                }
-              }
-            }
-          }
-        }
-      }
-      break;
-    case NS_XUL_POPUP_SHOWING:
-    case NS_XUL_POPUP_SHOWN:
-    case NS_XUL_POPUP_HIDING:
-    case NS_XUL_POPUP_HIDDEN:
-    case NS_XUL_CLOSE:
-    case NS_XUL_COMMAND:
-    case NS_XUL_BROADCAST:
-    case NS_XUL_COMMAND_UPDATE:
-      listeners = GetListenersByType(eEventArrayType_XUL, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
-        }
-        if (NS_OK == ret) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMXULListener> xulListener(do_QueryInterface(ls->mListener));
-              if (xulListener) {
-                switch(aEvent->message) {
-                  case NS_XUL_POPUP_SHOWING:
-                    ret = xulListener->PopupShowing(*aDOMEvent);
-                    break;
-                  case NS_XUL_POPUP_SHOWN:
-                    ret = xulListener->PopupShown(*aDOMEvent);
-                    break;
-                  case NS_XUL_POPUP_HIDING:
-                    ret = xulListener->PopupHiding(*aDOMEvent);
-                    break;
-                  case NS_XUL_POPUP_HIDDEN:
-                    ret = xulListener->PopupHidden(*aDOMEvent);
-                    break;
-                  case NS_XUL_CLOSE:
-                    ret = xulListener->Close(*aDOMEvent);
-                    break;
-                  case NS_XUL_COMMAND:
-                    ret = xulListener->Command(*aDOMEvent);
-                    break;
-                  case NS_XUL_BROADCAST:
-                    ret = xulListener->Broadcast(*aDOMEvent);
-                    break;
-                  case NS_XUL_COMMAND_UPDATE:
-                    ret = xulListener->CommandUpdate(*aDOMEvent);
-                    break;
-                  default:
-                    break;
-                }
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = 0;
-                switch(aEvent->message) {
-                  case NS_XUL_POPUP_SHOWING:
-                    subType = NS_EVENT_BITS_XUL_POPUP_SHOWING;
-                    if (ls->mSubType & NS_EVENT_BITS_XUL_POPUP_SHOWING) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_XUL_POPUP_SHOWN:
-                    subType = NS_EVENT_BITS_XUL_POPUP_SHOWN;
-                    if (ls->mSubType & NS_EVENT_BITS_XUL_POPUP_SHOWN) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_XUL_POPUP_HIDING:
-                    subType = NS_EVENT_BITS_XUL_POPUP_HIDING;
-                    if (ls->mSubType & NS_EVENT_BITS_XUL_POPUP_HIDING) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_XUL_POPUP_HIDDEN:
-                    subType = NS_EVENT_BITS_XUL_POPUP_HIDDEN;
-                    if (ls->mSubType & NS_EVENT_BITS_XUL_POPUP_HIDDEN) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_XUL_CLOSE:
-                    subType = NS_EVENT_BITS_XUL_CLOSE;
-                    if (ls->mSubType & NS_EVENT_BITS_XUL_CLOSE) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_XUL_COMMAND:
-                    subType = NS_EVENT_BITS_XUL_COMMAND;
-                    if (ls->mSubType & NS_EVENT_BITS_XUL_COMMAND) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_XUL_BROADCAST:
-                    subType = NS_EVENT_BITS_XUL_BROADCAST;
-                    if (ls->mSubType & NS_EVENT_BITS_XUL_BROADCAST) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_XUL_COMMAND_UPDATE:
-                    subType = NS_EVENT_BITS_XUL_COMMAND_UPDATE;
-                    if (ls->mSubType & NS_EVENT_BITS_XUL_COMMAND_UPDATE) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
-                }
-              }
-            }
-          }
-        }
-      }
-      break;
-
-    case NS_MUTATION_SUBTREEMODIFIED:
-    case NS_MUTATION_NODEINSERTED:
-    case NS_MUTATION_NODEREMOVED:
-    case NS_MUTATION_NODEINSERTEDINTODOCUMENT:
-    case NS_MUTATION_NODEREMOVEDFROMDOCUMENT:
-    case NS_MUTATION_ATTRMODIFIED:
-    case NS_MUTATION_CHARACTERDATAMODIFIED:
-      listeners = GetListenersByType(eEventArrayType_Mutation, nsnull, PR_FALSE);
-      if (listeners) {
-        if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMMutationEvent(aDOMEvent, aPresContext, aEvent);
-        }
-        if (NS_OK == ret) {
-          for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
-            nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
-
-            if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
-              nsCOMPtr<nsIDOMMutationListener> mutationListener = do_QueryInterface(ls->mListener);
-              if (mutationListener) {
-                switch(aEvent->message) {
-                  case NS_MUTATION_SUBTREEMODIFIED:
-                    ret = mutationListener->SubtreeModified(*aDOMEvent);
-                    break;
-                  case NS_MUTATION_NODEINSERTED:
-                    ret = mutationListener->NodeInserted(*aDOMEvent);
-                    break;
-                  case NS_MUTATION_NODEREMOVED:
-                    ret = mutationListener->NodeRemoved(*aDOMEvent);
-                    break;
-                  case NS_MUTATION_NODEINSERTEDINTODOCUMENT:
-                    ret = mutationListener->NodeInsertedIntoDocument(*aDOMEvent);
-                    break;
-                  case NS_MUTATION_NODEREMOVEDFROMDOCUMENT:
-                    ret = mutationListener->NodeRemovedFromDocument(*aDOMEvent);
-                    break;
-                  case NS_MUTATION_ATTRMODIFIED:
-                    ret = mutationListener->AttrModified(*aDOMEvent);
-                    break;
-                  case NS_MUTATION_CHARACTERDATAMODIFIED:
-                    ret = mutationListener->CharacterDataModified(*aDOMEvent);
-                    break;
-                  default:
-                    break;
-                }
-              }
-              else {
-                PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = 0;
-                switch(aEvent->message) {
-                  case NS_MUTATION_SUBTREEMODIFIED:
-                    subType = NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED;
-                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_MUTATION_NODEINSERTED:
-                    subType = NS_EVENT_BITS_MUTATION_NODEINSERTED;
-                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_NODEINSERTED) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_MUTATION_NODEREMOVED:
-                    subType = NS_EVENT_BITS_MUTATION_NODEREMOVED;
-                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_NODEREMOVED) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_MUTATION_NODEINSERTEDINTODOCUMENT:
-                    subType = NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT;
-                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_MUTATION_NODEREMOVEDFROMDOCUMENT:
-                    subType = NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT;
-                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_MUTATION_ATTRMODIFIED:
-                    subType = NS_EVENT_BITS_MUTATION_ATTRMODIFIED;
-                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_ATTRMODIFIED) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_MUTATION_CHARACTERDATAMODIFIED:
-                    subType = NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED;
-                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
-                }
-              }
-            }
-          }
-        }
-      }
-      break;
-
-    default:
-      break;
+    }
   }
 
   // XXX (NS_OK != ret) is going away,
@@ -2771,6 +1978,72 @@ NS_IMETHODIMP
 nsEventListenerManager::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
   return GetSystemEventGroupLM(aGroup);
+}
+
+nsresult
+nsEventListenerManager::FixContextMenuEvent(nsIPresContext* aPresContext,
+                                            nsIDOMEventTarget* aCurrentTarget,
+                                            nsEvent* aEvent,
+                                            nsIDOMEvent** aDOMEvent)
+{
+  // If we're here because of the key-equiv for showing context menus, we
+  // have to reset the event target to the currently focused element. Get it
+  // from the focus controller.
+  nsCOMPtr<nsIDOMEventTarget> currentTarget(aCurrentTarget);
+  nsCOMPtr<nsIDOMElement> currentFocus;
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIPresShell> shell;
+  nsString empty;
+
+  if (aEvent->message == NS_CONTEXTMENU_KEY) {
+    aPresContext->GetShell(getter_AddRefs(shell));
+    shell->GetDocument(getter_AddRefs(doc));
+    if (doc) {
+      nsCOMPtr<nsIScriptGlobalObject> scriptObj;
+      doc->GetScriptGlobalObject(getter_AddRefs(scriptObj));
+      if (scriptObj) {
+        nsCOMPtr<nsPIDOMWindow> privWindow = do_QueryInterface(scriptObj);
+        if (privWindow) {
+          nsCOMPtr<nsIFocusController> focusController;
+          privWindow->GetRootFocusController(getter_AddRefs(focusController));
+          if (focusController)
+            focusController->GetFocusedElement(getter_AddRefs(currentFocus));
+        }
+      }
+    }
+  }
+
+  nsresult ret = NS_OK;
+
+  if (nsnull == *aDOMEvent) {        
+    // If we're here because of the key-equiv for showing context menus, we
+    // have to twiddle with the NS event to make sure the context menu comes
+    // up in the upper left of the relevant content area before we create
+    // the DOM event. Since we never call InitMouseEvent() on the event, 
+    // the client X/Y will be 0,0. We can make use of that if the widget is null.
+    if (aEvent->message == NS_CONTEXTMENU_KEY)
+      NS_IF_RELEASE(((nsGUIEvent*)aEvent)->widget);   // nulls out widget
+    ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
+  }
+
+  if (NS_SUCCEEDED(ret)) {
+    // update the target
+    if (currentFocus) {
+      // Reset event coordinates relative to focused frame in view
+      nsPoint targetPt;
+      GetCoordinatesFor(currentFocus, aPresContext, shell, targetPt);
+      aEvent->point.x += targetPt.x - aEvent->refPoint.x;
+      aEvent->point.y += targetPt.y - aEvent->refPoint.y;
+      aEvent->refPoint.x = targetPt.x;
+      aEvent->refPoint.y = targetPt.y;
+
+      currentTarget = do_QueryInterface(currentFocus);
+      nsCOMPtr<nsIPrivateDOMEvent> pEvent(do_QueryInterface(*aDOMEvent));
+      pEvent->SetTarget (currentTarget);
+    }
+  }
+
+  return ret;
 }
 
 void nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl, 
