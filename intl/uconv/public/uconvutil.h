@@ -70,7 +70,6 @@ typedef enum {
         u2BytesGRPrefix8EA7Charset,
         u1ByteGLCharset,
         uDecomposedHangulCharset,
-        uDecomposedHangulGLCharset,
         uJohabHangulCharset,
         uJohabSymbolCharset,
         u4BytesGB18030Charset,

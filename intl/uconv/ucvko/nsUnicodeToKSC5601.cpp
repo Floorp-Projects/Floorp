@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jungshik Shin <jshin@mailaps.org>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -43,34 +44,18 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static const PRUint16 g2BytesShiftTable[] =  {
+static const PRUint16 g_2BytesShiftTable[] =  {
   0, u2BytesCharset,  
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-
-static const PRUint16 gDecomposedHangulShiftTable[] =  {
-  0, uDecomposedHangulGLCharset,
-  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
-};
-
-static const PRUint16 *g_MappingTable[3] = {
-  g_ufKSC5601Mapping,
-  g_HangulNullMapping
-};
-
-static const PRUint16 *g_ShiftTable[3] =  {
-  g2BytesShiftTable,
-  gDecomposedHangulShiftTable
 };
 
 NS_METHOD
 nsUnicodeToKSC5601Constructor(nsISupports *aOuter, REFNSIID aIID,
                               void **aResult)
 {
-  return CreateMultiTableEncoder(2,
-                                 (uShiftTable**) g_ShiftTable, 
-                                 (uMappingTable**) g_MappingTable,
-                                 8 /* max length = src * 8 */,
-                                 aOuter, aIID, aResult);
+  return CreateTableEncoder((uShiftTable*) g_2BytesShiftTable, 
+                             (uMappingTable*) g_ufKSC5601Mapping,
+                             2 /* max length = src * 2 */,
+                             aOuter, aIID, aResult);
 }
 
