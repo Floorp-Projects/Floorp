@@ -323,9 +323,6 @@ public:
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
-  nsresult CreatePluginHost(PRBool aAllowPlugins);
-  nsresult DestroyPluginHost(void);
-
   NS_IMETHOD SetSessionHistory(nsISessionHistory * aSHist);
   NS_IMETHOD GetSessionHistory(nsISessionHistory *& aResult);
   NS_IMETHOD SetIsInSHist(PRBool aIsFrame);
@@ -388,9 +385,6 @@ protected:
                         const char* aContentType,
                         const char* aCommand,
                         nsIStreamListener** aResult);
-  static nsIPluginHost    *mPluginHost;
-  static nsIPluginManager *mPluginManager;
-  static PRUint32          mPluginInitCnt;
   PRBool mProcessedEndDocumentLoad;
 
   MOZ_TIMER_DECLARE(mTotalTime)
@@ -448,60 +442,6 @@ static NS_DEFINE_CID(kCDOMRangeCID,           NS_RANGE_CID);
 // XXX not sure
 static NS_DEFINE_IID(kILinkHandlerIID,        NS_ILINKHANDLER_IID);
 
-nsIPluginHost *nsWebShell::mPluginHost = nsnull;
-nsIPluginManager *nsWebShell::mPluginManager = nsnull;
-PRUint32 nsWebShell::mPluginInitCnt = 0;
-
-nsresult nsWebShell::CreatePluginHost(PRBool aAllowPlugins)
-{
-  nsresult rv = NS_OK;
-
-  if ((PR_TRUE == aAllowPlugins) && (0 == mPluginInitCnt))
-  {
-    if (nsnull == mPluginManager)
-    {
-      // use the service manager to obtain the plugin manager.
-      rv = nsServiceManager::GetService(kCPluginManagerCID, kIPluginManagerIID,
-                                        (nsISupports**)&mPluginManager);
-      if (NS_OK == rv)
-      {
-        if (NS_OK == mPluginManager->QueryInterface(kIPluginHostIID,
-                                                    (void **)&mPluginHost))
-        {
-          mPluginHost->Init();
-        }
-      }
-    }
-  }
-
-  mPluginInitCnt++;
-
-  return rv;
-}
-
-nsresult nsWebShell::DestroyPluginHost(void)
-{
-  mPluginInitCnt--;
-
-  NS_ASSERTION(!(mPluginInitCnt < 0), "underflow in plugin host destruction");
-
-  if (0 == mPluginInitCnt)
-  {
-    if (nsnull != mPluginHost) {
-      mPluginHost->Destroy();
-      mPluginHost->Release();
-      mPluginHost = NULL;
-    }
-
-    // use the service manager to release the plugin manager.
-    if (nsnull != mPluginManager) {
-      nsServiceManager::ReleaseService(kCPluginManagerCID, mPluginManager);
-      mPluginManager = NULL;
-    }
-  }
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 
@@ -576,9 +516,6 @@ nsWebShell::~nsWebShell()
     nsString* s = (nsString*) mHistory.ElementAt(i);
     delete s;
   }
-
-
-  DestroyPluginHost();
 
 #ifdef DETECT_WEBSHELL_LEAKS
   // We're counting the number of |nsWebShells| to help find leaks
@@ -710,8 +647,6 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
          aInstancePtr), NS_ERROR_FAILURE);
       return NS_OK;
       }
-   else if(mPluginManager) //XXX this seems a little wrong. MMP
-      rv = mPluginManager->QueryInterface(aIID, aInstancePtr); 
 
    if (!*aInstancePtr || NS_FAILED(rv))
      return nsDocShell::GetInterface(aIID,aInstancePtr);
@@ -2627,11 +2562,6 @@ NS_IMETHODIMP nsWebShell::Create()
 
   NS_ENSURE_SUCCESS(eventService->GetThreadEventQueue(NS_CURRENT_THREAD,
    &mThreadEventQueue), NS_ERROR_FAILURE);
-
-  //XXX make sure plugins have started up. this really needs to
-  //be associated with the nsIContentViewerContainer interfaces,
-  //not the nsIWebShell interfaces. this is a hack. MMP
-  CreatePluginHost(mAllowPlugins);
 
   WEB_TRACE(WEB_TRACE_CALLS,
             ("nsWebShell::Init: this=%p", this));
