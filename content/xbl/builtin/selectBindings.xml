@@ -246,8 +246,11 @@
             this._selectArray.push(this.childNodes[val]);
              
             var textDisplayNode = this.getElementByAttribute("selectattr", "text");  
-            if (textDisplayNode)
-              textDisplayNode.setAttribute("value", this.childNodes[val].text);
+            if (textDisplayNode) { 
+              var text = this.childNodes[val].text;
+              text = text.replace(/\n/g, "");
+              textDisplayNode.setAttribute("value", text);
+            }
           }
           
           return val;    
@@ -302,9 +305,6 @@
           var menuBox = boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
           menuBox.activeChild = this._selectArray[0];
         }
-
-        if (this._selectArray[0])
-          this.childNodes[this.selectedIndex].setAttribute("menuactive", "true");
       ]]>
       </handler>
       <handler event="mouseover">

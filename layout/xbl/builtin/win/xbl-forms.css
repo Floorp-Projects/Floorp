@@ -22,6 +22,7 @@
 @import url(resource:/res/builtin/textfields.css);
 @import url(resource:/res/builtin/buttons.css);
 @import url(resource:/res/builtin/select.css);
+@import url(resource:/res/builtin/checkbox.css);
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
  
@@ -31,9 +32,8 @@
 
 /* widgets will be removed from this as their XBL counterparts are implemented */ 
 input[type="image"], 
-input[type="checkbox"], 
 input[type="radio"], 
-fieldset, legend, select {
+fieldset, legend {
   display                 : none; 
 }
 
@@ -107,6 +107,11 @@ select optgroup, select[size="1"] optgroup
 select option, select[size="1"] option
   {
     -moz-binding          : url("resource:///res/builtin/platformSelectBindings.xml#option");
+  }   
+  
+input[type="checkbox"]
+  {
+    -moz-binding          : url("resource:///res/builtin/platformCheckboxBindings.xml#checkbox");
   }   
   
   
