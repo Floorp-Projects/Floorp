@@ -36,7 +36,7 @@
 <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
    flex="100%" style="height: 100%"
    datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch" 
-   ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
+   ondblclick="return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');">
 
   <!-- Commented out until new tree content model and template builder can play nice -->
   <template>
