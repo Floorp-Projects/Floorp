@@ -298,14 +298,25 @@ static float64 testFunctionCall(World &world, float64 n)
     return result.f64;    
 }
 
+/**
+ * Poor man's instruction tracing facility.
+ */
 class Tracer : public Context::Listener {
     typedef InstructionStream::difference_type InstructionOffset;
     void listen(Context* /*context*/, InstructionIterator pc,
-                JSValues* /*registers*/, ICodeModule* iCode)
+                JSValues* registers, ICodeModule* iCode)
     {
         InstructionOffset offset = (pc - iCode->its_iCode->begin());
         printFormat(stdOut, "%04X: ", offset);
-        stdOut << **pc << '\n';
+        Instruction* i = *pc;
+        stdOut << *i;
+        if (i->count() > 0) {
+            stdOut << " [";
+            i->printOperands(stdOut, *registers);
+            stdOut << "]\n";
+        } else {
+            stdOut << '\n';
+        }
     }
 };
 
