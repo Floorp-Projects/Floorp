@@ -18,18 +18,18 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-
-IDLSRCS =                                       \
-			nsIMsgHost.idl						\
-			nsIMsgFolder.idl					\
-			nsIFolder.idl						\
-			nsIFolderListener.idl				\
-			nsIMsgGroupRecord.idl				\
-			nsICopyMessageListener.idl			\
-			nsIMsgIncomingServer.idl			\
-			nsIMsgThread.idl					\
-			nsIMsgMessageService.idl			\
-			nsIMessage.idl						\
+NO_GEN_XPT=1
+XPIDLSRCS =                                       \
+			.\nsIMsgHost.idl						\
+			.\nsIMsgFolder.idl					\
+			.\nsIFolder.idl						\
+			.\nsIFolderListener.idl				\
+			.\nsIMsgGroupRecord.idl				\
+			.\nsIMsgIncomingServer.idl			\
+			.\nsIMsgThread.idl					\
+			.\nsIMsgMessageService.idl			\
+			.\nsIDOMMsgAppcore.idl				\
+			.\nsIUrlListener.idl				\
 			$(NULL)
 
 EXPORTS =                           \
