@@ -58,6 +58,6 @@ Moz::StopForErrors();
 #Moz::DontStopForErrors();
 
 #OpenErrorLog("::NGLayoutBuildLog");
-OpenErrorLog(":::Mozilla.BuildLog");		# Tinderbox requires that name
+OpenErrorLog("NGLayoutPullLog");		# Tinderbox requires that name
 
 Checkout();
