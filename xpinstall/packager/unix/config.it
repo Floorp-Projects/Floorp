@@ -48,7 +48,7 @@ C7=Component8
 ; *** LOCALIZE ME BABY ***
 Description Short=Complete
 ; *** LOCALIZE ME BABY ***
-Description Long=Navigator, Mail & News, Chatzilla, and Debugger
+Description Long=Navigator, Mail & News, Chatzilla, Debugger, and Inspector
 C0=Component0
 C1=Component1
 C2=Component2
@@ -59,6 +59,7 @@ C6=Component6
 C7=Component7
 C8=Component8
 C9=Component9
+C10=Component10
 
 [Setup Type2]
 ; *** LOCALIZE ME BABY ***
@@ -88,6 +89,7 @@ C6=Component6
 C7=Component7
 C8=Component8
 C9=Component9
+C10=Component10
 
 
 ;-------------------------------------------------------------------------
@@ -195,6 +197,16 @@ Description Long=JavaScript Debugger
 Archive=venkman.xpi
 $InstallSize$:venkman
 $InstallSizeArchive$:venkman.xpi
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component10]
+Description Short=Inspector
+; *** LOCALIZE ME BABY ***
+Description Long=DOM Inspector
+Archive=inspector.xpi
+$InstallSize$:inspector
+$InstallSizeArchive$:inspector.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 

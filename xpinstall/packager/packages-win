@@ -369,3 +369,10 @@ bin\chrome\pipnss.jar
 bin\chrome\pippki.jar
 bin\res\nssifail.txt
 
+[inspector]
+bin\components\inspector.dll
+bin\components\inspector.xpt
+bin\chrome\inspector.jar
+bin\defaults\pref\inspector.js
+bin\res\inspector\viewer-registry.rdf
+bin\res\inspector\search-registry.rdf

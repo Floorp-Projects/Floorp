@@ -45,6 +45,7 @@ C5=Component5
 C6=Component6
 C7=Component7
 C8=Component8
+C9=Component9
 
 [Dialog Select Components]
 ; *** LOCALIZE ME BABY ***
@@ -129,6 +130,15 @@ Description Long=JavaScript Debugger
 Archive=venkman.xpi
 Install Size=<#venkman_actualSize>
 Archive Size=<#venkman_archiveSize>
+Attributes=SELECTED
+
+[Component9]
+Description Short=Inspector
+; *** LOCALIZE ME BABY ***
+Description Long=DOM Inspector
+Archive=inspector.xpi
+Install Size=<#inspector_actualSize>
+Archive Size=<#inspector_archiveSize>
 Attributes=SELECTED
 
 [Dialog Start Install]

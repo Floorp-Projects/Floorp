@@ -336,3 +336,11 @@ viewer:chrome:venkman.jar
 ; distribution so that it can be seamlessly replaced with a
 ; legitimate one for milestone builds, without breaking the
 ; installer nor having to rebuild it.
+
+[inspector]
+viewer:Components:inspector.shlb
+viewer:Components:inspector.xpt
+viewer:chrome:inspector.jar
+viewer:defaults:pref:inspector.js
+viewer:res:inspector:viewer-registry.rdf
+viewer:res:inspector:search-registry.rdf
