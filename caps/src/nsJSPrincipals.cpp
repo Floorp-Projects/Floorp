@@ -45,7 +45,16 @@ nsDestroyJSPrincipals(JSContext *cx, struct JSPrincipals *jsprin) {
     // Note that we don't want to use NS_IF_RELEASE because it will try
     // to set nsjsprin->nsIPrincipalPtr to nsnull *after* nsjsprin has
     // already been destroyed.
+#ifdef NS_BUILD_REFCNT_LOGGING
+    // The refcount logging considers AddRef-to-1 to indicate creation,
+    // so trick it into thinking it's otherwise, but balance the
+    // Release() we do below.
     nsjsprin->refcount++;
+    nsjsprin->nsIPrincipalPtr->AddRef();
+    nsjsprin->refcount--;
+#else
+    nsjsprin->refcount++;
+#endif
     if (nsjsprin->nsIPrincipalPtr)
         nsjsprin->nsIPrincipalPtr->Release();
     // The nsIPrincipal that we release owns the JSPrincipal struct,
