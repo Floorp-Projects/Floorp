@@ -1123,98 +1123,155 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
 	return err;
 }
 
+nsresult nsAddrDatabase::DoStringAnonymousTransaction
+(nsVoidArray* pAttributes, nsVoidArray* pValues, PRBool bAdd)
+{
+	nsresult err = NS_OK;
+
+	if (pAttributes && pValues)
+	{
+		PRUint32 count, i;
+		count = pAttributes->Count();
+		for (i = 0; i < count; i++)
+		{
+			char* pAttrStr = (char*)pAttributes->ElementAt(i);
+			mdb_token anonymousColumnToken;
+			GetStore()->StringToToken(GetEnv(),  pAttrStr, &anonymousColumnToken);
+			char* pValueStr = (char*)pValues->ElementAt(i);
+
+			nsIMdbRow	*anonymousRow = nsnull;
+			if (bAdd)
+			{
+				err = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &anonymousRow);			
+				if (NS_SUCCEEDED(err) && anonymousRow)
+				{
+					AddStringColumn(anonymousRow, anonymousColumnToken, pValueStr);
+					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
+				}
+			}
+			else
+			{
+				struct mdbYarn yarn;
+				mdbOid rowOid;
+
+				GetStringYarn(pValueStr, &yarn);
+				err = GetStore()->FindRow(GetEnv(), m_CardRowScopeToken, anonymousColumnToken,
+										&yarn, &rowOid, &anonymousRow);
+				if (NS_SUCCEEDED(err) && anonymousRow)
+					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
+			}
+ 		}
+	}
+	return err;
+}
+
+nsresult nsAddrDatabase::DoIntAnonymousTransaction
+(nsVoidArray* pAttributes, nsVoidArray* pValues, PRBool bAdd)
+{
+	nsresult err = NS_OK;
+	if (pAttributes && pValues)
+	{
+		PRUint32 count, i;
+		count = pAttributes->Count();
+		for (i = 0; i < count; i++)
+		{
+			char* pAttrStr = (char*)pAttributes->ElementAt(i);
+			mdb_token anonymousColumnToken;
+			GetStore()->StringToToken(GetEnv(),  pAttrStr, &anonymousColumnToken);
+			PRUint32* pValue = (PRUint32*)pValues->ElementAt(i);
+			PRUint32 value = *pValue;
+
+			nsIMdbRow	*anonymousRow = nsnull;
+			if (bAdd)
+			{
+				err = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &anonymousRow);			
+				if (NS_SUCCEEDED(err) && anonymousRow)
+				{
+					AddIntColumn(anonymousRow, anonymousColumnToken, value);
+					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
+				}
+			}
+			else
+			{
+				struct mdbYarn yarn;
+				mdbOid rowOid;
+				char yarnBuf[100];
+
+				yarn.mYarn_Buf = (void *) yarnBuf;
+				GetIntYarn(value, &yarn);
+				err = GetStore()->FindRow(GetEnv(), m_CardRowScopeToken, anonymousColumnToken,
+										&yarn, &rowOid, &anonymousRow);
+				if (NS_SUCCEEDED(err) && anonymousRow)
+					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
+			}
+ 		}
+	}
+	return err;
+}
+
+nsresult nsAddrDatabase::DoBoolAnonymousTransaction
+(nsVoidArray* pAttributes, nsVoidArray* pValues, PRBool bAdd)
+{
+	nsresult err = NS_OK;
+	if (pAttributes && pValues)
+	{
+		PRUint32 count, i;
+		count = m_pAnonymousBoolAttributes->Count();
+		for (i = 0; i < count; i++)
+		{
+			char* pAttrStr = (char*)pAttributes->ElementAt(i);
+			mdb_token anonymousColumnToken;
+			GetStore()->StringToToken(GetEnv(),  pAttrStr, &anonymousColumnToken);
+			PRBool* pValue = (PRBool*)pValues->ElementAt(i);
+			PRBool value = *pValue;
+			PRUint32 nBoolValue = 0;
+			if (value)
+				nBoolValue = 1;
+			else
+				nBoolValue = 0;
+
+			nsIMdbRow	*anonymousRow = nsnull;
+			if (bAdd)
+			{
+				err = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &anonymousRow);			
+				if (NS_SUCCEEDED(err) && anonymousRow)
+				{
+					AddIntColumn(anonymousRow, anonymousColumnToken, nBoolValue);
+					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
+				}
+			}
+			else
+			{
+				struct mdbYarn yarn;
+				mdbOid rowOid;
+				char yarnBuf[100];
+
+				yarn.mYarn_Buf = (void *) yarnBuf;
+				GetIntYarn(nBoolValue, &yarn);
+				err = GetStore()->FindRow(GetEnv(), m_CardRowScopeToken, anonymousColumnToken,
+										&yarn, &rowOid, &anonymousRow);
+				if (NS_SUCCEEDED(err) && anonymousRow)
+					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
+			}
+ 		}
+	}
+	return err;
+}
+
 nsresult nsAddrDatabase::DoAnonymousAttributesTransaction(PRBool bAdd)
 {
 	nsresult err = NS_OK;
-	PRUint32 count, i;
-		 
-	if (!m_pAnonymousStrAttributes || !m_pAnonymousStrValues)
-		return NS_ERROR_NULL_POINTER;
- 
+		  
 	if (!m_mdbAnonymousTable)
 		err = InitAnonymousTable();
 
 	if (NS_FAILED(err) || !m_mdbAnonymousTable)
 		return NS_ERROR_FAILURE;
-	if (m_pAnonymousStrAttributes && m_pAnonymousStrValues)
-	{
-		count = m_pAnonymousStrAttributes->Count();
-		for (i = 0; i < count; i++)
-		{
-			char* pAttrStr = (char*)m_pAnonymousStrAttributes->ElementAt(i);
-			mdb_token anonymousColumnToken;
-			GetStore()->StringToToken(GetEnv(),  pAttrStr, &anonymousColumnToken);
 
-			nsIMdbRow	*anonymousRow;
-			err = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &anonymousRow);			
-			if (NS_SUCCEEDED(err) && anonymousRow)
-			{
-				if (bAdd)
-				{
-					char* pValueStr = (char*)m_pAnonymousStrValues->ElementAt(i);
-					AddStringColumn(anonymousRow, anonymousColumnToken, pValueStr);
-					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
-				}
-				else
-					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
-			}
- 		}
-	}
-	if (m_pAnonymousIntAttributes && m_pAnonymousIntValues)
-	{
-		count = m_pAnonymousIntAttributes->Count();
-		for (i = 0; i < count; i++)
-		{
-			char* pAttrStr = (char*)m_pAnonymousIntAttributes->ElementAt(i);
-			mdb_token anonymousColumnToken;
-			GetStore()->StringToToken(GetEnv(),  pAttrStr, &anonymousColumnToken);
+	DoStringAnonymousTransaction(m_pAnonymousStrAttributes, m_pAnonymousStrValues, bAdd);
+	DoIntAnonymousTransaction(m_pAnonymousIntAttributes, m_pAnonymousIntValues, bAdd);
+	DoBoolAnonymousTransaction(m_pAnonymousBoolAttributes, m_pAnonymousBoolValues, bAdd);
 
-			nsIMdbRow	*anonymousRow;
-			err = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &anonymousRow);			
-			if (NS_SUCCEEDED(err) && anonymousRow)
-			{
-				if (bAdd)
-				{
-					PRUint32* pValue = (PRUint32*)m_pAnonymousIntValues->ElementAt(i);
-					PRUint32 value = *pValue;
-					AddIntColumn(anonymousRow, anonymousColumnToken, value);
-					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
-				}
-				else
-					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
-			}
- 		}
-	}
-	if (m_pAnonymousBoolAttributes && m_pAnonymousBoolValues)
-	{
-		count = m_pAnonymousBoolAttributes->Count();
-		for (i = 0; i < count; i++)
-		{
-			char* pAttrStr = (char*)m_pAnonymousBoolAttributes->ElementAt(i);
-			mdb_token anonymousColumnToken;
-			GetStore()->StringToToken(GetEnv(),  pAttrStr, &anonymousColumnToken);
-
-			nsIMdbRow	*anonymousRow;
-			err = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &anonymousRow);			
-			if (NS_SUCCEEDED(err) && anonymousRow)
-			{
-				if (bAdd)
-				{
-					PRBool* pValue = (PRBool*)m_pAnonymousBoolValues->ElementAt(i);
-					PRBool value = *pValue;
-					PRUint32 nBoolValue = 0;
-					if (value)
-						nBoolValue = 1;
-					else
-						nBoolValue = 0;
-					AddIntColumn(anonymousRow, anonymousColumnToken, nBoolValue);
-					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
-				}
-				else
-					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
-			}
- 		}
-	}
 	Commit(kSessionCommit);
 	return err;
 }
@@ -1329,15 +1386,31 @@ NS_IMETHODIMP nsAddrDatabase::ContainsCard(nsIAbCard *card, PRBool *hasCard)
 	return err;
 }
 
+void nsAddrDatabase::GetStringYarn(char* str, struct mdbYarn* strYarn)
+{
+	strYarn->mYarn_Grow = NULL;
+	strYarn->mYarn_Buf = str;
+	strYarn->mYarn_Size = PL_strlen((const char *) strYarn->mYarn_Buf) + 1;
+	strYarn->mYarn_Fill = strYarn->mYarn_Size - 1;
+	strYarn->mYarn_Form = 0;
+}
+
+void nsAddrDatabase::GetIntYarn(PRUint32 nValue, struct mdbYarn* intYarn)
+{
+	intYarn->mYarn_Size = sizeof(intYarn->mYarn_Buf);
+	intYarn->mYarn_Fill = intYarn->mYarn_Size;
+	intYarn->mYarn_Form = 0;
+	intYarn->mYarn_Grow = NULL;
+
+	PR_snprintf((char*)intYarn->mYarn_Buf, intYarn->mYarn_Size, "%lx", nValue);
+	intYarn->mYarn_Fill = PL_strlen((const char *) intYarn->mYarn_Buf);
+}
+
 mdb_err nsAddrDatabase::AddStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, char* str)
 {
 	struct mdbYarn yarn;
 
-	yarn.mYarn_Grow = NULL;
-	yarn.mYarn_Buf = str;
-	yarn.mYarn_Size = PL_strlen((const char *) yarn.mYarn_Buf) + 1;
-	yarn.mYarn_Fill = yarn.mYarn_Size - 1;
-	yarn.mYarn_Form = 0;
+	GetStringYarn(str, &yarn);
 	mdb_err err = cardRow->AddColumn(GetEnv(),  inColumn, &yarn);
 
 	return err;
@@ -1349,13 +1422,7 @@ mdb_err nsAddrDatabase::AddIntColumn(nsIMdbRow* cardRow, mdb_column inColumn, PR
 	char	yarnBuf[100];
 
 	yarn.mYarn_Buf = (void *) yarnBuf;
-	yarn.mYarn_Size = sizeof(yarnBuf);
-	yarn.mYarn_Fill = yarn.mYarn_Size;
-	yarn.mYarn_Form = 0;
-	yarn.mYarn_Grow = NULL;
-
-	PR_snprintf((char*)yarn.mYarn_Buf, yarn.mYarn_Size, "%lx", nValue);
-	yarn.mYarn_Fill = PL_strlen((const char *) yarn.mYarn_Buf);
+	GetIntYarn(nValue, &yarn);
 	return cardRow->AddColumn(GetEnv(),  inColumn, &yarn);
 }
 
@@ -1472,6 +1539,13 @@ nsresult nsAddrDatabase::SetAnonymousAttribute
 		{
 			pAttributes->AppendElement(attrname);
 			pValues->AppendElement(value);
+			*pAttrAray = pAttributes;
+			*pValueArray = pValues;
+		}
+		else
+		{
+			delete pAttributes;
+			delete pValues;
 		}
 	}
 	else

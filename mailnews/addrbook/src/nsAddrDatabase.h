@@ -134,6 +134,8 @@ protected:
 
 
 	void YarnToUInt32(struct mdbYarn *yarn, PRUint32 *pResult);
+	void GetStringYarn(char* str, struct mdbYarn* strYarn);
+	void GetIntYarn(PRUint32 nValue, struct mdbYarn* intYarn);
 	mdb_err AddStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, char* str);
 	mdb_err AddIntColumn(nsIMdbRow* cardRow, mdb_column inColumn, PRUint32 nValue);
 	nsresult GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString& str);
@@ -147,6 +149,9 @@ protected:
 	nsresult SetAnonymousAttribute(nsVoidArray** pAttrAray, 
 							nsVoidArray** pValueArray, void *attrname, void *value);
 	nsresult DoAnonymousAttributesTransaction(PRBool bAdd);
+	nsresult DoStringAnonymousTransaction(nsVoidArray* pAttributes, nsVoidArray* pValues, PRBool bAdd);
+	nsresult DoIntAnonymousTransaction(nsVoidArray* pAttributes, nsVoidArray* pValues, PRBool bAdd);
+	nsresult DoBoolAnonymousTransaction(nsVoidArray* pAttributes, nsVoidArray* pValues, PRBool bAdd);
 
 	static nsVoidArray/*<nsAddrDatabase>*/* GetDBCache();
 	static nsVoidArray/*<nsAddrDatabase>*/* m_dbCache;
