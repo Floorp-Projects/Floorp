@@ -159,6 +159,9 @@ typedef PRUint16 PRUnichar;
     Need to add an autoconf test for this.
   */
 
+#define NS_MIN min
+#define NS_MAX max
+
   /* under Metrowerks (Mac), we don't have autoconf yet */
 #ifdef __MWERKS__
   #define HAVE_CPP_SPECIALIZATION
@@ -185,6 +188,13 @@ typedef PRUint16 PRUnichar;
       // VC++5.0 has an internal compiler error (sometimes) without this
     #undef HAVE_CPP_USING
   #endif
+
+  /* VC++ is special and doesn't use naked min() and max() */
+  #undef NS_MIN
+  #define NS_MIN _cpp_min
+
+  #undef NS_MAX
+  #define NS_MAX _cpp_max
 #endif
 
 
