@@ -1835,17 +1835,17 @@ NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const nsCString& aProvi
   }
 
   return SetProviderForPackage(aProviderType, packageResource, providerResource, aSelectionArc,
-                               aUseProfile, nsnull, aIsAdding);;
+                               aUseProfile, nsnull, aIsAdding);
 }
 
 NS_IMETHODIMP nsChromeRegistry::IsSkinSelected(const PRUnichar* aSkin,
-                                               PRBool aUseProfile, PRBool* aResult)
+                                               PRBool aUseProfile, PRInt32* aResult)
 {
   return IsProviderSelected(nsCAutoString("skin"), aSkin, mSelectedSkin, aUseProfile, aResult);
 }
 
 NS_IMETHODIMP nsChromeRegistry::IsLocaleSelected(const PRUnichar* aLocale,
-                                                 PRBool aUseProfile, PRBool* aResult)
+                                                 PRBool aUseProfile, PRInt32* aResult)
 {
   return IsProviderSelected(nsCAutoString("locale"), aLocale, mSelectedLocale, aUseProfile, aResult);
 }
@@ -1853,11 +1853,11 @@ NS_IMETHODIMP nsChromeRegistry::IsLocaleSelected(const PRUnichar* aLocale,
 NS_IMETHODIMP nsChromeRegistry::IsProviderSelected(const nsCString& aProvider,
                                                    const PRUnichar* aProviderName,
                                                    nsIRDFResource* aSelectionArc,
-                                                   PRBool aUseProfile, PRBool* aResult)
+                                                   PRBool aUseProfile, PRInt32* aResult)
 {
   // Build the provider resource str.
   // e.g., urn:mozilla:skin:aqua/1.0
-  *aResult = PR_FALSE;
+  *aResult = NONE;
   nsCAutoString resourceStr( "urn:mozilla:" );
   resourceStr += aProvider;
   resourceStr += ":";
@@ -1915,13 +1915,18 @@ NS_IMETHODIMP nsChromeRegistry::IsProviderSelected(const nsCString& aProvider,
          // Select the skin for this package resource.
          nsCOMPtr<nsIRDFResource> packageResource(do_QueryInterface(packageNode));
          if (packageResource) {
-           rv = IsProviderSetForPackage(aProvider, packageResource, entry, aSelectionArc, aUseProfile, aResult);
+           PRBool isSet = PR_FALSE;
+           rv = IsProviderSetForPackage(aProvider, packageResource, entry, aSelectionArc, aUseProfile, &isSet);
            if (NS_FAILED(rv)) {
              NS_ERROR("Unable to set provider for package resource.");
              return rv;
            }
-           if (*aResult)
+           if (isSet && !*aResult)
+             *aResult = FULL;
+           else if (!isSet && *aResult) {
+             *aResult = PARTIAL;
              return NS_OK;
+           }
          }
       }
     }
@@ -1970,7 +1975,7 @@ nsChromeRegistry::IsProviderSelectedForPackage(const nsCString& aProviderType,
   NS_ASSERTION(providerResource, "failed to get providerResource");
 
   return IsProviderSetForPackage(aProviderType, packageResource, providerResource, aSelectionArc,
-                                 aUseProfile, aResult);;
+                                 aUseProfile, aResult);
 }
 
 NS_IMETHODIMP
