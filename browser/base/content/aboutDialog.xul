@@ -59,7 +59,7 @@
   <deck id="modes" flex="1">
     <vbox flex="1" id="clientBox">
       <label id="version" value="&aboutVersion;"/>
-      <label id="copyright" value="&copyrightText;"/>
+      <description id="copyright">&copyrightText;</description>
       <vbox id="detailsBox" align="center" flex="1">
         <spacer flex="1"/>
         <textbox id="userAgent" multiline="true" readonly="true" cols="60"/>
