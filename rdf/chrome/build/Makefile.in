@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  string \
 		  rdf \
 		  necko \
+		  layout \
 		  content \
 		  jar \
 		  $(NULL)

@@ -87,7 +87,6 @@
 #include "nsIDocShell.h"
 #include "nsIStyleSet.h"
 #include "nsISupportsArray.h"
-#include "nsICSSLoader.h"
 #include "nsIDocumentObserver.h"
 #include "nsIXULDocument.h"
 #include "nsIIOService.h"
@@ -3070,26 +3069,10 @@ nsChromeRegistry::GetAgentSheets(nsIDocShell* aDocShell, nsISupportsArray **aRes
           nsCOMPtr<nsIURI> url;
           rv = NS_NewURI(getter_AddRefs(url), nsDependentCString(token), nsnull, docURL);
 
-          PRBool enabled = PR_FALSE;
           nsCOMPtr<nsICSSStyleSheet> sheet;
-          nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/xul/xul-prototype-cache;1"));
-          if (cache) {
-            cache->GetEnabled(&enabled);
-            if (enabled) {
-              nsCOMPtr<nsICSSStyleSheet> cachedSheet;
-              cache->GetStyleSheet(url, getter_AddRefs(cachedSheet));
-              if (cachedSheet)
-                sheet = cachedSheet;
-            }
-          }
-
-          if (!sheet) {
-            LoadStyleSheetWithURL(url, getter_AddRefs(sheet));
-            if (sheet) {
-              if (enabled)
-                cache->PutStyleSheet(sheet);
-            }
-          }
+          // The CSSLoader handles all the prototype cache stuff for
+          // us as needed.
+          LoadStyleSheetWithURL(url, getter_AddRefs(sheet));
 
           if (sheet) {
             // A sheet was loaded successfully.  We will *not* use the default
@@ -3148,16 +3131,19 @@ nsresult nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsACS
 
 nsresult nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet)
 {
-  nsCOMPtr<nsICSSLoader> loader;
-  nsresult rv = nsComponentManager::CreateInstance(kCSSLoaderCID,
-                                    nsnull,
-                                    NS_GET_IID(nsICSSLoader),
-                                    getter_AddRefs(loader));
-  if (NS_FAILED(rv)) return rv;
-  if (loader) {
-      rv = loader->LoadAgentSheet(aURL, aSheet);
-      if (NS_FAILED(rv)) return rv;
+  *aSheet = nsnull;
+  nsresult rv;
+  
+  if (!mCSSLoader) {
+    mCSSLoader = do_CreateInstance(kCSSLoaderCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
+  
+  if (mCSSLoader) {
+    rv = mCSSLoader->LoadAgentSheet(aURL, aSheet);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
   return NS_OK;
 }
 
