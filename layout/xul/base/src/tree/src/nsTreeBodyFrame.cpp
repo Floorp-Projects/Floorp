@@ -274,20 +274,6 @@ static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
   ourView->CreateWidget(kWidgetCID);
   ourView->GetWidget(*getter_AddRefs(mOutlinerWidget));
-
-  // See if there is a XUL outliner builder associated with the
-  // element. If so, try to make *it* be the view.
-  nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(aContent);
-  if (xulele) {
-    nsCOMPtr<nsIXULTemplateBuilder> builder;
-    xulele->GetBuilder(getter_AddRefs(builder));
-    if (builder) {
-      nsCOMPtr<nsIOutlinerView> view = do_QueryInterface(builder);
-      if (view)
-        SetView(view);
-    }
-  }
-
   return rv;
 }
 
@@ -301,6 +287,25 @@ nsOutlinerBodyFrame::Destroy(nsIPresContext* aPresContext)
   // Drop our ref to the view.
   if (mView)
     mView->SetOutliner(nsnull);
+
+  // Save off our info into the box object.
+  if (mOutlinerBoxObject) {
+    nsCOMPtr<nsIBoxObject> box(do_QueryInterface(mOutlinerBoxObject));
+    nsAutoString view; view.AssignWithConversion("view");
+    box->SetPropertyAsSupports(view.GetUnicode(), mView);
+
+    if (mTopRowIndex > 0) {
+      nsAutoString topRowStr; topRowStr.AssignWithConversion("topRow");
+      nsAutoString topRow;
+      topRow.AppendInt(mTopRowIndex);
+      box->SetProperty(topRowStr.GetUnicode(), topRow.GetUnicode());
+    }
+
+    // Always null out the cached outliner body frame.
+    nsAutoString outlinerBody; outlinerBody.AssignWithConversion("outlinerbody");
+    box->RemoveProperty(outlinerBody.GetUnicode());
+  }
+
   mView = nsnull;
 
   return nsLeafBoxFrame::Destroy(aPresContext);
@@ -311,7 +316,63 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
                                           const nsHTMLReflowState& aReflowState,
                                           nsReflowStatus& aStatus)
 {
-  if ( mView && mRowHeight && aReflowState.reason == eReflowReason_Resize) {
+  if (aReflowState.reason == eReflowReason_Initial) {
+    // We might have a box object with some properties already cached.  If so,
+    // pull them out of the box object and restore them here.
+    mRowHeight = GetRowHeight();
+    nsCOMPtr<nsIContent> parent;
+    mContent->GetParent(*getter_AddRefs(parent));
+    nsCOMPtr<nsIDOMXULElement> parentXUL(do_QueryInterface(parent));
+    if (parentXUL) {
+      nsCOMPtr<nsIBoxObject> box;
+      parentXUL->GetBoxObject(getter_AddRefs(box));
+      if (box) {
+        nsCOMPtr<nsIOutlinerBoxObject> outlinerBox(do_QueryInterface(box));
+        SetBoxObject(outlinerBox);
+
+        nsAutoString view; view.AssignWithConversion("view");
+        nsCOMPtr<nsISupports> suppView;
+        box->GetPropertyAsSupports(view.GetUnicode(), getter_AddRefs(suppView));
+        nsCOMPtr<nsIOutlinerView> outlinerView(do_QueryInterface(suppView));
+
+        if (outlinerView) {
+          nsAutoString topRow; topRow.AssignWithConversion("topRow");
+          nsXPIDLString rowStr;
+          box->GetProperty(topRow.GetUnicode(), getter_Copies(rowStr));
+          nsAutoString rowStr2(rowStr);
+          PRInt32 error;
+          PRInt32 rowIndex = rowStr2.ToInteger(&error);
+      
+          // Set our view.
+          SetView(outlinerView);
+
+          // Scroll to the given row.
+          ScrollToRow(rowIndex);
+
+          // Clear out the property info.
+          box->RemoveProperty(view.GetUnicode());
+          box->RemoveProperty(topRow.GetUnicode());
+
+          return nsLeafBoxFrame::Reflow(aPresContext, aReflowMetrics, aReflowState, aStatus);
+        }
+      }
+    }
+
+    // See if there is a XUL outliner builder associated with the
+    // element. If so, try to make *it* be the view.
+    nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(mContent);
+    if (xulele) {
+      nsCOMPtr<nsIXULTemplateBuilder> builder;
+      xulele->GetBuilder(getter_AddRefs(builder));
+      if (builder) {
+        nsCOMPtr<nsIOutlinerView> view = do_QueryInterface(builder);
+        if (view)
+          SetView(view);
+      }
+    }
+  }
+
+  if (mView && mRowHeight && aReflowState.reason == eReflowReason_Resize) {
     mInnerBox = GetInnerBox();
     mPageCount = mInnerBox.height / mRowHeight;
 
@@ -324,9 +385,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
     InvalidateScrollbar();
   }
 
-//  nsLeafBoxFrame::Reflow(aPresContext, aReflowMetrics, aReflowState, aStatus);
-
-  return NS_OK;
+  return nsLeafBoxFrame::Reflow(aPresContext, aReflowMetrics, aReflowState, aStatus);
 }
 
 static void 
@@ -354,31 +413,32 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
     mView = nsnull;
   }
 
+  // Only reset the top row index and delete the columns if we had an old non-null view.
+  if (mView) {
+    mTopRowIndex = 0;
+    delete mColumns;
+    mColumns = nsnull;
+  }
+
   // Outliner, meet the view.
   mView = aView;
  
   // Changing the view causes us to refetch our data.  This will
   // necessarily entail a full invalidation of the outliner.
-  mTopRowIndex = 0;
-  delete mColumns;
-  mColumns = nsnull;
   Invalidate();
  
   if (mView) {
     // View, meet the outliner.
-#if 1 // XXX Waaah! HYATT, SPANK ME!
-    nsCOMPtr<nsIXULTemplateBuilder> builder = do_QueryInterface(mView);
-    if (builder)
-      mView->SetOutliner(this);
-    else
-#endif
     mView->SetOutliner(mOutlinerBoxObject);
     
-    // Give the view a new empty selection object to play with.
+    // Give the view a new empty selection object to play with, but only if it
+    // doesn't have one already.
     nsCOMPtr<nsIOutlinerSelection> sel;
-    NS_NewOutlinerSelection(this, getter_AddRefs(sel));
-
-    mView->SetSelection(sel);
+    mView->GetSelection(getter_AddRefs(sel));
+    if (!sel) {
+      NS_NewOutlinerSelection(this, getter_AddRefs(sel));
+      mView->SetSelection(sel);
+    }
 
     // The scrollbar will need to be updated.
     InvalidateScrollbar();
@@ -1061,6 +1121,10 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   // XXX This trap handles an odd bogus 1 pixel invalidation that we keep getting 
   // when scrolling.
   if (aDirtyRect.width == 1)
+    return NS_OK;
+
+  if (aWhichLayer != NS_FRAME_PAINT_LAYER_BACKGROUND &&
+      aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND)
     return NS_OK;
 
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
