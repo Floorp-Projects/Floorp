@@ -57,12 +57,15 @@ nsTextWidget::~nsTextWidget()
 //-------------------------------------------------------------------------
 NS_METHOD nsTextWidget::CreateNative(GtkWidget *parentWindow)
 {
+  PRBool oldIsReadOnly;
   mWidget = gtk_entry_new();
   gtk_widget_set_name(mWidget, "nsTextWidget");
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_release_event",
                      GTK_SIGNAL_FUNC(handle_key_release_event),
                      this);
+  SetPassword(mIsPassword);
+  SetReadOnly(mIsReadOnly, oldIsReadOnly);
   gtk_widget_show(mWidget);
   return NS_OK;
 }
