@@ -1166,6 +1166,8 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI,
             path.IsEmpty()                ||
             path.EqualsLiteral("mozilla") ||
             path.EqualsLiteral("logo")    ||
+            path.EqualsLiteral("license") ||
+            path.EqualsLiteral("licence") ||
             path.EqualsLiteral("credits"))
         {
             aScheme = NS_LITERAL_CSTRING("about safe");
