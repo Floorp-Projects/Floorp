@@ -118,6 +118,7 @@ REBASE=
 !endif
 
 rebase:
+!if defined(MOZILLA_OFFICIAL)
 !if defined(FIND)
 !if defined(REBASE)
 	echo rebasing $(DIST)
@@ -129,6 +130,7 @@ rebase:
 !endif
 !else
         echo No find defined.
+!endif
 !endif
 
 install:: rebase
