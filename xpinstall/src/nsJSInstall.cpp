@@ -1463,6 +1463,7 @@ InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   PRUint32 installType = 0;
   nsIFile* chrome = nsnull;
+  return JS_TRUE;
 }
 
 
