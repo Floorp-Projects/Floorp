@@ -1,5 +1,5 @@
 <!-- extracted from charsetOverlay.xul -->
-<!ENTITY charsetMenu.label				"Character Set">
+<!ENTITY charsetMenu.label				"Character Coding">
 <!ENTITY charsetMenuMore.label				"More">
 <!ENTITY charsetMenuMore1.label				"Character Set  ISO">
 <!ENTITY charsetMenuMore2.label				"Character Set  Multibyte">
