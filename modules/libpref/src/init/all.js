@@ -28,7 +28,6 @@ pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search
 pref("keyword.URL", "http://keyword.netscape.com/keyword/");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "en-US");
-pref("general.milestone", "");
 
 pref("general.startup.browser",             true);
 pref("general.startup.mail",                false);
