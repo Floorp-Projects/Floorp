@@ -288,14 +288,91 @@ NS_IMPL_ISUPPORTS(nsRadioGroup::Enumerator, NS_IENUMERATOR_IID);
 // Get enumeration next element. Return null at the end
 //
 //-------------------------------------------------------------------------
-nsISupports* nsRadioGroup::Enumerator::Next()
-{
-    if (mCurrentPosition < mArraySize && mChildrens[mCurrentPosition]) {
-        NS_ADDREF(mChildrens[mCurrentPosition]);
-        return mChildrens[mCurrentPosition++];
-    }
 
-    return NULL;
+
+
+nsresult
+nsRadioGroup::Enumerator::Next()
+{
+    if (mCurrentPosition < (mArraySize -1) )
+      mCurrentPosition ++;
+    else
+      return NS_ERROR_FAILURE;
+    return NS_OK
+}
+
+
+
+nsresult
+nsRadioGroup::Enumerator::Prev()
+{
+    if (mCurrentPosition > 0 )
+      mCurrentPosition --;
+    else
+      return NS_ERROR_FAILURE;
+    return NS_OK
+}
+
+
+
+nsresult
+nsRadioGroup::Enumerator::CurrentItem(nsISupports **aItem)
+{
+    if (!aItem)
+      return NS_ERROR_NULL_POINTER;
+    if (mCurrentPosition >= 0 && mCurrentPosition < mArraySize && mChildrens[mCurrentPosition]) {
+        NS_ADDREF(mChildrens[mCurrentPosition]);
+        *aItem = mChildrens[mCurrentPosition];
+    }
+    else
+      return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
+
+
+
+nsresult
+nsRadioGroup::Enumerator::First()
+{
+    if (mArraySize && mChildrens[0]) {
+        mCurrentPosition = 0;
+        return NS_OK;
+    }
+    else
+      return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
+
+
+
+nsresult
+nsRadioGroup::Enumerator::Last()
+{
+    if (mArraySize && mChildrens[0]) {
+        mCurrentPosition = mArraySize -1;
+        return NS_OK;
+    }
+    else
+      return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
+
+
+ 
+nsresult
+nsRadioGroup::Enumerator::IsDone(PRBool *aDone)
+{
+    if (!aDone)
+        return NS_ERROR_NULL_POINTER;
+    if ((mCurrentPosition == (mArraySize -1)) || mArraySize <= 0 ){ //empty lists always return done
+        *aDone = PR_TRUE;
+    }
+    else
+        *aDone = PR_FALSE;
+    return NS_OK;
 }
 
 
