@@ -23,4 +23,5 @@
 //
 //
 
+#include "MacPrefix.h"
 #include "JavaScriptConfig.h"

@@ -22,4 +22,5 @@
 //
 //
 
+#include "MacPrefix.h"
 #include "JPEGConfig.h"

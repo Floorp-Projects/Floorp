@@ -16,10 +16,5 @@
  * Reserved.
  */
 /* ** */
-#define EDITOR 1
 
-#include "NSCrossProductDefines.h"
-#include "IDE_Options.h"
-
-
-#define MOZILLA_CLIENT 1
+/* Nuthin' to do. */

@@ -16,7 +16,3 @@
  * Reserved.
  */
 #define CGLUESUPPORTED 0 // turn off C glue support to avoid conflict on create() in RDF
-
-#include "IDE_Options.h"
-#include "NSCrossProductDefines.h"
-#define MOZILLA_CLIENT 1
