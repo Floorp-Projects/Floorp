@@ -26,7 +26,12 @@
  *   -- 19990806
  *     -- moved initialization of constant shorts and chars to 
  *        URIUtils.cpp
- * $Id: URIUtils.h,v 1.2 1999/11/15 07:12:48 nisheeth%netscape.com Exp $
+ *
+ * Peter Van der Beken
+ *   -- 20000326
+ *     -- added Mozilla integration code
+ *
+ * $Id: URIUtils.h,v 1.3 2000/03/27 07:12:10 kvisco%ziplink.net Exp $
  */
 
 #include "String.h"
@@ -34,11 +39,21 @@
 #include <iostream.h>
 #include <fstream.h>
 
+#ifdef MOZILLA
+#include "nsIServiceManager.h"
+#include "nsIIOService.h"
+#include "nsIURL.h"
+#include "MozillaString.h"
+#include "nsXPIDLString.h"
+#include "nsCOMPtr.h"
+
+static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
+#endif
 /**
  * A utility class for URI handling
  * Not yet finished, only handles file URI at this point
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:48 $
+ * @version $Revision: 1.3 $ $Date: 2000/03/27 07:12:10 $
  *
 **/
 
@@ -71,7 +86,7 @@ public:
     static const char PROTOCOL_SEP;
 
 
-    static istream* URIUtils::getInputStream
+    static istream* getInputStream
         (String& href, String& documentBase, String& errMsg);
 
 	/**
