@@ -32,6 +32,7 @@ nsDocShellLoadInfo::nsDocShellLoadInfo()
 	NS_INIT_REFCNT();
    mLoadType = nsIDocShellLoadInfo::loadNormal;
    mInheritOwner = PR_FALSE;
+   mStopActiveDocument = PR_FALSE; 
 }
 
 nsDocShellLoadInfo::~nsDocShellLoadInfo()
