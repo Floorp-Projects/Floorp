@@ -54,6 +54,15 @@ static PRLogModuleInfo* gLogStopwatchModule = PR_NewLogModule("timing");
 #define RAPTOR_STOPWATCH_TRACE(_args) 
 #endif
 
+#ifdef DEBUG_STOPWATCH
+#define RAPTOR_STOPWATCH_DEBUGTRACE(_args)      \
+  PR_BEGIN_MACRO                                \
+  printf _args ;                                \
+  PR_END_MACRO
+#else
+#define RAPTOR_STOPWATCH_DEBUGTRACE(_args) 
+#endif
+
 class Stopwatch {
 
 private:
