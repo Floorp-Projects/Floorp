@@ -385,7 +385,8 @@ protected:
 
   const nsStyleStruct* WalkRuleTree(const nsStyleStructID aSID, nsIStyleContext* aContext, 
                                     nsRuleData* aRuleData,
-                                    nsCSSStruct* aSpecificData);
+                                    nsCSSStruct* aSpecificData,
+                                    PRBool aComputeData);
 
   const nsStyleStruct* ComputeDisplayData(nsStyleStruct* aStartDisplay, const nsCSSStruct& aDisplayData, 
                                           nsIStyleContext* aContext, nsRuleNode* aHighestNode,
@@ -471,30 +472,30 @@ protected:
   inline RuleDetail CheckSpecifiedProperties(const nsStyleStructID aSID, const nsCSSStruct& aCSSStruct);
 
   const nsStyleStruct* GetParentData(const nsStyleStructID aSID);
-  const nsStyleStruct* GetDisplayData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetVisibilityData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetFontData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetColorData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetBackgroundData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetMarginData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetBorderData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetPaddingData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetOutlineData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetListData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetPositionData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetTableData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetTableBorderData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetContentData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetQuotesData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetTextData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetTextResetData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetUIData(nsIStyleContext* aContext);
-  const nsStyleStruct* GetUIResetData(nsIStyleContext* aContext);
+  const nsStyleStruct* GetDisplayData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetVisibilityData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetFontData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetColorData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetBackgroundData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetMarginData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetBorderData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetPaddingData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetOutlineData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetListData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetPositionData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetTableData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetTableBorderData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetContentData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetQuotesData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetTextData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetTextResetData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetUIData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetUIResetData(nsIStyleContext* aContext, PRBool aComputeData);
 #ifdef INCLUDE_XUL
-  const nsStyleStruct* GetXULData(nsIStyleContext* aContext);
+  const nsStyleStruct* GetXULData(nsIStyleContext* aContext, PRBool aComputeData);
 #endif
 
-  typedef const nsStyleStruct* (nsRuleNode::*GetStyleDataFn)(nsIStyleContext*);
+  typedef const nsStyleStruct* (nsRuleNode::*GetStyleDataFn)(nsIStyleContext*, PRBool);
   static GetStyleDataFn gGetStyleDataFn[];
 
 public:
@@ -519,7 +520,8 @@ public:
   nsresult GetPresContext(nsIPresContext** aResult);
   nsresult PathContainsRule(nsIStyleRule* aRule, PRBool* aMatched);
   const nsStyleStruct* GetStyleData(nsStyleStructID aSID, 
-                                    nsIStyleContext* aContext);
+                                    nsIStyleContext* aContext,
+                                    PRBool aComputeData);
 };
 
 #endif
