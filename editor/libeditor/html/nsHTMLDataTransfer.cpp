@@ -960,10 +960,14 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
       }
       else if (aCfhtml[curPos] == '<') 
       {
-          // working backwards, the first thing we see is the start of a tag
-          // so StartFragment is bad, so we need to update it.
-          NS_ASSERTION(0, "StartFragment byte count in the clipboard looks bad, see bug #228879");
-          startFragment = curPos - 1;
+          // if we are at the start, then we want to see the '<'
+          if (curPos != startFragment) 
+          {
+              // working backwards, the first thing we see is the start of a tag
+              // so StartFragment is bad, so we need to update it.
+              NS_ASSERTION(0, "StartFragment byte count in the clipboard looks bad, see bug #228879");
+              startFragment = curPos - 1;
+          }
           break;
       }
       else 
