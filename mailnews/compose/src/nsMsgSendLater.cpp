@@ -376,6 +376,12 @@ SendOperationListener::OnStatus(const char *aMsgID, const PRUnichar *aMsg)
 
   return NS_OK;
 }
+
+nsresult
+SendOperationListener::OnSendNotPerformed(const char *aMsgID, nsresult aStatus)
+{
+  return NS_OK;
+}
   
 nsresult
 SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 

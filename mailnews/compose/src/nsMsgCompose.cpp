@@ -2284,6 +2284,29 @@ nsMsgComposeSendListener::OnStatus(const char *aMsgID, const PRUnichar *aMsg)
   return NS_OK;
 }
   
+nsresult nsMsgComposeSendListener::OnSendNotPerformed(const char *aMsgID, nsresult aStatus)
+{
+ // since OnSendNotPerformed is called in the case where the user aborts the operation
+ // by closing the compose window, we need not do the stuff required 
+ // for closing the windows. However we would need to do the other operations as below.
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
+  if (compose)
+  {
+    compose->NotifyStateListeners(eComposeProcessDone,aStatus);
+
+    nsCOMPtr<nsIMsgSendListener> externalListener;
+    compose->GetExternalSendListener(getter_AddRefs(externalListener));
+    if (externalListener)
+      externalListener->OnSendNotPerformed(aMsgID, aStatus) ;
+  }
+
+  return rv ;
+}
+
+
 nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
                                      nsIFileSpec *returnFileSpec)
 {

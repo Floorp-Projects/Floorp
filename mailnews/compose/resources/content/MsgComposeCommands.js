@@ -206,7 +206,18 @@ var stateListener = {
       SetContentAndBodyAsUnmodified();
      
       if (gCloseWindowAfterSave)
+      {
+        // Notify the SendListener that Send has been aborted and Stopped
+        if (gMsgCompose)
+        {
+          var externalListener = gMsgCompose.getExternalSendListener();
+          if (externalListener)
+          {
+              externalListener.onSendNotPerformed(null, Components.results.NS_ERROR_ABORT);
+          }
+        }
         MsgComposeCloseWindow(true);
+    }
     }
    
     gCloseWindowAfterSave = false;
@@ -996,6 +1007,17 @@ function DoCommandClose()
 {
   var retVal;
   if ((retVal = ComposeCanClose())) {
+
+    // Notify the SendListener that Send has been aborted and Stopped
+    if (gMsgCompose)
+    {
+      var externalListener = gMsgCompose.getExternalSendListener();
+      if (externalListener)
+      {
+        externalListener.onSendNotPerformed(null, Components.results.NS_ERROR_ABORT);
+      }
+    }
+
     MsgComposeCloseWindow(true);
 	  // at this point, we might be caching this window.
 	  // in which case, we don't want to close it

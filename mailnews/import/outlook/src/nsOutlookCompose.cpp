@@ -122,6 +122,9 @@ public:
 		return NS_OK;
 	}
 
+   /* void OnSendNotPerformed */
+   NS_IMETHOD OnSendNotPerformed(const char *aMsgID, nsresult aStatus) {return NS_OK;}
+
   /* void OnGetDraftFolderURI (); */
   NS_IMETHOD OnGetDraftFolderURI(const char *aFolderURI) {return NS_OK;}
 

@@ -80,4 +80,10 @@ interface nsIMsgSendListener : nsISupports {
      */
     void onGetDraftFolderURI(in string aFolderURI);
 
+    /**
+     * Notify the observer when the user aborts the send without actually doing the send
+     * eg : by closing the compose window without Send.
+     */
+    void onSendNotPerformed(in string aMsgID, in nsresult aStatus);
+
 };
