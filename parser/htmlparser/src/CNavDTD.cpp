@@ -63,12 +63,33 @@ static char gHeadingTags[]={
   0};
 
 static char  gStyleTags[]={
-  eHTMLTag_a,       eHTMLTag_b,       eHTMLTag_big,
-  eHTMLTag_blink,   eHTMLTag_center,  eHTMLTag_cite,  
-  eHTMLTag_em,      eHTMLTag_font,    eHTMLTag_i,     
-  eHTMLTag_kbd,     eHTMLTag_s,       eHTMLTag_small, 
-  eHTMLTag_strike,  eHTMLTag_strong,  eHTMLTag_sub,   
-  eHTMLTag_sup,     eHTMLTag_tt,      eHTMLTag_u,     
+  eHTMLTag_a,
+  eHTMLTag_acronym,
+  eHTMLTag_b,
+  eHTMLTag_bdo,
+  eHTMLTag_big,
+  eHTMLTag_blink,
+  eHTMLTag_cite,
+  eHTMLTag_code,
+  eHTMLTag_del,
+  eHTMLTag_dfn,
+  eHTMLTag_em,
+  eHTMLTag_font,
+  eHTMLTag_i,
+  eHTMLTag_ins,
+  eHTMLTag_kbd,
+  eHTMLTag_nobr,
+  eHTMLTag_q,
+  eHTMLTag_s,
+  eHTMLTag_samp,
+  eHTMLTag_small,
+  eHTMLTag_span,
+  eHTMLTag_strike,
+  eHTMLTag_strong,
+  eHTMLTag_sub,
+  eHTMLTag_sup,
+  eHTMLTag_tt,
+  eHTMLTag_u,     
   eHTMLTag_var,     
   0};
 
@@ -1118,15 +1139,27 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     return CanContainFormElement((eHTMLTags)aParent,(eHTMLTags)aChild);
   }
 
-  switch((eHTMLTags)aParent) {
-
+  if (0 != strchr(gStyleTags, aParent)) {
+    if(eHTMLTag_li == aChild) {
+      //This code was added to enforce the rule that listitems
+      //autoclose prior listitems.  Stylistic tags (including <A>)
+      //that get in the way are simply out of luck.
+      result=PR_FALSE;
+    }
+    else
+      result=PRBool(0!=strchr(gTagSet1,aChild));
+  }
+  else {
+    switch((eHTMLTags)aParent) {
     case eHTMLTag_address:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet2,aChild));
+      break;
 
     case eHTMLTag_applet:
       if(eHTMLTag_param==aChild)
         result=PR_TRUE;
-      else result=PRBool(0!=strchr(gTagSet2,aChild)); 
+      else
+        result=PRBool(0!=strchr(gTagSet2,aChild)); 
       break;
 
     case eHTMLTag_area:
@@ -1143,58 +1176,25 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_wbr:
       break;    //singletons can't contain anything...
 
-    case eHTMLTag_a:
-    case eHTMLTag_acronym:
-    case eHTMLTag_bdo:
-    case eHTMLTag_big:
-    case eHTMLTag_blink:
-    case eHTMLTag_b:
-    case eHTMLTag_cite:
-    case eHTMLTag_code:
-    case eHTMLTag_del:
-    case eHTMLTag_dfn:
-    case eHTMLTag_em:
-    case eHTMLTag_font:
-    case eHTMLTag_i:
-    case eHTMLTag_ins:
-    case eHTMLTag_kbd:
-    case eHTMLTag_q:
-    case eHTMLTag_small:
-    case eHTMLTag_span:
-    case eHTMLTag_strike:
-    case eHTMLTag_s:
-    case eHTMLTag_sub:
-    case eHTMLTag_sup:
-    case eHTMLTag_tt:
-    case eHTMLTag_u:
-    case eHTMLTag_var:
-      {
-        static char  listtags[]={eHTMLTag_li,0};
-
-        if(0!=strchr(listtags,aChild)) {
-          //This code was added to enforce the rule that listitems autoclose prior listitems. 
-          //Stylistic tags (including <A>) that get in the way are simply out of luck.
-          result=PR_FALSE;
-        }
-        else result=PRBool(0!=strchr(gTagSet1,aChild));
-      }
-      break;
-
     case eHTMLTag_blockquote:
     case eHTMLTag_body:
       if(eHTMLTag_userdefined==aChild)
         result=PR_TRUE;
-      else result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      else
+        result=PRBool(0!=strchr(gTagSet1,aChild)); 
       break;
 
     case eHTMLTag_button:
-      result=PRBool(0!=strchr(gTagSet3,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet3,aChild));
+      break;
 
     case eHTMLTag_caption:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet1,aChild));
+      break;
 
     case eHTMLTag_center:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet1,aChild));
+      break;
 
     case eHTMLTag_col:
     case eHTMLTag_colgroup:
@@ -1207,7 +1207,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
         if(0!=strchr(datalistTags,aChild)) {
           result=PR_TRUE;
         }
-        else result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+        else
+          result=PRBool(0!=strchr(gTagSet1,aChild));
       }
       break;
 
@@ -1217,7 +1218,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
     case eHTMLTag_dl:
       {
-        char okTags[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_whitespace,eHTMLTag_newline,eHTMLTag_p,0};
+        char okTags[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_whitespace,
+                       eHTMLTag_newline,eHTMLTag_p,0};
         result=PRBool(0!=strchr(okTags,aChild));
       }
       break;
@@ -1225,18 +1227,21 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_fieldset:
       if(eHTMLTag_legend==aChild)
         result=PR_TRUE;
-      else result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      else
+        result=PRBool(0!=strchr(gTagSet1,aChild)); 
       break;
 
     case eHTMLTag_form:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet1,aChild));
+      break;
 
     case eHTMLTag_frame:
       break;  //singletons can't contain other tags
 
     case eHTMLTag_frameset:
       {
-        static char okTags[]={eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes,
+        static char okTags[]={eHTMLTag_frame,eHTMLTag_frameset,
+                              eHTMLTag_noframes,
                               eHTMLTag_newline,eHTMLTag_whitespace,0};
         result=PRBool(0!=strchr(okTags,aChild));
       }
@@ -1263,7 +1268,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
     case eHTMLTag_html:
       {
-        static char  okTags[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,0};
+        static char okTags[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,0};
         result=PRBool(0!=strchr(okTags,aChild));
       }
       break;
@@ -1271,12 +1276,14 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_iframe:/* XXX wrong */
       if(eHTMLTag_frame==aChild)
         result=PR_FALSE;
-      else result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      else
+        result=PRBool(0!=strchr(gTagSet1,aChild)); 
       break;
 
     case eHTMLTag_label:
     case eHTMLTag_legend:/* XXX not sure */
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet1,aChild));
+      break;
 
     case eHTMLTag_layer:
     case eHTMLTag_link:
@@ -1284,12 +1291,14 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
     case eHTMLTag_li:
       if (eHTMLTag_li == aChild) {
-        return PR_FALSE;
+        result = PR_FALSE;
       }
-      result=PRBool(!strchr(gHeadingTags,aChild)); break;
+      result=PRBool(!strchr(gHeadingTags,aChild));
+      break;
 
     case eHTMLTag_listing:
-      result = PR_TRUE; break;
+      result = PR_TRUE;
+      break;
 
     case eHTMLTag_map:
       {
@@ -1309,21 +1318,21 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       result=PRBool(0 != strchr(gTagSet1,aChild));
       break;
 
-    case eHTMLTag_nobr:
-      result=PR_TRUE; break;
-
     case eHTMLTag_noframes:
       if(eHTMLTag_body==aChild)
         result=PR_TRUE;
-      else result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      else
+        result=PRBool(0!=strchr(gTagSet1,aChild)); 
       break;
 
     case eHTMLTag_noscript:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet1,aChild));
+      break;
 
     case eHTMLTag_option:
       //for now, allow an option to contain anything but another option...
-      result=PRBool(eHTMLTag_option!=aChild); break;
+      result=PRBool(eHTMLTag_option!=aChild);
+      break;
 
     case eHTMLTag_p:
       {
@@ -1333,18 +1342,21 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
           result=PR_FALSE;
         else if(0!=strchr(datalistTags,aChild)) {
           //we now allow DT/DD inside a paragraph, so long as a DL is open...
-          if(PR_TRUE==HasOpenContainer(eHTMLTag_dl))
+          if(PR_TRUE==HasOpenContainer(eHTMLTag_dl)) {
             if(PR_TRUE==HasOpenContainer(eHTMLTag_dt))
               result=PR_FALSE;
-          else result=PR_TRUE;
+          } else
+            result=PR_TRUE;
         }
-        else result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+        else
+          result=PRBool(0!=strchr(gTagSet2,aChild));
       }
       break;
 
     case eHTMLTag_object:
     case eHTMLTag_pre:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet2,aChild));
+      break;
 
     case eHTMLTag_param:
       break;  //singletons can't contain other tags
@@ -1356,7 +1368,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       break; //unadorned script text...
 
     case eHTMLTag_select:
-      result=PR_TRUE; break; //for now, allow select to contain anything...
+      result=PR_TRUE; //for now, allow select to contain anything...
+      break;
 
     case eHTMLTag_style:
       break;  //singletons can't contain other tags
@@ -1373,7 +1386,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_tbody:
     case eHTMLTag_tfoot:
     case eHTMLTag_thead:
-      result=PRBool(eHTMLTag_tr==aChild); break;
+      result=PRBool(eHTMLTag_tr==aChild);
+      break;
 
     case eHTMLTag_th:
     case eHTMLTag_td:
@@ -1397,12 +1411,21 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       break;
 
     case eHTMLTag_userdefined:
-      result=PR_TRUE; break; //XXX for now...
+      result=PR_TRUE; //XXX for now...
+      break;
 
     case eHTMLTag_xmp: 
-    default:
       break;
-  } //switch
+
+    default:
+#ifdef NS_DEBUG
+      printf("XXX: unhandled tag %s in CanContain switch statement\n",
+             NS_EnumToTag((nsHTMLTag)aParent));
+#endif
+      break;
+    } //switch
+  } //if
+
   return result;
 }
 
@@ -1844,29 +1867,18 @@ PRBool CNavDTD::IsGatedFromClosing(eHTMLTags aChildTag) const {
   PRInt32 tagPos=GetTopmostIndexOf(aChildTag);
   PRInt32 theGatePos=kNotFound;
 
-  switch(aChildTag) {
+  if (0 != strchr(gStyleTags, aChildTag)) {
+    static char theGateTags[]={ 
+      eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,  eHTMLTag_tbody,   
+      eHTMLTag_tfoot,   eHTMLTag_tr,  eHTMLTag_thead,     eHTMLTag_td, 
+      eHTMLTag_body,0};
+    theGatePos=GetTopmostIndexOf(theGateTags);
+  }
+  else {
+    switch(aChildTag) {
     case eHTMLTag_li:
       {
         static char theGateTags[]={eHTMLTag_ol,eHTMLTag_ul,0};
-        theGatePos=GetTopmostIndexOf(theGateTags);
-      }
-      break;
-
-    case eHTMLTag_a:      case eHTMLTag_b:
-    case eHTMLTag_big:    case eHTMLTag_blink:
-    case eHTMLTag_center:
-    case eHTMLTag_cite:   case eHTMLTag_em:
-    case eHTMLTag_font:   case eHTMLTag_i:    
-    case eHTMLTag_kbd:    case eHTMLTag_s:    
-    case eHTMLTag_small:  case eHTMLTag_strike:  
-    case eHTMLTag_strong: case eHTMLTag_sub:   
-    case eHTMLTag_sup:    case eHTMLTag_tt:
-    case eHTMLTag_u:      case eHTMLTag_var:
-      {
-        static char theGateTags[]={ 
-          eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,  eHTMLTag_tbody,   
-          eHTMLTag_tfoot,   eHTMLTag_tr,  eHTMLTag_thead,     eHTMLTag_td, 
-          eHTMLTag_body,0};
         theGatePos=GetTopmostIndexOf(theGateTags);
       }
       break;
@@ -1876,18 +1888,19 @@ PRBool CNavDTD::IsGatedFromClosing(eHTMLTags aChildTag) const {
       theGatePos=GetTopmostIndexOf(gTableTags);
       break;
     
-/*      
-    eHTMLTag_table
-    eHTMLTag_tbody
-    eHTMLTag_thead
-    eHTMLTag_tfoot
-    eHTMLTag_caption  
-    eHTMLTag_col   
-    eHTMLTag_colgroup
-*/
+      /*      
+        eHTMLTag_table
+        eHTMLTag_tbody
+        eHTMLTag_thead
+        eHTMLTag_tfoot
+        eHTMLTag_caption  
+        eHTMLTag_col   
+        eHTMLTag_colgroup
+        */
 
     default:
       break;
+    }
   }
   if(kNotFound!=theGatePos)
     if(kNotFound!=tagPos)
@@ -2548,30 +2561,11 @@ nsresult
 CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
   nsresult   result=0;
   
-  switch (aTag) {
-
-    case eHTMLTag_a:/* XXX consolidate with other switch statements by having a lookup table: "IsStyleTag[enum]" */
-    case eHTMLTag_b:
-    case eHTMLTag_big:
-    case eHTMLTag_blink:
-    case eHTMLTag_cite:
-    case eHTMLTag_em:
-    case eHTMLTag_font:
-    case eHTMLTag_i:
-    case eHTMLTag_kbd:
-    case eHTMLTag_q:
-    case eHTMLTag_s:
-    case eHTMLTag_small:
-    case eHTMLTag_strike:
-    case eHTMLTag_strong:
-    case eHTMLTag_sub:
-    case eHTMLTag_sup:
-    case eHTMLTag_tt:
-    case eHTMLTag_u:
-    case eHTMLTag_var:
-      mStyleStack.Push(aTag);
-      break;
-
+  if (0 != strchr(gStyleTags, aTag)) {
+    mStyleStack.Push(aTag);
+  }
+  else {
+    switch (aTag) {
     case eHTMLTag_h1: case eHTMLTag_h2:
     case eHTMLTag_h3: case eHTMLTag_h4:
     case eHTMLTag_h5: case eHTMLTag_h6:
@@ -2579,6 +2573,7 @@ CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
 
     default:
       break;
+    }
   }
 
   return result;
@@ -2597,30 +2592,12 @@ CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
   nsresult result=0;
   
   if(mStyleStack.mCount>0) {
-    switch (aTag) {
-
-      case eHTMLTag_a:
-      case eHTMLTag_b:
-      case eHTMLTag_big:
-      case eHTMLTag_blink:
-      case eHTMLTag_cite:
-      case eHTMLTag_em:
-      case eHTMLTag_font:
-      case eHTMLTag_i:
-      case eHTMLTag_kbd:
-      case eHTMLTag_small:
-      case eHTMLTag_s:
-      case eHTMLTag_strike:
-      case eHTMLTag_strong:
-      case eHTMLTag_sub:
-      case eHTMLTag_sup:
-      case eHTMLTag_tt:
-      case eHTMLTag_u:
-      case eHTMLTag_var:
-        if(aTag==anActualTag)
-          mStyleStack.Pop();
-        break;
-
+    if (0 != strchr(gStyleTags, aTag)) {
+      if(aTag==anActualTag)
+        mStyleStack.Pop();
+    }
+    else {
+      switch (aTag) {
       case eHTMLTag_h1: case eHTMLTag_h2:
       case eHTMLTag_h3: case eHTMLTag_h4:
       case eHTMLTag_h5: case eHTMLTag_h6:
@@ -2628,10 +2605,11 @@ CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
 
       default:
         break;
-    }//switch
+      }//switch
+    }
   }//if
   return result;
-} //update...
+}
 
 
 /*******************************************************************
