@@ -42,6 +42,7 @@
 
 class nsHTMLParser;
 class nsIHTMLContentSink;
+class nsIParserDebug;
 
 class CNavDTD : public nsIDTD {
             
@@ -141,11 +142,11 @@ class CNavDTD : public nsIDTD {
      *  of one type can contain a tag of another type.
      *  
      *  @update  gess 3/25/98
-     *  @param   aParent -- tag enum of parent container
-     *  @param   aChild -- tag enum of child container
+     *  @param   aParent -- int tag of parent container
+     *  @param   aChild -- int tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanContain(eHTMLTags aParent,eHTMLTags aChild) const;
+    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild);
 
     /**
      *  This method is called to determine whether or not a tag
@@ -199,26 +200,21 @@ class CNavDTD : public nsIDTD {
      */
     virtual eHTMLTags GetDefaultParentTagFor(eHTMLTags aTag) const;
 
-
     /**
-     * This method gets called at various times by the parser
-     * whenever we want to verify a valid context stack. This
-     * method also gives us a hook to add debugging metrics.
-     *
-     * @update  gess4/6/98
-     * @param   aStack[] array of ints (tokens)
-     * @param   aCount number of elements in given array
-     * @return  TRUE if stack is valid, else FALSE
+     * 
+     * @update	jevering 6/18/98
+     * @param  aURLRef if the current URL reference (for debugger)
+     * @return
      */
-    virtual PRBool VerifyContextVector(void) const;
+    virtual void SetURLRef(char * aURLRef);
 
     /**
      * 
-     * @update	gess5/18/98
-     * @param 
+     * @update	jevering 6/18/98
+     * @param  aParserDebug   created debug parser object
      * @return
      */
-    virtual PRBool Verify(const char* anOutputDir,PRBool aRecordStats);
+    virtual void SetParserDebug(nsIParserDebug * aParserDebug);
 
     /**
      * This method tries to design a context map (without actually
@@ -230,7 +226,7 @@ class CNavDTD : public nsIDTD {
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    virtual PRBool ForwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
+    virtual PRBool ForwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag);
 
     /**
      * This method tries to design a context map (without actually
@@ -699,7 +695,8 @@ protected:
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
     nsDeque             mTokenDeque;
-
+    char*               mURLRef;
+    nsIParserDebug*     mParserDebug;
 };
 
 
