@@ -431,13 +431,24 @@ DefinePropertyIfFound(XPCCallContext& ccx,
        idval == rt->GetStringJSVal(XPCJSRuntime::IDX_QUERY_INTERFACE))
         propFlags &= ~JSPROP_ENUMERATE;
 
-    jsval funval;
-    if(!member->GetValue(ccx, iface, &funval))
-        return JS_FALSE;
+    JSObject* funobj;
+    
+    {
+        // scoped gc protection of funval
+        jsval funval;
 
-    JSObject* funobj = JS_CloneFunctionObject(ccx, JSVAL_TO_OBJECT(funval), obj);
-    if(!funobj)
-        return JS_FALSE;
+        if(!member->GetValue(ccx, iface, &funval))
+            return JS_FALSE;
+    
+        AUTO_MARK_JSVAL(ccx, funval);
+
+        funobj = JS_CloneFunctionObject(ccx, JSVAL_TO_OBJECT(funval), obj);
+        if(!funobj)
+            return JS_FALSE;
+    }
+
+    // protect funobj until it is actually attached
+    AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(funobj));
 
 #ifdef off_DEBUG_jband
     {
