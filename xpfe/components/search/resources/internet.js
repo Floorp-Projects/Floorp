@@ -23,7 +23,7 @@ function doSearch()
 		if (!treeItem)	continue;
 		// XXX when its fully implemented, instead use
 		//     var engines = document.getElementsByTagName("checkbox");
-		if (treeItem.childNodes[0].childNodes[0].getAttribute("value") == "1")
+		if (treeItem.childNodes[0].childNodes[0].childNodes[0].getAttribute("value") == "1")
 		{
 			var engineURI = treeItem.getAttribute("id");
 			if (!engineURI)	continue;
@@ -91,7 +91,7 @@ function doUncheckAll()
 		if (!treeItem)	continue;
 		// XXX when its fully implemented, instead use
 		//     var engines = document.getElementsByTagName("checkbox");
-		treeItem.childNodes[0].childNodes[0].setAttribute("value", "0");
+		treeItem.childNodes[0].childNodes[0].childNodes[0].setAttribute("value", "0");
 	}
 
 	dump("doUncheckAll() done.\n");
