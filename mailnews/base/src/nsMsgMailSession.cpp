@@ -22,10 +22,7 @@
 
 #include "msgCore.h" // for pre-compiled headers
 #include "nsMsgMailSession.h"
-#include "nsMsgLocalCID.h"
-#include "nsMsgBaseCID.h"
 #include "nsCOMPtr.h"
-#include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgWindow.h"
@@ -42,9 +39,6 @@ NS_INTERFACE_MAP_BEGIN(nsMsgMailSession)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgMailSession)
 NS_INTERFACE_MAP_END_THREADSAFE
   
-static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
-static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
- 
 
 nsMsgMailSession::nsMsgMailSession():
   mRefCnt(0)
