@@ -38,6 +38,7 @@
 
 #include "nsIBoxObject.h"
 #include "nsIDOMXULElement.h"
+#include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsITreeSelection.h"
 #include "nsITreeColumns.h"
 #include "nsXULTreeAccessible.h"
@@ -475,13 +476,20 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetState(PRUint32 *_retval)
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
-    PRBool isSelected, currentIndex;
+    PRBool isSelected;
     selection->IsSelected(mRow, &isSelected);
     if (isSelected)
       *_retval |= STATE_SELECTED;
-    selection->GetCurrentIndex(&currentIndex);
-    if (currentIndex == mRow)
+  }
+
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
+    do_QueryInterface(mDOMNode);
+  if (multiSelect) {
+    PRInt32 currentIndex;
+    multiSelect->GetCurrentIndex(&currentIndex);
+    if (currentIndex == mRow) {
       *_retval |= STATE_FOCUSED;
+    }
   }
 
   PRInt32 firstVisibleRow, lastVisibleRow;
