@@ -308,7 +308,7 @@ class CCDATASectionToken : public CHTMLToken {
   CTOKEN_IMPL_SIZEOF
 
 public:
-                        CCDATASectionToken();
+                        CCDATASectionToken(eHTMLTags aTag = eHTMLTag_unknown);
                         CCDATASectionToken(const nsAString& aString);
     virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
     virtual const char* GetClassName(void);

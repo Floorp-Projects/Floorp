@@ -707,7 +707,7 @@ void CTextToken::Bind(const nsAString& aStr)
  *  @param   aName -- string to init token name with
  *  @return  
  */
-CCDATASectionToken::CCDATASectionToken() : CHTMLToken(eHTMLTag_unknown) {
+CCDATASectionToken::CCDATASectionToken(eHTMLTags aTag) : CHTMLToken(aTag) {
 }
 
 
