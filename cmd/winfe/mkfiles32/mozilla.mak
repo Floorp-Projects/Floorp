@@ -945,23 +945,25 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libi18n\ugendata.c
 	$(DEPTH)\lib\libi18n\umap.c
 	$(DEPTH)\lib\libi18n\uscan.c
+	$(DEPTH)\lib\libi18n\datefmt.c
 !IF "$(MOZ_BITS)"=="16"
 	$(DEPTH)\lib\libi18n\unicvt.c
+	$(DEPTH)\lib\libi18n\datefmt.c
 !ENDIF
+	$(DEPTH)\lib\libi18n\acptlang.c
 	$(DEPTH)\lib\libi18n\fontencd.c
 	$(DEPTH)\lib\libi18n\csnamefn.c
 	$(DEPTH)\lib\libi18n\csnametb.c
 	$(DEPTH)\lib\libi18n\mime2fun.c
 	$(DEPTH)\lib\libi18n\sbconvtb.c
-	$(DEPTH)\lib\libi18n\acptlang.c
 	$(DEPTH)\lib\libi18n\csstrlen.c
 	$(DEPTH)\lib\libi18n\sblower.c
 	$(DEPTH)\lib\libi18n\intlcomp.c
 	$(DEPTH)\lib\libi18n\dblower.c
-	$(DEPTH)\lib\libi18n\kinsokud.c
-	$(DEPTH)\lib\libi18n\kinsokuf.c
 	$(DEPTH)\lib\libi18n\net_junk.c
 	$(DEPTH)\lib\libi18n\katakana.c
+	$(DEPTH)\lib\libi18n\kinsokud.c
+	$(DEPTH)\lib\libi18n\kinsokuf.c
 	$(DEPTH)\lib\libcnv\libcnv.c
 	$(DEPTH)\lib\libcnv\writejpg.c
 	$(DEPTH)\lib\libcnv\colorqnt.c
