@@ -868,7 +868,7 @@ void nsEudoraWin32::SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pA
 	if (NS_SUCCEEDED(rv) && smtpService) {
 		nsCOMPtr<nsISmtpServer>		foundServer;
 	
-		rv = smtpService->FindServer( pServer, getter_AddRefs( foundServer));
+		rv = smtpService->FindServer( pUser, pServer, getter_AddRefs( foundServer));
 		if (NS_SUCCEEDED( rv) && foundServer) {
 			IMPORT_LOG1( "SMTP server already exists: %s\n", pServer);
 			return;
