@@ -64,7 +64,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 XPIDLSRCS	= \
-		nsIEvaluateStringProxy.idl \
 		$(NULL)
 
 
