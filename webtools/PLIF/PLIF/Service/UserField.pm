@@ -56,6 +56,7 @@ sub provides {
 sub init {
     my $self = shift;
     my($app, $user, $fieldID, $fieldCategory, $fieldName, $fieldTypeData, $fieldMode, $fieldData) = @_;
+    $self->SUPER::init($app);
     # do not hold on to $user!
     $self->app($app);
     $self->userID($user->userID); # only change this if it started as undef
