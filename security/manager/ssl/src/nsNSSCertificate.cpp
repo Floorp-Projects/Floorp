@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.45 2001/08/14 00:01:11 kaie%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.46 2001/08/21 01:12:38 rangansen%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -630,8 +630,12 @@ nsNSSCertificate::nsNSSCertificate(char *certDER, int derLen) :
               
 {
   NS_INIT_ISUPPORTS();
-
   mCert = CERT_DecodeCertFromPackage(certDER, derLen);
+  if(mCert->dbhandle == nsnull)
+  {
+      mCert->dbhandle = CERT_GetDefaultCertDB();
+  }
+  
 }
 
 nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) : 
@@ -2700,6 +2704,7 @@ done:
 	        nickname++;
 	        nickname = PL_strdup(nickname);
 	        PR_Free(tmp);
+             tmp = nsnull;
 	      } else {
 	        nickname = tmp;
 	        tmp = NULL;
