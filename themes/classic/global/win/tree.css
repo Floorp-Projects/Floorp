@@ -53,6 +53,14 @@ treecell
     padding               : 0px;
   }
 
+.treecell-header-image {
+  padding: 0px;
+}
+
+.treecell-image {
+  padding: 0px;
+}
+
 .treecell-header-box
   {
     border-left           : 1px solid threedface;

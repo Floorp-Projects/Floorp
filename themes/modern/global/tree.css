@@ -39,8 +39,16 @@ treecell {
   color: black;
   border-right: 1px solid white;
   vertical-align: middle;
-  padding: 0px 0px 0px 5px;
+  padding: 0px 0px 0px 4px;
 } 
+
+.treecell-header-image {
+  padding: 0px;
+}
+
+.treecell-image {
+  padding: 0px;
+}
 
 .treecell-inset-header {
   border-top: 1px solid white;

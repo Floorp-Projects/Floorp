@@ -95,6 +95,14 @@ treecell {
   border-bottom: 1px solid #AAAAAA;
 }
 
+.treecell-header-image {
+  padding: 0px;
+}
+
+.treecell-image {
+  padding: 0px;
+}
+
 /* todo: need to make dupes of the above to indicate columns with
    sort directions */
 
