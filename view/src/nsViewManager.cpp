@@ -541,7 +541,7 @@ nsViewManager::CreateRegion(nsIRegion* *result)
   }
 
   nsIRegion* region = nsnull;
-  rv = CallCreateInstance(mRegionFactory, &region);
+  rv = CallCreateInstance(mRegionFactory.get(), &region);
   if (NS_SUCCEEDED(rv)) {
     rv = region->Init();
     *result = region;
