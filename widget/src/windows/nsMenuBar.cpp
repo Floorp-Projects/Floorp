@@ -147,9 +147,11 @@ nsEventStatus nsMenuBar::MenuConstruct(
           if (menuElement) {
             nsString menuNodeType;
             nsString menuName;
+			nsString menuAccessKey = " ";
             menuElement->GetNodeName(menuNodeType);
             if (menuNodeType.Equals("menu")) {
               menuElement->GetAttribute(nsAutoString("name"), menuName);
+			  menuElement->GetAttribute(nsAutoString("accesskey"), menuAccessKey);
               // Don't create the whole menu yet, just add in the top level names
               
                 // Create nsMenu
@@ -169,6 +171,8 @@ nsEventStatus nsMenuBar::MenuConstruct(
 
                   // Set nsMenu Name
                   pnsMenu->SetLabel(menuName); 
+				  // Set the access key
+				  pnsMenu->SetAccessKey(menuAccessKey);
                   // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership
                   pnsMenuBar->AddMenu(pnsMenu); 
 
@@ -287,6 +291,19 @@ NS_METHOD nsMenuBar::InsertMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
 {
   nsString name;
   aMenu->GetLabel(name);
+
+  //get access key
+  nsString accessKey = " ";
+  aMenu->GetAccessKey(accessKey);
+  if(accessKey != " "){
+    //munge acess key into name
+    PRInt32 offset = name.Find(accessKey);
+	if(offset != -1)
+		name.Insert("&", offset);
+  }
+
+  //strcat the accelerator to the end of the name
+
   char * nameStr = GetACPString(name);
 
   mItems->InsertElementAt(aMenu, (PRInt32)aPos);
