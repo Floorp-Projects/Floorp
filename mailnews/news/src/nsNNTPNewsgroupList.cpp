@@ -290,7 +290,6 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsINNTPHost* host,
 {
 	int status = 0;
 	PRBool emptyGroup_p = PR_FALSE;
-    nsresult result;
 
 	PR_ASSERT(first && last);
 	if (!first || !last) return NS_MSG_FAILURE;
@@ -602,9 +601,9 @@ nsNNTPNewsgroupList::ProcessXOVER(char *line)
 		PRInt32	lastIndex = m_lastProcessedNumber - m_firstMsgNumber + 1;
 		PRInt32	numDownloaded = lastIndex;
 		PRInt32	totIndex = m_lastMsgNumber - m_firstMsgNumber + 1;
-		PRInt32 	percent = (totIndex) ? (PRInt32)(100.0 * (double)numDownloaded / (double)totToDownload) : 0;
 
 #ifdef HAVE_PANES
+		PRInt32 	percent = (totIndex) ? (PRInt32)(100.0 * (double)numDownloaded / (double)totToDownload) : 0;
 		FE_SetProgressBarPercent (m_pane->GetContext(), percent);
 #endif
 		
@@ -735,9 +734,11 @@ nsNNTPNewsgroupList::FinishXOVER (int status)
 			}
 #endif
 		}
-		nsINNTPNewsgroup *newsFolder = NULL;
 #ifdef HAVE_PANES
-		newsFolder = (m_pane) ? savePane->GetMaster()->FindNewsFolder(m_host, m_groupName, PR_FALSE) : 0;
+		nsINNTPNewsgroup *newsFolder =
+            (m_pane) ?
+            savePane->GetMaster()->FindNewsFolder(m_host, m_groupName, PR_FALSE) :
+            0;
 		FE_PaneChanged(m_pane, PR_FALSE, MSG_PaneNotifyFolderLoaded, (PRUint32)newsFolder);
 #endif
 	}
