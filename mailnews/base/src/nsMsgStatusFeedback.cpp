@@ -28,7 +28,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULDocument.h"
-
+#include "nsIObserverService.h"
 
 
 nsMsgStatusFeedback::nsMsgStatusFeedback()
@@ -38,16 +38,18 @@ nsMsgStatusFeedback::nsMsgStatusFeedback()
 	m_lastPercent = 0;
 	LL_I2L(m_lastProgressTime, 0);
 	mWebShell = nsnull;
+  mWebShellWindow = nsnull;
 }
 
 nsMsgStatusFeedback::~nsMsgStatusFeedback()
 {
+  EndObserving();
 }
 
 //
 // nsISupports
 //
-NS_IMPL_ISUPPORTS2(nsMsgStatusFeedback, nsIMsgStatusFeedback, nsIDocumentLoaderObserver)
+NS_IMPL_ISUPPORTS3(nsMsgStatusFeedback, nsIMsgStatusFeedback, nsIDocumentLoaderObserver, nsIObserver)
 
 // nsIDocumentLoaderObserver
 
@@ -128,6 +130,61 @@ nsMsgStatusFeedback::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* c
 		  setAttribute( rootWebshell, "canStop", "disabled", "true" );
 		}
 	}
+  return rv;
+}
+
+static const char *prefix = "component://netscape/appshell/component/browser/window";
+
+void nsMsgStatusFeedback::BeginObserving() 
+{
+  // Get observer service.
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIObserverService, svc, NS_OBSERVERSERVICE_PROGID, &rv);
+  if ( NS_SUCCEEDED( rv ) && svc ) 
+  {
+    // Add/Remove object as observer of web shell window topics.
+    nsAutoString topic1(prefix);
+    topic1 += ";status";
+    rv = svc->AddObserver( this, topic1.GetUnicode() );
+   }
+
+    return;
+}
+
+void nsMsgStatusFeedback::EndObserving() 
+{
+  // Get observer service.
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIObserverService, svc, NS_OBSERVERSERVICE_PROGID, &rv);
+  if ( NS_SUCCEEDED( rv ) && svc ) 
+  {
+    // Add/Remove object as observer of web shell window topics.
+    nsAutoString topic1(prefix);
+    topic1 += ";status";
+    rv = svc->RemoveObserver( this, topic1.GetUnicode() );
+   }
+
+  return;
+}
+
+NS_IMETHODIMP nsMsgStatusFeedback::Observe( nsISupports *aSubject,
+                                            const PRUnichar *aTopic,
+                                            const PRUnichar *someData ) 
+{
+  nsresult rv = NS_OK;
+  // We only are interested if aSubject is our web shell window.
+  if ( aSubject && mWebShellWindow ) 
+  {
+    nsCOMPtr<nsIWebShellWindow> window = do_QueryInterface(aSubject, &rv);
+    if ( NS_SUCCEEDED(rv) && window && (window == mWebShellWindow) ) 
+    {
+      nsString topic1 = prefix;
+      topic1 += ";status";
+      if ( topic1 == aTopic ) 
+        rv = ShowStatusString(someData);
+    } // if window matches our window
+  } // if we have a window to worry about
+    
   return rv;
 }
 
@@ -238,9 +295,22 @@ NS_IMETHODIMP nsMsgStatusFeedback::SetWebShell(nsIWebShell *shell, nsIDOMWindow 
 			webshell->GetRootWebShell(mWebShell);
 			nsIWebShell *root = mWebShell;
 			NS_RELEASE(root); // don't hold reference
+
+      // get the webshell window too....
+      nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+      webshell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+      if (topLevelWindow)
+      {
+        nsCOMPtr<nsIWebShellWindow> webWindow = do_QueryInterface(topLevelWindow);
+        // do NOT!!! keep an owning reference on the webshell window..it owns us...
+        mWebShellWindow = webWindow;
+      }
 		}
 	}
 	mWindow = aWindow;
+
+  BeginObserving();
+
 	return NS_OK;
 }
 

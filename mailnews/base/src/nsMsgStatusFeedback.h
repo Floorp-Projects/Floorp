@@ -26,43 +26,45 @@
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDOMWindow.h"
 #include "nsIWebShell.h"
+#include "nsIWebShellWindow.h"
+#include "nsIObserver.h" 
 #include "nsCOMPtr.h"
 #include "nsIMsgStatusFeedback.h"
 
-class nsMsgStatusFeedback : public nsIMsgStatusFeedback, public nsIDocumentLoaderObserver
+class nsMsgStatusFeedback : public nsIMsgStatusFeedback, public nsIObserver, public nsIDocumentLoaderObserver
 {
 public:
 	nsMsgStatusFeedback();
 	virtual ~nsMsgStatusFeedback();
 
 	NS_DECL_ISUPPORTS
-    NS_DECL_NSIMSGSTATUSFEEDBACK
+  NS_DECL_NSIMSGSTATUSFEEDBACK
+  NS_DECL_NSIOBSERVER
     
 	// nsIDocumntLoaderObserver
-    NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
-    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
-    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel);
-    NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax);
-    NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
-    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
-    NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand );		
+  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel);
+  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
+  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
+  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand );		
 
 
 	nsresult setAttribute( nsIWebShell *shell,
-                              const char *id,
-                              const char *name,
-                              const nsString &value );
+                         const char *id,
+                         const char *name,
+                         const nsString &value );
 protected:
 	nsIWebShell				*mWebShell;
 	nsIDOMWindow			*mWindow;
+  nsIWebShellWindow *mWebShellWindow;
 	PRBool					m_meteorsSpinning;
 	PRInt32					m_lastPercent;
-	PRInt64					m_lastProgressTime;				
+	PRInt64					m_lastProgressTime;
 
+  void BeginObserving();
+  void EndObserving();
 };
 
-
-
-
 #endif // _nsMsgStatusFeedback_h
-
