@@ -64,6 +64,8 @@ typedef PRUint32 nsresult;
 #define NS_ERROR_MODULE_RDF        10
 #define NS_ERROR_MODULE_UCONV      11
 
+#define NS_ERROR_MODULE_MAILNEWS   16
+
 /**
  * @name Standard Error Handling Macros
  */
