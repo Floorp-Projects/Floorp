@@ -50,9 +50,6 @@ public class MozAxPlugin extends Plugin
     // Note: These methods are not overloaded like the public versions above
     //       because javah generates bad code which doesn't compile if you try.
 
-    // TODO remove - this is just a sanity test
-    public native void x(int timeout);
-
     private native Object xgetProperty(String dispid);
     private native void xsetProperty1(String dispid, String property);
     private native void xsetProperty2(String dispid, Object property);
