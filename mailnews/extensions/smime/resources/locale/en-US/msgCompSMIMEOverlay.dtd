@@ -4,19 +4,19 @@
 <!ENTITY securityMenu.accesskey "e">
 
 <!ENTITY menu_securityEncryptIfPossible.label "Encrypt if Possible">
-<!ENTITY menu_securityEncryptIfPossible.accesskey "E">
+<!ENTITY menu_securityEncryptIfPossible.accesskey "P">
 
-<!ENTITY menu_securityEncryptRequire.label "Require Encryption">
-<!ENTITY menu_securityEncryptRequire.accesskey "R">
+<!ENTITY menu_securityEncryptRequire.label "Encrypt This Message">
+<!ENTITY menu_securityEncryptRequire.accesskey "E">
 
-<!ENTITY menu_securityNoEncryption.label "No Encryption">
+<!ENTITY menu_securityNoEncryption.label "Do Not Encrypt This Message">
 <!ENTITY menu_securityNoEncryption.accesskey "N">
 
-<!ENTITY menu_securitySign.label "Digitally Sign">
-<!ENTITY menu_securitySign.accesskey "D">
+<!ENTITY menu_securitySign.label "Digitally Sign This Message">
+<!ENTITY menu_securitySign.accesskey "S">
 
-<!ENTITY menu_securityStatus.label "Message Security">
-<!ENTITY menu_securityStatus.accesskey "M">
+<!ENTITY menu_securityStatus.label "View Security Info">
+<!ENTITY menu_securityStatus.accesskey "I">
 
 <!ENTITY securityButton.label "Security">
 <!ENTITY securityButton.tooltip "View or change security settings">
