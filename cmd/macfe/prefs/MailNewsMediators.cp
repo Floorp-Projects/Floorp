@@ -52,7 +52,10 @@ extern "C"
 
 //PP
 #include <LTextColumn.h>
+#include <LGAPushButton.h>
 #include <UModalDialogs.h>
+#include <LGARadioButton.h>
+#include <LGACheckbox.h>
 
 #ifndef MOZ_LITE
 #pragma mark ---CLDAPServerPropDialog---
@@ -94,12 +97,12 @@ void CLDAPServerPropDialog::FinishCreateSelf( )
 	XP_ASSERT(mPortNumber);
 	mMaxHits = (CValidEditField *) FindPaneByID(eMaxHitsEditField);
 	XP_ASSERT(mMaxHits);
-	mSecureBox = dynamic_cast<LControl*>(FindPaneByID(eSecureBox));
+	mSecureBox = (LGACheckbox *) FindPaneByID(eSecureBox);
 	XP_ASSERT(mSecureBox);
-	mSavePasswordBox = dynamic_cast<LControl*>(FindPaneByID ( eSaveLDAPServerPasswordBox) );
+	mSavePasswordBox = dynamic_cast<LGACheckbox *>(FindPaneByID ( eSaveLDAPServerPasswordBox) );
 	Assert_( mSavePasswordBox );
 	
-	mDownloadCheckBox = dynamic_cast<LControl*>( FindPaneByID ( eDownloadCheckBox ) );
+	mDownloadCheckBox = dynamic_cast<LGACheckbox* >( FindPaneByID ( eDownloadCheckBox ) );
 	Assert_( mDownloadCheckBox );
 
 	UReanimator::LinkListenerToControls( this, this, eLDAPServerPropertiesDialogResID );
@@ -265,7 +268,7 @@ void  CLDAPServerPropDialog::SetUpDialog(
 		mMaxHits->Disable();
 		mSecureBox->Disable();
 //		pwBox->Disable();
-		LControl *okButton = dynamic_cast<LControl*>(FindPaneByID(CPrefsDialog::eOKButtonID));
+		LGAPushButton *okButton = (LGAPushButton *) FindPaneByID(CPrefsDialog::eOKButtonID);
 		XP_ASSERT(okButton);
 		okButton->Disable();
 	}
@@ -292,7 +295,8 @@ Boolean CLDAPServerPropDialog::PortNumberValidationFunc(CValidEditField *portNum
 		// LDAP secure (SSL) standard port = 636
 		LView	*superView = portNumber->GetSuperView();
 		XP_ASSERT(superView);
-		LControl* checkbox = dynamic_cast<LControl*>(superView->FindPaneByID(eSecureBox));
+		LGACheckbox	*checkbox =
+				(LGACheckbox *)superView->FindPaneByID(eSecureBox);
 		XP_ASSERT(checkbox);
 		portNumber->SetValue(checkbox->GetValue() ? eLDAPSecurePort : eLDAPStandardPort);
 		portNumber->SelectAll();
@@ -388,7 +392,8 @@ void CMailNewsIdentityMediator::ListenToMessage(MessageT inMessage, void *ioPara
 					// If mNeedsPrefs, then we are setting up the pane. If the picker
 					// is not set (can happen if the sig file was physically deleted),
 					// then we need to unset the "use" check box.
-					LControl* checkbox = dynamic_cast<LControl*>(FindPaneByID(inMessage));
+					LGACheckbox *checkbox =
+							(LGACheckbox *)FindPaneByID(inMessage);
 					XP_ASSERT(checkbox);
 					checkbox->SetValue(false);
 				}
@@ -398,7 +403,8 @@ void CMailNewsIdentityMediator::ListenToMessage(MessageT inMessage, void *ioPara
 					if (!fPicker->WasSet())
 					{	// If the file picker is still unset, that means that the user
 						// cancelled the file browse so we don't want the checkbox set.
-						LControl *checkbox = dynamic_cast<LControl*>(FindPaneByID(inMessage));
+						LGACheckbox *checkbox =
+								(LGACheckbox *)FindPaneByID(inMessage);
 						XP_ASSERT(checkbox);
 						checkbox->SetValue(false);
 					}
@@ -406,7 +412,8 @@ void CMailNewsIdentityMediator::ListenToMessage(MessageT inMessage, void *ioPara
 			}
 			break;
 		case msg_FolderChanged:
-			LControl *checkbox = dynamic_cast<LControl*>(FindPaneByID(eUseSigFileBox));
+			LGACheckbox *checkbox =
+					(LGACheckbox *)FindPaneByID(eUseSigFileBox);
 			XP_ASSERT(checkbox);
 			checkbox->SetValue(true);
 			break;
@@ -619,8 +626,7 @@ void CMailNewsOutgoingMediator::ListenToMessage(MessageT inMessage, void* ioPara
 					ckID = 'Tmpl';
 					break;
 			}
-			LControl* checkbox = dynamic_cast<LControl*>(FindPaneByID(ckID));
-			XP_ASSERT(checkbox);
+			LGACheckbox* checkbox = dynamic_cast<LGACheckbox*>(FindPaneByID(ckID));
 			UPrefControls::NoteSpecialFolderChanged(checkbox, kind, folder);
 		}
 	}
@@ -970,11 +976,11 @@ void CMailNewsMailServerMediator::AddButton()
 		MPreferenceBase::StWriteOnDestroy setter2(false);
 		StDialogHandler handler(12011, nil);
 		LWindow* dialog = handler.GetDialog();
-		LEditField* nameField = dynamic_cast<LEditField*>(dialog->FindPaneByID('NAME'));
+		LGAEditField* nameField = (LGAEditField*)dialog->FindPaneByID('NAME');
 		SignalIf_(!nameField);
 		if (!nameField)
 			return;
-		LControl* popButton = dynamic_cast<LControl*>(dialog->FindPaneByID('POP3'));
+		LGARadioButton* popButton = (LGARadioButton*)dialog->FindPaneByID('POP3');
 		SignalIf_(!popButton);
 		if (!popButton)
 			return;
@@ -1195,7 +1201,8 @@ Boolean CMailNewsNewsServerMediator::PortNumberValidationFunc(CValidEditField *p
 		// NNTP secure (SSL) standard port = 563
 		LView	*superView = portNumber->GetSuperView();
 		XP_ASSERT(superView);
-		LControl *checkbox = dynamic_cast<LControl*>(superView->FindPaneByID(eNewsServerSecureBox));
+		LGACheckbox	*checkbox =
+				(LGACheckbox *)superView->FindPaneByID(eNewsServerSecureBox);
 		XP_ASSERT(checkbox);
 		portNumber->SetValue(checkbox->GetValue() ? eNNTPSecurePort : eNNTPStandardPort);
 		portNumber->SelectAll();
@@ -1695,9 +1702,11 @@ Boolean COfflineNewsMediator::SinceDaysValidationFunc(CValidEditField *sinceDays
 		// field's superview.
 		LView	*superView = sinceDays->GetSuperView();
 		XP_ASSERT(superView);
-		LControl *checkbox = dynamic_cast<LControl*>(superView->FindPaneByID(eByDateBox));
+		LGACheckbox	*checkbox =
+				(LGACheckbox *)superView->FindPaneByID(eByDateBox);
 		XP_ASSERT(checkbox);
-		LControl *radioButton = dynamic_cast<LControl*>(superView->FindPaneByID(eDaysRButton));
+		LGARadioButton	*radioButton =
+				(LGARadioButton *)superView->FindPaneByID(eDaysRButton);
 		XP_ASSERT(radioButton);
 		if (checkbox->GetValue() && radioButton->GetValue())
 		{

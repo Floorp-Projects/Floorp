@@ -16,43 +16,46 @@
  * Reserved.
  */
 
-//
-// CProgressCaption
-//
-// Manages a progress bar and a text area to show loading status messages.
-// Rewritten to use standard toolbox controls instead of drawing our own.
-//
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	CProgressCaption.h
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
 #pragma once
 
 
-#include <LProgressBar.h>
-#include <LCaption.h>
+#include "CProgressBar.h"
 
-
-class CProgressCaption : public LView
+class CProgressCaption : public CProgressBar
 {
 	public:
-		enum { class_ID = 'PgCp', kProgressBar = 'prog', kStatusText = 'capt' };
-		enum { eBarHidden = -2, eIndefinite = -1 };
-
+		enum { class_ID = 'PgCp' };
+		enum { eBarHidden = -2 };
 								CProgressCaption(LStream* inStream);
 		virtual					~CProgressCaption();
 
+		virtual	void			SetHidden() {SetValue(eBarHidden);}
 		virtual void			SetDescriptor(ConstStringPtr inDescriptor);
 		virtual void			SetDescriptor(const char* inCDescriptor);
 		virtual StringPtr		GetDescriptor(Str255 outDescriptor) const;
 
-		virtual	void			SetValue(Int32 inValue);
-		virtual	Int32			GetValue() const;
-		
-		virtual void			SetMaxValue ( Int32 inMax ) ;
+		virtual	void 			Draw(RgnHandle inSuperDrawRgnH);
 
+		virtual	void			SetEraseColor(Int16 inPaletteIndex)
+									{	mEraseColor = inPaletteIndex; }
+	protected:
+		virtual void			GetActiveColors(
+									RGBColor& bodyColor,
+									RGBColor& barColor,
+									RGBColor& FrameColor) const;
+	//DATA:
 	protected:
 
-		virtual void			FinishCreateSelf ( ) ;
-		
-		LProgressBar*			mBar;
-		LCaption*				mStatusText;
+		virtual	void			DrawSelf(void);
+
+		TString<Str255>			mText;
+		ResIDT					mBoundedTraitsID;		// normal progress bar
+		ResIDT					mIndefiniteTraitsID;	// indefinite progress bar
+		ResIDT					mHiddenTraitsID;		// hidden progress bar
+		Int16					mEraseColor;
 };
 

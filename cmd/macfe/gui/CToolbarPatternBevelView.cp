@@ -21,7 +21,7 @@
 #include <LArrayIterator.h>
 
 #include "CToolbarPatternBevelView.h"
-#include "CToolbarBevelButton.h"
+#include "CToolbarButton.h"
 #include "StRegionHandle.h"
 
 #include <stddef.h>
@@ -29,7 +29,7 @@
 // Bug #79175
 // Change the update command status so that the "Show/Hide Component Bar" works
 CToolbarPatternBevelView::CToolbarPatternBevelView(LStream* inStream)
-:	CAMSavvyBevelView(inStream)
+:	CPatternBevelView(inStream)
 {
 	LCommander::SetUpdateCommandStatus(true);
 }
@@ -72,7 +72,7 @@ void CToolbarPatternBevelView::CalcArrangement( Boolean inRotateArrangement, Int
 		// ...once to calculate the old and new grid cell-size, and change the mode of each button;
 	LPane* current_subview_ptr = 0;
 	for ( LArrayIterator iter(mSubPanes); iter.Next(&current_subview_ptr); )
-		if ( CToolbarBevelButton* button = dynamic_cast<CToolbarBevelButton*>(current_subview_ptr) )
+		if ( CToolbarButton* button = dynamic_cast<CToolbarButton*>(current_subview_ptr) )
 			{
 				++number_of_buttons;
 
@@ -110,8 +110,7 @@ void CToolbarPatternBevelView::CalcArrangement( Boolean inRotateArrangement, Int
 
 				if ( !inRotateArrangement )
 					{
-						SDimension16 unused;
-						button->ChangeMode(inNewMode, unused);
+						button->ChangeMode(inNewMode, SDimension16());
 
 							// ...and the post-ChangeMode size for |new_cell_size|
 						button->GetFrameSize(button_size);
@@ -133,7 +132,7 @@ void CToolbarPatternBevelView::CalcArrangement( Boolean inRotateArrangement, Int
 	if ( number_of_buttons > 0 )
 		{
 			for ( LArrayIterator iter(mSubPanes); (number_of_buttons > 0) && iter.Next(&current_subview_ptr); )
-				if ( CToolbarBevelButton* button = dynamic_cast<CToolbarBevelButton*>(current_subview_ptr) )
+				if ( CToolbarButton* button = dynamic_cast<CToolbarButton*>(current_subview_ptr) )
 					{
 						--number_of_buttons;
 

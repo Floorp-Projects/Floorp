@@ -45,43 +45,21 @@
 	#include <LTextColumn.h>
 	#include <LSubOverlapView.h>
 	
-// еее AM wrappers classes and their AM implementations
-	#include <LStaticText.h>
-	#include <LAMStaticTextImp.h>
-	#include <LIconControl.h>
-	#include <LProgressBar.h>
-	#include <LPushButton.h>
-	#include <LAMPushButtonImp.h>
-	#include <LBevelButton.h>
-	#include <LCmdBevelButton.h>
-	#include <LCheckbox.h>
-	#include <LRadioButton.h>
-	#include <LTextGroupBox.h>
-	#include <LEditText.h>
-	#include <LAMEditTextImp.h>
-	#include <LPopupButton.h>
-	#include <LAMPopupButtonImp.h>
-	
-// еее Things that will go away after appearance conversion complete
-	#include "CProgressBar.h"
-	#include "CPatternBevelView.h"
-	#include "CBevelButton.h"
-	#include "CPatternButtonPopup.h"
-	#include "CPatternProgressBar.h"
-	#include "CPatternPane.h"
-	#include "CGABorderPane.h"
-		
 // еее PowerPlant Grayscale Classes
 	#include <UGALibRegistry.h>
 
 // еее General Purpose UI Classes
-	#include "CToolbarBevelButton.h"
+	#include "CBevelButton.h"
 	#include "CPatternButton.h"	
-	#include "CAMSavvyBevelView.h"
-
+	#include "CGrayBevelView.h"
+	#include "CPatternBevelView.h"
+	#include "CPatternButtonPopup.h"
+	#include "CGuidePopupMenu.h"
 	#include "CNavigationButtonPopup.h"
 	#include "CCloseAllAttachment.h"
 	#include "CColorEraseAttachment.h"
+	#include "CGABorderPane.h"
+	#include "CPatternPane.h"
 				
 	#include "CIncludeView.h"
 	#include "CPlaceHolderView.h"
@@ -89,6 +67,8 @@
 	#include "CClusterView.h"
 	#include "CTabSwitcher.h"
 	#include "CPatternTabControl.h"	
+	#include "CProgressBar.h"
+//	#include "CProgressCaption.h"
 	#include "CTaskBarView.h"
 	#include "LTableHeader.h"
 	#include "LTableViewHeader.h"
@@ -99,8 +79,8 @@
 	#include "CPaneEnabler.h"
 	#include "CStringListToolTipPane.h"	
 	#include "CSaveProgress.h"	
+	#include "CPatternProgressBar.h"
 	#include "CScrollerWithArrows.h"
-	#include "CProgressCaption.h"
 	
 #ifdef MOZ_MAIL_NEWS
 	#include "CBiffButtonAttachment.h"
@@ -185,6 +165,8 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CProxyCaption);
 	RegisterClass_(CCloseAllAttachment);
 	RegisterClass_(CColorEraseAttachment);
+	RegisterClass_(CGABorderPane);
+	RegisterClass_(CPatternPane);
 	
 	RegisterClass_(LSubOverlapView);
 
@@ -211,6 +193,7 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(LTabGroup);
 	RegisterClass_(LActiveScroller);
 
+	//LRegistrar::RegisterClass('prto', (ClassCreatorFunc);LPrintout::CreateOldPrintoutStream);
 
 #ifdef PP_NewClasses
 	#include <LCicnButton.h>
@@ -231,45 +214,14 @@ void RegisterAllBrowserClasses(void)
 	// еее PowerPlant Grayscale Classes
 	RegisterGALibraryClasses();
 
-	// еее PowerPlant appearance manager classes and their implementations
-	RegisterClass_(LStaticText);
-	RegisterClassID_(LAMStaticTextImp, LStaticText::imp_class_ID);
-	RegisterClass_(LIconControl);
-	RegisterClassID_(LAMControlImp, LIconControl::imp_class_ID);
-	RegisterClass_(LProgressBar);
-	RegisterClassID_(LAMControlImp, LProgressBar::imp_class_ID);
-	RegisterClass_(LPushButton);
-	RegisterClassID_(LAMPushButtonImp, LPushButton::imp_class_ID);
-//	RegisterClass_(LBevelButton);
-//	RegisterClassID_(LAMControlImp, LBevelButton::imp_class_ID);
-	RegisterClass_(LCmdBevelButton);
-	RegisterClassID_(LAMControlImp, LCmdBevelButton::imp_class_ID);
-	RegisterClass_(LCheckBox);
-	RegisterClassID_(LAMControlImp, LCheckBox::imp_class_ID);
-	RegisterClass_(LRadioButton);
-	RegisterClassID_(LAMControlImp, LRadioButton::imp_class_ID);
-	RegisterClass_(LTextGroupBox);
-	RegisterClassID_(LAMControlImp, LTextGroupBox::imp_class_ID);
-	RegisterClass_(LPopupButton);
-	RegisterClassID_(LAMPopupButtonImp, LPopupButton::imp_class_ID);
-//	RegisterClass_(LEditText);
-//	RegisterClassID_(LAMEditTextImp, LEditText::imp_class_ID);
-	
-	// еее Things that will go away after appearance port complete
-	RegisterClass_(CProgressBar);
-	RegisterClass_(CPatternBevelView);
+	// еее General Purpose UI Classes
 	RegisterClass_(CBevelButton);
 	RegisterClass_(CDeluxeBevelButton);
 	RegisterClass_(CPatternButton);
 	RegisterClass_(CPatternButtonPopup);
-	RegisterClass_(CPatternProgressBar);
-	RegisterClass_(CPatternProgressCaption);
-	RegisterClass_(CPatternPane);
-	RegisterClass_(CGABorderPane);
-
-	// еее General Purpose UI Classes
-	RegisterClass_(CToolbarBevelButton);	
-	RegisterClass_(CAMSavvyBevelView);	
+	RegisterClass_(CGrayBevelView);
+	RegisterClass_(CPatternBevelView);
+	
 		
 	RegisterClass_(CIncludeView);
 	RegisterClass_(CPlaceHolderView);
@@ -277,6 +229,7 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CClusterView);
 	RegisterClass_(CPatternTabControl);
 	RegisterClass_(CTabSwitcher);
+	RegisterClass_(CProgressBar);
 	RegisterClass_(CKeyScrollAttachment);
 	RegisterClass_(CToolTipAttachment);
 	RegisterClass_(CDynamicTooltipPane);
@@ -285,6 +238,7 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CPaneEnabler);
 	RegisterClass_(CSlaveEnabler);
 	RegisterClass_(CScrollerWithArrows);
+	RegisterClass_(CScrollArrowControl);
 	
 #ifdef MOZ_MAIL_NEWS
 	RegisterClass_(CSingleLineEditField);
@@ -293,7 +247,7 @@ void RegisterAllBrowserClasses(void)
 //	RegisterClass_(CBiffButtonAttachment);
 #endif // MOZ_MAIL_NEWS
 	RegisterClass_(CSimpleDividedView);
-	RegisterClass_(CProgressCaption);
+	//RegisterClass_(CProgressCaption);
 	RegisterClass_(CTaskBarView);
 
 	RegisterClass_(CToolTipPane);
@@ -302,10 +256,13 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(LTableHeader);
 	RegisterClass_(LTableViewHeader);
 
+	RegisterClass_(CPatternProgressBar);
+	RegisterClass_(CPatternProgressCaption);
 
 	RegisterClass_(CTextEdit);
 	RegisterClass_(CEditBroadcaster);
 
+	RegisterClass_(CGuidePopupMenu);
 	RegisterClass_(CNavigationButtonPopup);
 	
 	// *** Browser Specific UI Classes

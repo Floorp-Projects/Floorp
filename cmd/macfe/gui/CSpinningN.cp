@@ -23,6 +23,8 @@
 #include <UResourceMgr.h>
 #include "CSpinningN.h"
 #include "UGraphicGizmos.h"
+#include "UGAAppearance.h"
+#include "CSharedPatternWorld.h"
 #include "macutil.h"
 #include "CNSContext.h"	// for the broadcast messages
 #include "uapp.h"
@@ -50,7 +52,10 @@ const Int16		cButtonBevelBorderSize	=	8;
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
 CSpinningN::CSpinningN(LStream *inStream)
-	: CToolbarBevelButton(inStream)
+	:	mAdornment(nil),
+		mFill(nil),
+		
+		CPatternButton(inStream)
 {
 	mSpinCounter = 0;		// 0 indicates the icon is not spinning
 	mIsCoBranded = false;
@@ -70,13 +75,18 @@ CSpinningN::CSpinningN(LStream *inStream)
 
 void CSpinningN::FinishCreateSelf(void)
 {
-	CToolbarBevelButton::FinishCreateSelf();
+	CPatternButton::FinishCreateSelf();
 	
 	CalcAnimationMode();
 	RepositionSelf();
 	mFinishedCreatingSelf = true;
 	
-	StopSpinningNow();
+	LView* theSuperView = GetSuperView();
+	if (theSuperView)
+	{
+		mAdornment	= theSuperView->FindPaneByID(kAdornmentPaneID);
+		mFill		= theSuperView->FindPaneByID(kFillPaneID);
+	}
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -121,34 +131,34 @@ void CSpinningN::AdaptToSuperFrameSize(
 //		not be positionned correctly at that time.
 }
 
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-//
-// StartRepeating
-//
 void CSpinningN::StartRepeating(void)
 {
 	if (mRefCount == 0)
 	{
 		mSpinCounter = 1;		// > 0 means that we're spinning
 		mLastSpinTicks = ::TickCount();
-		
+	
 		LPeriodical::StartRepeating();
 	}
 	++mRefCount;
 }
 
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-//
-// StopRepeating
-//
 void CSpinningN::StopRepeating()
 {
 	if (mRefCount <= 1)
-	{		
+	{
+		LPeriodical::StopRepeating();
+		
 		mSpinCounter = 0;		// 0 indicates the icon is not spinning
 		mLastSpinTicks = ::TickCount();
-		
-		LPeriodical::StopRepeating();
 		
 		if (IsVisible() && FocusDraw())
 			Draw(NULL);
@@ -157,16 +167,6 @@ void CSpinningN::StopRepeating()
 	--mRefCount;
 	if (mRefCount < 0)
 		mRefCount = 0;
-
-	// get back to std icon
-	ControlButtonContentInfo newInfo;
-	newInfo.u.resID = mGraphicID;
-	if (mIsCoBranded)	
-		newInfo.contentType = kControlContentCIconRes;
-	else
-		newInfo.contentType = kControlContentIconSuiteRes;
-	SetContentInfo ( newInfo );
-
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -186,7 +186,7 @@ void CSpinningN::StopSpinningNow()
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-void CSpinningN::SpendTime(const EventRecord& inMacEvent )
+void CSpinningN::SpendTime(const EventRecord& /* inMacEvent */)
 {
 	if ((::TickCount() - mLastSpinTicks) < kSpinInterval) 
 		return;
@@ -196,14 +196,106 @@ void CSpinningN::SpendTime(const EventRecord& inMacEvent )
 	mSpinCounter = (mSpinCounter + 1) % mIconCount;
 	if (mSpinCounter == 0) // skip zero
 		mSpinCounter++;
+		
+	if (IsVisible() && FocusDraw())
+		Draw(NULL);
+}
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+
+void CSpinningN::DrawSelf(void)
+{
+	PrepareDrawButton();
+
+	DrawButtonContent();
 	
-	ControlButtonContentInfo newInfo;
-	newInfo.u.resID = mGraphicID + mSpinCounter;
-	if (mIsCoBranded)	
-		newInfo.contentType = kControlContentCIconRes;
+	DrawButtonGraphic();			
+			
+	FinalizeDrawButton();
+}
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	DrawButtonContent
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+	
+void CSpinningN::DrawButtonContent(void)
+{
+	CGrafPtr thePort;
+	::GetPort(&(GrafPtr)thePort);
+	
+	Rect theFrame = mCachedButtonFrame;
+	Point theAlignment;
+	
+	CalcOrientationPoint(theAlignment);
+	mPatternWorld->Fill(thePort, theFrame, theAlignment);
+
+	::InsetRect(&theFrame, 2, 2);
+
+	if (IsActive() && IsEnabled())
+		{
+		if (IsTrackInside() || (!IsBehaviourButton() && (mValue == Button_On)))
+			{
+			DrawButtonHilited();
+			}
+		else
+			{
+			DrawButtonNormal();
+			}
+		}
 	else
-		newInfo.contentType = kControlContentIconSuiteRes;
-	SetContentInfo ( newInfo );
+		{
+		DrawSelfDisabled();
+		}
+}
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	DrawSelfDisabled
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+	
+void CSpinningN::DrawSelfDisabled(void)
+{
+	UGAAppearance::DrawGAButtonDimmedBevelTint(mCachedButtonFrame);
+}
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	DrawButtonGraphic
+//
+//	the first cicn's or icl8's in each of the large and small sequences should
+//	be preloaded and locked.
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+
+void CSpinningN::DrawButtonGraphic(void)
+{
+	Rect theFrame;
+	CalcLocalFrameRect(theFrame);
+	
+	UGraphicGizmos::CenterRectOnRect(mCachedIconFrame, theFrame);
+
+	if (IsTrackInside() || (GetValue() == Button_On))
+		::OffsetRect(&mCachedIconFrame, 1, 1);
+
+	if (mIsCoBranded)
+		{
+		StUseResFile rf(mAnimResFile);
+		CIconHandle theHandle = ::GetCIcon(mGraphicID + mSpinCounter);
+		if (theHandle == NULL)
+			theHandle = ::GetCIcon(mGraphicID);
+	
+		if (theHandle != NULL)	
+			{
+			::PlotCIcon(&mCachedIconFrame, theHandle);
+			::DisposeCIcon(theHandle);
+			}
+		}
+	else
+		{
+//		UGraphicGizmos::CenterRectOnRect(mCachedIconFrame, theFrame);
+		OSErr theErr = ::PlotIconID(&mCachedIconFrame, atNone, ttNone, mGraphicID + mSpinCounter);
+		if (theErr != noErr)
+			::PlotIconID(&mCachedIconFrame, atNone, ttNone, mGraphicID);
+		}
 }
 
 
@@ -361,6 +453,11 @@ void CSpinningN::RepositionSelf(SDimension16* inNewToolbarSize)
 //	SDimension16 frameSize;
 	GetFrameSize(frameSize);
 	
+//	v = (theSuperFrameSize.height - theHeight) / 2;
+//	h = theSuperFrameSize.width - theWidth - v - 1;
+//	PlaceInSuperFrameAt(h, v, false);
+//	ResizeFrameTo(theWidth, theHeight, true);
+
 	// Adjust theWidth and theHeight to take into account
 	// button bevel
 	
@@ -371,6 +468,34 @@ void CSpinningN::RepositionSelf(SDimension16* inNewToolbarSize)
 	h = theSuperFrameSize.width - theWidth - v - 1;
 	PlaceInSuperFrameAt(h, v, false);
 	ResizeFrameTo(theWidth, theHeight, true);
+
+/*
+	// Adjust the adornment pane
+	
+	if (theSuperFrameSize.height <= theHeight || theHeight < 40)
+	{
+		if (mAdornment)
+			mAdornment->Hide();
+	}
+	else
+	{
+		if (mAdornment)
+		{
+			mAdornment->PlaceInSuperFrameAt(h - 1, v - 1, false);
+			mAdornment->ResizeFrameTo(theWidth + 2, theHeight + 2, true);
+			mAdornment->Show();
+		}
+	}
+	
+	// Adjust the position and size of the fill pane
+	
+	if (mFill)
+	{
+		h = theSuperFrameSize.width - theWidth - v - 1;
+		mFill->PlaceInSuperFrameAt(h, 1, false);
+		mFill->ResizeFrameTo(theSuperFrameSize.width - h, theSuperFrameSize.height - 2, true);
+	}
+*/
 }
 
 void CSpinningN::GetLargeIconFrameSize(SDimension16& outFrameSize)

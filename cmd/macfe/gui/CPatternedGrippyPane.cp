@@ -30,14 +30,12 @@
 #include "CSharedPatternWorld.h"
 #include "UGraphicGizmos.h"
 
-#include <Appearance.h>
-
 
 CPatternedGrippyPane::CPatternedGrippyPane(LStream* inStream)
 	:	LPane(inStream)
 {
-	ResIDT ignoredEntry;	
-	*inStream >> ignoredEntry;			// read in but ignore (used to be background pattern id)
+	ResIDT theBackgroundID;	
+	*inStream >> theBackgroundID;
 	ResIDT theBackgroundHiliteID;	
 	*inStream >> theBackgroundHiliteID;
 	
@@ -49,6 +47,9 @@ CPatternedGrippyPane::CPatternedGrippyPane(LStream* inStream)
 	ResIDT theTriangleID;
 	*inStream >> theTriangleID;
 	
+	mBackPattern = CSharedPatternWorld::CreateSharedPatternWorld(theBackgroundID);
+	ThrowIfNULL_(mBackPattern);
+	mBackPattern->AddUser(this);
 	mBackPatternHilite = CSharedPatternWorld::CreateSharedPatternWorld(theBackgroundHiliteID);
 	ThrowIfNULL_(mBackPatternHilite);
 	mBackPatternHilite->AddUser(this);
@@ -74,6 +75,7 @@ CPatternedGrippyPane::~CPatternedGrippyPane()
 {
 	mGrippy->RemoveUser(this);
 	mGrippyHilite->RemoveUser(this);
+	mBackPattern->RemoveUser(this);
 	mBackPatternHilite->RemoveUser(this);
 	::DisposeCIcon(mTriangle);
 }
@@ -95,18 +97,13 @@ void CPatternedGrippyPane::DrawSelf(void)
 		// because we may be being drawn offscreen.
 	CGrafPtr thePort;
 	::GetPort(&(GrafPtr)thePort);
-
 	if ( mMouseInside )
 		mBackPatternHilite->Fill(thePort, theFrame, theAlignment);
-	else {
-		// fill and bevel with appearance manager look
-		Rect bevelFrame = theFrame;
-		--bevelFrame.top;			// get rid of thick bevels on top/left/right
-		--bevelFrame.left;
-		++bevelFrame.right;
-		::DrawThemeWindowListViewHeader ( &bevelFrame, kThemeStateActive );
-	}
-		
+	else
+		mBackPattern->Fill(thePort, theFrame, theAlignment);
+	
+	UGraphicGizmos::BevelTintRect(theFrame, 1, 0x4000, 0x4000);
+
 	Rect theTriangleFrame = (**mTriangle).iconPMap.bounds;
 	Rect theTriangleDest = theFrame;
 	theTriangleDest.bottom = theTriangleDest.top + RectWidth(theFrame);
@@ -121,13 +118,14 @@ void CPatternedGrippyPane::DrawSelf(void)
  	
  	// hack to make it look centered for both drag bars and expand/collapse widget
  	if ( thePatternDest.right - thePatternDest.left > 5 )
- 		++theAlignment.h;
+ 		theAlignment.h++;
  	
 	if ( mMouseInside )
 		mGrippyHilite->Fill(thePort, thePatternDest, theAlignment);
 	else
 		mGrippy->Fill(thePort, thePatternDest, theAlignment);
 		
+//	UGraphicGizmos::DrawArithPattern(theFrame, mBottomShadePat, 0x6000, false);
 }
 
 

@@ -511,7 +511,7 @@ void * StructCopy(const void * struc, UInt32 size)
 }
 
 
-void SetMenuSize( LPopupButton* popup, short shouldBe )
+void SetMenuSize( LStdPopupMenu* popup, short shouldBe )
 {
 	MenuHandle		menu;
 	short			count;
@@ -682,29 +682,47 @@ void TurnOn( LControl* control )
 	control->BroadcastMessage( msg_ControlClicked, (void*)control );
 }
 
-
-//
-// Why pass both the control _and_ the menu when one will do? This is an artifact of
-// trying to get rid of the LGA* stuff from all files that don't need it. Once we can do
-// that, we can return this routine to it's old glory of only taking the control (pinkerton).
-//
-Boolean SetMenuToNamedItem( LControl* inControl, MenuHandle inMenu, const CStr255& itemText )
+Boolean SetPopupToNamedItem( LStdPopupMenu* whichMenu, const CStr255& itemText )
 {
-	short menuSize = CountMItems( inMenu );
+	MenuHandle		menuH;
+	short			menuSize;
+	Str255			fontName;
+	
+	menuH = whichMenu->GetMacMenuH();
+	menuSize = CountMItems( menuH );
 	
 	for ( short i = 1; i <= menuSize; i++ )
 	{
-		CStr255 currItemName;
-		::GetMenuItemText( inMenu, i, currItemName );
-		if ( itemText == currItemName )
+		::GetMenuItemText( menuH, i, fontName );
+		if ( itemText == (CStr255)fontName )
 		{
-			inControl->SetValue( i );
+			whichMenu->SetValue( i );
 			return TRUE;
 		}
 	}
 	return FALSE;
 }
 
+Boolean SetLGAPopupToNamedItem( LGAPopup* whichMenu, const CStr255& itemText )
+{
+	MenuHandle		menuH;
+	short			menuSize;
+	Str255			fontName;
+	
+	menuH = whichMenu->GetMacMenuH();
+	menuSize = CountMItems( menuH );
+	
+	for ( short i = 1; i <= menuSize; i++ )
+	{
+		::GetMenuItemText( menuH, i, fontName );
+		if ( itemText == (CStr255)fontName )
+		{
+			whichMenu->SetValue( i );
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
 
 unsigned long GetFreeSpaceInBytes( short vRefNum )
 {

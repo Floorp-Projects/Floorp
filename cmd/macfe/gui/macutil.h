@@ -26,7 +26,6 @@
 #include <LControl.h>
 #include <LPane.h>
 #include <LGAPopup.h>
-#include <LPopupButton.h>
 #include <Processes.h>
 
 #include "PascalString.h"
@@ -173,7 +172,7 @@ void CreateMenuString( CStr255& itemName );
 Handle TextHandleToHardLineBreaks(CSimpleTextView &inTextView);
 
 // ¥Êsets the number of entries in popup to be shouldBe
-void SetMenuSize( LPopupButton* popup, short shouldBe );
+void SetMenuSize( LStdPopupMenu* popup, short shouldBe );
 void SetMenuSizeForLGAPopup( LGAPopup* popup, short shouldBe );
 
 void SetMenuItem( CommandT whichItem, Boolean toState );
@@ -186,8 +185,9 @@ void * StructCopy(const void * struc, UInt32 size);
 // ¥ return the free space available on the volume referenced by vRefNum in bytes
 unsigned long GetFreeSpaceInBytes( short vRefNum );
 
-// ¥Êsets the std popup to the named item
-Boolean SetMenuToNamedItem( LControl* inControl, MenuHandle inMenu, const CStr255& itemText ) ;
+// ¥Êsets the std poup to the named item
+Boolean SetPopupToNamedItem( LStdPopupMenu* whichMenu, const CStr255& itemText );
+Boolean SetLGAPopupToNamedItem( LGAPopup* whichMenu, const CStr255& itemText );
 
 // ¥
 void TurnOn( LControl* control );

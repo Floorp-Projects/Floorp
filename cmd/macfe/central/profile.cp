@@ -29,13 +29,14 @@
 #include "resgui.h"
 #include "xp_file_mac.h"
 #include "DirectoryCopy.h"
+#include <LGARadioButton.h>
+#include <LGAPushButton.h>
+#include <LGAEditField.h>
 
 // for multi-user profile support in PE
 #include "MUC.h"
 #include <CodeFragments.h>
 #include <LString.h>
-#include <LPushButton.h>
-
 
 #define updateWizardDialog		9800
 
@@ -304,11 +305,11 @@ CUserProfile::GetUserProfile( const FSSpec& usersFolder, FSSpec& profileFolder,
 	return result;
 }
 
-static void PrefToEditField(const char * prefName, LEditField * field);
-static void EditFieldToPref(LEditField * field, const char * prefName);
+static void PrefToEditField(const char * prefName, LGAEditField * field);
+static void EditFieldToPref(LGAEditField * field, const char * prefName);
 
-const Uint32 PREF_STRING_LEN = 255;
-void PrefToEditField(const char * prefName, LEditField * field)
+#define PREF_STRING_LEN 255
+void PrefToEditField(const char * prefName, LGAEditField * field)
 {
 	int prefStringLen;
 	char prefString[PREF_STRING_LEN];
@@ -320,7 +321,7 @@ void PrefToEditField(const char * prefName, LEditField * field)
 	}
 }
 
-void EditFieldToPref(LEditField * field, const char * prefName)
+void EditFieldToPref(LGAEditField * field, const char * prefName)
 {
 	Str255 s;
 	field->GetDescriptor(s);
@@ -336,11 +337,11 @@ CUserProfile::DoNetExtendedProfileDialog(LCommander * super)
 	StDialogHandler	theHandler(9911, super);
 	LWindow			*theDialog = theHandler.GetDialog();
 	
-	LEditField *ldapAddressField = dynamic_cast<LEditField*>(theDialog->FindPaneByID('addr'));
-	LEditField *searchBaseField = dynamic_cast<LEditField*>(theDialog->FindPaneByID('sbas'));
-	LEditField *httpAddressField = dynamic_cast<LEditField*>(theDialog->FindPaneByID('hurl'));
-	LControl * ldapRadio = dynamic_cast<LControl*>(theDialog->FindPaneByID('ldap'));
-	LControl * httpRadio = dynamic_cast<LControl*>(theDialog->FindPaneByID('http'));
+	LGAEditField *ldapAddressField = (LGAEditField*)theDialog->FindPaneByID('addr');
+	LGAEditField *searchBaseField = (LGAEditField*)theDialog->FindPaneByID('sbas');
+	LGAEditField *httpAddressField = (LGAEditField*)theDialog->FindPaneByID('hurl');
+	LGARadioButton * ldapRadio = (LGARadioButton *)theDialog->FindPaneByID('ldap');
+	LGARadioButton * httpRadio = (LGARadioButton *)theDialog->FindPaneByID('http');
 	
 	ThrowIfNil_(ldapAddressField);
 	ThrowIfNil_(searchBaseField);
@@ -404,8 +405,8 @@ CUserProfile::DoNetProfileDialog()
 		StDialogHandler	theHandler(9910, CFrontApp::GetApplication());
 		LWindow			*theDialog = theHandler.GetDialog();
 
-		LEditField *usernameField = dynamic_cast<LEditField*>(theDialog->FindPaneByID('user'));
-		LEditField *passwordField = dynamic_cast<LEditField*>(theDialog->FindPaneByID('pass'));
+		LGAEditField *usernameField = (LGAEditField*)theDialog->FindPaneByID('user');
+		LGAEditField *passwordField = (LGAEditField*)theDialog->FindPaneByID('pass');
 
 		ThrowIfNil_(usernameField);
 		ThrowIfNil_(passwordField);
@@ -564,7 +565,7 @@ ProfileErr CUserProfile::HandleProfileDialog(
 		profileManagerDialog : profileSelectDialog;
 	Boolean				success = false;
 	LListBox*			listBox;
-	LPushButton*		okButton;
+	LGAPushButton*		okButton;
 	LPane*				newButton;
 	LPane*				deleteButton;
 	LPane*				renameButton;
@@ -587,7 +588,7 @@ ProfileErr CUserProfile::HandleProfileDialog(
 	listBox->AddListener( &dialog );
 	listBox->SwitchTarget( listBox );
 	
-	okButton = dynamic_cast<LPushButton*>(dialog.GetDialog()->FindPaneByID( 'ok  ' ));
+	okButton = (LGAPushButton*)dialog.GetDialog()->FindPaneByID( 'ok  ' );
 	deleteButton = dialog.GetDialog()->FindPaneByID( 2 );
 	renameButton = dialog.GetDialog()->FindPaneByID( 3 );
 	newButton = dialog.GetDialog()->FindPaneByID( 1 );

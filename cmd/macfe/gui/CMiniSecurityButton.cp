@@ -31,3 +31,29 @@ ResIDT CMiniSecurityButton::GetIconID(ESecurityState inSecurityState)
 		result = ResID_SecureIcon;
 	return result;
 }
+
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	DrawButtonContent
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+	
+void CMiniSecurityButton::DrawButtonContent(void)
+{
+	CGrafPtr thePort;
+	::GetPort(&(GrafPtr)thePort);
+	
+	Rect theFrame = mCachedButtonFrame;
+	Point theAlignment;
+	
+	CalcOrientationPoint(theAlignment);
+	mPatternWorld->Fill(thePort, theFrame, theAlignment);
+}
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	DrawButtonGraphic
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+
+void CMiniSecurityButton::DrawButtonGraphic(void)
+{
+	CToolbarButton::DrawButtonGraphic();
+}

@@ -38,11 +38,16 @@ enum {eNoColorSet = -1};
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
 CProgressCaption::CProgressCaption(LStream* inStream)
-	:	LView(inStream),
-		mBar(NULL), mStatusText(NULL)
+	:	CProgressBar(inStream)
 {
+	inStream->ReadPString(mText);
+//	*inStream >> mText;
+	*inStream >> mBoundedTraitsID;
+	*inStream >> mIndefiniteTraitsID;
+	*inStream >> mHiddenTraitsID;
+	*inStream >> mEraseColor;
+	SetHidden();
 }
-
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥
@@ -52,102 +57,47 @@ CProgressCaption::~CProgressCaption()
 {
 }
 
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-void
-CProgressCaption :: FinishCreateSelf ( )
-{
-	mBar = dynamic_cast<LProgressBar*>(FindPaneByID(kProgressBar));
-	mStatusText = dynamic_cast<LCaption*>(FindPaneByID(kStatusText));
-	
-	Assert_(mBar != NULL);
-	Assert_(mStatusText != NULL);
-
-} // FinishCreateSelf
-
-
-//
-// GetDescriptor
-// SetDescriptor
-//
-// Pass-through's to the caption object.
-//
-
-StringPtr
-CProgressCaption::GetDescriptor(
+StringPtr CProgressCaption::GetDescriptor(
 	Str255	outDescriptor) const
 {
-	return mStatusText->GetDescriptor ( outDescriptor );
+	return LString::CopyPStr(mText, outDescriptor);
 }
 
-void
-CProgressCaption::SetDescriptor(ConstStringPtr	inDescriptor)
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+
+void CProgressCaption::SetDescriptor(ConstStringPtr	inDescriptor)
 {
-	mStatusText->SetDescriptor ( "\p" );	
-	if (FocusExposed())
-		Draw(NULL);
-
-	mStatusText->SetDescriptor ( inDescriptor );	
-	if (FocusExposed())
-		Draw(NULL);
-}
-
-void
-CProgressCaption::SetDescriptor(const char* inCDescriptor)
-{
-	mStatusText->SetDescriptor ( "\p" );	
-	if (FocusExposed())
-		Draw(NULL);
-
-	mStatusText->SetDescriptor ( LStr255(inCDescriptor) );
+	if (inDescriptor == NULL)
+		mText = "\p";
+	else
+		mText = inDescriptor;
+	
 	if (FocusExposed())
 		Draw(NULL);
 }
 
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-//
-// SetMaxValue
-//
-// Sets the max value of the progress bar control.
-//
-void
-CProgressCaption :: SetMaxValue ( Int32 inNewMaxValue )
+void CProgressCaption::SetDescriptor(const char* inCDescriptor)
 {
-	mBar->SetMaxValue ( inNewMaxValue ) ;
+	if (inCDescriptor == NULL)
+		mText = "\p";
+	else
+		mText = inCDescriptor;
 
-} // SetMaxValue
-
-
-//
-// GetValue
-// SetValue
-//
-// Pass-throughs to the progress bar object. The value (-1) from layout means set the
-// bar to an indefinite state (barber pole).
-//
-
-void
-CProgressCaption :: SetValue ( Int32 inValue )
-{
-	if ( inValue == eIndefinite ) {
-		EventRecord ignored;				// SpendTime() really doesn't use this. Only needed
-											// because there is no API to spin barber pole (idle).
-		mBar->SetIndeterminateFlag ( true );
-		mBar->SpendTime(ignored);
-	}
-	else {
-		mBar->SetIndeterminateFlag ( false );	
-		mBar->SetValue ( inValue );
-	}
+	if (FocusExposed())
+		Draw(NULL);
 }
 
-Int32
-CProgressCaption :: GetValue ( ) const
-{
-	return mBar->GetValue ( );
-}
-
-
-#if 0
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -254,4 +204,3 @@ void CProgressCaption::DrawSelf(void)
 	UGraphicGizmos::PlaceStringInRect(mText, theFrame, just);
 }
 
-#endif

@@ -16,10 +16,10 @@
  * Reserved.
  */
 
-#include <LPopupButton.h>
+#include <LGAPopup.h>
 
 //======================================
-class CSizePopup: public LPopupButton
+class CSizePopup: public LGAPopup
 //======================================
 {
 public:
@@ -39,15 +39,17 @@ public:
 	virtual void		SetValue(Int32 inValue);
 						
 	void				MarkRealFontSizes(short fontNum);
-	void				MarkRealFontSizes(LPopupButton *fontPopup);
+	void				MarkRealFontSizes(LGAPopup *fontPopup);
 
 	virtual	void		SetUpCurrentMenuItem(MenuHandle	inMenuH, Int16 inCurrentItem);
 	
 protected:
 
+	virtual Boolean		TrackHotSpot(Int16 inHotSpot, Point inPoint, Int16 inModifiers);
 	virtual Int32		GetFontSizeFromMenuItem(Int32 inMenuItem) const;
+	virtual void		DrawPopupTitle();
+	virtual void		DrawPopupArrow();
 
 	Int32				mFontSize;	
 	short				mFontNumber;
-	
 }; // class CSizePopup

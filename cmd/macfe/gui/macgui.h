@@ -258,27 +258,23 @@ public:
 	void UserChangedText();
 };
 
-
-#if 0
 /*****************************************************************************
- * class CEditBroadcaster
+ * class CGAEditBroadcaster
  * LGAEditField that notifies listeners about its changes
  *****************************************************************************/
-class CEditBroadcaster	: public LEditField
+class CGAEditBroadcaster	: public LGAEditField
 {
 public:
 
 	// ее Constructors/destructors
 	enum { class_ID = 'Gebr' };
-	CEditBroadcaster(LStream *inStream);
+	CGAEditBroadcaster(LStream *inStream);
 
 	// ее Misc
 	// Broadcast
 	void BroadcastValueMessage();
 	void UserChangedText();
 };
-#endif
-
 
 /*****************************************************************************
  * class CTextEdit

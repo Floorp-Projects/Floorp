@@ -506,13 +506,6 @@ void CBrowserWindow::FindCommandStatus(
 	//
 	switch (inCommand)
 	{
-		// the bevel button for the branding icon asks us if this command should be enabled
-		// so that the button can be enabled. We always want this button enabled, so return 
-		// true.
-		case LOGO_BUTTON:
-			outEnabled = true;
-			break;
-			
 		case cmd_DocumentInfo:
 		case cmd_ViewSource:
 			if (mContext && (mIsRootDocInfo || mIsViewSource || mIsHTMLHelp))
@@ -706,30 +699,20 @@ Boolean	CBrowserWindow::ObeyCommand(
 					GetHTMLView()->ObeyCommand(inCommand, ioParam);
 				}
 				break;
-
-#if 0			
-			// The forward and back buttons are LBevelButtons, which means they will
-			// broadcast when the user clicks in them. |ioParam| will be the value of
-			// the popup menu, or 0 if the user clicked the button.
+				
 			case cmd_GoForward:
-				if ( ioParam > 0 ) {
-				
-				
-				}
-					else {
-					if (CApplicationEventAttachment::CurrentEventHasModifiers(optionKey))
+				if (CApplicationEventAttachment::CurrentEventHasModifiers(optionKey))
+				{
+					if (mContext)
 					{
-						if (mContext)
-						{
-							mContext->GoForwardOneHost();
-						}
+						mContext->GoForwardOneHost();
 					}
-					else
-					{
-						SendAEGo(kAENext);
-					}
-					cmdHandled = true;
 				}
+				else
+				{
+					SendAEGo(kAENext);
+				}
+				cmdHandled = true;
 				break;
 				
 			case cmd_GoBack:
@@ -746,7 +729,6 @@ Boolean	CBrowserWindow::ObeyCommand(
 				}
 				cmdHandled = true;
 				break;
-#endif
 				
 			case cmd_Home:
 				SendAEGo(AE_www_go_home);
@@ -885,11 +867,18 @@ void CBrowserWindow::ListenToMessage(MessageT inMessage, void* ioParam)
 			CStr255* urlString = (CStr255*)ioParam;
 			if (urlString && mContext)
 			{
+			/*		old way
+				URL_Struct* theURL =
+					NET_CreateURLStruct(*urlString, NET_DONT_RELOAD);
+				mContext->SwitchLoadURL(theURL, FO_CACHE_AND_PRESENT);
+			*/
 				if (!urlString->IsEmpty())
 					SendAEGetURL(*urlString);
 			}
 			break;
 		
+		case cmd_GoForward:
+		case cmd_GoBack:
 		case cmd_Home:
 		case cmd_Reload:
 		case cmd_Stop:

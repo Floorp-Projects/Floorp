@@ -784,28 +784,26 @@ void CEditBroadcaster::UserChangedText()
 	BroadcastMessage(msg_EditField, this);
 }
 
-#if 0
 /*****************************************************************************
- * class CEditBroadcaster
- * LEditField that notifies listeners about its changes
+ * class CGAEditBroadcaster
+ * LGAEditField that notifies listeners about its changes
  *****************************************************************************/
 
-CEditBroadcaster::CEditBroadcaster(LStream *inStream)
-	:	LEditField(inStream)
+CGAEditBroadcaster::CGAEditBroadcaster(LStream *inStream)
+	:	LGAEditField(inStream)
 {
 }
 
-void CEditBroadcaster::UserChangedText()
+void CGAEditBroadcaster::UserChangedText()
 {
 	BroadcastMessage(msg_EditField, this);
 }
 
 void
-CEditBroadcaster::BroadcastValueMessage()
+CGAEditBroadcaster::BroadcastValueMessage()
 {
 	BroadcastMessage(msg_EditField, this);
 }
-#endif
 
 /*****************************************************************************
  * class CTextEdit

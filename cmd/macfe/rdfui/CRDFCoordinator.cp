@@ -88,7 +88,7 @@
 #include "URobustCreateWindow.h"
 #include "BookmarksDialogs.h"
 #include "divview.h"
-#include "LIconControl.h"
+#include "LGAIconSuiteControl.h"
 
 
 const char* CRDFCoordinator::Pref_EditWorkspace = "browser.editWorkspace";
@@ -164,7 +164,8 @@ CRDFCoordinator::FinishCreateSelf()
 		
 	// If the close box is there, register this class as a listener so we get the
 	// close message. It won't be there in the standalone window version		
-	LIconControl* closeBox = dynamic_cast<LIconControl*>(FindPaneByID(CNavCenterTitle::kCloseBoxPaneID));
+	LGAIconSuiteControl* closeBox = 
+			dynamic_cast<LGAIconSuiteControl*>(FindPaneByID(CNavCenterTitle::kCloseBoxPaneID));
 	if ( closeBox )
 		closeBox->AddListener(this);
 			

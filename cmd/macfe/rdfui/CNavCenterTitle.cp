@@ -27,11 +27,9 @@
 #include "CNavCenterTitle.h"
 #include "CNavCenterSelectorPane.h"		// for message id's
 
-#include <LCaption.h>
-
 
 CNavCenterTitle :: CNavCenterTitle ( LStream *inStream )
-	: CAMSavvyBevelView (inStream),
+	: CGrayBevelView (inStream),
 		mTitle(NULL)
 {
 

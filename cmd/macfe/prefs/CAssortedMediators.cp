@@ -34,6 +34,7 @@ extern "C"
 #ifdef MOZ_MAIL_NEWS
 #include "CMessageFolder.h"
 #endif
+#include "UGraphicGizmos.h"
 #include "CToolTipAttachment.h"
 #include "CValidEditField.h"
 
@@ -63,9 +64,14 @@ extern "C"
 #include <UModalDialogs.h>
 #include <UNewTextDrawing.h>
 #include <LTextColumn.h>
+#include <UDrawingUtils.h>
+#include <UGAColorRamp.h>
 #include <LControl.h>
-#include <LPopupButton.h>
-#include <LDialogBox.h>
+
+
+#include <LGADialogBox.h>
+#include <LGACheckbox.h>
+#include <LGARadioButton.h>
 
 //#include <QAP_Assist.h>
 
@@ -80,41 +86,6 @@ extern "C"
 	#include "CMailProgressWindow.h"
 #endif
 #endif // MOZ_MAIL_NEWS
-
-
-#pragma mark ---CBroadcasterEditField---
-
-//
-// CBroadcasterEditField
-//
-// Differs from LBroadcasterEditField in that it broadcasts a change with every keystroke, 
-// unlike its L* bretheren which only broadcasts when focus leaves the textbox.
-//
-// NOTE: This used to be called CEditFieldControl, but that was too misleading for my tastes.
-//
-class CBroadcasterEditField : public LEditField, public LBroadcaster
-{
-public:
-	enum
-	{
-		class_ID = 'BrEd',
-		msg_TextChanged = 'TxtC'
-	};
-						CBroadcasterEditField(LStream *inStream) :
-										  LEditField(inStream)
-										  {}
-	virtual				~CBroadcasterEditField() {}
-	
-protected:
-	virtual void		UserChangedText();
-
-}; // class CBroadcasterEditField
-
-void CBroadcasterEditField::UserChangedText()
-{
-	BroadcastMessage(msg_TextChanged, this);
-}
-
 
 #pragma mark ---CMIMEListPane---
 //======================================
@@ -714,7 +685,7 @@ CMIMEListPane::PrefCellInfo::PrefCellInfo()
 
 #pragma mark ---CEditMIMEWindow---
 //======================================
-class CEditMIMEWindow : public LDialogBox
+class CEditMIMEWindow : public LGADialogBox
 //======================================
 {
 public:
@@ -754,16 +725,16 @@ private:
 			char**				mPluginList;		// Null-terminated array of plug-in names
 			uint32				mPluginCount;		// Number of plug-ins in array
 
-			LPopupButton		*mFileTypePopup;
-			LPopupButton		*mPluginPopup;
-			LEditField			*mDescriptionEditField;
-			LEditField			*mTypeEditField;
-			LEditField			*mExtensionEditField;
-			LControl			*mRadioSave;
-			LControl			*mRadioLaunch;
-			LControl			*mRadioInternal;
-			LControl			*mRadioUnknown;
-			LControl			*mRadioPlugin;
+			LGAPopup			*mFileTypePopup;
+			LGAPopup			*mPluginPopup;
+			CGAEditBroadcaster	*mDescriptionEditField;
+			CGAEditBroadcaster	*mTypeEditField;
+			CGAEditBroadcaster	*mExtensionEditField;
+			LGARadioButton		*mRadioSave;
+			LGARadioButton		*mRadioLaunch;
+			LGARadioButton		*mRadioInternal;
+			LGARadioButton		*mRadioUnknown;
+			LGARadioButton		*mRadioPlugin;
 //			CFilePicker			*mAppPicker;
 			LCaption			*mAppName;
 			LButton				*mAppButton;
@@ -790,7 +761,7 @@ enum
 //-----------------------------------
 CEditMIMEWindow::CEditMIMEWindow(LStream* inStream):
 //-----------------------------------
-	LDialogBox(inStream),
+	LGADialogBox(inStream),
 	mMIMETable(nil),
 	mModified(false),
 	mInitialized(false),
@@ -815,35 +786,34 @@ CEditMIMEWindow::~CEditMIMEWindow()
 void CEditMIMEWindow::FinishCreateSelf()
 {
 	// Cache pointers to all the controls
-	mFileTypePopup = dynamic_cast<LPopupButton*>(FindPaneByID(eFileTypePopupMenu));
+	mFileTypePopup = (LGAPopup *)FindPaneByID(eFileTypePopupMenu);
 	XP_ASSERT(mFileTypePopup);
 
-	mPluginPopup = dynamic_cast<LPopupButton*>(FindPaneByID(ePluginPopupMenu));
+	mPluginPopup = (LGAPopup *)FindPaneByID(ePluginPopupMenu);
 	XP_ASSERT(mPluginPopup);
 
-	mDescriptionEditField = dynamic_cast<LEditField*>(FindPaneByID(eDescriptionField));
+	mDescriptionEditField = (CGAEditBroadcaster *)FindPaneByID(eDescriptionField);
 	XP_ASSERT(mDescriptionEditField);
 
-	mTypeEditField = dynamic_cast<LEditField*>(FindPaneByID(eMIMETypeField));
+	mTypeEditField = (CGAEditBroadcaster *)FindPaneByID(eMIMETypeField);
 	XP_ASSERT(mTypeEditField);
 
-	mExtensionEditField = dynamic_cast<LEditField*>(FindPaneByID(eSuffixes));
+	mExtensionEditField = (CGAEditBroadcaster *)FindPaneByID(eSuffixes);
 	XP_ASSERT(mExtensionEditField);
 
-	mRadioSave = dynamic_cast<LControl*>(FindPaneByID(eSaveRButton));
-	
+	mRadioSave = (LGARadioButton *)FindPaneByID(eSaveRButton);
 	XP_ASSERT(mRadioSave);
 
-	mRadioLaunch = dynamic_cast<LControl*>(FindPaneByID(eApplicationRButton));
+	mRadioLaunch = (LGARadioButton *)FindPaneByID(eApplicationRButton);
 	XP_ASSERT(mRadioLaunch);
 
-	mRadioInternal = dynamic_cast<LControl*>(FindPaneByID(eCommunicatorRButton));
+	mRadioInternal = (LGARadioButton *)FindPaneByID(eCommunicatorRButton);
 	XP_ASSERT(mRadioInternal);
 
-	mRadioUnknown = dynamic_cast<LControl*>(FindPaneByID(eUnknownRButton));
+	mRadioUnknown = (LGARadioButton *)FindPaneByID(eUnknownRButton);
 	XP_ASSERT(mRadioUnknown);
 
-	mRadioPlugin = dynamic_cast<LControl*>(FindPaneByID(ePluginRButton));
+	mRadioPlugin = (LGARadioButton *)FindPaneByID(ePluginRButton);
 	XP_ASSERT(mRadioPlugin);
 
 //	mAppPicker = (CFilePicker *)FindPaneByID(eApplicationFilePicker);
@@ -860,18 +830,12 @@ void CEditMIMEWindow::FinishCreateSelf()
 
 	// Text fields cannot become broadcasters automatically because
 	// LinkListenerToControls expects fields to be descendants of LControl
-	// C++ vtable gets messed up. Luckily, these text fields are also LBroadcasters!
-	LBroadcaster* field = dynamic_cast<LBroadcaster*>(FindPaneByID(eDescriptionField));
-	XP_ASSERT(field != NULL);
-	field->AddListener(this);
-	field = dynamic_cast<LBroadcaster*>(FindPaneByID(eMIMETypeField));
-	XP_ASSERT(field != NULL);
-	field->AddListener(this);
-	field = dynamic_cast<LBroadcaster*>(FindPaneByID(eSuffixes));
-	XP_ASSERT(field != NULL);
-	field->AddListener(this);
+	// C++ vtable gets messed up
+	mDescriptionEditField->AddListener(this);
+	mTypeEditField->AddListener(this);
+	mExtensionEditField->AddListener(this);
 
-	LDialogBox::FinishCreateSelf();
+	LGADialogBox::FinishCreateSelf();
 }
 
 
@@ -947,7 +911,7 @@ void CEditMIMEWindow::BuildPluginMenu()
 	
 	if (oldCount || mPluginCount)
 	{
-		SetMenuSize(mPluginPopup, mPluginCount);
+		SetMenuSizeForLGAPopup(mPluginPopup, mPluginCount);
 
 		MenuHandle menuH = mPluginPopup->GetMacMenuH();
 		uint32 index = 0;
@@ -979,8 +943,6 @@ void CEditMIMEWindow::BuildPluginMenu()
 			mPluginPopup->Refresh();
 		}
 	}
-	else
-		mPluginPopup->SetValue(1);
 }
 
 
@@ -995,7 +957,7 @@ void CEditMIMEWindow::BuildFileTypeMenu()
 	
 	if (count)
 	{
-		SetMenuSize(mFileTypePopup, count);
+		SetMenuSizeForLGAPopup(mFileTypePopup, count);
 
 		MenuHandle menuH = mFileTypePopup->GetMacMenuH();
 		uint32 index;
@@ -1364,8 +1326,8 @@ void CEditMIMEWindow::ListenToMessage(MessageT inMessage, void */*ioParam*/)
 			break;
 		}
 
-		// User edited some text. Update controls to match.
-		case CBroadcasterEditField::msg_TextChanged:
+		// Edit some text
+		case msg_EditField:
 		{
 			CStr255 newText;
 
@@ -1399,6 +1361,33 @@ void CEditMIMEWindow::ListenToMessage(MessageT inMessage, void */*ioParam*/)
 	}	
 }
 
+#pragma mark ---CEditFieldControl---
+//======================================
+class CEditFieldControl : public LGAEditField
+//======================================
+{
+	// Note: This is not derived from LControl! It has control in the
+	// name because it broadcasts when the user changes its contents.
+
+	public:
+		enum
+		{
+			class_ID = 'edtC',
+			msg_ChangedText = 'TxtC'
+		};
+		virtual				~CEditFieldControl() {}
+							CEditFieldControl(LStream *inStream) :
+											  LGAEditField(inStream)
+											  {}
+		virtual void		UserChangedText();
+}; // class CEditFieldControl
+
+//-----------------------------------
+void CEditFieldControl::UserChangedText()
+//-----------------------------------
+{
+	BroadcastMessage(msg_ChangedText, this);
+}
 
 //======================================
 #pragma mark --CAppearanceMainMediator---
@@ -1410,13 +1399,14 @@ enum
 	eMailBox,
 	eNewsBox,
 	eEditorBox,
-	eConferenceBox,		// unused
+	eConferenceBox,
 	eCalendarBox,
-	eNetcasterBox,		// unused
+	eNetcasterBox,
 	ePicturesAndTextRButton,
 	eShowToolTipsBox,
 	ePicturesOnlyRButton,
 	eTextOnlyRButton,
+	eDesktopPatternBox
 };
 
 //-----------------------------------
@@ -1430,17 +1420,34 @@ CAppearanceMainMediator::CAppearanceMainMediator(LStream*)
 void CAppearanceMainMediator::LoadPrefs()
 //-----------------------------------
 {
-	// netcaster/conference are gone in 5.0
-	
+	const OSType kConferenceAppSig = 'Ncq¹';
 	FSSpec fspec;
-	const OSType kCalendarAppSig = 'NScl';
-	if (CFileMgr::FindApplication(kCalendarAppSig, fspec) != noErr)
+	if (CFileMgr::FindApplication(kConferenceAppSig, fspec) != noErr)
 	{
-		LControl* checkbox = dynamic_cast<LControl*>(FindPaneByID(eCalendarBox));
+		LGACheckbox* checkbox = (LGACheckbox *)FindPaneByID(eConferenceBox);
 		XP_ASSERT(checkbox);
 		checkbox->SetValue(false);
 		// disable the control
 		checkbox->Disable();	
+	}
+
+	const OSType kCalendarAppSig = 'NScl';
+	if (CFileMgr::FindApplication(kCalendarAppSig, fspec) != noErr)
+	{
+		LGACheckbox* checkbox = (LGACheckbox *)FindPaneByID(eCalendarBox);
+		XP_ASSERT(checkbox);
+		checkbox->SetValue(false);
+		// disable the control
+		checkbox->Disable();	
+	}
+
+	if (!FE_IsNetcasterInstalled())
+	{
+		LGACheckbox* checkbox = (LGACheckbox *)FindPaneByID(eNetcasterBox);
+		XP_ASSERT(checkbox);
+		checkbox->SetValue(false);
+		// disable the control
+		checkbox->Disable();
 	}
 }
 
@@ -1448,7 +1455,7 @@ void CAppearanceMainMediator::WritePrefs()
 {
 	// this pref will not take effect immediately unless we tell the CToolTipAttachment
 	// class to make it so
-	LControl *theBox = dynamic_cast<LControl*>(FindPaneByID(eShowToolTipsBox));
+	LGACheckbox	*theBox = (LGACheckbox *)FindPaneByID(eShowToolTipsBox);
 	XP_ASSERT(theBox);
 	CToolTipAttachment::Enable(theBox->GetValue());
 }
@@ -1477,7 +1484,7 @@ CAppearanceFontsMediator::CAppearanceFontsMediator(LStream*)
 int
 CAppearanceFontsMediator::GetSelectEncMenuItem()
 {
-	LPopupButton* encMenu = dynamic_cast<LPopupButton*>(FindPaneByID(eCharSetMenu));
+	LGAPopup *encMenu = (LGAPopup *)FindPaneByID(eCharSetMenu);
 	XP_ASSERT(encMenu);
 	return encMenu->GetValue();
 }
@@ -1490,7 +1497,7 @@ CAppearanceFontsMediator::UpdateEncoding(PaneIDT changedMenuID)
 
 	if (changedMenuID == ePropFontMenu || changedMenuID == eFixedFontMenu)
 	{
-		LPopupButton *changedMenu = dynamic_cast<LPopupButton*>(FindPaneByID(changedMenuID));
+		LGAPopup *changedMenu = (LGAPopup *)FindPaneByID(changedMenuID);
 		XP_ASSERT(changedMenu);
 		int	changedMenuValue = changedMenu->GetValue();
 		CStr255	itemString;
@@ -1506,7 +1513,7 @@ CAppearanceFontsMediator::UpdateEncoding(PaneIDT changedMenuID)
 	}
 	else if (changedMenuID == ePropSizeMenu || changedMenuID == eFixedSizeMenu)
 	{
-		CSizePopup *sizeMenu = dynamic_cast<CSizePopup*>(FindPaneByID(changedMenuID));
+		CSizePopup *sizeMenu = (CSizePopup *)FindPaneByID(changedMenuID);
 		XP_ASSERT(sizeMenu);
 		if (changedMenuID == ePropSizeMenu)
 		{
@@ -1526,7 +1533,7 @@ CAppearanceFontsMediator::UpdateMenus()
 	Int32	selectedEncMenuItem = GetSelectEncMenuItem();
 	XP_ASSERT(selectedEncMenuItem <= mEncodingsCount);
 
-	CSizePopup *propSizeMenu = dynamic_cast<CSizePopup*>(FindPaneByID(ePropSizeMenu));
+	CSizePopup *propSizeMenu = (CSizePopup *)FindPaneByID(ePropSizeMenu);
 	XP_ASSERT(propSizeMenu);
 	propSizeMenu->SetFontSize(mEncodings[selectedEncMenuItem - 1].mPropFontSize);
 	if (mEncodings[selectedEncMenuItem - 1].mPropFontSizeLocked)
@@ -1537,7 +1544,7 @@ CAppearanceFontsMediator::UpdateMenus()
 	{
 		propSizeMenu->Enable();
 	}
-	CSizePopup *fixedSizeMenu = dynamic_cast<CSizePopup*>(FindPaneByID(eFixedSizeMenu));
+	CSizePopup *fixedSizeMenu = (CSizePopup *)FindPaneByID(eFixedSizeMenu);
 	XP_ASSERT(fixedSizeMenu);
 	fixedSizeMenu->SetFontSize(mEncodings[selectedEncMenuItem - 1].mFixedFontSize);
 	if (mEncodings[selectedEncMenuItem - 1].mFixedFontSizeLocked)
@@ -1550,12 +1557,12 @@ CAppearanceFontsMediator::UpdateMenus()
 	}
 
 	Str255	fontName;
-	LPopupButton *propFontMenu = dynamic_cast<LPopupButton*>(FindPaneByID(ePropFontMenu));
+	LGAPopup *propFontMenu = (LGAPopup *)FindPaneByID(ePropFontMenu);
 	XP_ASSERT(propFontMenu);
-	if (!SetMenuToNamedItem(propFontMenu, propFontMenu->GetMacMenuH(), mEncodings[selectedEncMenuItem - 1].mPropFont))
+	if (!SetLGAPopupToNamedItem(propFontMenu, mEncodings[selectedEncMenuItem - 1].mPropFont))
 	{
 		GetFontName(applFont, fontName);
-		if (!SetMenuToNamedItem(propFontMenu, propFontMenu->GetMacMenuH(), fontName))
+		if (!SetLGAPopupToNamedItem(propFontMenu, fontName))
 		{
 			propFontMenu->SetValue(1);
 		}
@@ -1570,12 +1577,12 @@ CAppearanceFontsMediator::UpdateMenus()
 		propFontMenu->Enable();
 	}
 
-	LPopupButton *fixedFontMenu = dynamic_cast<LPopupButton*>(FindPaneByID(eFixedFontMenu));
+	LGAPopup *fixedFontMenu = (LGAPopup *)FindPaneByID(eFixedFontMenu);
 	XP_ASSERT(fixedFontMenu);
-	if (!SetMenuToNamedItem(fixedFontMenu, fixedFontMenu->GetMacMenuH(), mEncodings[selectedEncMenuItem - 1].mFixedFont))
+	if (!SetLGAPopupToNamedItem(fixedFontMenu, mEncodings[selectedEncMenuItem - 1].mFixedFont))
 	{
 		GetFontName(applFont, fontName);
-		if (!SetMenuToNamedItem(fixedFontMenu, fixedFontMenu->GetMacMenuH(), fontName))
+		if (!SetLGAPopupToNamedItem(fixedFontMenu, fontName))
 		{
 			fixedFontMenu->SetValue(1);
 		}
@@ -1701,7 +1708,7 @@ CAppearanceFontsMediator::PopulateEncodingsMenus(PaneIDT menuID)
 	{
 		LoadEncodings();
 	}
-	LPopupButton *theMenu = dynamic_cast<LPopupButton*>(FindPaneByID(menuID));
+	LGAPopup *theMenu = (LGAPopup *)FindPaneByID(menuID);
 	XP_ASSERT(theMenu);
 	for (int i = 0; i < mEncodingsCount; ++i)
 	{
@@ -1758,7 +1765,7 @@ CAppearanceFontsMediator::WriteEncodingPrefs()
 
 
 Int16
-CAppearanceFontsMediator::GetFontSize(LPopupButton* whichPopup)
+CAppearanceFontsMediator::GetFontSize(LGAPopup* whichPopup)
 {
 	Str255		sizeString;
 	Int32		fontSize = 12;
@@ -1779,11 +1786,12 @@ CAppearanceFontsMediator::GetFontSize(LPopupButton* whichPopup)
 void
 CAppearanceFontsMediator::FontMenuChanged(PaneIDT changedMenuID)
 {
-	CSizePopup *sizePopup = dynamic_cast<CSizePopup*>(FindPaneByID(ePropFontMenu == changedMenuID ?
+	CSizePopup	*sizePopup =
+			(CSizePopup *)FindPaneByID(ePropFontMenu == changedMenuID ?
 											ePropSizeMenu :
-											eFixedSizeMenu));
+											eFixedSizeMenu);
 	XP_ASSERT(sizePopup);
-	LPopupButton* fontPopup = dynamic_cast<LPopupButton*>(FindPaneByID(changedMenuID));
+	LGAPopup	*fontPopup = (LGAPopup *)FindPaneByID(changedMenuID);
 	XP_ASSERT(fontPopup);
 	sizePopup->MarkRealFontSizes(fontPopup);
 	UpdateEncoding(changedMenuID);
@@ -2291,7 +2299,8 @@ CBrowserLanguagesMediator::GetNewLanguage(char *&newLanguage)
 	mAddLanguageList =
 		(LTextColumn *)dialog->FindPaneByID(eAddLanguageList);
 	XP_ASSERT(mAddLanguageList);
-	CBroadcasterEditField* theField = dynamic_cast<CBroadcasterEditField*>(dialog->FindPaneByID(eAddLanguageOtherEditField));
+	CEditFieldControl	*theField =
+		(CEditFieldControl *)dialog->FindPaneByID(eAddLanguageOtherEditField);
 	XP_ASSERT(theField);
 
 	mOtherTextEmpty = true;
@@ -2397,9 +2406,9 @@ CBrowserLanguagesMediator::ListenToMessage(MessageT inMessage, void *ioParam)
 {
 	switch (inMessage)
 	{
-		case CBroadcasterEditField::msg_TextChanged:
+		case CEditFieldControl::msg_ChangedText:
 			Str255	languageStr;
-			(reinterpret_cast<LEditField*>(ioParam))->GetDescriptor(languageStr);
+			((CEditFieldControl *)ioParam)->GetDescriptor(languageStr);
 			if ((mOtherTextEmpty && languageStr[0]) ||	// The value of mOtherTextEmpty
 				(!mOtherTextEmpty && !languageStr[0]))	// needs to change.
 			{
@@ -2816,7 +2825,8 @@ CEditorMainMediator::ListenToMessage(MessageT inMessage, void *ioParam)
 					// If mNeedsPrefs, then we are setting up the pane. If the picker
 					// is not set (can happen if the app file was physically deleted),
 					// then we need to unset the "use" check box.
-					LControl *checkbox = dynamic_cast<LControl*>(FindPaneByID(inMessage));
+					LGACheckbox *checkbox =
+							(LGACheckbox *)FindPaneByID(inMessage);
 					XP_ASSERT(checkbox);
 					checkbox->SetValue(false);
 				}
@@ -2826,7 +2836,8 @@ CEditorMainMediator::ListenToMessage(MessageT inMessage, void *ioParam)
 					if (!fPicker->WasSet())
 					{	// If the file picker is still unset, that means that the user
 						// cancelled the file browse so we don't want the checkbox set.
-						LControl *checkbox = dynamic_cast<LControl*>(FindPaneByID(inMessage));
+						LGACheckbox *checkbox =
+								(LGACheckbox *)FindPaneByID(inMessage);
 						XP_ASSERT(checkbox);
 						checkbox->SetValue(false);
 					}
@@ -2844,7 +2855,8 @@ CEditorMainMediator::ListenToMessage(MessageT inMessage, void *ioParam)
 					// If mNeedsPrefs, then we are setting up the pane. If the picker
 					// is not set (can happen if the app file was physically deleted),
 					// then we need to unset the "use" check box.
-					LControl *checkbox = dynamic_cast<LControl*>(FindPaneByID(inMessage));
+					LGACheckbox *checkbox =
+							(LGACheckbox *)FindPaneByID(inMessage);
 					XP_ASSERT(checkbox);
 					checkbox->SetValue(false);
 				}
@@ -2854,7 +2866,8 @@ CEditorMainMediator::ListenToMessage(MessageT inMessage, void *ioParam)
 					if (!fPicker->WasSet())
 					{	// If the file picker is still unset, that means that the user
 						// cancelled the file browse so we don't want the checkbox set.
-						LControl *checkbox = dynamic_cast<LControl*>(FindPaneByID(inMessage));
+						LGACheckbox *checkbox =
+								(LGACheckbox *)FindPaneByID(inMessage);
 						XP_ASSERT(checkbox);
 						checkbox->SetValue(false);
 					}
@@ -2872,7 +2885,7 @@ CEditorMainMediator::ListenToMessage(MessageT inMessage, void *ioParam)
 					checkBoxID = eUseImageEditorBox;
 					break;
 			}
-			LControl *checkbox = dynamic_cast<LControl*>(FindPaneByID(inMessage));
+			LGACheckbox *checkbox = (LGACheckbox *)FindPaneByID(checkBoxID);
 			XP_ASSERT(checkbox);
 			checkbox->SetValue(true);
 			break;
@@ -2919,7 +2932,8 @@ CEditorMainMediator::SaveIntervalValidationFunc(CValidEditField *saveInterval)
 		// We are assuming that the checkbox is a sub of the field's superview.
 		LView	*superView = saveInterval->GetSuperView();
 		XP_ASSERT(superView);
-		LControl *checkbox = dynamic_cast<LControl*>(superView->FindPaneByID(eAutoSaveCheckBox));
+		LGACheckbox	*checkbox =
+				(LGACheckbox *)superView->FindPaneByID(eAutoSaveCheckBox);
 		XP_ASSERT(checkbox);
 		if (checkbox->GetValue())
 		{
@@ -3343,7 +3357,7 @@ CAdvancedProxiesMediator::ListenToMessage(MessageT inMessage, void *ioParam)
 		case msg_ControlClicked:
 			break;
 		case eViewProxyConfigButton:
-			LControl* theButton = dynamic_cast<LControl*>(FindPaneByID(eManualRButton));
+			LGARadioButton	*theButton = (LGARadioButton *)FindPaneByID(eManualRButton);
 			XP_ASSERT(theButton);
 			if (!theButton->GetValue())
 			{
@@ -3501,8 +3515,8 @@ void CAdvancedDiskSpaceMediator::LoadMainPane()
 void UAssortedPrefMediators::RegisterViewClasses()
 //-----------------------------------
 {
-	RegisterClass_(CBroadcasterEditField);
-	
+	RegisterClass_(CEditFieldControl);
+
 	RegisterClass_( CEditMIMEWindow);
 	RegisterClass_( CMIMEListPane);
 	RegisterClass_(CColorButton);
@@ -3511,10 +3525,10 @@ void UAssortedPrefMediators::RegisterViewClasses()
 	RegisterClass_(COtherSizeDialog);
 	RegisterClass_(CSizePopup);
 	
+	RegisterClass_( CGAEditBroadcaster);
 	RegisterClass_(CValidEditField);
 	RegisterClass_( LCicnButton);
 //	RegisterClass_( 'sbox', (ClassCreatorFunc)OneClickLListBox::CreateOneClickLListBox );
 	RegisterClass_(OneRowLListBox);	// added by ftang
 	UPrefControls::RegisterPrefControlViews();
-
 } // CPrefsDialog::RegisterViewClasses

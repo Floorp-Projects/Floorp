@@ -24,15 +24,16 @@
 
 #include <LPane.h>
 #include <LListener.h>
+#include <LPeriodical.h>
 
-
-#include "CToolbarBevelButton.h"
+#include "CPatternButton.h"
 
 const Int16 kMaxSpinStages 		=	40;
 
 class CSpinningN :
-		public CToolbarBevelButton,
-		public LListener
+		public CPatternButton,
+		public LListener,
+		protected LPeriodical
 {
 	public:
 		enum {
@@ -67,7 +68,19 @@ class CSpinningN :
 
 	
 		virtual void		FinishCreateSelf(void);
+		virtual void		DrawSelf(void);
 
+		virtual void		DrawButtonGraphic(void);
+		virtual void		DrawButtonContent(void);
+		virtual void		DrawSelfDisabled(void);
+		
+			//	We redraw on Activate/Deactivate/Enable/Disable in order to play well
+			//	with the darn CBevelView stuff.
+		virtual void		ActivateSelf()		{ Draw(nil); }
+		virtual void		DeactivateSelf()	{ Draw(nil); }
+		virtual void		EnableSelf()		{ Draw(nil); }
+		virtual void		DisableSelf()		{ Draw(nil); }
+		
 		virtual void		CalcAnimationMode(void);
 		virtual	void		RepositionSelf(SDimension16* inNewToolbarSize = NULL);
 
@@ -95,4 +108,6 @@ class CSpinningN :
 		
 		Boolean				mFinishedCreatingSelf;
 		
+		LPane*				mAdornment;
+		LPane*				mFill;
 };

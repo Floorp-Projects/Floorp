@@ -18,10 +18,10 @@
 
 #pragma once
 
-#include <LEditField.h>
+#include <LGAEditField.h>
 
 //======================================
-class CValidEditField: public LEditField
+class CValidEditField: public LGAEditField
 //======================================
 {
 public:

@@ -32,7 +32,6 @@ public:
 class LTextColumn;
 class CMIMEListPane;
 class CDragOrderTextList;
-class LPopupButton;
 
 //======================================
 #pragma mark
@@ -101,7 +100,7 @@ class CAppearanceFontsMediator : public CPrefsMediator
 				void	UpdateEncoding(PaneIDT changedMenuID);
 				void	PopulateEncodingsMenus(PaneIDT menuID);
 				void	WriteEncodingPrefs();
-				Int16	GetFontSize(LPopupButton* whichPopup);
+				Int16	GetFontSize(LGAPopup* whichPopup);
 				int		GetSelectEncMenuItem();
 				void	FontMenuChanged(PaneIDT changedMenuID);
 				void	SizeMenuChanged(PaneIDT changedMenuID);
@@ -160,7 +159,6 @@ class CBrowserLanguagesMediator : public CPrefsMediator
 	public:
 
 		enum { class_ID = PrefPaneID::eBrowser_Languages };
-		
 		CBrowserLanguagesMediator(LStream*);
 		virtual	~CBrowserLanguagesMediator();
 
