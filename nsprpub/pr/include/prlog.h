@@ -86,7 +86,7 @@ PR_BEGIN_EXTERN_C
 ** The special LogModule name "sync" tells the NSPR log service to do
 ** unbuffered logging.
 ** 
-** The special LogModule name "buffsize:<size>" tells NSPR to set the
+** The special LogModule name "bufsize:<size>" tells NSPR to set the
 ** log buffer to <size>.
 **
 ** The environment variable NSPR_LOG_FILE specifies the log file to use
