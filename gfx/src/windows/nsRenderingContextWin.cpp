@@ -223,29 +223,28 @@ void nsRenderingContextWin :: PopState()
   }
   else
   {
-    GraphicsState *state = mStates;
+    GraphicsState *oldstate = mStates;
 
     mStates = mStates->mNext;
 
-    mStateCache->AppendElement(state);
+    mStateCache->AppendElement(oldstate);
 
     if (nsnull != mStates)
     {
       mTMatrix = &mStates->mMatrix;
 
-      if (state->mGlobalClip != mStates->mGlobalClip)
-      {
-        GraphicsState *pstate = mStates;
+      GraphicsState *pstate = mStates;
 
-        //the clip rect has changed from state to state, so
-        //install the previous clip rect
+      //the clip rect has changed from state to state, so
+      //install the previous clip rect
 
-        while (nsnull == pstate->mClipRegion)
-          pstate = pstate->mNext;
+      while ((nsnull != pstate) && (nsnull == pstate->mClipRegion))
+        pstate = pstate->mNext;
 
-        if (nsnull != pstate)
-          ::SelectClipRgn(mDC, pstate->mClipRegion);
-      }
+      if ((nsnull != pstate) && (pstate->mGlobalClip != oldstate->mGlobalClip))
+        ::SelectClipRgn(mDC, pstate->mClipRegion);
+      else
+        ::SelectClipRgn(mDC, NULL);
     }
     else
       mTMatrix = nsnull;
@@ -769,11 +768,13 @@ nsresult nsRenderingContextWin :: CopyOffScreenBits(nsRect &aBounds)
 
     //look for a cliprect somewhere in the stack...
 
-    while (nsnull == pstate->mClipRegion)
+    while ((nsnull != pstate) && (nsnull == pstate->mClipRegion))
       pstate = pstate->mNext;
 
     if (nsnull != pstate)
       ::SelectClipRgn(mMainDC, pstate->mClipRegion);
+    else
+      ::SelectClipRgn(mMainDC, NULL);
 
     ::BitBlt(mMainDC, 0, 0, aBounds.width, aBounds.height, mDC, 0, 0, SRCCOPY);
   }
