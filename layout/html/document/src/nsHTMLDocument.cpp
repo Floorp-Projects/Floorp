@@ -41,6 +41,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsContentList.h"
 #include "nsINetService.h"
+#include "nsIServiceManager.h"
 #include "nsIFormManager.h"
 #include "nsRepository.h"
 #include "nsParserCIID.h"
@@ -67,6 +68,8 @@ static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMNSHTMLDocumentIID, NS_IDOMNSHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 NS_LAYOUT nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
@@ -684,9 +687,9 @@ NS_IMETHODIMP
 nsHTMLDocument::GetCookie(nsString& aCookie)
 {
   nsINetService *service;
-  nsresult res = NS_OK;
-  
-  res = NS_NewINetService(&service, nsnull);
+  nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&service);
   if ((NS_OK == res) && (nsnull != service)) {
 
     res = service->GetCookieString(mDocumentURL, aCookie);
@@ -701,9 +704,9 @@ NS_IMETHODIMP
 nsHTMLDocument::SetCookie(const nsString& aCookie)
 {
   nsINetService *service;
-  nsresult res = NS_OK;
-  
-  res = NS_NewINetService(&service, nsnull);
+  nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&service);
   if ((NS_OK == res) && (nsnull != service)) {
 
     res = service->SetCookieString(mDocumentURL, aCookie);

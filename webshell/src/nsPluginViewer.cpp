@@ -38,6 +38,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kIPluginInstanceOwnerIID, NS_IPLUGININSTANCEOWNER_IID);
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
+static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
+
 
 class PluginViewerImpl;
 

@@ -27,6 +27,7 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMDocument.h"
 #include "nsINetService.h"
+#include "nsIServiceManager.h"
 #include "nsINetContainerApplication.h"
 #include "nsITimer.h"
 #include "nsEventListenerManager.h"
@@ -71,6 +72,8 @@ static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 GlobalWindowImpl::GlobalWindowImpl()
 {
@@ -1548,133 +1551,145 @@ NavigatorImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 NS_IMETHODIMP
 NavigatorImpl::GetUserAgent(nsString& aUserAgent)
 {
-  nsINetService *service;
-  nsresult res = NS_OK;
-  
-  res = NS_NewINetService(&service, nsnull);
-  if ((NS_OK == res) && (nsnull != service)) {
-    nsINetContainerApplication *container;
+    nsINetService *service = nsnull;
+    nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&service);
 
-    res = service->GetContainerApplication(&container);
-    if ((NS_OK == res) && (nsnull != container)) {
-      nsAutoString appVersion;
-      container->GetAppCodeName(aUserAgent);
-      container->GetAppVersion(appVersion);
+    if ((NS_OK == res) && (nsnull != service)) {
 
-      aUserAgent.Append('/');
-      aUserAgent.Append(appVersion);
-      NS_RELEASE(container);
+        nsINetContainerApplication *container;
+        res = service->GetContainerApplication(&container);
+        if ((NS_OK == res) && (nsnull != container)) {
+
+            if (NS_OK == (res = container->GetAppCodeName(aUserAgent)) ) {
+
+                nsAutoString appVersion;
+                if (NS_OK == (res = container->GetAppVersion(appVersion)) ) {
+                    aUserAgent.Append('/');
+                    aUserAgent.Append(appVersion);
+                }
+            }
+            NS_RELEASE(container);
+        }
+        NS_RELEASE(service);
     }
-    
-    NS_RELEASE(service);
-  }
-
-  return res;
+    return res;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetAppCodeName(nsString& aAppCodeName)
 {
-  nsINetService *service;
-  nsresult res = NS_OK;
-  
-  res = NS_NewINetService(&service, nsnull);
-  if ((NS_OK == res) && (nsnull != service)) {
-    nsINetContainerApplication *container;
+    nsINetService *service;
+    nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&service);
 
-    res = service->GetContainerApplication(&container);
-    if ((NS_OK == res) && (nsnull != container)) {
-      res = container->GetAppCodeName(aAppCodeName);
-      NS_RELEASE(container);
+    if ((NS_OK == res) && (nsnull != service)) {
+
+        nsINetContainerApplication *container;
+        res = service->GetContainerApplication(&container);
+        if ((NS_OK == res) && (nsnull != container)) {
+
+            res = container->GetAppCodeName(aAppCodeName);
+            NS_RELEASE(container);
+        }
+        NS_RELEASE(service);
     }
-    
-    NS_RELEASE(service);
-  }
-  return res;
+
+    return res;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetAppVersion(nsString& aAppVersion)
 {
-  nsINetService *service;
-  nsresult res = NS_OK;
-  
-  res = NS_NewINetService(&service, nsnull);
-  if ((NS_OK == res) && (nsnull != service)) {
-    nsINetContainerApplication *container;
+    nsINetService *service;
+    nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&service);
 
-    res = service->GetContainerApplication(&container);
-    if ((NS_OK == res) && (nsnull != container)) {
-      res = container->GetAppVersion(aAppVersion);
-      NS_RELEASE(container);
+    if ((NS_OK == res) && (nsnull != service)) {
+
+        nsINetContainerApplication *container;
+        res = service->GetContainerApplication(&container);
+        if ((NS_OK == res) && (nsnull != container)) {
+
+            res = container->GetAppVersion(aAppVersion);
+            NS_RELEASE(container);
+        }
+        NS_RELEASE(service);
     }
-    
-    NS_RELEASE(service);
-  }
-  return res;
+
+    return res;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetAppName(nsString& aAppName)
 {
-  nsINetService *service;
-  nsresult res = NS_OK;
-  
-  res = NS_NewINetService(&service, nsnull);
-  if ((NS_OK == res) && (nsnull != service)) {
-    nsINetContainerApplication *container;
+    nsINetService *service;
+    nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&service);
 
-    res = service->GetContainerApplication(&container);
-    if ((NS_OK == res) && (nsnull != container)) {
-      res = container->GetAppName(aAppName);
-      NS_RELEASE(container);
+    if ((NS_OK == res) && (nsnull != service)) {
+
+        nsINetContainerApplication *container;
+        res = service->GetContainerApplication(&container);
+        if ((NS_OK == res) && (nsnull != container)) {
+
+            res = container->GetAppName(aAppName);
+            NS_RELEASE(container);
+        }
+        NS_RELEASE(service);
     }
-    
-    NS_RELEASE(service);
-  }
-  return res;
+
+    return res;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetLanguage(nsString& aLanguage)
 {
-  nsINetService *service;
-  nsresult res = NS_OK;
-  
-  res = NS_NewINetService(&service, nsnull);
-  if ((NS_OK == res) && (nsnull != service)) {
-    nsINetContainerApplication *container;
+    nsINetService *service;
+    nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&service);
 
-    res = service->GetContainerApplication(&container);
-    if ((NS_OK == res) && (nsnull != container)) {
-      res = container->GetLanguage(aLanguage);
-      NS_RELEASE(container);
+    if ((NS_OK == res) && (nsnull != service)) {
+
+        nsINetContainerApplication *container;
+        res = service->GetContainerApplication(&container);
+        if ((NS_OK == res) && (nsnull != container)) {
+
+            res = container->GetLanguage(aLanguage);
+            NS_RELEASE(container);
+        }
+        NS_RELEASE(service);
     }
-    
-    NS_RELEASE(service);
-  }
-  return res;
+
+    return res;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetPlatform(nsString& aPlatform)
 {
-  nsINetService *service;
-  nsresult res = NS_OK;
-  
-  res = NS_NewINetService(&service, nsnull);
-  if ((NS_OK == res) && (nsnull != service)) {
-    nsINetContainerApplication *container;
+    nsINetService *service;
+    nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                          kINetServiceIID,
+                                          (nsISupports **)&service);
 
-    res = service->GetContainerApplication(&container);
-    if ((NS_OK == res) && (nsnull != container)) {
-      res = container->GetPlatform(aPlatform);
-      NS_RELEASE(container);
+    if ((NS_OK == res) && (nsnull != service)) {
+
+        nsINetContainerApplication *container;
+        res = service->GetContainerApplication(&container);
+        if ((NS_OK == res) && (nsnull != container)) {
+
+            res = container->GetPlatform(aPlatform);
+            NS_RELEASE(container);
+        }
+        NS_RELEASE(service);
     }
-    
-    NS_RELEASE(service);
-  }
-  return res;
+
+    return res;
 }
 
 NS_IMETHODIMP

@@ -30,6 +30,7 @@ CPPSRCS			= \
 			  nsNetStubs.cpp      \
 			  nsNetIDs.cpp        \
               nsLoadAttribs.cpp   \
+              nsNetFactory.cpp    \
 			  $(NULL)
 
 REQUIRES		= raptor js dbm nspr security pref xpcom util img \

@@ -718,7 +718,7 @@ nsresult nsNetFile::FileRemove(const char *aPath) {
     // We should never be deleting a relative file.
     NS_PRECONDITION( ( (*path != mDirDel) && (*path && (*path+1 != ':'))), "Deleting a relative path.");
 
-    if (PR_Delete(aPath) == PR_FAILURE)
+    if (PR_Delete(path) == PR_FAILURE)
         return NS_ERROR_FAILURE;
 
     return NS_OK;
