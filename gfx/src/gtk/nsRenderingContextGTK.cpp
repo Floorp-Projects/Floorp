@@ -87,8 +87,38 @@ nsRenderingContextGTK :: nsRenderingContextGTK()
 
 nsRenderingContextGTK :: ~nsRenderingContextGTK()
 {
-  NS_IF_RELEASE(mContext);
+  if (mRegion) {
+    ::gdk_region_destroy(mRegion);
+    mRegion = nsnull;
+  }
+
+  mTMatrix = nsnull;
+  
+  // Destroy the State Machine
+  if (nsnull != mStateCache)
+  {
+    PRInt32 cnt = mStateCache->Count();
+
+    while (--cnt >= 0)
+    {
+      GraphicsState *state = (GraphicsState *)mStateCache->ElementAt(cnt);
+      mStateCache->RemoveElementAt(cnt);
+
+      if (nsnull != state)
+        delete state;
+    }
+
+    delete mStateCache;
+    mStateCache = nsnull;
+  }
+
+  // Destroy the front buffer and it's GC if one was allocated for it
+  if (nsnull != mOffscreenSurface) {
+    delete mOffscreenSurface;
+  }
+
   NS_IF_RELEASE(mFontMetrics);
+  NS_IF_RELEASE(mContext);
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextGTK, kRenderingContextIID)
@@ -107,7 +137,9 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
   mRenderingSurface->drawable = (GdkDrawable *)aWindow->GetNativeData(NS_NATIVE_WINDOW);
   mRenderingSurface->gc       = (GdkGC *)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
   
-  return NS_OK;
+  mOffscreenSurface = mRenderingSurface;
+
+  return (CommonInit());
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
@@ -117,6 +149,17 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
   NS_IF_ADDREF(mContext);
 
   mRenderingSurface = (nsDrawingSurfaceGTK *) aSurface;
+
+  return (CommonInit());
+}
+
+NS_IMETHODIMP nsRenderingContextGTK::CommonInit()
+{
+  mContext->GetDevUnitsToAppUnits(mP2T);
+  float app2dev;
+  mContext->GetAppUnitsToDevUnits(app2dev);
+  mTMatrix->AddScale(app2dev, app2dev);
+
   return NS_OK;
 }
 
@@ -872,12 +915,6 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
                     drect.width, drect.height);
 
   return NS_OK;
-}
-
-//locals
-NS_IMETHODIMP nsRenderingContextGTK::CommonInit()
-{
-  mContext->GetDevUnitsToAppUnits(mP2T);
 }
 
 NS_IMETHODIMP
