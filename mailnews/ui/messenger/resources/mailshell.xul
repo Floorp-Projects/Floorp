@@ -296,13 +296,16 @@
       <menuitem name="About Communicator..." onclick="About();"/>
     </menu>
     <menu name="Demo">
-      <menuitem name="News Message 1" onclick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com');"/>
-      <menuitem name="News Message 2" onclick="MsgLoadNewsMessage('news://news.mozilla.org:119/36BC8178.5BE93104@netscape.com');"/>
+      <menuitem name="Download News Article 1" onclick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com');"/>
+	  <menuitem name="Display Inbox Msg 1" onclick="MsgLoadNewsMessage('mailbox:0');"/>
+	  <menuitem name="Display Inbox Msg 2" onclick="MsgLoadNewsMessage('mailbox:1');"/>
+	  <menuitem name="Display Inbox Msg 3" onclick="MsgLoadNewsMessage('mailbox:2');"/>
+	  <menuitem name="Display Inbox Msg 4" onclick="MsgLoadNewsMessage('mailbox:3');"/>
     </menu>
   </menubar>
 
 <html:div id="header">
-<toolbox>
+   <toolbox>
     <toolbar>
  	  <html:table width="100%" cellpadding=0 cellspacing=0><html:tr>
 
@@ -332,7 +335,7 @@
 	  </html:td>
       </html:tr></html:table>
     </toolbar>
-</toolbox>
+	</toolbox>
 </html:div>
 
 <html:div id="thread">
