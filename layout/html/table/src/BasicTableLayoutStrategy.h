@@ -102,8 +102,6 @@ protected:
     * Computes the minimum and maximum table widths. 
     * Set column width information in each column frame and in the table frame.
     *
-    * @param aMaxWidth - the computed width of the table or 
-    *  UNCONSTRAINED_SIZE if an auto width table
     * @return PR_TRUE has  a pct cell or col, PR_FALSE otherwise
     */
   virtual PRBool AssignNonPctColumnWidths(nscoord                  aComputedWidth,

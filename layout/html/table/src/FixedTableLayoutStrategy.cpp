@@ -64,10 +64,8 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(const nsHTMLReflowState& aR
  *  as determined by the table width attribute.  If no table width attribute, it gets 0 width
  */
 PRBool 
-FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPresContext,
-                                                   nscoord                  aComputedWidth,
-                                                   const nsHTMLReflowState& aReflowState,
-                                                   float                    aPixelToTwips)
+FixedTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aComputedWidth,
+                                                   const nsHTMLReflowState& aReflowState)
 {
   // NS_ASSERTION(aComputedWidth != NS_UNCONSTRAINEDSIZE, "bad computed width");
   const nsStylePosition* tablePosition = mTableFrame->GetStylePosition();
@@ -76,6 +74,8 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
 
   PRInt32 numCols = mTableFrame->GetColCount();
   PRInt32 colX;
+  float pixelToTwips;
+  mTableFrame->GetPresContext()->GetScaledPixelsToTwips(&pixelToTwips);
   // availWidth is used as the basis for percentage width columns. It is aComputedWidth
   // minus table border, padding, & cellspacing
   nscoord spacingX = mTableFrame->GetCellSpacingX();
@@ -128,7 +128,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
              (aComputedWidth != NS_UNCONSTRAINEDSIZE)) { 
       // Only apply percentages if we're constrained.
       float percent = colPosition->mWidth.GetPercentValue();
-      colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(percent * (float)availWidth), aPixelToTwips); 
+      colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(percent * (float)availWidth), pixelToTwips); 
       colFrame->SetWidth(PCT, colWidths[colX]);
       percTotal+=colWidths[colX];
     }
@@ -150,10 +150,10 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
         if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
           // need to add border and padding into fixed width
           nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
-                                                                  aPixelToTwips, cellFrame);
+                                                                  pixelToTwips, cellFrame);
           cellWidth = cellPosition->mWidth.GetCoordValue() + borderPadding.left + borderPadding.right;
           colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(((float) cellWidth) / ((float) colSpan)),
-                                                                      aPixelToTwips);
+                                                                      pixelToTwips);
           colFrame->SetWidth(MIN_CON, colWidths[colX]);
         }
         else if ((eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) &&
@@ -161,10 +161,10 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
           float percent = cellPosition->mWidth.GetPercentValue();
           // need to add border and padding into percent width
           nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
-                                                                  aPixelToTwips, cellFrame);
+                                                                  pixelToTwips, cellFrame);
           cellWidth = NSToCoordRound(percent * (float) availWidth) + borderPadding.left + borderPadding.right;
           colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(((float) cellWidth) / ((float) colSpan)),
-                                                                      aPixelToTwips); 
+                                                                      pixelToTwips); 
           colFrame->SetWidth(PCT, colWidths[colX]);
           percTotal += colWidths[colX];
         }
@@ -194,7 +194,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
           float percent = ((float)propInfo[colX])/((float)propTotal);
           amountToAllocate += NSToCoordRound(percent * (float)remainingWidth);
           colWidths[colX] = (amountToAllocate > 0) ?
-            nsTableFrame::RoundToPixel(amountToAllocate, aPixelToTwips,
+            nsTableFrame::RoundToPixel(amountToAllocate, pixelToTwips,
                                        eRoundUpIfHalfOrMore) : 0;
           totalColWidth += colWidths[colX];
           amountToAllocate -= colWidths[colX];
@@ -214,7 +214,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
             amountToAllocate += colAlloc;
             colWidths[colX] = (amountToAllocate > 0) ?
               nsTableFrame::RoundToPixel(amountToAllocate,
-                                         aPixelToTwips,
+                                         pixelToTwips,
                                          eRoundUpIfHalfOrMore) : 0;
             totalColWidth += colWidths[colX];
             amountToAllocate -= colWidths[colX];
@@ -229,7 +229,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
           if (colWidths[colX] > 0) {
             amountToAllocate += NSToCoordRound(remainingWidth * colWidths[colX] / divisor);
             nscoord colAlloc = (amountToAllocate > 0) ?
-              nsTableFrame::RoundToPixel(amountToAllocate, aPixelToTwips,
+              nsTableFrame::RoundToPixel(amountToAllocate, pixelToTwips,
                                          eRoundUpIfHalfOrMore) : 0;
             colWidths[colX] += colAlloc;
             totalColWidth += colAlloc;
@@ -249,7 +249,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
       colWidths[colX] = 0;
     // if there was too much allocated due to rounding, remove it from the last col
     if ((colX == lastColAllocated) && (overAllocation != 0)) {
-      nscoord thisRemoval = nsTableFrame::RoundToPixel(overAllocation, aPixelToTwips);
+      nscoord thisRemoval = nsTableFrame::RoundToPixel(overAllocation, pixelToTwips);
       colWidths[colX] -= thisRemoval;
       totalColWidth -= thisRemoval;
       
@@ -267,7 +267,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
       if(( colFrame->GetWidth(PCT) > 0) && ( percTotal > 0)){
         amountToRemove += NSToCoordRound(overAllocation* colWidths[colX] / (float) percTotal);
         nscoord thisRemoval = (amountToRemove > 0) ?
-          nsTableFrame::RoundToPixel(amountToRemove, aPixelToTwips,
+          nsTableFrame::RoundToPixel(amountToRemove, pixelToTwips,
                                      eRoundUpIfHalfOrMore) : 0;
         colWidths[colX] -= thisRemoval;
         amountToRemove -= thisRemoval;
