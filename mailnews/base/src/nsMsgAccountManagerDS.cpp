@@ -34,7 +34,7 @@
 #include "nsEnumeratorUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIMsgMailSession.h"
-
+#include "nsIMsgFilterList.h"
 #include "nsXPIDLString.h"
 
 #include "nsMsgRDFUtils.h"
@@ -77,6 +77,7 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_NameSort=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_FolderTreeNameSort=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTag=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_IsDefaultServer=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_SupportsFilters=nsnull;
 
 // containment
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Child=nsnull;
@@ -98,7 +99,7 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleSMTP=nsnull;
 // common literals
 nsIRDFLiteral* nsMsgAccountManagerDataSource::kTrueLiteral = nsnull;
 
-nsCOMPtr<nsIAtom> nsMsgAccountManagerDataSource::kDefaultServerAtom;
+nsIAtom* nsMsgAccountManagerDataSource::kDefaultServerAtom = nsnull;
 
 nsrefcnt nsMsgAccountManagerDataSource::gAccountManagerResourceRefCnt = 0;
 
@@ -113,7 +114,7 @@ nsCOMPtr<nsISupportsArray> nsMsgAccountManagerDataSource::mAccountRootArcsOut;
 #define NC_RDF_IDENTITY NC_NAMESPACE_URI "Identity"
 #define NC_RDF_SETTINGS NC_NAMESPACE_URI "Settings"
 #define NC_RDF_ISDEFAULTSERVER NC_NAMESPACE_URI "IsDefaultServer"
-
+#define NC_RDF_SUPPORTSFILTERS NC_NAMESPACE_URI "SupportsFilters"
 
 nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
 {
@@ -130,6 +131,7 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
       getRDFService()->GetResource(NC_RDF_FOLDERTREENAME_SORT, &kNC_FolderTreeNameSort);
       getRDFService()->GetResource(NC_RDF_PAGETAG, &kNC_PageTag);
       getRDFService()->GetResource(NC_RDF_ISDEFAULTSERVER, &kNC_IsDefaultServer);
+      getRDFService()->GetResource(NC_RDF_SUPPORTSFILTERS, &kNC_SupportsFilters);
       getRDFService()->GetResource(NC_RDF_ACCOUNT, &kNC_Account);
       getRDFService()->GetResource(NC_RDF_SERVER, &kNC_Server);
       getRDFService()->GetResource(NC_RDF_IDENTITY, &kNC_Identity);
@@ -167,6 +169,7 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
       NS_IF_RELEASE(kNC_FolderTreeNameSort);
       NS_IF_RELEASE(kNC_PageTag);
       NS_IF_RELEASE(kNC_IsDefaultServer);
+      NS_IF_RELEASE(kNC_SupportsFilters);
       NS_IF_RELEASE(kNC_Account);
       NS_IF_RELEASE(kNC_Server);
       NS_IF_RELEASE(kNC_Identity);
@@ -184,7 +187,7 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
       NS_IF_RELEASE(kNC_Settings);
 
 
-      kDefaultServerAtom=nsnull;
+      NS_IF_RELEASE(kDefaultServerAtom);
       mAccountArcsOut = nsnull;
       mAccountRootArcsOut = nsnull;
 	}
@@ -371,28 +374,22 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       nsCOMPtr<nsIMsgIncomingServer> thisServer;
       rv = getServerForFolderNode(source, getter_AddRefs(thisServer));
       if (NS_FAILED(rv) || !thisServer) return NS_RDF_NO_VALUE;
-      
-      nsCOMPtr<nsIMsgAccountManager> am =
-          do_QueryReferent(mAccountManager);
-      
-      nsCOMPtr<nsIMsgAccount> defaultAccount;
-      rv = am->GetDefaultAccount(getter_AddRefs(defaultAccount));
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!defaultAccount) return NS_RDF_NO_VALUE;
 
-      nsCOMPtr<nsIMsgIncomingServer> defaultServer;
-      rv = defaultAccount->GetIncomingServer(getter_AddRefs(defaultServer));
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!defaultServer) return NS_RDF_NO_VALUE;
-
-      PRBool isEqual;
-      rv = defaultServer->Equals(thisServer, &isEqual);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (isEqual)
+      if (isDefaultServer(thisServer))
           str.AssignWithConversion("true");
   }
-  
+
+  else if (property == kNC_SupportsFilters) {
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      rv = getServerForFolderNode(source, getter_AddRefs(server));
+      if (NS_FAILED(rv) || !server) return NS_RDF_NO_VALUE;
+
+      nsCOMPtr<nsIMsgFilterList> filterList;
+      server->GetFilterList(getter_AddRefs(filterList));
+
+      if (supportsFilters(server))
+          str.AssignWithConversion("true");
+  }
   if (!str.IsEmpty())
     rv = createNode(str, target, getRDFService());
   //if we have an empty string and we don't have an error value, then 
@@ -670,7 +667,8 @@ nsMsgAccountManagerDataSource::HasAssertion(nsIRDFResource *aSource,
   //   answer if it's a server.. any failure falls through to the default case
   //
   // short-circuit on property, so objects like filters, etc, don't get queried
-  else if (aProperty == kNC_IsDefaultServer) {
+  else if (aProperty == kNC_IsDefaultServer ||
+           aProperty == kNC_SupportsFilters) {
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = getServerForFolderNode(aSource, getter_AddRefs(server));
     if (NS_SUCCEEDED(rv) && server)
@@ -700,7 +698,12 @@ nsMsgAccountManagerDataSource::HasAssertionServer(nsIMsgIncomingServer *aServer,
             *_retval = isDefaultServer(aServer);
         else
             *_retval = !isDefaultServer(aServer);
-        
+
+    } else if (aProperty == kNC_SupportsFilters) {
+        if (aTarget == kTrueLiteral) {
+            *_retval = supportsFilters(aServer);
+        } else
+            *_retval = !supportsFilters(aServer);
     } else {
         *_retval = PR_FALSE;
     }
@@ -735,7 +738,21 @@ nsMsgAccountManagerDataSource::isDefaultServer(nsIMsgIncomingServer *aServer)
 
     return isEqual;
 }
-        
+
+
+PRBool
+nsMsgAccountManagerDataSource::supportsFilters(nsIMsgIncomingServer *aServer)
+{
+    nsresult rv;
+    
+    nsCOMPtr<nsIMsgFilterList> filterList;
+    rv = aServer->GetFilterList(getter_AddRefs(filterList));
+    if (NS_SUCCEEDED(rv) && filterList)
+        return PR_TRUE;
+    
+    return PR_FALSE;
+
+}
 nsresult
 nsMsgAccountManagerDataSource::HasAssertionAccountRoot(nsIRDFResource *aProperty,
                                                        nsIRDFNode *aTarget,
@@ -934,7 +951,7 @@ nsMsgAccountManagerDataSource::OnItemBoolPropertyChanged(nsISupports *aItem,
 
     // server properties
     // check property first because that's fast
-    if (aProperty == kDefaultServerAtom.get()) {
+    if (aProperty == kDefaultServerAtom) {
 
         nsCOMPtr<nsIMsgIncomingServer> server;
         rv = getServerForObject(aItem, getter_AddRefs(server));

@@ -88,6 +88,7 @@ protected:
                                    PRBool aTruthValue, PRBool *_retval);
   
   PRBool isDefaultServer(nsIMsgIncomingServer *aServer);
+  PRBool supportsFilters(nsIMsgIncomingServer *aServer);
   
   static PRBool isContainment(nsIRDFResource *aProperty);
   nsresult getServerForFolderNode(nsIRDFNode *aResource,
@@ -106,6 +107,7 @@ protected:
   static nsIRDFResource* kNC_FolderTreeNameSort;
   static nsIRDFResource* kNC_PageTag;
   static nsIRDFResource* kNC_IsDefaultServer;
+  static nsIRDFResource* kNC_SupportsFilters;
   
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_AccountRoot;
@@ -123,7 +125,7 @@ protected:
 
   static nsIRDFLiteral* kTrueLiteral;
 
-  static nsCOMPtr<nsIAtom> kDefaultServerAtom;
+  static nsIAtom* kDefaultServerAtom;
 
   static nsrefcnt gAccountManagerResourceRefCnt;
 
