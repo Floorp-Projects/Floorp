@@ -39,7 +39,8 @@
 
 var gPrefsBundle;
 
-function acctNamePageValidate() {
+function acctNamePageValidate() 
+{
   var accountname = document.getElementById("prettyName").value;
 
   if (!accountname || accountname =="") {
@@ -48,6 +49,32 @@ function acctNamePageValidate() {
       return false;
   }
   var pageData = parent.GetPageData();
+
+  // fix for bug #255473
+  // allow for multiple RSS accounts.
+  // if our isp.rdf file defines "wizardAutoGenerateUniqueHostname"
+  // we generate a unique hostname until we have one that doesn't exist
+  // for RSS accounts, in rss.rdf, userName, hostName and serverType
+  // default to the same thing, so we need to do this to allow for
+  // multiple RSS accounts.  Note, they can all have the same pretty name.
+  if (gCurrentAccountData && 
+      gCurrentAccountData.wizardAutoGenerateUniqueHostname) 
+  {
+    var serverType = parent.getCurrentServerType(pageData);
+    var userName = parent.getCurrentUserName(pageData);
+    var hostName = parent.getCurrentHostname(pageData);
+    var hostNamePref = hostName;
+    var i = 1;
+    while (parent.AccountExists(userName, hostName, serverType)) 
+    {
+      // if "News & Blogs" exists, try
+      // "News & Blogs-1", then "News & Blogs-2", etc.
+      hostName = hostNamePref + "-" + i;
+      i++;
+    }
+    setPageData(pageData, "server", "hostname", hostName);
+  }
+
   setPageData(pageData, "accname", "prettyName", accountname);
   return true;
 }

@@ -33,6 +33,7 @@
           </NC:nsIMsgIdentity>
         </NC:identity>
 
+	<NC:wizardAutoGenerateUniqueHostname>true</NC:wizardAutoGenerateUniqueHostname>
         <NC:wizardHideIncoming>true</NC:wizardHideIncoming>
 	      <NC:wizardAccountName>&rss.accountName;</NC:wizardAccountName>
         <NC:wizardSkipPanels>identitypage,serverpage,loginpage</NC:wizardSkipPanels>
