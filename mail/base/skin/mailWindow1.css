@@ -981,11 +981,17 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 /* ..... message pane adjustments ..... */
 
 #messagepanebox {
-  border: 1px solid ThreeDShadow;
+  border-top: 1px solid ThreeDShadow;
+  border-left: 1px solid ThreeDShadow;
+  border-right: 0px;
+  border-bottom: 1px solid ThreeDShadow;
 }
 
 #messagepane {
-  border: 1px solid -moz-Field;
+  border-top: 1px solid -moz-Field;
+  border-left: 0px;
+  border-right: 0px;
+  border-bottom: 1px solid -moz-Field;
 }
 
 #messagepanebox[focusring="true"] > #messagepane {
