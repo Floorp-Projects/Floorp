@@ -85,9 +85,3 @@
 #mouseWheelMode {
   width: 9em;
 }
-
-/* ::::: Smart Browsing ::::: */
-
-#disabledDomains {
-  max-height: 13em;
-}
