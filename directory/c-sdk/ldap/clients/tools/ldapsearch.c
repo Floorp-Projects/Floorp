@@ -869,7 +869,7 @@ print_entry( ld, entry, attrsonly )
     ldap_memfree( dn );
 
     if ( use_psearch ) {
-	LDAPControl	**ectrls;
+	LDAPControl	**ectrls = NULL;
 	int		chgtype, chgnumpresent;
 	long		chgnum;
 	char		*prevdn, longbuf[ 128 ];
@@ -893,6 +893,7 @@ print_entry( ld, entry, attrsonly )
 		    ldap_memfree( prevdn );
 		}
 	    }
+	    ldap_controls_free( ectrls );
 	}
     }
 
