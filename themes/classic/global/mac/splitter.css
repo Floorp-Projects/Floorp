@@ -53,7 +53,7 @@ splitter:hover:active
 /* vertical splitters */
   splitter
     {
-    	width               : 6px;
+    	width               : 7px;
     }
   
 /* horizontal splitters */  
