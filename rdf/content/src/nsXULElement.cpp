@@ -257,6 +257,7 @@ private:
     static PRInt32              kNameSpaceID_XUL;
     static nsIAtom*             kIdAtom;
     static nsIAtom*             kContainerAtom;
+    static nsIAtom*             kOpenAtom;
 
     nsIDocument*      mDocument;
     void*             mScriptObject;
@@ -279,6 +280,7 @@ nsIRDFService*       RDFElementImpl::gRDFService;
 nsINameSpaceManager* RDFElementImpl::gNameSpaceManager;
 nsIAtom*             RDFElementImpl::kIdAtom;
 nsIAtom*             RDFElementImpl::kContainerAtom;
+nsIAtom*             RDFElementImpl::kOpenAtom;
 PRInt32              RDFElementImpl::kNameSpaceID_RDF;
 PRInt32              RDFElementImpl::kNameSpaceID_XUL;
 
@@ -311,6 +313,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
 
         kIdAtom        = NS_NewAtom("id");
         kContainerAtom = NS_NewAtom("container");
+        kOpenAtom      = NS_NewAtom("open");
 
         rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
                                           nsnull,
@@ -359,6 +362,7 @@ RDFElementImpl::~RDFElementImpl()
 
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kContainerAtom);
+        NS_IF_RELEASE(kOpenAtom);
         NS_IF_RELEASE(gNameSpaceManager);
     }
 }
@@ -1373,7 +1377,7 @@ RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
         if (nsnull != doc) {
             aKid->SetDocument(doc, PR_FALSE);
             if (aNotify) {
-                doc->ContentAppended(this, mChildren->Count() - 1);
+                doc->ContentInserted(this, aKid, mChildren->Count() - 1);
             }
         }
     }
@@ -1643,6 +1647,18 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         mContentsMustBeGenerated = PR_TRUE;
     }
 
+    // See if they're opening or closing the element.
+    if ((aNameSpaceID == kNameSpaceID_XUL) && (aName == kOpenAtom)) {
+        if (aValue.EqualsIgnoreCase("true")) {
+            mContentsMustBeGenerated = PR_TRUE;
+            rv = EnsureContentsGenerated();
+        }
+        else {
+            mContentsMustBeGenerated = PR_TRUE;
+            NS_IF_RELEASE(mChildren);
+        }
+    }
+
     return rv;
 }
 
@@ -1798,6 +1814,12 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
     }
 
     // End XUL Only Code
+
+    // See if they're closing the element.
+    if ((aNameSpaceID == kNameSpaceID_XUL) && (aName == kOpenAtom)) {
+        mContentsMustBeGenerated = PR_TRUE;
+        NS_IF_RELEASE(mChildren);
+    }
 
     return rv;
 }
