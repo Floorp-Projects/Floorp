@@ -44,9 +44,9 @@ function deleteThisFolder(dirKey, folder)
 
   fToDelete = getFolder(dirKey, folder);
   logComment(folder + " folder: " + fToDelete);
-  if(folder.exists(fToDelete, true))
+  if(File.exists(fToDelete))
   {
-    File.dirRemove(fToDelete);
+    File.dirRemove(fToDelete, true);
     return(true);
   }
   else
