@@ -9,18 +9,26 @@
   BINDING : menulist
   XUL REPRESENTATION : <menulist>
   -->
-  <binding id="menulist" extends="resource:/chrome/menulistBindings.xml#menulist">
+  <binding id="menulist">
     <content excludes="template,observes,menupopup" flex="1">
       <xul:box class="menulist-internal-box" flex="1">
-        <xul:image class="menu-icon" inherits="src"/>
-        <xul:text class="menu-text" inherits="value,accesskey,crop" crop="right" flex="1"/>
-        <xul:box class="menu-dropmarker-box-1" valign="middle" inherits="open">
-          <xul:box class="menu-dropmarker-box-2" flex="1" autostretch="never" valign="middle" inherits="open">
-            <xul:image class="menu-dropmarker" inherits="disabled"/>
+        <xul:image class="menulist-icon" inherits="src"/>
+        <xul:text class="menulist-text" inherits="value,accesskey,crop" crop="right" flex="1"/>
+        <xul:box class="menulist-dropmarker-box-1" valign="middle" inherits="open">
+          <xul:box class="menulist-dropmarker-box-2" flex="1" autostretch="never" valign="middle" inherits="open">
+            <xul:image class="menulist-dropmarker" inherits="disabled"/>
           </xul:box>
         </xul:box>
       </xul:box>
     </content>
   </binding>
 
+  <binding id="menulistpopup">
+    <content>
+      <xul:box class="menulistpopup-internal-box" orient="vertical" flex="1" style="overflow: auto">
+        <children/>
+      </xul:box>
+    </content>
+  </binding>
+   
 </bindings>

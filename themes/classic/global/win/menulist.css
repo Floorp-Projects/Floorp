@@ -20,24 +20,23 @@
     }
     
 /* icon display frame */
-  menulist > .menulist-internal-box
+  .menulist-internal-box
     {
       border-left         : 1px solid threeddarkshadow;
       border-top          : 1px solid threeddarkshadow;
       border-right        : 1px solid threedface;
       border-bottom       : 1px solid threedface;
-      padding             : 2px 0px 2px 0px;
     }  
 
 /* text display frame */
-  menulist > .menulist-internal-box > .menu-text 
+  .menulist-text 
     {
       padding             : 2px 4px 2px 4px;
-      margin-right        : 0px;
+      margin:             : 0px;
     }
     
 /* drop marker display frame */
-  .menu-dropmarker-box-1
+  .menulist-dropmarker-box-1
     {
       border-top          : 1px solid threedface;
       border-left         : 1px solid threedface;
@@ -46,112 +45,63 @@
       background-color    : threedface;
     }
   
-  .menu-dropmarker-box-1
+  .menulist-dropmarker-box-2
     {
       border-top          : 1px solid threedhighlight;
       border-left         : 1px solid threedhighlight;
       border-bottom       : 1px solid threedshadow;
       border-right        : 1px solid threedshadow;
+      padding             : 2px 1px 2px 1px;
     }
 
-  .menu-dropmarker
+  .menulist-dropmarker
     {
       list-style-image    : url("chrome://global/skin/scroll-down.gif");
-      padding             : 2px;
     }
   
-  .menu-dropmarker[disabled="true"]
+  .menulist-dropmarker[disabled="true"]
     {
       list-style-image    : url("chrome://global/skin/scroll-down-disabled.gif");
       padding             : 2px;
     }
 
-  .menu-dropmarker-box-1[open="true"]
+  .menulist-dropmarker-box-1[open="true"]
     { 
       border              : 1px solid threedshadow;
     }
     
-  .menu-dropmarker-box-1[open="true"]
+  .menulist-dropmarker-box-2[open="true"]
     {
-      padding             : 3px 2px 1px 2px;
-    }
-
-/** rules for EDITABLE menulists (aka 'comboboxes'). 
- **/
-
-/* outer frame */
-  menulist[editable="true"] 
-    {
-      padding             : 0px;
-    }
-
-/* icon display frame */
-  menulist[editable="true"] > .menu-icon 
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-      background-color    : white;
-      padding             : 1px;
-      border-left         : 1px inset #CCCCCC;
-      border-top          : 1px inset #CCCCCC;
-      border-right        : none;
-      border-bottom       : 1px inset #CCCCCC;
-    }
-
-/* text display frame */    
-  menulist[editable="true"] > .menu-text 
-    {
-      border-left         : none;
-      border-top          : 1px inset #CCCCCC;
-      border-right        : 1px inset #CCCCCC;
-      border-bottom       : 1px inset #CCCCCC;
-      margin              : 0px 2px 0px 0px;
-    }
-
-/* drop marker display frame */
-  menulist[editable="true"] > .menu-dropmarker 
-    {
-      border              : 1px outset #CCCCCC;
-    }
-
-  menulist[editable="true"][open="true"] > .menu-dropmarker 
-    {
-      border              : 1px inset #CCCCCC;
+      border              : 1px solid threedface;
+      padding             : 3px 0px 1px 2px;
     }
 
 /* rules for popups and separators associated with menulists */
   menulist > menupopup 
     {
+      behavior            : url("chrome://global/skin/menulistBindings.xml#menulistpopup");
       background-color    : window;
-      border              : 1px solid threeddarkshadow;
-      border-top          : 0px;
+      border              : 1px solid #000000;
       min-width           : 0px;
-      padding             : 0px;
     }
-   
-  menulist > menupopup > menuseparator 
-    {
-      border-bottom       : 2px groove #CCCCCC;
-    }
-
 
   menulist > menupopup > menuitem 
     {
-      padding             : 0px;
-      min-width: 0px;
-      max-width: auto;
+      padding             : 0px 1px 0px 1px;
+      min-width           : 0px;  /* should be in content*/
+      max-width           : auto; /* should be in content*/
+      border              : 1px solid window;
     }
 
-  menulist > menupopup > menuitem > .menu-left 
+  menulist > menupopup > menuitem[menuactive="true"]
     {
-      width               : 13px;
+      border              : 1px dotted #F5DB95;
     }
 
-  menulist > menupopup > menuitem[selected="true"] > .menu-left
+  menulist > menupopup > menuitem > .menu-iconic-left,
+  menulist > menupopup > menuitem > .menu-iconic-left[menuactive="true"]
     {
-      list-style-image    : url(chrome://global/skin/menu-check.gif);
-    }
-  
-  menulist > menupopup > menuitem[menuactive="true"][selected="true"] > .menu-left
-    {
-      list-style-image    : url(chrome://global/skin/menu-check-hover.gif);
+      list-style-image    : inherit;
+      width               : 0px;
+      border              : none;
     }

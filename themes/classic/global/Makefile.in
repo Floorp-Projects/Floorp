@@ -131,6 +131,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	toolbargrippy-twisty.gif \
 	toolbargrippy-texture.gif \
 	loading.gif \
+	smallheader-bg.gif \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

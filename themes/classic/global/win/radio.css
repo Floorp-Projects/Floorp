@@ -4,82 +4,81 @@
 /* outer frame */
   radio 
     {
-      margin: 3px 5px 3px 5px;
+      behavior            : url("chrome://global/skin/classicBindings.xml#radio");
+      margin              : 3px 5px 3px 5px;
     }
 
-
-/* checkmark outer frame */
-  radio > .internal-box > .checkmark-box 
+  .radio-checkmark-box-1
     {
-      border: 1px solid #000000;
-      -moz-border-radius: 50%;
-      margin-top: 2px;
+      border-top          : 1px solid threedshadow;
+      border-left         : 1px solid threedshadow;
+      border-right        : 1px solid threedhighlight;
+      border-bottom       : 1px solid threedhighlight;
+      background-color    : #FFFFFF;
+      -moz-border-radius  : 50%;
+      margin              : 2px 2px 0px 0px;
+      width               : 12px;
+      height              : 12px;
     }
 
-  radio[disabled="true"] > .internal-box > .checkmark-box,
-  radio[disabled="true"]:hover > .internal-box > .checkmark-box 
+  .radio-checkmark-box-1[disabled="true"]
     {
-      border: 1px solid #999999;
+      background-color    : threedface;
     }
-    
-/* checkmark inner frame */
-  radio > .internal-box > .checkmark-box > image 
+
+  .radio-checkmark-box-2
     {
-      border: 1px outset #CCCCCC;
-      width: 8px;
-      height: 8px;
-      -moz-border-radius: 50%;
-    }
+      border-left         : 1px solid threeddarkshadow;
+      border-top          : 1px solid threeddarkshadow;
+      border-right        : 1px solid threedface;
+      border-bottom       : 1px solid threedface;
+      -moz-border-radius  : 50%;
+      padding             : 2px;
+      width               : 10px;
+      height              : 10px;
+    }  
 
   /* ensure that no list-style-image is inherited in from the Outside */
-  .checkmark-box
+  .radio-check
     {
-      list-style-image: none;
+      list-style-image    : none;
+    }
+
+  .radio-check[checked="true"]
+    {
+      list-style-image    : url(chrome://global/skin/check-radio.gif);
     }
   
-
-  radio[checked="true"] > .internal-box > .checkmark-box > image 
+  .radio-check[checked="true"][disabled="true"]
     {
-      list-style-image: url(chrome://global/skin/check-radio.gif);
-    }
-  
-  radio[checked="true"][disabled="true"] > .internal-box > .checkmark-box > image
-    {
-      list-style-image: url(chrome://global/skin/check-radio-disabled.gif);
+      list-style-image    : url(chrome://global/skin/check-radio-disabled.gif);
     }
 
-  radio:hover:active > .internal-box > .checkmark-box > image 
+  radio:hover:active > .radio-internal-box > .radio-checkmark-box-1
     {
-      border: 1px inset #CCCCCC;
-    }
-
-  radio[disabled="true"] > .internal-box > .checkmark-box > image,
-  radio[disabled="true"]:active > .internal-box > .checkmark-box > image 
-    {
-      border: 1px outset #CCCCCC;
+      background-color    : threedface;
     }
 
 /* text/icon frames */
-  radio[value] > .internal-box > html,
-  radio.iconic > .internal-box > .icon 
+  .radio-text
     {
-      margin: 0px 0px 0px 4px;
-      padding: 1px;
+      margin              : 0px 0px 0px 2px;
+      padding             : 1px;
     }
 
-  radio.iconic > .internal-box > html 
+  .radio-icon 
     {
-      margin-left: 4px;
-    }
+      list-style-image    : inherit;
+    }    
     
-  radio[disabled="true"][value] > .internal-box > html 
+  .radio-text[disabled="true"]
     {
-      color: #999999;
+      color               : graytext;
     }
   
-  radio:focus > .internal-box > html
+  radio:focus > .radio-internal-box > .radio-text
     { 
-      border              : 1px dotted black;
+      border              : 1px dotted threeddarkshadow;
       padding             : 0px;
     }
     
