@@ -488,8 +488,9 @@ void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface)
 
 	if (mGS->mFontMetrics)
 		SetFont(mGS->mFontMetrics);
-
-
+	
+	if (!mContext) return;
+	
 	// GS and context initializations
   ((nsDeviceContextMac *)mContext)->SetDrawingSurface(mPort);
 #if 0
@@ -519,6 +520,11 @@ NS_IMETHODIMP nsRenderingContextMac::SetPortTextState()
 	NS_PRECONDITION(mGS->mFontMetrics != nsnull, "No font metrics in SetPortTextState");
 	
 	if (nsnull == mGS->mFontMetrics)
+		return NS_ERROR_NULL_POINTER;
+
+	NS_PRECONDITION(mContext != nsnull, "No device context in SetPortTextState");
+	
+	if (nsnull == mContext)
 		return NS_ERROR_NULL_POINTER;
 
 	TextStyle		theStyle;
