@@ -48,3 +48,5 @@
 <!ENTITY otherUpper.label "Other Uppercase">
 <!ENTITY otherLower.label "Other Lowercase">
 <!ENTITY commonSymbols.label "Common Symbols">
+<!ENTITY insertButton.label "Insert">
+<!ENTITY closeButton.label "Close">
