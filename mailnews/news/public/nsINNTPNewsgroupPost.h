@@ -12,7 +12,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsINNTPNewsgroupPost */
+/* starting interface:    nsINNTPNewsgroupPost */
 
 /* {c4164a20-bc74-11d2-b7f2-00805f05ffa5} */
 #define NS_INNTPNEWSGROUPPOST_IID_STR "c4164a20-bc74-11d2-b7f2-00805f05ffa5"
@@ -22,10 +22,7 @@
 
 class nsINNTPNewsgroupPost : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_INNTPNEWSGROUPPOST_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INNTPNEWSGROUPPOST_IID)
 
   /* attribute string relayVersion; */
   NS_IMETHOD GetRelayVersion(char * *aRelayVersion) = 0;

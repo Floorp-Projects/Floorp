@@ -14,7 +14,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIMsgOfflineNewsState */
+/* starting interface:    nsIMsgOfflineNewsState */
 
 /* {921AC210-96B5-11d2-B7EB-00805F05FFA5} */
 #define NS_IMSGOFFLINENEWSSTATE_IID_STR "921AC210-96B5-11d2-B7EB-00805F05FFA5"
@@ -24,10 +24,7 @@
 
 class nsIMsgOfflineNewsState : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGOFFLINENEWSSTATE_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGOFFLINENEWSSTATE_IID)
 
   /* attribute nsINNTPNewsgroup newsgroup; */
   NS_IMETHOD GetNewsgroup(nsINNTPNewsgroup * *aNewsgroup) = 0;
