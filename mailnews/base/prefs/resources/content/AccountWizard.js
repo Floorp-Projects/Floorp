@@ -513,12 +513,14 @@ function updateMap(pageData, wizardMap) {
         if (pageData.accounttype.mailaccount &&
             pageData.accounttype.mailaccount.value) {
 
+            wizardMap.accname.previous = "login";
+            
             if (currentAccountData && currentAccountData.wizardSkipPanels) {
                 wizardMap.identity.next = "done";
                 wizardMap.done.previous = "identity";
             } else {
                 wizardMap.identity.next = "server";
-                wizardMap.accname.previous = "server";
+                wizardMap.done.previous = "accname";
             }
         }
 
