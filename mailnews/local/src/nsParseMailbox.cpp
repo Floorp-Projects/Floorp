@@ -1302,8 +1302,12 @@ int nsParseMailMessageState::FinalizeHeaders()
                     }
 				}
 
+        // use in-reply-to header as references, if there's no references header
 				if (references != nsnull)
 					m_newMsgHdr->SetReferences(references->value);
+        else if (inReplyTo != nsnull)
+          m_newMsgHdr->SetReferences(inReplyTo->value);
+
 				if (date) {
 					PRTime resultTime;
 					PRStatus timeStatus = PR_ParseTimeString (date->value, PR_FALSE, &resultTime);
