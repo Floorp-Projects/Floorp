@@ -2858,20 +2858,14 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   // but reflow somethimes gets upset when using max int
   // basically, we want to reflow a single page that is large 
   // enough to fit any atomic object like an IFrame
-  const PRInt32 kHundredPagesHigh = 5;
+  const PRInt32 kFivePagesHigh = 5;
 
   // now, change the value for special cases
   if (mPrt->mPrintFrameType == nsIPrintOptions::kEachFrameSep) {
     if (aPO->mFrameType == eFrame) {
       adjRect.SetRect(0, 0, width, height);
     } else if (aPO->mFrameType == eIFrame) {
-      height = pageHeight*kHundredPagesHigh;
-      adjRect.SetRect(aPO->mRect.x != 0?margin.left:0, aPO->mRect.y != 0?margin.top:0, width, height);
-    }
-
-  } else if (mPrt->mPrintFrameType == nsIPrintOptions::kFramesAsIs) {
-    if (aPO->mFrameType == eFrame || aPO->mFrameType == eIFrame) {
-      height = pageHeight*kHundredPagesHigh;
+      height = pageHeight*kFivePagesHigh;
       adjRect.SetRect(aPO->mRect.x != 0?margin.left:0, aPO->mRect.y != 0?margin.top:0, width, height);
     }
 
@@ -2881,7 +2875,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
         adjRect.x = 0;
         adjRect.y = 0;
       } else {
-        height = pageHeight*kHundredPagesHigh;
+        height = pageHeight*kFivePagesHigh;
         adjRect.SetRect(aPO->mRect.x != 0?margin.left:0, aPO->mRect.y != 0?margin.top:0, width, height);
       }
     }
