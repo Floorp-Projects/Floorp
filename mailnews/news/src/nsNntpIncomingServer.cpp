@@ -815,12 +815,12 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsg
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::PopulateSubscribeDatasourceWithName(nsIMsgWindow *aMsgWindow, PRBool aForceToServer, const char *name)
+nsNntpIncomingServer::PopulateSubscribeDatasourceWithPath(nsIMsgWindow *aMsgWindow, PRBool aForceToServer, const char *path)
 {
 	nsresult rv;
 
 #ifdef DEBUG_sspitzer
-	printf("PopulateSubscribeDatasourceWithName(%s)\n",name);
+	printf("PopulateSubscribeDatasourceWithPath(%s)\n",path);
 #endif
 
 	rv = StopPopulatingSubscribeDS();

@@ -140,13 +140,13 @@ interface nsIImapService : nsISupports
   void discoverChildren(in nsIEventQueue aClientEventQueue, 
                         in nsIMsgFolder aImapMailFolder,
                         in nsIUrlListener aUrlListener,
-						in string name,
+						in string folderPath,
                         out nsIURI aURL);
 
   void discoverLevelChildren(in nsIEventQueue aClientEventQueue, 
                              in nsIMsgFolder aImapMailFolder,
                              in nsIUrlListener aUrlListener,
-							 in string name,
+							 in string folderPath,
                              in long aLevel,
                              out nsIURI aURL);
 
@@ -205,5 +205,5 @@ interface nsIImapService : nsISupports
                            in nsIUrlListener aUrlListener);
 
   void buildSubscribeDatasource(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow);
-  void buildSubscribeDatasourceWithName(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow, in string name);
+  void buildSubscribeDatasourceWithPath(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow, in string folderPath);
 };

@@ -328,13 +328,23 @@ function SubscribeOnClick(event)
         	var treeitem = event.target.parentNode.parentNode.parentNode;
 			var open = treeitem.getAttribute('open');
 			if(open == "true") {
-				var name = treeitem.getAttribute("name");	
-				dump("do twisty for " + name +"\n");
+				var uri = treeitem.getAttribute("id");	
+				
+				// we need the path here,  so if the uri is:
+				// imap://sspitzer@nsmail-1/foo/bar
+				// we want foo/bar
+				//
+				// why not use the "name" attribute?
+				// for i18n, we need the folder path, which is not the same
+				// the folder path (of the uri) will have UTF7
+				// the name has UTF8
+				var path = uri.substring(gServerURI.length + 1,uri.length);
+				dump("do twisty for " + path + "\n");
 
 				// Turn progress meter on.
 				gStatusBar.setAttribute("mode","undetermined");	
 
-				gSubscribableServer.populateSubscribeDatasourceWithName(null /* eventually, a nsIMsgWindow */, true /* force to server */, name);
+				gSubscribableServer.populateSubscribeDatasourceWithPath(null /* eventually, a nsIMsgWindow */, true /* force to server */, path);
 			}
 		}
 		else {

@@ -1839,11 +1839,11 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::PopulateSubscribeDatasourceWithName(nsIMsgWindow *aMsgWindow, PRBool aForceToServer /*ignored*/, const char *name)
+nsImapIncomingServer::PopulateSubscribeDatasourceWithPath(nsIMsgWindow *aMsgWindow, PRBool aForceToServer /*ignored*/, const char *path)
 {
 	nsresult rv;
 #ifdef DEBUG_sspitzer
-	printf("in PopulateSubscribeDatasourceWithName(%s)\n",name);
+	printf("in PopulateSubscribeDatasourceWithPath(%s)\n",path);
 #endif
 	mDoingSubscribeDialog = PR_TRUE;	
 
@@ -1855,7 +1855,7 @@ nsImapIncomingServer::PopulateSubscribeDatasourceWithName(nsIMsgWindow *aMsgWind
 	if (NS_FAILED(rv)) return rv;
 	if (!imapService) return NS_ERROR_FAILURE;
 
-    rv = imapService->BuildSubscribeDatasourceWithName(this, aMsgWindow, name);
+    rv = imapService->BuildSubscribeDatasourceWithPath(this, aMsgWindow, path);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

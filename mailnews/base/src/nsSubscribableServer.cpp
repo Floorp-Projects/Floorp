@@ -452,7 +452,7 @@ nsSubscribableServer::SubscribeCleanup()
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::PopulateSubscribeDatasourceWithName(nsIMsgWindow *aMsgWindow, PRBool aForceToServer, const char *name)
+nsSubscribableServer::PopulateSubscribeDatasourceWithPath(nsIMsgWindow *aMsgWindow, PRBool aForceToServer, const char *path)
 {
 	NS_ASSERTION(PR_FALSE,"override this.");
 	return NS_ERROR_FAILURE;
