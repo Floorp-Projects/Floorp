@@ -121,7 +121,10 @@
                    </box>
 
                    <vbox id="weekview-daynumber-spacer-left">
-                      <label class="all-day-content-box-text-title" value="&allDayEvents.label;"/>
+                      <label class="all-day-content-box-text-title">
+                         <!-- text must not in be an attribute so it can wrap -->
+                         &allDayEvents.label;
+                      </label>
                    </vbox>
 
                </column>

@@ -1220,6 +1220,7 @@ then observed (ERic 20/06/03)
 }
 #week-view-header-box{
   /*padding             : 2px 2px 0px 2px;*/
+  border-bottom         : 1px solid #2085c4;        
 }
 
 #week-view-content-holder,#week-view-header-holder{
@@ -1330,7 +1331,6 @@ then observed (ERic 20/06/03)
 #weekview-daynumber-spacer-left
 {
    width                : 82px;
-   border-bottom           : 1px solid #2085c4;
    border-left           : 1px solid #2085c4;
 }
 
@@ -1349,7 +1349,6 @@ then observed (ERic 20/06/03)
    -moz-box-align : start;
 	padding					: 2px;
    background-color     : white;
-   border-bottom           : 1px solid #2085c4;
    min-height       		: 25px;
 }
 
