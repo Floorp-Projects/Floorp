@@ -264,8 +264,6 @@ int main(int argc, char** argv)
   txt->AppendData(tmp);
   NS_RELEASE(txt);
 
-  text->SetDocument(myDoc, PR_FALSE, PR_TRUE);
-
 #if 0
   // Query ITextContent interface
   nsITextContent* textContent;

@@ -134,8 +134,9 @@ nsHTMLTableCellElement::GetTable()
 {
   nsIContent *result = nsnull;
 
-  if (GetParent()) {  // GetParent() should be a row
-    nsIContent* section = GetParent()->GetParent();
+  nsIContent *parent = GetParent();
+  if (parent) {  // GetParent() should be a row
+    nsIContent* section = parent->GetParent();
     if (section) {
       if (section->IsContentOfType(eHTML) &&
           section->GetNodeInfo()->Equals(nsHTMLAtoms::table)) {
@@ -282,7 +283,7 @@ nsHTMLTableCellElement::ParseAttribute(nsIAtom* aAttribute,
     if (res) {
       PRInt32 val = aResult.GetIntegerValue();
       // quirks mode does not honor the special html 4 value of 0
-      if (val < 0 || (0 == val && InNavQuirksMode(mDocument))) {
+      if (val < 0 || (0 == val && InNavQuirksMode(GetCurrentDoc()))) {
         aResult.SetTo(1, nsAttrValue::eInteger);
       }
     }
@@ -298,7 +299,7 @@ nsHTMLTableCellElement::ParseAttribute(nsIAtom* aAttribute,
     return ParseTableCellHAlignValue(aValue, aResult);
   }
   if (aAttribute == nsHTMLAtoms::bgcolor) {
-    return aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument());
+    return aResult.ParseColor(aValue, GetOwnerDoc());
   }
   if (aAttribute == nsHTMLAtoms::scope) {
     return aResult.ParseEnumValue(aValue, kCellScopeTable);

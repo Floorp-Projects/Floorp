@@ -374,11 +374,12 @@ nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
   // If we don't have an attribute, find the actual color used for
   // (generally from the user agent style sheet) for compatibility
   if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    if (mDocument) {
+    nsIDocument *document = GetCurrentDoc();
+    if (document) {
       // Make sure the style is up-to-date, since we need it
-      mDocument->FlushPendingNotifications(Flush_Style);
+      document->FlushPendingNotifications(Flush_Style);
 
-      nsIFrame* frame = GetPrimaryFrameFor(this, mDocument, PR_FALSE);
+      nsIFrame* frame = GetPrimaryFrameFor(this, document, PR_FALSE);
     
       if (frame) {
         bgcolor = frame->GetStyleBackground()->mBackgroundColor;
@@ -415,7 +416,7 @@ nsHTMLBodyElement::ParseAttribute(nsIAtom* aAttribute,
       aAttribute == nsHTMLAtoms::link ||
       aAttribute == nsHTMLAtoms::alink ||
       aAttribute == nsHTMLAtoms::vlink) {
-    return aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument());
+    return aResult.ParseColor(aValue, GetOwnerDoc());
   }
   if (aAttribute == nsHTMLAtoms::marginwidth ||
       aAttribute == nsHTMLAtoms::marginheight ||
@@ -433,7 +434,8 @@ void
 nsHTMLBodyElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                PRBool aCompileEventHandlers)
 {
-  if (aDocument != mDocument && mContentStyleRule) {
+  nsIDocument *document = GetCurrentDoc();
+  if (aDocument != document && mContentStyleRule) {
     mContentStyleRule->mPart = nsnull;
     mContentStyleRule->mSheet = nsnull;
 
@@ -501,8 +503,9 @@ nsHTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   nsGenericHTMLElement::WalkContentStyleRules(aRuleWalker);
 
-  if (!mContentStyleRule && mDocument) {
-    mContentStyleRule = new BodyRule(this, mDocument->GetAttributeStyleSheet());
+  if (!mContentStyleRule && IsInDoc()) {
+    mContentStyleRule = new BodyRule(this,
+                                     GetOwnerDoc()->GetAttributeStyleSheet());
     NS_IF_ADDREF(mContentStyleRule);
   }
   if (aRuleWalker && mContentStyleRule) {

@@ -129,7 +129,7 @@ nsHTMLFrameElement::ParseAttribute(nsIAtom* aAttribute,
                                    nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
-    return aResult.ParseColor(aValue, nsGenericHTMLFrameElement::GetOwnerDocument());
+    return aResult.ParseColor(aValue, nsGenericHTMLFrameElement::GetOwnerDoc());
   }
   if (aAttribute == nsHTMLAtoms::frameborder) {
     return ParseFrameborderValue(aValue, aResult);

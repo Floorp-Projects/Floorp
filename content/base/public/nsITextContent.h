@@ -89,23 +89,25 @@ public:
   virtual PRBool IsOnlyWhitespace() = 0;
 
   /**
-   * Clone this content node. Unlike the nsIDOMNode equivalent, this
-   * method allows you to specify whether to copy the text as well.
-   */
-  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText) = 0;
-
-  /**
    * Append the text content to aResult.
    */
   virtual void AppendTextTo(nsAString& aResult) = 0;
 };
 
 // XXX These belong elsewhere
+/**
+ * There's no need to pass in aOwnerDocument if the node is going to be
+ * inserted *immediately* after creation.
+ */
 nsresult
-NS_NewTextNode(nsITextContent** aResult);
+NS_NewTextNode(nsITextContent **aResult, nsIDocument *aOwnerDocument = nsnull);
 
+/**
+ * There's no need to pass in aOwnerDocument if the node is going to be
+ * inserted *immediately* after creation.
+ */
 nsresult
-NS_NewCommentNode(nsIContent** aResult);
+NS_NewCommentNode(nsIContent **aResult, nsIDocument *aOwnerDocument = nsnull);
 
 
 #endif /* nsITextContent_h___ */

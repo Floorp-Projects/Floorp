@@ -75,6 +75,7 @@ nsSVGElement::~nsSVGElement()
   for (i = 0; i < count; ++i) {
     mMappedAttributes.AttrAt(i)->GetSVGValue()->RemoveObserver(this);
   }
+  mMappedAttributes.Clear();
 }
 
 //----------------------------------------------------------------------
@@ -130,7 +131,7 @@ nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
   
   PRInt32 index = mAttrsAndChildren.IndexOfAttr(aName, aNamespaceID);
   
-  if (mDocument) {
+  if (IsInDoc()) {
     hasListeners = nsGenericElement::HasMutationListeners(this,
       NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
     
@@ -214,9 +215,10 @@ nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
       // creation as well as for the root element of a document
       // we're parsing.  But in famous last words, this code will
       // be changing soon to allow multiple onloads per document.
-      if (mDocument && !mDocument->GetRootContent()) {
+      nsIDocument *document = GetCurrentDoc();
+      if (document && !document->GetRootContent()) {
         nsCOMPtr<nsIDOMEventReceiver> receiver =
-          do_QueryInterface(mDocument->GetScriptGlobalObject());
+          do_QueryInterface(document->GetScriptGlobalObject());
         if (receiver) {
           receiver->GetListenerManager(getter_AddRefs(manager));
         }
@@ -308,7 +310,7 @@ nsSVGElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
   PRBool modification = PR_FALSE;
   nsAutoString oldValueStr;
 
-  if (mDocument) {
+  if (IsInDoc()) {
     hasListeners = nsGenericElement::HasMutationListeners(this,
       NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
 
@@ -452,8 +454,8 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
   *aOwnerSVGElement = nsnull;
 
   nsIBindingManager *bindingManager = nsnull;
-  if (mDocument) {
-    bindingManager = mDocument->GetBindingManager();
+  if (IsInDoc()) {
+    bindingManager = GetOwnerDoc()->GetBindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;
@@ -548,7 +550,7 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable)
   const nsAttrName* attrName = mMappedAttributes.GetSafeAttrNameAt(i);
   PRBool modification = PR_FALSE;
   PRBool hasListeners = PR_FALSE;
-  if (mDocument) {
+  if (IsInDoc()) {
     modification = !!mAttrsAndChildren.GetAttr(attrName->LocalName(),
                                                attrName->NamespaceID());
     hasListeners = nsGenericElement::HasMutationListeners(this,
@@ -612,9 +614,10 @@ nsSVGElement::SetAttrAndNotify(PRInt32 aNamespaceID, nsIAtom* aAttribute,
     NS_STATIC_CAST(PRUint8, nsIDOMMutationEvent::MODIFICATION) :
     NS_STATIC_CAST(PRUint8, nsIDOMMutationEvent::ADDITION);
 
-  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
-  if (aNotify && mDocument) {
-    mDocument->AttributeWillChange(this, aNamespaceID, aAttribute);
+  nsIDocument* document = GetCurrentDoc();
+  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
+  if (aNotify && document) {
+    document->AttributeWillChange(this, aNamespaceID, aAttribute);
   }
 
   if (aNamespaceID == kNameSpaceID_None) {
@@ -633,9 +636,9 @@ nsSVGElement::SetAttrAndNotify(PRInt32 aNamespaceID, nsIAtom* aAttribute,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (mDocument) {
+  if (document) {
     nsCOMPtr<nsIXBLBinding> binding;
-    mDocument->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
+    document->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
     if (binding) {
       binding->AttributeChanged(aAttribute, aNamespaceID, PR_FALSE, aNotify);
     }
@@ -669,7 +672,7 @@ nsSVGElement::SetAttrAndNotify(PRInt32 aNamespaceID, nsIAtom* aAttribute,
     }
 
     if (aNotify) {
-      mDocument->AttributeChanged(this, aNamespaceID, aAttribute, modType);
+      document->AttributeChanged(this, aNamespaceID, aAttribute, modType);
     }
   }
   

@@ -198,9 +198,9 @@ nsHTMLButtonElement::Click()
   mHandlingClick = PR_TRUE;
   // Hold on to the document in case one of the events makes it die or
   // something...
-  nsCOMPtr<nsIDocument> doc = mDocument; 
+  nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
 
-  if (mDocument) {
+  if (doc) {
     nsIPresShell *shell = doc->GetShellAt(0);
     if (shell) {
       nsCOMPtr<nsPresContext> context;

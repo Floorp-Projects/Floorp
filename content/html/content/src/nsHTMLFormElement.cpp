@@ -652,10 +652,10 @@ void
 nsHTMLFormElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                PRBool aCompileEventHandlers)
 {
-  nsCOMPtr<nsIHTMLDocument> oldDocument = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIHTMLDocument> oldDocument = do_QueryInterface(GetCurrentDoc());
   nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
   
-  nsCOMPtr<nsIHTMLDocument> newDocument = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIHTMLDocument> newDocument = do_QueryInterface(GetCurrentDoc());
   if (oldDocument != newDocument) {
     if (oldDocument) {
       oldDocument->RemovedForm();
@@ -763,8 +763,8 @@ nsHTMLFormElement::DoSubmitOrReset(nsPresContext* aPresContext,
   NS_ENSURE_ARG_POINTER(aPresContext);
 
   // Make sure the presentation is up-to-date
-  if (mDocument) {
-    mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
+  if (IsInDoc()) {
+    GetOwnerDoc()->FlushPendingNotifications(Flush_ContentAndNotify);
   }
 
   // JBK Don't get form frames anymore - bug 34297
@@ -975,7 +975,8 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
     nsCOMPtr<nsISupports> inst;
     *aCancelSubmit = PR_FALSE;
 
-    nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(mDocument->GetScriptGlobalObject());
+    nsCOMPtr<nsIDOMWindowInternal> window =
+      do_QueryInterface(GetOwnerDoc()->GetScriptGlobalObject());
 
     PRBool loop = PR_TRUE;
     while (NS_SUCCEEDED(theEnum->HasMoreElements(&loop)) && loop) {
@@ -1244,12 +1245,13 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   // Get the document to form the URL.
   // We'll also need it later to get the DOM window when notifying form submit
   // observers (bug 33203)
-  if (!mDocument) {
+  if (!IsInDoc()) {
     return NS_OK; // No doc means don't submit, see Bug 28988
   }
 
   // Get base URL
-  nsIURI *docURI = mDocument->GetDocumentURI();
+  nsIDocument *document = GetOwnerDoc();
+  nsIURI *docURI = document->GetDocumentURI();
   NS_ENSURE_TRUE(docURI, NS_ERROR_UNEXPECTED);
 
   // If an action is not specified and we are inside
@@ -1261,7 +1263,7 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
 
   nsCOMPtr<nsIURI> actionURL;
   if (action.IsEmpty()) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
+    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
     if (!htmlDoc) {
       // Must be a XML, XUL or other non-HTML document type
       // so do nothing.
@@ -1288,7 +1290,7 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   nsIScriptSecurityManager *securityManager =
       nsContentUtils::GetSecurityManager();
   rv = securityManager->
-    CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), actionURL,
+    CheckLoadURIWithPrincipal(document->GetPrincipal(), actionURL,
                               nsIScriptSecurityManager::STANDARD);
   NS_ENSURE_SUCCESS(rv, rv);
 

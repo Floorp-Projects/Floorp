@@ -43,6 +43,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsIAttribute.h"
+#include "nsIDocument.h"
 
 /**
  * Class used to implement DOM text nodes
@@ -51,7 +52,7 @@ class nsTextNode : public nsGenericDOMDataNode,
                    public nsIDOMText
 {
 public:
-  nsTextNode();
+  nsTextNode(nsIDocument *aDocument);
   virtual ~nsTextNode();
 
   // nsISupports
@@ -74,8 +75,8 @@ public:
   virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
 #endif
 
-  // nsITextContent
-  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText);
+  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText,
+                                                        nsIDocument *aOwnerDocument);
 };
 
 /**
@@ -111,6 +112,8 @@ public:
     nsITextContent* mContent;  // Weak ref; it owns us
   };
 
+  nsAttributeTextNode() : nsTextNode(nsnull) {
+  }
   virtual ~nsAttributeTextNode() {
     DetachListener();
   }
@@ -128,17 +131,25 @@ private:
 };
 
 nsresult
-NS_NewTextNode(nsITextContent** aInstancePtrResult)
+NS_NewTextNode(nsITextContent** aInstancePtrResult,
+               nsIDocument *aOwnerDocument)
 {
-  *aInstancePtrResult = new nsTextNode();
-  NS_ENSURE_TRUE(*aInstancePtrResult, NS_ERROR_OUT_OF_MEMORY);
+  *aInstancePtrResult = nsnull;
 
-  NS_ADDREF(*aInstancePtrResult);
+  nsCOMPtr<nsITextContent> instance = new nsTextNode(aOwnerDocument);
+  NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
+
+  if (aOwnerDocument && !aOwnerDocument->AddOrphan(instance)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  instance.swap(*aInstancePtrResult);
 
   return NS_OK;
 }
 
-nsTextNode::nsTextNode()
+nsTextNode::nsTextNode(nsIDocument *aDocument)
+  : nsGenericDOMDataNode(aDocument)
 {
 }
 
@@ -194,16 +205,16 @@ nsTextNode::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsTextNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsCOMPtr<nsITextContent> textContent = CloneContent(PR_TRUE);
+  nsCOMPtr<nsITextContent> textContent = CloneContent(PR_TRUE, GetOwnerDoc());
   NS_ENSURE_TRUE(textContent, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(textContent, aReturn);
 }
 
 already_AddRefed<nsITextContent>
-nsTextNode::CloneContent(PRBool aCloneText)
+nsTextNode::CloneContent(PRBool aCloneText, nsIDocument *aOwnerDocument)
 {
-  nsTextNode* it = new nsTextNode();
+  nsTextNode* it = new nsTextNode(aOwnerDocument);
   if (!it)
     return nsnull;
 
@@ -212,6 +223,10 @@ nsTextNode::CloneContent(PRBool aCloneText)
   }
 
   NS_ADDREF(it);
+
+  if (aOwnerDocument && !aOwnerDocument->AddOrphan(it)) {
+    NS_RELEASE(it);
+  }
 
   return it;
 }
@@ -226,7 +241,7 @@ nsTextNode::IsContentOfType(PRUint32 aFlags) const
 void
 nsTextNode::List(FILE* out, PRInt32 aIndent) const
 {
-  NS_PRECONDITION(mDocument, "bad content");
+  NS_PRECONDITION(IsInDoc(), "bad content");
 
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -243,7 +258,7 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
 void
 nsTextNode::DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const
 {
-  NS_PRECONDITION(mDocument, "bad content");
+  NS_PRECONDITION(IsInDoc(), "bad content");
 
   if(aDumpAll) {
     PRInt32 index;

@@ -258,7 +258,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
           nsCOMPtr<nsIURI> uri;
           rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
                                                          value,
-                                                         mDocument,
+                                                         GetCurrentDoc(),
                                                          base);
           if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsPresContext> pc;
@@ -293,6 +293,7 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
 
   if (mIsLink && (NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
+    nsIDocument *document = GetCurrentDoc();
     switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       {
@@ -388,7 +389,7 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
         nsCOMPtr<nsIURI> uri;
         ret = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
                                                         href,
-                                                        mDocument,
+                                                        document,
                                                         baseURI);
         if (NS_SUCCEEDED(ret)) {
           ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURI, uri,

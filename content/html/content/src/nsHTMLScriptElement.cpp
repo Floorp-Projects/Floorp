@@ -649,14 +649,14 @@ nsHTMLScriptElement::GetScriptLineNumber()
 void
 nsHTMLScriptElement::MaybeProcessScript()
 {
-  if (mIsEvaluated || mEvaluating || !mDocument || !GetParent()) {
+  if (mIsEvaluated || mEvaluating || !IsInDoc() || !GetParent()) {
     return;
   }
 
   // We'll always call this to make sure that
   // ScriptAvailable/ScriptEvaluated gets called. See bug 153600
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIScriptLoader> loader = mDocument->GetScriptLoader();
+  nsCOMPtr<nsIScriptLoader> loader = GetOwnerDoc()->GetScriptLoader();
   if (loader) {
     mEvaluating = PR_TRUE;
     rv = loader->ProcessScriptElement(this, this);

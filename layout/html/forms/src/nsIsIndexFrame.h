@@ -136,8 +136,8 @@ public:
   NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState);
 
 protected:
-  nsIHTMLContent*     mTextContent;
-  nsIContent*         mInputContent;
+  nsCOMPtr<nsITextContent> mTextContent;
+  nsCOMPtr<nsIContent> mInputContent;
 
   // XXX Hack: pres context needed by function KeyPress() and SetFocus()
   nsPresContext*     mPresContext;  // weak reference

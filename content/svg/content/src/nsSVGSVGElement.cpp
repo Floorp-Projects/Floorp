@@ -352,9 +352,9 @@ nsSVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
 
   *aPixelUnitToMillimeterX = 0.28f; // 90dpi
 
-  if (!mDocument) return NS_OK;
+  if (!IsInDoc()) return NS_OK;
   // Get Presentation shell 0
-  nsIPresShell *presShell = mDocument->GetShellAt(0);
+  nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
   if (!presShell) return NS_OK;
   
   // Get the Presentation Context from the Shell
@@ -382,9 +382,9 @@ nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
 
   *aScreenPixelToMillimeterX = 0.28f; // 90dpi
 
-  if (!mDocument) return NS_OK;
+  if (!IsInDoc()) return NS_OK;
     // Get Presentation shell 0
-  nsIPresShell *presShell = mDocument->GetShellAt(0);
+  nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
   if (!presShell) return NS_OK;
   
   // Get the Presentation Context from the Shell
@@ -457,8 +457,8 @@ nsSVGSVGElement::SuspendRedraw(PRUint32 max_wait_milliseconds, PRUint32 *_retval
   if (++mRedrawSuspendCount > 1) 
     return NS_OK;
   
-  if (!mDocument) return NS_ERROR_FAILURE;
-  nsIPresShell *presShell = mDocument->GetShellAt(0);
+  if (!IsInDoc()) return NS_ERROR_FAILURE;
+  nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
   NS_ASSERTION(presShell, "need presShell to suspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
@@ -508,8 +508,8 @@ nsSVGSVGElement::UnsuspendRedrawAll()
 {
   mRedrawSuspendCount = 0;
   
-  if (!mDocument) return NS_ERROR_FAILURE;
-  nsIPresShell *presShell = mDocument->GetShellAt(0);
+  if (!IsInDoc()) return NS_ERROR_FAILURE;
+  nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
   NS_ASSERTION(presShell, "need presShell to unsuspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
@@ -533,9 +533,9 @@ nsSVGSVGElement::UnsuspendRedrawAll()
 NS_IMETHODIMP
 nsSVGSVGElement::ForceRedraw()
 {
-  if (!mDocument) return NS_ERROR_FAILURE;
+  if (!IsInDoc()) return NS_ERROR_FAILURE;
 
-  nsIPresShell *presShell = mDocument->GetShellAt(0);
+  nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
   NS_ASSERTION(presShell, "need presShell to unsuspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
@@ -890,8 +890,8 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
   nsCOMPtr<nsIDOMSVGMatrix> CTM;
 
   nsIBindingManager *bindingManager = nsnull;
-  if (mDocument) {
-    bindingManager = mDocument->GetBindingManager();
+  if (IsInDoc()) {
+    bindingManager = GetOwnerDoc()->GetBindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;
@@ -963,8 +963,8 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   nsCOMPtr<nsIDOMSVGMatrix> screenCTM;
 
   nsIBindingManager *bindingManager = nsnull;
-  if (mDocument) {
-    bindingManager = mDocument->GetBindingManager();
+  if (IsInDoc()) {
+    bindingManager = GetOwnerDoc()->GetBindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;
@@ -1136,8 +1136,8 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable)
 
   mViewBoxToViewportTransform = nsnull;
   
-  if (!mDocument) return NS_ERROR_FAILURE;
-  nsIPresShell* presShell = mDocument->GetShellAt(0);
+  if (!IsInDoc()) return NS_ERROR_FAILURE;
+  nsIPresShell* presShell = GetOwnerDoc()->GetShellAt(0);
   NS_ASSERTION(presShell, "no presShell");
   if (!presShell) return NS_ERROR_FAILURE;
 
@@ -1183,9 +1183,10 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
   x = 0;
   y = 0;
 
-  if (!mDocument) return;
+  nsIDocument *document = GetCurrentDoc();
+  if (!document) return;
 
-  nsIPresShell *presShell = mDocument->GetShellAt(0);
+  nsIPresShell *presShell = document->GetShellAt(0);
   if (!presShell) {
     NS_ERROR("couldn't get presshell");
     return;
@@ -1199,7 +1200,7 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
   }
    
   // Flush all pending notifications so that our frames are uptodate
-  mDocument->FlushPendingNotifications(Flush_Layout);
+  document->FlushPendingNotifications(Flush_Layout);
     
   nsIFrame* frame;
   presShell->GetPrimaryFrameFor(this, &frame);

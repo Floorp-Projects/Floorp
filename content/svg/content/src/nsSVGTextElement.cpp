@@ -358,12 +358,12 @@ void nsSVGTextElement::ParentChainChanged()
 already_AddRefed<nsISVGTextContentMetrics>
 nsSVGTextElement::GetTextContentMetrics()
 {
-  if (!mDocument) {
+  if (!IsInDoc()) {
     NS_ERROR("no document");
     return nsnull;
   }
   
-  nsIPresShell* presShell = mDocument->GetShellAt(0);
+  nsIPresShell* presShell = GetOwnerDoc()->GetShellAt(0);
   if (!presShell) {
     NS_ERROR("no presshell");
     return nsnull;

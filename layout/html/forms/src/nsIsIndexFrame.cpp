@@ -80,8 +80,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 
-static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
-
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 nsresult
@@ -99,9 +97,7 @@ NS_NewIsIndexFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-nsIsIndexFrame::nsIsIndexFrame():
-  mTextContent(nsnull),
-  mInputContent(nsnull)
+nsIsIndexFrame::nsIsIndexFrame()
 {
     //Shrink the area around it's contents
   SetFlags(NS_BLOCK_SHRINK_WRAP);
@@ -109,14 +105,10 @@ nsIsIndexFrame::nsIsIndexFrame():
 
 nsIsIndexFrame::~nsIsIndexFrame()
 {
-  if (mTextContent) {
-    NS_RELEASE(mTextContent);
-  }
   // remove ourself as a listener of the text control (bug 40533)
   if (mInputContent) {
     nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mInputContent));
     reciever->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMKeyListener));
-    NS_RELEASE(mInputContent);
   }
 }
 
@@ -164,9 +156,10 @@ nsIsIndexFrame::UpdatePromptLabel()
     result = nsFormControlHelper::GetLocalizedString(nsFormControlHelper::GetHTMLPropertiesFileName(),
                                                      NS_LITERAL_STRING("IsIndexPrompt").get(), prompt);
   }
-  nsCOMPtr<nsITextContent> text = do_QueryInterface(mTextContent);
-  text->SetText(prompt, PR_TRUE);
-  return result;
+
+  mTextContent->SetText(prompt, PR_TRUE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -242,14 +235,13 @@ nsIsIndexFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // Add a child text content node for the label
   if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIContent> labelContent(do_CreateInstance(kTextNodeCID,&result));
-    if (NS_SUCCEEDED(result) && labelContent) {
+    nsCOMPtr<nsITextContent> labelContent;
+    NS_NewTextNode(getter_AddRefs(labelContent));
+    if (labelContent) {
       // set the value of the text node and add it to the child list
-      result = labelContent->QueryInterface(NS_GET_IID(nsITextContent),(void**)&mTextContent);
-      if (NS_SUCCEEDED(result) && mTextContent) {
-        UpdatePromptLabel();
-        result = aChildList.AppendElement(mTextContent);
-      }
+      mTextContent.swap(labelContent);
+      UpdatePromptLabel();
+      aChildList.AppendElement(mTextContent);
     }
   }
 
@@ -258,7 +250,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
                      getter_AddRefs(inputInfo));
 
-  result = NS_NewHTMLElement(&mInputContent, inputInfo);
+  result = NS_NewHTMLElement(getter_AddRefs(mInputContent), inputInfo);
   NS_ENSURE_SUCCESS(result, result);
 
   mInputContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);

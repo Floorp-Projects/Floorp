@@ -114,7 +114,6 @@
 #include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
 
-static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 
 #include "nsIDOMWindowInternal.h"
@@ -1488,10 +1487,8 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsPresContext*       aPresContext
           rv = NS_NewAttributeContent(aContent, attrNameSpace, attrName,
                                       getter_AddRefs(content));
 
-          // Set aContent as the parent content and set the document
-          // object. This way event handling works
+          // Set aContent as the parent content so that event handling works.
           content->SetParent(aContent);
-          content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
           content->SetNativeAnonymous(PR_TRUE);
           content->SetBindingParent(content);
 
@@ -1544,19 +1541,17 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsPresContext*       aPresContext
 
     // Create a text content node
     nsIFrame* textFrame = nsnull;
-    nsCOMPtr<nsIContent> textContent = do_CreateInstance(kTextNodeCID);
+    nsCOMPtr<nsITextContent> textContent;
+    NS_NewTextNode(getter_AddRefs(textContent));
     if (textContent) {
       // Set the text
-      nsCOMPtr<nsIDOMCharacterData> domData = do_QueryInterface(textContent);
-      domData->SetData(contentString);
+      textContent->SetText(contentString, PR_TRUE);
 
       if (textPtr)
-        *textPtr = domData;
+        *textPtr = do_QueryInterface(textContent);
   
-      // Set aContent as the parent content and set the document object. This
-      // way event handling works
+      // Set aContent as the parent content so that event handling works.
       textContent->SetParent(aContent);
-      textContent->SetDocument(aDocument, PR_TRUE, PR_TRUE);
       textContent->SetNativeAnonymous(PR_TRUE);
       textContent->SetBindingParent(textContent);
       
@@ -10167,18 +10162,16 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell,
   GetAlternateTextFor(aContent, aContent->Tag(), altText);
 
   // Create a text content element for the alternate text
-  nsCOMPtr<nsIContent> altTextContent(do_CreateInstance(kTextNodeCID,&rv));
+  nsCOMPtr<nsITextContent> altTextContent;
+  rv = NS_NewTextNode(getter_AddRefs(altTextContent));
   if (NS_FAILED(rv))
     return rv;
 
   // Set the content's text
-  nsCOMPtr<nsIDOMCharacterData> domData = do_QueryInterface(altTextContent);
-  if (domData)
-    domData->SetData(altText);
+  altTextContent->SetText(altText, PR_TRUE);
   
-  // Set aContent as the parent content and set the document object
+  // Set aContent as the parent content.
   altTextContent->SetParent(aContent);
-  altTextContent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
 
   // Create either an inline frame, block frame, or area frame
   nsIFrame* containerFrame;

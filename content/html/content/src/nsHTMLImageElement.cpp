@@ -259,12 +259,14 @@ nsHTMLImageElement::GetXY()
 {
   nsPoint point(0, 0);
 
-  if (!mDocument) {
+  if (!IsInDoc()) {
     return point;
   }
 
+  nsIDocument *document = GetOwnerDoc();
+
   // Get Presentation shell 0
-  nsIPresShell *presShell = mDocument->GetShellAt(0);
+  nsIPresShell *presShell = document->GetShellAt(0);
   if (!presShell) {
     return point;
   }
@@ -278,7 +280,7 @@ nsHTMLImageElement::GetXY()
   }
 
   // Flush all pending notifications so that our frames are laid out correctly
-  mDocument->FlushPendingNotifications(Flush_Layout);
+  document->FlushPendingNotifications(Flush_Layout);
 
   // Get the Frame for this image
   nsIFrame* frame = nsnull;
@@ -327,11 +329,11 @@ nsHTMLImageElement::GetWidthHeight()
 {
   nsSize size(0,0);
 
-  if (mDocument) {
+  if (IsInDoc()) {
     // Flush all pending notifications so that our frames are up to date.
     // If we're not in a document, we don't have a frame anyway, so we
     // don't care.
-    mDocument->FlushPendingNotifications(Flush_Layout);
+    GetOwnerDoc()->FlushPendingNotifications(Flush_Layout);
   }
 
   nsIImageFrame* imageFrame;
@@ -536,11 +538,11 @@ nsHTMLImageElement::IsFocusable(PRInt32 *aTabIndex)
   PRInt32 tabIndex;
   GetTabIndex(&tabIndex);
 
-  if (mDocument) {
+  if (IsInDoc()) {
     nsAutoString usemap;
     GetUseMap(usemap);
     nsCOMPtr<nsIDOMHTMLMapElement> imageMap =
-      nsImageMapUtils::FindImageMap(mDocument, usemap);
+      nsImageMapUtils::FindImageMap(GetOwnerDoc(), usemap);
     if (imageMap) {
       if (aTabIndex) {
         // Use tab index on individual map areas
@@ -605,7 +607,7 @@ void
 nsHTMLImageElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                 PRBool aCompileEventHandlers)
 {
-  PRBool documentChanging = aDocument && (aDocument != mDocument);
+  PRBool documentChanging = aDocument && aDocument != GetCurrentDoc();
   
   nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
   if (documentChanging && GetParent()) {
@@ -623,7 +625,7 @@ void
 nsHTMLImageElement::SetParent(nsIContent* aParent)
 {
   nsGenericHTMLElement::SetParent(aParent);
-  if (aParent && mDocument) {
+  if (aParent && IsInDoc()) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
     nsAutoString uri;

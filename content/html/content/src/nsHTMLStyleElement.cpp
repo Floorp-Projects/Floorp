@@ -215,7 +215,7 @@ void
 nsHTMLStyleElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                 PRBool aCompileEventHandlers)
 {
-  nsCOMPtr<nsIDocument> oldDoc = mDocument;
+  nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
 
   nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
 

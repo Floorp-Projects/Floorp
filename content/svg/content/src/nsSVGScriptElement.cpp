@@ -229,8 +229,8 @@ nsSVGScriptElement::ScriptAvailable(nsresult aResult,
 {
   if (!aIsInline && NS_FAILED(aResult)) {
     nsCOMPtr<nsPresContext> presContext;
-    if (mDocument) {
-      nsIPresShell *presShell = mDocument->GetShellAt(0);
+    if (IsInDoc()) {
+      nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
       if (presShell)
         presShell->GetPresContext(getter_AddRefs(presContext));
     }
@@ -269,8 +269,8 @@ nsSVGScriptElement::ScriptEvaluated(nsresult aResult,
   nsresult rv = NS_OK;
   if (!aIsInline) {
     nsCOMPtr<nsPresContext> presContext;
-    if (mDocument) {
-      nsIPresShell *presShell = mDocument->GetShellAt(0);
+    if (IsInDoc()) {
+      nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
       if (presShell)
         presShell->GetPresContext(getter_AddRefs(presContext));
     }
@@ -393,14 +393,14 @@ nsSVGScriptElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
 void
 nsSVGScriptElement::MaybeProcessScript()
 {
-  if (mIsEvaluated || mEvaluating || !mDocument || !GetParent()) {
+  if (mIsEvaluated || mEvaluating || !IsInDoc() || !GetParent()) {
     return;
   }
 
   // We'll always call this to make sure that
   // ScriptAvailable/ScriptEvaluated gets called. See bug 153600
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIScriptLoader> loader = mDocument->GetScriptLoader();
+  nsCOMPtr<nsIScriptLoader> loader = GetOwnerDoc()->GetScriptLoader();
   if (loader) {
     mEvaluating = PR_TRUE;
     rv = loader->ProcessScriptElement(this, this);

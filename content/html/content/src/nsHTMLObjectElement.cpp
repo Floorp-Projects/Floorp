@@ -213,11 +213,11 @@ nsHTMLObjectElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 
   *aContentDocument = nsnull;
 
-  if (!mDocument) {
+  if (!IsInDoc()) {
     return NS_OK;
   }
 
-  nsIDocument *sub_doc = mDocument->GetSubDocumentFor(this);
+  nsIDocument *sub_doc = GetOwnerDoc()->GetSubDocumentFor(this);
 
   if (!sub_doc) {
     return NS_OK;

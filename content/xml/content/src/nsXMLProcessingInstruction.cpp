@@ -45,22 +45,35 @@
 nsresult
 NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
                                const nsAString& aTarget,
-                               const nsAString& aData)
+                               const nsAString& aData,
+                               nsIDocument *aOwnerDocument)
 {
   if (aTarget.EqualsLiteral("xml-stylesheet")) {
-    return NS_NewXMLStylesheetProcessingInstruction(aInstancePtrResult, aData);
+    return NS_NewXMLStylesheetProcessingInstruction(aInstancePtrResult, aData,
+                                                    aOwnerDocument);
   }
-  *aInstancePtrResult = new nsXMLProcessingInstruction(aTarget, aData);
-  NS_ENSURE_TRUE(*aInstancePtrResult, NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ADDREF(*aInstancePtrResult);
+  *aInstancePtrResult = nsnull;
+
+  nsCOMPtr<nsIContent> instance;
+  instance = new nsXMLProcessingInstruction(aTarget, aData,
+                                            aOwnerDocument);
+  NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
+
+  if (aOwnerDocument && !aOwnerDocument->AddOrphan(instance)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  instance.swap(*aInstancePtrResult);
 
   return NS_OK;
 }
 
 nsXMLProcessingInstruction::nsXMLProcessingInstruction(const nsAString& aTarget,
-                                                       const nsAString& aData) :
-  mTarget(aTarget)
+                                                       const nsAString& aData,
+                                                       nsIDocument *aDocument)
+  : nsGenericDOMDataNode(aDocument),
+    mTarget(aTarget)
 {
   nsGenericDOMDataNode::SetData(aData);
 }
@@ -156,29 +169,27 @@ nsXMLProcessingInstruction::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   nsAutoString data;
   GetData(data);
 
-  *aReturn = new nsXMLProcessingInstruction(mTarget, data);
-  if (!*aReturn) {
+  nsIDocument *document = GetOwnerDoc();
+  nsXMLProcessingInstruction *pi =
+    new nsXMLProcessingInstruction(mTarget, data, document);
+  if (!pi) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  NS_ADDREF(*aReturn);
+  if (document) {
+    document->AddOrphan(pi);
+  }
+
+  NS_ADDREF(*aReturn = pi);
 
   return NS_OK;
-}
-
-already_AddRefed<nsITextContent> 
-nsXMLProcessingInstruction::CloneContent(PRBool aCloneText)
-{
-  NS_ERROR("Huh, this shouldn't be called!");
-
-  return nsnull;
 }
 
 #ifdef DEBUG
 void
 nsXMLProcessingInstruction::List(FILE* out, PRInt32 aIndent) const
 {
-  NS_PRECONDITION(mDocument, "bad content");
+  NS_PRECONDITION(IsInDoc(), "bad content");
 
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
