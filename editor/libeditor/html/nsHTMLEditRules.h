@@ -150,6 +150,9 @@ protected:
   nsresult DidMakeBasicBlock(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   nsresult AlignInnerBlocks(nsIDOMNode *aNode, const nsAString *alignType);
   nsresult AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignType);
+  PRBool   IsFormatNode(nsIDOMNode *aNode);
+  nsresult AppendInnerFormatNodes(nsISupportsArray *aArray, nsIDOMNode *aNode);
+  nsresult GetFormatString(nsIDOMNode *aNode, nsAString &outFormat);
   nsresult GetInnerContent(nsIDOMNode *aNode, nsISupportsArray *outArrayOfNodes, PRInt32 *aIndex, PRBool aList = PR_TRUE, PRBool aTble = PR_TRUE);
   nsCOMPtr<nsIDOMNode> IsInListItem(nsIDOMNode *aNode);
   nsresult ReturnInHeader(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
@@ -180,7 +183,7 @@ protected:
                                       PRInt32 *ioStartOffset,
                                       PRInt32 aAction,
                                       PRBool *aHandled);
-  nsresult CheckForInvisibleBR(nsIDOMNode *aBlock, BRLocation aWhere, 
+  nsresult CheckForInvisibleBR(nsIDOMNode *aBlock, nsHTMLEditRules::BRLocation aWhere, 
                                nsCOMPtr<nsIDOMNode> *outBRNode, PRInt32 aOffset=0);
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);

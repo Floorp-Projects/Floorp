@@ -511,8 +511,6 @@
         <menuitem id="menu_h6"        type="radio" name="1" label="&heading6Cmd.label;"             accesskey="&heading6.accesskey;"            value="h6"    observes="cmd_renderedHTMLEnabler"/>
         <menuitem id="menu_address"   type="radio" name="1" label="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    value="address"  observes="cmd_renderedHTMLEnabler"/>   
         <menuitem id="menu_pre"       type="radio" name="1" label="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  value="pre"   observes="cmd_renderedHTMLEnabler"/>       
-        <menuseparator/>
-        <menuitem id="menu_blockquote" type="checkbox" label="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" value="blockquote" observes="cmd_renderedHTMLEnabler"/>
       </menupopup>
     </menu>
 
@@ -727,8 +725,6 @@
       <menuitem label="&heading6Cmd.label;"            value="h6"/>
       <menuitem label="&paragraphAddressCmd.label;"    value="address"/>
       <menuitem label="&paragraphPreformatCmd.label;"  value="pre"/>
-      <menuseparator/>
-      <menuitem label="&paragraphBlockquoteCmd.label;" value="blockquote"/>
     </menupopup>
   </menulist>
 
