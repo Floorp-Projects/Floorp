@@ -109,7 +109,6 @@ NS_IMPL_QUERY_HEAD(nsDocShell)
    NS_IMPL_QUERY_BODY(nsIBaseWindow)
    NS_IMPL_QUERY_BODY(nsIScrollable)
    NS_IMPL_QUERY_BODY(nsITextScroll)
-   NS_IMPL_QUERY_BODY(nsICapabilities)
 //   NS_IMPL_QUERY_BODY(nsIInterfaceRequestor)
 NS_IMPL_QUERY_TAIL(nsIDocShell)
 
