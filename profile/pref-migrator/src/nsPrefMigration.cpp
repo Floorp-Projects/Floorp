@@ -396,6 +396,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   nsCOMPtr<nsIFileSpec> newIMAPMailPath;
   nsCOMPtr<nsIFileSpec> newIMAPLocalMailPath;
   nsCOMPtr<nsIFileSpec> newNewsPath;
+  PRBool exists;
   
   PRInt32 serverType = POP_4X_MAIL_TYPE; 
   PRBool hasIMAP = PR_FALSE;
@@ -426,18 +427,19 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   rv = m_prefs->GetIntPref(PREF_MAIL_SERVER_TYPE, &serverType);
   if (NS_FAILED(rv)) return rv;
   
+           
   if (serverType == POP_4X_MAIL_TYPE) {
-    rv = GetDirFromPref(oldProfilePath,newProfilePath,NEW_MAIL_DIR_NAME, PREF_MAIL_DIRECTORY, getter_AddRefs(newPOPMailPath), getter_AddRefs(oldPOPMailPath));
+  	rv = NS_NewFileSpec(getter_AddRefs(newPOPMailPath));
+    if (NS_FAILED(rv)) return rv;
+    rv = NS_NewFileSpec(getter_AddRefs(oldPOPMailPath));
+    if (NS_FAILED(rv)) return rv;
+  
+    rv = GetDirFromPref(oldProfilePath,newProfilePath,NEW_MAIL_DIR_NAME, PREF_MAIL_DIRECTORY, newPOPMailPath, oldPOPMailPath);
     if (NS_FAILED(rv)) {
-      rv = NS_NewFileSpec(getter_AddRefs(newPOPMailPath));
-      if (NS_FAILED(rv)) return rv;
-      rv = NS_NewFileSpec(getter_AddRefs(oldPOPMailPath));
-      if (NS_FAILED(rv)) return rv;
-      
       /* use the default locations */
       rv = oldPOPMailPath->FromFileSpec(oldProfilePath);
       if (NS_FAILED(rv)) return rv;
-      
+          
       rv = oldPOPMailPath->AppendRelativeUnixPath(OLD_MAIL_DIR_NAME);
       if (NS_FAILED(rv)) return rv;
       
@@ -448,25 +450,45 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 			
 			rv = newPOPMailPath->FromFileSpec(newProfilePath);
 			if (NS_FAILED(rv)) return rv;
+			
+			rv = newPOPMailPath->Exists(&exists);
+      		if (NS_FAILED(rv)) return rv;
+      		if (!exists)  {
+  				rv = newPOPMailPath->CreateDir();
+  				if (NS_FAILED(rv)) return rv;
+  			}
       
 			rv = newPOPMailPath->AppendRelativeUnixPath(NEW_MAIL_DIR_NAME);
 			if (NS_FAILED(rv)) return rv;
     }
-    rv = newPOPMailPath->CreateDir();
+	rv = newPOPMailPath->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+	if (!exists)  {
+		rv = newPOPMailPath->CreateDir();
+		if (NS_FAILED(rv)) return rv;
+	}
     m_prefs->CopyCharPref(PREF_NETWORK_HOSTS_POP_SERVER, &popServerName);
     rv = newPOPMailPath->AppendRelativeUnixPath(popServerName);
-    rv = newPOPMailPath->CreateDir();
+    if (NS_FAILED(rv)) return rv;
+	rv = newPOPMailPath->Exists(&exists);
+	
+	if (NS_FAILED(rv)) return rv;
+	if (!exists)  {
+		rv = newPOPMailPath->CreateDir();
+		if (NS_FAILED(rv)) return rv;
+	}
   }
   else if (serverType == IMAP_4X_MAIL_TYPE) {
     hasIMAP = PR_TRUE;
-    /* First get the actual local mail files location */
-    rv = GetDirFromPref(oldProfilePath,newProfilePath, NEW_MAIL_DIR_NAME, PREF_MAIL_DIRECTORY, getter_AddRefs(newIMAPLocalMailPath), getter_AddRefs(oldIMAPLocalMailPath));
-    if (NS_FAILED(rv)) {
-      rv = NS_NewFileSpec(getter_AddRefs(newIMAPLocalMailPath));
-      if (NS_FAILED(rv)) return rv;
-      rv = NS_NewFileSpec(getter_AddRefs(oldIMAPLocalMailPath));
-      if (NS_FAILED(rv)) return rv;
+    
+	rv = NS_NewFileSpec(getter_AddRefs(newIMAPLocalMailPath));
+	if (NS_FAILED(rv)) return rv;
+	rv = NS_NewFileSpec(getter_AddRefs(oldIMAPLocalMailPath));
+	if (NS_FAILED(rv)) return rv;
       
+    /* First get the actual local mail files location */
+    rv = GetDirFromPref(oldProfilePath,newProfilePath, NEW_MAIL_DIR_NAME, PREF_MAIL_DIRECTORY, newIMAPLocalMailPath, oldIMAPLocalMailPath);
+    if (NS_FAILED(rv)) {
       /* default paths */
       rv = oldIMAPLocalMailPath->FromFileSpec(oldProfilePath);
       if (NS_FAILED(rv)) return rv;
@@ -480,25 +502,42 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       
       rv = newIMAPLocalMailPath->FromFileSpec(newProfilePath);
       if (NS_FAILED(rv)) return rv;
+      
+		rv = newIMAPLocalMailPath->Exists(&exists);
+		if (NS_FAILED(rv)) return rv;
+		if (!exists)  {
+			rv = newIMAPLocalMailPath->CreateDir();
+			if (NS_FAILED(rv)) return rv;
+		}
       rv = newIMAPLocalMailPath->AppendRelativeUnixPath(NEW_MAIL_DIR_NAME);
       if (NS_FAILED(rv)) return rv;
       
     }
     
     /* Now create the new "Mail/Local Mail" directory */
-    rv = newIMAPLocalMailPath->CreateDir();
-    rv = newIMAPLocalMailPath->AppendRelativeUnixPath(NEW_LOCAL_MAIL_DIR_NAME);
-    rv = newIMAPLocalMailPath->CreateDir();
+	rv = newIMAPLocalMailPath->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+	if (!exists)  {
+		newIMAPLocalMailPath->CreateDir();
+	}
+	rv = newIMAPLocalMailPath->AppendRelativeUnixPath(NEW_LOCAL_MAIL_DIR_NAME);
+	if (NS_FAILED(rv)) return rv;
+	rv = newIMAPLocalMailPath->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+	if (!exists)  {
+		rv = newIMAPLocalMailPath->CreateDir();
+		if (NS_FAILED(rv)) return rv;
+	}
     
-    /* Next get IMAP mail summary files location */
-    rv = GetDirFromPref(oldProfilePath,newProfilePath, NEW_IMAPMAIL_DIR_NAME, PREF_MAIL_IMAP_ROOT_DIR,getter_AddRefs(newIMAPMailPath),getter_AddRefs(oldIMAPMailPath));
-    if (NS_FAILED(rv)) {
-      rv = NS_NewFileSpec(getter_AddRefs(newIMAPMailPath));
-      if (NS_FAILED(rv)) return rv;
-      rv = NS_NewFileSpec(getter_AddRefs(oldIMAPMailPath));
-      if (NS_FAILED(rv)) return rv;
+	rv = NS_NewFileSpec(getter_AddRefs(newIMAPMailPath));
+	if (NS_FAILED(rv)) return rv;
+	rv = NS_NewFileSpec(getter_AddRefs(oldIMAPMailPath));
+	if (NS_FAILED(rv)) return rv;
       
-			/* default paths */
+    /* Next get IMAP mail summary files location */
+    rv = GetDirFromPref(oldProfilePath,newProfilePath, NEW_IMAPMAIL_DIR_NAME, PREF_MAIL_IMAP_ROOT_DIR,newIMAPMailPath,oldIMAPMailPath);
+    if (NS_FAILED(rv)) {
+ 			/* default paths */
 			rv = oldIMAPMailPath->FromFileSpec(oldProfilePath);
 			if (NS_FAILED(rv)) return rv;
 			rv = oldIMAPMailPath->AppendRelativeUnixPath(OLD_IMAPMAIL_DIR_NAME);
@@ -511,24 +550,35 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       
 			rv = newIMAPMailPath->FromFileSpec(newProfilePath);
 			if (NS_FAILED(rv)) return rv;
+			
+			rv = newIMAPMailPath->Exists(&exists);
+			if (NS_FAILED(rv)) return rv;
+			if (!exists)  {
+				rv = newIMAPMailPath->CreateDir();
+				if (NS_FAILED(rv)) return rv;
+			}
 			rv = newIMAPMailPath->AppendRelativeUnixPath(NEW_IMAPMAIL_DIR_NAME);
 			if (NS_FAILED(rv)) return rv;
     }
-    newIMAPMailPath->CreateDir();
+	rv = newIMAPMailPath->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+	if (!exists)  {
+		rv = newIMAPMailPath->CreateDir();
+		if (NS_FAILED(rv)) return rv;
+	}
   }
   else {
     return NS_ERROR_UNEXPECTED;
   }
   
+	rv = NS_NewFileSpec(getter_AddRefs(newNewsPath));
+	if (NS_FAILED(rv)) return rv;
+	rv = NS_NewFileSpec(getter_AddRefs(oldNewsPath));
+	if (NS_FAILED(rv)) return rv;
   
   /* Create the new News directory from the setting in prefs.js or a default */
-  rv = GetDirFromPref(oldProfilePath,newProfilePath, NEW_NEWS_DIR_NAME, PREF_NEWS_DIRECTORY, getter_AddRefs(newNewsPath),getter_AddRefs(oldNewsPath));
+  rv = GetDirFromPref(oldProfilePath,newProfilePath, NEW_NEWS_DIR_NAME, PREF_NEWS_DIRECTORY, newNewsPath,oldNewsPath);
   if (NS_FAILED(rv)) {
-    rv = NS_NewFileSpec(getter_AddRefs(newNewsPath));
-    if (NS_FAILED(rv)) return rv;
-    rv = NS_NewFileSpec(getter_AddRefs(oldNewsPath));
-    if (NS_FAILED(rv)) return rv;
-      
 		/* default paths */
 		rv = oldNewsPath->FromFileSpec(oldProfilePath);
 		if (NS_FAILED(rv)) return rv;
@@ -543,10 +593,22 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
 		rv = newNewsPath->FromFileSpec(newProfilePath);
 		if (NS_FAILED(rv)) return rv;
+		
+		rv = newNewsPath->Exists(&exists);
+		if (NS_FAILED(rv)) return rv;
+		if (!exists)  {
+			rv = newNewsPath->CreateDir();
+			if (NS_FAILED(rv)) return rv;
+		}
 		rv = newNewsPath->AppendRelativeUnixPath(NEW_NEWS_DIR_NAME);
 		if (NS_FAILED(rv)) return rv;
   }
-  newNewsPath->CreateDir();
+	rv = newNewsPath->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+	if (!exists)  {
+		rv = newNewsPath->CreateDir();
+		if (NS_FAILED(rv)) return rv;
+	}
 
 #if 1 
   printf("TODO:  port / fix / turn on the code that checks for space before copying.\n");
@@ -733,9 +795,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   rv=m_prefs->SavePrefFileAs(m_prefsFile);
   if (NS_FAILED(rv)) return rv;
   rv=m_prefs->ResetPrefs();
-  if (NS_FAILED(rv)) return rv;
-
-  return NS_OK;
+  return rv;
 }
 
 
@@ -827,7 +887,7 @@ nsPrefMigration::CreateNewUser5Tree(nsIFileSpec * oldProfilePath, nsIFileSpec * 
  *
  *--------------------------------------------------------------------------------*/
 nsresult
-nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newProfilePath, const char *newDirName, char* pref, nsIFileSpec** newPath, nsIFileSpec** oldPath)
+nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newProfilePath, const char *newDirName, char* pref, nsIFileSpec* newPath, nsIFileSpec* oldPath)
 {
   nsresult rv;
   
@@ -836,37 +896,42 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
   rv = getPrefService();
   if (NS_FAILED(rv)) return rv;  
   
-  rv = m_prefs->GetFilePref(pref, oldPath);	// need a getter_AddRefs(oldPath)?
+  nsCOMPtr <nsIFileSpec> oldPrefPath;
+  rv = m_prefs->GetFilePref(pref, getter_AddRefs(oldPrefPath));
   if (NS_FAILED(rv)) return rv;
-
-
-  rv = NS_NewFileSpec(newPath);
-  if (NS_FAILED(rv)) return rv; 
+  
+  PRBool exists;
+  rv = oldPath->Exists(&exists);
+  if (NS_FAILED(rv)) return rv;
+  if (!exists) return rv;
+  
+  rv = oldPath->FromFileSpec(oldPrefPath);
+  if (NS_FAILED(rv)) return rv;
   
 #ifdef XP_UNIX
-  // what if they don't want to go to <profile>/<newDirName>?
-  // what if unix users want "mail.directory" + "5" (like "~/ns_imap5")
-  // or "mail.imap.root_dir" + "5" (like "~/nsmail5")?
-  // should we let them? no.  let's migrate them to
-  // <profile>/Mail and <profile>/ImapMail
-  // let's make all three platforms the same.
-  rv = (*newPath)->FromFileSpec(newProfilePath);
-  if (NS_FAILED(rv)) return rv;
-  rv = (*newPath)->AppendRelativeUnixPath(newDirName);
-  if (NS_FAILED(rv)) return rv;
+	// what if they don't want to go to <profile>/<newDirName>?
+	// what if unix users want "mail.directory" + "5" (like "~/ns_imap5")
+	// or "mail.imap.root_dir" + "5" (like "~/nsmail5")?
+	// should we let them? no.  let's migrate them to
+	// <profile>/Mail and <profile>/ImapMail
+	// let's make all three platforms the same.
+	rv = (newPath)->FromFileSpec(newProfilePath);
+	if (NS_FAILED(rv)) return rv;
+	rv = (newPath)->AppendRelativeUnixPath(newDirName);
+	if (NS_FAILED(rv)) return rv;
 #else
 	nsXPIDLCString leafname;
-	rv = (*newPath)->FromFileSpec(*oldPath);
+	rv = (newPath)->FromFileSpec(oldPath);
 	if (NS_FAILED(rv)) return rv;
-	rv = (*newPath)->GetLeafName(getter_Copies(leafname));
+	rv = (newPath)->GetLeafName(getter_Copies(leafname));
 	if (NS_FAILED(rv)) return rv;
 	nsCString newleafname((const char *)leafname);
 	newleafname += NEW_DIR_SUFFIX;
-	rv = (*newPath)->SetLeafName(newleafname);
+	rv = (newPath)->SetLeafName(newleafname);
 	if (NS_FAILED(rv)) return rv;
 #endif /* XP_UNIX */
 
-  rv = SetPremigratedFilePref(pref, *oldPath);
+  rv = SetPremigratedFilePref(pref, oldPath);
   if (NS_FAILED(rv)) return rv;
   
 #ifdef XP_UNIX
@@ -879,12 +944,12 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
    * isn't this fun?  
    */
   if (PL_strcmp(PREF_NEWS_DIRECTORY, pref) == 0) {
-    rv = (*oldPath)->FromFileSpec(oldProfilePath);
-    rv = (*oldPath)->AppendRelativeUnixPath(OLD_NEWS_DIR_NAME);
+    rv = (oldPath)->FromFileSpec(oldProfilePath);
+    rv = (oldPath)->AppendRelativeUnixPath(OLD_NEWS_DIR_NAME);
   }
 #endif /* XP_UNIX */
   
-  m_prefs->SetFilePref(pref, *newPath, PR_FALSE); 
+  m_prefs->SetFilePref(pref, newPath, PR_FALSE); 
   return NS_OK;
 }
 
