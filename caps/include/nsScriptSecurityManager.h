@@ -45,7 +45,7 @@
 #include "nsDOMPropEnums.h"
 #include "nsCOMPtr.h"
 
-class nsIPref;
+class nsISecurityPref;
 
 /////////////////////
 // nsIPrincipalKey //
@@ -163,13 +163,13 @@ private:
     PrincipalPrefChanged(const char *pref, void *data);
 
     nsObjectHashtable *mOriginToPolicyMap;
-    nsIPref *mPrefs;
+    nsISecurityPref *mPrefs;
     nsIPrincipal *mSystemPrincipal;
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
     nsSupportsHashtable *mPrincipals;
     PRBool mIsJavaScriptEnabled;
     PRBool mIsMailJavaScriptEnabled;
-    PRBool mIsAccessingPrefs;
+    PRBool mIsWritingPrefs;
     unsigned char hasDomainPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
 };
 
