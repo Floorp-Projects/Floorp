@@ -43,8 +43,6 @@ class nsIContentViewerContainer : public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ICONTENT_VIEWER_CONTAINER_IID; return iid; }
 
-  NS_IMETHOD QueryCapability(const nsIID &aIID, void** aResult) = 0;
-
   NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
                    const char* aCommand,
                    nsISupports* aExtraInfo) = 0;
