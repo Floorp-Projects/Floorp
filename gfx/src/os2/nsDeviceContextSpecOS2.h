@@ -84,7 +84,7 @@ public:
    void GetPrinter (int numPrinter, char** printerName);
    PRTQUEUE* SetPrinterQueue (int numPrinter);
    HDC GetDCHandle (int numPrinter);
-   PLONG GetPrintDriverSize (int printer);
+   LONG GetPrintDriverSize (int printer);
    PDRIVDATA GetPrintDriver (int printer);
    char* GetDriverType (int printer);
    BOOL ShowProperties(int index);
