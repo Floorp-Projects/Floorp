@@ -3771,7 +3771,7 @@ test -n "$MAKE" && break
 done
 test -n "$MAKE" || MAKE=":"
 
-    _cygwin_make=`$MAKE -h | grep 'built for i686-pc-cygwin' 2>/dev/null`
+    _cygwin_make=`$MAKE -h | grep cygwin 2>/dev/null`
     if test -z "$_cygwin_make"; then
         { echo "configure: error: Cygwin make must be used to build Mozilla on win32." 1>&2; exit 1; }
     fi
