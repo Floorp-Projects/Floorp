@@ -29,11 +29,6 @@
 { 0x9e3233e1, 0xebe2, 0x11d2,                 \
     { 0x95, 0xad, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
-#define NS_IMAPSERVICE_CID						  \
-{ /* C5852B22-EBE2-11d2-95AD-000064657374 */      \
- 0xc5852b22, 0xebe2, 0x11d2,                      \
- {0x95, 0xad, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74}}
-
 ////////////////////////////////////////////////////////////////////////////////////////
 // The IMAP Service is an interfaced designed to make building and running imap urls
 // easier. Clients typically go to the imap service and ask it do things such as:
