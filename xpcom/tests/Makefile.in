@@ -46,17 +46,6 @@ CPPSRCS		=		\
 	TestThreads.cpp		\
 	$(NULL)
 
-ifndef NECKO
-CPPSRCS += 			\
-	SizeTest01.cpp		\
-	SizeTest02.cpp		\
-	SizeTest03.cpp		\
-	SizeTest04.cpp		\
-	SizeTest05.cpp		\
-	SizeTest06.cpp		\
-	$(NULL)
-endif
-
 include $(topsrcdir)/config/config.mk
 
 DEFINES		+= -DUSE_NSREG
