@@ -30,6 +30,11 @@ LIBRARY_NAME = npscriptable
 
 NO_DIST_INSTALL = 1
 
+REQUIRES = plugin \
+           java \
+           xpcom \
+           $(NULL)
+
 CPPSRCS = plugin.cpp \
           nsScriptablePeer.cpp \
           $(NULL)

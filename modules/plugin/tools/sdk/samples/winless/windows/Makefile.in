@@ -30,6 +30,10 @@ LIBRARY_NAME = npwinless
 
 NO_DIST_INSTALL = 1
 
+REQUIRES = plugin \
+           java \
+           $(NULL)
+
 CPPSRCS = plugin.cpp
 
 SHARED_LIBRARY_LIBS = ../../common/plugingate_s.$(LIB_SUFFIX)
