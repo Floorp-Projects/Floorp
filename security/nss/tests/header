@@ -125,6 +125,9 @@ if [ -z "$MASTERBUILD" ]
 then
 	MASTERBUILD=y2sun2_Solaris8
 	#MASTERBUILD=shame_Solaris2.6
+	MB_WAS_SET=FALSE
+else
+	MB_WAS_SET=TRUE
 fi
 
 if [ -z "$BUILDNUMBER" ]	
@@ -135,6 +138,9 @@ export BUILDNUMBER
 if [ -z "$NT_MASTERBUILD" ]
 then 					
 	NT_MASTERBUILD=blowfish_NT4.0_Win95
+	NT_MB_WAS_SET=FALSE
+else
+	NT_MB_WAS_SET=TRUE
 fi
 O_LDIR=OFF			#local QA dir for NT, temporary
 
@@ -158,7 +164,10 @@ glob_init()
 		set_host				# can be constructed. If running interactive 
 	fi							# it needs to be called by sourcing script
 	. $QASCRIPT_DIR/set_environment		#finds out if we are running on Windows
-	Debug "Path after set_environment $PATH"
+	if [ $O_WIN = "ON" ] 
+	then
+		write_to_tmpfile
+	fi
 	umask 0	
 	set_dirs
 	set_files
@@ -193,6 +202,21 @@ set_vars()
 	fi
 }
 
+################################### set_dirs ###########################
+# global shell function, sets the nt masterbuild directories, part of init 
+########################################################################
+find_nt_masterbuild()
+{
+	NT_MASTERDIR=${D2}/${NT_MASTERBUILD}
+	if [ "${NT_MB_WAS_SET}" = "FALSE" -a ! -d $NT_MASTERDIR ] ; then
+		if [ -d ${D2}/*NT4* ] ; then
+			NT_MASTERBUILD=` cd ${D2}; ls -d *NT4* `
+			Debug "NT_MASTERBUILD $NT_MASTERBUILD"
+			NT_MASTERDIR=${D2}/${NT_MASTERBUILD}
+		fi
+	fi
+	Debug "NT_MASTERDIR $NT_MASTERDIR"
+}
 
 ################################### set_dirs ###########################
 # global shell function, sets the directories, part of init 
@@ -212,7 +236,7 @@ set_dirs()
 
 	D2=${D1}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}
 	UX_MASTERDIR=${D2}/${MASTERBUILD}
-	NT_MASTERDIR=${D2}/${NT_MASTERBUILD}
+	find_nt_masterbuild
 
 	UXDIST=${UX_MASTERDIR}/mozilla/dist
 	NTDIST=${NT_MASTERDIR}/mozilla/dist
@@ -264,23 +288,41 @@ set_dirs()
 ########################################################################
 set_files()
 {
-	if [ $O_CRON = "ON" ]
+	if [ $O_CRON = "ON" -o $O_WIN = "ON" ]
 	then
+		Debug "attempting to create resultfiles"
 		NEWFILENAME=$RESULTDIR/$HOST.`basename $0`
 		if [ ! -d $RESULTDIR ]
 		then
 			mkdir -p $RESULTDIR || Exit "Error: can't make $RESULTDIR"
 		fi
-		if [ ! -w $RESULTDIR ]
-		then
+		if [ ! -w $RESULTDIR ] ; then
 			Exit "can't touch $NEWFILENAME"
 		fi
+		Debug "About to touch $NEWFILENAME "
 		touch $NEWFILENAME || Exit "Error: can't touch $NEWFILENAME"
+		Debug "About to cat $FILENAME >>$NEWFILENAME "
 		cat $FILENAME >>$NEWFILENAME || Exit "Error: can't append $FILENAME to $NEWFILENAME"
 		TMPFILES="$TMPFILES $FILENAME"
 		FILENAME=$NEWFILENAME
 		Debug "Writing output to $FILENAME"
 	fi
+}
+
+################################### eval_opts ##########################
+# global shell function, for NT and cron operation, first a tmpfile 
+# needs to be created
+########################################################################
+write_to_tmpfile()
+{
+	Debug "Writing to the TMPFILE"
+	O_FILE=ON
+	FILENAME=${TMP}/nsstmp.$$	# for now write to the temporary file
+									# since we don't know the hostname yet
+									# will be inserted to the real file later
+	TMPFILES="$TMPFILES nsstmp.$$"		
+	touch $FILENAME || Exit "Error: can't touch $FILENAME"
+	Debug "Writing output to $FILENAME"
 }
 
 ################################### eval_opts ##########################
@@ -297,14 +339,7 @@ do
 			O_SILENT=ON
 			O_DEBUG=ON				# FIXME take out!
 			O_ALWAYS_YES=ON
-			O_FILE=ON
-			FILENAME=${TMP}/nsstmp.$$	# for now write to the temporary file
-									# since we don't know the hostname yet
-									# will be inserted to the real file later
-			TMPFILES="$TMPFILES nsstmp.$$"		
-			touch $FILENAME || Exit "Error: can't touch $FILENAME"
-									# NOTE we append rather that creating
-			Debug "Writing output to $FILENAME"
+			write_to_tmpfile
 			
 			export O_CRON
 			;;
