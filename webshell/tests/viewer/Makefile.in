@@ -40,6 +40,7 @@ EXPORT_RESOURCE_SAMPLES := \
 	$(srcdir)/samples/gear1.gif \
 	$(srcdir)/samples/rock_gra.gif \
 	$(srcdir)/samples/bg.jpg \
+	$(srcdir)/samples/checkboxTest.xul \
 	$(NULL)
 
 EXPORT_RESOURCE_THROBBER := \
