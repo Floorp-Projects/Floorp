@@ -76,7 +76,7 @@ Contributor(s):
       <hbox align="center">
         <label value="&location.label;" accesskey="&location.accesskey;" 
                control="mailnews.start_page.url"/>
-        <textbox id="mailnewsStartPageUrl" preftype="localizedstring"
+        <textbox id="mailnewsStartPageUrl" flex="1" preftype="localizedstring"
                  prefstring="mailnews.start_page.url"/>
       </hbox>
 
