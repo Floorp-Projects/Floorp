@@ -394,6 +394,7 @@ nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect& aDirtyRect)
 {
+#ifdef XP_PC
   aRenderingContext.PushState();
 
   float p2t;
@@ -419,6 +420,7 @@ nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
   }
   PRBool clip;
   aRenderingContext.PopState(clip);
+#endif
 }
 
 NS_METHOD 
