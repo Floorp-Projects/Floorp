@@ -39,7 +39,6 @@
 /* use these macros to define a class IID for our component. Our object currently supports two interfaces 
    (nsISupports and nsIMsgCompose) so we want to define constants for these two interfaces */
 static NS_DEFINE_IID(kIMsgSend, NS_IMSGSEND_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
@@ -316,7 +315,6 @@ static char* NET_GetURLFromLocalFile(char *filename)
 
 char * WH_TempName(const char * prefix)
 {
-	nsresult res;
 	nsString tempFilePath = TEMP_PATH;
 
 /*JFD
@@ -2404,20 +2402,20 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 			goto FAILMEM;
 
 		nsFileSpec aPath(m_html_filename);
-		nsOutputFileStream tmpfile(aPath);
-		if (! tmpfile.is_open()) {
+		nsOutputFileStream tempfile(aPath);
+		if (! tempfile.is_open()) {
 			status = MK_UNABLE_TO_OPEN_TMP_FILE;
 			goto FAIL;
 		}
 
-		status = tmpfile.write(m_attachment1_body, m_attachment1_body_length);
+		status = tempfile.write(m_attachment1_body, m_attachment1_body_length);
 		if (status < int(m_attachment1_body_length)) {
 			if (status >= 0)
 				status = MK_MIME_ERROR_WRITING_FILE;
 			goto FAIL;
 		}
 
-		if (tmpfile.failed()) goto FAIL;
+		if (tempfile.failed()) goto FAIL;
 
 		m_plaintext = new MSG_DeliverMimeAttachment;
 		if (!m_plaintext)
@@ -2790,8 +2788,6 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	*/
 	if (m_attachment_count > 0)
 	{
-		char *buffer;
-
 		/* Kludge to avoid having to allocate memory on the toy computers... */
 		if (! mime_mailto_stream_read_buffer)
 			mime_mailto_stream_read_buffer = (char *) PR_Malloc (MIME_BUFFER_SIZE);
@@ -2803,7 +2799,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		for (i = 0; i < m_attachment_count; i++)
 		{
 			MSG_DeliverMimeAttachment *ma = &m_attachments[i];
-			char *hdrs = 0;
+			hdrs = 0;
 
 			nsMsgSendPart* part = NULL;
 
@@ -3101,8 +3097,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 		{
 			PRInt32 receipt_header_type = 0;
 
-			NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-      if (NS_SUCCEEDED(rv) && prefs) 
+      if (prefs) 
     	  prefs->GetIntPref("mail.receipt.request_header_type", &receipt_header_type);
 
 			// 0 = MDN Disposition-Notification-To: ; 1 = Return-Receipt-To: ; 2 =
@@ -3226,8 +3221,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 	{
 		PRBool bUseXSender = PR_FALSE;
 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-    if (NS_SUCCEEDED(rv) && prefs) 
+    if (prefs) 
   	  prefs->GetBoolPref("mail.use_x_sender", &bUseXSender);
 
 		if (bUseXSender) {
@@ -3241,8 +3235,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 
 			PUSH_STRING("\"");
 
-      NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-      if (NS_SUCCEEDED(rv) && prefs) 
+      if (prefs) 
   	    prefs->GetCharPref("mail.identity.username", tmpBuffer, &bufSize);
 			convbuf = INTL_EncodeMimePartIIStr((char *)tmpBuffer, charset,
 										mime_headers_use_quoted_printable_p);
