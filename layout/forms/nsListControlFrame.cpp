@@ -290,7 +290,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   desiredSize = aDesiredSize;
   nsIFrame * firstChild = mFrames.FirstChild();
 
-  nsHTMLReflowState   reflowState(aPresContext, firstChild, aReflowState, maxSize);
+  nsHTMLReflowState   reflowState(aPresContext, aReflowState, firstChild, maxSize);
   nsIHTMLReflow*      htmlReflow;
   if (NS_OK == firstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
     htmlReflow->WillReflow(aPresContext);
@@ -321,7 +321,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   mContentFrame->FirstChild(nsnull, &childFrame);
   nsPoint offset(0,0);
   while (nsnull != childFrame) {  // reflow, place, size the children
-    nsHTMLReflowState   reflowState(aPresContext, childFrame, aReflowState, maxSize);
+    nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame, maxSize);
     nsIHTMLReflow*      htmlReflow;
 
     if (NS_OK == childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {

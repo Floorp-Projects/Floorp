@@ -255,7 +255,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
   childFrame = mFrames.FirstChild();
   nsPoint offset(0,0);
   while (nsnull != childFrame) {  // reflow, place, size the children
-    nsHTMLReflowState   reflowState(aPresContext, childFrame, aReflowState,
+    nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame,
                                     maxSize);
     nsIHTMLReflow*      htmlReflow;
 

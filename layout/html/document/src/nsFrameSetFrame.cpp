@@ -654,7 +654,7 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
     }
   }
 
-  nsHTMLReflowState  reflowState(aPresContext, aChild, aReflowState, aSize);
+  nsHTMLReflowState  reflowState(aPresContext, aReflowState, aChild, aSize);
   nsIHTMLReflow*     htmlReflow;
 
   if (NS_OK == aChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -1416,8 +1416,9 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
     nsIRenderingContext *acx;
     aPresContext.GetShell(getter_AddRefs(shell));
     shell->CreateRenderingContext(this, &acx);
+    // XXX this can't possibly be right, but oh well...
     nsHTMLReflowState state(aPresContext, this, eReflowReason_Initial,
-                            size, acx);
+                            acx, size);
     state.reason = eReflowReason_Incremental;
     nsReflowStatus status;
     nsDidReflowStatus didStatus = 0;

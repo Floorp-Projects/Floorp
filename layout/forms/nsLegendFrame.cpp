@@ -174,7 +174,7 @@ nsLegendFrame::Reflow(nsIPresContext& aPresContext,
 
   // reflow the child
   nsIFrame* firstKid = mFrames.FirstChild();
-  nsHTMLReflowState reflowState(aPresContext, firstKid, aReflowState,
+  nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid,
                                 availSize);
   //XXX remove when reflow state is fixed
   LegendHack(reflowState, "legend's area");

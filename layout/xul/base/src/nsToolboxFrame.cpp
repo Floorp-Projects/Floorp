@@ -217,7 +217,7 @@ nsToolboxFrame :: DrawGrippy (  nsIPresContext& aPresContext, nsIRenderingContex
 
   const nsStyleColor*   grippyColor   = (const nsStyleColor*)style->GetStyleData(eStyleStruct_Color);
   const nsStyleSpacing* grippySpacing = (const nsStyleSpacing*)style->GetStyleData(eStyleStruct_Spacing);
-  const nsStyleFont*    grippyFont    = (const nsStyleFont*)style->GetStyleData(eStyleStruct_Font);
+//  const nsStyleFont*    grippyFont    = (const nsStyleFont*)style->GetStyleData(eStyleStruct_Font);
 
   nsToolboxFrame* nonConstSelf = NS_CONST_CAST(nsToolboxFrame*, this);
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, nonConstSelf,
@@ -321,7 +321,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
       // they are the same, so find the width/height desired by the toolbar frame.
       nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
 		
-      nsHTMLReflowState reflowState(aPresContext, childFrame, aReflowState, maxSize);
+      nsHTMLReflowState reflowState(aPresContext, aReflowState, childFrame, maxSize);
       nsIHTMLReflow* htmlReflow = nsnull;                               // can't use nsCOMPtr because of bad COM
       if ( childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow) == NS_OK ) {
         htmlReflow->WillReflow(aPresContext);

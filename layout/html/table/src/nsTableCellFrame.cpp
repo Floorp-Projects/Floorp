@@ -475,7 +475,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   SetPriorAvailWidth(aReflowState.availableWidth);
   nsIFrame* firstKid = mFrames.FirstChild();
-  nsHTMLReflowState kidReflowState(aPresContext, firstKid, aReflowState,
+  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid,
                                    availSize);
 
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState, aStatus);

@@ -179,7 +179,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
     // Give the child frame a chance to reflow, even though we know it'll have 0 size
     nsHTMLReflowMetrics kidSize(nsnull);
     // XXX Use a valid reason...
-    nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
                                      nsSize(0,0), eReflowReason_Initial);
 
     nsReflowStatus status;
@@ -468,9 +468,9 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext&          aPresC
 
   // Pass along the reflow command
   nsHTMLReflowMetrics desiredSize(nsnull);
-  nsHTMLReflowState kidReflowState(aPresContext, aNextFrame,
-                                   aReflowState,
-                                   nsSize(aReflowState.availableWidth, aReflowState.availableHeight));
+  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aNextFrame,
+                                   nsSize(aReflowState.availableWidth,
+                                          aReflowState.availableHeight));
   rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
   if (NS_FAILED(rv))
     return rv;

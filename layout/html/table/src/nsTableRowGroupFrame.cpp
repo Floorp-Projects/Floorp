@@ -406,7 +406,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
     // it wants. We'll deal with splitting later after we've computed the row
     // heights, taking into account cells with row spans...
     kidAvailSize.height = NS_UNCONSTRAINEDSIZE;
-    nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState.reflowState,
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState, kidFrame,
                                      kidAvailSize, aReason);
     if (kidFrame != mFrames.FirstChild()) {
       // If this isn't the first row frame, then we can't be at the top of
@@ -533,7 +533,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
 {
   if (gsDebug) printf("TRGF CalculateRowHeights begin\n");
   // iterate children and for each row get its height
-  PRBool atLeastOneRowSpanningCell = PR_FALSE;
   PRInt32 numRows;
   GetRowCount(numRows);
   PRInt32 *rowHeights = new PRInt32[numRows];
@@ -798,7 +797,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
         // Reflow the row in the available space and have it split
         nsSize              availSize(aReflowState.availableWidth,
                                       aReflowState.availableHeight - bounds.y);
-        nsHTMLReflowState   rowReflowState(aPresContext, rowFrame, aReflowState,
+        nsHTMLReflowState   rowReflowState(aPresContext, aReflowState, rowFrame,
                                           availSize, eReflowReason_Resize);
         nsHTMLReflowMetrics desiredSize(nsnull);
 
@@ -867,13 +866,15 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
             //   of whether it's complete)
             // - add the continuing frame to the row frame we're pushing
             nsIFrame*         parentFrame;
-            nsSize            rowFrameSize;
             nsPoint           firstRowOrigin, lastRowOrigin;
+/*
+            nsSize            rowFrameSize;
             nsSize            availSize(aReflowState.availableWidth,
                                         aReflowState.availableHeight);
-            nsHTMLReflowState rowReflowState(aPresContext, rowFrame, aReflowState,
+            nsHTMLReflowState rowReflowState(aPresContext, aReflowState, rowFrame,
                                              availSize, eReflowReason_Resize);
 
+*/
             nsReflowStatus    status;
 
             // Ask the cell frame's parent to reflow it to the height of all the
@@ -950,8 +951,6 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
   if (eReflowReason_Incremental == aReflowState.reason) {
     rv = IncrementalReflow(aPresContext, aDesiredSize, state, aStatus);
   } else {
-    PRBool reflowMappedOK = PR_TRUE;
-  
     aStatus = NS_FRAME_COMPLETE;
   
     // Check for an overflow list
@@ -1132,6 +1131,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
   case nsIReflowCommand::PushReflow:
   case nsIReflowCommand::CheckPullupReflow :
   case nsIReflowCommand::UserDefined :
+  default:
     NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
     rv = NS_ERROR_NOT_IMPLEMENTED;
     if (PR_TRUE==gsDebugIR) printf("TRGF IR: reflow command not implemented.\n");
@@ -1311,7 +1311,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
   // Pass along the reflow command
   // XXX Correctly compute the available space...
   nsSize  availSpace(aReflowState.reflowState.availableWidth, aReflowState.reflowState.availableHeight);
-  nsHTMLReflowState   kidReflowState(aPresContext, aNextFrame, aReflowState.reflowState, availSpace);
+  nsHTMLReflowState   kidReflowState(aPresContext, aReflowState.reflowState, aNextFrame, availSpace);
   nsHTMLReflowMetrics desiredSize(nsnull);
 
   rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);

@@ -318,7 +318,6 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   }
 
 //  nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
-  nsHTMLReflowMetrics desiredSize = aDesiredSize;
   ////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////
   {
