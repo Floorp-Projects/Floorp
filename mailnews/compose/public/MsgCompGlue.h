@@ -20,8 +20,8 @@ public:
 class MSG_Master
 {
 public:
-        void GetFolderTree(void) {;}
-	MSG_NewsHost* FindHost(const char* name, XP_Bool isSecure, int32 port) {return NULL;}
+	GetFolderTree(void) {;}
+	HJ97882
 //	msg_HostTable* GetHostTable() {return m_hosttable;}
 
 };
