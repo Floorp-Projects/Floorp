@@ -1289,7 +1289,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     }
 
     /* embedded newlines -- argh! */
-    while ((tmp = strchr(message, '\n'))) {
+    while ((tmp = strchr(message, '\n')) != 0) {
 	tmp++;
 	if (prefix) fputs(prefix, stderr);
 	fwrite(message, 1, tmp - message, stderr);
