@@ -503,7 +503,7 @@ nsStdURL::GetPrePath(char **o_Spec)
     if (mHost)
     {
         rv = AppendString(finalSpec,mHost,HOSTESCAPED,nsIIOService::url_Host);
-        if (-1 != mPort)
+        if (-1 != mPort && mDefaultPort != mPort)
         {
             char* portBuffer = PR_smprintf(":%d", mPort);
             if (!portBuffer)
