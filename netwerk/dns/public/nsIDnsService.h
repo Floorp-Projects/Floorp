@@ -50,7 +50,7 @@ public:
 
     NS_IMETHOD Lookup(const char*      hostname,
                       nsIDnsListener*  listener,
-                      nsICancelable*  *dnsRequest);
+                      nsICancelable*  *dnsRequest) = 0;
 		
 
 };
