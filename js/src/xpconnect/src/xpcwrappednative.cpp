@@ -214,8 +214,8 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
             if(!rootClazz)
                 goto return_wrapper;
 
-            root = new nsXPCWrappedNative(xpcc, realObj, aScope, 
-                                          aGlobalObject, clazz, nsnull);
+            root = new nsXPCWrappedNative(xpcc, rootObj, aScope, 
+                                          aGlobalObject, rootClazz, nsnull);
             NS_RELEASE(rootClazz);
 
             if(!root)
