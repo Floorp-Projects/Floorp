@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.69 $ $Date: 2002/09/30 20:33:44 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.70 $ $Date: 2002/10/01 14:32:15 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -231,61 +231,75 @@ nss3certificate_getIdentifier(nssDecodedCert *dc)
     return rvID;
 }
 
-static NSSItem *
+static void *
 nss3certificate_getIssuerIdentifier(nssDecodedCert *dc)
 {
     CERTCertificate *c = (CERTCertificate *)dc->data;
-    CERTAuthKeyID *cAuthKeyID;
-    PRArenaPool *tmpArena = NULL;
-    NSSItem *rvID = NULL;
-    tmpArena = PORT_NewArena(512);
-    cAuthKeyID = CERT_FindAuthKeyIDExten(tmpArena, c);
-    if (cAuthKeyID == NULL) {
-	goto done;
+    return (void *)c->authKeyID;
+}
+
+static nssCertIDMatch
+nss3certificate_matchIdentifier(nssDecodedCert *dc, void *id)
+{
+    CERTCertificate *c = (CERTCertificate *)dc->data;
+    CERTAuthKeyID *authKeyID = (CERTAuthKeyID *)id;
+    SECItem skid;
+    nssCertIDMatch match = nssCertIDMatch_Unknown;
+
+    /* keyIdentifier */
+    if (authKeyID->keyID.len > 0) {
+	if (CERT_FindSubjectKeyIDExten(c, &skid) == SECSuccess) {
+	    PRBool skiEqual;
+	    skiEqual = SECITEM_ItemsAreEqual(&authKeyID->keyID, &skid);
+	    PORT_Free(skid.data);
+	    if (skiEqual) {
+		/* change the state to positive match, but keep going */
+		match = nssCertIDMatch_Yes;
+	    } else {
+		/* exit immediately on failure */
+		return nssCertIDMatch_No;
+	    }
+	} /* else fall through */
     }
-    if (cAuthKeyID->keyID.data) {
-	rvID = nssItem_Create(NULL, NULL, cAuthKeyID->keyID.len, 
-						cAuthKeyID->keyID.data);
-    } else if (cAuthKeyID->authCertIssuer) {
+
+    /* issuer/serial (treated as pair) */
+    if (authKeyID->authCertIssuer) {
 	SECItem *caName = NULL;
-	CERTIssuerAndSN issuerSN;
-	CERTCertificate *issuer = NULL;
+	SECItem *caSN = &authKeyID->authCertSerialNumber;
 
 	caName = (SECItem *)CERT_GetGeneralNameByType(
-	                                        cAuthKeyID->authCertIssuer,
+	                                        authKeyID->authCertIssuer,
 						certDirectoryName, PR_TRUE);
 	if (caName == NULL) {
-	    goto done;
+	    /* this is some kind of error, so treat it as unknown */
+	    return nssCertIDMatch_Unknown;
 	}
-	issuerSN.derIssuer.data = caName->data;
-	issuerSN.derIssuer.len = caName->len;
-	issuerSN.derIssuer.type = siBuffer;
-	issuerSN.serialNumber.data = cAuthKeyID->authCertSerialNumber.data;
-	issuerSN.serialNumber.len = cAuthKeyID->authCertSerialNumber.len;
-	issuerSN.serialNumber.type = siBuffer;
-	issuer = PK11_FindCertByIssuerAndSN(NULL, &issuerSN, NULL);
-	if (issuer) {
-	    rvID = nssItem_Create(NULL, NULL, issuer->subjectKeyID.len, 
-	    			issuer->subjectKeyID.data);
-	    CERT_DestroyCertificate(issuer);
+	if (SECITEM_ItemsAreEqual(&c->derSubject, caName) &&
+	    SECITEM_ItemsAreEqual(&c->serialNumber, caSN)) 
+	{
+	    /* change the state to positive match, but keep going */
+	    match = nssCertIDMatch_Yes;
+	} else {
+	    /* exit immediately on failure */
+	    return nssCertIDMatch_No;
 	}
     }
-done:
-    if (tmpArena) PORT_FreeArena(tmpArena, PR_FALSE);
-    return rvID;
+
+    /* If the issued cert has a keyIdentifier field with a value, but
+     * this issuer cert does not have a subjectKeyID extension, and
+     * the issuer/serial number fields of the authKeyID extension
+     * are empty, the state will be Unknown.  Otherwise it should have
+     * been set to Yes.
+     */
+    return match;
 }
 
 static PRBool
-nss3certificate_matchIdentifier(nssDecodedCert *dc, NSSItem *id)
+nss3certificate_isValidIssuer(nssDecodedCert *dc)
 {
     CERTCertificate *c = (CERTCertificate *)dc->data;
-    SECItem *subjectKeyID, authKeyID;
-    subjectKeyID = &c->subjectKeyID;
-    SECITEM_FROM_NSSITEM(&authKeyID, id);
-    if (SECITEM_CompareItem(subjectKeyID, &authKeyID) == SECEqual) {
-	return PR_TRUE;
-    }
-    return PR_FALSE;
+    unsigned int ignore;
+    return CERT_IsCACert(c, &ignore);
 }
 
 static NSSUsage *
@@ -331,6 +345,11 @@ nss3certificate_matchUsage(nssDecodedCert *dc, NSSUsage *usage)
     CERTCertificate *cc = (CERTCertificate *)dc->data;
     SECCertUsage secUsage = usage->nss3usage;
     PRBool ca = usage->nss3lookingForCA;
+
+    /* This is for NSS 3.3 functions that do not specify a usage */
+    if (usage->anyUsage) {
+	return PR_TRUE;
+    }
     secrv = CERT_KeyUsageAndTypeForCertUsage(secUsage, ca,
                                              &requiredKeyUsage,
                                              &requiredCertType);
@@ -391,6 +410,7 @@ nssDecodedPKIXCertificate_Create (
     rvDC->getIdentifier = nss3certificate_getIdentifier;
     rvDC->getIssuerIdentifier = nss3certificate_getIssuerIdentifier;
     rvDC->matchIdentifier = nss3certificate_matchIdentifier;
+    rvDC->isValidIssuer = nss3certificate_isValidIssuer;
     rvDC->getUsage = nss3certificate_getUsage;
     rvDC->isValidAtTime = nss3certificate_isValidAtTime;
     rvDC->isNewerThan = nss3certificate_isNewerThan;
@@ -413,6 +433,7 @@ create_decoded_pkix_cert_from_nss3cert (
     rvDC->getIdentifier = nss3certificate_getIdentifier;
     rvDC->getIssuerIdentifier = nss3certificate_getIssuerIdentifier;
     rvDC->matchIdentifier = nss3certificate_matchIdentifier;
+    rvDC->isValidIssuer = nss3certificate_isValidIssuer;
     rvDC->getUsage = nss3certificate_getUsage;
     rvDC->isValidAtTime = nss3certificate_isValidAtTime;
     rvDC->isNewerThan = nss3certificate_isNewerThan;

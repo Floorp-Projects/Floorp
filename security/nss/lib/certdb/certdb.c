@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.42 2002/08/24 00:45:55 jpierre%netscape.com Exp $
+ * $Id: certdb.c,v 1.43 2002/10/01 14:32:07 ian.mcgreer%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -725,6 +725,64 @@ cert_GetKeyID(CERTCertificate *cert)
 
 }
 
+static PRBool
+cert_IsRootCert(CERTCertificate *cert)
+{
+    SECStatus rv;
+    SECItem tmpitem;
+
+    /* cache the authKeyID extension, if present */
+    cert->authKeyID = CERT_FindAuthKeyIDExten(cert->arena, cert);
+
+    /* it MUST be self-issued to be a root */
+    if (cert->derIssuer.len == 0 ||
+        !SECITEM_ItemsAreEqual(&cert->derIssuer, &cert->derSubject))
+    {
+	return PR_FALSE;
+    }
+
+    /* check the authKeyID extension */
+    if (cert->authKeyID) {
+	/* authority key identifier is present */
+	if (cert->authKeyID->keyID.len > 0) {
+	    /* the keyIdentifier field is set, look for subjectKeyID */
+	    rv = CERT_FindSubjectKeyIDExten(cert, &tmpitem);
+	    if (rv == SECSuccess) {
+		PRBool match;
+		/* also present, they MUST match for it to be a root */
+		match = SECITEM_ItemsAreEqual(&cert->authKeyID->keyID,
+		                              &tmpitem);
+		PORT_Free(tmpitem.data);
+		if (!match) return PR_FALSE; /* else fall through */
+	    } else {
+		/* the subject key ID is required when AKI is present */
+		return PR_FALSE;
+	    }
+	}
+	if (cert->authKeyID->authCertIssuer) {
+	    SECItem *caName;
+	    caName = (SECItem *)CERT_GetGeneralNameByType(
+	                                  cert->authKeyID->authCertIssuer,
+	                                  certDirectoryName, PR_TRUE);
+	    if (caName) {
+		if (!SECITEM_ItemsAreEqual(&cert->derIssuer, caName)) {
+		    return PR_FALSE;
+		} /* else fall through */
+	    } /* else ??? could not get general name as directory name? */
+	}
+	if (cert->authKeyID->authCertSerialNumber.len > 0) {
+	    if (!SECITEM_ItemsAreEqual(&cert->serialNumber,
+	                         &cert->authKeyID->authCertSerialNumber)) {
+		return PR_FALSE;
+	    } /* else fall through */
+	}
+	/* all of the AKI fields that were present passed the test */
+	return PR_TRUE;
+    }
+    /* else the AKI was not present, so this is a root */
+    return PR_TRUE;
+}
+
 /*
  * take a DER certificate and decode it into a certificate structure
  */
@@ -823,6 +881,9 @@ CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
     if ( rv != SECSuccess ) {
 	goto loser;
     }
+
+    /* determine if this is a root cert */
+    cert->isRoot = cert_IsRootCert(cert);
 
     tmpname = CERT_NameToAscii(&cert->subject);
     if ( tmpname != NULL ) {
@@ -1721,7 +1782,7 @@ CERT_IsCACert(CERTCertificate *cert, unsigned int *rettype)
 
     ret = PR_FALSE;
     type = 0;
-    
+
     if ( cert->trust && (cert->trust->sslFlags|cert->trust->emailFlags|
 				cert->trust->objectSigningFlags)) {
 	trust = cert->trust;
@@ -1769,6 +1830,14 @@ CERT_IsCACert(CERTCertificate *cert, unsigned int *rettype)
 	    }
 	}
     }
+
+    /* the isRoot flag trumps all */
+    if (cert->isRoot) {
+	ret = PR_TRUE;
+	/* set only these by default, same as above */
+	type = (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA);
+    }
+
     if ( rettype != NULL ) {
 	*rettype = type;
     }

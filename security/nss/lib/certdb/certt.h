@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.20 2002/08/07 03:42:45 jpierre%netscape.com Exp $
+ * $Id: certt.h,v 1.21 2002/10/01 14:32:09 ian.mcgreer%sun.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -285,13 +285,17 @@ struct CERTCertificateStr {
      */
     CERTSubjectList *subjectList;
 
+    /* these belong in the static section, but are here to maintain
+     * the structure's integrity
+     */
+    CERTAuthKeyID * authKeyID;  /* x509v3 authority key identifier */
+    PRBool isRoot;              /* cert is the end of a chain */
+
     /* these fields are used by client GUI code to keep track of ssl sockets
      * that are blocked waiting on GUI feedback related to this cert.
      * XXX - these should be moved into some sort of application specific
      *       data structure.  They are only used by the browser right now.
      */
-    struct SECSocketNode *socketlist;
-    int socketcount;
     struct SECSocketNode *authsocketlist;
     int series; /* was int authsocketcount; record the series of the pkcs11ID */
 

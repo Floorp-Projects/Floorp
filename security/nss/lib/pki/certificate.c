@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.43 $ $Date: 2002/09/23 21:32:31 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.44 $ $Date: 2002/10/01 14:32:15 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -280,26 +280,76 @@ nssCertificate_GetDecoding (
 static NSSCertificate **
 filter_subject_certs_for_id (
   NSSCertificate **subjectCerts, 
-  NSSItem *id
+  void *id
 )
 {
     NSSCertificate **si;
     nssDecodedCert *dcp;
     int nextOpenSlot = 0;
+    int i;
+    nssCertIDMatch matchLevel = nssCertIDMatch_Unknown;
+    nssCertIDMatch match;
 
     /* walk the subject certs */
     for (si = subjectCerts; *si; si++) {
 	dcp = nssCertificate_GetDecoding(*si);
-	if (dcp->matchIdentifier(dcp, id)) {
-	    /* this cert has the correct identifier */
+	if (!dcp) {
+	    NSSCertificate_Destroy(*si);
+	    continue;
+	}
+	match = dcp->matchIdentifier(dcp, id);
+	switch (match) {
+	case nssCertIDMatch_Yes:
+	    if (matchLevel == nssCertIDMatch_Unknown) {
+		/* we have non-definitive matches, forget them */
+		for (i = 0; i < nextOpenSlot; i++) {
+		    NSSCertificate_Destroy(subjectCerts[i]);
+		    subjectCerts[i] = NULL;
+		}
+		nextOpenSlot = 0;
+		/* only keep definitive matches from now on */
+		matchLevel = nssCertIDMatch_Yes;
+	    }
+	    /* keep the cert */
 	    subjectCerts[nextOpenSlot++] = *si;
-	} else {
+	    break;
+	case nssCertIDMatch_Unknown:
+	    if (matchLevel == nssCertIDMatch_Unknown) {
+		/* only have non-definitive matches so far, keep it */
+		subjectCerts[nextOpenSlot++] = *si;
+		break;
+	    }
+	    /* else fall through, we have a definitive match already */
+	case nssCertIDMatch_No:
+	default:
 	    NSSCertificate_Destroy(*si);
 	    *si = NULL;
 	}
     }
     subjectCerts[nextOpenSlot] = NULL;
     return subjectCerts;
+}
+
+static NSSCertificate **
+filter_certs_for_valid_issuers (
+  NSSCertificate **certs
+)
+{
+    NSSCertificate **cp;
+    nssDecodedCert *dcp;
+    int nextOpenSlot = 0;
+    int i;
+
+    for (cp = certs; *cp; cp++) {
+	dcp = nssCertificate_GetDecoding(*cp);
+	if (dcp && dcp->isValidIssuer(dcp)) {
+	    certs[nextOpenSlot++] = *cp;
+	} else {
+	    NSSCertificate_Destroy(*cp);
+	}
+    }
+    certs[nextOpenSlot] = NULL;
+    return certs;
 }
 
 static NSSCertificate *
@@ -343,15 +393,15 @@ find_cert_issuer (
     certs = nssCertificateArray_Join(ccIssuers, tdIssuers);
     if (certs) {
 	nssDecodedCert *dc = NULL;
-	NSSItem *issuerID = NULL;
+	void *issuerID = NULL;
 	dc = nssCertificate_GetDecoding(c);
 	if (dc) {
 	    issuerID = dc->getIssuerIdentifier(dc);
 	}
 	if (issuerID) {
 	    certs = filter_subject_certs_for_id(certs, issuerID);
-	    nssItem_Destroy(issuerID);
-	} 
+	}
+	certs = filter_certs_for_valid_issuers(certs);
 	issuer = nssCertificateArray_FindBestCertificate(certs,
 	                                                 timeOpt,
 	                                                 usage,
@@ -378,18 +428,22 @@ nssCertificate_BuildChain (
   PRStatus *statusOpt
 )
 {
-    PRStatus status;
     NSSCertificate **rvChain;
 #ifdef NSS_3_4_CODE
     NSSCertificate *cp;
+    CERTCertificate *cCert;
 #endif
+    NSSUsage issuerUsage = *usage;
     NSSTrustDomain *td;
     nssPKIObjectCollection *collection;
+
     td = NSSCertificate_GetTrustDomain(c);
 #ifdef NSS_3_4_CODE
     if (!td) {
 	td = STAN_GetDefaultTrustDomain();
     }
+    /* bump the usage up to CA level */
+    issuerUsage.nss3lookingForCA = PR_TRUE;
 #endif
     if (statusOpt) *statusOpt = PR_SUCCESS;
     collection = nssCertificateCollection_Create(td, NULL);
@@ -401,24 +455,22 @@ nssCertificate_BuildChain (
     if (rvLimit == 1) {
 	goto finish;
     }
-    while (!nssItem_Equal(&c->subject, &c->issuer, &status)) {
+    /* XXX This breaks code for which NSS_3_4_CODE is not defined (pure
+     *     4.0 builds).  That won't affect the tip.  But be careful
+     *     when merging 4.0!!!
+     */
+    while (c != (NSSCertificate *)NULL) {
 #ifdef NSS_3_4_CODE
+	cCert = STAN_GetCERTCertificate(c);
+	if (cCert->isRoot) {
+	    /* not including the issuer of the self-signed cert, which is,
+	     * of course, itself
+	     */
+	    break;
+	}
 	cp = c;
 #endif
-	c = find_cert_issuer(c, timeOpt, usage, policiesOpt);
-#ifdef NSS_3_4_CODE
-	if (!c) {
-	    PRBool tmpca = usage->nss3lookingForCA;
-	    usage->nss3lookingForCA = PR_TRUE;
-	    c = find_cert_issuer(cp, timeOpt, usage, policiesOpt);
-	    if (!c && !usage->anyUsage) {
-		usage->anyUsage = PR_TRUE;
-		c = find_cert_issuer(cp, timeOpt, usage, policiesOpt);
-		usage->anyUsage = PR_FALSE;
-	    }
-	    usage->nss3lookingForCA = tmpca;
-	}
-#endif /* NSS_3_4_CODE */
+	c = find_cert_issuer(c, timeOpt, &issuerUsage, policiesOpt);
 	if (c) {
 	    nssPKIObjectCollection_AddObject(collection, (nssPKIObject *)c);
 	    nssCertificate_Destroy(c); /* collection has it */
