@@ -20,6 +20,6 @@
 #ifndef nsConverterCID_h___
 #define nsConverterCID_h___
 
-#include "nsISupports.h"
+// XXX deprecated file. To be deleted.
 
 #endif /* nsConverterCID_h___ */
