@@ -425,27 +425,34 @@ NS_IMETHODIMP nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepain
 {
 nsSizeEvent 	event;
 
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-  
-   if(nsnull!=mWindowRegion)
-  	::DisposeRgn(mWindowRegion);
-	mWindowRegion = NewRgn();
-	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);		 
- 
-  if (aRepaint)
-  	{
-  	UpdateVisibilityFlag();
-  	UpdateDisplay();
-  	}
-  
-  event.message = NS_SIZE;
-  event.point.x = 0;
-  event.point.y = 0;
-  event.windowSize = &mBounds;
-  event.eventStructType = NS_SIZE_EVENT;
-  event.widget = this;
- 	return ( this->DispatchWindowEvent(&event) ? NS_OK : NS_ERROR_FAILURE );
+
+	if( (mBounds.width != aWidth) && (mBounds.width != aWidth) )
+		{
+	  mBounds.width  = aWidth;
+	  mBounds.height = aHeight;
+	  
+	   if(nsnull!=mWindowRegion)
+	  	::DisposeRgn(mWindowRegion);
+		mWindowRegion = NewRgn();
+		SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);		 
+	 
+	  if (aRepaint)
+	  	{
+	  	UpdateVisibilityFlag();
+	  	UpdateDisplay();
+	  	}
+	  
+	  event.message = NS_SIZE;
+	  event.point.x = 0;
+	  event.point.y = 0;
+	  event.windowSize = &mBounds;
+	  event.eventStructType = NS_SIZE_EVENT;
+	  event.widget = this;
+	  
+	  // why is this breaking things
+	 	return ( this->DispatchWindowEvent(&event) ? NS_OK : NS_ERROR_FAILURE );
+		}
+	return(NS_OK);
 }
 
     
