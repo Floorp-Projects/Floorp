@@ -48,6 +48,26 @@ dnl =
 dnl ========================================================
 CFLAGS="${CFLAGS=}"
 CXXFLAGS="${CXXFLAGS=}"
+LDFLAGS="${LDFLAGS=}"
+HOST_CFLAGS="${HOST_CFLAGS=}"
+HOST_CXXFLAGS="${HOST_CXXFLAGS=}"
+HOST_LDFLAGS="${HOST_LDFLAGS=}"
+
+dnl ========================================================
+dnl = Preserve certain environment flags passed to configure
+dnl = We want sub projects to receive the same flags
+dnl = untainted by this configure script
+dnl ========================================================
+_SUBDIR_CC="$CC"
+_SUBDIR_CXX="$CXX"
+_SUBDIR_CFLAGS="$CFLAGS"
+_SUBDIR_CXXFLAGS="$CFLAGS"
+_SUBDIR_LDFLAGS="$LDFLAGS"
+_SUBDIR_HOST_CC="$HOST_CC"
+_SUBDIR_HOST_CFLAGS="$HOST_CFLAGS"
+_SUBDIR_HOST_CXXFLAGS="$HOST_CXXFLAGS"
+_SUBDIR_HOST_LDFLAGS="$HOST_LDFLAGS"
+_SUBDIR_CONFIG_ARGS="$ac_configure_args"
 
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
@@ -2899,4 +2919,27 @@ then
   rm -f ${srcdir}/nsprpub/config/my_overrides.mk
   cp build/unix/nspr_my_config.mk ${srcdir}/nsprpub/config/my_config.mk
   cp build/unix/nspr_my_overrides.mk ${srcdir}/nsprpub/config/my_overrides.mk
+fi
+
+dnl ========================================================
+dnl = Setup a nice relatively clean build environment for
+dnl = sub-configures.
+dnl ========================================================
+CC="$_SUBDIR_CC" 
+CXX="$_SUBDIR_CXX" 
+CFLAGS="$_SUBDIR_CFLAGS" 
+CXXFLAGS="$_SUBDIR_CXXFLAGS"
+LDFLAGS="$_SUBDIR_LDFLAGS"
+HOST_CC="$_SUBDIR_HOST_CC" 
+HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
+HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
+WINDRES=
+DLLTOOL=
+MAKEFILES=
+
+unset CONFIG_FILES
+
+if test -n "$MOZ_ENABLE_GTK_MOZILLA"; then
+ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-mozilla=$MOZ_BUILD_ROOT"
+AC_OUTPUT_SUBDIRS(webshell/embed/gtk)
 fi
