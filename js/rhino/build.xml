@@ -34,6 +34,7 @@ Requires Ant version 1.2
     <property name="dist.javasrc.dir" value="${src.dir}/src"/>
     <property name="dist.docsrc.dir" value="${src.dir}/docs"/>
     <available file="${cvs.javasrc.dir}/org" property="in-cvs-tree"/>
+    <available classname="com.ibm.bsf.BSFEngine" property="bsf.present"/>
   </target>
 
   <target name="init" depends="properties">
@@ -54,7 +55,9 @@ Requires Ant version 1.2
            destdir="${build.dest}" 
            includes="org/**/*.java"
            deprecation="on"
-           debug="${debug}" />
+           debug="${debug}">
+      <exclude name="**/RhinoBSFEngine.java" unless="bsf.present"/>
+    </javac>
   </target>
 
   <target name="compile-from-dist" unless="in-cvs-tree" depends="prepare">
