@@ -2331,20 +2331,26 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
   
   if(mIsControlDown && (virtualKeyCode <= 0x1A)) // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details  
   { 
-     uniChar = virtualKeyCode - 1 + NS_VK_A ;
-     virtualKeyCode = 0;
+    // need to account for shift here.  bug 16486 
+    if ( mIsShiftDown ) 
+      uniChar = virtualKeyCode - 1 + 'A' ; 
+    else 
+      uniChar = virtualKeyCode - 1 + 'a' ; 
+    virtualKeyCode = 0;
   } 
   else 
-  if(virtualKeyCode < 0x20) 
   {
-     uniChar = 0;
-  } 
-  else 
-  {
-     ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length,
-	  &uniChar,sizeof(uniChar));
-     virtualKeyCode = 0;
-     mIsShiftDown = PR_FALSE;
+    if(virtualKeyCode < 0x20) 
+    {
+      uniChar = 0;
+    } 
+    else 
+    {
+      ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length,
+	    &uniChar,sizeof(uniChar));
+      virtualKeyCode = 0;
+      mIsShiftDown = PR_FALSE;
+    }
   }
   return DispatchKeyEvent(NS_KEY_PRESS, uniChar, virtualKeyCode);
 
