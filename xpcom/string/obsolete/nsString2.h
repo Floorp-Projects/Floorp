@@ -50,6 +50,11 @@ class nsISizeOfHandler;
 #define nsString2     nsString
 #define nsAutoString2 nsAutoString
 
+#define kRadix10        (10)
+#define kRadix16        (16)
+#define kAutoDetect     (100)
+#define kRadixUnknown   (kAutoDetect+1)
+
 
 class NS_COM nsSubsumeStr;
 class NS_COM nsString2 : public nsStr {
@@ -366,12 +371,17 @@ char* ToCString(char* aBuf,PRUint32 aBufLength,PRUint32 anOffset=0) const;
 float ToFloat(PRInt32* aErrorCode) const;
 
 /**
+ * Try to derive the radix from the value contained in this string
+ * @return  kRadix10, kRadix16 or kAutoDetect (meaning unknown)
+ */
+PRUint32  DetermineRadix(void);
+
+/**
  * Perform string to int conversion.
  * @param   aErrorCode will contain error if one occurs
  * @return  int rep of string value
  */
-PRInt32 ToInteger(PRInt32* aErrorCode) const;
-PRInt32 ToInteger(PRInt32* aErrorCode,PRUint32 aRadix) const;
+PRInt32   ToInteger(PRInt32* aErrorCode,PRUint32 aRadix=kRadix10) const;
 
 
 /**********************************************************************
