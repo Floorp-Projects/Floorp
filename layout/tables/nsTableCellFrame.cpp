@@ -89,11 +89,16 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
     NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
 
     nsRect  rect(0, 0, mRect.width, mRect.height);
-    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *myColor);
 
-    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, *mySpacing, 0);
+    // empty cells do not render
+    if (0!=mPass1DesiredSize.width || 0!=mPass1DesiredSize.height)
+    {
+      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                      aDirtyRect, rect, *myColor);
+
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *mySpacing, 0);
+    }
   }
 
   // for debug...
