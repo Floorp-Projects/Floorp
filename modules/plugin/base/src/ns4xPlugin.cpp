@@ -188,7 +188,48 @@ nsresult
 ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
 {
     CheckClassInitialized();
-    
+    printf("debug: edburns ns4xPlugin::CreatePlugin\n");
+#ifdef XP_UNIX
+
+    ns4xPlugin *plptr;
+
+    NPPluginFuncs callbacks;
+    memset((void*) &callbacks, 0, sizeof(callbacks));
+    callbacks.size = sizeof(callbacks);
+
+    printf("debug: edburns ns4xPlugin::CreatePlugin: cleared callbacks\n");
+
+    NP_PLUGINSHUTDOWN pfnShutdown =
+        (NP_PLUGINSHUTDOWN)PR_FindSymbol(pluginTag->mLibrary, "NP_Shutdown");
+
+	// create the new plugin handler
+    pluginTag->mEntryPoint = plptr = new ns4xPlugin(&callbacks, pfnShutdown, serviceMgr);
+
+    if (pluginTag->mEntryPoint == NULL)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(pluginTag->mEntryPoint);
+
+	// we must init here because the plugin may call NPN functions
+	// when we call into the NP_Initialize entry point - NPN functions
+	// require that mBrowserManager be set up
+    plptr->Initialize();
+
+    NP_PLUGINUNIXINIT pfnInitialize =
+        (NP_PLUGINUNIXINIT)PR_FindSymbol(pluginTag->mLibrary, "NP_Initialize");
+
+    if (pfnInitialize == NULL)
+        return NS_ERROR_UNEXPECTED; // XXX Right error?
+
+	if (pfnInitialize(&(ns4xPlugin::CALLBACKS),&callbacks) != NS_OK)
+		return NS_ERROR_UNEXPECTED;
+	printf("debug: edburns: ns4xPlugin::CreatePlugin: callbacks->newstream: %p\n",
+	       callbacks.newstream);
+
+    // now copy function table back to ns4xPlugin instance
+    memcpy((void*) &(plptr->fCallbacks), (void*)&callbacks, sizeof(callbacks));
+#endif
+
 #ifdef XP_PC
 	// XXX this only applies on Windows
     NP_GETENTRYPOINTS pfnGetEntryPoints =

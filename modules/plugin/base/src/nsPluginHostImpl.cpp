@@ -1592,8 +1592,16 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   nsresult  rv;
   nsIPluginInstance *instance = nsnull;
 
+#ifdef NS_DEBUG
+  printf("InstantiateEmbededPlugin for %s\n",aMimeType);
+#endif
+
   if(FindStoppedPluginForURL(aURL, aOwner) == NS_OK)
   {
+#ifdef NS_DEBUG
+      printf("InstantiateEmbededPlugin find stopped\n");
+#endif
+
 	  aOwner->GetInstance(instance);
     if(!aMimeType || PL_strcasecmp(aMimeType, "application/x-java-vm"))
 	    rv = NewEmbededPluginStream(aURL, nsnull, instance);
@@ -1642,6 +1650,9 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     }
   }
 
+#ifdef NS_DEBUG
+  printf("InstantiateFullPagePlugin.. returning\n");
+#endif
   return rv;
 }
 
@@ -1653,6 +1664,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 {
   nsresult  rv;
   nsIURI    *url;
+
+#ifdef NS_DEBUG
+  printf("InstantiateFullPagePlugin for %s\n",aMimeType);
+#endif
 
   //create a URL so that the instantiator can do file ext.
   //based plugin lookups...
@@ -1667,6 +1682,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 
   if(FindStoppedPluginForURL(url, aOwner) == NS_OK)
   {
+#ifdef NS_DEBUG
+      printf("InstantiateFullPagePlugin, got a stopped plugin\n");
+#endif
+
     nsIPluginInstance* instance;
 	  aOwner->GetInstance(instance);
     if(!aMimeType || PL_strcasecmp(aMimeType, "application/x-java-vm"))
@@ -1683,6 +1702,9 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
     nsIPluginInstance *instance = nsnull;
     nsPluginWindow    *window = nsnull;
 
+#ifdef NS_DEBUG
+    printf("InstantiateFullPagePlugin, got it... now stream\n");
+#endif
     //we got a plugin built, now stream
 
     aOwner->GetInstance(instance);

@@ -93,6 +93,8 @@ NS_IMPL_ISUPPORTS(ns4xPluginStreamListener, kIPluginStreamListenerIID);
 NS_IMETHODIMP
 ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 {
+
+    printf("debug: edburns: ns4xPluginStreamListener::OnStartBinding()\n");
 	NPP npp;
 	const NPPluginFuncs *callbacks;
 	PRBool seekable;
@@ -112,7 +114,9 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
     mInst->GetCallbacks(&callbacks);
     mInst->GetNPP(&npp);
 
+    printf("debug: edburns: ns4xPluginStreamListener::OnStartBinding() done GetNPP()\n");
 #if !TARGET_CARBON
+    printf("debug: edburns: ns4xPluginStreamListener::OnStartBinding() about to call CallNPP_NewStreamProc: callbacks->newstream: %p\n", callbacks->newstream);
 // pinkerton
 // relies on routine descriptors, not present in carbon. We need to fix this.
     error = CallNPP_NewStreamProc(callbacks->newstream,
@@ -124,7 +128,6 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 	if(error != NPERR_NO_ERROR)
 		return NS_ERROR_FAILURE;
 #endif
-	
 	// translate the old 4x style stream type to the new one
 	switch(streamType)
 	{
@@ -139,6 +142,8 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 		default: return NS_ERROR_FAILURE;
 	}
 
+    printf("debug: edburns: ns4xPluginStreamListener::OnStartBinding() done switch\n");
+	
     return NS_OK;
 }
 
