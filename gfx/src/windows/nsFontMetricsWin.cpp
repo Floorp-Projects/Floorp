@@ -1344,7 +1344,7 @@ ReadCMAPTableFormat12(PRUint8* aBuf, PRInt32 len, PRUint32 **aExtMap)
 
 
 static void 
-ReadCMAPTableFormat4(PRUint8* aBuf, PRInt32 aLength, PRUint32* aMap, PRUint8* aIsSpace) 
+ReadCMAPTableFormat4(PRUint8* aBuf, PRInt32 aLength, PRUint32* aMap, PRUint8* aIsSpace, PRUint32 aMaxGlyph) 
 {
   PRUint8* p = aBuf;
   PRUint8* end = aBuf + aLength;
@@ -1376,13 +1376,15 @@ ReadCMAPTableFormat4(PRUint8* aBuf, PRInt32 aLength, PRUint32* aMap, PRUint8* aI
         if ((PRUint8*) g < end) {
           if (*g) {
             PRUint16 glyph = idDelta[i] + *g;
-            if (aIsSpace[glyph]) {
-              if (SHOULD_BE_SPACE_CHAR(c)) {
+            if (glyph < aMaxGlyph) {
+              if (aIsSpace[glyph]) {
+                if (SHOULD_BE_SPACE_CHAR(c)) {
+                  ADD_GLYPH(aMap, c);
+                } 
+              }
+              else {
                 ADD_GLYPH(aMap, c);
-              } 
-            }
-            else {
-              ADD_GLYPH(aMap, c);
+              }
             }
           }
           else {
@@ -1505,7 +1507,7 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFont
     PRUint32 maxGlyph;
     nsAutoFontDataBuffer isSpace;
     if (NS_SUCCEEDED(GetSpaces(aDC, &maxGlyph, isSpace))) {
-      ReadCMAPTableFormat4(buf+keepOffset, len-keepOffset, map, isSpace.GetArray());
+      ReadCMAPTableFormat4(buf+keepOffset, len-keepOffset, map, isSpace.GetArray(), maxGlyph);
       ccmap = MapToCCMap(map);
       aCharset = DEFAULT_CHARSET;
       aFontType = eFontType_Unicode;
