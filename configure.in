@@ -808,10 +808,9 @@ alpha*-*-osf*)
 	DSO_LDOPTS='-shared -Wl,-soname -Wl,$@'
     else
 	MOZ_DEBUG_FLAGS='-g3'
-	MOZ_OPTIMIZE_FLAGS='-fast'
 	ASFLAGS='-I$(topsrcdir)/xpcom/reflect/xptcall/public -g -std1'
-	CFLAGS="$CFLAGS -std1"
-	CXXFLAGS="$CXXFLAGS -noexceptions"
+	CFLAGS="$CFLAGS -std1 -ieee"
+	CXXFLAGS="$CXXFLAGS -noexceptions -ieee"
 	DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $@'
 	DSO_CFLAGS=
 	DSO_PIC_CFLAGS=
