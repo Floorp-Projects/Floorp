@@ -85,6 +85,17 @@ extern  SYMGETMODULEINFO _SymGetModuleInfo;
 
 PRBool EnsureSymInitialized();
 
+/*
+ * SymGetModuleInfoEspecial
+ *
+ * Attempt to determine the module information.
+ * Bug 112196 says this DLL may not have been loaded at the time
+ *  SymInitialize was called, and thus the module information
+ *  and symbol information is not available.
+ * This code rectifies that problem.
+ */
+BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aModuleInfo);
+
 PR_END_EXTERN_C
 
 #endif //WIN32
