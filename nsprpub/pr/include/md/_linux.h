@@ -33,8 +33,12 @@
 #define _PR_SI_ARCHITECTURE "alpha"
 #elif defined(__mc68000__)
 #define _PR_SI_ARCHITECTURE "m68k"
-#else
+#elif defined(__sparc__)
+#define _PR_SI_ARCHITECTURE "sparc"
+#elif defined(__i386__)
 #define _PR_SI_ARCHITECTURE "x86"
+#else
+#error "Unknown CPU architecture"
 #endif
 #define PR_DLL_SUFFIX		".so"
 
@@ -121,7 +125,15 @@ extern void _MD_CleanupBeforeExit(void);
 /* XXX not sure if this is correct, or maybe it should be 17? */
 #define PR_NUM_GCREGS 9
 
-#else
+#elif defined(__sparc__)
+/* Sparc */
+#define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__fp
+#define _MD_SET_FP(_t, val)
+#define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
+#define _MD_GET_FP_PTR(_t) ((void *) 0)
+#define _MD_SP_TYPE __ptr_t
+
+#elif defined(__i386__)
 /* Intel based Linux */
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[JB_SP]
@@ -137,6 +149,10 @@ extern void _MD_CleanupBeforeExit(void);
 #define _MD_SP_TYPE __ptr_t
 #endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
 #define PR_NUM_GCREGS   6
+
+#else
+
+#error "Unknown CPU architecture"
 
 #endif /*__powerpc__*/
 
