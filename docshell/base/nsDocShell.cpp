@@ -74,6 +74,7 @@ nsDocShell::nsDocShell() :
   mUpdateHistoryOnLoad(PR_TRUE),
   mInitialPageLoad(PR_TRUE),
   mAllowPlugins(PR_TRUE),
+  mViewMode(viewNormal),
   mEODForCurrentDocument (PR_FALSE),
   mParent(nsnull),
   mTreeOwner(nsnull),
@@ -132,6 +133,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
    NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
+   NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIScrollable)
    NS_INTERFACE_MAP_ENTRY(nsITextScroll)
@@ -442,6 +444,29 @@ NS_IMETHODIMP nsDocShell::SetAllowPlugins(PRBool aAllowPlugins)
 {
    mAllowPlugins = aAllowPlugins;
    //XXX should enable or disable a plugin host
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetViewMode(PRInt32* aViewMode)
+{
+   NS_ENSURE_ARG_POINTER(aViewMode);
+
+   *aViewMode = mViewMode;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetViewMode(PRInt32 aViewMode)
+{
+   NS_ENSURE_ARG((viewNormal == aViewMode) || (viewSource == aViewMode));
+
+   if(mViewMode != aViewMode)
+      {
+      mViewMode = aViewMode;
+      Reload(reloadNormal);
+      }
+   else
+      mViewMode = aViewMode;
+
    return NS_OK;
 }
 
@@ -1064,6 +1089,112 @@ NS_IMETHODIMP nsDocShell::GetSessionHistory(nsISHistory** aSessionHistory)
    *aSessionHistory = mSessionHistory;
    NS_IF_ADDREF(*aSessionHistory);
    return NS_OK;
+}
+
+//*****************************************************************************
+// nsDocShell::nsIWebProgress
+//*****************************************************************************
+
+NS_IMETHODIMP nsDocShell::AddProgressListener(nsIWebProgressListener* aListener, 
+   PRInt32* aCookie)
+{
+   //XXXTAB First Check
+	/*
+	Registers a listener to be notified of Progress Events
+
+	@param listener - The listener interface to be called when a progress event
+			occurs.
+
+	@param cookie - This is an optional parameter to receieve a cookie to use
+			to unregister rather than the original interface pointer.  This may
+			be nsnull.
+
+	@return	NS_OK - Listener was registered successfully.
+				NS_INVALID_ARG - The listener passed in was either nsnull, 
+						or was already registered with this progress interface.
+	 */
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::RemoveProgressListener(nsIWebProgressListener* listener, 
+   PRInt32 cookie)
+{
+   //XXXTAB First Check
+   //XXX First Check
+	/* 
+	Removes a previously registered listener of Progress Events
+		
+	@param listener - The listener interface previously registered with 
+			AddListener() this may be nsnull if a valid cookie is provided.
+
+	@param cookie - A cookie that was returned from a previously called
+		AddListener() call.  This may be nsnull if a valid listener interface
+		is passed in.
+
+	@return	NS_OK - Listener was successfully unregistered.
+				NS_ERROR_INVALID_ARG - Neither the cookie nor the listener point
+					to a previously registered listener.
+	*/
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::GetProgressStatusFlags(PRInt32* aProgressStatusFlags)
+{
+   //XXXTAB First Check
+   //XXX First Check
+	/*
+	Current connection Status of the browser.  This will be one of the enumerated
+	connection progress steps.
+	*/
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::GetCurSelfProgress(PRInt32* curSelfProgress)
+{
+   //XXXTAB First Check
+   //XXX First Check
+	/*
+	The current position of progress.  This is between 0 and maxSelfProgress.
+	This is the position of only this progress object.  It doesn not include
+	the progress of all children.
+	*/
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::GetMaxSelfProgress(PRInt32* maxSelfProgress)
+{
+   //XXXTAB First Check
+   //XXX First Check
+	/*
+	The maximum position that progress will go to.  This sets a relative
+	position point for the current progress to relate to.  This is the max
+	position of only this progress object.  It does not include the progress of
+	all the children.
+	*/
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::GetCurTotalProgress(PRInt32* curTotalProgress)
+{
+   //XXXTAB First Check
+   //XXX First Check
+	/*
+	The current position of progress for this object and all children added
+	together.  This is between 0 and maxTotalProgress.
+	*/
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::GetMaxTotalProgress(PRInt32* maxTotalProgress)
+{
+   //XXXTAB First Check
+   //XXX First Check
+	/*
+	The maximum position that progress will go to for the max of this progress
+	object and all children.  This sets the relative position point for the
+	current progress to relate to.
+	*/
+   return NS_ERROR_FAILURE;
 }
 
 //*****************************************************************************
@@ -1937,19 +2068,11 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
    nsILoadGroup* aLoadGroup, nsIStreamListener** aContentHandler,
    nsIContentViewer** aViewer)
 {
-   nsXPIDLCString strCommand;
-   // go to the uri loader and ask it to convert the uri load command into a old
-   // world style string
-   nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
-   NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
-   
-   NS_ENSURE_SUCCESS(uriLoader->GetStringForCommand(aCommand, 
-      getter_Copies(strCommand)), NS_ERROR_FAILURE);
-   
    //XXX This should probably be some category thing....
    char id[256];
    PR_snprintf(id, sizeof(id), NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
-      (const char*)strCommand , aContentType);
+      (const char*)((viewSource == mViewMode) ? "view-source" : "view"),
+      aContentType);
 
    // Create an instance of the document-loader-factory
    nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory(do_CreateInstance(id));
@@ -1957,7 +2080,8 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
       return NS_ERROR_FAILURE;
 
    // Now create an instance of the content viewer
-   NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance(strCommand,
+   NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance(
+      (viewSource == mViewMode) ? "view-source" : "view",
       aOpenedChannel, aLoadGroup, aContentType,
       NS_STATIC_CAST(nsIContentViewerContainer*, this), nsnull, 
       aContentHandler, aViewer), NS_ERROR_FAILURE);
