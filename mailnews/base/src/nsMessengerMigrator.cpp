@@ -2190,10 +2190,6 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 		newsDir->CreateDir();
 	}
 
-    // migrate the filter files
-    rv = MigrateNewsFilters(server);
-    if (NS_FAILED(rv)) return rv;
-
 	return NS_OK;
 }
 
@@ -2229,14 +2225,6 @@ nsMessengerMigrator::MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const cha
 #if defined(DEBUG_sspitzer) || defined(DEBUG_bienvenu)
 #define MIGRATE_FILTERS 1
 #endif
-
-nsresult nsMessengerMigrator::MigrateNewsFilters(nsIMsgIncomingServer *aServer)
-{
-#ifdef DEBUG
-	printf("news filter files aren't migrated, because we don't support hostinfo.dat files yet.  I'm working on it.\n");
-#endif
-	return NS_OK;
-}
 
 nsresult nsMessengerMigrator::MigrateFilters(nsIMsgIncomingServer *aServer)
 {

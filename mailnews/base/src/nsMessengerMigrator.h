@@ -121,7 +121,6 @@ private:
  
   nsresult SetSendLaterUriPref(nsIMsgIncomingServer *server);
   nsresult MigrateFilters(nsIMsgIncomingServer *server);
-  nsresult MigrateNewsFilters(nsIMsgIncomingServer *server);
 
   nsresult getPrefService();
 
