@@ -133,8 +133,7 @@ protected:
 
   nsresult DoRemoveFrame(nsBlockReflowState& aState,
                          nsBaseIBFrame* aParentFrame,
-                         nsIFrame* aDeletedFrame,
-                         nsIFrame* aPrevSibling);
+                         nsIFrame* aDeletedFrame);
 
   virtual nsresult PrepareInitialReflow(nsBlockReflowState& aState);
 
