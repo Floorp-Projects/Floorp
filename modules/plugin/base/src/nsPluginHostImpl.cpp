@@ -5058,7 +5058,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
   // possible reset in subsequent ScanPluginsDirectory calls
   PRBool pluginschanged = PR_FALSE;
 
-  // 1. Scan the app-defined list of plugin dirs.
+  // Scan the app-defined list of plugin dirs.
   rv = dirService->Get(NS_APP_PLUGINS_DIR_LIST, NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dirList));
   if (NS_SUCCEEDED(rv)) {
     ScanPluginsDirectoryList(dirList, compManager, aCreatePluginList, &pluginschanged);
@@ -5074,27 +5074,11 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
     }
   }
     
-  // 2. Scan the system-defined list of plugin dirs
-  rv = dirService->Get(NS_OS_PLUGINS_DIR_LIST, NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dirList));
-  if (NS_SUCCEEDED(rv)) {
-    ScanPluginsDirectoryList(dirList, compManager, aCreatePluginList, &pluginschanged);
-
-    if (pluginschanged)
-      *aPluginsChanged = PR_TRUE;
-
-    // if we are just looking for possible changes, 
-    // no need to proceed if changes are detected
-    if (!aCreatePluginList && *aPluginsChanged) {
-      ClearCachedPluginInfoList();
-      return NS_OK;
-    }
-  }
-
   mPluginsLoaded = PR_TRUE; // at this point 'some' plugins have been loaded,
                             // the rest is optional
     
 #if defined (XP_WIN)
-  // 3. Scan the installation paths of our popular plugins if the prefs are enabled
+  // Scan the installation paths of our popular plugins if the prefs are enabled
     
   // This table controls the order of scanning
   const char *prefs[] = {NS_WIN_JRE_SCAN_KEY,         nsnull,
