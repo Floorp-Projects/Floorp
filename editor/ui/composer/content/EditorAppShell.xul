@@ -201,7 +201,7 @@
     </toolbar>
     </toolbox>
 
-    <html:iframe type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
+    <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
 
     <box align="horizontal" id="DisplayModeBar">
       <spring class="spacer"/>
