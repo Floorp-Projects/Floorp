@@ -1057,6 +1057,7 @@ void CSSStyleSheetImpl::operator delete(void* ptr)
 #ifdef DEBUG_REFS
 static PRInt32 gInstanceCount;
 #endif
+MOZ_DECL_CTOR_COUNTER(CSSStyleSheetImpl);
 
 CSSStyleSheetImpl::CSSStyleSheetImpl()
   : nsICSSStyleSheet(),
@@ -1073,6 +1074,7 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
     mDirty(PR_FALSE),
     mScriptObject(nsnull)
 {
+  MOZ_COUNT_CTOR(CSSStyleSheetImpl);
   NS_INIT_REFCNT();
 
   mInner = new CSSStyleSheetInner(this);
@@ -1099,6 +1101,7 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
     mScriptObject(nsnull),
     mInner(aCopy.mInner)
 {
+  MOZ_COUNT_CTOR(CSSStyleSheetImpl);
   NS_INIT_REFCNT();
 
   mInner->AddSheet(this);
@@ -1138,6 +1141,7 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
 
 CSSStyleSheetImpl::~CSSStyleSheetImpl()
 {
+  MOZ_COUNT_DTOR(CSSStyleSheetImpl);
 #ifdef DEBUG_REFS
   --gInstanceCount;
   fprintf(stdout, "%d - CSSStyleSheet\n", gInstanceCount);
