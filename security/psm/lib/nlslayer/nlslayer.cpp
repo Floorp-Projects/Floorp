@@ -77,13 +77,6 @@ extern "C" PRBool nlsInit()
 #if !defined(XP_MAC)
 	res = NS_InitXPCOM(NULL, NULL);
 	NS_ASSERTION( NS_SUCCEEDED(res), "NS_InitXPCOM failed" );
-
-	// Register components
-	res = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                                 NULL /* default */);
-	if(NS_FAILED(res)) {
-		goto loser;
-	}
 #endif
 
 	// Create the bundles

@@ -117,14 +117,22 @@ NSPR_CO_FLAGS=-r NSPRPUB_CLIENT_BRANCH
 CVSCO_NSPR = cvs -q $(CVS_FLAGS) co $(NSPR_CO_FLAGS) -P
 
 #//------------------------------------------------------------------------
-#// Figure out how to pull PSM client libs.
-#// If no PSM_CO_TAG is specified, use the default static tag
+#// Figure out how to pull NSS and PSM libs.
+#// If no NSS_CO_TAG or PSM_CO_TAG is specified, use the default static tag
 #//------------------------------------------------------------------------
+
+!if "$(NSS_CO_TAG)" != ""
+NSS_CO_FLAGS=-r $(NSS_CO_TAG)
+!else
+NSS_CO_FLAGS= -r NSS_CLIENT_TAG
+!endif
+
+CVSCO_NSS = cvs -q $(CVS_FLAGS) co $(NSS_CO_FLAGS) -P
 
 !if "$(PSM_CO_TAG)" != ""
 PSM_CO_FLAGS=-r $(PSM_CO_TAG)
 !else
-PSM_CO_FLAGS=-r SECURITY_CLIENT_BRANCH
+PSM_CO_FLAGS=
 !endif
 
 CVSCO_PSM = cvs -q $(CVS_FLAGS) co $(PSM_CO_FLAGS) -P
@@ -159,9 +167,14 @@ pull_nspr: pull_clientmak
       cd $(MOZ_SRC)\.
       $(CVSCO_NSPR) mozilla/nsprpub
 
-pull_psm:
+pull_nss:
 	cd $(MOZ_SRC)\.
-	$(CVSCO_PSM) mozilla/security
+	$(CVSCO_NSS) mozilla/security/coreconf
+	$(CVSCO_NSS) mozilla/security/nss
+
+pull_psm: pull_nss
+	cd $(MOZ_SRC)\.
+	$(CVSCO_PSM) mozilla/security/psm
 
 pull_ldapcsdk:
 	cd $(MOZ_SRC)\.
