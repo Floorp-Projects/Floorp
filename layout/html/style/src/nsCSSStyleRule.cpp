@@ -830,10 +830,16 @@ DOMCSSDeclarationImpl::RemoveProperty(const nsString& aPropertyName,
     nsCSSValue val;
 
     rv = decl->RemoveProperty(prop, val);
-    if (NS_FAILED(rv))
-      return rv;
 
-    val.ToString(aReturn, prop);
+    if (NS_SUCCEEDED(rv)) {
+      // We pass in eCSSProperty_UNKNOWN here so that we don't get the
+      // property name in the return string.
+      val.ToString(aReturn, eCSSProperty_UNKNOWN);
+    } else {
+      // If we tried to remove an invalid property or a property that wasn't 
+      //  set we simply return success and an empty string
+      rv = NS_OK;
+    }
   }
 
   return rv;
