@@ -1129,13 +1129,17 @@ public class Context {
         if (doubleLen != doubleLen)
             return null;
         int len = (int) doubleLen;
-        Object[] result = new Object[len];
-        for (int i=0; i < len; i++) {
-            Object elem = object.get(i, object);
-            result[i] = elem == Scriptable.NOT_FOUND ? Undefined.instance
-                                                     : elem;
+        if (len == 0) {
+            return ScriptRuntime.emptyArgs;
+        } else {
+            Object[] result = new Object[len];
+            for (int i=0; i < len; i++) {
+                Object elem = ScriptableObject.getProperty(object, i);
+                result[i] = (elem == Scriptable.NOT_FOUND) ? Undefined.instance
+                                                           : elem;
+            }
+            return result;
         }
-        return result;
     }
 
     /**
