@@ -27,6 +27,8 @@
 #include "nsIOutlinerView.h"
 #include "nsIOutlinerRangeList.h"
 #include "nsICSSPseudoComparator.h"
+#include "nsIScrollbarMediator.h"
+#include "nsIWidget.h"
 
 class nsSupportsHashtable;
 
@@ -143,7 +145,8 @@ public:
 };
 
 // The actual frame that paints the cells and rows.
-class nsOutlinerBodyFrame : public nsLeafBoxFrame, public nsIOutlinerBoxObject, public nsICSSPseudoComparator
+class nsOutlinerBodyFrame : public nsLeafBoxFrame, public nsIOutlinerBoxObject, public nsICSSPseudoComparator,
+                            public nsIScrollbarMediator
 {
 public:
   NS_DECL_ISUPPORTS
@@ -151,6 +154,11 @@ public:
 
   // nsICSSPseudoComparator
   NS_IMETHOD PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult);
+
+  // nsIScrollbarMediator
+  NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex);
+  NS_IMETHOD ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex);
+  NS_IMETHOD VisibilityChanged(PRBool aVisible) { Invalidate(); return NS_OK; };
 
   // Overridden from nsIFrame to cache our pres context.
   NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
@@ -232,6 +240,12 @@ protected: // Data Members
 
   // Cached column information.
   nsOutlinerColumn* mColumns;
+
+  // Our vertical scrollbar.
+  nsIFrame* mScrollbar;
+
+  // Our outliner widget.
+  nsCOMPtr<nsIWidget> mOutlinerWidget;
 
   // The index of the first visible row and the # of rows visible onscreen.  
   // The outliner only examines onscreen rows, starting from

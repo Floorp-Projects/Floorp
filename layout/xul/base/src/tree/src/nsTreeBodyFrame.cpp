@@ -25,10 +25,13 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsIPresContext.h"
+#include "nsINameSpaceManager.h"
+#include "nsIScrollbarFrame.h"
+
 #include "nsOutlinerBodyFrame.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
-#include "nsINameSpaceManager.h"
+
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
 #include "nsIDOMElement.h"
@@ -191,7 +194,7 @@ NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 // Constructor
 nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
 :nsLeafBoxFrame(aPresShell), mPresContext(nsnull),
- mTopRowIndex(0), mColumns(nsnull)
+ mTopRowIndex(0), mColumns(nsnull), mScrollbar(nsnull)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
 }
@@ -213,12 +216,42 @@ nsOutlinerBodyFrame::Release(void)
   return NS_OK;
 }
 
+static nsIFrame* InitScrollbarFrame(nsIPresContext* aPresContext, nsIFrame* aCurrFrame, nsIScrollbarMediator* aSM)
+{
+  // Check ourselves
+  nsCOMPtr<nsIScrollbarFrame> sf(do_QueryInterface(aCurrFrame));
+  if (sf) {
+    sf->SetScrollbarMediator(aSM);
+    return aCurrFrame;
+  }
+
+  nsIFrame* child;
+  aCurrFrame->FirstChild(aPresContext, nsnull, &child);
+  while (child) {
+    nsIFrame* result = InitScrollbarFrame(aPresContext, child, aSM);
+    if (result)
+      return result;
+    child->GetNextSibling(&child);
+  }
+
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsOutlinerBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
                           nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow)
 {
   mPresContext = aPresContext;
   nsresult rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsBoxFrame::CreateViewForFrame(aPresContext, this, aContext, PR_TRUE);
+  nsIView* ourView;
+  nsLeafBoxFrame::GetView(aPresContext, &ourView);
+
+static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
+
+  ourView->CreateWidget(kWidgetCID);
+  ourView->GetWidget(*getter_AddRefs(mOutlinerWidget));
+
   return rv;
 }
 
@@ -274,10 +307,6 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetPageCount(PRInt32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBodyFrame::ScrollToRow(PRInt32 aRow)
-{
-  return NS_OK;
-}
 
 NS_IMETHODIMP nsOutlinerBodyFrame::Invalidate()
 {
@@ -302,6 +331,35 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
 
 NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateScrollbar()
 {
+  if (!mScrollbar)
+    // Try to find it.
+    mScrollbar = InitScrollbarFrame(mPresContext, mParent, this);
+
+  if (!mScrollbar || !mView)
+    return NS_OK;
+
+  PRInt32 rowCount = 0;
+  mView->GetRowCount(&rowCount);
+  
+  nsCOMPtr<nsIContent> scrollbar;
+  mScrollbar->GetContent(getter_AddRefs(scrollbar));
+
+  nsAutoString maxposStr;
+
+  float t2p;
+  mPresContext->GetTwipsToPixels(&t2p);
+  nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
+
+  PRInt32 size = rowHeightAsPixels*(rowCount-mPageCount+1);
+  maxposStr.AppendInt(size);
+  scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, maxposStr, PR_TRUE);
+
+  // Also set our page increment and decrement.
+  nscoord pageincrement = mPageCount*rowHeightAsPixels;
+  nsAutoString pageStr;
+  pageStr.AppendInt(pageincrement);
+  scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::pageincrement, pageStr, PR_TRUE);
+
   return NS_OK;
 }
 
@@ -387,9 +445,14 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clipState);
 
   // Update our page count, our available height and our row height.
+  PRInt32 oldRowHeight = mRowHeight;
   mRowHeight = GetRowHeight(aPresContext);
   mInnerBox = GetInnerBox();
   mPageCount = mInnerBox.height/mRowHeight;
+
+  if (mRowHeight != oldRowHeight)
+    InvalidateScrollbar();
+
   PRInt32 rowCount = 0;
   mView->GetRowCount(&rowCount);
   
@@ -400,8 +463,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   for (PRInt32 i = mTopRowIndex; i < rowCount && i < mTopRowIndex+mPageCount+1; i++) {
     nsRect rowRect(0, mRowHeight*(i-mTopRowIndex), mInnerBox.width, mRowHeight);
     nsRect dirtyRect;
-    if (dirtyRect.IntersectRect(aDirtyRect, rowRect))
+    if (dirtyRect.IntersectRect(aDirtyRect, rowRect)) {
       PaintRow(i, rowRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+    }
   }
 
   aRenderingContext.PopState(clipState);
@@ -449,8 +513,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
   for (nsOutlinerColumn* currCol = mColumns; currCol; currCol = currCol->GetNext()) {
     nsRect cellRect(currX, rowRect.y, currCol->GetWidth(), rowRect.height);
     nsRect dirtyRect;
-    if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
+    if (dirtyRect.IntersectRect(aDirtyRect, cellRect)) {
       PaintCell(aRowIndex, currCol, cellRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
+    }
     currX += currCol->GetWidth();
   }
 
@@ -598,6 +663,86 @@ nsOutlinerBodyFrame::PaintBackgroundLayer(nsIStyleContext* aStyleContext, nsIPre
   return NS_OK;
 }
 
+// Scrolling
+NS_IMETHODIMP nsOutlinerBodyFrame::ScrollToRow(PRInt32 aRow)
+{
+  if (!mView)
+    return NS_OK;
+
+  PRInt32 rowCount;
+  mView->GetRowCount(&rowCount);
+
+  PRInt32 delta = aRow - mTopRowIndex;
+
+  if (delta > 0) {
+    if (mTopRowIndex == (rowCount - mPageCount + 1))
+      return NS_OK;
+  }
+  else {
+    if (mTopRowIndex == 0)
+      return NS_OK;
+  }
+
+  mTopRowIndex += delta;
+
+  float t2p;
+  mPresContext->GetTwipsToPixels(&t2p);
+  nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
+
+  PRInt32 absDelta = delta > 0 ? delta : -delta;
+  if (absDelta*mRowHeight >= mRect.height)
+    Invalidate();
+  else if (mOutlinerWidget)
+    mOutlinerWidget->Scroll(0, delta > 0 ? -delta*rowHeightAsPixels : delta*rowHeightAsPixels, nsnull);
+ 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerBodyFrame::ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex)
+{
+  if (aNewIndex > aOldIndex)
+    ScrollToRow(mTopRowIndex+1);
+  else ScrollToRow(mTopRowIndex-1);
+
+  // Update the scrollbar.
+  nsCOMPtr<nsIContent> scrollbarContent;
+  mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+  float t2p;
+  mPresContext->GetTwipsToPixels(&t2p);
+  nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
+
+  nsAutoString curPos;
+  curPos.AppendInt(mTopRowIndex*rowHeightAsPixels);
+  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
+
+  return NS_OK;
+}
+  
+NS_IMETHODIMP
+nsOutlinerBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
+{
+  float t2p;
+  mPresContext->GetTwipsToPixels(&t2p);
+  nscoord rh = NSToCoordRound((float)mRowHeight*t2p);
+
+  nscoord oldrow = aOldIndex/rh;
+  nscoord newrow = aNewIndex/rh;
+
+  if (oldrow != newrow)
+    ScrollToRow(newrow);
+
+  // Go exactly where we're supposed to
+  // Update the scrollbar.
+  nsCOMPtr<nsIContent> scrollbarContent;
+  mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+  nsAutoString curPos;
+  curPos.AppendInt(aNewIndex);
+  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
+
+  return NS_OK;
+}
+
 // The style cache.
 nsresult 
 nsOutlinerBodyFrame::GetPseudoStyleContext(nsIPresContext* aPresContext, nsIAtom* aPseudoElement, 
@@ -677,4 +822,5 @@ nsOutlinerBodyFrame::EnsureColumns(nsIPresContext* aPresContext)
 NS_INTERFACE_MAP_BEGIN(nsOutlinerBodyFrame)
   NS_INTERFACE_MAP_ENTRY(nsIOutlinerBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsICSSPseudoComparator)
+  NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
 NS_INTERFACE_MAP_END_INHERITING(nsLeafFrame)
