@@ -269,6 +269,7 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 		folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
   
 	mSubFolders->AppendElement(folder);
+    folder->SetDepth(mDepth+1);
 	*child = folder;
 	NS_ADDREF(*child);
     (void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
@@ -651,7 +652,7 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
     
     if (!m_haveReadNameFromDB)
     {
-        if (mDepth == 1) 
+        if (mDepth == 0) 
         {
             char *hostName = nsnull;
             GetHostName(&hostName);
@@ -867,8 +868,45 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessage(nsIMessage* message)
 NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
 	nsIImapProtocol* aProtocol, mailbox_spec* aSpec)
 {
-	nsresult rv = NS_ERROR_FAILURE;
-	return rv;
+	nsresult rv;
+    PRBool found = PR_FALSE;
+    nsIMsgFolder* aFolder = nsnull;
+    nsISupports* aItem;
+    nsIBidirectionalEnumerator *aEnumerator = nsnull;
+
+    rv = NS_NewISupportsArrayEnumerator(mSubFolders, &aEnumerator);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = aEnumerator->First();
+    while (rv == NS_OK)
+    {
+        rv = aEnumerator->CurrentItem(&aItem);
+        if (rv != NS_OK) break;
+        aFolder = nsnull;
+        rv = aItem->QueryInterface(nsIMsgFolder::GetIID(), (void**) &aFolder);
+        aItem->Release();
+        if (rv == NS_OK && aFolder)
+        {
+            char* aName = nsnull;
+            aFolder->GetName(&aName);
+            NS_RELEASE (aFolder);
+            if (PL_strcmp(aName, aSpec->allocatedPathName) == 0)
+            {
+                found = PR_TRUE;
+                break;
+            }
+        }
+        rv = aEnumerator->Next();
+    }
+    if (!found)
+    {
+        nsIMsgFolder *child = nsnull;
+        nsAutoString folderName = aSpec->allocatedPathName;
+        AddSubfolder(folderName, &child);
+        NS_IF_RELEASE(child);
+    }
+    aEnumerator->Release();
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailFolder::MailboxDiscoveryDone(
