@@ -38,6 +38,7 @@ var DisplayModeAllTags = 2;
 var DisplayModeSource = 3;
 var PreviousNonSourceDisplayMode = 1;
 var EditorDisplayMode = 1;  // Normal Editor mode
+var EditModeType = "";
 var WebCompose = false;     // Set true for Web Composer, leave false for Messenger Composer
 var docWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
 var contentWindow = 0;
@@ -54,6 +55,14 @@ var gOutputWrap          = 32;
 var gOutputFormatFlowed  = 64;
 var gOutputAbsoluteLinks = 128;
 var gOutputEncodeEntities = 256;
+var gEditModeLabel;
+var gNormalModeButton;
+var gTagModeButton;
+var gSourceModeButton;
+var gPreviewModeButton;
+var gIsWindows;
+var gIsMac;
+var gIsUNIX;
 
 var gPrefs;
 // These must be kept in synch with the XUL <options> lists
@@ -127,6 +136,21 @@ function EditorStartup(editorType, editorElement)
 {
   contentWindow = window.content;
   sourceContentWindow = document.getElementById("content-source");
+  gEditModeLabel     = document.getElementById("EditModeLabel"); 
+  gNormalModeButton  = document.getElementById("NormalModeButton");
+  gTagModeButton     = document.getElementById("TagModeButton");
+  gSourceModeButton  = document.getElementById("SourceModeButton");
+  gPreviewModeButton = document.getElementById("PreviewModeButton");
+
+  gIsWin = navigator.appVersion.indexOf("Win") != -1;
+  gIsUNIX = (navigator.appVersion.indexOf("X11") || 
+             navigator.appVersion.indexOf("nux")) != -1;
+  gIsMac = !gIsWin && !gIsUNIX;
+dump("IsWin="+gIsWin+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
+
+  // The "type" attribute persists, so use that value
+  //  to setup edit mode buttons
+  ToggleEditModeType(gNormalModeButton.getAttribute("type"));
 
   // XUL elements we use when switching from normal editor to edit source
   ContentWindowDeck = document.getElementById("ContentWindowDeck");
@@ -153,12 +177,13 @@ function EditorStartup(editorType, editorElement)
   // set up our global prefs object
   GetPrefsService();
    
+//  editorShell.editorDocument.onDblClick = "EditorDblClick()";
+
   // Get url for editor content and load it.
   // the editor gets instantiated by the editor shell when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
   editorShell.LoadUrl(url);
 }
-
 
 function _EditorNotImplemented()
 {
@@ -175,6 +200,11 @@ function EditorShutdown()
   dump("In EditorShutdown..\n");
 }
 
+// We use this alot!
+function GetString(id)
+{
+  return editorShell.GetString(id);
+}
 
 // -------------------------- Key Bindings -------------------------
 
@@ -337,7 +367,7 @@ function EditorNewPlaintext()
 function EditorSaveDocument(doSaveAs, doSaveCopy)
 {
   //TODO: Replace this with nsIFilePicker code.
-  // but should we try to do it all here or just use nsIFilePicker in editorShell code?
+  // but should we try to do it all here or just use nsIFilePicker in EditorShell code?
   editorShell.saveDocument(doSaveAs, doSaveCopy);
 }
 
@@ -376,7 +406,7 @@ function EditorClose()
 function EditorCanClose()
 {
   // Returns FALSE only if user cancels save action
-  return editorShell.CheckAndSaveDocument(editorShell.GetString("BeforeClosing"));
+  return editorShell.CheckAndSaveDocument(GetString("BeforeClosing"));
 }
 
 // --------------------------- Edit menu ---------------------------
@@ -430,9 +460,14 @@ function EditorFindNext()
 
 function EditorViewSource()
 {
+// TESTING EditConflict dialog:
+    window.openDialog("chrome://editor/content/EditConflict.xul", "_blank", "chrome,close,titlebar,modal", "");
+
+return;
+
   // Temporary hack: save to a file and call up the source view window
   // using the local file url.
-  if (!editorShell.CheckAndSaveDocument(editorShell.GetString("BeforeViewSource")))
+  if (!editorShell.CheckAndSaveDocument(GetString("BeforeViewSource")))
     return;
 
   fileurl = "";
@@ -939,13 +974,10 @@ function SetDisplayMode(mode)
   editorShell.SetDisplayMode(mode);
 
   // Set the UI states
-  document.getElementById("PreviewModeButton").setAttribute("selected",Number(mode == DisplayModePreview));
-  document.getElementById("NormalModeButton").setAttribute("selected",Number(mode == DisplayModeNormal));
-  document.getElementById("TagModeButton").setAttribute("selected",Number(mode == DisplayModeAllTags));
-  var HTMLButton = document.getElementById("SourceModeButton");
-  if (HTMLButton)
-    HTMLButton.setAttribute("selected", Number(mode == DisplayModeSource));
-
+  gPreviewModeButton.setAttribute("selected",Number(mode == DisplayModePreview));
+  gNormalModeButton.setAttribute("selected",Number(mode == DisplayModeNormal));
+  gTagModeButton.setAttribute("selected",Number(mode == DisplayModeAllTags));
+  gSourceModeButton.setAttribute("selected", Number(mode == DisplayModeSource));
 
   if (mode == DisplayModeSource)
   {
@@ -978,6 +1010,34 @@ function SetDisplayMode(mode)
     contentWindow.focus();
   }
   return true;
+}
+
+function ToggleEditModeType()
+{
+  if (EditModeType == "text")
+  {
+    EditModeType = "image";
+    gNormalModeButton.setAttribute("value","");
+    gTagModeButton.setAttribute("value","");
+    gSourceModeButton.setAttribute("value","");
+    gPreviewModeButton.setAttribute("value","");
+    // Advanced users don't need to see the label (cleaner look)
+    gEditModeLabel.setAttribute("hidden","true");
+  }
+  else
+  {
+    EditModeType = "text";
+    gNormalModeButton.setAttribute("value","Normal");
+    gTagModeButton.setAttribute("value","Show All Tags");
+    gSourceModeButton.setAttribute("value","HTML Source");
+    gPreviewModeButton.setAttribute("value","Edit Preview");
+    gEditModeLabel.removeAttribute("hidden");
+  }
+
+  gNormalModeButton.setAttribute("type",EditModeType);
+  gTagModeButton.setAttribute("type",EditModeType);
+  gSourceModeButton.setAttribute("type",EditModeType);
+  gPreviewModeButton.setAttribute("type",EditModeType);
 }
 
 function EditorToggleParagraphMarks()
@@ -1022,11 +1082,11 @@ function SetBackColorString(xulElementID)
     var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, selectedCountObj);  
 
     if (tagNameObj.value == "table")
-      textVal = editorShell.GetString("TableBackColor");
+      textVal = GetString("TableBackColor");
     else if (tagNameObj.value == "td")
-      textVal = editorShell.GetString("CellBackColor");
+      textVal = GetString("CellBackColor");
     else
-      textVal = editorShell.GetString("PageBackColor");
+      textVal = GetString("PageBackColor");
 
     xulElement.setAttribute("value",textVal);
   }
@@ -1039,7 +1099,17 @@ function InitBackColorPopup()
 
 function EditorInitEditMenu()
 {
-  // We will be modifying the Paste menuitem in the future  
+  var DelStr = GetString(gIsMac ? "Clear" : "Delete");
+
+  // Change menu text to "Clear" for Mac 
+  // TODO: Should this be in globalOverlay.j?
+  document.getElementById("menu_delete").setAttribute("value",DelStr);
+  // TODO: WHAT IS THE Mac STRING?
+  if (!gIsMac)
+    document.getElementById("menu_delete").setAttribute("acceltext", GetString("Del"));
+    
+  //TODO: We should modify the Paste menuitem to build a submenu 
+  //      with multiple paste format types
 }
 
 function InitRecentFilesMenu()
@@ -1068,7 +1138,7 @@ function EditorInitFormatMenu()
   if (menuItem)
   {
     var element = GetSelectedElementOrParentCell();
-    var menuStr = editorShell.GetString("ObjectProperties");
+    var menuStr = GetString("ObjectProperties");
     if (element && element.nodeName)
     {
       var objStr = "";
@@ -1076,22 +1146,22 @@ function EditorInitFormatMenu()
       switch (element.nodeName)
       {
         case 'IMG':
-          objStr = editorShell.GetString("Image");
+          objStr = GetString("Image");
           break;
         case 'HR':
-          objStr = editorShell.GetString("HLine");
+          objStr = GetString("HLine");
           break;
         case 'TABLE':
-          objStr = editorShell.GetString("Table");
+          objStr = GetString("Table");
           break;
         case 'TD':
-          objStr = editorShell.GetString("TableCell");
+          objStr = GetString("TableCell");
           break;
         case 'A':
           if(element.href)
-            objStr = editorShell.GetString("Link");
+            objStr = GetString("Link");
           else if (element.name)
-            objStr = editorShell.GetString("NamedAnchor");
+            objStr = GetString("NamedAnchor");
           break;
       }
       menuStr = menuStr.replace(/%obj%/,objStr);        
@@ -1108,7 +1178,7 @@ function EditorInitFormatMenu()
   }
 }
 
-function InitTableMenu()
+function EditorInitTableMenu()
 {
   // Change text on the "Join..." item depending if we
   //   are joining selected cells or just cell to right
@@ -1117,11 +1187,27 @@ function InitTableMenu()
   //       included in the selection?
   var menuText;
   if (editorShell.GetFirstSelectedCell())
-    menuText = editorShell.GetString("JoinSelectedCells");
+    menuText = GetString("JoinSelectedCells");
   else
-    menuText = editorShell.GetString("JoinCellToRight");
+    menuText = GetString("JoinCellToRight");
 
   document.getElementById("tableJoinCells").setAttribute("value",menuText);
+
+  // Set platform-specific hints for how to select cells
+  if (gIsWin) osKey = "XulKeyWin";
+  if (gIsMac) osKey = "XulKeyMac";
+  if (gIsUNIX) osKey = "XulKeyUnix";
+
+  var DragStr = GetString(osKey)+GetString("Drag");
+  var ClickStr = GetString(osKey)+GetString("Click");
+  var DelStr = GetString(gIsMac ? "Clear" : "Del");
+
+  document.getElementById("menu_DeleteCell").setAttribute("acceltext",ClickStr);
+  document.getElementById("menu_SelectRow").setAttribute("acceltext",DragStr);
+  document.getElementById("menu_SelectColumn").setAttribute("acceltext",DragStr);
+  document.getElementById("menu_SelectAllCells").setAttribute("acceltext",DragStr);
+  // And add "Del" or "Clear"
+  document.getElementById("menu_DeleteCellContents").setAttribute("acceltext",DelStr);
 }
 
 function EditorInitToolbars()
@@ -1152,7 +1238,7 @@ function EditorSetDefaultPrefs()
     domdoc.insertBefore(newdoctype, domdoc.firstChild);
   }
   else
-    domdoc.insertBefore(newdoctype, domdoc.doctype);
+    dump("doctype not added");
   
   // search for head; we'll need this for meta tag additions
   var headelement = 0;
