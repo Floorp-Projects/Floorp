@@ -39,18 +39,35 @@ static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-
-typedef struct _findEntry {
+// use this to search all accounts for the given account and store the
+// resulting key in hashKey
+typedef struct _findAccountEntry {
   nsIMsgAccount *account;
   PRBool found;
   nsHashKey* hashKey;
-} findEntry;
+} findAccountEntry;
 
+
+// use this to search for all servers with the given hostname/iid and
+// put them in "servers"
 typedef struct _findServerEntry {
   const char *hostname;
   const nsIID *iid;
   nsISupportsArray *servers;
 } findServerEntry;
+
+
+// use this to search for all servers that match "server" and
+// put all identities in "identities"
+typedef struct _findIdentitiesByServerEntry {
+  nsISupportsArray *identities;
+  nsIMsgIncomingServer *server;
+} findIdentitiesByServerEntry;
+
+typedef struct _findServersByIdentityEntry {
+  nsISupportsArray *servers;
+  nsIMsgIdentity *identity;
+} findServersByIdentityEntry;
 
 class nsMsgAccountManager : public nsIMsgAccountManager {
 public:
@@ -96,6 +113,11 @@ public:
   NS_IMETHOD FindServersByHostname(const char* hostname,
                                    const nsIID& iid,
                                    nsISupportsArray* *serverArray);
+  NS_IMETHOD GetIdentitiesForServer(nsIMsgIncomingServer *server,
+                                    nsISupportsArray **_retval);
+
+  NS_IMETHOD GetServersForIdentity(nsIMsgIdentity *identity,
+                                   nsISupportsArray **_retval);
   
 private:
   nsHashtable *m_accounts;
@@ -114,7 +136,10 @@ private:
                                      void *closure);
   static PRBool hashTableFindFirst(nsHashKey *aKey, void *aData,
                                    void *closure);
-
+  static PRBool findIdentitiesForServer(nsHashKey *aKey,
+                                        void *aData, void *closure);
+  static PRBool findServersForIdentity (nsHashKey *aKey,
+                                        void *aData, void *closure);
   // nsISupportsArray enumerators
   static PRBool findServerByName(nsISupports *aElement, void *data);
   
@@ -226,7 +251,7 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
     printf("No default account. Looking for one..\n");
 #endif
     
-    findEntry entry = { nsnull, PR_FALSE, nsnull };
+    findAccountEntry entry = { nsnull, PR_FALSE, nsnull };
 
     m_accounts->Enumerate(hashTableFindFirst, (void *)&entry);
 
@@ -258,7 +283,7 @@ nsMsgAccountManager::SetDefaultAccount(nsIMsgAccount * aDefaultAccount)
 nsHashKey *
 nsMsgAccountManager::findAccount(nsIMsgAccount *aAccount)
 {
-  findEntry entry = {aAccount, PR_FALSE, nsnull };
+  findAccountEntry entry = {aAccount, PR_FALSE, nsnull };
 
   m_accounts->Enumerate(hashTableFindAccount, (void *)&entry);
 
@@ -281,9 +306,9 @@ nsMsgAccountManager::hashTableFindAccount(nsHashKey *aKey,
   // compare them as nsIMsgAccount*'s - not sure if that
   // really makes a difference
   nsIMsgAccount *thisAccount = (nsIMsgAccount *)aData;
-  findEntry *entry = (findEntry *)closure;
+  findAccountEntry *entry = (findAccountEntry *)closure;
 
-  // when found, fix up the findEntry
+  // when found, fix up the findAccountEntry
   if (thisAccount == entry->account) {
     entry->found = PR_TRUE;
     entry->hashKey = aKey;
@@ -299,7 +324,7 @@ nsMsgAccountManager::hashTableFindFirst(nsHashKey *aKey,
                                           void *closure)
 {
   
-  findEntry *entry = (findEntry *)closure;
+  findAccountEntry *entry = (findAccountEntry *)closure;
 
   entry->hashKey = aKey;
   entry->account = (nsIMsgAccount *)aData;
@@ -425,7 +450,7 @@ nsMsgAccountManager::LoadAccounts()
     nsCOMPtr<nsIMsgAccount> account;
     char *token = nsnull;
     char *rest = accountList;
-    nsString2 str = "";
+    nsString str = "";
     char *accountKey = nsnull;
 
     token = nsCRT::strtok(rest, ",", &rest);
@@ -672,6 +697,7 @@ nsMsgAccountManager::FindServersByHostname(const char* hostname,
 
 }
 
+
 // if the aElement matches the given hostname, add it to the given array
 PRBool
 nsMsgAccountManager::findServerByName(nsISupports *aElement, void *data)
@@ -695,6 +721,126 @@ nsMsgAccountManager::findServerByName(nsISupports *aElement, void *data)
 
   return PR_TRUE;
 }
+
+NS_IMETHODIMP
+nsMsgAccountManager::GetIdentitiesForServer(nsIMsgIncomingServer *server,
+                                            nsISupportsArray **_retval)
+{
+  nsresult rv;
+  nsCOMPtr<nsISupportsArray> identities;
+  rv = NS_NewISupportsArray(getter_AddRefs(identities));
+  if (NS_FAILED(rv)) return rv;
+  
+  findIdentitiesByServerEntry identityInfo;
+  identityInfo.server = server;
+  identityInfo.identities = identities;
+  
+  m_accounts->Enumerate(findIdentitiesForServer,
+                        (void *)&identityInfo);
+
+  // do an addref for the caller.
+  *_retval = identities;
+  NS_ADDREF(*_retval);
+
+  return NS_OK;
+}
+
+PRBool
+nsMsgAccountManager::findIdentitiesForServer(nsHashKey *key,
+                                             void *aData, void *closure)
+{
+  nsresult rv;
+  nsIMsgAccount* account = (nsIMsgAccount*)aData;
+  findIdentitiesByServerEntry *entry = (findIdentitiesByServerEntry*)closure;
+  
+  nsIMsgIncomingServer* thisServer;
+  rv = account->GetIncomingServer(&thisServer);
+  if (NS_FAILED(rv)) return rv;
+  
+  // ugh, this is bad. Need a better comparison method
+  if (entry->server == thisServer) {
+    // add all these elements to the nsISupports array
+    nsCOMPtr<nsISupportsArray> theseIdentities;
+    rv = account->GetIdentities(getter_AddRefs(theseIdentities));
+    if (NS_SUCCEEDED(rv))
+      rv = entry->identities->AppendElements(theseIdentities);
+  }
+
+  NS_RELEASE(thisServer);
+
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::GetServersForIdentity(nsIMsgIdentity *identity,
+                                           nsISupportsArray **_retval)
+{
+
+  nsresult rv;
+  nsCOMPtr<nsISupportsArray> servers;
+  rv = NS_NewISupportsArray(getter_AddRefs(servers));
+  if (NS_FAILED(rv)) return rv;
+  
+  findServersByIdentityEntry serverInfo;
+  serverInfo.identity = identity;
+  serverInfo.servers = servers;
+  
+  m_accounts->Enumerate(findServersForIdentity,
+                        (void *)&serverInfo);
+
+  // do an addref for the caller.
+  *_retval = servers;
+  NS_ADDREF(*_retval);
+
+  return NS_OK;
+}
+  
+PRBool
+nsMsgAccountManager::findServersForIdentity(nsHashKey *key,
+                                             void *aData, void *closure)
+{
+  nsresult rv;
+  nsIMsgAccount* account = (nsIMsgAccount*)aData;
+  findServersByIdentityEntry *entry = (findServersByIdentityEntry*)closure;
+
+  nsCOMPtr<nsISupportsArray> identities;
+  account->GetIdentities(getter_AddRefs(identities));
+
+  PRUint32 idCount=0;
+  identities->Count(&idCount);
+
+  PRUint32 id;
+  for (id=0; id<idCount; id++) {
+    // don't use nsCOMPtrs because of the horrible pointer comparison below
+    nsISupports *thisSupports = identities->ElementAt(id);
+    if (!thisSupports) continue;
+    
+    nsIMsgIdentity *thisIdentity;
+    rv = thisSupports->QueryInterface(nsIMsgIdentity::GetIID(),
+                                      (void **)&thisIdentity);
+    NS_RELEASE(thisSupports);
+    if (NS_SUCCEEDED(rv)) {
+
+      // if the identity is found, add this server to this element
+      // bad bad bad - pointer comparisons are evil.
+      if (entry->identity == thisIdentity) {
+        nsCOMPtr<nsIMsgIncomingServer> thisServer;
+        rv = account->GetIncomingServer(getter_AddRefs(thisServer));
+        if (NS_SUCCEEDED(rv)) {
+          entry->servers->AppendElement(thisServer);
+
+          // release everything NOW since we're breaking out of the loop
+          NS_RELEASE(thisIdentity);
+          break;
+        }
+      }
+      NS_RELEASE(thisIdentity);
+    }
+  }
+
+  return PR_TRUE;
+}
+
 
 nsresult
 NS_NewMsgAccountManager(const nsIID& iid, void **result)
