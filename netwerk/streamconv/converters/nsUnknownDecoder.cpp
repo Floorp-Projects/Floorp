@@ -409,13 +409,14 @@ PRBool nsUnknownDecoder::SniffForImageMimeType(nsIRequest* aRequest)
 {
   // Just ask libpr0n
   nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
-  char* temp;
-  loader->SupportImageWithContents(mBuffer, mBufferLen, &temp);
-  if (temp) {
-    mContentType.Adopt(temp);
-  }
+  if (!loader) return PR_FALSE;
 
-  return temp != nsnull;
+  char* temp;
+  nsresult rv = loader->SupportImageWithContents(mBuffer, mBufferLen, &temp);
+  if (NS_FAILED(rv) || !temp) return PR_FALSE;
+
+  mContentType.Adopt(temp);
+  return PR_TRUE;
 }
 
 PRBool nsUnknownDecoder::SniffForXML(nsIRequest* aRequest)
