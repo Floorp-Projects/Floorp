@@ -399,9 +399,20 @@ getSignatureOidTag(KeyType keyType, SECOidTag hashAlgTag)
 }
 
 static SECStatus
+AddExtensions(void *, const char *, const char *, PRBool, PRBool, PRBool, PRBool,
+              PRBool, PRBool);
+
+static SECStatus
 CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
         SECOidTag hashAlgTag, CERTName *subject, char *phone, int ascii, 
-	const char *emailAddrs, const char *dnsNames, PRFileDesc *outFile)
+	const char *emailAddrs, const char *dnsNames,
+        PRBool	keyUsage, 
+	PRBool  extKeyUsage,
+	PRBool  basicConstraint, 
+	PRBool  authKeyID,
+	PRBool  crlDistPoints, 
+	PRBool  nscpCertType,
+        PRFileDesc *outFile)
 {
     CERTSubjectPublicKeyInfo *spki;
     CERTCertificateRequest *cr;
@@ -411,6 +422,7 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
     SECStatus rv;
     PRArenaPool *arena;
     PRInt32 numBytes;
+    void *extHandle;
 
     /* Create info about public key */
     spki = SECKEY_CreateSubjectPublicKeyInfo(pubk);
@@ -418,9 +430,9 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
 	SECU_PrintError(progName, "unable to create subject public key");
 	return SECFailure;
     }
-
+    
     /* Generate certificate request */
-    cr = CERT_CreateCertificateRequest(subject, spki, 0);
+    cr = CERT_CreateCertificateRequest(subject, spki, NULL);
     if (!cr) {
 	SECU_PrintError(progName, "unable to make certificate request");
 	return SECFailure;
@@ -432,6 +444,20 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
 	return SECFailure;
     }
     
+    extHandle = CERT_StartCertificateRequestAttributes(cr);
+    if (extHandle == NULL) {
+        PORT_FreeArena (arena, PR_FALSE);
+	return SECFailure;
+    }
+    if (AddExtensions(extHandle, emailAddrs, PR_FALSE, PR_FALSE, PR_FALSE,
+                      PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE)
+                  != SECSuccess) {
+        PORT_FreeArena (arena, PR_FALSE);
+        return SECFailure;
+    }
+    CERT_FinishExtensions(extHandle);
+    CERT_FinishCertificateRequestAttributes(cr);
+
     /* Der encode the request */
     encoding = SEC_ASN1EncodeItem(arena, NULL, cr,
 		  SEC_ASN1_GET(CERT_CertificateRequestTemplate));
@@ -2081,6 +2107,71 @@ AddCrlDistPoint(void *extHandle)
 }
 
 static SECStatus
+AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
+	PRBool	keyUsage, 
+	PRBool  extKeyUsage,
+	PRBool  basicConstraint, 
+	PRBool  authKeyID,
+	PRBool  crlDistPoints, 
+	PRBool  nscpCertType)
+{
+    SECStatus 	rv = SECSuccess;
+    do {
+	/* Add key usage extension */
+	if (keyUsage) {
+	    rv = AddKeyUsage(extHandle);
+	    if (rv)
+		break;
+	}
+
+	/* Add extended key usage extension */
+	if (extKeyUsage) {
+	    rv = AddExtKeyUsage(extHandle);
+	    if (rv)
+		break;
+	}
+
+	/* Add basic constraint extension */
+	if (basicConstraint) {
+	    rv = AddBasicConstraint(extHandle);
+	    if (rv)
+		break;
+	}
+
+	if (authKeyID) {
+	    rv = AddAuthKeyID (extHandle);
+	    if (rv)
+		break;
+	}    
+
+	if (crlDistPoints) {
+	    rv = AddCrlDistPoint (extHandle);
+	    if (rv)
+		break;
+	}
+	
+	if (nscpCertType) {
+	    rv = AddNscpCertType(extHandle);
+	    if (rv)
+		break;
+	}
+
+	if (emailAddrs != NULL) {
+	    rv = AddEmailSubjectAlt(extHandle,emailAddrs);
+	    if (rv)
+		break;
+	}
+
+	if (dnsNames != NULL) {
+	    rv = AddDNSSubjectAlt(extHandle,dnsNames);
+	    if (rv)
+		break;
+	}
+    } while (0);
+    return rv;
+}
+
+static SECStatus
 CreateCert(
 	CERTCertDBHandle *handle, 
 	char *  issuerNickName, 
@@ -2110,6 +2201,7 @@ CreateCert(
     CERTCertificateRequest *certReq	= NULL;
     SECStatus 	rv 			= SECSuccess;
     SECItem 	reqDER;
+    CERTCertExtension **CRexts;
 
     reqDER.data = NULL;
     do {
@@ -2129,63 +2221,29 @@ CreateCert(
 	if (subjectCert == NULL) {
 	    GEN_BREAK (SECFailure)
 	}
-
+        
+        
 	extHandle = CERT_StartCertExtensions (subjectCert);
 	if (extHandle == NULL) {
 	    GEN_BREAK (SECFailure)
 	}
-
-	/* Add key usage extension */
-	if (keyUsage) {
-	    rv = AddKeyUsage(extHandle);
-	    if (rv)
-		break;
+        
+        rv = AddExtensions(extHandle, emailAddrs, dnsNames, keyUsage, extKeyUsage,
+                          basicConstraint, authKeyID, crlDistPoints, nscpCertType);
+        if (rv != SECSuccess) {
+	    GEN_BREAK (SECFailure)
 	}
-
-	/* Add extended key usage extension */
-	if (extKeyUsage) {
-	    rv = AddExtKeyUsage(extHandle);
-	    if (rv)
-		break;
-	}
-
-	/* Add basic constraint extension */
-	if (basicConstraint) {
-	    rv = AddBasicConstraint(extHandle);
-	    if (rv)
-		break;
-	}
-
-	if (authKeyID) {
-	    rv = AddAuthKeyID (extHandle);
-	    if (rv)
-		break;
-	}    
-
-
-	if (crlDistPoints) {
-	    rv = AddCrlDistPoint (extHandle);
-	    if (rv)
-		break;
-	}
-	
-	if (nscpCertType) {
-	    rv = AddNscpCertType(extHandle);
-	    if (rv)
-		break;
-	}
-
-	if (emailAddrs != NULL) {
-	    rv = AddEmailSubjectAlt(extHandle,emailAddrs);
-	    if (rv)
-		break;
-	}
-
-	if (dnsNames != NULL) {
-	    rv = AddDNSSubjectAlt(extHandle,dnsNames);
-	    if (rv)
-		break;
-	}
+        
+        if (certReq->attributes != NULL &&
+            SECOID_FindOIDTag(&(*certReq->attributes)->attrType)
+                == SEC_OID_PKCS9_EXTENSION_REQUEST) {
+            rv = CERT_GetCertificateRequestExtensions(certReq, &CRexts);
+            if (rv != SECSuccess)
+                break;
+            rv = CERT_MergeExtensions(extHandle, CRexts);
+            if (rv != SECSuccess)
+                break;
+        }
 
 	CERT_FinishExtensions(extHandle);
 
@@ -2877,7 +2935,13 @@ secuCommandFlag certutil_options[] =
 	             certutil.options[opt_ASCIIForIO].activated,
 		     certutil.options[opt_ExtendedEmailAddrs].arg,
 		     certutil.options[opt_ExtendedDNSNames].arg,
-		     outFile ? outFile : PR_STDOUT);
+                     certutil.options[opt_AddKeyUsageExt].activated,
+                     certutil.options[opt_AddExtKeyUsageExt].activated,
+                     certutil.options[opt_AddBasicConstraintExt].activated,
+                     certutil.options[opt_AddAuthorityKeyIDExt].activated,
+                     certutil.options[opt_AddCRLDistPtsExt].activated,
+                     certutil.options[opt_AddNSCertTypeExt].activated,
+                     outFile ? outFile : PR_STDOUT);
 	if (rv) 
 	    goto shutdown;
 	privkey->wincx = &pwdata;

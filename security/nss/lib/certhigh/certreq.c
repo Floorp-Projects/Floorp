@@ -35,10 +35,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "cert.h"
+#include "certt.h"
 #include "secder.h"
 #include "key.h"
 #include "secitem.h"
 #include "secasn1.h"
+#include "secerr.h"
 
 const SEC_ASN1Template CERT_AttributeTemplate[] = {
     { SEC_ASN1_SEQUENCE,
@@ -166,8 +168,7 @@ CERT_CreateCertificateRequest(CERTName *subject,
 
 	    /* allocate space for attributes */
 	    while(attributes[i] != NULL) i++;
-	    certreq->attributes = (SECItem**)PORT_ArenaZAlloc(arena, 
-						   	      sizeof(SECItem *) * (i + 1));
+	    certreq->attributes = PORT_ArenaZNewArray(arena,CERTAttribute*,i+1);
 	    if(!certreq->attributes) {
 		goto loser;
 	    }
@@ -231,3 +232,96 @@ CERT_DestroyCertificateRequest(CERTCertificateRequest *req)
     return;
 }
 
+static void
+setCRExt(void *o, CERTCertExtension **exts)
+{
+    ((CERTCertificateRequest *)o)->attributes = (struct CERTAttributeStr **)exts;
+}
+
+/*
+** Set up to start gathering cert extensions for a cert request.
+** The list is created as CertExtensions and converted to an
+** attribute list by CERT_FinishCRAttributes().
+ */
+extern void *cert_StartExtensions(void *owner, PRArenaPool *ownerArena,
+                       void (*setExts)(void *object, CERTCertExtension **exts));
+void *
+CERT_StartCertificateRequestAttributes(CERTCertificateRequest *req)
+{
+    return (cert_StartExtensions ((void *)req, req->arena, setCRExt));
+}
+
+/*
+** At entry req->attributes actually contains an list of cert extensions--
+** req-attributes is overloaded until the list is DER encoded (the first
+** ...EncodeItem() below).
+** We turn this into an attribute list by encapsulating it
+** in a PKCS 10 Attribute structure
+ */
+SECStatus
+CERT_FinishCertificateRequestAttributes(CERTCertificateRequest *req)
+{   SECItem *extlist;
+    SECOidData *oidrec;
+    CERTAttribute *attribute;
+   
+    if (!req || !req->arena) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    if (req->attributes == NULL)
+        return SECSuccess;
+
+    extlist = SEC_ASN1EncodeItem(req->arena, NULL, &req->attributes,
+                            SEC_ASN1_GET(CERT_SequenceOfCertExtensionTemplate));
+    if (extlist == NULL)
+        return(SECFailure);
+
+    oidrec = SECOID_FindOIDByTag(SEC_OID_PKCS9_EXTENSION_REQUEST);
+    if (oidrec == NULL)
+	return SECFailure;
+
+    /* now change the list of cert extensions into a list of attributes
+     */
+    req->attributes = PORT_ArenaZNewArray(req->arena, CERTAttribute*, 2);
+
+    attribute = PORT_ArenaZNew(req->arena, CERTAttribute);
+    
+    if (req->attributes == NULL || attribute == NULL ||
+        SECITEM_CopyItem(req->arena, &attribute->attrType, &oidrec->oid) != 0) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return SECFailure;
+    }
+    attribute->attrValue = PORT_ArenaZNewArray(req->arena, SECItem*, 2);
+
+    if (attribute->attrValue == NULL)
+        return SECFailure;
+
+    attribute->attrValue[0] = extlist;
+    attribute->attrValue[1] = NULL;
+    req->attributes[0] = attribute;
+    req->attributes[1] = NULL;
+
+    return SECSuccess;
+}
+
+SECStatus
+CERT_GetCertificateRequestExtensions(CERTCertificateRequest *req,
+                                        CERTCertExtension ***exts)
+{
+    if (req == NULL || exts == NULL) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    
+    if (req->attributes == NULL || *req->attributes == NULL)
+        return SECSuccess;
+    
+    if ((*req->attributes)->attrValue == NULL) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    return(SEC_ASN1DecodeItem(req->arena, exts, 
+            SEC_ASN1_GET(CERT_SequenceOfCertExtensionTemplate),
+            (*req->attributes)->attrValue[0]));
+}
