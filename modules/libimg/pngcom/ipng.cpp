@@ -155,8 +155,7 @@ il_png_complete(il_container *ic)
    
     /* notify observers that the current frame has completed. */
 
-/*  ic->imgdcb->ImgDCBHaveImageAll();  GRR: what about this? (from jpeg.cpp) */
-    ic->imgdcb->ImgDCBHaveImageFrame();
+    ic->imgdcb->ImgDCBHaveImageAll(); 
 
 #ifndef WE_DONT_HAVE_SUBSEQUENT_IMAGES
     /* An image can specify a delay time before which to display
@@ -192,6 +191,8 @@ il_png_abort(il_container *ic)
         ipng_p->alpharow = NULL;
 
 #ifdef WE_DONT_HAVE_SUBSEQUENT_IMAGES
+
+        png_destroy_read_struct(&ipng_p->pngs_p, &ipng_p->info_p, NULL);
         PR_FREEIF(ipng_p);
         ic->ds = NULL;
 #endif
