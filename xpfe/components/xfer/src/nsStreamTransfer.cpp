@@ -28,6 +28,7 @@
 #include "nsNetUtil.h"
 #include "nsIPref.h"
 #include "nsIURL.h"
+#include "nsEscape.h"
 
 // {BEBA91C0-070F-11d3-8068-00600811A9C3}
 #define NS_STREAMTRANSFER_CID \
@@ -204,7 +205,8 @@ nsCString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel ) {
                 char *nameFromURL = 0;
                 rv = url->GetFileName( &nameFromURL );
                 if ( NS_SUCCEEDED( rv ) && nameFromURL ) {
-                    result = nameFromURL;
+                    // Unescape the file name (GetFileName escapes it).
+                    result = nsUnescape( nameFromURL );
                     nsCRT::free( nameFromURL );
                 }
             }
