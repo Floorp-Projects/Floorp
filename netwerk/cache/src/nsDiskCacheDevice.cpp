@@ -835,7 +835,7 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
     // ensure parent directory exists
     rv = parentDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
-        rv = parentDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+        rv = parentDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
     if (NS_FAILED(rv))  return;
     
     // ensure cache directory exists
@@ -848,7 +848,7 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
     
     rv = directory->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
-        rv = directory->Create(nsIFile::DIRECTORY_TYPE, 0775);
+        rv = directory->Create(nsIFile::DIRECTORY_TYPE, 0700);
     if (NS_FAILED(rv))  return;
     
     mCacheDirectory = do_QueryInterface(directory);
