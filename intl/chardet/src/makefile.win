@@ -68,6 +68,7 @@ REQUIRES	= xpcom \
 		  webshell \
 		  docshell \
 		  htmlparser \
+		  dom \
 		  necko \
 		  widget \
 		  layout \
