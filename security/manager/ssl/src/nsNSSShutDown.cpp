@@ -210,7 +210,8 @@ nsresult nsNSSShutDownList::doPK11Logout()
   return NS_OK;
 }
 
-PLDHashOperator nsNSSShutDownList::doPK11LogoutHelper(PLDHashTable *table, 
+PLDHashOperator PR_CALLBACK
+nsNSSShutDownList::doPK11LogoutHelper(PLDHashTable *table, 
   PLDHashEntryHdr *hdr, PRUint32 number, void *arg)
 {
   ObjectHashEntry *entry = NS_STATIC_CAST(ObjectHashEntry*, hdr);
@@ -262,7 +263,8 @@ nsresult nsNSSShutDownList::evaporateAllNSSResources()
   return NS_OK;
 }
 
-PLDHashOperator nsNSSShutDownList::evaporateAllNSSResourcesHelper(PLDHashTable *table, 
+PLDHashOperator PR_CALLBACK
+nsNSSShutDownList::evaporateAllNSSResourcesHelper(PLDHashTable *table, 
   PLDHashEntryHdr *hdr, PRUint32 number, void *arg)
 {
     ObjectHashEntry *entry = NS_STATIC_CAST(ObjectHashEntry*, hdr);
