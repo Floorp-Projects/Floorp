@@ -128,7 +128,7 @@ DigestData (unsigned char *digest, unsigned char *data,
 	return -1;
 
 	(* hashObj->begin)(hashcx);
-	(* hashObj->update)(hashcx, data, PORT_Strlen(data));
+	(* hashObj->update)(hashcx, data, PORT_Strlen((char *)data));
 	(* hashObj->end)(hashcx, digest, len, maxLen);
 	(* hashObj->destroy)(hashcx, PR_TRUE);
 
@@ -426,8 +426,10 @@ int main(int argc, char **argv)
 								  SECU_PrintCertificateRequest);
 	} else if (PL_strcmp (typeTag, SEC_CT_CRL) == 0) {
 		rv = SECU_PrintSignedData (outFile, &data, "CRL", 0, SECU_PrintCrl);
+#ifdef HAVE_EPK_TEMPLATE
 	} else if (PL_strcmp(typeTag, SEC_CT_PRIVATE_KEY) == 0) {
 		rv = SECU_PrintPrivateKey(outFile, &data, "Private Key", 0);
+#endif
 	} else if (PL_strcmp(typeTag, SEC_CT_PUBLIC_KEY) == 0) {
 		rv = SECU_PrintPublicKey(outFile, &data, "Public Key", 0);
 	} else if (PL_strcmp(typeTag, SEC_CT_PKCS7) == 0) {
