@@ -335,15 +335,24 @@ struct nsDOMClassInfoData
 
 static nsDOMClassInfoData sClassInfoData[] = {
   // Base classes
+
+  // The Window class lets you QI into interfaces that are not in the
+  // flattened set (i.e. nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY
+  // is not set), because of this make sure all scriptable interfaces
+  // that are implemented by GlobalWindowImpl can securely be exposed
+  // to JS.
+
+
   NS_DEFINE_CLASSINFO_DATA(Window, nsWindowSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_GETPROPERTY |
                            nsIXPCScriptable::WANT_SETPROPERTY |
                            nsIXPCScriptable::WANT_NEWRESOLVE |
                            nsIXPCScriptable::WANT_PRECREATE |
                            nsIXPCScriptable::WANT_FINALIZE |
                            nsIXPCScriptable::WANT_ADDPROPERTY |
-                           nsIXPCScriptable::WANT_DELPROPERTY)
+                           nsIXPCScriptable::WANT_DELPROPERTY |
+                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
   NS_DEFINE_CLASSINFO_DATA(Location, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Navigator, nsDOMGenericSH,

@@ -3031,6 +3031,12 @@ NS_IMETHODIMP GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
       *aSink = docCharset;
     }
   }
+  else if (aIID.Equals(NS_GET_IID(nsIWebNavigation))) {
+    if (mDocShell) {
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+      *aSink = webNav;
+    }
+  }
   else {
     return QueryInterface(aIID, aSink);
   }

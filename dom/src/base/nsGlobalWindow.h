@@ -84,6 +84,12 @@ class nsIDocShellLoadInfo;
 //*****************************************************************************
 // GlobalWindowImpl: Global Object for Scripting
 //*****************************************************************************
+// Beware that all scriptable interfaces implemented by
+// GlobalWindowImpl will be reachable from JS, if you make this class
+// implement new interfaces you better know what you're
+// doing. Security wise this is very sensitive code. --
+// jst@netscape.com
+
 
 class GlobalWindowImpl : public nsIScriptGlobalObject,
                          public nsIDOMWindowInternal,
