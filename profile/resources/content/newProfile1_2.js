@@ -71,8 +71,7 @@ function chooseProfileFolder( aRootFolder )
       fp.setFilters(Components.interfaces.nsIFilePicker.filterAll);
       fp.show();
       // later change to 
-      // aRootFolder = fp.file.unicodePath;
-      aRootFolder = fp.file.path;
+      aRootFolder = fp.file.unicodePath;
     }
     catch(e) {
       aRootFolder = null;
@@ -109,17 +108,14 @@ function updateProfileName()
     var sfile = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile); 
     if ( sfile ) {
       // later change to 
-      // sfile.initWithUnicodePath(rootFolder);
-      sfile.initWithPath(rootFolder);
+      sfile.initWithUnicodePath(rootFolder);
     }
     // later change to 
-    // sfile.appendUnicode(profileName.value);
-    sfile.append(profileName.value);
+    sfile.appendUnicode(profileName.value);
     
     clearFolderDisplay();
     // later change to 
-    // var value = document.createTextNode( sfile.unicodePath );
-    var value = document.createTextNode( sfile.path );
+    var value = document.createTextNode( sfile.unicodePath );
     folderDisplayElement.appendChild( value );
   }
   catch(e) {
