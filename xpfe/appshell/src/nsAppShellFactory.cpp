@@ -47,6 +47,15 @@
 #include "nsDialogParamBlock.h"
 #include "nsFileLocations.h"
 
+/* right now, only unix has user info, but mac and windows implementations are coming soon */
+#ifdef XP_UNIX
+#define HAVE_USER_INFO 1
+#endif /* XP_UNIX */
+
+#ifdef HAVE_USER_INFO
+#include "nsUserInfo.h"
+#endif /* HAVE_USER_INFO */
+
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult);
@@ -60,6 +69,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSessionHistory);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommonDialogs);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileLocator);
+#ifdef HAVE_USER_INFO
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo);
+#endif /* HAVE_USER_INFO */ 
 
 
 static nsModuleComponentInfo gAppShellModuleInfo[] =
@@ -114,6 +126,13 @@ static nsModuleComponentInfo gAppShellModuleInfo[] =
     NS_FILELOCATOR_PROGID,
     nsFileLocatorConstructor,
   },
+#ifdef HAVE_USER_INFO
+  { "User Info Service",
+    NS_USERINFO_CID,
+    NS_USERINFO_PROGID,
+    nsUserInfoConstructor,
+  },
+#endif /* HAVE_USER_INFO */ 
 };
 
 NS_IMPL_NSGETMODULE("appshell", gAppShellModuleInfo)
