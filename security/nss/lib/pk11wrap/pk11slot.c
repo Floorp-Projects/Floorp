@@ -657,6 +657,7 @@ pk11_CheckPassword(PK11SlotInfo *slot,char *pw)
     PK11_EnterSlotMonitor(slot);
     crv = PK11_GETTAB(slot)->C_Login(slot->session,CKU_USER,
 						(unsigned char *)pw,len);
+    slot->lastLoginCheck = 0;
     PK11_ExitSlotMonitor(slot);
     switch (crv) {
     /* if we're already logged in, we're good to go */
@@ -700,6 +701,7 @@ PK11_CheckUserPassword(PK11SlotInfo *slot,char *pw)
 
     crv = PK11_GETTAB(slot)->C_Login(slot->session,CKU_USER,
 					(unsigned char *)pw,len);
+    slot->lastLoginCheck = 0;
     PK11_ExitSlotMonitor(slot);
     switch (crv) {
     /* if we're already logged in, we're good to go */
@@ -727,6 +729,7 @@ PK11_Logout(PK11SlotInfo *slot)
     /* force a logout */
     PK11_EnterSlotMonitor(slot);
     crv = PK11_GETTAB(slot)->C_Logout(slot->session);
+    slot->lastLoginCheck = 0;
     PK11_ExitSlotMonitor(slot);
     if (crv != CKR_OK) {
 	PORT_SetError(PK11_MapError(crv));
@@ -780,6 +783,7 @@ PK11_HandlePasswordCheck(PK11SlotInfo *slot,void *wincx)
 			 (PK11_Global.transaction != slot->authTransact)) {
     	    PK11_EnterSlotMonitor(slot);
 	    PK11_GETTAB(slot)->C_Logout(slot->session);
+	    slot->lastLoginCheck = 0;
     	    PK11_ExitSlotMonitor(slot);
 	    NeedAuth = PR_TRUE;
 	}
@@ -933,6 +937,7 @@ PK11_CheckSSOPassword(PK11SlotInfo *slot, char *ssopw)
     /* check the password */
     crv = PK11_GETTAB(slot)->C_Login(rwsession,CKU_SO,
 						(unsigned char *)ssopw,len);
+    slot->lastLoginCheck = 0;
     switch (crv) {
     /* if we're already logged in, we're good to go */
     case CKR_OK:
@@ -947,6 +952,8 @@ PK11_CheckSSOPassword(PK11SlotInfo *slot, char *ssopw)
 	rv = SECFailure; /* some failure we can't fix by retrying */
     }
     PK11_GETTAB(slot)->C_Logout(rwsession);
+    slot->lastLoginCheck = 0;
+
     /* release rwsession */
     PK11_RestoreROSession(slot,rwsession);
     return rv;
@@ -999,6 +1006,7 @@ PK11_InitPin(PK11SlotInfo *slot,char *ssopw, char *userpw)
     /* check the password */
     crv = PK11_GETTAB(slot)->C_Login(rwsession,CKU_SO, 
 					  (unsigned char *)ssopw,ssolen);
+    slot->lastLoginCheck = 0;
     if (crv != CKR_OK) {
 	PORT_SetError(PK11_MapError(crv));
 	goto done;
@@ -1013,6 +1021,7 @@ PK11_InitPin(PK11SlotInfo *slot,char *ssopw, char *userpw)
 
 done:
     PK11_GETTAB(slot)->C_Logout(rwsession);
+    slot->lastLoginCheck = 0;
     PK11_RestoreROSession(slot,rwsession);
     if (rv == SECSuccess) {
         /* update our view of the world */
@@ -1020,6 +1029,7 @@ done:
 	PK11_EnterSlotMonitor(slot);
     	PK11_GETTAB(slot)->C_Login(slot->session,CKU_USER,
 						(unsigned char *)userpw,len);
+	slot->lastLoginCheck = 0;
 	PK11_ExitSlotMonitor(slot);
     }
     return rv;
@@ -1716,7 +1726,9 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
     slot->hasRandom = ((tokenInfo.flags & CKF_RNG) ? PR_TRUE : PR_FALSE);
     slot->protectedAuthPath =
     		((tokenInfo.flags & CKF_PROTECTED_AUTHENTICATION_PATH) 
-							? PR_TRUE : PR_FALSE);
+	 						? PR_TRUE : PR_FALSE);
+    slot->lastLoginCheck = 0;
+    slot->lastState = 0;
     /* on some platforms Active Card incorrectly sets the 
      * CKF_PROTECTED_AUTHENTICATION_PATH bit when it doesn't mean to. */
     if (slot->isActiveCard) {
@@ -2240,6 +2252,16 @@ PK11_GetInternalSlot(void)
     return PK11_ReferenceSlot(mod->slots[0]);
 }
 
+PRBool 
+pk11_InDelayPeriod(PRIntervalTime lastTime, PRIntervalTime delayTime, 
+						PRIntervalTime *retTime)
+{
+    PRIntervalTime time;
+
+    *retTime = time = PR_IntervalNow();
+    return (PRBool) (time > lastTime) && ((time-lastTime) < delayTime);
+}
+
 /*
  * Determine if the token is logged in. We have to actually query the token,
  * because it's state can change without intervention from us.
@@ -2251,6 +2273,12 @@ PK11_IsLoggedIn(PK11SlotInfo *slot,void *wincx)
     int askpw = slot->askpw;
     int timeout = slot->timeout;
     CK_RV crv;
+    PRIntervalTime curTime;
+    static PRIntervalTime login_delay_time = 0;
+
+    if (login_delay_time == 0) {
+	login_delay_time = PR_SecondsToInterval(1);
+    }
 
     /* If we don't have our own password default values, use the system
      * ones */
@@ -2281,6 +2309,7 @@ PK11_IsLoggedIn(PK11SlotInfo *slot,void *wincx)
 	if (LL_CMP(result, <, currtime) ) {
 	    PK11_EnterSlotMonitor(slot);
 	    PK11_GETTAB(slot)->C_Logout(slot->session);
+	    slot->lastLoginCheck = 0;
 	    PK11_ExitSlotMonitor(slot);
 	} else {
 	    slot->authTime = currtime;
@@ -2288,7 +2317,16 @@ PK11_IsLoggedIn(PK11SlotInfo *slot,void *wincx)
     }
 
     PK11_EnterSlotMonitor(slot);
-    crv = PK11_GETTAB(slot)->C_GetSessionInfo(slot->session,&sessionInfo);
+    if (pk11_InDelayPeriod(slot->lastLoginCheck,login_delay_time, &curTime)) {
+	sessionInfo.state = slot->lastState;
+	crv = CKR_OK;
+    } else {
+	crv = PK11_GETTAB(slot)->C_GetSessionInfo(slot->session,&sessionInfo);
+	if (crv == CKR_OK) {
+	    slot->lastState = sessionInfo.state;
+	    slot->lastLoginCheck = curTime;
+	}
+    }
     PK11_ExitSlotMonitor(slot);
     /* if we can't get session info, something is really wrong */
     if (crv != CKR_OK) {
