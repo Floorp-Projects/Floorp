@@ -2770,7 +2770,7 @@ PRBool CSSParserImpl::ParseColorOpacity(PRInt32& aErrorCode, PRUint8& aOpacity)
     return PR_FALSE;
   }
 
-  PRUint32 value = (PRUint32)NSToIntRound(mToken.mNumber*255);
+  PRInt32 value = NSToIntRound(mToken.mNumber*255);
 
   if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
     REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ')' but found"));
