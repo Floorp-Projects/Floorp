@@ -95,7 +95,7 @@ public:
  *  
  *  @update  gess 3/25/98
  */
-class nsIParser : public nsISupports {
+CLASS_EXPORT_HTMLPARS nsIParser : public nsISupports {
   public:
 
     static const nsIID& GetIID() { static nsIID iid = NS_IPARSER_IID; return iid; }
@@ -167,13 +167,13 @@ class nsIParser : public nsISupports {
      ******************************************************************************************/
     virtual PRBool    EnableParser(PRBool aState) = 0;
     virtual PRBool    IsParserEnabled() = 0;
-    virtual nsresult  Parse(nsIURI* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0) = 0;
-    virtual nsresult	Parse(nsIInputStream& aStream, PRBool aEnableVerify=PR_FALSE, void* aKey=0) = 0;
-    virtual nsresult  Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall) = 0;
+    virtual nsresult  Parse(nsIURI* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0,eParseMode aMode=eParseMode_autodetect) = 0;
+    virtual nsresult	Parse(nsIInputStream& aStream, PRBool aEnableVerify=PR_FALSE, void* aKey=0,eParseMode aMode=eParseMode_autodetect) = 0;
+    virtual nsresult  Parse(const nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall,eParseMode aMode=eParseMode_autodetect) = 0;
     virtual nsresult  Terminate(void) = 0;
 
-    virtual PRBool    IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType)=0;
-    virtual nsresult  ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType)=0;
+    virtual PRBool    IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,eParseMode aMode=eParseMode_autodetect)=0;
+    virtual nsresult  ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,eParseMode aMode=eParseMode_autodetect)=0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time

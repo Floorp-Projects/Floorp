@@ -788,6 +788,9 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
   static    nsAutoString gEdibles("!-");
   static    nsAutoString gMinus("-");
   static    nsAutoString gWhitespace("\b\t\n\r ");
+  
+  static nsAutoString gDfltEndComment("-->");
+
   nsresult  result=NS_OK;
  
   /*********************************************************
@@ -797,7 +800,9 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
    *********************************************************/
 
   aString="<!";
-  nsAutoString theRightChars;
+  nsAutoString  theRightChars;
+  PRInt32       theBestAltPos=kNotFound;
+  PRUint32      theStartOffset=0;
 
   result=aScanner.GetChar(aChar);
   if(NS_OK==result) {
@@ -809,34 +814,46 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
              //in this case, we're reading a long-form comment <-- xxx -->
           aString+=aChar;
           PRInt32 findpos=kNotFound;
-          result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_TRUE);  //get all available '---'
-          findpos=aString.RFind("-->");
-
           while((kNotFound==findpos) && (NS_OK==result)) {
-            result=aScanner.ReadUntil(aString,kMinus,PR_TRUE);
-
-            if(NS_OK==result) {
-              result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_FALSE);  //get all available '---'
-              if(NS_OK==result)
-                result=aScanner.ReadWhile(aString,gWhitespace,PR_TRUE,PR_FALSE);  //get all available whitespace
-            }
-            
-            if(NS_OK==result) {
-              result=aScanner.GetChar(aChar);
-              aString+=aChar;
-            }
-          
+            result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);          
             if(NS_OK==result){
-              theRightChars.Truncate(0);
-              aString.Right(theRightChars,5);
-              theRightChars.StripChars(" ");
-            
-              findpos=theRightChars.RFind("-->");
-              if(kNotFound==findpos)
-                findpos=theRightChars.RFind("!>");
+
+              if(kNotFound==theBestAltPos) {
+                const PRUnichar* theBuf=aString.GetUnicode();
+                findpos=aString.Length()-3;
+                theBuf=(PRUnichar*)&theBuf[findpos];
+                if(!gDfltEndComment.Equals(theBuf,PR_FALSE,3)) {
+                  //we didn't find the dflt end comment delimiter, so look for alternatives...
+                  findpos=kNotFound;
+                  theRightChars.Truncate(0);
+                  aString.Right(theRightChars,15);
+                  theRightChars.StripChars(" ");
+
+                  int rclen=theRightChars.Length();
+                  aChar=theRightChars[rclen-2];
+                  if(('!'==aChar) || ('-'==aChar)) {
+                    theBestAltPos=aString.Length();
+                    theStartOffset=aScanner.GetOffset();
+                  }
+                }
+              }
+
             }
           } //while
+          if((kNotFound==findpos) && (!aScanner.IsIncremental())) {
+            //if you're here, then we're in a special state. 
+            //The problem at hand is that we've hit the end of the document without finding the normal endcomment delimiter "-->".
+            //In this case, the first thing we try is to see if we found one of the alternate endcomment delimiters "->" or "!>".
+            //If so, rewind just pass than, and use everything up to that point as your comment.
+            //If not, the document has no end comment and should be treated as one big comment.
+            if(kNotFound<theBestAltPos) {
+              aString.Truncate(theBestAltPos);
+              aScanner.Mark(theStartOffset);
+              result=NS_OK;
+            }
+          }
           return result;
+
         } //if
       }//if
     }//if
@@ -860,6 +877,18 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
 nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
   PRBool theStrictForm=PR_FALSE;
   nsresult result=(theStrictForm) ? ConsumeStrictComment(aChar,aScanner,mTextValue) : ConsumeComment(aChar,aScanner,mTextValue);
+
+#if 0
+  if(NS_OK==result) {
+      //ok then, all is well so strip off the delimiters...
+    nsAutoString theLeft("");
+    mTextValue.Left(theLeft,2);
+    if(theLeft=="<!")
+      mTextValue.Cut(0,2);
+    if('>'==mTextValue.Last())
+      mTextValue.Truncate(mTextValue.Length()-1);
+  }
+#endif
   return result;
 }
 

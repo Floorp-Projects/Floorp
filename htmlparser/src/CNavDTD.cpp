@@ -51,6 +51,7 @@
 #endif
 
 
+static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID); 
@@ -498,15 +499,14 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
   mHadFrameset=PR_FALSE;
   mLineNumber=1;
   mHasOpenScript=PR_FALSE;
-  mSink=(nsIHTMLContentSink*)aSink;
-  if((aNotifySink) && (mSink)) {
+  if((aNotifySink) && (aSink)) {
 
 #ifdef RGESS_DEBUG
     gStartTime = PR_Now();
     printf("Begin parsing...\n");
 #endif
 
-    result = mSink->WillBuildModel();
+    result = aSink->WillBuildModel();
     CStartToken theToken(eHTMLTag_html);
     HandleStartToken(&theToken);
 
@@ -525,29 +525,35 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
   *
   * @update	gess5/18/98
   * @param	aParser is the parser object that's driving this process
-  * @return	error code (almost always 0)
+  * @return	error code (almost always NS_OK)
   */
 nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   nsresult result=NS_OK;
 
-  NS_ADDREF(aSink);
   if(aTokenizer) {
     nsITokenizer*  oldTokenizer=mTokenizer;
     mTokenizer=aTokenizer;
     mParser=(nsParser*)aParser;
-    mSink=(nsIHTMLContentSink*)aSink;
-    gRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
-    while(NS_SUCCEEDED(result)){
-      CToken* theToken=mTokenizer->PopToken();
-      if(theToken) { 
-        result=HandleToken(theToken,aParser);
-      }
-      else break;
-    }//while
-    mTokenizer=oldTokenizer;
+
+    mSink=nsnull;
+    result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
+
+    if(mSink) {
+      NS_ADDREF(mSink);
+      gRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
+      while(NS_SUCCEEDED(result)){
+        CToken* theToken=mTokenizer->PopToken();
+        if(theToken) { 
+          result=HandleToken(theToken,aParser);
+        }
+        else break;
+      }//while
+      mTokenizer=oldTokenizer;
+      NS_IF_RELEASE(mSink);
+      mSink=nsnull;
+    }
   }
   else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
-  NS_IF_RELEASE(aSink);
   return result;
 }
 
@@ -568,8 +574,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
   }
 
   if(aParser){
-    mSink=(nsIHTMLContentSink*)aSink;
-    if(aNotifySink && mSink){
+    if(aNotifySink && aSink){
       if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) {
         eHTMLTags theTarget;
         while(mBodyContext->GetCount() > 0) {
@@ -605,16 +610,16 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
         if(mComputedCRC32!=mExpectedCRC32) {
           if(mExpectedCRC32!=0) {
             printf("CRC Computed: %u  Expected CRC: %u\n,",mComputedCRC32,mExpectedCRC32);
-            result = mSink->DidBuildModel(2);
+            result = aSink->DidBuildModel(2);
           } 
           else {
             printf("Computed CRC: %u.\n",mComputedCRC32);
-            result = mSink->DidBuildModel(3);
+            result = aSink->DidBuildModel(3);
           }
         }
-        else result = mSink->DidBuildModel(0);
+        else result = aSink->DidBuildModel(0);
       }
-      else result=mSink->DidBuildModel(0);
+      else result=aSink->DidBuildModel(0);
 
       if(mDTDDebug) {
         mDTDDebug->DumpVectorRecord();

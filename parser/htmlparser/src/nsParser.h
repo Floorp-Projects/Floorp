@@ -174,7 +174,7 @@ friend class CTokenHandler;
      * @param   aListener is a listener to forward notifications to
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aEnableVerify=PR_FALSE,void* aKey=0);
+    virtual nsresult Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aEnableVerify=PR_FALSE,void* aKey=0,eParseMode aMode=eParseMode_autodetect);
 
     /**
      * Cause parser to parse input from given stream 
@@ -182,7 +182,7 @@ friend class CTokenHandler;
      * @param   aStream is the i/o source
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIInputStream& aStream,PRBool aEnableVerify=PR_FALSE,void* aKey=0);
+    virtual nsresult Parse(nsIInputStream& aStream,PRBool aEnableVerify=PR_FALSE,void* aKey=0,eParseMode aMode=eParseMode_autodetect);
 
     /**
      * @update	gess5/11/98
@@ -190,10 +190,10 @@ friend class CTokenHandler;
      * @param   appendTokens tells us whether we should insert tokens inline, or append them.
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE);
+    virtual nsresult Parse(const nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE,eParseMode aMode=eParseMode_autodetect);
 
-    virtual PRBool    IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType);
-    virtual nsresult  ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType);
+    virtual PRBool    IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,eParseMode aMode=eParseMode_autodetect);
+    virtual nsresult  ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,eParseMode aMode=eParseMode_autodetect);
 
 
     /**
