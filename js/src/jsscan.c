@@ -494,7 +494,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
     JSErrorReporter onError;
     JSErrorReport report;
     jschar *tokenptr;
-    JSString *linestr;
+    JSString *linestr = NULL;
     char *message;
     JSBool warning;
 
@@ -512,6 +512,8 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
     }
     va_end(ap);
 
+    js_AddRoot(cx, &linestr, "error line buffer");
+
     JS_ASSERT(ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
     limit = ts->linebuf.limit;
     onError = cx->errorReporter;
@@ -527,8 +529,12 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 	report.tokenptr = linestr
 			  ? report.linebuf + (tokenptr - ts->linebuf.base)
 			  : NULL;
-	report.uclinebuf = ts->linebuf.base;
-	report.uctokenptr = tokenptr;
+	report.uclinebuf = linestr
+			  ? JS_GetStringChars(linestr)
+			  : NULL;
+	report.uctokenptr = linestr
+			  ? report.uclinebuf + (tokenptr - ts->linebuf.base)
+			  : NULL;
 
 #if JS_HAS_ERROR_EXCEPTIONS
 	/*
@@ -570,18 +576,6 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
         }
         if (onError)
             (*onError)(cx, message, &report);
-#if 0
-#if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800
-    } else {
-	if (ts->filename)
-	    fprintf(stderr, "%s, ", ts->filename);
-	if (ts->lineno)
-	    fprintf(stderr, "line %u: ", ts->lineno);
-	fprintf(stderr, "%s:\n%s\n",message,
-		js_DeflateString(cx, ts->linebuf.base,
-				 ts->linebuf.limit - ts->linebuf.base));
-#endif
-#endif
     }
     if (message)
         JS_free(cx, message);
@@ -593,6 +587,8 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
     }
     if (report.ucmessage)
         JS_free(cx, (void *)report.ucmessage);
+
+    js_RemoveRoot(cx->runtime, &linestr);
 
     if (!JSREPORT_IS_WARNING(flags)) {
         /* Set the error flag to suppress spurious reports. */
