@@ -144,19 +144,11 @@
 /* Define Class IDs */
 static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
 static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
-static NS_DEFINE_CID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kAppShellCID,         NS_APPSHELL_CID);
 
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kMenuBarCID,          NS_MENUBAR_CID);
 static NS_DEFINE_CID(kMenuCID,             NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID,         NS_MENUITEM_CID);
-
-static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
-static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
 
 
 #ifdef DEBUG_rods
@@ -164,8 +156,6 @@ static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
 #endif
 
 #include "nsIWebShell.h"
-
-static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
 
 #define SIZE_PERSISTENCE_TIMEOUT 500 // msec
 
