@@ -32,7 +32,7 @@ div.title {
 }
 
 div.subtitle {
-  font: 4mm tahoma,arial,helvetica,sans-serif;
+  font: 3mm tahoma,arial,helvetica,sans-serif;
   margin: 2px;
 }
 
@@ -43,31 +43,19 @@ box.button-group {
   padding: 1mm;
 }
 
-#selectList {
-  width: 12em;
-}
-
-#tree {
-  width: 17em;
-}
-
+/* These rules apply appropriate images to the 'reorder' buttons */
 titledbutton.up {
-  list-style-image:url(chrome://sidebar/skin/list-up.gif);
+  list-style-image:url("chrome://sidebar/skin/list-up.gif");
 }
 
 titledbutton.up[disabled="true"] {
-  list-style-image:url(chrome://sidebar/skin/list-up-dis.gif);
+  list-style-image:url("chrome://sidebar/skin/list-up-dis.gif");
 }
 
 titledbutton.down {
-  list-style-image:url(chrome://sidebar/skin/list-down.gif);
+  list-style-image:url("chrome://sidebar/skin/list-down.gif");
 }
 
 titledbutton.down[disabled="true"] {
-  list-style-image:url(chrome://sidebar/skin/list-down-dis.gif);
-}
-
-tree#other-panels {
-  width:  15em;
-  height: 15em;
+  list-style-image:url("chrome://sidebar/skin/list-down-dis.gif");
 }

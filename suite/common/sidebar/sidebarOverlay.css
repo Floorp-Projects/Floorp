@@ -73,11 +73,15 @@ splitter.panel-bar titledbutton
 
 splitter > titledbutton.show-hide
 {
+  padding: 0px;
+  margin: 0px;
   list-style-image:url(chrome://sidebar/skin/panel-collapse.gif);
 }
 
 splitter[state="collapsed"] > titledbutton.show-hide
 {
+  padding: 0px;
+  margin: 0px;
   list-style-image:url(chrome://sidebar/skin/panel-expand.gif);
 }
 

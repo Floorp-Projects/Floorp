@@ -36,11 +36,13 @@
     &sidebar.preview.title.label;
   </html:div>
 
-  <html:hr/>
+  <html:div>
+    <html:hr />
+  </html:div>
 
   <box align="horizontal" class="panelbar">
     <html:img src="chrome://sidebar/skin/corner.gif" />
-    <titledbutton id="paneltitle" class="borderless paneltitle" />
+    <titledbutton id="paneltitle" class="plain paneltitle" />
     <spring flex="100%" />
   </box>
 
