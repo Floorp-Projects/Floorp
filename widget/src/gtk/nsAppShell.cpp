@@ -88,35 +88,27 @@ NS_METHOD nsAppShell::Create(int *bac, char **bav)
   gchar *home=nsnull;
   gchar *path=nsnull;
 
-  int *argc=nsnull;
-  char **argv=nsnull;
-#if 0
-  // why do i get an error if this is defined here??
-  //  nsICmdLineService *cmdLineArgs=nsnull;
-  nsresult rv = NS_OK;
+  int argc = bac ? *bac : 0;
+  char **argv = bav;
+#if 1
+  nsresult rv;
 
   NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    rv = cmdLineArgs->GetArgc(argc);
+    rv = cmdLineArgs->GetArgc(&argc);
     if(NS_FAILED(rv))
-      argc = bac;
+      argc = bac ? *bac : 0;
 
     rv = cmdLineArgs->GetArgv(&argv);
     if(NS_FAILED(rv))
       argv = bav;
-  } else {
-    argc = bac;
-    argv = bav;
   }
-#else
-  argc = bac;
-  argv = bav;
 #endif
 
   gtk_set_locale ();
 
-  gtk_init (argc, &argv);
+  gtk_init (&argc, &argv);
 
   // delete the cmdLineArgs thing?
 
