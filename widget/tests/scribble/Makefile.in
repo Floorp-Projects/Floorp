@@ -84,14 +84,10 @@ LIBS := \
 	-lremoturl \
 	-lsecfree \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
-	-lxp \
 	-lxpcom \
-	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-lxp \
-	-lxpcom \
 	-lreg \
 	$(ZLIB_LIBS) \
-	-lraptorplugin \
 	-l$(MOZ_LIB_DBM_PREFIX)dbm \
 	$(TK_LIBS) \
 	$(NSPR_LIBS) \
