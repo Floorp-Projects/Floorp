@@ -273,14 +273,15 @@ void MRJSession::idle(UInt32 milliseconds)
 #endif
 }
 
-void MRJSession::sendMessage(NativeMessage* message)
+void MRJSession::sendMessage(NativeMessage* message, Boolean async)
 {
 	// can't block the main env, otherwise messages will never be processed!
 	if (onMainThread()) {
 		message->execute();
 	} else {
 		postMessage(message);
-		mMessageMonitor->wait();
+		if (!async)
+			mMessageMonitor->wait();
 	}
 }
 

@@ -32,7 +32,7 @@ public:
 	AsyncMessage(MRJSession* session) : mSession(session) {}
 	virtual ~AsyncMessage() {}
 
-	void send();
+	void send(Boolean async = false);
 
 protected:
 	MRJSession* mSession;
