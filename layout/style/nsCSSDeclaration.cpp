@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Daniel Glazman <glazman@netscape.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -322,7 +323,7 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
       case eCSSProperty_border_bottom_color:
       case eCSSProperty_border_left_color:
       case eCSSProperty_border_right_color:
-      case eCSSProperty__moz_outline_color: {
+      case eCSSProperty_outline_color: {
         // we can lookup the property in the ColorTable and then
         // get a string mapping the name
         nsCAutoString str;
@@ -532,7 +533,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
     case eCSSProperty_border_right:
     case eCSSProperty_border_bottom:
     case eCSSProperty_border_left:
-    case eCSSProperty__moz_outline: {
+    case eCSSProperty_outline: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
       NS_ASSERTION(nsCSSProps::kTypeTable[subprops[0]] == eCSSType_Value &&

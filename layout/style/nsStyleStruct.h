@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -519,16 +520,19 @@ struct nsStyleOutline: public nsStyleStruct {
   																// (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
 
   nsStyleCoord  mOutlineOffset;   // [reset] length
+  nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
+
   PRBool GetOutlineOffset(nscoord& aOffset) const
   {
-    if (mHasCachedOutline) {
-      aOffset = mCachedOutlineOffset;
+    if (mOutlineOffset.GetUnit() == eStyleUnit_Coord) {
+      aOffset = mOutlineOffset.GetCoordValue();
       return PR_TRUE;
+    } else {
+      NS_NOTYETIMPLEMENTED("GetOutlineOffset: eStyleUnit_Chars");
+      aOffset = 0;
+      return PR_FALSE;
     }
-    return PR_FALSE;
   }
-
-  nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
 
   PRBool GetOutlineWidth(nscoord& aWidth) const
   {
@@ -578,7 +582,6 @@ struct nsStyleOutline: public nsStyleStruct {
 
 protected:
   nscoord       mCachedOutlineWidth;
-  nscoord       mCachedOutlineOffset;
 
   nscolor       mOutlineColor;    // [reset] 
 

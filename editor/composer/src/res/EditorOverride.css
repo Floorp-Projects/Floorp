@@ -178,7 +178,7 @@ span[\_moz_anonclass="mozResizer"][anonlocation="se"] {
 
 span[\_moz_anonclass="mozResizingShadow"],
 img[\_moz_anonclass="mozResizingShadow"] {
-  -moz-outline: thin dashed black;
+  outline: thin dashed black;
   -moz-user-select: none;
   opacity: 0.5;
   position: absolute;
@@ -197,11 +197,11 @@ span[\_moz_anonclass="mozResizingInfo"] {
 }
 
 img[\_moz_resizing] {
-  -moz-outline: thin solid black;
+  outline: thin solid black;
 }
 
 *[\_moz_abspos] {
-  -moz-outline: silver ridge 2px;
+  outline: silver ridge 2px;
   z-index: 2147483645 !important; /* max value -2 for this property */
 }
 *[\_moz_abspos="white"] {
@@ -212,7 +212,7 @@ img[\_moz_resizing] {
 }
 
 span[\_moz_anonclass="mozGrabber"] {
-  -moz-outline: ridge 2px silver;
+  outline: ridge 2px silver;
   padding: 2px;
   position: absolute;
   width: 12px;

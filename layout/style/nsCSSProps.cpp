@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -99,12 +100,19 @@ nsCSSProps::ReleaseTable(void)
 }
 
 struct CSSPropertyAlias {
-  char name[13];
+  char name[sizeof("-moz-outline-offset")];
   nsCSSProperty id;
 };
 
 static const CSSPropertyAlias gAliases[] = {
-  { "-moz-opacity", eCSSProperty_opacity }
+  { "-moz-opacity", eCSSProperty_opacity },
+  { "-moz-outline", eCSSProperty_outline },
+  { "-moz-outline-color", eCSSProperty_outline_color },
+  { "-moz-outline-style", eCSSProperty_outline_style },
+  { "-moz-outline-width", eCSSProperty_outline_width },
+  { "-moz-outline-offset", eCSSProperty_outline_offset }
+  // Don't forget to update the sizeof in CSSPropertyAlias above with the
+  // longest string when you add stuff here.
 };
 
 nsCSSProperty 
@@ -691,6 +699,22 @@ const PRInt32 nsCSSProps::kListStyleKTable[] = {
   eCSSKeyword__moz_ethiopic_halehame_am, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM,
   eCSSKeyword__moz_ethiopic_halehame_ti_er, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER,
   eCSSKeyword__moz_ethiopic_halehame_ti_et, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+// Same as kBorderStyleKTable except 'hidden'.
+const PRInt32 nsCSSProps::kOutlineStyleKTable[] = {
+  eCSSKeyword_dotted, NS_STYLE_BORDER_STYLE_DOTTED,
+  eCSSKeyword_dashed, NS_STYLE_BORDER_STYLE_DASHED,
+  eCSSKeyword_solid,  NS_STYLE_BORDER_STYLE_SOLID,
+  eCSSKeyword_double, NS_STYLE_BORDER_STYLE_DOUBLE,
+  eCSSKeyword_groove, NS_STYLE_BORDER_STYLE_GROOVE,
+  eCSSKeyword_ridge,  NS_STYLE_BORDER_STYLE_RIDGE,
+  eCSSKeyword_inset,  NS_STYLE_BORDER_STYLE_INSET,
+  eCSSKeyword_outset, NS_STYLE_BORDER_STYLE_OUTSET,
+  eCSSKeyword__moz_bg_inset,  NS_STYLE_BORDER_STYLE_BG_INSET,
+  eCSSKeyword__moz_bg_outset, NS_STYLE_BORDER_STYLE_BG_OUTSET,
+  eCSSKeyword__moz_bg_solid,  NS_STYLE_BORDER_STYLE_BG_SOLID,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1343,11 +1367,11 @@ static const nsCSSProperty gMozMarginEndSubpropTable[] = {
 };
 
 
-static const nsCSSProperty gMozOutlineSubpropTable[] = {
+static const nsCSSProperty gOutlineSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
-  eCSSProperty__moz_outline_color,
-  eCSSProperty__moz_outline_style,
-  eCSSProperty__moz_outline_width,
+  eCSSProperty_outline_color,
+  eCSSProperty_outline_style,
+  eCSSProperty_outline_width,
   eCSSProperty_UNKNOWN
 };
 

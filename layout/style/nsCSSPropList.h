@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -385,15 +386,11 @@ CSS_PROP_POSITION(min-height, min_height, MinHeight, Position, mMinHeight, eCSST
 CSS_PROP_POSITION(min-width, min_width, MinWidth, Position, mMinWidth, eCSSType_Value, nsnull)
 CSS_PROP_DISPLAY(opacity, opacity, Opacity, Display, mOpacity, eCSSType_Value, nsnull) // XXX bug 3935
 CSS_PROP_BACKENDONLY(orphans, orphans, Orphans, Breaks, mOrphans, eCSSType_Value, nsnull)
-CSS_PROP_NOTIMPLEMENTED(outline, outline, Outline)
-CSS_PROP_NOTIMPLEMENTED(outline-color, outline_color, OutlineColor)
-CSS_PROP_NOTIMPLEMENTED(outline-style, outline_style, OutlineStyle)
-CSS_PROP_NOTIMPLEMENTED(outline-width, outline_width, OutlineWidth)
-CSS_PROP_SHORTHAND(-moz-outline, _moz_outline, MozOutline)  // XXX This is temporary fix for nsbeta3+ Bug 48973, turning outline into -moz-outline  XXX bug 48973
-CSS_PROP_OUTLINE(-moz-outline-color, _moz_outline_color, MozOutlineColor, Margin, mOutlineColor, eCSSType_Value, kOutlineColorKTable) // XXX bug 48973
-CSS_PROP_OUTLINE(-moz-outline-style, _moz_outline_style, MozOutlineStyle, Margin, mOutlineStyle, eCSSType_Value, kBorderStyleKTable) // XXX bug 48973
-CSS_PROP_OUTLINE(-moz-outline-width, _moz_outline_width, MozOutlineWidth, Margin, mOutlineWidth, eCSSType_Value, kBorderWidthKTable) // XXX bug 48973
-CSS_PROP_OUTLINE(-moz-outline-offset, _moz_outline_offset, MozOutlineOffset, Margin, mOutlineOffset, eCSSType_Value, nsnull)
+CSS_PROP_SHORTHAND(outline, outline, Outline)
+CSS_PROP_OUTLINE(outline-color, outline_color, OutlineColor, Margin, mOutlineColor, eCSSType_Value, kOutlineColorKTable)
+CSS_PROP_OUTLINE(outline-style, outline_style, OutlineStyle, Margin, mOutlineStyle, eCSSType_Value, kBorderStyleKTable)
+CSS_PROP_OUTLINE(outline-width, outline_width, OutlineWidth, Margin, mOutlineWidth, eCSSType_Value, kBorderWidthKTable)
+CSS_PROP_OUTLINE(outline-offset, outline_offset, OutlineOffset, Margin, mOutlineOffset, eCSSType_Value, nsnull)
 CSS_PROP_SHORTHAND(overflow, overflow, Overflow)
 CSS_PROP_DISPLAY(overflow-x, overflow_x, OverflowX, Display, mOverflowX, eCSSType_Value, kOverflowSubKTable)
 CSS_PROP_DISPLAY(overflow-y, overflow_y, OverflowY, Display, mOverflowY, eCSSType_Value, kOverflowSubKTable)

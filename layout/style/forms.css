@@ -295,7 +295,7 @@ input[type="image"][disabled] {
 }
 
 input[type="image"]:focus {
-  -moz-outline: 1px dotted invert;
+  outline: 1px dotted invert;
 }
 
 /* file selector */

@@ -23,6 +23,7 @@
  *   Original Author: David W. Hyatt (hyatt@netscape.com)
  *   Daniel Glazman <glazman@netscape.com>
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -3629,9 +3630,9 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct,
   SetCoord(marginData.mOutlineWidth, outline->mOutlineWidth, parentOutline->mOutlineWidth,
            SETCOORD_LEH, aContext, mPresContext, inherited);
 
-  // outline-offset: length, enum, inherit
+  // outline-offset: length, inherit
   SetCoord(marginData.mOutlineOffset, outline->mOutlineOffset, parentOutline->mOutlineOffset,
-           SETCOORD_LEH, aContext, mPresContext, inherited);
+           SETCOORD_LH, aContext, mPresContext, inherited);
   
 
   // outline-color: color, string, enum, inherit
@@ -3662,12 +3663,14 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct,
     }
   }
 
-  // outline-style: enum, none, inherit
+  // outline-style: auto, enum, none, inherit
   if (eCSSUnit_Enumerated == marginData.mOutlineStyle.GetUnit())
     outline->SetOutlineStyle(marginData.mOutlineStyle.GetIntValue());
   else if (eCSSUnit_None == marginData.mOutlineStyle.GetUnit())
     outline->SetOutlineStyle(NS_STYLE_BORDER_STYLE_NONE);
-  else if (eCSSUnit_Inherit == marginData.mOutlineStyle.GetUnit()) {
+  else if (eCSSUnit_Auto == marginData.mOutlineStyle.GetUnit()) {
+    outline->SetOutlineStyle(NS_STYLE_BORDER_STYLE_AUTO);
+  } else if (eCSSUnit_Inherit == marginData.mOutlineStyle.GetUnit()) {
     inherited = PR_TRUE;
     outline->SetOutlineStyle(parentOutline->GetOutlineStyle());
   }

@@ -24,6 +24,7 @@
  *   Håkan Waara <hwaara@chello.se>
  *   Dan Rosen <dr@netscape.com>
  *   Daniel Glazman <glazman@netscape.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -2533,7 +2534,7 @@ nsresult PresShell::SetPrefFocusRules(void)
         nsAutoString strRule;
         if (!focusRingOnAnything)
           strRule.AppendLiteral("*|*:link:focus, *|*:visited");    // If we only want focus rings on the normal things like links
-        strRule.AppendLiteral(":focus {-moz-outline: ");     // For example 3px dotted WindowText (maximum 4)
+        strRule.AppendLiteral(":focus {outline: ");     // For example 3px dotted WindowText (maximum 4)
         strRule.AppendInt(focusRingWidth);
         strRule.AppendLiteral("px dotted WindowText !important; } ");     // For example 3px dotted WindowText
         // insert the rules
