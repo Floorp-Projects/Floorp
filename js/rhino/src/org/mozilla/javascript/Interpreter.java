@@ -106,7 +106,7 @@ public class Interpreter {
         InterpretedScript result = new InterpretedScript(cx, itsData);
         setArgNames(result);
         if (cx.debugger != null) {
-            cx.debugger.handleCompilationDone(cx, result, debugSource);
+            cx.debugger.handleCompilationDone(cx, itsData, debugSource);
         }
         return result;
     }
@@ -140,7 +140,7 @@ public class Interpreter {
         InterpretedFunction result = new InterpretedFunction(cx, itsData);
         setArgNames(result);
         if (cx.debugger != null) {
-            cx.debugger.handleCompilationDone(cx, result, debugSource);
+            cx.debugger.handleCompilationDone(cx, itsData, debugSource);
         }
         debugSource = savedSource;
         return result;
@@ -1597,8 +1597,7 @@ public class Interpreter {
 
         DebugFrame debuggerFrame = null;
         if (cx.debugger != null) {
-            DebuggableScript dscript = (DebuggableScript)fnOrScript;
-            debuggerFrame = cx.debugger.getFrame(cx, dscript);
+            debuggerFrame = cx.debugger.getFrame(cx, idata);
         }
 
         if (idata.itsFunctionType != 0) {

@@ -36,10 +36,9 @@
 package org.mozilla.javascript;
 
 import java.io.Serializable;
-import org.mozilla.javascript.debug.DebuggableScript;
 
 final class InterpretedFunction extends NativeFunction
-    implements DebuggableScript, Serializable
+    implements Serializable
 {
 
     static final long serialVersionUID = -6235150451107527319L;
@@ -75,26 +74,6 @@ final class InterpretedFunction extends NativeFunction
         return Interpreter.interpret(cx, scope, thisObj,
                                      args, null, 0, args.length,
                                      this, itsData);
-    }
-
-    public boolean isFunction() {
-        return true;
-    }
-
-    public Scriptable getScriptable() {
-        return this;
-    }
-
-    public String getSourceName() {
-        return itsData.itsSourceFile;
-    }
-
-    public boolean isGeneratedScript() {
-        return ScriptRuntime.isGeneratedScript(itsData.itsSourceFile);
-    }
-
-    public int[] getLineNumbers() {
-        return Interpreter.getLineNumbers(itsData);
     }
 
     InterpreterData itsData;

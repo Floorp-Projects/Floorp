@@ -38,7 +38,9 @@ package org.mozilla.javascript;
 
 import java.io.Serializable;
 
-class InterpreterData implements Serializable {
+import org.mozilla.javascript.debug.DebuggableScript;
+
+final class InterpreterData implements Serializable, DebuggableScript {
 
     static final long serialVersionUID = 4815333329084415557L;
 
@@ -82,4 +84,25 @@ class InterpreterData implements Serializable {
     int itsMaxCalleeArgs;
 
     Object securityDomain;
+
+    public boolean isFunction() {
+        return itsFunctionType != 0;
+    }
+
+    public String getFunctionName() {
+        return itsName;
+    }
+
+    public String getSourceName() {
+        return itsSourceFile;
+    }
+
+    public boolean isGeneratedScript() {
+        return ScriptRuntime.isGeneratedScript(itsSourceFile);
+    }
+
+    public int[] getLineNumbers() {
+        return Interpreter.getLineNumbers(this);
+    }
+
 }

@@ -53,10 +53,10 @@ public interface DebuggableScript {
     public boolean isFunction();
 
     /**
-     * Get the Scriptable object (Function or Script) that is
-     * described by this DebuggableScript object.
+     * Get name of the function described by this script.
+     * Return null or an empty string if this script is not function.
      */
-    public Scriptable getScriptable();
+    public String getFunctionName();
 
     /**
      * Get the name of the source (usually filename or URL)

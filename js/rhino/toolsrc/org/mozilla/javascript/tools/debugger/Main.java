@@ -2453,12 +2453,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
         scriptItems.put(fnOrScript, item);
 
-        if (fnOrScript.getScriptable() instanceof NativeFunction) {
-            NativeFunction f = (NativeFunction)fnOrScript.getScriptable();
-            String name = f.getFunctionName();
-            if (name.length() > 0 && !name.equals("anonymous")) {
-                functionNames.put(name, item);
-            }
+        String name = fnOrScript.getFunctionName();
+        if (name != null && name.length() > 0 && !name.equals("anonymous")) {
+            functionNames.put(name, item);
         }
         loadedFile(si);
     }

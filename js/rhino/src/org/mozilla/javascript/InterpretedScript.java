@@ -35,12 +35,9 @@
 
 package org.mozilla.javascript;
 
-import org.mozilla.javascript.debug.*;
-
 import java.util.*;
 
 final class InterpretedScript extends NativeScript
-    implements DebuggableScript
 {
 
     InterpretedScript(Context cx, InterpreterData theData)
@@ -64,26 +61,6 @@ final class InterpretedScript extends NativeScript
         return Interpreter.interpret(cx, scope, thisObj,
                                      args, null, 0, args.length,
                                      this, itsData);
-    }
-
-    public boolean isFunction() {
-        return false;
-    }
-
-    public Scriptable getScriptable() {
-        return this;
-    }
-
-    public String getSourceName() {
-        return itsData.itsSourceFile;
-    }
-
-    public boolean isGeneratedScript() {
-        return ScriptRuntime.isGeneratedScript(itsData.itsSourceFile);
-    }
-
-    public int[] getLineNumbers() {
-        return Interpreter.getLineNumbers(itsData);
     }
 
     InterpreterData itsData;
