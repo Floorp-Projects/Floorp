@@ -88,7 +88,7 @@
 <!ENTITY newevent.invite.label       "Pozvat" >
 <!ENTITY newevent.email.label        "Upozornění na email" >
 <!ENTITY newevent.beforealarm.label  "před začátkem události" >
-<!ENTITY newevent.beforealarmends.label  "before the event ends" >
+<!ENTITY newevent.beforealarmends.label  "před koncem události" >
 <!ENTITY newevent.repeat.label       "Opakovat každý" >
 <!ENTITY newevent.until.label        "Do" >
 <!ENTITY newevent.forever.label      "Navždy" >
@@ -145,12 +145,12 @@
 <!ENTITY newtodo.starttime.warning "Konec úkolu je zvolen před začátkem.">
 <!ENTITY newtodo.cancelled.label "Zrušeno">
 <!ENTITY newtodo.status.label "Stav">
-<!ENTITY newtodo.beforealarm.label  "before the task starts" >
-<!ENTITY newtodo.beforealarmends.label  "before the task is due" >
-<!ENTITY newtodo.newtodo.tab.label "Task" >
-<!ENTITY newtodo.status.longlabel "Task Status">
-<!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
-<!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
+<!ENTITY newtodo.beforealarm.label  "před začátkem" >
+<!ENTITY newtodo.beforealarmends.label  "před koncem" >
+<!ENTITY newtodo.newtodo.tab.label "Úkol" >
+<!ENTITY newtodo.status.longlabel "Stav úkolu">
+<!ENTITY newtodo.duetime.warning    "Zvolený počáteční čas je po konečném čase.">
+<!ENTITY newtodo.duedate.warning    "Zvolené počáteční datum je po konečném datu.">
 
 <!ENTITY calendar.confirm.deleteevent "Skutečně chcete vymazat událost pojmenovanou: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Skutečně chcete vymazat tuto nepojmenovanou událost?" >
@@ -255,14 +255,14 @@
 <!ENTITY calendar.monthview.button.label        "Měsíční" >
 <!ENTITY calendar.multiweekview.button.label        "Více-týdenní" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Pouze pracovní týden" >
-<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "P" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Zobrazené úlohy" >
-<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "Z" >
 
 <!ENTITY calendar.menu.options.modify           "Upravit" >
 <!ENTITY calendar.menu.options.remove           "Vymazat" >
 <!ENTITY calendar.menu.options.close            "Zavřít okno" >
-<!ENTITY calendar.menu.options.close.accesskey  "C" >
+<!ENTITY calendar.menu.options.close.accesskey  "Z" >
 
 <!ENTITY calendar.main.tab.label        "Události" >
 <!ENTITY calendar.search.tab.label      "Hledej">
@@ -358,7 +358,7 @@
 <!ENTITY calendar.context.deleteserver.label           "Vymazat kalendář">
 <!ENTITY calendar.context.deleteserver.accesskey       "D">
 <!ENTITY calendar.context.refreshserver.label          "Obnovit vzdálené kalendáře">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.refreshserver.accesskey      "O">
 <!ENTITY calendar.context.publish.label                "Publikovat celý kalendář">
 <!ENTITY calendar.context.publish.accesskey            "P">
 

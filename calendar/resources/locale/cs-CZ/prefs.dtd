@@ -40,14 +40,14 @@
 <!ENTITY calendarPanel.label        "Kalendář" >
 <!ENTITY calendar.accesskey         "k" >
 <!ENTITY calendar.publish.label     "Publikování">
-<!ENTITY calendar.general.label     "General">
+<!ENTITY calendar.general.label     "Obecné">
 <!ENTITY calendar.alarms.label      "Upozornění">
 <!ENTITY calendar.views.label       "Pohledy">
 <!ENTITY calendar.timezone.label    "Časová zóna">
 
-<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.title            "Nastavení kalendáře">
 <!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
-<!ENTITY prefWindow.category         "Category">
+<!ENTITY prefWindow.category         "Kategorie">
 
 <!ENTITY pref.mainbox.label         "Hlavní nastavení" >
 <!ENTITY pref.alarmgoesoff.label "Při aktivaci upozornění:">
@@ -58,12 +58,12 @@
 <!ENTITY pref.defaultemail.label "Výchozí adresa pro poslání upozornění:">
 <!ENTITY pref.defaulttext.label "Výchozí text upozornění:">
 <!ENTITY pref.missedalarms    "Zobrazit zmeškaná upozornění" >
-<!ENTITY pref.defalarm4events.label "Default alarm setting for events:">
-<!ENTITY pref.defalarm4todos.label "Default alarm setting for tasks:">
-<!ENTITY pref.alarm.on "On">
-<!ENTITY pref.alarm.off "Off">
-<!ENTITY pref.defalarmlen4events.label "Default time an alarm goes off before an event:">
-<!ENTITY pref.defalarmlen4todos.label "Default time an alarm goes off before a task:">
+<!ENTITY pref.defalarm4events.label "Upozornění před událostmi:">
+<!ENTITY pref.defalarm4todos.label "Upozornění před úkoly:">
+<!ENTITY pref.alarm.on "Zapnuto">
+<!ENTITY pref.alarm.off "Vypnuto">
+<!ENTITY pref.defalarmlen4events.label "Upozornit na událost s předstihem:">
+<!ENTITY pref.defalarmlen4todos.label "Upozornit na úkol s předstihem:">
 
 <!ENTITY pref.dateformat.label      "Formát data:" >
 <!ENTITY pref.dateformat.long       "Dlouhý" >

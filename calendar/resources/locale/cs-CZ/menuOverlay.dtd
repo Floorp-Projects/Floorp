@@ -115,22 +115,22 @@
 <!ENTITY goNextCmd.label                "Následující">
 <!ENTITY goNextCmd.accesskey            "n">
 
-<!ENTITY taskMenu.label                "Tasks">
-<!ENTITY taskMenu.accesskey            "T">
+<!ENTITY taskMenu.label                "Úlohy">
+<!ENTITY taskMenu.accesskey            "h">
 
-<!ENTITY toolsMenu.label                "Tools">
-<!ENTITY toolsMenu.accesskey            "o">
+<!ENTITY toolsMenu.label                "Nástroje">
+<!ENTITY toolsMenu.accesskey            "n">
 
-<!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.label     "Konzola jazyka JavaScript">
 <!ENTITY javaScriptConsoleCmd.accesskey "S">
 
-<!ENTITY navigatorCmd.label     "Browser">
-<!ENTITY navigatorCmd.accesskey "B">
+<!ENTITY navigatorCmd.label     "Prohlížeč">
+<!ENTITY navigatorCmd.accesskey "P">
 
-<!ENTITY messengerCmd.label     "Mail">
-<!ENTITY messengerCmd.accesskey "M">
+<!ENTITY messengerCmd.label     "Pošta">
+<!ENTITY messengerCmd.accesskey "o">
 
-<!ENTITY addressBookCmd.label     "Address Book">
+<!ENTITY addressBookCmd.label     "Databáze kontaktů">
 <!ENTITY addressBookCmd.accesskey "A">
 
 <!ENTITY helpMenu.accesskey            "H">
