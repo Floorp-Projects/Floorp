@@ -464,7 +464,7 @@ nsFileChannel::GetContentType(char * *aContentType)
     nsString2 extStr;
     PRInt32 extLoc = specStr.RFind('.');
     if (-1 != extLoc) {
-        specStr.Right(extStr, extLoc);
+        specStr.Right(extStr, specStr.Length() - extLoc - 1);
         PRUnichar *ext = extStr.ToNewUnicode();
 
         NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
