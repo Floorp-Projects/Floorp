@@ -369,8 +369,12 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   if (nsnull!=aDesiredSize.maxElementSize)
   {
     *aDesiredSize.maxElementSize = *pMaxElementSize;
-    aDesiredSize.maxElementSize->height += topInset + bottomInset;
-    aDesiredSize.maxElementSize->width += leftInset + rightInset;
+    // NAV4 compatibility: only add insets if cell content was not 0 min height
+    if (0!=pMaxElementSize->height)
+      aDesiredSize.maxElementSize->height += topInset + bottomInset;
+    // NAV4 compatibility: only add insets if cell content was not 0 min width
+    if (0!=pMaxElementSize->width)
+      aDesiredSize.maxElementSize->width += leftInset + rightInset;
   }
   SetDesiredSize(aDesiredSize);
   if (nsnull!=aDesiredSize.maxElementSize)
