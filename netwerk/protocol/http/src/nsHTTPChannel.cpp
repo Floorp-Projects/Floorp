@@ -922,6 +922,7 @@ nsHTTPChannel::ComputeCurrentAge(PRTime now,
 
     // Compute apparent age
     LL_SUB(diff, responseTime, dateValue);
+    LL_DIV(diff, diff, 1000000); // convert u-sec to sec
     LL_L2UI(*result, diff);
     *result = PR_MAX(0, *result);
 
@@ -931,6 +932,7 @@ nsHTTPChannel::ComputeCurrentAge(PRTime now,
 
     // Compute resident time
     LL_SUB(diff, now, requestTime);
+    LL_DIV(diff, diff, 1000000); // convert u-sec to sec
 
     // Compute current age
     PRUint32 temp;
@@ -973,6 +975,7 @@ nsHTTPChannel::ComputeFreshnessLifetime(PRUint32 *result)
         if (NS_FAILED(rv)) return rv;
         if (avail) {
             LL_SUB(diff, date2, date);
+            LL_DIV(diff, diff, 1000000); // convert u-sec to sec
             LL_L2UI(*result, diff);
             return NS_OK;
         }
@@ -981,9 +984,12 @@ nsHTTPChannel::ComputeFreshnessLifetime(PRUint32 *result)
         rv = mResponse->GetLastModifiedValue(&date2, &avail);
         if (NS_FAILED(rv)) return rv;
         if (avail) {
+            LOG(("using last-modified to determine freshness-lifetime\n"));
+            LOG(("last-modified = %lld, date = %lld\n", date2, date));
             LL_SUB(diff, date, date2);
+            LL_DIV(diff, diff, 1000000); // convert u-sec to sec
             LL_L2UI(*result, diff);
-            *result = (PRUint32) (*result * 0.1);
+            *result /= 10;
             return NS_OK;
         }
     }
@@ -1020,11 +1026,18 @@ nsHTTPChannel::UpdateExpirationTime()
     rv = ComputeFreshnessLifetime(&freshnessLifetime);
     if (NS_FAILED(rv)) return rv;
 
+    LOG(("freshnessLifetime = %u, currentAge = %u\n",
+        freshnessLifetime, currentAge));
+
     timeRemaining = freshnessLifetime - currentAge;
-    timeRemaining = PR_MIN(0, timeRemaining);
+    timeRemaining = PR_MAX(0, timeRemaining);
 
     LL_UI2L(expirationTime, timeRemaining);
-    LL_ADD(expirationTime, now, expirationTime);
+    LL_MUL(expirationTime, expirationTime, 1000000); // convert sec to u-sec
+
+    LOG(("timeRemaining (in u-sec) = %lld\n", expirationTime));
+
+    LL_ADD(expirationTime, now, expirationTime); // compute expiration time
 
     return mCacheEntry->SetExpirationTime(expirationTime);
 }
@@ -1050,7 +1063,7 @@ nsHTTPChannel::CheckCache()
         return NS_OK;
 
     // Get the cached HTTP response headers
-    rv = mCacheEntry->GetMetaDataElement("headers", getter_Copies(str));
+    rv = mCacheEntry->GetMetaDataElement("http-headers", getter_Copies(str));
     if (NS_FAILED(rv)) return rv;
 
     // Parse the cached HTTP response headers
@@ -1310,7 +1323,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
         rv = mResponse->EmitHeaders(allHeaders);
         if (NS_FAILED(rv)) return rv;
 
-        rv = mCacheEntry->SetMetaDataElement("headers", allHeaders.get());
+        rv = mCacheEntry->SetMetaDataElement("http-headers", allHeaders.get());
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -2916,7 +2929,7 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
     if (NS_FAILED(rv)) return rv;
 
 #ifdef MOZ_NEW_CACHE
-    rv = mCacheEntry->SetMetaDataElement("headers", allHeaders.get());
+    rv = mCacheEntry->SetMetaDataElement("http-headers", allHeaders.get());
 #else
     rv = mCacheEntry->SetAnnotation("HTTP headers", allHeaders.Length()+1, 
                                      allHeaders.get());
