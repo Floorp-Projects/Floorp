@@ -25,6 +25,12 @@
 DEPTH = ..\..\..
 include <$(DEPTH)\config\config.mak>
 
+!if "$(WINOS)" == "WIN95"
+QUIET=
+!else
+QUIET=@
+!endif
+
 .SUFFIXES: .cpp .c .rc
 
 !if !defined(MOZ_SRC)
@@ -403,8 +409,12 @@ LINK_LIBS= \
     $(DIST)\lib\jpeg$(MOZ_BITS)$(VERSION_NUMBER).lib \
     $(DIST)\lib\dbm$(MOZ_BITS).lib \
 !endif
+!if "$(WINOS)" == "WIN95"
+    $(DIST)\lib\xpcom$(MOZ_BITS).lib
+!else
     $(DIST)\lib\xpcom$(MOZ_BITS).lib \
     $(NULL)
+!endif
 
 ##      Specify MFC libs before other libs and before .obj files,
 ##              such that _CrtDumpMemoryLeaks will be called
@@ -1829,15 +1839,16 @@ install:    \
 !ENDIF
 !endif
 
+!if "$(_MSC_VER)" == "1100"
 REBASE=rebase.exe
-!if [for %i in (. %PATH%) do @if exist %i\$(REBASE) echo %i\$(REBASE) > rebase.yes]
+!if [for %i in (. %PATH%) do $(QUIET)if exist %i\$(REBASE) echo %i\$(REBASE) > rebase.yes]
 !endif
 !if exist(rebase.yes)
-!if [for %i in ($(OUTDIR)\*.dll) do @echo %i >> rebase.lst]
+!if [for %i in ($(OUTDIR)\*.dll) do $(QUIET)echo %i >> rebase.lst]
 !endif
-!if [for %i in ($(OUTDIR)\java\bin\*.dll) do @echo %i >> rebase.lst]
+!if [for %i in ($(OUTDIR)\java\bin\*.dll) do $(QUIET)echo %i >> rebase.lst]
 !endif
-!if [for %i in ($(OUTDIR)\spellchk\*.dll) do @echo %i >> rebase.lst]
+!if [for %i in ($(OUTDIR)\spellchk\*.dll) do $(QUIET)echo %i >> rebase.lst]
 !endif
 !endif
 
@@ -1848,6 +1859,10 @@ rebase:
 !endif
 !if exist(rebase.yes)
 	del rebase.yes
+!endif
+!else
+rebase:
+
 !endif
 
 

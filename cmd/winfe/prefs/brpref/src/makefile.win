@@ -65,5 +65,7 @@ LINCS=-I$(XPDIST)\public\dllcom -I$(XPDIST)\public\winprefs \
 
 libs:: $(DLL)
        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+!if "$(WINOS)" != "WIN95"
 	   @$(DIST)\bin\dllreg $(DIST)\bin\$(DLLNAME).dll
+!endif
        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib

@@ -15,6 +15,10 @@ IGNORE_MANIFEST=1
 # Reserved.
 
 
+DEPTH  	= ../../../../..
+ 
+!include "$(MOZ_SRC)\ns\config\config.mak"
+
 !if "$(MOZ_BITS)" == "16"
 DLL_CFLAGS=/GA /GEd /GEf /D_WINDLL
 
@@ -65,6 +69,8 @@ LINCS=-I$(XPDIST)\public\dllcom -I$(XPDIST)\public\winprefs \
 
 libs:: $(DLL)
        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+!if "$(WINOS)" != "WIN95"
 	   @$(DIST)\bin\dllreg $(DIST)\bin\$(DLLNAME).dll
+!endif
        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
        
