@@ -169,6 +169,10 @@ public:
                                              nscoord aCharWidth) const;
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
+  NS_IMETHOD SelectionChanged();// Called when the selection has changed. 
+                                                       // If the the same item in the list is selected
+                                                       // it is NOT called.
+
   // nsIFormMouseListener
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
@@ -177,11 +181,11 @@ public:
   NS_IMETHOD ShowDropDown(PRBool aDoDropDown);
   NS_IMETHOD GetDropDown(nsIFrame** aDropDownFrame);
   NS_IMETHOD SetDropDown(nsIFrame* aDropDownFrame);
-  NS_IMETHOD RollupFromList(nsIPresContext* aPresContext);
+  NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext, PRBool aForceUpdate, PRBool aSendEvent);
+  NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex);
   NS_IMETHOD AbsolutelyPositionDropDown();
   NS_IMETHOD GetAbsoluteRect(nsRect* aRect);
   NS_IMETHOD GetIndexOfDisplayArea(PRInt32* aSelectedIndex);
-  NS_IMETHOD RedisplaySelectedText();
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
@@ -191,7 +195,6 @@ public:
   NS_IMETHOD OnOptionSelected(nsIPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected);
-  NS_IMETHOD OnOptionTextChanged(nsIDOMHTMLOptionElement* option);
   NS_IMETHOD GetDummyFrame(nsIFrame** aFrame);
   NS_IMETHOD SetDummyFrame(nsIFrame* aFrame);
 
@@ -220,7 +223,6 @@ public:
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
 protected:
-
   NS_IMETHOD CreateDisplayFrame(nsIPresContext* aPresContext);
 
 #ifdef DO_NEW_REFLOW
@@ -251,8 +253,6 @@ protected:
   void ShowList(nsIPresContext* aPresContext, PRBool aShowList);
   void SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight);
   void InitTextStr();
-  nsresult RedisplayText(PRInt32 aIndex);
-  nsresult ActuallyDisplayText(nsAString& aText, PRBool aNotify);
   nsresult GetPrimaryComboFrame(nsIPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);
   NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
 
@@ -271,6 +271,8 @@ protected:
   nsFrameList              mPopupFrames;             // additional named child list
   nsIPresContext*          mPresContext;             // XXX: Remove the need to cache the pres context.
   nsFormFrame*             mFormFrame;               // Parent Form Frame
+  nsString                 mTextStr;                 // Current Combo box selection
+  PRInt32                  mSelectedIndex;           // current selected index
   nsCOMPtr<nsITextContent> mDisplayContent;          // Anonymous content used to display the current selection
   PRPackedBool             mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
   nsIFrame*                mDisplayFrame;            // frame to display selection
@@ -292,8 +294,6 @@ protected:
   nsCSSFrameConstructor* mFrameConstructor;
 
   PRPackedBool          mGoodToGo;
-
-  PRInt32               mDisplayedIndex;
 
   // make someone to listen to the button. If its programmatically pressed by someone like Accessibility
   // then open or close the combo box.
