@@ -66,10 +66,10 @@
 
 // XP_UNIX
 #ifndef WIDGET_DLL
-#define WIDGET_DLL "libwidgetmotif.so"
+#define WIDGET_DLL "libwidgetgtk.so"
 #endif
 #ifndef GFXWIN_DLL
-#define GFXWIN_DLL "libgfxmotif.so"
+#define GFXWIN_DLL "libgfxgtk.so"
 #endif
 #define VIEW_DLL   "libraptorview.so"
 #define WEB_DLL    "libraptorwebwidget.so"
@@ -79,6 +79,8 @@
 #define DOM_DLL    "libjsdom.so"
 #define LAYOUT_DLL "libraptorhtml.so"
 #define NETLIB_DLL "libnetlib.so"
+
+#define APPSHELL_DLL  "libnsappshell.so"
 
 #endif // XP_MAC
 
