@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  imglib2 \
 		  layout \
+		  js \
 		  $(NULL)
 # for xlib port
 REQUIRES	+= xlibxtbin xlibrgb
