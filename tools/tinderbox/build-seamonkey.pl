@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.45 $ ';
+$Version = '$Revision: 1.46 $ ';
 
 
 sub PrintUsage {
@@ -271,6 +271,13 @@ sub BuildIt {
 		}
 
 		# Run MailNews test.
+		#
+		# This test needs the following security pref set
+		#   user_pref("signed.applets.codebase_principal_support", true);
+		# first time around, you get two dialogs, which sets this pref:
+		#   user_pref("security.principal.X0", "[Codebase http://www.mozilla.org/quality/mailnews/APITest.html] UniversalBrowserRead=1 UniversalXPConnect=1");
+		#
+
 		if ($BuildStatus == 0 and $MailNewsTest) {
 		  $BuildStatusStr = 'success';
 		  print LOG "Running MailNewsTest ...\n";
@@ -278,7 +285,7 @@ sub BuildIt {
 		  $BuildStatus = 
 			&RunFileBasedTest("MailNewsTest", 
 							  "mozilla-bin http://www.mozilla.org/quality/mailnews/APITest.html", 
-							  60, "enablePrivilege");
+							  120, "enablePrivilege456");  # enablePrivilege456 is hack to test status.
 		}
 
         # Run Editor test.
