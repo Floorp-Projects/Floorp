@@ -192,7 +192,7 @@ sub log_recent_errors($)
 	{
 		my ($project_name) = @_;
 		my $found_errors = 0;
-
+	
 		if ( $logging )
 			{
 				open(RECENT_ERRORS, "<$recent_errors_file");
@@ -209,7 +209,7 @@ sub log_recent_errors($)
 				close(RECENT_ERRORS);
 				unlink("$recent_errors_file");
 			}
-
+		
 		if ( $stop_on_1st_error && $found_errors )
 			{
 				print ERROR_LOG "### Build failed.\n";
@@ -294,10 +294,15 @@ sub MakeAlias($$)
 		my $message = "Can't create a Finder alias (at \"$new_file\")\n for \"$old_file\";";
 		# die "$message symlink doesn't work on directories.\n" if -d $old_file;
 		die "$message because \"$old_file\" doesn't exist.\n" unless -e $old_file;
-
-		unlink $new_file;
-		# print "symlink(\"$old_file\", \"$new_file\");\n";
-		symlink($old_file, $new_file) || die "$message symlink returned an unexpected error.\n";
+		#check if the alias is already pointing to the right direction
+		my ($aliasto) = readlink($new_file);
+		my ($full_old_file) = ( $old_file =~ m/^:/ ) ? cwd() . $old_file : $old_file;
+		unless ($aliasto && ($aliasto eq $full_old_file))
+		{
+			unlink $new_file;
+			# print "symlink(\"$old_file\", \"$new_file\");\n";
+			symlink($old_file, $new_file) || die "$message symlink returned an unexpected error.\n";
+		}
 	}
 	
 	
