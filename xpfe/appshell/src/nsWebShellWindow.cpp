@@ -1123,10 +1123,8 @@ nsWebShellWindow::ShowModal()
   if (parentWidget)
     parentWidget->Enable(PR_FALSE);
   rv = nsXULWindow::ShowModal();
-  if (parentWidget) {
+  if (parentWidget)
     parentWidget->Enable(PR_TRUE);
-    parentWindow->Show(PR_TRUE); // bring to front
-  }
   return rv;
 }
 
