@@ -2126,7 +2126,7 @@ pk11_getDefSlotName(CK_SLOT_ID slotID)
     switch (slotID) {
     case NETSCAPE_SLOT_ID:
 	return 
-	 "NSS Internal Cryptographic Services Version 3.4                 ";
+	 "NSS Internal Cryptographic Services                             ";
     case PRIVATE_KEY_SLOT_ID:
 	return 
 	 "NSS User Private Key and Certificate Services                   ";
