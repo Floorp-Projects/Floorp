@@ -26,6 +26,8 @@
 	resultListStart = "Groups of reviewed web sites related to your search term."
 	resultListEnd = "Web sites reviewed and categorized by a team of editors."
 	resultItemStart = "<LI>"
+	nameStart = '">'
+	nameEnd = "</FONT>"
 >
 
 <INTERPRET
