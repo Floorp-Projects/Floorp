@@ -14,3 +14,4 @@ nsIFileSystem.idl
 nsIPrompt.idl
 nsIStreamLoader.idl
 nsIURLParser.idl
+nsIProtocolProxyService.idl
