@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Vladimir Vukicevic <vladimir@pobox.com>
+ *  Ted Mielczarek <ted.mielczarek@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -105,38 +106,41 @@ function vercmp ($a, $b) {
 }
 
 //
-// These are passed in the GET string
+// These are passed in the GET string / POST request
 //
 
-if (!array_key_exists('reqVersion', $_GET))
+if (!array_key_exists('reqVersion', $_REQUEST))
     bail ("Invalid request.");
 
-$reqVersion = $_GET['reqVersion'];
+$reqVersion = $_REQUEST['reqVersion'];
 
 if ($reqVersion == 1) {
 
-    if (!array_key_exists('id', $_GET) ||
-        !array_key_exists('version', $_GET) ||
-        !array_key_exists('maxAppVersion', $_GET) ||
-        !array_key_exists('appID', $_GET) ||
-        !array_key_exists('appVersion', $_GET))
+    if (!array_key_exists('id', $_REQUEST) ||
+        !array_key_exists('version', $_REQUEST) ||
+        !array_key_exists('maxAppVersion', $_REQUEST) ||
+        !array_key_exists('appID', $_REQUEST) ||
+        !array_key_exists('appVersion', $_REQUEST))
         bail ("Invalid request.");
 
-    $reqItemGuid          = mysql_real_escape_string($_GET['id']);
-    $reqItemVersion       = mysql_real_escape_string($_GET['version']);
-    $reqItemMaxAppVersion = mysql_real_escape_string($_GET['maxAppVersion']);
-    $reqTargetAppGuid     = mysql_real_escape_string($_GET['appID']);
-    $reqTargetAppVersion  = mysql_real_escape_string($_GET['appVersion']);
+    // these three can have multiple values
+    $reqItemGuid          = explode(",",mysql_real_escape_string($_REQUEST['id']));
+    $reqItemVersion       = explode(",",mysql_real_escape_string($_REQUEST['version']));
+    // are we even using this?
+    $reqItemMaxAppVersion = explode(",",mysql_real_escape_string($_REQUEST['maxAppVersion']));
+    $reqTargetAppGuid     = mysql_real_escape_string($_REQUEST['appID']);
+    $reqTargetAppVersion  = mysql_real_escape_string($_REQUEST['appVersion']);
 
     // For backwards compatibility, not required.
-    $reqTargetOS = mysql_real_escape_string($_GET['appOS']);
+    $reqTargetOS = mysql_real_escape_string($_REQUEST['appOS']);
 } else {
     // bail
     bail ("Bad request version received");
 }
 
 // check args
-if (empty($reqItemGuid) || empty($reqItemVersion) || empty($reqTargetAppGuid)) {
+if (empty($reqItemGuid) || empty($reqItemVersion) || empty($reqTargetAppGuid)
+	|| (count($reqItemGuid) != count($reqItemVersion))) {
     bail ("Invalid request.");
 }
 
@@ -203,92 +207,12 @@ if ( ( $reqTargetOS == 'WINNT' )
   $osid = 6;
 }
 
-$query = 
-"SELECT main.guid AS extguid,
-        main.type AS exttype,
-        version.version AS extversion,
-        version.uri AS exturi,
-        version.minappver AS appminver,
-        version.maxappver AS appmaxver,
-        applications.guid AS appguid
- FROM main
-   INNER JOIN version ON main.id = version.id
-   INNER JOIN applications ON version.appid = applications.appid ";
-
-/* We want to filter the results so that only OS=ALL and OS specific
-results show up. */
-
-$where = " WHERE main.guid = '" . $reqItemGuid . "' 
-             AND applications.guid = '" . $reqTargetAppGuid . "'
-             AND (version.OSID = 1 OR version.OSID = " . $osid . ")
-             AND version.approved = 'YES'";
-
-/* Sort the result set so that the greatest OS Specific is the last one
-at each level. */
-
-$order = " ORDER BY version.MaxAppVer_int DESC, version.version 
-DESC, version.osid DESC";
-
-$result = mysql_query ($query . $where . $order);
-
-if (!$result) {
-    bail ('Query error: ' . mysql_error());
-}
-
-// info for this version
-$thisVersionData = '';
-
-// info for highest version
-$highestVersionData = '';
-
-$itemType = '';
-
-while ($line = mysql_fetch_array($result, MYSQL_ASSOC)) {
-  if (empty($itemType)) {
-    $itemType = $ext_typemap[$line['exttype']];
-  }
-
-  // Do we already have the current or a newer one?
-  if (vercmp($line['extversion'], $reqItemVersion) <= 0) {
-    $thisVersionData = $line;
-    break;
-  }
-
-  // Is this one compatible?
-  if (vercmp($line['appmaxver'], $reqTargetAppVersion) >= 0 &&
-      vercmp($line['appminver'], $reqTargetAppVersion) <= 0) {
-    $highestVersionData = $line;
-    break;
-  }
-  // Keep going until we find one that is
-}
-
-mysql_free_result ($result);
-
 //
 // Now to spit out the RDF.  We hand-generate because the data is pretty simple.
 //
 
 print "<?xml version=\"1.0\"?>\n";
 print "<RDF:RDF xmlns:RDF=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:em=\"http://www.mozilla.org/2004/em-rdf#\">\n\n";
-
-print "<RDF:Description about=\"urn:mozilla:{$itemType}:{$reqItemGuid}\">\n";
-
-// output list of updates (just highest and this)
-print " <em:updates><RDF:Seq>\n";
-if (!empty($thisVersionData))
-    print "  <RDF:li resource=\"urn:mozilla:{$itemType}:{$reqItemGuid}:{$thisVersionData['extversion']}\"/>\n";
-if (!empty($highestVersionData))
-    print "  <RDF:li resource=\"urn:mozilla:{$itemType}:{$reqItemGuid}:{$highestVersionData['extversion']}\"/>\n";
-print " </RDF:Seq></em:updates>\n";
-
-// output compat bits for firefox 0.9
-if (!empty($highestVersionData)) {
-    print " <em:version>{$highestVersionData['extversion']}</em:version>\n";
-    print " <em:updateLink>{$highestVersionData['exturi']}</em:updateLink>\n";
-}
-
-print "</RDF:Description>\n\n";
 
 function print_update ($data) {
     global $ext_typemap;
@@ -303,13 +227,97 @@ function print_update ($data) {
     print "   <em:updateLink>{$data['exturi']}</em:updateLink>\n";
     print "  </RDF:Description>\n";
     print " </em:targetApplication>\n";
-    print "</RDF:Description>\n";
+    print "</RDF:Description>\n\n";
 }
 
-if (!empty($thisVersionData))
+// now we query for each item
+for($i=0; $i < count($reqItemGuid); $i++)
+{
+  $query = 
+    "SELECT main.guid AS extguid,
+        main.type AS exttype,
+        version.version AS extversion,
+        version.uri AS exturi,
+        version.minappver AS appminver,
+        version.maxappver AS appmaxver,
+        applications.guid AS appguid
+ FROM main
+   INNER JOIN version ON main.id = version.id
+   INNER JOIN applications ON version.appid = applications.appid ";
+
+  /* We want to filter the results so that only OS=ALL and OS specific
+results show up. */
+
+  $where = " WHERE main.guid = '" . $reqItemGuid[$i] . "' 
+             AND applications.guid = '" . $reqTargetAppGuid . "'
+             AND (version.OSID = 1 OR version.OSID = " . $osid . ")
+             AND version.approved = 'YES'";
+
+  /* Sort the result set so that the greatest OS Specific is the last one
+at each level. */
+
+  $order = " ORDER BY version.MaxAppVer_int DESC, version.version 
+DESC, version.osid DESC";
+
+  $result = mysql_query ($query . $where . $order);
+
+  if (!$result) {
+    bail ('Query error: ' . mysql_error());
+  }
+
+  // info for this version
+  $thisVersionData = '';
+
+  // info for highest version
+  $highestVersionData = '';
+
+  $itemType = '';
+
+  while ($line = mysql_fetch_array($result, MYSQL_ASSOC)) {
+    if (empty($itemType)) {
+      $itemType = $ext_typemap[$line['exttype']];
+    }
+
+    // Do we already have the current or a newer one?
+    if (vercmp($line['extversion'], $reqItemVersion[$i]) <= 0) {
+      $thisVersionData = $line;
+      break;
+    }
+
+    // Is this one compatible?
+    if (vercmp($line['appmaxver'], $reqTargetAppVersion) >= 0 &&
+	vercmp($line['appminver'], $reqTargetAppVersion) <= 0) {
+      $highestVersionData = $line;
+      break;
+    }
+    // Keep going until we find one that is
+  }
+
+  print "<RDF:Description about=\"urn:mozilla:{$itemType}:{$reqItemGuid[$i]}\">\n";
+
+  // output list of updates (just highest and this)
+  print " <em:updates><RDF:Seq>\n";
+  if (!empty($thisVersionData))
+    print "  <RDF:li resource=\"urn:mozilla:{$itemType}:{$reqItemGuid[$i]}:{$thisVersionData['extversion']}\"/>\n";
+  if (!empty($highestVersionData))
+    print "  <RDF:li resource=\"urn:mozilla:{$itemType}:{$reqItemGuid[$i]}:{$highestVersionData['extversion']}\"/>\n";
+  print " </RDF:Seq></em:updates>\n";
+
+  // output compat bits for firefox 0.9
+  if (!empty($highestVersionData)) {
+    print " <em:version>{$highestVersionData['extversion']}</em:version>\n";
+    print " <em:updateLink>{$highestVersionData['exturi']}</em:updateLink>\n";
+  }
+
+  print "</RDF:Description>\n\n";
+
+  if (!empty($thisVersionData))
     print_update ($thisVersionData);
-if (!empty($highestVersionData))
+  if (!empty($highestVersionData))
     print_update ($highestVersionData);
+
+  mysql_free_result ($result);
+}
 
 print "</RDF:RDF>\n";
 
