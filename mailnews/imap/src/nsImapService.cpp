@@ -426,7 +426,6 @@ NS_IMETHODIMP nsImapService::OpenAttachment(const char *aContentType,
   return rv;
 }
 
-/* void OpenAttachment (in nsIURI aURI, in nsISupports aDisplayConsumer, in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener, out nsIURI aURL); */
 NS_IMETHODIMP nsImapService::FetchMimePart(nsIURI *aURI, const char *aMessageURI, nsISupports *aDisplayConsumer, nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aURL)
 {
 	nsresult rv = NS_OK;
