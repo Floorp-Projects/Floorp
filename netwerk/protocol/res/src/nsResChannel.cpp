@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 #include "nsResChannel.h"
@@ -102,12 +102,12 @@ NS_INTERFACE_MAP_END_THREADSAFE
 NS_METHOD
 nsResChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 {
-    nsResChannel* fc = new nsResChannel();
-    if (fc == nsnull)
+    nsResChannel* rc = new nsResChannel();
+    if (rc == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(fc);
-    nsresult rv = fc->QueryInterface(aIID, aResult);
-    NS_RELEASE(fc);
+    NS_ADDREF(rc);
+    nsresult rv = rc->QueryInterface(aIID, aResult);
+    NS_RELEASE(rc);
     return rv;
 }
 
@@ -120,16 +120,17 @@ nsResChannel::Substitutions::Init()
 {
     nsresult rv;
     nsResChannel* channel = GET_SUBSTITUTIONS_CHANNEL(this);
-    
+
     if (mSubstitutions)
         return NS_ERROR_FAILURE;
 
     char* root;
     rv = channel->mResourceURI->GetHost(&root);
     if (NS_SUCCEEDED(rv)) {
-		char* strRoot = root;
-		if (strRoot == nsnull) strRoot = "";	// don't pass null to GetSubstitutions
-        rv = channel->mHandler->GetSubstitutions(strRoot, getter_AddRefs(mSubstitutions));
+        // XXX don't pass null to GetSubstitutions!
+        const char* strRoot = root ? root : "";
+        rv = channel->mHandler->GetSubstitutions(strRoot,
+                                                 getter_AddRefs(mSubstitutions));
         nsCRT::free(root);
     }
     return rv;
@@ -152,13 +153,13 @@ nsResChannel::Substitutions::Next(char* *result)
     rv = channel->mResourceURI->GetPath(&path);
     if (NS_FAILED(rv)) return rv;
 
-    // XXX this path[0] check is a hack -- it seems to me that GetPath 
+    // XXX this path[0] check is a hack -- it seems to me that GetPath
     // shouldn't include the leading slash:
     char* aResolvedURI;
     rv = substURI->Resolve(path[0] == '/' ? path+1 : path, &aResolvedURI);
     nsCRT::free(path);
     if (NS_FAILED(rv)) return rv;
-    
+
     *result = aResolvedURI;
     return NS_OK;
 }
@@ -302,7 +303,7 @@ nsResChannel::EnsureNextResolvedChannel()
         rv = mResolvedChannel->SetNotificationCallbacks(mCallbacks);
         if (NS_FAILED(rv)) goto done;
     }
-    
+
   done:
 #if defined(PR_LOGGING)
     nsXPIDLCString resURI;
@@ -432,7 +433,7 @@ nsResChannel::GetContentType(char * *aContentType)
 {
     if (mResolvedChannel)
         return mResolvedChannel->GetContentType(aContentType);
-    
+
     // if we have not created a mResolvedChannel, use the mime service
     nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_CONTRACTID));
     if (!MIMEService) return NS_ERROR_FAILURE;
@@ -509,7 +510,7 @@ nsResChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallb
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsResChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
     NS_NOTREACHED("nsResChannel::GetSecurityInfo");
@@ -540,11 +541,11 @@ nsResChannel::OnStopRequest(nsIRequest* request, nsISupports* context,
                  "wrong thread calling this routine");
 #endif
     if (NS_FAILED(aStatus) && aStatus != NS_BINDING_ABORTED) {
-        nsCOMPtr<nsIRequest> dummyRequest; 
+        nsCOMPtr<nsIRequest> dummyRequest;
 
         // if we failed to process this channel, then try the next one:
         switch (mState) {
-          case ASYNC_READ: 
+          case ASYNC_READ:
             return AsyncOpen(GetUserListener(), mUserContext);
           default:
             break;

@@ -37,7 +37,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputStream, nsIInputStream);
 NS_IMETHODIMP 
 nsJARInputStream::Available(PRUint32 *_retval)
 {
-  if (Zip() == 0)
+  if (Zip() == nsnull)
     *_retval = 0;
   else
     *_retval = Zip()->Available(mReadInfo);

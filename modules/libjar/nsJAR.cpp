@@ -543,10 +543,10 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
     rv = LoadEntry(tempFilename, getter_Copies(sigBuffer), &sigLen);
   }
   if (NS_FAILED(rv))
-    {
-      nsCAutoString tempFilename(sigFilename); tempFilename.Append("RSA", 3);
-      rv = LoadEntry(tempFilename, getter_Copies(sigBuffer), &sigLen);
-    }
+  {
+    nsCAutoString tempFilename(sigFilename); tempFilename.Append("RSA", 3);
+    rv = LoadEntry(tempFilename, getter_Copies(sigBuffer), &sigLen);
+  }
   if (NS_FAILED(rv))
   {
     mGlobalStatus = nsIJAR::NO_MANIFEST;

@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 #ifndef nsResChannel_h__
@@ -58,7 +58,7 @@ public:
     // Define a Create method to be used with a factory:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
-    
+
     nsresult Init(nsIResProtocolHandler* handler, nsIURI* uri);
 
 protected:

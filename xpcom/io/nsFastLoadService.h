@@ -22,6 +22,7 @@
 #include "prtypes.h"
 #include "pldhash.h"
 #include "nsCOMPtr.h"
+#include "nsHashtable.h"
 #include "nsIFastLoadService.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
@@ -48,4 +49,5 @@ class NS_COM nsFastLoadService : public nsIFastLoadService
     nsCOMPtr<nsIObjectOutputStream> mOutputStream;
     nsCOMPtr<nsIFastLoadFileIO>     mFileIO;
     PRInt32                         mDirection;
+    nsHashtable                     mChecksumTable;
 };
