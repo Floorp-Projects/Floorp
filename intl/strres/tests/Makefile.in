@@ -31,6 +31,7 @@ EXPORT_RESOURCE	= \
 		$(srcdir)/strres-test.html \
 		$(srcdir)/strres-test.xul \
 		$(srcdir)/strres-test.dtd \
+		$(srcdir)/strres-test.js \
 		$(NULL)
 
 ifndef NECKO

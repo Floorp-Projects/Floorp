@@ -51,5 +51,10 @@ install:: $(PROGRAMS)
 
 clobber::
 	rm -f $(DIST)\bin\StringBundleTest.exe
+	rm -f $(DIST)\bin\res\strres.properties
+	rm -f $(DIST)\bin\res\strres-test.html
+	rm -f $(DIST)\bin\res\strres-test.xul
+	rm -f $(DIST)\bin\res\strres-test.dtd
+	rm -f $(DIST)\bin\res\strres-test.js
 
 $(PROG0): $(OBJDIR) StringBundleTest.cpp
