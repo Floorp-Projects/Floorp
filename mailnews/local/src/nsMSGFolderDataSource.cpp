@@ -65,6 +65,7 @@ nsIRDFResource* nsMSGFolderDataSource::kNC_MSGFolderRoot;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Subject;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Sender;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Date;
+nsIRDFResource* nsMSGFolderDataSource::kNC_Status;
 
 // commands
 nsIRDFResource* nsMSGFolderDataSource::kNC_Delete;
@@ -82,6 +83,7 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Subject);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Sender);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Date);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Status);
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Delete);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Reply);
@@ -186,6 +188,7 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
   NS_RELEASE2(kNC_Subject, refcnt);
   NS_RELEASE2(kNC_Sender, refcnt);
   NS_RELEASE2(kNC_Date, refcnt);
+  NS_RELEASE2(kNC_Status, refcnt);
 
   NS_RELEASE2(kNC_Delete, refcnt);
   NS_RELEASE2(kNC_Reply, refcnt);
@@ -244,6 +247,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
     gRDFService->GetResource(kURINC_Subject, &kNC_Subject);
     gRDFService->GetResource(kURINC_Sender, &kNC_Sender);
     gRDFService->GetResource(kURINC_Date, &kNC_Date);
+    gRDFService->GetResource(kURINC_Status, &kNC_Status);
 
     gRDFService->GetResource(kURINC_Delete, &kNC_Delete);
     gRDFService->GetResource(kURINC_Reply, &kNC_Reply);
@@ -359,6 +363,14 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
         peq(kNC_Subject, property)) {
       nsAutoString subject;
       rv = message->GetProperty("subject", subject);
+	  PRUint32 flags;
+	  message->GetFlags(&flags);
+	  if(flags & MSG_FLAG_HAS_RE)
+	  {
+		nsAutoString reStr="Re: ";
+		reStr +=subject;
+		subject = reStr;
+	  }
       createNode(subject, target);
     }
     else if (peq(kNC_Sender, property))
@@ -370,15 +382,30 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
     }
     else if (peq(kNC_Date, property))
     {
-      nsAutoString date;
-      rv = message->GetProperty("date", date);
-			PRInt32 error;
-			time_t time = date.ToInteger(&error, 16);
-			struct tm* tmTime = localtime(&time);
-			char dateBuf[100];
-			strftime(dateBuf, 100, "%m/%d/%y %I:%M %p", tmTime);
-			date = dateBuf;
-		  createNode(date, target);
+		nsAutoString date;
+		rv = message->GetProperty("date", date);
+		PRInt32 error;
+		time_t time = date.ToInteger(&error, 16);
+		struct tm* tmTime = localtime(&time);
+		char dateBuf[100];
+		strftime(dateBuf, 100, "%m/%d/%y %I:%M %p", tmTime);
+		date = dateBuf;
+		createNode(date, target);
+    }
+    else if (peq(kNC_Status, property))
+    {
+		PRUint32 flags;
+		message->GetFlags(&flags);
+		nsAutoString flagStr = "";
+		if(flags & MSG_FLAG_REPLIED)
+			flagStr = "replied";
+		else if(flags & MSG_FLAG_FORWARDED)
+			flagStr = "forwarded";
+		else if(flags & MSG_FLAG_NEW)
+			flagStr = "new";
+		else if(flags & MSG_FLAG_READ)
+			flagStr = "read";
+		createNode(flagStr, target);
     }
     return rv;
   }
@@ -476,7 +503,8 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
     NS_IF_RELEASE(folder);
   }
   else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
-    if(peq(kNC_Name, property) || peq(kNC_Subject, property) || peq(kNC_Date, property))
+    if(peq(kNC_Name, property) || peq(kNC_Subject, property) || peq(kNC_Date, property) ||
+		peq(kNC_Status, property))
     {
       nsRDFSingletonAssertionCursor* cursor =
         new nsRDFSingletonAssertionCursor(this, source, property, PR_FALSE);
@@ -496,7 +524,6 @@ NS_IMETHODIMP nsMSGFolderDataSource::Assert(nsIRDFResource* source,
                       nsIRDFNode* target,
                       PRBool tv)
 {
-  PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -504,7 +531,6 @@ NS_IMETHODIMP nsMSGFolderDataSource::Unassert(nsIRDFResource* source,
                         nsIRDFResource* property,
                         nsIRDFNode* target)
 {
-  PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -610,6 +636,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
     arcs->AppendElement(kNC_Subject);
     arcs->AppendElement(kNC_Sender);
     arcs->AppendElement(kNC_Date);
+	arcs->AppendElement(kNC_Status);
     NS_IF_RELEASE(message);
   }
 
@@ -802,12 +829,16 @@ nsresult nsMSGFolderDataSource::GetFolderFromMessage(nsIMessage *message, nsIMsg
 	if(NS_SUCCEEDED( rv = message->QueryInterface(nsIRDFResource::GetIID(), (void**)&resource)))
 	{
 		resource->GetValue(&uri);
-		nsString folderURIStr;
+		nsString messageFolderURIStr;
 		nsMsgKey key;
-		nsParseLocalMessageURI(uri, folderURIStr, &key);
-		char *folderURI = folderURIStr.ToNewCString();
+		nsParseLocalMessageURI(uri, messageFolderURIStr, &key);
+		nsString folderOnly, folderURIStr;
+		messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kMessageRootURI));
+		folderURIStr = kMailboxRootURI;
+		folderURIStr+= folderOnly;
 
 		nsIRDFResource *folderResource;
+		char *folderURI = folderURIStr.ToNewCString();
 		gRDFService->GetResource(folderURI, &folderResource);
 		delete[] folderURI;
 

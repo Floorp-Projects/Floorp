@@ -133,6 +133,7 @@ protected:
   static nsIRDFResource* kNC_Subject;
   static nsIRDFResource* kNC_Sender;
   static nsIRDFResource* kNC_Date;
+  static nsIRDFResource* kNC_Status;
 
   // commands
   static nsIRDFResource* kNC_Delete;
