@@ -40,7 +40,7 @@ class nsFormFrame;
  // using GFX calls, rather than creating a widget. Undefining it 
  // causes widgets to be used for form elements. @see RequiresWidget method
  // to see which widgets will obey this directive.
-#define NS_GFX_RENDER_FORM_ELEMENTS
+#undef NS_GFX_RENDER_FORM_ELEMENTS
 
 /** 
   * nsFormControlFrame is the base class for frames of form controls. It
