@@ -73,18 +73,6 @@
 			path = ../dist/Embed/components/xpcom_obsolete.xpt;
 			refType = 2;
 		};
-		0FA8EF9D0423B21100A80166 = {
-			fileRef = 0FA8EF9C0423B21100A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		0FA8EF9E0423B21100A80166 = {
-			fileRef = 0FA8EF9C0423B21100A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		0FA8EF9F0423B29400A80166 = {
 			fileRef = 0FA8EF970423B1A500A80166;
 			isa = PBXBuildFile;
@@ -215,18 +203,6 @@
 		};
 		0FA8EFCB0423EAAD00A80166 = {
 			fileRef = 0FA8EFCA0423EAAD00A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		0FF326C6042507CF00A80166 = {
-			isa = PBXFileReference;
-			name = libxpcom_compat.a;
-			path = ../xpcom/obsolete/libxpcom_compat.a;
-			refType = 2;
-		};
-		0FF326C7042507CF00A80166 = {
-			fileRef = 0FF326C6042507CF00A80166;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -839,7 +815,6 @@
 				F5F415E403B97C6101A80166,
 				F5F7EF0F03C1F29C01BDD337,
 				3F22CC1503DF42A200026DCE,
-				0FA8EF9D0423B21100A80166,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1147,6 +1122,18 @@
 		};
 		A74938920416CD4700A967F8 = {
 			fileRef = A74938900416CD2F00A967F8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A7A744730427017500A967DF = {
+			fileRef = 0FA8EF970423B1A500A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A7A744740427019D00A967DF = {
+			fileRef = 0FA8EF9C0423B21100A80166;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -4941,7 +4928,6 @@
 		};
 		F56F242202AC6F7101A967F3 = {
 			children = (
-				0FF326C6042507CF00A80166,
 				0FA8EFCA0423EAAD00A80166,
 				F56F242602AC706801A967F3,
 				F56F242702AC706801A967F3,
@@ -7482,7 +7468,6 @@
 				F5F415E503B97C6101A80166,
 				F5F7EF1003C1F29C01BDD337,
 				3F22CC1403DF42A200026DCE,
-				0FA8EF9E0423B21100A80166,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7606,7 +7591,6 @@
 				F5BAABA102AC4AA701A967F3,
 				F5BAABA202AC4AA701A967F3,
 				F55A4DF50380705A01A80166,
-				0FF326C7042507CF00A80166,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8379,6 +8363,7 @@
 				F5BAAC0702AC693C01A967F3,
 				F5461CBF03AAC36B01A96660,
 				A7DF2C6403C3C92F00A80196,
+				A7A744740427019D00A967DF,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -9072,6 +9057,7 @@
 			dstSubfolderSpec = 6;
 			files = (
 				F5BAAC3C02AC6AA201A967F3,
+				A7A744730427017500A967DF,
 				F5BAAC3D02AC6AA201A967F3,
 				F5BAAC3E02AC6AA201A967F3,
 				F5BAAC3F02AC6AA201A967F3,
