@@ -276,6 +276,7 @@ enum nsDragDropEventStatus {
 #define NS_COMPOSITION_END    15
 #define NS_MOUSE_SCROLL_EVENT 16
 #define NS_COMPOSITION_QUERY  17
+
  
  /**
  * GUI MESSAGES
@@ -433,6 +434,12 @@ enum nsDragDropEventStatus {
        (((evnt)->message == NS_KEY_DOWN) ||  \
         ((evnt)->message == NS_KEY_PRESS) || \
         ((evnt)->message == NS_KEY_UP))
+
+#define NS_IS_IME_EVENT(evnt) \
+       (((evnt)->message == NS_TEXT_EVENT) ||  \
+        ((evnt)->message == NS_COMPOSITION_START) ||  \
+        ((evnt)->message == NS_COMPOSITION_END) || \
+        ((evnt)->message == NS_COMPOSITION_QUERY))
 
 /*
  * Virtual key bindings for keyboard events
