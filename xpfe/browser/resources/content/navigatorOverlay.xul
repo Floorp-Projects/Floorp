@@ -354,13 +354,13 @@ Contributor(s): ______________________________________. -->
       <menuitem value="&findAgainCmd.label;" oncommand="BrowserFindAgain();"/>
       <menuseparator />
       <menuitem value="&searchBookmarksHistoryCmd.label;" 
-        oncommand="OpenSearch('find', null);"/>
+        oncommand="OpenSearch('find', true, null);"/>
       <menuitem value="&searchInternetCmd.label;"
-        oncommand="OpenSearch('internet', null);"/>
+        oncommand="OpenSearch('internet', true, null);"/>
       <menuitem value="&searchAllMailCmd.label;" 
-        oncommand="OpenSearch('mail', null);"/>
+        oncommand="OpenSearch('mail', true, null);"/>
       <menuitem value="&searchAddressbookCmd.label;"
-        oncommand="OpenSearch('addressbook', null);"/>
+        oncommand="OpenSearch('addressbook', true, null);"/>
       <menuseparator />
       <menuitem value="&searchComputerCmd.label;" 
         oncommand="BrowserReload();"/>

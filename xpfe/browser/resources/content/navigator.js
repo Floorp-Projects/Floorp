@@ -875,7 +875,7 @@ function createBrowserInstance()
   	}
   }
 
-function OpenSearch(tabName, searchStr)
+function OpenSearch(tabName, forceDialogFlag, searchStr)
 {
 	var searchMode = 0;
 	var searchEngineURI = null;
@@ -898,7 +898,7 @@ function OpenSearch(tabName, searchStr)
 		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=";
 	}
 
-	if (searchMode == 1)
+	if ((searchMode == 1) || (forceDialogFlag == true))
 	{
 		window.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
 	}
