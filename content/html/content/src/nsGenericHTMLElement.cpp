@@ -1349,7 +1349,7 @@ nsGenericHTMLElement::FindForm(nsIDOMHTMLFormElement **aForm)
 {
   // XXX: Namespaces!!!
 
-  nsIContent* content(this);
+  nsIContent* content = this;
   nsCOMPtr<nsIAtom> tag;
 
   *aForm = nsnull;
