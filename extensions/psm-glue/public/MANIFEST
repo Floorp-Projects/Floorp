@@ -1,0 +1,4 @@
+nsIPSMComponent.idl
+nsIPSMUIHandler.idl
+nsISecureBrowserUI.idl
+nsISSLSocketProvider.idl
