@@ -4878,9 +4878,6 @@ nsEventStateManager::ResetBrowseWithCaret()
   PRPackedBool browseWithCaret =
     nsContentUtils::GetBoolPref("accessibility.browsewithcaret");
 
-  if (mBrowseWithCaret == browseWithCaret)
-    return; // already set this way, don't change caret at all
-
   mBrowseWithCaret = browseWithCaret;
 
   nsIPresShell *presShell = mPresContext->GetPresShell();
