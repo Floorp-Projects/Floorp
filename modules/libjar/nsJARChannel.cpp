@@ -34,7 +34,6 @@
 #include "nsIProgressEventSink.h"
 #include "nsXPIDLString.h"
 #include "nsIJAR.h"
-#include "nsIResProtocolHandler.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
@@ -287,7 +286,6 @@ nsresult
 nsJARChannel::EnsureJARFileAvailable()
 {
     nsresult rv;
-    nsCOMPtr<nsIFileURL> fileURL;
 
 #ifdef PR_LOGGING
     nsXPIDLCString jarURLStr;
@@ -302,28 +300,13 @@ nsJARChannel::EnsureJARFileAvailable()
     rv = mURI->GetJAREntry(&mJAREntry);
     if (NS_FAILED(rv)) goto error;
 
-    // try to get a nsIFile directly from the url, which will often succeed.
-    fileURL = do_QueryInterface(mJARBaseURI);
-    if (fileURL)
-        fileURL->GetFile(getter_AddRefs(mDownloadedJARFile));
+    rv = NS_NewDownloader(getter_AddRefs(mDownloader),
+                          mJARBaseURI, this, nsnull, mSynchronousRead,
+                          mLoadGroup, mCallbacks, mLoadFlags);
 
-    if (mDownloadedJARFile) {
-        // after successfully downloading the jar file to the cache,
-        // start the extraction process:
-        if (mSynchronousRead)
-            rv = OpenJARElement();
-        else
-            rv = AsyncReadJARElement();
-    }
-    else {
-        rv = NS_NewDownloader(getter_AddRefs(mDownloader),
-                              mJARBaseURI, this, nsnull, mSynchronousRead,
-                              mLoadGroup, mCallbacks, mLoadFlags);
-
-        // if DownloadComplete() was called early, need to release the reference.
-        if (mSynchronousRead && mSynchronousInputStream)
-            mDownloader = 0;
-    }
+    // if DownloadComplete() was called early, need to release the reference.
+    if (mSynchronousRead && mSynchronousInputStream)
+        mDownloader = null_nsCOMPtr();
 
   error:
     if (NS_FAILED(rv) && mLoadGroup) {

@@ -26,7 +26,6 @@
 #include "nsIResProtocolHandler.h"
 #include "nsHashtable.h"
 #include "nsISupportsArray.h"
-#include "nsIIOService.h"
 #include "nsWeakReference.h"
 
 class nsResProtocolHandler : public nsIResProtocolHandler, public nsSupportsWeakReference
@@ -46,14 +45,9 @@ public:
     nsresult Init();
     nsresult SetSpecialDir(const char* rootName, const char* specialDir);
 
-    static nsResProtocolHandler *get() { return mGlobalInstance; }
-
-private:
-    static nsResProtocolHandler *mGlobalInstance;
-
-    PRLock*                mLock;
-    nsSupportsHashtable    mSubstitutions;
-    nsCOMPtr<nsIIOService> mIOService;
+protected:
+    PRLock*             mLock;
+    nsSupportsHashtable mSubstitutions;
 };
 
 #endif /* nsResProtocolHandler_h___ */

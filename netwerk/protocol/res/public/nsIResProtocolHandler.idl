@@ -75,9 +75,4 @@ interface nsIResProtocolHandler : nsIProtocolHandler
      * Returns true if substitutions are already defined for the specified root.
      */
     boolean hasSubstitutions(in string root);
-    
-    /**
-     * Resolution utility function.
-     */
-    string resolveURI(in nsIURI resourceURI);
 };
