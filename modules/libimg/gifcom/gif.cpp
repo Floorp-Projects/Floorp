@@ -116,7 +116,8 @@ typedef enum {
     gif_consume_netscape_extension,
     gif_consume_comment,
     gif_delay,
-    gif_wait_for_buffer_full
+    gif_wait_for_buffer_full,
+    gif_stop_animating   //added for animation stop 
 } gstate;
 
 /* "Disposal" method indicates how the image should be handled in the
@@ -1508,7 +1509,7 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
                     to stop decoding of subsequent frames. Only the
                     first frame is displayed for eImageAnimation_None.
                     */
-                    gs->state = gif_error;
+                    gs->state = gif_stop_animating;   
                     break;
                 }
 
@@ -1607,6 +1608,10 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
         case gif_error: 
             ILTRACE(2,("il:gif: reached error state"));
             return MK_IMAGE_LOSSAGE;
+            break;
+
+        case gif_stop_animating:
+            return 0;
             break;
 
         default: 
