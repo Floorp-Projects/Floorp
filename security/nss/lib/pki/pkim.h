@@ -35,7 +35,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.1 $ $Date: 2001/10/11 16:34:44 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.2 $ $Date: 2001/10/12 17:54:50 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -187,7 +187,6 @@ nssTrustDomain_GetCertsForSubjectFromCache
   nssList *certListOpt
 );
 
-#if 0
 /*
  * Look for a specific cert in the cache.
  */
@@ -198,7 +197,6 @@ nssTrustDomain_GetCertForIssuerAndSNFromCache
   NSSDER *issuer,
   NSSDER *serialNum
 );
-#endif
 
 /*
  * Look for a specific cert in the cache.
