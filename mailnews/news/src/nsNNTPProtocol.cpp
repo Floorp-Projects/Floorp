@@ -2011,19 +2011,16 @@ PRInt32 nsNNTPProtocol::SendGroupForArticle()
   nsresult rv;
   PRInt32 status = 0; 
 
-  // todo, don't do this copy
-  char *groupname = nsnull;
-  rv = m_newsgroup->GetName(&groupname);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GetName failed");
-  m_currentGroup = groupname;
-  PR_FREEIF(groupname);
+  nsXPIDLCString groupname;
+  rv = m_newsgroup->GetName(getter_Copies(groupname));
+  NS_ASSERTION(NS_SUCCEEDED(rv) && (const char *)groupname && nsCRT::strlen((const char *)groupname), "no group name");
 
   char outputBuffer[OUTPUT_BUFFER_SIZE];
   
   PR_snprintf(outputBuffer, 
 			OUTPUT_BUFFER_SIZE, 
 			"GROUP %.512s" CRLF, 
-			(const char *)m_currentGroup);
+			(const char *)groupname);
 
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
   if (mailnewsurl)
@@ -2038,9 +2035,16 @@ PRInt32 nsNNTPProtocol::SendGroupForArticle()
 
 PRInt32 nsNNTPProtocol::SendGroupForArticleResponse()
 {
+  nsresult rv;
   /* ignore the response code and continue
    */
   m_nextState = NNTP_SEND_ARTICLE_NUMBER;
+
+  nsXPIDLCString groupname;
+  rv = m_newsgroup->GetName(getter_Copies(groupname));
+  NS_ASSERTION(NS_SUCCEEDED(rv) && (const char *)groupname && nsCRT::strlen((const char *)groupname), "no group name");
+  m_currentGroup = (const char *)groupname;
+
 
   return(0);
 }
@@ -2465,7 +2469,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 	PR_Free(command);
 
 	m_nextState = NNTP_RESPONSE;
-	m_nextStateAfterResponse = NNTP_AUTHORIZE_RESPONSE;;
+	m_nextStateAfterResponse = NNTP_AUTHORIZE_RESPONSE;
 
 	SetFlag(NNTP_PAUSE_FOR_READ);
 
