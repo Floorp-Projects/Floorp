@@ -57,7 +57,8 @@ class nsHTMLToTXTSinkStream : public nsIHTMLContentSink
    * Standard constructor
    * @update	gpk02/03/99
    */
-  nsHTMLToTXTSinkStream(nsIOutputStream* aOutStream, nsString* aOutString);
+  nsHTMLToTXTSinkStream(nsIOutputStream* aOutStream, nsString* aOutString,
+                        PRUint32 aFlags);
 
   /**
    * virtual destructor
@@ -113,7 +114,6 @@ class nsHTMLToTXTSinkStream : public nsIHTMLContentSink
    * The following methods are specific to this class.
    *******************************************************************/
   NS_IMETHOD SetWrapColumn(PRUint32 aWrapCol)   { mWrapColumn = aWrapCol; return NS_OK; };
-  NS_IMETHOD DoPrettyPrint(PRBool aPP)          { mPrettyPrint = aPP; return NS_OK; };
 
 protected:
   void EnsureBufferSize(PRInt32 aNewSize);
@@ -131,7 +131,7 @@ protected:
   PRInt32          mIndent;
   PRInt32          mColPos;
   PRBool           mDoOutput;
-  PRBool           mPrettyPrint;
+  PRInt32          mFlags;
   PRUint32         mWrapColumn;
 
   // The tag stack: the stack of tags we're operating on, so we can nest:
@@ -154,17 +154,13 @@ extern NS_HTMLPARS nsresult
 NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                             nsIOutputStream* aOutStream,
                             const nsString* aCharsetOverride=nsnull,
-                            PRUint32 aWrapColumn=0,
-                            PRBool aPrettyPrint=PR_FALSE);
+                            PRUint32 aWrapColumn=0, PRUint32 aFlags=0);
 
 extern NS_HTMLPARS nsresult
 NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                             nsString* aOutString,
-                            PRUint32 aWrapColumn=0,
-                            PRBool aPrettyPrint=PR_FALSE);
+                            PRUint32 aWrapColumn=0, PRUint32 aFlags=0);
+
 
 #endif
-
-
-
 

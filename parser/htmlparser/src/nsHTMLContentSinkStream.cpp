@@ -35,6 +35,7 @@
 #include "nsIParser.h"
 #include "nsHTMLEntities.h"
 #include "nsCRT.h"
+#include "nsIDocumentEncoder.h"   // for output flags
 
 #include "nsIUnicodeEncoder.h"
 #include "nsICharsetAlias.h"
@@ -248,16 +249,14 @@ NS_IMPL_RELEASE(nsHTMLContentSinkStream)
  */
 NS_HTMLPARS nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
-                            nsIOutputStream* aOutStream,
-                            const nsString* aCharsetOverride,
-                            PRBool aDoFormat,
-                            PRBool aDoHeader)
+                              nsIOutputStream* aOutStream,
+                              const nsString* aCharsetOverride,
+                              PRUint32 aFlags)
 {
   nsHTMLContentSinkStream* it = new nsHTMLContentSinkStream(aOutStream,
                                                             nsnull,
                                                             aCharsetOverride,
-                                                            aDoFormat,
-                                                            aDoHeader);
+                                                            aFlags);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -274,15 +273,13 @@ NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult,
  */
 NS_HTMLPARS nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
-                            nsString* aOutString, 
-                            PRBool aDoFormat,
-                            PRBool aDoHeader)
+                              nsString* aOutString, 
+                              PRUint32 aFlags)
 {
   nsHTMLContentSinkStream* it = new nsHTMLContentSinkStream(nsnull,
                                                             aOutString,
                                                             nsnull,
-                                                            aDoFormat,
-                                                            aDoHeader);
+                                                            aFlags);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -352,16 +349,21 @@ nsresult nsHTMLContentSinkStream::InitEncoder(const nsString& aCharset)
 nsHTMLContentSinkStream::nsHTMLContentSinkStream(nsIOutputStream* aOutStream, 
                                                  nsString* aOutString,
                                                  const nsString* aCharsetOverride,
-                                                 PRBool aDoFormat,
-                                                 PRBool aDoHeader)  {
+                                                 PRUint32 aFlags)
+{
   NS_INIT_REFCNT();
   mLowerCaseTags = PR_TRUE;  
   memset(mHTMLTagStack,0,sizeof(mHTMLTagStack));
   mHTMLStackPos = 0;
   mColPos = 0;
   mIndent = 0;
-  mDoFormat = aDoFormat;
-  mDoHeader = aDoHeader;
+  mDoFormat = (aFlags & nsIDocumentEncoder::OutputFormatted) ? PR_TRUE
+                                                             : PR_FALSE;
+  mBodyOnly = (aFlags & nsIDocumentEncoder::OutputBodyOnly) ? PR_TRUE
+                                                            : PR_FALSE;
+  mDoHeader = (!mBodyOnly) && (mDoFormat) &&
+               ((aFlags & nsIDocumentEncoder::OutputNoDoctype) ? PR_FALSE
+                                                               : PR_TRUE);
   mBuffer = nsnull;
   mBufferSize = 0;
   mUnicodeEncoder = nsnull;
@@ -510,8 +512,11 @@ void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
 
 void nsHTMLContentSinkStream::Write(const nsString& aString)
 {
+  if (mBodyOnly && !mInBody)
+    return;
+
   // No need to re-encode strings, since they're going from UCS2 to UCS2
-  if (mString != nsnull)
+  if (mString)
     mString->Append(aString);
 
   if (!mStream)
@@ -536,6 +541,9 @@ void nsHTMLContentSinkStream::Write(const nsString& aString)
 
 void nsHTMLContentSinkStream::Write(const char* aData)
 {
+  if (mBodyOnly && !mInBody)
+    return;
+
   if (mStream)
   {
     nsOutputStream out(mStream);
@@ -549,6 +557,9 @@ void nsHTMLContentSinkStream::Write(const char* aData)
 
 void nsHTMLContentSinkStream::Write(char aData)
 {
+  if (mBodyOnly && !mInBody)
+    return;
+
   if (mStream)
   {
     nsOutputStream out(mStream);
@@ -863,7 +874,6 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   const nsString&   name = aNode.GetText();
   nsString          tagName;
 
-
   if (tag == eHTMLTag_body)
     mInBody = PR_TRUE;
 
@@ -875,7 +885,6 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   else
     tagName.ToUpperCase();
 
-  
   if ((mDoFormat || !mInBody) && mColPos != 0 && BreakBeforeOpen(tag))
   {
     Write(NS_LINEBREAK);

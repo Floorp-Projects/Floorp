@@ -3078,7 +3078,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
   }
   else
   { // default processing
-    nsCOMPtr<nsITextEncoder> encoder;
+    nsCOMPtr<nsIDocumentEncoder> encoder;
     char* progid = new char[strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1];
     if (! progid)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -3109,24 +3109,19 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
  	  rv = GetPresShell(getter_AddRefs(shell));
     if (NS_FAILED(rv))
       return rv;
-    rv = encoder->Init(shell, doc, aFormatType);
+    rv = encoder->Init(shell, doc, aFormatType, aFlags);
     if (NS_FAILED(rv))
       return rv;
 
-	  if (aFlags & EditorOutputSelectionOnly)
+    // Set the selection, if appropriate:
+    if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
     {
-	    nsCOMPtr<nsIDOMSelection> selection;
-	    rv = GetSelection(getter_AddRefs(selection));
-	    if (NS_SUCCEEDED(rv) && selection)
-	      encoder->SetSelection(selection);
-	  }
+      nsCOMPtr<nsIDOMSelection> selection;
+      rv = GetSelection(getter_AddRefs(selection));
+      if (NS_SUCCEEDED(rv) && selection)
+        encoder->SetSelection(selection);
+    }
 	  
-    // Try to set pretty printing, but don't panic if it doesn't work:
-    (void)encoder->PrettyPrint((aFlags & EditorOutputFormatted)
-                               ? PR_TRUE : PR_FALSE);
-    // Indicate whether we want the comment and doctype headers prepended:
-    (void)encoder->AddHeader((aFlags & EditorOutputNoDoctype)
-                             ? PR_FALSE : PR_TRUE);
     // Set the wrap column.  If our wrap column is 0,
     // i.e. wrap to body width, then don't set it, let the
     // document encoder use its own default.
@@ -3156,7 +3151,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
                                            PRUint32 aFlags)
 {
   nsresult rv;
-  nsCOMPtr<nsITextEncoder> encoder;
+  nsCOMPtr<nsIDocumentEncoder> encoder;
   char* progid = new char[strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1];
   if (! progid)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -3190,42 +3185,37 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
 
  	rv = GetPresShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv)) {
-    rv = encoder->Init(shell,doc, aFormatType);
+    rv = encoder->Init(shell,doc, aFormatType, aFlags);
     if (NS_FAILED(rv))
       return rv;
   }
 
-  if (aFlags & EditorOutputSelectionOnly)
+  // Set the selection, if appropriate:
+  if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
   {
-    nsCOMPtr<nsIDOMSelection>  selection;
+    nsCOMPtr<nsIDOMSelection> selection;
     rv = GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(rv) && selection)
       encoder->SetSelection(selection);
   }
-
-  // Try to set pretty printing, but don't panic if it doesn't work:
-  (void)encoder->PrettyPrint((aFlags & EditorOutputFormatted)
-                             ? PR_TRUE : PR_FALSE);
-  // Indicate whether we want the comment and doc type headers prepended:
-  (void)encoder->AddHeader((aFlags & EditorOutputNoDoctype)
-                           ? PR_FALSE : PR_TRUE);
+	  
   // Set the wrap column.  If our wrap column is 0,
   // i.e. wrap to body width, then don't set it, let the
   // document encoder use its own default.
-    PRInt32 wrapColumn;
-    if (NS_SUCCEEDED(GetBodyWrapWidth(&wrapColumn)))
+  PRInt32 wrapColumn;
+  if (NS_SUCCEEDED(GetBodyWrapWidth(&wrapColumn)))
+  {
+    if (wrapColumn != 0)
     {
-      if (wrapColumn != 0)
-      {
-        PRUint32 wc;
-        if (wrapColumn < 0)
-          wc = 0;
-        else
-          wc = (PRUint32)wrapColumn;
-        if (wrapColumn > 0)
-          (void)encoder->SetWrapColumn(wc);
-      }
+      PRUint32 wc;
+      if (wrapColumn < 0)
+        wc = 0;
+      else
+        wc = (PRUint32)wrapColumn;
+      if (wrapColumn > 0)
+        (void)encoder->SetWrapColumn(wc);
     }
+  }
 
   return encoder->EncodeToStream(aOutputStream);
 }

@@ -2675,7 +2675,7 @@ void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
   converter.AddStartTag("section_body");
 
   nsIDOMElement* root = nsnull;
-  if (NS_OK == GetDocumentElement(&root)) 
+  if (NS_SUCCEEDED(GetDocumentElement(&root)))
   {  
 #if 1
     ToXIF(converter,root);
@@ -2752,10 +2752,10 @@ nsDocument::OutputDocumentAs(nsIOutputStream* aStream, nsIDOMSelection* selectio
     switch (aOutputFormat)
     {
     case eOutputText:
-      rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink), aStream, &charsetStr);
+      rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink), aStream, &charsetStr, 0);
       break;
     case eOutputHTML:
-      rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink), aStream, &charsetStr);
+      rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink), aStream, &charsetStr, 0);
       break;
     default:
       rv = NS_ERROR_INVALID_ARG;

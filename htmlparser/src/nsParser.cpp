@@ -818,7 +818,7 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
 
     nsString theOutput("");
     nsIHTMLContentSink*  theSink=0;
-    nsresult theResult=NS_New_HTML_ContentSinkStream(&theSink,&theOutput,PR_FALSE,PR_FALSE);
+    nsresult theResult=NS_New_HTML_ContentSinkStream(&theSink,&theOutput,0);
     SetContentSink(theSink);
     theResult=Parse(theBuffer,(void*)&theBuffer,aContentType,PR_FALSE,PR_TRUE);
     theOutput.StripWhitespace();

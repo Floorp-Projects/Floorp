@@ -56,6 +56,7 @@
 #include "nsWidgetsCID.h"
 
 #include "nsIHTMLEditor.h"
+#include "nsIDocumentEncoder.h"
 #include "nsIEditorMailSupport.h"
 #include "nsEditorCID.h"
 #include "nsIDOMNode.h"
@@ -612,7 +613,7 @@ void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
     PRUint32 flags = 0;
 
     if (PR_TRUE==IsPlainTextControl()) {
-      flags |= nsIEditor::EditorOutputNoDoctype;
+      flags |= nsIDocumentEncoder::OutputNoDoctype;
     }
 
     nsString wrap;
@@ -621,7 +622,7 @@ void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
     {
       if (kTextControl_Wrap_Hard.EqualsIgnoreCase(wrap))
       {
-        flags |= nsIEditor::EditorOutputFormatted;
+        flags |= nsIDocumentEncoder::OutputFormatted;
       }
     }
 
