@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -1304,8 +1305,18 @@ static void DumpHelp(char *appname)
   printf("%s--gtk-no-debug=FLAGS%sGtk+ debugging flags to unset\n", HELP_SPACER_1, HELP_SPACER_2);
   printf("%s--gtk-module=MODULE%sLoad an additional Gtk module\n", HELP_SPACER_1, HELP_SPACER_2);
 
-  /* end gtk options */
-#endif
+  /* end gtk toolkit options */
+#endif /* MOZ_WIDGET_GTK */
+#if MOZ_WIDGET_XLIB
+  printf("Xlib options\n");
+  printf("%s-display=DISPLAY%sX display to use\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-visual=VISUALID%sX visual to use\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-install_colormap%sInstall own colormap\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-sync%sMake X calls synchronous\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-no-xshm%sDon't use X shared memory extension\n", HELP_SPACER_1, HELP_SPACER_2);
+
+  /* end xlib toolkit options */
+#endif /* MOZ_WIDGET_XLIB */
 #ifdef MOZ_X11
   printf("X11 options\n");
   printf("%s--display=DISPLAY%sX display to use\n", HELP_SPACER_1, HELP_SPACER_2);
