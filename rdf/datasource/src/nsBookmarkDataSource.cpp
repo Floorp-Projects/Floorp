@@ -1193,7 +1193,7 @@ BookmarkDataSourceImpl::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFi
 					if (NS_FAILED(rv = children->GetNext(getter_AddRefs(iSupports))))	break;
 
 					nsCOMPtr<nsIRDFResource>	child = do_QueryInterface(iSupports);
-					if (nsnull == child)	break;
+					if (!child)	break;
 
 					PRBool	isIERoot = PR_FALSE, isContainer = PR_FALSE;
 					if (NS_SUCCEEDED(child->EqualsResource(kNC_IEFavoritesRoot, &isIERoot)))
