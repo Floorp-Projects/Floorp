@@ -37,7 +37,7 @@ $NumOfSites = $ARGV[2];
 $buildRoot = $ARGV[3];
 $LinkURL = $ARGV[4];
 $useClockTime = $ARGV[5];
-$buildIDFile = '< '.$buildRoot.'\bin\chrome\navigator\locale\navigator.dtd';
+$buildIDFile = '< '.$buildRoot.'\bin\chrome\locales\en-US\navigator\locale\navigator.dtd';
 debug_print( "Arguments:[ $UrlName | $logFile | $NumOfSites | $buildRoot | $LinkURL | $useClockTime]\n");
 
 #------------------------------------------------------------------------------
