@@ -157,6 +157,13 @@ public:
                                    nsIFrame*       aParentFrame,
                                    nsIFrame**      aContinuingFrame) = 0;
 
+  // Request to find the primary frame associated with a given content object.
+  // This is typically called by the pres shell when there is no mapping in
+  // the pres shell hash table
+  NS_IMETHOD FindPrimaryFrameFor(nsIPresContext* aPresContext,
+                                 nsIContent*     aContent,
+                                 nsIFrame**      aFrame) = 0;
+
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
   virtual void ListContexts(nsIStyleContext* aRootContext, FILE* out = stdout, PRInt32 aIndent = 0) = 0;
 };
