@@ -41,6 +41,9 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/newlist.gif \
 	$(srcdir)/property.gif \
 	$(srcdir)/abnewmsg.gif \
+	$(srcdir)/person.gif \
+	$(srcdir)/list.gif \
+	$(srcdir)/myaddrbk.gif \
 	$(srcdir)/editcard.xul \
 	$(srcdir)/addressbook.js \
 	$(NULL)

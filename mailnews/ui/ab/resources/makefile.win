@@ -36,8 +36,11 @@ install::
 	$(MAKE_INSTALL) newlist.gif 	$(DIST)\bin\res\mailnews\addrbook
 	$(MAKE_INSTALL) property.gif 	$(DIST)\bin\res\mailnews\addrbook
 	$(MAKE_INSTALL) abnewmsg.gif 	$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) person.gif 		$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) list.gif 		$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) myaddrbk.gif 	$(DIST)\bin\res\mailnews\addrbook
 	$(MAKE_INSTALL) editcard.xul 	$(DIST)\bin\res\mailnews\addrbook
-	$(MAKE_INSTALL) addressbook.js	$(DIST)\bin\res\mailnews\addrbook
+	$(MAKE_INSTALL) addressbook.js 	$(DIST)\bin\res\mailnews\addrbook
 
 clobber::
 	rm -f $(DIST)\res\mailnews\addrbook\addrshell.xul
@@ -52,6 +55,8 @@ clobber::
 	rm -f $(DIST)\res\mailnews\addrbook\newlist.gif
 	rm -f $(DIST)\res\mailnews\addrbook\property.gif
 	rm -f $(DIST)\res\mailnews\addrbook\abnewmsg.gif
+	rm -f $(DIST)\res\mailnews\addrbook\person.gif
+	rm -f $(DIST)\res\mailnews\addrbook\list.gif
+	rm -f $(DIST)\res\mailnews\addrbook\myaddrbk.gif
 	rm -f $(DIST)\res\mailnews\addrbook\editcard.xul
 	rm -f $(DIST)\res\mailnews\addrbook\addressbook.js
-

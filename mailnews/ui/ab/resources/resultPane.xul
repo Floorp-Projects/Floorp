@@ -12,12 +12,18 @@
 ]>   
 
 <window
-  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 
-<tree>
+<tree rdf:datasources="rdf:addressdirectory rdf:addresscard" id="resultTree">
+  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#PersonName"/>
+  <treecol id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#Email"/>
+  <treecol id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
+  <treecol id="OrganizationColumn" rdf:resource="http://home.netscape.com/NC-rdf#Organization"/>
+  <treecol id="NicknameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Nickname"/>
+  <treecol id="CityColumn" rdf:resource="http://home.netscape.com/NC-rdf#City"/>
   <treehead>
     <treeitem>
 		<treecell>&nameColumn.label;</treecell>
@@ -30,14 +36,14 @@
   </treehead>
   
 
-  <treebody id="person" name="personlist">
-    <treeitem  open="true">
-		<treecell>Candice huang</treecell>
-		<treecell>chuang@netscape.com</treecell>
-		<treecell>2674</treecell>
-		<treecell>Mail</treecell>
-		<treecell>candice</treecell>
-		<treecell>Mountain View</treecell>
+  <treebody id="" name="cardTreeBody">
+    <treeitem open="false">
+      <treecell/>
+      <treecell/>
+      <treecell/>
+      <treecell/>
+      <treecell/>
+      <treecell/>
     </treeitem>
   </treebody>
 </tree>

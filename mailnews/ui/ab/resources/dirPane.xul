@@ -8,11 +8,12 @@
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
-  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 
-<tree>
+<tree rdf:datasources="rdf:addressdirectory" id="dirTree" onclick="return parent.parent.ChangeDirectoryByDOMNode(event.target.parentNode)">
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#DirName"/>
   <treehead>
     <treeitem>
       <treecell>&directoryColumn.label;</treecell>
@@ -20,8 +21,8 @@
   </treehead>
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
-    <treeitem id="directory">
-      <treecell><treeindentation/>Personal Address Book</treecell>
+    <treeitem id="abdirectory:/" open="true">
+      <treecell/>
       </treeitem>
   </treebody>
 </tree>
