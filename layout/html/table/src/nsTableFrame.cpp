@@ -68,22 +68,6 @@ static void GetPlaceholderFor(nsIPresContext& aPresContext, nsIFrame& aFrame, ns
 
 static const PRInt32 kColumnWidthIncrement=10;
 
-#if 1
-PRBool nsDebugTable::gRflTableOuter = PR_FALSE;
-PRBool nsDebugTable::gRflTable      = PR_FALSE;
-PRBool nsDebugTable::gRflRowGrp     = PR_FALSE;
-PRBool nsDebugTable::gRflRow        = PR_FALSE;
-PRBool nsDebugTable::gRflCell       = PR_FALSE;
-PRBool nsDebugTable::gRflArea       = PR_FALSE;
-#else
-PRBool nsDebugTable::gRflTableOuter = PR_TRUE;
-PRBool nsDebugTable::gRflTable      = PR_TRUE;
-PRBool nsDebugTable::gRflRowGrp     = PR_TRUE;
-PRBool nsDebugTable::gRflRow        = PR_TRUE;
-PRBool nsDebugTable::gRflCell       = PR_TRUE;
-PRBool nsDebugTable::gRflArea       = PR_TRUE;
-#endif
-static PRInt32 gRflCount = 0;
 
 /* ----------- InnerTableReflowState ---------- */
 
@@ -184,6 +168,9 @@ nsTableFrame::nsTableFrame()
     nsCRT::memset (mColumnWidths, 0, mColumnWidthsLength*sizeof(PRInt32));
   }
 #endif
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  mTimer = new nsReflowTimer(this);
+#endif
 }
 
 NS_IMPL_ADDREF_INHERITED(nsTableFrame, nsHTMLContainerFrame)
@@ -259,6 +246,9 @@ nsTableFrame::~nsTableFrame()
     delete mTableLayoutStrategy;
     mTableLayoutStrategy = nsnull;
   }
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflowDone(this);
+#endif
 }
 
 NS_IMETHODIMP
@@ -1640,8 +1630,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
                                nsReflowStatus& aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableFrame", aReflowState.reason);
-  if (nsDebugTable::gRflTable) nsTableFrame::DebugReflow("T::Rfl en", this, &aReflowState, nsnull);
-
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
+#endif
+                                   
   // Initialize out parameter
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = 0;
@@ -1804,7 +1796,9 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     }
   }
 
-  if (nsDebugTable::gRflTable) nsTableFrame::DebugReflow("T::Rfl ex", this, nsnull, &aDesiredSize, aStatus);
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
+#endif
   return rv;
 }
 
@@ -4615,32 +4609,10 @@ PRInt32 nsTableFrame::GetNumCellsOriginatingInCol(PRInt32 aColIndex) const
   return cellMap->GetNumCellsOriginatingInCol(aColIndex);
 }
 
-#define INDENT_PER_LEVEL 2
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
 
-void nsTableFrame::DebugGetIndent(const nsIFrame* aFrame, 
-                                  char*           aBuf)
-{
-  PRInt32 numLevels = 0;
-  nsIFrame* parent = nsnull;
-  aFrame->GetParent(&parent);
-  while (parent) {
-    nsIAtom* frameType = nsnull;
-    parent->GetFrameType(&frameType);
-    if ((nsDebugTable::gRflTableOuter && (nsLayoutAtoms::tableOuterFrame    == frameType)) ||
-        (nsDebugTable::gRflTable      && (nsLayoutAtoms::tableFrame         == frameType)) ||
-        (nsDebugTable::gRflRowGrp     && (nsLayoutAtoms::tableRowGroupFrame == frameType)) ||
-        (nsDebugTable::gRflRow        && (nsLayoutAtoms::tableRowFrame      == frameType)) ||
-        (nsDebugTable::gRflCell       && (nsLayoutAtoms::tableCellFrame     == frameType)) ||
-        (nsDebugTable::gRflArea       && (nsLayoutAtoms::areaFrame          == frameType))) {
-      numLevels++;
-    }
-    NS_IF_RELEASE(frameType);
-    parent->GetParent(&parent);
-  }
-  PRInt32 indent = INDENT_PER_LEVEL * numLevels;
-  nsCRT::memset (aBuf, ' ', indent);
-  aBuf[indent] = 0;
-}
+static PRInt32 gRflCount = 0;
+#define INDENT_PER_LEVEL 1
 
 void PrettyUC(nscoord aSize,
               char*   aBuf)
@@ -4653,43 +4625,88 @@ void PrettyUC(nscoord aSize,
   }
 }
 
-void nsTableFrame::DebugReflow(char*                      aMessage,
-                               const nsIFrame*            aFrame,
-                               const nsHTMLReflowState*   aState, 
-                               const nsHTMLReflowMetrics* aMetrics,
-                               const nsReflowStatus       aStatus)
+void GetFrameTypeName(nsIAtom* aFrameType,
+                      char*    aName)
 {
+  if (nsLayoutAtoms::tableOuterFrame == aFrameType) 
+    strcpy(aName, "Tbl");
+  else if (nsLayoutAtoms::tableFrame == aFrameType) 
+    strcpy(aName, "Tbl");
+  else if (nsLayoutAtoms::tableRowGroupFrame == aFrameType) 
+    strcpy(aName, "RowG");
+  else if (nsLayoutAtoms::tableRowFrame == aFrameType) 
+    strcpy(aName, "Row");
+  else if (nsLayoutAtoms::tableCellFrame == aFrameType) 
+    strcpy(aName, "Cell");
+  else if (nsLayoutAtoms::blockFrame == aFrameType) 
+    strcpy(aName, "Block");
+  else 
+    NS_ASSERTION(PR_FALSE, "invalid call to GetFrameTypeName");
+}
+
+#ifdef DEBUG_TABLE_REFLOW
+
+void DebugGetIndent(const nsIFrame* aFrame, 
+                    char*           aBuf)
+{
+  PRInt32 numLevels = 0;
+  nsIFrame* parent = nsnull;
+  aFrame->GetParent(&parent);
+  while (parent) {
+    nsCOMPtr<nsIAtom> frameType;
+    parent->GetFrameType(getter_AddRefs(frameType));
+    if ((nsLayoutAtoms::tableOuterFrame    == frameType.get()) ||
+        (nsLayoutAtoms::tableFrame         == frameType.get()) ||
+        (nsLayoutAtoms::tableRowGroupFrame == frameType.get()) ||
+        (nsLayoutAtoms::tableRowFrame      == frameType.get()) ||
+        (nsLayoutAtoms::tableCellFrame     == frameType.get())) {
+      numLevels++;
+    }
+    parent->GetParent(&parent);
+  }
+  PRInt32 indent = INDENT_PER_LEVEL * numLevels;
+  nsCRT::memset (aBuf, ' ', indent);
+  aBuf[indent] = 0;
+}
+
+void nsTableFrame::DebugReflow(nsIFrame*            aFrame,
+                               nsHTMLReflowState&   aState,
+                               nsHTMLReflowMetrics* aMetrics,
+                               nsReflowStatus       aStatus)
+{
+  // get the frame type
+  nsCOMPtr<nsIAtom> fType;
+  aFrame->GetFrameType(getter_AddRefs(fType));
+  char fName[128];
+  GetFrameTypeName(fType.get(), fName);
+
   char indent[256];
-  nsTableFrame::DebugGetIndent(aFrame, indent);
-  printf("%s%s %p ", indent, aMessage, aFrame);
-  char width[32];
-  char height[32];
-  if (aState) {
-    PrettyUC(aState->availableWidth, width);
-    PrettyUC(aState->availableHeight, height);
-    printf("rea=%d av=(%s,%s) ", aState->reason, width, height); 
-    PrettyUC(aState->mComputedWidth, width);
-    PrettyUC(aState->mComputedHeight, height);
-    printf("comp=(%s,%s) count=%d \n ", width, height, gRflCount);
+  DebugGetIndent(aFrame, indent);
+  printf("%s%s %p ", indent, fName, aFrame);
+  char width[16];
+  char height[16];
+  if (!aMetrics) { // start
+    PrettyUC(aState.availableWidth, width);
+    printf("r=%d a=%s ", aState.reason, width); 
+    PrettyUC(aState.mComputedWidth, width);
+    PrettyUC(aState.mComputedHeight, height);
+    printf("c=%s,%s cnt=%d \n", width, height, gRflCount);
     gRflCount++;
     //if (32 == gRflCount) {
     //  NS_ASSERTION(PR_FALSE, "stop");
     //}
   }
-  if (aMetrics) {
-    if (aState) {
-      printf("%s", indent);
-    }
+  if (aMetrics) { // stop
     PrettyUC(aMetrics->width, width);
     PrettyUC(aMetrics->height, height);
-    printf("des=(%s,%s) ", width, height);
+    printf("d=%s,%s ", width, height);
     if (aMetrics->maxElementSize) {
       PrettyUC(aMetrics->maxElementSize->width, width);
-      PrettyUC(aMetrics->maxElementSize->height, height);
-      printf("maxElem=(%s,%s)", width, height);
+      printf("me=%s ", width);
     }
     if (aMetrics->mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-      printf("max=%d ", aMetrics->mMaximumWidth);
+      PrettyUC(aMetrics->mMaximumWidth, width);
+      printf("m=%s ", width);
     }
     if (NS_FRAME_COMPLETE != aStatus) {
       printf("status=%d", aStatus);
@@ -4697,6 +4714,206 @@ void nsTableFrame::DebugReflow(char*                      aMessage,
     printf("\n");
   }
 }
+
+#else
+
+nsReflowTimer* GetFrameTimer(nsIFrame* aFrame,
+                             nsIAtom*  aFrameType)
+{
+  if (nsLayoutAtoms::tableOuterFrame == aFrameType) 
+    return ((nsTableOuterFrame*)aFrame)->mTimer;
+  else if (nsLayoutAtoms::tableFrame == aFrameType) 
+    return ((nsTableFrame*)aFrame)->mTimer;
+  else if (nsLayoutAtoms::tableRowGroupFrame == aFrameType) 
+    return ((nsTableRowGroupFrame*)aFrame)->mTimer;
+  else if (nsLayoutAtoms::tableRowFrame == aFrameType) 
+    return ((nsTableRowFrame*)aFrame)->mTimer;
+  else if (nsLayoutAtoms::tableCellFrame == aFrameType) 
+    return ((nsTableCellFrame*)aFrame)->mTimer;
+  else if (nsLayoutAtoms::blockFrame == aFrameType) { 
+    nsIFrame* parentFrame;
+    aFrame->GetParent(&parentFrame);
+    nsCOMPtr<nsIAtom> fType;
+    parentFrame->GetFrameType(getter_AddRefs(fType));
+    if (nsLayoutAtoms::tableCellFrame == fType) {
+      nsTableCellFrame* cellFrame = (nsTableCellFrame*)parentFrame;
+      // fix up the block timer, which may be referring to the cell
+      if (cellFrame->mBlockTimer->mFrame == parentFrame) {
+        cellFrame->mBlockTimer->mFrame = aFrame;
+        NS_IF_RELEASE(cellFrame->mBlockTimer->mFrameType);
+        cellFrame->mBlockTimer->mFrameType = nsLayoutAtoms::blockFrame;
+        NS_ADDREF(cellFrame->mBlockTimer->mFrameType);
+      }
+      return cellFrame->mBlockTimer;
+    }
+  }
+  return nsnull;
+}
+
+void DebugReflowPrint(nsReflowTimer& aTimer,
+                      PRUint32       aLevel,
+                      PRBool         aSummary)
+{
+  // set up the indentation
+  char indentChar[128];
+  PRInt32 indent = INDENT_PER_LEVEL * aLevel;
+  nsCRT::memset (indentChar, ' ', indent);
+  indentChar[indent] = 0;
+
+  // get the frame type
+  char fName[128];
+  GetFrameTypeName(aTimer.mFrameType, fName);
+
+  // print the timer
+  printf("\n%s%s %dms %p", indentChar, fName, aTimer.Elapsed(), aTimer.mFrame);
+  if (aSummary) {
+    printf(" times=%d", aTimer.mNumStarts);
+  }
+  else {
+    char avWidth[16];
+    char compWidth[16];
+    char compHeight[16];
+    char desWidth[16];
+    char desHeight[16];
+    PrettyUC(aTimer.mAvailWidth, avWidth);
+    PrettyUC(aTimer.mComputedWidth, compWidth);
+    PrettyUC(aTimer.mComputedHeight, compHeight);
+    PrettyUC(aTimer.mDesiredWidth, desWidth);
+    PrettyUC(aTimer.mDesiredHeight, desHeight);
+    printf(" r=%d a=%s c=%s,%s d=%s,%s", aTimer.mReason, avWidth, compWidth,
+           compHeight, desWidth, desHeight); 
+    if (aTimer.mMaxElementWidth >= 0) {
+      PrettyUC(aTimer.mMaxElementWidth, avWidth);
+      printf(" me=%s", avWidth);
+    }
+    if (aTimer.mMaxWidth >= 0) {
+      PrettyUC(aTimer.mMaxWidth, avWidth);
+      printf(" m=%s", avWidth);
+    }
+    if (NS_FRAME_COMPLETE != aTimer.mStatus) {
+      printf(" status=%d", aTimer.mStatus);
+    }
+    printf(" cnt=%d", aTimer.mCount);
+  }
+  // print the timer's children
+  nsVoidArray& children = aTimer.mChildren;
+  PRInt32 numChildren = children.Count();
+  for (PRInt32 childX = 0; childX < numChildren; childX++) {
+    nsReflowTimer* child = (nsReflowTimer*)children.ElementAt(childX);
+    if (child) {
+      DebugReflowPrint(*child, aLevel + 1, aSummary);
+    }
+    else NS_ASSERTION(PR_FALSE, "bad DebugTimeReflow");
+  }
+}
+
+void nsTableFrame::DebugReflow(nsIFrame*            aFrame,
+                               nsHTMLReflowState&   aState,
+                               nsHTMLReflowMetrics* aMetrics,
+                               nsReflowStatus       aStatus)
+{
+  // get the parent timer 
+  const nsHTMLReflowState* parentRS = aState.parentReflowState;
+  nsReflowTimer* parentTimer = nsnull;
+  while (parentRS) {
+    parentTimer = (nsReflowTimer *)parentRS->mDebugHook;
+    if (parentTimer) break;
+    parentRS = parentRS->parentReflowState;
+  }
+  // get the the frame summary timer
+  nsCOMPtr<nsIAtom> frameType = nsnull;
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+  nsReflowTimer* frameTimer = GetFrameTimer(aFrame, frameType.get());
+  if (!frameTimer) {
+    NS_ASSERTION(PR_FALSE, "no frame timer");
+    return;
+  }
+  if (!aMetrics) { // start
+    // create the reflow timer
+    nsReflowTimer* timer = new nsReflowTimer(aFrame);
+    if (!timer) {
+      NS_ASSERTION(PR_FALSE, "could not create timer");
+      return;
+    }
+    timer->mReason = aState.reason;
+    timer->mAvailWidth = aState.availableWidth;
+    timer->mComputedWidth = aState.mComputedWidth;
+    timer->mComputedHeight = aState.mComputedHeight;
+    timer->mCount = gRflCount++;   
+    timer->Start();
+    aState.mDebugHook = timer;
+    if (parentTimer) {
+      parentTimer->mChildren.AppendElement(timer);
+    }
+    // start the frame summary timer
+    frameTimer->Start();
+  }
+  else {
+    // stop the reflow timer
+    nsReflowTimer* timer = (nsReflowTimer *)aState.mDebugHook; 
+    if (timer) {
+      timer->Stop();
+      timer->mDesiredWidth  = aMetrics->width;
+      timer->mDesiredHeight = aMetrics->height;
+      timer->mMaxElementWidth = (aMetrics->maxElementSize) 
+        ? aMetrics->maxElementSize->width : -1;
+      timer->mMaxWidth = (aMetrics->mFlags & NS_REFLOW_CALC_MAX_WIDTH) 
+        ? aMetrics->mMaximumWidth : -1;
+      timer->mStatus = aStatus;
+    }
+    else {
+      NS_ASSERTION(PR_FALSE, "bad DebugTimeReflow");
+      return;
+    }
+    if (!parentTimer) {
+      // print out all of the reflow timers
+      DebugReflowPrint(*timer, 0, PR_FALSE);
+      timer->Destroy();
+    }
+    // stop the frame summary timer
+    frameTimer->Stop();
+  }
+}
+
+void nsTableFrame::DebugReflowDone(nsIFrame* aFrame)
+{
+  // get the timer of aFrame
+  nsCOMPtr<nsIAtom> frameType = nsnull;
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+  nsReflowTimer* thisTimer = GetFrameTimer(aFrame, frameType.get());
+
+  // get the nearest ancestor frame with a timer
+  nsReflowTimer* ancestorTimer;
+  nsIFrame* ancestorFrame;
+  aFrame->GetParent(&ancestorFrame);
+  while (ancestorFrame) {
+    nsCOMPtr<nsIAtom> frameType = nsnull;
+    ancestorFrame->GetFrameType(getter_AddRefs(frameType));
+    ancestorTimer = GetFrameTimer(ancestorFrame, frameType.get());
+    if (ancestorTimer) break;
+    ancestorFrame->GetParent(&ancestorFrame);
+  }
+  if (ancestorTimer) { // add this timer to its parent
+    ancestorTimer->mChildren.AppendElement(thisTimer);
+    nsCOMPtr<nsIAtom> fType;
+    aFrame->GetFrameType(getter_AddRefs(fType));
+    if (nsLayoutAtoms::tableCellFrame == fType) {
+      // add the cell block timer as a child of the cell timer
+      nsTableCellFrame* cellFrame = (nsTableCellFrame*)aFrame;
+      cellFrame->mTimer->mChildren.AppendElement(cellFrame->mBlockTimer);
+    }
+  }
+  else { // print out all of the frame timers
+    printf("\n\nSUMMARY OF REFLOW BY FRAME\n");
+    DebugReflowPrint(*thisTimer, 0, PR_TRUE);
+    thisTimer->Destroy();
+  }
+}
+
+#endif
+
+#endif
+
 
 PRBool nsTableFrame::RowHasSpanningCells(PRInt32 aRowIndex)
 {

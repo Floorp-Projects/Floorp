@@ -28,6 +28,10 @@
 class  nsTableFrame;
 class  nsTableCellFrame;
 
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+class nsReflowTimer;
+#endif
+
 /* ----------- RowReflowState ---------- */
 
 struct RowReflowState {
@@ -71,6 +75,8 @@ struct RowReflowState {
 class nsTableRowFrame : public nsHTMLContainerFrame
 {
 public:
+  virtual ~nsTableRowFrame();
+
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -321,6 +327,11 @@ private:
   // max-ascent and max-descent amongst all cells that have 'vertical-align: baseline'
   nscoord mMaxCellAscent;  // does include cells with rowspan > 1
   nscoord mMaxCellDescent; // does *not* include cells with rowspan > 1
+
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+public:
+  nsReflowTimer* mTimer;
+#endif
 };
 
 inline PRInt32 nsTableRowFrame::GetRowIndex() const

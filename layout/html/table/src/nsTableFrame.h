@@ -46,6 +46,87 @@ struct InnerTableReflowState;
 struct nsStylePosition;
 struct nsStyleSpacing;
 
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+#ifdef WIN32
+#include <windows.h>
+#endif
+class nsReflowTimer
+{
+public:
+  nsReflowTimer(nsIFrame* aFrame) {
+    mFrame = aFrame;
+    aFrame->GetFrameType(&mFrameType);
+		Reset();
+	}
+
+  void Destroy() {
+    PRInt32 numChildren = mChildren.Count();
+    for (PRInt32 childX = 0; childX < numChildren; childX++) {
+      ((nsReflowTimer*)mChildren.ElementAt(childX))->Destroy();
+    }
+    NS_IF_RELEASE(mFrameType);
+    delete this;
+  }
+
+  void Print(PRUint32 aIndent,
+             char*    aHeader = 0)  {
+		if (aHeader) {
+	    printf("%s", aHeader);
+		}
+    printf(" elapsed=%d numStarts=%d \n", Elapsed(), mNumStarts);	  
+  }
+
+  PRUint32 Elapsed() {
+    return mTotalTime;
+	}
+
+  void Reset() {
+		mTotalTime = mNumStarts = 0;
+    mStarted = PR_FALSE;
+	}
+
+  void Start() {
+    NS_ASSERTION(!mStarted, "started timer without stopping");
+#ifdef WIN32
+    mStartTime = GetTickCount();
+#else
+    mStartTime = 0;
+#endif
+    mStarted = PR_TRUE;
+    mNumStarts++;
+	}
+
+  void Stop() {
+    NS_ASSERTION(mStarted, "stopped timer without starting");
+		mTotalTime += GetTickCount() - mStartTime;
+    mStarted = PR_FALSE;
+	}
+  PRUint32        mTotalTime;
+  PRUint32        mStartTime;
+  PRUint32        mNumStarts;
+  PRBool          mStarted;
+  const nsIFrame* mFrame;
+  nsIAtom*        mFrameType; // needed for frame summary timer
+  nsReflowReason  mReason;
+  nsVoidArray     mChildren;
+  PRInt32         mCount;
+  // reflow state/reflow metrics data
+  nscoord         mAvailWidth;
+  nscoord         mComputedWidth;
+  nscoord         mComputedHeight;
+  nscoord         mMaxElementWidth;
+  nscoord         mMaxWidth; // preferred width
+  nscoord         mDesiredWidth;
+  nscoord         mDesiredHeight;        
+  nsReflowStatus  mStatus;
+
+private:
+  ~nsReflowTimer() {}
+
+};
+
+#endif
+
 /**
  * Child list name indices
  * @see #GetAdditionalChildListName()
@@ -53,15 +134,6 @@ struct nsStyleSpacing;
 #define NS_TABLE_FRAME_COLGROUP_LIST_INDEX 0
 #define NS_TABLE_FRAME_LAST_LIST_INDEX    NS_TABLE_FRAME_COLGROUP_LIST_INDEX
 
-struct nsDebugTable
-{
-  static PRBool gRflTableOuter;
-  static PRBool gRflTable;
-  static PRBool gRflRowGrp;
-  static PRBool gRflRow;
-  static PRBool gRflCell;
-  static PRBool gRflArea;
-};
 /* ============================================================================ */
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
@@ -415,15 +487,6 @@ public:
 
   PRBool HasCellSpanningPctCol() const;
   void SetHasCellSpanningPctCol(PRBool aValue);
-
-  static void DebugReflow(char*                      aMessage,
-                          const nsIFrame*            aFrame,
-                          const nsHTMLReflowState*   aState, 
-                          const nsHTMLReflowMetrics* aMetrics,
-                          const nsReflowStatus       aStatus = NS_FRAME_COMPLETE);
-
-  static void DebugGetIndent(const nsIFrame* aFrame, 
-                             char*           aBuf);
 
 protected:
 
@@ -873,6 +936,19 @@ protected:
                                                // used only for the collapsing border model
   nscoord                 mPercentBasisForRows;
   nscoord                 mPreferredWidth;
+
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+public:
+  static void DebugReflow(nsIFrame*            aFrame, 
+                          nsHTMLReflowState&   aReflowState, 
+                          nsHTMLReflowMetrics* aMetrics = nsnull,
+                          nsReflowStatus       aStatus  = NS_FRAME_COMPLETE);
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  static void DebugReflowDone(nsIFrame* aFrame);
+
+  nsReflowTimer* mTimer;
+#endif
+#endif
 };
 
 

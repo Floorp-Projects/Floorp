@@ -115,6 +115,16 @@ nsTableRowFrame::nsTableRowFrame()
   mBits.mMinRowSpan = 1;
   mBits.mRowIndex   = 0;
   ResetTallestCell(0);
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  mTimer = new nsReflowTimer(this);
+#endif
+}
+
+nsTableRowFrame::~nsTableRowFrame()
+{
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflowDone(this);
+#endif
 }
 
 NS_IMETHODIMP
@@ -1488,7 +1498,9 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
                         nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableRowFrame", aReflowState.reason);
-  if (nsDebugTable::gRflRow) nsTableFrame::DebugReflow("TR::Rfl en", this, &aReflowState, nsnull);
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
+#endif
   nsresult rv = NS_OK;
 
   // Initialize 'out' parameters (aStatus set below, undefined if rv returns an error)
@@ -1548,7 +1560,9 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
     mMaxElementSize = *aDesiredSize.maxElementSize;
   }
 
-  if (nsDebugTable::gRflRow) nsTableFrame::DebugReflow("TR::Rfl ex", this, nsnull, &aDesiredSize, aStatus);
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
+#endif
   return rv;
 }
 

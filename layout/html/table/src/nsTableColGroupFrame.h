@@ -29,6 +29,7 @@
 class nsTableColFrame;
 class nsTableFrame;
 
+
 enum nsTableColGroupType {
   eColGroupContent            = 0, // there is real col group content associated   
   eColGroupAnonymousCol       = 1, // the result of a col
@@ -217,7 +218,6 @@ protected:
     unsigned int mType:4;       
     unsigned int mUnused:28;                         
   } mBits;
-
 };
 
 inline nsTableColGroupFrame::nsTableColGroupFrame()
