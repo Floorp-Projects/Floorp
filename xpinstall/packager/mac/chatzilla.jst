@@ -1,28 +1,29 @@
-// NOTE: due to a bug Mac wizard install folders are off by one, so
-// different scripts would be needed for an initial install vs.
-// a later XPInstall.  This script is being written for an initial
-// install; for a web install use the Windows or Unix installs
+var srDest = $SpaceRequired$;
 
 var err = initInstall("Chatzilla v0.5", "Chatzilla", "$Version$"); 
 logComment("initInstall: " + err);
 
 var fProgram = getFolder("Program");
-addFile("Chatzilla service",
+
+if (verifyDiskSpace(fProgram, srDest))
+{
+    addFile("Chatzilla service",
         "viewer/Components/chatzilla-service.js",
         getFolder(fProgram,"Components"),
         "");
 
-var fChat = getFolder(fProgram,"chrome/`packages/chatzilla");
-addDirectory("",
+    var fChat = getFolder(fProgram,"chrome/packages/chatzilla");
+    addDirectory("",
              "viewer/chrome/packages/chatzilla", // jar source folder 
              fChat,                           // target folder
              "");                             // target subdir 
 
-registerChrome(PACKAGE | DELAYED_CHROME, fChat);
+    registerChrome(PACKAGE | DELAYED_CHROME, fChat);
 
-err = getLastError();
-if (err==SUCCESS)
-    performInstall(); 
+    if (err==SUCCESS)
+        performInstall(); 
+    else
+        cancelInstall(err);
+}
 else
-    cancelInstall(err);
-
+    cancelInstall(INSUFFICIENT_DISK_SPACE);

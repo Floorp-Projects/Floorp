@@ -1,3 +1,5 @@
+var srDest = $SpaceRequired$;
+
 var err = initInstall("Mozilla Seamonkey", "Browser", "$Version$"); 
 logComment("initInstall: " + err);
 
@@ -6,22 +8,27 @@ logComment("fProgram: " + fProgram);
 
 var subFolder = "Mozilla Folder";
 
-err = addDirectory("Program",
+if (verifyDiskSpace(fProgram, srDest))
+{
+    err = addDirectory("Program",
                    "$Version$",
                    "viewer",           // jar source folder 
                    fProgram,           // target folder 
                    "",                 // target subdir 
                    true );             // force flag 
 
-logComment("addDirectory() returned: " + err);
+    logComment("addDirectory() returned: " + err);
 
-if (err==SUCCESS)
-{
-	err = performInstall(); 
-	logComment("performInstall() returned: " + err);
+    if (err==SUCCESS)
+    {
+	    err = performInstall(); 
+    	logComment("performInstall() returned: " + err);
+    }
+    else
+    {
+	    cancelInstall(err);
+	    logComment("cancelInstall() returned: " + err);
+    }
 }
 else
-{
-	cancelInstall(err);
-	logComment("cancelInstall() returned: " + err);
-}
+    cancelInstall(INSUFFICIENT_DISK_SPACE);

@@ -1,3 +1,5 @@
+var srDest = $SpaceRequired$;
+
 var err;
 var fProgram;
 
@@ -13,26 +15,29 @@ logComment("initInstall: " + err);
 fProgram = getFolder("Program");
 logComment("fProgram: " + fProgram);
 
-err = addDirectory("",
+if (verifyDiskSpace(fProgram, srDest))
+{
+    err = addDirectory("",
                    "$Version$",
                    "viewer",
                    fProgram,
                    "",
                    true);
-logComment("addDirectory() returned: " + err);
+    logComment("addDirectory() returned: " + err);
 
-// register chrome
-var cf = getFolder("Chrome");
-registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName));
+    var cf = getFolder("Chrome");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName));
 
-// check return value
-if(err == SUCCESS)
-{
-    err = performInstall(); 
-    logComment("performInstall() returned: " + err);
+    if(err == SUCCESS)
+    {
+        err = performInstall(); 
+        logComment("performInstall() returned: " + err);
+    }
+    else
+    {
+        cancelInstall(err);
+        logComment("cancelInstall due to error: " + err);
+    }
 }
 else
-{
-    cancelInstall(err);
-    logComment("cancelInstall due to error: " + err);
-}
+    cancelInstall(INSUFFICIENT_DISK_SPACE);
