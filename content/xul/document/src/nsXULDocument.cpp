@@ -112,6 +112,7 @@
 #include "nsIPref.h"
 #include "nsIFocusController.h"
 #include "nsContentList.h"
+#include "nsIScriptSecurityManager.h"
 
 //----------------------------------------------------------------------
 //
@@ -2888,6 +2889,8 @@ nsXULDocument::ResumeWalk()
     // <html:script src="..." />) can be properly re-loaded if the
     // cached copy of the document becomes stale.
     nsresult rv;
+    nsCOMPtr<nsIScriptSecurityManager> secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     while (1) {
         // Begin (or resume) walking the current prototype.
@@ -3063,10 +3066,28 @@ nsXULDocument::ResumeWalk()
                    ("xul: loading overlay %s", urlspec.get()));
         }
 #endif
+
+        // Chrome documents are allowed to load overlays from anywhere.
+        // Also, any document may load a chrome:// overlay.
+        // In all other cases, the overlay is only allowed to load if
+        // the master document and prototype document have the same origin.
+
+        PRBool overlayIsChrome = IsChromeURI(uri);
+        if (!IsChromeURI(mDocumentURL) && !overlayIsChrome) {
+            // Make sure we're allowed to load this overlay.
+            rv = secMan->CheckSameOriginURI(mDocumentURL, uri);
+            if (NS_FAILED(rv)) {
+                // move on to the next overlay
+                continue;
+            }
+        }
+
         // Look in the prototype cache for the prototype document with
         // the specified overlay URI.
-        if (IsChromeURI(uri))
+        if (overlayIsChrome)
             gXULCache->GetPrototype(uri, getter_AddRefs(mCurrentPrototype));
+        else
+            mCurrentPrototype = nsnull;
 
         // Same comment as nsChromeProtocolHandler::NewChannel and
         // nsXULDocument::StartDocumentLoad
@@ -3088,7 +3109,6 @@ nsXULDocument::ResumeWalk()
         gXULCache->GetEnabled(&useXULCache);
 
         if (useXULCache && mCurrentPrototype) {
-            NS_ASSERTION(IsChromeURI(uri), "XUL cache hit on non-chrome URI?");
             PRBool loaded;
             rv = mCurrentPrototype->AwaitLoadDone(this, &loaded);
             if (NS_FAILED(rv)) return rv;
@@ -3148,7 +3168,7 @@ nsXULDocument::ResumeWalk()
             // each time.  We must do this after NS_OpenURI and AsyncOpen,
             // or chrome code will wrongly create a cached chrome channel
             // instead of a real one.
-            if (useXULCache && IsChromeURI(uri)) {
+            if (useXULCache && overlayIsChrome) {
                 rv = gXULCache->PutPrototype(mCurrentPrototype);
                 if (NS_FAILED(rv)) return rv;
             }
