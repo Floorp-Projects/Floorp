@@ -515,6 +515,9 @@ nsStorageInputStream::Seek(PRInt32 aWhence, PRInt32 aOffset)
     case NS_SEEK_END:
         pos = mStorageStream->mLogicalLength + aOffset;
         break;
+    default:
+        NS_NOTREACHED("unexpected whence value");
+        return NS_ERROR_UNEXPECTED;
     }
 
     return Seek(pos);
