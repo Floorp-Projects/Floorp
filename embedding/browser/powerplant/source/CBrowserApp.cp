@@ -623,7 +623,7 @@ NS_IMETHODIMP CBrowserApp::Observe(nsISupports *aSubject, const char *aTopic, co
             status->VetoChange();
         }
     }
-    else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-change-teardown").get()))
+    else if (!nsCRT::strcmp(aTopic, "profile-change-teardown"))
     {
         // Close all open windows. Alternatively, we could just call CBrowserWindow::Stop()
         // on each. Either way, we have to stop all network activity on this phase.
@@ -639,7 +639,7 @@ NS_IMETHODIMP CBrowserApp::Observe(nsISupports *aSubject, const char *aTopic, co
         	}
         }
     }
-    else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-after-change").get()))
+    else if (!nsCRT::strcmp(aTopic, "profile-after-change"))
     {
         InitializePrefs();
 
