@@ -157,7 +157,6 @@
 <!ENTITY debugMenu.label "Debug">
 <!ENTITY outputTextCmd.label "Output Text">
 <!ENTITY outputHTMLCmd.label "Output HTML">
-<!ENTITY outputXIFCmd.label "Output XIF">
 <!ENTITY insertTextCmd.label "Insert Text">
 <!ENTITY testSelectionCmd.label "Test Selection">
 <!ENTITY testTableLayoutCmd.label "Test Table Layout">
