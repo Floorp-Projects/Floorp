@@ -34,7 +34,9 @@
 nsDll::nsDll(const char *codeDllName, int type)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
-    m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
+    m_persistentDescriptor(NULL), m_nativePath(NULL),
+    m_markForUnload(PR_FALSE), m_registryLocation(0)
+
 {
     if (!codeDllName || !*codeDllName)
     {
@@ -79,7 +81,8 @@ nsDll::nsDll(nsIFileSpec *dllSpec, const char *registryLocation, PRUint32 modDat
 nsDll::nsDll(const char *libPersistentDescriptor)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
-    m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
+    m_persistentDescriptor(NULL), m_nativePath(NULL),
+    m_markForUnload(PR_FALSE), m_registryLocation(0)
 
 {
     Init(libPersistentDescriptor);
@@ -93,7 +96,8 @@ nsDll::nsDll(const char *libPersistentDescriptor)
 nsDll::nsDll(const char *libPersistentDescriptor, PRUint32 modDate, PRUint32 fileSize)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
-    m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
+    m_persistentDescriptor(NULL), m_nativePath(NULL),
+    m_markForUnload(PR_FALSE), m_registryLocation(0)
 
 {
     Init(libPersistentDescriptor);
