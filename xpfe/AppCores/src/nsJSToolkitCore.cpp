@@ -137,7 +137,6 @@ PR_STATIC_CALLBACK(JSBool)
 ToolkitCoreShowDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsIDOMWindowPtr b1;
 
@@ -182,7 +181,6 @@ PR_STATIC_CALLBACK(JSBool)
 ToolkitCoreShowWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsIDOMWindowPtr b1;
 
@@ -227,7 +225,6 @@ PR_STATIC_CALLBACK(JSBool)
 ToolkitCoreShowWindowWithArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsIDOMWindowPtr b1;
   nsAutoString b2;
@@ -275,7 +272,6 @@ PR_STATIC_CALLBACK(JSBool)
 ToolkitCoreShowModalDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsIDOMWindowPtr b1;
 
@@ -320,7 +316,6 @@ PR_STATIC_CALLBACK(JSBool)
 ToolkitCoreCloseWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMWindowPtr b0;
 
   *rval = JSVAL_NULL;
