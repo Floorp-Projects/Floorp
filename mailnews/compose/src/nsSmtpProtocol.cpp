@@ -510,7 +510,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
   if (m_responseCode == 220)
   { // fisrt time we connect to the server; check for the greeting if it is a
     // ESMTP server set capability accordingly
-      if (m_responseText && nsCRT::strlen(m_responseText))
+      if (nsCRT::strlen(m_responseText))
       {
           if (TestFlag(nsISmtpServer::cap_undefined) && m_runningURL)
           {
