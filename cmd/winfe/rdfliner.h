@@ -137,6 +137,7 @@ private:
 	BOOL m_bUseSelection;			// Do we allow selection?
 
 	BOOL m_bIsPopup;			// Whether or not we're a popup tree.
+	BOOL m_bTemporarilyRetainPopup; // Whether or not to temporarily retain a popup without dismissing it.
 
 public:
     CRDFOutliner (CRDFOutlinerParent* theParent, HT_Pane thePane = NULL, HT_View theView = NULL);
@@ -154,10 +155,12 @@ public:
 	int GetSortColumn() { return m_nSortColumn; }
 	int GetSortType() { return m_nSortType; }
 	BOOL IsPopup() { return m_bIsPopup; }
-	
+	BOOL ShouldRetainPopup() { return m_bTemporarilyRetainPopup; }
+
 	// Setters
 	void ToggleModes();
 	void SetIsPopup(BOOL isPopup) { m_bIsPopup = isPopup; }
+	void SetTemporaryRetainOnPopup(BOOL tempRetain) { m_bTemporarilyRetainPopup = tempRetain; }
 
 	void SetHTView(HT_View v); 
 	void SetWindowTarget(char* target) { m_WindowTarget = target; }

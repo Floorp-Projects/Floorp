@@ -208,7 +208,7 @@ CRDFOutliner::CRDFOutliner (CRDFOutlinerParent* theParent, HT_Pane thePane, HT_V
 :COutliner(FALSE), m_pAncestor(NULL), m_Pane(thePane), m_View(theView), m_Parent(theParent), m_EditField(NULL),
 m_nSortType(HT_NO_SORT), m_nSortColumn(HT_NO_SORT), m_hEditTimer(0), m_hDragRectTimer(0),
 m_bNeedToClear(FALSE), m_nSelectedColumn(0), m_bDoubleClick(FALSE), m_Node(NULL), 
-m_bDataSourceInWindow(FALSE), m_NavTitleBar(NULL), m_bIsPopup(FALSE)
+m_bDataSourceInWindow(FALSE), m_NavTitleBar(NULL), m_bIsPopup(FALSE), m_bTemporarilyRetainPopup(FALSE)
 {
     ApiApiPtr(api);
     m_pUnkUserImage = api->CreateClassInstance(APICLASS_IMAGEMAP,NULL,(APISIGNATURE)IDB_BOOKMARKS);
@@ -1724,7 +1724,8 @@ void CRDFOutliner::OnSetFocus ( CWnd * pOldWnd )
 {
 	// Update the context's stored RDF Info.  Hack for the back end.  Needs to go away eventually.
     theApp.m_pRDFCX->TrackRDFWindow(this);
-	
+	SetTemporaryRetainOnPopup(FALSE);
+
 	Default();
 
 	if (m_iSelection >= 0)
@@ -1761,7 +1762,7 @@ void CRDFOutliner::FocusCheck(CWnd* pWnd, BOOL gotFocus)
 			{
 				// Invalidate for a redraw
 				m_NavTitleBar->NotifyFocus(FALSE);
-				if (IsPopup())
+				if (IsPopup() && !ShouldRetainPopup())
 				{		
 					// Destroy the window.
 					if (pFrameWnd->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
@@ -4223,6 +4224,9 @@ CRDFContentView* CRDFContentView::DisplayRDFTreeFromPane(CWnd* pParent, int xPos
 			XP_GetURLForView(HT_GetSelectedView(thePane), data); 		
 		}
 	}
+
+	theApp.m_pRDFCX->TrackRDFWindow(newView);
+	
 	return newView;
 }
 
@@ -4233,8 +4237,7 @@ CRDFContentView* CRDFContentView::DisplayRDFTreeFromResource(CWnd* pParent,
 	XP_BZERO(ns, sizeof(HT_NotificationStruct));
 	ns->notifyProc = embeddedTreeNotifyProcedure;
 	ns->data = NULL;
-	theApp.m_pRDFCX->TrackRDFWindow(pParent);
-
+	
 	HT_Pane thePane = HT_PaneFromResource(HT_GetRDFResource(node), ns, PR_FALSE, PR_TRUE, PR_TRUE);
 
 	// Now call our helper function
@@ -4249,7 +4252,6 @@ CRDFContentView* CRDFContentView::DisplayRDFTreeFromSHACK(MWContext *pContext, C
 	XP_BZERO(ns, sizeof(HT_NotificationStruct));
 	ns->notifyProc = embeddedTreeNotifyProcedure;
 	ns->data = NULL;
-	theApp.m_pRDFCX->TrackRDFWindow(pParent);
 	
 	// Construct the pane and give it our notification struct
 	HT_Pane thePane = HT_PaneFromURL(pContext, url, templateType, ns, 0, param_count, param_names, param_values);  
@@ -4277,8 +4279,19 @@ extern "C" MWContext* FE_GetRDFContext(void)
 CWnd* CRDFCX::GetDialogOwner() const
 {
 	if (m_pCurrentRDFWindow == NULL || m_pCurrentRDFWindow->m_hWnd == NULL)
-		return CWnd::GetDesktopWindow();
-	return m_pCurrentRDFWindow->GetTopLevelFrame();
+		return NULL;
+	else 
+	{
+		// Need to redesign
+		if (m_pCurrentRDFWindow->GetParent() != NULL &&
+			m_pCurrentRDFWindow->GetParent()->GetParent() != NULL &&
+			m_pCurrentRDFWindow->GetParent()->GetParent()->IsKindOf(RUNTIME_CLASS(CRDFContentView)))
+		{
+			CRDFOutliner* pOutliner = (CRDFOutliner*)m_pCurrentRDFWindow;
+			pOutliner->SetTemporaryRetainOnPopup(TRUE);
+		}
+		return m_pCurrentRDFWindow->GetTopLevelFrame();
+	}
 }
 
 // ==================================================================
