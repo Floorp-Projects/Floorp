@@ -73,8 +73,8 @@
             <!-- labels -->
             <grid>
               <columns>
-                <column/>
                 <column flex="1"/>
+                <column/>
                 <column/>
               </columns>
               <rows>

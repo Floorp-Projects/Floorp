@@ -208,13 +208,9 @@ function ViewCookieSelected( e )
     [null,"ifl_name","ifl_value","ifl_domaintype","ifl_domain","ifl_path","ifl_secure","ifl_expires"];
   for(i = 1; i < props.length; i++)
   {
-    if( !selItemsMax && i == 3) {
+    if(i == 3) {
       var dtypecell = document.getElementById("ifl_domaintype");
-      if(dtypecell.hasChildNodes()) {
-        dtypecell.removeChild(dtypecell.lastChild);
-      }
-      var content = document.createTextNode(cookies[idx].domaintype+":");
-      dtypecell.appendChild(content);
+      dtypecell.setAttribute("value", cookies[idx].domaintype+":");
       continue;
     }
     var field = document.getElementById(rows[i]);
