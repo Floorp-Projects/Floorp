@@ -82,14 +82,18 @@ function OnSelect(event)
           var targetstr;
 
           var literal;
-          if (literal = target.QueryInterface(Components.interfaces.nsIRDFLiteral)) {
-              targetstr = literal.Value;
-          }
-          else if (literal = target.QueryInterface(Components.interfaces.nsIRDFInt)) {
+	  literal = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	  if (literal) {
               targetstr = literal.Value;
           }
           else {
-              // Hmm. Not sure!
+		literal = target.QueryInterface(Components.interfaces.nsIRDFInt)
+		if (literal) {
+              		targetstr = literal.Value;
+		}
+		else {
+			// Hmm. Not sure!
+		}
           }
           
           debug('targetstr = ' + targetstr);
