@@ -21,8 +21,9 @@ use File::Basename; # for basename();
 use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
+use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.227 $ ';
+$::UtilsVersion = '$Revision: 1.228 $ ';
 
 package TinderUtils;
 
@@ -604,7 +605,15 @@ sub mail_build_finished_message {
     # If on Windows, make sure the log mail has unix lineendings, or
     # we'll confuse the log scraper.
     if ($platform eq 'windows') {
-        system("dos2unix $logfile.last");
+        open(IN,"$logfile.last") || die ("$logfile.last: $!\n");
+        open(OUT,">$logfile.new") || die ("$logfile.new: $!\n");
+        while (<IN>) {
+            s/\r\n$/\n/;
+	    print OUT "$_";
+        } 
+        close(IN);
+        close(OUT);
+        File::Copy::move("$logfile.new", "$logfile.last") or die("move: $!\n");
     }
 
     if ($Settings::ReportStatus and $Settings::ReportFinalStatus) {
@@ -2240,6 +2249,24 @@ sub BloatTest {
         return 'testfailed';
     }
 
+    my $platform = $Settings::OS =~ /^WIN/ ? 'windows' : 'unix';
+    # If on Windows, make sure the urls file has dos lineendings, or
+    # mozilla won't parse the file correctly
+    if ($platform eq 'windows') {
+	my $bu = "$binary_dir/bloaturls.txt";
+        open(IN,"$bu") || die ("$bu: $!\n");
+        open(OUT,">$bu.new") || die ("$bu.new: $!\n");
+        while (<IN>) {
+	    if (! m/\r\n$/) {
+                s/\n$/\r\n/;
+            }
+	    print OUT "$_";
+        } 
+        close(IN);
+        close(OUT);
+        File::Copy::move("$bu.new", "$bu") or die("move: $!\n");
+    }
+
     $ENV{XPCOM_MEM_BLOAT_LOG} = 1; # Turn on ref counting to track leaks.
 
     # Build up binary command, look for profile.
@@ -2468,6 +2495,24 @@ sub BloatTest2 {
     unless (-e "$binary_dir/bloaturls.txt") {
         print_log "Error: bloaturls.txt does not exist.\n";
         return 'testfailed';
+    }
+
+    my $platform = $Settings::OS =~ /^WIN/ ? 'windows' : 'unix';
+    # If on Windows, make sure the urls file has dos lineendings, or
+    # mozilla won't parse the file correctly
+    if ($platform eq 'windows') {
+	my $bu = "$binary_dir/bloaturls.txt";
+        open(IN,"$bu") || die ("$bu: $!\n");
+        open(OUT,">$bu.new") || die ("$bu.new: $!\n");
+        while (<IN>) {
+	    if (! m/\r\n$/) {
+                s/\n$/\r\n/;
+            }
+	    print OUT "$_";
+        } 
+        close(IN);
+        close(OUT);
+        File::Copy::move("$bu.new", "$bu") or die("move: $!\n");
     }
 
     rename($sdleak_log, $old_sdleak_log);
