@@ -285,7 +285,7 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
 
   // XXX add <0 checks if types change
   PRUint32 textLength = PRUint32( mText.GetLength() );
-  if (aStart >= textLength) {
+  if (aStart > textLength) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
