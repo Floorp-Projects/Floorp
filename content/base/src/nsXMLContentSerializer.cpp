@@ -104,11 +104,13 @@ nsXMLContentSerializer::AppendTextData(nsIDOMNode* aNode,
   content->GetText(&frag);
 
   if (frag) {
-    PRInt32 length = ((aEndOffset == -1) ? frag->GetLength() : aEndOffset) - aStartOffset;
+    PRInt32 endoffset = (aEndOffset == -1) ? frag->GetLength() : aEndOffset;
+    PRInt32 length = endoffset - aStartOffset;
     
+    NS_ASSERTION(aStartOffset >= 0, "Negative start offset for text fragment!");
+    NS_ASSERTION(aStartOffset <= endoffset, "A start offset is beyond the end of the text fragment!");
+
     if (length <= 0) {
-      NS_ASSERTION(aStartOffset == 0,
-                   "a start offset is beyond the end of the text fragment!");
       return NS_OK;  // XXX Zero is a legal value, maybe non-zero values should
                      //     be an error.
     }
