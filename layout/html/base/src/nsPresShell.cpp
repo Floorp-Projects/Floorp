@@ -2643,27 +2643,22 @@ PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 PresShell::GoToAnchor(const nsString& aAnchorName) const
 {
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc;
-  nsCOMPtr<nsIXMLDocument> xmlDoc;
+  nsCOMPtr<nsIDOMDocument> doc;
   nsresult                     rv = NS_OK;
   nsCOMPtr<nsIContent>  content;
 
-  if (NS_SUCCEEDED(mDocument->QueryInterface(NS_GET_IID(nsIDOMHTMLDocument),
-                                             getter_AddRefs(htmlDoc)))) {    
+  if (NS_SUCCEEDED(mDocument->QueryInterface(NS_GET_IID(nsIDOMDocument),
+                                             getter_AddRefs(doc)))) {    
     nsCOMPtr<nsIDOMElement> element;
 
     // Find the element with the specified id
-    rv = htmlDoc->GetElementById(aAnchorName, getter_AddRefs(element));
+    rv = doc->GetElementById(aAnchorName, getter_AddRefs(element));
     if (NS_SUCCEEDED(rv) && element) {
       // Get the nsIContent interface, because that's what we need to
       // get the primary frame
       rv = element->QueryInterface(NS_GET_IID(nsIContent),
                                    getter_AddRefs(content));
     }
-  }
-  else if (NS_SUCCEEDED(mDocument->QueryInterface(NS_GET_IID(nsIXMLDocument),
-                                                  getter_AddRefs(xmlDoc)))) {
-    rv = xmlDoc->GetContentById(aAnchorName,  getter_AddRefs(content));
   }
 
   if (NS_SUCCEEDED(rv) && content) {

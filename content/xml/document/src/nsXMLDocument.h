@@ -86,7 +86,6 @@ public:
   NS_IMETHOD    Load(const nsString& aUrl);
 
   // nsIXMLDocument interface
-  NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent);
 #ifdef MOZ_XSL
   NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator);
 #endif

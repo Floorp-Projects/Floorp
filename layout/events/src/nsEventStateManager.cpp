@@ -447,23 +447,25 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 	    }
 
       // Focus the DOM window.
-      if(focusedWindow)
+      NS_WARN_IF_FALSE(focusedWindow,"check why focusedWindow is null!!!");
+      if(focusedWindow) {
         focusedWindow->Focus();
 
-      if (focusedElement) {
-        nsCOMPtr<nsIContent> focusContent = do_QueryInterface(focusedElement);
-        nsCOMPtr<nsIDOMDocument> domDoc;
-        nsCOMPtr<nsIDocument> document;
-        focusedWindow->GetDocument(getter_AddRefs(domDoc));
-        if (domDoc) {
-          document = do_QueryInterface(domDoc);
-          nsCOMPtr<nsIPresShell> shell;
-          nsCOMPtr<nsIPresContext> context;
-          shell = getter_AddRefs(document->GetShellAt(0));
-          shell->GetPresContext(getter_AddRefs(context));
-          focusContent->SetFocus(context);
-        }
-      }       
+        if (focusedElement) {
+          nsCOMPtr<nsIContent> focusContent = do_QueryInterface(focusedElement);
+          nsCOMPtr<nsIDOMDocument> domDoc;
+          nsCOMPtr<nsIDocument> document;
+          focusedWindow->GetDocument(getter_AddRefs(domDoc));
+          if (domDoc) {
+            document = do_QueryInterface(domDoc);
+            nsCOMPtr<nsIPresShell> shell;
+            nsCOMPtr<nsIPresContext> context;
+            shell = getter_AddRefs(document->GetShellAt(0));
+            shell->GetPresContext(getter_AddRefs(context));
+            focusContent->SetFocus(context);
+          }
+        }  
+      }
 
       if (commandDispatcher) {
         commandDispatcher->SetActive(PR_TRUE);
