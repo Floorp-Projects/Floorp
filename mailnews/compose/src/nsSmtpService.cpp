@@ -347,15 +347,6 @@ NS_IMETHODIMP nsMailtoChannel::Open(nsIInputStream **_retval)
 
 NS_IMETHODIMP nsMailtoChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
-  PRInt32 port;
-  nsresult rv = m_url->GetPort(&port);
-  if (NS_FAILED(rv))
-      return rv;
- 
-  rv = NS_CheckPortSafety(port, "mailto");
-  if (NS_FAILED(rv))
-      return rv;
-
   mStatus = listener->OnStartRequest(this, ctxt);
 
   // If OnStartRequest(...) failed, then propagate the error code...
