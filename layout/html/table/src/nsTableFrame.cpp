@@ -4956,7 +4956,7 @@ BCMapCellIterator::SetNewRowGroup(PRBool aFindFirstDamagedRow)
     mRowGroupStart = mRowGroup->GetStartRowIndex();
     mRowGroupEnd   = mRowGroupStart + mRowGroup->GetRowCount() - 1;
     if (mRowGroupEnd >= 0) {
-      mCellMap  = mTableCellMap->GetMapFor(*mRowGroup);
+      mCellMap = mTableCellMap->GetMapFor(*mRowGroup); if (!mCellMap) ABORT1(PR_FALSE);
       nsTableRowFrame* firstRow = mRowGroup->GetFirstRow();
       if (aFindFirstDamagedRow) {
         if ((mAreaStart.y >= mRowGroupStart) && (mAreaStart.y <= mRowGroupEnd)) {
@@ -5077,7 +5077,7 @@ BCMapCellIterator::PeekBottom(BCMapCellInfo&   aRefInfo,
     nsIFrame* frame = (nsTableRowGroupFrame*)mRowGroups.ElementAt(mRowGroupIndex + 1); if (!frame) ABORT0();
     rg = mTableFrame.GetRowGroupFrame(frame);
     if (rg) {
-      cellMap = mTableCellMap->GetMapFor(*rg);
+      cellMap = mTableCellMap->GetMapFor(*rg); if (!cellMap) ABORT0();
       rgRowIndex = 0;
       nextRow = rg->GetFirstRow();
     }
@@ -6363,7 +6363,7 @@ BCMapBorderIterator::SetNewRowGroup()
     rowGroupEnd      = rowGroupStart + rg->GetRowCount() - 1;
 
     if (SetNewRow(rg->GetFirstRow())) {
-      cellMap = tableCellMap->GetMapFor(*(nsTableRowGroupFrame*)rg->GetFirstInFlow()); 
+      cellMap = tableCellMap->GetMapFor(*(nsTableRowGroupFrame*)rg->GetFirstInFlow()); if (!cellMap) ABORT1(PR_FALSE);
     }
     if (rg && table->GetPrevInFlow() && !rg->GetPrevInFlow()) {
       // if rg doesn't have a prev in flow, then it may be a repeated header or footer
