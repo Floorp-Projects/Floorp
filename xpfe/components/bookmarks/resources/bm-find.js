@@ -26,6 +26,7 @@
  */
 
 var gFindText;
+var gBundle = null;
 
 function doLoad()
 {
@@ -119,8 +120,10 @@ function saveFind()
   var searchURL = resultsTree.getAttribute("ref");
   if (!searchURL)
     return false;
+  if (!gBundle)
+    gBundle = srGetStrBundle("chrome://communicator/locale/bookmarks/bookmark.properties");
+  var searchTitle = gBundle.formatStringFromName("FindTitle", [gMatchName, gMethodName, gTextName, gDatasourceName], 4);
 
-  var searchTitle = "Find: " + gMatchName + " " + gMethodName + " '" + gTextName + "' in " + gDatasourceName;
   var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
                        .getService(Components.interfaces.nsIBookmarksService);
       bmks = bmks.AddBookmark(searchURL, searchTitle, bmks.BOOKMARK_FIND_TYPE, null);
