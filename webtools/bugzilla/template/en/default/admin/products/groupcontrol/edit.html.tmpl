@@ -179,7 +179,7 @@ this group according to the following definitions.
     </td>
     <td>
       [% terms.Bugs %] in this product are permitted to be restricted to this
-      group.  Users who are a member of this group will be able to place [% terms.bugs %] in
+      group.  Users who are members of this group will be able to place [% terms.bugs %] in
       this group.
     </td>
   </tr>
@@ -218,7 +218,7 @@ this group according to the following definitions.
     </td>
     <td>
       [% terms.Bugs %] in this product are permitted to be restricted to this
-      group.  Users who are a member of this group will be able to place [% terms.bugs %]
+      group.  Users who are members of this group will be able to place [% terms.bugs %]
        in this group.  Non-members will be forced to restrict [% terms.bugs %] to
        this group when they initially enter [% terms.abug %] in this product.
     </td>
@@ -232,7 +232,7 @@ this group according to the following definitions.
     </td>
     <td>
       [% terms.Bugs %] in this product are permitted to be restricted to this
-      group and are placed in this group by default.  Users who are a member of this
+      group and are placed in this group by default.  Users who are members of this
       group will be able to place [% terms.bugs %] in this group.
     </td>
   </tr>
@@ -245,7 +245,7 @@ this group according to the following definitions.
     </td>
     <td>
       [% terms.Bugs %] in this product are permitted to be restricted to this
-      group and are placed in this group by default.  Users who are a member of this group
+      group and are placed in this group by default.  Users who are members of this group
       will be able to place [% terms.bugs %] in this group.  Non-members will be
       able to restrict [% terms.bugs %] to this group on entry and will do so by default
     </td>
@@ -259,7 +259,7 @@ this group according to the following definitions.
     </td>
     <td>
       [% terms.Bugs %] in this product are permitted to be restricted to this
-      group and are placed in this group by default.  Users who are a member of this group
+      group and are placed in this group by default.  Users who are members of this group
       will be able to place [% terms.bugs %] in this group. Non-members will be forced
       to place [% terms.bugs %] in this group on entry.
     </td>
@@ -277,7 +277,11 @@ this group according to the following definitions.
     </td>
   </tr>
 </table>
-
-
+<p>
+Please note that the above table delineates the only allowable combinations
+for the <b>MemberControl</b> and <b>OtherControl</b> field settings.
+Attempting to submit a combination not listed there (e.g. Mandatory/NA,
+Default/Shown, etc.) will produce an error message.
+</p>
 [% PROCESS global/footer.html.tmpl %]
 
