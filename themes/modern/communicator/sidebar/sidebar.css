@@ -144,7 +144,7 @@
 
 .sidebar-tab-left-box {
   border-top: 2px solid;
-  border-bottom: 1px solid #B9C4D0;
+  border-bottom: 2px solid #B9C4D0;
   -moz-border-top-colors: #8A9DAF #D4E1EA;
   min-width: 90px;
 }
