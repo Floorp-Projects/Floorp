@@ -278,6 +278,24 @@ Sub Title=XXXben blah blah install path
 ;*** LOCALIZE ME BABY ***
 Message0=$ProductName$ will be installed into the following folder:
 
+[Dialog Upgrade]
+Show Dialog=TRUE
+Show In Easy Install=FALSE
+;*** LOCALIZE ME BABY ***
+Title=Upgrade
+;*** LOCALIZE ME BABY ***
+Sub Title=XXXben blah blah Upgrade path
+;*** LOCALIZE ME BABY ***
+Message Cleanup=A previous $ProductNameInternal$ installation has been found in the chosen folder.
+;*** LOCALIZE ME BABY ***
+Checkbox Clean Install=Perform a Safe Upgrade
+;*** LOCALIZE ME BABY ***
+Message Clean Install=A Safe Upgrade will completely remove the old installation. Any third party components you have installed will be lost. This is recommended as it may prevent incompatibilities. 
+;*** LOCALIZE ME BABY ***
+Message Install Over=If you choose not to perform a Safe Upgrade, third party components will not be removed, which may cause unpredictable behavior. 
+;*** LOCALIZE ME BABY ***
+Message Install Over Windir=A Safe Upgrade of $ProductNameInternal$ cannot be performed because the program is installed within the Windows folder. It is recommended that you choose another folder to install $ProductNameInternal$ into. 
+
 [Dialog Select Additional Components]
 Show Dialog=FALSE
 ;*** LOCALIZE ME BABY ***
@@ -1252,12 +1270,6 @@ Message Download Paused=Setup has encountered a network problem and has paused t
 Message NORMAL Restricted Access=Setup has detected that you do not have the appropriate Administrator privileges to this system.  It is highly recommended that you do not continue with the installation of $ProductName$, or it may not function properly.  Would you still like to continue?
 ;*** LOCALIZE ME BABY ***
 Message AUTO Restricted Access=Setup has detected that you do not have the appropriate Administrator privileges to this system.  Setup cannot continue with the installation of $ProductName$.
-;*** LOCALIZE ME BABY ***
-Message Cleanup On Upgrade=A previous $ProductNameInternal$ installation has been found in the chosen directory.\n\nUnrecognized 3rd party components will be removed from this directory to prevent version incompatibilities and will have to be re-installed.  Your $ProductNameInternal$ profile information will not be affected.
-;*** LOCALIZE ME BABY ***
-Message Cleanup On Upgrade Windir=Setup has detected that the previous installation of $ProductNameInternal$ was installed to a folder within your Windows folder.  Setup will not attempt to cleanup the previous installation of $ProductNameInternal$ due to the potential removal of critical system files.
-;*** LOCALIZE ME BABY ***
-Cleanup On Upgrade Path Box String=Path to be cleaned up:
 
 
 [Site Selector]

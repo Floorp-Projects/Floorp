@@ -89,6 +89,7 @@ extern diL              diLicense;
 extern diST             diSetupType;
 extern diSC             diSelectComponents;
 extern diSIP            diSelectInstallPath;
+extern diU              diUpgrade;
 extern diSC             diSelectAdditionalComponents;
 extern diWI             diWindowsIntegration;
 extern diPF             diProgramFolder;

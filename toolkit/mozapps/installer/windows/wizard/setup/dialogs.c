@@ -42,9 +42,190 @@
 #include <commdlg.h>
 
 static WNDPROC OldListBoxWndProc;
-static BOOL    gbProcessingXpnstallFiles;
 static DWORD   gdwACFlag;
-static DWORD   gdwIndexLastSelected;
+static BOOL    gDidShowUpgradePanel;
+
+///////////////////////////////////////////////////////////////////////////////
+// INSTALL WIZARD SEQUENCER
+//
+
+void InitSequence(HINSTANCE hInstance)
+{
+  // Wizard data structures
+  PROPSHEETPAGE psp;
+  HPROPSHEETPAGE pages[11] = {0};
+  PROPSHEETHEADER psh;
+  int count = 0;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Create the Wizard Sequence
+  //
+  psp.dwSize            = sizeof(psp);
+  psp.hInstance         = hSetupRscInst;
+  psp.lParam            = 0;
+
+  // Welcome Page
+  if (diWelcome.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_HIDEHEADER;
+    psp.pfnDlgProc        = DlgProcWelcome;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_WELCOME);
+    
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  // License Page
+  if (diLicense.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diLicense.szTitle;
+    psp.pszHeaderSubTitle = diLicense.szSubTitle;
+    psp.pfnDlgProc        = DlgProcLicense;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_LICENSE);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  // License Page
+  if (diSetupType.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diSetupType.szTitle;
+    psp.pszHeaderSubTitle = diSetupType.szSubTitle;
+    psp.pfnDlgProc        = DlgProcSetupType;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_SETUP_TYPE);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  if (diSelectInstallPath.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diSelectInstallPath.szTitle;
+    psp.pszHeaderSubTitle = diSelectInstallPath.szSubTitle;
+    psp.pfnDlgProc        = DlgProcSelectInstallPath;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_SELECT_INSTALL_PATH);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  if (diUpgrade.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diUpgrade.szTitle;
+    psp.pszHeaderSubTitle = diUpgrade.szSubTitle;
+    psp.pfnDlgProc        = DlgProcUpgrade;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_UPGRADE);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+  else {
+    // If we're not showing the Upgrade dialog, we need to set some state to
+    // tell the installer to default to a Safe Install. 
+
+    sgProduct.doCleanupOnUpgrade = TRUE;
+  }
+
+  if (diSelectComponents.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diSelectComponents.szTitle;
+    psp.pszHeaderSubTitle = diSelectComponents.szSubTitle;
+    psp.pfnDlgProc        = DlgProcSelectComponents;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_SELECT_COMPONENTS);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  if (diStartInstall.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diStartInstall.szTitle;
+    psp.pszHeaderSubTitle = diStartInstall.szSubTitle;
+    psp.pfnDlgProc        = DlgProcSummary;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_START_INSTALL);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  if (diDownloading.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diDownloading.szTitle;
+    psp.pszHeaderSubTitle = diDownloading.szSubTitle;
+    psp.pfnDlgProc        = DlgProcDownloading;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_DOWNLOADING);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  if (diInstalling.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diInstalling.szTitle;
+    psp.pszHeaderSubTitle = diInstalling.szSubTitle;
+    psp.pfnDlgProc        = DlgProcInstalling;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_EXTRACTING);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+#if WINTEGRATION_PAGE
+  // Windows Integration Page
+  if (diWindowsIntegration.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diWindowsIntegration.szTitle;
+    psp.pszHeaderSubTitle = diWindowsIntegration.szSubTitle;
+    psp.pfnDlgProc        = DlgProcWindowsIntegration;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_WINDOWS_INTEGRATION);
+    
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+#endif
+
+  // Successful Install Page
+  if (diInstallSuccessful.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_HIDEHEADER;
+    psp.pfnDlgProc        = DlgProcInstallSuccessful;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_INSTALL_SUCCESSFUL);
+    
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  // Property Sheet
+  psh.dwSize            = sizeof(psh);
+  psh.hInstance         = hSetupRscInst;
+  psh.hwndParent        = NULL;
+  psh.phpage            = pages;
+  psh.dwFlags           = PSH_WIZARD97|PSH_WATERMARK|PSH_HEADER;
+  psh.pszbmWatermark    = MAKEINTRESOURCE(IDB_WATERMARK);
+  psh.pszbmHeader       = MAKEINTRESOURCE(IDB_HEADER);
+  psh.nStartPage        = 0;
+  psh.nPages            = count;
+
+
+  // Create the Font for Intro/End page headers.
+  sgInstallGui.welcomeTitleFont = MakeFont(TEXT("Trebuchet MS Bold"), 14, FW_BOLD);
+
+  // Start the Wizard.
+  PropertySheet(&psh);
+
+  DeleteObject(sgInstallGui.welcomeTitleFont);
+}
+
+HFONT MakeFont(TCHAR* aFaceName, int aFontSize, LONG aWeight) 
+{
+  // Welcome Page Header font data
+  NONCLIENTMETRICS ncm = {0};
+  LOGFONT lf;
+  HDC hDC;
+
+  ncm.cbSize = sizeof(ncm);
+  SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+
+  if (aFaceName) 
+    lstrcpy(lf.lfFaceName, aFaceName); 
+
+  lf = ncm.lfMessageFont;
+  lf.lfWeight = aWeight;
+
+  hDC = GetDC(NULL); 
+  lf.lfHeight = 0 - GetDeviceCaps(hDC, LOGPIXELSY) * aFontSize / 72;
+  ReleaseDC(NULL, hDC);
+
+  return CreateFontIndirect(&lf);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // DIALOG: EXIT SETUP
@@ -225,6 +406,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   HWND    hRadioSt0, hStaticSt0, hRadioSt1, hStaticSt1;
   LPNMHDR notifyMessage;
   BOOL    skipNext = FALSE;
+  static  char defaultPath[MAX_BUF];
 
   hRadioSt0   = GetDlgItem(hDlg, IDC_RADIO_ST0);
   hStaticSt0  = GetDlgItem(hDlg, IDC_STATIC_ST0_DESCRIPTION);
@@ -233,6 +415,8 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
 
   switch(msg) {
   case WM_INITDIALOG:
+    lstrcpy(defaultPath, sgProduct.szPath);
+
     SetDlgItemText(hDlg, IDC_STATIC_MSG0, diSetupType.szMessage0);
 
     if(diSetupType.stSetupType0.bVisible) {
@@ -297,7 +481,10 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       // collection is required, go right to the end. 
       if (notifyMessage->code == PSN_WIZNEXT && 
           dwSetupType == ST_RADIO0) {
-        SetWindowLong(hDlg, DWL_MSGRESULT, DLG_START_INSTALL);
+        // Reset the path to the default value. 
+        lstrcpy(sgProduct.szPath, defaultPath);
+
+        CheckForUpgrade(hDlg, DLG_START_INSTALL);
         skipNext = TRUE;
       }
       
@@ -327,9 +514,7 @@ void BrowseForDirectory(HWND hParent)
 { 
 	LPITEMIDLIST  itemIDList;
 	BROWSEINFO    browseInfo;
-  HWND          hDestinationPath;
   char          currDir[MAX_PATH];
-  char          szBuf[MAX_PATH];
   
   GetCurrentDirectory(MAX_PATH, currDir);
 
@@ -346,10 +531,7 @@ void BrowseForDirectory(HWND hParent)
 
   if (itemIDList) {
     if (SHGetPathFromIDList(itemIDList, currDir)) {
-      // Update the displayed path
-      hDestinationPath = GetDlgItem(hParent, IDC_EDIT_DESTINATION);
-      TruncateString(hDestinationPath, currDir, szBuf, sizeof(szBuf));
-      SetDlgItemText(hParent, IDC_EDIT_DESTINATION, szBuf);
+      InitPathDisplay(hParent, currDir, IDC_FOLDER_ICON, IDC_EDIT_DESTINATION);
 
       SetCurrentDirectory(currDir);
 
@@ -373,13 +555,8 @@ void BrowseForDirectory(HWND hParent)
 
 void RecoverFromPathError(HWND aPanel)
 {
-  HWND destinationPath;
-  char buf[MAX_BUF];
-
   // Reset the displayed path to the previous, valid value. 
-  destinationPath = GetDlgItem(aPanel, IDC_EDIT_DESTINATION); 
-  TruncateString(destinationPath, sgProduct.szPath, buf, sizeof(buf));
-  SetDlgItemText(aPanel, IDC_EDIT_DESTINATION, buf);
+  InitPathDisplay(aPanel, sgProduct.szPath, IDC_FOLDER_ICON, IDC_EDIT_DESTINATION);
 
   // Reset the temporary path string so we don't get stuck receiving 
   // the error message.
@@ -389,14 +566,57 @@ void RecoverFromPathError(HWND aPanel)
   SetWindowLong(aPanel, DWL_MSGRESULT, -1);
 }
 
+void CheckForUpgrade(HWND aPanel, int aNextPanel)
+{
+  char buf[MAX_BUF];
+  int nextPanel = aNextPanel;
+
+  // Check to see if we should show the "Safe Upgrade" dialog
+  // The second part of the test is to see if the flag in config.ini
+  // specifies whether or not this should be shown *specifically* in the
+  // "Easy Install" mode. If that flag is set to FALSE, the Upgrade 
+  // panel is shown only in the "Custom"/"Advanced" pass. 
+  if (sgProduct.checkCleanupOnUpgrade && 
+      !(dwSetupType == ST_RADIO0 && !diUpgrade.bShowInEasyInstall)) {
+
+    // Found destination folder.  check to see if we're upgrading ontop
+    // of a previous installation.  If so, we need to prompt the user
+    // about removing the entire dir before installation happens.
+    MozCopyStr(sgProduct.szPath, buf, sizeof(buf));
+    AppendBackSlash(buf, sizeof(buf));
+    lstrcat(buf, sgProduct.szProgramName);
+    if (FileExists(buf)) {
+      // Prompt user if deleting target path is okay. Only show
+      // prompt if the setup is running in normal mode, else
+      // assume user wants deletion.
+      if(sgProduct.mode == NORMAL)
+        nextPanel = DLG_UPGRADE;
+      else {
+        sgProduct.doCleanupOnUpgrade = TRUE;
+        nextPanel = aNextPanel;
+      }
+    }
+    else
+      nextPanel = aNextPanel;
+  }
+
+  /* SiCNodeSetItemsSelected() is called from within DlgProcUpgrade().
+   * If DlgProcUpgrade is not called (in the case of a !NORMAL install),
+   * then we need to call it here. */
+  if (sgProduct.mode != NORMAL)
+    SiCNodeSetItemsSelected(dwSetupType);
+
+  gDidShowUpgradePanel = nextPanel == DLG_UPGRADE;
+
+  SetWindowLong(aPanel, DWL_MSGRESULT, nextPanel);
+}
 
 LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
-  HWND    hDestinationPath;
   char    szBuf[MAX_BUF];
   char    szBufTemp[MAX_BUF];
   LPNMHDR notifyMessage;
-  HICON   hSmallFolderIcon, hLargeFolderIcon;
+  BOOL    rv = FALSE;
 
   switch(msg) {
   case WM_INITDIALOG:
@@ -404,15 +624,9 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
 
     EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_BROWSE), !sgProduct.bLockPath);
 
-    // Folder Icon
-    ExtractIconEx("shell32.dll", 3, &hLargeFolderIcon, &hSmallFolderIcon, 1);
-    SendMessage(GetDlgItem(hDlg, IDC_FOLDER_ICON), STM_SETICON, (LPARAM)hSmallFolderIcon, 0);
-    
     SetCurrentDirectory(szTempSetupPath);
 
-    hDestinationPath = GetDlgItem(hDlg, IDC_EDIT_DESTINATION);
-    TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
-    SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
+    InitPathDisplay(hDlg, szTempSetupPath, IDC_FOLDER_ICON, IDC_EDIT_DESTINATION);
 
     SetDlgItemText(hDlg, IDC_BUTTON_BROWSE, sgInstallGui.szBrowse_);
     break;
@@ -460,11 +674,13 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
       lstrcpy(szBuf, sgProduct.szPath);
       AppendBackSlash(szBuf, sizeof(szBuf));
 
+      CheckForUpgrade(hDlg, DLG_SELECT_COMPONENTS);
+
       /* Create the path if it does not exist */
-      if(FileExists(szBuf) == FALSE) {
+      if (FileExists(szBuf) == FALSE) {
         char szBuf2[MAX_PATH];
 
-        if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) != WIZ_OK) {
+        if (CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) != WIZ_OK) {
           char szECreateDirectory[MAX_BUF];
           char szEMessageTitle[MAX_BUF];
 
@@ -473,15 +689,21 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
           RemoveBackSlash(szBufTemp);
           lstrcat(szBufTemp, "\n\n");
 
-          if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", szECreateDirectory, sizeof(szECreateDirectory), szFileIniInstall))
+          if (GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", 
+                                      szECreateDirectory, sizeof(szECreateDirectory), 
+                                      szFileIniInstall))
             wsprintf(szBuf, szECreateDirectory, szBufTemp);
 
-          GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "", szEMessageTitle, sizeof(szEMessageTitle), szFileIniInstall);
+          GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "", 
+                                  szEMessageTitle, sizeof(szEMessageTitle), 
+                                  szFileIniInstall);
 
           MessageBox(hDlg, szBuf, szEMessageTitle, MB_OK | MB_ICONERROR);
           
           RecoverFromPathError(hDlg);
 
+          // Prevent the page change if we failed to create the directory. 
+          SetWindowLong(hDlg, DWL_MSGRESULT, -1);
           return TRUE;
         }
 
@@ -495,8 +717,10 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
           UpdateInstallLog(KEY_CREATE_FOLDER, szBuf2, FALSE);
         }
 
-        bCreateDestinationDir = TRUE;
       }
+
+      // Need to return TRUE so we override the default wizard sequence. 
+      rv = TRUE;
 
       break;
 
@@ -507,85 +731,107 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
     break;
   }
 
-  return 0;
+  return rv;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // DIALOG: UPGRADE CONFIRMATION
 //
+void UpdateUpgradeModeMessage(HWND aPanel)
+{
+  if (IsDlgButtonChecked(aPanel, IDC_CHECK_SAFE_INSTALL) == BST_CHECKED)
+    SetDlgItemText(aPanel, IDC_MESSAGE_INFO, diUpgrade.szSafeInstallInfo);
+  else
+    SetDlgItemText(aPanel, IDC_MESSAGE_INFO, diUpgrade.szUnsafeInstallInfo);
+}
 
 LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
-  char buf[MAX_BUF];
+  LPNMHDR notifyMessage;
+  BOOL pathInWinDir = FALSE;
+  BOOL rv = FALSE;
 
-  switch(msg)
-  {
-    case WM_INITDIALOG:
-      GetPrivateProfileString("Messages", "MB_WARNING_STR", "",
-          buf, sizeof(buf), szFileIniInstall);
-      SetWindowText(hDlg, buf);
+  switch (msg) {
+  case WM_INITDIALOG:
+    SetDlgItemText(hDlg, IDC_MESSAGE_UPGRADE, diUpgrade.szMessageCleanup);
+    SetDlgItemText(hDlg, IDC_CHECK_SAFE_INSTALL, diUpgrade.szCheckboxSafeInstall);
 
-      GetPrivateProfileString("Strings", "Message Cleanup On Upgrade", "",
-          buf, sizeof(buf), szFileIniConfig);
-      ReplacePrivateProfileStrCR(buf);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, buf);
+    // Default to "Safe Upgrade".
+    CheckDlgButton(hDlg, IDC_CHECK_SAFE_INSTALL, BST_CHECKED);
 
-      GetPrivateProfileString("Strings", "Cleanup On Upgrade Path Box String", "",
-          buf, sizeof(buf), szFileIniConfig);
-      SetDlgItemText(hDlg, IDC_STATIC, buf);
+    break;
 
-      MozCopyStr(sgProduct.szPath, buf, sizeof(buf));
-      RemoveBackSlash(buf);
-      SetDlgItemText(hDlg, IDC_DELETE_PATH, buf);
-
-      SetDlgItemText(hDlg, IDCONTINUE, sgInstallGui.szContinue_);
-      SetDlgItemText(hDlg, IDSKIP, sgInstallGui.szSkip_);
-      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, IDC_DELETE_PATH, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, IDCONTINUE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, IDSKIP, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+  case WM_COMMAND:
+    switch (LOWORD(wParam)) {
+    case IDC_CHECK_SAFE_INSTALL:
+      UpdateUpgradeModeMessage(hDlg);
+      
       break;
+    }
 
-    case WM_COMMAND:
-      switch(LOWORD(wParam))
-      {
-        case IDCONTINUE:
-          /* If the installation path happens to be within the %windir%, then
-           * show error message and continue without removing the previous
-           * installation path. */
-          if(IsPathWithinWindir(sgProduct.szPath))
-          {
-            GetPrivateProfileString("Strings", "Message Cleanup On Upgrade Windir", "",
-                buf, sizeof(buf), szFileIniConfig);
-            MessageBox(hWndMain, buf, NULL, MB_ICONEXCLAMATION);
-          }
-          else
-            /* set the var to delete target path here */
-            sgProduct.doCleanupOnUpgrade = TRUE;
+    break;
 
-          SiCNodeSetItemsSelected(dwSetupType);
-          DestroyWindow(hDlg);
-          break;
+  case WM_NOTIFY:
+    notifyMessage = (LPNMHDR)lParam;
 
-        case IDSKIP:
-          sgProduct.doCleanupOnUpgrade = FALSE;
-          SiCNodeSetItemsSelected(dwSetupType);
-          DestroyWindow(hDlg);
-          break;
+    switch (notifyMessage->code) {
+    case PSN_SETACTIVE:
+      // Wizard dialog title
+      PropSheet_SetTitle(GetParent(hDlg), 0, (LPTSTR)diUpgrade.szTitle); 
 
-        case IDWIZBACK:
-          DestroyWindow(hDlg);
-          break;
+      InitPathDisplay(hDlg, sgProduct.szPath, IDC_FOLDER_ICON, IDC_EDIT_DESTINATION);
 
-        default:
-          break;
+      pathInWinDir = IsPathWithinWindir(sgProduct.szPath);
+      if(pathInWinDir) {
+        // Do not clean up 
+        sgProduct.doCleanupOnUpgrade = FALSE;
+
+        // Disable UI and show an explanation. 
+        EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SAFE_INSTALL), FALSE);
+        SetDlgItemText(hDlg, IDC_MESSAGE_INFO, diUpgrade.szNoSafeUpgradeWindir);
       }
+
+      CheckDlgButton(hDlg, IDC_CHECK_SAFE_INSTALL, sgProduct.doCleanupOnUpgrade ? BST_CHECKED : BST_UNCHECKED);
+      
+      if (!pathInWinDir)
+        UpdateUpgradeModeMessage(hDlg);
+
+      PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT|PSWIZB_BACK);
+
       break;
+
+    case PSN_WIZNEXT:
+      if (dwSetupType == ST_RADIO0) {
+        SetWindowLong(hDlg, DWL_MSGRESULT, DLG_START_INSTALL);
+        rv = TRUE;
+      }
+
+      sgProduct.doCleanupOnUpgrade = IsDlgButtonChecked(hDlg, IDC_CHECK_SAFE_INSTALL) == BST_CHECKED;
+
+      SiCNodeSetItemsSelected(dwSetupType);
+
+      break;
+
+    case PSN_WIZBACK:
+      if (dwSetupType == ST_RADIO0) {
+        SetWindowLong(hDlg, DWL_MSGRESULT, DLG_SETUP_TYPE);
+        rv = TRUE;
+      }
+
+      sgProduct.doCleanupOnUpgrade = IsDlgButtonChecked(hDlg, IDC_CHECK_SAFE_INSTALL) == BST_CHECKED;
+
+      SiCNodeSetItemsSelected(dwSetupType);
+
+      break;
+
+    case PSN_QUERYCANCEL:
+      return !ShouldExitSetup(hDlg);
+    }
+
+    break;
+  
   }
-  return(0);
+  return rv;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -953,6 +1199,17 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
 
       break;
 
+    case PSN_WIZBACK:
+      // If we showed the "Upgrade" panel, be sure to show it again in the sequence 
+      // on the way back, to not do so "feels" wrong/confusing. 
+      if (gDidShowUpgradePanel)
+        SetWindowLong(hDlg, DWL_MSGRESULT, DLG_UPGRADE);
+      else 
+        SetWindowLong(hDlg, DWL_MSGRESULT, DLG_SELECT_INSTALL_PATH);
+      
+      return TRUE;
+      break;
+
     case PSN_QUERYCANCEL:
       return !ShouldExitSetup(hDlg);
     }
@@ -1015,7 +1272,6 @@ void PositionControl(HWND aWindow, int aResourceIDRelative, int aResourceIDContr
 
 LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
-  HWND ctrl;
   LPSTR szMessage = NULL;
   LPNMHDR notifyMessage;
   char szAddtlComps[MAX_BUF];
@@ -1042,9 +1298,6 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
     ExtractIconEx("setuprsc.dll", 2, &largeIcon, &smallIcon, 1);
 #endif
     SendMessage(GetDlgItem(hDlg, IDC_APP_ICON), STM_SETICON, (LPARAM)smallIcon, 0);
-
-    ExtractIconEx("shell32.dll", 3, &largeIcon, &smallIcon, 1);
-    SendMessage(GetDlgItem(hDlg, IDC_FOLDER_ICON), STM_SETICON, (LPARAM)smallIcon, 0);
 
     break;
   
@@ -1124,9 +1377,7 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       SetDlgItemText(hDlg, IDC_PRIMARY_COMPONENT, szTemp);
 
       // Update the install folder. 
-      ctrl = GetDlgItem(hDlg, IDC_INSTALL_FOLDER);
-      TruncateString(ctrl, sgProduct.szPath, szTemp, sizeof(szTemp));
-      SetDlgItemText(hDlg, IDC_INSTALL_FOLDER, szTemp);
+      InitPathDisplay(hDlg, sgProduct.szPath, IDC_FOLDER_ICON, IDC_INSTALL_FOLDER);
       
       PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT|PSWIZB_BACK);
 
@@ -1147,7 +1398,12 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       // If the user selected Easy Install, go right back to the setup type
       // selection page, bypassing the advanced configuration steps. 
       if (dwSetupType == ST_RADIO0) {
-        SetWindowLong(hDlg, DWL_MSGRESULT, DLG_SETUP_TYPE);
+        // If we showed the "Upgrade" panel, be sure to show it again in the sequence 
+        // on the way back, to not do so "feels" wrong/confusing. 
+        if (gDidShowUpgradePanel) 
+          SetWindowLong(hDlg, DWL_MSGRESULT, DLG_UPGRADE);
+        else  
+          SetWindowLong(hDlg, DWL_MSGRESULT, DLG_SETUP_TYPE);
         skipNext = TRUE;
       }
       break;
@@ -1171,8 +1427,6 @@ void SaveUserChanges()
 {
   char szDestPath[MAX_BUF];
   char szInstallLogFile[MAX_BUF];
-
-  gbProcessingXpnstallFiles = TRUE;
 
   LogISShared();
   LogISDestinationPath();
@@ -1292,58 +1546,6 @@ BOOL IsDownloadRequired()
   // The existence of the getarchives.idi file determines if there are
   // any archives needed to be downloaded.
   return FileExists(szFileIdiGetArchives);
-}
-
-void TruncateString(HWND hWnd, LPSTR szInURL, LPSTR szOutString, DWORD dwOutStringBufSize)
-{
-  HDC           hdcWnd;
-  LOGFONT       logFont;
-  HFONT         hfontNew;
-  HFONT         hfontOld;
-  RECT          rWndRect;
-  SIZE          sizeString;
-  char          *ptr = NULL;
-  int           iHalfLen;
-  int           iOutStringLen;
-
-  if((DWORD)lstrlen(szInURL) > dwOutStringBufSize)
-    return;
-
-  ZeroMemory(szOutString, dwOutStringBufSize);
-  lstrcpy(szOutString, szInURL);
-  iOutStringLen = lstrlen(szOutString);
-  hdcWnd        = GetWindowDC(hWnd);
-  GetClientRect(hWnd, &rWndRect);
-  SystemParametersInfo(SPI_GETICONTITLELOGFONT,
-                       sizeof(logFont),
-                       (PVOID)&logFont,
-                       0);
-
-  hfontNew = CreateFontIndirect(&logFont);
-  if(hfontNew)
-  {
-    hfontOld = (HFONT)SelectObject(hdcWnd, hfontNew);
-
-    GetTextExtentPoint32(hdcWnd, szOutString, iOutStringLen, &sizeString);
-    while(sizeString.cx > rWndRect.right)
-    {
-      iHalfLen = iOutStringLen / 2;
-      if(iHalfLen == 2)
-        break;
-
-      ptr = szOutString + iHalfLen;
-      memmove(ptr - 1, ptr, lstrlen(ptr) + 1);
-      szOutString[iHalfLen - 2] = '.';
-      szOutString[iHalfLen - 1] = '.';
-      szOutString[iHalfLen]     = '.';
-      iOutStringLen = lstrlen(szOutString);
-      GetTextExtentPoint32(hdcWnd, szOutString, iOutStringLen, &sizeString);
-    }
-  }
-
-  SelectObject(hdcWnd, hfontOld);
-  DeleteObject(hfontNew);
-  ReleaseDC(hWnd, hdcWnd);
 }
 
 #ifdef STUB_INSTALLER
@@ -1652,8 +1854,6 @@ BOOL InstallFiles(HWND hDlg)
 
   CleanupXpcomFile();
 
-  gbProcessingXpnstallFiles = FALSE;
-
   return err == WIZ_OK || err == 999;
 }
 
@@ -1867,6 +2067,10 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
   return 0;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// DIALOG: MESSAGE (A small utility message window)
+//
+
 LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   RECT      rDlg;
@@ -1942,17 +2146,6 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   return(0);
 }
 
-void ProcessWindowsMessages()
-{
-  MSG msg;
-
-  while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-  {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
-  }
-}
-
 void ShowMessage(LPSTR szMessage, BOOL bShow)
 {
   if(sgProduct.mode != SILENT)
@@ -1972,6 +2165,20 @@ void ShowMessage(LPSTR szMessage, BOOL bShow)
       DestroyWindow(hDlgMessage);
       hDlgMessage = NULL;
     }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// UTILITY FUNCTIONS
+
+void ProcessWindowsMessages()
+{
+  MSG msg;
+
+  while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+  {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
   }
 }
 
@@ -1996,165 +2203,69 @@ HWND InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlg
   return(hDlg);
 }
 
-void InitSequence(HINSTANCE hInstance)
+void TruncateString(HWND hWnd, LPSTR szInURL, LPSTR szOutString, DWORD dwOutStringBufSize)
 {
-  // Wizard data structures
-  PROPSHEETPAGE psp;
-  HPROPSHEETPAGE pages[11] = {0};
-  PROPSHEETHEADER psh;
-  int count = 0;
+  HDC           hdcWnd;
+  LOGFONT       logFont;
+  HFONT         hfontNew;
+  HFONT         hfontOld;
+  RECT          rWndRect;
+  SIZE          sizeString;
+  char          *ptr = NULL;
+  int           iHalfLen;
+  int           iOutStringLen;
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Create the Wizard Sequence
-  //
-  psp.dwSize            = sizeof(psp);
-  psp.hInstance         = hSetupRscInst;
-  psp.lParam            = 0;
+  if((DWORD)lstrlen(szInURL) > dwOutStringBufSize)
+    return;
 
-  // Welcome Page
-  if (diWelcome.bShowDialog) {
-    psp.dwFlags           = PSP_DEFAULT|PSP_HIDEHEADER;
-    psp.pfnDlgProc        = DlgProcWelcome;
-    psp.pszTemplate       = MAKEINTRESOURCE(DLG_WELCOME);
-    
-    pages[count++]        = CreatePropertySheetPage(&psp);
+  ZeroMemory(szOutString, dwOutStringBufSize);
+  lstrcpy(szOutString, szInURL);
+  iOutStringLen = lstrlen(szOutString);
+  hdcWnd        = GetWindowDC(hWnd);
+  GetClientRect(hWnd, &rWndRect);
+  SystemParametersInfo(SPI_GETICONTITLELOGFONT,
+                       sizeof(logFont),
+                       (PVOID)&logFont,
+                       0);
+
+  hfontNew = CreateFontIndirect(&logFont);
+  if(hfontNew)
+  {
+    hfontOld = (HFONT)SelectObject(hdcWnd, hfontNew);
+
+    GetTextExtentPoint32(hdcWnd, szOutString, iOutStringLen, &sizeString);
+    while(sizeString.cx > rWndRect.right)
+    {
+      iHalfLen = iOutStringLen / 2;
+      if(iHalfLen == 2)
+        break;
+
+      ptr = szOutString + iHalfLen;
+      memmove(ptr - 1, ptr, lstrlen(ptr) + 1);
+      szOutString[iHalfLen - 2] = '.';
+      szOutString[iHalfLen - 1] = '.';
+      szOutString[iHalfLen]     = '.';
+      iOutStringLen = lstrlen(szOutString);
+      GetTextExtentPoint32(hdcWnd, szOutString, iOutStringLen, &sizeString);
+    }
   }
 
-  // License Page
-  if (diLicense.bShowDialog) {
-    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle    = diLicense.szTitle;
-    psp.pszHeaderSubTitle = diLicense.szSubTitle;
-    psp.pfnDlgProc        = DlgProcLicense;
-    psp.pszTemplate       = MAKEINTRESOURCE(DLG_LICENSE);
-
-    pages[count++]        = CreatePropertySheetPage(&psp);
-  }
-
-  // License Page
-  if (diSetupType.bShowDialog) {
-    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle    = diSetupType.szTitle;
-    psp.pszHeaderSubTitle = diSetupType.szSubTitle;
-    psp.pfnDlgProc        = DlgProcSetupType;
-    psp.pszTemplate       = MAKEINTRESOURCE(DLG_SETUP_TYPE);
-
-    pages[count++]        = CreatePropertySheetPage(&psp);
-  }
-
-  if (diSelectInstallPath.bShowDialog) {
-    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle    = diSelectInstallPath.szTitle;
-    psp.pszHeaderSubTitle = diSelectInstallPath.szSubTitle;
-    psp.pfnDlgProc        = DlgProcSelectInstallPath;
-    psp.pszTemplate       = MAKEINTRESOURCE(DLG_SELECT_INSTALL_PATH);
-
-    pages[count++]        = CreatePropertySheetPage(&psp);
-  }
-
-  if (diSelectComponents.bShowDialog) {
-    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle    = diSelectComponents.szTitle;
-    psp.pszHeaderSubTitle = diSelectComponents.szSubTitle;
-    psp.pfnDlgProc        = DlgProcSelectComponents;
-    psp.pszTemplate       = MAKEINTRESOURCE(DLG_SELECT_COMPONENTS);
-
-    pages[count++]        = CreatePropertySheetPage(&psp);
-  }
-
-  if (diStartInstall.bShowDialog) {
-    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle    = diStartInstall.szTitle;
-    psp.pszHeaderSubTitle = diStartInstall.szSubTitle;
-    psp.pfnDlgProc        = DlgProcSummary;
-    psp.pszTemplate       = MAKEINTRESOURCE(DLG_START_INSTALL);
-
-    pages[count++]        = CreatePropertySheetPage(&psp);
-  }
-
-  if (diDownloading.bShowDialog) {
-    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle    = diDownloading.szTitle;
-    psp.pszHeaderSubTitle = diDownloading.szSubTitle;
-    psp.pfnDlgProc        = DlgProcDownloading;
-    psp.pszTemplate       = MAKEINTRESOURCE(DLG_DOWNLOADING);
-
-    pages[count++]        = CreatePropertySheetPage(&psp);
-  }
-
-  if (diInstalling.bShowDialog) {
-    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle    = diInstalling.szTitle;
-    psp.pszHeaderSubTitle = diInstalling.szSubTitle;
-    psp.pfnDlgProc        = DlgProcInstalling;
-    psp.pszTemplate       = MAKEINTRESOURCE(DLG_EXTRACTING);
-
-    pages[count++]        = CreatePropertySheetPage(&psp);
-  }
-
-#if WINTEGRATION_PAGE
-  // Windows Integration Page
-  if (diWindowsIntegration.bShowDialog) {
-    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle    = diWindowsIntegration.szTitle;
-    psp.pszHeaderSubTitle = diWindowsIntegration.szSubTitle;
-    psp.pfnDlgProc        = DlgProcWindowsIntegration;
-    psp.pszTemplate       = MAKEINTRESOURCE(DLG_WINDOWS_INTEGRATION);
-    
-    pages[count++]        = CreatePropertySheetPage(&psp);
-  }
-#endif
-
-  // Successful Install Page
-  if (diInstallSuccessful.bShowDialog) {
-    psp.dwFlags           = PSP_DEFAULT|PSP_HIDEHEADER;
-    psp.pfnDlgProc        = DlgProcInstallSuccessful;
-    psp.pszTemplate       = MAKEINTRESOURCE(DLG_INSTALL_SUCCESSFUL);
-    
-    pages[count++]        = CreatePropertySheetPage(&psp);
-  }
-
-  // Property Sheet
-  psh.dwSize            = sizeof(psh);
-  psh.hInstance         = hSetupRscInst;
-  psh.hwndParent        = NULL;
-  psh.phpage            = pages;
-  psh.dwFlags           = PSH_WIZARD97|PSH_WATERMARK|PSH_HEADER;
-  psh.pszbmWatermark    = MAKEINTRESOURCE(IDB_WATERMARK);
-  psh.pszbmHeader       = MAKEINTRESOURCE(IDB_HEADER);
-  psh.nStartPage        = 0;
-  psh.nPages            = count;
-
-
-  // Create the Font for Intro/End page headers.
-  sgInstallGui.welcomeTitleFont = MakeFont(TEXT("Trebuchet MS Bold"), 14, FW_BOLD);
-
-  // Start the Wizard.
-  PropertySheet(&psh);
-
-  DeleteObject(sgInstallGui.welcomeTitleFont);
+  SelectObject(hdcWnd, hfontOld);
+  DeleteObject(hfontNew);
+  ReleaseDC(hWnd, hdcWnd);
 }
 
-HFONT MakeFont(TCHAR* aFaceName, int aFontSize, LONG aWeight) 
+void InitPathDisplay (HWND aWindow, char* aPath, int aFolderIcon, int aFolderField)
 {
-  // Welcome Page Header font data
-  NONCLIENTMETRICS ncm = {0};
-  LOGFONT lf;
-  HDC hDC;
+  HICON largeIcon, smallIcon;
+  char buf[MAX_BUF];
 
-  ncm.cbSize = sizeof(ncm);
-  SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
-
-  if (aFaceName) 
-    lstrcpy(lf.lfFaceName, aFaceName); 
-
-  lf = ncm.lfMessageFont;
-  lf.lfWeight = aWeight;
-
-  hDC = GetDC(NULL); 
-  lf.lfHeight = 0 - GetDeviceCaps(hDC, LOGPIXELSY) * aFontSize / 72;
-  ReleaseDC(NULL, hDC);
-
-  return CreateFontIndirect(&lf);
+   // Folder Icon
+  ExtractIconEx("shell32.dll", 3, &largeIcon, &smallIcon, 1);
+  SendMessage(GetDlgItem(aWindow, aFolderIcon), STM_SETICON, (LPARAM)smallIcon, 0);
+ 
+  TruncateString(GetDlgItem(aWindow, aFolderField), 
+                 aPath, buf, sizeof(buf));
+  SetDlgItemText(aWindow, aFolderField, buf);
 }
 
