@@ -40,12 +40,10 @@
   ]]>
   </script>
 
-   <broadcaster id="intlAcceptLanguages" 
-                value="" pref="true" 
+  <broadcaster  id="intlAcceptLanguages" 
+                value="" 
                 preftype="string" 
-                prefstring="intl.accept_languages" 
-                prefattribute="value"
-                wsm_persist="true"/>
+                prefstring="intl.accept_languages"/>
 
   <!-- vert 0 -->
   <box align="vertical" flex="100%">
@@ -125,8 +123,6 @@
             <box align="vertical">
               <button class="dialog push" value="&languages.customize.addButton.label;" onclick="AddLanguage();"/>
               <button class="dialog push" value="&languages.customize.deleteButton.label;" onclick="RemoveActiveLanguage();"/>
-              <button class="dialog push" value="&languages.customize.save.label;" onclick="Save();"/>
-              <button class="dialog push" value="&languages.customize.cancel.label;" onclick="window.close();"/>
             </box>
             <!-- vert 3 -->
 
@@ -145,4 +141,3 @@
    <!-- vert 0 -->	
 
 </window>
-
