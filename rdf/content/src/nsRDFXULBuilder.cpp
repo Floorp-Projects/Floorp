@@ -1822,6 +1822,10 @@ RDFXULBuilderImpl::CreateOrReuseElement(nsINameSpace* aContainingNameSpace,
             nsCOMPtr<nsIContent> element = 
                 do_QueryInterface( mZombiePool->ElementAt(count) );
 
+            NS_ASSERTION(element, "element is not a nsIContent");
+            if (! element)
+                continue;
+
             nsCOMPtr<nsIRDFResource> resource;
             rv = nsRDFContentUtils::GetElementResource(element, getter_AddRefs(resource));
             NS_ASSERTION(NS_SUCCEEDED(rv), "an element with out a resource is in the recycle bin");
