@@ -641,10 +641,29 @@ nsresult nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCombine 
 
    if( trect.width == 0 || trect.height == 0)
    {
+      // Mozilla assumes that clip region with zero width or height does not produce any output - everything is clipped.
+      // GPI does not support clip regions with zero width or height. We cheat by creating 1x1 clip region far outside
+      // of real drawing region limits.
+
       if( aCombine == nsClipCombine_kIntersect || aCombine == nsClipCombine_kReplace)
-         lrc = OS2_SetClipRegion( mSurface->mPS, 0);
-      else
-         lrc = OS2_CombineClipRegion( mSurface->mPS, 0, CRGN_OR);
+      {
+         RECTL rcl;
+         rcl.xLeft   = -1;
+         rcl.xRight  = 0;
+         rcl.yBottom = -1;
+         rcl.yTop    = 0;
+
+         HRGN hrgn = GFX (::GpiCreateRegion( mSurface->mPS, 1, &rcl), RGN_ERROR);
+         OS2_SetClipRegion (mSurface->mPS, hrgn);
+
+         lrc = PR_TRUE;      // Should pretend that clipping region is empty
+      } else
+      {
+         // Clipping region is already correct. Just need to obtain it's complexity
+         POINTL Offset = { 0, 0 };
+
+         lrc = GFX (::GpiOffsetClipRegion (mSurface->mPS, &Offset), RGN_ERROR);
+      }
    }
    else
    {
