@@ -4368,7 +4368,7 @@
 		F5461CBB03AAC25C01A96660 = {
 			isa = PBXFileReference;
 			name = nsProxyAutoConfig.js;
-			path = ../netwerk/base/src/nsProxyAutoConfig.js;
+			path = ../dist/bin/components/nsProxyAutoConfig.js;
 			refType = 2;
 		};
 		F5461CBE03AAC27C01A96660 = {
@@ -11708,7 +11708,7 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = htmlEntityVersions.properties;
-			path = ../intl/unicharutil/tables/htmlEntityVersions.properties;
+			path = ../dist/Embed/res/entityTables/htmlEntityVersions.properties;
 			refType = 2;
 		};
 		F6BD64DC01B3172601A962F7 = {
