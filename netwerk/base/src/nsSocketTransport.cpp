@@ -533,7 +533,15 @@ nsresult nsSocketTransport::doResolveHost(void)
   char dbbuf[PR_NETDB_BUF_SIZE];
   PRHostEnt hostEnt;
 
-  if (nsString2::IsDigit(mHostName[0])) {
+  PRBool numeric = PR_TRUE;
+  for (char *hostCheck = mHostName; *hostCheck; hostCheck++) {
+      if (!nsString2::IsDigit(*hostCheck) && (*hostCheck != '.') ) {
+          numeric = PR_FALSE;
+          break;
+      }
+  }
+
+  if (numeric) {
       PRNetAddr *netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));
       status = PR_StringToNetAddr(mHostName, netAddr);
       if (PR_SUCCESS != status) {
