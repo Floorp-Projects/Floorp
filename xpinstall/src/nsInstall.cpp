@@ -2580,6 +2580,11 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
         temp->Exists(&exists);
         if (exists)
         {
+            PRBool writable;
+            temp->IsWritable(&writable);
+            if (!writable) // Can't extract. Target is readonly.
+                return nsInstall::READ_ONLY;
+          
             tempFile = do_QueryInterface(temp, &rv); //convert to an nsILocalFile
             if (tempFile == nsnull)
                 return nsInstall::OUT_OF_MEMORY;
