@@ -29,7 +29,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMDocument.h"
 
-class nsIDOMElement;
 class nsIDOMHTMLElement;
 class nsIDOMHTMLCollection;
 class nsIDOMNodeList;
@@ -76,8 +75,6 @@ public:
 
   NS_IMETHOD    Writeln(const nsString& aText)=0;
 
-  NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn)=0;
-
   NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn)=0;
 };
 
@@ -102,7 +99,6 @@ public:
   NS_IMETHOD    Close();  \
   NS_IMETHOD    Write(const nsString& aText);  \
   NS_IMETHOD    Writeln(const nsString& aText);  \
-  NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn);  \
   NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn);  \
 
 
@@ -127,7 +123,6 @@ public:
   NS_IMETHOD    Close() { return _to Close(); }  \
   NS_IMETHOD    Write(const nsString& aText) { return _to Write(aText); }  \
   NS_IMETHOD    Writeln(const nsString& aText) { return _to Writeln(aText); }  \
-  NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn) { return _to GetElementById(aElementId, aReturn); }  \
   NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn) { return _to GetElementsByName(aElementName, aReturn); }  \
 
 

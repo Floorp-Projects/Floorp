@@ -325,19 +325,7 @@ public:
                                    PRBool aUseCapture);
 
     // nsIDOMDocument interface
-    NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDoctype);
-    NS_IMETHOD    GetImplementation(nsIDOMDOMImplementation** aImplementation);
-    NS_IMETHOD    GetDocumentElement(nsIDOMElement** aDocumentElement);
-
-    NS_IMETHOD    CreateElement(const nsString& aTagName, nsIDOMElement** aReturn);
-    NS_IMETHOD    CreateDocumentFragment(nsIDOMDocumentFragment** aReturn);
-    NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn);
-    NS_IMETHOD    CreateComment(const nsString& aData, nsIDOMComment** aReturn);
-    NS_IMETHOD    CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn);
-    NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn);
-    NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn);
-    NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);
-    NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn);
+    NS_DECL_IDOMDOCUMENT
 
     // nsIDOMNSDocument interface
     NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets);

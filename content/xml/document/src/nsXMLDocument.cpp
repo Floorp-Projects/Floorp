@@ -696,6 +696,50 @@ nsXMLDocument::CreateElementWithNameSpace(const nsString& aTagName,
   return rv;
 }
  
+NS_IMETHODIMP
+nsXMLDocument::ImportNode(nsIDOMNode* aImportedNode,
+                          PRBool aDeep,
+                          nsIDOMNode** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXMLDocument::CreateElementNS(const nsString& aNamespaceURI,
+                               const nsString& aQualifiedName,
+                               nsIDOMElement** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXMLDocument::CreateAttributeNS(const nsString& aNamespaceURI,
+                                 const nsString& aQualifiedName,
+                                 nsIDOMAttr** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXMLDocument::GetElementById(const nsString& aElementId,
+                              nsIDOMElement** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXMLDocument::GetElementsByTagNameNS(const nsString& aNamespaceURI, 
+                                      const nsString& aLocalName, 
+                                      nsIDOMNodeList** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 // nsIXMLDocument interface
 static nsIContent *
