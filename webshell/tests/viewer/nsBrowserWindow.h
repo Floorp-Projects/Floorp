@@ -258,7 +258,7 @@ public:
   PRBool mAllowPlugins;
 
   // Global window collection
-  static nsVoidArray gBrowsers;
+  static nsVoidArray *gBrowsers;
   static void AddBrowser(nsBrowserWindow* aBrowser);
   static void RemoveBrowser(nsBrowserWindow* aBrowser);
   static nsBrowserWindow* FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich);
