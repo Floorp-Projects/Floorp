@@ -87,13 +87,22 @@ static int PR_CALLBACK cacheCapacityChanged(const char *pref, void *closure)
     return NS_OK;
 }
 
+static nsresult ensureCacheDirectory(nsIFile * cacheDirectory)
+{
+    // make sure the Cache directory exists.
+    PRBool exists;
+    nsresult rv = cacheDirectory->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && !exists)
+        rv = cacheDirectory->Create(nsIFile::DIRECTORY_TYPE, 0777);
+    return rv;
+}
+
 static nsresult installPrefListeners(nsDiskCacheDevice* device)
 {
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
 	if (NS_FAILED(rv))
 		return rv;
-
 
 	rv = prefs->RegisterCallback(CACHE_DISK_CAPACITY, cacheCapacityChanged, device);
 	if (NS_FAILED(rv))
@@ -134,11 +143,9 @@ static nsresult installPrefListeners(nsDiskCacheDevice* device)
     	if (NS_FAILED(rv))
     		return rv;
 
-        // make sure the Cache directory exists.
-        PRBool exists;
-        rv = cacheDirectory->Exists(&exists);
-        if (NS_SUCCEEDED(rv) && !exists)
-            cacheDirectory->Create(nsIFile::DIRECTORY_TYPE, 0777);
+        rv = ensureCacheDirectory(cacheDirectory);
+        if (NS_FAILED(rv))
+            return rv;
 
         rv = prefs->SetFileXPref(CACHE_DIR_PREF, cacheDirectory);
     	if (NS_FAILED(rv))
@@ -147,11 +154,11 @@ static nsresult installPrefListeners(nsDiskCacheDevice* device)
         return rv;
 #endif
     } else {
-        // be a good citizen in the current Cache directory.
-        rv = cacheDirectory->Append("NewCache");
+        // always make sure the directory exists, the user may blow it away.
+        rv = ensureCacheDirectory(cacheDirectory);
         if (NS_FAILED(rv))
             return rv;
-    
+
         // cause the preference to be set up initially.
         device->setCacheDirectory(cacheDirectory);
     }
