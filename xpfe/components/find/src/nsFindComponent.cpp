@@ -52,7 +52,7 @@ struct nsFindComponent : public nsIFindComponent {
 
     // ctor/dtor
     nsFindComponent();
-    ~nsFindComponent();
+    virtual ~nsFindComponent();
 
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
@@ -79,7 +79,7 @@ struct nsFindComponent : public nsIFindComponent {
 
             NS_INIT_REFCNT();
         }
-        ~Context() {
+        virtual ~Context() {
         }
         void Reset( nsIDocument *aNewDocument ) {
             // Reconstruct nsITextServicesDocument?...
@@ -252,7 +252,7 @@ struct nsFindDialog : public nsIXULWindowCallbacks,
     // nsFindDialog stuff
     nsFindDialog( nsIFindComponent *aComponent,
                   nsFindComponent::Context *aContext );
-    ~nsFindDialog() {}
+    virtual ~nsFindDialog() {}
     void OnFind( nsIContent *aContent );
     void OnNext();
     void OnCancel();
