@@ -117,17 +117,18 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
                     meta->reportError(Exception::rangeError, "Array length too large", meta->engine->errorPos());
             }
             else {
-                setLength(meta, arrInst, 1);
                 meta->mn1->name = meta->engine->numberToString((int32)0);
                 meta->writeDynamicProperty(arrInst, meta->mn1, true, argv[0], RunPhase);
             }
         }
         else {
-            setLength(meta, arrInst, argc);
-            for (uint32 i = 0; i < argc; i++) {
-                meta->mn1->name = meta->engine->numberToString(i);
-                meta->writeDynamicProperty(arrInst, meta->mn1, true, argv[i], RunPhase);
+            uint32 i;
+            for (i = 0; i < argc; i++) {
+                const DynamicPropertyMap::value_type e(*meta->engine->numberToString(i), DynamicPropertyValue(argv[i], DynamicPropertyValue::ENUMERATE));
+                arrInst->dynamicProperties.insert(e);
             }
+            const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, DynamicPropertyValue(INT_TO_JS2VAL(i), DynamicPropertyValue::PERMANENT));
+            arrInst->dynamicProperties.insert(e);
         }
     }
     JS2Object::removeRoot(ri);
@@ -794,14 +795,7 @@ js2val Array_SetElement(JS2Metadata *meta, const js2val thisValue, js2val *argv,
 
 void initArrayObject(JS2Metadata *meta)
 {
-
-    typedef struct {
-        char *name;
-        uint16 length;
-        NativeCode *code;
-    } PrototypeFunction;
-
-    PrototypeFunction arrayProtos[] = 
+    FunctionData prototypeFunctions[] = 
     {
         { "toString",           0, Array_toString },
         { "toLocaleString",     0, Array_toString },       // XXX 
@@ -819,38 +813,8 @@ void initArrayObject(JS2Metadata *meta)
         { NULL }
     };
 
-    NamespaceList publicNamespaceList;
-    publicNamespaceList.push_back(meta->publicNamespace);
-
-    meta->arrayClass->construct = Array_Constructor;
-    meta->arrayClass->call = Array_Constructor;
     meta->arrayClass->prototype = new ArrayInstance(meta, meta->objectClass->prototype, meta->arrayClass);
-
-    // Adding "prototype" & "length" as static members of the class - not dynamic properties; XXX
-    meta->env->addFrame(meta->arrayClass);
-        Variable *v = new Variable(meta->arrayClass, OBJECT_TO_JS2VAL(meta->arrayClass->prototype), true);
-        meta->defineLocalMember(meta->env, meta->engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        v = new Variable(meta->numberClass, INT_TO_JS2VAL(1), true);
-        meta->defineLocalMember(meta->env, meta->engine->length_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-    meta->env->removeTopFrame();
-
-    PrototypeFunction *pf = &arrayProtos[0];
-    while (pf->name) {
-
-        SimpleInstance *callInst = new SimpleInstance(meta->functionClass);
-        callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
-        InstanceMember *m = new InstanceMethod(callInst);
-        meta->defineInstanceMember(meta->arrayClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
-/*
-    Dynamic property of the prototype:
-*/
-        FunctionInstance *fInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
-        fInst->fWrap = callInst->fWrap;
-        meta->writeDynamicProperty(meta->arrayClass->prototype, new Multiname(&meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-        fInst->writeProperty(meta, meta->engine->length_StringAtom, INT_TO_JS2VAL(pf->length), DynamicPropertyValue::PERMANENT | DynamicPropertyValue::READONLY);
-        
-        pf++;
-    }
+    meta->initBuiltinClass(meta->arrayClass, &prototypeFunctions[0], NULL, Array_Constructor, Array_Constructor);
 }
 
 }

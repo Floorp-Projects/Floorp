@@ -138,6 +138,8 @@ enum JS2Op {
     ePopv,
     ePop,
     eDup,
+    eSwap,
+    eSwap2,
     eVoid,
 
     eLexicalPostInc,    // <multiname index:u16>

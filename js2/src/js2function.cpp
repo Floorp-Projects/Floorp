@@ -114,63 +114,15 @@ namespace MetaData {
 
     void initFunctionObject(JS2Metadata *meta)
     {
-        meta->functionClass->construct = Function_Constructor;
-        meta->functionClass->call = Function_Constructor;
-
-        typedef struct {
-            char *name;
-            uint16 length;
-            NativeCode *code;
-        } PrototypeFunction;
-
-        PrototypeFunction prototypeFunctions[] =
+        FunctionData prototypeFunctions[] =
         {
             { "toString",            0, Function_toString },
             { "valueOf",             0, Function_valueOf  },
             { NULL }
         };
 
-
-        NamespaceList publicNamespaceList;
-        publicNamespaceList.push_back(meta->publicNamespace);
-
         meta->functionClass->prototype = new FunctionInstance(meta, meta->objectClass->prototype, meta->functionClass);
-
-        // Adding "prototype" as a static member of the class - not a dynamic property
-        meta->env->addFrame(meta->functionClass);
-            Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(meta->functionClass->prototype), true);
-            meta->defineLocalMember(meta->env, meta->engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        meta->env->removeTopFrame();
-
-        // Add "constructor" as a dynamic property of the prototype
-        FunctionInstance *fInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
-        meta->writeDynamicProperty(fInst, new Multiname(meta->engine->length_StringAtom, meta->publicNamespace), true, INT_TO_JS2VAL(1), RunPhase);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), Function_Constructor);
-        meta->writeDynamicProperty(meta->functionClass->prototype, new Multiname(&meta->world.identifiers["constructor"], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-
-        PrototypeFunction *pf = &prototypeFunctions[0];
-        while (pf->name) {
-            SimpleInstance *callInst = new SimpleInstance(meta->functionClass);
-            callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
-    /*
-    XXX not static members, since those can't be accessed from the instance
-              Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(fInst), true);
-              meta->defineLocalMember(&meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-    */
-            InstanceMember *m = new InstanceMethod(callInst);
-            meta->defineInstanceMember(meta->functionClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
-
-    /*
-        Dynamic property of the prototype:
-    */
-            FunctionInstance *fInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
-            fInst->fWrap = callInst->fWrap;
-            meta->writeDynamicProperty(meta->functionClass->prototype, new Multiname(&meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-            meta->writeDynamicProperty(fInst, new Multiname(meta->engine->length_StringAtom, meta->publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);
-
-            pf++;
-        }
-
+        meta->initBuiltinClass(meta->functionClass, &prototypeFunctions[0], NULL, Function_Constructor, Function_Constructor);
     }
 
 }

@@ -56,6 +56,8 @@ class SimpleInstance;
 typedef void (Invokable)();
 typedef js2val (Callor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
+
 
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
@@ -79,6 +81,13 @@ extern js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2v
 extern js2val RegExp_exec(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val Boolean_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val Number_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+
+typedef struct {
+    char *name;
+    uint16 length;
+    NativeCode *code;
+} FunctionData;
+
 
 extern uint32 getLength(JS2Metadata *meta, JS2Object *obj);
 extern js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 length);
@@ -571,8 +580,6 @@ public:
     js2val value;                // This fixed property's current value; uninitialised if the fixed property is an uninitialised constant
 };
 
-typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
-
 class ParameterFrame;
 
 class FunctionWrapper {
@@ -779,7 +786,10 @@ public:
     virtual void emitPreIncBytecode(BytecodeContainer *, size_t)            { ASSERT(false); }
     virtual void emitPreDecBytecode(BytecodeContainer *, size_t)            { ASSERT(false); }
 
-    virtual void emitDeleteBytecode(BytecodeContainer *, size_t)            { ASSERT(false); }    
+    virtual void emitDeleteBytecode(BytecodeContainer *, size_t)            { ASSERT(false); }   
+    
+    // indicate whether building the reference generate any stack deposits
+    virtual int hasStackEffect()                                            { ASSERT(false); return 0; }
 };
 
 class LexicalReference : public Reference {
@@ -810,6 +820,8 @@ public:
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreDec, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
     
     virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalDelete, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
+
+    virtual int hasStackEffect()                                           { return 0; }
 };
 
 class DotReference : public Reference {
@@ -842,6 +854,8 @@ public:
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreDec, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
 
     virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotDelete, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
+
+    virtual int hasStackEffect()                                            { return 1; }
 };
 
 class SlotReference : public Reference {
@@ -864,6 +878,7 @@ public:
     virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eFalse, pos); /* bCon->emitOp(eSlotDelete, pos); bCon->addShort((uint16)slotIndex); */ }
 
     uint32 slotIndex;
+    virtual int hasStackEffect()                                            { return 1; }
 };
 
 
@@ -904,6 +919,7 @@ public:
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketPreDec, pos); }
 
     virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketDelete, pos); }
+    virtual int hasStackEffect()                                            { return 2; }
 };
 
 
@@ -1138,6 +1154,7 @@ public:
     bool deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result);
 
     void addGlobalObjectFunction(char *name, NativeCode *code, uint32 length);
+    void initBuiltinClass(JS2Class *builtinClass, FunctionData *protoFunctions, FunctionData *staticFunctions, NativeCode *construct, NativeCode *call);
 
     void reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg = NULL);
     void reportError(Exception::Kind kind, const char *message, size_t pos, const String &name);
@@ -1230,7 +1247,6 @@ public:
 };
 
     inline char narrow(char16 ch) { return char(ch); }
-
 
 }; // namespace MetaData
 }; // namespace Javascript

@@ -76,6 +76,25 @@
         }
         break;
 
+    case eSwap:        // go from [x][y] --> [y][x]
+        {
+            ASSERT((sp - execStack) > 2);
+            a = sp[-2];
+            sp[-2] = sp[-1];
+            sp[-1] = a;
+        }
+        break;
+    case eSwap2:        // go from [x][y][z] --> [y][z][x]
+        {
+            ASSERT((sp - execStack) > 3);
+            a = sp[-3];
+            sp[-3] = sp[-2];
+            sp[-2] = sp[-1];
+            sp[-1] = a;
+        }
+        break;
+
+        
         // Get the first enumerable property from the object
         // and save it's 'state' on the stack. Push true/false
         // for whether that was succesful.

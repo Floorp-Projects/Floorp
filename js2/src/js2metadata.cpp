@@ -336,14 +336,14 @@ namespace MetaData {
                             case StmtNode::DoWhile:
                                 {
                                     UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
-                                    g->tgtID = w->breakLabelID;
+                                    g->tgtID = w->continueLabelID;
                                 }
                                 break;
                             case StmtNode::For:
                             case StmtNode::ForIn:
                                 {
                                     ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
-                                    g->tgtID = f->breakLabelID;
+                                    g->tgtID = f->continueLabelID;
                                 }
                             }
                             found = true;
@@ -771,6 +771,18 @@ namespace MetaData {
 */
             {
                 ForStmtNode *f = checked_cast<ForStmtNode *>(p);
+                BytecodeContainer::LabelID loopTop = bCon->getLabel();
+
+                Reference *r = SetupExprNode(env, phase, f->expr2, &exprType);
+                if (r) r->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eFirst, p->pos);
+                bCon->emitBranch(eBranchFalse, f->breakLabelID, p->pos);
+
+                bCon->setLabel(loopTop);                
+                
+                targetList.push_back(p);
+                bCon->emitOp(eForValue, p->pos);
+
                 Reference *v = NULL;
                 if (f->initializer->getKind() == StmtNode::Var) {
                     VariableStmtNode *vs = checked_cast<VariableStmtNode *>(f->initializer);
@@ -787,17 +799,14 @@ namespace MetaData {
                     else
                         NOT_REACHED("what else??");
                 }            
-
-                BytecodeContainer::LabelID loopTop = bCon->getLabel();
-
-                Reference *r = SetupExprNode(env, phase, f->expr2, &exprType);
-                if (r) r->emitReadBytecode(bCon, p->pos);
-                bCon->emitOp(eFirst, p->pos);
-                bCon->emitBranch(eBranchFalse, f->breakLabelID, p->pos);
-
-                bCon->setLabel(loopTop);
-                targetList.push_back(p);
-                bCon->emitOp(eForValue, p->pos);
+                switch (v->hasStackEffect()) {
+                case 1:
+                    bCon->emitOp(eSwap, p->pos);
+                    break;
+                case 2:
+                    bCon->emitOp(eSwap2, p->pos);
+                    break;
+                }
                 v->emitWriteBytecode(bCon, p->pos);
                 bCon->emitOp(ePop, p->pos);     // clear iterator value from stack
                 SetupStmt(env, phase, f->stmt);
@@ -2297,9 +2306,10 @@ doUnary:
         case ExprNode::comma:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                SetupExprNode(env, phase, b->op1, exprType);
+                Reference *r = SetupExprNode(env, phase, b->op1, exprType);
+                if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(ePopv, p->pos);
-                SetupExprNode(env, phase, b->op2, exprType);
+                returnRef = SetupExprNode(env, phase, b->op2, exprType);
             }
             break;
         case ExprNode::Instanceof:
@@ -4297,6 +4307,72 @@ deleteClassProperty:
         reportError(kind, message, pos, str.c_str());
     }
 
+ 
+    void JS2Metadata::initBuiltinClass(JS2Class *builtinClass, FunctionData *protoFunctions, FunctionData *staticFunctions, NativeCode *construct, NativeCode *call)
+    {
+        FunctionData *pf;
+
+        builtinClass->construct = construct;
+        builtinClass->call = call;
+
+        NamespaceList publicNamespaceList;
+        publicNamespaceList.push_back(publicNamespace);
+    
+        // Adding "prototype" & "length" as static members of the class - not dynamic properties; XXX
+        env->addFrame(builtinClass);
+        {
+            Variable *v = new Variable(builtinClass, OBJECT_TO_JS2VAL(builtinClass->prototype), true);
+            defineLocalMember(env, engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+            v = new Variable(builtinClass, INT_TO_JS2VAL(1), true);
+            defineLocalMember(env, engine->length_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+
+            pf = staticFunctions;
+            if (pf) {
+                while (pf->name) {
+                    SimpleInstance *callInst = new SimpleInstance(functionClass);
+                    callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
+                    v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);
+                    defineLocalMember(env, &world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+                    pf++;
+                }
+            }
+        }
+        env->removeTopFrame();
+    
+        // Add "constructor" as a dynamic property of the prototype
+        FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+        writeDynamicProperty(fInst, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(1), RunPhase);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), construct);
+        writeDynamicProperty(builtinClass->prototype, new Multiname(&world.identifiers["constructor"], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+    
+        pf = protoFunctions;
+        if (pf) {
+            while (pf->name) {
+                SimpleInstance *callInst = new SimpleInstance(functionClass);
+                callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
+    /*
+    XXX not prototype object function properties, like ECMA3
+            writeDynamicProperty(dateClass->prototype, new Multiname(world.identifiers[pf->name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+    */
+    /*
+    XXX not static members, since those can't be accessed from the instance
+              Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
+              defineLocalMember(&env, &world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+    */
+                InstanceMember *m = new InstanceMethod(callInst);
+                defineInstanceMember(builtinClass, &cxt, &world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+
+                FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+                fInst->fWrap = callInst->fWrap;
+                writeDynamicProperty(builtinClass->prototype, new Multiname(&world.identifiers[pf->name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+                writeDynamicProperty(fInst, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);
+                pf++;
+            }
+        }
+    }
+
+   
+    
  /************************************************************************************
  *
  *  JS2Class

@@ -314,13 +314,7 @@ void initMathObject(JS2Metadata *meta)
     }
     meta->env->removeTopFrame();
 
-    typedef struct {
-        char *name;
-        uint16 length;
-        NativeCode *code;
-    } PrototypeFunction;
-
-    PrototypeFunction prototypeFunctions[] =
+    FunctionData prototypeFunctions[] =
     {
         { "abs",    1,    Math_abs },
         { "acos",   1,    Math_acos },
@@ -344,7 +338,7 @@ void initMathObject(JS2Metadata *meta)
     };
 
     meta->env->addFrame(meta->mathClass);
-    PrototypeFunction *pf = &prototypeFunctions[0];
+    FunctionData *pf = &prototypeFunctions[0];
     while (pf->name) {
         SimpleInstance *callInst = new SimpleInstance(meta->functionClass);
         callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);

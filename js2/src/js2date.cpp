@@ -1419,14 +1419,7 @@ static js2val Date_valueOf(JS2Metadata *meta, const js2val thisValue, js2val arg
 
 void initDateObject(JS2Metadata *meta)
 {
-
-    typedef struct {
-        char *name;
-        uint16 length;
-        NativeCode *code;
-    } PrototypeFunction;
-
-    PrototypeFunction prototypeFunctions[] =
+    FunctionData prototypeFunctions[] =
     {
             { "getTime",            0, Date_getTime            },
             { "getTimezoneOffset",  0, Date_getTimezoneOffset  },
@@ -1479,61 +1472,17 @@ void initDateObject(JS2Metadata *meta)
 #endif
             { NULL }
     };
+    FunctionData staticFunctions[] =
+    {
+            { "parse",            0, Date_parse            },
+            { "UTC",              0, Date_UTC  },
+            { NULL }
+    };
 
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
 
-    meta->dateClass->construct = Date_Constructor;
-    meta->dateClass->call = Date_Call;
-
-    NamespaceList publicNamespaceList;
-    publicNamespaceList.push_back(meta->publicNamespace);
-
-
-    meta->dateClass->prototype = new DateInstance(meta, meta->objectClass->prototype, meta->booleanClass);
-    
-    // Adding "prototype" & "length" as static members of the class - not dynamic properties; XXX
-    meta->env->addFrame(meta->dateClass);
-        Variable *v = new Variable(meta->dateClass, OBJECT_TO_JS2VAL(meta->dateClass->prototype), true);
-        meta->defineLocalMember(meta->env, meta->engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        v = new Variable(meta->numberClass, INT_TO_JS2VAL(1), true);
-        meta->defineLocalMember(meta->env, meta->engine->length_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-
-        // "parse" & "UTC" as static members:
-        SimpleInstance *callInst = new SimpleInstance(meta->functionClass);
-        callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), Date_parse);
-        v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(callInst), true);
-        meta->defineLocalMember(meta->env, &meta->world.identifiers["parse"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);        
-        callInst = new SimpleInstance(meta->functionClass);
-        callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), Date_UTC);
-        v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(callInst), true);
-        meta->defineLocalMember(meta->env, &meta->world.identifiers["UTC"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);        
-    meta->env->removeTopFrame();
-    
-    
-    PrototypeFunction *pf = &prototypeFunctions[0];
-    while (pf->name) {
-        SimpleInstance *callInst = new SimpleInstance(meta->functionClass);
-        callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
-/*
-XXX not prototype object function properties, like ECMA3
-        meta->writeDynamicProperty(meta->dateClass->prototype, new Multiname(meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-*/
-/*
-XXX not static members, since those can't be accessed from the instance
-          Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(fInst), true);
-          meta->defineLocalMember(&meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-*/
-        InstanceMember *m = new InstanceMethod(callInst);
-        meta->defineInstanceMember(meta->dateClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
-
-        FunctionInstance *fInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
-        fInst->fWrap = callInst->fWrap;
-        meta->writeDynamicProperty(meta->dateClass->prototype, new Multiname(&meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-        meta->writeDynamicProperty(fInst, new Multiname(meta->engine->length_StringAtom, meta->publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);
-        pf++;
-    
-    }
-
+    meta->dateClass->prototype = new DateInstance(meta, meta->objectClass->prototype, meta->booleanClass);   
+    meta->initBuiltinClass(meta->dateClass, &prototypeFunctions[0], &staticFunctions[0], Date_Constructor, Date_Call);
 }
 
 

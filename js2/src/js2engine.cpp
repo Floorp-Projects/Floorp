@@ -517,6 +517,8 @@ namespace MetaData {
         { ePopv,  "Popv", 0 },
         { ePop,  "Pop", 0 },
         { eDup,  "Dup", 0 },
+        { eSwap,  "Swap", 0 },
+        { eSwap2, "Swap2", 0 },
         { eVoid,  "Void", 0 },
 
         { eLexicalPostInc,  "LexicalPostInc", NAME_INDEX },    // <multiname index:u16>
@@ -737,6 +739,10 @@ namespace MetaData {
 
         case eDup:          // duplicate top item
             return 1;      
+
+        case eSwap:         // swap top two items
+        case eSwap2:        // or top three items
+            return 0;      
 
         case ePop:          // remove top item
             return -1;      
