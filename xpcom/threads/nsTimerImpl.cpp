@@ -89,7 +89,8 @@ PR_STATIC_CALLBACK(PRStatus) InitThread(void)
 nsTimerImpl::nsTimerImpl() :
   mClosure(nsnull),
   mCallbackType(CALLBACK_TYPE_UNKNOWN),
-  mFiring(PR_FALSE)
+  mFiring(PR_FALSE),
+  mCancelled(PR_FALSE)
 {
   NS_INIT_REFCNT();
   nsIThread::GetCurrent(getter_AddRefs(mCallingThread));
@@ -107,9 +108,8 @@ nsTimerImpl::nsTimerImpl() :
 
 nsTimerImpl::~nsTimerImpl()
 {
-  mClosure = nsnull;
-  mCallback.c = nsnull;
-  mCallbackType = CALLBACK_TYPE_UNKNOWN;
+  if (mCallbackType == CALLBACK_TYPE_INTERFACE)
+    NS_RELEASE(mCallback.i);
 
   gThread->RemoveTimer(this);
 }
@@ -163,6 +163,7 @@ NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
   SetDelayInternal(aDelay);
 
   mCallback.i = aCallback;
+  NS_ADDREF(mCallback.i);
   mCallbackType = CALLBACK_TYPE_INTERFACE;
 
   mPriority = (PRUint8)aPriority;
@@ -175,9 +176,8 @@ NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
 
 NS_IMETHODIMP_(void) nsTimerImpl::Cancel()
 {
+  mCancelled = PR_TRUE;
   mClosure = nsnull;
-  mCallback.c = nsnull;
-  mCallbackType = CALLBACK_TYPE_UNKNOWN;
 
   gThread->RemoveTimer(this);
 }
@@ -205,6 +205,9 @@ NS_IMETHODIMP_(void) nsTimerImpl::SetType(PRUint32 aType)
 
 void nsTimerImpl::Process()
 {
+  if (mCancelled)
+    return;
+
 #ifdef DEBUG_TIMERS
   PRIntervalTime now = PR_IntervalNow();
   PRIntervalTime a = now - mStart; // actual delay in intervals
@@ -289,7 +292,9 @@ void nsTimerImpl::Fire()
 			         (PLHandleEventProc)handleMyEvent,
 			         (PLDestroyEventProc)destroyMyEvent);
 
-  NS_ADDREF(this);
+  // Since TimerThread addref'd 'this' for us, we don't need to addref here.  We will release
+  // in destroyMyEvent.
+
 #ifdef DEBUG_TIMERS
   event->mInit = PR_IntervalNow();
 #endif
