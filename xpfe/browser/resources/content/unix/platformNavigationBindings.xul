@@ -6,9 +6,6 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <keyset id="keyset">
-    <!-- reload key navigation, 4.xP -->
-    <key id="key_reload" alt="true" key="&reloadCmd.commandKey;" observes="canReload"/>
-
     <!-- proper arrow key navigation, 4.xP -->
     <key id="goBackKb" alt="true" keycode="VK_LEFT" observes="Browser:Back"/>
     <key id="goForwardKb" alt="true" keycode="VK_RIGHT" observes="Browser:Forward"/>
