@@ -1365,6 +1365,9 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aMetrics)
 {
+  // Reset our padding.  If we need it, we'll set it below.
+  mPadding.SizeTo(0, 0, 0, 0);
+  
   const nsStyleList* myList = GetStyleList();
   nscoord ascent;
 
