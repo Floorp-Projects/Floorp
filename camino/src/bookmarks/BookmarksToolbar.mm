@@ -180,7 +180,6 @@
   for (int i = 0; i < count; i++)
   {
     BookmarksButton* button = [mButtons objectAtIndex: i];
-    NSLog(@"Looking at button with item %x, %@, for item %x", [button getItem], [button getItem], aItem);
     if ([button getItem] == aItem)
     {
       [mButtons removeObjectAtIndex: i];
@@ -588,7 +587,6 @@
 
 - (void)bookmarkAdded:(nsIContent*)bookmark inContainer:(nsIContent*)container isChangedRoot:(BOOL)isRoot
 {
-  NSLog(@"Toolbar notified that %x added in %x, is root %d", bookmark, container, isRoot);
   nsCOMPtr<nsIContent>	toolbarRootContent = getter_AddRefs([[BookmarksManager sharedBookmarksManager] getToolbarRoot]);
   if (container == toolbarRootContent.get())
   {
@@ -602,8 +600,6 @@
 
 - (void)bookmarkRemoved:(nsIContent*)bookmark inContainer:(nsIContent*)container isChangedRoot:(BOOL)isRoot
 {
-  NSLog(@"Toolbar notified that %x removed in %x, is root %d", bookmark, container, isRoot);
-
   nsCOMPtr<nsIContent>	toolbarRootContent = getter_AddRefs([[BookmarksManager sharedBookmarksManager] getToolbarRoot]);
   if (container == toolbarRootContent.get())
   {

@@ -182,20 +182,32 @@
 
 -(void)mouseDown:(NSEvent*)aEvent
 {
-  // pop up a "context menu" on folders showing their contents. we check
-  // for single click to fix issues with dblclicks (bug 162367)
-  if (mBookmarkItem && mIsFolder && [aEvent clickCount] == 1)
+  // XXX we should decide whether to click or drag here based on timing, not
+  // whether the command key is down. We'll probably need to provide a custom
+  // Button Cell, and override trackMouse:inRect...
+  if (mBookmarkItem && mIsFolder && ([aEvent modifierFlags] & NSCommandKeyMask) == 0)
   {
+    [self highlight:YES];
     NSMenu* popupMenu = [[NSMenu alloc] init];
+    // dummy first item
+    [popupMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];
     // make a temporary BookmarksMenu to build the menu
-    BookmarksMenu* bmMenu = [[BookmarksMenu alloc] initWithMenu:popupMenu firstItem:0 rootContent:[mBookmarkItem contentNode] watchedFolder:eBookmarksFolderNormal];
-    [NSMenu popUpContextMenu: popupMenu withEvent: aEvent forView: self];
-    
+    BookmarksMenu* bmMenu = [[BookmarksMenu alloc] initWithMenu:popupMenu firstItem:1 rootContent:[mBookmarkItem contentNode] watchedFolder:eBookmarksFolderNormal];
+
+    // use a temporary NSPopUpButtonCell to display the menu.
+    NSPopUpButtonCell	*popupCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES];
+    [popupCell setMenu: popupMenu];
+    [popupCell setFont:[NSFont labelFontOfSize: 11.0]];
+    [popupCell trackMouse:aEvent inRect:[self bounds] ofView:self untilMouseUp:YES];
+    [popupCell release];
+      
     [bmMenu release];
     [popupMenu release];
+    [self highlight:NO];
+    return;
   }
-  else
-    [super mouseDown:aEvent];
+
+  [super mouseDown:aEvent];
 }
 
 - (void)setItem:(BookmarkItem*)inItem
@@ -243,28 +255,28 @@
 }
 
 - (void) mouseDragged: (NSEvent*) aEvent
-{  
-  if ([[mBookmarkItem url] length] == 0)
-    return;
-
+{
+  BOOL isSingleBookmark = ![mBookmarkItem isGroup] && ![mBookmarkItem isFolder];
+  
   NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-  [pboard declareURLPasteboardWithAdditionalTypes:[NSArray arrayWithObjects:@"MozBookmarkType", nil] owner:self];
-
-  NSString     *url 	= [mBookmarkItem url];
   NSString     *title = [mBookmarkItem name];
-  NSString     *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
+  
+  if (isSingleBookmark)
+  {
+    [pboard declareURLPasteboardWithAdditionalTypes:[NSArray arrayWithObjects:@"MozBookmarkType", nil] owner:self];
+  
+    NSString     *url 	= [mBookmarkItem url];
+    NSString     *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
+  
+    [pboard setDataForURL:url title:cleanedTitle];
+  }
+  else
+  {
+    [pboard declareTypes:[NSArray arrayWithObject:@"MozBookmarkType"] owner:self];
+  }
 
   // MozBookmarkType
-  nsCOMPtr<nsIContent> content = [mBookmarkItem contentNode];
-  if (content)
-  {
-    PRUint32 contentID;
-    content->GetContentID(&contentID);  
-    NSArray *itemsArray = [NSArray arrayWithObjects:[NSNumber numberWithInt: contentID], nil];
-    [pboard setPropertyList: itemsArray forType: @"MozBookmarkType"];  
-  }
-  
-  [pboard setDataForURL:url title:cleanedTitle];
+  [pboard setPropertyList:[NSArray arrayWithObject:[mBookmarkItem contentID]] forType: @"MozBookmarkType"];  
 
   [self dragImage: [MainController createImageForDragging:[self image] title:title]
                     at: NSMakePoint(0,NSHeight([self bounds])) offset: NSMakeSize(0,0)
