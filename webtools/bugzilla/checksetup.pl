@@ -851,9 +851,17 @@ sub AddFDef ($$$) {
     $name = $dbh->quote($name);
     $description = $dbh->quote($description);
 
+    my $sth = $dbh->prepare("SELECT fieldid FROM fielddefs " .
+                            "WHERE name = $name");
+    $sth->execute();
+    my ($fieldid) = ($sth->fetchrow_array());
+    if (!$fieldid) {
+        $fieldid = 'NULL';
+    }
+
     $dbh->do("REPLACE INTO fielddefs " .
-             "(name, description, mailhead, sortkey) VALUES " .
-             "($name, $description, $mailhead, $headernum)");
+             "(fieldid, name, description, mailhead, sortkey) VALUES " .
+             "($fieldid, $name, $description, $mailhead, $headernum)");
     $headernum++;
 }
 
@@ -876,6 +884,7 @@ AddFDef("cc", "CC", 0);
 AddFDef("dependson", "BugsThisDependsOn", 0);
 AddFDef("blocked", "OtherBugsDependingOnThis", 0);
 AddFDef("target_milestone", "Target Milestone", 0);
+AddFDef("stupidtest", "Stupidtest", 0);
     
     
 

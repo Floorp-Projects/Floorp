@@ -778,12 +778,14 @@ sub DumpBugActivity {
         $datepart = "and bugs_activity.bug_when >= $starttime";
     }
     my $query = "
-        SELECT fielddefs.name, bugs_activity.bug_when,
+        SELECT IFNULL(fielddefs.name, bugs_activity.fieldid),
+                bugs_activity.bug_when,
                 bugs_activity.oldvalue, bugs_activity.newvalue,
                 profiles.login_name
-        FROM bugs_activity,profiles,fielddefs
+        FROM bugs_activity LEFT JOIN fielddefs ON 
+                                     bugs_activity.fieldid = fielddefs.fieldid,
+             profiles
         WHERE bugs_activity.bug_id = $id $datepart
-              AND fielddefs.fieldid = bugs_activity.fieldid
               AND profiles.userid = bugs_activity.who
         ORDER BY bugs_activity.bug_when";
 
