@@ -333,10 +333,9 @@ class NS_LossyConvertUCS2toASCII : public nsCString
 
 #define NS_LITERAL_CSTRING(s) nsDependentCString(s)
 
-#ifdef HAVE_CPP_2BYTE_WCHAR_T
+// only used by nsNativeAppSupport{Win,OS2}.cpp
+#if defined(XP_WIN) || defined(XP_OS2)
 #define NS_LITERAL_STRING(s) nsDependentString(L##s)
-#else
-#error "need implementation of NS_LITERAL_STRING"
 #endif
 
 #define EmptyCString() nsCString()
