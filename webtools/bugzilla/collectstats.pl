@@ -24,14 +24,14 @@
 
 use diagnostics;
 use strict;
+use vars @::legal_product;
 
 require "globals.pl";
 
 ConnectToDatabase();
+GetVersionTable();
 
-my @products = qw (Mozilla NGLayout);
-
-foreach (@products)
+foreach (@::legal_product)
 	{
 	my $dir = "data/mining";
 	&check_data_dir ($dir);
@@ -101,7 +101,6 @@ FIN
 sub today
   {
   my ($dom, $mon, $year) = (localtime(time))[3, 4, 5];
-  if ($year > 99) { $year += 2000; } else { $year += 1900; }
-  return sprintf "%04d%02d%02d", $year, ++$mon, $dom;
+  return sprintf "%04d%02d%02d", 1900 + $year, ++$mon, $dom;
   }
 
