@@ -1,0 +1,92 @@
+{
+    IBClasses = (
+        {
+            CLASS = BookmarkOutlineView; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = ExtendedOutlineView; 
+        }, 
+        {
+            ACTIONS = {
+                addBookmark = id; 
+                addCollection = id; 
+                addFolder = id; 
+                addSeparator = id; 
+                deleteBookmarks = id; 
+                locateBookmark = id; 
+                openBookmark = id; 
+                openBookmarkInNewTab = id; 
+                openBookmarkInNewWindow = id; 
+                quicksearchPopupChanged = id; 
+                setAsDockMenuFolder = id; 
+                showBookmarkInfo = id; 
+            }; 
+            CLASS = BookmarkViewController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mActionButton = NSButton; 
+                mActionMenuBookmarks = NSMenu; 
+                mActionMenuHistory = NSMenu; 
+                mAddButton = NSButton; 
+                mAddCollectionButton = NSButton; 
+                mBookmarksEditingView = NSView; 
+                mBookmarksHostView = NSView; 
+                mBookmarksOutlineView = BookmarkOutlineView; 
+                mContainersSplit = NSSplitView; 
+                mContainersTableView = ExtendedTableView; 
+                mHistoryHostView = NSView; 
+                mHistoryOutlineView = ExtendedOutlineView; 
+                mHistoryOutlineViewDelegate = HistoryOutlineViewDelegate; 
+                mOutlinerHostView = NSView; 
+                mQuickSearchMenuBookmarks = NSMenu; 
+                mQuickSearchMenuHistory = NSMenu; 
+                mSearchField = SearchTextField; 
+                mSortButton = NSButton; 
+                mSortMenuBookmarks = NSMenu; 
+                mSortMenuHistory = NSMenu; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = ExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
+        {CLASS = ExtendedTableView; LANGUAGE = ObjC; SUPERCLASS = NSTableView; }, 
+        {
+            ACTIONS = {unimplemented = id; }; 
+            CLASS = FirstResponder; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = HistoryDataSource; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {
+                deleteHistoryItems = id; 
+                groupByDate = id; 
+                groupBySite = id; 
+                openHistoryItem = id; 
+                openHistoryItemInNewTab = id; 
+                openHistoryItemInNewWindow = id; 
+                setNoGrouping = id; 
+                sortAscending = id; 
+                sortBy = id; 
+                sortDescending = id; 
+            }; 
+            CLASS = HistoryOutlineViewDelegate; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mBookmarksViewController = BookmarkViewController; 
+                mHistoryOutlineView = ExtendedOutlineView; 
+                mHistorySortMenu = NSMenu; 
+                mOutlinerContextMenu = NSMenu; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = NSObject; LANGUAGE = ObjC; }, 
+        {CLASS = PopupMenuButton; LANGUAGE = ObjC; SUPERCLASS = NSButton; }, 
+        {
+            ACTIONS = {selectText = id; }; 
+            CLASS = SearchTextField; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mPopupMenu = NSMenu; }; 
+            SUPERCLASS = NSTextField; 
+        }
+    ); 
+    IBVersion = 1; 
+}
