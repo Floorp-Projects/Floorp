@@ -632,6 +632,10 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
             if (pos > 0)
               dispFileName.Truncate(pos);
 
+            // According to RFC 2183, filename can be given as filename=value,
+            // where value is token or quoted-string.  See bug 66181. 
+            dispFileName.StripChar('"');
+
             // ONLY if we got here, will we remember the suggested file name...
             mSuggestedFileName.AssignWithConversion(dispFileName);
           }
