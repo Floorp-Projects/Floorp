@@ -212,7 +212,6 @@ components\locale.xpt
 components\mozuconv.dll
 components\uconv.xpt
 components\unicharutil.xpt
-components\ucnative.xpt
 
 ; dom
 components\dom.xpt                      

@@ -249,7 +249,6 @@ thunderbird\components\locale.xpt
 thunderbird\components\uconv.dll
 thunderbird\components\uconv.xpt
 thunderbird\components\unicharutil.xpt
-thunderbird\components\ucnative.xpt
 
 ; dom 
 thunderbird\components\dom.xpt                      
