@@ -92,15 +92,6 @@ NS_NewXMLNotation(nsIContent** aInstancePtrResult,
 class nsIDOMNamedNodeMap;
 
 extern nsresult
-NS_NewXMLDocumentType(nsIContent** aInstancePtrResult,
-                      const nsAReadableString& aName,
-                      nsIDOMNamedNodeMap *aEntities,
-                      nsIDOMNamedNodeMap *aNotations,
-                      const nsAReadableString& aPublicId,
-                      const nsAReadableString& aSystemId,
-                      const nsAReadableString& aInternalSubset);
-
-extern nsresult
 NS_NewXMLNamedNodeMap(nsIDOMNamedNodeMap** aInstancePtrResult,
                       nsISupportsArray *aArray);
 
