@@ -378,7 +378,7 @@ protected:
   Widget m_toplevelWidget; // the parent widget to this window
 
   static MenuSpec new_menu_spec[];
-  static MenuSpec encoding_menu_spec[];
+  static MenuSpec encoding_menu_spec[]; // delete this after we can change ThreadFrame and ComposeFrame
   static MenuSpec window_menu_spec[];
   static MenuSpec help_menu_spec[];
   static MenuSpec places_menu_spec[];

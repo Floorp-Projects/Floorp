@@ -384,6 +384,7 @@ MenuSpec XFE_Frame::next_submenu_spec[] = {
 };
 
 // Encoding Menu Spec - shared between Browsers, and Mail/News
+// Delete this after we can change ThreadFrame and ComposeFrame
 MenuSpec XFE_Frame::encoding_menu_spec[] = {
 	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_LATIN1 },
 	MENU_SEPARATOR,

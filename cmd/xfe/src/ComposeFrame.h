@@ -74,6 +74,7 @@ private:
   static ToolbarSpec toolbar_spec[];
   static MenuSpec html_edit_menu_spec[];
   static MenuSpec html_view_menu_spec[];
+  static MenuSpec encoding_menu_spec[];
   static MenuSpec html_show_chrome_spec[];
   static MenuSpec html_menu_bar_spec[];
   XP_Bool m_destroyWhenConnectionsComplete;

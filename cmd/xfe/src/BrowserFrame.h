@@ -70,6 +70,7 @@ private:
   static MenuSpec edit_menu_spec[];
   static MenuSpec view_menu_spec[];
   static MenuSpec go_menu_spec[];
+  static MenuSpec encoding_menu_spec[]; 
 
   //static MenuSpec help_menu_spec[];
 

@@ -74,6 +74,8 @@ private:
   static MenuSpec offline_submenu_spec[];
   static MenuSpec ignore_submenu_spec[];
 
+  static MenuSpec encoding_menu_spec[];
+
   static ToolbarSpec toolbar_spec[];
 
   void updateReadAndTotalCounts();

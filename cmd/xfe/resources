@@ -2152,27 +2152,30 @@ Change character encoding of the current page
 
 ! View/Encoding Submenu
 
-*latin1EncCmdString:		Western (ISO-8859-1)
-*latin2EncCmdString:		Central European (ISO-8859-2)
-*Win1250EncCmdString:		Central European (Windows-1250)
-*jaAutoEncCmdString:		Japanese (Auto-Detect)
-*jaSJISEncCmdString:		Japanese (Shift_JIS)
-*jaEUCEncCmdString:			Japanese (EUC-JP)
-*twBig5EncCmdString:		Traditional Chinese (Big5)
-*twEUCEncCmdString:			Traditional Chinese (EUC-TW)
-*gbEUCEncCmdString:			Simplified Chinese (GB2312)
-*krEUCEncCmdString:			Korean (Auto-Detect)
-*2022krEncCmdString:		Korean (ISO-2022-KR)
-*koi8rEncCmdString:			Cyrillic (KOI8-R)
-*88595EncCmdString:			Cyrillic (ISO-8859-5)
-*Win1251EncCmdString:		Cyrillic (Windows-1251)
-*armenianEncCmdString:		Armenian (ArmSCII-8)
-*greekEncCmdString:			Greek (ISO-8859-7)
-*Win1253EncCmdString:		Greek (Windows-1253)
-*88599EncCmdString:			Turkish (ISO-8859-9)
-*unicode_utf8EncCmdString:	Unicode (UTF-8)
-*unicode_utf7EncCmdString:	Unicode (UTF-7)
-*otherEncCmdString:			User-Defined
+*iso-8859-1EncCmdString:		Western (ISO-8859-1)
+*iso-8859-2EncCmdString:		Central European (ISO-8859-2)
+*windows-1250EncCmdString:		Central European (Windows-1250)
+*euc-jpAutoEncCmdString:		Japanese (Auto-Detect)
+*Shift_JISEncCmdString:			Japanese (Shift_JIS)
+*euc-jpEncCmdString:			Japanese (EUC-JP)
+*iso-2022-jpEncCmdString:		Japanese (ISO-2022-JP)
+*big5EncCmdString:			Traditional Chinese (Big5)
+*x-euc-twEncCmdString:			Traditional Chinese (EUC-TW)
+*gb2312EncCmdString:			Simplified Chinese (GB2312)
+*EUC-KRAutoEncCmdString:		Korean (Auto-Detect)
+*EUC-KREncCmdString:			Korean (EUC-KR)
+*iso-2022-krEncCmdString:		Korean (ISO-2022-KR)
+*koi8-rEncCmdString:			Cyrillic (KOI8-R)
+*iso-8859-5EncCmdString:		Cyrillic (ISO-8859-5)
+*windows-1251EncCmdString:		Cyrillic (Windows-1251)
+*armscii-8EncCmdString:			Armenian (ArmSCII-8)
+*iso-8859-7EncCmdString:		Greek (ISO-8859-7)
+*windows-1253EncCmdString:		Greek (Windows-1253)
+*iso-8859-9EncCmdString:		Turkish (ISO-8859-9)
+*UTF-8EncCmdString:			Unicode (UTF-8)
+*UTF-7EncCmdString:			Unicode (UTF-7)
+*ISO-10646-UCS-2EncCmdString:		Unicode (UCS-2)
+*x-user-definedEncCmdString:		User-Defined
 *setDefaultDocCSID:			Set Default Encoding
 *setDefaultDocumentEncoding.documentationString:	\
 Set the Global Default Documentation Encoding
@@ -5548,6 +5551,7 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charset*big5-0:					x-x-big5
 *documentFonts.charset*big5.et-0:				x-x-big5
 *documentFonts.charset*big5.et.ext-0:				x-x-big5
+*documentFonts.charset*big5.eten-0:				x-x-big5
 *documentFonts.charset*big5.etext-0:				x-x-big5
 *documentFonts.charset*big5.hku-0:				x-x-big5
 *documentFonts.charset*big5.hku-1:				x-x-big5
@@ -5568,6 +5572,13 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charset*cns11643.1992.5-0:			x-cns11643-5
 *documentFonts.charset*cns11643.1992.6-0:			x-cns11643-6
 *documentFonts.charset*cns11643.1992.7-0:			x-cns11643-7
+*documentFonts.charset*cns11643.1992-1:				x-cns11643-1
+*documentFonts.charset*cns11643.1992-2:				x-cns11643-2
+*documentFonts.charset*cns11643.1992-3:				x-cns11643-3
+*documentFonts.charset*cns11643.1992-4:				x-cns11643-4
+*documentFonts.charset*cns11643.1992-5:				x-cns11643-5
+*documentFonts.charset*cns11643.1992-6:				x-cns11643-6
+*documentFonts.charset*cns11643.1992-7:				x-cns11643-7
 *documentFonts.charset*dec-decctrl:				x-ignore
 *documentFonts.charset*dec-decksroman:				x-ignore
 *documentFonts.charset*dec-decmath_extension:			x-ignore

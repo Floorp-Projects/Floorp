@@ -87,6 +87,8 @@ private:
   static MenuSpec go_menu_spec[];
   static MenuSpec bookmark_menu_spec[];
 
+  static MenuSpec encoding_menu_spec[];
+
   // static MenuSpec navigate_menu_spec[];
   // static MenuSpec help_menu_spec[];
 

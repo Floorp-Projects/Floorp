@@ -33,6 +33,7 @@
 #include "ViewGlue.h"
 #include "Logo.h"
 #include "xpassert.h"
+#include "csid.h"
 
 #include "DtWidgets/ComboBox.h"
 
@@ -52,6 +53,46 @@ extern "C" {
   URL_Struct *fe_GetBrowserStartupUrlStruct();
 }
 
+
+// Browser Encoding Menu Spec - no longer shared between Browsers, and Mail/News
+MenuSpec XFE_BrowserFrame::encoding_menu_spec[] = {
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_LATIN1 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_LATIN2 },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CP_1250 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_EUCJP_AUTO },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_SJIS },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_EUCJP },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_BIG5 },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CNS_8BIT },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_GB_8BIT },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_KSC_8BIT_AUTO },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_KSC_8BIT },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_2022_KR },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_8859_5 },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_KOI8_R },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CP_1251 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_ARMSCII8 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_8859_7 },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CP_1253 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_8859_9 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_UTF8 },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_UTF7 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_USRDEF2 },
+	MENU_SEPARATOR,
+	{ xfeCmdSetDefaultDocumentEncoding,	PUSHBUTTON },
+	{ NULL }
+};
 MenuSpec XFE_BrowserFrame::file_menu_spec[] = {
 #if (defined(MOZ_MAIL_NEWS) || defined(EDITOR))
   { "newSubmenu",		CASCADEBUTTON,
@@ -127,7 +168,7 @@ MenuSpec XFE_BrowserFrame::view_menu_spec[] = {
 #endif
   MENU_SEPARATOR,
   { "encodingSubmenu",		CASCADEBUTTON,
-	(MenuSpec*)&XFE_Frame::encoding_menu_spec },
+	(MenuSpec*)&XFE_BrowserFrame::encoding_menu_spec },
   { NULL }
 };
 

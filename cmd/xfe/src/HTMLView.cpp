@@ -1537,83 +1537,20 @@ XFE_HTMLView::commandToString(CommandType cmd, void *calldata, XFE_CommandInfo*)
   }
   else if (IS_CMD(xfeCmdChangeDocumentEncoding))
     {
+      char buf[80]; 
       char *res = NULL;
       int doc_csid = (int)calldata;
 
-      switch (doc_csid)
-        {
-          case CS_LATIN1:
-            res = "latin1EncCmdString";
-            break;
-          case CS_LATIN2:
-            res = "latin2EncCmdString";
-            break;
-          case CS_CP_1250:
-            res = "Win1250EncCmdString";
-            break;
-          case CS_EUCJP_AUTO:
-            res = "jaAutoEncCmdString";
-            break;
-          case CS_SJIS:
-            res = "jaSJISEncCmdString";
-            break;
-          case CS_EUCJP:
-            res = "jaEUCEncCmdString";
-            break;
-          case CS_BIG5:
-            res = "twBig5EncCmdString";
-            break;
-          case CS_CNS_8BIT:
-            res = "twEUCEncCmdString";
-            break;
-          case CS_GB_8BIT:
-            res = "gbEUCEncCmdString";
-            break;
-          case CS_KSC_8BIT_AUTO:
-            res = "krEUCEncCmdString";
-            break;
-          case CS_2022_KR:
-            res = "2022krEncCmdString";
-            break;
-          case CS_KOI8_R:
-            res = "koi8rEncCmdString";
-            break;
-          case CS_CP_1251:
-            res = "Win1251EncCmdString";
-            break;
-          case CS_8859_5:
-            res = "88595EncCmdString";
-            break;
-          case CS_ARMSCII8:
-            res = "armenianEncCmdString";
-            break;
-          case CS_8859_7:
-            res = "greekEncCmdString";
-            break;
-          case CS_CP_1253:
-            res = "Win1253EncCmdString";
-            break;
-          case CS_8859_9:
-            res = "88599EncCmdString";
-            break;
-          case CS_UTF8:
-            res = "unicode_utf8EncCmdString";
-            break;
-          case CS_UTF7:
-            res = "unicode_utf7EncCmdString";
-            break;
-          case CS_USRDEF2:
-            res = "otherEncCmdString";
-            break;
-          default:
-            XP_ASSERT(0);
-            break;
-        }
-      
+      res = (char*)INTL_CsidToCharsetNamePt(doc_csid);
+
       if (res)
-        return stringFromResource(res);
+      {
+        PR_snprintf(buf, sizeof(buf), "%s%sEncCmdString" , res, ((doc_csid & CS_AUTO) ? "Auto" : ""));
+        return stringFromResource(buf);
+      }
       else
         return NULL;
+
     }
   else if (IS_CMD(xfeCmdSetDefaultDocumentEncoding))
     {

@@ -87,6 +87,8 @@ private:
   static MenuSpec go_menu_spec[];
   static MenuSpec message_menu_spec[];
 
+  static MenuSpec encoding_menu_spec[];
+
   static MenuSpec offline_submenu_spec[];
 
   static ToolbarSpec toolbar_spec[];

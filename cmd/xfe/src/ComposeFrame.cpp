@@ -36,6 +36,7 @@
 #include "Xfe/Xfe.h"
 #include "edt.h"
 #include "msgcflds.h"
+#include "csid.h"
 #include "msgcom.h"
 #include <xpgetstr.h>     /* for XP_GetString() */
 
@@ -59,6 +60,40 @@ extern "C" {
   void fe_set_scrolled_default_size(MWContext *context);
 }
 
+
+// Compose Encoding Menu Spec - no longer shared between Browsers, and Mail/News
+MenuSpec XFE_ComposeFrame::encoding_menu_spec[] = {
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_LATIN1 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_LATIN2 },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CP_1250 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_JIS },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_BIG5 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_GB_8BIT },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_KSC_8BIT },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_2022_KR },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_8859_5 },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_KOI8_R },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CP_1251 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_ARMSCII8 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_8859_7 },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_CP_1253 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_8859_9 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_UTF8 },
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_UTF7 },
+	MENU_SEPARATOR,
+	{ xfeCmdChangeDocumentEncoding,	TOGGLEBUTTON, NULL, "EncodingRadioGroup", False, (void*)CS_USRDEF2 },
+	{ NULL }
+};
 MenuSpec XFE_ComposeFrame::message_attach_menu_spec[] = {
   { xfeCmdAttachFile,			PUSHBUTTON },
   { xfeCmdAttachWebPage,		PUSHBUTTON },
@@ -217,7 +252,7 @@ MenuSpec XFE_ComposeFrame::html_view_menu_spec[] = {
   { xfeCmdViewPageInfo,		PUSHBUTTON },
   MENU_SEPARATOR,
   { "encodingSubmenu",		CASCADEBUTTON,
-	(MenuSpec*)&XFE_Frame::encoding_menu_spec },
+	(MenuSpec*)&XFE_ComposeFrame::encoding_menu_spec },
   { NULL }
 };
 
