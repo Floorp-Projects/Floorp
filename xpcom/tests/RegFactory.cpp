@@ -41,7 +41,9 @@
 #include "nsIComponentRegistrar.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsILocalFile.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 static PRBool gUnreg = PR_FALSE;
 
@@ -65,15 +67,17 @@ void print_err(nsresult err)
   }
 }
 
-nsresult Register(nsIComponentRegistrar* register, const char *path) 
+nsresult Register(nsIComponentRegistrar* registrar, const char *path) 
 { 
-  nsCOMPtr<nsIFileSpec> spec;
-  nsresult res = NS_NewFileSpec(getter_AddRefs(spec));
-  if (NS_FAILED(res)) return res;
-  res = spec->SetNativePath((char *)path);
-  if (NS_FAILED(res)) return res;
-  res = register->AutoRegister(spec);
-  return res;
+  nsCOMPtr<nsILocalFile> file;
+  nsresult rv =
+    NS_NewLocalFile(
+      NS_ConvertUTF8toUCS2(path),
+      PR_TRUE,
+      getter_AddRefs(file));
+  if (NS_FAILED(rv)) return rv;
+  rv = registrar->AutoRegister(file);
+  return rv;
 }
 
 nsresult Unregister(const char *path) 
@@ -87,7 +91,7 @@ nsresult Unregister(const char *path)
 #endif
 }
 
-int ProcessArgs(nsIComponentRegistrar* register, int argc, char *argv[])
+int ProcessArgs(nsIComponentRegistrar* registrar, int argc, char *argv[])
 {
   int i = 1;
   nsresult res;
@@ -116,7 +120,7 @@ int ProcessArgs(nsIComponentRegistrar* register, int argc, char *argv[])
           cerr << "): " << argv[i] << "\n";
         }
       } else {
-        res = Register(register, argv[i]);
+        res = Register(registrar, argv[i]);
         if (NS_SUCCEEDED(res)) {
           cout << "Successfully registered: " << argv[i] << "\n";
         } else {
