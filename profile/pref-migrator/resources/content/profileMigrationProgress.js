@@ -36,15 +36,15 @@ function onLoad(oldProfilePath, newProfilePath) {
   var prefmigrator = Components.classes['component://netscape/profile/migration'].createInstance(Components.interfaces.nsIPrefMigration);
   if (prefmigrator) 
   {
-	dump("-----  Migrating prefs\n");
-	try {
-     		prefmigrator.ProcessPrefsFromJS();
-	}
-	catch (ex) {
-		alert("error migrating profile, possibly out of space.  ex="+ex);
-	}
-	dump("-----  Migrating prefs done " + retval + "\n" );
+	 dump("-----  Migrating prefs\n");
+     retval = prefmigrator.ProcessPrefsFromJS();
+	 dump("-----  Migrating prefs done " + retval + "\n" );
   }
+  else
+  {
+	  dump("-----  ERROR Migrating prefs failed create instances failed\n");
+  }
+  return retval;
 }
 
 
