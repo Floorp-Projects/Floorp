@@ -85,6 +85,7 @@ tab {
 tab > .tab-box > .tab-text {
   border: 1px solid transparent;
   padding: 0px 1px 0px 1px;
+  margin: 0px !important;
 }
 
 tab:focus > .tab-box > .tab-text {
