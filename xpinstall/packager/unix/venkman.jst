@@ -1,0 +1,30 @@
+var srDest = $SpaceRequired$;
+
+var err = initInstall("Venkman", "JavaScript Debugger", "$Version$"); 
+logComment("initInstall: " + err);
+
+if (verifyDiskSpace(getFolder("Program"), srDest))
+{
+    addFile("Venkman Service",
+            "$Version$",
+            "bin/components/venkman-service.js",
+            getFolder("Components"),
+            "venkman-service.js",
+            true);
+
+    addFile("Venkman Chrome",
+            "bin/chrome/venkman.jar",   // jar source folder 
+            getFolder("Chrome"),        // target folder
+            "");                        // target subdir 
+
+    registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "content/venkman/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "skin/modern/venkman/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "locale/en-US/venkman/");
+
+    if (err==SUCCESS)
+        performInstall(); 
+    else
+        cancelInstall(err);
+}
+else
+    cancelInstall(INSUFFICIENT_DISK_SPACE);
