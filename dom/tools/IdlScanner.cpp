@@ -1111,8 +1111,23 @@ void IdlScanner::Number(int aStartChar, Token *aToken)
   }
 
   if (isdigit(aStartChar)) {
+    long base = 10;
+    if ('0' == aStartChar) {
+      aStartChar = mInputFile->get();
+      if (('x' == aStartChar) || ('X' == aStartChar)) {
+        base = 16;
+        aStartChar = mInputFile->get();
+      }
+      else if (isdigit(aStartChar)) {
+        base = 8;
+      }
+      else {
+        mInputFile->putback(aStartChar);
+      }
+    }
+
     do {
-      value = value * 10 + (aStartChar - '0');
+      value = value * base + (aStartChar - '0');
       aStartChar = mInputFile->get();
     } while (isdigit(aStartChar));
 

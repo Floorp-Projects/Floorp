@@ -502,7 +502,7 @@ IdlVariable* IdlParser::ParseConst(IdlSpecification &aSpecification)
   // position INTEGER_CONSTANT
   if (token->id < INTEGER_CONSTANT) {
     delete constObj;
-    throw ConstParsingException("Missing identifire. Const name undefined.");
+    throw ConstParsingException("Missing identifier. Const name undefined.");
   }
   else if (INTEGER_CONSTANT == token->id) {
     constObj->SetValue(token->value.vLong);
