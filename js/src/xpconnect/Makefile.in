@@ -29,10 +29,11 @@ include $(topsrcdir)/config/config.mk
 CPPSRCS=		\
 	xpt_cpp.cpp			\
 	nsXPConnect.cpp		\
-	nscarbitrary.cpp	\
+	xpcarbitrary.cpp	\
 	xpccontext.cpp		\
 	xpcconvert.cpp		\
 	xpcinvoke.cpp		\
+	xpclog.cpp			\
 	xpcmaps.cpp			\
 	xpcnsid.cpp			\
 	xpcstubs.cpp		\
