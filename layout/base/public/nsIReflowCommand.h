@@ -20,6 +20,7 @@
 
 #include "nsISupports.h"
 
+class  nsIAtom;
 class  nsIFrame;
 class  nsIPresContext;
 class  nsIRenderingContext;
@@ -62,14 +63,16 @@ public:
      * command is the container frame itself. The "child frame" is a linked
      * list of newly created child frames.
      *
-     * The target frame should insert the new frames into its child list, and
-     * then reflow the child frames using an eReflowReason_Initial reflow reason.
+     * The target frame should insert the new frames into the specified child
+     * list, and then reflow the child frames using an eReflowReason_Initial
+     * reflow reason.
      *
      * ContentInserted content notifications also generate a FrameAppended reflow
      * command if the container frame has no existing child frames.
      *
      * @see #GetTarget()
      * @see #GetChildFrame()
+     * @see #GetChildListName()
      */
     FrameAppended,
 
@@ -84,7 +87,8 @@ public:
      *
      * The target frame should insert the new frames immediately after the previous
      * sibling frame, and then reflow the new frames using an eReflowReason_Initial
-     * reflow reason.
+     * reflow reason. Use GetChildListName() to get the name of the child list to
+     * which you should insert the new frames.
      *
      * The target frame is determined as follows:
      *   - find the previous existing frame and use its content parent
@@ -94,6 +98,7 @@ public:
      * @see #GetTarget()
      * @see #GetChildFrame()
      * @see #GetPrevSiblingFrame()
+     * @see #GetChildListName()
      */
     FrameInserted,
 
@@ -103,8 +108,12 @@ public:
      * associated with the content that has been removed. The target frame
      * is the content parent of the "child frame".
      *
+     * Use GetChildListName() to get the name of the child list associated with
+     * the frame to be deleted
+     *
      * @see #GetTarget()
      * @see #GetChildFrame()
+     * @see #GetChildListName()
      */
     FrameRemoved,
 
@@ -176,6 +185,16 @@ public:
    * Get the child frame associated with the reflow command.
    */
   NS_IMETHOD GetChildFrame(nsIFrame*& aChildFrame) const = 0;
+
+  /**
+   * Returns the name of the child list to which the child frame belongs.
+   * Only used for reflow command types FrameAppended, FrameInserted, and
+   * FrameRemoved
+   *
+   * Returns nsnull if the child frame is associated with the unnamed
+   * principal child list
+   */
+  NS_IMETHOD GetChildListName(nsIAtom*& aListName) const = 0;
 
   /**
    * Get the previous sibling frame associated with the reflow command.
