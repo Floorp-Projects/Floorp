@@ -1921,16 +1921,11 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
             presContext->GetBaseURL(getter_AddRefs(firstURI));
 
             /* Check to see if the image is the whole page, in which case accept it */
-            char* firstSpec = 0;
-            char* thisSpec = 0;
-            firstURI->GetSpec(&firstSpec);
-            uri->GetSpec(&thisSpec);
-            PRBool onlyImageOnPage = !PL_strcmp(firstSpec, thisSpec);
-            Recycle(firstSpec);
-            Recycle(thisSpec);
-            if (onlyImageOnPage) {
-                Recycle(host);
-                return PR_TRUE;
+            PRBool eq;
+            firstURI->Equals(uri, &eq);
+            if (eq) {
+              Recycle(host);
+              return PR_TRUE;
             }
             
             rv = firstURI->GetHost(&firstHost);
