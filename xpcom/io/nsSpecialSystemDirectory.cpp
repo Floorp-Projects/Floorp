@@ -315,6 +315,10 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         case Mac_DocumentsDirectory:
             *this = kDocumentsFolderType;
             break;
+
+        case Mac_InternetSearchDirectory:
+            *this = kInternetSearchSitesFolderType;
+            break;
 #endif
             
 #ifdef XP_PC

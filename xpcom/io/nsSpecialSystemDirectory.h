@@ -57,6 +57,7 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
         ,   Mac_FontsDirectory        =   109
         ,   Mac_PreferencesDirectory  =   110
         ,   Mac_DocumentsDirectory    =   111
+        ,   Mac_InternetSearchDirectory    =   112
         
         ,   Win_SystemDirectory       =   201
         ,   Win_WindowsDirectory      =   202
