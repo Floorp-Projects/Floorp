@@ -95,7 +95,6 @@ static PRLock *_pr_logLock;
 
 static PRLogModuleInfo *logModules;
 
-#ifdef PR_LOGGING
 static char *logBuf = NULL;
 static char *logp;
 static char *logEndp;
@@ -245,11 +244,9 @@ void _PR_LogCleanup(void)
 #endif
 }
 
-#endif /* PR_LOGGING */
 
 static void _PR_SetLogModuleLevel( PRLogModuleInfo *lm )
 {
-#ifdef PR_LOGGING
     char *ev;
 
     ev = PR_GetEnv("NSPR_LOG_MODULES");
@@ -281,7 +278,6 @@ static void _PR_SetLogModuleLevel( PRLogModuleInfo *lm )
             if (count == -1) break;
         }
     }
-#endif /* PR_LOGGING */
 } /* end _PR_SetLogModuleLevel() */
 
 PR_IMPLEMENT(PRLogModuleInfo*) PR_NewLogModule(const char *name)
@@ -303,7 +299,6 @@ PR_IMPLEMENT(PRLogModuleInfo*) PR_NewLogModule(const char *name)
 
 PR_IMPLEMENT(PRBool) PR_SetLogFile(const char *file)
 {
-#ifdef PR_LOGGING
 #ifdef _PR_USE_STDIO_FOR_LOGGING
     FILE *newLogFile;
 
@@ -339,15 +334,10 @@ PR_IMPLEMENT(PRBool) PR_SetLogFile(const char *file)
     }
     return (PRBool) (newLogFile != 0);
 #endif /* _PR_USE_STDIO_FOR_LOGGING */
-#else /* PR_LOGGING */
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return PR_FALSE;
-#endif /* PR_LOGGING */
 }
 
 PR_IMPLEMENT(void) PR_SetLogBuffering(PRIntn buffer_size)
 {
-#ifdef PR_LOGGING
     PR_LogFlush();
 
     if (logBuf)
@@ -358,12 +348,10 @@ PR_IMPLEMENT(void) PR_SetLogBuffering(PRIntn buffer_size)
         logp = logBuf = (char*) PR_MALLOC(buffer_size);
         logEndp = logp + buffer_size;
     }
-#endif /* PR_LOGGING */
 }
 
 PR_IMPLEMENT(void) PR_LogPrint(const char *fmt, ...)
 {
-#ifdef PR_LOGGING
     va_list ap;
     char line[LINE_BUF_SIZE];
     PRUint32 nb;
@@ -424,12 +412,10 @@ PR_IMPLEMENT(void) PR_LogPrint(const char *fmt, ...)
     }
     _PR_UNLOCK_LOG();
     PR_LogFlush();
-#endif /* PR_LOGGING */
 }
 
 PR_IMPLEMENT(void) PR_LogFlush(void)
 {
-#ifdef PR_LOGGING
     if (logBuf && logFile) {
         _PR_LOCK_LOG();
             if (logp > logBuf) {
@@ -438,21 +424,17 @@ PR_IMPLEMENT(void) PR_LogFlush(void)
             }
         _PR_UNLOCK_LOG();
     }
-#endif /* PR_LOGGING */
 }
 
 PR_IMPLEMENT(void) PR_Abort(void)
 {
-#ifdef PR_LOGGING
     PR_LogPrint("Aborting");
     abort();
-#endif /* PR_LOGGING */
-        PR_ASSERT(1);
 }
 
 PR_IMPLEMENT(void) PR_Assert(const char *s, const char *file, PRIntn ln)
 {
-#ifdef PR_LOGGING
+#ifdef DEBUG
     PR_LogPrint("Assertion failure: %s, at %s:%d\n", s, file, ln);
 #if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
@@ -466,14 +448,12 @@ PR_IMPLEMENT(void) PR_Assert(const char *s, const char *file, PRIntn ln)
 #ifndef XP_MAC
     abort();
 #endif
-#endif /* PR_LOGGING */
+#endif /* DEBUG */
 }
 
 #ifdef XP_MAC
 PR_IMPLEMENT(void) PR_Init_Log(void)
 {
-#ifdef PR_LOGGING
 	_PR_InitLog();
-#endif
 }
 #endif

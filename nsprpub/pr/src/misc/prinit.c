@@ -195,9 +195,7 @@ static void _PR_InitStuff(void)
     _PR_InitCMon();
     _PR_InitIO();
     _PR_InitNet();
-#ifdef PR_LOGGING
     _PR_InitLog();
-#endif
     _PR_InitLinker();
     _PR_InitCallOnce();
     _PR_InitDtoa();
@@ -385,9 +383,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
 
 	    PR_LOG(_pr_thread_lm, PR_LOG_MIN,
 	            ("PR_Cleanup: clean up before destroying thread"));
-	#ifdef PR_LOGGING
 	    _PR_LogCleanup();
-	#endif
         _PR_CleanupFdCache();
 
         /*
