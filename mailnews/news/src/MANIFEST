@@ -24,3 +24,4 @@ nsNNTPNewsgroup.h
 nntpCore.h
 nsNNTPNewsgroupPost.h
 nsNewsFolder.h
+nsNntpIncomingServer.h

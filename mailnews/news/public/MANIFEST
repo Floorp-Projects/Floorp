@@ -26,3 +26,4 @@ nsINNTPArticleList.h
 nsINntpUrl.h
 nsINNTPNewsgroupPost.h
 nsINntpService.h
+nsINntpIncomingServer.h

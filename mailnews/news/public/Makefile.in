@@ -33,6 +33,7 @@ EXPORTS= \
 		nsINntpUrl.h \
 		nsINNTPNewsgroupPost.h \
 		nsINntpService.h \
+		nsINntpIncomingServer.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
