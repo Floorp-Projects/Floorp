@@ -726,7 +726,7 @@ public class AddressBook extends GeneralFrame {
     File resourceFile = new File(aImageName);
     try {
       if (resourceFile.exists()) {
-         b.setIcon(new ImageIcon(resourceFile.getCanonicalFile().toString()));
+         b.setIcon(new ImageIcon(resourceFile.getCanonicalPath()));
       }
     } catch (IOException e) {
       System.out.println("IOException occured");
