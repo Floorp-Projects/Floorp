@@ -1098,8 +1098,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   }
   else if (HadSpecialReflow() && ((eReflowReason_Incremental == aReflowState.reason) || 
                                   (eReflowReason_Resize == aReflowState.reason))) {
-    // if the block height value hasn't changed, use the last height of the cell, otherwise ignore it
-    if (GetLastBlockHeight() == priorBlockHeight) {
+    // with an unconstrained height, if the block height value hasn't changed, 
+    // use the last height of the cell.
+    if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && 
+        (GetLastBlockHeight() == priorBlockHeight)) {
       aDesiredSize.height = mRect.height;
     }
     else {
