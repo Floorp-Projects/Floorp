@@ -74,15 +74,6 @@ nsCocoaBrowserService::InitEmbedding()
   if (sSingleton)
     return NS_OK;
 
-  // XXX Temporary hack to make sure we find the 
-  // right executable directory
-  NSBundle* mainBundle = [NSBundle mainBundle];
-  NSString* path = [mainBundle bundlePath];
-  NSMutableString* mutablePath = [NSMutableString stringWithString:path];
-  [mutablePath appendString:@"/Contents/MacOS/"];
-  const char* cstr = [mutablePath cString];
-  setenv("MOZILLA_FIVE_HOME", cstr, 1);
-
   sSingleton = new nsCocoaBrowserService();
   if (!sSingleton) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -116,28 +107,6 @@ nsCocoaBrowserService::InitEmbedding()
 
   watcher->SetWindowCreator(sSingleton);
 
-  // Set the profile which the control will use
-  nsCOMPtr<nsIProfile> profileService(do_GetService(NS_PROFILE_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  // Make a new default profile for the control if none exists.
-  nsAutoString newProfileName(NS_LITERAL_STRING("Chimera"));
-  PRBool profileExists = PR_FALSE;
-  rv = profileService->ProfileExists(newProfileName.get(), &profileExists);
-  if (NS_FAILED(rv))
-    return rv;
-  
-  if (!profileExists) {
-    rv = profileService->CreateNewProfile(newProfileName.get(), nsnull, nsnull, PR_FALSE);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  rv = profileService->SetCurrentProfile(newProfileName.get());
-  if (NS_FAILED(rv))
-    return rv;
-
   return NS_OK;
 }
 
@@ -148,8 +117,6 @@ nsCocoaBrowserService::BrowserClosed()
     if (sCanTerminate && sNumBrowsers == 0) {
         // The app is terminating *and* our count dropped to 0.
         NS_IF_RELEASE(sSingleton);
-        nsCOMPtr<nsIPrefService> pref(do_GetService("@mozilla.org/preferences-service;1"));
-        pref->SavePrefFile(nsnull);
         NS_TermEmbedding();
         printf("Shutting down embedding!\n");
     }

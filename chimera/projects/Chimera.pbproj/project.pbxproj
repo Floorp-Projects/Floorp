@@ -14,6 +14,7 @@
 				F5DE10EB0209DC0601A967DF,
 				F51B70B7026EC98B01A80166,
 				F5AE04BA0206A4FE01A967DF,
+				F52D5CD8027D3D5001A80166,
 				F6BA6D4E01B2F8A601A962F7,
 				F56769FB0208F74A010001CA,
 				F507BA4C0213AFF701D93544,
@@ -64,6 +65,9 @@
 			children = (
 				1058C7A1FEA54F0111CA2CBB,
 				F557193A022B4102010001CA,
+				F52D5CDB027D412A01A80166,
+				F52D5CDC027D412A01A80166,
+				F52D5CDD027D412A01A80166,
 			);
 			isa = PBXGroup;
 			name = "Linked Frameworks";
@@ -256,7 +260,7 @@
 			);
 			buildSettings = {
 				DEBUGGING_SYMBOLS = NO;
-				FRAMEWORK_SEARCH_PATHS = ../embedding/browser/cocoa/src/build;
+				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = "../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util ../modules/zlib/src";
@@ -395,6 +399,7 @@
 				F541496002711B0101A80166,
 				F52D5CD1027A887001A80166,
 				F52D5CD5027A88C601A80166,
+				F52D5CD9027D3D5001A80166,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -486,6 +491,7 @@
 				F541496102711B0101A80166,
 				F52D5CD2027A887001A80166,
 				F52D5CD6027A88C601A80166,
+				F52D5CDA027D3D5001A80166,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -506,6 +512,9 @@
 				F57F0F4A0209DF5301A967DF,
 				F557193B022B4103010001CA,
 				F5C2CDA802383CE701A967DF,
+				F52D5CDE027D412A01A80166,
+				F52D5CDF027D412A01A80166,
+				F52D5CE0027D412A01A80166,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -877,6 +886,7 @@
 				F5125A110202064D01FAFD9F,
 				F5AE04B20206A34801A967DF,
 				F5AE04B60206A37C01A967DF,
+				F52D5CD7027D3D5001A80166,
 				F507BA480213AD5F01D93544,
 				F57074B5026BA85F01A80166,
 				F57074B9026BFD0101A80166,
@@ -1410,6 +1420,64 @@
 		};
 		F52D5CD6027A88C601A80166 = {
 			fileRef = F52D5CD4027A88C601A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52D5CD7027D3D5001A80166 = {
+			isa = PBXFileReference;
+			path = CHPreferenceManager.h;
+			refType = 4;
+		};
+		F52D5CD8027D3D5001A80166 = {
+			isa = PBXFileReference;
+			path = CHPreferenceManager.mm;
+			refType = 4;
+		};
+		F52D5CD9027D3D5001A80166 = {
+			fileRef = F52D5CD7027D3D5001A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52D5CDA027D3D5001A80166 = {
+			fileRef = F52D5CD8027D3D5001A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52D5CDB027D412A01A80166 = {
+			isa = PBXFrameworkReference;
+			name = Carbon.framework;
+			path = /System/Library/Frameworks/Carbon.framework;
+			refType = 0;
+		};
+		F52D5CDC027D412A01A80166 = {
+			isa = PBXFrameworkReference;
+			name = CoreFoundation.framework;
+			path = /System/Library/Frameworks/CoreFoundation.framework;
+			refType = 0;
+		};
+		F52D5CDD027D412A01A80166 = {
+			isa = PBXFrameworkReference;
+			name = SystemConfiguration.framework;
+			path = /System/Library/Frameworks/SystemConfiguration.framework;
+			refType = 0;
+		};
+		F52D5CDE027D412A01A80166 = {
+			fileRef = F52D5CDB027D412A01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52D5CDF027D412A01A80166 = {
+			fileRef = F52D5CDC027D412A01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52D5CE0027D412A01A80166 = {
+			fileRef = F52D5CDD027D412A01A80166;
 			isa = PBXBuildFile;
 			settings = {
 			};

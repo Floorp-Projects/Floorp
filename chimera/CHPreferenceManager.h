@@ -1,5 +1,5 @@
 //
-//  PreferenceManager.h
+//  CHPreferenceManager.h
 //  Chimera
 //
 //  Created by William Dell Wisner on Wed Apr 17 2002.
@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <Carbon/Carbon.h>
 
-@interface PreferenceManager : NSObject {
+@interface CHPreferenceManager : NSObject {
     NSUserDefaults *defaults;
     ICInstance internetConfig;
 }

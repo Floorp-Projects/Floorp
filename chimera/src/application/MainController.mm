@@ -64,11 +64,14 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
     [super dealloc];
     [mFindDialog release];
+    [mPreferenceManager release];
     printf("Main controller died.\n");
 }
 
 -(void)awakeFromNib
-{    
+{
+    mPreferenceManager = [[CHPreferenceManager alloc] init];
+
     [self newWindow: self];
     
     [mSplashScreen close];
@@ -104,7 +107,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [[mainWindow windowController] autosaveWindowFrame];
 
   // Now open the new window.
-  BrowserWindowController* controller = [self openBrowserWindowWithURLString:@"about:blank"];
+  BrowserWindowController* controller = [self openBrowserWindowWithURLString: [mPreferenceManager homePage]];
   [controller focusURLBar];
 }	
 

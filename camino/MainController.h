@@ -40,6 +40,7 @@
 #import "MVPreferencesController.h"
 #import "CHSplashScreenWindow.h"
 #import "FindDlgController.h"
+#import "CHPreferenceManager.h"
 
 class BookmarksService;
 
@@ -60,6 +61,8 @@ class BookmarksService;
 
     CHSplashScreenWindow *mSplashScreen;
     
+    CHPreferenceManager* mPreferenceManager;
+
     BookmarksService *mMenuBookmarks;
     
     FindDlgController* mFindDialog;
