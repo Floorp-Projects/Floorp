@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode:nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -42,7 +42,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 
-#include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
 
@@ -455,7 +454,7 @@ nsresult nsDocumentOpenInfo::RetargetOutput(nsIRequest *request, const char * aS
 nsURILoader::nsURILoader()
 {
   NS_INIT_ISUPPORTS();
-  m_listeners = new nsVoidArray();
+  NS_NewISupportsArray(getter_AddRefs(m_listeners));
  
   // Check pref to see if we should prevent frameset spoofing
   mValidateOrigin = PR_TRUE; // secure by default, pref disables check
@@ -467,8 +466,6 @@ nsURILoader::nsURILoader()
 
 nsURILoader::~nsURILoader()
 {
-  if (m_listeners)
-    delete m_listeners;
 }
 
 NS_IMPL_ADDREF(nsURILoader);
@@ -482,18 +479,25 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP nsURILoader::RegisterContentListener(nsIURIContentListener * aContentListener)
 {
   nsresult rv = NS_OK;
-  if (m_listeners)
-    m_listeners->AppendElement(aContentListener);
-  else
-    rv = NS_ERROR_FAILURE;
+  if (!m_listeners) return NS_ERROR_FAILURE;
+
+  nsWeakPtr weakListener = do_GetWeakReference(aContentListener);
+  NS_ASSERTION(weakListener, "your URIContentListener must support weak refs!\n");
+  
+  if (weakListener)
+    m_listeners->AppendElement(weakListener);
 
   return rv;
 } 
 
 NS_IMETHODIMP nsURILoader::UnRegisterContentListener(nsIURIContentListener * aContentListener)
 {
-  if (m_listeners)
-    m_listeners->RemoveElement(aContentListener);
+  if (!m_listeners) return NS_OK;
+    
+  nsWeakPtr weakListener = do_GetWeakReference(aContentListener);
+  if (weakListener)
+    m_listeners->RemoveElement(weakListener);
+
   return NS_OK;
   
 }
@@ -976,31 +980,35 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   NS_ENSURE_ARG(aContentType);
   NS_ENSURE_ARG(request);
 
-  // okay, now we've discovered the content type. We need to do the following:
-  // (1) We always start with the original content listener (if any) that originated the request
-  // and then ask if it can handle the content.
-  // (2) if it can't, we'll move on to the registered content listeners and give 
-  // them a crack at handling the content.
-
-  // (3) if we cannot find a registered content lister to handle the type, then we move on to
-  // phase II which is to try to find a content handler in the registry for the content type.
-  // hitting this phase usually means we'll be creating a new window or handing off to an 
-  // external application.
+  // okay, now we've discovered the content type. We need to do the
+  // following:
+  // (1) We always start with the original content listener (if any)
+  //     that originated the request and then ask if it can handle the
+  //     content.
+  // (2) if it can't, we'll move on to the registered content
+  //     listeners and give them a crack at handling the content.
+  // (3) if we cannot find a registered content lister to handle the
+  //     type, then we move on to phase II which is to try to find a
+  //     content handler in the registry for the content type.
+  //     hitting this phase usually means we'll be creating a new
+  //     window or handing off to an external application.
 
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIURIContentListener> listenerToUse = aContentListener;
   PRBool skipRetargetingSearch = PR_FALSE;
-  // How do we determine whether we need to ask any registered content listeners if they
-  // want a crack at the content? 
-  // (1) if the window target is blank or new, then we don't want to ask...
+  // How do we determine whether we need to ask any registered content
+  // listeners if they want a crack at the content?
+  // (1) if the window target is blank or new, then we don't want to
+  //     ask...
   if (!nsCRT::strcasecmp(aWindowTarget, "_blank") || !nsCRT::strcasecmp(aWindowTarget, "_new"))
     skipRetargetingSearch = PR_TRUE;
   else
   {
-    // (2) if the original content listener is NULL and we have a target name then we
-    // must not be a window open with that target name so skip the content listener search
-    // and skip to the part that brings up the new window.
+    // (2) if the original content listener is NULL and we have a
+    //     target name then we must not be a window open with that
+    //     target name so skip the content listener search and skip to
+    //     the part that brings up the new window.
     if (aWindowTarget && *aWindowTarget && !aContentListener)
       skipRetargetingSearch = PR_TRUE;
   }
@@ -1014,20 +1022,32 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
                                                 aCommand, aWindowTarget, aContentTypeToUse);
                                             
 
-    if (!foundContentHandler) // if it can't handle the content, scan through the list of registered listeners
+    // if it can't handle the content, scan through the list of
+    // registered listeners
+    if (!foundContentHandler)
     {
        PRInt32 i = 0;
        // keep looping until we get a content listener back
-       for(i = 0; i < m_listeners->Count() && !foundContentHandler; i++)
+       PRUint32 count; m_listeners->Count(&count);
+       for(i = 0; i < PRInt32(count) && !foundContentHandler; i++)
        {
           //nsIURIContentListener's aren't refcounted.
-          nsIURIContentListener * listener =(nsIURIContentListener*)m_listeners->ElementAt(i);
+          nsWeakPtr weakListener;
+          m_listeners->QueryElementAt(i, NS_GET_IID(nsIWeakReference),
+                                      getter_AddRefs(weakListener));
+         
+          nsCOMPtr<nsIURIContentListener> listener =
+            do_QueryReferent(weakListener);
           if (listener)
           {
               foundContentHandler = ShouldHandleContent(listener, aContentType, 
                                                         aCommand, aWindowTarget, aContentTypeToUse);
               if (foundContentHandler)
                 listenerToUse = listener;
+          } else {
+            // remove from the listener list, and reset i
+            m_listeners->RemoveElementAt(i);
+            i--;
           }
       } // for loop
     } // if we can't handle the content

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -25,11 +25,10 @@
 
 #include "nsCURILoader.h"
 #include "nsISupportsUtils.h"
+#include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsString.h"
-
-class nsVoidArray;
 
 class nsURILoader : public nsIURILoader
 {
@@ -43,8 +42,8 @@ public:
 protected:
   // we shouldn't need to have an owning ref count on registered
   // content listeners because they are supposed to unregister themselves
-  // when they go away.
-  nsVoidArray * m_listeners;
+  // when they go away. This array stores weak references
+  nsCOMPtr<nsISupportsArray> m_listeners;
 
   // If set, we will try to prevent frame spoofing (set by pref in constructor)
   PRBool mValidateOrigin;

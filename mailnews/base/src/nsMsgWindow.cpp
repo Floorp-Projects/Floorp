@@ -55,7 +55,10 @@
 static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsMsgWindow, nsIMsgWindow, nsIURIContentListener)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsMsgWindow,
+                              nsIMsgWindow,
+                              nsIURIContentListener,
+                              nsISupportsWeakReference)
 
 nsMsgWindow::nsMsgWindow()
 {
