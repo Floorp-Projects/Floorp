@@ -186,6 +186,23 @@ public:
 			mClipRegion->SetTo(0, 0, w, h);
 		}
 	}
+
+#ifdef MOZ_MATHML
+  /**
+   * Returns metrics (in app units) of an 8-bit character string
+   */
+  NS_IMETHOD GetBoundingMetrics(const char*        aString,
+                                PRUint32           aLength,
+                                nsBoundingMetrics& aBoundingMetrics);
+  
+  /**
+   * Returns metrics (in app units) of a Unicode character string
+   */
+  NS_IMETHOD GetBoundingMetrics(const PRUnichar*   aString,
+                                PRUint32           aLength,
+                                nsBoundingMetrics& aBoundingMetrics,
+                                PRInt32*           aFontID = nsnull);
+#endif /* MOZ_MATHML */
 	
 protected:
 	NS_IMETHOD CommonInit();
