@@ -29,11 +29,12 @@ package			Moz;
 require			Exporter;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors);
+@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest);
 @EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib);
 
 	use Cwd;
 	use File::Path;
+	use ExtUtils::Manifest 'maniread';
 
 sub current_directory()
 	{
@@ -283,8 +284,43 @@ sub MakeAlias($$)
 		die "$message because \"$old_file\" doesn't exit.\n" unless -e $old_file;
 
 		unlink $new_file;
+		# print "symlink(\"$old_file\", \"$new_file\");\n";
 		symlink($old_file, $new_file) || die "$message symlink returned an unexpected error.\n";
 	}
+
+=pod
+
+C<InstallFromManifest()>
+
+=cut
+
+sub InstallFromManifest($;$)
+	{
+		my ($manifest_file, $dest_dir) = @_;
+
+		$dest_dir ||= ":";
+
+		$manifest_file =~ m/(.+):/;
+		my $source_dir =  $1;
+
+		chop($dest_dir) if $dest_dir =~ m/:$/;
+
+		my $read = maniread(full_path_to($manifest_file));
+		foreach $file (keys %$read)
+			{
+				next unless $file;
+
+				$subdir = ":";
+				if ( $file =~ /:.+:/ )
+					{
+						$subdir = $&;
+					}
+
+				$file = ":$file" unless $file =~ m/^:/;
+				MakeAlias("$source_dir$file", "$dest_dir$subdir");
+			}
+	}
+
 
 
 1;
