@@ -5587,7 +5587,7 @@ nsTableFrame::ExpandBCDamageArea(nsRect& aRect) const
         if (dEndY < rgEndY) {
           row = (nsVoidArray*)cellMap->mRows.ElementAt(dEndY + 1 - rgStartY); if (!row) ABORT0();
           for (PRInt32 x = dStartX; x <= dEndX; x++) {
-            CellData* cellData = (row->Count() > x) ? (CellData*)row->ElementAt(x) : nsnull;
+            CellData* cellData = (CellData*)row->SafeElementAt(x);
             if (cellData && (cellData->IsRowSpan())) {
               haveSpanner = PR_TRUE;
               break;
@@ -5616,13 +5616,13 @@ nsTableFrame::ExpandBCDamageArea(nsRect& aRect) const
       if ((iterStartY >= 0) && (iterEndY >= 0)) {
         for (PRInt32 y = iterStartY; y <= iterEndY; y++) {
           nsVoidArray* row = (nsVoidArray*)cellMap->mRows.ElementAt(y - rgStartY); if (!row) ABORT0();
-          CellData* cellData = (CellData*)row->ElementAt(dStartX);
+          CellData* cellData = (CellData*)row->SafeElementAt(dStartX);
           if (cellData && (cellData->IsColSpan())) {
             haveSpanner = PR_TRUE;
             break;
           }
           if (dEndX < (numCols - 1)) {
-            cellData = (row->Count() > dEndX) ? (CellData*)row->ElementAt(dEndX + 1) : nsnull;
+            cellData = (CellData*)row->SafeElementAt(dEndX + 1);
             if (cellData && (cellData->IsColSpan())) {
               haveSpanner = PR_TRUE;
               break;
