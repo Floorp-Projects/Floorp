@@ -35,13 +35,14 @@
 #include "nsIEventQueue.h"
 #include "nsProxiedService.h"
 #include "nsICacheVisitor.h"
+#include "nsIObserverService.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 nsCacheService *   nsCacheService::gService = nsnull;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheService, nsICacheService)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsCacheService, nsICacheService, nsIObserver)
 
 nsCacheService::nsCacheService()
     : mCacheServiceLock(nsnull),
@@ -103,6 +104,14 @@ nsCacheService::Init()
     rv = mDiskDevice->Init();
     if (NS_FAILED(rv)) goto error;
 
+    // observer XPCOM shutdown.
+    {
+        nsCOMPtr<nsIObserverService> observerService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            observerService->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+        }
+    }
+    
     return NS_OK;
 
  error:
@@ -678,6 +687,11 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
     }
 
     return NS_OK;
+}
+
+NS_IMETHODIMP nsCacheService::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+    return Shutdown();
 }
 
 

@@ -32,6 +32,7 @@
 #include "nsCacheSession.h"
 #include "nsCacheDevice.h"
 #include "nsCacheEntry.h"
+#include "nsIObserver.h"
 
 class nsCacheRequest;
 
@@ -40,11 +41,12 @@ class nsCacheRequest;
  *  nsCacheService
  */
 
-class nsCacheService : public nsICacheService
+class nsCacheService : public nsICacheService, public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICACHESERVICE
+    NS_DECL_NSIOBSERVER
     
     nsCacheService();
     virtual ~nsCacheService();
