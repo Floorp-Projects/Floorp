@@ -11,6 +11,7 @@ interface Navigator {
 	readonly attribute PluginArray		plugins;
 	readonly attribute DOMString		securityPolicy;
 	readonly attribute DOMString		userAgent;
+	readonly attribute boolean              cookieEnabled;
 
 	boolean    javaEnabled();
 	boolean    taintEnabled();

@@ -359,6 +359,8 @@ public:
 
   NS_IMETHOD    GetUserAgent(nsString& aUserAgent);
 
+  NS_IMETHOD    GetCookieEnabled(PRBool* aCookieEnabled);
+
   NS_IMETHOD    JavaEnabled(PRBool* aReturn);
 
   NS_IMETHOD    TaintEnabled(PRBool* aReturn);
