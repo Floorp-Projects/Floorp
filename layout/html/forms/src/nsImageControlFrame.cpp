@@ -436,11 +436,8 @@ nsImageControlFrame::GetCursor(nsIPresContext* aPresContext,
 void
 nsImageControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  if (nsnull != mFormFrame && !nsFormFrame::GetDisabled(this)) {
-    // Do Submit & DOM Processing
-    nsFormControlHelper::DoManualSubmitOrReset(aPresContext, nsnull, 
-                                               mFormFrame, this, PR_TRUE, PR_TRUE); 
-  } 
+// This is no longer called; click events are handled in
+// nsHTMLInputElement::HandleDOMEvent().
 }
 
 NS_IMETHODIMP

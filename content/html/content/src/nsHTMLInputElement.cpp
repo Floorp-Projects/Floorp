@@ -1367,10 +1367,16 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           case NS_FORM_INPUT_SUBMIT:
           case NS_FORM_INPUT_IMAGE:
             {
-              // Tell the frame about the click
-              if (formControlFrame) {
-                formControlFrame->MouseClicked(aPresContext);
-              }
+              nsFormEvent event;
+              event.eventStructType = NS_FORM_EVENT;
+              event.message         = (type == NS_FORM_INPUT_RESET) ? NS_FORM_RESET : NS_FORM_SUBMIT;
+              event.originator      = this;
+              nsEventStatus status  = nsEventStatus_eIgnore;
+
+              nsCOMPtr<nsIPresShell> presShell;
+              aPresContext->GetShell(getter_AddRefs(presShell));
+              nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
+              presShell->HandleEventWithTarget(&event, nsnull, form, NS_EVENT_FLAG_INIT, &status);
             }
             break;
 

@@ -299,21 +299,8 @@ nsHTMLButtonControlFrame::IsSubmit(PRInt32 type)
 void
 nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
-    PRInt32 type;
-    GetType(&type);
-
-    if (IsReset(type) == PR_TRUE) {
-      // do Reset & Frame processing of event
-      nsFormControlHelper::DoManualSubmitOrReset(aPresContext, nsnull, mFormFrame, 
-                                                 this, PR_FALSE, PR_FALSE); 
-    }
-    else if (IsSubmit(type) == PR_TRUE) {
-      // do Submit & Frame processing of event
-      nsFormControlHelper::DoManualSubmitOrReset(aPresContext, nsnull, mFormFrame, 
-                                                 this, PR_TRUE, PR_FALSE); 
-    }
-  }
+// This is no longer called; click events are handled in
+// nsHTMLInputElement::HandleDOMEvent().
 }
 
 void 
