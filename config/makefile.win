@@ -50,6 +50,10 @@ INSTALL_DIR=$(DIST)\bin
 
 GARBAGE = *.obj *.sbr *.pdb build_number nsBuildID.h
 
+!ifdef MOZ_COVERAGE
+GARBAGE = $(GARBAGE) trace.dll trace.lib trace.exp
+!endif
+
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules
@@ -97,8 +101,32 @@ bin2rc.exe:: bin2rc.c
 makedep.exe:: makedep.cpp
     $(CC) -MT /O2 /GB $**
 
-export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number nsBuildID.h
+trace.dll:: trace.obj pldhash.obj
+    link /nologo /debug /libpath:$(DIST)/lib /dll /out:$@ $** nspr4.lib imagehlp.lib
+
+pldhash.obj:: $(DEPTH)/xpcom/ds/pldhash.c
+    $(CC) /c /nologo /Od /Z7 /I$(DEPTH)/xpcom/ds /I$(DIST)/include $**
+ 
+trace.obj:: trace.cpp
+    $(CC) /c /nologo /Od /Z7 /DMOZ_SRC=\"$(MOZ_SRC)\" /I$(DEPTH)/xpcom/ds /I$(DIST)/include $**
+
+export:: \
+        makecopy.exe  \
+        mangle.exe    \
+        mantomak.exe  \
+        bin2rc.exe    \
+        makedep.exe   \
+        build_number  \
+        nsBuildID.h   \
+!ifdef MOZ_COVERAGE
+        trace.dll     \
+!endif
+        $(NULL)
        $(MAKE_INSTALL) nsBuildID.h $(PUBLIC)
+!ifdef MOZ_COVERAGE
+       $(MAKE_INSTALL) trace.dll $(DIST)/bin
+       $(MAKE_INSTALL) trace.lib $(DIST)/lib
+!endif
 
 !ifdef MOZ_FULLCIRCLE
 
