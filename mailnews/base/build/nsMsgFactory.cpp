@@ -102,6 +102,10 @@
 
 #include "nsMsgProgress.h"
 
+#ifdef XP_WIN
+#include "nsMessengerWinIntegration.h"
+#endif
+
 // private factory declarations for each component we know how to produce
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerBootstrap)
@@ -139,6 +143,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgWatchedThreadsWithUnreadDBView);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchDBView);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOfflineManager);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgProgress);
+#ifdef XP_WIN
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerWinIntegration, Init);
+#endif
 
 // The list of components we register
 static nsModuleComponentInfo gComponents[] = {
@@ -307,7 +314,12 @@ static nsModuleComponentInfo gComponents[] = {
       NS_MSGPROGRESS_CONTRACTID,
       nsMsgProgressConstructor,
     },
-
+#ifdef XP_WIN
+    { "Windows OS Integration", NS_MESSENGERWININTEGRATION_CID,
+      NS_MESSENGEROSINTEGRATION_CONTRACTID,
+      nsMessengerWinIntegrationConstructor,
+    },
+#endif
 };
 
 NS_IMPL_NSGETMODULE(nsMsgBaseModule, gComponents)

@@ -441,4 +441,10 @@
  0x9f4dd201, 0x3b1f, 0x11d5,											\
  {0x9d, 0xaa, 0xc3, 0x45, 0xc9, 0x45, 0x3d, 0x3c }}
 
+// 
+// nsMessengerOSIntegration 
+//
+#define NS_MESSENGEROSINTEGRATION_CONTRACTID \
+  "@mozilla.org/messenger/osintegration;1"
+ 
 #endif // nsMessageBaseCID_h__

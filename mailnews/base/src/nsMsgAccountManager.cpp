@@ -22,6 +22,7 @@
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
  * Seth Spitzer <sspitzer@netscape.com>
+ * Bhuvan Racham <racham@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -75,6 +76,7 @@
 #include "nsRDFCID.h"
 #include "nsIImapIncomingServer.h" 
 #include "nsIImapUrl.h"
+#include "nsIMessengerOSIntegration.h"
 
 #if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_ACCOUNTMANAGER 1
@@ -599,8 +601,7 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
 
   // if it's the default, clear the default account
   if (m_defaultAccount.get() == aAccount) {
-    m_defaultAccount = nsnull;
-    setDefaultAccountPref(nsnull);
+    SetDefaultAccount(nsnull);
   }
 
   // XXX - need to figure out if this is the last time this server is
@@ -749,8 +750,8 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
   rv = LoadAccounts();
   if (NS_FAILED(rv)) return rv;
   
+  PRUint32 count;
   if (!m_defaultAccount) {
-    PRUint32 count;
     m_accounts->Count(&count);
 #ifdef DEBUG_ACCOUNTMANAGER
     printf("There are %d accounts\n", count);
@@ -767,12 +768,40 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
     if (NS_SUCCEEDED(rv)) {
       GetAccount(defaultKey, getter_AddRefs(m_defaultAccount));
     } else {
-      rv = m_accounts->QueryElementAt(0, NS_GET_IID(nsIMsgAccount),
-                                      (void **)getter_AddRefs(m_defaultAccount));
-      if (NS_SUCCEEDED(rv))
-        SetDefaultAccount(m_defaultAccount);
-    }
+      PRUint32 index;
+      PRBool foundValidDefaultAccount = PR_FALSE;
+      for (index = 0; index < count; index++) {
+        nsCOMPtr<nsIMsgAccount> aAccount;
+        rv = m_accounts->QueryElementAt(index, NS_GET_IID(nsIMsgAccount),
+                                        (void **)getter_AddRefs(aAccount));
+        if (NS_SUCCEEDED(rv)) {
+          // get incoming server
+          nsCOMPtr <nsIMsgIncomingServer> server;
+          rv = aAccount->GetIncomingServer(getter_AddRefs(server));
+          NS_ENSURE_SUCCESS(rv,rv);
+          
+          PRBool canBeDefaultServer = PR_FALSE;
+          server->GetCanBeDefaultServer(&canBeDefaultServer);
+          
+          // if this can serve as default server, set it as default and
+          // break outof the loop.
+          if (canBeDefaultServer) {
+            SetDefaultAccount(aAccount);
+            foundValidDefaultAccount = PR_TRUE;
+            break;
+          }
+        }
+      }
+      if (!foundValidDefaultAccount) {
+        // get the first account and use it.
+        // we need to fix this scenario.
+        nsCOMPtr<nsIMsgAccount> firstAccount;
+        rv = m_accounts->QueryElementAt(0, NS_GET_IID(nsIMsgAccount),
+                                       (void **)getter_AddRefs(firstAccount));
 
+        SetDefaultAccount(firstAccount);
+      }
+    }
   }
   
   *aDefaultAccount = m_defaultAccount;
@@ -1258,8 +1287,13 @@ nsMsgAccountManager::LoadAccounts()
   nsCOMPtr<nsIMsgBiffManager> biffService = 
            do_GetService(NS_MSGBIFFMANAGER_CONTRACTID, &rv);
   
-  // mail.accountmanager.accounts is the main entry point for all accounts
+  // Ensure messenger OS integration service has started
+  // note, you can't expect the integrationService to be there
+  // we don't have OS integration on all platforms.
+  nsCOMPtr<nsIMessengerOSIntegration> integrationService =
+           do_GetService(NS_MESSENGEROSINTEGRATION_CONTRACTID, &rv);
 
+  // mail.accountmanager.accounts is the main entry point for all accounts
   nsXPIDLCString accountList;
   rv = getPrefService();
   if (NS_SUCCEEDED(rv)) {
@@ -2166,3 +2200,4 @@ nsMsgAccountManager::SaveAccountInfo()
   NS_ENSURE_SUCCESS(rv,rv);
   return m_prefs->SavePrefFile(nsnull);
 }
+

@@ -63,6 +63,7 @@ XPIDLSRCS =								\
     .\nsIMsgDBView.idl \
     .\nsIMsgOfflineManager.idl \
     .\nsIMsgProgress.idl \
+    .\nsIMessengerOSIntegration.idl \
 		$(NULL)
 
 ################################################################################
