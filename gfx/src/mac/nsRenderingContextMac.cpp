@@ -26,11 +26,13 @@
 #include "nsVoidArray.h"
 #include "nsGfxCIID.h"
 
-#define USE_ATSUI_HACK TRUE
+#define USE_ATSUI_HACK
 
+#ifdef USE_ATSUI_HACK
 #include <ATSUnicode.h>
 #include <FixMath.h>
 #include <Gestalt.h>
+#endif
 
 //------------------------------------------------------------------------
 
@@ -1391,10 +1393,11 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 // interface. The purpose is to use ATSUI in GFX so we can start Input Method work
 // before the real ATSUI GFX adoption get finish.
 //------------------------------------------------------------------------
+#ifdef USE_ATSUI_HACK
 
 #define FloatToFixed(a)		((Fixed)((float)(a) * fixed1))
-OSErr
-atsuSetFont(ATSUStyle theStyle, ATSUFontID theFontID)
+
+OSErr atsuSetFont(ATSUStyle theStyle, ATSUFontID theFontID)
 {
 	ATSUAttributeTag 		theTag;
 	ByteCount				theValueSize;
@@ -1406,8 +1409,9 @@ atsuSetFont(ATSUStyle theStyle, ATSUFontID theFontID)
 
 	return ATSUSetAttributes(theStyle, 1, &theTag, &theValueSize, &theValue);	
 }
-OSErr
-atsuSetSize(ATSUStyle theStyle, Fixed size)
+
+
+OSErr atsuSetSize(ATSUStyle theStyle, Fixed size)
 {
 	ATSUAttributeTag 		theTag;
 	ByteCount				theValueSize;
@@ -1419,8 +1423,9 @@ atsuSetSize(ATSUStyle theStyle, Fixed size)
 
 	return ATSUSetAttributes(theStyle, 1, &theTag, &theValueSize, &theValue);
 }
-OSErr
-atsuSetColor(ATSUStyle theStyle, RGBColor color)
+
+
+OSErr atsuSetColor(ATSUStyle theStyle, RGBColor color)
 {
 	ATSUAttributeTag 		theTag;
 	ByteCount				theValueSize;
@@ -1433,12 +1438,15 @@ atsuSetColor(ATSUStyle theStyle, RGBColor color)
 	return ATSUSetAttributes(theStyle, 1, &theTag, &theValueSize, &theValue);
 }
 
+
 OSErr setStyleSize (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle theStyle)
 {
 	float  dev2app;
 	aContext->GetDevUnitsToAppUnits(dev2app);
 	return atsuSetSize(theStyle, FloatToFixed((float(aFont.size) / dev2app)));
 }
+
+
 OSErr setStyleColor(nscolor aColor, ATSUStyle theStyle)
 {
     RGBColor	thecolor;
@@ -1447,8 +1455,9 @@ OSErr setStyleColor(nscolor aColor, ATSUStyle theStyle)
 	thecolor.blue = COLOR8TOCOLOR16(NS_GET_B(aColor));	
 	return atsuSetColor(theStyle, thecolor);	
 }
-OSErr setStyleFont (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle theStyle)
 
+
+OSErr setStyleFont (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle theStyle)
 {
 	short fontNum;
 	OSErr					err = 0;
@@ -1479,6 +1488,8 @@ OSErr setStyleFont (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle t
 		return err;
 	return atsuSetFont(theStyle, atsuFontID);
 }
+
+
 OSErr setATSUIFont(const nsFont& aFont, nscolor aColor, nsIDeviceContext* aContext, ATSUStyle theStyle)
 {
 	OSErr					err = 0;
@@ -1492,20 +1503,21 @@ OSErr setATSUIFont(const nsFont& aFont, nscolor aColor, nsIDeviceContext* aConte
 }
 
 
-static Boolean UseATSUIHack()
+static Boolean IsATSUIAvailable()
 {
-#ifndef USE_ATSUI_HACK
-    return FALSE;
-#endif
-	static Boolean gInitATSUIHack = FALSE;
-	static Boolean gATSUIHack = FALSE;
-	if(! gInitATSUIHack) {
+	static Boolean gInitialized = FALSE;
+	static Boolean gATSUIAvailable = FALSE;
+	if (! gInitialized)
+	{
 		long				version;
-		gATSUIHack = (::Gestalt(gestaltATSUVersion, &version) == noErr);
-		gInitATSUIHack = TRUE;
+		gATSUIAvailable = (::Gestalt(gestaltATSUVersion, &version) == noErr);
+		gInitialized = TRUE;
 	}
-	return gATSUIHack;
+	return gATSUIAvailable;
 }
+#endif //USE_ATSUI_HACK
+
+
 //------------------------------------------------------------------------
 // ATSUI Hack 
 //------------------------------------------------------------------------
@@ -1514,7 +1526,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUi
                                          nscoord aX, nscoord aY, nscoord aWidth,
                                          const nscoord* aSpacing)
 {
-   if(UseATSUIHack())
+#ifdef USE_ATSUI_HACK
+   if (IsATSUIAvailable())
    { 
 
 		StartDraw();
@@ -1593,7 +1606,10 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUi
 
 		EndDraw();
  	 	return NS_OK;
-	} else {
+	}
+	else
+#endif //USE_ATSUI_HACK
+	{
 		nsString nsStr;
 		nsStr.SetString(aString, aLength);
 		char* cStr = nsStr.ToNewCString();
