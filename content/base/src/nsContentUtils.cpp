@@ -2085,11 +2085,12 @@ nsCxPusher::Pop()
   mScriptIsRunning = PR_FALSE;
 }
 
-static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][38] = {
+static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][48] = {
   // Must line up with the enum values in |PropertiesFile| enum.
   "chrome://global/locale/css.properties",
   "chrome://global/locale/xbl.properties",
-  "chrome://global/locale/xul.properties"
+  "chrome://global/locale/xul.properties",
+  "chrome://global/locale/layout_errors.properties"
 };
 
 /* static */ nsresult
@@ -2098,6 +2099,7 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
                                 const PRUnichar **aParams,
                                 PRUint32 aParamsLength,
                                 nsIURI* aURI,
+                                const nsAFlatString& aSourceLine,
                                 PRUint32 aLineNumber,
                                 PRUint32 aColumnNumber,
                                 PRUint32 aErrorFlags,
@@ -2134,7 +2136,7 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
   NS_ENSURE_SUCCESS(rv, rv);
   rv = errorObject->Init(errorText.get(),
                          NS_ConvertUTF8toUTF16(spec).get(), // file name
-                         EmptyString().get(), // source line
+                         aSourceLine.get(),
                          aLineNumber, aColumnNumber,
                          aErrorFlags, aCategory);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -454,6 +454,8 @@ public:
    *   @param aParams Parameters to be substituted into localized message.
    *   @param aParamsLength Length of aParams.
    *   @param aURI URI of resource containing error (may be null).
+   *   @param aSourceLine The text of the line that contains the error (may be
+              empty).
    *   @param aLineNumber Line number within resource containing error.
    *   @param aColumnNumber Column number within resource containing error.
    *   @param aErrorFlags See nsIScriptError.
@@ -463,6 +465,7 @@ public:
     eCSS_PROPERTIES,
     eXBL_PROPERTIES,
     eXUL_PROPERTIES,
+    eLAYOUT_PROPERTIES,
     PropertiesFile_COUNT
   };
   static nsresult ReportToConsole(PropertiesFile aFile,
@@ -470,6 +473,7 @@ public:
                                   const PRUnichar **aParams,
                                   PRUint32 aParamsLength,
                                   nsIURI* aURI,
+                                  const nsAFlatString& aSourceLine,
                                   PRUint32 aLineNumber,
                                   PRUint32 aColumnNumber,
                                   PRUint32 aErrorFlags,

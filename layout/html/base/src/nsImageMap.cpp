@@ -141,59 +141,25 @@ is_space(char c)
 static void logMessage(nsIContent*      aContent,
                        const nsAString& aCoordsSpec,
                        PRInt32          aFlags,
-                       const PRUnichar* aMessageName) {
-  nsresult rv;
-  nsCOMPtr<nsIConsoleService> consoleService =
-    do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return;
-  nsCOMPtr<nsIScriptError> errorObject =
-    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return;
-  nsCOMPtr<nsIStringBundleService> stringBundleService =
-    do_GetService(kCStringBundleServiceCID, &rv);
-  if (NS_FAILED(rv))
-    return;
-  nsCOMPtr<nsIStringBundle> bundle;
-  rv = stringBundleService->CreateBundle(
-         "chrome://global/locale/layout_errors.properties",
-         getter_AddRefs(bundle));
-  if (NS_FAILED(rv))
-    return;
-  nsXPIDLString errorText;
-  rv =
-    bundle->FormatStringFromName(aMessageName,
-                                 nsnull, 0,
-                                 getter_Copies(errorText));
-  if (NS_FAILED(rv))
-    return;
-
-  // XXX GetOwnerDocument
-  nsINodeInfo *nodeInfo = aContent->GetNodeInfo();
-  NS_ASSERTION(nodeInfo, "Element with no nodeinfo");
-
-  nsIDocument* doc = nsContentUtils::GetDocument(nodeInfo);
-  nsCAutoString urlSpec;
+                       const char* aMessageName) {
+  nsIURL* documentURI = nsnull;
+  nsIDocument* doc = aContent->GetOwnerDoc();
   if (doc) {
-    nsIURI *uri = doc->GetDocumentURI();
-    if (uri) {
-      uri->GetSpec(urlSpec);
-    }
+    documentURI = doc->GetDocumentURI();
   }
-  rv = errorObject->Init(errorText.get(),
-                         NS_ConvertUTF8toUCS2(urlSpec).get(), /* file name */
-                         PromiseFlatString(NS_LITERAL_STRING("coords=\"") +
-                                           aCoordsSpec +
-                                           NS_LITERAL_STRING("\"")).get(), /* source line */
-                         0, /* line number */
-                         0, /* column number */
-                         aFlags,
-                         "ImageMap");
-  if (NS_FAILED(rv))
-    return;
-
-  consoleService->LogMessage(errorObject);
+  nsContentUtils::ReportToConsole(
+     nsContentUtils::eLAYOUT_PROPERTIES,
+     aMessageName,
+     nsnull,  /* params */
+     0, /* params length */
+     documentURI,
+     PromiseFlatString(NS_LITERAL_STRING("coords=\"") +
+                       aCoordsSpec +
+                       NS_LITERAL_STRING("\"")), /* source line */
+     0, /* line number */
+     0, /* column number */
+     aFlags,
+     "ImageMap");
 }
 
 // XXX straight copy from laymap.c
@@ -445,7 +411,7 @@ void RectArea::ParseCoords(const nsAString& aSpec)
   }
 
   if (!saneRect) {
-    logMessage(mArea, aSpec, flag, NS_LITERAL_STRING("ImageMapRectBoundsError").get());
+    logMessage(mArea, aSpec, flag, "ImageMapRectBoundsError");
   }
 }
 
@@ -528,13 +494,13 @@ void PolyArea::ParseCoords(const nsAString& aSpec)
       logMessage(mArea,
                  aSpec,
                  nsIScriptError::warningFlag,
-                 NS_LITERAL_STRING("ImageMapPolyOddNumberOfCoords").get());
+                 "ImageMapPolyOddNumberOfCoords");
     }
   } else {
     logMessage(mArea,
                aSpec,
                nsIScriptError::errorFlag,
-               NS_LITERAL_STRING("ImageMapPolyWrongNumberOfCoords").get());
+               "ImageMapPolyWrongNumberOfCoords");
   }
 }
 
@@ -673,7 +639,7 @@ void CircleArea::ParseCoords(const nsAString& aSpec)
       logMessage(mArea,
                  aSpec,
                  nsIScriptError::errorFlag,
-                 NS_LITERAL_STRING("ImageMapCircleNegativeRadius").get());
+                 "ImageMapCircleNegativeRadius");
     }
   
     if (mNumCoords > 3) {
@@ -688,7 +654,7 @@ void CircleArea::ParseCoords(const nsAString& aSpec)
     logMessage(mArea,
                aSpec,
                flag,
-               NS_LITERAL_STRING("ImageMapCircleWrongNumberOfCoords").get());
+               "ImageMapCircleWrongNumberOfCoords");
   }
 }
 
