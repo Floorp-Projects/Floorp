@@ -490,6 +490,7 @@ protected:
     afx_msg void OnUpdateFileSave(CCmdUI* pCmdUI);
     afx_msg void OnSelectNextNonTextObject();
     afx_msg void OnUpdateEditSource(CCmdUI* pCmdUI);
+    afx_msg int  OnMouseActivate( CWnd *, UINT, UINT );
 	//}}AFX_MSG
 
     // These are called CNetscapeEditView::OnCmdMsg
@@ -526,9 +527,6 @@ protected:
     afx_msg void OnUpdateEditFindAgain(CCmdUI* pCmdUI);
     afx_msg void OnUpdateFileDocinfo(CCmdUI* pCmdUI);
     afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
-#ifdef ENDER
-    virtual afx_msg int OnMouseActivate( CWnd *pWin, UINT uHitTest, UINT uMessage );
-#endif //ENDER
 
     LRESULT OnButtonMenuOpen(WPARAM wParam, LPARAM lParam);
 
