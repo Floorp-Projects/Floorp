@@ -34,7 +34,6 @@
 #include "nsRepository.h"
 #include "nsGUIEvent.h"
 #include "nsDOMEvent.h"
-#include "nsIFontCache.h"
 #include "nsIFontMetrics.h"
 #include "nsIFormControl.h"
 #include "nsIDeviceContext.h"
@@ -587,11 +586,9 @@ nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame
   aFrame->GetFont(&aPresContext, font);
   //printf("\n GetTextSize %s", aString.ToNewCString());
   nsIDeviceContext* deviceContext = aPresContext.GetDeviceContext();
-  nsIFontCache* fontCache;
-  deviceContext->GetFontCache(fontCache);
 
   nsIFontMetrics* fontMet;
-  fontCache->GetMetricsFor(font, fontMet);
+  deviceContext->GetMetricsFor(font, fontMet);
   fontMet->GetWidth(aString, aSize.width);
   fontMet->GetHeight(aSize.height);
 
@@ -602,7 +599,6 @@ nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame
   fontMet->GetWidth(char2, char2Width);
 
   NS_RELEASE(fontMet);
-  NS_RELEASE(fontCache);
   NS_RELEASE(deviceContext);
 
   return ((char1Width + char2Width) / 2) + 1;

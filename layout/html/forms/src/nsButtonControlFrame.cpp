@@ -35,7 +35,6 @@
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
 #include "nsIDeviceContext.h"
-#include "nsIFontCache.h"
 #include "nsIFontMetrics.h"
 #include "nsIFormControl.h"
 #include "nsIImage.h"

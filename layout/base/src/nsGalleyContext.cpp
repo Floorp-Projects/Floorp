@@ -36,7 +36,6 @@ GalleyContext::GalleyContext()
 
 GalleyContext::~GalleyContext()
 {
-  mDeviceContext->FlushFontCache();
 }
 
 PRBool GalleyContext::IsPaginated()
