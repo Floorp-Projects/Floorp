@@ -44,7 +44,6 @@
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIURL.h"
 #endif
 
 // For reporting errors with the console service
@@ -73,13 +72,9 @@ const char kScriptErrorContractID[] =      "@mozilla.org/scripterror;1";
 const char kObserverServiceContractID[] = NS_OBSERVERSERVICE_CONTRACTID;
 #ifndef XPCONNECT_STANDALONE
 const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRACTID;
-const char kStandardURLContractID[] = "@mozilla.org/network/standard-url;1";
 #endif
 
-JS_STATIC_DLL_CALLBACK(void)
-Reporter(JSContext *cx, const char *message, JSErrorReport *rep);
-
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool PR_CALLBACK
 Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
@@ -103,7 +98,7 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool PR_CALLBACK
 Debug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 #ifdef DEBUG
@@ -113,133 +108,9 @@ Debug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 }
 
-#ifndef XPCONNECT_STANDALONE
-
-static JSFunctionSpec gSandboxFun[] = {
-    {"dump", Dump, 1 },
-    {"debug", Debug, 1 },
-    {0}
-};
-
-JS_STATIC_DLL_CALLBACK(JSBool)
-NewSandbox(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  JSObject* new_obj = nsnull;
-  JSBool retval = JS_FALSE;
-
-  nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID);
-  if (!xpc)
-    return JS_FALSE;
-
-  JSContext* local_cx = JS_NewContext(JS_GetRuntime(cx), 8192);
-  if (!local_cx)
-    return JS_FALSE;
-
-  // from here we leave via 'out' only
-
-  new_obj = JS_NewObject(local_cx, nsnull, nsnull, nsnull);
-  
-  if (!new_obj)
-    goto out;
-
-  // root it early
-  *rval = OBJECT_TO_JSVAL(new_obj);
-
-  if (JS_InitStandardClasses(local_cx, new_obj) &&
-      JS_DefineFunctions(local_cx, new_obj, gSandboxFun) &&
-      NS_SUCCEEDED(xpc->InitClasses(local_cx, new_obj))) {
-    retval = JS_TRUE;
-  }
-  
-out:
-  if (local_cx)
-    JS_DestroyContext(local_cx);      
-
-  if (!retval)
-    *rval = JSVAL_NULL;
-  return retval;
-}        
-
-JS_STATIC_DLL_CALLBACK(JSBool)
-EvalInSandbox(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  JSPrincipals* jsPrincipals;
-  JSString* strText;
-  JSString* strUrl;
-  const char* bytesUrl;
-  JSObject* objSandbox;
-  nsresult rv;
-  JSBool retval = JS_FALSE;
-
-  if (argc < 3)
-    return JS_FALSE;
-  
-  if (!JS_ValueToObject(cx, argv[0], &objSandbox))
-    return JS_FALSE;
-
-  if (!(strText = JS_ValueToString(cx, argv[1])))
-    return JS_FALSE;
-
-  if (!(strUrl = JS_ValueToString(cx, argv[2])))
-    return JS_FALSE;
-
-  if (!(bytesUrl = JS_GetStringBytes(strUrl)))
-    return JS_FALSE;
-
-  nsCOMPtr<nsIStandardURL> stdUrl = do_CreateInstance(kStandardURLContractID);
-  if (!stdUrl)
-    return JS_FALSE;
-
-  rv = stdUrl->Init(nsIStandardURL::URLTYPE_STANDARD, 80, bytesUrl, nsnull);
-  if (NS_FAILED(rv))
-    return JS_FALSE;
-
-  nsCOMPtr<nsIScriptSecurityManager> secman = 
-      do_GetService(kScriptSecurityManagerContractID);
-  if (!secman)
-      return JS_FALSE;
-
-  nsCOMPtr<nsIURL> url = do_QueryInterface(stdUrl);
-
-  nsCOMPtr<nsIPrincipal> principal;
-  secman->GetCodebasePrincipal(url, getter_AddRefs(principal));
-  if (!principal)
-      return JS_FALSE;
-
-  rv = principal->GetJSPrincipals(&jsPrincipals);
-  if (!jsPrincipals)
-      return JS_FALSE;
-
-  JSContext* local_cx = JS_NewContext(JS_GetRuntime(cx), 8192);
-  if (!local_cx)
-    return JS_FALSE;
-
-  JSCLAutoErrorReporterSetter aers(local_cx, Reporter);
-
-  retval = JS_EvaluateUCScriptForPrincipals(local_cx, objSandbox, jsPrincipals,
-                                            JS_GetStringChars(strText),
-                                            JS_GetStringLength(strText),
-                                            bytesUrl, 1, rval);
-  
-  if (!retval && JS_IsExceptionPending(local_cx)) {
-    jsval e;
-    if (JS_GetPendingException(local_cx, &e))
-      JS_SetPendingException(cx, e);
-  }
-
-  JS_DestroyContext(local_cx);      
-  return retval;
-}        
-
-#endif
-
 static JSFunctionSpec gGlobalFun[] = {
     {"dump", Dump, 1 },
     {"debug", Debug, 1 },
-#ifndef XPCONNECT_STANDALONE
-    {"Sandbox", NewSandbox, 0 },
-    {"evalInSandbox", EvalInSandbox, 3 },
-#endif
     {0}
 };
 
@@ -392,7 +263,7 @@ mozJSComponentLoader::GetFactory(const nsIID &aCID,
     return rv;
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void PR_CALLBACK
 Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
 {
     nsresult rv;
