@@ -52,7 +52,8 @@ typedef Boolean (*EventProc)(const EventRecord*);
  *-----------------------------------------------------------*/
 #define CFG_IS_REMOTE 		0	/* if on, download remote config.ini file */	
 #define SDINST_IS_DLL 		1	/* if on, load SDInstLib as code fragment */
-#define	MOZILLA				0	/* if on, draws the Mozilla logo, not NS */
+#define	MOZILLA				0	/* if on, draws the Mozilla logo, not NS, 
+                                          and doesn't use sdinst.dll */
 #define PRE_BETA_HACKERY	1	/* if on, extracts core to selected folder 
 										  instead of Temporary Items */
  
@@ -280,6 +281,9 @@ typedef struct InstComp {
 	/* attributes */
 	Boolean selected;
 	Boolean invisible;
+	
+	/* UI highlighting */
+	Boolean highlighted;
 
 } InstComp; 
 
@@ -510,7 +514,9 @@ void		ShowComponentsWin(void);
 Boolean		PopulateCompInfo(void);
 void		UpdateCompWin(void);
 void		InComponentsContent(EventRecord*, WindowPtr);
+void		MouseMovedInComponentsWin(EventRecord *);
 void		SetOptInfo(void);
+void		UpdateLongDesc(int);
 void		EnableComponentsWin(void);
 void		DisableComponentsWin(void);
 
@@ -536,9 +542,10 @@ Boolean		LoadSDLib(FSSpec, SDI_NETINSTALL *, EventProc *, CFragConnectionID *);
 Boolean		UnloadSDLib(CFragConnectionID *);
 
 /*-----------------------------------------------------------*
- *   Deflation
+ *   Inflation
  *-----------------------------------------------------------*/
 OSErr		ExtractCoreFile(short, long);
+OSErr		InflateFiles(void*, void*, short, long);
 OSErr		AppleSingleDecode(FSSpecPtr, FSSpecPtr);
 void		ResolveDirs(char *, char*);
 OSErr		DirCreateRecursive(char *);

@@ -311,6 +311,9 @@ PopulateCompWinKeys(char *cfgText)
 		}
 		if (attrValH)
 			DisposeHandle(attrValH);
+			
+		/* initialize to not highlighted */
+		gControls->cfg->comp[i].highlighted = false;
 		
 		/* URLs for redundancy/retry/failover */
 		gControls->cfg->comp[i].numURLs = 0;
@@ -761,7 +764,7 @@ unsigned char *CToPascal(char *str)
 	char* cpy;
 
 	len = strlen(str);
-	cpy = (char*)NewPtrClear(len);
+	cpy = (char*)NewPtrClear(len+1);
 	if (!cpy)
 		return 0;
 	strncpy(cpy, str, len);
