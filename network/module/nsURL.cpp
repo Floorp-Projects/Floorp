@@ -245,6 +245,27 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     return NS_OK;
   }
 
+  // Strip out reference info; do what mkparse.c does with search tack on's
+  char* ref = PL_strchr(cSpec, '#');
+  if (nsnull != ref) {
+    // XXX Terminate string at reference; note: this loses a search
+    // request following the string. We don't keep around that
+    // information anyway, so who cares???
+    *ref = '\0';
+    char* search = PL_strchr(ref + 1, '?');
+    if (nsnull != search) {
+      *search = '\0';
+    }
+    PRIntn hashLen = PL_strlen(ref + 1);
+    if (0 != hashLen) {
+      mRef = (char*) PR_Malloc(hashLen + 1);
+      PL_strcpy(mRef, ref + 1);
+    }
+    if (nsnull != search) {
+      *search = '?';
+    }
+  }
+
   const char* cp = PL_strchr(cSpec, ':');
   if ((nsnull == cp) || ('/' == cSpec[0])) {
     // relative spec
@@ -264,11 +285,17 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
       // Relative spec is absolute to the server
       mFile = PL_strdup(cSpec);
     } else {
-      char* dp = PL_strrchr(uFile, '/');
-      PRInt32 dirlen = (dp + 1) - uFile;
-      mFile = (char*) PR_Malloc(dirlen + len);
-      PL_strncpy(mFile, uFile, dirlen);
-      PL_strcpy(mFile + dirlen, cSpec);
+      if (cSpec[0] != '\0') {
+        // Strip out old tail component and put in the new one
+        char* dp = PL_strrchr(uFile, '/');
+        PRInt32 dirlen = (dp + 1) - uFile;
+        mFile = (char*) PR_Malloc(dirlen + len);
+        PL_strncpy(mFile, uFile, dirlen);
+        PL_strcpy(mFile + dirlen, cSpec);
+      }
+      else {
+        mFile = PL_strdup(uFile);
+      }
     }
 
     /* Stolen from netlib's mkparse.c.
@@ -324,10 +351,19 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
       portBuffer[0] = '\0';
     }
 
-    PRInt32 plen = PL_strlen(mProtocol) + PL_strlen(mHost) + PL_strlen(portBuffer) + PL_strlen(mFile) + 4;
+    PRInt32 plen = PL_strlen(mProtocol) + PL_strlen(mHost) +
+      PL_strlen(portBuffer) + PL_strlen(mFile) + 4;
+    if (mRef) {
+      plen += 1 + PL_strlen(mRef);
+    }
     mSpec = (char *) PR_Malloc(plen + 1);
     PR_snprintf(mSpec, plen, "%s://%s%s%s", 
-                mProtocol, ((nsnull != mHost) ? mHost : ""), portBuffer, mFile);
+                mProtocol, ((nsnull != mHost) ? mHost : ""), portBuffer,
+                mFile);
+    if (mRef) {
+      PL_strcat(mSpec, "#");
+      PL_strcat(mSpec, mRef);
+    }
   } else {
     // absolute spec
     mSpec = PL_strdup(cSpec);
