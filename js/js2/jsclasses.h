@@ -43,6 +43,7 @@ namespace JSClasses {
     using JSTypes::JSObject;
     using JSTypes::JSType;
     using JSTypes::JSScope;
+    using JSTypes::JSFunction;
     using ICG::ICodeModule;
     
 
@@ -69,7 +70,11 @@ namespace JSClasses {
     typedef gc_allocator<JSSlot> gc_slot_allocator;
 #endif
 
-     typedef std::map<String, JSSlot, std::less<const String>, gc_slot_allocator> JSSlots;
+    typedef std::map<String, JSSlot, std::less<const String>, gc_slot_allocator> JSSlots;
+
+
+    typedef std::pair<String, JSFunction*> MethodEntry;
+    typedef std::vector<MethodEntry> JSMethods;
 
     /**
      * Represents a class in the JavaScript 2 (ECMA 4) language.
@@ -85,8 +90,7 @@ namespace JSClasses {
         uint32 mStaticCount;
         JSSlots mStaticSlots;
         JSValue* mStaticData;
-        // typedef std::vector<ICodeModule*, gc_allocator<ICodeModule*> > JSMethods;
-        // JSMethods mMethods;
+        JSMethods mMethods;
     public:
         JSClass(JSScope* scope, const String& name, JSClass* superClass = 0)
             :   JSType(name, superClass),
@@ -95,9 +99,12 @@ namespace JSClasses {
                 mStaticCount(0),
                 mStaticData(0)
         {
-            // to "inherit" superClass methods.
-            if (superClass)
-                mScope->setPrototype(superClass->mScope);
+            if (superClass) {
+                   // inherit superclass methods
+                JSMethods::iterator end = superClass->mMethods.end();
+                for (JSMethods::iterator i = superClass->mMethods.begin(); i != end; i++)
+                    mMethods.push_back(*i);
+            }    
         }
         
         JSClass* getSuperClass()
@@ -209,6 +216,32 @@ namespace JSClasses {
                 f << i->first << " : " << mStaticData[i->second.mIndex]  << "\n";
             }
         }
+
+        void defineMethod(const String& name, JSFunction *f)
+        {
+            uint32 slot;
+            if (hasMethod(name, slot))
+                mMethods[slot] = MethodEntry(name, f);
+            else
+                mMethods.push_back(MethodEntry(name, f));
+        }
+
+        bool hasMethod(const String& name, uint32& index)
+        {
+            JSMethods::iterator end = mMethods.end();
+            for (JSMethods::iterator i = mMethods.begin(); i != end; i++) {
+                if (i->first == name) {
+                    index = i - mMethods.begin();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        JSFunction* getMethod(uint32 index)
+        {
+            return mMethods[index].second;
+        }
     };
 
     /**
@@ -242,6 +275,11 @@ namespace JSClasses {
             setPrototype(thisClass->getScope());
         }
         
+        JSFunction* getMethod(uint32 index)
+        {
+            return getClass()->getMethod(index);
+        }
+
         JSClass* getClass()
         {
             return static_cast<JSClass*>(mType);
