@@ -509,16 +509,11 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 		rv = newMsgHdr->GetFlags(&flags);
    		if (NS_FAILED(rv)) return rv;
 		/* strip "Re: " */
-    nsXPIDLCString modifiedSubject;
+                nsXPIDLCString modifiedSubject;
 		if (NS_MsgStripRE(&subject, &subjectLen, getter_Copies(modifiedSubject)))
-		{
-			// todo:
-			// use OrFlags()?
-			// I don't think I need to get flags, since
-			// this is a new header.
-			rv = newMsgHdr->SetFlags(flags | MSG_FLAG_HAS_RE);
-    			if (NS_FAILED(rv)) return rv;
-		}
+                  flags |= MSG_FLAG_HAS_RE;
+		rv = newMsgHdr->SetFlags(flags); // this will make sure read flags agree with newsrc
+    		if (NS_FAILED(rv)) return rv;
 
 		if (! (flags & MSG_FLAG_READ))
 			rv = newMsgHdr->OrFlags(MSG_FLAG_NEW, &flags);
