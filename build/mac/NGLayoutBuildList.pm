@@ -417,7 +417,7 @@ sub BuildClientDist()
     _InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST",					"$distdirectory:libpref:");
 
 	#PROFILE
-    _InstallFromManifest(":mozilla:profile:public:MANIFEST",							"$distdirectory:profile:");
+    _InstallFromManifest(":mozilla:profile:public:MANIFEST_IDL",							"$distdirectory:idl:");
     _InstallFromManifest(":mozilla:profile:idlservices:MANIFEST",								"$distdirectory:idl:");
 
 	#PREF_MIGRATOR
@@ -991,7 +991,7 @@ sub BuildCommonProjects()
 
 	BuildOneProject(":mozilla:caps:macbuild:Caps.mcp",						 	"Caps$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:modules:libpref:macbuild:libpref.mcp",			"libpref$D.shlb", "libpref.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:modules:libpref:macbuild:libpref.mcp",			"libpref$D.shlb", "libpref.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:js:macbuild:XPConnect.mcp",						"XPConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -21,12 +21,14 @@
 
 #include "pratom.h"
 #include "prmem.h"
+#include "plstr.h"
+
 #include "nsIRegistry.h"
 #include "NSReg.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
-#include "plstr.h"
+#include "nsXPIDLString.h"
 #include "nsIFileSpec.h"
 #include "nsFileSpec.h"
 #include "nsString.h"
@@ -34,6 +36,11 @@
 #include "nsFileLocations.h"
 #include "nsEscape.h"
 #include "nsIURL.h"
+
+#include "nsIAppShellService.h"
+#include "nsAppShellCIDs.h"
+#include "nsIBrowserWindow.h"
+#include "nsIWebShellWindow.h"
 
 #ifndef NECKO
 #include "nsINetService.h"
@@ -103,13 +110,13 @@ static int	g_numOldProfiles = 0;
 static PRBool renameCurrProfile = PR_FALSE;
 
 // IID and CIDs of all the services needed
-static NS_DEFINE_IID(kIProfileIID, NS_IPROFILE_IID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 #ifndef NECKO
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
@@ -125,14 +132,28 @@ static NS_DEFINE_IID(kIPrefMigration_IID, NS_IPrefMigration_IID);
 static NS_DEFINE_CID(kPrefMigration_CID, NS_PrefMigration_CID);
 #endif
 
-class nsProfile: public nsIProfile {
+class nsProfile: public nsIProfile,
+                 public nsIShutdownListener
+{
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIPROFILE
 
+  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
+  
 private:
   static void useDefaultProfileFile(nsProfile *aProfileInst);
   static nsProfile *mInstance;
   nsIRegistry* m_reg;
+  nsIPref* m_prefs;
 
+  nsresult loadPrefs();
+  nsresult unloadPrefs();
+
+  nsresult ProcessArgs(nsICmdLineService *service,
+                       PRBool *profileDirSet,
+                       char **profdir);
+  nsresult LoadDefaultProfileDir(char *profstr);
+    
 public:
     nsProfile();
     virtual ~nsProfile();
@@ -156,49 +177,8 @@ public:
 	// Fills the global array gProfiles by enumerating registry entries
 	void		GetAllProfiles();
 
-    // Initialize/shutdown
-    NS_IMETHOD Startup(char *registry);
-    NS_IMETHOD Shutdown();
-
-    // Getters
-    NS_IMETHOD GetProfileDir(const char *profileName, nsFileSpec* profileDir);
-    NS_IMETHOD GetProfileCount(int *numProfiles);
-    NS_IMETHOD GetSingleProfile(char **profileName);
-    NS_IMETHOD GetCurrentProfile(char **profileName);
-    NS_IMETHOD GetFirstProfile(char **profileName);
-    NS_IMETHOD GetCurrentProfileDir(nsFileSpec* profileDir);
-
-    // Setters
-    NS_IMETHOD SetProfileDir(const char *profileName, const nsFileSpec& profileDir);
-
-	// General
     NS_IMETHOD ProfileExists(const char *profileName);
-
-	// Migrate 4.x profile information
-	NS_IMETHOD MigrateProfileInfo();
 	NS_IMETHOD UpdateMozProfileRegistry();
-      
-	// Profile Core supporters
-    NS_IMETHOD CreateNewProfile(char* data);
-	NS_IMETHOD RenameProfile(const char* aOldName, const char* aNewName);  
-	NS_IMETHOD DeleteProfile(const char* aProfileName, const char *canDeleteFiles);  
-	NS_IMETHOD GetProfileList(nsString& profileList);
-	NS_IMETHOD StartCommunicator(const char* aProfileName);
-	NS_IMETHOD GetCurrProfile(nsString& currProfile);
-	NS_IMETHOD MigrateProfile(const char* aProfileName);
-
-	// Cookie processing
-	NS_IMETHOD GetCookie(nsString& aCookie);
-	NS_IMETHOD ProcessPRegCookie();
-	NS_IMETHOD IsPregCookieSet(char **pregSet);
-	NS_IMETHOD ProcessPREGInfo(char* data);
-
-	// Get the count of 4x (unmigrated) profiles
-	NS_IMETHOD Get4xProfileCount(int *numProfiles);
-	NS_IMETHOD MigrateAllProfiles();
-
-	// Clone a profile with current profile info
-	NS_IMETHOD CloneProfile(const char* aProfileName);
 };
 
 nsProfile* nsProfile::mInstance = nsnull;
@@ -210,13 +190,15 @@ static PRInt32 g_LockCount = 0;
  * Constructor/Destructor
  */
 nsProfile::nsProfile()
-: m_reg(nsnull)
+: m_reg(nsnull),
+  m_prefs(nsnull)
 {
   PR_AtomicIncrement(&g_InstanceCount);
   NS_INIT_REFCNT();
 }
 
 nsProfile::~nsProfile() {
+  unloadPrefs();
   PR_AtomicDecrement(&g_InstanceCount);
   mInstance = nsnull;
 }
@@ -233,7 +215,9 @@ nsProfile *nsProfile::GetInstance()
  * nsISupports Implementation
  */
 
-NS_IMPL_ISUPPORTS(nsProfile, kIProfileIID);
+NS_IMPL_ADDREF(nsProfile)
+NS_IMPL_RELEASE(nsProfile)
+NS_IMPL_QUERY_INTERFACE2(nsProfile, nsIProfile, nsIShutdownListener)
 
 /*
  * nsIProfile Implementation
@@ -241,7 +225,7 @@ NS_IMPL_ISUPPORTS(nsProfile, kIProfileIID);
 // Creates an instance of the mozRegistry (m_reg)
 // or any other registry that would be finalized for 5.0
 // Adds subtree Profiles to facilitate profile operations
-NS_IMETHODIMP nsProfile::Startup(char *filename)
+NS_IMETHODIMP nsProfile::Startup(const char *filename)
 {
 
 #if defined(DEBUG_profile)
@@ -297,8 +281,264 @@ NS_IMETHODIMP nsProfile::Startup(char *filename)
 
 NS_IMETHODIMP nsProfile::Shutdown()
 {
+  unloadPrefs();
+  
   NS_RELEASE(m_reg);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
+{
+	nsresult rv;
+  // initializations for profile manager
+	PRBool profileDirSet = PR_FALSE;
+	char *profstr;
+  
+  Startup(nsnull);
+
+
+  if (cmdLineArgs)
+    rv = ProcessArgs(cmdLineArgs, &profileDirSet, &profstr);
+  
+  if (!profileDirSet)
+    rv = LoadDefaultProfileDir(profstr);
+
+  printf("Profile Manager : Profile Wizard and Manager activites : End\n");
+
+  return NS_OK;
+}
+
+
+nsresult
+nsProfile::LoadDefaultProfileDir(char *profstr)
+{
+    nsresult rv;
+    nsIURI* profURL = nsnull;
+    int numProfiles=0;
+  
+    PRInt32 profWinWidth  = 615;
+    PRInt32 profWinHeight = 500;
+  
+    GetProfileCount(&numProfiles);
+  /*
+	 	 * Create the Application Shell instance...
+		 */
+    NS_WITH_SERVICE(nsIAppShellService, profAppShell,
+                    kAppShellServiceCID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    char *isPregInfoSet = nsnull;
+    IsPregCookieSet(&isPregInfoSet); 
+		
+    PRBool pregPref = PR_FALSE;
+    rv = loadPrefs();
+    if (NS_SUCCEEDED(rv))
+        rv = m_prefs->GetBoolPref(PREG_PREF, &pregPref);
+
+    if (!profstr)
+        {
+            // This means that there was no command-line argument to force
+            // profile UI to come up. But we need the UI anyway if there
+            // are no profiles yet, or if there is more than one.
+            if (numProfiles == 0)
+                {
+                    if (pregPref)
+                        profstr = "resource:/res/profile/cpwPreg.xul"; 
+                    else
+                        profstr = "resource:/res/profile/cpw.xul"; 
+                }
+            else if (numProfiles > 1)
+                profstr = "resource:/res/profile/pm.xul"; 
+        }
+
+
+    // Provide Preg information
+    if (pregPref && (PL_strcmp(isPregInfoSet, "true") != 0))
+        profstr = "resource:/res/profile/cpwPreg.xul"; 
+
+
+    if (profstr)
+        {
+#ifdef NECKO
+            rv = NS_NewURI(&profURL, profstr);
+#else
+            rv = NS_NewURL(&profURL, profstr);
+#endif
+	
+            if (NS_FAILED(rv)) {
+                return rv;
+            } 
+
+            nsCOMPtr<nsIWebShellWindow>  profWindow;
+            rv = profAppShell->CreateTopLevelWindow(nsnull, profURL,
+                                                    PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
+                                                    nsnull, profWinWidth, profWinHeight,
+                                                    getter_AddRefs(profWindow));
+
+            NS_RELEASE(profURL);
+		
+            if (NS_FAILED(rv)) 
+                {
+                    return rv;
+                }
+
+            /*
+             * Start up the main event loop...
+             */	
+            rv = profAppShell->Run();
+        }
+
+    if (pregPref && PL_strcmp(isPregInfoSet, "true") != 0)
+        ProcessPRegCookie();
+    
+    // Now we have the right profile, read the user-specific prefs.
+    m_prefs->ReadUserPrefs();
+    return NS_OK;
+}
+
+nsresult
+nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
+                       PRBool* profileDirSet,
+                       char **profstr)
+{
+    nsresult rv;
+	char* cmdResult = nsnull;
+	nsFileSpec currProfileDirSpec;
+    printf("Profile Manager : Command Line Options : Begin\n");
+  
+    // check for command line arguments for profile manager
+    //	
+    // -P command line option works this way:
+    // apprunner -P profilename 
+    // runs the app using the profile <profilename> 
+    // remembers profile for next time
+    rv = cmdLineArgs->GetCmdLineValue("-P", &cmdResult);
+    if (NS_SUCCEEDED(rv))
+        {
+            if (cmdResult) {
+                char* currProfileName = cmdResult;
+
+                fprintf(stderr, "ProfileName : %s\n", cmdResult);
+			
+                GetProfileDir(currProfileName, &currProfileDirSpec);
+                printf("** ProfileDir  :  %s **\n", currProfileDirSpec.GetCString());
+			
+                if (NS_SUCCEEDED(rv)){
+                    *profileDirSet = PR_TRUE;
+                }
+            }
+        }
+  
+	// -CreateProfile command line option works this way:
+	// apprunner -CreateProfile profilename 
+	// creates a new profile named <profilename> and sets the directory to your CWD 
+	// runs app using that profile 
+	// remembers profile for next time 
+	//                         - OR -
+	// apprunner -CreateProfile "profilename profiledir" 
+	// creates a new profile named <profilename> and sets the directory to <profiledir> 
+	// runs app using that profile 
+	// remembers profile for next time
+
+    rv = cmdLineArgs->GetCmdLineValue("-CreateProfile", &cmdResult);
+    if (NS_SUCCEEDED(rv))
+        {
+            if (cmdResult) {
+                char* currProfileName = strtok(cmdResult, " ");
+                char* currProfileDirString = strtok(NULL, " ");
+			
+                if (currProfileDirString)
+                    currProfileDirSpec = currProfileDirString;
+                else
+                    {
+                        // No directory name provided. Get File Locator
+                        NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+                        if (NS_FAILED(rv))
+                            return rv;
+                        if (!locator)
+                            return NS_ERROR_FAILURE;
+				
+                        // Get current profile, make the new one a sibling...
+                        nsIFileSpec* spec;
+                        rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &spec);
+                        if (NS_FAILED(rv) || !spec)
+                            return NS_ERROR_FAILURE;
+                        spec->GetFileSpec(&currProfileDirSpec);
+                        NS_RELEASE(spec);
+                        currProfileDirSpec.SetLeafName(currProfileName);
+
+                        rv = locator->ForgetProfileDir();
+                    }
+
+                fprintf(stderr, "profileName & profileDir are: %s\n", cmdResult);
+                SetProfileDir(currProfileName, currProfileDirSpec);
+                *profileDirSet = PR_TRUE;
+			
+            }
+        }
+
+    // Start Profile Manager
+    rv = cmdLineArgs->GetCmdLineValue("-ProfileManager", &cmdResult);
+    if (NS_SUCCEEDED(rv))
+        {		
+            if (cmdResult) {
+                *profstr = "resource:/res/profile/pm.xul"; 
+            }
+        }
+
+	// Start Profile Wizard
+    rv = cmdLineArgs->GetCmdLineValue("-ProfileWizard", &cmdResult);
+    if (NS_SUCCEEDED(rv))
+        {		
+            if (cmdResult) {
+                *profstr = "resource:/res/profile/cpw.xul"; 
+            }
+        }
+
+	// Start Migaration activity
+    rv = cmdLineArgs->GetCmdLineValue("-installer", &cmdResult);
+    if (NS_SUCCEEDED(rv))
+        {		
+            if (cmdResult) {
+#ifdef XP_PC
+                MigrateProfileInfo();
+
+                int num4xProfiles = 0;
+                Get4xProfileCount(&num4xProfiles);
+
+				int numProfiles = 0;
+				GetProfileCount(&numProfiles);
+                if (num4xProfiles == 0 && numProfiles == 0) {
+                    *profstr = "resource:/res/profile/cpw.xul"; 
+                }
+                else if (num4xProfiles == 1) {
+                    MigrateAllProfiles();
+                }
+                else if (num4xProfiles > 1) {
+                    *profstr = "resource:/res/profile/pm.xul";
+                }
+#endif
+            }
+        }
+
+    printf("Profile Manager : Command Line Options : End\n");
+
+
+
+  /*
+   * Load preferences, causing them to be initialized, and hold a reference to them.
+   */
+    rv = loadPrefs();
+    if (NS_FAILED(rv))
+        return rv;
+
+#if defined (NS_USING_PROFILES)
+    printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
+#endif
+  
+    return NS_OK;
 }
 
 
@@ -346,7 +586,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 					if (NS_SUCCEEDED(rv))
 					{
 						char* isMigrated = nsnull;
-						char* orgProfileDir = nsnull;
+                        nsXPIDLCString orgProfileDir;
 						
 						// Use persistent classes to make the directory names XPlatform
 						nsInputStringStream stream(encodedProfileDir);
@@ -356,7 +596,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 
 						PR_FREEIF(encodedProfileDir);
 
-						orgProfileDir = PL_strdup(profileDir->GetCString());
+						orgProfileDir.Copy(profileDir->GetCString());
 
 						// Get the value of entry "migrated" to check the nature of the profile
 						m_reg->GetString( newKey, "migrated", &isMigrated);
@@ -377,9 +617,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 							if (!tmpFileSpec.Exists()) {
 							    
 								// Get profile defaults folder..
-								nsIFileLocator* locator = nsnull;
-		
-								rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
+                              NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
 
 								if (NS_FAILED(rv) || !locator)
 									return NS_ERROR_FAILURE;
@@ -401,7 +639,6 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 									defaultsDirSpec.RecursiveCopy(tmpFileSpec);
 								}
 
-								nsServiceManager::ReleaseService(kFileLocatorCID, locator);
 							}
 
 						}
@@ -850,7 +1087,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
  */
 
 // Sets the current profile directory
-NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec& profileDir)
+NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& profileDir)
 {
     nsresult rv = NS_OK;
 
@@ -968,7 +1205,7 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec
 
 
 // Creates a new profile
-NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
+NS_IMETHODIMP nsProfile::CreateNewProfile(const char* charData)
 {
 
 	nsresult rv = NS_OK;
@@ -978,9 +1215,7 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
     printf("ProfileManagerData*** : %s\n", charData);
 #endif
 
-	nsIFileLocator* locator = nsnull;
-		
-	rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
 
 	if (NS_FAILED(rv) || !locator)
 		return NS_ERROR_FAILURE;
@@ -1065,8 +1300,6 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 		defaultsDirSpec.RecursiveCopy(dirSpec);
 	}
 
-	nsServiceManager::ReleaseService(kFileLocatorCID, locator);
-		
 	if (dirName)
 	{
 		PR_DELETE(dirName);
@@ -1618,14 +1851,10 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
     printf("ProfileManager : Start AppRunner\n");
 #endif
 
-	nsIPref *prefs = nsnull;
-
 	/*
 	 * Need to load new profile prefs.
 	 */
-	rv = nsServiceManager::GetService(kPrefCID, 
-                                    nsIPref::GetIID(), 
-                                    (nsISupports **)&prefs);
+    rv = loadPrefs();
 	
 	// First, set the profile to be the current profile.
 	// So that FileLocation services grabs right directory when it needs to.
@@ -1645,25 +1874,16 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
 			m_reg->Close();
 		}
 
-		nsIFileLocator* locator = nsnull;
-    
-		rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
+        NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
 			
-		if (locator)
-		{
+		if (NS_SUCCEEDED(rv) && locator)
 			rv = locator->ForgetProfileDir();
-			nsServiceManager::ReleaseService(kFileLocatorCID, locator);
-		}
 
 		if (NS_SUCCEEDED(rv))
 		{
-			prefs->StartUp();
+			m_prefs->StartUp();
 		}
 		
-		// Release prefs service.
-		if (prefs) {
-			nsServiceManager::ReleaseService(kPrefCID, prefs);
-		}
 	}
 
     return rv;
@@ -2125,7 +2345,7 @@ NS_IMETHODIMP nsProfile::ProcessPRegCookie()
 	return rv;
 }
 
-NS_IMETHODIMP nsProfile::ProcessPREGInfo(char* data)
+NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 {
 	nsresult rv = NS_OK;
 
@@ -2576,6 +2796,39 @@ NS_IMETHODIMP nsProfile::CloneProfile(const char* newProfile)
 	return rv;
 }
 
+NS_IMETHODIMP
+nsProfile::OnShutdown(const nsCID& serviceCID, nsISupports* service) {
+
+  if (serviceCID.Equals(kPrefCID)) {
+    unloadPrefs();
+    // are we supposed to do this?
+    nsServiceManager::ReleaseService(serviceCID, service);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsProfile::loadPrefs() {
+  if (m_prefs) return NS_OK;
+
+  nsresult rv;
+  rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
+                                    (nsISupports **)&m_prefs, this);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "may bail without prefs service..\n");
+  return rv;
+}
+
+nsresult
+nsProfile::unloadPrefs() {
+  if (m_prefs) {
+    m_prefs->SavePrefFile(); 
+    m_prefs->ShutDown();
+    nsServiceManager::ReleaseService(kPrefCID, m_prefs);
+    m_prefs=nsnull;
+  }
+  return NS_OK;
+}
 
 /***************************************************************************************/
 /***********                           PROFILE FACTORY                      ************/
@@ -2668,19 +2921,15 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 {
   nsresult rv;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr,
+                   kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->RegisterComponent(kProfileCID, nsnull, nsnull, path, 
+  
+  rv = compMgr->RegisterComponent(kProfileCID,
+                                  "Profile Manager",
+                                  NS_PROFILE_PROGID, path, 
                                   PR_TRUE, PR_TRUE);
 
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
@@ -2688,18 +2937,12 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 {
   nsresult rv;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr,
+                   kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kProfileCID, path);
 
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
