@@ -126,6 +126,8 @@ var applicationName = navigator.vendor ;
 if(applicationName == "" ) applicationName = "Mozilla" ;
 logMessage("application : " + applicationName);
 
+var calendarsToPublish = new Array();
+
 
 /*-----------------------------------------------------------------
 *  G L O B A L     C A L E N D A R      F U N C T I O N S
@@ -1004,89 +1006,75 @@ function refreshRemoteCalendarAndRunFunction( calendarEvent, Server, functionToR
 function deleteEventCommand( DoNotConfirm )
 {
    var SelectedItems = gCalendarWindow.EventSelection.selectedEvents;
-   
-   if( SelectedItems.length == 1 )
-   {
-      var calendarEvent = SelectedItems[0];
+   outerLoop:
+      if ( SelectedItems )
+      {
+         if ( !DoNotConfirm )
+         {
+            var calendarEvent = SelectedItems[0];
 
-      if ( calendarEvent.title != "" ) {
-         if( !DoNotConfirm ) {        
-            if ( confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) 
+            if ( SelectedItems.length > 1 ) {
+               if ( !confirm( confirmDeleteAllEvents ) ) {
+                  break outerLoop; } }
+            else if ( calendarEvent.title != "" ) {
+               if ( !confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) {
+                  break outerLoop; } }
+            else {
+               if ( !confirm( confirmDeleteUntitledEvent ) ) {
+                  break outerLoop; } }
+         }
+
+         calendarsToPublish = new Array();
+         var autoPublishEnabled = false;
+         var serverInArray = false;
+         for( i = 0; i < SelectedItems.length; i++ )
+         {
+            var calendarServer = gCalendarWindow.calendarManager.getCalendarByName( SelectedItems[i].parent.server );
+            if( calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true" )
             {
-               refreshRemoteCalendarAndRunFunction( calendarEvent.id, calendarEvent.parent.server, "deleteEvent" );
+
+               // If the calendarsToPublish array is empty, add this alarm's calendar's parent server to the array
+               if( calendarsToPublish.length == 0 )
+                  serverInArray = false;
+               else
+               {
+                  // Check if this alarm's parent calendar's server is already in the calendarsToPublish array
+                  serverInArray = false;
+                  for( var j = 0; j < calendarsToPublish.length; j++ )
+                  {
+                     if( calendarsToPublish[j].getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ) ==
+                         calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ) )
+                     {
+                        serverInArray = true;
+                     }
+                  }
+               }
+
+               // If this event's parent calendar's server isn't in the array, add it
+               if( !serverInArray )
+                  calendarsToPublish.push(calendarServer);
             }
          }
-         else
+
+         gICalLib.batchMode = true;
+         for( i = 0; i < SelectedItems.length; i++ )
          {
-            refreshRemoteCalendarAndRunFunction( calendarEvent.id, calendarEvent.parent.server, "deleteEvent" );
-            
-            gCalendarWindow.clearSelectedEvent( calendarEvent );
+            gCalendarWindow.clearSelectedEvent( SelectedItems[i] );
+            gICalLib.deleteEvent( SelectedItems[i].id );
          }
-      }
-      else
-      {
-         if( !DoNotConfirm ) {        
-            if ( confirm( confirmDeleteUntitledEvent ) ) {
-               refreshRemoteCalendarAndRunFunction( calendarEvent.id, calendarEvent.parent.server, "deleteEvent" );
+         gICalLib.batchMode = false;
 
-               gCalendarWindow.clearSelectedEvent( calendarEvent );
-            }
-         }
-         else
+         // If we need to publish at least one calendar, publish to each calendarServer in the array
+         if( calendarsToPublish.length() )
          {
-            refreshRemoteCalendarAndRunFunction( calendarEvent.id, calendarEvent.parent.server, "deleteEvent" );
-
-            gCalendarWindow.clearSelectedEvent( calendarEvent );
-         }
-      }
-   }
-   else if( SelectedItems.length > 1 )
-   {
-      var NumberOfEventsToDelete = SelectedItems.length;
-
-      gICalLib.batchMode = true;
-      
-      var ThisItem;
-
-      if( !DoNotConfirm )
-      {
-         if( confirm( "Are you sure you want to delete all selected events?" ) )
-         {
-            gCalendarWindow.clearSelectedEvent( calendarEvent );
-            
-            while( SelectedItems.length )
+            for( i = 0; i < calendarsToPublish.length; i++ )
             {
-               ThisItem = SelectedItems.pop();
-               
-               gICalLib.deleteEvent( ThisItem.id );
+               gCalendarWindow.calendarManager.publishCalendar( calendarsToPublish[i] );
             }
          }
       }
-      else
-      {
-         gCalendarWindow.clearSelectedEvent( calendarEvent );
-            
-         while( SelectedItems.length )
-         {
-            ThisItem = SelectedItems.pop();
-            
-            gICalLib.deleteEvent( ThisItem.id );
-         }
-      }
-
-      gICalLib.batchMode = false;
-
-      /*
-      var NumberOfTotalEvents  = gCalendarWindow.calendarEvent.getAllEvents().length;
-
-      if( NumberOfTotalEvents = NumberOfEventsToDelete )
-      {
-         //highlight today's date
-         gCalendarWindow.currentView.hiliteTodaysDate();
-      }
-      */
-   }
 }
+
 
 /**
 *  Delete the current selected item with focus from the ToDo unifinder list
