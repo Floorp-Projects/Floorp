@@ -199,7 +199,7 @@ nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
         contractID.Append(*p);
 
     nsCOMPtr<nsIRDFDelegateFactory> delegateFactory =
-             do_CreateInstance(contractID.get());
+             do_CreateInstance(contractID.get(), &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = delegateFactory->CreateDelegate(this, aKey, aIID, aResult);
