@@ -40,7 +40,6 @@ install::
 	$(MAKE_INSTALL) list.gif 		$(DIST)\bin\res\mailnews\addrbook
 	$(MAKE_INSTALL) myaddrbk.gif 	$(DIST)\bin\res\mailnews\addrbook
 	$(MAKE_INSTALL) editcard.xul 	$(DIST)\bin\res\mailnews\addrbook
-	$(MAKE_INSTALL) selectaddress.xul 	$(DIST)\bin\res\mailnews\addrbook
 	$(MAKE_INSTALL) addressbook.js 	$(DIST)\bin\res\mailnews\addrbook
 
 clobber::
@@ -60,5 +59,4 @@ clobber::
 	rm -f $(DIST)\res\mailnews\addrbook\list.gif
 	rm -f $(DIST)\res\mailnews\addrbook\myaddrbk.gif
 	rm -f $(DIST)\res\mailnews\addrbook\editcard.xul
-	rm -f $(DIST)\res\mailnews\addrbook\selectaddress.xul
 	rm -f $(DIST)\res\mailnews\addrbook\addressbook.js
