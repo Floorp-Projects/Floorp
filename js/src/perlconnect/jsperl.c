@@ -541,6 +541,7 @@ PVCallStub (JSContext *cx, JSObject *obj, uintN argc,
 
     fun = JS_ValueToFunction(cx, argv[-2]);
     name = (char*) JS_GetFunctionName(fun);
+
     stash = SvSTASH(SvRV(perl_object));
     gv = gv_fetchmeth(stash, name, strlen(name), 0);
     /* cnt = perl_call_pv(method_name, 0); */
@@ -565,7 +566,7 @@ PVCallStub (JSContext *cx, JSObject *obj, uintN argc,
     }
     PUTBACK;
 
-    cnt = perl_call_sv((SV*)GvCV(gv), 0);
+    cnt = perl_call_sv((SV*)GvCV(gv), G_ARRAY | G_KEEPERR | G_EVAL);
 
     //SvREFCNT_dec(perl_object);
 
@@ -578,14 +579,23 @@ PVCallStub (JSContext *cx, JSObject *obj, uintN argc,
     if (cnt == 1) {
         SVToJSVAL(cx, obj, ST(0), rval);
     } else {
-        warn("sorry, but array results are not supported yet...");
+        JSObject *jsarr;
+        jsval val;
+        int i;
+        jsarr = JS_NewArrayObject(cx, 0, NULL);
+        for (i = 0; i < cnt; i++) {
+            SVToJSVAL(cx, JS_GetGlobalObject(cx), ST(i), &val);
+            JS_DefineElement(cx, jsarr, i, val, NULL, NULL, 0);
+        }
+        *rval = OBJECT_TO_JSVAL(jsarr);
     }
     PUTBACK;
 
     FREETMPS;
     LEAVE;
 
-    return(JS_TRUE);
+    //return(JS_TRUE);
+    return checkError(cx);
 }
 
 /*
@@ -595,7 +605,7 @@ PVCallStub (JSContext *cx, JSObject *obj, uintN argc,
     first. *rval contains the result.
 */
 /* __PH__
-    ...but. PVGetproperty now firstly look for method in given 
+    ...but. PVGetproperty now firstly looks for method in given 
     object package. If such method if found, then is returned 
     universal method stub. Sideeffect of this behavior is, that
     method are looked first before properties of the same name.
@@ -610,7 +620,7 @@ PVGetProperty(JSContext *cx, JSObject *obj, jsval name, jsval *rval)
 {
     char* str;
 
-    /* __PH__ OK, array properties should be served first */
+    /* __PH__ array properties should be served first */
     if(JSVAL_IS_INT(name)){
         int32 ip;
 
@@ -640,8 +650,8 @@ PVGetProperty(JSContext *cx, JSObject *obj, jsval name, jsval *rval)
         }
     }else{
         int i;
-        /* __PH__ predefined methods have to win */
-        for(i=0;i<sizeof(predefined_methods)/sizeof(char*);i++){
+        /* __PH__ predefined methods NUST win */
+        for(i=0; i < sizeof(predefined_methods)/sizeof(char*); i++){
             if(!strcmp(predefined_methods[i], str)){
                 return JS_TRUE;
             }
@@ -649,15 +659,15 @@ PVGetProperty(JSContext *cx, JSObject *obj, jsval name, jsval *rval)
 
         /* __PH__ properties in hash should be served at last (possibly) */
         PVGetKey(cx, obj, str, rval);
-        if(*rval!=JSVAL_VOID){
+        if (*rval!=JSVAL_VOID) {
             return JS_TRUE;
-        }else{
+        } else {
 #if 0
             char* str = JS_GetStringBytes(JS_ValueToString(cx, name));
             JS_ReportError(cx, "Perl: can't get property '%s'", str);
             return JS_FALSE;
 #else
-            /* when Volodya does another job, we can experiment :-) */
+            /* when Volodya does another job, we may experiment :-) */
             char* str = JS_GetStringBytes(JS_ValueToString(cx, name));
             /* great, but who will dispose it? (GC of JS??) */
             JSFunction *fun = JS_NewFunction(cx, PVCallStub, 0, 0, NULL, str);
@@ -715,7 +725,8 @@ PVGetElement(JSContext *cx, JSObject *obj, jsint index, jsval *rval)
     if(!sv){
         return JS_FALSE;
     }
-    return SVToJSVAL(cx, obj, newRV_inc(*sv), rval);
+    //return SVToJSVAL(cx, obj, newRV_inc(*sv), rval);
+    return SVToJSVAL(cx, obj, *sv, rval);
 }
 
 /*
@@ -817,14 +828,14 @@ PVToString(JSContext *cx, JSObject *obj, int argc, jsval *argv, jsval* rval)
 
     /*return perl_call(cx, obj, 2, args, rval);*/
 
-    if(type==SVt_PVAV){
+    if (type==SVt_PVAV) {
         JSObject   *arrayObject = JS_NewArrayObject(cx,0,NULL);
         JSFunction *fun;
 
         JS_GetProperty(cx, arrayObject, "toString", &v);
         fun = JS_ValueToFunction(cx, v);
         JS_CallFunction(cx, obj, fun, 0, NULL, rval);
-    }else{
+    } else {
         char out[256];
         JS_GetProperty(cx, obj, "type", &v);
         if(!JSVAL_IS_VOID(v))
@@ -838,7 +849,7 @@ PVToString(JSContext *cx, JSObject *obj, int argc, jsval *argv, jsval* rval)
 }
 
 static JSBool
-PVConvert(JSContext *cx, JSObject *obj, JSType type, jsval *rval)
+PVConvert (JSContext *cx, JSObject *obj, JSType type, jsval *rval)
 {
     *rval = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
@@ -852,7 +863,7 @@ PVConvert(JSContext *cx, JSObject *obj, JSType type, jsval *rval)
 /* #include <stdio.h> */
 
 static void
-PVFinalize(JSContext *cx, JSObject *obj)
+PVFinalize (JSContext *cx, JSObject *obj)
 {
     /* SV* sv = SvRV(PVGetRef(cx, obj)); */
     SV *sv;
@@ -864,7 +875,7 @@ PVFinalize(JSContext *cx, JSObject *obj)
            if ( SvROK(sv) ) sv = SvRV( sv ); _PH_ test*/
         
         /* TODO: GC */
-        if(sv && SvREFCNT(sv)>0){
+        if(sv && SvREFCNT(sv) > 0){
             /*fprintf(stderr, "Finilization: %d references left", SvREFCNT(sv));*/
             SvREFCNT_dec(sv);
             /*fprintf(stderr, "Finilization: %d references left", SvREFCNT(sv));*/
@@ -957,12 +968,13 @@ SVToJSVAL(JSContext *cx, JSObject *obj, SV *ref, jsval *rval) {
     SV *sv;
     char* name=NULL;
 
-    /* we'll use the dereferrenced value (ecpet for object) */
+    /* we'll use the dereferrenced value (excpet for object) */
     if( SvROK(ref) ) {
         sv = SvRV(ref);
     }else{
         sv = ref;
     }
+
     /* printf("+++> In SVToJSVAL value %s, type=%d\n", SvPV(sv, PL_na), SvTYPE(sv)); */
 
     if ( ! SvOK( ref ) ){
@@ -971,6 +983,7 @@ SVToJSVAL(JSContext *cx, JSObject *obj, SV *ref, jsval *rval) {
     } else
     if ( SV_BIND_TO_OBJECT(ref) ) {
         JSObject *perlValue, *prototype;
+
         /*svtype type = SvTYPE(sv);
           switch(type){
           case SVt_RV:   name = "Perl Reference"; break;
@@ -988,12 +1001,15 @@ SVToJSVAL(JSContext *cx, JSObject *obj, SV *ref, jsval *rval) {
         name = "Perl Value";
         /* __PH__ */
         SvREFCNT_inc(ref);
+
         if (SvTYPE(sv) == SVt_PVAV)
             prototype = JS_NewArrayObject(cx, 0, NULL);
         else 
             prototype = NULL;
+
         perlValue = JS_DefineObject(cx, obj, "PerlValue",
-                                    &perlValueClass, prototype, JSPROP_ENUMERATE);
+                                    &perlValueClass, prototype, 
+                                    JSPROP_ENUMERATE);
         JS_SetPrivate(cx, perlValue, ref);
         JS_DefineFunctions(cx, perlValue, perlValueMethods);
         JS_DefineProperty(cx, perlValue, "type",
@@ -1016,6 +1032,5 @@ SVToJSVAL(JSContext *cx, JSObject *obj, SV *ref, jsval *rval) {
         *rval = JSVAL_VOID; /* shouldn't happen */
         /* printf("---> SVToJSVAL returning VOID (panic)\n"); */
     }
-    
     return JS_TRUE;
 }
