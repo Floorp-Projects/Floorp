@@ -115,12 +115,12 @@ FtFuncList nsFreeType2::FtFuncs [] = {
   {"FTC_Manager_Done",        NS_FT2_OFFSET(nsFTC_Manager_Done),        PR_TRUE},
   {"FTC_Manager_New",         NS_FT2_OFFSET(nsFTC_Manager_New),         PR_TRUE},
   {"FTC_Image_Cache_New",     NS_FT2_OFFSET(nsFTC_Image_Cache_New),     PR_TRUE},
-#ifdef MOZ_SVG
+// #ifdef MOZ_SVG
   {"FT_Glyph_Transform",      NS_FT2_OFFSET(nsFT_Glyph_Transform),      PR_TRUE},
   {"FT_Get_Kerning",          NS_FT2_OFFSET(nsFT_Get_Kerning),          PR_TRUE},
   {"FT_Glyph_Copy",           NS_FT2_OFFSET(nsFT_Glyph_Copy),           PR_TRUE},
   {"FT_Glyph_To_Bitmap",      NS_FT2_OFFSET(nsFT_Glyph_To_Bitmap),      PR_TRUE},
-#endif
+// #endif
   {"FT_Get_First_Char",       NS_FT2_OFFSET(nsFT_Get_First_Char),       PR_FALSE},
   {"FT_Get_Next_Char",        NS_FT2_OFFSET(nsFT_Get_Next_Char),        PR_FALSE},
   {nsnull,                    0, 0}
@@ -327,7 +327,7 @@ nsFreeType2::ImageCacheNew(FTC_Manager manager, FTC_Image_Cache *cache)
   return error ? NS_ERROR_FAILURE : NS_OK;
 } 
 
-#ifdef MOZ_SVG
+// #ifdef MOZ_SVG
 NS_IMETHODIMP
 nsFreeType2::GlyphTransform(FT_Glyph glyph, FT_Matrix * matrix, FT_Vector * delta)
 {
@@ -363,7 +363,7 @@ nsFreeType2::GlyphToBitmap(FT_Glyph *the_glyph, FT_Render_Mode render_mode,
   return error ? NS_ERROR_FAILURE : NS_OK;
 }
 
-#endif
+// #endif
 
 NS_IMETHODIMP
 nsFreeType2::GetFirstChar(FT_Face face, FT_UInt *gindex, FT_ULong *charcode)
