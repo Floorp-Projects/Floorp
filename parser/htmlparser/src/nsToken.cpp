@@ -85,7 +85,8 @@ void CToken::DebugDumpToken(ostream& anOutputStream) {
  *  @param  ostream -- output stream to accept output data
  *------------------------------------------------------*/
 void CToken::DebugDumpSource(ostream& anOutputStream) {
-	anOutputStream << mTextValue;
+  char buf[256];
+	anOutputStream << mTextValue.ToCString(buf, 256);
 }
 
 /**-------------------------------------------------------

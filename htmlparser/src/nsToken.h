@@ -53,7 +53,7 @@ class CScanner;
 class CToken {
 	public:
 									        CToken(const nsString& aName);
-            					    ~CToken();
+    virtual               ~CToken();
 		
     virtual	nsString&     GetStringValue(void);
     virtual	nsString&     GetText(void);
