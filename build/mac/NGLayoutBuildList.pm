@@ -175,6 +175,10 @@ sub BuildDist()
 	#INCLUDE
 	InstallFromManifest(":mozilla:config:mac:MANIFEST",								"$distdirectory:config:");
 	InstallFromManifest(":mozilla:config:mac:MANIFEST_config",						"$distdirectory:config:");
+
+	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
+	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
+
 	InstallFromManifest(":mozilla:include:MANIFEST",								"$distdirectory:include:");		
 	InstallFromManifest(":mozilla:cmd:macfe:pch:MANIFEST",							"$distdirectory:include:");
 	InstallFromManifest(":mozilla:cmd:macfe:utility:MANIFEST",						"$distdirectory:include:");
@@ -432,9 +436,6 @@ sub BuildDist()
    InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
 
-	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
-	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
-
 	print("--- Dist export complete ----\n")
 }
 
@@ -474,7 +475,9 @@ sub BuildOneProject($$$$$$)
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
-	my($component_dir) = $component ? "Components:" : "";
+	
+	# Put libraries in "Essential Files" folder, Components in "Components" folder
+	my($component_dir) = $component ? "Components:" : "Essential Files:";
 
 	my($project_dir) = $project_path;
 	$project_dir =~ s/:[^:]+$/:/;			# chop off leaf name
@@ -493,7 +496,7 @@ sub BuildOneProject($$$$$$)
 	BuildProject($project_path, $target_name);
 	
 	$alias_shlb ? MakeAlias("$project_dir$target_name", "$dist_dir$component_dir") : 0;
-	$alias_xSYM ? MakeAlias("$project_dir$target_name.xSYM", "$dist_dir") : 0;
+	$alias_xSYM ? MakeAlias("$project_dir$target_name.xSYM", "$dist_dir$component_dir") : 0;
 }
 
 
@@ -777,7 +780,7 @@ sub BuildLayoutProjects()
 		#// beard: use pattern substitution to generate path to WasteLib. (thanks gordon!)
 		$appath =~ s/[^:]*$/MacOS Support:WASTE 1.3 Distribution:WASTELib/;
 		my($wastelibpath) = $appath;
-		MakeAlias("$wastelibpath", "$dist_dir");
+		MakeAlias("$wastelibpath", "$dist_dir"."Essential Files:");
 	}
 	else {
 		print STDERR "Can't find $filepath\n";
