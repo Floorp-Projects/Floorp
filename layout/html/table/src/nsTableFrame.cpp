@@ -1613,7 +1613,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
 
   // See if we are supposed to compute our maximum width
   if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-    PRBool  isAutoWidth = RequiresPass1Layout() &&
+    PRBool  isAutoWidth = IsAutoLayout(&aReflowState) &&
                           (eStyleUnit_Auto == aReflowState.mStylePosition->mWidth.GetUnit());
     
     // See if the pass1 maximum width is no longer valid because one of the
@@ -1694,7 +1694,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext*          aPresContext,
   // Compute the insets (sum of border and padding)
   // XXX: since this is pass1 reflow and where we place the rowgroup frames is irrelevant, insets are probably a waste
 
-  if (PR_TRUE==RequiresPass1Layout())
+  if (IsAutoLayout(&aReflowState))
   {
     nsIFrame* kidFrame = aStartingFrame;
     if (nsnull==kidFrame)
@@ -2886,7 +2886,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
   nsresult  rv = NS_OK;
 
   nsReflowReason reason;
-  if (PR_FALSE==RequiresPass1Layout())
+  if (!IsAutoLayout(&aReflowState.reflowState))
   {
     reason = aReflowState.reflowState.reason;
     if (eReflowReason_Incremental==reason) {
@@ -3215,7 +3215,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   if (nsnull == mTableLayoutStrategy) {
     nsCompatibility mode;
     aPresContext->GetCompatibilityMode(&mode);
-    if (PR_FALSE==RequiresPass1Layout())
+    if (!IsAutoLayout(&aReflowState))
       mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
     else
       mTableLayoutStrategy = new BasicTableLayoutStrategy(this, eCompatibility_NavQuirks == mode);
@@ -3224,7 +3224,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   }
   // fixed-layout tables need to reinitialize the layout strategy. When there are scroll bars
   // reflow gets called twice and the 2nd time has the correct space available.
-  else if (!RequiresPass1Layout()) {
+  else if (!IsAutoLayout(&aReflowState)) {
     mTableLayoutStrategy->Initialize(aPresContext, aMaxElementSize, boxWidth);
   }
 
@@ -4176,11 +4176,25 @@ void nsTableFrame::SetMaxElementSize(nsSize* aMaxElementSize)
 }
 
 
-PRBool nsTableFrame::RequiresPass1Layout()
+PRBool nsTableFrame::IsAutoLayout(const nsHTMLReflowState* aReflowState)
 {
   const nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  return (PRBool)(NS_STYLE_TABLE_LAYOUT_FIXED!=tableStyle->mLayoutStrategy);
+  // a fixed table-layout table with an auto width is not considered as such
+  // for purposes of requiring pass1 reflow and assigning a layout strategy
+  if (NS_STYLE_TABLE_LAYOUT_FIXED == tableStyle->mLayoutStrategy) {
+    const nsStylePosition* position;
+    if (aReflowState) {
+      position = aReflowState->mStylePosition;
+    }
+    else {
+      GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)position);
+    }
+    if (eStyleUnit_Auto != position->mWidth.GetUnit()) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
 }
 
 #ifdef DEBUG

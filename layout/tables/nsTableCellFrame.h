@@ -221,8 +221,6 @@ private:
   // All these methods are support methods for RecalcLayoutData
   nsIFrame* GetFrameAt(nsVoidArray* aList,  PRInt32 aIndex);
 
-  nscoord GetMargin(nsIFrame* aFrame, PRUint8 aEdge) const;
-
   //XXX: aTableFrame can be removed as soon as border-collapse inherits correctly
   void GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFrame);
 

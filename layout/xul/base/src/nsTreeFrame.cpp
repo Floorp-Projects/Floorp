@@ -105,6 +105,20 @@ NS_IMETHODIMP nsTreeFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return nsTableFrame::QueryInterface(aIID, aInstancePtr);
 }
 
+// this is overriden because the behavior for a table is to force the layout
+// to auto layout if the table is auto width. This doesn't work for trees.
+PRBool nsTreeFrame::IsAutoLayout(const nsHTMLReflowState* aReflowState)
+{
+  const nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+  // a fixed table-layout table with an auto width is not considered as such
+  // for purposes of requiring pass1 reflow and assigning a layout strategy
+  if (NS_STYLE_TABLE_LAYOUT_FIXED == tableStyle->mLayoutStrategy) {
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 void nsTreeFrame::SetSelection(nsIPresContext* aPresContext, nsTreeCellFrame* aFrame)
 {
   nsCOMPtr<nsIContent> cellContent;

@@ -924,15 +924,12 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
                                nsTableCellFrame *   aStartFrame,
                                PRBool               aDoSiblings)
 {
+  nsresult  rv = NS_OK;
   // Place our children, one at a time, until we are out of children
   nsSize    kidMaxElementSize(0,0);
   nscoord   x = 0;
-  PRBool    tableLayoutStrategy=NS_STYLE_TABLE_LAYOUT_AUTO; 
   nsTableFrame* table = aReflowState.tableFrame;
-  nsresult  rv = NS_OK;
-  const nsStyleTable* tableStyle;
-  table->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  tableLayoutStrategy = tableStyle->mLayoutStrategy;
+  PRBool    isAutoLayout = table->IsAutoLayout(&aReflowState.reflowState);
 
   nsIFrame* kidFrame;
   if (nsnull==aStartFrame)
@@ -962,7 +959,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
       // get the child's maximum width
       nsSize  kidAvailSize;
       nsHTMLReflowMetrics kidSize(nsnull);
-      if (NS_STYLE_TABLE_LAYOUT_AUTO==tableLayoutStrategy)
+      if (isAutoLayout)
       {
         kidAvailSize.SizeTo(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
         kidSize.maxElementSize=&kidMaxElementSize;
@@ -1223,7 +1220,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     // Unless this is a fixed-layout table, then have the cell incrementally
     // update its maximum width
     nsHTMLReflowMetrics desiredSize(&kidMaxElementSize,
-                                    aReflowState.tableFrame->RequiresPass1Layout() ?
+                                    aReflowState.tableFrame->IsAutoLayout() ?
                                     NS_REFLOW_CALC_MAX_WIDTH : 0);
     nsHTMLReflowState   kidReflowState(aPresContext,
                                        aReflowState.reflowState,
@@ -1350,7 +1347,7 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
   switch (reason) {
   case eReflowReason_Initial:
     rv = InitialReflow(aPresContext, aDesiredSize, state, aStatus, nsnull, PR_TRUE);
-    if (PR_FALSE==tableFrame->RequiresPass1Layout())
+    if (!tableFrame->IsAutoLayout())
     { // this resize reflow is necessary to place the cells correctly in the case of rowspans and colspans.  
       // It is very efficient.  It does not actually need to pass a reflow down to the cells.
       nsSize  availSpace(aReflowState.availableWidth, aReflowState.availableHeight);

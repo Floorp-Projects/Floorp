@@ -1159,7 +1159,10 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       // basis of the outset border. If the table has a transparant background then it finds
       // the closest ancestor that has a non transparant backgound. NS_STYLE_BORDER_OUTSET 
       // uses the border color of the table and if that is not set, then it uses the color.
-      PRUint8 borderStyle = NS_STYLE_BORDER_STYLE_BG_OUTSET;
+      nsCompatibility mode;
+      aPresContext->GetCompatibilityMode(&mode);
+      PRUint8 borderStyle = (eCompatibility_NavQuirks == mode) 
+                            ? NS_STYLE_BORDER_STYLE_BG_OUTSET : NS_STYLE_BORDER_STYLE_OUTSET;
 
       // bordercolor
       aAttributes->GetAttribute(nsHTMLAtoms::bordercolor, value);
@@ -1213,6 +1216,11 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         if (nsnull==tableStyle)
           tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
         tableStyle->mCellPadding.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
+      }
+      else if (value.GetUnit() == eHTMLUnit_Percent) {
+        if (nsnull==tableStyle)
+          tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+        tableStyle->mCellPadding.SetPercentValue(value.GetPercentValue());
       }
 
       // cellspacing  (reuses tableStyle if already resolved)

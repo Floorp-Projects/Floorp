@@ -792,7 +792,7 @@ public: /* ----- Cell Map public methods ----- */
   void SetMaxElementSize(nsSize* aMaxElementSize);
 
   /** returns PR_TRUE if table layout requires a preliminary pass over the content */
-  PRBool RequiresPass1Layout();
+  virtual PRBool IsAutoLayout(const nsHTMLReflowState* aReflowState = nsnull);
 
   // compute the height of the table to be used as the basis for 
   // percentage height cells
