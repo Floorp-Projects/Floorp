@@ -65,7 +65,7 @@ protected:
   // effect and the data represents a span.
   union {
     nsTableCellFrame* mOrigCell;
-    PRUint32          mBits;
+    long              mBits;
   };
 };
 
