@@ -198,7 +198,7 @@ BOOL XP_WritePrivateProfileString(LPSTR szSection, LPSTR szKey, LPSTR szString, 
 BOOL XP_WritePrivateProfileInt(LPSTR szSection, LPSTR szKey, int iValue, LPSTR szFileName)
 {
   char szString[80];
-  itoa(iValue, szString, 10);
+  _itoa(iValue, szString, 10);
   return XP_WritePrivateProfileString(szSection, szKey, szString, szFileName);
 }
 

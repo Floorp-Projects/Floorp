@@ -163,7 +163,7 @@ static NPBool convertStringToBOOL(LPSTR szString)
   }
   else
   {
-    NPBool npb = (strcmpi(szString, "TRUE") == 0) ? TRUE : FALSE;
+    NPBool npb = (stricmp(szString, "TRUE") == 0) ? TRUE : FALSE;
     return npb;
   }
 }
@@ -192,11 +192,11 @@ static NPReason convertStringToNPReason(LPSTR szString)
   }
   else
   {
-    if(strcmpi(ENTRY_NPRES_DONE, szString) == 0)
+    if(stricmp(ENTRY_NPRES_DONE, szString) == 0)
       return NPRES_DONE;
-    else if(strcmpi(ENTRY_NPRES_NETWORK_ERR, szString) == 0)
+    else if(stricmp(ENTRY_NPRES_NETWORK_ERR, szString) == 0)
       return NPRES_NETWORK_ERR;
-    else if(strcmpi(ENTRY_NPRES_USER_BREAK, szString) == 0)
+    else if(stricmp(ENTRY_NPRES_USER_BREAK, szString) == 0)
       return NPRES_USER_BREAK;
     else
       return NPRES_DONE;
@@ -225,17 +225,17 @@ static NPNVariable convertStringToNPNVariable(LPSTR szString)
   }
   else
   {
-    if(strcmpi(ENTRY_NPNVXDISPLAY, szString) == 0)
+    if(stricmp(ENTRY_NPNVXDISPLAY, szString) == 0)
       return NPNVxDisplay;
-    else if(strcmpi(ENTRY_NPNVXTAPPCONTEXT, szString) == 0)
+    else if(stricmp(ENTRY_NPNVXTAPPCONTEXT, szString) == 0)
       return NPNVxtAppContext;
-    else if(strcmpi(ENTRY_NPNVNETSCAPEWINDOW, szString) == 0)
+    else if(stricmp(ENTRY_NPNVNETSCAPEWINDOW, szString) == 0)
       return NPNVnetscapeWindow;
-    else if(strcmpi(ENTRY_NPNVJAVASCRIPTENABLEDBOOL, szString) == 0)
+    else if(stricmp(ENTRY_NPNVJAVASCRIPTENABLEDBOOL, szString) == 0)
       return NPNVjavascriptEnabledBool;
-    else if(strcmpi(ENTRY_NPNVASDENABLEDBOOL, szString) == 0)
+    else if(stricmp(ENTRY_NPNVASDENABLEDBOOL, szString) == 0)
       return NPNVasdEnabledBool;
-    else if(strcmpi(ENTRY_NPNVISOFFLINEBOOL, szString) == 0)
+    else if(stricmp(ENTRY_NPNVISOFFLINEBOOL, szString) == 0)
       return NPNVisOfflineBool;
     else
       return (NPNVariable)0;
@@ -266,17 +266,17 @@ static NPPVariable convertStringToNPPVariable(LPSTR szString)
   }
   else
   {
-    if(strcmpi(ENTRY_NPPVPLUGINNAMESTRING, szString) == 0)
+    if(stricmp(ENTRY_NPPVPLUGINNAMESTRING, szString) == 0)
       return NPPVpluginNameString;
-    else if(strcmpi(ENTRY_NPPVPLUGINDESCRIPTIONSTRING, szString) == 0)
+    else if(stricmp(ENTRY_NPPVPLUGINDESCRIPTIONSTRING, szString) == 0)
       return NPPVpluginDescriptionString;
-    else if(strcmpi(ENTRY_NPPVPLUGINWINDOWBOOL, szString) == 0)
+    else if(stricmp(ENTRY_NPPVPLUGINWINDOWBOOL, szString) == 0)
       return NPPVpluginWindowBool;
-    else if(strcmpi(ENTRY_NPPVPLUGINTRANSPARENTBOOL, szString) == 0)
+    else if(stricmp(ENTRY_NPPVPLUGINTRANSPARENTBOOL, szString) == 0)
       return NPPVpluginTransparentBool;
-    else if(strcmpi(ENTRY_NPPVPLUGINKEEPLIBRARYINMEMORY, szString) == 0)
+    else if(stricmp(ENTRY_NPPVPLUGINKEEPLIBRARYINMEMORY, szString) == 0)
       return NPPVpluginKeepLibraryInMemory;
-    else if(strcmpi(ENTRY_NPPVPLUGINWINDOWSIZE, szString) == 0)
+    else if(stricmp(ENTRY_NPPVPLUGINWINDOWSIZE, szString) == 0)
       return NPPVpluginWindowSize;
     else
       return (NPPVariable)0;
