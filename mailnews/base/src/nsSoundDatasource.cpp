@@ -64,7 +64,7 @@
 #define FILE_SCHEME "file://"
 #define FILE_SCHEME_LEN 7
 
-#ifdef XP_WIN32
+#ifdef XP_WIN
 #include <windows.h> 
 #endif
 
