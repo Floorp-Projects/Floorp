@@ -1584,10 +1584,13 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
             }
             parentData = parentData->mParentData;
           } while (parentData);
-        
-          (data->mParentData->mPendingChildren)++;
         }
         result = LoadSheet(key, data);
+        if (count && NS_SUCCEEDED(result)) {
+          // Only if LoadSheet succeeds do we have another pending child
+          // load for the parent.
+          ++(data->mParentData->mPendingChildren);
+        }
       }
     }
   }
