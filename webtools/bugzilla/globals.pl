@@ -70,7 +70,7 @@ use Date::Parse;               # For str2time().
 use RelationSet;
 
 # Contains the version string for the current running Bugzilla.
-$::param{'version'} = '2.12';
+$::param{'version'} = '2.13';
 
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
