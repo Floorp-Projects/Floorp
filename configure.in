@@ -3108,6 +3108,11 @@ MOZ_ARG_ENABLE_BOOL(efence,
 [  --enable-efence         Link with Electric Fence if available (default=no) ],
   AC_CHECK_LIB(efence,malloc))
 
+dnl XXX temporary: will be removed once new string APIs are un-#ifdef'd
+MOZ_ARG_ENABLE_BOOL(new-string-apis,
+[  --enable-new-string-apis Use the new string APIs (default=no) ],
+  AC_DEFINE(NEW_STRING_APIS))
+
 dnl ========================================================
 dnl =
 dnl = MOZ_DEMANGLE_UNDEFINED_SYMBOLS
