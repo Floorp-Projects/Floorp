@@ -325,8 +325,6 @@ nsresult nsRenderingContextOS2::CommonInit()
     GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET,
                             LCOLF_CONSECRGB, 0,
                             palInfo.sizePalette, (PLONG) palInfo.palette);
-    free(palInfo.palette);
-    palInfo.palette = nsnull;
   }
   else
   {
@@ -361,8 +359,6 @@ nsresult nsRenderingContextOS2::SelectOffScreenDrawingSurface( nsDrawingSurface 
         GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET | LCOL_PURECOLOR,
                                 LCOLF_CONSECRGB, 0,
                                 palInfo.sizePalette, (PLONG) palInfo.palette);
-        free(palInfo.palette);
-        palInfo.palette = nsnull;
       }
       else
       {

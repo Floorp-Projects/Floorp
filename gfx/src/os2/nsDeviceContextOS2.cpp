@@ -104,6 +104,11 @@ nsDeviceContextOS2::~nsDeviceContextOS2()
      PrnCloseDC(mDC);
   }
 
+  if (!mPaletteInfo.isPaletteDevice) {
+     free(mPaletteInfo.palette);
+     mPaletteInfo.palette = nsnull;
+  }
+
   NS_IF_RELEASE(mSpec);
 }
 
