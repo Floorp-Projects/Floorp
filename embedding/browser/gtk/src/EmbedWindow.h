@@ -32,6 +32,8 @@
 #include <nsIInterfaceRequestor.h>
 #include <nsCOMPtr.h>
 
+#include <gtk/gtk.h>
+
 class EmbedPrivate;
 
 class EmbedWindow : public nsIWebBrowserChrome,
@@ -72,6 +74,7 @@ private:
   nsCOMPtr<nsIWebBrowser>  mWebBrowser; // [OWNER]
   nsCOMPtr<nsIBaseWindow>  mBaseWindow; // [OWNER]
   PRUint32                 mChromeMask;
+  static GtkWidget        *sTipWindow;
 
 };
   
