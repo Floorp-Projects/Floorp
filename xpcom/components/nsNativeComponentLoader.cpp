@@ -513,12 +513,17 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
         }    
     }
 #endif // MOZ_DEMANGLE_SYMBOLS
-    
-    // Do NSPR log
-#ifdef PR_LOGGING
     nsXPIDLCString displayPath;
     dll->GetDisplayPath(displayPath);
 
+    fprintf(stderr, 
+            "nsNativeComponentLoader: %s(%s) Load FAILED with error:%s\n", 
+            aCallerName,
+            displayPath.get(), 
+            errorMsg.get());
+
+    // Do NSPR log
+#ifdef PR_LOGGING
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
            ("nsNativeComponentLoader: %s(%s) Load FAILED with error:%s", 
             aCallerName,
