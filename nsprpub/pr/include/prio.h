@@ -291,7 +291,7 @@ typedef enum PRSeekWhence {
     PR_SEEK_END = 2
 } PRSeekWhence;
 
-PR_EXTERN(PRDescType) PR_GetDescType(PRFileDesc *file);
+NSPR_API(PRDescType) PR_GetDescType(PRFileDesc *file);
 
 /*
 ***************************************************************************
@@ -431,7 +431,7 @@ typedef enum PRSpecialFD
     PR_StandardError           /* standard error */
 } PRSpecialFD;
 
-PR_EXTERN(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD id);
+NSPR_API(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD id);
 
 #define PR_STDIN	PR_GetSpecialFD(PR_StandardInput)
 #define PR_STDOUT	PR_GetSpecialFD(PR_StandardOutput)
@@ -470,10 +470,10 @@ PR_EXTERN(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD id);
 #define PR_TOP_IO_LAYER (PRDescIdentity)-2
 #define PR_NSPR_IO_LAYER (PRDescIdentity)0
 
-PR_EXTERN(PRDescIdentity) PR_GetUniqueIdentity(const char *layer_name);
-PR_EXTERN(const char*) PR_GetNameForIdentity(PRDescIdentity ident);
-PR_EXTERN(PRDescIdentity) PR_GetLayersIdentity(PRFileDesc* fd);
-PR_EXTERN(PRFileDesc*) PR_GetIdentitiesLayer(PRFileDesc* fd_stack, PRDescIdentity id);
+NSPR_API(PRDescIdentity) PR_GetUniqueIdentity(const char *layer_name);
+NSPR_API(const char*) PR_GetNameForIdentity(PRDescIdentity ident);
+NSPR_API(PRDescIdentity) PR_GetLayersIdentity(PRFileDesc* fd);
+NSPR_API(PRFileDesc*) PR_GetIdentitiesLayer(PRFileDesc* fd_stack, PRDescIdentity id);
 
 /*
  **************************************************************************
@@ -483,7 +483,7 @@ PR_EXTERN(PRFileDesc*) PR_GetIdentitiesLayer(PRFileDesc* fd_stack, PRDescIdentit
  * layer's methods table. You may NOT modify the table directly.
  **************************************************************************
  */
-PR_EXTERN(const PRIOMethods *) PR_GetDefaultIOMethods(void);
+NSPR_API(const PRIOMethods *) PR_GetDefaultIOMethods(void);
 
 /*
  **************************************************************************
@@ -494,7 +494,7 @@ PR_EXTERN(const PRIOMethods *) PR_GetDefaultIOMethods(void);
  * provided. The runtime will not modify the table nor test its correctness.
  **************************************************************************
  */
-PR_EXTERN(PRFileDesc*) PR_CreateIOLayerStub(
+NSPR_API(PRFileDesc*) PR_CreateIOLayerStub(
     PRDescIdentity ident, const PRIOMethods *methods);
 
 /*
@@ -511,7 +511,7 @@ PR_EXTERN(PRFileDesc*) PR_CreateIOLayerStub(
  * stack will not change.
  **************************************************************************
  */
-PR_EXTERN(PRStatus) PR_PushIOLayer(
+NSPR_API(PRStatus) PR_PushIOLayer(
     PRFileDesc *fd_stack, PRDescIdentity id, PRFileDesc *layer);
 
 /*
@@ -528,7 +528,7 @@ PR_EXTERN(PRStatus) PR_PushIOLayer(
  * that file descriptor will remain valid.
  **************************************************************************
  */
-PR_EXTERN(PRFileDesc*) PR_PopIOLayer(PRFileDesc *fd_stack, PRDescIdentity id);
+NSPR_API(PRFileDesc*) PR_PopIOLayer(PRFileDesc *fd_stack, PRDescIdentity id);
 
 /*
  **************************************************************************
@@ -574,7 +574,7 @@ PR_EXTERN(PRFileDesc*) PR_PopIOLayer(PRFileDesc *fd_stack, PRDescIdentity id);
  **************************************************************************
  */
 
-PR_EXTERN(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode);
+NSPR_API(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode);
 /* Open flags */
 #define PR_RDONLY       0x01
 #define PR_WRONLY       0x02
@@ -623,7 +623,7 @@ PR_EXTERN(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode);
  **************************************************************************
  */
 
-PR_EXTERN(PRStatus)    PR_Close(PRFileDesc *fd);
+NSPR_API(PRStatus)    PR_Close(PRFileDesc *fd);
 
 /*
  **************************************************************************
@@ -658,7 +658,7 @@ PR_EXTERN(PRStatus)    PR_Close(PRFileDesc *fd);
  **************************************************************************
  */
 
-PR_EXTERN(PRInt32) PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount);
+NSPR_API(PRInt32) PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount);
 
 /*
  ***************************************************************************
@@ -682,7 +682,7 @@ PR_EXTERN(PRInt32) PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount);
  ***************************************************************************
  */
 
-PR_EXTERN(PRInt32) PR_Write(PRFileDesc *fd,const void *buf,PRInt32 amount);
+NSPR_API(PRInt32) PR_Write(PRFileDesc *fd,const void *buf,PRInt32 amount);
 
 /*
  ***************************************************************************
@@ -716,7 +716,7 @@ PR_EXTERN(PRInt32) PR_Write(PRFileDesc *fd,const void *buf,PRInt32 amount);
 
 #define PR_MAX_IOVECTOR_SIZE 16   /* 'iov_size' must be <= */
 
-PR_EXTERN(PRInt32) PR_Writev(
+NSPR_API(PRInt32) PR_Writev(
     PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size,
     PRIntervalTime timeout);
 
@@ -737,7 +737,7 @@ PR_EXTERN(PRInt32) PR_Writev(
  ***************************************************************************
  */
 
-PR_EXTERN(PRStatus) PR_Delete(const char *name);
+NSPR_API(PRStatus) PR_Delete(const char *name);
 
 /**************************************************************************/
 
@@ -780,8 +780,8 @@ struct PRFileInfo64 {
  ***************************************************************************
  */
 
-PR_EXTERN(PRStatus) PR_GetFileInfo(const char *fn, PRFileInfo *info);
-PR_EXTERN(PRStatus) PR_GetFileInfo64(const char *fn, PRFileInfo64 *info);
+NSPR_API(PRStatus) PR_GetFileInfo(const char *fn, PRFileInfo *info);
+NSPR_API(PRStatus) PR_GetFileInfo64(const char *fn, PRFileInfo64 *info);
 
 /*
  **************************************************************************
@@ -800,8 +800,8 @@ PR_EXTERN(PRStatus) PR_GetFileInfo64(const char *fn, PRFileInfo64 *info);
  ***************************************************************************
  */
 
-PR_EXTERN(PRStatus) PR_GetOpenFileInfo(PRFileDesc *fd, PRFileInfo *info);
-PR_EXTERN(PRStatus) PR_GetOpenFileInfo64(PRFileDesc *fd, PRFileInfo64 *info);
+NSPR_API(PRStatus) PR_GetOpenFileInfo(PRFileDesc *fd, PRFileInfo *info);
+NSPR_API(PRStatus) PR_GetOpenFileInfo64(PRFileDesc *fd, PRFileInfo64 *info);
 
 /*
  **************************************************************************
@@ -819,7 +819,7 @@ PR_EXTERN(PRStatus) PR_GetOpenFileInfo64(PRFileDesc *fd, PRFileInfo64 *info);
  **************************************************************************
  */
 
-PR_EXTERN(PRStatus)    PR_Rename(const char *from, const char *to);
+NSPR_API(PRStatus)    PR_Rename(const char *from, const char *to);
 
 /*
  *************************************************************************
@@ -851,7 +851,7 @@ typedef enum PRAccessHow {
     PR_ACCESS_READ_OK = 3
 } PRAccessHow;
 
-PR_EXTERN(PRStatus) PR_Access(const char *name, PRAccessHow how);
+NSPR_API(PRStatus) PR_Access(const char *name, PRAccessHow how);
 
 /*
  *************************************************************************
@@ -886,8 +886,8 @@ PR_EXTERN(PRStatus) PR_Access(const char *name, PRAccessHow how);
  *************************************************************************
  */
 
-PR_EXTERN(PROffset32) PR_Seek(PRFileDesc *fd, PROffset32 offset, PRSeekWhence whence);
-PR_EXTERN(PROffset64) PR_Seek64(PRFileDesc *fd, PROffset64 offset, PRSeekWhence whence);
+NSPR_API(PROffset32) PR_Seek(PRFileDesc *fd, PROffset32 offset, PRSeekWhence whence);
+NSPR_API(PROffset64) PR_Seek64(PRFileDesc *fd, PROffset64 offset, PRSeekWhence whence);
 
 /*
  ************************************************************************
@@ -909,8 +909,8 @@ PR_EXTERN(PROffset64) PR_Seek64(PRFileDesc *fd, PROffset64 offset, PRSeekWhence 
  ************************************************************************
  */
 
-PR_EXTERN(PRInt32) PR_Available(PRFileDesc *fd);
-PR_EXTERN(PRInt64) PR_Available64(PRFileDesc *fd);
+NSPR_API(PRInt32) PR_Available(PRFileDesc *fd);
+NSPR_API(PRInt64) PR_Available64(PRFileDesc *fd);
 
 /*
  ************************************************************************
@@ -929,7 +929,7 @@ PR_EXTERN(PRInt64) PR_Available64(PRFileDesc *fd);
  ************************************************************************
  */
 
-PR_EXTERN(PRStatus)	PR_Sync(PRFileDesc *fd);
+NSPR_API(PRStatus)	PR_Sync(PRFileDesc *fd);
 
 /************************************************************************/
 
@@ -961,7 +961,7 @@ struct PRDirEntry {
  *************************************************************************
  */
 
-PR_EXTERN(PRDir*) PR_OpenDir(const char *name);
+NSPR_API(PRDir*) PR_OpenDir(const char *name);
 
 /*
  *************************************************************************
@@ -994,7 +994,7 @@ typedef enum PRDirFlags {
     PR_SKIP_HIDDEN = 0x4
 } PRDirFlags;
 
-PR_EXTERN(PRDirEntry*) PR_ReadDir(PRDir *dir, PRDirFlags flags);
+NSPR_API(PRDirEntry*) PR_ReadDir(PRDir *dir, PRDirFlags flags);
 
 /*
  *************************************************************************
@@ -1013,7 +1013,7 @@ PR_EXTERN(PRDirEntry*) PR_ReadDir(PRDir *dir, PRDirFlags flags);
  *************************************************************************
  */
 
-PR_EXTERN(PRStatus) PR_CloseDir(PRDir *dir);
+NSPR_API(PRStatus) PR_CloseDir(PRDir *dir);
 
 /*
  *************************************************************************
@@ -1035,7 +1035,7 @@ PR_EXTERN(PRStatus) PR_CloseDir(PRDir *dir);
  *************************************************************************
  */
 
-PR_EXTERN(PRStatus) PR_MkDir(const char *name, PRIntn mode);
+NSPR_API(PRStatus) PR_MkDir(const char *name, PRIntn mode);
 
 /*
  *************************************************************************
@@ -1055,9 +1055,9 @@ PR_EXTERN(PRStatus) PR_MkDir(const char *name, PRIntn mode);
  **************************************************************************
  */
 
-PR_EXTERN(PRStatus) PR_RmDir(const char *name);
+NSPR_API(PRStatus) PR_RmDir(const char *name);
 
-PR_EXTERN(PRUintn) PR_NetAddrSize(const PRNetAddr* addr);
+NSPR_API(PRUintn) PR_NetAddrSize(const PRNetAddr* addr);
 
 /*
  *************************************************************************
@@ -1076,7 +1076,7 @@ PR_EXTERN(PRUintn) PR_NetAddrSize(const PRNetAddr* addr);
  **************************************************************************
  */
 
-PR_EXTERN(PRFileDesc*)    PR_NewUDPSocket(void);
+NSPR_API(PRFileDesc*)    PR_NewUDPSocket(void);
 
 /*
  *************************************************************************
@@ -1095,7 +1095,7 @@ PR_EXTERN(PRFileDesc*)    PR_NewUDPSocket(void);
  **************************************************************************
  */
 
-PR_EXTERN(PRFileDesc*)    PR_NewTCPSocket(void);
+NSPR_API(PRFileDesc*)    PR_NewTCPSocket(void);
 
 /*
  *************************************************************************
@@ -1115,7 +1115,7 @@ PR_EXTERN(PRFileDesc*)    PR_NewTCPSocket(void);
  **************************************************************************
  */
 
-PR_EXTERN(PRFileDesc*)    PR_OpenUDPSocket(PRIntn af);
+NSPR_API(PRFileDesc*)    PR_OpenUDPSocket(PRIntn af);
 
 /*
  *************************************************************************
@@ -1135,7 +1135,7 @@ PR_EXTERN(PRFileDesc*)    PR_OpenUDPSocket(PRIntn af);
  **************************************************************************
  */
 
-PR_EXTERN(PRFileDesc*)    PR_OpenTCPSocket(PRIntn af);
+NSPR_API(PRFileDesc*)    PR_OpenTCPSocket(PRIntn af);
 
 /*
  *************************************************************************
@@ -1159,7 +1159,7 @@ PR_EXTERN(PRFileDesc*)    PR_OpenTCPSocket(PRIntn af);
  **************************************************************************
  */
 
-PR_EXTERN(PRStatus) PR_Connect(
+NSPR_API(PRStatus) PR_Connect(
     PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout);
 
 /*
@@ -1188,7 +1188,7 @@ PR_EXTERN(PRStatus) PR_Connect(
  *       error code.
  */
 
-PR_EXTERN(PRStatus)    PR_GetConnectStatus(const PRPollDesc *pd);
+NSPR_API(PRStatus)    PR_GetConnectStatus(const PRPollDesc *pd);
 
 /*
  *************************************************************************
@@ -1212,7 +1212,7 @@ PR_EXTERN(PRStatus)    PR_GetConnectStatus(const PRPollDesc *pd);
  **************************************************************************
  */
 
-PR_EXTERN(PRFileDesc*) PR_Accept(
+NSPR_API(PRFileDesc*) PR_Accept(
     PRFileDesc *fd, PRNetAddr *addr, PRIntervalTime timeout);
 
 /*
@@ -1234,7 +1234,7 @@ PR_EXTERN(PRFileDesc*) PR_Accept(
  **************************************************************************
  */
 
-PR_EXTERN(PRStatus) PR_Bind(PRFileDesc *fd, const PRNetAddr *addr);
+NSPR_API(PRStatus) PR_Bind(PRFileDesc *fd, const PRNetAddr *addr);
 
 /*
  *************************************************************************
@@ -1256,7 +1256,7 @@ PR_EXTERN(PRStatus) PR_Bind(PRFileDesc *fd, const PRNetAddr *addr);
  **************************************************************************
  */
 
-PR_EXTERN(PRStatus) PR_Listen(PRFileDesc *fd, PRIntn backlog);
+NSPR_API(PRStatus) PR_Listen(PRFileDesc *fd, PRIntn backlog);
 
 /*
  *************************************************************************
@@ -1287,7 +1287,7 @@ typedef enum PRShutdownHow
     PR_SHUTDOWN_BOTH = 2      /* disallow further receives and sends */
 } PRShutdownHow;
 
-PR_EXTERN(PRStatus)    PR_Shutdown(PRFileDesc *fd, PRShutdownHow how);
+NSPR_API(PRStatus)    PR_Shutdown(PRFileDesc *fd, PRShutdownHow how);
 
 /*
  *************************************************************************
@@ -1318,7 +1318,7 @@ PR_EXTERN(PRStatus)    PR_Shutdown(PRFileDesc *fd, PRShutdownHow how);
  **************************************************************************
  */
 
-PR_EXTERN(PRInt32)    PR_Recv(PRFileDesc *fd, void *buf, PRInt32 amount,
+NSPR_API(PRInt32)    PR_Recv(PRFileDesc *fd, void *buf, PRInt32 amount,
                 PRIntn flags, PRIntervalTime timeout);
 
 /*
@@ -1349,7 +1349,7 @@ PR_EXTERN(PRInt32)    PR_Recv(PRFileDesc *fd, void *buf, PRInt32 amount,
  **************************************************************************
  */
 
-PR_EXTERN(PRInt32)    PR_Send(PRFileDesc *fd, const void *buf, PRInt32 amount,
+NSPR_API(PRInt32)    PR_Send(PRFileDesc *fd, const void *buf, PRInt32 amount,
                                 PRIntn flags, PRIntervalTime timeout);
 
 /*
@@ -1384,7 +1384,7 @@ PR_EXTERN(PRInt32)    PR_Send(PRFileDesc *fd, const void *buf, PRInt32 amount,
  **************************************************************************
  */
 
-PR_EXTERN(PRInt32) PR_RecvFrom(
+NSPR_API(PRInt32) PR_RecvFrom(
     PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
     PRNetAddr *addr, PRIntervalTime timeout);
 
@@ -1417,7 +1417,7 @@ PR_EXTERN(PRInt32) PR_RecvFrom(
  **************************************************************************
  */
 
-PR_EXTERN(PRInt32) PR_SendTo(
+NSPR_API(PRInt32) PR_SendTo(
     PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
     const PRNetAddr *addr, PRIntervalTime timeout);
 
@@ -1457,7 +1457,7 @@ PR_EXTERN(PRInt32) PR_SendTo(
 **************************************************************************
 */
 
-PR_EXTERN(PRInt32) PR_TransmitFile(
+NSPR_API(PRInt32) PR_TransmitFile(
     PRFileDesc *networkSocket, PRFileDesc *sourceFile,
     const void *headers, PRInt32 hlen, PRTransmitFileFlags flags,
     PRIntervalTime timeout);
@@ -1509,7 +1509,7 @@ struct PRSendFileData {
 };
 
 
-PR_EXTERN(PRInt32) PR_SendFile(
+NSPR_API(PRInt32) PR_SendFile(
     PRFileDesc *networkSocket, PRSendFileData *sendData,
 	PRTransmitFileFlags flags, PRIntervalTime timeout);
 
@@ -1553,7 +1553,7 @@ PR_EXTERN(PRInt32) PR_SendFile(
 **     for the failure is obtained by calling PR_GetError().
 **************************************************************************
 **/
-PR_EXTERN(PRInt32) PR_AcceptRead(
+NSPR_API(PRInt32) PR_AcceptRead(
     PRFileDesc *listenSock, PRFileDesc **acceptedSock,
     PRNetAddr **peerAddr, void *buf, PRInt32 amount, PRIntervalTime timeout);
 
@@ -1577,7 +1577,7 @@ PR_EXTERN(PRInt32) PR_AcceptRead(
 ** XXX can we implement this on windoze and mac?
 **************************************************************************
 **/
-PR_EXTERN(PRStatus) PR_NewTCPSocketPair(PRFileDesc *fds[2]);
+NSPR_API(PRStatus) PR_NewTCPSocketPair(PRFileDesc *fds[2]);
 
 /*
 *************************************************************************
@@ -1597,7 +1597,7 @@ PR_EXTERN(PRStatus) PR_NewTCPSocketPair(PRFileDesc *fds[2]);
 **     be obtained by calling PR_GetError().
 **************************************************************************
 **/
-PR_EXTERN(PRStatus)	PR_GetSockName(PRFileDesc *fd, PRNetAddr *addr);
+NSPR_API(PRStatus)	PR_GetSockName(PRFileDesc *fd, PRNetAddr *addr);
 
 /*
 *************************************************************************
@@ -1619,12 +1619,12 @@ PR_EXTERN(PRStatus)	PR_GetSockName(PRFileDesc *fd, PRNetAddr *addr);
 **     be obtained by calling PR_GetError().
 **************************************************************************
 **/
-PR_EXTERN(PRStatus)	PR_GetPeerName(PRFileDesc *fd, PRNetAddr *addr);
+NSPR_API(PRStatus)	PR_GetPeerName(PRFileDesc *fd, PRNetAddr *addr);
 
-PR_EXTERN(PRStatus)	PR_GetSocketOption(
+NSPR_API(PRStatus)	PR_GetSocketOption(
     PRFileDesc *fd, PRSocketOptionData *data);
 
-PR_EXTERN(PRStatus)	PR_SetSocketOption(
+NSPR_API(PRStatus)	PR_SetSocketOption(
     PRFileDesc *fd, const PRSocketOptionData *data);
 
 /*
@@ -1654,7 +1654,7 @@ PR_EXTERN(PRStatus)	PR_SetSocketOption(
  *     be obtained by calling PR_GetError().
  *************************************************************************
  */
-PR_EXTERN(PRStatus) PR_SetFDInheritable(
+NSPR_API(PRStatus) PR_SetFDInheritable(
     PRFileDesc *fd,
     PRBool inheritable);
 
@@ -1674,7 +1674,7 @@ PR_EXTERN(PRStatus) PR_SetFDInheritable(
  *     by calling PR_GetError().
  *************************************************************************
  */
-PR_EXTERN(PRFileDesc *) PR_GetInheritedFD(const char *name);
+NSPR_API(PRFileDesc *) PR_GetInheritedFD(const char *name);
 
 /*
  *********************************************************************
@@ -1695,19 +1695,19 @@ typedef enum PRFileMapProtect {
     PR_PROT_WRITECOPY     /* readable, and write is private (copy-on-write) */
 } PRFileMapProtect;
 
-PR_EXTERN(PRFileMap *) PR_CreateFileMap(
+NSPR_API(PRFileMap *) PR_CreateFileMap(
     PRFileDesc *fd,
     PRInt64 size,
     PRFileMapProtect prot);
 
-PR_EXTERN(void *) PR_MemMap(
+NSPR_API(void *) PR_MemMap(
     PRFileMap *fmap,
     PROffset64 offset,  /* must be aligned and sized to whole pages */
     PRUint32 len);
 
-PR_EXTERN(PRStatus) PR_MemUnmap(void *addr, PRUint32 len);
+NSPR_API(PRStatus) PR_MemUnmap(void *addr, PRUint32 len);
 
-PR_EXTERN(PRStatus) PR_CloseFileMap(PRFileMap *fmap);
+NSPR_API(PRStatus) PR_CloseFileMap(PRFileMap *fmap);
 
 /*
  ******************************************************************
@@ -1722,7 +1722,7 @@ PR_EXTERN(PRStatus) PR_CloseFileMap(PRFileMap *fmap);
  * read and write ends of the pipe.
  */
 
-PR_EXTERN(PRStatus) PR_CreatePipe(
+NSPR_API(PRStatus) PR_CreatePipe(
     PRFileDesc **readPipe,
     PRFileDesc **writePipe
 );
@@ -1798,7 +1798,7 @@ struct PRPollDesc {
 ** XXX can we implement this on windoze and mac?
 **************************************************************************
 */
-PR_EXTERN(PRInt32) PR_Poll(
+NSPR_API(PRInt32) PR_Poll(
     PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout);
 
 /*
@@ -1842,13 +1842,13 @@ PR_EXTERN(PRInt32) PR_Poll(
 **************************************************************************
 */
 
-PR_EXTERN(PRFileDesc *) PR_NewPollableEvent(void);
+NSPR_API(PRFileDesc *) PR_NewPollableEvent(void);
 
-PR_EXTERN(PRStatus) PR_DestroyPollableEvent(PRFileDesc *event);
+NSPR_API(PRStatus) PR_DestroyPollableEvent(PRFileDesc *event);
 
-PR_EXTERN(PRStatus) PR_SetPollableEvent(PRFileDesc *event);
+NSPR_API(PRStatus) PR_SetPollableEvent(PRFileDesc *event);
 
-PR_EXTERN(PRStatus) PR_WaitForPollableEvent(PRFileDesc *event);
+NSPR_API(PRStatus) PR_WaitForPollableEvent(PRFileDesc *event);
 
 PR_END_EXTERN_C
 

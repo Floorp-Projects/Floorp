@@ -117,7 +117,7 @@ PR_BEGIN_EXTERN_C
 **   code. Clinton: FOAD.
 **
 */
-PR_EXTERN(PRSize) PR_GetRandomNoise( 
+NSPR_API(PRSize) PR_GetRandomNoise( 
     void    *buf,
     PRSize  size
 );

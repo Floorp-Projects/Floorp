@@ -144,7 +144,7 @@ PR_BEGIN_EXTERN_C
 **   Pointer to PRFileMap or NULL on error.
 **
 */
-PR_EXTERN( PRFileMap *)
+NSPR_API( PRFileMap *)
 PR_OpenAnonFileMap(
     const char *dirName,
     PRSize      size, 
@@ -172,7 +172,7 @@ PR_OpenAnonFileMap(
 **   PRStatus
 **
 */
-PR_EXTERN(PRStatus) 
+NSPR_API(PRStatus) 
 PR_ProcessAttrSetInheritableFileMap( 
     PRProcessAttr   *attr,
     PRFileMap       *fm, 
@@ -197,7 +197,7 @@ PR_ProcessAttrSetInheritableFileMap(
 **   PRFileMap pointer or NULL.
 **
 */
-PR_EXTERN( PRFileMap *)
+NSPR_API( PRFileMap *)
 PR_GetInheritedFileMap( 
     const char *shmname 
 );
@@ -221,7 +221,7 @@ PR_GetInheritedFileMap(
 **   PRStatus
 **
 */
-PR_EXTERN( PRStatus )
+NSPR_API( PRStatus )
 PR_ExportFileMapAsString( 
     PRFileMap *fm,
     PRSize    bufsize,
@@ -243,7 +243,7 @@ PR_ExportFileMapAsString(
 **   PRFileMap pointer or NULL.
 **
 */
-PR_EXTERN( PRFileMap * )
+NSPR_API( PRFileMap * )
 PR_ImportFileMapFromString( 
     const char *fmstring
 );

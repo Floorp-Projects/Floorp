@@ -158,7 +158,7 @@ typedef PRTimeParameters (PR_CALLBACK_DECL *PRTimeParamFn)(const PRExplodedTime 
 #if defined(HAVE_WATCOM_BUG_2)
 PRTime __pascal __export __loadds
 #else
-PR_EXTERN(PRTime) 
+NSPR_API(PRTime) 
 #endif
 PR_Now(void);
 
@@ -172,14 +172,14 @@ PR_Now(void);
  *     as PRExplodedTime.
  */
 
-PR_EXTERN(void) PR_ExplodeTime(
+NSPR_API(void) PR_ExplodeTime(
     PRTime usecs, PRTimeParamFn params, PRExplodedTime *exploded);
 
 /* Reverse operation of PR_ExplodeTime */
 #if defined(HAVE_WATCOM_BUG_2)
 PRTime __pascal __export __loadds
 #else
-PR_EXTERN(PRTime) 
+NSPR_API(PRTime) 
 #endif
 PR_ImplodeTime(const PRExplodedTime *exploded);
 
@@ -195,7 +195,7 @@ PR_ImplodeTime(const PRExplodedTime *exploded);
  *     should treat them as "read-only".
  */
 
-PR_EXTERN(void) PR_NormalizeTime(
+NSPR_API(void) PR_NormalizeTime(
     PRExplodedTime *exploded, PRTimeParamFn params);
 
 /**********************************************************************/
@@ -203,16 +203,16 @@ PR_EXTERN(void) PR_NormalizeTime(
 /**********************************************************************/
 
 /* Time parameters that suit current host machine */
-PR_EXTERN(PRTimeParameters) PR_LocalTimeParameters(const PRExplodedTime *gmt);
+NSPR_API(PRTimeParameters) PR_LocalTimeParameters(const PRExplodedTime *gmt);
 
 /* Time parameters that represent Greenwich Mean Time */
-PR_EXTERN(PRTimeParameters) PR_GMTParameters(const PRExplodedTime *gmt);
+NSPR_API(PRTimeParameters) PR_GMTParameters(const PRExplodedTime *gmt);
 
 /*
  * Time parameters that represent the US Pacific Time Zone, with the
  * current daylight saving time rules (for testing only)
  */
-PR_EXTERN(PRTimeParameters) PR_USPacificTimeParameters(const PRExplodedTime *gmt);
+NSPR_API(PRTimeParameters) PR_USPacificTimeParameters(const PRExplodedTime *gmt);
 
 /*
  * This parses a time/date string into a PRTime
@@ -245,7 +245,7 @@ PR_EXTERN(PRTimeParameters) PR_USPacificTimeParameters(const PRExplodedTime *gmt
  * the time string which you are parsing.
  */
 
-PR_EXTERN(PRStatus) PR_ParseTimeString (
+NSPR_API(PRStatus) PR_ParseTimeString (
 	const char *string,
 	PRBool default_to_gmt,
 	PRTime *result);
@@ -262,13 +262,13 @@ PR_EXTERN(PRStatus) PR_ParseTimeString (
 #ifndef NO_NSPR_10_SUPPORT
 
 /* Format a time value into a buffer. Same semantics as strftime() */
-PR_EXTERN(PRUint32) PR_FormatTime(char *buf, int buflen, const char *fmt, 
+NSPR_API(PRUint32) PR_FormatTime(char *buf, int buflen, const char *fmt, 
                                            const PRExplodedTime *tm);
 
 /* Format a time value into a buffer. Time is always in US English format, regardless
  * of locale setting.
  */
-PR_EXTERN(PRUint32)
+NSPR_API(PRUint32)
 PR_FormatTimeUSEnglish( char* buf, PRUint32 bufSize,
                         const char* format, const PRExplodedTime* tm );
 

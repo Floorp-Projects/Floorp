@@ -31,13 +31,13 @@ PR_BEGIN_EXTERN_C
 typedef struct PRProcess PRProcess;
 typedef struct PRProcessAttr PRProcessAttr;
 
-PR_EXTERN(PRProcessAttr *) PR_NewProcessAttr(void);
+NSPR_API(PRProcessAttr *) PR_NewProcessAttr(void);
 
-PR_EXTERN(void) PR_ResetProcessAttr(PRProcessAttr *attr);
+NSPR_API(void) PR_ResetProcessAttr(PRProcessAttr *attr);
 
-PR_EXTERN(void) PR_DestroyProcessAttr(PRProcessAttr *attr);
+NSPR_API(void) PR_DestroyProcessAttr(PRProcessAttr *attr);
 
-PR_EXTERN(void) PR_ProcessAttrSetStdioRedirect(
+NSPR_API(void) PR_ProcessAttrSetStdioRedirect(
     PRProcessAttr *attr,
     PRSpecialFD stdioFd,
     PRFileDesc *redirectFd
@@ -46,18 +46,18 @@ PR_EXTERN(void) PR_ProcessAttrSetStdioRedirect(
 /*
  * OBSOLETE -- use PR_ProcessAttrSetStdioRedirect instead.
  */
-PR_EXTERN(void) PR_SetStdioRedirect(
+NSPR_API(void) PR_SetStdioRedirect(
     PRProcessAttr *attr,
     PRSpecialFD stdioFd,
     PRFileDesc *redirectFd
 );
 
-PR_EXTERN(PRStatus) PR_ProcessAttrSetCurrentDirectory(
+NSPR_API(PRStatus) PR_ProcessAttrSetCurrentDirectory(
     PRProcessAttr *attr,
     const char *dir
 );
 
-PR_EXTERN(PRStatus) PR_ProcessAttrSetInheritableFD(
+NSPR_API(PRStatus) PR_ProcessAttrSetInheritableFD(
     PRProcessAttr *attr,
     PRFileDesc *fd,
     const char *name
@@ -76,23 +76,23 @@ PR_EXTERN(PRStatus) PR_ProcessAttrSetInheritableFD(
 ** termination using PR_WaitProcess(). 
 */
 
-PR_EXTERN(PRProcess*) PR_CreateProcess(
+NSPR_API(PRProcess*) PR_CreateProcess(
     const char *path,
     char *const *argv,
     char *const *envp,
     const PRProcessAttr *attr);
 
-PR_EXTERN(PRStatus) PR_CreateProcessDetached(
+NSPR_API(PRStatus) PR_CreateProcessDetached(
     const char *path,
     char *const *argv,
     char *const *envp,
     const PRProcessAttr *attr);
 
-PR_EXTERN(PRStatus) PR_DetachProcess(PRProcess *process);
+NSPR_API(PRStatus) PR_DetachProcess(PRProcess *process);
 
-PR_EXTERN(PRStatus) PR_WaitProcess(PRProcess *process, PRInt32 *exitCode);
+NSPR_API(PRStatus) PR_WaitProcess(PRProcess *process, PRInt32 *exitCode);
 
-PR_EXTERN(PRStatus) PR_KillProcess(PRProcess *process);
+NSPR_API(PRStatus) PR_KillProcess(PRProcess *process);
 
 PR_END_EXTERN_C
 

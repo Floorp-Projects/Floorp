@@ -47,9 +47,9 @@ PRInt64 __pascal __loadds __export
 PRInt64 __pascal __loadds __export
     LL_Zero(void);
 #else
-PR_EXTERN(PRInt64) LL_MaxInt(void);
-PR_EXTERN(PRInt64) LL_MinInt(void);
-PR_EXTERN(PRInt64) LL_Zero(void);
+NSPR_API(PRInt64) LL_MaxInt(void);
+NSPR_API(PRInt64) LL_MinInt(void);
+NSPR_API(PRInt64) LL_Zero(void);
 #endif
 
 #define LL_MAXINT   LL_MaxInt()
@@ -248,7 +248,7 @@ PR_EXTERN(PRInt64) LL_Zero(void);
 
 #define LL_UDIVMOD(qp, rp, a, b)    ll_udivmod(qp, rp, a, b)
 
-PR_EXTERN(void) ll_udivmod(PRUint64 *qp, PRUint64 *rp, PRUint64 a, PRUint64 b);
+NSPR_API(void) ll_udivmod(PRUint64 *qp, PRUint64 *rp, PRUint64 a, PRUint64 b);
 
 #define LL_DIV(r, a, b) { \
     PRInt64 _a, _b; \

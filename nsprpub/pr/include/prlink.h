@@ -40,7 +40,7 @@ typedef struct PRStaticLinkTable {
 ** The string provided as 'path' is copied. The caller can do whatever is
 ** convenient with the argument when the function is complete.
 */
-PR_EXTERN(PRStatus) PR_SetLibraryPath(const char *path);
+NSPR_API(PRStatus) PR_SetLibraryPath(const char *path);
 
 /*
 ** Return a character string which contains the path used to search for
@@ -50,7 +50,7 @@ PR_EXTERN(PRStatus) PR_SetLibraryPath(const char *path);
 ** The storage is allocated by the runtime and becomes the responsibilty
 ** of the caller.
 */
-PR_EXTERN(char*) PR_GetLibraryPath(void);
+NSPR_API(char*) PR_GetLibraryPath(void);
 
 /*
 ** Given a directory name "dir" and a library name "lib" construct a full
@@ -63,13 +63,13 @@ PR_EXTERN(char*) PR_GetLibraryPath(void);
 ** The storage for the result is allocated by the runtime and becomes the
 ** responsibility of the caller.
 */
-PR_EXTERN(char*) PR_GetLibraryName(const char *dir, const char *lib);
+NSPR_API(char*) PR_GetLibraryName(const char *dir, const char *lib);
 
 /*
 **
 ** Free the memory allocated, for the caller, by PR_GetLibraryName
 */
-PR_EXTERN(void) PR_FreeLibraryName(char *mem);
+NSPR_API(void) PR_FreeLibraryName(char *mem);
 
 /*
 ** Given a library "name" try to load the library. The argument "name"
@@ -83,7 +83,7 @@ PR_EXTERN(void) PR_FreeLibraryName(char *mem);
 **
 ** This increments the reference count of the library.
 */
-PR_EXTERN(PRLibrary*) PR_LoadLibrary(const char *name);
+NSPR_API(PRLibrary*) PR_LoadLibrary(const char *name);
 
 /*
 ** Each operating system has its preferred way of specifying
@@ -147,7 +147,7 @@ typedef struct PRLibSpec {
 ** Load the specified library, in the manner specified by 'flags'.
 */
 
-PR_EXTERN(PRLibrary *)
+NSPR_API(PRLibrary *)
 PR_LoadLibraryWithFlags(
     PRLibSpec libSpec,    /* the shared library */
     PRIntn flags          /* flags that affect the loading */
@@ -162,7 +162,7 @@ PR_LoadLibraryWithFlags(
 **
 ** This function decrements the reference count of the library.
 */
-PR_EXTERN(PRStatus) PR_UnloadLibrary(PRLibrary *lib);
+NSPR_API(PRStatus) PR_UnloadLibrary(PRLibrary *lib);
 
 /*
 ** Given the name of a procedure, return the address of the function that
@@ -172,7 +172,7 @@ PR_EXTERN(PRStatus) PR_UnloadLibrary(PRLibrary *lib);
 **
 ** This function does not modify the reference count of the library.
 */
-PR_EXTERN(void*) PR_FindSymbol(PRLibrary *lib, const char *name);
+NSPR_API(void*) PR_FindSymbol(PRLibrary *lib, const char *name);
 
 /*
 ** Finds a symbol in one of the currently loaded libraries. Given the
@@ -184,7 +184,7 @@ PR_EXTERN(void*) PR_FindSymbol(PRLibrary *lib, const char *name);
 **
 ** This increments the reference count of the library.
 */
-PR_EXTERN(void*) PR_FindSymbolAndLibrary(const char *name,
+NSPR_API(void*) PR_FindSymbolAndLibrary(const char *name,
 						      PRLibrary* *lib);
 
 /*
@@ -198,7 +198,7 @@ PR_EXTERN(void*) PR_FindSymbolAndLibrary(const char *name,
 **
 ** This increments the reference count of the library.
 */
-PR_EXTERN(PRLibrary*) PR_LoadStaticLibrary(
+NSPR_API(PRLibrary*) PR_LoadStaticLibrary(
     const char *name, const PRStaticLinkTable *table);
 
 PR_END_EXTERN_C

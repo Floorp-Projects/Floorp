@@ -115,7 +115,7 @@ typedef enum PRThreadPriority
 ** When the start function returns the thread exits. If it is the last
 ** PR_USER_THREAD to exit then the process exits.
 */
-PR_EXTERN(PRThread*) PR_CreateThread(PRThreadType type,
+NSPR_API(PRThread*) PR_CreateThread(PRThreadType type,
                      void (*start)(void *arg),
                      void *arg,
                      PRThreadPriority priority,
@@ -136,24 +136,24 @@ PR_EXTERN(PRThread*) PR_CreateThread(PRThreadType type,
 ** The calling thread will not be blocked if the target thread has already
 ** terminated.
 */
-PR_EXTERN(PRStatus) PR_JoinThread(PRThread *thread);
+NSPR_API(PRStatus) PR_JoinThread(PRThread *thread);
 
 /*
 ** Return the current thread object for the currently running code.
 ** Never returns NULL.
 */
-PR_EXTERN(PRThread*) PR_GetCurrentThread(void);
+NSPR_API(PRThread*) PR_GetCurrentThread(void);
 #define PR_CurrentThread() PR_GetCurrentThread() /* for nspr1.0 compat. */
 
 /*
 ** Get the priority of "thread".
 */
-PR_EXTERN(PRThreadPriority) PR_GetThreadPriority(const PRThread *thread);
+NSPR_API(PRThreadPriority) PR_GetThreadPriority(const PRThread *thread);
 
 /*
 ** Change the priority of the "thread" to "priority".
 */
-PR_EXTERN(void) PR_SetThreadPriority(PRThread *thread, PRThreadPriority priority);
+NSPR_API(void) PR_SetThreadPriority(PRThread *thread, PRThreadPriority priority);
 
 /*
 ** This routine returns a new index for per-thread-private data table. 
@@ -181,7 +181,7 @@ PR_EXTERN(void) PR_SetThreadPriority(PRThread *thread, PRThreadPriority priority
 */
 typedef void (PR_CALLBACK *PRThreadPrivateDTOR)(void *priv);
 
-PR_EXTERN(PRStatus) PR_NewThreadPrivateIndex(
+NSPR_API(PRStatus) PR_NewThreadPrivateIndex(
     PRUintn *newIndex, PRThreadPrivateDTOR destructor);
 
 /*
@@ -195,7 +195,7 @@ PR_EXTERN(PRStatus) PR_NewThreadPrivateIndex(
 **
 ** This can return PR_FAILURE if the index is invalid.
 */
-PR_EXTERN(PRStatus) PR_SetThreadPrivate(PRUintn tpdIndex, void *priv);
+NSPR_API(PRStatus) PR_SetThreadPrivate(PRUintn tpdIndex, void *priv);
 
 /*
 ** Recover the per-thread-private data for the current thread. "tpdIndex" is
@@ -206,7 +206,7 @@ PR_EXTERN(PRStatus) PR_SetThreadPrivate(PRUintn tpdIndex, void *priv);
 **
 ** A thread can only get access to its own thread-specific-data.
 */
-PR_EXTERN(void*) PR_GetThreadPrivate(PRUintn tpdIndex);
+NSPR_API(void*) PR_GetThreadPrivate(PRUintn tpdIndex);
 
 /*
 ** This routine sets the interrupt request for a target thread. The interrupt
@@ -218,23 +218,23 @@ PR_EXTERN(void*) PR_GetThreadPrivate(PRUintn tpdIndex);
 **
 ** PR_Interrupt may itself fail if the target thread is invalid.
 */
-PR_EXTERN(PRStatus) PR_Interrupt(PRThread *thread);
+NSPR_API(PRStatus) PR_Interrupt(PRThread *thread);
 
 /*
 ** Clear the interrupt request for the calling thread. If no such request
 ** is pending, this operation is a noop.
 */
-PR_EXTERN(void) PR_ClearInterrupt(void);
+NSPR_API(void) PR_ClearInterrupt(void);
 
 /*
 ** Block the interrupt for the calling thread.
 */
-PR_EXTERN(void) PR_BlockInterrupt(void);
+NSPR_API(void) PR_BlockInterrupt(void);
 
 /*
 ** Unblock the interrupt for the calling thread.
 */
-PR_EXTERN(void) PR_UnblockInterrupt(void);
+NSPR_API(void) PR_UnblockInterrupt(void);
 
 /*
 ** Make the current thread sleep until "ticks" time amount of time
@@ -243,22 +243,22 @@ PR_EXTERN(void) PR_UnblockInterrupt(void);
 ** equivalent to PR_INTERVAL_NO_TIMEOUT is an error and will result
 ** in a PR_FAILURE error return.
 */
-PR_EXTERN(PRStatus) PR_Sleep(PRIntervalTime ticks);
+NSPR_API(PRStatus) PR_Sleep(PRIntervalTime ticks);
 
 /*
 ** Get the scoping of this thread.
 */
-PR_EXTERN(PRThreadScope) PR_GetThreadScope(const PRThread *thread);
+NSPR_API(PRThreadScope) PR_GetThreadScope(const PRThread *thread);
 
 /*
 ** Get the type of this thread.
 */
-PR_EXTERN(PRThreadType) PR_GetThreadType(const PRThread *thread);
+NSPR_API(PRThreadType) PR_GetThreadType(const PRThread *thread);
 
 /*
 ** Get the join state of this thread.
 */
-PR_EXTERN(PRThreadState) PR_GetThreadState(const PRThread *thread);
+NSPR_API(PRThreadState) PR_GetThreadState(const PRThread *thread);
 
 PR_END_EXTERN_C
 

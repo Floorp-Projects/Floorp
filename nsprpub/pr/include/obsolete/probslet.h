@@ -32,17 +32,17 @@ PR_BEGIN_EXTERN_C
 ** Yield the current thread.  The proper function to use in place of
 ** PR_Yield() is PR_Sleep() with an argument of PR_INTERVAL_NO_WAIT.
 */
-PR_EXTERN(PRStatus) PR_Yield(void);
+NSPR_API(PRStatus) PR_Yield(void);
 
 /*
 ** These are obsolete and are replaced by PR_GetSocketOption() and
 ** PR_SetSocketOption().
 */
 
-PR_EXTERN(PRStatus) PR_GetSockOpt(
+NSPR_API(PRStatus) PR_GetSockOpt(
     PRFileDesc *fd, PRSockOption optname, void* optval, PRInt32* optlen);
 
-PR_EXTERN(PRStatus) PR_SetSockOpt(
+NSPR_API(PRStatus) PR_SetSockOpt(
     PRFileDesc *fd, PRSockOption optname, const void* optval, PRInt32 optlen);
 
 /************************************************************************/
@@ -120,7 +120,7 @@ typedef struct PR_fd_set {
 ** XXX can we implement this on windoze and mac?
 **************************************************************************
 */
-PR_EXTERN(PRInt32) PR_Select(
+NSPR_API(PRInt32) PR_Select(
     PRInt32 num, PR_fd_set *readfds, PR_fd_set *writefds,
     PR_fd_set *exceptfds, PRIntervalTime timeout);
 
@@ -142,13 +142,13 @@ PR_EXTERN(PRInt32) PR_Select(
 ** fdset, zero otherwise.
 */
 
-PR_EXTERN(void)        PR_FD_ZERO(PR_fd_set *set);
-PR_EXTERN(void)        PR_FD_SET(PRFileDesc *fd, PR_fd_set *set);
-PR_EXTERN(void)        PR_FD_CLR(PRFileDesc *fd, PR_fd_set *set);
-PR_EXTERN(PRInt32)     PR_FD_ISSET(PRFileDesc *fd, PR_fd_set *set);
-PR_EXTERN(void)        PR_FD_NSET(PRInt32 osfd, PR_fd_set *set);
-PR_EXTERN(void)        PR_FD_NCLR(PRInt32 osfd, PR_fd_set *set);
-PR_EXTERN(PRInt32)     PR_FD_NISSET(PRInt32 osfd, PR_fd_set *set);
+NSPR_API(void)        PR_FD_ZERO(PR_fd_set *set);
+NSPR_API(void)        PR_FD_SET(PRFileDesc *fd, PR_fd_set *set);
+NSPR_API(void)        PR_FD_CLR(PRFileDesc *fd, PR_fd_set *set);
+NSPR_API(PRInt32)     PR_FD_ISSET(PRFileDesc *fd, PR_fd_set *set);
+NSPR_API(void)        PR_FD_NSET(PRInt32 osfd, PR_fd_set *set);
+NSPR_API(void)        PR_FD_NCLR(PRInt32 osfd, PR_fd_set *set);
+NSPR_API(PRInt32)     PR_FD_NISSET(PRInt32 osfd, PR_fd_set *set);
 
 #ifndef NO_NSPR_10_SUPPORT
 #ifdef XP_MAC
@@ -157,7 +157,7 @@ PR_EXTERN(PRInt32)     PR_FD_NISSET(PRInt32 osfd, PR_fd_set *set);
 #include <sys/stat.h>
 #endif
 
-PR_EXTERN(PRInt32) PR_Stat(const char *path, struct stat *buf);
+NSPR_API(PRInt32) PR_Stat(const char *path, struct stat *buf);
 #endif /* NO_NSPR_10_SUPPORT */
 
 /***********************************************************************
@@ -185,8 +185,8 @@ PR_EXTERN(PRInt32) PR_Stat(const char *path, struct stat *buf);
 **                      be retrieved by calling PR_GetError().
 **
 ***********************************************************************/
-PR_EXTERN(PRNetAddr*) PR_CreateNetAddr(PRNetAddrValue val, PRUint16 port);
-PR_EXTERN(PRStatus) PR_DestroyNetAddr(PRNetAddr *addr);
+NSPR_API(PRNetAddr*) PR_CreateNetAddr(PRNetAddrValue val, PRUint16 port);
+NSPR_API(PRStatus) PR_DestroyNetAddr(PRNetAddr *addr);
 
 
 
@@ -210,13 +210,13 @@ PR_EXTERN(PRStatus) PR_DestroyNetAddr(PRNetAddr *addr);
 **                      result will be PR_FAILURE and the reason for
 **                      the failure can be retrieved by PR_GetError().
 ***********************************************************************/
-PR_EXTERN(PRStatus) PR_GetHostName(char *name, PRUint32 namelen);
+NSPR_API(PRStatus) PR_GetHostName(char *name, PRUint32 namelen);
 
 /*
 ** Return the current thread's last error string.
 ** obsoleted by PR_GetErrorText().
 */
-PR_EXTERN(const char *) PR_GetErrorString(void);
+NSPR_API(const char *) PR_GetErrorString(void);
 
 PR_END_EXTERN_C
 

@@ -81,9 +81,9 @@ typedef struct PRPollQueue
 #define _PR_POLLQUEUE_PTR(_qp) \
     ((PRPollQueue *) ((char*) (_qp) - offsetof(PRPollQueue,links)))
 
-PR_EXTERN(PRInt32) _PR_WaitForFD(PRInt32 osfd, PRUintn how,
+NSPR_API(PRInt32) _PR_WaitForFD(PRInt32 osfd, PRUintn how,
 					PRIntervalTime timeout);
-PR_EXTERN(void) _PR_Unblock_IO_Wait(struct PRThread *thr);
+NSPR_API(void) _PR_Unblock_IO_Wait(struct PRThread *thr);
 
 #define _PR_MD_MAX_OSFD             FD_SETSIZE
 #define _PR_IOQ(_cpu)				((_cpu)->md.ioQ)
@@ -382,7 +382,7 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 
 
 /* --- Initialization stuff --- */
-PR_EXTERN(void) _MD_INIT_RUNNING_CPU(struct _PRCPU *cpu );
+NSPR_API(void) _MD_INIT_RUNNING_CPU(struct _PRCPU *cpu );
 #define _MD_START_INTERRUPTS()
 #define _MD_STOP_INTERRUPTS()
 #define _MD_DISABLE_CLOCK_INTERRUPTS()
@@ -422,8 +422,8 @@ PR_EXTERN(void) _MD_INIT_RUNNING_CPU(struct _PRCPU *cpu );
 ** Watcom needs to see this to make the linker work.
 **
 */
-PR_EXTERN(void) _PR_NativeDestroyThread(PRThread *thread);
-PR_EXTERN(void) _PR_UserDestroyThread(PRThread *thread);
+NSPR_API(void) _PR_NativeDestroyThread(PRThread *thread);
+NSPR_API(void) _PR_UserDestroyThread(PRThread *thread);
 
 
 /*

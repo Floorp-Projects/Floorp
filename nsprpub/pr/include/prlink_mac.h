@@ -40,7 +40,7 @@ PR_BEGIN_EXTERN_C
 ** 
 ** If fileSpec points to an alias, the alias is resolved by this call.
 */
-PR_EXTERN(PRLibrary*) PR_LoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName);
+NSPR_API(PRLibrary*) PR_LoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName);
 
 /*
 ** PR_LoadIndexedFragment
@@ -56,7 +56,7 @@ PR_EXTERN(PRLibrary*) PR_LoadNamedFragment(const FSSpec *fileSpec, const char* f
 ** If fileSpec points to an alias, the alias is resolved by this call.
 ** 
 */
-PR_EXTERN(PRLibrary*) PR_LoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragIndex);
+NSPR_API(PRLibrary*) PR_LoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragIndex);
 
 PR_END_EXTERN_C
 

@@ -43,7 +43,7 @@ PR_BEGIN_EXTERN_C
 ** already held, by another thread or this thread, the
 ** result will be PR_FAILURE.
 */
-PR_EXTERN(PRStatus) PRP_TryLock(PRLock *lock);
+NSPR_API(PRStatus) PRP_TryLock(PRLock *lock);
 
 /*
 ** Create a naked condition variable
@@ -53,14 +53,14 @@ PR_EXTERN(PRStatus) PRP_TryLock(PRLock *lock);
 ** that may be used in the subsequent "naked" condition variable
 ** operations (see PRP_NakedWait, PRP_NakedNotify, PRP_NakedBroadcast);
 */
-PR_EXTERN(PRCondVar*) PRP_NewNakedCondVar(void);
+NSPR_API(PRCondVar*) PRP_NewNakedCondVar(void);
 
 /*
 ** Destroy a naked condition variable
 **
 ** Destroy the condition variable created by PR_NewNakedCondVar.
 */
-PR_EXTERN(void) PRP_DestroyNakedCondVar(PRCondVar *cvar);
+NSPR_API(void) PRP_DestroyNakedCondVar(PRCondVar *cvar);
 
 /*
 ** Wait on a condition
@@ -73,7 +73,7 @@ PR_EXTERN(void) PRP_DestroyNakedCondVar(PRCondVar *cvar);
 **
 ** NB: The CV ('cvar') must be one created using PR_NewNakedCondVar.
 */
-PR_EXTERN(PRStatus) PRP_NakedWait(
+NSPR_API(PRStatus) PRP_NakedWait(
 	PRCondVar *cvar, PRLock *lock, PRIntervalTime timeout);
 
 /*
@@ -83,7 +83,7 @@ PR_EXTERN(PRStatus) PRP_NakedWait(
 **
 ** NB: The CV ('cvar') must be one created using PR_NewNakedCondVar.
 */
-PR_EXTERN(PRStatus) PRP_NakedNotify(PRCondVar *cvar);
+NSPR_API(PRStatus) PRP_NakedNotify(PRCondVar *cvar);
 
 /*
 ** Notify all threads waiting on a condition
@@ -92,7 +92,7 @@ PR_EXTERN(PRStatus) PRP_NakedNotify(PRCondVar *cvar);
 **
 ** NB: The CV ('cvar') must be one created using PR_NewNakedCondVar.
 */
-PR_EXTERN(PRStatus) PRP_NakedBroadcast(PRCondVar *cvar);
+NSPR_API(PRStatus) PRP_NakedBroadcast(PRCondVar *cvar);
 
 PR_END_EXTERN_C
 

@@ -42,37 +42,37 @@ PR_BEGIN_EXTERN_C
 ** up). This call will return NULL if the monitor cache needs to be
 ** expanded and the system is out of memory.
 */
-PR_EXTERN(PRMonitor*) PR_CEnterMonitor(void *address);
+NSPR_API(PRMonitor*) PR_CEnterMonitor(void *address);
 
 /*
 ** Like PR_ExitMonitor except use the "address" to find a monitor in the
 ** monitor cache.
 */
-PR_EXTERN(PRStatus) PR_CExitMonitor(void *address);
+NSPR_API(PRStatus) PR_CExitMonitor(void *address);
 
 /*
 ** Like PR_Wait except use the "address" to find a monitor in the
 ** monitor cache.
 */
-PR_EXTERN(PRStatus) PR_CWait(void *address, PRIntervalTime timeout);
+NSPR_API(PRStatus) PR_CWait(void *address, PRIntervalTime timeout);
 
 /*
 ** Like PR_Notify except use the "address" to find a monitor in the
 ** monitor cache.
 */
-PR_EXTERN(PRStatus) PR_CNotify(void *address);
+NSPR_API(PRStatus) PR_CNotify(void *address);
 
 /*
 ** Like PR_NotifyAll except use the "address" to find a monitor in the
 ** monitor cache.
 */
-PR_EXTERN(PRStatus) PR_CNotifyAll(void *address);
+NSPR_API(PRStatus) PR_CNotifyAll(void *address);
 
 /*
 ** Set a callback to be invoked each time a monitor is recycled from the cache
 ** freelist, with the monitor's cache-key passed in address.
 */
-PR_EXTERN(void) PR_CSetOnMonitorRecycle(void (*callback)(void *address));
+NSPR_API(void) PR_CSetOnMonitorRecycle(void (*callback)(void *address));
 
 PR_END_EXTERN_C
 

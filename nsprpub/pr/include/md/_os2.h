@@ -401,7 +401,7 @@ typedef struct __NSPR_TLS
 } _NSPR_TLS;
 
 extern _NSPR_TLS*  pThreadLocalStorage;
-PR_EXTERN(void) _PR_MD_ENSURE_TLS(void);
+NSPR_API(void) _PR_MD_ENSURE_TLS(void);
 
 #define _MD_CURRENT_THREAD() pThreadLocalStorage->_pr_currentThread
 #define _MD_SET_CURRENT_THREAD(_thread) _PR_MD_ENSURE_TLS(); pThreadLocalStorage->_pr_currentThread = (_thread)

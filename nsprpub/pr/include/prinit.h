@@ -77,7 +77,7 @@ typedef PRBool (*PRVersionCheck)(const char*);
 ** Note that NSPR has no cooperating dependencies.
 */
 
-PR_EXTERN(PRBool) PR_VersionCheck(const char *importedVersion);
+NSPR_API(PRBool) PR_VersionCheck(const char *importedVersion);
 
 
 /************************************************************************/
@@ -90,7 +90,7 @@ PR_EXTERN(PRBool) PR_VersionCheck(const char *importedVersion);
 **
 ** The specificaiton of 'maxPTDs' is ignored.
 */
-PR_EXTERN(void) PR_Init(
+NSPR_API(void) PR_Init(
     PRThreadType type, PRThreadPriority priority, PRUintn maxPTDs);
 
 /*
@@ -113,13 +113,13 @@ PR_EXTERN(void) PR_Init(
 
 typedef PRIntn (PR_CALLBACK *PRPrimordialFn)(PRIntn argc, char **argv);
 
-PR_EXTERN(PRIntn) PR_Initialize(
+NSPR_API(PRIntn) PR_Initialize(
     PRPrimordialFn prmain, PRIntn argc, char **argv, PRUintn maxPTDs);
 
 /*
 ** Return PR_TRUE if PR_Init has already been called.
 */
-PR_EXTERN(PRBool) PR_Initialized(void);
+NSPR_API(PRBool) PR_Initialized(void);
 
 /*
  * Perform a graceful shutdown of NSPR.  PR_Cleanup() may be called by
@@ -137,57 +137,57 @@ PR_EXTERN(PRBool) PR_Initialized(void);
  * or PR_FAILURE if the calling thread of this function is not the
  * primordial thread.
  */
-PR_EXTERN(PRStatus) PR_Cleanup(void);
+NSPR_API(PRStatus) PR_Cleanup(void);
 
 /*
 ** Disable Interrupts
 **		Disables timer signals used for pre-emptive scheduling.
 */
-PR_EXTERN(void) PR_DisableClockInterrupts(void);
+NSPR_API(void) PR_DisableClockInterrupts(void);
 
 /*
 ** Enables Interrupts
 **		Enables timer signals used for pre-emptive scheduling.
 */
-PR_EXTERN(void) PR_EnableClockInterrupts(void);
+NSPR_API(void) PR_EnableClockInterrupts(void);
 
 /*
 ** Block Interrupts
 **		Blocks the timer signal used for pre-emptive scheduling
 */
-PR_EXTERN(void) PR_BlockClockInterrupts(void);
+NSPR_API(void) PR_BlockClockInterrupts(void);
 
 /*
 ** Unblock Interrupts
 **		Unblocks the timer signal used for pre-emptive scheduling
 */
-PR_EXTERN(void) PR_UnblockClockInterrupts(void);
+NSPR_API(void) PR_UnblockClockInterrupts(void);
 
 /*
 ** Create extra virtual processor threads. Generally used with MP systems.
 */
-PR_EXTERN(void) PR_SetConcurrency(PRUintn numCPUs);
+NSPR_API(void) PR_SetConcurrency(PRUintn numCPUs);
 
 /*
 ** Control the method and size of the file descriptor (PRFileDesc*)
 ** cache used by the runtime. Setting 'high' to zero is for performance,
 ** any other value probably for debugging (see memo on FD caching).
 */
-PR_EXTERN(PRStatus) PR_SetFDCacheSize(PRIntn low, PRIntn high);
+NSPR_API(PRStatus) PR_SetFDCacheSize(PRIntn low, PRIntn high);
 
 /*
  * Cause an immediate, nongraceful, forced termination of the process.
  * It takes a PRIntn argument, which is the exit status code of the
  * process.
  */
-PR_EXTERN(void) PR_ProcessExit(PRIntn status);
+NSPR_API(void) PR_ProcessExit(PRIntn status);
 
 /*
 ** Abort the process in a non-graceful manner. This will cause a core file,
 ** call to the debugger or other moral equivalent as well as causing the
 ** entire process to stop.
 */
-PR_EXTERN(void) PR_Abort(void);
+NSPR_API(void) PR_Abort(void);
 
 /*
  ****************************************************************
@@ -205,7 +205,7 @@ typedef struct PRCallOnceType {
 
 typedef PRStatus (PR_CALLBACK *PRCallOnceFN)(void);
 
-PR_EXTERN(PRStatus) PR_CallOnce(
+NSPR_API(PRStatus) PR_CallOnce(
     PRCallOnceType *once,
     PRCallOnceFN    func
 );

@@ -38,7 +38,7 @@ PR_BEGIN_EXTERN_C
 ** RETURN:
 **    the returned value is the result of the increment
 */
-PR_EXTERN(PRInt32)	PR_AtomicIncrement(PRInt32 *val);
+NSPR_API(PRInt32)	PR_AtomicIncrement(PRInt32 *val);
 
 /*
 ** FUNCTION: PR_AtomicDecrement
@@ -49,7 +49,7 @@ PR_EXTERN(PRInt32)	PR_AtomicIncrement(PRInt32 *val);
 ** RETURN:
 **    the returned value is the result of the decrement
 */
-PR_EXTERN(PRInt32)	PR_AtomicDecrement(PRInt32 *val);
+NSPR_API(PRInt32)	PR_AtomicDecrement(PRInt32 *val);
 
 /*
 ** FUNCTION: PR_AtomicSet
@@ -61,7 +61,7 @@ PR_EXTERN(PRInt32)	PR_AtomicDecrement(PRInt32 *val);
 ** RETURN:
 **    Returns the prior value
 */
-PR_EXTERN(PRInt32) PR_AtomicSet(PRInt32 *val, PRInt32 newval);
+NSPR_API(PRInt32) PR_AtomicSet(PRInt32 *val, PRInt32 newval);
 
 /*
 ** FUNCTION: PR_AtomicAdd
@@ -73,7 +73,7 @@ PR_EXTERN(PRInt32) PR_AtomicSet(PRInt32 *val, PRInt32 newval);
 ** RETURN:
 **    the returned value is the result of the addition
 */
-PR_EXTERN(PRInt32)	PR_AtomicAdd(PRInt32 *ptr, PRInt32 val);
+NSPR_API(PRInt32)	PR_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 
 /*
 ** LIFO linked-list (stack)
@@ -96,7 +96,7 @@ typedef struct PRStackStr PRStack;
 ** RETURN:
 **    A pointer to the created stack, if successful, else NULL.
 */
-PR_EXTERN(PRStack *)	PR_CreateStack(const char *stack_name);
+NSPR_API(PRStack *)	PR_CreateStack(const char *stack_name);
 
 /*
 ** FUNCTION: PR_StackPush
@@ -108,7 +108,7 @@ PR_EXTERN(PRStack *)	PR_CreateStack(const char *stack_name);
 ** RETURN:
 **    None
 */
-PR_EXTERN(void)			PR_StackPush(PRStack *stack, PRStackElem *stack_elem);
+NSPR_API(void)			PR_StackPush(PRStack *stack, PRStackElem *stack_elem);
 
 /*
 ** FUNCTION: PR_StackPop
@@ -121,7 +121,7 @@ PR_EXTERN(void)			PR_StackPush(PRStack *stack, PRStackElem *stack_elem);
 **	  if non-empty,
 **    else NULL
 */
-PR_EXTERN(PRStackElem *)	PR_StackPop(PRStack *stack);
+NSPR_API(PRStackElem *)	PR_StackPop(PRStack *stack);
 
 /*
 ** FUNCTION: PR_DestroyStack
@@ -135,7 +135,7 @@ PR_EXTERN(PRStackElem *)	PR_StackPop(PRStack *stack);
 **					PR_GetError will return
 **						PR_INVALID_STATE_ERROR - stack is not empty
 */
-PR_EXTERN(PRStatus)		PR_DestroyStack(PRStack *stack);
+NSPR_API(PRStatus)		PR_DestroyStack(PRStack *stack);
 
 PR_END_EXTERN_C
 

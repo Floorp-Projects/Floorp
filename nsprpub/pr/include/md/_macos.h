@@ -180,7 +180,7 @@ extern PRStatus _MD_KillProcess(PRProcess *process);
 ** Thread Related definitions
 */
 
-PR_EXTERN(PRThread *) PR_GetPrimaryThread();
+NSPR_API(PRThread *) PR_GetPrimaryThread();
 
 #if defined(powerc) || defined(__powerc)
 #define _MD_GET_PC(_t) (*((PRUint32 *)((_t)->md.jb)))

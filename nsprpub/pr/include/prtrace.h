@@ -179,7 +179,7 @@ typedef enum PRTraceOption
 #define PR_CREATE_TRACE(handle,qName,rName,description)\
     (handle) = PR_CreateTrace((qName),(rName),(description))
 
-PR_EXTERN(PRTraceHandle)
+NSPR_API(PRTraceHandle)
 	PR_CreateTrace( 
     	const char *qName,          /* QName for this trace handle */
 	    const char *rName,          /* RName for this trace handle */
@@ -209,7 +209,7 @@ PR_EXTERN(PRTraceHandle)
 #define PR_DESTROY_TRACE(handle)\
     PR_DestroyTrace((handle))
 
-PR_EXTERN(void) 
+NSPR_API(void) 
 	PR_DestroyTrace( 
 		PRTraceHandle handle    /* Handle to be destroyed */
 );
@@ -246,7 +246,7 @@ PR_EXTERN(void)
 #define PR_TRACE(handle,ud0,ud1,ud2,ud3,ud4,ud5,ud6,ud7)\
     PR_Trace((handle),(ud0),(ud1),(ud2),(ud3),(ud4),(ud5),(ud6),(ud7))
 
-PR_EXTERN(void) 
+NSPR_API(void) 
 	PR_Trace( 
     	PRTraceHandle handle,       /* use this trace handle */
 	    PRUint32    userData0,      /* User supplied data word 0 */
@@ -329,7 +329,7 @@ PR_EXTERN(void)
 #define PR_SET_TRACE_OPTION(command,value)\
     PR_SetTraceOption((command),(value))
 
-PR_EXTERN(void) 
+NSPR_API(void) 
 	PR_SetTraceOption( 
 	    PRTraceOption command,  /* One of the enumerated values */
 	    void *value             /* command value or NULL */
@@ -363,7 +363,7 @@ PR_EXTERN(void)
 #define PR_GET_TRACE_OPTION(command,value)\
     PR_GetTraceOption((command),(value))
 
-PR_EXTERN(void) 
+NSPR_API(void) 
 	PR_GetTraceOption( 
     	PRTraceOption command,  /* One of the enumerated values */
 	    void *value             /* command value or NULL */
@@ -395,7 +395,7 @@ PR_EXTERN(void)
 #define PR_GET_TRACE_HANDLE_FROM_NAME(handle,qName,rName)\
     (handle) = PR_GetTraceHandleFromName((qName),(rName))
 
-PR_EXTERN(PRTraceHandle) 
+NSPR_API(PRTraceHandle) 
 	PR_GetTraceHandleFromName( 
     	const char *qName,      /* QName search argument */
         const char *rName       /* RName search argument */
@@ -423,7 +423,7 @@ PR_EXTERN(PRTraceHandle)
 #define PR_GET_TRACE_NAME_FROM_HANDLE(handle,qName,rName,description)\
     PR_GetTraceNameFromHandle((handle),(qName),(rName),(description))
 
-PR_EXTERN(void) 
+NSPR_API(void) 
 	PR_GetTraceNameFromHandle( 
     	PRTraceHandle handle,       /* handle as search argument */
 	    const char **qName,         /* pointer to associated QName */
@@ -461,7 +461,7 @@ PR_EXTERN(void)
 #define PR_FIND_NEXT_TRACE_QNAME(next,handle)\
     (next) = PR_FindNextTraceQname((handle))
 
-PR_EXTERN(PRTraceHandle) 
+NSPR_API(PRTraceHandle) 
 	PR_FindNextTraceQname( 
         PRTraceHandle handle
 );
@@ -499,7 +499,7 @@ PR_EXTERN(PRTraceHandle)
 #define PR_FIND_NEXT_TRACE_RNAME(next,rhandle,qhandle)\
     (next) = PR_FindNextTraceRname((rhandle),(qhandle))
 
-PR_EXTERN(PRTraceHandle) 
+NSPR_API(PRTraceHandle) 
 	PR_FindNextTraceRname( 
         PRTraceHandle rhandle,
         PRTraceHandle qhandle
@@ -551,7 +551,7 @@ PR_EXTERN(PRTraceHandle)
 #define PR_RECORD_TRACE_ENTRIES()\
 	PR_RecordTraceEntries()
     
-PR_EXTERN(void)
+NSPR_API(void)
 	PR_RecordTraceEntries(
         void 
 );
@@ -600,7 +600,7 @@ PR_EXTERN(void)
         PR_GetTraceEntries((buffer),(count),(found))
 
 
-PR_EXTERN(PRIntn)
+NSPR_API(PRIntn)
     PR_GetTraceEntries(
         PRTraceEntry    *buffer,    /* where to write output */
         PRInt32         count,      /* number to get */

@@ -45,13 +45,13 @@ PR_BEGIN_EXTERN_C
 ** must be freed by PR_Free.
 */
 
-PR_EXTERN(void *) PR_Malloc(PRUint32 size);
+NSPR_API(void *) PR_Malloc(PRUint32 size);
 
-PR_EXTERN(void *) PR_Calloc(PRUint32 nelem, PRUint32 elsize);
+NSPR_API(void *) PR_Calloc(PRUint32 nelem, PRUint32 elsize);
 
-PR_EXTERN(void *) PR_Realloc(void *ptr, PRUint32 size);
+NSPR_API(void *) PR_Realloc(void *ptr, PRUint32 size);
 
-PR_EXTERN(void) PR_Free(void *ptr);
+NSPR_API(void) PR_Free(void *ptr);
 
 /*
 ** The following are some convenience macros defined in terms of

@@ -86,7 +86,7 @@ typedef PRUint32 PRIntervalTime;
 ** MEMORY:      N/A
 ** ALGORITHM:   Platform dependent
 ***********************************************************************/
-PR_EXTERN(PRIntervalTime) PR_IntervalNow(void);
+NSPR_API(PRIntervalTime) PR_IntervalNow(void);
 
 /***********************************************************************
 ** FUNCTION:    PR_TicksPerSecond
@@ -104,7 +104,7 @@ PR_EXTERN(PRIntervalTime) PR_IntervalNow(void);
 ** MEMORY:      N/A
 ** ALGORITHM:   N/A
 ***********************************************************************/
-PR_EXTERN(PRUint32) PR_TicksPerSecond(void);
+NSPR_API(PRUint32) PR_TicksPerSecond(void);
 
 /***********************************************************************
 ** FUNCTION:    PR_SecondsToInterval
@@ -123,9 +123,9 @@ PR_EXTERN(PRUint32) PR_TicksPerSecond(void);
 ** MEMORY:      N/A
 ** ALGORITHM:   N/A
 ***********************************************************************/
-PR_EXTERN(PRIntervalTime) PR_SecondsToInterval(PRUint32 seconds);
-PR_EXTERN(PRIntervalTime) PR_MillisecondsToInterval(PRUint32 milli);
-PR_EXTERN(PRIntervalTime) PR_MicrosecondsToInterval(PRUint32 micro);
+NSPR_API(PRIntervalTime) PR_SecondsToInterval(PRUint32 seconds);
+NSPR_API(PRIntervalTime) PR_MillisecondsToInterval(PRUint32 milli);
+NSPR_API(PRIntervalTime) PR_MicrosecondsToInterval(PRUint32 micro);
 
 /***********************************************************************
 ** FUNCTION:    PR_IntervalToSeconds
@@ -144,9 +144,9 @@ PR_EXTERN(PRIntervalTime) PR_MicrosecondsToInterval(PRUint32 micro);
 ** MEMORY:      N/A
 ** ALGORITHM:   N/A
 ***********************************************************************/
-PR_EXTERN(PRUint32) PR_IntervalToSeconds(PRIntervalTime ticks);
-PR_EXTERN(PRUint32) PR_IntervalToMilliseconds(PRIntervalTime ticks);
-PR_EXTERN(PRUint32) PR_IntervalToMicroseconds(PRIntervalTime ticks);
+NSPR_API(PRUint32) PR_IntervalToSeconds(PRIntervalTime ticks);
+NSPR_API(PRUint32) PR_IntervalToMilliseconds(PRIntervalTime ticks);
+NSPR_API(PRUint32) PR_IntervalToMicroseconds(PRIntervalTime ticks);
 
 PR_END_EXTERN_C
 

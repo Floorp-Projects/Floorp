@@ -81,7 +81,7 @@ typedef PRBool (PR_CALLBACK *PRPeriodicAlarmFn)(
 ** MEMORY:      The object (PRAlarm) and a thread to support notifications.
 ** ALGORITHM:   N/A
 ***********************************************************************/
-PR_EXTERN(PRAlarm*) PR_CreateAlarm(void);
+NSPR_API(PRAlarm*) PR_CreateAlarm(void);
 
 /***********************************************************************
 ** FUNCTION:    PR_DestroyAlarm
@@ -101,7 +101,7 @@ PR_EXTERN(PRAlarm*) PR_CreateAlarm(void);
 ** MEMORY:      N/A
 ** ALGORITHM:   N/A
 ***********************************************************************/
-PR_EXTERN(PRStatus) PR_DestroyAlarm(PRAlarm *alarm);
+NSPR_API(PRStatus) PR_DestroyAlarm(PRAlarm *alarm);
 
 /***********************************************************************
 ** FUNCTION:    PR_SetAlarm
@@ -139,7 +139,7 @@ PR_EXTERN(PRStatus) PR_DestroyAlarm(PRAlarm *alarm);
 **              The amount of lateness of one notification is taken into
 **              account on the next in an attempt to avoid long term slew.  
 ***********************************************************************/
-PR_EXTERN(PRAlarmID*) PR_SetAlarm(
+NSPR_API(PRAlarmID*) PR_SetAlarm(
     PRAlarm *alarm, PRIntervalTime period, PRUint32 rate,
     PRPeriodicAlarmFn function, void *clientData);
 
@@ -165,7 +165,7 @@ PR_EXTERN(PRAlarmID*) PR_SetAlarm(
 ** MEMORY:      N/A.
 ** ALGORITHM:   See PR_SetAlarm().  
 ***********************************************************************/
-PR_EXTERN(PRStatus) PR_ResetAlarm(
+NSPR_API(PRStatus) PR_ResetAlarm(
 	PRAlarmID *id, PRIntervalTime period, PRUint32 rate);
 
 PR_END_EXTERN_C
