@@ -3501,7 +3501,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresContext*          aPresConte
   
     aPresContext->ResolvePseudoStyleContextFor(aContent,
                                   nsLayoutAtoms::scrolledContentPseudo,
-                                  scrollPseudoStyle, PR_FALSE,
+                                  aStyleContext, PR_FALSE,
                                   getter_AddRefs(scrolledPseudoStyle));
 
     scrollFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
