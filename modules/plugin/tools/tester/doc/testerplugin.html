@@ -1,0 +1,334 @@
+<HTML>
+<HEAD>
+   <TITLE>Tester Plugin</TITLE>
+</HEAD>
+<BODY>
+
+<CENTER><B><FONT SIZE=+2>Tester Plugin</FONT></B></CENTER>
+<CENTER><I>Started by: av 11.25.97</I></CENTER>
+<CENTER><I>Last updated: 12.16.97</I></CENTER>
+
+<P><B><FONT SIZE=+1>Table of contents</FONT></B>
+<UL>
+<LI><B>&nbsp;&nbsp;&nbsp; </B><A HREF="#Summary">Summary</A></LI>
+<LI>&nbsp;&nbsp;&nbsp; <A HREF="#Description">Description</A></LI>
+<LI>&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#GUI">GUI</A></LI>
+
+<UL>
+<LI>&nbsp;<A HREF="#WinGUI">Windows</A></LI>
+</UL>
+
+<UL>
+<LI>&nbsp;<A HREF="#UnixGUI">UNIX</A></LI>
+</UL>
+
+<UL>
+<LI>&nbsp;<A HREF="#MACGUI">MAC</A></LI>
+</UL>
+
+<LI>&nbsp;&nbsp;&nbsp; <A HREF="#Full Page">Full Page Mode</A></LI>
+<LI>&nbsp;&nbsp;&nbsp; <A HREF="#Log File">Log File Format</A></LI>
+<LI>&nbsp;&nbsp;&nbsp; <A HREF="#Script File">Script File Format</A></LI>
+<LI>&nbsp;&nbsp;&nbsp; <A HREF="#Current Version">Current Version and Known Issues</A></LI>
+<LI>&nbsp;&nbsp;&nbsp; <A HREF="#Enchancements">Enhancements and To-Do List</A></LI>
+<LI>&nbsp;&nbsp;&nbsp; <A HREF="#Architecture">Appendix A: Plugin Architecture (port notes)</A></LI>
+<LI>&nbsp;&nbsp;&nbsp; <A HREF="#Preferences File">Appendix B: Preferences File</A></LI>
+</UL>
+
+<A NAME="Summary"></A><B><FONT SIZE=+1>Summary</FONT></B>
+
+<P>Tester plugin (preliminary file name npapi.dll) is designed to add a
+level of convenience and automation to testing Netscape Plugin API. The
+plugin has implementation of all existing NPAPI calls and allows to execute
+them in any desirable pattern as well as log all NPAPI activity.
+Plugin handles MIME type <TT>'application/npapi-test' </TT>and file
+extension <TT>'pts'</TT> (which could stand for 'plugin test script').
+
+<P><A NAME="Description"></A><B><FONT SIZE=+1>Description</FONT></B>
+
+<P>The plugin is capable of issuing NPAPI calls to the Navigator and logging
+them along with callbacks from the Navigator with argument and return values.
+Time stamps are also logged so some timing issues can be investigated.
+All NPAPI calls, both <TT>NPN_*</TT> and <TT>NPP_*</TT>, are getting logged
+during operation of the plugin. User can see log in the dedicated frame
+in the Navigator window or dump log into file.
+
+<P>The plugin has two modes of operation: manual and automatic (script
+execution). The manual mode is thought to be convenient for taking a quick
+look at the API and get some initial feeling. It allows user (developer,
+tester) to call any NPAPI function with any valid arguments from the plugin
+GUI and see the either the visual result of this call or the log if the
+call results in callbacks from the Navigator or returns some values.
+
+<P>Automatic mode is for more sophisticated testing with preset pattern
+of calls. Before starting a test plugin reads a specified script file which
+contains all necessary info on what calls to execute, what parameters to
+pass and how to conduct the test: how many times, with what time delay
+after specific calls or after repetition cycle.
+
+<P>From plugin GUI user can choose log file name and script file name (or
+URL - see <A HREF="#Enchancements">Enhancements</A> if this is in to-do
+list).
+
+<P>Special case is&nbsp; <A HREF="#Full Page">full page</A>&nbsp; mode,
+when the plugin is invoked on file extension association. In this case
+there is no GUI at all, and <TT>*.pts </TT>file is treated as a script
+file to execute.
+
+<P><A NAME="GUI"></A><B><FONT SIZE=+1>GUI</FONT></B>
+
+<P>Platform implementations of the plugin GUI can differ since the plugin
+was originally developed for Windows NT, and GUI is the only non-crossplatform
+part of it. See <A HREF="#Enchancements">Enhancements</A> section for the
+latest on platform implementations.
+
+<P><A NAME="WinGUI"></A><I><FONT SIZE=+1>Windows GUI</FONT></I>
+
+<P>In its original configuration the main Navigator window is divided into
+three frames: Control frame, Display frame and Log frame, although this
+configuration is not required.
+
+<P>Plugin controls (the actual GUI) occupy the Control frame, while Display
+frame can be used as a target for calls like <TT>NPN_GetURL</TT> and Log
+frame displays the log.
+
+<P>User chooses desired mode of operation: Auto or Manual, and using check
+boxes and editable fields enables/disables logging to frame/file
+chooses log and script file names. User can hold log output if timing
+is important by disabling "Flush immediately" feature and flush the log
+when it is appropriate by hand ("Flush" button).
+
+<BR>&nbsp;
+
+<CENTER><IMG SRC="auto.gif" HEIGHT=371 WIDTH=195>&nbsp;<IMG SRC="manual.gif" HEIGHT=371 WIDTH=195 ALIGN=ABSCENTER></CENTER>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Fig. 1. Screen shots of Auto and Manual modes
+
+<P>&nbsp;
+<BR>In Manual mode, only valid arguments are possible to pass. If, say,
+we pass a string pointer to <TT>NPN_GetURL</TT> as a URL to get, user cannot
+specify the actual pointer value, he rather types the string itself. Plugin
+instance value can not be modified too. In Auto mode, on the contrary,
+one can pass any values in place of any argument using&nbsp; <A HREF="#Script File">script
+file format</A>&nbsp; features. This option is particularly useful if invalid
+parameters are to be tested.
+
+<P><A NAME="UnixGUI"></A><I><FONT SIZE=+1>UNIX GUI</FONT></I>
+
+<P><A NAME="MACGUI"></A><I><FONT SIZE=+1>MAC GUI</FONT></I>
+
+<P><A NAME="Full Page"></A><B><FONT SIZE=+1>Full Page Mode</FONT></B>
+
+<P>This is a useful mode when no user interaction is needed at all. The
+plugin is launched in full page mode when it encounters file of <TT>'pts'</TT>
+type. It saves this file in a local cache and then treats it as a normal
+script file. It automatically constructes log file with the name of cache
+file and <TT>'log'</TT> extension. This can overridden in preferences profile.
+See Appendix B on&nbsp; <A HREF="#Log File Name In Fully Automatic Mode">how
+to specify log file name in fully automatic mode</A> .
+
+<P><A NAME="Log File"></A><B><FONT SIZE=+1>Log File Format</FONT></B>
+
+<P>Every NPAPI call is logged into a log item which normally consists of
+three lines:
+<UL><TT>NPN_GetURL(0x00cfa7a0, 0x00a2f8c0("http://w3"), 0x00a2f840("_npapi_Dis..."))</TT>
+<BR><TT>Returns: NPERR_NO_ERROR</TT>
+<BR><TT>Time: 9478 9554 (76)</TT></UL>
+
+Actual argument values are shown. There are some exceptions:
+
+<UL>
+<LI>In case argument is a pointer to some data like a string the beginning
+of the data is also shown in parenthesis right after the value. First ten
+characters are shown by default. See Appendix B on&nbsp; <A HREF="#Wrap">how
+to set wrap</A> .</LI>
+
+<LI>If argument is enumerated parameter or <TT>#define'e</TT>d value its identificator
+is shown rather than numeric value, e.g. (<TT>..., NPRES_DONE)</TT>.</LI>
+
+<LI>If argument is a pointer which is supposed to be filled with data after
+function returns, the data is also shown in parenthesis.</LI>
+</UL>
+
+Time stamp allows user to estimate timing. Numbers are some relative time
+counts in milliseconds. First is a time when a specific function is entered,
+second - when it is about to return, and third is just a subtract of those
+two.
+
+<P><A NAME="Separator Back"></A>Symbolic separator can be inserted after
+each log record. This could be useful for automated log file readers. See
+Appendix B on <A HREF="#Separator">how to specify separator</A> .
+
+<P><A NAME="Script File"></A><B><FONT SIZE=+1>Script File Format</FONT></B>
+
+<P>Script file is in a form of standard Windows profile (<TT>.INI</TT>
+file).
+
+<BR>Private profile is a text file consisting of sections and keys with
+
+their values, comments can be made with a semicolon in first position
+
+<UL><TT>[SectionName1]</TT>
+
+<BR><TT>key1=value1</TT>
+
+<BR><TT>key2=value2</TT></UL>
+
+In tester plugin script file every call to be executed should form a section
+with numeric name (this number will define an order of call sequence) and
+<TT>APICall</TT> key which specifies a function to call, <B><TT>arg1</TT></B>,
+<B><TT>arg2</TT></B> etc. keys specifying arguments, and also the section
+can contain a <B><TT>delay</TT></B> key which would insert a time delay
+in milliseconds placed after the call. For example:
+<UL><TT>[10]</TT>
+<BR><TT>APICall=NPN_MemAlloc</TT>
+<BR><TT>arg1=1024</TT></UL>
+The file can also contain <B><TT>Options</TT></B> section which would specifies
+how to conduct the script. For instance:
+<UL><TT>[Options]</TT>
+<BR><TT>first=1</TT>
+<BR><TT>last=23</TT>
+<BR><TT>repetitions=1</TT>
+<BR><TT>delay=0</TT></UL>
+<B><TT>first</TT></B> key says from where to start the script (default
+1). <B><TT>last</TT></B> key MUST be present, and it says when to stop
+the script cycle. All sections with numbers less than that of specified
+in the <TT>first</TT> key and more than that of specified in the <TT>last</TT>
+key are ignored by the script reading code. So you can pick any part of
+existing long script for executing. Two other keys are optional, <B><TT>repetitions</TT></B>
+being the number of times the script cycle is going to be executed (default
+1), and <B><TT>delay</TT></B> being the time delay in milliseconds between
+cycle repetitions (default 0).
+
+<P>'Numeric' sections are the actual script, each representing one NPAPI
+call. Calls will be executed in their numeric order, some numbers could
+be&nbsp; missing, so you can start to write your script with numbers multiple
+by say ten in order to be able to insert new script items later.
+
+<P><I><FONT COLOR="#CC0000">Important feature:</FONT></I>
+<BR><TT>arg*</TT> keys represent NPAPI function call arguments and they
+depend on actual call. In some cases you may not specify an argument if
+you have no control over it. E.g. pointer to the plugin instance or pointer
+to a stream created by <TT>NPN_NewStream</TT>. Scripter code will pick
+up right ones for you. If you specify them explicitly it will take them
+but be prepared for boom. This is appropriate if you want to test an API
+call with invalid&nbsp; arguments. String should can be represented by
+actual string. Arguments which are parameters of enumerated type or <TT>#define</TT>'ed
+like <TT>NPPVariable</TT>, <TT>NPReason</TT> etc. should be represented
+by their enum type identificator from npapi.h like <TT>NPPVpluginNameString</TT>
+or <TT>NPRES_DONE</TT>. Also <TT>NPBool</TT> should read <TT>TRUE</TT>
+or <TT>FALSE</TT>. If you want to test real numeric values in place of
+this args, say <TT>0x00000000</TT> for string pointers, use a special prefix
+'<TT>_true_numeric_value_</TT>' . The following example will execute <TT>NPN_GetURL(instance,
+-1, "some_target")</TT> with real instance, invalid URL and valid target:
+<UL><TT>[1]</TT>
+<BR><TT>APICall=NPN_GetURL</TT>
+<BR><TT>arg2=true_numeric_value_-1</TT>
+<BR><TT>arg3=some_target</TT></UL>
+The special 'numeric' prefix also works for <TT>NPBool</TT>, <TT>NPReason</TT>,
+<TT>NPNVariable</TT> and <TT>NPPVariable</TT>.
+<BR>In case of <TT>NPRect*</TT> or <TT>NPSize*</TT> type of argument you
+can use either <TT>arg*=0x0000</TT> (or any other value) or not using <TT>arg*</TT>
+use <TT>top=</TT>..., <TT>left=</TT>...,<TT> right=</TT>..., <TT>bottom=</TT>...
+or <TT>width=</TT>..., <TT>height=</TT>...
+
+<P><A NAME="Current Version"></A><B><FONT SIZE=+1>Current Version and Known Issues</FONT></B>
+
+<P>Current version is 1.4.
+
+<P>Issues:
+<UL>
+<LI>In Auto mode log is not shown in frame until script execution is complete</LI>
+<LI>Log in window does not scroll automatically</LI>
+<LI>There is no way to stop script execution during execution. In fact the
+whole thing is "frozen"</LI>
+<LI>Log file name and script file name must not contain path. Files are always
+supposed to sit in the Navigator Plugins directory</LI>
+<LI>In Manual mode multiple <TT>NPN_MemAlloc</TT>'s are not allowed, every
+<TT>NPN_MemAlloc</TT> should be followed by <TT>NPN_MemFree</TT> (not necessary
+immediately though)</LI>
+<LI>The same applies to <TT>NPN_NewStream</TT></LI>
+</UL>
+
+<A NAME="Enchancements"></A><B><FONT SIZE=+1>Enhancements and To-Do List</FONT></B>
+
+<UL>
+<LI>Implement for UNIX</LI>
+<LI>Implement for MAC</LI>
+<LI>URL for scripts, not only local files</LI>
+<LI>Introduce options for log. Like "short" - with no return value or arguments
+(e.g. useful for timing investigations), "errors only" - when all 'normal'
+activity is not logged. 'Normal' here needs to be defined</LI>
+</UL>
+
+&nbsp;<A NAME="Architecture"></A><B><FONT SIZE=+1>Appendix A: Plugin Architecture (port notes)</FONT></B>
+
+<P>The core of the plugin consists of three self-contained objects of types
+<TT>CPlugin</TT>, <TT>CLogger</TT> and <TT>CScripter</TT>, and there is
+also a set of various helpers like string converters and formatters, and
+INI style profile handlers (on Windows, standard built-in profile stuff
+can be used).
+<BR>The three objects are global for the project, <TT>CPlugin</TT> being
+a "coordinating center". <TT>CLogger</TT> and <TT>CScripter</TT> are not
+members of <TT>CPlugin</TT> simply because there is no need to keep several
+instances of e.g. <TT>CLogger</TT> for every instance of <TT>CPlugin</TT>.
+One should be enough for all.
+<P>Part of <TT>CPlugin</TT> C++ interface and some functions in <TT>xp.cpp
+</TT>are the only things which should be implemented for every platform
+separately since this object handles GUI. Therefore, to make things easier,
+an abstract class <TT>CPluginBase</TT> has been written. This base class
+methods contain cross-platform code, and object of <TT>CPlugin</TT> type
+can be derived from this base class. With this approach no changes need
+to be made in any project file, only a new source file with implementation
+of <TT>CPlugin::CPluginBase</TT> with appropriate GUI handling can be added.
+
+<P>As a first step, one can try just to build a project with no additional
+coding, thus with no GUI, so it will work only with scripts.
+<P><TT>CLogger</TT> and <TT>CScripter</TT> do not use any Windows specific
+API thus are cross-platform. C++ interface for these objects is self-explaining
+and straight forward. The objects handle file operations, string scanning
+and formatting, and also information output.
+
+<P>Some Windows specific calls which are used throughout the project are
+put together in file xp.cpp where they are <TT>#ifdef</TT>'ed and need
+to be implemented for every non-Windows platform. At the moment they are:
+<TT>XP_GetTickCount(...), XP_Sleep(...)</TT>.
+
+<P>So, the steps for successful porting are:
+<UL>1. Include all files from <TT>Tester/Common </TT>subdir to the project
+<BR>2. Derive <TT>CPlugin</TT> class from <TT>CPluginBase</TT>
+<BR>3. Implement all pure virtual methods
+<BR>4. Implement any platform specific methods for handling GUI, if needed
+<BR>5. Name <TT>CPlugin </TT>class header file<TT> Plugin.h </TT>(it is
+used in dependencies)
+<BR>6. Look through <TT>xp.cpp </TT>and implement missing for your platform
+<TT>XP_* </TT>calls</UL>
+
+&nbsp;<A NAME="Preferences File"></A><B><FONT SIZE=+1>Appendix B: Preferences File</FONT></B>
+
+<P><TT>Npapi.ini</TT> is located in the same directory the plugin is located.
+Currently it stores GUI preferences in <TT>Options </TT>section, and normally,
+it does not need to be edited directly.
+
+<P><A NAME="Separator"></A><TT>In Log </TT>section the form of <A HREF="#Separator Back">separator</A>
+can be specified using key <B><TT>RecordSeparator</TT></B>. For example:
+<UL><TT>[Log]</TT>
+<BR><TT>RecordSeparator=$</TT></UL>
+If no separator is specified, blank line is used instead.
+
+<P><A NAME="Wrap"></A>In this section you can also specify when to cut
+off long data strings in the log as follows:
+<UL><TT>[Log]</TT>
+<BR><TT>StringDataWrap=20</TT></UL>
+The default value is 10.
+
+<P><A NAME="Log File Name In Fully Automatic Mode"></A>The log file name
+for <A HREF="#Full Page">full page mode</A> can be specified with key <B><TT>FileName</TT></B>.
+Note that full path should be given too:
+<UL><TT>[Log]</TT>
+<BR><TT>FileName=y:\x86Dbg\plugins\test.log</TT></UL>
+<BR>
+
+</BODY>
+</HTML>
+
