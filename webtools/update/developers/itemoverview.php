@@ -12,7 +12,7 @@ include"inc_sidebar.php";
 ?>
 <?php
 $id = escape_string($_GET["id"]);
-$sql = "SELECT  TM.ID, TM.GUID, TM.Name, TM.Homepage, TM.Description, TM.downloadcount, TM.TotalDownloads, TM.Rating, TU.UserEmail FROM  `main`  TM 
+$sql = "SELECT  TM.ID, TM.Type, TM.GUID, TM.Name, TM.Homepage, TM.Description, TM.downloadcount, TM.TotalDownloads, TM.Rating, TU.UserEmail FROM  `main`  TM 
 LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
 INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
 WHERE TM.ID = '$id' LIMIT 1";
@@ -21,6 +21,7 @@ WHERE TM.ID = '$id' LIMIT 1";
   $row = mysql_fetch_array($sql_result);
 $v++;
     $id = $row["ID"];
+    $type = $row["Type"];
     $guid = $row["GUID"];
     $name = $row["Name"];
     $dateadded = $row["DateAdded"];
@@ -100,7 +101,7 @@ $sql2 = "SELECT TV.Version, AppName, MinAppVer, MaxAppVer FROM `version` TV
 <h2>Add New Version of <?php echo"$name"; ?></h2>
 <TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: solid 0px #000000; width: 100%">
 <FORM NAME="additem" METHOD="POST" ACTION="additem.php?function=additem2" enctype="multipart/form-data">
-<INPUT NAME="type" TYPE="hidden" VALUE="<?php echo"$_GET[type]"; ?>">
+<INPUT NAME="type" TYPE="hidden" VALUE="<?php echo"$type"; ?>">
 <TR><TD style="padding-left: 20px">
 Your <?php echo"$typename"?> File:<BR>
 <INPUT NAME="file" SIZE=40 TYPE="FILE"><BR>
