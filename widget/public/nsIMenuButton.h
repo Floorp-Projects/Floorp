@@ -123,6 +123,11 @@ public:
                           const nsString& aPressedURL,
                           const nsString& aDisabledURL,
                           const nsString& aRollOverURL) = 0;
+  NS_IMETHOD SetImageUpURL(const nsString& aUpURL) = 0;
+  NS_IMETHOD SetImagePressedURL(const nsString& aPressedURL) = 0;
+  NS_IMETHOD SetImageDisabledURL(const nsString& aDisabledURL) = 0;
+  NS_IMETHOD SetImageRollOverURL(const nsString& aRollOverURL) = 0;
+
  /**
   * Sets the width of the border
   *
