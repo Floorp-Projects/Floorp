@@ -35,6 +35,9 @@ static const PRUint16 gJis0212map[] = {
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
+static PRUint16 gSjisIBMNECmap[] = {
+#include "IBMNEC.map"
+};
 
 NS_IMETHODIMP nsShiftJISToUnicode::Convert(
    const char * aSrc, PRInt32 * aSrcLen,
@@ -57,7 +60,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
      188*31, 188*32, 188*33, 188*34, 188*35, 188*36, 188*37, 188*38,
      188*39, 188*40, 188*41, 188*42, 188*43, 188*44, 188*45, 188*46,
      0xE000, 0xE000+188, 0xE000+188*2, 0xE000+188*3, 0xE000+188*4, 0xE000+188*5, 0xE000+188*6, 0xE000+188*7,
-     0xE000+188*8, 0xE000+188*9, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
+     0xE000+188*8, 0xE000+188*9, 0xFFFA, 0xFFFB, 0xFFFC, 0xFFFD, 0xFFFD, 0xFFFD,
    };
    static const PRUint8 sbIdx[256] =
    {
@@ -99,10 +102,34 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
    const unsigned char* src =(unsigned char*) aSrc;
    PRUnichar* destEnd = aDest + *aDestLen;
    PRUnichar* dest = aDest;
+   PRUint16 ibmnec;
+   PRUint8  fbibmnec;
    while((src < srcEnd))
    {
        switch(mState)
        {
+
+          case 4: // IBM extention to NEC extention
+          {
+            ibmnec += *src;
+            ibmnec = gSjisIBMNECmap[ibmnec - 0xFA40];
+            if ( ibmnec == 0 ) {
+              *dest++ = 0xFFFD;
+              ibmnec = 0;
+              fbibmnec = 0;
+              mState=0;
+              if(dest >= destEnd)
+                goto error1;
+            } else {
+              *dest++ = gJis0208map[fbIdx[(ibmnec >> 8) & 0x7F ] 
+                                   + sbIdx[ibmnec & 0x00FF]];
+              if(dest >= destEnd)
+                goto error1;
+              mState = 0;
+              break;
+            }
+          } 
+
           case 0:
           if(*src & 0x80 && *src != (unsigned char)0xa0)
           {
@@ -118,9 +145,15 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
                       (0xfd != *src) && (0xfe != *src) & (0xff != *src))
                       mState = 3;  // two byte undefined
                  } else {
-                   *dest++ = mData; // JIS 0201
-                   if(dest >= destEnd)
-                      goto error1;
+                   if((0xfa == *src) || (0xfb == *src) || (0xfc == *src)) {
+                     ibmnec=((*src) << 8) & 0xFF00;
+                     fbibmnec = *src;
+                     mState = 4; // IBM Extra
+                   } else {
+                     *dest++ = mData; // JIS 0201
+                     if(dest >= destEnd)
+                       goto error1;
+                   }
                  }
                } else {
                  mState = 2; // EUDC
