@@ -967,12 +967,12 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 			{
 				if (NS_SUCCEEDED(rv = mInner->Assert(ieFolder, kRDF_type, kNC_Folder, PR_TRUE)))
 				{
-					BookmarkParser parser();
+					BookmarkParser parser;
 					parser.Init(&ieStream, this);
 					parser.Parse(ieFolder);
 					
 					nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
-					if (NS_SUCCEEDED(rv = mRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
+					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
 					{
 						rv = rdf_Assert(mInner, ieFolder, kURINC_Name, ieTitleLiteral);
 					}
