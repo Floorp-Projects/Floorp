@@ -363,12 +363,14 @@ nsHTMLFormElement::StringToAttribute(nsIAtom* aAttribute,
                               nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::method) {
-    nsGenericHTMLElement::ParseEnumValue(aValue, kFormMethodTable, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kFormMethodTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::enctype) {
-    nsGenericHTMLElement::ParseEnumValue(aValue, kFormEnctypeTable, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kFormEnctypeTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }

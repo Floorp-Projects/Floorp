@@ -510,26 +510,31 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::width) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                              eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                                  eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   } 
   else if (aAttribute == nsHTMLAtoms::height) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                              eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                                  eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   } 
   else if (aAttribute == nsHTMLAtoms::maxlength) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::tabindex) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (IsImage()) {
     if (nsGenericHTMLElement::ParseImageAttribute(aAttribute,
@@ -538,8 +543,9 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::border) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }

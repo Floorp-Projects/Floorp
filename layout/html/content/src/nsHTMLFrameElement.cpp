@@ -151,31 +151,36 @@ nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
-    nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   } 
   else if (aAttribute == nsHTMLAtoms::frameborder) {
     // XXX need to check for correct mode
-    nsGenericHTMLElement::ParseFrameborderValue(PR_FALSE, aValue, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseFrameborderValue(PR_FALSE, aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   } 
   else if (aAttribute == nsHTMLAtoms::marginwidth) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                              eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                                  eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::marginheight) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                              eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                                  eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::noresize) {
     aResult.SetEmptyValue();
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::scrolling) {
-     nsGenericHTMLElement::ParseScrollingValue(PR_FALSE, aValue, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseScrollingValue(PR_FALSE, aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }

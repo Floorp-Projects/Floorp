@@ -337,27 +337,31 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
    */
   /* attributes that resolve to integers with a min of 0 */
   if (aAttribute == nsHTMLAtoms::choff) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
 
   /* attributes that resolve to integers with a min of 1 */
-  if ((aAttribute == nsHTMLAtoms::colspan) ||
+  else if ((aAttribute == nsHTMLAtoms::colspan) ||
       (aAttribute == nsHTMLAtoms::rowspan)) {
-    nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
 
   /* attributes that resolve to integers or percents */
   else if (aAttribute == nsHTMLAtoms::height) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
 
   /* attributes that resolve to integers or percents or proportions */
   else if (aAttribute == nsHTMLAtoms::width) {
-    nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   
   /* other attributes */
@@ -366,17 +370,10 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::background) {
-    aResult.SetStringValue(aValue);
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-  else if (aAttribute == nsHTMLAtoms::nowrap) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::scope) {
     if (nsGenericHTMLElement::ParseEnumValue(aValue, kCellScopeTable, aResult)) {
@@ -478,7 +475,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     // nowrap
     // nowrap depends on the width attribute, so be sure to handle it after width is mapped!
     aAttributes->GetAttribute(nsHTMLAtoms::nowrap, value);
-    if (value.GetUnit() == eHTMLUnit_Empty)
+    if (value.GetUnit() != eHTMLUnit_Null)
     {
       if (widthValue.GetUnit() != eHTMLUnit_Pixel)
       {

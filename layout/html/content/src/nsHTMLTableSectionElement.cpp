@@ -225,14 +225,16 @@ nsHTMLTableSectionElement::StringToAttribute(nsIAtom* aAttribute,
    */
   /* attributes that resolve to integers */
   if (aAttribute == nsHTMLAtoms::choff) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
 
   /* attributes that resolve to integers or percents */
   else if (aAttribute == nsHTMLAtoms::height) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
 
   /* other attributes */
@@ -241,13 +243,10 @@ nsHTMLTableSectionElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::background) {
-    aResult.SetStringValue(aValue);
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::valign) {
     if (nsGenericHTMLElement::ParseTableVAlignValue(aValue, aResult)) {

@@ -132,24 +132,19 @@ nsHTMLPreElement::StringToAttribute(nsIAtom* aAttribute,
                                     const nsString& aValue,
                                     nsHTMLValue& aResult)
 {
-  if ((aAttribute == nsHTMLAtoms::wrap) ||
-      (aAttribute == nsHTMLAtoms::variable)) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
   if (aAttribute == nsHTMLAtoms::cols) {
     if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult,
                                          eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  if (aAttribute == nsHTMLAtoms::width) {
+  else if (aAttribute == nsHTMLAtoms::width) {
     if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult,
                                          eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  if (aAttribute == nsHTMLAtoms::tabstop) {
+  else if (aAttribute == nsHTMLAtoms::tabstop) {
     PRInt32 ec, tabstop = aValue.ToInteger(&ec);
     if (tabstop <= 0) {
       tabstop = 8;
@@ -196,7 +191,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
     // wrap: empty
     aAttributes->GetAttribute(nsHTMLAtoms::wrap, value);
-    if (value.GetUnit() == eHTMLUnit_Empty) {
+    if (value.GetUnit() != eHTMLUnit_Null) {
       nsStyleText* text = (nsStyleText*)
         aContext->GetMutableStyleData(eStyleStruct_Text);
       text->mWhiteSpace = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;

@@ -135,19 +135,15 @@ nsHTMLMenuElement::StringToAttribute(nsIAtom* aAttribute,
                                      nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    if (!nsGenericHTMLElement::ParseEnumValue(aValue, kListTypeTable,
-                                              aResult)) {
-      aResult.SetIntValue(NS_STYLE_LIST_STYLE_BASIC, eHTMLUnit_Enumerated);
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kListTypeTable,
+                                             aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
-    return NS_CONTENT_ATTR_HAS_VALUE;
   }
-  if (aAttribute == nsHTMLAtoms::start) {
-    nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-  if (aAttribute == nsHTMLAtoms::compact) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_NO_VALUE;
+  else if (aAttribute == nsHTMLAtoms::start) {
+    if (nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
@@ -179,10 +175,13 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       list->mListStyleType = value.GetIntValue();
     }
+    else if (value.GetUnit() != eHTMLUnit_Null) {
+      list->mListStyleType = NS_STYLE_LIST_STYLE_BASIC;
+    }
 
     // compact: empty
     aAttributes->GetAttribute(nsHTMLAtoms::compact, value);
-    if (value.GetUnit() == eHTMLUnit_Empty) {
+    if (value.GetUnit() != eHTMLUnit_Null) {
       // XXX set
     }
   }

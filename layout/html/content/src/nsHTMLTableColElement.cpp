@@ -162,18 +162,21 @@ nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
    */
   /* attributes that resolve to integers */
   if (aAttribute == nsHTMLAtoms::choff) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
-  else   if (aAttribute == nsHTMLAtoms::span) {
-    nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+  else if (aAttribute == nsHTMLAtoms::span) {
+    if (nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
 
   /* attributes that resolve to integers or percents or proportions */
   else if (aAttribute == nsHTMLAtoms::width) {
-    nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
 
   /* other attributes */
