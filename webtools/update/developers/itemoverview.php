@@ -58,7 +58,7 @@ echo"Categories: $categories<br>\n";
 
 <h3>Listed Versions</h3>
 <?php
-$approved_array = array("?"=>"Pending Approval", "YES"=>"Approved", "NO"=>"Disabled");
+$approved_array = array("?"=>"Pending Approval", "YES"=>"Approved", "NO"=>"Denied", "DISABLED"=>"Disabled");
 $sql = "SELECT vID, TV.Version, URI, OSName, approved FROM `t_version` TV
 INNER JOIN t_os TOS ON TOS.OSID = TV.OSID
 WHERE `ID`='$id' GROUP BY `URI` ORDER BY `Version`";

@@ -18,7 +18,7 @@ if ($_SESSION["level"] == "admin" or $_SESSION["level"] == "moderator") {
 
 $sql ="SELECT TM.ID FROM `t_main` TM
 INNER JOIN `t_version` TV ON TM.ID = TV.ID
-WHERE `approved` = '?' ORDER BY TV.DateUpdated ASC";
+WHERE `approved` = '?' GROUP BY `URI` ORDER BY TV.DateUpdated ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $num_result = mysql_num_rows($sql_result);
 ?>
