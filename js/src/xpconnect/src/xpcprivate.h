@@ -1351,9 +1351,11 @@ private:
                    nsIXPConnectWrappedNative *wrapper,
                    nsIXPCScriptable *arbitrary);
 
+    JSBool NeedToFillCache(JSObject* obj) const {return obj != mObj;}
+
 private:
     nsJSID mDetails;
-    JSBool mCacheFilled;
+    JSObject* mObj;
 };
 
 // nsJSCID
