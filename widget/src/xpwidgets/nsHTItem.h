@@ -30,6 +30,8 @@ public:
     virtual ~nsHTItem();
 
 	virtual PRBool IsExpandedDelegate() const;
+	virtual void ToggleOpenStateDelegate();
+
 	virtual PRUint32 GetIndentationLevelDelegate() const;
 	virtual void SetIndentationLevelDelegate(PRUint32 n);
 

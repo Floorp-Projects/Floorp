@@ -97,17 +97,11 @@ void nsHTDataModel::AddNodesToArray(nsIContent* pContent, PRUint32 indentLevel)
 	}
 	else mRootNode = pDataItem;
 
-	nsHTItem* pItem = NS_STATIC_CAST(nsHTItem*, pDataItem->GetImplData());
-
-	nsIContent* pChildrenNode = nsHTDataModel::FindChildWithName(pItem->GetContentNode(), "children");
-	if (pChildrenNode)
+	if (pContent == mContentRoot || pDataItem->IsExpanded())
 	{
-		// If the node is OPEN, then its children need to be added to the visibility array.
-		nsString attrValue;
-		nsresult result = pContent->GetAttribute("open", attrValue);
-        attrValue.ToLowerCase();
-		if ((pContent == mContentRoot) || (result == NS_CONTENT_ATTR_NO_VALUE ||
-			(result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true")))
+		nsHTItem* pItem = NS_STATIC_CAST(nsHTItem*, pDataItem->GetImplData());
+		nsIContent* pChildrenNode = nsHTDataModel::FindChildWithName(pItem->GetContentNode(), "children");
+		if (pChildrenNode)
 		{
 			PRInt32 numChildren = 0;
 			pChildrenNode->ChildCount(numChildren);
