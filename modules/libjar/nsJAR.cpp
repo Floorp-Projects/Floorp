@@ -819,15 +819,12 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
     console->LogStringMessage(messageUni);
     nsMemory::Free(messageUni);
   }
-#ifndef DEBUG
-  else // If JS console reporting failed, print to stderr.
+#ifdef DEBUG
+  char* messageCstr = message.ToNewCString();
+  if (!messageCstr) return;
+  fprintf(stderr, "%s\n", messageCstr);
+  nsMemory::Free(messageCstr);
 #endif
-  {
-    char* messageCstr = message.ToNewCString();
-    if (!messageCstr) return;
-    fprintf(stderr, "%s\n", messageCstr);
-    nsMemory::Free(messageCstr);
-  }
 }
 
 nsresult
