@@ -54,6 +54,9 @@ class nsTemplateMatch;
 class nsOutlinerRows
 {
 public:
+    class iterator;
+    friend class iterator;
+
     enum Direction { eDirection_Forwards = +1, eDirection_Backwards = -1 };
 
     // N.B. these values are chosen to avoid problems with
@@ -165,7 +168,7 @@ public:
         /**
          * Insert an immediate child row at the specified index.
          */
-        PRBool InsertRowAt(nsTemplateMatch* aMatch, PRInt32 aIndex);
+        iterator InsertRowAt(nsTemplateMatch* aMatch, PRInt32 aIndex);
 
         /**
          * Remove an immediate child row from the specified index.
@@ -206,9 +209,6 @@ protected:
     };
 
 public:
-    class iterator;
-    friend class iterator;
-
     /**
      * An iterator that can be used to traverse the outliner view.
      */
@@ -221,15 +221,21 @@ public:
         void Next();
         void Prev();
 
+        friend class Subtree; // so InsertRowAt can initialize us
         friend class nsOutlinerRows; // so nsOutlinerRows can initialize us
 
         /**
-         * Used by PathTo() to initialize an iterator.
+         * Used by operator[]() to initialize an iterator.
          */
-        void Push(Subtree* aParent, PRInt32 aChildIndex);
+        void Append(Subtree* aParent, PRInt32 aChildIndex);
 
         /**
-         * Used by PathTo() to initialize an iterator.
+         * Used by InsertRowAt() to initialize an iterator.
+         */
+        void Push(Subtree *aParent, PRInt32 aChildIndex);
+
+        /**
+         * Used by operator[]() and InsertRowAt() to initialize an iterator.
          */
         void SetRowIndex(PRInt32 aRowIndex) { mRowIndex = aRowIndex; }
 
@@ -379,10 +385,10 @@ public:
     /**
      * Insert a new match into the view
      */
-    void
+    iterator
     InsertRowAt(nsTemplateMatch* aMatch, Subtree* aSubtree, PRInt32 aChildIndex) {
-        aSubtree->InsertRowAt(aMatch, aChildIndex);
-        InvalidateCachedRow(); }
+        InvalidateCachedRow();
+        return aSubtree->InsertRowAt(aMatch, aChildIndex); }
 
     /**
      * Raw access to the rows; e.g., for sorting.
