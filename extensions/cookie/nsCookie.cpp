@@ -1664,7 +1664,11 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * setCookieHeader, char * ser
     expires = cookie_ParseDate(date);
     *ptr=origLast;
   }
-  sDate = cookie_ParseDate(server_date);
+  if (server_date) {
+    sDate = cookie_ParseDate(server_date);
+  } else {
+    sDate = time(NULL);
+  }
   if( sDate && expires ) {
     if( expires < sDate ) {
       gmtCookieExpires=1;
@@ -2192,9 +2196,11 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
       cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(count));
       if (cookie && cookie_InSequence(gone, count)) {
         cookie_FreeCookie(cookie);
+        cookie_cookiesChanged = PR_TRUE;
       }
     }
   }
+  cookie_SaveCookies();
   cookie_UnlockCookieList();
   nsCRT::free(gone);
 
