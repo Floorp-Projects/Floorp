@@ -117,13 +117,12 @@ function historyOnClick(aEvent)
   // This is kind of a hack but matches the currently implemented behaviour. 
   // If a status bar is not present, assume we're in sidebar mode, and thus single clicks on containers
   // will open the container. Single clicks on non-containers are handled below in historyOnSelect.
-  if (!gHistoryStatus) {
-    var currentIndex = gHistoryTree.currentIndex;     
+  if (!gHistoryStatus && aEvent.button == 0) {
     var row = { };
     var col = { };
     var elt = { };
     gHistoryTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, elt);
-    if (row.value >= 0 && isContainer(gHistoryTree, row.value)) 
+    if (row.value >= 0 && col.value && elt.value != "twisty" && isContainer(gHistoryTree, row.value))
       gHistoryTree.treeBoxObject.view.toggleOpenState(row.value);
   }
 }
