@@ -218,7 +218,6 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
 
     if (gVerbose) {
         printf("\n+++ TestHTTPEventSink::OnHeadersAvailable +++\n");
-        nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(context));
         if (pHTTPCon) {
             char* type;
             //optimize later TODO allow atoms here...! intead of just the header strings

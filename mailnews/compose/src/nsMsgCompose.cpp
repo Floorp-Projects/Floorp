@@ -522,8 +522,8 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
       {
         // Apply entity conversion then convert to a mail charset. 
         char charset[65];
-        nsresult rv = nsMsgI18NSaveAsCharset(attachment1_type, aCharset.ToCString(charset, 65), 
-                                             nsString(bodyString).GetUnicode(), &outCString);
+        rv = nsMsgI18NSaveAsCharset(attachment1_type, aCharset.ToCString(charset, 65), 
+                                    nsString(bodyString).GetUnicode(), &outCString);
         if (NS_SUCCEEDED(rv)) 
         {
           bodyString = outCString;

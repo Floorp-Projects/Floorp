@@ -427,9 +427,9 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
         if (pipe->mObserver) {
             nsCOMPtr<nsIPipeObserver> obs = pipe->mObserver;
             mon.Exit();     // XXXbe avoid deadlock better
-            nsresult rv = obs->OnClose(pipe);
+            nsresult rv2 = obs->OnClose(pipe);
             mon.Enter();
-            NS_ASSERTION(NS_SUCCEEDED(rv), "OnClose failed");
+            NS_ASSERTION(NS_SUCCEEDED(rv2), "OnClose failed");
             // don't return error from OnClose -- its not our problem
             pipe->mObserver = nsnull;       // so we don't call OnClose again
         }
