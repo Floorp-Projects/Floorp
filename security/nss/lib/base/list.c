@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.16 $ $Date: 2002/03/15 22:09:45 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.17 $ $Date: 2002/04/22 20:44:07 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -313,19 +313,23 @@ nssList_Count(nssList *list)
 NSS_IMPLEMENT PRStatus
 nssList_GetArray(nssList *list, void **rvArray, PRUint32 maxElements)
 {
-    nssListIterator *iter;
-    void *el;
+    nssListElement *node;
     PRUint32 i = 0;
     PR_ASSERT(maxElements > 0);
-    iter = nssList_CreateIterator(list);
-    for (el = nssListIterator_Start(iter); el != NULL;
-         el = nssListIterator_Next(iter)) 
-    {
-	rvArray[i++] = el;
-	if (i == maxElements) break;
+    node = list->head;
+    if (!node) {
+	return PR_SUCCESS;
     }
-    nssListIterator_Finish(iter);
-    nssListIterator_Destroy(iter);
+    NSSLIST_LOCK_IF(list);
+    while (node) {
+	rvArray[i++] = node->data;
+	if (i == maxElements) break;
+	node = (nssListElement *)PR_NEXT_LINK(&node->link);
+	if (node == list->head) {
+	    break;
+	}
+    }
+    NSSLIST_UNLOCK_IF(list);
     return PR_SUCCESS;
 }
 
