@@ -48,6 +48,7 @@
 #include "nsIOutputStream.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsNetSegmentUtils.h"
 #include "nsCRT.h"
 #include "nsEscape.h"
 
@@ -193,7 +194,11 @@ nsDataChannel::ParseData() {
     writeData* dataToWrite = nsnull;
     PRUint32 dataLen = PL_strlen(dataBuffer);
     
-    rv = NS_NewPipe(getter_AddRefs(bufInStream), getter_AddRefs(bufOutStream));
+    // create an unbounded pipe.
+    rv = NS_NewPipe(getter_AddRefs(bufInStream),
+                    getter_AddRefs(bufOutStream),
+                    NET_DEFAULT_SEGMENT_SIZE, PR_UINT32_MAX,
+                    PR_TRUE, PR_TRUE, nsIOService::gBufferCache);
     if (NS_FAILED(rv))
         goto cleanup;
 
