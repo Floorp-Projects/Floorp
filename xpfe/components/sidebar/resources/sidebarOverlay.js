@@ -33,7 +33,8 @@ var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService(
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService)
 
 var defaultsidebar = new Object
-defaultsidebar.db       = 'chrome://sidebar/content/sidebar.rdf'
+defaultsidebar.db = null;
+var default_sidebar_db = 'chrome://sidebar/content/sidebar.rdf'
 defaultsidebar.resource = 'NC:SidebarRoot'
 
 // the current sidebar:
@@ -41,6 +42,29 @@ var sidebar;
 
 function sidebarOverlayInit(usersidebar)
 {
+  defaultsidebar.db = default_sidebar_db;
+  try 
+  {
+	profileService  = Components.classes['component://netscape/profile/manager'].getService();
+	profileService = profileService.QueryInterface(Components.interfaces.nsIProfile);
+	var sidebar_url = profileService.getCurrentProfileDirFromJS();
+	sidebar_url.URLString += "sidebar.rdf";
+      
+	if (!(sidebar_url.exists())) {
+		dump("using default, " + sidebar_url.URLString + "does not exist\n");
+		defaultsidebar.db = default_sidebar_db;
+	}
+	else {
+		dump("sidebar url is " + sidebar_url.URLString + "\n");
+		defaultsidebar.db = sidebar_url.URLString;
+	}
+  }
+  catch (ex) 
+  {
+	dump("failed to get sidebar url, using default\n");
+  	defaultsidebar.db = default_sidebar_db;
+  }
+
   var sidebar_element = document.getElementById('sidebarbox');
   if (sidebar_element.getAttribute('hidden')) {
     return
