@@ -92,7 +92,7 @@ class nsMsgAttachmentHandler;
 // Attachment file/URL structures
 struct nsMsgAttachmentData
 {
-  nsIURI  *url;			      // The URL to attach. This should be 0 to signify "end of list".
+  nsIURI* url;			      // The URL to attach. This should be 0 to signify "end of list".
 
   char *desired_type;	    // The type to which this document should be
 						              // converted.  Legal values are NULL, TEXT_PLAIN
@@ -126,7 +126,7 @@ struct nsMsgAttachmentData
 //
 typedef struct nsMsgAttachedFile
 {
-  nsIURI      *orig_url;		// Where it came from on the network (or even elsewhere on the local disk.)
+  nsCOMPtr<nsIURI> orig_url;	// Where it came from on the network (or even elsewhere on the local disk.)
 
   nsFileSpec  *file_spec;		// The tmp file in which the (possibly converted) data now resides.
   

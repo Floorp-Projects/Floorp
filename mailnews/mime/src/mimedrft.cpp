@@ -184,6 +184,7 @@ mime_dump_attachments ( nsMsgAttachmentData *attachData )
 
       tmp->url->GetSpec(&spec);
       printf("URL               : %s\n", spec);
+      PR_FREEIF(spec);
     }
 
     printf("Desired Type      : %s\n", tmp->desired_type);
@@ -461,7 +462,7 @@ mime_free_attach_data ( nsMsgAttachmentData *attachData, int cleanupCount)
 
   for ( i=0; i < cleanupCount; i++, tmp++ ) 
   {
-    if ( tmp->url ) 
+    if (tmp->url)
       delete tmp->url;
     PR_FREEIF(tmp->real_name);
 
@@ -486,8 +487,7 @@ mime_free_attachments ( nsMsgAttachedFile *attachments, int count )
 
   for ( i = 0; i < count; i++, cur++ ) 
   {
-    if ( cur->orig_url )
-      NS_RELEASE(cur->orig_url);
+    cur->orig_url=nsnull;
 
     PR_FREEIF ( cur->type );
     PR_FREEIF ( cur->encoding );
@@ -698,8 +698,10 @@ MimeGetNamedString(PRInt32 id)
   retString[0] = '\0';
   char *tString = MimeGetStringByID(id);
   if (tString)
+  {
     PL_strncpy(retString, tString, sizeof(retString)); 
-
+    PR_Free(tString);
+  }
   return retString;
 }
 
@@ -1847,8 +1849,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
       nsFileURL fileURL(*tmpSpec);
       const char * tempSpecStr = fileURL.GetURLString();
 
-      nsMimeNewURI(&(newAttachment->orig_url), tempSpecStr, nsnull);
-      NS_IF_ADDREF(newAttachment->orig_url);
+      nsMimeNewURI(getter_AddRefs(newAttachment->orig_url), tempSpecStr, nsnull);
   }
 
   PR_FREEIF(workURLSpec);

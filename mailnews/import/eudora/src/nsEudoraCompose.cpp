@@ -507,13 +507,13 @@ void nsEudoraCompose::ExtractType( nsString& str)
 void nsEudoraCompose::CleanUpAttach( nsMsgAttachedFile *a, PRInt32 count)
 {
 	for (PRInt32 i = 0; i < count; i++) {
-		NS_IF_RELEASE( a[i].orig_url);
-		if (a[i].type)
-			nsCRT::free( a[i].type);
-		if (a[i].description)
-			nsCRT::free( a[i].description);
-		if (a[i].encoding)
-			nsCRT::free( a[i].encoding);
+    a[i].orig_url=nsnull;
+    if (a[i].type)
+      nsCRT::free( a[i].type);
+    if (a[i].description)
+      nsCRT::free( a[i].description);
+    if (a[i].encoding)
+      nsCRT::free( a[i].encoding);
 	}
 
 	delete [] a;
@@ -555,7 +555,7 @@ nsMsgAttachedFile * nsEudoraCompose::GetLocalAttachments( void)
 			CleanUpAttach( a, count);
 			return( nsnull);
 		}
-		rv = m_pIOService->NewURI( urlStr, nsnull, &(a[i].orig_url));
+		rv = m_pIOService->NewURI( urlStr, nsnull, getter_AddRefs(a[i].orig_url));
 		nsCRT::free( urlStr);
 		if (NS_FAILED( rv)) {
 			CleanUpAttach( a, count);
