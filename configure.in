@@ -1132,6 +1132,7 @@ network/cnvts/Makefile
 network/cstream/Makefile
 network/main/Makefile
 network/mimetype/Makefile
+network/public/Makefile
 network/module/Makefile
 network/module/tests/Makefile
 network/protocol/Makefile
