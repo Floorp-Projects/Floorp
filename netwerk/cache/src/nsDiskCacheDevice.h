@@ -49,9 +49,12 @@ public:
                                           nsITransport ** result);
 
     virtual nsresult        OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize);
+    
+    virtual nsresult        Visit(nsICacheVisitor * visitor);
 
 /* private: */
     void                    setCacheDirectory(nsILocalFile* directory);
+    void                    setCacheCapacity(PRUint32 capacity);
 
 private:
     nsresult getFileForKey(const char* key, PRBool meta, nsIFile**);
@@ -63,10 +66,11 @@ private:
     nsresult deleteDiskCacheEntry(nsCacheEntry* entry);
 
 private:
-    nsCOMPtr<nsILocalFile>      mCacheDirectory;
-    nsCacheEntryHashTable       mBoundEntries;
-    PRBool                      mScannedEntries;
-    PRUint64                    mTotalCachedDataSize;
+    nsCOMPtr<nsILocalFile>  mCacheDirectory;
+    nsCacheEntryHashTable   mBoundEntries;
+    PRBool                  mScannedEntries;
+    PRUint32                mCacheCapacity;
+    PRUint32                mCacheSize;
 };
 
 #endif // _nsDiskCacheDevice_h_

@@ -45,6 +45,8 @@ static const char CACHE_DIR_PREF[] = { "browser.newcache.directory" };
 static const char CACHE_DIR_PREF[] = { "browser.cache.directory" };
 #endif
 
+static const char CACHE_DISK_CAPACITY[] = { "browser.cache.disk_cache_size" };
+
 static int PR_CALLBACK cacheDirectoryChanged(const char *pref, void *closure)
 {
 	nsresult rv;
@@ -63,13 +65,50 @@ static int PR_CALLBACK cacheDirectoryChanged(const char *pref, void *closure)
     return NS_OK;
 }
 
+static int PR_CALLBACK cacheCapacityChanged(const char *pref, void *closure)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+	if (NS_FAILED(rv))
+		return rv;
+    
+    PRInt32 cacheCapacity;
+    rv = prefs->GetIntPref(CACHE_DISK_CAPACITY, &cacheCapacity);
+	if (NS_FAILED(rv))
+		return rv;
+
+    nsDiskCacheDevice* device = NS_STATIC_CAST(nsDiskCacheDevice*, closure);
+    device->setCacheCapacity(cacheCapacity);
+    
+    return NS_OK;
+}
+
 static nsresult installPrefListeners(nsDiskCacheDevice* device)
 {
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
 	if (NS_FAILED(rv))
 		return rv;
-	rv = prefs->RegisterCallback(CACHE_DIR_PREF, cacheDirectoryChanged, device); 
+
+
+	rv = prefs->RegisterCallback(CACHE_DISK_CAPACITY, cacheCapacityChanged, device);
+	if (NS_FAILED(rv))
+		return rv;
+
+    PRInt32 cacheCapacity;
+    rv = prefs->GetIntPref(CACHE_DISK_CAPACITY, &cacheCapacity);
+    if (NS_FAILED(rv)) {
+#if DEBUG
+        const kTenMegabytes = 10 * 1024 * 1024;
+        rv = prefs->SetIntPref(CACHE_DISK_CAPACITY, kTenMegabytes);
+#else
+		return rv;
+#endif
+    } else {
+        device->setCacheCapacity(cacheCapacity);
+    }
+
+	rv = prefs->RegisterCallback(CACHE_DIR_PREF, cacheDirectoryChanged, device);
 	if (NS_FAILED(rv))
 		return rv;
 
@@ -90,6 +129,12 @@ static nsresult installPrefListeners(nsDiskCacheDevice* device)
         rv = cacheDirectory->Append("Cache");
     	if (NS_FAILED(rv))
     		return rv;
+
+        // make sure the Cache directory exists.
+        PRBool exists;
+        rv = cacheDirectory->Exists(&exists);
+        if (NS_SUCCEEDED(rv) && !exists)
+            cacheDirectory->Create(nsIFile::DIRECTORY_TYPE, 0777);
 
         rv = prefs->SetFileXPref(CACHE_DIR_PREF, cacheDirectory);
     	if (NS_FAILED(rv))
@@ -185,7 +230,7 @@ ensureDiskCacheEntry(nsCacheEntry * entry)
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 nsDiskCacheDevice::nsDiskCacheDevice()
-    :   mScannedEntries(PR_FALSE), mTotalCachedDataSize(LL_ZERO)
+    :   mScannedEntries(PR_FALSE), mCacheCapacity(0), mCacheSize(0)
 {
 }
 
@@ -347,21 +392,25 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
 nsresult
 nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 {
-    PRInt64 deltaSize64;
-    LL_I2L(deltaSize64, deltaSize);
-    LL_ADD(mTotalCachedDataSize, mTotalCachedDataSize, deltaSize64);
+    mCacheSize += deltaSize;
+    return NS_OK;
+}
+
+nsresult
+nsDiskCacheDevice::Visit(nsICacheVisitor * visitor)
+{
     return NS_OK;
 }
 
 void nsDiskCacheDevice::setCacheDirectory(nsILocalFile* cacheDirectory)
 {
     mCacheDirectory = cacheDirectory;
+}
 
-    // make sure the Cache directory exists.
-    PRBool exists;
-    nsresult rv = cacheDirectory->Exists(&exists);
-    if (NS_SUCCEEDED(rv) && !exists)
-        cacheDirectory->Create(nsIFile::DIRECTORY_TYPE, 0777);
+void nsDiskCacheDevice::setCacheCapacity(PRUint32 capacity)
+{
+    // XXX start evicting entries if the new size is smaller!
+    mCacheCapacity = capacity;
 }
 
 nsresult nsDiskCacheDevice::getFileForKey(const char* key, PRBool meta, nsIFile ** result)
