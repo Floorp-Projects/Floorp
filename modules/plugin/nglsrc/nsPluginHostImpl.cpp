@@ -30,6 +30,8 @@
 #include "nsIOutputStream.h"
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
+#include "nsICookieStorage.h"
+#include "nsINetService.h"
 #include "prprf.h"
 #include "gui.h"
 
@@ -43,6 +45,7 @@
 #include "winbase.h"
 #endif
 
+#include "nsSpecialSystemDirectory.h"
 #include "nsFileSpec.h"
 
 #ifdef XP_MAC
@@ -59,12 +62,8 @@
 
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID); 
 static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
-static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
-static NS_DEFINE_IID(kIPluginManager2IID, NS_IPLUGINMANAGER2_IID);
-static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
@@ -1146,37 +1145,43 @@ nsresult nsPluginHostImpl :: QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
 
-  if (aIID.Equals(kIPluginManagerIID))
+  if (aIID.Equals(nsIPluginManager::GetIID()))
   {
     *aInstancePtrResult = (void *)((nsIPluginManager *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(kIPluginManager2IID))
+  if (aIID.Equals(nsIPluginManager2::GetIID()))
   {
     *aInstancePtrResult = (void *)((nsIPluginManager2 *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(kIPluginHostIID))
+  if (aIID.Equals(nsIPluginHost::GetIID()))
   {
     *aInstancePtrResult = (void *)((nsIPluginHost *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(kIFactoryIID))
+  if (aIID.Equals(nsIFactory::GetIID()))
   {
     *aInstancePtrResult = (void *)((nsIFactory *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(kIFileUtilitiesIID))
+  if (aIID.Equals(nsIFileUtilities::GetIID()))
   {
     *aInstancePtrResult = (void*)(nsIFileUtilities*)this;
+    AddRef();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(nsICookieStorage::GetIID())) {
+    *aInstancePtrResult = (void*)(nsICookieStorage*)this;
     AddRef();
     return NS_OK;
   }
@@ -2370,15 +2375,64 @@ nsresult nsPluginHostImpl :: LockFactory(PRBool aLock)
 
 NS_IMETHODIMP nsPluginHostImpl::GetProgramPath(const char* *result)
 {
+	static nsSpecialSystemDirectory programDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+	*result = programDir;
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginHostImpl::GetTempDirPath(const char* *result)
 {
+	static nsSpecialSystemDirectory tempDir(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+	*result = tempDir;
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginHostImpl::NewTempFileName(const char* prefix, PRUint32 bufLen, char* resultBuf)
 {
-	return NS_OK;
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// nsICookieStorage interface
+
+NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCookieBuffer, PRUint32& inOutCookieSize)
+{
+	nsresult rv = NS_OK;
+	nsINetService* netService = NULL;
+	const nsCID kNetServiceCID = NS_NETSERVICE_CID;
+	rv = mServiceMgr->GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports**)&netService);
+	if (rv == NS_OK) {
+		nsIURL* cookieURL = NULL;
+		rv = NS_NewURL(&cookieURL, nsString(inCookieURL));
+		if (rv == NS_OK) {
+			nsString cookieValue;
+			rv = netService->GetCookieString(cookieURL, cookieValue);
+			PRInt32 cookieLength = cookieValue.Length();
+			if (cookieLength < inOutCookieSize)
+				inOutCookieSize = cookieLength;
+			cookieValue.ToCString((char*)inOutCookieBuffer, inOutCookieSize);
+			cookieURL->Release();
+		}
+		mServiceMgr->ReleaseService(kNetServiceCID, netService);
+	}
+	return rv;
+}
+
+NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* inCookieBuffer, PRUint32 inCookieSize)
+{
+	nsresult rv = NS_OK;
+	nsINetService* netService = NULL;
+	const nsCID kNetServiceCID = NS_NETSERVICE_CID;
+	rv = mServiceMgr->GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports**)&netService);
+	if (rv == NS_OK) {
+		nsIURL* cookieURL = NULL;
+		rv = NS_NewURL(&cookieURL, nsString(inCookieURL));
+		if (rv == NS_OK) {
+			nsString cookieValue;
+			cookieValue.SetString((const char*)inCookieBuffer, inCookieSize);
+			rv = netService->SetCookieString(cookieURL, cookieValue);
+			cookieURL->Release();
+		}
+		mServiceMgr->ReleaseService(kNetServiceCID, netService);
+	}
+	return rv;
 }
