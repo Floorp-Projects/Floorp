@@ -36,11 +36,13 @@
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsIGenericFactory.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "pratom.h"
 #include "prmem.h"
 #include "nsIServiceManager.h"
+#include "nsIModule.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -431,151 +433,178 @@ nsStringBundleService::CreateXPCBundle(const char *aURLSpec, const PRUnichar *aL
   return ret;
 }
 
-class nsStringBundleServiceFactory : public nsIFactory
+NS_IMETHODIMP
+NS_NewStringBundleService(nsISupports* aOuter, const nsIID& aIID,
+                          void** aResult)
 {
-public:
-  nsStringBundleServiceFactory();
-  virtual ~nsStringBundleServiceFactory();
+  nsresult rv;
 
+  if (!aResult) {                                                  
+    return NS_ERROR_INVALID_POINTER;                             
+  }                                                                
+  if (aOuter) {                                                    
+    *aResult = nsnull;                                           
+    return NS_ERROR_NO_AGGREGATION;                              
+  }                                                                
+  nsStringBundleService * inst = new nsStringBundleService();
+  if (inst == NULL) {                                             
+    *aResult = nsnull;                                           
+    return NS_ERROR_OUT_OF_MEMORY;
+  }                                                                
+  rv = inst->QueryInterface(aIID, aResult);                        
+  if (NS_FAILED(rv)) {
+    delete inst;
+    *aResult = nsnull;                                           
+  }                                                              
+  return rv;                                                     
+}
+
+//----------------------------------------------------------------------------
+
+class nsSBModule : public nsIModule 
+{
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIMODULE
 
-  NS_IMETHOD CreateInstance(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-  NS_IMETHOD LockFactory(PRBool aLock);
+private:
+
+  PRBool mInitialized;
+
+  void Shutdown();
+
+public:
+
+  nsSBModule();
+
+  virtual ~nsSBModule();
+
+  nsresult Initialize();
+
+protected:
+  nsCOMPtr<nsIGenericFactory> mFactory;
 };
 
-nsStringBundleServiceFactory::nsStringBundleServiceFactory()
-{
-#ifdef DEBUG_tao
-  printf("\n++ nsStringBundleServiceFactory::nsStringBundleServiceFactory ++\n");
-#endif
-  NS_INIT_REFCNT();
-}
+static nsSBModule * gModule = NULL;
 
-nsStringBundleServiceFactory::~nsStringBundleServiceFactory()
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager * compMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
 {
-}
+  nsresult rv = NS_OK;
 
-NS_IMPL_ISUPPORTS(nsStringBundleServiceFactory, kIFactoryIID)
+  NS_ENSURE_ARG_POINTER(return_cobj);
+  NS_ENSURE_NOT(gModule, NS_ERROR_FAILURE);
 
-NS_IMETHODIMP
-nsStringBundleServiceFactory::CreateInstance(nsISupports* aOuter,
-  REFNSIID aIID, void** aResult)
-{
-#ifdef DEBUG_tao
-  printf("\n++ nsStringBundleServiceFactory::CreateInstance ++\n");
-#endif
-  nsStringBundleService* service = new nsStringBundleService();
-  if (!service) {
+  // Create an initialize the module instance
+  nsSBModule * m = new nsSBModule();
+  if (!m) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult ret = service->QueryInterface(aIID, aResult);
-  if (NS_FAILED(ret)) {
-    delete service;
-    return ret;
-  }
 
-  return ret;
+  // Increase refcnt and store away nsIModule interface to m in return_cobj
+  rv = m->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+  if (NS_FAILED(rv)) {
+    delete m;
+    m = nsnull;
+  }
+  gModule = m;                  // WARNING: Weak Reference
+  return rv;
 }
 
-NS_IMETHODIMP
-nsStringBundleServiceFactory::LockFactory(PRBool aLock)
-{
-#ifdef DEBUG_tao
-  printf("\n++ nsStringBundleServiceFactory::LockFactory ++\n");
-#endif
-  if (aLock) {
-    PR_AtomicIncrement(&gLockCount);
-  }
-  else {
-    PR_AtomicDecrement(&gLockCount);
-  }
+NS_IMPL_ISUPPORTS(nsSBModule, nsIModule::GetIID())
 
+nsSBModule::nsSBModule()
+: mInitialized(PR_FALSE)
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsSBModule::~nsSBModule()
+{
+  Shutdown();
+}
+
+nsresult nsSBModule::Initialize()
+{
   return NS_OK;
 }
 
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* aServMgr, const char* path)
+void nsSBModule::Shutdown()
 {
-#ifdef DEBUG_tao
-  printf("\n++  str bunlde  NSRegisterSelf ++\n");
-#endif
+  mFactory = nsnull;
+}
+
+NS_IMETHODIMP nsSBModule::GetClassObject(nsIComponentManager *aCompMgr,
+                                         const nsCID& aClass,
+                                         const nsIID& aIID,
+                                         void ** r_classObj)
+{
   nsresult rv;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
+  // Defensive programming: Initialize *r_classObj in case of error below
+  if (!r_classObj) {
+    return NS_ERROR_INVALID_POINTER;
+  }
+  *r_classObj = NULL;
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
+  if (!mInitialized) {
+    rv = Initialize();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    mInitialized = PR_TRUE;
+  }
 
-  rv = compMgr->RegisterComponent(kStringBundleServiceCID, 
+  nsCOMPtr<nsIGenericFactory> fact;
+  if (aClass.Equals(kStringBundleServiceCID)) {
+    if (!mFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mFactory), 
+          NS_NewStringBundleService);
+    }
+    fact = mFactory;
+  } else {
+    return NS_ERROR_FACTORY_NOT_REGISTERED;
+  }
+
+  if (fact) {
+    rv = fact->QueryInterface(aIID, r_classObj);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsSBModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                                              nsIFileSpec* aPath,
+                                              const char* registryLocation,
+                                              const char* componentType)
+{
+  nsresult rv;
+  rv = aCompMgr->RegisterComponentSpec(kStringBundleServiceCID, 
                                   "String Bundle", 
                                   NS_STRINGBUNDLE_PROGID, 
-                                  path,
+                                  aPath,
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* aServMgr, const char* path)
+NS_IMETHODIMP nsSBModule::UnregisterSelf(nsIComponentManager *aCompMgr,
+                                                nsIFileSpec* aPath,
+                                                const char* registryLocation)
 {
-#ifdef DEBUG_tao
-  printf("\n++  str bunlde  NSUnregisterSelf ++\n");
-#endif
   nsresult rv;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
+  rv = aCompMgr->UnregisterComponentSpec(kStringBundleServiceCID, aPath);
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->UnregisterComponent(kStringBundleServiceCID, path);
-  if (NS_FAILED(rv)) goto done;
-
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
-extern "C" NS_EXPORT nsresult
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
+NS_IMETHODIMP nsSBModule::CanUnload(nsIComponentManager *aCompMgr, 
+                                           PRBool *okToUnload)
 {
-#ifdef DEBUG_tao
-  printf("\n++  str bunlde  NSGetFactory ++\n");
-#endif
-  nsresult  res;
-
-  if (!aFactory) {
-    return NS_ERROR_NULL_POINTER;
+  if (!okToUnload) {
+    return NS_ERROR_INVALID_POINTER;
   }
-
-  if (aClass.Equals(kStringBundleServiceCID)) {
-    nsStringBundleServiceFactory* factory = new nsStringBundleServiceFactory();
-    if (!factory) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    res = factory->QueryInterface(kIFactoryIID, (void**) aFactory);
-    if (NS_FAILED(res)) {
-      *aFactory = nsnull;
-      delete factory;
-    }
-
-    return res;
-  }
-
-  return NS_NOINTERFACE;
+  *okToUnload = PR_FALSE;
+  return NS_ERROR_FAILURE;
 }
+

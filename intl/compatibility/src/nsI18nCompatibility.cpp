@@ -21,6 +21,8 @@
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsIFactory.h"
+#include "nsIGenericFactory.h"
+#include "nsIModule.h"
 #include "nsIServiceManager.h"
 #include "nsII18nCompatibility.h"
 #include "nsI18nCompatibility.h"
@@ -59,124 +61,178 @@ NS_IMETHODIMP nsI18nCompatibility::CSIDtoCharsetName(PRUint16 csid, PRUnichar **
 PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
 
-class nsI18nCompatibilityFactory : public nsIFactory {
+NS_IMETHODIMP
+NS_NewI18nCompatibility(nsISupports* aOuter, const nsIID& aIID,
+                        void** aResult)
+{
+  nsresult rv;
+
+  if (!aResult) {                                                  
+    return NS_ERROR_INVALID_POINTER;                             
+  }                                                                
+  if (aOuter) {                                                    
+    *aResult = nsnull;                                           
+    return NS_ERROR_NO_AGGREGATION;                              
+  }                                                                
+  nsI18nCompatibility * inst = new nsI18nCompatibility();
+  if (inst == NULL) {                                             
+    *aResult = nsnull;                                           
+    return NS_ERROR_OUT_OF_MEMORY;
+  }                                                                
+  rv = inst->QueryInterface(aIID, aResult);                        
+  if (NS_FAILED(rv)) {
+    delete inst;
+    *aResult = nsnull;                                           
+  }                                                              
+  return rv;                                                     
+}
+
+//----------------------------------------------------------------------------
+
+class nsI18nCompModule : public nsIModule 
+{
   NS_DECL_ISUPPORTS
-  nsI18nCompatibilityFactory() {
-    NS_INIT_REFCNT();
-    PR_AtomicIncrement(&g_InstanceCount);
-  };
-  virtual ~nsI18nCompatibilityFactory() {
-    PR_AtomicDecrement(&g_InstanceCount);
-  };
+  NS_DECL_NSIMODULE
 
-  NS_IMETHOD CreateInstance(nsISupports *aDelegate,
-                            const nsIID &aIID,
-                            void **aResult);
+private:
 
-  NS_IMETHOD LockFactory(PRBool aLock) {
-    if (aLock) {
-      PR_AtomicIncrement(&g_LockCount);
-    } else {
-      PR_AtomicDecrement(&g_LockCount);
-    }
-    return NS_OK;
-  };
+  PRBool mInitialized;
+
+  void Shutdown();
+
+public:
+
+  nsI18nCompModule();
+
+  virtual ~nsI18nCompModule();
+
+  nsresult Initialize();
+
+protected:
+  nsCOMPtr<nsIGenericFactory> mFactory;
 };
 
-NS_IMPL_ISUPPORTS(nsI18nCompatibilityFactory, kIFactoryIID);
+static nsI18nCompModule * gModule = NULL;
 
-nsresult nsI18nCompatibilityFactory::CreateInstance(nsISupports *aDelegate,
-                                                    const nsIID &aIID,
-                                                    void **aResult)
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager * compMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
 {
-  if(NULL == aResult) {
-    return NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_OK;
+
+  NS_ENSURE_ARG_POINTER(return_cobj);
+  NS_ENSURE_NOT(gModule, NS_ERROR_FAILURE);
+
+  // Create an initialize the module instance
+  nsI18nCompModule * m = new nsI18nCompModule();
+  if (!m) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  
-  *aResult = NULL;
 
-  nsI18nCompatibility *imp = new nsI18nCompatibility();
-  
-  if(NULL == imp) 
-     return NS_ERROR_OUT_OF_MEMORY;
+  // Increase refcnt and store away nsIModule interface to m in return_cobj
+  rv = m->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+  if (NS_FAILED(rv)) {
+    delete m;
+    m = nsnull;
+  }
+  gModule = m;                  // WARNING: Weak Reference
+  return rv;
+}
 
-  nsresult rv = imp->QueryInterface(aIID, aResult);
-  
-  if(NS_FAILED(rv)) {
-    delete imp;
+NS_IMPL_ISUPPORTS(nsI18nCompModule, nsIModule::GetIID())
+
+nsI18nCompModule::nsI18nCompModule()
+: mInitialized(PR_FALSE)
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsI18nCompModule::~nsI18nCompModule()
+{
+  Shutdown();
+}
+
+nsresult nsI18nCompModule::Initialize()
+{
+  return NS_OK;
+}
+
+void nsI18nCompModule::Shutdown()
+{
+  mFactory = nsnull;
+}
+
+NS_IMETHODIMP nsI18nCompModule::GetClassObject(nsIComponentManager *aCompMgr,
+                                               const nsCID& aClass,
+                                               const nsIID& aIID,
+                                               void ** r_classObj)
+{
+  nsresult rv;
+
+  // Defensive programming: Initialize *r_classObj in case of error below
+  if (!r_classObj) {
+    return NS_ERROR_INVALID_POINTER;
+  }
+  *r_classObj = NULL;
+
+  if (!mInitialized) {
+    rv = Initialize();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    mInitialized = PR_TRUE;
+  }
+
+  nsCOMPtr<nsIGenericFactory> fact;
+  if (aClass.Equals(kI18nCompatibilityCID)) {
+    if (!mFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mFactory), 
+          NS_NewI18nCompatibility);
+    }
+    fact = mFactory;
+  } else {
+    return NS_ERROR_FACTORY_NOT_REGISTERED;
+  }
+
+  if (fact) {
+    rv = fact->QueryInterface(aIID, r_classObj);
   }
 
   return rv;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
-                                           const nsCID &aClass,
-                                           const char *aClassName,
-                                           const char *aProgID,
-                                           nsIFactory **aFactory)
-{
-  if (aFactory == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aClass.Equals(kI18nCompatibilityCID)) {
-    *aFactory = NULL;
-    nsI18nCompatibilityFactory *factory = new nsI18nCompatibilityFactory();
-    if(nsnull == factory) 
-      return NS_ERROR_OUT_OF_MEMORY;
-    nsresult res = factory->QueryInterface(kIFactoryIID, (void **) aFactory);
-    if (NS_FAILED(res)) {
-      *aFactory = NULL;
-      delete factory;
-    }
-    return res;
-  }
-  return NS_NOINTERFACE;
-}
-
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) {
-  return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
-}
-
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
+NS_IMETHODIMP nsI18nCompModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                                              nsIFileSpec* aPath,
+                                              const char* registryLocation,
+                                              const char* componentType)
 {
   nsresult rv;
-
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->RegisterComponent(kI18nCompatibilityCID, 
+  rv = aCompMgr->RegisterComponentSpec(kI18nCompatibilityCID, 
                                   "I18n compatibility", 
                                   NS_I18NCOMPATIBILITY_PROGID, 
-                                  path,
+                                  aPath,
                                   PR_TRUE, PR_TRUE);
-
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
+NS_IMETHODIMP nsI18nCompModule::UnregisterSelf(nsIComponentManager *aCompMgr,
+                                                nsIFileSpec* aPath,
+                                                const char* registryLocation)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
+  rv = aCompMgr->UnregisterComponentSpec(kI18nCompatibilityCID, aPath);
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->UnregisterComponent(kI18nCompatibilityCID, path);
-
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
+
+NS_IMETHODIMP nsI18nCompModule::CanUnload(nsIComponentManager *aCompMgr, 
+                                           PRBool *okToUnload)
+{
+  if (!okToUnload) {
+    return NS_ERROR_INVALID_POINTER;
+  }
+  *okToUnload = PR_FALSE;
+  return NS_ERROR_FAILURE;
+}
+
