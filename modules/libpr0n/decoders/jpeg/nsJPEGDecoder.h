@@ -94,9 +94,7 @@ public:
   jstate mState;
 
   JSAMPARRAY mSamples;
-  JSAMPARRAY mSamples3;
-  PRUint8*   mRGBPadRow;
-  PRUint32   mRGBPadRowLength;
+  PRUint8*   mRGBRow;
 
   PRInt32 mCompletedPasses;
   PRInt32 mPasses;
