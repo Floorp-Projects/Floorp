@@ -353,10 +353,7 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
         kidFrame = nextInFlow->mFirstChild;
       } else {
         // We've pulled up all the children, so move to the next-in-flow.
-        nsIFrame* next;
-
-        nextInFlow->GetNextInFlow(next);
-        nextInFlow = (nsInlineFrame*)next;
+        nextInFlow = (nsInlineFrame*)nextInFlow->mNextInFlow;
         continue;
       }
     }
@@ -480,10 +477,7 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
       // the next-in-flows must be empty. Do a sanity check
       while (nsnull != nextInFlow) {
         NS_ASSERTION(nsnull == nextInFlow->mFirstChild, "non-empty next-in-flow");
-        nsIFrame* next;
-
-        nextInFlow->GetNextInFlow(next);
-        nextInFlow = (nsInlineFrame*)next;
+        nextInFlow = (nsInlineFrame*)nextInFlow->mNextInFlow;
       }
 #endif
     }
