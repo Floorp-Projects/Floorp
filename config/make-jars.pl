@@ -50,9 +50,15 @@ sub EnsureFileInDir
     my ($destPath, $srcPath, $objDir) = @_;
 
     if (!-e $destPath) {
-        $destPath =~ /(.*)[\\\/]([\w\d.\-]+)/;
-        my $dir = $1;
-        my $file = $2;
+        my $dir = "";
+        my $file;
+        if ($destPath =~ /([\w\d.\-\\\/]+)[\\\/]([\w\d.\-]+)/) {
+            $dir = $1;
+            $file = $2;
+        }
+        else {
+            $file = $destPath;
+        }
 
         if ($srcPath) {
             $file = $srcPath;
