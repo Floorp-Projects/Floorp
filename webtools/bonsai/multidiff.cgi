@@ -26,6 +26,8 @@ require 'utils.pl';
 
 $|=1;
 
+loadConfigData();
+
 print "Content-type: text/html
 
 <PRE><FONT FACE='Lucida Console'>
