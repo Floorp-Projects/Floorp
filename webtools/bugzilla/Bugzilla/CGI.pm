@@ -116,18 +116,6 @@ sub multipart_init {
     return $self->SUPER::multipart_init(@_);
 }
 
-sub cookie {
-    my $self = shift;
-
-    # Add the default path in, but only if we're fetching stuff
-    # (This test fails for |$cgi->cookie(-name=>'x')| which _is_ meant to
-    # fetch, but thats an ugly notation for the fetch case which we shouldn't
-    # be using)
-    unshift(@_, '-path' => Param('cookiepath')) if scalar(@_)>1;
-
-    return $self->SUPER::cookie(@_);
-}
-
 # The various parts of Bugzilla which create cookies don't want to have to
 # pass them arround to all of the callers. Instead, store them locally here,
 # and then output as required from |headers|.
@@ -138,7 +126,14 @@ sub cookie {
 sub send_cookie {
     my $self = shift;
 
-    my $cookie = $self->cookie(@_);
+    # Add the default path in
+    unshift(@_, '-path' => Param('cookiepath'));
+
+    # Use CGI::Cookie directly, because CGI.pm's |cookie| method gives the
+    # current value if there isn't a -value attribute, which happens when
+    # we're expiring an entry.
+    require CGI::Cookie;
+    my $cookie = CGI::Cookie->new(@_);
 
     # XXX - mod_perl
     print "Set-Cookie: $cookie\r\n";
@@ -190,11 +185,6 @@ I<Bugzilla::CGI> also includes additional functions.
 
 This returns a sorted string of the parameters, suitable for use in a url.
 Values in C<@exclude> are not included in the result.
-
-=item C<cookie>
-
-Identical to the CGI.pm C<cookie> routine, except that the cookie path is
-automatically added.
 
 =item C<send_cookie>
 

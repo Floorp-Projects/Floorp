@@ -808,9 +808,8 @@ if ($format->{'extension'} eq "html") {
     my $cookiepath = Param("cookiepath");
 
     if ($order) {
-        my $qorder = url_quote($order);
         $cgi->send_cookie(-name => 'LASTORDER',
-                          -value => $qorder,
+                          -value => $order,
                           -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
     }
     my $bugids = join(":", @bugidlist);
