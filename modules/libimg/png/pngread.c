@@ -166,6 +166,7 @@ png_create_read_struct_2(png_const_charp user_png_ver, png_voidp error_ptr,
 /* Initialize PNG structure for reading, and allocate any memory needed.
    This interface is deprecated in favour of the png_create_read_struct(),
    and it will eventually disappear. */
+#if defined(PNG_1_0_X)
 #undef png_read_init
 void PNGAPI
 png_read_init(png_structp png_ptr)
@@ -215,6 +216,7 @@ png_read_init_2(png_structp png_ptr, png_const_charp user_png_ver,
      }
    png_read_init_3(&png_ptr, user_png_ver, png_struct_size);
 }
+#endif
 
 void PNGAPI
 png_read_init_3(png_structpp ptr_ptr, png_const_charp user_png_ver,
