@@ -312,8 +312,17 @@ function ToggleMessageRead(treeItem)
 
 	var tree = GetThreadTree();
 	var status = treeItem.getAttribute('Status');
-	var unread = (status == "") || (status == "new");
+	var unread = (status == " ") || (status == "new");
 	messenger.MarkMessageRead(tree.database, treeItem, unread);
+}
+
+function ToggleMessageFlagged(treeItem)
+{
+
+	var tree = GetThreadTree();
+	var flaggedValue = treeItem.getAttribute('Flagged');
+	var flagged = (flaggedValue =="flagged");
+	messenger.MarkMessageFlagged(tree.database, treeItem, !flagged);
 }
 
 function ThreadPaneSelectionChange(selectedElement)
