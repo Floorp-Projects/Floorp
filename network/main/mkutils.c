@@ -101,8 +101,8 @@ NET_Progress(MWContext *context, char *msg)
 PUBLIC char **
 NET_AssembleAllFilesInDirectory(MWContext *context, char * local_dir_name)
 {
-	XP_Dir dir_ptr;
-	XP_DirEntryStruct *dir_entry;
+	PRDir *dir_ptr;
+	PRDirEntry *dir_entry;
     XP_StatStruct stat_entry;
 	char **files_to_post;
 	char *file_to_post = 0;
@@ -118,7 +118,7 @@ NET_AssembleAllFilesInDirectory(MWContext *context, char * local_dir_name)
 	local_dir_name += 7;	// chop-off "file://"
 #endif
 
-	if(NULL == (dir_ptr = XP_OpenDir(local_dir_name, xpFileToPost)))
+	if(NULL == (dir_ptr = PR_OpenDir(local_dir_name)))
 	  {
 	  	FE_Alert(context, "Unable to open local directory");
 	  	return NULL;
@@ -134,15 +134,12 @@ NET_AssembleAllFilesInDirectory(MWContext *context, char * local_dir_name)
 	cur_array_size = INITIAL_ARRAY_SIZE;
 
     i=0;
-	while((dir_entry = XP_ReadDir(dir_ptr)) != NULL)
+	while((dir_entry = PR_ReadDir(dir_ptr, PR_SKIP_BOTH)) != NULL)
 	  {
-	  	/* skip . and .. */
-		if(!PL_strcmp(dir_entry->d_name, ".") || !PL_strcmp(dir_entry->d_name, ".."))
-			continue;
-        
         /* assemble full pathname first so we can test if its a directory */
         file_to_post = PL_strdup(local_dir_name);
         if ( ! file_to_post ){
+            PR_CloseDir(dir_ptr);
     		return NULL;
         }
 
@@ -157,12 +154,15 @@ NET_AssembleAllFilesInDirectory(MWContext *context, char * local_dir_name)
           }
         if ( ! file_to_post )
           {
+            PR_CloseDir(dir_ptr);
     		return NULL;
           }
 
-		StrAllocCat(file_to_post, dir_entry->d_name);
+		StrAllocCat(file_to_post, dir_entry->name);
+
         if ( ! file_to_post )
           {
+            PR_CloseDir(dir_ptr);
     		return NULL;
           }
 
@@ -178,8 +178,10 @@ NET_AssembleAllFilesInDirectory(MWContext *context, char * local_dir_name)
 		if(i >= cur_array_size-1)
 		  {
 		  	files_to_post = (char**) PR_Realloc(files_to_post, (cur_array_size + EXPAND_ARRAY_BY) * sizeof(char*)); 
-			if(!files_to_post)
+            if(!files_to_post) {
+                PR_CloseDir(dir_ptr);
 				return NULL;
+            }
 			cur_array_size += EXPAND_ARRAY_BY;
 		  }
 
@@ -187,6 +189,8 @@ NET_AssembleAllFilesInDirectory(MWContext *context, char * local_dir_name)
 
         PR_Free(file_to_post);
        }
+
+    PR_CloseDir(dir_ptr);
 
 	/* NULL terminate the array, space is guarenteed above */
 	files_to_post[i] = NULL;
