@@ -249,7 +249,7 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
         <template>
           <rule>
             <menupopup>
-              <menuitem class="standrad" uri="rdf:*" 
+              <menuitem class="standard" uri="rdf:*" 
                         value="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                         data="rdf:http://www.mozilla.org/rdf/chrome#name" 
                         oncommand="selectLocale(event)" />
