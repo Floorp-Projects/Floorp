@@ -55,4 +55,4 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("PKI", components)
+NS_IMPL_NSGETMODULE(PKI, components)
