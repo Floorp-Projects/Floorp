@@ -294,6 +294,14 @@ sub DoPermissions {
 
 # No SavePermissions() because this panel has no changeable fields.
 
+
+sub DoSavedSearches() {
+    $vars->{'queries'} = Bugzilla->user->queries;
+}
+
+# No SaveSavedSearches() because this panel has no changeable fields (yet).
+
+
 ###############################################################################
 # Live code (not subroutine definitions) starts here
 ###############################################################################
@@ -328,6 +336,10 @@ SWITCH: for ($current_tab_name) {
     };
     /^permissions$/ && do {
         DoPermissions();
+        last SWITCH;
+    };
+    /^saved-searches$/ && do {
+        DoSavedSearches();
         last SWITCH;
     };
     ThrowUserError("unknown_tab",
