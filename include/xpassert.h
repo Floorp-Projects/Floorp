@@ -95,28 +95,20 @@ XP_END_PROTOS
 #elif defined(XP_MAC)
 
 	#ifdef DEBUG
-		#ifdef __cplusplus
-			#ifdef __MWERKS__
-				/*
-				**	See the comment above: XP_ASSERT is supposed to abort!
-				**	The MacFE_Signal is actually not in the spirit of the creator of XP_Assert.
-				**	Also, the previous version was annoying (always seen in uapp.cp)
-				**	The Metrowerks Assert_ macro is much more helpful...
-				*/
-				#include <PP_Types.h>
-				#include <UException.h>
-				#define XP_ASSERT(X) Assert_(X)
-			#else
-				extern "C" void debugstr(const char* s);
-			#endif
-		#else
-			extern unsigned char* c2pstr(char*);
-			extern void debugstr(const char* s);
-		#endif
 		#ifndef XP_ASSERT
+			#include <Memory.h>
+			#include <string.h>
 			/* Carbon doesn't support debugstr(), so we have to do it ourselves. Also, Carbon */
 			/* may have read-only strings so that we need a temp buffer to use c2pstr(). */
-			#define XP_ASSERT(X) do {if (!(X)) {char buff[500]; strcpy(buff,#X); DebugStr(c2pstr(buff));} } while (PR_FALSE)
+			static StringPtr XP_c2pstrcpy(StringPtr pstr, const char* str)
+			{
+				int len = (int) strlen(str);
+				if (len > 255) len = 255;
+				pstr[0] = (unsigned char)len;
+				BlockMoveData(str, pstr + 1, len);
+				return pstr;
+			}
+			#define XP_ASSERT(X) do {if (!(X)) {Str255 pstr; DebugStr(XP_c2pstrcpy(pstr, #X));} } while (PR_FALSE)
 		#endif
 	#else
 		#define XP_ASSERT(X)
