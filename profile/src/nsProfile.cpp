@@ -40,7 +40,6 @@
 
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
-#include "nsIBrowserWindow.h"
 #include "prprf.h"
 
 #include "nsIIOService.h"
@@ -64,6 +63,7 @@
 // Interfaces Needed
 #include "nsIDocShell.h"
 #include "nsIWebShell.h"
+#include "nsIWebBrowserChrome.h"
 
 #if defined (XP_UNIX)
 #elif defined (XP_MAC)
@@ -120,9 +120,9 @@
 #define PREF_CONFIRM_AUTOMIGRATION	"profile.confirm_automigration"
 
 #if defined (XP_MAC)
-#define CHROME_STYLE NS_CHROME_WINDOW_BORDERS_ON|NS_CHROME_WINDOW_CLOSE_ON
+#define CHROME_STYLE nsIWebBrowserChrome::windowBordersOn | nsIWebBrowserChrome::windowCloseOn
 #else /* the rest */
-#define CHROME_STYLE NS_CHROME_ALL_CHROME
+#define CHROME_STYLE nsIWebBrowserChrome::allChrome
 #endif 
 
 // we want everyone to have the debugging info to the console for now
@@ -1741,7 +1741,7 @@ nsProfile::TriggerActivation(const char *profileName)
 			if (NS_FAILED(rv)) return rv;
 
 			rv = pregAppShell->CreateTopLevelWindow(nsnull, registrationURL,
-													PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
+													PR_TRUE, PR_TRUE, nsIWebBrowserChrome::allChrome,
 							            ACTIVATION_WINDOW_WIDTH,           // width 
 							            ACTIVATION_WINDOW_HEIGHT,           // height
 													getter_AddRefs(mPregWindow));
