@@ -30,6 +30,7 @@ IDLSRCS =				  \
 		nsIMsgIncomingServer.idl	\
 		nsIMessage.idl			\
 		nsIMsgThread.idl	\
+		nsIMsgMessageService.idl \
 		$(NULL)
 
 EXPORTS =				\
@@ -62,6 +63,7 @@ EXPORTS =				\
 		nsICopyMessageListener.h \
 		nsIMessageView.h	\
 		nsIMsgThread.h		\
+		nsIMsgMessageService.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
