@@ -46,7 +46,7 @@ function SendMessageNow()
   var iwindowManager = Components.interfaces.nsIWindowMediator;           
   var windowManager  = cwindowManager.QueryInterface(iwindowManager);     
   var composeWindow = windowManager.getMostRecentWindow('msgcompose'); //find the open msgcompose window and get it      
-  composeWindow.SendMessage(); //send the message that we've done a Reply to
+  composeWindow.SendMessage(); //send the message that we've invoked a Reply To window for
 }
 
 addEventListener("load",StartSmoketestTimers,false);
