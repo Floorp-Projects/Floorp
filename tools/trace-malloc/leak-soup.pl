@@ -34,6 +34,7 @@ use IPC::Open2;
 
 # Collect program options
 $::opt_help = 0;
+$::opt_detail = 0;
 $::opt_format = "boehm";
 $::opt_fragment = 10;
 $::opt_nostacks = 0;
@@ -43,11 +44,12 @@ $::opt_noentrained = 0;
 $::opt_noslop = 0;
 $::opt_showtype = 100000000;
 
-GetOptions("help", "format=s", "fragment=i", "nostacks", "nochildstacks", "depth=i", "noentrained", "noslop", "showtype=i");
+GetOptions("help", "detail", "format=s", "fragment=i", "nostacks", "nochildstacks", "depth=i", "noentrained", "noslop", "showtype=i");
 
 if ($::opt_help) {
     die "usage: leak-soup.pl [options] <leakfile>
   --help          Display this message
+  --detail        Provide details of memory sweeping from child to parents
   --format=[boehm*|trace-malloc]
                   Parse input as if from boehm (default) or trace-malloc
   --fragment=n    Histogram bucket ration for fragmentation analysis
@@ -255,6 +257,25 @@ sub init_type_table() {
 	$type_data->{'size'} += $size;
 	if (defined $swept_in) {
 	    $type_data->{'swept_in'} += $swept_in;
+
+	    if ($::opt_detail) {
+		my $type_detail_sizes = $type_data->{'sweep_details_size'};
+		my $type_detail_counts;
+		if (!defined $type_detail_sizes) {
+		    $type_detail_sizes = $type_data->{'sweep_details_size'} = {};
+		    $type_detail_counts = $type_data->{'sweep_details_count'} = {};
+		} else {
+		    $type_detail_counts = $type_data->{'sweep_details_count'};
+		}
+
+		my $sweep_details = $obj->{'sweep_details'};
+		for my $swept_addr (keys (%{$sweep_details})) {
+		    my $swept_obj = $::Objects{$swept_addr};
+		    my $swept_type = $swept_obj->{'type'};
+		    $type_detail_sizes->{$swept_type} += $sweep_details->{$swept_addr};
+		    $type_detail_counts->{$swept_type}++;
+		}
+	    }
 	}
 	if (defined $overlap_count) {
 	    $type_data->{'overlap_count'} += $overlap_count;
@@ -321,6 +342,15 @@ sub print_type_table(){
 	}
 
 	print "\n" ;
+	if (defined $type_data->{'sweep_details_size'}) {
+	    my $sizes = $type_data->{'sweep_details_size'};
+	    my $counts = $type_data->{'sweep_details_count'};
+	    my @swept_types = sort {$sizes->{$b} <=> $sizes->{$a}} keys (%{$sizes});
+	    
+	    for my $type (@swept_types) {
+		print "   $sizes->{$type}     (", int($sizes->{$type}/$counts->{$type}) , ")   $counts->{$type} x $type\n";
+	    }
+	}
     }
     if ($bytes_printed_tally != $::TotalSize) {
 	printf "%2.2f%% ", ($::TotalSize- $bytes_printed_tally) * 100.0/$::TotalSize;
@@ -575,8 +605,8 @@ sub sweep_leaf_memory () {
     my $sweep_count = 0;
     my $leaf_counter = 0;
     LEAF: while ($leaf_counter <= $#::Leafs) {
-
-	my $leaf_obj = $::Objects{$::Leafs[$leaf_counter++]};
+	my $leaf_addr = $::Leafs[$leaf_counter++];
+	my $leaf_obj = $::Objects{$leaf_addr};
 	my $parents = $leaf_obj->{'parents'};
 
 	next LEAF if (! defined($parents) || 1 != scalar(@$parents));
@@ -586,6 +616,30 @@ sub sweep_leaf_memory () {
 
 	# watch out for self-pointers
 	next LEAF if ($parent_obj == $leaf_obj); 
+
+	if ($::opt_detail) {
+	    foreach my $obj ($parent_obj, $leaf_obj) {
+		if (!defined $obj->{'original_size'}) {
+		    $obj->{'original_size'} = $obj->{'size'};
+		}
+	    }
+	    if (defined $leaf_obj->{'sweep_details'}) {
+		if (defined $parent_obj->{'sweep_details'}) { # merge details
+		    foreach my $swept_obj (keys (%{$leaf_obj->{'sweep_details'}})) {
+			%{$parent_obj->{'sweep_details'}}->{$swept_obj} = 
+			    %{$leaf_obj->{'sweep_details'}}->{$swept_obj};
+		    }
+		} else { # No parent info
+		    $parent_obj->{'sweep_details'} = \%{$leaf_obj->{'sweep_details'}};
+		}
+		delete $leaf_obj->{'sweep_details'};
+	    } else { # no leaf detail
+		if (!defined $parent_obj->{'sweep_details'}) {
+		    $parent_obj->{'sweep_details'} = {};
+		}
+	    }
+	    %{$parent_obj->{'sweep_details'}}->{$leaf_addr} = $leaf_obj->{'original_size'};
+	}
 
 	$parent_obj->{'size'} += $leaf_obj->{'size'};
 	$parent_obj->{'swept_in'} += 
