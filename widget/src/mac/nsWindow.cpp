@@ -410,9 +410,8 @@ NS_IMETHODIMP nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 				// always let update events through, because if we don't handle them, we're
 				// doomed!
 			case activateEvt:
-				// certainly we have to let the obvious activate events through. hopefully
-				// our consumption of other events will keep any unwanted activate events
-				// from even getting this far
+				// activate events aren't so much a request as simply informative. might
+				// as well acknowledge them.
 				*aForWindow = PR_TRUE;
 				break;
 
@@ -428,8 +427,19 @@ NS_IMETHODIMP nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 					if ( where == inContent && inWindow )
 						*aForWindow = PR_TRUE;
 				}
-				if ( eventType == suspendResumeMessage )
+				if ( eventType == suspendResumeMessage ) {
 					*aForWindow = PR_TRUE;
+					if (theEvent->message & resumeFlag) {
+						// divert it to our window if it isn't naturally
+						if (!inWindow) {
+							StPortSetter portSetter(window);
+							theEvent->where.v = 0;
+							theEvent->where.h = 0;
+							::LocalToGlobal(&theEvent->where);
+						}
+				  	}
+				}
+
 				break;
 		} // case of which event type
 	} else
