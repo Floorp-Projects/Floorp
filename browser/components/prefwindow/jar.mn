@@ -24,7 +24,6 @@ browser.jar:
 *   content/browser/pref/privacyExpanderBindings.xml       (content/privacyExpanderBindings.xml)
 *   content/browser/pref/editAction.xul                    (content/editAction.xul)
 *   content/browser/pref/editAction.js                     (content/editAction.js)
-*   content/browser/pref/pref-test.xul                     (content/pref-test.xul)
 *   content/browser/pref/plugins.xul                       (content/plugins.xul)
 *   content/browser/pref/plugins.js                        (content/plugins.js)
 
