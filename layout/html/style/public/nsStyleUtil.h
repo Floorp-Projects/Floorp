@@ -24,9 +24,16 @@
 
 #include "nslayout.h"
 #include "nsCoord.h"
+#include "nsIPresContext.h"
 
 class nsIStyleContext;
 struct nsStyleColor;
+
+enum nsFontSizeType {
+  eFontSize_HTML  	= 1,
+  eFontSize_CSS			= 2
+};
+
 
 // Style utility functions
 class nsStyleUtil {
@@ -35,11 +42,12 @@ public:
   static float GetScalingFactor(PRInt32 aScaler);
 
   static nscoord CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize, 
-                                   float aScalingFactor);
+                                   float aScalingFactor, nsIPresContext* aPresContext,
+                                   nsFontSizeType aFontSizeType = eFontSize_HTML);
   static PRInt32 FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                         float aScalingFactor);
+                                         float aScalingFactor, nsIPresContext* aPresContext);
   static PRInt32 FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                        float aScalingFactor);
+                                        float aScalingFactor, nsIPresContext* aPresContext);
 
   static PRInt32 ConstrainFontWeight(PRInt32 aWeight);
 

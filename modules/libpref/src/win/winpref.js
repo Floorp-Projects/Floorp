@@ -101,7 +101,7 @@ pref("font.name.serif.zh-TW", "細明體"); // "MingLiU"
 pref("font.name.sans-serif.zh-TW", "細明體"); // "MingLiU" 
 pref("font.name.monospace.zh-TW", "細明體"); // "MingLiU" 
 
-pref("font.size.nav4rounding", true);
+pref("font.size.nav4rounding", false);
 
 
 pref("taskbar.x",                           -1); 
