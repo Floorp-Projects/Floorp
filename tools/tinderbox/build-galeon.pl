@@ -59,7 +59,10 @@ sub main {
   #
   # Need a way to bypass initial setup dialog stuff, or
   # we'll need to manually run this by hand the first time.
-  # 
+  #
+  # Also, have to set crash_recovery=0 in ~/.gnome/galeon to avoid
+  # getting the crash dialog after the alive test times out.
+  #
 
   # Test galeon, about:blank
   if ($galeon_alive_test and $post_status eq 'success') {
