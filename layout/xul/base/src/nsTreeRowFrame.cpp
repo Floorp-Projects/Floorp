@@ -38,7 +38,6 @@
 #include "nsTableColFrame.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULTreeElement.h"
-#include "nsTreeTwistyListener.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
 #include "nsIPresContext.h"

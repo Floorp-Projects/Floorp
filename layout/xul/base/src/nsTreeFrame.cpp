@@ -38,7 +38,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULTreeElement.h"
-#include "nsTreeTwistyListener.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIReflowCommand.h"
@@ -74,7 +73,7 @@ NS_NewTreeFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 // Constructor
 nsTreeFrame::nsTreeFrame()
-:nsTableFrame(),mSlatedForReflow(PR_FALSE), mTwistyListener(nsnull), mGeneration(0), mUseGeneration(PR_TRUE),
+:nsTableFrame(),mSlatedForReflow(PR_FALSE), mGeneration(0), mUseGeneration(PR_TRUE),
  mFixedRows(-1), mReflowStopped(PR_FALSE)
 {
 }
@@ -380,9 +379,6 @@ void nsTreeFrame::MoveToRowCol(nsIPresContext* aPresContext, PRInt32 aRow, PRInt
 NS_IMETHODIMP 
 nsTreeFrame::Destroy(nsIPresContext* aPresContext)
 {
-  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent);
-  target->RemoveEventListener(NS_ConvertASCIItoUCS2("mousedown"), mTwistyListener, PR_TRUE); 
-	mTwistyListener = nsnull;
   return nsTableFrame::Destroy(aPresContext);
 }
 
@@ -488,13 +484,6 @@ nsTreeFrame::Init(nsIPresContext*  aPresContext,
                   nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsTableFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
-  // Create the menu bar listener.
-  mTwistyListener = new nsTreeTwistyListener();
-
-  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent);
-  
-  target->AddEventListener(NS_ConvertASCIItoUCS2("mousedown"), mTwistyListener, PR_TRUE); 
 
   nsAutoString value;
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent);

@@ -111,7 +111,6 @@ protected:
 
 protected: // Data Members
   PRBool mSlatedForReflow; // If set, don't waste time scheduling excess reflows.
-  nsTreeTwistyListener* mTwistyListener;
   PRInt32 mGeneration;
   PRBool mUseGeneration;
   PRInt32 mFixedRows;
