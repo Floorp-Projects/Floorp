@@ -178,13 +178,19 @@ sub init {
             }
         }
         if ($params->param("emaillongdesc$id")) {
-            my $table = "longdescs_";
-            push(@supptables, "longdescs $table");
-            push(@wherepart, "$table.bug_id = bugs.bug_id");
-            my $ptable = "longdescnames_";
-            push(@supptables, "profiles $ptable");
-            push(@wherepart, "$table.who = $ptable.userid");
-            push(@clist, "$ptable.login_name", $type, $email);
+            if (my $list = $self->ListIDsForEmail($type, $email)) {
+                my $table = "longdescs_";
+                push(@supptables, "LEFT JOIN longdescs $table ON bugs.bug_id = $table.bug_id AND $table.who IN($list)");
+                push(@clist, "$table.who",'isnotnull');
+            } else {
+                my $table = "longdescs_";
+                push(@supptables, "longdescs $table");
+                push(@wherepart, "$table.bug_id = bugs.bug_id");
+                my $ptable = "longdescnames_";
+                push(@supptables, "profiles $ptable");
+                push(@wherepart, "$table.who = $ptable.userid");
+                push(@clist, "$ptable.login_name", $type, $email);
+            }
         }
         if (@clist) {
             push(@specialchart, \@clist);
@@ -291,6 +297,21 @@ sub init {
              $f = "map_$f.login_name";
          },
 
+         "^cc,(anyexact|substring)" => sub {
+             my $list;
+             $list = $self->ListIDsForEmail($t, $v);
+             if ($list) {
+                 push(@supptables, "LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id AND cc_$chartid.who IN($list)");
+                 $term = "cc_$chartid.who IS NOT NULL";
+             } else {
+                 push(@supptables, "LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id");
+
+                 push(@supptables, "LEFT JOIN profiles map_cc_$chartid ON cc_$chartid.who = map_cc_$chartid.userid");
+                 $ff = $f = "map_cc_$chartid.login_name";
+                 my $ref = $funcsbykey{",anyexact"};
+                 &$ref;
+             }
+         },
          "^cc," => sub {
             push(@supptables, "LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id");
 
@@ -569,6 +590,9 @@ sub init {
          },
          ",lessthan" => sub {
              $term = "$ff < $q";
+         },
+         ",isnotnull" => sub {
+             $term = "$ff IS NOT NULL";
          },
          ",greaterthan" => sub {
              $term = "$ff > $q";
@@ -924,6 +948,45 @@ sub SqlifyDate {
         ThrowUserError("illegal_date");
     }
     return time2str("%Y-%m-%d %H:%M:%S", $date);
+}
+
+# ListIDsForEmail returns an string with a comma-joined list
+# of userids matching an email address
+# according to the type specified.
+# Currently, this only supports anyexact and substring matches.
+# Substring matches will return up to 50 matching userids
+# If a match type is unsupported or returns too many matches,
+# ListIDsForEmail returns an undef.
+sub ListIDsForEmail {
+    my ($self, $type, $email) = (@_);
+    my $old = $self->{"emailcache"}{"$type,$email"};
+    return undef if ($old && $old eq "---");
+    return $old if $old;
+    my @list = ();
+    my $list = "---";
+    if ($type eq 'anyexact') {
+        foreach my $w (split(/,/, $email)) {
+            $w = trim($w);
+            my $id = &::DBname_to_id($w);
+            if ($id > 0) {
+                push(@list,$id)
+            }
+        }
+        $list = join(',', @list);
+    } elsif ($type eq 'substring') {
+        &::SendSQL("SELECT userid FROM profiles WHERE INSTR(login_name, " .
+            &::SqlQuote($email) . ") LIMIT 51");
+        while (&::MoreSQLData()) {
+            my ($id) = &::FetchSQLData();
+            push(@list, $id);
+        }
+        if (@list < 50) {
+            $list = join(',', @list);
+        }
+    }
+    $self->{"emailcache"}{"$type,$email"} = $list;
+    return undef if ($list eq "---");
+    return $list;
 }
 
 sub GetByWordList {
