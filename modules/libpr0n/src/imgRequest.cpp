@@ -58,7 +58,7 @@ imgRequest::imgRequest() :
   mObservers(0),
   mLoading(PR_FALSE), mProcessing(PR_FALSE),
   mImageStatus(imgIRequest::STATUS_NONE), mState(0),
-  mContentType(nsnull), mCacheId(0), mValidator(nsnull)
+  mContentType(nsnull), mCacheId(0), mValidator(nsnull), mIsMultiPartChannel(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -307,6 +307,14 @@ NS_IMETHODIMP imgRequest::GetImage(imgIContainer **aImage)
   return NS_OK;
 }
 
+NS_IMETHODIMP imgRequest::GetIsMultiPartChannel(PRBool *aIsMultiPartChannel)
+{
+  LOG_FUNC(gImgLog, "imgRequest::GetIsMultiPartChannel");
+
+  *aIsMultiPartChannel = mIsMultiPartChannel;
+
+  return NS_OK;
+}
 
 /** imgIContainerObserver methods **/
 
@@ -533,6 +541,11 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   if (!mChannel) {
     mChannel = do_QueryInterface(aRequest);
   }
+
+  nsXPIDLCString mContentType;
+  mChannel->GetContentType(getter_Copies(mContentType));
+  if (PL_strcasecmp("multipart/x-mixed-replace", mContentType.get()) == 0)
+      mIsMultiPartChannel = PR_TRUE;
 
   /* set our state variables to their initial values. */
   mImageStatus = imgIRequest::STATUS_NONE;

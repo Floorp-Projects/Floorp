@@ -41,4 +41,5 @@ interface imgILoad : nsISupports
    * @attention NEED DOCS
    */
   attribute imgIContainer image;
+  readonly attribute PRBool isMultiPartChannel;
 };

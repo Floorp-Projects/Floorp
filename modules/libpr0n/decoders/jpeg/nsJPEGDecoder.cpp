@@ -819,5 +819,8 @@ term_source (j_decompress_ptr jd)
     src->decoder->mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
   }
 
-  src->decoder->mFrame->SetMutable(PR_FALSE);
+  PRBool isMutable = PR_FALSE;
+  if (src->decoder->mImageLoad) 
+      src->decoder->mImageLoad->GetIsMultiPartChannel(&isMutable);
+  src->decoder->mFrame->SetMutable(isMutable);
 }
