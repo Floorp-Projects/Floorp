@@ -54,9 +54,7 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
-#ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
-#endif
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
@@ -193,9 +191,13 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
     return NS_ERROR_FAILURE;
 
   // See if our event receiver is a content node (and not us).
+  nsCOMPtr<nsIAtom> tag;
+  mHandlerElement->GetTag(*getter_AddRefs(tag));
+  PRBool isXULKey = (tag.get() == nsXULAtoms::key);
+    
   PRBool isReceiverCommandElement = PR_FALSE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aReceiver));
-  if (content && content.get() != mHandlerElement)
+  if (isXULKey && content && content.get() != mHandlerElement)
     isReceiverCommandElement = PR_TRUE;
 
   // This is a special-case optimization to make command handling fast.
@@ -312,12 +314,8 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
     }
   }
   
-#ifdef INCLUDE_XUL
-  nsCOMPtr<nsIAtom> tag;
-  mHandlerElement->GetTag(*getter_AddRefs(tag));
-  if (tag.get() == nsXULAtoms::key)
+  if (isXULKey)
     aEvent->PreventDefault(); // Preventing default for XUL key handlers
-#endif
 
   // Compile the handler and bind it to the element.
   nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
