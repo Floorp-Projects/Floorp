@@ -321,7 +321,7 @@ public class JavaAdapter extends ScriptableObject {
     private static Class
     loadAdapterClass(Context cx, String className, byte[] classBytes)
     {
-        ClassLoader parentLoader = cx.getClass().getClassLoader();
+        ClassLoader parentLoader = cx.getApplicationClassLoader();
         GeneratedClassLoader loader;
         SecurityController sc = cx.getSecurityController();
         if (sc == null) {

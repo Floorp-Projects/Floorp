@@ -57,7 +57,7 @@ public class InvokerImpl extends Invoker {
         int classNum;
         synchronized (this) {
             if (invokersCache == null) {
-                ClassLoader parentLoader = cx.getClass().getClassLoader();
+                ClassLoader parentLoader = cx.getApplicationClassLoader();
                 classLoader = cx.createClassLoader(parentLoader);
                 // Initialize invokersCache after creation of classloader
                 // since it can throw SecurityException. It prevents

@@ -49,30 +49,11 @@ public class DefiningClassLoader extends ClassLoader
     implements GeneratedClassLoader
 {
     public DefiningClassLoader() {
-        init(getClass().getClassLoader());
+        this.parentLoader = getClass().getClassLoader();
     }
 
     public DefiningClassLoader(ClassLoader parentLoader) {
-        init(parentLoader);
-    }
-
-    private void init(ClassLoader parentLoader) {
         this.parentLoader = parentLoader;
-        this.contextLoader = null;
-        if (method_getContextClassLoader != null) {
-            try {
-                this.contextLoader = (ClassLoader)
-                    method_getContextClassLoader.invoke(
-                        Thread.currentThread(),
-                        ScriptRuntime.emptyArgs);
-            } catch (IllegalAccessException ex) {
-            } catch (InvocationTargetException ex) {
-            } catch (SecurityException ex) {
-            }
-            if (this.contextLoader == this.parentLoader) {
-                this.contextLoader = null;
-            }
-        }
     }
 
     public Class defineClass(String name, byte[] data) {
@@ -88,20 +69,10 @@ public class DefiningClassLoader extends ClassLoader
     {
         Class cl = findLoadedClass(name);
         if (cl == null) {
-            // First try parent class loader and if that does not work, try
-            // contextLoader, but that will be null if
-            // Thread.getContextClassLoader() == parentLoader
-            // or on JDK 1.1 due to lack Thread.getContextClassLoader().
-            // To avoid catching and rethrowing ClassNotFoundException
-            // in this cases, use try/catch check only if contextLoader != null.
-            if (contextLoader == null) {
-                cl = loadFromParent(name);
+            if (parentLoader != null) {
+                cl = parentLoader.loadClass(name);
             } else {
-                try {
-                    cl = loadFromParent(name);
-                } catch (ClassNotFoundException ex) {
-                    cl = contextLoader.loadClass(name);
-                }
+                cl = findSystemClass(name);
             }
         }
         if (resolve) {
@@ -110,36 +81,5 @@ public class DefiningClassLoader extends ClassLoader
         return cl;
     }
 
-    private Class loadFromParent(String name)
-        throws ClassNotFoundException
-    {
-        if (parentLoader != null) {
-            return parentLoader.loadClass(name);
-        } else {
-            return findSystemClass(name);
-        }
-    }
-
     private ClassLoader parentLoader;
-    private ClassLoader contextLoader;
-
-    // We'd like to use "Thread.getContextClassLoader", but
-    // that's only available on Java2.
-    private static Method method_getContextClassLoader;
-
-    static {
-        // Don't use "Thread.class": that performs the lookup
-        // in the class initializer, which doesn't allow us to
-        // catch possible security exceptions.
-        Class threadClass = ScriptRuntime.getClassOrNull("java.lang.Thread");
-        if (threadClass != null) {
-            try {
-                method_getContextClassLoader =
-                    threadClass.getDeclaredMethod("getContextClassLoader",
-                                                   new Class[0]);
-            } catch (NoSuchMethodException e) {
-            } catch (SecurityException e) {
-            }
-        }
-    }
 }

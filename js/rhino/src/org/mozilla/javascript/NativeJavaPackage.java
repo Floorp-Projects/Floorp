@@ -173,7 +173,7 @@ public class NativeJavaPackage extends ScriptableObject {
     }
 
     public NativeJavaPackage(String packageName) {
-        this.packageName = packageName;
+        this(packageName, null);
     }
 
     public NativeJavaPackage(String packageName, ClassLoader classLoader) {
@@ -223,7 +223,7 @@ public class NativeJavaPackage extends ScriptableObject {
         ClassShutter shutter = cx.getClassShutter();
         Scriptable newValue = null;
         if (shutter == null || shutter.visibleToScripts(newPackage)) {
-            Class cl = findClass(classLoader, newPackage);
+            Class cl = findClass(cx, newPackage);
             if (cl != null) {
                 newValue = new NativeJavaClass(getTopLevelScope(this), cl);
                 newValue.setParentScope(this);
@@ -283,8 +283,12 @@ public class NativeJavaPackage extends ScriptableObject {
             Context.getMessage0("msg.not.java.obj"));
     }
 
-    private static Class findClass(ClassLoader loader, String className) {
+    private Class findClass(Context cx, String className) {
         Class cl = null;
+        ClassLoader loader = classLoader;
+        if (loader == null) {
+            loader = cx.getApplicationClassLoader();
+        }
         if (loader != null) {
             cl = ScriptRuntime.getClassOrNull(loader, className);
         } else {
