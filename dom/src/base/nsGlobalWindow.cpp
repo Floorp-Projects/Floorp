@@ -478,7 +478,7 @@ GlobalWindowImpl::SetStatus(const nsString& aStatus)
 {
   nsIBrowserWindow *mBrowser;
   if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    mBrowser->SetStatus(aStatus);
+    mBrowser->SetStatus(aStatus.GetUnicode());
     NS_RELEASE(mBrowser);
   }
   return NS_OK;
@@ -508,7 +508,7 @@ GlobalWindowImpl::GetName(nsString& aName)
 NS_IMETHODIMP
 GlobalWindowImpl::SetName(const nsString& aName)
 {
-  mWebShell->SetName(aName);
+  mWebShell->SetName(aName.GetUnicode());
   return NS_OK;
 }
 
@@ -1486,8 +1486,8 @@ GlobalWindowImpl::Open(JSContext *cx,
       webShellContainer->NewWebShell(mChrome, PR_FALSE, newWebShell);
     }
     if (nsnull != newWebShell) {
-      newWebShell->SetName(name);
-      newWebShell->LoadURL(mAbsURL);
+      newWebShell->SetName(name.GetUnicode());
+      newWebShell->LoadURL(mAbsURL.GetUnicode());
 
       if (NS_OK == newWebShell->GetContainer(newContainer) && nsnull != newContainer) {
         newContainer->QueryInterface(kIBrowserWindowIID, (void**)&newWindow);
@@ -1687,7 +1687,7 @@ GlobalWindowImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
     nsString mPropName;
     nsAutoString mPrefix;
     mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
-    mPrefix.SetString(mPropName, 2);
+    mPrefix.SetString(mPropName.GetUnicode(), 2);
     if (mPrefix == "on") {
       return CheckForEventListener(aContext, mPropName);
     }
@@ -1742,7 +1742,7 @@ GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
     nsString mPropName;
     nsAutoString mPrefix;
     mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
-    mPrefix.SetString(mPropName, 2);
+    mPrefix.SetString(mPropName.GetUnicode(), 2);
     if (mPrefix == "on") {
       return CheckForEventListener(aContext, mPropName);
     }
