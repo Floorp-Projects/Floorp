@@ -68,5 +68,3 @@ DSO_LDFLAGS		=
 
 # +Z generates position independent code for use in shared libraries.
 DSO_CFLAGS = +Z
-
-HAVE_PURIFY		= 1

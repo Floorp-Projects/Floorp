@@ -77,7 +77,6 @@ NOMD_OS_CFLAGS += $(ODD_CFLAGS)
 # we do not have -MDupdate ...
 OS_CFLAGS   += $(NOMD_OS_CFLAGS)
 OS_LIBS     += -lsocket -lnsl -lresolv -lgen -ldl -lc /usr/ucblib/libucb.a
-HAVE_PURIFY  = 0
 
 ifdef DSO_BACKEND
 	DSO_LDOPTS += -h $(DSO_NAME)

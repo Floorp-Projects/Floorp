@@ -316,8 +316,7 @@ OVERVIEW of "rules.mk":
         libs::                  recursively build
                                 static (archival) $(LIBRARY), shared
                                 (dynamic link) $(SHARED_LIBRARY),
-                                import $(IMPORT_LIBRARY), and/or
-                                "purified" $(PURE_LIBRARY)
+                                and/or import $(IMPORT_LIBRARY)
                                 libraries
 
         program::               recursively build $(PROGRAM)
@@ -423,10 +422,6 @@ OVERVIEW of "rules.mk":
                                           (dynamic link) library
                                           specified by the
                                           $(SHARED_LIBRARY) variable
-
-        $(PURE_LIBRARY):                  build the "purified" library
-                                          specified by the
-                                          $(PURE_LIBRARY) variable
 
 
         PROGRAMS

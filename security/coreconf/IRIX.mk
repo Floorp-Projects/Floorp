@@ -103,8 +103,6 @@ endif
 
 MKSHLIB     += $(LD) $(SHLIB_LD_OPTS) -shared -soname $(@:$(OBJDIR)/%.so=%.so)
 
-HAVE_PURIFY	= 1
-
 DSO_LDOPTS	= -elf -shared -all
 
 ifdef DSO_BACKEND
