@@ -74,6 +74,13 @@ public:
   virtual PRInt32 GetBytesPix() = 0;
 
   /**
+   * Get whether rows are organized top to bottom, or bottom to top 
+   * @update - syd 3/29/99 
+   * @return PR_TRUE if top to bottom, else PR_FALSE 
+   */
+  virtual PRBool GetIsRowOrderTopToBottom() = 0;
+
+  /**
    * Get the width for the pixelmap
    * @update - dwc 2/1/99
    * @return The width in pixels for the pixelmap
