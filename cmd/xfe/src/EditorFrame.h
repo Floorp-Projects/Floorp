@@ -79,7 +79,9 @@ public:
 
   static MenuSpec new_submenu_spec[];
   static MenuSpec save_submenu_spec[];
+#ifdef MOZ_MAIL_NEWS
   static MenuSpec publish_submenu_spec[];
+#endif
 
   // alignment menu spec needs to be public so BrowserFrame can
   // use it for embedded editors:

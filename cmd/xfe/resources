@@ -628,9 +628,14 @@ Send current page location to a recipient
 
 *Editor*menuBar*saveAs.acceleratorText:
 
+! Publish appears twice: when MOZ_MAIL_NEWS, it has a submenu
 *menuBar*publish.labelString:				Publish...
 *menuBar*publish.mnemonic:				    u
 *publish.documentationString:	\
+Upload current file or directory to a server for public viewing
+*menuBar*publishMenu.labelString:			Publish...
+*menuBar*publishMenu.mnemonic:				    u
+*publishMenu.documentationString:	\
 Upload current file or directory to a server for public viewing
 
 *menuBar*browsePage.labelString:            Browse Page
@@ -2840,6 +2845,7 @@ Insert an arbitrary HTML Tag at the insertion location
 *toolBar*save.labelString:              Save
 *toolBar*saveAs.labelString:            Save As...
 *toolBar*publish.labelString:           Publish
+*toolBar*publishMenu.labelString:       Publish
 *toolBar*sendPage.labelString:          Send Page
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2854,6 +2860,7 @@ Insert an arbitrary HTML Tag at the insertion location
 *toolBar.copy.labelString:		Copy
 *toolBar.paste.labelString:		Paste
 *toolBar.publish.labelString:		Publish
+*toolBar.publishMenu.labelString:	Publish
 ! new
 *toolBar.newBlank.labelString:          New
 *newBlank.tipString:                New Page

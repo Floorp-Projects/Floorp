@@ -258,6 +258,20 @@ public:
 	}; 
 };
 
+#ifdef MOZ_MAIL_NEWS
+class SendPageCommand : public AlwaysEnabledCommand
+{
+public:
+	SendPageCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdSendPage, v) {};
+
+	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
+      void fe_mailto_cb(Widget , XtPointer, XtPointer);
+      fe_mailto_cb(CONTEXT_WIDGET (view->getContext()), 
+                   (XtPointer) view->getContext(), NULL);
+	}; 
+};
+#endif /* MOZ_MAIL_NEWS */
+
 class DeleteTableCommand : public XFE_EditorViewCommand
 {
 public:
@@ -821,6 +835,9 @@ static XFE_CommandParameters set_font_size_params[] = {
 int
 XFE_CommandParametersGetIndexByName(XFE_CommandParameters* list, char* name)
 {
+	PR_ASSERT(name != 0);   // we really do want a crash here if we see this
+    if (name == 0)
+    	return -1;
 	unsigned i;
 	for (i = 0; list[i].name != NULL; i++) {
 		if (XP_STRCASECMP(name, list[i].name) == 0)
@@ -2865,6 +2882,9 @@ XFE_EditorView::XFE_EditorView(XFE_Component *toplevel_component,
 	registerCommand(m_commands, new SaveCommand(ev));
 	registerCommand(m_commands, new SaveAsCommand(ev));
 	registerCommand(m_commands, new PublishCommand(ev));
+#ifdef MOZ_MAIL_NEWS
+	registerCommand(m_commands, new SendPageCommand(ev));
+#endif /* MOZ_MAIL_NEWS */
 	registerCommand(m_commands, new DeleteTableCommand(ev));
 	registerCommand(m_commands, new DeleteTableCellCommand(ev));
 	registerCommand(m_commands, new DeleteTableRowCommand(ev));

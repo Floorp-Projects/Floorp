@@ -100,7 +100,12 @@ MenuSpec XFE_EditorFrame::file_menu_spec[] = {
   MENU_SEPARATOR,
   { xfeCmdSave,         PUSHBUTTON },
   { xfeCmdSaveAs,	    PUSHBUTTON },
+#ifdef MOZ_MAIL_NEWS
+  { "publishMenu",      CASCADEBUTTON,
+    (MenuSpec*)&XFE_EditorFrame::publish_submenu_spec },
+#else /* MOZ_MAIL_NEWS */
   { xfeCmdPublish,      PUSHBUTTON },
+#endif /* MOZ_MAIL_NEWS */
   MENU_SEPARATOR,
   { xfeCmdSendPage,		PUSHBUTTON },
   { xfeCmdBrowsePage,	PUSHBUTTON },
@@ -371,11 +376,13 @@ MenuSpec XFE_EditorFrame::save_submenu_spec[] = {
 	{ NULL }
 };
 
+#ifdef MOZ_MAIL_NEWS
 MenuSpec XFE_EditorFrame::publish_submenu_spec[] = {
 	MENU_PUSHBUTTON(xfeCmdPublish),
 	MENU_PUSHBUTTON(xfeCmdSendPage),
 	{ NULL }
 };
+#endif /* MOZ_MAIL_NEWS */
 
 static ToolbarSpec editor_file_toolbar_spec[] = {
 	{ 
@@ -404,12 +411,21 @@ static ToolbarSpec editor_file_toolbar_spec[] = {
 	},
 	{ xfeCmdBrowsePage,	PUSHBUTTON,           &ed_browse_group  },
 	{ 
-		xfeCmdPublish,
+#ifdef MOZ_MAIL_NEWS
+		"publishMenu",
 		CASCADEBUTTON,
 		&ed_publish_group, NULL, NULL, NULL,				// Icons
 		(MenuSpec*) &XFE_EditorFrame::publish_submenu_spec,	// Submenu spec
 		NULL , NULL, 										// Generate proc
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
+#else /* MOZ_MAIL_NEWS */
+		xfeCmdPublish,
+		PUSHBUTTON,
+		&ed_publish_group, NULL, NULL, NULL,				// Icons
+		NULL,												// Submenu spec
+		NULL , NULL, 										// Generate proc
+		XFE_TOOLBAR_DELAY_LONG								// Popup delay
+#endif /* MOZ_MAIL_NEWS */
 	},
 	TOOLBAR_SEPARATOR,
 	{ xfeCmdPrint,      PUSHBUTTON,           &ed_print_group   }, 
