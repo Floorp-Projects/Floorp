@@ -41,13 +41,19 @@
 ;;;
 ;;; An expression <set-expr> can be any of the following:
 ;;;   C                                   The name of a previously defined character class.
-;;;   every                               The set of all characters
 ;;;   (char1 char2 ... charn)             The set of characters {char1, char2, ..., charn}
 ;;;   (+ <set-expr1> ... <set-exprn>)     The set union of <set-expr1>, ..., <set-exprn>,
 ;;;                                       which should be disjoint.
 ;;;   (++ <set-expr1> ... <set-exprn>)    Same as +, but printed on separate lines.
 ;;;   (- <set-expr1> <set-expr2>)         The set of characters in <set-expr1> but not <set-expr2>;
 ;;;                                       <set-expr2> should be a subset of <set-expr1>.
+;;;   (% <builtin-class> . <description>) A predefined set of characters.  <description> is suitable for
+;;;                                       depicting.
+;;;
+;;; <builtin-class> can be one of the following:
+;;;   every                    The set of all characters
+;;;   initial-alpha            The set of characters suitable for the beginning of a Unicode identifier
+;;;   alphanumeric             The set of Unicode identifier continuation characters
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -77,6 +83,9 @@
           (format stream " ~:_"))))))
 
 
+(defconstant *empty-charset* 0)
+
+
 ; Return the character set consisting of the single character char.
 (declaim (inline char-charset))
 (defun char-charset (char)
@@ -89,6 +98,14 @@
     (if (logbitp i charset)
       charset
       (logior charset (ash 1 i)))))
+
+
+; Return the character set consisting of adding the character range to the given charset.
+(defun charset-add-range (charset low-char high-char)
+  (let ((low (char-code low-char))
+        (high (char-code high-char)))
+    (assert-true (>= high low))
+    (dpb -1 (byte (1+ (- high low)) low) charset)))
 
 
 ; Return the union of the two character sets, which should be disjoint.
@@ -116,6 +133,12 @@
 (declaim (inline charset-infinite?))
 (defun charset-infinite? (charset)
   (minusp charset))
+
+
+; Return true if the character set contains the given character.
+(declaim (inline char-in-charset?))
+(defun char-in-charset? (charset char)
+  (logbitp (char-code char) charset))
 
 
 ; If the character set contains exactly one character, return that character;
@@ -153,6 +176,41 @@
 
 
 ;;; ------------------------------------------------------------------------------------------------------
+;;; PREDEFINED SETS OF CHARACTERS
+
+(defmacro predefined-character-set (symbol)
+  `(get ,symbol 'predefined-character-set))
+
+
+; Predefine a character set with the given name.  The set is specified by char-ranges, which is a
+; list of single characters or two-elements (low-char high-char) lists; both low-char and high-char
+; are inclusive.
+
+(defun define-character-set (symbol char-ranges)
+  (let ((charset *empty-charset*))
+    (dolist (char-range char-ranges)
+      (setq charset 
+            (if (characterp char-range)
+              (charset-add-char charset char-range)
+              (charset-add-range charset (first char-range) (second char-range)))))
+    (setf (predefined-character-set symbol) charset)))
+
+
+(setf (predefined-character-set 'every) -1)
+(define-character-set 'initial-alpha '((#\A #\Z) (#\a #\z)))
+(define-character-set 'alphanumeric '((#\0 #\9) (#\A #\Z) (#\a #\z)))
+
+(define-character-set '*ordinary-initial-identifier-character* '(#\$ #\_ (#\A #\Z) (#\a #\z)))
+(define-character-set '*ordinary-continuing-identifier-character* '(#\$ #\_ (#\0 #\9) (#\A #\Z) (#\a #\z)))
+
+(defun ordinary-initial-identifier-character? (char)
+  (char-in-charset? (predefined-character-set '*ordinary-initial-identifier-character*) char))
+
+(defun ordinary-continuing-identifier-character? (char)
+  (char-in-charset? (predefined-character-set '*ordinary-continuing-identifier-character*) char))
+
+
+;;; ------------------------------------------------------------------------------------------------------
 ;;; LEXER-ACTIONS
 
 (defstruct (lexer-action (:constructor make-lexer-action (name number type-expr function-name markup))
@@ -175,19 +233,20 @@
 (defun depict-lexer-action (markup-stream lexer-action nonterminal)
   (dolist (markup-item (lexer-action-markup lexer-action))
     (if (eq markup-item '*)
-      (depict-general-nonterminal markup-stream nonterminal)
+      (depict-general-nonterminal markup-stream nonterminal :reference)
       (depict-group markup-stream markup-item))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; CHARCLASSES
 
-(defstruct (charclass (:constructor make-charclass (nonterminal charset-source charset actions))
+(defstruct (charclass (:constructor make-charclass (nonterminal charset-source charset actions hidden))
                       (:predicate charclass?))
   (nonterminal nil :type nonterminal :read-only t)    ;The nonterminal on the left-hand side of this production
   (charset-source nil :read-only t)                   ;The source expression for the charset
   (charset nil :type integer :read-only t)            ;The set of characters in this class
-  (actions nil :type list :read-only t))              ;List of (action-name . lexer-action)
+  (actions nil :type list :read-only t)               ;List of (action-name . lexer-action)
+  (hidden nil :type bool :read-only t))               ;True if this charclass should not be in the grammar
 
 
 ; Evaluate a <set-expr> whose syntax is given at the top of this file.
@@ -196,7 +255,6 @@
 (defun eval-charset-expr (charclasses-hash expr)
   (cond
    ((null expr) 0)
-   ((eq expr 'every) -1)
    ((symbolp expr)
     (charclass-charset
      (or (gethash expr charclasses-hash)
@@ -205,11 +263,12 @@
     (labels
       ((recursive-eval (expr)
          (eval-charset-expr charclasses-hash expr)))
-      (case (car expr)
-        ((+ ++) (reduce #'charset-union (cdr expr) :initial-value 0 :key #'recursive-eval))
-        (- (unless (cdr expr)
+      (case (first expr)
+        ((+ ++) (reduce #'charset-union (rest expr) :initial-value 0 :key #'recursive-eval))
+        (- (unless (rest expr)
              (error "Bad character set expression ~S" expr))
-           (reduce #'charset-difference (cdr expr) :key #'recursive-eval))
+           (reduce #'charset-difference (rest expr) :key #'recursive-eval))
+        (% (assert-non-null (predefined-character-set (second expr))))
         (t (reduce #'charset-union expr :key #'char-charset)))))
    (t (error "Bad character set expression ~S" expr))))
 
@@ -219,45 +278,48 @@
     (format stream "~W -> ~@_~:I" (charclass-nonterminal charclass))
     (print-charset (charclass-charset charclass) stream)
     (format stream " ~_")
-    (pprint-fill stream (mapcar #'car (charclass-actions charclass)))))
+    (pprint-fill stream (mapcar #'car (charclass-actions charclass)))
+    (when (charclass-hidden charclass)
+      (format stream " ~_hidden"))))
 
 
 ; Emit markup for the lexer charset expression.
 (defun depict-charset-source (markup-stream expr)
   (cond
    ((null expr) (error "Can't emit null charset expression"))
-   ((eq expr 'every) (depict-general-nonterminal markup-stream ':any-character))
-   ((symbolp expr) (depict-general-nonterminal markup-stream expr))
+   ((symbolp expr) (depict-general-nonterminal markup-stream expr :reference))
    ((consp expr)
-    (case (car expr)
-      ((+ ++) (depict-list markup-stream #'depict-charset-source (cdr expr) :separator " | "))
+    (case (first expr)
+      ((+ ++) (depict-list markup-stream #'depict-charset-source (rest expr) :separator " | "))
       (- (depict-charset-source markup-stream (second expr))
          (depict markup-stream " " :but-not " ")
          (depict-list markup-stream #'depict-charset-source (cddr expr) :separator " | "))
+      (% (depict-styled-text markup-stream (cddr expr)))
       (t (depict-list markup-stream #'depict-terminal expr :separator " | "))))
    (t (error "Bad character set expression ~S" expr))))
 
 
 ; Emit markup paragraphs for the lexer charclass.
 (defun depict-charclass (markup-stream charclass)
-  (let ((nonterminal (charclass-nonterminal charclass))
-        (expr (charclass-charset-source charclass)))
-    (if (and (consp expr) (eq (car expr) '++))
-      (let* ((subexprs (cdr expr))
-             (length (length subexprs)))
-        (depict-paragraph (markup-stream ':grammar-lhs)
-          (depict-general-nonterminal markup-stream nonterminal)
-          (depict markup-stream " " ':derives-10))
-        (dotimes (i length)
-          (depict-paragraph (markup-stream (if (= i (1- length)) ':grammar-rhs-last ':grammar-rhs))
-            (if (zerop i)
-              (depict markup-stream ':tab3)
-              (depict markup-stream "|" ':tab2))
-            (depict-charset-source markup-stream (nth i subexprs)))))
-      (depict-paragraph (markup-stream ':grammar-lhs-last)
-        (depict-general-nonterminal markup-stream (charclass-nonterminal charclass))
-        (depict markup-stream " " ':derives-10 " ")
-        (depict-charset-source markup-stream expr)))))
+  (depict-block-style (markup-stream ':grammar-rule)
+    (let ((nonterminal (charclass-nonterminal charclass))
+          (expr (charclass-charset-source charclass)))
+      (if (and (consp expr) (eq (first expr) '++))
+        (let* ((subexprs (rest expr))
+               (length (length subexprs)))
+          (depict-paragraph (markup-stream ':grammar-lhs)
+            (depict-general-nonterminal markup-stream nonterminal :definition)
+            (depict markup-stream " " ':derives-10))
+          (dotimes (i length)
+            (depict-paragraph (markup-stream (if (= i (1- length)) ':grammar-rhs-last ':grammar-rhs))
+              (if (zerop i)
+                (depict markup-stream ':tab3)
+                (depict markup-stream "|" ':tab2))
+              (depict-charset-source markup-stream (nth i subexprs)))))
+        (depict-paragraph (markup-stream ':grammar-lhs-last)
+          (depict-general-nonterminal markup-stream (charclass-nonterminal charclass) :definition)
+          (depict markup-stream " " ':derives-10 " ")
+          (depict-charset-source markup-stream expr))))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -336,18 +398,19 @@
 
 ; Make a lexer structure corresponding to a grammar with the given source.
 ; charclasses-source is a list of character classes, where each class is a list of:
-;     a nonterminal C;
+;     a nonterminal C (may be a list to specify an attributed-nonterminal);
 ;     an expression <set-expr> that denotes the set of characters in character class C;
 ;     a list of bindings, each containing:
 ;       an action name;
-;       a lexer-action name.
+;       a lexer-action name;
+;     an optional flag that indicatest that the character class should not be in the grammar.
 ; lexer-actions-source is a list of lexer-action bindings, each containing:
 ;     a lexer-action name;
 ;     the type of this lexer-action's value;
 ;     the name of a lisp function (char -> value) that performs the lexer-action on a character.
 ; This does not make the lexer's grammar; use make-lexer-and-grammar for that.
-(defun make-lexer (charclasses-source lexer-actions-source grammar-source)
-  (assert-type charclasses-source (list (tuple nonterminal t (list (tuple identifier identifier)))))
+(defun make-lexer (parametrization charclasses-source lexer-actions-source grammar-source)
+  (assert-type charclasses-source (list (cons t (cons t (cons (list (tuple identifier identifier)) t)))))
   (assert-type lexer-actions-source (list (tuple identifier t identifier list)))
   (let ((lexer-actions (make-hash-table :test #'eq))
         (charclasses nil)
@@ -366,7 +429,7 @@
                 (make-lexer-action name (incf lexer-action-number) type-expr function markup)))))
     
     (dolist (charclass-source charclasses-source)
-      (let ((nonterminal (first charclass-source))
+      (let ((nonterminal (assert-type (grammar-parametrization-intern parametrization (first charclass-source)) nonterminal))
             (charset (eval-charset-expr charclasses-hash (ensure-proper-form (second charclass-source))))
             (actions 
              (mapcar #'(lambda (action-source)
@@ -380,7 +443,7 @@
           (error "Attempt to redefine character class ~S" nonterminal))
         (when (charset-empty? charset)
           (error "Empty character class ~S" nonterminal))
-        (let ((charclass (make-charclass nonterminal (second charclass-source) charset actions)))
+        (let ((charclass (make-charclass nonterminal (second charclass-source) charset actions (fourth charclass-source))))
           (push charclass charclasses)
           (setf (gethash nonterminal charclasses-hash) charclass)
           (push charset charsets))))
@@ -496,35 +559,40 @@
     (let ((productions nil)
           (commands nil))
       (dolist (charclass (lexer-charclasses lexer))
-        (let ((nonterminal (charclass-nonterminal charclass))
-              (production-number 0))
-          (dolist (action (charclass-actions charclass))
-            (let ((lexer-action (cdr action)))
-              (push (list 'declare-action (car action) nonterminal (lexer-action-type-expr lexer-action)) commands)))
-          (do ((charset (charclass-charset charclass)))
-              ((charset-empty? charset))
-            (let* ((partition-name (if (charset-infinite? charset)
-                                     *default-partition-name*
-                                     (gethash (charset-highest-char charset) (lexer-char-tokens lexer))))
-                   (partition-charset (if (characterp partition-name)
-                                        (char-charset partition-name)
-                                        (partition-charset (gethash partition-name (lexer-partitions lexer)))))
-                   (production-name (intern (format nil "~A-~D" nonterminal (incf production-number)))))
-              (push (list nonterminal (list partition-name) production-name) productions)
-              (dolist (action (charclass-actions charclass))
-                (let* ((lexer-action (cdr action))
-                       (body (if (characterp partition-name)
-                               (let* ((lexer-action-function (lexer-action-function-name lexer-action))
-                                      (result (funcall lexer-action-function partition-name)))
-                                 (typecase result
-                                   (integer result)
-                                   (character result)
-                                   ((eql nil) 'false)
-                                   ((eql t) 'true)
-                                   (t (error "Cannot infer the type of ~S's result ~S" lexer-action-function result))))
-                               (list (lexer-action-name lexer-action) partition-name))))
-                  (push (list 'action (car action) production-name body nil) commands)))
-              (setq charset (charset-difference charset partition-charset))))))
+        (unless (charclass-hidden charclass)
+          (let* ((nonterminal (charclass-nonterminal charclass))
+                 (nonterminal-source (general-grammar-symbol-source nonterminal))
+                 (production-prefix (if (consp nonterminal-source)
+                                      (format nil "~{~A~^-~}" nonterminal-source)
+                                      nonterminal-source))
+                 (production-number 0))
+            (dolist (action (charclass-actions charclass))
+              (let ((lexer-action (cdr action)))
+                (push (list 'declare-action (car action) nonterminal-source (lexer-action-type-expr lexer-action)) commands)))
+            (do ((charset (charclass-charset charclass)))
+                ((charset-empty? charset))
+              (let* ((partition-name (if (charset-infinite? charset)
+                                       *default-partition-name*
+                                       (gethash (charset-highest-char charset) (lexer-char-tokens lexer))))
+                     (partition-charset (if (characterp partition-name)
+                                          (char-charset partition-name)
+                                          (partition-charset (gethash partition-name (lexer-partitions lexer)))))
+                     (production-name (intern (format nil "~A-~D" production-prefix (incf production-number)))))
+                (push (list nonterminal-source (list partition-name) production-name) productions)
+                (dolist (action (charclass-actions charclass))
+                  (let* ((lexer-action (cdr action))
+                         (body (if (characterp partition-name)
+                                 (let* ((lexer-action-function (lexer-action-function-name lexer-action))
+                                        (result (funcall lexer-action-function partition-name)))
+                                   (typecase result
+                                     (integer result)
+                                     (character result)
+                                     ((eql nil) 'false)
+                                     ((eql t) 'true)
+                                     (t (error "Cannot infer the type of ~S's result ~S" lexer-action-function result))))
+                                 (list (lexer-action-name lexer-action) partition-name))))
+                    (push (list 'action (car action) production-name body nil) commands)))
+                (setq charset (charset-difference charset partition-charset)))))))
       
       (let ((partition-commands
              (mapcan
@@ -552,7 +620,7 @@
 ;     define the partitions used in this lexer;
 ;     define the actions of these productions.
 (defun make-lexer-and-grammar (kind charclasses-source lexer-actions-source parametrization start-symbol grammar-source &optional excluded-nonterminals-source)
-  (let ((lexer (make-lexer charclasses-source lexer-actions-source grammar-source)))
+  (let ((lexer (make-lexer parametrization charclasses-source lexer-actions-source grammar-source)))
     (multiple-value-bind (extra-grammar-source extra-commands) (lexer-grammar-and-commands lexer)
       (let ((grammar (make-and-compile-grammar kind parametrization start-symbol
                                                (append extra-grammar-source grammar-source) excluded-nonterminals-source)))
@@ -593,27 +661,44 @@
 ; string plus the symbol $END which is inserted after the last character of
 ; the string.
 ; Return the list of lists of action results of the elements.
+;
+; If initial-state and state-transition are non-nil, the parser has state.
+; initial-state is a list of input symbols to be prepended to the input string
+; before the first element is parsed.  state-transition is a function that
+; takes the result of each successful action and produces two values:
+;   a modified result of that action;
+;   a list of input symbols to be prepended to the input string before the next
+;     element is parsed.
+;
 ; If trace is:
 ;   nil,     don't print trace information
 ;   :code,   print trace information, including action code
 ;   other    print trace information
-; Return two values:
+;
+; Return three values:
 ;   the list of lists of action results;
 ;   the list of action results' types.  Each of the lists of action results has
 ;     this type signature.
-(defun lexer-metaparse (lexer string &key trace)
+;   the last state
+(defun lexer-metaparse (lexer string &key initial-state state-transition trace)
   (let ((metagrammar (lexer-metagrammar lexer)))
     (do ((in (append (coerce string 'list) '($end)))
          (results-lists nil))
-        ((endp in) (values (nreverse results-lists) (grammar-user-start-action-types (metagrammar-grammar metagrammar))))
-      (multiple-value-bind (results in-rest) (action-metaparse metagrammar (lexer-classifier lexer) in :trace trace)
+        ((endp in) (values (nreverse results-lists)
+                           (grammar-user-start-action-types (metagrammar-grammar metagrammar))
+                           initial-state))
+      (multiple-value-bind (results in-rest)
+                           (action-metaparse metagrammar (lexer-classifier lexer) (append initial-state in) :trace trace)
+        (when state-transition
+          (multiple-value-setq (results initial-state) (funcall state-transition results)))
         (setq in in-rest)
         (push results results-lists)))))
 
 
 ; Same as lexer-metaparse except that also print the action results nicely.
-(defun lexer-pmetaparse (lexer string &key (stream t) trace)
-  (multiple-value-bind (results-lists types) (lexer-metaparse lexer string :trace trace)
+(defun lexer-pmetaparse (lexer string &key initial-state state-transition (stream t) trace)
+  (multiple-value-bind (results-lists types final-state)
+                       (lexer-metaparse lexer string :initial-state initial-state :state-transition state-transition :trace trace)
     (pprint-logical-block (stream results-lists)
       (pprint-exit-if-list-exhausted)
       (loop
@@ -621,5 +706,5 @@
         (pprint-exit-if-list-exhausted)
         (format stream " ~_")))
     (terpri stream)
-    (values results-lists types)))
+    (values results-lists types final-state)))
 
