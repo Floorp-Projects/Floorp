@@ -1,0 +1,106 @@
+<?xml version="1.0"?> 
+
+<!-- 
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+  
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+  
+  The Original Code is Mozilla Communicator client code, released
+  March 31, 1998.
+  
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation. Portions created by Netscape are
+  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+  Rights Reserved.
+  
+  Contributor(s): 
+-->
+
+<?xml-stylesheet href="chrome://navigator/skin/navigator.css" type="text/css"?> 
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  %brandDTD;
+  <!ENTITY % helperAppLauncherDTD SYSTEM "chrome://global/locale/helperAppLauncher.dtd" >
+  %helperAppLauncherDTD;
+]>            
+ 
+<window id="helperAppLaunchConfirmation"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&caption.label;"
+        onload="window.dialog = new nsHelperAppLauncherDialog();"
+        style="width: 40em;"
+        class="dialog"
+        align="vertical"
+        persist="screenX screenY"
+        screenX="24" screenY="24">
+              
+    <script language="javascript" src="chrome://global/content/strres.js"/>
+    <script language="javascript" src="chrome://global/content/globalOverlay.js"/>  
+    <script language="javascript" src="chrome://global/content/helperAppLauncher.js"/>
+    <script language="javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+                   
+    <keyset id="keyset"/>
+           
+    <box>
+        <box orient="vertical">
+            <image class="question-icon"/>
+            <spring flex="1"/>
+        </box>
+        <separator orient="vertical" class="thin"/>
+        <box orient="vertical" flex="1">
+            <html>&intro.label;</html>
+            <separator orient="horizontal" class="thin"/>
+            <radiogroup id="mode" orient="vertical">
+                <box orient="vertical">
+                    <box autostretch="never">
+                        <radio id="runApp"
+                               group="mode"
+                               value="&runApp.label;"
+                               accesskey="&runApp.accesskey;"/>
+                    </box>
+                    <box class="indent">
+                        <textfield id="appName" readonly="true" flex="1"/>
+                        <button class="dialog"
+                                value="&chooseApp.label;"
+                                accesskey="&chooseApp.accesskey;"
+                                oncommand="dialog.chooseApp();"/>
+                    </box>
+                </box>
+                <box orient="vertical">
+                    <box autostretch="never">
+                        <radio id="saveToDisk"
+                               group="mode"
+                               value="&saveToDisk.label;"
+                               accesskey="&saveToDisk.accesskey;"/>
+                    </box>
+                    <box class="indent">
+                        <textfield id="fileName" readonly="true" flex="1"/>
+                        <button class="dialog"
+                                value="&chooseFile.label;"
+                                accesskey="&chooseFile.accesskey;"
+                                oncommand="dialog.chooseFile();"/>
+                    </box>
+                 </box>
+            </radiogroup>
+            <separator orient="horizontal" class="thin"/>
+            <box autostretch="never">
+                <checkbox id="alwaysAskMe" value="&alwaysAskMe.label;" accesskey="&alwaysAskMe.accesskey;"/>
+            </box>
+        </box>
+    </box>
+
+    <separator class="groove"/>
+
+    <box id="okCancelButtonsRight"/>
+           
+</window>
