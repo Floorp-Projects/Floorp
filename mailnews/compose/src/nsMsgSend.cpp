@@ -822,6 +822,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 
     m_plaintext->AnalyzeSnarfedFile(); // look for 8 bit text, long lines, etc.
     m_plaintext->PickEncoding(mCompFields->GetCharacterSet(), this);
+    const char *charset = mCompFields->GetCharacterSet();
     hdrs = mime_generate_attachment_headers(m_plaintext->m_type,
                         m_plaintext->m_encoding,
                         m_plaintext->m_description,
@@ -830,7 +831,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
                         nsnull, 0,
                         m_digest_p,
                         m_plaintext,
-                        mCompFields->GetCharacterSet(),
+                        charset,
+                        charset,
                         mCompFields->GetBodyIsAsciiOnly(),
                         nsnull,
                         PR_TRUE);
@@ -1024,12 +1026,14 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   //
   if ((!plainpart) || (plainpart != mainbody))
   {
+    const char *charset = mCompFields->GetCharacterSet();
     hdrs = mime_generate_attachment_headers (m_attachment1_type,
                          m_attachment1_encoding,
                          0, 0, 0, 0, 0,
                          m_digest_p,
                          nsnull, /* no "ma"! */
-                         mCompFields->GetCharacterSet(),
+                         charset,
+                         charset,
                          mCompFields->GetBodyIsAsciiOnly(),
                          nsnull,
                          PR_TRUE);
@@ -1254,6 +1258,7 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
                                                           // we determine from
                                                           // the file or none
                                                           // at all! 
+                                           mCompFields->GetCharacterSet(),
                                            PR_FALSE,      // bodyIsAsciiOnly to false
                                                           // for attachments
                                            ma->m_content_id,

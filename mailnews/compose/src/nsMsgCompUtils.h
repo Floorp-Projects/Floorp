@@ -103,7 +103,8 @@ char        *mime_generate_attachment_headers (const char *type,
                            const char *base_url,
                            PRBool digest_p,
                            nsMsgAttachmentHandler *ma,
-                           const char *charset,
+                           const char *attachmentCharset, // charset of the attachment (can be null)
+                           const char *bodyCharset,       // charset of the main body
                            PRBool bodyIsAsciiOnly,
                            const char *content_id,
                            PRBool     aBodyDocument);

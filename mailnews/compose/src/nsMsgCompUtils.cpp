@@ -723,7 +723,8 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
                   const char *base_url,
                   PRBool /*digest_p*/,
                   nsMsgAttachmentHandler * /*ma*/,
-                  const char *charset,
+                  const char *attachmentCharset,
+                  const char *bodyCharset,
                   PRBool bodyIsAsciiOnly,
                   const char *content_id, 
                   PRBool      aBodyDocument)
@@ -747,18 +748,28 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
 
   /* Let's encode the real name */
   char *encodedRealName = nsnull;
+  nsXPIDLCString charset;   // actual charset used for MIME encode
   if (real_name)
   {
-    encodedRealName = nsMsgI18NEncodeMimePartIIStr(real_name, PR_FALSE, nsMsgI18NFileSystemCharset(), 0, usemime);
+    // first try main body's charset to encode the file name, 
+    // then try local file system charset if fails
+    NS_ConvertUTF8toUCS2 realName(real_name);
+    if (bodyCharset && *bodyCharset &&
+        nsMsgI18Ncheck_data_in_charset_range(bodyCharset, realName.get()))
+      charset.Assign(bodyCharset);
+    else
+    {
+      charset.Assign(nsMsgI18NFileSystemCharset());
+      if (!nsMsgI18Ncheck_data_in_charset_range(charset.get(), realName.get()))
+        charset.Assign("UTF-8"); // set to UTF-8 if fails again
+    }
+
+    encodedRealName = nsMsgI18NEncodeMimePartIIStr(real_name, PR_FALSE, charset.get(), 0, usemime);
     if (!encodedRealName || !*encodedRealName)
     {
-      /* Let's try one more time using UTF8 */
-        encodedRealName = nsMsgI18NEncodeMimePartIIStr(real_name, PR_FALSE, "UTF-8", 0, usemime);
-      if (!encodedRealName || !*encodedRealName)
-      {
-        PR_FREEIF(encodedRealName);
-        encodedRealName = PL_strdup(real_name);
-      }
+      PR_Free(encodedRealName);
+      encodedRealName = PL_strdup(real_name);
+      charset.Assign("us-ascii");
     }
 
     /* ... and then put backslashes before special characters (RFC 822 tells us to). */
@@ -777,8 +788,11 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
   {
     
     char charset_label[65] = "";   // Content-Type: charset
-    PL_strncpy(charset_label, charset, sizeof(charset_label)-1);
-    charset_label[sizeof(charset_label)-1] = '\0';
+    if (attachmentCharset)
+    {
+      PL_strncpy(charset_label, attachmentCharset, sizeof(charset_label)-1);
+      charset_label[sizeof(charset_label)-1] = '\0';
+    }
     
     /* If the characters are all 7bit, then it's better (and true) to
     claim the charset to be US-  rather than Latin1.  Should we
@@ -791,7 +805,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
     
     // If charset is multibyte then no charset to be specified (apply base64 instead).
     // The list of file types match with PickEncoding() where we put base64 label.
-    if ( ((charset && !nsMsgI18Nmultibyte_charset(charset)) ||
+    if ( ((attachmentCharset && !nsMsgI18Nmultibyte_charset(attachmentCharset)) ||
          ((PL_strcasecmp(type, TEXT_HTML) == 0) ||
          (PL_strcasecmp(type, TEXT_MDL) == 0) ||
          (PL_strcasecmp(type, TEXT_PLAIN) == 0) ||
@@ -815,7 +829,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
     // Add format=flowed as in RFC 2646 if we are using that
     if(type && !PL_strcasecmp(type, "text/plain"))
     {
-      if(UseFormatFlowed(charset))
+      if(UseFormatFlowed(bodyCharset))
         PUSH_STRING ("; format=flowed");
       // else
       // {
@@ -848,7 +862,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
     }
     else // if (parmFolding == 2)
     {
-      char *rfc2231Parm = RFC2231ParmFolding("name", charset,
+      char *rfc2231Parm = RFC2231ParmFolding("name", charset.get(),
                          nsMsgI18NGetAcceptLanguage(), encodedRealName);
       if (rfc2231Parm) {
         PUSH_STRING(";\r\n ");
@@ -917,7 +931,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
     }
     else // if (parmFolding == 2)
     {
-      char *rfc2231Parm = RFC2231ParmFolding("filename", charset,
+      char *rfc2231Parm = RFC2231ParmFolding("filename", charset.get(),
                        nsMsgI18NGetAcceptLanguage(), encodedRealName);
       if (rfc2231Parm) {
         PUSH_STRING(";\r\n ");
