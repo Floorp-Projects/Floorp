@@ -2624,7 +2624,6 @@ nsHttpChannel::SetContentType(const nsACString &value)
             mResponseHead->SetContentCharset(charsetBuf);
     } else {
         // We are being given a content-type hint.
-        nsCAutoString charsetBuf;
         NS_ParseContentType(value, mContentTypeHint, mContentCharsetHint);
     }
     
