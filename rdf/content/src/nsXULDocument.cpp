@@ -122,6 +122,8 @@
 #include "rdf.h"
 #include "rdfutil.h"
 #include "nsIFrame.h"
+#include "nsIPrivateDOMImplementation.h"
+#include "nsIDOMDOMImplementation.h"
 #include "nsINodeInfo.h"
 
 //----------------------------------------------------------------------
@@ -156,6 +158,7 @@ static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
 static NS_DEFINE_CID(kXULKeyListenerCID,         NS_XULKEYLISTENER_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 static NS_DEFINE_CID(kXULTemplateBuilderCID,     NS_XULTEMPLATEBUILDER_CID);
+static NS_DEFINE_CID(kDOMImplementationCID,      NS_DOM_IMPLEMENTATION_CID);
 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
@@ -2292,10 +2295,19 @@ nsXULDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 NS_IMETHODIMP
 nsXULDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
 {
-    NS_NOTREACHED("nsXULDocument::GetImplementation");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+  nsresult rv;
+  rv = nsComponentManager::CreateInstance(kDOMImplementationCID,
+                                          nsnull,
+                                          NS_GET_IID(nsIDOMDOMImplementation),
+                                          (void**) aImplementation);
+  if (NS_FAILED(rv)) return rv;
 
+  nsCOMPtr<nsIPrivateDOMImplementation> impl = do_QueryInterface(*aImplementation, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = impl->Init((nsIDocument*) this);
+  return rv;
+}
 
 NS_IMETHODIMP
 nsXULDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)

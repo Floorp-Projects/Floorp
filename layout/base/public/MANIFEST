@@ -56,3 +56,4 @@ nsILayoutHistoryState.h
 nsIStatefulFrame.h
 nsISelfScrollingFrame.h
 nsIScrollableFrame.h
+nsIPrivateDOMImplementation.h

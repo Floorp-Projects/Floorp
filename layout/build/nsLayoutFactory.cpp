@@ -52,6 +52,8 @@
 #include "nsIDocumentEncoder.h"
 #include "nsCOMPtr.h"
 #include "nsIFrameSelection.h"
+#include "nsIDOMDOMImplementation.h"
+#include "nsIPrivateDOMImplementation.h"
 
 #include "nsIXBLService.h"
 #include "nsIBindingManager.h"
@@ -98,9 +100,10 @@ static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
 static NS_DEFINE_CID(kXBLServiceCID, NS_XBLSERVICE_CID);
 static NS_DEFINE_CID(kBindingManagerCID, NS_BINDINGMANAGER_CID);
 
+static NS_DEFINE_CID(kDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kNodeInfoManagerCID, NS_NODEINFOMANAGER_CID);
-
 static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
+
 
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
@@ -397,6 +400,13 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewAutoCopyService", res);
       return res;
     }
+  }
+  else if (mClassID.Equals(kDOMImplementationCID)) {
+    res = NS_NewDOMImplementation((nsIDOMDOMImplementation**) &inst);
+	if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewDOMImplementation", res);
+      return res;
+	}
   }
   else {
     return NS_NOINTERFACE;
