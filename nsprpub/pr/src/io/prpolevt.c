@@ -208,6 +208,10 @@ PR_IMPLEMENT(PRFileDesc *) PR_NewPollableEvent(void)
 {
     PRFileDesc *event;
     PRFileDesc *fd[2]; /* fd[0] is the read end; fd[1] is the write end */
+#ifdef USE_TCP_SOCKETPAIR
+    PRSocketOptionData socket_opt;
+    PRStatus rv;
+#endif
 
     fd[0] = fd[1] = NULL;
 
@@ -235,6 +239,13 @@ PR_IMPLEMENT(PRFileDesc *) PR_NewPollableEvent(void)
         fd[0] = fd[1] = NULL;
         goto errorExit;
     }
+	/*
+	 * set the TCP_NODELAY option to reduce notification latency
+	 */
+    socket_opt.option = PR_SockOpt_NoDelay;
+    socket_opt.value.no_delay = PR_TRUE;
+    rv = PR_SetSocketOption(fd[1], &socket_opt);
+    PR_ASSERT(PR_SUCCESS == rv);
 #endif
 
     event->secret->writeEnd = fd[1];
