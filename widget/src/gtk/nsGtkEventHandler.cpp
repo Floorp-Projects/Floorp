@@ -63,6 +63,12 @@ struct EventInfo {
   nsRect   *rect;    // the rect
 };
 
+// This is a flag that says if we should suppress the next key down
+// event.  This is used when that last key release event was
+// suppressed and we want the next key press event to not generate the
+// key down event since it is part of a key repeat sequence.
+static PRBool suppressNextKeyDown = PR_FALSE;
+
 //==============================================================
 void InitAllocationEvent(GtkAllocation *aAlloc,
                          gpointer   p,
@@ -702,7 +708,11 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   //   window that currently has focus inside our app...
   //
   InitKeyEvent(event, win, kevent, NS_KEY_DOWN);
-  win->OnKey(kevent);
+  // if we need to suppress this NS_KEY_DOWN event, reset the flag
+  if (suppressNextKeyDown == PR_TRUE)
+    suppressNextKeyDown = PR_FALSE;
+  else
+    win->OnKey(kevent);
 
 
   //
@@ -736,6 +746,37 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
 //==============================================================
 gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p)
 {
+  GdkEvent *nextEvent;
+  PRBool    shouldDrop = PR_FALSE;
+  // According to the DOM spec if this is the result of a key repeat
+  // event we don't let it through since the DOM wants the event
+  // stream to look like this: press press press press release.  The
+  // way that X does things is to do press release press release, etc.
+  // We check to see if this is a key release by checking to see if
+  // the next event in the queue is a key press event and it has the
+  // exact same timestamp as the current event.
+
+  // get the next event
+  nextEvent = gdk_event_get();
+  // see if it's a key press event and if the time matches.
+  if (nextEvent && (nextEvent->type == GDK_KEY_PRESS) && (nextEvent->key.time == event->time))
+  {
+      shouldDrop = PR_TRUE;
+      // the next key press event shouldn't generate a key down event.
+      // this is a global variable
+      suppressNextKeyDown = PR_TRUE;
+  }
+  if (nextEvent) {
+    // put makes a copy so we're safe doing this.
+    gdk_event_put(nextEvent);
+    // free the event since we just got a copy.
+    gdk_event_free(nextEvent);
+  }
+
+  // should we drop this event?
+  if (shouldDrop)
+    return PR_TRUE;
+
   // Don't pass shift, control and alt as key release events
   if (event->keyval == GDK_Shift_L
       || event->keyval == GDK_Shift_R
