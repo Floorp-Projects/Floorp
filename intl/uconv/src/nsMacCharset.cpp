@@ -23,7 +23,8 @@
 #include "nsIPlatformCharset.h"
 #include "nsPlatformCharsetFactory.h"
 #include "pratom.h"
-
+#include "nsURLProperties.h"
+#include <Script.h>
 #include "nsUConvDll.h"
 
 
@@ -38,7 +39,7 @@ public:
   virtual ~nsMacCharset();
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
-
+  nsString mCharset;
 };
 
 NS_IMPL_ISUPPORTS(nsMacCharset, kIPlatformCharsetIID);
@@ -47,6 +48,32 @@ nsMacCharset::nsMacCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
+  nsAutoString propertyURL("resource://res/maccharset.properties");
+
+  nsURLProperties *info = new nsURLProperties( propertyURL );
+
+  if( info ) { 
+	  long ret = ::GetScriptManagerVariable(smRegionCode);
+	  PRInt32 reg = (PRInt32)(ret & 0x00FFFF);
+ 	  nsAutoString regionKey("region.");
+	  regionKey.Append(reg, 10);
+	  
+	  nsresult res = info->Get(regionKey, mCharset);
+	  if(NS_FAILED(res)) {
+		  ret = ::GetScriptManagerVariable(smSysScript);
+		  PRInt32 script = (PRInt32)(ret & 0x00FFFF);
+		  nsAutoString scriptKey("script.");
+		  scriptKey.Append(script, 10);
+	 	  nsresult res = info->Get(scriptKey, mCharset);
+	      if(NS_FAILED(res)) {
+	      	  mCharset = "x-mac-roman";
+		  }   
+	  }
+	  
+	  delete info;
+  } else {
+  	mCharset = "x-mac-roman";
+  }
 }
 nsMacCharset::~nsMacCharset()
 {
@@ -56,7 +83,7 @@ nsMacCharset::~nsMacCharset()
 NS_IMETHODIMP 
 nsMacCharset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
 {
-   oResult = "ISO-8859-1"; // XXX- hack to be implement
+   oResult = mCharset; 
    return NS_OK;
 }
 
