@@ -1952,7 +1952,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 	buffer_size = status;  // status holds # bytes we've actually buffered so far...
   
     /* normal read. Yay! */
-    if (m_pop3ConData->bytes_received_in_message + buffer_size >
+    if ((PRInt32) (m_pop3ConData->bytes_received_in_message + buffer_size) >
         m_pop3ConData->cur_msg_size) 
         buffer_size = m_pop3ConData->cur_msg_size -
             m_pop3ConData->bytes_received_in_message; 

@@ -1503,7 +1503,8 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   struct mime_draft_data *mdd = (struct mime_draft_data *) stream_closure;
   nsMsgAttachedFile *attachments = 0, *newAttachment = 0;
   int nAttachments = 0;
-  char *hdr_value = NULL, *parm_value = NULL;
+  //char *hdr_value = NULL;
+  char *parm_value = NULL;
   PRBool needURL = PR_FALSE;
   PRBool creatingMsgBody = PR_TRUE;
   PRBool bodyPart = PR_FALSE;
