@@ -35,6 +35,8 @@
 
 class nsIJSNativeInitializer : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IJSNATIVEINITIALIZER_IID; return iid; }
+
   /**
    * Intialize a newly created native instance using the parameters
    * passed into the JavaScript constructor.
