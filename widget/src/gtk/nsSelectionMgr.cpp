@@ -64,6 +64,10 @@
 
 #include "nsString.h"
 
+#ifdef HAVE_STRINGS_H
+#include <strings.h>        // bcopy, Solaris/CC.
+#endif
+
 #include <stdio.h>
 
 // XXX BWEEP BWEEP This is ONLY TEMPORARY until the service manager
