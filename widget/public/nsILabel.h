@@ -37,6 +37,10 @@ enum nsLabelAlignment {
     eAlign_Center
   }; 
 
+struct nsLabelInitData : public nsWidgetInitData {
+  nsLabelAlignment mAlignment;
+};
+
 /**
  * Label widget.
  * Automatically shows itself as depressed when clicked on.
