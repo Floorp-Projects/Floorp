@@ -858,7 +858,7 @@ PRInt32 _MD_send(PRFileDesc *fd, const void *buf, PRInt32 amount,
 	PRInt32 tmp_amount = amount;
 #endif
 
-
+    /*
      * On pre-2.6 Solaris, send() is much slower than write().
      * On 2.6 and beyond, with in-kernel sockets, send() and
      * write() are fairly equivalent in performance.
