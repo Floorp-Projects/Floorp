@@ -3326,7 +3326,6 @@ class BodyCodegen
             casting overhead.
 
         */
-        cfw.addALoad(variableObjectLocal);
         int childType = child.getType();
         if ((childType == Token.THIS
             || (childType == Token.NEWTEMP
@@ -3334,12 +3333,12 @@ class BodyCodegen
             && nameChild.getType() == Token.STRING)
         {
             addOptRuntimeInvoke(
-                "thisGet",
+                "getPropScriptable",
                 "(Lorg/mozilla/javascript/Scriptable;"
                 +"Ljava/lang/String;"
-                +"Lorg/mozilla/javascript/Scriptable;"
                 +")Ljava/lang/Object;");
         } else {
+            cfw.addALoad(variableObjectLocal);
             addScriptRuntimeInvoke(
                 "getProp",
                 "(Ljava/lang/Object;"

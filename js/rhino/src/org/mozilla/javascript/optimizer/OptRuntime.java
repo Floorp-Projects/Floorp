@@ -125,31 +125,21 @@ public final class OptRuntime extends ScriptRuntime
                                     Object[] args)
         throws JavaScriptException
     {
+        Object prop;
         Scriptable obj = scope;
-        Object prop = null;
-        Scriptable thisArg = null;
- search:
-        while (obj != null) {
-            Scriptable m = obj;
-            do {
-                prop = m.get(id, obj);
+ search: {
+            while (obj != null) {
+                prop = ScriptableObject.getProperty(obj, id);
                 if (prop != Scriptable.NOT_FOUND) {
-                    thisArg = obj;
                     break search;
                 }
-                m = m.getPrototype();
-            } while (m != null);
-            obj = obj.getParentScope();
-        }
-        if ((prop == null) || (prop == Scriptable.NOT_FOUND)) {
+                obj = obj.getParentScope();
+            }
             String msg = ScriptRuntime.getMessage1("msg.is.not.defined", id);
             throw ScriptRuntime.constructError("ReferenceError", msg);
         }
 
-        while (thisArg instanceof NativeWith)
-            thisArg = thisArg.getPrototype();
-        if (thisArg instanceof NativeCall)
-            thisArg = ScriptableObject.getTopLevelScope(thisArg);
+        Scriptable thisArg = ScriptRuntime.getThis(obj);
 
         if (!(prop instanceof Function)) {
             Object[] errorArgs = { toString(prop)  };
@@ -161,26 +151,14 @@ public final class OptRuntime extends ScriptRuntime
         return function.call(cx, scope, thisArg, args);
     }
 
-    public static Object thisGet(Scriptable thisObj, String id,
-                                 Scriptable scope)
+    public static Object getPropScriptable(Scriptable obj, String id)
     {
-        if (thisObj == null) {
-            throw Context.reportRuntimeError(
-                getMessage("msg.null.to.object", null));
+        if (obj == null || obj == Undefined.instance) {
+            throw ScriptRuntime.undefReadError(obj, id);
         }
-
-        Object result = thisObj.get(id, thisObj);
+        Object result = ScriptableObject.getProperty(obj, id);
         if (result != Scriptable.NOT_FOUND)
             return result;
-
-        Scriptable m = thisObj.getPrototype();
-        while (m != null) {
-            result = m.get(id, thisObj);
-            if (result != Scriptable.NOT_FOUND)
-                return result;
-
-            m = m.getPrototype();
-        }
         return Undefined.instance;
     }
 

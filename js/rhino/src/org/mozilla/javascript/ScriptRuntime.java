@@ -2148,7 +2148,7 @@ public class ScriptRuntime {
         return constructError("TypeError", msg);
     }
 
-    static RuntimeException undefReadError(Object object, String property)
+    public static RuntimeException undefReadError(Object object, String property)
     {
         String messageId = (object == null) ? "msg.null.prop.read"
                                             : "msg.undef.prop.read";
