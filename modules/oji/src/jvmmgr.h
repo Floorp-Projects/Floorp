@@ -28,6 +28,8 @@
 #include "jsdbgapi.h"
 #include "nsError.h"
 
+#include "nsISecurityContext.h"
+
 struct nsJVMManager;
 
 typedef enum nsJVMStatus {
@@ -124,7 +126,6 @@ JVM_GetStartJSFrameFromParallelStack(void);
 PR_EXTERN(JSStackFrame*)
 JVM_GetEndJSFrameFromParallelStack(JSStackFrame  *pCurrentFrame);
 
-typedef struct nsISecurityContext nsISecurityContext;
 PR_EXTERN(nsISecurityContext*) 
 JVM_GetJSSecurityContext();
 
