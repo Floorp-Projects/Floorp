@@ -3515,7 +3515,7 @@ nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell*                aPresS
 }
 
 
-nsresult
+NS_IMETHODIMP
 nsFrame::CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
     // get its view
