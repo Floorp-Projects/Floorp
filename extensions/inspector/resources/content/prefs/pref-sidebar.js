@@ -57,7 +57,6 @@ const kSidebarPanelId      = "UPnls"; // directory services property to find pan
 const kSidebarURNPanelList = "urn:sidebar:current-panel-list";
 const kSidebarURN3rdParty  = "urn:sidebar:3rdparty-panel";
 const kSidebarURL          = "chrome://inspector/content/sidebar.xul";
-const kSidebarTitle        = "DOM Inspector";
 
 //////////////////////////////////////////////////
 
@@ -113,6 +112,9 @@ SidebarPrefs.prototype =
       return false;
     }
 
+    var bundle = document.getElementById("inspector-bundle");
+    var kSidebarTitle = bundle.getString("sidebar.title");
+
     this.mDS.Assert(this.mPanelRes, gRDF.GetResource(kNCURI + "title"), gRDF.GetLiteral(kSidebarTitle), true);
     this.mDS.Assert(this.mPanelRes, gRDF.GetResource(kNCURI + "content"), gRDF.GetLiteral(kSidebarURL), true);
     this.mPanelSeq.AppendElement(this.mPanelRes);
@@ -121,7 +123,6 @@ SidebarPrefs.prototype =
     var msg = document.getElementById("txSidebarMsg");
     msg.removeChild(msg.firstChild);
 
-    var bundle = document.getElementById("inspector-bundle");
     msg.appendChild(document.createTextNode(bundle.getString("sidebarInstalled"))); 
     var btn = document.getElementById("btnSidebarInstall");
     btn.setAttribute("disabled", "true");
