@@ -1829,6 +1829,7 @@ nsChromeRegistry::IsProviderSelectedForPackage(const nsCString& aProviderType,
                                                nsIRDFResource* aSelectionArc, 
                                                PRBool aUseProfile, PRBool* aResult)
 {
+  *aResult = PR_FALSE;
   nsCAutoString package( "urn:mozilla:package:" );
   package.AppendWithConversion(aPackageName);
 
