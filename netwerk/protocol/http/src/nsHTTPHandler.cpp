@@ -26,10 +26,9 @@
 #include "nsITransport.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
-#include "nsStandardUrl.h"
 #include "nsIHTTPEventSink.h"
 
-static NS_DEFINE_CID(kStandardUrlCID, NS_THIS_STANDARDURL_IMPLEMENTATION_CID);
+static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 NS_METHOD CreateOrGetHTTPHandler(nsIHTTPHandler* *o_HTTPHandler)
@@ -80,11 +79,12 @@ nsHTTPHandler::NewConnection(nsIURL* i_URL,
             nsIURL* pURL = nsnull;
             //Check to see if an instance already exists in the active list
             PRUint32 count;
+            PRInt32 index;
             m_pConnections->Count(&count);
-            for (--count; count >= 0; --count) 
+            for (index=count-1; index >= 0; --index) 
             {
                 //switch to static_cast...
-                pConn = (nsHTTPConnection*)((nsIHTTPConnection*) m_pConnections->ElementAt(count));
+                pConn = (nsHTTPConnection*)((nsIHTTPConnection*) m_pConnections->ElementAt(index));
                 //Do other checks here as well... TODO
                 if ((NS_OK == pConn->GetURL(&pURL)) && (pURL == i_URL))
                 {
