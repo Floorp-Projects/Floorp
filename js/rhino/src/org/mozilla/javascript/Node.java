@@ -56,7 +56,8 @@ public class Node implements Cloneable {
         double number;
     }
 
-    private static class StringNode extends Node {
+    private static class StringNode extends Node
+    {
 
         StringNode(int type, String str) {
             super(type);
@@ -64,6 +65,14 @@ public class Node implements Cloneable {
         }
 
         String str;
+    }
+
+    private static class PropListItem
+    {
+        PropListItem next;
+        int type;
+        int intValue;
+        Object objectValue;
     }
 
     public Node(int nodeType) {
@@ -356,44 +365,80 @@ public class Node implements Cloneable {
         return null;
     }
 
-    public Object getProp(int propType) {
-        if (props == null)
-            return null;
-        return props.getObject(propType);
+    private PropListItem lookupProperty(int propType)
+    {
+        PropListItem x = propListHead;
+        while (x != null && propType != x.type) {
+            x = x.next;
+        }
+        return x;
     }
 
-    public int getIntProp(int propType, int defaultValue) {
-        if (props == null)
-            return defaultValue;
-        return props.getInt(propType, defaultValue);
+    private PropListItem ensureProperty(int propType)
+    {
+        PropListItem item = lookupProperty(propType);
+        if (item == null) {
+            item = new PropListItem();
+            item.type = propType;
+            item.next = propListHead;
+            propListHead = item;
+        }
+        return item;
     }
 
-    public int getExistingIntProp(int propType) {
-        return props.getExistingInt(propType);
+    public void removeProp(int propType)
+    {
+        PropListItem x = propListHead;
+        if (x != null) {
+            PropListItem prev = null;
+            while (x.type != propType) {
+                prev = x;
+                x = x.next;
+                if (x == null) { return; }
+            }
+            if (prev == null) {
+                propListHead = x.next;
+            } else {
+                prev.next = x.next;
+            }
+        }
     }
 
-    public void putProp(int propType, Object prop) {
+    public Object getProp(int propType)
+    {
+        PropListItem item = lookupProperty(propType);
+        if (item == null) { return null; }
+        return item.objectValue;
+    }
+
+    public int getIntProp(int propType, int defaultValue)
+    {
+        PropListItem item = lookupProperty(propType);
+        if (item == null) { return defaultValue; }
+        return item.intValue;
+    }
+
+    public int getExistingIntProp(int propType)
+    {
+        PropListItem item = lookupProperty(propType);
+        if (item == null) { Context.codeBug(); }
+        return item.intValue;
+    }
+
+    public void putProp(int propType, Object prop)
+    {
         if (prop == null) {
             removeProp(propType);
-        }
-        else {
-            if (props == null) {
-                props = new UintMap(2);
-            }
-            props.put(propType, prop);
+        } else {
+            PropListItem item = ensureProperty(propType);
+            item.objectValue = prop;
         }
     }
 
-    public void putIntProp(int propType, int prop) {
-        if (props == null)
-            props = new UintMap(2);
-        props.put(propType, prop);
-    }
-
-    public void removeProp(int propType) {
-        if (props != null) {
-            props.remove(propType);
-        }
+    public void putIntProp(int propType, int prop)
+    {
+        PropListItem item = ensureProperty(propType);
+        item.intValue = prop;
     }
 
     public int getOperation() {
@@ -477,16 +522,13 @@ public class Node implements Cloneable {
                 sb.append(' ');
                 sb.append(intDatum);
             }
-            if (props == null)
-                return sb.toString();
 
-            int[] keys = props.getKeys();
-            for (int i = 0; i != keys.length; ++i) {
-                int key = keys[i];
+            for (PropListItem x = propListHead; x != null; x = x.next) {
+                int type = x.type;
                 sb.append(" [");
-                sb.append(propToString(key));
+                sb.append(propToString(type));
                 sb.append(": ");
-                switch (key) {
+                switch (type) {
                     case FIXUPS_PROP : // can't add this as it recurses
                         sb.append("fixups property");
                         break;
@@ -497,11 +539,11 @@ public class Node implements Cloneable {
                         sb.append("last use property");
                         break;
                     default :
-                        Object obj = props.getObject(key);
+                        Object obj = x.objectValue;
                         if (obj != null) {
                             sb.append(obj.toString());
                         } else {
-                            sb.append(props.getExistingInt(key));
+                            sb.append(x.intValue);
                         }
                         break;
                 }
@@ -549,6 +591,13 @@ public class Node implements Cloneable {
     private Node first;    // first element of a linked list of children
     private Node last;     // last element of a linked list of children
     private int intDatum = -1;    // encapsulated int data; depends on type
-    private UintMap props;
+
+    /**
+     * Linked list of properties. Since vast majority of nodes would have
+     * no more then 2 properties, linked list saves memory and provides
+     * fast lookup. If this does not holds, propListHead can be replaced
+     * by UintMap.
+     */
+    private PropListItem propListHead;
 }
 
