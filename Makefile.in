@@ -156,6 +156,10 @@ endif
 
 DIRS	+= l10n
 
+ifdef MOZ_STATIC_COMPONENTS
+DIRS   += modules/staticmod
+endif
+
 endif # BUILD_MODULES == all
 
 STATIC_MAKEFILES := $(NSPRPUB_DIR)
