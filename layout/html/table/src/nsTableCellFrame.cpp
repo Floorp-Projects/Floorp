@@ -585,6 +585,9 @@ void nsTableCellFrame::VerticallyAlignChild(nsPresContext*          aPresContext
                                            aPresContext->ScaledPixelsToTwips(),
                                            eAlwaysRoundDown);
   }
+  // if the content is larger than the cell height align from top
+  kidYTop = PR_MAX(0, kidYTop);
+
   firstKid->SetPosition(nsPoint(kidRect.x, kidYTop));
   nsHTMLReflowMetrics desiredSize(PR_FALSE);
   desiredSize.width = mRect.width;
