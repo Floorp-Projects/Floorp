@@ -105,12 +105,6 @@
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.commandkey "g">
-<!ENTITY goMenu.label "Go">
-<!ENTITY goMenu.accesskey "g">
-<!ENTITY goHomeCmd.label "Home">
-<!ENTITY goHomeCmd.accesskey "h">
-
-
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY bookmarksMenu.accesskey "b">
 <!ENTITY addCurPageCmd.label "Add Bookmark">
@@ -173,3 +167,5 @@
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label            "Document: Done">
+
+
