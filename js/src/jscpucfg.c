@@ -57,12 +57,6 @@
 #endif
 #endif
 
-#ifdef linux
-#ifndef LINUX
-# error "LINUX is not defined"
-#endif
-#endif
-
 #ifdef bsdi
 #ifndef BSDI
 # error "BSDI is not defined"
