@@ -291,7 +291,7 @@ PRInt32 nsComboBox::GetSelectedIndex()
 	if (! mMenuHandle)
 		return -1;
 
-	return ::GetControlValue(mControl);
+	return ::GetControlValue(mControl) - 1;
 }
 
 //-------------------------------------------------------------------------
