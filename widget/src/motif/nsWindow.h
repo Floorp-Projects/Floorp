@@ -67,11 +67,13 @@ public:
     virtual void            Show(PRBool bState);
     virtual void            Move(PRUint32 aX, PRUint32 aY);
     virtual void            Resize(PRUint32 aWidth,
-                                   PRUint32 aHeight);
+                                   PRUint32 aHeight,
+                                   PRBool   aRepaint);
     virtual void            Resize(PRUint32 aX,
                                    PRUint32 aY,
                                    PRUint32 aWidth,
-                                   PRUint32 aHeight);
+                                   PRUint32 aHeight,
+                                   PRBool   aRepaint);
     virtual void            Enable(PRBool bState);
     virtual void            SetFocus(void);
     virtual void            GetBounds(nsRect &aRect);
@@ -187,16 +189,18 @@ public:
         nsWindow::Move(aX, aY); \
     } \
     void Resize(PRUint32 aWidth, \
-                PRUint32 aHeight) \
+                PRUint32 aHeight, \
+                PRBool   aRepaint) \
     { \
-        nsWindow::Resize(aWidth, aHeight); \
+        nsWindow::Resize(aWidth, aHeight, aRepaint); \
     } \
     void Resize(PRUint32 aX, \
                 PRUint32 aY, \
                 PRUint32 aWidth, \
-                PRUint32 aHeight) \
+                PRUint32 aHeight, \
+                PRBool   aRepaint) \
     { \
-        nsWindow::Resize(aX, aY, aWidth, aHeight); \
+        nsWindow::Resize(aX, aY, aWidth, aHeight, aRepaint); \
     } \
     void Enable(PRBool bState) \
     { \

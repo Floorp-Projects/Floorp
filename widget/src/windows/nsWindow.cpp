@@ -762,7 +762,7 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight)
+void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
     if (mWnd) {
         nsIWidget *par = GetParent();
@@ -773,13 +773,18 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight)
           NS_RELEASE(par);
         }
 
+        UINT  flags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE;
+        if (!aRepaint) {
+          flags |= SWP_NOREDRAW;
+        }
+
         if (NULL != deferrer) {
             VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, 0, 0, aWidth, GetHeight(aHeight), 
-                                    SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE));
+                                    flags));
         }
         else {
             VERIFY(::SetWindowPos(mWnd, NULL, 0, 0, aWidth, GetHeight(aHeight), 
-                                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE));
+                                  flags));
         }
     }
 }
@@ -790,7 +795,11 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight)
+void nsWindow::Resize(PRUint32 aX,
+                      PRUint32 aY,
+                      PRUint32 aWidth,
+                      PRUint32 aHeight,
+                      PRBool   aRepaint)
 {
     if (mWnd) {
         nsIWidget *par = GetParent();
@@ -801,13 +810,18 @@ void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeigh
           NS_RELEASE(par);
         }
 
+        UINT  flags = SWP_NOZORDER | SWP_NOACTIVATE;
+        if (!aRepaint) {
+          flags |= SWP_NOREDRAW;
+        }
+
         if (NULL != deferrer) {
             VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), 
-                                    SWP_NOZORDER | SWP_NOACTIVATE));
+                                    flags));
         }
         else {
             VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), 
-                                  SWP_NOZORDER | SWP_NOACTIVATE));
+                                  flags));
         }
     }
 }

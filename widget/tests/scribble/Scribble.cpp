@@ -73,7 +73,7 @@ nsEventStatus PR_CALLBACK HandleEventMain(nsGUIEvent *aEvent)
                 if (next) {
                     nsIWidget *widget;
                     if (NS_OK == next->QueryInterface(kIWidgetIID, (void**)&widget)) {
-                        widget->Resize(0, 0, 200, ((nsSizeEvent*)aEvent)->windowSize->height - 26);
+                        widget->Resize(0, 0, 200, ((nsSizeEvent*)aEvent)->windowSize->height - 26, PR_TRUE);
                         NS_RELEASE(widget);
                     }
                 }
@@ -85,7 +85,8 @@ nsEventStatus PR_CALLBACK HandleEventMain(nsGUIEvent *aEvent)
             scribbleData.drawPane->Resize(200, 
                                           0, 
                                           ((nsSizeEvent*)aEvent)->windowSize->width - 206,
-                                          ((nsSizeEvent*)aEvent)->windowSize->height - 26);
+                                          ((nsSizeEvent*)aEvent)->windowSize->height - 26,
+                                          PR_TRUE);
 
             break;
         }
