@@ -2,24 +2,86 @@
 
 <bindings   id="mailBindings"
             xmlns="http://www.mozilla.org/xbl"
-            xmlns:html="http://www.w3.org/TR/REC-html40"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <binding id="searchattribute" extends="xul:menulist">
+  <binding id="searchattribute" extends="xul:box">
     <content>
-      <xul:menupopup>
-        <xul:menuitem value="contains"/>
-        <xul:menuitem value="doesn't contain"/>
-      </xul:menupopup>
+      <xul:menulist flex="1">
+        <xul:menupopup>
+          <xul:menuitem value="contains"/>
+          <xul:menuitem value="doesn't contain"/>
+        </xul:menupopup>
+      </xul:menulist>
     </content>
 
     <interface>
-      <!-- scope ID - retrieve the table -->
       <property readonly="true" name="validityManager">
         <![CDATA[
            Components.classes['mozilla.mail.search.validityManager.1'].getService(Components.interfaces.nsIMsgSearchValidityManager);
         ]]>
       </property>
+      <property name="attributeBundle">
+         <![CDATA[
+           dump("Loading string bundle\n");
+           srGetStrBundle("chrome://messenger/locale/search-attributes.properties");
+          ]]>
+      </property>
+
+      <property name="scope">
+        <!-- scope ID - retrieve the table -->
+        <setter>
+          <![CDATA[
+            this.setAttribute("scope", val);
+            var table = this.validityManager.getTable(val);
+            this.populateFromTable(table);
+          ]]>
+        </setter>
+        <getter>
+          <![CDATA[
+            return this.getAttribute("scope");
+          ]]>
+        </getter>
+      </property>
+      <method name="populateFromTable">
+        <argument name="table"/>
+        <body>
+          <![CDATA[
+            dump("Populating table\n");
+            var attrNames = this.attributeBundle;
+            var len = new Object;
+            var attrs = table.getAvailableAttributes(len);
+
+
+            var menulist = this.anonymousContent[0];
+            var popup = menulist.firstChild;
+
+            // save our old "data" so we can restore it later
+            var oldData = menulist.data;
+
+            // remove the old popup children
+            while (popup.hasChildNodes())
+              popup.removeChild(popup.lastChild);
+
+            var newSelection;
+            for (var i=0; i<attrs.length; i++) {
+              // create the menuitem
+              var menuitem = document.createElement("menuitem");
+              menuitem.setAttribute("value",
+                                    attrNames.GetStringFromID(attrs[i]));
+              menuitem.setAttribute("data",attrs[i]);
+              popup.appendChild(menuitem);
+
+              // try to restore the selection
+              if (!newSelection || oldData == attrs[i].toString()) {
+                newSelection = menuitem;
+              }
+            }
+
+            // now restore the selection
+            menulist.selectedItem = newSelection
+          ]]>
+        </body>
+      </method>
     </interface>
   </binding>
 </bindings>
