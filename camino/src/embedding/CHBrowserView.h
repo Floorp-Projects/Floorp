@@ -57,6 +57,7 @@ class nsIDragHelperService;
 // register itself with the view using the addListener
 // method.
 @protocol NSBrowserListener
+
 - (void)onLoadingStarted;
 - (void)onLoadingCompleted:(BOOL)succeeded;
 // Invoked regularly as data associated with a page streams
@@ -71,6 +72,7 @@ class nsIDragHelperService;
 // Called when a tooltip should be shown or hidden
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text;
 - (void)onHideTooltip;
+
 @end
 
 typedef enum {
@@ -80,6 +82,7 @@ typedef enum {
 } NSStatusType;
 
 @protocol NSBrowserContainer
+
 - (void)setStatus:(NSString *)statusString ofType:(NSStatusType)type;
 - (NSString *)title;
 - (void)setTitle:(NSString *)title;
@@ -88,6 +91,15 @@ typedef enum {
 - (void)sizeBrowserTo:(NSSize)dimensions;
 // Create a new browser container window and return the contained view. 
 - (CHBrowserView*)createBrowserWindow:(unsigned int)mask;
+
+- (NSMenu*)getContextMenu;
+- (NSWindow*)getNativeWindow;
+
+// Ask whether the browser should accept a drag from the given source.
+// Should return NO if the source is a container for the browser, or
+// another item that represents the same entity (e.g. tab or proxy icon)
+- (BOOL)shouldAcceptDragFromSource:(id)dragSource;
+
 @end
 
 enum {

@@ -37,32 +37,18 @@
 
 #import "NSString+Utils.h"
 
-#import "CHBrowserView.h"
-#import "FindDlgController.h"
-#import "nsCocoaBrowserService.h"
-#import "mozView.h"
-
-// Embedding includes
 #include "nsCWebBrowser.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIWebBrowserChrome.h"
-#include "nsIEmbeddingSiteWindow.h"
-#include "nsIWebProgressListener.h"
-#include "nsIWebBrowser.h"
+#include "nsIBaseWindow.h"
 #include "nsIWebNavigation.h"
+#include "nsComponentManagerUtils.h"
+
 #include "nsIURI.h"
 #include "nsIDOMWindow.h"
-#include "nsWeakReference.h"
 #include "nsIWidget.h"
-
-// XPCOM and String includes
-#include "nsCRT.h"
-#include "nsXPIDLString.h"
-#include "nsCOMPtr.h"
 
 // Printing
 #include "nsIWebBrowserPrint.h"
-#include "nsIPrintSettings.h"
+//#include "nsIPrintSettings.h"
 
 // Saving of links/images/docs
 #include "nsIWebBrowserFocus.h"
@@ -70,16 +56,22 @@
 #include "nsIDOMLocation.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIProperties.h"
-#include "nsIRequest.h"
-#include "nsIPrefService.h"
+//#include "nsIRequest.h"
+//#include "nsIPrefService.h"
 #include "nsISHistory.h"
 #include "nsIHistoryEntry.h"
 #include "nsISHEntry.h"
 #include "nsNetUtil.h"
-#include "nsIContextMenuListener.h"
-#include "nsITooltipListener.h"
-#include "nsIEmbeddingSiteWindow2.h"
 #include "SaveHeaderSniffer.h"
+
+#import "CHBrowserWrapper.h"
+#import "CHBrowserView.h"
+
+#import "FindDlgController.h"
+#import "nsCocoaBrowserService.h"
+#import "nsCocoaBrowserListener.h"
+
+#import "mozView.h"
 
 typedef unsigned int DragReference;
 #include "nsIDragHelperService.h"
@@ -92,588 +84,9 @@ typedef unsigned int DragReference;
 #include "nsICommandManager.h"
 #include "nsICommandParams.h"
 
-const char* persistContractID = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
-const char* dirServiceContractID = "@mozilla.org/file/directory_service;1";
 
-class nsCocoaBrowserListener : public nsSupportsWeakReference,
-                               public nsIInterfaceRequestor,
-                               public nsIWebBrowserChrome,
-                               public nsIWindowCreator,
-                               public nsIEmbeddingSiteWindow2,
-                               public nsIWebProgressListener,
-                               public nsIContextMenuListener,
-                               public nsITooltipListener
-{
-public:
-  nsCocoaBrowserListener(CHBrowserView* aView);
-  virtual ~nsCocoaBrowserListener();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSIWEBBROWSERCHROME
-  NS_DECL_NSIWINDOWCREATOR
-  NS_DECL_NSIEMBEDDINGSITEWINDOW
-  NS_DECL_NSIEMBEDDINGSITEWINDOW2
-  NS_DECL_NSIWEBPROGRESSLISTENER
-  NS_DECL_NSICONTEXTMENULISTENER
-  NS_DECL_NSITOOLTIPLISTENER
-    
-  void AddListener(id <NSBrowserListener> aListener);
-  void RemoveListener(id <NSBrowserListener> aListener);
-  void SetContainer(id <NSBrowserContainer> aContainer);
-
-private:
-  CHBrowserView* mView;     // WEAK - it owns us
-  NSMutableArray* mListeners;
-  id <NSBrowserContainer> mContainer;
-  PRBool mIsModal;
-  PRUint32 mChromeFlags;
-};
-
-nsCocoaBrowserListener::nsCocoaBrowserListener(CHBrowserView* aView)
-  : mView(aView), mContainer(nsnull), mIsModal(PR_FALSE), mChromeFlags(0)
-{
-  NS_INIT_ISUPPORTS();
-  mListeners = [[NSMutableArray alloc] init];
-}
-
-nsCocoaBrowserListener::~nsCocoaBrowserListener()
-{
-  [mListeners release];
-  mView = nsnull;
-  if (mContainer) {
-    [mContainer release];
-  }
-}
-
-NS_IMPL_ISUPPORTS9(nsCocoaBrowserListener,
-                   nsIInterfaceRequestor,
-                   nsIWebBrowserChrome,
-                   nsIWindowCreator,
-                   nsIEmbeddingSiteWindow,
-                   nsIEmbeddingSiteWindow2,
-                   nsIWebProgressListener,
-                   nsISupportsWeakReference,
-                   nsIContextMenuListener,
-                   nsITooltipListener)
-
-// Implementation of nsIInterfaceRequestor
-NS_IMETHODIMP 
-nsCocoaBrowserListener::GetInterface(const nsIID &aIID, void** aInstancePtr)
-{
-  if (aIID.Equals(NS_GET_IID(nsIDOMWindow))) {
-    nsCOMPtr<nsIWebBrowser> browser = dont_AddRef([mView getWebBrowser]);
-    if (browser)
-      return browser->GetContentDOMWindow((nsIDOMWindow **) aInstancePtr);
-  }
-  
-  return QueryInterface(aIID, aInstancePtr);
-}
-
-// Implementation of nsIWindowCreator.  The CocoaBrowserService forwards requests
-// for a new window that have a parent to us, and we take over from there.  
-/* nsIWebBrowserChrome createChromeWindow (in nsIWebBrowserChrome parent, in PRUint32 chromeFlags); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::CreateChromeWindow(nsIWebBrowserChrome *parent, 
-                                           PRUint32 chromeFlags, 
-                                           nsIWebBrowserChrome **_retval)
-{
-  if (parent != this) {
-#if DEBUG
-    NSLog(@"Mismatch in nsCocoaBrowserListener::CreateChromeWindow.  We should be the owning parent.");
-#endif
-    return NS_ERROR_FAILURE;
-  }
-  
-  CHBrowserView* childView = [mContainer createBrowserWindow: chromeFlags];
-  if (!childView) {
-#if DEBUG
-    NSLog(@"No CHBrowserView hooked up for a newly created window yet.");
-#endif
-    return NS_ERROR_FAILURE;
-  }
-  
-  nsCocoaBrowserListener* listener = [childView getCocoaBrowserListener];
-  if (!listener) {
-#if DEBUG
-    NSLog(@"Uh-oh! No listener yet for a newly created window (nsCocoaBrowserlistener)");
-    return NS_ERROR_FAILURE;
-#endif
-  }
-  
-#if DEBUG
-  NSLog(@"Made a chrome window.");
-#endif
-  
-  *_retval = listener;
-  NS_IF_ADDREF(*_retval);
-  return NS_OK;
-}
-
-// Implementation of nsIContextMenuListener
-NS_IMETHODIMP
-nsCocoaBrowserListener::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent* aEvent, nsIDOMNode* aNode)
-{
-  [mContainer onShowContextMenu: aContextFlags domEvent: aEvent domNode: aNode];
-  return NS_OK;
-}
-
-// Implementation of nsITooltipListener
-NS_IMETHODIMP
-nsCocoaBrowserListener::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText)
-{
-  NSPoint where;
-  where.x = aXCoords; where.y = aYCoords;
-  [mContainer onShowTooltip:where withText:[NSString stringWithPRUnichars:aTipText]];
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCocoaBrowserListener::OnHideTooltip()
-{
-  [mContainer onHideTooltip];
-  return NS_OK;
-}
-
-// Implementation of nsIWebBrowserChrome
-/* void setStatus (in unsigned long statusType, in wstring status); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::SetStatus(PRUint32 statusType, const PRUnichar *status)
-{
-  if (!mContainer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSString* str = nsnull;
-  if (status && (*status != PRUnichar(0))) {
-    str = [NSString stringWithPRUnichars:status];
-  }
-
-  [mContainer setStatus:str ofType:(NSStatusType)statusType];
-
-  return NS_OK;
-}
-
-/* attribute nsIWebBrowser webBrowser; */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::GetWebBrowser(nsIWebBrowser * *aWebBrowser)
-{
-  NS_ENSURE_ARG_POINTER(aWebBrowser);
-  if (!mView) {
-    return NS_ERROR_FAILURE;
-  }
-  *aWebBrowser = [mView getWebBrowser];
-
-  return NS_OK;
-}
-NS_IMETHODIMP 
-nsCocoaBrowserListener::SetWebBrowser(nsIWebBrowser * aWebBrowser)
-{
-  if (!mView) {
-    return NS_ERROR_FAILURE;
-  }
-
-  [mView setWebBrowser:aWebBrowser];
-
-  return NS_OK;
-}
-
-/* attribute unsigned long chromeFlags; */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::GetChromeFlags(PRUint32 *aChromeFlags)
-{
-  NS_ENSURE_ARG_POINTER(aChromeFlags);
-  *aChromeFlags = mChromeFlags;
-  return NS_OK;
-}
-NS_IMETHODIMP 
-nsCocoaBrowserListener::SetChromeFlags(PRUint32 aChromeFlags)
-{
-  // XXX Do nothing with them for now
-  mChromeFlags = aChromeFlags;
-  return NS_OK;
-}
-
-/* void destroyBrowserWindow (); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::DestroyBrowserWindow()
-{
-  // XXX Could send this up to the container, but for now,
-  // we just destroy the enclosing window.
-  NSWindow* window = [mView window];
-
-  if (window) {
-    [window close];
-  }
-
-  return NS_OK;
-}
-
-/* void sizeBrowserTo (in long aCX, in long aCY); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
-{
-  if (mContainer) {
-    NSSize size;
-    
-    size.width = (float)aCX;
-    size.height = (float)aCY;
-
-    [mContainer sizeBrowserTo:size];
-  }
-  
-  return NS_OK;
-}
-
-/* void showAsModal (); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::ShowAsModal()
-{
-  if (!mView) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSWindow* window = [mView window];
-
-  if (!window) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mIsModal = PR_TRUE;
-  //int result = [NSApp runModalForWindow:window];
-  mIsModal = PR_FALSE;
-
-  return NS_OK;
-}
-
-/* boolean isWindowModal (); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::IsWindowModal(PRBool *_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  *_retval = mIsModal;
-
-  return NS_OK;
-}
-
-/* void exitModalEventLoop (in nsresult aStatus); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::ExitModalEventLoop(nsresult aStatus)
-{
-//  [NSApp stopModalWithCode:(int)aStatus];
-
-  return NS_OK;
-}
-
-// Implementation of nsIEmbeddingSiteWindow2
-NS_IMETHODIMP
-nsCocoaBrowserListener::Blur()
-{
-  return NS_OK;
-}
-
-// Implementation of nsIEmbeddingSiteWindow
-/* void setDimensions (in unsigned long flags, in long x, in long y, in long cx, in long cy); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
-{
-  if (!mView)
-    return NS_ERROR_FAILURE;
-
-  NSWindow* window = [mView window];
-  if (!window)
-    return NS_ERROR_FAILURE;
-
-  if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
-    NSPoint origin;
-    origin.x = (float)x;
-    origin.y = (float)y;
-    [window setFrameOrigin:origin];
-  }
-
-  if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
-    NSRect frame = [window frame];
-    frame.size.width = (float)cx;
-    frame.size.height = (float)cy;
-    [window setFrame:frame display:YES];
-  }
-  else if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER) {
-    NSSize size;
-    size.width = (float)cx;
-    size.height = (float)cy;
-    [window setContentSize:size];
-  }
-
-  return NS_OK;
-}
-
-/* void getDimensions (in unsigned long flags, out long x, out long y, out long cx, out long cy); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::GetDimensions(PRUint32 flags,  PRInt32 *x,  PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
-{
-  if (!mView)
-    return NS_ERROR_FAILURE;
-
-  NSWindow* window = [mView window];
-  if (!window)
-    return NS_ERROR_FAILURE;
-
-  NSRect frame = [window frame];
-  if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
-    if ( x )
-      *x = (PRInt32)frame.origin.x;
-    if ( y )
-      *y = (PRInt32)frame.origin.y;
-  }
-  if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
-    if ( cx )
-      *cx = (PRInt32)frame.size.width;
-    if ( cy )
-      *cy = (PRInt32)frame.size.height;
-  }
-  else if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER) {
-    NSView* contentView = [window contentView];
-    NSRect contentFrame = [contentView frame];
-    if ( cx )
-      *cx = (PRInt32)contentFrame.size.width;
-    if ( cy )
-      *cy = (PRInt32)contentFrame.size.height;    
-  }
-
-  return NS_OK;
-}
-
-/* void setFocus (); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::SetFocus()
-{
-  if (!mView) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSWindow* window = [mView window];
-  if (!window) {
-    return NS_ERROR_FAILURE;
-  }
-
-  [window makeKeyAndOrderFront:window];
-
-  return NS_OK;
-}
-
-/* attribute boolean visibility; */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::GetVisibility(PRBool *aVisibility)
-{
-  NS_ENSURE_ARG_POINTER(aVisibility);
-
-  if (!mView) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSWindow* window = [mView window];
-  if (!window) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aVisibility = [window isMiniaturized];
-
-  return NS_OK;
-}
-NS_IMETHODIMP 
-nsCocoaBrowserListener::SetVisibility(PRBool aVisibility)
-{
-  if (!mView) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSWindow* window = [mView window];
-  if (!window) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aVisibility) {
-    [window deminiaturize:window];
-  }
-  else {
-    [window miniaturize:window];
-  }
-
-  return NS_OK;
-}
-
-/* attribute wstring title; */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::GetTitle(PRUnichar * *aTitle)
-{
-  NS_ENSURE_ARG_POINTER(aTitle);
-
-  if (!mContainer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSString* title = [mContainer title];
-  unsigned int length = [title length];
-  if (length) {
-    *aTitle = (PRUnichar*)nsMemory::Alloc((length+1)*sizeof(PRUnichar));
-    if (!*aTitle) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    [title getCharacters:*aTitle];
-  }
-  else {
-    *aTitle = nsnull;
-  }
-  
-  return NS_OK;
-}
-NS_IMETHODIMP 
-nsCocoaBrowserListener::SetTitle(const PRUnichar * aTitle)
-{
-  NS_ENSURE_ARG(aTitle);
-
-  if (!mContainer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSString* str = [NSString stringWithPRUnichars:aTitle];
-  [mContainer setTitle:str];
-
-  return NS_OK;
-}
-
-/* [noscript] readonly attribute voidPtr siteWindow; */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::GetSiteWindow(void * *aSiteWindow)
-{
-  NS_ENSURE_ARG_POINTER(aSiteWindow);
-  *aSiteWindow = nsnull;
-  if (!mView) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSWindow* window = [mView window];
-  if (!window) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aSiteWindow = (void*)window;
-
-  return NS_OK;
-}
-
-
-//
-// Implementation of nsIWebProgressListener
-//
-
-/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long aStateFlags, in unsigned long aStatus); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
-                                        PRUint32 aStateFlags, PRUint32 aStatus)
-{
-  NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id<NSBrowserListener> obj;
-  
-  if (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK) {
-    if (aStateFlags & nsIWebProgressListener::STATE_START) {
-      while ((obj = [enumerator nextObject]))
-        [obj onLoadingStarted];
-    }
-    else if (aStateFlags & nsIWebProgressListener::STATE_STOP) {
-      while ((obj = [enumerator nextObject]))
-        [obj onLoadingCompleted:(NS_SUCCEEDED(aStatus))];
-    }
-  }
-
-  return NS_OK;
-}
-
-/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
-                                          PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
-                                          PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
-{
-  NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id<NSBrowserListener> obj;
-  while ((obj = [enumerator nextObject]))
-    [obj onProgressChange:aCurTotalProgress outOf:aMaxTotalProgress];
-  
-  return NS_OK;
-}
-
-/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
-                                          nsIURI *location)
-{
-  if (!location)
-    return NS_ERROR_FAILURE;
-    
-  nsCAutoString spec;
-  location->GetSpec(spec);
-  NSString* str = [NSString stringWithCString:spec.get()];
-
-  NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id<NSBrowserListener> obj;
-  while ((obj = [enumerator nextObject]))
-    [obj onLocationChange:str];
-
-  return NS_OK;
-}
-
-/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, 
-                                        const PRUnichar *aMessage)
-{
-  NSString* str = [NSString stringWithPRUnichars:aMessage];
-  
-  NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id<NSBrowserListener> obj; 
-  while ((obj = [enumerator nextObject]))
-    [obj onStatusChange: str];
-
-  return NS_OK;
-}
-
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
-NS_IMETHODIMP 
-nsCocoaBrowserListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
-{
-  NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id<NSBrowserListener> obj; 
-  while ((obj = [enumerator nextObject]))
-    [obj onSecurityStateChange: state];
-
-  return NS_OK;
-}
-
-void 
-nsCocoaBrowserListener::AddListener(id <NSBrowserListener> aListener)
-{
-  [mListeners addObject:aListener];
-}
-
-void 
-nsCocoaBrowserListener::RemoveListener(id <NSBrowserListener> aListener)
-{
-  [mListeners removeObject:aListener];
-}
-
-void 
-nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
-{
-  [mContainer autorelease];
-
-  mContainer = aContainer;
-
-  [mContainer retain];
-}
-
-#pragma mark -
+const char kPersistContractID[] = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
+const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 @implementation CHBrowserView
 
@@ -685,43 +98,42 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
 
 - (id)initWithFrame:(NSRect)frame
 {
-    if ( (self = [super initWithFrame:frame]) ) {
-
-        nsresult rv = nsCocoaBrowserService::InitEmbedding();
-        if (NS_FAILED(rv)) {
-    // XXX need to throw
-        }
-
-        _listener = new nsCocoaBrowserListener(self);
-        NS_ADDREF(_listener);
-        
-  // Create the web browser instance
-        nsCOMPtr<nsIWebBrowser> browser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) {
-    // XXX need to throw
-        }
-
-        _webBrowser = browser;
-        NS_ADDREF(_webBrowser);
-        
-  // Set the container nsIWebBrowserChrome
-        _webBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome *,
-                                                       _listener));
-        
-  // Register as a listener for web progress
-        nsCOMPtr<nsIWeakReference> weak = do_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, _listener));
-        _webBrowser->AddWebBrowserListener(weak, NS_GET_IID(nsIWebProgressListener));
-        
-  // Hook up the widget hierarchy with us as the parent
-        nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(_webBrowser);
-        baseWin->InitWindow((NSView*)self, nsnull, 0, 0,
-                            frame.size.width, frame.size.height);
-        baseWin->Create();
-        
-  // register the view as a drop site for text, files, and urls. 
-        [self registerForDraggedTypes: [NSArray arrayWithObjects:
-                  @"MozURLType", NSStringPboardType, NSURLPboardType, NSFilenamesPboardType, nil]];
+  if ( (self = [super initWithFrame:frame]) )
+  {
+    nsresult rv = nsCocoaBrowserService::InitEmbedding();
+    if (NS_FAILED(rv)) {
+// XXX need to throw
     }
+
+    _listener = new nsCocoaBrowserListener(self);
+    NS_ADDREF(_listener);
+    
+// Create the web browser instance
+    nsCOMPtr<nsIWebBrowser> browser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) {
+// XXX need to throw
+    }
+
+    _webBrowser = browser;
+    NS_ADDREF(_webBrowser);
+    
+// Set the container nsIWebBrowserChrome
+    _webBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome *, _listener));
+    
+// Register as a listener for web progress
+    nsCOMPtr<nsIWeakReference> weak = do_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, _listener));
+    _webBrowser->AddWebBrowserListener(weak, NS_GET_IID(nsIWebProgressListener));
+    
+// Hook up the widget hierarchy with us as the parent
+    nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(_webBrowser);
+    baseWin->InitWindow((NSView*)self, nsnull, 0, 0,
+                        frame.size.width, frame.size.height);
+    baseWin->Create();
+    
+// register the view as a drop site for text, files, and urls. 
+    [self registerForDraggedTypes: [NSArray arrayWithObjects:
+              @"MozURLType", NSStringPboardType, NSURLPboardType, NSFilenamesPboardType, nil]];
+  }
   return self;
 }
 
@@ -950,12 +362,12 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
     // Create our web browser persist object.  This is the object that knows
     // how to actually perform the saving of the page (and of the images
     // on the page).
-    nsCOMPtr<nsIWebBrowserPersist> webPersist(do_CreateInstance(persistContractID));
+    nsCOMPtr<nsIWebBrowserPersist> webPersist(do_CreateInstance(kPersistContractID));
     if (!webPersist)
         return;
     
     // Make a temporary file object that we can save to.
-    nsCOMPtr<nsIProperties> dirService(do_GetService(dirServiceContractID));
+    nsCOMPtr<nsIProperties> dirService(do_GetService(kDirServiceContractID));
     if (!dirService)
         return;
     nsCOMPtr<nsIFile> tmpFile;
@@ -1287,24 +699,35 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
 
 -(NSMenu*)getContextMenu
 {
-  return [[self superview] getContextMenu];
+  if ([[self superview] conformsToProtocol:@protocol(NSBrowserContainer)])
+  {
+    id<NSBrowserContainer> browserContainer = [self superview];
+  	return [browserContainer getContextMenu];
+  }
+  
+  return nil;
 }
 
 -(NSWindow*)getNativeWindow
 {
-  NSWindow* result = [self window];
-  if (result)
-    return result; // We're visible.  Just hand the window back.
-  else {
-    // We're invisible.  It's likely that we're in a Cocoa tab view.
-    // First see if we have a cached window.
-    if (mWindow)
-      return mWindow;
-    
-    // Finally, see if our parent responds to the getNativeWindow selector,
-    // and if they do, let them handle it.
-    return [[self superview] getNativeWindow];
+  NSWindow* window = [self window];
+  if (window)
+    return window; // We're visible.  Just hand the window back.
+
+  // We're invisible.  It's likely that we're in a Cocoa tab view.
+  // First see if we have a cached window.
+  if (mWindow)
+    return mWindow;
+  
+  // Finally, see if our parent responds to the getNativeWindow selector,
+  // and if they do, let them handle it.
+  if ([[self superview] conformsToProtocol:@protocol(NSBrowserContainer)])
+  {
+    id<NSBrowserContainer> browserContainer = [self superview];
+    return [browserContainer getNativeWindow];
   }
+    
+  return nil;
 }
 
 
@@ -1327,14 +750,28 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
   }
 }
 
+#pragma mark -
+
+- (BOOL)shouldAcceptDrag:(id <NSDraggingInfo>)sender
+{
+  if ([[self superview] conformsToProtocol:@protocol(NSBrowserContainer)])
+  {
+    id<NSBrowserContainer> browserContainer = [self superview];
+    return [browserContainer shouldAcceptDragFromSource:[sender draggingSource]];
+  }
+  return YES;
+}
 
 - (unsigned int)draggingEntered:(id <NSDraggingInfo>)sender
 {
+  if (![self shouldAcceptDrag:sender])
+    return NSDragOperationNone;
+
 //  NSLog(@"draggingEntered");  
   nsCOMPtr<nsIDragHelperService> helper(do_GetService("@mozilla.org/widget/draghelperservice;1"));
   mDragHelper = helper.get();
   NS_IF_ADDREF(mDragHelper);
-  NS_ASSERTION ( mDragHelper, "Couldn't get a drag service, we're in biiig trouble" );
+  NS_ASSERTION ( mDragHelper, "Couldn't get a drag service, we're in big trouble" );
   
   if ( mDragHelper ) {
     mLastTrackedLocation = [sender draggingLocation];
@@ -1366,6 +803,9 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
 
 - (unsigned int)draggingUpdated:(id <NSDraggingInfo>)sender
 {
+  if (![self shouldAcceptDrag:sender])
+    return NSDragOperationNone;
+
 //  NSLog(@"draggingUpdated");
   PRBool dropAllowed = PR_FALSE;
   if ( mDragHelper ) {
@@ -1387,6 +827,9 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
+  if (![self shouldAcceptDrag:sender])
+    return NO;
+
   PRBool dragAccepted = PR_FALSE;
     
   if ( mDragHelper ) {
@@ -1400,6 +843,7 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
   return dragAccepted ? YES : NO;
 }
 
+#pragma mark -
 
 -(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem
 {

@@ -1,0 +1,62 @@
+//
+//  nsCocoaBrowserListener.h
+//  Chimera
+//
+//  Created by Simon Fraser on Sat Aug 17 2002.
+//  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
+//
+
+
+#ifndef __nsCocoaBrowserListener_h__
+#define __nsCocoaBrowserListener_h__
+
+#include "nsWeakReference.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIWebBrowser.h"
+#include "nsIWebBrowserChrome.h"
+#include "nsIWebProgressListener.h"
+#include "nsIEmbeddingSiteWindow2.h"
+#include "nsIWindowCreator.h"
+
+#include "nsIContextMenuListener.h"
+#include "nsITooltipListener.h"
+
+@class CHBrowserView;
+
+class nsCocoaBrowserListener : public nsSupportsWeakReference,
+                               public nsIInterfaceRequestor,
+                               public nsIWebBrowserChrome,
+                               public nsIWindowCreator,
+                               public nsIEmbeddingSiteWindow2,
+                               public nsIWebProgressListener,
+                               public nsIContextMenuListener,
+                               public nsITooltipListener
+{
+public:
+  nsCocoaBrowserListener(CHBrowserView* aView);
+  virtual ~nsCocoaBrowserListener();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIWEBBROWSERCHROME
+  NS_DECL_NSIWINDOWCREATOR
+  NS_DECL_NSIEMBEDDINGSITEWINDOW
+  NS_DECL_NSIEMBEDDINGSITEWINDOW2
+  NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSICONTEXTMENULISTENER
+  NS_DECL_NSITOOLTIPLISTENER
+    
+  void AddListener(id <NSBrowserListener> aListener);
+  void RemoveListener(id <NSBrowserListener> aListener);
+  void SetContainer(id <NSBrowserContainer> aContainer);
+
+private:
+  CHBrowserView*          mView;     // WEAK - it owns us
+  NSMutableArray*         mListeners;
+  id <NSBrowserContainer> mContainer;
+  PRBool                  mIsModal;
+  PRUint32                mChromeFlags;
+};
+
+
+#endif // __nsCocoaBrowserListener_h__
