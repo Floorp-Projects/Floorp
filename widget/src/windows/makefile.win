@@ -54,6 +54,7 @@ CPPSRCS =              \
 	nsLookAndFeel.cpp    \
 	nsLabel.cpp          \
 	nsToolkit.cpp        \
+	nsSound.cpp          \
 	$(NULL)
 
 MODULE=raptor 
@@ -90,6 +91,7 @@ OBJS =                             \
 	.\$(OBJDIR)\nsLookAndFeel.obj    \
 	.\$(OBJDIR)\nsLabel.obj    \
 	.\$(OBJDIR)\nsToolkit.obj        \
+	.\$(OBJDIR)\nsSound.obj          \
 	$(NULL)
 
 LINCS=                                  \
