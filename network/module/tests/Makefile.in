@@ -32,8 +32,6 @@ INCLUDES+=-I$(srcdir)/../src -I$(DIST)/include
 
 REQUIRES = raptor netlib xpcom pref
 
-OBJS	= $(CPPSRCS:.cpp=.o)
-
 EX_LIBS = \
 	$(DIST)/bin/libabouturl.so \
 	$(DIST)/bin/libfileurl.so \
@@ -47,15 +45,15 @@ EX_LIBS = \
 	$(DIST)/bin/libnetwork.so \
 	$(DIST)/bin/libnetlib.so \
 	$(DIST)/bin/libnetutil.so \
-        $(DIST)/bin/libreg.so	\
+    $(DIST)/bin/libreg.so	\
 	$(DIST)/bin/libxpcom.so	\
 	$(DIST)/bin/libpwcac.so \
-	$(DIST)/bin/libdbm.so	\
+	$(DIST)/bin/libmozdbm.so	\
 	$(DIST)/bin/libxp.so	\
 	$(DIST)/bin/libpref.so	\
 	$(DIST)/bin/libjs.so	\
 	$(DIST)/bin/libraptorbase.so \
-	$(DIST)/bin/libgmbaseunix.so \
+	$(DIST)/bin/libgmbase$(MOZ_TOOLKIT).so \
 	$(DIST)/bin/libsecfree.so \
 	$(NULL)
 
