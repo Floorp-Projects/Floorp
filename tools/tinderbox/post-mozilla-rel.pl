@@ -63,6 +63,7 @@ sub makefullsoft {
   chomp($builddir);
   # should go in config
   my $moforoot = "cltbld\@cvs.mozilla.org:/mofo"; 
+  $ENV{CVS_RSH} = "ssh" unless defined($ENV{CVS_RSH});
   my $fullsofttag = " ";
   $fullsofttag = " -r $Settings::BuildTag"
         unless not defined($Settings::BuildTag) or $Settings::BuildTag eq '';
