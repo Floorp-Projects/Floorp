@@ -59,6 +59,13 @@ ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_gcc_x86_unix.cpp xptcstubs_gcc_x86_unix.cpp
 endif
 endif
+# IA64 Linux
+ifneq (,$(filter Linux,$(OS_ARCH)))
+ifneq (,$(findstring ia64,$(OS_TEST)))
+CPPSRCS		:= xptcinvoke_ipf64.cpp xptcstubs_ipf64.cpp
+ASFILES		:= xptcstubs_asm_ipf64.s xptcinvoke_asm_ipf64.s
+endif
+endif
 #
 # BeOS/Intel (uses the same unixish_x86 code)
 #
