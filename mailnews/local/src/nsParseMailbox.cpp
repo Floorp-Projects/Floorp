@@ -1862,7 +1862,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 
 	// if we have made it this far then the message has successfully been written to the new folder
 	// now add the header to the destMailDB.
-	if (NS_SUCCEEDED(rv))
+	if (NS_SUCCEEDED(rv) && destMailDB)
 	{
 		nsIMsgDBHdr *newHdr = nsnull;
 
@@ -1873,7 +1873,6 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 			// set new byte offset, since the offset in the old file is certainly wrong
 			newHdr->SetMessageKey (newMsgPos); 
 			newHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
-      destIFolder->SetHasNewMessages(PR_TRUE);
       destMailDB->AddToNewList(newMsgPos);
 		}
 	}
@@ -1882,7 +1881,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 		if (destMailDB)
 			destMailDB = nsnull;
 	}
-
+    destIFolder->SetHasNewMessages(PR_TRUE);
 	destFile->close();
     delete destFile;
 	m_inboxFileStream->close();
