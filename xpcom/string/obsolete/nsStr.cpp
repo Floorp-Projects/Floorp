@@ -442,52 +442,24 @@ void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRUint32 aChar,PRBool aEli
 PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRUint32 anOffset) {
   if((aDest.mLength>0) && (aTarget.mLength>0) && (anOffset<aTarget.mLength)){
 
-      //This little block of code builds up the boyer-moore skip table.
-      //It might be nicer if this could be generated externally as passed in to improve performance.
-    const int theSize=256;
-    int theSkipTable[theSize];
-    PRUint32 theIndex=0;
-    for (theIndex=0;theIndex<theSize;++theIndex) {
-      theSkipTable[theIndex]=aTarget.mLength;
-    }
-    PRUnichar theChar=0;
-    if(aIgnoreCase) {
-      for (theIndex=0;theIndex<aTarget.mLength-1;++theIndex) {
-        theChar=nsCRT::ToLower(GetCharAt(aTarget,theIndex));
-        theSkipTable[(PRUint32)theChar]=(aTarget.mLength-theIndex-1);
-      }
-    }
-    else {
-      for (theIndex=0;theIndex<aTarget.mLength-1;++theIndex) {
-        theSkipTable[(PRUint32)GetCharAt(aTarget,theIndex)]=(aTarget.mLength-theIndex-1);
-      }
-    }
-
-      //and now we do the actual searching.      
-    PRUint32 theMaxIndex=aDest.mLength-anOffset;
-    for (theIndex=aTarget.mLength-1; theIndex< theMaxIndex; theIndex+= theSkipTable[(unsigned char)GetCharAt(aDest,theIndex)]) {
-      int theDestIndex=theIndex;
-      int theTargetIndex=aTarget.mLength-1;
-      
-      PRBool matches=PR_TRUE;
-      while((theTargetIndex>=0) && (matches)){
-        PRUnichar theTargetChar=GetCharAt(aTarget,theTargetIndex);
-        PRUnichar theDestChar=GetCharAt(aDest,theDestIndex);
-        if(aIgnoreCase) {
-          theTargetChar=nsCRT::ToLower(theTargetChar);
-          theDestChar=nsCRT::ToLower(theDestChar);
+    int32 index=anOffset-1;
+    int32 theMax=aDest.mLength-aTarget.mLength;
+    if((aDest.mLength>0) && (aTarget.mLength>0)){
+      int32 theTargetMax=aTarget.mLength;
+      while(++index<=theMax) {
+        int32 theSubIndex=-1;
+        PRBool  matches=PR_TRUE;
+        while((++theSubIndex<theTargetMax) && (matches)){
+          PRUnichar theChar=(aIgnoreCase) ? nsCRT::ToLower(GetCharAt(aDest,index+theSubIndex)) : GetCharAt(aDest,index+theSubIndex);
+          PRUnichar theTargetChar=(aIgnoreCase) ? nsCRT::ToLower(GetCharAt(aTarget,theSubIndex)) : GetCharAt(aTarget,theSubIndex);
+          matches=PRBool(theChar==theTargetChar);
         }
-        matches=PRBool(theTargetChar==theDestChar);
-        if(matches){
-          --theDestIndex;
-          --theTargetIndex;
+        if(matches) { 
+          return index;
         }
       }
-      if(-1==theTargetIndex){
-        return anOffset+theDestIndex+1;
-      }
-    } //for
-  }//if
+    }//if
+  }
   return kNotFound;
 }
 
