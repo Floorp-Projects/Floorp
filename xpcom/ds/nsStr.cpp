@@ -108,12 +108,15 @@ void nsStr::Destroy(nsStr& aDest,nsIMemoryAgent* anAgent) {
  * @param   aNewLength -- new capacity of string in charSize units
  * @return  void
  */
-void nsStr::EnsureCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* anAgent) {
+PRBool nsStr::EnsureCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* anAgent) {
+  PRBool result=PR_TRUE;
   if(aNewLength>aString.mCapacity) {
     nsIMemoryAgent* theAgent=(anAgent) ? anAgent : GetDefaultAgent();
-    theAgent->Realloc(aString,aNewLength);
-    AddNullTerminator(aString);
+    result=theAgent->Realloc(aString,aNewLength);
+    if(aString.mStr)
+      AddNullTerminator(aString);
   }
+  return result;
 }
 
 /**
@@ -123,24 +126,28 @@ void nsStr::EnsureCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* an
  * @param   aNewLength -- new capacity of string in charSize units
  * @return  void
  */
-void nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength,nsIMemoryAgent* anAgent) {
+PRBool nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength,nsIMemoryAgent* anAgent) {
+  PRBool result=PR_TRUE;
   if(aNewLength>aDest.mCapacity) {
     nsStr theTempStr;
     nsStr::Initialize(theTempStr,aDest.mCharSize);
 
     nsIMemoryAgent* theAgent=(anAgent) ? anAgent : GetDefaultAgent();
-    EnsureCapacity(theTempStr,aNewLength,theAgent);
 
-    if(aDest.mLength) {
-      Append(theTempStr,aDest,0,aDest.mLength,theAgent);        
-    } 
-    theAgent->Free(aDest);
-    aDest.mStr = theTempStr.mStr;
-    theTempStr.mStr=0; //make sure to null this out so that you don't lose the buffer you just stole...
-    aDest.mLength=theTempStr.mLength;
-    aDest.mCapacity=theTempStr.mCapacity;
-    aDest.mOwnsBuffer=theTempStr.mOwnsBuffer;
+    result=EnsureCapacity(theTempStr,aNewLength,theAgent);
+    if(result) {
+      if(aDest.mLength) {
+        Append(theTempStr,aDest,0,aDest.mLength,theAgent);        
+      } 
+      theAgent->Free(aDest);
+      aDest.mStr = theTempStr.mStr;
+      theTempStr.mStr=0; //make sure to null this out so that you don't lose the buffer you just stole...
+      aDest.mLength=theTempStr.mLength;
+      aDest.mCapacity=theTempStr.mCapacity;
+      aDest.mOwnsBuffer=theTempStr.mOwnsBuffer;
+    }
   }
+  return result;
 }
 
 /**
@@ -170,15 +177,19 @@ void nsStr::Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 a
     PRUint32 theRealLen=(aCount<0) ? aSource.mLength : MinInt(aCount,aSource.mLength);
     PRUint32 theLength=(anOffset+theRealLen<aSource.mLength) ? theRealLen : (aSource.mLength-anOffset);
     if(0<theLength){
+      
+      PRBool isBigEnough=PR_TRUE;
       if(aDest.mLength+theLength > aDest.mCapacity) {
-        GrowCapacity(aDest,aDest.mLength+theLength,anAgent);
+        isBigEnough=GrowCapacity(aDest,aDest.mLength+theLength,anAgent);
       }
 
-      //now append new chars, starting at offset
-      (*gCopyChars[aSource.mCharSize][aDest.mCharSize])(aDest.mStr,aDest.mLength,aSource.mStr,anOffset,theLength);
+      if(isBigEnough) {
+        //now append new chars, starting at offset
+        (*gCopyChars[aSource.mCharSize][aDest.mCharSize])(aDest.mStr,aDest.mLength,aSource.mStr,anOffset,theLength);
 
-      aDest.mLength+=theLength;
-      AddNullTerminator(aDest);
+        aDest.mLength+=theLength;
+        AddNullTerminator(aDest);
+      }
     }
   }
 }
@@ -213,24 +224,26 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
             nsStr::Initialize(theTempStr,aDest.mCharSize);
 
             nsIMemoryAgent* theAgent=(anAgent) ? anAgent : GetDefaultAgent();
-            EnsureCapacity(theTempStr,aDest.mLength+theLength,theAgent);  //grow the temp buffer to the right size
+            PRBool isBigEnough=EnsureCapacity(theTempStr,aDest.mLength+theLength,theAgent);  //grow the temp buffer to the right size
 
-            if(aDestOffset) {
-              Append(theTempStr,aDest,0,aDestOffset,theAgent); //first copy leftmost data...
-            } 
+            if(isBigEnough) {
+              if(aDestOffset) {
+                Append(theTempStr,aDest,0,aDestOffset,theAgent); //first copy leftmost data...
+              } 
               
-            Append(theTempStr,aSource,0,aSource.mLength,theAgent); //next copy inserted (new) data
+              Append(theTempStr,aSource,0,aSource.mLength,theAgent); //next copy inserted (new) data
             
-            PRUint32 theRemains=aDest.mLength-aDestOffset;
-            if(theRemains) {
-              Append(theTempStr,aDest,aDestOffset,theRemains,theAgent); //next copy rightmost data
-            }
+              PRUint32 theRemains=aDest.mLength-aDestOffset;
+              if(theRemains) {
+                Append(theTempStr,aDest,aDestOffset,theRemains,theAgent); //next copy rightmost data
+              }
 
-            theAgent->Free(aDest);
-            aDest.mStr = theTempStr.mStr;
-            theTempStr.mStr=0; //make sure to null this out so that you don't lose the buffer you just stole...
-            aDest.mCapacity=theTempStr.mCapacity;
-            aDest.mOwnsBuffer=theTempStr.mOwnsBuffer;
+              theAgent->Free(aDest);
+              aDest.mStr = theTempStr.mStr;
+              theTempStr.mStr=0; //make sure to null this out so that you don't lose the buffer you just stole...
+              aDest.mCapacity=theTempStr.mCapacity;
+              aDest.mOwnsBuffer=theTempStr.mOwnsBuffer;
+            }
 
           }
 
@@ -364,6 +377,21 @@ void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
   PRUint32 aNewLen=gCompressChars[aDest.mCharSize](aDest.mStr,aDest.mLength,aSet);
   aDest.mLength=aNewLen;
 }
+
+
+/**
+ * 
+ * @update	gess1/7/99
+ * @param 
+ * @return
+ */
+void nsStr::StripChars(nsStr& aDest,const char* aSet){
+  if((0<aDest.mLength) && (aSet)) {
+    PRUint32 aNewLen=gStripChars[aDest.mCharSize](aDest.mStr,aDest.mLength,aSet);
+    aDest.mLength=aNewLen;
+  }
+}
+
 
   /**************************************************************
     Searching methods...

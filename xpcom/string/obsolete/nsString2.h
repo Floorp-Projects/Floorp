@@ -269,7 +269,7 @@ void ToUpperCase(nsString& aString) const;
  *  @return *this 
  */
 nsString& StripChars(const char* aSet);
-nsString& StripChar(PRUnichar aChar);
+nsString& StripChar(char aChar);
 
 /**
  *  This method strips whitespace throughout the string

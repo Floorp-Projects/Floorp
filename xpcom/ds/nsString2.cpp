@@ -386,13 +386,9 @@ void nsString::ToUpperCase(nsString& aString) const {
  *  @param  aChar -- char to be stripped
  *  @return *this 
  */
-nsString& nsString::StripChar(PRUnichar aChar){
-
-  PRInt32 theIndex=FindChar(aChar,PR_FALSE,0);
-  while(kNotFound<theIndex) {
-    Cut(theIndex,1);
-    theIndex=FindChar(aChar,PR_FALSE,theIndex);
-  }
+nsString& nsString::StripChar(char aChar){
+  char aSet[2]={aChar,0};
+  nsStr::StripChars(*this,aSet);
   return *this;
 }
 
@@ -405,14 +401,7 @@ nsString& nsString::StripChar(PRUnichar aChar){
  *  @return *this 
  */
 nsString& nsString::StripChars(const char* aSet){
-
-  if(aSet){
-    PRInt32 theIndex=FindCharInSet(aSet,0);
-    while(kNotFound<theIndex) {
-      Cut(theIndex,1);
-      theIndex=FindCharInSet(aSet,theIndex);
-    }
-  }
+  nsStr::StripChars(*this,aSet);
   return *this;
 }
 
@@ -424,8 +413,7 @@ nsString& nsString::StripChars(const char* aSet){
  *  @return  this
  */
 nsString& nsString::StripWhitespace() {
-  StripChars(kWhitespace);
-  return *this;
+  return StripChars(kWhitespace);
 }
 
 /**
@@ -1124,43 +1112,34 @@ nsString& nsString::Append(PRUnichar aChar) {
  * @param   aRadix:
  * @return
  */
-nsString& nsString::Append(PRInt32 aInteger,PRInt32 aRadix) {
+nsString& nsString::Append(PRInt32 anInteger,PRInt32 aRadix) {
 
-#if 0
-  char buf[128]={0,0};
-  char* buffer=buf;
+  PRUint32 theInt=(PRUint32)anInteger;
 
-  ldiv_t r;                                 /* result of val / base  */
-  if (aRadix> 36 || aRadix< 2)  {          /* no conversion if wrong base */
-    return *this;
+  char buf[]={'0',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+  PRInt32 radices[] = {1000000000,268435456};
+  PRInt32 mask1=radices[16==aRadix];
+
+  PRInt32 charpos=0;
+  if(anInteger<0) {
+    theInt*=-1;
+    if(10==aRadix) {
+      buf[charpos++]='-';
+    }
+    else theInt=(int)~(theInt-1);
   }
 
-  if (aInteger < 0)
-    *buffer++ = '-';
-  r = ldiv (labs(aInteger), aRadix);
-
-  /* output digits of val/base first */
-  if (r.quot > 0)
-    buffer = ltoa ( r.quot, buf, aRadix);
-
-  /* output last digit */
-  int len=strlen(buffer);
-  buf[len] = "0123456789abcdefghijklmnopqrstuvwxyz"[(int)r.rem];
-  buf[len+1] =0;
-
-#endif
-
-  char* fmt = "%d";
-  if (8 == aRadix) {
-    fmt = "%o";
-  } else if (16 == aRadix) {
-    fmt = "%x";
+  PRBool isfirst=true;
+  while(mask1>=1) {
+    PRInt32 div=theInt/mask1;
+    if((div) || (!isfirst)) {
+      buf[charpos++]="0123456789abcdef"[div];
+      isfirst=false;
+    }
+    theInt-=div*mask1;
+    mask1/=aRadix;
   }
-  char buf[40];
-  // *** XX UNCOMMENT THIS LINE
-  //PR_snprintf(buf, sizeof(buf), fmt, aInteger);
-  sprintf(buf,fmt,aInteger);
-
   return Append(buf);
 }
 

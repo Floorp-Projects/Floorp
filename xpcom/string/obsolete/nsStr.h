@@ -238,8 +238,8 @@ struct NS_COM nsStr {
   * @param  anAgent is the allocator to be used on the nsStr
   * @return  
   */
-  static void EnsureCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* anAgent=0);
-  static void GrowCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* anAgent=0);
+  static PRBool EnsureCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* anAgent=0);
+  static PRBool GrowCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* anAgent=0);
 
  /**
   * These methods are used to append content to the given nsStr
@@ -335,6 +335,18 @@ struct NS_COM nsStr {
    * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
    */
   static void CompressSet(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing);
+
+  /**
+   * This method removes all occurances of chars in given set from aDest 
+   *
+   * @update	gess 01/04/99
+   * @param   aDest is the buffer to be manipulated
+   * @param   aSet tells us which chars to compress from given buffer
+   * @param   aChar is the replacement char
+   * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
+   * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
+   */
+  static void StripChars(nsStr& aDest,const char* aSet);
 
   /**
    * This method compares the data bewteen two nsStr's 
@@ -445,8 +457,12 @@ public:
     PRUint32 theSize=(theNewCapacity<<aDest.mCharSize);
     aDest.mStr = (char*)nsAllocator::Alloc(theSize);
 
-    aDest.mOwnsBuffer=1;
-    return PR_TRUE;
+    PRBool result=PR_FALSE;
+    if(aDest.mStr) {
+      aDest.mOwnsBuffer=1;
+      result=PR_TRUE;
+    }
+    return result;
   }
 
   virtual PRBool Free(nsStr& aDest){
@@ -462,10 +478,23 @@ public:
   }
 
   virtual PRBool Realloc(nsStr& aDest,PRUint32 aCount){
+
     Free(aDest);
     return Alloc(aDest,aCount);
-  }
 
+#if 0
+    nsStr temp;
+    memcpy(&temp,&aDest,sizeof(aDest));
+
+    PRBool result=Alloc(temp,aCount);
+    if(result) {
+      Free(aDest);
+      aDest.mStr=temp.mStr;
+      aDest.mCapacity=temp.mCapacity;
+    }
+    return result;
+#endif
+  }
 };
 
 nsIMemoryAgent* GetDefaultAgent(void);

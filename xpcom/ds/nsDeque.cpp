@@ -78,17 +78,11 @@ nsDeque::~nsDeque() {
 
 
 /**
- * Returns the number of elements currently stored in
- * this deque.
  *
  * @update	gess4/18/98
  * @param 
- * @return  int contains element count
+ * @return  
  */ 
-PRInt32 nsDeque::GetSize(void) const {
-  return mSize;
-}
-
 void nsDeque::SetDeallocator(nsDequeFunctor* aDeallocator){
   if(mDeallocator) {
     delete mDeallocator;
