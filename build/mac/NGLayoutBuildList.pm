@@ -486,6 +486,12 @@ sub MakeResourceAliases()
     my($resource_dir) = "$dist_dir" . "res:";
     my($samples_dir) = "$resource_dir" . "samples:";
 
+    # default folder
+    my($defaults_dir) = "$dist_dir" . "Defaults:";
+    mkdir($defaults_dir, 0);
+    my($default_wallet_dir) = "$defaults_dir"."wallet:";
+    mkdir($default_wallet_dir, 0);
+
     #//
     #// Make aliases of resource files
     #//
@@ -504,7 +510,7 @@ sub MakeResourceAliases()
 
     _InstallResources(":mozilla:gfx:src:MANIFEST",                                      "$resource_dir"."gfx:");
 
-    _InstallResources(":mozilla:extensions:wallet:src:MANIFEST",                        "$resource_dir");
+    _InstallResources(":mozilla:extensions:wallet:src:MANIFEST",                        "$default_wallet_dir");
     my($entitytab_dir) = "$resource_dir" . "entityTables";
     _InstallResources(":mozilla:intl:unicharutil:tables:MANIFEST",                      "$entitytab_dir");
 
@@ -562,10 +568,6 @@ sub MakeResourceAliases()
 
     my($communicator_enUS_locales_chrome_dir) = "$enUS_locales_chrome_dir" . "communicator:";
     my($communicatorLocale) = "$communicator_enUS_locales_chrome_dir" . "locale:";
-
-    # default folder
-    my($defaults_dir) = "$dist_dir" . "Defaults:";
-    mkdir($defaults_dir, 0);
 
     # copy the chrome registry (don't alias it)
     _copy( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
