@@ -24,7 +24,7 @@ XPIDL_MODULE=appshell
 
 XPIDLSRCS =                       \
        .\nsIFileLocator.idl       \
-       	nsIWindowMediator.idl	\
+       	.\nsIWindowMediator.idl	\
         $(NULL)
 
 EXPORTS =                         \
