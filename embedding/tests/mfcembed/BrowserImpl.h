@@ -53,8 +53,6 @@ protected:
 	PBROWSERFRAMEGLUE m_pBrowserFrameGlue;
 
 	nsCOMPtr<nsIWebBrowser> mWebBrowser;
-
-    nsCOMPtr<nsIPrompt> mPrompter;
 };
 
 #endif //_BROWSERIMPL_H

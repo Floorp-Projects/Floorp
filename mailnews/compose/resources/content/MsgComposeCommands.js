@@ -1043,14 +1043,14 @@ function GenericSendMessage( msgType )
 				{
     				if (promptService)
     				{
-						var result = {value:0};
+						var result = {value:gComposeMsgsBundle.getString("defaultSubject")};
         				if (promptService.prompt(
         					window,
         					gComposeMsgsBundle.getString("subjectDlogTitle"),
         					gComposeMsgsBundle.getString("subjectDlogMessage"),
-                                                "", 0,
-        					gComposeMsgsBundle.getString("defaultSubject"),
-        					result
+                            result,
+        					null,
+        					{value:0}
         					))
         				{
         					msgCompFields.subject = result.value;
@@ -1521,9 +1521,9 @@ function AttachPage()
         	window,
         	gComposeMsgsBundle.getString("attachPageDlogTitle"),
         	gComposeMsgsBundle.getString("attachPageDlogMessage"),
-                "", 0,
+            result,
         	null,
-        	result))
+        	{value:0}))
         {
 			AddAttachment(result.value, null);
         }

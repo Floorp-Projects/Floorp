@@ -87,7 +87,6 @@ public:
   NS_IMETHOD GetWidget(nsIWidget *& aWidget);
   NS_IMETHOD GetDOMWindow(nsIDOMWindowInternal** aDOMWindow);
   NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindowInternal** aDOMWindow);
-  NS_IMETHOD GetPrompter(nsIPrompt* *result);
   // nsWebShellWindow methods...
   nsresult Initialize(nsIXULWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
                       PRBool aCreatedVisible, PRBool aLoadDefaultPage,

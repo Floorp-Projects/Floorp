@@ -1444,7 +1444,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
   if (!mGroupPassword) {
     // prompt the user for the password
         
-		nsCOMPtr<nsIPrompt> dialog;
+		nsCOMPtr<nsIAuthPrompt> dialog;
 #ifdef DEBUG_seth
     NS_ASSERTION(aMsgWindow,"no msg window");
 #endif
@@ -1463,7 +1463,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
 		else {
                   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
                   if (wwatch)
-                    wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+                    wwatch->GetNewAuthPrompter(0, getter_AddRefs(dialog));
 
                   if (!dialog) return NS_ERROR_FAILURE;
 		}
@@ -1480,7 +1480,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
 
       nsAutoString realm;
       CopyASCIItoUCS2(nsLiteralCString(NS_STATIC_CAST(const char*, signonURL)), realm);
-      rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, realm.GetUnicode(), nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
+      rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, realm.GetUnicode(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                   getter_Copies(uniGroupPassword), &okayValue);
       if (NS_FAILED(rv)) return rv;
 
@@ -1515,7 +1515,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
     if (!mGroupUsername) {
         // prompt the user for the username
         
-		nsCOMPtr<nsIPrompt> dialog;
+		nsCOMPtr<nsIAuthPrompt> dialog;
 #ifdef DEBUG_seth
 		NS_ASSERTION(aMsgWindow,"no msg window");
 #endif
@@ -1532,7 +1532,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
 		else {
                   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
                   if (wwatch)
-                    wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+                    wwatch->GetNewAuthPrompter(0, getter_AddRefs(dialog));
 
                   if (!dialog) return NS_ERROR_FAILURE;
 		}
@@ -1550,7 +1550,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
             nsAutoString realm;
             CopyASCIItoUCS2(nsLiteralCString(NS_STATIC_CAST(const char*, signonURL)), realm);
             rv = dialog->Prompt(aPromptTitle, aPromptMessage, realm.GetUnicode(), 
-                                nsIPrompt::SAVE_PASSWORD_PERMANENTLY, nsnull,
+                                nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, nsnull,
                                 getter_Copies(uniGroupUsername), &okayValue);
             if (NS_FAILED(rv)) return rv;
 

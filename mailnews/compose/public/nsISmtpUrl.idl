@@ -30,6 +30,7 @@
 
 interface nsIMsgIdentity;
 interface nsIPrompt;
+interface nsIAuthPrompt;
 interface nsISmtpServer;
 interface nsIInterfaceRequestor;
 
@@ -66,6 +67,7 @@ interface nsISmtpUrl : nsISupports {
 	// smtp://sspitzer@tintin/...
 	attribute nsIMsgIdentity senderIdentity;
     attribute nsIPrompt prompt;
+    attribute nsIAuthPrompt authPrompt;
     attribute nsIInterfaceRequestor notificationCallbacks;
     attribute nsISmtpServer smtpServer;
 };

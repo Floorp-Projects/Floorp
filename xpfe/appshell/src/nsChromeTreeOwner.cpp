@@ -32,6 +32,7 @@
 
 // Interfaces needed to include
 #include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsIWindowMediator.h"
 
 // CIDs
@@ -76,7 +77,8 @@ NS_IMETHODIMP nsChromeTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 
   if(aIID.Equals(NS_GET_IID(nsIPrompt)))
     return mXULWindow->GetInterface(aIID, aSink);
-
+  if(aIID.Equals(NS_GET_IID(nsIAuthPrompt)))
+    return mXULWindow->GetInterface(aIID, aSink);
   if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)))
     return mXULWindow->GetInterface(aIID, aSink);
 

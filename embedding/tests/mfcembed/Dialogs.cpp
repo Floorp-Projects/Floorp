@@ -35,15 +35,20 @@
 //				CPromptDialog Stuff
 //--------------------------------------------------------------------------//
 
-CPromptDialog::CPromptDialog(CWnd* pParent, const char* pTitle, const char* pText, const char* pDefEditText)
-    : CDialog(CPromptDialog::IDD, pParent)
+CPromptDialog::CPromptDialog(CWnd* pParent, const char* pTitle, const char* pText,
+                             const char* pInitPromptText,
+                             BOOL bHasCheck, const char* pCheckText, int initCheckVal)
+    : CDialog(CPromptDialog::IDD, pParent),
+    m_bHasCheckBox(bHasCheck)
 {   
 	if(pTitle)
 		m_csDialogTitle = pTitle;
 	if(pText)
 		m_csPromptText = pText;
-	if(pDefEditText)
-		m_csPromptAnswer = pDefEditText;
+	if(pInitPromptText)
+		m_csPromptAnswer = pInitPromptText;
+	if(pCheckText)
+	    m_csCheckBoxText = pCheckText; 
 }
 
 void CPromptDialog::DoDataExchange(CDataExchange* pDX)
@@ -51,6 +56,7 @@ void CPromptDialog::DoDataExchange(CDataExchange* pDX)
     CDialog::DoDataExchange(pDX);
     //{{AFX_DATA_MAP(CPromptDialog)
     DDX_Text(pDX, IDC_PROMPT_ANSWER, m_csPromptAnswer);
+    DDX_Check(pDX, IDC_CHECK_SAVE_PASSWORD, m_bCheckBoxValue);
     //}}AFX_DATA_MAP
 }
 
@@ -67,6 +73,23 @@ int CPromptDialog::OnInitDialog()
 	CWnd *pWnd = GetDlgItem(IDC_PROMPT_TEXT);
 	if(pWnd)
 		pWnd->SetWindowText(m_csPromptText);
+
+  CButton *pChk = (CButton *)GetDlgItem(IDC_CHECK_SAVE_PASSWORD);
+	if(pChk)
+	{
+	    if (m_bHasCheckBox)
+	    {
+		    if(!m_csCheckBoxText.IsEmpty())
+			    pChk->SetWindowText(m_csCheckBoxText);
+			pChk->SetCheck(m_bCheckBoxValue ? BST_CHECKED : BST_UNCHECKED);
+		}
+		else
+		{
+			// Hide the check box control if there's no label text
+			// This will be the case when we're not using single sign-on
+			pChk->ShowWindow(SW_HIDE); 
+		}
+	}
 
 	CEdit *pEdit = (CEdit *)GetDlgItem(IDC_PROMPT_ANSWER);
 	if(pEdit) 
@@ -85,18 +108,20 @@ int CPromptDialog::OnInitDialog()
 //				CPromptPasswordDialog Stuff
 //--------------------------------------------------------------------------//
 
-CPromptPasswordDialog::CPromptPasswordDialog(CWnd* pParent, const char* pTitle, const char* pText, const char* pCheckText)
-    : CDialog(CPromptPasswordDialog::IDD, pParent)
+CPromptPasswordDialog::CPromptPasswordDialog(CWnd* pParent, const char* pTitle, const char* pText,
+                                             const char* pInitPasswordText,
+                                             BOOL bHasCheck, const char* pCheckText, int initCheckVal)
+    : CDialog(CPromptPasswordDialog::IDD, pParent),
+    m_bHasCheckBox(bHasCheck), m_bCheckBoxValue(initCheckVal)
 {   
 	if(pTitle)
 		m_csDialogTitle = pTitle;
 	if(pText)
 		m_csPromptText = pText;
+	if(pInitPasswordText)
+	    m_csPassword = pInitPasswordText;
 	if(pCheckText)
 		m_csCheckBoxText = pCheckText;
-
-	m_csPassword = "";
-	m_bSavePassword = PR_FALSE;
 }
 
 void CPromptPasswordDialog::DoDataExchange(CDataExchange* pDX)
@@ -104,7 +129,7 @@ void CPromptPasswordDialog::DoDataExchange(CDataExchange* pDX)
     CDialog::DoDataExchange(pDX);
     //{{AFX_DATA_MAP(CPromptPasswordDialog)
     DDX_Text(pDX, IDC_PASSWORD, m_csPassword);
-	DDX_Check(pDX, IDC_CHECK_SAVE_PASSWORD, m_bSavePassword);
+	  DDX_Check(pDX, IDC_CHECK_SAVE_PASSWORD, m_bCheckBoxValue);
     //}}AFX_DATA_MAP
 }
 
@@ -116,24 +141,26 @@ END_MESSAGE_MAP()
 
 int CPromptPasswordDialog::OnInitDialog()
 {   
-   	SetWindowText(m_csDialogTitle);
+  SetWindowText(m_csDialogTitle);
   
 	CWnd *pWnd = GetDlgItem(IDC_PROMPT_TEXT);
 	if(pWnd)
 		pWnd->SetWindowText(m_csPromptText);
 
-	pWnd = GetDlgItem(IDC_CHECK_SAVE_PASSWORD);
-	if(pWnd)
+	CButton *pChk = (CButton *)GetDlgItem(IDC_CHECK_SAVE_PASSWORD);
+	if(pChk)
 	{
-		if(!m_csCheckBoxText.IsEmpty())
-		{
-			pWnd->SetWindowText(m_csCheckBoxText);
+	  if (m_bHasCheckBox)
+	  {
+		  if(!m_csCheckBoxText.IsEmpty())
+			  pChk->SetWindowText(m_csCheckBoxText);
+			pChk->SetCheck(m_bCheckBoxValue ? BST_CHECKED : BST_UNCHECKED);
 		}
 		else
 		{
 			// Hide the check box control if there's no label text
 			// This will be the case when we're not using single sign-on
-			pWnd->ShowWindow(SW_HIDE); 
+			pChk->ShowWindow(SW_HIDE); 
 		}
 	}
 
@@ -152,26 +179,22 @@ int CPromptPasswordDialog::OnInitDialog()
 //				CPromptUsernamePasswordDialog Stuff
 //--------------------------------------------------------------------------//
 
-CPromptUsernamePasswordDialog::CPromptUsernamePasswordDialog(CWnd* pParent, const char* pTitle, const char* pText, 
-								   const char* pUserNameLabel, const char* pPasswordLabel,
-								   const char* pCheckText, const char* pInitUserName, const char* pInitPassword, PRBool bCheck)
-    : CDialog(CPromptUsernamePasswordDialog::IDD, pParent)
+CPromptUsernamePasswordDialog::CPromptUsernamePasswordDialog(CWnd* pParent, const char* pTitle, const char* pText,
+                                  const char* pInitUsername, const char* pInitPassword, 
+		                          BOOL bHasCheck, const char* pCheckText, int initCheckVal)
+    : CDialog(CPromptUsernamePasswordDialog::IDD, pParent),
+    m_bHasCheckBox(bHasCheck), m_bCheckBoxValue(initCheckVal)
 {   
 	if(pTitle)
 		m_csDialogTitle = pTitle;
 	if(pText)
 		m_csPromptText = pText;
-	if(pUserNameLabel)
-		m_csUserNameLabel = pUserNameLabel;
-	if(pPasswordLabel)
-		m_csPasswordLabel = pPasswordLabel;
-	if(pCheckText)
-		m_csCheckBoxText = pCheckText;
-	if(pInitUserName)
-		m_csUserName = pInitUserName;
+	if(pInitUsername)
+		m_csUserName = pInitUsername;
 	if(pInitPassword)
 		m_csPassword = pInitPassword;
-	m_bSavePassword = bCheck;
+	if(pCheckText)
+		m_csCheckBoxText = pCheckText;
 }
 
 void CPromptUsernamePasswordDialog::DoDataExchange(CDataExchange* pDX)
@@ -180,7 +203,7 @@ void CPromptUsernamePasswordDialog::DoDataExchange(CDataExchange* pDX)
     //{{AFX_DATA_MAP(CPromptUsernamePasswordDialog)
 	DDX_Text(pDX, IDC_USERNAME, m_csUserName);
     DDX_Text(pDX, IDC_PASSWORD, m_csPassword);
-	DDX_Check(pDX, IDC_CHECK_SAVE_PASSWORD, m_bSavePassword);
+	DDX_Check(pDX, IDC_CHECK_SAVE_PASSWORD, m_bCheckBoxValue);
     //}}AFX_DATA_MAP
 }
 
@@ -198,41 +221,17 @@ int CPromptUsernamePasswordDialog::OnInitDialog()
 	if(pWnd)
 		pWnd->SetWindowText(m_csPromptText);
 
-	// This empty check is required since in the case
-	// of non single sign-on the interface methods do
-	// not specify the label text for username(unlike in
-	// in the single sign-on case where they are)
-	// In the case where the labels are not specified 
-	// we just use whatever is in the dlg resource
-	// Ditto for the password label also
-	if(! m_csUserNameLabel.IsEmpty())
-	{
-		pWnd = GetDlgItem(IDC_USERNAME_LABEL);
-		if(pWnd)
-			pWnd->SetWindowText(m_csUserNameLabel);
-	}
-
-	if(! m_csPasswordLabel.IsEmpty())
-	{
-		pWnd = GetDlgItem(IDC_PASSWORD_LABEL);
-		if(pWnd)
-			pWnd->SetWindowText(m_csPasswordLabel);
-	}
-
 	CButton *pChk = (CButton *)GetDlgItem(IDC_CHECK_SAVE_PASSWORD);
 	if(pChk)
 	{
-		if(!m_csCheckBoxText.IsEmpty())
+		if(m_bHasCheckBox)
 		{
-			pChk->SetWindowText(m_csCheckBoxText);
-
-			pChk->SetCheck(m_bSavePassword ? BST_CHECKED : BST_UNCHECKED);
+		    if (!m_csCheckBoxText.IsEmpty())
+			    pChk->SetWindowText(m_csCheckBoxText);
+			pChk->SetCheck(m_bCheckBoxValue ? BST_CHECKED : BST_UNCHECKED);
 		}
 		else
 		{
-			// Hide the check box control if there's no label text
-			// This will be the case when we're not using single sign-on
-
 			pChk->ShowWindow(SW_HIDE);
 		}
 	}

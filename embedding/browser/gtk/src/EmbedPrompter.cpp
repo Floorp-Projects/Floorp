@@ -52,14 +52,21 @@ EmbedPrompter::~EmbedPrompter(void)
 nsresult
 EmbedPrompter::Create(PromptType aType)
 {
-  nsresult rv = NS_OK; 
+  nsresult rv = NS_OK;
+
+  int includeCheckFlag = 0;
+
   switch (aType) {
   case TYPE_PROMPT_USER_PASS:
+    if (mCheckMessage.Length())
+      includeCheckFlag = EmbedPrompter::INCLUDE_CHECKBOX;
     CreatePasswordPrompter(EmbedPrompter::INCLUDE_USERNAME | 
-			   EmbedPrompter::INCLUDE_CHECKBOX);
+			   includeCheckFlag);
     break;
   case TYPE_PROMPT_PASS:
-    CreatePasswordPrompter(EmbedPrompter::INCLUDE_CHECKBOX);
+    if (mCheckMessage.Length())
+      includeCheckFlag = EmbedPrompter::INCLUDE_CHECKBOX;
+    CreatePasswordPrompter(includeCheckFlag);
     break;
   case TYPE_ALERT:
     CreateAlertPrompter(0);
@@ -75,8 +82,11 @@ EmbedPrompter::Create(PromptType aType)
     CreateAlertPrompter(EmbedPrompter::INCLUDE_CHECKBOX);
     break;
   case TYPE_PROMPT:
+    if (mCheckMessage.Length())
+      includeCheckFlag = EmbedPrompter::INCLUDE_CHECKBOX;
     CreateAlertPrompter(EmbedPrompter::INCLUDE_CANCEL |
-			EmbedPrompter::INCLUDE_TEXTFIELD);
+			EmbedPrompter::INCLUDE_TEXTFIELD |
+			includeCheckFlag);
     break;
   default:
     rv = NS_ERROR_NOT_IMPLEMENTED;
@@ -92,16 +102,9 @@ EmbedPrompter::SetTitle(const PRUnichar *aTitle)
 }
 
 void
-EmbedPrompter::SetDefaultText (const PRUnichar *aDefaultText)
+EmbedPrompter::SetTextValue(const PRUnichar *aTextValue)
 {
-  mDefaultText.AppendWithConversion(aDefaultText);
-}
-
-void
-EmbedPrompter::SetPassRealm(const PRUnichar *aRealm)
-{
-  mRealm.Assign("Enter Password for ");
-  mRealm.AppendWithConversion(aRealm);
+  mTextValue.AppendWithConversion(aTextValue);
 }
 
 void
@@ -114,6 +117,18 @@ void
 EmbedPrompter::SetMessageText(const PRUnichar *aMessageText)
 {
   mMessageText.AppendWithConversion(aMessageText);
+}
+
+void
+EmbedPrompter::SetUser(const PRUnichar *aUser)
+{
+  mUser.AppendWithConversion(aUser);
+}
+
+void
+EmbedPrompter::SetPassword(const PRUnichar *aPass)
+{
+  mPass.AppendWithConversion(aPass);
 }
 
 void
@@ -137,7 +152,7 @@ EmbedPrompter::GetConfirmValue(PRBool *aConfirmValue)
 void
 EmbedPrompter::GetTextValue(PRUnichar **aTextValue)
 {
-  *aTextValue = mText.ToNewUnicode();
+  *aTextValue = mTextValue.ToNewUnicode();
 }
 
 void
@@ -208,7 +223,7 @@ EmbedPrompter::UserOK(void)
   if (mTextField) {
     gchar *text;
     text = gtk_editable_get_chars(GTK_EDITABLE(mTextField), 0, -1);
-    mText.Assign(text);
+    mTextValue.Assign(text);
     g_free(text);
   }
   
@@ -246,14 +261,15 @@ EmbedPrompter::CreatePasswordPrompter(int aFlags)
   gtk_container_set_border_width(GTK_CONTAINER(mWindow),
 				 4);
 
-  // the label that says "Enter Password..."
-  GtkWidget *realmLabel = gtk_label_new(mRealm.get());
+  GtkWidget *msgLabel = gtk_label_new(mMessageText.get());
   // add it
   gtk_box_pack_start(topLevelVBox,
-		     realmLabel,
+		     msgLabel,
 		     FALSE, /* expand */
 		     FALSE, /* fill */
 		     0);    /* padding */
+
+  PRInt32 startPos;
 
   if (aFlags & EmbedPrompter::INCLUDE_USERNAME) {
     // the username label
@@ -265,6 +281,12 @@ EmbedPrompter::CreatePasswordPrompter(int aFlags)
 		       0);    /* padding */
     // the username text area
     mUserField = gtk_entry_new();
+    if (mUser.Length()) {
+      startPos = 0;
+      gtk_editable_insert_text(GTK_EDITABLE(mUserField),
+			       mUser.get(), mUser.Length(),
+			       &startPos);
+    }
     gtk_box_pack_start(topLevelVBox,
 		       mUserField,
 		       FALSE, /* expand */
@@ -284,6 +306,12 @@ EmbedPrompter::CreatePasswordPrompter(int aFlags)
   mPassField = gtk_entry_new();
   // it's a password field
   gtk_entry_set_visibility(GTK_ENTRY(mPassField), FALSE);
+  if (mPass.Length()) {
+    startPos = 0;
+    gtk_editable_insert_text(GTK_EDITABLE(mPassField),
+			     mPass.get(), mPass.Length(),
+			     &startPos);
+  }
   // add it
   gtk_box_pack_start(topLevelVBox,
 		   mPassField,
@@ -295,7 +323,10 @@ EmbedPrompter::CreatePasswordPrompter(int aFlags)
   if (aFlags & EmbedPrompter::INCLUDE_CHECKBOX) {
     // make it
     mCheckBox =
-      gtk_check_button_new_with_label("Use Password Manager To Save Password");
+      gtk_check_button_new_with_label(mCheckMessage.get());
+    // set its state
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mCheckBox),
+				 mCheckValue);
     // add it
     gtk_box_pack_start(topLevelVBox,
 		     mCheckBox,
@@ -373,6 +404,12 @@ EmbedPrompter::CreateAlertPrompter(int aFlags)
   // text field
   if (aFlags & EmbedPrompter::INCLUDE_TEXTFIELD) {
     mTextField = gtk_entry_new();
+    if (mTextValue.Length()) {
+      int startPos = 0;
+      gtk_editable_insert_text(GTK_EDITABLE(mTextField),
+			       mTextValue.get(), mTextValue.Length(),
+			       &startPos);
+    }
     gtk_box_pack_start(topLevelVBox,
 		       mTextField,
 		       FALSE, /* expand */
@@ -383,6 +420,9 @@ EmbedPrompter::CreateAlertPrompter(int aFlags)
   if (aFlags & EmbedPrompter::INCLUDE_CHECKBOX) {
     // make it
     mCheckBox = gtk_check_button_new_with_label(mCheckMessage);
+    // set its state
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mCheckBox),
+				 mCheckValue);
     // add it
     gtk_box_pack_start(topLevelVBox,
 		       mCheckBox,

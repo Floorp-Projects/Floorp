@@ -34,6 +34,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULElement.h"
 #include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsIWindowMediator.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsPIDOMWindow.h"
@@ -85,7 +86,8 @@ NS_IMETHODIMP nsContentTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 
   if(aIID.Equals(NS_GET_IID(nsIPrompt)))
     return mXULWindow->GetInterface(aIID, aSink);
-
+  if(aIID.Equals(NS_GET_IID(nsIAuthPrompt)))
+    return mXULWindow->GetInterface(aIID, aSink);
   if (aIID.Equals(NS_GET_IID(nsIDocShellTreeItem))) {
     nsCOMPtr<nsIDocShell> shell;
     mXULWindow->GetDocShell(getter_AddRefs(shell));

@@ -69,16 +69,17 @@ struct IBrowserFrameGlue {
 	virtual void Alert(const PRUnichar *dialogTitle, const PRUnichar *text) = 0;
 	virtual void Confirm(const PRUnichar *dialogTitle, const PRUnichar *text, PRBool *_retval) = 0;
 	virtual void Prompt(const PRUnichar *dialogTitle, const PRUnichar *text,
-					const PRUnichar *defaultEditText, PRUnichar **result, 
-					PRBool *retval) = 0;
+					            PRUnichar **promptText,
+					            const PRUnichar *checkboxMsg, PRBool *checkboxState, 
+					            PRBool *retval) = 0;
 	virtual void PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text,
-					const PRUnichar *checkboxMsg, PRBool *checkboxState,
-					PRUnichar **result, PRBool *retval) = 0;
+	                            PRUnichar **password,
+					                    const PRUnichar *checkboxMsg, PRBool *checkboxState,
+					                    PRBool *retval) = 0;
 	virtual void PromptUserNamePassword(const PRUnichar *dialogTitle, const PRUnichar *text,
-								   const PRUnichar *userNameLabel, const PRUnichar *passwordLabel, 
-								   const PRUnichar *checkboxMsg, PRBool *checkboxState,
-								   PRUnichar **username, PRUnichar **password,
-								   PRBool *retval) = 0;
+	                                    PRUnichar **username, PRUnichar **password,
+								                      const PRUnichar *checkboxMsg, PRBool *checkboxState,
+								                      PRBool *retval) = 0;
 
 };
 
@@ -105,9 +106,9 @@ struct IBrowserFrameGlue {
 		virtual void ShowContextMenu(PRUint32 aContextFlags, nsIDOMNode *aNode);	\
 		virtual void Alert(const PRUnichar *dialogTitle, const PRUnichar *text);	\
 		virtual void Confirm(const PRUnichar *dialogTitle, const PRUnichar *text, PRBool *_retval);	\
-		virtual void Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *defaultEditText, PRUnichar **result, PRBool *retval);	\
-		virtual void PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *checkboxMsg, PRBool *checkboxState, PRUnichar **result, PRBool *retval);	\
-		virtual void PromptUserNamePassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *userNameLabel, const PRUnichar *passwordLabel, const PRUnichar *checkboxMsg, PRBool *checkboxState, PRUnichar **username, PRUnichar **password, PRBool *retval);
+		virtual void Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **promptText, const PRUnichar *checkboxMsg, PRBool *checkboxState, PRBool *retval);	\
+		virtual void PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **password, const PRUnichar *checkboxMsg, PRBool *checkboxState, PRBool *retval);	\
+		virtual void PromptUserNamePassword(const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **username, PRUnichar **password, const PRUnichar *checkboxMsg, PRBool *checkboxState, PRBool *retval);
 		
 typedef IBrowserFrameGlue *PBROWSERFRAMEGLUE;
 

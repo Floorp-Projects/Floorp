@@ -467,7 +467,7 @@ nsWalletlibService::WALLET_Decrypt (const char *crypt, PRUnichar **text) {
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsSingleSignOnPrompt,
                               nsISingleSignOnPrompt,
-                              nsIPrompt,
+                              nsIAuthPrompt,
                               nsIObserver,
                               nsISupportsWeakReference)
 
@@ -486,33 +486,6 @@ nsSingleSignOnPrompt::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSingleSignOnPrompt::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
-{
-  return mPrompt->Alert(dialogTitle, text);
-}
-
-NS_IMETHODIMP
-nsSingleSignOnPrompt::AlertCheck(const PRUnichar *dialogTitle, 
-                              const PRUnichar *text, 
-                              const PRUnichar *checkMsg, 
-                              PRBool *checkValue)
-{
-  return mPrompt->AlertCheck(dialogTitle, text, checkMsg, checkValue);
-}
-
-NS_IMETHODIMP
-nsSingleSignOnPrompt::Confirm(const PRUnichar *dialogTitle, const PRUnichar *text, PRBool *_retval)
-{
-  return mPrompt->Confirm(dialogTitle, text, _retval);
-}
-
-NS_IMETHODIMP
-nsSingleSignOnPrompt::ConfirmCheck(const PRUnichar *dialogTitle, const PRUnichar *text, 
-                                   const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
-{
-  return mPrompt->ConfirmCheck(dialogTitle, text, checkMsg, checkValue, _retval);
-}
 
 NS_IMETHODIMP
 nsSingleSignOnPrompt::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, 
@@ -550,29 +523,6 @@ nsSingleSignOnPrompt::PromptPassword(const PRUnichar *dialogTitle, const PRUnich
   rv = SINGSIGN_PromptPassword(dialogTitle, text, pwd,
                                realm.get(), mPrompt, _retval, savePassword);
   return rv;
-}
-
-NS_IMETHODIMP
-nsSingleSignOnPrompt::Select(const PRUnichar *dialogTitle, const PRUnichar *text, PRUint32 count,
-                    const PRUnichar **selectList, PRInt32 *outSelection, PRBool *_retval)
-{
-  return mPrompt->Select(dialogTitle, text, count, selectList, outSelection, _retval);
-}
-
-NS_IMETHODIMP
-nsSingleSignOnPrompt::UniversalDialog(const PRUnichar *titleMessage, const PRUnichar *dialogTitle, 
-                             const PRUnichar *text, const PRUnichar *checkboxMsg, const PRUnichar *button0Text,
-                             const PRUnichar *button1Text, const PRUnichar *button2Text, 
-                             const PRUnichar *button3Text, const PRUnichar *editfield1Msg,
-                             const PRUnichar *editfield2Msg, PRUnichar **editfield1Value,
-                             PRUnichar **editfield2Value, const PRUnichar *iconURL,
-                             PRBool *checkboxState, PRInt32 numberButtons, PRInt32 numberEditfields,
-                             PRInt32 editField1Password, PRInt32 *buttonPressed)
-{
-  return mPrompt->UniversalDialog(titleMessage, dialogTitle, text, checkboxMsg, button0Text, button1Text,
-                                  button2Text, button3Text, editfield1Msg, editfield2Msg, editfield1Value,
-                                  editfield2Value, iconURL, checkboxState, numberButtons, numberEditfields,
-                                  editField1Password, buttonPressed);
 }
   
 // nsISingleSignOnPrompt methods:

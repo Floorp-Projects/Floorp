@@ -20,7 +20,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIPrompt;
+interface nsIAuthPrompt;
 
 [scriptable, uuid(c165b634-1dd1-11b2-a849-82dd67b7519e)]
 interface nsISmtpServer : nsISupports {
@@ -39,8 +39,8 @@ interface nsISmtpServer : nsISupports {
 
     readonly attribute string serverURI;
     string getPasswordWithUI(in wstring promptString, in wstring promptTitle,
-                             in nsIPrompt netPrompt);
+                             in nsIAuthPrompt netPrompt);
     void getUsernamePasswordWithUI(in wstring promptString, in wstring promptTitle,
-                             in nsIPrompt netPrompt, out string userid, out string password);
+                             in nsIAuthPrompt netPrompt, out string userid, out string password);
     void forgetPassword();
 };

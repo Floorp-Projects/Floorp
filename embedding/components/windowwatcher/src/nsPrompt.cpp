@@ -25,6 +25,7 @@
 #include "nsIServiceManager.h"
 #include "nsIWalletService.h"
 #include "nsPrompt.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kSingleSignOnPromptCID, NS_SINGLESIGNONPROMPT_CID);
@@ -63,6 +64,28 @@ NS_NewPrompter(nsIPrompt **result, nsIDOMWindow *aParent)
   }
 
   *result = prompter;
+  return NS_OK;
+}
+
+nsresult
+NS_NewAuthPrompter(nsIAuthPrompt **result, nsIDOMWindow *aParent)
+{
+
+  nsresult rv;
+  *result = 0;
+
+  nsPrompt *prompter = new nsPrompt(aParent);
+  if (!prompter)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(prompter);
+  rv = prompter->Init();
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(prompter);
+    return rv;
+  }
+
+  *result = prompter;
   // wrap the base prompt in an nsISingleSignOnPrompt, if available
   nsCOMPtr<nsISingleSignOnPrompt> siPrompt = do_CreateInstance(kSingleSignOnPromptCID);
   if (siPrompt) {
@@ -77,7 +100,7 @@ NS_NewPrompter(nsIPrompt **result, nsIDOMWindow *aParent)
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsPrompt, nsIPrompt)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsPrompt, nsIPrompt, nsIAuthPrompt)
 
 nsPrompt::nsPrompt(nsIDOMWindow *aParent)
   : mParent(aParent)
@@ -108,6 +131,10 @@ nsPrompt::GetLocaleString(const PRUnichar *aKey, PRUnichar **aResult)
 
   return rv;
 }
+
+//*****************************************************************************
+// nsPrompt::nsIPrompt
+//*****************************************************************************   
 
 NS_IMETHODIMP
 nsPrompt::Alert(const PRUnichar* dialogTitle, 
@@ -184,12 +211,11 @@ nsPrompt::ConfirmCheck(const PRUnichar* dialogTitle,
 }
 
 NS_IMETHODIMP
-nsPrompt::Prompt(const PRUnichar* dialogTitle,
-                 const PRUnichar* text,
-                 const PRUnichar* passwordRealm,
-                 PRUint32 savePassword,
-                 const PRUnichar* defaultText,
-                 PRUnichar* *result,
+nsPrompt::Prompt(const PRUnichar *dialogTitle,
+                 const PRUnichar *text,
+                 PRUnichar **answer,
+                 const PRUnichar *checkMsg,
+                 PRBool *checkValue,
                  PRBool *_retval)
 {
   nsresult rv;
@@ -202,20 +228,19 @@ nsPrompt::Prompt(const PRUnichar* dialogTitle,
     stringOwner.TakeString(title);
   }
 
-  return mPromptService->Prompt(mParent, title, text,
-                                passwordRealm, savePassword,
-                                defaultText, result, _retval);
+  return mPromptService->Prompt(mParent, title, text, answer,
+                                checkMsg, checkValue, _retval);
 }
 
 NS_IMETHODIMP
-nsPrompt::PromptUsernameAndPassword(const PRUnichar* dialogTitle, 
-                                    const PRUnichar* text,
-                                    const PRUnichar* passwordRealm,
-                                    PRUint32 savePassword,
-                                    PRUnichar* *user,
-                                    PRUnichar* *pwd,
+nsPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
+                                    const PRUnichar *text,
+                                    PRUnichar **username,
+                                    PRUnichar **password,
+                                    const PRUnichar *checkMsg,
+                                    PRBool *checkValue,
                                     PRBool *_retval)
-{	
+{
   nsresult rv;
   AutoStringFree stringOwner;
   PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
@@ -226,20 +251,18 @@ nsPrompt::PromptUsernameAndPassword(const PRUnichar* dialogTitle,
     stringOwner.TakeString(title);
   }
 
-  return mPromptService->PromptUsernameAndPassword(mParent, title, text,
-                                                   passwordRealm, savePassword,
-                                                   user, pwd, _retval);
+  return mPromptService->PromptUsernameAndPassword(mParent, title, text, username, password,
+                                                   checkMsg, checkValue, _retval);
 }
 
 NS_IMETHODIMP
-nsPrompt::PromptPassword(const PRUnichar* dialogTitle, 
-                         const PRUnichar* text,
-                         const PRUnichar* passwordRealm,
-                         PRUint32 savePassword,
-                         PRUnichar* *pwd,
+nsPrompt::PromptPassword(const PRUnichar *dialogTitle,
+                         const PRUnichar *text,
+                         PRUnichar **password,
+                         const PRUnichar *checkMsg,
+                         PRBool *checkValue,
                          PRBool *_retval)
 {
-  // XXX: ignore passwordRealm and savePassword here?
   nsresult rv;
   AutoStringFree stringOwner;
   PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
@@ -250,9 +273,8 @@ nsPrompt::PromptPassword(const PRUnichar* dialogTitle,
     stringOwner.TakeString(title);
   }
 
-  return mPromptService->PromptPassword(mParent, title, text,
-                                        passwordRealm, savePassword,
-                                        pwd, _retval);
+  return mPromptService->PromptPassword(mParent, title, text, password,
+                                        checkMsg, checkValue, _retval);
 }
 
 NS_IMETHODIMP
@@ -321,3 +343,81 @@ nsPrompt::UniversalDialog(const PRUnichar *inTitleMessage,
   return rv;
 }
 
+//*****************************************************************************
+// nsPrompt::nsIAuthPrompt
+// This implementation serves as glue between nsIAuthPrompt and nsIPrompt
+// when a single-signon was not available.
+//*****************************************************************************   
+
+NS_IMETHODIMP
+nsPrompt::Prompt(const PRUnichar* dialogTitle,
+                 const PRUnichar* text,
+                 const PRUnichar* passwordRealm,
+                 PRUint32 savePassword,
+                 const PRUnichar* defaultText,
+                 PRUnichar* *result,
+                 PRBool *_retval)
+{
+  // Ignore passwordRealm and savePassword
+  nsresult rv;
+  AutoStringFree stringOwner;
+  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
+
+  if (!title) {
+    rv = GetLocaleString(NS_LITERAL_STRING("Prompt").get(), &title);
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    stringOwner.TakeString(title);
+  }
+
+  if (defaultText)
+    *result = ToNewUnicode(nsLiteralString(defaultText));
+  return mPromptService->Prompt(mParent, title, text,
+                                result, nsnull, nsnull, _retval);
+}
+
+NS_IMETHODIMP
+nsPrompt::PromptUsernameAndPassword(const PRUnichar* dialogTitle, 
+                                    const PRUnichar* text,
+                                    const PRUnichar* passwordRealm,
+                                    PRUint32 savePassword,
+                                    PRUnichar* *user,
+                                    PRUnichar* *pwd,
+                                    PRBool *_retval)
+{
+  // Ignore passwordRealm and savePassword
+  nsresult rv;
+  AutoStringFree stringOwner;
+  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
+  
+  if (!title) {
+    rv = GetLocaleString(NS_LITERAL_STRING("PromptUsernameAndPassword").get(), &title);
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    stringOwner.TakeString(title);
+  }
+
+  return mPromptService->PromptUsernameAndPassword(mParent, title, text,
+                                                   user, pwd, nsnull, nsnull, _retval);
+}
+
+NS_IMETHODIMP
+nsPrompt::PromptPassword(const PRUnichar* dialogTitle, 
+                         const PRUnichar* text,
+                         const PRUnichar* passwordRealm,
+                         PRUint32 savePassword,
+                         PRUnichar* *pwd,
+                         PRBool *_retval)
+{
+  // Ignore passwordRealm and savePassword
+  nsresult rv;
+  AutoStringFree stringOwner;
+  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
+
+  if (!title) {
+    rv = GetLocaleString(NS_LITERAL_STRING("PromptPassword").get(), &title);
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    stringOwner.TakeString(title);
+  }
+
+  return mPromptService->PromptPassword(mParent, title, text,
+                                        pwd, nsnull, nsnull, _retval);
+}

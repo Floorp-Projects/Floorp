@@ -77,10 +77,9 @@ function AddDomain(obj)
       window,
       obj.DlgTitle,
       obj.DlgMsg,
-      "",
-      0,
+      result,
       null,
-      result
+      {value:0}
     ))
       DomainName = result.value.replace(/ /g,"");
   }

@@ -393,50 +393,40 @@ si_CheckGetPassword
 {
   nsresult res;
 
-  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
   PRUnichar * prompt_string = (PRUnichar*)dialogTitle;
   if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
     prompt_string = Wallet_Localize("PromptForPassword");
   PRUnichar * check_string;
+  
+  // According to nsIPrompt spec, the checkbox is shown or not
+  // depending on whether or not checkValue == nsnull, not checkMsg.
+  PRBool * check_value = checkValue;
   if (savePassword != SINGSIGN_SAVE_PASSWORD_PERMANENTLY) {
     check_string = nsnull;
+    check_value = nsnull;
   } else if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
     check_string = Wallet_Localize("SaveThisPasswordEncrypted");
   } else {
     check_string = Wallet_Localize("SaveThisPasswordObscured");
   }
 
-  res = dialog->UniversalDialog(
-    NULL, /* title message */
-    prompt_string, /* title text in top line of window */
-    szMessage, /* this is the main message */
-    check_string, /* This is the checkbox message */
-    NULL, /* first button text, becomes OK by default */
-    NULL, /* second button text, becomes CANCEL by default */
-    NULL, /* third button text */
-    NULL, /* fourth button text */
-    NULL, /* first edit field label */
-    NULL, /* second edit field label */
-    password, /* first edit field initial and final value */
-    NULL, /* second edit field initial and final value */
-    NULL,  /* icon: question mark by default */
-    checkValue, /* initial and final value of checkbox */
-    2, /* number of buttons */
-    1, /* number of edit fields */
-    1, /* is first edit field a password field */
-    &buttonPressed);
+  PRBool confirmed = PR_FALSE;  
+  res = dialog->PromptPassword(prompt_string,
+                               szMessage,
+                               password,
+                               check_string,
+                               check_value,
+                               &confirmed);
 
   if (dialogTitle == nsnull)
     Recycle(prompt_string);
   if (check_string)
     Recycle(check_string);
-  else
-    *checkValue = PR_FALSE;
 
   if (NS_FAILED(res)) {
     return res;
   }
-  if (buttonPressed == 0) {
+  if (confirmed) {
     return NS_OK;
   } else {
     return NS_ERROR_FAILURE; /* user pressed cancel */
@@ -454,50 +444,40 @@ si_CheckGetData
 {
   nsresult res;  
 
-  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
   PRUnichar * prompt_string = (PRUnichar*)dialogTitle;
   if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
     prompt_string = Wallet_Localize("PromptForData");
   PRUnichar * check_string;
+
+  // According to nsIPrompt spec, the checkbox is shown or not
+  // depending on whether or not checkValue == nsnull, not checkMsg.
+  PRBool * check_value = checkValue;
   if (savePassword != SINGSIGN_SAVE_PASSWORD_PERMANENTLY) {
     check_string = nsnull;
+    check_value = nsnull;
   } else if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
     check_string = Wallet_Localize("SaveThisValueEncrypted");
   } else {
     check_string = Wallet_Localize("SaveThisValueObscured");
   }
 
-  res = dialog->UniversalDialog(
-    NULL, /* title message */
-    prompt_string, /* title text in top line of window */
-    szMessage, /* this is the main message */
-    check_string, /* This is the checkbox message */
-    NULL, /* first button text, becomes OK by default */
-    NULL, /* second button text, becomes CANCEL by default */
-    NULL, /* third button text */
-    NULL, /* fourth button text */
-    NULL, /* first edit field label */
-    NULL, /* second edit field label */
-    data, /* first edit field initial and final value */
-    NULL, /* second edit field initial and final value */
-    NULL,  /* icon: question mark by default */
-    checkValue, /* initial and final value of checkbox */
-    2, /* number of buttons */
-    1, /* number of edit fields */
-    0, /* is first edit field a password field */
-    &buttonPressed);
+  PRBool confirmed = PR_FALSE;  
+  res = dialog->Prompt(prompt_string,
+                       szMessage,
+                       data,
+                       check_string,
+                       check_value,
+                       &confirmed);
 
   if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
     Recycle(prompt_string);
   if (check_string)
     Recycle(check_string);
-  else
-    *checkValue = PR_FALSE;
 
   if (NS_FAILED(res)) {
     return res;
   }
-  if (buttonPressed == 0) {
+  if (confirmed) {
     return NS_OK;
   } else {
     return NS_ERROR_FAILURE; /* user pressed cancel */
@@ -515,54 +495,40 @@ si_CheckGetUsernamePassword
    PRBool* checkValue)
 {
   nsresult res;  
-  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
+  PRUnichar * check_string;
   PRUnichar * prompt_string = (PRUnichar*)dialogTitle;
   if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
     prompt_string = Wallet_Localize("PromptForPassword");
-  PRUnichar * user_string = Wallet_Localize("UserName");
-  PRUnichar * password_string = Wallet_Localize("Password");
-  PRUnichar * check_string;
+  
+  // According to nsIPrompt spec, the checkbox is shown or not
+  // depending on whether or not checkValue == nsnull, not checkMsg.
+  PRBool * check_value = checkValue;
   if (savePassword != SINGSIGN_SAVE_PASSWORD_PERMANENTLY) {
     check_string = nsnull;
+    check_value = nsnull;
   } else if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
     check_string = Wallet_Localize("SaveTheseValuesEncrypted");
   } else {
     check_string = Wallet_Localize("SaveTheseValuesObscured");
   }
 
-  res = dialog->UniversalDialog(
-    NULL, /* title message */
-    prompt_string, /* title text in top line of window */
-    szMessage, /* this is the main message */
-    check_string, /* This is the checkbox message */
-    NULL, /* first button text, becomes OK by default */
-    NULL, /* second button text, becomes CANCEL by default */
-    NULL, /* third button text */
-    NULL, /* fourth button text */
-    user_string, /* first edit field label */
-    password_string, /* second edit field label */
-    username, /* first edit field initial and final value */
-    password, /* second edit field initial and final value */
-    NULL,  /* icon: question mark by default */
-    checkValue, /* initial and final value of checkbox */
-    2, /* number of buttons */
-    2, /* number of edit fields */
-    0, /* is first edit field a password field */
-    &buttonPressed);
+  PRBool confirmed = PR_FALSE;  
+  res = dialog->PromptUsernameAndPassword(dialogTitle,
+                                          szMessage,
+                                          username, password,
+                                          check_string,
+                                          check_value,
+                                          &confirmed);
 
-  if (dialogTitle == nsnull)
+  if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
     Recycle(prompt_string);
-  Recycle(user_string);
-  Recycle(password_string);
   if (check_string)
     Recycle(check_string);
-  else
-    *checkValue = PR_FALSE;
-
+  
   if (NS_FAILED(res)) {
     return res;
   }
-  if (buttonPressed == 0) {
+  if (confirmed) {
     return NS_OK;
   } else {
     return NS_ERROR_FAILURE; /* user pressed cancel */
@@ -2324,27 +2290,23 @@ si_DoDialogIfPrefIsOff(
     case promptUsernameAndPassword:
       res = dialog->PromptUsernameAndPassword(prompt_string,
                                               text,
-                                              realm.GetUnicode(), 
-                                              savePassword,
                                               user,
                                               pwd,
+                                              nsnull, nsnull,
                                               pressedOK);
       break;
     case promptPassword:
       res = dialog->PromptPassword(prompt_string,
                                    text,
-                                   realm.GetUnicode(),
-                                   savePassword,
                                    pwd,
+                                   nsnull, nsnull,
                                    pressedOK);
       break;
     case prompt:
       res = dialog->Prompt(prompt_string,
                            text,
-                           realm.GetUnicode(),
-                           savePassword,
-                           defaultText,
                            resultText,
+                           nsnull, nsnull,
                            pressedOK);
 #ifdef DEBUG
       break;

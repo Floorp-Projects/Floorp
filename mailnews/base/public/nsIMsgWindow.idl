@@ -29,6 +29,8 @@ interface nsIDocShell;
 interface nsIDOMWindowInternal;
 interface nsIMsgHeaderSink;
 interface nsIPrompt;
+interface nsIAuthPrompt;
+
 /*
  *  This interface can be used to set data specific to a window.
  */
@@ -45,6 +47,7 @@ interface nsIMsgWindow : nsISupports {
     void displayHTMLInMessagePane(in wstring title, in wstring body);
 
     readonly attribute nsIPrompt promptDialog;
+    readonly attribute nsIAuthPrompt authPromptDialog;
     attribute wstring mailCharacterSet;
 	
 	void SetDOMWindow(in nsIDOMWindowInternal window);

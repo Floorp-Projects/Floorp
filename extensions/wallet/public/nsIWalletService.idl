@@ -21,7 +21,7 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIPrompt.idl"
+#include "nsIAuthPrompt.idl"
 #include "domstubs.idl"
 #include "nsIEnumerator.idl"
 
@@ -38,6 +38,7 @@
 %}
 
 interface nsIPresShell;
+interface nsIPrompt;
 
 native nsAutoString(nsAutoString);
 [ref] native nsAutoStringRef(nsAutoString);
@@ -77,7 +78,7 @@ interface nsIWalletService : nsISupports {
 };
 
 [scriptable, uuid(6228d644-17fe-11d4-8cee-0060b0fc14a3)]
-interface nsISingleSignOnPrompt : nsIPrompt
+interface nsISingleSignOnPrompt : nsIAuthPrompt
 {
   void setPromptDialogs(in nsIPrompt dialogs);
 };

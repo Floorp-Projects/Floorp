@@ -46,6 +46,7 @@ CPP_OBJS=                            \
     .\$(OBJDIR)\nsWebBrowserPersist.obj     \
     .\$(OBJDIR)\nsDOMWalker.obj             \
     .\$(OBJDIR)\nsWebBrowserFind.obj        \
+    .\$(OBJDIR)\nsNonPersistAuthPrompt.obj  \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

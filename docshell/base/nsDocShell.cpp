@@ -42,6 +42,7 @@
 #include "nsPoint.h"
 #include "nsGfxCIID.h"
 #include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsTextFormatter.h"
 #include "nsIHTTPEventSink.h"
 #include "nsISecurityEventSink.h"
@@ -241,7 +242,19 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
         }
         else
             return NS_NOINTERFACE;
-      }
+   }
+   else if(aIID.Equals(NS_GET_IID(nsIAuthPrompt)))
+   {
+        nsCOMPtr<nsIAuthPrompt> authPrompter(do_GetInterface(mTreeOwner));
+        if (authPrompter)
+        {
+            *aSink = authPrompter;
+            NS_ADDREF((nsISupports*)*aSink);
+            return NS_OK;
+        }
+        else
+            return NS_NOINTERFACE;
+   }
    else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink)) || aIID.Equals(NS_GET_IID(nsIHTTPEventSink)) ||
             aIID.Equals(NS_GET_IID(nsIWebProgress)) || aIID.Equals(NS_GET_IID(nsISecurityEventSink)) )
    {

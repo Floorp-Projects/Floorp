@@ -61,44 +61,66 @@ interface nsIPrompt : nsISupports
                          out boolean checkValue);
 
     /**
-     * Values for the savePassword parameter to prompt, promptPassword and
-     * promptUsernameAndPassword.
-     */
-    const PRUint32 SAVE_PASSWORD_NEVER             = 0;
-    const PRUint32 SAVE_PASSWORD_FOR_SESSION       = 1;
-    const PRUint32 SAVE_PASSWORD_PERMANENTLY       = 2;
+     * Puts up a dialog with an edit field and an optional checkbox.
+     *
+     * @param dialogTitle
+     * @param text
+     * @param value         in: Pre-fills the dialog field if non-null
+     *                      out: If result is true, a newly allocated
+     *                      string. If result is false, in string is not
+     *                      touched.
+     * @param checkMsg      if null, will use default title - "Remember Value"
+     * @param checkValue    if null, check box will not be shown       
+     * @return true for OK, false for Cancel
+     */                        
+     boolean prompt(in wstring dialogTitle,
+                    in wstring text,
+                    inout wstring value, 
+                    in wstring checkMsg,
+                    inout boolean checkValue);
 
     /**
-     * Puts up a text input dialog with OK and Cancel buttons.
+     * Puts up a dialog with a password field and an optional checkbox.
+     *
+     * @param dialogTitle
+     * @param text
+     * @param password      in: Pre-fills the dialog field if non-null
+     *                      out: If result is true, a newly allocated
+     *                      string. If result is false, in string is not
+     *                      touched.
+     * @param checkMsg      if null, will use default title - "Remember Password"
+     * @param checkValue    if null, check box will not be shown    
      * @return true for OK, false for Cancel
-     */
-    boolean prompt(in wstring dialogTitle,
-                   in wstring text,
-                   in wstring passwordRealm,
-                   in PRUint32 savePassword,
-                   in wstring defaultText, 
-                   out wstring result);
-
+     */                        
+     boolean promptPassword(in wstring dialogTitle,
+                            in wstring text,
+                            inout wstring password,
+                            in wstring checkMsg,
+                            inout boolean checkValue);
+ 
     /**
-     * Puts up a username/password dialog with OK and Cancel buttons.
+     * Puts up a dialog with an edit field, a password field, and an optional checkbox.
+     *
+     * @param dialogTitle
+     * @param text
+     * @param username      in: Pre-fills the dialog field if non-null
+     *                      out: If result is true, a newly allocated
+     *                      string. If result is false, in string is not
+     *                      touched.
+     * @param password      in: Pre-fills the dialog field if non-null
+     *                      out: If result is true, a newly allocated
+     *                      string. If result is false, in string is not
+     *                      touched.
+     * @param checkMsg      if null, will use default title - "Remember Name and Password"
+     * @param checkValue    if null, check box will not be shown    
      * @return true for OK, false for Cancel
-     */
-    boolean promptUsernameAndPassword(in wstring dialogTitle,
-                                      in wstring text,
-                                      in wstring passwordRealm,
-                                      in PRUint32 savePassword,
-                                      out wstring user, 
-                                      out wstring pwd);
-
-    /**
-     * Puts up a password dialog with OK and Cancel buttons.
-     * @return true for OK, false for Cancel
-     */
-    boolean promptPassword(in wstring dialogTitle,
-                           in wstring text,
-                           in wstring passwordRealm,
-                           in PRUint32 savePassword,
-                           out wstring pwd);
+     */                        
+     boolean promptUsernameAndPassword(in wstring dialogTitle,
+                                       in wstring text,
+                                       inout wstring username,
+                                       inout wstring password,
+                                       in wstring checkMsg,
+                                       inout boolean checkValue);
     
     /**
      * Puts up a dialog box which has a list box of strings

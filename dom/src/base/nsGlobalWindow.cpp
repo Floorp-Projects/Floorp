@@ -75,7 +75,7 @@
 #include "nsIPref.h"
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
@@ -1585,7 +1585,7 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
 
   nsresult ret = NS_OK;
   nsAutoString message, initial, title;
-  PRUint32 savePassword = nsIPrompt::SAVE_PASSWORD_NEVER;
+  PRUint32 savePassword = nsIAuthPrompt::SAVE_PASSWORD_NEVER;
 
   if (argc > 0) {
     nsJSUtils::nsConvertJSValToString(message, cx, argv[0]);
@@ -1603,7 +1603,7 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
     }
   }
 
-  nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
+  nsCOMPtr<nsIAuthPrompt> prompter(do_GetInterface(mDocShell));
 
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 

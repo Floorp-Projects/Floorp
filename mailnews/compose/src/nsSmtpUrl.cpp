@@ -535,6 +535,24 @@ nsSmtpUrl::GetPrompt(nsIPrompt **aNetPrompt)
 }
 
 NS_IMETHODIMP
+nsSmtpUrl::SetAuthPrompt(nsIAuthPrompt *aNetAuthPrompt)
+{
+    NS_ENSURE_ARG_POINTER(aNetAuthPrompt);
+    m_netAuthPrompt = aNetAuthPrompt;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpUrl::GetAuthPrompt(nsIAuthPrompt **aNetAuthPrompt)
+{
+    NS_ENSURE_ARG_POINTER(aNetAuthPrompt);
+    if (!m_netAuthPrompt) return NS_ERROR_NULL_POINTER;
+    *aNetAuthPrompt = m_netAuthPrompt;
+    NS_ADDREF(*aNetAuthPrompt);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSmtpUrl::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 {
     NS_ENSURE_ARG_POINTER(aCallbacks);

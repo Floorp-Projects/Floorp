@@ -23,13 +23,16 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMWindow.h"
 #include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsIPromptService.h"
 
-class nsPrompt : public nsIPrompt {
+class nsPrompt : public nsIPrompt,
+                 public nsIAuthPrompt {
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROMPT
+  NS_DECL_NSIAUTHPROMPT
 
   nsPrompt(nsIDOMWindow *window);
   virtual ~nsPrompt() {}
@@ -46,3 +49,5 @@ protected:
 nsresult
 NS_NewPrompter(nsIPrompt **result, nsIDOMWindow *aParent);
 
+nsresult
+NS_NewAuthPrompter(nsIAuthPrompt **result, nsIDOMWindow *aParent);

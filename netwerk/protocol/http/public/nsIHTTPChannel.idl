@@ -30,7 +30,7 @@ interface nsISimpleEnumerator;
 interface nsIAtom;
 interface nsIInputStream;
 interface nsIURI;
-interface nsIPrompt;
+interface nsIAuthPrompt;
 
 [scriptable, uuid(35c00430-1938-11d3-933a-000064657374)]
 interface nsIHTTPChannel : nsIChannel
@@ -107,7 +107,7 @@ interface nsIHTTPChannel : nsIChannel
     readonly attribute PRBool usingProxy;
     readonly attribute PRBool usingTransparentProxy;
 
-    readonly attribute nsIPrompt prompter;
+    readonly attribute nsIAuthPrompt authPrompter;
 
     /*
        This string if set is used for forming the final request. So if you 

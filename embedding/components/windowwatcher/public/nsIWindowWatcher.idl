@@ -46,6 +46,7 @@ and that windows remove themselves from the service when they are closed.
 interface nsIDOMWindow;
 interface nsIObserver;
 interface nsIPrompt;
+interface nsIAuthPrompt;
 interface nsISimpleEnumerator;
 interface nsIWindowCreator;
 
@@ -108,6 +109,13 @@ interface nsIWindowWatcher : nsISupports {
   */
 
   nsIPrompt getNewPrompter(in nsIDOMWindow aParent);
+
+  /** Return a newly created nsIAuthPrompt implementation.
+      @param aParent the parent window used for posing alerts. can be null.
+      @return a new nsIAuthPrompt object
+  */
+
+  nsIAuthPrompt getNewAuthPrompter(in nsIDOMWindow aParent);
 
   /** Set the window creator callback. It must be filled in by the app.
       openWindow will use it to create new windows.

@@ -45,7 +45,7 @@
 #include "nsIDocShell.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
-#include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsIWalletService.h"
 #include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
@@ -687,7 +687,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
     NS_ENSURE_ARG_POINTER(okayValue);
 
     if (m_password.IsEmpty()) {
-        nsCOMPtr<nsIPrompt> dialog;
+        nsCOMPtr<nsIAuthPrompt> dialog;
         // aMsgWindow is required if we need to prompt
         if (aMsgWindow)
         {
@@ -705,7 +705,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
         {
           nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
           if (wwatch)
-            wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+            wwatch->GetNewAuthPrompter(0, getter_AddRefs(dialog));
           if (!dialog) return NS_ERROR_FAILURE;
         }
 		if (NS_SUCCEEDED(rv) && dialog)
@@ -715,7 +715,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 			rv = GetServerURI(getter_Copies(serverUri));
 			if (NS_FAILED(rv)) return rv;
 			rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, 
-                                        NS_ConvertASCIItoUCS2(serverUri).get(), nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
+                                        NS_ConvertASCIItoUCS2(serverUri).get(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                         getter_Copies(uniPassword), okayValue);
             if (NS_FAILED(rv)) return rv;
 				

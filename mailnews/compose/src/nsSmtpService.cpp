@@ -187,15 +187,21 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 			smtpUrl->SetPostMessageFile(aFilePath);
 			smtpUrl->SetSenderIdentity(aSenderIdentity);
             smtpUrl->SetNotificationCallbacks(aNotificationCallbacks);
+            
             nsCOMPtr<nsIPrompt> smtpPrompt(do_GetInterface(aNotificationCallbacks));
-            if (!smtpPrompt)
+            nsCOMPtr<nsIAuthPrompt> smtpAuthPrompt(do_GetInterface(aNotificationCallbacks));
+            if (!smtpPrompt || !smtpAuthPrompt)
             {
               nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-              if (wwatch)
-                wwatch->GetNewPrompter(0, getter_AddRefs(smtpPrompt));
+              if (wwatch) {
+                if (!smtpPrompt)
+                  wwatch->GetNewPrompter(0, getter_AddRefs(smtpPrompt));
+                if (!smtpAuthPrompt)
+                  wwatch->GetNewAuthPrompter(0, getter_AddRefs(smtpAuthPrompt));
+              }
             }
-
-            smtpUrl->SetPrompt(smtpPrompt);
+            smtpUrl->SetPrompt(smtpPrompt);            
+            smtpUrl->SetAuthPrompt(smtpAuthPrompt);
 			url->RegisterListener(aUrlListener);
 		}
 		rv = smtpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) aUrl);

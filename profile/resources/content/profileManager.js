@@ -69,14 +69,14 @@ function RenameProfile()
   }
   else {
     var oldName = selected.getAttribute("rowName");
-    var result = { };
+    var newName = {value:oldName};
     var dialogTitle = gProfileManagerBundle.getString("renameprofiletitle");
     var msg = gProfileManagerBundle.getString("renameProfilePrompt");
     msg = msg.replace(/%oldProfileName%/gi, oldName);
     while (1) {
-      var rv = promptService.prompt(window, dialogTitle, msg, "", 0, oldName, result);
+      var rv = promptService.prompt(window, dialogTitle, msg, newName, null, {value:0});
       if (rv) {
-        var newName = result.value;
+        var newName = newName.value;
         if (!newName) return false;
         var invalidChars = ["/", "\\", "*", ":"];
         for( var i = 0; i < invalidChars.length; i++ )

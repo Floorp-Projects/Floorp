@@ -30,6 +30,7 @@
 #include "nsIMsgIdentity.h"
 #include "nsCOMPtr.h"
 #include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsISmtpServer.h"
 #include "nsIInterfaceRequestor.h"
 
@@ -101,6 +102,7 @@ protected:
 	nsCOMPtr<nsIFileSpec> m_fileName;
 	nsCOMPtr<nsIMsgIdentity> m_senderIdentity;
     nsCOMPtr<nsIPrompt> m_netPrompt;
+    nsCOMPtr<nsIAuthPrompt> m_netAuthPrompt;
     nsCOMPtr<nsIInterfaceRequestor> m_callbacks;
     nsCOMPtr<nsISmtpServer> m_smtpServer;
 

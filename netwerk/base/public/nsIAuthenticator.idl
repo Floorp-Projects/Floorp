@@ -20,7 +20,7 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIPrompt.idl"
+#include "nsIAuthPrompt.idl"
 #include "nsIURL.idl"
 
 [scriptable,uuid(adf74d2a-1dd1-11b2-b129-f3154be37959)]
@@ -47,7 +47,7 @@ interface nsIAuthenticator : nsISupports
      */
     string authenticate(in nsIURI uri, in string protocol, in string challenge,
                         in wstring username, in wstring password,
-                        in nsIPrompt prompter);
+                        in nsIAuthPrompt prompter);
 
   /**
    * No interaction with the user required.  This indicates that the 

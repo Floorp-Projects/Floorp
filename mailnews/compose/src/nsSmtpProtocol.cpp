@@ -35,6 +35,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgCompCID.h"
 #include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsString.h"
 #include "nsTextFormatter.h"
 #include "nsIMsgIdentity.h"
@@ -1601,8 +1602,8 @@ nsSmtpProtocol::GetPassword(char **aPassword)
     nsCRT::free(*aPassword);
     *aPassword = 0;
 
-    nsCOMPtr<nsIPrompt> netPrompt;
-    rv = smtpUrl->GetPrompt(getter_AddRefs(netPrompt));
+    nsCOMPtr<nsIAuthPrompt> netPrompt;
+    rv = smtpUrl->GetAuthPrompt(getter_AddRefs(netPrompt));
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString username;
@@ -1680,8 +1681,8 @@ nsSmtpProtocol::GetUsernamePassword(char **aUsername, char **aPassword)
     nsCRT::free(*aPassword);
     *aPassword = 0;
 
-    nsCOMPtr<nsIPrompt> netPrompt;
-    rv = smtpUrl->GetPrompt(getter_AddRefs(netPrompt));
+    nsCOMPtr<nsIAuthPrompt> netPrompt;
+    rv = smtpUrl->GetAuthPrompt(getter_AddRefs(netPrompt));
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString hostname;

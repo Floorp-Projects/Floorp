@@ -589,13 +589,13 @@ function myPrompt(message, oldValue, title) {
 //  if bug 41390 gets fixed, use the following line and delete rest of routine
 //  prompt(message, oldValue, title); /* use this if bug 41390 gets fixed */
 
-  var newValue = { };
+  var newValue = { value:oldValue };
   if (!title) {
     title = " ";
   }
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
   promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-  promptService.prompt(window, title, message, "", 0, oldValue, newValue)
+  promptService.prompt(window, title, message, newValue, null, { value:0 })
   return newValue.value;
 }
 
