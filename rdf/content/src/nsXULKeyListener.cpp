@@ -287,7 +287,13 @@ nsXULKeyListenerImpl::Init(
     printf("nsXULKeyListenerImpl::Init()\n");
   element = aElement; // Weak reference. Don't addref it.
   mDOMDocument = aDocument; // Weak reference.
+
+  // Set the default for the xul key modifier
+#ifdef XP_MAC
+  mXULKeyModifier = xulKeyMeta;
+#else
   mXULKeyModifier = xulKeyControl;
+#endif
   return NS_OK;
 }
 
