@@ -108,7 +108,6 @@
 #include "nsIPref.h"
 
 #include "nsIMsgWindow.h"
-#include "nsIPrompt.h"
 
 #include "nsINntpService.h"
 #include "nntpCore.h"
