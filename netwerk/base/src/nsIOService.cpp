@@ -318,7 +318,7 @@ nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handle
 }
 
 NS_IMETHODIMP
-nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **result, PRUint32 start=0, PRUint32 end=0)
+nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **result, PRUint32 start, PRUint32 end)
 {
     for (unsigned int i=0; i<NS_N(gScheme); i++)
     {
