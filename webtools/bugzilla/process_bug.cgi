@@ -898,12 +898,11 @@ The changes made were:
         }
         if ($old ne $new) {
             if ($col eq 'assigned_to' || $col eq 'qa_contact') {
-                $old = DBID_to_name($old) if $old != 0;
-                $new = DBID_to_name($new) if $new != 0;
+                $old = ($old) ? DBID_to_name($old) : "";
+                $new = ($new) ? DBID_to_name($new) : "";
                 $origCcString .= ",$old"; # make sure to send mail to people
                                           # if they are going to no longer get
                                           # updates about this bug.
-                $old = "" if $old == 0;
             }
             if ($col eq 'product') {
                 RemoveVotes($id, 0,
