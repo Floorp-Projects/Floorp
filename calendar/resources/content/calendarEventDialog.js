@@ -273,10 +273,16 @@ function loadCalendarEventDialog()
    {
       for (var i = 0; i < serverList.length ; i++)
       {
-         //if( serverList[i].remote != true )
          document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
       }
-      document.getElementById( "server-field" ).selectedIndex = 0;
+      if( args.server )
+      {
+         setFieldValue( "server-field", args.server );
+      }
+      else
+      {
+         document.getElementById( "server-field" ).selectedIndex = 0;
+      }
    }
    else
    {

@@ -508,7 +508,18 @@ function newEvent( startDate, endDate )
    {
       calendarEvent.end.setTime( endDate.getTime() );
    }
-   editNewEvent( calendarEvent );
+   
+   //get the selected calendar
+   var selectedCalendarItem = document.getElementById( "list-calendars-listbox" ).selectedItem;
+   
+   var server = null;
+
+   if( selectedCalendarItem )
+   {
+      server = selectedCalendarItem.calendarObject.path;
+   }
+   
+   editNewEvent( calendarEvent, server );
 }
 
 
@@ -517,7 +528,7 @@ function newEvent( startDate, endDate )
 * When the user clicks OK "addEventDialogResponse" is called
 */
 
-function editNewEvent( calendarEvent )
+function editNewEvent( calendarEvent, server )
 {
    // set up a bunch of args to pass to the dialog
 
@@ -525,6 +536,9 @@ function editNewEvent( calendarEvent )
    args.mode = "new";
    args.onOk =  self.addEventDialogResponse;
    args.calendarEvent = calendarEvent;
+   
+   if( server )
+      args.server = server;
 
    // open the dialog modally
    openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
