@@ -5,4 +5,6 @@
 nsIUrlListener.idl
 nsIMsgGroupRecord.idl
 nsIMessenger.idl
-#nsIMsgMailNewsUrl.idl
+nsIMsgIdentity.idl
+nsIMsgSignature.idl
+nsIMsgVCard.idl
