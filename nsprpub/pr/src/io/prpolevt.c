@@ -148,10 +148,12 @@ PR_IMPLEMENT(PRFileDesc *) PR_NewPollableEvent(void)
 
 #ifndef USE_TCP_SOCKETPAIR
     if (PR_CreatePipe(&fd[0], &fd[1]) == PR_FAILURE) {
+        fd[0] = fd[1] = NULL;
         goto errorExit;
     }
 #else
     if (PR_NewTCPSocketPair(fd) == PR_FAILURE) {
+        fd[0] = fd[1] = NULL;
         goto errorExit;
     }
 #endif
