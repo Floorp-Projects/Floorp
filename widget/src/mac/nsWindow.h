@@ -51,9 +51,9 @@ public:
     NS_DECL_ISUPPORTS
 
 
-    NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
-    nsrefcnt AddRefObject(void);
-    nsrefcnt ReleaseObject(void);
+    NS_IMETHOD 	QueryObject(const nsIID& aIID, void** aInstancePtr);
+    nsrefcnt 		AddRefObject(void);
+    nsrefcnt 		ReleaseObject(void);
 
     // nsIWidget interface
     virtual void            Create(nsIWidget *aParent,

@@ -20,6 +20,7 @@
 #define nsMacMessagePump_h__
 
 #include "nsToolKit.h"
+#include "nsWindow.h"
 #include <Fonts.h>
 #include <TextEdit.h>
 #include <Dialogs.h>
@@ -33,7 +34,7 @@ class nsMacMessenger
 {
 	// CLASS MEMBERS
   private:
-	PRBool				mRunning;
+	PRBool						mRunning;
 
 	// CLASS METHODS
 	private:		    
@@ -55,8 +56,12 @@ class nsMacMessagePump
 {
 	// CLASS MEMBERS
   private:
-	PRBool					mRunning;
-	nsMacMessenger	*mMessenger;
+	PRBool						mRunning;
+	nsMacMessenger		*mMessenger;
+	Point							mMousePoint;				// keep track of where the mouse is at all times
+	PRBool						mInBackground;
+  static  nsWindow	*gCurrentWindow;
+
 
 	// CLASS METHODS
 	private:		    
@@ -65,10 +70,15 @@ class nsMacMessagePump
     				nsMacMessagePump(nsMacMessenger *aTheMessageProc);
     virtual ~nsMacMessagePump();
   
-		PRBool	DoMessagePump();
-		void 		DoMouseDown(EventRecord *aTheEvent);
-		void 		DoKey(EventRecord *aTheEvent);
-		void 		DoIdleWidgets();
+		PRBool			DoMessagePump();
+		void 				DoMouseDown(EventRecord *aTheEvent);
+		void				DoMouseUp(EventRecord *aTheEvent);
+		void				DoMouseMove(EventRecord *aTheEvent);
+		void				DoPaintEvent(EventRecord *aTheEvent);
+		void 				DoKey(EventRecord *aTheEvent);
+		void 				DoIdleWidgets();
+  	void 				SetCurrentWindow(nsWindow *aTheWin) { gCurrentWindow = aTheWin;}
+  	nsWindow* 	GetCurrentWindow(void) {return(gCurrentWindow);}
 
 };
 

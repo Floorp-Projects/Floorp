@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 //---- Factory Includes & Stuff -----// 
 #include "nsIFactory.h" 
 #include "nsRepository.h" 
@@ -97,7 +98,7 @@ char * gFailedMsg = NULL;
 #define TEXT_HEIGHT 30
 #endif
 
-#define DEBUG_MOUSE 0
+#define DEBUG_MOUSE 1
 
 #define NUM_COMBOBOX_ITEMS 8
 #define kSetCaret        "Set Caret"
@@ -819,7 +820,7 @@ void DumpRects()
  */
 nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 { 
-	//  printf("aEvent->message %d\n", aEvent->message);
+	  printf("aEvent->message %d\n", aEvent->message);
     nsEventStatus result = nsEventStatus_eIgnore;
     switch(aEvent->message) {
 
@@ -1546,8 +1547,9 @@ nsresult WidgetTest(int *argc, char **argv)
     window->Show(PR_TRUE);
     window->SetCursor(eCursor_hyperlink);
 #endif
+
 	if(appShell)
-    	return(appShell->Run());
+		return(appShell->Run());	
 }
 
 

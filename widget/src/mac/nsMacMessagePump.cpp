@@ -22,13 +22,11 @@
 
 #define IsUserWindow(wp) (wp && ((((WindowPeek)wp)->windowKind) >= userKind))
 
+nsWindow* nsMacMessagePump::gCurrentWindow = nsnull;   // needed for exit and enter events
 
 
-//-------------------------------------------------------------------------
-//
-// Initialize the message pump
-//
-//-------------------------------------------------------------------------
+//==============================================================
+
 nsMacMessagePump::nsMacMessagePump(nsMacMessenger *aTheMessageProc)
 {
 
@@ -38,47 +36,44 @@ nsMacMessagePump::nsMacMessagePump(nsMacMessenger *aTheMessageProc)
 }
 
 
-//-------------------------------------------------------------------------
-//
-// Initialize the message pump
-//
-//-------------------------------------------------------------------------
+//==============================================================
+
 nsMacMessagePump::~nsMacMessagePump()
 {
 
 }
 
-//-------------------------------------------------------------------------
-//
-// Enter a message handler loop
-//
-//-------------------------------------------------------------------------
+//==============================================================
+
 PRBool 
 nsMacMessagePump::DoMessagePump()
 {
 PRBool				stillrunning = PR_TRUE;
 EventRecord		theevent;
-RgnHandle			fMouseRgn=NULL;
 long					sleep=0;
 PRInt16				haveevent;
 WindowPtr			whichwindow;
+RgnHandle			currgn;
 
 #define SUSPENDRESUMEMESSAGE 		0x01
 #define MOUSEMOVEDMESSAGE				0xFA
 
 	mRunning = PR_TRUE;
+	mInBackground = PR_FALSE;
+	
+	// calculate the regions to watch
+	currgn = ::NewRgn();
+	SetRectRgn(currgn,-32000,-32000,-32000,-32000);
 	
 	
 	while(mRunning && stillrunning)
 		{			
-		haveevent = ::WaitNextEvent(everyEvent,&theevent,sleep,fMouseRgn);
+		haveevent = ::WaitNextEvent(everyEvent,&theevent,sleep,currgn);
+
 		if(haveevent)
 			{
 			switch(theevent.what)
 				{
-				case nullEvent:
-					DoIdleWidgets();
-					break;
 				case diskEvt:
 					if(theevent.message<0)
 						{
@@ -95,19 +90,10 @@ WindowPtr			whichwindow;
 					DoMouseDown(&theevent);
 					break;
 				case mouseUp:
+					DoMouseUp(&theevent);
 					break;
 				case updateEvt:
-					whichwindow = (WindowPtr)theevent.message;
-					if (IsUserWindow(whichwindow)) 
-						{
-						SetPort(whichwindow);
-						BeginUpdate(whichwindow);
-						
-						// generate a paint event
-
-
-						EndUpdate(whichwindow);
-						}
+					DoPaintEvent(&theevent);
 					break;
 				case activateEvt:
 					whichwindow = (WindowPtr)theevent.message;
@@ -130,20 +116,33 @@ WindowPtr			whichwindow;
 					switch(evtype)
 						{
 						case MOUSEMOVEDMESSAGE:
+							DoMouseMove(&theevent);
 							break;
 						case SUSPENDRESUMEMESSAGE:
 							if(theevent.message&0x00000001)
 								{
 								// resume message
+								mInBackground = PR_FALSE;
 								}
 							else
 								{
 								// suspend message
+								mInBackground = PR_TRUE;
 								}
 						}
 					break;
 				}
 			}
+		else
+			{
+			switch(theevent.what)
+				{
+				case nullEvent:
+					DoIdleWidgets();	
+					break;
+				}		
+			}
+			
 		if(mMessenger)
 			stillrunning = mMessenger->IsRunning();
 		}
@@ -154,18 +153,50 @@ WindowPtr			whichwindow;
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// Handle and pass on Idle events
-//
-//-------------------------------------------------------------------------
+//==============================================================
+
+void 
+nsMacMessagePump::DoPaintEvent(EventRecord *aTheEvent)
+{
+WindowPtr			whichwindow;
+nsPaintEvent 	pevent;
+nsWindow			*thewindow;
+nsRect 				rect;
+ 
+	whichwindow = (WindowPtr)aTheEvent->message;
+	
+	if (IsUserWindow(whichwindow)) 
+		{
+		SetPort(whichwindow);
+		BeginUpdate(whichwindow);
+		
+		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
+		if(thewindow != nsnull)
+			{
+			thewindow = thewindow->FindWidgetHit(aTheEvent->where);
+
+			// generate a paint event
+			pevent.message = NS_PAINT;
+			pevent.widget = thewindow;
+			pevent.eventStructType = NS_PAINT_EVENT;
+			pevent.point.x = aTheEvent->where.h;
+	    pevent.point.y = aTheEvent->where.v;
+	    pevent.rect = &rect;
+	    pevent.time = 0; 
+	    thewindow->OnPaint(pevent);
+	    }
+		EndUpdate(whichwindow);
+		}
+
+}
+
+//==============================================================
+
 void 
 nsMacMessagePump::DoIdleWidgets()
 {
 WindowPtr			whichwindow;
-PRInt16				partcode;
 nsWindow			*thewindow;
-nsIWidget			*thewidget;
 		
 	whichwindow = ::FrontWindow();
 	while(whichwindow)
@@ -178,21 +209,17 @@ nsIWidget			*thewidget;
 
 }
 
-//-------------------------------------------------------------------------
-//
-// Handle the mousedown event
-//
-//-------------------------------------------------------------------------
+//==============================================================
+
 void 
 nsMacMessagePump::DoMouseDown(EventRecord *aTheEvent)
 {
 WindowPtr			whichwindow;
 PRInt16				partcode;
 nsWindow			*thewindow;
-nsWindow			*thewidget;
 Rect					therect;
 long					newsize;			// window's new size
-nsMouseEvent	mevent;
+nsMouseEvent	mouseevent;
 
 	partcode = FindWindow(aTheEvent->where,&whichwindow);
 
@@ -212,13 +239,17 @@ nsMouseEvent	mevent;
 				if(thewindow)
 					{
 					// mousedown inside the content region
-					mevent.time = 1000;
-					mevent.isShift = FALSE;
-					mevent.isControl = FALSE;
-					mevent.isAlt = FALSE;
-					mevent.clickCount = 1;
-					mevent.eventStructType = NS_MOUSE_EVENT;
-					thewindow->DispatchMouseEvent(mevent);
+					mouseevent.message = NS_MOUSE_LEFT_BUTTON_DOWN;
+					mouseevent.widget  = (nsWindow *) thewindow;
+					mouseevent.point.x = aTheEvent->where.h;
+					mouseevent.point.y = aTheEvent->where.v;					
+					mouseevent.time = 0;
+					mouseevent.isShift = FALSE;
+					mouseevent.isControl = FALSE;
+					mouseevent.isAlt = FALSE;
+					mouseevent.clickCount = 1;
+					mouseevent.eventStructType = NS_MOUSE_EVENT;
+					thewindow->DispatchMouseEvent(mouseevent);
 					}
 				break;
 			case inDrag:
@@ -268,12 +299,123 @@ nsMouseEvent	mevent;
 		}
 }
 
-//-------------------------------------------------------------------------
-//
-// Handle the key events
-//
-//-------------------------------------------------------------------------
-void nsMacMessagePump::DoKey(EventRecord *aTheEvent)
+//==============================================================
+
+void 
+nsMacMessagePump::DoMouseUp(EventRecord *aTheEvent)
+{
+WindowPtr			whichwindow;
+PRInt16				partcode;
+nsWindow			*thewindow;
+nsMouseEvent	mouseevent;
+
+	partcode = FindWindow(aTheEvent->where,&whichwindow);
+
+	if(whichwindow!=0)
+		{
+		SelectWindow(whichwindow);
+		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
+			
+		if(thewindow != nsnull)
+			thewindow = thewindow->FindWidgetHit(aTheEvent->where);
+
+		switch(partcode)
+			{
+			case inSysWindow:
+				break;
+			case inContent:
+				if(thewindow)
+					{
+					// mousedown inside the content region
+					mouseevent.message = NS_MOUSE_LEFT_BUTTON_UP;
+					mouseevent.widget  = (nsWindow *) thewindow;
+					mouseevent.point.x = aTheEvent->where.h;
+					mouseevent.point.y = aTheEvent->where.v;					
+					mouseevent.time = 0;
+					mouseevent.isShift = FALSE;
+					mouseevent.isControl = FALSE;
+					mouseevent.isAlt = FALSE;
+					mouseevent.clickCount = 1;
+					mouseevent.eventStructType = NS_MOUSE_EVENT;
+					thewindow->DispatchMouseEvent(mouseevent);
+					}
+				break;
+			}
+		}
+}
+
+//==============================================================
+
+void 
+nsMacMessagePump::DoMouseMove(EventRecord *aTheEvent)
+{
+WindowPtr			whichwindow;
+PRInt16				partcode;
+nsWindow			*thewindow,*lastwindow;
+nsMouseEvent	mouseevent;
+
+
+	if (*(long*)&mMousePoint == *(long*)&aTheEvent->where)
+		return;
+
+	partcode = FindWindow(aTheEvent->where,&whichwindow);
+	
+	mouseevent.point.x = aTheEvent->where.h;
+	mouseevent.point.y = aTheEvent->where.v;					
+	mouseevent.time = 0;
+	mouseevent.isShift = FALSE;
+	mouseevent.isControl = FALSE;
+	mouseevent.isAlt = FALSE;
+	mouseevent.clickCount = 1;
+	mouseevent.eventStructType = NS_MOUSE_EVENT;
+	lastwindow = this->GetCurrentWindow();
+	mMousePoint = aTheEvent->where;
+
+	switch(partcode)
+		{
+		case inContent:
+			thewindow = nsnull;
+			if(whichwindow!=nsnull)
+				thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
+			if(thewindow != nsnull)
+				thewindow = thewindow->FindWidgetHit(aTheEvent->where);		
+			
+			if(thewindow)
+				{
+				if(lastwindow == nsnull || thewindow != lastwindow)
+					{
+					// mouseenter
+					this->SetCurrentWindow(thewindow);
+					mouseevent.message = NS_MOUSE_ENTER;
+					mouseevent.widget  = (nsWindow *) thewindow;
+					thewindow->DispatchMouseEvent(mouseevent);
+					}
+				else
+					{
+					// mousedown inside the content region
+					mouseevent.message = NS_MOUSE_MOVE;
+					mouseevent.widget  = (nsWindow *) thewindow;
+					thewindow->DispatchMouseEvent(mouseevent);
+					}
+				}
+			break;
+		default:
+			if(lastwindow != nsnull)
+				{
+				this->SetCurrentWindow(nsnull);
+				mouseevent.message = NS_MOUSE_EXIT;
+				mouseevent.widget  = (nsWindow *) lastwindow;
+				lastwindow->DispatchMouseEvent(mouseevent);
+				}
+			break;
+		}
+
+}
+
+//==============================================================
+
+void 
+nsMacMessagePump::DoKey(EventRecord *aTheEvent)
 {
 char				ch;
 WindowPtr		whichwindow;
@@ -292,3 +434,5 @@ WindowPtr		whichwindow;
 			}
 		}
 }
+
+//==============================================================
