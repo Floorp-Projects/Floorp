@@ -101,7 +101,7 @@ NS_IMETHODIMP nsCBaseLoop::CloneEvent(nsIEvent* event, nsIEvent** newEvent)
 	if(event)
 		{
 		platformEventData = GetPlatformEventData(event);
-		NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+		NS_ENSURE_TRUE(platformEventData, NS_ERROR_FAILURE);
 		}
 
 	nsCEvent* cEvent = new nsCEvent(platformEventData);
@@ -122,7 +122,7 @@ NS_IMETHODIMP nsCBaseLoop::CreateNewEvent(nsIEvent** newEvent)
 	NS_ENSURE_ARG_POINTER(newEvent);
 
 	nsCEvent* event = new nsCEvent();
-	NS_ENSURE(event, NS_ERROR_OUT_OF_MEMORY);
+	NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
 	event->AddRef();
 	nsresult rv = event->QueryInterface(NS_GET_IID(nsIEvent), (void**)newEvent);
@@ -138,7 +138,7 @@ NS_IMETHODIMP nsCBaseLoop::CreateNewEventFilter(nsIEventFilter** newFilter)
 	NS_ENSURE_ARG_POINTER(newFilter);
 
 	nsCEventFilter* filter = new nsCEventFilter();
-	NS_ENSURE(filter, NS_ERROR_OUT_OF_MEMORY);
+	NS_ENSURE_TRUE(filter, NS_ERROR_OUT_OF_MEMORY);
 
 	filter->AddRef();
 	nsresult rv = filter->QueryInterface(NS_GET_IID(nsIEventFilter), (void**)newFilter);
@@ -160,7 +160,7 @@ NS_IMETHODIMP nsCBaseLoop::GetNextEvent(nsIEventFilter* filter,
 	
 	void* platformEventData = GetPlatformEventData(event);
 	void* platformFilterData = GetPlatformFilterData(localFilter);
-	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+	NS_ENSURE_TRUE(platformEventData, NS_ERROR_FAILURE);
 
 	return PlatformGetNextEvent(platformFilterData, platformEventData);
 }
@@ -176,7 +176,7 @@ NS_IMETHODIMP nsCBaseLoop::PeekNextEvent(nsIEventFilter* filter,
 
 	void* platformEventData = GetPlatformEventData(event);
 	void* platformFilterData = GetPlatformFilterData(localFilter);
-	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+	NS_ENSURE_TRUE(platformEventData, NS_ERROR_FAILURE);
 
 	return PlatformPeekNextEvent(platformFilterData, platformEventData, fRemoveEvent);
 }
@@ -186,7 +186,7 @@ NS_IMETHODIMP nsCBaseLoop::TranslateEvent(nsIEvent* event)
 	NS_ENSURE_ARG(event);
 
 	void* platformEventData = GetPlatformEventData(event);
-	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+	NS_ENSURE_TRUE(platformEventData, NS_ERROR_FAILURE);
 
 	return PlatformTranslateEvent(platformEventData);
 }
@@ -196,7 +196,7 @@ NS_IMETHODIMP nsCBaseLoop::DispatchEvent(nsIEvent* event)
 	NS_ENSURE_ARG(event);
 
 	void* platformEventData = GetPlatformEventData(event);
-	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+	NS_ENSURE_TRUE(platformEventData, NS_ERROR_FAILURE);
 
 	return PlatformDispatchEvent(platformEventData);
 }
@@ -206,7 +206,7 @@ NS_IMETHODIMP nsCBaseLoop::SendLoopEvent(nsIEvent* event, PRInt32* result)
 	NS_ENSURE_ARG(event);
 
 	void* platformEventData = GetPlatformEventData(event);
-	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+	NS_ENSURE_TRUE(platformEventData, NS_ERROR_FAILURE);
 
 	return PlatformSendLoopEvent(platformEventData, result);
 }
@@ -216,7 +216,7 @@ NS_IMETHODIMP nsCBaseLoop::PostLoopEvent(nsIEvent* event)
 	NS_ENSURE_ARG(event);
 
 	void* platformEventData = GetPlatformEventData(event);
-	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+	NS_ENSURE_TRUE(platformEventData, NS_ERROR_FAILURE);
 
 	return PlatformPostLoopEvent(platformEventData);
 }
@@ -278,7 +278,7 @@ nsresult nsCBaseLoop::RunWithNoListener(nsIEvent* event,
 
 	void* platformEventData = GetPlatformEventData(event);
 	void* platformFilterData = GetPlatformFilterData(filter);
-	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+	NS_ENSURE_TRUE(platformEventData, NS_ERROR_FAILURE);
 								
 	while(NS_OK == (rv = RetrieveNextEvent(platformFilterData, platformEventData)))
 		{
@@ -299,7 +299,7 @@ nsresult nsCBaseLoop::RunWithTranslateListener(nsIEvent* event,
 
 	void* platformEventData = GetPlatformEventData(event);
 	void* platformFilterData = GetPlatformFilterData(filter);
-	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+	NS_ENSURE_TRUE(platformEventData, NS_ERROR_FAILURE);
 								
 	while(NS_OK == (rv = RetrieveNextEvent(platformFilterData, platformEventData)))
 		{
@@ -328,7 +328,7 @@ nsresult nsCBaseLoop::RunWithDispatchListener(nsIEvent* event,
 
 	void* platformEventData = GetPlatformEventData(event);
 	void* platformFilterData = GetPlatformFilterData(filter);
-	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+	NS_ENSURE_TRUE(platformEventData, NS_ERROR_FAILURE);
 								
 	while(NS_OK == (rv = RetrieveNextEvent(platformFilterData, platformEventData)))
 		{
@@ -358,7 +358,7 @@ nsresult nsCBaseLoop::RunWithTranslateAndDispatchListener(nsIEvent* event,
 
 	void* platformEventData = GetPlatformEventData(event);
 	void* platformFilterData = GetPlatformFilterData(filter);
-	NS_ENSURE(platformEventData, NS_ERROR_FAILURE);
+	NS_ENSURE_TRUE(platformEventData, NS_ERROR_FAILURE);
 								
 	while(NS_OK == (rv = RetrieveNextEvent(platformFilterData, platformEventData)))
 		{

@@ -48,7 +48,7 @@ NS_METHOD nsCAppLoop::Create(nsISupports* aOuter, const nsIID& aIID,
 	NS_ENSURE_NO_AGGREGATION(aOuter);
 
 	nsCAppLoop* app = new nsCAppLoop();
-	NS_ENSURE(app, NS_ERROR_OUT_OF_MEMORY);
+	NS_ENSURE_TRUE(app, NS_ERROR_OUT_OF_MEMORY);
 
 	NS_ADDREF(app);
 	nsresult rv = app->QueryInterface(aIID, ppv);
