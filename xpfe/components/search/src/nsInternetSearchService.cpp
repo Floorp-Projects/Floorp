@@ -386,7 +386,39 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 
 
 
-NS_IMPL_ISUPPORTS(InternetSearchDataSource, InternetSearchDataSource::GetIID());
+////////////////////////////////////////////////////////////////////////
+
+
+
+// NS_IMPL_ISUPPORTS(InternetSearchDataSource, InternetSearchDataSource::GetIID());
+NS_IMPL_ADDREF(InternetSearchDataSource);
+NS_IMPL_RELEASE(InternetSearchDataSource);
+
+
+
+NS_IMETHODIMP
+InternetSearchDataSource::QueryInterface(REFNSIID aIID, void **aResult)
+{
+	NS_PRECONDITION(aResult != nsnull, "null ptr");
+	if (! aResult)
+		return NS_ERROR_NULL_POINTER;
+
+	if (aIID.Equals(nsIInternetSearchService::GetIID()) ||
+	    aIID.Equals(kISupportsIID))
+	{
+		*aResult = NS_STATIC_CAST(InternetSearchDataSource *, this);
+	}
+	else if (aIID.Equals(nsIRDFDataSource::GetIID())) {
+		*aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
+	}
+	else {
+		*aResult = nsnull;
+		return NS_NOINTERFACE;
+	}
+
+	NS_ADDREF(this);
+	return NS_OK;
+}
 
 
 
