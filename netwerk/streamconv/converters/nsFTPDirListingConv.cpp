@@ -965,20 +965,16 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
 
                       escName = nsEscape(line+1, url_Path);
                       thisEntry->mName = escName;
-                      
-                      if (flagsize) {
-                        thisEntry->mSupressSize = PR_FALSE;
-                        // Mutiply what the last modification date to get usecs.  
-                        PRInt64 usecs = LL_Zero();
-                        PRInt64 seconds = LL_Zero();
-                        PRInt64 multiplier = LL_Zero();
-                        LL_I2L(seconds, when);
-                        LL_I2L(multiplier, PR_USEC_PER_SEC);
-                        LL_MUL(usecs, seconds, multiplier);
-                        PR_ExplodeTime(usecs, PR_LocalTimeParameters, &thisEntry->mMDTM);
-                      } else {
-                          thisEntry->mSupressSize = PR_TRUE;
-                      }
+                      thisEntry->mSupressSize = !flagsize;
+
+                      // Mutiply what the last modification date to get usecs.
+                      PRInt64 usecs = LL_Zero();
+                      PRInt64 seconds = LL_Zero();
+                      PRInt64 multiplier = LL_Zero();
+                      LL_I2L(seconds, when);
+                      LL_I2L(multiplier, PR_USEC_PER_SEC);
+                      LL_MUL(usecs, seconds, multiplier);
+                      PR_ExplodeTime(usecs, PR_LocalTimeParameters, &thisEntry->mMDTM);
 
                       processing = PR_FALSE;
                     }
