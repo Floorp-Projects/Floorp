@@ -908,7 +908,23 @@ nsresult nsMsgMdnGenerator::InitAndProcess()
         do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (accountManager && m_server)
     {
-        rv = accountManager->GetFirstIdentityForServer(m_server, getter_AddRefs(m_identity));
+        if (!m_identity)
+        {
+          // check if this is a message delivered to the global inbox,
+          // in which case we find the originating account's identity.
+          nsXPIDLCString accountKey;
+          m_headers->ExtractHeader(HEADER_X_MOZILLA_ACCOUNT_KEY, PR_FALSE,
+                               getter_Copies(accountKey));
+          nsCOMPtr <nsIMsgAccount> account;
+          if (!accountKey.IsEmpty())
+            accountManager->GetAccount(accountKey, getter_AddRefs(account));
+          if (account)
+          {
+            account->GetIncomingServer(getter_AddRefs(m_server));
+            if (m_server)
+              rv = accountManager->GetFirstIdentityForServer(m_server, getter_AddRefs(m_identity));
+          }
+        }
         NS_ENSURE_SUCCESS(rv,rv);
 
         if (m_identity)
