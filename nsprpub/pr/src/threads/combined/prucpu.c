@@ -70,6 +70,9 @@ void  _PR_InitCPUs()
 {
     PRThread *me = _PR_MD_CURRENT_THREAD();
 
+    if (_native_threads_only)
+        return;
+
     _pr_cpuID = 0;
     _MD_NEW_LOCK( &_pr_cpuLock);
 #if !defined(_PR_LOCAL_THREADS_ONLY) && !defined(_PR_GLOBAL_THREADS_ONLY)
@@ -81,8 +84,7 @@ void  _PR_InitCPUs()
 #ifdef _PR_LOCAL_THREADS_ONLY
 
 #ifdef HAVE_CUSTOM_USER_THREADS
-	if (!_native_threads_only)
-    	_PR_MD_CREATE_PRIMORDIAL_USER_THREAD(me);
+    _PR_MD_CREATE_PRIMORDIAL_USER_THREAD(me);
 #endif
 
     /* Now start the first CPU. */
@@ -188,6 +190,8 @@ static PRStatus _PR_StartCPU(_PRCPU *cpu, PRThread *thread)
     ** native thread. That stack will be used by the cpu when pausing.
     */
 
+    PR_ASSERT(!_native_threads_only);
+
     cpu->last_clock = PR_IntervalNow();
 
     /* Before we create any threads on this CPU we have to
@@ -197,25 +201,23 @@ static PRStatus _PR_StartCPU(_PRCPU *cpu, PRThread *thread)
     _PR_MD_INIT_RUNNING_CPU(cpu);
     thread->cpu = cpu;
 
-    if (!_native_threads_only) {
-        cpu->idle_thread = _PR_CreateThread(PR_SYSTEM_THREAD,
-                                            _PR_CPU_Idle,
-                                            (void *)cpu,
-                                            PR_PRIORITY_NORMAL,
-                                            PR_LOCAL_THREAD,
-                                            PR_UNJOINABLE_THREAD,
-                                            0,
-                                            _PR_IDLE_THREAD);
+    cpu->idle_thread = _PR_CreateThread(PR_SYSTEM_THREAD,
+                                        _PR_CPU_Idle,
+                                        (void *)cpu,
+                                        PR_PRIORITY_NORMAL,
+                                        PR_LOCAL_THREAD,
+                                        PR_UNJOINABLE_THREAD,
+                                        0,
+                                        _PR_IDLE_THREAD);
 
-        if (!cpu->idle_thread) {
-            /* didn't clean up CPU queue XXXMB */
-            PR_DELETE(cpu);
-            return PR_FAILURE;
-        } 
-        PR_ASSERT(cpu->idle_thread->cpu == cpu);
+    if (!cpu->idle_thread) {
+        /* didn't clean up CPU queue XXXMB */
+        PR_DELETE(cpu);
+        return PR_FAILURE;
+    } 
+    PR_ASSERT(cpu->idle_thread->cpu == cpu);
 
-        cpu->idle_thread->no_sched = 0;
-    }
+    cpu->idle_thread->no_sched = 0;
 
     cpu->thread = thread;
 
