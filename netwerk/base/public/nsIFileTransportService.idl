@@ -37,6 +37,8 @@ interface nsIFileTransportService : nsISupports
     // This version can be used with an existing input stream to serve
     // as a data pump:
     nsIChannel CreateTransportFromStream(in nsIInputStream fromStream,
+                                         in string contentType,
+                                         in long contentLength,
                                          in string command,
                                          in nsIEventSinkGetter getter);
 

@@ -179,7 +179,11 @@ nsresult  rv;
 
   mQuoteChannel = null_nsCOMPtr();
   NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
-  rv = netService->NewInputStreamChannel(aURL, nsnull, nsnull, nsnull,
+  rv = netService->NewInputStreamChannel(aURL, 
+                                         nsnull,      // contentType
+                                         -1,          // contentLength
+                                         nsnull,      // inputStream
+                                         nsnull,      // loadGroup
                                          getter_AddRefs(mQuoteChannel));
 
   NS_ASSERTION(!mQuoteListener, "Oops quote listener exists\n");

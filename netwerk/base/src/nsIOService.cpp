@@ -414,7 +414,8 @@ nsIOService::NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
 }
 
 NS_IMETHODIMP
-nsIOService::NewInputStreamChannel(nsIURI* uri, const char *contentType,
+nsIOService::NewInputStreamChannel(nsIURI* uri, const char *contentType, 
+                                   PRInt32 contentLength,
                                    nsIInputStream *inStr, nsILoadGroup* group,
                                    nsIChannel **result)
 {
@@ -423,7 +424,7 @@ nsIOService::NewInputStreamChannel(nsIURI* uri, const char *contentType,
     rv = nsInputStreamChannel::Create(nsnull, NS_GET_IID(nsIChannel),
                                       (void**)&channel);
     if (NS_FAILED(rv)) return rv;
-    rv = channel->Init(uri, contentType, inStr, group);
+    rv = channel->Init(uri, contentType, contentLength, inStr, group);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

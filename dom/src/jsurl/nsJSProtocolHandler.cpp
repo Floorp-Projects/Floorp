@@ -337,7 +337,9 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     if (NS_FAILED(rv))
         return rv;
 
-    rv = serv->NewInputStreamChannel(uri, "text/html", in, aGroup, &channel);
+    rv = serv->NewInputStreamChannel(uri, "text/html",
+                                     -1,      // XXX need contentLength -- implies that the evaluation should happen here, not in Read
+                                     in, aGroup, &channel);
     NS_RELEASE(in);
     if (NS_FAILED(rv))
         return rv;

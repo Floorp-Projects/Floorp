@@ -95,8 +95,6 @@ void Pump_PLEvents(nsIEventQueueService * eventQService)
 
 }
 
-
-
 // -----
 //
 // TestConnection class...
@@ -107,7 +105,8 @@ class TestConnection : public nsIRunnable,
                        public nsIStreamListener
 {
 public:
-  TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsyncFlag);
+  TestConnection(const char* aHostName, PRInt32 aPort,
+                 PRBool aAsyncFlag, PRBool testAsyncRead);
   virtual ~TestConnection();
 
   NS_DECL_ISUPPORTS
@@ -123,6 +122,8 @@ public:
 
   nsresult Suspend(void);
   nsresult Resume(void);
+
+  void SetAsyncOpenCompleted() { mAsyncOpenCompleted = PR_TRUE; }
 
 protected:
 #ifndef NSPIPE2
@@ -142,12 +143,60 @@ protected:
   char    mBufferChar;
 
   PRInt32 mBytesRead;
+
+  PRBool mTestAsyncOpen;
+  PRBool mAsyncOpenCompleted;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+class TestConnectionOpenObserver : public nsIStreamObserver 
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISTREAMOBSERVER
+
+  TestConnectionOpenObserver(TestConnection* test)
+    : mTestConnection(test) { 
+    NS_INIT_REFCNT();
+  }
+  virtual ~TestConnectionOpenObserver() {}
+
+protected:
+  TestConnection* mTestConnection;
+
+};
+
+NS_IMPL_ISUPPORTS1(TestConnectionOpenObserver, nsIStreamObserver);
+
+NS_IMETHODIMP
+TestConnectionOpenObserver::OnStartRequest(nsIChannel* channel, nsISupports* context)
+{
+  printf("\n+++ TestConnectionOpenObserver::OnStartRequest +++. Context = %p\n", context);
+
+  mTestConnection->SetAsyncOpenCompleted();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TestConnectionOpenObserver::OnStopRequest(nsIChannel* channel, 
+                                          nsISupports* context,
+                                          nsresult aStatus,
+                                          const PRUnichar* aMsg)
+{
+  printf("\n+++ TestConnectionOpenObserver::OnStopRequest (status = %x) +++."
+         "\tContext = %p\n", 
+         aStatus, context);
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
 TestConnection::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
+  NS_ASSERTION(!mTestAsyncOpen || mAsyncOpenCompleted, "AsyncOpen failed");
+
   printf("\n+++ TestConnection::OnStartRequest +++. Context = %p\n", context);
   return NS_OK;
 }
@@ -159,6 +208,8 @@ TestConnection::OnDataAvailable(nsIChannel* channel, nsISupports* context,
                                 PRUint32 aSourceOffset,
                                 PRUint32 aLength)
 {
+  NS_ASSERTION(!mTestAsyncOpen || mAsyncOpenCompleted, "AsyncOpen failed");
+
   char buf[1025];
   PRUint32 amt;
 
@@ -187,6 +238,8 @@ TestConnection::OnStopRequest(nsIChannel* channel,
                               nsresult aStatus,
                               const PRUnichar* aMsg)
 {
+  NS_ASSERTION(!mTestAsyncOpen || mAsyncOpenCompleted, "AsyncOpen failed");
+
   printf("\n+++ TestConnection::OnStopRequest (status = %x) +++."
          "\tContext = %p\n", 
          aStatus, context);
@@ -194,13 +247,17 @@ TestConnection::OnStopRequest(nsIChannel* channel,
 }
 
 
-TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsyncFlag)
+TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, 
+                               PRBool aAsyncFlag, PRBool testAsyncRead)
 {
   nsresult rv;
 
   NS_INIT_REFCNT();
 
   mIsAsync      = aAsyncFlag;
+
+  mTestAsyncOpen = testAsyncRead;
+  mAsyncOpenCompleted = PR_FALSE;
 
   mBufferLength = 255;
   mBufferChar   = 'a';
@@ -310,6 +367,19 @@ TestConnection::Run(void)
 
   if (NS_SUCCEEDED(rv)) {
     if (mIsAsync) {
+      
+      if (mTestAsyncOpen) {
+        TestConnectionOpenObserver* obs = new TestConnectionOpenObserver(this);
+        if (obs == nsnull)
+          return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(obs);
+        rv = mTransport->AsyncOpen(obs, nsnull);
+        NS_RELEASE(obs);
+        if (NS_FAILED(rv)) {
+          printf("Error: AsyncOpen failed...");
+        }
+      }
+
       //
       // Initiate an async read...
       //
@@ -529,6 +599,7 @@ main(int argc, char* argv[])
 ///  }
 
   PRBool bIsAsync = PR_TRUE;
+  PRBool bTestAsyncOpen = PR_FALSE;
   char* hostName = nsnull;
   int i;
 
@@ -537,6 +608,10 @@ main(int argc, char* argv[])
     // Turn on synchronous mode...
     if (PL_strcasecmp(argv[i], "-sync") == 0) {
       bIsAsync = PR_FALSE;
+      continue;
+    } 
+    if (PL_strcasecmp(argv[i], "-asyncopen") == 0) {
+      bTestAsyncOpen = PR_TRUE;
       continue;
     } 
 
@@ -573,7 +648,7 @@ main(int argc, char* argv[])
   // Create the connections and threads...
   //
   for (i=0; i<NUM_TEST_THREADS; i++) {
-    gConnections[i] = new TestConnection(hostName, 7, bIsAsync);
+    gConnections[i] = new TestConnection(hostName, 7, bIsAsync, bTestAsyncOpen);
     rv = NS_NewThread(&gThreads[i], gConnections[i], 0, PR_JOINABLE_THREAD);
   }
 

@@ -43,6 +43,7 @@ XPIDLSRCS	= \
 		nsILoadGroup.idl \
 		nsIFileTransportService.idl \
 		nsISocketTransportService.idl \
+		nsIFileSystem.idl \
 		$(NULL)
 
 EXPORTS		= \

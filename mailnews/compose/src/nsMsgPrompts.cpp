@@ -51,9 +51,6 @@ nsMsgDisplayMessageByString(const PRUnichar * msg)
 nsresult
 nsMsgAskBooleanQuestionByID(PRInt32 msgID, PRBool *answer)
 {
-  nsresult rv;
-  PRInt32 result;
-
   PRUnichar * msg = ComposeGetStringByID(msgID);
   nsMsgAskBooleanQuestionByString(msg, answer);
   nsCRT::free(msg);

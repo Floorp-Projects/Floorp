@@ -151,7 +151,8 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
 	  return NS_OK;
   }
 
-  if (aIID.Equals(nsIStreamListener::GetIID())) 
+  if (aIID.Equals(nsIStreamListener::GetIID()) ||
+      aIID.Equals(nsIStreamObserver::GetIID())) 
   {
 	  *aInstancePtr = (nsIStreamListener *) this;                                                   
 	  NS_ADDREF_THIS();
@@ -6224,6 +6225,11 @@ NS_IMETHODIMP nsImapMockChannel::OpenInputStream(PRUint32 startPosition, PRInt32
 NS_IMETHODIMP nsImapMockChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsImapMockChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener)

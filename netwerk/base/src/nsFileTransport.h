@@ -31,6 +31,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
+#include "nsIFileSystem.h"
 
 class nsIEventSinkGetter;
 
@@ -57,35 +58,52 @@ public:
                   const char* command,
                   nsIEventSinkGetter* getter);
     nsresult Init(nsIInputStream* fromStream, 
+                  const char* contentType,
+                  PRInt32 contentLength,
                   const char* command,
                   nsIEventSinkGetter* getter);
 
     void Process(void);
 
     enum State {
-        QUIESCENT,
+        CLOSED,
+        OPENING,
+        OPENED,
         START_READ,
         READING,
         END_READ,
         START_WRITE,
         WRITING,
-        END_WRITE
+        END_WRITE,
+        CLOSING
+    };
+
+    enum Command {
+        NONE,
+        INITIATE_READ,
+        INITIATE_WRITE
     };
 
 protected:
     nsCOMPtr<nsIProgressEventSink>      mProgress;
-    nsFileSpec                          mSpec;
+    nsFileSpec                          mSpec;      // eliminate?
+    nsCOMPtr<nsIFileSystem>             mFileObject;
+    char*                               mContentType;
+
+    nsCOMPtr<nsIStreamObserver>         mOpenObserver;
+    nsCOMPtr<nsISupports>               mOpenContext;
 
     nsCOMPtr<nsISupports>               mContext;
     State                               mState;
+    Command                             mCommand;
     PRBool                              mSuspended;
     PRMonitor*                          mMonitor;
 
     // state variables:
     nsresult                            mStatus;
     PRUint32                            mOffset;
-    PRInt32                             mAmount;
-    PRUint32                            mTotalAmount;
+    PRInt32                             mTotalAmount;
+    PRInt32                             mTransferAmount;
 
     // reading state varialbles:
     nsCOMPtr<nsIStreamListener>         mListener;

@@ -34,7 +34,6 @@ static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsFileTransportService::nsFileTransportService()
-    : mPool(nsnull), mSuspended(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -45,7 +44,7 @@ nsresult
 nsFileTransportService::Init()
 {
     nsresult rv;
-    rv = NS_NewThreadPool(&mPool, NS_FILE_TRANSPORT_WORKER_COUNT,
+    rv = NS_NewThreadPool(getter_AddRefs(mPool), NS_FILE_TRANSPORT_WORKER_COUNT,
                           NS_FILE_TRANSPORT_WORKER_COUNT,
                           NS_FILE_TRANSPORT_WORKER_STACK_SIZE);
     return rv;
@@ -54,8 +53,6 @@ nsFileTransportService::Init()
 nsFileTransportService::~nsFileTransportService()
 {
     mPool->Shutdown();
-    NS_IF_RELEASE(mPool);
-    NS_IF_RELEASE(mSuspended);
 }
 
 NS_IMPL_ISUPPORTS(nsFileTransportService, NS_GET_IID(nsFileTransportService));
@@ -102,6 +99,8 @@ nsFileTransportService::CreateTransport(nsFileSpec& spec,
 
 NS_IMETHODIMP
 nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
+                                                  const char* contentType,
+                                                  PRInt32 contentLength,
                                                   const char *command,
                                                   nsIEventSinkGetter *getter,
                                                   nsIChannel** result)
@@ -111,7 +110,7 @@ nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(fromStream, command, getter);
+    rv = trans->Init(fromStream, contentType, contentLength, command, getter);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;
@@ -146,7 +145,7 @@ nsFileTransportService::Suspend(nsIRunnable* request)
     nsresult rv;
     nsAutoCMonitor mon(this);   // protect mSuspended
     if (mSuspended == nsnull) {
-        rv = NS_NewISupportsArray(&mSuspended);
+        rv = NS_NewISupportsArray(getter_AddRefs(mSuspended));
         if (NS_FAILED(rv)) return rv;
     }
     return mSuspended->AppendElement(request) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool

@@ -196,6 +196,9 @@ protected:
   PRInt32       mPort;
   char*         mSocketType;
 
+  nsCOMPtr<nsIStreamObserver>         mOpenObserver;
+  nsCOMPtr<nsISupports>               mOpenContext;
+
   nsCOMPtr<nsISupports>       mReadContext;
   nsCOMPtr<nsIStreamListener> mReadListener;
   nsCOMPtr<nsIBufferInputStream>  mReadPipeIn;

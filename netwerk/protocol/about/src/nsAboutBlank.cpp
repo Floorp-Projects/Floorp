@@ -25,7 +25,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 NS_IMPL_ISUPPORTS(nsAboutBlank, NS_GET_IID(nsIAboutModule));
 
-static const char kBlankPage[] = "<html><body></body></html>";
+static const char kBlankPage[] = "";
 
 NS_IMETHODIMP
 nsAboutBlank::NewChannel(const char *verb,
@@ -48,7 +48,9 @@ nsAboutBlank::NewChannel(const char *verb,
     NS_RELEASE(s);
     if (NS_FAILED(rv)) return rv;
 
-    rv = serv->NewInputStreamChannel(aURI, "text/html", in, aGroup, &channel);
+    rv = serv->NewInputStreamChannel(aURI, "text/html", 
+                                     nsCRT::strlen(kBlankPage),
+                                     in, aGroup, &channel);
     NS_RELEASE(in);
     if (NS_FAILED(rv)) return rv;
 

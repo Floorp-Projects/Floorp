@@ -22,7 +22,13 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
+#include "nsIIOService.h"
+#include "nsIServiceManager.h"
 #include "nsIChannel.h"
+#include "nsCOMPtr.h"
+
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 class nsAsyncStreamObserver : public nsIStreamObserver
 {
@@ -33,29 +39,40 @@ public:
     NS_DECL_NSISTREAMOBSERVER
 
     // nsAsyncStreamObserver methods:
-    nsAsyncStreamObserver(nsIEventQueue* aEventQ) 
-        : mReceiver(nsnull), mStatus(NS_OK) 
+    nsAsyncStreamObserver() 
+        : mStatus(NS_OK) 
     { 
         NS_INIT_REFCNT();
-        mEventQueue = aEventQ;
-        NS_IF_ADDREF(mEventQueue);
     }
     
     virtual ~nsAsyncStreamObserver();
 
-    void Init(nsIStreamObserver* aListener) {
-        mReceiver = aListener;
-        NS_ADDREF(mReceiver);
+    nsresult Init(nsIStreamObserver* aObserver, nsIEventQueue* aEventQ) {
+        mReceiver = aObserver;
+        if (aEventQ) {
+            mEventQueue = aEventQ;
+        }
+        else {
+            nsresult rv;
+            NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIEventQueue> eventQueue;
+            rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
+                                                    getter_AddRefs(mEventQueue));
+            if (NS_FAILED(rv)) return rv;
+        }
+        return NS_OK;
     }
 
-    nsISupports* GetReceiver()      { return mReceiver; }
+    nsISupports* GetReceiver()      { return mReceiver.get(); }
     nsresult GetStatus()            { return mStatus; }
     void SetStatus(nsresult value)  { mStatus = value; }
 
 protected:
-    nsIEventQueue*      mEventQueue;
-    nsIStreamObserver*  mReceiver;
-    nsresult            mStatus;
+    nsCOMPtr<nsIEventQueue>     mEventQueue;
+    nsCOMPtr<nsIStreamObserver> mReceiver;
+    nsresult                    mStatus;
 };
 
 
@@ -86,13 +103,8 @@ public:
                                PRUint32 aLength);
 
     // nsAsyncStreamListener methods:
-    nsAsyncStreamListener(nsIEventQueue* aEventQ) 
-        : nsAsyncStreamObserver(aEventQ) {}
+    nsAsyncStreamListener() {}
 
-    void Init(nsIStreamListener* aListener) {
-        mReceiver = aListener;
-        NS_ADDREF(mReceiver);
-    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,8 +197,6 @@ nsStreamListenerEvent::Fire(nsIEventQueue* aEventQueue)
 
 nsAsyncStreamObserver::~nsAsyncStreamObserver()
 {
-  NS_RELEASE(mReceiver);
-  NS_IF_RELEASE(mEventQueue);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsAsyncStreamObserver, 
@@ -391,11 +401,15 @@ NS_NewAsyncStreamObserver(nsIStreamObserver* *result,
                           nsIStreamObserver* receiver)
 {
     nsAsyncStreamObserver* l =
-        new nsAsyncStreamObserver(eventQueue);
+        new nsAsyncStreamObserver();
     if (l == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    l->Init(receiver);
     NS_ADDREF(l);
+    nsresult rv = l->Init(receiver, eventQueue);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(l);
+        return rv;
+    }
     *result = l;
     return NS_OK;
 }
@@ -406,11 +420,15 @@ NS_NewAsyncStreamListener(nsIStreamListener* *result,
                           nsIStreamListener* receiver)
 {
     nsAsyncStreamListener* l =
-        new nsAsyncStreamListener(eventQueue);
+        new nsAsyncStreamListener();
     if (l == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    l->Init(receiver);
     NS_ADDREF(l);
+    nsresult rv = l->Init(receiver, eventQueue);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(l);
+        return rv;
+    }
     *result = l;
     return NS_OK;
 }

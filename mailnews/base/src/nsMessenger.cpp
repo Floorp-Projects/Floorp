@@ -514,9 +514,12 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
             }
             aListener->m_channel = null_nsCOMPtr();
             NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
-            rv = netService->NewInputStreamChannel(aURL, nsnull,
-                                                   nsnull, nsnull,
-                                     getter_AddRefs(aListener->m_channel));
+            rv = netService->NewInputStreamChannel(aURL,
+                                                   nsnull,      // contentType
+                                                   -1,          // contentLength
+                                                   nsnull,      // inputStream
+                                                   nsnull,      // loadGroup
+                                                   getter_AddRefs(aListener->m_channel));
             nsAutoString from, to;
             from = "message/rfc822";
             to = "text/xul";
@@ -638,9 +641,12 @@ nsMessenger::SaveAs(const char* url, PRBool asFile)
                   aListener->m_channel = null_nsCOMPtr();
                   NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID,
                                   &rv);
-                  rv = netService->NewInputStreamChannel(aURL, nsnull,
-                                                         nsnull, nsnull,
-                                     getter_AddRefs(aListener->m_channel));
+                  rv = netService->NewInputStreamChannel(aURL, 
+                                                         nsnull,      // contentType
+                                                         -1,          // contentLength
+                                                         nsnull,      // inputStream
+                                                         nsnull,      // loadGroup
+                                                         getter_AddRefs(aListener->m_channel));
                   nsAutoString from, to;
                   from = "message/rfc822";
                   to = saveAsFileType == 1 ? "text/html" : "text/plain";

@@ -84,7 +84,7 @@ nsHTTPResponseListener::~nsHTTPResponseListener()
     NS_IF_RELEASE(mConsumer);
 }
 
-NS_IMPL_ISUPPORTS(nsHTTPResponseListener,NS_GET_IID(nsIStreamListener));
+NS_IMPL_ISUPPORTS2(nsHTTPResponseListener, nsIStreamListener, nsIStreamObserver);
 
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);

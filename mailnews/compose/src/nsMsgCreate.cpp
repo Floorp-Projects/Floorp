@@ -266,7 +266,12 @@ SaveDraftMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
 
   nsCOMPtr<nsIChannel> dummyChannel;
   NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
-  rv = netService->NewInputStreamChannel(aURL, nsnull, nsnull, nsnull, getter_AddRefs(dummyChannel));
+  rv = netService->NewInputStreamChannel(aURL, 
+                                         nsnull,      // contentType
+                                         -1,          // contentLength
+                                         nsnull,      // inputStream
+                                         nsnull,      // loadGroup
+                                         getter_AddRefs(dummyChannel));
 
   if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, nsnull, dummyChannel)))
   {

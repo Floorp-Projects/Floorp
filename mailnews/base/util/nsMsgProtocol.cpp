@@ -269,6 +269,11 @@ NS_IMETHODIMP nsMsgProtocol::OpenOutputStream(PRUint32 startPosition, nsIOutputS
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsMsgProtocol::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsMsgProtocol::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener)
 {
 	// set the stream listener and then load the url

@@ -1430,7 +1430,7 @@ nsDocumentBindInfo::CancelRefreshURLTimers(void)
 
 
 
-NS_IMPL_ISUPPORTS(nsChannelListener, nsCOMTypeInfo<nsIStreamListener>::GetIID());
+NS_IMPL_ISUPPORTS2(nsChannelListener, nsIStreamObserver, nsIStreamListener);
 
 nsChannelListener::nsChannelListener()
 {

@@ -246,6 +246,12 @@ nsFileChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result
 }
 
 NS_IMETHODIMP
+nsFileChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsISupports *ctxt,
                          nsIStreamListener *listener)
