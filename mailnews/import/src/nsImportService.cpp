@@ -242,7 +242,7 @@ NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsStrin
 			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, m_sysCharset);
 
 		if (NS_FAILED(rv)) 
-			m_sysCharset.Assign("ISO-8859-1");
+			m_sysCharset.AssignWithConversion("ISO-8859-1");
 	}
 
 	if (!sysStr) {
@@ -259,7 +259,7 @@ NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsStrin
 	if (m_sysCharset.IsEmpty() ||
 		m_sysCharset.EqualsIgnoreCase("us-ascii") ||
 		m_sysCharset.EqualsIgnoreCase("ISO-8859-1")) {
-		uniStr.Assign( sysStr);
+		uniStr.AssignWithConversion( sysStr);
 		return( NS_OK);
 	}
 	
@@ -280,7 +280,7 @@ NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsStrin
 
 		if (NS_FAILED( rv)) {
 			IMPORT_LOG0( "*** Error getting charset alias to convert to uinicode\n");
-			uniStr.Assign( sysStr);
+			uniStr.AssignWithConversion( sysStr);
 			return( rv);
 		}
 
@@ -310,7 +310,7 @@ NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsStrin
 	}
 	
 	if (NS_FAILED( rv))
-		uniStr.Assign( sysStr);
+		uniStr.AssignWithConversion( sysStr);
 
 	return( rv);
 }
@@ -594,7 +594,7 @@ nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSuppo
 		delete [] pName;
 	}
 	else
-		theTitle = "Unknown";
+		theTitle.AssignWithConversion("Unknown");
 		
 	rv = module->GetDescription( &pName);
 	if (NS_SUCCEEDED( rv)) {
@@ -602,7 +602,7 @@ nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSuppo
 		delete [] pName;
 	}
 	else
-		theDescription = "Unknown description";
+		theDescription.AssignWithConversion("Unknown description");
 	
 	// call the module to get the info we need
 	m_pModules->AddModule( clsId, pSupports, theTitle.GetUnicode(), theDescription.GetUnicode());
@@ -719,8 +719,8 @@ void nsImportModuleList::AddModule( const nsCID& cid, const char *pSupports, con
 	
 	m_count++;
 #ifdef IMPORT_DEBUG
-	nsCString 	name( pName);
-	nsCString	desc( pDesc);
+	nsCString 	name; name.AssignWithConversion( pName);
+	nsCString	desc; desc.AssignWithConversion( pDesc);
 	IMPORT_LOG3( "* nsImportService registered import module: %s, %s, %s\n", (const char *)name, (const char *)desc, pSupports);
 #endif
 }

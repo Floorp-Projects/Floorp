@@ -308,7 +308,7 @@ PRBool nsImportMimeEncode::WriteFileName( nsCString& fName, PRBool wasTrans, con
 		if (result)
 			result = m_pOut->WriteStr( pTag);
 		numStr = "*";
-		numStr.Append( tagNum);
+		numStr.AppendInt( tagNum);
 		if (result)
 			result = m_pOut->WriteStr( (const char *)numStr);
 		if (wasTrans && result)
@@ -332,7 +332,7 @@ PRBool nsImportMimeEncode::WriteFileName( nsCString& fName, PRBool wasTrans, con
 			if (result)
 				result = m_pOut->WriteStr( pTag);
 			numStr = "*";
-			numStr.Append( tagNum);
+			numStr.AppendInt( tagNum);
 			if (result)
 				result = m_pOut->WriteStr( (const char *)numStr);
 			if (wasTrans && result)

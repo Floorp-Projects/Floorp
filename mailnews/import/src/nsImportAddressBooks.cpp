@@ -904,7 +904,7 @@ void nsImportGenericAddressBooks::ReportError( PRUnichar *pName, nsString *pStre
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsImportStringBundle::FreeString( pFmt);
-	pStream->Append( NS_LINEBREAK);
+	pStream->AppendWithConversion( NS_LINEBREAK);
 }
 
 PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)

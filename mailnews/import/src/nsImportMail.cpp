@@ -390,7 +390,7 @@ void nsImportGenericMail::GetDefaultDestination( void)
 		rootFolder->GenerateUniqueSubfolderName( "Imported Mail", nsnull, &pName);
 		if (pName) {
 			IMPORT_LOG1( "* Creating folder for importing mail: %s\n", pName);
-			nsAutoString childName(pName);
+			nsAutoString childName; childName.AssignWithConversion(pName);
 			rootFolder->CreateSubfolder( childName.GetUnicode());
 			nsCOMPtr<nsISupports> subFolder;
 			rootFolder->GetChildNamed( pName, getter_AddRefs( subFolder));
@@ -636,7 +636,7 @@ void nsImportGenericMail::ReportError( PRInt32 id, const PRUnichar *pName, nsStr
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsImportStringBundle::FreeString( pFmt);
-	pStream->Append( NS_LINEBREAK);
+	pStream->AppendWithConversion( NS_LINEBREAK);
 	NS_IF_RELEASE( pBundle);
 }
 
@@ -854,7 +854,7 @@ ImportMailThread( void *stuff)
 					nsCRT::free( pName);
 				}
 				else
-					lastName = "Unknown!";
+					lastName.AssignWithConversion("Unknown!");
 				
 				pStr = lastName.ToNewCString();
 				exists = PR_FALSE;
@@ -867,10 +867,10 @@ ImportMailThread( void *stuff)
 						pStr = pSubName;
 					}
 				}
-				lastName = pStr;
+				lastName.AssignWithConversion(pStr);
 				
 				IMPORT_LOG1( "* Creating new import folder: %s\n", pStr);
-				nsAutoString newName(pStr);
+				nsAutoString newName; newName.AssignWithConversion(pStr);
 
 				rv = curProxy->CreateSubfolder( newName.GetUnicode());
 				
@@ -966,7 +966,7 @@ PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 	if (m_pName)
 		prettyName = m_pName;
 	else
-		prettyName = "Imported Mail";
+		prettyName.AssignWithConversion("Imported Mail");
 	
 	nsCOMPtr<nsIMsgIncomingServer> server;
 
@@ -1072,8 +1072,8 @@ void nsImportGenericMail::GetUniquePrettyName( nsIMsgAccountManager *pMgr, nsStr
 		}
 		if (found) {
 			newName = name;
-			newName.Append( " ");
-			newName.Append( count);
+			newName.AppendWithConversion( " ");
+			newName.AppendInt( count);
 			count++;
 		}
 

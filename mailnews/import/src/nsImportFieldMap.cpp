@@ -70,7 +70,7 @@ nsImportFieldMap::nsImportFieldMap()
 			nsImportStringBundle::GetStringByID( i, *pStr, pBundle);	
 		}
 		else
-			pStr->Append( i);
+			pStr->AppendInt( i);
 		m_descriptions.AppendElement( (void *)pStr);
 	}
 	
