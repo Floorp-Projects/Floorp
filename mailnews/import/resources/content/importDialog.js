@@ -865,6 +865,13 @@ function ImportAddress( module, success, error) {
       return( false);
     }
 
+    if (file.fileSize == 0) {
+      var errorText = gImportMsgsBundle.getFormattedString('ImportEmptyAddressBook', [path]);
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+
+      promptService.alert(window, document.title, errorText);
+      return false;
+    }
     addInterface.SetData("addressLocation", file);
   }
 
