@@ -93,21 +93,6 @@ static void printDepth(int depth) {
   }
 }
 
-// Drag & Drop stuff.
-enum {
-  TARGET_STRING,
-  TARGET_ROOTWIN
-};
-
-static GtkTargetEntry target_table[] = {
-  { "STRING",     0, TARGET_STRING },
-  { "text/plain", 0, TARGET_STRING },
-  { "application/x-rootwin-drop", 0, TARGET_ROOTWIN }
-};
-
-static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
-
-
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsWidget)
 
 //-------------------------------------------------------------------------
@@ -1100,8 +1085,34 @@ nsWindow::HandleGDKEvent(GdkEvent *event)
   case GDK_MOTION_NOTIFY:
   {
     XEvent xevent;
-    while (XCheckMaskEvent(GDK_DISPLAY(), ButtonMotionMask, &xevent));
-    OnMotionNotifySignal (&event->motion);
+    GdkEvent gdk_event;
+    PRBool synthEvent = PR_FALSE;
+    while (XCheckWindowEvent(GDK_DISPLAY(),
+                             GDK_WINDOW_XWINDOW(mSuperWin->bin_window),
+                             ButtonMotionMask, &xevent)) {
+      synthEvent = PR_TRUE;
+    }
+    if (synthEvent) {
+      gdk_event.type = GDK_MOTION_NOTIFY;
+      gdk_event.motion.window = event->motion.window;
+      gdk_event.motion.send_event = event->motion.send_event;
+      gdk_event.motion.time = xevent.xmotion.time;
+      gdk_event.motion.x = xevent.xmotion.x;
+      gdk_event.motion.y = xevent.xmotion.y;
+      gdk_event.motion.pressure = event->motion.pressure;
+      gdk_event.motion.xtilt = event->motion.xtilt;
+      gdk_event.motion.ytilt = event->motion.ytilt;
+      gdk_event.motion.state = event->motion.state;
+      gdk_event.motion.is_hint = xevent.xmotion.is_hint;
+      gdk_event.motion.source = event->motion.source;
+      gdk_event.motion.deviceid = event->motion.deviceid;
+      gdk_event.motion.x_root = xevent.xmotion.x_root;
+      gdk_event.motion.y_root = xevent.xmotion.y_root;
+      OnMotionNotifySignal (&gdk_event.motion);
+    }
+    else {
+      OnMotionNotifySignal (&event->motion);
+    }
   }
   break;
   case GDK_BUTTON_PRESS:
@@ -1184,9 +1195,33 @@ nsWindow::HandleGDKEvent(GdkEvent *event)
   }
 
 #endif
-
 }
 
+void
+nsWindow::InstallToplevelDragDataReceivedSignal(void)
+{
+  NS_ASSERTION( nsnull != mShell, "mShell is null");
+  
+  InstallSignal(mShell,
+                (gchar *)"drag_data_received",
+                GTK_SIGNAL_FUNC(nsWindow::ToplevelDragDataReceivedSignal));
+}
+
+/* static */
+void nsWindow::ToplevelDragDataReceivedSignal(GtkWidget         *aWidget,
+                                              GdkDragContext    *aDragContext,
+                                              gint               x,
+                                              gint               y,
+                                              GtkSelectionData  *aSelectionData,
+                                              guint              aInfo,
+                                              guint32            aTime,
+                                              gpointer           aData)
+{
+   nsWindow *widget = (nsWindow *)aData;
+   NS_ASSERTION(nsnull != widget, "instance pointer is null");
+
+   widget->OnDragDataReceivedSignal(aWidget, aDragContext, x, y, aSelectionData, aInfo, aTime);
+}
 
 void
 nsWindow::InstallToplevelDragBeginSignal(void)
@@ -1228,7 +1263,6 @@ nsWindow::ToplevelDragLeaveSignal(GtkWidget *      aWidget,
                                   guint            aTime,
                                   void             *aData)
 {
-  g_print("nsWindow::ToplevelDragLeaveSignal\n");
   if (mLastDragMotionWindow) {
     mLastDragMotionWindow->OnDragLeaveSignal(aDragContext, aTime);
     mLastLeaveWindow = mLastDragMotionWindow;
@@ -1267,7 +1301,7 @@ nsWindow::ToplevelDragMotionSignal(GtkWidget *      aWidget,
 
   widget->OnToplevelDragMotion(aWidget, aDragContext, x, y, time);
 
-  return PR_TRUE;
+  return TRUE;
 }
 
 #ifdef NS_DEBUG
@@ -1434,6 +1468,10 @@ nsWindow::OnToplevelDragMotion     (GtkWidget      *aWidget,
 
   innerMostWidget->Release();
 
+  // make sure that we set our drag context
+  GdkDragAction action = GDK_ACTION_COPY;
+  gdk_drag_status(aDragContext, action, aTime);
+
 }
 
 void
@@ -1455,9 +1493,8 @@ nsWindow::ToplevelDragDropSignal(GtkWidget *      aWidget,
                                  guint            aTime,
                                  void             *aData)
 {
-  g_print("nsWindow::ToplevelDragDropSignal\n");
   if (mLastLeaveWindow) {
-    mLastLeaveWindow->OnDragDropSignal(aDragContext, x, y, aTime);
+    mLastLeaveWindow->OnDragDropSignal(aWidget, aDragContext, x, y, aTime);
     mLastLeaveWindow = NULL;
   }
   return PR_FALSE;
@@ -1686,11 +1723,13 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     InstallToplevelDragLeaveSignal();
     InstallToplevelDragMotionSignal();
     InstallToplevelDragDropSignal();
+    InstallToplevelDragDataReceivedSignal();
     // set the shell window as a drop target
     gtk_drag_dest_set (mShell,
-                       GTK_DEST_DEFAULT_ALL,
-                       target_table, n_targets - 1, /* no rootwin */
-                       GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
+                       (GtkDestDefaults)0,
+                       NULL,
+                       0,
+                       (GdkDragAction)0);
   }
 
   if (mSuperWin) {

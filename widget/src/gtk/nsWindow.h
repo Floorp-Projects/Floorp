@@ -105,6 +105,7 @@ public:
   void                 InstallToplevelDragLeaveSignal (void);
   void                 InstallToplevelDragMotionSignal(void);
   void                 InstallToplevelDragDropSignal  (void);
+  void                 InstallToplevelDragDataReceivedSignal(void);
 
   static gint          ToplevelDragBeginSignal  (GtkWidget *      aWidget,
                                                  GdkDragContext   *aDragContext,
@@ -128,6 +129,15 @@ public:
                                                  gint             y,
                                                  guint            aTime,
                                                  void             *aData);
+
+  static void          ToplevelDragDataReceivedSignal(GtkWidget         *aWidget,
+                                                      GdkDragContext    *aDragContext,
+                                                      gint               x,
+                                                      gint               y,
+                                                      GtkSelectionData  *aSelectionData,
+                                                      guint              aInfo,
+                                                      guint32            aTime,
+                                                      gpointer           aData);
 
   void                 OnToplevelDragMotion     (GtkWidget      *aWidget,
                                                  GdkDragContext *aGdkDragContext,

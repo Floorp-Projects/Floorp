@@ -35,6 +35,8 @@
 #include <gdk/gdkx.h>
 #include "nsIRollupListener.h"
 #include "nsIServiceManager.h"
+#include "nsIDragSessionGTK.h"
+#include "nsIDragService.h"
 
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_keyboard_get_modifiers()
 
@@ -47,6 +49,7 @@
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 // keeping track of a list of simultaneously modal widgets
 class ModalWidgetList {
@@ -197,21 +200,6 @@ gint nsWidget::sButtonMotionRootX = -1;
 gint nsWidget::sButtonMotionRootY = -1;
 gint nsWidget::sButtonMotionWidgetX = -1;
 gint nsWidget::sButtonMotionWidgetY = -1;
-
-// Drag & Drop stuff.
-enum {
-  TARGET_STRING,
-  TARGET_ROOTWIN
-};
-
-static GtkTargetEntry target_table[] = {
-  { "STRING",     0, TARGET_STRING },
-  { "text/plain", 0, TARGET_STRING },
-  { "application/x-rootwin-drop", 0, TARGET_ROOTWIN }
-};
-
-static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
-
 
 //#undef DEBUG_pavlov
 
@@ -1126,16 +1114,17 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
     
     // Initialize this window instance as a drag target.
     gtk_drag_dest_set (mWidget,
-                       GTK_DEST_DEFAULT_ALL,
-                       target_table, n_targets - 1, /* no rootwin */
-                       GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
+                       (GtkDestDefaults)0,
+                       NULL,
+                       0,
+                       (GdkDragAction)0);
     
     // Drag & Drop events.
     InstallDragBeginSignal(mWidget);
     InstallDragLeaveSignal(mWidget);
     InstallDragMotionSignal(mWidget);
     InstallDragDropSignal(mWidget);
-    
+    InstallDragDataReceived(mWidget);
     
     // Focus
     InstallFocusInSignal(mWidget);
@@ -1508,6 +1497,16 @@ nsWidget::InstallDragDropSignal(GtkWidget * aWidget)
                 GTK_SIGNAL_FUNC(nsWidget::DragDropSignal));
 }
 
+void
+nsWidget::InstallDragDataReceived(GtkWidget *aWidget)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  InstallSignal(aWidget,
+                (gchar *)"drag_data_received",
+                GTK_SIGNAL_FUNC(nsWidget::DragDataReceivedSignal));
+}
+
+
 //////////////////////////////////////////////////////////////////
 void 
 nsWidget::InstallEnterNotifySignal(GtkWidget * aWidget)
@@ -1714,6 +1713,10 @@ nsWidget::OnDragEnterSignal(GdkDragContext *aGdkDragContext,
                              gint            y,
                              guint           aTime)
 {
+
+  // make sure that we tell the drag manager what the hell is going on.
+  UpdateDragContext(NULL, aGdkDragContext, aTime);
+
   // we are a drag dest.. cool huh?
   mIsDragDest = PR_TRUE;
 
@@ -1738,8 +1741,10 @@ nsWidget::OnDragEnterSignal(GdkDragContext *aGdkDragContext,
 nsWidget::OnDragLeaveSignal(GdkDragContext   *context,
                             guint             aTime)
 {
-  mIsDragDest = PR_FALSE;
+  // update our drag context
+  UpdateDragContext(NULL, NULL, aTime);
 
+  mIsDragDest = PR_FALSE;
 
   nsMouseEvent event;
 
@@ -1781,11 +1786,14 @@ nsWidget::OnDragBeginSignal(GdkDragContext * aGdkDragContext)
 
 
 /* virtual */ void 
-nsWidget::OnDragDropSignal(GdkDragContext *aDragContext,
+nsWidget::OnDragDropSignal(GtkWidget      *aWidget,
+                           GdkDragContext *aDragContext,
                            gint            x,
                            gint            y,
                            guint           aTime)
 {
+  UpdateDragContext(aWidget, aDragContext, aTime);
+
   nsMouseEvent    event;
 
   event.message = NS_DRAGDROP_DROP;
@@ -1800,7 +1808,42 @@ nsWidget::OnDragDropSignal(GdkDragContext *aDragContext,
   DispatchWindowEvent(&event);
 
   Release();
+
+  // after a drop takes place we need to make sure that the drag
+  // service doesn't think that it still has a context.  if the other
+  // way ( besides the drop ) to end a drag event is during the leave
+  // event and and that case is handled in that handler.
+  UpdateDragContext(NULL, NULL, 0);
+
 }
+
+/* virtual */
+void nsWidget::OnDragDataReceivedSignal(GtkWidget         *aWidget,
+                                        GdkDragContext    *context,
+                                        gint               x,
+                                        gint               y,
+                                        GtkSelectionData  *selection_data,
+                                        guint              info,
+                                        guint32            aTime)
+{
+  // the service is the only one that cares that we get this.
+  g_print("nsWidget::OnDragDataReceivedSignal\n");
+  nsCOMPtr<nsIDragService> dragService;
+  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
+                                             nsIDragService::GetIID(),
+                                             (nsISupports **)&dragService);
+  if (NS_FAILED(rv)) {
+    g_print("*** warning: failed to get the drag service. this is a _bad_ thing.\n");
+    return;
+  }
+  nsCOMPtr<nsIDragSessionGTK> dragServiceGTK;
+  dragServiceGTK = do_QueryInterface(dragService);
+  if (!dragServiceGTK) {
+    return;
+  }
+  dragServiceGTK->SetDataReceived(aWidget, context, x, y, selection_data, info, aTime);
+}
+
 
 
 //////////////////////////////////////////////////////////////////
@@ -2380,12 +2423,30 @@ nsWidget::DragDropSignal(GtkWidget *      aWidget,
   }
 #endif
 
-  widget->OnDragDropSignal(aDragContext, x, y, aTime);
+  widget->OnDragDropSignal(aWidget, aDragContext, x, y, aTime);
 
   return PR_TRUE;
 }
 
 
+/* static */
+void
+nsWidget::DragDataReceivedSignal(GtkWidget         *aWidget,
+                                 GdkDragContext    *aDragContext,
+                                 gint               x,
+                                 gint               y,
+                                 GtkSelectionData  *aSelectionData,
+                                 guint              aInfo,
+                                 guint32            aTime,
+                                 gpointer           aData)
+{
+  NS_ASSERTION(nsnull != aWidget, "widget is null");
+  NS_ASSERTION(nsnull != aDragContext, "dragcontext is null");
+  nsWidget *widget = (nsWidget *)aData;
+  NS_ASSERTION( nsnull != widget, "instance pointer is null");
+
+  widget->OnDragDataReceivedSignal(aWidget, aDragContext, x, y, aSelectionData, aInfo, aTime);
+}
 
 
 //////////////////////////////////////////////////////////////////
@@ -3060,6 +3121,29 @@ GtkWindow *nsWidget::GetTopLevelWindow(void)
   else
     return NULL;
 }
+
+/* virtual */
+void nsWidget::UpdateDragContext(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime)
+{
+  // make sure that we tell the drag manager what the hell is going on.
+  nsCOMPtr<nsIDragService> dragService;
+  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
+                                             nsIDragService::GetIID(),
+                                             (nsISupports **)&dragService);
+  if (NS_FAILED(rv)) {
+    g_print("*** warning: failed to get the drag service. this is a _bad_ thing.\n");
+    return;
+  }
+  nsCOMPtr<nsIDragSessionGTK> dragServiceGTK;
+  dragServiceGTK = do_QueryInterface(dragService);
+  if (!dragServiceGTK) {
+    return;
+  }
+
+  dragServiceGTK->SetLastContext(aWidget, aGdkDragContext, aTime);
+
+}
+
 
 #ifdef NS_DEBUG
 

@@ -34,12 +34,22 @@ class nsIDragSessionGTK : public nsISupports {
  public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAGSESSIONGTK_IID)
 
-  NS_IMETHOD SetLastDragContext(GdkDragContext *aContext) = 0;
-  NS_IMETHOD SetDragData       (GtkWidget      *aWidget,
-                                GdkDragContext *aContext,
-                                gint            x,
-                                gint            y,
-                                guint           time) = 0;
+  NS_IMETHOD SetLastContext  (GtkWidget      *aWidget,
+                              GdkDragContext *aContext,
+                              guint           aTime) = 0;
+  NS_IMETHOD SetDataReceived (GtkWidget         *aWidget,
+                              GdkDragContext    *context,
+                              gint               x,
+                              gint               y,
+                              GtkSelectionData  *selection_data,
+                              guint              info,
+                              guint32            time) = 0;
+  NS_IMETHOD DataGetSignal   (GtkWidget        *widget,
+                              GdkDragContext   *context,
+                              GtkSelectionData *selection_data,
+                              guint             info,
+                              guint32           time,
+                              gpointer          data) = 0;
 
 };
 
