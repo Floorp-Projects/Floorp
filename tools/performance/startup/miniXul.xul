@@ -2,17 +2,6 @@
 
 <!DOCTYPE window>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <script type="application/x-javascript">
-        <![CDATA[
-            function onload() {
-                var n = window.arguments[0] - 1;
-                if ( n ) {
-                    // We need to open more windows.
-                    window.opener.openWindows(n);
-                    //window.openDialog("chrome://navigator/content/miniXul.xul","_blank","chrome,all", n);
-                }
-            }
-        ]]>
-    </script>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="miniXul">
 </window>
