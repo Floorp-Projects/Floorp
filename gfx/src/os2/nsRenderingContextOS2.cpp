@@ -280,7 +280,6 @@ nsresult nsRenderingContextOS2::Init( nsIDeviceContext *aContext,
    mFrontSurface = mSurface;
    NS_ADDREF(mFrontSurface);
 
-  mContext->GetGammaTable(mGammaTable);
 
    return CommonInit();
 }
@@ -305,6 +304,7 @@ nsresult nsRenderingContextOS2::Init( nsIDeviceContext *aContext,
 // to pels.  Note there is *no* guarantee that app units == twips.
 nsresult nsRenderingContextOS2::CommonInit()
 {
+  mContext->GetGammaTable(mGammaTable);
    float app2dev = 0;
    mContext->GetAppUnitsToDevUnits( app2dev);
    mTMatrix.AddScale( app2dev, app2dev);
@@ -882,6 +882,20 @@ void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
       areaBundle.lColor = lColor;
       lineBundle.lColor = lColor;
 
+      if (((nsDeviceContextOS2 *) mContext)->mDC )
+      {
+
+         areaBundle.lBackColor = 0x00FFFFFF;   //OS2TODO
+         lineBundle.lBackColor = 0x00FFFFFF;
+
+         areaBundle.usMixMode     = FM_LEAVEALONE;
+         areaBundle.usBackMixMode = BM_LEAVEALONE;
+
+
+         lLineFlags = lLineFlags | LBB_BACK_COLOR ;
+         lAreaFlags = lAreaFlags | ABB_BACK_COLOR | ABB_MIX_MODE | ABB_BACK_MIX_MODE;
+
+      }
 
       GpiSetAttrs( mSurface->mPS, PRIM_LINE,lLineFlags, 0, (PBUNDLE)&lineBundle);
 
