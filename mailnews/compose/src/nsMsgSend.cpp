@@ -2996,7 +2996,21 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
     // so try to use the prompt interface associated with the smtp url...
     nsCOMPtr<nsISmtpUrl> smtpUrl (do_QueryInterface(aUri));
     nsCOMPtr<nsIPrompt> prompt;
-    smtpUrl->GetPrompt(getter_AddRefs(prompt));
+    if (smtpUrl)
+    {
+      smtpUrl->GetPrompt(getter_AddRefs(prompt));
+    }
+    else
+    {
+      nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl (do_QueryInterface(aUri));
+      if (mailnewsUrl)
+      {
+        nsCOMPtr <nsIMsgWindow> msgWindow;
+        mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+        if (msgWindow)
+          msgWindow->GetPromptDialog(getter_AddRefs(prompt));
+      }
+    }
     Fail(prompt, aExitCode, eMsg);
     NotifyListenersOnStopSending(nsnull, aExitCode, nsnull, nsnull);
     return;
