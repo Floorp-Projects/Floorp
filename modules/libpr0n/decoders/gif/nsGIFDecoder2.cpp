@@ -33,51 +33,6 @@
 #include "nsRect.h"
 
 //////////////////////////////////////////////////////////////////////
-// Declaration of the static callbacks
-
-static int PR_CALLBACK BeginGIF(
-  void*    aClientData,
-  PRUint32 aLogicalScreenWidth, 
-  PRUint32 aLogicalScreenHeight,
-  PRUint8  aBackgroundRGBIndex);
-  
-static int PR_CALLBACK HaveDecodedRow(
-  void* aClientData,
-  PRUint8* aRowBufPtr,   // Pointer to single scanline temporary buffer
-  int aXOffset,          // With respect to GIF logical screen origin
-  int aLength,           // Length of the row?
-  int aRow,              // Row number?
-  int aDuplicateCount,   // Number of times to duplicate the row?
-  PRUint8 aDrawMode,     // il_draw_mode
-  int aInterlacePass);
-    
-static int PR_CALLBACK NewPixmap();
-
-static int PR_CALLBACK EndGIF(
-  void*    aClientData,
-  int      aAnimationLoopCount);
-  
-static int PR_CALLBACK BeginImageFrame(
-  void*    aClientData,
-  PRUint32 aFrameNumber,   /* Frame number, 1-n */
-  PRUint32 aFrameXOffset,  /* X offset in logical screen */
-  PRUint32 aFrameYOffset,  /* Y offset in logical screen */
-  PRUint32 aFrameWidth,    
-  PRUint32 aFrameHeight,   
-  GIF_RGB* aTransparencyChromaKey);
-static int PR_CALLBACK EndImageFrame(
-  void*    aClientData, 
-  PRUint32 aFrameNumber,
-  PRUint32 aDelayTimeout);
-static int PR_CALLBACK SetupColorspaceConverter();
-static int PR_CALLBACK ResetPalette();
-static int PR_CALLBACK InitTransparentPixel();
-static int PR_CALLBACK DestroyTransparentPixel();
-
-static int PR_CALLBACK HaveImageAll(
-  void* aClientData);
-
-//////////////////////////////////////////////////////////////////////
 // GIF Decoder Implementation
 // This is an adaptor between GIF2 and imgIDecoder
 
@@ -131,24 +86,12 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgILoad *aLoad)
   /* Always decode to 24 bit pixdepth */
   
   PRBool created = gif_create(&mGIFStruct);
-
   NS_ASSERTION(created, "gif_create failed");
+  if (!created)
+    return NS_ERROR_FAILURE;
 
   // Call GIF decoder init routine
-  GIFInit(
-    mGIFStruct,
-    this,
-    NewPixmap,
-    BeginGIF,
-    EndGIF,
-    BeginImageFrame,
-    EndImageFrame,
-    SetupColorspaceConverter,
-    ResetPalette,
-    InitTransparentPixel,
-    DestroyTransparentPixel,
-    HaveDecodedRow,
-    HaveImageAll);
+  GIFInit(mGIFStruct, this);
 
   return NS_OK;
 }
@@ -285,7 +228,7 @@ NS_IMETHODIMP nsGIFDecoder2::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 //******************************************************************************
 
 //******************************************************************************
-int BeginGIF(
+int nsGIFDecoder2::BeginGIF(
   void*    aClientData,
   PRUint32 aLogicalScreenWidth, 
   PRUint32 aLogicalScreenHeight,
@@ -313,7 +256,7 @@ int BeginGIF(
 }
 
 //******************************************************************************
-int EndGIF(
+int nsGIFDecoder2::EndGIF(
     void*    aClientData,
     int      aAnimationLoopCount)
 {
@@ -329,14 +272,13 @@ int EndGIF(
 }
 
 //******************************************************************************
-int BeginImageFrame(
+int nsGIFDecoder2::BeginImageFrame(
   void*    aClientData,
   PRUint32 aFrameNumber,   /* Frame number, 1-n */
   PRUint32 aFrameXOffset,  /* X offset in logical screen */
   PRUint32 aFrameYOffset,  /* Y offset in logical screen */
   PRUint32 aFrameWidth,    
-  PRUint32 aFrameHeight,   
-  GIF_RGB* aTransparencyChromaKey) /* don't have this info yet */
+  PRUint32 aFrameHeight)
 {
   nsGIFDecoder2* decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
   
@@ -362,7 +304,7 @@ int BeginImageFrame(
 }
 
 //******************************************************************************
-int EndImageFrame(
+int nsGIFDecoder2::EndImageFrame(
   void*    aClientData, 
   PRUint32 aFrameNumber,
   PRUint32 aDelayTimeout)  /* Time this frame should be displayed before the next frame 
@@ -376,7 +318,7 @@ int EndImageFrame(
   // One reason why it may not be initialized is because the frame
   // is out of the bounds of the image.
   if (!decoder->mImageFrame) {
-    HaveDecodedRow(aClientData,nsnull,0,0,0,0,0,0);
+    HaveDecodedRow(aClientData,nsnull,0,0,0);
   } else {
     // We actually have the timeout information before we get the lzw encoded 
     // image data, at least according to the spec, but we delay in setting the 
@@ -418,26 +360,13 @@ int EndImageFrame(
   return 0;
 }
   
-
-
-//******************************************************************************
-// GIF decoder callback
-int HaveImageAll(
-  void* aClientData)
-{
-  return 0;
-}
-
 //******************************************************************************
 // GIF decoder callback notification that it has decoded a row
-int HaveDecodedRow(
+int nsGIFDecoder2::HaveDecodedRow(
   void* aClientData,
   PRUint8* aRowBufPtr,   // Pointer to single scanline temporary buffer
-  int aXOffset,          // With respect to GIF logical screen origin
-  int aLength,           // Length of the row?
   int aRowNumber,        // Row number?
   int aDuplicateCount,   // Number of times to duplicate the row?
-  PRUint8 aDrawMode,     // il_draw_mode
   int aInterlacePass)    // interlace pass (1-4)
 {
   nsGIFDecoder2* decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
@@ -620,38 +549,4 @@ int HaveDecodedRow(
   return 0;
 }
 
-//******************************************************************************
-int ResetPalette()
-{
-  return 0;
-}
 
-//******************************************************************************
-int SetupColorspaceConverter()
-{
-  return 0;
-}
-
-//******************************************************************************
-int EndImageFrame()
-{
-  return 0;
-}
-
-//******************************************************************************
-int NewPixmap()
-{
-  return 0;
-}
-
-//******************************************************************************
-int InitTransparentPixel()
-{
-  return 0;
-}
-
-//******************************************************************************
-int DestroyTransparentPixel()
-{
-  return 0;
-}
