@@ -3,5 +3,5 @@
 #
 
 libmng.h
-mng_conf.h
-mng_types.h
+libmng_conf.h
+libmng_types.h

@@ -36,9 +36,6 @@
 #define CHANNELS 4
 #endif
 
-// Decrease this to a sane value after this bug is fixed:
-//   http://bugzilla.mozilla.org/show_bug.cgi?id=41831
-#define MOZ_MNG_BUFSIZE 262144
 
 typedef struct ipng_str {
 
@@ -50,12 +47,12 @@ typedef struct ipng_str {
 
   void *timer_id;
   
-  PRUint8 writeBuffer[MOZ_MNG_BUFSIZE];   /* Circular buffer */
-  PRUint32 bytesBuffered;
-  PRUint32 writeStart;
+  PRUint8 *writeBuffer;         /* Bugzilla 41831 */
+  PRUint32 bufferSize;
+  PRUint32 bufferEnd;
+  PRUint32 bufferPtr;
 
-  PRUint32 bytesNeeded;      /* number of bytes libmng wants (to know when */
-                             /*   we can call read_resume) */
+  PRBool resumeNeeded;          /* need to call display_resume? */
   
   il_container *ic;
 
@@ -94,27 +91,15 @@ il_mng_readdata(mng_handle handle, mng_ptr buf,
 {
   EXTRACT_STRUCTS;
 
-  if (imng_p->bytesBuffered >= size) {
-    PRUint32 endChunk = (MOZ_MNG_BUFSIZE-imng_p->writeStart);
+  dprintf((stderr, "MNG::readdata size=%d buffered=%d\n", 
+           size, imng_p->bufferEnd - imng_p->bufferPtr));
 
-    memcpy(buf, imng_p->writeBuffer+imng_p->writeStart,
-           PR_MIN(endChunk, size));
-    
-    if (endChunk < size)
-      memcpy((PRUint8 *)buf+endChunk, imng_p->writeBuffer, size-endChunk);
-    
-    imng_p->bytesBuffered -= size;
-    imng_p->writeStart = (imng_p->writeStart+size) % MOZ_MNG_BUFSIZE;
-    imng_p->bytesNeeded = 0;
+  size = PR_MIN(size, imng_p->bufferEnd - imng_p->bufferPtr);
+  memcpy(buf, imng_p->writeBuffer+imng_p->bufferPtr, size);
+  imng_p->bufferPtr += size;
+  *stored = size;
 
-    *stored = size;
-    return MNG_TRUE;
-  } else {
-    imng_p->bytesNeeded = size;
-
-    *stored = 0;
-    return MNG_FALSE;
-  }
+  return MNG_TRUE;
 }
 
 static mng_bool
@@ -203,7 +188,12 @@ il_mng_timeout_func(void *data)
 //  dprintf((stderr, "il_mng_timeout_func\n"));
 
   imng_p->timer_id = 0;
-  mng_display_resume(handle);
+
+  int ret = mng_display_resume(handle);
+  if (ret == MNG_NEEDMOREDATA)
+    imng_p->resumeNeeded = PR_TRUE;
+
+//  dprintf((stderr, "il_mng_timeout_func display_resume returned %d\n", ret));
 }
 
 static mng_bool
@@ -234,6 +224,22 @@ il_mng_free(mng_ptr ptr, mng_size_t size)
   nsMemory::Free(ptr);
 }
 
+static mng_bool
+il_mng_trace(mng_handle handle, mng_int32 iFuncnr, mng_int32 iFuncseq,
+             mng_pchar zFuncname)
+{
+  dprintf((stderr, "== trace ==  %s %d %d\n", zFuncname, iFuncnr, iFuncseq));
+  return MNG_TRUE;
+}
+
+static mng_bool
+il_mng_error(mng_handle hHandle, mng_int32 iErrorcode, mng_int8 iSeverity,
+             mng_chunkid iChunkname, mng_uint32 iChunkseq, mng_int32 iExtra1,
+             mng_int32 iExtra2, mng_pchar zErrortext)
+{
+  dprintf((stderr, "== error == %s\n", zErrortext));
+  return MNG_TRUE;
+}
 
 // Boilerplate methods... *yawn*
 //===========================================================
@@ -287,9 +293,12 @@ MNGDecoder::ImgDInit()
   if( ilContainer != NULL ) {
     imng_structp imng_p;
     imng_p = (imng_structp) nsMemory::Alloc(sizeof(imng_struct));
-    memset(imng_p, 0, sizeof(imng_struct));
     if (!imng_p) 
         return PR_FALSE;
+    memset(imng_p, 0, sizeof(imng_struct));
+
+    imng_p->writeBuffer = (PRUint8 *)nsMemory::Alloc(4096);
+    imng_p->bufferSize = 4096;
     
     ilContainer->image->header.width = ilContainer->dest_width;
     ilContainer->image->header.height = ilContainer->dest_height;
@@ -351,8 +360,10 @@ MNGDecoder::ImgDInit()
     mng_setcb_settimer(imng_p->handle, il_mng_settimer);
     mng_setcb_memalloc(imng_p->handle, il_mng_alloc);
     mng_setcb_memfree(imng_p->handle, il_mng_free);
+    mng_set_suspensionmode(imng_p->handle, MNG_TRUE);
 
-    mng_readdisplay(imng_p->handle);
+    if (mng_readdisplay(imng_p->handle) == MNG_NEEDMOREDATA)
+      imng_p->resumeNeeded = PR_TRUE;
   }
   return NS_OK;
 }
@@ -365,7 +376,7 @@ MNGDecoder::ImgDWriteReady(PRUint32 *max_read)
 
   imng_structp imng_p = (imng_structp)ilContainer->ds;
 
-  *max_read = MOZ_MNG_BUFSIZE-imng_p->bytesBuffered;
+  *max_read = imng_p->bufferSize - imng_p->bufferEnd;
   
   dprintf((stderr, "%d\n", *max_read));
 
@@ -380,24 +391,24 @@ MNGDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 
   if (ilContainer != NULL) {
     imng_structp imng_p = (imng_structp)ilContainer->ds;
-    
-    if (PRUint32(len)>MOZ_MNG_BUFSIZE-imng_p->bytesBuffered) {
-      fprintf(stderr, "MNG too large - abort, abort!\n");
-      fprintf(stderr, " http://bugzilla.mozilla.org/show_bug.cgi?id=41831\n");
-      return NS_ERROR_FAILURE;
+
+    if (imng_p->bufferEnd+len > imng_p->bufferSize) {
+      imng_p->bufferSize *= 2;
+      imng_p->writeBuffer = (PRUint8 *)
+        nsMemory::Realloc(imng_p->writeBuffer, imng_p->bufferSize);
     }
 
-    int32 endChunk =
-      (MOZ_MNG_BUFSIZE-(imng_p->writeStart+imng_p->bytesBuffered));
-    memcpy(imng_p->writeBuffer+imng_p->writeStart+imng_p->bytesBuffered,
-           buf, PR_MIN(endChunk,len));
-    if (endChunk < len)
-      memcpy(imng_p->writeBuffer, buf+endChunk, len-endChunk);
-    imng_p->bytesBuffered += len;
+    memcpy(imng_p->writeBuffer+imng_p->bufferEnd, buf, len);
+    imng_p->bufferEnd += len;
 
-    if (imng_p->bytesNeeded && 
-        (imng_p->bytesBuffered >= imng_p->bytesNeeded)) {
-      mng_read_resume(imng_p->handle);
+    if (imng_p->resumeNeeded) {
+//      dprintf((stderr, "MNG::ImgDWrite display_resume (%d)\n",
+//               imng_p->bytesBuffered));
+      imng_p->resumeNeeded = PR_FALSE;
+      int ret = mng_display_resume(imng_p->handle);
+      if (ret == MNG_NEEDMOREDATA)
+        imng_p->resumeNeeded = PR_TRUE;
+//      dprintf((stderr, "MNG::ImgDWrite display_resume returned %d\n", ret));
     }
   }
   return NS_OK;
@@ -427,6 +438,7 @@ MNGDecoder::ImgDAbort()
 
     mng_display_freeze(imng_p->handle);
     mng_cleanup(&imng_p->handle);
+    nsMemory::Free(imng_p->writeBuffer);
     nsMemory::Free(imng_p->image);
     nsMemory::Free(imng_p->rowbuf);
     nsMemory::Free(imng_p);

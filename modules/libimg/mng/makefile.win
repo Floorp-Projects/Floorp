@@ -32,51 +32,51 @@ MAKE_OBJ_TYPE=LIB
 LCFLAGS = $(LCFLAGS) -DDEBUG_GC
 !endif
 
-EXPORTS = libmng.h mng_conf.h mng_types.h
+EXPORTS = libmng.h libmng_conf.h libmng_types.h
 
 MODULE=mng
 DEPTH=..\..\..
 LOCAL_INCLUDES=-I.
 LIBRARY_NAME=mng
 CSRCS=\
-		mng_callback_xs.c \
-		mng_chunk_io.c \
-		mng_chunk_prc.c \
-		mng_chunk_xs.c \
-		mng_cms.c \
-		mng_display.c \
-		mng_dither.c \
-		mng_error.c \
-		mng_filter.c \
-		mng_hlapi.c \
-		mng_jpeg.c \
-		mng_object_prc.c \
-		mng_pixels.c \
-		mng_prop_xs.c \
-		mng_read.c \
-		mng_trace.c \
-		mng_write.c \
-		mng_zlib.c \
+		libmng_callback_xs.c \
+		libmng_chunk_io.c \
+		libmng_chunk_prc.c \
+		libmng_chunk_xs.c \
+		libmng_cms.c \
+		libmng_display.c \
+		libmng_dither.c \
+		libmng_error.c \
+		libmng_filter.c \
+		libmng_hlapi.c \
+		libmng_jpeg.c \
+		libmng_object_prc.c \
+		libmng_pixels.c \
+		libmng_prop_xs.c \
+		libmng_read.c \
+		libmng_trace.c \
+		libmng_write.c \
+		libmng_zlib.c \
 		$(NULL)
 C_OBJS=\
-		.\$(OBJDIR)\mng_callback_xs.obj \
-		.\$(OBJDIR)\mng_chunk_io.obj \
-		.\$(OBJDIR)\mng_chunk_prc.obj \
-		.\$(OBJDIR)\mng_chunk_xs.obj \
-		.\$(OBJDIR)\mng_cms.obj \
-		.\$(OBJDIR)\mng_display.obj \
-		.\$(OBJDIR)\mng_dither.obj \
-		.\$(OBJDIR)\mng_error.obj \
-		.\$(OBJDIR)\mng_filter.obj \
-		.\$(OBJDIR)\mng_hlapi.obj \
-		.\$(OBJDIR)\mng_jpeg.obj \
-		.\$(OBJDIR)\mng_object_prc.obj \
-		.\$(OBJDIR)\mng_pixels.obj \
-		.\$(OBJDIR)\mng_prop_xs.obj \
-		.\$(OBJDIR)\mng_read.obj \
-		.\$(OBJDIR)\mng_trace.obj \
-		.\$(OBJDIR)\mng_write.obj \
-		.\$(OBJDIR)\mng_zlib.obj \
+		.\$(OBJDIR)\libmng_callback_xs.obj \
+		.\$(OBJDIR)\libmng_chunk_io.obj \
+		.\$(OBJDIR)\libmng_chunk_prc.obj \
+		.\$(OBJDIR)\libmng_chunk_xs.obj \
+		.\$(OBJDIR)\libmng_cms.obj \
+		.\$(OBJDIR)\libmng_display.obj \
+		.\$(OBJDIR)\libmng_dither.obj \
+		.\$(OBJDIR)\libmng_error.obj \
+		.\$(OBJDIR)\libmng_filter.obj \
+		.\$(OBJDIR)\libmng_hlapi.obj \
+		.\$(OBJDIR)\libmng_jpeg.obj \
+		.\$(OBJDIR)\libmng_object_prc.obj \
+		.\$(OBJDIR)\libmng_pixels.obj \
+		.\$(OBJDIR)\libmng_prop_xs.obj \
+		.\$(OBJDIR)\libmng_read.obj \
+		.\$(OBJDIR)\libmng_trace.obj \
+		.\$(OBJDIR)\libmng_write.obj \
+		.\$(OBJDIR)\libmng_zlib.obj \
 		$(NULL)
 !if "$(MOZ_BITS)" != "16"
 LINCS=-I$(XPDIST)\public\util -I$(XPDIST)\public\nspr \
