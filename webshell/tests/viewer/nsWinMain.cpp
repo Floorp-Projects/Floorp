@@ -66,6 +66,12 @@ nsNativeBrowserWindow::~nsNativeBrowserWindow()
 }
 
 nsresult
+nsNativeBrowserWindow::InitNativeWindow()
+{
+	// override to do something special with platform native windows
+}
+
+nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
   HMENU menu = ::LoadMenu(gInstance, "Viewer");

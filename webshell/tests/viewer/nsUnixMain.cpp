@@ -15,22 +15,31 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-#include <gtk/gtk.h>
-
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
-#include "nsGTKMenu.h"
+#include "nsMotifMenu.h"
 #include "nsIImageManager.h"
+#include "nsIEventQueueService.h"
+
 #include <stdlib.h>
 #include "plevent.h"
 
-
 extern "C" char *fe_GetConfigDir(void) {
+  printf("XXX: return /tmp for fe_GetConfigDir\n");
   return strdup("/tmp");
 }
 
+XtAppContext gAppContext; // XXX This should be changed
 static nsNativeViewerApp* gTheApp;
+PLEventQueue*  gUnixMainEventQueue = nsnull;
+
+extern void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue);
+
+static void nsUnixEventProcessorCallback(XtPointer aClosure, int* aFd, XtIntervalId *aId) 
+{
+  NS_ASSERTION(*aFd==PR_GetEventQueueSelectFD(gUnixMainEventQueue), "Error in nsUnixMain.cpp:nsUnixEventProcessCallback");
+  PR_ProcessPendingEvents(gUnixMainEventQueue);
+}
 
 nsNativeViewerApp::nsNativeViewerApp()
 {
@@ -43,6 +52,34 @@ nsNativeViewerApp::~nsNativeViewerApp()
 int
 nsNativeViewerApp::Run()
 {
+   // Setup event queue for dispatching 
+   // asynchronous posts of form data + clicking on links.
+   // Lifted from cmd/xfe/mozilla.c
+  nsresult rv = nsnull; 
+#ifdef OLD_EVENT_QUEUE
+  gUnixMainEventQueue = PR_CreateEventQueue("viewer-event-queue", PR_GetCurrentThread());
+  if (nsnull == gUnixMainEventQueue) {
+     // Force an assertion
+    NS_ASSERTION("Can not create an event loop", PR_FALSE); 
+  }
+
+   // XXX Setup webshell's event queue. This should be changed
+  nsWebShell_SetUnixEventQueue(gUnixMainEventQueue);
+#else
+  if (nsnull == mEventQService) {
+     NS_ASSERTION("No event queue service available", PR_FALSE);
+     return -1;
+  }
+ rv = mEventQService->GetThreadEventQueue(PR_GetCurrentThread(),  &gUnixMainEventQueue);
+  if (NS_OK !=  rv) {
+    NS_ASSERTION("Could not obtain thread event queue", PR_FALSE);
+  }
+
+
+#endif  /* OLD_EVENT_QUEUE */
+  XtAppAddInput(gAppContext, PR_GetEventQueueSelectFD(gUnixMainEventQueue), 
+   (XtPointer)(XtInputReadMask), nsUnixEventProcessorCallback, 0);
+
   OpenWindow();
   mAppShell->Run();
   return 0;
@@ -75,7 +112,7 @@ static void MenuProc(PRUint32 aId)
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
-  CreateViewerMenus((GtkWidget*)mWindow->GetNativeData(NS_NATIVE_WIDGET),this);
+  CreateViewerMenus(XtParent((Widget)mWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
   return NS_OK;
 }
 
