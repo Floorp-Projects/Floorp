@@ -61,6 +61,7 @@ nslocks.h
 ntos.h
 ntypes.h
 pics.h
+platform.h
 prefetch.h
 proto.h
 pwcacapi.h
