@@ -163,7 +163,7 @@ function onStart()
   var profileTree = document.getElementById("profiles");
   if( startButton.getAttribute("disabled") == "true" ||
       profileTree.selectedItems.length != 1 )
-    return;
+    return false;
     
   var selected = profileTree.selectedItems[0];
     
