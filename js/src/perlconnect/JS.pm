@@ -39,6 +39,132 @@
 ############################################################################
 
 package JS;
+$VERSION='0.03';
+require Exporter;
+use DynaLoader;
+@ISA = qw(Exporter DynaLoader);
+use strict;
+use vars qw($VERSION);
+
+sub boot        #7/31/98 5:28PM
+{
+    # this is to load the JS DLL at run-time
+    bootstrap JS $VERSION;
+    push @DynaLoader::dl_library_path, $ENV{'LD_LIBRARY_PATH'};
+}   ##boot
+
+sub new {
+    my ($class, $maxbytes) = @_;
+    my $self = new JS::Runtime($maxbytes);
+    return $self;
+}
+
+############################################################
+# JS::Runtime
+############################################################
+package JS::Runtime;
+use strict;
+use vars qw ($AUTOLOAD $DEBUG %CONTEXTS);
+
+# we use %CONTEXT hash to remember all created contex. 
+# reason of this is increase reference to context objects
+# and ensure corret order of destructor calls
+
+sub AUTOLOAD        #7/28/98 8:24PM
+{
+    print "\nJS::Runtime::AUTOLOAD: $AUTOLOAD, not implemented yet\n" if $DEBUG;
+}   ##AUTOLOAD
+
+
+# Constructor. Calls NewRuntime
+
+sub new     #7/31/98 3:39PM
+{
+    warn "JS::Runtime::new\n" if $DEBUG;
+    my($class, $maxbytes) = @_;
+    my $self = JS::NewRuntime(scalar($maxbytes));
+    return  $self;
+}   ##new
+
+sub createContext {
+    my ($self, $stacksize) = @_;
+    #my $cx = $self->NewContext($stacksize);
+    my $cx = JS::Context->new($self, $stacksize);
+#    $CONTEXTS{$self} = [] unless exists $CONTEXTS{$self};
+#    push @{$CONTEXTS{$self}}, $cx;
+    return $cx;
+}
+
+# Destructor for Runtimes
+sub DESTROY     #7/31/98 4:54PM
+{
+    my $self = shift;
+    warn "JS::Runtime::DESTROY\n" if $DEBUG;
+    JS::DestroyRuntime($self);
+}   ##DESTROY
+
+############################################################
+# JS::Context
+############################################################
+package JS::Context;
+use vars qw($AUTOLOAD $DEBUG);
+
+sub AUTOLOAD        #7/28/98 8:24PM
+{
+    print "\nJS::Context::AUTOLOAD: $AUTOLOAD, not implemented yet\n" if $DEBUG;
+}   ##AUTOLOAD
+
+sub new     #7/31/98 3:39PM
+{
+    warn "JS::Context::new\n" if $DEBUG;
+    my($class, $rt, $stacksize) = @_;
+    my $this = JS::Runtime::NewContext($rt, $stacksize);
+    return  $this;
+}   ##new
+
+sub DESTROY     #7/31/98 4:54PM
+{
+    my $self = shift;
+    warn "JS::Context::DESTROY\n" if $DEBUG;
+    JS::Runtime::DestroyContext($self);
+}   ##DESTROY
+
+############################################################
+# JS::Object
+############################################################
+package JS::Object;
+use vars qw($AUTOLOAD $DEBUG);
+
+sub AUTOLOAD        #7/28/98 8:24PM
+{
+    $_ = $AUTOLOAD;
+    $_ =~ s/.*://;
+    print "\nJS::Object::AUTOLOAD: $_, not implemented yet\n" if $DEBUG;
+}   ##AUTOLOAD
+
+
+
+############################################################
+# executable part
+############################################################
+#$JS::Runtime::DEBUG = 1;
+#$JS::Context::DEBUG = 1;
+#$JS::Object::DEBUG = 1;
+
+&JS::boot();
+
+1;
+
+############################################################
+# the end
+############################################################
+
+
+
+
+__END__
+
+package JS;
 $VERSION = '0.03';
 require Exporter;
 require DynaLoader;
@@ -53,7 +179,8 @@ sub new         #7/31/98 5:32PM
 {
     print "JS::new" if $DEBUG;
     my $rt = new JS::Runtime(10_000);
-    return $this = new JS::Context($rt, 1_024);
+    $this = new JS::Context($rt, 1_024);
+    return $this
 }   ##new
 
 ############################################################################
@@ -93,6 +220,7 @@ sub DESTROY     #7/31/98 4:54PM
 {
     my $self = shift;
     print "JS::Runtime::DESTROY\n" if $DEBUG;
+warn("JS::Runtime::DESTROY\n");
     JS::DestroyRuntime($self);
     undef $this;
 }   ##DESTROY
@@ -112,6 +240,7 @@ sub AUTOLOAD        #7/28/98 8:24PM
 sub new     #7/31/98 3:39PM
 {
     print "JS::Context::new\n" if $DEBUG;
+warn("JS::Context::new\n");
     my($class, $rt, $stacksize) = @_;
     $this = JS::Runtime::NewContext($rt, $stacksize);
     return  $this;
@@ -123,7 +252,8 @@ sub new     #7/31/98 3:39PM
 sub DESTROY     #7/31/98 4:54PM
 {
     my $self = shift;
-    print "JS::Contexts::DESTROY\n" if $DEBUG;
+    print "JS::Context::DESTROY\n" if $DEBUG;
+warn("JS::Context::DESTROY\n");
     JS::Runtime::DestroyContext($self);
     undef $this;
 }   ##DESTROY

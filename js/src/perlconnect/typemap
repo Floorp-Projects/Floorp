@@ -47,7 +47,7 @@ JSObject *       OBJECT
 OUTPUT
 jsval
     {
-        JSContext *cx = getContext();
+        /* JSContext *cx = getContext(); */
         JSVALToSV(cx, JS_GetGlobalObject(cx), $var, &$arg);
     }
 
@@ -66,7 +66,7 @@ RUNTIME
 INPUT
 jsval
     {
-        JSContext *cx = getContext();
+        /* JSContext *cx = getContext(); */
         SVToJSVAL(cx, JS_GetGlobalObject(cx), newRV($arg), &$var);
     }
 

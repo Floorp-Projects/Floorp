@@ -35,6 +35,177 @@
 # Test file for JS.pm
 #
 
+############################################################
+# support packages for test script
+############################################################
+
+############################################################
+# Fotrik
+package Father;
+
+sub old_meth {
+    return "Father::old_meth";
+}
+
+
+############################################################
+# Synacek
+package Son;
+use vars qw( @ISA );
+@ISA = qw( Father );
+
+sub new {
+    my $class = shift;
+    $class = ref $class || $class;
+    my $self = {};
+    bless $self, $class;
+    return $self;
+}
+
+sub new_meth {
+    return "Son::new_meth";
+}
+
+############################################################
+# Proxy
+package Proxy;
+
+sub new {
+    my $class = shift;
+    $class = ref $class || $class;
+    my $self = { property => shift };
+    bless $self, $class;
+    return $self;    
+}
+
+sub getObj {
+    my $ret = new Son();
+    return $ret;
+}
+
+sub getValue {
+    my $self = shift;
+    return $self->{ property };
+}
+
+############################################################
+# main part of the test script
+############################################################
+
+package main;
+use JS;
+
+BEGIN 
+  { $| = 1; print "1..11\n"; }
+END 
+  { print "not ok 1\n" unless $loaded; }
+
+$loaded = 1;
+print "ok 1\n";
+
+use strict; #no typos, please
+
+my $rt = new JS(1_204 ** 2);
+my $cx = $rt->createContext(8 * 1_024);
+
+my $jsval;
+my $testc = 1; #testcounter
+############################################################
+# the simplest test
+$testc++;
+$jsval = $cx->eval('6;');
+print $jsval == 6 ? "ok $testc\n" : "not ok $testc\n";
+
+############################################################
+#second very simple test
+$testc++;
+$jsval = $cx->eval('"hallo";');
+print $jsval eq "hallo" ? "ok $testc\n" : "not ok $testc\n";
+
+############################################################
+# third very simple test
+$testc++;
+$jsval = $cx->eval("1.23");
+print $jsval == 1.23 ? "ok $testc\n" : "not ok $testc\n";
+
+############################################################
+#undef is little bit tricky
+$testc++;
+$jsval = $cx->eval('undefined');
+print ! defined $jsval  ? "ok $testc\n" : "not ok $testc\n";
+
+############################################################
+#can ve tie js objects? (generally to hash, Arrays to arrays too)
+$testc++;
+$jsval = $cx->eval('foo = new Object(); foo.prop = 1; foo;');
+my %hash;
+#read js property
+tie %hash, 'JS::Object', $jsval;
+print $hash{prop} == 1  ? "ok $testc\n" : "not ok $testc\n";
+
+############################################################
+#set js propertry
+$testc++;
+$hash{prop2} = 2;
+$jsval = $cx->eval('foo.prop2;');
+print $jsval == 2  ? "ok $testc\n" : "not ok $testc\n";
+
+############################################################
+#tie array
+$testc++;
+my @arr;
+$jsval = $cx->eval('arr = new Array(); arr[0] = 0; arr[1] = 1; arr;');
+tie @arr, "JS::Object", $jsval;
+print ((($#arr == 1) && ($arr[1] == 1)) ? "ok $testc\n" : "not ok $testc\n");
+
+############################################################
+# object delegation test
+$testc++;
+$cx->createObject(new Proxy("init_value"), "perlobj", 
+		  { getObj   => \&Proxy::getObj,
+		    getValue => \&Proxy::getValue,
+		  });
+$jsval = $cx->eval("perlobj.getValue()");
+print $jsval eq "init_value"  ? "ok $testc\n" : "not ok $testc\n";
+
+############################################################
+# perl object returned to js
+$testc++;
+$jsval = $cx->eval("po = perlobj.getObj(); po.new_meth()");
+print $jsval eq "Son::new_meth" ? "ok $testc\n" : "not ok $testc\n";
+
+
+############################################################
+# and what about inherited methods?
+$testc++;
+$jsval = $cx->eval("po.old_meth()");
+print $jsval eq "Father::old_meth" ? "ok $testc\n" : "not ok $testc\n";
+
+############################################################
+# error test
+$testc++;
+my $line;
+sub js_ErrorReporter {
+    my ($msg, $file, $line, $linebuf, $token) = @_;
+    die "line $line";
+}
+$cx->setErrorReporter( \&js_ErrorReporter );
+eval { $cx->eval("x = 2 + 4;\nsecond line is wrong\n"); };
+print $@ =~ /^line 1/ ? "ok $testc\n" : "not ok $testc\n";
+
+############################################################
+# cleanup
+# so far we have to undef context value, to make sure
+# it is disposed before runtome
+undef $cx;
+undef $rt;
+
+__END__
+
+############################################################
+# the old disabled tests (should work)
+############################################################
+
 use JS;
 # create new JS context
 ($js = new JS()) or warn "new JS() failed";

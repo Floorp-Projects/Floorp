@@ -44,3 +44,4 @@
 */
 JS_EXTERN_API(JSObject*)
 JS_InitPerlClass(JSContext *cx, JSObject *obj);
+
