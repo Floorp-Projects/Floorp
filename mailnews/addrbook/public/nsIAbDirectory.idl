@@ -60,6 +60,7 @@ interface nsIAbDirectoryProperties : nsISupports {
   attribute string authDn;
   attribute unsigned long syncTimeStamp;
   attribute long categoryId;
+  attribute long position;
 };
 
 [scriptable, uuid(AA920C90-1DD1-11B2-96D3-AA81268ADAFC)]
@@ -94,7 +95,7 @@ interface nsIAbDirectory : nsISupports {
   readonly attribute nsIAbDirectoryProperties directoryProperties;
 
 	// Get the children directories
-	readonly attribute nsIEnumerator childNodes;
+	readonly attribute nsISimpleEnumerator childNodes;
 
 	// Get the cards associated with the directory
 	// This will return the cards associated with

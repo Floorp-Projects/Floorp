@@ -63,7 +63,7 @@ public:
 	
 	// nsAbDirProperty methods
 	NS_IMETHOD GetChildCards(nsIEnumerator **aCards) ;
-	NS_IMETHOD GetChildNodes(nsIEnumerator **aNodes) ;
+	NS_IMETHOD GetChildNodes(nsISimpleEnumerator **aNodes) ;
     NS_IMETHOD HasCard(nsIAbCard *aCard, PRBool *aHasCard) ;
     NS_IMETHOD HasDirectory(nsIAbDirectory *aDirectory, PRBool *aHasDirectory) ;
     NS_IMETHOD DeleteCards(nsISupportsArray *aCardList) ;

@@ -43,7 +43,7 @@
 #include "nsAbDirProperty.h"
 
 #include "nsHashtable.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 
 class nsAbBSDirectory : public nsRDFResource, public nsAbDirProperty
 {
@@ -54,7 +54,7 @@ public:
 	virtual ~nsAbBSDirectory();
 	
 	// nsIAbDirectory methods
-	NS_IMETHOD GetChildNodes(nsIEnumerator* *result);
+	NS_IMETHOD GetChildNodes(nsISimpleEnumerator* *result);
 	NS_IMETHOD CreateNewDirectory(nsIAbDirectoryProperties *aProperties);
 	NS_IMETHOD CreateDirectoryByURI(const PRUnichar *dirName, const char *uri, PRBool migrating);
   NS_IMETHOD ModifyDirectory(nsIAbDirectory *directory, nsIAbDirectoryProperties *aProperties);
@@ -72,7 +72,7 @@ protected:
 
 protected:
 	PRBool mInitialized;
-	nsCOMPtr<nsISupportsArray> mSubDirectories;
+	nsCOMArray<nsIAbDirectory> mSubDirectories;
 	nsHashtable mServers;
 };
 

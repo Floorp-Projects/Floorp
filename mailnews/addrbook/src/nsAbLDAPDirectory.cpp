@@ -56,6 +56,8 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPrefBranch.h"
+#include "nsCOMArray.h"
+#include "nsArrayEnumerator.h"
 
 nsAbLDAPDirectory::nsAbLDAPDirectory() :
     nsAbDirectoryRDFResource(),
@@ -181,14 +183,10 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetOperations(PRInt32 *aOperations)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAbLDAPDirectory::GetChildNodes(nsIEnumerator* *result)
+NS_IMETHODIMP nsAbLDAPDirectory::GetChildNodes(nsISimpleEnumerator* *aResult)
 {
-    nsCOMPtr<nsISupportsArray> array;
-    NS_NewISupportsArray(getter_AddRefs(array));
-    if (!array)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-    return array->Enumerate(result);
+    nsCOMArray<nsIAbDirectory> children;
+    return NS_NewArrayEnumerator(aResult, children);
 }
 
 NS_IMETHODIMP nsAbLDAPDirectory::GetChildCards(nsIEnumerator** result)

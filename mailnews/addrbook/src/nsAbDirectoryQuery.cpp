@@ -387,18 +387,15 @@ nsresult nsAbDirectoryQuery::queryChildren (nsIAbDirectory* directory,
 {
     nsresult rv = NS_OK;
 
-    nsCOMPtr<nsIEnumerator> subDirectories;
+    nsCOMPtr<nsISimpleEnumerator> subDirectories;
     rv = directory->GetChildNodes(getter_AddRefs(subDirectories));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = subDirectories->First();
-    if (NS_FAILED(rv))
-        return NS_OK;
-
-    do
+    PRBool hasMore;
+    while (NS_SUCCEEDED(rv = subDirectories->HasMoreElements(&hasMore)) && hasMore)
     {
         nsCOMPtr<nsISupports> item;
-        rv = subDirectories->CurrentItem (getter_AddRefs (item));
+        rv = subDirectories->GetNext (getter_AddRefs (item));
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIAbDirectory> subDirectory(do_QueryInterface(item, &rv));
@@ -407,10 +404,7 @@ nsresult nsAbDirectoryQuery::queryChildren (nsIAbDirectory* directory,
         rv = query (subDirectory, arguments, listener, resultLimit);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = subDirectories->Next();
     }
-    while (rv == NS_OK);
-
     return NS_OK;
 }
 

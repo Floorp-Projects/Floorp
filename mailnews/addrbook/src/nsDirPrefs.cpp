@@ -306,143 +306,143 @@ nsVoidArray* DIR_GetDirectories()
 
 nsresult DIR_GetDirServers()
 {
-    nsresult rv = NS_OK;
-
-	if (!dir_ServerList)
-	{
-        nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-        if (NS_FAILED(rv) || !pPref) 
+  nsresult rv = NS_OK;
+  
+  if (!dir_ServerList)
+  {
+    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+    if (NS_FAILED(rv) || !pPref) 
     		return NS_ERROR_FAILURE;
-
-		/* we need to build the DIR_Server list */ 
-		rv = DIR_GetServerPreferences(&dir_ServerList);
-
-		/* Register the preference call back if necessary. */
-		if (NS_SUCCEEDED(rv) && (!dir_ServerPrefCallbackRegistered))
-		{
-			dir_ServerPrefCallbackRegistered = PR_TRUE;
-        	pPref->RegisterCallback(PREF_LDAP_SERVER_TREE_NAME, dir_ServerPrefCallback, nsnull);
-		}
-	}
-	return rv;
+    
+    /* we need to build the DIR_Server list */ 
+    rv = DIR_GetServerPreferences(&dir_ServerList);
+    
+    /* Register the preference call back if necessary. */
+    if (NS_SUCCEEDED(rv) && (!dir_ServerPrefCallbackRegistered))
+    {
+      dir_ServerPrefCallbackRegistered = PR_TRUE;
+      pPref->RegisterCallback(PREF_LDAP_SERVER_TREE_NAME, dir_ServerPrefCallback, nsnull);
+    }
+  }
+  return rv;
 }
 
 static nsresult dir_ConvertToMabFileName()
 {
-	if (dir_ServerList)
-	{
-		PRInt32 count = dir_ServerList->Count();
-		PRInt32 i;
-		for (i = 0; i < count; i++)
-		{
-			DIR_Server *server = (DIR_Server *)dir_ServerList->ElementAt(i);
-
-			// convert for main personal addressbook only
-			// do other address book when convert from 4.5 to mork is done
-			if (server && server->position == 1 && server->fileName)
-			{
+  if (dir_ServerList)
+  {
+    PRInt32 count = dir_ServerList->Count();
+    PRInt32 i;
+    for (i = 0; i < count; i++)
+    {
+      DIR_Server *server = (DIR_Server *)dir_ServerList->ElementAt(i);
+      
+      // convert for main personal addressbook only
+      // do other address book when convert from 4.5 to mork is done
+      if (server && server->position == 1 && server->fileName)
+      {
         // determine if server->fileName ends with ".na2"
         PRUint32 fileNameLen = strlen(server->fileName);
         if ((fileNameLen > kABFileName_PreviousSuffixLen) && 
-            strcmp(server->fileName + fileNameLen - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0)
-				{
-					//Move old abook.na2 to end of the list and change the description
-					DIR_Server * newServer = nsnull;
-					DIR_CopyServer(server, &newServer);
-					newServer->position = count + 1;
-					char *newDescription = PR_smprintf("%s 4.x", newServer->description);
-					PR_FREEIF(newServer->description);
-					newServer->description = newDescription;
-					char *newPrefName = PR_smprintf("%s4x", newServer->prefName);
-					PR_FREEIF(newServer->prefName);
-					newServer->prefName = newPrefName;
-					dir_ServerList->AppendElement(newServer);
-					DIR_SavePrefsForOneServer(newServer);
-
-					PR_FREEIF (server->fileName);
-                    server->fileName = nsCRT::strdup(kPersonalAddressbook);
-					DIR_SavePrefsForOneServer(server);
-				}
-			}
-		}
-	}
-	return NS_OK;
+          strcmp(server->fileName + fileNameLen - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0)
+        {
+          //Move old abook.na2 to end of the list and change the description
+          DIR_Server * newServer = nsnull;
+          DIR_CopyServer(server, &newServer);
+          newServer->position = count + 1;
+          char *newDescription = PR_smprintf("%s 4.x", newServer->description);
+          PR_FREEIF(newServer->description);
+          newServer->description = newDescription;
+          char *newPrefName = PR_smprintf("%s4x", newServer->prefName);
+          PR_FREEIF(newServer->prefName);
+          newServer->prefName = newPrefName;
+          dir_ServerList->AppendElement(newServer);
+          DIR_SavePrefsForOneServer(newServer);
+          
+          PR_FREEIF (server->fileName);
+          server->fileName = nsCRT::strdup(kPersonalAddressbook);
+          DIR_SavePrefsForOneServer(server);
+        }
+      }
+    }
+  }
+  return NS_OK;
 }
 
 nsresult DIR_ShutDown()  /* FEs should call this when the app is shutting down. It frees all DIR_Servers regardless of ref count values! */
 {
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-	if (NS_FAILED(rv) || !pPref) 
-		return NS_ERROR_FAILURE;
-	pPref->SavePrefFile(nsnull);
-
-	if (dir_ServerList)
-	{
-		PRInt32 count = dir_ServerList->Count();
-		PRInt32 i;
-		for (i = 0; i < count; i++)
-		{
-			DIR_DeleteServer((DIR_Server *)(dir_ServerList->ElementAt(i)));
-		}
-		delete dir_ServerList;
-		dir_ServerList = nsnull;
-	}
-
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+  if (NS_FAILED(rv) || !pPref) 
+    return NS_ERROR_FAILURE;
+  pPref->SavePrefFile(nsnull);
+  
+  if (dir_ServerList)
+  {
+    PRInt32 count = dir_ServerList->Count();
+    PRInt32 i;
+    for (i = 0; i < count; i++)
+    {
+      DIR_DeleteServer((DIR_Server *)(dir_ServerList->ElementAt(i)));
+    }
+    delete dir_ServerList;
+    dir_ServerList = nsnull;
+  }
+  
   /* unregister the preference call back, if necessary.
-   * we need to do this as DIR_Shutdown() is called when switching profiles
-   * when using turbo.  (see nsAbDirectoryDataSource::Observe())
-   * When switching profiles, prefs get unloaded and then re-loaded
-   * we don't want our callback to get called for all that.
-   * We'll reset our callback the first time DIR_GetDirServers() is called
-   * after we've switched profiles.
-   */
+  * we need to do this as DIR_Shutdown() is called when switching profiles
+  * when using turbo.  (see nsAbDirectoryDataSource::Observe())
+  * When switching profiles, prefs get unloaded and then re-loaded
+  * we don't want our callback to get called for all that.
+  * We'll reset our callback the first time DIR_GetDirServers() is called
+  * after we've switched profiles.
+  */
   if (dir_ServerPrefCallbackRegistered) {
     pPref->UnregisterCallback(PREF_LDAP_SERVER_TREE_NAME, dir_ServerPrefCallback, nsnull);
     dir_ServerPrefCallbackRegistered = PR_FALSE;
   }
-
-	return NS_OK;
+  
+  return NS_OK;
 }
 
 nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir)
 {
-	if (dir_ServerList)
-	{
-		PRInt32 count = dir_ServerList->Count();
-		PRInt32 i;
-		for (i = 0; i < count; i++)
-		{
-			DIR_Server* server = (DIR_Server *)(dir_ServerList->ElementAt(i));
-			if (server == pServer)
-			{
-				*hasDir = PR_TRUE;
-				return NS_OK;
-			}
-		}
-	}
-	*hasDir = PR_FALSE;
-	return NS_OK;
+  if (dir_ServerList)
+  {
+    PRInt32 count = dir_ServerList->Count();
+    PRInt32 i;
+    for (i = 0; i < count; i++)
+    {
+      DIR_Server* server = (DIR_Server *)(dir_ServerList->ElementAt(i));
+      if (server == pServer)
+      {
+        *hasDir = PR_TRUE;
+        return NS_OK;
+      }
+    }
+  }
+  *hasDir = PR_FALSE;
+  return NS_OK;
 }
 
 nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, PRBool migrating, const char * uri, int maxHits, const char * authDn, DirectoryType dirType, DIR_Server** pServer)
 {
-	DIR_Server * server = (DIR_Server *) PR_Malloc(sizeof(DIR_Server));
-	DIR_InitServerWithType (server, dirType);
-	if (!dir_ServerList)
-		DIR_GetDirServers();
-	if (dir_ServerList)
-	{
-		PRInt32 count = dir_ServerList->Count();
-
+  DIR_Server * server = (DIR_Server *) PR_Malloc(sizeof(DIR_Server));
+  DIR_InitServerWithType (server, dirType);
+  if (!dir_ServerList)
+    DIR_GetDirServers();
+  if (dir_ServerList)
+  {
+    PRInt32 count = dir_ServerList->Count();
+    
     NS_ConvertUCS2toUTF8 utf8str(dirName);
     server->description = ToNewCString(utf8str);
-		server->position = count + 1;
-
-		if (fileName)
-            server->fileName = nsCRT::strdup(fileName);
-		else
-			DIR_SetFileName(&server->fileName, kPersonalAddressbook);
+    server->position = count + 1;
+    
+    if (fileName)
+      server->fileName = nsCRT::strdup(fileName);
+    else
+      DIR_SetFileName(&server->fileName, kPersonalAddressbook);
     if (dirType == LDAPDirectory) {
       // We don't actually allow the password to be saved in the preferences;
       // this preference is (effectively) ignored by the current code base.  
@@ -459,11 +459,11 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
     }
     if (maxHits)
       server->maxHits = maxHits;
-
-		dir_ServerList->AppendElement(server);
-		if (!migrating) {
-			DIR_SavePrefsForOneServer(server); 
-		}
+    
+    dir_ServerList->AppendElement(server);
+    if (!migrating) {
+      DIR_SavePrefsForOneServer(server); 
+    }
     else if (!server->prefName)
     {
       // Need to return pref names here so the caller will be able to get the
@@ -481,39 +481,39 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
       }
     }
 #ifdef DEBUG_sspitzer
-		else {
-			printf("don't set the prefs, they are already set since this ab was migrated\n");
-		}
+    else {
+      printf("don't set the prefs, they are already set since this ab was migrated\n");
+    }
 #endif
-		*pServer = server;
-
-		// save new address book into pref file 
-		nsresult rv = NS_OK;
-		nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-		if (NS_FAILED(rv) || !pPref) 
-			return NS_ERROR_FAILURE;
-		pPref->SavePrefFile(nsnull);
-
-		return NS_OK;
-	}
-	return NS_ERROR_FAILURE;
+    *pServer = server;
+    
+    // save new address book into pref file 
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+    if (NS_FAILED(rv) || !pPref) 
+      return NS_ERROR_FAILURE;
+    pPref->SavePrefFile(nsnull);
+    
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 nsresult DIR_DecrementServerRefCount (DIR_Server *server)
 {
-	NS_ASSERTION((server != nsnull), "server is null");
+  NS_ASSERTION((server != nsnull), "server is null");
  	if (server && --server->refCount <= 0)
-		return DIR_DeleteServer(server);
-	else
-		return 1;
+          return DIR_DeleteServer(server);
+        else
+          return 1;
 }
 
 nsresult DIR_IncrementServerRefCount (DIR_Server *server)
 {
-	NS_ASSERTION((server != nsnull), "server is null");
-	if (server)
-		server->refCount++;
-	return NS_OK;
+  NS_ASSERTION((server != nsnull), "server is null");
+  if (server)
+    server->refCount++;
+  return NS_OK;
 }
 
 /*****************************************************************************
@@ -523,67 +523,67 @@ nsresult DIR_IncrementServerRefCount (DIR_Server *server)
 /* use this when you want to create a server of a particular type */
 nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType)
 {
-	DIR_InitServer(server);
+  DIR_InitServer(server);
   server->dirType = dirType;
-	if (dirType == LDAPDirectory)
-	{
-        server->columnAttributes = nsCRT::strdup(kDefaultLDAPColumnHeaders);
-		server->isOffline = PR_TRUE;
-		server->csid = CS_UTF8;
-		server->locale = nsnull;
-	}
-	else if (dirType == PABDirectory || dirType == MAPIDirectory)
-	{
-        server->columnAttributes = nsCRT::strdup(kDefaultPABColumnHeaders);
-		server->isOffline = PR_FALSE;
-		server->csid = CS_UTF8;
-//		server->csid = INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel);
-		server->locale = nsnull; /* get the locale we are going to use with this AB */
-/*		server->locale = INTL_GetCollationKeyLocale(nsnull); */
-	}
-	return NS_OK;
+  if (dirType == LDAPDirectory)
+  {
+    server->columnAttributes = nsCRT::strdup(kDefaultLDAPColumnHeaders);
+    server->isOffline = PR_TRUE;
+    server->csid = CS_UTF8;
+    server->locale = nsnull;
+  }
+  else if (dirType == PABDirectory || dirType == MAPIDirectory)
+  {
+    server->columnAttributes = nsCRT::strdup(kDefaultPABColumnHeaders);
+    server->isOffline = PR_FALSE;
+    server->csid = CS_UTF8;
+    //		server->csid = INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel);
+    server->locale = nsnull; /* get the locale we are going to use with this AB */
+    /*		server->locale = INTL_GetCollationKeyLocale(nsnull); */
+  }
+  return NS_OK;
 }
 
 nsresult DIR_InitServer (DIR_Server *server)
 {
-	NS_ASSERTION((server != nsnull), "server is null");
-	if (server)
-	{
-		memset(server, 0, sizeof(DIR_Server));
-		server->saveResults = PR_TRUE;
-		server->efficientWildcards = kDefaultEfficientWildcards;
-		server->port = LDAP_PORT;
-		server->maxHits = kDefaultMaxHits;
-		server->isOffline = kDefaultIsOffline;
-		server->refCount = 1;
-		server->position = kDefaultPosition;
-		server->csid = CS_UTF8;
-		server->locale = nsnull;
-        server->uri = nsnull;
-        // initialize the palm category
-        server->PalmCategoryId = -1;
-	}
-	return NS_OK;
+  NS_ASSERTION((server != nsnull), "server is null");
+  if (server)
+  {
+    memset(server, 0, sizeof(DIR_Server));
+    server->saveResults = PR_TRUE;
+    server->efficientWildcards = kDefaultEfficientWildcards;
+    server->port = LDAP_PORT;
+    server->maxHits = kDefaultMaxHits;
+    server->isOffline = kDefaultIsOffline;
+    server->refCount = 1;
+    server->position = kDefaultPosition;
+    server->csid = CS_UTF8;
+    server->locale = nsnull;
+    server->uri = nsnull;
+    // initialize the palm category
+    server->PalmCategoryId = -1;
+  }
+  return NS_OK;
 }
 
 DIR_DescriptionCode DIR_ValidateDirectoryDescription(nsVoidArray * wholeList, DIR_Server * serverToValidate)
 {
-	/* right now the only invalid description is a duplicate...so check for duplicates */
-	if (wholeList && serverToValidate && serverToValidate->description)
-	{
-		PRInt32 numItems = wholeList->Count();
-		PRInt32 i;
-		for (i = 0; i < numItems; i++)
-		{
-			DIR_Server *s = (DIR_Server *)(dir_ServerList->ElementAt(i));
-			/* don't check the description if it is the same directory as the one we are comparing against */
-            if (s != serverToValidate && s->description && !nsCRT::strcasecmp(s->description, serverToValidate->description))
-				return DIR_DuplicateDescription;
-		}
-
-	}
-
-	return DIR_ValidDescription;
+  /* right now the only invalid description is a duplicate...so check for duplicates */
+  if (wholeList && serverToValidate && serverToValidate->description)
+  {
+    PRInt32 numItems = wholeList->Count();
+    PRInt32 i;
+    for (i = 0; i < numItems; i++)
+    {
+      DIR_Server *s = (DIR_Server *)(dir_ServerList->ElementAt(i));
+      /* don't check the description if it is the same directory as the one we are comparing against */
+      if (s != serverToValidate && s->description && !nsCRT::strcasecmp(s->description, serverToValidate->description))
+        return DIR_DuplicateDescription;
+    }
+    
+  }
+  
+  return DIR_ValidDescription;
 }
 
 
@@ -2875,202 +2875,202 @@ char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
 
 void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool oldstyle /* 4.0 Branch */)
 {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-    if (NS_FAILED(rv) || !pPref) 
-		return;
-
-	PRBool  prefBool;
-	char    *prefstring = server->prefName;
-	char     tempstring[256];
-	char    *csidString  = nsnull;
-	PRBool forcePrefSave = PR_FALSE;  /* if when reading in the prefs we did something that forces us to save the branch...*/
-
-	if (reinitialize)
-	{
-		/* If we're reinitializing, we need to save off the runtime volatile
-		 * data which isn't stored in persistent JS prefs and restore it
-		 */
-		PRUint32 oldRefCount = server->refCount;
-		server->prefName = nsnull;
-		dir_DeleteServerContents(server);
-		DIR_InitServer(server);
-		server->prefName = prefstring;
-		server->refCount = oldRefCount; 
-	}
-	
-        // this call fills in tempstring with the position pref, and
-        // we then check to see if it's locked.
-	server->position = DIR_GetIntPref (prefstring, "position", tempstring, kDefaultPosition);
-	PRBool bIsLocked;
-	pPref->PrefIsLocked(tempstring, &bIsLocked);
-	DIR_ForceFlag(server, DIR_UNDELETABLE | DIR_POSITION_LOCKED, bIsLocked);
-
-	server->isSecure = DIR_GetBoolPref (prefstring, "isSecure", tempstring, PR_FALSE);
-	server->saveResults = DIR_GetBoolPref (prefstring, "saveResults", tempstring, PR_TRUE);				
-	server->efficientWildcards = DIR_GetBoolPref (prefstring, "efficientWildcards", tempstring, PR_TRUE);				
-	server->port = DIR_GetIntPref (prefstring, "port", tempstring, server->isSecure ? LDAPS_PORT : LDAP_PORT);
-	if (server->port == 0)
-		server->port = server->isSecure ? LDAPS_PORT : LDAP_PORT;
-	server->maxHits = DIR_GetIntPref (prefstring, "maxHits", tempstring, kDefaultMaxHits);
-
-	if (0 == PL_strcmp(prefstring, "ldap_2.servers.pab") || 
-		0 == PL_strcmp(prefstring, "ldap_2.servers.history")) 
-	{
-		// get default address book name from addressbook.properties 
-		server->description = DIR_GetLocalizedStringPref(prefstring, "description", tempstring, "");
-	}
-	else
-		server->description = DIR_GetStringPref (prefstring, "description", tempstring, "");
-
-	server->serverName = DIR_GetStringPref (prefstring, "serverName", tempstring, "");
-	server->searchBase = DIR_GetStringPref (prefstring, "searchBase", tempstring, "");
-	server->isOffline = DIR_GetBoolPref (prefstring, "isOffline", tempstring, kDefaultIsOffline);
-	server->dirType = (DirectoryType)DIR_GetIntPref (prefstring, "dirType", tempstring, LDAPDirectory);
-	if (server->dirType == PABDirectory)
-	{
-		/* make sure there is a PR_TRUE PAB */
-		if (!server->serverName || !*server->serverName)
-			server->isOffline = PR_FALSE;
-		server->saveResults = PR_TRUE; /* never let someone delete their PAB this way */
-	}
-
-	/* load in the column attributes */
-	if (server->dirType == PABDirectory || server->dirType == MAPIDirectory)
-		server->columnAttributes = DIR_GetStringPref(prefstring, "columns", tempstring, kDefaultPABColumnHeaders);
-	else
-		server->columnAttributes = DIR_GetStringPref(prefstring, "columns", tempstring, kDefaultLDAPColumnHeaders);
-
-	server->fileName = DIR_GetStringPref (prefstring, "filename", tempstring, "");
-	if ( (!server->fileName || !*(server->fileName)) && !oldstyle) /* if we don't have a file name and this is the new branch get a file name */
-			DIR_SetServerFileName (server, server->serverName);
-	if (server->fileName && *server->fileName)
-		DIR_ConvertServerFileName(server);
-
-    // the string "s" is the default uri ( <scheme> + "://" + <filename> )
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+  if (NS_FAILED(rv) || !pPref) 
+    return;
+  
+  PRBool  prefBool;
+  char    *prefstring = server->prefName;
+  char     tempstring[256];
+  char    *csidString  = nsnull;
+  PRBool forcePrefSave = PR_FALSE;  /* if when reading in the prefs we did something that forces us to save the branch...*/
+  
+  if (reinitialize)
+  {
+    /* If we're reinitializing, we need to save off the runtime volatile
+    * data which isn't stored in persistent JS prefs and restore it
+    */
+    PRUint32 oldRefCount = server->refCount;
+    server->prefName = nsnull;
+    dir_DeleteServerContents(server);
+    DIR_InitServer(server);
+    server->prefName = prefstring;
+    server->refCount = oldRefCount; 
+  }
+  
+  // this call fills in tempstring with the position pref, and
+  // we then check to see if it's locked.
+  server->position = DIR_GetIntPref (prefstring, "position", tempstring, kDefaultPosition);
+  PRBool bIsLocked;
+  pPref->PrefIsLocked(tempstring, &bIsLocked);
+  DIR_ForceFlag(server, DIR_UNDELETABLE | DIR_POSITION_LOCKED, bIsLocked);
+  
+  server->isSecure = DIR_GetBoolPref (prefstring, "isSecure", tempstring, PR_FALSE);
+  server->saveResults = DIR_GetBoolPref (prefstring, "saveResults", tempstring, PR_TRUE);				
+  server->efficientWildcards = DIR_GetBoolPref (prefstring, "efficientWildcards", tempstring, PR_TRUE);				
+  server->port = DIR_GetIntPref (prefstring, "port", tempstring, server->isSecure ? LDAPS_PORT : LDAP_PORT);
+  if (server->port == 0)
+    server->port = server->isSecure ? LDAPS_PORT : LDAP_PORT;
+  server->maxHits = DIR_GetIntPref (prefstring, "maxHits", tempstring, kDefaultMaxHits);
+  
+  if (0 == PL_strcmp(prefstring, "ldap_2.servers.pab") || 
+    0 == PL_strcmp(prefstring, "ldap_2.servers.history")) 
+  {
+    // get default address book name from addressbook.properties 
+    server->description = DIR_GetLocalizedStringPref(prefstring, "description", tempstring, "");
+  }
+  else
+    server->description = DIR_GetStringPref (prefstring, "description", tempstring, "");
+  
+  server->serverName = DIR_GetStringPref (prefstring, "serverName", tempstring, "");
+  server->searchBase = DIR_GetStringPref (prefstring, "searchBase", tempstring, "");
+  server->isOffline = DIR_GetBoolPref (prefstring, "isOffline", tempstring, kDefaultIsOffline);
+  server->dirType = (DirectoryType)DIR_GetIntPref (prefstring, "dirType", tempstring, LDAPDirectory);
+  if (server->dirType == PABDirectory)
+  {
+    /* make sure there is a PR_TRUE PAB */
+    if (!server->serverName || !*server->serverName)
+      server->isOffline = PR_FALSE;
+    server->saveResults = PR_TRUE; /* never let someone delete their PAB this way */
+  }
+  
+  /* load in the column attributes */
+  if (server->dirType == PABDirectory || server->dirType == MAPIDirectory)
+    server->columnAttributes = DIR_GetStringPref(prefstring, "columns", tempstring, kDefaultPABColumnHeaders);
+  else
+    server->columnAttributes = DIR_GetStringPref(prefstring, "columns", tempstring, kDefaultLDAPColumnHeaders);
+  
+  server->fileName = DIR_GetStringPref (prefstring, "filename", tempstring, "");
+  if ( (!server->fileName || !*(server->fileName)) && !oldstyle) /* if we don't have a file name and this is the new branch get a file name */
+    DIR_SetServerFileName (server, server->serverName);
+  if (server->fileName && *server->fileName)
+    DIR_ConvertServerFileName(server);
+  
+  // the string "s" is the default uri ( <scheme> + "://" + <filename> )
   nsCString s((server->dirType == PABDirectory || server->dirType == MAPIDirectory) ? kMDBDirectoryRoot : kLDAPDirectoryRoot);
-    s.Append (server->fileName);
-    server->uri = DIR_GetStringPref (prefstring, "uri", tempstring, s.get ());
-    
-	server->lastSearchString = DIR_GetStringPref (prefstring, "searchString", tempstring, "");
-
-	/* This is where site-configurable attributes and filters are read from JavaScript */
-    DIR_GetCustomAttributePrefs (prefstring, server);
-	DIR_GetCustomFilterPrefs (prefstring, server, tempstring);
-
-	/* The replicated attributes and basic search attributes can only be
+  s.Append (server->fileName);
+  server->uri = DIR_GetStringPref (prefstring, "uri", tempstring, s.get ());
+  
+  server->lastSearchString = DIR_GetStringPref (prefstring, "searchString", tempstring, "");
+  
+  /* This is where site-configurable attributes and filters are read from JavaScript */
+  DIR_GetCustomAttributePrefs (prefstring, server);
+  DIR_GetCustomFilterPrefs (prefstring, server, tempstring);
+  
+  /* The replicated attributes and basic search attributes can only be
 	 * attributes which are in our predefined set (DIR_AttributeId) so
-	 * store those in an array of IDs for more convenient access
+         * store those in an array of IDs for more convenient access
 	 */
-	dir_GetReplicationInfo (prefstring, server, tempstring);
-
-	server->PalmCategoryId = DIR_GetIntPref (prefstring, "PalmCategoryId", tempstring, -1);
-	server->PalmSyncTimeStamp = DIR_GetIntPref (prefstring, "PalmSyncTimeStamp", tempstring, 0);
-
-	/* Get authentication prefs */
-	server->enableAuth = DIR_GetBoolPref (prefstring, "auth.enabled", tempstring, kDefaultEnableAuth);
-	server->authDn = DIR_GetStringPref (prefstring, "auth.dn", tempstring, nsnull);
-	server->savePassword = DIR_GetBoolPref (prefstring, "auth.savePassword", tempstring, kDefaultSavePassword);
-	if (server->savePassword)
-		server->password = DIR_GetStringPref (prefstring, "auth.password", tempstring, "");
-
-	prefBool = DIR_GetBoolPref (prefstring, "autoComplete.enabled", tempstring, kDefaultAutoCompleteEnabled);
-	DIR_ForceFlag (server, DIR_AUTO_COMPLETE_ENABLED, prefBool);
-	prefBool = DIR_GetBoolPref (prefstring, "autoComplete.never", tempstring, kDefaultAutoCompleteNever);
-	DIR_ForceFlag (server, DIR_AUTO_COMPLETE_NEVER, prefBool);
-	server->autoCompleteFilter = DIR_GetStringPref (prefstring, "autoComplete.filter", tempstring, nsnull);
-
-	/* read in the I18N preferences for the directory --> locale and csid */
-
-	/* okay we used to write out the csid as a integer pref called "charset" then we switched to a string pref called "csid" 
-	   for I18n folks. So we want to read in the old integer pref and if it is not kDefaultPABCSID (which is a bogus -1), 
-	   then use it as the csid and when we save the server preferences later on we'll clear the old "charset" pref so we don't
-	   have to do this again. Otherwise, we already have a string pref so use that one */
-
-	csidString = DIR_GetStringPref (prefstring, "csid", tempstring, nsnull);
-	if (csidString) /* do we have a csid string ? */
-	{
-		server->csid = CS_UTF8;
-//		server->csid = INTL_CharSetNameToID (csidString);
-		PR_Free(csidString);
-	}
-	else 
-	{ 
-		/* try to read it in from the old integer style char set preference */
-		if (server->dirType == PABDirectory || server->dirType == MAPIDirectory)
-			server->csid = (PRInt16) DIR_GetIntPref (prefstring, "charset", tempstring, kDefaultPABCSID);
-		else
-			server->csid = (PRInt16) DIR_GetIntPref (prefstring, "charset", tempstring, kDefaultLDAPCSID);	
-
-		forcePrefSave = PR_TRUE; /* since we read from the old pref we want to force the new pref to be written out */
-	}
-
-	if (server->csid == CS_DEFAULT || server->csid == CS_UNKNOWN)
-		server->csid = CS_UTF8;
-//		server->csid = INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel);
-
-	/* now that the csid is taken care of, read in the locale preference */
-	server->locale = DIR_GetStringPref (prefstring, "locale", tempstring, nsnull);
-	
-	prefBool = DIR_GetBoolPref (prefstring, "vlvDisabled", tempstring, kDefaultVLVDisabled);
-	DIR_ForceFlag (server, DIR_LDAP_VLV_DISABLED | DIR_LDAP_ROOTDSE_PARSED, prefBool);
-
-	server->customDisplayUrl = DIR_GetStringPref (prefstring, "customDisplayUrl", tempstring, "");
-
-	if (!oldstyle /* we don't care about saving old directories */ && forcePrefSave && !dir_IsServerDeleted(server) )
-		DIR_SavePrefsForOneServer(server); 
+  dir_GetReplicationInfo (prefstring, server, tempstring);
+  
+  server->PalmCategoryId = DIR_GetIntPref (prefstring, "PalmCategoryId", tempstring, -1);
+  server->PalmSyncTimeStamp = DIR_GetIntPref (prefstring, "PalmSyncTimeStamp", tempstring, 0);
+  
+  /* Get authentication prefs */
+  server->enableAuth = DIR_GetBoolPref (prefstring, "auth.enabled", tempstring, kDefaultEnableAuth);
+  server->authDn = DIR_GetStringPref (prefstring, "auth.dn", tempstring, nsnull);
+  server->savePassword = DIR_GetBoolPref (prefstring, "auth.savePassword", tempstring, kDefaultSavePassword);
+  if (server->savePassword)
+    server->password = DIR_GetStringPref (prefstring, "auth.password", tempstring, "");
+  
+  prefBool = DIR_GetBoolPref (prefstring, "autoComplete.enabled", tempstring, kDefaultAutoCompleteEnabled);
+  DIR_ForceFlag (server, DIR_AUTO_COMPLETE_ENABLED, prefBool);
+  prefBool = DIR_GetBoolPref (prefstring, "autoComplete.never", tempstring, kDefaultAutoCompleteNever);
+  DIR_ForceFlag (server, DIR_AUTO_COMPLETE_NEVER, prefBool);
+  server->autoCompleteFilter = DIR_GetStringPref (prefstring, "autoComplete.filter", tempstring, nsnull);
+  
+  /* read in the I18N preferences for the directory --> locale and csid */
+  
+  /* okay we used to write out the csid as a integer pref called "charset" then we switched to a string pref called "csid" 
+  for I18n folks. So we want to read in the old integer pref and if it is not kDefaultPABCSID (which is a bogus -1), 
+  then use it as the csid and when we save the server preferences later on we'll clear the old "charset" pref so we don't
+  have to do this again. Otherwise, we already have a string pref so use that one */
+  
+  csidString = DIR_GetStringPref (prefstring, "csid", tempstring, nsnull);
+  if (csidString) /* do we have a csid string ? */
+  {
+    server->csid = CS_UTF8;
+    //		server->csid = INTL_CharSetNameToID (csidString);
+    PR_Free(csidString);
+  }
+  else 
+  { 
+    /* try to read it in from the old integer style char set preference */
+    if (server->dirType == PABDirectory || server->dirType == MAPIDirectory)
+      server->csid = (PRInt16) DIR_GetIntPref (prefstring, "charset", tempstring, kDefaultPABCSID);
+    else
+      server->csid = (PRInt16) DIR_GetIntPref (prefstring, "charset", tempstring, kDefaultLDAPCSID);	
+    
+    forcePrefSave = PR_TRUE; /* since we read from the old pref we want to force the new pref to be written out */
+  }
+  
+  if (server->csid == CS_DEFAULT || server->csid == CS_UNKNOWN)
+    server->csid = CS_UTF8;
+  //		server->csid = INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel);
+  
+  /* now that the csid is taken care of, read in the locale preference */
+  server->locale = DIR_GetStringPref (prefstring, "locale", tempstring, nsnull);
+  
+  prefBool = DIR_GetBoolPref (prefstring, "vlvDisabled", tempstring, kDefaultVLVDisabled);
+  DIR_ForceFlag (server, DIR_LDAP_VLV_DISABLED | DIR_LDAP_ROOTDSE_PARSED, prefBool);
+  
+  server->customDisplayUrl = DIR_GetStringPref (prefstring, "customDisplayUrl", tempstring, "");
+  
+  if (!oldstyle /* we don't care about saving old directories */ && forcePrefSave && !dir_IsServerDeleted(server) )
+    DIR_SavePrefsForOneServer(server); 
 }
 
 /* return total number of directories */
 static PRInt32 dir_GetPrefsFrom40Branch(nsVoidArray **list)
 {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-    if (NS_FAILED(rv) || !pPref) 
-		return -1;
-
-	PRInt32 result = -1;
-	(*list) = new nsVoidArray();
-	if (!(*list))
-		return result;
-
-	/* get the preference for how many directories */
-	if (*list)
-	{
-		PRInt32 i = 0;
-		PRInt32 numDirectories = 0;
- 
-		pPref->GetIntPref("ldap_1.number_of_directories", &numDirectories);	
-		/* ldap_1.directory start from 1 */
-		for (i = 1; i <= numDirectories; i++)
-		{
-			DIR_Server *server;
-
-			server = (DIR_Server *)PR_Calloc(1, sizeof(DIR_Server));
-			if (server)
-			{
-				char *prefName = PR_smprintf("ldap_1.directory%i", i);
-				if (prefName)
-				{
-					DIR_InitServer(server);
-					server->prefName = prefName;
-					DIR_GetPrefsForOneServer(server, PR_FALSE, PR_TRUE);				
-					PR_smprintf_free(server->prefName);
-					server->prefName = DIR_CreateServerPrefName (server, nsnull);
-					/* Leave room for Netcenter */
-					server->position = (server->dirType == PABDirectory ? i : i + 1);
-					(*list)->AppendElement(server);
-				}
-			}
-		}
-
-		/* all.js should have filled this stuff in */
-		PR_ASSERT(numDirectories != 0);
-
-		result = numDirectories;
-	}
-
-	return result;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+  if (NS_FAILED(rv) || !pPref) 
+    return -1;
+  
+  PRInt32 result = -1;
+  (*list) = new nsVoidArray();
+  if (!(*list))
+    return result;
+  
+  /* get the preference for how many directories */
+  if (*list)
+  {
+    PRInt32 i = 0;
+    PRInt32 numDirectories = 0;
+    
+    pPref->GetIntPref("ldap_1.number_of_directories", &numDirectories);	
+    /* ldap_1.directory start from 1 */
+    for (i = 1; i <= numDirectories; i++)
+    {
+      DIR_Server *server;
+      
+      server = (DIR_Server *)PR_Calloc(1, sizeof(DIR_Server));
+      if (server)
+      {
+        char *prefName = PR_smprintf("ldap_1.directory%i", i);
+        if (prefName)
+        {
+          DIR_InitServer(server);
+          server->prefName = prefName;
+          DIR_GetPrefsForOneServer(server, PR_FALSE, PR_TRUE);				
+          PR_smprintf_free(server->prefName);
+          server->prefName = DIR_CreateServerPrefName (server, nsnull);
+          /* Leave room for Netcenter */
+          server->position = (server->dirType == PABDirectory ? i : i + 1);
+          (*list)->AppendElement(server);
+        }
+      }
+    }
+    
+    /* all.js should have filled this stuff in */
+    PR_ASSERT(numDirectories != 0);
+    
+    result = numDirectories;
+  }
+  
+  return result;
 }
 
 static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsoleteList)
@@ -3145,208 +3145,231 @@ static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsol
     return NS_OK;
 }
 
+// I don't think we care about locked positions, etc.
+void DIR_SortServersByPosition(nsVoidArray *serverList)
+{
+  int i, j;
+  DIR_Server *server;
+  
+  int count = serverList->Count();
+  for (i = 0; i < count - 1; i++)
+  {
+    for (j = i + 1; j < count; j++)
+    {
+      if (((DIR_Server *) serverList->ElementAt(j))->position < ((DIR_Server *) serverList->ElementAt(i))->position)
+      {
+        server        = (DIR_Server *) serverList->ElementAt(i);
+        serverList->ReplaceElementAt(serverList->ElementAt(j), i);
+        serverList->ReplaceElementAt(server, j);
+      }
+    }
+  }
+}
+
 
 nsresult DIR_GetServerPreferences(nsVoidArray** list)
 {
-    nsresult err = NS_OK;
-    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &err)); 
-    if (NS_FAILED(err) || !pPref) 
-		return NS_ERROR_FAILURE;
-
-	PRInt32 position = 1;
-	PRInt32 version = -1;
-    char **oldChildren = nsnull;
-	PRBool savePrefs = PR_FALSE;
-	PRBool migrating = PR_FALSE;
-	nsVoidArray *oldList = nsnull;
-	nsVoidArray *obsoleteList = nsnull;
-	nsVoidArray *newList = nsnull;
-	PRInt32 i, j, count;
-
-
-	/* Update the ldap list version and see if there are old prefs to migrate. */
-	if (pPref->GetIntPref(PREF_LDAP_VERSION_NAME, &version) == PREF_NOERROR)
-	{
-		if (version < kPreviousListVersion)
-		{
-			pPref->SetIntPref(PREF_LDAP_VERSION_NAME, kCurrentListVersion);
-
-			/* Look to see if there's an old-style "ldap_1" tree in prefs */
-            PRUint32 prefCount;
-            err = dir_GetChildList(NS_LITERAL_CSTRING("ldap_1."),
-                                   &prefCount, &oldChildren);
-            if (NS_SUCCEEDED(err))
-			{
-                if (prefCount > 0)
-				{
-					migrating = PR_TRUE;
-					position = dir_GetPrefsFrom40Branch(&oldList);
-				}
-                NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, oldChildren);
-			}
-		}
-	}
-
-	/* Find the new-style "ldap_2.servers" tree in prefs */
-	err = dir_GetPrefsFrom45Branch(&newList, migrating ? &obsoleteList : nsnull);
-
-	/* Merge the new tree onto the old tree, old on top, new at bottom */
-	if (NS_SUCCEEDED(err) && oldList && newList)
-	{
-		DIR_Server *newServer;
-
-		/* Walk through the new list looking for servers that are duplicates of
-		 * ones in the old list.  Mark any duplicates for non-inclusion in the
-		 * final list.
-		 */
-		PRInt32 newCount = newList->Count();
-		for (i = 0; i < newCount; i++)
-		{
-			newServer = (DIR_Server *)newList->ElementAt(i);
-			if (nsnull != newServer)
-			{
-				DIR_Server *oldServer;
-
-				PRInt32 oldCount = oldList->Count();
-				for (j = 0; j < oldCount; j++)
-				{
-					oldServer = (DIR_Server *)oldList->ElementAt(j);
-					if (nsnull != oldServer)
-					{
-						/* Don't add servers which are in the old list and don't add a
-						 * second personal address book.
-						 */
-						if (   dir_AreServersSame(newServer, oldServer, PR_FALSE)
-							|| (   oldServer->dirType == PABDirectory
-								&& newServer->dirType == PABDirectory
-								&& oldServer->isOffline == PR_FALSE
-								&& newServer->isOffline == PR_FALSE))
-						{
-							/* Copy any new prefs out of the new server.
-							 */
-							PR_FREEIF(oldServer->prefName);
-                            oldServer->prefName  = nsCRT::strdup(newServer->prefName);
-							/* since the pref name has now been set, we can generate a proper
-							   file name in case we don't have one already */
-							if (!oldServer->fileName || !*oldServer->fileName)
-								DIR_SetServerFileName(oldServer, nsnull); 
-								
-							oldServer->flags     = newServer->flags;
-
-							/* Mark the new version of the server as one not to be moved
-							 * to the final list.
-							 */
-							newServer->position = 0;
-							break;
-						}
-					}
-				}
-			}
-		}
-
-		/* Walk throught the new list again.  This time delete duplicates and
-		 * move the rest to the old (final) list.
-		 */
-		count = newList->Count();
-		for (i = count - 1; i >= 0; i--)
-		{
-			newServer = (DIR_Server *)newList->ElementAt(i);
-			if (!dir_IsServerDeleted(newServer))
-			{
-				/* Make sure new servers are placed after old servers, but
-				 * keep them in relative order.
-				 */
-				if (!DIR_TestFlag(newServer, DIR_POSITION_LOCKED))
-				{
-					/* The server at position 2 (i.e. Netcenter) must be left
-					 * at position 2.
-					 */
-					if (newServer->position > 2) 
-						newServer->position += position;
-				}
-				oldList->AppendElement(newServer);
-			}
-			else
-			{
-				DIR_DecrementServerRefCount(newServer);
-			}
-		}
-		newList->Clear();
-		DIR_DeleteServerList(newList);
-
-		*list = oldList;
-		savePrefs = PR_TRUE;
-	}
-	else
-		*list = newList;
-
-	/* Remove any obsolete servers from the list.
-	 * Note that we only remove obsolete servers when we are migrating.  We
-	 * don't do it otherwise because that would keep users from manually
-	 * re-adding these servers (which they should be allowed to do).
-	 */
-	if (NS_SUCCEEDED(err) && obsoleteList)
-	{
-		DIR_Server *obsoleteServer;
-		nsVoidArray *walkObsoleteList = obsoleteList;
-		
-		count = walkObsoleteList->Count();
-		for (i = 0; i < count;i++)
-		{
-			if (nsnull != (obsoleteServer = (DIR_Server *)walkObsoleteList->ElementAt(i)))
-			{
-				DIR_Server *existingServer;
-				nsVoidArray *walkExistingList = *list;
-
-				PRInt32 existCount = walkExistingList->Count();
-				for (j = 0; j < existCount;j++)
-				{
-					existingServer = (DIR_Server *)walkExistingList->ElementAt(j);
-					if (nsnull != existingServer)
-					{
-						if (dir_AreServersSame(existingServer, obsoleteServer, PR_FALSE))
-						{
-							savePrefs = PR_TRUE;
-							DIR_DecrementServerRefCount(existingServer);
-							(*list)->RemoveElement(existingServer);
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-	if (obsoleteList)
-		DIR_DeleteServerList(obsoleteList);
-
-	if (version < kCurrentListVersion)
-	{
-		pPref->SetIntPref(PREF_LDAP_VERSION_NAME, kCurrentListVersion);
-		// see if we have the ab upgrader.  if so, skip this, since we
-		// will be migrating.
-		nsresult rv;
-		nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
-  		if (NS_FAILED(rv) || !abUpgrader) {
+  nsresult err = NS_OK;
+  nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &err)); 
+  if (NS_FAILED(err) || !pPref) 
+    return NS_ERROR_FAILURE;
+  
+  PRInt32 position = 1;
+  PRInt32 version = -1;
+  char **oldChildren = nsnull;
+  PRBool savePrefs = PR_FALSE;
+  PRBool migrating = PR_FALSE;
+  nsVoidArray *oldList = nsnull;
+  nsVoidArray *obsoleteList = nsnull;
+  nsVoidArray *newList = nsnull;
+  PRInt32 i, j, count;
+  
+  
+  /* Update the ldap list version and see if there are old prefs to migrate. */
+  if (pPref->GetIntPref(PREF_LDAP_VERSION_NAME, &version) == PREF_NOERROR)
+  {
+    if (version < kPreviousListVersion)
+    {
+      pPref->SetIntPref(PREF_LDAP_VERSION_NAME, kCurrentListVersion);
+      
+      /* Look to see if there's an old-style "ldap_1" tree in prefs */
+      PRUint32 prefCount;
+      err = dir_GetChildList(NS_LITERAL_CSTRING("ldap_1."),
+        &prefCount, &oldChildren);
+      if (NS_SUCCEEDED(err))
+      {
+        if (prefCount > 0)
+        {
+          migrating = PR_TRUE;
+          position = dir_GetPrefsFrom40Branch(&oldList);
+        }
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, oldChildren);
+      }
+    }
+  }
+  
+  /* Find the new-style "ldap_2.servers" tree in prefs */
+  err = dir_GetPrefsFrom45Branch(&newList, migrating ? &obsoleteList : nsnull);
+  
+  /* Merge the new tree onto the old tree, old on top, new at bottom */
+  if (NS_SUCCEEDED(err) && oldList && newList)
+  {
+    DIR_Server *newServer;
+    
+    /* Walk through the new list looking for servers that are duplicates of
+    * ones in the old list.  Mark any duplicates for non-inclusion in the
+    * final list.
+    */
+    PRInt32 newCount = newList->Count();
+    for (i = 0; i < newCount; i++)
+    {
+      newServer = (DIR_Server *)newList->ElementAt(i);
+      if (nsnull != newServer)
+      {
+        DIR_Server *oldServer;
+        
+        PRInt32 oldCount = oldList->Count();
+        for (j = 0; j < oldCount; j++)
+        {
+          oldServer = (DIR_Server *)oldList->ElementAt(j);
+          if (nsnull != oldServer)
+          {
+          /* Don't add servers which are in the old list and don't add a
+          * second personal address book.
+            */
+            if (   dir_AreServersSame(newServer, oldServer, PR_FALSE)
+              || (   oldServer->dirType == PABDirectory
+              && newServer->dirType == PABDirectory
+              && oldServer->isOffline == PR_FALSE
+              && newServer->isOffline == PR_FALSE))
+            {
+            /* Copy any new prefs out of the new server.
+              */
+              PR_FREEIF(oldServer->prefName);
+              oldServer->prefName  = nsCRT::strdup(newServer->prefName);
+              /* since the pref name has now been set, we can generate a proper
+              file name in case we don't have one already */
+              if (!oldServer->fileName || !*oldServer->fileName)
+                DIR_SetServerFileName(oldServer, nsnull); 
+              
+              oldServer->flags     = newServer->flags;
+              
+              /* Mark the new version of the server as one not to be moved
+              * to the final list.
+              */
+              newServer->position = 0;
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    /* Walk throught the new list again.  This time delete duplicates and
+    * move the rest to the old (final) list.
+    */
+    count = newList->Count();
+    for (i = count - 1; i >= 0; i--)
+    {
+      newServer = (DIR_Server *)newList->ElementAt(i);
+      if (!dir_IsServerDeleted(newServer))
+      {
+      /* Make sure new servers are placed after old servers, but
+      * keep them in relative order.
+        */
+        if (!DIR_TestFlag(newServer, DIR_POSITION_LOCKED))
+        {
+        /* The server at position 2 (i.e. Netcenter) must be left
+        * at position 2.
+          */
+          if (newServer->position > 2) 
+            newServer->position += position;
+        }
+        oldList->AppendElement(newServer);
+      }
+      else
+      {
+        DIR_DecrementServerRefCount(newServer);
+      }
+    }
+    newList->Clear();
+    DIR_DeleteServerList(newList);
+    
+    *list = oldList;
+    savePrefs = PR_TRUE;
+  }
+  else
+    *list = newList;
+  
+    /* Remove any obsolete servers from the list.
+    * Note that we only remove obsolete servers when we are migrating.  We
+    * don't do it otherwise because that would keep users from manually
+    * re-adding these servers (which they should be allowed to do).
+    */
+  if (NS_SUCCEEDED(err) && obsoleteList)
+  {
+    DIR_Server *obsoleteServer;
+    nsVoidArray *walkObsoleteList = obsoleteList;
+    
+    count = walkObsoleteList->Count();
+    for (i = 0; i < count;i++)
+    {
+      if (nsnull != (obsoleteServer = (DIR_Server *)walkObsoleteList->ElementAt(i)))
+      {
+        DIR_Server *existingServer;
+        nsVoidArray *walkExistingList = *list;
+        
+        PRInt32 existCount = walkExistingList->Count();
+        for (j = 0; j < existCount;j++)
+        {
+          existingServer = (DIR_Server *)walkExistingList->ElementAt(j);
+          if (nsnull != existingServer)
+          {
+            if (dir_AreServersSame(existingServer, obsoleteServer, PR_FALSE))
+            {
+              savePrefs = PR_TRUE;
+              DIR_DecrementServerRefCount(existingServer);
+              (*list)->RemoveElement(existingServer);
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  if (obsoleteList)
+    DIR_DeleteServerList(obsoleteList);
+  
+  if (version < kCurrentListVersion)
+  {
+    pPref->SetIntPref(PREF_LDAP_VERSION_NAME, kCurrentListVersion);
+    // see if we have the ab upgrader.  if so, skip this, since we
+    // will be migrating.
+    nsresult rv;
+    nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
+    if (NS_FAILED(rv) || !abUpgrader) 
+    {
       // if we can upgrade, don't touch the 4.x pab.
       // if we can't, move the 4.x pab aside
-			dir_ConvertToMabFileName();
-		}
-	}
-	/* Write the merged list so we get it next time we ask */
-	if (savePrefs)
-		DIR_SaveServerPreferences(*list);
-
-	return err;
+      dir_ConvertToMabFileName();
+    }
+  }
+  /* Write the merged list so we get it next time we ask */
+  if (savePrefs)
+    DIR_SaveServerPreferences(*list);
+ 
+  DIR_SortServersByPosition(*list);
+  return err;
 }
 
 void DIR_ClearPrefBranch(const char *branch)
 {
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-	if (NS_FAILED(rv) || !pPref) 
-		return;
-
-	pPref->DeleteBranch (branch);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+  if (NS_FAILED(rv) || !pPref) 
+    return;
+  
+  pPref->DeleteBranch (branch);
 }
 
 static void DIR_ClearIntPref (const char *pref)

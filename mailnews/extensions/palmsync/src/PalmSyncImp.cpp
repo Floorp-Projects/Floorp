@@ -145,17 +145,16 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
   nsCOMPtr <nsIAbDirectory> directory = do_QueryInterface(resource, &rv);
   if(NS_FAILED(rv)) return E_FAIL;
 
-  nsCOMPtr<nsIEnumerator> subDirectories;
+  nsCOMPtr<nsISimpleEnumerator> subDirectories;
   if (NS_SUCCEEDED(directory->GetChildNodes(getter_AddRefs(subDirectories))) && subDirectories)
   {
     // Get the total number of addrbook.
     PRInt16 count=0;
     nsCOMPtr<nsISupports> item;
-    if (NS_SUCCEEDED(subDirectories->First()))
+    PRBool hasMore;
+    while (NS_SUCCEEDED(rv = subDirectories->HasMoreElements(&hasMore)) && hasMore)
     {
-      do
-      {
-        if (NS_SUCCEEDED(subDirectories->CurrentItem(getter_AddRefs(item))))
+        if (NS_SUCCEEDED(subDirectories->GetNext(getter_AddRefs(item))))
         {
           directory = do_QueryInterface(item, &rv);
           if (NS_SUCCEEDED(rv))
@@ -182,7 +181,6 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
           }
         }
         count++;
-      } while (NS_SUCCEEDED(subDirectories->Next()));
     }
 
     if (!count)

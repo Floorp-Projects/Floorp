@@ -224,61 +224,51 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTarget(nsIRDFResource* source,
 
 
 NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
-                                                nsIRDFResource* property,    
-                                                PRBool tv,
-                                                nsISimpleEnumerator** targets)
+                                                  nsIRDFResource* property,    
+                                                  PRBool tv,
+                                                  nsISimpleEnumerator** targets)
 {
   nsresult rv = NS_RDF_NO_VALUE;
   NS_ENSURE_ARG_POINTER(targets);
-
+  
   nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv) && directory)
   {
     if ((kNC_Child == property))
     {
-      nsCOMPtr<nsIEnumerator> subDirectories;
-
-      rv = directory->GetChildNodes(getter_AddRefs(subDirectories));
-      NS_ENSURE_SUCCESS(rv, rv);
-      nsAdapterEnumerator* cursor =
-        new nsAdapterEnumerator(subDirectories);
-      if (cursor == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(cursor);
-      *targets = cursor;
-	  return NS_OK;
-	}
+      return directory->GetChildNodes(targets);
+    }
     else if((kNC_DirName == property) ||
-            (kNC_DirUri == property) ||
-            (kNC_IsMailList == property) ||
-            (kNC_IsRemote == property) ||
-            (kNC_IsSecure == property) ||
-            (kNC_IsWriteable == property) ||
-            (kNC_DirTreeNameSort == property)) 
-	{ 
+      (kNC_DirUri == property) ||
+      (kNC_IsMailList == property) ||
+      (kNC_IsRemote == property) ||
+      (kNC_IsSecure == property) ||
+      (kNC_IsWriteable == property) ||
+      (kNC_DirTreeNameSort == property)) 
+    { 
       nsSingletonEnumerator* cursor =
         new nsSingletonEnumerator(property);
       if (cursor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(cursor);
       *targets = cursor;
-	  return NS_OK;
+      return NS_OK;
     }
     else if((kNC_CardChild == property))
     { 
       nsCOMPtr<nsIEnumerator> cardChild;
-
+      
       rv = directory->GetChildCards(getter_AddRefs(cardChild));
       if (NS_SUCCEEDED(rv) && cardChild)
-	  {
-		  nsAdapterEnumerator* cursor =
-			new nsAdapterEnumerator(cardChild);
-		  if (cursor == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
-		  NS_ADDREF(cursor);
-		  *targets = cursor;
-		  return NS_OK;
-	  }
+      {
+        nsAdapterEnumerator* cursor =
+          new nsAdapterEnumerator(cardChild);
+        if (cursor == nsnull)
+          return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(cursor);
+        *targets = cursor;
+        return NS_OK;
+      }
     }
   }
   return NS_NewEmptyEnumerator(targets);
@@ -714,6 +704,8 @@ nsAbDirectoryDataSource::createDirectoryTreeNameSortNode(nsIAbDirectory* directo
   PRUint32 dirType;
   rv = properties->GetDirType(&dirType);
   NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 position;
+  rv = properties->GetPosition(&position);
   // Get isMailList
   PRBool isMailList = PR_FALSE;
   directory->GetIsMailList(&isMailList);
@@ -736,10 +728,11 @@ nsAbDirectoryDataSource::createDirectoryTreeNameSortNode(nsIAbDirectory* directo
    */
 
   nsAutoString sortString;
+  // top level sort will be by position. Sort by type under that...
+  sortString.Append((PRUnichar) (position + 'a'));
   if (isMailList)
     sortString.AppendInt(5);    // mailing lists
-  else
-  if (dirType == PABDirectory)
+  else if (dirType == PABDirectory)
   {
     if (strcmp(uri, kPersonalAddressbookUri) == 0)
       sortString.AppendInt(0);  // Personal addrbook

@@ -56,126 +56,117 @@
 #include "nsIMessengerMigrator.h"
 #include "nsAbDirFactoryService.h"
 #include "nsAbMDBDirFactory.h"
+#include "nsArrayEnumerator.h"
 
 nsAbBSDirectory::nsAbBSDirectory()
-	: nsRDFResource(),
-	  mInitialized(PR_FALSE),
-	  mServers (13)
+: nsRDFResource(),
+mInitialized(PR_FALSE),
+mServers (13)
 {
-	NS_NewISupportsArray(getter_AddRefs(mSubDirectories));
 }
 
 nsAbBSDirectory::~nsAbBSDirectory()
 {
-	if (mSubDirectories)
-	{
-		PRUint32 count;
-		nsresult rv = mSubDirectories->Count(&count);
-		NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-		PRInt32 i;
-		for (i = count - 1; i >= 0; i--)
-			mSubDirectories->RemoveElementAt(i);
-	}
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsAbBSDirectory, nsRDFResource, nsIAbDirectory)
 
 nsresult nsAbBSDirectory::NotifyItemAdded(nsISupports *item)
 {
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
-	if(NS_SUCCEEDED(rv))
-		abSession->NotifyDirectoryItemAdded(this, item);
-	return NS_OK;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIAddrBookSession> abSession = 
+    do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
+  if(NS_SUCCEEDED(rv))
+    abSession->NotifyDirectoryItemAdded(this, item);
+  return NS_OK;
 }
 
 nsresult nsAbBSDirectory::NotifyItemDeleted(nsISupports *item)
 {
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
-
-	if(NS_SUCCEEDED(rv))
-		abSession->NotifyDirectoryDeleted(this, item);
-
-	return NS_OK;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIAddrBookSession> abSession = 
+    do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
+  
+  if(NS_SUCCEEDED(rv))
+    abSession->NotifyDirectoryDeleted(this, item);
+  
+  return NS_OK;
 }
 
 nsresult nsAbBSDirectory::CreateDirectoriesFromFactory(
-	nsIAbDirectoryProperties *aProperties,
-	DIR_Server *aServer,
-	PRBool aNotify)
+                                                       nsIAbDirectoryProperties *aProperties,
+                                                       DIR_Server *aServer,
+                                                       PRBool aNotify)
 {
-	nsresult rv;
+  nsresult rv;
   NS_ENSURE_ARG_POINTER(aProperties);
-
-	// Get the directory factory service
-	nsCOMPtr<nsIAbDirFactoryService> dirFactoryService = 
-			do_GetService(NS_ABDIRFACTORYSERVICE_CONTRACTID,&rv);
-	NS_ENSURE_SUCCESS (rv, rv);
+  
+  // Get the directory factory service
+  nsCOMPtr<nsIAbDirFactoryService> dirFactoryService = 
+    do_GetService(NS_ABDIRFACTORYSERVICE_CONTRACTID,&rv);
+  NS_ENSURE_SUCCESS (rv, rv);
 		
-	// Get the directory factory from the URI
+  // Get the directory factory from the URI
   nsXPIDLCString uri;
   rv = aProperties->GetURI(getter_Copies(uri));
   NS_ENSURE_SUCCESS(rv,rv);
-
-	nsCOMPtr<nsIAbDirFactory> dirFactory;
-	rv = dirFactoryService->GetDirFactory(uri.get(), getter_AddRefs(dirFactory));
-	NS_ENSURE_SUCCESS (rv, rv);
-
-	// Create the directories
-	nsCOMPtr<nsISimpleEnumerator> newDirEnumerator;
-	rv = dirFactory->CreateDirectory(aProperties, getter_AddRefs(newDirEnumerator));
-	NS_ENSURE_SUCCESS (rv, rv);
-
-	// Enumerate through the directories adding them
-	// to the sub directories array
-	PRBool hasMore;
-	while (NS_SUCCEEDED(newDirEnumerator->HasMoreElements(&hasMore)) && hasMore)
-	{
-		nsCOMPtr<nsISupports> newDirSupports;
-		rv = newDirEnumerator->GetNext(getter_AddRefs(newDirSupports));
-		if(NS_FAILED(rv))
-			continue;
-			
-		nsCOMPtr<nsIAbDirectory> childDir = do_QueryInterface(newDirSupports, &rv); 
-		if(NS_FAILED(rv))
-			continue;
-
-		// Define a relationship between the preference
-		// entry and the directory
-		nsVoidKey key((void *)childDir);
-		mServers.Put (&key, (void *)aServer);
-
-		mSubDirectories->AppendElement(childDir);
-
-		// Inform the listener, i.e. the RDF directory data
-		// source that a new address book has been added
-		if (aNotify)
-			NotifyItemAdded(childDir);
-	}
-
-	return NS_OK;
+  
+  nsCOMPtr<nsIAbDirFactory> dirFactory;
+  rv = dirFactoryService->GetDirFactory(uri.get(), getter_AddRefs(dirFactory));
+  NS_ENSURE_SUCCESS (rv, rv);
+  
+  // Create the directories
+  nsCOMPtr<nsISimpleEnumerator> newDirEnumerator;
+  rv = dirFactory->CreateDirectory(aProperties, getter_AddRefs(newDirEnumerator));
+  NS_ENSURE_SUCCESS (rv, rv);
+  
+  // Enumerate through the directories adding them
+  // to the sub directories array
+  PRBool hasMore;
+  while (NS_SUCCEEDED(newDirEnumerator->HasMoreElements(&hasMore)) && hasMore)
+  {
+    nsCOMPtr<nsISupports> newDirSupports;
+    rv = newDirEnumerator->GetNext(getter_AddRefs(newDirSupports));
+    if(NS_FAILED(rv))
+      continue;
+    
+    nsCOMPtr<nsIAbDirectory> childDir = do_QueryInterface(newDirSupports, &rv); 
+    if(NS_FAILED(rv))
+      continue;
+    
+    // Define a relationship between the preference
+    // entry and the directory
+    nsVoidKey key((void *)childDir);
+    mServers.Put (&key, (void *)aServer);
+    
+    mSubDirectories.AppendObject(childDir);
+    
+    // Inform the listener, i.e. the RDF directory data
+    // source that a new address book has been added
+    if (aNotify)
+      NotifyItemAdded(childDir);
+  }
+  
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsIEnumerator* *result)
+NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsISimpleEnumerator* *aResult)
 {
-	if (!mInitialized) 
-	{
-		nsresult rv;
-	    nsCOMPtr<nsIAbDirFactoryService> dirFactoryService = 
-			do_GetService(NS_ABDIRFACTORYSERVICE_CONTRACTID,&rv);
-		NS_ENSURE_SUCCESS (rv, rv);
-
+  if (!mInitialized) 
+  {
+    nsresult rv;
+    nsCOMPtr<nsIAbDirFactoryService> dirFactoryService = 
+      do_GetService(NS_ABDIRFACTORYSERVICE_CONTRACTID,&rv);
+    NS_ENSURE_SUCCESS (rv, rv);
+    
     if (!DIR_GetDirectories())
-			return NS_ERROR_FAILURE;
-		
+      return NS_ERROR_FAILURE;
+    
     PRInt32 count = DIR_GetDirectories()->Count();
-		for (PRInt32 i = 0; i < count; i++)
-		{
+    for (PRInt32 i = 0; i < count; i++)
+    {
       DIR_Server *server = (DIR_Server *)(DIR_GetDirectories()->ElementAt(i));
-
+      
       // if this is a 4.x, local .na2 addressbook (PABDirectory)
       // we must skip it.
       // mozilla can't handle 4.x .na2 addressbooks
@@ -184,127 +175,125 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsIEnumerator* *result)
       // those.  see bug #127007
       PRUint32 fileNameLen = strlen(server->fileName);
       if (((fileNameLen > kABFileName_PreviousSuffixLen) && 
-          strcmp(server->fileName + fileNameLen - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) &&
-          (server->dirType == PABDirectory))
-				continue;
-			
+        strcmp(server->fileName + fileNameLen - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) &&
+        (server->dirType == PABDirectory))
+        continue;
+      
       nsCOMPtr <nsIAbDirectoryProperties> properties;
       properties = do_CreateInstance(NS_ABDIRECTORYPROPERTIES_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv,rv);
-
-			NS_ConvertUTF8toUCS2 description (server->description);
+      
+      NS_ConvertUTF8toUCS2 description (server->description);
       rv = properties->SetDescription(description);
       NS_ENSURE_SUCCESS(rv,rv);
-			
+      
       rv = properties->SetFileName(server->fileName);
       NS_ENSURE_SUCCESS(rv,rv);
-			
-			// Set the uri property
+      
+      // Set the uri property
       nsCAutoString URI (server->uri);
-			// This is in case the uri is never set
-			// in the nsDirPref.cpp code.
-			if (!server->uri)
-			{
+      // This is in case the uri is never set
+      // in the nsDirPref.cpp code.
+      if (!server->uri)
         URI = NS_LITERAL_CSTRING(kMDBDirectoryRoot) + nsDependentCString(server->fileName);
-			}
-
-            /*
-             * Check that we are not converting from a
-             * a 4.x address book file e.g. pab.na2
+      
+      /*
+      * Check that we are not converting from a
+      * a 4.x address book file e.g. pab.na2
       * check if the URI ends with ".na2"
-            */
-      if (StringEndsWith(URI, NS_LITERAL_CSTRING(kABFileName_PreviousSuffix))) {
+      */
+      if (StringEndsWith(URI, NS_LITERAL_CSTRING(kABFileName_PreviousSuffix))) 
         URI.ReplaceSubstring(URI.get() + kMDBDirectoryRootLen, server->fileName);
-            }
-
+      
       rv = properties->SetPrefName(server->prefName);
       NS_ENSURE_SUCCESS(rv,rv);
-
+      
       rv = properties->SetURI(URI.get());
       NS_ENSURE_SUCCESS(rv,rv);
-
-			// Create the directories
+      
+      // Create the directories
       rv = CreateDirectoriesFromFactory(properties,
         server, PR_FALSE /* notify */);
-		}
-
-		mInitialized = PR_TRUE;
-	}
-	return mSubDirectories->Enumerate(result);
+    }
+    
+    mInitialized = PR_TRUE;
+    // sort directories by position...
+  }
+  return NS_NewArrayEnumerator(aResult, mSubDirectories);
 }
 
 NS_IMETHODIMP nsAbBSDirectory::CreateNewDirectory(nsIAbDirectoryProperties *aProperties)
 {
-	/*
-	 * TODO
-	 * This procedure is still MDB specific
-	 * due to the dependence on the current
-	 * nsDirPref.cpp code
-	 *
+/*
+* TODO
+* This procedure is still MDB specific
+* due to the dependence on the current
+* nsDirPref.cpp code
+*
 	 */
   NS_ENSURE_ARG_POINTER(aProperties);
-	nsresult rv;
-
+  nsresult rv;
+  
   nsAutoString description;
   nsXPIDLCString fileName;
   nsXPIDLCString uri;
   nsXPIDLCString authDn;
-
+  
   rv = aProperties->GetDescription(description);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
   rv = aProperties->GetFileName(getter_Copies(fileName));
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
   rv = aProperties->GetURI(getter_Copies(uri));
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
   PRUint32 dirType;
   rv = aProperties->GetDirType(&dirType);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
   PRUint32 maxHits;
   rv = aProperties->GetMaxHits(&maxHits);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
   rv = aProperties->GetAuthDn(getter_Copies(authDn));
   NS_ENSURE_SUCCESS(rv, rv);
-
-	/*
-	 * The creation of the address book in the preferences
-	 * is very MDB implementation specific.
-	 * If the fileName attribute is null then it will
-	 * create an appropriate file name.
-	 * Somehow have to resolve this issue so that it
-	 * is more general.
-	 *
-	 */
-	DIR_Server* server = nsnull;
-	rv = DIR_AddNewAddressBook(description.get(),
-			(fileName.Length ()) ? fileName.get () : nsnull,
-			PR_FALSE /* is_migrating */, uri.get(),
-			maxHits, authDn,
-			(DirectoryType)dirType, 
-			&server);
-	NS_ENSURE_SUCCESS (rv, rv);
-
-	// Update the file name property
+  
+  /*
+   * The creation of the address book in the preferences
+   * is very MDB implementation specific.
+   * If the fileName attribute is null then it will
+   * create an appropriate file name.
+   * Somehow have to resolve this issue so that it
+   * is more general.
+   *
+   */
+  DIR_Server* server = nsnull;
+  rv = DIR_AddNewAddressBook(description.get(),
+    (fileName.Length ()) ? fileName.get () : nsnull,
+    PR_FALSE /* is_migrating */, uri.get(),
+    maxHits, authDn,
+    (DirectoryType)dirType, 
+    &server);
+  NS_ENSURE_SUCCESS (rv, rv);
+  
+  // Update the file name property
   rv = aProperties->SetFileName(server->fileName);
   NS_ENSURE_SUCCESS(rv, rv);
-	
+  
   if (dirType != LDAPDirectory) {
-	// Add the URI property
-  nsCAutoString URI(NS_LITERAL_CSTRING(kMDBDirectoryRoot) + nsDependentCString(server->fileName));
-  rv = aProperties->SetURI(URI.get());
-  NS_ENSURE_SUCCESS(rv, rv);
+    // Add the URI property
+    nsCAutoString URI(NS_LITERAL_CSTRING(kMDBDirectoryRoot) + nsDependentCString(server->fileName));
+    rv = aProperties->SetURI(URI.get());
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-
+  
   rv = aProperties->SetPrefName(server->prefName);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
   rv = CreateDirectoriesFromFactory(aProperties, server, PR_TRUE /* notify */);
   NS_ENSURE_SUCCESS(rv,rv);
-	return rv;
+  return rv;
 }
 
 NS_IMETHODIMP nsAbBSDirectory::CreateDirectoryByURI(const PRUnichar *aDisplayName, const char *aURI, PRBool migrating)
@@ -312,15 +301,15 @@ NS_IMETHODIMP nsAbBSDirectory::CreateDirectoryByURI(const PRUnichar *aDisplayNam
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(aDisplayName);
 
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
 
-	const char* fileName = nsnull;
+  const char* fileName = nsnull;
   if (StringBeginsWith(nsDependentCString(aURI), NS_LITERAL_CSTRING(kMDBDirectoryRoot)))
     fileName = aURI + kMDBDirectoryRootLen;
 
-	DIR_Server * server = nsnull;
+  DIR_Server * server = nsnull;
   rv = DIR_AddNewAddressBook(aDisplayName, fileName, migrating, aURI, 0, nsnull, PABDirectory, &server);
-	NS_ENSURE_SUCCESS(rv,rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIAbDirectoryProperties> properties;
   properties = do_CreateInstance(NS_ABDIRECTORYPROPERTIES_CONTRACTID, &rv);
@@ -348,14 +337,14 @@ NS_IMETHODIMP nsAbBSDirectory::CreateDirectoryByURI(const PRUnichar *aDisplayNam
 
 struct GetDirectories
 {
-		GetDirectories (DIR_Server* aServer) :
-				mServer (aServer)
-		{
-			NS_NewISupportsArray(getter_AddRefs(directories));
-		}
+  GetDirectories (DIR_Server* aServer) :
+  mServer (aServer)
+  {
+    NS_NewISupportsArray(getter_AddRefs(directories));
+  }
 
-		nsCOMPtr<nsISupportsArray> directories;
-		DIR_Server* mServer;
+  nsCOMPtr<nsISupportsArray> directories;
+  DIR_Server* mServer;
 };
 
 PRBool PR_CALLBACK GetDirectories_getDirectory (nsHashKey *aKey, void *aData, void* closure)
@@ -382,7 +371,7 @@ NS_IMETHODIMP nsAbBSDirectory::DeleteDirectory(nsIAbDirectory *directory)
 	// if addressbook is not launched yet mSevers will not be initialized
 	// calling GetChildNodes will initialize mServers
 	if (!mInitialized) {
-		nsCOMPtr<nsIEnumerator> subDirectories;
+		nsCOMPtr<nsISimpleEnumerator> subDirectories;
 		rv = GetChildNodes(getter_AddRefs(subDirectories));
 		NS_ENSURE_SUCCESS(rv, rv);
 	}
@@ -415,7 +404,7 @@ NS_IMETHODIMP nsAbBSDirectory::DeleteDirectory(nsIAbDirectory *directory)
 		nsVoidKey k((void *)d);
 		mServers.Remove(&k);
 
-		rv = mSubDirectories->RemoveElement(d);
+		rv = mSubDirectories.RemoveObject(d);
 		NotifyItemDeleted(d);
 
 		nsCOMPtr<nsIRDFResource> resource (do_QueryInterface (d, &rv));
@@ -443,7 +432,7 @@ NS_IMETHODIMP nsAbBSDirectory::ModifyDirectory(nsIAbDirectory *directory, nsIAbD
   // if addressbook is not launched yet mSevers will not be initialized
   // calling GetChildNodes will initialize mServers
   if (!mInitialized) {
-    nsCOMPtr<nsIEnumerator> subDirectories;
+    nsCOMPtr<nsISimpleEnumerator> subDirectories;
     rv = GetChildNodes(getter_AddRefs(subDirectories));
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -513,16 +502,16 @@ NS_IMETHODIMP nsAbBSDirectory::ModifyDirectory(nsIAbDirectory *directory, nsIAbD
 
 NS_IMETHODIMP nsAbBSDirectory::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
 {
-	if (!hasDir)
-		return NS_ERROR_NULL_POINTER;
-
-	nsresult rv = NS_ERROR_FAILURE;
-
-	DIR_Server* dirServer = nsnull;
-	nsVoidKey key((void *)dir);
-	dirServer = (DIR_Server* )mServers.Get (&key);
-	rv = DIR_ContainsServer(dirServer, hasDir);
-
-	return rv;
+  if (!hasDir)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  DIR_Server* dirServer = nsnull;
+  nsVoidKey key((void *)dir);
+  dirServer = (DIR_Server* )mServers.Get (&key);
+  rv = DIR_ContainsServer(dirServer, hasDir);
+  
+  return rv;
 }
 

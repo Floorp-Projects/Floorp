@@ -104,5 +104,6 @@ private:
   nsCString mAuthDn;
   PRUint32  mSyncTimeStamp;
   PRInt32   mCategoryId;
+  PRInt32   mPosition;
 };
 #endif

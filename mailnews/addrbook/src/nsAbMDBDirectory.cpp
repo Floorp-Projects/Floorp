@@ -55,7 +55,7 @@
 #include "nsIAbDirectoryQueryProxy.h"
 #include "nsAbQueryStringToExpression.h"
 #include "nsAbUtils.h"
-
+#include "nsArrayEnumerator.h"
 #include "nsAbMDBCardProperty.h"
 
 #include "mdb.h"
@@ -71,24 +71,12 @@ nsAbMDBDirectory::nsAbMDBDirectory(void):
      mIsQueryURI(PR_FALSE),
      mPerformingQuery(PR_FALSE)
 {
-  NS_NewISupportsArray(getter_AddRefs(mSubDirectories));
 }
 
 nsAbMDBDirectory::~nsAbMDBDirectory(void)
 {
   if (mDatabase) {
     mDatabase->RemoveListener(this);
-  }
-    
-  if (mSubDirectories)
-  {
-    PRUint32 count;
-    nsresult rv;
-    rv = mSubDirectories->Count(&count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-    PRInt32 i;
-    for (i = count - 1; i >= 0; i--)
-      mSubDirectories->RemoveElementAt(i);
   }
 }
 
@@ -168,7 +156,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteDirectory(nsIAbDirectory *directory)
 
     if (m_AddressList)
       m_AddressList->RemoveElement(directory);
-    rv = mSubDirectories->RemoveElement(directory);
+    rv = mSubDirectories.RemoveObject(directory);
 
     NotifyItemDeleted(directory);
   }
@@ -332,7 +320,7 @@ NS_IMETHODIMP nsAbMDBDirectory::AddDirectory(const char *uriName, nsIAbDirectory
   nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mSubDirectories->AppendElement(directory);
+  mSubDirectories.AppendObject(directory);
   NS_IF_ADDREF(*childDir = directory);
   return rv;
 }
@@ -355,20 +343,16 @@ NS_IMETHODIMP nsAbMDBDirectory::GetDirUri(char **uri)
 
 // nsIAbDirectory methods
 
-NS_IMETHODIMP nsAbMDBDirectory::GetChildNodes(nsIEnumerator* *result)
+NS_IMETHODIMP nsAbMDBDirectory::GetChildNodes(nsISimpleEnumerator* *aResult)
 {
   if (mIsQueryURI)
   {
-    nsCOMPtr<nsISupportsArray> array;
-    NS_NewISupportsArray(getter_AddRefs(array));
-    return array->Enumerate(result);
+    nsCOMArray<nsIAbDirectory> children;
+    return NS_NewArrayEnumerator(aResult, children);
   }
 
-  if (!mInitialized) 
-  {
-    mInitialized = PR_TRUE;
-  }
-  return mSubDirectories->Enumerate(result);
+  mInitialized = PR_TRUE;
+  return NS_NewArrayEnumerator(aResult, mSubDirectories);
 }
 
 PR_STATIC_CALLBACK(PRBool) enumerateSearchCache(nsHashKey *aKey, void *aData, void* closure)
@@ -526,7 +510,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteCards(nsISupportsArray *cards)
                   {
                   if (m_AddressList)
                     m_AddressList->RemoveElement(listDir);
-                  rv = mSubDirectories->RemoveElement(listDir);
+                  rv = mSubDirectories.RemoveObject(listDir);
 
                   if (listDir)
                     NotifyItemDeleted(listDir);

@@ -182,7 +182,7 @@ nsresult nsAbPalmHotSync::GetABInterface()
   nsAutoString description;
   PRUint32 dirType, palmSyncTimeStamp;
   PRInt32 palmCategoryIndex;
-  nsCOMPtr<nsIEnumerator> subDirectories;
+  nsCOMPtr<nsISimpleEnumerator> subDirectories;
   if (NS_FAILED(directory->GetChildNodes(getter_AddRefs(subDirectories))) || !subDirectories)
     return E_FAIL;
 

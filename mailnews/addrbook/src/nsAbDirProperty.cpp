@@ -217,7 +217,7 @@ NS_IMETHODIMP nsAbDirProperty::CopyMailList(nsIAbDirectory* srcList)
 // nsIAbDirectory NOT IMPLEMENTED methods
 
 NS_IMETHODIMP
-nsAbDirProperty::GetChildNodes(nsIEnumerator **childList)
+nsAbDirProperty::GetChildNodes(nsISimpleEnumerator **childList)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
@@ -363,6 +363,9 @@ NS_IMETHODIMP nsAbDirProperty::GetDirectoryProperties(nsIAbDirectoryProperties *
         rv = properties->SetSyncTimeStamp(server->PalmSyncTimeStamp);
 
       if (NS_SUCCEEDED(rv))
+        rv = properties->SetPosition(server->position);
+
+      if (NS_SUCCEEDED(rv))
         NS_ADDREF(*aDirectoryProperties = properties);
     }
   }
@@ -380,6 +383,7 @@ nsAbDirectoryProperties::nsAbDirectoryProperties(void)
   mMaxHits = 0;
   mSyncTimeStamp = 0;
   mCategoryId = -1;
+  mPosition = 0;
 }
 
 nsAbDirectoryProperties::~nsAbDirectoryProperties(void)
@@ -496,6 +500,20 @@ NS_IMETHODIMP nsAbDirectoryProperties::GetCategoryId(PRInt32 *aCategoryId)
   *aCategoryId = mCategoryId;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsAbDirectoryProperties::SetPosition(PRInt32 aPosition)
+{
+  mPosition = aPosition;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirectoryProperties::GetPosition(PRInt32 *aPosition)
+{
+  NS_ENSURE_ARG_POINTER(aPosition);
+  *aPosition = mPosition;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsAbDirectoryProperties::SetSyncTimeStamp(PRUint32 aSyncTimeStamp)
 {

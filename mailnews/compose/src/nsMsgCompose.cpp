@@ -3692,58 +3692,56 @@ nsresult nsMsgCompose::GetABDirectories(const nsACString& dirUri, nsISupportsArr
   if (!searchSubDirectory)
       return rv;
   
-  nsCOMPtr<nsIEnumerator> subDirectories;
+  nsCOMPtr<nsISimpleEnumerator> subDirectories;
   if (NS_SUCCEEDED(directory->GetChildNodes(getter_AddRefs(subDirectories))) && subDirectories)
   {
     nsCOMPtr<nsISupports> item;
-    if (NS_SUCCEEDED(subDirectories->First()))
+    PRBool hasMore;
+    while (NS_SUCCEEDED(rv = subDirectories->HasMoreElements(&hasMore)) && hasMore)
     {
-      do
+      if (NS_SUCCEEDED(subDirectories->GetNext(getter_AddRefs(item))))
       {
-        if (NS_SUCCEEDED(subDirectories->CurrentItem(getter_AddRefs(item))))
+        directory = do_QueryInterface(item, &rv);
+        if (NS_SUCCEEDED(rv))
         {
-          directory = do_QueryInterface(item, &rv);
-          if (NS_SUCCEEDED(rv))
+          PRBool bIsMailList;
+
+          if (NS_SUCCEEDED(directory->GetIsMailList(&bIsMailList)) && bIsMailList)
+            continue;
+
+          nsCOMPtr<nsIRDFResource> source(do_QueryInterface(directory));
+    
+          nsXPIDLCString uri;
+          // rv = directory->GetDirUri(getter_Copies(uri));
+          rv = source->GetValue(getter_Copies(uri));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          PRInt32 pos;
+          if (nsCRT::strcmp((const char *)uri, kPersonalAddressbookUri) == 0)
+            pos = 0;
+          else
           {
-            PRBool bIsMailList;
+            PRUint32 count = 0;
+            directoriesArray->Count(&count);
 
-            if (NS_SUCCEEDED(directory->GetIsMailList(&bIsMailList)) && bIsMailList)
-              continue;
-
-      nsCOMPtr<nsIRDFResource> source(do_QueryInterface(directory));
-      
-            nsXPIDLCString uri;
-            // rv = directory->GetDirUri(getter_Copies(uri));
-            rv = source->GetValue(getter_Copies(uri));
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            PRInt32 pos;
-            if (nsCRT::strcmp((const char *)uri, kPersonalAddressbookUri) == 0)
-              pos = 0;
+            if (PL_strcmp((const char *)uri, kCollectedAddressbookUri) == 0)
+            {
+              collectedAddressbookFound = PR_TRUE;
+              pos = count;
+            }
             else
             {
-              PRUint32 count = 0;
-              directoriesArray->Count(&count);
-
-              if (PL_strcmp((const char *)uri, kCollectedAddressbookUri) == 0)
-              {
-                collectedAddressbookFound = PR_TRUE;
-                pos = count;
-              }
+              if (collectedAddressbookFound && count > 1)
+                pos = count - 1;
               else
-              {
-                if (collectedAddressbookFound && count > 1)
-                  pos = count - 1;
-                else
-                  pos = count;
-              }
+                pos = count;
             }
-
-            directoriesArray->InsertElementAt(directory, pos);
-            rv = GetABDirectories(uri, directoriesArray, PR_TRUE);
           }
+
+          directoriesArray->InsertElementAt(directory, pos);
+          rv = GetABDirectories(uri, directoriesArray, PR_TRUE);
         }
-      } while (NS_SUCCEEDED(subDirectories->Next()));
+      }
     }
   }
   return rv;
@@ -3754,45 +3752,43 @@ nsresult nsMsgCompose::BuildMailListArray(nsIAddrDatabase* database, nsIAbDirect
   nsresult rv;
 
   nsCOMPtr<nsIAbDirectory> directory;
-  nsCOMPtr<nsIEnumerator> subDirectories;
+  nsCOMPtr<nsISimpleEnumerator> subDirectories;
 
   if (NS_SUCCEEDED(parentDir->GetChildNodes(getter_AddRefs(subDirectories))) && subDirectories)
   {
     nsCOMPtr<nsISupports> item;
-    if (NS_SUCCEEDED(subDirectories->First()))
+    PRBool hasMore;
+    while (NS_SUCCEEDED(rv = subDirectories->HasMoreElements(&hasMore)) && hasMore)
     {
-      do
+      if (NS_SUCCEEDED(subDirectories->GetNext(getter_AddRefs(item))))
       {
-        if (NS_SUCCEEDED(subDirectories->CurrentItem(getter_AddRefs(item))))
+        directory = do_QueryInterface(item, &rv);
+        if (NS_SUCCEEDED(rv))
         {
-          directory = do_QueryInterface(item, &rv);
-          if (NS_SUCCEEDED(rv))
+          PRBool bIsMailList;
+
+          if (NS_SUCCEEDED(directory->GetIsMailList(&bIsMailList)) && bIsMailList)
           {
-            PRBool bIsMailList;
+            nsXPIDLString listName;
+            nsXPIDLString listDescription;
 
-            if (NS_SUCCEEDED(directory->GetIsMailList(&bIsMailList)) && bIsMailList)
-            {
-              nsXPIDLString listName;
-              nsXPIDLString listDescription;
+            directory->GetDirName(getter_Copies(listName));
+            directory->GetDescription(getter_Copies(listDescription));
 
-              directory->GetDirName(getter_Copies(listName));
-              directory->GetDescription(getter_Copies(listDescription));
+            nsMsgMailList* mailList = new nsMsgMailList(nsAutoString((const PRUnichar*)listName),
+                  nsAutoString((const PRUnichar*)listDescription), directory);
+            if (!mailList)
+              return NS_ERROR_OUT_OF_MEMORY;
+            NS_ADDREF(mailList);
 
-              nsMsgMailList* mailList = new nsMsgMailList(nsAutoString((const PRUnichar*)listName),
-                    nsAutoString((const PRUnichar*)listDescription), directory);
-              if (!mailList)
-                return NS_ERROR_OUT_OF_MEMORY;
-              NS_ADDREF(mailList);
+            rv = array->AppendElement(mailList);
+            if (NS_FAILED(rv))
+              return rv;
 
-              rv = array->AppendElement(mailList);
-              if (NS_FAILED(rv))
-                return rv;
-
-              NS_RELEASE(mailList);
-            }
+            NS_RELEASE(mailList);
           }
         }
-      } while (NS_SUCCEEDED(subDirectories->Next()));
+      }
     }
   }
   return rv;

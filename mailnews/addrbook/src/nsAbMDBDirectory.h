@@ -46,6 +46,7 @@
 
 #include "nsAbMDBDirProperty.h"  
 #include "nsIAbCard.h"
+#include "nsCOMArray.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsDirPrefs.h"
@@ -86,7 +87,7 @@ public:
     NS_IMETHOD HasCardForEmailAddress(const char * aEmailAddress, PRBool * aCardExists);
 
 	// nsIAbDirectory methods:
-	NS_IMETHOD GetChildNodes(nsIEnumerator* *result);
+	NS_IMETHOD GetChildNodes(nsISimpleEnumerator* *result);
 	NS_IMETHOD GetChildCards(nsIEnumerator* *result);
   NS_IMETHOD ModifyDirectory(nsIAbDirectory *directory, nsIAbDirectoryProperties *aProperties);
   	NS_IMETHOD DeleteDirectory(nsIAbDirectory *directory);
@@ -122,7 +123,7 @@ protected:
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  
 
 protected:
-	nsCOMPtr<nsISupportsArray> mSubDirectories;
+	nsCOMArray<nsIAbDirectory> mSubDirectories;
 	PRBool mInitialized;
 	PRInt16 mIsMailingList;
 

@@ -167,72 +167,64 @@ NS_IMETHODIMP nsAbCardProperty::GetIsAnEmailAddress(PRBool *aIsEmailAddress)
 
 nsresult nsAbCardProperty::GetAttributeName(PRUnichar **aName, nsString& value)
 {
-	if (aName)
-	{
-		*aName = ToNewUnicode(value);
-		if (!(*aName)) 
-			return NS_ERROR_OUT_OF_MEMORY;
-		else
-			return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-
+  NS_ENSURE_ARG_POINTER(aName);
+  *aName = ToNewUnicode(value);
+  return (*aName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult nsAbCardProperty::SetAttributeName(const PRUnichar *aName, nsString& arrtibute)
 {
-	if (aName)
-		arrtibute = aName;
-	return NS_OK;
+  if (aName)
+    arrtibute = aName;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAbCardProperty::GetPreferMailFormat(PRUint32 *aFormat)
 {
-	*aFormat = m_PreferMailFormat;	
-	return NS_OK;
+  *aFormat = m_PreferMailFormat;	
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAbCardProperty::SetPreferMailFormat(PRUint32 aFormat)
 {
-	m_PreferMailFormat = aFormat;
-	return NS_OK;
+  m_PreferMailFormat = aFormat;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAbCardProperty::GetIsMailList(PRBool *aIsMailList)
 {
-	*aIsMailList = m_IsMailList;
-	return NS_OK;
+    *aIsMailList = m_IsMailList;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsAbCardProperty::SetIsMailList(PRBool aIsMailList)
 {
-	m_IsMailList = aIsMailList;
-	return NS_OK;
+    m_IsMailList = aIsMailList;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsAbCardProperty::GetMailListURI(char **aMailListURI)
 {
-	if (aMailListURI)
-	{
+  if (aMailListURI)
+  {
     *aMailListURI = ToNewCString(m_MailListURI);
     if (*aMailListURI)
       return NS_OK;
     return NS_ERROR_OUT_OF_MEMORY;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
+  }
+  else
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsAbCardProperty::SetMailListURI(const char *aMailListURI)
 {
-	if (aMailListURI)
-	{
-		m_MailListURI = aMailListURI;
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
+  if (aMailListURI)
+  {
+    m_MailListURI = aMailListURI;
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **value)

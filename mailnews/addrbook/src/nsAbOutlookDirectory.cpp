@@ -50,7 +50,7 @@
 #include "nsAbQueryStringToExpression.h"
 #include "nsAbUtils.h"
 #include "nsIProxyObjectManager.h"
-
+#include "nsEnumeratorUtils.h"
 #include "prlog.h"
 #include "prthread.h"
 
@@ -145,7 +145,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
 }
 
 // nsIAbDirectory methods
-NS_IMETHODIMP nsAbOutlookDirectory::GetChildNodes(nsIEnumerator **aNodes)
+NS_IMETHODIMP nsAbOutlookDirectory::GetChildNodes(nsISimpleEnumerator **aNodes)
 {
     if (!aNodes) { return NS_ERROR_NULL_POINTER ; }
     *aNodes = nsnull ;
@@ -158,8 +158,9 @@ NS_IMETHODIMP nsAbOutlookDirectory::GetChildNodes(nsIEnumerator **aNodes)
     else {
         retCode = GetChildNodes(getter_AddRefs(nodeList)) ;
     }
-    if (NS_SUCCEEDED(retCode)) { nodeList->Enumerate(aNodes) ; }
-    return retCode ;
+    if (NS_SUCCEEDED(retCode))
+      retCode = NS_NewArrayEnumerator(aNodes, nodeList);
+    return retCode;
 }
 
 NS_IMETHODIMP nsAbOutlookDirectory::GetChildCards(nsIEnumerator **aCards)
