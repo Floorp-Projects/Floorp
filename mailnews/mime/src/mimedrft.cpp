@@ -56,6 +56,8 @@
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 #include "nsXPIDLString.h"
+#include "nsIMIMEService.h"
+#include "nsIMIMEInfo.h"
 
 //
 // Header strings...
@@ -80,6 +82,7 @@ static nsString& mime_decode_string(const char* str ,
 
 // CID's
 static NS_DEFINE_CID(kCMsgComposeServiceCID,  NS_MSGCOMPOSESERVICE_CID);       
+static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +90,6 @@ static NS_DEFINE_CID(kCMsgComposeServiceCID,  NS_MSGCOMPOSESERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 // Define CIDs...
-static NS_DEFINE_CID(kIOServiceCID,           NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kMsgCompFieldsCID,       NS_MSGCOMPFIELDS_CID); 
 static NS_DEFINE_CID(kPrefCID,                NS_PREF_CID);
 
@@ -1314,10 +1316,10 @@ mime_parse_stream_complete (nsMIMESession *stream)
                                                 mdd->mailcharset);
         }
         // setting the charset while we are creating the composition fields
- //       fields->SetCharacterSet(NS_LITERAL_STRING(mdd->mailcharset));
+        //fields->SetCharacterSet(NS_ConvertASCIItoUCS2(mdd->mailcharset));
 
       // convert from UTF-8 to UCS2
-      nsAutoString ucs2;
+      nsString ucs2;
       if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode("UTF-8", body, ucs2)))
         fields->SetBody(ucs2.GetUnicode());
       else
@@ -1653,7 +1655,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     newAttachment->description = nsCRT::strdup(workURLSpec);
 
   nsFileSpec *tmpSpec = nsnull;
-  if (newAttachment->real_name)
+  if (newAttachment->real_name && *newAttachment->real_name)
   {
   	//Need some convertion to native file system character set
   	nsAutoString outStr;
@@ -1673,17 +1675,43 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   }
   else
   {
-    char *ptr = PL_strchr(newAttachment->type, '/');
-    if (!ptr)
+    // if we didn't get a real name for the attachment, then we should
+    // ask the mime service what extension this content type should use and use nsmail.that file extension
+    // if that doesn't work then just use "nsmail.tmp"
+
+    nsCAutoString  newAttachName ("nsmail");
+    PRBool extensionAdded = PR_FALSE;
+    // the content type may contain a charset. i.e. text/html; ISO-2022-JP...we want to strip off the charset
+    // before we ask the mime service for a mime info for this content type.
+    nsCAutoString contentType (newAttachment->type);
+    PRInt32 pos = contentType.FindCharInSet(";");
+    if (pos > 0)
+      contentType.Truncate(pos);
+    nsresult  rv = NS_OK;
+    NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
+    if (NS_SUCCEEDED(rv) && mimeFinder) 
     {
-      tmpSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
+      nsCOMPtr<nsIMIMEInfo> mimeInfo = nsnull;
+      rv = mimeFinder->GetFromMIMEType(contentType, getter_AddRefs(mimeInfo));
+      if (NS_SUCCEEDED(rv) && mimeInfo) 
+      {
+        nsXPIDLCString fileExtension;
+
+        if ( (NS_SUCCEEDED(mimeInfo->FirstExtension(getter_Copies(fileExtension)))) && fileExtension)
+        {
+          newAttachName.Append(".");
+          newAttachName.Append(fileExtension);
+          extensionAdded = PR_TRUE;
+        }
+      }        
     }
-    else
+
+    if (!extensionAdded)
     {
-      ++ptr;
-      workURLSpec = PR_smprintf("nsmail.%s", ptr);
-      tmpSpec = nsMsgCreateTempFileSpec(workURLSpec);
+      newAttachName.Append(".tmp");
     }
+
+    tmpSpec = nsMsgCreateTempFileSpec(newAttachName);
   }
 
   // This needs to be done so the attachment structure has a handle 
