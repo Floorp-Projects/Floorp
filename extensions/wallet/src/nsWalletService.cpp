@@ -63,9 +63,9 @@ NS_IMETHODIMP nsWalletlibService::WALLET_PreEdit(nsIURL* url) {
     return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_Prefill(nsIPresShell* shell, PRBool quick) {
-    ::WLLT_Prefill(shell, quick);
-    return NS_OK;
+NS_IMETHODIMP nsWalletlibService::WALLET_Prefill
+        (nsIPresShell* shell, nsString url, PRBool quick) {
+    return ::WLLT_Prefill(shell, url, quick);
 }
 
 NS_IMETHODIMP nsWalletlibService::WALLET_OKToCapture

@@ -88,6 +88,10 @@ PRIVATE XP_List * wallet_specificURLFieldToSchema_list=0;
 PRIVATE XP_List * wallet_FieldToSchema_list=0;
 PRIVATE XP_List * wallet_SchemaToValue_list=0;
 PRIVATE XP_List * wallet_SchemaConcat_list=0;
+PRIVATE XP_List * wallet_URL_list = 0;
+
+#define NO_CAPTURE 0
+#define NO_PREVIEW 1
 
 typedef struct _wallet_PrefillElement {
   nsIDOMHTMLInputElement* inputElement;
@@ -362,48 +366,6 @@ wallet_GetUsingDialogsPref(void)
 /* The following routines are used for accessing strings to be localized */
 /*************************************************************************/
 
-#ifdef xxx
-/* temporary until I can get the real routine below to work */
-PUBLIC char*
-Wallet_Localize1(char* genericString) {
-  nsAutoString v("***NO LOCALIZED STRING FOUND***");
-  if (!PL_strcmp(genericString,"IncorrectKey_TryAgain?")) {
-    v = nsAutoString("Incorrect key.  Do you want to try again?");
-  } else if (!PL_strcmp(genericString,"KeyFailure")){
-    v = nsAutoString("Key failure!  Wallet file will not be opened.");
-  } else if (!PL_strcmp(genericString,"WantToCaptureForm?")){
-    v = nsAutoString("Do you want to put the values on this form into your wallet?");
-  } else if (!PL_strcmp(genericString,"FollowingItemsCanBePrefilledForYou")){
-    v = nsAutoString("Following items can be pre-filled for you.");
-  } else if (!PL_strcmp(genericString,"password")){
-    v = nsAutoString("database password: ");
-  } else if (!PL_strcmp(genericString,"newPassword")){
-    v = nsAutoString("new password: ");
-  } else if (!PL_strcmp(genericString,"SelectUser")){
-    v = nsAutoString("Select a username to be entered on this form");
-  } else if (!PL_strcmp(genericString,"SelectUserWhosePasswordIsBeingChanged")){
-    v = nsAutoString("Select the user whose password is being changed.");
-  } else if (!PL_strcmp(genericString,"PasswordNotification1")){
-    v = nsAutoString
-      ("For your convenience, the browser can remember your user names and passwords so you won't have to re-type them when you return to a site.  ");
-  } else if (!PL_strcmp(genericString,"PasswordNotification2")){
-    v = nsAutoString
-      ("Your passwords will be obscured before being saved on your hard drive.  Do you want this feature enabled?");
-  } else if (!PL_strcmp(genericString,"WantToSavePassword?")){
-    v = nsAutoString("Do you want to save the user name and password for this form?");
-  } else if (!PL_strcmp(genericString,"ViewSavedSignons")){
-    v = nsAutoString("View saved sign-ons");
-  } else if (!PL_strcmp(genericString,"ViewSavedRejects")){
-    v = nsAutoString("View sign-ons that won't be saved");
-  } else if (!PL_strcmp(genericString,"SavedSignons")){
-    v = nsAutoString("Saved Sign-ons");
-  } else if (!PL_strcmp(genericString,"SavedRejects")){
-    v = nsAutoString("Sign-ons that won't be saved");
-  }
-  return v.ToNewCString();
-}
-#endif
-
 #define TEST_URL "resource:/res/wallet.properties"
 
 PUBLIC char*
@@ -658,7 +620,7 @@ wallet_WriteToList(
 /*
  * fetch an entry from the designated list
  */
-PRInt32
+PRBool
 wallet_ReadFromList(
   nsAutoString item1,
   nsAutoString& item2,
@@ -672,7 +634,7 @@ wallet_ReadFromList(
 
   /* make sure the list exists */
   if(!list_ptr) {
-    return -1;
+    return PR_FALSE;
   }
 
   /* find item1 in the list */
@@ -681,10 +643,10 @@ wallet_ReadFromList(
     if((ptr->item1->Compare(item1))==0) {
       item2 = nsAutoString(*ptr->item2);
       itemList = ptr->itemList;
-      return 0;
+      return PR_TRUE;
     }
   }
-  return -1;
+  return PR_FALSE;
 }
 
 /*
@@ -1192,7 +1154,7 @@ wallet_FetchFromNetCenter(char* from, char* to) {
           /* place contents of network stream in output file */
           char buff[1001];
           PRUint32 count;
-          while (NS_OK == (*aNewStream)->Read(buff,1000,&count)) {
+          while (NS_SUCCEEDED((*aNewStream)->Read(buff,1000,&count))) {
             buff[count] = '\0';
             strm.write(buff, count);
           }
@@ -1273,11 +1235,11 @@ PRInt32 FieldToValue(
     resume = wallet_SchemaToValue_list;
   }
   if ((schema.Length() > 0) ||
-      (wallet_ReadFromList(field, schema, dummy, URLFieldToSchema_list) != -1) ||
-      (wallet_ReadFromList(field, schema, dummy, FieldToSchema_list) != -1)) {
+      wallet_ReadFromList(field, schema, dummy, URLFieldToSchema_list) ||
+      wallet_ReadFromList(field, schema, dummy, FieldToSchema_list)) {
     /* schema name found, now fetch value from schema/value table */ 
     SchemaToValue_list = resume;
-    if (wallet_ReadFromList(schema, value, itemList, SchemaToValue_list) != -1) {
+    if (wallet_ReadFromList(schema, value, itemList, SchemaToValue_list)) {
       /* value found, prefill it into form */
       resume = SchemaToValue_list;
       return 0;
@@ -1287,7 +1249,7 @@ PRInt32 FieldToValue(
 
       XP_List * SchemaConcat_list = wallet_SchemaConcat_list;
       nsAutoString dummy2;
-      if (wallet_ReadFromList(schema, dummy2, itemList2, SchemaConcat_list) != -1) {
+      if (wallet_ReadFromList(schema, dummy2, itemList2, SchemaConcat_list)) {
         /* concatenation rules exist, generate value as a concatenation */
         XP_List * list_ptr1;
         wallet_Sublist * ptr1;
@@ -1296,7 +1258,7 @@ PRInt32 FieldToValue(
         nsAutoString value2;
         while((ptr1=(wallet_Sublist *) XP_ListNextObject(list_ptr1))!=0) {
           SchemaToValue_list = wallet_SchemaToValue_list;
-          if (wallet_ReadFromList(*(ptr1->item), value2, dummy, SchemaToValue_list) != -1) {
+          if (wallet_ReadFromList(*(ptr1->item), value2, dummy, SchemaToValue_list)) {
             if (value.Length()>0) {
               value += " ";
             }
@@ -1311,7 +1273,7 @@ PRInt32 FieldToValue(
   } else {
     /* schema name not found, use field name as schema name and fetch value */
     SchemaToValue_list = resume;
-    if (wallet_ReadFromList(field, value, itemList, SchemaToValue_list) != -1) {
+    if (wallet_ReadFromList(field, value, itemList, SchemaToValue_list)) {
       /* value found, prefill it into form */
       schema = nsAutoString(field);
       resume = SchemaToValue_list;
@@ -1549,6 +1511,14 @@ void WLLT_ChangePassword() {
 #endif
 }
 
+void
+wallet_InitializeURLList() {
+  static PRBool wallet_URLListInitialized = PR_FALSE;
+  if (!wallet_URLListInitialized) {
+    wallet_ReadFromFile("URL.tbl", wallet_URL_list, PR_FALSE);
+    wallet_URLListInitialized = PR_TRUE;
+  }
+}
 /*
  * initialization for current URL
  */
@@ -1637,15 +1607,31 @@ wallet_RequestToPrefillDone(XPDialogState* state, char** argv, int argc,
   if (button == XP_DIALOG_OK_BUTTON) {
     char* listAsAscii;
     char* fillins;
+    char* urlName;
+    char* skip;
     nsAutoString * next;
 
     /* get values that are in environment variables */
     fillins = XP_FindValueInArgs("fillins", argv, argc);
     listAsAscii = XP_FindValueInArgs("list", argv, argc);
-    XP_List * list;
-    sscanf(listAsAscii, "%ld", &list);
+    skip = XP_FindValueInArgs("skip", argv, argc);
+    urlName = XP_FindValueInArgs("url", argv, argc);
+
+    /* add url to url list if user doesn't want to preview this page in the future */
+    if (!PL_strcmp(skip, "true")) {
+      nsAutoString * url = new nsAutoString(urlName);
+      XP_List* URL_list = wallet_URL_list;
+      XP_List* dummy;
+      nsAutoString * value = new nsAutoString("nn");
+      wallet_ReadFromList(*url, *value, dummy, URL_list);
+      value->SetCharAt('y', NO_PREVIEW);
+      wallet_WriteToList(*url, *value, dummy, wallet_URL_list, DUP_OVERWRITE);
+      wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
+    }
 
     /* process the list, doing the fillins */
+    XP_List * list;
+    sscanf(listAsAscii, "%ld", &list);
 
     /*
      * note: there are two lists involved here and we are stepping through both of them.
@@ -1743,7 +1729,7 @@ static XPDialogInfo dialogInfo = {
 };
 
 void
-wallet_RequestToPrefill(XP_List * list) {
+wallet_RequestToPrefill(XP_List * list, nsString url) {
   char *buffer = (char*)PR_Malloc(BUFLEN);
   char *buffer2 = 0;
   PRInt32 g = 0;
@@ -1843,11 +1829,15 @@ wallet_RequestToPrefill(XP_List * list) {
   PR_FREEIF(heading);
 
 /* generate rest of html */
+  char * skipMessage = Wallet_Localize("RememberThisDecision?");
   g += PR_snprintf(buffer+g, BUFLEN-g,
 "    function loadButtons(){\n"
 "      top.frames[button_frame].document.open();\n"
 "      top.frames[button_frame].document.write(\n"
 "        \"<FORM name=buttons action=internal-walletPrefill-handler method=post>\" +\n"
+"          \"<BR>\" +\n"
+"          \"<INPUT type=CHECKBOX name=skip> Bypass this screen when pre-filling this form\" +\n"
+"          \"<BR>\" +\n"
 "          \"<BR>\" +\n"
 "          \"<DIV align=center>\" +\n"
 "            \"<INPUT type=BUTTON value=OK width=80 onclick=parent.clicker(this,window.parent)>\" +\n"
@@ -1855,15 +1845,19 @@ wallet_RequestToPrefill(XP_List * list) {
 "            \"<INPUT type=BUTTON value=Cancel width=80 onclick=parent.clicker(this,window.parent)>\" +\n"
 "          \"</DIV>\" +\n"
 "          \"<INPUT type=HIDDEN name=xxxbuttonxxx>\" +\n"
-"          \"<INPUT type=HIDDEN name=handle value="
-    );
+"          \"<INPUT type=HIDDEN name=handle value=",
+      skipMessage);
   FLUSH_BUFFER
+  PR_FREEIF(skipMessage);
 
   /* generate remainder of html, it will go into strings->arg[2] */
+  char * urlCString;
+  urlCString = url.ToNewCString();
   g += PR_snprintf(buffer+g, BUFLEN-g,
 ">\" +\n"
 "          \"<INPUT TYPE=HIDDEN NAME=fillins VALUE=\\\" \\\" SIZE=-1>\" +\n"
 "          \"<INPUT TYPE=HIDDEN NAME=list VALUE=\\\" \\\" SIZE=-1>\" +\n"
+"          \"<INPUT TYPE=HIDDEN NAME=url VALUE=\\\" \\\" SIZE=-1>\" +\n"
 "        \"</FORM>\"\n"
 "      );\n"
 "      top.frames[button_frame].document.close();\n"
@@ -1877,7 +1871,10 @@ wallet_RequestToPrefill(XP_List * list) {
 "    function clicker(but,win){\n"
 "      selname = top.frames[list_frame].document.fSelectFillin;\n"
 "      var list = top.frames[button_frame].document.buttons.list;\n"
+"      var url = top.frames[button_frame].document.buttons.url;\n"
+"      var skip = top.frames[button_frame].document.buttons.skip;\n"
 "      list.value = %ld;\n"
+"      url.value = \"%s\";\n"
 "      var fillins = top.frames[button_frame].document.buttons.fillins;\n"
 "      fillins.value = \"\";\n"
 "      for (i=0; i<selname.length; i++) {\n"
@@ -1889,7 +1886,8 @@ wallet_RequestToPrefill(XP_List * list) {
 "      var expires = new Date();\n"
 "      expires.setTime(expires.getTime() + 1000*60*60*24*365);\n"
 "      document.cookie = \"htmldlgs=|\" + but.value +\n"
-"        '|list|' + list.value + '|fillins|' + fillins.value + '|' +\n"
+"        '|list|' + list.value + '|fillins|' + fillins.value +\n"
+"        '|skip|' + skip.checked + '|url|' + url.value + '|' +\n"
 "        \"; expires=\" + expires.toGMTString();\n"
 #endif
 "      top.frames[button_frame].document.buttons.xxxbuttonxxx.value = but.value;\n"
@@ -1939,8 +1937,9 @@ wallet_RequestToPrefill(XP_List * list) {
 "  <BODY> <BR> </BODY>\n"
 "</NOFRAMES>\n"
 "</HTML>\n",
-    list, SEPARATOR, SEPARATOR);
+    list, urlCString, SEPARATOR, SEPARATOR);
   FLUSH_BUFFER
+  delete []urlCString;
 
   /* free buffer since it is no longer needed */
   PR_FREEIF(buffer);
@@ -2093,26 +2092,28 @@ WLLT_PreEdit(nsIURL* url) {
 /*
  * get the form elements on the current page and prefill them if possible
  */
-PUBLIC void
-WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
+PUBLIC nsresult
+WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
 
 #ifndef HTMLDialogs 
   if (!shell) {
     XP_MakeHTMLDialog2(&dialogInfo);
-    return;
+    return NS_OK;
   }
 #endif
 
   /* create list of elements that can be prefilled */
   XP_List *wallet_PrefillElement_list=XP_ListNew();
   if (!wallet_PrefillElement_list) {
-    return;
+    return NS_ERROR_FAILURE;
   }
 
   /* starting with the present shell, get each form element and put them on a list */
+  nsresult result;
   if (nsnull != shell) {
     nsIDocument* doc = nsnull;
-    if (shell->GetDocument(&doc) == NS_OK) {
+    result = shell->GetDocument(&doc);
+    if (NS_SUCCEEDED(result)) {
       wallet_Initialize();
       wallet_InitializeCurrentURL(doc);
       nsIDOMHTMLDocument* htmldoc = nsnull;
@@ -2200,38 +2201,54 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
   }
 
   /* return if no elements were put into the list */
-  if (!XP_ListCount(wallet_PrefillElement_list)) {
-    return;
+  if (!wallet_PrefillElement_list || !XP_ListCount(wallet_PrefillElement_list)) {
+    return NS_ERROR_FAILURE; // indicates to caller not to display preview screen
   }
 
   /* prefill each element using the list */
-  if (wallet_PrefillElement_list) {
-    if (quick) {
-      /* prefill each element without any user verification */
-      XP_List * list_ptr = wallet_PrefillElement_list;
-      wallet_PrefillElement * ptr;
-      while((ptr = (wallet_PrefillElement *) XP_ListNextObject(list_ptr))!=0) {
-        if (ptr->count) {
-          if (ptr->inputElement) {
-            ptr->inputElement->SetValue(*(ptr->value));
-          } else {
-            ptr->selectElement->SetSelectedIndex(ptr->selectIndex);
-          }
+
+  /* determine if url is on list of urls that should not be previewed */
+  PRBool noPreview = PR_FALSE;
+  if (!quick) {
+    wallet_InitializeURLList();
+    XP_List* URL_list = wallet_URL_list;
+    XP_List* dummy;
+    nsAutoString * value = new nsAutoString("nn");
+    nsAutoString * urlPtr = new nsAutoString(url);
+    wallet_ReadFromList(*urlPtr, *value, dummy, URL_list);
+    noPreview = (value->CharAt(NO_PREVIEW) == 'y');
+    delete value;
+    delete urlPtr;
+  }
+
+  /* determine if preview is necessary */
+  if (noPreview || quick) {
+    /* prefill each element without any preview for user verification */
+    XP_List * list_ptr = wallet_PrefillElement_list;
+    wallet_PrefillElement * ptr;
+    while((ptr = (wallet_PrefillElement *) XP_ListNextObject(list_ptr))!=0) {
+      if (ptr->count) {
+        if (ptr->inputElement) {
+          ptr->inputElement->SetValue(*(ptr->value));
+        } else {
+          ptr->selectElement->SetSelectedIndex(ptr->selectIndex);
         }
       }
-      /* go thru list just generated and release everything */
-      wallet_ReleasePrefillElementList(wallet_PrefillElement_list);
-    } else {
-      /* let user verify the prefills first */
-      wallet_RequestToPrefill(wallet_PrefillElement_list);
     }
-  }
+    /* go thru list just generated and release everything */
+    wallet_ReleasePrefillElementList(wallet_PrefillElement_list);
+    return NS_ERROR_FAILURE; // indicates to caller not to display preview screen
+  } else {
+    /* let user preview and verify the prefills first */
+    wallet_RequestToPrefill(wallet_PrefillElement_list, url);
 #ifdef DEBUG
 wallet_DumpStopwatch();
 wallet_ClearStopwatch();
 //wallet_DumpTiming();
 //wallet_ClearTiming();
 #endif
+    return NS_OK; // indicates that caller is to display preview screen
+  }
 }
 
 /*
@@ -2239,19 +2256,52 @@ wallet_ClearStopwatch();
  */
 
 PUBLIC void
-WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName) {
-  char * message = Wallet_Localize("WantToCaptureForm?");
+WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
   nsFileSpec dirSpec;
+  PRBool isWalletEditor;
   nsresult rv = Wallet_ProfileDirectory(dirSpec);
+  nsAutoString * url = new nsAutoString(urlName);
+
+  /* determine if it is the wallet editor, in which case we don't want to capture */
   if (NS_FAILED(rv)) {
-    *result = wallet_GetFormsCapturingPref() && (count>=3) && FE_Confirm(message);
+    isWalletEditor = PR_FALSE;
   } else {
     nsFileURL u = nsFileURL(dirSpec + WALLET_EDITOR_NAME);
-    *result =
-      (PL_strcmp(URLName, (char *)u.GetURLString())) && wallet_GetFormsCapturingPref() &&
-      (count>=3) && FE_Confirm(message);
+    isWalletEditor = !PL_strcmp(urlName, (char *)u.GetURLString());
   }
-  PR_FREEIF(message);
+
+  /* see if this url is already on list of url's for which we don't want to capture */
+  wallet_InitializeURLList();
+  XP_List* URL_list = wallet_URL_list;
+  XP_List* dummy;
+  nsAutoString * value = new nsAutoString("nn");
+  if (wallet_ReadFromList(*url, *value, dummy, URL_list)) {
+    if (value->CharAt(NO_CAPTURE) == 'y') {
+      *result = PR_FALSE;
+      return;
+    }
+  }
+
+  /* ask user if we should capture the values on this form */
+  if (!isWalletEditor && wallet_GetFormsCapturingPref() && (count>=3)) {
+    char * message = Wallet_Localize("WantToCaptureForm?");
+    *result = FE_Confirm(message);
+    if (!(*result)) {
+      char * message2 = Wallet_Localize("RememberThisDecision");
+      if (FE_Confirm(message2)) {
+        /* add URL to list with NO_CAPTURE indicator set */
+        value->SetCharAt('y', NO_CAPTURE);
+        wallet_WriteToList(*url, *value, dummy, wallet_URL_list, DUP_OVERWRITE);
+        wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
+      } else {
+        delete url;
+      }
+      PR_FREEIF(message2);
+    }
+    PR_FREEIF(message);
+  } else {
+    *result = PR_FALSE;
+  }
 }
 
 /*
@@ -2284,13 +2334,13 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard) {
   XP_List* dummy;
 
   if (schema.Length() ||
-      (wallet_ReadFromList(field, schema, dummy, URLFieldToSchema_list) != -1) ||
-      (wallet_ReadFromList(field, schema, dummy, FieldToSchema_list) != -1)) {
+      (wallet_ReadFromList(field, schema, dummy, URLFieldToSchema_list)) ||
+      (wallet_ReadFromList(field, schema, dummy, FieldToSchema_list))) {
 
     /* field to schema mapping already exists */
 
     /* is this a new value for the schema */
-    if ((wallet_ReadFromList(schema, oldValue, dummy, SchemaToValue_list)==-1) || 
+    if (!(wallet_ReadFromList(schema, oldValue, dummy, SchemaToValue_list)) || 
         (oldValue != value)) {
 
       /* this is a new value so store it */
@@ -2305,7 +2355,7 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard) {
     /* no field to schema mapping so assume schema name is same as field name */
 
     /* is this a new value for the schema */
-    if ((wallet_ReadFromList(field, oldValue, dummy, SchemaToValue_list)==-1) ||
+    if (!(wallet_ReadFromList(field, oldValue, dummy, SchemaToValue_list)) ||
         (oldValue != value)) {
 
       /* this is a new value so store it */
@@ -2331,7 +2381,7 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard) {
 //}
 
 //PUBLIC void
-//WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName) {
+//WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
 //}
 
 //PUBLIC void

@@ -160,7 +160,8 @@ XP_MakeHTMLDialog(
 
 void
 XP_MakeHTMLDialog2(XPDialogInfo *dialogInfo) {
-  char* argv[] = {NULL, NULL, NULL, NULL, NULL, NULL};
+#define MAX_ARGC 10
+  char* argv[MAX_ARGC];
   int argc = 0;
   char* button = NULL;
 
@@ -173,7 +174,7 @@ XP_MakeHTMLDialog2(XPDialogInfo *dialogInfo) {
   res = nsServiceManager::GetService(kNetServiceCID,
                                      kINetServiceIID,
                                      (nsISupports **)&netservice);
-  if ((NS_OK == res) && (nsnull != netservice)) {
+  if ((NS_SUCCEEDED(res)) && (nsnull != netservice)) {
     const nsAutoString html_dlgs = nsAutoString(HTML_DLGS_URL);
     if (!NS_FAILED(NS_NewURL(&url, html_dlgs))) {
       res = netservice->GetCookieString(url, *nsCookie);
@@ -197,10 +198,14 @@ XP_MakeHTMLDialog2(XPDialogInfo *dialogInfo) {
         for (int i=0; ((*cookie != '\0') && (*cookie != ';')); i++) {
           separator = strchr(cookie, '|');
           *separator = '\0';
+          argv[i] = NULL;
           LocalStrAllocCopy(argv[i], cookie);
           cookie = separator+1;
           *separator = '|';
           argc++;
+          if (argc >= MAX_ARGC) {
+            break;
+          }
         }
 
         /* call the callback routine */

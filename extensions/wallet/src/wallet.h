@@ -39,8 +39,8 @@ WLLT_ChangePassword();
 extern void
 WLLT_PreEdit(nsIURL* url);
 
-extern void
-WLLT_Prefill(nsIPresShell* shell, PRBool quick);
+extern nsresult
+WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick);
 
 extern void
 WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName);
