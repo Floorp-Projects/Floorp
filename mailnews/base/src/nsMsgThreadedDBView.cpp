@@ -68,6 +68,13 @@ NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeV
     nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
     rv = m_db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
     NS_ENSURE_SUCCESS(rv, rv);
+    // save off sort type and order, view type and flags
+    dbFolderInfo->SetSortType(m_sortType);
+    dbFolderInfo->SetSortOrder(m_sortOrder);
+    dbFolderInfo->SetViewFlags(m_viewFlags);
+    nsMsgViewTypeValue viewType;
+    GetViewType(&viewType);
+    dbFolderInfo->SetViewType(viewType);
     if (m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)
     { 
       // Set unread msg size + extra entries to avoid reallocation on new mail.

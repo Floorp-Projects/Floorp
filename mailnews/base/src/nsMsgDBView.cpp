@@ -1,4 +1,4 @@
-	/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1722,8 +1722,6 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
   m_sortOrder = sortOrder;
   m_sortType = sortType;
 
-  nsMsgViewTypeValue viewType;
-
   if (folder) // search view will have a null folder
   {
     nsCOMPtr <nsIDBFolderInfo> folderInfo;
@@ -1731,12 +1729,6 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     NS_ENSURE_SUCCESS(rv,rv);
     m_db->AddListener(this);
     m_folder = folder;
-    // save off sort type and order, view type and flags
-    folderInfo->SetSortType(sortType);
-    folderInfo->SetSortOrder(sortOrder);
-    folderInfo->SetViewFlags(viewFlags);
-    GetViewType(&viewType);
-    folderInfo->SetViewType(viewType);
     // determine if we are in a news folder or not.
     // if yes, we'll show lines instead of size, and special icons in the thread pane
     nsCOMPtr <nsIMsgIncomingServer> server;
