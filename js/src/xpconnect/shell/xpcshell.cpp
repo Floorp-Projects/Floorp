@@ -18,6 +18,16 @@
 
 /* XPConnect JavaScript interactive shell. */
 
+#if 1   // FIXME - fur, Incompatible with new interactive API
+
+int
+main(int argc, char **argv)
+{
+    return 0;
+}
+
+#else
+
 #include <stdio.h>
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
@@ -571,3 +581,5 @@ void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
 //void Dxpc(int depth) {Dobj(GetXPConnect(), depth);}
 JS_END_EXTERN_C
 #endif
+
+#endif    // #if 0
