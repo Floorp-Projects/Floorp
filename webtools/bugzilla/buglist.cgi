@@ -416,7 +416,7 @@ sub GenerateSQL {
              $f = "$table.$field";
          },
          # 2001-05-16 myk@mozilla.org: enable querying against attachment status
-         # if this installation has enabled use of the attachment manager.
+         # if this installation has enabled use of the attachment tracker.
          "^attachstatusdefs.name," => sub {
              my $attachtable = "attachments_$chartid";
              my $statustable = "attachstatuses_$chartid";
@@ -427,9 +427,15 @@ sub GenerateSQL {
              push(@wherepart, "bugs.bug_id = $attachtable.bug_id");
              push(@wherepart, "$attachtable.attach_id = $statustable.attach_id");
              push(@wherepart, "$statustable.statusid = $statusdefstable.id");
-             my $table = $statusdefstable;
-             my $field = "name";
-             $f = "$table.$field";
+
+             # When the operator is changedbefore, changedafter, changedto, 
+             # or changedby, $f appears in the query as "fielddefs.name = '$f'",
+             # so it must be the exact name of the table/field as they appear
+             # in the fielddefs table (i.e. attachstatusdefs.name).  For all 
+             # other operators, $f appears in the query as "$f = value", so it
+             # should be the name of the table/field with the correct table
+             # alias for this chart entry (f.e. attachstatusdefs_0.name).
+             $f = ($t =~ /^changed/) ? "attachstatusdefs.name" : "$statusdefstable.name";
          },
          "^changedin," => sub {
              $f = "(to_days(now()) - to_days(bugs.delta_ts))";
