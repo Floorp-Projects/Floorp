@@ -330,8 +330,10 @@ endif
 
 freetype:
 ifdef MOZ_ENABLE_XFT
+ifndef MOZ_XFT_SYSTEM_FREETYPE2
 	$(MAKE) -C other-licenses/freetype
 	$(MAKE) -C other-licenses/freetype install
+endif
 endif
 
 expat:
