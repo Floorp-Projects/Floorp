@@ -17,8 +17,8 @@
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIDOMNSEvent_h__
-#define nsIDOMNSEvent_h__
+#ifndef nsIDOMNSUIEvent_h__
+#define nsIDOMNSUIEvent_h__
 
 #include "nsISupports.h"
 #include "nsString.h"
@@ -26,13 +26,13 @@
 
 class nsIDOMRenderingContext;
 
-#define NS_IDOMNSEVENT_IID \
+#define NS_IDOMNSUIEVENT_IID \
  { 0xa6cf90c4, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMNSEvent : public nsISupports {
+class nsIDOMNSUIEvent : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSEVENT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSUIEVENT_IID; return iid; }
   enum {
     EVENT_MOUSEDOWN = 1,
     EVENT_MOUSEUP = 2,
@@ -72,51 +72,36 @@ public:
   };
 
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX)=0;
-  NS_IMETHOD    SetLayerX(PRInt32 aLayerX)=0;
 
   NS_IMETHOD    GetLayerY(PRInt32* aLayerY)=0;
-  NS_IMETHOD    SetLayerY(PRInt32 aLayerY)=0;
 
   NS_IMETHOD    GetPageX(PRInt32* aPageX)=0;
-  NS_IMETHOD    SetPageX(PRInt32 aPageX)=0;
 
   NS_IMETHOD    GetPageY(PRInt32* aPageY)=0;
-  NS_IMETHOD    SetPageY(PRInt32 aPageY)=0;
 
   NS_IMETHOD    GetWhich(PRUint32* aWhich)=0;
-  NS_IMETHOD    SetWhich(PRUint32 aWhich)=0;
 
   NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc)=0;
 };
 
 
-#define NS_DECL_IDOMNSEVENT   \
+#define NS_DECL_IDOMNSUIEVENT   \
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX);  \
-  NS_IMETHOD    SetLayerX(PRInt32 aLayerX);  \
   NS_IMETHOD    GetLayerY(PRInt32* aLayerY);  \
-  NS_IMETHOD    SetLayerY(PRInt32 aLayerY);  \
   NS_IMETHOD    GetPageX(PRInt32* aPageX);  \
-  NS_IMETHOD    SetPageX(PRInt32 aPageX);  \
   NS_IMETHOD    GetPageY(PRInt32* aPageY);  \
-  NS_IMETHOD    SetPageY(PRInt32 aPageY);  \
   NS_IMETHOD    GetWhich(PRUint32* aWhich);  \
-  NS_IMETHOD    SetWhich(PRUint32 aWhich);  \
   NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc);  \
 
 
 
-#define NS_FORWARD_IDOMNSEVENT(_to)  \
-  NS_IMETHOD    GetLayerX(PRInt32* aLayerX) { return _to##GetLayerX(aLayerX); } \
-  NS_IMETHOD    SetLayerX(PRInt32 aLayerX) { return _to##SetLayerX(aLayerX); } \
-  NS_IMETHOD    GetLayerY(PRInt32* aLayerY) { return _to##GetLayerY(aLayerY); } \
-  NS_IMETHOD    SetLayerY(PRInt32 aLayerY) { return _to##SetLayerY(aLayerY); } \
-  NS_IMETHOD    GetPageX(PRInt32* aPageX) { return _to##GetPageX(aPageX); } \
-  NS_IMETHOD    SetPageX(PRInt32 aPageX) { return _to##SetPageX(aPageX); } \
-  NS_IMETHOD    GetPageY(PRInt32* aPageY) { return _to##GetPageY(aPageY); } \
-  NS_IMETHOD    SetPageY(PRInt32 aPageY) { return _to##SetPageY(aPageY); } \
-  NS_IMETHOD    GetWhich(PRUint32* aWhich) { return _to##GetWhich(aWhich); } \
-  NS_IMETHOD    SetWhich(PRUint32 aWhich) { return _to##SetWhich(aWhich); } \
-  NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc) { return _to##GetRc(aRc); } \
+#define NS_FORWARD_IDOMNSUIEVENT(_to)  \
+  NS_IMETHOD    GetLayerX(PRInt32* aLayerX) { return _to GetLayerX(aLayerX); } \
+  NS_IMETHOD    GetLayerY(PRInt32* aLayerY) { return _to GetLayerY(aLayerY); } \
+  NS_IMETHOD    GetPageX(PRInt32* aPageX) { return _to GetPageX(aPageX); } \
+  NS_IMETHOD    GetPageY(PRInt32* aPageY) { return _to GetPageY(aPageY); } \
+  NS_IMETHOD    GetWhich(PRUint32* aWhich) { return _to GetWhich(aWhich); } \
+  NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc) { return _to GetRc(aRc); } \
 
 
-#endif // nsIDOMNSEvent_h__
+#endif // nsIDOMNSUIEvent_h__

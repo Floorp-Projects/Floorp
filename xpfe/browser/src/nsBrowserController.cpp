@@ -24,6 +24,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMUIEvent.h"
 
 #include "nsIWebShell.h"
 #include "nsIScriptContextOwner.h"
@@ -35,6 +36,7 @@ static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
 static NS_DEFINE_IID(kIDOMFormListenerIID,  NS_IDOMFORMLISTENER_IID);
 static NS_DEFINE_IID(kIDOMLoadListenerIID,  NS_IDOMLOADLISTENER_IID);
+static NS_DEFINE_IID(kIDOMUIEventIID,  NS_IDOMUIEVENT_IID);
 
 static NS_DEFINE_IID(kIWebShellIID,             NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID,   NS_ISCRIPTCONTEXTOWNER_IID);
@@ -155,24 +157,28 @@ nsresult nsBrowserController::KeyUp(nsIDOMEvent* aKeyEvent)
   nsresult rv;
   PRUint32 key;
 
-  rv = aKeyEvent->GetKeyCode(&key);
-  if (NS_SUCCEEDED(rv)) {
-    // If ENTER was pressed in the URL type-in then change to the new URL...
-    if (0x0d == key) {
+  nsIDOMUIEvent* uiEvent;
+  if (NS_SUCCEEDED(aKeyEvent->QueryInterface(kIDOMUIEventIID, (void**)&uiEvent))) {
+    rv = uiEvent->GetKeyCode(&key);
+    if (NS_SUCCEEDED(rv)) {
+      // If ENTER was pressed in the URL type-in then change to the new URL...
+      if (0x0d == key) {
 
-      if ((nsnull != mWebWindow) && (nsnull != mURLTypeIn)) {
-        nsIDOMHTMLInputElement* element;
-        rv = mURLTypeIn->QueryInterface(kIDOMHTMLInputElementIID, (void**) &element);
-        // Get the contents of the URL type-in...
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString name;
+        if ((nsnull != mWebWindow) && (nsnull != mURLTypeIn)) {
+          nsIDOMHTMLInputElement* element;
+          rv = mURLTypeIn->QueryInterface(kIDOMHTMLInputElementIID, (void**) &element);
+          // Get the contents of the URL type-in...
+          if (NS_SUCCEEDED(rv)) {
+            nsAutoString name;
 
-          element->GetValue(name);
-          mWebWindow->LoadURL(name.GetUnicode());
-          NS_RELEASE(element);
+            element->GetValue(name);
+            mWebWindow->LoadURL(name.GetUnicode());
+            NS_RELEASE(element);
+          }
         }
       }
     }
+    NS_RELEASE(uiEvent);
   }
 
   return NS_OK;

@@ -19,8 +19,8 @@
 #ifndef nsDOMEvent_h__
 #define nsDOMEvent_h__
 
-#include "nsIDOMEvent.h"
-#include "nsIDOMNSEvent.h"
+#include "nsIDOMUIEvent.h"
+#include "nsIDOMNSUIEvent.h"
 #include "nsISupports.h"
 #include "nsIPrivateDOMEvent.h"
 
@@ -31,7 +31,7 @@ class nsIContent;
 
 class nsIDOMRenderingContext;
 
-class nsDOMEvent : public nsIDOMEvent, public nsIDOMNSEvent, public nsIPrivateDOMEvent {
+class nsDOMEvent : public nsIDOMUIEvent, public nsIDOMNSUIEvent, public nsIPrivateDOMEvent {
 
 public:
   // Note: this enum must be kept in sync with mEventNames in nsDOMEvent.cpp
@@ -66,67 +66,56 @@ public:
 
   // nsIDOMEventInterface
   NS_IMETHOD    GetType(nsString& aType);
-  NS_IMETHOD    SetType(const nsString& aType);
-
-  NS_IMETHOD	GetText(nsString& aText);
-
-  NS_IMETHOD	GetCommitText(PRBool* aCommitText);
-  NS_IMETHOD	SetCommitText(PRBool aCommitText);
 
   NS_IMETHOD    GetTarget(nsIDOMNode** aTarget);
-  NS_IMETHOD    SetTarget(nsIDOMNode* aTarget);
+
+  NS_IMETHOD    GetCurrentNode(nsIDOMNode** aCurrentNode);
+
+  NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase);
+
+  NS_IMETHOD    PreventBubble();
+
+  NS_IMETHOD    PreventCapture();
+
+  NS_IMETHOD    PreventDefault();
+
+  NS_IMETHOD	  GetText(nsString& aText);
+
+  NS_IMETHOD	  GetCommitText(PRBool* aCommitText);
+  NS_IMETHOD	  SetCommitText(PRBool aCommitText);
 
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX);
-  NS_IMETHOD    SetScreenX(PRInt32 aScreenX);
 
   NS_IMETHOD    GetScreenY(PRInt32* aScreenY);
-  NS_IMETHOD    SetScreenY(PRInt32 aScreenY);
 
   NS_IMETHOD    GetClientX(PRInt32* aClientX);
-  NS_IMETHOD    SetClientX(PRInt32 aClientX);
 
   NS_IMETHOD    GetClientY(PRInt32* aClientY);
-  NS_IMETHOD    SetClientY(PRInt32 aClientY);
 
   NS_IMETHOD    GetAltKey(PRBool* aAltKey);
-  NS_IMETHOD    SetAltKey(PRBool aAltKey);
 
   NS_IMETHOD    GetCtrlKey(PRBool* aCtrlKey);
-  NS_IMETHOD    SetCtrlKey(PRBool aCtrlKey);
 
   NS_IMETHOD    GetShiftKey(PRBool* aShiftKey);
-  NS_IMETHOD    SetShiftKey(PRBool aShiftKey);
 
   NS_IMETHOD    GetMetaKey(PRBool* aMetaKey);
-  NS_IMETHOD    SetMetaKey(PRBool aMetaKey);
 
   NS_IMETHOD    GetCharCode(PRUint32* aCharCode);
-  NS_IMETHOD    SetCharCode(PRUint32 aCharCode);
 
   NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);
-  NS_IMETHOD    SetKeyCode(PRUint32 aKeyCode);
 
   NS_IMETHOD    GetButton(PRUint32* aButton);
-  NS_IMETHOD    SetButton(PRUint32 aButton);
-
-  NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble);
-  NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble);
 
   // nsIDOMNSEvent interface
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX);
-  NS_IMETHOD    SetLayerX(PRInt32 aLayerX);
 
   NS_IMETHOD    GetLayerY(PRInt32* aLayerY);
-  NS_IMETHOD    SetLayerY(PRInt32 aLayerY);
 
   NS_IMETHOD    GetPageX(PRInt32* aClientX);
-  NS_IMETHOD    SetPageX(PRInt32 aClientX);
 
   NS_IMETHOD    GetPageY(PRInt32* aClientY);
-  NS_IMETHOD    SetPageY(PRInt32 aClientY);
 
   NS_IMETHOD    GetWhich(PRUint32* aKeyCode);
-  NS_IMETHOD    SetWhich(PRUint32 aKeyCode);
 
   NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc);
 

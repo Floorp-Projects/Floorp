@@ -33,6 +33,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
+#include "nsIDOMUIEvent.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -150,10 +151,17 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   PRUint32 button;
 
+  nsCOMPtr<nsIDOMUIEvent>uiEvent;
+  uiEvent = do_QueryInterface(aMouseEvent);
+  if (!uiEvent) {
+    //non-ui event passed in.  bad things.
+    return NS_OK;
+  }
+
   switch (popupType) {
     case eXULPopupType_popup:
       // Check for left mouse button down
-      aMouseEvent->GetButton(&button);
+      uiEvent->GetButton(&button);
       if (button == 1) {
         // Time to launch a popup menu.
         LaunchPopup(aMouseEvent);
@@ -161,7 +169,7 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
       break;
     case eXULPopupType_context:
       // Check for right mouse button down
-      aMouseEvent->GetButton(&button);
+      uiEvent->GetButton(&button);
       // XXX: Handle Mac 
       if (button == 3) {
         // Time to launch a context menu.
@@ -237,10 +245,19 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
         if (anchorAlignment == "") {
           // We aren't anchored. Create on the point.
           // Retrieve our x and y position.
-          PRInt32 xPos = 50;
-		      PRInt32 yPos = 50; // For now, hardcode to (50,50), since screen doesn't work.
-          anEvent->GetScreenX(&xPos); 
-          anEvent->GetScreenY(&yPos); 
+          nsCOMPtr<nsIDOMUIEvent>uiEvent;
+          uiEvent = do_QueryInterface(anEvent);
+          if (!uiEvent) {
+            //non-ui event passed in.  bad things.
+            return NS_OK;
+          }
+
+          PRInt32 xPos;
+    		  PRInt32 yPos;
+          uiEvent->GetScreenX(&xPos); 
+          uiEvent->GetScreenY(&yPos); 
+          xPos = 50; // For now, hardcode to (50,50), since screen doesn't work.
+          yPos = 50;
                  
           domWindow->CreatePopup(element, popupContent, 
                                xPos, yPos, 

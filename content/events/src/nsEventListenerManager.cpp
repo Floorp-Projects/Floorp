@@ -469,7 +469,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_EXIT:
       if (nsnull != mMouseListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; i<mMouseListeners->Count(); i++) {
@@ -571,7 +571,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_MOVE:
       if (nsnull != mMouseMotionListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; i<mMouseMotionListeners->Count(); i++) {
@@ -620,7 +620,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
 #endif
 		if (nsnull != mCompositionListeners) {
 			if (nsnull == *aDOMEvent) {
-				ret = NS_NewDOMEvent(aDOMEvent,aPresContext,aEvent);
+				ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,aEvent);
 			}
 			if (NS_OK == ret) {
 				for(int i=0;i<mTextListeners->Count();i++) {
@@ -671,7 +671,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
 #endif
 		  if (nsnull != mTextListeners) {
 			  if (nsnull == *aDOMEvent) {
-				  ret = NS_NewDOMEvent(aDOMEvent,aPresContext,aEvent);
+				  ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,aEvent);
 			  }
         if (NS_OK == ret) {
           for (int i=0; i<mTextListeners->Count(); i++) {
@@ -706,7 +706,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_KEY_PRESS:
       if (nsnull != mKeyListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; i<mKeyListeners->Count(); i++) {
@@ -768,7 +768,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_BLUR_CONTENT:
       if (nsnull != mFocusListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; i<mFocusListeners->Count(); i++) {
@@ -823,7 +823,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_FORM_CHANGE:
       if (nsnull != mFormListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; i<mFormListeners->Count(); i++) {
@@ -885,7 +885,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_PAGE_UNLOAD:
       if (nsnull != mLoadListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; i<mLoadListeners->Count(); i++) {
@@ -938,7 +938,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_PAINT:
       if (nsnull != mPaintListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; i<mPaintListeners->Count(); i++) {
@@ -977,7 +977,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_DRAGDROP_DROP:
       if (nsnull != mDragListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
 
         if (NS_OK == ret) {
@@ -1033,7 +1033,7 @@ nsresult nsEventListenerManager::CreateEvent(nsIPresContext& aPresContext,
                                              nsEvent* aEvent,
                                              nsIDOMEvent** aDOMEvent)
 {
-    return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+    return NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
 }
 
 /**
