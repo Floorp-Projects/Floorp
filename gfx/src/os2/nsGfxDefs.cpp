@@ -37,6 +37,8 @@
 
 #include "libprint.h"
 
+#include <stdlib.h>
+
 BOOL GetTextExtentPoint32(HPS aPS, const char* aString, int aLength, PSIZEL aSizeL)
 {
   POINTL ptls[5];
@@ -186,11 +188,17 @@ void nsGfxModuleData::Init()
 nsGfxModuleData::~nsGfxModuleData()
 {
   /* Free any converters that were created */
-  for (int i=0; i < 15 /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ; i++ ) {
-    if (gUconvInfo[i].mConverter) {
-      ::UniFreeUconvObject(gUconvInfo[i].mConverter);
-    } /* endif */
-  } /* endfor */
+  if (gUconvInfoList) {
+    nsUconvInfo* UconvInfoList = gUconvInfoList;
+    nsUconvInfo* tUconvInfoList;
+    do {
+      if (UconvInfoList->mConverter)
+        ::UniFreeUconvObject(UconvInfoList->mConverter);
+      tUconvInfoList = UconvInfoList;
+      UconvInfoList = UconvInfoList->pNext;
+      free(tUconvInfoList);
+    } while (UconvInfoList);
+  } /* endif */
 
   PrnTerminate();
   if( hModResources)
@@ -203,20 +211,47 @@ nsGfxModuleData gGfxModuleData;
 int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize )
 {
   UconvObject* pConverter = 0;
-  /* Free any converters that were created */
-  for (int i=0; i < 15 /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ; i++ ) {
-    if (gUconvInfo[i].mCodePage == CodePage) {
-      if (!gUconvInfo[i].mConverter) {
+  uconv_attribute_t attr;
+
+  /* Short circuit most common case */
+  if ((gUconvInfoList) && (gUconvInfoList->mCodePage == CodePage)) {
+     pConverter = &(gUconvInfoList->mConverter);
+  } else {
+     nsUconvInfo* UconvInfoList;
+     nsUconvInfo* prevUconvInfoList;
+     if (gUconvInfoList) {
+       UconvInfoList = gUconvInfoList;
+
+       while (UconvInfoList) {
+         if (UconvInfoList->mCodePage == CodePage) {
+           pConverter = &(UconvInfoList->mConverter);
+           break;
+         }
+         prevUconvInfoList = UconvInfoList;
+         UconvInfoList = UconvInfoList->pNext;
+       } /* endwhile */
+     } /* endif */
+     if (!pConverter) {
+        nsUconvInfo* pnsUconvInfo;
+        pnsUconvInfo = (nsUconvInfo*)malloc(sizeof(nsUconvInfo));
+        pnsUconvInfo->mCodePage = CodePage;
         UniChar codepage[20];
         int unirc = ::UniMapCpToUcsCp( CodePage, codepage, 20);
-        ::UniCreateUconvObject( codepage, &gUconvInfo[i].mConverter);
-      } /* endif */
-      pConverter = &gUconvInfo[i].mConverter;
-      break;
-    } /* endif */
-  } /* endfor */
-  if (!pConverter) {
-      pConverter = &gUconvInfo[0].mConverter;
+        ::UniCreateUconvObject( codepage, &pnsUconvInfo->mConverter);
+        ::UniQueryUconvObject(pnsUconvInfo->mConverter, &attr, sizeof(uconv_attribute_t), 
+                              NULL, NULL, NULL);
+        attr.options = UCONV_OPTION_SUBSTITUTE_BOTH;
+        attr.subchar_len=1;
+        attr.subchar[0]='?';
+        ::UniSetUconvObject(pnsUconvInfo->mConverter, &attr);
+        pConverter = &(pnsUconvInfo->mConverter);
+        pnsUconvInfo->pNext = NULL;
+        if (gUconvInfoList) {
+           prevUconvInfoList->pNext = pnsUconvInfo;
+        } else {
+           gUconvInfoList = pnsUconvInfo;
+        } /* endif */
+     } /* endif */
   } /* endif */
 
   UniChar *ucsString = (UniChar*) pText;
@@ -226,8 +261,8 @@ int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, c
 
   char *tmp = szBuffer; // function alters the out pointer
 
-   int unirc = ::UniUconvFromUcs( *pConverter, &ucsString, &ucsLen,
-                                  (void**) &tmp, &cplen, &cSubs);
+  int unirc = ::UniUconvFromUcs( *pConverter, &ucsString, &ucsLen,
+                                 (void**) &tmp, &cplen, &cSubs);
 
   if( unirc == UCONV_E2BIG) // k3w1
   {
@@ -244,20 +279,47 @@ int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, c
 int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnichar *szBuffer, ULONG ulSize )
 {
   UconvObject* pConverter = 0;
-  /* Free any converters that were created */
-  for (int i=0; i < 15 /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ; i++ ) {
-    if (gUconvInfo[i].mCodePage == CodePage) {
-      if (!gUconvInfo[i].mConverter) {
+  uconv_attribute_t attr;
+
+  /* Short circuit most common case */
+  if ((gUconvInfoList) && (gUconvInfoList->mCodePage == CodePage)) {
+     pConverter = &(gUconvInfoList->mConverter);
+  } else {
+     nsUconvInfo* UconvInfoList;
+     nsUconvInfo* prevUconvInfoList;
+     if (gUconvInfoList) {
+       UconvInfoList = gUconvInfoList;
+
+       while (UconvInfoList) {
+         if (UconvInfoList->mCodePage == CodePage) {
+           pConverter = &(UconvInfoList->mConverter);
+           break;
+         }
+         prevUconvInfoList = UconvInfoList;
+         UconvInfoList = UconvInfoList->pNext;
+       } /* endwhile */
+     } /* endif */
+     if (!pConverter) {
+        nsUconvInfo* pnsUconvInfo;
+        pnsUconvInfo = (nsUconvInfo*)malloc(sizeof(nsUconvInfo));
+        pnsUconvInfo->mCodePage = CodePage;
         UniChar codepage[20];
         int unirc = ::UniMapCpToUcsCp( CodePage, codepage, 20);
-        ::UniCreateUconvObject( codepage, &gUconvInfo[i].mConverter);
-      } /* endif */
-      pConverter = &gUconvInfo[i].mConverter;
-      break;
-    } /* endif */
-  } /* endfor */
-  if (!pConverter) {
-      pConverter = &gUconvInfo[0].mConverter;
+        ::UniCreateUconvObject( codepage, &pnsUconvInfo->mConverter);
+        ::UniQueryUconvObject(pnsUconvInfo->mConverter, &attr, sizeof(uconv_attribute_t), 
+                              NULL, NULL, NULL);
+        attr.options = UCONV_OPTION_SUBSTITUTE_BOTH;
+        attr.subchar_len=1;
+        attr.subchar[0]='?';
+        ::UniSetUconvObject(pnsUconvInfo->mConverter, &attr);
+        pConverter = &(pnsUconvInfo->mConverter);
+        pnsUconvInfo->pNext = NULL;
+        if (gUconvInfoList) {
+           prevUconvInfoList->pNext = pnsUconvInfo;
+        } else {
+           gUconvInfoList = pnsUconvInfo;
+        } /* endif */
+     } /* endif */
   } /* endif */
 
   char *ucsString = (char*) pText;
