@@ -232,28 +232,6 @@ TranslateString(unsigned char *aRegValue, DWORD aRegValueLength,
                        NS_REINTERPRET_CAST(char *, aRegValue));
 }
 
-// translate homepage
-// (modified string copy)
-void
-TranslateHomepage(unsigned char *aRegValue, DWORD aRegValueLength,
-                  DWORD aRegValueType,
-                  nsIPrefBranch *prefs, char *aPrefKeyName) {
-
-  if (aRegValueType != REG_SZ)
-    NS_WARNING("unexpected string data type");
-
-  if (aRegValueType == REG_SZ) {
-    // strcmp is safe; it's bounded by its second parameter
-    if (strcmp(NS_REINTERPRET_CAST(char *, aRegValue), "about:blank") == 0)
-      prefs->SetIntPref("browser.startup.page", 0);
-    else {
-      prefs->SetIntPref("browser.startup.page", 1);
-      prefs->SetCharPref(aPrefKeyName,
-                        NS_REINTERPRET_CAST(char *, aRegValue));
-    }
-  }
-}
-
 // translate accepted language character set formats
 // (modified string copy)
 void
@@ -373,7 +351,7 @@ struct regEntry gRegEntries[] = {
   { 0,
     "Start Page",
     "browser.startup.homepage",
-    TranslateHomepage },
+    TranslateString },
   { 0, 
     "Anchor Underline",
     "browser.underline_anchors",
