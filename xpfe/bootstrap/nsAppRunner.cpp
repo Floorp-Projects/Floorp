@@ -33,6 +33,7 @@
 #include "nsCRT.h"
 #include "nsFileSpec.h"
 #include "nsIFileLocator.h"
+#include "nsIPrefWindow.h"
 #include "nsFileLocations.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
@@ -513,7 +514,27 @@ int main(int argc, char* argv[])
   /* End of mailhack */
   /* ********************************************************************* */
 
-  /* Kick off appcores */
+  // Support the "-pref" command-line option, which just puts up the pref window, so that
+  // apprunner becomes a "control panel". The "OK" and "Cancel" buttons will quit
+  // the application.
+  rv = cmdLineArgs->GetCmdLineValue("-pref", &cmdResult);
+  if (NS_SUCCEEDED(rv) && cmdResult && (strcmp("1",cmdResult) == 0))
+  {
+    nsIPrefWindow* prefWindow;
+    rv = nsComponentManager::CreateInstance(
+	  NS_PREFWINDOW_PROGID,
+      nsnull,
+      nsIPrefWindow::GetIID(),
+      (void **)&prefWindow);
+	if (NS_SUCCEEDED(rv))
+	{
+	  prefWindow->Init(nsString("Apprunner::main()").GetUnicode());
+	  prefWindow->ShowWindow(nsnull);
+	}
+	goto done;
+  }
+
+  // Kick off appcores
   rv = nsServiceManager::GetService(kAppCoresManagerCID,
                                     kIDOMAppCoresManagerIID,
                                     (nsISupports**)&appCoresManager);
