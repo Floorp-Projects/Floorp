@@ -30,7 +30,7 @@ CPPSRCS =     \
   nsTokenHandler.cpp \
   CNavDTD.cpp \
   COtherDTD.cpp \
-  nsHTMLParser.cpp  \
+  nsParser.cpp  \
   nsHTMLTokens.cpp  \
   prstrm.cpp \
   $(NULL)

@@ -52,8 +52,8 @@
  *         
  */
 
-#ifndef NS_HTMLPARSER__
-#define NS_HTMLPARSER__
+#ifndef NS_PARSER__
+#define NS_PARSER__
 
 #include "nsIParser.h"
 #include "nsDeque.h"
@@ -63,7 +63,7 @@
 #include "nsIStreamListener.h"
 
 
-#define NS_IHTML_PARSER_IID      \
+#define NS_PARSER_IID      \
   {0x2ce606b0, 0xbee6,  0x11d1,  \
   {0xaa, 0xd9, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
 
@@ -77,7 +77,7 @@ class nsIParserFilter;
 class nsIParserDebug;
 
 
-class nsHTMLParser : public nsIParser, public nsIStreamListener {
+class nsParser : public nsIParser, public nsIStreamListener {
             
   public:
 friend class CTokenHandler;
@@ -89,14 +89,14 @@ friend class CTokenHandler;
      * default constructor
      * @update	gess5/11/98
      */
-    nsHTMLParser();
+    nsParser();
 
 
     /**
      * Destructor
      * @update	gess5/11/98
      */
-    ~nsHTMLParser();
+    ~nsParser();
 
     /**
      * Select given content sink into parser for parser output
@@ -105,12 +105,12 @@ friend class CTokenHandler;
      * @return  old sink, or NULL
      */
     virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
-
-    virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter);
     
-    virtual void SetDTD(nsIDTD* aDTD);
+    virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter);
 
-    virtual nsIDTD * GetDTD(void);
+    virtual void SetDTD(nsIDTD* aDTD);
+    
+    virtual nsIDTD* GetDTD(void);
     
     /**
      *  
@@ -297,7 +297,7 @@ protected:
     //*********************************************
 
     nsIStreamListener*  mListener;
-    nsIContentSink*     mSink; 
+    nsIContentSink*     mSink;
     nsIParserFilter*    mParserFilter;
 
     nsDequeIterator*    mCurrentPos;

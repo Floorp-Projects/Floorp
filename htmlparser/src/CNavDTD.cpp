@@ -29,16 +29,16 @@
  * 
  * ...add comments here about transient style stack.
  *         
- */
+   */
 
 #include "nsIParserDebug.h"
 #include "CNavDTD.h"
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
-#include "nsParserTypes.h"
-#include "nsHTMLParser.h"
+#include "nsParser.h"
 #include "nsHTMLContentSink.h" 
 #include "nsScanner.h"
+#include "nsParserTypes.h"
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -122,7 +122,7 @@ nsresult CNavDTD::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 /**
  *  This method is defined in nsIParser. It is used to 
- *  cause the COM-like construction of an nsHTMLParser.
+ *  cause the COM-like construction of an nsParser.
  *  
  *  @update  gess 4/8/98
  *  @param   nsIParser** ptr to newly instantiated parser
@@ -395,7 +395,7 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   CStartToken*  st= (CStartToken*)(aToken);
-  eHTMLTags     tokenTagType=st->GetHTMLTag();
+  eHTMLTags     tokenTagType=(eHTMLTags)st->GetTypeID();
 
   //Begin by gathering up attributes...
   nsCParserNode attrNode((CHTMLToken*)aToken);
@@ -511,7 +511,8 @@ PRInt32 CNavDTD::HandleEndToken(CToken* aToken) {
 
   PRInt32     result=kNoError;
   CEndToken*  et = (CEndToken*)(aToken);
-  eHTMLTags   tokenTagType=et->GetHTMLTag();
+  eHTMLTags   tokenTagType=(eHTMLTags)et->GetTypeID();
+
 
   // Here's the hacky part:
   // Because we're trying to be backward compatible with Nav4/5, 
@@ -581,7 +582,7 @@ PRInt32 CNavDTD::HandleEntityToken(CToken* aToken) {
 
   CEntityToken* et = (CEntityToken*)(aToken);
   PRInt32       result=kNoError;
-  eHTMLTags     tokenTagType=et->GetHTMLTag();
+  eHTMLTags     tokenTagType=(eHTMLTags)et->GetTypeID();
 
   if(PR_FALSE==CanOmit(GetTopNode(),tokenTagType)) {
     nsCParserNode aNode((CHTMLToken*)aToken);
@@ -762,7 +763,7 @@ CTokenHandler* CNavDTD::AddTokenHandler(CTokenHandler* aHandler) {
  *  @return 
  */
 void CNavDTD::SetParser(nsIParser* aParser) {
-  mParser=(nsHTMLParser*)aParser;
+  mParser=(nsParser*)aParser;
 }
 
 /**
@@ -1675,7 +1676,7 @@ PRInt32 CNavDTD::OpenTransientStyles(eHTMLTags aTag){
           case eHTMLTag_secret_h5style: case eHTMLTag_secret_h6style:
             break;
           default:
-            token.SetHTMLTag(theTag);  //open the html container...
+            token.SetTypeID(theTag);  //open the html container...
             result=OpenContainer(theNode,PR_FALSE);
             mLeafBits[mContextStackPos-1]=PR_TRUE;
         } //switch
@@ -1809,7 +1810,7 @@ PRInt32 CNavDTD::OpenBody(const nsIParserNode& aNode){
       CHTMLToken    token(gEmpty);
       nsCParserNode htmlNode(&token);
 
-      token.SetHTMLTag(eHTMLTag_html);  //open the html container...
+      token.SetTypeID(eHTMLTag_html);  //open the html container...
       result=OpenHTML(htmlNode);
     }
   }
@@ -2056,7 +2057,7 @@ PRInt32 CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdate
   if((anIndex<mContextStackPos) && (anIndex>=0)) {
     while(mContextStackPos>anIndex) {
       eHTMLTags theTag=mContextStack[mContextStackPos-1];
-      aToken.SetHTMLTag(theTag);
+      aToken.SetTypeID(theTag);
       result=CloseContainer(theNode,aTag,aUpdateStyles);
     }
   }
@@ -2117,7 +2118,7 @@ PRInt32 CNavDTD::CloseTopmostContainer(){
 
   CEndToken aToken(gEmpty);
   eHTMLTags theTag=(eHTMLTags)mContextStack[mContextStackPos-1];
-  aToken.SetHTMLTag(theTag);
+  aToken.SetTypeID(theTag);
   nsCParserNode theNode(&aToken);
   return CloseContainer(theNode,theTag,PR_TRUE);
 }
@@ -2287,39 +2288,40 @@ PRInt32 CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag
 PRInt32 CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
   PRInt32 result=0;
   
-  switch (aTag) {
+  if(mStyleStackPos>0) {
+    switch (aTag) {
 
-    case eHTMLTag_a:
-    case eHTMLTag_bold:
-    case eHTMLTag_big:
-    case eHTMLTag_blink:
-    case eHTMLTag_cite:
-    case eHTMLTag_em:
-    case eHTMLTag_font:
-    case eHTMLTag_italic:
-    case eHTMLTag_kbd:
-    case eHTMLTag_small:
-    case eHTMLTag_spell:
-    case eHTMLTag_strike:
-    case eHTMLTag_strong:
-    case eHTMLTag_sub:
-    case eHTMLTag_sup:
-    case eHTMLTag_tt:
-    case eHTMLTag_u:
-    case eHTMLTag_var:
-      if(aTag==anActualTag)
-        mStyleStack[--mStyleStackPos]=eHTMLTag_unknown;
-      break;
+      case eHTMLTag_a:
+      case eHTMLTag_bold:
+      case eHTMLTag_big:
+      case eHTMLTag_blink:
+      case eHTMLTag_cite:
+      case eHTMLTag_em:
+      case eHTMLTag_font:
+      case eHTMLTag_italic:
+      case eHTMLTag_kbd:
+      case eHTMLTag_small:
+      case eHTMLTag_spell:
+      case eHTMLTag_strike:
+      case eHTMLTag_strong:
+      case eHTMLTag_sub:
+      case eHTMLTag_sup:
+      case eHTMLTag_tt:
+      case eHTMLTag_u:
+      case eHTMLTag_var:
+        if(aTag==anActualTag)
+          mStyleStack[--mStyleStackPos]=eHTMLTag_unknown;
+        break;
 
-    case eHTMLTag_h1: case eHTMLTag_h2:
-    case eHTMLTag_h3: case eHTMLTag_h4:
-    case eHTMLTag_h5: case eHTMLTag_h6:
-      break;
+      case eHTMLTag_h1: case eHTMLTag_h2:
+      case eHTMLTag_h3: case eHTMLTag_h4:
+      case eHTMLTag_h5: case eHTMLTag_h6:
+        break;
 
-    default:
-      break;
-  }
-
+      default:
+        break;
+    }//switch
+  }//if
   return result;
 } //update...
 
@@ -2719,6 +2721,12 @@ void CNavDTD::WillInterruptParse(void){
   }
   return;
 }
+
+
+/************************************************************************
+  Here's a bunch of stuff JEvering put into the parser to do debugging.
+ ************************************************************************/
+
 
 void CNavDTD::SetURLRef(char * aURLRef){
    if (mURLRef) {

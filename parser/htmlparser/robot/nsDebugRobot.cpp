@@ -208,7 +208,7 @@ extern "C" NS_EXPORT int DebugRobot(
     delete urlName;
 
     nsIParser* parser;
-    rv = NS_NewHTMLParser(&parser);
+    rv = NS_NewParser(&parser);
     if (NS_OK != rv) {
       printf("can't make parser\n");
       NS_RELEASE(pIParserDebug);
