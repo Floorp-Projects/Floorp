@@ -1144,14 +1144,14 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       }                                                                         
       break; // NS_FOCUS_CONTENT
 
-      case NS_KEY_PRESS:
+      case NS_KEY_UP:
       {
         // For backwards compat, trigger checks/radios/buttons with
         // space or enter (bug 25300)
         nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
 
         if (keyEvent->keyCode == NS_VK_RETURN ||
-            keyEvent->charCode == NS_VK_SPACE) {
+            keyEvent->keyCode == NS_VK_SPACE) {
           switch(type) {
             case NS_FORM_INPUT_CHECKBOX:
             case NS_FORM_INPUT_RADIO:
