@@ -135,6 +135,10 @@ SOURCE=..\icodeasm.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\icodeEmitter.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\icodegenerator.cpp
 # End Source File
 # Begin Source File
