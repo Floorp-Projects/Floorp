@@ -24,6 +24,9 @@
 #include "nsString.h"
 #include "plstr.h"
 
+#ifdef XP_MAC
+#include "nsCommandLineServiceMac.h"
+#endif
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kCmdLineServiceCID,         NS_COMMANDLINE_SERVICE_CID);
@@ -76,6 +79,10 @@ NS_IMPL_ISUPPORTS(nsCmdLineService, kICommandLineServiceIID);
 NS_IMETHODIMP
 nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 {
+#if defined(XP_MAC)
+  InitializeMacCommandLine(aArgc, aArgv);
+#endif
+
   PRInt32   i=0;
   nsresult  rv = nsnull;
 
