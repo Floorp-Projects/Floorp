@@ -559,8 +559,6 @@ nsMsgFolder::parseURI(PRBool needServer)
   rv = url->SetSpec(mURI);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIIOService> ioServ(do_GetService(kIOServiceCID, &rv));
-
   //
   // pull some info out of the URI
   //
@@ -589,7 +587,7 @@ nsMsgFolder::parseURI(PRBool needServer)
 		// yes, let's say it is in utf8
 
       nsXPIDLCString result;
-      rv = ioServ->Unescape(fileName, getter_Copies(result));
+      rv = nsStdUnescape((char*)fileName.get(), getter_Copies(result));
       mName.AssignWithConversion(result);
     }
   }
@@ -659,7 +657,7 @@ nsMsgFolder::parseURI(PRBool needServer)
     url->GetFilePath(getter_Copies(urlPath));
 
     nsXPIDLCString result;
-    rv = ioServ->Unescape(urlPath, getter_Copies(result));
+    rv = nsStdUnescape((char*)urlPath.get(), getter_Copies(result));
 
     // transform the filepath from the URI, such as
     // "/folder1/folder2/foldern"

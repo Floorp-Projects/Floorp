@@ -53,6 +53,7 @@
 #include "nsIMsgLocalMailFolder.h"
 #include "nsMsgUtils.h"
 #include "prprf.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -104,7 +105,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupport
 		url->GetFileName(getter_Copies(folderName));
         
         nsXPIDLCString tempfolder;
-        rv = ioServ->Unescape(folderName, getter_Copies(tempfolder));
+        rv = nsStdUnescape((char*)folderName.get(), getter_Copies(tempfolder));
 
         // convert from OS native charset to unicode
         rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), tempfolder, m_folderName);
@@ -114,7 +115,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupport
 		if (fileName)
 		{
             char* result = nsnull;
-            rv = ioServ->Unescape(fileName, &result);
+            rv = nsStdUnescape((char*)fileName.get(), &result);
 			nsFilePath dbPath(result);
             CRTFREEIF(result);
 			nsFileSpec dbName(dbPath);

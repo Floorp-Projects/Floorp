@@ -1378,14 +1378,13 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
       {
         nsCString unencodedURL(myGetter);
              // would be nice, if nsXPIDL*String were ns*String
-        nsCOMPtr<nsIIOService> serv (do_GetService(kIOServiceCID, &rv));
-        if (!unencodedURL.IsEmpty() && NS_SUCCEEDED(rv) && serv)
+        nsCAutoString encodedURL;
+        if (!unencodedURL.IsEmpty() && NS_SUCCEEDED(rv))
         {
-          if (NS_SUCCEEDED(serv->Escape(unencodedURL.get(),
-                   nsIIOService::url_FileBaseName | nsIIOService::url_Forced,
-                   getter_Copies(myGetter))))
+          if (NS_SUCCEEDED(nsStdEscape(unencodedURL.get(),
+                   esc_FileBaseName | esc_Forced, encodedURL )))
           {
-            mCiteReference.AssignWithConversion(myGetter);
+            mCiteReference.AssignWithConversion(encodedURL);
             mCiteReference.Insert(NS_LITERAL_STRING("mid:"), 0);
           }
           else
