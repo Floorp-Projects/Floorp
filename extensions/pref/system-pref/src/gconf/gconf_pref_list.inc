@@ -7,3 +7,6 @@
 
     {"network.proxy.http", "/system/http_proxy/host"},
     {"network.proxy.http_port", "/system/http_proxy/port"},
+    {"network.proxy.ftp", "/system/ftp_proxy/host"},
+    {"network.proxy.ftp_port", "/system/ftp_proxy/port"},
+    {"config.use_system_prefs.accessibility", "/desktop/gnome/interface/accessibility"},
