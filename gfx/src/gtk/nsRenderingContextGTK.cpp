@@ -60,6 +60,10 @@ nsRenderingContextGTK::nsRenderingContextGTK()
   mClipRegion = nsnull;
   mDrawStringBuf = nsnull;
 
+  mClipIsSet = PR_TRUE;
+  mFontIsSet = PR_TRUE;
+  mColorIsSet = PR_TRUE;
+
   PushState();
 }
 
@@ -150,9 +154,10 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
 NS_IMETHODIMP nsRenderingContextGTK::CommonInit()
 {
   // this keeps the cursor flashing
-  gint x, y, w, h, d;
-  gdk_window_get_geometry(mSurface->GetDrawable(), &x, &y, &w, &h, &d);
+  PRUint32 w, h;
 
+  mSurface->GetSize(&w, &h);
+  
   if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)&mClipRegion)) )
   {
     mClipRegion->Init();
@@ -293,13 +298,13 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
 
     // restore everything
     mClipRegion = state->mClipRegion;
+    mClipIsSet = PR_FALSE;
+
     if (mFontMetrics != state->mFontMetrics)
       SetFont(state->mFontMetrics);
 
-    mClipIsSet = PR_FALSE;
-
     if (state->mColor != mCurrentColor)
-      SetColor(state->mColor);
+      SetColor(state->mColor);    
 
     if (state->mLineStyle != mCurrentLineStyle)
       SetLineStyle(state->mLineStyle);
@@ -425,16 +430,24 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
   return NS_OK;
 }
 
-void nsRenderingContextGTK::DoSetClipRegion()
+void nsRenderingContextGTK::UpdateGC()
 {
-  if (mClipIsSet)
-    return;
+  if (!mClipIsSet && mClipRegion) {
+    GdkRegion *rgn;
+    mClipRegion->GetNativeRegion((void*&)rgn);
+    gdk_gc_set_clip_region(mSurface->GetGC(),rgn);
+    mClipIsSet = PR_TRUE;
+  }
+  if (!mFontIsSet && mSurface) {
+    gdk_gc_set_font(mSurface->GetGC(),
+                    mCurrentFont);
+    mFontIsSet = PR_TRUE;
+  }
+  if (!mColorIsSet) {
+    gdk_rgb_gc_set_foreground(mSurface->GetGC(), NS_TO_GDK_RGB(mCurrentColor));
+    mColorIsSet = PR_TRUE;
+  }
 
-  GdkRegion *rgn;
-  mClipRegion->GetNativeRegion((void*&)rgn);
-  gdk_gc_set_clip_region(mSurface->GetGC(),rgn);
-
-  mClipIsSet = PR_TRUE;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
@@ -484,26 +497,20 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
   if (!aRegion)
     return NS_ERROR_NULL_POINTER;
 
-  if (*aRegion) // copy it, they should be using CopyClipRegion
-  {
+  if (*aRegion) { // copy it, they should be using CopyClipRegion 
     // printf("you should be calling CopyClipRegion()\n");
     (*aRegion)->SetTo(*mClipRegion);
     rv = NS_OK;
-  }
-  else
-  {
+  } else {
     if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), 
                                                          (void**)aRegion )) )
     {
-      if (mClipRegion)
-      {
+      if (mClipRegion) {
         (*aRegion)->Init();
         (*aRegion)->SetTo(*mClipRegion);
         NS_ADDREF(*aRegion);
         rv = NS_OK;
-      }
-      else
-      {
+      } else {
         printf("null clip region, can't make a valid copy\n");
         NS_RELEASE(*aRegion);
         rv = NS_ERROR_FAILURE;
@@ -521,7 +528,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SetColor(nscolor aColor)
       
   mCurrentColor = aColor;
 
-  ::gdk_rgb_gc_set_foreground(mSurface->GetGC(), NS_TO_GDK_RGB(mCurrentColor));
+  mColorIsSet = PR_FALSE;
   
   return NS_OK;
 }
@@ -534,11 +541,10 @@ NS_IMETHODIMP nsRenderingContextGTK::GetColor(nscolor &aColor) const
 
 NS_IMETHODIMP nsRenderingContextGTK::SetFont(const nsFont& aFont)
 {
-  nsIFontMetrics* newMetrics;
-  nsresult rv = mContext->GetMetricsFor(aFont, newMetrics);
+  nsCOMPtr<nsIFontMetrics> newMetrics;
+  nsresult rv = mContext->GetMetricsFor(aFont, *getter_AddRefs(newMetrics));
   if (NS_SUCCEEDED(rv)) {
     rv = SetFont(newMetrics);
-    NS_RELEASE(newMetrics);
   }
   return rv;
 }
@@ -554,9 +560,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SetFont(nsIFontMetrics *aFontMetrics)
     nsFontHandle  fontHandle;
     mFontMetrics->GetFontHandle(fontHandle);
     mCurrentFont = (GdkFont *)fontHandle;
-
-    ::gdk_gc_set_font(mSurface->GetGC(),
-                      mCurrentFont);
+    mFontIsSet = PR_FALSE;
   }
 
   return NS_OK;
@@ -692,7 +696,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord 
     aX1--;
   }
 
-  DoSetClipRegion();
+  UpdateGC();
 
   ::gdk_draw_line(mSurface->GetDrawable(),
                   mSurface->GetGC(),
@@ -718,7 +722,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt
     printf("(%i,%i)\n", p.x, p.y);
   }
 
-  DoSetClipRegion();
+  UpdateGC();
 
   ::gdk_draw_lines(mSurface->GetDrawable(),
                    mSurface->GetGC(),
@@ -761,7 +765,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawRect(nscoord aX, nscoord aY, nscoord aW
   // so that the right number of pixels are drawn.
   if (w && h) {
 
-    DoSetClipRegion();
+    UpdateGC();
 
     ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
                          FALSE,
@@ -798,7 +802,7 @@ NS_IMETHODIMP nsRenderingContextGTK::FillRect(nscoord aX, nscoord aY, nscoord aW
   // It's all way off the screen anyway.
   ConditionRect(x,y,w,h);
 
-  DoSetClipRegion();
+  UpdateGC();
 
   ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
                        TRUE,
@@ -835,7 +839,7 @@ NS_IMETHODIMP nsRenderingContextGTK::InvertRect(nscoord aX, nscoord aY, nscoord 
   // Set XOR drawing mode
   ::gdk_gc_set_function(mSurface->GetGC(),GDK_XOR);  
 
-  DoSetClipRegion();
+  UpdateGC();
 
   // Fill the rect
   ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
@@ -862,7 +866,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolygon(const nsPoint aPoints[], PRInt3
     pts[i].y = p.y;
 	}
 
-  DoSetClipRegion();
+  UpdateGC();
 
   ::gdk_draw_polygon(mSurface->GetDrawable(), mSurface->GetGC(), FALSE, pts, aNumPoints);
 
@@ -885,7 +889,7 @@ NS_IMETHODIMP nsRenderingContextGTK::FillPolygon(const nsPoint aPoints[], PRInt3
     pts[i].y = p.y;
 	}
 
-  DoSetClipRegion();
+  UpdateGC();
 
   ::gdk_draw_polygon(mSurface->GetDrawable(), mSurface->GetGC(), TRUE, pts, aNumPoints);
 
@@ -913,7 +917,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawEllipse(nscoord aX, nscoord aY, nscoord
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
-  DoSetClipRegion();
+  UpdateGC();
 
   ::gdk_draw_arc(mSurface->GetDrawable(), mSurface->GetGC(), FALSE,
                  x, y, w, h,
@@ -941,7 +945,7 @@ NS_IMETHODIMP nsRenderingContextGTK::FillEllipse(nscoord aX, nscoord aY, nscoord
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
-  DoSetClipRegion();
+  UpdateGC();
 
   ::gdk_draw_arc(mSurface->GetDrawable(), mSurface->GetGC(), TRUE,
                  x, y, w, h,
@@ -972,7 +976,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawArc(nscoord aX, nscoord aY,
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
-  DoSetClipRegion();
+  UpdateGC();
 
   ::gdk_draw_arc(mSurface->GetDrawable(), mSurface->GetGC(), FALSE,
                  x, y, w, h,
@@ -1005,7 +1009,7 @@ NS_IMETHODIMP nsRenderingContextGTK::FillArc(nscoord aX, nscoord aY,
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
-  DoSetClipRegion();
+  UpdateGC();
 
   ::gdk_draw_arc(mSurface->GetDrawable(), mSurface->GetGC(), TRUE,
                  x, y, w, h,
@@ -1226,7 +1230,7 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
       y += aY;
     }
 
-    DoSetClipRegion();
+    UpdateGC();
 
     if (nsnull != aSpacing) {
       // Render the string, one character at a time...
@@ -1303,7 +1307,7 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
     nscoord x = aX;
     nscoord y;
 
-    DoSetClipRegion();
+    UpdateGC();
 
     // Substract xFontStruct ascent since drawing specifies baseline
     mFontMetrics->GetMaxAscent(y);
@@ -1406,7 +1410,7 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
       y += aY;
     }
 
-    DoSetClipRegion();
+    UpdateGC();
 
     if (nsnull != aSpacing) {
       // Render the string, one character at a time...
@@ -1517,7 +1521,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
   SetColor(color);
 #endif
 
-  DoSetClipRegion();
+  UpdateGC();
 
   return aImage->Draw(*this, mSurface,
                       x, y, w, h);
@@ -1557,7 +1561,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
   SetColor(color);
 #endif
 
-  DoSetClipRegion();
+  UpdateGC();
 
   return aImage->Draw(*this, mSurface,
                       sr.x, sr.y,
@@ -1629,7 +1633,7 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
   // gdk_draw_pixmap and copy_area do the same thing internally.
   // copy_area sounds better
 
-  DoSetClipRegion();
+  UpdateGC();
 
   ::gdk_window_copy_area(destsurf->GetDrawable(),
                          ((nsDrawingSurfaceGTK *)aSrcSurf)->GetGC(),
