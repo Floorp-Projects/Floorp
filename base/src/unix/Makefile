@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,30 +13,19 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
+DEPTH		= ../../..
 
-DEPTH = ../../..
+LIBRARY_NAME	= gmbaseunix
 
+MODULE		= raptor
 
-LIBRARY_NAME = gmbaseunix
+REQUIRES	= xpcom raptor 
 
-MODULE=raptor
+DEFINES		= -D_IMPL_NS_WIDGET 
 
-REQUIRES=xpcom raptor 
-
-DEFINES = -D_IMPL_NS_WIDGET 
-
-CPPSRCS= \
-	nsTimer.cpp 
-
-CPP_OBJS=				\
- ./$(OBJDIR)/nsTimer.o		\
- $(NULL)
-
-include $(DEPTH)/config/config.mk
-
-TARGETS = $(LIBRARY)
+CPPSRCS		= nsTimer.cpp
 
 include $(DEPTH)/config/rules.mk
-
 
