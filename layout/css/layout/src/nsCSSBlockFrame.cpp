@@ -2128,6 +2128,9 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
   // Compute the available space that the child block can reflow into
   nsSize availSize;
   if (aState.mUnconstrainedWidth) {
+#if 1
+    availSize.width = NS_UNCONSTRAINEDSIZE;
+#else
     // Never give a block an unconstrained width
 #if 1
     nsRect r;
@@ -2156,6 +2159,7 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
       aState.mHaveBlockMaxWidth = PR_TRUE;
     }
     availSize.width = aState.mBlockMaxWidth;
+#endif
 #endif
   }
   else {
