@@ -12,6 +12,7 @@
   button.plain > .button-internal-box > .button-icon, 
   button.plain > .button-internal-box > .button.icon:hover:active
     {
+      -moz-binding		  : url(chrome://global/content/xulBindings.xml#buttonleft);
       border              : 0px !important;
       margin              : 0px;
       padding             : 0px;
@@ -65,8 +66,8 @@ button.plain-extended {}
 	text-align          : center;
     vertical-align      : middle;
     padding				: 0px;
-    font-size 			: 11px;
-    font-family			: charcoal, arial;
+    font-size 			: 12px;
+    font-family			: charcoal, ms sans serif;
     font-weight			: normal;
     margin-right		: 2px;
   }
@@ -82,7 +83,7 @@ button.plain-extended {}
   }
 
   .button-bottom-spring {
-	height				: 2px;
+	height				: 1px;
   }
   
   button:hover:active {
@@ -123,14 +124,6 @@ button.plain-extended {}
   	margin: 2px 5px 3px 5px;
   }
 
-  .button-text-box[default="true"] {
-  	//font-weight: bold;    TURN ON LATER, AFTER FIXING FONT ISSUE
-  }
-
-  button[default="true"] > .button-image-middle > .button-top-spring {
-	height: 3px;
-  }
-
   .button-image-left[default="true"] {
 	background	: url(chrome://global/skin/button-def-left.gif) no-repeat;
 	width: 11px;
@@ -166,7 +159,7 @@ button.plain-extended {}
 
   .button-image-middle[default="true"][disabled="true"],
   button[default="true"][disabled="true"]:hover:active > .button-image-middle {
-	background	: url(chrome://global/skin/button-def-disabled-middle.gif) repeat-x;
+	background	: url(chrome://global/skin/button-def-disabled-mid.gif) repeat-x;
   }
 
   .button-image-right[default="true"][disabled="true"],

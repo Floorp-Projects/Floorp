@@ -54,8 +54,8 @@ menupopup > menuitem, popup > menuitem
 
 menuseparator 
   {
-  	border-top			  : 1px solid #FEFEFE;
-    border-bottom         : 1px solid #012655; 
+    border-top			  : 1px solid #7A8490;
+    border-bottom         : 1px solid #FEFEFE; 
     margin                : 2px 3px;
   }
 

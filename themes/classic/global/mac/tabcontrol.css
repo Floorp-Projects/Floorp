@@ -4,9 +4,11 @@
  * as Macintosh tabs generally are.  An example of using bottom tab images can be 
  * found in EditorToolbar.css in classic/editor/.
  *******************************/
- 
+
+/*** TAB: TOP <tab> ***/
+
 tab { 
-  -moz-binding			: url(chrome://global/skin/classicBindings.xml#tab);
+  -moz-binding		: url(chrome://global/skin/classicBindings.xml#tab);
   color				: #000000; 
   padding			: 0px;
   max-height		: 24px;
@@ -51,7 +53,7 @@ tab:hover:active > .tab-image-right {
 
 
 /* when a tab is selected this is how it should look */
-tab:hover:active[selected="true"] {
+tab:hover:active[selected="true"],  tab:hover:active[selected="1"]{
 	color			: #000000;
 }
 
@@ -90,8 +92,89 @@ tab:hover:active[selected="true"] > .tab-image-right {
 }
 
 tabbox {
-  -moz-binding			: url(chrome://global/skin/classicBindings.xml#tabbox);
+  -moz-binding		: url(chrome://global/skin/classicBindings.xml#tabbox);
   padding			: 0px;
+}
+
+/*** TAB: BOTTOM <tab class="tab-bottom"> ***/
+/* Found in editor.xul & editorOverlay.xul 
+ * SMALL TABS FOR NOW */
+
+.tab-bottom > .tab-image-middle > .tab-text {
+	font			: 10px geneva;
+	font-weight		: bold;
+}
+
+.tab-bottom > .tab-image-left {
+  background		: url(chrome://global/skin/tab-sm-bot-unsel-left.gif) no-repeat;
+  width				: 11px;
+  height			: 19px;
+}
+
+.tab-bottom > .tab-image-middle {
+  background		: url(chrome://global/skin/tab-sm-bot-unsel-mid.gif) repeat-x;
+}
+
+.tab-bottom > .tab-image-middle > .tab-left {
+  padding			: 4px 0px;
+}
+
+.tab-bottom > .tab-image-right {
+  background		: url(chrome://global/skin/tab-sm-bot-unsel-right.gif) no-repeat;
+  width				: 11px;
+  height			: 19px;
+}
+
+.tab-bottom > .tab-image-middle > .tab-text {
+  padding			: 4px 0px 5px 0px;
+}
+
+.tab-bottom:hover:active > .tab-image-left { 
+  background		: url(chrome://global/skin/tab-sm-bot-unsel-acti-left.gif) no-repeat;
+}
+
+.tab-bottom:hover:active > .tab-image-middle { 
+  background		: url(chrome://global/skin/tab-sm-bot-unsel-acti-mid.gif) repeat-x;
+}
+
+.tab-bottom:hover:active > .tab-image-right { 
+  background		: url(chrome://global/skin/tab-sm-bot-unsel-acti-right.gif) no-repeat;
+}
+
+/* when a tab is selected this is how it should look */
+
+.tab-bottom[selected="1"] > .tab-image-left,
+.tab-bottom:hover:active[selected="1"] > .tab-image-left { 
+  background		: url(chrome://global/skin/tab-sm-bot-sel-left.gif) no-repeat;
+}
+
+.tab-bottom[selected="1"] > .tab-image-middle,
+.tab-bottom:hover:active[selected="1"] > .tab-image-middle { 
+  background		: url(chrome://global/skin/tab-sm-bot-sel-mid.gif) repeat-x;
+}
+
+.tab-bottom[selected="1"] > .tab-image-right,
+.tab-bottom:hover:active[selected="1"] > .tab-image-right { 
+  background		: url(chrome://global/skin/tab-sm-bot-sel-right.gif) no-repeat;
+}
+
+.tabbox-bottom > .tab-border-top-left {
+  background		: url(chrome://global/skin/tab-border-top.gif) repeat-x top;
+  width				: 2px;
+}
+
+.tabbox-bottom > .tab-border-top-left-cap {
+  background		: url(chrome://global/skin/tab-border-bot-left-cap.gif) no-repeat top;
+  width				: 2px;
+}
+
+.tabbox-bottom > .tab-border-top-right {
+  background		: url(chrome://global/skin/tab-border-bot.gif) repeat-x top;
+}
+
+.tabbox-bottom > .tab-border-top-right-cap {
+  background		: url(chrome://global/skin/tab-border-bot-right-cap.gif) no-repeat top;
+  width				: 2px;
 }
 
     /* top tabs */

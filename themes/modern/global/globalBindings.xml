@@ -110,7 +110,7 @@
         <xul:spring class="button-image-left" inherits="default,disabled"/>
     	<xul:box flex="1" class="button-image-middle" inherits="default,disabled" orient="vertical" align="center">
     	  <xul:spring flex="1" class="button-top-spring"/>
-    	  <xul:box flex="1">
+    	  <xul:box flex="1" autostretch="never">
     	  	<xul:image class="button-icon" inherits="src"/>
     	    <xul:box class="button-text-box" flex="1" inherits="default">
 		      <xul:text inherits="disabled,value,crop,accesskey"/>
@@ -182,6 +182,32 @@
       <xul:spring class="thumb-horz-spring-right"/>
     </content>
   </binding>
+
+  <binding id="tab" extends="chrome://global/content/tabBindings.xml#tab">
+    <content>
+      <xul:spring class="tab-image-left" inherits="selected"/>
+      <xul:box flex="1" class="tab-image-middle" orient="horizontal" align="center" inherits="selected" autostretch="never">
+	      <xul:image class="tab-left"/>
+    	  <xul:text flex="1" inherits="value,crop,accesskey" crop="right" class="tab-text"/>
+      </xul:box>
+      <xul:spring class="tab-image-right" inherits="selected"/>
+    </content>
+  </binding>
+
+  <binding id="tabbox" extends="chrome://global/content/tabBindings.xml#tabbox">
+    <content>
+      <xul:spring class="tab-border-top-left-cap"/>
+	  <xul:spring class="tab-border-top-left"/>
+	  <xul:box inherits="align">
+		  <children/>
+	  </xul:box>
+	  <xul:spring class="tab-border-top-right" flex="1"/>
+	  <xul:spring class="tab-border-top-right-cap"/>
+	</content>
+  </binding>
+
+
+<!-- BUGGY TEXTFIELD: DO NOT USE -->
 
   <binding id="textfield" extends="chrome://global/content/xulBindings.xml#textfield">
     <content excludes="observes,template">

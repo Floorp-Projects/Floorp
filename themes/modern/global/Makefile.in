@@ -279,6 +279,30 @@ EXPORT_RESOURCE_SAMPLES_3 = \
 	simple-arrow-right.gif \
 	simple-arrow-up-disabled.gif \
 	simple-arrow-up.gif \
+	tab-bot-border-leftcap.gif \
+	tab-bot-border-rightcap.gif \
+	tab-bot-border.gif \
+	tab-bot-clicked-left.gif \
+	tab-bot-clicked-middle.gif \
+	tab-bot-clicked-right.gif \
+	tab-bot-select-left.gif \
+	tab-bot-select-middle.gif \
+	tab-bot-select-right.gif \
+	tab-bot-unselect-left.gif \
+	tab-bot-unselect-middle.gif \
+	tab-bot-unselect-right.gif \
+	tab-clicked-left.gif \
+	tab-clicked-middle.gif \
+	tab-clicked-right.gif \
+	tab-select-left.gif \
+	tab-select-middle.gif \
+	tab-select-right.gif \
+	tab-top-border-leftcap.gif \
+	tab-top-border-rightcap.gif \
+	tab-top-border.gif \
+	tab-unselect-left.gif \
+	tab-unselect-middle.gif \
+	tab-unselect-right.gif \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
