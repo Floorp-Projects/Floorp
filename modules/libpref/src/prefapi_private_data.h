@@ -18,6 +18,7 @@
 
 /* Data shared between prefapi.c and nsPref.cpp */
 
+NSPR_BEGIN_EXTERN_C
 extern JSTaskState *		gMochaTaskState;
 extern JSContext *			gMochaContext;
 extern JSObject *			gMochaPrefObject;
@@ -40,13 +41,16 @@ extern PLHashTable*			gHashTable;
 extern char *               gSavedLine;       
 extern PLHashAllocOps       pref_HashAllocOps;
 
-NSPR_BEGIN_EXTERN_C
 PR_EXTERN(JSBool) PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
 PR_EXTERN(PrefResult) pref_savePref(PLHashEntry *he, int i, void *arg);
 PR_EXTERN(PrefResult) pref_saveLIPref(PLHashEntry *he, int i, void *arg);
 PR_EXTERN(PRBool) pref_VerifyLockFile(char* buf, long buflen);
 PR_EXTERN(PrefResult) PREF_SetSpecialPrefsLocal(void);
 PR_EXTERN(int) pref_CompareStrings(const void *v1, const void *v2);
+/* -- Platform specific function extern */
+#if !defined(XP_WIN) && !defined(XP_OS2)
+extern JSBool pref_InitInitialObjects(void);
+#endif
 NSPR_END_EXTERN_C
 
 /* Possibly exportable */

@@ -468,11 +468,13 @@ int main()
 	// mscott - this is just a bad bad bad hack right now until prefs
 	// has the ability to take nsnull as a parameter. Once that happens,
 	// prefs will do the work of figuring out which prefs file to load...
+	// jrm - You don't even need to call this now. Just using the service
+	// should do the trick.
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
-	if (NS_SUCCEEDED(result) && prefs)
-	{
-		prefs->Startup("prefs50.js");
-	}
+//	if (NS_SUCCEEDED(result) && prefs)
+//	{
+//		prefs->StartUp();
+//	}
 
 	// Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;

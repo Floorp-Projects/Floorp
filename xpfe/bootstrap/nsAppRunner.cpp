@@ -148,7 +148,6 @@ int main(int argc, char* argv[])
   // XXX: This call will be replaced by a registry initialization...
   NS_SetupRegistry_1();
 
-  //Is there a call to get current working directory ?
   nsIFileLocator* locator = nsnull;
   rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
   if (NS_FAILED(rv))
@@ -312,36 +311,13 @@ int main(int argc, char* argv[])
   }
   
   /*
-   * Load preferences
+   * Load preferences, causing them to be initialized, and hold a reference to them.
    */
   rv = nsServiceManager::GetService(kPrefCID, 
                                     nsIPref::GetIID(), 
                                     (nsISupports **)&prefs);
   if (NS_FAILED(rv))
     goto done;
-
-  { // <-Scoping for nsFileSpec
-	  nsFileSpec newPrefs;
-	  rv = locator->GetFileLocation(nsSpecialFileSpec::App_PreferencesFile50, &newPrefs);
-	  if (NS_SUCCEEDED(rv))
-	  {
-	    if (!newPrefs.Exists())
-	    {
-	       nsOutputFileStream stream(newPrefs);
-	       if (stream.is_open())
-	       {
-	           stream << "// This is an empty prefs file" << nsEndl;
-	       }
-	    }
-	    if (newPrefs.Exists())
-	       rv = prefs->Startup(newPrefs.GetCString());
-	    else
-	    {
-	       rv = NS_ERROR_FAILURE;
-	       goto done;
-	    }
-	  }
-  } // <- end of scoping for nsFileSpec
 
   /*
    * Create the Application Shell instance...
@@ -488,7 +464,7 @@ done:
 
   /* Release the global preferences... */
   if (prefs) {
-    prefs->Shutdown();
+    prefs->ShutDown();
     nsServiceManager::ReleaseService(kPrefCID, prefs);
   }
 

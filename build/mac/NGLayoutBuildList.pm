@@ -883,6 +883,9 @@ sub BuildMailNewsProjects()
 
 sub BuildProjects()
 {
+	# activate Toolserver
+	ActivateApplication('MPSX');
+
 	# activate CodeWarrior
 	ActivateApplication('CWIE');
 
