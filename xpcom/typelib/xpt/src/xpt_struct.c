@@ -75,7 +75,7 @@ XPT_NewHeader(uint32 num_interfaces)
     header->minor_version = XPT_MINOR_VERSION;
     header->num_interfaces = num_interfaces;
     header->interface_directory = PR_CALLOC(num_interfaces *
-                                            sizeof(XPTInterfaceDirectoryEntry));
+                                           sizeof(XPTInterfaceDirectoryEntry));
     if (!header->interface_directory) {
         PR_DELETE(header);
         return NULL;
@@ -104,6 +104,7 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
     if (mode == XPT_ENCODE) {
         /* IDEs appear after header, including annotations */
         ide_offset = XPT_SizeOfHeader(*headerp) + 1; /* one-based offset */
+        header->data_pool = XPT_SizeOfHeaderBlock(*headerp);
     }
 
     for (i = 0; i < 16; i++) {
