@@ -25,7 +25,7 @@
 static NS_DEFINE_CID( kDialogParamBlockCID,          NS_DialogParamBlock_CID);
 
 #if 0
-nsresult FE_Select( nsIDOMWindow* inParent, PRUnichar* inMsg, PRUnichar** inList , PRInt32& ioCount, PRInt32* _retval )
+nsresult FE_Select( nsIDOMWindow* inParent, const PRUnichar* inTitle, const PRUnichar* inMsg, PRUnichar** inList , PRInt32& ioCount, PRInt32* _retval )
 {	
 	nsresult rv;
 	const PRInt32 eSelection = 2 ;
@@ -37,12 +37,13 @@ nsresult FE_Select( nsIDOMWindow* inParent, PRUnichar* inMsg, PRUnichar** inList
       
 	if ( NS_FAILED( rv ) )
 		return rv;
-	block->SetNumberStrings( ioCount + 1 );
-	block->SetString( nsICommonDialogs::eMsg, inMsg );
+	block->SetNumberStrings( ioCount + 2 );
+	block->SetString( 0, inMsg );
+	block->SetString(1, inMsg );
 	block->SetInt( eSelection, ioCount );
-	for ( int32 i =1; i<= ioCount; i++ )
+	for ( int32 i =2; i<= ioCount+1; i++ )
 	{
-		block->SetString( i, inList[i-1] );
+		block->SetString( i, inList[i-2] );
 	}
 	static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 	NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
@@ -110,7 +111,6 @@ NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindow *inParent,  const PRUnichar *i
 	
 	NS_IF_RELEASE( block );
 	return rv;
-
 }
 
 NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *inWindowTitle, const PRUnichar *inMsg, PRBool *_retval)

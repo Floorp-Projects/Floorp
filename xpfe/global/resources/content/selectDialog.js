@@ -7,13 +7,51 @@ function selectDialogOnLoad()
 	if( !param )
 		dump( " error getting param block interface\n" );
 	
-	var msg = param.GetString( 0 );
-	dump("message: "+ msg +"\n");
-	SetElementText("info.txt", msg ); 
+	var messageText = param.GetString( 0 );
+	dump("message: "+ messageText +"\n");
+	{
+		 var messageFragment;
+
+    	// Let the caller use "\n" to cause breaks
+    	// Translate these into <br> tags
+		 var messageParent = (document.getElementById("info.txt"));
+	   	 done = false;
+	   	 while (!done) {
+	      breakIndex =   messageText.indexOf('\n');
+	      if (breakIndex == 0) {
+	        // Ignore break at the first character
+	        messageText = messageText.slice(1);
+	        dump("Found break at begining\n");
+	        messageFragment = "";
+	      } else if (breakIndex > 0) {
+	        // The fragment up to the break
+	        messageFragment = messageText.slice(0, breakIndex);
+
+	        // Chop off fragment we just found from remaining string
+	        messageText = messageText.slice(breakIndex+1);
+	      } else {
+	        // "\n" not found. We're done
+	        done = true;
+	        messageFragment = messageText;
+	      }
+	      messageNode = document.createTextNode(messageFragment);
+	      if (messageNode)
+	        messageParent.appendChild(messageNode);
+
+	      // This is needed when the default namespace of the document is XUL
+	      breakNode = document.createElementWithNameSpace("BR", "http://www.w3.org/TR/REC-html40");
+	      if (breakNode)
+	        messageParent.appendChild(breakNode);
+	    }
+	}
+	
+	var windowTitle = param.GetString( 1 );
+	window.title = windowTitle;
+	 
 	listBox = document.getElementById("list");
 	var numItems = param.GetInt( 2 )
 	
-	for ( i = 1; i <= numItems; i++ )
+	for ( i = 2; i <= numItems+1; i++ )
 	{
 		var newString = param.GetString( i );
 		dump("setting string "+newString+"\n");
@@ -25,25 +63,19 @@ function selectDialogOnLoad()
 
 	// Move to the right location
 	moveToAlertPosition();
+	param.SetInt(0, 1 );
 }
 
 
 
-function SetElementText( elementID, text )
-{
-	dump("setting "+elementID+" to "+text +"\n");
-	var element = document.getElementById(elementID);
-	if( element )
-		element.childNodes[0].nodeValue = text;
-	else
-		dump("couldn't find element \n");
-}
+
 
 
 function commonDialogOnOK()
 {
 	dump("commonDialogOnOK \n");
 	param.SetInt(2, listBox.selectedIndex );
+	param.SetInt(0, 0 );
 	return true;
 }
 
