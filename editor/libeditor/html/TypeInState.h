@@ -20,8 +20,6 @@
 #define ChangeAttributeTxn_h__
 
 #include "nsIDOMSelectionListener.h"
-#include "nsColor.h"
-#include "nsCoord.h"
 
 class TypeInState : public nsIDOMSelectionListener
 {
@@ -51,19 +49,19 @@ public:
   void SetFontFace(nsString aFace);
   nsString GetFontFace();
   
-  void SetFontColor(nscolor aColor);
-  nscolor GetFontColor();
+  void SetFontColor(nsString aColor);
+  nsString GetFontColor();
   
-  void SetFontSize(nscoord aFontSize);
-  nscoord GetFontSize();
+  void SetFontSize(nsString aFontSize);
+  nsString GetFontSize();
 
 protected:
   PRBool   mBold;
   PRBool   mItalic;
   PRBool   mUnderline;
   nsString mFontFace;
-  nscolor  mFontColor;
-  nscoord  mFontSize;
+  nsString mFontColor;
+  nsString mFontSize;
   PRUint32 mIsSet;
 };
 
@@ -81,8 +79,6 @@ void TypeInState::Reset()
   mBold = PR_FALSE;
   mItalic = PR_FALSE;
   mUnderline = PR_FALSE;
-  mFontColor = NS_RGB(0,0,0);
-  mFontSize = 0;
   mIsSet = 0;
 };
 
@@ -96,7 +92,10 @@ TypeInState::TypeInState()
 inline 
 PRBool TypeInState::IsSet(PRUint32 aStyle)
 {
-  return (PRBool)(mIsSet & aStyle);
+  if ((PRBool)(mIsSet & aStyle))
+    return PR_TRUE;
+  else
+    return PR_FALSE;
 };
 
 inline 
@@ -156,25 +155,25 @@ nsString TypeInState::GetFontFace()
 { return mFontFace; };
 
 inline
-void TypeInState::SetFontColor(nscolor aColor)
+void TypeInState::SetFontColor(nsString aColor)
 {
   mFontColor = aColor;
   mIsSet |= NS_TYPEINSTATE_FONTCOLOR;
 };
 
 inline
-nscolor TypeInState::GetFontColor()
+nsString TypeInState::GetFontColor()
 { return mFontColor; };
 
 inline
-void TypeInState::SetFontSize(nscoord aSize)
+void TypeInState::SetFontSize(nsString aSize)
 {
   mFontSize = aSize;
   mIsSet |= NS_TYPEINSTATE_FONTSIZE;
 };
 
 inline
-nscoord TypeInState::GetFontSize()
+nsString TypeInState::GetFontSize()
 { return mFontSize; };
 
 

@@ -91,10 +91,13 @@ protected:
   /** insert aNode into a new style node of type aTag.
     * aSelection is optional.  If provided, aSelection is set to (aNode, 0)
     * if aNode was successfully placed in a new style node
+    * @param aNewStyleNode   [OUT] The newly created style node, if result is successful
+    *                              undefined if result is a failure.
     */
-  nsresult InsertStyleNode(nsIDOMNode *aNode, 
-                             nsIAtom    *aTag, 
-                             nsIDOMSelection *aSelection);
+  nsresult InsertStyleNode(nsIDOMNode      *aNode, 
+                           nsIAtom         *aTag, 
+                           nsIDOMSelection *aSelection,
+                           nsIDOMNode     **aNewStyleNode);
 
   /** create a new style node of type aTag in aParentNode, and put a new text node 
     * in the new style node.  

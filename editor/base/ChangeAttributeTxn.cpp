@@ -30,10 +30,10 @@ ChangeAttributeTxn::~ChangeAttributeTxn()
 }
 
 NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
-                                  nsIDOMElement  *aElement,
-                                  const nsString& aAttribute,
-                                  const nsString& aValue,
-                                  PRBool aRemoveAttribute)
+                                       nsIDOMElement  *aElement,
+                                       const nsString& aAttribute,
+                                       const nsString& aValue,
+                                       PRBool aRemoveAttribute)
 {
   if (nsnull!=aEditor && nsnull!=aElement)
   {

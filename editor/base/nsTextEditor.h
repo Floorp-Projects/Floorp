@@ -103,27 +103,66 @@ protected:
   
 // Utility Methods
 
-  virtual void IsTextPropertySetByContent(nsIDOMNode  *aNode,
-                                          nsIAtom     *aProperty, 
+  /** content-based query returns PR_TRUE if <aProperty aAttribute=aValue> effects aNode
+    * If <aProperty aAttribute=aValue> contains aNode, 
+    * but <aProperty aAttribute=SomeOtherValue> also contains aNode and the second is
+    * more deeply nested than the first, then the first does not effect aNode.
+    *
+    * @param aNode      The target of the query
+    * @param aProperty  The property that we are querying for
+    * @param aAttribute The attribute of aProperty, example: color in <FONT color="blue">
+    *                   May be null.
+    * @param aValue     The value of aAttribute, example: blue in <FONT color="blue">
+    *                   May be null.  Ignored if aAttribute is null.
+    * @param aIsSet     [OUT] PR_TRUE if <aProperty aAttribute=aValue> effects aNode.
+    * @param aStyleNode [OUT] set to the node representing <aProperty aAttribute=aValue>, if found.
+    *                   null if aIsSet is returned as PR_FALSE;
+    */
+  virtual void IsTextPropertySetByContent(nsIDOMNode     *aNode,
+                                          nsIAtom        *aProperty, 
                                           const nsString *aAttribute,
                                           const nsString *aValue,
-                                          PRBool      &aIsSet,
-                                          nsIDOMNode **aStyleNode) const;
+                                          PRBool         &aIsSet,
+                                          nsIDOMNode    **aStyleNode) const;
 
+  /** style-based query returns PR_TRUE if (aProperty, aAttribute) is set in aSC.
+    * WARNING: not well tested yet since we don't do style-based queries anywhere.
+    */
   virtual void IsTextStyleSet(nsIStyleContext *aSC, 
                               nsIAtom         *aProperty, 
                               const nsString  *aAttributes, 
                               PRBool          &aIsSet) const;
 
+  /** returns PR_TRUE in out-param aIsInline if aNode is inline as defined by HTML DTD */
   NS_IMETHOD IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline) const;
 
+  /** returns PR_TRUE in out-param aResult if all nodes between (aStartNode, aStartOffset)
+    * and (aEndNode, aEndOffset) are inline as defined by HTML DTD. 
+    */
   NS_IMETHOD IntermediateNodesAreInline(nsIDOMRange  *aRange,
                                         nsIDOMNode   *aStartNode, 
                                         PRInt32       aStartOffset, 
                                         nsIDOMNode   *aEndNode,
                                         PRInt32       aEndOffset,
-                                        nsIDOMNode   *aParent,
                                         PRBool       &aResult) const;
+
+  /** returns the number of things inside aNode in the out-param aCount.  
+    * If aNode is text, returns number of characters. 
+    * If not, returns number of children nodes.
+    */
+  NS_IMETHOD GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount) const;
+
+  /** Moves the content between (aNode, aStartOffset) and (aNode, aEndOffset)
+    * into aNewParentNode, splitting aNode as necessary to maintain the relative
+    * position of all leaf content.
+    */
+  NS_IMETHOD nsTextEditor::MoveContentIntoNewParent(nsIDOMNode  *aNode, 
+                                                    nsIDOMNode  *aOldParentNode, 
+                                                    PRInt32      aStartOffset, 
+                                                    PRInt32      aEndOffset,
+                                                    nsString     aTag,
+                                                    nsIDOMNode **aNewNode);
+
 
   NS_IMETHOD SetTextPropertiesForNode(nsIDOMNode  *aNode, 
                                       nsIDOMNode  *aParent,
@@ -167,8 +206,7 @@ protected:
                                                         nsIAtom     *aPropName, 
                                                         const nsString *aAttribute);
 
-  NS_IMETHOD RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
-                                                             nsIDOMNode  *aStartNode,
+  NS_IMETHOD RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStartNode,
                                                              PRInt32      aStartOffset,
                                                              nsIDOMNode  *aEndNode,
                                                              PRInt32      aEndOffset,
@@ -176,11 +214,10 @@ protected:
                                                              nsIAtom     *aPropName,
                                                              const nsString *aAttribute);
 
-
-
   NS_IMETHOD SetTypeInStateForProperty(TypeInState &aTypeInState, 
                                        nsIAtom     *aPropName, 
-                                       const nsString *aAttribute);
+                                       const nsString *aAttribute,
+                                       const nsString *aValue);
   
   TypeInState GetTypeInState() { return mTypeInState;}
 

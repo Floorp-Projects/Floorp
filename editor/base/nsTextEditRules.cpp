@@ -297,10 +297,11 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
       // create style nodes or move it up the content hierarchy as needed.
       if ((NS_SUCCEEDED(result)) && newTextNode)
       {
+        nsCOMPtr<nsIDOMNode>newStyleNode;
         if (aTypeInState.IsSet(NS_TYPEINSTATE_BOLD))
         {
           if (PR_TRUE==aTypeInState.GetBold()) {
-            InsertStyleNode(newTextNode, nsIEditProperty::b, aSelection);
+            result = InsertStyleNode(newTextNode, nsIEditProperty::b, aSelection, getter_AddRefs(newStyleNode));
           }
           else {
             printf("not yet implemented, make not bold in a bold context\n");
@@ -309,7 +310,7 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
         if (aTypeInState.IsSet(NS_TYPEINSTATE_ITALIC))
         {
           if (PR_TRUE==aTypeInState.GetItalic()) { 
-            InsertStyleNode(newTextNode, nsIEditProperty::i, aSelection);
+            result = InsertStyleNode(newTextNode, nsIEditProperty::i, aSelection, getter_AddRefs(newStyleNode));
           }
           else
           {
@@ -318,12 +319,34 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
         }
         if (aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
         {
-          if (PR_TRUE==aTypeInState.GetUnderline()) { 
-            InsertStyleNode(newTextNode, nsIEditProperty::u, aSelection);
+          if (PR_TRUE==aTypeInState.GetUnderline()) {
+            result = InsertStyleNode(newTextNode, nsIEditProperty::u, aSelection, getter_AddRefs(newStyleNode));
           }
           else
           {
             printf("not yet implemented, make not underline in an underline context\n");
+          }
+        }
+        if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTCOLOR))
+        {
+          nsAutoString fontColor;
+          fontColor = aTypeInState.GetFontColor();
+          if (0!=fontColor.Length()) { 
+            result = InsertStyleNode(newTextNode, nsIEditProperty::font, aSelection, getter_AddRefs(newStyleNode));
+            if (NS_SUCCEEDED(result) && newStyleNode)
+            {
+              nsCOMPtr<nsIDOMElement>element = do_QueryInterface(newStyleNode);
+              if (element)
+              {
+                nsAutoString attr;
+                nsIEditProperty::color->ToString(attr);
+                result = mEditor->SetAttribute(element, attr, fontColor);
+              }
+            }
+          }
+          else
+          {
+            printf("not yet implemented, make not font in an font context\n");
           }
         }
       }
@@ -374,7 +397,10 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
 }
 
 nsresult
-nsTextEditRules::InsertStyleNode(nsIDOMNode *aNode, nsIAtom *aTag, nsIDOMSelection *aSelection)
+nsTextEditRules::InsertStyleNode(nsIDOMNode      *aNode, 
+                                 nsIAtom         *aTag, 
+                                 nsIDOMSelection *aSelection,
+                                 nsIDOMNode     **aNewNode)
 {
   NS_ASSERTION(aNode && aTag, "bad args");
   if (!aNode || !aTag) { return NS_ERROR_NULL_POINTER; }
@@ -386,14 +412,13 @@ nsTextEditRules::InsertStyleNode(nsIDOMNode *aNode, nsIAtom *aTag, nsIDOMSelecti
   nsIEditorSupport::GetChildOffset(aNode, parent, offsetInParent);
   nsAutoString tag;
   aTag->ToString(tag);
-  nsCOMPtr<nsIDOMNode>newStyleNode;
-  result = mEditor->CreateNode(tag, parent, offsetInParent, getter_AddRefs(newStyleNode));
-  if ((NS_SUCCEEDED(result)) && newStyleNode)
+  result = mEditor->CreateNode(tag, parent, offsetInParent, aNewNode);
+  if ((NS_SUCCEEDED(result)) && *aNewNode)
   {
     result = mEditor->DeleteNode(aNode);
     if (NS_SUCCEEDED(result))
     {
-      result = mEditor->InsertNode(aNode, newStyleNode, 0);
+      result = mEditor->InsertNode(aNode, *aNewNode, 0);
       if (NS_SUCCEEDED(result)) {
         if (aSelection) {
           aSelection->Collapse(aNode, 0);
@@ -424,7 +449,8 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTa
       anchorAsText = do_QueryInterface(anchor);
       if (anchorAsText)
       {
-        result = InsertStyleNode(anchor, aTag, aSelection);
+        nsCOMPtr<nsIDOMNode> newStyleNode;
+        result = InsertStyleNode(anchor, aTag, aSelection, getter_AddRefs(newStyleNode));
         return result;
       }
     }
