@@ -37,7 +37,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: pwdecrypt.c,v 1.2 2004/04/25 15:02:52 gerv%gerv.net Exp $
+ * $Id: pwdecrypt.c,v 1.3 2004/07/28 21:10:07 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -198,12 +198,13 @@ main (int argc, char **argv)
     SECStatus	 rv;
     PLOptState	*optstate;
     char	*program_name;
-    const char  *input_file = NULL; 	/* read encrypted data from here (or create) */
-    const char  *output_file = NULL;	/* write new encrypted data here */
-    const char  *log_file = NULL;	/* write new encrypted data here */
+    char  *input_file = NULL; 	/* read encrypted data from here (or create) */
+    char  *output_file = NULL;	/* write new encrypted data here */
+    char  *log_file = NULL;	/* write new encrypted data here */
     FILE	*inFile = stdin;
     FILE	*outFile = stdout;
     FILE	*logFile = NULL;
+    PLOptStatus optstatus;
     SECItem	result;
     int		c;
 
@@ -212,63 +213,69 @@ main (int argc, char **argv)
     program_name = PL_strrchr(argv[0], '/');
     program_name = program_name ? (program_name + 1) : argv[0];
 
-    optstate = PL_CreateOptState (argc, argv, "Hd:i:o:l:v");
+    optstate = PL_CreateOptState (argc, argv, "Hd:i:o:l:?");
     if (optstate == NULL) {
 	SECU_PrintError (program_name, "PL_CreateOptState failed");
-	return -1;
+	return 1;
     }
 
-    while (PL_GetNextOpt (optstate) == PL_OPT_OK) {
+    while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
 	    short_usage (program_name);
-	    return retval;
+	    return 1;
 
 	  case 'H':
 	    long_usage (program_name);
-	    return retval;
+	    return 1;
 
 	  case 'd':
 	    SECU_ConfigDirectory(optstate->value);
 	    break;
 
           case 'i':
-            input_file = optstate->value;
+            input_file = PL_strdup(optstate->value);
             break;
 
           case 'o':
-            output_file = optstate->value;
+            output_file = PL_strdup(optstate->value);
             break;
 
           case 'l':
-            log_file = optstate->value;
+            log_file = PL_strdup(optstate->value);
             break;
 
 	}
     }
-    if (input_file)
-    {
+    PL_DestroyOptState(optstate);
+    if (optstatus == PL_OPT_BAD) {
+	short_usage (program_name);
+	return 1;
+    }
+
+    if (input_file) {
       inFile = fopen(input_file,"r");
       if (inFile == NULL) {
 	perror(input_file);
 	return 1;
       }
+      PR_Free(input_file);
     }
-    if (output_file)
-    {
+    if (output_file) {
       outFile = fopen(output_file,"w+");
       if (outFile == NULL) {
 	perror(output_file);
 	return 1;
       }
+      PR_Free(output_file);
     }
-    if (log_file)
-    {
+    if (log_file) {
       logFile = fopen(log_file,"w+");
       if (logFile == NULL) {
 	perror(log_file);
 	return 1;
       }
+      PR_Free(log_file);
     }
 
     /*
@@ -276,8 +283,8 @@ main (int argc, char **argv)
      */
     PK11_SetPasswordFunc(SECU_GetModulePassword);
     rv = NSS_Init(SECU_ConfigDirectory(NULL));
-
     if (rv != SECSuccess) {
+	SECU_PrintError (program_name, "NSS_Init failed");
 	retval = 1;
 	goto prdone;
     }
@@ -341,6 +348,7 @@ main (int argc, char **argv)
     }
 
     if (NSS_Shutdown() != SECSuccess) {
+	SECU_PrintError (program_name, "NSS_Shutdown failed");
        exit(1);
     }
 
