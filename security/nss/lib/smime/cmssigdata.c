@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.5 2000/09/13 22:44:28 mcgreer%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.6 2000/09/14 00:33:28 mcgreer%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -121,7 +121,7 @@ NSS_CMSSignedData_Destroy(NSSCMSSignedData *sigd)
 SECStatus
 NSS_CMSSignedData_Encode_BeforeStart(NSSCMSSignedData *sigd)
 {
-    NSSCMSSignerInfo **signerinfos, *signerinfo;
+    NSSCMSSignerInfo *signerinfo;
     SECOidTag digestalgtag;
     SECItem *dummy;
     int version;
@@ -149,12 +149,9 @@ NSS_CMSSignedData_Encode_BeforeStart(NSSCMSSignedData *sigd)
     if (NSS_CMSContentInfo_GetContentTypeTag(&(sigd->contentInfo)) != SEC_OID_PKCS7_DATA)
 	version = NSS_CMS_SIGNED_DATA_VERSION_EXT;
 
-    signerinfos = sigd->signerInfos;
-    if (!signerinfos)
-	goto encode_version;
     /* prepare all the SignerInfos (there may be none) */
-    for (i=0; signerinfos[i] != NULL; i++) {
-	signerinfo = signerinfos[i];
+    for (i=0; i < NSS_CMSSignedData_SignerInfoCount(sigd); i++) {
+	signerinfo = NSS_CMSSignedData_GetSignerInfo(sigd, i);
 
 	/* RFC2630 5.1 "version is the syntax version number..." */
 	if (NSS_CMSSignerInfo_GetVersion(signerinfo) != NSS_CMS_SIGNER_INFO_VERSION_ISSUERSN)
@@ -179,7 +176,6 @@ NSS_CMSSignedData_Encode_BeforeStart(NSSCMSSignedData *sigd)
 	}
     }
 
-encode_version:
     dummy = SEC_ASN1EncodeInteger(poolp, &(sigd->version), (long)version);
     if (dummy == NULL)
 	return SECFailure;
@@ -247,12 +243,9 @@ NSS_CMSSignedData_Encode_AfterData(NSSCMSSignedData *sigd)
     signerinfos = sigd->signerInfos;
     certcount = 0;
 
-    if (!signerinfos)
-	goto prepare_certs;
-
     /* prepare all the SignerInfos (there may be none) */
-    for (i=0; signerinfos[i] != NULL; i++) {
-	signerinfo = signerinfos[i];
+    for (i=0; i < NSS_CMSSignedData_SignerInfoCount(sigd); i++) {
+	signerinfo = NSS_CMSSignedData_GetSignerInfo(sigd, i);
 
 	/* find correct digest for this signerinfo */
 	digestalgtag = NSS_CMSSignerInfo_GetDigestAlgTag(signerinfo);
@@ -287,7 +280,6 @@ NSS_CMSSignedData_Encode_AfterData(NSSCMSSignedData *sigd)
     if (rv != SECSuccess)
 	goto loser;
 
-prepare_certs:
     /*
      * now prepare certs & crls
      */
