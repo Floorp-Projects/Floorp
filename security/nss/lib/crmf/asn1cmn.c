@@ -217,6 +217,12 @@ cmmf_decode_process_certorenccert(PRArenaPool       *poolp,
 	}
 	break;
     case cmmfEncryptedCert:
+	PORT_Assert(poolp);
+	if (!poolp) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    rv = SECFailure;
+	    break;
+	}
         inCertOrEncCert->cert.encryptedCert =
 	    PORT_ArenaZNew(poolp, CRMFEncryptedValue);
 	if (inCertOrEncCert->cert.encryptedCert == NULL) {

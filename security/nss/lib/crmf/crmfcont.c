@@ -585,47 +585,58 @@ crmf_get_mechanism_from_public_key(SECKEYPublicKey *inPubKey)
 SECItem*
 crmf_get_public_value(SECKEYPublicKey *pubKey, SECItem *dest)
 {
-    SECItem *pubValue;
+    SECItem *src;
+
+    switch(pubKey->keyType) {
+    case dsaKey:
+	src =  &pubKey->u.dsa.publicValue;
+	break;
+    case rsaKey:
+	src =  &pubKey->u.rsa.modulus;
+	break;
+    case dhKey:
+	src =  &pubKey->u.dh.publicValue;
+	break;
+    default:
+	src = NULL;
+	break;
+    }
+    if (!src) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
+    }
 
     if (dest != NULL) {
-        pubValue = dest;
+	SECStatus rv = SECITEM_CopyItem(NULL, dest, src);
+	if (rv != SECSuccess) {
+	    dest = NULL;
+	}
     } else {
-        pubValue = PORT_ZNew(SECItem);
+        dest = SECITEM_ArenaDupItem(NULL, src);
     }
-    switch(pubKey->keyType) {
-        case dsaKey:
-	    SECITEM_CopyItem(NULL, pubValue, &pubKey->u.dsa.publicValue);
-            break;
-        case rsaKey:
-	    SECITEM_CopyItem(NULL, pubValue, &pubKey->u.rsa.modulus);
-            break;
-        case dhKey:
-	    SECITEM_CopyItem(NULL, pubValue, &pubKey->u.dh.publicValue);
-	    break;
-        default:
-	    if (dest == NULL) {
-	        PORT_Free(pubValue);
-	    }
-            pubValue = NULL;
-	    break;
-    }
-    return pubValue;
+    return dest;
 }
 
 static SECItem*
 crmf_decode_params(SECItem *inParams)
 {
-    SECItem   *params;
-    SECStatus  rv;
-    
-    params = PORT_ZNew(SECItem);
-    rv = SEC_ASN1DecodeItem(NULL, params, 
-                            SEC_ASN1_GET(SEC_OctetStringTemplate),
-			    inParams);
-    if (rv != SECSuccess) {
-        SECITEM_FreeItem(params, PR_TRUE);
-	return NULL;
+    SECItem     *params;
+    SECStatus    rv      = SECFailure;
+    PRArenaPool *poolp;
+
+    poolp = PORT_NewArena(CRMF_DEFAULT_ARENA_SIZE);
+    if (poolp == NULL) {
+        return NULL;
     }
+    
+    params = PORT_ArenaZNew(poolp, SECItem);
+    if (params) {
+	rv = SEC_ASN1DecodeItem(poolp, params, 
+				SEC_ASN1_GET(SEC_OctetStringTemplate),
+				inParams);
+    }
+    params = (rv == SECSuccess) ? SECITEM_ArenaDupItem(NULL, params) : NULL;
+    PORT_FreeArena(poolp, PR_FALSE);
     return params;
 }
 
