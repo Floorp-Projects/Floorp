@@ -28,6 +28,7 @@
 
 // Interfaces Needed
 #include "nsIWebBrowserChrome.h"
+#include "nsIWebBrowserChromeFocus.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIInterfaceRequestor.h"
@@ -38,6 +39,7 @@
 class nsBrowserWindow;
 
 class nsWebBrowserChrome : public nsIWebBrowserChrome,
+                           public nsIWebBrowserChromeFocus,
                            public nsIEmbeddingSiteWindow,
                            public nsIWebProgressListener,
                            public nsIInterfaceRequestor,
@@ -49,6 +51,7 @@ public:
    NS_DECL_ISUPPORTS
 
    NS_DECL_NSIWEBBROWSERCHROME
+   NS_DECL_NSIWEBBROWSERCHROMEFOCUS
    NS_DECL_NSIEMBEDDINGSITEWINDOW
    NS_DECL_NSIWEBPROGRESSLISTENER
    NS_DECL_NSIINTERFACEREQUESTOR

@@ -72,6 +72,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
+#include "nsIWebBrowserFocus.h"
 #include "nsIBaseWindow.h"
 #include "nsXPIDLString.h"
 #include "nsIViewManager.h"
@@ -610,6 +611,22 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
 
     case NS_MENU_SELECTED:
       result = bw->DispatchMenuItem(((nsMenuEvent*)aEvent)->mCommand);
+      break;
+
+    case NS_ACTIVATE:
+      {
+        nsCOMPtr<nsIWebBrowserFocus> focus = do_GetInterface(bw->mWebBrowser);
+        if (focus)
+          focus->Activate();
+      }
+      break;
+
+    case NS_DEACTIVATE:
+      {
+        nsCOMPtr<nsIWebBrowserFocus> focus = do_GetInterface(bw->mWebBrowser);
+        if (focus)
+          focus->Deactivate();
+      }
       break;
 
     default:
