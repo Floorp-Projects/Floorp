@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
 #include "nsBlockReflowContext.h"
 #include "nsBlockBandData.h"
@@ -41,7 +42,7 @@
 #include "nsIHTMLContent.h"
 #include "prprf.h"
 #include "nsLayoutAtoms.h"
-#include "nsCOMPtr.h"
+#include "nsIDOMHTMLParagraphElement.h"
 
 // XXX temporary for :first-letter support
 #include "nsITextContent.h"
@@ -956,8 +957,86 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
                                nsBlockReflowState& aState,
                                nsHTMLReflowMetrics& aMetrics)
 {
-  // Compute final width
   const nsMargin& borderPadding = aState.BorderPadding();
+
+  // Special check for zero sized content: If our content is zero
+  // sized then we collapse into nothingness.
+  //
+  // Consensus after discussion with a few CSS folks is that html's
+  // notion of collapsing <P>'s should take precedence over non
+  // auto-sided block elements. Therefore we don't honor the width,
+  // height, border or padding attributes (the parent has to not apply
+  // a margin for us also).
+  //
+  // Note that this is <b>only</b> done for html paragraphs. Its not
+  // appropriate to apply it to other containers, especially XML
+  // content!
+  PRBool isHTMLParagraph = 0 != (mState & NS_BLOCK_IS_HTML_PARAGRAPH);
+  if (isHTMLParagraph &&
+      (aReflowState.mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_BLOCK) &&
+      (((0 == aState.mKidXMost) ||
+        (0 == aState.mKidXMost - borderPadding.left)) &&
+       (0 == aState.mY - borderPadding.top))) {
+    // Zero out the works
+    aMetrics.width = 0;
+    aMetrics.height = 0;
+    aMetrics.ascent = 0;
+    aMetrics.descent = 0;
+    aMetrics.mCarriedOutTopMargin = 0;
+    aMetrics.mCarriedOutBottomMargin = 0;
+    if (nsnull != aMetrics.maxElementSize) {
+      aMetrics.maxElementSize->width = 0;
+      aMetrics.maxElementSize->height = 0;
+    }
+    aMetrics.mCombinedArea.x = 0;
+    aMetrics.mCombinedArea.y = 0;
+    aMetrics.mCombinedArea.width = 0;
+    aMetrics.mCombinedArea.height = 0;
+    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+    return;
+  }
+
+  if (aState.mComputeMaxElementSize) {
+    nscoord maxWidth, maxHeight;
+    if (aState.mNoWrap) {
+      // When no-wrap is true the max-element-size.width is the
+      // width of the widest line plus the right border. Note that
+      // aState.mKidXMost already has the left border factored into
+      // it
+      // XXX Make this be our entire width instead of this computation
+      maxWidth = aState.mKidXMost + borderPadding.right;
+    }
+    else {
+      // Add in border and padding dimensions to already computed
+      // max-element-size values.
+      maxWidth = aState.mMaxElementSize.width +
+        borderPadding.left + borderPadding.right;
+    }
+    maxHeight = aState.mMaxElementSize.height +
+      borderPadding.top + borderPadding.bottom;
+
+    // Store away the final value
+    aMetrics.maxElementSize->width = maxWidth;
+    aMetrics.maxElementSize->height = maxHeight;
+#ifdef DEBUG_kipp
+    if ((maxWidth > aMetrics.width) || (maxHeight > aMetrics.height)) {
+      ListTag(stdout);
+      printf(": WARNING: max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
+             maxWidth, maxHeight, aMetrics.width, aMetrics.height,
+             aState.mReflowState.availableWidth,
+             aState.mReflowState.availableHeight);
+    }
+#endif
+#ifdef NOISY_MAX_ELEMENT_SIZE
+    ListTag(stdout);
+    printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
+           maxWidth, maxHeight, aMetrics.width, aMetrics.height,
+           aState.mReflowState.availableWidth,
+           aState.mReflowState.availableHeight);
+#endif
+  }
+
+  // Compute final width
   if (!aState.mUnconstrainedWidth && aReflowState.HaveFixedContentWidth()) {
     // Use style defined width
     aMetrics.width = borderPadding.left + aReflowState.computedWidth +
@@ -1044,71 +1123,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     aMetrics.mCarriedOutBottomMargin = aState.mPrevBottomMargin;
   }
 
-  // Special check for zero sized content: If our content is zero
-  // sized then we collapse into nothingness.
-  PRBool emptyFrame = PR_FALSE;
-  // We need to check the specified width and see if it's 'auto'
-  PRIntn specifiedWidthUnit = aReflowState.mStylePosition->mWidth.GetUnit();
-  // XXX bug: what about inherit?
-  if ((eStyleUnit_Auto == specifiedWidthUnit) &&
-      (NS_AUTOHEIGHT == aReflowState.computedHeight) &&
-      ((0 == aState.mKidXMost - borderPadding.left) &&
-       (0 == aState.mY - borderPadding.top))) {
-    aMetrics.width = 0;
-    aMetrics.height = 0;
-    aMetrics.mCarriedOutTopMargin = 0;
-    aMetrics.mCarriedOutBottomMargin = 0;
-    emptyFrame = PR_TRUE;
-  }
-
   aMetrics.ascent = aMetrics.height;
   aMetrics.descent = 0;
-
-  if (aState.mComputeMaxElementSize) {
-    nscoord maxWidth, maxHeight;
-    if (emptyFrame) {
-      // When a frame is empty it must not provide any
-      // max-element-size information.
-      maxWidth = maxHeight = 0;
-    }
-    else {
-      if (aState.mNoWrap) {
-        // When no-wrap is true the max-element-size.width is the
-        // width of the widest line plus the right border. Note that
-        // aState.mKidXMost already has the left border factored into
-        // it
-        maxWidth = aState.mKidXMost + borderPadding.right;
-      }
-      else {
-        // Add in border and padding dimensions to already computed
-        // max-element-size values.
-        maxWidth = aState.mMaxElementSize.width +
-          borderPadding.left + borderPadding.right;
-      }
-      maxHeight = aState.mMaxElementSize.height +
-        borderPadding.top + borderPadding.bottom;
-    }
-
-    // Store away the final value
-    aMetrics.maxElementSize->width = maxWidth;
-    aMetrics.maxElementSize->height = maxHeight;
-#ifdef DEBUG_kipp
-    if ((maxWidth > aMetrics.width) || (maxHeight > aMetrics.height)) {
-      ListTag(stdout);
-      printf(": WARNING: max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
-             maxWidth, maxHeight, aMetrics.width, aMetrics.height,
-             aState.mReflowState.availableWidth,
-             aState.mReflowState.availableHeight);
-    }
-#endif
-#ifdef NOISY_MAX_ELEMENT_SIZE
-    ListTag(stdout);
-    printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
-           maxWidth, maxHeight, aMetrics.width, aMetrics.height,
-           aState.mReflowState.availableWidth,
-           aState.mReflowState.availableHeight);
-#endif
-  }
 
   // Compute the combined area of our children
   // XXX take into account the overflow->clip property!
@@ -4239,7 +4255,8 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
     mStyleContext->GetStyleData(eStyleStruct_Display);
 
   // Only paint the border and background if we're visible
-  if (disp->mVisible && (eFramePaintLayer_Underlay == aWhichLayer)) {
+  if (disp->mVisible && (eFramePaintLayer_Underlay == aWhichLayer) &&
+      (0 != mRect.width) && (0 != mRect.height)) {
     PRIntn skipSides = GetSkipSides();
     const nsStyleColor* color = (const nsStyleColor*)
       mStyleContext->GetStyleData(eStyleStruct_Color);
@@ -4429,6 +4446,19 @@ nsBlockFrame::Init(nsIPresContext&  aPresContext,
     nsBlockFrame*  blockFrame = (nsBlockFrame*)aPrevInFlow;
 
     SetFlags(blockFrame->mFlags);
+  }
+
+  // See if the content is an html paragraph to support some html
+  // compatability code.
+  if (nsnull != aContent) {
+    static NS_DEFINE_IID(kIDOMHTMLParagraphElementIID, NS_IDOMHTMLPARAGRAPHELEMENT_IID);
+    nsIDOMHTMLParagraphElement* p;
+    nsresult rv = aContent->QueryInterface(kIDOMHTMLParagraphElementIID,
+                                           (void**) &p);
+    if (NS_SUCCEEDED(rv) && p) {
+      mState |= NS_BLOCK_IS_HTML_PARAGRAPH;
+      NS_RELEASE(p);
+    }
   }
   
   return nsBlockFrameSuper::Init(aPresContext, aContent, aParent,
