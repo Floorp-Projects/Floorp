@@ -53,9 +53,7 @@
 #endif
 
 #include "nsHTTPRequest.h"
-#ifdef DEBUG_gagan
 #include "nsIWebFilters.h"
-#endif
 
 #ifdef XP_UNIX
 #include <sys/utsname.h>
@@ -222,10 +220,9 @@ nsHTTPHandler::NewChannel(nsIURI* i_URL, nsIChannel **o_Instance)
     if (scheme != nsnull  && handlerScheme != nsnull  &&
         0 == PL_strcasecmp(scheme, handlerScheme)) 
     {
-#ifdef DEBUG_gagan
         // Check for filtering
         nsCOMPtr<nsIWebFilters> filters = 
-            do_CreateInstance(NS_WEBFILTERS_PROGID, &rv);
+            do_GetService(NS_WEBFILTERS_PROGID, &rv);
         if (NS_SUCCEEDED(rv))
         {
             PRBool allowLoading = PR_TRUE;
@@ -233,7 +230,6 @@ nsHTTPHandler::NewChannel(nsIURI* i_URL, nsIChannel **o_Instance)
                 !allowLoading)
                 return NS_ERROR_FAILURE; // NS_ERROR_FILTERED
         }
-#endif
 
         nsCOMPtr<nsIURI> channelURI;
         PRUint32 count;
