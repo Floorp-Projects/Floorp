@@ -43,7 +43,8 @@ import java.io.*;
  *      issuerName      Name,
  *      serialNumber    INTEGER,
  *      reason          CRLReason,
- *      passphrase      OCTET STRING OPTIONAL,
+ *      invalidityDate  GeneralizedTime OPTIONAL,
+ *      sharedSecret    OCTET STRING OPTIONAL,
  *      comment         UTF8String OPTIONAL }
  * </pre>
  */
@@ -93,6 +94,16 @@ public class RevRequest implements ASN1Value {
      *  field.
      */
     public static final ENUMERATED removeFromCRL = new ENUMERATED(8);
+    /**
+     * A <code>CRLReason</code>, which can be used in the <code>reason</code>
+     *  field.
+     */
+    public static final ENUMERATED privilegeWithdrawn = new ENUMERATED(9);
+    /**
+     * A <code>CRLReason</code>, which can be used in the <code>reason</code>
+     *  field.
+     */
+    public static final ENUMERATED aACompromise = new ENUMERATED(10);
 
 
     ///////////////////////////////////////////////////////////////////////
@@ -101,7 +112,8 @@ public class RevRequest implements ASN1Value {
     private ANY issuerName;
     private INTEGER serialNumber;
     private ENUMERATED reason;
-    private OCTET_STRING passphrase; // may be null
+    private GeneralizedTime invalidityDate; // may be null
+    private OCTET_STRING sharedSecret; // may be null
     private UTF8String comment; // may be null
     private SEQUENCE sequence;
 
@@ -131,7 +143,9 @@ public class RevRequest implements ASN1Value {
      *      superseded              (4),
      *      cessationOfOperation    (5),
      *      certificateHold         (6),
-     *      removeFromCRL           (8) }
+     *      removeFromCRL           (8),
+     *      privilegeWithdrawn      (9),
+     *      aACompromise            (10) }
      * </pre>
      * These are all defined as constants in this class.
      */
@@ -140,11 +154,29 @@ public class RevRequest implements ASN1Value {
     }
 
     /**
+     * Returns the <tt>invalidityDate</tt> field. Returns <tt>null</tt>
+     * if the field is not present.
+     */
+    public GeneralizedTime getInvalidityDate() {
+        return invalidityDate;
+    }
+
+    /**
      * Returns the <code>passphrase</code> field.  Returns
      *  <code>null</code> if the field is not present.
+     * @deprecated The <tt>passphrase</tt> field has been renamed
+     *  <tt>sharedSecret</tt>. Call <tt>getSharedSecret</tt> instead.
      */
     public OCTET_STRING getPassphrase() {
-        return passphrase;
+        return sharedSecret;
+    }
+
+    /**
+     * Returns the <code>sharedSecret</code> field.  Returns
+     *  <code>null</code> if the field is not present.
+     */
+    public OCTET_STRING getSharedSecret() {
+        return sharedSecret;
     }
 
     /**
@@ -163,20 +195,47 @@ public class RevRequest implements ASN1Value {
 
 
     /**
+     * Constructs a new <code>RevRequest</code> from its components,
+     *  omitting the <tt>invalidityDate</tt> field.
+     *
+     * @deprecated This constructor is obsolete now that
+     *      <tt>invalidityDate</tt> has been added to the class.
+     *
+     * @param issuerName The <code>issuerName</code> field.
+     * @param serialNumber The <code>serialNumber</code> field.
+     * @param reason The <code>reason</code> field.  The constants defined
+     *      in this class may be used.
+     * @param sharedSecret The <code>sharedSecret</code> field.  This field is
+     *      optional, so <code>null</code> may be used.
+     * @param comment The <code>comment</code> field.  This field is optional,
+     *      so <code>null</code> may be used.
+     */
+    public RevRequest(ANY issuerName, INTEGER serialNumber,
+                    ENUMERATED reason, OCTET_STRING sharedSecret,
+                    UTF8String comment)
+    {
+        this(issuerName, serialNumber, reason, null, sharedSecret, comment);
+    }
+
+    /**
      * Constructs a new <code>RevRequest</code> from its components.
      *
      * @param issuerName The <code>issuerName</code> field.
      * @param serialNumber The <code>serialNumber</code> field.
      * @param reason The <code>reason</code> field.  The constants defined
      *      in this class may be used.
-     * @param passphrase The <code>passphrase</code> field.  This field is
+     * @param invalidityDate The suggested value for the Invalidity Date
+     *      CRL extension. This field is optional, so <tt>null</tt> may be
+     *      used.
+     * @param sharedSecret The <code>sharedSecret</code> field.  This field is
      *      optional, so <code>null</code> may be used.
      * @param comment The <code>comment</code> field.  This field is optional,
      *      so <code>null</code> may be used.
      */
     public RevRequest(ANY issuerName, INTEGER serialNumber,
-                    ENUMERATED reason, OCTET_STRING passphrase,
-                    UTF8String comment) {
+                    ENUMERATED reason, GeneralizedTime invalidityDate,
+                    OCTET_STRING sharedSecret, UTF8String comment)
+    {
         if( issuerName==null || serialNumber==null || reason==null ) {
             throw new IllegalArgumentException(
                 "parameter to RevRequest constructor is null");
@@ -192,8 +251,11 @@ public class RevRequest implements ASN1Value {
         this.reason = reason;
         sequence.addElement(reason);
 
-        this.passphrase = passphrase;
-        sequence.addElement(passphrase);
+        this.invalidityDate = invalidityDate;
+        sequence.addElement(invalidityDate);
+
+        this.sharedSecret = sharedSecret;
+        sequence.addElement(sharedSecret);
 
         this.comment = comment;
         sequence.addElement(comment);
@@ -232,6 +294,7 @@ public class RevRequest implements ASN1Value {
             seqt.addElement(ANY.getTemplate());
             seqt.addElement(INTEGER.getTemplate());
             seqt.addElement(ENUMERATED.getTemplate());
+            seqt.addOptionalElement(GeneralizedTime.getTemplate());
             seqt.addOptionalElement(OCTET_STRING.getTemplate());
             seqt.addOptionalElement(UTF8String.getTemplate());
         }
@@ -253,8 +316,9 @@ public class RevRequest implements ASN1Value {
             return new RevRequest(  (ANY) seq.elementAt(0),
                                     (INTEGER) seq.elementAt(1),
                                     (ENUMERATED) seq.elementAt(2),
-                                    (OCTET_STRING) seq.elementAt(3),
-                                    (UTF8String) seq.elementAt(4) );
+                                    (GeneralizedTime) seq.elementAt(3),
+                                    (OCTET_STRING) seq.elementAt(4),
+                                    (UTF8String) seq.elementAt(5) );
 
         }
     }
