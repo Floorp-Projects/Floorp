@@ -2170,6 +2170,18 @@ nsXULElement::SetParent(nsIContent* aParent)
     return NS_OK;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsXULElement::IsNativeAnonymous() const
+{
+    return PR_FALSE;
+}
+
+NS_IMETHODIMP_(void)
+nsXULElement::SetNativeAnonymous(PRBool aAnonymous)
+{
+    // XXX Need to make this actually do something - bug 165110
+}
+
 NS_IMETHODIMP
 nsXULElement::CanContainChildren(PRBool& aResult) const
 {
