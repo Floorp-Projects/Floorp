@@ -1027,7 +1027,7 @@ MRJFrame* MRJContext::findFrame(WindowRef window)
 	MRJFrame* frame = NULL;
 	
 	// locates the frame corresponding to this window.
-	if (window == NULL && mViewerFrame != NULL) {
+	if (window == NULL || (CGrafPtr(window) == mPluginPort) && mViewerFrame != NULL) {
 		frame = getFrame(mViewerFrame);
 	} else {
 		// Scan the available frames for this context, and see if any of them correspond to this window.
@@ -1101,8 +1101,13 @@ void MRJContext::setVisibility()
 		// compute the frame's origin and clipping.
 		
 		// JManager wants the origin expressed in window coordinates.
+#if 0		
 		Point frameOrigin = { npWindow->y, npWindow->x };
-		
+#else
+		nsPluginPort* npPort = mPluginWindow->window;
+		Point frameOrigin = { -npPort->porty, -npPort->portx };
+#endif
+	
 		// The clipping region is now maintained by a new browser event.
 		OSStatus status = ::JMSetFrameVisibility(mViewerFrame, GrafPtr(mPluginPort),
 												frameOrigin, mPluginClipping);
