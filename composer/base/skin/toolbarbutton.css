@@ -64,8 +64,7 @@ toolbarbutton {
   text-align: center;
 }
 
-toolbarbutton:hover,
-toolbarbutton[buttonover="true"] {
+toolbarbutton:hover {
   border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
 }
 
@@ -135,7 +134,6 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   padding: 0 0 1px 0;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
   -moz-appearance: dualbutton-dropdown;
-
 }
 
 .toolbarbutton-menubutton-dropmarker[disabled="true"] {
@@ -144,6 +142,6 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 }
 
 toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropmarker,
-toolbarbutton[type="menu-button"][buttondown="true"] > .toolbarbutton-menubutton-dropmarker {
+toolbarbutton[type="menu-button"]:hover:active > .toolbarbutton-menubutton-dropmarker {
   padding: 1px 0 0 0;
 }

@@ -231,11 +231,11 @@ toolbar[mode="text"] .toolbarbutton-text {
   list-style-image: url("chrome://editor/skin/icons/orbit-button2-print.png");
 }
 
-#printButton[buttonover="true"] {
+#printButton:hover {
   list-style-image: url("chrome://editor/skin/icons/orbit-button2-print-hover.png");
 }
 
-#printButton[buttondown="true"] {
+#printButton:hover:active {
   list-style-image: url("chrome://editor/skin/icons/orbit-button2-print-active.png");
 }
 
