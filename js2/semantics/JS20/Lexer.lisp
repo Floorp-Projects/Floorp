@@ -11,7 +11,7 @@
      "L"
      '((lexer code-lexer
               :lalr-1
-              :$next-token
+              :$next-input-element
               ((:unicode-character (% every (:text "Any Unicode character")) () t)
                (:unicode-initial-alphabetic
                 (% initial-alpha (:text "Any Unicode initial alphabetic character (includes ASCII "
@@ -57,20 +57,20 @@
               (($default-action character nil identity)
                ($digit-value integer digit-value digit-char-36)))
        
-       (rule :$next-token
-             ((token token))
-         (production :$next-token ($unit (:next-token unit)) $next-token-unit
-           (token (token :next-token)))
-         (production :$next-token ($re (:next-token re)) $next-token-re
-           (token (token :next-token)))
-         (production :$next-token ($non-re (:next-token div)) $next-token-non-re
-           (token (token :next-token))))
+       (rule :$next-input-element
+             ((input-element input-element))
+         (production :$next-input-element ($unit (:next-input-element unit)) $next-input-element-unit
+           (input-element (input-element :next-input-element)))
+         (production :$next-input-element ($re (:next-input-element re)) $next-input-element-re
+           (input-element (input-element :next-input-element)))
+         (production :$next-input-element ($non-re (:next-input-element div)) $next-input-element-non-re
+           (input-element (input-element :next-input-element))))
        
        (%text nil "The start symbols are: "
-              (:grammar-symbol (:next-token unit)) " if the previous token was a number; "
-              (:grammar-symbol (:next-token re)) " if the previous token was not a number and a "
+              (:grammar-symbol (:next-input-element unit)) " if the previous input element was a number; "
+              (:grammar-symbol (:next-input-element re)) " if the previous input-element was not a number and a "
               (:character-literal #\/) " should be interpreted as a regular expression; and "
-              (:grammar-symbol (:next-token div)) " if the previous token was not a number and a "
+              (:grammar-symbol (:next-input-element div)) " if the previous input-element was not a number and a "
               (:character-literal #\/) " should be interpreted as a division or division-assignment operator.")
        
        (deftype semantic-exception (oneof syntax-error))
@@ -127,44 +127,44 @@
        (production :line-breaks (:line-break) line-breaks-first)
        (production :line-breaks (:line-breaks :white-space :line-break) line-breaks-rest)
        
-       (%section "Tokens")
+       (%section "Input elements")
        
        (grammar-argument :nu re div unit)
        (grammar-argument :nu_2 re div)
        
-       (rule (:next-token :nu)
-             ((token token))
-         (production (:next-token re) (:white-space (:token re)) next-token-re
-           (token (token :token)))
-         (production (:next-token div) (:white-space (:token div)) next-token-div
-           (token (token :token)))
-         (production (:next-token unit) ((:- :continuing-identifier-character #\\) :white-space (:token div)) next-token-unit-normal
-           (token (token :token)))
-         (production (:next-token unit) ((:- #\_) :identifier-name) next-token-unit-name
-           (token (oneof string (name :identifier-name))))
-         (production (:next-token unit) (#\_ :identifier-name) next-token-unit-underscore-name
-           (token (oneof string (name :identifier-name)))))
+       (rule (:next-input-element :nu)
+             ((input-element input-element))
+         (production (:next-input-element re) (:white-space (:input-element re)) next-input-element-re
+           (input-element (input-element :input-element)))
+         (production (:next-input-element div) (:white-space (:input-element div)) next-input-element-div
+           (input-element (input-element :input-element)))
+         (production (:next-input-element unit) ((:- :continuing-identifier-character #\\) :white-space (:input-element div)) next-input-element-unit-normal
+           (input-element (input-element :input-element)))
+         (production (:next-input-element unit) ((:- #\_) :identifier-name) next-input-element-unit-name
+           (input-element (oneof string (name :identifier-name))))
+         (production (:next-input-element unit) (#\_ :identifier-name) next-input-element-unit-underscore-name
+           (input-element (oneof string (name :identifier-name)))))
        
        (%print-actions)
        
-       (rule (:token :nu_2)
-             ((token token))
-         (production (:token :nu_2) (:line-breaks) token-line-breaks
-           (token (oneof line-break)))
-         (production (:token :nu_2) (:identifier-or-reserved-word) token-identifier-or-reserved-word
-           (token (token :identifier-or-reserved-word)))
-         (production (:token :nu_2) (:punctuator) token-punctuator
-           (token (oneof punctuator (punctuator :punctuator))))
-         (production (:token div) (:division-punctuator) token-division-punctuator
-           (token (oneof punctuator (punctuator :division-punctuator))))
-         (production (:token :nu_2) (:numeric-literal) token-numeric-literal
-           (token (oneof number (float64-value :numeric-literal))))
-         (production (:token :nu_2) (:string-literal) token-string-literal
-           (token (oneof string (string-value :string-literal))))
-         (production (:token re) (:reg-exp-literal) token-reg-exp-literal
-           (token (oneof regular-expression (r-e-value :reg-exp-literal))))
-         (production (:token :nu_2) (:end-of-input) token-end
-           (token (oneof end))))
+       (rule (:input-element :nu_2)
+             ((input-element input-element))
+         (production (:input-element :nu_2) (:line-breaks) input-element-line-breaks
+           (input-element (oneof line-break)))
+         (production (:input-element :nu_2) (:identifier-or-keyword) input-element-identifier-or-keyword
+           (input-element (input-element :identifier-or-keyword)))
+         (production (:input-element :nu_2) (:punctuator) input-element-punctuator
+           (input-element (oneof punctuator (punctuator :punctuator))))
+         (production (:input-element div) (:division-punctuator) input-element-division-punctuator
+           (input-element (oneof punctuator (punctuator :division-punctuator))))
+         (production (:input-element :nu_2) (:numeric-literal) input-element-numeric-literal
+           (input-element (oneof number (float64-value :numeric-literal))))
+         (production (:input-element :nu_2) (:string-literal) input-element-string-literal
+           (input-element (oneof string (string-value :string-literal))))
+         (production (:input-element re) (:reg-exp-literal) input-element-reg-exp-literal
+           (input-element (oneof regular-expression (r-e-value :reg-exp-literal))))
+         (production (:input-element :nu_2) (:end-of-input) input-element-end
+           (input-element (oneof end))))
        
        (production :end-of-input ($end) end-of-input-end)
        (production :end-of-input (:line-comment $end) end-of-input-line-comment)
@@ -175,14 +175,14 @@
        (deftype quantity (tuple (amount float64)
                            (unit string)))
        
-       (deftype token (oneof line-break
-                             (identifier string)
-                             (keyword string)
-                             (punctuator string)
-                             (number float64)
-                             (string string)
-                             (regular-expression reg-exp)
-                             end))
+       (deftype input-element (oneof line-break
+                                     (identifier string)
+                                     (keyword string)
+                                     (punctuator string)
+                                     (number float64)
+                                     (string string)
+                                     (regular-expression reg-exp)
+                                     end))
        (%print-actions)
        
        (%section "Keywords and identifiers")
@@ -252,13 +252,13 @@
              true
              (member id (subseq list 1)))))
        
-       (rule :identifier-or-reserved-word
-             ((token token))
-         (production :identifier-or-reserved-word (:identifier-name) identifier-or-reserved-word-identifier-name
-           (token (let ((id string (name :identifier-name)))
-                    (if (and (member id keywords) (not (contains-escapes :identifier-name)))
-                      (oneof keyword id)
-                      (oneof identifier id))))))
+       (rule :identifier-or-keyword
+             ((input-element input-element))
+         (production :identifier-or-keyword (:identifier-name) identifier-or-keyword-identifier-name
+           (input-element (let ((id string (name :identifier-name)))
+                            (if (and (member id keywords) (not (contains-escapes :identifier-name)))
+                              (oneof keyword id)
+                              (oneof identifier id))))))
        (%print-actions)
        
        (%section "Punctuators")
@@ -519,7 +519,7 @@
 #|
 (depict-rtf-to-local-file
  "JS20/LexerCharClasses.rtf"
- "JavaScript 2 Lexer Character Classes"
+ "JavaScript 2 Lexical Character Classes"
  #'(lambda (rtf-stream)
      (depict-paragraph (rtf-stream ':grammar-header)
        (depict rtf-stream "Character Classes"))
@@ -532,26 +532,26 @@
 (values
   (depict-rtf-to-local-file
    "JS20/LexerGrammar.rtf"
-   "JavaScript 2 Lexer Grammar"
+   "JavaScript 2 Lexical Grammar"
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *lw* :visible-semantics nil)))
   (depict-rtf-to-local-file
    "JS20/LexerSemantics.rtf"
-   "JavaScript 2 Lexer Semantics"
+   "JavaScript 2 Lexical Semantics"
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *lw*))))
 
 (values
   (depict-html-to-local-file
    "JS20/LexerGrammar.html"
-   "JavaScript 2 Lexer Grammar"
+   "JavaScript 2 Lexical Grammar"
    t
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *lw* :visible-semantics nil))
    :external-link-base "notation.html")
   (depict-html-to-local-file
    "JS20/LexerSemantics.html"
-   "JavaScript 2 Lexer Semantics"
+   "JavaScript 2 Lexical Semantics"
    t
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *lw*))
