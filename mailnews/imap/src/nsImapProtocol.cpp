@@ -181,7 +181,7 @@ static PRInt32 gIdealTime = 4;
 static PRInt32 gChunkAddSize = 2048;
 static PRInt32 gChunkSize = 10240;
 static PRInt32 gChunkThreshold = 10240 + 4096;
-static PRBool gFetchByChunks = PR_TRUE;
+//static PRBool gFetchByChunks = PR_TRUE;
 static PRInt32 gMaxChunkSize = 40960;
 static PRBool gInitialized = PR_FALSE;
 nsresult nsImapProtocol::GlobalInitialization()
@@ -1691,7 +1691,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 
                 if (GetServerStateParser().LastCommandSuccessful())
                 {
-                    delete_message_struct *deleteMsg = (delete_message_struct *) PR_Malloc (sizeof(delete_message_struct));
+                    //delete_message_struct *deleteMsg = (delete_message_struct *) PR_Malloc (sizeof(delete_message_struct));
 
 					// convert name back from utf7
 					utf_name_struct *nameStruct = (utf_name_struct *) PR_Malloc(sizeof(utf_name_struct));
@@ -1982,7 +1982,9 @@ void nsImapProtocol::BeginMessageDownLoad(
             {
 	           // create a pipe to pump the message into...the output will go to whoever
 	           // is consuming the message display
-	            nsresult rv = NS_NewPipe(getter_AddRefs(m_channelInputStream), getter_AddRefs(m_channelOutputStream));
+	            nsresult rv;
+                rv = NS_NewPipe(getter_AddRefs(m_channelInputStream), getter_AddRefs(m_channelOutputStream));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed!");
             }
             // else, if we are saving the message to disk!
             else if (m_imapMessageSink /* && m_imapAction == nsIImapUrl::nsImapSaveMessageToDisk */) 
@@ -3204,7 +3206,6 @@ PRUint32 nsImapProtocol::GetMessageSize(nsCString &messageId,
 		PL_strcpy(id, messageId.GetBuffer());
 
 		nsIMAPNamespace *nsForMailbox = nsnull;
-        const char *userName = GetImapUserName();
         m_hostSessionList->GetNamespaceForMailboxForHost(GetImapServerKey(), folderFromParser,
             nsForMailbox);
 
@@ -3622,10 +3623,7 @@ void
 nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)  
 {
 	// IMAP_LoadTrashFolderName(); **** needs to work on localization issues
-
 	nsIMAPNamespace *ns = nsnull;
-    const char* hostName = GetImapHostName();
-    const char *userName = GetImapUserName();
 
     NS_ASSERTION (m_hostSessionList, "fatal null host session list");
     if (!m_hostSessionList) return;
@@ -6106,7 +6104,6 @@ PRBool
 nsImapProtocol::GetDeleteIsMoveToTrash()
 {
     PRBool rv = PR_FALSE;
-    const char *userName = GetImapUserName();
     NS_ASSERTION (m_hostSessionList, "fatal... null host session list");
     if (m_hostSessionList)
         m_hostSessionList->GetDeleteIsMoveToTrashForHost(GetImapServerKey(), rv);
