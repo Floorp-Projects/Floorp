@@ -145,6 +145,7 @@
   padding: inherit;
   display: inherit;
   -moz-box-orient: inherit;
+  -moz-counter-reset: inherit;
 }
 
 *|*::-moz-page, *|*::-moz-page-sequence {
