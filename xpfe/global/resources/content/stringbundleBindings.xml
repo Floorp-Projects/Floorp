@@ -8,25 +8,26 @@
 
   <binding id="stringbundle" extends="xul:spring">
     <implementation name="XStringBundle">
-      
+
       <method name="getString">
         <parameter name="aStringKey"/>
         <body>
           <![CDATA[
-            try {
-              return this.stringBundle.GetStringFromName(aStringKey);
-            }
-            catch (e) {
-              dump("<StringBundle> Error: Failed to get string from bundle. Are you using the right key?\n");
-              dump("The key you provided was: " + aStringKey + "\n");
-              dump("The exception thrown was:\n" + e + "\n");
-              throw e;
-              return null;
-            }
+            return this.stringBundle.GetStringFromName(aStringKey);
           ]]>
         </body>
       </method>
-    
+
+      <method name="getFormattedString">
+        <parameter name="aStringKey"/>
+        <parameter name="aStringsArray"/>
+        <body>
+          <![CDATA[
+            return this.stringBundle.formatStringFromName(aStringKey, aStringsArray, aStringsArray.length);
+          ]]>
+        </body>
+      </method>
+
       <property name="stringBundle" readonly="true">
         <getter>
           <![CDATA[
@@ -75,10 +76,10 @@
           ]]>
         </getter>
       </property>
-      <property name="_bundle"/>
-      <property name="_src"/>
+
+      <property name="_bundle">null</property>
 
     </implementation>
   </binding>
-  
+
 </bindings>
