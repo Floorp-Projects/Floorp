@@ -79,6 +79,9 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         mSplashScreen = [[CHSplashScreenWindow alloc] splashImage:nil withFade:YES withStatusRect:NSMakeRect(0,0,0,0)];
         mFindDialog = nil;
         mMenuBookmarks = nil;
+        
+        [NSApp setServicesProvider:self];
+
     }
     return self;
 }
@@ -514,6 +517,37 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   }
 
   return NO;
+}
+
+// services
+
+- (void)openURL:(NSPasteboard *) pboard userData:(NSString *) userData error:(NSString **) error
+{
+  NSString *urlString = [[[NSMutableString alloc] init] autorelease];
+  if ( !urlString )
+    return;
+
+  NSArray* types = [pboard types];
+  if (![types containsObject:NSStringPboardType]) {
+    *error = NSLocalizedString(@"Error: couldn't open URL.",
+                    @"pboard couldn't give URL string.");
+    return;
+  }
+  NSString* pboardString = [pboard stringForType:NSStringPboardType];
+  if (!pboardString) {
+    *error = NSLocalizedString(@"Error: couldn't open URL.",
+                    @"pboard couldn't give URL string.");
+    return;
+  }
+  NSScanner* scanner = [NSScanner scannerWithString:pboardString];
+  [scanner scanCharactersFromSet:[[NSCharacterSet whitespaceAndNewlineCharacterSet] invertedSet] intoString:&urlString];
+  while(![scanner isAtEnd]) {
+    NSString *tmpString;
+    [scanner scanCharactersFromSet:[[NSCharacterSet whitespaceAndNewlineCharacterSet] invertedSet] intoString:&tmpString];
+    [urlString appendString:tmpString];
+  }
+  
+  [self openBrowserWindowWithURLString:urlString];
 }
 
 @end
