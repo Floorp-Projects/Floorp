@@ -1206,7 +1206,9 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, nsITreeColumn *col, n
     return NS_MSG_INVALID_DBVIEW_INDEX;
   }
 
-  PRUint32 flags = m_flags.GetAt(aRow);
+  PRUint32 flags;
+  msgHdr->GetFlags(&flags);
+
   if (!(flags & MSG_FLAG_READ))
     properties->AppendElement(kUnreadMsgAtom);  
   else 
@@ -1550,7 +1552,11 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAStr
     else if (colID[1] == 'i') // size
       rv = FetchSize(msgHdr, getter_Copies(valueText));
     else if (colID[1] == 't') // status
-      rv = FetchStatus(m_flags[aRow], getter_Copies(valueText));
+    {
+      PRUint32 flags;
+      msgHdr->GetFlags(&flags);
+      rv = FetchStatus(flags, getter_Copies(valueText));
+    }
     aValue.Assign(valueText);
     break;
   case 'r': // recipient

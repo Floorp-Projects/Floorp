@@ -215,6 +215,12 @@ protected:
   // in the db, which might get cleared because the user clicked away
   // from the folder.
   nsMsgKeyArray m_saveNewMsgs;
+
+  // These are the set of new messages for a folder who has had
+  // its db closed, without the user reading the folder. This 
+  // happens with pop3 mail filtered to a different local folder.
+  nsMsgKeyArray m_newMsgs;
+
   //
   // stuff from the uri
   //

@@ -292,6 +292,14 @@ NS_IMETHODIMP nsMsgDBFolder::EndFolderLoading(void)
     PRBool hasNewMessages;
 
     rv = mDatabase->HasNew(&hasNewMessages);
+    if (!hasNewMessages)
+    {
+      for (PRUint32 keyIndex = 0; keyIndex < m_newMsgs.GetSize(); keyIndex++)
+        mDatabase->AddToNewList(m_newMsgs[keyIndex]);
+
+      hasNewMessages = (m_newMsgs.GetSize() > 0);
+      m_newMsgs.RemoveAll();
+    }
     SetHasNewMessages(hasNewMessages);
   }
 
@@ -448,7 +456,9 @@ NS_IMETHODIMP nsMsgDBFolder::ClearNewMessages()
       m_saveNewMsgs.CopyArray(newMessageKeys);
     NS_DELETEXPCOM (newMessageKeys);
     rv = mDatabase->ClearNewList(PR_TRUE);
+    m_newMsgs.RemoveAll();
   }
+  mNumNewBiffMessages = 0;
   return rv;
 }
 
@@ -772,6 +782,14 @@ nsMsgDBFolder::SetMsgDatabase(nsIMsgDatabase *aMsgDatabase)
     mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
     mDatabase->RemoveListener(this);
     mDatabase->ClearCachedHdrs();
+    if (!aMsgDatabase)
+    {
+      nsMsgKeyArray *newMessageKeys = nsnull;
+      nsresult rv = mDatabase->GetNewList(&newMessageKeys);
+      if (NS_SUCCEEDED(rv) && newMessageKeys)
+        m_newMsgs.CopyArray(newMessageKeys);
+      NS_DELETEXPCOM (newMessageKeys);
+    }
   }
   mDatabase = aMsgDatabase;
 
