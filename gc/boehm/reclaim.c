@@ -32,9 +32,16 @@ word sz;
     if (GC_debugging_started && GC_has_debug_info(p)) {
         GC_print_obj(p);
     } else {
+#ifdef MACOS
+        /* no debug info, so at least try for a type name. */
+        /* extern const char* getTypeName(void* ptr);
+        GC_err_printf3("0x%08lX <%s> (%ld)\n", p, getTypeName(p),
+                       (unsigned long)WORDS_TO_BYTES(sz)); */
+#else
         GC_err_printf2("0x%lx (appr. size = %ld)\n",
        		      (unsigned long)p,
        		      (unsigned long)WORDS_TO_BYTES(sz));
+#endif
     }
 }
 
@@ -107,16 +114,21 @@ register word sz;
 	    } else {
 			FOUND_FREE(hbp, word_no);
 			INCR_WORDS(sz);
-#if defined(FIND_LEAK) || 1
-			/* object is available - put on list */
-		    obj_link(p) = list;
-		    list = ((ptr_t)p);
-			/* Clear object, advance p to next object in the process */
-		    q = p + sz;
-            p++; /* Skip link field */
-            while (p < q) {
-				*p++ = 0;
-		    }
+#if !defined(FIND_LEAK) || 1
+			if (GC_root_size) {
+				/* object is available - put on list */
+			    obj_link(p) = list;
+			    list = ((ptr_t)p);
+				/* Clear object, advance p to next object in the process */
+			    q = p + sz;
+	            p++; /* Skip link field */
+	            while (p < q) {
+					*p++ = 0;
+			    }
+			} else {
+				/* roots gone, just advance. */
+				p += sz;
+			}
 #else
 			/* let leaks accumulate. */
 			p += sz;
@@ -152,10 +164,10 @@ register ptr_t list;
 #   define DO_OBJ(start_displ) \
 	if (!(mark_word & ((word)1 << start_displ))) { \
 	    FOUND_FREE(hbp, p - (word *)hbp + start_displ); \
-	    p[start_displ] = (word)list; \
+	    if (GC_root_size) { p[start_displ] = (word)list; \
 	    list = (ptr_t)(p+start_displ); \
 	    p[start_displ+1] = 0; \
-	    INCR_WORDS(2); \
+	    INCR_WORDS(2); } \
 	}
     
     p = (word *)(hbp->hb_body);
@@ -199,12 +211,14 @@ register ptr_t list;
 #   define DO_OBJ(start_displ) \
 	if (!(mark_word & ((word)1 << start_displ))) { \
 	    FOUND_FREE(hbp, p - (word *)hbp + start_displ); \
+	    if (GC_root_size) { \
 	    p[start_displ] = (word)list; \
 	    list = (ptr_t)(p+start_displ); \
 	    p[start_displ+1] = 0; \
 	    p[start_displ+2] = 0; \
 	    p[start_displ+3] = 0; \
 	    INCR_WORDS(4); \
+	    } \
 	}
     
     p = (word *)(hbp->hb_body);
@@ -265,11 +279,13 @@ register word sz;
     /* go through all words in block */
 	while( p <= plim )  {
 	    if( !mark_bit_from_hdr(hhdr, word_no) ) {
-		FOUND_FREE(hbp, word_no);
-		INCR_WORDS(sz);
-		/* object is available - put on list */
-		    obj_link(p) = list;
-		    list = ((ptr_t)p);
+            FOUND_FREE(hbp, word_no);
+            INCR_WORDS(sz);
+            if (GC_root_size) {
+                /* object is available - put on list */
+                obj_link(p) = list;
+                list = ((ptr_t)p);
+            }
 	    }
 	    p += sz;
 	    word_no += sz;
@@ -301,9 +317,11 @@ register ptr_t list;
 #   define DO_OBJ(start_displ) \
 	if (!(mark_word & ((word)1 << start_displ))) { \
 	    FOUND_FREE(hbp, p - (word *)hbp + start_displ); \
+	    if (GC_root_size) { \
 	    p[start_displ] = (word)list; \
 	    list = (ptr_t)(p+start_displ); \
 	    INCR_WORDS(2); \
+	    } \
 	}
     
     p = (word *)(hbp->hb_body);
@@ -347,9 +365,11 @@ register ptr_t list;
 #   define DO_OBJ(start_displ) \
 	if (!(mark_word & ((word)1 << start_displ))) { \
 	    FOUND_FREE(hbp, p - (word *)hbp + start_displ); \
+	    if (GC_root_size) { \
 	    p[start_displ] = (word)list; \
 	    list = (ptr_t)(p+start_displ); \
 	    INCR_WORDS(4); \
+	    } \
 	}
     
     p = (word *)(hbp->hb_body);
@@ -403,9 +423,11 @@ register ptr_t list;
 #   define DO_OBJ(start_displ) \
 	if (!(mark_word & ((word)1 << start_displ))) { \
 	    FOUND_FREE(hbp, p - (word *)hbp + start_displ); \
+	    if (GC_root_size) { \
 	    p[start_displ] = (word)list; \
 	    list = (ptr_t)(p+start_displ); \
 	    INCR_WORDS(1); \
+	    } \
 	}
     
     p = (word *)(hbp->hb_body);
@@ -517,10 +539,12 @@ word abort_if_found;		/* Abort if a reclaimable object is found */
     if( sz > MAXOBJSZ ) {  /* 1 big object */
         if( !mark_bit_from_hdr(hhdr, HDR_WORDS) ) {
 	    FOUND_FREE(hbp, HDR_WORDS);
+	    if (GC_root_size) {
 #	    ifdef GATHERSTATS
 	        GC_mem_found += sz;
 #	    endif
 	    GC_freehblk(hbp);
+	    }
 	}
     } else {
         GC_bool empty = GC_block_empty(hhdr);
