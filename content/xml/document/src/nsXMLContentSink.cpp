@@ -873,7 +873,7 @@ NS_NewMathMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
         NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
         if (sheet) {
           nsCOMPtr<nsIURI> uri;
-          sheet->GetURL(*getter_AddRefs(uri));
+          sheet->GetSheetURI(getter_AddRefs(uri));
           nsCAutoString uriStr;
           uri->GetSpec(uriStr);
           if (uriStr.Equals(kMathMLStyleSheetURI)) {

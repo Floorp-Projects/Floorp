@@ -54,7 +54,8 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIStyleSheet api
-  NS_IMETHOD GetURL(nsIURI*& aURL) const;
+  NS_IMETHOD GetSheetURI(nsIURI** aSheetURL) const;
+  NS_IMETHOD GetBaseURI(nsIURI** aBaseURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;

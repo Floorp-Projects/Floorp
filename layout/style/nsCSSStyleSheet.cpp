@@ -1249,7 +1249,8 @@ CloneRuleInto(nsISupports* aRule, void* aArray)
 nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
                                        nsICSSStyleSheet* aParentSheet)
   : mSheets(),
-    mURL(aCopy.mURL),
+    mSheetURI(aCopy.mSheetURI),
+    mBaseURI(aCopy.mBaseURI),
     mNameSpace(nsnull),
     mComplete(aCopy.mComplete)
 {
@@ -1516,11 +1517,9 @@ nsCSSStyleSheet::DropRuleProcessor(nsCSSRuleProcessor* aProcessor)
 
 
 NS_IMETHODIMP
-nsCSSStyleSheet::SetURL(nsIURI* aURL)
+nsCSSStyleSheet::SetURIs(nsIURI* aSheetURI, nsIURI* aBaseURI)
 {
-  NS_PRECONDITION(aURL, "null ptr");
-  if (! aURL)
-    return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION(aSheetURI && aBaseURI, "null ptr");
 
   if (! mInner) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1529,14 +1528,22 @@ nsCSSStyleSheet::SetURL(nsIURI* aURL)
   NS_ASSERTION(!mInner->mOrderedRules && !mInner->mComplete,
                "Can't call SetURL on sheets that are complete or have rules");
 
-  mInner->mURL = aURL;
+  mInner->mSheetURI = aSheetURI;
+  mInner->mBaseURI = aBaseURI;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCSSStyleSheet::GetURL(nsIURI*& aURL) const
+nsCSSStyleSheet::GetSheetURI(nsIURI** aSheetURI) const
 {
-  NS_IF_ADDREF(aURL = (mInner ? mInner->mURL.get() : nsnull));
+  NS_IF_ADDREF(*aSheetURI = (mInner ? mInner->mSheetURI.get() : nsnull));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSStyleSheet::GetBaseURI(nsIURI** aBaseURI) const
+{
+  NS_IF_ADDREF(*aBaseURI = (mInner ? mInner->mBaseURI.get() : nsnull));
   return NS_OK;
 }
 
@@ -1724,7 +1731,7 @@ nsCSSStyleSheet::ContainsStyleSheet(nsIURI* aURL, PRBool& aContains, nsIStyleShe
 {
   NS_PRECONDITION(nsnull != aURL, "null arg");
 
-  if (!mInner || !mInner->mURL) {
+  if (!mInner || !mInner->mSheetURI) {
     // We're not yet far enough along in our load to know what our URL is (we
     // may still get redirected and such).  Assert (caller should really not be
     // calling this on us at this stage) and return.
@@ -1734,7 +1741,7 @@ nsCSSStyleSheet::ContainsStyleSheet(nsIURI* aURL, PRBool& aContains, nsIStyleShe
   }
   
   // first check ourself out
-  nsresult rv = mInner->mURL->Equals(aURL, &aContains);
+  nsresult rv = mInner->mSheetURI->Equals(aURL, &aContains);
   if (NS_FAILED(rv)) aContains = PR_FALSE;
 
   if (aContains) {
@@ -2099,7 +2106,7 @@ void nsCSSStyleSheet::List(FILE* out, PRInt32 aIndent) const
 
   fputs("CSS Style Sheet: ", out);
   nsCAutoString urlSpec;
-  nsresult rv = mInner->mURL->GetSpec(urlSpec);
+  nsresult rv = mInner->mSheetURI->GetSpec(urlSpec);
   if (NS_SUCCEEDED(rv) && !urlSpec.IsEmpty()) {
     fputs(urlSpec.get(), out);
   }
@@ -2247,8 +2254,9 @@ nsCSSStyleSheet::GetHref(nsAString& aHref)
 {
   nsCAutoString str;
 
-  if (mInner && mInner->mURL) {
-    mInner->mURL->GetSpec(str);
+  // XXXldb The DOM spec says that this should be null for inline style sheets.
+  if (mInner && mInner->mSheetURI) {
+    mInner->mSheetURI->GetSpec(str);
   }
 
   CopyUTF8toUTF16(str, aHref);
@@ -2330,7 +2338,7 @@ nsCSSStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 
   // Get the security manager and do the same-origin check
   rv = nsContentUtils::GetSecurityManager()->CheckSameOrigin(cx,
-                                                             mInner->mURL);
+                                                             mInner->mSheetURI);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2403,7 +2411,7 @@ nsCSSStyleSheet::InsertRule(const nsAString& aRule,
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
   nsCOMPtr<nsISupportsArray> rules;
-  result = css->ParseRule(aRule, mInner->mURL, getter_AddRefs(rules));
+  result = css->ParseRule(aRule, mInner->mBaseURI, getter_AddRefs(rules));
   if (NS_FAILED(result))
     return result;
   
@@ -2647,7 +2655,7 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule* a
   NS_ENSURE_SUCCESS(result, result);
 
   nsCOMPtr<nsISupportsArray> rules;
-  result = css->ParseRule(aRule, mInner->mURL, getter_AddRefs(rules));
+  result = css->ParseRule(aRule, mInner->mBaseURI, getter_AddRefs(rules));
   NS_ENSURE_SUCCESS(result, result);
 
   PRUint32 rulecount = 0;
@@ -2739,31 +2747,9 @@ nsCSSStyleSheet::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
   return NS_OK;
 }
 
-// XXX for backwards compatibility and convenience
-nsresult
-NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURI* aURL)
-{
-  nsICSSStyleSheet* sheet;
-  nsresult rv;
-  if (NS_FAILED(rv = NS_NewCSSStyleSheet(&sheet)))
-    return rv;
-
-  if (NS_FAILED(rv = sheet->SetURL(aURL))) {
-    NS_RELEASE(sheet);
-    return rv;
-  }
-
-  *aInstancePtrResult = sheet;
-  return NS_OK;
-}
-
 nsresult
 NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult)
 {
-  if (aInstancePtrResult == nsnull) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
   nsCSSStyleSheet  *it = new nsCSSStyleSheet();
 
   if (nsnull == it) {

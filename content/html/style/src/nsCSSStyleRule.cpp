@@ -901,7 +901,7 @@ public:
   virtual void DropReference(void);
   virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                      PRBool aAllocate);
-  virtual nsresult GetCSSParsingEnvironment(nsIURI** aURI,
+  virtual nsresult GetCSSParsingEnvironment(nsIURI** aBaseURI,
                                             nsICSSLoader** aCSSLoader,
                                             nsICSSParser** aCSSParser);
   virtual nsresult DeclarationChanged();
@@ -1003,12 +1003,12 @@ DOMCSSDeclarationImpl::GetCSSDeclaration(nsCSSDeclaration **aDecl,
  * being initialized.
  */
 nsresult
-DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aURI,
+DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aBaseURI,
                                                 nsICSSLoader** aCSSLoader,
                                                 nsICSSParser** aCSSParser)
 {
   // null out the out params since some of them may not get initialized below
-  *aURI = nsnull;
+  *aBaseURI = nsnull;
   *aCSSLoader = nsnull;
   *aCSSParser = nsnull;
   nsresult result;
@@ -1016,7 +1016,7 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aURI,
   if (mRule) {
     mRule->GetStyleSheet(*getter_AddRefs(sheet));
     if (sheet) {
-      sheet->GetURL(*aURI);
+      sheet->GetBaseURI(aBaseURI);
       nsCOMPtr<nsIDocument> document;
       sheet->GetOwningDocument(*getter_AddRefs(document));
       if (document) {

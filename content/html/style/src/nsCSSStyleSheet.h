@@ -70,7 +70,8 @@ public:
   virtual void RebuildNameSpaces();
 
   nsAutoVoidArray        mSheets;
-  nsCOMPtr<nsIURI>       mURL;
+  nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
+  nsCOMPtr<nsIURI>       mBaseURI; // for resolving relative URIs
   nsISupportsArray*      mOrderedRules;
   nsCOMPtr<nsINameSpace> mNameSpace;
   PRPackedBool           mComplete;
@@ -96,7 +97,8 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIStyleSheet interface
-  NS_IMETHOD GetURL(nsIURI*& aURL) const;
+  NS_IMETHOD GetSheetURI(nsIURI** aSheetURI) const;
+  NS_IMETHOD GetBaseURI(nsIURI** aBaseURI) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
@@ -129,7 +131,7 @@ public:
   NS_IMETHOD ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
   NS_IMETHOD StyleSheetCount(PRInt32& aCount) const;
   NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const;
-  NS_IMETHOD SetURL(nsIURI* aURL);
+  NS_IMETHOD SetURIs(nsIURI* aSheetURI, nsIURI* aBaseURI);
   NS_IMETHOD SetTitle(const nsAString& aTitle);
   NS_IMETHOD AppendMedium(nsIAtom* aMedium);
   NS_IMETHOD ClearMedia();
