@@ -146,8 +146,12 @@ clobber_nglayout:
 	@cd $(MOZ_SRC)\mozilla\.
 	nmake -f nglayout.mak clobber_all $(NGLAYOUT_ENV_VARS)
 
-build_all: build_seamonkey
+build_all: build_seamonkey build_apprunner
 
 build_seamonkey:
 	@cd $(MOZ_SRC)\mozilla\.
 	nmake -f nglayout.mak all
+
+build_apprunner:
+	@cd $(MOZ_SRC)\mozilla\xpfe\.
+	nmake -f makefile.win
