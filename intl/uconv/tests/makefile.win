@@ -41,6 +41,7 @@ LINCS=  \
   -I$(PUBLIC)\raptor	\
   -I..\public	\
   -I..\ucvja	\
+  -I..\ucvlatin	\
   $(NULL)
 
 LLIBS=				\
