@@ -1905,6 +1905,13 @@ nsMsgFolder::MarkAllMessagesRead(void)
 }
 
 NS_IMETHODIMP
+nsMsgFolder::MarkThreadRead(nsIMsgThread *thread)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
 nsMsgFolder::CopyMessages(nsIMsgFolder* srcFolder,
                           nsISupportsArray *messages,
                           PRBool isMove,

@@ -958,6 +958,39 @@ nsMessenger::MarkAllMessagesRead(nsIRDFCompositeDataSource *database,
 }
 
 NS_IMETHODIMP
+nsMessenger::MarkThreadRead(nsIRDFCompositeDataSource *database,
+                                 nsIMsgFolder *folder, nsIMsgThread *thread)
+{
+	nsresult rv=NS_OK;
+	nsCOMPtr<nsISupportsArray> folderArray;
+	nsCOMPtr<nsISupportsArray> argumentArray;
+
+	if(!folder || !database || !thread)
+		return NS_ERROR_NULL_POINTER;
+
+	if(NS_FAILED(NS_NewISupportsArray(getter_AddRefs(folderArray))))
+		return NS_ERROR_OUT_OF_MEMORY;
+
+
+	if(NS_FAILED(NS_NewISupportsArray(getter_AddRefs(argumentArray))))
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(folder);
+	if(folder)
+	{
+		folderArray->AppendElement(folderResource);
+	}
+
+	nsCOMPtr<nsISupports> threadSupports = do_QueryInterface(thread);
+	if(threadSupports)
+		argumentArray->AppendElement(threadSupports);
+
+	DoCommand(database, NC_RDF_MARKTHREADREAD, folderArray, argumentArray);
+
+	return rv;
+}
+
+NS_IMETHODIMP
 nsMessenger::MarkMessageFlagged(nsIRDFCompositeDataSource *database,
                                 nsIRDFResource *messageResource,
                                 PRBool markFlagged)

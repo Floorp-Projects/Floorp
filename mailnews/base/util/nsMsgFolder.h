@@ -152,6 +152,8 @@ public:
   NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
   NS_IMETHOD MarkAllMessagesRead(void);
   NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
+  NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
+
   NS_IMETHOD GetChildWithURI(const char *uri, PRBool deep, nsIMsgFolder **_retval); 
 
   // end NS_DECL_NSIMSGFOLDER

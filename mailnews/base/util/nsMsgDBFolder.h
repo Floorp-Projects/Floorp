@@ -72,6 +72,8 @@ public:
 	NS_IMETHOD ManyHeadersToDownload(PRBool *_retval);
 
 	NS_IMETHOD MarkAllMessagesRead(void);
+    NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
+
 
 	NS_IMETHOD Shutdown(PRBool shutdownChildren);
   NS_IMETHOD ForceDBClosed();

@@ -81,6 +81,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_COPY					NC_NAMESPACE_URI "Copy"
 #define NC_RDF_MOVE					NC_NAMESPACE_URI "Move"
 #define NC_RDF_MARKALLMESSAGESREAD  NC_NAMESPACE_URI "MarkAllMessagesRead"
+#define NC_RDF_MARKTHREADREAD		NC_NAMESPACE_URI "MarkThreadRead"
 #define NC_RDF_COMPACT				NC_NAMESPACE_URI "Compact"
 #define NC_RDF_RENAME				NC_NAMESPACE_URI "Rename"
 #define NC_RDF_EMPTYTRASH   NC_NAMESPACE_URI "EmptyTrash"

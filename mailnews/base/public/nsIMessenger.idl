@@ -27,6 +27,8 @@
 #include "nsIRDFCompositeDataSource.idl"
 #include "nsIMsgWindow.idl"
 #include "nsIMsgIdentity.idl"
+#include "nsIMsgThread.idl"
+#include "nsIMsgFolder.idl"
 
 %{C++
 #include "nsIDOMWindow.h"
@@ -77,7 +79,9 @@ interface nsIMessenger : nsISupports {
 	void MarkMessageFlagged(in nsIRDFCompositeDataSource database,
                             in nsIRDFResource message,
                             in boolean markFlagged);
-
+	void markThreadRead(in nsIRDFCompositeDataSource database,
+						 in nsIMsgFolder folder,
+						 in nsIMsgThread thread);
 	void NewFolder(in nsIRDFCompositeDataSource database,
                    in nsIRDFResource parentFolder,
 				   in wstring name);

@@ -298,6 +298,7 @@ interface nsIMsgFolder : nsIFolder {
 	void markMessagesRead(in nsISupportsArray messages, in boolean markRead);
 	void markAllMessagesRead();
 	void markMessagesFlagged(in nsISupportsArray messages, in boolean markFlagged);
+	void markThreadRead(in nsIMsgThread thread);
   nsIMsgDatabase getMsgDatabase(in nsIMsgWindow msgWindow);
 
 	nsIMsgFolder getChildWithURI(in string uri, in boolean deep);

@@ -848,6 +848,16 @@ nsMsgDBFolder::MarkAllMessagesRead(void)
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgDBFolder::MarkThreadRead(nsIMsgThread *thread)
+{
+
+	nsresult rv = GetDatabase(nsnull);
+	if(NS_SUCCEEDED(rv))
+		return mDatabase->MarkThreadRead(thread, nsnull, nsnull);
+
+	return rv;
+}
+
 NS_IMETHODIMP
 nsMsgDBFolder::OnStartRunningUrl(nsIURI *aUrl)
 {

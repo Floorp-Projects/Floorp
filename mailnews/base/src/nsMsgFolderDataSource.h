@@ -154,6 +154,8 @@ protected:
   nsresult DoNewFolder(nsIMsgFolder *folder,
 							  nsISupportsArray *arguments);
 
+  nsresult DoMarkThreadRead(nsIMsgFolder *folder, nsISupportsArray *arguments);
+
   nsresult DoFolderAssert(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target);
 
   nsresult DoFolderHasAssertion(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target,
@@ -209,6 +211,7 @@ protected:
   static nsIRDFResource* kNC_Copy;
   static nsIRDFResource* kNC_Move;
   static nsIRDFResource* kNC_MarkAllMessagesRead;
+  static nsIRDFResource* kNC_MarkThreadRead;
   static nsIRDFResource* kNC_Compact;
   static nsIRDFResource* kNC_Rename;
   static nsIRDFResource* kNC_EmptyTrash;
