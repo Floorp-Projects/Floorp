@@ -900,9 +900,16 @@ nsresult nsViewer::ShowPrintPreview(nsIWebWidget* web, PRIntn aColumns)
 
       rv = NS_NewWebWidget(&wd->ww);
       AddMenu(wd->windowWidget, PR_TRUE);
-      rv = wd->ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET), rr, doc, cx);
-      wd->ww->Show();
+
+      // XXX There is a chicken-and-egg bug here: the Init method goes
+      // ahead and reflows the document before we have added the
+      // observer; adding the observer sets the link-handler. The
+      // link-handler is needed to do the initial reflow properly. YIKES!
+
+      rv = wd->ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET),
+                        rr, doc, cx);
       wd->observer = NewObserver(wd->ww);
+      wd->ww->Show();
 
       NS_RELEASE(dx);
       NS_RELEASE(cx);
