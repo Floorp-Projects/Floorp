@@ -979,8 +979,8 @@ NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output)
     size_t cSubs = 0;
     size_t resultLeft = resultLen;
   
-    int unirc = ::UniUconvToUcs(UnicodeConverter, &inputStr, &inputLen,
-                                (void**)&result, &resultLeft, &cSubs);
+    int unirc = ::UniUconvToUcs(UnicodeConverter, (void**)&inputStr, &inputLen,
+                                &result, &resultLeft, &cSubs);
 
     NS_ASSERTION(unirc != UCONV_E2BIG, "Path too big");
   
