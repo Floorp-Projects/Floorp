@@ -901,7 +901,6 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
     subBounds.height = NSToCoordRound(aDesiredSize.height * t2p);
     mWebShell->SetBounds(subBounds.x, subBounds.y,
                        subBounds.width, subBounds.height);
-    mWebShell->Repaint(PR_TRUE); 
 
     NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
       ("exit nsHTMLFrameInnerFrame::Reflow: size=%d,%d rv=%x",
