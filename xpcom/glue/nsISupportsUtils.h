@@ -278,6 +278,20 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
   return status;                                                         \
 }
 
+#define NS_IMPL_QUERY_TAIL_INHERITING(_baseclass)                        \
+    foundInterface = 0;                                                  \
+  nsresult status;                                                       \
+  if ( !foundInterface )                                                 \
+    status = _baseclass::QueryInterface(aIID, aInstancePtr);             \
+  else                                                                   \
+    {                                                                    \
+      NS_ADDREF(foundInterface);                                         \
+      status = NS_OK;                                                    \
+    }                                                                    \
+  *aInstancePtr = foundInterface;                                        \
+  return status;                                                         \
+}
+
 #define NS_IMPL_QUERY_TAIL(_supports_interface)                          \
 	NS_IMPL_QUERY_BODY_AMBIGUOUS(nsISupports, _supports_interface)         \
 	NS_IMPL_QUERY_TAIL_GUTS
@@ -293,110 +307,117 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
 #define NS_INTERFACE_MAP_ENTRY(_interface)                         NS_IMPL_QUERY_BODY(_interface)
 #define NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(_interface, _implClass)   NS_IMPL_QUERY_BODY_AMBIGUOUS(_interface, _implClass)
 #define NS_INTERFACE_MAP_END                                       NS_IMPL_QUERY_TAIL_GUTS
+#define NS_INTERFACE_MAP_END_INHERITING(_baseClass)                NS_IMPL_QUERY_TAIL_INHERITING(_baseClass)
 
+#define NS_IMPL_QUERY_INTERFACE0(_class)                                                      \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(nsISupports)                                                       \
+  NS_INTERFACE_MAP_END
 
-#define NS_IMPL_QUERY_INTERFACE0(_class)                                 \
-  NS_IMPL_QUERY_HEAD(_class)                                             \
-  NS_IMPL_QUERY_TAIL(nsISupports)
+#define NS_IMPL_QUERY_INTERFACE1(_class, _i1)                                                 \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END
 
-#define NS_IMPL_QUERY_INTERFACE1(_class, _interface)                     \
-  NS_IMPL_QUERY_HEAD(_class)                                             \
-  NS_IMPL_QUERY_BODY(_interface)                                         \
-  NS_IMPL_QUERY_TAIL(nsISupports)
+#define NS_IMPL_QUERY_INTERFACE2(_class, _i1, _i2)                                            \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END
 
-#define NS_IMPL_QUERY_INTERFACE2(_class, _i1, _i2)                       \
-  NS_IMPL_QUERY_HEAD(_class)                                             \
-  NS_IMPL_QUERY_BODY(_i1)                                                \
-  NS_IMPL_QUERY_BODY(_i2)                                                \
-  NS_IMPL_QUERY_TAIL(_i1)
+#define NS_IMPL_QUERY_INTERFACE3(_class, _i1, _i2, _i3)                                       \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END
 
-#define NS_IMPL_QUERY_INTERFACE3(_class, _i1, _i2, _i3)                  \
-  NS_IMPL_QUERY_HEAD(_class)                                             \
-  NS_IMPL_QUERY_BODY(_i1)                                                \
-  NS_IMPL_QUERY_BODY(_i2)                                                \
-  NS_IMPL_QUERY_BODY(_i3)                                                \
-  NS_IMPL_QUERY_TAIL(_i1)
+#define NS_IMPL_QUERY_INTERFACE4(_class, _i1, _i2, _i3, _i4)                                  \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END
 
-#define NS_IMPL_QUERY_INTERFACE4(_class, _i1, _i2, _i3, _i4)             \
-  NS_IMPL_QUERY_HEAD(_class)                                             \
-  NS_IMPL_QUERY_BODY(_i1)                                                \
-  NS_IMPL_QUERY_BODY(_i2)                                                \
-  NS_IMPL_QUERY_BODY(_i3)                                                \
-  NS_IMPL_QUERY_BODY(_i4)                                                \
-  NS_IMPL_QUERY_TAIL(_i1)
+#define NS_IMPL_QUERY_INTERFACE5(_class, _i1, _i2, _i3, _i4, _i5)                             \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END
 
-#define NS_IMPL_QUERY_INTERFACE5(_class, _i1, _i2, _i3, _i4, _i5)        \
-  NS_IMPL_QUERY_HEAD(_class)                                             \
-  NS_IMPL_QUERY_BODY(_i1)                                                \
-  NS_IMPL_QUERY_BODY(_i2)                                                \
-  NS_IMPL_QUERY_BODY(_i3)                                                \
-  NS_IMPL_QUERY_BODY(_i4)                                                \
-  NS_IMPL_QUERY_BODY(_i5)                                                \
-  NS_IMPL_QUERY_TAIL(_i1)
+#define NS_IMPL_QUERY_INTERFACE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)                        \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END
 
-#define NS_IMPL_QUERY_INTERFACE6(_class, _i1, _i2, _i3, _i4, _i5, _i6)   \
-  NS_IMPL_QUERY_HEAD(_class)                                             \
-  NS_IMPL_QUERY_BODY(_i1)                                                \
-  NS_IMPL_QUERY_BODY(_i2)                                                \
-  NS_IMPL_QUERY_BODY(_i3)                                                \
-  NS_IMPL_QUERY_BODY(_i4)                                                \
-  NS_IMPL_QUERY_BODY(_i5)                                                \
-  NS_IMPL_QUERY_BODY(_i6)                                                \
-  NS_IMPL_QUERY_TAIL(_i1)
+#define NS_IMPL_QUERY_INTERFACE7(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7)                   \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i7)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END
 
-#define NS_IMPL_QUERY_INTERFACE7(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
-    _i7)                                                                 \
-  NS_IMPL_QUERY_HEAD(_class)                                             \
-  NS_IMPL_QUERY_BODY(_i1)                                                \
-  NS_IMPL_QUERY_BODY(_i2)                                                \
-  NS_IMPL_QUERY_BODY(_i3)                                                \
-  NS_IMPL_QUERY_BODY(_i4)                                                \
-  NS_IMPL_QUERY_BODY(_i5)                                                \
-  NS_IMPL_QUERY_BODY(_i6)                                                \
-  NS_IMPL_QUERY_BODY(_i7)                                                \
-  NS_IMPL_QUERY_TAIL(_i1)
+#define NS_IMPL_QUERY_INTERFACE8(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8)              \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i7)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i8)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END
 
-#define NS_IMPL_QUERY_INTERFACE8(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
-    _i7, _i8)                                                            \
-  NS_IMPL_QUERY_HEAD(_class)                                             \
-  NS_IMPL_QUERY_BODY(_i1)                                                \
-  NS_IMPL_QUERY_BODY(_i2)                                                \
-  NS_IMPL_QUERY_BODY(_i3)                                                \
-  NS_IMPL_QUERY_BODY(_i4)                                                \
-  NS_IMPL_QUERY_BODY(_i5)                                                \
-  NS_IMPL_QUERY_BODY(_i6)                                                \
-  NS_IMPL_QUERY_BODY(_i7)                                                \
-  NS_IMPL_QUERY_BODY(_i8)                                                \
-  NS_IMPL_QUERY_TAIL(_i1)
+#define NS_IMPL_QUERY_INTERFACE9(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9)         \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i7)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i8)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i9)                                                               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END
 
-#define NS_IMPL_QUERY_INTERFACE9(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
-   _i7, _i8, _i9)                                                        \
-  NS_IMPL_QUERY_HEAD(_class)                                             \
-  NS_IMPL_QUERY_BODY(_i1)                                                \
-  NS_IMPL_QUERY_BODY(_i2)                                                \
-  NS_IMPL_QUERY_BODY(_i3)                                                \
-  NS_IMPL_QUERY_BODY(_i4)                                                \
-  NS_IMPL_QUERY_BODY(_i5)                                                \
-  NS_IMPL_QUERY_BODY(_i6)                                                \
-  NS_IMPL_QUERY_BODY(_i7)                                                \
-  NS_IMPL_QUERY_BODY(_i8)                                                \
-  NS_IMPL_QUERY_BODY(_i9)                                                \
-  NS_IMPL_QUERY_TAIL(_i1)
-
-#define NS_IMPL_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6,  \
-   _i7, _i8, _i9, i10)                                                   \
-  NS_IMPL_QUERY_HEAD(_class)                                             \
-  NS_IMPL_QUERY_BODY(_i1)                                                \
-  NS_IMPL_QUERY_BODY(_i2)                                                \
-  NS_IMPL_QUERY_BODY(_i3)                                                \
-  NS_IMPL_QUERY_BODY(_i4)                                                \
-  NS_IMPL_QUERY_BODY(_i5)                                                \
-  NS_IMPL_QUERY_BODY(_i6)                                                \
-  NS_IMPL_QUERY_BODY(_i7)                                                \
-  NS_IMPL_QUERY_BODY(_i8)                                                \
-  NS_IMPL_QUERY_BODY(_i9)                                                \
-  NS_IMPL_QUERY_BODY(_i10)                                               \
-  NS_IMPL_QUERY_TAIL(_i1)
+#define NS_IMPL_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8, _i9, _i10)  \
+  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i7)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i8)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i9)                                                               \
+    NS_INTERFACE_MAP_ENTRY(_i10)                                                              \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+  NS_INTERFACE_MAP_END
 
 /*
  The following macro is deprecated.  We need to switch all instances
@@ -832,9 +853,6 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
   PR_END_MACRO
 
 ///////////////////////////////////////////////////////////////////////////////
-
-// A type-safe interface for calling |QueryInterface()|.  A similar
-// implementation exists in "nsCOMPtr.h" for use with |nsCOMPtr|s.
 
 extern "C++" {
 // ...because some one is accidentally including this file inside
