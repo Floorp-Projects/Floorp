@@ -1026,7 +1026,7 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
   char contenttype[50];
   if(sniffout_mimetype((const char*) str, len, contenttype)){
       // data type understood by mime sniffer
-        if(int ret = nsCRT::strcmp(contenttype, ic->type) != 0){
+        if(nsCRT::strcmp(contenttype, ic->type) != 0){
             //what the sniff saw and what the mime header said is
             //different. We'll believe the data from the sniffer
             nsCRT::free(ic->type);
