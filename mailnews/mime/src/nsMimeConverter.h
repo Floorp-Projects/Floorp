@@ -61,9 +61,18 @@ public:
                               PRBool eatContinuations = PR_TRUE);
 
   // Decode routine (also converts output to unicode)
-  NS_IMETHOD DecodeMimeHeader(const nsCString& header, 
+  // On success, decodedString is never null
+  NS_IMETHOD DecodeMimeHeader(const char *header,
                               PRUnichar **decodedString,
                               const char *default_charset = 0,
+                              PRBool override_charset = PR_FALSE,
+                              PRBool eatContinuations = PR_TRUE);
+
+  // Decode routine (also converts output to unicode)
+  // On success, decodedString is never null
+  NS_IMETHOD DecodeMimeHeader(const char *header, 
+                              nsAWritableString& decodedString,
+                              const char *default_charset = nsnull,
                               PRBool override_charset = PR_FALSE,
                               PRBool eatContinuations = PR_TRUE);
 

@@ -399,21 +399,6 @@ char * nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRB
   return NS_SUCCEEDED(res) ? encodedString : nsnull;
 }
 
-// MIME decoder
-nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString, PRBool eatContinuations)
-{
-  nsIMimeConverter *converter;
-  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                                    NS_GET_IID(nsIMimeConverter), (void **)&converter);
-  if (NS_SUCCEEDED(res) && nsnull != converter) {
-    nsXPIDLString decodedUnichar;
-    res = converter->DecodeMimePartIIStr(header, charset, getter_Copies(decodedUnichar), eatContinuations);
-    decodedString = (const PRUnichar*)decodedUnichar;
-    NS_RELEASE(converter);
-  }
-  return res;
-}
-
 // Get a default mail character set.
 char * nsMsgI18NGetDefaultMailCharset()
 {

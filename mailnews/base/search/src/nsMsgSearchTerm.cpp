@@ -37,6 +37,8 @@
 #include "nsMsgSearchNews.h"
 #include "nsMsgSearchValue.h"
 #include "nsMsgI18N.h"
+#include "nsIMimeConverter.h"
+#include "nsMsgMimeCID.h"
 
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
@@ -600,6 +602,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsIMsgSearchScopeTerm *scope,
                                                 PRUint32 offset,
                                                 PRUint32 length /* in lines*/,
                                                 const char *charset,
+                                                PRBool charsetOverride,
                                                 nsIMsgDBHdr *msg,
                                                 nsIMsgDatabase* db,
                                                 const char * headers, 
@@ -651,7 +654,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsIMsgSearchScopeTerm *scope,
 				if (headerValue < buf_end && *headerValue) // make sure buf has info besides just the header
 				{
 					PRBool result2;
-					err = MatchRfc2047String(headerValue, charset, &result2);  // match value with the other info...
+					err = MatchRfc2047String(headerValue, charset, charsetOverride, &result2);  // match value with the other info...
 					if (result != result2) // if we found a match
 					{
 						searchingHeaders = PR_FALSE;   // then stop examining the headers
@@ -757,26 +760,24 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 // *pResult is PR_FALSE when strings don't match, PR_TRUE if they do.
 nsresult nsMsgSearchTerm::MatchRfc2047String (const char *rfc2047string,
                                        const char *charset,
+                                       PRBool charsetOverride,
                                        PRBool *pResult)
 {
+	static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
+
 	if (!pResult || !rfc2047string)
 		return NS_ERROR_NULL_POINTER;
 
-	PRBool mimedecode = PR_FALSE;
-	nsString decodedString, encodedString, cs;
-	const char *stringToMatch;
-	encodedString.AssignWithConversion(rfc2047string, -1);
-	nsresult res = nsMsgI18NDecodeMimePartIIStr(encodedString, cs, decodedString, PR_FALSE);
+    nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID);
+	char *stringToMatch = 0;
+    nsresult res = mimeConverter->DecodeMimeHeader(rfc2047string,
+                                                   &stringToMatch,
+                                                   charset, charsetOverride);
 
-	if (NS_SUCCEEDED(res)) {
-		stringToMatch = decodedString.ToNewUTF8String();
-		mimedecode = PR_TRUE;
-		charset = nsnull;
-	}
-	else
-		stringToMatch = rfc2047string; // Try to match anyway
+	res = MatchString(stringToMatch ? stringToMatch : rfc2047string,
+                      nsnull, pResult);
 
-	res = MatchString(stringToMatch, charset, pResult);
+    PR_FREEIF(stringToMatch);
 
 	return res;
 }
@@ -897,7 +898,7 @@ nsresult nsMsgSearchTerm::GetMatchAllBeforeDeciding (PRBool *aResult)
 }
 
 
-nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *charset, PRBool *pResult)
+nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *charset, PRBool charsetOverride, PRBool *pResult)
 {
 	if (!pResult)
 		return NS_ERROR_NULL_POINTER;
@@ -934,9 +935,9 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		PRInt32 addressPos = 0;
 		for (PRUint32 i = 0; i < count && result == boolContinueLoop; i++)
 		{
-			err = MatchRfc2047String (walkNames, charset, &result);
+			err = MatchRfc2047String (walkNames, charset, charsetOverride, &result);
 			if (boolContinueLoop == result)
-				err = MatchRfc2047String (walkAddresses, charset, &result);
+				err = MatchRfc2047String (walkAddresses, charset, charsetOverride, &result);
 
 			namePos += walkNames.Length() + 1;
 			addressPos += walkAddresses.Length() + 1;

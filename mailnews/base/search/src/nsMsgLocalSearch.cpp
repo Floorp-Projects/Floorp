@@ -516,6 +516,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
     nsXPIDLCString  matchString;
     nsXPIDLCString  msgCharset;
     const char *charset;
+    PRBool charsetOverride = PR_FALSE; /* XXX BUG 68706 */
     PRUint32 msgFlags;
     PRBool result;
 
@@ -554,12 +555,12 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         {
         case nsMsgSearchAttrib::Sender:
             msgToMatch->GetAuthor(getter_Copies(matchString));
-            err = pTerm->MatchRfc822String (matchString, charset, &result);
+            err = pTerm->MatchRfc822String (matchString, charset, charsetOverride, &result);
             break;
         case nsMsgSearchAttrib::Subject:
 			{
             msgToMatch->GetSubject(getter_Copies(matchString) /* , PR_TRUE */);
-            err = pTerm->MatchRfc2047String (matchString, charset, &result);
+            err = pTerm->MatchRfc2047String (matchString, charset, charsetOverride, &result);
 			}
             break;
         case nsMsgSearchAttrib::ToOrCC:
@@ -567,11 +568,11 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             PRBool boolKeepGoing;
             pTerm->GetMatchAllBeforeDeciding(&boolKeepGoing);
             msgToMatch->GetRecipients(getter_Copies(recipients));
-            err = pTerm->MatchRfc822String (recipients, charset, &result);
+            err = pTerm->MatchRfc822String (recipients, charset, charsetOverride, &result);
             if (boolKeepGoing == result)
             {
                 msgToMatch->GetCcList(getter_Copies(ccList));
-                err = pTerm->MatchRfc822String (ccList, charset, &result);
+                err = pTerm->MatchRfc822String (ccList, charset, charsetOverride, &result);
             }
         }
             break;
@@ -610,11 +611,11 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             break;
         case nsMsgSearchAttrib::To:
             msgToMatch->GetRecipients(getter_Copies(recipients));
-            err = pTerm->MatchRfc822String(nsCAutoString(recipients), charset, &result);
+            err = pTerm->MatchRfc822String(nsCAutoString(recipients), charset, charsetOverride, &result);
             break;
         case nsMsgSearchAttrib::CC:
             msgToMatch->GetCcList(getter_Copies(ccList));
-            err = pTerm->MatchRfc822String (nsCAutoString(ccList), charset, &result);
+            err = pTerm->MatchRfc822String (nsCAutoString(ccList), charset, charsetOverride, &result);
             break;
         case nsMsgSearchAttrib::AgeInDays:
 			{
@@ -629,7 +630,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 				msgToMatch->GetLineCount(&lineCount);
 				nsMsgKey messageKey;
 				msgToMatch->GetMessageKey(&messageKey);
-				err = pTerm->MatchArbitraryHeader (scope, messageKey, lineCount,charset, 
+				err = pTerm->MatchArbitraryHeader (scope, messageKey, lineCount,charset, charsetOverride,
                                                 msgToMatch, db, headers, headerSize, Filtering, &result);
 			}
             break;

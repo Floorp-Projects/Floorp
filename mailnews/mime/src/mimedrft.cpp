@@ -77,9 +77,6 @@ int                 mime_decompose_file_output_fn ( char *buf, PRInt32 size, voi
 int                 mime_decompose_file_close_fn ( void *stream_closure );
 extern int          MimeHeaders_build_heads_list(MimeHeaders *hdrs);
 
-static nsString& mime_decode_string(const char* str , const char* defaultCharset, 
-                                    PRBool eatContinuations = PR_TRUE);
-
 // CID's
 static NS_DEFINE_CID(kCMsgComposeServiceCID,  NS_MSGCOMPOSESERVICE_CID);       
 
@@ -236,17 +233,6 @@ mime_dump_attachments ( attachmentList );
   return rv;
 }
 
-static nsString& mime_decode_string(const char* str, const char* defaultCharset, 
-                                    PRBool eatContinuations)
-{
-    static nsString decodedString;
-    nsString encodedCharset;
-    encodedCharset.AssignWithConversion(defaultCharset);  // in case the header has no charset specified
-    nsMsgI18NDecodeMimePartIIStr(NS_ConvertASCIItoUCS2(str), encodedCharset,
-                                 decodedString, eatContinuations);
-    return decodedString;
-}
-
 nsIMsgCompFields * 
 CreateCompositionFields(const char        *from,
 									      const char        *reply_to,
@@ -268,6 +254,7 @@ CreateCompositionFields(const char        *from,
                         char              *charset)
 {
   nsIMsgCompFields *cFields = nsnull;
+  char *val;
 
   // Create the compose fields...
   nsresult rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, 
@@ -279,21 +266,66 @@ CreateCompositionFields(const char        *from,
 
   // Now set all of the passed in stuff...
   cFields->SetCharacterSet(charset);
-  cFields->SetFrom(mime_decode_string(from, charset).GetUnicode());
-  cFields->SetSubject(mime_decode_string(subject, charset).GetUnicode());
-  cFields->SetReplyTo(mime_decode_string(reply_to, charset).GetUnicode());
-  cFields->SetTo(mime_decode_string(to, charset).GetUnicode());
-  cFields->SetCc(mime_decode_string(cc, charset).GetUnicode());
-  cFields->SetBcc(mime_decode_string(bcc, charset).GetUnicode());
-  cFields->SetFcc(mime_decode_string(fcc, charset).GetUnicode());
-  cFields->SetNewsgroups(nsAutoCString(mime_decode_string(newsgroups, charset)));
-  cFields->SetFollowupTo(nsAutoCString(mime_decode_string(followup_to, charset)));
-  cFields->SetOrganization(mime_decode_string(organization, charset).GetUnicode());
-  cFields->SetReferences(nsAutoCString(mime_decode_string(references, charset)));
-  cFields->SetOtherRandomHeaders(mime_decode_string(other_random_headers, charset).GetUnicode());
-  cFields->SetPriority(nsAutoCString(mime_decode_string(priority, charset)));
-  cFields->SetAttachments(nsAutoCString(mime_decode_string(attachment, charset)));
-  cFields->SetNewspostUrl(nsAutoCString(mime_decode_string(newspost_url, charset)));
+
+  val = MIME_DecodeMimeHeader(from, charset, PR_FALSE, PR_TRUE);
+  cFields->SetFrom(NS_ConvertUTF8toUCS2(val ? val : from).get());
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(subject, charset, PR_FALSE, PR_TRUE);
+  cFields->SetSubject(NS_ConvertUTF8toUCS2(val ? val : subject).get());
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(reply_to, charset, PR_FALSE, PR_TRUE);
+  cFields->SetReplyTo(NS_ConvertUTF8toUCS2(val ? val : reply_to).get());
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(to, charset, PR_FALSE, PR_TRUE);
+  cFields->SetTo(NS_ConvertUTF8toUCS2(val ? val : to).get());
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(cc, charset, PR_FALSE, PR_TRUE);
+  cFields->SetCc(NS_ConvertUTF8toUCS2(val ? val : cc).get());
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(bcc, charset, PR_FALSE, PR_TRUE);
+  cFields->SetBcc(NS_ConvertUTF8toUCS2(val ? val : bcc).get());
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(fcc, charset, PR_FALSE, PR_TRUE);
+  cFields->SetFcc(NS_ConvertUTF8toUCS2(val ? val : fcc).get());
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(newsgroups, charset, PR_FALSE, PR_TRUE);
+  cFields->SetNewsgroups(val ? val : newsgroups);
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(followup_to, charset, PR_FALSE, PR_TRUE);
+  cFields->SetFollowupTo(val ? val : followup_to);
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(organization, charset, PR_FALSE, PR_TRUE);
+  cFields->SetOrganization(NS_ConvertUTF8toUCS2(val ? val : organization).get());
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(references, charset, PR_FALSE, PR_TRUE);
+  cFields->SetReferences(val ? val : references);
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(other_random_headers, charset, PR_FALSE, PR_TRUE);
+  cFields->SetOtherRandomHeaders(NS_ConvertUTF8toUCS2(val ? val : other_random_headers).get());
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(priority, charset, PR_FALSE, PR_TRUE);
+  cFields->SetPriority(val ? val : priority);
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(attachment, charset, PR_FALSE, PR_TRUE);
+  cFields->SetAttachments(val ? val : attachment);
+  PR_FREEIF(val);
+
+  val = MIME_DecodeMimeHeader(newspost_url, charset, PR_FALSE, PR_TRUE);
+  cFields->SetNewspostUrl(val ? val : newspost_url);
+  PR_FREEIF(val);
 
   return cFields;
 }
@@ -568,15 +600,15 @@ mime_intl_insert_message_header_1(char        **body,
 	else
 		mime_SACat(body, ": ");
 
-  // MIME decode header and convert to UTF-8
-  nsAutoString ucs2(mime_decode_string(*hdr_value, mailcharset));
-  char* utf8 = ucs2.ToNewUTF8String();
-  if (NULL != utf8) {
-    mime_SACat(body, utf8);
-    Recycle(utf8);
-  }
-  else 
-    mime_SACat(body, *hdr_value); // raw MIME encoded string
+    // MIME decode header
+    char* utf8 = MIME_DecodeMimeHeader(*hdr_value, mailcharset, PR_FALSE,
+                                       PR_TRUE);
+    if (NULL != utf8) {
+        mime_SACat(body, utf8);
+        PR_Free(utf8);
+    } else {
+        mime_SACat(body, *hdr_value); // raw MIME encoded string
+    }
 
 	if (htmlEdit)
 		mime_SACat(body, HEADER_END_JUNK);
@@ -849,11 +881,11 @@ mime_insert_normal_headers(char             **body,
 										  MimeGetNamedString(MIME_MHTML_CC),
 										  mailcharset, htmlEdit);
 	}
-  /*
-    Do not reveal bcc recipients when forwarding a message!
-    See http://bugzilla.mozilla.org/show_bug.cgi?id=41150
-  */
-  if (newsgroups)
+    /*
+      Do not reveal bcc recipients when forwarding a message!
+      See http://bugzilla.mozilla.org/show_bug.cgi?id=41150
+    */
+    if (newsgroups)
 		mime_intl_insert_message_header_1(&newBody, &newsgroups, HEADER_NEWSGROUPS,
 										  MimeGetNamedString(MIME_MHTML_NEWSGROUPS),
 										  mailcharset, htmlEdit);

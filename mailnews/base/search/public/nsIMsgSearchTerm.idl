@@ -31,7 +31,7 @@ interface nsIMsgSearchScopeTerm;
 
 native nsCStringRef(nsCString&);
 
-[scriptable, uuid(52db94d7-71c8-46c9-9692-91ff880a8cb7)]
+[scriptable, uuid(cc7795ce-1dd1-11b2-9ad2-dfa3c0b6ee09)]
 interface nsIMsgSearchTerm : nsISupports {
     attribute nsMsgSearchAttribValue attrib;
     attribute nsMsgSearchOpValue op;
@@ -40,9 +40,8 @@ interface nsIMsgSearchTerm : nsISupports {
     attribute boolean booleanAnd;
     attribute string arbitraryHeader;
 
-    boolean matchRfc822String(in string aString, in string charset);
-    boolean matchRfc2047String(in string aString, in string charset);
-    boolean matchString(in string aString, in string charset);
+    boolean matchRfc822String(in string aString, in string charset, in boolean charsetOverride);
+    boolean matchRfc2047String(in string aString, in string charset, in boolean charsetOverride);
     boolean matchDate(in PRTime aTime);
     boolean matchStatus(in unsigned long aStatus);
     boolean matchPriority(in nsMsgPriorityValue priority);
@@ -63,6 +62,7 @@ interface nsIMsgSearchTerm : nsISupports {
                                  in unsigned long offset,
                                  in unsigned long length,
                                  in string charset,
+                                 in boolean charsetOverride,
                                  in nsIMsgDBHdr msg,
                                  in nsIMsgDatabase db,
                                  //[array, size_is(headerLength)] in string headers,

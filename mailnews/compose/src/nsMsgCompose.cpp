@@ -72,6 +72,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsIPrompt.h"
+#include "nsMsgMimeCID.h"
 
 #include "nsMsgComposeService.h"
 #include "nsMsgUtils.h"
@@ -80,6 +81,7 @@
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 static PRInt32 GetReplyOnTop()
 {
@@ -96,7 +98,7 @@ static nsresult RemoveDuplicateAddresses(const char * addresses, const char * an
 
 	nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
 	if (parser)
-		rv= parser->RemoveDuplicateAddresses(msgCompHeaderInternalCharset(), addresses, anothersAddresses, removeAliasesToMe, newAddress);
+		rv= parser->RemoveDuplicateAddresses("UTF-8", addresses, anothersAddresses, removeAliasesToMe, newAddress);
 	else
 		rv = NS_ERROR_FAILURE;
 
@@ -261,7 +263,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
         aEditorShell->InsertAsCitedQuotation(aBuf.GetUnicode(),
                                mCiteReference.GetUnicode(),
                                PR_TRUE,
-                               NS_ConvertASCIItoUCS2("UTF-8").GetUnicode(),
+                               NS_LITERAL_STRING("UTF-8").get(),
                                getter_AddRefs(nodeInserted));
       else
         aEditorShell->InsertAsQuotation(aBuf.GetUnicode(),
@@ -892,7 +894,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
       if (replyTo && *(const char *)replyTo)
       {
         if (replyToStr.Length() > 0)
-          replyToStr.AppendWithConversion(',');
+          replyToStr.Append(PRUnichar(','));
         replyToStr.AppendWithConversion(replyTo);
       }
       
@@ -909,7 +911,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 	        nsXPIDLCString email;
 	        m_identity->GetEmail(getter_Copies(email));
 	        if (bccStr.Length() > 0)
-            bccStr.AppendWithConversion(',');
+            bccStr.Append(PRUnichar(','));
           bccStr.AppendWithConversion(email);
 	    }
 	    
@@ -919,7 +921,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 	        nsXPIDLCString bccList;
 	        m_identity->GetBccList(getter_Copies(bccList));
 	        if (bccStr.Length() > 0)
-	            bccStr.AppendWithConversion(',');
+	            bccStr.Append(PRUnichar(','));
 	        bccStr.AppendWithConversion(bccList);
 	    }
 	    m_compFields->SetBcc(bccStr.GetUnicode());
@@ -947,17 +949,14 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
     if (msgHdr)
     {
       nsXPIDLCString subject;
-      nsAutoString subjectStr;
-      nsAutoString aCharset;
-      nsAutoString decodedString;
-      nsAutoString encodedCharset;
+      nsCString subjectStr;
+      nsXPIDLString decodedString;
+      nsXPIDLCString decodedCString;
+      PRBool charsetOverride = PR_FALSE;
       nsXPIDLCString charset;
-
-      char *aCString = nsnull;
+      nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID);
     
       rv = msgHdr->GetCharset(getter_Copies(charset));
-
-      aCharset.AssignWithConversion(charset);
 
       if (NS_FAILED(rv)) return rv;
       rv = msgHdr->GetSubject(getter_Copies(subject));
@@ -986,57 +985,65 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
             {
               nsXPIDLString mailCharset;
               msgWindow->GetMailCharacterSet(getter_Copies(mailCharset));
-              if (mailCharset && (* (const PRUnichar *) mailCharset) )
-                aCharset = mailCharset;
+              if (mailCharset && (* (const PRUnichar *) mailCharset) ) {
+                charset = PL_strdup(NS_ConvertUCS2toUTF8(mailCharset).get());
+                charsetOverride = PR_TRUE;
+              }
             }
           }
           
           // get an original charset, used for a label, UTF-8 is used for the internal processing
-          if (!aCharset.IsEmpty())
+          if (charset.get() && charset.get()[0])
           {
-            nsCAutoString aCharsetCStr; aCharsetCStr.AssignWithConversion(aCharset);
-            m_compFields->SetCharacterSet(aCharsetCStr);
-            // set an original charset so MIME decoder can use it in case the header has no label
-            encodedCharset = aCharset;
-           }
+            m_compFields->SetCharacterSet(charset);
+          }
         
-          subjectStr.AppendWithConversion("Re: ");
-          subjectStr.AppendWithConversion(subject);
-          if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(subjectStr, encodedCharset, decodedString)))
-            m_compFields->SetSubject(decodedString.GetUnicode());
-          else
-            m_compFields->SetSubject(subjectStr.GetUnicode());
+          subjectStr.Append("Re: ");
+          subjectStr.Append(subject);
+          rv = mimeConverter->DecodeMimeHeader(subjectStr.get(),
+                                               getter_Copies(decodedString),
+                                               charset, charsetOverride);
+          if (NS_SUCCEEDED(rv)) {
+            m_compFields->SetSubject(decodedString);
+          } else {
+            m_compFields->SetSubject(subjectStr);
+          }
 
           nsXPIDLCString author;
           rv = msgHdr->GetAuthor(getter_Copies(author));		
           if (NS_FAILED(rv)) return rv;
           m_compFields->SetTo(author);
 
-          nsString authorStr; authorStr.AssignWithConversion(author);
-          if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(authorStr, encodedCharset, decodedString)))
-            if (NS_SUCCEEDED(rv = ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), decodedString, &aCString)))
-            {
-              m_compFields->SetTo(aCString);
-              PR_Free(aCString);
-            }
+          rv = mimeConverter->DecodeMimeHeader(author,
+                                               getter_Copies(decodedCString),
+                                               charset, charsetOverride);
+          if (NS_SUCCEEDED(rv) && decodedCString) {
+            m_compFields->SetTo(decodedCString);
+          } else {
+            m_compFields->SetTo(author);
+          }
           
-            // Setup quoting callbacks for later...
-            mWhatHolder = 1;
-            mQuoteURI = originalMsgURI;
+          // Setup quoting callbacks for later...
+          mWhatHolder = 1;
+          mQuoteURI = originalMsgURI;
           
-            break;
+          break;
         }
       case nsIMsgCompType::ForwardAsAttachment:
         {
         
-          subjectStr.AppendWithConversion("[Fwd: ");
-          subjectStr.AppendWithConversion(subject);
-          subjectStr.AppendWithConversion("]");
+          subjectStr.Append("[Fwd: ");
+          subjectStr.Append(subject);
+          subjectStr.Append("]");
         
-          if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(subjectStr, encodedCharset, decodedString)))
-            m_compFields->SetSubject(decodedString.GetUnicode());
-          else
-            m_compFields->SetSubject(subjectStr.GetUnicode());
+          rv = mimeConverter->DecodeMimeHeader(subjectStr.get(), 
+                                               getter_Copies(decodedString),
+                                               charset, charsetOverride);
+          if (NS_SUCCEEDED(rv)) {
+            m_compFields->SetSubject(decodedString);
+          } else {
+            m_compFields->SetSubject(subjectStr); 
+          }
         
           // Setup quoting callbacks for later...
           mQuotingToFollow = PR_FALSE;	//We don't need to quote the original message.
@@ -1108,30 +1115,15 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
 
         if (parser)
         {
-          nsAutoString aCharset;
-          aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
-          char * utf8Author = nsnull;
+          nsCAutoString utf8Author;
+          utf8Author = NS_ConvertUCS2toUTF8(author);
           nsAutoString authorStr; authorStr.Assign(author);
-          rv = ConvertFromUnicode(aCharset, authorStr, &utf8Author);
-          if (NS_SUCCEEDED(rv) && utf8Author)
-          {
-            nsCAutoString acharsetC;
-            acharsetC.AssignWithConversion(aCharset);
-            rv = parser->ExtractHeaderAddressName(acharsetC, utf8Author,
-                                                  &authorName);
-            if (NS_SUCCEEDED(rv))
-              rv = ConvertToUnicode(aCharset, authorName, authorStr);
-          }
-          else
-          {
-            nsCAutoString authorCStr;
-            authorCStr.AssignWithConversion(author);
-            rv = parser->ExtractHeaderAddressName(nsnull, authorCStr,
-                                                  &authorName);
-            if (NS_SUCCEEDED(rv))
-              authorStr.AssignWithConversion(authorName);
-          }
-          PR_FREEIF(utf8Author);
+
+          rv = parser->ExtractHeaderAddressName("UTF-8", utf8Author,
+                                                &authorName);
+          if (NS_SUCCEEDED(rv))
+            authorStr = NS_ConvertUTF8toUCS2(authorName);
+
           if (authorName)
             PL_strfree(authorName);
 
@@ -1139,13 +1131,13 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
             mCitePrefix.Append(authorStr);
           else
             mCitePrefix.Append(author);
-          mCitePrefix.AppendWithConversion(" wrote:<br><html>");  //XXX I18n?
+          mCitePrefix.Append(NS_LITERAL_STRING(" wrote:<br><html>"));  //XXX I18n?
         }
       }
     }
 
     if (mCitePrefix.IsEmpty())
-      mCitePrefix.AppendWithConversion("<br><br>--- Original Message ---<br><html>");  //XXX I18n?
+      mCitePrefix.Append(NS_LITERAL_STRING("<br><br>--- Original Message ---<br><html>"));  //XXX I18n?
   }
   
   NS_INIT_REFCNT(); 
@@ -1201,83 +1193,61 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         nsAutoString followUpTo;
         nsAutoString messageId;
         nsAutoString references;
-        nsAutoString encodedCharset;
-        nsAutoString encodedHeader;
-        char *outCString = nsnull;
+        nsXPIDLCString outCString;
         PRUnichar emptyUnichar = 0;
         PRBool needToRemoveDup = PR_FALSE;
+        nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID);
         
         if (type == nsIMsgCompType::ReplyAll)
         {
-          mHeaders->ExtractHeader(HEADER_TO, PR_TRUE, &outCString);
+          mHeaders->ExtractHeader(HEADER_TO, PR_TRUE, getter_Copies(outCString));
           if (outCString)
           {
-            encodedHeader.AssignWithConversion(outCString);
-            if (NS_FAILED(nsMsgI18NDecodeMimePartIIStr(encodedHeader, encodedCharset, recipient)))
-              recipient = encodedHeader;
-            PR_FREEIF(outCString);
+            mimeConverter->DecodeMimeHeader(outCString, recipient);
           }
               
-          mHeaders->ExtractHeader(HEADER_CC, PR_TRUE, &outCString);
+          mHeaders->ExtractHeader(HEADER_CC, PR_TRUE, getter_Copies(outCString));
           if (outCString)
           {
-            encodedHeader.AssignWithConversion(outCString);
-            if (NS_FAILED(nsMsgI18NDecodeMimePartIIStr(encodedHeader, encodedCharset, cc)))
-              cc = encodedHeader;
-            PR_FREEIF(outCString);
+            mimeConverter->DecodeMimeHeader(outCString, cc);
           }
               
           if (recipient.Length() > 0 && cc.Length() > 0)
-            recipient.AppendWithConversion(", ");
+            recipient.Append(NS_LITERAL_STRING(", "));
           recipient += cc;
           compFields->SetCc(recipient.GetUnicode());
 
           needToRemoveDup = PR_TRUE;
         }
               
-        mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, &outCString);
+        mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          encodedHeader.AssignWithConversion(outCString);
-          if (NS_FAILED(nsMsgI18NDecodeMimePartIIStr(encodedHeader, encodedCharset, replyTo)))
-            replyTo = encodedHeader;
-          PR_FREEIF(outCString);
+          mimeConverter->DecodeMimeHeader(outCString, replyTo);
         }
         
-        mHeaders->ExtractHeader(HEADER_NEWSGROUPS, PR_FALSE, &outCString);
+        mHeaders->ExtractHeader(HEADER_NEWSGROUPS, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          encodedHeader.AssignWithConversion(outCString);
-          if (NS_FAILED(nsMsgI18NDecodeMimePartIIStr(encodedHeader, encodedCharset, newgroups)))
-            newgroups = encodedHeader;
-          PR_FREEIF(outCString);
+          mimeConverter->DecodeMimeHeader(outCString, newgroups);
         }
         
-        mHeaders->ExtractHeader(HEADER_FOLLOWUP_TO, PR_FALSE, &outCString);
+        mHeaders->ExtractHeader(HEADER_FOLLOWUP_TO, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          encodedHeader.AssignWithConversion(outCString);
-          if (NS_FAILED(nsMsgI18NDecodeMimePartIIStr(encodedHeader, encodedCharset, followUpTo)))
-            followUpTo = encodedHeader;
-          PR_FREEIF(outCString);
+          mimeConverter->DecodeMimeHeader(outCString, followUpTo);
         }
         
-        mHeaders->ExtractHeader(HEADER_MESSAGE_ID, PR_FALSE, &outCString);
+        mHeaders->ExtractHeader(HEADER_MESSAGE_ID, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          encodedHeader.AssignWithConversion(outCString);
-          if (NS_FAILED(nsMsgI18NDecodeMimePartIIStr(encodedHeader, encodedCharset, messageId)))
-            messageId = encodedHeader;
-          PR_FREEIF(outCString);
+          mimeConverter->DecodeMimeHeader(outCString, messageId);
         }
         
-        mHeaders->ExtractHeader(HEADER_REFERENCES, PR_FALSE, &outCString);
+        mHeaders->ExtractHeader(HEADER_REFERENCES, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          encodedHeader.AssignWithConversion(outCString);
-          if (NS_FAILED(nsMsgI18NDecodeMimePartIIStr(encodedHeader, encodedCharset, references)))
-            references = encodedHeader;
-          PR_FREEIF(outCString);
+          mimeConverter->DecodeMimeHeader(outCString, references);
         }
         
         if (! replyTo.IsEmpty())
@@ -1303,7 +1273,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         }
         
         if (! references.IsEmpty())
-          references.AppendWithConversion(' ');
+          references.Append(PRUnichar(' '));
         references += messageId;
         compFields->SetReferences(nsAutoCString(references));
         
@@ -1348,7 +1318,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
 #endif
 
     if (! mHeadersOnly)
-      mMsgBody.AppendWithConversion("</html>");
+      mMsgBody.Append(NS_LITERAL_STRING("</html>"));
     
     // Now we have an HTML representation of the quoted message.
     // If we are in plain text mode, we need to convert this to plain
@@ -2600,7 +2570,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                     {
                       //oops, parser problem! I will try to do my best...
                       fullNameStr = pDisplayName;
-                      fullNameStr.AppendWithConversion(" <");
+                      fullNameStr.Append(NS_LITERAL_STRING(" <"));
                       if (bIsMailList)
                       {
                         if (pEmail && pEmail[0] != 0)
@@ -2610,7 +2580,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                       }
                       else
                         fullNameStr += pEmail;
-                      fullNameStr.AppendWithConversion(">");
+                      fullNameStr.Append(PRUnichar('>'));
                     }
 
                     if (fullNameStr.IsEmpty())
@@ -2738,14 +2708,14 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
           if (populateMailList)
           {
             if (! recipientsStr.IsEmpty())
-              recipientsStr.AppendWithConversion(',');
+              recipientsStr.Append(PRUnichar(','));
             recipientsStr.Append(recipient->mAddress);
           }
 
           if (returnNonHTMLRecipients && recipient->mPreferFormat != nsIAbPreferMailFormat::html)
           {
             if (! nonHtmlRecipientsStr.IsEmpty())
-              nonHtmlRecipientsStr.AppendWithConversion(',');
+              nonHtmlRecipientsStr.Append(PRUnichar(','));
             nonHtmlRecipientsStr.Append(recipient->mEmail);
           }
 
@@ -3326,12 +3296,12 @@ nsMsgMailList::nsMsgMailList(nsString listName, nsString listDescription, nsIAbD
   {
       //oops, parser problem! I will try to do my best...
       mFullName = listName;
-      mFullName.AppendWithConversion(" <");
+      mFullName.Append(NS_LITERAL_STRING(" <"));
       if (listDescription.IsEmpty())
         mFullName += listName;
       else
         mFullName += listDescription;
-      mFullName.AppendWithConversion(">");
+      mFullName.Append(PRUnichar('>'));
   }
 
   mDirectory = directory;

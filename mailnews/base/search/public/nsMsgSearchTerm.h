@@ -66,7 +66,6 @@ public:
     //                                   PRUint32 headersSize, /* size of the NULL terminated list of headers */
     //                                   PRBool ForFilters /* true if we are filtering */,
     //								   PRBool *pResult);
-    //	nsresult MatchString (nsCString *, const char *charset, PRBool body, PRBool *result);
 	// nsresult MatchDate (PRTime, PRBool *result);
 	// nsresult MatchStatus (PRUint32, PRBool *result);
 	// nsresult MatchPriority (nsMsgPriorityValue, PRBool *result);
@@ -95,6 +94,8 @@ public:
 	nsCString m_arbitraryHeader;         // user specified string for the name of the arbitrary header to be used in the search
 									  // only has a value when m_attribute = attribOtherHeader!!!!
 protected:
+	nsresult MatchString (const char *stringToMatch, const char *charset,
+                          PRBool *pResult);
 	nsresult		OutputValue(nsCString &outputStr);
 	nsMsgSearchAttribValue ParseAttribute(char *inStream);
 	nsMsgSearchOpValue	ParseOperator(char *inStream);

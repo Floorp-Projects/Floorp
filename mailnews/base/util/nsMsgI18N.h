@@ -155,18 +155,6 @@ NS_MSG_BASE nsresult ConvertToUnicode(const nsString& aCharset,
                                  nsString& outString);
 
 /**
- * If a header is MIME encoded then decode a header and sets a charset name.
- *
- * @param header      [IN] A header to decode.
- * @param charset     [IN/OUT] Input charset to be used for conversion when no charset available in the header.
- *                             Output charset to be set from the encoded charset name.
- * @param decodedString [OUT] Decoded unicode string.
- * @param eatContinuations [IN]
- * @return            nsresult.
- */
-NS_MSG_BASE nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString, PRBool eatContinuations=PR_TRUE);
-
-/**
  * Parse for META charset.
  *
  * @param fileSpec    [IN] A filespec.
