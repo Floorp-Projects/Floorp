@@ -631,6 +631,9 @@ xpfe/components/bookmarks/Makefile
 xpfe/components/bookmarks/public/Makefile
 xpfe/components/bookmarks/src/Makefile
 xpfe/components/directory/Makefile
+xpfe/components/download-manager/Makefile
+xpfe/components/download-manager/src/Makefile
+xpfe/components/download-manager/public/Makefile
 xpfe/components/timebomb/Makefile
 xpfe/components/timebomb/tools/Makefile
 xpfe/components/regviewer/Makefile

@@ -39,6 +39,8 @@
 #include "nsAutoComplete.h"
 #include "nsBookmarksService.h"
 #include "nsDirectoryViewer.h"
+#include "nsDownloadManager.h"
+#include "nsDownloadProxy.h"
 #include "nsGlobalHistory.h"
 #include "rdf.h"
 #include "nsTimeBomb.h"
@@ -63,6 +65,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(LocalSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(InternetSearchDataSource, Init)
@@ -147,6 +151,10 @@ static const nsModuleComponentInfo components[] = {
       nsHTTPIndexConstructor },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,
       nsHTTPIndexConstructor },
+    { "Download Manager", NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID,
+      nsDownloadManagerConstructor },
+    { "Download", NS_DOWNLOAD_CID, NS_DOWNLOAD_CONTRACTID,
+      nsDownloadProxyConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_CONTRACTID,
       nsGlobalHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_DATASOURCE_CONTRACTID,

@@ -21,12 +21,9 @@
  *  Bill Law    law@netscape.com
  */
 
-#include "nsIWebProgressListener.idl"
+#include "nsIDownload.idl"
 
-interface nsIWebBrowserPersist;
 interface nsIDOMWindow;
-interface nsILocalFile;
-interface nsIObserver;
 
 /* nsIProgressDialog
  *
@@ -50,75 +47,20 @@ interface nsIObserver;
  */
 
 [scriptable, uuid(88A478B3-AF65-440a-94DC-ED9B154D2990)]
-interface nsIProgressDialog : nsIWebProgressListener {
+interface nsIProgressDialog : nsIDownload {
    /**
     * Open the dialog
     *
     * @param aParent  Parent window; optional (if null, then
     *                 a top-level window is created)
-    * @param aPersist The stream transfer operation that the dialog is
-    *                 to show progress for.  This is optional.  If
-    *                 specified, then the progress dialog will register
-    *                 itself as the listener for that object.  Otherwise,
-    *                 it is the caller's responsibility to connect this
-    *                 object to something that sends out the web progress
-    *                 notifications.
     */
-   void open( in nsIDOMWindow aParent, in nsIWebBrowserPersist aPersist );
+   void open( in nsIDOMWindow aParent );
 
-   /**
-    * Set starting time to use in elapsed/remaining time calculations;
-    * this is useful in cases where the download might have started
-    * prior to the dialog opening; the time is specified as
-    * milliseconds, according to the convention for the JavaScript Date 
-    * object getTime function; if not specified, this value will default
-    * to the time at which the progress dialog object is created.
-    */
-   attribute long long startTime;
-
-   /**
-    * URL of the source of the stream transfer that the dialog is 
-    * displaying the progress of.
-    */
-   attribute nsIURI source;
-
-   /**
-    * Target of the stream transfer that the dialog is
-    * displaying the progress of.
-    */
-   attribute nsILocalFile target;
-
-   /**
-    * Set this attribute to indicate that the dialog is being
-    * used to display progress prior to opening a downloaded
-    * file with a helper application.  The application string
-    * specified will appear on the dialog, unless the string
-    * is empty.  This will also cause the "keep this dialog
-    * open after download" checkbox hidden.
-    */
-   attribute wstring openingWith;
-
-   /**
-    * Set this attribute to the observer object that will be
-    * notified when the user presses the Cancel button.  The
-    * observer's "observe" method will be called with:
-    *   aSubject = the nsIProgressDialog
-    *   aTopic   = "oncancel"
-    *   aData    = ""
-    */
-   attribute nsIObserver observer;
-
-   /**
-    * The web browser persist object doing the associated I/O.
-    * May be null.
-    */
-   readonly attribute nsIWebBrowserPersist operation;
-
-   /**
-    * The dialog object itself.  This might be null if the dialog isn't
-    * open yet, or has been closed.
-    */
-   readonly attribute nsIDOMWindow dialog;
+  /**
+   * The dialog object itself.  This might be null if the dialog isn't
+   * open yet, or has been closed.
+   */   
+   attribute nsIDOMWindow dialog;
 };
 
 
