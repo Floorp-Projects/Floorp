@@ -144,14 +144,11 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
   static PRBool hasConverter = PR_FALSE;
   if ( !hasConverter ) {
     // get the charset
-    nsCOMPtr <nsIPlatformCharset> platformCharsetService;
     nsAutoString platformCharset;
-    nsresult res = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
-                                                       NS_GET_IID(nsIPlatformCharset), 
-                                                       getter_AddRefs(platformCharsetService));
-    if (NS_SUCCEEDED(res))
-      res = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
-    if (NS_FAILED(res))
+    nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+    if (NS_SUCCEEDED(rv))
+      rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
+    if (NS_FAILED(rv))
       platformCharset.Assign("ISO-8859-1");
       
     // get the encoder
@@ -199,14 +196,11 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PR
   static PRBool hasConverter = PR_FALSE;
   if ( !hasConverter ) {
     // get the charset
-    nsCOMPtr <nsIPlatformCharset> platformCharsetService;
     nsAutoString platformCharset;
-    nsresult res = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
-                                                       NS_GET_IID(nsIPlatformCharset), 
-                                                       getter_AddRefs(platformCharsetService));
-    if (NS_SUCCEEDED(res))
-      res = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
-    if (NS_FAILED(res))
+    nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+    if (NS_SUCCEEDED(rv))
+      rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
+    if (NS_FAILED(rv))
       platformCharset.Assign("ISO-8859-1");
       
     // get the decoder
