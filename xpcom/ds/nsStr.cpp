@@ -35,32 +35,10 @@
 #include "nsDeque.h"
 
  
-static const char* kFoolMsg = "Error: Some fool overwrote the shared buffer.";
 //static const char* kCallFindChar =  "For better performance, call FindChar() for targets whose length==1.";
 //static const char* kCallRFindChar = "For better performance, call RFindChar() for targets whose length==1.";
 
-static char* gCommonEmptyBuffer=0;
-
-/**
- * 
- * @update	gess10/30/98
- * @param 
- * @return
- */
-char* GetSharedEmptyBuffer() {
-  if(!gCommonEmptyBuffer) {
-    const size_t theDfltSize=5;
-    gCommonEmptyBuffer=new char[theDfltSize];
-    if(gCommonEmptyBuffer){
-      nsCRT::zero(gCommonEmptyBuffer,theDfltSize);
-      gCommonEmptyBuffer[0]=0;
-    }
-    else {
-      printf("%s\n","Memory allocation error!");
-    }
-  }
-  return gCommonEmptyBuffer;
-}
+static const PRUnichar gCommonEmptyBuffer[1];
 
 /**
  * This method initializes all the members of the nsStr structure 
@@ -70,12 +48,11 @@ char* GetSharedEmptyBuffer() {
  * @return
  */
 void nsStr::Initialize(nsStr& aDest,eCharSize aCharSize) {
-  aDest.mStr=GetSharedEmptyBuffer();
+  aDest.mStr=(char*)gCommonEmptyBuffer;
   aDest.mLength=0;
   aDest.mCapacity=0;
   aDest.mCharSize=aCharSize;
   aDest.mOwnsBuffer=0;
-  NS_ASSERTION(gCommonEmptyBuffer[0]==0,kFoolMsg);
 }
 
 /**
@@ -85,12 +62,11 @@ void nsStr::Initialize(nsStr& aDest,eCharSize aCharSize) {
  * @return
  */
 void nsStr::Initialize(nsStr& aDest,char* aCString,PRUint32 aCapacity,PRUint32 aLength,eCharSize aCharSize,PRBool aOwnsBuffer){
-  aDest.mStr=(aCString) ? aCString : GetSharedEmptyBuffer();
+  aDest.mStr=(aCString) ? aCString : (char*)gCommonEmptyBuffer;
   aDest.mLength=aLength;
   aDest.mCapacity=aCapacity;
   aDest.mCharSize=aCharSize;
   aDest.mOwnsBuffer=aOwnsBuffer;
-  NS_ASSERTION(gCommonEmptyBuffer[0]==0,kFoolMsg);
 }
 
 /**
@@ -111,7 +87,7 @@ nsIMemoryAgent* GetDefaultAgent(void){
  * @return
  */
 void nsStr::Destroy(nsStr& aDest,nsIMemoryAgent* anAgent) {
-  if((aDest.mStr) && (aDest.mStr!=GetSharedEmptyBuffer())) {
+  if((aDest.mStr) && (aDest.mStr!=(char*)gCommonEmptyBuffer)) {
     if(!anAgent)
       anAgent=GetDefaultAgent();
     
@@ -138,7 +114,6 @@ void nsStr::EnsureCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* an
     theAgent->Realloc(aString,aNewLength);
     AddNullTerminator(aString);
   }
-  NS_ASSERTION(gCommonEmptyBuffer[0]==0,kFoolMsg);
 }
 
 /**
@@ -166,7 +141,6 @@ void nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength,nsIMemoryAgent* anAgen
     aDest.mCapacity=theTempStr.mCapacity;
     aDest.mOwnsBuffer=theTempStr.mOwnsBuffer;
   }
-  NS_ASSERTION(gCommonEmptyBuffer[0]==0,kFoolMsg);
 }
 
 /**
@@ -204,10 +178,9 @@ void nsStr::Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 a
       (*gCopyChars[aSource.mCharSize][aDest.mCharSize])(aDest.mStr,aDest.mLength,aSource.mStr,anOffset,theLength);
 
       aDest.mLength+=theLength;
+      AddNullTerminator(aDest);
     }
   }
-  AddNullTerminator(aDest);
-  NS_ASSERTION(gCommonEmptyBuffer[0]==0,kFoolMsg);
 }
 
 
@@ -253,7 +226,6 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
     }
     else Append(aDest,aSource,0,aCount,anAgent);
   }
-  NS_ASSERTION(gCommonEmptyBuffer[0]==0,kFoolMsg);
 }
 
 
@@ -279,7 +251,6 @@ void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount,nsIMemoryAg
     }
     else Truncate(aDest,aDestOffset,anAgent);
   }//if
-  NS_ASSERTION(gCommonEmptyBuffer[0]==0,kFoolMsg);
 }
 
 /**
@@ -293,7 +264,6 @@ void nsStr::Truncate(nsStr& aDest,PRUint32 aDestOffset,nsIMemoryAgent* anAgent){
     aDest.mLength=aDestOffset;
     AddNullTerminator(aDest);
   }
-  NS_ASSERTION(gCommonEmptyBuffer[0]==0,kFoolMsg);
 }
 
 
@@ -307,7 +277,6 @@ void nsStr::Truncate(nsStr& aDest,PRUint32 aDestOffset,nsIMemoryAgent* anAgent){
 void nsStr::ChangeCase(nsStr& aDest,PRBool aToUpper) {
   // somehow UnicharUtil return failed, fallback to the old ascii only code
   gCaseConverters[aDest.mCharSize](aDest.mStr,aDest.mLength,aToUpper);
-  NS_ASSERTION(gCommonEmptyBuffer[0]==0,kFoolMsg);
 }
 
 /**
@@ -354,7 +323,6 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
     }
 
   }
-  NS_ASSERTION(gCommonEmptyBuffer[0]==0,kFoolMsg);
 }
 
 /**
@@ -367,7 +335,6 @@ void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
   Trim(aDest,aSet,aEliminateLeading,aEliminateTrailing);
   PRUint32 aNewLen=gCompressChars[aDest.mCharSize](aDest.mStr,aDest.mLength,aSet);
   aDest.mLength=aNewLen;
-  NS_ASSERTION(gCommonEmptyBuffer[0]==0,kFoolMsg);
 }
 
   /**************************************************************
