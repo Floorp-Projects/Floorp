@@ -74,11 +74,8 @@ NS_IMETHODIMP nsSupportsIDImpl::GetData(nsID **aData)
         *aData = (nsID*) nsMemory::Clone(mData, sizeof(nsID));
         return *aData ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
-    else
-    {
-        *aData = nsnull;
-        return NS_OK;
-    }
+    *aData = nsnull;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsSupportsIDImpl::SetData(const nsID *aData)
@@ -94,22 +91,16 @@ NS_IMETHODIMP nsSupportsIDImpl::SetData(const nsID *aData)
 
 NS_IMETHODIMP nsSupportsIDImpl::ToString(char **_retval)
 {
-    char* result = nsnull;
+    char* result;
     NS_ASSERTION(_retval, "Bad pointer");
     if(mData)
     {
-        char * str = mData->ToString();
-        if(str)
-        {
-            result = (char*) nsMemory::Clone(str, 
-                                    (nsCRT::strlen(str)+1)*sizeof(char));
-            delete [] str;
-        }
+        result = mData->ToString();
     }
     else
     {
-      static const char nullStr[] = "null";
-      result = (char*) nsMemory::Clone(nullStr, sizeof(nullStr));
+        static const char nullStr[] = "null";
+        result = (char*) nsMemory::Clone(nullStr, sizeof(nullStr));
     }
 
     *_retval = result;
@@ -146,8 +137,6 @@ NS_IMETHODIMP nsSupportsStringImpl::GetType(PRUint16 *aType)
 NS_IMETHODIMP nsSupportsStringImpl::GetData(char **aData)
 {
     nsresult rv = NS_OK;
-    *aData = nsnull;
-
     // copy the buffer
     if (mData) {
         size_t size((mLength + 1) * sizeof(char));
@@ -155,6 +144,8 @@ NS_IMETHODIMP nsSupportsStringImpl::GetData(char **aData)
         if (!(*aData))
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
+    else
+        *aData = nsnull;
 
     return rv;
 }
@@ -189,11 +180,10 @@ NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRUint32 aLength,
         // allocate a new buffer
         size_t size((aLength + 1) * sizeof(char));
         newData = NS_STATIC_CAST(char*, nsMemory::Alloc(size));
-        // copy into that buffer if it was successfully allocated
-        if (newData)
-            nsCRT::memcpy(newData, aData, aLength * sizeof(char));
-        else
+        if (!newData)
             return NS_ERROR_OUT_OF_MEMORY;
+        // copy into that buffer if it was successfully allocated
+        nsCRT::memcpy(newData, aData, aLength * sizeof(char));
     }
 
     // if we've succeeded so far, adopt the new buffer. the adopt
@@ -220,7 +210,7 @@ NS_IMETHODIMP nsSupportsStringImpl::AdoptDataWithLength(PRUint32 aLength,
         // set length of new buffer
         mLength = aLength;
         // always make sure we're null-terminated
-        mData[mLength] = NS_STATIC_CAST(char, 0);
+        mData[mLength] = '\0';
     }
     else
         mLength = 0;
@@ -258,8 +248,6 @@ NS_IMETHODIMP nsSupportsWStringImpl::GetType(PRUint16 *aType)
 NS_IMETHODIMP nsSupportsWStringImpl::GetData(PRUnichar **aData)
 {
     nsresult rv = NS_OK;
-    *aData = nsnull;
-
     // copy the buffer
     if (mData) {
         size_t size((mLength + 1) * sizeof(PRUnichar));
@@ -267,6 +255,8 @@ NS_IMETHODIMP nsSupportsWStringImpl::GetData(PRUnichar **aData)
         if (!(*aData))
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
+    else
+        *aData = nsnull;
 
     return rv;
 }
@@ -301,11 +291,10 @@ NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(PRUint32 aLength,
         // allocate a new buffer
         size_t size((aLength + 1) * sizeof(PRUnichar));
         newData = NS_STATIC_CAST(PRUnichar*, nsMemory::Alloc(size));
-        // copy into that buffer if it was successfully allocated
-        if (newData)
-            nsCRT::memcpy(newData, aData, aLength * sizeof(PRUnichar));
-        else
+        if (!newData)
             return NS_ERROR_OUT_OF_MEMORY;
+        // copy into that buffer if it was successfully allocated
+        nsCRT::memcpy(newData, aData, aLength * sizeof(PRUnichar));
     }
 
     // if we've succeeded so far, adopt the new buffer. the adopt
@@ -1026,11 +1015,8 @@ NS_IMETHODIMP nsSupportsInterfacePointerImpl::GetDataIID(nsID **aIID)
         *aIID = (nsID*) nsMemory::Clone(mIID, sizeof(nsID));
         return *aIID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
-    else
-    {
-        *aIID = nsnull;
-        return NS_OK;
-    }
+    *aIID = nsnull;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsSupportsInterfacePointerImpl::SetDataIID(const nsID *aIID)
