@@ -88,7 +88,9 @@ MODULE=htmlparser
 
 REQUIRES = xpcom netlib raptor
 
+ifdef IGNORE_THIS_SECTION_UNTIL_DECISION_IS_MADE
 GARBAGE	+= $(OBJDIR)/nsHTMLTags.h $(OBJDIR)/nsHTMLTags.cpp $(OBJDIR)/nsHTMLEntities.cpp
+endif
 
 include $(topsrcdir)/config/rules.mk
 
