@@ -18,7 +18,6 @@ comm.jar:
     content/communicator/pref/overrideHandler.js                (prefwindow/resources/content/overrideHandler.js)
     content/communicator/pref/pref-cache.js                     (prefwindow/resources/content/pref-cache.js)
     content/communicator/pref/pref-cache.xul                    (prefwindow/resources/content/pref-cache.xul)
-    content/communicator/pref/pref-colors.js                    (prefwindow/resources/content/pref-colors.js)
     content/communicator/pref/pref-colors.xul                   (prefwindow/resources/content/pref-colors.xul)
     content/communicator/pref/pref-keynav.js                    (prefwindow/resources/content/pref-keynav.js)
     content/communicator/pref/pref-keynav.xul                   (prefwindow/resources/content/pref-keynav.xul)
