@@ -44,6 +44,7 @@ endif
 ifeq ($(OS_ARCH),OS2)
 DIRS		+= wizard/os2
 endif
+endif
 
 packages:
 	make -C packager
