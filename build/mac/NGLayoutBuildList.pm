@@ -126,6 +126,7 @@ sub Checkout()
 		$session->checkout("mozilla/lib/libparse") || die "checkout failure";
 		$session->checkout("mozilla/lib/layout") || die "checkout failure";
 		$session->checkout("mozilla/lib/libstyle") || die "checkout failure";
+		$session->checkout("mozilla/lib/libpwcac") || die "checkout failure";
 	}
 	if ($main::pull{xpcom})
 	{
