@@ -108,6 +108,8 @@ entity.8203=
 entity.8289=
 # U+2062, InvisibleTimes, marks multiplication when it is understood without a mark
 entity.8290=
+# U+2146, DifferentialD, d for use in differentials, e.g., within integrals
+entity.8518=d
 ##
 ## End of hand coded section
 ## Below are generated from the unicode character database
