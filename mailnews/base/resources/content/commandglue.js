@@ -36,6 +36,9 @@ var prefs = Components.classes['component://netscape/preferences'].getService();
 prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
 var showPerformance = prefs.GetBoolPref('mail.showMessengerPerformance');
 
+var msgNavigationService = Components.classes['component://netscape/messenger/msgviewnavigationservice'].getService();
+msgNavigationService= msgNavigationService.QueryInterface(Components.interfaces.nsIMsgViewNavigationService);
+
 var gBeforeFolderLoadTime;
 
 function OpenURL(url)
@@ -270,11 +273,6 @@ function RerootFolder(uri, newFolder, isThreaded, sortID)
   folder.setAttribute('ref', uri);
   
   UpdateStatusMessageCounts(newFolder);
-
-  var afterFolderLoadTime = new Date();
-  var timeToLoad = (afterFolderLoadTime.getTime() - gBeforeFolderLoadTime.getTime())/1000;
-  if(showPerformance)
-	  dump("Time to load " + uri + " is " +  timeToLoad + " seconds\n");
 }
 
 
@@ -614,10 +612,10 @@ function GetNextMessageAfterDelete(messages)
 	//search forward
 	while(curMessage)
 	{
-		nextMessage = GetNextMessageUnthreaded(tree, curMessage, GoMessage, false);
+		nextMessage = msgNavigationService.FindNextMessage(navigateAny, tree, curMessage, RDF, document, false, messageView.showThreads);
 		if(nextMessage)
 		{
-			if(!MessageInSelection(nextMessage, messages))
+			if(nextMessage.getAttribute("selected") != "true")
 			{
 				break;
 			}
@@ -633,10 +631,10 @@ function GetNextMessageAfterDelete(messages)
 		//search forward
 		while(curMessage)
 		{
-			nextMessage = GetPreviousMessage(curMessage, GoMessage, false);
+			nextMessage = msgNavigationService.FindPreviousMessage(navigateAny, tree, curMessage, RDF, document, false, messageView.showThreads);
 			if(nextMessage)
 			{
-				if(!MessageInSelection(nextMessage, messages))
+				if(nextMessage.getAttribute("selected") != "true")
 				{
 					break;
 				}
@@ -650,18 +648,6 @@ function GetNextMessageAfterDelete(messages)
 	return nextMessage;
 }
 
-function MessageInSelection(message, messages)
-{
-	var count = messages.length;
-
-	for(var i = 0; i < count; i++)
-	{
-		if(message == messages[i])
-			return true;
-
-	}
-	return false;
-}
 
 function SelectNextMessage(nextMessage)
 {

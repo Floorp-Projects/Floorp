@@ -275,4 +275,14 @@
 { 0xbb460dff, 0x8bf0, 0x11d3, \
   { 0x8a, 0xfe, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2}}
 
+//
+//nsMsgViewNavigationService
+//
+#define NS_MSGVIEWNAVIGATIONSERVICE_PROGID \
+	"component://netscape/messenger/msgviewnavigationservice"
+
+/* 60D34FB4-D031-11d3-8B2E-0060B0FC04D2*/
+#define NS_MSGVIEWNAVIGATIONSERVICE_CID \
+{ 0x60d34fb4, 0xd031, 0x11d3, \
+  { 0x8b, 0x2e, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2}}
 #endif // nsMessageBaseCID_h__

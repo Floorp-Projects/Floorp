@@ -137,7 +137,19 @@ var folderListener = {
 				{
 				  gCurrentLoadingFolderURI = "";
 				  //Now let's select the first new message if there is one
+				  var beforeScrollToNew = new Date();
 				  ScrollToFirstNewMessage();
+				  var afterScrollToNew = new Date();
+				  var timeToScroll = (afterScrollToNew.getTime() - beforeScrollToNew.getTime())/1000;
+
+
+				  var afterFolderLoadTime = new Date();
+				  var timeToLoad = (afterFolderLoadTime.getTime() - gBeforeFolderLoadTime.getTime())/1000;
+				  if(showPerformance)
+				  {
+					  dump("Time to load " + uri + " is " +  timeToLoad + " seconds\n");
+				  	  dump("of which scrolling to new is" + timeToScroll + "seconds\n");
+				  }
 				}
 			}
 
@@ -162,6 +174,7 @@ function OnLoadMessenger()
   AddToSession();
   //need to add to session before trying to load start folder otherwise listeners aren't
   //set up correctly.
+  dump('Before load start folder\n');
   loadStartFolder();
 
   // FIX ME - later we will be able to use onload from the overlay
@@ -281,19 +294,22 @@ function loadStartFolder()
 
 		//now find Inbox
 		var outNumFolders = new Object();
+		dump('Before getting inbox\n');
 		var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
 		if(!inboxFolder) return;
+		dump('We have an inbox\n');
 
 		var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
 		var inboxURI = resource.Value;
 
+		dump('InboxURI = ' + inboxURI + '\n');
 		//first, let's see if it's already in the dom.  This will make life easier.
 		var inbox = document.getElementById(inboxURI);
 
 		//if it's not here we will have to make sure it's open.
 		if(!inbox)
 		{
-
+			dump('There isnt an inbox in the tree yet\n');
 
 		}
 
@@ -554,59 +570,13 @@ function ThreadPaneOnClick(event)
 		if(open == "true")
 		{
 			//open all of the children of the treeitem
-			OpenThread(treeitem);
+			msgNavigationService.OpenTreeitemAndDescendants(treeitem);
 		}
 		dump('clicked on a twisty\n');
     }
 
 }
 
-function OpenThread(treeitem)
-{
-	treeitem.setAttribute('notreadytodisplay', 'true');
-	OpenTreeItemAndDescendants(treeitem);
-	treeitem.setAttribute('notreadytodisplay', 'false');
-}
-
-function OpenTreeItemAndDescendants(treeitem)
-{
-	var open = treeitem.getAttribute('open');
-	if(open != "true")
-	{
-		treeitem.setAttribute('open', 'true');
-	}
-
-	var treeitemChildNodes = treeitem.childNodes;
-	var numTreeitemChildren = treeitemChildNodes.length;
-
-	//if there's only one child then there are no treechildren so close it.
-	if(numTreeitemChildren == 1)
-		treeitem.setAttribute('open', '');
-	else
-	{
-		for(var i = 0; i < numTreeitemChildren; i++)
-		{
-			var treeitemChild = treeitemChildNodes[i];
-			if(treeitemChild.nodeName == 'treechildren')
-			{
-				var treechildrenChildNodes = treeitemChildNodes[i].childNodes;
-				var numTreechildrenChildren = treechildrenChildNodes.length;
-				
-				for(var j = 0; j < numTreechildrenChildren; j++)
-				{
-					var treechildrenChild = treechildrenChildNodes[j];
-					if(treechildrenChild.nodeName == 'treeitem')
-					{
-						treechildrenChild.setAttribute('open', 'true');
-						//Open up all of this items
-						OpenTreeItemAndDescendants(treechildrenChild);
-					}
-				}
-			}
-		}
-	}
-
-}
 
 function ChangeSelection(tree, newSelection)
 {

@@ -101,6 +101,9 @@ public:
   NS_IMETHOD SummaryChanged(void);
   NS_IMETHOD GetNumUnread(PRBool deep, PRInt32 *_retval);
   NS_IMETHOD GetTotalMessages(PRBool deep, PRInt32 *_retval);
+  NS_IMETHOD HasNewMessages(PRBool *hasNewMessages);
+  NS_IMETHOD GetFirstNewMessage(nsIMessage **firstNewMessage);
+  NS_IMETHOD ClearNewMessages();
   NS_IMETHOD GetExpungedBytesCount(PRUint32 *aExpungedBytesCount);
   NS_IMETHOD GetDeletable(PRBool *aDeletable);
   NS_IMETHOD GetRequiresCleanup(PRBool *aRequiresCleanup);

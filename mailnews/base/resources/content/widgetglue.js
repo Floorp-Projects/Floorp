@@ -958,36 +958,36 @@ function MsgStop() {
 
 function MsgNextMessage()
 {
-	GoNextMessage(GoMessage, ResourceGoMessage, null, false);
+	GoNextMessage(navigateAny, false );
 }
 
 function MsgNextUnreadMessage()
 {
-	GoNextMessage(GoUnreadMessage, ResourceGoUnreadMessage, GoUnreadThread, true);
+	GoNextMessage(navigateUnread, true);
 }
 function MsgNextFlaggedMessage()
 {
-	GoNextMessage(GoFlaggedMessage, ResourceGoFlaggedMessage, null, true);
+	GoNextMessage(navigateFlagged, true);
 }
 
 function MsgNextUnreadThread()
 {
-	GoNextThread(GoUnreadThread, GoUnreadMessage, ResourceGoUnreadMessage, true, true);
+	GoNextThread(navigateUnread, true, true);
 }
 
 function MsgPreviousMessage()
 {
-	GoPreviousMessage(GoMessage, false);
+	GoPreviousMessage(navigateAny, false);
 }
 
 function MsgPreviousUnreadMessage()
 {
-	GoPreviousMessage(GoUnreadMessage, true);
+	GoPreviousMessage(navigateUnread, true);
 }
 
 function MsgPreviousFlaggedMessage()
 {
-	GoPreviousMessage(GoFlaggedMessage, true);
+	GoPreviousMessage(navigateFlagged, true);
 }
 
 function MsgGoBack() {}

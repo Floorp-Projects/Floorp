@@ -236,6 +236,55 @@ NS_IMETHODIMP nsMsgDBFolder::SetCharset(const PRUnichar * aCharset)
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgDBFolder::HasNewMessages(PRBool *hasNewMessages)
+{
+	if(!hasNewMessages)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = GetDatabase(nsnull);
+
+	if(NS_SUCCEEDED(rv))
+	{
+		rv = mDatabase->HasNew(hasNewMessages);
+	}
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::GetFirstNewMessage(nsIMessage **firstNewMessage)
+{
+	nsresult rv = GetDatabase(nsnull);
+
+	if(NS_SUCCEEDED(rv))
+	{
+		nsMsgKey key;
+		rv = mDatabase->GetFirstNew(&key);
+		if(NS_FAILED(rv))
+			return rv;
+
+		nsCOMPtr<nsIMsgDBHdr> hdr;
+		rv = mDatabase->GetMsgHdrForKey(key, getter_AddRefs(hdr));
+		if(NS_FAILED(rv))
+			return rv;
+
+		rv = CreateMessageFromMsgDBHdr(hdr, firstNewMessage);
+		if(NS_FAILED(rv))
+			return rv;
+
+	}
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::ClearNewMessages()
+{
+	nsresult rv = GetDatabase(nsnull);
+
+	if(NS_SUCCEEDED(rv))
+	{
+		rv = mDatabase->ClearNewList(PR_FALSE);
+	}
+	return rv;
+}
+
 nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 {
 	// Since it turns out to be pretty expensive to open and close

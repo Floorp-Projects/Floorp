@@ -1214,10 +1214,6 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessages)
   return NS_OK;
 }
 
-#ifdef HAVE_DB
-NS_IMETHOD GetTotalMessagesInDB(PRUint32 *totalMessages) const;					// How many messages in database.
-#endif
-	
 PRInt32 nsMsgFolder::GetNumPendingUnread() 
 {
 	return mNumPendingUnreadMessages;
@@ -1228,6 +1224,23 @@ PRInt32 nsMsgFolder::GetNumPendingTotalMessages()
 	return mNumPendingTotalMessages;
 }
 
+NS_IMETHODIMP nsMsgFolder::HasNewMessages(PRBool *hasNewMessages)
+{
+	//we don't support this
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::GetFirstNewMessage(nsIMessage **firstNewMessage)
+{
+	//we don't support this
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::ClearNewMessages()
+{
+	//we don't support this
+	return NS_OK;
+}
 	
 void nsMsgFolder::ChangeNumPendingUnread(PRInt32 delta)
 {

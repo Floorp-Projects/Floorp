@@ -164,7 +164,26 @@ interface nsIMsgFolder : nsIFolder {
    */  
 	long getTotalMessages(in boolean deep);
 
+ /**
+  * does this folder have new messages
+  *
+  */
+	boolean hasNewMessages();
+
+  /**
+   * return the first new message in the folder
+   *
+   */
+    readonly attribute nsIMessage firstNewMessage;
+
+  /**
+   * clear new status flag of all of the new messages
+   *
+   */
+    void clearNewMessages();
+
 	readonly attribute unsigned long expungedBytesCount;
+
 
   /**
    * can this folder be deleted?

@@ -39,6 +39,8 @@ nsMsgCopyService.h
 nsMsgStatusFeedback.h
 nsMessageView.h
 nsMsgWindow.h
+nsMsgViewNavigationService.h
+
 
 
 

@@ -36,3 +36,5 @@ nsIMsgProtocolInfo.idl
 nsIMsgRDFDataSource.idl
 nsIIncomingServerListener.idl
 nsIMsgHdr.idl
+nsIMsgViewNavigationService.idl
+

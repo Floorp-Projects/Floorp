@@ -57,6 +57,7 @@ XPIDLSRCS =								\
 		.\nsIMsgRDFDataSource.idl		\
 		.\nsIIncomingServerListener.idl \
 		.\nsIMsgHdr.idl \
+		.\nsIMsgViewNavigationService.idl \
 		$(NULL)
 
 ################################################################################

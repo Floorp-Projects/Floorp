@@ -50,6 +50,7 @@ EXPORTS=						\
 	nsMessageView.h \
 	nsMsgWindow.h \
 	nsMessengerMigrator.h \
+	nsMsgViewNavigationService.h \
 	$(NULL)
 
 
@@ -82,6 +83,7 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsMessageView.obj		\
 	.\$(OBJDIR)\nsMsgWindow.obj \
 	.\$(OBJDIR)\nsMessengerMigrator.obj \
+	.\$(OBJDIR)\nsMsgViewNavigationService.obj \
 	$(NULL)
 
 

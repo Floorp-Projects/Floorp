@@ -54,6 +54,9 @@ public:
 	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset);
 	NS_IMETHOD SetCharset(const PRUnichar * aCharset);
+	NS_IMETHOD HasNewMessages(PRBool *hasNewMessages);
+	NS_IMETHOD GetFirstNewMessage(nsIMessage **firstNewMessage);
+	NS_IMETHOD ClearNewMessages();
 
   NS_IMETHOD GetMsgDatabase(nsIMsgDatabase** aMsgDatabase);
 
