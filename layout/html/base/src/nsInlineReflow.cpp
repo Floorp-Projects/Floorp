@@ -188,7 +188,7 @@ nsInlineReflow::SetFrame(nsIFrame* aFrame)
   mIsInlineAware = PR_FALSE;
 }
 
-nsInlineReflowStatus
+nsReflowStatus
 nsInlineReflow::ReflowFrame(nsIFrame* aFrame)
 {
   nsReflowStatus result;
@@ -347,7 +347,7 @@ nsInlineReflow::ComputeAvailableSize()
 PRBool
 nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
                             nsRect& aBounds,
-                            nsInlineReflowStatus& aStatus)
+                            nsReflowStatus& aStatus)
 {
   // Get reflow reason set correctly. It's possible that a child was
   // created and then it was decided that it could not be reflowed
@@ -368,6 +368,11 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
 
   // Setup reflow state for reflowing the frame
   nsHTMLReflowState reflowState(mFrame, mOuterReflowState, mFrameAvailSize);
+  if (!mTreatFrameAsBlock) {
+    mIsInlineAware = PR_TRUE;
+    reflowState.frameType = eReflowType_Inline;
+    reflowState.lineLayout = &mLineLayout;
+  }
   reflowState.reason = reason;
 
   // Let frame know that are reflowing it
@@ -379,12 +384,6 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   htmlReflow->WillReflow(mPresContext);
   mFrame->MoveTo(x, y);
 
-  // There are two ways to reflow the child frame: using the
-  // using the nsIInlineReflow interface or using the default Reflow
-  // method in nsIHTMLReflow. The order of precedence is nsIInlineReflow
-  // then nsIHTMLReflow. We map the reflow status into an
-  // nsInlineReflowStatus.
-  nsIInlineReflow* inlineReflow;
   aBounds.x = x;
   aBounds.y = y;
 
@@ -399,17 +398,10 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   nscoord ty = y - mOuterReflowState.mBorderPadding.top;
   mSpaceManager->Translate(tx, ty);
 
-  if (NS_OK == mFrame->QueryInterface(kIInlineReflowIID, (void**)&inlineReflow)) {
-    aStatus = inlineReflow->InlineReflow(mLineLayout, aMetrics, reflowState);
-    mIsInlineAware = PR_TRUE;
-    aBounds.width = aMetrics.width;
-    aBounds.height = aMetrics.height;
-  }
-  else {
-    htmlReflow->Reflow(mPresContext, aMetrics, reflowState, aStatus);
-    aBounds.width = aMetrics.width;
-    aBounds.height = aMetrics.height;
-  }
+  htmlReflow->Reflow(mPresContext, aMetrics, reflowState, aStatus);
+  aBounds.width = aMetrics.width;
+  aBounds.height = aMetrics.height;
+
   mSpaceManager->Translate(-tx, -ty);
 
   // Now that frame has been reflowed at least one time make sure that
@@ -458,7 +450,7 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
 PRBool
 nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
                               nsRect& aBounds,
-                              nsInlineReflowStatus& aStatus)
+                              nsReflowStatus& aStatus)
 {
   // Compute right margin to use
   mRightMargin = 0;

@@ -18,7 +18,6 @@
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
 #include "nsSplittableFrame.h"
-#include "nsIInlineReflow.h"
 #include "nsLineLayout.h"
 #include "nsString.h"
 #include "nsIPresContext.h"
@@ -110,12 +109,9 @@ public:
   nsVoidArray mFrames;
 };
 
-class TextFrame : public nsSplittableFrame, private nsIInlineReflow {
+class TextFrame : public nsSplittableFrame {
 public:
   TextFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIFrame
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
@@ -148,13 +144,15 @@ public:
                          PRUint32&       aAcutalContentOffset,
                          PRInt32&        aOffset);
 
-  // nsIInlineReflow
+  // nsIHTMLReflow
+#if 0
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
                           nsIReflowCommand* aReflowCommand);
-
-  NS_IMETHOD InlineReflow(nsLineLayout& aLineLayout,
-                          nsHTMLReflowMetrics& aMetrics,
-                          const nsHTMLReflowState& aReflowState);
+#endif
+  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+                    nsHTMLReflowMetrics& aMetrics,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
 
   // TextFrame methods
   struct SelectionInfo {
@@ -200,18 +198,18 @@ public:
                       nscolor aSelectionBGColor,
                       nscoord dx, nscoord dy);
 
-  nsInlineReflowStatus ReflowPre(nsLineLayout& aLineLayout,
-                                 nsHTMLReflowMetrics& aMetrics,
-                                 const nsHTMLReflowState& aReflowState,
-                                 const nsStyleFont& aFont,
-                                 PRInt32 aStartingOffset);
+  nsReflowStatus ReflowPre(nsLineLayout& aLineLayout,
+                           nsHTMLReflowMetrics& aMetrics,
+                           const nsHTMLReflowState& aReflowState,
+                           const nsStyleFont& aFont,
+                           PRInt32 aStartingOffset);
 
-  nsInlineReflowStatus ReflowNormal(nsLineLayout& aLineLayout,
-                                    nsHTMLReflowMetrics& aMetrics,
-                                    const nsHTMLReflowState& aReflowState,
-                                    const nsStyleFont& aFontStyle,
-                                    const nsStyleText& aTextStyle,
-                                    PRInt32 aStartingOffset);
+  nsReflowStatus ReflowNormal(nsLineLayout& aLineLayout,
+                              nsHTMLReflowMetrics& aMetrics,
+                              const nsHTMLReflowState& aReflowState,
+                              const nsStyleFont& aFontStyle,
+                              const nsStyleText& aTextStyle,
+                              PRInt32 aStartingOffset);
 
 protected:
   virtual ~TextFrame();
@@ -368,20 +366,6 @@ TextFrame::~TextFrame()
     // Release text timer when the last text frame is gone
     gTextBlinker = nsnull;
   }
-}
-
-NS_IMETHODIMP
-TextFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIInlineReflowIID)) {
-    *aInstancePtrResult = (void*) ((nsIInlineReflow*)this);
-    return NS_OK;
-  }
-  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
 NS_IMETHODIMP
@@ -1208,6 +1192,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   NS_RELEASE(doc);
 }
 
+#if 0
 NS_IMETHODIMP
 TextFrame::FindTextRuns(nsLineLayout&  aLineLayout,
                         nsIReflowCommand* aReflowCommand)
@@ -1217,6 +1202,7 @@ TextFrame::FindTextRuns(nsLineLayout&  aLineLayout,
   }
   return NS_OK;
 }
+#endif
 
 //---------------------------------------------------
 // Uses a binary search for find where the cursor falls in the line of text
@@ -1351,9 +1337,10 @@ TextFrame::GetPosition(nsIPresContext& aCX,
 }
 
 NS_IMETHODIMP
-TextFrame::InlineReflow(nsLineLayout&     aLineLayout,
-                        nsHTMLReflowMetrics& aMetrics,
-                        const nsHTMLReflowState& aReflowState)
+TextFrame::Reflow(nsIPresContext& aPresContext,
+                  nsHTMLReflowMetrics& aMetrics,
+                  const nsHTMLReflowState& aReflowState,
+                  nsReflowStatus& aStatus)
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter TextFrame::Reflow: aMaxSize=%d,%d",
@@ -1382,28 +1369,28 @@ TextFrame::InlineReflow(nsLineLayout&     aLineLayout,
   const nsStyleText* text =
     (const nsStyleText*)mStyleContext->GetStyleData(eStyleStruct_Text);
 
-  nsInlineReflowStatus rs;
+  NS_ASSERTION(nsnull != aReflowState.lineLayout, "no line layout");
   if (NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace) {
     // Use a specialized routine for pre-formatted text
-    rs = ReflowPre(aLineLayout, aMetrics, aReflowState,
-                   *font, startingOffset);
+    aStatus = ReflowPre(*aReflowState.lineLayout, aMetrics, aReflowState,
+                        *font, startingOffset);
   } else {
     // Use normal wrapping routine for non-pre text (this includes
     // text that is not wrapping)
-    rs = ReflowNormal(aLineLayout, aMetrics, aReflowState,
-                      *font, *text, startingOffset);
+    aStatus = ReflowNormal(*aReflowState.lineLayout, aMetrics, aReflowState,
+                           *font, *text, startingOffset);
   }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("exit TextFrame::Reflow: rv=%x width=%d",
-      rs, aMetrics.width));
-  return rs;
+     ("exit TextFrame::Reflow: status=%x width=%d",
+      aStatus, aMetrics.width));
+  return NS_OK;
 }
 
 // Reflow normal text (stuff that doesn't have to deal with horizontal
 // tabs). Normal text reflow may or may not wrap depending on the
 // "whiteSpace" style property.
-nsInlineReflowStatus
+nsReflowStatus
 TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
                         nsHTMLReflowMetrics& aMetrics,
                         const nsHTMLReflowState& aReflowState,
@@ -1578,14 +1565,14 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
   return (cp == end) ? NS_FRAME_COMPLETE : NS_FRAME_NOT_COMPLETE;
 }
 
-nsInlineReflowStatus
+nsReflowStatus
 TextFrame::ReflowPre(nsLineLayout& aLineLayout,
                      nsHTMLReflowMetrics& aMetrics,
                      const nsHTMLReflowState& aReflowState,
                      const nsStyleFont& aFont,
                      PRInt32 aStartingOffset)
 {
-  nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
+  nsReflowStatus rs = NS_FRAME_COMPLETE;
 
   PRInt32 textLength;
   const PRUnichar* cp = GetText(mContent, textLength);

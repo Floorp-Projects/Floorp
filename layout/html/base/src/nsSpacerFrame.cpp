@@ -18,7 +18,6 @@
 #include "nsHTMLParts.h"
 #include "nsIHTMLContent.h"
 #include "nsFrame.h"
-#include "nsIInlineReflow.h"
 #include "nsLineLayout.h"
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
@@ -33,19 +32,19 @@
 #define TYPE_LINE  1            // line-break + vertical space
 #define TYPE_IMAGE 2            // acts like a sized image with nothing to see
 
-class SpacerFrame : public nsFrame, private nsIInlineReflow {
+class SpacerFrame : public nsFrame {
 public:
   SpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  // nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-
-  // nsIInlineReflow
+  // nsIHTMLReflow
+#if 0
   NS_IMETHOD FindTextRuns(nsLineLayout&     aLineLayout,
                           nsIReflowCommand* aReflowCommand);
-  NS_IMETHOD InlineReflow(nsLineLayout&            aLineLayout,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState);
+#endif
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
 
   PRUint8 GetType();
 
@@ -76,25 +75,12 @@ SpacerFrame::~SpacerFrame()
 }
 
 NS_IMETHODIMP
-SpacerFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
+SpacerFrame::Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aMetrics,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIInlineReflowIID)) {
-    *aInstancePtrResult = (void*) ((nsIInlineReflow*)this);
-    return NS_OK;
-  }
-  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
-}
-
-NS_IMETHODIMP
-SpacerFrame::InlineReflow(nsLineLayout&            aLineLayout,
-                          nsHTMLReflowMetrics&     aMetrics,
-                          const nsHTMLReflowState& aReflowState)
-{
-  nsresult rv = NS_FRAME_COMPLETE;
+  aStatus = NS_FRAME_COMPLETE;
 
   // By default, we have no area
   aMetrics.width = 0;
@@ -133,7 +119,7 @@ SpacerFrame::InlineReflow(nsLineLayout&            aLineLayout,
     NS_RELEASE(hc);
   }
 
-  float p2t = aLineLayout.mPresContext.GetPixelsToTwips();
+  float p2t = aPresContext.GetPixelsToTwips();
   switch (type) {
   case TYPE_WORD:
     if (0 != width) {
@@ -143,7 +129,7 @@ SpacerFrame::InlineReflow(nsLineLayout&            aLineLayout,
 
   case TYPE_LINE:
     if (0 != width) {
-      rv = NS_INLINE_LINE_BREAK_AFTER(0);
+      aStatus = NS_INLINE_LINE_BREAK_AFTER(0);
       aMetrics.height = NSIntPixelsToTwips(width, p2t);
       aMetrics.ascent = aMetrics.height;
     }
@@ -161,9 +147,10 @@ SpacerFrame::InlineReflow(nsLineLayout&            aLineLayout,
     aMetrics.maxElementSize->height = aMetrics.height;
   }
 
-  return rv;
+  return NS_OK;
 }
 
+#if 0
 NS_IMETHODIMP
 SpacerFrame::FindTextRuns(nsLineLayout&     aLineLayout,
                           nsIReflowCommand* aReflowCommand)
@@ -171,6 +158,7 @@ SpacerFrame::FindTextRuns(nsLineLayout&     aLineLayout,
   aLineLayout.EndTextRun();
   return NS_OK;
 }
+#endif
 
 PRUint8
 SpacerFrame::GetType()
