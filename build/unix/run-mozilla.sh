@@ -401,9 +401,6 @@ then
         fi
     fi
 fi
-# Font path for Xft
-FONTCONFIG_PATH="/etc/fonts:${MOZILLA_FIVE_HOME}/res/Xft"
-export FONTCONFIG_PATH
 
 if [ "$moz_debug" -eq 1 ]
 then
