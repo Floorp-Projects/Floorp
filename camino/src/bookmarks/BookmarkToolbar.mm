@@ -224,8 +224,9 @@ static const int kBMBarScanningStep = 5;
 #define kMinBookmarkButtonWidth          16.0
 #define kMaxBookmarkButtonWidth         150.0
 #define kBookmarkButtonHorizPadding       5.0
+#define kBookmarkToolbarTopPadding        2.0
 #define kBookmarkButtonVerticalPadding    1.0
-#define kBookmarkToolbarBottomPadding     1.0
+#define kBookmarkToolbarBottomPadding     2.0
 
 -(void)reflowButtonsStartingAtIndex: (int)aIndex
 {
@@ -236,7 +237,7 @@ static const int kBMBarScanningStep = 5;
   // to bottom right.
   float oldHeight = [self frame].size.height;
   int   count         = [mButtons count];
-  float curRowYOrigin = 0.0;
+  float curRowYOrigin = kBookmarkToolbarTopPadding;
   float curX          = kBookmarkButtonHorizPadding;
 
   for (int i = 0; i < count; i ++)
@@ -263,9 +264,11 @@ static const int kBMBarScanningStep = 5;
 
       if (NSMaxX(buttonRect) > NSWidth([self bounds]))
       {
+        // jump to the next line
+        curX = kBookmarkButtonHorizPadding;
         curRowYOrigin += (kBookmarkButtonHeight + 2 * kBookmarkButtonVerticalPadding);
-        buttonRect = NSMakeRect(kBookmarkButtonHorizPadding, curRowYOrigin + kBookmarkButtonVerticalPadding, width, kBookmarkButtonHeight);
-        curX = NSWidth(buttonRect);
+        buttonRect = NSMakeRect(curX, curRowYOrigin + kBookmarkButtonVerticalPadding, width, kBookmarkButtonHeight);
+        curX += NSWidth(buttonRect) + kBookmarkButtonHorizPadding;
       }
 
       [button setFrame: buttonRect];
