@@ -184,63 +184,6 @@ nsresult nsTableOuterFrame::RecoverState(OuterTableReflowState& aReflowState,
   return NS_OK;
 }
 
-nsresult nsTableOuterFrame::AdjustSiblingsAfterReflow(nsIPresContext&        aPresContext,
-                                                      OuterTableReflowState& aReflowState,
-                                                      nsIFrame*              aKidFrame,
-                                                      nscoord                aDeltaY)
-{
-  // XXX: this is now dead code
-  nsIFrame* lastKidFrame = aKidFrame;
-
-  if (aDeltaY != 0) {
-    // Move the frames that follow aKidFrame by aDeltaY
-    nsIFrame* kidFrame;
-
-    aKidFrame->GetNextSibling(kidFrame);
-    while (nsnull != kidFrame) {
-      nsPoint origin;
-  
-      // XXX We can't just slide the child if it has a next-in-flow
-      kidFrame->GetOrigin(origin);
-      origin.y += aDeltaY;
-  
-      // XXX We need to send move notifications to the frame...
-      nsIHTMLReflow*  htmlReflow;
-      if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-        htmlReflow->WillReflow(aPresContext);
-      }
-      kidFrame->MoveTo(origin.x, origin.y);
-
-      // Get the next frame
-      lastKidFrame = kidFrame;
-      kidFrame->GetNextSibling(kidFrame);
-    }
-
-  } else {
-    // Get the last frame
-    lastKidFrame = LastFrame(mFirstChild);
-  }
-
-  // Update our running y-offset to reflect the bottommost child
-  nsRect  rect;
-
-  lastKidFrame->GetRect(rect);
-  aReflowState.y = rect.YMost();
-
-  // Get the bottom margin for the last child frame
-  const nsStyleSpacing* kidSpacing;
-  lastKidFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)kidSpacing);
-  nsMargin margin;
-  kidSpacing->CalcMarginFor(lastKidFrame, margin);
-  if (margin.bottom < 0) {
-    aReflowState.prevMaxNegBottomMargin = -margin.bottom;
-  } else {
-    aReflowState.prevMaxPosBottomMargin = margin.bottom;
-  }
-
-  return NS_OK;
-}
-
 nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext&        aPresContext,
                                               nsHTMLReflowMetrics&   aDesiredSize,
                                               OuterTableReflowState& aReflowState,
@@ -369,7 +312,7 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
     if (PR_TRUE==gsDebugIR) printf("inner table needs resize reflow.\n");
     // Compute the width to use for the table. In the case of an auto sizing
     // table this represents the maximum available width
-    nscoord tableWidth = GetTableWidth(aReflowState.reflowState);
+    nscoord tableWidth = ComputeAvailableTableWidth(aReflowState.reflowState);
 
     // If the caption max element size is larger, then use it instead.
     // XXX: caption align = left|right ignored here!
@@ -836,10 +779,8 @@ nsresult  nsTableOuterFrame::SizeAndPlaceChildren(const nsSize &         aInnerS
   return rv;
 }
 
-/**
- * Called by the Reflow() member function to compute the table width
- */
-nscoord nsTableOuterFrame::GetTableWidth(const nsHTMLReflowState& aReflowState)
+/* computes the table width */
+nscoord nsTableOuterFrame::ComputeAvailableTableWidth(const nsHTMLReflowState& aReflowState)
 {
   nscoord maxWidth;
 
@@ -973,7 +914,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
 
     // Compute the width to use for the table. In the case of an auto sizing
     // table this represents the maximum available width
-    nscoord tableWidth = GetTableWidth(aReflowState);
+    nscoord tableWidth = ComputeAvailableTableWidth(aReflowState);
 
     // If the caption max element size is larger, then use it instead.
     // XXX: caption align = left|right ignored here!
@@ -1116,10 +1057,9 @@ void nsTableOuterFrame::PlaceChild( OuterTableReflowState& aReflowState,
     aReflowState.availSize.height -= aKidRect.height;
   }
 
-  /* Update the maximum element size, which is the sum of:
+  /* Update the maximum element size, which is the max of:
    *   the maxElementSize of our first row
-   *   plus the maxElementSize of the top caption if we include it
-   *   plus the maxElementSize of the bottom caption if we include it
+   *   or the maxElementSize of the caption if we include it
    */
   if (aKidFrame == mCaptionFrame)
   {
