@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.289 $ ';
+$::UtilsVersion = '$Revision: 1.290 $ ';
 
 package TinderUtils;
 
@@ -1573,8 +1573,13 @@ sub run_all_tests {
     #
     unlink("$binary_dir/components/compreg.dat") or warn "$binary_dir/components/compreg.dat not removed\n";
     if($Settings::RegxpcomTest) {
-#        AliveTest("regxpcom", $build_dir, ["$binary_dir/regxpcom"],
-        AliveTest("regxpcom", $build_dir, [$binary, "-register"],
+        my $args;
+        if ($Settings::ProductName =~ /^(Firefox|Thunderbird)$/) {
+            $args = [$binary, "-register"];
+        } else {
+            $args = ["$binary_dir/regxpcom"];
+        }
+        AliveTest("regxpcom", $build_dir, $args,
                   $Settings::RegxpcomTestTimeout);
     }
 
