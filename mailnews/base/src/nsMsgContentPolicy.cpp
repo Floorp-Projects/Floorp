@@ -51,6 +51,8 @@
 #include "nsIMsgWindow.h"
 #include "nsIMimeMiscStatus.h"
 #include "nsIMsgMessageService.h"
+#include "nsIMsgIncomingServer.h"
+#include "nsIRssIncomingServer.h"
 #include "nsIMsgHdr.h"
 #include "nsMsgUtils.h"
 
@@ -148,7 +150,7 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
       // as the anonymous password
       *aDecision = nsIContentPolicy::REJECT_REQUEST;
     }
-    else // check for http and https urls...block those if necessary
+    else 
     {
       PRBool needToCheck = PR_FALSE;
       rv = aContentLocation->SchemeIs("http", &needToCheck);
@@ -159,12 +161,20 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
         NS_ENSURE_SUCCESS(rv,rv);
       }
 
-      if (needToCheck) // http or https ? 
+      // Consider blocking remote image requests if the image url is http or https
+      if (needToCheck) 
       {
-        // check the 'disable remote images pref' and block the image if appropriate
-        *aDecision = mBlockRemoteImages ? nsIContentPolicy::REJECT_REQUEST  :
-                                          nsIContentPolicy::ACCEPT;
+        // default to blocking remote content 
+        *aDecision = mBlockRemoteImages ? nsIContentPolicy::REJECT_REQUEST : nsIContentPolicy::ACCEPT;
 
+        // now do some more detective work to better refine our decision...
+        // (1) examine the msg hdr value for the remote content policy on this particular message to
+        //     see if this particular message has special rights to bypass the remote content check
+        // (2) special case RSS urls, always allow them to load remote images since the user explicitly
+        //     subscribed to the feed.
+        // (3) Eventually, check the personal address book and use it as a white list for senders 
+        //     who are allowed to send remote images (NOT IMPLEMENTED YET)
+        
         // get the msg hdr for the message URI we are actually loading
         NS_ENSURE_TRUE(aRequestingLocation, NS_OK);
         nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(aRequestingLocation, &rv);
@@ -173,9 +183,8 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
         nsXPIDLCString resourceURI;
         msgUrl->GetUri(getter_Copies(resourceURI));
         
-        // now get the msg service for this URI
+        // get the msg service for this URI
         nsCOMPtr<nsIMsgMessageService> msgService;
-
         rv = GetMessageServiceFromURI(resourceURI.get(), getter_AddRefs(msgService));
         NS_ENSURE_SUCCESS(rv, rv);
         
@@ -183,19 +192,27 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
         msgService->MessageURIToMsgHdr(resourceURI, getter_AddRefs(msgHdr));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        // first, get the hasRemoteContent property
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aRequestingLocation, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // Case #1, check the db hdr for the remote content policy on this particular message
         PRUint32 remoteContentPolicy = kNoRemoteContentPolicy;
         msgHdr->GetUint32Property("remoteContentPolicy", &remoteContentPolicy); 
 
-        if (!remoteContentPolicy) // kNoRemoteContentPolicy means we have never set a value on the message
-           msgHdr->SetUint32Property("remoteContentPolicy", kBlockRemoteContent); // this message contains blocked remote content
-
-        if (remoteContentPolicy != kAllowRemoteContent && mBlockRemoteImages) 
-        {
-          // now we need to call out the msg sink informing it that this message has remote content
-          nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aRequestingLocation, &rv);
-          NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        mailnewsUrl->GetServer(getter_AddRefs(server));
+        nsCOMPtr<nsIRssIncomingServer> rssServer = do_QueryInterface(server);
         
+        // Case #1 and #2: special case RSS. Allow urls that are RSS feeds to show remote image (Bug #250246)
+        // Honor the message specific remote content policy
+        if (rssServer || remoteContentPolicy == kAllowRemoteContent)
+          *aDecision = nsIContentPolicy::ACCEPT;
+        else if (mBlockRemoteImages) 
+        {
+          if (!remoteContentPolicy) // kNoRemoteContentPolicy means we have never set a value on the message
+            msgHdr->SetUint32Property("remoteContentPolicy", kBlockRemoteContent); 
+            
+          // now we need to call out the msg sink informing it that this message has remote content      
           nsCOMPtr<nsIMsgWindow> msgWindow;
           rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
           NS_ENSURE_SUCCESS(rv, rv);
@@ -205,15 +222,10 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
           NS_ENSURE_SUCCESS(rv, rv);
 
           msgHdrSink->OnMsgHasRemoteContent(msgHdr); // notify the UI to show the remote content hdr bar so the user can overide
-        }
-        else if (remoteContentPolicy == kAllowRemoteContent)
-        {
-          // user wants to see the remote content for this mesage
-          *aDecision = nsIContentPolicy::ACCEPT;
-        }
-      }
+        } // if mBlockRemoteImages
+      } // if need to check the url for a remote image policy
     }
-  }
+  } // if aContentType == nsIContentPolicy::TYPE_IMAGE
 
   return rv;
 }
