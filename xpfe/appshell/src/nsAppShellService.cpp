@@ -582,6 +582,19 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
       zlevel = nsIXULWindow::raisedZ;
     else if (aChromeMask & nsIWebBrowserChrome::windowLowered)
       zlevel = nsIXULWindow::loweredZ;
+#ifdef XP_MAC
+    /* Platforms on which modal windows are always application-modal, not
+       window-modal (that's just the Mac, right) want modal windows to
+       be stacked on top of everyone else. */
+    zlevel = nsIXULWindow::highestZ;
+#else
+    /* Platforms with native support for dependent windows (that's everyone
+       but the Mac, right?) know how to stack dependent windows. On these
+       platforms, give the dependent window the same level as its parent,
+       so we won't try to override the normal platform behaviour. */
+    if ((aChromeMask & nsIWebBrowserChrome::dependent) && aParent)
+      aParent->GetZlevel(&zlevel);
+#endif
 
     if (aInitialWidth == NS_SIZETOCONTENT ||
         aInitialHeight == NS_SIZETOCONTENT) {
