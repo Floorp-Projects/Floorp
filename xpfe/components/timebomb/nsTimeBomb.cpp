@@ -108,7 +108,9 @@ nsTimeBomb::Init()
 
     rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), getter_AddRefs(mPrefs));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs");
-	
+	if (NS_FAILED(rv))
+        return NS_OK;
+
     PRTime time = LL_Zero();
     rv = GetFirstLaunch(&time);
     if (NS_FAILED(rv))
