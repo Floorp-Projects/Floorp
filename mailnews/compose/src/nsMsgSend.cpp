@@ -1751,7 +1751,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
   while (token && *token) 
   {
     str = token;
-    str.StripWhitespace();
+    str.Trim(" \t", PR_TRUE, PR_TRUE); // trim leading and trailing white spaces
     
     if (!str.IsEmpty()) 
     {
