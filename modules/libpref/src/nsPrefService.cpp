@@ -468,7 +468,9 @@ static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
      }
  #endif
   if (NS_SUCCEEDED(rv)) {
-    if (PREF_EvaluateConfigScript(readBuf, amtRead, nsnull, aIsGlobalContext, PR_TRUE,
+    nsCAutoString leafName;
+    aFile->GetNativeLeafName(leafName);
+    if (PREF_EvaluateConfigScript(readBuf, amtRead, leafName.get(), aIsGlobalContext, PR_TRUE,
                                    aSkipFirstLine))
       gErrorOpeningUserPrefs = PR_FALSE;
     else
