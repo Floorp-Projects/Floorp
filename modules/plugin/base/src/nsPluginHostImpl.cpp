@@ -57,8 +57,6 @@
 #include "nsIScriptablePlugin.h"
 #include "nsICachingChannel.h"
 
-#include "nsIJVMPlugin.h"
-
 // Friggin' X11 has to "#define None". Lame!
 #ifdef None
 #undef None
