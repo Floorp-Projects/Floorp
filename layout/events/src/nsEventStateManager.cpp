@@ -286,7 +286,7 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext& aPresContext, nsGUI
     if ( devContext ) {
       float pixelsToTwips = 0.0;
       devContext->GetDevUnitsToTwips(pixelsToTwips);
-      twipDeltaToStartDrag =  pixelDeltaToStartDrag * pixelsToTwips;
+      twipDeltaToStartDrag =  (long)(pixelDeltaToStartDrag * pixelsToTwips);
     }
  
     // fire drag gesture if mouse has moved enough
@@ -357,14 +357,18 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
             current = parent;
           }
           
+          PRBool focusChangeFailed = PR_TRUE;
           if (focusable) {
             nsCOMPtr<nsIContent> content = do_QueryInterface(focusable);
-            if (!ChangeFocus(content, PR_TRUE)) {
-              if (nsnull != aEvent->widget) {
-                aEvent->widget->SetFocus();
-              }
-              SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+            if (ChangeFocus(content, PR_TRUE))
+              focusChangeFailed = PR_FALSE;
+          }
+
+          if (focusChangeFailed) {
+            if (nsnull != aEvent->widget) {
+              aEvent->widget->SetFocus();
             }
+            SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
           }
         }
 
