@@ -44,7 +44,6 @@
 #define VIEWER_DUMP_STYLE_SHEETS    40025
 #define VIEWER_DUMP_STYLE_CONTEXTS  40026
 #define VIEWER_DEBUGROBOT           40027
-#define VIEWER_DEBUGROBOT_UPDATE    40028
 
 // Note: must be in ascending sequential order
 #define VIEWER_ONE_COLUMN       40031
@@ -58,5 +57,13 @@
 #define VIEWER_EDIT_PASTE       40203
 #define VIEWER_EDIT_SELECTALL   40204
 #define VIEWER_EDIT_FINDINPAGE  40205
+
+/* Debug Robot dialog setup */
+
+#define IDD_DEBUGROBOT          101
+#define IDC_UPDATE_DISPLAY      40301
+#define IDC_VERIFICATION_DIRECTORY 40302
+#define IDC_PAGE_LOADS          40303
+#define IDC_STATIC              -1
 
 #endif /* resources_h___ */

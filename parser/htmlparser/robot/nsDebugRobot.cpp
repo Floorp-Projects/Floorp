@@ -37,6 +37,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD ProcessLink(const nsString& aURLSpec);
+  NS_IMETHOD VerifyDirectory (const char * verify_dir);
     
 };
 
@@ -47,6 +48,11 @@ static int g_iMaxProcess = 5000;
 static PRBool g_bHitTop;
 
 NS_IMPL_ISUPPORTS(RobotSinkObserver, kIRobotSinkObserverIID);
+
+NS_IMETHODIMP RobotSinkObserver::VerifyDirectory(const char * verify_dir)
+{
+   return NS_OK;
+}
 
 NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
 {
@@ -92,16 +98,25 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
+extern "C" NS_EXPORT void SetVerificationDirectory(char * verify_dir);
 
-extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList, nsIWebWidget * ww)
+//----------------------------------------------------------------------
+extern "C" NS_EXPORT int DebugRobot(
+   nsVoidArray * workList, 
+   nsIWebWidget * ww, 
+   int iMaxLoads, 
+   char * verify_dir,
+   void (*yieldProc )(const char *)
+   )
 {
   if (nsnull==workList)
      return -1;
+  g_iMaxProcess = iMaxLoads;
   g_iProcessed = 0;
   g_bHitTop = PR_FALSE;
   g_duplicateList = new nsVoidArray();
   RobotSinkObserver* myObserver = new RobotSinkObserver();
+  SetVerificationDirectory(verify_dir);
   NS_ADDREF(myObserver);
   g_workList = workList;
 
@@ -142,6 +157,8 @@ extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList, nsIWebWidget * ww)
 
     parser->SetContentSink(sink);
     parser->Parse(url);
+    if (yieldProc != NULL)
+       (*yieldProc)(url->GetSpec());
     if (ww)
        ww->LoadURL(url->GetSpec());
     NS_RELEASE(sink);
