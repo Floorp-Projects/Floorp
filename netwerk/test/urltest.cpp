@@ -38,17 +38,15 @@ int writeout(const char* i_pURL)
     if (i_pURL)
     {
 	    cout << "Analyzing " << i_pURL << endl;
-	    nsCOMPtr<nsIURI> pURL;
 
+	    nsCOMPtr<nsIURI> pURL;
         nsresult result = NS_OK;
+
         NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
         if (NS_FAILED(result)) return result;
 
-        if (!pService)
-            return -1;
-	    pService->NewURI(i_pURL, nsnull, getter_AddRefs(pURL));
-
-	    if (pURL)
+	    result = pService->NewURI(i_pURL, nsnull, getter_AddRefs(pURL));
+	    if (NS_SUCCEEDED(result))
 	    {
 		    char* temp;
 		    PRInt32 port;
@@ -62,17 +60,17 @@ int writeout(const char* i_pURL)
 		    cout << port << ',';
 		    pURL->GetPath(&temp);
 		    cout << (temp ? temp : "") << endl;
+            nsCRT::free(temp);
 	    } else {
 		    cout << "Can not create URL" << endl; 
 	    }
-        return 0;
+        return NS_OK;
     }
     return -1;
 }
 
 nsresult testURL(const char* i_pURL)
 {
-	nsresult result = NS_OK;
     const int tests = 8;
 
 	/* 
