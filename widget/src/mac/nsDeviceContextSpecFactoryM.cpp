@@ -27,6 +27,7 @@
  */
 nsDeviceContextSpecFactoryMac :: nsDeviceContextSpecFactoryMac()
 {
+	 NS_INIT_REFCNT();
 }
 
 /** -------------------------------------------------------
