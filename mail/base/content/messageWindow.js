@@ -551,6 +551,11 @@ function GetLoadedMsgFolder()
     return null;
 }
 
+function GetSelectedFolderURI()
+{
+  return gCurrentFolderUri;
+}
+
 function GetLoadedMessage()
 {
   return gCurrentMessageUri;
