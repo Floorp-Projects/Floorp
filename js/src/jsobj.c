@@ -411,11 +411,11 @@ JSBool
 js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 		jsval *rval)
 {
+    JSBool ok, outermost;
     JSHashEntry *he;
     JSIdArray *ida;
     jschar *chars, *ochars, *vchars, *vsharp;
     size_t nchars, vlength, vsharplength;
-    JSBool ok;
     char *comma;
     jsint i, j, length, valcnt;
     jsid id;
@@ -428,6 +428,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 #endif
     JSString *idstr, *valstr, *str;
 
+    outermost = (cx->sharpObjectMap.depth == 0);
     he = js_EnterSharpObject(cx, obj, &ida, &chars);
     if (!he)
 	return JS_FALSE;
@@ -446,13 +447,14 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JS_ASSERT(ida);
     ok = JS_TRUE;
 
-    /* Allocate 2 + 1 for "{}" and the terminator. */
+    /* Allocate 4 + 1 for "({})" and the terminator. */
     if (!chars) {
-	chars = malloc((2 + 1) * sizeof(jschar));
+	chars = malloc((4 + 1) * sizeof(jschar));
 	nchars = 0;
 	if (!chars)
 	    goto error;
     } else {
+	JS_ASSERT(!outermost);
 	MAKE_SHARP(he);
 	nchars = js_strlen(chars);
 	chars = realloc((ochars = chars), (nchars + 2 + 1) * sizeof(jschar));
@@ -461,6 +463,9 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	    goto error;
 	}
     }
+
+    if (outermost)
+	chars[nchars++] = '(';
     chars[nchars++] = '{';
 
     comma = NULL;
@@ -567,7 +572,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                              (gsop[j] ? 1 + gsop[j]->length : 0) +
 #endif
                              vsharplength + vlength +
-                             1 + 1) * sizeof(jschar));
+                             (outermost ? 2 : 1) + 1) * sizeof(jschar));
             if (!chars) {
                 /* Save code space on error: let JS_free ignore null vsharp. */
                 JS_free(cx, vsharp);
@@ -604,10 +609,10 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
     }
 
-    if (chars) {
-	chars[nchars++] = '}';
-	chars[nchars] = 0;
-    }
+    chars[nchars++] = '}';
+    if (outermost)
+	chars[nchars++] = ')';
+    chars[nchars] = 0;
 
 error:
     js_LeaveSharpObject(cx, &ida);
