@@ -43,8 +43,11 @@ function penroot()
 	this.OpenWindows = new Array();
 
    // global calendar
-   this.gCalendarEventDataSource = new CalendarEventDataSource( null, "/home/mikep" );
-   
+   var dirServiceProvider = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIDirectoryServiceProvider);   
+   var persistent = new Object();
+   var homeDir = dirServiceProvider.getFile("Home", persistent);
+
+   this.gCalendarEventDataSource = new CalendarEventDataSource( null, homeDir.unicodePath );
 }
 
 penroot.prototype.getAppNum = function (AppName)
