@@ -227,7 +227,7 @@ $uname</td>
     puts "[llength $checkinlist] checkins."
 
     set mailaddr [join $peoplelist ","]
-    append mailaddr "?subject=Build%20Problem"
+    append mailaddr "?subject=Hook%3a%20Build%20Problem"
     if {[info exists treeinfo($treeid,cchookmail)]} {
         append mailaddr "&cc=$treeinfo($treeid,cchookmail)"
     }
