@@ -78,45 +78,39 @@ nsTreeIndentationFrame::Reflow(nsIPresContext*          aPresContext,
   aMetrics.descent = 0;
 
   // Compute our width based on the depth of our node within the content model
-  if (!mHaveComputedWidth)
-  {
+  if (!mHaveComputedWidth) {
     mWidth = 0;
 	  nscoord level = 0;
 	  
 	  // First climb out to the tree item level.
 	  nsIFrame* aFrame = this;
-	  nsCOMPtr<nsIContent> pContent;
-	  aFrame->GetContent(getter_AddRefs(pContent));
-	  nsCOMPtr<nsIAtom> pTag;
-	  pContent->GetTag(*getter_AddRefs(pTag));
-	  if (pTag)
-	  {
-		  while (aFrame && pTag && pTag.get() != nsXULAtoms::treeitem)
-		  {
-			  aFrame->GetParent(&aFrame);
-			  
-			  // nsCOMPtr correctly handles releasing the old |pContent| and |pTag|
-			  aFrame->GetContent(getter_AddRefs(pContent));
-			  pContent->GetTag(*getter_AddRefs(pTag));
-		  }
+	  nsCOMPtr<nsIContent> content;
+	  aFrame->GetContent(getter_AddRefs(content));
+	  nsCOMPtr<nsIAtom> tag;
+	  content->GetTag(*getter_AddRefs(tag));
+		while (aFrame && tag && tag.get() != nsXULAtoms::treeitem) {
+			aFrame->GetParent(&aFrame);
+			
+			// nsCOMPtr correctly handles releasing the old |content| and |tag|
+			aFrame->GetContent(getter_AddRefs(content));
+			content->GetTag(*getter_AddRefs(tag));
+		}
 
-		  // We now have a tree row content node. Start counting our level of nesting.
-		  nsCOMPtr<nsIContent> pParentContent;
-		  while (pTag.get() != nsXULAtoms::tree && pTag.get() != nsXULAtoms::treehead)
-		  {
-			  pContent->GetParent(*getter_AddRefs(pParentContent));
+		// We now have a tree row content node. Start counting our level of nesting.
+		nsCOMPtr<nsIContent> parentContent;
+		while (tag.get() != nsXULAtoms::tree && tag.get() != nsXULAtoms::treehead) {
+			content->GetParent(*getter_AddRefs(parentContent));
 
-			  pParentContent->GetTag(*getter_AddRefs(pTag));
-			  pContent = pParentContent;
-			  
-			  ++level;
-		  }
+			parentContent->GetTag(*getter_AddRefs(tag));
+			content = parentContent;
+			
+			++level;
+		}
 
-		  level = (level/2) - 1;
-      if (level < 0) level = 0;
+		level = (level/2) - 1;
+    if (level < 0) level = 0;
 
-		  mWidth = level*16; // Hardcode an indentation of 16 pixels for now. TODO: Make this a parameter or something
-	  }
+		mWidth = level*16; // Hardcode an indentation of 16 pixels for now. TODO: Make this a parameter or something
   }
 
   float p2t;

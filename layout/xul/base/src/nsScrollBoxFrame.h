@@ -100,6 +100,7 @@ public:
   NS_IMETHOD GetMargin(nsMargin& aMargin);
 
   virtual nsresult GetContentOf(nsIContent** aContent);
+  
 
 protected:
   nsScrollBoxFrame(nsIPresShell* aShell);

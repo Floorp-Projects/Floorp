@@ -110,11 +110,8 @@ public:
   NS_IMETHOD_(void) Notify(nsITimer *timer) ;
 #endif
   
-  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
-  {
-    NeedsRecalc();
-    return nsXULTreeGroupFrame::GetPrefSize(aBoxLayoutState, aSize);
-  };
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD NeedsRecalc();
 
   NS_IMETHOD Paint(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer);
@@ -133,8 +130,10 @@ public:
   void RegenerateRowGroupInfo(PRInt32 aOnscreenCount);
   
   void SetRowHeight(PRInt32 aRowHeight);
-  PRBool IsFixedRowSize();
 
+  // returns -1 if not fixed
+  PRInt32 GetFixedRowSize();
+  
   nscoord GetYPosition();
   nscoord GetAvailableHeight();
   NS_IMETHOD GetNumberOfVisibleRows(PRInt32 *aResult) {
@@ -153,6 +152,8 @@ public:
   NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex);
   NS_IMETHOD ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex);
   NS_IMETHOD VisibilityChanged(PRBool aVisible);
+
+  void GetTreeContent(nsIContent** aResult);
 
   void VerticalScroll(PRInt32 aDelta);
 
@@ -194,6 +195,11 @@ public:
 
   PRBool IsBatching() const { return mBatchCount > 0; };
 
+  NS_IMETHOD
+  SizeTo(nsIPresContext* aPresContext, nscoord aWidth, nscoord aHeight);
+
+  nscoord ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState);
+
 protected:
 
   nsScrollSmoother* GetSmoother();
@@ -233,8 +239,13 @@ protected:
   PRInt32 mYPosition;
   nsScrollSmoother* mScrollSmoother;
   PRInt32 mTimePerRow;
+
+  nsCOMPtr<nsIAtom> mTreeItemTag;
+  nsCOMPtr<nsIAtom> mTreeRowTag;
+  nsCOMPtr<nsIAtom> mTreeChildrenTag;
+
+  nscoord mStringWidth;
+
 }; // class nsXULTreeOuterGroupFrame
 
-
 #endif
-

@@ -85,7 +85,7 @@ nsButtonBoxFrame::HandleEvent(nsIPresContext* aPresContext,
     case NS_KEY_PRESS:
       if (NS_KEY_EVENT == aEvent->eventStructType) {
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-        if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
+        if (NS_VK_SPACE == keyEvent->charCode || NS_VK_RETURN == keyEvent->charCode) {
           MouseClicked(aPresContext, aEvent);
         }
       }

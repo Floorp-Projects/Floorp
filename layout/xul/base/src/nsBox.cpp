@@ -1234,6 +1234,43 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         }
     }
 
+    nsCOMPtr<nsIContent> content;
+    frame->GetContent(getter_AddRefs(content));
+
+    if (content) {
+        nsIPresContext* presContext = aState.GetPresContext();
+
+        nsAutoString value;
+        PRInt32 error;
+
+        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::minwidth, value))
+        {
+            float p2t;
+            presContext->GetScaledPixelsToTwips(&p2t);
+
+            value.Trim("%");
+
+            nscoord val = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+            if (val > aSize.width)
+              aSize.width = val;
+            widthSet = PR_TRUE;
+        }
+
+        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::minheight, value))
+        {
+            float p2t;
+            presContext->GetScaledPixelsToTwips(&p2t);
+
+            value.Trim("%");
+
+            nscoord val = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+            if (val > aSize.height)
+              aSize.height = val;
+
+            heightSet = PR_TRUE;
+        }
+    }
+
     return (widthSet && heightSet);
 }
 

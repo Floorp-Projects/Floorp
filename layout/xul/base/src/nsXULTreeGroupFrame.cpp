@@ -37,6 +37,8 @@
 #include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsXULTreeOuterGroupFrame.h"
+#include "nsIDocument.h"
+#include "nsIBindingManager.h"
 
 
 //
@@ -268,11 +270,26 @@ nsXULTreeGroupFrame::GetFirstTreeBox(PRBool* aCreated)
   // we're using that content node to make our frame.
   // Otherwise we have nothing, and we should just try to grab the first child.
   if (!startContent) {
+    nsCOMPtr<nsIContent> content(mContent);
+    nsCOMPtr<nsIContent> bindingParent;
+    mContent->GetBindingParent(getter_AddRefs(bindingParent));
+    if (bindingParent) {
+      nsCOMPtr<nsIDocument> doc;
+      bindingParent->GetDocument(*getter_AddRefs(doc));
+      nsCOMPtr<nsIBindingManager> bindingManager;
+      doc->GetBindingManager(getter_AddRefs(bindingManager));
+      nsCOMPtr<nsIAtom> tag;
+      PRInt32 namespaceID;
+      bindingManager->ResolveTag(bindingParent, &namespaceID, getter_AddRefs(tag));
+      if (tag.get() == nsXULAtoms::tree)
+        content = bindingParent;
+    }
+
     PRInt32 childCount;
-    mContent->ChildCount(childCount);
+    content->ChildCount(childCount);
     nsCOMPtr<nsIContent> childContent;
     if (childCount > 0) {
-      mContent->ChildAt(0, *getter_AddRefs(childContent));
+      content->ChildAt(0, *getter_AddRefs(childContent));
       startContent = childContent;
     }
   }
@@ -352,13 +369,14 @@ nsXULTreeGroupFrame::GetNextTreeBox(nsIBox* aBox, PRBool* aCreated)
     nsCOMPtr<nsIContent> prevContent;
     frame->GetContent(getter_AddRefs(prevContent));
     nsCOMPtr<nsIContent> parentContent;
-    mContent->IndexOf(prevContent, i);
-    mContent->ChildCount(childCount);
+    prevContent->GetParent(*getter_AddRefs(parentContent));
+    parentContent->IndexOf(prevContent, i);
+    parentContent->ChildCount(childCount);
     if (i+1 < childCount) {
       
       // There is a content node that wants a frame.
       nsCOMPtr<nsIContent> nextContent;
-      mContent->ChildAt(i+1, *getter_AddRefs(nextContent));
+      parentContent->ChildAt(i+1, *getter_AddRefs(nextContent));
       nsIFrame* prevFrame = nsnull; // Default is to append
       PRBool isAppend = PR_TRUE;
       if (mLinkupFrame) {
