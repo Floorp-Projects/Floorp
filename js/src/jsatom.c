@@ -59,7 +59,6 @@ char   js_Object_str[]            = "Object";
 char   js_anonymous_str[]         = "anonymous";
 char   js_arguments_str[]         = "arguments";
 char   js_arity_str[]             = "arity";
-char   js_assign_str[]            = "assign";
 char   js_callee_str[]            = "callee";
 char   js_caller_str[]            = "caller";
 char   js_class_prototype_str[]   = "prototype";
@@ -222,7 +221,6 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
     FROB(anonymousAtom,           js_anonymous_str);
     FROB(argumentsAtom,           js_arguments_str);
     FROB(arityAtom,               js_arity_str);
-    FROB(assignAtom,              js_assign_str);
     FROB(calleeAtom,              js_callee_str);
     FROB(callerAtom,              js_caller_str);
     FROB(classPrototypeAtom,      js_class_prototype_str);
