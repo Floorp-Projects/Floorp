@@ -903,7 +903,7 @@ function MailCheckBeforeOfflineChange()
 
 function MsgSettingsOffline()
 {
-    window.parent.MsgAccountManager();
+    window.parent.MsgAccountManager('am-offline.xul');
 }
 
 // Init PrefsService

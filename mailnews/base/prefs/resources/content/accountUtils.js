@@ -132,7 +132,11 @@ function msgOpenAccountWizard()
 
 }
 
-function MsgAccountManager()
+// selectPage: the xul file name for the viewing page, 
+// null for the account main page, other pages are
+// 'am-server.xul', 'am-copies.xul', 'am-offline.xul', 
+// 'am-addressing.xul','am-advanced.xul', 'am-smtp.xul'
+function MsgAccountManager(selectPage)
 {
     var server;
     try {
@@ -142,5 +146,5 @@ function MsgAccountManager()
     
     window.openDialog("chrome://messenger/content/AccountManager.xul",
                       "AccountManager", "chrome,modal,titlebar,resizable",
-                      { server: server });
+                      { server: server, selectPage: selectPage });
 }

@@ -94,8 +94,11 @@ function onLoad() {
   gPrefsBundle = document.getElementById("bundle_prefs");
 
   var selectedServer;
-  if (window.arguments && window.arguments[0])
+  var selectPage = null;
+  if (window.arguments && window.arguments[0]) {
     selectedServer = window.arguments[0].server;
+    selectPage = window.arguments[0].selectPage;
+  }
 
   accountArray = new Array;
   RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
@@ -119,7 +122,7 @@ function onLoad() {
   setDefaultButton = document.getElementById("setDefaultButton");
 
   sortAccountList(accounttree);
-  selectServer(selectedServer)
+  selectServer(selectedServer, selectPage);
 }
 
 function sortAccountList(accounttree)
@@ -129,12 +132,15 @@ function sortAccountList(accounttree)
   xulSortService.Sort(accounttree, 'http://home.netscape.com/NC-rdf#FolderTreeName?sort=true', 'ascending');
 }
 
-function selectServer(server)
+function selectServer(server, selectPage)
 {
   var selectedItem;
 
-  if (server)
+  if (server) {
     selectedItem = document.getElementById(server.serverURI);
+    if (selectedItem && selectPage) 
+      selectedItem = findSelectPage(selectedItem, selectPage);
+  }
 
   if (!selectedItem)
     selectedItem = getFirstAccount();
@@ -145,6 +151,26 @@ function selectServer(server)
   if (result) {
     updateButtons(accounttree,result.serverId);
   }
+}
+
+function findSelectPage(selectServer, selectPage)
+{
+  var children = selectServer.childNodes;
+  for (i=0; i < children.length; i++) 
+  { 
+    if (children[i].localName == "treechildren") {
+      var pageNodes = children[i].childNodes;
+      for (j=0; j < pageNodes.length; j++) {
+        if (pageNodes[j].localName == "treeitem") {          
+          var page = pageNodes[j].getAttribute('PageTag');
+          if (page == selectPage) {
+            return pageNodes[j];
+          }
+        }
+      }
+    }
+  }
+  return null;
 }
 
 function getFirstAccount()

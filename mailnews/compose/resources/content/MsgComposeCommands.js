@@ -435,7 +435,7 @@ var defaultController =
       case "cmd_print"              : DoCommandPrint();                                                        break;
 
       //Edit Menu
-      case "cmd_account"            : MsgAccountManager();    break;
+      case "cmd_account"            : MsgAccountManager(null); break;
       case "cmd_preferences"        : DoCommandPreferences(); break;
 
       //View Menu

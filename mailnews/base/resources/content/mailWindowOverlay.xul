@@ -873,7 +873,7 @@ Rights Reserved.
                       accesskey="&folderPropsCmd.accesskey;"
                       observes="cmd_properties"/>
       <menuseparator/>
-      <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager();"/>
+      <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager(null);"/>
       <menuitem id="menu_preferences" oncommand="goPreferences('messenger.xul', 'chrome://messenger/content/pref-mailnews.xul','mailnews')"/>
     </menupopup>
   </menu>
