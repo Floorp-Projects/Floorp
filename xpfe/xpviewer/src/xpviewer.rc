@@ -19,6 +19,7 @@
 #include "jsconsres.h"
 #include <winres.h>
 
+1 ICON "retro_n.ico"
 
 VIEWER MENU DISCARDABLE
 {
