@@ -146,6 +146,7 @@ checkbox {
 
 radiogroup {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radiogroup");
+  -moz-box-orient: vertical;
 }
 
 radio {
@@ -431,10 +432,12 @@ stack, bulletinboard {
 
 tabbox {
   -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabbox");
+  -moz-box-orient: vertical;
 }
 
 tabs {
   -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabs");
+  -moz-box-orient: horizontal;
 }
 
 tab {
