@@ -497,7 +497,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
       {  // XXX for now, prefetch the attr value, this needs to be a special content node
         nsIAtom* attrName = nsnull;
         PRInt32 attrNameSpace = kNameSpaceID_None;
-        PRInt32 barIndex = contentString.Find('|'); // CSS namespace delimiter
+        PRInt32 barIndex = contentString.FindChar('|'); // CSS namespace delimiter
         if (-1 != barIndex) {
           nsAutoString  nameSpaceVal;
           contentString.Left(nameSpaceVal, barIndex);

@@ -662,11 +662,11 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString&       aSpec,
   aSpec.Trim(" \n\r\t"); // remove leading and trailing whitespace  
   
   // Count the commas 
-  PRInt32 commaX = aSpec.Find(COMMA);
+  PRInt32 commaX = aSpec.FindChar(COMMA);
   PRInt32 count = 1;
   while (commaX >= 0) {
     count++;
-    commaX = aSpec.Find(COMMA, commaX + 1);
+    commaX = aSpec.FindChar(COMMA, PR_FALSE,commaX + 1);
   }
 
   if (count > aMaxNumValues) {
@@ -681,7 +681,7 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString&       aSpec,
 
   for (PRInt32 i = 0; i < count; i++) {
     // Find our comma
-    commaX = aSpec.Find(COMMA, start);
+    commaX = aSpec.FindChar(COMMA, PR_FALSE,start);
     PRInt32 end = (commaX < 0) ? specLen : commaX;
 
     // Note: If end == start then it means that the token has no

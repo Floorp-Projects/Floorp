@@ -430,7 +430,7 @@ nsNativeTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
 
       // Draw multi-line text
       PRInt32 oldPos = 0;
-      PRInt32 pos    = aText.Find('\n', 0);
+      PRInt32 pos    = aText.FindChar('\n', PR_FALSE,0);
       while (1) {
         nsString substr;
         if (-1 == pos) {
@@ -447,7 +447,7 @@ nsNativeTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
           // Advance to the next carriage return
         pos++;
         oldPos = pos;
-        pos = aText.Find('\n', pos);
+        pos = aText.FindChar('\n', PR_FALSE,pos);
       }
 
       aRenderingContext.PopState(clipEmpty);
