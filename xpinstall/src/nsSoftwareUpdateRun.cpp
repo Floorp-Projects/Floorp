@@ -7,28 +7,33 @@
 #include <stat.h>
 #endif 
 
+#include "nsInstall.h"
+#include "zipfile.h"
+
+#include "nsSpecialSystemDirectory.h"
 #include "nspr.h"
 
 #include "nsRepository.h"
-#include "nsIBrowserWindow.h"
+
+#include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
 
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
 
-#include "nsInstall.h"
-#include "zipfile.h"
+#include "nsIServiceManager.h"
+#include "nsAppShellCIDs.h"
+#include "nsIAppShellService.h"
 
-#include "nsSpecialSystemDirectory.h"
+#include "nsIURL.h"
 
-extern PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, char* jarfile, char* args);
+extern PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, const char* jarfile, const char* args);
 
-
-static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
-static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
-
+static NS_DEFINE_IID(kWebShellWindowIID, NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 
+static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
 
 /* ReadFileIntoBuffer
  * given a file name, reads it into buffer
@@ -40,6 +45,8 @@ static short ReadFileIntoBuffer(const char* fileName, char** buffer, unsigned lo
     PRFileDesc* file;
     struct stat st;
     short result = 0;
+    
+    *buffer = nsnull;
 
     if ( stat( fileName, &st) != 0 )
     {
@@ -84,8 +91,15 @@ fail:
     return result;
 }
 
+PRInt32 Install(nsInstallInfo *installInfo)
+{   
+    return Install( (const char*) nsAutoCString( installInfo->GetLocalFile() ), 
+                    (const char*) nsAutoCString( installInfo->GetFlags()     ), 
+                    (const char*) nsAutoCString( installInfo->GetArguments() ),
+                    (const char*) nsAutoCString( installInfo->GetFromURL()   ));
+}
 
-extern "C" NS_EXPORT PRInt32 Install(char* jarFile, char* args)
+extern "C" NS_EXPORT PRInt32 Install(const char* jarFile, const char* flags, const char* args, const char* fromURL)
 {
     // Open the jarfile.
     void* hZip;
@@ -106,72 +120,78 @@ extern "C" NS_EXPORT PRInt32 Install(char* jarFile, char* args)
     installJSFileSpec += "install.js";
     installJSFileSpec.MakeUnique();
 
-    const char* installJSFile = nsFilePath(installJSFileSpec);
-
     // Extract the install.js file.
-    result  = ZIP_ExtractFile( hZip, "install.js", installJSFile );
+    result  = ZIP_ExtractFile( hZip, "install.js", installJSFileSpec.GetCString() );
     if (result != ZIP_OK)
     {
         return result;
     }
 
-    
-    nsIBrowserWindow    *aWindow;
-    nsIWebShell         *aWebShell;
+    nsIAppShellService      *appShell = nsnull;
+    nsIURL                  *url;
+    nsIWidget               *newWindow;
+    nsIWebShellWindow       *webShellWindow;
+    nsIWebShell             *aWebShell;
 
-    // Create a new window so that we can both run a script in it and display UI.
-
-    nsresult rv = nsRepository::CreateInstance( kBrowserWindowCID, 
-                                                nsnull,
-                                                kIBrowserWindowIID,
-                                                (void**) &aWindow);
-    if (rv == NS_OK) 
+    nsresult rv = NS_NewURL(&url, "resource:/res/install/progress.xul");
+    if (NS_FAILED(rv)) 
     {
-        nsRect rect(0, 0, 275, 300);
-        
-        nsAutoString            retval;
-        PRBool                  isUndefined;
-        
-        nsIScriptContextOwner*  scriptContextOwner;
-        nsIScriptContext*       scriptContext;
+        return rv;
+    }
+    
+    // Create a new window so that we can display UI.
 
-        rv = aWindow->Init(nsnull, nsnull, rect, PRUint32(0), PR_TRUE);
+    rv = nsServiceManager::GetService( kAppShellServiceCID, 
+                                       kIAppShellServiceIID,
+                                       (nsISupports**) &appShell);
+
+    if (NS_FAILED(rv)) 
+        return rv;
+
+    appShell->CreateTopLevelWindow( nsnull, url, nsString("CID"), newWindow, nsnull, nsnull, 375, 375);
+
+    NS_RELEASE(url);
+    
+    
+    if (rv == NS_OK)
+    {
+//         rv = newWindow->GetWebShell(aWebShell);
 
         if (rv == NS_OK)
         {
-            rv = aWindow->GetWebShell(aWebShell);
-            
-            /* 
-             * FIX: Display a window here...(ie.OpenURL)
-             */
+            nsIScriptContextOwner*  scriptContextOwner;
+            nsIScriptContext*       scriptContext;
 
-            if (NS_OK == aWebShell->QueryInterface( kIScriptContextOwnerIID, (void**)&scriptContextOwner)) 
+            rv = aWebShell->QueryInterface( kIScriptContextOwnerIID, (void**)&scriptContextOwner); 
+            
+            if (rv == NS_OK)
             {
                 rv = scriptContextOwner->GetScriptContext(&scriptContext);
 
                 if (NS_OK == rv) 
                 {
-                    
+                
                     InitXPInstallObjects(scriptContext, jarFile, args );
 
                     char* buffer;
                     unsigned long bufferLength;
-                    
-                    ReadFileIntoBuffer(installJSFile, &buffer, &bufferLength);
+                
+                    ReadFileIntoBuffer(installJSFileSpec, &buffer, &bufferLength);
 
+                    nsAutoString            retval;
+                    PRBool                  isUndefined;
                     // We expected this to block.
                     scriptContext->EvaluateString(nsString(buffer), nsnull, 0, retval, &isUndefined);
 
                     PR_FREEIF(buffer);
                     NS_RELEASE(scriptContext);
                 }
-                
+            
                 NS_RELEASE(scriptContextOwner);
             }
-        }
 
-        aWindow->Close();
-	    NS_RELEASE(aWindow);
+        }
+        appShell->CloseTopLevelWindow(newWindow);
     }
     else
     {
@@ -181,5 +201,5 @@ extern "C" NS_EXPORT PRInt32 Install(char* jarFile, char* args)
     ZIP_CloseArchive(&hZip);
     installJSFileSpec.Delete(PR_FALSE);
 
-    return 0;
+    return rv;
 }

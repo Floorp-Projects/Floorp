@@ -25,7 +25,7 @@
 
 #include "nsString.h"
 #include "nsFileSpec.h"
-
+#include "nsSpecialSystemDirectory.h"
 
 struct DirectoryTable
 {
@@ -59,6 +59,7 @@ struct DirectoryTable DirectoryTable[] =
 	{"Mac Extension",       307 },
 	{"Mac Fonts",           308 },
 	{"Mac Preferences",     309 },
+    {"Mac Documents",       310 },
 
 	{"Unix Local",          400 },
 	{"Unix Lib",            401 },
@@ -96,11 +97,8 @@ void
 nsInstallFolder::GetDirectoryPath(nsString& aDirectoryPath)
 {
 	// We want the a NATIVE path.
-	
-    aDirectoryPath.SetLength(0);
-    
-    // FIX NSFILESPEC - we need to have a GetDisplayString.
-    aDirectoryPath.Append(nsFilePath(*mUrlPath));
+	aDirectoryPath.SetLength(0);
+    aDirectoryPath.Append(mUrlPath->GetCString());
 }
 
 
@@ -121,57 +119,106 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
         
         switch (folderDirSpecID) 
 		{
-            case 100:               //  Plugins
+            case 100: ///////////////////////////////////////////////////////////  Plugins
+                // FIX
+                break; 
+
+            case 101: ///////////////////////////////////////////////////////////  Program
+                *this = nsSpecialSystemDirectory::OS_CurrentProcessDirectory;
+                break;
             
-            case 101:               //  Program
-            
-            case 102:               //  Communicator
-            
-            case 103:               //  User Pick
+            case 102: ///////////////////////////////////////////////////////////  Communicator
+                // FIX
+                break;
+
+            case 103: ///////////////////////////////////////////////////////////  User Pick
                 // we should never be here.
                 break;
-            case 104:               //  Temporary
-            
-            case 105:               //  Installed
+
+            case 104: ///////////////////////////////////////////////////////////  Temporary
+                *this = nsSpecialSystemDirectory::OS_TemporaryDirectory;
+                break;
+
+            case 105: ///////////////////////////////////////////////////////////  Installed
                 // we should never be here.
                 break;
-            case 106:               //  Current User
-            
-            case 107:               //  NetHelp
-            
-            case 108:               //  OS Drive
-            
-            case 109:               //  File URL
 
+            case 106: ///////////////////////////////////////////////////////////  Current User
+                // FIX
+                break;
 
-            case 200:               //  Win System
-            
-            case 201:               //  Windows
+            case 107: ///////////////////////////////////////////////////////////  NetHelp
+                // FIX
+                break;
 
-            case 300:               //  Mac System
-            
-            case 301:               //  Mac Desktop
-            
-            case 302:               //  Mac Trash
-            
-            case 303:               //  Mac Startup
-            
-            case 304:               //  Mac Shutdown
-            
-            case 305:               //  Mac Apple Menu
-            
-            case 306:               //  Mac Control Panel
-            
-            case 307:               //  Mac Extension
-            
-            case 308:               //  Mac Fonts
-            
-            case 309:               //  Mac Preferences
+            case 108: ///////////////////////////////////////////////////////////  OS Drive
+                *this = nsSpecialSystemDirectory::OS_DriveDirectory;
+                break;
 
-            case 400:               //  Unix Local
-            case 401:               //  Unix Lib
+            case 109: ///////////////////////////////////////////////////////////  File URL
+                // we should never be here.
+                break;
 
-            // Insert code here...
+            case 200: ///////////////////////////////////////////////////////////  Win System
+                *this = nsSpecialSystemDirectory::Win_SystemDirectory;
+                break;
+
+            case 201: ///////////////////////////////////////////////////////////  Windows
+                *this = nsSpecialSystemDirectory::Win_WindowsDirectory;
+                break;
+
+            case 300: ///////////////////////////////////////////////////////////  Mac System
+                *this = nsSpecialSystemDirectory::Mac_SystemDirectory;
+                break;
+
+            case 301: ///////////////////////////////////////////////////////////  Mac Desktop
+                *this = nsSpecialSystemDirectory::Mac_DesktopDirectory;
+                break;
+
+            case 302: ///////////////////////////////////////////////////////////  Mac Trash
+                *this = nsSpecialSystemDirectory::Mac_TrashDirectory;
+                break;
+
+            case 303: ///////////////////////////////////////////////////////////  Mac Startup
+                *this = nsSpecialSystemDirectory::Mac_StartupDirectory;
+                break;
+
+            case 304: ///////////////////////////////////////////////////////////  Mac Shutdown
+                *this = nsSpecialSystemDirectory::Mac_StartupDirectory;
+                break;
+
+            case 305: ///////////////////////////////////////////////////////////  Mac Apple Menu
+                *this = nsSpecialSystemDirectory::Mac_AppleMenuDirectory;
+                break;
+
+            case 306: ///////////////////////////////////////////////////////////  Mac Control Panel
+                *this = nsSpecialSystemDirectory::Mac_ControlPanelDirectory;
+                break;
+
+            case 307: ///////////////////////////////////////////////////////////  Mac Extension
+                *this = nsSpecialSystemDirectory::Mac_ExtensionDirectory;
+                break;
+
+            case 308: ///////////////////////////////////////////////////////////  Mac Fonts
+                *this = nsSpecialSystemDirectory::Mac_FontsDirectory;
+                break;
+
+            case 309: ///////////////////////////////////////////////////////////  Mac Preferences
+                *this = nsSpecialSystemDirectory::Mac_PreferencesDirectory;
+                break;
+                    
+            case 310: ///////////////////////////////////////////////////////////  Mac Documents
+                *this = nsSpecialSystemDirectory::Mac_DocumentsDirectory;
+                break;
+                    
+            case 400: ///////////////////////////////////////////////////////////  Unix Local
+                *this = nsSpecialSystemDirectory::Unix_LocalDirectory;
+                break;
+
+            case 401: ///////////////////////////////////////////////////////////  Unix Lib
+                *this = nsSpecialSystemDirectory::Unix_LibDirectory;
+                break;
+
 
             case -1:
 		    default:
@@ -207,3 +254,10 @@ nsInstallFolder::MapNameToEnum(const nsString& name)
 
 
 
+//----------------------------------------------------------------------------------------
+void nsInstallFolder::operator = (enum nsSpecialSystemDirectory::SystemDirectories aSystemSystemDirectory)
+//----------------------------------------------------------------------------------------
+{
+    nsSpecialSystemDirectory temp(aSystemSystemDirectory);
+    mUrlPath = new nsFileSpec(temp);
+}

@@ -19,6 +19,8 @@
 #ifndef _NS_SOFTWAREUPDATESTREAM_H__
 #define _NS_SOFTWAREUPDATESTREAM_H__
 
+#include "nsInstall.h"
+
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsString.h"
@@ -29,13 +31,15 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 
+#include "nsISoftwareUpdate.h"
+
 static NS_DEFINE_IID(kInetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kInetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kInetLibURLIID, NS_INETLIBURL_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 
-extern "C" nsresult DownloadJar(const nsString& aUrlString, const nsString& aSaveLocationString );
+extern "C" nsresult DownloadJar(nsInstallInfo *nextInstall);
 
 
 class nsSoftwareUpdateListener : public nsIStreamListener
@@ -44,7 +48,7 @@ class nsSoftwareUpdateListener : public nsIStreamListener
     public:
         NS_DECL_ISUPPORTS
     
-        nsSoftwareUpdateListener();
+        nsSoftwareUpdateListener(nsInstallInfo *nextInstall);
 
         NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* info);
         NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax);
@@ -53,13 +57,19 @@ class nsSoftwareUpdateListener : public nsIStreamListener
         NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length);
         NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
         
-        NS_METHOD SetListenerInfo(char* aUrlString);
+        
+
 
     protected:
         ~nsSoftwareUpdateListener();
 
+
     private:
-          PRFileDesc *mOutFileDesc;
+
+          nsISoftwareUpdate *mSoftwareUpdate;
+          PRFileDesc        *mOutFileDesc;
+          nsInstallInfo     *mInstallInfo;
+          PRInt32            mResult;
 };
 
 #endif

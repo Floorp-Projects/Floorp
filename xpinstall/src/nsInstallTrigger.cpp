@@ -126,9 +126,13 @@ nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
 NS_IMETHODIMP    
 nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn)
 {
-    nsString location = "C:\\temp\\test.jar";
+    nsInstallInfo *nextInstall = new nsInstallInfo( aURL,  "",  ""); 
+
+    // start the download (this will clean itself up)
     
-    *aReturn = DownloadJar(aURL, location);
+    nsSoftwareUpdateListener *downloader = new nsSoftwareUpdateListener(nextInstall);
+
+    *aReturn = NS_OK;  // maybe we should do something more.
     return NS_OK;
 }
 
