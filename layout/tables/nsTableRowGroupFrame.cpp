@@ -1450,6 +1450,28 @@ nsTableRowGroupFrame::RecoverState(RowGroupReflowState& aReflowState,
   return NS_OK;
 }
 
+PRBool
+nsTableRowGroupFrame::IsSimpleRowFrame(nsTableFrame* aTableFrame,
+                                       nsIFrame*     aFrame)
+{
+  // Make sure it's a row frame and not a row group frame
+  nsCOMPtr<nsIAtom>  frameType;
+
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+  if (frameType.get() == nsLayoutAtoms::tableRowFrame) {
+    PRInt32 rowIndex = ((nsTableRowFrame*)aFrame)->GetRowIndex();
+    
+    // It's a simple row frame if there are no cells that span into or
+    // across the row
+    if (!aTableFrame->RowIsSpannedInto(rowIndex) &&
+        !aTableFrame->RowHasSpanningCells(rowIndex)) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
                                                  nsHTMLReflowMetrics& aDesiredSize,
                                                  RowGroupReflowState& aReflowState,
@@ -1482,11 +1504,10 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
   // changed). If so, just return and don't bother adjusting the rows
   // that follow
   if (!aReflowState.tableFrame->NeedsReflow(aReflowState.reflowState)) {
-    // Inform the row of its new height.
-    PRBool  isJustSingleRow = PR_FALSE;  /* how to determine this now? */
-    if (isJustSingleRow) {
-      // XXX If someone enables this, note that this is a bad cast, since your
-      // child could be a nested table row group (the tree widget strikes again).
+    // If the row has no cells that span into or across the row, then we
+    // don't have to call CalculateRowHeights() which is quite expensive
+    if (IsSimpleRowFrame(aReflowState.tableFrame, aNextFrame)) {
+      // Inform the row of its new height.
       ((nsTableRowFrame*)aNextFrame)->DidResize(aPresContext, aReflowState.reflowState);
       
       // Adjust the frames that follow...
