@@ -177,6 +177,12 @@ function UpdateMenus(event)
     setTimeout("UpdateCharsetDetector()", 0);
 }
 
+function CreateMenu(node)
+{
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  observerService.notifyObservers(null, "charsetmenu-selected", node);
+}
+
 function UpdateMailMenus(event)
 {
     // use setTimeout workaround to delay checkmark the menu
