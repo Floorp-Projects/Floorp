@@ -5754,11 +5754,11 @@ nsCSSDeclaration::UseBackgroundPosition(nsAString & aString,
   nsAutoString backgroundXValue, backgroundYValue;
   AppendValueOrImportantValueToString(eCSSProperty_background_x_position, backgroundXValue);
   AppendValueOrImportantValueToString(eCSSProperty_background_y_position, backgroundYValue);
-  aString.Append(backgroundYValue);
+  aString.Append(backgroundXValue);
   if (!backgroundXValue.Equals(backgroundYValue, nsCaseInsensitiveStringComparator())) {
     // the two values are different
     aString.Append(PRUnichar(' '));
-    aString.Append(backgroundXValue);
+    aString.Append(backgroundYValue);
   }
   aBgPositionX = 0;
   aBgPositionY = 0;
