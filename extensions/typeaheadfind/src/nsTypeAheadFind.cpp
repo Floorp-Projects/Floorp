@@ -935,8 +935,8 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
       NS_ENSURE_TRUE(presShell, NS_OK);
       presShell->GetPresContext(getter_AddRefs(presContext));
       NS_ENSURE_TRUE(presContext, NS_OK);
-      nsCOMPtr<nsIEventStateManager> esm;
-      presContext->GetEventStateManager(getter_AddRefs(esm));
+
+      nsIEventStateManager *esm = presContext->EventStateManager();
       esm->GetFocusedContent(getter_AddRefs(focusedContent));
       if (focusedContent) {
         mIsFindingText = PR_TRUE; // prevent selection listener from calling CancelFind()
@@ -1362,14 +1362,13 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
       SetSelectionLook(presShell, PR_TRUE, mRepeatingMode != eRepeatingForward 
                                            && mRepeatingMode != eRepeatingReverse);
 
-      nsCOMPtr<nsIEventStateManager> esm;
-      presContext->GetEventStateManager(getter_AddRefs(esm));
+      nsIEventStateManager *esm = presContext->EventStateManager();
+
+      PRBool isSelectionWithFocus;
+      esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
+
       nsCOMPtr<nsIContent> focusedContent;
-      if (esm) {
-        PRBool isSelectionWithFocus;
-        esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
-        esm->GetFocusedContent(getter_AddRefs(focusedContent));
-      }
+      esm->GetFocusedContent(getter_AddRefs(focusedContent));
 
       DisplayStatus(PR_TRUE, focusedContent, PR_FALSE);
 

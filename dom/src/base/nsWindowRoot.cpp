@@ -88,12 +88,9 @@ nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, PRBool *_retval)
   nsCOMPtr<nsIPresContext> aPresContext;
   shell->GetPresContext(getter_AddRefs(aPresContext));
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm)))) {
-    return esm->DispatchNewEvent(NS_STATIC_CAST(nsIDOMEventReceiver*,this), aEvt, _retval);
-  }
-
-  return NS_ERROR_FAILURE;
+  return aPresContext->EventStateManager()->
+    DispatchNewEvent(NS_STATIC_CAST(nsIDOMEventReceiver*, this),
+                     aEvt, _retval);
 }
 
 NS_IMETHODIMP

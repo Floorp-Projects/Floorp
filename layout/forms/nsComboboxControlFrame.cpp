@@ -2377,33 +2377,28 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
       // XXX This is only temporary
       // Only paint the focus if we're visible
       if (GetStyleVisibility()->IsVisible()) {
-        nsCOMPtr<nsIEventStateManager> stateManager;
-        nsresult rv = mPresContext->GetEventStateManager(getter_AddRefs(stateManager));
-        if (NS_SUCCEEDED(rv)) {
-          if (!nsFormControlHelper::GetDisabled(mContent) && mFocused == this) {
-            aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-            aRenderingContext.SetColor(0);
-          } else {
-            aRenderingContext.SetColor(GetStyleBackground()->mBackgroundColor);
-            aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
-          }
-          //aRenderingContext.DrawRect(clipRect);
-          float p2t;
-          p2t = aPresContext->PixelsToTwips();
-          nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-          clipRect.width -= onePixel;
-          clipRect.height -= onePixel;
-          aRenderingContext.DrawLine(clipRect.x, clipRect.y, 
-                                     clipRect.x+clipRect.width, clipRect.y);
-          aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y, 
-                                     clipRect.x+clipRect.width, clipRect.y+clipRect.height);
-          aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y+clipRect.height, 
-                                     clipRect.x, clipRect.y+clipRect.height);
-          aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
-                                     clipRect.x, clipRect.y);
-          aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
-                                     clipRect.x, clipRect.y);
+        if (!nsFormControlHelper::GetDisabled(mContent) && mFocused == this) {
+          aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
+          aRenderingContext.SetColor(0);
+        } else {
+          aRenderingContext.SetColor(GetStyleBackground()->mBackgroundColor);
+          aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
         }
+        //aRenderingContext.DrawRect(clipRect);
+        float p2t = aPresContext->PixelsToTwips();
+        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+        clipRect.width -= onePixel;
+        clipRect.height -= onePixel;
+        aRenderingContext.DrawLine(clipRect.x, clipRect.y, 
+                                   clipRect.x+clipRect.width, clipRect.y);
+        aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y, 
+                                   clipRect.x+clipRect.width, clipRect.y+clipRect.height);
+        aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y+clipRect.height, 
+                                   clipRect.x, clipRect.y+clipRect.height);
+        aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
+                                   clipRect.x, clipRect.y);
+        aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
+                                   clipRect.x, clipRect.y);
       }
       /////////////////////
       aRenderingContext.PopState(clipEmpty);

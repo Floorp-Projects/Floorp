@@ -629,13 +629,9 @@ void nsWebBrowserFind::MoveFocusToCaret(nsIDOMWindow *aWindow)
   if (!presContext) 
     return;
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  presContext->GetEventStateManager(getter_AddRefs(esm));
-
-  if (esm) {
-    PRBool isSelectionWithFocus;
-    esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
-  }
+  PRBool isSelectionWithFocus;
+  presContext->EventStateManager()->MoveFocusToCaret(PR_TRUE,
+                                                     &isSelectionWithFocus);
 }
 
 /*

@@ -3725,12 +3725,8 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   nsCOMPtr<nsIPresContext> presContext;
   shell->GetPresContext(getter_AddRefs(presContext));
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  nsresult rv = presContext->GetEventStateManager(getter_AddRefs(esm));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return esm->DispatchNewEvent(NS_STATIC_CAST(nsIDOMDocument *, this), aEvent,
-                               _retval);
+  return presContext->EventStateManager()->
+    DispatchNewEvent(NS_STATIC_CAST(nsIDOMDocument*, this), aEvent, _retval);
 }
 
 NS_IMETHODIMP

@@ -524,7 +524,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
                   shell->GetPresContext(getter_AddRefs(oldPresContext));
                   
                   nsCOMPtr<nsIEventStateManager> esm;
-                  oldPresContext->GetEventStateManager(getter_AddRefs(esm));
+                  esm = oldPresContext->EventStateManager();
                   esm->SetFocusedContent(gLastFocusedContent);
                   gLastFocusedContent->HandleDOMEvent(oldPresContext,
                                                       &blurevent, nsnull,
@@ -658,7 +658,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
                 shell->GetPresContext(getter_AddRefs(oldPresContext));
 
                 nsCOMPtr<nsIEventStateManager> esm;
-                oldPresContext->GetEventStateManager(getter_AddRefs(esm));
+                esm = oldPresContext->GetEventStateManager();
                 esm->SetFocusedContent(gLastFocusedContent);
                 gLastFocusedContent->HandleDOMEvent(oldPresContext, &event,
                                                     nsnull, NS_EVENT_FLAG_INIT,
@@ -816,7 +816,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
               focusController->GetFocusedElement(getter_AddRefs(focusedElement));
 
             nsCOMPtr<nsIEventStateManager> esm;
-            oldPresContext->GetEventStateManager(getter_AddRefs(esm));
+            esm = oldPresContext->EventStateManager();
             esm->SetFocusedContent(gLastFocusedContent);
 
             nsCOMPtr<nsIContent> focusedContent = do_QueryInterface(focusedElement);
@@ -1003,8 +1003,6 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
       nsCOMPtr<nsIDocShellTreeItem> subShellItem;
       nsCOMPtr<nsIPresShell> subPS;
       nsCOMPtr<nsIPresContext> subPC;
-      nsCOMPtr<nsIEventStateManager> subESM;
-
 
       docShell->GetChildAt(counter, getter_AddRefs(subShellItem));
       nsCOMPtr<nsIDocShell> subDS = do_QueryInterface(subShellItem);
@@ -1021,9 +1019,9 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
         subPS->GetPresContext(getter_AddRefs(subPC));
         NS_ASSERTION(subPC, "PresShell without PresContext");
 
-        subPC->GetEventStateManager(getter_AddRefs(subESM));
+        nsEventStateManager* esm =
+          NS_STATIC_CAST(nsEventStateManager *, subPC->EventStateManager());
 
-        nsEventStateManager* esm = NS_STATIC_CAST(nsEventStateManager *, NS_STATIC_CAST(nsIEventStateManager *, subESM.get()));
         if (esm)
           esm->HandleAccessKey(subPC, aEvent, aStatus, -1, eAccessKeyProcessingDown);
 
@@ -1050,7 +1048,6 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
 
       nsCOMPtr<nsIPresShell> parentPS;
       nsCOMPtr<nsIPresContext> parentPC;
-      nsCOMPtr<nsIEventStateManager> parentESM;
 
       parentDS->GetPresShell(getter_AddRefs(parentPS));
       NS_ASSERTION(parentPS, "Our PresShell exists but the parent's does not?");
@@ -1058,9 +1055,9 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
       parentPS->GetPresContext(getter_AddRefs(parentPC));
       NS_ASSERTION(parentPC, "PresShell without PresContext");
 
-      parentPC->GetEventStateManager(getter_AddRefs(parentESM));
+      nsEventStateManager* esm =
+        NS_STATIC_CAST(nsEventStateManager *, parentPC->EventStateManager());
 
-      nsEventStateManager* esm = NS_STATIC_CAST(nsEventStateManager *, NS_STATIC_CAST(nsIEventStateManager *, parentESM.get()));
       if (esm)
         esm->HandleAccessKey(parentPC, aEvent, aStatus, myOffset, eAccessKeyProcessingUp);
     }
@@ -2947,13 +2944,12 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   if (vm) {
     vm->GetWidget(getter_AddRefs(widget));
   }
-  nsCOMPtr<nsIEventStateManager> esm;
-  presContext->GetEventStateManager(getter_AddRefs(esm));
 
   printf("DS %p  Type %s  Cnt %d  Doc %p  DW %p  EM %p\n", 
     parentAsDocShell.get(), 
     type==nsIDocShellTreeItem::typeChrome?"Chrome":"Content", 
-    childWebshellCount, doc.get(), domwin.get(), esm.get());
+    childWebshellCount, doc.get(), domwin.get(),
+    presContext->EventStateManager());
 
   if (childWebshellCount > 0) {
     for (PRInt32 i=0;i<childWebshellCount;i++) {
@@ -3217,8 +3213,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
           nsCOMPtr<nsIPresContext> parentPC;
           parentShell->GetPresContext(getter_AddRefs(parentPC));
 
-          nsCOMPtr<nsIEventStateManager> parentESM;
-          parentPC->GetEventStateManager(getter_AddRefs(parentESM));
+          nsIEventStateManager *parentESM = parentPC->EventStateManager();
 
           SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
@@ -4097,7 +4092,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
           }
           
           nsCOMPtr<nsIEventStateManager> esm;
-          oldPresContext->GetEventStateManager(getter_AddRefs(esm));
+          esm = oldPresContext->EventStateManager();
           esm->SetFocusedContent(gLastFocusedContent);
           nsCOMPtr<nsIContent> temp = gLastFocusedContent;
           NS_RELEASE(gLastFocusedContent);
@@ -4151,9 +4146,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
           oldFocusController->SetSuppressFocus(PR_TRUE, "SendFocusBlur Window Switch #2");
       }
 
-      nsCOMPtr<nsIEventStateManager> esm;
-      gLastFocusedPresContext->GetEventStateManager(getter_AddRefs(esm));
-      esm->SetFocusedContent(nsnull);
+      gLastFocusedPresContext->EventStateManager()->SetFocusedContent(nsnull);
       nsCOMPtr<nsIDocument> temp = gLastFocusedDocument;
       NS_RELEASE(gLastFocusedDocument);
       gLastFocusedDocument = nsnull;
@@ -4499,25 +4492,6 @@ nsEventStateManager::FlushPendingEvents(nsIPresContext* aPresContext)
     }
   }
 }
-
-nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)
-{
-  nsresult rv;
-
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIEventStateManager* manager = new nsEventStateManager();
-  if (nsnull == manager) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = CallQueryInterface(manager, aInstancePtrResult);
-  if (NS_FAILED(rv)) return rv;
-
-  return manager->Init();
-}
-
 
 nsresult
 nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
@@ -5163,21 +5137,19 @@ nsEventStateManager::TabIntoDocument(nsIDocShell* aDocShell,
     nsCOMPtr<nsIPresContext> pc;
     aDocShell->GetPresContext(getter_AddRefs(pc));
     if (pc) {
-      nsCOMPtr<nsIEventStateManager> docESM;
-      pc->GetEventStateManager(getter_AddRefs(docESM));
-      if (docESM) {
-        // we are about to shift focus to aDocShell
-        // keep track of the document, so we don't try to go back into it.
-        mTabbingFromDocShells.AppendObject(aDocShell);
-        
-        // clear out any existing focus state
-        docESM->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-        // now focus the first (or last) focusable content
-        docESM->ShiftFocus(aForward, nsnull);
+      nsIEventStateManager *docESM = pc->EventStateManager();
 
-        // remove the document from the list
-        mTabbingFromDocShells.RemoveObject(aDocShell); 
-      }
+      // we are about to shift focus to aDocShell
+      // keep track of the document, so we don't try to go back into it.
+      mTabbingFromDocShells.AppendObject(aDocShell);
+        
+      // clear out any existing focus state
+      docESM->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+      // now focus the first (or last) focusable content
+      docESM->ShiftFocus(aForward, nsnull);
+
+      // remove the document from the list
+      mTabbingFromDocShells.RemoveObject(aDocShell); 
     }
   }
 }

@@ -47,7 +47,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsILanguageAtomService.h"
 #include "nsIURL.h"
-#include "nsIEventStateManager.h"
 #include "nsIObserver.h"
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
@@ -94,10 +93,6 @@ public:
   virtual void SetPageDim(nsRect* aRect) = 0;
   NS_IMETHOD GetTwipsToPixelsForFonts(float* aResult) const;
   NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const;
-  NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
-  nsIEventStateManager* GetEventStateManager() {
-    return nsIPresContext::GetEventStateManager();
-  }
   NS_IMETHOD GetLanguageSpecificTransformType(
               nsLanguageSpecificTransformType* aType);
 

@@ -910,20 +910,17 @@ nsTextBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
     if (accessKey.IsEmpty())
         return NS_OK;
 
-    nsresult rv = NS_OK;
+    nsresult rv;
 
     // With a valid PresContext we can get the ESM 
     // and (un)register the access key
-    nsCOMPtr<nsIEventStateManager> esm;
-    aPresContext->GetEventStateManager(getter_AddRefs(esm));
+    nsIEventStateManager *esm = aPresContext->EventStateManager();
 
-    if (esm) {
-        PRUint32 key = accessKey.First();
-        if (aDoReg)
-            rv = esm->RegisterAccessKey(mContent, key);
-        else
-            rv = esm->UnregisterAccessKey(mContent, key);
-    }
+    PRUint32 key = accessKey.First();
+    if (aDoReg)
+        rv = esm->RegisterAccessKey(mContent, key);
+    else
+        rv = esm->UnregisterAccessKey(mContent, key);
 
     return rv;
 }

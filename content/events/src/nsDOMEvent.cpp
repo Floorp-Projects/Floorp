@@ -297,11 +297,11 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
   
 	*aTarget = nsnull;
 
-  nsCOMPtr<nsIEventStateManager> manager;
   nsCOMPtr<nsIContent> targetContent;  
 
-  if (mPresContext && NS_OK == mPresContext->GetEventStateManager(getter_AddRefs(manager)) && manager) {
-    manager->GetEventTargetContent(mEvent, getter_AddRefs(targetContent));
+  if (mPresContext) {
+    mPresContext->EventStateManager()->
+      GetEventTargetContent(mEvent, getter_AddRefs(targetContent));
   }
   
   if (targetContent) {
@@ -346,11 +346,8 @@ nsDOMEvent::GetTargetFromFrame()
   if (!mPresContext) { return nsnull; }
 
   // Get the target frame (have to get the ESM first)
-  nsCOMPtr<nsIEventStateManager> esm;
-  mPresContext->GetEventStateManager(getter_AddRefs(esm));
-
   nsIFrame* targetFrame = nsnull;
-  esm->GetEventTarget(&targetFrame);
+  mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
   if (!targetFrame) { return nsnull; }
 
   // get the real content
@@ -906,14 +903,9 @@ NS_METHOD nsDOMEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIEventStateManager> manager;
-  mPresContext->GetEventStateManager(getter_AddRefs(manager));
-  if (!manager) {
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIContent> relatedContent;
-  manager->GetEventRelatedContent(getter_AddRefs(relatedContent));
+  mPresContext->EventStateManager()->
+    GetEventRelatedContent(getter_AddRefs(relatedContent));
   if (!relatedContent) {
     return NS_OK;
   }
@@ -1069,11 +1061,9 @@ NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
 {
   NS_ENSURE_ARG_POINTER(aRangeParent);
   nsIFrame* targetFrame = nsnull;
-  nsCOMPtr<nsIEventStateManager> manager;
 
-  if (mPresContext && 
-      (NS_OK == mPresContext->GetEventStateManager(getter_AddRefs(manager)))) {
-    manager->GetEventTarget(&targetFrame);
+  if (mPresContext) {
+    mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
   }
 
   *aRangeParent = nsnull;
@@ -1101,12 +1091,9 @@ NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
 {
   NS_ENSURE_ARG_POINTER(aRangeOffset);
   nsIFrame* targetFrame = nsnull;
-  nsIEventStateManager* manager;
 
-  if (mPresContext && 
-      (NS_OK == mPresContext->GetEventStateManager(&manager))) {
-    manager->GetEventTarget(&targetFrame);
-    NS_RELEASE(manager);
+  if (mPresContext) {
+    mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
   }
 
   if (targetFrame) {

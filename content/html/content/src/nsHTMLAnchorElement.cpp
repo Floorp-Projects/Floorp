@@ -265,27 +265,22 @@ nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
   // don't make the link grab the focus if there is no link handler
   nsILinkHandler *handler = aPresContext->GetLinkHandler();
   if (handler) {
-    nsCOMPtr<nsIEventStateManager> stateManager;
+    aPresContext->EventStateManager()->SetContentState(this,
+                                                       NS_EVENT_STATE_FOCUS);
 
-    aPresContext->GetEventStateManager(getter_AddRefs(stateManager));
+    // Make sure the presentation is up-to-date
+    if (mDocument) {
+      mDocument->FlushPendingNotifications();
+    }
 
-    if (stateManager) {
-      stateManager->SetContentState(this, NS_EVENT_STATE_FOCUS);
+    nsIPresShell *presShell = aPresContext->GetPresShell();
 
-      // Make sure the presentation is up-to-date
-      if (mDocument) {
-        mDocument->FlushPendingNotifications();
-      }
-
-      nsIPresShell *presShell = aPresContext->GetPresShell();
-
-      if (presShell) {
-        nsIFrame* frame = nsnull;
-        presShell->GetPrimaryFrameFor(this, &frame);
-        if (frame) {
-          presShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_ANYWHERE,
-                                         NS_PRESSHELL_SCROLL_ANYWHERE);
-        }
+    if (presShell) {
+      nsIFrame* frame = nsnull;
+      presShell->GetPrimaryFrameFor(this, &frame);
+      if (frame) {
+        presShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_ANYWHERE,
+                                       NS_PRESSHELL_SCROLL_ANYWHERE);
       }
     }
   }
@@ -301,11 +296,9 @@ nsHTMLAnchorElement::RemoveFocus(nsIPresContext* aPresContext)
   // If we are disabled, we probably shouldn't have focus in the
   // first place, so allow it to be removed.
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  aPresContext->GetEventStateManager(getter_AddRefs(esm));
-
-  if (esm && mDocument) {
-    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+  if (mDocument) {
+    aPresContext->EventStateManager()->SetContentState(nsnull,
+                                                       NS_EVENT_STATE_FOCUS);
   }
 }
 

@@ -1359,18 +1359,12 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
   //the event on that map or on a link farther up the tree.  If we're on a
   //link farther up, do nothing.
   if (NS_SUCCEEDED(ret)) {
-    PRBool targetIsArea = PR_FALSE;
+    nsCOMPtr<nsIContent> target;
 
-    nsCOMPtr<nsIEventStateManager> esm;
-    if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm))) && esm) {
-      nsCOMPtr<nsIContent> target;
-      esm->GetEventTargetContent(aEvent, getter_AddRefs(target));
-      if (target && IsArea(target)) {
-        targetIsArea = PR_TRUE;
-      }
-    }
+    aPresContext->EventStateManager()->
+      GetEventTargetContent(aEvent, getter_AddRefs(target));
 
-    if (targetIsArea && !IsArea(this)) {
+    if (target && IsArea(target) && !IsArea(this)) {
       // We are over an area and our element is not one.  Return without
       // running anchor code.
       return ret;
@@ -1417,11 +1411,10 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
               break;
             }
   
-            nsCOMPtr<nsIEventStateManager> stateManager;
-            if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(stateManager))) {
-              stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE |
-                                                  NS_EVENT_STATE_FOCUS);
-            }
+            aPresContext->EventStateManager()->
+              SetContentState(this,
+                              NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+
           }
         }
         break;
@@ -3535,11 +3528,7 @@ nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
   if (aDoFocus) {
     SetFocus(presContext);
 
-    nsCOMPtr<nsIEventStateManager> esm;
-    presContext->GetEventStateManager(getter_AddRefs(esm));
-    if (esm) {
-      esm->MoveCaretToFocus();
-    }
+    presContext->EventStateManager()->MoveCaretToFocus();
     return;
   }
 
@@ -3561,9 +3550,7 @@ nsresult nsGenericHTMLElement::RegUnRegAccessKey(PRBool aDoReg)
   GetPresContext(this, getter_AddRefs(presContext));
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  presContext->GetEventStateManager(getter_AddRefs(esm));
-  NS_ENSURE_TRUE(esm, NS_ERROR_FAILURE);
+  nsIEventStateManager *esm = presContext->EventStateManager();
 
   // Register or unregister as appropriate.
   if (aDoReg) {

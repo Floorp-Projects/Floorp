@@ -154,10 +154,8 @@ static PRInt32 GetContentState(nsIFrame* aFrame)
 
   nsCOMPtr<nsIPresContext> context;
   shell->GetPresContext(getter_AddRefs(context));
-  nsCOMPtr<nsIEventStateManager> esm;
-  shell->GetPresContext()->GetEventStateManager(getter_AddRefs(esm));
   PRInt32 flags = 0;
-  esm->GetContentState(aFrame->GetContent(), flags);
+  context->EventStateManager()->GetContentState(aFrame->GetContent(), flags);
   return flags;
 }
 

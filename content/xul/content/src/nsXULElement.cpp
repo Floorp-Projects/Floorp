@@ -2072,11 +2072,9 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
                 nsCOMPtr<nsIPresContext> presContext;
                 shell->GetPresContext(getter_AddRefs(presContext));
 
-                nsCOMPtr<nsIEventStateManager> esm;
-                presContext->GetEventStateManager(getter_AddRefs(esm));
-
                 nsIContent* content = NS_STATIC_CAST(nsIContent*, this);
-                esm->UnregisterAccessKey(content, aOldValue.First());
+                presContext->EventStateManager()->
+                    UnregisterAccessKey(content, aOldValue.First());
             }
         }
     }
@@ -3970,12 +3968,8 @@ nsXULElement::SetFocus(nsIPresContext* aPresContext)
     if (disabled == NS_LITERAL_STRING("true"))
         return;
 
-    nsCOMPtr<nsIEventStateManager> esm;
-    aPresContext->GetEventStateManager(getter_AddRefs(esm));
-
-    if (esm) {
-        esm->SetContentState((nsIStyledContent*)this, NS_EVENT_STATE_FOCUS);
-    }
+    aPresContext->EventStateManager()->SetContentState(this,
+                                                       NS_EVENT_STATE_FOCUS);
 }
 
 void

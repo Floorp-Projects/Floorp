@@ -396,11 +396,8 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
 
 #ifdef DEBUG_CANVAS_FOCUS
     nsCOMPtr<nsIContent> focusContent;
-    nsCOMPtr<nsIEventStateManager> esm;
-    aPresContext->GetEventStateManager(getter_AddRefs(esm));
-    if (esm) {
-      esm->GetFocusedContent(getter_AddRefs(focusContent));
-    }
+    aPresContext->EventStateManager()->
+      GetFocusedContent(getter_AddRefs(focusContent));
 
     PRBool hasFocus = PR_FALSE;
     nsCOMPtr<nsISupports> container;
@@ -424,49 +421,44 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
       const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
       // Only paint the focus if we're visible
       if (vis->IsVisible()) {
-        nsCOMPtr<nsIEventStateManager> stateManager;
-        nsresult rv = aPresContext->GetEventStateManager(getter_AddRefs(stateManager));
-        if (NS_SUCCEEDED(rv)) {
-          nsIFrame * parentFrame = GetParent();
-          nsIView* parentView = parentFrame->GetView();
+        nsIFrame * parentFrame = GetParent();
+        nsIView* parentView = parentFrame->GetView();
 
-          nsIScrollableView* scrollableView;
-          if (NS_SUCCEEDED(CallQueryInterface(parentView, &scrollableView))) {
-            nscoord width, height;
-            scrollableView->GetContainerSize(&width, &height);
-            const nsIView* clippedView;
-            scrollableView->GetClipView(&clippedView);
-            nsRect vcr = clippedView->GetBounds();
-            focusRect.width = vcr.width;
-            focusRect.height = vcr.height;
-            nscoord x,y;
-            scrollableView->GetScrollPosition(x, y);
-            focusRect.x += x;
-            focusRect.y += y;
-          }
-
-          nsStyleOutline outlineStyle(aPresContext);
-          outlineStyle.SetOutlineStyle(NS_STYLE_BORDER_STYLE_DOTTED);
-          outlineStyle.SetOutlineInvert();
-          
-          float p2t;
-          p2t = aPresContext->PixelsToTwips();
-          // XXX the CSS border for links is specified as 2px, but it
-          // is only drawn as 1px.  Match this here.
-          nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-
-          nsRect borderInside(focusRect.x + onePixel,
-                              focusRect.y + onePixel,
-                              focusRect.width - 2 * onePixel,
-                              focusRect.height - 2 * onePixel);
-
-          nsCSSRendering::DrawDashedSides(0, aRenderingContext, 
-                                          focusRect, nsnull,
-                                          nsnull, &outlineStyle,
-                                          PR_TRUE, focusRect,
-                                          borderInside, 0, 
-                                          nsnull);
+        nsIScrollableView* scrollableView;
+        if (NS_SUCCEEDED(CallQueryInterface(parentView, &scrollableView))) {
+          nscoord width, height;
+          scrollableView->GetContainerSize(&width, &height);
+          const nsIView* clippedView;
+          scrollableView->GetClipView(&clippedView);
+          nsRect vcr = clippedView->GetBounds();
+          focusRect.width = vcr.width;
+          focusRect.height = vcr.height;
+          nscoord x,y;
+          scrollableView->GetScrollPosition(x, y);
+          focusRect.x += x;
+          focusRect.y += y;
         }
+
+        nsStyleOutline outlineStyle(aPresContext);
+        outlineStyle.SetOutlineStyle(NS_STYLE_BORDER_STYLE_DOTTED);
+        outlineStyle.SetOutlineInvert();
+
+        float p2t = aPresContext->PixelsToTwips();
+        // XXX the CSS border for links is specified as 2px, but it
+        // is only drawn as 1px.  Match this here.
+        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+        nsRect borderInside(focusRect.x + onePixel,
+                            focusRect.y + onePixel,
+                            focusRect.width - 2 * onePixel,
+                            focusRect.height - 2 * onePixel);
+
+        nsCSSRendering::DrawDashedSides(0, aRenderingContext, 
+                                        focusRect, nsnull,
+                                        nsnull, &outlineStyle,
+                                        PR_TRUE, focusRect,
+                                        borderInside, 0, 
+                                        nsnull);
       }
     }
   }

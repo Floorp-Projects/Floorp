@@ -1888,15 +1888,14 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   if (vm) {
     vm->GetWidget(getter_AddRefs(widget));
   }
-  nsCOMPtr<nsIEventStateManager> esm;
-  presContext->GetEventStateManager(getter_AddRefs(esm));
   nsCOMPtr<nsIContent> rootContent;
   doc->GetRootContent(getter_AddRefs(rootContent));
 
   printf("DS %p  Ty %s  Doc %p DW %p EM %p CN %p\n",  
     parentAsDocShell.get(), 
     type==nsIDocShellTreeItem::typeChrome?"Chr":"Con", 
-     doc.get(), domwin.get(), esm.get(), rootContent.get());
+     doc.get(), domwin.get(),
+     presContext->EventStateManager(), rootContent.get());
 
   if (childWebshellCount > 0) {
     for (PRInt32 i=0;i<childWebshellCount;i++) {

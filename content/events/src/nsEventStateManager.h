@@ -356,7 +356,4 @@ protected:
 
 };
 
-nsresult
-NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);
-
 #endif // nsEventStateManager_h__

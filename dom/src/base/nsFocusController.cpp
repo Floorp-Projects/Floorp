@@ -250,11 +250,8 @@ nsFocusController::MoveFocus(PRBool aForward, nsIDOMElement* aElt)
   nsCOMPtr<nsIPresContext> presContext;
   shell->GetPresContext(getter_AddRefs(presContext));
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  presContext->GetEventStateManager(getter_AddRefs(esm));
-  if (esm)
-    // Make this ESM shift the focus per our instructions.
-    esm->ShiftFocus(aForward, content);
+  // Make this ESM shift the focus per our instructions.
+  presContext->EventStateManager()->ShiftFocus(aForward, content);
 
   return NS_OK;
 }

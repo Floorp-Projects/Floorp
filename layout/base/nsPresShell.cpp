@@ -3834,11 +3834,7 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
 NS_IMETHODIMP
 PresShell::ClearFrameRefs(nsIFrame* aFrame)
 {
-  nsIEventStateManager *manager;
-  if (NS_SUCCEEDED (mPresContext->GetEventStateManager(&manager))) {
-    manager->ClearFrameRefs(aFrame);
-    NS_RELEASE(manager);
-  }
+  mPresContext->EventStateManager()->ClearFrameRefs(aFrame);
   
   if (mCaret) {
     mCaret->ClearFrameRefs(aFrame);
@@ -3905,13 +3901,12 @@ PresShell::CantRenderReplacedElement(nsIFrame* aFrame)
 NS_IMETHODIMP
 PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
 {
-  nsCOMPtr<nsIEventStateManager> esm;
-  mPresContext->GetEventStateManager(getter_AddRefs(esm));
+  // Hold a reference to the ESM in case event dispatch tears us down.
+  nsCOMPtr<nsIEventStateManager> esm = mPresContext->EventStateManager();
+
   if (aAnchorName.IsEmpty()) {
     NS_ASSERTION(!aScroll, "can't scroll to empty anchor name");
-    if (esm) {
-      esm->SetContentState(nsnull, NS_EVENT_STATE_URLTARGET);
-    }
+    esm->SetContentState(nsnull, NS_EVENT_STATE_URLTARGET);
     return NS_OK;
   }
 
@@ -4026,9 +4021,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
     }
   }
  
-  if (esm) {
-    esm->SetContentState(content, NS_EVENT_STATE_URLTARGET);
-  }
+  esm->SetContentState(content, NS_EVENT_STATE_URLTARGET);
 
   if (content) {
     // Flush notifications so we scroll to the right place
@@ -4085,10 +4078,8 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
           }
         }
         
-        if (esm) {
-          PRBool isSelectionWithFocus;
-          esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
-        }
+        PRBool isSelectionWithFocus;
+        esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
       }
     }
   } else {
@@ -5254,10 +5245,7 @@ PresShell::ContentReplaced(nsIDocument* aDocument,
 {
   // Notify the ESM that the content has been removed, so that
   // it can clean up any state related to the content.
-  nsCOMPtr<nsIEventStateManager> esm;
-  mPresContext->GetEventStateManager(getter_AddRefs(esm));
-  if (esm)
-    esm->ContentRemoved(aOldChild);
+  mPresContext->EventStateManager()->ContentRemoved(aOldChild);
 
   WillCauseReflow();
   mFrameConstructor->ContentReplaced(mPresContext, aContainer, aOldChild,
@@ -5274,10 +5262,7 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 {
   // Notify the ESM that the content has been removed, so that
   // it can clean up any state related to the content.
-  nsCOMPtr<nsIEventStateManager> esm;
-  mPresContext->GetEventStateManager(getter_AddRefs(esm));
-  if (esm)
-    esm->ContentRemoved(aChild);
+  mPresContext->EventStateManager()->ContentRemoved(aChild);
 
   WillCauseReflow();
   mFrameConstructor->ContentRemoved(mPresContext, aContainer, aChild,
@@ -5688,13 +5673,13 @@ nsresult PresShell::RetargetEventToParent(nsIView         *aView,
   // docshell, until the newly loading document is displayed.
 
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
-  nsCOMPtr<nsIEventStateManager> esm;
-  mPresContext->GetEventStateManager(getter_AddRefs(esm));
-  if (esm) {
-    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-    esm->SetFocusedContent(nsnull);
-    ContentStatesChanged(mDocument, aZombieFocusedContent, nsnull, NS_EVENT_STATE_FOCUS);
-  }
+  // hold a reference to the ESM across event dispatch
+  nsCOMPtr<nsIEventStateManager> esm = mPresContext->EventStateManager();
+
+  esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+  esm->SetFocusedContent(nsnull);
+  ContentStatesChanged(mDocument, aZombieFocusedContent,
+                       nsnull, NS_EVENT_STATE_FOCUS);
 
   // Next, update the display so the old focus ring is no longer visible
 
@@ -5795,10 +5780,9 @@ PresShell::HandleEvent(nsIView         *aView,
     // key and IME events go to the focused frame
     nsCOMPtr<nsIEventStateManager> manager;
     if ((NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
-         aEvent->message == NS_CONTEXTMENU_KEY) &&
-        NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(manager)))) {
+         aEvent->message == NS_CONTEXTMENU_KEY)) {
 
-      manager->GetFocusedFrame(&mCurrentEventFrame);
+      mPresContext->EventStateManager()->GetFocusedFrame(&mCurrentEventFrame);
       if (!mCurrentEventFrame) {
 #if defined(MOZ_X11)
         if (NS_IS_IME_EVENT(aEvent)) {
@@ -6021,11 +6005,10 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
   }
 #endif
 
-  nsCOMPtr<nsIEventStateManager> manager;
-  nsresult rv = mPresContext->GetEventStateManager(getter_AddRefs(manager));
+  nsCOMPtr<nsIEventStateManager> manager = mPresContext->EventStateManager();
+  nsresult rv = NS_OK;
 
-  if (NS_SUCCEEDED(rv) &&
-      (!NS_EVENT_NEEDS_FRAME(aEvent) || GetCurrentEventFrame())) {
+  if (!NS_EVENT_NEEDS_FRAME(aEvent) || GetCurrentEventFrame()) {
 
     // 1. Give event to event manager for pre event state changes and
     //    generation of synthetic events.
