@@ -1167,6 +1167,83 @@ nsEditorShell::SetBackgroundColor(const PRUnichar *color)
 }
 
 NS_IMETHODIMP 
+nsEditorShell::GetParagraphState(PRBool *aMixed, PRUnichar **_retval)
+{
+  if (!aMixed || !_retval) return NS_ERROR_NULL_POINTER;
+  *_retval = nsnull;
+  *aMixed = PR_FALSE;
+
+  nsresult  err = NS_NOINTERFACE;
+  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+
+  if (htmlEditor)
+  {
+    PRBool bMixed;
+    nsAutoString state;
+    err = htmlEditor->GetParagraphState(bMixed, state);
+    if (!bMixed)
+      *_retval = state.ToNewUnicode();
+  }
+  return err;
+}
+
+NS_IMETHODIMP 
+nsEditorShell::GetListState(PRBool *aMixed, PRUnichar **_retval)
+{
+  if (!aMixed || !_retval) return NS_ERROR_NULL_POINTER;
+  *_retval = nsnull;
+  *aMixed = PR_FALSE;
+
+  nsresult  err = NS_NOINTERFACE;
+  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+  if (htmlEditor)
+  {
+    PRBool bOL, bUL, bDL;
+    err = htmlEditor->GetListState(*aMixed, bOL, bUL, bDL);
+    if (NS_SUCCEEDED(err))
+    {
+      if (!*aMixed)
+      {
+        nsAutoString tagStr;
+        if (bOL) tagStr.AssignWithConversion("ol");
+        else if (bUL) tagStr.AssignWithConversion("ul");
+        else if (bDL) tagStr.AssignWithConversion("dl");
+        *_retval = tagStr.ToNewUnicode();
+      }
+    }  
+  }
+  return err;
+}
+
+NS_IMETHODIMP 
+nsEditorShell::GetListItemState(PRBool *aMixed, PRUnichar **_retval)
+{
+  if (!aMixed || !_retval) return NS_ERROR_NULL_POINTER;
+  *_retval = nsnull;
+  *aMixed = PR_FALSE;
+
+  nsresult  err = NS_NOINTERFACE;
+  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+  if (htmlEditor)
+  {
+    PRBool bLI,bDT,bDD;
+    err = htmlEditor->GetListItemState(*aMixed, bLI, bDT, bDD);
+    if (NS_SUCCEEDED(err))
+    {
+      if (!*aMixed)
+      {
+        nsAutoString tagStr;
+        if (bLI) tagStr.AssignWithConversion("li");
+        else if (bDT) tagStr.AssignWithConversion("dt");
+        else if (bDD) tagStr.AssignWithConversion("dd");
+        *_retval = tagStr.ToNewUnicode();
+      }
+    }  
+  }
+  return err;
+}
+
+NS_IMETHODIMP 
 nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
 {
   nsresult result = NS_NOINTERFACE;
@@ -1188,7 +1265,7 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
   if (aDisplayMode == eDisplayModeSource && mDisplayMode == eDisplayModeSource)
       return NS_OK;
 
-  // The rest of the HTML Source display work is in EditorCommand.js
+  // The rest of the HTML Source display work is in editor.js
 
   nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
   if (!styleSheets) return NS_NOINTERFACE;
@@ -4909,7 +4986,6 @@ nsEditorShell::DocumentIsRootDoc(nsIDocumentLoader* aLoader, PRBool& outIsRoot)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClickCount,
                                          PRInt32 x, PRInt32 y, PRBool *_retval)
@@ -4955,25 +5031,6 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
   // For double-click, edit element properties
   if (aClickCount == 2)
   {
-    // Get the ComposerController:
-    nsCOMPtr<nsIControllers> controllers;      
-    if(!mContentWindow)
-      return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
-    if (!cwP) return NS_ERROR_NOT_INITIALIZED;
-    rv = cwP->GetControllers(getter_AddRefs(controllers));      
-    if (NS_FAILED(rv)) return rv;
-    if (!controllers) return NS_ERROR_NULL_POINTER;
-
-    // TODO: Don't use eComposerController index! must search 
-    //  through controllers to find the one we want - UGH!
-    nsCOMPtr<nsIController> controller;   
-    rv = controllers->GetControllerAt(eComposerController, getter_AddRefs(controller));
-    if (NS_FAILED(rv)) return rv;
-    if (!controller) return NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsIEditorController> composerController = do_QueryInterface(controller);
-
-    // Execute the command
     nsAutoString commandName;
 
     // In "All Tags" mode, use AdvancedProperties,
@@ -4982,13 +5039,43 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
       commandName = NS_ConvertASCIItoUCS2("cmd_objectProperties");
     else
       commandName = NS_ConvertASCIItoUCS2("cmd_advancedProperties");
+    
+    rv = DoControllerCommand(commandName);
 
-    rv = composerController->DoCommand(commandName.GetUnicode());
-
-    // We handled the message -- don't propogate to frames
     if (NS_SUCCEEDED(rv))
       *_retval = PR_TRUE;
   }
 
   return rv;
 }
+
+nsresult
+nsEditorShell::DoControllerCommand(nsString& aCommand)
+{
+  // Get the list of controllers...
+  nsCOMPtr<nsIControllers> controllers;      
+  if(!mContentWindow)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+  if (!cwP) return NS_ERROR_NOT_INITIALIZED;
+  nsresult rv = cwP->GetControllers(getter_AddRefs(controllers));      
+  if (NS_FAILED(rv)) return rv;
+  if (!controllers) return NS_ERROR_NULL_POINTER;
+
+  //... then find the specific controller supporting desired command
+  nsCOMPtr<nsIController> controller; 
+
+  rv = controllers->GetControllerForCommand(aCommand.GetUnicode(), getter_AddRefs(controller));
+  
+  if (NS_SUCCEEDED(rv))
+  {
+    if (!controller) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIEditorController> composerController = do_QueryInterface(controller);
+    // Execute the command
+    rv = composerController->DoCommand(aCommand.GetUnicode());
+  }
+  return rv;
+}
+

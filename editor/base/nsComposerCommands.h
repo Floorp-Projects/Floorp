@@ -132,6 +132,20 @@ protected:
   virtual nsresult  ToggleState(nsIEditorShell *aEditorShell, const char* aTagName);
 };
 
+class nsListItemCommand : public nsBaseStateUpdatingCommand
+{
+public:
+
+            nsListItemCommand(const char* aTagName);
+
+protected:
+  
+  // get the current state (on or off) for this style or block format
+  virtual nsresult  GetCurrentState(nsIEditorShell *aEditorShell, const char* aTagName, PRBool& outStateSet);
+  
+  // add/remove the style
+  virtual nsresult  ToggleState(nsIEditorShell *aEditorShell, const char* aTagName);
+};
 
 // Base class for commands whose state consists of a string (e.g. para format)
 class nsMultiStateCommand : public nsBaseComposerCommand,
