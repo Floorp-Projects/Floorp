@@ -147,8 +147,7 @@ Rights Reserved.
 			<menuitem value="&selectThreadCmd.label;" disabled="true" oncommand="MsgSelectThread();"/>
 			<menuitem value="&selectFlaggedCmd.label;" disabled="true" oncommand="MsgSelectFlaggedMsg();"/>
 			<menuseparator/>
-			<menuitem value="&spamFiltersCmd.label;" disabled="true"/>
-			<menuitem value="&filtersCmd.label;" disabled="true" oncommand="MsgFilters();"/>
+			<menuitem value="&filtersCmd.label;" oncommand="MsgFilters();"/>
 			<menuitem value="&folderPropsCmd.label;" disabled="true" oncommand="MsgFolderProperties();"/>
 			<menuseparator/>
 			<menuitem value="&accountManagerCmd.label;" oncommand="MsgAccountManager();"/>
