@@ -272,6 +272,65 @@ read_addrs()
 }
 
 /**
+ * Run the program
+ */
+static void
+run()
+{
+    // We want non-blocking I/O on stdin so we can select on it.
+    fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
+
+    // The last time we refreshed the window.
+    struct timeval last;
+    gettimeofday(&last, 0);
+
+    int ok;
+
+    do {
+        // Select on stdin and the connection to the X server.
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(STDIN_FILENO, &fds);
+        FD_SET(GET_DISPLAY_FD(display), &fds);
+
+        struct timeval tv;
+        tv.tv_sec  = 1;
+        tv.tv_usec = 0;
+
+        ok = select(GET_DISPLAY_FD(display) + 1, &fds, 0, 0, &tv);
+        if (ok < 0)
+            break;
+
+        if (maxpage) {
+            // See if we've waited long enough to refresh the window.
+            struct timeval now;
+            gettimeofday(&now, 0);
+
+            if (now.tv_sec != last.tv_sec) {
+                // At least a second has gone by. Decay and refresh.
+                last = now;
+                decay();
+                invalidate_window();
+            }
+            else if (now.tv_usec - last.tv_usec > 100000) {
+                // At least 100msec have gone by. Refresh.
+                last.tv_usec = now.tv_usec;
+                invalidate_window();
+            }
+        }
+
+        // Now check for X events and input.
+        ok = 1;
+
+        if (FD_ISSET(GET_DISPLAY_FD(display), &fds))
+            ok = handle_xevents();
+
+        if (FD_ISSET(STDIN_FILENO, &fds))
+            ok = read_addrs();
+    } while (ok);
+}
+
+/**
  * Tear down our window and stuff.
  */
 static void
@@ -292,50 +351,8 @@ finish()
 int
 main(int argc, char *argv[])
 {
-    if (init()) {
-        fcntl(0, F_SETFL, O_NONBLOCK);
-
-        struct timeval last;
-        gettimeofday(&last, 0);
-
-        int ok;
-
-        do {
-            fd_set fds;
-            FD_ZERO(&fds);
-            FD_SET(STDIN_FILENO, &fds);
-            FD_SET(GET_DISPLAY_FD(display), &fds);
-
-            struct timeval tv;
-            tv.tv_sec  = 1;
-            tv.tv_usec = 0;
-
-            ok = select(GET_DISPLAY_FD(display) + 1, &fds, 0, 0, &tv);
-            if (ok < 0)
-                break;
-
-            struct timeval now;
-            gettimeofday(&now, 0);
-
-            if (maxpage && (now.tv_sec != last.tv_sec)) {
-                last = now;
-                decay();
-                invalidate_window();
-            }
-            else if (now.tv_usec - last.tv_usec > 100000) {
-                last.tv_usec = now.tv_usec;
-                invalidate_window();
-            }
-
-            ok = 1;
-
-            if (FD_ISSET(GET_DISPLAY_FD(display), &fds))
-                ok = handle_xevents();
-
-            if (FD_ISSET(STDIN_FILENO, &fds))
-                ok = read_addrs();
-        } while (ok);
-    }
+    if (init())
+        run();
 
     finish();
 
