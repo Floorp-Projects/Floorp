@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.17 $ 
-# $Date: 2002/04/27 03:23:00 $ 
+# $Revision: 1.18 $ 
+# $Date: 2002/05/10 21:24:39 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -87,13 +87,13 @@ sub timestring2time {
             $time = timelocal($sec,$min,$hours,$mday,$mon,$year - 1);    
         }
         
-        # check that the result is reasonable.
-        
-        if ( (($main::TIME - $main::SECONDS_PER_YEAR) > $time) || 
-             (($main::TIME + $main::SECONDS_PER_MONTH) < $time) ) {
-             $time = time();
-        }
+    }
 
+    # check that the result is reasonable.
+    
+    if ( (($main::TIME - $main::SECONDS_PER_YEAR) > $time) || 
+         (($main::TIME + $main::SECONDS_PER_MONTH) < $time) ) {
+        undefine $time;
     }
 
     return $time;
@@ -110,7 +110,7 @@ sub time2timestring {
     
     $mon++;
     $year += 1900;
-    my $display__time = sprintf("%02u/%02u %02u:%02u",
+    my $display_time = sprintf("%02u/%02u %02u:%02u",
                                 $mon, $mday,  $hour, $min);
   
     return $display_time;
@@ -158,6 +158,14 @@ sub get_params {
   # have to prevent bad scripts from being posted.
 
   $NOTE = extract_html_chars($NOTE);
+
+  {
+    TinderDB::loadtree_db($tree);
+      
+      @ASSOCIATIONS = TinderDB::notice_association($tree);
+  }
+
+  @CHOSEN_ASSOCIATIONS = param("associations");
 
   return 1;
 }
@@ -213,6 +221,20 @@ sub format_input_page {
 	      p(),
 	     );
   
+  if (@ASSOCIATIONS) {
+    
+    push @out, ( 
+                h3("Associated with"),
+                p(),
+                radio_group(
+                            -name=>'associations', 
+                            -value=>[@ASSOCIATIONS], 
+                            # -default=>,
+                            ),
+                p(),
+               )
+  } # end if
+  
   push @out, (
 	      "Enter Notice: \n",p(),
 	      textarea(-name=>'note', 
@@ -253,6 +275,11 @@ sub save_note {
   
   my ($pretty_time) = HTMLPopUp::timeHTML($time);
 
+  my %association;
+  foreach $association (@CHOSEN_ASSOCIATIONS) {
+      $association{$association} = 1;
+  }
+
   # We embed the IP address of the host, just in case there is some bad
   # html in the notice that gets through our defenses.  If we know that
   # there is a problem with a page, then we know which machine it came
@@ -267,6 +294,7 @@ sub save_note {
                   'posttime' => $TIME,
                   'localposttime' => $LOCALTIME,
                   'remote_host' => $REMOTE_HOST,
+                  'associations' => \%association,
                  };
 
   my ($update_file) = (FileStructure::get_filename($TREE, 'TinderDB_Dir').
