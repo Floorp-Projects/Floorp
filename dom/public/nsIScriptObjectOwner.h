@@ -72,4 +72,27 @@ public:
   NS_IMETHOD SetScriptObject(void* aScriptObject) = 0;
 };
 
+class nsIAtom;
+
+#define NS_ISCRIPTEVENTHANDLEROWNER_IID \
+{ /* 2ad54ae0-a839-11d3-ba97-00104ba02d3d */ \
+0x2ad54ae0, 0xa839, 0x11d3, \
+  {0xba, 0x97, 0x00, 0x10, 0x4b, 0xa0, 0x2d, 0x3d} }
+
+/**
+ * Associate a compiled event handler with its target object, which owns it
+ * This is an adjunct to nsIScriptObjectOwner that nsIEventListenerManager's
+ * implementation queries for, in order to avoid recompiling a recurrent or
+ * prototype-inherited event handler.
+ */
+class nsIScriptEventHandlerOwner : public nsISupports
+{
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTEVENTHANDLEROWNER_IID)
+
+  NS_IMETHOD GetCompiledEventHandler(nsIAtom *aName, void** aHandler) = 0;
+
+  NS_IMETHOD SetCompiledEventHandler(nsIAtom *aName, void* aHandler) = 0;
+};
+
 #endif // nsIScriptObjectOwner_h__

@@ -78,11 +78,63 @@ class nsXULAttributes;
 class nsXULPrototypeAttribute
 {
 public:
-    nsXULPrototypeAttribute() : mNameSpaceID(kNameSpaceID_Unknown) {}
+    nsXULPrototypeAttribute()
+        : mNameSpaceID(kNameSpaceID_Unknown),
+          mEventHandler(nsnull)
+    {
+#ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
+        gNumAttributes++;
+#endif
+    }
 
     PRInt32           mNameSpaceID;
     nsCOMPtr<nsIAtom> mName;
     nsString          mValue;
+    void*             mEventHandler;
+
+#ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
+    /**
+      If enough attributes, on average, are event handlers, it pays to keep
+      mEventHandler here, instead of maintaining a separate mapping in each
+      nsXULElement associating certain mName values to their mEventHandlers.
+      Assume we don't need to keep mNameSpaceID along with mName in such an
+      event-handler-only name-to-function-pointer mapping.
+
+      Let
+        minAttrSize  = sizeof(mNameSpaceID) + sizeof(mName) + sizeof(mValue)
+        mappingSize  = sizeof(mName) + sizeof(mEventHandler)
+        elemOverhead = nElems * sizeof(void*)
+
+      Then
+        nAttrs * minAttrSize + nEventHandlers * mappingSize + elemOverhead
+        > nAttrs * (minAttrSize + mappingSize - sizeof(mName))
+      which simplifies to
+        nEventHandlers * mappingSize + elemOverhead
+        > nAttrs * (mappingSize - sizeof(mName))
+      or
+        nEventHandlers + (nElems * sizeof(void*)) / mappingSize
+        > nAttrs * (1 - sizeof(mName) / mappingSize)
+
+      If nsCOMPtr and all other pointers are the same size, this reduces to
+        nEventHandlers + nElems / 2 > nAttrs / 2
+
+      To measure how many attributes are event handlers, compile XUL source
+      with XUL_PROTOTYPE_ATTRIBUTE_METERING and watch the counters below.
+      Plug into the above relation -- if true, it pays to put mEventHandler
+      in nsXULPrototypeAttribute rather than to keep a separate mapping.
+
+      Recent numbers after opening four browser windows:
+        nElems 3537, nAttrs 2528, nEventHandlers 1042
+      giving 1042 + 3537/2 > 2528/2 or 2810 > 1264.
+
+      As it happens, mEventHandler also makes this struct power-of-2 sized,
+      8 words on most architectures, which makes for strength-reduced array
+      index-to-pointer calculations.
+     */
+    static PRUint32   gNumElements;
+    static PRUint32   gNumAttributes;
+    static PRUint32   gNumEventHandlers;
+#endif
 };
 
 
@@ -249,6 +301,7 @@ class nsXULElement : public nsIStyledContent,
                      public nsIDOMXULElement,
                      public nsIDOMEventReceiver,
                      public nsIScriptObjectOwner,
+                     public nsIScriptEventHandlerOwner,
                      public nsIJSScriptObject,
                      public nsIStyleRule,
                      public nsIChromeEventHandler
@@ -388,6 +441,10 @@ public:
     // nsIScriptObjectOwner
     NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
     NS_IMETHOD SetScriptObject(void *aScriptObject);
+
+    // nsIScriptEventHandlerOwner
+    NS_IMETHOD GetCompiledEventHandler(nsIAtom *aName, void** aHandler);
+    NS_IMETHOD SetCompiledEventHandler(nsIAtom *aName, void* aHandler);
 
     // nsIJSScriptObject
     virtual PRBool AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
