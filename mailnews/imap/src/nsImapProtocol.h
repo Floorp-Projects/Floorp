@@ -26,6 +26,7 @@
 #include "nsIImapProtocol.h"
 #include "nsIImapUrl.h"
 
+#include "nsIEventQueue.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "nsIBufferOutputStream.h"
