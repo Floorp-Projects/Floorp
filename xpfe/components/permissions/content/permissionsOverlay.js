@@ -18,6 +18,9 @@
  * Contributor(s):
  */
 
+var COOKIEPERMISSION = 0;
+var IMAGEPERMISSION = 1;
+
 function viewImages() {
   window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
                     "modal=yes,chrome,resizable=yes", 2 );
