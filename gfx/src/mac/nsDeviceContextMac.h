@@ -26,15 +26,6 @@
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
 
-/* nsDrawingSurface is actually the following struct */
-struct nsDrawingSurfaceMac {
-/*  Display *display ;
-  Drawable drawable ;
-  GC       gc ;
-  Visual * visual ;
-  PRUint32 depth ; */
-};
-
 class nsDeviceContextMac : public DeviceContextImpl
 {
 public:
@@ -59,10 +50,9 @@ protected:
   virtual ~nsDeviceContextMac();
   nsresult CreateFontCache();
 
-  nsIFontCache      *mFontCache;
-  nsDrawingSurfaceMac * mSurface ;
-
-  PRUint32 mDepth;
+  nsIFontCache      		*mFontCache;
+  nsDrawingSurface 			mSurface ;
+  PRUint32 							mDepth;
 
 };
 
