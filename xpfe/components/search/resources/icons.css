@@ -1,41 +1,9 @@
-/* Icons */
+/* Default Icon */
 
-titledbutton.engine[value="AOL Netfind"] {
-	list-style-image: url("resource:/res/rdf/datasets/AOL_NetFind.gif");
+titledbutton[loading="true"] {
+	list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
 }
 
-titledbutton.engine[value="Excite"] {
-	list-style-image: url("resource:/res/rdf/datasets/Excite.gif");
-}
-
-titledbutton.engine[value="Google!"] {
-	list-style-image: url("resource:/res/rdf/datasets/Google.gif");
-}
-
-titledbutton.engine[value="GoTo.com"] {
-	list-style-image: url("resource:/res/rdf/datasets/GoTo.com.gif");
-}
-
-titledbutton.engine[value="Hotbot"] {
-	list-style-image: url("resource:/res/rdf/datasets/HotBot.gif");
-}
-
-titledbutton.engine[value="LookSmart"] {
-	list-style-image: url("resource:/res/rdf/datasets/LookSmart.gif");
-}
-
-titledbutton.engine[value="Lycos"] {
-	list-style-image: url("resource:/res/rdf/datasets/Lycos.gif");
-}
-
-titledbutton.engine[value="Netscape Open Directory"] {
-	list-style-image: url("resource:/res/rdf/datasets/Netscape_Open_Directory.gif");
-}
-
-titledbutton.engine[value="Snap.com"] {
-	list-style-image: url("resource:/res/rdf/datasets/Snap.com.gif");
-}
-
-titledbutton.engine {
+titledbutton.iconic {
 	list-style-image: url("resource:/res/rdf/document.gif");
 }
