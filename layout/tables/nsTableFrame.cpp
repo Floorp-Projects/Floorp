@@ -4841,14 +4841,9 @@ void nsTableFrame::GetTableBorderForRowGroup(nsTableRowGroupFrame * aRowGroupFra
 
 PRUint8 nsTableFrame::GetBorderCollapseStyle()
 {
-// XXX change this once border-collapse is tested fully
-//#ifdef BORDER_COLLAPSE_IS_READY
   const nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   return tableStyle->mBorderCollapse;
-//#else
-//  return NS_STYLE_BORDER_SEPARATE;
-//#endif
 }
 
 
