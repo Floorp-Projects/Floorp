@@ -86,6 +86,7 @@ public:
     icaltimetype GetNextAlarmTime( icaltimetype begin );
     bool matchId( const char *id );
     icaltimetype GetNextRecurrence( icaltimetype begin );
+    icaltimetype GetPreviousOccurrence( icaltimetype beforethis );
 private:
     char *m_id;
     char *m_syncid;
@@ -116,5 +117,23 @@ private:
     icaltimetype CalculateAlarmTime( icaltimetype date );
     bool IsExcepted( PRTime date );
 };
+
+/*******************************************************************************************/
+#define OE_ICALEVENTDISPLAY_CONTRACTID "@mozilla.org/icaleventdisplay;1"
+
+class oeICalEventDisplayImpl : public oeIICalEventDisplay
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_FORWARD_OEIICALEVENT(mEvent->)
+    NS_DECL_OEIICALEVENTDISPLAY
+    oeICalEventDisplayImpl( oeIICalEvent *event );
+    virtual ~oeICalEventDisplayImpl();
+private:
+    icaltimetype m_displaydate;
+    nsCOMPtr<oeIICalEvent> mEvent;
+};
+
+
 
 #endif

@@ -104,7 +104,7 @@ oeICalTodoImpl::~oeICalTodoImpl()
         m_due->Release();
     if( m_completed )
         m_completed->Release();
-    mEvent->Release();
+    mEvent = nsnull;
 }
 
 /* readonly attribute oeIDateTime due; */

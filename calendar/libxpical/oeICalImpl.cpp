@@ -51,6 +51,7 @@
 #include "nsIURL.h"
 #include "nsNetCID.h"
 #include "nsEscape.h"
+#include "nsISupportsArray.h"
                              
 extern "C" {
     #include "icalss.h"
@@ -136,7 +137,7 @@ oeEventEnumerator::HasMoreElements(PRBool *result)
     }
     return NS_OK;
 }
-
+/*
 NS_IMETHODIMP
 oeEventEnumerator::GetNext(nsISupports **_retval)
 {
@@ -151,6 +152,24 @@ oeEventEnumerator::GetNext(nsISupports **_retval)
         event->AddRef();
         *_retval = event;
         ++mCurrentIndex;
+    }
+    
+    return NS_OK;
+}*/
+NS_IMETHODIMP
+oeEventEnumerator::GetNext(nsISupports **_retval)
+{
+        
+    if( mCurrentIndex >= mEventVector.size() )
+    {
+        *_retval = nsnull;
+    }
+    else
+    {
+        oeIICalEvent* event = mEventVector[ mCurrentIndex ];
+        nsresult rv = NS_NewICalEventDisplay( event, (oeIICalEventDisplay**) _retval );
+        ++mCurrentIndex;
+        return rv;
     }
     
     return NS_OK;
@@ -865,7 +884,7 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
         return NS_OK;
     }
     
-    ((oeICalEventImpl *)icalevent)->GetId( retid );
+    icalevent->GetId( retid );
     if( *retid == nsnull ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::ModifyEvent() - Invalid Id.\n" );
@@ -1045,11 +1064,11 @@ oeICalImpl::DeleteEvent( const char *id )
     SetupAlarmManager();
 	return NS_OK;
 }
-
+/*
 NS_IMETHODIMP
 oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
 {
-#ifdef ICAL_DEBUG_ALL
+#ifdef ICAL_DEBUG
     printf( "oeICalImpl::GetAllEvents()\n" );
 #endif
     nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator();
@@ -1064,6 +1083,119 @@ oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
         }
         tmplistptr = tmplistptr->next;
     }
+
+    // bump ref count
+    return eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
+}*/
+NS_IMETHODIMP
+oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::GetAllEvents()\n" );
+#endif
+    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator();
+    
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCOMPtr<nsISupportsArray> eventArray;
+    NS_NewISupportsArray(getter_AddRefs(eventArray));
+    if (eventArray == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    EventList *tmplistptr = &m_eventlist;
+    while( tmplistptr ) {
+        if( tmplistptr->event ) {
+            eventArray->AppendElement( tmplistptr->event );
+        }
+        tmplistptr = tmplistptr->next;
+    }
+
+    PRTime todayinms = PR_Now();
+    PRInt64 usecpermsec;
+    LL_I2L( usecpermsec, PR_USEC_PER_MSEC );
+    LL_DIV( todayinms, todayinms, usecpermsec );
+
+    struct icaltimetype checkdate = ConvertFromPrtime( todayinms );
+    struct icaltimetype now = ConvertFromPrtime( todayinms );
+    icaltime_adjust( &now, 0, 0, 0, -1 );
+
+    icaltimetype nextcheckdate;
+    PRUint32 num;
+
+    do {
+        icaltimetype soonest = icaltime_null_time();
+        eventArray->Count( &num );
+        for ( unsigned int i=0; i<num; i++ ) {
+            oeIICalEvent* tmpevent;
+            eventArray->GetElementAt( i, (nsISupports **)&tmpevent );
+            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( now );
+            if( !icaltime_is_null_time( next ) )
+                continue;
+            icaltimetype previous = ((oeICalEventImpl *)tmpevent)->GetPreviousOccurrence( checkdate );
+            if( !icaltime_is_null_time( previous ) && ( icaltime_is_null_time( soonest ) || (icaltime_compare( soonest, previous ) > 0) ) ) {
+                soonest = previous;
+            }
+        }
+
+        nextcheckdate = soonest;
+        if( !icaltime_is_null_time( nextcheckdate )) {
+
+            for ( unsigned int i=0; i<num; i++ ) {
+                oeIICalEvent* tmpevent;
+                eventArray->GetElementAt( i, (nsISupports **)&tmpevent );
+                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( now );
+                if( !icaltime_is_null_time( next ) )
+                    continue;
+                icaltimetype previous = ((oeICalEventImpl *)tmpevent)->GetPreviousOccurrence( checkdate );
+                if( !icaltime_is_null_time( previous ) && (icaltime_compare( nextcheckdate, previous ) == 0) ) {
+                    eventEnum->AddEvent( tmpevent );
+//                    PRTime nextdateinms = ConvertToPrtime( nextcheckdate );
+//                    dateEnum->AddDate( nextdateinms );
+                    eventArray->RemoveElementAt( i );
+                    break;
+                }
+            }
+        }
+    } while ( !icaltime_is_null_time( nextcheckdate ) );
+
+    checkdate = ConvertFromPrtime( todayinms );
+    icaltime_adjust( &checkdate, 0, 0, 0, -1 );
+    
+    do {
+
+        icaltimetype soonest = icaltime_null_time();
+        eventArray->Count( &num );
+        for ( unsigned int i=0; i<num; i++ ) {
+            oeIICalEvent* tmpevent;
+            eventArray->GetElementAt( i, (nsISupports **)&tmpevent );
+            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+            if( !icaltime_is_null_time( next ) && ( icaltime_is_null_time( soonest ) || (icaltime_compare( soonest, next ) > 0) ) ) {
+                soonest = next;
+            }
+        }
+
+        nextcheckdate = soonest;
+
+        if( !icaltime_is_null_time( nextcheckdate )) {
+
+            for ( unsigned int i=0; i<num; i++ ) {
+                oeIICalEvent* tmpevent;
+                eventArray->GetElementAt( i, (nsISupports **)&tmpevent );
+                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+                if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
+                    eventEnum->AddEvent( tmpevent );
+//                    PRTime nextdateinms = ConvertToPrtime( nextcheckdate );
+//                    dateEnum->AddDate( nextdateinms );
+                    eventArray->RemoveElementAt( i );
+                    icaltime_adjust( &nextcheckdate, 0, 0, 0, -1 );
+                    break;
+                }
+            }
+            checkdate = nextcheckdate;
+        }
+    } while ( !icaltime_is_null_time( nextcheckdate ) );
+
 
     // bump ref count
     return eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
@@ -1209,7 +1341,7 @@ oeICalImpl::GetEventsForDay( PRTime datems, nsISimpleEnumerator **datelist, nsIS
 
     return GetEventsForRange(checkdateinms ,checkenddateinms ,datelist ,eventlist );
 }
-
+/*
 NS_IMETHODIMP
 oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
 #ifdef ICAL_DEBUG_ALL
@@ -1245,8 +1377,57 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
     eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
     dateEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)datelist);
     return NS_OK;
-}
+}*/
 
+NS_IMETHODIMP
+oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalImpl::GetEventsForRange()\n" );
+#endif
+    
+    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
+    
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCOMPtr<oeDateEnumerator> dateEnum = new oeDateEnumerator( );
+    
+    if (!dateEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    struct icaltimetype checkdate = ConvertFromPrtime( checkdateinms );
+    icaltime_adjust( &checkdate, 0, 0, 0, -1 );
+    
+    struct icaltimetype checkenddate = ConvertFromPrtime( checkenddateinms );
+
+    icaltimetype nextcheckdate;
+    do {
+        nextcheckdate = GetNextEvent( checkdate );
+        if( icaltime_compare( nextcheckdate, checkenddate ) >= 0 )
+            break;
+        if( !icaltime_is_null_time( nextcheckdate )) {
+            EventList *tmplistptr = &m_eventlist;
+            while( tmplistptr ) {
+                if( tmplistptr->event ) {
+                    oeIICalEvent* tmpevent = tmplistptr->event;
+                    icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+                    if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
+                        eventEnum->AddEvent( tmpevent );
+                        PRTime nextdateinms = ConvertToPrtime( nextcheckdate );
+                        dateEnum->AddDate( nextdateinms );
+                    }
+                }
+                tmplistptr = tmplistptr->next;
+            }
+            checkdate = nextcheckdate;
+        }
+    } while ( !icaltime_is_null_time( nextcheckdate ) );
+
+    eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
+    dateEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)datelist);
+    return NS_OK;
+}
+/*
 NS_IMETHODIMP
 oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **eventlist ) {
 #ifdef ICAL_DEBUG_ALL
@@ -1274,6 +1455,72 @@ oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinm
 
     eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
     return NS_OK;
+}*/
+NS_IMETHODIMP
+oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **eventlist ) {
+//NOTE: checkenddateinms is being ignored for now
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalImpl::GetFirstEventsForRange()\n" );
+#endif
+    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator();
+    
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCOMPtr<nsISupportsArray> eventArray;
+    NS_NewISupportsArray(getter_AddRefs(eventArray));
+    if (eventArray == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    EventList *tmplistptr = &m_eventlist;
+    while( tmplistptr ) {
+        if( tmplistptr->event ) {
+            eventArray->AppendElement( tmplistptr->event );
+        }
+        tmplistptr = tmplistptr->next;
+    }
+
+    struct icaltimetype checkdate = ConvertFromPrtime( checkdateinms );
+    icaltime_adjust( &checkdate, 0, 0, 0, -1 );
+
+    icaltimetype nextcheckdate;
+    do {
+        PRUint32 num;
+        icaltimetype soonest = icaltime_null_time();
+        eventArray->Count( &num );
+        for ( unsigned int i=0; i<num; i++ ) {
+            oeIICalEvent* tmpevent;
+            eventArray->GetElementAt( i, (nsISupports **)&tmpevent );
+            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+            if( !icaltime_is_null_time( next ) && ( icaltime_is_null_time( soonest ) || (icaltime_compare( soonest, next ) > 0) ) ) {
+                soonest = next;
+            }
+        }
+
+        nextcheckdate = soonest;
+
+        if( !icaltime_is_null_time( nextcheckdate )) {
+
+            for ( unsigned int i=0; i<num; i++ ) {
+                oeIICalEvent* tmpevent;
+                eventArray->GetElementAt( i, (nsISupports **)&tmpevent );
+                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+                if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
+                    eventEnum->AddEvent( tmpevent );
+//                    PRTime nextdateinms = ConvertToPrtime( nextcheckdate );
+//                    dateEnum->AddDate( nextdateinms );
+                    eventArray->RemoveElementAt( i );
+                    icaltime_adjust( &nextcheckdate, 0, 0, 0, -1 );
+                    break;
+                }
+            }
+            checkdate = nextcheckdate;
+        }
+    } while ( !icaltime_is_null_time( nextcheckdate ) );
+
+
+    // bump ref count
+    return eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
 }
 
 icaltimetype oeICalImpl::GetNextEvent( icaltimetype starting ) {

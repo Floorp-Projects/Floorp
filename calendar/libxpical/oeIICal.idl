@@ -101,6 +101,13 @@ interface oeIICalEvent : nsISupports
     oeIICalEvent clone();
 };
 
+[scriptable, uuid(f95df40e-0d5f-49ec-9ba8-4b88d3eb53e0)]
+interface oeIICalEventDisplay : oeIICalEvent
+{
+    readonly attribute oeIICalEvent event;
+    attribute PRTime displayDate;
+};
+
 [scriptable, uuid(d44987b4-1dd1-11b2-9783-8a78ed685caf)]
 interface oeIICalTodo : oeIICalEvent
 {
@@ -153,4 +160,6 @@ extern nsresult
 NS_NewICalEvent(oeIICalEvent** inst);
 extern nsresult
 NS_NewDateTime(oeIDateTime** inst);
+extern nsresult
+NS_NewICalEventDisplay( oeIICalEvent* event, oeIICalEventDisplay** inst );
 %}

@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Mostafa Hosseini <mostafah@oeone.com>
+ *                 Gary Frederick <gary.frederick@jsoft.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -102,6 +103,8 @@ PRTime ConvertToPrtime ( icaltimetype indate ) {
     return result;
 }
 
+int gEventCount = 0;
+int gEventDisplayCount = 0;
 
 //////////////////////////////////////////////////
 //   ICalEvent Factory
@@ -128,7 +131,7 @@ NS_NewICalEvent( oeIICalEvent** inst )
 oeICalEventImpl::oeICalEventImpl()
 {
 #ifdef ICAL_DEBUG
-    printf( "oeICalEventImpl::oeICalEventImpl()\n" );
+    printf( "oeICalEventImpl::oeICalEventImpl(): %d\n", ++gEventCount );
 #endif
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -170,7 +173,7 @@ oeICalEventImpl::oeICalEventImpl()
 oeICalEventImpl::~oeICalEventImpl()
 {
 #ifdef ICAL_DEBUG
-    printf( "oeICalEventImpl::~oeICalEventImpl( %d )\n", mRefCnt );
+    printf( "oeICalEventImpl::~oeICalEventImpl(): %d\n", --gEventCount );
 #endif
   /* destructor code */
   if( m_id )
@@ -848,6 +851,19 @@ icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin ) {
     return result;
 }
 
+icaltimetype oeICalEventImpl::GetPreviousOccurrence( icaltimetype beforethis ) {
+    icaltimetype result = icaltime_null_time();
+    PRTime beforethisinms = ConvertToPrtime( beforethis );
+    PRTime resultinms;
+    PRBool isvalid;
+    GetPreviousOccurrence( beforethisinms ,&resultinms, &isvalid );
+    if( !isvalid )
+        return result;
+
+    result = ConvertFromPrtime( resultinms );
+    return result;
+}
+
 icaltimetype oeICalEventImpl::GetNextAlarmTime( icaltimetype begin ) {
 #ifdef ICAL_DEBUG_ALL
     printf( "oeICalEventImpl::GetNextAlarmTime()\n" );
@@ -1463,7 +1479,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
 }
 
 #define ICALEVENT_VERSION "2.0"
-#define ICALEVENT_PRODID "PRODID:-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN" // ggf
+#define ICALEVENT_PRODID "PRODID:-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN"
 
 icalcomponent* oeICalEventImpl::AsIcalComponent()
 {
@@ -1484,7 +1500,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     icalproperty *prop = icalproperty_new_version( ICALEVENT_VERSION );
     icalcomponent_add_property( newcalendar, prop );
 
-    //prodid - ggf
+    //prodid
     prop = icalproperty_new_prodid( ICALEVENT_PRODID );
     icalcomponent_add_property( newcalendar, prop );
 
@@ -1773,4 +1789,108 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     //add event to newcalendar
     icalcomponent_add_component( newcalendar, vevent );
     return newcalendar;
+}
+
+/********************************************************************************************/
+#include <nsIServiceManager.h>
+ 
+NS_IMPL_ADDREF(oeICalEventDisplayImpl)
+NS_IMPL_RELEASE(oeICalEventDisplayImpl)
+//NS_IMPL_ISUPPORTS1(oeICalEventDisplayImpl, oeIICalEventDisplay)
+
+nsresult
+NS_NewICalEventDisplay( oeIICalEvent* event, oeIICalEventDisplay** inst )
+{
+    NS_PRECONDITION(inst != nsnull, "null ptr");
+    if (! inst)
+        return NS_ERROR_NULL_POINTER;
+
+    *inst = new oeICalEventDisplayImpl( event );
+    if (! *inst)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*inst);
+    return NS_OK;
+}
+
+oeICalEventDisplayImpl::oeICalEventDisplayImpl( oeIICalEvent* event )
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventDisplayImpl::oeICalEventDisplayImpl(): %d\n", ++gEventDisplayCount );
+#endif
+    NS_INIT_ISUPPORTS();
+    nsresult rv;
+    if( event == nsnull ) {
+        mEvent = do_CreateInstance(OE_ICALEVENTDISPLAY_CONTRACTID, &rv);
+    } else {
+        NS_ADDREF( event );
+        mEvent = event;
+    }
+
+    /* member initializers and constructor code */
+    m_displaydate = icaltime_null_time();
+}
+
+oeICalEventDisplayImpl::~oeICalEventDisplayImpl()
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventDisplayImpl::~oeICalEventDisplayImpl(): %d\n", --gEventDisplayCount );
+#endif
+  /* destructor code */
+    mEvent = nsnull;
+}
+
+NS_IMETHODIMP
+oeICalEventDisplayImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+    if (nsnull == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    if (aIID.Equals(NS_GET_IID(nsISupports))) {
+        *aInstancePtr = (void*)(oeIICalEventDisplay*)this;
+        *aInstancePtr = (nsISupports*)*aInstancePtr;
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    if (aIID.Equals(NS_GET_IID(oeIICalEventDisplay))) {
+        *aInstancePtr = (void*)(oeIICalEventDisplay*)this;
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    if (aIID.Equals(NS_GET_IID(oeIICalEvent))) {
+        return mEvent->QueryInterface( aIID, aInstancePtr );
+    }
+    return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP oeICalEventDisplayImpl::GetDisplayDate( PRTime *aRetVal )
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventDisplayImpl::GetDisplayDate()\n" );
+#endif
+    *aRetVal = ConvertToPrtime( m_displaydate );
+    return NS_OK;
+}
+    
+
+NS_IMETHODIMP oeICalEventDisplayImpl::SetDisplayDate( PRTime aNewVal )
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventDisplayImpl::SetDisplayDate()\n" );
+#endif
+    m_displaydate = ConvertFromPrtime( aNewVal );
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeICalEventDisplayImpl::GetEvent( oeIICalEvent **ev )
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventDisplayImpl::GetEvent()\n" );
+#endif
+#ifdef ICAL_DEBUG
+    printf( "WARNING: .event is no longer needed to access event fields\n" );
+#endif
+    *ev = mEvent;
+    NS_ADDREF(*ev);
+    return NS_OK;
 }
