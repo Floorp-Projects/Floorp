@@ -23,7 +23,6 @@
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIFloaterContainer.h"
 #include "nsHTMLIIDs.h"
 
 static NS_DEFINE_IID(kIReflowCommandIID, NS_IREFLOWCOMMAND_IID);
@@ -100,18 +99,8 @@ NS_IMPL_ISUPPORTS(nsHTMLReflowCommand, kIReflowCommandIID);
 
 nsIFrame* nsHTMLReflowCommand::GetContainingBlock(nsIFrame* aFloater)
 {
-  nsIFrame*             containingBlock = nsnull;
-  nsIFloaterContainer*  container = nsnull;
-
-  for (aFloater->GetContentParent(containingBlock);
-       nsnull != containingBlock;
-       containingBlock->GetContentParent(containingBlock))
-  {
-    if (NS_OK == containingBlock->QueryInterface(kIFloaterContainerIID, (void**)&container)) {
-      break;
-    }
-  }
-
+  nsIFrame* containingBlock;
+  aFloater->GetGeometricParent(containingBlock);
   return containingBlock;
 }
 
