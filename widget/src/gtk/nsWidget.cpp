@@ -155,9 +155,17 @@ NS_METHOD nsWidget::Show(PRBool bState)
     return NS_OK; // Will be null durring printing
 
   if (bState)
+  {
     ::gtk_widget_show(mWidget);
+  }
   else
+  {
     ::gtk_widget_hide(mWidget);
+
+    // For some strange reason, gtk_widget_hide() does not seem to
+    // unmap the window.
+    ::gtk_widget_unmap(mWidget);
+  }
 
   mShown = bState;
 
@@ -173,6 +181,18 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
     }
     else
       aState = PR_TRUE;
+
+//
+// Why isnt the following good enough ? -ramiro
+//
+//     if (nsnull != mWidget)
+//     {
+//       aState = GTK_WIDGET_VISIBLE(mWidget);
+//     }
+//     else
+//     {
+//       aState = PR_FALSE;
+//     }
 
     return NS_OK;
 }
