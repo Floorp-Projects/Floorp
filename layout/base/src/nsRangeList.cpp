@@ -2273,7 +2273,30 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset, SelectionType aTyp
   else if (NS_FAILED(mAnchorFocusRange[aType]->SetEnd(endNode,endOffset)))
           return NS_ERROR_FAILURE;//???
   /*end hack*/
+
   ScrollIntoView(aType);
+
+#ifdef DEBUG_SELECTION
+  if (aParentNode)
+  {
+    nsCOMPtr<nsIContent>content;
+    content = do_QueryInterface(aParentNode);
+    nsIAtom *tag;
+    content->GetTag(tag);
+    if (tag)
+    {
+	    nsString tagString;
+	    tag->ToString(tagString);
+	    char * tagCString = tagString.ToNewCString();
+	    printf ("Sel. Extend to %p %s %d\n", content, tagCString, aOffset);
+	    delete [] tagCString;
+    }
+  }
+  else {
+    printf ("Sel. Extend set to null parent.\n");
+  }
+#endif
+
   return NotifySelectionListeners();
 }
 
