@@ -141,7 +141,6 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize)
   if (nsnull!=aMaxElementSize)
   {
     aMaxElementSize->height = 0;
-    
     // begin REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
     nsIFrame * parent = nsnull;
     mTableFrame->GetGeometricParent(parent);
@@ -151,7 +150,10 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize)
     nsMargin borderPadding;
     const nsStyleSpacing* spacing;
     if (tablePosition->mWidth.GetUnit()==eStyleUnit_Coord)
+    {
       aMaxElementSize->width = tablePosition->mWidth.GetCoordValue();
+      aMaxElementSize->width = PR_MAX(aMaxElementSize->width, mMinTableWidth);
+    }   
     else
       aMaxElementSize->width = mMinTableWidth;
 
