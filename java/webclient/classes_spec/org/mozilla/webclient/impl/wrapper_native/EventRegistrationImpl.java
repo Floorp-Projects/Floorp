@@ -332,7 +332,13 @@ public class BrowserToJavaEventPump extends Thread {
 		    Iterator iter = listeners.iterator();
 		    while (iter.hasNext()) {
 			curListener = (WebclientEventListener) iter.next();
-			curListener.eventDispatched(curEvent);
+			try {
+			    curListener.eventDispatched(curEvent);
+			}
+			catch (Throwable e) {
+			    System.out.println("Caught Execption calling listener: " + curListener + ". Exception: " + e + " " + e.getMessage());
+			    e.printStackTrace();
+			}
 		    }
 		}
 	    }

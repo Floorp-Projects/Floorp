@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -23,6 +23,8 @@
 
 package org.mozilla.webclient;
 
+import java.util.Map;
+
 
 public interface CurrentPage2 extends CurrentPage
 {
@@ -35,5 +37,9 @@ public interface CurrentPage2 extends CurrentPage
     public void print();
 
     public void printPreview(boolean preview);
+
+    public Map getRequestHeaders();
+
+    public Map getResponseHeaders();
 }
 // end of interface CurrentPage2

@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.18 2004/06/24 16:23:42 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.19 2004/09/03 19:04:22 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -26,11 +26,8 @@
 
 package org.mozilla.webclient;
 
-import org.mozilla.util.THTTPD;
-
-import junit.framework.TestSuite;
-import junit.framework.TestResult;
 import junit.framework.Test;
+import junit.framework.TestSuite;
 
 import java.util.Enumeration;
 
@@ -55,29 +52,10 @@ public class NavigationTest extends WebclientTestCase {
     }
 
     public static Test suite() {
-	TestSuite result = new TestSuite() {
-		public void run(TestResult result) {
-		    serverThread = 
-			new THTTPD.ServerThread("LocalHTTPD",
-						new File (getBrowserBinDir() +
-							  "/../../java/webclient/build.test"), -1);
-		    serverThread.start();
-		    serverThread.P();
-		    super.run(result);
-		    try {
-			BrowserControlFactory.appTerminate();
-		    }
-		    catch (Exception e) {
-			fail();
-		    }
-		    serverThread.stopRunning();
-		}
-	    };
+	TestSuite result = createServerTestSuite();
 	result.addTestSuite(NavigationTest.class);
 	return (result);
     }
-
-    static THTTPD.ServerThread serverThread;
 
     static EventRegistration2 eventRegistration;
 

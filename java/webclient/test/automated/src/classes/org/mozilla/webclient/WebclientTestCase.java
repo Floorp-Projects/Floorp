@@ -1,5 +1,5 @@
 /*
- * $Id: WebclientTestCase.java,v 1.7 2004/06/23 17:08:23 edburns%acm.org Exp $
+ * $Id: WebclientTestCase.java,v 1.8 2004/09/03 19:04:22 edburns%acm.org Exp $
  */
 
 /* 
@@ -32,11 +32,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import java.io.IOException;
+import java.io.File;
 
 import org.mozilla.util.Assert;
 import org.mozilla.util.ParameterCheck;
 
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import junit.framework.TestResult;
+import junit.framework.Test;
+
+import org.mozilla.util.THTTPD;
 
 /**
  *
@@ -44,7 +50,7 @@ import junit.framework.TestCase;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: WebclientTestCase.java,v 1.7 2004/06/23 17:08:23 edburns%acm.org Exp $
+ * @version $Id: WebclientTestCase.java,v 1.8 2004/09/03 19:04:22 edburns%acm.org Exp $
  * 
  * @see	Blah
  * @see	Bloo
@@ -64,6 +70,8 @@ public static final String OUTPUT_FILE_ROOT = "./build.test/";
 //
 // Class Variables
 //
+
+    static THTTPD.ServerThread serverThread;
 
 //
 // Instance Variables
@@ -103,6 +111,28 @@ public void setUp()
 //
 // General Methods
 //
+
+public static TestSuite createServerTestSuite() {
+    TestSuite result = new TestSuite() {
+	    public void run(TestResult result) {
+		serverThread = 
+		    new THTTPD.ServerThread("LocalHTTPD",
+					    new File (getBrowserBinDir() +
+						      "/../../java/webclient/build.test"), -1);
+		serverThread.start();
+		serverThread.P();
+		super.run(result);
+		try {
+		    BrowserControlFactory.appTerminate();
+		}
+		catch (Exception e) {
+		    fail();
+		}
+		serverThread.stopRunning();
+	    }
+	};
+	return result;
+}
 
 /**
 

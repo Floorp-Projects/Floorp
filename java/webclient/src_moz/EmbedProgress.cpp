@@ -23,6 +23,8 @@
 
 #include <nsXPIDLString.h>
 #include <nsIChannel.h>
+#include <nsIHttpChannel.h>
+#include <nsIHttpHeaderVisitor.h>
 
 #include "nsIURI.h"
 #include "nsCRT.h"
@@ -103,10 +105,17 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
     // 
     // document states
     //
+    nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aRequest);
 
     // if we've got the start flag, emit the signal
     if ((aStateFlags & STATE_IS_NETWORK) && 
 	(aStateFlags & STATE_START)) {
+	
+	if (channel) {
+	    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+		   ("EmbedProgress::OnStateChange: have nsIHttpChannel at START_DOCUMENT_LOAD\n"));
+	}
+
 	util_SendEventToJava(nsnull, 
 			     mEventRegistration, 
 			     DOCUMENT_LOAD_LISTENER_CLASSNAME,
@@ -117,6 +126,11 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
     // and for stop, too
     if ((aStateFlags & STATE_IS_NETWORK) && 
 	(aStateFlags & STATE_STOP)) {
+	if (channel) {
+	    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+		   ("EmbedProgress::OnStateChange: have nsIHttpChannel at END_DOCUMENT_LOAD\n"));
+	}
+
 	util_SendEventToJava(nsnull, 
 			     mEventRegistration, 
 			     DOCUMENT_LOAD_LISTENER_CLASSNAME,

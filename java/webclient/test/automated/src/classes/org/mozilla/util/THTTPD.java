@@ -1,5 +1,5 @@
 /*
- * $Id: THTTPD.java,v 1.4 2004/06/24 16:23:42 edburns%acm.org Exp $
+ * $Id: THTTPD.java,v 1.5 2004/09/03 19:04:21 edburns%acm.org Exp $
  */
 
 /* 
@@ -156,7 +156,8 @@ public class THTTPD extends Object {
 			    while (null != (curLine = responseReader.readLine())) {
 				responseString.append(curLine);
 			    }
-			    curLine = "Content-type: " + 
+			    curLine = "Server: THTTPD\r\n" + 
+				"Content-type: " + 
 				getContentTypeForFile(responseFile) + 
 				"\r\nContent-Length: " + 
 				responseString.length() + "\r\n\r\n";

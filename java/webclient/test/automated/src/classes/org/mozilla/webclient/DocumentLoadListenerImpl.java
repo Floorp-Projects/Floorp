@@ -1,5 +1,5 @@
 /*
- * $Id: DocumentLoadListenerImpl.java,v 1.1 2004/06/23 19:58:12 edburns%acm.org Exp $
+ * $Id: DocumentLoadListenerImpl.java,v 1.2 2004/09/03 19:04:22 edburns%acm.org Exp $
  */
 
 /* 
@@ -31,6 +31,9 @@ public abstract class DocumentLoadListenerImpl implements DocumentLoadListener {
 	public void eventDispatched(WebclientEvent event) {
 	    if (event instanceof DocumentLoadEvent) {
 		switch ((int) event.getType()) {
+		case ((int) DocumentLoadEvent.START_DOCUMENT_LOAD_EVENT_MASK):
+		    doStartCheck();
+		    break;
 		case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
 		    doEndCheck();
 		    break;
@@ -40,6 +43,8 @@ public abstract class DocumentLoadListenerImpl implements DocumentLoadListener {
 		}
 	    }
 	}	
+
+        public void doStartCheck() {}
 	
 	public void doEndCheck() {}
 

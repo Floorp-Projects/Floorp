@@ -160,6 +160,7 @@
             <test name="org.mozilla.webclient.impl.wrapper_native.WrapperFactoryImplTest"/>
             <test name="org.mozilla.webclient.impl.WebclientFactoryImplTest"/>
             <test name="org.mozilla.webclient.NavigationTest"/>
+<!--            <test name="org.mozilla.webclient.CurrentPageTest"/> -->
             <test name="org.mozilla.webclient.HistoryTest"/>
 <!-- non running
             <test name="org.mozilla.webclient.wrapper_native.gtk.TestGtkBrowserControlCanvas"/>

@@ -32,6 +32,7 @@ import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.impl.WrapperFactory;
 
 import java.util.Properties;
+import java.util.Map;
 import java.io.*;
 import java.net.*;
 
@@ -292,6 +293,17 @@ public void printPreview(boolean preview)
     }
 }
 
+public Map getRequestHeaders()
+{
+    return null;
+}
+
+public Map getResponseHeaders()
+{
+    return null;
+}
+
+
 //
 // Native methods
 //
@@ -327,22 +339,5 @@ native public void nativeSelectAll(int webShellPtr);
 native public void nativePrint(int webShellPtr);
 
 native public void nativePrintPreview(int webShellPtr, boolean preview);
-
-// ----VERTIGO_TEST_START
-
-//
-// Test methods
-//
-
-public static void main(String [] args)
-{
-    Assert.setEnabled(true);
-    Log.setApplicationName("CurrentPageImpl");
-    Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.5 2004/06/25 13:59:53 edburns%acm.org Exp $");
-
-}
-
-// ----VERTIGO_TEST_END
 
 } // end of class CurrentPageImpl

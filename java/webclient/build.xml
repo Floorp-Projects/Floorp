@@ -219,6 +219,10 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
     <delete dir="${build.home}/org/mozilla/webclient"/>
   </target>
 
+  <target name="clean.test">
+    <ant antfile="build-tests.xml" target="clean"/>   
+  </target>
+
   <target name="clean" depends="clean.classes_spec">
 
     <ant antfile="build-tests.xml" target="clean"/>   
