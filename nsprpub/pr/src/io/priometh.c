@@ -327,7 +327,9 @@ PR_IMPLEMENT(PRInt32) PR_EmulateSendFile(
     PRIOVec iov[3];
     PRFileMap *mapHandle = NULL;
     void *addr;
-    PRUint32 file_mmap_offset, pagesize;
+    PRUint32 file_mmap_offset, alignment;
+    PRInt64 zero64;
+    PROffset64 file_mmap_offset64;
     PRUint32 addr_offset, mmap_len;
 
     /* Get file size */
@@ -349,12 +351,12 @@ PR_IMPLEMENT(PRInt32) PR_EmulateSendFile(
     else
         file_bytes = info.size - sfd->file_offset;
 
-    pagesize = PR_GetPageSize();
+    alignment = PR_GetMemMapAlignment();
     /*
      * If the file is large, mmap and send the file in chunks so as
      * to not consume too much virtual address space
      */
-    if (!sfd->file_offset || !(sfd->file_offset & (pagesize - 1))) {
+    if (!sfd->file_offset || !(sfd->file_offset & (alignment - 1))) {
         /*
          * case 1: page-aligned file offset
          */
@@ -367,7 +369,7 @@ PR_IMPLEMENT(PRInt32) PR_EmulateSendFile(
          * case 2: non page-aligned file offset
          */
         /* find previous page boundary */
-        file_mmap_offset = (sfd->file_offset & ~(pagesize - 1));
+        file_mmap_offset = (sfd->file_offset & ~(alignment - 1));
 
         /* number of initial bytes to skip in mmap'd segment */
         addr_offset = sfd->file_offset - file_mmap_offset;
@@ -379,12 +381,14 @@ PR_IMPLEMENT(PRInt32) PR_EmulateSendFile(
      * Map in (part of) file. Take care of zero-length files.
      */
     if (len) {
-        mapHandle = PR_CreateFileMap(sfd->fd, 0, PR_PROT_READONLY);
+        LL_I2L(zero64, 0);
+        mapHandle = PR_CreateFileMap(sfd->fd, zero64, PR_PROT_READONLY);
         if (!mapHandle) {
             count = -1;
             goto done;
         }
-        addr = PR_MemMap(mapHandle, file_mmap_offset, mmap_len);
+        LL_I2L(file_mmap_offset64, file_mmap_offset);
+        addr = PR_MemMap(mapHandle, file_mmap_offset64, mmap_len);
         if (!addr) {
             count = -1;
             goto done;
@@ -435,9 +439,10 @@ PR_IMPLEMENT(PRInt32) PR_EmulateSendFile(
          * Map in (part of) file
          */
         file_mmap_offset = sfd->file_offset + count - sfd->hlen;
-        PR_ASSERT((file_mmap_offset % pagesize) == 0);
+        PR_ASSERT((file_mmap_offset % alignment) == 0);
 
-        addr = PR_MemMap(mapHandle, file_mmap_offset, len);
+        LL_I2L(file_mmap_offset64, file_mmap_offset);
+        addr = PR_MemMap(mapHandle, file_mmap_offset64, len);
         if (!addr) {
             count = -1;
             goto done;
