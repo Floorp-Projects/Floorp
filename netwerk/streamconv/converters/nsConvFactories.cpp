@@ -320,7 +320,7 @@ static nsModuleComponentInfo components[] =
 	// registering it's cid factory here.
 	{ "HACK-TXTToHTMLConverter", 
   	  MOZITXTTOHTMLCONV_CID,
-	  NS_ISTREAMCONVERTER_KEY, 
+	  MOZ_TXTTOHTMLCONV_CONTRACTID, 
 	  CreateNewTXTToHTMLConvFactory
     }
 };
