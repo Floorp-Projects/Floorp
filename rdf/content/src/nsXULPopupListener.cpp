@@ -34,7 +34,6 @@
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
@@ -459,11 +458,11 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
     return NS_OK;
 
   // We have some popup content. Obtain our window.
-  nsIScriptContextOwner* owner = document->GetScriptContextOwner();
   nsCOMPtr<nsIScriptContext> context;
-  if (NS_OK == owner->GetScriptContext(getter_AddRefs(context))) {
-    nsIScriptGlobalObject* global = context->GetGlobalObject();
-    if (global) {
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  document->GetScriptGlobalObject(getter_AddRefs(global));
+  if (global) {
+    if (NS_OK == global->GetContext(getter_AddRefs(context))) {
       // Get the DOM window
       nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
       if (domWindow != nsnull) {
@@ -484,10 +483,8 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
                                type, anchorAlignment, popupAlignment,
                                getter_AddRefs(uselessPopup));
       }
-      NS_RELEASE(global);
     }
   }
-  NS_IF_RELEASE(owner);
 
   return NS_OK;
 }

@@ -1952,7 +1952,7 @@ nsRange::IsValidFragment(const nsString& aFragment, PRBool* aReturn)
   return result;
 }
 
-// BEGIN nsIScriptContextOwner interface implementations
+// BEGIN nsIScriptObjectOwner interface implementations
 NS_IMETHODIMP
 nsRange::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
@@ -1975,7 +1975,7 @@ nsRange::SetScriptObject(void *aScriptObject)
   return NS_OK;
 }
 
-// END nsIScriptContextOwner interface implementations
+// END nsIScriptObjectOwner interface implementations
 
 nsresult
 nsRange::Lock()

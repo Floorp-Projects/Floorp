@@ -38,7 +38,6 @@
 #include "nsIHTMLDocument.h"
 #include "nsIHTMLContent.h"
 #include "nsILinkHandler.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsISizeOfHandler.h"

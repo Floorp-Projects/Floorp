@@ -85,12 +85,14 @@ public:
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
-  NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext);
-  NS_IMETHOD_(void)       GetContext(nsIScriptContext **aContext);
-  NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument);
-  NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell);
-  NS_IMETHOD_(void)       GetWebShell(nsIWebShell **aWebShell);// XXX This may be temporary - rods
-  NS_IMETHOD_(void)       SetOpenerWindow(nsIDOMWindow *aOpener);
+  NS_IMETHOD    SetContext(nsIScriptContext *aContext);
+  NS_IMETHOD    GetContext(nsIScriptContext **aContext);
+  NS_IMETHOD    SetNewDocument(nsIDOMDocument *aDocument);
+  NS_IMETHOD    SetWebShell(nsIWebShell *aWebShell);
+  NS_IMETHOD    GetWebShell(nsIWebShell **aWebShell);// XXX This may be temporary - rods
+  NS_IMETHOD    SetOpenerWindow(nsIDOMWindow *aOpener);
+  NS_IMETHOD    SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
+  NS_IMETHOD    GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner);
 
   NS_IMETHOD    GetWindow(nsIDOMWindow** aWindow);
   NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf);
@@ -274,6 +276,7 @@ protected:
   HistoryImpl *mHistory;
   nsIWebShell *mWebShell;
   nsIDOMWindow *mOpener;
+  nsIScriptGlobalObjectOwner* mGlobalObjectOwner; // [Weak Ref]
 
   BarPropImpl *mMenubar;
   BarPropImpl *mToolbar;

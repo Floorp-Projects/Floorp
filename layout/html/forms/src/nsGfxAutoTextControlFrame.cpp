@@ -26,7 +26,6 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectData.h"
 #include "nsIScriptObjectOwner.h"
@@ -269,19 +268,18 @@ nsresult nsGfxAutoTextControlFrame::SetEventHandlers(PRInt32 handlerID)
 nsresult nsGfxAutoTextControlFrame::AddScriptEventHandler(PRInt32 handlerID, const char* handlerName, const nsString& aFunc, nsIDocument* aDocument)
 {
 	nsresult ret = NS_OK;
-	nsIScriptContext* context;
-	nsIScriptContextOwner* owner;
+   nsCOMPtr<nsIScriptGlobalObject> scriptGlobal;
 
 	if (nsnull != aDocument)
 	{
-    	owner = aDocument->GetScriptContextOwner();
-		if (owner)
+      aDocument->GetScriptGlobalObject(getter_AddRefs(scriptGlobal));
+		if (scriptGlobal)
 		{
-			if (NS_OK == owner->GetScriptContext(&context))
+         nsCOMPtr<nsIScriptContext> context;
+			if (NS_OK == scriptGlobal->GetContext(getter_AddRefs(context)))
 			{
-        		nsIScriptObjectOwner* cowner;
-        		if (NS_OK == mContent->QueryInterface(kIScriptObjectOwnerIID,
-                                              (void**) &cowner))
+            nsCOMPtr<nsIScriptObjectOwner> cowner(do_QueryInterface(mContent));
+        		if (cowner)
 				{
 					JSObject *mScriptObject;
 					ret = BuildScriptEventHandler(context, cowner, handlerName, aFunc, &mScriptObject);
@@ -290,11 +288,8 @@ nsresult nsGfxAutoTextControlFrame::AddScriptEventHandler(PRInt32 handlerID, con
 						mEvtHdlrContext[handlerID] = context;
 						mEvtHdlrScript[handlerID] = mScriptObject;
 					}
-          			NS_RELEASE(cowner);
         		}
-        		NS_RELEASE(context);
 			}
-		NS_RELEASE(owner);
 		}
 	}
   return ret;

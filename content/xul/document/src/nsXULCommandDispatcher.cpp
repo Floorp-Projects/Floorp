@@ -37,7 +37,6 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
@@ -485,11 +484,8 @@ XULCommandDispatcherImpl::Matches(const nsString& aList, const nsString& aElemen
     nsCOMPtr<nsIDocument> objectOwner = do_QueryInterface(document);
     if(!objectOwner) return NS_OK;
 
-    nsCOMPtr<nsIScriptContextOwner> contextOwner = dont_QueryInterface(objectOwner->GetScriptContextOwner());
-    if(!contextOwner) return NS_OK;
-
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    objectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
     if(!globalObject) return NS_OK;
 
     nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(globalObject);

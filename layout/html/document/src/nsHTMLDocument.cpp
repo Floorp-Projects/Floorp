@@ -2469,10 +2469,7 @@ nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject
       
       res = cx->GetContainer(getter_AddRefs(container));
       if (NS_SUCCEEDED(res) && container) {
-        nsCOMPtr<nsIScriptContextOwner> sco = do_QueryInterface(container);
-        if (sco) {
-          res = sco->GetScriptGlobalObject(getter_AddRefs(global));
-        }
+        global = do_GetInterface(container);
       }
     }
     // XXX If we can't find a view, parent to the calling context's
@@ -2510,11 +2507,11 @@ nsHTMLDocument::Resolve(JSContext *aContext, jsval aID)
     
     if (owner) {
       nsCOMPtr<nsIScriptContext> scriptContext;
-      nsCOMPtr<nsIScriptContextOwner> contextOwner;
+      nsCOMPtr<nsIScriptGlobalObject> scriptGlobal;
+      GetScriptGlobalObject(getter_AddRefs(scriptGlobal));
 
-      contextOwner = getter_AddRefs(GetScriptContextOwner());
-      if (contextOwner) {
-        result = contextOwner->GetScriptContext(getter_AddRefs(scriptContext));
+      if (scriptGlobal) {
+        result = scriptGlobal->GetContext(getter_AddRefs(scriptContext));
       }
 
       if (!scriptContext) {

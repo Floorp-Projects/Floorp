@@ -26,6 +26,7 @@ XPIDLSRCS=						\
 		.\nsCDocShell.idl			\
 		.\nsIDocShell.idl			\
 		.\nsIDocShellContainer.idl			\
+		.\nsIDocShellTreeNode.idl			\
 #		.\nsIContentViewerEdit.idl	\
 #		.\nsIContentViewerFile.idl	\
 		.\nsIMarkupDocumentViewer.idl	\

@@ -192,7 +192,7 @@ private:
 
   nsRangeList *mRangeList;
 
-  // for nsIScriptContextOwner
+  // for nsIScriptObjectOwner
   void*		mScriptObject;
 
   nsAutoScrollTimer *mAutoScrollTimer; // timer for autoscrolling.
@@ -4156,7 +4156,7 @@ nsDOMSelection::DeleteFromDocument()
   return mRangeList->DeleteFromDocument();
 }
 
-// BEGIN nsIScriptContextOwner interface implementations
+// BEGIN nsIScriptObjectOwner interface implementations
 NS_IMETHODIMP
 nsDOMSelection::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
@@ -4179,4 +4179,4 @@ nsDOMSelection::SetScriptObject(void *aScriptObject)
   return NS_OK;
 }
 
-// END nsIScriptContextOwner interface implementations
+// END nsIScriptObjectOwner interface implementations

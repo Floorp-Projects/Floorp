@@ -65,7 +65,6 @@ class nsIHTMLElementFactory;
 class nsILoadGroup;
 class nsIRDFResource;
 class nsIRDFService;
-class nsIScriptContextOwner;
 class nsITimer;
 class nsIUnicharStreamLoader;
 class nsIXMLElementFactory;
@@ -182,9 +181,9 @@ public:
 
     NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
 
-    virtual nsIScriptContextOwner *GetScriptContextOwner();
+    NS_IMETHOD GetScriptGlobalObject(nsIScriptGlobalObject** aScriptGlobalObject);
 
-    virtual void SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner);
+    NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
 
     NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager);
 
@@ -502,7 +501,7 @@ protected:
     nsCOMPtr<nsIPrincipal>     mDocumentPrincipal;  // [OWNER]
     nsCOMPtr<nsIContent>       mRootContent;        // [OWNER]
     nsIDocument*               mParentDocument;     // [WEAK]
-    nsIScriptContextOwner*     mScriptContextOwner; // [WEAK] it owns me! (indirectly)
+    nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
     void*                      mScriptObject;       // ????
     nsXULDocument*             mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
     nsString                   mCharSetID;

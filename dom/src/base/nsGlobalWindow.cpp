@@ -54,8 +54,9 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
-#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIDocument.h"
 #include "nsIURL.h"
 #include "nsIPref.h"
@@ -134,6 +135,7 @@ GlobalWindowImpl::GlobalWindowImpl()
   mLocation = nsnull;
   mFrames = nsnull;
   mOpener = nsnull;
+  mGlobalObjectOwner = nsnull;
 
   mTimeouts = nsnull;
   mTimeoutInsertionPoint = nsnull;
@@ -252,7 +254,7 @@ GlobalWindowImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObje
   return res;
 }
 
-NS_IMETHODIMP_(void)       
+NS_IMETHODIMP
 GlobalWindowImpl::SetContext(nsIScriptContext *aContext)
 {
   if (mContext) {
@@ -261,23 +263,25 @@ GlobalWindowImpl::SetContext(nsIScriptContext *aContext)
 
   mContext = aContext;
   NS_ADDREF(mContext);
+  return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 GlobalWindowImpl::GetContext(nsIScriptContext **aContext)
 {
   *aContext = mContext;
   NS_IF_ADDREF(*aContext);
+  return NS_OK;
 }
 
-NS_IMETHODIMP_(void)       
+NS_IMETHODIMP
 GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
 {
   if (mFirstDocumentLoad) {
     mFirstDocumentLoad = PR_FALSE;
     mDocument = aDocument;
     NS_IF_ADDREF(mDocument);
-    return;
+    return NS_OK;
   }
   
   if (mDocument) {
@@ -332,9 +336,10 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
       mContext->InitContext(this);
     }
   }
+  return NS_OK;
 }
 
-NS_IMETHODIMP_(void)       
+NS_IMETHODIMP
 GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
 {
   //mWebShell isn't refcnt'd here.  WebShell calls SetWebShell(nsnull) when deleted.
@@ -384,26 +389,41 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
     if(chromeEventHandler)
       mChromeEventHandler = chromeEventHandler.get(); // Weak ref
   }
+  return NS_OK;
 }
 
-NS_IMETHODIMP_(void)       // XXX This may be temporary - rods
+NS_IMETHODIMP
 GlobalWindowImpl::GetWebShell(nsIWebShell **aWebShell)
 {
-  if (nsnull != mWebShell)  {
-    *aWebShell = mWebShell;
-    NS_ADDREF(mWebShell);
-  } else {
-    //*mWebShell = nsnull;
-  }
-
+   *aWebShell = mWebShell;
+   NS_IF_ADDREF(*aWebShell);
+   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)       
+NS_IMETHODIMP
 GlobalWindowImpl::SetOpenerWindow(nsIDOMWindow *aOpener)
 {
   NS_IF_RELEASE(mOpener);
   mOpener = aOpener;
   NS_IF_ADDREF(mOpener);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner)
+{
+   mGlobalObjectOwner = aOwner; // Note this is supposed to be a weak ref.
+   return NS_OK;   
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner)
+{
+   NS_ENSURE_ARG_POINTER(aOwner);
+
+   *aOwner = mGlobalObjectOwner;
+   NS_IF_ADDREF(*aOwner);
+   return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1310,13 +1330,12 @@ GlobalWindowImpl::Close(JSContext* cx, jsval* argv, PRUint32 argc)
   nsresult result = NS_OK;
   nsIScriptContext* callingContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
   nsIScriptContext* winContext;
-  nsCOMPtr<nsIScriptContextOwner> owner;
+  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(mWebShell));
 
-  if (mWebShell) {
-    owner = do_QueryInterface(mWebShell, &result);
+  if (globalObject) {
     
     if (NS_SUCCEEDED(result)) {
-      result = owner->GetScriptContext(&winContext);
+      result = globalObject->GetContext(&winContext);
       if (NS_SUCCEEDED(result)) {
         if (winContext == callingContext) {
           result = callingContext->SetTerminationFunction(CloseWindow, (nsISupports*)(nsIScriptGlobalObject*)this);
@@ -2515,21 +2534,13 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell,
 nsresult
 GlobalWindowImpl::ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow)
 {
-  nsIScriptContextOwner *newContextOwner = nsnull;
-  nsIScriptGlobalObject *newGlobalObject = nsnull;
   nsresult              res;
 
   *aDOMWindow = nsnull;
-  res = aWebShell->QueryInterface(NS_GET_IID(nsIScriptContextOwner), (void**)&newContextOwner);
-  if (NS_SUCCEEDED(res)) {
-    res = newContextOwner->GetScriptGlobalObject(&newGlobalObject);
-    if (NS_SUCCEEDED(res)) {
-      res = newGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aDOMWindow);
-      newGlobalObject->SetOpenerWindow(this); // damnit
-      NS_RELEASE(newGlobalObject);
-    }
-    NS_RELEASE(newContextOwner);
-  }
+  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(mWebShell));
+  NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
+  res = CallQueryInterface(globalObject.get(), aDOMWindow);
+  globalObject->SetOpenerWindow(this); // damnit
   return res;
 }
 
@@ -2537,21 +2548,11 @@ GlobalWindowImpl::ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDO
 nsresult
 GlobalWindowImpl::WebShellToDOMWindow(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow)
 {
-  nsresult rv;
+   NS_ENSURE_ARG_POINTER(aDOMWindow);
+   NS_ENSURE_TRUE(aWebShell, NS_ERROR_FAILURE);
 
-  NS_ASSERTION(aWebShell, "null in param to WebShellToDOMWindow");
-  NS_ASSERTION(aDOMWindow, "null out param to WebShellToDOMWindow");
-
-  *aDOMWindow = nsnull;
-
-  nsCOMPtr<nsIScriptContextOwner> owner = do_QueryInterface(aWebShell, &rv);
-  if (owner) {
-    nsCOMPtr<nsIScriptGlobalObject> scriptobj;
-    rv = owner->GetScriptGlobalObject(getter_AddRefs(scriptobj));
-    if (NS_SUCCEEDED(rv) && scriptobj)
-      rv = scriptobj->QueryInterface(nsIDOMWindow::GetIID(), (void **) aDOMWindow);
-  }
-  return rv;
+   nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(aWebShell));
+   return CallQueryInterface(globalObject.get(), aDOMWindow);
 }
 
 NS_IMETHODIMP
@@ -2876,23 +2877,17 @@ GlobalWindowImpl::Resolve(JSContext *aContext, jsval aID)
           if (child) {
             JSObject *childObj;
             //We found a subframe of the right name.  The rest of this is to get its script object.
-            nsIScriptContextOwner *contextOwner;
-            if (NS_SUCCEEDED(child->QueryInterface(NS_GET_IID(nsIScriptContextOwner), (void**)&contextOwner))) {
-              nsIScriptGlobalObject *childGlobalObj;
-              if (NS_SUCCEEDED(contextOwner->GetScriptGlobalObject(&childGlobalObj))) {
-                nsIScriptObjectOwner *objOwner;
-                  if (NS_SUCCEEDED(childGlobalObj->QueryInterface(NS_GET_IID(nsIScriptObjectOwner), (void**)&objOwner))) {
-                    nsIScriptContext *scriptContext;
-                    childGlobalObj->GetContext(&scriptContext);
-                    if (scriptContext) {
-                      objOwner->GetScriptObject(scriptContext, (void**)&childObj);
-                      NS_RELEASE(scriptContext);
-                    }
-                    NS_RELEASE(objOwner);
+            nsCOMPtr<nsIScriptGlobalObject> childGlobalObject(do_GetInterface(child));
+            if(childGlobalObject) {
+               nsCOMPtr<nsIScriptObjectOwner> objOwner(do_QueryInterface(childGlobalObject));
+               if(objOwner) {
+                  nsCOMPtr<nsIScriptContext> scriptContext;
+               
+                  childGlobalObject->GetContext(getter_AddRefs(scriptContext));
+                  if(scriptContext) {
+                     objOwner->GetScriptObject(scriptContext, (void**)&childObj);
                   }
-                NS_RELEASE(childGlobalObj);
-              }
-              NS_RELEASE(contextOwner);
+               } 
             }
             //Okay, if we now have a childObj, we can define it and proceed.
             if (childObj) {
@@ -3487,12 +3482,8 @@ GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow** aParent)
          NS_ENSURE_SUCCESS(chromeElement->GetDocument(*getter_AddRefs(doc)),
             NS_ERROR_FAILURE);
 
-         nsCOMPtr<nsIScriptContextOwner> contextOwner = 
-                              dont_QueryInterface(doc->GetScriptContextOwner());
-         NS_ENSURE_TRUE(contextOwner, NS_ERROR_FAILURE);
-
          nsCOMPtr<nsIScriptGlobalObject> globalObject;
-         contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+         doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
          NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
 
          parent = do_QueryInterface(globalObject);

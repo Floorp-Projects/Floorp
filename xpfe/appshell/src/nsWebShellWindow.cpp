@@ -67,7 +67,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIContextMenu.h"
 
 // For JS Execution
-#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIJSContextStack.h"
 
 #include "nsIEventQueueService.h"
@@ -1126,26 +1126,18 @@ nsWebShellWindow::AddWebShellInfo(const nsString& aID,
 NS_IMETHODIMP
 nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow)
 {
-  nsresult rv;
-  nsCOMPtr<nsIScriptContextOwner> newContextOwner;
-  nsCOMPtr<nsIScriptGlobalObject> newGlobalObject;
-  nsCOMPtr<nsIDOMWindow> newDOMWindow;
+  nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner(do_QueryInterface(aShell));
+  NS_ENSURE_TRUE(globalObjectOwner, NS_ERROR_FAILURE);
 
-  newContextOwner = do_QueryInterface(aShell);
-  if (newContextOwner) {
-    if (NS_FAILED(rv = newContextOwner->GetScriptGlobalObject(getter_AddRefs(newGlobalObject)))) {
-      NS_ERROR("Unable to retrieve global object.");
-      return rv;
-    }
-    
-    if (newGlobalObject) {
-      newDOMWindow = do_QueryInterface(newGlobalObject);
-      *aDOMWindow = newDOMWindow.get();
-      NS_ADDREF(*aDOMWindow);
-    }
-    else return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  globalObjectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+  NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
 
+  nsCOMPtr<nsIDOMWindow> newDOMWindow(do_QueryInterface(globalObject));
+  NS_ENSURE_TRUE(newDOMWindow, NS_ERROR_FAILURE);
+
+  *aDOMWindow = newDOMWindow.get();
+  NS_ADDREF(*aDOMWindow);
   return NS_OK;
 }
 
@@ -2420,12 +2412,11 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
   nsCOMPtr<nsIWebShellWindow> kungFuDeathGrip(this);
 
   nsresult rv;
-  nsCOMPtr<nsIScriptContextOwner> contextOwner;
+  nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner(do_QueryInterface(mWebShell));
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
 
-  contextOwner = do_QueryInterface(mWebShell);
-  if (contextOwner) {
-    if (NS_SUCCEEDED(contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject))) && globalObject) {
+  if (globalObjectOwner) {
+    if (NS_SUCCEEDED(globalObjectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject))) && globalObject) {
       nsCOMPtr<nsIContentViewer> contentViewer;
       if (NS_SUCCEEDED(mWebShell->GetContentViewer(getter_AddRefs(contentViewer)))) {
         nsCOMPtr<nsIDocumentViewer> docViewer;

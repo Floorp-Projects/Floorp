@@ -83,7 +83,6 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
@@ -307,7 +306,6 @@ PlaceholderChannel::~PlaceholderChannel()
 
 nsXULDocument::nsXULDocument(void)
     : mParentDocument(nsnull),
-      mScriptContextOwner(nsnull),
       mScriptObject(nsnull),
       mNextSrcLoadWaiter(nsnull),
       mCharSetID("UTF-8"),
@@ -1146,25 +1144,27 @@ nsXULDocument::GetCSSLoader(nsICSSLoader*& aLoader)
   return result;
 }
 
-nsIScriptContextOwner *
-nsXULDocument::GetScriptContextOwner()
+NS_IMETHODIMP
+nsXULDocument::GetScriptGlobalObject(nsIScriptGlobalObject** aScriptGlobalObject)
 {
-    NS_IF_ADDREF(mScriptContextOwner);
-    return mScriptContextOwner;
+   *aScriptGlobalObject = mScriptGlobalObject;
+   NS_IF_ADDREF(*aScriptGlobalObject);
+   return NS_OK;
 }
 
-void
-nsXULDocument::SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner)
+NS_IMETHODIMP
+nsXULDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 {
     // XXX HACK ALERT! If the script context owner is null, the document
     // will soon be going away. So tell our content that to lose its
     // reference to the document. This has to be done before we
     // actually set the script context owner to null so that the
     // content elements can remove references to their script objects.
-    if (!aScriptContextOwner && mRootContent)
+    if (!aScriptGlobalObject && mRootContent)
         mRootContent->SetDocument(nsnull, PR_TRUE);
 
-    mScriptContextOwner = aScriptContextOwner;
+    mScriptGlobalObject = aScriptGlobalObject;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1757,12 +1757,8 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   //Capturing stage
-  if (NS_EVENT_FLAG_BUBBLE != aFlags && nsnull != mScriptContextOwner) {
-    nsIScriptGlobalObject* global;
-    if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(&global)) {
-      global->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
-      NS_RELEASE(global);
-    }
+  if (NS_EVENT_FLAG_BUBBLE != aFlags && nsnull != mScriptGlobalObject) {
+    mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
   }
 
   //Local handling stage
@@ -1772,12 +1768,8 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   //Bubbling stage
-  if (NS_EVENT_FLAG_CAPTURE != aFlags && nsnull != mScriptContextOwner) {
-    nsIScriptGlobalObject* global;
-    if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(&global)) {
-      global->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
-      NS_RELEASE(global);
-    }
+  if (NS_EVENT_FLAG_CAPTURE != aFlags && nsnull != mScriptGlobalObject) {
+    mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
   }
 
   if (NS_EVENT_FLAG_INIT == aFlags) {
@@ -3001,16 +2993,10 @@ nsXULDocument::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
             return PR_FALSE;
 
         if (PL_strcmp("location", JS_GetStringBytes(jsString)) == 0) {
-            if (nsnull != mScriptContextOwner) {
-                nsCOMPtr<nsIScriptGlobalObject> global;
-                mScriptContextOwner->GetScriptGlobalObject(getter_AddRefs(global));
-                if (nsnull != global) {
-                    nsCOMPtr<nsIJSScriptObject> window = do_QueryInterface(global);
-                    if (nsnull != window) {
-                        return window->GetProperty(aContext, aID, aVp);
-                    }
-                }
-            }
+           nsCOMPtr<nsIJSScriptObject> window = do_QueryInterface(mScriptGlobalObject);
+           if (nsnull != window) {
+               return window->GetProperty(aContext, aID, aVp);
+           }
         }
     }
 
@@ -3104,9 +3090,7 @@ nsXULDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
         // Make sure that we've got our script context owner; this
         // assertion will fire if we've tried to get the script object
         // before our scope has been set up.
-        NS_ASSERTION(mScriptContextOwner != nsnull, "no script context owner");
-        if (! mScriptContextOwner)
-            return NS_ERROR_NOT_INITIALIZED;
+        NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
 
         nsresult rv;
 
@@ -3115,17 +3099,10 @@ nsXULDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
         // global object from aContext would make our script object
         // dynamically scoped in the first context that ever tried to
         // use us!)
-        nsCOMPtr<nsIScriptGlobalObject> global;
-        rv = mScriptContextOwner->GetScriptGlobalObject(getter_AddRefs(global));
-        if (NS_FAILED(rv)) return rv;
-
-        NS_ASSERTION(global != nsnull, "script context owner has no global object");
-        if (! global)
-            return NS_ERROR_UNEXPECTED;
 
         rv = NS_NewScriptXULDocument(aContext,
                                      NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(nsIDOMXULDocument*, this)),
-                                     global, &mScriptObject);
+                                     mScriptGlobalObject, &mScriptObject);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -3468,9 +3445,9 @@ nsXULDocument::StartLayout(void)
 
         // Perform the resize
         PRInt32 chromeX,chromeY,chromeWidth,chromeHeight;
-        nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(webShell));
-        NS_ABORT_IF_FALSE(webShellWin, "QI Failed!!!!");
-        webShellWin->GetPositionAndSize(&chromeX, &chromeY, &chromeWidth,
+        nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(webShell));
+        NS_ABORT_IF_FALSE(docShellWin, "QI Failed!!!!");
+        docShellWin->GetPositionAndSize(&chromeX, &chromeY, &chromeWidth,
          &chromeHeight);
 
         float t2p;
@@ -4917,13 +4894,10 @@ nsXULDocument::ExecuteScript(JSObject* aScriptObject)
     // Execute the precompiled script with the given version
     nsresult rv;
 
-    nsCOMPtr<nsIScriptContextOwner> owner = dont_AddRef(GetScriptContextOwner());
-    NS_ASSERTION(owner != nsnull, "document has no script context owner");
-    if (! owner)
-        return NS_ERROR_UNEXPECTED;
+    NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIScriptContext> context;
-    rv = owner->GetScriptContext(getter_AddRefs(context));
+    rv = mScriptGlobalObject->GetContext(getter_AddRefs(context));
     if (NS_FAILED(rv)) return rv;
 
     rv = context->ExecuteScript(aScriptObject, nsnull, nsnull, nsnull);
@@ -5720,15 +5694,8 @@ nsXULDocument::CachedChromeLoader::OnStopRequest(nsIChannel* aChannel,
         if (! container)
             continue;
 
-        // the container should be a script context owner...
-        nsCOMPtr<nsIScriptContextOwner> owner = do_QueryInterface(container);
-        NS_ASSERTION(owner != nsnull, "container is not a script context owner");
-        if (! owner)
-            continue;
-
-        // and the script context owner has a script global object...
-        nsCOMPtr<nsIScriptGlobalObject> global;
-        rv = owner->GetScriptGlobalObject(getter_AddRefs(global));
+        // the container should support GI to globalObject...
+        nsCOMPtr<nsIScriptGlobalObject> global(do_GetInterface(container, &rv));
         if (NS_FAILED(rv))
             continue;
 

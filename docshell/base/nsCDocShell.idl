@@ -21,7 +21,7 @@
  */
 
 #include "nsIDocShell.idl"
-#include "nsIDocShellContainer.idl"
+#include "nsIDocShellTreeNode.idl"
 #include "nsIBaseWindow.idl"
 #include "nsIScrollable.idl"
 #include "nsITextScroll.idl"

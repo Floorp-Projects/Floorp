@@ -104,11 +104,12 @@ NS_IMPL_RELEASE(nsDocShell)
 NS_INTERFACE_MAP_BEGIN(nsDocShell)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShell)
    NS_INTERFACE_MAP_ENTRY(nsIDocShell)
+   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIScrollable)
    NS_INTERFACE_MAP_ENTRY(nsITextScroll)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-   NS_INTERFACE_MAP_ENTRY(nsIScriptContextOwner)
+   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -521,7 +522,7 @@ nsDocShell::SetMarginHeight(PRInt32 aHeight)
 }
 
 //*****************************************************************************
-// nsDocShell::nsIDocShellContainer
+// nsDocShell::nsIDocShellTreeNode
 //*****************************************************************************   
 
 NS_IMETHODIMP nsDocShell::GetChildCount(PRInt32 *aChildCount)
@@ -597,7 +598,7 @@ NS_IMETHODIMP nsDocShell::GetChildAt(PRInt32 aIndex, nsIDocShell** aDocShell)
 /* depth-first search for a child shell with aName */
 NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName, nsIDocShell **_retval)
 {
-  NS_ENSURE_ARG_POINTER(aName);
+  NS_ENSURE_ARG(aName);
   NS_ENSURE_ARG_POINTER(_retval);
   
   *_retval = nsnull;  // if we don't find one, we return NS_OK and a null result 
@@ -616,12 +617,12 @@ NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName, nsIDocShell 
       }
 
       // See if child contains the shell with the given name
-      nsCOMPtr<nsIDocShellContainer> childAsContainer = do_QueryInterface(child);
+      nsCOMPtr<nsIDocShellTreeNode> childAsContainer = do_QueryInterface(child);
       if (child)
       {
         NS_ENSURE_SUCCESS(childAsContainer->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
       }
-      if (_retval) {  // found it
+      if (*_retval) {  // found it
         break;
       }
     }
@@ -1256,6 +1257,9 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
    if(aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
       NS_SUCCEEDED(EnsureContentListener()))
       *aSink = mContentListener;
+   if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) &&
+      NS_SUCCEEDED(EnsureScriptEnvironment()))
+      *aSink = mScriptGlobal;
    else
       return QueryInterface(aIID, aSink);
 
@@ -1264,19 +1268,8 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
 }
 
 //*****************************************************************************
-// nsDocShell::nsIScriptContextOwner
+// nsDocShell::nsIScriptGlobalObjectOwner
 //*****************************************************************************   
-
-NS_IMETHODIMP nsDocShell::GetScriptContext(nsIScriptContext** aContext)
-{
-   NS_ENSURE_ARG_POINTER(aContext);
-   NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
-
-   *aContext = mScriptContext;
-   NS_IF_ADDREF(*aContext);
-
-   return NS_OK;
-}
 
 NS_IMETHODIMP nsDocShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
 {
@@ -1285,13 +1278,6 @@ NS_IMETHODIMP nsDocShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
 
    *aGlobal = mScriptContext->GetGlobalObject();
    NS_IF_ADDREF(*aGlobal);
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::ReleaseScriptContext(nsIScriptContext *aContext)
-{
-   NS_IF_RELEASE(aContext);
-   mScriptContext = nsnull;
    return NS_OK;
 }
 
@@ -1509,11 +1495,11 @@ nsresult nsDocShell::EnsureScriptEnvironment()
 
    //XXXWEBSHELL
    //mScriptGlobal->SetDocShell(NS_STATIC_CAST(nsIDocShell*, this));
+   mScriptGlobal->SetGlobalObjectOwner(
+      NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, this));
 
    NS_ENSURE_SUCCESS(NS_CreateScriptContext(scriptGlobalObject, 
       getter_AddRefs(mScriptContext)), NS_ERROR_FAILURE);
-
-   mScriptContext->SetOwner(NS_STATIC_CAST(nsIScriptContextOwner*, this));
 
    return NS_OK;
 }

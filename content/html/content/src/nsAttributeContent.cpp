@@ -41,7 +41,6 @@
 #include "nsDOMEvent.h"
 #include "nsIDOMText.h"
 #include "nsIDOMScriptObjectFactory.h"
-#include "nsIScriptContextOwner.h"
 #include "prprf.h"
 #include "nsCOMPtr.h"
 

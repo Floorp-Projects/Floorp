@@ -45,7 +45,6 @@
 #include "nsIDOMSelection.h"
 #include "nsIFrameSelection.h"
 #include "nsIDeviceContext.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsISelfScrollingFrame.h"
 
@@ -249,11 +248,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
                       if (gLastFocusedDocument) {
                         mCurrentTarget = nsnull;
                         
-                        nsCOMPtr<nsIScriptContextOwner> contextOwner = dont_QueryInterface(gLastFocusedDocument->GetScriptContextOwner());
-                        if(!contextOwner) break;
-
                         nsCOMPtr<nsIScriptGlobalObject> globalObject;
-                        contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+                        gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
                         if(!globalObject) break;
                     
                         globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
@@ -289,11 +285,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
                 
                 mCurrentTarget = nsnull;
                 // fire focus on window, not document
-                nsCOMPtr<nsIScriptContextOwner> contextOwner = dont_QueryInterface(mDocument->GetScriptContextOwner());
-                if(!contextOwner) break;
-
                 nsCOMPtr<nsIScriptGlobalObject> globalObject;
-                contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+                mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
                 if(!globalObject) break;
                      
                 globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
@@ -354,11 +347,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         mCurrentTarget = nsnull;
 
         // fire focus on window, not document
-        nsCOMPtr<nsIScriptContextOwner> contextOwner = dont_QueryInterface(mDocument->GetScriptContextOwner());
-        if(!contextOwner) break;
-
         nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+        mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
         if(!globalObject) break;
                      
         globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
@@ -400,11 +390,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
                 mCurrentTarget = nsnull;
 
                 // fire focus on window, not document
-                nsCOMPtr<nsIScriptContextOwner> contextOwner = dont_QueryInterface(mDocument->GetScriptContextOwner());
-                if(!contextOwner) break;
-
                 nsCOMPtr<nsIScriptGlobalObject> globalObject;
-                contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+                mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
                 if(!globalObject) break;
                      
                 globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
@@ -1973,16 +1960,12 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       }
       
       if (gLastFocusedDocument) {
-        nsCOMPtr<nsIScriptContextOwner> contextOwner = dont_QueryInterface(gLastFocusedDocument->GetScriptContextOwner());
-        if(contextOwner){
-          nsCOMPtr<nsIScriptGlobalObject> globalObject;
-          contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
-          if(globalObject)
-            globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-        }
-		gLastFocusedDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-      }         
-      
+        nsCOMPtr<nsIScriptGlobalObject> globalObject;
+        gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+        if(globalObject)
+          globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+		  gLastFocusedDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+      }
       NS_IF_RELEASE(mCurrentTargetContent);
     }
   }

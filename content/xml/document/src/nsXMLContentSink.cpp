@@ -28,6 +28,7 @@
 #include "nsIXMLDocument.h"
 #include "nsIXMLContent.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -50,7 +51,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptContextOwner.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
@@ -1623,16 +1623,12 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo, const char
   nsresult rv = NS_OK;
 
   if (0 < aScript.Length()) {
-    nsIScriptContextOwner *owner;
-    nsIScriptContext *context;
-    owner = mDocument->GetScriptContextOwner();
-    if (nsnull != owner) {
-
-      rv = owner->GetScriptContext(&context);
-      if (rv != NS_OK) {
-        NS_RELEASE(owner);
-        return rv;
-      }
+    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(scriptGlobal));
+    if (scriptGlobal) {
+      nsCOMPtr<nsIScriptContext> context;
+      NS_ENSURE_SUCCESS(scriptGlobal->GetContext(getter_AddRefs(context)),
+         NS_ERROR_FAILURE);
 
       nsIURI* docURL = mDocument->GetDocumentURL();
       char* url;
@@ -1649,8 +1645,6 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo, const char
 
         NS_IF_RELEASE(docURL);
 
-        NS_RELEASE(context);
-        NS_RELEASE(owner);
         nsCRT::free(url);
       }
     }

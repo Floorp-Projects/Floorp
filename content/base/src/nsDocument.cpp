@@ -22,6 +22,7 @@
 #include "plstr.h"
 
 #include "nsCOMPtr.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsDocument.h"
 #include "nsIArena.h"
 #include "nsIURL.h"
@@ -36,7 +37,6 @@
 #include "nsIDocumentObserver.h"
 #include "nsEventListenerManager.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptEventListener.h"
 #include "nsDOMEvent.h"
 #include "nsDOMEventsIIDs.h"
@@ -575,7 +575,6 @@ nsDocument::nsDocument()
   mParentDocument = nsnull;
   mRootContent = nsnull;
   mScriptObject = nsnull;
-  mScriptContextOwner = nsnull;
   mListenerManager = nsnull;
   mDisplaySelection = PR_FALSE;
   mInDestructor = PR_FALSE;
@@ -661,7 +660,6 @@ nsDocument::~nsDocument()
   }
 
   NS_IF_RELEASE(mArena);
-  NS_IF_RELEASE(mScriptContextOwner);
   NS_IF_RELEASE(mListenerManager);
   NS_IF_RELEASE(mDOMStyleSheets);
   NS_IF_RELEASE(mNameSpaceManager);
@@ -1399,35 +1397,30 @@ void nsDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
   }
 }
 
-nsIScriptContextOwner *nsDocument::GetScriptContextOwner()
+NS_IMETHODIMP 
+nsDocument::GetScriptGlobalObject(nsIScriptGlobalObject** aScriptGlobalObject)
 {
-  if (nsnull != mScriptContextOwner) {
-    NS_ADDREF(mScriptContextOwner);
-  }
-  
-  return mScriptContextOwner;
+   NS_ENSURE_ARG_POINTER(aScriptGlobalObject);
+
+   *aScriptGlobalObject = mScriptGlobalObject;
+   NS_IF_ADDREF(*aScriptGlobalObject);
+   return NS_OK;
 }
 
-void nsDocument::SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner)
+NS_IMETHODIMP 
+nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 {
   // XXX HACK ALERT! If the script context owner is null, the document
   // will soon be going away. So tell our content that to lose its
   // reference to the document. This has to be done before we
   // actually set the script context owner to null so that the
   // content elements can remove references to their script objects.
-  if ((nsnull == aScriptContextOwner) && (nsnull != mRootContent)) {
+  if ((nsnull == aScriptGlobalObject) && (nsnull != mRootContent)) {
     mRootContent->SetDocument(nsnull, PR_TRUE);
   }
 
-  if (nsnull != mScriptContextOwner) {
-    NS_RELEASE(mScriptContextOwner);
-  }
-  
-  mScriptContextOwner = aScriptContextOwner;
-  
-  if (nsnull != mScriptContextOwner) {
-    NS_ADDREF(mScriptContextOwner);
-  }
+  mScriptGlobalObject = aScriptGlobalObject;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1715,10 +1708,7 @@ nsresult nsDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptO
       
       res = cx->GetContainer(getter_AddRefs(container));
       if (NS_SUCCEEDED(res) && container) {
-        nsCOMPtr<nsIScriptContextOwner> sco = do_QueryInterface(container);
-        if (sco) {
-          res = sco->GetScriptGlobalObject(getter_AddRefs(global));
-        }
+        global = do_GetInterface(container);
       }
     }
     // XXX If we can't find a view, parent to the calling context's
@@ -2399,12 +2389,8 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
   }
   
   //Capturing stage
-  if (NS_EVENT_FLAG_BUBBLE != aFlags && nsnull != mScriptContextOwner) {
-    nsIScriptGlobalObject* mGlobal;
-    if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(&mGlobal)) {
-      mGlobal->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
-      NS_RELEASE(mGlobal);
-    }
+  if (NS_EVENT_FLAG_BUBBLE != aFlags && nsnull != mScriptGlobalObject) {
+    mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
   }
   
   //Local handling stage
@@ -2414,11 +2400,8 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   //Bubbling stage
-  if (NS_EVENT_FLAG_CAPTURE != aFlags && nsnull != mScriptContextOwner) {
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(getter_AddRefs(global))) {
-      global->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
-    }
+  if (NS_EVENT_FLAG_CAPTURE != aFlags && nsnull != mScriptGlobalObject) {
+    mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
   }
 
   if (NS_EVENT_FLAG_INIT == aFlags) {
@@ -2506,19 +2489,13 @@ PRBool    nsDocument::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 
   if (JSVAL_IS_STRING(aID) && 
       PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
-    if (nsnull != mScriptContextOwner) {
-      nsIScriptGlobalObject *global;
-      mScriptContextOwner->GetScriptGlobalObject(&global);
-      if (nsnull != global) {
-        nsIJSScriptObject *window;
-        if (NS_OK == global->QueryInterface(kIJSScriptObjectIID, (void **)&window)) {
-          result = window->GetProperty(aContext, aID, aVp);
-          NS_RELEASE(window);
-        }
-        else {
-          result = PR_FALSE;
-        }
-        NS_RELEASE(global);
+    if (mScriptGlobalObject) {
+      nsCOMPtr<nsIJSScriptObject> window(do_QueryInterface(mScriptGlobalObject));
+      if(window) {
+        result = window->GetProperty(aContext, aID, aVp);
+      }
+      else {
+        result = PR_FALSE;
       }
     }
   }
@@ -2611,19 +2588,13 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
   }
   else if (JSVAL_IS_STRING(aID) && 
       PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
-    if (nsnull != mScriptContextOwner) {
-      nsIScriptGlobalObject *global;
-      mScriptContextOwner->GetScriptGlobalObject(&global);
-      if (nsnull != global) {
-        nsIJSScriptObject *window;
-        if (NS_OK == global->QueryInterface(kIJSScriptObjectIID, (void **)&window)) {
-          result = window->SetProperty(aContext, aID, aVp);
-          NS_RELEASE(window);
-        }
-        else {
-          result = PR_FALSE;
-        }
-        NS_RELEASE(global);
+    if (mScriptGlobalObject) {
+      nsCOMPtr<nsIJSScriptObject> window(do_QueryInterface(mScriptGlobalObject));
+      if(window) {
+        result = window->SetProperty(aContext, aID, aVp);
+      }
+      else {
+        result = PR_FALSE;
       }
     }
   }

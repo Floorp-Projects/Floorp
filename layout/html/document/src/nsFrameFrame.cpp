@@ -753,9 +753,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
       // nearest enclosing chrome shell.
       
       nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
-      nsWebShellType chromeShellType;
-      outerShell->GetWebShellType(chromeShellType);
-      if (chromeShellType == nsWebShellChrome) {
+      if (parentType == nsWebShellChrome) {
         // Our parent shell is a chrome shell. It is therefore our nearest
         // enclosing chrome shell.
         chromeEventHandler = do_QueryInterface(mContent);

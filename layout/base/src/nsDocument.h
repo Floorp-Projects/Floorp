@@ -31,7 +31,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDiskDocument.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIDOMEventTarget.h"
 #include "nsXIFConverter.h"
 #include "nsIJSScriptObject.h"
@@ -244,8 +244,8 @@ public:
    * This is the context within which all scripts (during document 
    * creation and during event handling) will run.
    */
-  virtual nsIScriptContextOwner *GetScriptContextOwner();
-  virtual void SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner);
+  NS_IMETHOD GetScriptGlobalObject(nsIScriptGlobalObject** aGlobalObject);
+  NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject);
 
   /** 
    * Get the name space manager for this document
@@ -466,7 +466,7 @@ protected:
   nsVoidArray mStyleSheets;
   nsVoidArray mObservers;
   void* mScriptObject;
-  nsIScriptContextOwner *mScriptContextOwner;
+  nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
   nsIEventListenerManager* mListenerManager;
   PRBool mDisplaySelection;
   PRBool mInDestructor;
