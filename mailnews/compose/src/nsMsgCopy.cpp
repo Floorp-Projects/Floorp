@@ -462,7 +462,15 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
         if (rootMsgFolder)
         {
           nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(server);
-          return rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, imapServer == nsnull /*caseInsensitive*/, msgFolder);
+          rv = rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, imapServer == nsnull /*caseInsensitive*/, msgFolder);
+          /* we didn't find the folder so we will have to create new one.
+             CreateIfMissing does that provided we pass in a dummy folder */
+          if (!*msgFolder)
+          {
+            *msgFolder = folderResource;  
+            NS_ADDREF(*msgFolder);
+          }
+          return rv;
         }
         else
           return NS_MSG_ERROR_FOLDER_MISSING;
