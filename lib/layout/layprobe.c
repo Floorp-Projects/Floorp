@@ -426,8 +426,8 @@ Bool LO_QA_GetText( long probeID, char *text, long length)
 
 	if (ps && ps->curr_ele) {
 		if (ps->curr_ele->lo_any.type == LO_TEXT) {
-			XP_ASSERT(XP_STRLEN(ps->curr_ele->lo_text.pText) == length);
-			strncpy(text, ps->curr_ele->lo_text.pText, length);
+			XP_ASSERT(XP_STRLEN((const char *)ps->curr_ele->lo_text.text) == length);
+			strncpy(text, (const char *) ps->curr_ele->lo_text.text, length);
 			success = TRUE;
 		}
 	}
