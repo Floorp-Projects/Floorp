@@ -1349,6 +1349,15 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     }
     autoHeight += borderPadding.bottom;
 
+    if (NS_BLOCK_SPACE_MGR & mState) {
+      // Include the space manager's state to properly account for the
+      // bottom margin of any floated elements; e.g., inside a table cell.
+      nscoord ymost;
+      aReflowState.mSpaceManager->YMost(ymost);
+      if (ymost > autoHeight)
+        autoHeight = ymost;
+    }
+
     // Apply min/max values
     if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxHeight) {
       nscoord computedMaxHeight = aReflowState.mComputedMaxHeight +
