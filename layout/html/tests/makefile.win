@@ -16,6 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
+include <$(DEPTH)/config/config.mak>
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestCSSScanner.exe
