@@ -1691,13 +1691,11 @@ nsresult CNavDTD::CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 
         theToken=(CToken*)mSkippedContent.PopFront();
       else theToken=mTokenizer->PopToken();
       if(theToken)  {
-        CAttributeToken* theAttrToken = ((CAttributeToken*)theToken);
-        nsString& key=theAttrToken->GetKey();
         // Sanitize the key for it might contain some non-alpha-non-digit characters
         // at its end.  Ex. <OPTION SELECTED/> - This will be tokenized as "<" "OPTION",
         // "SELECTED/", and ">". In this case the "SELECTED/" key will be sanitized to
         // a legitimate "SELECTED" key.
-        theAttrToken->Sanitize(key); 
+        ((CAttributeToken*)theToken)->SanitizeKey();
 
   #ifdef  RICKG_DEBUG
     WriteTokenToLog(theToken);

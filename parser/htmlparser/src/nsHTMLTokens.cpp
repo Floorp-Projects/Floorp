@@ -1047,21 +1047,21 @@ PRInt32 CAttributeToken::GetTokenType(void) {
 }
 
 /*
- *  Removes non-alpha-non-digit characters from the end of the string
+ *  Removes non-alpha-non-digit characters from the end of a KEY
  *  
  *  @update harishd 07/15/99
- *  @param  aString - The string might contain garbage at the end!!
+ *  @param  
  *  @return  
  */
-void CAttributeToken::Sanitize(nsString& aString) {
-  PRInt32   length=aString.Length();
+void CAttributeToken::SanitizeKey() {
+  PRInt32   length=mTextKey.Length();
   if(length > 0) {
-    PRUnichar theChar=aString.Last();
+    PRUnichar theChar=mTextKey.Last();
     while(!nsString::IsAlpha(theChar) && !nsString::IsDigit(theChar)) {
-      aString.Truncate(length-1);
-      length = aString.Length();
+      mTextKey.Truncate(length-1);
+      length = mTextKey.Length();
       if(length <= 0) break;
-      theChar = aString.Last();
+      theChar = mTextKey.Last();
     }
   }
   return;
