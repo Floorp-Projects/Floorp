@@ -2968,10 +2968,12 @@ MOZ_ARG_DISABLE_BOOL(async-dns,
   NO_UNIX_ASYNC_DNS=1)
 
 MOZ_ARG_DISABLE_BOOL(logging,
-[  --disable-logging       Disable nsLogging facilities],
+[  --disable-logging       Disable logging facilities],
   NS_DISABLE_LOGGING=1)
 if test "$NS_DISABLE_LOGGING"; then
-  AC_DEFINE(NS_DISABLE_LOGGING)
+    AC_DEFINE(NS_DISABLE_LOGGING)
+else
+    AC_DEFINE(FORCE_PR_LOG)
 fi
 AC_SUBST(NS_DISABLE_LOGGING)
 
@@ -3373,17 +3375,20 @@ dnl =    module names beginning with ^ will be disabled
 dnl = 
 dnl ========================================================
 
-MOZ_DBGRINFO_MODULES="ALL_MODULES"
+MOZ_DBGRINFO_MODULES=""
 
 MOZ_ARG_WITH_STRING(dbgrinfo-modules,
 [  --with-dbgrinfo-modules Enable/disable debugger info for specific modules],
   [ for i in `echo $withval | sed 's/,/ /g'`; do
 
-      dnl note that the list of module names is reversed as it is copied - this is
-      dnl important, as it will allow config.mk to interpret stuff like
+      dnl note that the list of module names is reversed as it is copied
+      dnl this is important, as it will allow config.mk to interpret stuff like
       dnl "^ALL_MODULES xpcom" properly
       if test "$i" = "no"; then
         i="^ALL_MODULES"
+      fi
+      if test "$i" = "yes"; then
+        i="ALL_MODULES"
       fi
       MOZ_DBGRINFO_MODULES="$i $MOZ_DBGRINFO_MODULES";
     done ])
