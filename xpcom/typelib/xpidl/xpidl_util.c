@@ -145,6 +145,49 @@ xpidl_parse_iid(nsID *id, const char *str)
 }
 
 gboolean
+verify_const_declaration(IDL_tree const_tree) {
+    struct _IDL_CONST_DCL *dcl = &IDL_CONST_DCL(const_tree);
+    const char *name = IDL_IDENT(dcl->ident).str;
+    IDL_tree real_type;
+
+    /* const -> list -> interface */
+    if (!IDL_NODE_UP(IDL_NODE_UP(const_tree)) ||
+        IDL_NODE_TYPE(IDL_NODE_UP(IDL_NODE_UP(const_tree)))
+        != IDLN_INTERFACE) {
+        IDL_tree_error(const_tree,
+                       "const declaration \'%s\' outside interface",
+                       name);
+        return FALSE;
+    }
+
+    /* Could be a typedef; try to map it to the real type. */
+    real_type = find_underlying_type(dcl->const_type);
+    real_type = real_type ? real_type : dcl->const_type;
+    if (IDL_NODE_TYPE(real_type) == IDLN_TYPE_INTEGER &&
+        (IDL_TYPE_INTEGER(real_type).f_type == IDL_INTEGER_TYPE_SHORT ||
+         IDL_TYPE_INTEGER(real_type).f_type == IDL_INTEGER_TYPE_LONG))
+    {
+        if (!IDL_TYPE_INTEGER(real_type).f_signed &&
+            IDL_INTEGER(dcl->const_exp).value < 0)
+        {
+            IDL_tree_error(const_tree,
+                           "unsigned const declaration \'%s\' initialized with "
+                           "negative constant",
+                           name);
+            return FALSE;
+        }
+    } else {
+        IDL_tree_error(const_tree,
+                       "const declaration \'%s\' must be of type short or long",
+                       name);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+gboolean
 verify_attribute_declaration(IDL_tree attr_tree)
 {
     IDL_tree iface;
@@ -206,7 +249,6 @@ verify_attribute_declaration(IDL_tree attr_tree)
  * 
  * All the needed tree-walking seems pretty shaky; isn't there something in
  * libIDL to automate this?
- * Might want to export this to handle the bug against no typedef'd const.
  */
 IDL_tree /* IDL_TYPE_DCL */
 find_underlying_type(IDL_tree typedef_ident)
