@@ -81,6 +81,6 @@ clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).lib
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin

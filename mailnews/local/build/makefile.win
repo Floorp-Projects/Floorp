@@ -64,7 +64,7 @@ LINCS=  -I$(DEPTH)\mailnews\local\src	\
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME)

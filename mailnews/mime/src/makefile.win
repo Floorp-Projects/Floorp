@@ -186,7 +186,7 @@ LINCS=$(LINCS)  -I.                         		\
 include <$(DEPTH)/config/rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) .\$(CSS) $(DIST)\bin\res
 	$(MAKE_INSTALL) .\$(JS)  $(DIST)\bin\res
