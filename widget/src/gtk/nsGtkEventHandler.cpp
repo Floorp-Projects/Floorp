@@ -701,7 +701,7 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   //  character code.  Note we have to check for modifier keys, since
   // gtk returns a character value for them
   //
-#ifdef USE_XIM
+#ifdef USE_XIM_NOT
   if (event->length) {
     static nsIUnicodeDecoder *decoder = nsnull;
     if (!decoder) {
