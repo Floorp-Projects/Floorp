@@ -961,7 +961,13 @@ NS_IMETHODIMP nsImapProtocol::Run()
     }
         
     me->m_runningUrl = nsnull;
-    me->m_transport = nsnull;
+    if (m_transport)
+    {
+        // make sure the transport closes (even if someone is still indirectly
+        // referencing it).
+        me->m_transport->Close(NS_ERROR_ABORT);
+        me->m_transport = nsnull;
+    }
     me->m_inputStream = nsnull;
     me->m_outputStream = nsnull;
     me->m_channelListener = nsnull;
@@ -1069,8 +1075,10 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
     }
   }
 
-  if (m_pump)
-    m_pump->Cancel(NS_ERROR_ABORT);
+  // kill the socket connection
+  if (m_transport)
+    m_transport->Close(NS_ERROR_ABORT);
+
   PR_EnterMonitor(m_threadDeathMonitor);
   m_threadShouldDie = PR_TRUE;
   PR_ExitMonitor(m_threadDeathMonitor);
