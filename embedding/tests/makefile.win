@@ -17,10 +17,9 @@
 # Copyright (C) 1999, Mozilla.  All Rights Reserved.
 # 
 # Contributor(s):
-#   Travis Bogard <travis@netscape.com>
 
-DEPTH=..
+DEPTH=..\..
 
-DIRS=base browser tests
+DIRS=winEmbed
 
 include <$(DEPTH)\config\rules.mak>
