@@ -189,42 +189,42 @@ nsSOCKSSocketInfo::SetSOCKSVersion(PRInt32 aVersion)
 NS_IMETHODIMP 
 nsSOCKSSocketInfo::GetExternalProxyAddr(PRNetAddr * *aExternalProxyAddr)
 {
-    nsCRT::memcpy(*aExternalProxyAddr, &mExternalProxyAddr, sizeof(PRNetAddr));
+    memcpy(*aExternalProxyAddr, &mExternalProxyAddr, sizeof(PRNetAddr));
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsSOCKSSocketInfo::SetExternalProxyAddr(PRNetAddr *aExternalProxyAddr)
 {
-    nsCRT::memcpy(&mExternalProxyAddr, aExternalProxyAddr, sizeof(PRNetAddr));
+    memcpy(&mExternalProxyAddr, aExternalProxyAddr, sizeof(PRNetAddr));
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsSOCKSSocketInfo::GetDestinationAddr(PRNetAddr * *aDestinationAddr)
 {
-    nsCRT::memcpy(*aDestinationAddr, &mDestinationAddr, sizeof(PRNetAddr));
+    memcpy(*aDestinationAddr, &mDestinationAddr, sizeof(PRNetAddr));
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsSOCKSSocketInfo::SetDestinationAddr(PRNetAddr *aDestinationAddr)
 {
-    nsCRT::memcpy(&mDestinationAddr, aDestinationAddr, sizeof(PRNetAddr));
+    memcpy(&mDestinationAddr, aDestinationAddr, sizeof(PRNetAddr));
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsSOCKSSocketInfo::GetInternalProxyAddr(PRNetAddr * *aInternalProxyAddr)
 {
-    nsCRT::memcpy(*aInternalProxyAddr, &mInternalProxyAddr, sizeof(PRNetAddr));
+    memcpy(*aInternalProxyAddr, &mInternalProxyAddr, sizeof(PRNetAddr));
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsSOCKSSocketInfo::SetInternalProxyAddr(PRNetAddr *aInternalProxyAddr)
 {
-    nsCRT::memcpy(&mInternalProxyAddr, aInternalProxyAddr, sizeof(PRNetAddr));
+    memcpy(&mInternalProxyAddr, aInternalProxyAddr, sizeof(PRNetAddr));
     return NS_OK;
 }
 

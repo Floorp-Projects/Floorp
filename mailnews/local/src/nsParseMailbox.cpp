@@ -1288,7 +1288,7 @@ int nsParseMailMessageState::FinalizeHeaders()
             (int) m_headers_fp);
 #else
           // ### TODO: is it worth doing something different?
-          nsCRT::memcpy(md5_bin, "dummy message id", sizeof(md5_bin));						
+          memcpy(md5_bin, "dummy message id", sizeof(md5_bin));						
 #endif
           PR_snprintf (md5_data, sizeof(md5_data),
             "<md5:"

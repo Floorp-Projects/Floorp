@@ -556,7 +556,7 @@ char *nsIMAPGenericParser::CreateLiteral()
 
 			if (ContinueParse())
 			{
-				nsCRT::memcpy(returnString + charsReadSoFar, terminatedLine ? fCurrentLine : fCurrentTokenPlaceHolder, bytesToCopy); 
+				memcpy(returnString + charsReadSoFar, terminatedLine ? fCurrentLine : fCurrentTokenPlaceHolder, bytesToCopy); 
 				charsReadSoFar += bytesToCopy;
 			}
 		}

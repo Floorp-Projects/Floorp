@@ -273,7 +273,7 @@ PRUint32 UMimeEncode::ConvertBuffer( const PRUint8 * pIn, PRUint32 inLen, PRUint
 			lineLen = 0;
 			maxLine = maxLen;
 			if (pEolStr) {
-				nsCRT::memcpy( pOut, pEolStr, eolLen);
+				memcpy( pOut, pEolStr, eolLen);
 				pOut += eolLen;
 				len += eolLen;
 			}
@@ -284,7 +284,7 @@ PRUint32 UMimeEncode::ConvertBuffer( const PRUint8 * pIn, PRUint32 inLen, PRUint
 		lineLen = 0;
 		maxLine = maxLen;
 		if (pEolStr) {
-			nsCRT::memcpy( pOut, pEolStr, eolLen);
+			memcpy( pOut, pEolStr, eolLen);
 			pOut += eolLen;
 			len += eolLen;
 		}

@@ -56,7 +56,7 @@ nsresult FillResultsArray(const char * aName, const char *aAddress, PRUnichar **
 
 #define COPY_CHAR(_D,_S)            do { if (!_S || !*_S) { *_D++ = 0; }\
                                          else { int _LEN = NextChar_UTF8((char *)_S) - _S;\
-                                                nsCRT::memcpy(_D,_S,_LEN); _D += _LEN; } } while (0)
+                                                memcpy(_D,_S,_LEN); _D += _LEN; } } while (0)
 //#define NEXT_CHAR(_STR)             (_STR = (* (char *) _STR < 128) ? (char *) _STR + 1 : NextChar_UTF8((char *)_STR))
 #define NEXT_CHAR(_STR)             (_STR = NextChar_UTF8((char *)_STR))
 #define TRIM_WHITESPACE(_S,_E,_T)   do { while (_E > _S && nsCRT::IsAsciiSpace(_E[-1])) _E--;\
@@ -955,7 +955,7 @@ msg_quote_phrase_or_addr(char *address, PRInt32 length, PRBool addr_p)
 	*out++ = 0;
 
 	NS_ASSERTION(new_length >= (out - orig_out), "");
-	nsCRT::memcpy(address, orig_out, new_length);
+	memcpy(address, orig_out, new_length);
 	PR_FREEIF(orig_out); /* make sure we release the string we allocated */
 
   return full_length + unquotable_count + 2;
@@ -1047,7 +1047,7 @@ msg_extract_Header_address_mailboxes(const char *line)
 	for (i = 0; (int)i < status; i++)
 	{
 		PRUint32 j = nsCRT::strlen(s);
-		nsCRT::memcpy(out, s, j);
+		memcpy(out, s, j);
 		out += j;
 		if ((int)(i+1) < status)
 		{
@@ -1113,12 +1113,12 @@ msg_extract_Header_address_names(const char *line)
 
 		if (len1)
 		{
-			nsCRT::memcpy(out, s1, len1);
+			memcpy(out, s1, len1);
 			out += len1;
 		}
 		else
 		{
-			nsCRT::memcpy(out, s2, len2);
+			memcpy(out, s2, len2);
 			out += len2;
 		}
 
@@ -1241,12 +1241,12 @@ msg_format_Header_addresses (const char *names, const char *addrs,
 
 		if (len1)
 		{
-			nsCRT::memcpy(out, aName, len1);
+			memcpy(out, aName, len1);
 			out += len1;
 			*out++ = ' ';
 			*out++ = '<';
 		}
-		nsCRT::memcpy(out, anAddr, len2);
+		memcpy(out, anAddr, len2);
 		out += len2;
 		if (len1)
 			*out++ = '>';

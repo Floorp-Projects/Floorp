@@ -153,7 +153,7 @@ MimeRichtextConvert (char *line, PRInt32 length,
 	  /* Push out the text preceeding the tag. */
 	  if (last_end && last_end != this_start)
 		{
-		  nsCRT::memcpy (out, last_end, this_start - last_end);
+		  memcpy (out, last_end, this_start - last_end);
 		  out += this_start - last_end;
 		  *out = 0;
 		}

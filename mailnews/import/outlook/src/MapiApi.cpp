@@ -1181,7 +1181,7 @@ BOOL CMapiApi::GetEntryIdFromProp( LPSPropValue pVal, ULONG& cbEntryId, LPENTRYI
 		case PT_BINARY:
 			cbEntryId = pVal->Value.bin.cb;
 			MAPIAllocateBuffer( cbEntryId, (LPVOID *) &lpEntryId);
-			nsCRT::memcpy( lpEntryId, pVal->Value.bin.lpb, cbEntryId);
+			memcpy( lpEntryId, pVal->Value.bin.lpb, cbEntryId);
 		break;
 
 		default:
@@ -1292,7 +1292,7 @@ void CMapiApi::ReportUIDProp( const char *pTag, LPSPropValue pVal)
 		}
 		else {
 			nsIID	uid;
-			nsCRT::memcpy( &uid, pVal->Value.bin.lpb, 16);
+			memcpy( &uid, pVal->Value.bin.lpb, 16);
 			char *	pStr = uid.ToString();
 			if (pStr) {
 				MAPI_TRACE2( "%s %s\n", pTag, (const char *)pStr);
@@ -1664,7 +1664,7 @@ void CMapiFolder::SetEntryID( ULONG cbEid, LPENTRYID lpEid)
 	m_cbEid = cbEid;
 	if (cbEid) {
 		m_lpEid = new BYTE[cbEid];
-		nsCRT::memcpy( m_lpEid, lpEid, cbEid);
+		memcpy( m_lpEid, lpEid, cbEid);
 	}
 }
 
@@ -1703,7 +1703,7 @@ void CMsgStore::SetEntryID( ULONG cbEid, LPENTRYID lpEid)
 	m_lpEid = NULL;
 	if (cbEid) {
 		m_lpEid = new BYTE[cbEid];
-		nsCRT::memcpy( m_lpEid, lpEid, cbEid);
+		memcpy( m_lpEid, lpEid, cbEid);
 	}
 	m_cbEid = cbEid;
 
@@ -1748,7 +1748,7 @@ CMapiFolderContents::CMapiFolderContents( LPMDB lpMdb, ULONG cbEid, LPENTRYID lp
 	m_lpMdb = lpMdb;
 	m_fCbEid = cbEid;
 	m_fLpEid = new BYTE[cbEid];
-	nsCRT::memcpy( m_fLpEid, lpEid, cbEid);
+	memcpy( m_fLpEid, lpEid, cbEid);
 	m_count = 0;
 	m_iterCount = 0;
 	m_failure = FALSE;
@@ -1865,7 +1865,7 @@ BOOL CMapiFolderContents::GetNext( ULONG *pcbEid, LPENTRYID *ppEid, ULONG *poTyp
 				m_lastLpEid = new BYTE[cbEID];
 				m_lastCbEid = cbEID;
 			}
-			nsCRT::memcpy( m_lastLpEid, lpEID, cbEID);
+			memcpy( m_lastLpEid, lpEID, cbEID);
 
 			*ppEid = (LPENTRYID) m_lastLpEid;
 			*pcbEid = cbEID;

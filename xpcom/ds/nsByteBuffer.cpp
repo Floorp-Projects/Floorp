@@ -114,7 +114,7 @@ ByteBufferImpl::Grow(PRUint32 aNewSize)
   char* newbuf = new char[aNewSize];
   if (nsnull != newbuf) {
     if (0 != mLength) {
-      nsCRT::memcpy(newbuf, mBuffer, mLength);
+      memcpy(newbuf, mBuffer, mLength);
     }
     delete[] mBuffer;
     mBuffer = newbuf;

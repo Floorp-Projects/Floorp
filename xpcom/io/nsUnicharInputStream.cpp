@@ -97,7 +97,7 @@ nsresult StringUnicharInputStream::Read(PRUnichar* aBuf,
   if (amount > aCount) {
     amount = aCount;
   }
-  nsCRT::memcpy(aBuf, us + mPos, sizeof(PRUnichar) * amount);
+  memcpy(aBuf, us + mPos, sizeof(PRUnichar) * amount);
   mPos += amount;
   *aReadCount = amount;
   return NS_OK;
@@ -216,7 +216,7 @@ nsresult UTF8InputStream::Read(PRUnichar* aBuf,
   if (rv > aCount) {
     rv = aCount;
   }
-  nsCRT::memcpy(aBuf + aOffset, mUnicharData->GetBuffer() + mUnicharDataOffset,
+  memcpy(aBuf + aOffset, mUnicharData->GetBuffer() + mUnicharDataOffset,
                 rv * sizeof(PRUnichar));
   mUnicharDataOffset += rv;
   *aReadCount = rv;
@@ -260,7 +260,7 @@ PRInt32 UTF8InputStream::Fill(nsresult * aErrorCode)
                "Ouch. I would overflow my buffer if I wasn't so careful.");
   if (dstLen > mUnicharData->GetBufferSize()) return 0;
   
-  nsCRT::memcpy((void *)mUnicharData->GetBuffer(),
+  memcpy((void *)mUnicharData->GetBuffer(),
                 (void *)unicodeValue.get(), dstLen*sizeof(PRUnichar));
 
   mUnicharDataOffset = 0;

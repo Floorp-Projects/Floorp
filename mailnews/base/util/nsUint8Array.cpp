@@ -106,7 +106,7 @@ void nsUint8Array::SetSize(PRInt32 nNewSize, PRInt32 nGrowBy)
 		PRUint8* pNewData = (PRUint8*) new PRUint8[nNewMax * sizeof(PRUint8)];
 
 		// copy new data from old
-    nsCRT::memcpy(pNewData, m_pData, m_nSize * sizeof(PRUint8));
+        memcpy(pNewData, m_pData, m_nSize * sizeof(PRUint8));
 
 		NS_ASSERTION(nNewSize > m_nSize, "did't grow size");
 

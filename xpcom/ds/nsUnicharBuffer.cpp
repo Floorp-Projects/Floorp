@@ -114,7 +114,7 @@ UnicharBufferImpl::Grow(PRInt32 aNewSize)
   PRUnichar* newbuf = new PRUnichar[aNewSize];
   if (nsnull != newbuf) {
     if (0 != mLength) {
-      nsCRT::memcpy(newbuf, mBuffer, mLength * sizeof(PRUnichar));
+      memcpy(newbuf, mBuffer, mLength * sizeof(PRUnichar));
     }
     delete[] mBuffer;
     mBuffer = newbuf;

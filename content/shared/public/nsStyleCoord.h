@@ -190,7 +190,7 @@ inline float nsStyleCoord::GetFactorValue(void) const
 
 inline void nsStyleCoord::GetUnionValue(nsStyleUnion& aValue) const
 {
-  nsCRT::memcpy(&aValue, &mValue, sizeof(nsStyleUnion));
+  memcpy(&aValue, &mValue, sizeof(nsStyleUnion));
 }
 
 // -------------------------

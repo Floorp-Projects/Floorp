@@ -92,7 +92,7 @@ protected:
 inline PRBool	ImportOutFile::WriteData( const PRUint8 * pSrc, PRUint32 len) {
 	while ((len + m_pos) > m_bufSz) {
 		if ((m_bufSz - m_pos)) {
-			nsCRT::memcpy( m_pBuf + m_pos, pSrc, m_bufSz - m_pos);
+			memcpy( m_pBuf + m_pos, pSrc, m_bufSz - m_pos);
 			len -= (m_bufSz - m_pos);
 			pSrc += (m_bufSz - m_pos);
 			m_pos = m_bufSz;
@@ -102,7 +102,7 @@ inline PRBool	ImportOutFile::WriteData( const PRUint8 * pSrc, PRUint32 len) {
 	}
 	
 	if (len) {
-		nsCRT::memcpy( m_pBuf + m_pos, pSrc, len);
+		memcpy( m_pBuf + m_pos, pSrc, len);
 		m_pos += len;
 	}
 

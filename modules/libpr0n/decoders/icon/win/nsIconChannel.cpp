@@ -151,9 +151,9 @@ void InvertRows(unsigned char * aInitialBuffer, PRUint32 sizeOfBuffer, PRUint32 
   while (currentRow < lastRow)
   {
     // store the current row into a temporary buffer
-    nsCRT::memcpy(temporaryRowHolder, (void *) &aInitialBuffer[currentRow], numBytesPerRow);
-    nsCRT::memcpy((void *) &aInitialBuffer[currentRow], (void *)&aInitialBuffer[lastRow], numBytesPerRow);
-    nsCRT::memcpy((void *) &aInitialBuffer[lastRow], temporaryRowHolder, numBytesPerRow);
+    memcpy(temporaryRowHolder, (void *) &aInitialBuffer[currentRow], numBytesPerRow);
+    memcpy((void *) &aInitialBuffer[currentRow], (void *)&aInitialBuffer[lastRow], numBytesPerRow);
+    memcpy((void *) &aInitialBuffer[lastRow], temporaryRowHolder, numBytesPerRow);
     lastRow -= numBytesPerRow;
     currentRow += numBytesPerRow;
   }

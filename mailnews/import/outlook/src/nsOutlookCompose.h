@@ -67,7 +67,7 @@ public:
 		m_pBuffer = nsnull;
 		while (m_size < newSize) m_size += m_growBy;
 		if (Allocate( m_size)) {
-			if (pOldBuffer) { nsCRT::memcpy( m_pBuffer, pOldBuffer, oldSize); delete [] pOldBuffer;}
+			if (pOldBuffer) { memcpy( m_pBuffer, pOldBuffer, oldSize); delete [] pOldBuffer;}
 			return( PR_TRUE);
 		}
 		else { m_pBuffer = pOldBuffer; m_size = oldSize; return( PR_FALSE);}
@@ -79,7 +79,7 @@ public:
 		if (!Grow( offset + len)) return( PR_FALSE);
 		if (m_convertCRs)
 			return( SpecialMemCpy( offset, pData, len, pWritten));
-		nsCRT::memcpy( m_pBuffer + offset, pData, len);
+		memcpy( m_pBuffer + offset, pData, len);
 		return( PR_TRUE);
 	}
 	

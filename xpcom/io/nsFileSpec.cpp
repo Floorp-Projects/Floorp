@@ -195,7 +195,7 @@ void nsSimpleCharString::CopyFrom(const char* inData, PRUint32 inLength)
     if (!mData)
         return;
     if (inLength != 0) {
-        nsCRT::memcpy(mData->mString, inData, inLength);
+        memcpy(mData->mString, inData, inLength);
     }
     mData->mString[inLength] = '\0';
 } // nsSimpleCharString::CopyFrom
@@ -279,7 +279,7 @@ void nsSimpleCharString::ReallocData(PRUint32 inLength)
     // from a shared pointer.
     if (mData)
     {
-        nsCRT::memcpy(newData, mData, sizeof(Data) + copyLength);
+        memcpy(newData, mData, sizeof(Data) + copyLength);
         mData->mRefCount--; // Say goodbye
     }
     else

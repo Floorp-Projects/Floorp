@@ -778,7 +778,7 @@ void nsSimpleUInt32Array::Allocate( void)
 	else {
 		m_allocated += m_growBy;
 		PRUint32 *pData = new PRUint32[m_allocated];
-		nsCRT::memcpy( pData, m_pData, (m_allocated - m_growBy) * sizeof( PRUint32));
+		memcpy( pData, m_pData, (m_allocated - m_growBy) * sizeof( PRUint32));
 		delete [] m_pData;
 		m_pData = pData;
 	}

@@ -64,7 +64,7 @@ int write_stream(
 {	
 	if (p_ap_encode_obj->pos_outbuff + len < p_ap_encode_obj->s_outbuff)
 	{
-		nsCRT::memcpy(p_ap_encode_obj->outbuff + p_ap_encode_obj->pos_outbuff, 
+		memcpy(p_ap_encode_obj->outbuff + p_ap_encode_obj->pos_outbuff, 
 				out_string, 
 				len);
 		p_ap_encode_obj->pos_outbuff += len;
@@ -77,10 +77,10 @@ int write_stream(
 		*/
 		int s_len = p_ap_encode_obj->s_outbuff - p_ap_encode_obj->pos_outbuff;
 		
-		nsCRT::memcpy(p_ap_encode_obj->outbuff + p_ap_encode_obj->pos_outbuff, 
+		memcpy(p_ap_encode_obj->outbuff + p_ap_encode_obj->pos_outbuff, 
 					out_string, 
 					s_len);
-		nsCRT::memcpy(p_ap_encode_obj->b_overflow + p_ap_encode_obj->s_overflow,
+		memcpy(p_ap_encode_obj->b_overflow + p_ap_encode_obj->s_overflow,
 					out_string + s_len,
 					p_ap_encode_obj->s_overflow += (len - s_len));
 		p_ap_encode_obj->pos_outbuff += s_len;

@@ -56,7 +56,7 @@ public:
 	virtual ~nsImportTranslator() {}
 	virtual PRBool		Supports8bitEncoding( void) { return( PR_FALSE);}
 	virtual PRUint32	GetMaxBufferSize( PRUint32 inLen) { return( inLen + 1);}
-	virtual void		ConvertBuffer( const PRUint8 * pIn, PRUint32 inLen, PRUint8 * pOut) { nsCRT::memcpy( pOut, pIn, inLen); pOut[inLen] = 0;}
+	virtual void		ConvertBuffer( const PRUint8 * pIn, PRUint32 inLen, PRUint8 * pOut) { memcpy( pOut, pIn, inLen); pOut[inLen] = 0;}
 	virtual PRBool		ConvertToFile( const PRUint8 * pIn, PRUint32 inLen, ImportOutFile *pOutFile, PRUint32 *pProcessed = nsnull);
 	virtual PRBool		FinishConvertToFile( ImportOutFile * /* pOutFile */) { return( PR_TRUE);}
 

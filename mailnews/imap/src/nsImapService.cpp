@@ -231,7 +231,7 @@ NS_IMETHODIMP nsImapSaveAsListener::OnDataAvailable(nsIRequest* request,
           if (start && !end)
           {
               m_leftOver -= (start - m_dataBuffer);
-              nsCRT::memcpy(m_dataBuffer, start,
+              memcpy(m_dataBuffer, start,
                             m_leftOver+1); // including null
               maxReadCount = SAVE_BUF_SIZE - m_leftOver;
           }

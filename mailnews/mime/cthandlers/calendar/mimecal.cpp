@@ -141,7 +141,7 @@ MimeInlineTextCalendar_parse_line(char *line, PRInt32 length, MimeObject *obj)
     clazz->buffer = (char *)PR_Realloc(clazz->buffer, clazz->buffermax);
     if (clazz->buffer == NULL) return CAL_OUT_OF_MEMORY;
   }
-  nsCRT::memcpy(clazz->buffer + clazz->bufferlen, line, length);
+  memcpy(clazz->buffer + clazz->bufferlen, line, length);
   clazz->bufferlen += length;
   return 0;
 }

@@ -789,7 +789,7 @@ PRInt32	nsEudoraMailbox::IsEudoraFromSeparator( const char *pChar, PRInt32 maxLe
 						return( -1);
 					tym = PR_TRUE;
 					// for future use, get the time value
-					nsCRT::memcpy( tymStr, pTok, tokLen);
+					memcpy( tymStr, pTok, tokLen);
 					if (tokLen == 5) {
 						tymStr[5] = ':';
 						tymStr[6] = '0';
@@ -1045,7 +1045,7 @@ nsresult nsEudoraMailbox::FillMailBuffer( ReadFileState *pState, SimpleBufferTon
 		read.m_bytesInBuf = 0;
 	}
 	else if (read.m_writeOffset) {
-		nsCRT::memcpy( read.m_pBuffer, read.m_pBuffer + read.m_writeOffset, read.m_bytesInBuf - read.m_writeOffset);
+		memcpy( read.m_pBuffer, read.m_pBuffer + read.m_writeOffset, read.m_bytesInBuf - read.m_writeOffset);
 		read.m_bytesInBuf -= read.m_writeOffset;
 		read.m_writeOffset = 0;
 	}

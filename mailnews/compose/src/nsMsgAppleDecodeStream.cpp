@@ -273,7 +273,7 @@ net_AppleDouble_Decode_Write (
 	if (obj->bytes_in_buff + l > 1024)
 	{
 		size = 1024 - obj->bytes_in_buff;
-		nsCRT::memcpy(obj->in_buff+obj->bytes_in_buff, 
+		memcpy(obj->in_buff+obj->bytes_in_buff, 
 					s, 
 					size);
 		s += size;
@@ -295,7 +295,7 @@ net_AppleDouble_Decode_Write (
 	else
 	{
 		/* and we are sure we will not get overflow with the buff. */ 
-		nsCRT::memcpy(obj->in_buff+obj->bytes_in_buff, 
+		memcpy(obj->in_buff+obj->bytes_in_buff, 
 					s, 
 					l);
 		obj->bytes_in_buff += l;

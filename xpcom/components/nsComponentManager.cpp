@@ -2136,7 +2136,7 @@ MakeRegistryName(const char *aDllName, const char *prefix, char **regName)
     if (!registryName)
         return NS_ERROR_OUT_OF_MEMORY;
     
-    nsCRT::memcpy(registryName, prefix, len);
+    memcpy(registryName, prefix, len);
     strcpy(registryName + len, aDllName); // no nsCRT::strcpy? for shame!
     registryName[registryNameLen] = '\0';
     *regName = registryName;

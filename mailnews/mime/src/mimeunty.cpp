@@ -423,7 +423,7 @@ MimeUntypedText_uu_begin_line_p(const char *line, PRInt32 length,
 
   name = (char *) PR_MALLOC(((line+length)-s) + 1);
   if (!name) return PR_FALSE; /* grr... */
-  nsCRT::memcpy(name, s, (line+length)-s);
+  memcpy(name, s, (line+length)-s);
   name[(line+length)-s] = 0;
 
   /* take off newline. */

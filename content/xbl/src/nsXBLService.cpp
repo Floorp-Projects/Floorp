@@ -482,7 +482,7 @@ public:
   NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount) {
       PRUint32 readCount = PR_MIN(aCount, (mSize-mIndex));
       
-      nsCRT::memcpy(aBuf, mBuffer+mIndex, readCount);
+      memcpy(aBuf, mBuffer+mIndex, readCount);
       mIndex += readCount;
 
       *aReadCount = readCount;

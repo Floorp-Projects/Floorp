@@ -1730,7 +1730,7 @@ FindCharacterSet(MimeObject *obj)
     return nsnull;
 
   nsCRT::memset(workString, 0, obj->headers->all_headers_size + 1);
-  nsCRT::memcpy(workString, obj->headers->all_headers, obj->headers->all_headers_size);
+  memcpy(workString, obj->headers->all_headers, obj->headers->all_headers_size);
 
   char *cTypePtr = (char *) PL_strcasestr(workString, HEADER_CONTENT_TYPE);
   if (!cTypePtr)

@@ -299,9 +299,9 @@ nsCacheMetaData::AccumulateElement(PLDHashTable *table,
         return PL_DHASH_STOP;
     }
     
-    nsCRT::memcpy(state->bufPtr, hashEntry->key->get(), keySize);
+    memcpy(state->bufPtr, hashEntry->key->get(), keySize);
     state->bufPtr += keySize;
-    nsCRT::memcpy(state->bufPtr, hashEntry->value->get(), valSize);
+    memcpy(state->bufPtr, hashEntry->value->get(), valSize);
     state->bufPtr += valSize;
     state->metaSize += keySize + valSize;
     return PL_DHASH_NEXT;

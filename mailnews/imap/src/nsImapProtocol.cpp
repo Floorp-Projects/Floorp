@@ -3261,7 +3261,7 @@ NS_IMETHODIMP nsImapProtocol::NotifyBodysToDownload(PRUint32 *keys, PRUint32 key
     PR_FREEIF(m_fetchBodyIdList);
     m_fetchBodyIdList = (PRUint32 *) PR_MALLOC(keyCount * sizeof(PRUint32));
     if (m_fetchBodyIdList)
-      nsCRT::memcpy(m_fetchBodyIdList, keys, keyCount * sizeof(PRUint32));
+      memcpy(m_fetchBodyIdList, keys, keyCount * sizeof(PRUint32));
     m_fetchBodyCount    = keyCount;
     m_fetchBodyListIsNew = PR_TRUE;
     PR_Notify(m_fetchBodyListMonitor);

@@ -134,7 +134,7 @@ static T* ConvertBreaks(const T* inSrc, PRInt32& ioLen, const char* srcBreak, co
   {
     resultString = (T *)nsMemory::Alloc(sizeof(T) * ioLen);
     if (!resultString) return nsnull;
-    nsCRT::memcpy(resultString, inSrc, sizeof(T) * ioLen); // includes the null, if any
+    memcpy(resultString, inSrc, sizeof(T) * ioLen); // includes the null, if any
     return resultString;
   }
     

@@ -121,7 +121,7 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding)
     diskEntry->mKeySize         = keySize;
     diskEntry->mMetaDataSize    = metaSize;
     
-    nsCRT::memcpy(diskEntry->mKeyStart, entry->Key()->get(),keySize);
+    memcpy(diskEntry->mKeyStart, entry->Key()->get(),keySize);
     
     nsresult rv = entry->FlattenMetaData(&diskEntry->mKeyStart[keySize], metaSize);
     if (NS_FAILED(rv)) {

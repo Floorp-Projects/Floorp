@@ -168,7 +168,7 @@ PRInt32 nsMsgBodyHandler::GetNextFilterLine(char * buf, PRUint32 bufSize)
     if (m_headersSize > 0)
     {
       numBytesCopied = nsCRT::strlen(m_headers)+1 /* + 1 to include NULL */ < bufSize ? nsCRT::strlen(m_headers)+1 : (PRInt32) bufSize;
-      nsCRT::memcpy(buf, m_headers, numBytesCopied);
+      memcpy(buf, m_headers, numBytesCopied);
       m_headers += numBytesCopied;  
       // be careful...m_headersSize is unsigned. Don't let it go negative or we overflow to 2^32....*yikes*	
       if (m_headersSize < numBytesCopied)

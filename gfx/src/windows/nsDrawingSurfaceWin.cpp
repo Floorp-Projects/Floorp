@@ -627,7 +627,7 @@ BITMAPINFO * nsDrawingSurfaceWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHe
 	    colortable = (PRUint8 *)rv + sizeof(BITMAPINFOHEADER);
 
       if ((aDepth == 16) || (aDepth == 32))
-        nsCRT::memcpy(colortable, masks, sizeof(DWORD) * allocsize);
+        memcpy(colortable, masks, sizeof(DWORD) * allocsize);
       else
 	      nsCRT::zero(colortable, sizeof(RGBQUAD) * palsize);
 

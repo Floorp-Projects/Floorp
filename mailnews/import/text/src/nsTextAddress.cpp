@@ -158,7 +158,7 @@ nsresult nsTextAddress::ReadRecord( nsIFileSpec *pSrc, char *pLine, PRInt32 buff
 	do {
 		if (lineLen) {
 			if ((lineLen + 2) < bufferSz) {
-				nsCRT::memcpy( pLine + lineLen, "\x0D\x0A", 2);
+				memcpy( pLine + lineLen, "\x0D\x0A", 2);
 				lineLen += 2;
 				pLine[lineLen] = 0;
 			}

@@ -541,7 +541,7 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
       else {
         //buffering current line
         text->lineDamPtrs[text->lastLineInDam] = text->lineDamBuffer + text->curDamOffset;
-        nsCRT::memcpy(text->lineDamPtrs[text->lastLineInDam], line, length);
+        memcpy(text->lineDamPtrs[text->lastLineInDam], line, length);
         text->lastLineInDam++;
         text->curDamOffset += length;
       }

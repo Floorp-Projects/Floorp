@@ -595,10 +595,10 @@ int ap_decode_file_infor(appledouble_decode_object *p_ap_decode_obj)
 		{
 			reply.sfFile.vRefNum = p_ap_decode_obj->mSpec->vRefNum;
 			reply.sfFile.parID = p_ap_decode_obj->mSpec->parID;
-      nsCRT::memcpy(&reply.sfFile.name, p_ap_decode_obj->mSpec->name , 63 );		
+            memcpy(&reply.sfFile.name, p_ap_decode_obj->mSpec->name , 63 );		
 		}
 		
-		nsCRT::memcpy(p_ap_decode_obj->fname, 
+		memcpy(p_ap_decode_obj->fname, 
 					reply.sfFile.name+1, 
 					*(reply.sfFile.name)+1);
 		p_ap_decode_obj->fname[*(reply.sfFile.name)] = '\0';

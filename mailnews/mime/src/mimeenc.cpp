@@ -112,7 +112,7 @@ mime_decode_qp_buffer (MimeDecoderData *data, const char *buffer, PRInt32 length
 			 If it might be a token, unread it.
 			 Otherwise, just dump it.
 			 */
-		  nsCRT::memcpy (data->token, token, i);
+		  memcpy (data->token, token, i);
 		  data->token_size = i;
 		  i = 0;
 		  length = 0;
@@ -276,7 +276,7 @@ mime_decode_base64_buffer (MimeDecoderData *data,
 	  if (i < 4)
 		{
 		  /* Didn't get enough for a complete token. */
-		  nsCRT::memcpy (data->token, token, i);
+		  memcpy (data->token, token, i);
 		  data->token_size = i;
 		  length = 0;
 		  break;

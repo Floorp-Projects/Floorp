@@ -431,7 +431,7 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
 			return nsnull;
         }
 
-		nsCRT::memcpy(newLine, startOfLine, aNumBytesInLine); // copy the string into the new line buffer
+		memcpy(newLine, startOfLine, aNumBytesInLine); // copy the string into the new line buffer
 
 		if (m_eatCRLFs)
 			endOfLine += 1; // advance past LF if we haven't already done so...

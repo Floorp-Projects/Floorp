@@ -227,7 +227,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
       PRUint32 toCopy = sizeof(mDirEntryArray) - (mPos - DIRENTRYOFFSET - mCurrIcon*sizeof(mDirEntryArray));
       if (toCopy > aCount)
         toCopy = aCount;
-      nsCRT::memcpy(mDirEntryArray + sizeof(mDirEntryArray) - toCopy, aBuffer, toCopy);
+      memcpy(mDirEntryArray + sizeof(mDirEntryArray) - toCopy, aBuffer, toCopy);
       mPos += toCopy;
       aCount -= toCopy;
       aBuffer += toCopy;
@@ -257,7 +257,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     if (toCopy > aCount)
       toCopy = aCount;
 
-    nsCRT::memcpy(mBIHraw + (mPos - mImageOffset), aBuffer, toCopy);
+    memcpy(mBIHraw + (mPos - mImageOffset), aBuffer, toCopy);
     mPos += toCopy;
     aCount -= toCopy;
     aBuffer += toCopy;
@@ -354,7 +354,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
         if (toCopy) {
             if (toCopy > aCount)
                 toCopy = aCount;
-            nsCRT::memcpy(mRow + mRowBytes, aBuffer, toCopy);
+            memcpy(mRow + mRowBytes, aBuffer, toCopy);
             aCount -= toCopy;
             aBuffer += toCopy;
             mRowBytes += toCopy;
@@ -451,7 +451,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
         if (toCopy) {
             if (toCopy > aCount)
                 toCopy = aCount;
-            nsCRT::memcpy(mRow + mRowBytes, aBuffer, toCopy);
+            memcpy(mRow + mRowBytes, aBuffer, toCopy);
             aCount -= toCopy;
             aBuffer += toCopy;
             mRowBytes += toCopy;

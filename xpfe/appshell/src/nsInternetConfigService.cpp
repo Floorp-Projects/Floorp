@@ -137,7 +137,7 @@ NS_IMETHODIMP nsInternetConfigService::HasProtocolHandler(const char *protocol, 
   if (nsCRT::strlen(protocol) > 248)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCRT::memcpy(pref + pref[0] + 1, protocol, nsCRT::strlen(protocol));
+  memcpy(pref + pref[0] + 1, protocol, nsCRT::strlen(protocol));
   pref[0] = pref[0] + nsCRT::strlen(protocol);
   
   ICInstance instance = nsInternetConfig::GetInstance();

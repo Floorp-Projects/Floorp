@@ -597,7 +597,7 @@ nsCStringKey::Clone() const
     char* str = (char*)nsMemory::Alloc(len + sizeof(char));
     if (str == NULL)
         return NULL;
-    nsCRT::memcpy(str, mStr, len);
+    memcpy(str, mStr, len);
     str[len] = 0;
     return new nsCStringKey(str, mStrLen, OWN);
 }
@@ -691,7 +691,7 @@ nsStringKey::Clone() const
     PRUnichar* str = (PRUnichar*)nsMemory::Alloc(len);
     if (str == NULL)
         return NULL;
-    nsCRT::memcpy(str, mStr, len);
+    memcpy(str, mStr, len);
     return new nsStringKey(str, mStrLen, OWN);
 }
 
@@ -760,7 +760,7 @@ nsOpaqueKey::Clone() const
     char* str = (char*)nsMemory::Alloc(len + sizeof(char));
     if (str == NULL)
         return NULL;
-    nsCRT::memcpy(str, mBuf, len);
+    memcpy(str, mBuf, len);
     str[len] = 0;
     return new nsOpaqueKey(str, mBufLen, OWN);
 }

@@ -170,7 +170,7 @@ nsSaveAsCharset::HandleFallBack(PRUnichar character, char **outString, PRInt32 *
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
-    nsCRT::memcpy((*outString + *currentPos), fallbackStr, tempLen);
+    memcpy((*outString + *currentPos), fallbackStr, tempLen);
     *currentPos += tempLen;
   }
   return rv;

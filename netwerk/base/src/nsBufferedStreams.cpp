@@ -271,7 +271,7 @@ nsBufferedInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
     while (count > 0) {
         PRUint32 amt = PR_MIN(count, mFillPoint - mCursor);
         if (amt > 0) {
-            nsCRT::memcpy(buf + read, mBuffer + mCursor, amt);
+            memcpy(buf + read, mBuffer + mCursor, amt);
             read += amt;
             count -= amt;
             mCursor += amt;
@@ -344,7 +344,7 @@ nsBufferedInputStream::Fill()
         // slide the remainder down to the start of the buffer
         // |<------------->|<--rem-->|<--->|
         // b               c         f     s
-        nsCRT::memcpy(mBuffer, mBuffer + mCursor, rem);
+        memcpy(mBuffer, mBuffer + mCursor, rem);
     }
     mBufferStartOffset += mCursor;
     mFillPoint = rem;
@@ -497,7 +497,7 @@ nsBufferedOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *result)
     while (count > 0) {
         PRUint32 amt = PR_MIN(count, mBufferSize - mCursor);
         if (amt > 0) {
-            nsCRT::memcpy(mBuffer + mCursor, buf + written, amt);
+            memcpy(mBuffer + mCursor, buf + written, amt);
             written += amt;
             count -= amt;
             mCursor += amt;
@@ -535,7 +535,7 @@ nsBufferedOutputStream::Flush()
     // |<-------------->|<---|----->|
     // b                a    c      s
     PRUint32 rem = mFillPoint - amt;
-    nsCRT::memcpy(mBuffer, mBuffer + amt, rem);
+    memcpy(mBuffer, mBuffer + amt, rem);
     mFillPoint = mCursor = rem;
     return NS_ERROR_FAILURE;        // didn't flush all
 }

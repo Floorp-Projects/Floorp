@@ -220,7 +220,7 @@ PRBool FillSingleArray(void *array_ptr, PyObject *sequence_ob, PRUint32 sequence
             release_seq = PR_FALSE;
         if (!sequence_ob) // presumably a memory error, or Unicode encoding error.
             return PR_FALSE;
-		nsCRT::memcpy(pthis, PyString_AS_STRING(sequence_ob), sequence_size);
+		memcpy(pthis, PyString_AS_STRING(sequence_ob), sequence_size);
         if (release_seq)
             Py_DECREF(sequence_ob);
 		return PR_TRUE;
@@ -312,7 +312,7 @@ PRBool FillSingleArray(void *array_ptr, PyObject *sequence_ob, PRUint32 sequence
 					PyErr_NoMemory();
 					BREAK_FALSE;
 				}
-				nsCRT::memcpy(*pp, &iid, sizeof(iid));
+				memcpy(*pp, &iid, sizeof(iid));
 				break;
 				}
 
@@ -370,7 +370,7 @@ PRBool FillSingleArray(void *array_ptr, PyObject *sequence_ob, PRUint32 sequence
 					PyErr_NoMemory();
 					BREAK_FALSE;
 				}
-				nsCRT::memcpy(*pp, sz, sizeof(PRUnichar) * (nch + 1));
+				memcpy(*pp, sz, sizeof(PRUnichar) * (nch + 1));
 				break;
 				}
 			  case nsXPTType::T_INTERFACE:  {
@@ -812,7 +812,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 			MAKE_VALUE_BUFFER(sizeof(nsIID));
 			if (!Py_nsIID::IIDFromPyObject(val, &iid))
 				BREAK_FALSE;
-			nsCRT::memcpy(this_buffer_pointer, &iid, sizeof(iid));
+			memcpy(this_buffer_pointer, &iid, sizeof(iid));
 			ns_v.val.p = this_buffer_pointer;
 			break;
 		  case nsXPTType::T_DOMSTRING: {
@@ -852,7 +852,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 
 			cb_this_buffer_pointer = PyString_GET_SIZE(val_use)+1;
 			MAKE_VALUE_BUFFER(cb_this_buffer_pointer);
-			nsCRT::memcpy(this_buffer_pointer, PyString_AS_STRING(val_use), cb_this_buffer_pointer);
+			memcpy(this_buffer_pointer, PyString_AS_STRING(val_use), cb_this_buffer_pointer);
 			ns_v.val.p = this_buffer_pointer;
 			break;
 			}
@@ -933,7 +933,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 
 			cb_this_buffer_pointer = PyString_GET_SIZE(val_use);
 			MAKE_VALUE_BUFFER(cb_this_buffer_pointer);
-			nsCRT::memcpy(this_buffer_pointer, PyString_AS_STRING(val_use), cb_this_buffer_pointer);
+			memcpy(this_buffer_pointer, PyString_AS_STRING(val_use), cb_this_buffer_pointer);
 			ns_v.val.p = this_buffer_pointer;
 			rc = SetSizeIs(value_index, PR_TRUE, cb_this_buffer_pointer);
 			break;
@@ -955,7 +955,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 
 			cb_this_buffer_pointer = PyUnicode_GET_SIZE(val_use) * sizeof(PRUnichar);
 			MAKE_VALUE_BUFFER(cb_this_buffer_pointer);
-			nsCRT::memcpy(this_buffer_pointer, PyUnicode_AS_UNICODE(val_use), cb_this_buffer_pointer);
+			memcpy(this_buffer_pointer, PyUnicode_AS_UNICODE(val_use), cb_this_buffer_pointer);
 			ns_v.val.p = this_buffer_pointer;
 			rc = SetSizeIs(value_index, PR_TRUE, PyUnicode_GET_SIZE(val_use) );
 			break;
@@ -1740,7 +1740,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			PyErr_NoMemory();
 			BREAK_FALSE;
 		}
-		nsCRT::memcpy(*pp, &iid, sizeof(iid));
+		memcpy(*pp, &iid, sizeof(iid));
 		break;
 		}
 
@@ -1813,7 +1813,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			PyErr_NoMemory();
 			BREAK_FALSE;
 		}
-		nsCRT::memcpy(*pp, sz, sizeof(PRUnichar) * (nch + 1));
+		memcpy(*pp, sz, sizeof(PRUnichar) * (nch + 1));
 		break;
 		}
 	  case nsXPTType::T_INTERFACE:  {
@@ -1888,7 +1888,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			bBackFill = pi->IsIn();
 		}
 		if (bBackFill) {
-			nsCRT::memcpy(*(char **)ns_v.val.p, sz, nch);
+			memcpy(*(char **)ns_v.val.p, sz, nch);
 		} else {
 			// If we have an existing string, free it!
 			char **pp = (char **)ns_v.val.p;
@@ -1902,7 +1902,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 				PyErr_NoMemory();
 				BREAK_FALSE;
 			}
-			nsCRT::memcpy(*pp, sz, nch);
+			memcpy(*pp, sz, nch);
 			if (bCanSetSizeIs)
 				rc = SetSizeIs(index, PR_TRUE, nch);
 			else {
@@ -1944,7 +1944,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			bBackFill = pi->IsIn();
 		}
 		if (bBackFill) {
-			nsCRT::memcpy(*(PRUnichar **)ns_v.val.p, sz, nbytes);
+			memcpy(*(PRUnichar **)ns_v.val.p, sz, nbytes);
 		} else {
 			// If it is an existing string, free it.
 			PRUnichar **pp = (PRUnichar **)ns_v.val.p;
@@ -1959,7 +1959,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 				PyErr_NoMemory();
 				BREAK_FALSE;
 			}
-			nsCRT::memcpy(*pp, sz, nbytes);
+			memcpy(*pp, sz, nbytes);
 			if (bCanSetSizeIs)
 				rc = SetSizeIs(index, PR_TRUE, nch);
 			else {

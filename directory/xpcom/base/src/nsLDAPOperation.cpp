@@ -248,7 +248,7 @@ nsLDAPOperation::SearchExt(const PRUnichar *aBaseDn, PRInt32 aScope,
             NS_ERROR("nsLDAPOperation::SearchExt: out of memory ");
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        nsCRT::memcpy(attrs, aAttributes, aAttrCount * sizeof(char *));
+        memcpy(attrs, aAttributes, aAttrCount * sizeof(char *));
         attrs[aAttrCount] = 0;
     }
 

@@ -2858,7 +2858,7 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
       PRInt32 bytesLeft = allocSize - (PRInt32)(pTemp - pBase);
       PRInt32 bytesToCopy = PR_MIN(bytesLeft, (PRInt32)actualFieldLen);
       if (pField && bytesToCopy > 0) {
-        nsCRT::memcpy((void *)pTemp, pField, bytesToCopy);
+        memcpy((void *)pTemp, pField, bytesToCopy);
         if (bytesToCopy < (PRInt32)actualFieldLen) {
           NS_ASSERTION(0, "wow, big block");
           info->len = bytesToCopy;

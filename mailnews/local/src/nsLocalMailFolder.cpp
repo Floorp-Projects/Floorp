@@ -2409,7 +2409,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
         if (start && !end)
         {
             mCopyState->m_leftOver -= (start - mCopyState->m_dataBuffer);
-            nsCRT::memcpy (mCopyState->m_dataBuffer, start,
+            memcpy (mCopyState->m_dataBuffer, start,
                            mCopyState->m_leftOver+1);
             maxReadCount = COPY_BUFFER_SIZE - mCopyState->m_leftOver;
         }

@@ -159,7 +159,7 @@ MimeHeaders_parse_line (const char *buffer, PRInt32 size, MimeHeaders *hdrs)
 							   &hdrs->all_headers, &hdrs->all_headers_size);
 	  if (status < 0) return status;
 	}
-  nsCRT::memcpy(hdrs->all_headers+hdrs->all_headers_fp, buffer, size);
+  memcpy(hdrs->all_headers+hdrs->all_headers_fp, buffer, size);
   hdrs->all_headers_fp += size;
 
   return 0;
@@ -183,7 +183,7 @@ MimeHeaders_copy (MimeHeaders *hdrs)
 		  PR_Free(hdrs2);
 		  return 0;
 		}
-	  nsCRT::memcpy(hdrs2->all_headers, hdrs->all_headers, hdrs->all_headers_fp);
+	  memcpy(hdrs2->all_headers, hdrs->all_headers, hdrs->all_headers_fp);
 
 	  hdrs2->all_headers_fp   = hdrs->all_headers_fp;
 	  hdrs2->all_headers_size = hdrs->all_headers_fp;
@@ -459,7 +459,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		  {
 		    /* Now copy the header's contents in...
 		     */
-		    nsCRT::memcpy(s, contents, end - contents);
+		    memcpy(s, contents, end - contents);
 		    s[end - contents] = 0;
 		  }
 		else
@@ -564,7 +564,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 		{
 		  s = (char *) PR_MALLOC ((value_end - value_start) + 1);
 		  if (! s) return 0;  /* MIME_OUT_OF_MEMORY */
-		  nsCRT::memcpy (s, value_start, value_end - value_start);
+		  memcpy (s, value_start, value_end - value_start);
 		  s [value_end - value_start] = 0;
 		  /* if the parameter spans across multiple lines we have to strip out the
 			 line continuatio -- jht 4/29/98 */
@@ -597,7 +597,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 				  *charset = (char *) PR_MALLOC(s_quote1-value_start+1);
 				  if (*charset)
 				  {
-					  nsCRT::memcpy(*charset, value_start, s_quote1-value_start);
+					  memcpy(*charset, value_start, s_quote1-value_start);
 					  *(*charset+(s_quote1-value_start)) = 0;
 				  }
 			  }
@@ -607,7 +607,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 				  *language = (char *) PR_MALLOC(s_quote2-(s_quote1+1)+1);
 				  if (*language)
 				  {
-					  nsCRT::memcpy(*language, s_quote1+1, s_quote2-(s_quote1+1));
+					  memcpy(*language, s_quote1+1, s_quote2-(s_quote1+1));
 					  *(*language+(s_quote2-(s_quote1+1))) = 0;
 				  }
 			  }
@@ -617,7 +617,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 				  s = (char *) PR_MALLOC(value_end-(s_quote2+1)+1);
 				  if (s)
 				  {
-					  nsCRT::memcpy(s, s_quote2+1, value_end-(s_quote2+1));
+					  memcpy(s, s_quote2+1, value_end-(s_quote2+1));
 					  *(s+(value_end-(s_quote2+1))) = 0;
 					  if (needUnescape)
 					  {
@@ -652,7 +652,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 			  /* else {} something is really wrong; out of memory */
 			  if (s)
 			  {
-				  nsCRT::memcpy(s+len, value_start, value_end-value_start);
+				  memcpy(s+len, value_start, value_end-value_start);
 				  *(s+len+(value_end-value_start)) = 0;
 				  if (needUnescape)
 					  nsUnescape(s+len);
@@ -751,7 +751,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     
     name = (char *)PR_MALLOC(colon - head + 1);
     if (!name) return MIME_OUT_OF_MEMORY;
-    nsCRT::memcpy(name, head, colon - head);
+    memcpy(name, head, colon - head);
     name[colon - head] = 0;
   
     if ( (end - contents) > 0 )
@@ -762,7 +762,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
         PR_Free(name);
         return MIME_OUT_OF_MEMORY;
       }
-      nsCRT::memcpy(c2, contents, end - contents);
+      memcpy(c2, contents, end - contents);
       c2[end - contents] = 0;
     }
     

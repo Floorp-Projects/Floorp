@@ -258,7 +258,7 @@ static nsresult encodeGWorld(GWorldPtr world, OSType type, nsIInputStream **resu
                 UInt32 imageLength = ::GetHandleSize(imageHandle);
                 char* buffer = (char*) nsMemory::Alloc(imageLength);
                 if (buffer != NULL) {
-                    nsCRT::memcpy(buffer, *imageHandle, imageLength);
+                    memcpy(buffer, *imageHandle, imageLength);
                     nsCOMPtr<nsIByteArrayInputStream> stream;
                     rv = ::NS_NewByteArrayInputStream(getter_AddRefs(stream), buffer, imageLength);
                     if (NS_SUCCEEDED(rv)) {

@@ -235,7 +235,7 @@ nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength,
   if (NS_SUCCEEDED(res) && str != NULL) {
     if (mUseCodePointOrder) {
       *outLen = nsCRT::strlen(str);
-      nsCRT::memcpy(key, str, *outLen);
+      memcpy(key, str, *outLen);
     }
     else {
       DoSetLocale();

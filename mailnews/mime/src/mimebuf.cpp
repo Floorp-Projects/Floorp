@@ -89,7 +89,7 @@ mime_ReBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 		size = net_buffer_size;
 	  if (size > 0)
 		{
-      nsCRT::memcpy ((*bufferP) + (*buffer_fpP), net_buffer, size);
+          memcpy ((*bufferP) + (*buffer_fpP), net_buffer, size);
 		  (*buffer_fpP) += size;
 		  net_buffer += size;
 		  net_buffer_size -= size;
@@ -237,7 +237,7 @@ mime_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 									 bufferP, buffer_sizeP);
 			if (status < 0) return status;
 		  }
-		nsCRT::memcpy ((*bufferP) + (*buffer_fpP), net_buffer, (end - net_buffer));
+		memcpy ((*bufferP) + (*buffer_fpP), net_buffer, (end - net_buffer));
 		(*buffer_fpP) += (end - net_buffer);
 	  }
 

@@ -263,7 +263,7 @@ il_BACat (char **destination,
             if (*destination == NULL) 
               return(NULL);
 
-            nsCRT::memcpy(*destination, source, source_length);
+            memcpy(*destination, source, source_length);
           }
     }
 

@@ -195,7 +195,7 @@ PRUint32 nsOE5File::ReadMsgIndex( nsIFileSpec *file, PRUint32 offset, PRUint32Ar
 	
 		if (pArray->count >= pArray->alloc) {
 			pNewIndex = new PRUint32[ pArray->alloc + kIndexGrowBy];
-			nsCRT::memcpy( pNewIndex, pArray->pIndex, (pArray->alloc * 4));
+			memcpy( pNewIndex, pArray->pIndex, (pArray->alloc * 4));
 			(pArray->alloc) += kIndexGrowBy;		
 			delete [] pArray->pIndex;
 			pArray->pIndex = pNewIndex;
@@ -480,8 +480,8 @@ void nsOE5File::ConvertIndex( nsIFileSpec *pFile, char *pBuffer, PRUint32 *pInde
 	for (PRUint32 i = 0; i < size; i++) {
 		offset = 0;
 		if (ReadBytes( pFile, recordHead, pIndex[i], 12)) {
-			nsCRT::memcpy( &marker, recordHead, 4);
-			nsCRT::memcpy( &recordSize, recordHead + 4, 4);
+			memcpy( &marker, recordHead, 4);
+			memcpy( &recordSize, recordHead + 4, 4);
 			numAttrs = (PRUint32) recordHead[10];
 			if ((marker == pIndex[i]) && (recordSize < kMailboxBufferSize) && ((numAttrs * 4) <= recordSize)) {
 				if (ReadBytes( pFile, pBuffer, kDontSeek, recordSize)) {
@@ -490,15 +490,15 @@ void nsOE5File::ConvertIndex( nsIFileSpec *pFile, char *pBuffer, PRUint32 *pInde
 						tag = (PRUint8) pBuffer[attrOffset];
 						if (tag == (PRUint8) 0x84) {
 							tagData = 0;
-							nsCRT::memcpy( &tagData, pBuffer + attrOffset + 1, 3);
+							memcpy( &tagData, pBuffer + attrOffset + 1, 3);
 							offset = tagData;
 							break;
 						}
 						else if (tag == (PRUint8) 0x04) {
 							tagData = 0;
-							nsCRT::memcpy( &tagData, pBuffer + attrOffset + 1, 3);
+							memcpy( &tagData, pBuffer + attrOffset + 1, 3);
 							if (((numAttrs * 4) + tagData + 4) <= recordSize)
-								nsCRT::memcpy( &offset, pBuffer + (numAttrs * 4) + tagData, 4);
+								memcpy( &offset, pBuffer + (numAttrs * 4) + tagData, 4);
 						}
 					}
 				}

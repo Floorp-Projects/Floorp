@@ -113,7 +113,7 @@ PRBool nsUInt32Array::SetSize(PRUint32 nSize,
 		if (pNewData)
 		{
 			// Copy the data from the old array to the new one
-			nsCRT::memcpy(pNewData, m_pData, m_nSize * sizeof(PRUint32));
+			memcpy(pNewData, m_pData, m_nSize * sizeof(PRUint32));
 
 			// Zero out the remaining elements
 			nsCRT::memset(&pNewData[m_nSize], 0, (nSize - m_nSize) * sizeof(PRUint32));
@@ -172,7 +172,7 @@ PRUint32 nsUInt32Array::Add(PRUint32 newElement)
 PRUint32 nsUInt32Array::Add(PRUint32 *elementPtr, PRUint32 numElements) 
 { 
 	if (SetSize(m_nSize + numElements))
-		nsCRT::memcpy(m_pData + m_nSize - numElements, elementPtr, numElements * sizeof(PRUint32)); 
+		memcpy(m_pData + m_nSize - numElements, elementPtr, numElements * sizeof(PRUint32)); 
 
 	return m_nSize; 
 } 
@@ -181,7 +181,7 @@ PRUint32 *nsUInt32Array::CloneData()
 { 
 	PRUint32 *copyOfData = (PRUint32 *)PR_Malloc(m_nSize * sizeof(PRUint32)); 
 	if (copyOfData) 
-		nsCRT::memcpy(copyOfData, m_pData, m_nSize * sizeof(PRUint32)); 
+		memcpy(copyOfData, m_pData, m_nSize * sizeof(PRUint32)); 
 
 	return copyOfData; 
 } 
@@ -270,7 +270,7 @@ void nsUInt32Array::CopyArray(nsUInt32Array &oldA)
 	m_nMaxSize = oldA.m_nMaxSize;
 	m_pData = (PRUint32 *)PR_Malloc(m_nSize * sizeof(PRUint32));
 	if (m_pData)
-		nsCRT::memcpy(m_pData, oldA.m_pData, m_nSize * sizeof(PRUint32));
+		memcpy(m_pData, oldA.m_pData, m_nSize * sizeof(PRUint32));
 }
 
 /////////////////////////////////////////////////////////////////////////////

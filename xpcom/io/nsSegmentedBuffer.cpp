@@ -99,7 +99,7 @@ nsSegmentedBuffer::AppendNewSegment()
         // copy wrapped content to new extension
         if (mFirstSegmentIndex > mLastSegmentIndex) {
             // deal with wrap around case
-            nsCRT::memcpy(&mSegmentArray[mSegmentArrayCount],
+            memcpy(&mSegmentArray[mSegmentArrayCount],
                           mSegmentArray,
                           mLastSegmentIndex * sizeof(char*));
             nsCRT::memset(mSegmentArray, 0, mLastSegmentIndex * sizeof(char*));

@@ -87,7 +87,7 @@ nsHttpDigestAuth::MD5Hash(const char *buf, PRUint32 len)
   rv = mVerifier->HashEnd(hid, &chash, &clen, DIGEST_LENGTH);
   if (NS_FAILED(rv)) return rv;
 
-  nsCRT::memcpy(mHashBuf, chash, DIGEST_LENGTH);
+  memcpy(mHashBuf, chash, DIGEST_LENGTH);
   return NS_OK;
 }
 

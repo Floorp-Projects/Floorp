@@ -255,7 +255,7 @@ int binhex_encode_next(
 	*/
 	if (p_bh_encode_obj->s_overflow)
 	{
-		nsCRT::memcpy(p_bh_encode_obj->overflow, 
+		memcpy(p_bh_encode_obj->overflow, 
 				p_bh_encode_obj->outbuff, 
 				p_bh_encode_obj->s_overflow);
 				
@@ -288,13 +288,13 @@ int binhex_encode_next(
 			
 				p_bh_encode_obj->state = BINHEX_STATE_HEADER;
 				
-				nsCRT::memcpy(p_bh_encode_obj->name,
+				memcpy(p_bh_encode_obj->name,
 							in_buff, 
 							in_size);	
 			}
 			else if  (p_bh_encode_obj->state == BINHEX_STATE_HEADER)
 			{
-				nsCRT::memcpy(&(p_bh_encode_obj->head),
+				memcpy(&(p_bh_encode_obj->head),
 							in_buff, 
 							sizeof(binhex_header));
 				
@@ -365,12 +365,12 @@ int binhex_reencode_head(
 	p_bh_encode_obj->head.dlen = htonl(dlen = p_bh_encode_obj->head.dlen);
 	
 	/* make a copy before do the encoding, -- it may modify the head!!!. */
-	nsCRT::memcpy(buff, (char*)&p_bh_encode_obj->head, 
+	memcpy(buff, (char*)&p_bh_encode_obj->head, 
 						sizeof(binhex_header));
 	if (18 < sizeof(binhex_header))
 	{
 		/* we get an alignment problem here.	*/
-		nsCRT::memcpy(buff + 10, buff + 12, 8);
+        memcpy(buff + 10, buff + 12, 8);
 	}
 									
 	status = binhex_encode_next(
@@ -716,10 +716,10 @@ PRIVATE void binhex_process(
 					{
 						reply.sfFile.vRefNum = p_bh_decode_obj->mSpec->vRefNum;
 						reply.sfFile.parID = p_bh_decode_obj->mSpec->parID;
-						nsCRT::memcpy(&reply.sfFile.name, p_bh_decode_obj->mSpec->name , 63 );		
+						memcpy(&reply.sfFile.name, p_bh_decode_obj->mSpec->name , 63 );		
 					}					
 					
-					nsCRT::memcpy(p_bh_decode_obj->name, 
+					    memcpy(p_bh_decode_obj->name, 
 							reply.sfFile.name, 
 							*(reply.sfFile.name)+1);	/* save the new file name.	*/
 						

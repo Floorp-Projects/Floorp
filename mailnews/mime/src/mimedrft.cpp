@@ -784,7 +784,7 @@ mime_insert_all_headers(char            **body,
     name = (char *)PR_MALLOC(colon - head + 1);
     if (!name) 
       return /* MIME_OUT_OF_MEMORY */;
-    nsCRT::memcpy(name, head, colon - head);
+    memcpy(name, head, colon - head);
     name[colon - head] = 0;
 
     c2 = (char *)PR_MALLOC(end - contents + 1);
@@ -793,7 +793,7 @@ mime_insert_all_headers(char            **body,
       PR_Free(name);
       return /* MIME_OUT_OF_MEMORY */;
     }
-    nsCRT::memcpy(c2, contents, end - contents);
+    memcpy(c2, contents, end - contents);
     c2[end - contents] = 0;
     
     /* Do not reveal bcc recipients when forwarding a message!

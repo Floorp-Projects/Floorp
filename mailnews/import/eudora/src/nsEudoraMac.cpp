@@ -947,11 +947,11 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 	Str63	str63;
 	short	vRefNum = 0;
 	if (volumeName.Length() > 63) {
-		nsCRT::memcpy( &(str63[1]), volumeName.get(), 63);
+		memcpy( &(str63[1]), volumeName.get(), 63);
 		str63[0] = 63;
 	}
 	else {
-		nsCRT::memcpy( &(str63[1]), volumeName.get(), volumeName.Length());
+		memcpy( &(str63[1]), volumeName.get(), volumeName.Length());
 		str63[0] = volumeName.Length();
 	}
 		

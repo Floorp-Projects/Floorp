@@ -1084,13 +1084,13 @@ mime_set_url_part(const char *url, const char *part, PRBool append_p)
 	{
 	  if (append_p)
 		{
-		  nsCRT::memcpy(result, url, part_end - url);
+		  memcpy(result, url, part_end - url);
 		  result [part_end - url]     = '.';
 		  result [part_end - url + 1] = 0;
 		}
 	  else
 		{
-		  nsCRT::memcpy(result, url, part_begin - url);
+		  memcpy(result, url, part_begin - url);
 		  result [part_begin - url] = 0;
 		}
 	}
@@ -1363,7 +1363,7 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
 			  options->part_to_load = (char *) PR_MALLOC(end - value + 1);
 			  if (!options->part_to_load)
 				return MIME_OUT_OF_MEMORY;
-			  nsCRT::memcpy(options->part_to_load, value, end-value);
+			  memcpy(options->part_to_load, value, end-value);
 			  options->part_to_load[end-value] = 0;
 			}
 		}

@@ -284,7 +284,7 @@ static void DoOpaqueBlend(PRInt32 aNumLines, PRInt32 aNumBytes,
 {
   PRIntn y;
   for (y = 0; y < aNumLines; y++) {
-    nsCRT::memcpy(aDImage, aSImage, aNumBytes);
+    memcpy(aDImage, aSImage, aNumBytes);
     aSImage += aSLSpan;
     aDImage += aDLSpan;
   }

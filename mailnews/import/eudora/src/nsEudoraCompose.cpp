@@ -988,7 +988,7 @@ nsresult nsEudoraCompose::FillMailBuffer( ReadFileState *pState, SimpleBufferTon
 		read.m_bytesInBuf = 0;
 	}
 	else if (read.m_writeOffset) {
-		nsCRT::memcpy( read.m_pBuffer, read.m_pBuffer + read.m_writeOffset, read.m_bytesInBuf - read.m_writeOffset);
+		memcpy( read.m_pBuffer, read.m_pBuffer + read.m_writeOffset, read.m_bytesInBuf - read.m_writeOffset);
 		read.m_bytesInBuf -= read.m_writeOffset;
 		read.m_writeOffset = 0;
 	}

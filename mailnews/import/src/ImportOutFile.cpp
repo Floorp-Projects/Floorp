@@ -200,7 +200,7 @@ PRBool ImportOutFile::Flush( void)
 				return( PR_FALSE);
 			// now update our buffer...
 			if (transLen < m_pos) {
-				nsCRT::memcpy( m_pBuf, m_pBuf + transLen, m_pos - transLen);
+				memcpy( m_pBuf, m_pBuf + transLen, m_pos - transLen);
 			}
 			m_pos -= transLen;
 		}

@@ -223,7 +223,7 @@ MimePartBufferWrite (MimePartBufferData *data,
   if (data->part_buffer &&
 	  data->part_buffer_fp + size < data->part_buffer_size)
 	{
-	  nsCRT::memcpy(data->part_buffer + data->part_buffer_fp,
+	  memcpy(data->part_buffer + data->part_buffer_fp,
 				buf, size);
 	  data->part_buffer_fp += size;
 	}

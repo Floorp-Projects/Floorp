@@ -190,7 +190,7 @@ MimeContainer_add_child (MimeObject *parent, MimeObject *child)
   if (!new_kids) return MIME_OUT_OF_MEMORY;
   
   if (cont->nchildren > 0)
-    nsCRT::memcpy(new_kids, old_kids, sizeof(MimeObject *) * cont->nchildren);
+    memcpy(new_kids, old_kids, sizeof(MimeObject *) * cont->nchildren);
   new_kids[cont->nchildren] = child;
   PR_Free(old_kids);
   cont->children = new_kids;

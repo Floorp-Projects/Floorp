@@ -474,7 +474,7 @@ nsresult nsMsgFolderCache::RowCellColumnToCharPtr(nsIMdbRow *hdrRow, mdb_token c
 			char *result = (char *) PR_Malloc(yarn.mYarn_Fill + 1);
 			if (result)
 			{
-				nsCRT::memcpy(result, yarn.mYarn_Buf, yarn.mYarn_Fill);
+				memcpy(result, yarn.mYarn_Buf, yarn.mYarn_Fill);
 				result[yarn.mYarn_Fill] = '\0';
 			}
 			else

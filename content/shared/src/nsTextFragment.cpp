@@ -294,7 +294,7 @@ nsTextFragment::CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount)
 
   if (aCount != 0) {
     if (mState.mIs2b) {
-      nsCRT::memcpy(aDest, m2b + aOffset, sizeof(PRUnichar) * aCount);
+      memcpy(aDest, m2b + aOffset, sizeof(PRUnichar) * aCount);
     } else {
       unsigned const char *cp = m1b + aOffset;
       unsigned const char *end = cp + aCount;
@@ -327,7 +327,7 @@ nsTextFragment::CopyTo(char *aDest, PRInt32 aOffset, PRInt32 aCount)
         *aDest++ = (char)(*cp++);
       }
     } else {
-      nsCRT::memcpy(aDest, m1b + aOffset, sizeof(char) * aCount);
+      memcpy(aDest, m1b + aOffset, sizeof(char) * aCount);
     }
   }
 }

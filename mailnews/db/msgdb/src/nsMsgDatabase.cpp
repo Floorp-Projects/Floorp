@@ -2965,7 +2965,7 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
       if (*result)
       {
         if (yarn.mYarn_Fill > 0)
-          nsCRT::memcpy(*result, yarn.mYarn_Buf, yarn.mYarn_Fill);
+          memcpy(*result, yarn.mYarn_Buf, yarn.mYarn_Fill);
         else
           **result = 0;
       }

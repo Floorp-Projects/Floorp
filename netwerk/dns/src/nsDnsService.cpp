@@ -589,7 +589,7 @@ nsDNSLookup::ConvertHostEntry()
     mHostEntry.hostEnt.h_name = BufAlloc(len + 1, &mHostEntry.bufPtr, &mHostEntry.bufLen, 0);
     NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_name,"nsHostEnt buffer full.");
     if (mHostEntry.hostEnt.h_name == nsnull)  return;
-    nsCRT::memcpy(mHostEntry.hostEnt.h_name, mInetHostInfo.name, len + 1);
+    memcpy(mHostEntry.hostEnt.h_name, mInetHostInfo.name, len + 1);
     
     // set aliases to nsnull
     mHostEntry.hostEnt.h_aliases = (char **)BufAlloc(sizeof(char *), &mHostEntry.bufPtr, &mHostEntry.bufLen, sizeof(char *));

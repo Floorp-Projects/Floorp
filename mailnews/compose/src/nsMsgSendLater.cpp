@@ -234,7 +234,7 @@ nsMsgSendLater::RebufferLeftovers(char *startBuf, PRUint32 aLen)
   if (!mLeftoverBuffer)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCRT::memcpy(mLeftoverBuffer, startBuf, aLen);
+  memcpy(mLeftoverBuffer, startBuf, aLen);
   mLeftoverBuffer[aLen] = '\0';
   return NS_OK;
 }
@@ -251,7 +251,7 @@ nsMsgSendLater::BuildNewBuffer(const char* aBuf, PRUint32 aCount, PRUint32 *tota
   if (!mLeftoverBuffer)
     return NS_ERROR_FAILURE;
 
-  nsCRT::memcpy(mLeftoverBuffer + leftoverSize, aBuf, aCount);
+  memcpy(mLeftoverBuffer + leftoverSize, aBuf, aCount);
   *totalBufSize = aCount + leftoverSize;
   return NS_OK;
 }
@@ -895,14 +895,14 @@ SEARCH_NEWLINE:
         newh = (*header) + PL_strlen (*header);
         *newh++ = ',';
         *newh++ = ' ';
-        nsCRT::memcpy(newh, value, L);
+        memcpy(newh, value, L);
         newh [L] = 0;
       }
       else
       {
         *header = (char *) PR_Malloc(L+1);
         if (!*header) return NS_ERROR_OUT_OF_MEMORY;
-        nsCRT::memcpy((*header), value, L);
+        memcpy((*header), value, L);
         (*header)[L] = 0;
       }
     }
@@ -923,7 +923,7 @@ SEARCH_NEWLINE:
       char *draftInfo = (char*) PR_Malloc(L+1);
       char *receipt = NULL;
       if (!draftInfo) return NS_ERROR_OUT_OF_MEMORY;
-      nsCRT::memcpy(draftInfo, value, L);
+      memcpy(draftInfo, value, L);
       *(draftInfo+L)=0;
       receipt = PL_strstr(draftInfo, "receipt=");
       if (receipt) 
@@ -1076,7 +1076,7 @@ nsMsgSendLater::DeliverQueuedLine(char *line, PRInt32 length)
       if (NS_FAILED(status)) 
         return status;
       
-      nsCRT::memcpy(m_headers + m_headersFP, line, length);
+      memcpy(m_headers + m_headersFP, line, length);
       m_headersFP += length;
     }
   }

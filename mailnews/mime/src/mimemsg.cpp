@@ -229,7 +229,7 @@ MimeMessage_parse_line (char *line, PRInt32 length, MimeObject *obj)
 		  /* Hack a newline onto the end. */
 		  char *s = (char *)PR_MALLOC(length + MSG_LINEBREAK_LEN + 1);
 		  if (!s) return MIME_OUT_OF_MEMORY;
-		  nsCRT::memcpy(s, line, length);
+		  memcpy(s, line, length);
 		  PL_strcpy(s + length, MSG_LINEBREAK);
 		  status = kid->clazz->parse_buffer (s, length + MSG_LINEBREAK_LEN, kid);
 		  PR_Free(s);

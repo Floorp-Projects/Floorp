@@ -936,14 +936,14 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
                                      NSBIDI_DO_MIRRORING, &newLen);
       if (NS_SUCCEEDED(rv) ) {
         aTextLength = newLen;
-        nsCRT::memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
+        memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
       }
     }
     if (doShape) {
       rv = mUnicodeUtils->ArabicShaping(aText, aTextLength, buffer, (PRUint32 *)&newLen);
       if (NS_SUCCEEDED(rv) ) {
         aTextLength = newLen;
-        nsCRT::memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
+        memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
       }
     }
   }

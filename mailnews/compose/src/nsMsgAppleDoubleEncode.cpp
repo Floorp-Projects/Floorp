@@ -120,7 +120,7 @@ int ap_encode_init( appledouble_encode_object *p_ap_encode_obj,
 	/*
 	**	Fill out the source file inforamtion.
 	*/	
-	nsCRT::memcpy(p_ap_encode_obj->fname, fspec.name+1, *fspec.name);
+	memcpy(p_ap_encode_obj->fname, fspec.name+1, *fspec.name);
 	p_ap_encode_obj->fname[*fspec.name] = '\0';
 	p_ap_encode_obj->vRefNum = fspec.vRefNum;
 	p_ap_encode_obj->dirId   = fspec.parID;

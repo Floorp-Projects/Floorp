@@ -296,14 +296,14 @@ PRBool nsImportEncodeScan::Scan( PRBool *pDone)
 				#endif
 				m_eof = PR_FALSE;
 				m_pos = 0;
-				nsCRT::memcpy( m_pBuf, gAppleSingleHeader, kAppleSingleHeaderSize);
+				memcpy( m_pBuf, gAppleSingleHeader, kAppleSingleHeaderSize);
 				m_bytesInBuf = kAppleSingleHeaderSize;
 				int numEntries = 5;
 				if (m_dataForkSize)
 					numEntries++;
 				if (m_resourceForkSize)
 					numEntries++;
-				nsCRT::memcpy( m_pBuf + m_bytesInBuf, &numEntries, sizeof( numEntries));
+				memcpy( m_pBuf + m_bytesInBuf, &numEntries, sizeof( numEntries));
 				m_bytesInBuf += sizeof( numEntries);
 				FillInEntries( numEntries);
 				m_encodeScanState = kAddEntries;

@@ -416,7 +416,7 @@ nsPop3Sink::IncorporateWrite(const char* block,
     {
 		if (blockOffset == 1)
 			*m_outputBuffer = '>';
-    nsCRT::memcpy(m_outputBuffer + blockOffset, block, length - blockOffset);
+    memcpy(m_outputBuffer + blockOffset, block, length - blockOffset);
     *(m_outputBuffer + length) = 0;
 		nsresult rv = WriteLineToMailbox (m_outputBuffer);
         if (NS_FAILED(rv)) return rv;

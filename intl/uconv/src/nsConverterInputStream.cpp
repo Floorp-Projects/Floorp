@@ -111,7 +111,7 @@ nsConverterInputStream::Read(PRUnichar* aBuf,
   if (rv > aCount) {
     rv = aCount;
   }
-  nsCRT::memcpy(aBuf + aOffset, mUnicharData->GetBuffer() + mUnicharDataOffset,
+  memcpy(aBuf + aOffset, mUnicharData->GetBuffer() + mUnicharDataOffset,
                 rv * sizeof(PRUnichar));
   mUnicharDataOffset += rv;
   *aReadCount = rv;

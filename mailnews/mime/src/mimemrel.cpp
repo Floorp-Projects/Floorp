@@ -630,7 +630,7 @@ MimeMultipartRelated_parse_child_line (MimeObject *obj,
 	 */
 	if (relobj->head_buffer &&
 	    relobj->head_buffer_fp + length < relobj->head_buffer_size) {
-		nsCRT::memcpy(relobj->head_buffer + relobj->head_buffer_fp, line, length);
+		memcpy(relobj->head_buffer + relobj->head_buffer_fp, line, length);
 		relobj->head_buffer_fp += length;
 	} else {
 		/* Otherwise it won't fit; write it to the file instead. */
@@ -718,7 +718,7 @@ push_tag(MimeMultipartRelated* relobj, const char* buf, PRInt32 size)
 		}
 		if (!relobj->curtag) return MIME_OUT_OF_MEMORY;
 	}
-	nsCRT::memcpy(relobj->curtag + relobj->curtag_length, buf, size);
+	memcpy(relobj->curtag + relobj->curtag_length, buf, size);
 	relobj->curtag_length += size;
 	return 0;
 }

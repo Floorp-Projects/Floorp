@@ -138,7 +138,7 @@ MimeExternalBody_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	  char *new_str = (char *)PR_Realloc(bod->body, L + length + 1);
 	  if (!new_str) return MIME_OUT_OF_MEMORY;
 	  bod->body = new_str;
-	  nsCRT::memcpy(bod->body + L, line, length);
+	  memcpy(bod->body + L, line, length);
 	  bod->body[L + length] = 0;
 	  return 0;
 	}

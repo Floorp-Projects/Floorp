@@ -471,7 +471,7 @@ PRBool CMbxScanner::CopyMbxFileBytes( PRUint32 numBytes)
 		}
 		if (cnt) {
 			inIdx = cnt;
-			nsCRT::memcpy( m_pInBuffer, pIn, cnt);
+			memcpy( m_pInBuffer, pIn, cnt);
 		}
 		else
 			inIdx = 0;

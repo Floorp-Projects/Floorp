@@ -55,7 +55,7 @@ NS_IMETHODIMP nsCNullSecurityContext::GetOrigin(char* buf, int len)
         return NS_ERROR_NULL_POINTER;
     }
     // Copy origin
-    nsCRT::memcpy(buf, origin, originLen);
+    memcpy(buf, origin, originLen);
     return NS_OK;
 }
 
