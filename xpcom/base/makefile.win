@@ -46,6 +46,7 @@ XPIDL_MODULE = xpcom_base
 XPIDLSRCS =               \
         .\nsrootidl.idl   \
 	.\nsILeakDetector.idl \
+	.\nsIInterfaceRequestor.idl \
         .\nsISupports.idl \
         .\nsIWeakReference.idl \
         $(NULL)
