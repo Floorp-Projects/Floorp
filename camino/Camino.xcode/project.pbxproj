@@ -4932,7 +4932,7 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader ../extensions/transformiix/build";
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lxpcom_compat -lmozjs -lmozjpeg -ljsj -lmozpng -lpthread -lz -lm";
+				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lxpcom_compat -lmozjs -lmozjpeg -ljsj -lmozpng -lpthread -lz -lm";
 				PRODUCT_NAME = Camino;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wno-four-char-constants -Wno-unknown-pragmas -Wall -Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth -Wno-long-long";
