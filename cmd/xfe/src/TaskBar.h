@@ -70,6 +70,7 @@ private:
 	
 	XP_Bool				m_isFloating;
 	XFE_Frame *			m_parentFrame;
+	Widget				m_toolBar;
 	Widget				m_undockButton;
 
 #ifdef MOZ_MAIL_NEWS
@@ -82,14 +83,15 @@ private:
 	void		setIconGroupForCommand	(CommandType cmd,
 										 IconGroup * icons);
 	
-	void		createBaseToolBar		(Widget parent,String name);
-	void		createUndockButton		(Widget parent);
+	void		createBaseForm			(Widget parent);
+	void		createToolBar			(String name);
+	void		createUndockButton		();
 
 	Widget		createTaskBarButton		(TaskBarSpec * spec);
 	void		createButtons			(TaskBarSpec * spec);
 
-	void		createFloatingWidgets	(Widget parent);
-	void		createDockedWidgets		(Widget parent);
+	void		createFloatingWidgets	();
+	void		createDockedWidgets		();
 
     // update the icon appearance
     XFE_CALLBACK_DECL(updateIconAppearance)

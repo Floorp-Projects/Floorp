@@ -6324,6 +6324,24 @@ for download.
 
 *openInboxAndGetNewMessages.documentationString:		Open the mail window and get new messages
 
+!!
+!! *dockedTaskBar*undockButton
+!!
+*taskBarUndockButton.forceHeightToMax:			false
+*taskBarUndockButton.forceWidthToMax:			false
+*taskBarUndockButton.traversalOn:				false
+*taskBarUndockButton.highlightThickness:		0
+*taskBarUndockButton.armOffset:					0
+*taskBarUndockButton.raiseOffset:				0
+*taskBarUndockButton.fillOnEnter:				true
+*taskBarUndockButton.raiseBorderThickness:		0
+*taskBarUndockButton.raiseOnEnter:				false
+*taskBarUndockButton.fillOnArm:					true
+*taskBarUndockButton.shadowThickness:			1
+*taskBarUndockButton.shadowType:				shadow_out
+*taskBarUndockButton.buttonLayout:				button_pixmap_only
+
+
 *dockedTaskBar*XfeButton.marginBottom:				1
 *dockedTaskBar*XfeButton.marginLeft:				1
 *dockedTaskBar*XfeButton.marginRight:				1

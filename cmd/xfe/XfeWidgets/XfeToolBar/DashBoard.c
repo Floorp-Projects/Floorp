@@ -97,6 +97,7 @@ static Boolean		DockedTaskBarEmpty		(Widget);
 
 static Boolean		ChildIsProgressBar		(Widget);
 static Boolean		ChildIsStatusBar		(Widget);
+static Boolean		ChildIsTaskBar			(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -620,6 +621,10 @@ AcceptStaticChild(Widget child)
 	{
 		accept = (!dp->docked_task_bar || !dp->tool_bar);
 	}
+	else if (XmIsForm(child))
+	{
+		accept = !dp->docked_task_bar;
+	}
 	/* Look for progress bar */
 	else if (ChildIsProgressBar(child))
 	{
@@ -642,20 +647,17 @@ InsertStaticChild(Widget child)
 	Boolean					layout = False;
 
 	/* Tool Bars bar */
-	if (XfeIsToolBar(child))
+	if (XfeIsToolBar(child) || XmIsForm(child))
 	{
 		/* Task bar */
 		if (!dp->tool_bar)
 		{
 			dp->docked_task_bar = child;
 			
-#if FUCK
+#if 0
 			/* Add undock callback to docked task bar */
 			XtAddCallback(dp->docked_task_bar,XmNactionCallback,
 						  TaskBarActionCB,(XtPointer) w);
-			
-			/* Make sure the action button does show */
-			XtVaSetValues(dp->docked_task_bar,XmNshowActionButton,True,NULL);
 #endif
 		}
 		/* Tool bar */
@@ -721,10 +723,7 @@ DeleteStaticChild(Widget child)
 static Boolean
 ChildIsProgressBar(Widget child)
 {
-	return (XmIsDrawingArea(child) || 
-			XmIsForm(child) || 
-			XmIsFrame(child) || 
-			XfeIsProgressBar(child));
+	return XfeIsProgressBar(child);
 }
 /*----------------------------------------------------------------------*/
 static Boolean
@@ -824,14 +823,8 @@ AddFloatingShell(Widget w,Widget shell)
 	dp->floating_target		= _XfemChildren(shell)[0];
 	dp->floating_task_bar	= XfeDescendantFindByClass(shell,
 													   xfeToolBarWidgetClass,
-/* 													   xfeTaskBarWidgetClass, */
 													   XfeFIND_ALIVE,
 													   False);
-
-#if FUCK
-	/* Make sure the action button does not show */
-	XtVaSetValues(dp->floating_task_bar,XmNshowActionButton,False,NULL);
-#endif
 
 	/* Handle changes in view window structure */
 	XtAddEventHandler(dp->floating_shell,
