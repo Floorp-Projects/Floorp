@@ -5,7 +5,6 @@
 
 #include "msgCore.h"
 
-typedef void *MWContext;
 class MSG_Pane;
 typedef struct URL_Struct _URL_Struct;
 
@@ -17,7 +16,7 @@ const char *		FE_UsersMailAddress() {return NULL;}
 void				FE_UpdateCompToolbar(MSG_Pane*) {return;}
 void				FE_SetWindowLoading(MWContext *, URL_Struct *,Net_GetUrlExitFunc **) {return;}
 
-PRBool				NET_AreThereActiveConnectionsForWindow(MWContext *) {return PR_FALSE;}
+XP_Bool				NET_AreThereActiveConnectionsForWindow(MWContext *) {return PR_FALSE;}
 int					NET_SilentInterruptWindow(MWContext * window_id) {return 0;}
 int					NET_ScanForURLs(MSG_Pane*, const char *, PRInt32,char *, int, PRBool) {return NULL;}
 void				NET_FreeURLStruct (URL_Struct *) {return;}
