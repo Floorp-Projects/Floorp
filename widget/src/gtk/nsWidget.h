@@ -218,9 +218,15 @@ class nsWidget : public nsBaseWidget
   //
   //////////////////////////////////////////////////////////////////
   virtual void OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent);
-  virtual void OnDragMotionSignal(GdkDragContext *aGdkDragContext);
+  virtual void OnDragMotionSignal(GdkDragContext *aGdkDragContext,
+                                  gint            x,
+                                  gint            y,
+                                  guint           time);
   virtual void OnDragBeginSignal(GdkDragContext *aGdkDragContext);
-  virtual void OnDragDropSignal(GdkDragContext      *aGdkDragContext);
+  virtual void OnDragDropSignal(GdkDragContext *aGdkDragContext,
+                                gint            x,
+                                gint            y,
+                                guint           time);
   virtual void OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
   virtual void OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
   virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
