@@ -1202,12 +1202,6 @@ SEC_PKCS12DecoderStart(SECItem *pwitem, PK11SlotInfo *slot, void *wincx,
     p12dcx->errorValue = 0;
     p12dcx->error = PR_FALSE;
 
-    /* a slot is *required */
-    if(!slot) {
-	PORT_SetError(SEC_ERROR_NO_MEMORY);
-	goto loser;
-    }
-
     /* start the decoding of the PFX and set the notify proc
      * for the PFX item.
      */
@@ -1215,6 +1209,7 @@ SEC_PKCS12DecoderStart(SECItem *pwitem, PK11SlotInfo *slot, void *wincx,
     					  sec_PKCS12PFXItemTemplate);
     if(!p12dcx->pfxDcx) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY); 
+	PK11_FreeSlot(p12dcx->slot);
 	goto loser;
     }
 
