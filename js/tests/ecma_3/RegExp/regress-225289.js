@@ -62,19 +62,19 @@ pattern = /a|[^a]/;
   status = inSection(1);
   string = 'a';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string);
+  expectedmatch = Array('a');
   addThis();
 
   status = inSection(2);
   string = '';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string);
+  expectedmatch = null;
   addThis();
 
   status = inSection(3);
   string = '()';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string);
+  expectedmatch = Array('(');
   addThis();
 
 
@@ -83,19 +83,19 @@ pattern = /(a|[^a])/;
   status = inSection(4);
   string = 'a';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string, string);
+  expectedmatch = Array('a', 'a');
   addThis();
 
   status = inSection(5);
   string = '';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string, string);
+  expectedmatch = null;
   addThis();
 
   status = inSection(6);
   string = '()';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string, string);
+  expectedmatch = Array('(', '(');
   addThis();
 
 
@@ -104,19 +104,19 @@ pattern = /(a)|([^a])/;
   status = inSection(7);
   string = 'a';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string, string, undefined);
+  expectedmatch = Array('a', 'a', undefined);
   addThis();
 
   status = inSection(8);
   string = '';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string, undefined, string);
+  expectedmatch = null;
   addThis();
 
   status = inSection(9);
   string = '()';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string, undefined, string);
+  expectedmatch = Array('(', undefined, '(');
   addThis();
 
 
@@ -126,19 +126,19 @@ pattern = /((?:a|[^a])*)/g;
   status = inSection(10);
   string = 'a';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string, string);
+  expectedmatch = Array('a', 'a');
   addThis();
 
   status = inSection(11);
   string = '';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string, string);
+  expectedmatch = Array('', '');
   addThis();
 
   status = inSection(12);
   string = '()';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string, string);
+  expectedmatch = Array('(', '(');
   addThis();
 
 
