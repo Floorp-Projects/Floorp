@@ -89,6 +89,7 @@ protected:
    nsCOMPtr<nsIWidget>        mParentWidget;
    nsCOMPtr<nsIPref>          mPrefs;
    nsCOMPtr<nsIURI>           mCurrentURI;
+   nsCOMPtr<nsISupports>      mLoadCookie;
 
    /* Note this can not be nsCOMPtr as that that would cause an addref on the 
    parent thus a cycle.  A weak reference would work, but not required as the
