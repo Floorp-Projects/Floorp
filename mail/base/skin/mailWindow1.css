@@ -991,18 +991,18 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
   color: grey;
 }
 
-#search-button {
+#quick-search-button  {
   margin-top: 1px;
   margin-bottom: 1px;
   margin-right: 2px;
 }
 
-.search-button-image {
+.quick-search-button-image {
   margin: 0px;
   list-style-image: url("chrome://messenger/skin/icons/Search-bar.png");
 }
 
-.search-button-dropmarker {
+.quick-search-button-dropmarker {
   margin-left: 12px;
   margin-top: 8px;
   list-style-image: url("chrome://messenger/skin/icons/search-arrow.gif");

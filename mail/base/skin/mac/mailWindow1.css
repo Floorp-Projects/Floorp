@@ -970,17 +970,17 @@ splitter {
   color: grey;
 }
 
-#search-button {
+#quick-search-button {
   min-width: 22px;
   margin: 0px 3px 0px 5px; 
 }
 
-.search-button-image {
+.quick-search-button-image {
   padding: 0px;
   list-style-image: url("chrome://messenger/skin/icons/Search-bar.png");
 }
 
-.search-button-dropmarker {
+.quick-search-button-dropmarker {
   padding: 6px 0px 5px 17px;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
 }

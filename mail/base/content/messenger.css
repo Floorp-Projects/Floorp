@@ -86,7 +86,7 @@ dummy.usesMailWidgets {
   -moz-binding: url("chrome://messenger/content/search.xml#searchbar");
 }
 
-#search-button {
+#quick-search-button {
   -moz-binding: url("chrome://messenger/content/search.xml#searchBarDropMarker");
   cursor: default;
 }

@@ -87,9 +87,9 @@
       <children/>
       <xul:stack flex="1">
         <xul:hbox align="center">
-          <xul:image class="search-button-image" xbl:inherits="src"/>
+          <xul:image class="quick-search-button-image" xbl:inherits="src"/>
         </xul:hbox>
-        <xul:image class="search-button-dropmarker"/>
+        <xul:image class="quick-search-button-dropmarker"/>
       </xul:stack>
     </content>  
   </binding>

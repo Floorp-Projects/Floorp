@@ -1809,7 +1809,7 @@
   <spring flex="4"/>
 
   <textbox id="searchInput" flex="1" onfocus="onSearchInputFocus(event);" onblur="onSearchInputBlur(event);" onclick="this.select();" oninput="onSearchInput(false);" onkeypress="onSearchKeyPress(event);">
-    <button id="search-button" type="menu">
+    <button id="quick-search-button" type="menu">
       <menupopup id="quick-search-menupopup" value="2" persist="value" popupalign="topleft" popupanchor="bottomleft">
         <menuitem value="0" label="&searchSubjectMenu.label;" type="radio"  
                   oncommand="changeQuickSearchMode(this)"/>
