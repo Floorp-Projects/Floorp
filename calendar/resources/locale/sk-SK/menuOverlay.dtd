@@ -1,0 +1,136 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley <garths@oeone.com>
+   -                 Mike Potter <mikep@oeone.com>
+   -                 Chris Charabaruk <coldacid@meldstar.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!-- Event Menu -->
+<!ENTITY event.menu.title   "Udalosť">
+<!ENTITY eventMenuCmd.accesskey     "v">
+
+<!ENTITY event.new.event           "Nová udalosť">
+<!ENTITY event.new.event.accesskey "u">
+
+<!ENTITY event.new.todo     "Nová úloha">
+<!ENTITY event.new.todo.accesskey "k">
+
+<!ENTITY calendar.new.server.label "Nový kalendár">
+<!ENTITY calendar.new.server.accesskey "l">
+
+<!ENTITY event.edit.event   "Upraviť">
+<!ENTITY event.edit.event.accesskey "r">
+
+<!ENTITY event.delete.event "Odstrániť vybranú udalosť(i)">
+<!ENTITY event.delete.event.accesskey   "V">
+
+<!ENTITY event.delete.tasks "Odstrániť vybranú úlohu(y)">
+<!ENTITY event.delete.tasks.accesskey   "b">
+
+<!ENTITY event.mail.event   "Odoslať vybranú udalosť(i)">
+<!ENTITY event.mail.event.accesskey "O">
+
+<!ENTITY calendar.print.label   "Tlačiť aktívny kalendár...">
+<!ENTITY calendar.print.accesskey   "T">
+
+<!ENTITY calendar.printpreview.label    "Ukážka pred tlačou">
+<!ENTITY calendar.printpreview.accesskey    "U">
+
+<!ENTITY calendar.pagesetup.label   "Nastavenie tlače...">
+<!ENTITY calendar.pagesetup.accesskey   "s">
+
+<!ENTITY calendar.import.label  "Import zo súboru...">
+<!ENTITY calendar.import.accesskey  "I">
+
+<!ENTITY calendar.wizard.label  "Spustiť sprievodcu">
+<!ENTITY calendar.wizard.accesskey  "i">
+
+<!ENTITY calendar.export.label  "Exportovať vybrané udalosti...">
+<!ENTITY calendar.export.accesskey  "E">
+
+<!ENTITY calendar.subscribe.label "Prijať vzdialený kalendár...">
+<!ENTITY calendar.subscribe.accesskey "j">
+
+<!ENTITY calendar.publish.label "Publikovať vybrané udalosti...">
+<!ENTITY calendar.publish.accesskey "b">
+
+<!ENTITY calendar.about.label   "O Kalendári">
+<!ENTITY calendar.about.accesskey   "k">
+
+<!ENTITY calendar.cut.label "Vystrihnúť">
+<!ENTITY calendar.cut.accesskey "V">
+
+<!ENTITY calendar.copy.label    "Kopírovať">
+<!ENTITY calendar.copy.accesskey    "K">
+
+<!ENTITY calendar.paste.label   "Vložiť">
+<!ENTITY calendar.paste.accesskey   "l">
+
+<!ENTITY calendar.selectall.label   "Vybrať všetko">
+<!ENTITY calendar.selectall.accesskey   "a">
+
+<!ENTITY calendar.preferences.label "Predvoľby...">
+<!ENTITY calendar.preferences.accesskey "e">
+
+<!ENTITY goMenu.label                   "Prejsť">
+<!ENTITY goMenu.accesskey               "j">
+
+<!ENTITY goTodayCmd.label               "Prejsť na dnešný deň">
+<!ENTITY goTodayCmd.accesskey           "d">
+
+<!ENTITY goPreviousCmd.label            "Predchádzajúci">
+<!ENTITY goPreviousCmd.accesskey        "p">
+
+<!ENTITY goNextCmd.label                "Nasledujúci">
+<!ENTITY goNextCmd.accesskey            "N">
+
+<!ENTITY taskMenu.label                "Tasks">
+<!ENTITY taskMenu.accesskey            "T">
+
+<!ENTITY toolsMenu.label                "Tools">
+<!ENTITY toolsMenu.accesskey            "o">
+
+<!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.accesskey "S">
+
+<!ENTITY navigatorCmd.label     "Browser">
+<!ENTITY navigatorCmd.accesskey "B">
+
+<!ENTITY messengerCmd.label     "Mail">
+<!ENTITY messengerCmd.accesskey "M">
+
+<!ENTITY addressBookCmd.label     "Address Book">
+<!ENTITY addressBookCmd.accesskey "A">
+
+<!ENTITY helpMenu.accesskey            "H">
