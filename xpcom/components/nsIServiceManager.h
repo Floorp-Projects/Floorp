@@ -286,6 +286,36 @@ do_GetService( const char* aProgID, nsISupports* aServiceManager, nsresult* erro
     return nsGetServiceByProgID(aProgID, aServiceManager, error);
   }
 
+class NS_COM nsGetServiceFromCategory : public nsCOMPtr_helper
+{
+public:
+  nsGetServiceFromCategory(const char* aCategory, const char* aEntry,
+                           nsISupports* aServiceManager, 
+                           nsresult* aErrorPtr)
+    : mCategory(aCategory),
+      mEntry(aEntry),
+      mServiceManager( do_QueryInterface(aServiceManager) ),
+      mErrorPtr(aErrorPtr)
+  {
+    // nothing else to do
+  }
+  
+  virtual nsresult operator()( const nsIID&, void** ) const;
+  virtual ~nsGetServiceFromCategory() {};
+protected:
+  const char*                 mCategory;
+  const char*                 mEntry;
+  nsCOMPtr<nsIServiceManager> mServiceManager;
+  nsresult*                   mErrorPtr;
+};
+    
+inline
+const nsGetServiceFromCategory
+do_GetServiceFromCategory( const char* category, const char* entry,
+                           nsresult* error = 0)
+  {
+    return nsGetServiceFromCategory(category, entry, 0, error);
+  }
 
 ////////////////////////////////////////////////////////////////////////////////
 // NS_WITH_SERVICE: macro to make using services easier. 
