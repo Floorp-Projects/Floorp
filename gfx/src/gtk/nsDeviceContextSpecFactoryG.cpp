@@ -27,6 +27,7 @@
  */
 nsDeviceContextSpecFactoryGTK :: nsDeviceContextSpecFactoryGTK()
 {
+  NS_INIT_REFCNT();
 }
 
 /** -------------------------------------------------------
