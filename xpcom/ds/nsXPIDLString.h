@@ -116,29 +116,7 @@ public:
     /**
      * Return a reference to the immutable Unicode string.
      */
-    const PRUnichar*
-    get() const
-      {
-        return mBuf;
-      }
-
-    operator const PRUnichar*() const
-      {
-        return get();
-      }
-
-    PRUnichar
-    operator*() const
-      {
-        return *get();
-      }
-
-    PRUnichar
-    operator[]( long index ) const
-      {
-        return get()[index];
-      }
-    
+    operator const PRUnichar*();
 
     /**
      * Make a copy of the Unicode string. Use this function in the
@@ -248,28 +226,7 @@ public:
     /**
      * Return a reference to the immutable single-byte string.
      */
-    const char*
-    get() const
-      {
-        return mBuf;
-      }
-
-    operator const char*() const
-      {
-        return get();
-      }
-
-    char
-    operator*() const
-      {
-        return *get();
-      }
-
-    char
-    operator[]( long index ) const
-      {
-        return get()[index];
-      }
+    operator const char*();
 
     /**
      * Make a copy of the single-byte string. Use this function in the
