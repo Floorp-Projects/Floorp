@@ -248,8 +248,10 @@ PL_PostEvent(PLEventQueue* self, PLEvent* event)
     mon = self->monitor;
     PR_EnterMonitor(mon);
 
+#ifdef XP_UNIX
     if (self->idFunc && event)
       event->id = self->idFunc(self->idFuncClosure);
+#endif
 
     /* insert event into thread's event queue: */
     if (event != NULL) {
