@@ -398,6 +398,25 @@ PRBool nsTableOuterFrame::NeedsReflow(const nsHTMLReflowState& aReflowState)
   return result;
 }
 
+// GetParentStyleContextProvider:
+//  The innerTableFame is he parent style context provider
+//  Fortunately, we cache that as a data member, so just return the cached pointer value
+//
+NS_IMETHODIMP 
+nsTableOuterFrame::GetParentStyleContextProvider(nsIPresContext* aPresContext,
+                                                 nsIFrame** aProviderFrame, 
+                                                 nsContextProviderRelationship& aRelationship)
+{
+  NS_ASSERTION(aProviderFrame && aPresContext, "null argument: aPresContext and-or aProviderFrame");
+  if (aProviderFrame) {
+    // parent context provider is the innerTableFrame
+    NS_ASSERTION(mInnerTableFrame, "innerTableFrame should not be null");
+    *aProviderFrame = mInnerTableFrame;
+    aRelationship = eContextProvider_Descendant;
+  }
+  return ((aProviderFrame != nsnull) && (*aProviderFrame != nsnull)) ? NS_OK : NS_ERROR_FAILURE;
+}
+
 // INCREMENTAL REFLOW HELPER FUNCTIONS 
 
 nsSize

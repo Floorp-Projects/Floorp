@@ -225,6 +225,9 @@ public:
                     nsReflowStatus&          aStatus);
 
 
+  NS_IMETHOD GetParentStyleContextProvider(nsIPresContext* aPresContext,
+                                           nsIFrame** aProviderFrame, 
+                                           nsContextProviderRelationship& aRelationship);
 
   /** the COLS attribute can be modified by any cell's width attribute.
     * deal with it here.  Must be called before any call to 
