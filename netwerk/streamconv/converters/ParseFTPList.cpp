@@ -1088,12 +1088,6 @@ int ParseFTPList(const char *line, struct list_state *state,
           p--;
         if (p[2] != ':') /* year */
         {
-          if (pos >= 19100u) /* Y2K bug */
-            pos %= 1000u;
-          else if (pos >= 1900u)
-            pos -= 1900;
-          else
-            pos = 0;
           result->fe_time.tm_year = pos;
         }
         else
