@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2001/01/04 00:21:36 $ 
+# $Revision: 1.11 $ 
+# $Date: 2001/01/06 01:30:37 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -784,27 +784,33 @@ sub apply_db_updates {
     # or which start too fast
 
     if ( defined($DATABASE{$tree}{$build}{'recs'}) ) {
+      
+      # The time which the previous build started
+      my ($previous_rec) = $DATABASE{$tree}{$build}{'recs'}[0];
 
-         ($record->{'starttime'} < 
-          $DATABASE{$tree}{$build}{'recs'}[0]{'starttime'}) &&
-         next;
+      # Why are we ignoring out of order recipts?  This came from the
+      # original tinderbox?
 
-         # Keep the spacing between builds greater then our HTML grid
-         # spacing.  There can be very frequent updates for any build
-         # but different builds must be spaced apart.
-
-         my ($safe_separation) = (TinderDB::TABLE_SPACING + 
-                                $main::SECONDS_PER_MINUTE);
+      ($record->{'starttime'} < $previous_rec->{'starttime'}) &&
+        next;
+      
+      # Keep the spacing between builds greater then our HTML grid
+      # spacing.  There can be very frequent updates for any build
+      # but different builds must be spaced apart.
+      
+      my ($safe_separation) = (TinderDB::TABLE_SPACING + 
+                               $main::SECONDS_PER_MINUTE);
+      
+      my ($separation) = ($record->{'starttime'} - 
+                          $previous_rec->{'starttime'});
          
-         my ($separation) = ($record->{'starttime'} - 
-                           $DATABASE{$tree}{$build}{'recs'}[0]{'starttime'});
+      my ($different_builds) = ($record->{'starttime'} !=
+                                $previous_rec->{'starttime'});
          
-         ($separation < $safe_separation) &&
-         next;
+         ($different_builds) && 
+           ($separation < $safe_separation) && 
+             next;
     }
-
-    # The time which the previous build started
-    my ($previous_rec) = $DATABASE{$tree}{$build}{'recs'}[0];
 
     # Is this report an update to the current build? If so we do not
     # want two entries for the same build. Remove old entry
