@@ -49,6 +49,7 @@ ifdef MOZ_ENABLE_XFT
 	$(MAKE) expat
 endif
 	$(MAKE) tier_1
+	$(MAKE) tier_2
 	$(MAKE) tier_9
 ifdef MOZ_EXTENSIONS
 	$(MAKE) tier_94
@@ -68,6 +69,7 @@ endif
 DIRS = \
 	$(tier_0_dirs) \
 	$(tier_1_dirs) \
+	$(tier_2_dirs) \
 	$(tier_9_dirs) \
 	$(NULL)
 
@@ -100,40 +102,52 @@ tier_0_dirs = \
 	$(NULL)
 
 #
-# tier 1 - base libraries
-# 
-tier_1_dirs = js
+# tier 1 -  3rd party individual libraries
+#
+tier_1_dirs	+= dbm
 
-# MacOSX needs to build lib for MoreFiles before xpcom
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-tier_1_dirs += lib/mac/MoreFiles
+ifndef MOZ_NATIVE_JPEG
+tier_1_dirs	+= jpeg
 endif
 
-#
-# tier 9 - core components (xpcom,necko,gecko)
-#
-
-# intl should not be in here - it's just temporary until
-# xpconnect's dependency on intl is repaired - see bug 106130
-tier_9_dirs += \
-	modules/libreg \
-	string \
-	xpcom \
-	intl \
-	$(NULL)
-
 ifndef MOZ_NATIVE_ZLIB
-tier_9_dirs	+= modules/zlib
+tier_1_dirs	+= modules/zlib
 endif
 
 # Installer needs standalone libjar, hence standalone zlib
 ifneq (,$(filter Linux SunOS WINNT,$(OS_ARCH)))
-tier_9_dirs	+= modules/zlib/standalone
+tier_1_dirs	+= modules/zlib/standalone
 endif
 
-tier_9_dirs	+= \
-	modules/libjar \
-	$(NULL)
+ifdef MOZ_INTERNAL_LIBART_LGPL
+tier_1_dirs	+= other-licenses/libart_lgpl
+endif
+
+#
+# tier 2 - base libraries
+# 
+tier_2_dirs	= js
+
+# MacOSX needs to build lib for MoreFiles before xpcom
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+tier_2_dirs += lib/mac/MoreFiles
+endif
+
+tier_2_dirs	+= \
+		modules/libreg \
+		string \
+		xpcom \
+		$(NULL)
+
+#
+# tier 9 - core components (necko,gecko)
+#
+
+tier_9_dirs += \
+		js/src/xpconnect \
+		intl \
+		modules/libjar \
+		$(NULL)
 
 ifdef MOZ_JAVA_SUPPLEMENT
 tier_9_dirs += 			\
@@ -142,11 +156,7 @@ tier_9_dirs += 			\
   $(NULL)
 endif
 
-ifndef MOZ_NATIVE_JPEG
-tier_9_dirs	+= jpeg
-endif
-
-tier_9_dirs	+= dbm js/src/xpconnect
+tier_9_dirs	+= js/src/xpconnect
 
 ifdef MOZ_OJI
 tier_9_dirs	+= js/src/liveconnect
@@ -166,10 +176,6 @@ endif
 
 ifdef MOZ_ENABLE_GTK
 tier_9_dirs	+= widget/src/gtksuperwin widget/src/gtkxtbin
-endif
-
-ifdef MOZ_INTERNAL_LIBART_LGPL
-tier_9_dirs	+= other-licenses/libart_lgpl
 endif
 
 tier_9_dirs	+= \
