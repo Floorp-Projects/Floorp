@@ -32,16 +32,30 @@ class nsIHTMLStyleSheet;
 {0xa18f85f0, 0xc058, 0x11d1,        \
   {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
+// IID for the nsIHTMLMappedAttributes interface {0fdd27a0-2e7b-11d3-8060-006008159b5a}
+#define NS_IHTML_MAPPED_ATTRIBUTES_IID  \
+{0x0fdd27a0, 0x2e7b, 0x11d3,            \
+    {0x80, 0x60, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
 class nsIHTMLAttributes : public nsISupports {
 public:
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
-                          PRInt32& aAttrCount) = 0;
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTML_ATTRIBUTES_IID);
+
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsHTMLValue& aValue,
+                             PRBool aMappedToStyle, 
+                             nsIHTMLContent* aContent,
+                             nsIHTMLStyleSheet* aSheet,
+                             PRInt32& aAttrCount) = 0;
   // this string value version lets you avoid an extra string copy, 
   // the value is still stored in a nsHTMLValue
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
-                          PRInt32& aAttrCount) = 0;
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRInt32& aAttrCount) = 0;
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsString& aValue,
+                             PRBool aMappedToStyle, 
+                             nsIHTMLContent* aContent,
+                             nsIHTMLStyleSheet* aSheet) = 0;
+  NS_IMETHOD UnsetAttributeFor(nsIAtom* aAttribute, 
+                               nsIHTMLContent* aContent,
+                               nsIHTMLStyleSheet* aSheet,
+                               PRInt32& aAttrCount) = 0;
 
   NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
                           nsHTMLValue& aValue) const = 0;
@@ -50,30 +64,49 @@ public:
                                 nsIAtom*& aName) const = 0;
 
   NS_IMETHOD GetAttributeCount(PRInt32& aAttrCount) const = 0;
-  NS_IMETHOD Equals(const nsIHTMLAttributes* aAttributes, PRBool& aResult) const = 0;
-  NS_IMETHOD HashValue(PRUint32& aValue) const = 0;
 
   NS_IMETHOD GetID(nsIAtom*& aResult) const = 0;
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const = 0;
   NS_IMETHOD HasClass(nsIAtom* aClass) const = 0;
 
+  NS_IMETHOD Clone(nsIHTMLAttributes** aInstancePtrResult) const = 0;
+
+  NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet) = 0;
+
+  NS_IMETHOD GetMappedAttributeStyleRules(nsISupportsArray* aArray) const = 0;
+
+#ifdef UNIQUE_ATTR_SUPPORT
+  NS_IMETHOD Equals(const nsIHTMLAttributes* aAttributes, PRBool& aResult) const = 0;
+  NS_IMETHOD HashValue(PRUint32& aValue) const = 0;
+
   NS_IMETHOD AddContentRef(void) = 0;
   NS_IMETHOD ReleaseContentRef(void) = 0;
   NS_IMETHOD GetContentRefCount(PRInt32& aCount) const = 0;
 
-  NS_IMETHOD Clone(nsIHTMLAttributes** aInstancePtrResult) const = 0;
   NS_IMETHOD Reset(void) = 0;
-  NS_IMETHOD SetMappingFunctions(nsMapAttributesFunc aFontMapFunc, nsMapAttributesFunc aMapFunc) = 0;
-  NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet) = 0;
+#endif
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 };
 
+class nsIHTMLMappedAttributes : public nsISupports {
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTML_MAPPED_ATTRIBUTES_IID);
+
+  NS_IMETHOD GetAttribute(nsIAtom* aAttrName, nsHTMLValue& aValue) const = 0;
+  NS_IMETHOD GetAttributeCount(PRInt32& aCount) const = 0;
+
+  NS_IMETHOD Equals(const nsIHTMLMappedAttributes* aAttributes, PRBool& aResult) const = 0;
+  NS_IMETHOD HashValue(PRUint32& aValue) const = 0;
+
+  // Sheet accessors for unique table management
+  NS_IMETHOD SetUniqued(PRBool aUniqued) = 0;
+  NS_IMETHOD GetUniqued(PRBool& aUniqued) = 0;
+  NS_IMETHOD DropStyleSheetReference(void) = 0;
+};
+
 extern NS_HTML nsresult
-  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult,
-                       nsIHTMLStyleSheet* aSheet,
-                       nsMapAttributesFunc aFontMapFunc,
-                       nsMapAttributesFunc aMapFunc);
+  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult);
 
 #endif /* nsIHTMLAttributes_h___ */
 
