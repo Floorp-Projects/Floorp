@@ -131,7 +131,8 @@ MyBlendObserver::Notify(nsIImageRequest *aImageRequest,
         if ( gBlendImage && (aNotificationType == nsImageNotification_kImageComplete) )
           {
           nsColorMap *cmap = (*mImage)->GetColorMap();
-          nsRect *rect = (nsRect *)aParam3;  
+          nsRect *rect = (nsRect *)aParam3;
+
           Compositetest(gTestNum,gImage,gBlendImage,gMaskImage,gXOff,gYOff);
           }
        }
@@ -250,20 +251,22 @@ nsPoint *location;
 PRUint32    min,seconds,milli,i,h,w;
 SYSTEMTIME  thetime;
 nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
+nsIImage  *theimage;
+
 
   if(aTestNum == 1)
     {
     location = new nsPoint(aX,aY);
     if(aMImage)
       {
-      aImage->SetAlphaMask(aMImage);
-      aImage->MoveAlphaMask(rand() % gImage->GetWidth(),rand() % gImage->GetHeight());
+      aBImage->SetAlphaMask(aMImage);
+      aBImage->MoveAlphaMask(rand() % aImage->GetWidth(),rand() % aImage->GetHeight());
       }
 
     if(aMImage == nsnull)
       {
-      location->x = rand() % gImage->GetWidth();
-      location->y = rand() % gImage->GetHeight();
+      location->x = rand() % aImage->GetWidth();
+      location->y = rand() % aImage->GetHeight();
       printf("\n Image Location is %d, %d\n", location->x,location->y);
       }
     
@@ -275,7 +278,7 @@ nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
 
     if(aMImage)
       {
-      aImage->SetAlphaMask(aMImage);
+      aBImage->SetAlphaMask(aMImage);
       }
 
     printf("\nSTARTING Blending TEST\n");
@@ -283,7 +286,7 @@ nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
     min = thetime.wMinute;
     seconds = thetime.wSecond;
     milli = thetime.wMilliseconds;
-    location = new nsPoint(0,0);
+    location = new nsPoint(aX,aY);
     w = gImage->GetWidth();
     h = gImage->GetHeight();
 
@@ -291,16 +294,18 @@ nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
       {
       for(i=0;i<200;i++)
         {
-        aImage->MoveAlphaMask(rand()%w,rand()%h);
-        aImage->CompositeImage(aBImage,location);
-        drawCtx->DrawImage(gImage, 0, 0, gImage->GetWidth(), gImage->GetHeight());
+        aBImage->MoveAlphaMask(rand()%w,rand()%h);
+        theimage = aImage->DuplicateImage();
+        theimage->CompositeImage(aBImage,location);
+        drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
+        NS_RELEASE(theimage);
         }
       }
     else
       for(i=0;i<200;i++)
         {
         aImage->CompositeImage(aBImage,location);
-        drawCtx->DrawImage(gImage, 0, 0, gImage->GetWidth(), gImage->GetHeight());
+        drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
         }
 
     ::GetSystemTime(&thetime);
@@ -317,7 +322,7 @@ nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
     printf("The composite Time was %lu Milliseconds\n",milli);
     }
   
-  drawCtx->DrawImage(gImage, 0, 0, gImage->GetWidth(), gImage->GetHeight());
+  drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
 
   // we are finished with this
   if (gBlendImage) 
