@@ -911,26 +911,51 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
 
   nsIFrame* oldFrameParent;
   if (ParentIsInlineFrame(aOldFrame, &oldFrameParent)) {
-    // If the frame being removed has zero size then don't bother
-    // generating a reflow command.
-    nsRect bbox;
-    aOldFrame->GetRect(bbox);
-    if ((0 == bbox.width) && (0 == bbox.height)) {
-      // Don't bother generating a reflow command
-    }
-    else {
-      generateReflowCommand = PR_TRUE;
-      target = this;
-    }
+    // Loop and destroy the frame and all of its
+    // continuations. Because the frame's parent is an inline frame we
+    // know that any continuations will also be in an inline frame
+    // parent.
+    nsInlineFrame* parent = (nsInlineFrame*) oldFrameParent;
+    while (nsnull != aOldFrame) {
+      // If the frame being removed has zero size then don't bother
+      // generating a reflow command.
+      nsRect bbox;
+      aOldFrame->GetRect(bbox);
+      if ((0 == bbox.width) && (0 == bbox.height)) {
+        // Don't bother generating a reflow command
+      }
+      else {
+        generateReflowCommand = PR_TRUE;
+        target = this;
+      }
 
-    // When the parent is an inline frame we have a simple task - just
-    // remove the frame from our list and generate a reflow.
-    mFrames.DeleteFrame(aPresContext, aOldFrame);
+      // When the parent is an inline frame we have a simple task -
+      // just remove the frame from its parents list and generate a
+      // reflow command.
+      nsIFrame* oldFrameNextInFlow;
+      aOldFrame->GetNextInFlow(&oldFrameNextInFlow);
+      nsSplittableType st;
+      aOldFrame->IsSplittable(st);
+      if (NS_FRAME_NOT_SPLITTABLE != st) {
+        aOldFrame->RemoveFromFlow();
+      }
+      parent->mFrames.DeleteFrame(aPresContext, aOldFrame);
+      aOldFrame = oldFrameNextInFlow;
+      if (nsnull != aOldFrame) {
+        aOldFrame->GetParent((nsIFrame**) &parent);
+      }
+    }
 #ifdef NOISY_ANON_BLOCK
     printf("RemoveFrame: case 1\n");
 #endif
   }
   else {
+#ifdef DEBUG
+    nsIFrame* oldFrameNextInFlow;
+    aOldFrame->GetNextInFlow(&oldFrameNextInFlow);
+    NS_ASSERTION(nsnull == oldFrameNextInFlow, "XXX: can't remove continued frames that are in anonymous blocks -- not yet implemented");
+#endif
+
     nsIFrame* nextInFlow;
     nsIFrame* prevInFlow;
 
