@@ -65,6 +65,7 @@ nsMsgSearchBoolExpression::nsMsgSearchBoolExpression (nsIMsgSearchTerm * newTerm
     m_term = newTerm;
     m_encodingStr = encodingStr;
     m_evalValue = evalValue;
+    m_boolOp = nsMsgSearchBooleanOp::BooleanAND;
 
     // this expression does not contain sub expressions
     m_leftChild = nsnull;

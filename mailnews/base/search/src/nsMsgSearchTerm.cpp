@@ -806,7 +806,7 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 		break;
 	case nsMsgSearchOp::DoesntContain:
 		if ((nsnull != n_header) && ((n_str.GetBuffer())[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
-			PL_strstr(stringToMatch, n_str))
+			!PL_strstr(stringToMatch, n_str))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::Is:
@@ -1258,7 +1258,7 @@ NS_IMPL_ISUPPORTS1(nsMsgSearchScopeTerm, nsIMsgSearchScopeTerm)
 NS_IMETHODIMP
 nsMsgSearchScopeTerm::GetFileStream(nsIInputStream** aResult)
 {
-    *aResult = m_fileStream->GetIStream();
+  *aResult = (m_fileStream) ? m_fileStream->GetIStream() : nsnull;
     NS_IF_ADDREF(*aResult);
     return NS_OK;
 }
