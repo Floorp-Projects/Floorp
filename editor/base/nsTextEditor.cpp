@@ -49,12 +49,6 @@
 #include "nsIStyleContext.h"
 
 
-// INCLUDES FOR EVIL HACK TO FOR REDRAW
-// BEGIN
-#include "nsIViewManager.h"
-#include "nsIView.h"
-// END
-
 class nsIFrame;
 
 #ifdef XP_UNIX
@@ -406,6 +400,14 @@ NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::Direction aDir)
   nsresult endTxnResult = nsEditor::EndTransaction();  // don't return this result!
   NS_ASSERTION ((NS_SUCCEEDED(endTxnResult)), "bad end transaction result");
 
+
+// XXXX: Horrible hack! We are doing this because
+// of an error in Gecko which is not rendering the
+// document after a change via the DOM - gpk 2/13/99
+  // BEGIN HACK!!!
+  HACKForceRedraw();
+  // END HACK
+
   return result;
 }
 
@@ -433,6 +435,9 @@ NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
   nsresult endTxnResult = nsEditor::EndTransaction();  // don't return this result!
   NS_ASSERTION ((NS_SUCCEEDED(endTxnResult)), "bad end transaction result");
 
+  // BEGIN HACK!!!
+  HACKForceRedraw();
+  // END HACK
   return result;
 }
 
@@ -483,24 +488,9 @@ NS_IMETHODIMP nsTextEditor::InsertBreak()
 
 // XXXX: Horrible hack! We are doing this because
 // of an error in Gecko which is not rendering the
-// document after a change via the DOM - gpk 2/11/99
+// document after a change via the DOM - gpk 2/13/99
   // BEGIN HACK!!!
-  nsIPresShell* shell = nsnull;
-  
- 	GetPresShell(&shell);
-  if (nsnull != shell) {
-    nsIViewManager* viewmgr = nsnull;;
-    nsIView* view = nsnull;
-
-    shell->GetViewManager(&viewmgr);
-    if (nsnull != viewmgr) {
-      viewmgr->GetRootView(view);
-      if (nsnull != view) {
-        viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
-      }
-      NS_RELEASE(viewmgr);
-    }
-  }
+  HACKForceRedraw();
   // END HACK
 
   return result;
