@@ -4724,13 +4724,13 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
               nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aDropEvent));
 
               if (!nsuiEvent)
-                return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+                return NS_ERROR_NULL_POINTER;
               nsCOMPtr<nsIDOMNode> parent;
               if (!NS_SUCCEEDED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
-                return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+                return NS_ERROR_NULL_POINTER;
               PRInt32 offset = 0;
               if (!NS_SUCCEEDED(nsuiEvent->GetRangeOffset(&offset)))
-                return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+                return NS_ERROR_NULL_POINTER;
 
               nsCOMPtr<nsIDOMSelection> selection;
               if (NS_SUCCEEDED(GetSelection(getter_AddRefs(selection))))
