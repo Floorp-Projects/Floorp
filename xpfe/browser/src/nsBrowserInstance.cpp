@@ -131,6 +131,8 @@ static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
 #define PREF_BROWSER_STARTUP_PAGE "browser.startup.page"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
 
+const char *kIgnoreOverrideMilestone = "ignore";
+
 //*****************************************************************************
 //***    PageCycler: Object Management
 //*****************************************************************************
@@ -676,25 +678,26 @@ PRBool nsBrowserContentHandler::NeedHomepageOverride(nsIPref *aPrefService)
 {
   NS_ASSERTION(aPrefService, "Null pointer to prefs service!");
 
+  // get saved milestone from user's prefs
+  nsXPIDLCString savedMilestone;
+  aPrefService->GetCharPref(PREF_HOMEPAGE_OVERRIDE_MSTONE, 
+                            getter_Copies(savedMilestone));
+  // Mozilla never saves this value, but a fed-up advanced user might
+  if (savedMilestone.Equals(kIgnoreOverrideMilestone))
+    return PR_FALSE;
+
   // get browser's current milestone
-  nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler> httpHandler(
-      do_GetService("@mozilla.org/network/protocol;1?name=http", &rv));
-  if (NS_FAILED(rv))
+      do_GetService("@mozilla.org/network/protocol;1?name=http"));
+  if (!httpHandler)
     return PR_TRUE;
+
   nsCAutoString currMilestone;
   httpHandler->GetMisc(currMilestone);
 
-  // get saved milestone from user's prefs
-  nsXPIDLCString savedMilestone;
-  rv = aPrefService->GetCharPref(PREF_HOMEPAGE_OVERRIDE_MSTONE, 
-                                 getter_Copies(savedMilestone));
-
   // failed to get pref -or- saved milestone older than current milestone, 
   // write out known current milestone and show URL this time
-  if (NS_FAILED(rv) || 
-      !(currMilestone.Equals(savedMilestone)))
-  {
+  if (!(currMilestone.Equals(savedMilestone))) {
     // update milestone in "homepage override" pref
     aPrefService->SetCharPref(PREF_HOMEPAGE_OVERRIDE_MSTONE, 
                               currMilestone.get());
