@@ -359,23 +359,9 @@ bm_ReleaseGlobals()
 {
     if (--gRefCnt == 0)
     {
-        if (gRDF)
-        {
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
-            gRDF = nsnull;
-        }
-
-        if (gRDFC)
-        {
-            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFC);
-            gRDFC = nsnull;
-        }
-
-        if (gCharsetAlias)
-        {
-            nsServiceManager::ReleaseService(kCharsetAliasCID, gCharsetAlias);
-            gCharsetAlias = nsnull;
-        }
+        NS_IF_RELEASE(gRDF);
+        NS_IF_RELEASE(gRDFC);
+        NS_IF_RELEASE(gCharsetAlias);
 
         NS_IF_RELEASE(kNC_Bookmark);
         NS_IF_RELEASE(kNC_BookmarkSeparator);
