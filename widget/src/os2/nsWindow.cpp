@@ -152,6 +152,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mBorderStyle        = eBorderStyle_default;
     mFont               = nsnull;
     mOS2Toolkit         = nsnull;
+    mIsScrollBar         = FALSE;
 
   mIsTopWidgetWindow = PR_FALSE;
 }
@@ -784,6 +785,8 @@ void nsWindow::RealDoCreate( HWND              hwndP,
          style &= ~WS_CLIPSIBLINGS;
    }
 
+   mIsScrollBar = (!(strcmp( WindowClass(), WC_SCROLLBAR_STRING )));
+
    if( hwndP != HWND_DESKTOP)
    {
       // For pop-up menus, the parent is the desktop, but use the "parent" as owner
@@ -798,9 +801,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
       // For scrollbars, the parent is the owner, for notification purposes
       else if(!hwndOwner )
       {
-         BOOL bHwndIsScrollBar = 
-                           (!(strcmp( WindowClass(), WC_SCROLLBAR_STRING )));
-         if( bHwndIsScrollBar )
+         if( mIsScrollBar )
          {
             hwndOwner = hwndP;
          }
@@ -2248,11 +2249,13 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
         // behaviour (see nsEditorEventListeners.cpp)
     
         case WM_BUTTON1DOWN:
-          WinSetCapture( HWND_DESKTOP, mWnd);
+          if (!mIsScrollBar)
+            WinSetCapture( HWND_DESKTOP, mWnd);
           result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_DOWN, mp1, mp2);
           break;
         case WM_BUTTON1UP:
-          WinSetCapture( HWND_DESKTOP, 0); // release
+          if (!mIsScrollBar)
+            WinSetCapture( HWND_DESKTOP, 0); // release
           result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_UP, mp1, mp2);
           break;
         case WM_BUTTON1DBLCLK:
@@ -2260,11 +2263,13 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
     
         case WM_BUTTON2DOWN:
-          WinSetCapture( HWND_DESKTOP, mWnd);
+          if (!mIsScrollBar)
+            WinSetCapture( HWND_DESKTOP, mWnd);
           result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_DOWN, mp1, mp2);
           break;
         case WM_BUTTON2UP:
-          WinSetCapture( HWND_DESKTOP, 0); // release
+          if (!mIsScrollBar)
+            WinSetCapture( HWND_DESKTOP, 0); // release
           result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_UP, mp1, mp2);
           break;
         case WM_BUTTON2DBLCLK:
@@ -2313,9 +2318,10 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
                 ptlLastPos.y = (SHORT)SHORT2FROMMP(mp1);
             }
           }
-          DispatchMouseEvent( NS_MOUSE_MOVE, mp1, mp2);
+          result = DispatchMouseEvent( NS_MOUSE_MOVE, mp1, mp2);
           // don't propogate mouse move or the OS will change the pointer
-          result = PR_TRUE;
+          if (!mIsScrollBar)
+            result = PR_TRUE;
           break;
         case WM_MOUSEENTER:
           result = DispatchMouseEvent( NS_MOUSE_ENTER, mp1, mp2);

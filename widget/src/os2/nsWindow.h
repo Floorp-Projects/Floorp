@@ -244,6 +244,7 @@ protected:
    HWND      mHackDestroyWnd; // access GetMainWindow() window from destructor
    QMSG      mQmsg;
    PRBool    mIsTopWidgetWindow;
+   BOOL    mIsScrollBar;
 
    HWND      GetParentHWND() const;
    HWND      GetHWND() const   { return mWnd; }
