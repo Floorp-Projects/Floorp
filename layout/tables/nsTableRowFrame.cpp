@@ -1499,6 +1499,42 @@ PRBool nsTableRowFrame::Contains(const nsPoint& aPoint)
   return result;
 }
 
+/**
+ * This function is called by the row group frame's SplitRowGroup() code when
+ * pushing a row frame that has cell frames that span into it. The cell frame
+ * should be reflowed with the specified height
+ */
+void nsTableRowFrame::ReflowCellFrame(nsIPresContext&          aPresContext,
+                                      const nsHTMLReflowState& aReflowState,
+                                      nsTableCellFrame*        aCellFrame,
+                                      nscoord                  aAvailableHeight,
+                                      nsReflowStatus&          aStatus)
+{
+  // Reflow the cell frame with the specified height. Use the existing width
+  nsSize  cellSize;
+  aCellFrame->GetSize(cellSize);
+  
+  nsSize  availSize(cellSize.width, aAvailableHeight);
+  nsHTMLReflowState cellReflowState(aPresContext, aCellFrame, aReflowState, availSize,
+                                    eReflowReason_Resize);
+  nsHTMLReflowMetrics desiredSize(nsnull);
+
+  ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowState, aStatus);
+  aCellFrame->SizeTo(cellSize.width, aAvailableHeight);
+  aCellFrame->VerticallyAlignChild();
+}
+
+/**
+ * This function is called by the row group frame's SplitRowGroup() code when
+ * it creates a continuing cell frame and wants to insert it into the row's
+ * child list
+ */
+void nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
+                                      nsTableCellFrame* aPrevSibling)
+{
+  mFrames.InsertFrame(nsnull, aPrevSibling, aFrame);
+}
+
 /* ----- global methods ----- */
 
 nsresult 
