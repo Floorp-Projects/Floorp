@@ -33,7 +33,12 @@
 
 #include "nsGtkEventHandler.h"
 #include "nsAppShell.h"
+
+#ifndef NEW_CLIPBOARD_SUPPORT
 #include "nsSelectionMgr.h"
+#else
+#include "nsClipboard.h"
+#endif
 
 #include "stdio.h"
 
@@ -243,7 +248,12 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                      "delete_event",
                      GTK_SIGNAL_FUNC(handle_delete_event),
                      this);
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+    // Call SetTopLevelWidget here? 
+#else
     nsSelectionMgr::SetTopLevelWidget(mShell);
+#endif
   }
 
   // Force cursor to default setting
