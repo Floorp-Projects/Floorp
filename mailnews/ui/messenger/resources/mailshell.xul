@@ -7,7 +7,7 @@
 			xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   			onconstruction="MsgStartUp()">
   <html:style>
-	  #toolbar {
+      #toolbar {
         position: fixed;
         width: 100%;
         height: 80px;
@@ -41,19 +41,19 @@
         border: solid 1px black;
         background-color: #ffffff;
       }
-	  #thread {
-		position: fixed;
-		width: auto;
-		height: 120px;
-		top: 80px;
-		right: 0;
-		bottom: auto;
-		left: 15em;
-		overflow: auto;
-		padding: 2px .5em;
-		border: solid 1px white
-		background-color: #cccccc;
-	  }
+      #thread {
+        position: fixed;
+        width: auto;
+        height: 120px;
+        top: 80px;
+        right: 0;
+        bottom: auto;
+        left: 15em;
+        overflow: auto;
+        padding: 2px .5em;
+        border: solid 1px white
+        background-color: #cccccc;
+      }
       #footer {
         position: fixed;
         width: 100%;
