@@ -526,9 +526,9 @@ function GetLabelStrings()
   if (!gLabelStrings.length)
   {
     var prefString;
+    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     for (var index = 0; index < 6; index++)
     {
-      var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
       prefString = pref.getComplexValue("mailnews.labels.description." + index,  Components.interfaces.nsIPrefLocalizedString);
       gLabelStrings[index] = prefString;
     }

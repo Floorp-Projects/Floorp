@@ -42,6 +42,8 @@ typedef long nsMsgSearchScopeValue;
 
 typedef long nsMsgPriorityValue;
 
+typedef unsigned long nsMsgJunkStatus;
+
 [scriptable, uuid(94C0D8D8-2045-11d3-8A8F-0060B0FC04D2)]
 interface nsMsgPriority {
     const nsMsgPriorityValue notSet = 0;
