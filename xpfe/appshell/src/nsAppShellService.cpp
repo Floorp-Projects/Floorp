@@ -221,7 +221,7 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
   }
 
   // Initialize each registered component.
-  EnumerateComponents( &InitializeComponent );
+  EnumerateComponents( &nsAppShellService::InitializeComponent );
 
 done:
   return rv;
@@ -397,7 +397,7 @@ nsAppShellService::Shutdown(void)
 
 #if 1
   // Shutdown all components.
-  EnumerateComponents( &ShutdownComponent );
+  EnumerateComponents( &nsAppShellService::ShutdownComponent );
 
   mAppShell->Exit();
 #else
