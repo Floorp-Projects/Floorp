@@ -903,6 +903,27 @@ PluginViewerImpl::GetIsFramesetDocument(PRBool *aIsFramesetDocument)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* readonly attribute boolean isIFrameSelected; */
+NS_IMETHODIMP 
+PluginViewerImpl::GetIsIFrameSelected(PRBool *aIsIFrameSelected)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute boolean isRangeSelection; */
+NS_IMETHODIMP 
+PluginViewerImpl::GetIsRangeSelection(PRBool *aIsRangeSelection)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute boolean isFramesetFrameSelected; */
+NS_IMETHODIMP 
+PluginViewerImpl::GetIsFramesetFrameSelected(PRBool *aIsFramesetFrameSelected)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* readonly attribute long printPreviewNumPages; */
 NS_IMETHODIMP 
 PluginViewerImpl::GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages)
