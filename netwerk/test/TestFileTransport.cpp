@@ -164,7 +164,7 @@ public:
         nsCAutoString str(name);
         nsMemory::Free(name);
         str.Append(".bak");
-        rv = file->SetLeafName(str);
+        rv = file->SetLeafName(str.get());
         if (NS_FAILED(rv)) return rv;
         rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOut),
                                          file, 
@@ -255,7 +255,7 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     outFile.Append(".out");
     nsITransport* fileTrans;
     nsCOMPtr<nsILocalFile> file;
-    rv = NS_NewLocalFile(outFile, PR_FALSE, getter_AddRefs(file));
+    rv = NS_NewLocalFile(outFile.get(), PR_FALSE, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
     rv = fts->CreateTransport(file,
                               PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
@@ -266,7 +266,7 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     if (listener == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(listener);
-    rv = listener->Init(outFile);
+    rv = listener->Init(outFile.get());
     if (NS_FAILED(rv)) return rv;
 
     MyProgressEventSink* progressSink = new MyProgressEventSink();

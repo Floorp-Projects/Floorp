@@ -326,7 +326,7 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         nsCAutoString cacheKey;
         GenerateCacheKey(cacheKey);
 
-        return mCacheSession->AsyncOpenCacheEntry(cacheKey, accessRequested, this);
+        return mCacheSession->AsyncOpenCacheEntry(cacheKey.get(), accessRequested, this);
     }
     
     return SetupState();

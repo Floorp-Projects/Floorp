@@ -211,7 +211,7 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetFileExtensions( const char* aExtensions )
 	PRInt32 breakLocation = -1;
 	while ( (breakLocation= extList.FindCharInSet( ",",0 ) )!= -1)
 	{
-		nsCString ext( extList, breakLocation );
+		nsCString ext( extList.get(), breakLocation );
 		mExtensions.AppendCString( ext );
 		extList.Cut(0, breakLocation+1 );
 	}
@@ -344,7 +344,7 @@ void nsMIMEInfoImpl::SetRememberPrefForMimeType(const char * prefName)
 
     // always escape the pref b4 storing it in case someone enters some funky characters for a mime type...
     nsXPIDLCString escapedPrefString;
-    *((char **)getter_Copies(escapedPrefString)) = nsEscape(prefValue, url_XAlphas);
+    escapedPrefString.Adopt(nsEscape(prefValue.get(), url_XAlphas));
     prefBranch->SetCharPref(prefName, escapedPrefString);
   }
 }

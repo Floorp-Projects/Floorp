@@ -505,7 +505,7 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
     if (!mControlReadContinue)
         {
             if (mFTPEventSink)
-                mFTPEventSink->OnFTPControlLog(PR_TRUE, mResponseMsg);
+                mFTPEventSink->OnFTPControlLog(PR_TRUE, mResponseMsg.get());
 
         return Process();
         }
@@ -1228,7 +1228,7 @@ nsFtpState::SetContentType()
         SetDirMIMEType(fromStr);
 
         nsCAutoString contentType;contentType.AssignWithConversion(fromStr);
-        return mChannel->SetContentType(contentType);
+        return mChannel->SetContentType(contentType.get());
     }
 
     return mChannel->SetContentType("application/http-index-format");
@@ -1250,7 +1250,7 @@ nsFtpState::S_list() {
     if(mCacheEntry) {
         nsCAutoString serverType;
         serverType.AppendInt(mServerType);
-        (void) mCacheEntry->SetMetaDataElement("servertype", serverType);
+        (void) mCacheEntry->SetMetaDataElement("servertype", serverType.get());
     }
 
     nsCOMPtr<nsIStreamListener> converter;
@@ -1933,12 +1933,10 @@ nsFtpState::StopProcessing() {
     {
         // check to see if the control status is bad.
         // web shell wont throw an alert.  we better:
-        nsAutoString    text;
-        text.AssignWithConversion(mResponseMsg);
         
         NS_ASSERTION(mPrompter, "no prompter!");
         if (mPrompter)
-            (void) mPrompter->Alert(nsnull, text.get());
+            (void) mPrompter->Alert(nsnull, NS_ConvertASCIItoUCS2(mResponseMsg).get());
     }
     
     nsresult broadcastErrorCode = mControlStatus;

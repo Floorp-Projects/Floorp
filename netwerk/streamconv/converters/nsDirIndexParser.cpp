@@ -276,10 +276,10 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
       
       if (gTextToSubURI) {
         PRUnichar   *result = nsnull;
-        if (NS_SUCCEEDED(rv = gTextToSubURI->UnEscapeAndConvert(mEncoding.get(), filename,
+        if (NS_SUCCEEDED(rv = gTextToSubURI->UnEscapeAndConvert(mEncoding.get(), filename.get(),
                                                                 &result)) && (result)) {
           if (nsCRT::strlen(result) > 0) {
-            aIdx->SetLocation(filename);
+            aIdx->SetLocation(filename.get());
             if (!mHasDescription)
               aIdx->SetDescription(result);
             success = PR_TRUE;
@@ -295,7 +295,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
         // just fallback to unescape'ing in-place
         // XXX - this shouldn't be using UTF8, should it?
         // when can we fail to get the service, anyway? - bbaetz
-        aIdx->SetLocation(filename);
+        aIdx->SetLocation(filename.get());
         if (!mHasDescription) {
           aIdx->SetDescription(NS_ConvertUTF8toUCS2(value).get());
         }

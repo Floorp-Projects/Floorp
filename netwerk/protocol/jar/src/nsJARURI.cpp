@@ -89,7 +89,7 @@ nsJARURI::FormatSpec(const char* entryPath, char* *result)
     spec += NS_JAR_DELIMITER;
     spec += entryPath;
     
-    *result = nsCRT::strdup(spec);
+    *result = ToNewCString(spec);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -147,7 +147,7 @@ nsJARURI::SetSpec(const char * aSpec)
     jarPath.Cut(pos, jarPath.Length());
     jarPath.Cut(0, endPos);
 
-    rv = serv->NewURI(jarPath, nsnull, getter_AddRefs(mJARFile));
+    rv = serv->NewURI(jarPath.get(), nsnull, getter_AddRefs(mJARFile));
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString entry(aSpec);
@@ -155,7 +155,7 @@ nsJARURI::SetSpec(const char * aSpec)
     while (entry.CharAt(0) == '/')
         entry.Cut(0,1); // Strip any additional leading slashes from entry path
 
-    rv = serv->ResolveRelativePath(entry, nsnull, &mJAREntry);
+    rv = serv->ResolveRelativePath(entry.get(), nsnull, &mJAREntry);
     return rv;
 }
 

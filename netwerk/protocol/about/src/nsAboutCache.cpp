@@ -121,7 +121,7 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
                    "<head>\n<title>Information about the Cache Service</title>\n</head>\n"
                    "<body>\n<div>\n");
 
-    outputStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
+    outputStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
 
     rv = ParseURI(aURI, mDeviceID);
     if (NS_FAILED(rv)) return rv;
@@ -135,7 +135,7 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
         mBuffer.Append("</pre>\n");
     }
     mBuffer.Append("</div>\n</body>\n</html>\n");
-    outputStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
+    outputStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
         
     nsCOMPtr<nsIInputStream> inStr;
     PRUint32 size;
@@ -215,7 +215,7 @@ nsAboutCache::VisitDevice(const char *deviceID,
             mBuffer.Append("<hr />\n<pre>\n");
         }
         
-        mStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
+        mStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
     }
 
     return NS_OK;
@@ -300,7 +300,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
     // Entry is done...
     mBuffer.Append("\n\n");
 
-    mStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
+    mStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
 
     *visitNext = PR_TRUE;
     return NS_OK;

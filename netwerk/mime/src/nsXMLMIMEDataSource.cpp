@@ -330,7 +330,7 @@ nsXMLMIMEDataSource::Serialize() {
   PRUint32 bytesWritten;
   PRBool more;
  
-	rv = stream->Write( buffer  , buffer.Length(), &bytesWritten );
+	rv = stream->Write( buffer.get() , buffer.Length(), &bytesWritten );
 
   while ( NS_SUCCEEDED( enumerator->HasMoreElements(& more ) )&& more ) 
 	{
@@ -403,7 +403,7 @@ nsXMLMIMEDataSource::Serialize() {
 		
 		buffer+="/>\r";
 	
-		rv = stream->Write( buffer  , buffer.Length(), &bytesWritten );
+		rv = stream->Write( buffer.get() , buffer.Length(), &bytesWritten );
 	
   	if ( NS_FAILED( rv ) )
   		return rv;
@@ -655,29 +655,29 @@ static nsresult AddAttribute( nsIMIMEInfo* inElement, nsCString& inAttribute, ns
 	nsresult rv = NS_OK;
 	if ( inAttribute == nsDependentCString(kMIMEType) )
 	{
-		rv = inElement->SetMIMEType( inValue );
+		rv = inElement->SetMIMEType( inValue.get() );
 	}
 	else if ( inAttribute == nsDependentCString(kDescription)  )
 	{
 		PRUnichar* unicode; 
-		convertUTF8ToUnicode( inValue, &unicode );
+		convertUTF8ToUnicode( inValue.get(), &unicode );
 		rv =inElement->SetDescription( unicode );
 		nsTextFormatter::smprintf_free(unicode);
 	}
 	else if ( inAttribute == nsDependentCString(kExtensions)   )
 	{
-		rv = inElement->SetFileExtensions( inValue );
+		rv = inElement->SetFileExtensions( inValue.get() );
 	}
 	else if ( inAttribute == nsDependentCString(kMacType) )
 	{
 		PRUint32 value;
-		sscanf ( inValue, "%x", &value);
+		sscanf ( inValue.get(), "%x", &value);
 		rv = inElement->SetMacType( value );
 	}
 	else if ( inAttribute == nsDependentCString(kMacCreator) )
 	{
 		PRUint32 value;
-		sscanf ( inValue, "%x", &value);
+		sscanf ( inValue.get(), "%x", &value);
 		rv = inElement->SetMacCreator( value );
 	}
 	
