@@ -35,9 +35,10 @@ PROGA = .\$(OBJDIR)\TestRawCache.exe
 PROGB = .\$(OBJDIR)\TestCacheMgr.exe
 PROGC = .\$(OBJDIR)\TestWriteStream.exe
 PROGD = .\$(OBJDIR)\TestWriteSpeed.exe
+PROGE = .\$(OBJDIR)\TestCallbacks.exe
 PROGRAMS = \
 $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8) $(PROG9)\
-          $(PROGA) $(PROGB) $(PROGC) $(PROGD)
+          $(PROGA) $(PROGB) $(PROGC) $(PROGD) $(PROGE)
 
 LCFLAGS=-DUSE_NSREG -GX
 
@@ -84,5 +85,7 @@ $(PROGB): $(OBJDIR) TestCacheMgr.cpp
 
 $(PROGC): $(OBJDIR) TestWriteStream.cpp
 
-$(PROGC): $(OBJDIR) TestWriteSpeed.cpp
+$(PROGD): $(OBJDIR) TestWriteSpeed.cpp
+
+$(PROGE): $(OBJDIR) TestCallbacks.cpp
 
