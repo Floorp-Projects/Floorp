@@ -340,13 +340,11 @@ sub GenerateVersionTable {
     SendSQL("SELECT id, name FROM keyworddefs ORDER BY name");
     while (MoreSQLData()) {
         my ($id, $name) = FetchSQLData();
-        $::keywordsbyid{$id} = $name;
         $::keywordsbyname{$name} = $id;
         push(@::legal_keywords, $name);
     }
     print FID GenerateCode('@::legal_keywords');
     print FID GenerateCode('%::keywordsbyname');
-    print FID GenerateCode('%::keywordsbyid');
 
     print FID "1;\n";
     close FID;
