@@ -468,8 +468,11 @@ tbx_dirs()
     else
         if [ -n "${TBX_LOGDIR}" ] ; then
             TBX_LOGFILE_DIR="${TBX_LOGDIR}"
+        elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris8_64" ] ; then
+            TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8_64"
+        else
+            TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs"
         fi
-        TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8_64"
     fi
     echo "QA results in $RESULTDIR" >${TBX_LOGFILE_DIR}/qa.log
     O_FILE=ON
