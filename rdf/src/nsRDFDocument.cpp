@@ -34,11 +34,7 @@
 #include "nsIServiceManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsISupportsArray.h"
-#if 1
 #include "nsICollection.h"
-#else
-#include "nsISelection.h"
-#endif
 #include "nsIStreamListener.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
@@ -73,11 +69,7 @@ static NS_DEFINE_IID(kIWebShellIID,       NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID,    NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDTDIID,            NS_IDTD_IID);
 static NS_DEFINE_IID(kINameSpaceManagerIID, NS_INAMESPACEMANAGER_IID);
-#if 1
 static NS_DEFINE_IID(kICollectionIID,     NS_ICOLLECTION_IID);
-#else
-static NS_DEFINE_IID(kISelectionIID,      NS_ISELECTION_IID);
-#endif
 
 static NS_DEFINE_CID(kHTMLStyleSheetCID,      NS_HTMLSTYLESHEET_CID);
 static NS_DEFINE_CID(kParserCID,              NS_PARSER_IID); // XXX
@@ -88,11 +80,7 @@ static NS_DEFINE_CID(kRDFResourceManagerCID,  NS_RDFRESOURCEMANAGER_CID);
 static NS_DEFINE_CID(kTextNodeCID,            NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,       NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,    NS_NAMESPACEMANAGER_CID);
-#if 1
 static NS_DEFINE_CID(kRangeListCID,           NS_RANGELIST_CID);
-#else
-static NS_DEFINE_CID(kSelectionCID,           NS_SELECTION_CID);
-#endif
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -117,17 +105,10 @@ nsRDFDocument::nsRDFDocument()
     nsresult rv;
 
     // construct a selection object
-#if 1
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRangeListCID,
                                                     nsnull,
                                                     kICollectionIID,
                                                     (void**) &mSelection)))
-#else
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kSelectionCID,
-                                                    nsnull,
-                                                    kISelectionIID,
-                                                    (void**) &mSelection)))
-#endif
         PR_ASSERT(0);
 
     
@@ -723,29 +704,15 @@ nsRDFDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
 }
 
 NS_IMETHODIMP 
-nsRDFDocument::GetSelection(
-#if 1
-                            nsICollection** aSelection
-#else
-                            nsISelection *& aSelection
-#endif
-                            )
+nsRDFDocument::GetSelection(nsICollection** aSelection)
 {
     if (!mSelection) {
         PR_ASSERT(0);
-#if 1
         *aSelection = nsnull;
-#else
-        aSelection = nsnull;
-#endif
         return NS_ERROR_NOT_INITIALIZED;
     }
     NS_ADDREF(mSelection);
-#if 1
     *aSelection = mSelection;
-#else
-    aSelection = mSelection;
-#endif
     return NS_OK;
 }
 
