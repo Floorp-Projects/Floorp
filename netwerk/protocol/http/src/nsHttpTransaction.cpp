@@ -84,9 +84,7 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
         mNoContent = PR_TRUE;
 
     mReqHeaderBuf.SetLength(0);
-
-    rv = requestHead->Flatten(mReqHeaderBuf);
-    if (NS_FAILED(rv)) return rv;
+    requestHead->Flatten(mReqHeaderBuf);
 
     LOG2(("http request [\n%s]\n", mReqHeaderBuf.get()));
 

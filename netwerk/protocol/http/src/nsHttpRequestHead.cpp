@@ -27,7 +27,7 @@
 // nsHttpRequestHead
 //-----------------------------------------------------------------------------
 
-nsresult
+void
 nsHttpRequestHead::Flatten(nsACString &buf)
 {
     // note: the first append is intentional.
@@ -51,7 +51,4 @@ nsHttpRequestHead::Flatten(nsACString &buf)
     buf.Append("\r\n");
 
     mHeaders.Flatten(buf);
-
-    // do not append the final \r\n
-    return NS_OK;
 }

@@ -51,9 +51,9 @@ public:
     const char *PeekHeader(nsHttpAtom h)            { return mHeaders.PeekHeader(h); }
     nsresult SetHeader(nsHttpAtom h, const char *v) { return mHeaders.SetHeader(h, v); }
     nsresult GetHeader(nsHttpAtom h, char **v)      { return mHeaders.GetHeader(h, v); }
-    void     ClearHeaders()                         { mHeaders.Clear(); }
+    void ClearHeaders()                             { mHeaders.Clear(); }
 
-    nsresult Flatten(nsACString &);
+    void Flatten(nsACString &);
 
 private:
     nsHttpHeaderArray mHeaders;

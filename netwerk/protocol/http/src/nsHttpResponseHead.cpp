@@ -30,11 +30,11 @@
 // nsHttpResponseHead <public>
 //-----------------------------------------------------------------------------
 
-nsresult
+void
 nsHttpResponseHead::Flatten(nsACString &buf, PRBool pruneTransients)
 {
     if (mVersion == NS_HTTP_VERSION_0_9)
-        return NS_OK;
+        return;
 
     buf.Append("HTTP/");
     if (mVersion == NS_HTTP_VERSION_1_1)
@@ -50,8 +50,10 @@ nsHttpResponseHead::Flatten(nsACString &buf, PRBool pruneTransients)
     buf.Append(mStatusText);
     buf.Append("\r\n");
 
-    if (!pruneTransients)
-        return mHeaders.Flatten(buf);
+    if (!pruneTransients) {
+        mHeaders.Flatten(buf);
+        return;
+    }
 
     // otherwise, we need to iterate over the headers and only flatten
     // those that are appropriate.
@@ -79,7 +81,6 @@ nsHttpResponseHead::Flatten(nsACString &buf, PRBool pruneTransients)
         buf.Append(value);
         buf.Append("\r\n");
     }
-    return NS_OK;
 }
 
 nsresult
