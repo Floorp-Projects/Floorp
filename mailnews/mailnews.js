@@ -311,6 +311,6 @@ pref("mail.biff.play_sound",true);
 pref("mail.biff.use_default_sound",true);
 pref("mail.biff.sound_file","");
 // must be an URL.  (provide this back door for mac users, until we have a UI
-pref("mail.biff.default_sound_url","chrome://messenger/content/newmail.wav");
+pref("mail.biff.default_sound_url","");
 
 pref("mail.content_disposition_type", 0);
