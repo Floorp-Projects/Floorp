@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -88,7 +88,7 @@ protected:
   nsresult GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont);
 
   PRBool IsDisabled(nsIFrame* aFrame);
-  PRBool IsChecked(nsIFrame* aFrame);
+  PRBool IsChecked(nsIFrame* aFrame, PRBool aIsHTML);
   PRBool IsSelected(nsIFrame* aFrame);
   PRBool IsDefaultButton(nsIFrame* aFrame);
   PRBool IsIndeterminate(nsIFrame* aFrame);
@@ -136,4 +136,6 @@ private:
   nsCOMPtr<nsIAtom> mScrollbarAtom;
   nsCOMPtr<nsIAtom> mClassAtom;
   nsCOMPtr<nsIAtom> mSortDirectionAtom;
+  nsCOMPtr<nsIAtom> mInputAtom;
+  nsCOMPtr<nsIAtom> mInputCheckedAtom;
 };
