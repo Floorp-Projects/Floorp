@@ -96,32 +96,6 @@ outlinerchildren:-moz-outliner-cell-text(selected, focus) {
   color: #FFFFFF;
 }
 
-outlinerchildren:-moz-outliner-cell-text(primary) {
-  border-top: 1px solid transparent;
-  border-bottom: 1px solid transparent;
-}
-
-outlinerchildren:-moz-outliner-cell-text(primary, drop) {
-  background-color: #424F63;
-  color: #FFFFFF;
-}
-
-outlinerchildren:-moz-outliner-cell-text(primary, dropBefore) {
-  border-top: 1px solid #424F63;
-}
-
-outlinerchildren:-moz-outliner-cell-text(selected, primary, dropBefore) {
-  border-top: 1px solid #FFFFFF;
-}
-
-outlinerchildren:-moz-outliner-cell-text(primary, dropAfter) {
-  border-bottom: 1px solid #424F63;
-}
-
-outlinerchildren:-moz-outliner-cell-text(selected, primary, dropAfter) {
-  border-bottom: 1px solid #FFFFFF;
-}
-
 
 /* ::::: lines connecting cells ::::: */
 
@@ -133,10 +107,33 @@ outlinerchildren:-moz-outliner-line(selected, focus) {
   border: 1px dotted #FFFFFF;
 }
 
+
+/* ::::: outliner separator ::::: */
+
 outlinerchildren:-moz-outliner-separator {
   border-top: 1px solid #7A8490;
   border-bottom: 1px solid #FEFEFE;
 }
+
+
+/* ::::: drop feedback ::::: */
+
+outlinerchildren:-moz-outliner-cell-text(dropOn) {
+  background-color: #424F63;
+  color: #FFFFFF;
+}
+
+outlinerchildren:-moz-outliner-drop-feedback {
+  background-color: #424F63;
+  width: 50px;
+  height: 2px;
+  margin-left: 5px;
+}
+
+outlinerchildren:-moz-outliner-drop-feedback(selected) {
+  background-color: #FFFFFF;
+}
+
 
 /* ::::: outliner columns ::::: */
 

@@ -71,32 +71,6 @@ outlinerchildren:-moz-outliner-cell-text(selected, focus) {
   color: HighlightText;
 }
 
-outlinerchildren:-moz-outliner-cell-text(primary) {
-  border-top: 1px solid transparent;
-  border-bottom: 1px solid transparent;
-}
-
-outlinerchildren:-moz-outliner-cell-text(primary, drop) {
-  background-color: Highlight;
-  color: HighlightText;
-}
-
-outlinerchildren:-moz-outliner-cell-text(primary, dropBefore) {
-  border-top: 1px solid Highlight;
-}
-
-outlinerchildren:-moz-outliner-cell-text(selected, primary, dropBefore) {
-  border-top: 1px solid HighlightText;
-}
-
-outlinerchildren:-moz-outliner-cell-text(primary, dropAfter) {
-  border-bottom: 1px solid Highlight;
-}
-
-outlinerchildren:-moz-outliner-cell-text(selected, primary, dropAfter) {
-  border-bottom: 1px solid HighlightText;
-}
-
 
 /* ::::: lines connecting cells ::::: */
 
@@ -108,10 +82,33 @@ outlinerchildren:-moz-outliner-line {
   border: 1px dotted grey;
 }
 
+
+/* ::::: outliner separator ::::: */
+
 outlinerchildren:-moz-outliner-separator {
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDHighlight;
 }
+
+
+/* ::::: drop feedback ::::: */
+
+outlinerchildren:-moz-outliner-cell-text(dropOn) {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+outlinerchildren:-moz-outliner-drop-feedback {
+  background-color: Highlight;
+  width: 50px;
+  height: 2px;
+  margin-left: 5px;
+}
+
+outlinerchildren:-moz-outliner-drop-feedback(selected) {
+  background-color: HighlightText;
+}
+
 
 /* ::::: outliner columns ::::: */
 

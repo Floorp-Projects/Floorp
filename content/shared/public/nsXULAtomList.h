@@ -109,7 +109,8 @@ XUL_ATOM(primary, "primary")
 XUL_ATOM(current, "current")
 XUL_ATOM(seltype, "seltype")
 XUL_ATOM(sorted, "sorted")
-XUL_ATOM(drop, "drop")
+XUL_ATOM(dragSession, "dragSession")
+XUL_ATOM(dropOn, "dropOn")
 XUL_ATOM(dropBefore, "dropBefore")
 XUL_ATOM(dropAfter, "dropAfter")
 XUL_ATOM(mozoutlinerrow, ":-moz-outliner-row")
@@ -121,6 +122,7 @@ XUL_ATOM(mozoutlinerindentation, ":-moz-outliner-indentation")
 XUL_ATOM(mozoutlinerline, ":-moz-outliner-line")
 XUL_ATOM(mozoutlinerimage, ":-moz-outliner-image")
 XUL_ATOM(mozoutlinerseparator, ":-moz-outliner-separator")
+XUL_ATOM(mozoutlinerdropfeedback, ":-moz-outliner-drop-feedback")
 
 XUL_ATOM(menubar, "menubar") // An XP menu bar.
 XUL_ATOM(menu, "menu") // Represents an XP menu

@@ -316,6 +316,13 @@ public:
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer);
 
+  // This method paints a drop feedback in a given row of the outliner.
+  NS_IMETHOD PaintDropFeedback(nsIPresContext*      aPresContext,
+                               nsIRenderingContext& aRenderingContext,
+                               const nsRect&        aDirtyRect,
+                               nsFramePaintLayer    aWhichLayer,
+                               PRUint32             aFlags = 0);
+
   // This method is called with a specific style context and rect to
   // paint the background rect as if it were a full-blown frame.
   NS_IMETHOD PaintBackgroundLayer(nsIStyleContext* aStyleContext, nsIPresContext* aPresContext, 

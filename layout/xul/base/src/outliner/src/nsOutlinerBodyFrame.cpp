@@ -1548,6 +1548,10 @@ nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsOutlinerColumn* a
   if (sorted)
     mScratchArray->AppendElement(nsXULAtoms::sorted);
 
+  // drag session
+  if (mDragSession)
+    mScratchArray->AppendElement(nsXULAtoms::dragSession);
+
   if (aRowIndex != -1) {
     nsCOMPtr<nsIOutlinerSelection> selection;
     mView->GetSelection(getter_AddRefs(selection));
@@ -1584,12 +1588,12 @@ nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsOutlinerColumn* a
       mScratchArray->AppendElement(nsXULAtoms::leaf);
     }
 
-    // drop feedback
+    // drop orientation
     if (mDropAllowed && mDropRow == aRowIndex) {
       if (mDropOrient == nsIOutlinerView::inDropBefore)
         mScratchArray->AppendElement(nsXULAtoms::dropBefore);
       else if (mDropOrient == nsIOutlinerView::inDropOn)
-        mScratchArray->AppendElement(nsXULAtoms::drop);
+        mScratchArray->AppendElement(nsXULAtoms::dropOn);
       else if (mDropOrient == nsIOutlinerView::inDropAfter)
         mScratchArray->AppendElement(nsXULAtoms::dropAfter);
     }
@@ -1922,6 +1926,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
     }
   }
 
+  if (mDropAllowed)
+    PaintDropFeedback(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
+
   return NS_OK;
 }
 
@@ -2070,9 +2077,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
       if (overflow > 0)
         cellRect.width -= overflow;
       nsRect dirtyRect;
-      if (dirtyRect.IntersectRect(aDirtyRect, cellRect)) {
+      if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
         PaintCell(aRowIndex, currCol, cellRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
-      }
       currX += currCol->GetWidth();
     }
   }
@@ -2653,6 +2659,123 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsOutlinerBodyFrame::PaintDropFeedback(nsIPresContext*      aPresContext,
+                                                     nsIRenderingContext& aRenderingContext,
+                                                     const nsRect&        aDirtyRect,
+                                                     nsFramePaintLayer    aWhichLayer,
+                                                     PRUint32             aFlags)
+{
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    if (mDropOrient == nsIOutlinerView::inDropBefore ||
+        mDropOrient == nsIOutlinerView::inDropAfter) {
+      // Paint the drop feedback in between rows.
+
+      nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*(mDropRow-mTopRowIndex), mInnerBox.width, mRowHeight);
+      // Paint the drop feedback at the same position for both orientations.
+      if (mDropOrient == nsIOutlinerView::inDropAfter)
+        rowRect.y += mRowHeight;
+
+      nsRect dirtyRect;
+      if (dirtyRect.IntersectRect(aDirtyRect, rowRect)) {
+        // Find the primary cell.
+        nscoord currX = rowRect.x;
+        nsOutlinerColumn* currCol;
+        for (currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width;
+             currCol = currCol->GetNext()) {
+          if (currCol->IsPrimary())
+            break;
+          currX += currCol->GetWidth();
+        }
+        PrefillPropertyArray(mDropRow, currCol);
+
+        // Resolve the style to use for the drop feedback.
+        nsCOMPtr<nsIStyleContext> feedbackContext;
+        GetPseudoStyleContext(nsXULAtoms::mozoutlinerdropfeedback, getter_AddRefs(feedbackContext));
+
+        const nsStyleVisibility* vis = 
+          (const nsStyleVisibility*)feedbackContext->GetStyleData(eStyleStruct_Visibility);
+    
+        // Paint only if it is visible.
+        if (vis->IsVisibleOrCollapsed()) {
+          PRInt32 level;
+          mView->GetLevel(mDropRow, &level);
+
+          // If our previous or next row has greater level use that for 
+          // correct visual indentation.
+          if (mDropOrient == nsIOutlinerView::inDropBefore) {
+            if (mDropRow > 0) {
+              PRInt32 previousLevel;
+              mView->GetLevel(mDropRow - 1, &previousLevel);
+              if (previousLevel > level)
+                level = previousLevel;
+            }
+          }
+          else {
+            PRInt32 rowCount;
+            mView->GetRowCount(&rowCount);
+            if (mDropRow < rowCount - 1) {
+              PRInt32 nextLevel;
+              mView->GetLevel(mDropRow + 1, &nextLevel);
+              if (nextLevel > level)
+                level = nextLevel;
+            }
+          }
+
+          currX += mIndentation * level;
+
+          nsCOMPtr<nsIStyleContext> twistyContext;
+          GetPseudoStyleContext(nsXULAtoms::mozoutlinertwisty, getter_AddRefs(twistyContext));
+          nsRect twistySize = GetImageSize(mDropRow, currCol->GetID().get(), twistyContext);
+          const nsStyleMargin* twistyMarginData = (const nsStyleMargin*)twistyContext->GetStyleData(eStyleStruct_Margin);
+          nsMargin twistyMargin;
+          twistyMarginData->GetMargin(twistyMargin);
+          twistySize.Inflate(twistyMargin);
+          currX += twistySize.width;
+
+          const nsStylePosition* stylePosition = (const nsStylePosition*)
+            feedbackContext->GetStyleData(eStyleStruct_Position);
+
+          // Obtain the width for the drop feedback or use default value.
+          nscoord width;
+          if (stylePosition->mWidth.GetUnit() == eStyleUnit_Coord)
+            width = stylePosition->mWidth.GetCoordValue();
+          else {
+            // Use default width 50px.
+            float p2t;
+            mPresContext->GetPixelsToTwips(&p2t);
+            width = NSIntPixelsToTwips(50, p2t);
+          }
+
+          // Obtain the height for the drop feedback or use default value.
+          nscoord height;
+          if (stylePosition->mHeight.GetUnit() == eStyleUnit_Coord)
+            height = stylePosition->mHeight.GetCoordValue();
+          else {
+            // Use default height 2px.
+            float p2t;
+            mPresContext->GetPixelsToTwips(&p2t);
+            height = NSIntPixelsToTwips(2, p2t);
+          }
+
+          // Obtain the margins for the drop feedback and then deflate our rect
+          // by that amount.
+          nsRect feedbackRect(currX, rowRect.y, width, height);
+          const nsStyleMargin* styleMargin = (const nsStyleMargin*)
+            feedbackContext->GetStyleData(eStyleStruct_Margin);
+          nsMargin margin;
+          styleMargin->GetMargin(margin);
+          feedbackRect.Deflate(margin);
+
+          // Finally paint the drop feedback.
+          PaintBackgroundLayer(feedbackContext, aPresContext, aRenderingContext, feedbackRect, aDirtyRect);
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsOutlinerBodyFrame::PaintBackgroundLayer(nsIStyleContext* aStyleContext, nsIPresContext* aPresContext, 
                                           nsIRenderingContext& aRenderingContext, 
@@ -2704,6 +2827,18 @@ NS_IMETHODIMP nsOutlinerBodyFrame::ScrollToRow(PRInt32 aRow)
 {
   ScrollInternal(aRow);
   UpdateScrollbar();
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  // mac can't process the event loop during a drag, so if we're dragging,
+  // grab the scroll widget and make it paint synchronously. This is
+  // sorta slow (having to paint the entire tree), but it works.
+  if ( mDragSession ) {
+    nsCOMPtr<nsIWidget> scrollWidget;
+    mScrollbar->GetWindow(mPresContext, getter_AddRefs(scrollWidget));
+    if ( scrollWidget )
+      scrollWidget->Invalidate(PR_TRUE);
+  }
+#endif
 
   return NS_OK;
 }
@@ -2782,15 +2917,8 @@ nsOutlinerBodyFrame::ScrollInternal(PRInt32 aRow)
   PRInt32 absDelta = delta > 0 ? delta : -delta;
   if (hasBackground || absDelta*mRowHeight >= mRect.height)
     Invalidate();
-  else if (mOutlinerWidget) {
+  else if (mOutlinerWidget)
     mOutlinerWidget->Scroll(0, -delta*rowHeightAsPixels, nsnull);
-#if defined(XP_MAC) || defined(XP_MACOSX)
-    // mac can't process the event loop during a drag, so if we're dragging,
-    // update outliner widget synchronously.
-    if (mDragSession)
-      mOutlinerWidget->Update();
-#endif
-  }
 
   return NS_OK;
 }
@@ -2987,7 +3115,7 @@ nsOutlinerBodyFrame::OnDragExit(nsIDOMEvent* aEvent)
 {
   if (mDropAllowed) {
     mDropAllowed = PR_FALSE;
-    InvalidatePrimaryCell(mDropRow);
+    InvalidatePrimaryCell(mDropRow + (mDropOrient == nsIOutlinerView::inDropAfter ? 1 : 0));
   }
   else
     mDropAllowed = PR_FALSE;
@@ -3012,23 +3140,31 @@ nsOutlinerBodyFrame::OnDragExit(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsOutlinerBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
 {
-  // while we're here, handle tracking of scrolling during a drag.
-  PRBool scrollUp = PR_FALSE;
-  if (IsInDragScrollRegion(aEvent, &scrollUp)) {
-    if (mDropAllowed) {
-      // invalidate primary cell at old location.
-      mDropAllowed = PR_FALSE;
-      InvalidatePrimaryCell(mDropRow);
-    }
-    ScrollByLines(scrollUp ? -1 : 1);
+  if (! mView)
     return NS_OK;
-  }
 
   // compute the row mouse is over and the above/below/on state. Below we'll use this
   // to see if anything changed.
   PRInt32 newRow = -1;
   PRInt16 newOrient = -1;
   ComputeDropPosition(aEvent, &newRow, &newOrient);
+
+  // While we're here, handle tracking of scrolling during a drag.
+  PRInt32 rowCount;
+  mView->GetRowCount(&rowCount);
+  // Don't scroll if we are already at the top or bottom of the view.
+  if (newRow > 0 && newRow < rowCount - 1) {
+    PRBool scrollUp = PR_FALSE;
+    if (IsInDragScrollRegion(aEvent, &scrollUp)) {
+      if (mDropAllowed) {
+        // invalidate primary cell at old location.
+        mDropAllowed = PR_FALSE;
+        InvalidatePrimaryCell(mDropRow + (mDropOrient == nsIOutlinerView::inDropAfter ? 1 : 0));
+      }
+      ScrollByLines(scrollUp ? -1 : 1);
+      return NS_OK;
+    }
+  }
   
   // if changed from last time, invalidate primary cell at the old location and if allowed, 
   // invalidate primary cell at the new location. If nothing changed, just bail.
@@ -3036,7 +3172,7 @@ nsOutlinerBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
     // Invalidate row at the old location.
     if (mDropAllowed) {
       mDropAllowed = PR_FALSE;
-      InvalidatePrimaryCell(mDropRow);
+      InvalidatePrimaryCell(mDropRow + (mDropOrient == nsIOutlinerView::inDropAfter ? 1 : 0));
     }
 
     if (mOpenTimer) {
@@ -3077,7 +3213,7 @@ nsOutlinerBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
       if (canDropAtNewLocation) {
         // Invalidate row at the new location/
         mDropAllowed = canDropAtNewLocation;
-        InvalidatePrimaryCell(mDropRow);
+        InvalidatePrimaryCell(mDropRow + (mDropOrient == nsIOutlinerView::inDropAfter ? 1 : 0));
       }
     }
   }
