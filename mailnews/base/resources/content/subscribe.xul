@@ -32,6 +32,7 @@ Rights Reserved.
 		xmlns:nc="http://home.netscape.com/NC-rdf#"	
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
+		class="dialog"
         onload="SubscribeOnLoad()"
         style="padding:10px"> 
         
@@ -43,12 +44,13 @@ Rights Reserved.
 	<box align="horizontal" flex="100%">
 		<box align="vertical" flex="100%">
 			<box align="horizontal" flex="100%">
-				<html:div>Server:</html:div>
+				<html:div>&server.label;</html:div>
 				<titledbutton id="currentserver" value="..."/>
 			</box>
 			<box align="horizontal" flex="100%">
-				<html:div>Newsgroup:</html:div>
-				<html:input tabindex="0" type="text" id="name" style="width:100%"/>
+				<html:div>&newsgroup.label;</html:div>
+				<html:input tabindex="0" type="text" id="name" 
+						style="width:100%"/>
 			</box>
 		</box>
 	</box>
@@ -56,23 +58,30 @@ Rights Reserved.
 		<box align="vertical" flex="100%">
 
 <tree style="width:100px;" flex="100%"
-				datasources="rdf:msgaccountmanager rdf:mailnewsfolders" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
-				ref="rdf:null"
 	      		class="inset"
 				id="subscribetree"
+				datasources="rdf:msgaccountmanager rdf:mailnewsfolders" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
+				ref="rdf:null"
 				onclick="SubscribeOnClick(event);"> 
 
 	<template>
-		<rule nc:CanSubscribe="true">
+		<rule>
 	      	<treechildren>
 			<treeitem uri="...">
 		  	  		<treerow>
 						<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+						<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#CanSubscribe"/>
 					</treerow>
 			</treeitem>
 			</treechildren>
 		</rule>
 	</template>
+	<treehead>	
+		<treerow id="headRow">
+			<treecell value="&newsgroupHeader.label;"/>
+			<treecell value="&subscribedHeader.label;"/>
+		</treerow>
+	</treehead>	
 </tree>
 
 		</box>

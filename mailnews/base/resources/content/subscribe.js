@@ -4,7 +4,7 @@ var okCallback = null;
 
 function SubscribeOnLoad()
 {
-	dump("subscribeOnLoad()\n");
+	dump("SubscribeOnLoad()\n");
 
     gSubscribetree = document.getElementById('subscribetree');
     gCurrentServer = document.getElementById('currentserver');
