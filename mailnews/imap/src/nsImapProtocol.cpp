@@ -3087,11 +3087,6 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
 void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd)
 {
 
-  if (GetServerStateParser().GetDownloadingHeaders())
-  {
-    m_curHdrInfo->CacheLine(line, GetServerStateParser().CurrentResponseUID());
-    return;
-  }
   // when we duplicate this line, whack it into the native line
   // termination.  Do not assume that it really ends in CRLF
   // to start with, even though it is supposed to be RFC822
@@ -3170,6 +3165,11 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
     }
   }
   
+  if (GetServerStateParser().GetDownloadingHeaders())
+  {
+    m_curHdrInfo->CacheLine(localMessageLine, GetServerStateParser().CurrentResponseUID());
+    return;
+  }
   // if this line is for a different message, or the incoming line is too big
   if (((m_downloadLineCache.CurrentUID() != GetServerStateParser().CurrentResponseUID()) && !m_downloadLineCache.CacheEmpty()) ||
     (m_downloadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1)) )
