@@ -318,7 +318,13 @@ nsHTTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *aContext)
     }
 
     if (listener)
-        mResponseDataListener = new nsHTTPFinalListener (this, listener, aContext);
+    {
+        mResponseDataListener = new nsHTTPFinalListener(this,
+                listener,
+                aContext);
+        if (!mResponseDataListener)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
     else
         mResponseDataListener = listener;
 
@@ -1742,13 +1748,16 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
       httpProxy -> SetProxyPort (proxyPort);
   }
 
-  // Start the redirect...
-  nsIStreamListener   *sl = mResponseDataListener;
-  nsHTTPFinalListener *fl = NS_STATIC_CAST (nsHTTPFinalListener*, sl);
-
-  rv = channel->AsyncRead(fl -> GetListener (), mResponseContext);
-
-  fl -> Shutdown ();
+  if (mResponseDataListener)
+  {
+      // Start the redirect...
+      nsIStreamListener   *sl = mResponseDataListener;
+      nsHTTPFinalListener *fl = NS_STATIC_CAST (nsHTTPFinalListener*, sl);
+      rv = channel->AsyncRead(fl -> GetListener (), mResponseContext);
+      fl -> Shutdown ();
+  }
+  else
+      rv = NS_ERROR_FAILURE;
 
   //
   // Fire the OnRedirect(...) notification.
@@ -2192,10 +2201,15 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
     // Let it know that we have already tried prehost stuff...
     httpChannel->SetAuthTriedWithPrehost(PR_TRUE);
 
-    // Fire the new request...
-    nsIStreamListener   *sl = mResponseDataListener;
-    nsHTTPFinalListener *fl = NS_STATIC_CAST (nsHTTPFinalListener*, sl);
-    rv = channel->AsyncRead(fl -> GetListener (), mResponseContext);
+    if (mResponseDataListener)
+    {
+        // Fire the new request...
+        nsIStreamListener   *sl = mResponseDataListener;
+        nsHTTPFinalListener *fl = NS_STATIC_CAST (nsHTTPFinalListener*, sl);
+        rv = channel->AsyncRead(fl -> GetListener (), mResponseContext);
+    }
+    else
+        rv = NS_ERROR_FAILURE;
 
     // Abort the current response...  This will disconnect the consumer from
     // the response listener...  Thus allowing the entity that follows to
