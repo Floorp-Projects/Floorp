@@ -44,7 +44,7 @@ js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
 		     const char *filename, uintN lineno,
 		     JSPrincipals *principals)
 {
-    memset(cx, 0, sizeof *cg);
+    memset(cg, 0, sizeof *cg);
     cg->codeMark = PR_ARENA_MARK(&cx->codePool);
     cg->tempMark = PR_ARENA_MARK(&cx->tempPool);
     PR_ARENA_ALLOCATE(cg->base, &cx->codePool, CGINCR);
