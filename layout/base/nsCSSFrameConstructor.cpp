@@ -92,9 +92,6 @@
 #include "nsToolbarItemFrame.h"
 
 nsresult
-NS_NewDocumentElementFrame ( nsIFrame** aNewFrame );
-
-nsresult
 NS_NewThumbFrame ( nsIFrame** aNewFrame );
 
 nsresult
