@@ -25,6 +25,7 @@ bin/chrome/en-win.jar
 ; If you add a new directory you must explicitly call addDirectory in regus.jst
 bin/chrome/US.jar
 bin/defaults/profile/US/*
+bin/defaults/messenger/US/*
 bin/searchplugins/*
 
 [deflenus]
@@ -35,6 +36,7 @@ bin/defaults/profile/panels.rdf
 bin/defaults/profile/localstore.rdf
 bin/defaults/profile/search.rdf
 bin/defaults/profile/mimeTypes.rdf
+bin/defaults/messenger/mailViews.dat
 
 [xpcom]
 ; files required to initialize xpinstall for Install Wizard

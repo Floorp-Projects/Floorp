@@ -23,6 +23,7 @@ viewer:chrome:en-win.jar
 ; US 
 viewer:chrome:US.jar
 viewer:defaults:profile:US:*
+viewer:defaults:messenger:US:*
 viewer:Search Plugins:*
 
 [deflenus]
@@ -33,6 +34,7 @@ viewer:defaults:profile:panels.rdf
 viewer:defaults:profile:localstore.rdf
 viewer:defaults:profile:search.rdf
 viewer:defaults:profile:mimeTypes.rdf
+viewer:defaults:messenger:mailViews.dat
 
 [xpcom]
 viewer:Components:libjar.shlb 
