@@ -42,6 +42,6 @@ interface nsIProtocolProxyService : nsISupports
     */
     void addNoProxyFor(in string host, in long port);
     void removeNoProxyFor(in string host, in long port);
-
+    void configureFromPAC(in string url);
 };
 
