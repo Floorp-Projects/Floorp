@@ -135,6 +135,10 @@ ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
 endif
 
+ifeq ($(OS_ARCH),Darwin)
+EXTRA_DSO_LDOPTS := $(subst -dynamiclib -install_name @executable_path/\$@ -compatibility_version 1 -current_version 1,-execute,$(EXTRA_DSO_LDOPTS))
+endif
+
 $(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 
 ifeq ($(OS_ARCH),OS2)
@@ -146,7 +150,7 @@ $(EXE_DEF_FILE):
 	@echo 	WinQueryProperty		= PMMERGE.5450 >>$(EXE_DEF_FILE)
 	@echo 	WinRemoveProperty		= PMMERGE.5451 >>$(EXE_DEF_FILE)
 	@echo 	WinSetProperty			= PMMERGE.5452 >>$(EXE_DEF_FILE)
-	
+
 LDFLAGS += /NOE
 endif
 endif
@@ -167,4 +171,25 @@ install:: phoenix
 GARBAGE += phoenix
 GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js)
 
+endif
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+
+ifdef MOZ_DEBUG
+APP_NAME = PhoenixDebug
+else
+APP_NAME = Phoenix
+endif
+
+libs:: $(PROGRAM)
+	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
+	rsync -a $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
+	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
+	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
+	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
+	cp -RL $(srcdir)/macbuild/mach.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
+	echo -n APPLMOZZ > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
+
+clean clobber::
+	rm -rf $(DIST)/$(APP_NAME).app
 endif
