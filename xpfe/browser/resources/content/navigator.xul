@@ -173,11 +173,9 @@ Contributor(s):
                  onclick="URLBarClickHandler(event);">
           <deck id="page-proxy-deck">
             <image id="page-proxy-button"
-                   onclick="BookmarksUtils.addBookmarkForBrowser(getBrowser().webNavigation, true);"
                    ondraggesture="PageProxyDragGesture(event);"
                    tooltiptext="&proxyIcon.tooltip;"/>
             <image id="page-proxy-favicon" validate="never"
-                   onclick="BookmarksUtils.addBookmarkForBrowser(getBrowser().webNavigation, true);"
                    ondraggesture="PageProxyDragGesture(event);"
                    onload="this.parentNode.selectedIndex = 1;
                            event.stopPropagation();
