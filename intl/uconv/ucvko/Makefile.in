@@ -44,6 +44,7 @@ CPPSRCS		= \
 		nsUnicodeToCP949.cpp \
 		nsUnicodeToJohab.cpp \
 		nsJohabToUnicode.cpp \
+		nsUnicodeToJamoTTF.cpp \
 		$(NULL)
 
 ifdef MOZ_EXTRA_X11CONVERTERS
