@@ -226,14 +226,9 @@ nsEventStateManager::Init()
       sGeneralAccesskeyModifier =
         nsContentUtils::GetIntPref("ui.key.generalAccessKey",
                                    sGeneralAccesskeyModifier);
-
-      nsIContent::sTabFocusModel =
-        nsContentUtils::GetIntPref("accessibility.tabfocus",
-                                   nsIContent::sTabFocusModel);
     }
     prefBranch->AddObserver("accessibility.accesskeycausesactivation", this, PR_TRUE);
     prefBranch->AddObserver("accessibility.browsewithcaret", this, PR_TRUE);
-    prefBranch->AddObserver("accessibility.tabfocus", this, PR_TRUE);
     prefBranch->AddObserver("nglayout.events.dispatchLeftClickOnly", this, PR_TRUE);
     prefBranch->AddObserver("ui.key.generalAccessKey", this, PR_TRUE);
 #if 0
@@ -310,7 +305,6 @@ nsEventStateManager::Shutdown()
   if (prefBranch) {
     prefBranch->RemoveObserver("accessibility.accesskeycausesactivation", this);
     prefBranch->RemoveObserver("accessibility.browsewithcaret", this);
-    prefBranch->RemoveObserver("accessibility.tabfocus", this);
     prefBranch->RemoveObserver("nglayout.events.dispatchLeftClickOnly", this);
     prefBranch->RemoveObserver("ui.key.generalAccessKey", this);
 #if 0
@@ -353,10 +347,6 @@ nsEventStateManager::Observe(nsISupports *aSubject,
                                     sKeyCausesActivation);
     } else if (data.EqualsLiteral("accessibility.browsewithcaret")) {
       ResetBrowseWithCaret();
-    } else if (data.EqualsLiteral("accessibility.tabfocus")) {
-      nsIContent::sTabFocusModel =
-        nsContentUtils::GetIntPref("accessibility.tabfocus",
-                                   nsIContent::sTabFocusModel);
     } else if (data.EqualsLiteral("nglayout.events.dispatchLeftClickOnly")) {
       sLeftClickOnly =
         nsContentUtils::GetBoolPref("nglayout.events.dispatchLeftClickOnly",
@@ -3084,6 +3074,10 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
 NS_IMETHODIMP
 nsEventStateManager::ShiftFocus(PRBool aForward, nsIContent* aStart)
 {
+  nsCOMPtr<nsILookAndFeel> lookNFeel(do_GetService(kLookAndFeelCID));
+  lookNFeel->GetMetric(nsILookAndFeel::eMetric_TabFocusModel,
+                       nsIContent::sTabFocusModel);
+
   // We use mTabbedThroughDocument to indicate that we have passed
   // the end (or beginning) of the document we started tabbing from,
   // without finding anything else to focus.  If we pass the end of

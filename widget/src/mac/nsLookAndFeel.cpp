@@ -534,7 +534,21 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_TreeScrollLinesMax:
         aMetric = 3;
         break;
+    case eMetric_TabFocusModel:
+        CFPropertyListRef fullKeyboardAccessProperty;
+        fullKeyboardAccessProperty = ::CFPreferencesCopyValue (CFSTR("AppleKeyboardUIMode"),
+                                                               kCFPreferencesAnyApplication,
+                                                               kCFPreferencesCurrentUser,
+                                                               kCFPreferencesAnyHost);
+        PRInt32 fullKeyboardAccessPrefVal;
+        ::CFNumberGetValue(fullKeyboardAccessProperty, kCFNumberIntType,
+                           &fullKeyboardAccessPrefVal);
 
+        if (fullKeyboardAccessPrefVal == 3) // "Full keyboard access" is on
+          aMetric = 7; // everything that can be focused
+        else
+          aMetric = 1; // Textboxes
+        break;
     default:
         aMetric = 0;
         res = NS_ERROR_FAILURE;
