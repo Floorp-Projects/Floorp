@@ -966,7 +966,7 @@ StartupProfile(char *sProfileDir, char *sProfileName)
 		PRBool exists = PR_FALSE;
 		PRBool isDir = PR_FALSE;
 		profileDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-		rv = profileDir->InitWithPath(sProfileDir);
+		rv = profileDir->InitWithNativePath(nsDependentCString(sProfileDir));
 		if (NS_FAILED(rv))
 		  	return NS_ERROR_FAILURE;
 		profileDir->Exists(&exists);
