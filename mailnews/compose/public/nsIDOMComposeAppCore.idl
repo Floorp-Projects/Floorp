@@ -24,11 +24,18 @@
 #include "xulstubs.idl"
 #include "nsIDOMEditorAppCore.idl"
 
+%{ C++
+#include "nsIDOMXULTreeElement.h"
+#include "nsIDOMNodeList.h"
+%}
+
+
 native nsAutoString(nsAutoString&);
 
 [object, uuid(D4779C9A-CAA6-11d2-A6F2-0060B0EB39B5)]
 interface nsIDOMComposeAppCore : nsIDOMBaseAppCore {
 
+	void Dispose();
     void SetWindow(in nsIDOMWindow ptr);
     void SetEditor(in nsIDOMEditorAppCore ptr);
     void CompleteCallback(in nsAutoString script);
