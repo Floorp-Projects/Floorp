@@ -69,6 +69,7 @@ interface nsIProfile : nsISupports {
 
     void createNewProfile(in wstring profileName, 
                           in wstring nativeProfileDir, 
+                          in wstring langcode,
                           in boolean useExistingDir);
 
     void renameProfile(in wstring oldName, in wstring newName);

@@ -145,3 +145,12 @@ function setDisplayToDefaultFolder()
   // reset the display field
   updateProfileName();
 }
+
+function selectionChanged()
+{
+    var selected = document.getElementById("langList").selectedItem;
+    dump("\n --> selectionChanged, val=" + selected.getAttribute("value") + 
+	", id=" + selected.getAttribute("id") +
+	", data=" + selected.getAttribute("data") +
+	"\n");	
+}

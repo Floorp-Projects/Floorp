@@ -56,11 +56,44 @@
       <button id="useDefault" value="&button.usedefault.label;" oncommand="setDisplayToDefaultFolder();" disabled="true"/>
     </box>
   </box>
+
+  <titledbox>
+    <title><text value="&langSelBox.title.label;" /></title>
+
+    <box id="localeListbox" flex="100">
+      <box flex="10" orient="vertical">
+        <text class="label" 
+              value="&langList.txt.label;" 
+              accesskey="l" for="langList"/>
+        <menulist id="langList" 
+              ref="urn:mozilla:locale:root" datasources="rdf:chrome"
+              sortResource="http://www.mozilla.org/rdf/chrome#name" 
+              sortDirection="ascending" 
+              oncommand="selectionChanged()">
+              
+          <template>
+            <menupopup>
+              <menuitem value="rdf:http://www.mozilla.org/rdf/chrome#displayName" 
+                        data="rdf:http://www.mozilla.org/rdf/chrome#name" 
+                        uri="..."/>
+            </menupopup>
+          </template>
+        </menulist>  
+      </box>
+      <box flex="20" halign="right" orient="vertical">
+        <spring flex="10"/>
+<!--
+        <button flex="1" valign="bottom" 
+                value="&moreBtn.label;" />
+-->
+      </box>
+    </box>
+  </titledbox>
+  <!-- end here -->
+
+  <separator/>
     
   <!--spring flex="1"/-->
-
   <html id="finishtext">&pnl2.finish.text;</html> 
-
-
 </window>
 
