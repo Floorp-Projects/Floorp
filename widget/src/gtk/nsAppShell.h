@@ -25,7 +25,6 @@
 
 #include "nsIAppShell.h"
 #include "nsIEventQueue.h"
-
 #include <gtk/gtk.h>
 
 /**
@@ -41,8 +40,7 @@ public:
   NS_DECL_NSIAPPSHELL
 
 private:
-  nsIEventQueue* mEventQueue;
+  nsCOMPtr<nsIEventQueue> mEventQueue;
 };
 
 #endif // nsAppShell_h__
-

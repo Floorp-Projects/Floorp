@@ -21,6 +21,7 @@
  */
 
 #include "prmon.h"
+#include "plhash.h"
 #include "nsCOMPtr.h"
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
@@ -37,10 +38,11 @@
 #include "nsIWidget.h"
 #include "nsIPref.h"
 
-
 #include "glib.h"
 
 static PRBool sInitialized = PR_FALSE;
+static PLHashTable *sQueueHashTable = nsnull;
+static PLHashTable *sCountHashTable = nsnull;
 
 struct OurGdkIOClosure {
   GdkInputFunction  function;
@@ -73,6 +75,9 @@ our_gdk_input_add (gint              source,
                    gpointer          data,
                    gint              priority)
 {
+#ifdef DEBUG_APPSHELL
+  printf("our_gdk_input_add()\n");
+#endif
   guint result;
   OurGdkIOClosure *closure = g_new (OurGdkIOClosure, 1);
   GIOChannel *channel;
@@ -107,8 +112,10 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 {
-  mEventQueue  = nsnull;
   NS_INIT_REFCNT();
+#ifdef DEBUG_APPSHELL
+  printf("nsAppShell::nsAppShell()\n");
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -118,6 +125,11 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
+#ifdef DEBUG_APPSHELL
+  printf("nsAppShell::~nsAppShell()\n");
+#endif
+  // XXX we need to free this hashtable
+  //  PL_HashTableDestroy(sQueueHashTable);
 }
 
 //-------------------------------------------------------------------------
@@ -149,39 +161,38 @@ static void event_processor_callback(gpointer data,
 static void
 HandleColormapPrefs( void )
 {
-	PRInt32 ivalue = 0;
-        PRBool bvalue;
-	nsresult rv;
+  PRInt32 ivalue = 0;
+  PRBool bvalue;
+  nsresult rv;
 
-	/* The default is to do nothing. INSTALLCMAP has precedence over
-	   NCOLS. Ignore the fact we can't do this if it fails, as it is
-	   not critical */
- 
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	if (NS_FAILED(rv) || (!prefs)) 
-		return;
+  /* The default is to do nothing. INSTALLCMAP has precedence over
+     NCOLS. Ignore the fact we can't do this if it fails, as it is
+     not critical */
+  nsCOMPtr<nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
+  if (NS_FAILED(rv) || (!prefs)) 
+    return;
        
-	/* first check ncols */
+  /* first check ncols */
  
-	rv = prefs->GetIntPref(PREF_NCOLS, &ivalue);
-	if (NS_SUCCEEDED(rv) && ivalue >= 0 && ivalue <= 255 ) {
-		if ( ivalue > 6*6*6 )	// workaround for old GdkRGB's
-			ivalue = 6*6*6;
-		gdk_rgb_set_min_colors( ivalue );
-		return;
-	}
+  rv = prefs->GetIntPref(PREF_NCOLS, &ivalue);
+  if (NS_SUCCEEDED(rv) && ivalue >= 0 && ivalue <= 255 ) {
+    if ( ivalue > 6*6*6 ) // workaround for old GdkRGB's
+      ivalue = 6*6*6;
+    gdk_rgb_set_min_colors( ivalue );
+    return;
+  }
 
-	/* next check installcmap */
+  /* next check installcmap */
 
-	rv = prefs->GetBoolPref(PREF_INSTALLCMAP, &bvalue);
-	if (NS_SUCCEEDED(rv)) {
-		if ( PR_TRUE == bvalue )
-			gdk_rgb_set_install( TRUE );	// force it
-		else
-			gdk_rgb_set_min_colors( 0 );
-	}
+  rv = prefs->GetBoolPref(PREF_INSTALLCMAP, &bvalue);
+  if (NS_SUCCEEDED(rv)) {
+    if ( PR_TRUE == bvalue )
+      gdk_rgb_set_install( TRUE );  // force it
+    else
+      gdk_rgb_set_min_colors( 0 );
+  }
 }
-	
+  
 //-------------------------------------------------------------------------
 //
 // Create the application shell
@@ -190,6 +201,9 @@ HandleColormapPrefs( void )
 
 NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 {
+#ifdef DEBUG_APPSHELL
+  printf("nsAppShell::Create()\n");
+#endif
   if (sInitialized)
     return NS_OK;
 
@@ -203,10 +217,8 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 
   nsresult rv;
 
-  nsCOMPtr<nsICmdLineService> cmdLineArgs;
-  cmdLineArgs = do_GetService(kCmdLineServiceCID);
-  if (cmdLineArgs)
-  {
+  nsCOMPtr<nsICmdLineService> cmdLineArgs = do_GetService(kCmdLineServiceCID);
+  if (cmdLineArgs) {
     rv = cmdLineArgs->GetArgc(&argc);
     if(NS_FAILED(rv))
       argc = bac ? *bac : 0;
@@ -223,8 +235,6 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 #ifdef MOZ_GLE
   gle_init (&argc, &argv);
 #endif
-
-  // delete the cmdLineArgs thing?
 
   HandleColormapPrefs();
   gdk_rgb_init();
@@ -249,30 +259,39 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 NS_IMETHODIMP nsAppShell::Spinup()
 {
   nsresult   rv = NS_OK;
-  
-  // Get the event queue service 
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+
+#ifdef DEBUG_APPSHELL
+  printf("nsAppShell::Spinup()\n");
+#endif
+
+  // Get the event queue service
+  nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(kEventQueueServiceCID, &rv);
+
   if (NS_FAILED(rv)) {
     NS_ASSERTION("Could not obtain event queue service", PR_FALSE);
     return rv;
   }
 
   //Get the event queue for the thread.
-  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
   
-  // If a queue already present use it.
+  // If we got an event queue, use it.
   if (mEventQueue)
-    return rv;
+    goto done;
 
-  // Create the event queue for the thread
+  // otherwise create a new event queue for the thread
   rv = eventQService->CreateThreadEventQueue();
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     NS_ASSERTION("Could not create the thread event queue", PR_FALSE);
     return rv;
   }
 
-  //Get the event queue for the thread
-  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);
+  // Ask again nicely for the event queue now that we have created one.
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
+
+  // XXX shouldn't this be automatic?
+ done:
+  ListenToEventQueue(mEventQueue, PR_TRUE);
   
   return rv;
 }
@@ -284,10 +303,13 @@ NS_IMETHODIMP nsAppShell::Spinup()
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::Spindown()
 {
-  if (mEventQueue)
-  { 
+#ifdef DEBUG_APPSHELL
+  printf("nsAppShell::Spindown()\n");
+#endif
+  if (mEventQueue) {
+    ListenToEventQueue(mEventQueue, PR_FALSE);
     mEventQueue->ProcessPendingEvents();
-    NS_RELEASE(mEventQueue);
+    mEventQueue = nsnull;
   }
   return NS_OK;
 }
@@ -305,11 +327,7 @@ NS_IMETHODIMP nsAppShell::Run()
   if (!mEventQueue)
     return NS_ERROR_NOT_INITIALIZED;
 
-    
-  our_gdk_input_add(mEventQueue->GetEventQueueSelectFD(),
-                    event_processor_callback,
-                    mEventQueue, 
-                    G_PRIORITY_DEFAULT);
+  // kick up gtk_main.  this won't return until gtk_main_quit is called
   gtk_main();
 
   Spindown();
@@ -335,6 +353,7 @@ NS_IMETHODIMP nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
 {
   aRealEvent = PR_FALSE;
   aEvent = 0;
+
   return NS_OK;
 }
 
@@ -345,15 +364,69 @@ NS_IMETHODIMP nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
   if (!mEventQueue)
     return NS_ERROR_NOT_INITIALIZED;
-  
+
   g_main_iteration(PR_TRUE);
 
-  return mEventQueue->ProcessPendingEvents();
+  return NS_OK;
+}
+
+#define NUMBER_HASH_KEY(_num) ((PLHashNumber) _num)
+
+static PLHashNumber
+IntHashKey(PRInt32 key)
+{
+  return NUMBER_HASH_KEY(key);
 }
 
 NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
                                              PRBool aListen)
 {
+#ifdef DEBUG_APPSHELL
+  printf("ListenToEventQueue(%p, %d) this=%p\n", aQueue, aListen, this);
+#endif
+  if (!sQueueHashTable) {
+    sQueueHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
+                                      PL_CompareValues, PL_CompareValues, 0, 0);
+  }
+  if (!sCountHashTable) {
+    sCountHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
+                                      PL_CompareValues, PL_CompareValues, 0, 0);
+  }    
+
+  if (aListen) {
+    /* add listener */
+    PRInt32 key = aQueue->GetEventQueueSelectFD();
+
+    /* only add if we arn't already in the table */
+    if (!PL_HashTableLookup(sQueueHashTable, GINT_TO_POINTER(key))) {
+      gint tag;
+      tag = our_gdk_input_add(aQueue->GetEventQueueSelectFD(),
+                              event_processor_callback,
+                              aQueue,
+                              G_PRIORITY_DEFAULT);
+      if (tag >= 0) {
+        PL_HashTableAdd(sQueueHashTable, GINT_TO_POINTER(key), GINT_TO_POINTER(tag));
+      }
+    }
+    /* bump up the count */
+    gint count = GPOINTER_TO_INT(PL_HashTableLookup(sCountHashTable, GINT_TO_POINTER(key)));
+    PL_HashTableAdd(sCountHashTable, GINT_TO_POINTER(key), GINT_TO_POINTER(count+1));
+  } else {
+    /* remove listener */
+    PRInt32 key = aQueue->GetEventQueueSelectFD();
+
+    gint count = GPOINTER_TO_INT(PL_HashTableLookup(sCountHashTable, GINT_TO_POINTER(key)));
+    if (count - 1 == 0) {
+      gint tag = GPOINTER_TO_INT(PL_HashTableLookup(sQueueHashTable, GINT_TO_POINTER(key)));
+      if (tag > 0) {
+        gdk_input_remove(tag);
+        PL_HashTableRemove(sQueueHashTable, GINT_TO_POINTER(key));
+      }
+    }
+    PL_HashTableAdd(sCountHashTable, GINT_TO_POINTER(key), GINT_TO_POINTER(count-1));
+
+  }
+
   return NS_OK;
 }
 
