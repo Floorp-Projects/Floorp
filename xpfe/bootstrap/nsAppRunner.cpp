@@ -742,7 +742,7 @@ int main(int argc, char* argv[])
   //       has responsibility to release it.
   nsISplashScreen *splash = 0;
   // We can't use the command line service here because it isn't running yet
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(NTO)
   PRBool dosplash = PR_FALSE;
   for (int i=0; i<argc; i++)
     if ((PL_strcasecmp(argv[i], "-splash") == 0)
