@@ -2643,35 +2643,28 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
                         PRBool aDamageDeletedLines,
                         nsIFrame*& aFrameResult)
 {
-  nsresult rv = NS_OK;
-  PRBool stopPulling;
   aFrameResult = nsnull;
 
   // First check our remaining lines
-  while (end_lines() != aLine.next()) {
-    rv = PullFrameFrom(aState, aLine, mLines, aLine.next(), PR_FALSE,
-                       aDamageDeletedLines, aFrameResult, stopPulling);
-    if (NS_FAILED(rv) || stopPulling) {
-      return rv;
-    }
+  if (end_lines() != aLine.next()) {
+    return PullFrameFrom(aState, aLine, mLines, aLine.next(), PR_FALSE,
+                         aDamageDeletedLines, aFrameResult);
   }
 
   // Pull frames from the next-in-flow(s) until we can't
   nsBlockFrame* nextInFlow = aState.mNextInFlow;
   while (nsnull != nextInFlow) {
-    if (nextInFlow->mLines.empty()) {
-      nextInFlow = (nsBlockFrame*) nextInFlow->mNextInFlow;
-      aState.mNextInFlow = nextInFlow;
-      continue;
+    if (! nextInFlow->mLines.empty()) {
+      return PullFrameFrom(aState, aLine, nextInFlow->mLines,
+                           nextInFlow->mLines.begin(), PR_TRUE,
+                           aDamageDeletedLines, aFrameResult);
     }
-    rv = PullFrameFrom(aState, aLine, nextInFlow->mLines,
-                       nextInFlow->mLines.begin(), PR_TRUE,
-                       aDamageDeletedLines, aFrameResult, stopPulling);
-    if (NS_FAILED(rv) || stopPulling) {
-      return rv;
-    }
+
+    nextInFlow = (nsBlockFrame*) nextInFlow->mNextInFlow;
+    aState.mNextInFlow = nextInFlow;
   }
-  return rv;
+
+  return NS_OK;
 }
 
 /**
@@ -2694,8 +2687,7 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
                             nsLineList::iterator aFromLine,
                             PRBool aUpdateGeometricParent,
                             PRBool aDamageDeletedLines,
-                            nsIFrame*& aFrameResult,
-                            PRBool& aStopPulling)
+                            nsIFrame*& aFrameResult)
 {
   nsLineBox* fromLine = aFromLine;
   NS_ABORT_IF_FALSE(fromLine, "bad line to pull from");
@@ -2706,7 +2698,6 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
     // If our line is not empty and the child in aFromLine is a block
     // then we cannot pull up the frame into this line. In this case
     // we stop pulling.
-    aStopPulling = PR_TRUE;
     aFrameResult = nsnull;
   }
   else {
@@ -2754,7 +2745,6 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
     }
 
     // Stop pulling because we found a frame to pull
-    aStopPulling = PR_TRUE;
     aFrameResult = frame;
 #ifdef DEBUG
     VerifyLines(PR_TRUE);
