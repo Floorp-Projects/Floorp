@@ -137,7 +137,6 @@ locales/en-US.jar:
     communicator/locale/pref/pref-winhooks.dtd            (prefwindow/resources/locale/en-US/pref-winhooks.dtd)
     communicator/locale/pref/pref-passwords.dtd           (prefwindow/resources/locale/en-US/pref-passwords.dtd)
     communicator/locale/regviewer/regviewer.dtd           (regviewer/locale/en-US/regviewer.dtd)
-    communicator/locale/related/related-panel.dtd         (related/resources/locale/en-US/related-panel.dtd)
     communicator/locale/search/find.dtd                   (search/resources/locale/en-US/find.dtd)
     communicator/locale/search/findresults.dtd            (search/resources/locale/en-US/findresults.dtd)
     communicator/locale/search/internet.dtd               (search/resources/locale/en-US/internet.dtd)
