@@ -46,6 +46,10 @@
 #include "nsILocalFile.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
+#include "nsIEventQueueService.h"
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static nsIEventQueue* gEventQ = nsnull;
+
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -83,7 +87,7 @@ public:
   PRBool HaveError() const { return mError; }
 
 protected:
-  ~StreamToFile();
+  virtual ~StreamToFile();
 
   PRBool mDone;
   PRBool mError;
@@ -215,12 +219,21 @@ PageGrabber::NextFile(const char* aExtension)
 nsresult
 PageGrabber::Grab(const nsAFlatCString& aURL)
 {
+  nsresult rv;
+  // Create the Event Queue for this thread...
+  // Unix needs this
+  nsCOMPtr<nsIEventQueueService> eventQService =
+           do_GetService(kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
+
   nsCOMPtr<nsILocalFile> file = NextFile("html");
   if (!file) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   FILE* fp;
-  nsresult rv = file->OpenANSIFileDesc("wb", &fp);
+  rv = file->OpenANSIFileDesc("wb", &fp);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -243,6 +256,7 @@ PageGrabber::Grab(const nsAFlatCString& aURL)
   if (NS_FAILED(rv)) return rv;
 
   PRBool error = PR_FALSE;
+
   // Start the URL load...
   StreamToFile* copier = new StreamToFile(fp);
   if(copier) {
@@ -273,10 +287,18 @@ PageGrabber::Grab(const nsAFlatCString& aURL)
       }
     }
   #endif
+  #ifdef XP_UNIX
+    while ( !copier->IsDone() ) {
+      PLEvent *gEvent;
+      gEventQ->WaitForEvent(&gEvent);
+      gEventQ->HandleEvent(gEvent);
+    }
+  #endif
 
     error = copier->HaveError();
     NS_RELEASE(copier);
   }
+
   return error ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
@@ -294,7 +316,10 @@ main(int argc, char **argv)
   PageGrabber* grabber = new PageGrabber();
   if(grabber) {
     nsCOMPtr <nsILocalFile> directory(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));;
-    nsresult rv = directory->InitWithNativePath(nsDependentCString(argv[2]));
+    if (NS_FAILED(directory->InitWithNativePath(nsDependentCString(argv[2])))) {
+      fprintf(stderr, "InitWithNativePath failed\n");
+      return -2;
+    }
     grabber->Init(directory);
     if (NS_OK != grabber->Grab(nsDependentCString(argv[1]))) {
       return -1;
