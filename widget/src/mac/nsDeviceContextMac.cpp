@@ -334,8 +334,14 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
 	//aWidth = bounds.right - bounds.left;
 	//aHeight = bounds.bottom - bounds.top;
 	
-	aHeight = NSToIntRound((bounds.bottom - bounds.top)*mDevUnitsToAppUnits);
-	aWidth = NSToIntRound((bounds.right - bounds.left) * mDevUnitsToAppUnits);
+	
+	if(mSpec) {
+		aWidth = (mPageRect.right-mPageRect.left)*mDevUnitsToAppUnits;
+		aHeight = (mPageRect.bottom-mPageRect.top)*mDevUnitsToAppUnits;
+	}else {
+		aHeight = NSToIntRound((bounds.bottom - bounds.top)*mDevUnitsToAppUnits);
+		aWidth = NSToIntRound((bounds.right - bounds.left) * mDevUnitsToAppUnits);
+	}
 	
 	return NS_OK;	
 }
@@ -361,12 +367,14 @@ NS_IMETHODIMP nsDeviceContextMac::GetClientRect(nsRect &aRect)
 
 NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext)
 {
-GrafPtr	curPort;	
-double	pix_Inch;
-THPrint	thePrintRecord;			// handle to print record
+GrafPtr							curPort;	
+THPrint							thePrintRecord;			// handle to print record
+double							pix_Inch;
+nsDeviceContextMac	*macDC;
 
 	aContext = new nsDeviceContextMac();
-	((nsDeviceContextMac*)aContext)->mSpec = aDevice;
+	macDC = (nsDeviceContextMac*)aContext;
+	macDC->mSpec = aDevice;
 	NS_ADDREF(aDevice);
 	
 	::GetPort(&curPort);
@@ -376,11 +384,11 @@ THPrint	thePrintRecord;			// handle to print record
 	
 	((nsDeviceContextMac*)aContext)->Init(curPort);
 
-	((nsDeviceContextMac*)aContext)->mPageRect = (**thePrintRecord).prInfo.rPage;	
-	((nsDeviceContextMac*)aContext)->mTwipsToPixels = pix_Inch/(float)NSIntPointsToTwips(72);
-	((nsDeviceContextMac*)aContext)->mPixelsToTwips = 1.0f/mTwipsToPixels;
-  ((nsDeviceContextMac*)aContext)->mAppUnitsToDevUnits = mTwipsToPixels;
-  ((nsDeviceContextMac*)aContext)->mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
+	macDC->mPageRect = (**thePrintRecord).prInfo.rPage;	
+	macDC->mTwipsToPixels = pix_Inch/(float)NSIntPointsToTwips(72);
+	macDC->mPixelsToTwips = 1.0f/macDC->mTwipsToPixels;
+  macDC->mAppUnitsToDevUnits = macDC->mTwipsToPixels;
+  macDC->mDevUnitsToAppUnits = 1.0f / macDC->mAppUnitsToDevUnits;
 	//((nsDeviceContextMac*)aContext)->Init(this);
   return NS_OK;
 }
