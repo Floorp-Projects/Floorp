@@ -66,10 +66,13 @@ private:
 
   static PRInt32 sInstanceCount;
 
+  typedef enum { eUninitialized=0, eInvalid, eValid, ePrev, eNext } TSDIteratorStatus;
+
   nsCOMPtr<nsIDOMDocument>        mDOMDocument;
   nsCOMPtr<nsIPresShell>          mPresShell;
   nsCOMPtr<nsIEditor>             mEditor;
   nsCOMPtr<nsIContentIterator>    mIterator;
+  TSDIteratorStatus               mIteratorStatus;
   nsCOMPtr<nsIContent>            mPrevTextBlock;
   nsCOMPtr<nsIContent>            mNextTextBlock;
   nsCOMPtr<nsIEditActionListener> mNotifier;
