@@ -71,15 +71,14 @@ var gIsLoadingBlank = false;
 var gLastValidURLStr = "";
 var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
-#ifdef XP_WIN
-var gClickSelectsAll = true;
-#endif
 #ifdef XP_UNIX
 #ifdef XP_MACOSX
 var gClickSelectsAll = true;
 #else
 var gClickSelectsAll = false;
 #endif
+#else
+var gClickSelectsAll = true;
 #endif
 var gIgnoreFocus = false;
 var gIgnoreClick = false;
