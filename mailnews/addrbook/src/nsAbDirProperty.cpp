@@ -327,7 +327,7 @@ NS_IMETHODIMP nsAbDirProperty::GetDirectoryProperties(nsIAbDirectoryProperties *
   rv = GetDirPrefId(prefId);
 
   if (NS_SUCCEEDED(rv)) {
-    server->prefName = nsCRT::strdup(prefId.get());
+    server->prefName = ToNewCString(prefId);
     DIR_GetPrefsForOneServer(server, PR_FALSE, PR_FALSE);
 
     // Now create the obj and move info in DIR_Server to it.

@@ -703,7 +703,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIAbBooleanExpression> expression (do_QueryInterface (supportsExpression, &rv));
-    nsCString filter;
+    nsCAutoString filter;
     rv = nsAbBoolExprToLDAPFilter::Convert (expression, filter);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -722,7 +722,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     */
     if(filter.IsEmpty())
     {
-        filter += NS_LITERAL_CSTRING("(objectclass=inetorgperson)");
+        filter.AssignLiteral("(objectclass=inetorgperson)");
     }
 
     // Set up the search ldap url
@@ -887,7 +887,7 @@ nsresult nsAbLDAPDirectoryQuery::getLdapReturnAttributes (
             continue;
 
         if (i)
-            returnAttributes.Append (",");
+            returnAttributes.Append (PRUnichar (','));
 
         returnAttributes.Append (tableEntry->ldapProperty);
     }

@@ -575,12 +575,11 @@ nsresult nsAbDirectoryQuery::matchCardCondition (nsIAbCard* card,
         return NS_OK;
     }
 
-    nsXPIDLString _value;
-    rv = card->GetCardValue (name.get (), getter_Copies (_value));
+    nsXPIDLString value;
+    rv = card->GetCardValue (name.get (), getter_Copies (value));
     NS_ENSURE_SUCCESS(rv, rv);
-    nsString value (_value.get ());
 
-    if (!value.get () || value.Length () == 0)
+    if (value.IsEmpty())
     {
         if (conditionType == nsIAbBooleanConditionTypes::DoesNotExist)
             *matchFound = PR_TRUE;

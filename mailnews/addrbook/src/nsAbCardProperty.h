@@ -133,7 +133,7 @@ protected:
 
 private:
   nsresult AppendData(const char *aAttrName, mozITXTToHTMLConv *aConv, nsString &aResult);
-  nsresult AppendSection(AppendItem *aArray, PRInt16 aCount, const PRUnichar *aHeading, mozITXTToHTMLConv *aConv, nsString &aResult);
+  nsresult AppendSection(AppendItem *aArray, PRInt16 aCount, const nsAFlatString& aHeading, mozITXTToHTMLConv *aConv, nsString &aResult);
   nsresult GetCardTypeFromString(const char *aCardTypeStr, PRBool aEmptyIsTrue, PRBool *aValue);
 };
 

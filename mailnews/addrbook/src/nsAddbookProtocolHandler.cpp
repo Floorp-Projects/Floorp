@@ -150,7 +150,7 @@ nsAddbookProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 
   if (mAddbookOperation == nsIAddbookUrlOperation::InvalidUrl) {
     nsAutoString errorString;
-    errorString.Append(NS_LITERAL_STRING("Unsupported format/operation requested for ").get());
+    errorString.AssignLiteral("Unsupported format/operation requested for ");
     nsCAutoString spec;
     rv = aURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -179,7 +179,7 @@ nsAddbookProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
   nsString output;
   rv = GeneratePrintOutput(addbookUrl, output);
   if (NS_FAILED(rv)) {
-    output.Assign(NS_LITERAL_STRING("failed to print. url=").get());
+    output.AssignLiteral("failed to print. url=");
     nsCAutoString spec;
     rv = aURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -262,9 +262,9 @@ nsAddbookProtocolHandler::BuildDirectoryXML(nsIAbDirectory *aDirectory,
   nsCOMPtr<nsIEnumerator> cardsEnumerator;
   nsCOMPtr<nsIAbCard> card;
 
-  aOutput.Append(NS_LITERAL_STRING("<?xml version=\"1.0\"?>\n").get());
-  aOutput.Append(NS_LITERAL_STRING("<?xml-stylesheet type=\"text/css\" href=\"chrome://messenger/content/addressbook/print.css\"?>\n").get());
-  aOutput.Append(NS_LITERAL_STRING("<directory>\n").get());
+  aOutput.AppendLiteral("<?xml version=\"1.0\"?>\n"
+                        "<?xml-stylesheet type=\"text/css\" href=\"chrome://messenger/content/addressbook/print.css\"?>\n"
+                        "<directory>\n");
 
   // Get Address Book string and set it as title of XML document
   nsCOMPtr<nsIStringBundle> bundle;
@@ -275,9 +275,9 @@ nsAddbookProtocolHandler::BuildDirectoryXML(nsIAbDirectory *aDirectory,
       nsXPIDLString addrBook;
       rv = bundle->GetStringFromName(NS_LITERAL_STRING("addressBook").get(), getter_Copies(addrBook));
       if (NS_SUCCEEDED(rv)) {
-        aOutput.Append(NS_LITERAL_STRING("<title xmlns=\"http://www.w3.org/1999/xhtml\">").get());
+        aOutput.AppendLiteral("<title xmlns=\"http://www.w3.org/1999/xhtml\">");
         aOutput.Append(addrBook);
-        aOutput.Append(NS_LITERAL_STRING("</title>\n").get());
+        aOutput.AppendLiteral("</title>\n");
       }
     }
   }
@@ -298,14 +298,14 @@ nsAddbookProtocolHandler::BuildDirectoryXML(nsIAbDirectory *aDirectory,
         rv = card->ConvertToXMLPrintData(getter_Copies(xmlSubstr));
         NS_ENSURE_SUCCESS(rv,rv);
 
-        aOutput.Append(NS_LITERAL_STRING("<separator/>").get());
-        aOutput.Append(xmlSubstr.get());
+        aOutput.AppendLiteral("<separator/>");
+        aOutput.Append(xmlSubstr);
       }
     }
-	aOutput.Append(NS_LITERAL_STRING("<separator/>").get());
+    aOutput.AppendLiteral("<separator/>");
   }
 
-  aOutput.Append(NS_LITERAL_STRING("</directory>\n").get());
+  aOutput.AppendLiteral("</directory>\n");
 
   return NS_OK;
 }

@@ -494,8 +494,10 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteCards(nsISupportsArray *cards)
             //to do, get mailing list dir side uri and notify rdf to remove it
             PRUint32 rowID;
             dbcard->GetDbRowID(&rowID);
-            char *listUri = PR_smprintf("%s/MailList%ld", mURI.get(), rowID);
-            if (listUri)
+            nsCAutoString listUri(mURI);
+            listUri.AppendLiteral("/MailList");
+            listUri.AppendInt(rowID);
+            if (!listUri.IsEmpty())
             {
               nsresult rv = NS_OK;
               nsCOMPtr<nsIRDFService> rdfService = 
@@ -504,7 +506,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteCards(nsISupportsArray *cards)
               if(NS_SUCCEEDED(rv))
                 {
                 nsCOMPtr<nsIRDFResource> listResource;
-                rv = rdfService->GetResource(nsDependentCString(listUri),
+                rv = rdfService->GetResource(listUri,
                                              getter_AddRefs(listResource));
                 nsCOMPtr<nsIAbDirectory> listDir = do_QueryInterface(listResource, &rv);
                 if(NS_SUCCEEDED(rv))
@@ -515,17 +517,14 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteCards(nsISupportsArray *cards)
 
                   if (listDir)
                     NotifyItemDeleted(listDir);
-                  PR_smprintf_free(listUri);
                   }
                 else 
                   {
-                  PR_smprintf_free(listUri);
                   return rv;
                   }
                 }
               else
                 {
-                PR_smprintf_free(listUri);
                 return rv;
                 }
             }
@@ -656,8 +655,8 @@ nsresult nsAbMDBDirectory::InternalAddMailList(nsIAbDirectory *list, PRUint32 *k
   PRUint32 dbRowID;
   dblist->GetDbRowID(&dbRowID);
 
-  nsCAutoString listUri;
-  listUri = mURI + NS_LITERAL_CSTRING("/MailList");
+  nsCAutoString listUri(mURI);
+  listUri.AppendLiteral("/MailList");
   listUri.AppendInt(dbRowID);
 
   nsCOMPtr<nsIAbDirectory> newList;
