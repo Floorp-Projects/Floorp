@@ -313,7 +313,7 @@ my $patchreader = have_vers("PatchReader",0);
 
 print "\n" unless $silent;
 
-if ($^O =~ /MSWin32/i) {
+if ($^O =~ /MSWin32/i && !$silent) {
     if ($^V lt pack('U*',5,8,0)) {
         # If something older than 5.8 is detected, then point to the oi
         # repository using ppm version 2 commands (which is the default
