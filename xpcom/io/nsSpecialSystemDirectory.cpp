@@ -59,6 +59,10 @@
 #include "prenv.h"
 #endif
 
+#if defined(VMS)
+#include <unixlib.h>
+#endif
+
 #include "plstr.h"
 
 #include "nsHashtable.h"
@@ -750,7 +754,18 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             break;
 
         case Unix_HomeDirectory:
+#ifdef VMS
+	    {
+	        char *pHome;
+	        pHome = getenv("HOME");
+		if (*pHome == '/')
+        	    *this = pHome;
+		else
+        	    *this = decc$translate_vms(pHome);
+	    }
+#else
             *this = PR_GetEnv("HOME");
+#endif
             break;
 
 #endif        
