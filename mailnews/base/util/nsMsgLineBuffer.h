@@ -124,6 +124,7 @@ public:
   // aPauseForMoreData -- There is not enough data in the stream to make a line at this time...
   char * ReadNextLine(nsIInputStream * aInputStream, PRUint32 &anumBytesInLine, PRBool &aPauseForMoreData, nsresult *rv = nsnull);
   nsresult GrowBuffer(PRInt32 desiredSize);
+  void ClearBuffer();
   PRBool NextLineAvailable();
 protected:
   PRBool m_eatCRLFs;

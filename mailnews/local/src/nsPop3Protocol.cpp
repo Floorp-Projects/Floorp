@@ -1068,6 +1068,11 @@ nsPop3Protocol::Error(PRInt32 err_code)
 
 PRInt32 nsPop3Protocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging)
 {
+  // remove any leftover bytes in the line buffer
+  // this can happen if the last message line doesn't end with a (CR)LF
+  // or a server sent two reply lines
+  m_lineStreamBuffer->ClearBuffer();
+
   PRInt32 result = nsMsgProtocol::SendData(aURL, dataBuffer);
 
   if (!aSuppressLogging) 
@@ -2265,8 +2270,8 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
       if(m_pop3ConData->msg_info[m_listpos - 1].msgnum == msg_num)
         i = m_listpos - 1;
       else
-        for(i = 0; m_pop3ConData->msg_info[i].msgnum != msg_num &&
-                   i <= m_pop3ConData->number_of_messages; i++)
+        for(i = 0; i < m_pop3ConData->number_of_messages &&
+                   m_pop3ConData->msg_info[i].msgnum != msg_num; i++)
           ;
       
       m_pop3ConData->msg_info[i].uidl = PL_strdup(uidl);
@@ -2377,8 +2382,8 @@ PRInt32 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
         if(m_pop3ConData->msg_info[m_listpos - 1].msgnum == msg_num)
           i = m_listpos - 1;
         else
-          for(i = 0; m_pop3ConData->msg_info[i].msgnum != msg_num &&
-                     i <= m_pop3ConData->number_of_messages; i++)
+          for(i = 0; i < m_pop3ConData->number_of_messages &&
+                     m_pop3ConData->msg_info[i].msgnum != msg_num; i++)
             ;
 
         m_pop3ConData->msg_info[i].uidl = PL_strdup(uidl);

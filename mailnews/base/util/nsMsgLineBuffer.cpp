@@ -191,7 +191,7 @@ PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_
             {
                 status = GrowBuffer (desired_size, 1024);
                 if (status < 0) 
-					return status;
+                    return status;
             }
             memcpy (m_buffer + m_bufferPos, net_buffer, (end - net_buffer));
             m_bufferPos += (end - net_buffer);
@@ -212,7 +212,7 @@ PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_
         net_buffer_size -= (newline - net_buffer);
         net_buffer = newline;
         m_bufferPos = 0;
-	}
+    }
     return 0;
 }
 
@@ -227,49 +227,48 @@ PRInt32 nsMsgLineBuffer::ConvertAndSendBuffer()
     /* Convert the line terminator to the native form.
      */
 
-	char *buf = m_buffer;
-	PRInt32 length = m_bufferPos;
+    char *buf = m_buffer;
+    PRInt32 length = m_bufferPos;
 
     char* newline;
     
     PR_ASSERT(buf && length > 0);
     if (!buf || length <= 0) 
-		return -1;
+        return -1;
     newline = buf + length;
     
     PR_ASSERT(newline[-1] == nsCRT::CR || newline[-1] == nsCRT::LF);
     if (newline[-1] != nsCRT::CR && newline[-1] != nsCRT::LF)
-		return -1;
+        return -1;
     
-    if (!m_convertNewlinesP)
-	{
-	}
+    if (m_convertNewlinesP)
+    {
 #if (MSG_LINEBREAK_LEN == 1)
-    else if ((newline - buf) >= 2 &&
-             newline[-2] == nsCRT::CR &&
-             newline[-1] == nsCRT::LF)
-	{
+      if ((newline - buf) >= 2 &&
+           newline[-2] == nsCRT::CR &&
+           newline[-1] == nsCRT::LF)
+      {
         /* CRLF -> CR or LF */
         buf [length - 2] = MSG_LINEBREAK[0];
         length--;
-	}
-    else if (newline > buf + 1 &&
+      }
+      else if (newline > buf + 1 &&
              newline[-1] != MSG_LINEBREAK[0])
-	{
+      {
         /* CR -> LF or LF -> CR */
         buf [length - 1] = MSG_LINEBREAK[0];
-	}
+      }
 #else
-    else if (((newline - buf) >= 2 && newline[-2] != nsCRT::CR) ||
-             ((newline - buf) >= 1 && newline[-1] != nsCRT::LF))
-	{
+      if (((newline - buf) >= 2 && newline[-2] != nsCRT::CR) ||
+               ((newline - buf) >= 1 && newline[-1] != nsCRT::LF))
+      {
         /* LF -> CRLF or CR -> CRLF */
         length++;
         buf[length - 2] = MSG_LINEBREAK[0];
         buf[length - 1] = MSG_LINEBREAK[1];
-	}
+      }
 #endif
-    
+    }    
     return (m_handler) ? m_handler->HandleLine(buf, length) : HandleLine(buf, length);
 }
 
@@ -319,6 +318,12 @@ nsresult nsMsgLineStreamBuffer::GrowBuffer(PRInt32 desiredSize)
     return NS_ERROR_OUT_OF_MEMORY;
   m_dataBufferSize = desiredSize;
   return NS_OK;
+}
+
+void nsMsgLineStreamBuffer::ClearBuffer()
+{
+  m_startPos = 0;
+  m_numBytesInBuffer = 0;
 }
 
 // aInputStream - the input stream we want to read a line from
@@ -371,18 +376,17 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
     PRUint32 numFreeBytesInBuffer = m_dataBufferSize - m_startPos - m_numBytesInBuffer;
     if (numBytesInStream >= numFreeBytesInBuffer)
     {
-      if (m_numBytesInBuffer && m_startPos)
+      if (m_startPos)
       {
         memmove(m_dataBuffer, startOfLine, m_numBytesInBuffer);
-        m_dataBuffer[m_numBytesInBuffer] = '\0'; // make sure the end
-        // of the buffer is
-        // terminated
+        // make sure the end of the buffer is terminated
+        m_dataBuffer[m_numBytesInBuffer] = '\0';
         m_startPos = 0;
         startOfLine = m_dataBuffer;
         numFreeBytesInBuffer = m_dataBufferSize - m_numBytesInBuffer;
-        //				printf("moving data in read line around because buffer filling up\n");
+        //printf("moving data in read line around because buffer filling up\n");
       }
-      else if (!m_startPos)
+      else
       {
         PRInt32 growBy = (numBytesInStream - numFreeBytesInBuffer) * 2 + 1;
         // try growing buffer by twice as much as we need.
@@ -397,32 +401,27 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
     }
     
     PRUint32 numBytesToCopy = PR_MIN(numFreeBytesInBuffer - 1 /* leave one for a null terminator */, numBytesInStream);
-    // read the data into the end of our data buffer
     if (numBytesToCopy > 0)
     {
+      // read the data into the end of our data buffer
       rv = aInputStream->Read(startOfLine + m_numBytesInBuffer, numBytesToCopy,
                               &numBytesCopied);
       if (prv)
         *prv = rv;
       PRUint32 i;
       PRUint32 endBufPos = m_numBytesInBuffer + numBytesCopied;
-      for (i = m_numBytesInBuffer; i <endBufPos; i++)  //replace nulls with spaces
+      for (i = m_numBytesInBuffer; i < endBufPos; i++)  // replace nulls with spaces
       {
         if (!startOfLine[i])
           startOfLine[i] = ' ';
       }
       m_numBytesInBuffer += numBytesCopied;
       m_dataBuffer[m_startPos + m_numBytesInBuffer] = '\0';
+
+      // okay, now that we've tried to read in more data from the stream,
+      // look for another end of line character 
+      endOfLine = PL_strchr(startOfLine, m_lineToken);
     }
-    else if (!m_numBytesInBuffer)
-    {
-      aPauseForMoreData = PR_TRUE;
-      return nsnull;
-    }
-    
-    // okay, now that we've tried to read in more data from the stream, look for another end of line 
-    // character 
-    endOfLine = PL_strchr(startOfLine, m_lineToken);
   }
   
   // okay, now check again for endOfLine.
