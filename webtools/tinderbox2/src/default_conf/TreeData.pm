@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.12 $ 
-# $Date: 2002/04/26 23:00:10 $ 
+# $Revision: 1.13 $ 
+# $Date: 2002/04/30 18:01:02 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -174,30 +174,34 @@ $VERSION = '#tinder_version#';
 #                         is_bonsai_default => 1,
 #			 },
 
- 
+#	    # these are dummy trees for testing.	    
+#
+#	    'Project_A' =>  {
+#                   root => '/cvsroot',
+#                   module => '',
+#                   branch => 'HEAD',
+#                  },
+#	    'Project_B' =>  {
+#                   root => '/cvsroot',
+#                   module => 'MozillaTinderboxAll',
+#                   branch => 'HEAD',
+#                  },
+#	    'Project_C' =>  {
+#                   root => '/cvsroot',
+#                   module => 'NSS',
+#                   branch => 'HEAD',
+#                  },
+#
+
+# ------------- Real Trees Go Here ---------- 
+#
+
 	    'SeaMonkey' =>  {
                    root => '/cvsroot',
                    module => 'MozillaTinderboxAll',
                    branch => 'HEAD',
                   },
 
-	    # these are dummy trees for testing.	    
-
-	    'Project_A' =>  {
-                   root => '/cvsroot',
-                   module => '',
-                   branch => 'HEAD',
-                  },
-	    'Project_B' =>  {
-                   root => '/cvsroot',
-                   module => 'MozillaTinderboxAll',
-                   branch => 'HEAD',
-                  },
-	    'Project_C' =>  {
-                   root => '/cvsroot',
-                   module => 'NSS',
-                   branch => 'HEAD',
-                  },
 
 	   );
 
