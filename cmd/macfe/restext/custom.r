@@ -189,6 +189,8 @@ resource 'STR#' ( 300, "Pref file names", purgeable ) {{
 	"Defaults";								// 49 Template folder for new profiles
 	"moz40p3";								// 50 Cryptographic policy file
 	"SignedAppletDB";						// 51 Signed applet file
+	"Cookie Permissions";					// 52 Cookie permission file
+	"Single Signons";						// 53 Single Signon file
 }};
 
 resource 'STR#' ( BUTTON_STRINGS_RESID, "Button Names", purgeable ) {{

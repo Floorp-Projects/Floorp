@@ -550,4 +550,6 @@ enum pref_Strings {	prefFolderName = 1
 				,	profileTemplateDir = 49
 				,	cryptoPolicy = 50
 				,	signedAppletDb = 51
+				,	cookiePermissions = 52
+				,	singleSignons = 53
 				};

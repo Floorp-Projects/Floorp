@@ -688,6 +688,12 @@ void MochaFormSubmitCallback(MWContext* pContext,
 		LO_FormSubmitData* submit = LO_SubmitForm(pContext, (LO_FormElementStruct*)lo_element);
 		if (submit == NULL)
 			return;
+
+	#ifdef SingleSignon
+		// Check for a password submission and remember the data if so
+		SI_RememberSignonData(pContext, submit);
+	#endif	
+
 		URL_Struct* url =  NET_CreateURLStruct((char *)submit->action, NET_DONT_RELOAD);
 		CBrowserContext* context = ExtractBrowserContext(pContext);
 		if (context)
@@ -732,7 +738,11 @@ void MochaImageFormSubmitCallback(MWContext* pContext,
 		try
 			{
 			theSubmit = LO_SubmitImageForm(pContext, data->lo_image, data->x, data->y);
-//			ThrowIfNULL_(theSubmit);
+
+		#ifdef SingleSignon
+			// Check for a password submission and remember the data if so
+			SI_RememberSignonData(pContext, theSubmit);
+		#endif	
 			
 			// 97-06-07 pkc -- NULL is a valid return value from LO_SubmitImageForm
 			if (theSubmit)

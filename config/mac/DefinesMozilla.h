@@ -31,9 +31,9 @@
 //#define BETA
 // Comment out both ALPHA and BETA for the final version
 
-// ÑÑÑ Do we have an editor?
-// 98-03-10 pchen -- moved into Component_Config.h
-// #define EDITOR
+// 98-06-03 pinkerton -- temorary defines to turn on features before they fully land.
+#define CookieManagement 1
+#define SingleSignon 1
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	You typically will not need to change things below here

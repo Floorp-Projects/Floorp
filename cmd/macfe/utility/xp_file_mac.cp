@@ -245,11 +245,25 @@ OSErr XP_FileSpec(const char *inName, XP_FileType type, FSSpec* outSpec)
 			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
 			GetIndString(outSpec->name, 300, magicCookie);
 			break;
+#ifdef CookieManagement
+		case xpHTTPCookiePermission:
+			_ftype = emMagicCookie;		// is this right?
+			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
+			GetIndString(outSpec->name, 300, cookiePermissions);
+			break;
+#endif		
 		case xpJSCookieFilters:
 			_ftype = emTextType;
 			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
 			*(CStr63*)(outSpec->name) = ":cookies.js";	
 			break;
+#ifdef SingleSignon
+		case xpHTTPSingleSignon:
+			_ftype = emMagicCookie;		// is this right?
+			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
+			GetIndString(outSpec->name, 300, singleSignons);
+			break;
+#endif		
 		case xpProxyConfig:
 			_ftype = emTextType;
 			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
