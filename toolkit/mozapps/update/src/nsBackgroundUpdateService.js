@@ -109,7 +109,7 @@ nsBackgroundUpdateService.prototype = {
   checkForUpdates: function (aItems, aItemCount, aUpdateTypes, aSourceEvent, aParentWindow)
   {
     if (this.updating) return;
-    
+
     switch (aSourceEvent) {
     case nsIUpdateService.SOURCE_EVENT_MISMATCH:
     case nsIUpdateService.SOURCE_EVENT_USER:
