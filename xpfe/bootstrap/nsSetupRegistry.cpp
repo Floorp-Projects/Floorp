@@ -36,7 +36,8 @@
 #include "nsIDOMAppCoresManager.h"
 #include "nsIDOMBrowserAppCore.h"
 #include "nsISessionHistory.h"
-
+#include "rdf.h"
+#include "nsIWindowMediator.h"
 
 static NS_DEFINE_IID(kIAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
@@ -80,7 +81,7 @@ static NS_DEFINE_IID(kFileLocatorCID,     NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
 static NS_DEFINE_IID(kNetSupportDialogCID,    NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
-
+static NS_DEFINE_IID(kWindowMediatorCID,  NS_WINDOWMEDIATOR_CID);
 nsresult NS_AutoregisterComponents()
 {
   nsIFileSpec* spec = NS_LocateFileOrDirectory(
@@ -145,7 +146,9 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kRDFCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kSessionHistoryCID,     NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  
+  nsComponentManager::RegisterComponent(kWindowMediatorCID,
+                                         "window-mediator", NS_RDF_DATASOURCE_PROGID_PREFIX "window-mediator",
+                                         APPSHELL_DLL, PR_FALSE, PR_FALSE);
   //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
 
 }
