@@ -357,9 +357,79 @@ function SaveAsTemplate(uri, folder)
 	}
 }
 
+// XXXdmose The following junkmail code (down to, but not including,
+// JunkSelectedMessages) is here as temporary infrastructure glue.  It will
+// be replaced by code that use nsIMsgFilterPlugin directly soon.
+//
+const kUnknownToSpam = 0;
+const kUnknownToNoSpam = 1;
+const kNoSpamToSpam = 2;
+const kSpamToNoSpam = 3;
+
+var gJunkmailComponent;
+function getJunkmailComponent()
+{
+    if (!gJunkmailComponent) {
+        gJunkmailComponent = Components.classes['@mozilla.org/messenger/filter-plugin;1?name=junkmail']
+                .getService(Components.interfaces.nsISupports).wrappedJSObject;
+        gJunkmailComponent.initComponent();
+    }
+}
+
+function mark(aMessage, aSpam, aNextFunction)
+{
+    // Pffft, jumping through hoops here.
+    var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
+    var messageURL = mailSession.ConvertMsgURIToMsgURL(messageURI, msgWindow);
+    var action;
+    if (aSpam) {
+        action = kUnknownToSpam;
+        if (aMessage.getStringProperty("score") == "100") {
+            // Marking a spam message as spam does nothing
+            return;
+        }
+        if (aMessage.getStringProperty("score") == "0") {
+            // Marking a non-spam message as spam
+            action = kNoSpamToSpam;
+        }
+    }
+    else {
+        action = kUnknownToNoSpam;
+        if (aMessage.getStringProperty("score") == "0") {
+            // Marking a non-spam message as non-spam does nothing
+            return;
+        }
+        if (aMessage.getStringProperty("score") == "100") {
+            // Marking a spam message as non-spam
+            action = kSpamToNoSpam;
+        }
+    }
+    gJunkmailComponent.mark(messageURL, action, aNextFunction);
+}
+
 function JunkSelectedMessages(setAsJunk)
 {
-  gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk : nsMsgViewCommandType.unjunk);
+    gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk
+                      : nsMsgViewCommandType.unjunk);
+
+    getJunkmailComponent();
+    var messages = GetSelectedMessages();
+
+    // start the batch of messages
+    //
+    gJunkmailComponent.batchUpdate = true;
+
+    // mark each one
+    //
+    for ( var msg in messages ) {
+        var message = messenger.messageServiceFromURI(messages[msg])
+            .messageURIToMsgHdr(messages[msg]);
+        mark(message, setAsJunk, null);
+    }
+
+    // end the batch (tell the component to write out its data)
+    //
+    gJunkmailComponent.batchUpdate = false;
 }
 
 function MarkSelectedMessagesRead(markRead)
