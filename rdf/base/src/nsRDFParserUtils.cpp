@@ -95,30 +95,30 @@ nsRDFParserUtils::StripAndConvert(nsString& aResult)
     // should we be doing that? If so then it needs to live in two places (bad)
     // so we should add a translate numeric entity method from the parser...
     char cbuf[100];
-    PRInt32 index = 0;
-    while (index < aResult.Length()) {
+    PRInt32 i = 0;
+    while (i < aResult.Length()) {
         // If we have the start of an entity (and it's not at the end of
         // our string) then translate the entity into it's unicode value.
-        if ((aResult.CharAt(index++) == '&') && (index < aResult.Length())) {
-            PRInt32 start = index - 1;
-            PRUnichar e = aResult.CharAt(index);
+        if ((aResult.CharAt(i++) == '&') && (i < aResult.Length())) {
+            PRInt32 start = i - 1;
+            PRUnichar e = aResult.CharAt(i);
             if (e == '#') {
                 // Convert a numeric character reference
-                index++;
+                i++;
                 char* cp = cbuf;
                 char* limit = cp + sizeof(cbuf) - 1;
                 PRBool ok = PR_FALSE;
                 PRInt32 slen = aResult.Length();
-                while ((index < slen) && (cp < limit)) {
-                    PRUnichar e = aResult.CharAt(index);
-                    if (e == ';') {
-                        index++;
+                while ((i < slen) && (cp < limit)) {
+                    PRUnichar f = aResult.CharAt(i);
+                    if (f == ';') {
+                        i++;
                         ok = PR_TRUE;
                         break;
                     }
-                    if ((e >= '0') && (e <= '9')) {
-                        *cp++ = char(e);
-                        index++;
+                    if ((f >= '0') && (f <= '9')) {
+                        *cp++ = char(f);
+                        i++;
                         continue;
                     }
                     break;
@@ -137,31 +137,31 @@ nsRDFParserUtils::StripAndConvert(nsString& aResult)
 
                 // Remove entity from string and replace it with the integer
                 // value.
-                aResult.Cut(start, index - start);
+                aResult.Cut(start, i - start);
                 aResult.Insert(PRUnichar(ch), start);
-                index = start + 1;
+                i = start + 1;
             }
             else if (((e >= 'A') && (e <= 'Z')) ||
                      ((e >= 'a') && (e <= 'z'))) {
                 // Convert a named entity
-                index++;
+                i++;
                 char* cp = cbuf;
                 char* limit = cp + sizeof(cbuf) - 1;
                 *cp++ = char(e);
                 PRBool ok = PR_FALSE;
                 PRInt32 slen = aResult.Length();
-                while ((index < slen) && (cp < limit)) {
-                    PRUnichar e = aResult.CharAt(index);
-                    if (e == ';') {
-                        index++;
+                while ((i < slen) && (cp < limit)) {
+                    PRUnichar f = aResult.CharAt(i);
+                    if (f == ';') {
+                        i++;
                         ok = PR_TRUE;
                         break;
                     }
-                    if (((e >= '0') && (e <= '9')) ||
-                        ((e >= 'A') && (e <= 'Z')) ||
-                        ((e >= 'a') && (e <= 'z'))) {
-                        *cp++ = char(e);
-                        index++;
+                    if (((f >= '0') && (f <= '9')) ||
+                        ((f >= 'A') && (f <= 'Z')) ||
+                        ((f >= 'a') && (f <= 'z'))) {
+                        *cp++ = char(f);
+                        i++;
                         continue;
                     }
                     break;
@@ -183,9 +183,9 @@ nsRDFParserUtils::StripAndConvert(nsString& aResult)
 
                 // Remove entity from string and replace it with the integer
                 // value.
-                aResult.Cut(start, index - start);
+                aResult.Cut(start, i - start);
                 aResult.Insert(PRUnichar(ch), start);
-                index = start + 1;
+                i = start + 1;
             }
             else if (e == '{') {
                 // Convert a script entity
