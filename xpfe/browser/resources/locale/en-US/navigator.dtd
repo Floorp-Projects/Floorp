@@ -5,24 +5,30 @@
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 <!ENTITY throbber.url "http://www.mozilla.org"> 
 <!ENTITY myNetscape.url "http://my.netscape.com">
+<!ENTITY defaultHomepage.url "www.mozilla.org" >
 <!ENTITY fileMenu.label "File">
 <!ENTITY fileMenu.accesskey "f">
 <!ENTITY browserCmd.label "New Browser Window">
 <!ENTITY browserCmd.accesskey "n">
+<!ENTITY browserCmd.commandkey "n">
 <!ENTITY newMenu.label "New">
 <!ENTITY newMenu.accesskey "e">
 <!ENTITY newMailCmd.label "Mail Message">
 <!ENTITY newMailCmd.accesskey "m">
+<!ENTITY newMailCmd.commandkey "m">
 <!ENTITY newBlankPageCmd.label "Blank Window">
 <!ENTITY newBlankPageCmd.accesskey "b" >
+<!ENTITY newBlankPageCmd.commandkey "n" >
 <!ENTITY newPageFromTemplateCmd.label "Page Using Template">
 <!ENTITY newPageFromTemplateCmd.accesskey "t">
 <!ENTITY newPageFromDraftCmd.label "Page using Draft">
 <!ENTITY newPageFromDraftCmd.accesskey "d">
 <!ENTITY openCmd.label "Open Web Location...">
 <!ENTITY openCmd.accesskey "o">
+<!ENTITY openCmd.commandkey "o">
 <!ENTITY openFileCmd.label "Open File...">
 <!ENTITY openFileCmd.accesskey "l">
+<!ENTITY openFileCmd.commandkey "l">
 <!ENTITY sendPageCmd.label "Send Page">
 <!ENTITY sendPageCmd.accesskey "s">
 <!ENTITY editPageCmd.label "Edit Page">
@@ -39,10 +45,13 @@
 <!ENTITY printPreviewCmd.accesskey "v">
 <!ENTITY printCmd.label "Print...">
 <!ENTITY printCmd.accesskey "p">
+<!ENTITY printCmd.commandkey "p">
 <!ENTITY closeCmd.label "Close">
 <!ENTITY closeCmd.accesskey "c">
+<!ENTITY closeCmd.commandkey "w">
 <!ENTITY quitCmd.label "Quit">
 <!ENTITY quitCmd.accesskey "q">
+<!ENTITY quitCmd.commandkey "q">
 
 <!ENTITY editMenu.label "Edit">
 <!ENTITY undoCmd.label "Undo">
@@ -159,17 +168,23 @@
 <!ENTITY goMenu.accesskey "g">
 <!ENTITY goBackCmd.label "Back">
 <!ENTITY goBackCmd.accesskey "b">
+<!ENTITY goBackCmd.commandkey "[">
 <!ENTITY goForwardCmd.label "Forward">
 <!ENTITY goForwardCmd.accesskey "f">
+<!ENTITY goForwardCmd.commandkey "]">
 <!ENTITY goHomeCmd.label "Home">
 <!ENTITY goHomeCmd.accesskey "h">
+<!ENTITY goHomeCmd.commandkey "h">
+
 
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY bookmarksMenu.accesskey "b">
 <!ENTITY addCurPageCmd.label "Add Current Page">
 <!ENTITY addCurPageCmd.accesskey "a">
+<!ENTITY addCurPageCmd.commandkey "d">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
 <!ENTITY manBookmarksCmd.accesskey "m">
+<!ENTITY manBookmarksCmd.commandkey "m">
 
 <!ENTITY helpMenuCmd.label "Help">
 <!ENTITY helpContentsCmd.label "Help Contents">
