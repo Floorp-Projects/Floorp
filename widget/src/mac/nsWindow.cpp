@@ -37,16 +37,7 @@
 #include "nsplugindefs.h"
 #include "nsMacEventHandler.h"
 
-NS_IMPL_ADDREF(ChildWindow);
-NS_IMPL_RELEASE(ChildWindow);
 
-ChildWindow::ChildWindow() : nsWindow()
-{
-  NS_INIT_REFCNT();
-  strcpy(gInstanceClassName, "ChildWindow");
-}
-
-#pragma mark -
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -54,11 +45,12 @@ ChildWindow::ChildWindow() : nsWindow()
 //-------------------------------------------------------------------------
 nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this)
 {
-  NS_INIT_REFCNT();
   strcpy(gInstanceClassName, "nsWindow");
 
   mParent = nsnull;
   mBounds.SetRect(0,0,0,0);
+
+  mResizingChildren = PR_FALSE;
   mVisible = PR_FALSE;
   mEnabled = PR_TRUE;
 	SetPreferredSize(0,0);
@@ -68,6 +60,7 @@ nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this)
 	mTempRenderingContext = nsnull;
 
   mWindowRegion = nsnull;
+  mVisRegion = nsnull;
   mWindowPtr = nsnull;
   mDrawing = PR_FALSE;
 	mDestroyCalled = PR_FALSE;
@@ -91,10 +84,16 @@ nsWindow::~nsWindow()
 
 	//Destroy();
 
-	if (mWindowRegion != nsnull)
+	if (mWindowRegion)
 	{
 		::DisposeRgn(mWindowRegion);
 		mWindowRegion = nsnull;	
+	}
+
+	if (mVisRegion)
+	{
+		::DisposeRgn(mVisRegion);
+		mVisRegion = nsnull;	
 	}
 			
 	NS_IF_RELEASE(mTempRenderingContext);
@@ -102,7 +101,7 @@ nsWindow::~nsWindow()
 	NS_IF_RELEASE(mMenuBar);
 	NS_IF_RELEASE(mMenuListener);
 	
-	if (mPluginPort != nsnull) {
+	if (mPluginPort) {
 		delete mPluginPort;
 	}
 }
@@ -124,12 +123,8 @@ nsresult nsWindow::StandardCreate(nsIWidget *aParent,
                       nsNativeWidget aNativeParent)	// should always be nil here
 {
 	mParent = aParent;
-
 	mBounds = aRect;
-	mWindowRegion = ::NewRgn();
-	if (mWindowRegion == nil)
-		return NS_ERROR_OUT_OF_MEMORY;
-	::SetRectRgn(mWindowRegion, 0, 0, aRect.width, aRect.height);		 
+	CalcWindowRegions();
 
 	BaseCreate(aParent, aRect, aHandleEventFunction, 
 							aContext, aAppShell, aToolkit, aInitData);
@@ -245,7 +240,8 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     	break;
 
     case NS_NATIVE_REGION:
-    	retVal = (void*)mWindowRegion;
+//   	retVal = (void*)mWindowRegion;
+    	retVal = (void*)mVisRegion;
     	break;
 
     case NS_NATIVE_COLORMAP:
@@ -475,6 +471,9 @@ NS_IMETHODIMP nsWindow::Move(PRUint32 aX, PRUint32 aY)
 		mBounds.x = aX;
 		mBounds.y = aY;
 
+		// Recalculate the regions
+		CalcWindowRegions();
+
 		// Report the event
 		ReportMoveEvent();
 	}
@@ -494,9 +493,9 @@ NS_IMETHODIMP nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepain
 	  mBounds.width  = aWidth;
 	  mBounds.height = aHeight;
 
-		// Update the region
-		::SetRectRgn(mWindowRegion, 0, 0, aWidth, aHeight);		 
-	 
+		// Recalculate the regions
+		CalcWindowRegions();
+
 		// Invalidate the new location
 		if (aRepaint)
 			Invalidate(PR_FALSE);
@@ -540,6 +539,10 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::BeginResizingChildren(void)
 {
+	mResizingChildren = PR_TRUE;
+	mSaveVisible = mVisible;
+	mVisible = PR_FALSE;
+
 	return NS_OK;
 }
 
@@ -549,6 +552,10 @@ NS_IMETHODIMP nsWindow::BeginResizingChildren(void)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::EndResizingChildren(void)
 {
+	mResizingChildren = PR_FALSE;
+	mVisible = mSaveVisible;
+
+	CalcWindowRegions();
 	return NS_OK;
 }
 
@@ -583,8 +590,10 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 		GrafPtr savePort;
 		::GetPort(&savePort);
 		::SetPort(mWindowPtr);
+		Rect savePortRect = mWindowPtr->portRect;
 		::SetOrigin(0, 0);
 		::InvalRect(&macRect);
+//¥REVISIT		::SetOrigin(savePortRect.left, savePortRect.top);
 		::SetPort(savePort);
 	}
 	return NS_OK;
@@ -616,6 +625,8 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 	if (mDrawing)
 		return;
 	mDrawing = PR_TRUE;
+
+	CalcWindowRegions();	//¥REVISIT
 
 	if (aRenderingContext == nsnull)
 	{
@@ -711,15 +722,18 @@ NS_IMETHODIMP	nsWindow::Update()
 	else
 	{
 		reentrant = PR_TRUE;
+
+		// make a copy of the window update rgn
+		RgnHandle saveUpdateRgn = ::NewRgn();
+		if (!saveUpdateRgn)
+			return NS_ERROR_OUT_OF_MEMORY;
+		::CopyRgn(((WindowRecord*)mWindowPtr)->updateRgn, saveUpdateRgn);
+
+		// draw the widget
 		GrafPtr savePort;
 		::GetPort(&savePort);
 		::SetPort(mWindowPtr);
 
-		// make a copy of the window update rgn
-		RgnHandle saveUpdateRgn = ::NewRgn();
-		::CopyRgn(((WindowRecord*)mWindowPtr)->updateRgn, saveUpdateRgn);
-
-		// draw the widget
 		::BeginUpdate(mWindowPtr);
 		HandleUpdateEvent();
 		::EndUpdate(mWindowPtr);
@@ -762,7 +776,7 @@ nsresult nsWindow::HandleUpdateEvent()
 	// (at this point, the grafPort origin should always be 0,0
 	// so mWindowRegion has to be converted to window coordinates)
 	RgnHandle updateRgn = ::NewRgn();
-	if (updateRgn == nsnull)
+	if (!updateRgn)
 		return NS_ERROR_OUT_OF_MEMORY;
 	::CopyRgn(mWindowRegion, updateRgn);
 
@@ -800,14 +814,17 @@ nsresult nsWindow::HandleUpdateEvent()
 //-------------------------------------------------------------------------
 void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 {
+	if (! mVisible)
+		return;
+
 	// initialize the paint event
 	nsPaintEvent paintEvent;
 	paintEvent.eventStructType	= NS_PAINT_EVENT;		// nsEvent
-	paintEvent.message			= NS_PAINT;
-	paintEvent.widget			= this;					// nsGUIEvent
-	paintEvent.nativeMsg		= NULL;
-	paintEvent.renderingContext	= aContext;				// nsPaintEvent
-	paintEvent.rect				= &aRect;
+	paintEvent.message					= NS_PAINT;
+	paintEvent.widget						= this;							// nsGUIEvent
+	paintEvent.nativeMsg				= NULL;
+	paintEvent.renderingContext	= aContext;					// nsPaintEvent
+	paintEvent.rect							= &aRect;
 
 	// draw the widget
 	StartDraw(aContext);
@@ -816,7 +833,7 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 	EndDraw();
 
 	// recursively draw the children
-	nsIEnumerator* children = GetChildren();
+	nsCOMPtr<nsIEnumerator> children(dont_AddRef(GetChildren()));
 	if (children)
 	{
 		children->First();
@@ -826,6 +843,8 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 			if (NS_SUCCEEDED(children->CurrentItem(&child)))
 			{
 				nsWindow* childWindow = static_cast<nsWindow*>(child);
+				NS_RELEASE(child);
+
 				nsRect childBounds;
 				childWindow->GetBounds(childBounds);
 
@@ -836,11 +855,8 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 					intersection.MoveBy(-childBounds.x, -childBounds.y);
 					childWindow->UpdateWidget(intersection, aContext);
 				}
-				NS_RELEASE(child);
     	}
-		}
-		while (NS_SUCCEEDED(children->Next()));			
-		NS_RELEASE(children);
+		} while (NS_SUCCEEDED(children->Next()));			
 	}
 }
 
@@ -852,31 +868,38 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+	if (! mVisible)
+		return NS_OK;
+
+#if 0	//¥REVISIT
 	// scroll the rect
+	nsRect scrollRect;
+	if (aClipRect)
+		scrollRect = *aClipRect;
+	else
+	{
+		scrollRect = mBounds;
+		scrollRect.x = scrollRect.y = 0;
+	}
+
+	Rect macRect;
+	nsRectToMacRect(scrollRect, macRect);
+
+	RgnHandle updateRgn = ::NewRgn();
+	if (updateRgn == nil)
+		return NS_ERROR_OUT_OF_MEMORY;
+
 	StartDraw();
-		nsRect scrollRect;
-		if (aClipRect)
-			scrollRect = *aClipRect;
-		else
-		{
-			scrollRect = mBounds;
-			scrollRect.x = scrollRect.y = 0;
-		}
-
-		Rect macRect;
-		nsRectToMacRect(scrollRect, macRect);
-
-		RgnHandle updateRgn = ::NewRgn();
-		if (updateRgn == nil)
-			return NS_ERROR_OUT_OF_MEMORY;
-		// ::ClipRect(&macRect);
 		::ScrollRect(&macRect, aDx, aDy, updateRgn);
 		::InvalRgn(updateRgn);
 		::DisposeRgn(updateRgn);
 	EndDraw();
+#else
+	Invalidate(PR_FALSE);
+#endif
 
 	// scroll the children
-	nsIEnumerator* children = GetChildren();
+	nsCOMPtr<nsIEnumerator> children(dont_AddRef(GetChildren()));
 	if (children)
 	{
 		children->First();
@@ -886,6 +909,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 			if (NS_SUCCEEDED(children->CurrentItem(&child)))
 			{
 				nsWindow* childWindow = static_cast<nsWindow*>(child);
+				NS_RELEASE(child);
 
 				nsRect bounds;
 				childWindow->GetBounds(bounds);
@@ -893,19 +917,18 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 				bounds.y += aDy;
 				childWindow->SetBounds(bounds);
 				childWindow->Scroll(aDx, aDy, &bounds);
-
-				NS_RELEASE(child);
   		}
-		}
-		while (NS_SUCCEEDED(children->Next()));			
-		NS_RELEASE(children);
+		} while (NS_SUCCEEDED(children->Next()));			
 	}
+
+	// recalculate the window regions
+	CalcWindowRegions();
+
 	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 //
-// Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
 
@@ -1094,6 +1117,80 @@ PRBool nsWindow::ReportSizeEvent()
 
 
 #pragma mark -
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void nsWindow::CalcWindowRegions()
+{
+	//------
+	// calculate the window region
+	if (mWindowRegion == nsnull)
+	{
+		mWindowRegion = ::NewRgn();
+		if (mWindowRegion == nsnull)
+			return;
+	}
+ 	::SetRectRgn(mWindowRegion, 0, 0, mBounds.width, mBounds.height);
+
+
+	//------
+	// calculate the visible region
+	if (mVisRegion == nsnull)
+	{
+		mVisRegion = ::NewRgn();
+		if (mVisRegion == nsnull)
+			return;
+	}
+	::CopyRgn(mWindowRegion, mVisRegion);
+
+	// intersect with all the parents
+	nsWindow* parent = (nsWindow*)mParent;
+	nsPoint origin(-mBounds.x, -mBounds.y);
+	while (parent)
+	{
+		if (parent->mWindowRegion)
+		{
+			::OffsetRgn(parent->mWindowRegion, origin.x, origin.y);
+			::SectRgn(mVisRegion, parent->mWindowRegion, mVisRegion);
+			::OffsetRgn(parent->mWindowRegion, -origin.x, -origin.y);
+		}
+		origin.x -= parent->mBounds.x;
+		origin.y -= parent->mBounds.y;
+		parent = (nsWindow*)parent->mParent;
+	}
+
+	// clip the children out of the visRgn
+	RgnHandle childRgn = ::NewRgn();
+	if (!childRgn) return;
+
+	nsCOMPtr<nsIEnumerator> children(dont_AddRef(GetChildren()));
+	if (children)
+	{
+		children->First();
+		do
+		{
+			nsISupports* child;
+			if (NS_SUCCEEDED(children->CurrentItem(&child)))
+			{
+				nsWindow* childWindow = static_cast<nsWindow*>(child);
+				NS_RELEASE(child);
+
+				nsRect childRect;
+				childWindow->GetBounds(childRect);
+
+				Rect macRect;
+				::SetRect(&macRect, childRect.x, childRect.y, childRect.XMost(), childRect.YMost());
+				::RectRgn(childRgn, &macRect);
+				::DiffRgn(mVisRegion, childRgn, mVisRegion);
+			}
+		} while (NS_SUCCEEDED(children->Next()));
+	}
+	::DisposeRgn(childRgn);
+
+}
+
 //-------------------------------------------------------------------------
 /*
  *  @update  dc 08/28/98
@@ -1179,10 +1276,11 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 		do
 		{
 			nsISupports* child;
-      if (NS_SUCCEEDED(children->CurrentItem(&child)))
+			if (NS_SUCCEEDED(children->CurrentItem(&child)))
       {
       	nsWindow* childWindow = static_cast<nsWindow*>(child);
-			  NS_RELEASE(child);
+				NS_RELEASE(child);
+
 			  nsWindow* deeperHit = childWindow->FindWidgetHit(aThePoint);
 			  if (deeperHit)
 			  {
@@ -1199,7 +1297,6 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 }
 
 #pragma mark -
-#pragma mark - will be sorted -
 //-------------------------------------------------------------------------
 //
 // 
@@ -1207,6 +1304,7 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
+	NS_NOTYETIMPLEMENTED("nsWindow::WidgetToScreen");
 	return NS_OK;
 }
 
@@ -1217,6 +1315,7 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
+	NS_NOTYETIMPLEMENTED("nsWindow::ScreenToWidget");
 	return NS_OK;
 } 
 
@@ -1251,107 +1350,4 @@ void  nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 
 	aX += offX;
 	aY += offY;
-}
-
-/*
- * Convert an nsPoint into mac local coordinates.
- * The tree hierarchy is navigated upwards, changing
- * the x,y offset by the parent's coordinates
- *
- */
-void nsWindow::LocalToWindowCoordinate(nsPoint& aPoint)
-{
-	ConvertToDeviceCoordinates(aPoint.x, aPoint.y);
-}
-
-/* 
- * Convert widget local coordinates into mac local coordinates
- */
-void nsWindow::LocalToWindowCoordinate(nscoord& aX, nscoord& aY)
-{
-	ConvertToDeviceCoordinates(aX, aY);
-}
-
-/* 
- * Convert an nsRect into mac local coordinates
- */
-void nsWindow::LocalToWindowCoordinate(nsRect& aRect)
-{
-	ConvertToDeviceCoordinates(aRect.x, aRect.y);
-}
-
-//=================================================================
-/*  Convert the device coordinates to local coordinates.
- *  @update  dc 09/16/98
- *  @param   nscoord -- X coordinate to convert
- *  @param   nscoord -- Y coordinate to convert
- *  @return  NONE
- */
-void  nsWindow::ConvertToLocalCoordinates(nscoord &aX, nscoord &aY)
-{
-	PRInt32	offX, offY;
-	this->CalcOffset(offX,offY);
-
-	aX -= offX;
-	aY -= offY;
-}
-
-/*
- * Convert an nsPoint into mac local coordinates.
- * The tree hierarchy is navigated upwards, changing
- * the x,y offset by the parent's coordinates
- *
- */
-void nsWindow::WindowToLocalCoordinate(nsPoint& aPoint)
-{
-	ConvertToLocalCoordinates(aPoint.x, aPoint.y);
-}
-
-/* 
- * Convert widget local coordinates into mac local coordinates
- */
-void nsWindow::WindowToLocalCoordinate(nscoord& aX, nscoord& aY)
-{
-	ConvertToLocalCoordinates(aX, aY);
-}
-
-/* 
- * Convert an nsRect into mac local coordinates
- */
-void nsWindow::WindowToLocalCoordinate(nsRect& aRect)
-{
-	ConvertToLocalCoordinates(aRect.x, aRect.y);
-}
-
-#pragma mark -
-#pragma mark - will be gone -
-/* 
- * Convert a nsString to a PascalStr255
- */
-void nsWindow::StringToStr255(const nsString& aText, Str255& aStr255)
-{
-  char buffer[256];
-	
-	aText.ToCString(buffer,255);
-		
-	PRInt32 len = strlen(buffer);
-	memcpy(&aStr255[1],buffer,len);
-	aStr255[0] = len;
-	
-		
-}
-
-
-/* 
- * Convert a nsString to a PascalStr255
- */
-void nsWindow::Str255ToString(const Str255& aStr255, nsString& aText)
-{
-  char 		buffer[256];
-	PRInt32 len = aStr255[0];
-  
-	memcpy(buffer,&aStr255[1],len);
-	buffer[len] = 0;
-
-	aText = buffer;		
 }
