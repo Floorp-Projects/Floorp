@@ -356,7 +356,7 @@ NS_IMETHODIMP BasicStringImpl::Seek(PRSeekWhence whence, PRInt32 offset)
     mLastResult = NS_OK; // reset on a seek.
     mEOF = PR_FALSE; // reset on a seek.
     PRInt32 fileSize = length();
-    PRInt32 newPosition;
+    PRInt32 newPosition=-1;
     switch (whence)
     {
         case PR_SEEK_CUR: newPosition = mOffset + offset; break;
