@@ -41,8 +41,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MOZ_STATIC_COMPONENT_LIBS=
+BUILD_STATIC_LIBS=
+BUILD_SHARED_LIBS=1
+
 MODULE		= calendar
-XPIDL_MODULE    = calendar
+#XPIDL_MODULE    = calendar
 LIBRARY_NAME	= xpical
 SHORT_LIBNAME	= xpical
 EXPORT_LIBRARY	= 1
@@ -55,9 +59,11 @@ REQUIRES	= xpcom \
 		  necko \
 		  msgcompose \
 		  addrbook \
+		  ical \
+		  icalss \
 		  $(NULL)
 
-XPIDLSRCS = oeIICal.idl
+#XPIDLSRCS = oeIICal.idl
 
 CPPSRCS		= \
 		oeICalEventImpl.cpp \
@@ -75,3 +81,8 @@ OS_COMPILE_CXXFLAGS += -DICAL_DEBUG
 #-DICAL_DEBUG_ALL
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+endif
+
