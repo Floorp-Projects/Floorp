@@ -387,7 +387,7 @@ nsresult nsXPFCCanvas :: CreateImageGroup()
 
     gXPFCToolkit->GetViewManager()->GetDeviceContext(deviceCtx);    
 
-    mImageGroup->Init(deviceCtx);
+    mImageGroup->Init(deviceCtx,nsnull);
 
     NS_IF_RELEASE(deviceCtx);
   }

@@ -94,7 +94,7 @@ nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsIRenderingContext& aR
    */
   
   aRenderingContext.GetFontMetrics()->GetHeight(height);
-  aRenderingContext.GetFontMetrics()->GetWidth(*string,width);
+  aRenderingContext.GetWidth(*string,width);
 
   /*
    * XXX: If we are too big, remove the Day of the week.  Need a better algorithm
@@ -105,7 +105,7 @@ nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsIRenderingContext& aR
    {
      pattern = "MMM dd\n";
      GetTimeContext()->GetDTFirstVisible()->strftime(pattern, &string);
-     aRenderingContext.GetFontMetrics()->GetWidth(*string,width);
+     aRenderingContext.GetWidth(*string,width);
    }
 
   /*

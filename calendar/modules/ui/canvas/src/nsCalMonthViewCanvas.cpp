@@ -432,7 +432,7 @@ nsEventStatus nsCalMonthViewCanvas :: PaintCellBackground( PRUint32& aCellRow, P
     nscoord text_width ;
 
     aRenderingContext.GetFontMetrics()->GetHeight(text_height);
-    aRenderingContext.GetFontMetrics()->GetWidth(strDate, text_width);
+    aRenderingContext.GetWidth(strDate, text_width);
 
     x = x + w - text_width;
     y = y + h - text_height;

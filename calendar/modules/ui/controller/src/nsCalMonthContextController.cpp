@@ -1675,7 +1675,7 @@ void nsCalMonthContextController::GetTextExtent(char *p, int iChars, int& iWidth
    
   fm = mRenderingContext->GetFontMetrics();
 
-  fm->GetWidth(p,(nscoord)iWidth);
+  mRenderingContext->GetWidth(p,(nscoord)iWidth);
   fm->GetHeight((nscoord)iHeight);
 
 }
@@ -1731,7 +1731,7 @@ void nsCalMonthContextController::GetFontInfo(
 
         nsIFontMetrics * fm = ctx->GetFontMetrics();
 
-        fm->GetWidth("0",m_iDigitWidth);
+        ctx->GetWidth("0",m_iDigitWidth);
         fm->GetHeight(m_iDigitHeight);
 
         /*
@@ -1742,7 +1742,7 @@ void nsCalMonthContextController::GetFontInfo(
         strcpy(sBuf,"Wednesday");
         sBuf[GetDOWColHdrChars() ] = 0;
 
-        fm->GetWidth(sBuf,m_iMaxDOWColHdrWidth);
+        ctx->GetWidth(sBuf,m_iMaxDOWColHdrWidth);
 
     }
 

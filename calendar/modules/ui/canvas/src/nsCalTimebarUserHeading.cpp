@@ -89,7 +89,7 @@ nsEventStatus nsCalTimebarUserHeading :: PaintForeground(nsIRenderingContext& aR
    */
   
   aRenderingContext.GetFontMetrics()->GetHeight(height);
-  aRenderingContext.GetFontMetrics()->GetWidth(mUserName,width);
+  aRenderingContext.GetWidth(mUserName,width);
 
   /*
    * center the text in our rect and draw it

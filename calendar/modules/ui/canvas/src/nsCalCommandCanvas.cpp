@@ -133,7 +133,13 @@ nsresult nsCalCommandCanvas :: Init()
 
   nscoord width ;
   
-  fm->GetWidth(text,width);
+  nsIRenderingContext * aRC;
+
+  ctx->CreateRenderingContext(mStaticTextField, aRC);
+
+  aRC->GetWidth(text,width);
+
+  NS_RELEASE(aRC);
 
   rect.width = width ;
 
@@ -231,9 +237,14 @@ nsresult nsCalCommandCanvas :: SetBounds(const nsRect &aBounds)
     
     ctx->GetMetricsFor(font,fm);
 
-    NS_RELEASE(ctx);
+    nsIRenderingContext * aRC;
 
-    fm->GetWidth(text,width);
+    ctx->CreateRenderingContext(mStaticTextField, aRC);
+
+    aRC->GetWidth(text,width);
+
+    NS_RELEASE(aRC);
+    NS_RELEASE(ctx);
 
     rect.width = width ;
 

@@ -270,7 +270,7 @@ nsEventStatus nsXPButton :: PaintForeground(nsIRenderingContext& aRenderingConte
    */
   
   aRenderingContext.GetFontMetrics()->GetHeight(string_height);
-  aRenderingContext.GetFontMetrics()->GetWidth(string,string_width);
+  aRenderingContext.GetWidth(string,string_width);
 
   switch(mVerticalJustification)
   {
