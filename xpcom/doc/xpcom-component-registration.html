@@ -1,0 +1,226 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Suresh Duddi">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en]C-NSCP  (WinNT; U) [Netscape]">
+   <title>XPCOM Dynamic Component Registration</title>
+</head>
+<body>
+
+<center>
+<h2>
+XPCOM Dynamic Component Registration</h2></center>
+
+<center>Suresh Duddi &lt;<a href="mailto:dp@netscape.com">dp@netscape.com</a>>
+<hr WIDTH="100%"></center>
+
+<p>Dynamic object registration in XPCOM is achieved by interaction of the
+following components:
+<ul>
+<li>
+The Registry</li>
+
+<li>
+The Repository</li>
+
+<li>
+The Service Manager</li>
+
+<li>
+Component dll implementing <tt>NSRegisterSelf()</tt></li>
+</ul>
+The registration mechanism for XPCOM components is similar in many ways
+to that of COM. The XPCOM component dlls will have the opportunity to register
+themselves with the registry. The exact time of installation would be either
+at install time or as a result of <b>autodetection</b> by the Repository
+Manager at runtime.
+<br>&nbsp;
+<h3>
+<a NAME="The Registry: XPCOM Hierarchy"></a>The Registry: XPCOM Hierarchy</h3>
+XPCOM uses the nsRegistry to store mappings between CLSIDs and their implementations.
+The Registry provides persistent storage of hierarchical keys and name-value
+pairs associated with each key. Each key also keeps a default value.
+<p>XPCOM will use the following registry hierarchy:
+<blockquote><tt>ROOTKEY_COMMON</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; Classes</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CLSID</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"<i>CLSID-string"</i>&nbsp;&nbsp;&nbsp; "<i>class name"</i></tt>
+<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</i>ProgID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "<i>component.class.version"</i></tt>
+<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</i>InprocServer&nbsp; "<i>full-path-name"</i></tt>
+<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</i>&nbsp;&nbsp;&nbsp;
+LastModTimeStamp<sup><font color="#990000">*</font></sup>&nbsp;&nbsp; <i>time-value</i></tt>
+<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</i>FileSize<sup><font color="#990000">*</font></sup>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<i>nbytes</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp; "<i>component.class.version"&nbsp;&nbsp;&nbsp;
+"class name"</i></tt>
+<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </i>CLSID<i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"CLSID-string"</i></tt></blockquote>
+
+<p><br><tt><sup><font color="#990000">*</font> </sup></tt>Automatically
+added by the Repository
+<br>&nbsp;
+<h3>
+<a NAME="The Repository: Object instance creation"></a>The Repository:
+Object instance creation</h3>
+All object creation happens via The Repository. <tt>nsIRepository::CreateInstance()</tt>
+will be the primary way of creation of object instances. The steps in instantiation
+of an object that implements the IID interface and of class CLSID is as
+follows:
+<ol>
+<li>
+The CLSID of the component that would need to create the object instance
+is identified.</li>
+
+<ol>If the input to <tt>nsIRepository::CreateInstance() </tt>is a CLSID,
+then there is no figuring out. If the input is a ProgID string, it uses
+<tt>nsIRepository::ProgIDToCLSID()</tt>
+to convert the ProgID string passed into it to convert to the CLSID.</ol>
+
+<li>
+Load the dll associated with the CLSID after consulting the Registry</li>
+
+<li>
+Instantiate the class factory by calling a globally exported dll function
+<tt>NSGetFactory()</tt>.
+This returns an instance of the class factory that implements the <tt>nsIFactory</tt>
+interface.</li>
+
+<li>
+The actual object creation is delegated to this <tt>nsIFactory</tt> instance
+with a call to <tt>nsIFactory::CreateInstance()</tt>.</li>
+</ol>
+
+<h3>
+<a NAME="The Service Manager"></a>The Service Manager</h3>
+All globally created system services are available via the <tt>nsIServiceManager</tt>,
+including the <tt>nsIRepository</tt> and <tt>nsIRegistry</tt>. Although
+the <tt>nsIServiceManager</tt> uses the Registry and Repository in the
+creation and maintenance of other services, the circular dependency is
+broken by not letting the <tt>nsIServiceManager</tt> create the <tt>nsIRepository</tt>
+and <tt>nsIRegistry</tt> instance and registering them specially with the
+<tt>nsIServiceManager</tt>.
+The nsIServiceManager is passed into NSGetFactory() for assisting the DLL
+in the Factory creation process.
+<h3>
+<a NAME="Component Registration"></a>Component Registration</h3>
+Either at installation time of the Component or at times when the XPCOM
+library autodetect new/changed dlls, component registration is activated.
+The autodetection happens at startup time of the navigator or via a javascript
+trigger <tt>navigator.repository.autodetect()</tt>. The steps in component
+registration would be:
+<ol>
+<li>
+The dll is loaded</li>
+
+<li>
+The component is allowed to self register by a call to a globally exported
+dll function <tt>NSRegisterSelf()</tt>. The <tt>nsIServiceManager</tt>
+and the fullpath of the dll are passed in to assist in the registration
+process. The dll is expected to create/modify its entries in the Registry
+according to the guidelines of the <a href="#The Registry: XPCOM Hierarchy">XPCOM
+hierarchy</a> in the registry. <tt>nsIRepository</tt>, which can be queried
+from the <tt>nsIServiceManager</tt>, has useful registration functions
+that would easen the process.</li>
+
+<li>
+The dll is unloaded</li>
+</ol>
+
+<h3>
+<a NAME="Autodetection of Components"></a>Autodetection of Components</h3>
+Autodetection of changed dlls happened by storing the dll's last modified
+time and its size in the Registry automatically. If either the last modified
+time stamp or the filesize differs from that stored in the Registry for
+the dll, re-registration takes place. Before re-registration, the existing
+instances of the objects created by the classes in the dll are not freed
+because the <tt>nsIRepository</tt> has no list of them. The <tt>NSCanUnload()</tt>
+will be called with input parameter <i>force</i> set to <tt>true</tt>.
+The dll has to prepare for getting unloaded. After this call returns, the
+dll <b>will</b> be unloaded if the return value is <tt>true</tt>. If the
+dll detects that it cannot properly prepare for unloading, then it can
+return <tt>false</tt>. XPCOM will not let the re-registration of the modified
+dll proceed in this case. There is nothing much that XPCOM library can
+do to salvage this situation other than warning the user of possible instability
+and advice a restart upon which the re-registration will happen.
+<br>&nbsp;
+<h3>
+How will all this help me</h3>
+For Component Developers:
+<ul>
+<li>
+Component dlls developed could be dropped into a directory, a JS function
+called after which your component is in business without even a restart
+of the browser. Of course, there needs to be someone accessing it.</li>
+
+<li>
+No need to export you CLSID or run around finding where to advertise your
+CLSID</li>
+</ul>
+For Component Users:
+<blockquote>
+<li>
+No more hacking in calls to <tt>nsIRepository::RegisterFactory()</tt></li>
+
+<li>
+No need to know the CLSID of components that you want to instantiate. Component
+creation can happen like this</li>
+
+<br><tt>nsIRepository::CreateInstance(<b>"Gecko.LayoutEngine.1"</b>, NULL,
+domIID, &amp;result);</tt>
+<br>instead of
+<br><tt>nsIRepository::CreateInstance(<b>RAPTOR_CLSID</b>, NULL, domIID,
+&amp;result);</tt>
+<p>Another example : To create a button instance that supports IWidget
+interface,
+<br><tt>nsIRepository::CreateInstance(<b>"xpfe.button.1"</b>, NULL, nsWidgetIID,
+&amp;result);</tt></blockquote>
+
+<h3>
+Issues</h3>
+
+<ul>
+<li>
+Need support for questions like:</li>
+
+<ol>
+<li>
+Enumerate all CLSIDs that implement a particular interface.</li>
+
+<li>
+Let a particular CLSID be the preferable implementation for an interface.<br>
+I dont know how this a XPCOM component user could use it unless there could
+be a call like:<br>
+<tt>nsIRepository::CreateInstance(<b>NULL</b>, NULL, nsWidgetIID, &amp;result);</tt></li>
+
+<li>
+Enumerate all interfaces supported by a CLSID</li>
+</ol>
+
+<li>
+Resolving naming conflicts between ProgID</li>
+
+<li>
+Store component specific name-values under <tt>ROOTKEY_COMMON\\<i>component.class.version\\</i></tt></li>
+
+<li>
+Add a registry entry under <tt>ROOTKEY_COMMON\\<i>component.class.version\\</i></tt><i>
+</i>to indicate the willingness for a CLSID to behave as a Service.</li>
+
+<li>
+Add quick registration support functions in <tt>nsIRepository</tt> for
+components to use.</li>
+
+<li>
+Is the hierarchy <tt>ROOTKEY_COMMON\\<b>Classes</b>\\CLSID </tt>acceptable.</li>
+</ul>
+
+<hr WIDTH="100%">
+<br><i><font size=-1>Last Modified: 28 Jan 1998</font></i>
+<br><font size=-1><i>Feedback to: </i><a href="news:netscape.public.mozilla.xpcom">netscape.public.mozilla.xpcom</a></font>
+</body>
+</html>
