@@ -1345,6 +1345,20 @@ PRBool nsImageWin::CanAlphaBlend(void)
 nsresult 
 nsImageWin :: Optimize(nsIDeviceContext* aContext)
 {
+#define DONT_OPTIMIZE 1
+#ifdef DONT_OPTIMIZE
+  // XXX
+  // see bug 205893 & bug 204374
+  // With the increase memory cache size, we hold to many images.
+  // Every image is also holding onto a GDI HBITMAP which hurts
+  // system performance.  So until we can get a handle on the
+  // situation lets just NOT optimize.  
+  // NOTE the previous patch (127547) in bug 205893 doesn't fix the 
+  // problem reported by bug 184933 so I suggest going with NEVER
+  // optimizing for now
+
+  return NS_OK;
+#else
   // we used to set a flag because  a valid HDC may not be ready, 
   // like at startup, but now we just roll our own HDC for the given screen.
   
@@ -1393,6 +1407,7 @@ nsImageWin :: Optimize(nsIDeviceContext* aContext)
   }
 
   return NS_OK;
+#endif
 }
 
 
