@@ -49,6 +49,7 @@ classic.jar:
   skin/classic/communicator/sidebar/preview.css                         (communicator/sidebar/preview.css)
   skin/classic/communicator/sidebar/sidebarBindings.xml                 (communicator/sidebar/sidebarBindings.xml)
   skin/classic/communicator/sidebar/sidebar.css                         (communicator/sidebar/sidebar.css)
+  skin/classic/communicator/sidebar/sidebarListView.css                 (communicator/sidebar/sidebarListView.css)
   skin/classic/communicator/xpinstall/xpinstall.css                     (communicator/xpinstall/xpinstall.css)
   skin/classic/communicator/brand/throbber-single.gif                   (communicator/brand/throbber-single.gif)
   skin/classic/communicator/brand/throbber-anim.gif                     (communicator/brand/throbber-anim.gif)
