@@ -51,6 +51,7 @@ struct _GtkMozAreaClass
   /* signals */
   void (* toplevel_focus_in ) (GtkMozArea *area);
   void (* toplevel_focus_out) (GtkMozArea *area);
+  void (* toplevel_configure) (GtkMozArea *area);
 };
 
 GtkType    gtk_mozarea_get_type (void);

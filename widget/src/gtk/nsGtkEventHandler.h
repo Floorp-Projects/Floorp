@@ -29,7 +29,6 @@
 
 class nsIWidget;
 
-gboolean handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p);
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p);
 gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p);
 
