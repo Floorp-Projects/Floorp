@@ -63,9 +63,9 @@ AbsoluteFrame::~AbsoluteFrame()
 {
 }
 
-nsIView* AbsoluteFrame::CreateView(nsIView*      aContainingView,
-                                   const nsRect& aRect,
-                                   PRInt32       aZIndex)
+nsIView* AbsoluteFrame::CreateView(nsIView*         aContainingView,
+                                   const nsRect&    aRect,
+                                   nsStylePosition* aPosition)
 {
   nsIView*  view;
 
@@ -85,17 +85,29 @@ nsIView* AbsoluteFrame::CreateView(nsIView*      aContainingView,
     // See if the containing view is a scroll view
     nsIScrollableView*  scrollView = nsnull;
     nsresult            result;
+    nsRect              clip;
+    nsRect*             pClip = NS_STYLE_CLIP_RECT == aPosition->mClipFlags ?
+                                &clip : nsnull;
+
+    // Is there a clip rect specified?
+    if (NS_STYLE_CLIP_RECT == aPosition->mClipFlags) {
+      // XXX Michael: this needs to change
+      clip.SetRect(aPosition->mClip.left, aPosition->mClip.top,
+                   aPosition->mClip.right, aPosition->mClip.bottom);
+    }
      
     result = aContainingView->QueryInterface(kIScrollableViewIID, (void**)&scrollView);
     if (NS_OK == result) {
       nsIView* scrolledView = scrollView->GetScrolledView();
 
-      view->Init(viewManager, aRect, scrolledView, nsnull, nsnull, nsnull, aZIndex);
+      view->Init(viewManager, aRect, scrolledView, nsnull, nsnull, nsnull,
+        aPosition->mZIndex, pClip);
       viewManager->InsertChild(scrolledView, view, 0);
       NS_RELEASE(scrolledView);
       NS_RELEASE(scrollView);
     } else {
-      view->Init(viewManager, aRect, aContainingView, nsnull, nsnull, nsnull, aZIndex);
+      view->Init(viewManager, aRect, aContainingView, nsnull, nsnull, nsnull,
+        aPosition->mZIndex, pClip);
       viewManager->InsertChild(aContainingView, view, 0);
     }
   
@@ -250,7 +262,7 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
     ComputeViewBounds(containingRect, position, rect);
 
     // Create a view for the frame
-    nsIView*  view = CreateView(containingView, rect, position->mZIndex);
+    nsIView*  view = CreateView(containingView, rect, position);
     NS_RELEASE(containingView);
 
     mFrame->SetView(view);  

@@ -53,9 +53,9 @@ protected:
 
   virtual ~AbsoluteFrame();
 
-  nsIView*  CreateView(nsIView*      aContainingView,
-                       const nsRect& aRect,
-                       PRInt32       aZIndex);
+  nsIView*  CreateView(nsIView*         aContainingView,
+                       const nsRect&    aRect,
+                       nsStylePosition* aPosition);
   nsIFrame* GetContainingBlock();
   void      ComputeViewBounds(const nsRect&    aContainingInnerRect,
                               nsStylePosition* aPosition,

@@ -140,20 +140,22 @@ protected:
 };
 
 struct nsStylePosition : public nsStyleStruct {
-  PRUint8 mPosition;                    // see nsStyleConsts.h
-  PRUint8 mOverflow;                    // see nsStyleConsts.h
+  PRUint8   mPosition;                  // see nsStyleConsts.h
+  PRUint8   mOverflow;                  // see nsStyleConsts.h
+  PRUint8   mClipFlags;                 // see nsStyleConsts.h
 
-  PRUint8 mLeftOffsetFlags;             // see nsStyleConsts.h
-  PRUint8 mTopOffsetFlags;              // see nsStyleConsts.h
-  PRUint8 mWidthFlags;                  // see nsStyleConsts.h
-  PRUint8 mHeightFlags;                 // see nsStyleConsts.h
+  PRUint8   mLeftOffsetFlags;           // see nsStyleConsts.h
+  PRUint8   mTopOffsetFlags;            // see nsStyleConsts.h
+  PRUint8   mWidthFlags;                // see nsStyleConsts.h
+  PRUint8   mHeightFlags;               // see nsStyleConsts.h
 
-  nscoord mLeftOffset;
-  nscoord mTopOffset;
-  nscoord mWidth;
-  nscoord mHeight;
+  nscoord   mLeftOffset;
+  nscoord   mTopOffset;
+  nscoord   mWidth;
+  nscoord   mHeight;
 
-  PRInt32 mZIndex;
+  PRInt32   mZIndex;
+  nsMargin  mClip;                      // offsets from respective edge
 
 protected:
   nsStylePosition();
