@@ -646,6 +646,9 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
   nsIFrame* targetFrame;
   nsIFrame* nextFrame;
 
+  nsRect oldKidBounds;
+  kidFrame->GetRect(oldKidBounds);
+
   // Special handling for incremental reflow
   if (eReflowReason_Incremental == aReflowState.reason) {
     // See whether we're the target of the reflow command
@@ -856,6 +859,36 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
                   border.left, border.top, NS_FRAME_NO_MOVE_VIEW, aStatus);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
       CalculateChildTotalSize(kidFrame, kidDesiredSize);
+    }
+  }
+
+  nsRect newKidBounds;
+  kidFrame->GetRect(newKidBounds);
+
+  // may need to update fixed position children of the viewport,
+  // if the client area changed size
+  if ((oldKidBounds.width != newKidBounds.width
+      || oldKidBounds.height != newKidBounds.height)
+      && eReflowReason_Incremental == aReflowState.reason) {
+    nsIFrame* parentFrame;
+    GetParent(&parentFrame);
+    if (parentFrame) {
+      nsCOMPtr<nsIAtom> parentFrameType;
+      parentFrame->GetFrameType(getter_AddRefs(parentFrameType));
+      if (parentFrameType.get() == nsLayoutAtoms::viewportFrame) {
+        // Usually there are no fixed children, so don't do anything unless there's
+        // at least one fixed child
+        nsIFrame* child;
+        if (NS_SUCCEEDED(parentFrame->FirstChild(aPresContext,
+          nsLayoutAtoms::fixedList, &child)) && child) {
+          nsCOMPtr<nsIPresShell> presShell;
+          aPresContext->GetShell(getter_AddRefs(presShell));
+
+          // force a reflow of the fixed children
+          nsFrame::CreateAndPostReflowCommand(presShell, parentFrame,
+            nsIReflowCommand::UserDefined, nsnull, nsnull, nsLayoutAtoms::fixedList);
+        }
+      }
     }
   }
   

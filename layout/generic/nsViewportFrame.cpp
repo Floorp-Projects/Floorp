@@ -25,7 +25,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"
 #include "nsIViewManager.h"
-#include "nsIScrollableView.h"
+#include "nsIScrollableFrame.h"
 #include "nsIDeviceContext.h"
 #include "nsIPresContext.h"
 #include "nsIReflowCommand.h"
@@ -310,30 +310,18 @@ ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext*          aPresC
 
   // Get our prinicpal child frame and see if we're scrollable
   nsIFrame* kidFrame = mFrames.FirstChild();
-  nsIView*  kidView;
+  nsCOMPtr<nsIScrollableFrame> scrollingFrame(do_QueryInterface(kidFrame));
 
-  kidFrame->GetView(aPresContext, &kidView);
-  if (nsnull != kidView) {
-    nsIScrollableView* scrollingView;
-    
-    if (NS_SUCCEEDED(kidView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
-      // Get the scrollbar dimensions
-      float             sbWidth, sbHeight;
-      nsCOMPtr<nsIDeviceContext> dc;
-      aPresContext->GetDeviceContext(getter_AddRefs(dc));
-
-      dc->GetScrollBarDimensions(sbWidth, sbHeight);
-      
-      // See if the scrollbars are visible
-      PRBool  vertSBVisible, horzSBVisible;
-      
-      scrollingView->GetScrollbarVisibility(&vertSBVisible, &horzSBVisible);
-      if (vertSBVisible) {
-        aWidth -= NSToCoordRound(sbWidth);
-      }
-      if (horzSBVisible) {
-        aHeight -= NSToCoordRound(sbHeight);
-      }
+  if (scrollingFrame) {
+    nscoord sbWidth = 0, sbHeight = 0;
+    PRBool sbHVisible = PR_FALSE, sbVVisible = PR_FALSE;
+    scrollingFrame->GetScrollbarSizes(aPresContext, &sbWidth, &sbHeight);
+    scrollingFrame->GetScrollbarVisibility(aPresContext, &sbVVisible, &sbHVisible);
+    if (sbVVisible) {
+      aWidth -= sbWidth;
+    }
+    if (sbHVisible) {
+      aHeight -= sbHeight;
     }
   }
 }
@@ -402,9 +390,6 @@ void
 ViewportFrame::ReflowFixedFrames(nsIPresContext*          aPresContext,
                                  const nsHTMLReflowState& aReflowState) const
 {
-  NS_PRECONDITION(eReflowReason_Incremental != aReflowState.reason,
-                  "unexpected reflow reason");
-
   // Calculate how much room is available for the fixed items. That means
   // determining if the viewport is scrollable and whether the vertical and/or
   // horizontal scrollbars are visible
@@ -490,8 +475,17 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
   nsIFrame* nextFrame = nsnull;
   PRBool    isHandled = PR_FALSE;
   
-  // Check for an incremental reflow
-  if (eReflowReason_Incremental == aReflowState.reason) {
+  nsIReflowCommand::ReflowType reflowType = nsIReflowCommand::ContentChanged;
+  if (aReflowState.reflowCommand) {
+    aReflowState.reflowCommand->GetType(reflowType);
+  }
+  if (reflowType == nsIReflowCommand::UserDefined) {
+    // Reflow the fixed frames to account for changed scrolled area size
+    ReflowFixedFrames(aPresContext, aReflowState);
+    isHandled = PR_TRUE;
+
+    // Otherwise check for an incremental reflow
+  } else if (eReflowReason_Incremental == aReflowState.reason) {
     // See if we're the target frame
     nsIFrame* targetFrame;
     aReflowState.reflowCommand->GetTarget(targetFrame);
