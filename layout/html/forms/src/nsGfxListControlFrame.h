@@ -31,6 +31,7 @@
 #define DO_REFLOW_COUNTER
 //#define DO_UNCONSTRAINED_CHECK
 //#define DO_PIXELS
+#define DO_DRAGGING
 #endif
 
 #include "nsHTMLContainerFrame.h"
@@ -56,7 +57,7 @@ class nsVoidArray;
 class nsIScrollableView;
 
 class nsGfxListControlFrame;
-class nsAutoScrollTimer;
+class nsSelectAutoScrollTimer;
 
 #define NS_IGFXLIST_EVENT_LISTENER_IID \
 {/* e4bf05b0-457f-11d3-86ea-000064657374*/ \
@@ -357,6 +358,10 @@ protected:
   nscoord      mMaxHeight;
   PRBool       mIsCapturingMouseEvents;
 
+  // Dragging Info
+  PRBool       mIsDragScrollingDown;
+  PRInt32      mLastDragCoordY;
+
   nsVoidArray  * mSelectionCache;
   PRInt32        mSelectionCacheLength;
 
@@ -384,7 +389,7 @@ protected:
 
   // timer for autoscrolling.
 #ifdef DO_DRAGGING
-  nsAutoScrollTimer *mAutoScrollTimer; 
+  nsSelectAutoScrollTimer *mAutoScrollTimer; 
 #endif
 
 #ifdef DO_REFLOW_COUNTER
