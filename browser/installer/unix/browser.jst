@@ -1,0 +1,94 @@
+function upgradeCleanup()
+{
+  // For now, since we're new, we have no such files.
+}
+
+var srDest = $SpaceRequired$;
+
+var err = initInstall("$ProductName$", "Browser", "$Version$"); 
+logComment("initInstall: " + err);
+
+var communicatorFolder = getFolder("Program");
+logComment("communicatorFolder: " + communicatorFolder);
+
+if (verifyDiskSpace(communicatorFolder, srDest))
+{
+    // Call upgradeCleanup() before addDirectory() in case we accidentaly
+    // delete files that we happen to be also installing.  This way, if we do,
+    // it will just get reinstalled.  This is for safety measure.
+    upgradeCleanup();
+    err = addDirectory("Program",
+                       "$Version$",
+                       "bin",              // jar source folder
+                       communicatorFolder, // target folder
+                       "",                 // target subdir 
+                       true );             // force flag 
+
+    logComment("addDirectory() returned: " + err);
+
+    // create the plugins folder next to mozilla 
+    var pluginsFolder = getFolder("Plugins");
+    var ignoreErr = dirCreate(pluginsFolder);
+    logComment("dirCreate() returned: " + ignoreErr);
+
+    // register chrome
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "browser.jar"), "content/browser/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome", "classic.jar"), "skin/classic/browser/");
+
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "toolkit.jar"), "content/passwordmgr/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "toolkit.jar"), "content/mozapps/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome", "classic.jar"), "skin/classic/mozapps/");
+
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/autoconfig/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/necko/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/cookie/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/wallet/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/xbl-marquee/");
+
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global-region/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global-platform/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/global/");
+
+    // XXXben Stuff that will become obsolete
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator-region/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator-platform/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/navigator/");
+
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator-region/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator-platform/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/communicator/");
+
+    // Register the psm chrome files, if they exist.
+    var pki = getFolder("Chrome", "pippki.jar");
+    if (File.exists(pki))
+      registerChrome(CONTENT | DELAYED_CHROME, pki, "content/pippki/");
+
+    var nss = getFolder("Chrome", "pipnss.jar");
+    if (File.exists(nss))
+      registerChrome(CONTENT | DELAYED_CHROME, nss, "content/pipnss/");
+
+    if (err==SUCCESS)
+    {
+	    err = performInstall(); 
+	    logComment("performInstall() returned: " + err);
+        if (! ('buildID' in Install))
+        {
+          logComment("Running Pre-Mozilla 0.9.1");
+          initInstall("Post-install Cleanup Utility", "Browser/xpicleanup", "$Version$");
+          cleanupUtility = getFolder(communicatorFolder, "xpicleanup");
+          err = File.execute(cleanupUtility);
+          logComment("execute() returned: " + err);
+          err = performInstall();
+        }
+    }
+    else
+    {
+	    cancelInstall(err);
+	    logComment("cancelInstall() due to error: " + err);
+    }
+}
+else
+    cancelInstall(INSUFFICIENT_DISK_SPACE);
