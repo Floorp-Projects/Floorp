@@ -55,7 +55,7 @@ use Chatbot::Eliza;
 
 $|++;
 
-my $VERSION = "1.22"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.27"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
@@ -1034,8 +1034,8 @@ sub stocks {
 
 
 sub LoadStockList {
-     %stocklist = ("#NSCP" => [$channel],
-                   "#AOL" => [$channel]);
+     %stocklist = ("NSCP" => [$channel],
+                   "AOL" => [$channel]);
 
      if (open(LIST, $stockf)) {
          %stocklist = ();
