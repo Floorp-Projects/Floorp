@@ -98,7 +98,7 @@ class Parser {
         throws IOException
     {
         this.decompiler = new Decompiler();
-        Object decompilerScriptContext = decompiler.startScript();
+        decompiler.startScript();
 
         this.nf = nf;
         currentScriptOrFn = nf.createScript();
@@ -141,7 +141,7 @@ class Parser {
             return null;
         }
 
-        String source = decompiler.stopScript(decompilerScriptContext);
+        String source = decompiler.stopScript();
         this.decompiler = null; // To help GC
 
         nf.initScript(currentScriptOrFn, pn, ts.getSourceName(),
@@ -231,7 +231,7 @@ class Parser {
         FunctionNode fnNode = nf.createFunction(name);
         int functionIndex = currentScriptOrFn.addFunction(fnNode);
 
-        Object decompilerFunctionContext
+        int functionSourceOffset 
             = decompiler.startFunction(name, functionIndex);
 
         ScriptOrFnNode savedScriptOrFn = currentScriptOrFn;
@@ -270,7 +270,7 @@ class Parser {
             // name might be null;
         }
         finally {
-            source = decompiler.stopFunction(decompilerFunctionContext);
+            source = decompiler.stopFunction(functionSourceOffset);
             currentScriptOrFn = savedScriptOrFn;
         }
 
@@ -1451,28 +1451,24 @@ class ParserException extends Exception { }
 class Decompiler
 {
 
-    public Object startScript()
+    public void startScript()
     {
         sourceBuffer = new char[128];
         sourceTop = 0;
 
         // Add script indicator
         addToken(Token.SCRIPT);
-        return Boolean.TRUE;
     }
 
-    public String stopScript(Object contextObj)
+    public String stopScript()
     {
-        if (contextObj != Boolean.TRUE)
-            throw new IllegalArgumentException();
-
         String encoded = sourceToString(0);
         sourceBuffer = null; // It helpds GC
         sourceTop = 0;
         return encoded;
     }
 
-    public Object startFunction(String name, int functionIndex)
+    public int startFunction(String name, int functionIndex)
     {
         if (!(0 <= functionIndex))
             throw new IllegalArgumentException();
@@ -1489,12 +1485,11 @@ class Decompiler
         if (name.length() != 0) {
             addName(name);
         }
-        return new Integer(savedTop);
+        return savedTop;
     }
 
-    public String stopFunction(Object contextObj)
+    public String stopFunction(int savedTop)
     {
-        int savedTop = ((Integer)contextObj).intValue();
         if (!(0 <= savedTop && savedTop <= sourceTop))
             throw new IllegalArgumentException();
 
