@@ -171,7 +171,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
                     if (escaped) {
                         mBuf += escaped;
                         mBuf.Append(' ');
-                        delete[] escaped; // XXX!
+                        nsCRT::free(escaped);
                     }
                     nsCRT::free(leafname);
                 }
