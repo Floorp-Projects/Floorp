@@ -80,6 +80,7 @@ public:
   NS_IMETHOD MarkChildrenStyleChange();
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState);
   NS_IMETHOD DumpBox(FILE* out);
+  NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust);
 
   nsBox(nsIPresShell* aShell);
 
