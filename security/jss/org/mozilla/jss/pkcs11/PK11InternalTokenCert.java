@@ -50,7 +50,7 @@ public final class PK11InternalTokenCert extends PK11InternalCert
         return super.getOwningToken();
     }
 
-    PK11InternalTokenCert(byte[] certPtr, byte[] slotPtr) {
-        super(certPtr, slotPtr);
+    PK11InternalTokenCert(byte[] certPtr, byte[] slotPtr, String nickname) {
+        super(certPtr, slotPtr, nickname);
     }
 }

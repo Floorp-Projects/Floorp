@@ -123,7 +123,7 @@ public class PK11InternalCert extends PK11Cert
 	/////////////////////////////////////////////////////////////
 	// Construction
 	/////////////////////////////////////////////////////////////
-    PK11InternalCert(byte[] certPtr, byte[] slotPtr) {
-        super(certPtr, slotPtr);
+    PK11InternalCert(byte[] certPtr, byte[] slotPtr, String nickname) {
+        super(certPtr, slotPtr, nickname);
     }
 }

@@ -46,7 +46,9 @@ public class PK11Cert implements org.mozilla.jss.crypto.X509Certificate {
 
     //public native byte[] getUniqueID();
 
-    public native String getNickname();
+    public String getNickname() {
+        return nickname;
+    }
 
     /**
      * A class that implements Principal with a String.
@@ -138,11 +140,12 @@ public class PK11Cert implements org.mozilla.jss.crypto.X509Certificate {
 	//	this.certProxy = proxy;
 	//}
 
-	PK11Cert(byte[] certPtr, byte[] slotPtr) {
+	PK11Cert(byte[] certPtr, byte[] slotPtr, String nickname) {
         Assert._assert(certPtr!=null);
         Assert._assert(slotPtr!=null);
 		certProxy = new CertProxy(certPtr);
 		tokenProxy = new TokenProxy(slotPtr);
+		this.nickname = nickname;
 	}
 
 	/////////////////////////////////////////////////////////////
@@ -151,6 +154,8 @@ public class PK11Cert implements org.mozilla.jss.crypto.X509Certificate {
 	protected CertProxy certProxy;
 
 	protected TokenProxy tokenProxy;
+
+	protected String nickname;
 }
 
 class CertProxy extends org.mozilla.jss.util.NativeProxy {

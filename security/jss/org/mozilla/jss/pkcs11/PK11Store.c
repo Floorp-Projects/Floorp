@@ -199,7 +199,8 @@ Java_org_mozilla_jss_pkcs11_PK11Store_putCertsInVector
         ***************************************************/
         certCopy = CERT_DupCertificate(node->cert);
         slotCopy = PK11_ReferenceSlot(slot);
-        object = JSS_PK11_wrapCertAndSlot(env, &certCopy, &slotCopy);
+        object = JSS_PK11_wrapCertAndSlotAndNickname(env,
+            &certCopy, &slotCopy, node->appData);
         if(object == NULL) {
             PR_ASSERT( (*env)->ExceptionOccurred(env) );
             goto finish;

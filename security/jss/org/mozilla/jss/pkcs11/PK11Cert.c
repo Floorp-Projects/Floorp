@@ -395,25 +395,27 @@ JSS_PK11_findCertsAndSlotFromNickname(char *nickname, void *wincx,
 }
 
 
-/****************************************************************
+/***********************************************************************
  *
- * J S S _ P K 1 1 _ w r a p C e r t A n d S l o t
+ * J S S _ P K 1 1 _ w r a p C e r t A n d S l o t A n d N i c k n a m e
  *
- * Builds a Certificate wrapper around a CERTCertificate and a
- *		PK11SlotInfo.
+ * Builds a Certificate wrapper around a CERTCertificate, a
+ *		PK11SlotInfo, and a nickname.
  * cert: Will be eaten and erased whether the wrap was successful or not.
  * slot: Will be eaten and erased whether the wrap was successful or not.
- * returns: a new PK11Cert wrapping the CERTCertificate and PK11SlotInfo,
- *		or NULL if an exception was thrown.
+ * nickname: the cert instance's nickname
+ * returns: a new PK11Cert wrapping the CERTCertificate, PK11SlotInfo,
+ *		and nickname, or NULL if an exception was thrown.
  */
 jobject
-JSS_PK11_wrapCertAndSlot(JNIEnv *env, CERTCertificate **cert,
-    PK11SlotInfo **slot)
+JSS_PK11_wrapCertAndSlotAndNickname(JNIEnv *env, CERTCertificate **cert,
+    PK11SlotInfo **slot, const char *nickname)
 {
 	jclass certClass;
 	jmethodID constructor;
 	jbyteArray certPtr;
 	jbyteArray slotPtr;
+	jstring jnickname = NULL;
 	jobject Cert=NULL;
 
 	PR_ASSERT(env!=NULL && cert!=NULL && *cert!=NULL
@@ -421,6 +423,9 @@ JSS_PK11_wrapCertAndSlot(JNIEnv *env, CERTCertificate **cert,
 
 	certPtr = JSS_ptrToByteArray(env, *cert);
 	slotPtr = JSS_ptrToByteArray(env, *slot);
+	if (nickname) {
+		jnickname = (*env)->NewStringUTF(env, nickname);
+	}
 
 	certClass = (*env)->FindClass(env, INTERNAL_TOKEN_CERT_CLASS_NAME);
 	if(certClass == NULL) {
@@ -439,7 +444,8 @@ JSS_PK11_wrapCertAndSlot(JNIEnv *env, CERTCertificate **cert,
 	}
 
 	/* Call the constructor */
-	Cert = (*env)->NewObject(env, certClass, constructor, certPtr, slotPtr);
+	Cert = (*env)->NewObject(env, certClass, constructor, certPtr,
+		slotPtr, jnickname);
 	if(Cert==NULL) {
 		goto finish;
 	}
@@ -454,6 +460,25 @@ finish:
 	*cert = NULL;
 	*slot = NULL;
 	return Cert;
+}
+
+/****************************************************************
+ *
+ * J S S _ P K 1 1 _ w r a p C e r t A n d S l o t
+ *
+ * Builds a Certificate wrapper around a CERTCertificate and a
+ *		PK11SlotInfo.
+ * cert: Will be eaten and erased whether the wrap was successful or not.
+ * slot: Will be eaten and erased whether the wrap was successful or not.
+ * returns: a new PK11Cert wrapping the CERTCertificate and PK11SlotInfo,
+ *		or NULL if an exception was thrown.
+ */
+jobject
+JSS_PK11_wrapCertAndSlot(JNIEnv *env, CERTCertificate **cert,
+    PK11SlotInfo **slot)
+{
+	return JSS_PK11_wrapCertAndSlotAndNickname(env, cert, slot,
+			(*cert)->nickname);
 }
 
 /****************************************************************
@@ -565,27 +590,6 @@ finish:
     }
 
     return byteArray;
-}
-
-/**********************************************************************
- * PK11Cert.getNickname
- */
-JNIEXPORT jstring JNICALL
-Java_org_mozilla_jss_pkcs11_PK11Cert_getNickname
-    (JNIEnv *env, jobject this)
-{
-    CERTCertificate *cert;
-
-    PR_ASSERT(env!=NULL && this!=NULL);
-
-    if( JSS_PK11_getCertPtr(env, this, &cert) != PR_SUCCESS) {
-        return NULL;
-    }
-    if(cert->nickname == NULL) {
-        return NULL;
-    } else {
-        return (*env)->NewStringUTF(env, cert->nickname);
-    }
 }
 
 /**********************************************************************

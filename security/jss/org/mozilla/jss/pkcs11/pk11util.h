@@ -194,6 +194,30 @@ JSS_PK11_findCertsAndSlotFromNickname(char *nickname, void *wincx,
     PK11SlotInfo **ppSlot);
 
 
+/***********************************************************************
+ *
+ * J S S _ P K 1 1 _ w r a p C e r t A n d S l o t A n d N i c k n a m e
+ *
+ * Builds a PK11Cert object from a CERTCertificate, a PK11SlotInfo, and
+ *	a nickname.
+ * ppCert: Pointer to pointer to CERTCertificate.  The CERTCertificate
+ *      will be wrapped in a Java certificate.  If this fails, it
+ *      will be deleted.  In any case, the caller should never worry about,
+ *      or use, this CERTCertificate again. To enforce this, *ppCert
+ *      will be set to NULL whether the functions fails or succeeds.
+ * ppSlot: Pointer to pointer to PK11SlotInfo.  The PK11SlotInfo
+ *      will be wrapped in a Java certificate.  If this fails, it
+ *      will be deleted.  In any case, the caller should never worry about,
+ *      or use, this PK11SlotInfo again. To enforce this, *ppSlot
+ *      will be set to NULL whether the functions fails or succeeds.
+ * nickname: the cert instance's nickname.
+ * Returns: a new Java PK11Cert object, or NULL if an exception was thrown.
+ */
+jobject
+JSS_PK11_wrapCertAndSlotAndNickname(JNIEnv *env, CERTCertificate **ppCert,
+    PK11SlotInfo **ppSlot, const char *nickname);
+
+
 /****************************************************************
  *
  * J S S _ P K 1 1 _ w r a p C e r t A n d S l o t
