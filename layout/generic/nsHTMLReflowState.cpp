@@ -1319,11 +1319,25 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
       }
       else break;
     }
-    else if (nsLayoutAtoms::canvasFrame != frameType.get()) {
+    else if (nsLayoutAtoms::canvasFrame == frameType.get()) {
+      // Use scroll frames' computed height if we have one, this will
+      // allow us to get viewport height for native scrollbars.
+      nsHTMLReflowState* scrollState = (nsHTMLReflowState *)rs->parentReflowState;
+      nsCOMPtr<nsIAtom> scrollFrameType;
+      scrollState->frame->GetFrameType(getter_AddRefs(scrollFrameType));
+      if (nsLayoutAtoms::scrollFrame == scrollFrameType.get()) {
+        rs = scrollState;
+      }
+	}
+    else {
       break;
     }
-    // the ancestor has a computed height, it is the percent base
+
+    // if the ancestor has a computed height, it is the percent base
     result = rs->mComputedHeight;
+    // if unconstrained - don't sutract borders - would result in huge height
+    if (NS_AUTOHEIGHT == result) return result;
+
     // if we got to the canvas frame, then subtract out 
     // margin/border/padding for the BODY and HTML elements
     if (nsLayoutAtoms::canvasFrame == frameType.get()) {
@@ -1429,7 +1443,8 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPre
     if (NS_AUTOHEIGHT == aContainingBlockHeight) {
       nsCOMPtr<nsIAtom> fType;
       frame->GetFrameType(getter_AddRefs(fType));
-      if (nsLayoutAtoms::tableFrame == fType.get()) {
+      if (nsLayoutAtoms::tableFrame == fType.get() ||
+          nsLayoutAtoms::htmlFrameOuterFrame == fType.get()) {
         nsCompatibility mode;
         aPresContext->GetCompatibilityMode(&mode);
         if (eCompatibility_NavQuirks == mode) {
