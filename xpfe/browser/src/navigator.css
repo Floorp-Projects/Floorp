@@ -14,7 +14,7 @@ titledbutton#translate-button {
 }
 
 titledbutton#print-button {
-	list-style-image:url(resource:/res/toolbar/TB_Back.gif);
+	list-style-image:url(resource:/res/toolbar/TB_Print.gif);
 }
 
 titledbutton#back-button {
