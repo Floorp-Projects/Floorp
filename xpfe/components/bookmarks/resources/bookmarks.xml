@@ -902,9 +902,11 @@
         {
           this.mOuter.onCommandUpdate();
           const kStatusBar = document.getAnonymousElementByAttribute(this.mOuter, "anonid", "statusbar-text");
+          if (!kStatusBar)
+            return;
           const currentIndex = this.mOuter.currentIndex;
           var displayValue = "";
-          if (kStatusBar && this.mOuter.treeBoxObject.selection.count == 1) {
+          if (this.mOuter.treeBoxObject.selection.count == 1) {
             if (this.mOuter.treeBoxObject.view.isContainer(currentIndex)) {
               const kRDFCContractID = "@mozilla.org/rdf/container;1";
               const kRDFCIID = Components.interfaces.nsIRDFContainer;
@@ -930,8 +932,8 @@
             }
             if (displayValue.substring(0, 3) == "NC:")
               displayValue = "";
-            kStatusBar.label = displayValue;
           }
+          kStatusBar.label = displayValue;
         },
         
         isEditable: function BMOLBuilderObserver_isEditable(aItemIndex, aColumnID)
@@ -1897,6 +1899,17 @@
         <body><![CDATA[
           // XXXben
           return true;
+        ]]></body>
+      </method>
+      <method name="searchBookmarks">
+      <parameter name="aInput"/>
+        <body><![CDATA[
+          if (!aInput) 
+            this.tree.setAttribute("ref", "NC:BookmarksRoot");
+          else {
+            const ref = "find:datasource=rdf:bookmarks&match=http://home.netscape.com/NC-rdf#Name&method=contains&text=";
+            this.tree.setAttribute("ref", ref + escape(aInput));
+          }
         ]]></body>
       </method>
     </implementation>
