@@ -103,8 +103,6 @@ static void DLLErrorInternal(PRIntn oserr)
     error = dlerror();  /* $$$ That'll be wrong some of the time - AOF */
 #elif defined(HAVE_STRERROR)
     error = strerror(oserr);  /* this should be okay */
-#elif defined(XP_PC)
-    error = errno_string(GetLastError());
 #else
     error = errno_string(oserr);
 #endif
