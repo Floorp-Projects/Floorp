@@ -510,6 +510,13 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       computedMargin.left - mComputedBorderPadding.left -
       mComputedBorderPadding.right -
       computedMargin.right - computedOffsets.right;
+
+    if (computedWidth > mComputedMaxWidth) {
+      computedWidth = mComputedMaxWidth;
+    } else if (computedWidth < mComputedMinWidth) {
+      computedWidth = mComputedMinWidth;
+    }
+
   } else {
     if (eStyleUnit_Inherit == widthUnit) {
       computedWidth = containingBlockWidth;
@@ -517,6 +524,11 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       // Use the specified value for the computed width
       ComputeHorizontalValue(containingBlockWidth, widthUnit,
                              mStylePosition->mWidth, computedWidth);
+    }
+    if (computedWidth > mComputedMaxWidth) {
+      computedWidth = mComputedMaxWidth;
+    } else if (computedWidth < mComputedMinWidth) {
+      computedWidth = mComputedMinWidth;
     }
 
     if (leftIsAuto) {
@@ -617,6 +629,12 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
           computedMargin.top - mComputedBorderPadding.top -
           mComputedBorderPadding.bottom -
           computedMargin.bottom - computedOffsets.bottom;
+        
+        if (computedHeight > mComputedMaxHeight) {
+          computedHeight = mComputedMaxHeight;
+        } else if (computedHeight < mComputedMinHeight) {
+          computedHeight = mComputedMinHeight;
+        }
       }
     }
   } else {
@@ -626,6 +644,13 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       // Use the specified value for the computed height
       ComputeVerticalValue(containingBlockHeight, heightUnit,
                            mStylePosition->mHeight, computedHeight);
+    }
+
+    if (computedHeight > mComputedMaxHeight) {
+      computedHeight = mComputedMaxHeight;
+    }
+    if (computedHeight < mComputedMinHeight) {
+      computedHeight = mComputedMinHeight;
     }
 
     if (NS_AUTOHEIGHT != containingBlockHeight) {
@@ -778,7 +803,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     if ((NS_FRAME_REPLACED(NS_CSS_FRAME_TYPE_INLINE) == frameType) ||
         (NS_FRAME_REPLACED(NS_CSS_FRAME_TYPE_FLOATING) == frameType)) {
       // Inline replaced element and floating replaced element are basically
-      // treated the same
+      // treated the same. First calculate the computed width
       if (eStyleUnit_Inherit == widthUnit) {
         computedWidth = containingBlockWidth;
       } else if (eStyleUnit_Auto == widthUnit) {
@@ -789,6 +814,13 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                                mStylePosition->mWidth,
                                computedWidth);
       }
+      if (computedWidth > mComputedMaxWidth) {
+        computedWidth = mComputedMaxWidth;
+      } else if (computedWidth < mComputedMinWidth) {
+        computedWidth = mComputedMinWidth;
+      }
+
+      // Now calculate the computed height
       if (eStyleUnit_Inherit == heightUnit) {
         computedHeight = containingBlockHeight;
       } else if (eStyleUnit_Auto == heightUnit) {
@@ -799,8 +831,14 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                              mStylePosition->mHeight,
                              computedHeight);
       }
+      if (computedHeight > mComputedMaxHeight) {
+        computedHeight = mComputedMaxHeight;
+      } else if (computedHeight < mComputedMinHeight) {
+        computedHeight = mComputedMinHeight;
+      }
+    
     } else if (NS_CSS_FRAME_TYPE_FLOATING == frameType) {
-      // Floating non-replaced element
+      // Floating non-replaced element. First calculate the computed width
       if (eStyleUnit_Inherit == widthUnit) {
         computedWidth = containingBlockWidth;
       } else if (eStyleUnit_Auto == widthUnit) {
@@ -811,6 +849,13 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                                mStylePosition->mWidth,
                                computedWidth);
       }
+      if (computedWidth > mComputedMaxWidth) {
+        computedWidth = mComputedMaxWidth;
+      } else if (computedWidth < mComputedMinWidth) {
+        computedWidth = mComputedMinWidth;
+      }
+
+      // Now calculate the computed height
       if (eStyleUnit_Inherit == heightUnit) {
         computedHeight = containingBlockHeight;
       } else if (eStyleUnit_Auto == heightUnit) {
@@ -820,8 +865,14 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                              mStylePosition->mHeight,
                              computedHeight);
       }
+      if (computedHeight > mComputedMaxHeight) {
+        computedHeight = mComputedMaxHeight;
+      } else if (computedHeight < mComputedMinHeight) {
+        computedHeight = mComputedMinHeight;
+      }
+    
     } else if (NS_CSS_FRAME_TYPE_INTERNAL_TABLE == frameType) {
-      // Internal table elements. The rules vary depending on the type
+      // Internal table elements. The rules vary depending on the type.
       // Calculate the computed width
       if ((NS_STYLE_DISPLAY_TABLE_ROW == mStyleDisplay->mDisplay) ||
           (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == mStyleDisplay->mDisplay)) {
@@ -915,6 +966,20 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
         computedWidth = availableWidth - computedMargin.left -
           computedMargin.right - mComputedBorderPadding.left -
           mComputedBorderPadding.right;
+
+        // Take into account any min and max values
+        if (computedWidth > mComputedMaxWidth) {
+          // Apply the rules again, but this time using 'max-width' as the value
+          // for 'width'
+          computedWidth = mComputedMaxWidth;
+          CalculateLeftRightMargin(cbrs, computedWidth);
+        
+        } else if (computedWidth < mComputedMinWidth) {
+          // Apply the rules again, but this time using 'min-width' as the value
+          // for 'width'
+          computedWidth = mComputedMinWidth;
+          CalculateLeftRightMargin(cbrs, computedWidth);
+        }
       }
     }
   } else {
@@ -936,6 +1001,13 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
     else {
       ComputeHorizontalValue(aContainingBlockWidth, aWidthUnit,
                              mStylePosition->mWidth, computedWidth);
+    }
+
+    // Take into account any min and max values
+    if (computedWidth > mComputedMaxWidth) {
+      computedWidth = mComputedMaxWidth;
+    } else if (computedWidth < mComputedMinWidth) {
+      computedWidth = mComputedMinWidth;
     }
 
     // Calculate the computed left and right margin again taking into
@@ -969,6 +1041,11 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
   } else {
     ComputeVerticalValue(aContainingBlockHeight, aHeightUnit,
                          mStylePosition->mHeight, computedHeight);
+  }
+  if (computedHeight > mComputedMaxHeight) {
+    computedWidth = mComputedMaxHeight;
+  } else if (computedHeight < mComputedMinHeight) {
+    computedHeight = mComputedMinHeight;
   }
 }
 
@@ -1402,22 +1479,55 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
   nsStyleUnit maxWidthUnit = mStylePosition->mMaxWidth.GetUnit();
   if (eStyleUnit_Inherit == maxWidthUnit) {
     mComputedMaxWidth = aContainingBlockRS->mComputedMaxWidth;
+  } else if (eStyleUnit_Null == maxWidthUnit) {
+    // Specified value of 'none'
+    mComputedMaxWidth = NS_UNCONSTRAINEDSIZE;  // no limit
   } else {
     ComputeHorizontalValue(aContainingBlockWidth, maxWidthUnit,
                            mStylePosition->mMaxWidth, mComputedMaxWidth);
   }
+
+  // If the computed value of 'min-width' is greater than the value of
+  // 'max-width', 'max-width' is set to the value of 'min-width'
+  if (mComputedMinWidth > mComputedMaxWidth) {
+    mComputedMaxWidth = mComputedMinWidth;
+  }
+
   nsStyleUnit minHeightUnit = mStylePosition->mMinHeight.GetUnit();
   if (eStyleUnit_Inherit == minHeightUnit) {
     mComputedMinHeight = aContainingBlockRS->mComputedMinHeight;
   } else {
-    ComputeVerticalValue(aContainingBlockHeight, minHeightUnit,
-                         mStylePosition->mMinHeight, mComputedMinHeight);
+    // Check for percentage based values and a containing block height that
+    // depends on the content height. Treat them like 'auto'
+    if ((NS_AUTOHEIGHT == aContainingBlockHeight) &&
+        (eStyleUnit_Percent == minHeightUnit)) {
+      mComputedMinHeight = 0;
+    } else {
+      ComputeVerticalValue(aContainingBlockHeight, minHeightUnit,
+                           mStylePosition->mMinHeight, mComputedMinHeight);
+    }
   }
   nsStyleUnit maxHeightUnit = mStylePosition->mMaxHeight.GetUnit();
   if (eStyleUnit_Inherit == maxHeightUnit) {
     mComputedMaxHeight = aContainingBlockRS->mComputedMaxHeight;
+  } else if (eStyleUnit_Null == maxHeightUnit) {
+    // Specified value of 'none'
+    mComputedMaxHeight = NS_UNCONSTRAINEDSIZE;  // no limit
   } else {
-    ComputeVerticalValue(aContainingBlockHeight, maxHeightUnit,
-                         mStylePosition->mMaxHeight, mComputedMaxHeight);
+    // Check for percentage based values and a containing block height that
+    // depends on the content height. Treat them like 'auto'
+    if ((NS_AUTOHEIGHT == aContainingBlockHeight) && 
+        (eStyleUnit_Percent == maxHeightUnit)) {
+      mComputedMaxHeight = NS_UNCONSTRAINEDSIZE;
+    } else {
+      ComputeVerticalValue(aContainingBlockHeight, maxHeightUnit,
+                           mStylePosition->mMaxHeight, mComputedMaxHeight);
+    }
+  }
+
+  // If the computed value of 'min-height' is greater than the value of
+  // 'max-height', 'max-height' is set to the value of 'min-height'
+  if (mComputedMinHeight > mComputedMaxHeight) {
+    mComputedMaxHeight = mComputedMinHeight;
   }
 }
