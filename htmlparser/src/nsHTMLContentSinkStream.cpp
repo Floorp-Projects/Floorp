@@ -432,13 +432,12 @@ void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize)
  * Entities are represented in the dom as single elements.
  * Substitute them back into entity for (e.g. &acute;) here.
  */
-void nsHTMLContentSinkStream::UnicodeToHTMLString(nsString& aSrc)
+void nsHTMLContentSinkStream::UnicodeToHTMLString(const nsString& aSrc,
+                                                  nsString& aDst)
 {
   PRInt32       length = aSrc.Length();
   PRUnichar     ch; 
   const char*   entity = nsnull;
-  nsAutoString  data;
-
 
   if (mUnicodeEncoder == nsnull)
     InitEncoder("");
@@ -458,23 +457,23 @@ void nsHTMLContentSinkStream::UnicodeToHTMLString(nsString& aSrc)
         nsAutoString temp(entity);
 
         temp.ToLowerCase();
-        data.Append('&');
-        data.Append(temp);
-        data.Append(';');
+        aDst.Append('&');
+        aDst.Append(temp);
+        aDst.Append(';');
       }
       else
       {
-        data.Append(ch);
+        aDst.Append(ch);
       }
     }
-    aSrc = data;
   }
 }
 
 
 void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
 {
-  UnicodeToHTMLString(aSrc);
+  nsString unicode;
+  UnicodeToHTMLString(aSrc, unicode);
 
   NS_VERIFY(mUnicodeEncoder != nsnull,"The unicode encoder needs to be initialized");
   if (mUnicodeEncoder == nsnull)
