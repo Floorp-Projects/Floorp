@@ -25,6 +25,10 @@ foreach (@lines) {
     /^([0-9\.]*):/;
     $cur = $1;
     printdiff($cur, $prev, $_);
+    if (/total: ([0-9\.]*)/) {
+        # print how much % this was
+        printf "%4.2f%%", $1/$total*100;
+    }
     print "\t$_";
     $prev = $cur;
 }
@@ -43,9 +47,11 @@ sub printdiff() {
 
     # If we are ignoring dlls and this is a dll line, return
     if ($ignoreDllLoads && $line =~ /PR_LoadLibrary/) {
-        return;
+        return 0;
     }
 
     # if significant time elapsed print it
     printf "%4.2f%% %5.3f\n", $diff/$total*100, $diff;
+
+    return 1;
 }
