@@ -1,0 +1,61 @@
+
+BookSet {
+  display: block;
+}
+
+Book {
+  display: list-item;
+  float: none;
+  border: none;
+  background: inherit;
+}
+
+BookCover {
+ display: none;
+}
+
+Title {
+  display: block;
+  font-weight: bold;
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+Author {
+  display: block;
+  font-style: italic;
+}
+
+Synopsis {
+  display: none;
+}
+
+
+ListPrice {
+  display: none;
+  text-align: right;
+  padding-right: 15px;
+  text-decoration: line-through;  
+}
+
+
+Price {
+  display: block;
+  color: rgb(20,100,0);
+  font-weight: bold;
+  text-align:left; 
+}
+
+
+Price:before {
+  content: "Our Price: ";
+}
+
+ISBN {
+  display: block;
+  font-family: monospace;
+  font-size: 8pt;
+}
+
+
