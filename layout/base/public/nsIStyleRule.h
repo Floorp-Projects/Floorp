@@ -25,6 +25,7 @@
 
 class nsIStyleContext;
 class nsIPresContext;
+class nsIContent;
 
 // IID for the nsIStyleRule interface {40ae5c90-ad6a-11d1-8031-006008159b5a}
 #define NS_ISTYLE_RULE_IID     \
@@ -32,10 +33,11 @@ class nsIPresContext;
 
 class nsIStyleRule : public nsISupports {
 public:
-  virtual PRBool Equals(const nsIStyleRule* aRule) const = 0;
-  virtual PRUint32 HashValue(void) const = 0;
+  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const = 0;
+  NS_IMETHOD HashValue(PRUint32& aValue) const = 0;
 
-  virtual void MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext, 
+                          nsIContent* aContent) = 0;
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 };
