@@ -48,7 +48,7 @@ var gStatusBar = null;
 
 function NODE_ID(aElement)
 {
-  return aElement.id || aElement.getAttribute("ref");
+  return aElement.getAttribute("ref") || aElement.id;
 }
 
 function Startup()
@@ -134,7 +134,7 @@ var downloadViewController = {
     var cmds = ["cmd_properties", "cmd_pause", "cmd_cancel",
                 "cmd_openfile", "cmd_showinshell"];
     var selectionCount = gDownloadView.selectedItems.length;
-    if (!selectionCount || !gDownloadView.getRowCount()) return false;
+    if (!selectionCount) return false;
 
     var isDownloading = gDownloadManager.getDownload(gDownloadView.selectedItems[0].id);
     switch (aCommand) {
@@ -204,7 +204,6 @@ var downloadViewController = {
     case "cmd_remove":
       for (i = 0; i < selection.length; ++i)
         gDownloadManager.removeDownload(selection[i].id);
-      window.updateCommands("tree-select");
       break;
     case "cmd_selectAll":
       gDownloadView.selectAll();

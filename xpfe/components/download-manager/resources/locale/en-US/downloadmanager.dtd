@@ -15,7 +15,7 @@
 <!ENTITY cmd.properties.keybinding        "i">
 <!ENTITY cmd.pause.label                  "Pause">
 <!ENTITY cmd.pause.accesskey              "p">
-<!ENTITY cmd.remove.label                 "Remove from List">
+<!ENTITY cmd.remove.label                 "Remove from list">
 <!ENTITY cmd.remove.accesskey             "r">
 <!ENTITY cmd.cancel.label                 "Cancel">
 <!ENTITY cmd.cancel.accesskey             "c">

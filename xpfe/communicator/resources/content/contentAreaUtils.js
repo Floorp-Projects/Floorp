@@ -286,7 +286,16 @@ function foundHeaderInfo(aSniffer, aData)
     bypassCache : aData.bypassCache
   };
   
+  // Create persist object and progress dialog, connect them up, and
+  // initiate download.
+  var dialog  = makeProgressDialog();
   var persist = makeWebBrowserPersist();
+
+  dialog.source = makeURL(aData.url);
+  dialog.target = persistArgs.target;
+
+  // Set up the persist object to do the download/save.
+  persist.progressListener = dialog;
 
   // Calculate persist flags.
   const nsIWBP = Components.interfaces.nsIWebBrowserPersist;
@@ -299,9 +308,6 @@ function foundHeaderInfo(aSniffer, aData)
   if (shouldDecode)
     persist.persistFlags &= ~nsIWBP.PERSIST_FLAGS_NO_CONVERSION;
     
-  // Create download and initiate it (below)
-  var dl = Components.classes["@mozilla.org/download;1"].createInstance(Components.interfaces.nsIDownload);
-
   if (isDocument && fp.filterIndex != 1) {
     // Saving a Document, not a URI:
     var filesFolder = null;
@@ -329,11 +335,12 @@ function foundHeaderInfo(aSniffer, aData)
     }
     
     const kWrapColumn = 80;
-    dl.init(aSniffer.uri, persistArgs.target, null, null, null, persist);
+
+    dialog.open(null, persist);
     persist.saveDocument(persistArgs.source, persistArgs.target, filesFolder, 
                          persistArgs.contentType, encodingFlags, kWrapColumn);
   } else {
-    dl.init(source, persistArgs.target, null, null, null, persist);
+    dialog.open(null, persist);
     persist.saveURI(source, persistArgs.postData, persistArgs.target);
   }
 }
