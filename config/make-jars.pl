@@ -11,8 +11,6 @@ use Time::localtime;
 use Cwd;
 use File::Copy;
 use File::Path;
-use Fcntl qw(:DEFAULT :flock);
-use IO::File;
 
 my $objdir = getcwd;
 
@@ -46,12 +44,10 @@ if ($verbose) {
         . "\n";
 }
 
-sub zipErrorCheck($$)
+sub zipErrorCheck($)
 {
-    my ($err,$lockhandle) = @_;
+    my ($err) = @_;
     return if ($err == 0 || $err == 12);
-    flock($lockhandle, LOCK_UN);
-    close($lockhandle);
     die ("Error invoking zip: $err");
 }
 
@@ -67,30 +63,9 @@ sub JarIt
     chdir("$destPath/$jarfile");
     #print "cd $destPath/$jarfile\n";
 
-    my $lockhandle = new IO::File;
-    my $jarfileStat = stat("../$jarfile.jar");
-    my $err = 0; 
-
-    if (!defined($jarfileStat)) {
-	open(DUMMY, ">dummy") || die ("$!\n");
-	close(DUMMY);
-	open ($lockhandle, "dummy") ||
-	    die("ERROR: Could not create lockfile for dummy. Exiting.\n");
-	flock($lockhandle, LOCK_EX);
-        system("zip -u ../$jarfile.jar dummy") == 0 or
-	    $err = $? >> 8;
-	zipErrorCheck($err,$lockhandle);
-	flock($lockhandle, LOCK_UN);
-	close($lockhandle);
-    }
-   
-    open($lockhandle,"../$jarfile.jar") || 
-	die("WARNING: Could not create lockfile for ../$jarfile.jar. Exiting.\n");
-    flock($lockhandle, LOCK_EX);
-    
     if (!($args eq "")) {
 	my $cwd = getcwd;
-
+	my $err = 0; 
         #print "zip -u ../$jarfile.jar $args\n";
 
 	# Handle posix cmdline limits (4096)
@@ -105,13 +80,13 @@ sub JarIt
 	    #print "Length of subargs: " . length($subargs) . "\n";
 	    system("zip -u ../$jarfile.jar $subargs") == 0 or
 		$err = $? >> 8;
-	    zipErrorCheck($err,$lockhandle);
+	    zipErrorCheck($err);
 	}
 	#print "Length of args: " . length($args) . "\n";
         #print "zip -u ../$jarfile.jar $args\n";
         system("zip -u ../$jarfile.jar $args") == 0 or
 	    $err = $? >> 8;
-	zipErrorCheck($err,$lockhandle);
+	zipErrorCheck($err);
     }
 
     if (!($overrides eq "")) {
@@ -129,26 +104,12 @@ sub JarIt
 	    #print "Length of subargs: " . length($subargs) . "\n";
 	    system("zip ../$jarfile.jar $subargs") == 0 or
 		$err = $? >> 8;
-	    zipErrorCheck($err,$lockhandle);
+	    zipErrorCheck($err);
 	}
         #print "zip ../$jarfile.jar $overrides\n";
         system("zip ../$jarfile.jar $overrides\n") == 0 or 
 	    $err = $? >> 8;
-	zipErrorCheck($err,$lockhandle);
-    }
-    flock($lockhandle, LOCK_UN);
-    close($lockhandle);
-
-    if (!defined($jarfileStat)) {
-	open ($lockhandle, "../$jarfile.jar") ||
-	    die("ERROR: Could not create lockfile for ../$jarfile.jar. Exiting.\n");
-	flock($lockhandle, LOCK_EX);
-        system("zip -d ../$jarfile.jar dummy") == 0 or
-	    $err = $? >> 8;
-	zipErrorCheck($err,$lockhandle);
-	flock($lockhandle, LOCK_UN);
-	close($lockhandle);
-	unlink("dummy");
+	zipErrorCheck($err);
     }
 
     chdir($oldDir);
