@@ -54,6 +54,8 @@ const calICalendar = Components.interfaces.calICalendar;
 function calICSCalendar () {
     this.wrappedJSObject = this;
     this.initICSCalendar();
+    this.unmappedComponents = [];
+    this.unmappedProperties = [];
 }
 
 calICSCalendar.prototype = {
@@ -77,7 +79,6 @@ calICSCalendar.prototype = {
         this.mICSService = Components.classes["@mozilla.org/calendar/ics-service;1"]
                                      .getService(Components.interfaces.calIICSService);
         this.mObserver = new calICSObserver(this);
-        this.addObserver(this.mObserver, calICalendar.ITEM_FILTER_TYPE_ALL);
     },
 
     name: "",
@@ -90,11 +91,18 @@ calICSCalendar.prototype = {
         return this.setICSUri(aUri);
     },
 
+    calendarPromotedProps: {
+        "PRODID": true,
+        "VERSION": true
+    },
+
     setICSUri: function(aUri) {
-        // XXX If this ever uses async io, make sure to also make this
-        // async. The ui should not be able to edit the calendar while loading.
-        // or just queue the changes from the ui.
-        this.mInitializing = true;
+        // XXX Make it impossible for the UI to edit the calendar while
+        //     loading.
+
+        // Removing the observer because the file should not be written
+        // while loading.
+        this.removeObserver(this.mObserver);
         this.mUri = aUri;
         
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
@@ -123,24 +131,52 @@ calICSCalendar.prototype = {
         // ics files are always utf8
         unicodeConverter.charset = "UTF-8";
         var str = unicodeConverter.convertFromByteArray(result, result.length);
+
         // Wrap parsing in a try block. Will ignore errors. That's a good thing
         // for non-existing or empty files, but not good for invalid files.
         // We should not accidently overwrite third party files.
         // XXX Fix that
-        try {
+        // XXX try disabled for debugging all the other possible problems.
+        //     that's more important then file at the moment.
+        //try {
             var calComp = this.mICSService.parseICS(str);
-            // XXX also getting VTODO would be nice
-            var subComp = calComp.getFirstSubcomponent("VEVENT");
-            while (subComp) {
-                var event = Components.classes["@mozilla.org/calendar/event;1"]
-                                      .createInstance(Components.interfaces.calIEvent);
-                event.icalComponent = subComp;
-                this.addItem(event, null);
 
-                subComp = calComp.getNextSubcomponent("VEVENT");
+            // Get unknown properties
+            var prop = calComp.getFirstProperty("ANY");
+            while (prop) {
+                if (!this.calendarPromotedProps[prop.propertyName]) {
+                    this.unmappedProperties.push(prop);
+                    dump(prop.propertyName+"\n");
+                }
+                prop = calComp.getNextProperty("ANY");
             }
-        } catch(e) { }
-        this.mInitializing = false;
+
+            var subComp = calComp.getFirstSubcomponent("ANY");
+            while (subComp) {
+                switch (subComp.componentType) {
+                case "VEVENT":
+                    var event = Components.classes["@mozilla.org/calendar/event;1"]
+                                          .createInstance(Components.interfaces.calIEvent);
+                    event.icalComponent = subComp;
+                    this.addItem(event, null);
+                    break;
+                case "VTODOnot":
+                    // XXX Last time i tried, vtodo didn't work. Sadly no time to
+                    // debug now.
+                    var todo = Components.classes["@mozilla.org/calendar/todo;1"]
+                                         .createInstance(Components.interfaces.calITodo);
+                    todo.icalComponent = subComp;
+                    this.addItem(todo, null);
+                    break;
+                default:
+                    this.unmappedComponents.push(subComp);
+                    dump(subComp.componentType+"\n");
+                }
+                subComp = calComp.getNextSubcomponent("ANY");
+            }
+            
+        //} catch(e) { dump(e+"\n");}
+        this.addObserver(this.mObserver, calICalendar.ITEM_FILTER_TYPE_ALL);
         this.observeOnLoad();
     },
 
@@ -175,15 +211,23 @@ calICSCalendar.prototype = {
             }
         };
 
-        if (this.mInitializing)
-            return;
         if (!this.mUri)
             throw Components.results.NS_ERROR_FAILURE;
-dump(">>> WriteICS "+this.mUri.spec+"\n")
 
         var calComp = this.mICSService.createIcalComponent("VCALENDAR");
         calComp.version = "2.0";
         calComp.prodid = "-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN";
+
+        var i;
+        for (i in this.unmappedComponents) {
+             dump("Adding a "+this.unmappedComponents[i].componentType+"\n");
+             calComp.addSubcomponent(this.unmappedComponents[i]);
+        }
+        for (i in this.unmappedProperties) {
+             dump("Adding "+this.unmappedProperties[i].propertyName+"\n");
+             calComp.addProperty(this.unmappedProperties[i]);
+        }
+
         this.getItems(calICalendar.ITEM_FILTER_TYPE_ALL, 0, null, null, listener);
     },
 
@@ -241,7 +285,7 @@ dump(">>> WriteICS "+this.mUri.spec+"\n")
         }
         Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
         return null;
-    },
+    }
 };
 
 function calICSObserver(aCalendar) {
@@ -250,22 +294,31 @@ function calICSObserver(aCalendar) {
 
 calICSObserver.prototype = {
     mCalendar: null,
+    mInBatch: false,
 
-    // XXX only write when not in a batch!
-    onStartBatch: function() {},
-    onEndBatch: function() {},
+    onStartBatch: function() {
+        this.mInBatch = true;
+    },
+    onEndBatch: function() {
+        this.mInBatch = false;
+        // XXX Should this be done?
+        this.mCalendar.writeICS();
+    },
     onLoad: function() {},
     onAddItem: function(aItem) {
-        this.mCalendar.writeICS();
+        if (!this.mInBatch)
+            this.mCalendar.writeICS();
     },
     onModifyItem: function(aNewItem, aOldItem) {
-        this.mCalendar.writeICS();
+        if (!this.mInBatch)
+            this.mCalendar.writeICS();
     },
     onDeleteItem: function(aDeletedItem) {
-        this.mCalendar.writeICS();
+        if (!this.mInBatch)
+            this.mCalendar.writeICS();
     },
     onAlarm: function(aAlarmItem) {},
-    onError: function(aMessage) {},
+    onError: function(aMessage) {}
 };
 
 /****
