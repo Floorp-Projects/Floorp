@@ -55,15 +55,31 @@
 /*----------------------------------------------------------------------*/
 typedef struct
 {
-	Widget						item;
+	/* Item */
+	Widget							item;
+
+	/* Does the item have tip string support ? */
+	Boolean							tip_string_installed;
+
+	/* Does the item have doc string support ? */
+	Boolean							doc_string_installed;
 
 	/* TipString */
-	Boolean						tip_string_enabled;
-	XtCallbackRec				tip_string_callback;
+	Boolean							tip_string_enabled;
+	XfeTipStringObtainCallback		tip_string_obtain_callback;
+	XtPointer						tip_string_obtain_data1;
+	XtPointer						tip_string_obtain_data2;
 
 	/* DocString */
-	Boolean						doc_string_enabled;
-	XtCallbackRec				doc_string_callback;
+	Boolean							doc_string_enabled;
+	XfeTipStringObtainCallback		doc_string_obtain_callback;
+	XtPointer						doc_string_obtain_data1;
+	XtPointer						doc_string_obtain_data2;
+
+	/* DocString callback */
+	XfeDocStringCallback			doc_string_callback;
+	XtPointer						doc_string_data1;
+	XtPointer						doc_string_data2;
 
 } _XfeTipItemInfoRec,*_XfeTipItemInfo;
 /*----------------------------------------------------------------------*/
@@ -107,20 +123,29 @@ static void					ManagerDestroyCB	(Widget,XtPointer,XtPointer);
 /* Widget functions														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void					WidgetAdd			(Widget);
-static void					WidgetRemove		(Widget);
-static _XfeTipItemInfo		WidgetGetInfo		(Widget);
-static _XfeTipItemInfo		WidgetAddInfo		(Widget);
-static void					WidgetRemoveInfo	(Widget,_XfeTipItemInfo);
+static void					WidgetAddStageOneEH		(Widget);
+static void					WidgetRemoveStageOneEH	(Widget);
+static _XfeTipItemInfo		WidgetAddTipString		(Widget);
+static void					WidgetRemoveTipString	(Widget);
+static _XfeTipItemInfo		WidgetAddDocString		(Widget);
+static void					WidgetRemoveDocString	(Widget);
+static _XfeTipItemInfo		WidgetGetInfo			(Widget);
+static void					WidgetAddInfo			(Widget,_XfeTipItemInfo);
+static void					WidgetRemoveInfo		(Widget,_XfeTipItemInfo);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* Gadget functions														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void					GadgetAdd			(Widget);
-static void					GadgetRemove		(Widget);
-static _XfeTipItemInfo		GadgetGetInfo		(Widget);
+static _XfeTipItemInfo		GadgetAddTipString		(Widget);
+static void					GadgetRemoveTipString	(Widget);
+static _XfeTipItemInfo		GadgetAddDocString		(Widget);
+static void					GadgetRemoveDocString	(Widget);
+static _XfeTipItemInfo		GadgetGetInfo			(Widget);
+static void					GadgetAddInfo			(Widget w,
+													 _XfeTipManagerInfo,
+													 _XfeTipItemInfo);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -197,8 +222,8 @@ GadgetPhonyInputDispatch(Widget		w,
 	assert( input_dispatch != NULL );
 
 	/* Do the tip magic only if tip or doc strings are globally enabled */
-	if (XfeToolTipGlobalGetTipStringEnabledState() ||
-		XfeToolTipGlobalGetDocStringEnabledState())
+	if (XfeTipStringGlobalGetEnabledState() ||
+		XfeDocStringGlobalGetEnabledState())
 	{
 		_XfeTipManagerInfo	manager_info = NULL;
 		Widget				pw = XtParent(w);
@@ -215,32 +240,31 @@ GadgetPhonyInputDispatch(Widget		w,
 			
 			if (node != NULL)
 			{
-				_XfeTipItemInfo		item_info = 
-					(_XfeTipItemInfo) XfeLinkNodeItem(node);
+				_XfeTipItemInfo info = (_XfeTipItemInfo) XfeLinkNodeItem(node);
+				
+				assert( info != NULL );
 
-				assert( item_info != NULL );
-
-				if (item_info != NULL)
+				if (info != NULL)
 				{
 					Boolean do_tip_string = 
-						XfeToolTipGlobalGetTipStringEnabledState() &&
-						item_info->tip_string_enabled;
+						XfeTipStringGlobalGetEnabledState() &&
+						info->tip_string_enabled;
 
 					Boolean do_doc_string = 
-						XfeToolTipGlobalGetDocStringEnabledState() &&
-						item_info->doc_string_enabled;
+						XfeDocStringGlobalGetEnabledState() &&
+						info->doc_string_enabled;
 
 					/* Enter */
 					if (event_mask & XmENTER_EVENT)
 					{
 						if (do_tip_string)
 						{
-							TipStringEnterItem(w,item_info);
+							TipStringEnterItem(w,info);
 						}
 						
 						if (do_doc_string)
 						{
-							DocStringEnterItem(w,item_info);
+							DocStringEnterItem(w,info);
 						}
 					}
 					/* Leave */
@@ -248,12 +272,12 @@ GadgetPhonyInputDispatch(Widget		w,
 					{
 						if (do_tip_string)
 						{
-							TipStringLeaveItem(w,item_info);
+							TipStringLeaveItem(w,info);
 						}
 						
 						if (do_doc_string)
 						{
-							DocStringLeaveItem(w,item_info);
+							DocStringLeaveItem(w,info);
 						}
 					}
 					/*
@@ -272,13 +296,13 @@ GadgetPhonyInputDispatch(Widget		w,
 					{
 						if (do_tip_string)
 						{
-							TipStringCancelItem(w,item_info);
+							TipStringCancelItem(w,info);
 						}
 					}
-				} /* item_info != NULL */
+				} /* info != NULL */
 			} /* node != NULL */
 		} /* manager_info != NULL */
-	} /* XfeToolTipGlobalGetTipStringEnabledState() == True */
+	} /* XfeTipStringGlobalGetEnabledState() == True */
 
 	/* Invoke the original InputDispatch() method */
 	(*input_dispatch)(w,event,event_mask);
@@ -512,22 +536,13 @@ ManagerDestroyCB(Widget w,XtPointer client_data,XtPointer call_data)
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void
-WidgetAdd(Widget w)
+WidgetAddStageOneEH(Widget w)
 {
-	_XfeTipItemInfo		item_info = NULL;
-
 	assert( _XfeIsAlive(w) );
 	assert( XtIsWidget(w) );
+	assert( _XfeIsRealized(w) );
 
-	/* Make sure the item is not already on the list */
-	assert( WidgetGetInfo(w) == NULL );
-
-	/* Add the item info the the widget */
-	item_info = WidgetAddInfo(w);
-
-	assert( item_info != NULL );
-
-	/* Remove the tool tip event handler */
+	/* Remove the event handler so that we start with a clean item */
     XtRemoveEventHandler(w,
 						 TOOL_TIP_EVENT_MASK,
 						 FALSE,
@@ -544,25 +559,13 @@ WidgetAdd(Widget w)
 }
 /*----------------------------------------------------------------------*/
 static void
-WidgetRemove(Widget w)
+WidgetRemoveStageOneEH(Widget w)
 {
-	_XfeTipItemInfo		item_info = NULL;
-
 	assert( _XfeIsAlive(w) );
 	assert( XtIsWidget(w) );
+/* 	assert( _XfeIsRealized(w) ); */
 
-	/* Add the item info the the widget */
-	item_info = WidgetGetInfo(w);
-
-	assert( item_info != NULL );
-
-	/* Remove the tool tip info from the widget */
- 	WidgetRemoveInfo(w,item_info);
-
-	/* Free the tool tip info */
-	ItemFreeInfo(item_info);
-
-	/* Remove the tool tip event handler */
+	/* Remove the event handler so that we start with a clean item */
     XtRemoveEventHandler(w,
 						 TOOL_TIP_EVENT_MASK,
 						 FALSE,
@@ -571,9 +574,161 @@ WidgetRemove(Widget w)
 }
 /*----------------------------------------------------------------------*/
 static _XfeTipItemInfo
+WidgetAddTipString(Widget w)
+{
+	_XfeTipItemInfo		info = NULL;
+
+	assert( _XfeIsAlive(w) );
+	assert( XtIsWidget(w) );
+
+	/* Try to find the info */
+	info = WidgetGetInfo(w);
+	
+	/* If the info is not found, allocate it and add it to the item */
+	if (info == NULL)
+	{
+		info = ItemAllocateInfo(w);
+
+		WidgetAddInfo(w,info);
+	}
+
+	assert( info != NULL );
+
+	/* If the tip string info was already installed, we are done */
+	if (info->tip_string_installed)
+	{
+		return info;
+	}
+
+	/* Mark the tip string info as installed */
+	info->tip_string_installed = True;
+
+	/* Add the stage one event handler */
+	WidgetAddStageOneEH(w);
+
+	return info;
+}
+/*----------------------------------------------------------------------*/
+static void
+WidgetRemoveTipString(Widget w)
+{
+	_XfeTipItemInfo		info = NULL;
+
+	assert( _XfeIsAlive(w) );
+	assert( XtIsWidget(w) );
+
+	/* Add the item info the the widget */
+	info = WidgetGetInfo(w);
+
+	assert( info != NULL );
+
+	/* Mark the tip string info as not installed */
+	info->tip_string_installed = False;
+
+	/* Reset all the tip string members */
+	info->tip_string_enabled			= False;
+	info->tip_string_obtain_callback	= NULL;
+	info->tip_string_obtain_data1		= NULL;
+	info->tip_string_obtain_data2		= NULL;
+
+	/* If the doc string is installed, leave info and event handlers alone */
+	if (info->doc_string_installed)
+	{
+		return;
+	}
+
+	/* Remove the info from the widget */
+ 	WidgetRemoveInfo(w,info);
+
+	/* Free the info */
+	ItemFreeInfo(info);
+
+	/* Remove stage one event handler */
+	WidgetRemoveStageOneEH(w);
+}
+/*----------------------------------------------------------------------*/
+static _XfeTipItemInfo
+WidgetAddDocString(Widget w)
+{
+	_XfeTipItemInfo		info = NULL;
+
+	assert( _XfeIsAlive(w) );
+	assert( XtIsWidget(w) );
+
+	/* Try to find the info */
+	info = WidgetGetInfo(w);
+	
+	/* If the info is not found, allocate it and add it to the item */
+	if (info == NULL)
+	{
+		info = ItemAllocateInfo(w);
+
+		WidgetAddInfo(w,info);
+	}
+
+	assert( info != NULL );
+
+	/* If the doc string info was already installed, we are done */
+	if (info->doc_string_installed)
+	{
+		return info;
+	}
+
+	/* Mark the doc string info as installed */
+	info->doc_string_installed = True;
+
+	/* Add the stage one event handler */
+	WidgetAddStageOneEH(w);
+
+	return info;
+}
+/*----------------------------------------------------------------------*/
+static void
+WidgetRemoveDocString(Widget w)
+{
+	_XfeTipItemInfo		info = NULL;
+
+	assert( _XfeIsAlive(w) );
+	assert( XtIsWidget(w) );
+
+	/* Add the item info the the widget */
+	info = WidgetGetInfo(w);
+
+	assert( info != NULL );
+
+	/* Mark the doc string info as not installed */
+	info->doc_string_installed = False;
+
+	/* Reset all the doc string members */
+	info->doc_string_enabled			= False;
+	info->doc_string_obtain_callback	= NULL;
+	info->doc_string_obtain_data1		= NULL;
+	info->doc_string_obtain_data2		= NULL;
+
+	info->doc_string_callback			= NULL;
+	info->doc_string_data1				= NULL;
+	info->doc_string_data2				= NULL;
+
+	/* If the tip string is installed, leave info and event handlers alone */
+	if (info->tip_string_installed)
+	{
+		return;
+	}
+
+	/* Remove the info from the widget */
+ 	WidgetRemoveInfo(w,info);
+
+	/* Free the info */
+	ItemFreeInfo(info);
+
+	/* Remove stage one event handler */
+	WidgetRemoveStageOneEH(w);
+}
+/*----------------------------------------------------------------------*/
+static _XfeTipItemInfo
 WidgetGetInfo(Widget w)
 {
-	_XfeTipItemInfo	item_info = NULL;
+	_XfeTipItemInfo	info = NULL;
 
 	assert( _XfeIsAlive(w) );
 	assert( _XfeIsRealized(w) );
@@ -585,66 +740,53 @@ WidgetGetInfo(Widget w)
 		int find_result = XFindContext(XtDisplay(w),
 									   XtWindow(w),
 									   _xfe_tt_item_context,
-									   (XPointer *) &item_info);
+									   (XPointer *) &info);
 
 		if (find_result != 0)
 		{
-			item_info = NULL;
+			info = NULL;
 		}
 	}
 
-	return item_info;
+	return info;
 }
 /*----------------------------------------------------------------------*/
-static _XfeTipItemInfo
-WidgetAddInfo(Widget w)
+static void
+WidgetAddInfo(Widget w,_XfeTipItemInfo info)
 {
-	_XfeTipItemInfo		item_info = NULL;
-	int					save_result;
+	int save_result;
 
 	assert( _XfeIsAlive(w) );
 	assert( _XfeIsRealized(w) );
 	assert( XtIsWidget(w) );
+	assert( info != NULL );
 
-	/* Allocate the gadget context only once */
+	/* Allocate the unique context only once */
 	if (_xfe_tt_item_context == None)
 	{
 		_xfe_tt_item_context = XUniqueContext();
 	}
 
+	/* Make sure the info is not already installed */
 	assert( XFindContext(XtDisplay(w),
 						 XtWindow(w),
 						 _xfe_tt_item_context,
-						 (XPointer *) &item_info) != 0);
-
-	/* Allocate the item info */
-	item_info = ItemAllocateInfo(w);
-
-	assert( item_info != NULL );
-
-#if 1 
-	item_info->tip_string_enabled = True;
-	item_info->doc_string_enabled = True;
-#endif
+						 (XPointer *) &info) != 0);
 
 	save_result = XSaveContext(XtDisplay(w),
 							   XtWindow(w),
 							   _xfe_tt_item_context,
-							   (XPointer) item_info);
+							   (XPointer) info);
 	
 	assert( save_result == 0 );
-	
-	assert( item_info != NULL );
-	
-	return item_info;
 }
 /*----------------------------------------------------------------------*/
 static void
-WidgetRemoveInfo(Widget w,_XfeTipItemInfo item_info)
+WidgetRemoveInfo(Widget w,_XfeTipItemInfo info)
 {
 	int delete_result;
 
-	assert( item_info != NULL );
+	assert( info != NULL );
 	assert( _xfe_tt_item_context != None );
 
 	delete_result = XDeleteContext(XtDisplay(w),
@@ -655,18 +797,17 @@ WidgetRemoveInfo(Widget w,_XfeTipItemInfo item_info)
 }
 /*----------------------------------------------------------------------*/
 
-
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* Gadget functions														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void
-GadgetAdd(Widget w)
+static _XfeTipItemInfo
+GadgetAddTipString(Widget w)
 {
 	Widget				pw = NULL;
 	_XfeTipManagerInfo	manager_info = NULL;
-	_XfeTipItemInfo		item_info = NULL;
+	_XfeTipItemInfo		info = NULL;
 
 	assert( _XfeIsAlive(w) );
 	assert( XmIsGadget(w) );
@@ -684,35 +825,41 @@ GadgetAdd(Widget w)
 
 	assert( manager_info != NULL );
 
-	/* Allocate the item info */
-	item_info = ItemAllocateInfo(w);
+	/* Try to find the info */
+	info = GadgetGetInfo(w);
+	
+	/* If the info is not found, allocate it and add it to the item */
+	if (info == NULL)
+	{
+		info = ItemAllocateInfo(w);
 
-	assert( item_info != NULL );
+		GadgetAddInfo(w,manager_info,info);
+	}
 
-#if 1 
-	item_info->tip_string_enabled = True;
-	item_info->doc_string_enabled = True;
-#endif
+	assert( info != NULL );
 
-	/* Make sure the item is not already on the list */
-	assert( XfeLinkedFind(manager_info->children_list,
-						  ChildrenListTestFunc,
-						  (XtPointer) w) == NULL);
+	/* If the tip string info was already installed, we are done */
+	if (info->tip_string_installed)
+	{
+		return info;
+	}
 
-	/* Add this gadget to the tool tip children list */
-	XfeLinkedInsertAtTail(manager_info->children_list,item_info);
+	/* Mark the tip string info as installed */
+	info->tip_string_installed = True;
 
 	GadgetSaveRealInputDispatchMethod(w);
 	
 	GadgetHackInputDispatch(w);
+
+	return info;
 }
 /*----------------------------------------------------------------------*/
 static void
-GadgetRemove(Widget w)
+GadgetRemoveTipString(Widget w)
 {
 	Widget				pw = NULL;
 	_XfeTipManagerInfo	manager_info = NULL;
-	_XfeTipItemInfo		item_info = NULL;
+	_XfeTipItemInfo		info = NULL;
 	XfeLinkNode			node;
 
 	assert( XmIsGadget(w) );
@@ -730,20 +877,147 @@ GadgetRemove(Widget w)
 			
 	assert( node != NULL );
 
+	info = (_XfeTipItemInfo) XfeLinkNodeItem(node);
+
+	assert( info != NULL );
+
+	/* Mark the tip string info as not installed */
+	info->tip_string_installed = False;
+
+	/* Reset all the tip string members */
+	info->tip_string_enabled			= False;
+	info->tip_string_obtain_callback	= NULL;
+	info->tip_string_obtain_data1		= NULL;
+	info->tip_string_obtain_data2		= NULL;
+
+	/* If the doc string is installed, leave info and event handlers alone */
+	if (info->doc_string_installed)
+	{
+		return;
+	}
+
 	/* Remove the item info from the list */
-	item_info = (_XfeTipItemInfo) 
+	info = (_XfeTipItemInfo) 
 		XfeLinkedRemoveNode(manager_info->children_list,node);
 
-	assert( item_info != NULL );
+	assert( info != NULL );
 
 	/* Free the item info */
-	ItemFreeInfo(item_info);
+	ItemFreeInfo(info);
+}
+/*----------------------------------------------------------------------*/
+static _XfeTipItemInfo
+GadgetAddDocString(Widget w)
+{
+	Widget				pw = NULL;
+	_XfeTipManagerInfo	manager_info = NULL;
+	_XfeTipItemInfo		info = NULL;
+
+	assert( _XfeIsAlive(w) );
+	assert( XmIsGadget(w) );
+
+	pw = XtParent(w);
+
+	/* Look for the manager info */
+	manager_info = ManagerGetInfo(pw);
+	
+	/* Add the manager info if needed */
+	if (manager_info == NULL)
+	{
+		manager_info = ManagerAddInfo(pw);
+	}
+
+	assert( manager_info != NULL );
+
+	/* Try to find the info */
+	info = GadgetGetInfo(w);
+	
+	/* If the info is not found, allocate it and add it to the item */
+	if (info == NULL)
+	{
+		info = ItemAllocateInfo(w);
+
+		GadgetAddInfo(w,manager_info,info);
+	}
+
+	assert( info != NULL );
+
+	/* If the doc string info was already installed, we are done */
+	if (info->doc_string_installed)
+	{
+		return info;
+	}
+
+	/* Mark the doc string info as installed */
+	info->doc_string_installed = True;
+
+	GadgetSaveRealInputDispatchMethod(w);
+	
+	GadgetHackInputDispatch(w);
+
+	return info;
+}
+/*----------------------------------------------------------------------*/
+static void
+GadgetRemoveDocString(Widget w)
+{
+	Widget				pw = NULL;
+	_XfeTipManagerInfo	manager_info = NULL;
+	_XfeTipItemInfo		info = NULL;
+	XfeLinkNode			node;
+
+	assert( XmIsGadget(w) );
+
+	pw = XtParent(w);
+
+	/* Look for the manager info */
+	manager_info = ManagerGetInfo(pw);
+	
+	assert( manager_info != NULL );
+
+	node = XfeLinkedFind(manager_info->children_list,
+						 ChildrenListTestFunc,
+						 (XtPointer) w);
+			
+	assert( node != NULL );
+
+	info = (_XfeTipItemInfo) XfeLinkNodeItem(node);
+
+	assert( info != NULL );
+
+	/* Mark the doc string info as not installed */
+	info->doc_string_installed = False;
+
+	/* Reset all the doc string members */
+	info->doc_string_enabled			= False;
+	info->doc_string_obtain_callback	= NULL;
+	info->doc_string_obtain_data1		= NULL;
+	info->doc_string_obtain_data2		= NULL;
+
+	info->doc_string_callback			= NULL;
+	info->doc_string_data1				= NULL;
+	info->doc_string_data2				= NULL;
+
+	/* If the doc string is installed, leave info and event handlers alone */
+	if (info->doc_string_installed)
+	{
+		return;
+	}
+
+	/* Remove the item info from the list */
+	info = (_XfeTipItemInfo) 
+		XfeLinkedRemoveNode(manager_info->children_list,node);
+
+	assert( info != NULL );
+
+	/* Free the item info */
+	ItemFreeInfo(info);
 }
 /*----------------------------------------------------------------------*/
 static _XfeTipItemInfo
 GadgetGetInfo(Widget w)
 {
-	_XfeTipItemInfo		item_info = NULL;
+	_XfeTipItemInfo		info = NULL;
 	Widget				pw = NULL;
 	_XfeTipManagerInfo	manager_info = NULL;
 
@@ -762,11 +1036,28 @@ GadgetGetInfo(Widget w)
 
 		if (node != NULL)
 		{
-			item_info = (_XfeTipItemInfo) XfeLinkNodeItem(node);
+			info = (_XfeTipItemInfo) XfeLinkNodeItem(node);
 		}
 	}
 
-	return item_info;
+	return info;
+}
+/*----------------------------------------------------------------------*/
+static void
+GadgetAddInfo(Widget w,_XfeTipManagerInfo manager_info,_XfeTipItemInfo info)
+{
+	assert( _XfeIsAlive(w) );
+	assert( XmIsGadget(w) );
+	assert( manager_info != NULL );
+	assert( info != NULL );
+
+	/* Make sure the item is not already on the list */
+	assert( XfeLinkedFind(manager_info->children_list,
+						  ChildrenListTestFunc,
+						  (XtPointer) w) == NULL);
+
+	/* Add this gadget to the tool tip children list */
+	XfeLinkedInsertAtTail(manager_info->children_list,info);
 }
 /*----------------------------------------------------------------------*/
 
@@ -778,77 +1069,91 @@ GadgetGetInfo(Widget w)
 static void
 ItemDestroyCB(Widget w,XtPointer client_data,XtPointer call_data)
 {
+/* 	_XfeTipItemInfo	info = (_XfeTipItemInfo) client_data; */
+
 	if (XmIsGadget(w))
 	{
-		GadgetRemove(w);
+		GadgetRemoveTipString(w);
+		GadgetRemoveDocString(w);
 	}
 	else
 	{
-		WidgetRemove(w);
+		WidgetRemoveTipString(w);
+		WidgetRemoveDocString(w);
 	}
 }
 /*----------------------------------------------------------------------*/
 static _XfeTipItemInfo
 ItemAllocateInfo(Widget w)
 {
-	_XfeTipItemInfo	item_info = NULL;
+	_XfeTipItemInfo	info = NULL;
 
 	assert( _XfeIsAlive(w) );
 	assert( _XfeIsRealized(w) );
 
-	item_info = (_XfeTipItemInfo) XtMalloc(sizeof(_XfeTipItemInfoRec) * 1);
+	info = (_XfeTipItemInfo) XtMalloc(sizeof(_XfeTipItemInfoRec) * 1);
 
 	/* Initialize the members */
-	item_info->item							= w;
+	info->item							= w;
 
-	item_info->tip_string_enabled			= False;
- 	item_info->doc_string_enabled			= False;
+	info->tip_string_installed			= False;
+	info->doc_string_installed			= False;
 
-	item_info->tip_string_callback.callback	= NULL;
-	item_info->tip_string_callback.closure	= NULL;
+	/* TipString */
+	info->tip_string_enabled			= False;
+	info->tip_string_obtain_callback	= NULL;
+	info->tip_string_obtain_data1		= NULL;
+	info->tip_string_obtain_data2		= NULL;
 
-	item_info->doc_string_callback.callback	= NULL;
-	item_info->doc_string_callback.closure	= NULL;
+	/* DocString */
+	info->doc_string_enabled			= False;
+	info->doc_string_obtain_callback	= NULL;
+	info->doc_string_obtain_data1		= NULL;
+	info->doc_string_obtain_data2		= NULL;
+	info->doc_string_callback			= NULL;
 
-	XtAddCallback(w,
-				  XmNdestroyCallback,
-				  ItemDestroyCB,
-				  (XtPointer) item_info);
+	/* DocString callback */
+	info->doc_string_callback			= NULL;
+	info->doc_string_data1				= NULL;
+	info->doc_string_data2				= NULL;
+
+	/* Garbage collection */
+	XtAddCallback(w,XmNdestroyCallback,ItemDestroyCB,(XtPointer) info);
 	
-	return item_info;
+	return info;
 }
 /*----------------------------------------------------------------------*/
 static void
-ItemFreeInfo(_XfeTipItemInfo item_info)
+ItemFreeInfo(_XfeTipItemInfo info)
 {
-	assert( item_info != NULL );
+	assert( info != NULL );
 
-	XtFree((char *) item_info);
+	XtFree((char *) info);
 }
 /*----------------------------------------------------------------------*/
 static _XfeTipItemInfo
 ItemGetInfo(Widget w)
 {
-	_XfeTipItemInfo item_info = NULL;
+	_XfeTipItemInfo info = NULL;
 	
 	assert( _XfeIsAlive(w) );
 
 	if (XmIsGadget(w))
 	{
-		item_info = GadgetGetInfo(w);
+		info = GadgetGetInfo(w);
 	}
 	else
 	{
-		item_info = WidgetGetInfo(w);
+		info = WidgetGetInfo(w);
 	}
 
-	return item_info;
+	return info;
 }
 /*----------------------------------------------------------------------*/
 static void
 ItemGetTipString(Widget w,XmString * xmstr_out,Boolean * need_to_free_out)
 {
-	_XfeTipItemInfo	item_info;
+	_XfeTipItemInfo	info;
 
 	assert( xmstr_out != NULL );
 	assert( need_to_free_out != NULL );
@@ -858,26 +1163,18 @@ ItemGetTipString(Widget w,XmString * xmstr_out,Boolean * need_to_free_out)
 
 	assert( _XfeIsAlive(w) );
 	
-	item_info = ItemGetInfo(w);
+	info = ItemGetInfo(w);
 	
-	assert( item_info != NULL );
+	assert( info != NULL );
 
-	/* Invoke the tool tip callback if present */
-	if (item_info->tip_string_callback.callback != NULL)
+	/* Invoke the tip string obtain callback if present */
+	if (info->tip_string_obtain_callback != NULL)
 	{
-		XfeToolTipLabelCallbackStruct cbs;
-
-		cbs.reason = 0;
-		cbs.event = NULL;
-		cbs.label_return = NULL;
-		cbs.need_to_free_return = False;
-		
-		(*item_info->tip_string_callback.callback)(w,
-												 item_info->tip_string_callback.closure,
-												 &cbs);
-		
-		*xmstr_out = cbs.label_return;
-		*need_to_free_out = cbs.need_to_free_return;
+		(*info->tip_string_obtain_callback)(w,
+											info->tip_string_obtain_data1,
+											info->tip_string_obtain_data2,
+											xmstr_out,
+											need_to_free_out);
 	}
 	/* Check resources directly */
 	else
@@ -897,7 +1194,7 @@ ItemGetTipString(Widget w,XmString * xmstr_out,Boolean * need_to_free_out)
 static void
 ItemGetDocString(Widget w,XmString * xmstr_out,Boolean * need_to_free_out)
 {
-	_XfeTipItemInfo	item_info;
+	_XfeTipItemInfo	info;
 
 	assert( xmstr_out != NULL );
 	assert( need_to_free_out != NULL );
@@ -907,34 +1204,26 @@ ItemGetDocString(Widget w,XmString * xmstr_out,Boolean * need_to_free_out)
 
 	assert( _XfeIsAlive(w) );
 	
-	item_info = ItemGetInfo(w);
+	info = ItemGetInfo(w);
 	
-	assert( item_info != NULL );
+	assert( info != NULL );
 
-	/* Invoke the doc string callback if present */
-	if (item_info->doc_string_callback.callback != NULL)
+	/* Invoke the doc string obtain callback if present */
+	if (info->doc_string_obtain_callback != NULL)
 	{
-		XfeToolTipLabelCallbackStruct cbs;
-		
-		cbs.reason = 0;
-		cbs.event = NULL;
-		cbs.label_return = NULL;
-		cbs.need_to_free_return = False;
-		
-		(*item_info->doc_string_callback.callback)(w,
-												   item_info->doc_string_callback.closure,
-												   &cbs);
-		
-		*xmstr_out = cbs.label_return;
-		*need_to_free_out = cbs.need_to_free_return;
+		(*info->doc_string_obtain_callback)(w,
+											info->doc_string_obtain_data1,
+											info->doc_string_obtain_data2,
+											xmstr_out,
+											need_to_free_out);
 	}
 	/* Check resources directly */
 	else
 	{
-		*xmstr_out = XfeSubResourceGetWidgetXmStringValue(w, 
-														  XmNdocumentationString, 
-														  XmCDocumentationString);
-		
+		*xmstr_out = 
+			XfeSubResourceGetWidgetXmStringValue(w, 
+												 XmNdocumentationString, 
+												 XmCDocumentationString);
 		/*
 		 * No need to free this string.  The Xt resource destructor
 		 * should take care of freeing this memory.
@@ -954,7 +1243,7 @@ static Widget		_xfe_tt_stage_two_target = NULL;
 static XtIntervalId	_xfe_tt_timer_id = 0;
 
 static void
-TipStringEnterItem(Widget w,_XfeTipItemInfo item_info)
+TipStringEnterItem(Widget w,_XfeTipItemInfo info)
 {
 	assert( _XfeIsAlive(w) );
 
@@ -978,7 +1267,7 @@ TipStringEnterItem(Widget w,_XfeTipItemInfo item_info)
 }
 /*----------------------------------------------------------------------*/
 static void
-TipStringLeaveItem(Widget w,_XfeTipItemInfo item_info)
+TipStringLeaveItem(Widget w,_XfeTipItemInfo info)
 {
 	assert( _XfeIsAlive(w) );
 	
@@ -1010,13 +1299,13 @@ TipStringLeaveItem(Widget w,_XfeTipItemInfo item_info)
 }
 /*----------------------------------------------------------------------*/
 static void
-TipStringCancelItem(Widget w,_XfeTipItemInfo item_info)
+TipStringCancelItem(Widget w,_XfeTipItemInfo info)
 {
 #ifdef DEBUG_TOOL_TIPS
 	printf("TipStringCancelItem(%s)\n",XtName(w));
 #endif
 
-	TipStringLeaveItem(w,item_info);
+	TipStringLeaveItem(w,info);
 }
 /*----------------------------------------------------------------------*/
 
@@ -1025,14 +1314,48 @@ TipStringCancelItem(Widget w,_XfeTipItemInfo item_info)
 /* DocString enter / leave / cancel functions							*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-/* static Widget		_xfe_tt_stage_one_target = NULL; */
-/* static Widget		_xfe_tt_stage_two_target = NULL; */
-/* static XtIntervalId	_xfe_tt_timer_id = 0; */
-
 static void
-DocStringEnterItem(Widget w,_XfeTipItemInfo item_info)
+DocStringEnterItem(Widget w,_XfeTipItemInfo info)
 {
+	XmString	xmstr = NULL;
+	Boolean		need_to_free = False;
+
 	assert( _XfeIsAlive(w) );
+	assert( info != NULL );
+
+	ItemGetDocString(w,&xmstr,&need_to_free);
+
+#if DEBUG
+	if (xmstr == NULL)
+	{
+		xmstr = XmStringCreateLocalized("No doc string found.  You Suck!");
+		
+		need_to_free = True;
+	}
+#endif
+ 
+	/* Invoke the doc string SET callback if present */
+	if (info->doc_string_callback != NULL)
+	{
+		(*info->doc_string_callback)(w,
+									 info->doc_string_data1,
+									 info->doc_string_data2,
+									 XfeDOC_STRING_SET,
+									 xmstr);
+	}
+#ifdef DEBUG
+	else
+	{
+		printf("Widget '%s' has doc string support, but no callback\n",
+			   XtName(w));
+	}
+#endif
+	
+	/* Free the string if needed */
+	if (need_to_free)
+	{
+		XmStringFree(xmstr);
+	}
 
 #ifdef DEBUG_TOOL_TIPS
 	printf("DocStringEnterItem(%s)\n",XtName(w));
@@ -1040,9 +1363,20 @@ DocStringEnterItem(Widget w,_XfeTipItemInfo item_info)
 }
 /*----------------------------------------------------------------------*/
 static void
-DocStringLeaveItem(Widget w,_XfeTipItemInfo item_info)
+DocStringLeaveItem(Widget w,_XfeTipItemInfo info)
 {
 	assert( _XfeIsAlive(w) );
+	assert( info != NULL );
+
+	/* Invoke the doc string CLEAR callback if present */
+	if (info->doc_string_callback != NULL)
+	{
+		(*info->doc_string_callback)(w,
+									 info->doc_string_data1,
+									 info->doc_string_data2,
+									 XfeDOC_STRING_CLEAR,
+									 NULL);
+	}
 	
 #ifdef DEBUG_TOOL_TIPS
 	printf("DocStringLeaveItem(%s)\n",XtName(w));
@@ -1081,7 +1415,7 @@ ItemPostToolTip(Widget w)
 #if DEBUG
 	if (xmstr == NULL)
 	{
-		xmstr = XmStringCreateLocalized("YOU SUCK!");
+		xmstr = XmStringCreateLocalized("No tip string found.  You Suck!");
 		
 		need_to_free = True;
 	}
@@ -1139,22 +1473,22 @@ ItemUnPostToolTip(Widget w)
 static void
 ChildrenListDestroyProc(XtPointer item,XtPointer client_data)
 {
-	_XfeTipItemInfo	item_info = (_XfeTipItemInfo) item;
+	_XfeTipItemInfo	info = (_XfeTipItemInfo) item;
 
-	assert( item_info != NULL );
+	assert( info != NULL );
 
-	ItemFreeInfo(item_info);
+	ItemFreeInfo(info);
 }
 /*----------------------------------------------------------------------*/
 static Boolean
 ChildrenListTestFunc(XtPointer item,XtPointer client_data)
 {
-	_XfeTipItemInfo	item_info = (_XfeTipItemInfo) item;
+	_XfeTipItemInfo	info = (_XfeTipItemInfo) item;
 	Widget			w = (Widget) client_data;
 
-	assert( item_info != NULL );
+	assert( info != NULL );
 
-	return (item_info->item == w);
+	return (info->item == w);
 }
 /*----------------------------------------------------------------------*/
 
@@ -1229,34 +1563,34 @@ WidgetStageOneEH(Widget		w,
 				 Boolean *	cont)
 {
 	/* Do the tip magic only if tip or doc strings are globally enabled */
-	if (XfeToolTipGlobalGetTipStringEnabledState() ||
-		XfeToolTipGlobalGetDocStringEnabledState())
+	if (XfeTipStringGlobalGetEnabledState() ||
+		XfeDocStringGlobalGetEnabledState())
 	{
-		_XfeTipItemInfo item_info = WidgetGetInfo(w);
+		_XfeTipItemInfo info = WidgetGetInfo(w);
 
-		assert( item_info != NULL );
+		assert( info != NULL );
 
-		if (item_info != NULL)
+		if (info != NULL)
 		{
 			Boolean do_tip_string = 
-				XfeToolTipGlobalGetTipStringEnabledState() &&
-				item_info->tip_string_enabled;
+				XfeTipStringGlobalGetEnabledState() &&
+				info->tip_string_enabled;
 			
 			Boolean do_doc_string = 
-				XfeToolTipGlobalGetDocStringEnabledState() &&
-				item_info->doc_string_enabled;
+				XfeDocStringGlobalGetEnabledState() &&
+				info->doc_string_enabled;
 
 			/* Enter */
 			if (event->type == EnterNotify)
 			{
 				if (do_tip_string)
 				{
-					TipStringEnterItem(w,item_info);
+					TipStringEnterItem(w,info);
 				}
 				
 				if (do_doc_string)
 				{
-					DocStringEnterItem(w,item_info);
+					DocStringEnterItem(w,info);
 				}
 			}
 			/* Leave */
@@ -1264,12 +1598,12 @@ WidgetStageOneEH(Widget		w,
 			{
 				if (do_tip_string)
 				{
-					TipStringLeaveItem(w,item_info);
+					TipStringLeaveItem(w,info);
 				}
 				
 				if (do_doc_string)
 				{
-					DocStringLeaveItem(w,item_info);
+					DocStringLeaveItem(w,info);
 				}
 			}
 			/* Cancel */
@@ -1277,10 +1611,10 @@ WidgetStageOneEH(Widget		w,
 			{
 				if (do_tip_string)
 				{
-					TipStringCancelItem(w,item_info);
+					TipStringCancelItem(w,info);
 				}
 			}
-		} /* item_info != NULL */
+		} /* info != NULL */
 	}
 
 	*cont = True;
@@ -1363,75 +1697,84 @@ _XfeToolTipIsLocked(void)
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipAddTipString(Widget w)
+XfeTipStringAdd(Widget w)
 {
+	_XfeTipItemInfo	info = NULL;
+
 	assert( _XfeIsAlive(w) );
 
 #ifdef DEBUG_TOOL_TIPS
-	printf("XfeToolTipAddTipString(%s)\n",XtName(w));
+	printf("XfeTipStringAdd(%s)\n",XtName(w));
 #endif
 
 	if (XmIsGadget(w))
 	{
-		GadgetAdd(w);
+		info = GadgetAddTipString(w);
 	}
 	else
 	{
-		WidgetAdd(w);
+		info = WidgetAddTipString(w);
+	}
+
+	assert( info != NULL );
+
+	/* Enable the tip string by default */
+	info->tip_string_enabled = True;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeTipStringRemove(Widget w)
+{
+	assert( _XfeIsAlive(w) );
+
+#ifdef DEBUG_TOOL_TIPS
+	printf("XfeTipStringRemove(%s)\n",XtName(w));
+#endif
+
+	if (XmIsGadget(w))
+	{
+		GadgetRemoveTipString(w);
+	}
+	else
+	{
+		WidgetRemoveTipString(w);
 	}
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipRemoveTipString(Widget w)
+XfeTipStringSetEnabledState(Widget w,Boolean state)
 {
+	_XfeTipItemInfo info;
+	
 	assert( _XfeIsAlive(w) );
 
-#ifdef DEBUG_TOOL_TIPS
-	printf("XfeToolTipRemoveTipString(%s)\n",XtName(w));
-#endif
+	info = ItemGetInfo(w);
 
-	if (XmIsGadget(w))
+	assert( info != NULL );
+	
+	if (info != NULL)
 	{
-		GadgetRemove(w);
-	}
-	else
-	{
-		WidgetRemove(w);
+		info->tip_string_enabled = state;
 	}
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Boolean
-XfeToolTipGetTipStringEnabledState(Widget w)
+XfeTipStringGetEnabledState(Widget w)
 {
-	_XfeTipItemInfo item_info;
+	_XfeTipItemInfo info;
 	
 	assert( _XfeIsAlive(w) );
 
-	item_info = ItemGetInfo(w);
+	info = ItemGetInfo(w);
 
-	if (item_info != NULL)
+	assert( info != NULL );
+
+	if (info != NULL)
 	{
-		return item_info->tip_string_enabled;
+		return info->tip_string_enabled;
 	}
 
 	return False;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ void
-XfeToolTipSetTipStringEnabledState(Widget w,Boolean state)
-{
-	_XfeTipItemInfo item_info;
-	
-	assert( _XfeIsAlive(w) );
-
-	item_info = ItemGetInfo(w);
-
-	assert( item_info != NULL );
-	
-	if (item_info != NULL)
-	{
-		item_info->tip_string_enabled = state;
-	}
 }
 /*----------------------------------------------------------------------*/
 
@@ -1441,27 +1784,31 @@ XfeToolTipSetTipStringEnabledState(Widget w,Boolean state)
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipSetTipStringCallback(Widget			w,
-							   XtCallbackProc	callback,
-							   XtPointer		client_data)
+XfeTipStringSetObtainCallback(Widget						w,
+							  XfeTipStringObtainCallback	callback,
+							  XtPointer						client_data1,
+							  XtPointer						client_data2)
 {
-	_XfeTipItemInfo item_info;
+	_XfeTipItemInfo info;
 	
 	assert( _XfeIsAlive(w) );
 
-	item_info = ItemGetInfo(w);
+	info = ItemGetInfo(w);
 
-	if (item_info != NULL)
+	assert( info != NULL );
+
+	if (info != NULL)
 	{
-		item_info->tip_string_callback.callback = callback;
-		item_info->tip_string_callback.closure = client_data;
+		info->tip_string_obtain_callback	= callback;
+		info->tip_string_obtain_data1		= client_data1;
+		info->tip_string_obtain_data2		= client_data2;
 	}
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipClearTipStringCallback(Widget w)
+XfeTipStringClearObtainCallback(Widget w)
 {
-	XfeToolTipSetTipStringCallback(w,NULL,NULL);
+	XfeTipStringSetObtainCallback(w,NULL,NULL,NULL);
 }
 /*----------------------------------------------------------------------*/
 
@@ -1473,13 +1820,13 @@ XfeToolTipClearTipStringCallback(Widget w)
 static Boolean _xfe_tip_string_global_enabled = False;
 
 /* extern */ void
-XfeToolTipGlobalSetTipStringEnabledState(Boolean state)
+XfeTipStringGlobalSetEnabledState(Boolean state)
 {
 	_xfe_tip_string_global_enabled = state;
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Boolean
-XfeToolTipGlobalGetTipStringEnabledState(void)
+XfeTipStringGlobalGetEnabledState(void)
 {
 	return _xfe_tip_string_global_enabled;
 }
@@ -1491,7 +1838,7 @@ XfeToolTipGlobalGetTipStringEnabledState(void)
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern Boolean
-XfeToolTipIsTipStringShowing(void)
+XfeTipStringIsShowing(void)
 {
 	/* writeme */
 	assert( 0 );
@@ -1505,77 +1852,87 @@ XfeToolTipIsTipStringShowing(void)
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipAddDocString(Widget w)
+XfeDocStringAdd(Widget w)
 {
+	_XfeTipItemInfo	info = NULL;
+
 	assert( _XfeIsAlive(w) );
 
 #ifdef DEBUG_TOOL_TIPS
-	printf("XfeToolTipAddDocString(%s)\n",XtName(w));
+	printf("XfeDocStringAdd(%s)\n",XtName(w));
 #endif
 
 	if (XmIsGadget(w))
 	{
-		GadgetAdd(w);
+		info = GadgetAddDocString(w);
 	}
 	else
 	{
-		WidgetAdd(w);
+		info = WidgetAddDocString(w);
+	}
+
+	assert( info != NULL );
+
+	/* Enable the doc string by default */
+	info->doc_string_enabled = True;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeDocStringRemove(Widget w)
+{
+	assert( _XfeIsAlive(w) );
+
+#ifdef DEBUG_TOOL_TIPS
+	printf("XfeDocStringRemove(%s)\n",XtName(w));
+#endif
+
+	if (XmIsGadget(w))
+	{
+		GadgetRemoveDocString(w);
+	}
+	else
+	{
+		WidgetRemoveDocString(w);
 	}
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipRemoveDocString(Widget w)
+XfeDocStringSetEnabledState(Widget w,Boolean state)
 {
+	_XfeTipItemInfo info;
+	
 	assert( _XfeIsAlive(w) );
 
-#ifdef DEBUG_TOOL_TIPS
-	printf("XfeToolTipRemoveDocString(%s)\n",XtName(w));
-#endif
+	info = ItemGetInfo(w);
 
-	if (XmIsGadget(w))
+	assert( info != NULL );
+	
+	if (info != NULL)
 	{
-		GadgetRemove(w);
-	}
-	else
-	{
-		WidgetRemove(w);
+		info->doc_string_enabled = state;
 	}
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Boolean
-XfeToolTipGetDocStringEnabledState(Widget w)
+XfeDocStringGetEnabledState(Widget w)
 {
-	_XfeTipItemInfo item_info;
+	_XfeTipItemInfo info;
 	
 	assert( _XfeIsAlive(w) );
 
-	item_info = ItemGetInfo(w);
+	info = ItemGetInfo(w);
 
-	if (item_info != NULL)
+	assert( info != NULL );
+
+	if (info != NULL)
 	{
-		return item_info->doc_string_enabled;
+		return info->doc_string_enabled;
 	}
 
 	return False;
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeToolTipSetDocStringEnabledState(Widget w,Boolean state)
-{
-	_XfeTipItemInfo item_info;
-	
-	assert( _XfeIsAlive(w) );
 
-	item_info = ItemGetInfo(w);
-
-	assert( item_info != NULL );
-	
-	if (item_info != NULL)
-	{
-		item_info->doc_string_enabled = state;
-	}
-}
-/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -1583,27 +1940,59 @@ XfeToolTipSetDocStringEnabledState(Widget w,Boolean state)
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipSetDocStringCallback(Widget			w,
-							   XtCallbackProc	callback,
-							   XtPointer		client_data)
+XfeDocStringSetObtainCallback(Widget						w,
+							  XfeTipStringObtainCallback	callback,
+							  XtPointer						client_data1,
+							  XtPointer						client_data2)
 {
-	_XfeTipItemInfo item_info;
+	_XfeTipItemInfo info;
 	
 	assert( _XfeIsAlive(w) );
 
-	item_info = ItemGetInfo(w);
+	info = ItemGetInfo(w);
 
-	if (item_info != NULL)
+	assert( info != NULL );
+
+	if (info != NULL)
 	{
-		item_info->doc_string_callback.callback = callback;
-		item_info->doc_string_callback.closure = client_data;
+		info->doc_string_obtain_callback	= callback;
+		info->doc_string_obtain_data1		= client_data1;
+		info->doc_string_obtain_data2		= client_data2;
 	}
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipClearDocStringCallback(Widget w)
+XfeDocStringClearObtainCallback(Widget w)
 {
-	XfeToolTipSetDocStringCallback(w,NULL,NULL);
+	XfeDocStringSetObtainCallback(w,NULL,NULL,NULL);
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeDocStringSetCallback(Widget					w,
+						XfeDocStringCallback	callback,
+						XtPointer				client_data1,
+						XtPointer				client_data2)
+{
+	_XfeTipItemInfo info;
+	
+	assert( _XfeIsAlive(w) );
+
+	info = ItemGetInfo(w);
+
+	assert( info != NULL );
+
+	if (info != NULL)
+	{
+		info->doc_string_callback	= callback;
+		info->doc_string_data1		= client_data1;
+		info->doc_string_data2		= client_data2;
+	}
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeDocStringClearCallback(Widget w)
+{
+	XfeDocStringSetCallback(w,NULL,NULL,NULL);
 }
 /*----------------------------------------------------------------------*/
 
@@ -1615,13 +2004,13 @@ XfeToolTipClearDocStringCallback(Widget w)
 static Boolean _xfe_doc_string_global_enabled = False;
 
 /* extern */ void
-XfeToolTipGlobalSetDocStringEnabledState(Boolean state)
+XfeDocStringGlobalSetEnabledState(Boolean state)
 {
 	_xfe_doc_string_global_enabled = state;
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Boolean
-XfeToolTipGlobalGetDocStringEnabledState(void)
+XfeDocStringGlobalGetEnabledState(void)
 {
 	return _xfe_doc_string_global_enabled;
 }

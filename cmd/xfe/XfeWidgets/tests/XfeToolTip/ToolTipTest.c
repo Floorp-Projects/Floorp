@@ -27,13 +27,31 @@
 #include <Xfe/XfeTest.h>
 #include <Xfe/ToolTip.h>
 
+/*----------------------------------------------------------------------*/
+static void
+string_obtain_cb	(Widget			w,
+					 XtPointer		client_data1,
+					 XtPointer		client_data2,
+					 XmString *		string_return,
+					 Boolean *		need_to_free_string);
+/*----------------------------------------------------------------------*/
+static void
+doc_string_cb		(Widget					w,
+					 XtPointer				client_data1,
+					 XtPointer				client_data2,
+					 XfeDocStringReason		reason,
+					 XmString				string);
+/*----------------------------------------------------------------------*/
+
+
 static Widget	_button_gadgets[3];
 static Widget	_label_gadgets[3];
 
 static Widget	_button_widgets[3];
 static Widget	_label_widgets[3];
 
-static void tool_tip_cb(Widget,XtPointer,XtPointer);
+static Widget	_status_label = NULL;
+
 
 /*----------------------------------------------------------------------*/
 int
@@ -59,6 +77,8 @@ main(int argc,char *argv[])
 	_label_gadgets[0] = XmCreateLabelGadget(form,"LabelGadget1",NULL,0);
 	_label_gadgets[1] = XmCreateLabelGadget(form,"LabelGadget2",NULL,0);
 	_label_gadgets[2] = XmCreateLabelGadget(form,"LabelGadget3",NULL,0);
+
+	_status_label = XfeCreateLabel(form,"StatusLabel",NULL,0);
 
 	XtVaSetValues(_button_gadgets[0],XmNtopWidget,_label_widgets[2],NULL);
 	XtVaSetValues(_button_gadgets[1],XmNtopWidget,_button_gadgets[0],NULL);
@@ -86,31 +106,62 @@ main(int argc,char *argv[])
 	XtManageChild(_label_gadgets[1]);
 	XtManageChild(_label_gadgets[2]);
 
+	XtManageChild(_status_label);
+
 	XtPopup(frame,XtGrabNone);
 
-	XfeToolTipAddTipString(_button_widgets[0]);
-	XfeToolTipAddTipString(_button_widgets[1]);
-/* 	XfeToolTipAddTipString(_button_widgets[2]); */
+	/* Tip Strings */
+	XfeTipStringAdd(_button_widgets[0]);
+	XfeTipStringAdd(_button_widgets[1]);
+/* 	XfeTipStringAdd(_button_widgets[2]); */
 
-	XfeToolTipAddTipString(_label_widgets[0]);
-	XfeToolTipAddTipString(_label_widgets[1]);
-/* 	XfeToolTipAddTipString(_label_widgets[2]); */
+	XfeTipStringAdd(_label_widgets[0]);
+	XfeTipStringAdd(_label_widgets[1]);
+/* 	XfeTipStringAdd(_label_widgets[2]); */
 
-	XfeToolTipAddTipString(_button_gadgets[0]);
-	XfeToolTipAddTipString(_button_gadgets[1]);
-/* 	XfeToolTipAddTipString(_button_gadgets[2]); */
+	XfeTipStringAdd(_button_gadgets[0]);
+	XfeTipStringAdd(_button_gadgets[1]);
+/* 	XfeTipStringAdd(_button_gadgets[2]); */
 
-	XfeToolTipAddTipString(_label_gadgets[0]);
-	XfeToolTipAddTipString(_label_gadgets[1]);
-/* 	XfeToolTipAddTipString(_label_gadgets[2]); */
+	XfeTipStringAdd(_label_gadgets[0]);
+	XfeTipStringAdd(_label_gadgets[1]);
+/* 	XfeTipStringAdd(_label_gadgets[2]); */
 
-
-	XfeToolTipSetTipStringCallback(_button_widgets[0],
-								   tool_tip_cb,
-								   NULL);
+	XfeTipStringSetObtainCallback(_button_widgets[0],
+								  string_obtain_cb,
+								  NULL,
+								  NULL);
 	
- 	XfeToolTipGlobalSetTipStringEnabledState(True);
- 	XfeToolTipGlobalSetDocStringEnabledState(True);
+ 	XfeTipStringGlobalSetEnabledState(True);
+
+	/* Doc Strings */
+	XfeDocStringAdd(_button_widgets[0]);
+	XfeDocStringAdd(_button_widgets[1]);
+/* 	XfeDocStringAdd(_button_widgets[2]); */
+
+	XfeDocStringAdd(_label_widgets[0]);
+	XfeDocStringAdd(_label_widgets[1]);
+/* 	XfeDocStringAdd(_label_widgets[2]); */
+
+	XfeDocStringAdd(_button_gadgets[0]);
+	XfeDocStringAdd(_button_gadgets[1]);
+/* 	XfeDocStringAdd(_button_gadgets[2]); */
+
+	XfeDocStringAdd(_label_gadgets[0]);
+	XfeDocStringAdd(_label_gadgets[1]);
+/* 	XfeDocStringAdd(_label_gadgets[2]); */
+
+	XfeDocStringSetObtainCallback(_button_widgets[0],
+								  string_obtain_cb,
+								  NULL,
+								  NULL);
+
+	XfeDocStringSetCallback(_button_widgets[0],
+							doc_string_cb,
+							NULL,
+							NULL);
+
+ 	XfeDocStringGlobalSetEnabledState(True);
 
     XfeAppMainLoop();
 
@@ -118,20 +169,41 @@ main(int argc,char *argv[])
 }
 /*----------------------------------------------------------------------*/
 static void
-tool_tip_cb(Widget		w,
-			XtPointer	client_data,
-			XtPointer	call_data)
+string_obtain_cb(Widget		w,
+				 XtPointer	client_data1,
+				 XtPointer	client_data2,
+				 XmString *	string_return,
+				 Boolean *	need_to_free_string)
 {
-	XfeToolTipLabelCallbackStruct * data = 
-		(XfeToolTipLabelCallbackStruct *) call_data;
-
 	static int count = 1;
 
 	char buf[256];
 
 	sprintf(buf,"%s_%d","Count",count++);
 
-	data->label_return = XmStringCreateLocalized(buf);
-	data->need_to_free_return = True;
+	*string_return = XmStringCreateLocalized(buf);
+	*need_to_free_string = True;
+}
+/*----------------------------------------------------------------------*/
+static void
+doc_string_cb(Widget				w,
+			  XtPointer				client_data1,
+			  XtPointer				client_data2,
+			  XfeDocStringReason	reason,
+			  XmString				string)
+{
+	if (!XfeIsAlive(_status_label))
+	{
+		return;
+	}
+
+	if (reason == XfeDOC_STRING_SET)
+	{
+ 		XfeLabelSetString(_status_label,string);
+	}
+	else if (reason == XfeDOC_STRING_CLEAR)
+	{
+		XfeLabelSetStringPSZ(_status_label,"");
+	}
 }
 /*----------------------------------------------------------------------*/

@@ -16,11 +16,11 @@
 ! Reserved.
 
 
-ToolTipTest*MainForm.width:					800
-ToolTipTest*MainForm.height:				    400
+ToolTipTest*MainForm.width:					    800
+ToolTipTest*MainForm.height:				    500
 ToolTipTest*MainForm.background:			    Gray60
 ToolTipTest*MainForm.shadowThickness:		    0
-ToolTipTest*MainForm.shadowType:			shadow_in
+ToolTipTest*MainForm.shadowType:			    shadow_in
 
 !ToolTipTest*fontList:	-*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*
 !ToolTipTest*labelFontList:	-*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*
@@ -114,3 +114,18 @@ ToolTipTest*XmLabelGadget.topOffset:				10
 
 
 ToolTipTest*XmLabelGadget*tipString:				This is a Tool Tip
+
+ToolTipTest*StatusLabel.bottomAttachment:			attach_form
+ToolTipTest*StatusLabel.leftAttachment:			    attach_form
+ToolTipTest*StatusLabel.rightAttachment:			attach_form
+ToolTipTest*StatusLabel.topAttachment:			    attach_none
+ToolTipTest*StatusLabel.bottomOffset:			    2
+ToolTipTest*StatusLabel.leftOffset:				    2
+ToolTipTest*StatusLabel.rightOffset:				2
+ToolTipTest*StatusLabel.usePreferredWidth:			false
+ToolTipTest*StatusLabel.shadowType:			        shadow_in
+ToolTipTest*StatusLabel.background:			        gray70
+ToolTipTest*StatusLabel.labelAlignment:				alignment_beginning
+
+
+
