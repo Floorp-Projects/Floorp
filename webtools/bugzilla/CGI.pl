@@ -611,7 +611,7 @@ Content-type: text/html
         # This seems like as good as time as any to get rid of old
         # crufty junk in the logincookies table.  Get rid of any entry
         # that hasn't been used in a month.
-        if ($::dbwritesallowed) {
+        if (Bugzilla->dbwritesallowed) {
             SendSQL("DELETE FROM logincookies " .
                     "WHERE TO_DAYS(NOW()) - TO_DAYS(lastused) > 30");
         }
@@ -620,7 +620,7 @@ Content-type: text/html
     }
 
     # Update the timestamp on our logincookie, so it'll keep on working.
-    if ($::dbwritesallowed) {
+    if (Bugzilla->dbwritesallowed) {
         SendSQL("UPDATE logincookies SET lastused = null " .
                 "WHERE cookie = $::COOKIE{'Bugzilla_logincookie'}");
     }

@@ -352,7 +352,7 @@ sub GetVersionTable {
     }
     if (time() - $mtime > 3600) {
         use Token;
-        Token::CleanTokenTable() if $::dbwritesallowed;
+        Token::CleanTokenTable() if Bugzilla->dbwritesallowed;
         GenerateVersionTable();
     }
     require 'data/versioncache';

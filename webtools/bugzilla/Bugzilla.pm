@@ -46,7 +46,6 @@ sub cgi {
 my $_dbh;
 my $_dbh_main;
 my $_dbh_shadow;
-
 sub dbh {
     my $class = shift;
 
@@ -56,6 +55,17 @@ sub dbh {
     }
 
     return $_dbh;
+}
+
+sub dbwritesallowed {
+    my $class = shift;
+
+    # We can write if we are connected to the main database.
+    # Note that if we don't have a shadowdb, then we claim that its ok
+    # to write even if we're nominally connected to the shadowdb.
+    # This is OK because this method is only used to test if misc
+    # updates can be done, rather than anything complicated.
+    return $class->dbh == $_dbh_main;
 }
 
 sub switch_to_shadow_db {
@@ -174,6 +184,12 @@ method for those scripts/templates which are only use via CGI, though.
 =item C<dbh>
 
 The current database handle. See L<DBI>.
+
+=item C<dbwritesallowed>
+
+Determines if writes to the database are permitted. This is usually used to
+determine if some general cleanup needs to occur (such as clearing the token
+table)
 
 =item C<switch_to_shadow_db>
 
