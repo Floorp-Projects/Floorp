@@ -74,7 +74,11 @@ GMAKE_FLAGS = $(GMAKE_FLAGS) USE_DEBUG_RTL=1
 
 all:: export libs install
 
-export libs install clobber clobber_all clean depend::
+install:: moz_import install_roots
+
+depend::
+
+export libs install clobber clobber_all clean::
 !if "$(MOZ_BITS)" == "16"
 	set PATH=%WATCPATH%
 	set INCLUDE=%WATC_INC%
@@ -90,3 +94,6 @@ export libs install clobber clobber_all clean depend::
 
 moz_import::
 	copy $(DIST)\lib\dbm32.lib $(DIST)\lib\dbm.lib
+
+install_roots::
+	$(MAKE_INSTALL) $(DIST)\lib\nssckbi.dll $(DIST)\bin
