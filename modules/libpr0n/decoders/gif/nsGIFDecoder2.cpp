@@ -352,6 +352,12 @@ int EndImageFrame(
 {
   nsGIFDecoder2* decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
   
+  // If mImageFrame hasn't been initialized, call HaveDecodedRow to init it
+  // One reason why it may not be initialized is because the frame
+  // is out of the bounds of the image.
+  if (!decoder->mImageFrame)
+    HaveDecodedRow(aClientData,nsnull,0,0,0,0,0,0);
+
   // We actually have the timeout information before we get the lzw encoded image
   // data, at least according to the spec, but we delay in setting the timeout for
   // the image until here to help ensure that we have the whole image frame decoded before
