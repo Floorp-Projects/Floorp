@@ -1555,7 +1555,7 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="internet_keywords"
-         nc:name="internet keywords"
+         nc:name="Internet Keywords"
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#internet_keywordsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
