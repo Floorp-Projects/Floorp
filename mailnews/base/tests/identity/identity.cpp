@@ -50,7 +50,8 @@ int main() {
   static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
   // start up prefs
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv); 
-
+  (void)prefs;
+  
   if (NS_FAILED(rv)) {
     printf("Couldn't start prefs\n");
     exit(1);
