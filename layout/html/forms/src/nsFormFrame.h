@@ -117,6 +117,7 @@ protected:
   char* UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder* encoder);
   
   NS_IMETHOD GetEncoder(nsIUnicodeEncoder** encoder);
+  NS_IMETHOD GetPlatformEncoder(nsIUnicodeEncoder** encoder);
   void GetSubmitCharset(nsString& oCharset);
 
   nsVoidArray          mFormControls;
