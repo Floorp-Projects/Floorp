@@ -654,7 +654,6 @@ l10n/us/xp/Makefile
 lib/Makefile
 lib/htmldlgs/Makefile
 lib/layout/Makefile
-lib/libaddr/Makefile
 lib/libdom/Makefile
 lib/libi18n/Makefile
 lib/libi18n/unicode/Makefile
@@ -667,7 +666,6 @@ lib/liblayer/src/Makefile
 lib/libmime/Makefile
 lib/libmisc/Makefile
 lib/libmocha/Makefile
-lib/libmsg/Makefile
 lib/libparse/Makefile
 lib/libpics/Makefile
 lib/libpwcac/Makefile
