@@ -30,6 +30,7 @@ package PLIF::Service::Coses;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;
+use HTML::Entities; # DEPENDENCY
 @ISA = qw(PLIF::Service);
 1;
 
@@ -143,16 +144,19 @@ sub expand {
                         $scope->{$variable} = $value;
                     }
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}text') {
+                    if ($attributes->{'escape'}) {
+                        if ($scope == $superscope) {
+                            $scope = {%$scope};
+                        }
+                        $scope->{'coses: escapes'} = [$attributes->{'escape'}, @{$scope->{'coses: escapes'}}];
+                    }
                     if ($attributes->{'value'}) {
-                        $result .= $self->evaluateExpression($attributes->{'value'}, $scope);
-                        # XXX we need to also support:
-                        #   insert text escaped (as HTML, XML, URI, etc)
-                        #   insert a hash as a particular data structure (CGI arguments, an XML fragment, etc)
+                        $result .= $self->escape($app, $self->evaluateExpression($attributes->{'value'}, $scope), $scope);
                         next node; # skip contents if attribute 'value' is present
                     }
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}br') {
                     # useful if xml:space is set to 'default'
-                    $result .= "\n";
+                    $result .= $self->escape($app, "\n", $scope);
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}include') {
                     if ((not exists($attributes->{'parse'})) or ($attributes->{'parse'} eq 'xml')) {
                         # This is similar to an XInclude, but is done
@@ -168,12 +172,12 @@ sub expand {
                         push(@scope, $superscope);
                     } elsif ($attributes->{'parse'} eq 'text') {
                         # raw text inclusion
-                        $result .= $self->getString($app, $session, $protocol, 
-                                                    $self->evaluateExpression($attributes->{'href'}, $scope));
+                        $result .= $self->escape($app, $self->getString($app, $session, $protocol, 
+                                                                  $self->evaluateExpression($attributes->{'href'}, $scope)), $scope);
                     } elsif ($attributes->{'parse'} eq 'x-auto') {
                         # Get the string expanded automatically and
                         # insert it into the result.
-                        $result .= $output->getString($session, $self->evaluateExpression($attributes->{'href'}, $scope), $scope);
+                        $result .= $self->escape($app, $output->getString($session, $self->evaluateExpression($attributes->{'href'}, $scope), $scope), $scope);
                     }
                     next node; # skip default handling
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}else') {
@@ -190,7 +194,62 @@ sub expand {
                     if (defined($scope->{$variable})) {
                         next node; # skip this block if the variable IS there
                     }
-                # XXX add a couple of elements/attributes for encoding/decoding a hash into a string and back
+                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}shrink') {
+                    my $source = $self->evaluateExpression($attributes->{'source'}, $scope);
+                    my $target = $self->evaluateExpression($attributes->{'target'}, $scope);
+                    $self->assert($target !~ /[\(\.\)]/o, 1,
+                                  "variable '$target' contains one of '(', ')' or '.' and is therefore not valid to use as a variable name.");
+                    my @result;
+                    if (defined($source)) {
+                        $self->assert(ref($source) eq 'HASH', 1, "source variable is not a hash of arrays and thus cannot be shrunk.");
+                        # shrink it
+                        local $" = ',';
+                        foreach my $key (keys(%{$source})) {
+                            $self->assert(ref($source->{$key}) eq 'ARRAY', 1, "source variable is not a hash of arrays and cannot be shrunk.");
+                            my @value = @{$source->{$key}};
+                            if (scalar(@value)) {
+                                # escape all "\", "|" and "," characters in key and values
+                                foreach my $piece ($key, @value) {
+                                    if (defined($piece) and ($piece ne '')) {
+                                        $piece =~ s/\\/\\s/go;
+                                        $piece =~ s/\|/\\b/go;
+                                        $piece =~ s/\,/\\c/go;
+                                    } else {
+                                        $piece = '\0';
+                                    }
+                                }
+                                push(@result, "$key|@value");
+                            }
+                        }
+                    }
+                    local $" = '|';
+                    $scope->{$target} = "@result";
+                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}expand') {
+                    my $source = $self->evaluateExpression($attributes->{'source'}, $scope);
+                    my $target = $self->evaluateExpression($attributes->{'target'}, $scope);
+                    $self->assert($target !~ /[\(\.\)]/o, 1,
+                                  "variable '$target' contains one of '(', ')' or '.' and is therefore not valid to use as a variable name.");
+                    if (defined($source)) {
+                        $self->assert((not ref($source)), 1, "source variable is not a string and cannot be expanded.");
+                        # expand it
+                        my @hash = split(/\|/o, $source);
+                        my $isValue = 0;
+                        foreach my $piece (@hash) {
+                            my @piece;
+                            if ($isValue) {
+                                $piece = [split(/\,/o, $piece)];
+                            }
+                            foreach my $smallPiece (ref($piece) eq 'ARRAY' ? @$piece : $piece) {
+                                $smallPiece =~ s/\\b/\|/go;
+                                $smallPiece =~ s/\\s/\\/go;
+                                $smallPiece =~ s/\\c/\,/go;
+                                $smallPiece =~ s/\\0//go;
+                                $smallPiece =~ s/\\(.)/$1/go;
+                            }
+                            $isValue = not $isValue;
+                        }
+                        $scope->{$target} = {@hash};
+                    }
                 } else {
                     my $serialisedAttributes = '';
                     foreach my $attribute (keys(%$attributes)) {
@@ -208,11 +267,11 @@ sub expand {
                 # raw text node which may or may not be included
                 if ($contents =~ /\S/o) {
                     # if xml:space="default" then only include text nodes with non-whitespace.
-                    $result .= $contents;
+                    $result .= $self->escape($app, $contents, $scope);
                 }
             } else {
                 # raw text node
-                $result .= $contents;
+                $result .= $self->escape($app, $contents, $scope);
             }
         }
     }
@@ -441,4 +500,21 @@ sub sanitiseScope {
         }
     }
     return $data;
+}
+
+sub escape {
+    my $self = shift;
+    my($app, $string, $scope) = @_;
+    foreach my $escape (@{$scope->{'coses: escapes'}}) {
+        if ($escape eq 'HTML') {
+            $string = encode_entities($string);
+        } elsif ($escape eq 'XML') {
+            $string = $app->getService('service.xml')->escape($string);
+        } elsif ($escape eq 'URI') {
+            $string =~ s/([^-A-Za-z0-9_.!~*'()])/sprintf("%%%02X", ord($1))/geos; # ' (unlock font-lock)
+        } else {
+            $self->error(1, "Unknown escape type '$escape'");
+        }
+    }
+    return $string;
 }
