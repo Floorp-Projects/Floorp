@@ -237,7 +237,7 @@ sub build_project($$$)
 				die "### Can't find project file \"$project_path\".\n";
 			}
 		
-		print "Building \"$project_path\"\n";
+		print "Building \"$project_path\[$target_name\]\"\n";
 		
 		$had_errors = CodeWarriorLib::build_project(
 			$project_path, $target_name, $recent_errors_file, $clean_build
