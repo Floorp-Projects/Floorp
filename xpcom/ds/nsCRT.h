@@ -204,6 +204,12 @@ public:
     delete[] str;
   }
 
+  /// Compute a hashcode for a C string
+  static PRUint32 HashValue(const char* s1);
+
+  /// Same as above except that we return the length in s1len
+  static PRUint32 HashValue(const char* s1, PRUint32* s1len);
+
   /// Compute a hashcode for a ucs2 string
   static PRUint32 HashValue(const PRUnichar* s1);
 
