@@ -221,7 +221,7 @@ public:
 
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                             nsIURI* aURL, 
-                            const nsAString& aMedia,
+                            nsISupportsArray* aMedia,
                             nsICSSImportRule* aRule);
 
   NS_IMETHOD LoadAgentSheet(nsIURI* aURL, nsICSSStyleSheet** aSheet);
@@ -260,9 +260,12 @@ private:
                        StyleSheetState& aSheetState,
                        nsICSSStyleSheet** aSheet);
 
+  // Pass in either a media string or the array of media from the
+  // CSSParser.  Don't pass both.
   nsresult PrepareSheet(nsICSSStyleSheet* aSheet,
                         const nsAString& aTitle,
-                        const nsAString& aMedia);
+                        const nsAString& aMedia,
+                        nsISupportsArray* aMediaArr);
 
   nsresult InsertSheetInDoc(nsICSSStyleSheet* aSheet,
                             nsIContent* aLinkingContent,

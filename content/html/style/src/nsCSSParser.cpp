@@ -151,8 +151,12 @@ protected:
   PRBool ParseAtRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseCharsetRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
-  PRBool GatherMedia(nsresult& aErrorCode, nsString& aMedia, nsISupportsArray* aMediaAtoms);
-  PRBool ProcessImport(nsresult& aErrorCode, const nsString& aURLSpec, const nsString& aMedia, RuleAppendFunc aAppendFunc, void* aProcessData);
+  PRBool GatherMedia(nsresult& aErrorCode, nsISupportsArray* aMediaAtoms);
+  PRBool ProcessImport(nsresult& aErrorCode,
+                       const nsString& aURLSpec,
+                       nsISupportsArray* aMedia,
+                       RuleAppendFunc aAppendFunc,
+                       void* aProcessData);
   PRBool ParseMediaRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseNameSpaceRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ProcessNameSpace(nsresult& aErrorCode, const nsString& aPrefix, 
@@ -636,6 +640,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
     rv = NS_NewCSSStyleRule(&rule, nsnull, declaration);
     if (NS_FAILED(rv)) {
       declaration->RuleAbort();
+      ReleaseScanner();
       return rv;
     }
     *aResult = rule;
@@ -736,6 +741,7 @@ CSSParserImpl::ParseRule(const nsAString& aRule,
 
   rv = NS_NewISupportsArray(aResult);
   if (NS_FAILED(rv)) {
+    ReleaseScanner();
     return rv;
   }
   
@@ -1021,10 +1027,9 @@ PRBool CSSParserImpl::ParseCharsetRule(nsresult& aErrorCode, RuleAppendFunc aApp
   return PR_TRUE;
 }
 
-PRBool CSSParserImpl::GatherMedia(nsresult& aErrorCode, nsString& aMedia, 
+PRBool CSSParserImpl::GatherMedia(nsresult& aErrorCode,
                                   nsISupportsArray* aMediaAtoms)
 {
-  PRBool first = PR_TRUE;
   PRBool expectIdent = PR_TRUE;
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
@@ -1054,16 +1059,9 @@ PRBool CSSParserImpl::GatherMedia(nsresult& aErrorCode, nsString& aMedia,
     }
     else if (eCSSToken_Ident == mToken.mType) {
       if (expectIdent) {
-        if (! first) {
-          aMedia.Append(PRUnichar(','));
-        }
         ToLowerCase(mToken.mIdent);  // case insensitive from CSS - must be lower cased
-        if (aMediaAtoms) {
-          nsCOMPtr<nsIAtom> medium = do_GetAtom(mToken.mIdent);
-          aMediaAtoms->AppendElement(medium);
-        }
-        aMedia.Append(mToken.mIdent);
-        first = PR_FALSE;
+        nsCOMPtr<nsIAtom> medium = do_GetAtom(mToken.mIdent);
+        aMediaAtoms->AppendElement(medium);
         expectIdent = PR_FALSE;
       }
       else {
@@ -1082,10 +1080,7 @@ PRBool CSSParserImpl::GatherMedia(nsresult& aErrorCode, nsString& aMedia,
       break;
     }
   }
-  aMedia.Truncate();
-  if (aMediaAtoms) {
-    aMediaAtoms->Clear();
-  }
+  aMediaAtoms->Clear();
   return PR_FALSE;
 }
 
@@ -1097,11 +1092,16 @@ PRBool CSSParserImpl::ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppe
     return PR_FALSE;
   }
   nsAutoString url;
-  nsAutoString media;
-
+  nsCOMPtr<nsISupportsArray> media;
+  aErrorCode = NS_NewISupportsArray(getter_AddRefs(media));
+  if (!media) {
+    // Out of memory
+    return PR_FALSE;
+  }
+  
   if (eCSSToken_String == mToken.mType) {
     url = mToken.mIdent;
-    if (GatherMedia(aErrorCode, media, nsnull)) {
+    if (GatherMedia(aErrorCode, media)) {
       if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
         ProcessImport(aErrorCode, url, media, aAppendFunc, aData);
         return PR_TRUE;
@@ -1115,7 +1115,7 @@ PRBool CSSParserImpl::ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppe
         if ((eCSSToken_String == mToken.mType) || (eCSSToken_URL == mToken.mType)) {
           url = mToken.mIdent;
           if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
-            if (GatherMedia(aErrorCode, media, nsnull)) {
+            if (GatherMedia(aErrorCode, media)) {
               if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
                 ProcessImport(aErrorCode, url, media, aAppendFunc, aData);
                 return PR_TRUE;
@@ -1133,7 +1133,11 @@ PRBool CSSParserImpl::ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppe
 }
 
 
-PRBool CSSParserImpl::ProcessImport(nsresult& aErrorCode, const nsString& aURLSpec, const nsString& aMedia, RuleAppendFunc aAppendFunc, void* aData)
+PRBool CSSParserImpl::ProcessImport(nsresult& aErrorCode,
+                                    const nsString& aURLSpec,
+                                    nsISupportsArray* aMedia,
+                                    RuleAppendFunc aAppendFunc,
+                                    void* aData)
 {
   nsCOMPtr<nsICSSImportRule> rule;
   aErrorCode = NS_NewCSSImportRule(getter_AddRefs(rule), aURLSpec, aMedia);
@@ -1163,12 +1167,14 @@ PRBool CSSParserImpl::ProcessImport(nsresult& aErrorCode, const nsString& aURLSp
 PRBool CSSParserImpl::ParseMediaRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc,
                                      void* aData)
 {
-  nsAutoString  mediaStr;
   nsCOMPtr<nsISupportsArray> media;
-  NS_NewISupportsArray(getter_AddRefs(media));
+  aErrorCode = NS_NewISupportsArray(getter_AddRefs(media));
   if (media) {
-    if (GatherMedia(aErrorCode, mediaStr, media)) {
-      if ((!mediaStr.IsEmpty()) &&
+    if (GatherMedia(aErrorCode, media)) {
+      // XXXbz this could use better error reporting throughout the method
+      PRUint32 count;
+      media->Count(&count);
+      if (count > 0 &&
           ExpectSymbol(aErrorCode, '{', PR_TRUE)) {
         // push media rule on stack, loop over children
         nsCOMPtr<nsICSSMediaRule>  rule;

@@ -43,6 +43,7 @@
 
 class nsIAtom;
 class nsIURI;
+class nsISupportsArray;
 
 // IID for the nsICSSImportRule interface {33824a60-1a09-11d3-805a-006008159b5a}
 #define NS_ICSS_IMPORT_RULE_IID     \
@@ -63,6 +64,6 @@ public:
 
 nsresult
 NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult, 
-                    const nsString& aURLSpec, const nsString& aMedia);
+                    const nsString& aURLSpec, nsISupportsArray* aMedia);
 
 #endif /* nsICSSImportRule_h___ */
