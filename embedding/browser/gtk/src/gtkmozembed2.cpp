@@ -23,6 +23,7 @@
 
 #include "gtkmozembed.h"
 #include "gtkmozembedprivate.h"
+#include "gtkmozembed_internal.h"
 
 #include "EmbedPrivate.h"
 #include "EmbedWindow.h"
@@ -637,7 +638,8 @@ gtk_moz_embed_get_link_message(GtkMozEmbed *embed)
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
-  retval = embedPrivate->mWindow->mLinkMessage.ToNewCString();
+  if (embedPrivate->mWindow)
+    retval = embedPrivate->mWindow->mLinkMessage.ToNewCString();
 
   return retval;
 }
@@ -653,7 +655,8 @@ gtk_moz_embed_get_js_status(GtkMozEmbed *embed)
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
-  retval = embedPrivate->mWindow->mJSStatus.ToNewCString();
+  if (embedPrivate->mWindow)
+    retval = embedPrivate->mWindow->mJSStatus.ToNewCString();
 
   return retval;
 }
@@ -669,7 +672,8 @@ gtk_moz_embed_get_title(GtkMozEmbed *embed)
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
-  retval = embedPrivate->mWindow->mTitle.ToNewCString();
+  if (embedPrivate->mWindow)
+    retval = embedPrivate->mWindow->mTitle.ToNewCString();
 
   return retval;
 }
