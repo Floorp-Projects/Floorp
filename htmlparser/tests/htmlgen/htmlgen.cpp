@@ -7,10 +7,10 @@
 
 /*========================================================
   Special keywords:
-    $0..$9: represent command line arguments
-    @file:  the name of the file being writtent
-    @nextfile: the name of the next file to be written
-    @htmlgen:  runs the app recursively with given arguments.
+    $0..$9:     represent command line arguments
+    @file:      the name of the file being writtent
+    @nextfile:  the name of the next file to be written
+    @import:    imports text from another file.
  *========================================================*/
 
 
@@ -26,27 +26,27 @@
 
 
 static char* tagTable[] = {
-  "a", "abbr", "acronym", "address", "applet", "area", 
-  "b", "base", "basefont", "bdo", "bgsound", "big", "blink", "blockquote", "body", "br", "button", 
-  "caption", "center", "cite", "code", "col", "colgroup", 
-  "dd", "del", "dfn", "dir", "div", "dl", "dt", 
-  "em", "embed", 
-  "fieldset", "font", "form", "frame", "frameset", 
-  "h1", "h2", "h3", "h4", "h5", "h6", "head", "hr", "html", 
-  "i", "iframe", "ilayer", "img", "input", "ins", "isindex", 
-  "kbd", "keygen", 
-  "label", "layer", "legend", "li", "link", "listing", 
-  "map", "menu", "meta", "multicol", 
-  "nobr", "noembed", "noframes", "nolayer", "noscript", 
-  "object", "ol", "optgroup", "option", 
-  "p", "param", "plaintext", "pre", 
-  "q", 
-  "s","samp","script","select","server","small","sound","spacer","span","strike","strong","style","sub","sup", 
-  "table", "tbody", "td", "textarea", "tfoot", "th", "thead", "title", "tr", "tt", 
-  "u", "ul", 
-  "var", 
-  "wbr", 
-  "xmp",
+  "A", "ABBR", "ACRONYM", "ADDRESS", "APPLET", "AREA", 
+  "B", "BASE", "BASEFONT", "BDO", "BGSOUND", "BIG", "BLINK", "BLOCKQUOTE", "BODY", "BR", "BUTTON", 
+  "CAPTION", "CENTER", "CITE", "CODE", "COL", "COLGROUP", 
+  "DD", "DEL", "DFN", "DIR", "DIV", "DL", "DT", 
+  "EM", "EMBED", 
+  "FIELDSET", "FONT", "FORM", "FRAME", "FRAMESET", 
+  "H1", "H2", "H3", "H4", "H5", "H6", "HEAD", "HR", "HTML", 
+  "I", "IFRAME", "ILAYER", "IMG", "INPUT", "INS", "ISINDEX", 
+  "KBD", "KEYGEN", 
+  "LABEL", "LAYER", "LEGEND", "LI", "LINK", "LISTING", 
+  "MAP", "MENU", "META", "MULTICOL", 
+  "NOBR", "NOEMBED", "NOFRAMES", "NOLAYER", "NOSCRIPT", 
+  "OBJECT", "OL", "OPTGROUP", "OPTION", 
+  "P", "PARAM", "PLAINTEXT", "PRE", 
+  "Q", 
+  "S","SAMP","SCRIPT","SELECT","SERVER","SMALL","SOUND","SPACER","SPAN","STRIKE","STRONG","STYLE","SUB","SUP", 
+  "TABLE", "TBODY", "TD", "TEXTAREA", "TFOOT", "TH", "THEAD", "TITLE", "TR", "TT", 
+  "U", "UL", 
+  "VAR", 
+  "WBR", 
+  "XMP",
   0
 };
 static char gCWD[1025];
@@ -83,15 +83,15 @@ int findTag(const char* aTagName) {
 int findNearestTag(char* aTag){
   int result=-1;
   if(aTag){
-    char  theChar=tolower(aTag[0]);
+    char  theChar=toupper(aTag[0]);
     int theIndex=-1;
     while(tagTable[++theIndex]){
-      if(tolower(tagTable[theIndex][0])==theChar) {
+      if(toupper(tagTable[theIndex][0])==theChar) {
         return theIndex;
       }
     }
   }
-  if(tolower(aTag[0])<'a')
+  if(toupper(aTag[0])<'A')
     result=0;
   else result=107;
   return result;
@@ -280,14 +280,16 @@ public:
               strcpy(mFilename,theBuffer);
               readDefs=false;
             }
+#if 0
             else if(!stricmp(theBuffer,"-D")){
               readDefs=true;
             }
+#endif
             else if(!stricmp(theBuffer,"-O")){
               aStream >> theBuffer;
               readDefs=false;
             }
-            else if(readDefs){
+            else {
               if(theBuffer[0]){
                 addMacro(theBuffer);
                 theBuffer[0]=0;
@@ -300,7 +302,7 @@ public:
   void  buildArgBuffer(char* aBuffer) {
           aBuffer[0]=0;
           if(mFilename[0]) {
-            sprintf(aBuffer,"-0 %s -f %s -d ",gThisFile,mFilename);
+            sprintf(aBuffer,"-o %s -f %s ",gThisFile,mFilename);
           }
           for(int i=0;i<mCount;i++){
             if(mKeys[i]) {
@@ -407,44 +409,42 @@ void expandMacros(char* aBuffer,CMacros& aMacroSet){
  * @param 
  * @return
  */
-int processFile(char* aDir,fstream& anOutputStream,istrstream& aInputArgs){
+int processFile(char* aDir,CMacros& aMacroList,fstream& anOutputStream,fstream& anInputStream){
   int result=0;
 
-  CMacros theMacros;
-  theMacros.consume(aInputArgs);
-
-  char* theFilename=theMacros.getFilename();
-  fstream theInputStream(theFilename,ios::in);
-  if(theInputStream.is_open()){
-    bool done=false;
-    char theBuffer[1024];
-    char theWord[600];
+  if(anInputStream.is_open()){
+    bool  done=false;
+    char  theBuffer[1024];
+    char* p=0;
 
     while((!done) && (0==result)){
     
-      theInputStream.getline(theBuffer,sizeof(theBuffer)-1);
-      if(theInputStream.gcount()){
+      anInputStream.getline(theBuffer,sizeof(theBuffer)-1);
+      if(anInputStream.gcount()){
 
           //before doing anything else, expand the macros and keywords...
-        expandMacros(theBuffer,theMacros);
-        expandKeywords(theBuffer,theMacros);
+        expandMacros(theBuffer,aMacroList);
+        expandKeywords(theBuffer,aMacroList);
 
         //Now process each line:
-        if(strchr(theBuffer,'@')) {
+        p=strstr(theBuffer,"@import");
+        if(p) {
 
           //First, see if the line is an htmlgen statement; if so, recurse to read new file...
-          istrstream iStr(theBuffer);
-          iStr>>theWord;
-          if(!stricmp(theWord,"@htmlgen")){
+          char theFilename[1024];
 
-            //If you're here, we found an htmlgen statement. 
-            //  To handle this, we have to:
-            //    1. strip off the @htmlgen
-            //    2. grab the filename and collect the args,
-            //    3. and recurse...
-    
-            result=processFile(aDir,anOutputStream,iStr);
-          }
+          strcpy(theFilename,"htmlgen -F ");
+          p+=8;
+          strcat(theFilename,p);
+
+          //If you're here, we found an htmlgen statement. 
+          //  To handle this, we have to:
+          //    1. strip off the @htmlgen
+          //    2. grab the filename and collect the args,
+          //    3. and recurse...
+          
+          fstream theInStream(p,ios::in);
+          result=processFile(aDir,aMacroList,anOutputStream,theInStream);
         }
         else anOutputStream << theBuffer << endl;
       }
@@ -467,17 +467,22 @@ int iterate(istrstream& aInputArgs){
   CMacros theArgs;
   theArgs.consume(aInputArgs);
 
-  char theBuffer[1024];
   char theFilename[1024];
 
   bool done=!theArgs.first();
   while((!done) && (0==result)){
     CMacros theTempArgs(theArgs);
-    theTempArgs.buildArgBuffer(theBuffer);
-    istrstream theArgStream(theBuffer);
+
+    //theTempArgs.buildArgBuffer(theBuffer);
+    //    istrstream theArgStream(theBuffer);
+
     sprintf(theFilename,"%s\\%s",gCWD,gThisFile);
     fstream theOutStream(theFilename,ios::trunc);    
-    result=processFile(gCWD,theOutStream,theArgStream);
+
+    char* theInFile=theArgs.getFilename();
+    fstream theInStream(theInFile,ios::in);
+
+    result=processFile(gCWD,theTempArgs,theOutStream,theInStream);
     theArgs.dump();
     done=!theArgs.next();
   }
@@ -507,6 +512,6 @@ int main(int argc,char* argv[]){
     istrstream aStrStream(theBuffer);
     result=iterate(aStrStream);
   }
-  else cout<<endl <<"HTMLGenerator usage -f filename [-d yyy|xxx,yyy|xxx...yyy]" << endl;
+  else cout<<endl <<"HTMLGenerator usage -f filename [yyy | xxx,yyy | xxx-yyy]" << endl;
   return result;
 }
