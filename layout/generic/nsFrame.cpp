@@ -1128,14 +1128,16 @@ void nsFrame::AdjustPointsInSameContent(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::GetCursor(nsIPresContext& aPresContext, nsPoint& aPoint, PRInt32& aCursor)
+nsFrame::GetCursor(nsIPresContext& aPresContext,
+                   nsPoint& aPoint,
+                   PRInt32& aCursor)
 {
   const nsStyleColor* styleColor;
   GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
   aCursor = styleColor->mCursor;
 
-  if (NS_STYLE_CURSOR_AUTO == aCursor && nsnull != mGeometricParent) {
-    mGeometricParent->GetCursor(aPresContext, aPoint, aCursor);
+  if ((NS_STYLE_CURSOR_AUTO == aCursor) && (nsnull != mContentParent)) {
+    mContentParent->GetCursor(aPresContext, aPoint, aCursor);
   }
 
   return NS_OK;
