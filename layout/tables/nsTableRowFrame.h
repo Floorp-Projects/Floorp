@@ -129,19 +129,12 @@ protected:
 
   nsresult RecoverState(RowReflowState& aState, nsIFrame* aKidFrame);
 
-  //overrides 
-
   void PlaceChild(nsIPresContext* aPresContext,
                   RowReflowState& aState,
                   nsIFrame*       aKidFrame,
                   const nsRect&   aKidRect,
                   nsSize*         aMaxElementSize,
                   nsSize*         aKidMaxElementSize);
-
-  nsresult IncrementalReflow(nsIPresContext*      aPresContext,
-                             RowReflowState&      aState,
-                             const nsReflowState& aReflowState,
-                             nsSize*              aMaxElementSize);
 
   nscoord ComputeCellXOffset(const RowReflowState& aState,
                              nsIFrame*             aKidFrame,
@@ -150,28 +143,28 @@ protected:
                                 nsIFrame*             aKidFrame) const;
 
   /**
-   * Reflow the frames we've already created
-   *
-   * @param   aPresContext presentation context to use
-   * @param   aState current inline state
-   * @return  true if we successfully reflowed all the mapped children and false
-   *            otherwise, e.g. we pushed children to the next in flow
+   * Called for a resize reflow. Typically because the column widths have
+   * changed. Reflows all the existing table cell frames
    */
-  PRBool        ReflowMappedChildren(nsIPresContext* aPresContext,
-                                     RowReflowState& aState,
-                                     nsSize*         aMaxElementSize);
+  nsresult ResizeReflow(nsIPresContext*  aPresContext,
+                        RowReflowState&  aState,
+                        nsReflowMetrics& aDesiredSize);
 
   /**
-   * Create new frames for content we haven't yet mapped
-   *
-   * @param   aPresContext presentation context to use
-   * @param   aState current inline state
-   * @return  frComplete if all content has been mapped and frNotComplete
-   *            if we should be continued
+   * Called for the initial reflow. Creates each table cell frame, and
+   * reflows the cell frame to gets its minimum and maximum sizes
    */
-  nsReflowStatus  ReflowUnmappedChildren(nsIPresContext* aPresContext,
-                                         RowReflowState& aState,
-                                         nsSize*         aMaxElementSize);
+  nsresult InitialReflow(nsIPresContext*  aPresContext,
+                         RowReflowState&  aState,
+                         nsReflowMetrics& aDesiredSize);
+
+  /**
+   * Called for incremental reflow
+   */
+  nsresult IncrementalReflow(nsIPresContext*      aPresContext,
+                             RowReflowState&      aState,
+                             const nsReflowState& aReflowState,
+                             nsSize*              aMaxElementSize);
 
 private:
   PRInt32  mRowIndex;
