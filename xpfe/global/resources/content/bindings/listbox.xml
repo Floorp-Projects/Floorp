@@ -186,7 +186,7 @@
           var item = document.createElementNS(XULNS, "listitem");
           item.setAttribute("label", label);
           item.setAttribute("value", value);
-          var before = this.childNodes[index];
+          var before = this.getItemAtIndex(index);
           if (before)
             this.insertBefore(item, before);
           else
@@ -200,7 +200,7 @@
         <parameter name="index"/>
         <body>
         <![CDATA[
-          var remove = this.childNodes[index];
+          var remove = this.getItemAtIndex(index);
           if (remove)
             this.removeChild(remove);
           return remove;
