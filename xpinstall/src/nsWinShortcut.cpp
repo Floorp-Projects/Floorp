@@ -59,7 +59,12 @@ HRESULT CreateALink(LPCSTR lpszPathObj, LPCSTR lpszPathLink, LPCSTR lpszDesc, LP
         // Set the path to the shortcut target, and add the 
         // description. 
         psl->SetPath(lpszPathObj);
-        psl->SetDescription(lpszDesc);
+
+        // Do not set the description at this time.  We need to fix this
+        // parameter so it can be passed in independent of the shortcut name
+        // itself.  Comment this code out for now until a real fix can be done.
+        // psl->SetDescription(lpszDesc);
+
         if(lpszWorkingPath)
             psl->SetWorkingDirectory(lpszWorkingPath);
         if(lpszArgs)
