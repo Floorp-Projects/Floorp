@@ -28,7 +28,6 @@ CHROME_L10N = \
 	.\editor.dtd \
 	.\sidebar-editor-rdf.dtd \
 	.\sidebar-editor.dtd \
-	.\viewSource.dtd \
 	.\editorOverlay.dtd \
 	.\editor.properties \
 	.\pref-editing.dtd \

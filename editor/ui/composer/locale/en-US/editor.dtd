@@ -39,9 +39,6 @@
 <!ENTITY helpMenu.label "Help">
 <!ENTITY aboutCmd.label ".About">
 
-<!ENTITY sourceEditor.label "HTML Source Editor">
-<!ENTITY sourceEditorCancelButton.label "Cancel">
-
 <!-- Display Mode Toolbar -->
 <!ENTITY editMode.label "Edit Mode:">
 
