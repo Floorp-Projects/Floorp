@@ -1125,6 +1125,21 @@ pk11_initSlotList(PK11SlotList *list)
     list->head = NULL;
 }
 
+static void
+pk11_freeSlotList(PK11SlotList *list)
+{
+    PK11SlotListElement *le, *next ;
+    if (list == NULL) return;
+
+    for (le = list->head ; le; le = next) {
+	next = le->next;
+	pk11_FreeListElement(list,le);
+    }
+    PK11_USE_THREADS(PZ_DestroyLock((PZLock *)(list->lock));)
+    list->lock = NULL;
+    list->head = NULL;
+}
+
 /* initialize the system slotlists */
 SECStatus
 PK11_InitSlotLists(void)
@@ -1144,6 +1159,26 @@ PK11_InitSlotLists(void)
     pk11_initSlotList(&pk11_tlsSlotList);
     pk11_initSlotList(&pk11_randomSlotList);
     return SECSuccess;
+}
+
+void
+PK11_DestroySlotLists(void)
+{
+    pk11_freeSlotList(&pk11_desSlotList);
+    pk11_freeSlotList(&pk11_rc4SlotList);
+    pk11_freeSlotList(&pk11_rc2SlotList);
+    pk11_freeSlotList(&pk11_rc5SlotList);
+    pk11_freeSlotList(&pk11_md5SlotList);
+    pk11_freeSlotList(&pk11_md2SlotList);
+    pk11_freeSlotList(&pk11_sha1SlotList);
+    pk11_freeSlotList(&pk11_rsaSlotList);
+    pk11_freeSlotList(&pk11_dsaSlotList);
+    pk11_freeSlotList(&pk11_dhSlotList);
+    pk11_freeSlotList(&pk11_ideaSlotList);
+    pk11_freeSlotList(&pk11_sslSlotList);
+    pk11_freeSlotList(&pk11_tlsSlotList);
+    pk11_freeSlotList(&pk11_randomSlotList);
+    return;
 }
 
 /* return a system slot list based on mechanism */

@@ -173,6 +173,23 @@ void SECMOD_init(char *dbname) {
     moduleLock = SECMOD_NewListLock();
 }
 
+
+void SECMOD_Shutdown() {
+    /* destroy the lock */
+    SECMOD_DestroyListLock(moduleLock);
+    moduleLock = NULL;
+    /* free the internal module */
+    SECMOD_DestroyModule(internalModule);
+    internalModule = NULL;
+    /* destroy the list */
+    SECMOD_DestroyModuleList(modules);
+    modules = NULL;
+
+    /* make all the slots and the lists go away */
+    PK11_DestroySlotLists();
+}
+
+
 /*
  * retrieve the internal module
  */

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.11 2001/01/26 04:33:45 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.12 2001/02/01 19:09:18 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -289,18 +289,16 @@ NSS_Shutdown(void)
     CERTCertDBHandle *certHandle;
     SECKEYKeyDBHandle *keyHandle;
 
+    SECMOD_Shutdown();
     certHandle = CERT_GetDefaultCertDB();
     if (certHandle)
     	CERT_ClosePermCertDB(certHandle);
+    CERT_SetDefaultCertDB(NULL); 
 
     keyHandle = SECKEY_GetDefaultKeyDB();
     if (keyHandle)
     	SECKEY_CloseKeyDB(keyHandle);
-
-    /* XXX
-     * This should also close the secmod DB, 
-     * but there's no secmod function to close the DB.
-     */
+    SECKEY_SetDefaultKeyDB(NULL); 
 }
 
 PRBool
