@@ -1198,31 +1198,35 @@ function BrowserChangeTextSize(newSize)
 
   function readFromClipboard()
   {
-    // Get clipboard.
-    var clipboard = Components
-                      .classes["component://netscape/widget/clipboard"]
-                        .getService ( Components.interfaces.nsIClipboard );
-    // Create tranferable that will transfer the text.
-    var trans = Components
-                   .classes["component://netscape/widget/transferable"]
-                     .createInstance( Components.interfaces.nsITransferable );
-    if ( !clipboard || !trans )
+    try {
+      // Get clipboard.
+      var clipboard = Components
+                        .classes["component://netscape/widget/clipboard"]
+                          .getService ( Components.interfaces.nsIClipboard );
+      // Create tranferable that will transfer the text.
+      var trans = Components
+                     .classes["component://netscape/widget/transferable"]
+                       .createInstance( Components.interfaces.nsITransferable );
+      if ( !clipboard || !trans )
+        return null;
+
+      trans.addDataFlavor( "text/unicode" );
+      clipboard.getData(trans, clipboard.kSelectionClipboard);
+
+      var data = new Object();
+      var dataLen = new Object();
+      trans.getTransferData("text/unicode", data, dataLen);
+      var url = null;
+      if (data)
+      {
+        data = data.value.QueryInterface(Components.interfaces
+                                                      .nsISupportsWString);
+        url = data.data.substring(0, dataLen.value / 2);
+      }
+      return url;
+    } catch(ex) {
       return null;
-
-    trans.addDataFlavor( "text/unicode" );
-    clipboard.getData(trans, clipboard.kSelectionClipboard);
-
-	var data = new Object();
-	var dataLen = new Object();
-	trans.getTransferData("text/unicode", data, dataLen);
-    var url = null;
-	if (data)
-    {
-      data = data.value.QueryInterface(Components.interfaces
-                                                    .nsISupportsWString);
-      url = data.data.substring(0, dataLen.value / 2);
     }
-	return url;
   }
 
   function enclosingLink(node)
@@ -1287,7 +1291,7 @@ function BrowserChangeTextSize(newSize)
 
       var url = readFromClipboard();
       //dump ("Loading URL on clipboard: '" + url + "'; length = " + url.length + "\n");
-      if (url.length > 0)
+      if (url && url.length > 0)
       {
         var urlBar = document.getElementById("urlbar");
         urlBar.value = url;
