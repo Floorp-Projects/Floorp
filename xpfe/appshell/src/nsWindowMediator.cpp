@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIWebShell.h"
+#include "nsAppShellWindowEnumerator.h"
 #include "nsRDFCID.h"
 #include "nsWindowMediator.h"
 #include "nsXPIDLString.h"
@@ -170,212 +171,6 @@ PRUint32 GetWindowZ( nsIXULWindow *inWindow )
 	return order;
 }
 
-class nsWindowMediator;
-
-struct nsWindowInfo
-{
-	nsWindowInfo( nsIXULWindow* inWindow, PRInt32 inTimeStamp ):
-		mWindow(inWindow),mTimeStamp(inTimeStamp)
-	{
-		ReferenceSelf( PR_TRUE, PR_TRUE );
-	}
-	
-	~nsWindowInfo()
-	{
-	}
-	
-	nsCOMPtr<nsIRDFResource>  mRDFID;
-	nsCOMPtr<nsIXULWindow>    mWindow;
-	PRInt32                   mTimeStamp;
-
-	// each struct is in two, independent, circular, doubly-linked lists
-	nsWindowInfo              *mYounger, // next younger in sequence
-	                          *mOlder;
-	nsWindowInfo              *mLower,   // next lower in z-order
-	                          *mHigher;
-	
-	nsAutoString    GetType()
-	{ 
-		nsAutoString rtnString;
-	 	GetWindowType( mWindow, rtnString );
-	 	return rtnString;
-	}
-
-	void InsertAfter( nsWindowInfo *inOlder, nsWindowInfo *inHigher );
-	void Unlink( PRBool inAge, PRBool inZ );
-	void ReferenceSelf( PRBool inAge, PRBool inZ );
-};
-
-void nsWindowInfo::InsertAfter( nsWindowInfo *inOlder , nsWindowInfo *inHigher) {
-  if (inOlder) {
-    mOlder = inOlder;
-    mYounger = inOlder->mYounger;
-    mOlder->mYounger = this;
-    if (mOlder->mOlder == mOlder)
-      mOlder->mOlder = this;
-    mYounger->mOlder = this;
-    if (mYounger->mYounger == mYounger)
-      mYounger->mYounger = this;
-  }
-  if (inHigher) {
-    mHigher = inHigher;
-    mLower = inHigher->mLower;
-    mHigher->mLower = this;
-    if (mHigher->mHigher == mHigher)
-      mHigher->mHigher = this;
-    mLower->mHigher = this;
-    if (mLower->mLower == mLower)
-      mLower->mLower = this;
-  }
-}
-
-void nsWindowInfo::Unlink( PRBool inAge, PRBool inZ ) {
-
-  if (inAge) {
-    mOlder->mYounger = mYounger;
-    mYounger->mOlder = mOlder;
-  }
-  if (inZ) {
-    mLower->mHigher = mHigher;
-    mHigher->mLower = mLower;
-  }
-  ReferenceSelf( inAge, inZ );
-}
-
-void nsWindowInfo::ReferenceSelf( PRBool inAge, PRBool inZ ) {
-
-  if (inAge) {
-    mYounger = this;
-    mOlder = this;
-  }
-  if (inZ) {
-    mLower = this;
-    mHigher = this;
-  }
-}
-
-class nsWindowEnumerator : public nsISimpleEnumerator
-{
-
-public:
-  nsWindowEnumerator ( const PRUnichar* inTypeString,
-                       nsWindowMediator& inMediator,
-                       PRBool enumXULWindow );
-  virtual ~nsWindowEnumerator();
-  NS_IMETHOD HasMoreElements(PRBool *retval);
-  NS_IMETHOD GetNext(nsISupports **retval);
-
-  NS_DECL_ISUPPORTS
-
-private:
-  friend class nsWindowMediator;
-
-  nsWindowInfo *FindNext();
-  void WindowRemoved( nsWindowInfo *inInfo );
-
-  nsWindowMediator *mWindowMediator;
-  nsString          mType;
-  nsWindowInfo     *mCurrentPosition;
-  PRBool            mEnumXULWindow;
-};
-
-nsWindowEnumerator::nsWindowEnumerator ( const PRUnichar* inTypeString,
-                                         nsWindowMediator& inMediator,
-                                         PRBool enumXULWindow )
-  : mWindowMediator(&inMediator), mType(inTypeString),
-    mCurrentPosition(inMediator.mOldestWindow),
-    mEnumXULWindow(enumXULWindow)
-{
-  NS_INIT_REFCNT();
-  mWindowMediator->AddEnumerator( this );
-  mWindowMediator->AddRef();
-
-  // If creating an enumerator for specific type, 
-  //  initialize with a window of that type
-  if (!mType.IsEmpty() && mCurrentPosition && mCurrentPosition->GetType() != mType)
-    mCurrentPosition = FindNext();
-}
-
-nsWindowEnumerator::~nsWindowEnumerator()
-{
-  mWindowMediator->RemoveEnumerator( this );
-  mWindowMediator->Release();
-}
-
-NS_IMETHODIMP nsWindowEnumerator::HasMoreElements(PRBool *retval)
-{
-  if ( !retval )
-    return NS_ERROR_INVALID_ARG;
-
-  *retval = PR_FALSE;
-  if (mCurrentPosition)
-    *retval = PR_TRUE;
-  return NS_OK;
-}
-	
-NS_IMETHODIMP nsWindowEnumerator::GetNext(nsISupports **retval)
-{
-  if (!retval)
-    return NS_ERROR_INVALID_ARG;
-
-  *retval = NULL;
-  if (mCurrentPosition) {
-    if(mEnumXULWindow)
-      CallQueryInterface(mCurrentPosition->mWindow, retval);
-    else {
-      nsCOMPtr<nsIDOMWindowInternal> domWindow;
-      GetDOMWindow(mCurrentPosition->mWindow, domWindow);
-      CallQueryInterface(domWindow, retval);
-    }
-    mCurrentPosition = FindNext();
-  }
-  return NS_OK;
-}
-
-nsWindowInfo * nsWindowEnumerator::FindNext() {
-
-  nsWindowInfo *info,
-               *listEnd;
-  PRBool        allWindows = mType.Length() == 0;
-
-  /* mCurrentPosition null is assumed to mean that the enumerator has run
-     its course and is now basically useless. It could also be interpreted
-     to mean that it was created at a time when there were no windows. In
-     that case it would probably be more appropriate to check to see whether
-     windows have subsequently been added. But it's not guaranteed that we'll
-     pick up newly added windows anyway (if they occurred previous to our
-     current position) so we just don't worry about that. */
-  if (!mCurrentPosition)
-    return 0;
-
-  info = mCurrentPosition->mYounger;
-  listEnd = mWindowMediator->mOldestWindow;
-
-  while (info != listEnd) {
-    if (allWindows || info->GetType() == mType)
-      return info;
-    info = info->mYounger;
-  }
-
-  return 0;
-}
-
-// if a window is being removed adjust the iterator's current position
-void nsWindowEnumerator::WindowRemoved( nsWindowInfo *inInfo ) {
-
-  if (mCurrentPosition == inInfo)
-    mCurrentPosition = mCurrentPosition != inInfo->mYounger ?
-                       inInfo->mYounger : 0;
-}
-
-/* 
- * Implementations of nsISupports interface methods...
- */
-NS_IMPL_ADDREF(nsWindowEnumerator);
-NS_IMPL_RELEASE(nsWindowEnumerator);
-NS_IMPL_QUERY_INTERFACE1(nsWindowEnumerator, nsISimpleEnumerator);
-
-
 nsIRDFResource	*nsWindowMediator::kNC_WindowMediatorRoot = NULL;
 nsIRDFResource	*nsWindowMediator::kNC_Name = NULL;
 nsIRDFResource	*nsWindowMediator::kNC_URL = NULL;
@@ -473,7 +268,7 @@ NS_IMETHODIMP nsWindowMediator::UnregisterWindow( nsWindowInfo *inInfo )
   // Inform the iterators
   PRInt32 index = -1;
   while (++index < mEnumeratorList.Count() ) 
-    ((nsWindowEnumerator*)mEnumeratorList[ index ] )->WindowRemoved ( inInfo );
+    ((nsAppShellWindowEnumerator*)mEnumeratorList[index])->WindowRemoved(inInfo);
 
   // Remove From RDF
   nsCOMPtr<nsIRDFContainer> container;
@@ -515,7 +310,7 @@ NS_METHOD nsWindowMediator::GetEnumerator( const PRUnichar* inType, nsISimpleEnu
     return NS_ERROR_INVALID_ARG;
 
   nsAutoLock lock(mListLock);
-  nsWindowEnumerator* enumerator = new nsWindowEnumerator( inType, *this, PR_FALSE );
+  nsAppShellWindowEnumerator *enumerator = new nsASDOMWindowEarlyToLateEnumerator(inType, *this);
   if (enumerator )
     return enumerator->QueryInterface( NS_GET_IID(nsISimpleEnumerator) , (void**)outEnumerator );
 
@@ -528,20 +323,57 @@ NS_METHOD nsWindowMediator::GetXULWindowEnumerator( const PRUnichar* inType, nsI
     return NS_ERROR_INVALID_ARG;
 
   nsAutoLock lock(mListLock);
-  nsWindowEnumerator* enumerator = new nsWindowEnumerator( inType, *this, PR_TRUE );
+  nsAppShellWindowEnumerator *enumerator = new nsASXULWindowEarlyToLateEnumerator(inType, *this);
   if (enumerator )
     return enumerator->QueryInterface( NS_GET_IID(nsISimpleEnumerator) , (void**)outEnumerator );
 
   return NS_ERROR_OUT_OF_MEMORY;
 }	
- 
 
-PRInt32 nsWindowMediator::AddEnumerator( nsWindowEnumerator* inEnumerator )
+NS_METHOD nsWindowMediator::GetZOrderDOMWindowEnumerator(
+            const PRUnichar *aWindowType, PRBool aFrontToBack,
+            nsISimpleEnumerator **_retval)
+{
+  if (!_retval)
+    return NS_ERROR_INVALID_ARG;
+
+  nsAutoLock lock(mListLock);
+  nsAppShellWindowEnumerator *enumerator;
+  if (aFrontToBack)
+    enumerator = new nsASDOMWindowFrontToBackEnumerator(aWindowType, *this);
+  else
+    enumerator = new nsASDOMWindowBackToFrontEnumerator(aWindowType, *this);
+  if (enumerator)
+    return enumerator->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void**) _retval);
+
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_METHOD nsWindowMediator::GetZOrderXULWindowEnumerator(
+            const PRUnichar *aWindowType, PRBool aFrontToBack,
+            nsISimpleEnumerator **_retval)
+{
+  if (!_retval)
+    return NS_ERROR_INVALID_ARG;
+
+  nsAutoLock lock(mListLock);
+  nsAppShellWindowEnumerator *enumerator;
+  if (aFrontToBack)
+    enumerator = new nsASXULWindowFrontToBackEnumerator(aWindowType, *this);
+  else
+    enumerator = new nsASXULWindowBackToFrontEnumerator(aWindowType, *this);
+  if (enumerator)
+    return enumerator->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void**) _retval);
+
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+
+PRInt32 nsWindowMediator::AddEnumerator( nsAppShellWindowEnumerator * inEnumerator )
 {
   return mEnumeratorList.AppendElement(inEnumerator);
 }
 
-PRInt32 nsWindowMediator::RemoveEnumerator( nsWindowEnumerator* inEnumerator)
+PRInt32 nsWindowMediator::RemoveEnumerator( nsAppShellWindowEnumerator * inEnumerator)
 {
   return mEnumeratorList.RemoveElement(inEnumerator);
 }
@@ -591,7 +423,7 @@ nsWindowMediator::MostRecentWindowInfo(const PRUnichar* inType)
   searchInfo = mOldestWindow;
   listEnd = 0;
   while (searchInfo != listEnd) {
-    if ((allWindows || searchInfo->GetType() == typeString) &&
+    if ((allWindows || searchInfo->TypeEquals(typeString)) &&
         searchInfo->mTimeStamp >= lastTimeStamp) {
 
       foundInfo = searchInfo;
