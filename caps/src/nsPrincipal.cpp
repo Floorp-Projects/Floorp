@@ -22,6 +22,7 @@
  *
  */
 
+#include "prtime.h"
 #include "nsPrincipal.h"
 #include "nsPrivilegeManager.h"
 
@@ -205,8 +206,7 @@ static nsVector* getTempCertificates(const unsigned char **certChain,
   cert = (CERTCertificate *)certArray->Get(0);
   rv = CERT_VerifyCert(handle, cert, PR_TRUE, 
                        certUsageObjectSigner,
-                       (int64)PR_FALSE, (void *)NULL, 
-                       (CERTVerifyLog *)NULL);
+                       PR_Now(), NULL, NULL);
   if (rv != SECSuccess) {
      // Free the certificates and mark this principal as not trusted.
      destroyCertificates(certArray);
