@@ -178,12 +178,24 @@ morkEnv::OidAsHex(void* outBuf, const mdbOid& inOid)
 // sprintf(buf, "%lX:^%lX", (long) inOid.mOid_Id, (long) inOid.mOid_Scope);
 {
   mork_u1* p = (mork_u1*) outBuf;
-  mork_size idSize = this->TokenAsHex(p, inOid.mOid_Id);
-  p += idSize;
+  mork_size outSize = this->TokenAsHex(p, inOid.mOid_Id);
+  p += outSize;
   *p++ = ':';
-  *p++ = '^';
-  mork_size scopeSize = this->TokenAsHex(p, inOid.mOid_Scope);
-  return idSize + scopeSize + 2;
+  
+  mork_scope scope = inOid.mOid_Scope;
+  if ( scope < 0x80 && morkCh_IsName((mork_ch) scope) )
+  {
+	  *p++ = (mork_u1) scope;
+	  *p = 0; // null termination
+	  outSize += 2;
+  }
+  else
+  {
+	  *p++ = '^';
+	  mork_size scopeSize = this->TokenAsHex(p, scope);
+	  outSize += scopeSize + 2;
+  }
+  return outSize;
 }
 
 
