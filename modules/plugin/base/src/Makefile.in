@@ -66,11 +66,9 @@ REQUIRES	+= xlibxtbin xlibrgb
 CPPSRCS		= \
 		ns4xPlugin.cpp \
 		ns4xPluginInstance.cpp \
-		nsPluginDocLoaderFactory.cpp \
 		nsPluginHostImpl.cpp \
 		nsPluginModule.cpp \
 		nsPluginInstancePeer.cpp \
-		nsPluginViewer.cpp \
 		nsPluginDirServiceProvider.cpp \
 		$(NULL)
 
@@ -96,10 +94,6 @@ endif
 endif
 endif
 endif
-
-EXPORTS		= \
-    nsPluginViewer.h \
-		$(NULL)
 
 ifneq (,$(filter WINNT Darwin,$(OS_ARCH)))
 EXTRA_DSO_LIBS	+= gkgfx
