@@ -164,7 +164,7 @@ struct nsIRegistry : public nsISupports {
     | is destroyed.  You can close the file prior to that by using the         |
     | Close() function.                                                        |
     --------------------------------------------------------------------------*/
-    NS_IMETHOD Open( const char *regFile = 0 ) = 0;
+    NS_IMETHOD Open( const char *regFile ) = 0;
     NS_IMETHOD OpenWellKnownRegistry( uint32 regid ) = 0;
     NS_IMETHOD OpenDefault() = 0;
     NS_IMETHOD Close() = 0;

@@ -50,7 +50,7 @@ struct nsRegistry : public nsIRegistry {
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIRegistry interface functions.
-    NS_IMETHOD Open( const char *regFile = 0 );
+    NS_IMETHOD Open( const char *regFile);
     NS_IMETHOD OpenWellKnownRegistry( uint32 regid );
     NS_IMETHOD OpenDefault();
     NS_IMETHOD Close();
