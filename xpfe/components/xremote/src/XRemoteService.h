@@ -52,6 +52,10 @@ class XRemoteService : public nsIXRemoteService {
 
   // find the last argument in an argument string
   void FindLastInList(nsCString &aString, nsCString &retString,
+                      PRUint32 *aIndexRet);
+
+  // find the second argument through the last argument in the string
+  void FindRestInList(nsCString &aString, nsCString &retString,
 		      PRUint32 *aIndexRet);
 
   // short cut for opening chrome windows
@@ -64,6 +68,7 @@ class XRemoteService : public nsIXRemoteService {
   // get the primary browser chrome location
   nsresult GetBrowserLocation(char **_retval);
   nsresult GetMailLocation(char **_retval);
+  nsresult GetComposeLocation(const char **_retval);
 
   // remote command handlers
   nsresult OpenURL(nsCString &aArgument,
