@@ -1186,14 +1186,7 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage, nsIMsgWindow *m
 			child->SetParent(nsnull);
 			status = child->RecursiveDelete(deleteStorage,msgWindow);  // recur
       if (NS_SUCCEEDED(status))
-        {
           mSubFolders->RemoveElement(supports);  // unlink it from this's child list
-          nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
-          nsCOMPtr<nsISupports> folderSupports;
-          rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
-          if(childSupports && NS_SUCCEEDED(rv))
-            NotifyItemDeleted(folderSupports, childSupports, "folderView");
-        }
       else
         { // setting parent back if we failed for some reason
           child->SetParent(this);

@@ -1328,18 +1328,24 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
           MatchOrChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
           if (changed)
             AlertFilterChanged(msgWindow);
-          nsCOMPtr<nsISupports> newFolderSupport = do_QueryInterface(newFolder);
-          NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
         /***** jefft -
         * Needs to find a way to reselect the new renamed folder and the
         * message being selected.
         */
           if (cnt > 0)
             newFolder->RenameSubFolders(msgWindow, this);
+
           if (parentFolder)
           {
             SetParent(nsnull);
             parentFolder->PropagateDelete(this, PR_FALSE, msgWindow);
+
+            nsCOMPtr<nsISupports> newFolderSupports = do_QueryInterface(newFolder);
+            nsCOMPtr<nsISupports> parentSupports = do_QueryInterface(parentFolder);
+            if(newFolderSupports && parentSupports)
+            {
+              NotifyItemAdded(parentSupports, newFolderSupports, "folderView");
+            }
           }
         }
     }
@@ -1375,11 +1381,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, ns
        msgFolder->MatchOrChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
        if (changed)
          msgFolder->AlertFilterChanged(msgWindow);
-
-       nsCOMPtr <nsISupports> parentSupport = do_QueryInterface(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
-       nsCOMPtr <nsISupports> newFolderSupport = do_QueryInterface(newFolder);
-       if (parentSupport && newFolderSupport)
-         NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
 
        newFolder->RenameSubFolders(msgWindow, msgFolder);
      }
@@ -2044,17 +2045,6 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   rv = srcFolder->MatchOrChangeFilterDestination(newMsgFolder, PR_TRUE, &changed);
   if (changed)
     srcFolder->AlertFilterChanged(msgWindow);
-  if (newMsgFolder) 
-  {
-    newMsgFolder->SetName(folderName.get());
-    nsCOMPtr<nsISupports> supports = do_QueryInterface(newMsgFolder);
-    nsCOMPtr <nsISupports> parentSupports = do_QueryInterface((nsIMsgLocalMailFolder*)this);
-    
-    if (supports && parentSupports)
-    {
-      NotifyItemAdded(parentSupports, supports, "folderView");
-    }
-  }
   
   nsCOMPtr<nsIEnumerator> aEnumerator;
   srcFolder->GetSubFolders(getter_AddRefs(aEnumerator));
@@ -2077,6 +2067,16 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   
   if (isMoveFolder && NS_SUCCEEDED(copyStatus))
   {
+    if (newMsgFolder)  //notifying the "folder" that was dragged and dropped has been created.
+    {                  //no need to do this for its subfolders - isMoveFolder will be true for "folder"
+      newMsgFolder->SetName(folderName.get());
+      nsCOMPtr<nsISupports> supports = do_QueryInterface(newMsgFolder);
+      nsCOMPtr <nsISupports> parentSupports = do_QueryInterface((nsIMsgLocalMailFolder*)this);
+    
+      if (supports && parentSupports)
+        NotifyItemAdded(parentSupports, supports, "folderView");
+    }
+
     nsCOMPtr <nsIFolder> parent;
     nsCOMPtr<nsIMsgFolder> msgParent;
     srcFolder->GetParent(getter_AddRefs(parent));

@@ -5857,15 +5857,8 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         unusedDB->SetSummaryValid(PR_TRUE);
         unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
         unusedDB->Close(PR_TRUE);
-        nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
-        nsCOMPtr<nsISupports> folderSupports;
-        rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
-        if(childSupports && NS_SUCCEEDED(rv))
-          NotifyItemAdded(folderSupports, childSupports, "folderView");
 
 	    child->RenameSubFolders(msgWindow, msgFolder);
-	  }
-	}
        
     nsCOMPtr<nsIFolder> parent;
     msgFolder->GetParent(getter_AddRefs(parent));
@@ -5873,13 +5866,22 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
     msgFolder->SetParent(nsnull);
     msgParent->PropagateDelete(msgFolder,PR_FALSE, nsnull);
 
+        nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
+        nsCOMPtr<nsISupports> parentSupports;
+        rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(parentSupports));
+        if(childSupports && NS_SUCCEEDED(rv))
+        {
+          NotifyItemAdded(parentSupports, childSupports, "folderView");
+        }
+	  }
+	}     
     return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsgFolder *oldFolder)
 {
   nsresult rv = NS_OK;
-  
+  m_initialized = PR_TRUE;
   nsCOMPtr<nsIEnumerator> aEnumerator;
   oldFolder->GetSubFolders(getter_AddRefs(aEnumerator));
   nsCOMPtr<nsISupports> aSupport;
@@ -5956,16 +5958,11 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsg
        imapFolder->SetOnlineName(onlineCName.get());
        imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
        imapFolder->SetBoxFlags(boxflags);
-       m_initialized = PR_TRUE;
 
        PRBool changed = PR_FALSE;
        msgFolder->MatchOrChangeFilterDestination(child, PR_FALSE /*caseInsensitive*/, &changed);
        if (changed)
          msgFolder->AlertFilterChanged(msgWindow);
-       nsCOMPtr <nsISupports> parentSupport = do_QueryInterface(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));
-       nsCOMPtr <nsISupports> childSupport = do_QueryInterface(child);
-       if (parentSupport && childSupport)
-         NotifyItemAdded(parentSupport, childSupport, "folderView");
 	
        child->RenameSubFolders(msgWindow, msgFolder);
      }

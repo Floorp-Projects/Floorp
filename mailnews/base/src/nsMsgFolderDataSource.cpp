@@ -426,6 +426,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
       nsCOMPtr<nsIEnumerator> subFolders;
 
       rv = folder->GetSubFolders(getter_AddRefs(subFolders));
+      rv = subFolders->First();
 			if(NS_SUCCEEDED(rv))
 			{
 				nsAdapterEnumerator* cursor =
@@ -1321,6 +1322,7 @@ nsMsgFolderDataSource::createFolderOpenNode(nsIMsgFolder *folder, nsIRDFNode **t
   // from the folder cache on startup
   nsCOMPtr<nsIEnumerator> subFolders;
   nsresult rv = folder->GetSubFolders(getter_AddRefs(subFolders));
+  rv = subFolders->First();
   if (NS_FAILED(rv))
     return NS_RDF_NO_VALUE;
 
@@ -1818,6 +1820,7 @@ nsMsgFolderDataSource::createFolderChildNode(nsIMsgFolder *folder,
 {
   nsCOMPtr<nsIEnumerator> subFolders;
   nsresult rv = folder->GetSubFolders(getter_AddRefs(subFolders));
+  rv = subFolders->First();
   if (NS_FAILED(rv))
     return NS_RDF_NO_VALUE;
   
