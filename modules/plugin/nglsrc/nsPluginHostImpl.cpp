@@ -1927,6 +1927,33 @@ nsPluginHostImpl::IsPluginEnabledForType(const char* aMimeType)
   return NS_ERROR_FAILURE;
 }
 
+// check comma delimetered extensions
+static int CompareExtensions(const char *aExtensionList, const char *aExtension)
+{
+  if((aExtensionList == nsnull) || (aExtension == nsnull))
+    return -1;
+
+  const char *pExt = aExtensionList;
+  char *pComma = strchr(pExt, ',');
+
+  if(pComma == nsnull)
+    return strcmp(pExt, aExtension);
+
+  while(pComma != nsnull)
+  {
+    int length = pComma - pExt;
+    if(0 == strncmp(pExt, aExtension, length))
+      return 0;
+
+    pComma++;
+    pExt = pComma;
+    pComma = strchr(pExt, ',');
+  }
+
+  // the last one
+  return strcmp(pExt, aExtension);
+}
+
 NS_IMETHODIMP
 nsPluginHostImpl::IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType)
 {
@@ -1947,12 +1974,14 @@ nsPluginHostImpl::IsPluginEnabledForExtension(const char* aExtension, const char
 
       for (cnt = 0; cnt < variants; cnt++)
       {
-        if (0 == strcmp(plugins->mExtensionsArray[cnt], aExtension))
-		{
-			aMimeType = plugins->mMimeTypeArray[cnt];
-			return NS_OK;
-		}
-	  }	
+        //if (0 == strcmp(plugins->mExtensionsArray[cnt], aExtension))
+        // mExtensionsArray[cnt] could be not a single extension but rather a list separated by commas
+        if (0 == CompareExtensions(plugins->mExtensionsArray[cnt], aExtension))
+		    {
+			    aMimeType = plugins->mMimeTypeArray[cnt];
+			    return NS_OK;
+		    }
+	    }	
 
       if (cnt < variants)
         break;
