@@ -35,6 +35,7 @@ EXPORTS = \
 		nsIMsgRFC822Parser.h \
 		nsIMsgHost.h \
 		nsIMsgGroupRecord.h \
+		nsIMsgFolder.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

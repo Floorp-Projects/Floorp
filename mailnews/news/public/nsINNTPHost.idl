@@ -111,7 +111,7 @@ interface nsINNTPHost : nsISupports {
     void SetPrettyName(in string groupName, in string prettyName);
 
 	/* Go load the newsrc for this host.  Creates the subscribed hosts as
-       children of the given MSG_FolderInfo. */
+       children of the given nsIMsgFolder. */
     void LoadNewsrc();
 	/* Write out the newsrc for this host right now.  In general, either
        MarkDirty() or WriteIfDirty() should be called instead. */

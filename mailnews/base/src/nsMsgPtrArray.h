@@ -20,6 +20,7 @@
 #ifndef PTR_ARRAY_H_
 #define PTR_ARRAY_H_
 
+#include "nsIMsgFolder.h"
 typedef int XPCompareFunc(const void *, const void * );
 
 #ifdef DEBUG
@@ -151,7 +152,6 @@ protected:
 
 //*****************************************************************************
 
-class MSG_FolderInfo;
 
 class MSG_FolderArray : public XPSortedPtrArray
 {
@@ -160,7 +160,7 @@ public:
 	MSG_FolderArray (XPCompareFunc *compare = NULL) : XPSortedPtrArray (compare) {}
 
 	// Encapsulate this typecast, so we don't have to do it all over the place.
-	MSG_FolderInfo *GetAt(int i) const { return (MSG_FolderInfo*) XPPtrArray::GetAt(i); }
+	nsIMsgFolder *GetAt(int i) const { return (nsIMsgFolder *) XPPtrArray::GetAt(i); }
 };
 
 #endif
