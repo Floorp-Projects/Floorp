@@ -1896,8 +1896,8 @@ static nsresult CreateArray(nsIWritableVariant* aResult, PRUint16 aType, const n
         size, aArray);
       if (NS_FAILED(rc))
         break;
-      NS_ADDREF(v);                          //  Addref for array reference
       a[i] = v;
+      NS_ADDREF(a[i]);                       //  Addref for array reference
       aArray += size;
     }
     if (!NS_FAILED(rc)) {
@@ -2130,7 +2130,7 @@ NS_IMETHODIMP
       delete[] a;\
 
 #define DECODE_SIMPLE_ARRAY(XPType, VType, VTYPE) \
-  DECODE_ARRAY(XPType, VTYPE, nsnull, rc = v->GetAs##VType(a + p);if(NS_FAILED(rc))break;,)
+  DECODE_ARRAY(XPType, VTYPE, nsnull, rc = v->GetAs##VType(a + p);if(NS_FAILED(rc))break;,do{}while(0);)
 
   if (NS_FAILED(rc))
     return rc;
