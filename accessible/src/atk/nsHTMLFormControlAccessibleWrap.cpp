@@ -82,7 +82,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessibleWrap::GetExtState(PRUint32 *aState)
     nsAutoString typeString;
     htmlFormElement->GetType(typeString);
     if (typeString.LowerCaseEqualsLiteral("text"))
-      *aState |= STATE_SINGLE_LINE;
+      *aState |= EXT_STATE_SINGLE_LINE;
   }
   return NS_OK;
 }

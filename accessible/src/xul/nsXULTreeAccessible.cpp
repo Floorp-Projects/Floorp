@@ -522,8 +522,6 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetState(PRUint32 *_retval)
   mTree->GetLastVisibleRow(&lastVisibleRow);
   if (mRow < firstVisibleRow || mRow > lastVisibleRow)
     *_retval |= STATE_INVISIBLE;
-  else
-    *_retval |= STATE_SHOWING;
 
   return NS_OK;
 }

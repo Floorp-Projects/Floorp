@@ -52,7 +52,7 @@
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(14502afc-9513-4514-aab9-e4e7d3167ec7)]
+[scriptable, uuid(DB717DB4-37E9-42F1-A3B0-2579DD7C3814)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -283,19 +283,18 @@ interface nsIAccessible : nsISupports
 
 /**
  * Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
- * This is only the states that there isn't already a mapping for in MSAA
- * See www.accessmozilla.org/article.php?sid=11 for information on the mappings between accessibility API states
+ * "Extended state flags" has seperate value space from "MSAA State flags".
  */
-  const unsigned long  STATE_INVALID            = 0x00200000;  // No explanation given    
-  const unsigned long  STATE_ACTIVE             = 0x00400000;  // This window is currently the active window    
-  const unsigned long  STATE_EXPANDABLE         = 0x00800000;  // An item that can be expanded, such as a tree item with children    
-  const unsigned long  STATE_MODAL              = 0x01000000;  // Must do something with control before leaving it    
-  const unsigned long  STATE_MULTI_LINE         = 0x02000000;  // Edit control that can take multiple lines    
-  const unsigned long  STATE_SENSITIVE          = 0x04000000;  // No explanation given    
-  const unsigned long  STATE_SHOWING            = 0x10000000;  // This object and all of it's ancestors are visible    
-  const unsigned long  STATE_SINGLE_LINE        = 0x00040000;  // This text object can only contain 1 line of text    
-  const unsigned long  STATE_TRANSIENT          = 0x40000000;  // Tells accessibility aid "Don't add event listener - this object doesn't generate any". For example, could be used with higher level containers.    
-  const unsigned long  STATE_VERTICAL           = 0x80000000;  // Especially used for sliders and scrollbars  
+  const unsigned long  EXT_STATE_INVALID        = 0x00200000;  // No explanation given    
+  const unsigned long  EXT_STATE_ACTIVE         = 0x00400000;  // This window is currently the active window    
+  const unsigned long  EXT_STATE_EXPANDABLE     = 0x00800000;  // An item that can be expanded, such as a tree item with children    
+  const unsigned long  EXT_STATE_MODAL          = 0x01000000;  // Must do something with control before leaving it    
+  const unsigned long  EXT_STATE_MULTI_LINE     = 0x02000000;  // Edit control that can take multiple lines    
+  const unsigned long  EXT_STATE_SENSITIVE      = 0x04000000;  // No explanation given    
+  const unsigned long  EXT_STATE_SHOWING        = 0x10000000;  // This object and all of it's ancestors are visible    
+  const unsigned long  EXT_STATE_SINGLE_LINE    = 0x20000000;  // This text object can only contain 1 line of text    
+  const unsigned long  EXT_STATE_TRANSIENT      = 0x40000000;  // Tells accessibility aid "Don't add event listener - this object doesn't generate any". For example, could be used with higher level containers.    
+  const unsigned long  EXT_STATE_VERTICAL       = 0x80000000;  // Especially used for sliders and scrollbars  
 
 
 %{C++

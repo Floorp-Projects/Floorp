@@ -84,6 +84,7 @@ public:
     PRBool IsValidObject();
 
     static void TranslateStates(PRUint32 aState,
+                                PRUint32 aExtState,
                                 void *aAtkStateSet);
 protected:
     AtkObject *mMaiAtkObject;

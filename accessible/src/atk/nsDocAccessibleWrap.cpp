@@ -70,7 +70,7 @@ static char * sAtkPropertyNameArray[PROP_LAST] = {
     "accessible_table_summary"
 };
 
-static  AtkStateType TranslateAState(PRUint32 aState);
+static  AtkStateType TranslateAState(PRUint32 aState, PRUint32 aExtState);
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsDocAccessibleWrap, nsDocAccessible, nsIAccessibleText, nsIAccessibleEditableText)
 
@@ -134,7 +134,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
             pAtkStateChange->enable = !pAtkStateChange->enable;
             break;
         default:
-            atkState = TranslateAState(pAtkStateChange->state);
+            atkState = TranslateAState(pAtkStateChange->state, pAtkStateChange->extState);
         }
 
         atk_object_notify_state_change(accWrap->GetAtkObject(),
@@ -436,7 +436,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
 
 /* static */
 AtkStateType
-TranslateAState(PRUint32 aState)
+TranslateAState(PRUint32 aState, PRUint32 aExtState)
 {
     switch (aState) {
     case nsIAccessible::STATE_SELECTED:
@@ -475,38 +475,35 @@ TranslateAState(PRUint32 aState)
     case nsIAccessible::STATE_READONLY:
         return !ATK_STATE_EDITABLE;
 #endif
+    }
 
-        // The following state is
-        // Extended state flags (for non-MSAA, for Java and Gnome/ATK support)
-        // They are only the states that are not already  mapped in MSAA
-        // See www.accessmozilla.org/article.php?sid=11 for information on the
-        // mappings between accessibility API state
-
-    case nsIAccessible::STATE_ACTIVE:
+    // The following state is
+    // Extended state flags (for non-MSAA, for Java and Gnome/ATK support)
+    switch (aExtState) {
+    case nsIAccessible::EXT_STATE_ACTIVE:
         return ATK_STATE_ACTIVE;
-    case nsIAccessible::STATE_EXPANDABLE:
+    case nsIAccessible::EXT_STATE_EXPANDABLE:
         return ATK_STATE_EXPANDABLE;
 #if 0
         // Need change definitions in nsIAccessible.idl to avoid
         // duplicate value
-    case nsIAccessible::STATE_MODAL:
+    case nsIAccessible::EXT_STATE_MODAL:
         return ATK_STATE_MODAL;
 #endif
-    case nsIAccessible::STATE_MULTI_LINE:
+    case nsIAccessible::EXT_STATE_MULTI_LINE:
         return ATK_STATE_MULTI_LINE;
-    case nsIAccessible::STATE_SENSITIVE:
+    case nsIAccessible::EXT_STATE_SENSITIVE:
         return ATK_STATE_SENSITIVE;
-    case nsIAccessible::STATE_SHOWING:
+    case nsIAccessible::EXT_STATE_SHOWING:
         return ATK_STATE_SHOWING;
-    case nsIAccessible::STATE_SINGLE_LINE:
+    case nsIAccessible::EXT_STATE_SINGLE_LINE:
         return ATK_STATE_SINGLE_LINE;
-    case nsIAccessible::STATE_TRANSIENT:
+    case nsIAccessible::EXT_STATE_TRANSIENT:
         return ATK_STATE_TRANSIENT;
-    case nsIAccessible::STATE_VERTICAL:
+    case nsIAccessible::EXT_STATE_VERTICAL:
         return ATK_STATE_VERTICAL;
-    default:
-        return ATK_STATE_INVALID;
     }
+    return ATK_STATE_INVALID;
 }
 
 NS_IMETHODIMP nsDocAccessibleWrap::Shutdown()

@@ -75,7 +75,13 @@ class nsAccessibleEventData: public nsIAccessibleEvent
 
 struct AtkStateChange {
   PRUint32 state;
+  PRUint32 extState;
   PRBool   enable;
+  AtkStateChange() {
+    state = 0;
+    extState = 0;
+    enable = PR_FALSE;
+  }
 };
 
 enum AtkProperty {
