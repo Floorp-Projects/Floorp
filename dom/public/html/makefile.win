@@ -93,5 +93,5 @@ include <$(DEPTH)\config\rules.mak>
 export:: $(XPDIST)\include
     for %f in ($(EXPORTS2)) do $(MAKE_INSTALL:/=\) %f $(XPDIST:/=\)\include
 
-clobber:: $(XPDIST)\public\$(MODULE)
+clobber::
     -for %g in ($(EXPORTS2)) do $(RM) $(XPDIST:/=\)\include\%g
