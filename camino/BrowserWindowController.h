@@ -61,7 +61,7 @@ class nsIDOMNode;
 {
   NSTimer* mTimer;
   NSArray* mImages;
-  int mFrame;
+  unsigned int mFrame;
 }
 
 // public
@@ -75,45 +75,49 @@ class nsIDOMNode;
 @end
 
 
+@class BookmarksDataSource;
+@class CHHistoryDataSource;
+@class CHExtendedTabView;
+
 @interface BrowserWindowController : NSWindowController<CHFind>
 {
-  IBOutlet id mTabBrowser;
-  IBOutlet NSDrawer* mSidebarDrawer;
-  IBOutlet id mSidebarTabView;
-  IBOutlet id mSidebarSourceTabView;
-  IBOutlet id mLocationToolbarView;
-  IBOutlet NSTextField* mURLBar;
-  IBOutlet NSTextField* mStatus;
+  IBOutlet CHExtendedTabView* mTabBrowser;
+  IBOutlet NSDrawer*          mSidebarDrawer;
+  IBOutlet NSTabView*         mSidebarTabView;
+  IBOutlet NSTabView*         mSidebarSourceTabView;
+  IBOutlet NSView*            mLocationToolbarView;
+  IBOutlet NSTextField*       mURLBar;
+  IBOutlet NSTextField*       mStatus;
   IBOutlet NSProgressIndicator* mProgress;
-  IBOutlet NSImageView* mLock;
-  IBOutlet id mLocationSheetWindow;
-  IBOutlet id mLocationSheetURLField;
-  IBOutlet NSView* mStatusBar;					// contains the status text, progress bar, and lock
+  IBOutlet NSImageView*       mLock;
+  IBOutlet NSWindow*          mLocationSheetWindow;
+  IBOutlet NSTextField*       mLocationSheetURLField;
+  IBOutlet NSView*            mStatusBar;     // contains the status text, progress bar, and lock
 
-  IBOutlet id mSidebarBrowserView;
-  IBOutlet id mSidebarBookmarksDataSource;
-  IBOutlet id mHistoryDataSource;
+  IBOutlet id                   mSidebarBrowserView;  // currently unused
+  IBOutlet BookmarksDataSource* mSidebarBookmarksDataSource;
+  IBOutlet CHHistoryDataSource* mHistoryDataSource;
 
-  IBOutlet CHBookmarksToolbar* mPersonalToolbar;
+  IBOutlet CHBookmarksToolbar*  mPersonalToolbar;
 
-  IBOutlet id mAddBookmarkSheetWindow;
-  IBOutlet id mAddBookmarkTitleField;
-  IBOutlet id mAddBookmarkFolderField;
-  IBOutlet id mAddBookmarkCheckbox;
+  IBOutlet NSWindow*            mAddBookmarkSheetWindow;
+  IBOutlet NSTextField*         mAddBookmarkTitleField;
+  IBOutlet NSPopUpButton*       mAddBookmarkFolderField;
+  IBOutlet NSButton*            mAddBookmarkCheckbox;
 
   // Context menu outlets.
-  IBOutlet id mPageMenu;
-  IBOutlet id mImageMenu;
-  IBOutlet id mInputMenu;
-  IBOutlet id mLinkMenu;
-  IBOutlet id mImageLinkMenu;
+  IBOutlet NSMenu*              mPageMenu;
+  IBOutlet NSMenu*              mImageMenu;
+  IBOutlet NSMenu*              mInputMenu;
+  IBOutlet NSMenu*              mLinkMenu;
+  IBOutlet NSMenu*              mImageLinkMenu;
 
   // Context menu item outlets
-  IBOutlet id mBackItem;
-  IBOutlet id mForwardItem;
+  IBOutlet NSMenuItem*          mBackItem;
+  IBOutlet NSMenuItem*          mForwardItem;
   
-  NSToolbarItem *mLocationToolbarItem;
-  NSToolbarItem *mSidebarToolbarItem;
+  NSToolbarItem*                mLocationToolbarItem;
+  NSToolbarItem*                mSidebarToolbarItem;
 
   BOOL mInitialized;
   NSString* mURL;

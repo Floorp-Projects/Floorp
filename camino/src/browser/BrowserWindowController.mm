@@ -36,9 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "BrowserWindowController.h"
+
 #import "CHBrowserWrapper.h"
 #import "CHIconTabViewItem.h"
 #import "CHPreferenceManager.h"
+#import "BookmarksDataSource.h"
+#import "CHHistoryDataSource.h"
+#import "CHExtendedTabView.h"
 
 #include "nsIWebNavigation.h"
 #include "nsIDOMElement.h"
@@ -164,7 +168,9 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     NSTabViewItem* item = [mTabBrowser tabViewItemAtIndex: i];
     [[item view] windowClosed];
   }
-  [mSidebarBrowserView windowClosed];
+  
+  //if (mSidebarBrowserView)
+  //  [mSidebarBrowserView windowClosed];
 
   [mProgress release];
 
@@ -584,9 +590,6 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
   [newView setIsBookmarksImport: YES];
   [[[self window] contentView] addSubview: newView];
   [[newView getBrowserView] loadURI:aURLSpec flags:NSLoadFlagsNone];
-
-  // XXX force reload
-  //[mSidebarBookmarksDataSource reloadDataForItem: nil reloadChildren: YES];
 }
 
 - (IBAction)goToLocationFromToolbarURLField:(id)sender
