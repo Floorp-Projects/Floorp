@@ -3707,8 +3707,6 @@ nsresult
 nsXULElement::EnsureContentsGenerated(void) const
 {
     if (mLazyState & nsIXULContent::eChildrenMustBeRebuilt) {
-        nsresult rv;
-
         // Ensure that the element is actually _in_ the document tree;
         // otherwise, somebody is trying to generate children for a node
         // that's not currently in the content model.
@@ -3727,7 +3725,7 @@ nsXULElement::EnsureContentsGenerated(void) const
         if (! mDocument)
             return NS_OK;
 
-        rv = rdfDoc->CreateContents(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
+        nsresult rv = rdfDoc->CreateContents(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
         NS_ASSERTION(NS_SUCCEEDED(rv), "problem creating kids");
         if (NS_FAILED(rv)) return rv;
     }
