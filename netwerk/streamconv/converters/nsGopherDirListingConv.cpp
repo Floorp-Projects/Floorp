@@ -149,8 +149,7 @@ nsGopherDirListingConv::AsyncConvertData(const char *aFromType,
     rv = NS_NewInputStreamChannel(&mPartChannel,
                                   mUri,
                                   nsnull,
-                                  NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT),
-                                  EmptyCString());
+                                  NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT));
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

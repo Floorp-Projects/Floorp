@@ -400,8 +400,7 @@ nsresult nsJSChannel::Init(nsIURI *aURI)
     // If the resultant script evaluation actually does return a value, we
     // treat it as html.
     rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, mIOThunk,
-                                  NS_LITERAL_CSTRING("text/html"),
-                                  EmptyCString());
+                                  NS_LITERAL_CSTRING("text/html"));
     if (NS_FAILED(rv)) return rv;
 
     rv = mIOThunk->Init(aURI);

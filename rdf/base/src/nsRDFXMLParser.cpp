@@ -147,8 +147,7 @@ nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsA
 
     nsCOMPtr<nsIChannel> channel;
     rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aBaseURI, stream,
-                                  NS_LITERAL_CSTRING("text/xml"),
-                                  EmptyCString());
+                                  NS_LITERAL_CSTRING("text/xml"));
     if (NS_FAILED(rv)) return rv;
 
     listener->OnStartRequest(channel, nsnull);
