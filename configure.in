@@ -1264,6 +1264,7 @@ xpfe/Makefile
 xpfe/AppCores/Makefile
 xpfe/AppCores/public/Makefile
 xpfe/AppCores/src/Makefile
+xpfe/AppCores/xul/Makefile
 xpfe/browser/Makefile
 xpfe/browser/public/Makefile
 xpfe/browser/src/Makefile
