@@ -89,6 +89,10 @@
 
 #elif defined(XP_WIN) || defined(XP_OS2)
 
+#ifdef __WATCOMC__
+#define HAVE_VA_LIST_AS_ARRAY
+#endif
+
 #if defined( _WIN32) || defined(XP_OS2)
 #define IS_LITTLE_ENDIAN 1
 #undef  IS_BIG_ENDIAN
