@@ -68,12 +68,12 @@ function extensionSelect()
     var description = document.getElementById("extDescription");
     var uninstallButton = document.getElementById("uninstallExtension");
     var settingsButton = document.getElementById("extensionSettings");
-    
+
     while (description.hasChildNodes())
       description.removeChild(description.firstChild);
 
     nameField.setAttribute("value", extName);
-    
+
     author.setAttribute("value", selectedItem.getAttribute("author"));
     var authorURL = selectedItem.getAttribute("authorURL");
     if (authorURL != "") {
@@ -84,9 +84,9 @@ function extensionSelect()
       author.removeAttribute("link");
       author.className = "";
     }
-    
+
     settingsButton.disabled = selectedItem.getAttribute("settingsURL") == "";
-    
+
     description.appendChild(descText);
 
     updateDisableExtButton(selectedItem);
@@ -105,7 +105,7 @@ function toggleExtension()
     var disabled = (selectedItem.getAttribute("disabledState") == "true");
     chromeRegistry.setAllowOverlaysForPackage(selectedItem.getAttribute("name"), disabled);
     updateDisableExtButton(selectedItem);
-  }   
+  }
 }
 
 function updateDisableExtButton(item)
@@ -132,3 +132,10 @@ function showSettings()
     window.openDialog(selectedItem.getAttribute("settingsURL"), "", "chrome,dialog,modal");
 }
 
+function onDoubleClick(event)
+{
+  var settingsButton = document.getElementById("extensionSettings");
+
+  if (!settingsButton.disabled)
+    showSettings();
+}
