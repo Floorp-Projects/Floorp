@@ -51,7 +51,7 @@ bool gSendMail=false;
 const char* gDefDir="s:";
 char  gMTBFDirectory[500]="";
 char  gDirectory[10];
-const char* gDefProgram="/mozilla/dist/win32_d.obj/bin/viewer.exe";
+const char* gDefProgram="viewer.exe";
 char  gProgram[500];
 
 char  gSubject[]="\"Automated MTBF Report\"";
@@ -141,58 +141,22 @@ void PrintResultsAsHTML(ostream& aStream,time_t& aStart,time_t& aEnd,int aResult
 /*
   aStream << "MIME-Version: 1.0" << endl;
   aStream << "Content-Type: text/html; charset=us-ascii" << endl;
-  aStream << "From: rickg@netscape.com" << endl;
   aStream << "Subject: Automated MTBF Report" << endl;
-  aStream << "To: rickg@netscape.com rgess@san.rr.com" << endl;
 //  aStream << "To: rick@gessner.com rickg@netscape.com mozilla-layout@mozilla.org" << endl;
 */
-  //now dump the document in html format...
 
   int total=aEnd-aStart;
   int mins=(aEnd-aStart)/60;
   char buffer[50];
   sprintf(buffer,"%i mins %i sec",mins,total%60);
 
-  aStream << "<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">" << endl;
-  aStream << "<html>"<<endl;
-  aStream << "  <body>"<<endl;
-  aStream << "    <font face=\"Verdana\" size=2>"<<endl;
-  aStream << "      <table border=0 cellspacing=1 cellpadding=1>"<<endl;
-  aStream << "        <tbody>"<<endl;
-  aStream << "          <tr bgcolor=ffcccc>"<<endl;
-  aStream << "            <td></td><td align=center><font face=\"Verdana\" size=2><b>Automated MTBF Report</b></td>"<< endl;
-  aStream << "          </tr>"<<endl;
-  aStream << "          <tr>"<<endl;
-  aStream << "            <td><font face=\"Verdana\" size=2>Date:</td>"<< endl;
-  aStream << "            <td bgcolor=e8e8e8><font face=\"Verdana\" size=2>" << ctime(&ltime) << "</td>" << endl;
-  aStream << "          </tr>"<<endl;
-  aStream << "          <tr>"<<endl;
-  aStream << "            <td><font face=\"Verdana\" size=2>Running:</td>"<< endl;
-  aStream << "            <td bgcolor=cccccc><font face=\"Verdana\" size=2>" << gDirectory << gProgram << "</td>" << endl;
-  aStream << "          </tr>"<<endl;
-  aStream << "          <tr>"<<endl;
-  aStream << "            <td><font face=\"Verdana\" size=2>Args:</td>"<< endl;
-  aStream << "            <td bgcolor=e8e8e8><font face=\"Verdana\" size=2>-f " << gURLPath << "</td>" << endl;
-  aStream << "          </tr>"<<endl;
-  aStream << "          <tr>"<<endl;
-  aStream << "            <td><font face=\"Verdana\" size=2>Elapsed:</td>"<< endl;
-  aStream << "            <td bgcolor=cccccc><font face=\"Verdana\" size=2>"<< buffer << "</td>" << endl;
-  aStream << "          </tr>"<<endl;
-  aStream << "          <tr>"<<endl;
-  aStream << "            <td><font face=\"Verdana\" size=2>Exit: </td>"<<endl;
-  aStream << "            <td bgcolor=e8e8e8><font face=\"Verdana\" size=2>"<< gStatus[0==aResult] << endl;
-  aStream << "          </tr>"<<endl;
-  aStream << "        </tbody>"<<endl;
-  aStream << "      </table>" << endl;
-  aStream << "  </body>"<<endl;
-  aStream << "</html>"<<endl;
+  aStream << "Automated MTBF Report"<< endl;
+  aStream <<  ctime(&ltime) << endl;
+  aStream << "Running: "<< gDirectory << gProgram << endl;
+  aStream << "Elapsed: "<< buffer << endl;
+  aStream << "Exit: "<< gStatus[0==aResult] << endl;
 
-  //now dump my signature file...
-  aStream << "<hr><font size=1>Last update: Rick Gessner<br>" << endl;
-  aStream << "Date: 01.04.99<br>" << endl;
 
-  //now close the document...
-  aStream << "</body></html>" << endl;
 }
 
 
@@ -267,6 +231,7 @@ int main(int argc,char* argv[]) {
   //result=system("sendmail -t -messagefile=s:/mtbf/msg.txt ");
 
   if(argc>1) {
+/*
     char* theDir = getenv("moz_src");
     if(!theDir)
       theDir=getenv("homedrive");
@@ -274,6 +239,7 @@ int main(int argc,char* argv[]) {
     if(theDir)
       strcpy(gDirectory,theDir);
     else strcpy(gDirectory,gDefDir); 
+*/
     strcpy(gProgram,gDefProgram);
     initializeSettings(argc,argv);
 
@@ -294,7 +260,7 @@ int main(int argc,char* argv[]) {
         fstream out(gReportPath,ios::out);
         PrintResultsAsHTML(out,startTime,endTime,result);
       }
-      sprintf(buffer,"blat %s -s %s -t %s -uuencode",gReportPath,gSubject,gRecipient);
+      sprintf(buffer,"blat %s -s %s -t %s",gReportPath,gSubject,gRecipient);
       result=system(buffer);
     }
     else {
