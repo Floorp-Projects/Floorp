@@ -1593,11 +1593,16 @@ nsresult nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
     }
 
     if (NS_SUCCEEDED(ret)) {
+      PRInt32 count = listeners->Count();
+      nsVoidArray originalListeners(count);
+      originalListeners = *listeners;
+
       nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
 
-      for (int k = 0; !mListenersRemoved && listeners && k < listeners->Count(); ++k) {
-        nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*, listeners->ElementAt(k));
-        if (ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
+      for (int k = 0; !mListenersRemoved && listeners && k < count; ++k) {
+        nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*, originalListeners.FastElementAt(k));
+        // Don't fire the listener if it's been removed
+        if (listeners->IndexOf(ls) != -1 && ls->mFlags & aFlags && ls->mGroupFlags == currentGroup) {
           // Try the type-specific listener interface
           PRBool hasInterface = PR_FALSE;
           if (typeData)
