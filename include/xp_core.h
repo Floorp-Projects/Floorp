@@ -208,20 +208,6 @@ typedef int (*FARPROC)();
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #endif
 
-#ifndef FALSE
-#define FALSE 0
-#endif
-
-#ifndef TRUE
-#define TRUE !FALSE
-#endif
-
-#define YES 1
-#define NO 0
-
-#define ON 1
-#define OFF 0
-
 #ifndef nil
 #define nil 0
 #endif
