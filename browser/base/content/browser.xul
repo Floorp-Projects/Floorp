@@ -476,6 +476,15 @@
                onpopuphidden ="BookmarksMenu.destroyContextMenu(event);"/>
   </popupset>
 
+  <!-- bookmarks toolbar tooltip -->
+  <tooltip id="btTooltip" noautohide="true" 
+           onpopupshowing="return BookmarksToolbar.fillInBTTooltip(document.tooltipNode)">
+    <vbox id="btTooltipTextBox" flex="1">  
+      <label id="btTitleText" />
+      <label id="btUrlText" />
+    </vbox>
+  </tooltip>
+
   <template id='bookmarks-template' xmlns:nc="http://home.netscape.com/NC-rdf#">
     <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
       <toolbarseparator uri="rdf:*"
@@ -932,13 +941,6 @@
                 ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
                 ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.preventBubble()"
                 ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.preventBubble()">
-            <tooltip id="btTooltip" noautohide="true" 
-                     onpopupshowing="return BookmarksToolbar.fillInBTTooltip(document.tooltipNode)">
-              <vbox id="btTooltipTextBox" flex="1">  
-                <label id="btTitleText" />
-                <label id="btUrlText" />
-              </vbox>
-            </tooltip>
           </hbox>
           <hbox class="bookmarks-toolbar-overflow-items" mousethrough="always">
             <hbox mousethrough="always" id="overflow-padder"/>

@@ -247,7 +247,7 @@ var BookmarksMenu = {
         target.id == "bookmarks-chevron")
       return BookmarksUtils.DROP_ON;
     if (target.id == "bookmarks-ptf") {
-      return target.childNodes.length>4?
+      return target.hasChildNodes()?
              BookmarksUtils.DROP_AFTER:BookmarksUtils.DROP_ON;
     }
 
@@ -533,7 +533,7 @@ var BookmarksMenuDNDObserver = {
       this._observers = [
         document.getElementById("bookmarks-ptf"),
         document.getElementById("bookmarks-menu").parentNode,
-        document.getElementById("bookmarks-chevron").parentNode
+        document.getElementById("overflow-padder")
       ]
     }
     return this._observers;
@@ -749,7 +749,7 @@ var BookmarksToolbar =
   getLastVisibleBookmark: function ()
   {
     var buttons = document.getElementById("bookmarks-ptf");
-    var button = buttons.firstChild.nextSibling;
+    var button = buttons.firstChild;
     if (!button)
       return null; // empty bookmarks toolbar
     do {
@@ -763,9 +763,9 @@ var BookmarksToolbar =
   updateOverflowMenu: function (aMenuPopup)
   {
     var hbox = document.getElementById("bookmarks-ptf");
-    for (var i = 1; i < hbox.childNodes.length; i++) {
+    for (var i = 0; i < hbox.childNodes.length; i++) {
       var button = hbox.childNodes[i];
-      var menu = aMenuPopup.childNodes[i-1];
+      var menu = aMenuPopup.childNodes[i];
       if (menu.collapsed == button.collapsed)
         menu.collapsed = !menu.collapsed;
     }
@@ -781,7 +781,7 @@ var BookmarksToolbar =
     chevron.collapsed = true;
     var overflowed = false;
 
-    for (var i=1; i<buttons.childNodes.length; i++) {
+    for (var i=0; i<buttons.childNodes.length; i++) {
       var button = buttons.childNodes[i];
       button.collapsed = overflowed;
       
