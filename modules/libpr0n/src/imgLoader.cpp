@@ -411,8 +411,13 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
             newChannel->SetLoadFlags(loadFlags | nsICachingChannel::LOAD_ONLY_IF_MODIFIED);
 
       }
+      nsCOMPtr<imgIRequest> req;
       rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
-                                    requestFlags, aRequest, _retval);
+                                    requestFlags, aRequest, getter_AddRefs(req));
+      if (NS_FAILED(rv)) {
+        NS_RELEASE(request);
+        return rv;
+      }
 
       imgCacheValidator *hvc = new imgCacheValidator(request, aCX);
       if (!hvc) {
@@ -423,16 +428,18 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
       NS_ADDREF(hvc);
       request->mValidator = hvc;
 
-      hvc->AddProxy(NS_STATIC_CAST(imgRequestProxy*, *_retval));
+      hvc->AddProxy(NS_STATIC_CAST(imgRequestProxy*,
+                                   NS_STATIC_CAST(imgIRequest*, req.get())));
 
-      nsresult openRes;
-      openRes = newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, hvc), nsnull);
+      rv = newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, hvc), nsnull);
+      if (NS_SUCCEEDED(rv))
+        NS_ADDREF(*_retval = req.get());
 
       NS_RELEASE(hvc);
 
       NS_RELEASE(request);
 
-      return openRes;
+      return rv;
     }
   } else if (!request) {
     /* Case #1: no request from the cache.  do a new load */
