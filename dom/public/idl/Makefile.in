@@ -54,6 +54,7 @@ DIRS =						\
 	range					\
 	xbl					\
 	xpath					\
+	ls					\
 	xul
 
 ifdef MOZ_SVG
