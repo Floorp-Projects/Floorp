@@ -2658,7 +2658,8 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get property URI");
     if (NS_FAILED(rv)) return PR_FALSE;
 
-    nsAutoString    containment;
+    PRUnichar		buffer[256];
+    nsAutoString	containment(CBufDescriptor(buffer, PR_TRUE, sizeof(buffer) / sizeof(PRUnichar), 0));
 
     // rjc: Optimization: 99% of trees that use "containment='...'" put the
     // attribute on the root of the tree, so check that first
@@ -2670,7 +2671,7 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
             return(PR_TRUE);
         else    return(PR_FALSE);
     }
-
+/*
     // Walk up the content tree looking for the "containment"
     // attribute, so we can determine if the specified property
     // actually defines containment.
@@ -2696,7 +2697,7 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
         element->GetParent(*getter_AddRefs(parent));
         element = parent;
     }
-
+*/
     // If we get here, we didn't find any tree property: so now
     // defaults start to kick in.
 
@@ -2722,8 +2723,9 @@ RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* a
     rv = aProperty->GetValueConst(&propertyURI);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString    uri;
-    PRInt32        nameSpaceID;
+    PRUnichar		buffer[256];
+    nsAutoString	uri(CBufDescriptor(buffer, PR_TRUE, sizeof(buffer) / sizeof(PRUnichar), 0));
+    PRInt32        	nameSpaceID;
 
     // rjc: Optimization: 99% of trees that use "ignore='...'" put the
     // attribute on the root of the tree, so check that first
@@ -2741,7 +2743,7 @@ RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* a
         else    return(PR_FALSE);
             }
         }
-
+/*
     // Walk up the content tree looking for the "rdf:ignore"
     // attribute, so we can determine if the specified property should
     // be ignored.
@@ -2771,7 +2773,7 @@ RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* a
         element->GetParent(*getter_AddRefs(parent));
         element = parent;
     }
-
+*/
     // Walked _all_ the way to the top and couldn't find anything to
     // ignore.
     return PR_FALSE;
