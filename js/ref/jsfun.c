@@ -809,6 +809,39 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
+
+static JSBool
+fun_enumProperty(JSContext *cx, JSObject *obj)
+{
+    JSScope *scope;
+    JSScopeProperty *sprop;
+
+    /* Because properties of function objects such as "length" are
+     * not defined in function_props to avoid interfering with
+     * unqualified lookups in local scopes (which pass through the
+     * function object as a stand-in for the call object), we
+     * must twiddle any of the special properties not to be enumer-
+     * ated in this callback, rather than simply predefining the
+     * properties without JSPROP_ENUMERATE.
+     */
+
+    JS_LOCK_OBJ(cx, obj);
+    scope = (JSScope *) obj->map;
+    for (sprop = scope->props; sprop; sprop = sprop->next) {
+        jsval id = sprop->id;
+        if (!JSVAL_IS_INT(id)) {
+	    if (id == ATOM_KEY(cx->runtime->atomState.arityAtom) ||
+	        id == ATOM_KEY(cx->runtime->atomState.lengthAtom) ||
+	        id == ATOM_KEY(cx->runtime->atomState.callerAtom) ||
+	        id == ATOM_KEY(cx->runtime->atomState.nameAtom)) 
+            {
+	        sprop->attrs &= ~JSPROP_ENUMERATE;
+	    }
+        }
+    }
+    return JS_TRUE;
+}
+
 static JSBool
 fun_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
@@ -1121,7 +1154,7 @@ JSClass js_FunctionClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  fun_delProperty,
     fun_getProperty,  fun_setProperty,
-    JS_EnumerateStub, (JSResolveOp)fun_resolve,
+    fun_enumProperty, (JSResolveOp)fun_resolve,
     fun_convert,      fun_finalize,
     NULL,             NULL,
     NULL,             NULL,

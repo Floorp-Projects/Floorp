@@ -2453,24 +2453,29 @@ out:
 
 #ifdef DEBUG
 
-void printId(jsid id) {
+/* Routines to print out values during debugging. */
+
+void printVal(jsval val) {
     jsuint i;
-    JSAtom *atom;
     JSString *str;
 
-    fprintf(stderr, "id %d (0x%x) = ", id, id);
-    if (JSVAL_IS_INT(id)) {
-        fprintf(stderr, "%d\n", JSVAL_TO_INT(id));
-    } else {
-        atom = (JSAtom *)id;
-        str = ATOM_TO_STRING(atom);
-        fputc('"', stderr);
+    fprintf(stderr, "val %d (0x%x) = ", val, val);
+    if (JSVAL_IS_INT(val)) {
+        fprintf(stderr, "(int) %d\n", JSVAL_TO_INT(val));
+    } else if (JSVAL_IS_STRING(val)) {
+        fprintf(stderr, "(string) \"");
+        str = JSVAL_TO_STRING(val);
         for (i=0; i < str->length; i++)
             fputc(str->chars[i], stderr);
         fputc('"', stderr);
         fputc('\n', stderr);
     }
     fflush(stderr);
+}
+
+void printId(jsid id) {
+    fprintf(stderr, "id %d (0x%x) is ", id, id);
+    printVal(js_IdToValue(id));
 }
 
 #endif
