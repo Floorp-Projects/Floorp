@@ -362,9 +362,9 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
         aChannel->SetLoadFlags(loadFlags);
       }
 
-      rv = contentListener->DoContent(contentTypeToUse, mCommand, 
-                                    request, getter_AddRefs(contentStreamListener),
-                                    &bAbortProcess);
+      rv = contentListener->DoContent(contentTypeToUse.get(), mCommand, 
+                                      request, getter_AddRefs(contentStreamListener),
+                                      &bAbortProcess);
 
       // Do not continue loading if nsIURIContentListener::DoContent(...)
       // fails - It means that an unexpected error occurred...
@@ -780,7 +780,7 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   handlerContractID += aContentType;
   
   nsCOMPtr<nsIContentHandler> aContentHandler;
-  aContentHandler = do_CreateInstance(handlerContractID, &rv);
+  aContentHandler = do_CreateInstance(handlerContractID.get(), &rv);
   if (NS_SUCCEEDED(rv)) // we did indeed have a content handler for this type!! yippee...
   {
       rv = aContentHandler->HandleContent(aContentType, "view", aSrcWindowContext, request);

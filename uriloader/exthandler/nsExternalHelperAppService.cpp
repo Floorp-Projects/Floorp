@@ -353,7 +353,7 @@ nsresult nsExternalHelperAppService::FillTopLevelProperties(const char * aConten
         literal->GetValueConst(&stringValue);
         fileExtension.AssignWithConversion(stringValue);
         if (!fileExtension.IsEmpty())
-          aMIMEInfo->AppendExtension(fileExtension);
+          aMIMEInfo->AppendExtension(fileExtension.get());
       }
   
       fileExtensions->HasMoreElements(&hasMoreElements);
@@ -404,7 +404,7 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   contentTypeHandlerNodeName.Append(aContentType);
 
   nsCOMPtr<nsIRDFResource> contentTypeHandlerNodeResource;
-  aRDFService->GetResource(contentTypeHandlerNodeName, getter_AddRefs(contentTypeHandlerNodeResource));
+  aRDFService->GetResource(contentTypeHandlerNodeName.get(), getter_AddRefs(contentTypeHandlerNodeResource));
   NS_ENSURE_TRUE(contentTypeHandlerNodeResource, NS_ERROR_FAILURE); // that's not good! we have an error in the rdf file
 
   // now process the application handler information
@@ -434,7 +434,7 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   nsCAutoString externalAppNodeName (NC_CONTENT_NODE_EXTERNALAPP_PREFIX);
   externalAppNodeName.Append(aContentType);
   nsCOMPtr<nsIRDFResource> externalAppNodeResource;
-  aRDFService->GetResource(externalAppNodeName, getter_AddRefs(externalAppNodeResource));
+  aRDFService->GetResource(externalAppNodeName.get(), getter_AddRefs(externalAppNodeResource));
 
   if (externalAppNodeResource)
   {
@@ -478,7 +478,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
 
     // Get the mime type resource.
     nsCOMPtr<nsIRDFResource> contentTypeNodeResource;
-    rv = rdf->GetResource(contentTypeNodeName, getter_AddRefs(contentTypeNodeResource));
+    rv = rdf->GetResource(contentTypeNodeName.get(), getter_AddRefs(contentTypeNodeResource));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // we need a way to determine if this content type resource is really in the graph or not...
@@ -738,7 +738,7 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
           dispFileName.StripChar('"');
 
           // ONLY if we got here, will we remember the suggested file name...
-          mSuggestedFileName.AssignWithConversion(dispFileName);
+          mSuggestedFileName.AssignWithConversion(dispFileName.get());
         }
       } // if we found a file name in the header disposition field
     } // we had a disp header 
@@ -864,7 +864,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   // now append our extension.
   saltedTempLeafName.Append(mTempFileExtension);
 
-  mTempFile->Append(saltedTempLeafName); // make this file unique!!!
+  mTempFile->Append(saltedTempLeafName.get()); // make this file unique!!!
   mTempFile->CreateUnique(nsnull, nsIFile::NORMAL_FILE_TYPE, 0644);
 
   NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
@@ -1526,7 +1526,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile( nsIFile* aFile, char 
   // Windows, unix and mac when no type match occured.   
   if (fileExt.IsEmpty())
 	  return NS_ERROR_FAILURE;    
-  return GetTypeFromExtension( fileExt, aContentType );
+  return GetTypeFromExtension( fileExt.get(), aContentType );
 }
 
 nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const char * aContentType, nsIMIMEInfo ** aMIMEInfo )
