@@ -260,7 +260,8 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
 #else
       // Try again, this time using the broke-image url
       mLoadImageFailed = PR_TRUE;
-      return StartLoadImage(aPresContext, aForFrame, aNeedSizeUpdate, aLoadStatus);
+      return StartLoadImage(aPresContext, aForFrame, nsnull,
+                            aNeedSizeUpdate, aLoadStatus);
 #endif
     }
   }
