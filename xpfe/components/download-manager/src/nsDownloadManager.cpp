@@ -613,7 +613,7 @@ nsDownloadManager::Open(nsIDOMWindow* aParent)
   rv = ww->OpenWindow(aParent,
                       DOWNLOAD_MANAGER_FE_URL,
                       "_blank",
-                      "chrome,titlebar,dialog=no,resizable,centerscreen",
+                      "chrome,all,dialog=no,resizable",
                       params,
                       getter_AddRefs(newWindow));
 

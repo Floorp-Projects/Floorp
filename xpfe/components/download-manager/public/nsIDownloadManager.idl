@@ -142,8 +142,7 @@ interface nsIDownloadManager : nsISupports {
   * third party managers to let us know when they've closed.
   */
 
-  void onClose();
-
+  void onClose(); 
 };
 
 
