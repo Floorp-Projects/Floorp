@@ -133,7 +133,7 @@ struct JSSpanDep {
 
 /*
  * Jump targets are stored in an AVL tree, for O(log(n)) lookup with targets
- * sorted by offset from left to right, so that targets above a span-dependent
+ * sorted by offset from left to right, so that targets after a span-dependent
  * instruction whose jump offset operand must be extended can be found quickly
  * and adjusted upward (toward higher offsets).
  */
