@@ -24,7 +24,6 @@ LIBRARY_NAME = netwerkbase_s
 include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS =                              \
-        nsConnectionGroup.cpp          \
         nsAsyncStreamListener.cpp      \
         nsSyncStreamListener.cpp       \
         nsFileTransport.cpp            \
@@ -32,16 +31,8 @@ CPPSRCS =                              \
         nsSocketTransport.cpp          \
         nsSocketTransportStreams.cpp   \
         nsSocketTransportService.cpp   \
-        nsNetService.cpp               \
+        nsIOService.cpp                \
         nsStandardUrl.cpp              \
-        $(NULL)
-
-EXPORTS =			   \
-        nsConnectionGroup.h	   \
-        nsNetService.h		   \
-        nsFileTransportService.h   \
-        nsSocketTransportService.h \
-        nsStandardUrl.h		   \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
