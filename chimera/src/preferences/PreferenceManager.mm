@@ -121,9 +121,19 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     // directory but causes a (harmless) warning if not defined.
     setenv("MOZILLA_FIVE_HOME", binDirPath, 1);
 
+    // get the 'mozProfileDirName' key from our Info.plist file
+    NSString *dirString = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"mozProfileDirName"];
+    const char* profileDirName;
+    if (dirString)
+      profileDirName = [dirString cString];
+    else {
+      NSLog(@"mozProfileDirName key missing from Info.plist file. Using default profile directory");
+      profileDirName = "Chimera";
+    }
+    
     // Supply our own directory service provider so we can control where
     // the registry and profiles are located.
-    AppDirServiceProvider *provider = new AppDirServiceProvider(NS_LITERAL_CSTRING("Chimera"));
+    AppDirServiceProvider *provider = new AppDirServiceProvider(nsDependentCString(profileDirName));
     NS_ASSERTION(provider, "Failed to create AppDirServiceProvider");
     rv = NS_InitEmbedding(binDir, provider);
     if (NS_FAILED(rv)) {
