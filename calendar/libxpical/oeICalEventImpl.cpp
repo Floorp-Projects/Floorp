@@ -2329,7 +2329,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
 
     char tmpstr[20];
     //alarmlength
-    if( m_alarmlength && m_alarmlength != DEFAULT_ALARM_LENGTH ) {
+    if( m_alarmlength != DEFAULT_ALARM_LENGTH ) {
         sprintf( tmpstr, "%lu", m_alarmlength );
         prop = icalproperty_new_x( tmpstr );
         icalproperty_set_x_name( prop, XPROP_ALARMLENGTH);
