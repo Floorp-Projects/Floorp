@@ -32,9 +32,9 @@
 <html:div flex="100%">
 &categoryHeader;
 <html:br />
-<html:iframe name="preftree" id="preftree" src="preftree.xul" scrolling="auto" resize="yes" width="72%" height="356"/>
+<html:iframe name="preftree" id="preftree" src="chrome://pref/content/preftree.xul" scrolling="auto" resize="yes" width="72%" height="356"/>
 <html:iframe name="pref-appearance" id="pref-appearance"
-	src="pref-appearance.xul" width="72%" height="356" resize="yes" scrolling="auto"/>
+	src="chrome://pref/content/pref-appearance.xul" width="72%" height="356" resize="yes" scrolling="auto"/>
 <box>
    <spring flex="100%" />
 				<titledbutton align="bottom" value="&helpButton.label;" />				

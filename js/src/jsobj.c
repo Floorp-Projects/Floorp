@@ -116,7 +116,8 @@ obj_getCount(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 static JSPropertySpec object_props[] = {
     /* These two must come first; see object_props[slot].name usage below. */
     {js_proto_str, JSSLOT_PROTO,  JSPROP_PERMANENT, obj_getSlot,  obj_setSlot},
-    {js_parent_str,JSSLOT_PARENT, JSPROP_PERMANENT, obj_getSlot,  obj_setSlot},
+    {js_parent_str,JSSLOT_PARENT, JSPROP_PERMANENT|JSPROP_READONLY,
+                                                    obj_getSlot,  obj_setSlot},
     {js_count_str, 0,             JSPROP_PERMANENT, obj_getCount, obj_getCount},
     {0}
 };
@@ -2776,16 +2777,16 @@ void printString(JSString *str) {
     fputc('\n', stderr);
 }
 
-void printVal(jsval val);
+void printVal(JSContext *cx, jsval val);
 
 static
-void printObj(JSObject *jsobj) {
+void printObj(JSContext *cx, JSObject *jsobj) {
     jsuint i;
     jsval val;
     JSClass *clasp;
 
     fprintf(stderr, "object 0x%p\n", jsobj);
-    clasp = OBJ_GET_CLASS(NULL, jsobj);
+    clasp = OBJ_GET_CLASS(cx, jsobj);
     fprintf(stderr, "class 0x%p %s\n", clasp, clasp->name);
     for (i=0; i < jsobj->map->nslots; i++) {
         fprintf(stderr, "slot %3d ", i);
@@ -2793,18 +2794,18 @@ void printObj(JSObject *jsobj) {
         if (JSVAL_IS_OBJECT(val))
 	    fprintf(stderr, "object 0x%p\n", JSVAL_TO_OBJECT(val));
         else
-            printVal(val);
+            printVal(cx, val);
     }
 }
 
-void printVal(jsval val) {
+void printVal(JSContext *cx, jsval val) {
     fprintf(stderr, "val %d (0x%p) = ", (int)val, (void *)val);
     if (JSVAL_IS_NULL(val)) {
 	fprintf(stderr, "null\n");
     } else if (JSVAL_IS_VOID(val)) {
 	fprintf(stderr, "undefined\n");
     } else if (JSVAL_IS_OBJECT(val)) {
-        printObj(JSVAL_TO_OBJECT(val));
+        printObj(cx, JSVAL_TO_OBJECT(val));
     } else if (JSVAL_IS_INT(val)) {
 	fprintf(stderr, "(int) %d\n", JSVAL_TO_INT(val));
     } else if (JSVAL_IS_STRING(val)) {
@@ -2820,9 +2821,9 @@ void printVal(jsval val) {
 }
 
 static
-void printId(jsid id) {
+void printId(JSContext *cx, jsid id) {
     fprintf(stderr, "id %d (0x%p) is ", (int)id, (void *)id);
-    printVal(js_IdToValue(id));
+    printVal(cx, js_IdToValue(id));
 }
 
 static

@@ -58,6 +58,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsContentList.h"
 #include "nsDOMError.h"
+#include "nsICodebasePrincipal.h"
+#include "nsIScriptSecurityManager.h"
 
 #ifndef NECKO
 #include "nsINetService.h"
@@ -1335,27 +1337,82 @@ nsHTMLDocument::GetReferrer(nsString& aReferrer)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLDocument::GetDomainURI(nsIURI **uri) 
+{
+  nsCOMPtr<nsIPrincipal> principal = GetDocumentPrincipal();
+  if (!principal)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+  if (!codebase)
+    return NS_ERROR_FAILURE;
+  return codebase->GetURI(uri);
+}
+
+
 NS_IMETHODIMP    
 nsHTMLDocument::GetDomain(nsString& aDomain)
 {
-  //XXX TBI
-  // PCB: This is the domain name of the server that produced this document. Can we just
-  // extract it from the URL? What about proxy servers, etc.?
-  if (nsnull != mDocumentURL) {
-#ifdef NECKO
-    char* hostName;
-#else
-    const char* hostName;
-#endif
-    mDocumentURL->GetHost(&hostName);
-    aDomain.SetString(hostName);
-#ifdef NECKO
-    nsCRT::free(hostName);
-#endif
-  } else {
-    aDomain.SetLength(0);
-  }
+  nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(GetDomainURI(getter_AddRefs(uri))))
+    return NS_ERROR_FAILURE;
+
+  char *hostName;
+  if (NS_FAILED(uri->GetHost(&hostName)))
+    return NS_ERROR_FAILURE;
+  aDomain.SetString(hostName);
+  nsCRT::free(hostName);
+
   return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::SetDomain(const nsString& aDomain)
+{
+  // Check new domain
+  nsAutoString current;
+  if (NS_FAILED(GetDomain(current)))
+    return NS_ERROR_FAILURE;
+  PRBool ok = PR_FALSE;
+  if (current.Equals(aDomain)) {
+    ok = PR_TRUE;
+  } else if (aDomain.Length() < current.Length()) {
+    nsAutoString suffix;
+    current.Right(suffix, aDomain.Length());
+    PRUnichar c = current.CharAt(current.Length() - aDomain.Length() - 1);
+    if (aDomain.EqualsIgnoreCase(suffix) && (c == '.' || c == '/'))
+      ok = PR_TRUE;
+  }
+  if (!ok) {
+    // Error: illegal domain
+    return NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN;
+  }
+
+  // Create new URI
+  nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(GetDomainURI(getter_AddRefs(uri))))
+    return NS_ERROR_FAILURE;
+  nsXPIDLCString scheme;
+  if (NS_FAILED(uri->GetScheme(getter_Copies(scheme))))
+    return NS_ERROR_FAILURE;
+  nsXPIDLCString path;
+  if (NS_FAILED(uri->GetPath(getter_Copies(path))))
+    return NS_ERROR_FAILURE;
+  nsAutoString newURIString = (const char *)scheme;
+  newURIString += "://";
+  newURIString += aDomain;
+  newURIString += path;
+  nsIURI *newURI;
+  if (NS_FAILED(NS_NewURI(&newURI, newURIString)))
+    return NS_ERROR_FAILURE;
+
+  // Create new codebase principal
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                 NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) 
+    return NS_ERROR_FAILURE;
+  return securityManager->CreateCodebasePrincipal(newURI, &mPrincipal);
 }
 
 NS_IMETHODIMP    

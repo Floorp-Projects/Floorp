@@ -44,6 +44,7 @@ public:
   NS_IMETHOD    GetReferrer(nsString& aReferrer)=0;
 
   NS_IMETHOD    GetDomain(nsString& aDomain)=0;
+  NS_IMETHOD    SetDomain(const nsString& aDomain)=0;
 
   NS_IMETHOD    GetURL(nsString& aURL)=0;
 
@@ -82,6 +83,7 @@ public:
   NS_IMETHOD    SetTitle(const nsString& aTitle);  \
   NS_IMETHOD    GetReferrer(nsString& aReferrer);  \
   NS_IMETHOD    GetDomain(nsString& aDomain);  \
+  NS_IMETHOD    SetDomain(const nsString& aDomain);  \
   NS_IMETHOD    GetURL(nsString& aURL);  \
   NS_IMETHOD    GetBody(nsIDOMHTMLElement** aBody);  \
   NS_IMETHOD    SetBody(nsIDOMHTMLElement* aBody);  \
@@ -106,6 +108,7 @@ public:
   NS_IMETHOD    SetTitle(const nsString& aTitle) { return _to SetTitle(aTitle); } \
   NS_IMETHOD    GetReferrer(nsString& aReferrer) { return _to GetReferrer(aReferrer); } \
   NS_IMETHOD    GetDomain(nsString& aDomain) { return _to GetDomain(aDomain); } \
+  NS_IMETHOD    SetDomain(const nsString& aDomain) { return _to SetDomain(aDomain); } \
   NS_IMETHOD    GetURL(nsString& aURL) { return _to GetURL(aURL); } \
   NS_IMETHOD    GetBody(nsIDOMHTMLElement** aBody) { return _to GetBody(aBody); } \
   NS_IMETHOD    SetBody(nsIDOMHTMLElement* aBody) { return _to SetBody(aBody); } \

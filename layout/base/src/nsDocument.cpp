@@ -78,6 +78,8 @@
 #include "nsIEnumerator.h"
 #include "nsDOMError.h"
 
+#include "nsIScriptSecurityManager.h"
+
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
@@ -674,6 +676,7 @@ nsDocument::~nsDocument()
     mDocumentTitle = nsnull;
   }
   NS_IF_RELEASE(mDocumentURL);
+  NS_IF_RELEASE(mPrincipal);
   mDocumentLoadGroup = null_nsCOMPtr();
 
   mParentDocument = nsnull;
@@ -841,6 +844,7 @@ nsDocument::Reset(nsIURI *aURL)
     mDocumentTitle = nsnull;
   }
   NS_IF_RELEASE(mDocumentURL);
+  NS_IF_RELEASE(mPrincipal);
   mDocumentLoadGroup = null_nsCOMPtr();
 
   // Delete references to sub-documents
@@ -933,6 +937,18 @@ nsIURI* nsDocument::GetDocumentURL() const
 
 nsIPrincipal* nsDocument::GetDocumentPrincipal() const
 {
+  if (!mPrincipal) {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) 
+        return nsnull;
+    nsIPrincipal *p;
+    if (NS_FAILED(securityManager->CreateCodebasePrincipal(mDocumentURL, &p)))
+        return nsnull;
+    // XXX cast away const: should change type of member function
+    ((nsDocument *) this)->mPrincipal = p;
+  }
   NS_IF_ADDREF(mPrincipal);
   return mPrincipal;
 }

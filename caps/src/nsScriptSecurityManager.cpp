@@ -32,15 +32,13 @@
 #include "nsCRT.h"
 #include "nsXPIDLString.h"
 #include "nsIJSContextStack.h"
+#include "nsDOMError.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kIScriptSecurityManagerIID, NS_ISCRIPTSECURITYMANAGER_IID);
 static NS_DEFINE_IID(kIXPCSecurityManagerIID, NS_IXPCSECURITYMANAGER_IID);
-
-static const char accessErrorMessage[] = 
-    "access disallowed from scripts at %s to documents at another domain";
 
 enum {
     SCRIPT_SECURITY_SAME_DOMAIN_ACCESS,
@@ -181,6 +179,7 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
         if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
             return NS_ERROR_FAILURE;
 	    JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
+        return NS_ERROR_DOM_BAD_URI;
     }
     return NS_OK;
 }
@@ -497,7 +496,6 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
     if (NS_FAILED(globalData->GetPrincipal(result))) {
         return NS_ERROR_FAILURE;
     }
-    NS_ADDREF(*result);
     return NS_OK;
 }
 
@@ -563,10 +561,11 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     char *spec;
     if (NS_FAILED(uri->GetSpec(&spec)))
         return NS_ERROR_FAILURE;
-    JS_ReportError(aCx, accessErrorMessage, spec);
+    JS_ReportError(aCx, "access disallowed from scripts at %s to documents "
+                        "at another domain", spec);
     nsCRT::free(spec);
     *aResult = PR_FALSE;
-    return NS_OK;
+    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
 }
 
 
@@ -660,7 +659,7 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
         return NS_ERROR_FAILURE;
     if (!ok) {
         JS_ReportError(aJSContext, "Access denied to XPConnect service.");
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
     }
     return NS_OK;
 }

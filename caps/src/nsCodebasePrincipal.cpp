@@ -26,7 +26,33 @@
 
 static NS_DEFINE_IID(kICodebasePrincipalIID, NS_ICODEBASEPRINCIPAL_IID);
 
-NS_IMPL_ISUPPORTS(nsCodebasePrincipal, kICodebasePrincipalIID);
+NS_IMPL_QUERY_INTERFACE2(nsCodebasePrincipal, nsICodebasePrincipal, nsIPrincipal)
+
+// special AddRef/Release to unify reference counts between XPCOM 
+//  and JSPrincipals
+
+NS_IMETHODIMP_(nsrefcnt)
+nsCodebasePrincipal::AddRef(void)
+{
+    NS_PRECONDITION(PRInt32(mJSPrincipals.refcount) >= 0, "illegal refcnt");
+    ++mJSPrincipals.refcount;
+    NS_LOG_ADDREF(this, mJSPrincipals.refcount, __FILE__, __LINE__);
+    return mJSPrincipals.refcount;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsCodebasePrincipal::Release(void)
+{
+    NS_PRECONDITION(0 != mJSPrincipals.refcount, "dup release");
+    --mJSPrincipals.refcount;
+    NS_LOG_RELEASE(this, mJSPrincipals.refcount, __FILE__, __LINE__);
+    if (mJSPrincipals.refcount == 0) {                                 
+        NS_DELETEXPCOM(this);
+        return 0;
+    }  
+    return mJSPrincipals.refcount;
+}
+
 
 ////////////////////////////////////
 // Methods implementing nsIPrincipal

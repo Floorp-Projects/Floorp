@@ -212,7 +212,6 @@ public:
   
   // nsIScriptGlobalObjectData interface
   NS_IMETHOD        GetPrincipal(nsIPrincipal **prin);
-  NS_IMETHOD        SetPrincipal(nsIPrincipal *prin);
 
   friend void nsGlobalWindow_RunTimeout(nsITimer *aTimer, void *aClosure);
 
@@ -254,7 +253,6 @@ protected:
   HistoryImpl *mHistory;
   nsIWebShell *mWebShell;
   nsIDOMWindow *mOpener;
-  nsIPrincipal *mPrincipal;
 
   BarPropImpl *mMenubar;
   BarPropImpl *mToolbar;
