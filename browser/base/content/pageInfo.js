@@ -498,7 +498,9 @@ function doGrab(iterator, i)
 
 function ensureSelection(view)
 {
-  if (view.selection.count == 0) // only select something if nothing is currently selected
+  // only select something if nothing is currently selected
+  // and that there's something to select
+  if (view.selection.count == 0 && view.rowCount)
     view.selection.select(0);
 }
 
