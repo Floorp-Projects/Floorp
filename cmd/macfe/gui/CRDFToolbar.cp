@@ -17,6 +17,7 @@
  */
 
 #include "CRDFToolbar.h"
+#include "CRDFToolbarItem.h"
 
 #include <cassert>
 #include "htrdf.h"
@@ -181,10 +182,10 @@ CRDFToolbar :: LayoutButtons ( )
 // the url entry field.
 //
 void
-CRDFToolbar :: AddHTButton ( HT_Resource inButton )
+CRDFToolbar :: AddHTButton ( HT_Resource inNode )
 {
-	string nodeName = HT_GetNodeName(inButton);
-	string commandURL = HT_GetNodeURL(inButton);
+	string nodeName = HT_GetNodeName(inNode);
+	string commandURL = HT_GetNodeURL(inNode);
 	
 //	DebugStr(LStr255(nodeName.c_str()));
 //	DebugStr(LStr255(commandURL.c_str()));
@@ -193,34 +194,33 @@ CRDFToolbar :: AddHTButton ( HT_Resource inButton )
 	string tooltipText;
 	string statusBarText;
 	char* data = NULL;
-	if ( HT_GetTemplateData(inButton, gNavCenter->buttonTooltipText, HT_COLUMN_STRING, &data) && data )
+	if ( HT_GetTemplateData(inNode, gNavCenter->buttonTooltipText, HT_COLUMN_STRING, &data) && data )
 		tooltipText = data;
 	data = NULL;
-	if ( HT_GetTemplateData(inButton, gNavCenter->buttonStatusbarText, HT_COLUMN_STRING, &data) && data )
+	if ( HT_GetTemplateData(inNode, gNavCenter->buttonStatusbarText, HT_COLUMN_STRING, &data) && data )
 		statusBarText = data;
 	
-#if 0
-// BUTTON CLASSES NOT YET IMPLEMENTED
-	CRDFToolbarButton* pButton = NULL;
-	if (HT_IsURLBar(item))
-		pButton = new CURLBarButton;
-	else if (HT_IsSeparator(item))
+	CRDFToolbarItem* newItem = NULL;
+	if (HT_IsURLBar(inNode))
+		newItem = new CRDFURLBar;
+	else if (HT_IsSeparator(inNode))
 	{
-		pButton = new CRDFSeparatorButton;
+		newItem = new CRDFSeparator;
 		tooltipText = "Separator";
 		statusBarText = "Separator";
 	}
-	else pButton = new CRDFToolbarButton;
+	else newItem = new CRDFPushButton;
 
+/*
 	pButton->Create(this, GetDisplayMode(), CSize(60,42), CSize(85, 25), csAmpersandString,
 					tooltipText, statusBarText, CSize(23,17), 
 					m_nMaxToolbarButtonChars, m_nMinToolbarButtonChars, bookmark,
 					item, (HT_IsContainer(item) ? TB_HAS_DRAGABLE_MENU | TB_HAS_IMMEDIATE_MENU : 0));
+*/
 
-	HT_SetNodeFEData(item, pButton);
+	HT_SetNodeFEData(inNode, newItem);
 	
 	//еее deal with computing height/width??? They do on WinFE
-#endif
 	
 } // AddHTButton
 
