@@ -2148,6 +2148,53 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsval name, nsIInterfaceIn
     return NS_OK;
 }
 
+inline nsresult UnexpectedFailure(nsresult rv)
+{
+    NS_ERROR("This is not supposed to fail!");
+    return rv;
+}
+
+/* void refreshPrototype (); */
+NS_IMETHODIMP XPCWrappedNative::RefreshPrototype()
+{
+    XPCCallContext ccx(NATIVE_CALLER);
+    if(!ccx.IsValid())
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    if(!HasProto())
+        return NS_OK;
+
+    if(!GetFlatJSObject())
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    AutoMarkingWrappedNativeProtoPtr oldProto(ccx);
+    AutoMarkingWrappedNativeProtoPtr newProto(ccx);
+    
+    oldProto = GetProto();
+    XPCNativeScriptableCreateInfo ci(*oldProto->GetScriptableInfo());
+    newProto = XPCWrappedNativeProto::GetNewOrUsed(ccx, oldProto->GetScope(),
+                                                   oldProto->GetClassInfo(),
+                                                   &ci,
+                                                   !oldProto->IsShared());
+    if(!newProto)
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    // If nothing needs to change then we're done.
+
+    if(newProto.get() == oldProto.get())
+        return NS_OK;
+
+    if(!JS_SetPrototype(ccx, GetFlatJSObject(), newProto->GetJSProtoObject()))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    mMaybeProto = newProto;
+
+    if(mScriptableInfo == oldProto->GetScriptableInfo())
+        mScriptableInfo = newProto->GetScriptableInfo();
+
+    return NS_OK;
+}
+
 /* void debugDump (in short depth); */
 NS_IMETHODIMP XPCWrappedNative::DebugDump(PRInt16 depth)
 {

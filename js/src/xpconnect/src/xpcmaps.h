@@ -628,6 +628,12 @@ public:
         return proto;
     }
 
+    inline void Remove(XPCWrappedNativeProto* proto)
+    {
+        NS_PRECONDITION(proto,"bad param");
+        JS_DHashTableOperate(mTable, proto, JS_DHASH_REMOVE);
+    }
+
     inline uint32 Count() {return mTable->entryCount;}
     inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}

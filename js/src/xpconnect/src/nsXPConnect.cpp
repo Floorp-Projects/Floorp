@@ -113,7 +113,12 @@ nsXPConnect::~nsXPConnect()
     { // scoped callcontext
         XPCCallContext ccx(NATIVE_CALLER);
         if(ccx.IsValid())
+        {
             XPCWrappedNativeScope::SystemIsBeingShutDown(ccx);
+            if(mRuntime)
+                mRuntime->SystemIsBeingShutDown(&ccx);
+                
+        }
     }
 
     NS_IF_RELEASE(mInterfaceInfoManager);
@@ -363,6 +368,8 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
 
     if(!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    scope->RemoveWrappedNativeProtos();
 
     if(!nsXPCComponents::AttachNewComponentsObject(ccx, scope, aGlobalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);

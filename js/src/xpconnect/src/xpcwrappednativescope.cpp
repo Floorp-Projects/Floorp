@@ -608,6 +608,29 @@ XPCWrappedNativeScope::ClearAllWrappedNativeSecurityPolicies(XPCCallContext& ccx
     return NS_OK;
 }
 
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+WNProtoRemover(JSDHashTable *table, JSDHashEntryHdr *hdr,
+               uint32 number, void *arg)
+{
+    XPCWrappedNativeProtoMap* detachedMap = (XPCWrappedNativeProtoMap*)arg;
+    
+    XPCWrappedNativeProto* proto = (XPCWrappedNativeProto*)
+        ((ClassInfo2WrappedNativeProtoMap::Entry*)hdr)->value;
+
+    detachedMap->Add(proto);
+
+    return JS_DHASH_REMOVE;
+}
+
+void
+XPCWrappedNativeScope::RemoveWrappedNativeProtos()
+{
+    XPCAutoLock al(mRuntime->GetMapLock());
+    
+    mWrappedNativeProtoMap->Enumerate(WNProtoRemover, 
+        GetRuntime()->GetDetachedWrappedNativeProtoMap());
+}
+
 /***************************************************************************/
 
 // static

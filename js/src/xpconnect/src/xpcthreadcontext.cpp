@@ -416,6 +416,19 @@ xpc_ThreadDataDtorCB(void* ptr)
 
 void XPCPerThreadData::MarkAutoRootsBeforeJSFinalize(JSContext* cx)
 {
+#ifdef XPC_TRACK_AUTOMARKINGPTR_STATS
+    {
+        static int maxLength = 0;
+        int length = 0;
+        for(AutoMarkingPtr* p = mAutoRoots; p; p = p->GetNext())
+            length++;
+        if(length > maxLength)
+            maxLength = length;
+        printf("XPC gc on thread %x with %d AutoMarkingPtrs (%d max so far)\n",
+               this, length, maxLength);
+    }
+#endif
+
     if(mAutoRoots)
         mAutoRoots->MarkBeforeJSFinalize(cx);
 }
