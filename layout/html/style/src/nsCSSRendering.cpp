@@ -2425,6 +2425,30 @@ FindCanvasBackground(nsIPresContext* aPresContext,
   if (firstChild) {
     const nsStyleBackground *result;
     GetStyleData(firstChild, &result);
+  
+    // for printing and print preview.. this should be a pageContentFrame
+    nsCOMPtr<nsIAtom> frameType;
+    nsCOMPtr<nsIStyleContext> parentContext;
+
+    firstChild->GetFrameType(getter_AddRefs(frameType));
+    if ( (frameType == nsLayoutAtoms::pageContentFrame) ){
+      // we have to find the background style ourselves.. since the 
+      // pageContentframe does not have content
+      while(firstChild){
+        for (nsIFrame* kidFrame = firstChild; nsnull != kidFrame; ) {
+          kidFrame->GetStyleContext(getter_AddRefs(parentContext));
+          result = (nsStyleBackground*)parentContext->GetStyleData(eStyleStruct_Background);
+          if (!result->BackgroundIsTransparent()){
+            GetStyleData(kidFrame, aBackground);
+            return PR_TRUE;
+          } else {
+            kidFrame->GetNextSibling(&kidFrame); 
+          }
+        }
+        firstChild->FirstChild(aPresContext, nsnull, &firstChild);
+      }
+      return PR_FALSE;    // nothing found for this
+    }
 
     // Check if we need to do propagation from BODY rather than HTML.
     if (result->BackgroundIsTransparent()) {
@@ -2514,18 +2538,19 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
                                 const nsRect& aBorderArea,
                                 const nsStyleBorder& aBorder,
                                 nscoord aDX,
-                                nscoord aDY)
+                                nscoord aDY,PRBool aUsePrintSettings)
 {
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
 
   PRBool isCanvas;
   const nsStyleBackground *color;
+
   if (!FindBackground(aPresContext, aForFrame, &color, &isCanvas))
     return;
   if (!isCanvas) {
     PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
-                          aDirtyRect, aBorderArea, *color, aBorder, aDX, aDY);
+                          aDirtyRect, aBorderArea, *color, aBorder, aDX, aDY, aUsePrintSettings);
     return;
   }
 
@@ -2556,7 +2581,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 
   PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                         aDirtyRect, aBorderArea, canvasColor,
-                        aBorder, aDX, aDY);
+                        aBorder, aDX, aDY, aUsePrintSettings);
 }
 
 void
@@ -2568,7 +2593,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
                                       const nsStyleBackground& aColor,
                                       const nsStyleBorder& aBorder,
                                       nscoord aDX,
-                                      nscoord aDY)
+                                      nscoord aDY,
+                                      PRBool aUsePrintSettings)
 {
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
@@ -2576,22 +2602,22 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   PRBool        transparentBG = 
                   NS_STYLE_BG_COLOR_TRANSPARENT ==
                   (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+  PRBool        canDrawBackgroundImage=PR_TRUE,canDrawBackgroundColor=PR_TRUE;
   float         percent;
   nsStyleCoord  bordStyleRadius[4];
   PRInt16       borderRadii[4],i;
 
 
-
   // if we are printing, bail for now
-  PRBool  canDrawBackground;
-  aPresContext->GetBackgroundDraw(canDrawBackground);
-  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
+  if(aUsePrintSettings){
+    aPresContext->GetBackgroundImageDraw(canDrawBackgroundImage); 
+    aPresContext->GetBackgroundColorDraw(canDrawBackgroundColor); 
 
-  // only turn off background printing if we are currently printing.
-  if(!canDrawBackground && thePrinterContext){
-    return;
+    // only turn off background printing if we are currently printing.
+    if(!canDrawBackgroundImage && !canDrawBackgroundColor){
+      return;
+    }
   }
-
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the background.
   const nsStyleDisplay* displayData;
@@ -2606,8 +2632,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     }
   }
 
-  // if there is no background image, try a color.
-  if (aColor.mBackgroundImage.IsEmpty()) {
+  // if there is no background image or background images are turned off, try a color.
+  if (aColor.mBackgroundImage.IsEmpty() || (canDrawBackgroundColor && !canDrawBackgroundImage)) {
     // See if there's a background color specified. The background color
     // is rendered over the 'border' 'padding' and 'content' areas
     if (!transparentBG) {

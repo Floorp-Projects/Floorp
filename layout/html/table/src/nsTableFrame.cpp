@@ -1469,7 +1469,7 @@ nsTableFrame::Paint(nsIPresContext*      aPresContext,
       nsRect  rect(0, 0, mRect.width, mRect.height);
 
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *border, 0, 0);
+                                      aDirtyRect, rect, *border, 0, 0, PR_TRUE);
       
       // paint the column groups and columns
       nsIFrame* colGroupFrame = mColGroups.FirstChild();

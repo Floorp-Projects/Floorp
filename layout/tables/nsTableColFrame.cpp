@@ -158,7 +158,7 @@ nsTableColFrame::Paint(nsIPresContext*      aPresContext,
           (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
         nsRect rect(0, 0, mRect.width, mRect.height);
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *border, 0, 0);
+                                        aDirtyRect, rect, *border, 0, 0, PR_TRUE);
       }
     }
   }

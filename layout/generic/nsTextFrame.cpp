@@ -128,6 +128,29 @@ static NS_DEFINE_CID(kPrefCID,     NS_PREF_CID);
 
 //----------------------------------------
 
+
+// checks to see if the text can be lightened..
+// text is darkend
+inline PRBool CanDarken(nsIPresContext* aPresContext)
+{
+PRBool darken,haveBackground;
+
+    aPresContext->GetBackgroundColorDraw(haveBackground);
+    if(PR_TRUE == haveBackground){
+      darken = PR_FALSE;
+    } else {
+      aPresContext->GetBackgroundImageDraw(haveBackground);
+      if(PR_TRUE == haveBackground){
+        darken = PR_FALSE;
+      } else {
+        darken = PR_TRUE;
+      }
+    }
+
+  return darken;
+}
+
+
 struct nsAutoIndexBuffer {
   nsAutoIndexBuffer();
   ~nsAutoIndexBuffer();
@@ -2184,7 +2207,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 {
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsIPresShell> shell;
-  PRBool  displaySelection;
+  PRBool  displaySelection,canDarkenColor;
   PRBool  isPaginated;
   PRBool  isSelected;
   PRInt16 selectionValue;
@@ -2192,6 +2215,8 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 #ifdef IBMBIDI
   PRUint8 level = 0;
 #endif
+
+
   if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
                                        aRenderingContext,
                                        getter_AddRefs(shell),
@@ -2203,6 +2228,11 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
                                        getter_AddRefs(lb)))) {
      return;
   }
+
+  if(isPaginated){
+    canDarkenColor = CanDarken(aPresContext);
+  }
+
   // Make enough space to transform
   nsAutoTextBuffer paintBuffer;
   nsAutoIndexBuffer indexBuffer;
@@ -2269,7 +2299,8 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
     { 
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
-      aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
+
+      aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
       aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
       PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                            dx, dy, width);
@@ -2380,10 +2411,10 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
             newWidth =0;
           
           if (isPaginated && !iter.IsBeforeOrAfter()) {
-            aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
+            aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
             aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
           } else if (!isPaginated) {
-            aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,isPaginated));
+            aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,canDarkenColor));
             aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
           }
 
@@ -2397,7 +2428,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       }
       else if (!isPaginated) 
       {
-        aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
+        aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
         aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
       }
       PaintTextDecorations(aRenderingContext, aStyleContext,
@@ -2860,7 +2891,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsIPresShell> shell;
   PRBool  displaySelection;
-  PRBool  isPaginated;
+  PRBool  isPaginated,canDarkenColor;
   PRBool  isSelected;
   PRInt16 selectionValue;
   nsCOMPtr<nsILineBreaker> lb;
@@ -2876,6 +2907,10 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
      return;
   }
 
+
+  if(isPaginated){
+    canDarkenColor = CanDarken(aPresContext);
+  }
 
   // Make enough space to transform
   nsAutoTextBuffer paintBuffer;
@@ -2923,7 +2958,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
     if (!displaySelection || !isSelected) { 
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
-      aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
+      aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
       RenderString(aRenderingContext, aStyleContext, aTextStyle,
                    text, textLength, dx, dy, width);
     }
@@ -2985,11 +3020,11 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
 	      }
 
         if (isPaginated && !iter.IsBeforeOrAfter()) {
-          aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
+          aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
 	        RenderString(aRenderingContext,aStyleContext, aTextStyle, currenttext, 
 					        currentlength, currentX, dy, width, details);
         } else if (!isPaginated) {
-          aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,isPaginated));
+          aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,canDarkenColor));
 	        RenderString(aRenderingContext,aStyleContext, aTextStyle, currenttext, 
 					        currentlength, currentX, dy, width, details);
         }
@@ -3002,7 +3037,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
       }
       else if (!isPaginated) 
       {
-        aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
+        aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
         RenderString(aRenderingContext,aStyleContext, aTextStyle, text, 
                     PRUint32(textLength), dx, dy, width, details);
       }
@@ -3032,7 +3067,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsIPresShell> shell;
-  PRBool  displaySelection;
+  PRBool  displaySelection,canDarkenColor;
   PRBool  isPaginated;
   PRBool  isSelected;
   PRInt16 selectionValue;
@@ -3047,6 +3082,10 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
                                        selectionValue,
                                        getter_AddRefs(lb)))) {
      return;
+  }
+
+  if(isPaginated){
+    canDarkenColor = CanDarken(aPresContext);
   }
 
   // Get the text fragment
@@ -3140,7 +3179,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
       //if selection is > content length then selection has "slid off"
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
-      aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
+      aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
       aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
       PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                            dx, dy, width);
@@ -3198,7 +3237,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
             newWidth =0;
 
           if (isPaginated && !iter.IsBeforeOrAfter()) {
-            aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
+            aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
             aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
           } else if (!isPaginated) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,isPaginated));
@@ -3212,7 +3251,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
       }
       else if (!isPaginated) 
       {
-        aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
+        aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
         aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
       }
       PaintTextDecorations(aRenderingContext, aStyleContext,

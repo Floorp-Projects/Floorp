@@ -426,8 +426,10 @@ public:
   /**
    * Set and get methods for controling the background drawing
   */
-  NS_IMETHOD GetBackgroundDraw(PRBool &aCanDraw)=0;
-  NS_IMETHOD SetBackgroundDraw(PRBool aCanDraw)=0;
+  NS_IMETHOD GetBackgroundImageDraw(PRBool &aCanDraw)=0;
+  NS_IMETHOD SetBackgroundImageDraw(PRBool aCanDraw)=0;
+  NS_IMETHOD GetBackgroundColorDraw(PRBool &aCanDraw)=0;
+  NS_IMETHOD SetBackgroundColorDraw(PRBool aCanDraw)=0;
 
 #ifdef IBMBIDI
   /**

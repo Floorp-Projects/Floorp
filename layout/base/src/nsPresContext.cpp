@@ -157,7 +157,8 @@ nsPresContext::nsPresContext()
   mImageAnimationMode = imgIContainer::kNormalAnimMode;
   mImageAnimationModePref = imgIContainer::kNormalAnimMode;
 
-  SetBackgroundDraw(PR_TRUE);		// always draw the background
+  SetBackgroundImageDraw(PR_TRUE);		// always draw the background
+  SetBackgroundColorDraw(PR_TRUE);
 
   mStopped = PR_FALSE;
   mStopChrome = PR_TRUE;
