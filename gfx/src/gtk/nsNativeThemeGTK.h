@@ -109,6 +109,7 @@ private:
   nsCOMPtr<nsIAtom> mInputCheckedAtom;
   nsCOMPtr<nsIAtom> mInputAtom;
   nsCOMPtr<nsIAtom> mFocusedAtom;
+  nsCOMPtr<nsIAtom> mFirstTabAtom;
 
   GtkWidget* mProtoLayout;
 };
