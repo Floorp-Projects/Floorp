@@ -211,8 +211,8 @@ sub pickos {
             /Mozilla.*\(.*;.*; FreeBSD.*\)/ && do {return "FreeBSD";};
             /Mozilla.*\(Win16.*\)/          && do {return "Windows 3.1";};
             /Mozilla.*\(.*Win95.*\)/        && do {return "Windows 95";};
-            /Mozilla.*\(Win98.*\)/          && do {return "Windows 98";};
-            /Mozilla.*\(WinNT.*\)/          && do {return "Windows NT";};
+            /Mozilla.*\(.*Win98.*\)/        && do {return "Windows 98";};
+            /Mozilla.*\(.*WinNT.*\)/        && do {return "Windows NT";};
             /Mozilla.*Windows NT 5.*\)/     && do {return "Windows 2000";};
             /Mozilla.*\(Windows.*NT/        && do {return "Windows NT";};
         }
