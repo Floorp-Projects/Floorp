@@ -84,6 +84,10 @@ private:
                                     short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
   PRBool ATSUIFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth, short fontNum, 
                                short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
+  PRBool SurrogateGetDimensions(const PRUnichar *aSurrogatePt, nsTextDimensions& oWidth, short fontNum,  
+                                    short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
+  PRBool SurrogateDrawChar(const PRUnichar *aSurrogatePt, PRInt32 x, PRInt32 y, short& oWidth, short fontNum, 
+                               short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
   
   PRBool UPlusFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
   PRBool UPlusFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
@@ -114,6 +118,8 @@ private:
   PRBool TECFallbackGetBoundingMetrics(const PRUnichar *pChar, nsBoundingMetrics& oBoundingMetrics,
   										short fontNum, nsUnicodeFontMappingMac& fontMapping);
   PRBool ATSUIFallbackGetBoundingMetrics(const PRUnichar *pChar, nsBoundingMetrics& oBoundingMetrics, short fontNum,
+                                         short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
+  PRBool SurrogateGetBoundingMetrics(const PRUnichar *aSurrogatePt, nsBoundingMetrics& oBoundingMetrics, short fontNum,
                                          short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
   void GetScriptTextBoundingMetrics(const char* aText, ByteCount aLen, ScriptCode aScript, nsBoundingMetrics& oBoundingMetrics);
   nsresult GetTextSegmentBoundingMetrics(const PRUnichar *aString, PRUint32 aLength, short fontNum,

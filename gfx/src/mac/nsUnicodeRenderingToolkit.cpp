@@ -46,6 +46,8 @@
 #include "nsCarbonHelpers.h"
 #include "nsISaveAsCharset.h"
 #include "nsIComponentManager.h"
+#include "nsUnicharUtils.h"
+
 
 #include "nsMacUnicodeFontInfo.h"
 #include "nsICharRepresentable.h"
@@ -420,13 +422,13 @@ nsUnicodeRenderingToolkit::ATSUIFallbackGetDimensions(
          rep = (*aCharPt) - 0x2325;
       else 
          rep = (*aCharPt) - 0x2308;
-      res = mATSUIToolkit.GetTextDimensions(gSymbolReplacement+rep, oDim, aSize, 
+      res = mATSUIToolkit.GetTextDimensions(gSymbolReplacement+rep, 1, oDim, aSize, 
                                             origFontNum, 
                                             aBold, aItalic, aColor);
     } 
     else 
     {
-      res = mATSUIToolkit.GetTextDimensions(aCharPt, oDim, aSize, 
+      res = mATSUIToolkit.GetTextDimensions(aCharPt, 1, oDim, aSize, 
                                             origFontNum, 
                                             aBold, aItalic, aColor);
     }
@@ -495,13 +497,13 @@ nsUnicodeRenderingToolkit::ATSUIFallbackGetBoundingMetrics(
          rep = (*aCharPt) - 0x2325;
       else
          rep = (*aCharPt) - 0x2308;
-      res = mATSUIToolkit.GetBoundingMetrics(gSymbolReplacement+rep, oBoundingMetrics, aSize, 
+      res = mATSUIToolkit.GetBoundingMetrics(gSymbolReplacement+rep, 1, oBoundingMetrics, aSize, 
                                              origFontNum, 
                                              aBold, aItalic, aColor);
     }
     else
     {
-      res = mATSUIToolkit.GetBoundingMetrics(aCharPt, oBoundingMetrics, aSize, 
+      res = mATSUIToolkit.GetBoundingMetrics(aCharPt, 1, oBoundingMetrics, aSize, 
                                              origFontNum, 
                                              aBold, aItalic, aColor);
     }
@@ -570,11 +572,11 @@ PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackDrawChar(
         rep = (*aCharPt) - 0x2325;
       else 
         rep = (*aCharPt) - 0x2308;
-      res = mATSUIToolkit.DrawString(gSymbolReplacement+rep, x, y, oWidth, aSize, 
+      res = mATSUIToolkit.DrawString(gSymbolReplacement+rep, 1, x, y, oWidth, aSize, 
                                      origFontNum, 
                                      aBold, aItalic, aColor);
     } else {
-      res = mATSUIToolkit.DrawString(aCharPt, x, y, oWidth, aSize, 
+      res = mATSUIToolkit.DrawString(aCharPt, 1, x, y, oWidth, aSize, 
                                      origFontNum, 
                                      aBold, aItalic, aColor);
     }
@@ -612,6 +614,45 @@ PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackDrawChar(
   }
   return PR_FALSE;
 }
+
+PRBool  nsUnicodeRenderingToolkit :: SurrogateGetDimensions(
+  const PRUnichar *aSurrogatePt, nsTextDimensions& oDim, short origFontNum,  
+  short aSize, PRBool aBold, PRBool aItalic, nscolor aColor)
+{
+  nsresult res;
+  mATSUIToolkit.PrepareToDraw(mPort, mContext );
+  res = mATSUIToolkit.GetTextDimensions(aSurrogatePt, 2, oDim, aSize, 
+                                        origFontNum, 
+                                        aBold, aItalic, aColor);
+  return NS_SUCCEEDED(res);
+}
+
+PRBool  nsUnicodeRenderingToolkit :: SurrogateDrawChar(
+  const PRUnichar *aSurrogatePt, PRInt32 x, PRInt32 y, short& oWidth, short origFontNum, 
+  short aSize, PRBool aBold, PRBool aItalic, nscolor aColor)
+{
+  nsresult res;
+  mATSUIToolkit.PrepareToDraw(mPort, mContext );
+  res = mATSUIToolkit.DrawString(aSurrogatePt, 2, x, y, oWidth, aSize, 
+                                 origFontNum, 
+                                 aBold, aItalic, aColor);
+  return NS_SUCCEEDED(res);
+}
+
+#ifdef MOZ_MATHML
+PRBool  nsUnicodeRenderingToolkit :: SurrogateGetBoundingMetrics(
+  const PRUnichar *aSurrogatePt, nsBoundingMetrics& oBoundingMetrics, short origFontNum,
+  short aSize, PRBool aBold, PRBool aItalic, nscolor aColor)
+{
+  nsresult res;
+  mATSUIToolkit.PrepareToDraw(mPort, mContext );
+  res = mATSUIToolkit.GetBoundingMetrics(aSurrogatePt, 2, oBoundingMetrics, aSize, 
+                                             origFontNum, 
+                                             aBold, aItalic, aColor);
+
+  return NS_SUCCEEDED(res);
+}
+#endif
 
 static const char question[] = "<?>";
 
@@ -1275,6 +1316,27 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
       PRBool fallbackDone = PR_FALSE;
       segDim.Clear();
       
+      if (IS_HIGH_SURROGATE(*aString) && 
+          ((processLen+1) < aLength) &&
+          IS_LOW_SURROGATE(*(aString+1)))
+      {
+         const nsFont *font;
+         mGS->mFontMetrics->GetFont(font);
+         fallbackDone = SurrogateGetDimensions(aString, segDim, fontNum, 
+                                               font->size, 
+                                               (font->weight > NS_FONT_WEIGHT_NORMAL), 
+                                               ((NS_FONT_STYLE_ITALIC ==  font->style) || 
+                                               (NS_FONT_STYLE_OBLIQUE ==  font->style)),
+                                               mGS->mColor );     
+         if (fallbackDone)
+         {   
+           oDim.Combine(segDim);    
+           // for fallback measure/drawing, we always do one char a time.
+           aString += 2;
+           processLen += 2;
+           continue;
+         }
+      }
 #ifndef DISABLE_TEC_FALLBACK
       // Fallback by try different Script code
       if (! IS_SKIP_TEC_FALLBACK(*aString))
@@ -1441,6 +1503,31 @@ nsUnicodeRenderingToolkit::GetTextSegmentBoundingMetrics(
       PRBool fallbackDone = PR_FALSE;
       segBoundingMetrics.Clear();
 
+      if (IS_HIGH_SURROGATE(*aString) && 
+          ((processLen+1) < aLength) &&
+          IS_LOW_SURROGATE(*(aString+1)) )
+      {
+         const nsFont *font;
+         mGS->mFontMetrics->GetFont(font);
+         fallbackDone = SurrogateGetBoundingMetrics(aString, segBoundingMetrics, fontNum, 
+                                                    font->size, 
+                                                    (font->weight > NS_FONT_WEIGHT_NORMAL), 
+                                                    ((NS_FONT_STYLE_ITALIC ==  font->style) || 
+                                                     (NS_FONT_STYLE_OBLIQUE ==  font->style)),
+                                                     mGS->mColor );
+         if (fallbackDone)
+         {      
+           if (firstTime) {
+             firstTime = PR_FALSE;
+             oBoundingMetrics = segBoundingMetrics;
+           }
+           else
+             oBoundingMetrics += segBoundingMetrics;
+           aString += 2;
+           processLen += 2;
+           continue;
+         }
+      }
 #ifndef DISABLE_TEC_FALLBACK
       if (! IS_SKIP_TEC_FALLBACK(*aString))
         fallbackDone = TECFallbackGetBoundingMetrics(aString, segBoundingMetrics, fontNum, fontMapping);
@@ -1558,6 +1645,26 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
   	  {
 		  PRBool fallbackDone = PR_FALSE;
 
+      if (IS_HIGH_SURROGATE(*aString) && 
+          ((processLen+1) < aLength) &&
+          IS_LOW_SURROGATE(*(aString+1)) )
+      {
+         const nsFont *font;
+         mGS->mFontMetrics->GetFont(font);
+         fallbackDone = SurrogateDrawChar(aString, x, y, thisWidth, fontNum, 
+                                          font->size, 
+                                          (font->weight > NS_FONT_WEIGHT_NORMAL), 
+                                          ((NS_FONT_STYLE_ITALIC ==  font->style) || (NS_FONT_STYLE_OBLIQUE ==  font->style)),
+                                          mGS->mColor ); 
+         if (fallbackDone)
+         {      
+           textWidth += thisWidth;
+           x += thisWidth;         
+           aString += 2;
+           processLen += 2;
+           continue;
+         }
+      }
 #ifndef DISABLE_TEC_FALLBACK
 		  // Fallback by try different Script code
 		  if (! IS_SKIP_TEC_FALLBACK(*aString))

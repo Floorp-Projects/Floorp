@@ -374,7 +374,8 @@ void nsATSUIToolkit::PrepareToDraw(CGrafPtr aPort, nsIDeviceContext* aContext)
 //
 //------------------------------------------------------------------------
 void nsATSUIToolkit::StartDraw(
-	const PRUnichar *aCharPt, 
+	const PRUnichar *aCharPt,
+	PRUint32 aLen,
 	short aSize, short aFontNum,
 	PRBool aBold, PRBool aItalic, nscolor aColor, ATSUTextLayout& oLayout)
 {
@@ -390,7 +391,7 @@ void nsATSUIToolkit::StartDraw(
   // text here, we should explicitly invalidate any existing caches
   ::ATSUClearLayoutCache(oLayout, kATSUFromTextBeginning);
   
-  err = ATSUSetTextPointerLocation( oLayout, (ConstUniCharArrayPtr)aCharPt, 0, 1, 1);
+  err = ::ATSUSetTextPointerLocation( oLayout, (ConstUniCharArrayPtr)aCharPt, 0, aLen, aLen);
   if (noErr != err) {
     NS_WARNING("ATSUSetTextPointerLocation failed");
   	oLayout = nsnull;
@@ -404,7 +405,8 @@ void nsATSUIToolkit::StartDraw(
 //------------------------------------------------------------------------
 nsresult
 nsATSUIToolkit::GetTextDimensions(
-  const PRUnichar *aCharPt, 
+  const PRUnichar *aCharPt,
+  PRUint32 aLen, 
   nsTextDimensions& oDim,
   short aSize, short aFontNum,
   PRBool aBold, PRBool aItalic, nscolor aColor)
@@ -415,7 +417,7 @@ nsATSUIToolkit::GetTextDimensions(
   StPortSetter    setter(mPort);
   
   ATSUTextLayout aTxtLayout;
-  StartDraw(aCharPt, aSize, aFontNum, aBold, aItalic, aColor, aTxtLayout);
+  StartDraw(aCharPt, aLen, aSize, aFontNum, aBold, aItalic, aColor, aTxtLayout);
   if (nsnull == aTxtLayout) 
      return NS_ERROR_FAILURE;
 
@@ -423,7 +425,7 @@ nsATSUIToolkit::GetTextDimensions(
   ATSUTextMeasurement after; 
   ATSUTextMeasurement ascent; 
   ATSUTextMeasurement descent; 
-  err = ATSUMeasureText(aTxtLayout, 0, 1, NULL, &after, &ascent, &descent);
+  err = ::ATSUMeasureText(aTxtLayout, 0, aLen, NULL, &after, &ascent, &descent);
   if (noErr != err) 
   {
     NS_WARNING("ATSUMeasureText failed");     
@@ -445,6 +447,7 @@ nsATSUIToolkit::GetTextDimensions(
 nsresult 
 nsATSUIToolkit::GetBoundingMetrics(
   const PRUnichar *aCharPt, 
+  PRUint32 aLen, 
   nsBoundingMetrics &oBoundingMetrics,
   short aSize, short aFontNum,
   PRBool aBold, PRBool aItalic, 
@@ -456,7 +459,7 @@ nsATSUIToolkit::GetBoundingMetrics(
   StPortSetter setter(mPort);
 
   ATSUTextLayout aTxtLayout;
-  StartDraw(aCharPt, aSize, aFontNum, aBold, aItalic, aColor, aTxtLayout);
+  StartDraw(aCharPt, aLen, aSize, aFontNum, aBold, aItalic, aColor, aTxtLayout);
   if(nsnull == aTxtLayout)
     return NS_ERROR_FAILURE;
 
@@ -496,6 +499,7 @@ nsATSUIToolkit::GetBoundingMetrics(
 nsresult
 nsATSUIToolkit::DrawString(
 	const PRUnichar *aCharPt, 
+	PRUint32 aLen, 
 	PRInt32 x, PRInt32 y, 
 	short &oWidth,
 	short aSize, short aFontNum,
@@ -509,19 +513,19 @@ nsATSUIToolkit::DrawString(
 
   ATSUTextLayout aTxtLayout;
   
-  StartDraw(aCharPt, aSize, aFontNum, aBold, aItalic, aColor, aTxtLayout);
+  StartDraw(aCharPt, aLen, aSize, aFontNum, aBold, aItalic, aColor, aTxtLayout);
   if (nsnull == aTxtLayout)
     return NS_ERROR_FAILURE;
 
   OSStatus err = noErr;	
   ATSUTextMeasurement iAfter; 
-  err = ATSUMeasureText( aTxtLayout, 0, 1, NULL, &iAfter, NULL, NULL );
+  err = ::ATSUMeasureText( aTxtLayout, 0, aLen, NULL, &iAfter, NULL, NULL );
   if (noErr != err) {
      NS_WARNING("ATSUMeasureText failed");
      return NS_ERROR_FAILURE;
   } 
 
-  err = ATSUDrawText(aTxtLayout, 0, 1, Long2Fix(x), Long2Fix(y));
+  err = ::ATSUDrawText(aTxtLayout, 0, aLen, Long2Fix(x), Long2Fix(y));
   if (noErr != err) {
     NS_WARNING("ATSUDrawText failed");
     return NS_ERROR_FAILURE;

@@ -74,20 +74,20 @@ public:
 
   void PrepareToDraw(CGrafPtr aPort, nsIDeviceContext* aContext);
  
-  nsresult GetTextDimensions(const PRUnichar *aCharPt, nsTextDimensions &oDim, 
+  nsresult GetTextDimensions(const PRUnichar *aCharPt, PRUint32 aLen, nsTextDimensions &oDim, 
                              short aSize, short fontNum, PRBool aBold, 
                              PRBool aItalic, nscolor aColor);
-  nsresult DrawString(const PRUnichar *aCharPt, PRInt32 x, PRInt32 y, short &oWidth, 
+  nsresult DrawString(const PRUnichar *aCharPt, PRUint32 aLen, PRInt32 x, PRInt32 y, short &oWidth, 
                       short aSize, short fontNum, PRBool aBold, PRBool aItalic, 
                       nscolor aColor);
 #ifdef MOZ_MATHML
-  nsresult GetBoundingMetrics(const PRUnichar *aCharPt, nsBoundingMetrics &aBoundingMetrics,
+  nsresult GetBoundingMetrics(const PRUnichar *aCharPt, PRUint32 aLen, nsBoundingMetrics &aBoundingMetrics,
                               short aSize, short fontNum, PRBool aBold, 
                               PRBool aItalic, nscolor aColor);
 #endif // MOZ_MATHML
 
 private:
-  void StartDraw(const PRUnichar *aCharPt, short aSize, short fontNum, PRBool aBold,
+  void StartDraw(const PRUnichar *aCharPt, PRUint32 aLen, short aSize, short fontNum, PRBool aBold,
                  PRBool aItalic, nscolor aColor, ATSUTextLayout& oLayout);
 
   ATSUTextLayout GetTextLayout(short aFontNum, short aSize, PRBool aBold, 
