@@ -285,7 +285,7 @@ nsFastLoadService::StartMuxedDocument(nsISupports* aURI, const char* aURISpec,
 }
 
 NS_IMETHODIMP
-nsFastLoadService::SelectMuxedDocument(nsISupports* aURI)
+nsFastLoadService::SelectMuxedDocument(nsISupports* aURI, nsISupports** aResult)
 {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     nsCOMPtr<nsIFastLoadFileControl> control;
@@ -296,7 +296,7 @@ nsFastLoadService::SelectMuxedDocument(nsISupports* aURI)
     if (mInputStream) {
         control = do_QueryInterface(mInputStream);
         if (control) {
-            rv = control->SelectMuxedDocument(aURI);
+            rv = control->SelectMuxedDocument(aURI, aResult);
             if (NS_SUCCEEDED(rv))
                 mDirection = NS_FASTLOAD_READ;
         }
@@ -305,7 +305,7 @@ nsFastLoadService::SelectMuxedDocument(nsISupports* aURI)
     if (rv == NS_ERROR_NOT_AVAILABLE && mOutputStream) {
         control = do_QueryInterface(mOutputStream);
         if (control) {
-            rv = control->SelectMuxedDocument(aURI);
+            rv = control->SelectMuxedDocument(aURI, aResult);
             if (NS_SUCCEEDED(rv))
                 mDirection = NS_FASTLOAD_WRITE;
         }
