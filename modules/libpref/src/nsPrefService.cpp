@@ -234,7 +234,6 @@ NS_IMETHODIMP nsPrefService::GetDefaultBranch(const char *aPrefRoot, nsIPrefBran
 }
 
 
-#pragma mark -
 // Forward these methods through the nsIPrefBranchInternal headers
 
 NS_IMETHODIMP nsPrefService::AddObserver(const char *aDomain, nsIObserver *aObserver)
@@ -257,8 +256,6 @@ NS_IMETHODIMP nsPrefService::RemoveObserver(const char *aDomain, nsIObserver *aO
   return rv;
 }
 
-
-#pragma mark -
 
 nsresult nsPrefService::useDefaultPrefFile()
 {
@@ -417,7 +414,6 @@ static nsresult savePrefFile(nsIFile* aFile)
   return NS_OK;
 }
 
-#pragma mark -
 
 //----------------------------------------------------------------------------------------
 // So discouraged is the use of nsIFileSpec, nobody wanted to have this routine be
@@ -505,7 +501,6 @@ PRBool verifyFileHash(char* buf, long buflen)
   return success;
 }
 
-#pragma mark -
 
 /*
  * some stuff that gets called from Pref_Init()
