@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.45 2003/05/17 01:27:47 jake%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.46 2003/05/21 02:15:21 jake%bugzilla.org Exp $ -->
 <chapter id="installation">
   <title>Installation</title>
 
@@ -1226,6 +1226,44 @@ my $webservergid = '8'
           </programlisting>
         </section>
 
+        <section id="win32-code-bugmail">
+          <title>Changes to <filename>BugMail.pm</filename></title>
+
+          <para>To make bug e-mail work on Win32 (until bug 124174 lands), the
+          simplest way is to have Net::SMTP installed and change this (in
+          <filename>Bugzilla/BugMail.pm</filename>):</para>
+
+          <programlisting>
+open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
+  die "Can't open sendmail";
+
+print SENDMAIL trim($msg) . "\n";
+close SENDMAIL;
+          </programlisting>
+          <para>to</para>
+          <programlisting>
+use Net::SMTP;
+$smtp_server = 'smtp.mycompany.com';  # change this
+
+# Use die on error, so that the mail will be in the 'unsent mails' and
+# can be sent from the sanity check page.
+my $smtp = Net::SMTP->new($smtp_server) ||
+  die 'Cannot connect to server \'$smtp_server\'';
+
+$smtp->mail('bugzilla-daemon@mycompany.com');  # change this
+$smtp->to($person);
+$smtp->data();
+$smtp->datasend($msg);
+$smtp->dataend();
+$smtp->quit;
+          </programlisting>
+
+          <para>Don't forget to change the name of your SMTP server and the
+          domain of the sending e-mail address (after the '@') in the above
+          lines of code.</para>
+
+        </section>
+        
       </section>
 
       <section id="win32-http">
