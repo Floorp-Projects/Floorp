@@ -21,9 +21,8 @@
 #include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kITransformMediatorIID, NS_ITRANSFORM_MEDIATOR_IID);
-static NS_DEFINE_IID(kIDocumentTransformerIID, NS_IDOCUMENT_TRANSFORMER_IID);
 
-const char* kTransformerProgIDPrefix = "component://netscape/document-converter?type=";
+const char* kTransformerProgIDPrefix = "component://netscape/document-transformer?type=";
 
 nsresult
 NS_NewTransformMediator(nsITransformMediator** aResult,                     
@@ -90,7 +89,7 @@ nsTransformMediator::Init(const nsString& aMimeType)
     if (NS_SUCCEEDED(rv)) {
       // Try to find a component that implements the nsIDocumentTransformer interface
       rv = nsComponentManager::CreateInstance(cid, nsnull,
-        kIDocumentTransformerIID, (void**) &mTransformer);      
+        NS_GET_IID(nsIDocumentTransformer), (void**) &mTransformer);
     }
     delete [] progIDStr;
   }
