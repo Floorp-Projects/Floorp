@@ -124,9 +124,10 @@ LRESULT CALLBACK DlgProcWhatToDo(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam
   switch(msg)
   {
     case WM_INITDIALOG:
-      SetWindowText(hDlg, "Que?");
-      wsprintf(szBuf, diUninstall.szMessage0, ugUninstall.szDescription);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, szBuf);
+      NS_LoadString(hInst, IDS_DLG_REMOVE_FILE_TITLE, szBuf, MAX_BUF);
+      SetWindowText(hDlg, szBuf);
+      if(gszSharedFilename != NULL)
+        SetDlgItemText(hDlg, IDC_STATIC_SHARED_FILENAME, gszSharedFilename);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);

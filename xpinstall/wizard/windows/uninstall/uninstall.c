@@ -47,6 +47,7 @@ LPSTR           szUninstallDir;
 LPSTR           szTempDir;
 LPSTR           szOSTempDir;
 LPSTR           szFileIniUninstall;
+LPSTR           gszSharedFilename;
 
 ULONG           ulOSType;
 DWORD           dwScreenX;

@@ -349,7 +349,7 @@ int GetSharedFileCount(char *file)
   DWORD    type      = REG_DWORD;
   DWORD    valbuf    = 0;
   DWORD    valbufsize;
-  int      rv        = -1;
+  int      rv        = -999;
 
   valbufsize = sizeof(DWORD);
   result     = RegOpenKeyEx(HKEY_LOCAL_MACHINE, KEY_SHARED_DLLS, 0, KEY_READ, &keyHandle);
@@ -394,7 +394,7 @@ BOOL UnregisterServer(char *file)
 BOOL DetermineUnRegisterServer(sil *silInstallLogHead, LPSTR szFile)
 {
   sil   *silInstallLogTemp;
-  int   iSharedFileCount = -1;
+  int   iSharedFileCount;
   char  szLCLine[MAX_BUF];
   char  szLCFile[MAX_BUF];
   BOOL  bRv;
@@ -451,18 +451,21 @@ BOOL DetermineUnRegisterServer(sil *silInstallLogHead, LPSTR szFile)
     } while(silInstallLogTemp != silInstallLogHead);
   }
 
-  if(iSharedFileCount <= 0)
+  if((iSharedFileCount <= 0) && (iSharedFileCount != -999))
     bRv = TRUE;
 
   return(bRv);
 }
 
-DWORD AskWhatToDo()
+DWORD AskWhatToDo(LPSTR szFile)
 {
   MSG     msg;
   HWND    hDlg = NULL;
+  char    szBuf[MAX_BUF];
 
-  if((hDlg = InstantiateDialog(hDlgUninstall, DLG_WHAT_TO_DO, "Que?", DlgProcWhatToDo)) != NULL)
+  gszSharedFilename = szFile;
+  NS_LoadString(hInst, IDS_DLG_REMOVE_FILE_TITLE, szBuf, MAX_BUF);
+  if((hDlg = InstantiateDialog(hDlgUninstall, DLG_WHAT_TO_DO, szBuf, DlgProcWhatToDo)) != NULL)
   {
     while(GetMessage(&msg, NULL, 0, 0))
     {
@@ -512,7 +515,7 @@ DWORD Uninstall(sil* silInstallLogHead)
         if(DecrementSharedFileCounter(szFile) == 0)
         {
           if((gdwWhatToDo != WTD_NO_TO_ALL) && (gdwWhatToDo != WTD_YES_TO_ALL))
-            gdwWhatToDo = AskWhatToDo();
+            gdwWhatToDo = AskWhatToDo(szFile);
 
           if((gdwWhatToDo == WTD_YES) || (gdwWhatToDo == WTD_YES_TO_ALL))
           {
@@ -538,7 +541,7 @@ DWORD Uninstall(sil* silInstallLogHead)
         if(DecrementSharedFileCounter(szFile) == 0)
         {
           if((gdwWhatToDo != WTD_NO_TO_ALL) && (gdwWhatToDo != WTD_YES_TO_ALL))
-            gdwWhatToDo = AskWhatToDo();
+            gdwWhatToDo = AskWhatToDo(szFile);
 
           if((gdwWhatToDo == WTD_YES) || (gdwWhatToDo == WTD_YES_TO_ALL))
           {

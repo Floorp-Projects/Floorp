@@ -42,6 +42,7 @@ BOOL        DeleteOrDelayUntilReboot(LPSTR szFile);
 BOOL        UnregisterServer(char *file);
 int         GetSharedFileCount(char *file);
 BOOL        DetermineUnRegisterServer(sil *silInstallLogHead, LPSTR szFile);
+DWORD       AskWhatToDo(LPSTR szFile);
 
 #endif
 

@@ -124,18 +124,22 @@ BEGIN
     CTEXT           "",IDC_MESSAGE,0,0,236,34,SS_CENTERIMAGE
 END
 
-DLG_WHAT_TO_DO DIALOG DISCARDABLE  51, 56, 343, 79
+DLG_WHAT_TO_DO DIALOG DISCARDABLE  51, 56, 333, 140
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
-CLASS "Uninstall"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "&No",ID_NO,19,55,53,14
-    PUSHBUTTON      "&Cancel",IDCANCEL,271,55,53,14
-    LTEXT           "",IDC_MESSAGE0,17,11,308,32,NOT WS_GROUP
-    DEFPUSHBUTTON   "N&o to all",ID_NO_TO_ALL,82,55,53,14
-    DEFPUSHBUTTON   "&Yes",ID_YES,145,55,53,14
-    DEFPUSHBUTTON   "Y&es to all",ID_YES_TO_ALL,208,55,53,14
+    DEFPUSHBUTTON   "&No",ID_NO,40,108,53,14
+    PUSHBUTTON      "N&o to all",ID_NO_TO_ALL,107,108,53,14
+    PUSHBUTTON      "&Yes",ID_YES,174,108,53,14
+    PUSHBUTTON      "Y&es to all",ID_YES_TO_ALL,241,108,53,14
+    LTEXT           "Uninstall has detected that the following shared file is no longer used by any programs.  If any programs still require the shared file and it is removed, those programs may no longer function.  Are you sure you want to remove this shared file?",
+                    IDC_MESSAGE0,16,13,301,33,NOT WS_GROUP
+    LTEXT           "Leaving this file will not harm your system.  If you are not sure, it is recommended that the shared file be not removed from the system.",
+                    IDC_MESSAGE1,16,50,301,19,NOT WS_GROUP
+    RTEXT           "File name:",IDC_STATIC,18,81,41,8
+    LTEXT           "Static",IDC_STATIC_SHARED_FILENAME,66,79,251,14,
+                    SS_CENTERIMAGE | SS_SUNKEN
 END
 
 
@@ -167,6 +171,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_MB_MESSAGE_STR      "Message"
+    IDS_DLG_REMOVE_FILE_TITLE "Remove File?"
 END
 
 #endif    // English (U.S.) resources
