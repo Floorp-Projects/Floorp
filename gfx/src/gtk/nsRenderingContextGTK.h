@@ -23,7 +23,7 @@
 #ifndef nsRenderingContextGTK_h___
 #define nsRenderingContextGTK_h___
 
-#include "nsIRenderingContext.h"
+#include "nsRenderingContextImpl.h"
 #include "nsUnitConversion.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
@@ -42,7 +42,7 @@
 
 #include <gtk/gtk.h>
 
-class nsRenderingContextGTK : public nsIRenderingContext
+class nsRenderingContextGTK : public nsRenderingContextImpl
 {
 public:
   nsRenderingContextGTK();

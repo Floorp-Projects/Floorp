@@ -68,6 +68,7 @@ CPPSRCS		= \
 		nsImageNetContextAsync.cpp \
 		nsImageNetContextSync.cpp \
 		nsImageRenderer.cpp \
+        nsRenderingContextImpl.cpp \
 		nsImageRequest.cpp \
 		nsImageSystemServices.cpp \
 		nsImageURL.cpp \
