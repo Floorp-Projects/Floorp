@@ -256,26 +256,25 @@ HistoryImpl::Go()
     return NS_ERROR_NOT_AVAILABLE;
 
   PRUint32 argc;
-
   ncc->GetArgc(&argc);
 
-  if (argc == 0) {
-    return NS_OK;
+  PRInt32 delta = 0;
+
+  if (argc > 0) {
+    jsval *argv = nsnull;
+
+    ncc->GetArgvPtr(&argv);
+    NS_ENSURE_TRUE(argv, NS_ERROR_UNEXPECTED);
+
+    if (!JSVAL_IS_INT(argv[0])) {
+      // Not an index, don't do anything.
+
+      return NS_OK;
+    }
+
+    delta = JSVAL_TO_INT(argv[0]);
   }
 
-  jsval *argv = nsnull;
-
-  ncc->GetArgvPtr(&argv);
-  NS_ENSURE_TRUE(argv, NS_ERROR_UNEXPECTED);
-
-  if (!JSVAL_IS_INT(argv[0])) {
-    // Not an index, don't do anything.
-
-    return NS_OK;
-  }
-
-  PRInt32 delta = JSVAL_TO_INT(argv[0]);
- 
   return Go(delta);
 }
 
