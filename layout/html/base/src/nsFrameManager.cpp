@@ -248,12 +248,22 @@ public:
   NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
                                    PRBool &aAffects);
 
+  // Capture state from the entire frame heirarchy and store in aState
   NS_IMETHOD CaptureFrameState(nsIPresContext*        aPresContext,
                                nsIFrame*              aFrame,
                                nsILayoutHistoryState* aState);
   NS_IMETHOD RestoreFrameState(nsIPresContext*        aPresContext,
                                nsIFrame*              aFrame,
                                nsILayoutHistoryState* aState);
+  // Add/restore state for one frame (special, global type, like scroll position)
+  NS_IMETHOD CaptureFrameStateFor(nsIPresContext*     aPresContext,
+                               nsIFrame*              aFrame,
+                               nsILayoutHistoryState* aState,
+                               nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID);
+  NS_IMETHOD RestoreFrameStateFor(nsIPresContext*     aPresContext,
+                               nsIFrame*              aFrame,
+                               nsILayoutHistoryState* aState,
+                               nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID);
 
   // Gets and sets properties on a given frame
   NS_IMETHOD GetFrameProperty(nsIFrame* aFrame,
@@ -1477,8 +1487,10 @@ FrameManager::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
   return rv;
 }
 
-static nsresult
-CaptureFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState)
+// Capture state for a given frame.
+// Accept a content id here, in some cases we may not have content (scroll position)
+NS_IMETHODIMP
+FrameManager::CaptureFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState, nsIStatefulFrame::SpecialStateID aID)
 {
   nsresult rv = NS_OK;
   NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
@@ -1488,23 +1500,31 @@ CaptureFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHi
   nsIStatefulFrame* statefulFrame = nsnull;
   aFrame->QueryInterface(NS_GET_IID(nsIStatefulFrame), (void**) &statefulFrame);
   if (nsnull != statefulFrame) {
-    // If so, get the content ID, state type and the state and
-    // add an association between (ID, type) and (state) to the
-    // history state storage object, aState.
-    nsCOMPtr<nsIContent> content;    
-    rv = aFrame->GetContent(getter_AddRefs(content));   
-    if (NS_SUCCEEDED(rv)) {
-      PRUint32 ID;
-      rv = content->GetContentID(&ID);
-      if (NS_SUCCEEDED(rv) && ID) { // Must have ID (don't do anonymous content)
-        nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
-        rv = statefulFrame->GetStateType(aPresContext, &type);
+
+    // If not given one, get the content ID
+    PRUint32 ID = aID;
+    if (nsIStatefulFrame::eNoID == ID) {
+      nsCOMPtr<nsIContent> content;    
+      rv = aFrame->GetContent(getter_AddRefs(content));   
+      if (NS_SUCCEEDED(rv) && content) {
+        rv = content->GetContentID(&ID);
+      }
+    }
+    if (NS_SUCCEEDED(rv) && ID) { // Must have ID (don't do anonymous content)
+
+      // Get the state type
+      nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
+      rv = statefulFrame->GetStateType(aPresContext, &type);
+      if (NS_SUCCEEDED(rv)) {
+
+        // Get the state
+        nsCOMPtr<nsIPresState> frameState;
+        rv = statefulFrame->SaveState(aPresContext, getter_AddRefs(frameState));
         if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsIPresState> frameState;
-          rv = statefulFrame->SaveState(aPresContext, getter_AddRefs(frameState));
-          if (NS_SUCCEEDED(rv)) {
-            rv = aState->AddState(ID, frameState, type);            
-          }
+
+          // add an association between (ID, type) and (state) to the
+          // history state storage object, aState.
+          rv = aState->AddState(ID, frameState, type);            
         }
       }
     }
@@ -1539,8 +1559,10 @@ FrameManager::CaptureFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, 
   return rv;
 }
 
-static nsresult
-RestoreFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState)
+// Restore state for a given frame.
+// Accept a content id here, in some cases we may not have content (scroll position)
+NS_IMETHODIMP
+FrameManager::RestoreFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState, nsIStatefulFrame::SpecialStateID aID)
 {
   nsresult rv = NS_OK;
   NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
@@ -1550,26 +1572,30 @@ RestoreFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHi
   nsIStatefulFrame* statefulFrame = nsnull;
   aFrame->QueryInterface(NS_GET_IID(nsIStatefulFrame), (void**) &statefulFrame);
   if (nsnull != statefulFrame) {
-    // If so, get the content ID, state type and the frame state and
-    // ask the frame object to restore its state.    
-    nsCOMPtr<nsIContent> content;    
-    rv = aFrame->GetContent(getter_AddRefs(content));   
-    if (NS_SUCCEEDED(rv)) {
-      PRUint32 ID;
-      rv = content->GetContentID(&ID);
-      if (NS_SUCCEEDED(rv) && ID) { // Must have ID (don't do anonymous content)
-        nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
-        rv = statefulFrame->GetStateType(aPresContext, &type);
-        if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsIPresState> frameState;
-          rv = aState->GetState(ID, getter_AddRefs(frameState), type);          
-          if (NS_SUCCEEDED(rv) && frameState) {
-            // First restore the state.
-            rv = statefulFrame->RestoreState(aPresContext, frameState);
-            
-            // Now remove the state from the state table.
-            aState->RemoveState(ID, type);
-          }
+    // If not given one, get the content ID
+    PRUint32 ID = aID;
+    if (nsIStatefulFrame::eNoID == ID) {
+      nsCOMPtr<nsIContent> content;    
+      rv = aFrame->GetContent(getter_AddRefs(content));   
+      if (NS_SUCCEEDED(rv) && content) {
+        rv = content->GetContentID(&ID);
+      }
+    }
+    if (NS_SUCCEEDED(rv) && ID) { // Must have ID (don't do anonymous content)
+
+      nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
+      rv = statefulFrame->GetStateType(aPresContext, &type);
+      if (NS_SUCCEEDED(rv)) {
+
+        nsCOMPtr<nsIPresState> frameState;
+        rv = aState->GetState(ID, getter_AddRefs(frameState), type);          
+        if (NS_SUCCEEDED(rv) && frameState) {
+
+          // First restore the state.
+          rv = statefulFrame->RestoreState(aPresContext, frameState);
+
+          // Now remove the state from the state table.
+          aState->RemoveState(ID, type);
         }
       }
     }

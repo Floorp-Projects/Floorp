@@ -642,7 +642,7 @@ public:
 
   NS_IMETHOD DoCopy();
 
-  NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState);
+  NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage);
   NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState);
   NS_IMETHOD SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState);
 
@@ -1543,6 +1543,45 @@ PresShell::NotifyReflowObservers(const char *aData)
   return NS_OK;
 }
 
+static nsresult
+GetRootScrollFrame(nsIPresContext* aPresContext, nsIFrame* aRootFrame, nsIFrame** aScrollFrame) {
+
+  // Frames: viewport->scroll->scrollport (Gfx) or viewport->scroll (Native)
+  // Types:  viewport->scroll->sroll               viewport->scroll
+
+  // Ensure root frame is a viewport frame
+  *aScrollFrame = nsnull;
+  nsIFrame* theFrame = nsnull;
+  if (aRootFrame) {
+    nsCOMPtr<nsIAtom> fType;
+    aRootFrame->GetFrameType(getter_AddRefs(fType));
+    if (fType && (nsLayoutAtoms::viewportFrame == fType.get())) {
+
+      // If child is scrollframe keep it (native)
+      aRootFrame->FirstChild(aPresContext, nsnull, &theFrame);
+      if (theFrame) {
+        nsCOMPtr<nsIAtom> fType;
+        theFrame->GetFrameType(getter_AddRefs(fType));
+        if (nsLayoutAtoms::scrollFrame == fType.get()) {
+          *aScrollFrame = theFrame;
+
+          // If the first child of that is scrollframe, use it instead (gfx)
+          theFrame->FirstChild(aPresContext, nsnull, &theFrame);
+          if (theFrame) {
+            nsCOMPtr<nsIAtom> fType;
+            theFrame->GetFrameType(getter_AddRefs(fType));
+            if (nsLayoutAtoms::scrollFrame == fType.get()) {
+              *aScrollFrame = theFrame;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
@@ -2237,6 +2276,18 @@ PresShell::BeginLoad(nsIDocument *aDocument)
 NS_IMETHODIMP
 PresShell::EndLoad(nsIDocument *aDocument)
 {
+
+  // Restore frame state for the root scroll frame
+  nsIFrame* rootFrame = nsnull;
+  GetRootFrame(&rootFrame);
+  if (rootFrame && mHistoryState) {
+    nsIFrame* scrollFrame = nsnull;
+    GetRootScrollFrame(mPresContext, rootFrame, &scrollFrame);
+    if (scrollFrame) {
+      mFrameManager->RestoreFrameStateFor(mPresContext, scrollFrame, mHistoryState, nsIStatefulFrame::eDocumentScrollState);
+    }
+  }
+
 #ifdef MOZ_PERF_METRICS
   // Dump reflow, style resolution and frame construction times here.
   MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::EndLoad(), this=%p\n", this));
@@ -2814,7 +2865,7 @@ PresShell::DoCopy()
 }
 
 NS_IMETHODIMP
-PresShell::CaptureHistoryState(nsILayoutHistoryState** aState)
+PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPage)
 {
   nsresult rv = NS_OK;
 
@@ -2840,6 +2891,18 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState)
   nsIFrame* rootFrame = nsnull;
   rv = GetRootFrame(&rootFrame);
   if (NS_FAILED(rv) || nsnull == rootFrame) return rv;
+  // Capture frame state for the root scroll frame
+  // Don't capture state when first creating doc element heirarchy
+  // As the scroll position is 0 and this will cause us to loose
+  // our previously saved place!
+  if (aLeavingPage) {
+    nsIFrame* scrollFrame = nsnull;
+    rv = GetRootScrollFrame(mPresContext, rootFrame, &scrollFrame);
+    if (scrollFrame) {
+      rv = mFrameManager->CaptureFrameStateFor(mPresContext, scrollFrame, mHistoryState, nsIStatefulFrame::eDocumentScrollState);
+    }
+  }
+
 
   rv = mFrameManager->CaptureFrameState(mPresContext, rootFrame, mHistoryState);  
  

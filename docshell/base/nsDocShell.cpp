@@ -3128,7 +3128,7 @@ NS_IMETHODIMP nsDocShell::UpdateCurrentSessionHistory()
          if (NS_SUCCEEDED(rv) && shell) {
  
            nsCOMPtr<nsILayoutHistoryState> layoutState;
-           rv = shell->CaptureHistoryState(getter_AddRefs(layoutState));
+           rv = shell->CaptureHistoryState(getter_AddRefs(layoutState), PR_TRUE);
            if (NS_SUCCEEDED(rv) && layoutState) {
  
              rv = entry->SetLayoutHistoryState(layoutState);

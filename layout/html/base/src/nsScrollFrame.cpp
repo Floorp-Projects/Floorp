@@ -41,7 +41,10 @@
 #include "nsIBox.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollable.h"
+#include "nsIStatefulFrame.h"
 #include "nsBoxLayoutState.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIPresState.h"
 
 #undef NOISY_SECOND_REFLOW
 
@@ -267,6 +270,10 @@ nsScrollFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsIScrollableFrame*) this;                                        
     return NS_OK;                                                        
   }   
+  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
+    return NS_OK;
+  }
 
 
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);                                  
@@ -974,6 +981,132 @@ PRIntn
 nsScrollFrame::GetSkipSides() const
 {
   return 0;
+}
+
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsScrollFrame::GetStateType(nsIPresContext* aPresContext,
+                                 nsIStatefulFrame::StateType* aStateType)
+{
+  *aStateType = nsIStatefulFrame::eScrollType;
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsScrollFrame::SaveState(nsIPresContext* aPresContext,
+                              nsIPresState** aState)
+{
+  nsresult res = NS_OK;
+  PRInt32 x,y;
+  nsIScrollableView* scrollingView;
+  nsIView*           view;
+  GetView(aPresContext, &view);
+  if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+    scrollingView->GetScrollPosition(x,y);
+  }
+  nsIView* child = nsnull;
+  nsRect childRect(0,0,0,0);
+  if (NS_SUCCEEDED(scrollingView->GetScrolledView(child)) && child) {
+    child->GetBounds(childRect);
+  }
+
+  res = NS_NewPresState(aState);
+  nsCOMPtr<nsISupportsPRInt32> xoffset;
+  if (NS_SUCCEEDED(res)) {
+    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
+            nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(xoffset));
+    if (NS_SUCCEEDED(res) && xoffset) {
+      res = xoffset->SetData(x);
+      if (NS_SUCCEEDED(res)) {
+        (*aState)->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("x-offset"), xoffset);
+      }
+    }
+  }
+  nsCOMPtr<nsISupportsPRInt32> yoffset;
+  if (NS_SUCCEEDED(res)) {
+    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
+            nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(yoffset));
+    if (NS_SUCCEEDED(res) && yoffset) {
+      res = yoffset->SetData(y);
+      if (NS_SUCCEEDED(res)) {
+        (*aState)->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("y-offset"), yoffset);
+      }
+    }
+  }
+  nsCOMPtr<nsISupportsPRInt32> width;
+  if (NS_SUCCEEDED(res)) {
+    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
+            nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(width));
+    if (NS_SUCCEEDED(res) && width) {
+      res = width->SetData(childRect.width);
+      if (NS_SUCCEEDED(res)) {
+        (*aState)->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("width"), width);
+      }
+    }
+  }
+  nsCOMPtr<nsISupportsPRInt32> height;
+  if (NS_SUCCEEDED(res)) {
+    res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
+            nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(height));
+    if (NS_SUCCEEDED(res) && height) {
+      res = height->SetData(childRect.height);
+      if (NS_SUCCEEDED(res)) {
+        (*aState)->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("height"), height);
+      }
+    }
+  }
+  return res;
+}
+
+//-----------------------------------------------------------
+NS_IMETHODIMP
+nsScrollFrame::RestoreState(nsIPresContext* aPresContext,
+                                 nsIPresState* aState)
+{
+  nsCOMPtr<nsISupportsPRInt32> xoffset;
+  nsCOMPtr<nsISupportsPRInt32> yoffset;
+  nsCOMPtr<nsISupportsPRInt32> width;
+  nsCOMPtr<nsISupportsPRInt32> height;
+  aState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("x-offset"), getter_AddRefs(xoffset));
+  aState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("y-offset"), getter_AddRefs(yoffset));
+  aState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("width"), getter_AddRefs(width));
+  aState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("height"), getter_AddRefs(height));
+
+  nsresult res = NS_ERROR_NULL_POINTER;
+  if (xoffset && yoffset) {
+    PRInt32 x,y,w,h;
+    res = xoffset->GetData(&x);
+    if (NS_SUCCEEDED(res))
+      res = yoffset->GetData(&y);
+    if (NS_SUCCEEDED(res))
+      res = width->GetData(&w);
+    if (NS_SUCCEEDED(res))
+      res = height->GetData(&h);
+
+    if (NS_SUCCEEDED(res)) {
+
+      nsIScrollableView* scrollingView;
+      nsIView*           view;
+      GetView(aPresContext, &view);
+      if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+
+        nsIView* child = nsnull;
+        nsRect childRect(0,0,0,0);
+        if (NS_SUCCEEDED(scrollingView->GetScrolledView(child)) && child) {
+          child->GetBounds(childRect);
+        }
+        x = (int)(((float)childRect.width / w) * x);
+        y = (int)(((float)childRect.height / h) * y);
+
+        scrollingView->ScrollTo(x,y,0);
+      }
+    }
+  }
+
+  return res;
 }
 
 NS_IMETHODIMP
