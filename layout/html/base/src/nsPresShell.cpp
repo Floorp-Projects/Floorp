@@ -1254,13 +1254,13 @@ PresShell::ProcessReflowCommands()
     if (GetVerifyReflowEnable()) {
       // First synchronously render what we have so far so that we can
       // see it.
-      if (gVerifyReflowAll) {
-        printf("Before verify-reflow\n");
+//      if (gVerifyReflowAll) {
+//        printf("Before verify-reflow\n");
         nsIView* rootView;
         mViewManager->GetRootView(rootView);
         mViewManager->UpdateView(rootView, nsnull, NS_VMREFRESH_IMMEDIATE);
-        PR_Sleep(PR_SecondsToInterval(3));
-      }
+//        PR_Sleep(PR_SecondsToInterval(3));
+//      }
 
       mInVerifyReflow = PR_TRUE;
       VerifyIncrementalReflow();
@@ -2200,10 +2200,6 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
   stdout << r2;
 
   printf(" %s\n", aMsg);
-  if (gVerifyReflowAll) {
-    k1->List(stdout, 1);
-    k2->List(stdout, 1);
-  }
 }
 
 static PRBool
@@ -2541,16 +2537,16 @@ PresShell::VerifyIncrementalReflow()
   root2 = FindTopFrame(root2);
 #endif
   if (!CompareTrees(root1, root2)) {
-    if (!gVerifyReflowAll) {
-      printf("Verify reflow failed, primary tree:\n");
-      root1->List(stdout, 0);
-      printf("Verification tree:\n");
-      root2->List(stdout, 0);
-    }
+    printf("Verify reflow failed, primary tree:\n");
+    root1->List(stdout, 0);
+    printf("Verification tree:\n");
+    root2->List(stdout, 0);
   }
 
 //  printf("Incremental reflow doomed view tree:\n");
 //  view->List(stdout, 1);
+//  view->SetVisibility(nsViewVisibility_kHide);
+  cx->Stop();
   cx->SetContainer(nsnull);
   NS_RELEASE(cx);
   sh->EndObservingDocument();
