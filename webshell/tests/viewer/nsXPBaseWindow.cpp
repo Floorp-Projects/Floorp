@@ -233,7 +233,6 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
   r.x = r.y = 0;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                        r.x, r.y, r.width, r.height,
-                       nsScrollPreference_kNeverScroll, //nsScrollPreference_kAuto, 
                        aAllowPlugins, PR_FALSE);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
   mWebShell->SetPrefs(aPrefs);

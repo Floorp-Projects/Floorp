@@ -1121,7 +1121,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
   rv = webShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                        r.x, r.y, r.width, r.height,
-                       nsScrollPreference_kAuto, aAllowPlugins, PR_TRUE);
+                       aAllowPlugins, PR_TRUE);
   webShell->SetContainer((nsIWebShellContainer*) this);
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
@@ -1209,7 +1209,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
   rv = webShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                        r.x, r.y, r.width, r.height,
-                       nsScrollPreference_kAuto, aAllowPlugins);
+                       aAllowPlugins);
   webShell->SetContainer((nsIWebShellContainer*) this);
   webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
   if (docLoader) {
