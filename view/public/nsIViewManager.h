@@ -32,13 +32,12 @@ class nsIScrollableView;
 class nsIWidget;
 struct nsRect;
 
-typedef enum
-{
+enum nsContentQuality {
   nsContentQuality_kGood = 0,
   nsContentQuality_kFair,
   nsContentQuality_kPoor,
   nsContentQuality_kUnknown
-} nsContentQuality;
+};
 
 #define NS_IVIEWMANAGER_IID   \
 { 0x3a8863d0, 0xa7f3, 0x11d1, \
@@ -267,6 +266,17 @@ public:
    * @param zindex new z depth
    */
   NS_IMETHOD  SetViewZIndex(nsIView *aView, PRInt32 aZindex) = 0;
+
+  /**
+   * Indicate that the z-index of a view is "auto". An "auto" z-index
+   * means that the view does not define a new stacking context,
+   * which means that the z-indicies of the view's children are
+   * relative to the view's siblings.
+   * The view manager generates the appopriate dirty regions.
+   * @param aView view to change z depth of
+   * @param zindex new z depth
+   */
+  NS_IMETHOD  SetViewAutoZIndex(nsIView *aView, PRBool aAutoZIndex) = 0;
 
   /**
    * Used to move a view above another in z-order.
