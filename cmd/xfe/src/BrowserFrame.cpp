@@ -23,7 +23,8 @@
 
 
 #include "BrowserFrame.h"
-#include "HTMLView.h"
+/* #include "HTMLView.h" */
+#include "BrowserView.h"
 #include "HistoryMenu.h"
 #include "BackForwardMenu.h"
 #include "BookmarkFrame.h"
@@ -105,9 +106,10 @@ MenuSpec XFE_BrowserFrame::edit_menu_spec[] = {
 };
 
 MenuSpec XFE_BrowserFrame::view_menu_spec[] = {
-  { xfeCmdToggleNavigationToolbar,PUSHBUTTON },
+  { xfeCmdToggleNavigationToolbar ,PUSHBUTTON },
   { xfeCmdToggleLocationToolbar,  PUSHBUTTON },
   { xfeCmdTogglePersonalToolbar,  PUSHBUTTON },
+  { xfeCmdToggleNavCenter, PUSHBUTTON},
   MENU_SEPARATOR,
   { xfeCmdIncreaseFont,		PUSHBUTTON },
   { xfeCmdDecreaseFont,		PUSHBUTTON },
@@ -209,9 +211,11 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
 			  chromespec, 
 			  True)
 {
-  // create html view
-  XFE_HTMLView *htmlview;
 
+  // create html view
+/*  XFE_HTMLView *htmlview; */
+
+   XFE_BrowserView * browserView; 
   geometryPrefName = "browser";
 
   if (parent_frame)
@@ -229,7 +233,12 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
   
 #endif /* notyet */
 
-  htmlview = new XFE_HTMLView(this, getChromeParent(), NULL, m_context);
+/*    htmlview = new XFE_HTMLView(this, getChromeParent(), NULL, m_context); */
+
+  /* Create the browser view that holds the NavCenter view and the HTMl view */
+   browserView = new XFE_BrowserView(this, getChromeParent(), NULL, m_context); 
+
+
 
   // Create url bar
   m_urlBar = new XFE_URLBar(this,m_toolbox);
@@ -258,12 +267,22 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
 
   if (!chromespec || (chromespec && chromespec->show_url_bar))
 	  m_urlBar->show();
-
-  // register drop site on HTMLView
-  m_browserDropSite=new XFE_BrowserDrop(htmlview->getBaseWidget(),this);
-  m_browserDropSite->enable();
+  /*
+  XtVaSetValues(browserView->getBaseWidget(),
+		XmNleftAttachment, XmATTACH_FORM,
+		XmNtopAttachment, XmATTACH_FORM,
+		XmNrightAttachment, XmATTACH_FORM,
+		XmNbottomAttachment, XmATTACH_FORM,
+		NULL);
+        */
   
-  setView(htmlview);
+  // register drop site on HTMLView
+  /*   m_browserDropSite=new XFE_BrowserDrop(htmlview->getBaseWidget(),this);  */
+        m_browserDropSite=new XFE_BrowserDrop((browserView->getHTMLView())->getBaseWidget(),this);  
+     m_browserDropSite->enable();
+  
+/*   setView(htmlview);  */
+  setView(browserView);   
   setMenubar(menu_bar_spec);
   setToolbar(toolbar_spec);
 
@@ -273,7 +292,7 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
 
   fe_set_scrolled_default_size(m_context);
 
-  htmlview->show();
+//  htmlview->show();
 
   respectChrome(chromespec);
 
@@ -285,6 +304,7 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
 
   // Configure the toolbox for the first time
   configureToolbox();
+  printf("Created the BrowserFrame\n");
 }
 
 XFE_BrowserFrame::~XFE_BrowserFrame()
@@ -318,6 +338,7 @@ XFE_BrowserFrame::isCommandEnabled(CommandType cmd,
 {
   if (cmd == xfeCmdToggleLocationToolbar
       || cmd == xfeCmdTogglePersonalToolbar
+      || cmd == xfeCmdToggleNavCenter
       )
     return True;
   else
@@ -362,6 +383,13 @@ XFE_BrowserFrame::doCommand(CommandType cmd,
       // XXX not implemented
       return;
     }
+  else if (cmd == xfeCmdToggleNavCenter)
+    {
+      if (((XFE_BrowserView*)m_view)->isNavCenterShown())
+          ((XFE_BrowserView *)m_view)->hideNavCenter();
+      else
+        ((XFE_BrowserView *) m_view)->showNavCenter();
+    }
 
   else
     XFE_Frame::doCommand(cmd, calldata, info);
@@ -373,6 +401,7 @@ XFE_BrowserFrame::handlesCommand(CommandType cmd,
 {
   if (cmd == xfeCmdToggleLocationToolbar
       || cmd == xfeCmdTogglePersonalToolbar
+      || cmd == xfeCmdToggleNavCenter
       )
 
     return True;
@@ -406,7 +435,17 @@ XFE_BrowserFrame::commandToString(CommandType cmd,
 
         return stringFromResource(res);
     }
+    else if (cmd == xfeCmdToggleNavCenter)
+    {
+        char *res = NULL;
 
+        if (((XFE_BrowserView *)m_view)->isNavCenterShown())
+            res = "hideNavCenterCmdString";
+        else
+            res = "showNavCenterCmdString";
+
+        return stringFromResource(res);
+    }
   else
     {
       return XFE_Frame::commandToString(cmd, calldata, info);
@@ -416,7 +455,9 @@ XFE_BrowserFrame::commandToString(CommandType cmd,
 int
 XFE_BrowserFrame::getURL(URL_Struct *url, Boolean skip_get_url)
 {
-  XFE_HTMLView *hview = (XFE_HTMLView*)m_view;
+/*    XFE_HTMLView *hview = (XFE_HTMLView*)m_view;  */
+
+  XFE_BrowserView * browserview = (XFE_BrowserView *)m_view;   
 
   // we can't conditionally register here - otherwise fe_SetURLString
   // won't work. we now do it in the constructor.
@@ -435,7 +476,8 @@ XFE_BrowserFrame::getURL(URL_Struct *url, Boolean skip_get_url)
 
   m_urlBar->setURLString(url);
 
-  return hview->getURL(url, skip_get_url);
+/*      return hview->getURL(url, skip_get_url);  */
+     return (browserview->getHTMLView())->getURL(url, skip_get_url);  
 }
 
 void
