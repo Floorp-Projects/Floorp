@@ -23,6 +23,7 @@
 *"switch() misbehaves with duplicated labels"
 *
 * See ECMA3  Section 12.11,  "The switch Statement"
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=74474
 */
 //-------------------------------------------------------------------------------------------------
 var UBound = 0;
