@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMHTMLTableCellElement.h"
@@ -74,14 +75,14 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case HTMLTABLECELLELEMENT_CELLINDEX:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.cellindex", &ok);
         if (!ok) {
           //Need to throw error here
@@ -98,6 +99,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_ABBR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.abbr", &ok);
         if (!ok) {
           //Need to throw error here
@@ -114,6 +116,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_ALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.align", &ok);
         if (!ok) {
           //Need to throw error here
@@ -130,6 +133,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_AXIS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.axis", &ok);
         if (!ok) {
           //Need to throw error here
@@ -146,6 +150,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_BGCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.bgcolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -162,6 +167,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_CH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.ch", &ok);
         if (!ok) {
           //Need to throw error here
@@ -178,6 +184,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_CHOFF:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.choff", &ok);
         if (!ok) {
           //Need to throw error here
@@ -194,6 +201,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_COLSPAN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.colspan", &ok);
         if (!ok) {
           //Need to throw error here
@@ -210,6 +218,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_HEADERS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.headers", &ok);
         if (!ok) {
           //Need to throw error here
@@ -226,6 +235,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_HEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.height", &ok);
         if (!ok) {
           //Need to throw error here
@@ -242,6 +252,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_NOWRAP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.nowrap", &ok);
         if (!ok) {
           //Need to throw error here
@@ -258,6 +269,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_ROWSPAN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.rowspan", &ok);
         if (!ok) {
           //Need to throw error here
@@ -274,6 +286,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_SCOPE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.scope", &ok);
         if (!ok) {
           //Need to throw error here
@@ -290,6 +303,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_VALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.valign", &ok);
         if (!ok) {
           //Need to throw error here
@@ -306,6 +320,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_WIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.width", &ok);
         if (!ok) {
           //Need to throw error here
@@ -323,7 +338,6 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -348,14 +362,14 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case HTMLTABLECELLELEMENT_CELLINDEX:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.cellindex", &ok);
         if (!ok) {
           //Need to throw error here
@@ -377,6 +391,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_ABBR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.abbr", &ok);
         if (!ok) {
           //Need to throw error here
@@ -391,6 +406,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_ALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.align", &ok);
         if (!ok) {
           //Need to throw error here
@@ -405,6 +421,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_AXIS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.axis", &ok);
         if (!ok) {
           //Need to throw error here
@@ -419,6 +436,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_BGCOLOR:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.bgcolor", &ok);
         if (!ok) {
           //Need to throw error here
@@ -433,6 +451,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_CH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.ch", &ok);
         if (!ok) {
           //Need to throw error here
@@ -447,6 +466,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_CHOFF:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.choff", &ok);
         if (!ok) {
           //Need to throw error here
@@ -461,6 +481,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_COLSPAN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.colspan", &ok);
         if (!ok) {
           //Need to throw error here
@@ -482,6 +503,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_HEADERS:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.headers", &ok);
         if (!ok) {
           //Need to throw error here
@@ -496,6 +518,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_HEIGHT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.height", &ok);
         if (!ok) {
           //Need to throw error here
@@ -510,6 +533,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_NOWRAP:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.nowrap", &ok);
         if (!ok) {
           //Need to throw error here
@@ -526,6 +550,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_ROWSPAN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.rowspan", &ok);
         if (!ok) {
           //Need to throw error here
@@ -547,6 +572,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_SCOPE:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.scope", &ok);
         if (!ok) {
           //Need to throw error here
@@ -561,6 +587,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_VALIGN:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.valign", &ok);
         if (!ok) {
           //Need to throw error here
@@ -575,6 +602,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       }
       case HTMLTABLECELLELEMENT_WIDTH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltablecellelement.width", &ok);
         if (!ok) {
           //Need to throw error here
@@ -590,7 +618,6 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

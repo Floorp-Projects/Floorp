@@ -28,7 +28,6 @@ IDLSRCS =  \
 	HTMLBRElement.idl \
 	HTMLBaseElement.idl \
 	HTMLBaseFontElement.idl \
-	HTMLBlockquoteElement.idl \
 	HTMLBodyElement.idl \
 	HTMLButtonElement.idl \
 	HTMLCollection.idl \

@@ -12,6 +12,7 @@ interface Navigator {
 	readonly attribute DOMString		securityPolicy;
 	readonly attribute DOMString		userAgent;
 
-	boolean								javaEnabled();
-	
+	boolean    javaEnabled();
+	boolean    taintEnabled();
+	jsval      preference(/* ... */);
 };

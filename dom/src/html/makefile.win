@@ -31,7 +31,6 @@ CPPSRCS =			\
 	nsJSHTMLBRElement.cpp \
 	nsJSHTMLBaseElement.cpp \
 	nsJSHTMLBaseFontElement.cpp \
-	nsJSHTMLBlockquoteElement.cpp \
 	nsJSHTMLBodyElement.cpp \
 	nsJSHTMLButtonElement.cpp \
 	nsJSHTMLCollection.cpp \
@@ -92,7 +91,6 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSHTMLBRElement.obj \
 	.\$(OBJDIR)\nsJSHTMLBaseElement.obj \
 	.\$(OBJDIR)\nsJSHTMLBaseFontElement.obj \
-	.\$(OBJDIR)\nsJSHTMLBlockquoteElement.obj \
 	.\$(OBJDIR)\nsJSHTMLBodyElement.obj \
 	.\$(OBJDIR)\nsJSHTMLButtonElement.obj \
 	.\$(OBJDIR)\nsJSHTMLCollection.obj \

@@ -116,11 +116,11 @@ public:
 
   NS_IMETHOD    Dump(const nsString& aStr)=0;
 
-  NS_IMETHOD    Alert(JSContext *cx, jsval *argv, PRUint32 argc)=0;
+  NS_IMETHOD    Alert(JSContext* cx, jsval* argv, PRUint32 argc)=0;
 
-  NS_IMETHOD    Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aReturn)=0;
+  NS_IMETHOD    Confirm(JSContext* cx, jsval* argv, PRUint32 argc, PRBool* aReturn)=0;
 
-  NS_IMETHOD    Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aReturn)=0;
+  NS_IMETHOD    Prompt(JSContext* cx, jsval* argv, PRUint32 argc, nsString& aReturn)=0;
 
   NS_IMETHOD    Focus()=0;
 
@@ -154,15 +154,15 @@ public:
 
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID)=0;
 
-  NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn)=0;
+  NS_IMETHOD    SetTimeout(JSContext* cx, jsval* argv, PRUint32 argc, PRInt32* aReturn)=0;
 
-  NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn)=0;
+  NS_IMETHOD    SetInterval(JSContext* cx, jsval* argv, PRUint32 argc, PRInt32* aReturn)=0;
 
   NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, PRInt32 aXPos, PRInt32 aYPos, const nsString& aPopupType, const nsString& aAnchorAlignment, const nsString& aPopupAlignment, nsIDOMWindow** aReturn)=0;
 
-  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
+  NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
 
-  NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
+  NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
 };
 
 
@@ -210,9 +210,9 @@ public:
   NS_IMETHOD    GetPageYOffset(PRInt32* aPageYOffset);  \
   NS_IMETHOD    SetPageYOffset(PRInt32 aPageYOffset);  \
   NS_IMETHOD    Dump(const nsString& aStr);  \
-  NS_IMETHOD    Alert(JSContext *cx, jsval *argv, PRUint32 argc);  \
-  NS_IMETHOD    Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aReturn);  \
-  NS_IMETHOD    Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aReturn);  \
+  NS_IMETHOD    Alert(JSContext* cx, jsval* argv, PRUint32 argc);  \
+  NS_IMETHOD    Confirm(JSContext* cx, jsval* argv, PRUint32 argc, PRBool* aReturn);  \
+  NS_IMETHOD    Prompt(JSContext* cx, jsval* argv, PRUint32 argc, nsString& aReturn);  \
   NS_IMETHOD    Focus();  \
   NS_IMETHOD    Blur();  \
   NS_IMETHOD    Close();  \
@@ -229,11 +229,11 @@ public:
   NS_IMETHOD    ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif);  \
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);  \
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID);  \
-  NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
-  NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
+  NS_IMETHOD    SetTimeout(JSContext* cx, jsval* argv, PRUint32 argc, PRInt32* aReturn);  \
+  NS_IMETHOD    SetInterval(JSContext* cx, jsval* argv, PRUint32 argc, PRInt32* aReturn);  \
   NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, PRInt32 aXPos, PRInt32 aYPos, const nsString& aPopupType, const nsString& aAnchorAlignment, const nsString& aPopupAlignment, nsIDOMWindow** aReturn);  \
-  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
-  NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
+  NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
+  NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
 
 
 
@@ -281,9 +281,9 @@ public:
   NS_IMETHOD    GetPageYOffset(PRInt32* aPageYOffset) { return _to GetPageYOffset(aPageYOffset); } \
   NS_IMETHOD    SetPageYOffset(PRInt32 aPageYOffset) { return _to SetPageYOffset(aPageYOffset); } \
   NS_IMETHOD    Dump(const nsString& aStr) { return _to Dump(aStr); }  \
-  NS_IMETHOD    Alert(JSContext *cx, jsval *argv, PRUint32 argc) { return _to Alert(cx, argv, argc); }  \
-  NS_IMETHOD    Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aReturn) { return _to Confirm(cx, argv, argc, aReturn); }  \
-  NS_IMETHOD    Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aReturn) { return _to Prompt(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    Alert(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Alert(cx, argv, argc); }  \
+  NS_IMETHOD    Confirm(JSContext* cx, jsval* argv, PRUint32 argc, PRBool* aReturn) { return _to Confirm(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    Prompt(JSContext* cx, jsval* argv, PRUint32 argc, nsString& aReturn) { return _to Prompt(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    Focus() { return _to Focus(); }  \
   NS_IMETHOD    Blur() { return _to Blur(); }  \
   NS_IMETHOD    Close() { return _to Close(); }  \
@@ -300,11 +300,11 @@ public:
   NS_IMETHOD    ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif) { return _to ScrollBy(aXScrollDif, aYScrollDif); }  \
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID) { return _to ClearTimeout(aTimerID); }  \
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID) { return _to ClearInterval(aTimerID); }  \
-  NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to SetTimeout(cx, argv, argc, aReturn); }  \
-  NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to SetInterval(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    SetTimeout(JSContext* cx, jsval* argv, PRUint32 argc, PRInt32* aReturn) { return _to SetTimeout(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    SetInterval(JSContext* cx, jsval* argv, PRUint32 argc, PRInt32* aReturn) { return _to SetInterval(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, PRInt32 aXPos, PRInt32 aYPos, const nsString& aPopupType, const nsString& aAnchorAlignment, const nsString& aPopupAlignment, nsIDOMWindow** aReturn) { return _to CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType, aAnchorAlignment, aPopupAlignment, aReturn); }  \
-  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to Open(cx, argv, argc, aReturn); }  \
-  NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to OpenDialog(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to Open(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to OpenDialog(cx, argv, argc, aReturn); }  \
 
 
 extern nsresult NS_InitWindowClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);

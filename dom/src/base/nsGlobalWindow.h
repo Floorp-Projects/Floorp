@@ -327,6 +327,10 @@ public:
 
   NS_IMETHOD    JavaEnabled(PRBool* aReturn);
 
+  NS_IMETHOD    TaintEnabled(PRBool* aReturn);
+
+  NS_IMETHOD    Preference(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);
+
 protected:
   void *mScriptObject;
   nsIDOMMimeTypeArray* mMimeTypes;

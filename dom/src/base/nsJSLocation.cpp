@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMLocation.h"
@@ -69,14 +70,14 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case LOCATION_HASH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.hash", &ok);
         if (!ok) {
           //Need to throw error here
@@ -93,6 +94,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case LOCATION_HOST:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.host", &ok);
         if (!ok) {
           //Need to throw error here
@@ -109,6 +111,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case LOCATION_HOSTNAME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.hostname", &ok);
         if (!ok) {
           //Need to throw error here
@@ -125,6 +128,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case LOCATION_PATHNAME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.pathname", &ok);
         if (!ok) {
           //Need to throw error here
@@ -141,6 +145,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case LOCATION_PORT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.port", &ok);
         if (!ok) {
           //Need to throw error here
@@ -157,6 +162,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case LOCATION_PROTOCOL:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.protocol", &ok);
         if (!ok) {
           //Need to throw error here
@@ -173,6 +179,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case LOCATION_SEARCH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.search", &ok);
         if (!ok) {
           //Need to throw error here
@@ -190,7 +197,6 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -215,14 +221,14 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    PRBool ok = PR_FALSE;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
       case LOCATION_HASH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.hash", &ok);
         if (!ok) {
           //Need to throw error here
@@ -237,6 +243,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case LOCATION_HOST:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.host", &ok);
         if (!ok) {
           //Need to throw error here
@@ -251,6 +258,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case LOCATION_HOSTNAME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.hostname", &ok);
         if (!ok) {
           //Need to throw error here
@@ -265,6 +273,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case LOCATION_PATHNAME:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.pathname", &ok);
         if (!ok) {
           //Need to throw error here
@@ -279,6 +288,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case LOCATION_PORT:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.port", &ok);
         if (!ok) {
           //Need to throw error here
@@ -293,6 +303,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case LOCATION_PROTOCOL:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.protocol", &ok);
         if (!ok) {
           //Need to throw error here
@@ -307,6 +318,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case LOCATION_SEARCH:
       {
+        PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "location.search", &ok);
         if (!ok) {
           //Need to throw error here
@@ -322,7 +334,6 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -374,8 +385,8 @@ LocationToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -385,7 +396,6 @@ LocationToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -423,8 +433,8 @@ NSLocationReload(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -434,7 +444,6 @@ NSLocationReload(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -472,8 +481,8 @@ NSLocationReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
@@ -483,7 +492,6 @@ NSLocationReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore

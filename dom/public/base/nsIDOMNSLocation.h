@@ -34,21 +34,21 @@ class nsIDOMNSLocation : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSLOCATION_IID; return iid; }
 
-  NS_IMETHOD    Reload(JSContext *cx, jsval *argv, PRUint32 argc)=0;
+  NS_IMETHOD    Reload(JSContext* cx, jsval* argv, PRUint32 argc)=0;
 
-  NS_IMETHOD    Replace(JSContext *cx, jsval *argv, PRUint32 argc)=0;
+  NS_IMETHOD    Replace(JSContext* cx, jsval* argv, PRUint32 argc)=0;
 };
 
 
 #define NS_DECL_IDOMNSLOCATION   \
-  NS_IMETHOD    Reload(JSContext *cx, jsval *argv, PRUint32 argc);  \
-  NS_IMETHOD    Replace(JSContext *cx, jsval *argv, PRUint32 argc);  \
+  NS_IMETHOD    Reload(JSContext* cx, jsval* argv, PRUint32 argc);  \
+  NS_IMETHOD    Replace(JSContext* cx, jsval* argv, PRUint32 argc);  \
 
 
 
 #define NS_FORWARD_IDOMNSLOCATION(_to)  \
-  NS_IMETHOD    Reload(JSContext *cx, jsval *argv, PRUint32 argc) { return _to Reload(cx, argv, argc); }  \
-  NS_IMETHOD    Replace(JSContext *cx, jsval *argv, PRUint32 argc) { return _to Replace(cx, argv, argc); }  \
+  NS_IMETHOD    Reload(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Reload(cx, argv, argc); }  \
+  NS_IMETHOD    Replace(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Replace(cx, argv, argc); }  \
 
 
 #endif // nsIDOMNSLocation_h__
