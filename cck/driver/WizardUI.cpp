@@ -304,6 +304,28 @@ BOOL CWizardUI::SortList(WIDGET *curWidget)
 	return TRUE;
 }
 
+BOOL CWizardUI::SetDescription(WIDGET *w) 
+{
+	WIDGET *t = theApp.findWidget((char *) (LPCTSTR) w->target);
+	if (!t || (t->type != "Text" && t->type != "BoldText"))
+		return FALSE;
+
+	int selected = 0;
+	if (w->type == "ListBox")
+		selected = ((CListBox *)w->control)->GetCurSel();
+	else if (w->type == "CheckListBox")
+		selected = ((CCheckListBox *)w->control)->GetCurSel();
+	else if (w->type == "ComboBox")
+		selected = ((CComboBox *)w->control)->GetCurSel();
+	
+	if (selected == -1 || selected >= w->numOfOptDesc)
+		return FALSE;
+
+	((CEdit *)t->control)->SetWindowText(w->optDesc.value[selected]);
+
+	return TRUE;
+}
+
 BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam) 
 {
 	UINT nID = LOWORD(wParam);
@@ -319,6 +341,9 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 
 		if (curWidget->action.onCommand)
 			theInterpreter->interpret(curWidget->action.onCommand, curWidget);
+
+		if (curWidget->numOfOptDesc > 0)
+			SetDescription(curWidget);
 
 		break;
 	}
@@ -589,7 +614,6 @@ void CWizardUI::CreateControls()
 				CString ext = theInterpreter->replaceVars(curWidget->action.parameters,NULL);				
 				theApp.GenerateList(curWidget->action.onInit, curWidget, ext);
 			}
-			*/
 			if (!curWidget->action.onInit.IsEmpty())
 				theInterpreter->interpret(curWidget->action.onInit, curWidget);
 			else
@@ -613,6 +637,7 @@ void CWizardUI::CreateControls()
 				((CListBox*)curWidget->control)->SelectString(0, s);
 				s = strtok( NULL, "," );
 			}
+			*/
 			//GlobalFree(selectedItems);
 			EnableWidget(curWidget);
 		}
@@ -632,7 +657,6 @@ void CWizardUI::CreateControls()
 				CString ext = theInterpreter->replaceVars(curWidget->action.parameters, NULL);
 				theApp.GenerateList(curWidget->action.onInit, curWidget, ext);
 			}
-			*/
 			if (!curWidget->action.onInit.IsEmpty())
 				theInterpreter->interpret(curWidget->action.onInit, curWidget);
 			else
@@ -659,7 +683,10 @@ void CWizardUI::CreateControls()
 					((CCheckListBox*)curWidget->control)->SetCheck(i, 1);
 				s = strtok( NULL, "," );
 			}
+			if (curWidget->numOfOptDesc > 0)
+				SetDescription(curWidget);
 			//GlobalFree(selectedItems);
+			*/
 			EnableWidget(curWidget);
 		}
 		else if (widgetType == "ComboBox") {
@@ -673,7 +700,6 @@ void CWizardUI::CreateControls()
 				CString ext = theInterpreter->replaceVars(curWidget->action.parameters,NULL);				
 				theApp.GenerateList(curWidget->action.onInit, curWidget, ext);
 			}
-			*/
 			if (!curWidget->action.onInit.IsEmpty())
 				theInterpreter->interpret(curWidget->action.onInit, curWidget);
 			else
@@ -686,6 +712,7 @@ void CWizardUI::CreateControls()
 					}
 				}
 			}
+			*/
 			EnableWidget(curWidget);
 
 			//((CComboBox*)curWidget->control)->SelectString(0, selectedCustomization);
@@ -721,6 +748,91 @@ void CWizardUI::CreateControls()
 		else if (curWidget->control && curWidget->control->m_hWnd)
 		{
 			curWidget->control->SetFont(m_pFont);
+		}
+	}
+
+	// Handle initializations AFTER all controls created...
+	for (x = 0; x < m_pControlCount; x++) 
+	{
+		WIDGET* curWidget = CurrentNode->pageWidgets[x];
+		CString widgetType = curWidget->type;
+
+		if (widgetType == "ListBox") 
+		{
+			if (!curWidget->action.onInit.IsEmpty())
+				theInterpreter->interpret(curWidget->action.onInit, curWidget);
+			else
+			{
+				for (int i = 0; i < curWidget->numOfOptions; i++) 
+				{
+					if (curWidget->options.value[i])
+					{
+						((CListBox*)curWidget->control)->AddString(curWidget->options.value[i]);
+					}
+				}
+			}
+		
+			char* selectedItems;
+			selectedItems = (char *) GlobalAlloc(0, curWidget->value.GetLength()+1);
+			strcpy(selectedItems, (char *) (LPCTSTR) curWidget->value);
+
+			char *s = strtok(selectedItems, ",");
+			while (s) 
+			{
+				((CListBox*)curWidget->control)->SelectString(0, s);
+				s = strtok( NULL, "," );
+			}
+		}
+		else if (widgetType == "CheckListBox") 
+		{
+			if (!curWidget->action.onInit.IsEmpty())
+				theInterpreter->interpret(curWidget->action.onInit, curWidget);
+			else
+			{
+				for (int i = 0; i < curWidget->numOfOptions; i++) 
+				{
+					if (curWidget->options.value[i])
+					{
+						((CCheckListBox*)curWidget->control)->AddString(curWidget->options.value[i]);
+					}
+				}
+			}
+		
+			char* selectedItems;
+			selectedItems = (char *) GlobalAlloc(0, curWidget->value.GetLength()+1);
+			strcpy(selectedItems, (char *) (LPCTSTR) curWidget->value);
+
+			int i;
+			BOOL selected = FALSE;
+			char *s = strtok(selectedItems, ",");
+			while (s) 
+			{
+				if (!selected)
+				{
+					selected = TRUE;
+					((CCheckListBox*)curWidget->control)->SelectString(0, s);
+				}
+				i = ((CCheckListBox*)curWidget->control)->FindString(0, s);
+				if (i != -1)
+					((CCheckListBox*)curWidget->control)->SetCheck(i, 1);
+				s = strtok( NULL, "," );
+			}
+			if (curWidget->numOfOptDesc > 0)
+				SetDescription(curWidget);
+		}
+		else if (widgetType == "ComboBox") {
+			if (!curWidget->action.onInit.IsEmpty())
+				theInterpreter->interpret(curWidget->action.onInit, curWidget);
+			else
+			{
+				for (int i = 0; i < curWidget->numOfOptions; i++) 
+				{
+					if (curWidget->options.value[i])
+					{
+						((CComboBox*)curWidget->control)->AddString(curWidget->options.value[i]);
+					}
+				}
+			}
 		}
 	}
 }

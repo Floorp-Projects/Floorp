@@ -58,6 +58,8 @@ typedef struct WIDGET
 	ACTIONSET action;
 	int numOfOptions;
 	OPTIONS options;
+	int numOfOptDesc;
+	OPTIONS optDesc;
 	CString items;
 	BOOL cached;
 	UINT widgetID;

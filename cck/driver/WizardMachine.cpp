@@ -1370,46 +1370,72 @@ void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString
 	// As the number of entries in the subsection are not known, a generic loop
 	// has been created to read all existing name/value pairs in the subsection
 	// and store them in the options component of the control.
+	int counter = 0;
 	GetPrivateProfileString(iniSection, "subsection", "", buffer, MAX_SIZE, iniFile);
 	if (strcmp(buffer, "") != 0) {
 		char* subSection;
 		subSection = new char[sizeof(buffer)];
 		strcpy(subSection, buffer);
 
-		/*  Don't tie options to functions...
-		if (aWidget->action.function == "")
+		int i = 0;
+		char* ComponentKey;
+		char ComponentKeyBuffer[MAX_SIZE];
+		if (GetPrivateProfileString(subSection, NULL, "", buffer, MAX_SIZE, iniFile) > 0)
 		{
-		*/
-			int counter = 0;
-			int i = 0;
-			char* ComponentKey;
-			char ComponentKeyBuffer[MAX_SIZE];
-			if (GetPrivateProfileString(subSection, NULL, "", buffer, MAX_SIZE, iniFile) > 0)
+			while (counter < 25 && buffer[i] != 0)
 			{
-				while (buffer[i] != 0)
+				ComponentKey = &buffer[i];
+				if (GetPrivateProfileString(subSection, ComponentKey, "", ComponentKeyBuffer, MAX_SIZE, iniFile) > 0)
 				{
-					ComponentKey = &buffer[i];
-					if (GetPrivateProfileString(subSection, ComponentKey, "", ComponentKeyBuffer, MAX_SIZE, iniFile) > 0)
-					{
-						aWidget->options.name[counter] = new char[sizeof(ComponentKey)];
-						strcpy(aWidget->options.name[counter],ComponentKey);
-						aWidget->options.value[counter] = new char[sizeof(ComponentKeyBuffer)];
-						strcpy(aWidget->options.value[counter],ComponentKeyBuffer);	
-						counter++;
-					}
-					while (buffer[i] != 0)
-						i++;
-					i++;
+					aWidget->options.name[counter] = new char[sizeof(ComponentKey)];
+					strcpy(aWidget->options.name[counter],ComponentKey);
+					aWidget->options.value[counter] = new char[sizeof(ComponentKeyBuffer)];
+					strcpy(aWidget->options.value[counter],ComponentKeyBuffer);	
+					counter++;
 				}
+				while (buffer[i] != 0)
+					i++;
+				i++;
 			}
-			aWidget->numOfOptions = counter;
-		/*
-		}	
-		else {
-			aWidget->numOfOptions = 0;
 		}
-		*/
+		delete subSection;
 	}
+	aWidget->numOfOptions = counter;
+
+	// As the number of entries in the subsection are not known, a generic loop
+	// has been created to read all existing name/value pairs in the subsection
+	// and store them in the options component of the control.
+	counter = 0;
+	GetPrivateProfileString(iniSection, "OptionDescriptions", "", buffer, MAX_SIZE, iniFile);
+	if (strcmp(buffer, "") != 0) {
+		char* subSection;
+		subSection = new char[sizeof(buffer)];
+		strcpy(subSection, buffer);
+
+		int i = 0;
+		char* ComponentKey;
+		char ComponentKeyBuffer[MAX_SIZE];
+		if (GetPrivateProfileString(subSection, NULL, "", buffer, MAX_SIZE, iniFile) > 0)
+		{
+			while (counter < 25 && buffer[i] != 0)
+			{
+				ComponentKey = &buffer[i];
+				if (GetPrivateProfileString(subSection, ComponentKey, "", ComponentKeyBuffer, MAX_SIZE, iniFile) > 0)
+				{
+					aWidget->optDesc.name[counter] = new char[sizeof(ComponentKey)];
+					strcpy(aWidget->optDesc.name[counter],ComponentKey);
+					aWidget->optDesc.value[counter] = new char[sizeof(ComponentKeyBuffer)];
+					strcpy(aWidget->optDesc.value[counter],ComponentKeyBuffer);	
+					counter++;
+				}
+				while (buffer[i] != 0)
+					i++;
+				i++;
+			}
+		}
+		delete subSection;
+	}
+	aWidget->numOfOptDesc = counter;
 }
 
 /*
@@ -1589,11 +1615,17 @@ void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CStri
 		if (curWidget->value && curWidget->value != "")
 		{
 			char indices[MAX_SIZE];
+			int i;
 
 			strcpy(indices, curWidget->value); 
 			char *s = strtok(indices, ",");
 			for (; s; s=strtok(NULL, ","))
-				((CCheckListBox*)curWidget->control)->SelectString(0, s);
+			{
+				i = ((CCheckListBox*)curWidget->control)->FindString(0, s);
+				if (i != -1)
+					((CCheckListBox*)curWidget->control)->SetCheck(i, 1);
+			}
+			((CCheckListBox*)curWidget->control)->SetCurSel(0);
 		}
 		else
 			((CCheckListBox*)curWidget->control)->SetCurSel(0);

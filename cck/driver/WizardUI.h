@@ -75,6 +75,7 @@ public:
 	int m_pControlID;
 	BOOL containsImage;
 
+	BOOL SetDescription(WIDGET *w);
 	void SortWidgetsForTabOrder();
 	void EnableWidget(WIDGET *curWidget);
 	void CreateControls();
