@@ -13,8 +13,8 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
-	nsVectorIterator.h \
-	nsVector.h \
+	nsArrayIterator.h \
+	nsArray.h \
 	nsStack.h \
 	nsxpfcutil.h \
     nsUrlParser.h \

@@ -11,7 +11,7 @@ GDEPTH = ../../..
 DEPTH = ../../..
 
 EXPORTS = \
-	nsIVector.h \
+	nsIArray.h \
 	nsIIterator.h \
     nsIStack.h \
 	$(NULL)

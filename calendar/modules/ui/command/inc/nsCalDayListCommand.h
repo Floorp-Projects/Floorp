@@ -21,7 +21,7 @@
 
 #include "nsXPFCCommand.h"
 #include "nsCalUtilCIID.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 #include "nsIDateTime.h"
 
@@ -37,13 +37,13 @@ public:
   NS_IMETHOD CreateIterator(nsIIterator ** aIterator) ;
 
   NS_IMETHOD AddDateTime(nsIDateTime * aDateTime);
-  NS_IMETHOD AddDateVector(nsIVector * aDateVector);
+  NS_IMETHOD AddDateVector(nsIArray * aDateVector);
 
 protected:
   ~nsCalDayListCommand();
 
 private:
-  nsIVector *     mDateTimes ;
+  nsIArray *     mDateTimes ;
 
 
 };

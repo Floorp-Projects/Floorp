@@ -62,7 +62,7 @@ NS_IMPL_RELEASE(nsXPFCToolbarManager)
 
 nsresult nsXPFCToolbarManager :: Init()
 {
-  static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+  static NS_DEFINE_IID(kCVectorCID, NS_ARRAY_CID);
   nsresult res = nsRepository::CreateInstance(kCVectorCID, 
                                      nsnull, 
                                      kCVectorCID, 

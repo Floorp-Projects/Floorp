@@ -26,7 +26,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsCalendarContainer.h"
 #include "nsCalUtilCIID.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 #include "nsIStack.h"
 #include "nsIXMLParserObject.h"
@@ -87,10 +87,10 @@ private:
 
 private:
     nsCalendarContainer * mCalendarContainer;
-    nsIVector * mTimeContextList;
+    nsIArray * mTimeContextList;
     nsIStack *  mCanvasStack;
-    nsIVector * mOrphanCanvasList;
-    nsIVector * mControlList ;
+    nsIArray * mOrphanCanvasList;
+    nsIArray * mControlList ;
 
 
 };

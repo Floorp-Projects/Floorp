@@ -975,8 +975,8 @@ nsresult nsCalendarShell::RegisterFactories()
   nsRepository::RegisterFactory(kCCalTimeContextCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCalContextControllerCID, CALUI_DLL, PR_FALSE, PR_FALSE);
 
-  static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
-  static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
+  static NS_DEFINE_IID(kCVectorCID, NS_ARRAY_CID);
+  static NS_DEFINE_IID(kCVectorIteratorCID, NS_ARRAY_ITERATOR_CID);
 
   nsRepository::RegisterFactory(kCVectorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCVectorIteratorCID, XPFC_DLL, PR_FALSE, PR_FALSE);

@@ -20,7 +20,7 @@
 #define nsXPFCToolbarManager_h___
 
 #include "nsIXPFCToolbarManager.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 
 class nsXPFCToolbarManager : public nsIXPFCToolbarManager
@@ -38,7 +38,7 @@ protected:
   ~nsXPFCToolbarManager();
 
 private:
-  nsIVector * mToolbars;
+  nsIArray * mToolbars;
 
 };
 

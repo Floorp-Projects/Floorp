@@ -25,7 +25,7 @@
 #include "prmon.h"
 #include "plstr.h"
 #include "nsCom.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 
 #include "nsIXPFCObserverManager.h"
@@ -57,8 +57,8 @@ public:
   PRMonitor * monitor;
 
 private:
-  nsIVector * mList ;
-  nsIVector * mState ;
+  nsIArray * mList ;
+  nsIArray * mState ;
   PRUint32 mNotificationCount;
   nsIXPFCSubject * mOriginalNotifier;
 

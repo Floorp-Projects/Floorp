@@ -125,9 +125,9 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
   } else if (mClassID.Equals(kCXPFCContentSink)) {
     inst = (nsISupports *)(nsIXPFCXMLContentSink*)new nsXPFCXMLContentSink();
   } else if (mClassID.Equals(kCVector)) {
-    inst = (nsISupports *)new nsVector();
+    inst = (nsISupports *)new nsArray();
   } else if (mClassID.Equals(kCVectorIterator)) {
-    inst = (nsISupports *)new nsVectorIterator();
+    inst = (nsISupports *)new nsArrayIterator();
   } else if (mClassID.Equals(kCStack)) {
     inst = (nsISupports *)new nsStack();
   } else if (mClassID.Equals(kCLayout)) {

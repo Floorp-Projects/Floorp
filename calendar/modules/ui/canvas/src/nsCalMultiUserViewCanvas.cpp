@@ -21,7 +21,7 @@
 #include "nsCalTimebarTimeHeading.h"
 #include "nsBoxLayout.h"
 #include "nsCalUICIID.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 #include "nsCalToolkit.h"
 #include "nsCalNewModelCommand.h"

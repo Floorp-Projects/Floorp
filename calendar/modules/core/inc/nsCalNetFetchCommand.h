@@ -22,13 +22,13 @@
 #include "nscalexport.h"
 #include "nsCalNetFetchVals.h"
 #include "nsICalNetFetchCommand.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 
 
 class NS_CALENDAR nsCalNetFetchCommand 
 {
 
-  nsIVector * mpLayerList ;		// all the layers that need the events from this range
+  nsIArray * mpLayerList ;		// all the layers that need the events from this range
 
 public:
   nsCalNetFetchCommand(nsISupports* outer);

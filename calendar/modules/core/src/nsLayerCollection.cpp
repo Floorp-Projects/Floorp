@@ -89,7 +89,7 @@ nsLayerCollection::~nsLayerCollection()
 
 nsresult nsLayerCollection::Init()
 {
-  static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+  static NS_DEFINE_IID(kCVectorCID, NS_ARRAY_CID);
 
   nsresult res = nsRepository::CreateInstance(kCVectorCID, 
                                               nsnull, 
@@ -306,7 +306,7 @@ nsresult nsLayerCollection::FetchEventsByRange(
 {
   PRLock *pLock;
   PRCondVar *pSomeThreadsCompleted;
-  NSVector PendingThreadCompletions;
+  nsArray PendingThreadCompletions;
   PRInt32 i;
   PRInt32 iTmpSize;
   PRInt32 iFinishedThreadCount = 0;

@@ -16,48 +16,48 @@
  * Reserved.
  */
 
-#include "nsVector.h"
-#include "nsVectorIterator.h"
+#include "nsArray.h"
+#include "nsArrayIterator.h"
 #include "nsxpfcCIID.h"
 #include "nsxpfcutil.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+static NS_DEFINE_IID(kCVectorCID, NS_ARRAY_CID);
 
-nsVector :: nsVector()
+nsArray :: nsArray()
 {
   NS_INIT_REFCNT();
 
   mVoidArray = nsnull ;
 }
 
-nsVector :: ~nsVector()
+nsArray :: ~nsArray()
 {
   DeleteIfObject(mVoidArray) ;
 }
 
-NS_IMPL_QUERY_INTERFACE(nsVector, kCVectorCID)
-NS_IMPL_ADDREF(nsVector)
-NS_IMPL_RELEASE(nsVector)
+NS_IMPL_QUERY_INTERFACE(nsArray, kCVectorCID)
+NS_IMPL_ADDREF(nsArray)
+NS_IMPL_RELEASE(nsArray)
 
-nsresult nsVector :: Init()
+nsresult nsArray :: Init()
 {
   mVoidArray = NewObject(nsVoidArray) ;
 
   return NS_OK ;
 }
 
-PRUint32 nsVector :: Count()
+PRUint32 nsArray :: Count()
 {
   return mVoidArray->Count() ;
 }
 
-PRBool nsVector :: Empty()
+PRBool nsArray :: Empty()
 {
   return (Count() ? PR_TRUE : PR_FALSE) ;
 }
 
-PRBool nsVector :: Contains(nsComponent aComponent)
+PRBool nsArray :: Contains(nsComponent aComponent)
 {
   if (IndexOf(aComponent))
     return PR_TRUE ;
@@ -65,12 +65,12 @@ PRBool nsVector :: Contains(nsComponent aComponent)
     return PR_FALSE ;
 }
 
-PRUint32 nsVector :: IndexOf(nsComponent aComponent)
+PRUint32 nsArray :: IndexOf(nsComponent aComponent)
 {
   return (mVoidArray->IndexOf(aComponent)) ;
 }
 
-nsComponent nsVector :: ElementAt(PRUint32 aIndex)
+nsComponent nsArray :: ElementAt(PRUint32 aIndex)
 {
   return (mVoidArray->ElementAt(aIndex)) ; ;
 }
@@ -84,7 +84,7 @@ nsComponent nsVector :: ElementAt(PRUint32 aIndex)
  *             0 means the element was inserted, no problems
  *             1 means the element was not inserted because of an internal error
  */
-PRInt32 nsVector::InsertBinary(nsComponent newElement, nsVectorCompareProc aCompareFn, PRBool bAllowDups)
+PRInt32 nsArray::InsertBinary(nsComponent newElement, nsArrayCompareProc aCompareFn, PRBool bAllowDups)
 {
 	PRInt32 iCurrent = 0;
 	PRInt32 iLeft = 0;
@@ -116,7 +116,7 @@ PRInt32 nsVector::InsertBinary(nsComponent newElement, nsVectorCompareProc aComp
     return 1;
 }
 
-nsresult nsVector :: Insert(PRUint32 aIndex, nsComponent aComponent)
+nsresult nsArray :: Insert(PRUint32 aIndex, nsComponent aComponent)
 {
   nsresult res = NS_OK;
 
@@ -127,7 +127,7 @@ nsresult nsVector :: Insert(PRUint32 aIndex, nsComponent aComponent)
   return res ;
 }
 
-nsresult nsVector :: Append(nsComponent aComponent)
+nsresult nsArray :: Append(nsComponent aComponent)
 {
   nsresult res = NS_OK;
 
@@ -138,7 +138,7 @@ nsresult nsVector :: Append(nsComponent aComponent)
   return res ;
 }
 
-nsresult nsVector :: Remove(nsComponent aComponent)
+nsresult nsArray :: Remove(nsComponent aComponent)
 {
   if (PR_TRUE == mVoidArray->RemoveElement(aComponent))
     return NS_OK ;
@@ -146,14 +146,14 @@ nsresult nsVector :: Remove(nsComponent aComponent)
   return NS_ERROR_FAILURE ;
 }
 
-nsresult nsVector :: RemoveAll()
+nsresult nsArray :: RemoveAll()
 {
   mVoidArray->Clear();
 
   return NS_OK ;
 }
 
-nsresult nsVector :: RemoveAt(PRUint32 aIndex)
+nsresult nsArray :: RemoveAt(PRUint32 aIndex)
 {
   nsresult res = NS_OK;
 
@@ -164,9 +164,9 @@ nsresult nsVector :: RemoveAt(PRUint32 aIndex)
   return res ;
 }
 
-nsresult nsVector :: CreateIterator(nsIIterator ** aIterator)
+nsresult nsArray :: CreateIterator(nsIIterator ** aIterator)
 {
-  static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
+  static NS_DEFINE_IID(kCVectorIteratorCID, NS_ARRAY_ITERATOR_CID);
 
   nsresult res ;
 
@@ -178,7 +178,7 @@ nsresult nsVector :: CreateIterator(nsIIterator ** aIterator)
 
   nsRepository::RegisterFactory(kCVectorIteratorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
 
-  nsVectorIterator * aVectorIterator ;
+  nsArrayIterator * aVectorIterator ;
 
   *aIterator = nsnull;
 

@@ -22,7 +22,7 @@
 #include "nscalexport.h"
 #include "nsILayer.h"
 #include "nsILayerCollection.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 
 
 class NS_CALENDAR nsLayerCollection : public nsILayerCollection,
@@ -62,7 +62,7 @@ public:
 
   NS_IMETHOD StoreEvent(VEvent& addEvent);
 private:
-  nsIVector * mLayers ;
+  nsIArray * mLayers ;
   nsCalendarShell * mpShell;
 
 };

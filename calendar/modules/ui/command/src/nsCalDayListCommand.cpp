@@ -20,15 +20,15 @@
 #include "nsCalDayListCommand.h"
 #include "nsCalUICIID.h"
 #include "nsCalUtilCIID.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 #include "nsIIterator.h"
 #include "nsxpfcCIID.h"
 
 static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
 
-static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
-static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
+static NS_DEFINE_IID(kCVectorCID, NS_ARRAY_CID);
+static NS_DEFINE_IID(kCVectorIteratorCID, NS_ARRAY_ITERATOR_CID);
 
 nsCalDayListCommand :: nsCalDayListCommand()
 {
@@ -108,7 +108,7 @@ nsresult nsCalDayListCommand :: AddDateTime(nsIDateTime * aDateTime)
   return NS_OK;
 }
 
-nsresult nsCalDayListCommand :: AddDateVector(nsIVector * aDateVector)
+nsresult nsCalDayListCommand :: AddDateVector(nsIArray * aDateVector)
 {
   NS_IF_RELEASE(mDateTimes);
 

@@ -154,7 +154,7 @@ nsresult nsCalMonthContextController :: Init()
 
   if (nsnull == m_ActionDateList)
   {
-    static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+    static NS_DEFINE_IID(kCVectorCID, NS_ARRAY_CID);
 
     nsresult res = nsRepository::CreateInstance(kCVectorCID, 
                                                 nsnull, 
@@ -1253,7 +1253,7 @@ nsresult nsCalMonthContextController::AddToActionList(DateTime d)
         nsdatetime->Init();
         DateTime * dstar = new DateTime(d.getTime());
         nsdatetime->SetDateTime(dstar);
-        if ( -1 == m_ActionDateList->InsertBinary(nsdatetime,(nsVectorCompareProc)nsDateTime_SortAscending, PR_FALSE /* do not allow dups */))
+        if ( -1 == m_ActionDateList->InsertBinary(nsdatetime,(nsArrayCompareProc)nsDateTime_SortAscending, PR_FALSE /* do not allow dups */))
         {
             NS_IF_RELEASE(nsdatetime);
         }

@@ -273,7 +273,7 @@ protected:
     nsresult    AddToActionList(DateTime d);
     void        CommitArrow(int iDayVal, int iMonthVal);
     void        CommitDateList();
-    nsIVector * m_ActionDateList;  // Interactive DateList as we move the mouse
+    nsIArray * m_ActionDateList;  // Interactive DateList as we move the mouse
 
 };
 

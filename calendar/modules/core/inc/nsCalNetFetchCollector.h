@@ -22,13 +22,13 @@
 #include "nscalexport.h"
 #include "nsCalNetFetchVals.h"
 #include "nsICalNetFetchCollector.h"
-#include "nsIVector.h"
+#include "nsIArray.h"
 
 
 class NS_CALENDAR nsCalNetFetchCollector : public nsICalNetFetchCollector 
 {
 
-  nsIVector * mpFetchList ;
+  nsIArray * mpFetchList ;
 
 public:
   nsCalNetFetchCollector(nsISupports* outer);

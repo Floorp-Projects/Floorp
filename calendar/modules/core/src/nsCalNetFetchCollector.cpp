@@ -47,7 +47,7 @@ nsCalNetFetchCollector::~nsCalNetFetchCollector()
 
 nsresult nsCalNetFetchCollector::Init()
 {
-  static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+  static NS_DEFINE_IID(kCVectorCID, NS_ARRAY_CID);
 
   nsresult res = nsRepository::CreateInstance(kCVectorCID, nsnull, kCVectorCID, (void **)&mpFetchList);
   if (NS_OK != res)

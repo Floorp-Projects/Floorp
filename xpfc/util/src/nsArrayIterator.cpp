@@ -19,65 +19,65 @@
 #include "nscore.h"
 #include "nsIIterator.h"
 #include "nsxpfcCIID.h"
-#include "nsIVector.h"
-#include "nsVectorIterator.h"
+#include "nsIArray.h"
+#include "nsArrayIterator.h"
 #include "nsxpfcutil.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
+static NS_DEFINE_IID(kCVectorIteratorCID, NS_ARRAY_ITERATOR_CID);
 
-nsVectorIterator :: nsVectorIterator()
+nsArrayIterator :: nsArrayIterator()
 {
   NS_INIT_REFCNT();
   mCurrentElement = 0 ;
 }
 
-nsVectorIterator :: ~nsVectorIterator()
+nsArrayIterator :: ~nsArrayIterator()
 {
 }
 
-NS_IMPL_QUERY_INTERFACE(nsVectorIterator, kCVectorIteratorCID)
-NS_IMPL_ADDREF(nsVectorIterator)
-NS_IMPL_RELEASE(nsVectorIterator)
+NS_IMPL_QUERY_INTERFACE(nsArrayIterator, kCVectorIteratorCID)
+NS_IMPL_ADDREF(nsArrayIterator)
+NS_IMPL_RELEASE(nsArrayIterator)
 
-nsresult nsVectorIterator :: Init()
+nsresult nsArrayIterator :: Init()
 {
   mCurrentElement = 0 ;
   return NS_OK ;
 }
 
-nsresult nsVectorIterator :: Init(nsIVector * aVector)
+nsresult nsArrayIterator :: Init(nsIArray * aVector)
 {
   mVector = aVector;
   mCurrentElement = 0 ;
   return NS_OK ;
 }
 
-nsresult nsVectorIterator :: First()
+nsresult nsArrayIterator :: First()
 {
   mCurrentElement = 0 ;
   return NS_OK ;
 }
 
-nsresult nsVectorIterator :: Last()
+nsresult nsArrayIterator :: Last()
 {
   mCurrentElement = Count() - 1 ;
   return NS_OK ;
 }
 
-nsresult nsVectorIterator :: Next()
+nsresult nsArrayIterator :: Next()
 {
   mCurrentElement++;
   return NS_OK ;
 }
 
-nsresult nsVectorIterator :: Previous()
+nsresult nsArrayIterator :: Previous()
 {
   mCurrentElement--;
   return NS_OK ;
 }
 
-PRBool nsVectorIterator :: IsDone()
+PRBool nsArrayIterator :: IsDone()
 {
   if (mVector == nsnull)
     return PR_TRUE;
@@ -88,7 +88,7 @@ PRBool nsVectorIterator :: IsDone()
   return PR_FALSE ;
 }
 
-PRBool nsVectorIterator :: IsFirst()
+PRBool nsArrayIterator :: IsFirst()
 {
   if (mVector == nsnull)
     return PR_TRUE;
@@ -99,7 +99,7 @@ PRBool nsVectorIterator :: IsFirst()
   return PR_FALSE ;
 }
 
-nsComponent nsVectorIterator :: CurrentItem()
+nsComponent nsArrayIterator :: CurrentItem()
 {
   if (IsDone())
     return nsnull ;
@@ -107,7 +107,7 @@ nsComponent nsVectorIterator :: CurrentItem()
   return (mVector->ElementAt(mCurrentElement));     
 }
 
-PRUint32 nsVectorIterator :: Count()
+PRUint32 nsArrayIterator :: Count()
 {
   return (mVector->Count());     
 }
