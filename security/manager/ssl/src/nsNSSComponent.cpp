@@ -1151,6 +1151,10 @@ getPSMContentType(const char * aContentType)
     return PSMContentDownloader::X509_EMAIL_CERT;
   else if (!nsCRT::strcasecmp(aContentType, "application/x-pkcs7-crl"))
     return PSMContentDownloader::PKCS7_CRL;
+  else if (!nsCRT::strcasecmp(aContentType, "application/x-x509-crl"))
+    return PSMContentDownloader::PKCS7_CRL;
+  else if (!nsCRT::strcasecmp(aContentType, "application/pkix-crl"))
+    return PSMContentDownloader::PKCS7_CRL;
   return PSMContentDownloader::UNKNOWN_TYPE;
 }
 
