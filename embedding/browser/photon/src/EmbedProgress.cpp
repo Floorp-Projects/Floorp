@@ -86,8 +86,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 	nsString tmpString;
 	tmpString.AssignWithConversion(uriString);
 
-#if 0
-	if( ( aStateFlags & STATE_IS_NETWORK ) && NS_FAILED( aStatus ) ) 
+	if( ( aStateFlags & STATE_IS_REQUEST ) && NS_FAILED( aStatus ) ) 
 	{
 		PtWebErrorCallback_t cbw;
 
@@ -98,7 +97,8 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 		cbinfo.cbdata = &cbw;
 
 		memset( &cbw, 0, sizeof( PtWebErrorCallback_t ) );
-		strcpy(cbw.url, (const char *)uriString);
+		cbw.url = (char*)((const char *)uriString);
+		cbw.description = "";
 
 		cbw.type = Pt_WEB_ERROR_TOPVIEW;
 		switch( aStatus ) 
@@ -126,7 +126,6 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 			PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo);
 		/* let it check for STATE_STOP */
 	}
-#endif
 
 	memset(&cbinfo, 0, sizeof(cbinfo));
 
