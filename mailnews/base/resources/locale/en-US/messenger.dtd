@@ -243,6 +243,7 @@ Rights Reserved.
 <!ENTITY findCmd.label "Find in This Message...">
 <!ENTITY findCmd.accesskey "F">
 <!ENTITY findCmd.key "f">
+<!ENTITY findCmd.key2 "VK_F19">
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.key "g">

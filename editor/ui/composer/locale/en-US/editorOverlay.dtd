@@ -112,6 +112,7 @@
 <!ENTITY findCmd.label "Find and Replace...">
 <!ENTITY editfind.accesskey "f">
 <!ENTITY editfind.keybinding "f">
+<!ENTITY editfind.keybinding2 "VK_F19">
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY editfindnext.accesskey "g">
 <!ENTITY editfindnext.keybinding "g">

@@ -153,6 +153,7 @@ struct nsKeyConverter nsKeycodes[] = {
 // map Sun Keyboard special keysyms on to NS_VK keys
 struct nsKeyConverter nsSunKeycodes[] = {
     {NS_VK_ESCAPE, GDK_F11 }, //bug 57262, Sun Stop key generates F11 keysym
+    {NS_VK_F1, GDK_Help }, //Mapping Help key to F1
     {NS_VK_F11, 0x1005ff10 }, //Sun F11 key generates SunF36(0x1005ff10) keysym
     {NS_VK_F12, 0x1005ff11 }, //Sun F12 key generates SunF37(0x1005ff11) keysym
     {NS_VK_PAGE_UP,    GDK_F29 }, //KP_Prior

@@ -121,6 +121,7 @@
 <!ENTITY findPrevCmd.commandkey "g">
 <!ENTITY findAgainCmd.commandkey2 "VK_F3">
 <!ENTITY findPrevCmd.commandkey2 "VK_F3">
+<!ENTITY findOnCmd.commandkey2 "VK_F19">
 
 <!ENTITY searchInternetCmd.label "Search the Web">
 <!ENTITY searchInternetCmd.accesskey "S">
