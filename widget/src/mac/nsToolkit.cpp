@@ -36,12 +36,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsToolkit.h"
-#include "nsWindow.h"
+#include "nsIWidget.h"
 #include "nsGUIEvent.h"
 #include "nsWidgetAtoms.h"
 
 #include <Gestalt.h>
 #include <Appearance.h>
+
+#include "nsIEventSink.h"
 
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
@@ -262,6 +264,45 @@ bool
 nsToolkit :: IsAppInForeground ( )
 {
   return sInForeground;
+}
+
+
+//
+// GetTopWidget
+//
+// We've stashed the nsIWidget for the given windowPtr in the data 
+// properties of the window. Fetch it.
+//
+void
+nsToolkit::GetTopWidget ( WindowPtr aWindow, nsIWidget** outWidget )
+{
+  nsIWidget* topLevelWidget = nsnull;
+	::GetWindowProperty ( aWindow, 'MOSS', 'GEKO', sizeof(nsIWidget*), nsnull, (void*)&topLevelWidget);
+  if ( topLevelWidget ) {
+    *outWidget = topLevelWidget;
+    NS_ADDREF(*outWidget);
+  }
+}
+
+
+//
+// GetWindowEventSink
+//
+// We've stashed the nsIEventSink for the given windowPtr in the data 
+// properties of the window. Fetch it.
+//
+void
+nsToolkit::GetWindowEventSink ( WindowPtr aWindow, nsIEventSink** outSink )
+{
+  *outSink = nsnull;
+  
+  nsCOMPtr<nsIWidget> topWidget;
+  GetTopWidget ( aWindow, getter_AddRefs(topWidget) );
+  nsCOMPtr<nsIEventSink> sink ( do_QueryInterface(topWidget) );
+  if ( sink ) {
+    *outSink = sink;
+    NS_ADDREF(*outSink);
+  }
 }
 
 

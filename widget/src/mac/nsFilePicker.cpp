@@ -32,6 +32,8 @@
 #include "nsIURL.h"
 #include "nsVoidArray.h"
 #include "nsIFileChannel.h"
+#include "nsToolkit.h"
+#include "nsIEventSink.h"
 
 #include <InternetConfig.h>
 
@@ -39,8 +41,6 @@
 #include "nsCarbonHelpers.h"
 
 #include "nsFilePicker.h"
-#include "nsMacWindow.h"
-#include "nsMacMessageSink.h"
 #include "nsWatchTask.h"
 
 #include "nsIInternetConfigService.h"
@@ -169,6 +169,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 }
 
 
+
 //
 // FileDialogEventHandlerProc
 //
@@ -181,13 +182,14 @@ static pascal void FileDialogEventHandlerProc( NavEventCallbackMessage msg, NavC
 		switch ( cbRec->eventData.eventDataParms.event->what ) {
 		case updateEvt:
       WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
-      nsMacWindow* macWindow = nsMacMessageSink::GetNSWindowFromMacWindow(window);
-      ::BeginUpdate(window);
-      if (macWindow) {
-        EventRecord   theEvent = *cbRec->eventData.eventDataParms.event;
-        macWindow->HandleOSEvent(theEvent);
+      nsCOMPtr<nsIEventSink> sink;
+      nsToolkit::GetWindowEventSink ( window, getter_AddRefs(sink) );
+      if ( sink ) {
+        ::BeginUpdate(window);
+        PRBool handled = PR_FALSE;
+        sink->DispatchEvent(cbRec->eventData.eventDataParms.event, &handled);
+        ::EndUpdate(window);	        
       }        
-      ::EndUpdate(window);	        
 			break;
 		}
 		break;

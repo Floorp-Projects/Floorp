@@ -33,6 +33,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIWidget.h"
+#include "nsIEventSink.h"
 #include "nsMacMessageSink.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebProgress.h"
@@ -162,11 +163,10 @@ protected:
    
    Boolean                  HasFormElements();
 	
-protected:
-   static nsMacMessageSink mMessageSink;
-   
+protected:   
    LStr255                 mInitURL;
       
+   nsCOMPtr<nsIEventSink>        mEventSink;             // for event dispatch
    nsCOMPtr<nsIWebBrowser>       mWebBrowser;            // The thing we actually create
    nsCOMPtr<nsIBaseWindow>       mWebBrowserAsBaseWin;   // Convenience interface to above 
    nsCOMPtr<nsIWebNavigation>    mWebBrowserAsWebNav;    // Ditto

@@ -26,7 +26,9 @@
 #include "LAttachment.h"
 #include "LPeriodical.h"
 
-#include "nsMacMessageSink.h"
+class nsIWidget;
+class nsIEventSink;
+
 
 //*****************************************************************************
 // class CEmbedEventAttachment
@@ -51,7 +53,11 @@ public:
 protected:
     Boolean                     IsAlienGeckoWindow(WindowPtr inMacWindow);
   
-    static nsMacMessageSink     mMessageSink;
+    // utility routines for getting the toplevel widget and event sink
+    // stashed in the properties of gecko windows.
+    static void GetWindowEventSink ( WindowPtr aWindow, nsIEventSink** outSink ) ;
+    static void GetTopWidget ( WindowPtr aWindow, nsIWidget** outWidget ) ;
+
     static WindowPtr            mLastAlienWindowClicked;
 };
 

@@ -51,7 +51,6 @@
 //
 
 #include "nsMacMessagePump.h"
-#include "nsMacMessageSink.h"
 #include "nsWidgetsCID.h"
 #include "nsToolkit.h"
 #include "nscore.h"
@@ -79,6 +78,9 @@
 #include "nsCarbonHelpers.h"
 #include "nsWatchTask.h"
 
+#include "nsIEventSink.h"
+#include "nsPIWidgetMac.h"
+#include "nsPIEventSinkStandalone.h"
 
 #include "nsISocketTransportService.h"
 #include "nsIFileTransportService.h"
@@ -195,8 +197,8 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
  *	@param	 aToolkit -- The toolkit created by the application
  *	@return	 NONE
  */
-nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit, nsMacMessageSink* aSink)
-	: mToolkit(aToolkit), mMessageSink(aSink), mTSMMessagePump(NULL)
+nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit)
+	: mToolkit(aToolkit), mTSMMessagePump(NULL)
 {
 	mRunning = PR_FALSE;
 	mMouseRgn = ::NewRgn();
@@ -560,9 +562,11 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				if ( IsWindowHilited(whichWindow) || (gRollupListener && gRollupWidget) )
 					DispatchOSEventToRaptor(anEvent, whichWindow);
 				else {
-					nsMacWindow *mw = mMessageSink->GetNSWindowFromMacWindow(whichWindow);
-					if (mw)
-						mw->ComeToFront();
+				  nsCOMPtr<nsIWidget> topWidget;
+				  nsToolkit::GetTopWidget ( whichWindow, getter_AddRefs(topWidget) );
+				  nsCOMPtr<nsPIWidgetMac> macWindow ( do_QueryInterface(topWidget) );
+				  if ( macWindow )
+				    macWindow->ComeToFront();
 				}
 				break;
 			}
@@ -589,9 +593,11 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         // only activate if the command key is not down
         if (!(anEvent.modifiers & cmdKey))
         {
-          nsMacWindow *mw = mMessageSink->GetNSWindowFromMacWindow(whichWindow);
-          if (mw)
-            mw->ComeToFront();
+				  nsCOMPtr<nsIWidget> topWidget;
+				  nsToolkit::GetTopWidget ( whichWindow, getter_AddRefs(topWidget) );
+				  nsCOMPtr<nsPIWidgetMac> macWindow ( do_QueryInterface(topWidget) );
+				  if ( macWindow )
+				    macWindow->ComeToFront();
         }
         
 				// Dispatch the event because some windows may want to know that they have been moved.
@@ -707,11 +713,12 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				
 					if (partCode == inZoomOut)
 					{
-						nsMacWindow *whichMacWindow = nsMacMessageSink::GetNSWindowFromMacWindow(whichWindow);
-						if (whichMacWindow)
-							whichMacWindow->CalculateAndSetZoomedSize();
-					}
-
+  				  nsCOMPtr<nsIWidget> topWidget;
+  				  nsToolkit::GetTopWidget ( whichWindow, getter_AddRefs(topWidget) );
+  				  nsCOMPtr<nsPIWidgetMac> macWindow ( do_QueryInterface(topWidget) );
+  				  if ( macWindow )
+  				    macWindow->CalculateAndSetZoomedSize();
+          }
 					// !!!	Do not call ZoomWindow before calling DispatchOSEventToRaptor
 					//		otherwise nsMacEventHandler::HandleMouseDownEvent won't get
 					//		the right partcode for the click location
@@ -722,15 +729,12 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				break;
 
 #if TARGET_CARBON
-            case inToolbarButton:           // rjc: Mac OS X
-                nsWatchTask::GetTask().Suspend();			  
-    			nsMacWindow *mw = mMessageSink->GetNSWindowFromMacWindow(whichWindow);
-    			if (mw)
-                {
-                    gEventDispatchHandler.DispatchGuiEvent(mw, NS_OS_TOOLBAR);
-                }
-                nsWatchTask::GetTask().Resume();			  
-                break;
+        case inToolbarButton:           // rjc: Mac OS X
+  			  nsWatchTask::GetTask().Suspend();			  
+  				::SetPortWindowPort(whichWindow);
+  			  DispatchOSEventToRaptor(anEvent, whichWindow);
+  			  nsWatchTask::GetTask().Resume();			  
+  				break;
 #endif
 
 	}
@@ -937,6 +941,9 @@ void	nsMacMessagePump::DoIdle(EventRecord &anEvent)
 
 
 #pragma mark -
+
+
+
 //-------------------------------------------------------------------------
 //
 // DispatchOSEventToRaptor
@@ -946,9 +953,12 @@ PRBool	nsMacMessagePump::DispatchOSEventToRaptor(
 													EventRecord		&anEvent,
 													WindowPtr			aWindow)
 {
-	if (mMessageSink->IsRaptorWindow(aWindow))
-		return mMessageSink->DispatchOSEvent(anEvent, aWindow);
-	return PR_FALSE;
+  PRBool handled = PR_FALSE;
+  nsCOMPtr<nsIEventSink> sink;
+  nsToolkit::GetWindowEventSink ( aWindow, getter_AddRefs(sink) );
+  if ( sink )
+	  sink->DispatchEvent ( &anEvent, &handled );
+	return handled;
 }
 
 
@@ -967,9 +977,11 @@ PRBool nsMacMessagePump::DispatchMenuCommandToRaptor(
 	PRBool		handled = PR_FALSE;
   WindowPtr theFrontWindow = GetFrontApplicationWindow();
 
-	if (mMessageSink->IsRaptorWindow(theFrontWindow))
-		handled = mMessageSink->DispatchMenuCommand(anEvent, menuResult, theFrontWindow);
-
+  nsCOMPtr<nsIEventSink> sink;
+  nsToolkit::GetWindowEventSink ( theFrontWindow, getter_AddRefs(sink) );
+  nsCOMPtr<nsPIEventSinkStandalone> menuSink ( do_QueryInterface(sink) );
+  if ( menuSink )
+	  menuSink->DispatchMenuEvent ( &anEvent, menuResult, &handled );
 	return handled;
 }
 

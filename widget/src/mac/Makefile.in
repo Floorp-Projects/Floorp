@@ -68,7 +68,6 @@ CPPSRCS         = nsAppShell.cpp \
 		nsMacControl.cpp \
 		nsMacEventHandler.cpp \
 		nsMacMessagePump.cpp \
-		nsMacMessageSink.cpp \
 		nsMacResources.cpp \
 		nsMacTSMMessagePump.cpp \
 		nsMacWindow.cpp \
@@ -90,6 +89,8 @@ CPPSRCS         = nsAppShell.cpp \
 XPIDLSRCS	+= \
 		nsIChangeManager.idl \
 		nsIMenuCommandDispatcher.idl \
+		nsPIWidgetMac.idl \
+		nsPIEventSinkStandalone.idl \
 		$(NULL)
 
 GARBAGE		+= $(GFX_LCPPSRCS)

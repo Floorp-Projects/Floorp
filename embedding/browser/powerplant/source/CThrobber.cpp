@@ -163,7 +163,7 @@ void CThrobber::DrawSelf()
 {
 #if 0
    // Draw directly with the rendering context instead of passing an
-   // update event through nsMacMessageSink. By the time this routine is
+   // update event through event sink. By the time this routine is
    // called, PowerPlant has taken care of the location, z order, and clipping
    // of each view. Since focusing puts the the origin at our top left corner,
    // all we have to do is get the bounds of the widget and put that at (0,0)
