@@ -622,13 +622,13 @@ static void ShowXPCException()
                         nsCOMPtr<nsIJSErrorReport> report = do_QueryInterface(data);
                         if(report)
                         {
-                            char* str;
-                            rv = report->ToString(&str);
-                            if(NS_SUCCEEDED(rv) && str)
+                            char* str2;
+                            rv = report->ToString(&str2);
+                            if(NS_SUCCEEDED(rv) && str2)
                             {
-                                printf(str);
+                                printf(str2);
                                 printf("\n");
-                                nsAllocator::Free(str);
+                                nsAllocator::Free(str2);
                             }                            
                         }                            
                     }                            
