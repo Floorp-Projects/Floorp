@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -29,6 +29,7 @@ class nsJARURI : public nsIJARURI, nsISerializable
 public:    
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURI
+    NS_DECL_NSIURL
     NS_DECL_NSIJARURI
     NS_DECL_NSISERIALIZABLE
 
@@ -39,10 +40,15 @@ public:
     nsresult Init(const char *charsetHint);
     nsresult FormatSpec(const nsACString &entryPath, nsACString &result,
                         PRBool aIncludeScheme = PR_TRUE);
+    nsresult CreateEntryURL(const nsACString& entryFilename,
+                            const char* charset,
+                            nsIURL** url);
 
 protected:
     nsCOMPtr<nsIURI> mJARFile;
-    nsCString        mJAREntry;
+    // mJarEntry stored as a URL so that we can easily access things
+    // like extensions, refs, etc.
+    nsCOMPtr<nsIURL> mJAREntry;
     nsCString        mCharsetHint;
 };
 

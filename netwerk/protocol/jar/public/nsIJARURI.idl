@@ -16,11 +16,7 @@
  * Reserved.
  */
 
-#include "nsIURI.idl"
-
-%{C++
-#include "nsAString.h"
-%}
+#include "nsIURL.idl"
 
 /**
  * JAR URLs have the following syntax
@@ -28,9 +24,11 @@
  * jar:<jar-file-uri>!/<jar-entry>
  *
  * EXAMPLE: jar:http://www.big.com/blue.jar!/ocean.html
+ *
+ * The nsIURL methods operate on the <jar-entry> part of the spec.
  */
 [scriptable, uuid(c7e410d3-85f2-11d3-9f63-006008a6efe9)]
-interface nsIJARURI : nsIURI {
+interface nsIJARURI : nsIURL {
 
     /**
      * Returns the root URI (the one for the actual JAR file) for this JAR.
