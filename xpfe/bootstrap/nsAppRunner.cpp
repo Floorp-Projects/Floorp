@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
     }
     if (nsnull == urlstr)
     {    
-      urlstr = "resource:/res/samples/navigator.xul";
+      urlstr = "chrome://navigator/content/";
     }
   }
   else
