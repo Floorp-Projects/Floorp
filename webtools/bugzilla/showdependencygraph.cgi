@@ -59,7 +59,7 @@ if (defined $id) {
     open(DOT, ">$filename") || die "Can't create $filename";
     print DOT "digraph G {";
     print DOT qq{
-graph [URL="${urlbase}query.cgi", rankdir=$::FORM{'rankdir'}]
+graph [URL="${urlbase}query.cgi", rankdir=$::FORM{'rankdir'}, size="64,64"]
 node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
 };
     my %baselist;
