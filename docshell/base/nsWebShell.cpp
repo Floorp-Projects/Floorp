@@ -178,6 +178,8 @@ public:
   NS_IMETHOD SetMarginHeight(PRInt32  aHeight);
   NS_IMETHOD GetScrolling(PRInt32& aScrolling);
   NS_IMETHOD SetScrolling(PRInt32 aScrolling);
+  NS_IMETHOD GetIsFrame(PRBool& aIsFrame);
+  NS_IMETHOD SetIsFrame(PRBool aIsFrame);
   
   // Document load api's
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
@@ -329,6 +331,7 @@ protected:
   PRInt32 mMarginWidth;
   PRInt32 mMarginHeight;
   PRInt32 mScrolling;
+  PRBool  mIsFrame;
   nsVoidArray mRefreshments;
 
   void ReleaseChildren();
@@ -437,6 +440,7 @@ nsWebShell::nsWebShell()
   mScriptGlobal = nsnull;
   mScriptContext = nsnull;
   InitFrameData();
+  mIsFrame = PR_FALSE;
 }
 
 nsWebShell::~nsWebShell()
@@ -467,6 +471,7 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mScriptContext);
 
   InitFrameData();
+  mIsFrame = PR_FALSE;
 
   // XXX Because we hold references to the children and they hold references
   // to us we never get destroyed. See Destroy() instead...
@@ -1158,6 +1163,22 @@ nsWebShell::SetScrolling(PRInt32 aScrolling)
   mScrolling = aScrolling;
   return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsWebShell::GetIsFrame(PRBool& aIsFrame)
+{
+  aIsFrame = mIsFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetIsFrame(PRBool aIsFrame)
+{ 
+  mIsFrame = aIsFrame;
+  return NS_OK;
+}
+
+
 /**
  * Document Load methods
  */
@@ -1213,7 +1234,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   // web shell is being recycled
   nsIWebShell *rootWebShell;
   GetRootWebShell(rootWebShell);
-  if (this == rootWebShell) {
+  //if (this == rootWebShell) {
+  if (!mIsFrame) {
     InitFrameData();
   }
 
