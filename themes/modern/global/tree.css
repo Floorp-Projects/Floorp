@@ -9,6 +9,7 @@ tree {
   background-color: white;
   border: none;
   border-spacing: 0px;
+  -moz-user-focus: normal !important;
 }
 
 /** class="inset" *************************************************
@@ -23,27 +24,18 @@ tree.inset {
   margin: 1px 5px 2px 5px;
 }
 
-treeitem[selected="true"] > treerow { 
-	color: white;
-	background-color: #336699;
-}
-treeitem[dd-dropon="true"] > treerow { 
-	color: white;
-	background-color: #336699;
-}
-
 treecell { 
   white-space: nowrap;
   vertical-align: middle;
-  padding: 1px 0px 1px 2px;
+  padding: 0px 0px 1px 2px;
 } 
 
 .treecell-header { 
-  background-color: #CCCCCC; 
-  color: black;
-  border-right: 1px solid white;
-  vertical-align: middle;
+  border: 1px outset #C2D0D0;
   padding: 0px 0px 0px 4px;
+  background-color: #C2D0D0; 
+  vertical-align: middle;
+  color: #000000;
 } 
 
 .treecell-header-image {
@@ -99,6 +91,25 @@ treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-ico
  list-style-image: url("chrome://global/skin/closedtwisty.gif");
  -moz-user-focus:ignore;
  padding-right: 2px;
+}
+
+treeitem[selected="true"] > treerow {
+ color: #000000;
+ background-color: #B4C3D4;
+}
+
+tree:focus > treechildren treeitem[selected="true"] > treerow,
+treeitem[dd-dropon="true"] > treerow {
+  color: #ffffff;
+	background-color: #486380;
+}
+
+treerow {
+  border: 1px solid transparent;
+}
+
+tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow {
+  border: 1px solid #AECDCD;
 }
 
 treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty {
