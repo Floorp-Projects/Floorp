@@ -1,4 +1,4 @@
-<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<?xml version="1.0"?> <!-- -*- Mode: HTML; indent-tabs-mode: nil; -*- -->
 <!--
 
   The contents of this file are subject to the Netscape Public
@@ -70,30 +70,22 @@
 
 <tree  id="bookmarksTree" ref="NC:HistoryRoot" context="contextual"
        datasources="rdf:history rdf:localsearch"
-       style="width:100%;height:100%"
+       flex="1"
        multiple="true"
        ondragover="return DragOverTree(event);"
        ondraggesture="return BeginDragTree(event);"
        ondragdrop="return DropOnTree(event);">
 
   <template>
-    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-      <treechildren>
-       <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
-         <treerow>
-           <treecell><separator class="tree-separator" size="1" /></treecell>
-           <treecell><separator class="tree-separator" size="1" /></treecell>
-           <treecell><separator class="tree-separator" size="1" /></treecell>
-         </treerow>
-       </treeitem>  		
-      </treechildren>
-     </rule>
-
      <rule>
       <treechildren onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');">
-       <treeitem uri="..." persist="open" web:status="rdf:http://home.netscape.com/WEB-rdf#status" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
+       <treeitem uri="rdf:*" persist="open"
+         web:status="rdf:http://home.netscape.com/WEB-rdf#status"
+         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+         loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Name" indent="true" />
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
+             class="treecell-indent treecell-bookmark"/>
            <treecell value="rdf:http://home.netscape.com/NC-rdf#URL" />
            <treecell value="rdf:http://home.netscape.com/NC-rdf#Date" />
          </treerow>
