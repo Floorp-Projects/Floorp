@@ -201,7 +201,7 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     cert->istemp = PR_FALSE;
     cert->isperm = PR_TRUE;
     if (!trust) {
-	return PR_SUCCESS;
+	return SECSuccess;
     }
     return (STAN_ChangeCertTrust(cert, trust) == PR_SUCCESS) ? 
 							SECSuccess: SECFailure;
@@ -726,21 +726,14 @@ CERT_GetDBContentVersion(CERTCertDBHandle *handle)
     return 0;
 }
 
-/*
- *
- * Manage S/MIME profiles
- *
- */
-
 SECStatus
-CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
-		      SECItem *profileTime)
+certdb_SaveSingleProfile(CERTCertificate *cert, const char *emailAddr, 
+				SECItem *emailProfile, SECItem *profileTime)
 {
     int64 oldtime;
     int64 newtime;
     SECStatus rv = SECFailure;
     PRBool saveit;
-    char *emailAddr;
     SECItem oldprof, oldproftime;
     SECItem *oldProfile = NULL;
     SECItem *oldProfileTime = NULL;
@@ -749,32 +742,6 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
     NSSCryptoContext *cc;
     nssSMIMEProfile *stanProfile = NULL;
     PRBool freeOldProfile = PR_FALSE;
-
-    if (!cert) {
-        return SECFailure;
-    }
-
-    if (cert->slot &&  !PK11_IsInternal(cert->slot)) {
-        /* this cert comes from an external source, we need to add it
-        to the cert db before creating an S/MIME profile */
-        PK11SlotInfo* internalslot = PK11_GetInternalKeySlot();
-        if (!internalslot) {
-            return SECFailure;
-        }
-        rv = PK11_ImportCert(internalslot, cert,
-            CK_INVALID_HANDLE, NULL, PR_FALSE);
-
-        PK11_FreeSlot(internalslot);
-        if (rv != SECSuccess ) {
-            return SECFailure;
-        }
-    }
-
-    emailAddr = cert->emailAddr;
-    
-    if ( emailAddr == NULL ) {
-	goto loser;
-    }
 
     c = STAN_GetNSSCertificate(cert);
     if (!c) return SECFailure;
@@ -789,8 +756,8 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
 	    oldProfileTime = &oldproftime;
 	}
     } else {
-	oldProfile = PK11_FindSMimeProfile(&slot, emailAddr, &cert->derSubject, 
-							&oldProfileTime); 
+	oldProfile = PK11_FindSMimeProfile(&slot, (char *)emailAddr, 
+					&cert->derSubject, &oldProfileTime); 
 	freeOldProfile = PR_TRUE;
     }
 
@@ -873,8 +840,8 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
 		rv = (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
 	    }
 	} else {
-	    rv = PK11_SaveSMimeProfile(slot, emailAddr, &cert->derSubject, 
-						emailProfile, profileTime);
+	    rv = PK11_SaveSMimeProfile(slot, (char *)emailAddr, 
+				&cert->derSubject, emailProfile, profileTime);
 	}
     } else {
 	rv = SECSuccess;
@@ -896,6 +863,52 @@ loser:
     
     return(rv);
 }
+
+/*
+ *
+ * Manage S/MIME profiles
+ *
+ */
+
+SECStatus
+CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
+		      SECItem *profileTime)
+{
+    const char *emailAddr;
+    SECStatus rv;
+
+    if (!cert) {
+        return SECFailure;
+    }
+
+    if (cert->slot &&  !PK11_IsInternal(cert->slot)) {
+        /* this cert comes from an external source, we need to add it
+        to the cert db before creating an S/MIME profile */
+        PK11SlotInfo* internalslot = PK11_GetInternalKeySlot();
+        if (!internalslot) {
+            return SECFailure;
+        }
+        rv = PK11_ImportCert(internalslot, cert,
+            CK_INVALID_HANDLE, NULL, PR_FALSE);
+
+        PK11_FreeSlot(internalslot);
+        if (rv != SECSuccess ) {
+            return SECFailure;
+        }
+    }
+
+    
+    for (emailAddr = CERT_GetFirstEmailAddress(cert); emailAddr != NULL;
+		emailAddr = CERT_GetNextEmailAddress(cert,emailAddr)) {
+	rv = certdb_SaveSingleProfile(cert,emailAddr,emailProfile,profileTime);
+	if (rv != SECSuccess) {
+	   return SECFailure;
+	}
+    }
+    return SECSuccess;
+
+}
+
 
 SECItem *
 CERT_FindSMimeProfile(CERTCertificate *cert)
