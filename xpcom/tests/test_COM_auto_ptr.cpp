@@ -94,20 +94,20 @@ IFoo::IFoo()
 		: refcount_(0)
 	{
 		++total_constructions_;
-		cout << "  new IFoo@" << static_cast<void*>(this) << " [#" << total_constructions_ << "]" << endl;
+		cout << "  new IFoo@" << STATIC_CAST(void*, this) << " [#" << total_constructions_ << "]" << endl;
 	}
 
 IFoo::~IFoo()
 	{
 		++total_destructions_;
-		cout << "IFoo@" << static_cast<void*>(this) << "::~IFoo()" << " [#" << total_destructions_ << "]" << endl;
+		cout << "IFoo@" << STATIC_CAST(void*, this) << "::~IFoo()" << " [#" << total_destructions_ << "]" << endl;
 	}
 
 unsigned long
 IFoo::AddRef()
 	{
 		++refcount_;
-		cout << "IFoo@" << static_cast<void*>(this) << "::AddRef(), refcount --> " << refcount_ << endl;
+		cout << "IFoo@" << STATIC_CAST(void*, this) << "::AddRef(), refcount --> " << refcount_ << endl;
 		return refcount_;
 	}
 
@@ -119,16 +119,16 @@ IFoo::Release()
 			cout << ">>";
 			
 		--refcount_;
-		cout << "IFoo@" << static_cast<void*>(this) << "::Release(), refcount --> " << refcount_ << endl;
+		cout << "IFoo@" << STATIC_CAST(void*, this) << "::Release(), refcount --> " << refcount_ << endl;
 
 		if ( !refcount_ )
 			{
-				cout << "  delete IFoo@" << static_cast<void*>(this) << endl;
+				cout << "  delete IFoo@" << STATIC_CAST(void*, this) << endl;
 				delete this;
 			}
 
 		if ( wrap_message )
-			cout << "<<IFoo@" << static_cast<void*>(this) << "::Release()" << endl;
+			cout << "<<IFoo@" << STATIC_CAST(void*, this) << "::Release()" << endl;
 
 		return refcount_;
 	}
@@ -139,7 +139,7 @@ CreateIFoo( void** result )
 	{
 		cout << ">>CreateIFoo() --> ";
 		IFoo* foop = new IFoo;
-		cout << "IFoo@" << static_cast<void*>(foop) << endl;
+		cout << "IFoo@" << STATIC_CAST(void*, foop) << endl;
 
 		foop->AddRef();
 		*result = foop;
@@ -180,12 +180,12 @@ class IBar : public IFoo
 
 IBar::IBar()
 	{
-		cout << "  new IBar@" << static_cast<void*>(this) << endl;
+		cout << "  new IBar@" << STATIC_CAST(void*, this) << endl;
 	}
 
 IBar::~IBar()
 	{
-		cout << "IBar@" << static_cast<void*>(this) << "::~IBar()" << endl;
+		cout << "IBar@" << STATIC_CAST(void*, this) << "::~IBar()" << endl;
 	}
 
 
@@ -196,7 +196,7 @@ CreateIBar( void** result )
 	{
 		cout << ">>CreateIBar() --> ";
 		IBar* barp = new IBar;
-		cout << "IBar@" << static_cast<void*>(barp) << endl;
+		cout << "IBar@" << STATIC_CAST(void*, barp) << endl;
 
 		barp->AddRef();
 		*result = barp;
@@ -239,10 +239,10 @@ main()
 			//foop->Release();
 
 			cout << endl << "### Test  3: can you |AddRef| if you must?" << endl;
-			static_cast<IFoo*>(foop)->AddRef();
+			STATIC_CAST(IFoo*, foop)->AddRef();
 
 			cout << endl << "### Test  4: can you |Release| if you must?" << endl;
-			static_cast<IFoo*>(foop)->Release();
+			STATIC_CAST(IFoo*, foop)->Release();
 
 			cout << endl << "### Test  5: will a |COM_auto_ptr| |Release| when it goes out of scope?" << endl;
 		}
