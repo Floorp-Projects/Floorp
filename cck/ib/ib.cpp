@@ -593,7 +593,7 @@ int interpret(char *cmd)
 			// the default browser value is displayed
 			if ((strcmp(entity,"mainWindow.titlemodifier") == 0) &&
 			(strcmp(newvalue,"") == 0))
-				newvalue = "&brandShortName; {&buildId.label;}";
+				newvalue = "&brandShortName;";
 			ModifyDTD(xpifile, entity, newvalue);
 		}
 	}
