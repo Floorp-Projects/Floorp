@@ -185,19 +185,15 @@ nsMathMLmoFrame::Init(nsIPresContext*  aPresContext,
     mFlags |= NS_MATHML_OPERATOR_MUTABLE;
   }
 
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
   return rv;
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
-                                     nsIAtom*        aListName,
-                                     nsIFrame*       aChildList)
+nsMathMLmoFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
-  nsresult rv;
-  rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
 
   // fill our mEmbellishData member variable
   nsIFrame* firstChild = mFrames.FirstChild();
@@ -276,7 +272,7 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
       }
     }
   }   
-  return rv;
+  return NS_OK;
 }
 
 void

@@ -50,11 +50,6 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aChildList);
-
-  NS_IMETHOD
   Paint(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
@@ -72,6 +67,9 @@ public:
         nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
+
+  NS_IMETHOD
+  TransmitAutomaticData(nsIPresContext* aPresContext);
 
   // This method is called by the parent frame to ask <mo> 
   // to stretch itself.

@@ -67,22 +67,6 @@ nsMathMLmiFrame::~nsMathMLmiFrame()
 {
 }
 
-NS_IMETHODIMP
-nsMathMLmiFrame::Init(nsIPresContext*  aPresContext,
-                      nsIContent*      aContent,
-                      nsIFrame*        aParent,
-                      nsIStyleContext* aContext,
-                      nsIFrame*        aPrevInFlow)
-{
-  nsresult rv = NS_OK;
-  rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
-  return rv;
-}
-
 static PRBool
 IsStyleInvariant(PRUnichar aChar)
 {
@@ -91,14 +75,11 @@ IsStyleInvariant(PRUnichar aChar)
 
 // if our content is not a single character, we turn the font to normal
 NS_IMETHODIMP
-nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
-                                     nsIAtom*        aListName,
-                                     nsIFrame*       aChildList)
+nsMathMLmiFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
-  nsresult rv;
-
-  // First, let the base class do its work
-  rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
 
   // Get the text content that we enclose and its length
   // our content can include comment-nodes, attribute-nodes, text-nodes...
@@ -138,7 +119,7 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
                        nsMathMLAtoms::fontstyle_, fontstyle))
       {
         if (fontstyle.Equals(NS_LITERAL_STRING("italic")))
-          return rv;
+          return NS_OK;
       }
     }
 
@@ -161,7 +142,7 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
       }
     }
   }
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

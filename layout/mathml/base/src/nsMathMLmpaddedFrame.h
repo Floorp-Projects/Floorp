@@ -35,11 +35,8 @@ public:
   friend nsresult NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
   
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
-       nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIStyleContext* aContext,
-       nsIFrame*        aPrevInFlow);
+  InheritAutomaticData(nsIPresContext*  aPresContext,
+                       nsIFrame*        aParent);
 
   NS_IMETHOD
   TransmitAutomaticData(nsIPresContext* aPresContext)

@@ -33,22 +33,13 @@
 class nsMathMLmiFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLmiFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-  
-  NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
-       nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIStyleContext* aContext,
-       nsIFrame*        aPrevInFlow);
 
- /* mi implements its own SetInitialChildList() method 
-  * to switch to a normal-font (rather than italics) if its text
-  * content is not a single character (as per the MathML REC).
+ /* <mi> needs to switch to a normal-font (rather than italics) if
+  * its text content is not a single character (as per the MathML REC).
+  * special care is also needed for style-invariant chars - bug 65951
   */
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aChildList);
+  TransmitAutomaticData(nsIPresContext* aPresContext);
 
   NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,

@@ -898,8 +898,8 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
 }
 
 // There are precise rules governing children of a MathML frame,
-// and properties such as the scriptlevel or depends on those rules.
-// Hence for things to work, caller must use Append/Insert/etc wisely.
+// and properties such as the scriptlevel depends on those rules.
+// Hence for things to work, callers must use Append/Insert/etc wisely.
 
 nsresult
 nsMathMLContainerFrame::ChildListChanged(nsIPresContext* aPresContext,

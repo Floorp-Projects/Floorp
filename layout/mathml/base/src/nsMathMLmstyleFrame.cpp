@@ -118,30 +118,15 @@ nsMathMLmstyleFrame::InheritAutomaticData(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-// mstyle needs special care for its scriptlevel and displaystyle attributes
 NS_IMETHODIMP
 nsMathMLmstyleFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
   mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
-  // figure out our current presentation data
-  nsPresentationData oldData = mPresentationData;
-
-  InheritAutomaticData(aPresContext, mParent);
-
-  // propagate to our children if something changed
-  if (oldData.flags != mPresentationData.flags ||
-      oldData.scriptLevel != mPresentationData.scriptLevel) {
-    PRUint32 whichFlags = NS_MATHML_DISPLAYSTYLE;
-    PRUint32 newValues = NS_MATHML_DISPLAYSTYLE & mPresentationData.flags;
-    if (newValues == (oldData.flags & NS_MATHML_DISPLAYSTYLE)) {
-      newValues = 0;
-      whichFlags = 0;
-    }
-    // use the base method here because we really want to reflect any updates
-    nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 
-      mPresentationData.scriptLevel - oldData.scriptLevel, newValues, whichFlags);
-  }
+  // Nothing particular to do here, the values that we computed in
+  // InheritAutomaticData() are the values that we wanted to pass to
+  // our children. Our children would have inherited these values in
+  // their own InheritAutomaticData() as we descended the frame tree.
 
   return NS_OK;
 }
