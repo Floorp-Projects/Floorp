@@ -989,7 +989,6 @@ nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
     // Use selected cells to determine what rows to delete
     cell = firstCell;
 
-    PRBool deleteCol = PR_FALSE;
     while (cell)
     {
       if (cell != firstCell)
@@ -1086,7 +1085,7 @@ nsHTMLEditor::DeleteColumn(nsIDOMElement *aTable, PRInt32 aColIndex)
           if (rowCount == 1)
           {
             nsCOMPtr<nsIDOMSelection> selection;
-            nsresult res = GetSelection(getter_AddRefs(selection));
+            res = GetSelection(getter_AddRefs(selection));
             if (NS_FAILED(res)) return res;
             if (!selection) return NS_ERROR_FAILURE;
             return DeleteTable2(aTable, selection);
@@ -1171,7 +1170,6 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
     // Use selected cells to determine what rows to delete
     cell = firstCell;
 
-    PRBool deleteRow = PR_FALSE;
     while (cell)
     {
       if (cell != firstCell)
@@ -2243,7 +2241,7 @@ nsHTMLEditor::MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
   while (hasChild)
   {
     cellToMerge->GetLastChild(getter_AddRefs(cellChild));
-    nsresult res = DeleteNode(cellChild);
+    res = DeleteNode(cellChild);
     if (NS_FAILED(res)) return res;
 
     res = InsertNode(cellChild, targetCell, insertIndex);
@@ -2685,7 +2683,7 @@ nsHTMLEditor::GetCellContext(nsIDOMSelection **aSelection,
     nsCOMPtr<nsIDOMElement> cellOrTableElement;
     PRInt32 selectedCount;
     nsAutoString tagName;
-    nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(cellOrTableElement), tagName, selectedCount);
+    res = GetSelectedOrParentTableElement(*getter_AddRefs(cellOrTableElement), tagName, selectedCount);
     if (NS_FAILED(res)) return res;
     if (tagName == NS_LITERAL_STRING("table"))
     {
@@ -2920,7 +2918,7 @@ nsHTMLEditor::GetFirstSelectedCellInTable(nsIDOMElement **aCell, PRInt32 *aRowIn
 
   while (cell)
   {
-    nsresult res = GetNextSelectedCell(getter_AddRefs(cell), nsnull);
+    res = GetNextSelectedCell(getter_AddRefs(cell), nsnull);
     if (NS_FAILED(res)) return res;
     if (cell)
     {
