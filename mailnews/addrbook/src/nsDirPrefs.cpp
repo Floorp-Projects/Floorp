@@ -1968,11 +1968,86 @@ nsresult DIR_GetPersonalAddressBook(nsVoidArray *wholeList, DIR_Server **pab)
 }
 
 
+#ifndef MOZADDRSTANDALONE
+
 /*****************************************************************************
  * Functions for managing JavaScript prefs for the DIR_Servers 
  */
 
-#if !defined(MOZADDRSTANDALONE)
+#include "nsQuickSort.h"
+
+PR_STATIC_CALLBACK(int)
+comparePrefArrayMembers(const void* aElement1, const void* aElement2, void* aData)
+{
+    const char* element1 = *NS_STATIC_CAST(const char* const *, aElement1);
+    const char* element2 = *NS_STATIC_CAST(const char* const *, aElement2);
+    const PRUint32 offset = *NS_STATIC_CAST(const PRUint32*, aData);
+
+    // begin the comparison at |offset| chars into the string -
+    // this avoids comparing the "ldap_2.servers." portion of every element,
+    // which will always remain the same.
+    return strcmp(element1 + offset, element2 + offset);
+}
+
+static nsresult dir_GetChildList(const nsAFlatCString &aBranch,
+                                 PRUint32 *aCount, char ***aChildList)
+{
+    PRUint32 branchLen = aBranch.Length();
+
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefBranch) {
+        return NS_ERROR_FAILURE;
+    }
+
+    nsresult rv = prefBranch->GetChildList(aBranch.get(), aCount, aChildList);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    // traverse the list, and truncate all the descendant strings to just
+    // one branch level below the root branch.
+    for (PRUint32 i = *aCount; i--; ) {
+        // The prefname we passed to GetChildList was of the form
+        // "ldap_2.servers." and we are returned the descendants
+        // in the form of "ldap_2.servers.servername.foo"
+        // But we want the prefbranch of the servername, so
+        // write a NUL character in to terminate the string early.
+        char *endToken = strchr((*aChildList)[i] + branchLen, '.');
+        if (endToken)
+            *endToken = '\0';
+    }
+
+    if (*aCount > 1) {
+        // sort the list, in preparation for duplicate entry removal
+        NS_QuickSort(*aChildList, *aCount, sizeof(char*), comparePrefArrayMembers, &branchLen);
+
+        // traverse the list and remove duplicate entries.
+        // we use two positions in the list; the current entry and the previous entry
+        // (note that we do the traversal backwards, so the prev entry is actually
+        // ahead of the current one). we know we have >= 2 elements in the list here,
+        // so we just init the two counters sensibly to begin with.
+        PRUint32 prev = *aCount - 1;
+        PRUint32 cur = prev - 1;
+        do {
+            // if the elements are equal, move the trailing portion of the array
+            // forward a notch.
+            if (!comparePrefArrayMembers(&((*aChildList)[cur]), &((*aChildList)[prev]), &branchLen)) {
+                // free up memory.
+                nsMemory::Free((*aChildList)[cur]);
+                // move previous elements forward a notch
+                memmove(&((*aChildList)[cur]), &((*aChildList)[prev]), (*aCount - prev) * sizeof(char*));
+                // decrement the count
+                --(*aCount);
+            }
+
+            // move the prev element forward a notch
+            prev = cur;
+        } while (cur--);
+    }
+
+    return NS_OK;
+}
+
 
 static char *DIR_GetStringPref(const char *prefRoot, const char *prefLeaf, char *scratch, const char *defaultValue)
 {
@@ -2480,9 +2555,8 @@ static void dir_GetReplicationInfo(const char *prefstring, DIR_Server *server, c
  */
 static nsresult DIR_GetCustomAttributePrefs(const char *prefstring, DIR_Server *server)
 {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-    if (NS_FAILED(rv) || !pPref) 
+    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID)); 
+    if (!pPref)
 		return NS_ERROR_FAILURE;
 
     char **tokenList = nsnull;
@@ -2494,21 +2568,12 @@ static nsresult DIR_GetCustomAttributePrefs(const char *prefstring, DIR_Server *
     PRUint32 branchLen = branch.Length();
 
     PRUint32 prefCount;
-    rv = pPref->GetChildList(branch.get(), &prefCount, &childList);
+    nsresult rv = dir_GetChildList(branch, &prefCount, &childList);
     if (NS_SUCCEEDED(rv))
 	{
         for (PRUint32 i = 0; i < prefCount; ++i)
 		{
             char *jsValue = nsnull;
-
-            // The prefname we passed to GetChildList was of the form
-            // "ldap_2.servers." and we are returned the descendants
-            // in the form of "ldap_2.servers.servername.foo"
-            // But we want the prefbranch of the servername, so
-            // write a NUL character in to terminate the string early.
-            char *endToken = strchr(childList[i] + branchLen, '.');
-            if (endToken)
-                *endToken = char(0);
 
             rv = pPref->CopyCharPref(childList[i], &jsValue);
             if (NS_SUCCEEDED(rv))
@@ -2553,20 +2618,17 @@ static nsresult DIR_GetCustomAttributePrefs(const char *prefstring, DIR_Server *
  */
 static nsresult DIR_GetCustomFilterPrefs(const char *prefstring, DIR_Server *server, char *scratch)
 {
-    nsresult status = NS_OK;
-    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &status)); 
-    if (NS_FAILED(status) || !pPref) 
-		return NS_ERROR_FAILURE;
-
-	PRBool keepGoing = PR_TRUE;
-	PRInt32 filterNum = 1;
 	char *localScratch = (char*)PR_Malloc(128);
 	if (!localScratch)
 		return NS_ERROR_OUT_OF_MEMORY;
 
+    nsresult rv = NS_OK;
+    PRBool keepGoing = PR_TRUE;
+    PRInt32 filterNum = 1;
+
 	server->tokenSeps = DIR_GetStringPref (prefstring, "wordSeparators", localScratch, kDefaultTokenSeps);
-	while (keepGoing && NS_SUCCEEDED(status))
-	{
+	
+	do {
         char **childList = nsnull;
 
 		PR_snprintf (scratch, 128, "%s.filter%d", prefstring, filterNum);
@@ -2575,8 +2637,8 @@ static nsresult DIR_GetCustomFilterPrefs(const char *prefstring, DIR_Server *ser
         branch.Append(".");
 
         PRUint32 prefCount;
-        status = pPref->GetChildList(branch.get(), &prefCount, &childList);
-        if (NS_SUCCEEDED(status))
+        rv = dir_GetChildList(branch, &prefCount, &childList);
+        if (NS_SUCCEEDED(rv))
 		{
             if (prefCount > 0)
 			{
@@ -2602,10 +2664,10 @@ static nsresult DIR_GetCustomFilterPrefs(const char *prefstring, DIR_Server *ser
 					if (server->customFilters)
 						server->customFilters->AppendElement(filter);
 					else
-						status = NS_ERROR_OUT_OF_MEMORY;
+						rv = NS_ERROR_OUT_OF_MEMORY;
 				}
 				else
-					status = NS_ERROR_OUT_OF_MEMORY;
+					rv = NS_ERROR_OUT_OF_MEMORY;
 				filterNum++;
 			}
 			else
@@ -2614,10 +2676,10 @@ static nsresult DIR_GetCustomFilterPrefs(const char *prefstring, DIR_Server *ser
 		}
 		else
 			keepGoing = PR_FALSE;
-	}
+	} while (keepGoing && NS_SUCCEEDED(rv));
 
 	PR_Free(localScratch);
-	return status;
+	return rv;
 }
 
 /* This will convert from the old preference that was a path and filename */
@@ -2753,18 +2815,12 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
 
 char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
 {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-    if (NS_FAILED(rv) || !pPref) 
-		return nsnull;
-
 	/* we are going to try to be smart in how we generate our server
 	   pref name. We'll try to convert the description into a pref name
 	   and then verify that it is unique. If it is unique then use it... */
 	char * leafName = nsnull;
 	char * prefName = nsnull;
 	PRBool isUnique = PR_FALSE;
-    PRUint32 branchLen = sizeof(PREF_LDAP_SERVER_TREE_NAME); // includes sizeof(".") we'll concat later
 
 	if (name)
         leafName = nsCRT::strdup(name);
@@ -2777,34 +2833,27 @@ char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
 		/* we need to verify that this pref string name is unique */
 		prefName = PR_smprintf(PREF_LDAP_SERVER_TREE_NAME".%s", leafName);
 		isUnique = PR_FALSE;
-		while (!isUnique && prefName)
-		{ 
-			isUnique = PR_TRUE; /* now flip the logic and assume we are unique until we find a match */
-            PRUint32 prefCount;
-            rv = pPref->GetChildList(PREF_LDAP_SERVER_TREE_NAME ".", &prefCount, &children);
-            if (NS_SUCCEEDED(rv))
-			{
+        PRUint32 prefCount;
+        nsresult rv = dir_GetChildList(NS_LITERAL_CSTRING(PREF_LDAP_SERVER_TREE_NAME "."),
+                                       &prefCount, &children);
+        if (NS_SUCCEEDED(rv))
+        {
+            while (!isUnique && prefName)
+            {
+                isUnique = PR_TRUE; /* now flip the logic and assume we are unique until we find a match */
                 for (PRUint32 i = 0; i < prefCount && isUnique; ++i)
 				{
-                    // The prefname we passed to GetChildList was of the form
-                    // "ldap_2.servers." and we are returned the descendants
-                    // in the form of "ldap_2.servers.servername.foo"
-                    // But we want the prefbranch of the servername, so
-                    // write a NUL character in to terminate the string early.
-                    char *endToken = strchr(children[i] + branchLen, '.');
-                    if (endToken)
-                        *endToken = char(0);
-
                     if (!nsCRT::strcasecmp(children[i], prefName)) /* are they the same branch? */
                         isUnique = PR_FALSE;
 				}
-                NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, children);
 				if (!isUnique) /* then try generating a new pref name and try again */
 				{
 					PR_smprintf_free(prefName);
 					prefName = PR_smprintf(PREF_LDAP_SERVER_TREE_NAME".%s_%d", leafName, ++uniqueIDCnt);
 				}
 			} /* if we have a list of pref Names */
+
+            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, children);
 		} /* while we don't have a unique name */
 
 		PR_Free(leafName);
@@ -3019,82 +3068,74 @@ static PRInt32 dir_GetPrefsFrom40Branch(nsVoidArray **list)
 
 static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsoleteList)
 {
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID, &result)); 
-  if (NS_FAILED(result) || !pPref) 
-    return NS_ERROR_FAILURE;
-  
-  (*list) = new nsVoidArray();
-  if (!(*list))
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  if (obsoleteList)
-  {
-    (*obsoleteList) = new nsVoidArray();
-    if (!(*obsoleteList))
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
+    nsCOMPtr<nsIPref> pPref(do_GetService(NS_PREF_CONTRACTID));
+    if (!pPref)
+        return NS_ERROR_FAILURE;
 
-  char **children;
-  
-  PRUint32 prefCount;
-  PRUint32 branchLen = sizeof(PREF_LDAP_SERVER_TREE_NAME); // includes sizeof(".") we'll concat later
+    (*list) = new nsVoidArray();
+    if (!(*list))
+        return NS_ERROR_OUT_OF_MEMORY;
 
-  result = pPref->GetChildList(PREF_LDAP_SERVER_TREE_NAME ".", &prefCount, &children);
-  if (NS_SUCCEEDED(result))
-  {
-  /* TBD: Temporary code to read broken "ldap" preferences tree.
-  *      Remove line with if statement after M10.
-    */
+    if (obsoleteList)
+    {
+        (*obsoleteList) = new nsVoidArray();
+        if (!(*obsoleteList))
+        {
+            delete (*list);
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+
+    char **children;
+    PRUint32 prefCount;
+
+    nsresult rv = dir_GetChildList(NS_LITERAL_CSTRING(PREF_LDAP_SERVER_TREE_NAME "."),
+                                   &prefCount, &children);
+    if (NS_FAILED(rv))
+        return rv;
+
+    /* TBD: Temporary code to read broken "ldap" preferences tree.
+     *      Remove line with if statement after M10.
+     */
     if (dir_UserId == 0)
-      pPref->GetIntPref(PREF_LDAP_GLOBAL_TREE_NAME".user_id", &dir_UserId);
-    
+        pPref->GetIntPref(PREF_LDAP_GLOBAL_TREE_NAME".user_id", &dir_UserId);
+
     for (PRUint32 i = 0; i < prefCount; ++i)
     {
-      DIR_Server *server;
-      
-      // The prefname we passed to GetChildList was of the form
-      // "ldap_2.servers." and we are returned the descendants
-      // in the form of "ldap_2.servers.servername.foo"
-      // But we want the prefbranch of the servername, so
-      // write a NUL character in to terminate the string early.
-      char *endToken = strchr(children[i] + branchLen, '.');
-      if (endToken)
-        *endToken = char(0);
+        DIR_Server *server;
 
-      server = (DIR_Server *)PR_Calloc(1, sizeof(DIR_Server));
-      if (server)
-      {
-        DIR_InitServer(server);
-        server->prefName = nsCRT::strdup(children[i]);
-        DIR_GetPrefsForOneServer(server, PR_FALSE, PR_FALSE);
-        if (   server->description && server->description[0]
-          && (   (server->dirType == PABDirectory || 
-          server->dirType == MAPIDirectory ||
-          server->dirType == FixedQueryLDAPDirectory ||  // this one might go away
-          server->dirType == LDAPDirectory)  
-          || (server->serverName  && server->serverName[0])))
+        server = (DIR_Server *)PR_Calloc(1, sizeof(DIR_Server));
+        if (server)
         {
-          if (!dir_IsServerDeleted(server))
-          {
-            (*list)->AppendElement(server);
-          }
-          else if (obsoleteList)
-            (*obsoleteList)->AppendElement(server);
-          else
-            DIR_DeleteServer(server);
+            DIR_InitServer(server);
+            server->prefName = nsCRT::strdup(children[i]);
+            DIR_GetPrefsForOneServer(server, PR_FALSE, PR_FALSE);
+            if (server->description && server->description[0] && 
+                ((server->dirType == PABDirectory ||
+                  server->dirType == MAPIDirectory ||
+                  server->dirType == FixedQueryLDAPDirectory ||  // this one might go away
+                  server->dirType == LDAPDirectory) ||
+                 (server->serverName && server->serverName[0])))
+            {
+                if (!dir_IsServerDeleted(server))
+                {
+                    (*list)->AppendElement(server);
+                }
+                else if (obsoleteList)
+                    (*obsoleteList)->AppendElement(server);
+                else
+                    DIR_DeleteServer(server);
+            }
+            else
+            {
+                DIR_DeleteServer(server);
+            }
         }
-        else
-        {
-          DIR_DeleteServer(server);
-        }
-      }
     }
-    
+
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, children);
-  }
-  
-  return result;
+
+    return NS_OK;
 }
 
 
@@ -3125,7 +3166,8 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
 
 			/* Look to see if there's an old-style "ldap_1" tree in prefs */
             PRUint32 prefCount;
-            err = pPref->GetChildList("ldap_1.", &prefCount, &oldChildren);
+            err = dir_GetChildList(NS_LITERAL_CSTRING("ldap_1."),
+                                   &prefCount, &oldChildren);
             if (NS_SUCCEEDED(err))
 			{
                 if (prefCount > 0)
