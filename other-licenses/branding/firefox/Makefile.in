@@ -12,19 +12,31 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
+BROWSER_APP_FILES = \
+	default.xpm \
+	mozicon16.xpm \
+	mozicon50.xpm \
+	firefox.ico \
+	document.ico \
+	$(NULL)
+
+BROWSER_CONTENT_FILES = \
+	aboutCredits.png \
+	aboutFooter.png \
+	about.png \
+	$(NULL)
+
 export::
-	@echo "********************************* goats"
-	cp $(srcdir)/default.xpm $(DEPTH)/browser/app/default.xpm
-	cp $(srcdir)/mozicon16.xpm $(DEPTH)/browser/app/mozicon16.xpm
-	cp $(srcdir)/mozicon50.xpm $(DEPTH)/browser/app/mozicon50.xpm
-	cp $(srcdir)/firefox.ico $(DEPTH)/browser/app/firefox.ico
-	cp $(srcdir)/firefox.ico $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/browser.ico
+	cp $(addprefix $(srcdir)/, $(BROWSER_APP_FILES)) $(DEPTH)/browser/app/
+	if [ ! -d $(DEPTH)/browser/base/content ] ; then \
+		mkdir $(DEPTH)/browser/base/content; \
+	fi
+	cp $(addprefix $(srcdir)/, $(BROWSER_CONTENT_FILES)) $(DEPTH)/browser/base/content/
 	if [ ! -d $(DEPTH)/browser/app/macbuild ] ; then \
 		mkdir $(DEPTH)/browser/app/macbuild; \
 	fi
 	cp $(srcdir)/firefox.icns $(DEPTH)/browser/app/macbuild/firefox.icns
 	cp $(srcdir)/document.icns $(DEPTH)/browser/app/macbuild/document.icns
-	cp $(srcdir)/document.ico $(DEPTH)/browser/app/document.ico
+	cp $(srcdir)/firefox.ico $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/browser.ico
 	cp $(srcdir)/Header.bmp $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/Header.bmp
 	cp $(srcdir)/Watermrk.bmp $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/Watermrk.bmp
-

@@ -1,7 +1,0 @@
-# Override files in base package with trademarked artwork.
-
-browser.jar:
-+       content/browser/aboutCredits.png
-+       content/browser/aboutFooter.png
-+       content/browser/about.png
-
