@@ -2501,12 +2501,9 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
                     const nsRect&   aDamageRect,
                     PRBool          aImmediate) const
 {
-#ifdef DEBUG
   if (aDamageRect.IsEmpty()) {
-    NS_WARNING("empty damage rect: update caller to avoid fcn call overhead");
     return;
   }
-#endif
 
   if (aPresContext) {
     // Don't allow invalidates to do anything when
@@ -4847,8 +4844,8 @@ struct DR_State
   ~DR_State();
   void Init();
   void AddFrameTypeInfo(nsIAtom* aFrameType,
-                        char*    aFrameNameAbbrev,
-                        char*    aFrameName);
+                        const char* aFrameNameAbbrev,
+                        const char* aFrameName);
   DR_FrameTypeInfo* GetFrameTypeInfo(nsIAtom* aFrameType);
   DR_FrameTypeInfo* GetFrameTypeInfo(char* aFrameName);
   void InitFrameTypeTable();
@@ -4935,7 +4932,7 @@ MOZ_DECL_CTOR_COUNTER(DR_FrameTypeInfo)
 
 struct DR_FrameTypeInfo
 {
-  DR_FrameTypeInfo(nsIAtom* aFrmeType, char* aFrameNameAbbrev, char* aFrameName);
+  DR_FrameTypeInfo(nsIAtom* aFrmeType, const char* aFrameNameAbbrev, const char* aFrameName);
   ~DR_FrameTypeInfo() { 
       MOZ_COUNT_DTOR(DR_FrameTypeInfo);
       PRInt32 numElements;
@@ -4952,8 +4949,8 @@ struct DR_FrameTypeInfo
 };
 
 DR_FrameTypeInfo::DR_FrameTypeInfo(nsIAtom* aFrameType, 
-                                   char*    aFrameNameAbbrev, 
-                                   char*    aFrameName)
+                                   const char* aFrameNameAbbrev, 
+                                   const char* aFrameName)
 {
   mType = aFrameType;
   strcpy(mNameAbbrev, aFrameNameAbbrev);
@@ -5175,8 +5172,8 @@ void DR_State::ParseRulesFile()
 
 
 void DR_State::AddFrameTypeInfo(nsIAtom* aFrameType,
-                                char*    aFrameNameAbbrev,
-                                char*    aFrameName)
+                                const char* aFrameNameAbbrev,
+                                const char* aFrameName)
 {
   mFrameTypeTable.AppendElement(new DR_FrameTypeInfo(aFrameType, aFrameNameAbbrev, aFrameName));
 }
@@ -5414,7 +5411,7 @@ static void DisplayReflowEnterPrint(nsIPresContext*          aPresContext,
     if (aReflowState.path && aReflowState.path->mReflowCommand) {
       nsReflowType type;
       aReflowState.path->mReflowCommand->GetType(type);
-      char *incr_reason;
+      const char *incr_reason;
       switch(type) {
         case eReflowType_ContentChanged:
           incr_reason = "incr. (Content)";
