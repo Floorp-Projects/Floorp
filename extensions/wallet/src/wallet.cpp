@@ -237,14 +237,6 @@ wallet_GetWalletNotificationPref(void) {
 #include "nsXPIDLString.h"
 #include "nsIInterfaceRequestor.h" 
 
-static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
-#ifdef ReallyInNecko
-static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
-#endif
-
-static int gKeepRunning = 0;
-static nsIEventQueue* gEventQ = nsnull;
-
 class InputConsumer : public nsIStreamListener
 {
 public:
@@ -272,6 +264,8 @@ public:
   nsOutputFileStream   *mOutFile;
   nsFileSpec           mDirSpec;
   char                 *mFileName;
+  nsFileSpec           mFileSpec;     // request filename
+  nsFileSpec           mDownloadFileSpec; // tmp filename for download
 };
 
 
@@ -304,7 +298,7 @@ InputConsumer::OnStartRequest(nsIChannel* channel, nsISupports* context)
         pHTTPCon->GetResponseStatus(&httpStatus);
         if (httpStatus != 304) 
         {
-            mOutFile = new nsOutputFileStream(mDirSpec+mFileName);
+            mOutFile = new nsOutputFileStream(mDownloadFileSpec);
             if (!mOutFile->is_open())
                 return NS_ERROR_FAILURE;
             nsCOMPtr<nsIAtom> lastmodifiedheader;
@@ -355,6 +349,7 @@ InputConsumer::OnStopRequest(nsIChannel* channel,
 {
   PR_LOG(gWalletLog, PR_LOG_ALWAYS, ("InputConsumer::OnStopRequest[%x]\n", this));
   PRUint32 httpStatus;
+  nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(channel));
   if (pHTTPCon) {
     pHTTPCon->GetResponseStatus(&httpStatus);
@@ -362,9 +357,15 @@ InputConsumer::OnStopRequest(nsIChannel* channel,
   if (mOutFile && httpStatus != 304 ) {
       mOutFile->flush();
       mOutFile->close();
+      rv = NS_OK;
   }
-  gKeepRunning = 0;
-  return NS_OK;
+
+  /* rename the downloaded file to the file that was requested */
+  if (NS_SUCCEEDED(rv)) {
+    mDownloadFileSpec.Rename(mFileName);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -373,33 +374,22 @@ InputConsumer::Init(nsFileSpec dirSpec, const char *out)
 {
   mDirSpec = dirSpec;
   mFileName = nsCRT::strdup(out);
+  mFileSpec = dirSpec + mFileName;
+  // Create a temp download filename
+  nsCAutoString downloadFilename = mFileName;
+  downloadFilename.Append(",d");
+  mDownloadFileSpec = dirSpec + downloadFilename;
   return NS_OK;
 }
 
-#ifdef ReallyInNecko
-NECKO_EXPORT(nsresult)
-#else
 nsresult
-#endif
 NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
 {
     nsresult rv;
-    gKeepRunning = 0;
     if (gWalletLog == nsnull)
         gWalletLog = PR_NewLogModule ("nsWallet");
 
-    // Create the Event Queue for this thread...
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, 
-                    kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = eventQService->CreateThreadEventQueue();
-    if (NS_FAILED(rv)) return rv;
-
-    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> serv = do_GetService(kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIURI> pURL;
@@ -449,37 +439,18 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
         return rv;
     }
 
+    /* Trigger the async download */
     rv = pChannel->AsyncRead(listener,  // IStreamListener consumer
                              nsnull);   // ISupports context
 
-    if (NS_SUCCEEDED(rv)) {
-         gKeepRunning = 1;
+    /* return NS_OK iff there was an earlier version of the file downloaded */
+    if (listener->mFileSpec.Exists()) {
+      rv = NS_OK;
+    } else {
+      rv = NS_ERROR_FAILURE;
     }
 
     NS_RELEASE(listener);
-    if (NS_FAILED(rv)) return rv;
-
-    // Enter the message pump to allow the URL load to proceed.
-    while ( gKeepRunning ) {
-#ifdef WIN32
-        MSG msg;
-
-        if (GetMessage(&msg, NULL, 0, 0)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        } else {
-            gKeepRunning = 0;
-        }
-#else
-        PLEvent *gEvent;
-        rv = gEventQ->GetEvent(&gEvent);
-        PR_LOG(gWalletLog, PR_LOG_ALWAYS, ("NS_NewURItoFile::GetEvent, rv=%u\n", rv));
-        if (NS_SUCCEEDED(rv)) {
-            rv  = gEventQ->HandleEvent(gEvent);
-            PR_LOG(gWalletLog, PR_LOG_ALWAYS, ("NS_NewURItoFile::HandleEvent completed, rv=%u\n", rv));
-        }
-#endif /* !WIN32 */
-    }
     return rv;
 }
 
@@ -1686,17 +1657,24 @@ wallet_ReadFromFile
   nsFileSpec dirSpec;
   nsresult rv;
   rv = Wallet_ProfileDirectory(dirSpec);
-  if (NS_FAILED(rv) && localFile) {
-    /* if we failed to download the file, see if an initial version of it exists */
-    rv = Wallet_ResourceDirectory(dirSpec);
-  }
   if (NS_FAILED(rv)) {
     return;
   }
   nsInputFileStream strm(dirSpec + filename);
   if (!strm.is_open()) {
-    /* file doesn't exist -- that's not an error */
-    return;
+    if (!localFile) {
+      /* if we failed to download the file, see if an initial version of it exists */
+      rv = Wallet_ResourceDirectory(dirSpec);
+      if (NS_FAILED(rv)) {
+        return;
+      }
+      nsInputFileStream strm2(dirSpec + filename);
+      strm = strm2;
+    }
+    if (!strm.is_open()) {
+      /* still not open so give up */
+      return;
+    }
   }
 
   /* read in the header */
