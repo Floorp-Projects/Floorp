@@ -40,7 +40,7 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "nscore.h"
-
+#include "prenv.h"
 
 #include "ns4xPluginInstance.h"
 #include "ns4xPluginStreamListener.h"
@@ -767,6 +767,40 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
 
   peer->GetMode(&mode);
   peer->GetMIMEType(&mimetype);
+
+#ifdef XP_UNIX
+  // hack swliveconnect argument for flash plugins on unix,
+  // because if it set flash corrupts the stack in NPP_NewProc call (bug 149336)
+  static const char flashMimeType[] = "application/x-shockwave-flash";
+  static const char blockedParam[] = "swliveconnect";
+  if (count && !PL_strcasecmp(mimetype, flashMimeType)) {
+    static int cachedDisableHack = 0;
+    if (!cachedDisableHack) {
+       if (PR_GetEnv("MOZILLA_PLUGIN_DISABLE_FLASH_SWLIVECONNECT_HACK"))
+         cachedDisableHack = -1;
+       else
+         cachedDisableHack = 1;
+    }
+    if (cachedDisableHack > 0) {
+      for (PRUint16 i=0; i<count; i++) {
+        if (!PL_strcasecmp(names[i], blockedParam)) {
+          // BIG FAT WARNIG:
+          // I'm ugly casting |const char*| to |char*| and altering it
+          // because I know we do malloc it values in
+          // http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla/layout/html/base/src/nsObjectFrame.cpp&rev=1.349&root=/cvsroot#3020
+          // and free it at line #2096, so it couldn't be a const ptr to string literal
+          char *val = (char*) values[i];
+          if (val && *val) {
+            // we cannot just *val=0, it wont be free properly in such case
+            val[0] = '0';
+            val[1] = 0;
+          }
+          break;
+        }
+      }
+    }
+  }
+#endif
 
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_NewProc(fCallbacks->newp,
                                           (char *)mimetype,
