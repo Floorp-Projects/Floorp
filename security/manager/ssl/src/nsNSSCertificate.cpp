@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.39 2001/07/25 00:16:42 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.40 2001/08/01 23:05:08 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -1779,8 +1779,26 @@ ProcessTime(PRTime dispTime, const PRUnichar *displayName,
     return rv;
 
   nsString text;
-  dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
-                              dispTime, text);
+  nsString tempString;
+
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(dispTime, PR_LocalTimeParameters, &explodedTime);
+
+  dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
+                              &explodedTime, tempString);
+
+  text.Append(tempString);
+  text.Append(NS_LITERAL_STRING("\n("));
+
+  PRExplodedTime explodedTimeGMT;
+  PR_ExplodeTime(dispTime, PR_GMTParameters, &explodedTimeGMT);
+
+  dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
+                              &explodedTimeGMT, tempString);
+
+  text.Append(tempString);
+  text.Append(NS_LITERAL_STRING(" GMT)"));
+
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
   if (printableItem == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
