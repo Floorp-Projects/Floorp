@@ -204,7 +204,5 @@ public:
     }
 
     virtual ~nsRecyclingAllocatorImpl() {}
-
-    NS_GENERIC_FACTORY_CONSTRUCTOR(nsRecyclingAllocatorImpl);
 };
 #endif // nsRecyclingAllocator_h__

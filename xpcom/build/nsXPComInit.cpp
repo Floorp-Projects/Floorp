@@ -148,6 +148,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerManager);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVariant);
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRecyclingAllocatorImpl);
+
 #ifdef MOZ_TIMELINE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimelineService);
 #endif
@@ -286,7 +288,7 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(VARIANT, nsVariantConstructor),
     COMPONENT(INTERFACEINFOMANAGER_SERVICE, nsXPTIInterfaceInfoManagerGetSingleton),
 
-    COMPONENT(RECYCLINGALLOCATOR, nsRecyclingAllocatorImpl::nsRecyclingAllocatorImplConstructor),
+    COMPONENT(RECYCLINGALLOCATOR, nsRecyclingAllocatorImplConstructor),
 };
 
 #undef COMPONENT
