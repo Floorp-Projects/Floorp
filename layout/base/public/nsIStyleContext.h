@@ -33,12 +33,6 @@ class nsIPresContext;
 class nsISupportsArray;
 
 
-// Indicies into border/padding/margin arrays
-#define NS_SIDE_TOP     0
-#define NS_SIDE_RIGHT   1
-#define NS_SIDE_BOTTOM  2
-#define NS_SIDE_LEFT    3
-
 // The lifetime of these objects is managed by the nsIStyleContext.
 
 struct nsStyleFont : public nsStyleStruct {
