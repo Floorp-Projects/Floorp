@@ -534,15 +534,17 @@ CHBrowserListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequ
 {
   NSEnumerator* enumerator = [mListeners objectEnumerator];
   id<CHBrowserListener> obj;
-  if (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK) {
-    if (aStateFlags & nsIWebProgressListener::STATE_START) {
+  if (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK)
+  {
+    if (aStateFlags & nsIWebProgressListener::STATE_START)
+    {
       while ((obj = [enumerator nextObject]))
         [obj onLoadingStarted];
     }
-    else if (aStateFlags & nsIWebProgressListener::STATE_STOP) {
-      while ((obj = [enumerator nextObject])) {
+    else if (aStateFlags & nsIWebProgressListener::STATE_STOP)
+    {
+      while ((obj = [enumerator nextObject]))
         [obj onLoadingCompleted:(NS_SUCCEEDED(aStatus))];
-      }
     }
   }
 

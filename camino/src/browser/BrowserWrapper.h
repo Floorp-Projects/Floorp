@@ -50,7 +50,6 @@ class nsISupportsArray;
   NSTextField*              mStatus;
   BrowserWindowController*  mWindowController;
   NSTabViewItem*            mTabItem;
-  NSWindow*                 mWindow;
 
   NSImage*                  mSiteIconImage;    // current proxy icon image, which may be a site icon (favicon).
   NSString*                 mSiteIconURI;      // uri from  which we loaded the site icon	
@@ -83,11 +82,14 @@ class nsISupportsArray;
   BOOL mActivateOnLoad;    // If set, activate the browser view when loading starts.
 }
 
-- (id)initWithTab:(NSTabViewItem*)aTab andWindow:(NSWindow*)aWindow;
+- (id)initWithTab:(NSTabViewItem*)aTab windowController:(BrowserWindowController*)aWindowController;
 
 - (IBAction)load:(id)sender;
 - (void)awakeFromNib;
+
 - (void)setFrame:(NSRect)frameRect;
+- (void)setFrame:(NSRect)frameRect resizingBrowserViewIfHidden:(BOOL)inResizeBrowser;
+
 - (CHBrowserView*)getBrowserView;
 - (BOOL)isBusy;
 - (BOOL)isEmpty;                      // is about:blank loaded?
@@ -98,8 +100,7 @@ class nsISupportsArray;
 - (void)getBlockedSites:(nsISupportsArray**)outSites;
 
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups;
-- (void)makePrimaryBrowserView: (id)aUrlbar status: (id)aStatus
-          windowController: (BrowserWindowController*)aWindowController;
+- (void)makePrimary:(AutoCompleteTextField*)aUrlbar status:(NSTextField*)aStatus;
 - (void)disconnectView;
 - (void)setTab: (NSTabViewItem*)tab;
 - (NSTabViewItem*) tab;

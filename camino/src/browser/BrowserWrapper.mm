@@ -42,6 +42,7 @@
 #import "BrowserWindowController.h"
 #import "BookmarksClient.h"
 #import "SiteIconProvider.h"
+#import "BrowserTabView.h"
 #import "BrowserTabViewItem.h"
 #import "ToolTip.h"
 #import "PageProxyIcon.h"
@@ -84,15 +85,18 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 - (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI;
 
 - (void)setTabTitle:(NSString*)tabTitle windowTitle:(NSString*)windowTitle;
+- (NSString*)displayTitleForPageURL:(NSString*)inURL title:(NSString*)inTitle;
 
 @end
 
+#pragma mark -
+
 @implementation BrowserWrapper
 
-- (id)initWithTab:(NSTabViewItem*)aTab andWindow:(NSWindow*)aWindow
+- (id)initWithTab:(NSTabViewItem*)aTab windowController:(BrowserWindowController*)aWindowController
 {
   mTabItem = aTab;
-  mWindow = aWindow;
+  mWindowController = aWindowController;
   return [self initWithFrame: NSZeroRect];
 }
 
@@ -198,12 +202,10 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   return mTabItem;
 }
 
--(void)makePrimaryBrowserView: (id)aUrlbar status: (id)aStatus
-         windowController: (BrowserWindowController*)aWindowController
+- (void)makePrimary:(AutoCompleteTextField*)aUrlbar status:(NSTextField*)aStatus
 {
   mUrlbar = aUrlbar;
   mStatus = aStatus;
-  mWindowController = aWindowController;
 
   if (mIsBusy)
   {
@@ -253,11 +255,10 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   ioService->GetOffline(&offline);
   mOffline = offline;
   
-  if (mWindowController) // Only register if we're the content area.
-    [[NSNotificationCenter defaultCenter] addObserver:self
-        selector:@selector(offlineModeChanged:)
-        name:kOfflineNotificationName
-        object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+      selector:@selector(offlineModeChanged:)
+      name:kOfflineNotificationName
+      object:nil];
 
   // update the blocked popup indicator
   [mWindowController showPopupBlocked:(mBlockedSites != nil)];
@@ -298,12 +299,21 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)setFrame:(NSRect)frameRect
 {
+  [self setFrame:frameRect resizingBrowserViewIfHidden:NO];
+}
+
+- (void)setFrame:(NSRect)frameRect resizingBrowserViewIfHidden:(BOOL)inResizeBrowser
+{
   [super setFrame:frameRect];
 
-  // Only resize our browser view if we are visible.  If we're hidden, the frame
-  // will get reset when we get placed back into the view hierarchy anyway.  This
-  // enhancement keeps resizing in a window with many tabs from being slow.
-  if ([self window]) {
+  // Only resize our browser view if we are visible, unless the caller requests it.
+  // If we're hidden, the frame will get reset when we get placed back into the
+  // view hierarchy anyway. This enhancement keeps resizing in a window with
+  // many tabs from being slow.
+  // However, this requires us to do the resize on loadURI: below to make
+  // sure that we maintain the scroll position in background tabs correctly.
+  if ([self window] || inResizeBrowser)
+  {
     NSRect bounds = [self bounds];
     [mBrowserView setFrame:bounds];
   }
@@ -320,7 +330,17 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   // trying to load, even if it doesn't work
   if (mIsPrimary)
     [mWindowController updateLocationFields:urlSpec];
-
+  
+  // if we're not the primary tab, make sure that the browser view is 
+  // the correct size when loading a url so that if the url is a relative
+  // anchor, which will cause a scroll to the anchor on load, the scroll
+  // position isn't messed up when we finally display the tab.
+  if (!mIsPrimary)
+  {
+    NSRect tabContentRect = [[mWindowController getTabBrowser] contentRect];
+    [self setFrame:tabContentRect resizingBrowserViewIfHidden:YES];
+  }
+  
   mActivateOnLoad = activate;
   [mBrowserView loadURI:urlSpec referrer:referrer flags:flags allowPopups:inAllowPopups];
 }
@@ -332,11 +352,17 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     mDefaultStatusString = nil;
   }
 
-  [mWindowController ensureBrowserVisible:self];
-  [mWindowController showProgressIndicator];
-  [[mWindowController progressIndicator] setIndeterminate:YES];
-  [[mWindowController progressIndicator] startAnimation:self];
-
+  // it would be much cleaner to wrap up everything that is called
+  // on the window controller into a delegate protocol, and set
+  // the delegate of the frontmost wrapper to the BWC
+  if (mIsPrimary)
+  {
+    [mWindowController ensureBrowserVisible:self];
+    [mWindowController showProgressIndicator];
+    [[mWindowController progressIndicator] setIndeterminate:YES];
+    [[mWindowController progressIndicator] startAnimation:self];
+  }
+  
   [mLoadingStatusString autorelease];
   mLoadingStatusString = [NSLocalizedString(@"TabLoading", @"") retain];
   [mStatus setStringValue:mLoadingStatusString];
@@ -344,7 +370,8 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   [(BrowserTabViewItem*)mTabItem startLoadAnimation];
 
   NS_IF_RELEASE(mBlockedSites);
-  [mWindowController showPopupBlocked:NO];
+  if (mIsPrimary)
+    [mWindowController showPopupBlocked:NO];
   
   mProgress = 0.0;
   mIsBusy = YES;
@@ -353,7 +380,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   mTabTitle = [mLoadingStatusString retain];
   [mTabItem setLabel:mTabTitle];
 
-  if (mWindowController)
+  if (mIsPrimary)
     [mWindowController loadingStarted];
 }
 
@@ -373,10 +400,13 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     mActivateOnLoad = NO;
   }
   
-  [[mWindowController progressIndicator] setIndeterminate:YES];
-  [[mWindowController progressIndicator] stopAnimation:self];
-  [mWindowController hideProgressIndicator];
-
+  if (mIsPrimary)
+  {
+    [[mWindowController progressIndicator] setIndeterminate:YES];
+    [[mWindowController progressIndicator] stopAnimation:self];
+    [mWindowController hideProgressIndicator];
+  }
+  
   [mLoadingStatusString autorelease];
   mLoadingStatusString = [NSLocalizedString(@"DocumentDone", @"") retain];
   if (mDefaultStatusString) {
@@ -388,18 +418,26 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   
   [(BrowserTabViewItem*)mTabItem stopLoadAnimation];
 
-  mProgress = 1.0;
-  mIsBusy = NO;
-
-  if (mWindowController)
-    [mWindowController loadingDone];
-  // send a little love to the bookmarks
   NSString *urlString = nil;
   NSString *titleString = nil;
   [self getTitle:&titleString andHref:&urlString];
-  NSDictionary *userInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:0] forKey:URLLoadSuccessKey];
-  if (urlString && ![urlString isEqualToString:@"about:blank"]) {
-    NSNotification *note = [NSNotification notificationWithName:URLLoadNotification object:urlString userInfo:userInfo];
+  
+  // If we never got a page title, then the tab title will be stuck at "Loading..."
+  // so be sure to set the title here
+  NSString* tabTitle = [self displayTitleForPageURL:urlString title:titleString];
+  [mTabItem setLabel:tabTitle];
+  
+  mProgress = 1.0;
+  mIsBusy = NO;
+
+  if (mIsPrimary)
+    [mWindowController loadingDone];
+
+  // send a little love to the bookmarks
+  if (urlString && ![urlString isEqualToString:@"about:blank"])
+  {
+    NSDictionary*   userInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:0] forKey:URLLoadSuccessKey];
+    NSNotification* note     = [NSNotification notificationWithName:URLLoadNotification object:urlString userInfo:userInfo];
     [[NSNotificationQueue defaultQueue] enqueueNotification:note postingStyle:NSPostWhenIdle];
   }
 }
@@ -409,6 +447,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   if (maxBytes > 0)
   {
     mProgress = ((double)currentBytes / (double)maxBytes) * 100.0;
+
     if (mIsPrimary)
     {
       BOOL isIndeterminate = [[mWindowController progressIndicator] isIndeterminate];
@@ -469,7 +508,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 - (void)onSecurityStateChange:(unsigned long)newState
 {
   mSecureState = newState;
-  if ( mIsPrimary )
+  if (mIsPrimary)
     [mWindowController updateLock:newState];
 }
 
@@ -506,60 +545,51 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   return mTitle;
 }
 
+// this should only be called from the CHBrowserListener
 - (void)setTitle:(NSString *)title
 {
-  if ([title length] == 0)
-  {
-    // if we get a blank title that is not for "about:blank", use the url,
-    // or filename
-    NSString* curURL = [self getCurrentURLSpec];
-    if (![curURL isEqualToString:@"about:blank"])
-    {
-      if ([curURL hasPrefix:@"file://"])
-        title = [curURL lastPathComponent];
-      else
-        title = curURL;
-    }
-  }
-
   [self setTabTitle:title windowTitle:title];
 }
 
 - (void)setTabTitle:(NSString*)tabTitle windowTitle:(NSString*)windowTitle
 {
-  const short kViewSourceLength = 12;         // strlen("view-source:")
-
   NSString* curURL = [self getCurrentURLSpec];
+
   [mTabTitle autorelease];
-  if (tabTitle && [tabTitle length] > 0) {
-    if ([curURL hasPrefix:@"view-source:"])
-      mTabTitle = [NSString stringWithFormat:NSLocalizedString(@"SourceOf", @""), [curURL substringFromIndex:kViewSourceLength]];
-    else	
-      mTabTitle = tabTitle;
-  } 
-  else
-    mTabTitle = NSLocalizedString(@"UntitledPageTitle", @"");
-  [mTabTitle retain];
+  mTabTitle  = [[self displayTitleForPageURL:curURL title:tabTitle] retain];
   
   [mTitle autorelease];
-  if (windowTitle && [windowTitle length] > 0) {
-    if ([curURL hasPrefix:@"view-source:"])
-      mTitle = [NSString stringWithFormat:NSLocalizedString(@"SourceOf", @""), [curURL substringFromIndex:kViewSourceLength]];
-    else
-      mTitle = windowTitle;
-  } 
-  else
-    mTitle = NSLocalizedString(@"UntitledPageTitle", @"");
-
+  
+  NSString* newWindowTitle = [self displayTitleForPageURL:curURL title:windowTitle];
   if (mOffline)
-    mTitle = [NSString stringWithFormat:NSLocalizedString(@"OfflineTitleFormat", @""), mTitle];
-  [mTitle retain];
+    newWindowTitle = [NSString stringWithFormat:NSLocalizedString(@"OfflineTitleFormat", @""), newWindowTitle];
+  mTitle = [newWindowTitle retain];
   
   if (mIsPrimary)
     [[mWindowController window] setTitle:[mTitle stringByTruncatingTo:80 at:kTruncateAtEnd]];
   
   // Always set the tab.
   [mTabItem setLabel:mTabTitle];		// tab titles get truncated when setting them to tabs
+}
+
+- (NSString*)displayTitleForPageURL:(NSString*)inURL title:(NSString*)inTitle
+{
+  NSString* viewSourcePrefix = @"view-source:";
+  if ([inURL hasPrefix:viewSourcePrefix])
+    return [NSString stringWithFormat:NSLocalizedString(@"SourceOf", @""), [inURL substringFromIndex:[viewSourcePrefix length]]];
+
+  if ([inTitle length] > 0)
+    return inTitle;
+
+  if (![inURL isEqualToString:@"about:blank"])
+  {
+    if ([inURL hasPrefix:@"file://"])
+      return [inURL lastPathComponent];
+
+    return inURL;
+  }
+
+  return NSLocalizedString(@"UntitledPageTitle", @"");
 }
 
 - (BOOL)isFlipped
@@ -601,13 +631,15 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     NS_NewISupportsArray(&mBlockedSites);
   if ( mBlockedSites ) {
     mBlockedSites->AppendElement(inSite);
-    [mWindowController showPopupBlocked:YES];
+    if (mIsPrimary)
+      [mWindowController showPopupBlocked:YES];
   }
 }
 
 // Called when a context menu should be shown.
 - (void)onShowContextMenu:(int)flags domEvent:(nsIDOMEvent*)aEvent domNode:(nsIDOMNode*)aNode
 {
+  // presumably this is only called on the primary tab
   [mWindowController onShowContextMenu: flags domEvent: aEvent domNode: aNode];
 }
 
@@ -622,10 +654,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   if (window)
     return window;
 
-  if (mWindow)
-    return mWindow;
-  
-  return nil;
+  return [mWindowController window];
 }
 
 - (BOOL)shouldAcceptDragFromSource:(id)dragSource
@@ -664,9 +693,12 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   if (pageDoc)
   {
     nsIURI* url = pageDoc->GetDocumentURI();
-    nsCAutoString spec;
-    url->GetSpec(spec);
-    *outHrefString = [NSString stringWithUTF8String:spec.get()];
+    if (url)
+    {
+      nsCAutoString spec;
+      url->GetSpec(spec);
+      *outHrefString = [NSString stringWithUTF8String:spec.get()];
+    }
   }
 
   nsAutoString titleString;
@@ -675,8 +707,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     htmlDocument->GetTitle(titleString);
   if (!titleString.IsEmpty())
     *outTitle = [NSString stringWith_nsAString:titleString];
-  else if (*outHrefString)
-    *outTitle = [NSString stringWithString:*outHrefString];
 }
 
 - (void)offlineModeChanged: (NSNotification*)aNotification
@@ -688,13 +718,19 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     ioService->GetOffline(&offline);
     mOffline = offline;
     
-    if (mOffline) {
-        NSString* newTitle = [[[mWindowController window] title] stringByAppendingString: @" [Working Offline]"];
-        [[mWindowController window] setTitle: newTitle];
-    }
-    else {
-        NSArray* titleItems = [[[mWindowController window] title] componentsSeparatedByString:@" [Working Offline]"];
-        [[mWindowController window] setTitle: [titleItems objectAtIndex: 0]];
+    // XXX localize me
+    if (mIsPrimary)
+    {
+      if (mOffline)
+      {
+          NSString* newTitle = [[[mWindowController window] title] stringByAppendingString: @" [Working Offline]"];
+          [[mWindowController window] setTitle: newTitle];
+      }
+      else
+      {
+          NSArray* titleItems = [[[mWindowController window] title] componentsSeparatedByString:@" [Working Offline]"];
+          [[mWindowController window] setTitle: [titleItems objectAtIndex: 0]];
+      }
     }
 }
 

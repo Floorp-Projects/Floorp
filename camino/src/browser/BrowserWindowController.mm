@@ -2246,7 +2246,7 @@ enum BWCOpenDest {
   [mTabBrowser refreshTabBar:YES];
       
   // Make the new view the primary content area.
-  [mBrowserView makePrimaryBrowserView: mURLBar status: mStatus windowController: self];
+  [mBrowserView makePrimary:mURLBar status:mStatus];
 }
 
 - (void)tabView:(NSTabView *)aTabView willSelectTabViewItem:(NSTabViewItem *)aTabViewItem
@@ -2267,7 +2267,7 @@ enum BWCOpenDest {
   [mTabBrowser refreshTabBar:YES];
 }
 
--(id)getTabBrowser
+-(BrowserTabView*)getTabBrowser
 {
   return mTabBrowser;
 }
@@ -2414,9 +2414,15 @@ enum BWCOpenDest {
 -(BrowserTabViewItem*)createNewTabItem
 {
   BrowserTabViewItem* newTab = [BrowserTabView makeNewTabItem];
-  BrowserWrapper* newView = [[[BrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
+  BrowserWrapper* newView = [[BrowserWrapper alloc] initWithTab:newTab windowController:self];
 
-  [newTab setView: newView];
+  // size the new browser view properly up-front, so that if the
+  // page is scrolled to a relative anchor, we don't mess with the
+  // scroll position by resizing it later
+  [newView setFrame:[mTabBrowser contentRect] resizingBrowserViewIfHidden:YES];
+
+  [newTab setView: newView];  // takes ownership
+  [newView release];
   
   // we have to copy the context menu for each tag, because
   // the menu gets the tab view item's tag.
@@ -2911,8 +2917,8 @@ enum BWCOpenDest {
 // popup blocking
 - (IBAction)configurePopupBlocking:(id)sender
 {
-  [[NSApp delegate] displayPreferencesWindow:self];
-  [[[NSApp delegate] preferencesController] selectPreferencePaneByIdentifier:@"org.mozilla.chimera.preference.webfeatures"];
+  [[MVPreferencesController sharedInstance] showPreferences:nil];
+  [[MVPreferencesController sharedInstance] selectPreferencePaneByIdentifier:@"org.mozilla.chimera.preference.webfeatures"];
 }
 
 // updateLock:

@@ -48,10 +48,10 @@
 #include "nsICacheEntryDescriptor.h"
 
 
-NSString* SiteIconLoadNotificationName = @"siteicon_load_notification";
-NSString* SiteIconLoadImageKey         = @"siteicon_load_image";
-NSString* SiteIconLoadURIKey           = @"siteicon_load_uri";
-NSString* SiteIconLoadUserDataKey      = @"siteicon_load_user_data";
+NSString* const SiteIconLoadNotificationName = @"siteicon_load_notification";
+NSString* const SiteIconLoadImageKey         = @"siteicon_load_image";
+NSString* const SiteIconLoadURIKey           = @"siteicon_load_uri";
+NSString* const SiteIconLoadUserDataKey      = @"siteicon_load_user_data";
 
 
 static inline PRUint32 PRTimeToSeconds(PRTime t_usec)

@@ -39,10 +39,10 @@
 
 #import "RemoteDataProvider.h"
 
-extern NSString* SiteIconLoadNotificationName;
-extern NSString* SiteIconLoadImageKey;
-extern NSString* SiteIconLoadURIKey;
-extern NSString* SiteIconLoadUserDataKey;
+extern NSString* const SiteIconLoadNotificationName;
+extern NSString* const SiteIconLoadImageKey;
+extern NSString* const SiteIconLoadURIKey;
+extern NSString* const SiteIconLoadUserDataKey;
 
 class NeckoCacheHelper;
 

@@ -188,9 +188,7 @@ typedef enum
   NSString* mSavedTitle;
 }
 
-- (void)dealloc;
-
-- (id)getTabBrowser;
+- (BrowserTabView*)getTabBrowser;
 - (BrowserWrapper*)getBrowserWrapper;
 
 - (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups;

@@ -56,6 +56,7 @@
 #import "MainController.h"
 
 #import "BrowserWindowController.h"
+#import "BrowserTabView.h"
 #import "PreferenceManager.h"
 #import "ImageAndTextCell.h"
 #import "SearchTextField.h"

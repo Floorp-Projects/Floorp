@@ -67,6 +67,7 @@
 
 @end
 
+#pragma mark -
 
 #define kTabDropTargetHeight  18.0
 
