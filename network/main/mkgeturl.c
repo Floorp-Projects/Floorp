@@ -709,9 +709,9 @@ PUBLIC void
 NET_FinishInitNetLib()
 {
 #ifdef NS_NET_FILE
-    // Initialize all the directories and files that netlib needs.
+    /* Initialize all the directories and files that netlib needs. */
     if (!NET_InitFilesAndDirs())
-        ; // do something.
+        ; /* do something. */
 #endif
 
 
@@ -2975,8 +2975,8 @@ redo_load_switch:   /* come here on file/ftp retry */
 	  {
         char *proxy_address = NULL;
 #ifdef MODULAR_NETLIB
-        // If this url struct indicates that it doesn't want to use a proxy,
-        // skip it.
+        /* If this url struct indicates that it doesn't want to use a proxy,
+         * skip it. */
         if (!this_entry->URL_s->bypassProxy) {
             proxy_address = NET_FindProxyHostForUrl(type, this_entry->URL_s->address);
         }
