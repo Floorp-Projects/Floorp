@@ -245,6 +245,7 @@ static PRBool gNoisyContentUpdates = PR_FALSE;
 static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
 static PRBool gVerifyFastFindFrame = PR_FALSE;
+static PRBool gTablePseudoFrame = PR_FALSE;
 
 struct FrameCtorDebugFlags {
   const char* name;
@@ -256,6 +257,7 @@ static FrameCtorDebugFlags gFlags[] = {
   { "really-noisy-content-updates", &gReallyNoisyContentUpdates },
   { "noisy-inline",                 &gNoisyInlineConstruction },
   { "fast-find-frame",              &gVerifyFastFindFrame },
+  { "table-pseudo",                 &gTablePseudoFrame },
 };
 
 #define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
@@ -804,6 +806,9 @@ struct nsPseudoFrameData {
   nsPseudoFrameData();
   nsPseudoFrameData(nsPseudoFrameData& aOther);
   void Reset();
+#ifdef DEBUG
+  void Dump();
+#endif
 };
 
 struct nsPseudoFrames {
@@ -822,6 +827,9 @@ struct nsPseudoFrames {
   nsPseudoFrames& operator=(const nsPseudoFrames& aOther);
   void Reset(nsPseudoFrames* aSave = nsnull);
   PRBool IsEmpty() { return (!mLowestType && !mColGroup.mFrame); }
+#ifdef DEBUG
+  void Dump();
+#endif
 };
 
 nsPseudoFrameData::nsPseudoFrameData()
@@ -841,6 +849,26 @@ nsPseudoFrameData::Reset()
   mChildList2.childList = mChildList2.lastChild = nsnull;
 }
 
+#ifdef DEBUG
+void
+nsPseudoFrameData::Dump()
+{
+  nsIFrame* main = nsnull;
+  nsIFrame* second = nsnull;
+  printf("        %p\n", mFrame);
+  main = mChildList.childList;
+
+ 
+  second = mChildList2.childList;
+  while (main || second) {
+    printf("          %p   %p\n", main, second);
+    if (main)
+      main = main->GetNextSibling();
+    if (second)
+      second = second->GetNextSibling();
+  }
+}
+#endif
 nsPseudoFrames::nsPseudoFrames() 
 : mTableOuter(), mTableInner(), mRowGroup(), mColGroup(), 
   mRow(), mCellOuter(), mCellInner(), mLowestType(nsnull)
@@ -876,6 +904,97 @@ nsPseudoFrames::Reset(nsPseudoFrames* aSave)
   mLowestType = nsnull;
 }
 
+#ifdef DEBUG
+void
+nsPseudoFrames::Dump()
+{
+  if (IsEmpty()) {
+    // check that it is really empty, warn otherwise
+    NS_ASSERTION(!mTableOuter.mFrame,    "Pseudo Outer Table Frame not empty");
+    NS_ASSERTION(!mTableOuter.mChildList.childList, "Pseudo Outer Table Frame has primary children");
+    NS_ASSERTION(!mTableOuter.mChildList2.childList,"Pseudo Outer Table Frame has secondary children");
+    NS_ASSERTION(!mTableInner.mFrame,    "Pseudo Inner Table Frame not empty");
+    NS_ASSERTION(!mTableInner.mChildList.childList, "Pseudo Inner Table Frame has primary children");
+    NS_ASSERTION(!mTableInner.mChildList2.childList,"Pseudo Inner Table Frame has secondary children");
+    NS_ASSERTION(!mColGroup.mFrame,      "Pseudo Colgroup Frame not empty");
+    NS_ASSERTION(!mColGroup.mChildList.childList,   "Pseudo Colgroup Table Frame has primary children");
+    NS_ASSERTION(!mColGroup.mChildList2.childList,  "Pseudo Colgroup Table Frame has secondary children");
+    NS_ASSERTION(!mRowGroup.mFrame,      "Pseudo Rowgroup Frame not empty");
+    NS_ASSERTION(!mRowGroup.mChildList.childList,   "Pseudo Rowgroup Frame has primary children");
+    NS_ASSERTION(!mRowGroup.mChildList2.childList,  "Pseudo Rowgroup Frame has secondary children");
+    NS_ASSERTION(!mRow.mFrame,           "Pseudo Row Frame not empty");
+    NS_ASSERTION(!mRow.mChildList.childList,        "Pseudo Row Frame has primary children");
+    NS_ASSERTION(!mRow.mChildList2.childList,       "Pseudo Row Frame has secondary children");
+    NS_ASSERTION(!mCellOuter.mFrame,     "Pseudo Outer Cell Frame not empty");
+    NS_ASSERTION(!mCellOuter.mChildList.childList,  "Pseudo Outer Cell Frame has primary children");
+    NS_ASSERTION(!mCellOuter.mChildList2.childList, "Pseudo Outer Cell Frame has secondary children");
+    NS_ASSERTION(!mCellInner.mFrame,     "Pseudo Inner Cell Frame not empty");
+    NS_ASSERTION(!mCellInner.mChildList.childList,  "Pseudo Inner Cell Frame has primary children");
+    NS_ASSERTION(!mCellInner.mChildList2.childList, "Pseudo inner Cell Frame has secondary children");
+  }
+  else {
+    if (mTableOuter.mFrame || mTableOuter.mChildList.childList || mTableOuter.mChildList2.childList) {
+      if (nsLayoutAtoms::tableOuterFrame == mLowestType) {
+        printf("LOW OuterTable\n");
+      }
+      else {
+        printf("    OuterTable\n");
+      }
+      mTableOuter.Dump();
+    }
+    if (mTableInner.mFrame || mTableInner.mChildList.childList || mTableInner.mChildList2.childList) {
+      if (nsLayoutAtoms::tableFrame == mLowestType) {
+        printf("LOW InnerTable\n");
+      }
+      else {
+        printf("    InnerTable\n");
+      }
+      mTableInner.Dump();
+    }
+    if (mColGroup.mFrame || mColGroup.mChildList.childList || mColGroup.mChildList2.childList) {
+      if (nsLayoutAtoms::tableColGroupFrame == mLowestType) {
+        printf("LOW ColGroup\n");
+      }
+      else {
+        printf("    ColGroup\n");
+      }
+      mColGroup.Dump();
+    }
+    if (mRowGroup.mFrame || mRowGroup.mChildList.childList || mRowGroup.mChildList2.childList) {
+      if (nsLayoutAtoms::tableRowGroupFrame == mLowestType) {
+        printf("LOW RowGroup\n");
+      }
+      else {
+        printf("    RowGroup\n");
+      }
+      mRowGroup.Dump();
+    }
+    if (mRow.mFrame || mRow.mChildList.childList || mRow.mChildList2.childList) {
+      if (nsLayoutAtoms::tableRowFrame == mLowestType) {
+        printf("LOW Row\n");
+      }
+      else {
+        printf("    Row\n");
+      }
+      mRow.Dump();
+    }
+    
+    if (mCellOuter.mFrame || mCellOuter.mChildList.childList || mCellOuter.mChildList2.childList) {
+      if (IS_TABLE_CELL(mLowestType)) {
+        printf("LOW OuterCell\n");
+      }
+      else {
+        printf("    OuterCell\n");
+      }
+      mCellOuter.Dump();
+    }
+    if (mCellInner.mFrame || mCellInner.mChildList.childList || mCellInner.mChildList2.childList) {
+      printf("    InnerCell\n");
+      mCellInner.Dump();
+    }
+  }
+}
+#endif
 // -----------------------------------------------------------
 
 // Structure for saving the existing state when pushing/poping containing
@@ -2339,6 +2458,13 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
 
   aHighestFrame = nsnull;
 
+#ifdef DEBUG
+  if (gTablePseudoFrame) {
+    printf("*** ProcessPseudoFrames enter***\n");
+    aState.mPseudoFrames.Dump();
+  }
+#endif
+
   nsPseudoFrames& pseudoFrames = aState.mPseudoFrames;
   nsPresContext* presContext = aState.mPresContext;
 
@@ -2432,11 +2558,26 @@ static nsresult
 ProcessPseudoFrames(nsFrameConstructorState& aState,
                     nsFrameItems&   aItems)
 {
+
+#ifdef DEBUG
+  if (gTablePseudoFrame) {
+    printf("*** ProcessPseudoFrames complete enter***\n");
+    aState.mPseudoFrames.Dump();
+  }
+#endif
+ 
   nsIFrame* highestFrame;
   nsresult rv = ProcessPseudoFrames(aState, nsnull, highestFrame);
   if (highestFrame) {
     aItems.AddChild(highestFrame);
   }
+ 
+#ifdef DEBUG
+  if (gTablePseudoFrame) {
+    printf("*** ProcessPseudoFrames complete leave, highestframe:%p***\n",highestFrame);
+    aState.mPseudoFrames.Dump();
+  }
+#endif
   aState.mPseudoFrames.Reset();
   return rv;
 }
@@ -2445,8 +2586,37 @@ static nsresult
 ProcessPseudoFrames(nsFrameConstructorState& aState,
                     nsIAtom*        aHighestType)
 {
+#ifdef DEBUG
+  if (gTablePseudoFrame) {
+    printf("*** ProcessPseudoFrames limited enter highest:");
+    if (nsLayoutAtoms::tableOuterFrame == aHighestType) 
+      printf("OuterTable");
+    else if (nsLayoutAtoms::tableFrame == aHighestType) 
+      printf("InnerTable");
+    else if (nsLayoutAtoms::tableColGroupFrame == aHighestType) 
+      printf("ColGroup");
+    else if (nsLayoutAtoms::tableRowGroupFrame == aHighestType) 
+      printf("RowGroup");
+    else if (nsLayoutAtoms::tableRowFrame == aHighestType) 
+      printf("Row");
+    else if (IS_TABLE_CELL(aHighestType)) 
+      printf("Cell");
+    else 
+      NS_ASSERTION(PR_FALSE, "invalid call to ProcessPseudoFrames ");
+    printf("***\n");
+    aState.mPseudoFrames.Dump();
+  }
+#endif
+ 
   nsIFrame* highestFrame;
   nsresult rv = ProcessPseudoFrames(aState, aHighestType, highestFrame);
+
+#ifdef DEBUG
+  if (gTablePseudoFrame) {
+    printf("*** ProcessPseudoFrames limited leave:%p***\n",highestFrame);
+    aState.mPseudoFrames.Dump();
+  }
+#endif
   return rv;
 }
 
@@ -2492,7 +2662,12 @@ nsCSSFrameConstructor::CreatePseudoTableFrame(nsTableCreator&          aTableCre
   if (aState.mPseudoFrames.mCellInner.mFrame) {
     aState.mPseudoFrames.mCellInner.mChildList.AddChild(pseudoOuter.mFrame);
   }
-
+#ifdef DEBUG
+  if (gTablePseudoFrame) {
+     printf("*** CreatePseudoTableFrame ***\n");
+    aState.mPseudoFrames.Dump();
+  }
+#endif
   return rv;
 }
 
@@ -2534,7 +2709,12 @@ nsCSSFrameConstructor::CreatePseudoRowGroupFrame(nsTableCreator&          aTable
   if (aState.mPseudoFrames.mTableInner.mFrame) {
     aState.mPseudoFrames.mTableInner.mChildList.AddChild(pseudo.mFrame);
   }
-
+#ifdef DEBUG
+  if (gTablePseudoFrame) {
+     printf("*** CreatePseudoRowGroupFrame ***\n");
+    aState.mPseudoFrames.Dump();
+  }
+#endif
   return rv;
 }
 
@@ -2578,7 +2758,12 @@ nsCSSFrameConstructor::CreatePseudoColGroupFrame(nsTableCreator&          aTable
   if (aState.mPseudoFrames.mTableInner.mFrame) {
     aState.mPseudoFrames.mTableInner.mChildList.AddChild(pseudo.mFrame);
   }
-
+#ifdef DEBUG
+  if (gTablePseudoFrame) {
+     printf("*** CreatePseudoColGroupFrame ***\n");
+    aState.mPseudoFrames.Dump();
+  }
+#endif
   return rv;
 }
 
@@ -2619,7 +2804,12 @@ nsCSSFrameConstructor::CreatePseudoRowFrame(nsTableCreator&          aTableCreat
   if (aState.mPseudoFrames.mRowGroup.mFrame) {
     aState.mPseudoFrames.mRowGroup.mChildList.AddChild(pseudo.mFrame);
   }
-
+#ifdef DEBUG
+  if (gTablePseudoFrame) {
+     printf("*** CreatePseudoRowFrame ***\n");
+    aState.mPseudoFrames.Dump();
+  }
+#endif
   return rv;
 }
 
@@ -2665,7 +2855,12 @@ nsCSSFrameConstructor::CreatePseudoCellFrame(nsTableCreator&          aTableCrea
   if (aState.mPseudoFrames.mRow.mFrame) {
     aState.mPseudoFrames.mRow.mChildList.AddChild(pseudoOuter.mFrame);
   }
-
+#ifdef DEBUG
+  if (gTablePseudoFrame) {
+     printf("*** CreatePseudoCellFrame ***\n");
+    aState.mPseudoFrames.Dump();
+  }
+#endif
   return rv;
 }
 
@@ -13309,17 +13504,13 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsFrameConstructorState& aState,
 nsresult
 nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
 {
-#ifdef DEBUG
-  PRBool isAttinasi = PR_FALSE;
-#ifdef DEBUG_attinasi
-  isAttinasi = PR_TRUE;
-#endif // DEBUG_attinasi
 
+#ifdef DEBUG
   // ReframeContainingBlock is a NASTY routine, it causes terrible performance problems
   // so I want to see when it is happening!  Unfortunately, it is happening way to often because
   // so much content on the web causes 'special' block-in-inline frame situations and we handle them
   // very poorly
-  if (gNoisyContentUpdates || isAttinasi) {
+  if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::ReframeContainingBlock frame=%p\n",
            NS_STATIC_CAST(void*, aFrame));
   }
