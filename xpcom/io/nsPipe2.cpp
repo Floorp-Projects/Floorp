@@ -22,7 +22,7 @@
 #include "nsIServiceManager.h"
 #include "nsIPageManager.h"
 #define _CRTDBG_MAP_ALLOC
-#include "crtdbg.h"
+//#include "crtdbg.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
