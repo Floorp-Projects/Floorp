@@ -183,6 +183,7 @@ protected:
   nsIPresContext*       mPresContext;             // XXX: Remove the need to cache the pres context.
   nsFormFrame*          mFormFrame;               // Parent Form Frame
   nsString              mTextStr;                 // Current Combo box selection
+  PRInt32               mSelectedIndex;           // current selected index
   nsIHTMLContent*       mDisplayContent;          // Anonymous content used to display the current selection
   nsIHTMLContent*       mButtonContent;           // Anonymous content used to popup the dropdown list
   PRBool                mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
