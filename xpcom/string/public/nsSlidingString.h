@@ -84,7 +84,7 @@ class nsSlidingString;
    * a substring over a buffer list, this 
    */
 class NS_COM nsSlidingSubstring
-     : virtual public nsAPromiseString
+     : virtual public nsAString
   {
     friend class nsSlidingString;
 
@@ -170,7 +170,7 @@ class NS_COM nsSlidingSubstring
    *  
    */
 class NS_COM nsSlidingString
-    : virtual public nsAPromiseString,
+    : virtual public nsAString,
       private nsSlidingSubstring
   {
     friend class nsSlidingSubstring;

@@ -205,23 +205,42 @@ nsAString::FindChar( char_type aChar, PRUint32 aOffset ) const
     return -1;
   }
 
+PRBool
+nsAString::IsDependentOn( const self_type& aString ) const
+  {
+    const_fragment_type f1;
+    const char_type* s1 = GetReadableFragment(f1, kFirstFragment);
+    while ( s1 )
+      {
+        const_fragment_type f2;
+        const char_type* s2 = aString.GetReadableFragment(f2, kFirstFragment);
+        while ( s2 )
+          {
+              // if it _isn't_ the case that
+              //  one fragment starts after the other ends,
+              //  or ends before the other starts,
+              // then, they conflict:
+              // !(f2.mStart>=f1.mEnd || f2.mEnd<=f1.mStart)
+              //
+              // Simplified, that gives us:
+            if ( f2.mStart < f1.mEnd && f2.mEnd > f1.mStart )
+              return PR_TRUE;
+
+            s2 = aString.GetReadableFragment(f2, kNextFragment);
+          }
+        s1 = GetReadableFragment(f1, kNextFragment);
+      }
+    return PR_FALSE;
+  }
 
   //
   // |Assign()|
   //
 
 void
-nsAString::AssignFromReadable( const self_type& rhs )
-  {
-    if ( this != &rhs )
-      do_AssignFromReadable(rhs);
-    // else, self-assign is a no-op
-  }
-
-void
-nsAString::AssignFromPromise( const self_type& aReadable )
+nsAString::do_AssignFromReadable( const self_type& aReadable )
     /*
-      ...this function is only called when a promise that somehow references |this| is assigned _into_ |this|.
+      ...we need to check whether the string that's being assigned into |this| somehow references |this|.
       E.g.,
       
         ... writable& w ...
@@ -241,8 +260,12 @@ nsAString::AssignFromPromise( const self_type& aReadable )
       option to fix either the callers or this mechanism.
     */
   {
+      // self-assign is a no-op
+    if ( this == &aReadable)
+      return;
+
     if ( !aReadable.IsDependentOn(*this) )
-      do_AssignFromReadable(aReadable);
+      UncheckedAssignFromReadable(aReadable);
     else
       {
         size_type length = aReadable.Length();
@@ -262,7 +285,7 @@ nsAString::AssignFromPromise( const self_type& aReadable )
   }
 
 void
-nsAString::do_AssignFromReadable( const self_type& aReadable )
+nsAString::UncheckedAssignFromReadable( const self_type& aReadable )
   {
     SetLength(0);
     if ( !aReadable.IsEmpty() )
@@ -280,19 +303,19 @@ nsAString::do_AssignFromReadable( const self_type& aReadable )
 void
 nsAString::do_AssignFromElementPtr( const char_type* aPtr )
   {
-    do_AssignFromReadable(nsDependentString(aPtr));
+    UncheckedAssignFromReadable(nsDependentString(aPtr));
   }
 
 void
 nsAString::do_AssignFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    do_AssignFromReadable(Substring(aPtr, aPtr+aLength));
+    UncheckedAssignFromReadable(Substring(aPtr, aPtr+aLength));
   }
 
 void
 nsAString::do_AssignFromElement( char_type aChar )
   {
-    do_AssignFromReadable(Substring(&aChar, &aChar+1));
+    UncheckedAssignFromReadable(Substring(&aChar, &aChar+1));
   }
 
 
@@ -302,19 +325,10 @@ nsAString::do_AssignFromElement( char_type aChar )
   //
 
 void
-nsAString::AppendFromReadable( const self_type& aReadable )
-  {
-    if ( this != &aReadable )
-      do_AppendFromReadable(aReadable);
-    else
-      AppendFromPromise(aReadable);
-  }
-
-void
-nsAString::AppendFromPromise( const self_type& aReadable )
+nsAString::do_AppendFromReadable( const self_type& aReadable )
   {
     if ( !aReadable.IsDependentOn(*this) )
-      do_AppendFromReadable(aReadable);
+      UncheckedAppendFromReadable(aReadable);
     else
       {
         size_type length = aReadable.Length();
@@ -332,7 +346,7 @@ nsAString::AppendFromPromise( const self_type& aReadable )
   }
 
 void
-nsAString::do_AppendFromReadable( const self_type& aReadable )
+nsAString::UncheckedAppendFromReadable( const self_type& aReadable)
   {
     size_type oldLength = this->Length();
     SetLength(oldLength + aReadable.Length());
@@ -342,22 +356,23 @@ nsAString::do_AppendFromReadable( const self_type& aReadable )
     copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), BeginWriting(toBegin).advance( PRInt32(oldLength) ) );
   }
 
+
 void
 nsAString::do_AppendFromElementPtr( const char_type* aPtr )
   {
-    do_AppendFromReadable(nsDependentString(aPtr));
+    UncheckedAppendFromReadable(nsDependentString(aPtr));
   }
 
 void
 nsAString::do_AppendFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    do_AppendFromReadable(Substring(aPtr, aPtr+aLength));
+    UncheckedAppendFromReadable(Substring(aPtr, aPtr+aLength));
   }
 
 void
 nsAString::do_AppendFromElement( char_type aChar )
   {
-    do_AppendFromReadable(Substring(&aChar, &aChar + 1));
+    UncheckedAppendFromReadable(Substring(&aChar, &aChar + 1));
   }
 
 
@@ -367,19 +382,10 @@ nsAString::do_AppendFromElement( char_type aChar )
   //
 
 void
-nsAString::InsertFromReadable( const self_type& aReadable, index_type atPosition )
-  {
-    if ( this != &aReadable )
-      do_InsertFromReadable(aReadable, atPosition);
-    else
-      InsertFromPromise(aReadable, atPosition);
-  }
-
-void
-nsAString::InsertFromPromise( const self_type& aReadable, index_type atPosition )
+nsAString::do_InsertFromReadable( const self_type& aReadable, index_type atPosition )
   {
     if ( !aReadable.IsDependentOn(*this) )
-      do_InsertFromReadable(aReadable, atPosition);
+      UncheckedInsertFromReadable(aReadable, atPosition);
     else
       {
         size_type length = aReadable.Length();
@@ -397,7 +403,7 @@ nsAString::InsertFromPromise( const self_type& aReadable, index_type atPosition 
   }
 
 void
-nsAString::do_InsertFromReadable( const self_type& aReadable, index_type atPosition )
+nsAString::UncheckedInsertFromReadable( const self_type& aReadable, index_type atPosition )
   {
     size_type oldLength = this->Length();
     SetLength(oldLength + aReadable.Length());
@@ -414,19 +420,19 @@ nsAString::do_InsertFromReadable( const self_type& aReadable, index_type atPosit
 void
 nsAString::do_InsertFromElementPtr( const char_type* aPtr, index_type atPosition )
   {
-    do_InsertFromReadable(nsDependentString(aPtr), atPosition);
+    UncheckedInsertFromReadable(nsDependentString(aPtr), atPosition);
   }
 
 void
 nsAString::do_InsertFromElementPtrLength( const char_type* aPtr, index_type atPosition, size_type aLength )
   {
-    do_InsertFromReadable(Substring(aPtr, aPtr+aLength), atPosition);
+    UncheckedInsertFromReadable(Substring(aPtr, aPtr+aLength), atPosition);
   }
 
 void
 nsAString::do_InsertFromElement( char_type aChar, index_type atPosition )
   {
-    do_InsertFromReadable(Substring(&aChar, &aChar+1), atPosition);
+    UncheckedInsertFromReadable(Substring(&aChar, &aChar+1), atPosition);
   }
 
 
@@ -456,19 +462,10 @@ nsAString::Cut( index_type cutStart, size_type cutLength )
   //
 
 void
-nsAString::ReplaceFromReadable( index_type cutStart, size_type cutLength, const self_type& aReplacement )
-  {
-    if ( this != &aReplacement )
-      do_ReplaceFromReadable(cutStart, cutLength, aReplacement);
-    else
-      ReplaceFromPromise(cutStart, cutLength, aReplacement);
-  }
-
-void
-nsAString::ReplaceFromPromise( index_type cutStart, size_type cutLength, const self_type& aReadable )
+nsAString::do_ReplaceFromReadable( index_type cutStart, size_type cutLength, const self_type& aReadable )
   {
     if ( !aReadable.IsDependentOn(*this) )
-      do_ReplaceFromReadable(cutStart, cutLength, aReadable);
+      UncheckedReplaceFromReadable(cutStart, cutLength, aReadable);
     else
       {
         size_type length = aReadable.Length();
@@ -478,7 +475,7 @@ nsAString::ReplaceFromPromise( index_type cutStart, size_type cutLength, const s
             const_iterator fromBegin, fromEnd;
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
-            do_ReplaceFromReadable(cutStart, cutLength, nsDependentString(buffer, length));
+            UncheckedReplaceFromReadable(cutStart, cutLength, nsDependentString(buffer, length));
             delete[] buffer;
           }
         // else assert?
@@ -486,7 +483,7 @@ nsAString::ReplaceFromPromise( index_type cutStart, size_type cutLength, const s
   }
 
 void
-nsAString::do_ReplaceFromReadable( index_type cutStart, size_type cutLength, const self_type& aReplacement )
+nsAString::UncheckedReplaceFromReadable( index_type cutStart, size_type cutLength, const self_type& aReplacement )
   {
     size_type oldLength = this->Length();
 
@@ -509,6 +506,7 @@ nsAString::do_ReplaceFromReadable( index_type cutStart, size_type cutLength, con
 
     copy_string(aReplacement.BeginReading(fromBegin), aReplacement.EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(cutStart)));
   }
+
 
 
 int
@@ -704,23 +702,42 @@ nsACString::FindChar( char_type aChar, PRUint32 aOffset ) const
     return -1;
   }
 
+PRBool
+nsACString::IsDependentOn( const self_type& aString ) const
+  {
+    const_fragment_type f1;
+    const char_type* s1 = GetReadableFragment(f1, kFirstFragment);
+    while ( s1 )
+      {
+        const_fragment_type f2;
+        const char_type* s2 = aString.GetReadableFragment(f2, kFirstFragment);
+        while ( s2 )
+          {
+              // if it _isn't_ the case that
+              //  one fragment starts after the other ends,
+              //  or ends before the other starts,
+              // then, they conflict:
+              // !(f2.mStart>=f1.mEnd || f2.mEnd<=f1.mStart)
+              //
+              // Simplified, that gives us:
+            if ( f2.mStart < f1.mEnd && f2.mEnd > f1.mStart )
+              return PR_TRUE;
+
+            s2 = aString.GetReadableFragment(f2, kNextFragment);
+          }
+        s1 = GetReadableFragment(f1, kNextFragment);
+      }
+    return PR_FALSE;
+  }
 
   //
   // |Assign()|
   //
 
 void
-nsACString::AssignFromReadable( const self_type& rhs )
-  {
-    if ( this != &rhs )
-      do_AssignFromReadable(rhs);
-    // else, self-assign is a no-op
-  }
-
-void
-nsACString::AssignFromPromise( const self_type& aReadable )
+nsACString::do_AssignFromReadable( const self_type& aReadable )
     /*
-      ...this function is only called when a promise that somehow references |this| is assigned _into_ |this|.
+      ...we need to check whether the string that's being assigned into |this| somehow references |this|.
       E.g.,
       
         ... writable& w ...
@@ -740,8 +757,12 @@ nsACString::AssignFromPromise( const self_type& aReadable )
       option to fix either the callers or this mechanism.
     */
   {
+      // self-assign is a no-op
+    if (this == &aReadable)
+      return;
+
     if ( !aReadable.IsDependentOn(*this) )
-      do_AssignFromReadable(aReadable);
+      UncheckedAssignFromReadable(aReadable);
     else
       {
         size_type length = aReadable.Length();
@@ -761,7 +782,7 @@ nsACString::AssignFromPromise( const self_type& aReadable )
   }
 
 void
-nsACString::do_AssignFromReadable( const self_type& aReadable )
+nsACString::UncheckedAssignFromReadable( const self_type& aReadable )
   {
     SetLength(0);
     if ( !aReadable.IsEmpty() )
@@ -779,19 +800,19 @@ nsACString::do_AssignFromReadable( const self_type& aReadable )
 void
 nsACString::do_AssignFromElementPtr( const char_type* aPtr )
   {
-    do_AssignFromReadable(nsDependentCString(aPtr));
+    UncheckedAssignFromReadable(nsDependentCString(aPtr));
   }
 
 void
 nsACString::do_AssignFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    do_AssignFromReadable(Substring(aPtr, aPtr+aLength));
+    UncheckedAssignFromReadable(Substring(aPtr, aPtr+aLength));
   }
 
 void
 nsACString::do_AssignFromElement( char_type aChar )
   {
-    do_AssignFromReadable(Substring(&aChar, &aChar+1));
+    UncheckedAssignFromReadable(Substring(&aChar, &aChar+1));
   }
 
 
@@ -801,19 +822,10 @@ nsACString::do_AssignFromElement( char_type aChar )
   //
 
 void
-nsACString::AppendFromReadable( const self_type& aReadable )
-  {
-    if ( this != &aReadable )
-      do_AppendFromReadable(aReadable);
-    else
-      AppendFromPromise(aReadable);
-  }
-
-void
-nsACString::AppendFromPromise( const self_type& aReadable )
+nsACString::do_AppendFromReadable( const self_type& aReadable )
   {
     if ( !aReadable.IsDependentOn(*this) )
-      do_AppendFromReadable(aReadable);
+      UncheckedAppendFromReadable(aReadable);
     else
       {
         size_type length = aReadable.Length();
@@ -831,7 +843,7 @@ nsACString::AppendFromPromise( const self_type& aReadable )
   }
 
 void
-nsACString::do_AppendFromReadable( const self_type& aReadable )
+nsACString::UncheckedAppendFromReadable( const self_type& aReadable )
   {
     size_type oldLength = this->Length();
     SetLength(oldLength + aReadable.Length());
@@ -844,19 +856,19 @@ nsACString::do_AppendFromReadable( const self_type& aReadable )
 void
 nsACString::do_AppendFromElementPtr( const char_type* aPtr )
   {
-    do_AppendFromReadable(nsDependentCString(aPtr));
+    UncheckedAppendFromReadable(nsDependentCString(aPtr));
   }
 
 void
 nsACString::do_AppendFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    do_AppendFromReadable(Substring(aPtr, aPtr+aLength));
+    UncheckedAppendFromReadable(Substring(aPtr, aPtr+aLength));
   }
 
 void
 nsACString::do_AppendFromElement( char_type aChar )
   {
-    do_AppendFromReadable(Substring(&aChar, &aChar + 1));
+    UncheckedAppendFromReadable(Substring(&aChar, &aChar + 1));
   }
 
 
@@ -866,19 +878,10 @@ nsACString::do_AppendFromElement( char_type aChar )
   //
 
 void
-nsACString::InsertFromReadable( const self_type& aReadable, index_type atPosition )
-  {
-    if ( this != &aReadable )
-      do_InsertFromReadable(aReadable, atPosition);
-    else
-      InsertFromPromise(aReadable, atPosition);
-  }
-
-void
-nsACString::InsertFromPromise( const self_type& aReadable, index_type atPosition )
+nsACString::do_InsertFromReadable( const self_type& aReadable, index_type atPosition )
   {
     if ( !aReadable.IsDependentOn(*this) )
-      do_InsertFromReadable(aReadable, atPosition);
+      UncheckedInsertFromReadable(aReadable, atPosition);
     else
       {
         size_type length = aReadable.Length();
@@ -896,7 +899,7 @@ nsACString::InsertFromPromise( const self_type& aReadable, index_type atPosition
   }
 
 void
-nsACString::do_InsertFromReadable( const self_type& aReadable, index_type atPosition )
+nsACString::UncheckedInsertFromReadable( const self_type& aReadable, index_type atPosition )
   {
     size_type oldLength = this->Length();
     SetLength(oldLength + aReadable.Length());
@@ -913,19 +916,19 @@ nsACString::do_InsertFromReadable( const self_type& aReadable, index_type atPosi
 void
 nsACString::do_InsertFromElementPtr( const char_type* aPtr, index_type atPosition )
   {
-    do_InsertFromReadable(nsDependentCString(aPtr), atPosition);
+    UncheckedInsertFromReadable(nsDependentCString(aPtr), atPosition);
   }
 
 void
 nsACString::do_InsertFromElementPtrLength( const char_type* aPtr, index_type atPosition, size_type aLength )
   {
-    do_InsertFromReadable(Substring(aPtr, aPtr+aLength), atPosition);
+    UncheckedInsertFromReadable(Substring(aPtr, aPtr+aLength), atPosition);
   }
 
 void
 nsACString::do_InsertFromElement( char_type aChar, index_type atPosition )
   {
-    do_InsertFromReadable(Substring(&aChar, &aChar+1), atPosition);
+    UncheckedInsertFromReadable(Substring(&aChar, &aChar+1), atPosition);
   }
 
 
@@ -955,19 +958,10 @@ nsACString::Cut( index_type cutStart, size_type cutLength )
   //
 
 void
-nsACString::ReplaceFromReadable( index_type cutStart, size_type cutLength, const self_type& aReplacement )
-  {
-    if ( this != &aReplacement )
-      do_ReplaceFromReadable(cutStart, cutLength, aReplacement);
-    else
-      ReplaceFromPromise(cutStart, cutLength, aReplacement);
-  }
-
-void
-nsACString::ReplaceFromPromise( index_type cutStart, size_type cutLength, const self_type& aReadable )
+nsACString::do_ReplaceFromReadable( index_type cutStart, size_type cutLength, const self_type& aReadable )
   {
     if ( !aReadable.IsDependentOn(*this) )
-      do_ReplaceFromReadable(cutStart, cutLength, aReadable);
+      UncheckedReplaceFromReadable(cutStart, cutLength, aReadable);
     else
       {
         size_type length = aReadable.Length();
@@ -977,7 +971,7 @@ nsACString::ReplaceFromPromise( index_type cutStart, size_type cutLength, const 
             const_iterator fromBegin, fromEnd;
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
-            do_ReplaceFromReadable(cutStart, cutLength, nsDependentCString(buffer, length));
+            UncheckedReplaceFromReadable(cutStart, cutLength, nsDependentCString(buffer, length));
             delete[] buffer;
           }
         // else assert?
@@ -985,7 +979,7 @@ nsACString::ReplaceFromPromise( index_type cutStart, size_type cutLength, const 
   }
 
 void
-nsACString::do_ReplaceFromReadable( index_type cutStart, size_type cutLength, const self_type& aReplacement )
+nsACString::UncheckedReplaceFromReadable( index_type cutStart, size_type cutLength, const self_type& aReplacement )
   {
     size_type oldLength = this->Length();
 

@@ -62,12 +62,6 @@ nsPromiseFlatString::GetSharedBufferHandle() const
     return mPromisedString->GetSharedBufferHandle();
   }
 
-PRBool
-nsPromiseFlatString::IsDependentOn( const abstract_string_type& aString ) const
-  {
-    return mPromisedString->IsDependentOn(aString);
-  }
-
 const nsPromiseFlatString::char_type*
 nsPromiseFlatString::get() const
   {
@@ -124,12 +118,6 @@ const nsPromiseFlatCString::shared_buffer_handle_type*
 nsPromiseFlatCString::GetSharedBufferHandle() const
   {
     return mPromisedString->GetSharedBufferHandle();
-  }
-
-PRBool
-nsPromiseFlatCString::IsDependentOn( const abstract_string_type& aString ) const
-  {
-    return mPromisedString->IsDependentOn(aString);
   }
 
 const nsPromiseFlatCString::char_type*

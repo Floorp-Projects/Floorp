@@ -81,7 +81,7 @@
    */
 
 class NS_COM nsPromiseFlatString
-    : public nsAFlatString /* , public nsAPromiseString */
+    : public nsAFlatString
   {
     friend const nsPromiseFlatString PromiseFlatString( const abstract_string_type& );
 
@@ -99,7 +99,6 @@ class NS_COM nsPromiseFlatString
       virtual const buffer_handle_type*         GetFlatBufferHandle() const;
       virtual const buffer_handle_type*         GetBufferHandle() const;
       virtual const shared_buffer_handle_type*  GetSharedBufferHandle() const;
-      virtual PRBool IsDependentOn( const abstract_string_type& ) const;
 
 
         // things we are forwarding now, but won't when we finally fix obsolete/nsString et al
@@ -120,7 +119,7 @@ class NS_COM nsPromiseFlatString
   };
 
 class NS_COM nsPromiseFlatCString
-    : public nsAFlatCString /* , public nsAPromiseCString */
+    : public nsAFlatCString
   {
     friend const nsPromiseFlatCString PromiseFlatCString( const abstract_string_type& );
 
@@ -138,7 +137,6 @@ class NS_COM nsPromiseFlatCString
       virtual const buffer_handle_type*         GetFlatBufferHandle() const;
       virtual const buffer_handle_type*         GetBufferHandle() const;
       virtual const shared_buffer_handle_type*  GetSharedBufferHandle() const;
-      virtual PRBool IsDependentOn( const abstract_string_type& ) const;
 
 
         // things we are forwarding now, but won't when we finally fix obsolete/nsString et al

@@ -48,7 +48,7 @@
    */
 
 class NS_COM nsDependentConcatenation
-    : public nsAPromiseString
+    : public nsAString
   {
     public:
       typedef nsDependentConcatenation      self_type;
@@ -104,7 +104,6 @@ class NS_COM nsDependentConcatenation
     public:
 
       virtual PRUint32 Length() const;
-      virtual PRBool IsDependentOn( const abstract_string_type& ) const;
 //    virtual PRBool PromisesExactly( const abstract_string_type& ) const;
 
 //    const self_type operator+( const abstract_string_type& rhs ) const;
@@ -122,7 +121,7 @@ class NS_COM nsDependentConcatenation
   };
 
 class NS_COM nsDependentCConcatenation
-    : public nsAPromiseCString
+    : public nsACString
   {
     public:
       typedef nsDependentCConcatenation     self_type;
@@ -178,7 +177,6 @@ class NS_COM nsDependentCConcatenation
     public:
 
       virtual PRUint32 Length() const;
-      virtual PRBool IsDependentOn( const abstract_string_type& ) const;
 //    virtual PRBool PromisesExactly( const abstract_string_type& ) const;
 
 //    const self_type operator+( const abstract_string_type& rhs ) const;

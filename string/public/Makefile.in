@@ -33,7 +33,6 @@ MODULE		= string
 EXPORTS		=				\
 		nsAFlatString.h			\
 		nsAlgorithm.h			\
-		nsAPromiseString.h		\
 		nsASingleFragmentString.h	\
 		nsAString.h			\
 		nsAStringGenerator.h		\
