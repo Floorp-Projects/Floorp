@@ -40,46 +40,25 @@
 **
 ** Brendan Eich, 7/20/95
 */
-#ifdef XP_OS2_VACPP
-#include "getopt.c"
-#include "dirent.c"
-#endif
 #include <stdio.h>  /* OSF/1 requires this before grp.h, so put it first */
 #include <assert.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <dirent.h>
 #include <limits.h>
-
-#ifndef XP_OS2_VACPP
 #include <grp.h>
 #include <pwd.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifndef XP_OS2_VACPP
 #include <unistd.h>
 #include <utime.h>
-#endif
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "pathsub.h"
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
-#endif
-
-#ifdef XP_OS2_VACPP
-int getopt(int nargc, char **nargv, char *ostr);
-#include <dirent.h>
-#include <direct.h>
-#include <io.h>
-#include <sys\utime.h>
-#include <sys\types.h>
 #endif
 
 #ifdef SUNOS4
@@ -101,39 +80,12 @@ int getopt(int nargc, char **nargv, char *ostr);
 #endif
 
 #ifndef _DIRECTORY_SEPARATOR
-#ifdef XP_OS2
-#define _DIRECTORY_SEPARATOR "\\"
-#else
 #define _DIRECTORY_SEPARATOR "/"
-#endif
 #endif /* _DIRECTORY_SEPARATOR */
 
 #ifdef NEED_FCHMOD_PROTO
 extern int fchmod(int fildes, mode_t mode);
 #endif
-
-#ifdef XP_OS2
-/*Note: OS/2 has no concept of users or groups, or symbolic links...*/
-#define lstat stat
-/*looks reasonably safe based on OS/2's stat.h...*/
-#define S_ISLNK(mode)   0 /*no way in hell on a file system that doesn't support it*/
-#ifdef XP_OS2_VACPP
-#define mkdir(path, mode) mkdir(path)
-#define W_OK 1
-#endif /* XP_OS2_VACPP */
-#define touid(spam) 0
-#define togid(spam) 0
-#define access(spam, spam2) 0
-#define chown(spam1, spam2, spam3) 0
-#define lchown(spam1, spam2, spam3) 0
-#define fchown(spam1, spam2, spam3) 0
-#define readlink(spam1, spam2, spam3) -1
-#define symlink(spam1, spam2) -1
-#ifndef XP_OS2_VACPP
-unsigned long DosSetFileSize(int, int);
-#endif /* XP_OS2_VACPP */
-#define ftruncate(spam1, spam2) (DosSetFileSize(spam1, spam2)?-1:0)
-#endif /* XP_OS2 */
 
 static void
 usage(void)
@@ -155,11 +107,6 @@ mkdirs(char *path, mode_t mode)
 
     /* strip trailing "/." */
     l = strlen(path);
-#ifdef XP_OS2
-    /* if path is nothing but drive letter, return successfully */
-    if( l == 2 && path[1] == ':' )
-      return 0;
-#endif
     if(l > 1 && path[l - 1] == '.' && path[l - 2] == '/')
         path[l - 2] = 0;
 
@@ -183,7 +130,6 @@ mkdirs(char *path, mode_t mode)
       return res;
 }
 
-#ifndef XP_OS2
 static uid_t
 touid(char *owner)
 {
@@ -215,7 +161,6 @@ togid(char *group)
 	fail("cannot find gid for %s", group);
     return gid;
 }
-#endif
 
 static void
 copyfile( char *name, char *toname, mode_t mode, char *group, char *owner,
@@ -228,23 +173,12 @@ copyfile( char *name, char *toname, mode_t mode, char *group, char *owner,
 
   exists = (lstat(toname, &tosb) == 0);
 
-#ifdef XP_OS2_FIX
-  fromfd = open(name, O_RDONLY | O_BINARY);
-#else
   fromfd = open(name, O_RDONLY);
-#endif
   if (fromfd < 0 || fstat(fromfd, &sb) < 0)
     fail("cannot access %s", name);
   if (exists && (!S_ISREG(tosb.st_mode) || access(toname, W_OK) < 0))
     (void) (S_ISDIR(tosb.st_mode) ? rmdir : unlink)(toname);
-#ifdef XP_OS2
-  chmod(toname, S_IREAD | S_IWRITE);
-#endif
-#ifdef XP_OS2_FIX
-  tofd = open(toname, O_CREAT | O_WRONLY | O_BINARY, 0666);
-#else
   tofd = open(toname, O_CREAT | O_WRONLY, 0666);
-#endif
   if (tofd < 0)
     fail("cannot create %s", toname);
 
@@ -265,7 +199,6 @@ copyfile( char *name, char *toname, mode_t mode, char *group, char *owner,
 
   if (ftruncate(tofd, sb.st_size) < 0)
     fail("cannot truncate %s", toname);
-#ifndef XP_OS2
   if (dotimes)
   {
     utb.actime = sb.st_atime;
@@ -279,7 +212,6 @@ copyfile( char *name, char *toname, mode_t mode, char *group, char *owner,
   if (chmod(toname, mode) < 0)
 #endif
     fail("cannot change mode of %s", toname);
-#endif
   if ((owner || group) && fchown(tofd, uid, gid) < 0)
     fail("cannot change owner of %s", toname);
 
@@ -287,17 +219,6 @@ copyfile( char *name, char *toname, mode_t mode, char *group, char *owner,
   if (close(tofd) < 0)
     fail("cannot write to %s", toname);
   close(fromfd);
-#ifdef XP_OS2
-  if (dotimes)
-  {
-    utb.actime = sb.st_atime;
-    utb.modtime = sb.st_mtime;
-    if (utime(toname, &utb) < 0)
-      fail("cannot set times of %s", toname);
-  }
-  if (chmod(toname, (mode & (S_IREAD | S_IWRITE))) < 0)
-    fail("cannot change mode of %s", toname);
-#endif
 }
 
 static void
@@ -333,11 +254,7 @@ copydir( char *from, char *to, mode_t mode, char *group, char *owner,
     sprintf(direntry, "%s/%s", from, ep->d_name);
     sprintf(destentry, "%s%s%s", destdir, _DIRECTORY_SEPARATOR, ep->d_name);
 
-#ifdef XP_OS2_VACPP
-    if (ep->d_attribute & A_DIR)
-#else
     if (stat(direntry, &sb) == 0 && S_ISDIR(sb.st_mode))
-#endif
       copydir( direntry, destdir, mode, group, owner, dotimes, uid, gid );
     else
       copyfile( direntry, destentry, mode, group, owner, dotimes, uid, gid );
@@ -383,12 +300,7 @@ main(int argc, char **argv)
 	    dolink = 1;
 	    break;
      case 'R':
-#ifdef XP_OS2
- /* treat like -t since no symbolic links on OS2 */
-	    dotimes = 1;
-#else
 	    dolink = dorelsymlink = 1;
-#endif
 	    break;
 	  case 'm':
 	    mode = strtoul(optarg, &cp, 8);
@@ -415,12 +327,6 @@ main(int argc, char **argv)
 	usage();
 
     todir = argv[argc-1];
-#ifdef XP_OS2_VACPP
-    /* The stat() function in OS/2 Visual Age C++ doesn't like a path with
-       a trailing backslash.  */
-    if (todir[strlen(todir)-1] == '/')
-      todir[strlen(todir)-1] = '\0';
-#endif
     if ((stat(todir, &sb) < 0 || !S_ISDIR(sb.st_mode)) &&
 	mkdirs(todir, 0777) < 0) {
 	fail("cannot make directory %s", todir);
@@ -513,17 +419,11 @@ main(int argc, char **argv)
 	    }
 
 	    /* Check for a pre-existing symlink with identical content. */
-#ifdef XP_OS2_VACPP
-#pragma info(nocnd)
-#endif
 	    if ((exists && (!S_ISLNK(tosb.st_mode) ||
 						readlink(toname, buf, sizeof buf) != len ||
 						strncmp(buf, name, (unsigned int)len) != 0)) || 
 			((stat(name, &fromsb) == 0) && 
 			 (fromsb.st_mtime > tosb.st_mtime))) {
-#ifdef XP_OS2_VACPP
-#pragma info(restore)
-#endif
 		(void) (S_ISDIR(tosb.st_mode) ? rmdir : unlink)(toname);
 		exists = 0;
 	    }

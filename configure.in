@@ -1152,6 +1152,15 @@ case "$target" in
     RC=rc.exe
     RCFLAGS='-n -x2'
 
+    if test "$MOZTOOLS"; then
+        MOZ_TOOLS_DIR=`cd $MOZTOOLS && pwd`
+        if test "$?" != "0" || test -z "$MOZ_TOOLS_DIR"; then
+            AC_MSG_ERROR([cd \$MOZTOOLS failed. MOZTOOLS ==? $MOZTOOLS])
+        fi
+    else
+        AC_MSG_ERROR([MOZTOOLS is not set])
+    fi
+
     # EMX/GCC build
     if test "$GNU_CC"; then
         _PEDANTIC=''
@@ -4737,7 +4746,6 @@ dnl ========================================================
 if test "$OS_ARCH" = "OS2"; then
   AC_DEFINE(XP_PC)
   AC_DEFINE(XP_OS2)
-  AC_DEFINE(XP_OS2_FIX)
   if test "$VACPP" = "yes"; then
       LIBS='so32dll.lib tcp32dll.lib'
   fi
