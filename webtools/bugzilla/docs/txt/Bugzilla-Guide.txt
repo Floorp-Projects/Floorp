@@ -200,6 +200,11 @@ Matthew P. Barnson
         D.4. The Quicksearch Utility
         D.5. Hacking Bugzilla
 
+              D.5.1. Things that have caused problems and should be
+                      avoided
+
+              D.5.2. Coding Style for Bugzilla
+
    E. GNU Free Documentation License
 
         0. PREAMBLE
@@ -443,7 +448,7 @@ Chapter 1. About This Guide
 
 Chapter 2. Using Bugzilla
 
-
+     
 
    What, Why, How, & Where?
      _________________________________________________________________
@@ -501,7 +506,7 @@ Chapter 2. Using Bugzilla
 
 2.2. Why Should We Use Bugzilla?
 
-
+     
 
    No, Who's on first...
 
@@ -551,7 +556,7 @@ Chapter 2. Using Bugzilla
 
 2.3. How do I use Bugzilla?
 
-
+     
 
    Hey! I'm Woody! Howdy, Howdy, Howdy!
 
@@ -804,7 +809,7 @@ Chapter 2. Using Bugzilla
 
 2.3.3. Creating and Managing Bug Reports
 
-
+     
 
    And all this time, I thought we were taking bugs out...
      _________________________________________________________________
@@ -904,7 +909,7 @@ Chapter 2. Using Bugzilla
 
 2.4. Where can I find my user preferences?
 
-
+     
 
    Indiana, it feels like we walking on fortune cookies!
 
@@ -1490,7 +1495,7 @@ perl -pi -e 's@#!/usr/bonsaitools/bin/perl@#!/usr/bin/perl@' *cgi *pl Bug.pm
 
    bash# mysql -u root mysql
    mysql> UPDATE user SET Password=PASSWORD ('new_password') WHERE
-   user='root';
+   user='root'; 
    mysql> FLUSH PRIVILEGES;
 
    From this point on, if you need to access MySQL as the MySQL root
@@ -1510,7 +1515,7 @@ perl -pi -e 's@#!/usr/bonsaitools/bin/perl@#!/usr/bin/perl@' *cgi *pl Bug.pm
    mysql> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,
    ALTER,CREATE,DROP,REFERENCES ON bugs.* TO bugs@localhost IDENTIFIED BY
    'bugs_password';
-   mysql> FLUSH PRIVILEGES;
+   mysql> FLUSH PRIVILEGES; 
 
    Next, run the magic checksetup.pl script. (Many thanks to Holger
    Schurig <holgerschurig@nikocity.de> for writing this script!) It will
@@ -2463,7 +2468,7 @@ Chapter 4. Administering Bugzilla
    interface. Run "mysql" from the command line, and use these commands
    ("mysql>" denotes the mysql prompt, not something you should type in):
    mysql> use bugs; mysql> update profiles set groupset=0x7ffffffffffffff
-   where login_name = "(user's login name)";
+   where login_name = "(user's login name)"; 
 
    Yes, that is fourteen "f"'s. A whole lot of f-ing going on if you want
    to create a new administator.
@@ -2635,7 +2640,7 @@ Chapter 4. Administering Bugzilla
 
 4.3. Product, Component, Milestone, and Version Administration
 
-
+     
 
    Dear Lord, we have to get our users to do WHAT?
      _________________________________________________________________
@@ -3061,7 +3066,7 @@ Chapter 4. Administering Bugzilla
 
 4.4. Bugzilla Security
 
-
+     
 
    Putting your money in a wall safe is better protection than depending
    on the fact that no one knows that you hide your money in a mayonnaise
@@ -3886,238 +3891,238 @@ Appendix A. The Bugzilla FAQ
    1. General Questions
 
         A.1.1. Where can I find information about Bugzilla?
-        A.1.2. What license is Bugzilla distributed under?
-        A.1.3. How do I get commercial support for Bugzilla?
+        A.1.2. What license is Bugzilla distributed under? 
+        A.1.3. How do I get commercial support for Bugzilla? 
         A.1.4. What major companies or projects are currently using
-                Bugzilla for bug-tracking?
+                Bugzilla for bug-tracking? 
 
-        A.1.5. Who maintains Bugzilla?
+        A.1.5. Who maintains Bugzilla? 
         A.1.6. How does Bugzilla stack up against other bug-tracking
-                databases?
+                databases? 
 
-        A.1.7. How do I change my user name in Bugzilla?
+        A.1.7. How do I change my user name in Bugzilla? 
         A.1.8. Why doesn't Bugzilla offer this or that feature or
-                compatability with this other tracking software?
+                compatability with this other tracking software? 
 
         A.1.9. Why MySQL? I'm interested in seeing Bugzilla run on
-                Oracle/Sybase/Msql/PostgreSQL/MSSQL?
+                Oracle/Sybase/Msql/PostgreSQL/MSSQL? 
 
         A.1.10. Why do the scripts say "/usr/bonsaitools/bin/perl"
-                instead of "/usr/bin/perl" or something else?
+                instead of "/usr/bin/perl" or something else? 
 
    2. Red Hat Bugzilla
 
-        A.2.1. What about Red Hat Bugzilla?
-        A.2.2. What are the primary benefits of Red Hat Bugzilla?
-        A.2.3. What's the current status of Red Hat Bugzilla?
+        A.2.1. What about Red Hat Bugzilla? 
+        A.2.2. What are the primary benefits of Red Hat Bugzilla? 
+        A.2.3. What's the current status of Red Hat Bugzilla? 
 
    3. Loki Bugzilla (AKA Fenris)
 
-        A.3.1. What is Loki Bugzilla (Fenris)?
+        A.3.1. What is Loki Bugzilla (Fenris)? 
 
    4. Pointy-Haired-Boss Questions
 
         A.4.1. Is Bugzilla web-based or do you have to have specific
-                software or specific operating system on your machine?
+                software or specific operating system on your machine? 
 
         A.4.2. Has anyone you know of already done any Bugzilla
-                integration with Perforce (SCM software)?
+                integration with Perforce (SCM software)? 
 
-        A.4.3. Does Bugzilla allow the user to track multiple projects?
+        A.4.3. Does Bugzilla allow the user to track multiple projects? 
         A.4.4. If I am on many projects, and search for all bugs assigned
                 to me, will Bugzilla list them for me and allow me to
-                sort by project, severity etc?
+                sort by project, severity etc? 
 
         A.4.5. Does Bugzilla allow attachments (text, screenshots, urls
-                etc)? If yes, are there any that are NOT allowed?
+                etc)? If yes, are there any that are NOT allowed? 
 
         A.4.6. Does Bugzilla allow us to define our own priorities and
                 levels? Do we have complete freedom to change the labels
                 of fields and format of them, and the choice of
-                acceptable values?
+                acceptable values? 
 
         A.4.7. The index.html page doesn't show the footer. It's really
                 annoying to have to go to the querypage just to check my
                 "my bugs" link. How do I get a footer on static HTML
-                pages?
+                pages? 
 
         A.4.8. Does Bugzilla provide any reporting features, metrics,
                 graphs, etc? You know, the type of stuff that management
-                likes to see. :)
+                likes to see. :) 
 
         A.4.9. Is there email notification and if so, what do you see
                 when you get an email? Do you see bug number and title or
-                is it only the number?
+                is it only the number? 
 
         A.4.10. Can email notification be set up to send to multiple
-                people, some on the To List, CC List, BCC List etc?
+                people, some on the To List, CC List, BCC List etc? 
 
         A.4.11. If there is email notification, do users have to have any
-                particular type of email application?
+                particular type of email application? 
 
         A.4.12. If I just wanted to track certain bugs, as they go
                 through life, can I set it up to alert me via email
                 whenever that bug changes, whether it be owner, status or
-                description etc.?
+                description etc.? 
 
         A.4.13. Does Bugzilla allow data to be imported and exported? If
                 I had outsiders write up a bug report using a MS Word bug
                 template, could that template be imported into "matching"
                 fields? If I wanted to take the results of a query and
-                export that data to MS Excel, could I do that?
+                export that data to MS Excel, could I do that? 
 
         A.4.14. Has anyone converted Bugzilla to another language to be
-                used in other countries? Is it localizable?
+                used in other countries? Is it localizable? 
 
         A.4.15. Can a user create and save reports? Can they do this in
-                Word format? Excel format?
+                Word format? Excel format? 
 
         A.4.16. Can a user re-run a report with a new project, same
-                query?
+                query? 
 
         A.4.17. Can a user modify an existing report and then save it
-                into another name?
+                into another name? 
 
         A.4.18. Does Bugzilla have the ability to search by word, phrase,
-                compound search?
+                compound search? 
 
         A.4.19. Can the admin person establish separate group and
-                individual user privileges?
+                individual user privileges? 
 
         A.4.20. Does Bugzilla provide record locking when there is
                 simultaneous access to the same bug? Does the second
                 person get a notice that the bug is in use or how are
-                they notified?
+                they notified? 
 
-        A.4.21. Are there any backup features provided?
+        A.4.21. Are there any backup features provided? 
         A.4.22. Can users be on the system while a backup is in progress?
-
+                
         A.4.23. What type of human resources are needed to be on staff to
                 install and maintain Bugzilla? Specifically, what type of
                 skills does the person need to have? I need to find out
                 if we were to go with Bugzilla, what types of individuals
                 would we need to hire and how much would that cost vs
-                buying an "Out-of-the-Box" solution.
+                buying an "Out-of-the-Box" solution. 
 
         A.4.24. What time frame are we looking at if we decide to hire
                 people to install and maintain the Bugzilla? Is this
                 something that takes hours or weeks to install and a
                 couple of hours per week to maintain and customize or is
                 this a multi-week install process, plus a full time job
-                for 1 person, 2 people, etc?
+                for 1 person, 2 people, etc? 
 
         A.4.25. Is there any licensing fee or other fees for using
                 Bugzilla? Any out-of-pocket cost other than the bodies
-                needed as identified above?
+                needed as identified above? 
 
    5. Bugzilla Installation
 
-        A.5.1. How do I download and install Bugzilla?
-        A.5.2. How do I install Bugzilla on Windows NT?
-        A.5.3. Is there an easy way to change the Bugzilla cookie name?
+        A.5.1. How do I download and install Bugzilla? 
+        A.5.2. How do I install Bugzilla on Windows NT? 
+        A.5.3. Is there an easy way to change the Bugzilla cookie name? 
 
    6. Bugzilla Security
 
         A.6.1. How do I completely disable MySQL security if it's giving
                 me problems (I've followed the instructions in the
-                installation section of this guide!)?
+                installation section of this guide!)? 
 
-        A.6.2. Are there any security problems with Bugzilla?
+        A.6.2. Are there any security problems with Bugzilla? 
         A.6.3. I've implemented the security fixes mentioned in Chris
                 Yeh's security advisory of 5/10/2000 advising not to run
                 MySQL as root, and am running into problems with MySQL no
-                longer working correctly.
+                longer working correctly. 
 
    7. Bugzilla Email
 
         A.7.1. I have a user who doesn't want to receive any more email
-                from Bugzilla. How do I stop it entirely for this user?
+                from Bugzilla. How do I stop it entirely for this user? 
 
         A.7.2. I'm evaluating/testing Bugzilla, and don't want it to send
-                email to anyone but me. How do I do it?
+                email to anyone but me. How do I do it? 
 
         A.7.3. I want whineatnews.pl to whine at something more, or other
-                than, only new bugs. How do I do it?
+                than, only new bugs. How do I do it? 
 
         A.7.4. I don't like/want to use Procmail to hand mail off to
-                bug_email.pl. What alternatives do I have?
+                bug_email.pl. What alternatives do I have? 
 
         A.7.5. How do I set up the email interface to submit/change bugs
-                via email?
+                via email? 
 
         A.7.6. Email takes FOREVER to reach me from bugzilla -- it's
-                extremely slow. What gives?
+                extremely slow. What gives? 
 
-        A.7.7. How come email never reaches me from bugzilla changes?
+        A.7.7. How come email never reaches me from bugzilla changes? 
 
    8. Bugzilla Database
 
-        A.8.1. I've heard Bugzilla can be used with Oracle?
+        A.8.1. I've heard Bugzilla can be used with Oracle? 
         A.8.2. Bugs are missing from queries, but exist in the database
                 (and I can pull them up by specifying the bug ID). What's
-                wrong?
+                wrong? 
 
         A.8.3. I think my database might be corrupted, or contain invalid
-                entries. What do I do?
+                entries. What do I do? 
 
-        A.8.4. I want to manually edit some entries in my database. How?
+        A.8.4. I want to manually edit some entries in my database. How? 
         A.8.5. I try to add myself as a user, but Bugzilla always tells
-                me my password is wrong.
+                me my password is wrong. 
 
         A.8.6. I think I've set up MySQL permissions correctly, but
-                bugzilla still can't connect.
+                bugzilla still can't connect. 
 
         A.8.7. How do I synchronize bug information among multiple
-                different Bugzilla databases?
+                different Bugzilla databases? 
 
         A.8.8. Why do I get bizarre errors when trying to submit data,
-                particularly problems with "groupset"?
+                particularly problems with "groupset"? 
 
         A.8.9. How come even after I delete bugs, the long descriptions
-                show up?
+                show up? 
 
    9. Bugzilla and Win32
 
         A.9.1. What is the easiest way to run Bugzilla on Win32
-                (Win98+/NT/2K)?
+                (Win98+/NT/2K)? 
 
-        A.9.2. Is there a "Bundle::Bugzilla" equivalent for Win32?
+        A.9.2. Is there a "Bundle::Bugzilla" equivalent for Win32? 
         A.9.3. CGI's are failing with a "something.cgi is not a valid
-                Windows NT application" error. Why?
+                Windows NT application" error. Why? 
 
         A.9.4. Can I have some general instructions on how to make
-                Bugzilla on Win32 work?
+                Bugzilla on Win32 work? 
 
         A.9.5. I'm having trouble with the perl modules for NT not being
-                able to talk to to the database.
+                able to talk to to the database. 
 
    10. Bugzilla Usage
 
         A.10.1. The query page is very confusing. Isn't there a simpler
-                way to query?
+                way to query? 
 
         A.10.2. I'm confused by the behavior of the "accept" button in
                 the Show Bug form. Why doesn't it assign the bug to me
-                when I accept it?
+                when I accept it? 
 
         A.10.3. I can't upload anything into the database via the "Create
-                Attachment" link. What am I doing wrong?
+                Attachment" link. What am I doing wrong? 
 
         A.10.4. Email submissions to Bugzilla that have attachments end
-                up asking me to save it as a "cgi" file.
+                up asking me to save it as a "cgi" file. 
 
         A.10.5. How do I change a keyword in Bugzilla, once some bugs are
-                using it?
+                using it? 
 
    11. Bugzilla Hacking
 
-        A.11.1. What bugs are in Bugzilla right now?
+        A.11.1. What bugs are in Bugzilla right now? 
         A.11.2. How can I change the default priority to a null value?
                 For instance, have the default priority be "---" instead
-                of "P2"?
+                of "P2"? 
 
         A.11.3. What's the best way to submit patches? What guidelines
-                should I follow?
+                should I follow? 
 
 1. General Questions
 
@@ -4172,7 +4177,7 @@ Appendix A. The Bugzilla FAQ
    A.1.5. Who maintains Bugzilla?
 
    Bugzilla maintenance has been in a state of flux recently. Please
-   check the Bugzilla Project Page for the latest details.
+   check the Bugzilla Project Page for the latest details. 
 
    A.1.6. How does Bugzilla stack up against other bug-tracking
    databases?
@@ -5851,106 +5856,104 @@ D.4. The Quicksearch Utility
 
 D.5. Hacking Bugzilla
 
-   What follows are some general guidelines for changing Bugzilla, and
-   adhering to good coding practice while doing so. We've had some
-   checkins in the past which ruined Bugzilla installations because of
-   disregard for these conventions. Sorry for the lack of formatting; I
-   got this info into the Guide on the day of 2.14 release and haven't
-   formatted it yet.
+   The following is a guide for reviewers when checking code into
+   Bugzilla's CVS repostory at mozilla.org. If you wish to submit patches
+   to Bugzilla, you should follow the rules and style conventions below.
+   Any code that does not adhere to these basic rules will not be added
+   to Bugzilla's codebase.
+     _________________________________________________________________
 
-   The following is a guide for reviewers when checking code into Bugzill
-   a's
-   CVS repostory at mozilla.org.  If you wish to submit patches to Bugzil
-   la,
-   you should follow the rules and style conventions below.  Any code tha
-   t
-   does not adhere to these basic rules will not be added to Bugzilla's
-   codebase.
+D.5.1. Things that have caused problems and should be avoided
+
     1. Usage of variables in Regular Expressions
        It is very important that you don't use a variable in a regular
-       expression unless that variable is supposed to contain an expressi
-   on.
-       This especially applies when using grep.  You should use:
-       grep ($_ eq $value, @array);
-       - NOT -
-       grep (/$value/, @array);
-       If you need to use a non-expression variable inside of an expressi
-   on, be
-       sure to quote it properly (using \Q..\E).
-   Coding Style for Bugzilla
-   -------------------------
+       expression unless that variable is supposed to contain an
+       expression. This especially applies when using grep. You should
+       use:
+
+grep ($_ eq $value, @array);
+
+
+       -- NOT THIS --
+
+grep (/$value/, @array);
+
+
+       Note
+
+   If you need to use a non-expression variable inside of an expression,
+   be sure to quote it properly (using \Q..\E).
+     _________________________________________________________________
+
+D.5.2. Coding Style for Bugzilla
+
    While it's true that not all of the code currently in Bugzilla adheres
-    to
-   this styleguide, it is something that is being worked toward.  Therefo
-   re,
-   we ask that all new code (submitted patches and new files) follow this
-    guide
-   as closely as possible (if you're only changing 1 or 2 lines, you don'
-   t have
-   to reformat the entire file :).
-    1. Whitespace
+   to this (or any) styleguide, it is something that is being worked
+   toward. Therefore, we ask that all new code (submitted patches and new
+   files) follow this guide as closely as possible (if you're only
+   changing 1 or 2 lines, you don't have to reformat the entire file :).
+
+   The Bugzilla development team has decided to adopt the perl style
+   guide as published by Larry Wall. This giude can be found in
+   "Programming Perl" (the camel book) or by typing man perlstyle at your
+   favorite shell prompt.
+
+   What appears below if a brief summary, please refer to the perl style
+   guide if you don't see your question covered here.
+
+     * Whitespace
        Bugzilla's prefered indentation is 4 spaces (no tabs, please).
-    2. Curly braces.
-       The opening brace of a block should be on the same line as the sta
-   tement
-       that is causing the block and the closing brace should be at the s
-   ame
-       indentation level as that statement, for example:
-       if ($var) {
-           print "The variable is true";
-       }
-       else {
-           print "Try again";
-       }
-       - NOT -
-       if ($var)
-       {
-           print "The variable is true";
-       }
-       else
-       {
-           print "Try again";
-       }
-    3. File Names
-       File names for bugzilla code and support documention should be leg
-   al across
-       multiple platforms.  \ / : * ? " < > and | are all illegal charact
-   ers for
-       filenames on various platforms.  Also, file names should not have
-   spaces in
-       them as they can cause confusion in CVS and other mozilla.org util
-   ities.
-    4. Variable Names
+     * Curly braces.
+       The opening brace of a block should be on the same line as the
+       statement that is causing the block and the closing brace should
+       be at the same indentation level as that statement, for example:
+
+if ($var) {
+    print "The variable is true";
+}
+else {
+    print "Try again";
+}
+
+
+       -- NOT THIS --
+
+if ($var)
+{
+    print "The variable is true";
+}
+else
+{
+    print "Try again";
+}
+
+
+     * File Names
+       File names for bugzilla code and support documention should be
+       legal across multiple platforms. \ / : * ? " < > and | are all
+       illegal characters for filenames on various platforms. Also, file
+       names should not have spaces in them as they can cause confusion
+       in CVS and other mozilla.org utilities.
+     * Variable Names
        If a variable is scoped globally ($::variable) its name should be
-   descriptive
-       of what it contains.  Local variables can be named a bit looser, p
-   rovided the
-       context makes their content obvious.  For example, $ret could be u
-   sed as a
-       staging variable for a routine's return value as the line |return
-   $ret;| will
-       make it blatently obvious what the variable holds and most likely
-   be shown
-       on the same screen as |my $ret = "";|.
-    5. Cross Database Compatability
-       Bugzilla was originally written to work with MySQL and therefore t
-   ook advantage
-       of some of its features that aren't contained in other RDBMS softw
-   are.  These
-       should be avoided in all new code.  Examples of these features are
-    enums and
-       encrypt().
-    6. Cross Platform Compatability
-       While Bugzilla was written to be used on Unix based systems (and U
-   nix/Linux is
-       still the only officially supported platform) there are many who d
-   esire/need to
-       run Bugzilla on Microsoft Windows boxes.  Whenever possible, we sh
-   ould strive
-       not to make the lives of these people any more complicated and avo
-   id doing things
-       that break Bugzilla's ability to run on multiple operating systems
-   .
+       descriptive of what it contains. Local variables can be named a
+       bit looser, provided the context makes their content obvious. For
+       example, $ret could be used as a staging variable for a routine's
+       return value as the line return $ret; will make it blatantly
+       obvious what the variable holds and most likely be shown on the
+       same screen as my $ret = "";.
+     * Cross Database Compatability
+       Bugzilla was originally written to work with MySQL and therefore
+       took advantage of some of its features that aren't contained in
+       other RDBMS software. These should be avoided in all new code.
+       Examples of these features are enums and encrypt().
+     * Cross Platform Compatability
+       While Bugzilla was written to be used on Unix based systems (and
+       Unix/Linux is still the only officially supported platform) there
+       are many who desire/need to run Bugzilla on Microsoft Windows
+       boxes. Whenever possible, we should strive not to make the lives
+       of these people any more complicated and avoid doing things that
+       break Bugzilla's ability to run on multiple operating systems.
      _________________________________________________________________
 
 Appendix E. GNU Free Documentation License

@@ -250,100 +250,160 @@ RewriteRule ^/([0-9]+)$ http://foo.bar.com/show_bug.cgi?id=$1 [L,R]
   <section id="bzhacking">
     <title>Hacking Bugzilla</title>
     <para>
-      What follows are some general guidelines for changing Bugzilla, and adhering to good coding practice while doing so.  We've had some checkins in the past which ruined Bugzilla installations because of disregard for these conventions.  Sorry for the lack of formatting; I got this info into the Guide on the day of 2.14 release and haven't formatted it yet.
+      The following is a guide for reviewers when checking code into Bugzilla's
+      CVS repostory at mozilla.org.  If you wish to submit patches to Bugzilla,
+      you should follow the rules and style conventions below.  Any code that
+      does not adhere to these basic rules will not be added to Bugzilla's
+      codebase.
     </para>
-    <literallayout>
-
-The following is a guide for reviewers when checking code into Bugzilla's
-CVS repostory at mozilla.org.  If you wish to submit patches to Bugzilla,
-you should follow the rules and style conventions below.  Any code that
-does not adhere to these basic rules will not be added to Bugzilla's
-codebase.
-
- 1. Usage of variables in Regular Expressions
-
-    It is very important that you don't use a variable in a regular
-    expression unless that variable is supposed to contain an expression.
-    This especially applies when using grep.  You should use:
-
-    grep ($_ eq $value, @array);
-
-    - NOT -
-
-    grep (/$value/, @array);
-
-    If you need to use a non-expression variable inside of an expression, be
-    sure to quote it properly (using \Q..\E).
-
-Coding Style for Bugzilla
--------------------------
-
-While it's true that not all of the code currently in Bugzilla adheres to
-this styleguide, it is something that is being worked toward.  Therefore,
-we ask that all new code (submitted patches and new files) follow this guide
-as closely as possible (if you're only changing 1 or 2 lines, you don't have
-to reformat the entire file :).
-
- 1. Whitespace
-
-    Bugzilla's prefered indentation is 4 spaces (no tabs, please).
-
- 2. Curly braces.
-
-    The opening brace of a block should be on the same line as the statement
-    that is causing the block and the closing brace should be at the same
-    indentation level as that statement, for example:
-
-    if ($var) {
-        print "The variable is true";
-    }
-    else {
-        print "Try again";
-    }
-
-    - NOT -
-
-    if ($var)
-    {
-        print "The variable is true";
-    }
-    else
-    {
-        print "Try again";
-    }
-
- 3. File Names
-
-    File names for bugzilla code and support documention should be legal across
-    multiple platforms.  \ / : * ? " < > and | are all illegal characters for
-    filenames on various platforms.  Also, file names should not have spaces in
-    them as they can cause confusion in CVS and other mozilla.org utilities.
-
- 4. Variable Names
-
-    If a variable is scoped globally ($::variable) its name should be descriptive
-    of what it contains.  Local variables can be named a bit looser, provided the
-    context makes their content obvious.  For example, $ret could be used as a
-    staging variable for a routine's return value as the line |return $ret;| will
-    make it blatently obvious what the variable holds and most likely be shown
-    on the same screen as |my $ret = "";|.
-
- 5. Cross Database Compatability
-
-    Bugzilla was originally written to work with MySQL and therefore took advantage
-    of some of its features that aren't contained in other RDBMS software.  These
-    should be avoided in all new code.  Examples of these features are enums and
-    encrypt().
-
- 6. Cross Platform Compatability
-
-    While Bugzilla was written to be used on Unix based systems (and Unix/Linux is
-    still the only officially supported platform) there are many who desire/need to
-    run Bugzilla on Microsoft Windows boxes.  Whenever possible, we should strive
-    not to make the lives of these people any more complicated and avoid doing things
-    that break Bugzilla's ability to run on multiple operating systems.
-
-    </literallayout>
+    <section>
+      <title>Things that have caused problems and should be avoided</title>
+      <orderedlist>
+        <listitem>
+          <para>
+            Usage of variables in Regular Expressions
+          </para>
+          <para>
+            It is very important that you don't use a variable in a regular
+            expression unless that variable is supposed to contain an expression.
+            This especially applies when using grep.  You should use:
+          </para>
+          <para>
+            <programlisting>
+grep ($_ eq $value, @array);
+            </programlisting>
+          </para>
+          <para>
+            -- NOT THIS --
+          </para>
+          <para>
+            <programlisting>
+grep (/$value/, @array);
+            </programlisting>
+          </para>
+          <note>
+            <para>
+              If you need to use a non-expression variable inside of an expression, be
+              sure to quote it properly (using <function>\Q..\E</function>).
+            </para>
+          </note>
+        </listitem>
+      </orderedlist>
+    </section>
+    <section>
+      <title>Coding Style for Bugzilla</title>
+      <para>
+        While it's true that not all of the code currently in Bugzilla adheres to
+        this (or any) styleguide, it is something that is being worked toward.  Therefore,
+        we ask that all new code (submitted patches and new files) follow this guide
+        as closely as possible (if you're only changing 1 or 2 lines, you don't have
+        to reformat the entire file :).
+      </para>
+      <para>
+        The Bugzilla development team has decided to adopt the perl style guide as
+        published by Larry Wall.  This giude can be found in <quote>Programming
+        Perl</quote> (the camel book) or by typing <command>man perlstyle</command> at
+        your favorite shell prompt.
+      </para>
+      <para>
+        What appears below if a brief summary, please refer to the perl style
+        guide if you don't see your question covered here.
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>
+            Whitespace
+          </para>
+          <para>
+            Bugzilla's prefered indentation is 4 spaces (no tabs, please).
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Curly braces.
+          </para>
+          <para>
+            The opening brace of a block should be on the same line as the statement
+            that is causing the block and the closing brace should be at the same
+            indentation level as that statement, for example:
+          </para>
+          <para>
+            <programlisting>
+if ($var) {
+    print "The variable is true";
+}
+else {
+    print "Try again";
+}
+            </programlisting>
+          </para>
+          <para>
+            -- NOT THIS --
+          </para>
+          <para>
+            <programlisting>
+if ($var)
+{
+    print "The variable is true";
+}
+else
+{
+    print "Try again";
+}
+            </programlisting>
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            File Names
+          </para>
+          <para>
+            File names for bugzilla code and support documention should be legal across
+            multiple platforms. <computeroutput>\ / : * ? &quot; &lt; &gt;</computeroutput>
+            and <computeroutput>|</computeroutput> are all illegal characters for filenames
+            on various platforms.  Also, file names should not have spaces in them as they
+            can cause confusion in CVS and other mozilla.org utilities.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Variable Names
+          </para>
+          <para>
+            If a variable is scoped globally (<computeroutput>$::variable</computeroutput>)
+            its name should be descriptive of what it contains.  Local variables can be named
+            a bit looser, provided the context makes their content obvious.  For example,
+            <computeroutput>$ret</computeroutput> could be used as a staging variable for a
+             routine's return value as the line <computeroutput>return $ret;</computeroutput>
+             will make it blatantly obvious what the variable holds and most likely be shown
+             on the same screen as <computeroutput>my $ret = "";</computeroutput>.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Cross Database Compatability
+          </para>
+          <para>
+            Bugzilla was originally written to work with MySQL and therefore took advantage
+            of some of its features that aren't contained in other RDBMS software.  These
+            should be avoided in all new code.  Examples of these features are enums and
+            <function>encrypt()</function>.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Cross Platform Compatability
+          </para>
+          <para>
+            While Bugzilla was written to be used on Unix based systems (and Unix/Linux is
+            still the only officially supported platform) there are many who desire/need to
+            run Bugzilla on Microsoft Windows boxes.  Whenever possible, we should strive
+            not to make the lives of these people any more complicated and avoid doing things
+            that break Bugzilla's ability to run on multiple operating systems.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </section>
   </section>
 
 </appendix>

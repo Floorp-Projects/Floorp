@@ -74,101 +74,285 @@ NAME="BZHACKING"
 >D.5. Hacking Bugzilla</A
 ></H1
 ><P
->      What follows are some general guidelines for changing Bugzilla, and adhering to good coding practice while doing so.  We've had some checkins in the past which ruined Bugzilla installations because of disregard for these conventions.  Sorry for the lack of formatting; I got this info into the Guide on the day of 2.14 release and haven't formatted it yet.
+>      The following is a guide for reviewers when checking code into Bugzilla's
+      CVS repostory at mozilla.org.  If you wish to submit patches to Bugzilla,
+      you should follow the rules and style conventions below.  Any code that
+      does not adhere to these basic rules will not be added to Bugzilla's
+      codebase.
     </P
+><DIV
+CLASS="SECTION"
+><H2
+CLASS="SECTION"
+><A
+NAME="AEN2495"
+>D.5.1. Things that have caused problems and should be avoided</A
+></H2
 ><P
-CLASS="LITERALLAYOUT"
-><br>
-The&nbsp;following&nbsp;is&nbsp;a&nbsp;guide&nbsp;for&nbsp;reviewers&nbsp;when&nbsp;checking&nbsp;code&nbsp;into&nbsp;Bugzilla's<br>
-CVS&nbsp;repostory&nbsp;at&nbsp;mozilla.org.&nbsp;&nbsp;If&nbsp;you&nbsp;wish&nbsp;to&nbsp;submit&nbsp;patches&nbsp;to&nbsp;Bugzilla,<br>
-you&nbsp;should&nbsp;follow&nbsp;the&nbsp;rules&nbsp;and&nbsp;style&nbsp;conventions&nbsp;below.&nbsp;&nbsp;Any&nbsp;code&nbsp;that<br>
-does&nbsp;not&nbsp;adhere&nbsp;to&nbsp;these&nbsp;basic&nbsp;rules&nbsp;will&nbsp;not&nbsp;be&nbsp;added&nbsp;to&nbsp;Bugzilla's<br>
-codebase.<br>
-<br>
-&nbsp;1.&nbsp;Usage&nbsp;of&nbsp;variables&nbsp;in&nbsp;Regular&nbsp;Expressions<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;It&nbsp;is&nbsp;very&nbsp;important&nbsp;that&nbsp;you&nbsp;don't&nbsp;use&nbsp;a&nbsp;variable&nbsp;in&nbsp;a&nbsp;regular<br>
-&nbsp;&nbsp;&nbsp;&nbsp;expression&nbsp;unless&nbsp;that&nbsp;variable&nbsp;is&nbsp;supposed&nbsp;to&nbsp;contain&nbsp;an&nbsp;expression.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;This&nbsp;especially&nbsp;applies&nbsp;when&nbsp;using&nbsp;grep.&nbsp;&nbsp;You&nbsp;should&nbsp;use:<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;grep&nbsp;($_&nbsp;eq&nbsp;$value,&nbsp;@array);<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;NOT&nbsp;-<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;grep&nbsp;(/$value/,&nbsp;@array);<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;you&nbsp;need&nbsp;to&nbsp;use&nbsp;a&nbsp;non-expression&nbsp;variable&nbsp;inside&nbsp;of&nbsp;an&nbsp;expression,&nbsp;be<br>
-&nbsp;&nbsp;&nbsp;&nbsp;sure&nbsp;to&nbsp;quote&nbsp;it&nbsp;properly&nbsp;(using&nbsp;\Q..\E).<br>
-<br>
-Coding&nbsp;Style&nbsp;for&nbsp;Bugzilla<br>
--------------------------<br>
-<br>
-While&nbsp;it's&nbsp;true&nbsp;that&nbsp;not&nbsp;all&nbsp;of&nbsp;the&nbsp;code&nbsp;currently&nbsp;in&nbsp;Bugzilla&nbsp;adheres&nbsp;to<br>
-this&nbsp;styleguide,&nbsp;it&nbsp;is&nbsp;something&nbsp;that&nbsp;is&nbsp;being&nbsp;worked&nbsp;toward.&nbsp;&nbsp;Therefore,<br>
-we&nbsp;ask&nbsp;that&nbsp;all&nbsp;new&nbsp;code&nbsp;(submitted&nbsp;patches&nbsp;and&nbsp;new&nbsp;files)&nbsp;follow&nbsp;this&nbsp;guide<br>
-as&nbsp;closely&nbsp;as&nbsp;possible&nbsp;(if&nbsp;you're&nbsp;only&nbsp;changing&nbsp;1&nbsp;or&nbsp;2&nbsp;lines,&nbsp;you&nbsp;don't&nbsp;have<br>
-to&nbsp;reformat&nbsp;the&nbsp;entire&nbsp;file&nbsp;:).<br>
-<br>
-&nbsp;1.&nbsp;Whitespace<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Bugzilla's&nbsp;prefered&nbsp;indentation&nbsp;is&nbsp;4&nbsp;spaces&nbsp;(no&nbsp;tabs,&nbsp;please).<br>
-<br>
-&nbsp;2.&nbsp;Curly&nbsp;braces.<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;opening&nbsp;brace&nbsp;of&nbsp;a&nbsp;block&nbsp;should&nbsp;be&nbsp;on&nbsp;the&nbsp;same&nbsp;line&nbsp;as&nbsp;the&nbsp;statement<br>
-&nbsp;&nbsp;&nbsp;&nbsp;that&nbsp;is&nbsp;causing&nbsp;the&nbsp;block&nbsp;and&nbsp;the&nbsp;closing&nbsp;brace&nbsp;should&nbsp;be&nbsp;at&nbsp;the&nbsp;same<br>
-&nbsp;&nbsp;&nbsp;&nbsp;indentation&nbsp;level&nbsp;as&nbsp;that&nbsp;statement,&nbsp;for&nbsp;example:<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($var)&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;"The&nbsp;variable&nbsp;is&nbsp;true";<br>
-&nbsp;&nbsp;&nbsp;&nbsp;}<br>
-&nbsp;&nbsp;&nbsp;&nbsp;else&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;"Try&nbsp;again";<br>
-&nbsp;&nbsp;&nbsp;&nbsp;}<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;NOT&nbsp;-<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;($var)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;"The&nbsp;variable&nbsp;is&nbsp;true";<br>
-&nbsp;&nbsp;&nbsp;&nbsp;}<br>
-&nbsp;&nbsp;&nbsp;&nbsp;else<br>
-&nbsp;&nbsp;&nbsp;&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;"Try&nbsp;again";<br>
-&nbsp;&nbsp;&nbsp;&nbsp;}<br>
-<br>
-&nbsp;3.&nbsp;File&nbsp;Names<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;File&nbsp;names&nbsp;for&nbsp;bugzilla&nbsp;code&nbsp;and&nbsp;support&nbsp;documention&nbsp;should&nbsp;be&nbsp;legal&nbsp;across<br>
-&nbsp;&nbsp;&nbsp;&nbsp;multiple&nbsp;platforms.&nbsp;&nbsp;\&nbsp;/&nbsp;:&nbsp;*&nbsp;?&nbsp;"&nbsp;&#60;&nbsp;&#62;&nbsp;and&nbsp;|&nbsp;are&nbsp;all&nbsp;illegal&nbsp;characters&nbsp;for<br>
-&nbsp;&nbsp;&nbsp;&nbsp;filenames&nbsp;on&nbsp;various&nbsp;platforms.&nbsp;&nbsp;Also,&nbsp;file&nbsp;names&nbsp;should&nbsp;not&nbsp;have&nbsp;spaces&nbsp;in<br>
-&nbsp;&nbsp;&nbsp;&nbsp;them&nbsp;as&nbsp;they&nbsp;can&nbsp;cause&nbsp;confusion&nbsp;in&nbsp;CVS&nbsp;and&nbsp;other&nbsp;mozilla.org&nbsp;utilities.<br>
-<br>
-&nbsp;4.&nbsp;Variable&nbsp;Names<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;a&nbsp;variable&nbsp;is&nbsp;scoped&nbsp;globally&nbsp;($::variable)&nbsp;its&nbsp;name&nbsp;should&nbsp;be&nbsp;descriptive<br>
-&nbsp;&nbsp;&nbsp;&nbsp;of&nbsp;what&nbsp;it&nbsp;contains.&nbsp;&nbsp;Local&nbsp;variables&nbsp;can&nbsp;be&nbsp;named&nbsp;a&nbsp;bit&nbsp;looser,&nbsp;provided&nbsp;the<br>
-&nbsp;&nbsp;&nbsp;&nbsp;context&nbsp;makes&nbsp;their&nbsp;content&nbsp;obvious.&nbsp;&nbsp;For&nbsp;example,&nbsp;$ret&nbsp;could&nbsp;be&nbsp;used&nbsp;as&nbsp;a<br>
-&nbsp;&nbsp;&nbsp;&nbsp;staging&nbsp;variable&nbsp;for&nbsp;a&nbsp;routine's&nbsp;return&nbsp;value&nbsp;as&nbsp;the&nbsp;line&nbsp;|return&nbsp;$ret;|&nbsp;will<br>
-&nbsp;&nbsp;&nbsp;&nbsp;make&nbsp;it&nbsp;blatently&nbsp;obvious&nbsp;what&nbsp;the&nbsp;variable&nbsp;holds&nbsp;and&nbsp;most&nbsp;likely&nbsp;be&nbsp;shown<br>
-&nbsp;&nbsp;&nbsp;&nbsp;on&nbsp;the&nbsp;same&nbsp;screen&nbsp;as&nbsp;|my&nbsp;$ret&nbsp;=&nbsp;"";|.<br>
-<br>
-&nbsp;5.&nbsp;Cross&nbsp;Database&nbsp;Compatability<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Bugzilla&nbsp;was&nbsp;originally&nbsp;written&nbsp;to&nbsp;work&nbsp;with&nbsp;MySQL&nbsp;and&nbsp;therefore&nbsp;took&nbsp;advantage<br>
-&nbsp;&nbsp;&nbsp;&nbsp;of&nbsp;some&nbsp;of&nbsp;its&nbsp;features&nbsp;that&nbsp;aren't&nbsp;contained&nbsp;in&nbsp;other&nbsp;RDBMS&nbsp;software.&nbsp;&nbsp;These<br>
-&nbsp;&nbsp;&nbsp;&nbsp;should&nbsp;be&nbsp;avoided&nbsp;in&nbsp;all&nbsp;new&nbsp;code.&nbsp;&nbsp;Examples&nbsp;of&nbsp;these&nbsp;features&nbsp;are&nbsp;enums&nbsp;and<br>
-&nbsp;&nbsp;&nbsp;&nbsp;encrypt().<br>
-<br>
-&nbsp;6.&nbsp;Cross&nbsp;Platform&nbsp;Compatability<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;While&nbsp;Bugzilla&nbsp;was&nbsp;written&nbsp;to&nbsp;be&nbsp;used&nbsp;on&nbsp;Unix&nbsp;based&nbsp;systems&nbsp;(and&nbsp;Unix/Linux&nbsp;is<br>
-&nbsp;&nbsp;&nbsp;&nbsp;still&nbsp;the&nbsp;only&nbsp;officially&nbsp;supported&nbsp;platform)&nbsp;there&nbsp;are&nbsp;many&nbsp;who&nbsp;desire/need&nbsp;to<br>
-&nbsp;&nbsp;&nbsp;&nbsp;run&nbsp;Bugzilla&nbsp;on&nbsp;Microsoft&nbsp;Windows&nbsp;boxes.&nbsp;&nbsp;Whenever&nbsp;possible,&nbsp;we&nbsp;should&nbsp;strive<br>
-&nbsp;&nbsp;&nbsp;&nbsp;not&nbsp;to&nbsp;make&nbsp;the&nbsp;lives&nbsp;of&nbsp;these&nbsp;people&nbsp;any&nbsp;more&nbsp;complicated&nbsp;and&nbsp;avoid&nbsp;doing&nbsp;things<br>
-&nbsp;&nbsp;&nbsp;&nbsp;that&nbsp;break&nbsp;Bugzilla's&nbsp;ability&nbsp;to&nbsp;run&nbsp;on&nbsp;multiple&nbsp;operating&nbsp;systems.<br>
-<br>
-&nbsp;&nbsp;&nbsp;&nbsp;</P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>            Usage of variables in Regular Expressions
+          </P
+><P
+>            It is very important that you don't use a variable in a regular
+            expression unless that variable is supposed to contain an expression.
+            This especially applies when using grep.  You should use:
+          </P
+><P
+>            <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>grep ($_ eq $value, @array);
+            </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+          </P
+><P
+>            -- NOT THIS --
+          </P
+><P
+>            <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>grep (/$value/, @array);
+            </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+          </P
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="90%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>              If you need to use a non-expression variable inside of an expression, be
+              sure to quote it properly (using <TT
+CLASS="FUNCTION"
+>\Q..\E</TT
+>).
+            </P
+></TD
+></TR
+></TABLE
+></DIV
+></LI
+></OL
+></DIV
+><DIV
+CLASS="SECTION"
+><H2
+CLASS="SECTION"
+><A
+NAME="AEN2509"
+>D.5.2. Coding Style for Bugzilla</A
+></H2
+><P
+>        While it's true that not all of the code currently in Bugzilla adheres to
+        this (or any) styleguide, it is something that is being worked toward.  Therefore,
+        we ask that all new code (submitted patches and new files) follow this guide
+        as closely as possible (if you're only changing 1 or 2 lines, you don't have
+        to reformat the entire file :).
+      </P
+><P
+>        The Bugzilla development team has decided to adopt the perl style guide as
+        published by Larry Wall.  This giude can be found in <SPAN
+CLASS="QUOTE"
+>"Programming
+        Perl"</SPAN
+> (the camel book) or by typing <B
+CLASS="COMMAND"
+>man perlstyle</B
+> at
+        your favorite shell prompt.
+      </P
+><P
+>        What appears below if a brief summary, please refer to the perl style
+        guide if you don't see your question covered here.
+      </P
+><P
+></P
+><UL
+><LI
+><P
+>            Whitespace
+          </P
+><P
+>            Bugzilla's prefered indentation is 4 spaces (no tabs, please).
+          </P
+></LI
+><LI
+><P
+>            Curly braces.
+          </P
+><P
+>            The opening brace of a block should be on the same line as the statement
+            that is causing the block and the closing brace should be at the same
+            indentation level as that statement, for example:
+          </P
+><P
+>            <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>if ($var) {
+    print "The variable is true";
+}
+else {
+    print "Try again";
+}
+            </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+          </P
+><P
+>            -- NOT THIS --
+          </P
+><P
+>            <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>if ($var)
+{
+    print "The variable is true";
+}
+else
+{
+    print "Try again";
+}
+            </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+          </P
+></LI
+><LI
+><P
+>            File Names
+          </P
+><P
+>            File names for bugzilla code and support documention should be legal across
+            multiple platforms. <TT
+CLASS="COMPUTEROUTPUT"
+>\ / : * ? " &#60; &#62;</TT
+>
+            and <TT
+CLASS="COMPUTEROUTPUT"
+>|</TT
+> are all illegal characters for filenames
+            on various platforms.  Also, file names should not have spaces in them as they
+            can cause confusion in CVS and other mozilla.org utilities.
+          </P
+></LI
+><LI
+><P
+>            Variable Names
+          </P
+><P
+>            If a variable is scoped globally (<TT
+CLASS="COMPUTEROUTPUT"
+>$::variable</TT
+>)
+            its name should be descriptive of what it contains.  Local variables can be named
+            a bit looser, provided the context makes their content obvious.  For example,
+            <TT
+CLASS="COMPUTEROUTPUT"
+>$ret</TT
+> could be used as a staging variable for a
+             routine's return value as the line <TT
+CLASS="COMPUTEROUTPUT"
+>return $ret;</TT
+>
+             will make it blatantly obvious what the variable holds and most likely be shown
+             on the same screen as <TT
+CLASS="COMPUTEROUTPUT"
+>my $ret = "";</TT
+>.
+          </P
+></LI
+><LI
+><P
+>            Cross Database Compatability
+          </P
+><P
+>            Bugzilla was originally written to work with MySQL and therefore took advantage
+            of some of its features that aren't contained in other RDBMS software.  These
+            should be avoided in all new code.  Examples of these features are enums and
+            <TT
+CLASS="FUNCTION"
+>encrypt()</TT
+>.
+          </P
+></LI
+><LI
+><P
+>            Cross Platform Compatability
+          </P
+><P
+>            While Bugzilla was written to be used on Unix based systems (and Unix/Linux is
+            still the only officially supported platform) there are many who desire/need to
+            run Bugzilla on Microsoft Windows boxes.  Whenever possible, we should strive
+            not to make the lives of these people any more complicated and avoid doing things
+            that break Bugzilla's ability to run on multiple operating systems.
+          </P
+></LI
+></UL
+></DIV
 ></DIV
 ><DIV
 CLASS="NAVFOOTER"
