@@ -78,7 +78,7 @@ public:
   NS_IMETHOD GetChildNamed(nsString& name, nsISupports ** aChild);
 
   // this override pulls the value from the db
-	NS_IMETHOD GetName(nsString& name);   // Name of this folder (as presented to user).
+	NS_IMETHOD GetName(char ** name);   // Name of this folder (as presented to user).
 	NS_IMETHOD GetPrettyName(nsString& prettyName);	// Override of the base, for top-level mail folder
 
   NS_IMETHOD BuildFolderURL(char **url);
@@ -103,6 +103,7 @@ public:
 
 	//nsIMsgMailFolder
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
+  nsresult GetPathAsParentFolder(nsNativeFileSpec& aPathName);
 
 protected:
   nsresult CreateSubFolders(void);

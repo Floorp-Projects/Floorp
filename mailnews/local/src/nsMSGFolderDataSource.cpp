@@ -170,7 +170,26 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
 }
 
 
-NS_IMPL_ISUPPORTS(nsMSGFolderDataSource, nsIRDFMSGFolderDataSource::IID());
+NS_IMPL_ADDREF(nsMSGFolderDataSource)
+NS_IMPL_RELEASE(nsMSGFolderDataSource)
+
+NS_IMETHODIMP
+nsMSGFolderDataSource::QueryInterface(REFNSIID iid, void** result)
+{
+  if (! result)
+    return NS_ERROR_NULL_POINTER;
+
+  *result = nsnull;
+  if (iid.Equals(nsIRDFMSGFolderDataSource::IID()) ||
+	  iid.Equals(nsIRDFDataSource::IID()) ||
+      iid.Equals(kISupportsIID))
+  {
+    *result = NS_STATIC_CAST(nsIRDFMSGFolderDataSource*, this);
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
 
  // nsIRDFDataSource methods
 NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
@@ -201,7 +220,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
 		{
 			rootFolder->SetName("Mail and News");
 			rootFolder->SetDepth(0);
-			nsNativeFileSpec startPath("c:\\Program Files\\Netscape\\Users\\mscott\\Mail", PR_FALSE);
+			nsNativeFileSpec startPath("c:\\program files\\netscape\\users\\putterman\\Mail", PR_FALSE);
 			if (NS_FAILED(rv = InitLocalFolders(rootFolder, startPath, 1)))
 				return rv;
 
@@ -311,9 +330,11 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
 		{
 			nsIEnumerator *subFolders;
 
-      folder->GetSubFolders(&subFolders);
-		  nsRDFEnumeratorAssertionCursor* cursor =
-        new nsRDFEnumeratorAssertionCursor(this, source, kNC_Child, subFolders);
+			folder->GetSubFolders(&subFolders);
+			//folder->GetMessages(&subFolders);
+			nsRDFEnumeratorAssertionCursor* cursor =
+				new nsRDFEnumeratorAssertionCursor(this, 
+                                           source, kNC_Child, subFolders);
 			NS_IF_RELEASE(subFolders);
       if (cursor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;

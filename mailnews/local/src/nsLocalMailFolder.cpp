@@ -49,7 +49,7 @@ static const char kRootPrefix[] = "mailbox:/";
 static const char kMsgRootFolderPref[] = "mailnews.rootFolder";
 
 static nsresult
-nsURI2Path(char* uriStr, nsFileSpec& pathResult)
+nsURI2Path(char* uriStr, nsFileSpec& pathResult, PRBool asParentFolder)
 {
   nsAutoString path;
   nsAutoString uri = uriStr;
@@ -72,7 +72,7 @@ nsURI2Path(char* uriStr, nsFileSpec& pathResult)
   if (NS_FAILED(rv))
     return rv; 
 #else
-  char rootPath[] = "c:\\program files\\netscape\\users\\mscott\\mail";
+  char rootPath[] = "c:\\program files\\netscape\\users\\putterman\\mail";
 #endif
   path.Append(rootPath);
   uri.Cut(0, nsCRT::strlen(kRootPrefix));
@@ -106,9 +106,10 @@ nsURI2Path(char* uriStr, nsFileSpec& pathResult)
     NS_ASSERTION(cnt == pos, "something wrong with nsString");
     path.Append("\\");
     path.Append(folderName);
-    path.Append(".sbd");
     uri.Cut(0, pos);
     uriLen = uri.Length();
+	if(uriLen != 0 || asParentFolder)
+	    path.Append(".sbd");
   }
   // XXX bogus, nsFileSpec should take an nsString
   char* str = path.ToNewCString();
@@ -204,14 +205,11 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
   nsresult rv = NS_OK;
   nsAutoString currentFolderName;
   nsFileSpec path;
-  rv = GetPath(path);
+  rv = GetPathAsParentFolder(path);
   if (NS_FAILED(rv)) return rv;
-  for (nsDirectoryIterator dir(path); (const nsFileSpec&) dir; dir++) {
+  for (nsDirectoryIterator dir(path); dir.Exists(); dir++) {
     nsFileSpec currentFolderPath = (nsFileSpec&)dir;
-#if 0
-    if (currentFolderName)
-      delete[] currentFolderName;
-#endif
+
     currentFolderName = currentFolderPath.GetLeafName();
     if (nsShouldIgnoreFile(currentFolderName))
       continue;
@@ -219,37 +217,27 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
     nsAutoString uri;
     uri.Append(mURI);
     uri.Append('/');
-/*	if(PL_strcasecmp(mURI,kRootPrefix)==0)
-	{
-		nsFilePath filePath(path);
-		uri.Append(filePath);
-		uri.Append('/');
-	}
-	*/
-#if 0
+
     uri.Append(currentFolderName);
     char* uriStr = uri.ToNewCString();
     if (uriStr == nsnull) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       goto done;
     }
-#endif
+
     // XXX trim off .sbd from uriStr
     nsMsgLocalMailFolder* folder = new nsMsgLocalMailFolder(/*uriStr*/);
-#if 0
-    delete[] uriStr;
-#endif
+
     if (folder == nsnull) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       goto done;
     }
+
+	folder->Init(uriStr);
+    delete[] uriStr;
     mSubFolders->AppendElement(NS_STATIC_CAST(nsIMsgFolder*, folder));
   }
   done:
-#if 0
-  if (currentFolderName)
-    delete[] currentFolderName;
-#endif
   return rv;
 }
 
@@ -258,9 +246,8 @@ nsresult
 nsMsgLocalMailFolder::Initialize(void)
 {
   nsFileSpec path;
-  nsresult rv = GetPath(path);
+  nsresult rv = GetPathAsParentFolder(path);
   if (NS_FAILED(rv)) return rv;
-  nsFilePath aFilePath(path);
   PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
   if (path.IsDirectory()) {
       newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
@@ -330,12 +317,54 @@ nsMsgLocalMailFolder::ReplaceElement(nsISupports* element, nsISupports* newEleme
 NS_IMETHODIMP
 nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 {
-  // XXX temporary
-  nsISupportsArray* messages;
-  nsresult rv = NS_NewISupportsArray(&messages);
-  if (NS_FAILED(rv))
-    return rv;
-  NS_ADDREF(messages);
+	nsNativeFileSpec path;
+	nsresult rv = GetPath(path);
+	if (NS_FAILED(rv)) return rv;
+	
+	nsFilePath filePath(path);
+	nsMailDatabase *pMailDatabase;
+
+	nsISupportsArray* messages;
+	rv = NS_NewISupportsArray(&messages);
+	if (NS_FAILED(rv))
+		return rv;
+	NS_ADDREF(messages);
+
+	nsMailDatabase::Open(filePath, PR_TRUE, &pMailDatabase, PR_FALSE);
+	if(pMailDatabase)
+	{
+#ifdef DEBUG
+		pMailDatabase->PrePopulate();
+#endif
+		ListContext *pContext;
+		nsMsgHdr *pHdr;
+
+		pMailDatabase->ListFirst(&pContext, &pHdr);
+		while(pHdr)
+		{
+			int num = 0;
+			nsISupports *supports;
+		    if(NS_SUCCEEDED(rv = pHdr->QueryInterface(kISupportsIID, (void**)&supports)))
+			{
+				nsAutoString str("mailbox://test");
+				str += num;
+  			    char* cstr = str.ToNewCString();
+
+				nsIRDFNode *pNode;
+				if(NS_SUCCEEDED(rv = pHdr->QueryInterface(nsIRDFNode::IID(), (void**)&pNode)))
+				{
+					pNode->Init(cstr);
+					pNode->Release();
+					messages->AppendElement(supports);
+				}
+				pMailDatabase->ListNext(pContext, &pHdr);
+				NS_RELEASE(supports);
+			}
+			else
+				return rv;
+		}
+		pMailDatabase->ListDone(pContext);
+	}
   return messages->Enumerate(result); // empty set for now
 }
 
@@ -661,7 +690,7 @@ nsMsgLocalMailFolder::GetChildNamed(nsString& name, nsISupports ** aChild)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetName(nsString& name)
+NS_IMETHODIMP nsMsgLocalMailFolder::GetName(char **name)
 {
   if(!name)
     return NS_ERROR_NULL_POINTER;
@@ -672,7 +701,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetName(nsString& name)
     {
       SetName("Local Mail");
       mHaveReadNameFromDB = TRUE;
-	  name = mName;
+	  *name = mName.ToNewCString();
 	  return NS_OK;
     }
     else
@@ -680,7 +709,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetName(nsString& name)
       //Need to read the name from the database
     }
   }
-  nsURI2Name(mURI, name);
+	nsAutoString folderName;
+	nsURI2Name(mURI, folderName);
+	*name = folderName.ToNewCString();
 
   return NS_OK;
 }
@@ -930,13 +961,22 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRememberedPassword(char ** password)
   return NS_OK;
 }
 
+nsresult nsMsgLocalMailFolder::GetPathAsParentFolder(nsNativeFileSpec& aPathName)
+{
+	nsNativeFileSpec path;
+
+	nsresult rv = nsURI2Path(mURI, path, PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
+	aPathName = path;
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
 {
   if (mPath == nsnull) {
-    nsresult rv = nsURI2Path(mURI, mPath);
+    nsresult rv = nsURI2Path(mURI, mPath, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
   }
   aPathName = mPath;
   return NS_OK;
 }
-
