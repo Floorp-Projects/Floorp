@@ -36,7 +36,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsFTPChannel.obj              \
         .\$(OBJDIR)\nsFtpConnectionThread.obj	  \
         .\$(OBJDIR)\nsFtpModule.obj               \
-        .\$(OBJDIR)\nsFTPListener.obj             \
         .\$(OBJDIR)\nsAsyncEvent.obj              \
         $(NULL)
 
