@@ -46,7 +46,6 @@ CSRCS		= swfalg.c  \
 		  $(NULL)
 DIRS = pkcs11
 
-VPATH = $(OBJDIR)
 vpath %.c $(OBJDIR)
 
 
