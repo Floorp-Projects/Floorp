@@ -53,3 +53,8 @@
      * require that its this value be a string object. Therefore, it can be
      * transferred to other kinds of objects for use as a method.
      */
+
+
+	testcases[0] = { expect:"PASSED", actual:"PASSED", description:"NO TESTS EXIST" };
+
+	test();
