@@ -233,13 +233,6 @@ private (compiles fine)</li>
 block - remove that and the include (compiles fine)</li>
      <li>nsSpaceManger has no way of clearing the floater damage interval 
 set - this might be needed if the SpaceManager persists beyond a Reflow</li>
-     <li>As dbaron has documetned inteh code, the floater damage logic is 
-flawed: it only handles vertical changes to a line's combined area. &nbsp;The 
-Floater Damage API on the Space Manger does not support horizontal changes, 
-and the block frame does not attempt to handle them either except for the 
-case of a <a href="#block-line-impact">block-line impacted by a floater</a>
- .</li>
-   
   </ul>
    <br>
    <br>
