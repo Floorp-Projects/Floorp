@@ -3,5 +3,4 @@
 <!ENTITY          pnl2.pdir.label    "Your user settings, preferences, bookmarks and mail will be stored in ">
 <!ENTITY          pnl2.deffldr.label " the default folder.">
 <!ENTITY          pnl2.finish.text   "Click Finish to create this new profile.">
-
 <!ENTITY          button.choosefolder.label   "Change Folder...">
