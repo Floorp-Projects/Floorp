@@ -27,13 +27,14 @@
 #include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
 
-class nsInputStreamChannel : public nsIChannel, 
+class nsInputStreamChannel : public nsIInputStreamChannel, 
                              public nsIStreamListener
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
+    NS_DECL_NSIINPUTSTREAMCHANNEL
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
@@ -42,10 +43,6 @@ public:
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
-    nsresult Init(nsIURI* uri, const char* contentType, 
-                  PRInt32 contentLength, nsIInputStream* in,
-                  nsILoadGroup* group, nsIURI* originalURI);
 
 protected:
     nsCOMPtr<nsIURI>            mOriginalURI;
@@ -58,13 +55,5 @@ protected:
     nsCOMPtr<nsIChannel>        mFileTransport;
     nsCOMPtr<nsIStreamListener> mRealListener;
 };
-
-#define NS_INPUTSTREAMCHANNEL_CID                    \
-{ /* ccae3fae-30f5-11d3-8cd0-0060b0fc14a3 */         \
-    0xccae3fae,                                      \
-    0x30f5,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
 
 #endif // nsInputStreamChannel_h__
