@@ -1161,7 +1161,7 @@ function Save()
 function SaveAsFile(saveAs)
 {
 	dump("SaveAsFile from XUL\n");
-	editorShell.saveDocument(saveAs, false);
+	editorShell.saveDocument(saveAs, false, "text/html");
   defaultSaveOperation = "file";
 }
 
