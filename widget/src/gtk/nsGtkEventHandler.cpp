@@ -214,6 +214,63 @@ void UninitExposeEvent(GdkEventExpose *aGEE,
 
 //==============================================================
 
+#ifdef tague_keyboard_patch
+PRUint32 nsConvertCharCodeToUnicode(gchar* gdkString)
+{
+  //
+  // placeholder for something a little more interesting and correct
+  //
+  return gdkString[0];
+}
+
+//==============================================================
+void InitKeyEvent(GdkEventKey *aGEK,
+                            gpointer   p,
+                            nsKeyEvent &anEvent,
+                            PRUint32   aEventType)
+{
+  anEvent.message = aEventType;
+  anEvent.widget  = (nsWidget *) p;
+
+  anEvent.eventStructType = NS_KEY_EVENT;
+
+  if (aGEK != nsnull) {
+    anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
+    anEvent.charCode = 0;
+    anEvent.time = aGEK->time;
+    anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.point.x = 0;
+    anEvent.point.y = 0;
+  }
+}
+
+void InitKeyPressEvent(GdkEventKey *aGEK,
+                       gpointer p,
+                       nsKeyEvent &anEvent)
+{
+  //
+  // init the basic event fields
+  //
+  anEvent.eventStructType = NS_KEY_EVENT;
+  anEvent.message = NS_KEY_PRESS;
+  anEvent.widget = (nsWidget*)p;
+
+  if (aGEK!=nsnull) {
+    anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
+    anEvent.charCode = nsConvertCharCodeToUnicode(aGEK->string);
+    anEvent.time = aGEK->time;
+    anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.point.x = 0;
+    anEvent.point.y = 0;
+  }
+}
+
+
+#else
 //==============================================================
 void InitKeyEvent(GdkEventKey *aGEK,
                             gpointer   p,
@@ -243,6 +300,7 @@ void InitKeyEvent(GdkEventKey *aGEK,
     anEvent.point.y = 0;
   }
 }
+#endif
 
 //=============================================================
 void UninitKeyEvent(GdkEventKey *aGEK,
@@ -566,6 +624,7 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
 #endif
 }
 
+#ifdef tague_keyboard_patch
 //==============================================================
 gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 {
@@ -591,6 +650,71 @@ gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   return PR_TRUE;
 }
 
+
+//==============================================================
+gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
+{
+  nsKeyEvent kevent;
+  nsWindow* win = (nsWindow*)p;
+
+  // Don't pass shift, control and alt as key press events
+  if (event->keyval == GDK_Shift_L
+      || event->keyval == GDK_Shift_R
+      || event->keyval == GDK_Control_L
+      || event->keyval == GDK_Control_R
+      || event->keyval == GDK_Alt_L
+      || event->keyval == GDK_Alt_R)
+    return PR_TRUE;
+
+  win->AddRef();
+  //
+  // First, dispatch the Key event as a virtual key down event
+  //
+  InitKeyEvent(event, p, kevent, NS_KEY_DOWN);
+   win->OnKey(kevent);
+ 
+
+
+  //
+  // Second, dispatch the Key event as a key press event w/ a Unicode
+  //  character code
+  if (event->length) {
+     InitKeyPressEvent(event,p,kevent);
+     win->OnKey(kevent);
+   }
+
+  win->Release();
+  gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
+  
+  return PR_TRUE;
+}
+#else
+//==============================================================
+gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
+{
+  // Don't pass shift, control and alt as key release events
+  if (event->keyval == GDK_Shift_L
+      || event->keyval == GDK_Shift_R
+      || event->keyval == GDK_Control_L
+      || event->keyval == GDK_Control_R
+      || event->keyval == GDK_Alt_L
+      || event->keyval == GDK_Alt_R)
+    return PR_TRUE;
+
+  nsKeyEvent kevent;
+  InitKeyEvent(event, p, kevent, NS_KEY_UP);
+
+  nsWindow * win = (nsWindow *) p;
+  win->AddRef();
+  win->OnKey(kevent);
+  win->Release();
+
+  gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_release_event");
+
+  return PR_TRUE;
+}
+
+
 //==============================================================
 gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 {
@@ -615,6 +739,7 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   
   return PR_TRUE;
 }
+#endif
 
 //==============================================================
 gint nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p)
