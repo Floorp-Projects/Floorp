@@ -591,7 +591,7 @@ mozJSComponentLoader::UnloadAll(PRInt32 aWhen)
     return NS_OK;
 }
 
-static nsresult
+static NS_IMETHODIMP
 CreateJSComponentLoader(nsISupports *aOuter, const nsIID &iid, void **result)
 {
     if (!result)
