@@ -284,11 +284,12 @@ nsInstall::AddDirectory(const nsString& aRegName,
     {
         // assume package version for overriden forms that don't take version info
         *aReturn = mVersionInfo->ToString(qualifiedVersion);
-    }
 
-    if (*aReturn != SUCCESS)
-    {
-        return NS_OK;
+        if (NS_FAILED(*aReturn))
+        {
+            SaveError( nsInstall::UNEXPECTED_ERROR );
+            return NS_OK;
+        }
     }
 	
     nsString subdirectory(aSubdir);
@@ -460,12 +461,13 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
     {
         // assume package version for overriden forms that don't take version info
         *aReturn = mVersionInfo->ToString(qualifiedVersion);
-    }
 
-    if (*aReturn != SUCCESS)
-    {
-        return NS_OK;
-    }	
+        if (NS_FAILED(*aReturn))
+        {
+            SaveError( nsInstall::UNEXPECTED_ERROR );
+            return NS_OK;
+        }	
+    }
 
     if ( aRegName == "" || aRegName == "null") 
     {
