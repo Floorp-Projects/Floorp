@@ -28,6 +28,8 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= xpwidgets_s
 
+DEFINES		+= -DUSE_TLS_FOR_TOOLKIT
+
 CPPSRCS		= \
 		nsBaseWidget.cpp \
 		nsBaseFilePicker.cpp \
