@@ -312,6 +312,8 @@ nsDownloadManager::AddDownload(nsIDownloadItem* aDownloadItem)
   nsresult rv = GetDownloadsContainer(getter_AddRefs(downloads));
   if (NS_FAILED(rv)) return rv;
 
+  // such assumptions are pretty much okay because the client presumably used
+  // createDownload to create the download item, which creates a new instance of DownloadItem
   DownloadItem* item = NS_STATIC_CAST(DownloadItem*, aDownloadItem);
   item->SetDownloadManager(this);
 
