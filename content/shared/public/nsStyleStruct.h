@@ -731,7 +731,8 @@ struct nsStyleDisplay : public nsStyleStruct {
   PRUint8 mBreakType;           // [reset] see nsStyleConsts.h NS_STYLE_CLEAR_*
   PRPackedBool mBreakBefore;    // [reset] 
   PRPackedBool mBreakAfter;     // [reset] 
-  PRUint8   mOverflow;          // [reset] see nsStyleConsts.h
+  PRUint8 mOverflowX;           // [reset] see nsStyleConsts.h
+  PRUint8 mOverflowY;           // [reset] see nsStyleConsts.h
   PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
   
   PRBool IsBlockLevel() const {return (NS_STYLE_DISPLAY_BLOCK == mDisplay) ||
@@ -749,15 +750,18 @@ struct nsStyleDisplay : public nsStyleStruct {
                                       (NS_STYLE_POSITION_RELATIVE == mPosition);}
 
   PRBool IsScrollableOverflow() const {
-    return mOverflow != NS_STYLE_OVERFLOW_VISIBLE &&
-           mOverflow != NS_STYLE_OVERFLOW_CLIP;
+    // mOverflowX and mOverflowY always match when one of them is
+    // NS_STYLE_OVERFLOW_VISIBLE or NS_STYLE_OVERFLOW_CLIP.
+    return mOverflowX != NS_STYLE_OVERFLOW_VISIBLE &&
+           mOverflowX != NS_STYLE_OVERFLOW_CLIP;
   }
 
   // For table elements that don't support scroll frame creation, we
   // support 'overflow: hidden' to mean 'overflow: -moz-hidden-unscrollable'.
   PRBool IsTableClip() const {
-    return mOverflow == NS_STYLE_OVERFLOW_CLIP ||
-           mOverflow == NS_STYLE_OVERFLOW_HIDDEN;
+    return mOverflowX == NS_STYLE_OVERFLOW_CLIP ||
+           (mOverflowX == NS_STYLE_OVERFLOW_HIDDEN &&
+            mOverflowY == NS_STYLE_OVERFLOW_HIDDEN);
   }
 };
 

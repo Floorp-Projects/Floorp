@@ -184,7 +184,8 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
     aData->mDisplayData->mPosition = staticposition;
 
     nsCSSValue visible(NS_STYLE_OVERFLOW_VISIBLE, eCSSUnit_Enumerated);
-    aData->mDisplayData->mOverflow = visible;
+    aData->mDisplayData->mOverflowX = visible;
+    aData->mDisplayData->mOverflowY = visible;
 
     // Nobody will care about 'break-before' or 'break-after', since
     // they only apply to blocks (assuming we implement them correctly).

@@ -563,4 +563,11 @@ interface nsIDOMNSCSS2Properties : nsIDOMCSS2Properties
            attribute DOMString        opacity;
                                         // raises(DOMException) on setting
 
+           /* Mozilla extensions */
+           attribute DOMString        overflowX;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        overflowY;
+                                        // raises(DOMException) on setting
+
 };

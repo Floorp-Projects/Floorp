@@ -2604,16 +2604,55 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     display->mFloats = parentDisplay->mFloats;
   }
 
-  // overflow: enum, auto, inherit
-  if (eCSSUnit_Enumerated == displayData.mOverflow.GetUnit()) {
-    display->mOverflow = displayData.mOverflow.GetIntValue();
+  // overflow-x: enum, auto, inherit
+  if (eCSSUnit_Enumerated == displayData.mOverflowX.GetUnit()) {
+    display->mOverflowX = displayData.mOverflowX.GetIntValue();
   }
-  else if (eCSSUnit_Auto == displayData.mOverflow.GetUnit()) {
-    display->mOverflow = NS_STYLE_OVERFLOW_AUTO;
+  else if (eCSSUnit_Auto == displayData.mOverflowX.GetUnit()) {
+    display->mOverflowX = NS_STYLE_OVERFLOW_AUTO;
   }
-  else if (eCSSUnit_Inherit == displayData.mOverflow.GetUnit()) {
+  else if (eCSSUnit_Inherit == displayData.mOverflowX.GetUnit()) {
     inherited = PR_TRUE;
-    display->mOverflow = parentDisplay->mOverflow;
+    display->mOverflowX = parentDisplay->mOverflowX;
+  }
+
+  // overflow-y: enum, auto, inherit
+  if (eCSSUnit_Enumerated == displayData.mOverflowY.GetUnit()) {
+    display->mOverflowY = displayData.mOverflowY.GetIntValue();
+  }
+  else if (eCSSUnit_Auto == displayData.mOverflowY.GetUnit()) {
+    display->mOverflowY = NS_STYLE_OVERFLOW_AUTO;
+  }
+  else if (eCSSUnit_Inherit == displayData.mOverflowY.GetUnit()) {
+    inherited = PR_TRUE;
+    display->mOverflowY = parentDisplay->mOverflowY;
+  }
+
+  // CSS3 overflow-x and overflow-y require some fixup as well in some
+  // cases.  NS_STYLE_OVERFLOW_VISIBLE and NS_STYLE_OVERFLOW_CLIP are
+  // meaningful only when used in both dimensions.
+  if (display->mOverflowX != display->mOverflowY &&
+      (display->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE ||
+       display->mOverflowX == NS_STYLE_OVERFLOW_CLIP ||
+       display->mOverflowY == NS_STYLE_OVERFLOW_VISIBLE ||
+       display->mOverflowY == NS_STYLE_OVERFLOW_CLIP)) {
+    // We can't store in the rule tree since a more specific rule might
+    // change these conditions.
+    inherited = PR_TRUE;
+
+    // NS_STYLE_OVERFLOW_CLIP is a deprecated value, so if it's specified
+    // in only one dimension, convert it to NS_STYLE_OVERFLOW_HIDDEN.
+    if (display->mOverflowX == NS_STYLE_OVERFLOW_CLIP)
+      display->mOverflowX = NS_STYLE_OVERFLOW_HIDDEN;
+    if (display->mOverflowY == NS_STYLE_OVERFLOW_CLIP)
+      display->mOverflowY = NS_STYLE_OVERFLOW_HIDDEN;
+
+    // If 'visible' is specified but doesn't match the other dimension, it
+    // turns into 'auto'.
+    if (display->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE)
+      display->mOverflowX = NS_STYLE_OVERFLOW_AUTO;
+    if (display->mOverflowY == NS_STYLE_OVERFLOW_VISIBLE)
+      display->mOverflowY = NS_STYLE_OVERFLOW_AUTO;
   }
 
   // clip property: length, auto, inherit

@@ -431,11 +431,22 @@ public:
     return mLanguageSpecificTransformType;
   }
 
-  void SetViewportOverflowOverride(PRUint8 aStyle)
+  struct ScrollbarStyles {
+    // Always one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
+    // or NS_STYLE_OVERFLOW_AUTO.
+    PRUint8 mHorizontal, mVertical;
+    ScrollbarStyles(PRUint8 h, PRUint8 v) : mHorizontal(h), mVertical(v) {}
+    ScrollbarStyles() {}
+  };
+  void SetViewportOverflowOverride(PRUint8 aX, PRUint8 aY)
   {
-    mViewportStyleOverflow = aStyle;
+    mViewportStyleOverflow.mHorizontal = aX;
+    mViewportStyleOverflow.mVertical = aY;
   }
-  PRUint8 GetViewportOverflowOverride() { return mViewportStyleOverflow; }
+  ScrollbarStyles GetViewportOverflowOverride()
+  {
+    return mViewportStyleOverflow;
+  }
 
   /**
    * Set and get methods for controling the background drawing
@@ -644,8 +655,8 @@ protected:
   nscolor               mFocusBackgroundColor;
   nscolor               mFocusTextColor;
 
+  ScrollbarStyles       mViewportStyleOverflow;
   PRUint8               mFocusRingWidth;
-  PRUint8               mViewportStyleOverflow;
 
   nsCompatibility       mCompatibilityMode;
   PRUint16              mImageAnimationMode;
