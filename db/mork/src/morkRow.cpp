@@ -205,7 +205,8 @@ morkRow::AcquireCellHandle(morkEnv* ev, morkCell* ioCell,
     cellObj->CutStrongRef(ev);
     return cellHandle;
   }
-  return (nsIMdbCell*) 0;}
+  return (nsIMdbCell*) 0;
+}
 
 mork_count
 morkRow::CountOverlap(morkEnv* ev, morkCell* ioVector, mork_fill inFill)
@@ -344,7 +345,7 @@ morkCell*
 morkRow::CellAt(morkEnv* ev, mork_pos inPos) const
 {
   morkCell* cells = mRow_Cells;
-  if ( cells && inPos < mRow_Length )
+  if ( cells && inPos < mRow_Length && inPos >= 0 )
   {
     return cells + inPos;
   }
@@ -445,7 +446,10 @@ morkRow::SetRow(morkEnv* ev, const morkRow* inSourceRow)
             if ( dstCol )
             {
               dst->SetColumnAndChange(dstCol, morkChange_kAdd);
-              dst->mCell_Atom = store->CopyAtom(ev, atom);
+              atom = store->CopyAtom(ev, atom);
+              dst->mCell_Atom = atom;
+              if ( atom ) // another ref?
+                atom->AddCellUse(ev);
             }
           }
         }
