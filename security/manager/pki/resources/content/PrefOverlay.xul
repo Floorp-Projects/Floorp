@@ -47,7 +47,7 @@
                   label="&certs.label;" />
       </treerow>
     </treeitem>
-    <treeitem id="validationItem" open="true" >
+    <treeitem id="validationItem" >
       <treerow>
         <treecell class="treecell-indent" url="chrome://pippki/content/pref-validation.xul"
                  label="&validation.label;" />
