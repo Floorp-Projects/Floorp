@@ -24,9 +24,12 @@ MODULE		= npsimple
 REQUIRES	= xpcom plugin string
 
 LIBRARY_NAME	= npsimple
+MODULE_NAME     = SimplePlugin
 
 DEPTH = ..\..\..\..
 
+# Make sure that it builds but don't install it
+NO_DIST_INSTALL = 1
 
 XPIDLSRCS = \
 	.\nsISimplePluginInstance.idl \
@@ -87,7 +90,3 @@ LINCS=$(LINCS) -I$(PUBLIC)\plugin -I$(PUBLIC)\xpcom -I$(PUBLIC)\java -I$(PUBLIC)
 LCFLAGS = $(LCFLAGS) -DNEW_PLUGIN_STREAM_API
 !endif
 
-libs:: $(DLL)
-#        $(MAKE_INSTALL) $(XPDIST)\classes11\Simple.class $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\plugins\simple
-#        $(MAKE_INSTALL) Simple.class $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\plugins\simple
-        $(MAKE_INSTALL) $(OBJDIR)\npsimple.dll $(DIST)\bin\components
