@@ -34,8 +34,6 @@ enum nsLinkState {
   eLinkState_Unvisited  = 0,
   eLinkState_Visited    = 1, 
   eLinkState_OutOfDate  = 2,  // visited, but the cache is stale
-  eLinkState_Active     = 3,  // mouse is down on link
-  eLinkState_Hover      = 4   // mouse is hovering over link
 };
 
 // XXX Verb to use for link actuation. These are the verbs specified
