@@ -1038,32 +1038,6 @@ if (!GroupExists("canconfirm")) {
 
 
 ###########################################################################
-# Create initial test product if there are no products present.
-###########################################################################
-
-my $sth = $dbh->prepare("SELECT product FROM products");
-$sth->execute;
-unless ($sth->rows) {
-    print "Creating initial dummy product 'TestProduct' ...\n";
-    $dbh->do('INSERT INTO products(product, description, milestoneurl, disallownew, votesperuser, votestoconfirm) VALUES ("TestProduct",
-              "This is a test product.  This ought to be blown away and ' .
-             'replaced with real stuff in a finished installation of ' .
-             'bugzilla.", "", 0, 0, 0)');
-    $dbh->do('INSERT INTO versions (value, program) VALUES ("other", "TestProduct")');
-    $dbh->do('INSERT INTO components (value, program, description, initialowner, initialqacontact)
-             VALUES (' .
-             '"TestComponent", "TestProduct", ' .
-             '"This is a test component in the test product database.  ' .
-             'This ought to be blown away and replaced with real stuff in ' .
-             'a finished installation of bugzilla.", "", "")');
-    $dbh->do('INSERT INTO milestones (product, value) VALUES ("TestProduct","---")');
-}
-
-
-
-
-
-###########################################################################
 # Populate the list of fields.
 ###########################################################################
 
@@ -1249,7 +1223,7 @@ sub bailout {   # this is just in case we get interrupted while getting passwd
     exit 1;
 }
 
-$sth = $dbh->prepare(<<_End_Of_SQL_);
+my $sth = $dbh->prepare(<<_End_Of_SQL_);
   SELECT login_name
   FROM profiles
   WHERE groupset=9223372036854775807
@@ -1369,6 +1343,39 @@ _End_Of_SQL_
   }
   print "\n$login is now set up as the administrator account.\n";
 }
+
+
+###########################################################################
+# Create initial test product if there are no products present.
+###########################################################################
+
+$sth = $dbh->prepare(<<_End_Of_SQL_);
+  SELECT userid
+  FROM profiles
+  WHERE groupset=9223372036854775807
+_End_Of_SQL_
+$sth->execute;
+my ($adminuid) = $sth->fetchrow_array;
+if (!$adminuid) { die "No administator!" } # should never get here
+$sth = $dbh->prepare("SELECT product FROM products");
+$sth->execute;
+unless ($sth->rows) {
+    print "Creating initial dummy product 'TestProduct' ...\n";
+    $dbh->do('INSERT INTO products(product, description, milestoneurl, disallownew, votesperuser, votestoconfirm) VALUES ("TestProduct",
+              "This is a test product.  This ought to be blown away and ' .
+             'replaced with real stuff in a finished installation of ' .
+             'bugzilla.", "", 0, 0, 0)');
+    $dbh->do('INSERT INTO versions (value, program) VALUES ("other", "TestProduct")');
+    $dbh->do("INSERT INTO components (value, program, description, initialowner, initialqacontact)
+             VALUES (" .
+             "'TestComponent', 'TestProduct', " .
+             "'This is a test component in the test product database.  " .
+             "This ought to be blown away and replaced with real stuff in " .
+             "a finished installation of bugzilla.', $adminuid, 0)");
+    $dbh->do('INSERT INTO milestones (product, value) VALUES ("TestProduct","---")');
+}
+
+
 
 
 
