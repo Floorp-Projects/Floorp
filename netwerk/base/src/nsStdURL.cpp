@@ -903,7 +903,12 @@ nsStdURL::Resolve(const char *relativePath, char **result)
     if (brk && (*brk == ':')) // This is an absolute case
     {
         rv = DupString(result, relativePath);
-        ReplaceMess(*result);
+        char* path = PL_strstr(*result,"://");
+        if (path) {
+            path = PL_strstr((char*)(path+3),"/");
+            if (path) 
+                ReplaceMess(path);
+        }
         return rv;
     }
 
@@ -974,7 +979,12 @@ nsStdURL::Resolve(const char *relativePath, char **result)
     }
     *result = finalSpec.ToNewCString();
     if (*result) {
-        ReplaceMess(*result);
+        char* path = PL_strstr(*result,"://");
+        if (path) {
+            path = PL_strstr((char*)(path+3),"/");
+            if (path)
+                ReplaceMess(path);
+        }
         return NS_OK;
     } else
         return NS_ERROR_OUT_OF_MEMORY;
