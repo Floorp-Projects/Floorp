@@ -126,7 +126,9 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
 nsresult
 nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
                                   nsIPresContext&          aPresContext,
-                                  const nsHTMLReflowState& aReflowState)
+                                  const nsHTMLReflowState& aReflowState,
+                                  nscoord                  aContainingBlockWidth,
+                                  nscoord                  aContainingBlockHeight)
 {
   // Make a copy of the reflow state. If the reason is eReflowReason_Incremental,
   // then change it to eReflowReason_Resize
@@ -139,8 +141,8 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
   for (kidFrame = mAbsoluteFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
     // Reflow the frame
     nsReflowStatus  kidStatus;
-    ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, reflowState, kidFrame,
-                        PR_FALSE, kidStatus);
+    ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, reflowState, aContainingBlockWidth,
+                        aContainingBlockHeight, kidFrame, PR_FALSE, kidStatus);
   }
   return NS_OK;
 }
@@ -149,6 +151,8 @@ nsresult
 nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatingFrame,
                                              nsIPresContext&          aPresContext,
                                              const nsHTMLReflowState& aReflowState,
+                                             nscoord                  aContainingBlockWidth,
+                                             nscoord                  aContainingBlockHeight,
                                              PRBool&                  aWasHandled)
 {
   // Initialize the OUT paremeter
@@ -189,7 +193,8 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
           // just been inserted or appended
           NS_ASSERTION(frameState & NS_FRAME_FIRST_REFLOW, "unexpected frame state");
           ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
-                              f, PR_TRUE, status);
+                              aContainingBlockWidth, aContainingBlockHeight, f,
+                              PR_TRUE, status);
         }
       }
 
@@ -210,7 +215,8 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
 
       nsReflowStatus  kidStatus;
       ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
-                          nextFrame, PR_FALSE, kidStatus);
+                          aContainingBlockWidth, aContainingBlockHeight, nextFrame,
+                          PR_FALSE, kidStatus);
       // We don't need to invalidate anything because the frame should
       // invalidate any area within its frame that needs repainting, and
       // because it has a view if it changes size the view manager will
@@ -236,6 +242,8 @@ nsresult
 nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
                                                nsIPresContext&          aPresContext,
                                                const nsHTMLReflowState& aReflowState,
+                                               nscoord                  aContainingBlockWidth,
+                                               nscoord                  aContainingBlockHeight,
                                                nsIFrame*                aKidFrame,
                                                PRBool                   aInitialReflow,
                                                nsReflowStatus&          aStatus)
@@ -256,7 +264,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     nsSize              availSize(aReflowState.mComputedWidth, NS_UNCONSTRAINEDSIZE);
     nsHTMLReflowMetrics kidDesiredSize(nsnull);
     nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, aKidFrame,
-                                       availSize);
+                                       availSize, aContainingBlockWidth,
+                                       aContainingBlockHeight);
 
     // If it's the initial reflow, then override the reflow reason. This is
     // used when frames are inserted incrementally

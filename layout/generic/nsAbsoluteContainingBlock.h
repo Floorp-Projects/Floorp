@@ -71,7 +71,9 @@ public:
   // 'auto' for an offset, or a percentage based width or height
   nsresult Reflow(nsIFrame*                aDelegatingFrame,
                   nsIPresContext&          aPresContext,
-                  const nsHTMLReflowState& aReflowState);
+                  const nsHTMLReflowState& aReflowState,
+                  nscoord                  aContainingBlockWidth,
+                  nscoord                  aContainingBlockHeight);
 
   // Called only for a reflow reason of eReflowReason_Incremental. The
   // aWasHandled return value indicates whether the reflow command was
@@ -80,6 +82,8 @@ public:
   nsresult IncrementalReflow(nsIFrame*                aDelegatingFrame,
                              nsIPresContext&          aPresContext,
                              const nsHTMLReflowState& aReflowState,
+                             nscoord                  aContainingBlockWidth,
+                             nscoord                  aContainingBlockHeight,
                              PRBool&                  aWasHandled);
 
   void DestroyFrames(nsIFrame*       aDelegatingFrame,
@@ -93,6 +97,8 @@ protected:
   nsresult ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
                                nsIPresContext&          aPresContext,
                                const nsHTMLReflowState& aReflowState,
+                               nscoord                  aContainingBlockWidth,
+                               nscoord                  aContainingBlockHeight,
                                nsIFrame*                aKidFrame,
                                PRBool                   aInitialReflow,
                                nsReflowStatus&          aStatus);

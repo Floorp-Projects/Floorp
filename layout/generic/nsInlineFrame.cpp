@@ -188,8 +188,12 @@ nsPositionedInlineFrame::Reflow(nsIPresContext&          aPresContext,
   if (eReflowReason_Incremental == aReflowState.reason) {
     // Give the absolute positioning code a chance to handle it
     PRBool  handled;
+    nscoord containingBlockWidth = -1;
+    nscoord containingBlockHeight = -1;
     
-    mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState, handled);
+    mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
+                                         containingBlockWidth, containingBlockHeight,
+                                         handled);
 
     // If the incremental reflow command was handled by the absolute positioning
     // code, then we're all done
@@ -210,7 +214,11 @@ nsPositionedInlineFrame::Reflow(nsIPresContext&          aPresContext,
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed
   if (NS_SUCCEEDED(rv)) {
-    rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState);
+    nscoord containingBlockWidth = -1;
+    nscoord containingBlockHeight = -1;
+
+    rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
+                                   containingBlockWidth, containingBlockHeight);
   }
 
   return rv;

@@ -305,6 +305,34 @@ nsAreaFrame::GetSpaceManager(nsISpaceManager** aSpaceManagerResult)
   return NS_OK;
 }
 
+static void
+CalculateContainingBlock(const nsHTMLReflowState& aReflowState,
+                         nscoord                  aFrameWidth,
+                         nscoord                  aFrameHeight,
+                         nscoord&                 aContainingBlockWidth,
+                         nscoord&                 aContainingBlockHeight)
+{
+  aContainingBlockWidth = -1;  // have reflow state calculate
+  aContainingBlockHeight = -1; // have reflow state calculate
+
+  // We should probably do this for all frames, but for the time being just
+  // do this for relatively positioned block frames. The issue there is that
+  // for a 'height' of 'auto' the reflow state code won't know how to calculate
+  // the containing block height
+  if (NS_STYLE_POSITION_RELATIVE == aReflowState.mStylePosition->mPosition) {
+    aContainingBlockWidth = aFrameWidth;
+    aContainingBlockHeight = aFrameHeight;
+
+    // Containing block is relative to the padding edge
+    nsMargin  border;
+    if (!aReflowState.mStyleSpacing->GetBorder(border)) {
+      NS_NOTYETIMPLEMENTED("percentage border");
+    }
+    aContainingBlockWidth -= border.left + border.right;
+    aContainingBlockHeight -= border.top + border.bottom;
+  }
+}
+
 NS_IMETHODIMP
 nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -322,9 +350,16 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   // See if it's an incremental reflow command
   if (eReflowReason_Incremental == aReflowState.reason) {
     // Give the absolute positioning code a chance to handle it
+    nscoord containingBlockWidth;
+    nscoord containingBlockHeight;
     PRBool  handled;
+
+    CalculateContainingBlock(aReflowState, mRect.width, mRect.height,
+                             containingBlockWidth, containingBlockHeight);
     
-    mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState, handled);
+    mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
+                                         containingBlockWidth, containingBlockHeight,
+                                         handled);
 
     // If the incremental reflow command was handled by the absolute positioning
     // code, then we're all done
@@ -374,13 +409,6 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   }
 #endif
 
-  // Let the absolutely positioned container reflow any absolutely positioned
-  // child frames that need to be reflowed, e.g., elements with a percentage
-  // based width/height
-  if (NS_SUCCEEDED(rv)) {
-    rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState);
-  }
-
   if (mFlags & NS_AREA_WRAP_SIZE) {
     // When the area frame is supposed to wrap around all in-flow
     // children, make sure its big enough to include those that stick
@@ -395,6 +423,20 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
         aDesiredSize.height = yMost;
       }
     }
+  }
+
+  // Let the absolutely positioned container reflow any absolutely positioned
+  // child frames that need to be reflowed, e.g., elements with a percentage
+  // based width/height
+  if (NS_SUCCEEDED(rv)) {
+    nscoord containingBlockWidth;
+    nscoord containingBlockHeight;
+
+    CalculateContainingBlock(aReflowState, aDesiredSize.width, aDesiredSize.height,
+                             containingBlockWidth, containingBlockHeight);
+
+    rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
+                                   containingBlockWidth, containingBlockHeight);
   }
 
 #ifdef NOISY_MAX_ELEMENT_SIZE
