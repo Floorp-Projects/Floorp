@@ -44,9 +44,11 @@ public:
 
     NS_IMETHOD GetPrototype(nsIURI* aURI, nsIXULPrototypeDocument** _result);
     NS_IMETHOD PutPrototype(nsIXULPrototypeDocument* aDocument);
+    NS_IMETHOD FlushPrototypes();
 
     NS_IMETHOD GetStyleSheet(nsIURI* aURI, nsICSSStyleSheet** _result);
     NS_IMETHOD PutStyleSheet(nsICSSStyleSheet* aStyleSheet);
+    NS_IMETHOD FlushStyleSheets();
 
     NS_IMETHOD Flush();
 
@@ -151,6 +153,14 @@ nsXULPrototypeCache::PutPrototype(nsIXULPrototypeDocument* aDocument)
 
 
 NS_IMETHODIMP
+nsXULPrototypeCache::FlushPrototypes()
+{
+    mPrototypeTable.Reset();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsXULPrototypeCache::GetStyleSheet(nsIURI* aURI, nsICSSStyleSheet** _result)
 {
     nsIURIKey key(aURI);
@@ -174,10 +184,18 @@ nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet* aStyleSheet)
 
 
 NS_IMETHODIMP
+nsXULPrototypeCache::FlushStyleSheets()
+{
+    mStyleSheetTable.Reset();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsXULPrototypeCache::Flush()
 {
-    mPrototypeTable.Reset();
-    mStyleSheetTable.Reset();
+    FlushPrototypes();
+    FlushStyleSheets();
     return NS_OK;
 }
 
