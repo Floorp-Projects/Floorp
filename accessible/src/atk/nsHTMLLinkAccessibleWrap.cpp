@@ -89,6 +89,9 @@ NS_IMETHODIMP nsHTMLLinkAccessibleWrap::GetURI(PRInt32 i, nsIURI **aURI)
   //more powerful for the future.
   *aURI = nsnull;
 
+  if (!IsALink())  // Also initializes private data members
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsILink> link(do_QueryInterface(mLinkContent));
   if (link) {
     return link->GetHrefURI(aURI);
@@ -125,6 +128,9 @@ NS_IMETHODIMP nsHTMLLinkAccessibleWrap::IsSelected(PRBool *aIsSelected)
 nsresult nsHTMLLinkAccessibleWrap::GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset)
 {
   NS_ENSURE_TRUE(mTextNodes, NS_ERROR_FAILURE);
+
+  if (!IsALink())  // Also initializes private data members
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsILink> currentLink(do_QueryInterface(mLinkContent));
   NS_ENSURE_TRUE(currentLink, NS_ERROR_FAILURE);
