@@ -54,7 +54,6 @@
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaClick.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
@@ -63,9 +62,7 @@
   <script type="application/x-javascript" src="chrome://global/content/charset.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
-
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
  
   <stringbundleset id="stringbundleset"> <!-- Overlay hook for 3rd parties. Don't remove. -->
@@ -74,6 +71,7 @@
     <stringbundle id="bundle_browser_region" src="chrome://navigator-region/locale/region.properties"/>
     <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
     <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
+    <stringbundle id="contentAreaBundle" src="chrome://communicator/locale/contentAreaCommands.properties"/>
   </stringbundleset>
 
   <commandset commandupdater="true"
