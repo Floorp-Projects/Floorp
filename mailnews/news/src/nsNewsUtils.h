@@ -39,7 +39,6 @@
 #define NS_NEWSUTILS_H
 
 #include "nsString.h"
-#include "nsIMsgIncomingServer.h"
 
 class nsIMsgNewsFolder;
 
@@ -54,8 +53,6 @@ nsParseNewsMessageURI(const char* uri, nsCString& messageUriWithoutKey, PRUint32
 
 extern nsresult
 nsCreateNewsBaseMessageURI(const char *baseURI, char **baseMessageURI);
-
-extern nsresult nsGetNewsGroupFromUri(const char *uri, nsIMsgNewsFolder **aFolder);
 
 #endif //NS_NEWSUTILS_H
 
