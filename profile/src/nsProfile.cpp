@@ -1367,11 +1367,11 @@ NS_IMETHODIMP nsProfile::ProfileExists(const PRUnichar *profileName, PRBool *exi
     return NS_OK;
 }
 
-NS_IMETHODIMP nsProfile::IsCurrentProfileAvailable(PRBool *avialable)
+NS_IMETHODIMP nsProfile::IsCurrentProfileAvailable(PRBool *available)
 {
-    NS_ENSURE_ARG_POINTER(avialable);
+    NS_ENSURE_ARG_POINTER(available);
 
-    *avialable = mCurrentProfileAvailable;
+    *available = mCurrentProfileAvailable;
     return NS_OK;
 }
 
