@@ -47,15 +47,8 @@ function goQuitApplication()
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
   var enumerator = windowManagerInterface.getEnumerator( null );
-  var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
-  appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
-
-  var nativeAppSupport = null;
-  try {
-    nativeAppSupport = appShell.nativeAppSupport;
-  }
-  catch ( ex ) {
-  }
+  var appStartup = Components.classes['@mozilla.org/toolkit/app-startup;1'].
+                     getService(Components.interfaces.nsIAppStartup);
 
   while ( enumerator.hasMoreElements()  )
   {
@@ -64,7 +57,7 @@ function goQuitApplication()
        return false;
      domWindow.close();
   };
-  appShell.quit(Components.interfaces.nsIAppShellService.eAttemptQuit);
+  appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit);
   return true;
 }
 
