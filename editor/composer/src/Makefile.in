@@ -47,7 +47,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  xuldoc \
 		  txtsvc \
-		  chrome \
 		  imglib2 \
 		  commandhandler \
 		  composer \

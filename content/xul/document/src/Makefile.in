@@ -47,7 +47,6 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  htmlparser \
 		  lwbrk \
-		  chrome \
 		  docshell \
 		  pref \
 		  xul \

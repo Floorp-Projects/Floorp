@@ -69,6 +69,7 @@ SDK_XPIDLSRCS   = \
 		$(NULL)
 
 XPIDLSRCS	= \
+		nsIChromeRegistry.idl       \
 		nsIContentPolicy.idl        \
 		nsISelectionController.idl  \
 		nsISelectionDisplay.idl  \

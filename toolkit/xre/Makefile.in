@@ -49,7 +49,7 @@ EXPORT_LIBRARY = 1
 REQUIRES = \
 	appcomps \
 	appshell \
-	chrome \
+	content \
 	docshell \
 	dom \
 	embed_base \
