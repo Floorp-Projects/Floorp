@@ -70,7 +70,6 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
   static final String group_attr = "group";
   static final String accel_attr = "accel";
   static final String type_attr = "type";
-  static final int ELEMENT_TYPE = 1;
 
   Hashtable button_group;
   Hashtable actions;
@@ -184,7 +183,7 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
     JComponent container = null;
     JComponent item = null;
 
-    if (node.getNodeType() != ELEMENT_TYPE) return; // can't process it
+    if (node.getNodeType() != Node.ELEMENT_NODE) return; // can't process it
 
     // things will recurse through here
     item = buildComponent((Element)node, (JComponent)parent);

@@ -79,7 +79,6 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   static final String panel_tag = "panel";
   static final String input_tag = "input";
   static final String layout_attr = "layout";
-  static final int ELEMENT_TYPE = 1;
 
   PageUI component;
   String title;
@@ -189,7 +188,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
 
   boolean conditionMatch(Node node) {
     boolean match = false;
-    if (node.getNodeType() == ELEMENT_TYPE) {
+    if (node.getNodeType() == Node.ELEMENT_NODE) {
       Element current = (Element)node;
       String id_str = current.getAttribute(attr);
 
@@ -212,7 +211,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
 
     if (node == null) return;
 
-    if (node.getNodeType() != ELEMENT_TYPE) {
+    if (node.getNodeType() != Node.ELEMENT_NODE) {
       processNode(node.getNextSibling(), parent);
       return;
     }
