@@ -44,16 +44,23 @@ public:
 
   NS_IMETHOD Init(nsIPresShell *inPresShell) = 0;
   
+  NS_IMETHOD SetCaretDOMSelection(nsIDOMSelection *aDOMSel) = 0;
+
   /** SetCaretVisible will set the visibility of the caret
    *  @param inMakeVisible PR_TRUE to show the caret, PR_FALSE to hide it
    */
-  NS_IMETHOD SetCaretVisible(PRBool inMakeVisible, nsIDOMSelection *aDOMSel) = 0;
+  NS_IMETHOD SetCaretVisible(PRBool inMakeVisible) = 0;
+
+  /** GetCaretVisible will get the visibility of the caret
+   *  @param inMakeVisible PR_TRUE it is shown, PR_FALSE it is hidden
+   */
+  NS_IMETHOD GetCaretVisible(PRBool *outMakeVisible) = 0;
 
   /** SetCaretReadOnly set the appearance of the caret
    *  @param inMakeReadonly PR_TRUE to show the caret in a 'read only' state,
    *  PR_FALSE to show the caret in normal, editing state
    */
-  NS_IMETHOD SetCaretReadOnly(PRBool inMakeReadonly, nsIDOMSelection *aDOMSel) = 0;
+  NS_IMETHOD SetCaretReadOnly(PRBool inMakeReadonly) = 0;
 
   /** GetWindowRelativeCoordinates
    *  Get the position of the caret in (top-level) window coordinates.
@@ -80,30 +87,28 @@ extern nsresult NS_NewCaret(nsICaret** aInstancePtrResult);
 class StCaretHider
 {
 public:
-               StCaretHider(nsISelectionController* aSelCon)
-               : mWasVisible(PR_FALSE), mSelCon(nsnull)
+               StCaretHider(nsICaret* aSelCon)
+               : mWasVisible(PR_FALSE), mCaret(aSelCon)
                {
-                 mSelCon = aSelCon;		// addrefs
-                 if (mSelCon)
+                 if (mCaret)
                  {
-                   mSelCon->GetCaretEnabled(&mWasVisible);
+                   mCaret->GetCaretVisible(&mWasVisible);
                    if (mWasVisible)
-                     mSelCon->SetCaretEnabled(PR_FALSE);
+                     mCaret->SetCaretVisible(PR_FALSE);
                  }
                }
                
                ~StCaretHider()
                {
-                 if (mSelCon && mWasVisible)
-                   mSelCon->SetCaretEnabled(PR_TRUE);
+                 if (mCaret && mWasVisible)
+                   mCaret->SetCaretVisible(PR_TRUE);
                  // nsCOMPtr releases mPresShell
                }
 
 protected:
 
     PRBool                  mWasVisible;
-    nsCOMPtr<nsISelectionController>  mSelCon;
-
+    nsCOMPtr<nsICaret>  mCaret;
 };
 
 

@@ -3827,13 +3827,13 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
         nsIView *view = (nsIView*)frameView;
         nscoord x, y;
 
-        while (view && view != scrolledView)
+        while (view && view != cView)
         {
           result = view->GetParent(view);
 
           if (NS_FAILED(result))
             view = 0;
-          else if (view && view != scrolledView)
+          else if (view && view != cView) 
           {
             result = view->GetPosition(&x, &y);
 
@@ -5517,11 +5517,11 @@ nsDOMSelection::ScrollIntoView(SelectionRegion aRegion)
   result = GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(result))
     return result;
-  nsCOMPtr<nsISelectionController> selCon;
-  selCon = do_QueryInterface(presShell);
-  if (selCon)
+  nsCOMPtr<nsICaret> caret;
+  presShell->GetCaret(getter_AddRefs(caret));
+  if (caret)
   {
-    StCaretHider  caretHider(selCon);			// stack-based class hides and shows the caret
+    StCaretHider  caretHider(caret);			// stack-based class hides and shows the caret
 
     //
     // Scroll the selection region into view.

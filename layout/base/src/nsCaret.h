@@ -53,9 +53,11 @@ class nsCaret : public nsICaret,
 	  // nsICaret interface
   	NS_IMETHOD    Init(nsIPresShell *inPresShell);
 
- 		NS_IMETHOD    SetCaretVisible(PRBool inMakeVisible, nsIDOMSelection *aSel);
-  	NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly, nsIDOMSelection *aSel);
-		NS_IMETHOD 		GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsIDOMSelection *aDOMSel);
+    NS_IMETHOD    SetCaretDOMSelection(nsIDOMSelection *inDOMSel);
+    NS_IMETHOD    GetCaretVisible(PRBool *outMakeVisible);
+ 		NS_IMETHOD    SetCaretVisible(PRBool intMakeVisible);
+  	NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
+		NS_IMETHOD 		GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsIDOMSelection *inDOMSel);
 		NS_IMETHOD 		ClearFrameRefs(nsIFrame* aFrame);
 	
 	  //nsIDOMSelectionListener interface
