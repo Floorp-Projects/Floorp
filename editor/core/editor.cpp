@@ -27,7 +27,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
 #include "nsIDocument.h"
-#include "nsRepository.h"
 #include "nsIServiceManager.h"
 #include "nsEditFactory.h"
 #include "nsEditorCID.h"
@@ -75,6 +74,8 @@ static NS_DEFINE_CID(kCTransactionManagerFactoryCID, NS_TRANSACTION_MANAGER_FACT
 
 
 
+PRInt32 nsEditor::gInstanceCount = 0;
+
 //monitor for the editor
 
 
@@ -118,7 +119,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory
 extern "C" NS_EXPORT PRBool
 NSCanUnload(void)
 {
-    return PR_FALSE; //I have no idea. I am copying code here
+  return nsEditor::gInstanceCount; //I have no idea. I am copying code here
 }
 
 
@@ -146,6 +147,9 @@ nsEditor::nsEditor()
 {
   //initialize member variables here
   NS_INIT_REFCNT();
+  PR_EnterMonitor(getEditorMonitor());
+  gInstanceCount++;
+
   if (PR_TRUE==needsInit)
   {
     needsInit=PR_FALSE;
@@ -153,6 +157,7 @@ nsEditor::nsEditor()
                                 TRANSACTION_MANAGER_DLL, PR_FALSE, PR_FALSE);
   }
   mTxnMgr = nsnull;
+  PR_ExitMonitor(getEditorMonitor());
 }
 
 
