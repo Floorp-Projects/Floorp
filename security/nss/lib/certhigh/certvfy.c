@@ -1833,7 +1833,7 @@ CERT_GetCertNicknameWithValidity(PRArenaPool *arena, CERTCertificate *cert,
 				 char *expiredString, char *notYetGoodString)
 {
     SECCertTimeValidity validity;
-    char *nickname, *tmpstr;
+    char *nickname = NULL, *tmpstr = NULL;
     
     validity = CERT_CheckCertValidTimes(cert, PR_Now(), PR_FALSE);
 
@@ -1856,11 +1856,16 @@ CERT_GetCertNicknameWithValidity(PRArenaPool *arena, CERTCertificate *cert,
 	if ( validity == secCertTimeExpired ) {
 	    tmpstr = PR_smprintf("%s%s", cert->nickname,
 				 expiredString);
-	} else {
+	} else if ( validity == secCertTimeNotValidYet ) {
 	    /* not yet valid */
 	    tmpstr = PR_smprintf("%s%s", cert->nickname,
 				 notYetGoodString);
-	}
+        } else {
+            /* undetermined */
+	    tmpstr = PR_smprintf("%s",
+                        "(NULL) (Validity Unknown)");
+        }
+
 	if ( tmpstr == NULL ) {
 	    goto loser;
 	}
