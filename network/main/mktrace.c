@@ -39,7 +39,18 @@ PRLogModuleInfo* NETLIB=NULL;
 
 /* Used by NET_NTrace() */
 PRIVATE void net_Trace(char *msg) {
-	PR_LOG(NETLIB, out, (msg));
+	/* Only trace if the user explicitly told us to. */
+	if(MKLib_trace_flag) {
+		PR_LOG(NETLIB, PR_LOG_ALWAYS, (msg));
+
+		/* PR_LOG prints to stderr which doesn't exist in a windows app.
+		 * Use the win32 routine OutputDebugString to get text to goto the 
+		 * debug console. */
+#if defined(WIN32) && defined(DEBUG)
+		OutputDebugString(msg);
+		OutputDebugString("\n");
+#endif
+	}
 }
 
 
