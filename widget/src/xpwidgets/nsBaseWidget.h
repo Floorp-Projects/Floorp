@@ -23,7 +23,7 @@
 #include "nsIEnumerator.h"
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
-/*#include "nsIMenuListener.h"*/
+#include "nsIMenuListener.h"
 #include "nsIToolkit.h"
 #include "nsStringUtil.h"
 #include "nsString.h"
@@ -79,7 +79,7 @@ public:
     NS_IMETHOD              UpdateTooltips(nsRect* aNewTips[]);
     NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
     NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
-   /* NS_IMETHOD 				AddMenuListener(nsIMenuListener * aListener);*/
+    NS_IMETHOD 				AddMenuListener(nsIMenuListener * aListener);
     NS_IMETHOD              SetBounds(const nsRect &aRect);
     NS_IMETHOD              GetBounds(nsRect &aRect);
     NS_IMETHOD              GetBoundsAppUnits(nsRect &aRect, float aAppUnits);
@@ -110,7 +110,7 @@ protected:
     nsIToolkit        *mToolkit;
     nsIMouseListener  *mMouseListener;
     nsIEventListener  *mEventListener;
-   /* nsIMenuListener   *mMenuListener;*/
+    nsIMenuListener   *mMenuListener;
     nscolor           mBackground;
     nscolor           mForeground;
     nsCursor          mCursor;
