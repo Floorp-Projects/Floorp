@@ -736,6 +736,7 @@ pref("browser.downloadmanager.behavior", 0);
 
 // if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
 pref("plugin.override_internal_types", false);
+pref("plugin.expose_full_path", false); // if true navigator.plugins reveals full path
 
 // See bug 136985.  Gives embedders a pref to hook into to show
 // a popup blocker if they choose.

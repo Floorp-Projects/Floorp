@@ -4338,11 +4338,39 @@ public:
 
   NS_METHOD GetFilename(nsAString& aFilename)
   {
+    PRBool bShowPath;
+    nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
+    if (prefService &&
+        NS_SUCCEEDED(prefService->GetBoolPref("plugin.expose_full_path",&bShowPath)) &&
+        bShowPath)
+    {
+      // only show the full path if people have set the pref,
+      // the default should not reveal path information (bug 88183)
 #ifdef XP_MAC
-    return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mFullPath, aFilename);
-#else        
-    return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mFileName, aFilename);
+      return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mFullPath, aFilename);
+#else
+      return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mFileName, aFilename);
 #endif
+    }
+
+    nsFileSpec spec;
+    if (mPluginTag.mFullPath)
+    {
+#ifndef XP_MAC
+      NS_ERROR("Only MAC should be using nsPluginTag::mFullPath!");
+#endif
+      spec = mPluginTag.mFullPath;
+    }
+    else
+    {
+      spec = mPluginTag.mFileName;
+    }
+
+    char* name = spec.GetLeafName();
+    nsresult rv = DoCharsetConversion(mUnicodeDecoder, name, aFilename);
+    if (name)
+      nsCRT::free(name);
+    return rv;
   }
 
   NS_METHOD GetName(nsAString& aName)
