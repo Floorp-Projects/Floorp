@@ -100,6 +100,8 @@ nsresult
 nsCreateInstanceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
 	{
 		nsresult status = nsComponentManager::CreateInstance(mCID, mOuter, aIID, aInstancePtr);
+		if ( !NS_SUCCEEDED(status) )
+			*aInstancePtr = 0;
 
 		if ( mErrorPtr )
 			*mErrorPtr = status;
@@ -111,7 +113,10 @@ nsCreateInstanceByProgID::operator()( const nsIID& aIID, void** aInstancePtr ) c
 	{
 		nsresult status;
 		if ( mProgID )
-		  status = nsComponentManager::CreateInstance(mProgID, mOuter, aIID, aInstancePtr);
+			{
+		  	if ( !NS_SUCCEEDED(status = nsComponentManager::CreateInstance(mProgID, mOuter, aIID, aInstancePtr)) )
+		  		*aInstancePtr = 0;
+		  }
 		else
 		  status = NS_ERROR_NULL_POINTER;
 
