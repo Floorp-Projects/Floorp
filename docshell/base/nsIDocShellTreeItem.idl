@@ -55,7 +55,7 @@ interface nsIDocShellTreeItem : nsISupports
 	Returns the root DocShellTreeItem.  This is a convience equivalent to 
 	getting the parent and it's parent until there isn't a parent.
 	*/
-	readonly attribute nsIDocShellTreeItem rootDocShell;
+	readonly attribute nsIDocShellTreeItem rootTreeItem;
 
 	/*
 	The owner of the DocShell Tree.  This interface will be called upon when
