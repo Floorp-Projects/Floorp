@@ -35,12 +35,6 @@ ifeq ($(OS_ARCH), IRIX)
     endif
 endif
 
-ifeq ($(OS_ARCH),HP-UX)
-    ifeq (($USE_64),1)
-        CCCFLAGS += +DA2.0W
-    endif
-endif
-
 INCLUDES = -I$(DIST)/include
 
 HEADERS = *.h
