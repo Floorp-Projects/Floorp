@@ -1919,14 +1919,17 @@ nsXULDocument::FindNext(const nsAReadableString &aSearchStr,
 
 
 NS_IMETHODIMP 
-nsXULDocument::FlushPendingNotifications()
+nsXULDocument::FlushPendingNotifications(PRBool aFlushReflows)
 {
-  PRInt32 i, count = mPresShells.Count();
+  if (aFlushReflows) {
 
-  for (i = 0; i < count; i++) {
-    nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
-    if (shell) {
-      shell->FlushPendingNotifications();
+    PRInt32 i, count = mPresShells.Count();
+
+    for (i = 0; i < count; i++) {
+      nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+      if (shell) {
+        shell->FlushPendingNotifications();
+      }
     }
   }
 
