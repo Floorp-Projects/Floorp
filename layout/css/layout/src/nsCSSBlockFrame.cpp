@@ -40,6 +40,8 @@
 #include "nsHTMLValue.h"// XXX list ordinal hack
 #include "nsIHTMLContent.h"// XXX list ordinal hack
 
+// XXX break-before and completion status?
+
 // XXX mLastContentOffset, mFirstContentOffset, mLastContentIsComplete
 // XXX pagination
 // XXX prev-in-flow continuations
@@ -53,7 +55,6 @@
 // XXX max-element-size
 // XXX no-wrap
 // XXX margin collapsing and empty InlineFrameData's
-// XXX eliminate PutCachedData usage
 // XXX floaters in inlines
 // XXX Check handling of mUnconstrainedWidth
 
@@ -72,6 +73,10 @@
 // which frames were reflowed and which weren't. Then drain code can just
 // place the pulled up data directly when there are no floaters to
 // worry about. something like that...
+
+// XXX Tuneup: if mNoWrap is true and we are given a ResizeReflow we
+// can just return because there's nothing to do!; this is true in
+// nsCSSInlineFrame too!
 
 //----------------------------------------------------------------------
 // XXX It's really important that blocks strip out extra whitespace;
@@ -178,6 +183,8 @@ protected:
 
   nsresult FrameAppendedReflow(nsCSSBlockReflowState& aState);
 
+  nsresult FindTextRuns(nsCSSBlockReflowState& aState);
+
   nsresult ChildIncrementalReflow(nsCSSBlockReflowState& aState);
 
   nsresult ResizeReflow(nsCSSBlockReflowState& aState);
@@ -239,6 +246,9 @@ protected:
 
   // placeholder frames for floaters to display at the top line
   nsVoidArray* mRunInFloaters;
+
+  // Text run information
+  nsCSSTextRun* mTextRuns;
 
   friend struct nsCSSBlockReflowState;
 };
@@ -334,6 +344,15 @@ ListFloaters(FILE* out, PRInt32 aIndent, nsVoidArray* aFloaters)
   for (i = 0; i < n; i++) {
     nsIFrame* frame = (nsIFrame*) aFloaters->ElementAt(i);
     frame->List(out, aIndent);
+  }
+}
+
+static void
+ListTextRuns(FILE* out, PRInt32 aIndent, nsCSSTextRun* aRuns)
+{
+  while (nsnull != aRuns) {
+    aRuns->List(out, aIndent);
+    aRuns = aRuns->mNext;
   }
 }
 
@@ -763,6 +782,7 @@ nsCSSBlockFrame::~nsCSSBlockFrame()
   if (nsnull != mRunInFloaters) {
     delete mRunInFloaters;
   }
+  nsCSSTextRun::DeleteTextRuns(mTextRuns);
 }
 
 NS_IMETHODIMP
@@ -904,11 +924,18 @@ nsCSSBlockFrame::List(FILE* out, PRInt32 aIndent) const
     }
     aIndent--;
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
-    fputs(">\n", out);
+    fputs(">", out);
   }
   else {
-    fputs("<>\n", out);
+    fputs("<>", out);
   }
+
+  // Output the text-runs
+  if (nsnull != mTextRuns) {
+    fputs(" text-runs=<\n", out);
+    ListTextRuns(out, aIndent + 1, mTextRuns);
+  }
+  fputs("\n", out);
 
   return NS_OK;
 }
@@ -1472,9 +1499,61 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
     lastLine->SetLastContentIsComplete();
   }
 
+  // Generate text-run information
+  rv = FindTextRuns(aState);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
   // XXX temporary; use dirty bits instead so we can skip over all of
   // the lines that weren't changed.
   return ResizeReflow(aState);
+}
+
+nsresult
+nsCSSBlockFrame::FindTextRuns(nsCSSBlockReflowState& aState)
+{
+  // Destroy old run information first
+  nsCSSTextRun::DeleteTextRuns(mTextRuns);
+  mTextRuns = nsnull;
+  aState.mLineLayout.ResetTextRuns();
+
+  // Ask each child that implements nsIInlineReflow to find its text runs
+  LineData* line = mLines;
+  while (nsnull != line) {
+    if (!line->IsBlock()) {
+      nsIFrame* frame = line->mFirstChild;
+      PRInt32 n = line->mChildCount;
+      while (--n >= 0) {
+        nsIInlineReflow* inlineReflow;
+        if (NS_OK == frame->QueryInterface(kIInlineReflowIID,
+                                           (void**)&inlineReflow)) {
+          nsresult rv = inlineReflow->FindTextRuns(aState.mLineLayout);
+          if (NS_OK != rv) {
+            return rv;
+          }
+        }
+        else {
+          // A frame that doesn't implement nsIInlineReflow isn't text
+          // therefore it will end an open text run.
+          aState.mLineLayout.EndTextRun();
+        }
+        frame->GetNextSibling(frame);
+      }
+    }
+    else {
+      // A frame that doesn't implement nsIInlineReflow isn't text
+      // therefore it will end an open text run.
+      aState.mLineLayout.EndTextRun();
+    }
+    line = line->mNext;
+  }
+  aState.mLineLayout.EndTextRun();
+
+  // Now take the text-runs away from the line layout engine.
+  mTextRuns = aState.mLineLayout.TakeTextRuns();
+
+  return NS_OK;
 }
 
 #if XXX
@@ -1526,9 +1605,18 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
   }
 #endif
 
+// XXX Todo: some incremental reflows are passing through this block
+// and into a child block; those cannot impact our text-runs. In that
+// case skip the FindTextRuns work.
 nsresult
 nsCSSBlockFrame::ChildIncrementalReflow(nsCSSBlockReflowState& aState)
 {
+  // Generate text-run information
+  nsresult rv = FindTextRuns(aState);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
   // XXX temporary
   aState.GetAvailableSpace();
   aState.mPrevLine = nsnull;
@@ -1553,7 +1641,7 @@ nsCSSBlockFrame::ReflowLinesAt(nsCSSBlockReflowState& aState, LineData* aLine)
   while (nsnull != aLine) {
     nsInlineReflowStatus rs;
     if (!ReflowLine(aState, aLine, rs)) {
-      if (IS_REFLOW_ERROR(rs)) {
+      if (NS_IS_REFLOW_ERROR(rs)) {
         return nsresult(rs);
       }
       return NS_FRAME_NOT_COMPLETE;
@@ -1626,7 +1714,7 @@ nsCSSBlockFrame::ReflowLinesAt(nsCSSBlockReflowState& aState, LineData* aLine)
     while (nsnull != aLine) {
       nsInlineReflowStatus rs;
       if (!ReflowLine(aState, aLine, rs)) {
-        if (IS_REFLOW_ERROR(rs)) {
+        if (NS_IS_REFLOW_ERROR(rs)) {
           return nsresult(rs);
         }
         return NS_FRAME_NOT_COMPLETE;
@@ -1840,7 +1928,7 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
     rv = aFrame->Reflow(aState.mPresContext, metrics, reflowState,
                         reflowStatus);
   }
-  if (IS_REFLOW_ERROR(rv)) {
+  if (NS_IS_REFLOW_ERROR(rv)) {
     aReflowResult = nsInlineReflowStatus(rv);
     return PR_FALSE;
   }
@@ -1857,11 +1945,11 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
       ((nsCSSBlockFrame*)parent)->DeleteNextInFlowsFor(aFrame);
     }
     aLine->SetLastContentIsComplete();
-    aReflowResult = NS_INLINE_REFLOW_COMPLETE;
+    aReflowResult = NS_FRAME_COMPLETE;
   }
   else {
     aLine->ClearLastContentIsComplete();
-    aReflowResult = NS_INLINE_REFLOW_NOT_COMPLETE;
+    aReflowResult = NS_FRAME_NOT_COMPLETE;
   }
 
   // See if it fit
@@ -1872,7 +1960,7 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
   if ((mLines != aLine) && (newY > aState.mBottomEdge)) {
     // None of the block fit. Push aLine and any other lines that follow
     PushLines(aState);
-    aReflowResult = NS_INLINE_REFLOW_LINE_BREAK_BEFORE;
+    aReflowResult = NS_INLINE_LINE_BREAK_BEFORE(reflowStatus);
     return PR_FALSE;
   }
 
@@ -1939,7 +2027,7 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
       aState.mPrevLine = aLine;
       PushLines(aState);
     }
-    aReflowResult = NS_INLINE_REFLOW_LINE_BREAK_AFTER;
+    aReflowResult = NS_INLINE_LINE_BREAK_AFTER(reflowStatus);
     return PR_FALSE;
   }
   return PR_TRUE;
@@ -1975,23 +2063,22 @@ nsCSSBlockFrame::ReflowInlineFrame(nsCSSBlockReflowState& aState,
   nsIFrame* nextInFlow;
   aReflowResult = aState.mInlineLayout.ReflowAndPlaceFrame(aFrame);
   aState.mInlineLayout.mIsBullet = PR_FALSE;
-  if (IS_REFLOW_ERROR(aReflowResult)) {
+  if (NS_IS_REFLOW_ERROR(aReflowResult)) {
     return PR_FALSE;
   }
   PRBool lineWasComplete = aLine->GetLastContentIsComplete();
-  switch (aReflowResult & NS_INLINE_REFLOW_REFLOW_MASK) {
-  case NS_INLINE_REFLOW_COMPLETE:
+  if (!NS_INLINE_IS_BREAK(aReflowResult)) {
     aState.mPrevChild = aFrame;
-    aFrame->GetNextSibling(aFrame);
-    aLine->SetLastContentIsComplete();
-    break;
+    if (NS_FRAME_IS_COMPLETE(aReflowResult)) {
+      aFrame->GetNextSibling(aFrame);
+      aLine->SetLastContentIsComplete();
+      return PR_TRUE;
+    }
 
-  case NS_INLINE_REFLOW_NOT_COMPLETE:
     // Create continuation frame (if necessary); add it to the end of
     // the current line so that it can be pushed to the next line
     // properly.
     aLine->ClearLastContentIsComplete();
-    aState.mPrevChild = aFrame;
     rv = aState.mInlineLayout.MaybeCreateNextInFlow(aFrame, nextInFlow);
     if (NS_OK != rv) {
       aReflowResult = nsInlineReflowStatus(rv);
@@ -2000,28 +2087,43 @@ nsCSSBlockFrame::ReflowInlineFrame(nsCSSBlockReflowState& aState,
     if (nsnull != nextInFlow) {
       // Add new child to the line
       aLine->mChildCount++;
-      aFrame = nextInFlow;
     }
-    goto split_line;
-
-  case NS_INLINE_REFLOW_BREAK_AFTER:
-    aLine->SetLastContentIsComplete();
-    aState.mPrevChild = aFrame;
     aFrame->GetNextSibling(aFrame);
-    goto split_line;
-
-  case NS_INLINE_REFLOW_BREAK_BEFORE:
-    NS_ASSERTION(aLine->GetLastContentIsComplete(), "bad mState");
-
-  split_line:
-    rv = SplitLine(aState, aLine, aFrame, lineWasComplete);
-    if (IS_REFLOW_ERROR(rv)) {
-      aReflowResult = nsInlineReflowStatus(rv);
+  }
+  else {
+    if (NS_INLINE_IS_BREAK_AFTER(aReflowResult)) {
+      aState.mPrevChild = aFrame;
+      if (NS_FRAME_IS_COMPLETE(aReflowResult)) {
+        aLine->SetLastContentIsComplete();
+      }
+      else {
+        // Create continuation frame (if necessary); add it to the end of
+        // the current line so that it can be pushed to the next line
+        // properly.
+        aLine->ClearLastContentIsComplete();
+        rv = aState.mInlineLayout.MaybeCreateNextInFlow(aFrame, nextInFlow);
+        if (NS_OK != rv) {
+          aReflowResult = nsInlineReflowStatus(rv);
+          return PR_FALSE;
+        }
+        if (nsnull != nextInFlow) {
+          // Add new child to the line
+          aLine->mChildCount++;
+        }
+      }
+      aFrame->GetNextSibling(aFrame);
     }
-    return PR_FALSE;
+    else {
+      NS_ASSERTION(aLine->GetLastContentIsComplete(), "bad mState");
+    }
   }
 
-  return PR_TRUE;
+  // Split line since we aren't going to keep going
+  rv = SplitLine(aState, aLine, aFrame, lineWasComplete);
+  if (NS_IS_REFLOW_ERROR(rv)) {
+    aReflowResult = nsInlineReflowStatus(rv);
+  }
+  return PR_FALSE;
 }
 
 // XXX alloc lines using free-list in aState
@@ -2092,7 +2194,7 @@ nsCSSBlockFrame::PullFrame(nsCSSBlockReflowState& aState,
   // If our line is not empty and the child in aFromLine is a block
   // then we cannot pull up the frame into this line.
   if ((0 != aLine->mChildCount) && aFromLine->IsBlock()) {
-    aReflowResult = NS_INLINE_REFLOW_LINE_BREAK_BEFORE;
+    aReflowResult = NS_INLINE_LINE_BREAK_BEFORE(0);
     return PR_FALSE;
   }
 
@@ -2190,11 +2292,9 @@ nsCSSBlockFrame::PlaceLine(nsCSSBlockReflowState& aState,
 
   // Based on the last child we reflowed reflow status, we may need to
   // clear past any floaters.
-//XXX  PRBool updateReflowSpace = PR_FALSE;
-  if (NS_INLINE_REFLOW_BREAK_AFTER ==
-      (aReflowStatus & NS_INLINE_REFLOW_REFLOW_MASK)) {
+  if (NS_INLINE_IS_BREAK_AFTER(aReflowStatus)) {
     // Apply break to the line
-    PRUint8 breakType = NS_INLINE_REFLOW_GET_BREAK_TYPE(aReflowStatus);
+    PRUint8 breakType = NS_INLINE_GET_BREAK_TYPE(aReflowStatus);
     switch (breakType) {
     default:
       break;
@@ -2205,7 +2305,6 @@ nsCSSBlockFrame::PlaceLine(nsCSSBlockReflowState& aState,
          ("nsCSSBlockFrame::PlaceLine: clearing floaters=%d",
           breakType));
       aState.ClearFloaters(breakType);
-//XXX      updateReflowSpace = PR_TRUE;
       break;
     }
     // XXX page breaks, etc, need to be passed upwards too!
@@ -2235,17 +2334,7 @@ nsCSSBlockFrame::PlaceLine(nsCSSBlockReflowState& aState,
     // The current y coordinate is now past our available space
     // rectangle. Get a new band of space.
     aState.GetAvailableSpace();
-//XXX    updateReflowSpace = PR_TRUE;
   }
-
-#if XXX
-  if (updateReflowSpace) {
-    aState.mInlineLayout.SetReflowSpace(aState.mCurrentBand.availSpace.x,
-                                        aState.mY,
-                                        aState.mCurrentBand.availSpace.width,
-                                        aState.mCurrentBand.availSpace.height);
-  }
-#endif
   return PR_TRUE;
 }
 
@@ -2586,7 +2675,7 @@ nsCSSBlockFrame::ReflowFloater(nsIPresContext*        aPresContext,
   aFloaterFrame->Reflow(aPresContext, desiredSize, reflowState, status);
   aFloaterFrame->SizeTo(desiredSize.width, desiredSize.height);
 
-  aFloaterFrame->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+//XXX  aFloaterFrame->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
 }
 
 PRBool
@@ -2718,8 +2807,10 @@ nsCSSBlockReflowState::PlaceCurrentLineFloater(nsIFrame* aFloater)
   // Set the origin of the floater in world coordinates
   nscoord worldX, worldY;
   sm->GetTranslation(worldX, worldY);
+  aFloater->WillReflow(*mPresContext);
   aFloater->MoveTo(region.x + worldX + floaterMargin.left,
                    region.y + worldY + floaterMargin.top);
+  aFloater->DidReflow(*mPresContext, NS_FRAME_REFLOW_FINISHED);
 
   // Update the band of available space to reflect space taken up by
   // the floater

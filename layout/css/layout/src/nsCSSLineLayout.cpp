@@ -36,7 +36,7 @@ nsCSSTextRun::List(FILE* out, PRInt32 aIndent)
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   PRInt32 n = mArray.Count();
-  fprintf(out, "count=%d <\n", n);
+  fprintf(out, "%p: count=%d <\n", this, n);
   for (i = 0; i < n; i++) {
     nsIFrame* text = (nsIFrame*) mArray.ElementAt(i);
     text->List(out, aIndent + 1);
@@ -52,45 +52,56 @@ nsCSSLineLayout::nsCSSLineLayout(nsIPresContext* aPresContext,
 {
   mPresContext = aPresContext;
   mSpaceManager = aSpaceManager;
-  mTextRuns = nsnull;
-  mTextRunP = &mTextRuns;
-  mCurrentTextRun = nsnull;
   mListPositionOutside = PR_FALSE;
   mLineNumber = 0;
   mLeftEdge = 0;
   mColumn = 0;
   mSkipLeadingWS = PR_TRUE;
+
+  mTextRuns = nsnull;
+  ResetTextRuns();
 }
 
 nsCSSLineLayout::~nsCSSLineLayout()
 {
-  if (nsnull != mTextRuns) {
-    delete mTextRuns;
-  }
+  nsCSSTextRun::DeleteTextRuns(mTextRuns);
+}
+
+void
+nsCSSLineLayout::ResetTextRuns()
+{
+  nsCSSTextRun::DeleteTextRuns(mTextRuns);
+  mTextRuns = nsnull;
+  mTextRunP = &mTextRuns;
+  mNewTextRun = nsnull;
+}
+
+nsCSSTextRun*
+nsCSSLineLayout::TakeTextRuns()
+{
+  nsCSSTextRun* result = mTextRuns;
+  mTextRuns = nsnull;
+  ResetTextRuns();
+  return result;
 }
 
 void
 nsCSSLineLayout::EndTextRun()
 {
-  if (nsnull != mCurrentTextRun) {
-    // Keep the text-run if it's not empty
-    if (mCurrentTextRun->mArray.Count() > 0) {
-      *mTextRunP = mCurrentTextRun;
-      mTextRunP = &mCurrentTextRun->mNext;
-    }
-    else {
-      delete mCurrentTextRun;
-    }
-    mCurrentTextRun = nsnull;
-  }
+  mNewTextRun = nsnull;
 }
 
 nsresult
 nsCSSLineLayout::AddText(nsIFrame* aTextFrame)
 {
-  if (nsnull == mCurrentTextRun) {
-    mCurrentTextRun = new nsCSSTextRun();
+  if (nsnull == mNewTextRun) {
+    mNewTextRun = new nsCSSTextRun();
+    if (nsnull == mNewTextRun) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    *mTextRunP = mNewTextRun;
+    mTextRunP = &mNewTextRun->mNext;
   }
-  mCurrentTextRun->mArray.AppendElement(aTextFrame);
+  mNewTextRun->mArray.AppendElement(aTextFrame);
   return NS_OK;/* XXX */
 }

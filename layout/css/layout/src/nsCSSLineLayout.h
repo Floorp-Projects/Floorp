@@ -29,12 +29,11 @@ struct nsCSSTextRun {
     mNext = nsnull;
   }
 
-  ~nsCSSTextRun() {
-    nsCSSTextRun* run = mNext;
-    while (nsnull != run) {
-      nsCSSTextRun* next = run->mNext;
-      delete run;
-      run = next;
+  static void DeleteTextRuns(nsCSSTextRun* aRun) {
+    while (nsnull != aRun) {
+      nsCSSTextRun* next = aRun->mNext;
+      delete aRun;
+      aRun = next;
     }
   }
 
@@ -42,14 +41,13 @@ struct nsCSSTextRun {
 
   nsVoidArray mArray;
   nsCSSTextRun* mNext;
+
+protected:
+  ~nsCSSTextRun() {
+  }
 };
 
 //----------------------------------------------------------------------
-
-// 1) collecting frames for text-runs
-// 2) horizontal layout of frames for block
-// 3) horizontal layout of frames for inline
-// 4) state storage for text-reflow
 
 class nsCSSLineLayout {
 public:
@@ -57,18 +55,22 @@ public:
                   nsISpaceManager* aSpaceManager);
   ~nsCSSLineLayout();
 
-  void EndTextRun();
+  // Reset the text-run information in preparation for a FindTextRuns
+  void ResetTextRuns();
 
+  // Add another piece of text to a text-run during FindTextRuns.
   // Note: continuation frames must NOT add themselves; just the
   // first-in-flow
   nsresult AddText(nsIFrame* aTextFrame);
 
-  nsCSSTextRun* TakeTextRuns() {
-    nsCSSTextRun* result = mTextRuns;
-    mTextRuns = nsnull;
-    return result;
-  }
+  // Close out a text-run during FindTextRuns.
+  void EndTextRun();
 
+  // This returns the first nsCSSTextRun found during a
+  // FindTextRuns. The internal text-run state is reset.
+  nsCSSTextRun* TakeTextRuns();
+
+  // Prepare this line-layout for the reflow of a new line
   void Prepare(nscoord aLeftEdge) {
     mLeftEdge = aLeftEdge;
     mColumn = 0;
@@ -95,10 +97,6 @@ public:
   nscoord mLeftEdge;
   PRInt32 mColumn;
 
-  nsCSSTextRun* mTextRuns;
-  nsCSSTextRun** mTextRunP;
-  nsCSSTextRun* mCurrentTextRun;
-
   //XXX temporary?
 
   void SetSkipLeadingWhiteSpace(PRBool aNewSetting) {
@@ -107,6 +105,16 @@ public:
   PRBool GetSkipLeadingWhiteSpace() { return mSkipLeadingWS; }
 
   PRBool mSkipLeadingWS;
+
+protected:
+  // These slots are used during FindTextRuns
+  nsCSSTextRun* mTextRuns;
+  nsCSSTextRun** mTextRunP;
+  nsCSSTextRun* mNewTextRun;
+
+  // These slots are used during InlineReflow
+  nsCSSTextRun* mReflowTextRuns;
+  nsCSSTextRun* mTextRun;
 };
 
 #endif /* nsCSSLineLayout_h___ */
