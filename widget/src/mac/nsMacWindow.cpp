@@ -1121,8 +1121,11 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
       // update userstate to match, if appropriate
       PRInt32 sizeMode;
       GetSizeMode(&sizeMode);
-      if (sizeMode == nsSizeMode_Normal)
-        ::SetWindowUserState(mWindowPtr, &portBounds);
+      if (sizeMode == nsSizeMode_Normal) {
+        Rect newBounds;
+        ::GetWindowBounds(mWindowPtr, kWindowGlobalPortRgn, &newBounds);
+        ::SetWindowUserState(mWindowPtr, &newBounds);
+      }
     }
 
     // propagate the event in global coordinates
