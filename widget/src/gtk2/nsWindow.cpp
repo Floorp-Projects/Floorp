@@ -80,7 +80,7 @@ static GdkWindow *get_inner_gdk_window (GdkWindow *aWindow,
                                         gint x, gint y,
                                         gint *retx, gint *rety);
 
-static PRBool is_context_menu_key            (const nsKeyEvent& inKeyEvent);
+static inline PRBool is_context_menu_key(const nsKeyEvent& inKeyEvent);
 static void   key_event_to_context_menu_event(const nsKeyEvent* inKeyEvent,
                                               nsMouseEvent* outCMEvent);
 
