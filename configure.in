@@ -1262,7 +1262,7 @@ xpfe/appshell/public/Makefile
 xpfe/bootstrap/Makefile"
 
 EDITOR_MAKEFILES="
-editor/core/Makefile
+editor/base/Makefile
 editor/txmgr/Makefile
 editor/txmgr/public/Makefile
 editor/txmgr/src/Makefile
