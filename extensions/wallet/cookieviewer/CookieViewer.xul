@@ -58,8 +58,8 @@
             <treecol width="70%"/>
             <treehead>
               <treerow>
-                <treecell>&treehead.cookiedomain.label;</treecell>
-                <treecell>&treehead.cookiename.label;</treecell>
+                <treecell value="&treehead.cookiedomain.label;"/>
+                <treecell value="&treehead.cookiename.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="cookielist"/>
@@ -113,8 +113,8 @@
                 onclick="ViewPermissionSelected();">
             <treehead>
               <treerow>
-                <treecell>&treehead.sitename.label;</treecell>
-                <treecell>&treehead.status.label;</treecell>
+                <treecell value="&treehead.sitename.label;" />
+                <treecell value="&treehead.status.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="permissionslist"/>

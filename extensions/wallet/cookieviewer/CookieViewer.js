@@ -283,8 +283,7 @@ function AddItem(children,cells,prefix,idfier)
   for(var i = 0; i < cells.length; i++)
   {
     var cell  = document.createElement("treecell");
-    var text = document.createTextNode(cells[i]);
-    cell.appendChild(text);
+    cell.setAttribute("value", cells[i]);
     row.appendChild(cell);
   }
   item.appendChild(row);

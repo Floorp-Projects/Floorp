@@ -59,8 +59,8 @@
             <treecol width="55%"/>
             <treehead>
               <treerow>
-                <treecell>&treehead.signonsite.label;</treecell>
-                <treecell>&treehead.signonusername.label;</treecell>
+                <treecell value="&treehead.signonsite.label;"/>
+                <treecell value="&treehead.signonusername.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="savesignonlist"/>
@@ -82,8 +82,8 @@
             <treecol width="55%"/>
             <treehead>
               <treerow>
-                <treecell>&treehead.signonsite.label;</treecell>
-                <treecell>&treehead.signonusername.label;</treecell>
+                <treecell value="&treehead.signonsite.label;"/>
+                <treecell value="&treehead.signonusername.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="ignoredlist"/>
@@ -103,7 +103,7 @@
           <tree id="nopreviewtree" style="height: 280px; width: 380px;" align="vertical">
             <treehead>
               <treerow>
-                <treecell>&treehead.nopreviewforms.label;</treecell>
+                <treecell value="&treehead.nopreviewforms.label;"/>
               </treerow>          
             </treehead>
             <treechildren id="nopreviewlist"/>
