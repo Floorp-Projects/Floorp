@@ -46,11 +46,12 @@ PRUint32  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
   aTextBuffer.SetLength(0);
   aTextBuffer.Append(buf);
   NS_FREE_CHAR_BUF(buf);
+  */
 
   return(0);
 }
 
-PRUint32  nsTextHelper::SetText(const nsString &aText)
+PRUint32  nsTextHelper::SetText(const nsString& aText)
 { 
 /*
   NS_ALLOC_STR_BUF(buf, aText, 512);

@@ -30,7 +30,6 @@ DEFINES = -D_IMPL_NS_WIDGET
 
 EXTRA_DSO_LDOPTS+=\
 	$(DIST)/bin/libxpcom.so \
-	$(DIST)/bin/libraptorgfx.so \
 	$(DIST)/bin/libraptorbase.so \
 	$(DIST)/bin/libreg.so \
 	$(LIBNSPR)\
@@ -41,7 +40,7 @@ ifeq ($(OS_ARCH),Linux)
 EXTRA_DSO_LDOPTS+=\
 	-L/usr/X11R6/lib -lX11 -lm
 else
-EXTRA_DSO_LDOPTS+= -lX11 -lm 
+EXTRA_DSO_LDOPTS+= -lXm -lXt -lX11 -lm 
 endif
 
 CPPSRCS= \
