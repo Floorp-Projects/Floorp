@@ -442,9 +442,6 @@ function OnLoadThreadPane(threadTree)
 {
     gThreadTree = threadTree;
 	//Sort by date by default
-	// add folderSource to thread pane
-	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	threadTree.database.AddDataSource(folderDataSource);
 
 	//Add message data source
 	messageDataSource = messageDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
@@ -834,13 +831,13 @@ function GetLoadedMessage()
 
 function GetCompositeDataSource(command)
 {
-	if(command == "GetNewMessages" || command == "Copy"  || command == "Move" || 
-	   command == "NewFolder" ||  command == "MarkAllMessagesRead")
+	if(command == "GetNewMessages" || command == "DeleteMessages" || command == "Copy"  || 
+	   command == "Move" ||  command == "NewFolder" ||  command == "MarkAllMessagesRead")
 	{
 		var folderTree = GetFolderTree();
 		return folderTree.database;
 	}
-	else if(command == "DeleteMessages" || command == "MarkMessageRead" || 
+	else if(command == "MarkMessageRead" || 
 			command == "MarkMessageFlagged" || command == "MarkThreadAsRead" ||
 			command == "MessageProperty")
 	{

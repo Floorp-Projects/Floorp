@@ -376,6 +376,15 @@ function MsgStop()
 	StopUrls();
 }
 
+function MsgSendUnsentMsg() 
+{
+	var folder = GetFirstSelectedMsgFolder();
+	if(folder)
+	{
+		SendUnsentMessages(folder);
+	}
+}
+
 function MsgMarkByDate() {}
 function MsgOpenAttachment() {}
 function MsgUpdateMsgCount() {}

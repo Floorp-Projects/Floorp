@@ -702,7 +702,7 @@ function MsgViewUnreadMsg()
 	if(messageView)
 	{
 		messageView.viewType = viewShowUnread;
-		view.showThreads = false;
+		messageView.showThreads = false;
 	}
 
 	RefreshThreadTreeView();

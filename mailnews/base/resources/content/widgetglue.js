@@ -76,12 +76,6 @@ function GetSelectedFolderURI()
 	return uri;
 }
 
-function MsgSendUnsentMsg() 
-{
-    var identity = getIdentityForSelectedServer();
-	messenger.SendUnsentMessages(identity);
-}
-
 
 function MsgRenameFolder() 
 {

@@ -152,6 +152,17 @@ function getIdentityForServer(server)
 
     return identity;
 }
+
+function SendUnsentMessages(folder)
+{
+	if(folder)
+	{	
+		var identity = getIdentityForServer(folder.server);
+		messenger.SendUnsentMessages(identity);
+	}
+
+}
+
  function ComposeMessage(type, format, folder, messageArray) //type is a nsIMsgCompType and format is a nsIMsgCompFormat
 {
 	var msgComposeType = Components.interfaces.nsIMsgCompType;

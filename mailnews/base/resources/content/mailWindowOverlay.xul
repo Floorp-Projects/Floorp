@@ -432,7 +432,7 @@ Rights Reserved.
 					<menuitem value="&sortDescendCmd.label;" disabled="true" observes="cmd_sortDescending"/>
 				</menupopup>
 			</menu>
-			<menu value="&msgsMenu.label;" disabled="true">
+			<menu value="&msgsMenu.label;">
 				<menupopup>
 					<menuitem value="&allMsgsCmd.label;" disabled="true" observes="cmd_viewAllMsgs"/>
 					<menuitem value="&unreadMsgsCmd.label;" disabled="true" observes="cmd_viewUnreadMsgs"/>
