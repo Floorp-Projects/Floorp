@@ -1095,6 +1095,7 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, co
   
   if (aMsgQuote)
   {
+    SetMimeOutputType(nsMimeOutput::nsMimeMessageQuoting);
     nsCOMPtr<nsIMimeStreamConverterListener> quoteListener;
     rv = aMsgQuote->GetQuoteListener(getter_AddRefs(quoteListener));
     if (quoteListener)
