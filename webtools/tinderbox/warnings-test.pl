@@ -193,10 +193,11 @@ sub expand_cvs_modules {
 } } } }
 
 sub find_cvs_files {
-  $File::Find::prune = 1 if /.OBJ$/ or /^CVS$/;
+  $File::Find::prune = 1 if /.OBJ$/ or /^CVS$/ or /^Attic$/;
   if (-d $_) {
     $File::Find::prune = 1 if /$exclude_pat/o or $seen{$File::Find::name};
     $seen{$File::Find::name} = 1;
+    return;
   }
   my $dir = $File::Find::dir;
   $dir =~ s|^$cvsroot/||o;
