@@ -315,21 +315,38 @@ function showdetail(){
 }
 
 function getBuildConfig() {
-  /* Commented out until it works
-  var ioservice =
-     Components.classes["@mozilla.org/network/io-service;1"].
-       getService(Components.interfaces.nsIIOService);
-  var channel = ioservice.newChannel("chrome://global/content/buildconfig.html",
-                                     null, null);
-  var stream = channel.open();
-  var parser = new DOMParser();
-
-  var buildconfig = parser.parseFromStream(stream, "UTF-8", stream.available(),
-                                   "application/xhtml+xml");
-
-  return buildconfig.documentElement.firstChild.textContent;
-  */
-  return 'buildconfig';
+  // bz and Biesi are my hero's for writing/debugging this chunk.
+  try {
+    netscape.security.PrivilegeManager.
+      enablePrivilege("UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite");
+    var ioservice =
+      Components.classes["@mozilla.org/network/io-service;1"].
+        getService(Components.interfaces.nsIIOService);
+    var channel = ioservice.newChannel("chrome://global/content/buildconfig.html",
+                                       null, null);
+    var stream = channel.open();
+    var scriptableInputStream =
+      Components.classes["@mozilla.org/scriptableinputstream;1"].
+        createInstance(Components.interfaces.nsIScriptableInputStream);
+    scriptableInputStream.init(stream);
+    var data = "";
+    var curBit = scriptableInputStream.read(4096);
+    while (curBit.length) {
+      data += curBit;
+      curBit = scriptableInputStream.read(4096);
+    }
+    // Strip out the <!DOCTYPE> part, since it's not valid XML
+    data = data.replace(/^<!DOCTYPE[^>]*>/, "");
+    // Probably not strictly needed, but what the heck
+    data = data.replace(/^<html>/, "<html xmlns='http://www.w3.org/1999/xhtml'>");
+    var parser = new DOMParser();
+    var buildconfig = parser.parseFromString(data, "application/xhtml+xml");
+    var text = buildconfig.getElementsByTagName("body")[0].textContent;
+    var start= text.indexOf('Configure arguments')+19;
+    return text.substring(start);
+  } catch(ex) {
+    alert(ex);
+  }
 }
 
 function makeIntBool(boolStr){
@@ -342,12 +359,6 @@ function makeIntBool(boolStr){
 /*  NEW WEB SERVICE MODULE */
 /*  Based on Apple's example implementation of SOAP at: developer.apple.com/internet/webservices/mozgoogle_source.html */
 function callReporter(method,params,callback){
-  try {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-  } catch (e) {
-    alert(e);
-    return false;
-  }
   var soapCall = new SOAPCall();
   soapCall.transportURI = RMOURI;
   soapCall.encode(0, method, "urn:MozillaReporter", 0, null, params.length, params);
