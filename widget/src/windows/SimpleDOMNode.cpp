@@ -383,6 +383,33 @@ STDMETHODIMP SimpleDOMNode::get_computedStyleForProperties(
   return S_OK;
 }
 
+STDMETHODIMP SimpleDOMNode::scrollTo(/* [in] */ boolean aScrollTopLeft)
+{
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+
+  nsCOMPtr<nsIDocument> doc;
+  if (content) 
+    content->GetDocument(*getter_AddRefs(doc));
+
+  nsCOMPtr<nsIPresShell> shell;
+  if (doc)
+    doc->GetShellAt(0, getter_AddRefs(shell)); 
+
+  nsIFrame *frame = nsnull;
+  if (shell) {
+    shell->GetPrimaryFrameFor(content, &frame);
+  }
+
+  if (frame) {
+    PRInt32 percent = NS_PRESSHELL_SCROLL_ANYWHERE;
+    if (aScrollTopLeft)
+      percent = 0;
+    return shell->ScrollFrameIntoView(frame, percent, percent);
+  }
+
+  return E_FAIL;
+}
+
 
 ISimpleDOMNode* SimpleDOMNode::MakeSimpleDOMNode(nsIDOMNode *node)
 {

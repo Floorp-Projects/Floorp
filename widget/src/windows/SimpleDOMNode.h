@@ -109,6 +109,8 @@ class SimpleDOMNode : public ISimpleDOMNode
         /* [length_is][size_is][in] */ BSTR __RPC_FAR *styleProperties,
         /* [length_is][size_is][out][retval] */ BSTR __RPC_FAR *styleValues);
         
+    virtual HRESULT STDMETHODCALLTYPE scrollTo(/* [in] */ boolean scrollTopLeft);
+
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
