@@ -4078,6 +4078,9 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
 
     // Only Shrink if we are smaller
     if (mPrt->mShrinkRatio < 1.0f) {
+      // Clamp Shrink to Fit to 50%
+      mPrt->mShrinkRatio = PR_MAX(mPrt->mShrinkRatio, 0.5f);
+
       for (PRInt32 i=0;i<mPrt->mPrintDocList->Count();i++) {
         PrintObject* po = (PrintObject*)mPrt->mPrintDocList->ElementAt(i);
         NS_ASSERTION(po, "PrintObject can't be null!");
