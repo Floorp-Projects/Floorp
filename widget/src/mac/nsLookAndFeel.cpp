@@ -21,6 +21,7 @@
  */
 
 #include "nsLookAndFeel.h"
+#include "nsXPLookAndFeel.h"
 #include "nsCarbonHelpers.h"
 
  
