@@ -63,6 +63,7 @@ var gSearchBox = null;
 var gAccountCentralLoaded = false;
 var gFakeAccountPageLoaded = false;
 var gPaneConfig = null;
+var gStandAloneMail = false;
 //End progress and Status variables
 
 // for checking if the folder loaded is Draft or Unsent which msg is editable
@@ -189,6 +190,8 @@ function CreateMailWindowGlobals()
   accountCentralBox = document.getElementById("accountCentralBox");
   gSearchBox = document.getElementById("searchBox");
   gPaneConfig = pref.getIntPref("mail.pane_config");
+
+  gStandAloneMail = pref.getBoolPref("mail.standalone");
 }
 
 function InitMsgWindow()
@@ -198,11 +201,48 @@ function InitMsgWindow()
   msgWindow.msgHeaderSink = messageHeaderSink;
   msgWindow.SetDOMWindow(window);
   mailSession.AddMsgWindow(msgWindow);
+
+  var messagepane = document.getElementById("messagepane");
+  messagepane.addEventListener("click",messagePaneOnClick,true);
+}
+
+function messagePaneOnClick(event)
+{
+  // if this is stand alone mail (no browser)
+  // or this isn't a simple left click, do nothing, and let the normal code execute
+  if (gStandAloneMail || event.button != 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+    return;
+
+  // try to determine the href for what you are clicking on.  
+  // for example, it might be "" if you aren't left clicking on a link
+  var href = hrefForClickEvent(event);
+  if (!href) 
+    return;
+
+  // we know that http://, https://, ftp://, file://, chrome://, 
+  // resource://, about:, and gopher:// (as if), 
+  // should load in a browser.  but if we don't have one of those
+  // (examples are mailto, imap, news, mailbox, snews, nntp, ldap, 
+  // and externally handled schemes like aim)
+  // we may or may not want a browser window, in which case we return here
+  // and let the normal code handle it
+  var needABrowser = /(^http(s)?:|^ftp:|^file:|^gopher:|^chrome:|^resource:|^about:)/i;
+  if (href.search(needABrowser) == -1) 
+    return;
+
+  // if you get here, the user did a simple left click on a link
+  // that we know should be in a browser window.
+  // since we are in the message pane, send it to the top most browser window 
+  // (or open one) right away, instead of waiting for us to get some data and
+  // determine the content type, and then open a browser window
+  openTopBrowserWith(href);
+  // we want to preventDefault, so that in
+  // nsGenericHTMLElement::HandleDOMEventForAnchors(), we don't try to handle the click again
+  event.preventDefault();
 }
 
 function AddDataSources()
 {
-
   accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
   folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
   //to move menu item
@@ -677,3 +717,5 @@ const gMailToolBarPrefListener =
     document.getElementById("button-" + prefName.substr(this.domain.length+1)).hidden = !(pref.getBoolPref(prefName));
   }
 };
+
+
