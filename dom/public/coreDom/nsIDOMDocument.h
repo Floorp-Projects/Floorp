@@ -88,18 +88,18 @@ public:
 
 
 #define NS_FORWARD_IDOMDOCUMENT(_to)  \
-  NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDoctype) { return _to##GetDoctype(aDoctype); } \
-  NS_IMETHOD    GetImplementation(nsIDOMDOMImplementation** aImplementation) { return _to##GetImplementation(aImplementation); } \
-  NS_IMETHOD    GetDocumentElement(nsIDOMElement** aDocumentElement) { return _to##GetDocumentElement(aDocumentElement); } \
-  NS_IMETHOD    CreateElement(const nsString& aTagName, nsIDOMElement** aReturn) { return _to##CreateElement(aTagName, aReturn); }  \
-  NS_IMETHOD    CreateDocumentFragment(nsIDOMDocumentFragment** aReturn) { return _to##CreateDocumentFragment(aReturn); }  \
-  NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn) { return _to##CreateTextNode(aData, aReturn); }  \
-  NS_IMETHOD    CreateComment(const nsString& aData, nsIDOMComment** aReturn) { return _to##CreateComment(aData, aReturn); }  \
-  NS_IMETHOD    CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn) { return _to##CreateCDATASection(aData, aReturn); }  \
-  NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn) { return _to##CreateProcessingInstruction(aTarget, aData, aReturn); }  \
-  NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn) { return _to##CreateAttribute(aName, aReturn); }  \
-  NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn) { return _to##CreateEntityReference(aName, aReturn); }  \
-  NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn) { return _to##GetElementsByTagName(aTagname, aReturn); }  \
+  NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDoctype) { return _to GetDoctype(aDoctype); } \
+  NS_IMETHOD    GetImplementation(nsIDOMDOMImplementation** aImplementation) { return _to GetImplementation(aImplementation); } \
+  NS_IMETHOD    GetDocumentElement(nsIDOMElement** aDocumentElement) { return _to GetDocumentElement(aDocumentElement); } \
+  NS_IMETHOD    CreateElement(const nsString& aTagName, nsIDOMElement** aReturn) { return _to CreateElement(aTagName, aReturn); }  \
+  NS_IMETHOD    CreateDocumentFragment(nsIDOMDocumentFragment** aReturn) { return _to CreateDocumentFragment(aReturn); }  \
+  NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn) { return _to CreateTextNode(aData, aReturn); }  \
+  NS_IMETHOD    CreateComment(const nsString& aData, nsIDOMComment** aReturn) { return _to CreateComment(aData, aReturn); }  \
+  NS_IMETHOD    CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn) { return _to CreateCDATASection(aData, aReturn); }  \
+  NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn) { return _to CreateProcessingInstruction(aTarget, aData, aReturn); }  \
+  NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn) { return _to CreateAttribute(aName, aReturn); }  \
+  NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn) { return _to CreateEntityReference(aName, aReturn); }  \
+  NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn) { return _to GetElementsByTagName(aTagname, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitDocumentClass(nsIScriptContext *aContext, void **aPrototype);

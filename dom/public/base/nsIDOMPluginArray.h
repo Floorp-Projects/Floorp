@@ -52,10 +52,10 @@ public:
 
 
 #define NS_FORWARD_IDOMPLUGINARRAY(_to)  \
-  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to##GetLength(aLength); } \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMPlugin** aReturn) { return _to##Item(aIndex, aReturn); }  \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMPlugin** aReturn) { return _to##NamedItem(aName, aReturn); }  \
-  NS_IMETHOD    Refresh(PRBool aReloadDocuments) { return _to##Refresh(aReloadDocuments); }  \
+  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMPlugin** aReturn) { return _to Item(aIndex, aReturn); }  \
+  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMPlugin** aReturn) { return _to NamedItem(aName, aReturn); }  \
+  NS_IMETHOD    Refresh(PRBool aReloadDocuments) { return _to Refresh(aReloadDocuments); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitPluginArrayClass(nsIScriptContext *aContext, void **aPrototype);

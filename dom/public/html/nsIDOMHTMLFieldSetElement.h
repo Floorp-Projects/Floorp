@@ -45,7 +45,7 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLFIELDSETELEMENT(_to)  \
-  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to##GetForm(aForm); } \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLFieldSetElementClass(nsIScriptContext *aContext, void **aPrototype);

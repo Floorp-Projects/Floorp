@@ -47,8 +47,8 @@ public:
 
 
 #define NS_FORWARD_IDOMNSHTMLFORMELEMENT(_to)  \
-  NS_IMETHOD    GetEncoding(nsString& aEncoding) { return _to##GetEncoding(aEncoding); } \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn) { return _to##NamedItem(aName, aReturn); }  \
+  NS_IMETHOD    GetEncoding(nsString& aEncoding) { return _to GetEncoding(aEncoding); } \
+  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn) { return _to NamedItem(aName, aReturn); }  \
 
 
 #endif // nsIDOMNSHTMLFormElement_h__

@@ -46,8 +46,8 @@ public:
 
 
 #define NS_FORWARD_IDOMNSHTMLBUTTONELEMENT(_to)  \
-  NS_IMETHOD    Blur() { return _to##Blur(); }  \
-  NS_IMETHOD    Focus() { return _to##Focus(); }  \
+  NS_IMETHOD    Blur() { return _to Blur(); }  \
+  NS_IMETHOD    Focus() { return _to Focus(); }  \
 
 
 #endif // nsIDOMNSHTMLButtonElement_h__

@@ -50,9 +50,9 @@ public:
 
 
 #define NS_FORWARD_IDOMWINDOWCOLLECTION(_to)  \
-  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to##GetLength(aLength); } \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMWindow** aReturn) { return _to##Item(aIndex, aReturn); }  \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMWindow** aReturn) { return _to##NamedItem(aName, aReturn); }  \
+  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMWindow** aReturn) { return _to Item(aIndex, aReturn); }  \
+  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMWindow** aReturn) { return _to NamedItem(aName, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitWindowCollectionClass(nsIScriptContext *aContext, void **aPrototype);

@@ -70,15 +70,15 @@ public:
 
 
 #define NS_FORWARD_IDOMELEMENT(_to)  \
-  NS_IMETHOD    GetTagName(nsString& aTagName) { return _to##GetTagName(aTagName); } \
-  NS_IMETHOD    GetAttribute(const nsString& aName, nsString& aReturn) { return _to##GetAttribute(aName, aReturn); }  \
-  NS_IMETHOD    SetAttribute(const nsString& aName, const nsString& aValue) { return _to##SetAttribute(aName, aValue); }  \
-  NS_IMETHOD    RemoveAttribute(const nsString& aName) { return _to##RemoveAttribute(aName); }  \
-  NS_IMETHOD    GetAttributeNode(const nsString& aName, nsIDOMAttr** aReturn) { return _to##GetAttributeNode(aName, aReturn); }  \
-  NS_IMETHOD    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) { return _to##SetAttributeNode(aNewAttr, aReturn); }  \
-  NS_IMETHOD    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) { return _to##RemoveAttributeNode(aOldAttr, aReturn); }  \
-  NS_IMETHOD    GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn) { return _to##GetElementsByTagName(aName, aReturn); }  \
-  NS_IMETHOD    Normalize() { return _to##Normalize(); }  \
+  NS_IMETHOD    GetTagName(nsString& aTagName) { return _to GetTagName(aTagName); } \
+  NS_IMETHOD    GetAttribute(const nsString& aName, nsString& aReturn) { return _to GetAttribute(aName, aReturn); }  \
+  NS_IMETHOD    SetAttribute(const nsString& aName, const nsString& aValue) { return _to SetAttribute(aName, aValue); }  \
+  NS_IMETHOD    RemoveAttribute(const nsString& aName) { return _to RemoveAttribute(aName); }  \
+  NS_IMETHOD    GetAttributeNode(const nsString& aName, nsIDOMAttr** aReturn) { return _to GetAttributeNode(aName, aReturn); }  \
+  NS_IMETHOD    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) { return _to SetAttributeNode(aNewAttr, aReturn); }  \
+  NS_IMETHOD    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) { return _to RemoveAttributeNode(aOldAttr, aReturn); }  \
+  NS_IMETHOD    GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn) { return _to GetElementsByTagName(aName, aReturn); }  \
+  NS_IMETHOD    Normalize() { return _to Normalize(); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitElementClass(nsIScriptContext *aContext, void **aPrototype);

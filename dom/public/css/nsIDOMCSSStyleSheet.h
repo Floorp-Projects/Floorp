@@ -68,14 +68,14 @@ public:
 
 
 #define NS_FORWARD_IDOMCSSSTYLESHEET(_to)  \
-  NS_IMETHOD    GetOwningNode(nsIDOMNode** aOwningNode) { return _to##GetOwningNode(aOwningNode); } \
-  NS_IMETHOD    GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet) { return _to##GetParentStyleSheet(aParentStyleSheet); } \
-  NS_IMETHOD    GetHref(nsString& aHref) { return _to##GetHref(aHref); } \
-  NS_IMETHOD    GetTitle(nsString& aTitle) { return _to##GetTitle(aTitle); } \
-  NS_IMETHOD    GetMedia(nsString& aMedia) { return _to##GetMedia(aMedia); } \
-  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules) { return _to##GetCssRules(aCssRules); } \
-  NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn) { return _to##InsertRule(aRule, aIndex, aReturn); }  \
-  NS_IMETHOD    DeleteRule(PRUint32 aIndex) { return _to##DeleteRule(aIndex); }  \
+  NS_IMETHOD    GetOwningNode(nsIDOMNode** aOwningNode) { return _to GetOwningNode(aOwningNode); } \
+  NS_IMETHOD    GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet) { return _to GetParentStyleSheet(aParentStyleSheet); } \
+  NS_IMETHOD    GetHref(nsString& aHref) { return _to GetHref(aHref); } \
+  NS_IMETHOD    GetTitle(nsString& aTitle) { return _to GetTitle(aTitle); } \
+  NS_IMETHOD    GetMedia(nsString& aMedia) { return _to GetMedia(aMedia); } \
+  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules) { return _to GetCssRules(aCssRules); } \
+  NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn) { return _to InsertRule(aRule, aIndex, aReturn); }  \
+  NS_IMETHOD    DeleteRule(PRUint32 aIndex) { return _to DeleteRule(aIndex); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitCSSStyleSheetClass(nsIScriptContext *aContext, void **aPrototype);

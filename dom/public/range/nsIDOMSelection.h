@@ -91,22 +91,22 @@ public:
 
 
 #define NS_FORWARD_IDOMSELECTION(_to)  \
-  NS_IMETHOD    GetAnchorNode(nsIDOMNode** aAnchorNode) { return _to##GetAnchorNode(aAnchorNode); } \
-  NS_IMETHOD    GetAnchorOffset(PRInt32* aAnchorOffset) { return _to##GetAnchorOffset(aAnchorOffset); } \
-  NS_IMETHOD    GetFocusNode(nsIDOMNode** aFocusNode) { return _to##GetFocusNode(aFocusNode); } \
-  NS_IMETHOD    GetFocusOffset(PRInt32* aFocusOffset) { return _to##GetFocusOffset(aFocusOffset); } \
-  NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed) { return _to##GetIsCollapsed(aIsCollapsed); } \
-  NS_IMETHOD    GetRangeCount(PRInt32* aRangeCount) { return _to##GetRangeCount(aRangeCount); } \
-  NS_IMETHOD    GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn) { return _to##GetRangeAt(aIndex, aReturn); }  \
-  NS_IMETHOD    ClearSelection() { return _to##ClearSelection(); }  \
-  NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset) { return _to##Collapse(aParentNode, aOffset); }  \
-  NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset) { return _to##Extend(aParentNode, aOffset); }  \
-  NS_IMETHOD    DeleteFromDocument() { return _to##DeleteFromDocument(); }  \
-  NS_IMETHOD    AddRange(nsIDOMRange* aRange) { return _to##AddRange(aRange); }  \
-  NS_IMETHOD    StartBatchChanges() { return _to##StartBatchChanges(); }  \
-  NS_IMETHOD    EndBatchChanges() { return _to##EndBatchChanges(); }  \
-  NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener) { return _to##AddSelectionListener(aNewListener); }  \
-  NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove) { return _to##RemoveSelectionListener(aListenerToRemove); }  \
+  NS_IMETHOD    GetAnchorNode(nsIDOMNode** aAnchorNode) { return _to GetAnchorNode(aAnchorNode); } \
+  NS_IMETHOD    GetAnchorOffset(PRInt32* aAnchorOffset) { return _to GetAnchorOffset(aAnchorOffset); } \
+  NS_IMETHOD    GetFocusNode(nsIDOMNode** aFocusNode) { return _to GetFocusNode(aFocusNode); } \
+  NS_IMETHOD    GetFocusOffset(PRInt32* aFocusOffset) { return _to GetFocusOffset(aFocusOffset); } \
+  NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed) { return _to GetIsCollapsed(aIsCollapsed); } \
+  NS_IMETHOD    GetRangeCount(PRInt32* aRangeCount) { return _to GetRangeCount(aRangeCount); } \
+  NS_IMETHOD    GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn) { return _to GetRangeAt(aIndex, aReturn); }  \
+  NS_IMETHOD    ClearSelection() { return _to ClearSelection(); }  \
+  NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset) { return _to Collapse(aParentNode, aOffset); }  \
+  NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset) { return _to Extend(aParentNode, aOffset); }  \
+  NS_IMETHOD    DeleteFromDocument() { return _to DeleteFromDocument(); }  \
+  NS_IMETHOD    AddRange(nsIDOMRange* aRange) { return _to AddRange(aRange); }  \
+  NS_IMETHOD    StartBatchChanges() { return _to StartBatchChanges(); }  \
+  NS_IMETHOD    EndBatchChanges() { return _to EndBatchChanges(); }  \
+  NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener) { return _to AddSelectionListener(aNewListener); }  \
+  NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove) { return _to RemoveSelectionListener(aListenerToRemove); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitSelectionClass(nsIScriptContext *aContext, void **aPrototype);

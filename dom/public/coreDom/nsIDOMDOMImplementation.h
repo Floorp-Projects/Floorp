@@ -43,7 +43,7 @@ public:
 
 
 #define NS_FORWARD_IDOMDOMIMPLEMENTATION(_to)  \
-  NS_IMETHOD    HasFeature(const nsString& aFeature, const nsString& aVersion, PRBool* aReturn) { return _to##HasFeature(aFeature, aVersion, aReturn); }  \
+  NS_IMETHOD    HasFeature(const nsString& aFeature, const nsString& aVersion, PRBool* aReturn) { return _to HasFeature(aFeature, aVersion, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitDOMImplementationClass(nsIScriptContext *aContext, void **aPrototype);

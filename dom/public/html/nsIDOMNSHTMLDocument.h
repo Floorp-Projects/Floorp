@@ -85,22 +85,22 @@ public:
 
 
 #define NS_FORWARD_IDOMNSHTMLDOCUMENT(_to)  \
-  NS_IMETHOD    GetAlinkColor(nsString& aAlinkColor) { return _to##GetAlinkColor(aAlinkColor); } \
-  NS_IMETHOD    SetAlinkColor(const nsString& aAlinkColor) { return _to##SetAlinkColor(aAlinkColor); } \
-  NS_IMETHOD    GetLinkColor(nsString& aLinkColor) { return _to##GetLinkColor(aLinkColor); } \
-  NS_IMETHOD    SetLinkColor(const nsString& aLinkColor) { return _to##SetLinkColor(aLinkColor); } \
-  NS_IMETHOD    GetVlinkColor(nsString& aVlinkColor) { return _to##GetVlinkColor(aVlinkColor); } \
-  NS_IMETHOD    SetVlinkColor(const nsString& aVlinkColor) { return _to##SetVlinkColor(aVlinkColor); } \
-  NS_IMETHOD    GetBgColor(nsString& aBgColor) { return _to##GetBgColor(aBgColor); } \
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor) { return _to##SetBgColor(aBgColor); } \
-  NS_IMETHOD    GetFgColor(nsString& aFgColor) { return _to##GetFgColor(aFgColor); } \
-  NS_IMETHOD    SetFgColor(const nsString& aFgColor) { return _to##SetFgColor(aFgColor); } \
-  NS_IMETHOD    GetLastModified(nsString& aLastModified) { return _to##GetLastModified(aLastModified); } \
-  NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds) { return _to##GetEmbeds(aEmbeds); } \
-  NS_IMETHOD    GetLayers(nsIDOMHTMLCollection** aLayers) { return _to##GetLayers(aLayers); } \
-  NS_IMETHOD    GetPlugins(nsIDOMHTMLCollection** aPlugins) { return _to##GetPlugins(aPlugins); } \
-  NS_IMETHOD    GetSelection(nsString& aReturn) { return _to##GetSelection(aReturn); }  \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn) { return _to##NamedItem(aName, aReturn); }  \
+  NS_IMETHOD    GetAlinkColor(nsString& aAlinkColor) { return _to GetAlinkColor(aAlinkColor); } \
+  NS_IMETHOD    SetAlinkColor(const nsString& aAlinkColor) { return _to SetAlinkColor(aAlinkColor); } \
+  NS_IMETHOD    GetLinkColor(nsString& aLinkColor) { return _to GetLinkColor(aLinkColor); } \
+  NS_IMETHOD    SetLinkColor(const nsString& aLinkColor) { return _to SetLinkColor(aLinkColor); } \
+  NS_IMETHOD    GetVlinkColor(nsString& aVlinkColor) { return _to GetVlinkColor(aVlinkColor); } \
+  NS_IMETHOD    SetVlinkColor(const nsString& aVlinkColor) { return _to SetVlinkColor(aVlinkColor); } \
+  NS_IMETHOD    GetBgColor(nsString& aBgColor) { return _to GetBgColor(aBgColor); } \
+  NS_IMETHOD    SetBgColor(const nsString& aBgColor) { return _to SetBgColor(aBgColor); } \
+  NS_IMETHOD    GetFgColor(nsString& aFgColor) { return _to GetFgColor(aFgColor); } \
+  NS_IMETHOD    SetFgColor(const nsString& aFgColor) { return _to SetFgColor(aFgColor); } \
+  NS_IMETHOD    GetLastModified(nsString& aLastModified) { return _to GetLastModified(aLastModified); } \
+  NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds) { return _to GetEmbeds(aEmbeds); } \
+  NS_IMETHOD    GetLayers(nsIDOMHTMLCollection** aLayers) { return _to GetLayers(aLayers); } \
+  NS_IMETHOD    GetPlugins(nsIDOMHTMLCollection** aPlugins) { return _to GetPlugins(aPlugins); } \
+  NS_IMETHOD    GetSelection(nsString& aReturn) { return _to GetSelection(aReturn); }  \
+  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn) { return _to NamedItem(aName, aReturn); }  \
 
 
 #endif // nsIDOMNSHTMLDocument_h__

@@ -46,8 +46,8 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLBRELEMENT(_to)  \
-  NS_IMETHOD    GetClear(nsString& aClear) { return _to##GetClear(aClear); } \
-  NS_IMETHOD    SetClear(const nsString& aClear) { return _to##SetClear(aClear); } \
+  NS_IMETHOD    GetClear(nsString& aClear) { return _to GetClear(aClear); } \
+  NS_IMETHOD    SetClear(const nsString& aClear) { return _to SetClear(aClear); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLBRElementClass(nsIScriptContext *aContext, void **aPrototype);

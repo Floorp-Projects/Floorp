@@ -47,8 +47,8 @@ public:
 
 
 #define NS_FORWARD_IDOMEVENTTARGET(_to)  \
-  NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aPostProcess, PRBool aUseCapture) { return _to##AddEventListener(aType, aListener, aPostProcess, aUseCapture); }  \
-  NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aPostProcess, PRBool aUseCapture) { return _to##RemoveEventListener(aType, aListener, aPostProcess, aUseCapture); }  \
+  NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aPostProcess, PRBool aUseCapture) { return _to AddEventListener(aType, aListener, aPostProcess, aUseCapture); }  \
+  NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aPostProcess, PRBool aUseCapture) { return _to RemoveEventListener(aType, aListener, aPostProcess, aUseCapture); }  \
 
 
 #endif // nsIDOMEventTarget_h__

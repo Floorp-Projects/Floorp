@@ -72,16 +72,16 @@ public:
 
 
 #define NS_FORWARD_IDOMNAVIGATOR(_to)  \
-  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName) { return _to##GetAppCodeName(aAppCodeName); } \
-  NS_IMETHOD    GetAppName(nsString& aAppName) { return _to##GetAppName(aAppName); } \
-  NS_IMETHOD    GetAppVersion(nsString& aAppVersion) { return _to##GetAppVersion(aAppVersion); } \
-  NS_IMETHOD    GetLanguage(nsString& aLanguage) { return _to##GetLanguage(aLanguage); } \
-  NS_IMETHOD    GetMimeTypes(nsIDOMMimeTypeArray** aMimeTypes) { return _to##GetMimeTypes(aMimeTypes); } \
-  NS_IMETHOD    GetPlatform(nsString& aPlatform) { return _to##GetPlatform(aPlatform); } \
-  NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins) { return _to##GetPlugins(aPlugins); } \
-  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy) { return _to##GetSecurityPolicy(aSecurityPolicy); } \
-  NS_IMETHOD    GetUserAgent(nsString& aUserAgent) { return _to##GetUserAgent(aUserAgent); } \
-  NS_IMETHOD    JavaEnabled(PRBool* aReturn) { return _to##JavaEnabled(aReturn); }  \
+  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName) { return _to GetAppCodeName(aAppCodeName); } \
+  NS_IMETHOD    GetAppName(nsString& aAppName) { return _to GetAppName(aAppName); } \
+  NS_IMETHOD    GetAppVersion(nsString& aAppVersion) { return _to GetAppVersion(aAppVersion); } \
+  NS_IMETHOD    GetLanguage(nsString& aLanguage) { return _to GetLanguage(aLanguage); } \
+  NS_IMETHOD    GetMimeTypes(nsIDOMMimeTypeArray** aMimeTypes) { return _to GetMimeTypes(aMimeTypes); } \
+  NS_IMETHOD    GetPlatform(nsString& aPlatform) { return _to GetPlatform(aPlatform); } \
+  NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins) { return _to GetPlugins(aPlugins); } \
+  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy) { return _to GetSecurityPolicy(aSecurityPolicy); } \
+  NS_IMETHOD    GetUserAgent(nsString& aUserAgent) { return _to GetUserAgent(aUserAgent); } \
+  NS_IMETHOD    JavaEnabled(PRBool* aReturn) { return _to JavaEnabled(aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitNavigatorClass(nsIScriptContext *aContext, void **aPrototype);

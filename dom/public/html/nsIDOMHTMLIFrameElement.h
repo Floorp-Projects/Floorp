@@ -91,26 +91,26 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLIFRAMEELEMENT(_to)  \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
-  NS_IMETHOD    GetFrameBorder(nsString& aFrameBorder) { return _to##GetFrameBorder(aFrameBorder); } \
-  NS_IMETHOD    SetFrameBorder(const nsString& aFrameBorder) { return _to##SetFrameBorder(aFrameBorder); } \
-  NS_IMETHOD    GetHeight(nsString& aHeight) { return _to##GetHeight(aHeight); } \
-  NS_IMETHOD    SetHeight(const nsString& aHeight) { return _to##SetHeight(aHeight); } \
-  NS_IMETHOD    GetLongDesc(nsString& aLongDesc) { return _to##GetLongDesc(aLongDesc); } \
-  NS_IMETHOD    SetLongDesc(const nsString& aLongDesc) { return _to##SetLongDesc(aLongDesc); } \
-  NS_IMETHOD    GetMarginHeight(nsString& aMarginHeight) { return _to##GetMarginHeight(aMarginHeight); } \
-  NS_IMETHOD    SetMarginHeight(const nsString& aMarginHeight) { return _to##SetMarginHeight(aMarginHeight); } \
-  NS_IMETHOD    GetMarginWidth(nsString& aMarginWidth) { return _to##GetMarginWidth(aMarginWidth); } \
-  NS_IMETHOD    SetMarginWidth(const nsString& aMarginWidth) { return _to##SetMarginWidth(aMarginWidth); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
-  NS_IMETHOD    GetScrolling(nsString& aScrolling) { return _to##GetScrolling(aScrolling); } \
-  NS_IMETHOD    SetScrolling(const nsString& aScrolling) { return _to##SetScrolling(aScrolling); } \
-  NS_IMETHOD    GetSrc(nsString& aSrc) { return _to##GetSrc(aSrc); } \
-  NS_IMETHOD    SetSrc(const nsString& aSrc) { return _to##SetSrc(aSrc); } \
-  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to##GetWidth(aWidth); } \
-  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to##SetWidth(aWidth); } \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to SetAlign(aAlign); } \
+  NS_IMETHOD    GetFrameBorder(nsString& aFrameBorder) { return _to GetFrameBorder(aFrameBorder); } \
+  NS_IMETHOD    SetFrameBorder(const nsString& aFrameBorder) { return _to SetFrameBorder(aFrameBorder); } \
+  NS_IMETHOD    GetHeight(nsString& aHeight) { return _to GetHeight(aHeight); } \
+  NS_IMETHOD    SetHeight(const nsString& aHeight) { return _to SetHeight(aHeight); } \
+  NS_IMETHOD    GetLongDesc(nsString& aLongDesc) { return _to GetLongDesc(aLongDesc); } \
+  NS_IMETHOD    SetLongDesc(const nsString& aLongDesc) { return _to SetLongDesc(aLongDesc); } \
+  NS_IMETHOD    GetMarginHeight(nsString& aMarginHeight) { return _to GetMarginHeight(aMarginHeight); } \
+  NS_IMETHOD    SetMarginHeight(const nsString& aMarginHeight) { return _to SetMarginHeight(aMarginHeight); } \
+  NS_IMETHOD    GetMarginWidth(nsString& aMarginWidth) { return _to GetMarginWidth(aMarginWidth); } \
+  NS_IMETHOD    SetMarginWidth(const nsString& aMarginWidth) { return _to SetMarginWidth(aMarginWidth); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetScrolling(nsString& aScrolling) { return _to GetScrolling(aScrolling); } \
+  NS_IMETHOD    SetScrolling(const nsString& aScrolling) { return _to SetScrolling(aScrolling); } \
+  NS_IMETHOD    GetSrc(nsString& aSrc) { return _to GetSrc(aSrc); } \
+  NS_IMETHOD    SetSrc(const nsString& aSrc) { return _to SetSrc(aSrc); } \
+  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to SetWidth(aWidth); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLIFrameElementClass(nsIScriptContext *aContext, void **aPrototype);

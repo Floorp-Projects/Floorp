@@ -64,14 +64,14 @@ public:
 
 
 #define NS_FORWARD_IDOMSCREEN(_to)  \
-  NS_IMETHOD    GetWidth(PRInt32* aWidth) { return _to##GetWidth(aWidth); } \
-  NS_IMETHOD    GetHeight(PRInt32* aHeight) { return _to##GetHeight(aHeight); } \
-  NS_IMETHOD    GetPixelDepth(PRInt32* aPixelDepth) { return _to##GetPixelDepth(aPixelDepth); } \
-  NS_IMETHOD    GetColorDepth(PRInt32* aColorDepth) { return _to##GetColorDepth(aColorDepth); } \
-  NS_IMETHOD    GetAvailWidth(PRInt32* aAvailWidth) { return _to##GetAvailWidth(aAvailWidth); } \
-  NS_IMETHOD    GetAvailHeight(PRInt32* aAvailHeight) { return _to##GetAvailHeight(aAvailHeight); } \
-  NS_IMETHOD    GetAvailLeft(PRInt32* aAvailLeft) { return _to##GetAvailLeft(aAvailLeft); } \
-  NS_IMETHOD    GetAvailTop(PRInt32* aAvailTop) { return _to##GetAvailTop(aAvailTop); } \
+  NS_IMETHOD    GetWidth(PRInt32* aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    GetHeight(PRInt32* aHeight) { return _to GetHeight(aHeight); } \
+  NS_IMETHOD    GetPixelDepth(PRInt32* aPixelDepth) { return _to GetPixelDepth(aPixelDepth); } \
+  NS_IMETHOD    GetColorDepth(PRInt32* aColorDepth) { return _to GetColorDepth(aColorDepth); } \
+  NS_IMETHOD    GetAvailWidth(PRInt32* aAvailWidth) { return _to GetAvailWidth(aAvailWidth); } \
+  NS_IMETHOD    GetAvailHeight(PRInt32* aAvailHeight) { return _to GetAvailHeight(aAvailHeight); } \
+  NS_IMETHOD    GetAvailLeft(PRInt32* aAvailLeft) { return _to GetAvailLeft(aAvailLeft); } \
+  NS_IMETHOD    GetAvailTop(PRInt32* aAvailTop) { return _to GetAvailTop(aAvailTop); } \
 
 
 extern "C" NS_DOM nsresult NS_InitScreenClass(nsIScriptContext *aContext, void **aPrototype);

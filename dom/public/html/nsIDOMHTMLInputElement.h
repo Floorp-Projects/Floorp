@@ -140,44 +140,44 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLINPUTELEMENT(_to)  \
-  NS_IMETHOD    GetDefaultValue(nsString& aDefaultValue) { return _to##GetDefaultValue(aDefaultValue); } \
-  NS_IMETHOD    SetDefaultValue(const nsString& aDefaultValue) { return _to##SetDefaultValue(aDefaultValue); } \
-  NS_IMETHOD    GetDefaultChecked(PRBool* aDefaultChecked) { return _to##GetDefaultChecked(aDefaultChecked); } \
-  NS_IMETHOD    SetDefaultChecked(PRBool aDefaultChecked) { return _to##SetDefaultChecked(aDefaultChecked); } \
-  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to##GetForm(aForm); } \
-  NS_IMETHOD    GetAccept(nsString& aAccept) { return _to##GetAccept(aAccept); } \
-  NS_IMETHOD    SetAccept(const nsString& aAccept) { return _to##SetAccept(aAccept); } \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to##GetAccessKey(aAccessKey); } \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to##SetAccessKey(aAccessKey); } \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
-  NS_IMETHOD    GetAlt(nsString& aAlt) { return _to##GetAlt(aAlt); } \
-  NS_IMETHOD    SetAlt(const nsString& aAlt) { return _to##SetAlt(aAlt); } \
-  NS_IMETHOD    GetChecked(PRBool* aChecked) { return _to##GetChecked(aChecked); } \
-  NS_IMETHOD    SetChecked(PRBool aChecked) { return _to##SetChecked(aChecked); } \
-  NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to##GetDisabled(aDisabled); } \
-  NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to##SetDisabled(aDisabled); } \
-  NS_IMETHOD    GetMaxLength(PRInt32* aMaxLength) { return _to##GetMaxLength(aMaxLength); } \
-  NS_IMETHOD    SetMaxLength(PRInt32 aMaxLength) { return _to##SetMaxLength(aMaxLength); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
-  NS_IMETHOD    GetReadOnly(PRBool* aReadOnly) { return _to##GetReadOnly(aReadOnly); } \
-  NS_IMETHOD    SetReadOnly(PRBool aReadOnly) { return _to##SetReadOnly(aReadOnly); } \
-  NS_IMETHOD    GetSize(nsString& aSize) { return _to##GetSize(aSize); } \
-  NS_IMETHOD    SetSize(const nsString& aSize) { return _to##SetSize(aSize); } \
-  NS_IMETHOD    GetSrc(nsString& aSrc) { return _to##GetSrc(aSrc); } \
-  NS_IMETHOD    SetSrc(const nsString& aSrc) { return _to##SetSrc(aSrc); } \
-  NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to##GetTabIndex(aTabIndex); } \
-  NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return _to##SetTabIndex(aTabIndex); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
-  NS_IMETHOD    GetUseMap(nsString& aUseMap) { return _to##GetUseMap(aUseMap); } \
-  NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return _to##SetUseMap(aUseMap); } \
-  NS_IMETHOD    GetValue(nsString& aValue) { return _to##GetValue(aValue); } \
-  NS_IMETHOD    SetValue(const nsString& aValue) { return _to##SetValue(aValue); } \
-  NS_IMETHOD    Blur() { return _to##Blur(); }  \
-  NS_IMETHOD    Focus() { return _to##Focus(); }  \
-  NS_IMETHOD    Select() { return _to##Select(); }  \
-  NS_IMETHOD    Click() { return _to##Click(); }  \
+  NS_IMETHOD    GetDefaultValue(nsString& aDefaultValue) { return _to GetDefaultValue(aDefaultValue); } \
+  NS_IMETHOD    SetDefaultValue(const nsString& aDefaultValue) { return _to SetDefaultValue(aDefaultValue); } \
+  NS_IMETHOD    GetDefaultChecked(PRBool* aDefaultChecked) { return _to GetDefaultChecked(aDefaultChecked); } \
+  NS_IMETHOD    SetDefaultChecked(PRBool aDefaultChecked) { return _to SetDefaultChecked(aDefaultChecked); } \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
+  NS_IMETHOD    GetAccept(nsString& aAccept) { return _to GetAccept(aAccept); } \
+  NS_IMETHOD    SetAccept(const nsString& aAccept) { return _to SetAccept(aAccept); } \
+  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to SetAlign(aAlign); } \
+  NS_IMETHOD    GetAlt(nsString& aAlt) { return _to GetAlt(aAlt); } \
+  NS_IMETHOD    SetAlt(const nsString& aAlt) { return _to SetAlt(aAlt); } \
+  NS_IMETHOD    GetChecked(PRBool* aChecked) { return _to GetChecked(aChecked); } \
+  NS_IMETHOD    SetChecked(PRBool aChecked) { return _to SetChecked(aChecked); } \
+  NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
+  NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
+  NS_IMETHOD    GetMaxLength(PRInt32* aMaxLength) { return _to GetMaxLength(aMaxLength); } \
+  NS_IMETHOD    SetMaxLength(PRInt32 aMaxLength) { return _to SetMaxLength(aMaxLength); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetReadOnly(PRBool* aReadOnly) { return _to GetReadOnly(aReadOnly); } \
+  NS_IMETHOD    SetReadOnly(PRBool aReadOnly) { return _to SetReadOnly(aReadOnly); } \
+  NS_IMETHOD    GetSize(nsString& aSize) { return _to GetSize(aSize); } \
+  NS_IMETHOD    SetSize(const nsString& aSize) { return _to SetSize(aSize); } \
+  NS_IMETHOD    GetSrc(nsString& aSrc) { return _to GetSrc(aSrc); } \
+  NS_IMETHOD    SetSrc(const nsString& aSrc) { return _to SetSrc(aSrc); } \
+  NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to GetTabIndex(aTabIndex); } \
+  NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
+  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    GetUseMap(nsString& aUseMap) { return _to GetUseMap(aUseMap); } \
+  NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return _to SetUseMap(aUseMap); } \
+  NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \
+  NS_IMETHOD    SetValue(const nsString& aValue) { return _to SetValue(aValue); } \
+  NS_IMETHOD    Blur() { return _to Blur(); }  \
+  NS_IMETHOD    Focus() { return _to Focus(); }  \
+  NS_IMETHOD    Select() { return _to Select(); }  \
+  NS_IMETHOD    Click() { return _to Click(); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLInputElementClass(nsIScriptContext *aContext, void **aPrototype);

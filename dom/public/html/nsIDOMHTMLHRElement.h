@@ -61,14 +61,14 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLHRELEMENT(_to)  \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
-  NS_IMETHOD    GetNoShade(PRBool* aNoShade) { return _to##GetNoShade(aNoShade); } \
-  NS_IMETHOD    SetNoShade(PRBool aNoShade) { return _to##SetNoShade(aNoShade); } \
-  NS_IMETHOD    GetSize(nsString& aSize) { return _to##GetSize(aSize); } \
-  NS_IMETHOD    SetSize(const nsString& aSize) { return _to##SetSize(aSize); } \
-  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to##GetWidth(aWidth); } \
-  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to##SetWidth(aWidth); } \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to SetAlign(aAlign); } \
+  NS_IMETHOD    GetNoShade(PRBool* aNoShade) { return _to GetNoShade(aNoShade); } \
+  NS_IMETHOD    SetNoShade(PRBool aNoShade) { return _to SetNoShade(aNoShade); } \
+  NS_IMETHOD    GetSize(nsString& aSize) { return _to GetSize(aSize); } \
+  NS_IMETHOD    SetSize(const nsString& aSize) { return _to SetSize(aSize); } \
+  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to SetWidth(aWidth); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLHRElementClass(nsIScriptContext *aContext, void **aPrototype);

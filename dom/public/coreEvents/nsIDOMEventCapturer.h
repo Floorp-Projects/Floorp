@@ -47,8 +47,8 @@ public:
 
 
 #define NS_FORWARD_IDOMEVENTCAPTURER(_to)  \
-  NS_IMETHOD    CaptureEvent(const nsString& aType) { return _to##CaptureEvent(aType); }  \
-  NS_IMETHOD    ReleaseEvent(const nsString& aType) { return _to##ReleaseEvent(aType); }  \
+  NS_IMETHOD    CaptureEvent(const nsString& aType) { return _to CaptureEvent(aType); }  \
+  NS_IMETHOD    ReleaseEvent(const nsString& aType) { return _to ReleaseEvent(aType); }  \
 
 
 #endif // nsIDOMEventCapturer_h__

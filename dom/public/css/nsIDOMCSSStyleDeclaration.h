@@ -60,13 +60,13 @@ public:
 
 
 #define NS_FORWARD_IDOMCSSSTYLEDECLARATION(_to)  \
-  NS_IMETHOD    GetCssText(nsString& aCssText) { return _to##GetCssText(aCssText); } \
-  NS_IMETHOD    SetCssText(const nsString& aCssText) { return _to##SetCssText(aCssText); } \
-  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to##GetLength(aLength); } \
-  NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName, nsString& aReturn) { return _to##GetPropertyValue(aPropertyName, aReturn); }  \
-  NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName, nsString& aReturn) { return _to##GetPropertyPriority(aPropertyName, aReturn); }  \
-  NS_IMETHOD    SetProperty(const nsString& aPropertyName, const nsString& aValue, const nsString& aPriority) { return _to##SetProperty(aPropertyName, aValue, aPriority); }  \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn) { return _to##Item(aIndex, aReturn); }  \
+  NS_IMETHOD    GetCssText(nsString& aCssText) { return _to GetCssText(aCssText); } \
+  NS_IMETHOD    SetCssText(const nsString& aCssText) { return _to SetCssText(aCssText); } \
+  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
+  NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName, nsString& aReturn) { return _to GetPropertyValue(aPropertyName, aReturn); }  \
+  NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName, nsString& aReturn) { return _to GetPropertyPriority(aPropertyName, aReturn); }  \
+  NS_IMETHOD    SetProperty(const nsString& aPropertyName, const nsString& aValue, const nsString& aPriority) { return _to SetProperty(aPropertyName, aValue, aPriority); }  \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn) { return _to Item(aIndex, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitCSSStyleDeclarationClass(nsIScriptContext *aContext, void **aPrototype);

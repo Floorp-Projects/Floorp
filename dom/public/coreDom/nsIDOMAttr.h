@@ -52,10 +52,10 @@ public:
 
 
 #define NS_FORWARD_IDOMATTR(_to)  \
-  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
-  NS_IMETHOD    GetSpecified(PRBool* aSpecified) { return _to##GetSpecified(aSpecified); } \
-  NS_IMETHOD    GetValue(nsString& aValue) { return _to##GetValue(aValue); } \
-  NS_IMETHOD    SetValue(const nsString& aValue) { return _to##SetValue(aValue); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    GetSpecified(PRBool* aSpecified) { return _to GetSpecified(aSpecified); } \
+  NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \
+  NS_IMETHOD    SetValue(const nsString& aValue) { return _to SetValue(aValue); } \
 
 
 extern "C" NS_DOM nsresult NS_InitAttrClass(nsIScriptContext *aContext, void **aPrototype);

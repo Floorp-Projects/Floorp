@@ -52,10 +52,10 @@ public:
 
 
 #define NS_FORWARD_IDOMCSSSTYLERULE(_to)  \
-  NS_IMETHOD    GetSelectorText(nsString& aSelectorText) { return _to##GetSelectorText(aSelectorText); } \
-  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText) { return _to##SetSelectorText(aSelectorText); } \
-  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to##GetStyle(aStyle); } \
-  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle) { return _to##SetStyle(aStyle); } \
+  NS_IMETHOD    GetSelectorText(nsString& aSelectorText) { return _to GetSelectorText(aSelectorText); } \
+  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText) { return _to SetSelectorText(aSelectorText); } \
+  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to GetStyle(aStyle); } \
+  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle) { return _to SetStyle(aStyle); } \
 
 
 extern "C" NS_DOM nsresult NS_InitCSSStyleRuleClass(nsIScriptContext *aContext, void **aPrototype);

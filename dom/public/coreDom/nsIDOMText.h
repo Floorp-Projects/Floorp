@@ -45,7 +45,7 @@ public:
 
 
 #define NS_FORWARD_IDOMTEXT(_to)  \
-  NS_IMETHOD    SplitText(PRUint32 aOffset, nsIDOMText** aReturn) { return _to##SplitText(aOffset, aReturn); }  \
+  NS_IMETHOD    SplitText(PRUint32 aOffset, nsIDOMText** aReturn) { return _to SplitText(aOffset, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitTextClass(nsIScriptContext *aContext, void **aPrototype);

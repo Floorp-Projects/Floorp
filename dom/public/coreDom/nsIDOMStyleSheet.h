@@ -51,10 +51,10 @@ public:
 
 
 #define NS_FORWARD_IDOMSTYLESHEET(_to)  \
-  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
-  NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to##GetDisabled(aDisabled); } \
-  NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to##SetDisabled(aDisabled); } \
-  NS_IMETHOD    GetReadOnly(PRBool* aReadOnly) { return _to##GetReadOnly(aReadOnly); } \
+  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
+  NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
+  NS_IMETHOD    GetReadOnly(PRBool* aReadOnly) { return _to GetReadOnly(aReadOnly); } \
 
 
 extern "C" NS_DOM nsresult NS_InitStyleSheetClass(nsIScriptContext *aContext, void **aPrototype);

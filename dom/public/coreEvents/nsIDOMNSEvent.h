@@ -106,17 +106,17 @@ public:
 
 
 #define NS_FORWARD_IDOMNSEVENT(_to)  \
-  NS_IMETHOD    GetLayerX(PRInt32* aLayerX) { return _to##GetLayerX(aLayerX); } \
-  NS_IMETHOD    SetLayerX(PRInt32 aLayerX) { return _to##SetLayerX(aLayerX); } \
-  NS_IMETHOD    GetLayerY(PRInt32* aLayerY) { return _to##GetLayerY(aLayerY); } \
-  NS_IMETHOD    SetLayerY(PRInt32 aLayerY) { return _to##SetLayerY(aLayerY); } \
-  NS_IMETHOD    GetPageX(PRInt32* aPageX) { return _to##GetPageX(aPageX); } \
-  NS_IMETHOD    SetPageX(PRInt32 aPageX) { return _to##SetPageX(aPageX); } \
-  NS_IMETHOD    GetPageY(PRInt32* aPageY) { return _to##GetPageY(aPageY); } \
-  NS_IMETHOD    SetPageY(PRInt32 aPageY) { return _to##SetPageY(aPageY); } \
-  NS_IMETHOD    GetWhich(PRUint32* aWhich) { return _to##GetWhich(aWhich); } \
-  NS_IMETHOD    SetWhich(PRUint32 aWhich) { return _to##SetWhich(aWhich); } \
-  NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc) { return _to##GetRc(aRc); } \
+  NS_IMETHOD    GetLayerX(PRInt32* aLayerX) { return _to GetLayerX(aLayerX); } \
+  NS_IMETHOD    SetLayerX(PRInt32 aLayerX) { return _to SetLayerX(aLayerX); } \
+  NS_IMETHOD    GetLayerY(PRInt32* aLayerY) { return _to GetLayerY(aLayerY); } \
+  NS_IMETHOD    SetLayerY(PRInt32 aLayerY) { return _to SetLayerY(aLayerY); } \
+  NS_IMETHOD    GetPageX(PRInt32* aPageX) { return _to GetPageX(aPageX); } \
+  NS_IMETHOD    SetPageX(PRInt32 aPageX) { return _to SetPageX(aPageX); } \
+  NS_IMETHOD    GetPageY(PRInt32* aPageY) { return _to GetPageY(aPageY); } \
+  NS_IMETHOD    SetPageY(PRInt32 aPageY) { return _to SetPageY(aPageY); } \
+  NS_IMETHOD    GetWhich(PRUint32* aWhich) { return _to GetWhich(aWhich); } \
+  NS_IMETHOD    SetWhich(PRUint32 aWhich) { return _to SetWhich(aWhich); } \
+  NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc) { return _to GetRc(aRc); } \
 
 
 #endif // nsIDOMNSEvent_h__

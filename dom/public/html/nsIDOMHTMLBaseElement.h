@@ -51,10 +51,10 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLBASEELEMENT(_to)  \
-  NS_IMETHOD    GetHref(nsString& aHref) { return _to##GetHref(aHref); } \
-  NS_IMETHOD    SetHref(const nsString& aHref) { return _to##SetHref(aHref); } \
-  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to##GetTarget(aTarget); } \
-  NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to##SetTarget(aTarget); } \
+  NS_IMETHOD    GetHref(nsString& aHref) { return _to GetHref(aHref); } \
+  NS_IMETHOD    SetHref(const nsString& aHref) { return _to SetHref(aHref); } \
+  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to SetTarget(aTarget); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLBaseElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -61,14 +61,14 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLMETAELEMENT(_to)  \
-  NS_IMETHOD    GetContent(nsString& aContent) { return _to##GetContent(aContent); } \
-  NS_IMETHOD    SetContent(const nsString& aContent) { return _to##SetContent(aContent); } \
-  NS_IMETHOD    GetHttpEquiv(nsString& aHttpEquiv) { return _to##GetHttpEquiv(aHttpEquiv); } \
-  NS_IMETHOD    SetHttpEquiv(const nsString& aHttpEquiv) { return _to##SetHttpEquiv(aHttpEquiv); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
-  NS_IMETHOD    GetScheme(nsString& aScheme) { return _to##GetScheme(aScheme); } \
-  NS_IMETHOD    SetScheme(const nsString& aScheme) { return _to##SetScheme(aScheme); } \
+  NS_IMETHOD    GetContent(nsString& aContent) { return _to GetContent(aContent); } \
+  NS_IMETHOD    SetContent(const nsString& aContent) { return _to SetContent(aContent); } \
+  NS_IMETHOD    GetHttpEquiv(nsString& aHttpEquiv) { return _to GetHttpEquiv(aHttpEquiv); } \
+  NS_IMETHOD    SetHttpEquiv(const nsString& aHttpEquiv) { return _to SetHttpEquiv(aHttpEquiv); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetScheme(nsString& aScheme) { return _to GetScheme(aScheme); } \
+  NS_IMETHOD    SetScheme(const nsString& aScheme) { return _to SetScheme(aScheme); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLMetaElementClass(nsIScriptContext *aContext, void **aPrototype);

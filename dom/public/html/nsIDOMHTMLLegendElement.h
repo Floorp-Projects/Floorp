@@ -55,11 +55,11 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLLEGENDELEMENT(_to)  \
-  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to##GetForm(aForm); } \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to##GetAccessKey(aAccessKey); } \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to##SetAccessKey(aAccessKey); } \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
+  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to SetAlign(aAlign); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLLegendElementClass(nsIScriptContext *aContext, void **aPrototype);

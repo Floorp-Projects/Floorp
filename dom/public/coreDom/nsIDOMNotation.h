@@ -47,8 +47,8 @@ public:
 
 
 #define NS_FORWARD_IDOMNOTATION(_to)  \
-  NS_IMETHOD    GetPublicId(nsString& aPublicId) { return _to##GetPublicId(aPublicId); } \
-  NS_IMETHOD    GetSystemId(nsString& aSystemId) { return _to##GetSystemId(aSystemId); } \
+  NS_IMETHOD    GetPublicId(nsString& aPublicId) { return _to GetPublicId(aPublicId); } \
+  NS_IMETHOD    GetSystemId(nsString& aSystemId) { return _to GetSystemId(aSystemId); } \
 
 
 extern "C" NS_DOM nsresult NS_InitNotationClass(nsIScriptContext *aContext, void **aPrototype);

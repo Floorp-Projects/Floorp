@@ -43,7 +43,7 @@ public:
 
 
 #define NS_FORWARD_IDOMSELECTIONLISTENER(_to)  \
-  NS_IMETHOD    NotifySelectionChanged() { return _to##NotifySelectionChanged(); }  \
+  NS_IMETHOD    NotifySelectionChanged() { return _to NotifySelectionChanged(); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitSelectionListenerClass(nsIScriptContext *aContext, void **aPrototype);

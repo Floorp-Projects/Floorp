@@ -56,11 +56,11 @@ public:
 
 
 #define NS_FORWARD_IDOMCSSMEDIARULE(_to)  \
-  NS_IMETHOD    GetMediaTypes(nsString& aMediaTypes) { return _to##GetMediaTypes(aMediaTypes); } \
-  NS_IMETHOD    SetMediaTypes(const nsString& aMediaTypes) { return _to##SetMediaTypes(aMediaTypes); } \
-  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules) { return _to##GetCssRules(aCssRules); } \
-  NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn) { return _to##InsertRule(aRule, aIndex, aReturn); }  \
-  NS_IMETHOD    DeleteRule(PRUint32 aIndex) { return _to##DeleteRule(aIndex); }  \
+  NS_IMETHOD    GetMediaTypes(nsString& aMediaTypes) { return _to GetMediaTypes(aMediaTypes); } \
+  NS_IMETHOD    SetMediaTypes(const nsString& aMediaTypes) { return _to SetMediaTypes(aMediaTypes); } \
+  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules) { return _to GetCssRules(aCssRules); } \
+  NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn) { return _to InsertRule(aRule, aIndex, aReturn); }  \
+  NS_IMETHOD    DeleteRule(PRUint32 aIndex) { return _to DeleteRule(aIndex); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitCSSMediaRuleClass(nsIScriptContext *aContext, void **aPrototype);

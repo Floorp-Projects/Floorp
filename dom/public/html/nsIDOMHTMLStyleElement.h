@@ -56,12 +56,12 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLSTYLEELEMENT(_to)  \
-  NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to##GetDisabled(aDisabled); } \
-  NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to##SetDisabled(aDisabled); } \
-  NS_IMETHOD    GetMedia(nsString& aMedia) { return _to##GetMedia(aMedia); } \
-  NS_IMETHOD    SetMedia(const nsString& aMedia) { return _to##SetMedia(aMedia); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
+  NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
+  NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
+  NS_IMETHOD    GetMedia(nsString& aMedia) { return _to GetMedia(aMedia); } \
+  NS_IMETHOD    SetMedia(const nsString& aMedia) { return _to SetMedia(aMedia); } \
+  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLStyleElementClass(nsIScriptContext *aContext, void **aPrototype);

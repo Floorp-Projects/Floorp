@@ -47,8 +47,8 @@ public:
 
 
 #define NS_FORWARD_IDOMCSSFONTFACERULE(_to)  \
-  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to##GetStyle(aStyle); } \
-  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle) { return _to##SetStyle(aStyle); } \
+  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to GetStyle(aStyle); } \
+  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle) { return _to SetStyle(aStyle); } \
 
 
 extern "C" NS_DOM nsresult NS_InitCSSFontFaceRuleClass(nsIScriptContext *aContext, void **aPrototype);
