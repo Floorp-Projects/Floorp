@@ -181,7 +181,7 @@ protected:
     nsresult PlatformMarkNoComponents(nsDll *dll);
     nsresult PlatformRegister(const char *cidString, const char *className, const char *progID, nsDll *dll);
     nsresult PlatformUnregister(const char *cidString, const char *aLibrary);
-    nsresult PlatformFind(const nsCID &aCID, nsFactoryEntry* *result);
+    nsresult PlatformFind(const nsCID &aCID, nsDll* *aDll);
     nsresult PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass);
     nsresult PlatformCLSIDToProgID(nsCID *aClass, char* *aClassName, char* *aProgID);
     void     PlatformGetFileInfo(nsIRegistry::Key Key, PRUint32 *lastModifiedTime, PRUint32 *fileSize);
