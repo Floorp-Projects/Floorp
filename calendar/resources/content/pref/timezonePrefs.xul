@@ -47,7 +47,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	onload="parent.initPanel('chrome://calendar/content/pref/timezonePrefs.xul');"
-      headertitle="&calendarPanel.label;">
+      headertitle="&calendar.timezone.label;">
 
    <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
    <script type="application/x-javascript" src="chrome://global/content/strres.js"/>

@@ -47,7 +47,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://calendar/content/pref/alarmPrefs.xul');initAlarmPrefs();"
-      headertitle="&calendarPanel.label;">
+      headertitle="&calendar.alarms.label;">
 
    <script type="application/x-javascript" src="chrome://calendar/content/pref/alarmPrefs.js"/>
    <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
