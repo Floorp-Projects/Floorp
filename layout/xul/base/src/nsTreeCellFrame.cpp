@@ -29,6 +29,8 @@
 #include "nsIViewManager.h"
 #include "nsCSSRendering.h"
 #include "nsXULAtoms.h"
+#include "nsCOMPtr.h"
+
 
 static void ForceDrawFrame(nsIFrame * aFrame)
 {
@@ -42,13 +44,11 @@ static void ForceDrawFrame(nsIFrame * aFrame)
   aFrame->GetRect(rect);
   rect.x = pnt.x;
   rect.y = pnt.y;
-  if (view != nsnull) {
-    nsIViewManager * viewMgr;
-    view->GetViewManager(viewMgr);
-    if (viewMgr != nsnull) {
+  if (view) {
+    nsCOMPtr<nsIViewManager> viewMgr;
+    view->GetViewManager(*getter_AddRefs(viewMgr));
+    if (viewMgr)
       viewMgr->UpdateView(view, rect, 0);
-      NS_RELEASE(viewMgr);
-    }
   }
 
 }
@@ -94,8 +94,8 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
   if (pRowGroupFrame != nsnull)
   {
 		// Get the display type of the row group frame and see if it's a header or body
-		nsIStyleContext* parentContext = nsnull;
-		pRowGroupFrame->GetStyleContext(parentContext);
+		nsCOMPtr<nsIStyleContext> parentContext;
+		pRowGroupFrame->GetStyleContext(*getter_AddRefs(parentContext));
 		if (parentContext)
 		{
 			const nsStyleDisplay* display = (const nsStyleDisplay*)
@@ -105,7 +105,6 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
 				mIsHeader = PR_TRUE;
 			}
 			else mIsHeader = PR_FALSE;
-			NS_IF_RELEASE(parentContext);
 
 			// Get the table frame.
 			pRowGroupFrame->GetParent((nsIFrame*&)mTreeFrame);
@@ -194,14 +193,14 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
   {
     // Perform an expand/collapse
 	// Iterate up the chain to the row and then to the item.
-	nsIContent* pRowContent;
-	nsIContent* pTreeItemContent;
-	mContent->GetParent(pRowContent);
-	pRowContent->GetParent(pTreeItemContent);
+	nsCOMPtr<nsIContent> pRowContent;
+	nsCOMPtr<nsIContent> pTreeItemContent;
+	mContent->GetParent(*getter_AddRefs(pRowContent));
+	pRowContent->GetParent(*getter_AddRefs(pTreeItemContent));
 
 	// Take the tree item content and toggle the value of its open attribute.
 	nsString attrValue;
-    nsIAtom* kOpenAtom = NS_NewAtom("open");
+    nsCOMPtr<nsIAtom> kOpenAtom ( dont_AddRef(NS_NewAtom("open")) );
     nsresult result = pTreeItemContent->GetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, attrValue);
     attrValue.ToLowerCase();
     PRBool isExpanded =  (result == NS_CONTENT_ATTR_NO_VALUE ||
@@ -218,10 +217,10 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 	}
 
 	// Ok, try out the hack of doing frame reconstruction
-	nsIPresShell* pShell = aPresContext.GetShell();
-	nsIStyleSet* pStyleSet = pShell->GetStyleSet();
-	nsIDocument* pDocument = pShell->GetDocument();
-	nsIContent* pRoot = pDocument->GetRootContent();
+	nsCOMPtr<nsIPresShell> pShell ( dont_AddRef(aPresContext.GetShell()) );
+	nsCOMPtr<nsIStyleSet> pStyleSet ( dont_AddRef(pShell->GetStyleSet()) );
+	nsCOMPtr<nsIDocument> pDocument ( dont_AddRef(pShell->GetDocument()) );
+	nsCOMPtr<nsIContent> pRoot ( dont_AddRef(pDocument->GetRootContent()) );
 	
 	if (pRoot) {
 		nsIFrame*   docElementFrame;
@@ -239,14 +238,6 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 		}
     }
 
-	NS_RELEASE(pShell);
-	NS_RELEASE(pStyleSet);
-	NS_RELEASE(pDocument);
-	NS_IF_RELEASE(pRoot);
-
-	NS_RELEASE(kOpenAtom);
-    NS_RELEASE(pTreeItemContent);
-	NS_RELEASE(pRowContent);
   }
   return NS_OK;
 }
@@ -255,7 +246,7 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 void
 nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected)
 {
-	nsIAtom* kSelectedAtom = NS_NewAtom("selected");
+	nsCOMPtr<nsIAtom> kSelectedAtom ( dont_AddRef(NS_NewAtom("selected")) );
     if (isSelected)
 	{
 		// We're selecting the node.
@@ -268,5 +259,4 @@ nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected)
 		mContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, PR_TRUE);
 	}
 
-	NS_RELEASE(kSelectedAtom);
 }
