@@ -131,7 +131,7 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
                      *getter_AddRefs(nodeInfo));
 
-  nsCOMPtr<nsIElementFactory> ef(do_CreateInstance(kHTMLElementFactoryCID,&rv));
+  nsCOMPtr<nsIElementFactory> ef(do_GetService(kHTMLElementFactoryCID,&rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create the text content

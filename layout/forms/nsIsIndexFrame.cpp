@@ -233,7 +233,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   result = doc->GetNodeInfoManager(*getter_AddRefs(nimgr));
   NS_ENSURE_SUCCESS(result, result);
 
-  nsCOMPtr<nsIElementFactory> ef(do_CreateInstance(kHTMLElementFactoryCID,&result));
+  nsCOMPtr<nsIElementFactory> ef(do_GetService(kHTMLElementFactoryCID,&result));
   NS_ENSURE_SUCCESS(result, result);
 
   // Create an hr
