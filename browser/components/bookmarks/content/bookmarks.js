@@ -1618,16 +1618,6 @@ var BookmarksUtils = {
       return "current";
   },
 
-  loadBookmarkBrowserMiddleClick: function (aEvent, aDS)
-  {
-    if (aEvent.button != 1)
-      return;
-    // unlike for command events, we have to close the menus manually
-    personalToolbarDNDObserver.mCurrentDragOverTarget = null;
-    personalToolbarDNDObserver.onDragCloseTarget();
-    this.loadBookmarkBrowser(aEvent, aEvent.originalTarget, aDS);
-  },
-
   loadBookmarkBrowser: function (aEvent, aTarget, aDS)
   {
     var rSource   = RDF.GetResource(aTarget.id);
