@@ -628,9 +628,9 @@ nsHTTPChannel::Open(void)
         //
         rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
         if (factory) {
-          nsIStreamListener *newListener;
+          nsCOMPtr<nsIStreamListener> newListener;
           rv = factory->CreateLoadGroupListener(mResponseDataListener, 
-                                                &newListener);
+                                                getter_AddRefs(newListener));
           if (NS_SUCCEEDED(rv)) {
             // Already AddRefed from the factory...
             mResponseDataListener = newListener;
