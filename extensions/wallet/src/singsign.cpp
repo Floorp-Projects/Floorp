@@ -753,11 +753,19 @@ si_GetURL(const char * passwordRealm) {
     }
     return (si_SignonURLStruct *) (si_signon_list->ElementAt(0));
   }
+
   PRInt32 urlCount = LIST_COUNT(si_signon_list);
-  for (PRInt32 i=0; i<urlCount; i++) {
-    url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
-    if(url->passwordRealm && !PL_strcmp(passwordRealm, url->passwordRealm)) {
-      return url;
+  if (urlCount) {
+    // If the last char of passwordRealm is '/' then strip it before making comparison.
+    nsCAutoString realmWithoutTrailingSlash(passwordRealm);
+    if (realmWithoutTrailingSlash.Last() == '/')
+      realmWithoutTrailingSlash.SetLength(realmWithoutTrailingSlash.Length()-1);
+
+    for (PRInt32 i=0; i<urlCount; i++) {
+      url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
+      if(url->passwordRealm && !PL_strcmp(realmWithoutTrailingSlash.get(), url->passwordRealm)) {
+        return url;
+      }
     }
   }
   return (NULL);
