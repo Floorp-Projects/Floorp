@@ -576,7 +576,8 @@ public class NativeGlobal implements IdFunctionMaster {
 
         Object args[] = { message };
         try {
-            Object errorObject = cx.newObject(scopeObject, error, args);
+            Scriptable errorObject = cx.newObject(scopeObject, error, args);
+            errorObject.put("name", errorObject, error);
             return new EcmaError((NativeError)errorObject, sourceName,
                                  lineNumber, columnNumber, lineSource);
         }
