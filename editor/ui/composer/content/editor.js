@@ -1798,7 +1798,7 @@ function EditorSetSelectionFromOffsets(selRanges)
   var rangeArr, start, end, node, offset;
   var selection = editorShell.editorSelection;
 
-  selection.clearSelection();
+  selection.removeAllRanges();
 
   for (var i = 0; i < selRanges.length; i++)
   {

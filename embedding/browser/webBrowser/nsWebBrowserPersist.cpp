@@ -22,8 +22,13 @@
 
 #include "nspr.h"
 
+#define NO_XPCOM_FILE_STREAMS
+#include "nsIFileStream.h"        // Old XPCOM file streams
+#undef NO_XPCOM_FILE_STREAMS
+
+#include "nsIFileStreams.h"       // New Necko file streams
+
 #include "nsNetUtil.h"
-#include "nsFileStream.h"
 #include "nsIFileTransportService.h"
 #include "nsIHTTPChannel.h"
 #include "nsEscape.h"
@@ -252,6 +257,18 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
     // Store the base URI
     doc->GetBaseURL(*getter_AddRefs(mBaseURI));
 
+    nsCOMPtr<nsILocalFile> fileSpec(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) {
+       OnEndDownload();
+       return rv;
+    }
+    
+    rv = fileSpec->InitWithPath(aFileName);
+    if (NS_FAILED(rv)) {
+       OnEndDownload();
+       return rv;
+    }
+
     // Does the caller want to fixup the referenced URIs and save those too?
     if (aDataPath)
     {
@@ -286,20 +303,19 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
         nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(docAsNode);
         nsString contentType; contentType.AssignWithConversion("text/html"); // TODO
         nsString charType; // Empty
-        nsFileSpec fileSpec(aFileName);
-
+        
         nsEncoderNodeFixup *nodeFixup;
         nodeFixup = new nsEncoderNodeFixup;
         nodeFixup->mWebBrowserPersist = this;
 
         // Set the document base to ensure relative links still work
         SetDocumentBase(aDocument, mBaseURI);
- 
+
         // Save the document, fixing up the links as it goes out
         rv = SaveDocumentToFileWithFixup(
             doc,
             nodeFixup,
-            &fileSpec,
+            fileSpec,
             PR_TRUE  /* replace existing file */,
             PR_TRUE, /* save as a copy */
             contentType,
@@ -318,13 +334,13 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
         nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(docAsNode);
         nsString contentType; contentType.AssignWithConversion("text/html"); // TODO
         nsString charType; // Empty
-        nsFileSpec fileSpec(aFileName);
+
         rv = diskDoc->SaveFile(
-            &fileSpec,
+            fileSpec,
             PR_TRUE  /* replace existing file */,
             PR_TRUE, /* save as a copy */
-            contentType,
-            charType,
+            contentType.GetUnicode(),
+            charType.GetUnicode(),
             0, 72);
     }
 
@@ -775,7 +791,7 @@ nsresult
 nsWebBrowserPersist::SaveDocumentToFileWithFixup(
         nsIDocument    *aDocument,
         nsIDocumentEncoderNodeFixup *aNodeFixup,
-        nsFileSpec*     aFileSpec,
+        nsIFile*        aFileSpec,
         PRBool          aReplaceExisting,
         PRBool          aSaveCopy,
         const nsString& aFormatType,
@@ -795,39 +811,26 @@ nsWebBrowserPersist::SaveDocumentToFileWithFixup(
 
     // if we're not replacing an existing file but the file
     // exists, somethine is wrong
-    if (!aReplaceExisting && aFileSpec->Exists())
-    {
-        return NS_ERROR_FAILURE;        // where are the file I/O errors?
-    }
+    PRBool  fileExists;
+    rv = aFileSpec->Exists(&fileExists);
+    if (NS_FAILED(rv)) return rv;
+    
+    if (!aReplaceExisting && fileExists)
+      return NS_ERROR_FAILURE;				// where are the file I/O errors?
   
-    nsOutputFileStream    stream(*aFileSpec);
-    // if the stream didn't open, something went wrong
-    if (!stream.is_open())
-    {
-        return NS_BASE_STREAM_CLOSED;
-    }
+    nsCOMPtr<nsIFileOutputStream> outputStream = do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = outputStream->Init(aFileSpec, -1, -1);
+    if (NS_FAILED(rv)) return rv;
 
-    // Get a document encoder instance:
-    nsCOMPtr<nsIDocumentEncoder> encoder;
-    char* contractid = (char *)nsMemory::Alloc(strlen(NS_DOC_ENCODER_CONTRACTID_BASE)
-                                            + aFormatType.Length() + 1);
-    if (! contractid)
-    {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    strcpy(contractid, NS_DOC_ENCODER_CONTRACTID_BASE);
-    char* type = aFormatType.ToNewCString();
-    strcat(contractid, type);
-    nsCRT::free(type);
-    rv = nsComponentManager::CreateInstance(contractid,
-                                          nsnull,
-                                          NS_GET_IID(nsIDocumentEncoder),
-                                          getter_AddRefs(encoder));
-    nsCRT::free(contractid);
+    // Get a document encoder instance
+    nsCAutoString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
+    contractID.AppendWithConversion(aFormatType);
+    
+    nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(contractID, &rv);
     if (NS_FAILED(rv))
-    {
-        return rv;
-    }
+      return rv;
 
     rv = encoder->Init(aDocument, aFormatType, aFlags);
     if (NS_FAILED(rv))
@@ -850,7 +853,7 @@ nsWebBrowserPersist::SaveDocumentToFileWithFixup(
     }
     encoder->SetCharset(charsetStr);
 
-    rv = encoder->EncodeToStream(stream.GetIStream());
+    rv = encoder->EncodeToStream(outputStream);
 
     return rv;
 }

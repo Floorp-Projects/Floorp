@@ -73,6 +73,10 @@ public:
     NS_IMETHOD                         SetAtEOF(PRBool inAtEOF) = 0;
 }; // class nsIRandomAccessStore
 
+
+#ifndef NO_XPCOM_FILE_STREAMS   // hack to work around duplicate class definitions in here
+                                // and mozilla/netwerks/base/nsIFileStreams.idl
+
 /* a6cf90e6-15b3-11d2-932e-00805f8add32 */
 #define NS_IFILEINPUTSTREAM_IID \
 { 0xa6cf90e6, 0x15b3, 0x11d2, \
@@ -106,6 +110,8 @@ class nsIFileOutputStream
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IFILEOUTPUTSTREAM_IID; return iid; }
 }; // class nsIFileOutputStream
+
+#endif // NO_XPCOM_FILE_STREAMS
 
 //----------------------------------------------------------------------------------------
 extern "C" NS_COM nsresult NS_NewTypicalInputFileStream(

@@ -8,7 +8,6 @@ nsICaret.h
 nsIContent.h
 nsIContentIterator.h
 nsContentPolicyUtils.h
-nsIDiskDocument.h
 nsIDocument.h
 nsIDocumentContainer.h
 nsIDocumentEncoder.h

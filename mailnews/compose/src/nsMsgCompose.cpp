@@ -28,6 +28,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMDocument.h"
+#include "nsIDiskDocument.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -942,12 +943,12 @@ nsresult nsMsgCompose::SetBodyModified(PRBool modified)
 			if (modified)
 			{
 				PRInt32  modCount = 0;
-				diskDoc->GetModCount(&modCount);
+				diskDoc->GetModificationCount(&modCount);
 				if (modCount == 0)
-					diskDoc->IncrementModCount(1);
+					diskDoc->IncrementModificationCount(1);
 			}
 			else
-				diskDoc->ResetModCount();
+				diskDoc->ResetModificationCount();
 		}
 	}
 

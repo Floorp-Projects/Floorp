@@ -37,7 +37,6 @@ nsICaret.h \
 nsIContent.h \
 nsIContentIterator.h \
 nsContentPolicyUtils.h \
-nsIDiskDocument.h \
 nsIDocument.h \
 nsIDocumentContainer.h \
 nsIDocumentEncoder.h \
@@ -98,6 +97,7 @@ $(NULL)
 XPIDLSRCS	= \
 		nsIChromeEventHandler.idl	\
 		nsIContentPolicy.idl        \
+		nsIDiskDocument.idl         \
 		nsISelectionController.idl  \
 		nsISelectionListener.idl  \
 		nsISelection.idl  \

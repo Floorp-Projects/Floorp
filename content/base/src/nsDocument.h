@@ -411,19 +411,7 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
 
   // nsIDiskDocument inteface
-  NS_IMETHOD  InitDiskDocument(nsFileSpec *aFileSpec);
-  NS_IMETHOD  SaveFile(nsFileSpec*     aFileSpec,
-                       PRBool          aReplaceExisting,
-                       PRBool          aSaveCopy,
-                       const nsString& aSaveFileType,
-                       const nsString& aSaveCharset,
-                       PRUint32        aFlags,
-                       PRUint32        aWrapColumn);
-
-  NS_IMETHOD  GetFileSpec(nsFileSpec& aFileSpec);
-  NS_IMETHOD  GetModCount(PRInt32 *outModCount);
-  NS_IMETHOD  ResetModCount();
-  NS_IMETHOD  IncrementModCount(PRInt32 aNumMods);
+  NS_DECL_NSIDISKDOCUMENT
 
   // nsIDOMEventTarget interface
   NS_IMETHOD AddEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, 
@@ -503,8 +491,8 @@ protected:
   PRInt32 mNextContentID;
 
   // disk file members
-  nsFileSpec*     mFileSpec;
-  PRInt32         mModCount;
+  nsCOMPtr<nsIFile>   mFileSpec;
+  PRInt32             mModCount;
 
   nsIDTD* mDTD;
 

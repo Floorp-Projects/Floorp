@@ -1530,7 +1530,7 @@ nsEditor::GetDocumentModified(PRBool *outDocModified)
   if (NS_FAILED(rv)) return rv;
 
   PRInt32  modCount = 0;
-  diskDoc->GetModCount(&modCount);
+  diskDoc->GetModificationCount(&modCount);
 
   *outDocModified = (modCount != 0);
   return NS_OK;
@@ -1602,7 +1602,7 @@ nsEditor::GetWrapWidth(PRInt32 *aWrapColumn)
 }
 
 NS_IMETHODIMP 
-nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting,
+nsEditor::SaveFile(nsIFile *aFileSpec, PRBool aReplaceExisting,
                    PRBool aSaveCopy, const nsString& aFormat)
 {
   if (!aFileSpec)
@@ -1633,9 +1633,8 @@ nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting,
 
   PRInt32 wrapColumn = 72;
   GetWrapWidth(&wrapColumn);
-  nsAutoString useDocCharset;
   rv = diskDoc->SaveFile(aFileSpec, aReplaceExisting, aSaveCopy, 
-                         aFormat, useDocCharset, flags, wrapColumn);
+                          aFormat.GetUnicode(), NS_LITERAL_STRING(""), flags, wrapColumn);
   if (NS_SUCCEEDED(rv))
     DoAfterDocumentSave();
 
@@ -4288,7 +4287,7 @@ NS_IMETHODIMP nsEditor::IncDocModCount(PRInt32 inNumMods)
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(doc);
   if (diskDoc)
-    diskDoc->IncrementModCount(inNumMods);
+    diskDoc->IncrementModificationCount(inNumMods);
 
   NotifyDocumentListeners(eDocumentStateChanged);
   return NS_OK;
@@ -4305,7 +4304,7 @@ NS_IMETHODIMP nsEditor::GetDocModCount(PRInt32 &outModCount)
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(doc);
   if (diskDoc)
-    diskDoc->GetModCount(&outModCount);
+    diskDoc->GetModificationCount(&outModCount);
 
   return NS_OK;
 }
@@ -4319,7 +4318,7 @@ NS_IMETHODIMP nsEditor::ResetDocModCount()
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(doc);
   if (diskDoc)
-    diskDoc->ResetModCount();
+    diskDoc->ResetModificationCount();
 
   NotifyDocumentListeners(eDocumentStateChanged);
   return NS_OK;

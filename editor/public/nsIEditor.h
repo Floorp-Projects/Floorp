@@ -24,7 +24,6 @@
 #define nsIEditor_h__
 #include "nsISupports.h"
 #include "nscore.h"
-#include "nsIDiskDocument.h"
 #include "nsString.h"
 
 #define NS_IEDITOR_IID \
@@ -41,10 +40,10 @@ class nsISelection;
 class nsITransaction;
 class nsITransactionManager;
 class nsIOutputStream;
+class nsIFile;
 class nsIEditActionListener;
 class nsIEditorObserver;
 class nsIDocumentStateListener;
-class nsFileSpec;
 class nsISelectionController;
 class nsIContent;
 class nsIDOMEvent;
@@ -171,7 +170,7 @@ public:
    *  @param aFormat
    *          Mime type to save (text/plain or text/html)
    */
-  NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, const nsString& aFormat)=0;
+  NS_IMETHOD SaveFile(nsIFile *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, const nsString& aFormat)=0;
 
   /* ------------ Transaction methods -------------- */
 

@@ -41,7 +41,7 @@ public:
 
 
   /* Start logging */
-  NS_IMETHOD StartLogging(nsIFileSpec *aLogFile)=0;
+  NS_IMETHOD StartLogging(nsIFile *aLogFile)=0;
 
   /* Stop logging */
   NS_IMETHOD StopLogging()=0;

@@ -41,7 +41,6 @@
 #include "nsIComponentManager.h"
 #include "nsISupportsArray.h"
 #include "nsIEditProperty.h"
-#include "nsIFileSpec.h"
 #include "nsIDOMCharacterData.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDTD.h"
@@ -69,7 +68,7 @@ class nsILocale;
 class IMETextTxn;
 class AddStyleSheetTxn;
 class RemoveStyleSheetTxn;
-class nsFileSpec;
+class nsIFile;
 class nsISelectionController;
 
 
@@ -246,7 +245,7 @@ public:
   NS_IMETHOD GetDocumentModified(PRBool *outDocModified);
   NS_IMETHOD GetDocumentCharacterSet(PRUnichar** characterSet);
   NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet);
-  NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, const nsString& aFormat);
+  NS_IMETHOD SaveFile(nsIFile *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, const nsString& aFormat);
 
   // these are pure virtual in this base class
   NS_IMETHOD Cut() = 0;
