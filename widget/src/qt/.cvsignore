@@ -1,0 +1,14 @@
+Makefile
+moc_nsQApplication.cpp
+moc_nsComboBox.cpp
+moc_nsLabel.cpp
+moc_nsScrollbar.cpp
+moc_nsButton.cpp
+moc_nsListBox.cpp
+moc_nsTextAreaWidget.cpp
+moc_nsCheckButton.cpp
+moc_nsTextWidget.cpp
+moc_nsTabWidget.cpp
+moc_nsQEventHandler.cpp
+moc_nsRadioButton.cpp
+moc_nsWindow.cpp
