@@ -36,7 +36,7 @@
  */
 class nsICookieStorage : public nsISupports {
 public:
-	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOOKIEMANAGER_IID)
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOOKIESTORAGE_IID)
 
 	/**
 	 * Retrieves a cookie from the browser's persistent cookie store.
