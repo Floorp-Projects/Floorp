@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.98 $ ';
+$::UtilsVersion = '$Revision: 1.99 $ ';
 
 package TinderUtils;
 
@@ -946,7 +946,7 @@ sub run_all_tests {
 											  $build_dir,
 											  $binary,
 											  " -P $Settings::MozProfileName " . $url,
-											  $Settings::XULOpenWindowTestTimeout,
+											  $Settings::XULWindowOpenTestTimeout,
 											  "__xulWinOpenTime",
 											  ":");
 			chomp($open_time);

@@ -46,7 +46,7 @@ $JavaTestTimeout                = 45;
 $DomTestTimeout	                = 45;     # seconds
 $LayoutPerformanceTestTimeout   = 1200;  # seconds
 $StartupPerformanceTestTimeout  = 60;    # seconds
-$XULOpenWindowTestTimeout	    = 90;   # seconds
+$XULWindowOpenTestTimeout	    = 150;   # seconds
 
 
 $MozConfigFileName = 'mozconfig';
