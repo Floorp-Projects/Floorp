@@ -131,6 +131,7 @@ bin\components\ucharuti.dll
 bin\components\uconv.dll
 bin\components\uconv.xpt
 bin\components\ucvcn.dll
+bin\components\ucvibm.dll
 bin\components\ucvja.dll
 bin\components\ucvko.dll
 bin\components\ucvlatin.dll
@@ -197,6 +198,8 @@ bin\res\ua.css
 bin\res\arrow.gif
 bin\res\wincharset.properties
 bin\res\charsetalias.properties
+bin\res\charsetData.properties
+bin\res\charsetTitles.properties
 bin\res\entityTables\*
 bin\res\rdf\article.gif
 bin\res\rdf\document.gif

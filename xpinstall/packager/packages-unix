@@ -97,6 +97,7 @@ bin/components/libtxmgr.so
 bin/components/libtxtsvc.so
 bin/components/libuconv.so
 bin/components/libucvcn.so
+bin/components/libucvibm.so
 bin/components/libucvja.so
 bin/components/libucvko.so
 bin/components/libucvlatin.so
@@ -218,6 +219,8 @@ bin/res/URLFieldSchema.tbl
 bin/res/arrow.gif
 bin/res/charsetalias.properties
 bin/res/unixcharset.properties
+bin/res/charsetData.properties
+bin/res/charsetTitles.properties
 bin/res/html.css
 bin/res/html/*
 bin/res/rdf/article.gif

@@ -140,6 +140,7 @@ viewer:Components:uconv.shlb
 viewer:Components:uconv.xpt 
 viewer:Components:ucth.shlb 
 viewer:Components:ucvcn.shlb 
+viewer:Components:ucvibm.shlb 
 viewer:Components:ucvja.shlb 
 viewer:Components:ucvko.shlb 
 viewer:Components:ucvlatin.shlb 
@@ -196,6 +197,8 @@ viewer:defaults:pref:xpinstall.js
 viewer:defaults:profile:*
 viewer:res:arrow.gif
 viewer:res:charsetalias.properties 
+viewer:res:charsetData.properties 
+viewer:res:charsetTitles.properties 
 viewer:res:entityTables:*
 viewer:res:FieldSchema.tbl
 viewer:res:html:*
