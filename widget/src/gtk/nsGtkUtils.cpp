@@ -16,13 +16,13 @@
  * Reserved.
  */
 
+#include <unistd.h>
+#include <string.h>
+
 #include "nsGtkUtils.h"
 
 #include <gdk/gdkx.h>
 #include <gdk/gdkprivate.h>
-
-#include <unistd.h>
-#include <string.h>
 
 #if defined(__osf__) && !defined(_XOPEN_SOURCE_EXTENDED)
 /*
