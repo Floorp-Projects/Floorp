@@ -629,7 +629,8 @@ nsWebShell::ReloadDocument(const char* aCharset,
          muDV->SetHintCharacterSet(NS_ConvertASCIItoUCS2(aCharset).GetUnicode());
          muDV->SetHintCharacterSetSource((PRInt32)aSource);
          mCharsetReloadState = eCharsetReloadRequested;
-         return Reload(LOAD_FLAGS_NONE);
+         // XXX: LOAD_HISTORY really means load from cache...
+         return Reload(LOAD_HISTORY);
       }
     }
   }
