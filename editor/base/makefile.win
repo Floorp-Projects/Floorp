@@ -110,6 +110,7 @@ LINCS=-I$(PUBLIC)\editor \
     -I$(PUBLIC)\js \
     -I$(PUBLIC)\txmgr \
     -I$(PUBLIC)\netlib \
+    -I$(PUBLIC)\pref \
     -I$(PUBLIC)\dom
 
 MAKE_OBJ_TYPE = DLL
