@@ -43,6 +43,57 @@ var ios = Components.classes["@mozilla.org/network/io-service;1"]
 var pps = Components.classes["@mozilla.org/network/protocol-proxy-service;1"]
                     .getService(Components.interfaces.nsIProtocolProxyService);
 
+/**
+ * Test nsIProtocolHandler that allows proxying, but doesn't allow HTTP
+ * proxying.
+ */
+function TestProtocolHandler() {
+}
+TestProtocolHandler.prototype = {
+  QueryInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsIProtocolHandler) ||
+        iid.equals(Components.interfaces.nsISupports))
+      return this;
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+  scheme: "moz-test",
+  defaultPort: -1,
+  protocolFlags: Components.interfaces.nsIProtocolHandler.URI_NOAUTH |
+                 Components.interfaces.nsIProtocolHandler.URI_NORELATIVE |
+                 Components.interfaces.nsIProtocolHandler.ALLOWS_PROXY,
+  newURI: function(spec, originCharset, baseURI) {
+    var uri = Components.classes["@mozilla.org/network/simple-uri;1"]
+                        .createInstance(Components.interfaces.nsIURI);
+    uri.spec = spec;
+    return uri;
+  },
+  newChannel: function(uri) {
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  allowPort: function(port, scheme) {
+    return true;
+  }
+};
+
+function TestProtocolHandlerFactory() {
+}
+TestProtocolHandlerFactory.prototype = {
+  createInstance: function(delegate, iid) {
+    return new TestProtocolHandler().QueryInterface(iid);
+  },
+  lockFactory: function(lock) {
+  }
+};
+
+function register_test_protocol_handler() {
+  var reg = Components.manager.QueryInterface(
+      Components.interfaces.nsIComponentRegistrar);
+  reg.registerFactory(Components.ID("{4ea7dd3a-8cae-499c-9f18-e1de773ca25b}"),
+                      "TestProtocolHandler",
+                      "@mozilla.org/network/protocol;1?name=moz-test",
+                      new TestProtocolHandlerFactory());
+}
+
 function check_proxy(pi, type, host, port, flags, timeout, hasNext) {
   do_check_neq(pi, null);
   do_check_eq(pi.type, type);
@@ -72,8 +123,8 @@ TestFilter.prototype = {
   _flags: 0,
   _timeout: 0,
   QueryInterface: function(iid) {
-    if (iid.Equals(Components.interfaces.nsIProtocolProxyFilter) ||
-        iid.Equals(Components.interfaces.nsISupports))
+    if (iid.equals(Components.interfaces.nsIProtocolProxyFilter) ||
+        iid.equals(Components.interfaces.nsISupports))
       return this;
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
@@ -91,8 +142,8 @@ TestFilter.prototype = {
 function BasicFilter() {}
 BasicFilter.prototype = {
   QueryInterface: function(iid) {
-    if (iid.Equals(Components.interfaces.nsIProtocolProxyFilter) ||
-        iid.Equals(Components.interfaces.nsISupports))
+    if (iid.equals(Components.interfaces.nsIProtocolProxyFilter) ||
+        iid.equals(Components.interfaces.nsISupports))
       return this;
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
@@ -202,13 +253,20 @@ function run_pref_test() {
   check_proxy(pi, "socks", "barbar", 1203, 0, -1, false);
 }
 
-function TestResolveCallback() {}
+function run_protocol_handler_test() {
+  var uri = ios.newURI("moz-test:foopy", null, null);
 
+  var pi = pps.resolve(uri, 0);
+  do_check_eq(pi, null);
+}
+
+function TestResolveCallback() {
+}
 TestResolveCallback.prototype = {
   QueryInterface:
   function TestResolveCallback_QueryInterface(iid) {
-    if (iid.Equals(Components.interfaces.nsIProtocolProxyCallback) ||
-        iid.Equals(Components.interfaces.nsISupports))
+    if (iid.equals(Components.interfaces.nsIProtocolProxyCallback) ||
+        iid.equals(Components.interfaces.nsISupports))
       return this;
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
@@ -230,6 +288,8 @@ TestResolveCallback.prototype = {
     do_check_neq(pi, null);
     check_proxy(pi, "http", "foopy", 8080, 0, -1, true);
     check_proxy(pi.failoverProxy, "direct", "", -1, -1, -1, false);
+
+    run_protocol_handler_test();
 
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch);
@@ -274,6 +334,7 @@ function run_pac_test() {
 }
 
 function run_test() {
+  register_test_protocol_handler();
   run_filter_test();
   run_filter_test2();
   run_pref_test();
