@@ -18,22 +18,58 @@
 
 #include "nsFileChannel.h"
 #include "nscore.h"
+#include "nsIEventSinkGetter.h"
+#include "nsIURI.h"
+#include "nsIEventQueue.h"
+#include "nsIStreamListener.h"
+#include "nsIIOService.h"
+#include "nsIServiceManager.h"
+
+NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsFileChannel::nsFileChannel()
+    : mURI(nsnull), mGetter(nsnull), mListener(nsnull), mEventQueue(nsnull)
 {
     NS_INIT_REFCNT();
 }
 
 nsresult
-nsFileChannel::Init(nsIURI* uri, nsIEventSinkGetter* getter, nsIEventQueue* queue)
+nsFileChannel::Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
+                    nsIEventQueue* queue)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+
+    mGetter = getter;
+    NS_ADDREF(mGetter);
+
+    rv = getter->GetEventSink(verb, nsIStreamListener::GetIID(), (nsISupports**)&mListener);
+    if (NS_FAILED(rv)) return rv;
+
+    mURI = uri;
+    NS_ADDREF(mURI);
+
+    // XXX temporary, until we integrate more thoroughly with nsFileSpec
+    char* url;
+    rv = mURI->GetSpec(&url);
+    if (NS_FAILED(rv)) return rv;
+    nsFileURL fileURL(url);
+    nsCRT::free(url);
+    mSpec = fileURL;
+
+    mEventQueue = queue;
+    NS_ADDREF(mEventQueue);
+    
+    return NS_OK;
 }
 
 nsFileChannel::~nsFileChannel()
 {
+    NS_IF_RELEASE(mURI);
+    NS_IF_RELEASE(mGetter);
+    NS_IF_RELEASE(mListener);
+    NS_IF_RELEASE(mEventQueue);
 }
 
 NS_IMETHODIMP
@@ -72,19 +108,23 @@ nsFileChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 NS_IMETHODIMP
 nsFileChannel::GetURI(nsIURI * *aURI)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aURI = mURI;
+    NS_ADDREF(mURI);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFileChannel::OpenInputStream(PRUint32 startPosition, PRInt32 count,
                                nsIInputStream **_retval)
 {
+    NS_ASSERTION(startPosition == 0 && count == -1, "fix me");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFileChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
 {
+    NS_ASSERTION(startPosition == 0, "fix me");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -94,6 +134,7 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsIEventQueue *eventQueue,
                          nsIStreamListener *listener)
 {
+    NS_ASSERTION(startPosition == 0 && readCount == -1, "fix me");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -104,6 +145,7 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
                           nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer)
 {
+    NS_ASSERTION(startPosition == 0, "fix me");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -139,38 +181,60 @@ nsFileChannel::GetCreationDate(PRTime *aCreationDate)
 NS_IMETHODIMP
 nsFileChannel::GetModDate(PRTime *aModDate)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-#if 0
-    PRUint32 date;
-    nsresult rv = GetModDate(&date);
+    nsFileSpec::TimeStamp date;
+    mSpec.GetModDate(date);
     LL_I2L(*aModDate, date);
-    return rv;
-#endif
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFileChannel::GetFileSize(PRUint32 *aFileSize)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aFileSize = mSpec.GetFileSize();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFileChannel::GetParent(nsIFileChannel * *aParent)
 {
-//    return GetParent((nsIFileSpec**)aParent);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+
+    nsFileSpec parentSpec;
+    mSpec.GetParent(parentSpec);
+    nsFileURL parentURL(parentSpec);
+    const char* urlStr = parentURL.GetURLString();
+
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsIChannel* channel;
+    rv = serv->NewChannel("load",    // XXX what should this be?
+                          urlStr, nsnull,
+                          mGetter, &channel);
+    if (NS_FAILED(rv)) return rv;
+
+    // this cast is safe because nsFileURL::GetURLString aways
+    // returns file: strings, and consequently we'll make nsIFileChannel
+    // objects from them:
+    *aParent = NS_STATIC_CAST(nsIFileChannel*, channel);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFileChannel::GetNativePath(char * *aNativePath)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    char* nativePath = nsCRT::strdup(mSpec.GetNativePathCString());
+    if (nativePath == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    *aNativePath = nativePath;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileChannel::Exists(PRBool *_retval)
+nsFileChannel::Exists(PRBool *result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = mSpec.Exists();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -192,11 +256,11 @@ nsFileChannel::MoveFrom(nsIURI *src)
 {
 #if 0
     nsresult rv;
-    nsIFileChannel* FileChannel;
-    rv = src->QueryInterface(nsIFileChannel::GetIID(), (void**)&FileChannel);
+    nsIFileChannel* fc;
+    rv = src->QueryInterface(nsIFileChannel::GetIID(), (void**)&fc);
     if (NS_SUCCEEDED(rv)) {
-        rv = FileChannel->moveToDir(this);
-        NS_RELEASE(FileChannel);
+        rv = fc->moveToDir(this);
+        NS_RELEASE(fc);
         return rv;
     }
     else {
@@ -214,11 +278,11 @@ nsFileChannel::CopyFrom(nsIURI *src)
 {
 #if 0
     nsresult rv;
-    nsIFileChannel* FileChannel;
-    rv = src->QueryInterface(nsIFileChannel::GetIID(), (void**)&FileChannel);
+    nsIFileChannel* fc;
+    rv = src->QueryInterface(nsIFileChannel::GetIID(), (void**)&fc);
     if (NS_SUCCEEDED(rv)) {
-        rv = FileChannel->copyToDir(this);
-        NS_RELEASE(FileChannel);
+        rv = fc->copyToDir(this);
+        NS_RELEASE(fc);
         return rv;
     }
     else {
@@ -231,19 +295,17 @@ nsFileChannel::CopyFrom(nsIURI *src)
 }
 
 NS_IMETHODIMP
-nsFileChannel::IsDirectory(PRBool *_retval)
+nsFileChannel::IsDirectory(PRBool *result)
 {
-    // XXX rename isDirectory to IsDirectory
-//    return isDirectory(_retval);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = mSpec.IsDirectory();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileChannel::IsFile(PRBool *_retval)
+nsFileChannel::IsFile(PRBool *result)
 {
-    // XXX rename isFile to IsFile
-//    return isFile(_retval);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = mSpec.IsFile();
+    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -20,8 +20,10 @@
 #define nsFileChannel_h__
 
 #include "nsIFileChannel.h"
+#include "nsFileSpec.h"
 
 class nsIEventSinkGetter;
+class nsIStreamListener;
 
 class nsFileChannel : public nsIFileChannel {
 public:
@@ -114,9 +116,16 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(nsIURI* uri, nsIEventSinkGetter* getter, nsIEventQueue* queue);
+    nsresult Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
+                  nsIEventQueue* queue);
 
 protected:
+    nsIURI*             mURI;
+    nsIEventSinkGetter* mGetter;        // XXX it seems wrong keeping this -- used by GetParent
+    nsIStreamListener*  mListener;
+    nsIEventQueue*      mEventQueue;
+
+    nsFileSpec          mSpec;
 };
 
 #endif // nsFileChannel_h__
