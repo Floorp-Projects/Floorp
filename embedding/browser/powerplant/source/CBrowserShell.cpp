@@ -229,7 +229,12 @@ NS_IMETHODIMP CBrowserShellProgressListener::OnStatusChange(nsIWebProgress *aWeb
 
 NS_IMETHODIMP CBrowserShellProgressListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_TRUE(mpOwner, NS_ERROR_NULL_POINTER);
+
+    MsgSecurityChangeInfo info(mpOwner, state);
+    mpOwner->BroadcastMessage(msg_OnSecurityChange, &info);
+    
+    return NS_OK;
 }
 
 

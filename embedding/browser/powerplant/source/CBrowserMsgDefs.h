@@ -53,8 +53,9 @@ enum {
     msg_OnProgressChange      = EMBED_MSG_BASE_ID + 2,
     msg_OnLocationChange      = EMBED_MSG_BASE_ID + 3,
     msg_OnStatusChange        = EMBED_MSG_BASE_ID + 4,
+    msg_OnSecurityChange      = EMBED_MSG_BASE_ID + 5,
     
-    msg_OnChromeStatusChange  = EMBED_MSG_BASE_ID + 5
+    msg_OnChromeStatusChange  = EMBED_MSG_BASE_ID + 6
 };
 
 
@@ -120,6 +121,19 @@ struct MsgStatusChangeInfo
     const PRUnichar *mMessage;     
 };
 
+// msg_OnSecurityChange
+struct MsgSecurityChangeInfo
+{
+    MsgSecurityChangeInfo(CBrowserShell* broadcaster,
+                          PRInt32 state) :
+        mBroadcaster(broadcaster),
+        mState(state)
+        { }
+    
+    CBrowserShell *mBroadcaster;
+    PRInt32 mState;
+}; 
+
 // msg_OnChromeStatusChange
 // See nsIWebBrowserChrome::SetStatus
 struct MsgChromeStatusChangeInfo
@@ -134,6 +148,6 @@ struct MsgChromeStatusChangeInfo
     CBrowserShell *mBroadcaster;
     PRUint32  mStatusType;
     const PRUnichar *mStatus;
-}; 
+};
 
 #endif // __CBrowserShellMsgDefs__

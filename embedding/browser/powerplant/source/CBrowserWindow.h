@@ -29,6 +29,7 @@ class LEditText;
 class LStaticText;
 class CThrobber;
 class LProgressBar;
+class LIconControl;
 
 
 // CBrowserWindow:
@@ -75,6 +76,7 @@ protected:
     CThrobber*                  mThrobber;
     LControl                    *mBackButton, *mForwardButton, *mReloadButton, *mStopButton;
     LProgressBar*               mProgressBar;
+    LIconControl*               mLockIcon;
 };
 
 // ---------------------------------------------------------------------------

@@ -96,6 +96,13 @@ enum {
     str_SearchPlugInsDirName
 };
 
+// Icons
+enum {
+    icon_LockInsecure       = 1320,
+    icon_LockSecure,
+    icon_LockBroken
+};
+
 
 //*****************************************************************************
 //***    Message IDs
