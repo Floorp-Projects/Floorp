@@ -1,6 +1,6 @@
 ! Fixed section of symbol vector for LIBNSPR4 (non-debug)
 !
-GSMATCH=LEQUAL,2,7
+GSMATCH=LEQUAL,2,8
 case_sensitive=YES
 !
 ! --------------------------------------------------------------------------
@@ -39,6 +39,9 @@ case_sensitive=YES
 ! PR_GetAddrInfoByName, PR_FreeAddrInfo, PR_EnumerateAddrInfo and
 ! PR_GetCanonNameFromAddrInfo introduced in NSPR 4.5.
 ! These replace stubs 49-52
+! --------------------------------------------------------------------------
+! Ident 2,8 introduced for NSPR 4.6.
+! Stub49 (resurrected) replaces PR_FindLibrary.  
 ! --------------------------------------------------------------------------
 !
 SYMBOL_VECTOR=(PR_Accept=PROCEDURE)
@@ -130,7 +133,7 @@ SYMBOL_VECTOR=(PR_FD_ZERO=PROCEDURE)
 SYMBOL_VECTOR=(PR_FileDesc2NativeHandle=PROCEDURE)
 SYMBOL_VECTOR=(PR_FindFunctionSymbol=PROCEDURE)
 SYMBOL_VECTOR=(PR_FindFunctionSymbolAndLibrary=PROCEDURE)
-SYMBOL_VECTOR=(PR_FindLibrary=PROCEDURE)
+SYMBOL_VECTOR=(PR_VMS_Stub49=PROCEDURE)
 SYMBOL_VECTOR=(PR_FindSymbol=PROCEDURE)
 SYMBOL_VECTOR=(PR_FindSymbolAndLibrary=PROCEDURE)
 SYMBOL_VECTOR=(PR_FloorLog2=PROCEDURE)
