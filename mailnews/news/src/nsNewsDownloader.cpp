@@ -303,7 +303,8 @@ NS_IMETHODIMP nsNewsDownloader::OnSearchDone(nsresult status)
     if (m_listener)
       return m_listener->OnStopRunningUrl(nsnull, NS_OK);
   }
-  nsresult rv = DownloadArticles(m_window, m_folder, &m_keysToDownload);
+  nsresult rv = DownloadArticles(m_window, m_folder, 
+                  /* we've already set m_keysToDownload, so don't pass it in */ nsnull);
   if (NS_FAILED(rv))
     if (m_listener)
       m_listener->OnStopRunningUrl(nsnull, rv);
@@ -380,8 +381,16 @@ nsMsgDownloadAllNewsgroups::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
   {
     if (m_downloadedHdrsForCurGroup)
     {
-      rv = DownloadMsgsForCurrentGroup();
+      PRBool savingArticlesOffline = PR_FALSE;
+      nsCOMPtr <nsIMsgNewsFolder> newsFolder = do_QueryInterface(m_currentFolder);
+      if (newsFolder)
+        newsFolder->GetSaveArticleOffline(&savingArticlesOffline);
+
       m_downloadedHdrsForCurGroup = PR_FALSE;
+      if (savingArticlesOffline) // skip this group - we're saving to it already
+        rv = ProcessNextGroup();
+      else
+        rv = DownloadMsgsForCurrentGroup();
     }
     else
     {
