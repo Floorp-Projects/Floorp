@@ -46,6 +46,16 @@ typedef enum
   sg_auto
 } ShowGUI;
 
+typedef enum
+{
+  gp_mode = 1,
+  gp_logfile,
+  gp_scriptfile,
+  gp_tofile,
+  gp_toframe,
+  gp_flush
+}GUIPrefs;
+
 class CPlugin : public CPluginBase
 {
 private:
@@ -107,6 +117,7 @@ public:
   // utilities
   void restorePreferences();
   void savePreferences();
+  void updatePrefs(GUIPrefs prefs, int iValue, char * szValue = NULL);
 
   // Window message handlers
   void onInit(HWND hWnd, HWND hWndManual, HWND hWndAuto);
