@@ -811,7 +811,7 @@ RDFXMLDataSourceImpl::Flush(void)
     nsresult rv;
 
     // XXX Replace this with channels someday soon...
-    nsFileURL url(mURLSpec);
+    nsFileURL url(mURLSpec, PR_TRUE);
     nsFileSpec path(url);
 
     nsOutputFileStream out(path);
