@@ -87,9 +87,9 @@ public:
 
 #ifdef MOZ_NEW_CACHE
     nsresult            GetAgeValue(PRUint32 *, PRBool *isAvail);
-    nsresult            GetDateValue(PRTime *, PRBool *isAvail);
-    nsresult            GetLastModifiedValue(PRTime *, PRBool *isAvail);
-    nsresult            GetExpiresValue(PRTime *, PRBool *isAvail);
+    nsresult            GetDateValue(PRUint32 *, PRBool *isAvail);
+    nsresult            GetLastModifiedValue(PRUint32 *, PRBool *isAvail);
+    nsresult            GetExpiresValue(PRUint32 *, PRBool *isAvail);
 #endif
     nsresult            GetMaxAge(PRUint32 *, PRBool *isAvail);
 

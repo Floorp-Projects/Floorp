@@ -140,12 +140,12 @@ protected:
 #ifdef MOZ_NEW_CACHE
     nsresult            OpenCacheEntry();
 
-    nsresult            GetRequestTime(PRTime *);
-    nsresult            SetRequestTime(PRTime);
-    nsresult            GetResponseTime(PRTime *);
-    nsresult            SetResponseTime(PRTime);
+    nsresult            GetRequestTime(PRUint32 *);
+    nsresult            SetRequestTime(PRUint32);
+    nsresult            GetResponseTime(PRUint32 *);
+    nsresult            SetResponseTime(PRUint32);
 
-    nsresult            ComputeCurrentAge(PRTime now, PRUint32 *);
+    nsresult            ComputeCurrentAge(PRUint32 now, PRUint32 *);
     nsresult            ComputeFreshnessLifetime(PRUint32 *);
     nsresult            UpdateExpirationTime();
 #endif

@@ -918,19 +918,19 @@ nsHTTPResponse::GetAgeValue(PRUint32 *result, PRBool *isAvail)
 }
 
 nsresult
-nsHTTPResponse::GetDateValue(PRTime *result, PRBool *isAvail)
+nsHTTPResponse::GetDateValue(PRUint32 *result, PRBool *isAvail)
 {
     return ParseDateHeader(nsHTTPAtoms::Date, result, isAvail);
 }
 
 nsresult
-nsHTTPResponse::GetLastModifiedValue(PRTime *result, PRBool *isAvail)
+nsHTTPResponse::GetLastModifiedValue(PRUint32 *result, PRBool *isAvail)
 {
     return ParseDateHeader(nsHTTPAtoms::Last_Modified, result, isAvail);
 }
 
 nsresult
-nsHTTPResponse::GetExpiresValue(PRTime *result, PRBool *isAvail)
+nsHTTPResponse::GetExpiresValue(PRUint32 *result, PRBool *isAvail)
 {
     return ParseDateHeader(nsHTTPAtoms::Expires, result, isAvail);
 }
