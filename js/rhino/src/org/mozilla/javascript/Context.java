@@ -2045,6 +2045,7 @@ public class Context
     public final void setInstructionObserverThreshold(int threshold)
     {
         if (sealed) onSealedMutation();
+        if (threshold < 0) throw new IllegalArgumentException();
         instructionThreshold = threshold;
     }
 
@@ -2065,6 +2066,15 @@ public class Context
      */
     protected void observeInstructionCount(int instructionCount)
     {
+    }
+
+    final void addInstructionCount(int n)
+    {
+        instructionCount += n;
+        if (instructionCount > instructionThreshold) {
+            observeInstructionCount(instructionCount);
+            instructionCount = 0;
+        }
     }
 
     public GeneratedClassLoader createClassLoader(ClassLoader parent)

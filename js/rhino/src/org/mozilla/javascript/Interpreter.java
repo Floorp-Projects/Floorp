@@ -120,21 +120,31 @@ public class Interpreter
         Icode_REG_IND_C1                = BASE_ICODE + 35,
         Icode_REG_IND_C2                = BASE_ICODE + 36,
         Icode_REG_IND_C3                = BASE_ICODE + 37,
-        Icode_REG_IND1                  = BASE_ICODE + 38,
-        Icode_REG_IND2                  = BASE_ICODE + 39,
-        Icode_REG_IND4                  = BASE_ICODE + 40,
+        Icode_REG_IND_C4                = BASE_ICODE + 38,
+        Icode_REG_IND_C5                = BASE_ICODE + 39,
+        Icode_REG_IND1                  = BASE_ICODE + 40,
+        Icode_REG_IND2                  = BASE_ICODE + 41,
+        Icode_REG_IND4                  = BASE_ICODE + 42,
 
     // Load string register to prepare for the following string operation
-        Icode_REG_STR_C0                = BASE_ICODE + 41,
-        Icode_REG_STR_C1                = BASE_ICODE + 42,
-        Icode_REG_STR_C2                = BASE_ICODE + 43,
-        Icode_REG_STR_C3                = BASE_ICODE + 44,
-        Icode_REG_STR1                  = BASE_ICODE + 45,
-        Icode_REG_STR2                  = BASE_ICODE + 46,
-        Icode_REG_STR4                  = BASE_ICODE + 47,
+        Icode_REG_STR_C0                = BASE_ICODE + 43,
+        Icode_REG_STR_C1                = BASE_ICODE + 44,
+        Icode_REG_STR_C2                = BASE_ICODE + 45,
+        Icode_REG_STR_C3                = BASE_ICODE + 46,
+        Icode_REG_STR1                  = BASE_ICODE + 47,
+        Icode_REG_STR2                  = BASE_ICODE + 48,
+        Icode_REG_STR4                  = BASE_ICODE + 49,
 
     // Last icode
-        MAX_ICODE                       = BASE_ICODE + 47;
+        MAX_ICODE                       = BASE_ICODE + 49;
+
+    static {
+        if (MAX_ICODE > 127) {
+            // This allows to drop (0xFF & ...) in the interpreter loop
+            System.err.println("MAX_ICODE should be <= 128");
+            throw new IllegalStateException("MAX_ICODE should be <= 128");
+        }
+    }
 
     public Object compile(Scriptable scope,
                           CompilerEnvirons compilerEnv,
@@ -216,10 +226,6 @@ public class Interpreter
         itsData.itsFunctionType = theFunction.getFunctionType();
         itsData.itsNeedsActivation = theFunction.requiresActivation();
         itsData.itsName = theFunction.getFunctionName();
-        if ((theFunction.getParamAndVarCount() & ~0xFF) != 0) {
-            // Can not optimize vars as their index should fit 1 byte
-            itsData.itsNeedsActivation = true;
-        }
         if (!theFunction.getIgnoreDynamicScope()) {
             if (compilerEnv.isUseDynamicScope()) {
                 itsData.useDynamicScope = true;
@@ -422,10 +428,6 @@ public class Interpreter
 
             case Token.LOCAL_BLOCK :
                 stackShouldBeZero = true;
-                if ((itsLocalTop & ~0xFF) != 0) {
-                    throw Context.reportRuntimeError(
-                        "Program too complex (out of locals)");
-                }
                 node.putIntProp(Node.LOCAL_PROP, itsLocalTop);
                 ++itsLocalTop;
                 if (itsLocalTop > itsData.itsMaxLocals) {
@@ -1406,32 +1408,20 @@ public class Interpreter
             index = itsStrings.size();
             itsStrings.put(str, index);
         }
-        int indexSize = 0;
+        int indexSize;
         int indexOp;
-        switch (index) {
-          case 0:
-            indexOp = Icode_REG_STR_C0;
-            break;
-          case 1:
-            indexOp = Icode_REG_STR_C1;
-            break;
-          case 2:
-            indexOp = Icode_REG_STR_C2;
-            break;
-          case 3:
-            indexOp = Icode_REG_STR_C3;
-            break;
-          default:
-            if (index <= 0xFF) {
-                indexOp = Icode_REG_STR1;
-                indexSize = 1;
-             } else if (index <= 0xFFFF) {
-                indexOp = Icode_REG_STR2;
-                indexSize = 2;
-             } else {
-                indexOp = Icode_REG_STR4;
-                indexSize = 4;
-            }
+        if (index < 4) {
+            indexOp = Icode_REG_STR_C0 + index;
+            indexSize = 0;
+        } else if (index <= 0xFF) {
+            indexOp = Icode_REG_STR1;
+            indexSize = 1;
+         } else if (index <= 0xFFFF) {
+            indexOp = Icode_REG_STR2;
+            indexSize = 2;
+         } else {
+            indexOp = Icode_REG_STR4;
+            indexSize = 4;
         }
         iCodeTop = addIcode(indexOp, iCodeTop);
         switch (indexSize) {
@@ -1456,32 +1446,20 @@ public class Interpreter
     private int addIndexOp(int op, int index, int iCodeTop)
     {
         if (index < 0) Kit.codeBug();
-        int indexSize = 0;
+        int indexSize;
         int indexOp;
-        switch (index) {
-          case 0:
-            indexOp = Icode_REG_IND_C0;
-            break;
-          case 1:
-            indexOp = Icode_REG_IND_C1;
-            break;
-          case 2:
-            indexOp = Icode_REG_IND_C2;
-            break;
-          case 3:
-            indexOp = Icode_REG_IND_C3;
-            break;
-          default:
-            if (index <= 0xFF) {
-                indexOp = Icode_REG_IND1;
-                indexSize = 1;
-             } else if (index <= 0xFFFF) {
-                indexOp = Icode_REG_IND2;
-                indexSize = 2;
-             } else {
-                indexOp = Icode_REG_IND4;
-                indexSize = 4;
-            }
+        if (index < 6) {
+            indexOp = Icode_REG_IND_C0 + index;
+            indexSize = 0;
+        } else if (index <= 0xFF) {
+            indexOp = Icode_REG_IND1;
+            indexSize = 1;
+         } else if (index <= 0xFFFF) {
+            indexOp = Icode_REG_IND2;
+            indexSize = 2;
+         } else {
+            indexOp = Icode_REG_IND4;
+            indexSize = 4;
         }
         iCodeTop = addIcode(indexOp, iCodeTop);
         switch (indexSize) {
@@ -1630,6 +1608,8 @@ public class Interpreter
                     case Icode_REG_IND_C1:       return "REG_IND_C1";
                     case Icode_REG_IND_C2:       return "REG_IND_C2";
                     case Icode_REG_IND_C3:       return "REG_IND_C3";
+                    case Icode_REG_IND_C4:       return "REG_IND_C4";
+                    case Icode_REG_IND_C5:       return "REG_IND_C5";
                     case Icode_REG_IND1:         return "LOAD_IND1";
                     case Icode_REG_IND2:         return "LOAD_IND2";
                     case Icode_REG_IND4:         return "LOAD_IND4";
@@ -1949,13 +1929,11 @@ public class Interpreter
         final Object DBL_MRK = Interpreter.DBL_MRK;
         final Scriptable undefined = Undefined.instance;
 
-        final int VAR_SHFT = 0;
-        final int maxVars = idata.itsMaxVars;
-        final int LOCAL_SHFT = VAR_SHFT + maxVars;
+        final int LOCAL_SHFT = idata.itsMaxVars;
         final int STACK_SHFT = LOCAL_SHFT + idata.itsMaxLocals;
 
-// stack[VAR_SHFT <= i < LOCAL_SHFT]: variables
-// stack[LOCAL_SHFT <= i < TRY_STACK_SHFT]: used for newtemp/usetemp
+// stack[0 <= i < LOCAL_SHFT]: variables
+// stack[LOCAL_SHFT <= i < TRY_STACK_SHFT]: used for local temporaries
 // stack[STACK_SHFT <= i < STACK_SHFT + idata.itsMaxStack]: stack data
 
 // sDbl[i]: if stack[i] is DBL_MRK, sDbl[i] holds the number value
@@ -1975,13 +1953,13 @@ public class Interpreter
         if (definedArgs > argCount) { definedArgs = argCount; }
         for (int i = 0; i != definedArgs; ++i) {
             Object arg = args[argShift + i];
-            stack[VAR_SHFT + i] = arg;
+            stack[i] = arg;
             if (arg == DBL_MRK) {
-                sDbl[VAR_SHFT + i] = argsDbl[argShift + i];
+                sDbl[i] = argsDbl[argShift + i];
             }
         }
-        for (int i = definedArgs; i != maxVars; ++i) {
-            stack[VAR_SHFT + i] = undefined;
+        for (int i = definedArgs; i != idata.itsMaxVars; ++i) {
+            stack[i] = undefined;
         }
 
         DebugFrame debuggerFrame = null;
@@ -2057,10 +2035,7 @@ public class Interpreter
         byte[] iCode = idata.itsICode;
         int pc = 0;
         int pcPrevBranch = 0;
-        final int instructionThreshold = cx.instructionThreshold;
-        // During function call this will be set to -1 so catch can properly
-        // adjust it
-        int instructionCount = cx.instructionCount;
+        final boolean instructionCounting = (cx.instructionThreshold != 0);
         // arbitrary number to add to instructionCount when calling
         // other functions
         final int INVOCATION_COST = 100;
@@ -2071,9 +2046,9 @@ public class Interpreter
 
         Loop: for (;;) {
             try {
-                int op = 0xFF & iCode[pc++];
-                switch (op) {
+                int op = iCode[pc++];
     // Back indent to ease imlementation reading
+switch (op) {
 
     case Icode_CATCH: {
         // The following code should be executed inside try/catch inside main
@@ -2161,11 +2136,9 @@ public class Interpreter
         // clear exception
         javaException = null;
 
-        if (instructionThreshold != 0) {
-            if (instructionCount > instructionThreshold) {
-                cx.observeInstructionCount(instructionCount);
-                instructionCount = 0;
-            }
+        if (instructionCounting) {
+            // 500: catch cost
+            cx.addInstructionCount(500);
             pcPrevBranch = pc;
         }
         continue Loop;
@@ -2240,12 +2213,8 @@ public class Interpreter
         break;
     case Icode_RETSUB : {
         // indexReg: local to store return address
-        if (instructionThreshold != 0) {
-            instructionCount += pc - pcPrevBranch;
-            if (instructionCount > instructionThreshold) {
-                cx.observeInstructionCount(instructionCount);
-                instructionCount = 0;
-            }
+        if (instructionCounting) {
+            cx.addInstructionCount(pc - pcPrevBranch);
         }
         Object value = stack[LOCAL_SHFT + indexReg];
         if (value != DBL_MRK) {
@@ -2476,10 +2445,8 @@ public class Interpreter
         sDbl[stackTop] = sDbl[LOCAL_SHFT + indexReg];
         continue Loop;
     case Icode_CALLSPECIAL : {
-        if (instructionThreshold != 0) {
-            instructionCount += INVOCATION_COST;
-            cx.instructionCount = instructionCount;
-            instructionCount = -1;
+        if (instructionCounting) {
+            cx.instructionCount += INVOCATION_COST;
         }
         // indexReg: number of arguments
         int callType = iCode[pc] & 0xFF;
@@ -2503,15 +2470,12 @@ public class Interpreter
                               cx, function, isNew, functionThis, outArgs,
                               scope, thisObj, callType,
                               idata.itsSourceFile, sourceLine);
-        instructionCount = cx.instructionCount;
         pc += 4;
         continue Loop;
     }
     case Token.CALL : {
-        if (instructionThreshold != 0) {
-            instructionCount += INVOCATION_COST;
-            cx.instructionCount = instructionCount;
-            instructionCount = -1;
+        if (instructionCounting) {
+            cx.instructionCount += INVOCATION_COST;
         }
         // indexReg: number of arguments
         stackTop -= indexReg;
@@ -2554,15 +2518,11 @@ public class Interpreter
             throw ScriptRuntime.typeError1("msg.isnt.function",
                                            ScriptRuntime.toString(lhs));
         }
-
-        instructionCount = cx.instructionCount;
         continue Loop;
     }
     case Token.NEW : {
-        if (instructionThreshold != 0) {
-            instructionCount += INVOCATION_COST;
-            cx.instructionCount = instructionCount;
-            instructionCount = -1;
+        if (instructionCounting) {
+            cx.instructionCount += INVOCATION_COST;
         }
         // indexReg: number of arguments
         stackTop -= indexReg;
@@ -2598,7 +2558,6 @@ public class Interpreter
                                            ScriptRuntime.toString(lhs));
 
         }
-        instructionCount = cx.instructionCount;
         continue Loop;
     }
     case Token.TYPEOF : {
@@ -2643,8 +2602,8 @@ public class Interpreter
         continue Loop;
     case Token.SETVAR :
         if (!useActivationVars) {
-            stack[VAR_SHFT + indexReg] = stack[stackTop];
-            sDbl[VAR_SHFT + indexReg] = sDbl[stackTop];
+            stack[indexReg] = stack[stackTop];
+            sDbl[indexReg] = sDbl[stackTop];
         } else {
             Object val = stack[stackTop];
             if (val == DBL_MRK) val = doubleWrap(sDbl[stackTop]);
@@ -2654,8 +2613,8 @@ public class Interpreter
     case Token.GETVAR :
         ++stackTop;
         if (!useActivationVars) {
-            stack[stackTop] = stack[VAR_SHFT + indexReg];
-            sDbl[stackTop] = sDbl[VAR_SHFT + indexReg];
+            stack[stackTop] = stack[indexReg];
+            sDbl[stackTop] = sDbl[indexReg];
         } else {
             stack[stackTop] = activationGet(fnOrScript, scope, indexReg);
         }
@@ -2664,18 +2623,17 @@ public class Interpreter
     case Icode_VARDEC :
         ++stackTop;
         if (!useActivationVars) {
-            Object val = stack[VAR_SHFT + indexReg];
+            Object val = stack[indexReg];
             stack[stackTop] = val;
             double d;
             if (val == DBL_MRK) {
-                d = sDbl[VAR_SHFT + indexReg];
+                d = sDbl[indexReg];
                 sDbl[stackTop] = d;
             } else {
                 d = ScriptRuntime.toNumber(val);
             }
-            stack[VAR_SHFT + indexReg] = DBL_MRK;
-            sDbl[VAR_SHFT + indexReg] = (op == Icode_VARINC)
-                                        ? d + 1.0 : d - 1.0;
+            stack[indexReg] = DBL_MRK;
+            sDbl[indexReg] = (op == Icode_VARINC) ? d + 1.0 : d - 1.0;
         } else {
             Object val = activationGet(fnOrScript, scope, indexReg);
             stack[stackTop] = val;
@@ -2830,6 +2788,12 @@ public class Interpreter
     case Icode_REG_IND_C3:
         indexReg = 3;
         continue Loop;
+    case Icode_REG_IND_C4:
+        indexReg = 4;
+        continue Loop;
+    case Icode_REG_IND_C5:
+        indexReg = 5;
+        continue Loop;
     case Icode_REG_IND1:
         indexReg = 0xFF & iCode[pc];
         ++pc;
@@ -2869,16 +2833,12 @@ public class Interpreter
     default :
         dumpICode(idata);
         throw new RuntimeException("Unknown icode : "+op+" @ pc : "+(pc-1));
-                }  // end of interpreter switch
+}  // end of interpreter switch
 
                 // This should be reachable only for jump implementation
                 // when pc points to encoded target offset
-                if (instructionThreshold != 0) {
-                    instructionCount += pc + 2 - pcPrevBranch;
-                    if (instructionCount > instructionThreshold) {
-                        cx.observeInstructionCount(instructionCount);
-                        instructionCount = 0;
-                    }
+                if (instructionCounting) {
+                    cx.addInstructionCount(pc + 2 - pcPrevBranch);
                 }
                 int offset = getShort(iCode, pc);
                 if (offset != 0) {
@@ -2892,15 +2852,10 @@ public class Interpreter
 
             }  // end of interpreter try
             catch (Throwable ex) {
-                if (instructionThreshold != 0) {
-                    if (instructionCount < 0) {
-                        // throw during function call
-                        instructionCount = cx.instructionCount;
-                    } else {
-                        // throw during any other operation
-                        instructionCount += pc - pcPrevBranch;
-                        cx.instructionCount = instructionCount;
-                    }
+                if (instructionCounting) {
+                    // Can not call addInstructionCount as it may trigger
+                    // exception
+                    cx.instructionCount += pc - pcPrevBranch;
                 }
                 javaException = ex;
                 exceptionPC = pc - 1;
@@ -2920,14 +2875,6 @@ public class Interpreter
         }
         if (idata.itsNeedsActivation || debuggerFrame != null) {
             ScriptRuntime.popActivation(cx);
-        }
-
-        if (instructionThreshold != 0) {
-            if (instructionCount > instructionThreshold) {
-                cx.observeInstructionCount(instructionCount);
-                instructionCount = 0;
-            }
-            cx.instructionCount = instructionCount;
         }
 
         if (javaException != null) {
