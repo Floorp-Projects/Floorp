@@ -968,7 +968,7 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 	// set native font and attributes
   
 	nsFont *font;
-  font = mFontMetrics->GetFont(font);
+  mFontMetrics->GetFont(font);
 	nsFontMetricsMac::SetFont(*font, mContext);
 
 	// measure text
