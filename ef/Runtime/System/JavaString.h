@@ -40,7 +40,7 @@ public:
     static JavaString* make(const char* str) {return new JavaString(str); /* To change when we have a GC. */}
 
     JavaString(const char *str);
-    const int16 *getStr() { return (int16 *) ((char *) value+arrayEltsOffset(tkChar)); }
+    const uint16 *getStr() { return (uint16 *) ((char *) value+arrayEltsOffset(tkChar)); }
     
     /* Must be called before an instance of string is created */
     static void staticInit();  
