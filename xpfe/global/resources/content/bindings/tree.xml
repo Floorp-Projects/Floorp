@@ -30,7 +30,7 @@
 
       <property name="view"
                 onget="return this.treeBoxObject.view;"
-                onset="return this.treeBoxObject.view=val;"/>
+                onset="return this.treeBoxObject.view = val;"/>
 
       <property name="body"
                 onget="return this.treeBoxObject.treeBody;"/>
@@ -56,8 +56,8 @@
                 onset="this.setAttribute('seltype', val); return val;"/>
 
       <property name="currentIndex"
-                onget="return this.treeBoxObject.view.selection.currentIndex;"
-                onset="return this.treeBoxObject.view.selection.currentIndex=val;"/>
+                onget="return this.view.selection.currentIndex;"
+                onset="return this.view.selection.currentIndex = val;"/>
 
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
 
@@ -74,10 +74,10 @@
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
                 readonly="true"/>
       <property name="contentView"
-                onget="return this.treeBoxObject.view; /*.QueryInterface(Components.interfaces.nsITreeContentView)*/"
+                onget="return this.view; /*.QueryInterface(Components.interfaces.nsITreeContentView)*/"
                 readonly="true"/>
       <property name="builderView"
-                onget="return this.treeBoxObject.view; /*.QueryInterface(Components.interfaces.nsIXULTreeBuilder)*/"
+                onget="return this.view; /*.QueryInterface(Components.interfaces.nsIXULTreeBuilder)*/"
                 readonly="true"/>
       <field name="pageUpOrDownMovesSelection">
         !/Mac/.test(navigator.platform)
@@ -214,11 +214,11 @@
              No openState param == toggle -->
         <parameter name="openState"/>
         <body><![CDATA[
-          if (row < 0 || !this.treeBoxObject.view.isContainer(row)) {
+          if (row < 0 || !this.view.isContainer(row)) {
             return false;
           }
-          if (this.treeBoxObject.view.isContainerOpen(row) != openState) {
-            this.treeBoxObject.view.toggleOpenState(row);
+          if (this.view.isContainerOpen(row) != openState) {
+            this.view.toggleOpenState(row);
             if (row == this.currentIndex) {
               // Only fire event when current row is expanded or collapsed
               // because that's all the assistive technology really cares about.
@@ -254,7 +254,7 @@
       <handler event="keypress" keycode="vk_left">
         <![CDATA[
          if (!this.changeOpenState(this.currentIndex, false)) {
-           var parentIndex = this.treeBoxObject.view.getParentIndex(this.currentIndex);
+            var parentIndex = this.view.getParentIndex(this.currentIndex);
            if (parentIndex >= 0) {
              this.view.selection.select(parentIndex);
              this.treeBoxObject.ensureRowIsVisible(parentIndex);
@@ -266,7 +266,7 @@
         <![CDATA[
           var row = this.currentIndex;
           if (row >= 0 && !this.changeOpenState(row, true)) {
-            var view = this.treeBoxObject.view;
+            var view = this.view;
             if (row + 1 < view.rowCount &&
                 view.getParentIndex(row + 1) == row) {
               // If already opened, select the first child.
@@ -301,8 +301,9 @@
            return;
          }
          var c = this.currentIndex;
-         try { if (c+1 == this.treeBoxObject.view.rowCount)
-           return;
+          try {
+            if (c+1 == this.view.rowCount)
+              return;
          } catch (e) {}
          if (!event.ctrlKey)
            this.view.selection.timedSelect(c+1, this._selectDelay);
@@ -328,8 +329,9 @@
          if (this.view.selection.single)
            return;
          var c = this.currentIndex;
-         try { if (c+1 == this.treeBoxObject.view.rowCount)
-           return;
+          try {
+            if (c+1 == this.view.rowCount)
+              return;
          } catch (e) {}
          // Extend the selection from the existing pivot, if any
          this.view.selection.rangedSelect(-1, c + 1, event.ctrlKey);
@@ -365,7 +367,7 @@
            return;
          }
          var c = this.currentIndex;
-         var l = this.treeBoxObject.view.rowCount - 1;
+          var l = this.view.rowCount - 1;
          if (c == l)
            return;
          var f = this.treeBoxObject.getFirstVisibleRow();
@@ -408,7 +410,7 @@
          if (this.view.selection.single)
            return;
          var c = this.currentIndex;
-         var l = this.treeBoxObject.view.rowCount - 1;
+          var l = this.view.rowCount - 1;
          if (c == l)
            return;
          var f = this.treeBoxObject.getFirstVisibleRow();
@@ -428,7 +430,7 @@
       </handler>
       <handler event="keypress" keycode="vk_home" modifiers="control any">
         <![CDATA[
-         if (this.treeBoxObject.view.rowCount == 0)
+          if (this.view.rowCount == 0)
            return;
          // Normal behaviour is to select the first row
          if (!event.ctrlKey)
@@ -441,7 +443,7 @@
       </handler>
       <handler event="keypress" keycode="vk_end" modifiers="control any">
         <![CDATA[
-         var l = this.treeBoxObject.view.rowCount - 1;
+          var l = this.view.rowCount - 1;
          if (l < 0)
            return;
          // Normal behaviour is to select the last row
@@ -466,7 +468,7 @@
         <![CDATA[
          if (this.view.selection.single)
            return;
-         var l = this.treeBoxObject.view.rowCount - 1;
+          var l = this.view.rowCount - 1;
          // Extend the selection from the existing pivot, if any
          this.view.selection.rangedSelect(-1, l, event.ctrlKey);
          this.treeBoxObject.ensureRowIsVisible(l);
@@ -870,7 +872,7 @@
         <![CDATA[
           var tree = this.parentNode.parentNode;
           var column = tree.columns.getColumnFor(this);
-          tree.treeBoxObject.view.cycleHeader(column);
+          tree.view.cycleHeader(column);
         ]]>
       </handler>
     </handlers>
