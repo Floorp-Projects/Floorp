@@ -31,14 +31,7 @@
 #include "nsIFileSpec.h"
 #include "nsFileStream.h"
 
-// sorry, unix & mac will have to wait for tomorrow.  camelot is down.
-#if defined(XP_WIN) 
-#define HAVE_REAL_SUBSCRIBE 1
-#endif
 
-#ifdef HAVE_REAL_SUBSCRIBE
-#include "nsISubscribeDialogListener.h"
-#endif
 #ifdef DEBUG_seth
 #define DO_HASHING_OF_HOSTNAME 1
 #endif /* DEBUG_seth */

@@ -35,16 +35,27 @@
 #include "plstr.h"
 #include "prprf.h"
 
+#ifdef HAVE_REAL_SUBSCRIBE
+#include "nsISubscribeDialogListener.h"
+#endif
+
 /* get some implementation from nsMsgIncomingServer */
+#ifdef HAVE_REAL_SUBSCRIBE
 class nsNntpIncomingServer : public nsMsgIncomingServer,
                              public nsINntpIncomingServer,
 							 public nsISubscribeDialogMaster
+#else
+class nsNntpIncomingServer : public nsMsgIncomingServer,
+                             public nsINntpIncomingServer
+#endif
                              
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSINNTPINCOMINGSERVER
+#ifdef HAVE_REAL_SUBSCRIBE
 	NS_DECL_NSISUBSCRIBEDIALOGMASTER
+#endif
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
     
