@@ -1559,6 +1559,13 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
     // will be present in the lastCleanLine's YMost so don't add it
     // in again)
     aState.mY += lastCleanLine->mOuterBottomMargin;
+
+    // XXX I'm not sure about the previous statement and floaters!!!
+
+    // Place any floaters the line has
+    if (nsnull != lastCleanLine->mFloaters) {
+      aState.PlaceBelowCurrentLineFloaters(lastCleanLine->mFloaters);
+    }
   }
 
   aState.GetAvailableSpace();
@@ -3453,13 +3460,18 @@ nsCSSBlockFrame::ReflowFloater(nsIPresContext*        aPresContext,
                                nsCSSBlockReflowState& aState,
                                nsIFrame*              aFloaterFrame)
 {
-//XXX fix_me: use the values already stored in the nsCSSBlockReflowState
+  // Prepare the reflow state for the floater frame. Note that initially
+  // it's maxSize will be 0,0 until we compute it (we need the reflowState
+  // for nsCSSLayout::GetStyleSize so we have to do this first)
+  nsSize kidAvailSize(0, 0);
+  nsReflowState reflowState(aFloaterFrame, aState, kidAvailSize,
+                            eReflowReason_Initial);
+
   // Compute the available space for the floater. Use the default
   // 'auto' width and height values
-  nsSize kidAvailSize;
   nsSize styleSize;
   PRIntn styleSizeFlags =
-    nsCSSLayout::GetStyleSize(aPresContext, aState, styleSize);
+    nsCSSLayout::GetStyleSize(aPresContext, reflowState, styleSize);
 
   // XXX The width and height are for the content area only. Add in space for
   // border and padding
@@ -3485,26 +3497,21 @@ nsCSSBlockFrame::ReflowFloater(nsIPresContext*        aPresContext,
     }
     NS_ASSERTION(0 != kidAvailSize.width, "no width for block found");
   }
-
   if (styleSizeFlags & NS_SIZE_HAS_HEIGHT) {
     kidAvailSize.height = styleSize.height;
   }
   else {
     kidAvailSize.height = NS_UNCONSTRAINEDSIZE;
   }
+  reflowState.maxSize = kidAvailSize;
 
   // Resize reflow the anchored item into the available space
   // XXX Check for complete?
   nsReflowMetrics desiredSize(nsnull);
-  nsReflowState   reflowState(aFloaterFrame, aState, kidAvailSize,
-                              eReflowReason_Initial);
   nsReflowStatus  status;
-
   aFloaterFrame->WillReflow(*aPresContext);
   aFloaterFrame->Reflow(*aPresContext, desiredSize, reflowState, status);
   aFloaterFrame->SizeTo(desiredSize.width, desiredSize.height);
-
-//XXX  aFloaterFrame->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
 }
 
 PRBool
@@ -3671,10 +3678,19 @@ nsCSSBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaterList)
       aFloaterList->ElementAt(i);
     nsIFrame* floater = placeholderFrame->GetAnchoredItem();
 
-//    ReflowFloater(aPresContext, *state, aFloater);
+    // Remove floaters old placement from the space manager
+    sm->RemoveRegion(floater);
+
+    // Reflow the floater if it's targetted for a reflow
+    if (nsnull != reflowCommand) {
+      nsIFrame* target;
+      reflowCommand->GetTarget(target);
+      if (floater == target) {
+        mBlock->ReflowFloater(mPresContext, *this, floater);
+      }
+    }
 
     // Get the band of available space
-    // XXX This is inefficient to do this inside the loop...
     GetAvailableSpace();
 
     // Get the type of floater
@@ -3711,7 +3727,6 @@ nsCSSBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaterList)
     floaterSpacing->CalcMarginFor(floater, floaterMargin);
     region.width += floaterMargin.left + floaterMargin.right;
     region.height += floaterMargin.top + floaterMargin.bottom;
-    sm->RemoveRegion(floater);/* XXX temporary code */
     sm->AddRectRegion(floater, region);
 
     // Set the origin of the floater in world coordinates
