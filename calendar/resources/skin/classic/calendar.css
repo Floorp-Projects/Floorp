@@ -310,7 +310,7 @@
 #month-title-container
 {
     -moz-box-align: center;
-    -mox-box-pack: center;
+    -moz-box-pack: center;
     margin: 0px 15px 0px 15px;
 }
 
@@ -351,7 +351,7 @@
     list-style-image: url("chrome://calendar/skin/prevnextarrow.png");
 }
 #month-next-button{
-    -moz-box-align:right;
+    -moz-box-align:end;
     -moz-image-region: rect(33px 20px 66px 0);
     cursor:pointer;
 }
@@ -362,7 +362,7 @@
     -moz-image-region: rect(33px 60px 66px 40px);
 }
 #month-previous-button{
-    -moz-box-align:left;
+    -moz-box-align:start;
     -moz-image-region: rect(0 20px 33px 0);
     cursor:pointer;
 }
@@ -569,7 +569,7 @@
 
 #day-next-button
 {
-    -moz-box-align:right;
+    -moz-box-align:end;
     -moz-image-region: rect(33px 20px 66px 0);
     cursor:pointer;
 }
@@ -586,7 +586,7 @@
 
 #day-previous-button
 {
-    -moz-box-align:left;
+    -moz-box-align:start;
     -moz-image-region: rect(0 20px 33px 0);
     cursor:pointer;
 }
@@ -605,7 +605,7 @@
 #day-title-container
 {
     -moz-box-align: center;
-    -mox-box-pack: center;
+    -moz-box-pack: center;
     margin: 0px 15px 0px 15px;
 }
 
@@ -785,7 +785,7 @@
 
 #week-next-button
 {
-    -moz-box-align:right;
+    -moz-box-align:end;
     -moz-image-region: rect(33px 20px 66px 0);
     cursor:pointer;
 }
@@ -802,7 +802,7 @@
 
 #week-previous-button
 {
-    -moz-box-align:left;
+    -moz-box-align:start;
     -moz-image-region: rect(0 20px 33px 0);
     cursor:pointer;
 }
@@ -826,7 +826,7 @@
 #week-title-container
 {
     -moz-box-align: center;
-    -mox-box-pack: center;
+    -moz-box-pack: center;
     margin: 0px 15px;
 }
 
@@ -1056,39 +1056,6 @@
   	padding-left		: 30px;
 }
 
-#unifinder-search-results-tree listitem[selected="true"] > listcell,
-#unifinder-categories-tree listitem[selected="true"] > listcell
-{
-   background-color        : #D5E3F2;
-   color                   : #000000;
-}
-
-#calendar-bar > .toolbar-holder > .toolbar-primary-icon {
-  background-image: url("chrome://calendar/skin/calendar_topbar.gif");
-}
-
-.unifinder-tree-class > listitem[selected="true"] 
-{
-   background-color     : white;
-   color                : black;
-   border               : none;
-}
-
-.unifinder-tree-class > listitem[selected="true"] > listcell
-{
-   border                  : none;
-}
-
-.unifinder-tree-class:focus > listitem[selected="true"] > listcell > .unifinder-treecell-box-class
-{
-   background-color        : #d5e3f2; 
-}
-
-.unifinder-tree-class > listitem[selected="true"] > listcell > .unifinder-treecell-box-class
-{
-   background-color        : -moz-Dialog; 
-}
-
 .unifinder-treecell-box-class
 {
    padding              : 2px;
@@ -1114,15 +1081,6 @@ treechildren:-moz-tree-cell-text(completed)
 {
    text-decoration        : line-through;
    color                  : black;
-}
-
-treechildren:-moz-tree-row(selected) {
-   background-color      : -moz-Dialog; 
-}
-
-treechildren:-moz-tree-row(selected, focus) {
-   background-color        : #d5e3f2; 
-   border                : 1px dotted #d5e3f2;
 }
 
 
@@ -1166,4 +1124,8 @@ treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, highpriority) {
 
 treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, lowpriority) {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_low.png" )
+}
+
+treechildren:-moz-tree-cell-text(focus, selected) {
+   color                  : HighlightText;
 }
