@@ -55,7 +55,7 @@
 extern "C" int statvfs(const char *, struct statvfs *);
 #endif
  
- //----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
 // Canonify, make absolute, and check whether directories exist
 //----------------------------------------------------------------------------------------
@@ -69,7 +69,11 @@ void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
     }
     char buffer[MAXPATHLEN];
     errno = 0;
+#if defined(SOLARIS)
+    memset(buffer, '\0', sizeof(buffer)); // realpath reads it all, initialized or not.
+#else
     *buffer = '\0';
+#endif
     char* canonicalPath = realpath((const char*)ioPath, buffer);
     if (!canonicalPath)
     {
