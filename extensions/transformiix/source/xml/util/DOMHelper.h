@@ -81,12 +81,6 @@ public:
     Node* appearsFirst(Node* node1, Node* node2);
 
     /**
-     * Generates a unique ID for the given node and places the result in
-     * dest
-    **/
-    void generateId(Node* node, String& dest);
-
-    /**
      * Returns the child number of the given node. Numbering
      * starts at 1 for all nodes except the Document node and 
      * attribute nodes which has child numbers of 0. The child

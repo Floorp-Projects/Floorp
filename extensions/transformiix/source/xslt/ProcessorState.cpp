@@ -425,14 +425,6 @@ Element* ProcessorState::findTemplate(Node* node, Node* context, String* mode) {
 } //-- findTemplate
 
 /**
- * Generates a unique ID for the given node and places the result in
- * dest
-**/
-void ProcessorState::generateId(Node* node, String& dest) {
-    domHelper.generateId(node, dest);
-} //-- generateId
-
-/**
  * Returns the AttributeSet associated with the given name
  * or null if no AttributeSet is found
 **/
@@ -866,7 +858,7 @@ FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
        err.append(name);
    }
    else if (GENERATE_ID_FN.isEqual(name)) {
-       return new GenerateIdFunctionCall(&domHelper);
+       return new GenerateIdFunctionCall();
    }
    else if (SYSTEM_PROPERTY_FN.isEqual(name)) {
        return new SystemPropertyFunctionCall();
