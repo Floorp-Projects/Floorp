@@ -19,6 +19,7 @@ dist_libdir	= @dist_libdir@
 
 DIST		= $(dist_prefix)
 
+RELEASE_OBJDIR_NAME = @RELEASE_OBJDIR_NAME@
 OBJDIR_NAME	= @OBJDIR_NAME@
 OBJDIR		= @OBJDIR@
 OBJ_SUFFIX	= @OBJ_SUFFIX@

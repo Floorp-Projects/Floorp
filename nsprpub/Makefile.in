@@ -107,26 +107,26 @@ release::
 ifeq ($(OS_ARCH),WINNT)
 	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); then \
 		rm -rf $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); \
-		echo "making directory /m/dist/$(MOD_NAME)/$(BUILD_NUMBER)"; \
+		echo "making directory $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)"; \
 		config/prmkdir.bat $(MDIST_DOS)\\$(MOD_NAME)\\$(BUILD_NUMBER); \
 	fi
-	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME); then \
-		rm -rf $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME); \
-		echo "making directory /m/dist/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME)"; \
-		config/prmkdir.bat $(MDIST_DOS)\\$(MOD_NAME)\\$(BUILD_NUMBER)\\$(OBJDIR_NAME); \
+	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); then \
+		rm -rf $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
+		echo "making directory $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME)"; \
+		config/prmkdir.bat $(MDIST_DOS)\\$(MOD_NAME)\\$(BUILD_NUMBER)\\$(RELEASE_OBJDIR_NAME); \
 	fi
 else
 	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); then \
 		rm -rf $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); \
-		echo "making directory /m/dist/$(MOD_NAME)/$(BUILD_NUMBER)"; \
+		echo "making directory $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)"; \
 		$(NSINSTALL) -D $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); \
 		chmod 775 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); \
 	fi
-	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME); then \
-		rm -rf $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME); \
-		echo "making directory /m/dist/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME)"; \
-		$(NSINSTALL) -D $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME); \
-		chmod 775 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME); \
+	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); then \
+		rm -rf $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
+		echo "making directory $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME)"; \
+		$(NSINSTALL) -D $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
+		chmod 775 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
 	fi
 endif
 	cd $(RELEASE_DIR)/$(BUILD_NUMBER); \
@@ -134,11 +134,11 @@ endif
 	chmod 664 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/version.df; \
 	chmod 664 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/imports.df; \
 	cd $(OBJDIR_NAME); \
-	cp -f mdbinary.jar $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME); \
-	chmod 664 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME)/mdbinary.jar; \
+	cp -f mdbinary.jar $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
+	chmod 664 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME)/mdbinary.jar; \
 	cd include; \
-	cp -f mdheader.jar $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME); \
-	chmod 664 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(OBJDIR_NAME)/mdheader.jar
+	cp -f mdheader.jar $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
+	chmod 664 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME)/mdheader.jar
 
 depend:
 	@echo "NSPR20 has no dependencies.  Skipped."
