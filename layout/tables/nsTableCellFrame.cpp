@@ -53,7 +53,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsVoidArray.h"
 #include "nsIView.h"
-#include "nsStyleUtil.h"
 #include "nsLayoutAtoms.h"
 #include "nsIFrameManager.h"
 #include "nsIPresShell.h"

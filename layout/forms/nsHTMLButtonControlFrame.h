@@ -54,7 +54,6 @@
 #include "nsISupports.h"
 #include "nsHTMLAtoms.h"
 #include "nsIImage.h"
-#include "nsStyleUtil.h"
 #include "nsStyleConsts.h"
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"

@@ -50,7 +50,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsStyleUtil.h"
 #include "nsFont.h"
 #include "nsFormControlFrame.h"
 

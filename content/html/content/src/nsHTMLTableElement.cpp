@@ -50,7 +50,6 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsHTMLParts.h"
-#include "nsStyleUtil.h"
 #include "nsRuleNode.h"
 
 /* for collections */

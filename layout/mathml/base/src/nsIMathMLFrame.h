@@ -22,6 +22,9 @@
 #ifndef nsIMathMLFrame_h___
 #define nsIMathMLFrame_h___
 
+#include "nsIRenderingContext.h"
+#include "nsIFrame.h"
+
 struct nsPresentationData;
 struct nsEmbellishData;
 struct nsHTMLReflowMetrics;

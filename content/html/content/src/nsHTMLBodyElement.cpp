@@ -47,7 +47,6 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsStyleUtil.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIHTMLStyleSheet.h"

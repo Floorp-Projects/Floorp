@@ -25,7 +25,6 @@
 #include "nsHTMLParts.h"
 #include "nsIHTMLContent.h"
 #include "nsFrame.h"
-#include "nsLineLayout.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsHTMLAtoms.h"
@@ -35,7 +34,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
-#include "nsStyleUtil.h"
 
 #include "nsIDOMText.h"
 #include "nsITextContent.h"
