@@ -18,7 +18,6 @@
 #
 # Contributor(s): 
 
-IGNORE_MANIFEST=1 
 #//------------------------------------------------------------------------
 #//
 #// Specify the depth of the current directory relative to the
@@ -27,6 +26,20 @@ IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 DEPTH = ..\..\..
 
-DIRS  = org\mozilla\util org\mozilla\pluglet org\mozilla\pluglet\mozilla
+JAVA_OR_NSJVM=1
+NO_CAFE=1
+
+include <$(DEPTH)\config\config.mak>
+
+JAR_PLUGLET_CLASSES = \
+	org\mozilla\util \
+	org\mozilla\pluglet \
+	org\mozilla\pluglet\mozilla \
+	$(NULL)
+
+JDIRS = $(JAR_PLUGLET_CLASSES)
+JAVAC_PROG=$(JDKHOME)\bin\javac
+JAVAC_FLAGS=-classpath "$(MOZ_SRC)\mozilla\java\plugins\classes;$(CLASSPATH);$(JAVA_DESTPATH)" -d "$(JAVA_DESTPATH)"
 
 include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\config\javarules.mak>
