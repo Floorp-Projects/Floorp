@@ -9514,7 +9514,7 @@ fi
 
 echo $ac_n "checking whether the C++ \"using\" keyword can change access""... $ac_c" 1>&6
 echo "configure:9517: checking whether the C++ \"using\" keyword can change access" >&5
-if eval "test \"`echo '$''{'ac_cv_cpp_using_can_change_access'+set}'`\" = set"; then
+if eval "test \"`echo '$''{'ac_cv_cpp_access_changing_using'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
@@ -9531,27 +9531,27 @@ X x; Y y;
 EOF
 if { (eval echo configure:9533: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
-  ac_cv_cpp_using_can_change_access=yes
+  ac_cv_cpp_access_changing_using=yes
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  ac_cv_cpp_using_can_change_access=no
+  ac_cv_cpp_access_changing_using=no
 fi
 rm -f conftest*
 fi
 
-echo "$ac_t""$ac_cv_cpp_using_can_change_access" 1>&6
-if test "$ac_cv_cpp_using_can_change_access" = yes ; then
+echo "$ac_t""$ac_cv_cpp_access_changing_using" 1>&6
+if test "$ac_cv_cpp_access_changing_using" = yes ; then
    cat >> confdefs.h <<\EOF
-#define HAVE_ACCESS_CHANGING_CPP_USING 1
+#define HAVE_CPP_ACCESS_CHANGING_USING 1
 EOF
 
 fi
 
 echo $ac_n "checking whether the C++ \"using\" keyword resolves ambiguity""... $ac_c" 1>&6
 echo "configure:9554: checking whether the C++ \"using\" keyword resolves ambiguity" >&5
-if eval "test \"`echo '$''{'ac_cv_cpp_using_resolves_ambiguity'+set}'`\" = set"; then
+if eval "test \"`echo '$''{'ac_cv_cpp_ambiguity_resolving_using'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
@@ -9573,20 +9573,20 @@ X x; Y y; y.jo(x);
 EOF
 if { (eval echo configure:9575: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
-  ac_cv_cpp_using_resolves_ambiguity=yes
+  ac_cv_cpp_ambiguity_resolving_using=yes
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  ac_cv_cpp_using_resolves_ambiguity=no
+  ac_cv_cpp_ambiguity_resolving_using=no
 fi
 rm -f conftest*
 fi
 
-echo "$ac_t""$ac_cv_cpp_using_resolves_ambiguity" 1>&6
-if test "$ac_cv_cpp_using_resolves_ambiguity" = yes ; then
+echo "$ac_t""$ac_cv_cpp_ambiguity_resolving_using" 1>&6
+if test "$ac_cv_cpp_ambiguity_resolving_using" = yes ; then
    cat >> confdefs.h <<\EOF
-#define HAVE_AMBIGUITY_RESOLVING_CPP_USING 1
+#define HAVE_CPP_AMBIGUITY_RESOLVING_USING 1
 EOF
 
 fi
