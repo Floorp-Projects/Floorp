@@ -402,6 +402,11 @@ endif
 #
 $(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o 
 	@$(MAKE_OBJDIR)
+ifdef CPP_PROG_LINK
+	$(CCC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+else
+	$(CCF) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+endif
 
 
 
