@@ -531,7 +531,6 @@ nsHTMLTableElement::GetTBodies(nsIDOMHTMLCollection** aValue)
 {
   if (nsnull==mTBodies)
   {
-    NS_ADDREF(nsHTMLAtoms::tbody);
     mTBodies = new GenericElementCollection((nsIContent*)this, nsHTMLAtoms::tbody);
     NS_ADDREF(mTBodies); // this table's reference, released in the destructor
   }
