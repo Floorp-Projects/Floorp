@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #  Brian Ryner <bryner@brianryner.com>
+#  Benjamin Smedberg <benjamin@smedbergs.us>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,16 +43,14 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_STANDALONE_COMPOSER
-DIRS = console filepicker printing viewsource
-else
-DIRS = 	console \
+DIRS = \
+	console \
 	filepicker \
 	printing \
 	viewsource \
 	$(NULL)
 
-ifneq (,$(MOZ_PHOENIX)$(MOZ_XULRUNNER))
+ifndef MOZ_THUNDERBIRD
 DIRS +=	\
 	autocomplete \
 	cookie \
@@ -68,11 +67,8 @@ ifeq ($(OS_ARCH),WINNT)
 DIRS += alerts
 endif
 
-DIRS += downloads
-
-endif
-
 DIRS += \
+	downloads \
 	commandlines \
 	startup \
 	build \
