@@ -209,18 +209,24 @@ NS_COM
 char*
 ToNewUTF8String( const nsAString& aSource )
   {
-    nsAString::const_iterator start, end;
-    CalculateUTF8Size calculator;
-    copy_string(aSource.BeginReading(start), aSource.EndReading(end),
-                calculator);
+    // XXX The conversion code in NS_ConvertUCS2toUTF8 needs to be
+    // refactored so that we can use it here without a double-copy.
+    NS_ConvertUCS2toUTF8 temp(aSource);
 
-    char *result = NS_STATIC_CAST(char*,
-        nsMemory::Alloc(calculator.Size() + 1));
+    char* result;
+    if (temp.GetOwnsBuffer()) {
+      // We allocated. Trick the string into not freeing its buffer to
+      // avoid an extra allocation.
+      result = temp.mStr;
 
-    ConvertUCS2toUTF8 converter(result);
-    copy_string(aSource.BeginReading(start), aSource.EndReading(end),
-                converter).write_terminator();
-    NS_ASSERTION(calculator.Size() == converter.Size(), "length mismatch");
+      temp.mStr=0;
+      temp.SetOwnsBuffer(PR_FALSE);
+    }
+    else {
+      // We didn't allocate a buffer, so we need to copy it out of the
+      // nsCAutoString's storage.
+      result = ToNewCString(temp);
+    }
 
     return result;
   }
