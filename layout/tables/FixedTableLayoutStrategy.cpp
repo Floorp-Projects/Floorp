@@ -113,6 +113,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
     // Get column information
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
     NS_ASSERTION(nsnull != colFrame, "bad col frame");
+    if (!colFrame) return PR_FALSE;
 
     // Get the columns's style
     const nsStylePosition* colPosition;
