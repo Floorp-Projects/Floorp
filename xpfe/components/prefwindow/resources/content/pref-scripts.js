@@ -106,6 +106,12 @@ function Startup(){
     document.getElementById("allowDocumentCookieGet").checked = getPrefValueForCheckbox("dom.disable_cookie_get");
     document.getElementById("allowDocumentCookieSet").checked = getPrefValueForCheckbox("dom.disable_cookie_set");
 
+    //If we don't have a checkbox under groupbox pluginPreferences, we should hide it
+    var pluginGroup = document.getElementById("pluginPreferences")
+    var children = pluginGroup.childNodes;
+    if (!children || children.length <= 1)    // 1 for the caption
+      pluginGroup.setAttribute("hidden", "true");
+
   } else { //not first time it was loaded, get default values from data 
 
     document.getElementById("allowWindowOpen").checked = data["allowWindowOpen"].checked;

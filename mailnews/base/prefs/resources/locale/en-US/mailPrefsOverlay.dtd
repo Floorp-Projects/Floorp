@@ -1,6 +1,8 @@
 
 <!ENTITY enbJsCheckMailNews.label     "Mail &amp; Newsgroups">
 <!ENTITY enbJsCheckMailNews.accesskey "m">
+<!ENTITY enbPluginCheckMailNews.label     "Mail &amp; Newsgroups">
+<!ENTITY enbPluginCheckMailNews.accesskey "p">
 
 <!ENTITY disableCookieForMailNews.label "Disable cookies in Mail &amp; Newsgroups">
 <!ENTITY disableCookieForMailNews.accesskey "m">
