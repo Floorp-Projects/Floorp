@@ -1003,17 +1003,35 @@ nsHTTPChannel::CheckCache()
     // cache and that it has apparently valid HTTP headers.
     mCachedContentIsAvailable = PR_TRUE;
 
+    // This is a hack for bug 40449. We checking the expiration time
+    // to see if a cache entry is valid. If the current time is greater
+    // than the expiration time, we must revalidate this entry.
+    PRBool mustRevalidate = PR_FALSE;
+    PRTime expirationTime;
+    mCacheEntry->GetExpirationTime(&expirationTime);
+    if (!LL_IS_ZERO(expirationTime)) {
+        PRTime now = PR_Now();
+        if( LL_UCMP( now, >, expirationTime )) {
+            mCacheEntry->SetExpirationTime(LL_ZERO);
+            mustRevalidate = PR_TRUE;
+        }
+    }
+  
+
     // If validation is inhibited, we'll just use whatever data is in
     // the cache, regardless of whether or not it has expired.
     if (mLoadAttributes & nsIChannel::VALIDATE_NEVER) {
-        mCachedContentIsValid = PR_TRUE;
-        return NS_OK;
+        // hack for bug 40449. If the cache entry is invalid,
+        // we must revalidate with the server.
+        if (mustRevalidate == PR_FALSE) {
+            mCachedContentIsValid = PR_TRUE;
+            return NS_OK;
+        }
     }
 
     // If the must-revalidate directive is present in the cached response, data
     // must always be revalidated with the server, even if the user has
     // configured validation to be turned off.
-    PRBool mustRevalidate = PR_FALSE;
     nsXPIDLCString header;
     mCachedResponse->GetHeader(nsHTTPAtoms::Cache_Control, 
                                getter_Copies(header));
@@ -1030,6 +1048,7 @@ nsHTTPChannel::CheckCache()
     mCachedResponse->GetHeader(nsHTTPAtoms::Vary, getter_Copies(varyHeader));
     if (varyHeader)
         mustRevalidate = PR_TRUE;
+    
     
     // If the FORCE_VALIDATION flag is set, any cached data won't be used until
     // it's revalidated with the server, so there's no point in checking if it's
@@ -1186,8 +1205,19 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     PRBool inUse;
     rv = mCacheEntry->GetInUse(&inUse);
     if (NS_FAILED(rv)) return rv;
-    if (inUse)
+    if (inUse) {
+        // This is a hack for bug 40449. We are also using the expiration time
+        // to mark a cache entry is invalid. When we are not able to update the 
+        // cache entry, we set the expiration time to the current time, so 
+        // we force it to revalidate itself, next time the page is accessed, 
+        // instead of the stale value in the cache. We might need to subtract a 
+        // number from the result received from PR_Now, before passing it 
+        // to SetExpirationTime() as two consecutive calls to PR_Now might return
+        // the same value
+        PRTime curTime = PR_Now();
+        mCacheEntry->SetExpirationTime(curTime);
         return NS_OK;
+    }
 
     // The no-store directive within the 'Cache-Control:' header indicates
     // that we should not store the response in the cache
