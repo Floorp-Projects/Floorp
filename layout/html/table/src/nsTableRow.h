@@ -130,6 +130,9 @@ public:
   /** @see nsIContent::InsertChildAt */
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
+protected:
+  PRBool IsTableCell(nsIContent * aContent) const;
+
 };
 
 #endif
