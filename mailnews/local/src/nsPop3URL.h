@@ -80,6 +80,7 @@ public:
     // nsPop3URL
 
     nsPop3URL(nsISupports* aContainer, nsIURLGroup* aGroup);
+	virtual ~nsPop3URL();
 
     NS_DECL_ISUPPORTS
 
@@ -87,8 +88,6 @@ public:
     nsresult ParseURL(const nsString& aSpec, const nsIURL* aURL = nsnull);
 
 protected:
-    virtual ~nsPop3URL();
-
     /* Here's our link to the netlib world.... */
     URL_Struct *m_URL_s;
 
