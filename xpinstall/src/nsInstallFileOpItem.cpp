@@ -799,6 +799,19 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
   //mTarget->Execute(*mParams);
   //mTarget->Spawn(nsAutoCString(*mParams), 0);
 
+  char *cParams[1];
+
+  cParams[0] = nsnull;
+  cParams[0] = mParams->ToNewCString();
+
+  if(cParams[0] == nsnull)
+    return nsInstall::OUT_OF_MEMORY;
+
+  mTarget->Spawn((const char **)&cParams[0], 1);
+
+  if(cParams[0])
+    delete(cParams[0]);
+
   // We don't care if it succeeded or not since we
   // don't wait for the process to end anyways.
   // If the file doesn't exist, it was already detected
