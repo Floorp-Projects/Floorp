@@ -299,51 +299,47 @@ nsresult nsAutoConfig::downloadAutoConfig()
         }
     }
     
-    // Getting an event queue. If we start an AsyncOpen, the thread
-    // needs to wait before the reading of autoconfig is done
-    nsCOMPtr<nsIEventQueue> currentThreadQ;
-    nsCOMPtr<nsIEventQueueService> service;
-
-    // We are having the event queue processing only for the startup
-    // It is not needed with the repeating timer.
-    if (firstTime) {
-        service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) 
-            return rv;
-        rv = service->PushThreadEventQueue(getter_AddRefs(currentThreadQ));
-        if (NS_FAILED(rv)) 
-            return rv;
-    }
-    
     // create a new url 
     nsCOMPtr<nsIURI> url;
     nsCOMPtr<nsIChannel> channel;
     
     rv = NS_NewURI(getter_AddRefs(url), mConfigURL, nsnull, nsnull);
-    if (NS_FAILED(rv)) {
-        service->PopThreadEventQueue(currentThreadQ);
+    if (NS_FAILED(rv))
         return rv;
-    }
-    
+
     // open a channel for the url
     rv = NS_OpenURI(getter_AddRefs(channel),url, nsnull, nsnull, nsnull, nsIRequest::INHIBIT_PERSISTENT_CACHING | nsIRequest::LOAD_BYPASS_CACHE);
-    if (NS_FAILED(rv)) {
-        service->PopThreadEventQueue(currentThreadQ);
+    if (NS_FAILED(rv)) 
         return rv;
-    }
+
     
     rv = channel->AsyncOpen(this, nsnull); 
     if (NS_FAILED(rv)) {
-        service->PopThreadEventQueue(currentThreadQ);
         readOfflineFile();
         return rv;
     }
     
     // Set a repeating timer if the pref is set.
     // This is to be done only once.
+    // Also We are having the event queue processing only for the startup
+    // It is not needed with the repeating timer.
     if (firstTime) {
 
         firstTime = PR_FALSE;
+    
+        // Getting an event queue. If we start an AsyncOpen, the thread
+        // needs to wait before the reading of autoconfig is done
+
+        nsCOMPtr<nsIEventQueueService> service = 
+            do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) 
+            return rv;
+
+        nsCOMPtr<nsIEventQueue> currentThreadQ;
+        rv = service->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                          getter_AddRefs(currentThreadQ));
+        if (NS_FAILED(rv)) 
+            return rv;
     
         /* process events until we're finished. AutoConfig.jsc reading needs
            to be finished before the browser starts loading up
@@ -353,27 +349,19 @@ nsresult nsAutoConfig::downloadAutoConfig()
            that mLoaded will be set to true in any case (success/failure)
         */
         
-        PLEvent *event;
         while (!mLoaded) {
-            rv = currentThreadQ->WaitForEvent(&event);
-            NS_ASSERTION(NS_SUCCEEDED(rv),"-->nsAutoConfig::downloadAutoConfig: currentThreadQ->WaitForEvent failed...");
-            if (NS_FAILED(rv)) {
-                service->PopThreadEventQueue(currentThreadQ);
-                return rv;
-            }
-            rv = currentThreadQ->HandleEvent(event);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "-->nsAutoConfig::downloadAutoConfig: currentThreadQ->HandleEvent failed...");
-            if (NS_FAILED(rv)) {
-                service->PopThreadEventQueue(currentThreadQ);
-                return rv;
+
+            PRBool isEventPending;
+            rv = currentThreadQ->PendingEvents(&isEventPending);
+            if (NS_FAILED(rv)) 
+                return rv;        
+            if (isEventPending) {
+                rv = currentThreadQ->ProcessPendingEvents();
+                if (NS_FAILED(rv)) 
+                    return rv;        
             }
         }
         
-        // Removing the eventQueue from the list
-        rv = service->PopThreadEventQueue(currentThreadQ);
-        if (NS_FAILED(rv)) 
-            return rv;        
-
         PRInt32 minutes = 0;
         rv = mPrefBranch->GetIntPref("autoadmin.refresh_interval", 
                                      &minutes);
