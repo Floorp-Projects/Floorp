@@ -247,11 +247,16 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
   {
     nsString  newAttachName; newAttachName.AssignWithConversion("attachment");
     nsresult  rv = NS_OK;
+    nsCAutoString contentType (aAttach->real_type);
+    PRInt32 pos = contentType.FindCharInSet(";");
+    if (pos > 0)
+      contentType.Truncate(pos);
+
     NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && mimeFinder) 
     {
       nsIMIMEInfo *mimeInfo = nsnull;
-      rv = mimeFinder->GetFromMIMEType(aAttach->real_type, &mimeInfo);
+      rv = mimeFinder->GetFromMIMEType(contentType, &mimeInfo);
       if (NS_SUCCEEDED(rv) && mimeInfo) 
       {
         char *aFileExtension = nsnull;
@@ -643,43 +648,55 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
     line[input_length] = 0;
   }
   
-  converted = MIME_DecodeMimePartIIStr(line, charset, PR_TRUE);
-  
-  if (line != input_line)
-    PR_Free(line);
-  
-  if (converted)
+  // set the default charset to be used....
+  if (input_charset)
   {
-    // If output_charset is NULL, then we should just return the decoded
-    // header value
-    if (!output_charset)
-    {
-      *output_ret = converted;
-      *output_size_ret = nsCRT::strlen(converted);
-    }
-    else
-    {
-      char  *convertedString = NULL; 
-    
-      PRInt32 res = MIME_ConvertString(charset, "UTF-8", converted, &convertedString); 
-      if ( (res != 0) || (!convertedString) )
-      {
-        *output_ret = converted;
-        *output_size_ret = nsCRT::strlen(converted);
-      }
-      else
-      {
-        PR_Free(converted); 
-        *output_ret = convertedString;
-        *output_size_ret = nsCRT::strlen(convertedString);
-      }
-    }
+    PRInt32 charsetLength = nsCRT::strlen(input_charset);
+    if (charsetLength > 127)
+      charsetLength = 127;
+    nsCRT::memcpy(charset, input_charset, charsetLength);
+    charset[charsetLength] = '\0';;
+  }
+  
+  converted = MIME_DecodeMimePartIIStr(line, charset, PR_TRUE);
+
+  const char * stringToUse = converted;
+  const char * charSetToUse = charset;
+
+  if (!stringToUse)
+  {
+    stringToUse = line;
+    charSetToUse = input_charset;
+  }
+  
+  // If output_charset is NULL, then we should just return the decoded
+  // header value
+  if (!output_charset)
+  {
+    *output_ret = converted;
+    *output_size_ret = nsCRT::strlen(stringToUse);
   }
   else
   {
-    *output_ret = 0;
-    *output_size_ret = 0;
+    char  *convertedString = NULL; 
+  
+    PRInt32 res = MIME_ConvertString(charSetToUse, "UTF-8", stringToUse, &convertedString); 
+    if ( (res != 0) || (!convertedString) )
+    {
+      *output_ret = nsCRT::strdup(stringToUse);
+      *output_size_ret = nsCRT::strlen(stringToUse);
+    }
+    else
+    {
+      *output_ret = convertedString;
+      *output_size_ret = nsCRT::strlen(convertedString);
+    }
   }
+
+  if (line != input_line)
+    PR_Free(line);
+  PR_FREEIF(converted);
+
   return 0;
 }
 

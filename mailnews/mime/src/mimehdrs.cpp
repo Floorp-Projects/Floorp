@@ -681,9 +681,19 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
     if (opt->format_out != nsMimeOutput::nsMimeMessageSaveAs)
       output_charset = "UTF-8";
 
+    // if we have an override charset, use it first...otherwise fall back to the
+    // default charset. Note: these charsets will only be used if the header isn't
+    // mime encoded.
+    const char * inputCharset = nsnull;
+    if (opt->override_charset)
+      inputCharset = opt->override_charset;
+    else if (opt->default_charset)
+      inputCharset = opt->default_charset;
+
+
 	  int status =
 		opt->rfc1522_conversion_fn(input, input_length,
-								   0, output_charset,  /* no input charset? */
+								   inputCharset, output_charset,  /* no input charset? */
 								   &converted, &converted_len,
 								   opt->stream_closure);
 	  if (status < 0)
