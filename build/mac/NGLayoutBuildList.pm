@@ -244,6 +244,7 @@ sub BuildDist()
 #LAYOUT
     [":mozilla:layout:base:public:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:html:style:public:MANIFEST", "$distdirectory:layout:"],
+    [":mozilla:layout:html:document:public:MANIFEST", "$distdirectory:layout:"],
 #WIDGET
     [":mozilla:widget:public:MANIFEST", "$distdirectory:widget:"],
 #GFX
@@ -279,12 +280,12 @@ sub BuildCommonProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
-#	Moz::BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
+	Moz::BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
 	Moz::BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",							"Stubs");
-#	Moz::BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"Stubs");
+	Moz::BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"Stubs");
 
-#	Moz::BuildProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp");
-#	MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", "$dist_dir");
+	Moz::BuildProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp");
+	MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", "$dist_dir");
 	
 	Moz::BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.mcp");
 	MakeAlias(":mozilla:lib:mac:MoreFiles:build:MoreFiles$D.shlb", "$dist_dir");
@@ -298,7 +299,7 @@ sub BuildCommonProjects()
 	BuildProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",								"NSStdLib$D.shlb");
 	MakeAlias(":mozilla:lib:mac:NSStdLib:NSStdLib$D.shlb", "$dist_dir");
 	
-	BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
+#	BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
 
 	BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",								"xpcom$D.shlb");
 	MakeAlias(":mozilla:xpcom:macbuild:xpcom$D.shlb", "$dist_dir");
@@ -307,10 +308,8 @@ sub BuildCommonProjects()
 	MakeAlias(":mozilla:jpeg:macbuild:JPEG$D.shlb", "$dist_dir");
 
 	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",										"png$D.o");
-#	MakeAlias(":mozilla:modules:libimg:macbuild:png$D.o", "$dist_dir");
 
 	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",										"libimg$D.o");
-#	MakeAlias(":mozilla:modules:libimg:macbuild:png$D.o", "$dist_dir");
 
 }
 
@@ -323,22 +322,15 @@ sub BuildLayoutProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
-	BuildProject(":mozilla:modules:htmlparser:macbuild:htmlparser.mcp",				"htmlparser$D.o");
+	BuildProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",				"htmlparser$D.o");
 	
 	BuildProject(":mozilla:dom:macbuild:dom.mcp",				"dom$D.o");
 
 	BuildProject(":mozilla:gfx:macbuild:gfx.mcp",				"gfx$D.o");
 
 	BuildProject(":mozilla:layout:macbuild:layout.mcp",	"layout$D.o");
-#	MakeAlias(":mozilla:modules:libimg:macbuild:png$D.o", "$dist_dir");
+
 	BuildProject(":mozilla:webshell:macbuild:webshell.mcp",	"webshell$D.o");
-
-# LAYOUT SPECIFIC
-#  view				\
-#  widget			\
-#  layout			\
-#  webshell
-
 
 }
 
