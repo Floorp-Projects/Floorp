@@ -39,7 +39,7 @@
 # early.
 #
 # And you can re-run it whenever you want. Especially after Bugzilla
-# get's updated you SHOULD rerun it. Because then it may update your
+# gets updated you SHOULD rerun it. Because then it may update your
 # SQL table definitions so that they are again in sync with the code.
 #
 # So, currently this module does:
@@ -60,7 +60,7 @@
 #       settings, e.g. when you add a new platform
 #
 # People that install this module locally are not supposed to modify
-# this script. This is done by shifting the user settable stuff intp
+# this script. This is done by shifting the user settable stuff into
 # a local configuration file 'localconfig'. When this file get's
 # changed and 'checkconfig.pl' will be re-run, then the user changes
 # will be reflected back into the database.
@@ -321,19 +321,21 @@ LocalVar('@opsys', '
         "Mac System 8.5",
         "Mac System 8.6",
 	"Mac System 9.0",
-        "AIX",
+        "Linux",
         "BSDI",
+        "FreeBSD",
+        "NetBSD",
+        "OpenBSD",
+        "AIX",
+        "BeOS",
         "HP-UX",
         "IRIX",
-        "Linux",
-        "FreeBSD",
+        "Neutrino",
+        "OpenVMS",
+        "OS/2",
         "OSF/1",
         "Solaris",
         "SunOS",
-        "Neutrino",
-        "OS/2",
-        "BeOS",
-        "OpenVMS",
         "other"
 );
 ');
