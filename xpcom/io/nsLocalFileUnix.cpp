@@ -492,7 +492,7 @@ nsLocalFile::Normalize()
     BPath be_p;
     status_t err;
     if ((err = be_e.GetPath(&be_p)) == B_OK) {
-        resolved_path_ptr = be_p.Path();
+        resolved_path_ptr = (char *)be_p.Path();
         PL_strncpyz(resolved_path, resolved_path_ptr, PATH_MAX - 1);
     }
 #else
@@ -1212,6 +1212,47 @@ nsLocalFile::Exists(PRBool *_retval)
     return NS_OK;
 }
 
+#ifdef XP_BEOS
+// access() is buggy in BeOS POSIX implementation, at least for BFS, using stat() instead
+NS_IMETHODIMP
+nsLocalFile::IsWritable(PRBool *_retval)
+{
+    CHECK_mPath();
+    NS_ENSURE_ARG_POINTER(_retval);
+    struct stat buf;
+    *_retval = (stat(mPath.get(), &buf) == 0);
+    *_retval = *_retval && (buf.st_mode & (S_IWUSR | S_IWGRP | S_IWOTH ));
+    if (*_retval || errno == EACCES)
+        return NS_OK;
+    return NSRESULT_FOR_ERRNO();
+}
+
+NS_IMETHODIMP
+nsLocalFile::IsReadable(PRBool *_retval)
+{
+    CHECK_mPath();
+    NS_ENSURE_ARG_POINTER(_retval);
+    struct stat buf;
+    *_retval = (stat(mPath.get(), &buf) == 0);
+    *_retval = *_retval && (buf.st_mode & (S_IRUSR | S_IRGRP | S_IROTH ));
+    if (*_retval || errno == EACCES)
+        return NS_OK;
+    return NSRESULT_FOR_ERRNO();
+}
+
+NS_IMETHODIMP
+nsLocalFile::IsExecutable(PRBool *_retval)
+{
+    CHECK_mPath();
+    NS_ENSURE_ARG_POINTER(_retval);
+    struct stat buf;
+    *_retval = (stat(mPath.get(), &buf) == 0);
+    *_retval = *_retval && (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH ));
+    if (*_retval || errno == EACCES)
+        return NS_OK;
+    return NSRESULT_FOR_ERRNO();
+}
+#else
 NS_IMETHODIMP
 nsLocalFile::IsWritable(PRBool *_retval)
 {
@@ -1247,7 +1288,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
         return NS_OK;
     return NSRESULT_FOR_ERRNO();
 }
-
+#endif
 NS_IMETHODIMP
 nsLocalFile::IsDirectory(PRBool *_retval)
 {
