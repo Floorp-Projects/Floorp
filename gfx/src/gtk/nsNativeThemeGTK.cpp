@@ -53,6 +53,8 @@
 #include "nsILookAndFeel.h"
 #include "nsIDeviceContext.h"
 #include "nsTransform2D.h"
+#include "nsIMenuFrame.h"
+#include "nsIMenuParent.h"
 #include "prlink.h"
 
 #include <gdk/gdkprivate.h>
@@ -274,9 +276,30 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       }
 
       // menu item state is determined by the attribute "_moz-menuactive",
-      // and not by the mouse hovering (accessibility).
+      // and not by the mouse hovering (accessibility).  as a special case,
+      // menus which are children of a menu bar are only marked as prelight
+      // if they are open, not on normal hover.
+
       if (aWidgetType == NS_THEME_MENUITEM) {
-        aState->inHover = CheckBooleanAttr(aFrame, mMenuActiveAtom);
+        PRBool isTopLevel = PR_FALSE;
+        nsIMenuFrame *menuFrame;
+        CallQueryInterface(aFrame, &menuFrame);
+
+        if (menuFrame) {
+          nsIMenuParent *menuParent;
+          menuFrame->GetMenuParent(&menuParent);
+          if (menuParent)
+            menuParent->IsMenuBar(isTopLevel);
+        }
+
+        if (isTopLevel) {
+          PRBool isOpen;
+          menuFrame->MenuIsOpen(isOpen);
+          aState->inHover = isOpen;
+        } else {
+          aState->inHover = CheckBooleanAttr(aFrame, mMenuActiveAtom);
+        }
+
         aState->active = FALSE;
       }
     }
