@@ -132,32 +132,6 @@ PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
 PRBool             nsWidget::mGDKHandlerInstalled = PR_FALSE;
 PRBool             nsWidget::sTimeCBSet = PR_FALSE;
 
-#ifdef NS_DEBUG
-// debugging window
-static GtkWidget *debugTopLevel = NULL;
-static GtkWidget *debugBox = NULL;
-static GtkWidget *debugEntryBox = NULL;
-static GtkWidget *debugButton = NULL;
-static GtkWidget *debugCheckBox = NULL;
-nsWidget  *nsWidget::debugWidget = NULL;
-PRBool     nsWidget::sDebugFeedback = PR_FALSE;
-static PRBool     debugCheckedDebugWindow = PR_FALSE;
-static PRBool     debugCallbackRegistered = PR_FALSE;
-
-static void      debugHandleActivate(GtkEditable *editable,
-                                     gpointer user_data);
-static void      debugHandleClicked (GtkButton   *button,
-                                     gpointer user_data);
-static void      debugHandleToggle  (GtkToggleButton *button,
-                                     gpointer user_data);
-static void      debugSetupWindow   (void);
-static void      debugDestroyWindow (void);
-static int       debugWindowPrefChanged (const char *newpref, void *data);
-static void      debugRegisterCallback  (void);
-static gint      debugHandleWindowClose(GtkWidget *window, void *data);
-const char      *debugPrefName = "nglayout.widget.debugWindow";
-#endif /* NS_DEBUG */
-
 //
 // Keep track of the last widget being "dragged"
 //
@@ -217,17 +191,6 @@ nsWidget::nsWidget()
     }
     dragServiceGTK->TargetSetTimeCallback(nsWidget::GetLastEventTime);
   }
-#ifdef NS_DEBUG
-  // see if we need to set up the debugging window
-  if (!debugCheckedDebugWindow) {
-    debugSetupWindow();
-  }
-  // this will set up the callback for when the debug
-  // pref changes
-  if (!debugCallbackRegistered) {
-    debugRegisterCallback();
-  }
-#endif /* NS_DEBUG */
 }
 
 nsWidget::~nsWidget()
@@ -244,11 +207,6 @@ nsWidget::~nsWidget()
   Destroy();
 
   NS_ASSERTION(!ModalWidgetList::Find(this), "destroying widget without first clearing modality.");
-#ifdef NS_DEBUG
-  if (mIsToplevel) {
-    g_print("nsWidget::~nsWidget() of toplevel: %d widgets still exist.\n", sWidgetCount);
-  }
-#endif
 }
 
 
@@ -869,7 +827,7 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
 }
 
 #define CAPS_LOCK_IS_ON \
-(nsWidget::sDebugFeedback && (nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK))
+(nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
 
 NS_IMETHODIMP nsWidget::Validate()
 {
@@ -888,8 +846,10 @@ NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
   if (!GTK_WIDGET_REALIZED(mWidget) || !GTK_WIDGET_VISIBLE(mWidget))
     return NS_ERROR_FAILURE;
 
-#ifdef NS_DEBUG
-  if (CAPS_LOCK_IS_ON)
+#ifdef DEBUG
+  // Check the pref _before_ checking caps lock, because checking
+  // caps lock requires a server round-trip.
+  if (debug_GetCachedBoolPref("nglayout.debug.invalidate_dumping") && CAPS_LOCK_IS_ON)
   {
     debug_DumpInvalidate(stdout,
                          this,
@@ -898,7 +858,7 @@ NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
                          debug_GetName(mWidget),
                          debug_GetRenderXID(mWidget));
   }
-#endif // NS_DEBUG
+#endif // DEBUG
 
   mUpdateArea->SetTo(0, 0, mBounds.width, mBounds.height);
 
@@ -924,8 +884,10 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
   mUpdateArea->Union(aRect.x, aRect.y, aRect.width, aRect.height);
 
-#ifdef NS_DEBUG
-  if (CAPS_LOCK_IS_ON)
+#ifdef DEBUG
+  // Check the pref _before_ checking caps lock, because checking
+  // caps lock requires a server round-trip.
+  if (debug_GetCachedBoolPref("nglayout.debug.invalidate_dumping") && CAPS_LOCK_IS_ON)
   {
     debug_DumpInvalidate(stdout,
                          this,
@@ -934,7 +896,7 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
                          debug_GetName(mWidget),
                          debug_GetRenderXID(mWidget));
   }
-#endif // NS_DEBUG
+#endif // DEBUG
 
   if (aIsSynchronous)
   {
@@ -981,8 +943,10 @@ NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
     nsRegionRect *r = &(regionRectSet->mRects[i]);
 
 
-#ifdef NS_DEBUG
-    if (CAPS_LOCK_IS_ON)
+#ifdef DEBUG
+    // Check the pref _before_ checking caps lock, because checking
+    // caps lock requires a server round-trip.
+    if (debug_GetCachedBoolPref("nglayout.debug.invalidate_dumping") && CAPS_LOCK_IS_ON)
     {
       nsRect rect(r->x, r->y, r->width, r->height);
       debug_DumpInvalidate(stdout,
@@ -992,7 +956,7 @@ NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
                            debug_GetName(mWidget),
                            debug_GetRenderXID(mWidget));
     }
-#endif // NS_DEBUG
+#endif // DEBUG
 
 
     if (aIsSynchronous)
@@ -1330,7 +1294,7 @@ PRBool nsWidget::DispatchFocus(nsGUIEvent &aEvent)
 //
 //////////////////////////////////////////////////////////////////
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 PRInt32
 nsWidget::debug_GetRenderXID(GtkObject * aGtkWidget)
 {
@@ -1366,7 +1330,7 @@ nsWidget::debug_GetName(GtkWidget * aGtkWidget)
   return nsCAutoString("null");
 }
 
-#endif // NS_DEBUG
+#endif // DEBUG
 
 
 //////////////////////////////////////////////////////////////////
@@ -1382,13 +1346,16 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *aEvent,
 {
   NS_ADDREF(aEvent->widget);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   GtkObject *gw;
   void *nativeWidget = aEvent->widget->GetNativeData(NS_NATIVE_WIDGET);
   if (nativeWidget) {
     gw = GTK_OBJECT(nativeWidget);
     
-    if (CAPS_LOCK_IS_ON)
+    // Check the pref _before_ checking caps lock, because checking
+    // caps lock requires a server round-trip.
+
+    if (debug_GetCachedBoolPref("nglayout.debug.event_dumping") && CAPS_LOCK_IS_ON)
       {
         debug_DumpEvent(stdout,
                         aEvent->widget,
@@ -1397,7 +1364,7 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *aEvent,
                         (PRInt32) debug_GetRenderXID(gw));
       }
   }
-#endif // NS_DEBUG
+#endif // DEBUG
 
   if (nsnull != mMenuListener) {
     if (NS_MENU_EVENT == aEvent->eventStructType)
@@ -2548,162 +2515,6 @@ GtkWindow *nsWidget::GetTopLevelWindow(void)
   else
     return NULL;
 }
-
-#ifdef NS_DEBUG
-
-static void setDebugWindow(void)
-{
-  gchar *text = NULL;
-  int val = 0;
-
-  text = gtk_editable_get_chars(GTK_EDITABLE(debugEntryBox), 0, -1);
-  if (!text) {
-    return;
-  }
-
-  if (strlen(text) == 0) {
-    g_print("setting value to null\n");
-    nsWidget::debugWidget = NULL;
-    g_free(text);
-    return;
-  }
-  
-  if (strlen(text) < 3) {
-    g_print("string not long enough\n");
-    return;
-  }
-
-  if (memcmp(text, "0x", 2) != 0) {
-    g_print("string must begin in 0x\n");
-    return;
-  }
-
-  sscanf(&text[2], "%x", &val);
-
-#ifdef DEBUG
-  printf("setting value to 0x%x\n", val);
-#endif
-  nsWidget::debugWidget = (nsWidget *)val;
-
-  g_free(text);
-}
-
-static void debugHandleActivate(GtkEditable *editable,
-                                gpointer user_data)
-{
-  setDebugWindow();
-}
-
-static void      debugHandleClicked (GtkButton   *button,
-                                     gpointer user_data)
-{
-  setDebugWindow();
-}
-
-static void      debugHandleToggle  (GtkToggleButton *button,
-                                     gpointer user_data)
-{
-  if (gtk_toggle_button_get_active(button) == TRUE) {
-    nsWidget::sDebugFeedback = PR_TRUE;
-  }
-  else {
-    nsWidget::sDebugFeedback = PR_FALSE;
-  }
-}
-
-static void      debugDestroyWindow (void)
-{
-  // this will destroy all of the widgets inside the window, too.
-  gtk_widget_destroy(debugTopLevel);
-  debugTopLevel = NULL;
-  debugBox = NULL;
-  debugEntryBox = NULL;
-  debugButton = NULL;
-  debugCheckBox = NULL;
-  nsWidget::debugWidget = NULL;  
-}
-
-static void      debugSetupWindow   (void)
-{
-  PRBool   enable_window = PR_FALSE;
-  nsresult rv;
-  
-  debugCheckedDebugWindow = PR_TRUE;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
-  if (NS_SUCCEEDED(rv) && (prefs)) {
-    rv = prefs->GetBoolPref(debugPrefName, &enable_window);
-    if (NS_SUCCEEDED(rv) && enable_window) {
-      debugTopLevel = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-      gtk_signal_connect(GTK_OBJECT(debugTopLevel),
-                         "delete_event",
-                         GTK_SIGNAL_FUNC(debugHandleWindowClose),
-                         NULL);
-      
-      debugBox = gtk_hbox_new(PR_FALSE, 0);
-      gtk_container_add(GTK_CONTAINER(debugTopLevel), debugBox);
-      
-      debugEntryBox = gtk_entry_new();
-      gtk_box_pack_start_defaults(GTK_BOX(debugBox), debugEntryBox);
-      gtk_signal_connect(GTK_OBJECT(debugEntryBox), "activate",
-                         GTK_SIGNAL_FUNC(debugHandleActivate), NULL);
-      
-      debugButton = gtk_button_new_with_label("Set Window");
-      gtk_box_pack_start_defaults(GTK_BOX(debugBox), debugButton);
-      gtk_signal_connect(GTK_OBJECT(debugButton), "clicked",
-                         GTK_SIGNAL_FUNC(debugHandleClicked), NULL);
-
-      debugCheckBox = gtk_check_button_new_with_label("Debug Feedback");
-      gtk_box_pack_start_defaults(GTK_BOX(debugBox), debugCheckBox);
-      gtk_signal_connect(GTK_OBJECT(debugCheckBox), "toggled",
-                         GTK_SIGNAL_FUNC(debugHandleToggle), NULL);
-      
-      gtk_widget_show_all(debugTopLevel);
-    }
-  }
-}
-
-static int debugWindowPrefChanged (const char *newpref, void *data)
-{
-  PRBool enable_window;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
-  if (NS_SUCCEEDED(rv) && (prefs)) {
-    rv = prefs->GetBoolPref(debugPrefName, &enable_window);
-    if (NS_SUCCEEDED(rv) && enable_window) {
-      if (!debugTopLevel) {
-        // this will trigger the creation of the window
-        debugCheckedDebugWindow = PR_FALSE;
-        debugSetupWindow();
-      }
-    }
-    else if (NS_SUCCEEDED(rv) && (!enable_window)) {
-      if (debugTopLevel) {
-        debugDestroyWindow();
-      }
-    }
-  }
-  return 0;
-}
-
-static void      debugRegisterCallback  (void)
-{
-  nsresult rv;
-  
-  // make sure we don't call in here again
-  debugCallbackRegistered = PR_TRUE;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = prefs->RegisterCallback(debugPrefName, debugWindowPrefChanged, NULL);
-  }
-}
-
-static gint debugHandleWindowClose(GtkWidget *window, void *data)
-{
-  debugDestroyWindow();
-  return TRUE;
-}
-
-#endif /* NS_DEBUG */
 
 void nsWidget::IMECommitEvent(GdkEventKey *aEvent) {
   NS_ASSERTION(0, "nsWidget::IMECommitEvent() shouldn't be called!\n");

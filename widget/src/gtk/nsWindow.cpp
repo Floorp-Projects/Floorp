@@ -99,10 +99,10 @@ extern "C" int usleep(unsigned int);
 #define MODAL_TIMERS_BROKEN
 
 #define CAPS_LOCK_IS_ON \
-(nsWidget::sDebugFeedback && (nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK))
+(nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
 
 #define WANT_PAINT_FLASHING \
-(CAPS_LOCK_IS_ON && debug_WantPaintFlashing())
+(debug_WantPaintFlashing() && CAPS_LOCK_IS_ON)
 
 #define kWindowPositionSlop 20
 
@@ -142,8 +142,6 @@ GHashTable *nsWindow::mWindowLookupTable = NULL;
 
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::mLastDragMotionWindow = NULL;
-// we get our drop after the leave.
-nsWindow *nsWindow::mLastLeaveWindow = NULL;
 
 PRBool gJustGotDeactivate = PR_FALSE;
 PRBool gJustGotActivate   = PR_FALSE;
@@ -181,8 +179,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsWidget)
 nsWindow::nsWindow() 
 {
   mShell = nsnull;
-  mResized = PR_FALSE;
-  mLowerLeft = PR_FALSE;
   mWindowType = eWindowType_child;
   mBorderStyle = eBorderStyle_default;
   mSuperWin = 0;
@@ -197,8 +193,6 @@ nsWindow::nsWindow()
   if (mWindowLookupTable == NULL) {
     mWindowLookupTable = g_hash_table_new(g_direct_hash, g_direct_equal);
   }
-  if (mLastLeaveWindow == this)
-    mLastLeaveWindow = NULL;
   if (mLastDragMotionWindow == this)
     mLastDragMotionWindow = NULL;
   mBlockMozAreaFocusIn = PR_FALSE;
@@ -316,11 +310,6 @@ NS_IMETHODIMP nsWindow::Destroy(void)
   return nsWidget::Destroy();
 }
 
-
-PRBool nsWindow::IsChild() const
-{
-  return PR_FALSE;
-}
 
 void nsWindow::InvalidateWindowPos(void)
 {
@@ -450,7 +439,6 @@ nsWindow::DestroyNativeChildren(void)
     window = GDK_WINDOW_XWINDOW(mSuperWin->bin_window);
     if (window && !((GdkWindowPrivate *)mSuperWin->bin_window)->destroyed)
     {
-      //DumpWindowTree();
       // get a list of children for this window
       XQueryTree(display, window, &root_return, &parent_return,
                  &children_return, &nchildren_return);
@@ -470,32 +458,6 @@ nsWindow::DestroyNativeChildren(void)
   // free up this struct
   if (children_return)
     XFree(children_return);
-}
-
-void
-nsWindow::ShowCrossAtLocation(guint x, guint y)
-{
-#ifdef DEBUG
-  g_print("ShowCrossAtLocation %d, %d\n", x, y);
-#endif
-  if (mSuperWin) {
-    GdkGC *gc = 0;
-    GdkColor white;
-    int i;
-    gc = gdk_gc_new(GDK_ROOT_PARENT());
-    white.pixel = WhitePixel(gdk_display, DefaultScreen(gdk_display));
-    gdk_gc_set_foreground(gc,&white);
-    gdk_gc_set_function(gc,GDK_XOR);
-    gdk_gc_set_subwindow(gc,GDK_INCLUDE_INFERIORS);
-    gdk_gc_set_line_attributes(gc, 4, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
-    for (i=0; i < 2; i++) {
-      gdk_draw_line(mSuperWin->bin_window, gc, x - 20 , y, x + 20, y);
-      XSync(gdk_display, False);
-      usleep(200);
-      gdk_draw_line(mSuperWin->bin_window, gc, x, y - 20, x, y + 20);
-    }
-    gdk_gc_destroy(gc);
-  }
 }
 
 // This function will try to take a given native X window and try 
@@ -744,12 +706,6 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
    return;
  }
 
-#ifdef NS_DEBUG
-  if (this == debugWidget) {
-    g_print("nsWindow::DoPaint %d %d %d %d\n",
-            aX, aY, aWidth, aHeight);
-  }
-#endif // NS_DEBUG
   if (mEventCallback) {
 
     nsPaintEvent event;
@@ -768,7 +724,7 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     event.renderingContext = GetRenderingContext();
     if (event.renderingContext) {
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
       if (WANT_PAINT_FLASHING)
       {
         GdkWindow *gw = GetRenderWindow(GTK_OBJECT(mSuperWin));
@@ -791,7 +747,14 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
           nsGtkUtils::gdk_window_flash(gw,1,100000,area);
         }
       }
-#endif // NS_DEBUG
+
+      // Check the pref _before_ checking caps lock, because checking
+      // caps lock requires a server round-trip.
+      if (debug_GetCachedBoolPref("nglayout.debug.paint_dumping") && CAPS_LOCK_IS_ON)
+        debug_DumpPaintEvent(stdout, this, &event, 
+                             debug_GetName(GTK_OBJECT(mSuperWin)),
+                             (PRInt32) debug_GetRenderXID(GTK_OBJECT(mSuperWin)));
+#endif // DEBUG
       
       DispatchWindowEvent(&event);
       NS_RELEASE(event.renderingContext);
@@ -1637,112 +1600,6 @@ nsWindow::HandleGDKEvent(GdkEvent *event)
   }
 }
 
-#ifdef NS_DEBUG
-
-/* static */
-void
-nsWindow::dumpWindowChildren(Window aWindow, unsigned int depth)
-{
-  Display     *display;
-  Window       window;
-  Window       root_return;
-  Window       parent_return;
-  Window      *children_return;
-  unsigned int nchildren_return;
-  unsigned int i;
-  
-  display = GDK_DISPLAY();
-  window = aWindow;
-  XQueryTree(display, window, &root_return, &parent_return,
-             &children_return, &nchildren_return);
-
-#ifdef DEBUG_DND_XLATE
-  printDepth(depth);
-
-  g_print("Window 0x%lx ", window);
-#endif
-
-  GdkWindow *thisWindow = NULL;
-
-  thisWindow = gdk_window_lookup(window);
-
-  if (!thisWindow)
-  {
-    g_print("(none)\n");
-  }
-  else
-  {
-    gpointer data;
-    // see if this is a real widget
-    gdk_window_get_user_data(thisWindow, &data);
-    if (data)
-    {
-      if (GTK_IS_WIDGET(data))
-      {
-        g_print("(%s)\n", gtk_widget_get_name(GTK_WIDGET(data)));
-      }
-      else if (GDK_IS_SUPERWIN(data))
-      {
-        g_print("(bin_window for nsWindow %p)\n", gtk_object_get_data(GTK_OBJECT(data), "nsWindow"));
-      }
-      else
-      {
-        g_print("(invalid GtkWidget)\n");
-      }
-    }
-    else
-    {
-      // ok, see if it's a shell window
-      nsWindow *childWindow = (nsWindow *)g_hash_table_lookup(nsWindow::mWindowLookupTable,
-                                                              thisWindow);
-      if (childWindow)
-      {
-        g_print("(shell_window for nsWindow %p)\n", NS_STATIC_CAST(void *, childWindow));
-      }
-    }
-  }
-
-  for (i=0; i < nchildren_return; i++)
-  {
-    dumpWindowChildren(children_return[i], depth + 1);
-  }
-  
-  // free the list of children
-  if (children_return)
-    XFree(children_return);
-
-}
-
-void
-nsWindow::DumpWindowTree(void)
-{
-  if (mShell || mSuperWin)
-  {
-    GdkWindow *startWindow = NULL;
-    // see where we are starting
-    if (mShell)
-    {
-      g_print("dumping from shell for %p.\n", NS_STATIC_CAST(void *, this));
-      startWindow = mShell->window;
-    }
-    else 
-    {
-      g_print("dumping from superwin for %p.\n", NS_STATIC_CAST(void *, this));
-      startWindow = mSuperWin->shell_window;
-    }
-    Window window;
-    window = GDK_WINDOW_XWINDOW(startWindow);
-    dumpWindowChildren(window, 0);
-  }
-  else
-  {
-    g_print("no windows for %p.\n", NS_STATIC_CAST(void *, this));
-  }
-    
-}
-
-#endif /* NS_DEBUG */
-
 void
 nsWindow::OnDestroySignal(GtkWidget* aGtkWidget)
 {
@@ -2365,197 +2222,6 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
   return NS_OK;
 }
 
-
-
-void nsWindow::SendExposeEvent()
-{
-  mUpdateArea->Intersect(0, 0, mBounds.width, mBounds.height);
-
-  nsPaintEvent event;
-
-  event.rect = new nsRect();
-
-  event.message = NS_PAINT;
-  event.widget = this;
-  event.eventStructType = NS_PAINT_EVENT;
-  //  event.point.x = event->xexpose.x;
-  //  event.point.y = event->xexpose.y;
-  /* XXX fix this */
-  event.time = 0;
-
-  PRInt32 x, y, w, h;
-  mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
-
-  event.rect->x = x;
-  event.rect->y = y;
-  event.rect->width = w;
-  event.rect->height = h;
-  
-  if (event.rect->width == 0 || event.rect->height == 0) {
-    delete event.rect;
-    return;
-  }
-
-  // print out stuff here incase the event got dropped on the floor above
-#ifdef NS_DEBUG
-  if (CAPS_LOCK_IS_ON)
-  {
-    debug_DumpPaintEvent(stdout,
-                         this,
-                         &event,
-                         debug_GetName(GTK_OBJECT(mSuperWin)),
-                         (PRInt32) debug_GetRenderXID(GTK_OBJECT(mSuperWin)));
-  }
-#endif // NS_DEBUG
-
-  event.renderingContext = GetRenderingContext();
-  if (event.renderingContext) {
-    DispatchWindowEvent(&event);
-    NS_RELEASE(event.renderingContext);
-  }
-
-
-  mUpdateArea->Subtract(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
-
-#ifdef NS_DEBUG
-  if (WANT_PAINT_FLASHING)
-  {
-    GdkWindow *gw = GetRenderWindow(GTK_OBJECT(mSuperWin));
-    if (gw)
-    {
-      GdkRectangle   ar;
-      GdkRectangle * area = (GdkRectangle*) NULL;
-        
-      if (event.rect)
-      {
-        ar.x = event.rect->x;
-        ar.y = event.rect->y;
-          
-        ar.width = event.rect->width;
-        ar.height = event.rect->height;
-        
-        area = &ar;
-      }
-        
-      nsGtkUtils::gdk_window_flash(gw,1,100000,area);
-    }
-  }
-#endif // NS_DEBUG
-
-  delete event.rect;
-}
-
-
-/**
- * Processes an Expose Event
- *
- **/
-PRBool nsWindow::OnExpose(nsPaintEvent &event)
-{
-  nsresult result = PR_TRUE;
-
-  // call the event callback
-  if (mEventCallback) 
-  {
-    event.renderingContext = nsnull;
-
-    //    printf("nsWindow::OnExpose\n");
-
-    // expose.. we didn't get an Invalidate, so we should up the count here
-    mUpdateArea->Union(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
-
-    SendExposeEvent();
-  }
-
-  return result;
-}
-
-/**
- * Processes an Draw Event
- *
- **/
-PRBool nsWindow::OnDraw(nsPaintEvent &event)
-{
-  nsresult result ;
-
-  // call the event callback
-  if (mEventCallback) 
-  {
-    event.renderingContext = nsnull;
-
-    // XXX we SHOULD get an expose and not a draw for things, but we don't always with gtk <= 1.2.5
-    //    mUpdateArea->Union(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
-
-#ifdef NS_DEBUG
-    if (CAPS_LOCK_IS_ON)
-    {
-      debug_DumpPaintEvent(stdout,
-                           this,
-                           &event,
-                           debug_GetName(GTK_OBJECT(mSuperWin)),
-                           (PRInt32) debug_GetRenderXID(GTK_OBJECT(mSuperWin)));
-    }
-#endif // NS_DEBUG
-
-
-    //    NS_ADDREF(mUpdateArea);
-    //    event.region = mUpdateArea;
-
-    //    printf("\n\n");
-    PRInt32 x, y, w, h;
-    mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
-    //    printf("should be painting x = %i , y = %i , w = %i , h = %i\n", x, y, w, h);
-    //    printf("\n\n");
-    event.rect->x = x;
-    event.rect->y = y;
-    event.rect->width = w;
-    event.rect->height = h;
-
-    if (event.rect->width == 0 || event.rect->height == 0)
-    {
-      //      printf("ignoring paint for 0x0\n");
-      return NS_OK;
-    }
-
-
-    event.renderingContext = GetRenderingContext();
-    if (event.renderingContext) {
-      result = DispatchWindowEvent(&event);
-      NS_RELEASE(event.renderingContext);
-    }
-
-
-    mUpdateArea->Subtract(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
-
-#ifdef NS_DEBUG
-    if (WANT_PAINT_FLASHING)
-    {
-      GdkWindow *    gw = GetRenderWindow(GTK_OBJECT(mSuperWin));
-      if (gw)
-      {
-        GdkRectangle   ar;
-        GdkRectangle * area = (GdkRectangle*) NULL;
-        
-        if (event.rect)
-        {
-          ar.x = event.rect->x;
-          ar.y = event.rect->y;
-          
-          ar.width = event.rect->width;
-          ar.height = event.rect->height;
-          
-          area = &ar;
-        }
-        
-        nsGtkUtils::gdk_window_flash(gw,1,100000,area);
-      }
-    }
-#endif // NS_DEBUG
-  }
-  return result;
-}
-
-
 NS_IMETHODIMP nsWindow::BeginResizingChildren(void)
 {
   //  gtk_layout_freeze(GTK_LAYOUT(mWidget));
@@ -3142,103 +2808,6 @@ GtkWindow *nsWindow::GetTopLevelWindow(void)
 }
 
 //////////////////////////////////////////////////////////////////////
-//
-// Draw signal
-// 
-//////////////////////////////////////////////////////////////////////
-void 
-nsWindow::InitDrawEvent(GdkRectangle * aArea,
-                        nsPaintEvent & aPaintEvent,
-                        PRUint32       aEventType)
-{
-  aPaintEvent.message = aEventType;
-  aPaintEvent.widget  = (nsWidget *) this;
-
-  aPaintEvent.eventStructType = NS_PAINT_EVENT;
-  //  aPaintEvent.point.x = 0;
-  //  aPaintEvent.point.y = 0;
-  aPaintEvent.point.x = aArea->x;
-  aPaintEvent.point.y = aArea->y; 
-  aPaintEvent.time = GDK_CURRENT_TIME;
-
-  if (aArea != NULL) 
-  {
-    aPaintEvent.rect = new nsRect(aArea->x, 
-							  aArea->y, 
-							  aArea->width, 
-							  aArea->height);
-  }
-}
-//////////////////////////////////////////////////////////////////////
-void 
-nsWindow::UninitDrawEvent(GdkRectangle * area,
-                          nsPaintEvent & aPaintEvent,
-                          PRUint32       aEventType)
-{
-  if (area != NULL) 
-  {
-    delete aPaintEvent.rect;
-  }
-
-  // While I'd think you should NS_RELEASE(aPaintEvent.widget) here,
-  // if you do, it is a NULL pointer.  Not sure where it is getting
-  // released.
-}
-//////////////////////////////////////////////////////////////////////
-/* static */ gint
-nsWindow::DrawSignal(GtkWidget *    /* aWidget */,
-					 GdkRectangle * aArea,
-					 gpointer       aData)
-{
-  nsWindow * window = (nsWindow *) aData;
-
-  NS_ASSERTION(nsnull != window,"window is null");
-
-  return window->OnDrawSignal(aArea);
-}
-//////////////////////////////////////////////////////////////////////
-/* virtual */ gint
-nsWindow::OnDrawSignal(GdkRectangle * aArea)
-{
-  //printf("nsWindow::OnDrawSignal()\n");
-
-  nsPaintEvent pevent;
-
-  InitDrawEvent(aArea, pevent, NS_PAINT);
-
-  nsWindow * win = (nsWindow *) this;
-
-  NS_ADDREF(win);
-
-  win->OnDraw(pevent);
-
-  NS_RELEASE(win);
-
-  UninitDrawEvent(aArea, pevent, NS_PAINT);
-
-  return PR_TRUE;
-}
-
-// Add an XATOM property to this window.
-// Assuming XA_STRING type.
-// Borrowed from xfe classic branch.
-void nsWindow::StoreProperty(char *property, unsigned char *data)
-{
-  
-  // This needs to happen before properties start working.
-  // Not sure if calling this is ? overkill or not.
-  gtk_widget_show_all (mShell);
-
-  // GetRenderWindow(mWidget),
-  gdk_property_change (mShell->window,
-                       gdk_atom_intern (property, FALSE), /* property */
-                       XA_STRING, /* type */
-                       8, /* *sizeof(GdkAtom) Format. ? */
-                       GDK_PROP_MODE_REPLACE, /* mode */
-                       (guchar *)data, /* data */
-                       (gint)strlen((char *)data)); /* size of data */
-}
-
 // These are all of our drag and drop operations
 
 void
@@ -3748,11 +3317,6 @@ ChildWindow::~ChildWindow()
   IndentByDepth(stdout);
   printf("ChildWindow::~ChildWindow:%p\n", this);
 #endif
-}
-
-PRBool ChildWindow::IsChild() const
-{
-  return PR_TRUE;
 }
 
 #ifdef USE_XIM

@@ -58,7 +58,7 @@ class nsFont;
 class nsIAppShell;
 
 /**
- * Native GTK++ window wrapper.
+ * Native GTK+ window wrapper.
  */
 
 class nsWindow : public nsWidget
@@ -134,22 +134,12 @@ public:
 
   gint                 ConvertBorderStyles(nsBorderStyle bs);
 
-  // Add an XATOM property to this window.
-  void                 StoreProperty(char *property, unsigned char *data);
   void                 InvalidateWindowPos(void);
 
-
-  virtual PRBool IsChild() const;
-
-  // Utility methods
-  virtual  PRBool OnExpose(nsPaintEvent &event);
-  virtual  PRBool OnDraw(nsPaintEvent &event);
 
   virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
   // in nsWidget now
   //    virtual  PRBool OnResize(nsSizeEvent &aEvent);
-  
-  static void SuperWinFilter(GdkSuperWin *superwin, XEvent *event, gpointer p);
   
   void HandleXlibConfigureNotifyEvent(XEvent *event);
   // Return the GtkMozArea that is the nearest parent of this widget
@@ -166,7 +156,6 @@ public:
   PRBool GrabInProgress(void);
   //  XXX Chris - fix these
   //  virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
-  void ShowCrossAtLocation(guint x, guint y);
 
   // this will get the nsWindow with the grab.  The return will not be
   // addrefed.
@@ -184,24 +173,6 @@ public:
   void HandleMozAreaFocusOut(void);
 protected:
 
-  //////////////////////////////////////////////////////////////////////
-  //
-  // Draw signal
-  // 
-  //////////////////////////////////////////////////////////////////////
-  void InitDrawEvent(GdkRectangle * aArea,
-                     nsPaintEvent & aPaintEvent,
-                     PRUint32       aEventType);
-
-  void UninitDrawEvent(GdkRectangle * area,
-                       nsPaintEvent & aPaintEvent,
-                       PRUint32       aEventType);
-  
-  static gint DrawSignal(GtkWidget *    aWidget,
-                         GdkRectangle * aArea,
-                         gpointer       aData);
-
-  virtual gint OnDrawSignal(GdkRectangle * aArea);
   virtual void OnRealize(GtkWidget *aWidget);
 
   virtual void OnDestroySignal(GtkWidget* aGtkWidget);
@@ -212,11 +183,6 @@ protected:
   NS_IMETHOD CreateNative(GtkObject *parentWidget);
 
   PRBool      mIsTooSmall;
-
-  // Resize event management
-  nsRect mResizeRect;
-  int    mResized;
-  PRBool mLowerLeft;
 
   GtkWidget *mShell;  /* used for toplevel windows */
   GdkSuperWin *mSuperWin;
@@ -247,7 +213,6 @@ protected:
 
   // this is the last window that had a drag event happen on it.
   static nsWindow  *mLastDragMotionWindow;
-  static nsWindow  *mLastLeaveWindow;
   static GdkCursor *gsGtkCursorCache[eCursor_count_up_down + 1];
 
   void   InitDragEvent(nsMouseEvent &aEvent);
@@ -336,11 +301,6 @@ protected:
   static guint DragMotionTimerCallback (gpointer aClosure);
   static void  DragLeaveTimerCallback  (nsITimer *aTimer, void *aClosure);
 
-#ifdef NS_DEBUG
-  void        DumpWindowTree(void);
-  static void dumpWindowChildren(Window aWindow, unsigned int depth);
-#endif
-
 #ifdef USE_XIM
 protected:
   PRBool              mIMEEnable;
@@ -396,7 +356,6 @@ private:
   nsresult     SetIcon(GdkPixmap *window_pixmap, 
                        GdkBitmap *window_mask);
   nsresult     SetIcon();
-  void         SendExposeEvent();
   PRBool       mLastGrabFailed;
   void         NativeGrab(PRBool aGrab);
 
@@ -415,7 +374,6 @@ class ChildWindow : public nsWindow {
 public:
   ChildWindow();
   ~ChildWindow();
-  virtual PRBool IsChild() const;
 };
 
 #endif // Window_h__

@@ -43,7 +43,7 @@ static int PR_CALLBACK colorPrefChanged(const char* aPref, void* aData);
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 #include "nsSize.h"
 #endif
  
@@ -484,7 +484,7 @@ nsXPLookAndFeel::LookAndFeelChanged()
 }
 
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   // This method returns the actual (or nearest estimate) 
   // of the Navigator size for a given form control for a given font
   // and font size. This is used in NavQuirks mode to see how closely
