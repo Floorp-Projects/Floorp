@@ -16,7 +16,8 @@
  * Reserved.
  */
   
-
+#define DEBUG_XMLENCODING
+#define XMLENCODING_PEEKBYTES 64
 
 #include "nsParser.h"
 #include "nsIContentSink.h" 
@@ -1086,6 +1087,109 @@ nsresult nsParser::OnStartRequest(nsIURI* aURL, const char *aSourceType)
   return NS_OK;
 }
 
+
+#define UCS2_BE "X-ISO-10646-UCS-2-BE"
+#define UCS2_LE "X-ISO-10646-UCS-2-LE"
+#define UCS4_BE "X-ISO-10646-UCS-4-BE"
+#define UCS4_LE "X-ISO-10646-UCS-4-LE"
+#define UCS4_2143 "X-ISO-10646-UCS-4-2143"
+#define UCS4_3412 "X-ISO-10646-UCS-4-3412"
+
+static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
+   nsString& oCharset, nsCharsetSource& oCharsetSource)
+{
+ oCharsetSource= kCharsetFromAutoDetection;
+ oCharset = "";
+ // see http://www.w3.org/TR/1998/REC-xml-19980210#sec-oCharseting
+ // for details
+ switch(aBytes[0])
+	 {
+   case 0x00:
+     if(0x00==aBytes[1]) {
+        // 00 00
+        if((0x00==aBytes[2]) && (0x3C==aBytes[3])) {
+           // 00 00 00 3C UCS-4, big-endian machine (1234 order)
+           oCharset = UCS4_BE;
+        } else if((0x3C==aBytes[2]) && (0x00==aBytes[3])) {
+           // 00 00 3C 00 UCS-4, unusual octet order (2143)
+           oCharset = UCS4_2143;
+        } 
+     } else if(0x3C==aBytes[1]) {
+        // 00 3C
+        if((0x00==aBytes[2]) && (0x00==aBytes[3])) {
+           // 00 3C 00 00 UCS-4, unusual octet order (3412)
+           oCharset = UCS4_3412;
+        } else if((0x3C==aBytes[2]) && (0x3F==aBytes[3])) {
+           // 00 3C 00 3F UTF-16, big-endian, no Byte Order Mark
+           oCharset = UCS2_BE; // should change to UTF-16BE
+        } 
+     }
+   break;
+   case 0x3C:
+     if(0x00==aBytes[1]) {
+        // 3C 00
+        if((0x00==aBytes[2]) && (0x00==aBytes[3])) {
+           // 3C 00 00 00 UCS-4, little-endian machine (4321 order)
+           oCharset = UCS4_LE;
+        } else if((0x3F==aBytes[2]) && (0x00==aBytes[3])) {
+           // 3C 00 3F 00 UTF-16, little-endian, no Byte Order Mark
+           oCharset = UCS2_LE; // should change to UTF-16LE
+        } 
+     } else if((0x3C==aBytes[0]) && (0x3F==aBytes[1]) &&
+               (0x78==aBytes[2]) && (0x6D==aBytes[3]) &&
+               (0 == PL_strncmp("<?xml version", (char*)aBytes, 13 ))) {
+       // 3C 3F 78 6D
+       nsAutoString firstXbytes("");
+       firstXbytes.Append((const char*)aBytes, (PRInt32)
+                       ((aLen > XMLENCODING_PEEKBYTES)?
+                       XMLENCODING_PEEKBYTES:
+                       aLen)); 
+       PRInt32 xmlDeclEnd = firstXbytes.Find("?>", PR_FALSE, 13);
+	   // 27 == strlen("<xml? version="1" encoding=");
+       if((kNotFound != xmlDeclEnd) &&(xmlDeclEnd > 27 )){
+           firstXbytes.Cut(xmlDeclEnd, firstXbytes.Length()-xmlDeclEnd);
+           PRInt32 encStart = firstXbytes.Find("encoding", PR_FALSE,13);
+           if(kNotFound != encStart) {
+             encStart = firstXbytes.FindCharInSet("\"'", encStart+8);
+                              // 8 == strlen("encoding")
+             if(kNotFound != encStart) {
+                PRUnichar q = firstXbytes.CharAt(encStart); 
+                PRInt32 encEnd = firstXbytes.FindChar(q, PR_FALSE, encStart+1);
+                if(kNotFound != encEnd) {
+                   PRInt32 count = encEnd - encStart -1;
+                   if(count >0) {
+                      firstXbytes.Mid(oCharset,(encStart+1), count);
+                      oCharsetSource= kCharsetFromMetaTag;
+                   }
+                }
+             }
+           }
+       }
+     }
+   break;
+   case 0xFE:
+     if(0xFF==aBytes[1]) {
+        // FE FF
+        // UTF-16, big-endian 
+        oCharset = UCS2_BE; // should change to UTF-16BE
+     }
+   break;
+   case 0xFF:
+     if(0xFE==aBytes[1]) {
+        // FF FE
+        // UTF-16, little-endian 
+        oCharset = UCS2_LE; // should change to UTF-16LE
+     }
+   break;
+   // case 0x4C: if((0x6F==aBytes[1]) && ((0xA7==aBytes[2] && (0x94==aBytes[3])) {
+   //   We do not care EBCIDIC here....
+   // }
+   // break;
+ }  // switch
+ return oCharset.Length() > 0;
+}
+
+
 /**
  *  
  *  
@@ -1126,13 +1230,33 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
   int       theStartPos=0;
   nsresult result=NS_OK;
 
+  PRBool needCheckFirst4Bytes = 
+          ((0 == sourceOffset) && (mCharsetSource<kCharsetFromAutoDetection));
   while ((theNumRead>0) && (aLength>theTotalRead) && (NS_OK==result)) {
     result = pIStream->Read(mParserContext->mTransferBuffer, aLength, &theNumRead);
     if((result == NS_OK) && (theNumRead>0)) {
+      if(needCheckFirst4Bytes && (theNumRead >= 4)) {
+         nsCharsetSource guessSource;
+         nsAutoString guess("");
+         
+         needCheckFirst4Bytes = PR_FALSE;
+         if(detectByteOrderMark((const unsigned char*)mParserContext->mTransferBuffer,
+                                theNumRead, guess, guessSource)) 
+         {
+#ifdef DEBUG_XMLENCODING
+            printf("xmlencoding detect- %s\n", guess.ToNewCString());
+#endif
+            this->SetDocumentCharset(guess, guessSource);
+			mParserContext->mScanner->SetDocumentCharset(guess, guessSource);
+         }
+      }
       theTotalRead+=theNumRead;
       if(mParserFilter)
          mParserFilter->RawBuffer(mParserContext->mTransferBuffer, &theNumRead);
 
+#if 0
+      // The following Hack have moved to nsScanner.cpp
+      // Remove that Hack if you feel this hack is not necessary
       // XXX Hack --- NULL character(s) is(are) seen in the middle of the buffer!!!
       // For now, I'm conditioning the raw buffer by removing the unwanted null chars.
       // Problem could be NECKO related
@@ -1141,6 +1265,7 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
         if(mParserContext->mTransferBuffer[i]==kNullCh)
           mParserContext->mTransferBuffer[i]=kSpace;
       }
+#endif 
 
 #ifdef  NS_DEBUG
       int index=0;
