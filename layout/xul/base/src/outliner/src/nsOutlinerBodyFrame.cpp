@@ -1862,11 +1862,6 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
     currX += mIndentation * level;
     remainingWidth -= mIndentation * level;
 
-    // Always leave space for the twisty.
-    nsRect twistyRect(currX, cellRect.y, remainingWidth, cellRect.height);
-      PaintTwisty(aRowIndex, aColumn, twistyRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer,
-                  remainingWidth, currX);
-
     // Resolve the style to use for the connecting lines.
     nsCOMPtr<nsIStyleContext> lineContext;
     GetPseudoStyleContext(nsXULAtoms::mozoutlinerline, getter_AddRefs(lineContext));
@@ -1875,6 +1870,20 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
     
     if (vis->IsVisibleOrCollapsed() && level && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
       // Paint the connecting lines.
+
+      // Get the size of the twisty. We don't want to paint the twisty
+      // before painting of connecting lines since it would paint lines over
+      // the twisty. But we need to leave a place for it.
+      nsCOMPtr<nsIStyleContext> twistyContext;
+      GetPseudoStyleContext(nsXULAtoms::mozoutlinertwisty, getter_AddRefs(twistyContext));
+
+      nsRect twistySize = GetImageSize(aRowIndex, aColumn->GetID(), twistyContext);
+
+      const nsStyleMargin* twistyMarginData = (const nsStyleMargin*)twistyContext->GetStyleData(eStyleStruct_Margin);
+      nsMargin twistyMargin;
+      twistyMarginData->GetMargin(twistyMargin);
+      twistySize.Inflate(twistyMargin);
+
       aRenderingContext.PushState();
 
       const nsStyleBorder* borderStyle = (const nsStyleBorder*)lineContext->GetStyleData(eStyleStruct_Border);
@@ -1913,7 +1922,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
           imageSize.Inflate(imageMargin);
 
           // Line up line with the parent image.
-          x = currX + imageSize.width / 2;
+          x = currX + twistySize.width + imageSize.width / 2;
 
           // Paint full vertical line only if we have next sibling.
           PRBool hasNextSibling;
@@ -1941,6 +1950,11 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
       PrefillPropertyArray(aRowIndex, aColumn);
       mView->GetCellProperties(aRowIndex, aColumn->GetID(), mScratchArray);
     }
+
+    // Always leave space for the twisty.
+    nsRect twistyRect(currX, cellRect.y, remainingWidth, cellRect.height);
+    PaintTwisty(aRowIndex, aColumn, twistyRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer,
+                remainingWidth, currX);
   }
   
   // Now paint the icon for our cell.
