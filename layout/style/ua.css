@@ -25,7 +25,8 @@ BODY {
   cursor: arrow;
   display: block;
   line-height: 1.0;
-  margin: 8px;
+//XXX not yet...  margin: 8px;
+  padding: 8px;
   overflow: auto;
 }
 
