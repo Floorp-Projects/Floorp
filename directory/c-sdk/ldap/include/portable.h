@@ -44,7 +44,7 @@
  */
 
 #ifndef SYSV
-#if defined( hpux ) || defined( sunos5 ) || defined ( sgi ) || defined( SVR4 )
+#if defined( hpux ) || defined( SOLARIS ) || defined ( sgi ) || defined( SVR4 )
 #define SYSV
 #endif
 #endif
@@ -92,15 +92,6 @@
 #define WAITSTATUSTYPE	union wait
 #else
 #define WAITSTATUSTYPE	int
-#endif
-
-/*
- * define the flags for wait
- */
-#ifdef sunos5
-#define WAIT_FLAGS	( WNOHANG | WUNTRACED | WCONTINUED )
-#else
-#define WAIT_FLAGS	( WNOHANG | WUNTRACED )
 #endif
 
 /*
@@ -201,26 +192,6 @@
 #define NSLDAPI_MT_SAFE_SIGPROCMASK(h,s,o)	sigprocmask(h,s,o)
 #endif
 
-
-/*
- * for signal() -- what do signal handling functions return?
- */
-#ifndef SIG_FN
-#ifdef sunos5
-#   define SIG_FN void          /* signal-catching functions return void */
-#else /* sunos5 */
-# ifdef BSD
-#  if (BSD >= 199006) || defined(NeXT) || defined(OSF1) || defined(sun) || defined(ultrix) || defined(apollo) || defined(POSIX_SIGNALS)
-#   define SIG_FN void          /* signal-catching functions return void */
-#  else
-#   define SIG_FN int           /* signal-catching functions return int */
-#  endif
-# else /* BSD */
-#  define SIG_FN void           /* signal-catching functions return void */
-# endif /* BSD */
-#endif /* sunos5 */
-#endif /* SIG_FN */
-
 /*
  * toupper and tolower macros are different under bsd and sys v
  */
@@ -255,11 +226,6 @@
 #if ( !defined( HPUX9 )) && ( !defined( sunos4 )) && ( !defined( SNI )) && \
 	( !defined( HAVE_TIME_R ))
 #define HAVE_TIME_R
-#endif
-
-#if defined( sunos5 ) || defined( aix )
-#define HAVE_GETPWNAM_R
-#define HAVE_GETGRNAM_R
 #endif
 
 #if defined(SNI) || defined(LINUX1_2)
@@ -384,7 +350,7 @@ extern char *strdup();
 /*
  * Define a portable type for IPv4 style Internet addresses (32 bits):
  */
-#if ( defined(sunos5) && defined(_IN_ADDR_T)) || \
+#if defined(_IN_ADDR_T) || defined(LINUX) || \
     defined(aix) || defined(HPUX11) || defined(OSF1)
 typedef in_addr_t	nsldapi_in_addr_t;
 #else
