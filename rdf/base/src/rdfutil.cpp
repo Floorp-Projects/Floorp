@@ -38,6 +38,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
+#include "nsIURL.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -185,18 +186,18 @@ rdf_IsAnonymousResource(const nsString& aContextURI, nsIRDFResource* aResource)
 
 
 PR_EXTERN(nsresult)
-rdf_PossiblyMakeRelative(const nsString& aContextURI, nsString& aURI)
+rdf_MakeRelativeRef(const nsString& aBaseURI, nsString& aURI)
 {
-    // This implementation is extremely simple: no ".." or anything
-    // fancy like that. If the context URI is not a prefix of the URI
-    // in question, we'll just bail.
-    if (aURI.Find(aContextURI) != 0)
+    // This implementation is extremely simple: e.g., it can't compute
+    // relative paths, or anything fancy like that. If the context URI
+    // is not a prefix of the URI in question, we'll just bail.
+    if (aURI.Find(aBaseURI) != 0)
         return NS_OK;
 
     // Otherwise, pare down the target URI, removing the context URI.
-    aURI.Cut(0, aContextURI.Length());
+    aURI.Cut(0, aBaseURI.Length());
 
-    if (aURI.First() == '#' || aURI.First() == '/')
+    if (aURI.First() == '/')
         aURI.Cut(0, 1);
 
     return NS_OK;
@@ -204,32 +205,35 @@ rdf_PossiblyMakeRelative(const nsString& aContextURI, nsString& aURI)
 
 
 PR_EXTERN(nsresult)
-rdf_PossiblyMakeAbsolute(const nsString& aContextURI, nsString& aURI)
+rdf_MakeRelativeName(const nsString& aBaseURI, nsString& aURI)
 {
-    PRInt32 index = aURI.Find(':');
-    if (index > 0 && index < 25 /* XXX */)
-        return NS_OK;
+    nsresult rv;
 
-    PRUnichar last  = aContextURI.Last();
-    PRUnichar first = aURI.First();
+    rv = rdf_MakeRelativeRef(aBaseURI, aURI);
+    if (NS_FAILED(rv)) return rv;
+    
+    if (aURI.First() == '#')
+        aURI.Cut(0, 1);
 
-    nsAutoString result(aContextURI);
-    if (last == '#' || last == '/') {
-        if (first == '#') {
-            result.Truncate(result.Length() - 2);
-        }
-        result.Append(aURI);
-    }
-    else if (first == '#') {
-        result.Append(aURI);
-    }
-    else {
-        result.Append('#');
-        result.Append(aURI);
-    }
-
-    aURI = result;
     return NS_OK;
 }
 
 
+PR_EXTERN(nsresult)
+rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI)
+{
+    nsresult rv;
+    nsAutoString result;
+
+    rv = NS_MakeAbsoluteURL(nsnull, aBaseURI, aURI, result);
+    if (NS_SUCCEEDED(rv)) {
+        aURI = result;
+    }
+    else {
+        // There are some ugly URIs (e.g., "NC:Foo") that netlib can't
+        // parse. If NS_MakeAbsoluteURL fails, then just punt and
+        // assume that aURI was already absolute.
+    }
+
+    return NS_OK;
+}
