@@ -17,7 +17,6 @@ toolkit.jar:
         content/global/config.css                   (resources/content/config.css) 
         content/global/config.js                    (resources/content/config.js) 
         content/global/mozilla.xhtml                (resources/content/mozilla.xhtml) 
-        content/global/plugins.html                 (resources/content/plugins.html) 
         content/global/charsetOverlay.xul           (resources/content/charsetOverlay.xul) 
         content/global/charsetOverlay.js            (resources/content/charsetOverlay.js) 
         content/global/charsetDetectorsOverlay.js   (resources/content/charsetDetectorsOverlay.js) 

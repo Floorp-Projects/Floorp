@@ -29,6 +29,7 @@ comm.jar:
     content/communicator/printPageSetup.js               (resources/content/printPageSetup.js)
     content/communicator/printPageSetup.xul              (resources/content/printPageSetup.xul)
     content/communicator/printPreviewBindings.xml        (resources/content/printPreviewBindings.xml)
+    content/communicator/plugins.html                    (resources/content/plugins.html)
 
 en-US.jar:
         locale/en-US/communicator/contents.rdf                      (resources/locale/en-US/contents.rdf)
