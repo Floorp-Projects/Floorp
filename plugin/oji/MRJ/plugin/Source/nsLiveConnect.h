@@ -20,7 +20,7 @@
  */
 
 /*
-	nsLiveConnect.h
+    nsLiveConnect.h
  */
 
 #pragma once
@@ -32,14 +32,14 @@
 class MRJMonitor;
 
 class nsLiveconnect : public nsILiveconnect,
-					  public nsIPluginStreamListener,
-					  private SupportsMixin {
+                      public nsIPluginStreamListener,
+                      private SupportsMixin {
 public:
-	DECL_SUPPORTS_MIXIN
-	
-	nsLiveconnect();
-	virtual ~nsLiveconnect();
-	
+    DECL_SUPPORTS_MIXIN
+    
+    nsLiveconnect();
+    virtual ~nsLiveconnect();
+    
     /**
      * get member of a Native JSObject for a given name.
      *
@@ -52,10 +52,10 @@ public:
      */
     NS_IMETHOD
     GetMember(JNIEnv *env, jsobject jsobj, const jchar *name, jsize length, void* principalsArray[], 
-                     int numPrincipals, void *securityContext, jobject *pjobj)
-	{
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
+              int numPrincipals, nsISupports *securitySupports, jobject *pjobj)
+    {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     /**
      * get member of a Native JSObject for a given index.
@@ -67,10 +67,10 @@ public:
      */
     NS_IMETHOD
     GetSlot(JNIEnv *env, jsobject jsobj, jint slot, void* principalsArray[], 
-                     int numPrincipals, void *securityContext, jobject *pjobj)
-	{
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
+            int numPrincipals, nsISupports *securitySupports, jobject *pjobj)
+    {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     /**
      * set member of a Native JSObject for a given name.
@@ -83,10 +83,10 @@ public:
      */
     NS_IMETHOD
     SetMember(JNIEnv *env, jsobject jsobj, const jchar* name, jsize length, jobject jobj, void* principalsArray[], 
-                     int numPrincipals, void *securityContext)
-	{
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
+              int numPrincipals, nsISupports *securitySupports)
+    {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     /**
      * set member of a Native JSObject for a given index.
@@ -99,10 +99,10 @@ public:
      */
     NS_IMETHOD
     SetSlot(JNIEnv *env, jsobject jsobj, jint slot, jobject jobj, void* principalsArray[], 
-                     int numPrincipals, void *securityContext)
-	{
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
+            int numPrincipals, nsISupports *securitySupports)
+    {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     /**
      * remove member of a Native JSObject for a given name.
@@ -112,10 +112,10 @@ public:
      */
     NS_IMETHOD
     RemoveMember(JNIEnv *env, jsobject jsobj, const jchar* name, jsize length,  void* principalsArray[], 
-                     int numPrincipals, void *securityContext)
-	{
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
+                 int numPrincipals, nsISupports *securitySupports)
+    {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     /**
      * call a method of Native JSObject. 
@@ -127,10 +127,10 @@ public:
      */
     NS_IMETHOD
     Call(JNIEnv *env, jsobject jsobj, const jchar* name, jsize length, jobjectArray jobjArr,  void* principalsArray[], 
-                     int numPrincipals, void *securityContext, jobject *pjobj)
-	{
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
+         int numPrincipals, nsISupports *securitySupports, jobject *pjobj)
+    {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     /**
      * Evaluate a script with a Native JS Object representing scope.
@@ -141,9 +141,9 @@ public:
      * @param script             - Script to be executed.
      * @param pjobj              - return value.
      */
-    NS_IMETHOD	
+    NS_IMETHOD  
     Eval(JNIEnv *env, jsobject obj, const jchar *script, jsize length, void* principalsArray[], 
-         int numPrincipals, void *securityContext, jobject *outResult);
+         int numPrincipals, nsISupports *securitySupports, jobject *outResult);
 
     /**
      * Get the window object for a plugin instance.
@@ -156,10 +156,10 @@ public:
      */
     NS_IMETHOD
     GetWindow(JNIEnv *env, void *pJavaObject, void* principalsArray[], 
-                     int numPrincipals, void *securityContext, jsobject *pobj)
-	{
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
+              int numPrincipals, nsISupports *securitySupports, jsobject *pobj)
+    {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     /**
      * Finalize a JSObject instance.
@@ -169,9 +169,9 @@ public:
      */
     NS_IMETHOD
     FinalizeJSObject(JNIEnv *env, jsobject jsobj)
-	{
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
+    {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     /**
      * Convert a JSObject to a string.
@@ -182,12 +182,12 @@ public:
      */
     NS_IMETHOD
     ToString(JNIEnv *env, jsobject obj, jstring *pjstring)
-	{
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
+    {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
-	// nsIPluginStreamListener implementation.
-	
+    // nsIPluginStreamListener implementation.
+    
     /**
      * Notify the observer that the URL has started to load.  This method is
      * called only once, at the beginning of a URL load.<BR><BR>
@@ -198,7 +198,7 @@ public:
     NS_IMETHOD
     OnStartBinding(nsIPluginStreamInfo* pluginInfo)
     {
-    	return NS_OK;
+        return NS_OK;
     }
 
     /**
@@ -217,9 +217,9 @@ public:
     NS_IMETHOD
     OnFileAvailable(nsIPluginStreamInfo* pluginInfo, const char* fileName)
     {
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
-	
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    
     /**
      * Notify the observer that the URL has finished loading.  This method is 
      * called once when the networking library has finished processing the 
@@ -234,22 +234,22 @@ public:
     NS_IMETHOD
     OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status);
 
-	/**
-	 * What is this method supposed to do?
-	 */
+    /**
+     * What is this method supposed to do?
+     */
     NS_IMETHOD
     GetStreamType(nsPluginStreamType *result)
     {
-    	*result = nsPluginStreamType_Normal;
-    	return NS_OK;
+        *result = nsPluginStreamType_Normal;
+        return NS_OK;
     }
 
 private:
-	MRJMonitor* mJavaScriptMonitor;
-	char* mScript;
-	char* mResult;
+    MRJMonitor* mJavaScriptMonitor;
+    char* mScript;
+    char* mResult;
 
-	// support for SupportsMixin.
-	static const InterfaceInfo sInterfaces[];
-	static const UInt32 kInterfaceCount;
+    // support for SupportsMixin.
+    static const InterfaceInfo sInterfaces[];
+    static const UInt32 kInterfaceCount;
 };

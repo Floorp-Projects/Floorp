@@ -47,6 +47,7 @@
 #include "nsIPluginManager2.h"
 #include "nsIPluginInstancePeer.h"
 #include "nsIJVMPluginTagInfo.h"
+#include "MRJSecurityContext.h"
 
 #include <string>
 
@@ -87,7 +88,7 @@ MRJContext::MRJContext(MRJSession* session, MRJPluginInstance* instance)
 	:	mPluginInstance(instance), mSession(session), mSessionRef(session->getSessionRef()), mPeer(NULL),
 		mLocator(NULL), mContext(NULL), mViewer(NULL), mViewerFrame(NULL), mIsActive(false),
 		mPluginWindow(NULL), mPluginClipping(NULL), mPluginPort(NULL),
-		mDocumentBase(NULL), mAppletHTML(NULL), mPage(NULL)
+		mDocumentBase(NULL), mAppletHTML(NULL), mPage(NULL), mSecurityContext(NULL)
 {
 	instance->GetPeer(&mPeer);
 	
@@ -147,6 +148,11 @@ MRJContext::~MRJContext()
 	if (mAppletHTML != NULL) {
 		delete[] mAppletHTML;
 		mAppletHTML = NULL;
+	}
+	
+	if (mSecurityContext != NULL) {
+	    mSecurityContext->Release();
+	    mSecurityContext = NULL;
 	}
 }
 
@@ -1650,6 +1656,18 @@ void MRJContext::setAppletHTML(const char* appletHTML, nsPluginTagType tagType)
 const char* MRJContext::getAppletHTML()
 {
 	return mAppletHTML;
+}
+
+void MRJContext::setSecurityContext(MRJSecurityContext* context)
+{
+    NS_ADDREF(context);
+    NS_IF_RELEASE(mSecurityContext);
+    mSecurityContext = context;
+}
+
+MRJSecurityContext* MRJContext::getSecurityContext()
+{
+    return mSecurityContext;
 }
 
 MRJPage* MRJContext::findPage(const MRJPageAttributes& attributes)

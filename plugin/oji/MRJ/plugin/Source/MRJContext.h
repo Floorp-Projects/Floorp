@@ -48,6 +48,7 @@ struct nsPluginWindow;
 class MRJFrame;
 class MRJPage;
 struct MRJPageAttributes;
+class MRJSecurityContext;
 
 struct nsPluginPoint {
 	PRInt32             x;
@@ -101,6 +102,9 @@ public:
 	void setAppletHTML(const char* appletHTML, nsPluginTagType tagType);
 	const char* getAppletHTML();
 
+    void setSecurityContext(MRJSecurityContext* context);
+    MRJSecurityContext* getSecurityContext();
+
 private:
 	void localToFrame(Point* pt);
 	void ensureValidPort();
@@ -145,4 +149,5 @@ private:
 	char*					mDocumentBase;
 	char*					mAppletHTML;
 	MRJPage*				mPage;
+	MRJSecurityContext*     mSecurityContext;
 };
