@@ -1148,7 +1148,8 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
 
     nsAutoString textFlavor(kTextMime);
-    if (dragSession && NS_OK == dragSession->IsDataFlavorSupported(&textFlavor)) {
+    if (dragSession && 
+        (NS_OK == dragSession->IsDataFlavorSupported(&textFlavor))) {
       dragSession->SetCanDrop(PR_TRUE);
     }
     
@@ -1214,7 +1215,8 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
                                               (void**) getter_AddRefs(trans));
       if ( NS_SUCCEEDED(rv) && trans ) {
         // Add the text Flavor to the transferable, 
-        // because that is the only type of data we are looking for at the moment
+        // because that is the only type of data we are
+        // looking for at the moment.
         nsAutoString textMime (kTextMime);
         trans->AddDataFlavor(&textMime);
         //trans->AddDataFlavor(mImageDataFlavor);
