@@ -1735,7 +1735,7 @@ class BodyCodegen
               case Token.POS:
               case Token.NEG:
                 generateCodeFromNode(child, node);
-                addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+                addObjectToDouble();
                 if (type == Token.NEG) {
                     cfw.add(ByteCode.DNEG);
                 }
@@ -1745,7 +1745,7 @@ class BodyCodegen
               case Optimizer.TO_DOUBLE:
                 // cnvt to double (not Double)
                 generateCodeFromNode(child, node);
-                addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+                addObjectToDouble();
                 break;
 
               case Optimizer.TO_OBJECT: {
@@ -2831,10 +2831,10 @@ class BodyCodegen
             boolean childOfArithmetic = isArithmeticNode(parent);
             generateCodeFromNode(child, node);
             if (!isArithmeticNode(child))
-                addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+                addObjectToDouble();
             generateCodeFromNode(child.getNext(), node);
             if (!isArithmeticNode(child.getNext()))
-                  addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+                  addObjectToDouble();
             cfw.add(opCode);
             if (!childOfArithmetic) {
                 addDoubleWrap();
@@ -2898,7 +2898,7 @@ class BodyCodegen
         }
     }
 
-    private boolean nodeIsDirectCallParameter(Node node)
+    private int nodeIsDirectCallParameter(Node node)
     {
         if (node.getType() == Token.GETVAR) {
             OptLocalVariable lVar
@@ -2906,10 +2906,10 @@ class BodyCodegen
             if (lVar != null && lVar.isParameter() && inDirectCallFunction &&
                 !itsForcedObjectParameters)
             {
-                return true;
+                return lVar.getJRegister();
             }
         }
-        return false;
+        return -1;
     }
 
     private void genSimpleCompare(int type, int trueGOTO, int falseGOTO)
@@ -2964,31 +2964,26 @@ class BodyCodegen
             genSimpleCompare(type, trueGOTO, falseGOTO);
         } else {
             Node rChild = child.getNext();
-            boolean leftIsDCP = nodeIsDirectCallParameter(child);
-            boolean rightIsDCP = nodeIsDirectCallParameter(rChild);
-            if (leftIsDCP || rightIsDCP) {
-                if (leftIsDCP) {
-                    if (rightIsDCP) {
-                        OptLocalVariable lVar1, lVar2;
-                        lVar1 = (OptLocalVariable)child.getProp(
-                                    Node.VARIABLE_PROP);
-                        cfw.addALoad(lVar1.getJRegister());
+            int left_dcp_register = nodeIsDirectCallParameter(child);
+            int right_dcp_register = nodeIsDirectCallParameter(rChild);
+            if (left_dcp_register != -1 || right_dcp_register != -1) {
+                if (left_dcp_register != -1) {
+                    if (right_dcp_register != -1) {
+                        cfw.addALoad(left_dcp_register);
                         cfw.add(ByteCode.GETSTATIC,
                                 "java/lang/Void",
                                 "TYPE",
                                 "Ljava/lang/Class;");
                         int notNumbersLabel = cfw.acquireLabel();
                         cfw.add(ByteCode.IF_ACMPNE, notNumbersLabel);
-                        lVar2 = (OptLocalVariable)rChild.getProp(
-                                    Node.VARIABLE_PROP);
-                        cfw.addALoad(lVar2.getJRegister());
+                        cfw.addALoad(right_dcp_register);
                         cfw.add(ByteCode.GETSTATIC,
                                 "java/lang/Void",
                                 "TYPE",
                                 "Ljava/lang/Class;");
                         cfw.add(ByteCode.IF_ACMPNE, notNumbersLabel);
-                        cfw.addDLoad(lVar1.getJRegister() + 1);
-                        cfw.addDLoad(lVar2.getJRegister() + 1);
+                        cfw.addDLoad(left_dcp_register + 1);
+                        cfw.addDLoad(right_dcp_register + 1);
                         genSimpleCompare(type, trueGOTO, falseGOTO);
                         cfw.markLabel(notNumbersLabel);
                         // fall thru to generic handling
@@ -2996,10 +2991,7 @@ class BodyCodegen
                         // just the left child is a DCP, if the right child
                         // is a number it's worth testing the left
                         if (childNumberFlag == Node.RIGHT) {
-                            OptLocalVariable lVar1;
-                            lVar1 = (OptLocalVariable)child.getProp(
-                                        Node.VARIABLE_PROP);
-                            cfw.addALoad(lVar1.getJRegister());
+                            cfw.addALoad(left_dcp_register);
                             cfw.add(ByteCode.GETSTATIC,
                                     "java/lang/Void",
                                     "TYPE",
@@ -3007,7 +2999,7 @@ class BodyCodegen
                             int notNumbersLabel = cfw.acquireLabel();
                             cfw.add(ByteCode.IF_ACMPNE,
                                         notNumbersLabel);
-                            cfw.addDLoad(lVar1.getJRegister() + 1);
+                            cfw.addDLoad(left_dcp_register + 1);
                             generateCodeFromNode(rChild, node);
                             genSimpleCompare(type, trueGOTO, falseGOTO);
                             cfw.markLabel(notNumbersLabel);
@@ -3018,10 +3010,7 @@ class BodyCodegen
                     //  just the right child is a DCP, if the left child
                     //  is a number it's worth testing the right
                     if (childNumberFlag == Node.LEFT) {
-                        OptLocalVariable lVar2;
-                        lVar2 = (OptLocalVariable)rChild.getProp(
-                                    Node.VARIABLE_PROP);
-                        cfw.addALoad(lVar2.getJRegister());
+                        cfw.addALoad(right_dcp_register);
                         cfw.add(ByteCode.GETSTATIC,
                                 "java/lang/Void",
                                 "TYPE",
@@ -3029,7 +3018,7 @@ class BodyCodegen
                         int notNumbersLabel = cfw.acquireLabel();
                         cfw.add(ByteCode.IF_ACMPNE, notNumbersLabel);
                         generateCodeFromNode(child, node);
-                        cfw.addDLoad(lVar2.getJRegister() + 1);
+                        cfw.addDLoad(right_dcp_register + 1);
                         genSimpleCompare(type, trueGOTO, falseGOTO);
                         cfw.markLabel(notNumbersLabel);
                         // fall thru to generic handling
@@ -3038,11 +3027,11 @@ class BodyCodegen
             }
             generateCodeFromNode(child, node);
             if (childNumberFlag == Node.RIGHT) {
-                addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+                addObjectToDouble();
             }
             generateCodeFromNode(rChild, node);
             if (childNumberFlag == Node.LEFT) {
-                addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+                addObjectToDouble();
             }
             if (childNumberFlag == -1) {
                 if (type == Token.GE || type == Token.GT) {
@@ -3086,10 +3075,12 @@ class BodyCodegen
 
         generateCodeFromNode(child, node);
         if (childNumberFlag == Node.RIGHT) {
-            addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");                 }
+            addObjectToDouble();
+        }
         generateCodeFromNode(child.getNext(), node);
         if (childNumberFlag == Node.LEFT) {
-            addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");                 }
+            addObjectToDouble();
+        }
         if (childNumberFlag != -1) {
             int trueGOTO = cfw.acquireLabel();
             int skip = cfw.acquireLabel();
@@ -3115,17 +3106,6 @@ class BodyCodegen
                                    +")Z");
             addBooleanWrap();
         }
-    }
-
-    private Node getConvertToObjectOfNumberNode(Node node)
-    {
-        if (node.getType() == Optimizer.TO_OBJECT) {
-            Node convertChild = node.getFirstChild();
-            if (convertChild.getType() == Token.NUMBER) {
-                return convertChild;
-            }
-        }
-        return null;
     }
 
     private void visitEqOp(Node node, Node child)
@@ -3245,19 +3225,20 @@ class BodyCodegen
 
         Node rChild = child.getNext();
 
-        if (nodeIsDirectCallParameter(child)) {
-            Node convertChild = getConvertToObjectOfNumberNode(rChild);
-            if (convertChild != null) {
-                OptLocalVariable lVar1
-                    = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
-                cfw.addALoad(lVar1.getJRegister());
+        int child_dcp_register = nodeIsDirectCallParameter(child);
+        if (child_dcp_register != -1
+            && rChild.getType() == Optimizer.TO_OBJECT)
+        {
+            Node convertChild = rChild.getFirstChild();
+            if (convertChild.getType() == Token.NUMBER) {
+                cfw.addALoad(child_dcp_register);
                 cfw.add(ByteCode.GETSTATIC,
                         "java/lang/Void",
                         "TYPE",
                         "Ljava/lang/Class;");
                 int notNumbersLabel = cfw.acquireLabel();
                 cfw.add(ByteCode.IF_ACMPNE, notNumbersLabel);
-                cfw.addDLoad(lVar1.getJRegister() + 1);
+                cfw.addDLoad(child_dcp_register + 1);
                 cfw.addPush(convertChild.getDouble());
                 cfw.add(ByteCode.DCMPL);
                 if (type == Token.EQ)
@@ -3398,7 +3379,7 @@ class BodyCodegen
                     int beyond = cfw.acquireLabel();
                     cfw.add(ByteCode.IF_ACMPEQ, isNumberLabel);
                     cfw.addALoad(lVar.getJRegister());
-                    addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+                    addObjectToDouble();
                     cfw.add(ByteCode.GOTO, beyond);
                     cfw.markLabel(isNumberLabel);
                     cfw.addDLoad(lVar.getJRegister() + 1);
@@ -3685,6 +3666,11 @@ class BodyCodegen
         if (n != 0 && n != Integer.MAX_VALUE) {
             temp.putIntProp(Node.USES_PROP, n - 1);
         }
+    }
+
+    private void addObjectToDouble()
+    {
+        addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
     }
 
     private void addScriptRuntimeInvoke(String methodName,
