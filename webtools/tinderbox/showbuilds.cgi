@@ -71,7 +71,11 @@ if ($form{'quickparse'}) {
 }
 
 
-print "Content-type: text/html\nRefresh: 900\n\n<HTML>\n";
+if ($nowdate eq $maxdate) {
+  print "Content-type: text/html\nRefresh: 900\n\n<HTML>\n";
+} else {
+  print "Content-type: text/html\n\n<HTML>\n";
+}
 if( $form{'tree'} eq '' ){
     &show_tree_selector;
     exit;
@@ -250,13 +254,13 @@ sub display_build_table_row {
     }
 
     ($hour) = $tt =~ /(\d\d):/;
+    if ($tree2 eq '' and ($lasthour != $hour or $who_check_list[$t])) {
+      $qr = &query_ref( $td1, $build_time_times->[$t]);
+      $er = "</a>";
+    }
     if ($lasthour == $hour) {
       $tt =~ s/^.*&nbsp;//;
     } else {
-      if ($tree2 eq '') {
-	$qr = &query_ref( $td1, $build_time_times->[$t]);
-	$er = "</a>";
-      }
       $lasthour = $hour;
     }
 
