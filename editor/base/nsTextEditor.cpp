@@ -1545,7 +1545,7 @@ NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
   return res;
 }  
 
-NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString)
+NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly)
 {
   PRBool cancel;
   nsString resultString;
@@ -1582,6 +1582,13 @@ NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString)
     if (NS_FAILED(rv))
       return rv;
 
+	  if (aSelectionOnly) {
+	    nsCOMPtr<nsIDOMSelection>  selection;
+	    rv = GetSelection(getter_AddRefs(selection));
+	    if (NS_SUCCEEDED(rv) && selection)
+	      encoder->SetSelection(selection);
+	  }
+	  
     // Try to turn on pretty printing, but don't panic if it doesn't work:
     (void)encoder->PrettyPrint(PR_TRUE);
 
@@ -1590,7 +1597,7 @@ NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString)
   return rv;
 }
 
-NS_IMETHODIMP nsTextEditor::OutputHTMLToString(nsString& aOutputString)
+NS_IMETHODIMP nsTextEditor::OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly)
 {
 #if defined(DEBUG_akkana)
   printf("============Content dump:===========\n");
@@ -1634,10 +1641,17 @@ NS_IMETHODIMP nsTextEditor::OutputHTMLToString(nsString& aOutputString)
       return rv;
   }
 
+  if (aSelectionOnly) {
+    nsCOMPtr<nsIDOMSelection>  selection;
+    rv = GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(rv) && selection)
+      encoder->SetSelection(selection);
+  }
+  
   return encoder->EncodeToString(aOutputString);
 }
 
-NS_IMETHODIMP nsTextEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharset)
+NS_IMETHODIMP nsTextEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharset, PRBool aSelectionOnly)
 {
   nsCOMPtr<nsITextEncoder> encoder;
   nsresult rv = nsComponentManager::CreateInstance(kTextEncoderCID,
@@ -1666,13 +1680,20 @@ NS_IMETHODIMP nsTextEditor::OutputTextToStream(nsIOutputStream* aOutputStream, n
       return rv;
   }
 
+  if (aSelectionOnly) {
+    nsCOMPtr<nsIDOMSelection>  selection;
+    rv = GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(rv) && selection)
+      encoder->SetSelection(selection);
+  }
+
   // Try to turn on pretty printing, but don't panic if it doesn't work:
   (void)encoder->PrettyPrint(PR_TRUE);
 
   return encoder->EncodeToStream(aOutputStream);
 }
 
-NS_IMETHODIMP nsTextEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharset)
+NS_IMETHODIMP nsTextEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharset, PRBool aSelectionOnly)
 {
   nsCOMPtr<nsIHTMLEncoder> encoder;
   nsresult rv = nsComponentManager::CreateInstance(kHTMLEncoderCID,
@@ -1699,6 +1720,13 @@ NS_IMETHODIMP nsTextEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,ns
     rv = encoder->Init(shell,doc, mimetype);
     if (NS_FAILED(rv))
       return rv;
+  }
+
+  if (aSelectionOnly) {
+    nsCOMPtr<nsIDOMSelection>  selection;
+    rv = GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(rv) && selection)
+      encoder->SetSelection(selection);
   }
 
   return encoder->EncodeToStream(aOutputStream);
