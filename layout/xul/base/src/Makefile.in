@@ -106,8 +106,6 @@ CPPSRCS		= \
 		nsNativeScrollbarFrame.cpp \
 		$(NULL)
 
-XPIDLSRCS=      nsIScrollbarMediator.idl                  \
-                ($NULL)
 
 include $(topsrcdir)/config/config.mk
 
