@@ -487,10 +487,10 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   nsAutoString from, to;
   nsCOMPtr<nsISupports> channelSupport;
   nsCOMPtr<nsIStreamListener> convertedListener;
+  nsCOMPtr<nsIMsgMessageFetchPartService> fetchService;
   nsAutoString urlString;
   char *urlCString = nsnull;
   nsCOMPtr<nsIURI> aURL;
-  PRBool canFetchMimeParts = PR_FALSE;
   nsCAutoString fullMessageUri = messageUri;
   nsresult rv = NS_OK;
   
@@ -524,9 +524,9 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   rv = GetMessageServiceFromURI(messageUri, &messageService);
   if (NS_FAILED(rv)) goto done;
 
-  messageService->GetCanFetchMimeParts(&canFetchMimeParts);
-
-  if (canFetchMimeParts)
+  fetchService = do_QueryInterface(messageService);
+  // if the message service has a fetch part service then we know we can fetch mime parts...
+  if (fetchService)
   {
     PRInt32 sectionPos = urlString.Find("?section");
     nsString mimePart;
@@ -555,8 +555,8 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
         channelSupport, getter_AddRefs(convertedListener));
     if (NS_FAILED(rv)) goto done;
 
-    if (canFetchMimeParts)
-      rv = messageService->OpenAttachment(aURL, messageUri, convertedListener,
+    if (fetchService)
+      rv = fetchService->FetchMimePart(aURL, messageUri, convertedListener,
                                           mMsgWindow, nsnull,nsnull);
     else
       rv = messageService->DisplayMessage(messageUri,
@@ -577,16 +577,19 @@ done:
 }
 
 NS_IMETHODIMP
-nsMessenger::OpenAttachment(const char * contentType, const char * url, const
-                            char * displayName, const char * messageUri)
+nsMessenger::OpenAttachment(const char * aContentType, const char * aUrl, const
+                            char * aDisplayName, const char * aMessageUri)
 {
-    nsCString partMsgUrl = messageUri;
-    partMsgUrl += "?";
-    const char *part = PL_strstr(url, "part=");
-    partMsgUrl += part;
-    partMsgUrl += "&type=";
-    partMsgUrl += contentType;
-    return OpenURL(partMsgUrl.GetBuffer());
+  nsresult rv = NS_OK;
+  nsIMsgMessageService * messageService = nsnull;
+  rv = GetMessageServiceFromURI(aMessageUri, &messageService);
+  if (messageService)
+  {
+    rv = messageService->OpenAttachment(aContentType, aUrl, aMessageUri, mDocShell, mMsgWindow, nsnull);
+  }
+  if (messageService)
+     ReleaseMessageServiceFromURI(aMessageUri, messageService);
+	return rv;
 }
 
 NS_IMETHODIMP
