@@ -62,7 +62,13 @@ if ($action eq "add") {
         DisplayError("Please enter a quip in the text field.");
         exit();
     }
+
+    if (Param('enablequips') ne "on") {
+        ThrowUserError("This site does not permit the addition of new quips");
+        exit();
+    }
     
+
     if ($comment =~ m/</) {
         DisplayError("Sorry - for security reasons, support for HTML tags has 
                       been turned off in quips.");

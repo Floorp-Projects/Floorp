@@ -259,10 +259,12 @@ DefParam("cookiepath",
   "t",
   "/");
 
-DefParam("usequip",
-        "If this is on, Bugzilla displays a silly quip at the beginning of buglists, and lets users add to the list of quips.",
-        "b",
-        1);
+DefParam("enablequips",
+        "If this is on, Bugzilla displays a silly quip at the beginning of buglists, and lets users add to the list of quips. If this is frozen, Bugzilla will display the quip but not permit new additions.",
+        "s",
+        [['on','frozen','off'], (($::param{"usequip"} || 1) ? 'on' : 'off')],
+        \&check_multi);
+
 
 # Added parameter - JMR, 2/16/00
 DefParam("usebuggroups",
