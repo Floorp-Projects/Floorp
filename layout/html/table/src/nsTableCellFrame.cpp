@@ -77,8 +77,14 @@
 
 nsTableCellFrame::nsTableCellFrame()
 {
-  mBits.mColIndex        = 0;
+  mBits.mColIndex  = 0;
   mPriorAvailWidth = 0;
+
+  SetContentEmpty(PR_FALSE);
+  SetNeedSpecialReflow(PR_FALSE);
+  SetHadSpecialReflow(PR_FALSE);
+  SetHasPctOverHeight(PR_FALSE);
+
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   mTimer = new nsReflowTimer(this);
   mBlockTimer = new nsReflowTimer(this);
@@ -771,20 +777,6 @@ CalcUnpaginagedHeight(nsIPresContext*       aPresContext,
   return computedHeight;
 }
 
-static nscoord
-CalcHeightOfPrevInFlows(nsTableCellFrame& aCell)
-{
-  nscoord height = 0;
-  nsIFrame* prevInFlow;
-  for (aCell.GetPrevInFlow(&prevInFlow); prevInFlow; prevInFlow->GetPrevInFlow(&prevInFlow)) {
-    nsRect rect;
-    prevInFlow->GetRect(rect);
-    height += rect.height;
-  }
-  return height;
-}
-
-
 NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
                                    nsHTMLReflowMetrics&     aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
@@ -795,7 +787,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
-
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
 
@@ -1099,7 +1090,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
       // the height that they could honor in the pass 2 reflow
       SetHasPctOverHeight(PR_TRUE);
     }
-    aDesiredSize.height = mRect.height;
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
+      aDesiredSize.height = mRect.height;
+    }
     SetNeedSpecialReflow(PR_FALSE);
     SetHadSpecialReflow(PR_TRUE);
   }
@@ -1112,24 +1105,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     else {
       SetHadSpecialReflow(PR_FALSE);
     }
-  }
-  else if (computedPaginatedHeight > 0) {
-    nscoord height = computedPaginatedHeight + topInset + bottomInset - CalcHeightOfPrevInFlows(*this);
-    if (NS_FRAME_COMPLETE == aStatus) {
-      if (mPrevInFlow) height -= topInset;
-      height = PR_MAX(aDesiredSize.height, height);
-      if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) && (height > aReflowState.availableHeight)) {
-        height = aReflowState.availableHeight;
-        aStatus = NS_FRAME_NOT_COMPLETE;
-      }
-    }
-    else {
-      height -= bottomInset;
-      if (aDesiredSize.height < height) {
-        height = aDesiredSize.height;
-      }
-    }
-    aDesiredSize.height = height;
   }
 
   // remember the desired size for this reflow
