@@ -30,7 +30,7 @@ MODULE		= uriloader
 LIBRARY_NAME	= uriloader
 SHORT_LIBNAME	= urildr
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string necko mime exthandler rdf
+REQUIRES	= xpcom string necko mimetype exthandler rdf
 
 CPPSRCS		= nsURILoaderModule.cpp
 
