@@ -1131,7 +1131,7 @@ js_GetSrcNote(JSScript *script, jsbytecode *pc)
     jssrcnote *sn;
     ptrdiff_t offset, target;
 
-    target = PTRDIFF(pc, script->main, jsbytecode);
+    target = PTRDIFF(pc, script->code, jsbytecode);
     if ((uintN)target >= script->length)
         return NULL;
     offset = 0;
