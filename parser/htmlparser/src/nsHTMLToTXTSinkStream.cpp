@@ -595,7 +595,7 @@ nsHTMLToTXTSinkStream::AddProcessingInstruction(const nsIParserNode& aNode){
  */
 
 NS_IMETHODIMP
-nsHTMLToTXTSinkStream::AddDocTypeDecl(const nsIParserNode& aNode)
+nsHTMLToTXTSinkStream::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 {
   return NS_OK;
 }

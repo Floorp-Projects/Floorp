@@ -69,16 +69,6 @@ public:
 
   /**
    * This method is called by the parser when it encounters
-   * a document type declaration.
-   *
-   * XXX Should the parser also part the internal subset?
-   *
-   * @param  nsIParserNode reference to parser node interface
-   */
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode)=0;
-
-  /**
-   * This method is called by the parser when it encounters
    * character data - either regular CDATA or a marked CDATA
    * section.
    *

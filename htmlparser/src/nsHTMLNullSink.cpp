@@ -49,7 +49,7 @@ public:
   NS_IMETHOD NotifyError(const nsParserError* aError);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
   
   // nsIHTMLContentSink
   NS_IMETHOD SetTitle(const nsString& aValue);
@@ -517,7 +517,7 @@ nsHTMLNullSink::AddProcessingInstruction(const nsIParserNode& aNode){
  */
 
 NS_IMETHODIMP
-nsHTMLNullSink::AddDocTypeDecl(const nsIParserNode& aNode)
+nsHTMLNullSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 {
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);

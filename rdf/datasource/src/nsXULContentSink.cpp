@@ -164,10 +164,10 @@ public:
     NS_IMETHOD AddComment(const nsIParserNode& aNode);
     NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
     NS_IMETHOD NotifyError(const nsParserError* aError);
+    NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
 
     // nsIXMLContentSink
-    NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode);
-    NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
+    NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode);    
     NS_IMETHOD AddCharacterData(const nsIParserNode& aNode);
     NS_IMETHOD AddUnparsedEntity(const nsIParserNode& aNode);
     NS_IMETHOD AddNotation(const nsIParserNode& aNode);
@@ -968,7 +968,7 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-XULContentSinkImpl::AddDocTypeDecl(const nsIParserNode& aNode)
+XULContentSinkImpl::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 {
     PR_LOG(gLog, PR_LOG_WARNING,
            ("xul: ignoring doctype decl at line %d", aNode.GetSourceLineNumber()));

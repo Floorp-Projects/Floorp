@@ -86,7 +86,7 @@ class nsHTMLToTXTSinkStream : public nsIHTMLContentSink
   NS_IMETHOD NotifyError(const nsParserError* aError);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
 
   /*******************************************************************
    * The following methods are inherited from nsIHTMLContentSink.

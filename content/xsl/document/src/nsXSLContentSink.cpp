@@ -173,6 +173,14 @@ nsXSLContentSink::NotifyError(const nsParserError* aError)
   return result;
 }
 
+/*
+NS_IMETHODIMP 
+nsXSLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
+{
+  // We'll use nsXMLContentSink::AddDocTypeDecl() for now...
+}
+*/
+
 
 // nsIXMLContentSink
 
@@ -181,14 +189,6 @@ NS_IMETHODIMP
 nsXSLContentSink::AddXMLDecl(const nsIParserNode& aNode)
 {
   // We'll use nsXMLContentSink::AddXMLDecl() for now...
-}
-*/
-
-/*
-NS_IMETHODIMP 
-nsXSLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
-{
-  // We'll use nsXMLContentSink::AddDocTypeDecl() for now...
 }
 */
 

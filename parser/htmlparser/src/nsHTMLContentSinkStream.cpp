@@ -1146,7 +1146,7 @@ nsHTMLContentSinkStream::AddProcessingInstruction(const nsIParserNode& aNode){
  */
 
 NS_IMETHODIMP
-nsHTMLContentSinkStream::AddDocTypeDecl(const nsIParserNode& aNode)
+nsHTMLContentSinkStream::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 {
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);

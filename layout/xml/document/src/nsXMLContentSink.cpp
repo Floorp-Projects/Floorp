@@ -1364,7 +1364,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 
 
 NS_IMETHODIMP 
-nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
+nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 {
   printf("nsXMLContentSink::AddDocTypeDecl\n");
   return NS_OK;

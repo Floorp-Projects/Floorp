@@ -142,7 +142,7 @@ public:
    *
    * @param  nsIParserNode reference to parser node interface
    */
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode)=0;
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)=0;
 
   /**
    * This gets called by the parser if it hits an unrecoverable
