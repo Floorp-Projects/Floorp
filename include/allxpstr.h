@@ -6458,6 +6458,13 @@ ResDef(XP_EDT_MSG_TEXT_BUFFER_TOO_LARGE,	(XP_MSG_BASE + 843),
 ResDef(XP_EDT_MSG_CANNOT_PASTE,	(XP_MSG_BASE + 844),
 "You cannot paste this much text in a single operation.\nTry pasting the text in several smaller segments.")
 
+ResDef(XP_EDT_CAN_PASTE_AS_TABLE, (XP_MSG_BASE + 845),
+"Text can be pasted as %d rows and %d columns.\n\n")
+ResDef(XP_EDT_REPLACE_CELLS, (XP_MSG_BASE + 846),
+"Replace existing cells?")
+ResDef(XP_EDT_PASTE_AS_TABLE, (XP_MSG_BASE + 847),
+"Paste text as a new table?")
+
 ResDef(XP_EDT_MUST_SAVE_PROMPT, XP_MSG_BASE + 880, "You must save\n%s\nto a local file before editing.\nSave to a file now?")
 
 ResDef (MK_LDAP_ADD_SERVER_TO_PREFS, XP_MSG_BASE + 881,
