@@ -56,10 +56,10 @@ REQUIRES	= xpcom \
 		  widget \
 		  dom \
 		  necko \
+		  content \
 		  pref \
 		  appshell \
 		  gfx \
-		  chrome \
 		  xpinstall \
 		  uriloader \
 		  windowwatcher \

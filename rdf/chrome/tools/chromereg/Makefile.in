@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 REQUIRES	= xpcom \
-		  chrome \
+		  content \
 		  necko \
 		  string \
 		  rdf \

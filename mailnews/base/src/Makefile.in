@@ -60,7 +60,6 @@ REQUIRES	= xpcom \
 		  msgnews \
 		  addrbook \
 		  prefmigr \
-		  chrome \
 		  mime \
 		  mimetype \
 		  windowwatcher \
