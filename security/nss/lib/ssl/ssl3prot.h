@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3prot.h,v 1.1 2000/03/31 19:33:16 relyea%netscape.com Exp $
+ * $Id: ssl3prot.h,v 1.2 2001/09/18 01:59:19 nelsonb%netscape.com Exp $
  */
 
 #ifndef __ssl3proto_h_
@@ -184,9 +184,7 @@ typedef struct {
     SECItem list;
 } SSL3Certificate;
 
-typedef enum {
-    sign_null, sign_rsa, sign_dsa
-} SSL3SignType;
+/* SSL3SignType moved to ssl.h */
 
 /* The SSL key exchange method used */     
 typedef enum {

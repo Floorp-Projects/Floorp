@@ -112,6 +112,7 @@ NSSSSL_VersionCheck;
 ;+#   functions for now.
 SSL_GetMaxServerCacheLocks;
 SSL_SetMaxServerCacheLocks;
+SSL_GetChannelInfo;
 ;+    local:
 ;+*;
 ;+};

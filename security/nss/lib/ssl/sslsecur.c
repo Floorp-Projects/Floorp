@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.12 2001/06/09 03:18:08 nelsonb%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.13 2001/09/18 01:59:20 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -619,6 +619,7 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
     SECStatus rv;
     sslSocket *ss;
     sslSecurityInfo *sec;
+    sslServerCerts  *sc;
 
     ss = ssl_FindSocket(fd);
     if (!ss) {
@@ -654,39 +655,49 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
 	return SECFailure;
     }
 
+    sc = ss->serverCerts + kea;
     /* load the server certificate */
-    if (ss->serverCert[kea] != NULL)
-	CERT_DestroyCertificate(ss->serverCert[kea]);
+    if (sc->serverCert != NULL) {
+	CERT_DestroyCertificate(sc->serverCert);
+    	sc->serverCert = NULL;
+    }
     if (cert) {
-	ss->serverCert[kea] = CERT_DupCertificate(cert);
-	if (ss->serverCert[kea] == NULL)
+	SECKEYPublicKey * pubKey;
+	sc->serverCert = CERT_DupCertificate(cert);
+	if (!sc->serverCert)
 	    goto loser;
-    } else ss->serverCert[kea] = NULL;
+    	/* get the size of the cert's public key, and remember it */
+	pubKey = CERT_ExtractPublicKey(cert);
+	if (!pubKey) 
+	    goto loser;
+	sc->serverKeyBits = SECKEY_PublicKeyStrength(pubKey) * BPB;
+	SECKEY_DestroyPublicKey(pubKey); 
+	pubKey = NULL;
+    }
 
 
     /* load the server cert chain */
-    if (ss->serverCertChain[kea] != NULL)
-	CERT_DestroyCertificateList(ss->serverCertChain[kea]);
+    if (sc->serverCertChain != NULL) {
+	CERT_DestroyCertificateList(sc->serverCertChain);
+    	sc->serverCertChain = NULL;
+    }
     if (cert) {
-	ss->serverCertChain[kea] = CERT_CertChainFromCert(
-			    ss->serverCert[kea], certUsageSSLServer, PR_TRUE);
-	if (ss->serverCertChain[kea] == NULL)
+	sc->serverCertChain = CERT_CertChainFromCert(
+			    sc->serverCert, certUsageSSLServer, PR_TRUE);
+	if (sc->serverCertChain == NULL)
 	     goto loser;
-    } else ss->serverCertChain[kea] = NULL;
-
-
-    /* Only do this once because it's global. */
-    if (ssl3_server_ca_list == NULL)
-	ssl3_server_ca_list = CERT_GetSSLCACerts(ss->dbHandle);
+    }
 
     /* load the private key */
-    if (ss->serverKey[kea] != NULL)
-	SECKEY_DestroyPrivateKey(ss->serverKey[kea]);
+    if (sc->serverKey != NULL) {
+	SECKEY_DestroyPrivateKey(sc->serverKey);
+    	sc->serverKey = NULL;
+    }
     if (key) {
-	ss->serverKey[kea] = SECKEY_CopyPrivateKey(key);
-	if (ss->serverKey[kea] == NULL)
+	sc->serverKey = SECKEY_CopyPrivateKey(key);
+	if (sc->serverKey == NULL)
 	    goto loser;
-    } else ss->serverKey[kea] = NULL;
+    }
 
     if (kea == kt_rsa) {
         rv = ssl3_CreateRSAStepDownKeys(ss);
@@ -695,20 +706,24 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
 	}
     }
 
+    /* Only do this once because it's global. */
+    if (ssl3_server_ca_list == NULL)
+	ssl3_server_ca_list = CERT_GetSSLCACerts(ss->dbHandle);
+
     return SECSuccess;
 
 loser:
-    if (ss->serverCert[kea] != NULL) {
-	CERT_DestroyCertificate(ss->serverCert[kea]);
-	ss->serverCert[kea] = NULL;
+    if (sc->serverCert != NULL) {
+	CERT_DestroyCertificate(sc->serverCert);
+	sc->serverCert = NULL;
     }
-    if (ss->serverCertChain != NULL) {
-	CERT_DestroyCertificateList(ss->serverCertChain[kea]);
-	ss->serverCertChain[kea] = NULL;
+    if (sc->serverCertChain != NULL) {
+	CERT_DestroyCertificateList(sc->serverCertChain);
+	sc->serverCertChain = NULL;
     }
-    if (ss->serverKey[kea] != NULL) {
-	SECKEY_DestroyPrivateKey(ss->serverKey[kea]);
-	ss->serverKey[kea] = NULL;
+    if (sc->serverKey != NULL) {
+	SECKEY_DestroyPrivateKey(sc->serverKey);
+	sc->serverKey = NULL;
     }
     return SECFailure;
 }
