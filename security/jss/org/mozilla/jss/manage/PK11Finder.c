@@ -1412,7 +1412,7 @@ getCerts(JNIEnv *env, PK11CertListType type)
     /**************************************************
      * Create array of Java certificates
      **************************************************/
-    certClass = (*env)->FindClass(env, INTERNAL_CERT_CLASS_NAME);
+    certClass = (*env)->FindClass(env, X509_CERT_CLASS);
     if(certClass == NULL) {
         ASSERT_OUTOFMEM(env);
         goto finish;

@@ -51,7 +51,7 @@ import org.mozilla.jss.CRLImportException;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.7 $ $Date: 2001/07/06 01:08:08 $ 
+ * @version $Revision: 1.8 $ $Date: 2001/08/03 07:07:38 $ 
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -833,7 +833,7 @@ public final class CryptoManager implements TokenSupplier
      * @return An array of all CA certificates stored permanently
      *      in the trust database.
      */
-    public native InternalCertificate[]
+    public native X509Certificate[]
     getCACerts();
 
     /**
@@ -843,7 +843,7 @@ public final class CryptoManager implements TokenSupplier
      * @return An array of all certificates stored permanently
      *      in the trust database.
      */
-    public native InternalCertificate[]
+    public native X509Certificate[]
     getPermCerts();
 
     /**
