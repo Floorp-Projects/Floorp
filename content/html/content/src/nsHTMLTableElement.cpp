@@ -979,6 +979,17 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
     /* attributes that resolve to integers or percents or proportions */
 
     if (ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
+      // treat 0 width as auto
+      nsHTMLUnit unit = aResult.GetUnit();
+      if ((eHTMLUnit_Pixel == unit) && (0 == aResult.GetPixelValue())) {
+        return NS_CONTENT_ATTR_NOT_THERE;
+      }
+      else if ((eHTMLUnit_Integer == unit) && (0 == aResult.GetIntValue())) {
+        return NS_CONTENT_ATTR_NOT_THERE;
+      }
+      else if ((eHTMLUnit_Percent == unit) && (0.0f == aResult.GetPercentValue())) {
+        return NS_CONTENT_ATTR_NOT_THERE;
+      }
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
