@@ -56,10 +56,12 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 
 // nsDataChannel methods
-nsDataChannel::nsDataChannel() {
-    mStatus = NS_OK;
-    mContentLength = -1;
-    mLoadFlags = nsIRequest::LOAD_NORMAL;
+nsDataChannel::nsDataChannel() :
+    mStatus(NS_OK),
+    mLoadFlags(nsIRequest::LOAD_NORMAL),
+    mContentLength(-1),
+    mOpened(PR_FALSE)
+{
 }
 
 nsDataChannel::~nsDataChannel() {
@@ -362,6 +364,7 @@ nsDataChannel::Open(nsIInputStream **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
     NS_ADDREF(*_retval = mDataStream);
+    mOpened = PR_TRUE;
     return NS_OK;
 }
 
@@ -386,6 +389,7 @@ nsDataChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 
     // Hold onto the real consumer...
     mListener = aListener;
+    mOpened = PR_TRUE;
 
     // Add the request to the loadgroup (if available)
     if (mLoadGroup) {
@@ -437,7 +441,10 @@ nsDataChannel::GetContentType(nsACString &aContentType)
 NS_IMETHODIMP
 nsDataChannel::SetContentType(const nsACString &aContentType)
 {
-    mContentType = aContentType;
+    // Ignore content-type hints
+    if (mOpened) {
+        mContentType = aContentType;
+    }
     return NS_OK;
 }
 
@@ -451,7 +458,10 @@ nsDataChannel::GetContentCharset(nsACString &aContentCharset)
 NS_IMETHODIMP
 nsDataChannel::SetContentCharset(const nsACString &aContentCharset)
 {
-    mContentCharset = aContentCharset;
+    // Ignore content-charset hints
+    if (mOpened) {
+        mContentCharset = aContentCharset;
+    }
     return NS_OK;
 }
 

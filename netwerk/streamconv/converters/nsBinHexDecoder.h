@@ -117,7 +117,6 @@ protected:
   nsresult SetContentType(nsIRequest * aRequest, const char * fileName);
 
 protected:
-  nsCString mContentType;
   nsCOMPtr<nsIStreamListener> mNextListener;
 
   // the input and output streams form a pipe...they need to be passed around together..

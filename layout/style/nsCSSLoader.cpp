@@ -1359,6 +1359,10 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     }
   }
 
+  // Now tell the channel we expect text/css data back....  We do
+  // this before opening it, so it's only treated as a hint.
+  channel->SetContentType(NS_LITERAL_CSTRING("text/css"));
+
   // We don't have to hold on to the stream loader.  The ownership
   // model is: Necko owns the stream loader, which owns the load data,
   // which owns us

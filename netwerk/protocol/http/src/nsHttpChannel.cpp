@@ -586,28 +586,35 @@ nsresult
 nsHttpChannel::CallOnStartRequest()
 {
     if (mResponseHead && mResponseHead->ContentType().IsEmpty()) {
-        // Uh-oh.  We had better find out what type we are!
+        if (!mContentTypeHint.IsEmpty())
+            mResponseHead->SetContentType(mContentTypeHint);
+        else {
+            // Uh-oh.  We had better find out what type we are!
 
-        // XXX This does not work with content-encodings...  but
-        // neither does applying the conversion from the URILoader
+            // XXX This does not work with content-encodings...  but
+            // neither does applying the conversion from the URILoader
 
-        nsCOMPtr<nsIStreamConverterService> serv;
-        nsresult rv = gHttpHandler->
+            nsCOMPtr<nsIStreamConverterService> serv;
+            nsresult rv = gHttpHandler->
                 GetStreamConverterService(getter_AddRefs(serv));
-        // If we failed, we just fall through to the "normal" case
-        if (NS_SUCCEEDED(rv)) {
-            NS_ConvertASCIItoUCS2 from(UNKNOWN_CONTENT_TYPE);
-            nsCOMPtr<nsIStreamListener> converter;
-            rv = serv->AsyncConvertData(from.get(),
-                                        NS_LITERAL_STRING("*/*").get(),
-                                        mListener,
-                                        mListenerContext,
-                                        getter_AddRefs(converter));
+            // If we failed, we just fall through to the "normal" case
             if (NS_SUCCEEDED(rv)) {
-                mListener = converter;
+                NS_ConvertASCIItoUCS2 from(UNKNOWN_CONTENT_TYPE);
+                nsCOMPtr<nsIStreamListener> converter;
+                rv = serv->AsyncConvertData(from.get(),
+                                            NS_LITERAL_STRING("*/*").get(),
+                                            mListener,
+                                            mListenerContext,
+                                            getter_AddRefs(converter));
+                if (NS_SUCCEEDED(rv)) {
+                    mListener = converter;
+                }
             }
         }
     }
+
+    if (mResponseHead && mResponseHead->ContentCharset().IsEmpty())
+        mResponseHead->SetContentCharset(mContentCharsetHint);
     
     LOG(("  calling mListener->OnStartRequest\n"));
     nsresult rv = mListener->OnStartRequest(this, mListenerContext);
@@ -2562,17 +2569,24 @@ nsHttpChannel::GetContentType(nsACString &value)
 NS_IMETHODIMP
 nsHttpChannel::SetContentType(const nsACString &value)
 {
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
+    if (mIsPending) {
+        if (!mResponseHead)
+            return NS_ERROR_NOT_AVAILABLE;
 
-    nsCAutoString contentTypeBuf, charsetBuf;
-    NS_ParseContentType(value, contentTypeBuf, charsetBuf);
+        nsCAutoString contentTypeBuf, charsetBuf;
+        NS_ParseContentType(value, contentTypeBuf, charsetBuf);
 
-    mResponseHead->SetContentType(contentTypeBuf);
+        mResponseHead->SetContentType(contentTypeBuf);
 
-    // take care not to stomp on an existing charset
-    if (!charsetBuf.IsEmpty())
-        mResponseHead->SetContentCharset(charsetBuf);
+        // take care not to stomp on an existing charset
+        if (!charsetBuf.IsEmpty())
+            mResponseHead->SetContentCharset(charsetBuf);
+    } else {
+        // We are being given a content-type hint.
+        nsCAutoString charsetBuf;
+        NS_ParseContentType(value, mContentTypeHint, mContentCharsetHint);
+    }
+    
     return NS_OK;
 }
 
@@ -2589,10 +2603,15 @@ nsHttpChannel::GetContentCharset(nsACString &value)
 NS_IMETHODIMP
 nsHttpChannel::SetContentCharset(const nsACString &value)
 {
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
+    if (mIsPending) {
+        if (!mResponseHead)
+            return NS_ERROR_NOT_AVAILABLE;
 
-    mResponseHead->SetContentCharset(value);
+        mResponseHead->SetContentCharset(value);
+    } else {
+        // Charset hint
+        mContentCharsetHint = value;
+    }
     return NS_OK;
 }
 

@@ -190,6 +190,9 @@ private:
     PRUint32                          mLogicalOffset;
     PRUint8                           mCaps;
 
+    nsCString                         mContentTypeHint;
+    nsCString                         mContentCharsetHint;
+    
     // cache specific data
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     nsCOMPtr<nsIInputStreamPump>      mCachePump;
