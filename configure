@@ -7752,6 +7752,7 @@ layout/html/style/Makefile
 layout/html/style/public/Makefile
 layout/html/style/src/Makefile
 layout/html/table/Makefile
+layout/html/table/public/Makefile
 layout/html/table/src/Makefile
 layout/html/tests/Makefile
 layout/tools/Makefile
