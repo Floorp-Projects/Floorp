@@ -45,6 +45,7 @@ extern CComModule _Module;
 
 // STL headers
 #include <vector>
+#include <list>
 #include <string>
 
 // New winsock2.h doesn't define this anymore
@@ -53,8 +54,14 @@ typedef long int32;
 #include "jstypes.h"
 #include "prtypes.h"
 
-// Mozilla headers
+// Comment these out as appropriate
 //#define USE_NGPREF
+
+#ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+#define USE_PLUGIN
+#endif
+
+// Mozilla headers
 #ifdef USE_NGPREF
 #include "nsIPref.h"
 #endif
@@ -93,15 +100,19 @@ typedef long int32;
 typedef std::basic_string<TCHAR> tstring;
 
 #include "BrowserDiagnostics.h"
+#include "PropertyList.h"
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
 #include "WebShellContainer.h"
+#include "PropertyBag.h"
+#include "ControlSite.h"
+#include "ControlSiteIPFrame.h"
 
 #ifdef USE_PLUGIN
+#include "npapi.h"
 #include "nsIFactory.h"
 #include "nsIPlugin.h"
 #include "nsIPluginInstance.h"
-#include "ControlSite.h"
 #include "ActiveXPlugin.h"
 #include "ActiveXPluginInstance.h"
 #endif
