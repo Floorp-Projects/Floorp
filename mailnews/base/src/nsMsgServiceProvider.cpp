@@ -30,9 +30,7 @@
 #include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
 
-#include "nsSpecialSystemDirectory.h"
-#include "nsNetUtil.h"
-#include "nsIChromeRegistry.h"
+#include "nsIChromeRegistry.h" // for chrome registry
 
 #include "nsIFileSpec.h"
 #include "nsFileLocations.h"
@@ -42,72 +40,7 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
-static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
-static NS_DEFINE_CID(kFileSpecCID, NS_FILESPEC_CID);
-
-//----------------------------------------------------------------------------------------
-static nsresult GetConvertedChromeURL(const char* uriStr, nsIFileSpec* *outSpec)
-//----------------------------------------------------------------------------------------
-{
-
-  nsresult rv;
-    
-  nsCOMPtr<nsIURI> uri;
-  uri = do_CreateInstance(kStandardUrlCID);
-  rv = uri->SetSpec(uriStr);
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIChromeRegistry> chromeRegistry =
-      do_GetService(kChromeRegistryCID, &rv);
-
-  nsXPIDLCString newSpec;  
-  if (NS_SUCCEEDED(rv)) {
-
-      rv = chromeRegistry->ConvertChromeURL(uri, getter_Copies(newSpec));
-      if (NS_FAILED(rv))
-          return rv;
-  }
-  const char *urlSpec = newSpec;
-  rv = uri->SetSpec(urlSpec);
-  if (NS_FAILED(rv)) return rv;
-
-  /* won't deal remote URI yet */
-  nsString fileStr; fileStr.AssignWithConversion("file");
-  nsString resStr; resStr.AssignWithConversion("res");
-  nsString resoStr; resoStr.AssignWithConversion("resource");
-  
-  char *uriScheme = nsnull;
-  rv = uri->GetScheme(&uriScheme);
-  if (NS_FAILED(rv)) return rv;
-  nsString tmpStr; tmpStr.AssignWithConversion(uriScheme);
-   
-  NS_ASSERTION(((tmpStr == fileStr) || (tmpStr == resStr) || (tmpStr == resoStr)), "won't deal remote URI yet! \n");
-   
-  nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::Moz_BinDirectory);
-  nsFileURL fileURL(dir); // file:///moz_0511/mozilla/...
-       
-  if ((tmpStr != fileStr)) {
-       /* resolve to fileURL */
-       char *uriPath = nsnull;
-       rv = uri->GetPath(&uriPath);
-       if (NS_FAILED(rv)) return rv;
-       fileURL += uriPath;
-       urlSpec = fileURL.GetURLString();
-  }
-
-  nsCOMPtr<nsIFileSpec> dataFilesDir = do_GetService(kFileSpecCID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  *outSpec = dataFilesDir;
-  NS_ADDREF(*outSpec);
-
-  return dataFilesDir->SetURLString(urlSpec);
-}
-
-//========================================================================================
-// Implementation of nsMsgServiceProviderService
-//========================================================================================
 
 nsMsgServiceProviderService::nsMsgServiceProviderService()
 {
@@ -136,10 +69,44 @@ nsMsgServiceProviderService::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFileSpec> dataFilesDir;
-  rv = GetConvertedChromeURL("chrome://messenger/locale/isp/", getter_AddRefs(dataFilesDir));
+  rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultsFolder50,
+                                getter_AddRefs(dataFilesDir));
+  NS_ENSURE_SUCCESS(rv,rv);
 
-  if (NS_FAILED(rv) || !dataFilesDir)
-      return rv;
+  rv = dataFilesDir->AppendRelativeUnixPath("isp");
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // test if there is a locale provider
+  PRBool isexists = false;
+  rv = dataFilesDir->Exists(&isexists);
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (isexists) {
+    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsXPIDLString lc_name;
+      nsAutoString tmpstr; tmpstr.AssignWithConversion("navigator");
+      rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), getter_Copies(lc_name));
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoString localeStr(lc_name);
+
+        nsCOMPtr<nsIFileSpec> tmpdataFilesDir;
+        rv = NS_NewFileSpec(getter_AddRefs(tmpdataFilesDir));
+        NS_ENSURE_SUCCESS(rv,rv);
+        rv = tmpdataFilesDir->FromFileSpec(dataFilesDir);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        tmpdataFilesDir->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));
+        NS_ENSURE_SUCCESS(rv,rv);
+        rv = tmpdataFilesDir->Exists(&isexists);
+        NS_ENSURE_SUCCESS(rv,rv);
+        if (isexists) {
+            // use locale provider instead
+            dataFilesDir->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));
+            NS_ENSURE_SUCCESS(rv,rv);
+        }
+      }
+    }
+  }
   // now enumerate every file in the directory, and suck it into the datasource
 
   nsCOMPtr<nsIDirectoryIterator> fileIterator =
