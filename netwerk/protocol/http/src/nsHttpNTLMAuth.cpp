@@ -136,7 +136,11 @@ public:
     virtual ~nsNTLMContinuationState()
     {
         (gFT->DeleteSecurityContext)(&mCtx);
+#ifdef __MINGW32__
+        (gFT->FreeCredentialsHandle)(&mCred);
+#else
         (gFT->FreeCredentialHandle)(&mCred);
+#endif
     }
 
     CredHandle mCred;
