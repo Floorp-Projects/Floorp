@@ -231,20 +231,17 @@ static PRUint32 StringHash(const char *ubuf)
 nsresult NS_MsgHashIfNecessary(nsCAutoString &name)
 {
 #if defined(XP_MAC)
-  nsCAutoString illegalChars(":");
   const PRUint32 MAX_LEN = 25;
 #elif defined(XP_UNIX) || defined(XP_BEOS)
-  nsCAutoString illegalChars;  // is this correct for BEOS?
   const PRUint32 MAX_LEN = 55;
 #elif defined(XP_WIN32)
-  nsCAutoString illegalChars("\"/\\[]:;=,|?<>*$");
   const PRUint32 MAX_LEN = 55;
 #elif defined(XP_OS2)
-  nsCAutoString illegalChars("\"/\\[]:;=,|?<>*$");
   const PRUint32 MAX_LEN = 55;
 #else
-#error need_to_define_your_max_filename_length
+  #error need_to_define_your_max_filename_length
 #endif
+  nsCAutoString illegalChars(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS);
   nsCAutoString str(name);
 
   // Given a filename, make it safe for filesystem

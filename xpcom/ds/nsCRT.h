@@ -267,4 +267,19 @@ public:
 #define LFSTR "\012"
 #define CRLF "\015\012"     /* A CR LF equivalent string */
 
+
+#if defined(XP_MAC)
+  #define FILE_PATH_SEPARATOR       ":"
+  #define FILE_ILLEGAL_CHARACTERS   ""
+#elif defined(XP_WIN) || defined(XP_OS2)
+  #define FILE_PATH_SEPARATOR       "\\"
+  #define FILE_ILLEGAL_CHARACTERS   "/:*?\"<>|"
+#elif (defined(XP_UNIX) || defined(XP_BEOS)
+  #define FILE_PATH_SEPARATOR       "/"
+  #define FILE_ILLEGAL_CHARACTERS   ""
+#elif
+  #error need_to_define_your_file_path_separator_and_illegal_characters
+#endif
+
+
 #endif /* nsCRT_h___ */

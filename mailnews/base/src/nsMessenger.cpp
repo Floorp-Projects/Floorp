@@ -202,6 +202,42 @@ ConvertBufToPlainText(nsString &aConBuf)
   return rv;
 }
 
+nsresult ConvertAndSanitizeFileName(const char * displayName, PRUnichar ** unicodeResult, char ** result)
+{
+  char * unescapedName = PL_strdup(displayName);
+  if (!unescapedName)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  /* we need to convert the UTF-8 fileName to platform specific character set.
+     The display name is in UTF-8 because it has been escaped from JS
+  */ 
+  nsUnescape(unescapedName);
+  nsAutoString ucs2Str = NS_ConvertUTF8toUCS2(unescapedName);
+  PR_FREEIF(unescapedName);
+
+#if defined(XP_MAC)
+  /* We need to truncate the name to 31 characters, this even on MacOS X until the file API
+     correctly support long file name. Using a nsILocalFIle will do the trick...
+  */
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> aLocalFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(aLocalFile->SetUnicodeLeafName(ucs2Str.get())))
+    aLocalFile->GetUnicodeLeafName(getter_Copies(ucs2Str));
+#endif
+
+  // replace platform specific path separator and illegale characters to avoid any confusion
+  ucs2Str.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
+
+  nsresult rv = NS_OK;
+  if (result)
+    rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), ucs2Str, result);
+
+  if (unicodeResult)
+    *unicodeResult = ToNewUnicode(ucs2Str);
+
+ return rv;
+}
+
 // ***************************************************
 // jefft - this is a rather obscured class serves for Save Message As File,
 // Save Message As Template, and Save Attachment to a file
@@ -677,11 +713,18 @@ NS_IMETHODIMP
 nsMessenger::SaveAttachment(const char * contentType, const char * url,
                             const char * displayName, const char * messageUri)
 {
+  NS_ENSURE_ARG_POINTER(url);
+
+#ifdef DEBUG_MESSENGER
+  printf("nsMessenger::SaveAttachment(%s)\n",url);
+#endif    
+
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   char *unescapedUrl = nsnull;
   nsCOMPtr<nsIFilePicker> filePicker =
       do_CreateInstance("@mozilla.org/filepicker;1", &rv);
-  char * unescapedDisplayName = nsnull;
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PRInt16 dialogResult;
   nsCOMPtr<nsILocalFile> localFile;
   nsCOMPtr <nsILocalFile> lastSaveDir;
@@ -689,38 +732,15 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
   nsXPIDLCString filePath;
   nsXPIDLString defaultDisplayString;
 
-  if (NS_FAILED(rv)) goto done;
-  if (!url) goto done;
-
-#ifdef DEBUG_MESSENGER
-  printf("nsMessenger::SaveAttachment(%s)\n",url);
-#endif    
   unescapedUrl = PL_strdup(url);
-  if (!unescapedUrl) goto done;
+  if (!unescapedUrl)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsUnescape(unescapedUrl);
   
-  unescapedDisplayName = nsCRT::strdup(displayName);
-  if (!unescapedDisplayName) goto done;
-  nsUnescape(unescapedDisplayName);
-    
-  /* we need to convert the UTF-8 fileName to platform specific character set.
-     The display name is in UTF-8 because it has been escaped from JS
-  */
-  
-  defaultDisplayString.Assign(NS_ConvertUTF8toUCS2(unescapedDisplayName));
-  nsCRT::free(unescapedDisplayName);
-#if defined (XP_MAC)
-  {
-  /* We need to truncate the name to 31 characters, this even on MacOS X until the file API
-     correctly support long file name. Using a nsILocalFIle will do the trick...
-  */
-  nsCOMPtr<nsILocalFile> aLocalFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(aLocalFile->SetUnicodeLeafName(defaultDisplayString.get())))
-    aLocalFile->GetUnicodeLeafName(getter_Copies(defaultDisplayString));
-  }
-#endif
-  
+  rv = ConvertAndSanitizeFileName(displayName, getter_Copies(defaultDisplayString), nsnull);
+  if (NS_FAILED(rv)) goto done;
+
   filePicker->Init(
       nsnull, 
       GetString(NS_LITERAL_STRING("Save Attachment").get()),
@@ -736,24 +756,26 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
 
   filePicker->Show(&dialogResult);
   if (dialogResult == nsIFilePicker::returnCancel)
-      goto done;
+  {
+    rv = NS_OK;
+    goto done;
+  }
 
   rv = filePicker->GetFile(getter_AddRefs(localFile));
   if (NS_FAILED(rv)) goto done;
   
-  rv = SetLastSaveDirectory(localFile);
-  if (NS_FAILED(rv)) 
-    goto done;
+  (void)SetLastSaveDirectory(localFile);
   
   rv = localFile->GetPath(getter_Copies(filePath));
   fileSpec = do_CreateInstance("@mozilla.org/filespec;1", &rv);
   if (NS_FAILED(rv)) goto done;
+
   fileSpec->SetNativePath(filePath);
   rv = SaveAttachment(fileSpec, unescapedUrl, messageUri, contentType, nsnull);
 
 done:
-    PR_FREEIF(unescapedUrl);
-    return rv;
+  PR_FREEIF(unescapedUrl);
+  return rv;
 }
 
 
@@ -771,7 +793,7 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
     nsCOMPtr<nsILocalFile> lastSaveDir;
     nsCOMPtr<nsIFileSpec> fileSpec;
     nsXPIDLCString dirName;
-    char *unescapedUrl = nsnull, *unescapedName = nsnull, *tempCStr = nsnull;
+    char *unescapedUrl = nsnull, *unescapedName = nsnull;
     nsSaveAllAttachmentsState *saveState = nsnull;
     PRInt16 dialogResult;
 
@@ -813,13 +835,11 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
         nsFileSpec aFileSpec((const char *) dirName);
         unescapedUrl = PL_strdup(urlArray[0]);
         nsUnescape(unescapedUrl);
-        unescapedName = PL_strdup(displayNameArray[0]);
-        nsUnescape(unescapedName);
-        rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), NS_ConvertUTF8toUCS2(unescapedName),
-                                &tempCStr);
-        if (NS_FAILED(rv)) goto done;
-        PR_FREEIF(unescapedName);
-        unescapedName = tempCStr;
+
+        rv = ConvertAndSanitizeFileName(displayNameArray[0], nsnull, &unescapedName);
+        if (NS_FAILED(rv))
+          goto done;
+
         aFileSpec += unescapedName;
         rv = PromptIfFileExists(aFileSpec);
         if (NS_FAILED(rv)) return rv;
@@ -1756,8 +1776,7 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
       if (m_saveAllAttachmentsState->m_curIndex <
           m_saveAllAttachmentsState->m_count)
       {
-          char * unescapedUrl = nsnull, * unescapedName = nsnull, 
-               * tempCStr = nsnull;
+          char * unescapedUrl = nsnull, * unescapedName = nsnull;
           nsSaveAllAttachmentsState *state = m_saveAllAttachmentsState;
           PRUint32 i = state->m_curIndex;
           nsCOMPtr<nsIFileSpec> fileSpec;
@@ -1767,13 +1786,11 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
           if (NS_FAILED(rv)) goto done;
           unescapedUrl = PL_strdup(state->m_urlArray[i]);
           nsUnescape(unescapedUrl);
-          unescapedName = PL_strdup(state->m_displayNameArray[i]);
-          nsUnescape(unescapedName);
-          rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), NS_ConvertUTF8toUCS2(unescapedName),
-                                  &tempCStr);
-          if (NS_FAILED(rv)) goto done;
-          PR_FREEIF(unescapedName);
-          unescapedName = tempCStr;
+ 
+          rv = ConvertAndSanitizeFileName(state->m_displayNameArray[i], nsnull, &unescapedName);
+          if (NS_FAILED(rv))
+            goto done;
+
           aFileSpec += unescapedName;
           rv = m_messenger->PromptIfFileExists(aFileSpec);
           if (NS_FAILED(rv)) goto done;
