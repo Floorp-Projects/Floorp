@@ -70,7 +70,7 @@ print <<EOM;
 <tr><th>Max Row Size (minutes)</th><td>@{[$p->textfield(-name=>'max_row_size', -default=>$tree_info->[4])]}</td></tr>
 <tr><th>Tinderbox Page Size (minutes)</th><td>@{[$p->textfield(-name=>'default_tinderbox_view', -default=>$tree_info->[5])]}</td></tr>
 <tr><th>New Machines Visible By Default?</th><td><input type=checkbox name=new_machines_visible@{[$tree_info->[6] ? ' checked' : '']}></td></tr>
-<tr><th>Editor Privileges (list of emails)</th><td>@{[$p->textfield(-name=>'editors', -default=>$tree_info->[9])]}</td></tr>
+<tr><th>Editor Privileges (list of emails)</th><td>@{[$p->textfield(-name=>'editors', -default=>$tree_info->[7])]}</td></tr>
 </table>
 <p><strong>Initial .mozconfig:</strong><br>
 <input type=hidden name=initial_machine_config0 value=mozconfig>
