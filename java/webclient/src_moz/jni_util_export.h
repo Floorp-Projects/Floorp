@@ -149,7 +149,48 @@ typedef JNIEXPORT void (JNICALL * fpInitializeEventMaskType)
      jclass listenerClass,
      const char **nullTermMaskNameArray,
      jlong *maskValueArray);
-    
+
+/**
+
+ * Called when webclient wants to create a "Properties" object.  Right
+ * now, no parameters are actually used.
+
+ */
+
+typedef JNIEXPORT jobject (JNICALL * fpCreatePropertiesObjectType) 
+    (JNIEnv *env, jobject reserved_NotUsed);
+
+/**
+
+ * Called after webclient is done using a "Properties" object it created
+ * with fpCreatePropertiesObject
+
+ * @param propertiesObject the propertiesObject created with
+ * fpCreatePropertiesObject
+
+ */
+
+typedef JNIEXPORT void (JNICALL * fpDestroyPropertiesObjectType) 
+    (JNIEnv *env, jobject propertiesObject, jobject reserved_NotUsed);
+
+/**
+
+ * Called after webclient has called fpCreatePropertiesObjectType when
+ * webclient wants to store values into the properties object.
+
+ * @param env not used
+
+ * @param propertiesObject obtained from fpCreatePropertiesObjectType
+
+ * @param name the name of the property
+
+ * @param the value of the property
+
+ */
+
+typedef JNIEXPORT void (JNICALL * fpStoreIntoPropertiesObjectType) 
+    (JNIEnv *env, jobject propertiesObject, jobject name, jobject value);
+
 /**
 
  * This function must be called at app initialization.
@@ -179,6 +220,37 @@ JNIEXPORT void JNICALL util_SetEventOccurredFunction(fpEventOccurredType fp);
  */
 
 JNIEXPORT void JNICALL util_SetInitializeEventMaskFunction(fpInitializeEventMaskType fp);
+
+/**
+
+ * This function must be called at app initialization.
+
+ * @see fpCreatePropertiesObjectType
+
+ */
+
+JNIEXPORT void JNICALL util_SetCreatePropertiesObjectFunction(fpCreatePropertiesObjectType fp);
+
+/**
+
+ * This function must be called at app initialization.
+
+ * @see fpDestroyPropertiesObjectType
+
+ */
+
+JNIEXPORT void JNICALL util_SetDestroyPropertiesObjectFunction(fpDestroyPropertiesObjectType fp);
+
+/**
+
+ * This function must be called at app initialization.
+
+ * @see fpStoreIntoPropertiesObjectType
+
+ */
+
+JNIEXPORT void JNICALL util_SetStoreIntoPropertiesObjectFunction(fpStoreIntoPropertiesObjectType fp);
+
 
 
 /**
@@ -210,6 +282,36 @@ extern fpInstanceOfType externalInstanceOf;
  */
 
 extern fpInitializeEventMaskType externalInitializeEventMask;
+
+/**
+
+ * defined in jni_util_export.cpp
+
+ * The function pointer set with util_SetCreatePropertiesObjectFunction
+
+ */
+
+extern fpCreatePropertiesObjectType externalCreatePropertiesObject;
+
+/**
+
+ * defined in jni_util_export.cpp
+
+ * The function pointer set with util_SetDestroyPropertiesObjectFunction
+
+ */
+
+extern fpDestroyPropertiesObjectType externalDestroyPropertiesObject;
+
+/**
+
+ * defined in jni_util_export.cpp
+
+ * The function pointer set with util_SetStoreIntoPropertiesObjectFunction
+
+ */
+
+extern fpStoreIntoPropertiesObjectType externalStoreIntoPropertiesObject;
 
 /**
 

@@ -182,6 +182,34 @@ jint util_GetIntValueFromInstance(JNIEnv *env, jobject instance,
 void util_SetIntValueForInstance(JNIEnv *env, jobject instance,
                                  const char *fieldName, jint newValue);
 
+/**
+
+ * A JNI wrapper to create a java.util.Properties object, or the
+ * equivalent object in the BAL case.
+
+ */
+
+jobject util_CreatePropertiesObject(JNIEnv *env, jobject reserved_NotUsed);
+
+/**
+
+ * A JNI wrapper to destroy the object from CreatePropertiesObject
+
+ */
+
+void util_DestroyPropertiesObject(JNIEnv *env, jobject propertiesObject,
+                                  jobject reserved_NotUsed);
+
+/**
+
+ * A JNI wrapper for storing a name/value pair into the Properties
+ * object created by CreatePropertiesObject
+
+ */
+
+void util_StoreIntoPropertiesObject(JNIEnv *env, jobject propertiesObject,
+                                    jobject name, jobject value);
+
 
 //
 // Functions from secret JDK files

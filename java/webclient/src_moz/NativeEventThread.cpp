@@ -110,6 +110,7 @@ char * errorMessages[] = {
 
 const char *gSupportedListenerInterfaces[] = {
     "org/mozilla/webclient/DocumentLoadListener",
+    "java/awt/event/MouseListener",
     nsnull
 };
 
@@ -118,6 +119,7 @@ const char *gSupportedListenerInterfaces[] = {
 
 typedef enum {
     DOCUMENT_LOAD_LISTENER = 0,
+    MOUSE_LISTENER,
     LISTENER_NOT_FOUND
 } LISTENER_CLASSES;
 
@@ -244,6 +246,9 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
     switch(listenerType) {
     case DOCUMENT_LOAD_LISTENER:
         addDocumentLoadListener(env, initContext, globalRef); 
+        break;
+    case MOUSE_LISTENER:
+        addMouseListener(env, initContext, globalRef); 
         break;
     }
 }

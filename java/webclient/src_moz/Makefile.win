@@ -32,10 +32,12 @@ OBJS =                              \
     .\$(OBJDIR)\jni_util.obj  \
     .\$(OBJDIR)\jni_util_export.obj  \
     .\$(OBJDIR)\rdf_util.obj  \
+    .\$(OBJDIR)\dom_util.obj  \
     .\$(OBJDIR)\nsActions.obj  \
     .\$(OBJDIR)\BookmarksImpl.obj  \
     .\$(OBJDIR)\CurrentPageImpl.obj  \
     .\$(OBJDIR)\DocumentLoaderObserverImpl.obj  \
+    .\$(OBJDIR)\DOMMouseListenerImpl.obj  \
     .\$(OBJDIR)\EventRegistration.obj  \
     .\$(OBJDIR)\HistoryImpl.obj  \
     .\$(OBJDIR)\WrapperFactoryImpl.obj  \
@@ -76,6 +78,7 @@ LLIBS = \
 	$(DIST)\lib\nsreg.lib \
 	$(DIST)\lib\nspr3.lib \
 	$(DIST)\lib\plds3.lib \
+	$(DIST)\lib\plc3.lib \
 #	$(DEPTH)\xpfe\bootstrap\$(OBJDIR)\nsSetupRegistry.obj \
 	$(NULL)  
 

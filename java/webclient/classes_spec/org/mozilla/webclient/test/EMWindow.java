@@ -50,13 +50,13 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.6 2000/05/23 21:06:41 ashuk%eng.sun.com Exp $
+ * @version $Id: EMWindow.java,v 1.7 2000/05/25 23:51:43 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
  */
 
-public class EMWindow extends Frame implements DialogClient, ActionListener, DocumentLoadListener {
+public class EMWindow extends Frame implements DialogClient, ActionListener, DocumentLoadListener, MouseListener {
     static final int defaultWidth = 640;
     static final int defaultHeight = 480;
 
@@ -207,7 +207,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
                 browserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
             System.out.println("debug: edburns: adding DocumentLoadListener");
             eventRegistration.addDocumentLoadListener(this);
-
+            eventRegistration.addMouseListener(this);
 
             // PENDING(edburns): test code, replace with production code
             bookmarks = 
@@ -449,7 +449,7 @@ public void dialogCancelled(Dialog d) {
 
 
 //
-// From DocumentLoadListener
+// From WebclientEventListener sub-interfaces
 //
 
 /**
@@ -471,6 +471,47 @@ public void eventDispatched(WebclientEvent event)
             break;
         }
     }
+}
+
+//
+// From MouseListener
+// 
+
+public void mouseClicked(java.awt.event.MouseEvent e)
+{
+    System.out.println("mouseClicked");
+}
+
+public void mouseEntered(java.awt.event.MouseEvent e)
+{
+    System.out.println("mouseEntered");
+    if (e instanceof WCMouseEvent) {
+        WCMouseEvent wcMouseEvent = (WCMouseEvent) e;
+        Properties eventProps = 
+            (Properties) wcMouseEvent.getWebclientEvent().getEventData();
+        if (null == eventProps) {
+            return;
+        }
+        String href = eventProps.getProperty("href");
+        if (null != href) {
+            System.out.println(href);
+        }
+    }
+}
+
+public void mouseExited(java.awt.event.MouseEvent e)
+{
+    System.out.println("mouseExited");
+}
+
+public void mousePressed(java.awt.event.MouseEvent e)
+{
+    System.out.println("mousePressed");
+}
+
+public void mouseReleased(java.awt.event.MouseEvent e)
+{
+    System.out.println("mouseReleased");
 }
 
 }

@@ -52,7 +52,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     if (::util_ExceptionOccurred(env)) {
 	::util_ThrowExceptionToJava(env, "raptorWebShellLoadURL Exception: unable to extract Java string");
 	if (urlStringChars != nsnull)
-	  ::util_ReleaseStringChars(env, urlString, urlStringChars);
+	  ::util_ReleaseStringChars(env, urlString, (const jchar *) urlStringChars);
 	return;
       }
     
@@ -61,7 +61,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     if (initContext == nsnull) {
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellLoadURL");
       if (urlStringChars != nsnull)
-	::util_ReleaseStringChars(env, urlString, urlStringChars);
+	::util_ReleaseStringChars(env, urlString, (const jchar *) urlStringChars);
       return;
     }
     
@@ -72,7 +72,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
       ::util_PostEvent(initContext, event);
     }
     
-    ::util_ReleaseStringChars(env, urlString, urlStringChars);
+    ::util_ReleaseStringChars(env, urlString, (const jchar *) urlStringChars);
 }
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeRefresh

@@ -51,6 +51,24 @@
  */
 
 void addDocumentLoadListener(JNIEnv *env, WebShellInitContext *initContext,
-			     jobject listener);
+                             jobject listener);
+
+/**
+
+ * This function creates an instance of DOMMouseListenerImpl,
+ * which is the shim between the mozilla nsIDOMMouseListener class
+ * and the Java MouseListener interface.  See
+ * DocumentLoaderObserverImpl.h
+
+ * PENDING(): implement removeMouseListener
+
+ * PENDING(): implement the ability to have multiple listener instances
+ * per listener types, all of which get notified.
+
+ */
+
+void addMouseListener(JNIEnv *env, WebShellInitContext *initContext,
+                      jobject listener);
+
 
 #endif

@@ -233,7 +233,7 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString
             length = string->Length();
         }
 
-        result = ::util_NewString(env, textForNode, length);
+        result = ::util_NewString(env, (const jchar *) textForNode, length);
     }
     else {
         result = ::util_NewStringUTF(env, "");

@@ -23,6 +23,7 @@
 package org.mozilla.webclient;
 
 import java.awt.event.WindowListener;
+import java.awt.event.MouseListener;
 
 public interface EventRegistration {
 
@@ -34,6 +35,9 @@ public interface EventRegistration {
 
 public void addDocumentLoadListener(DocumentLoadListener listener); 
 public void removeDocumentLoadListener(DocumentLoadListener listener); 
+
+public void addMouseListener(MouseListener listener);
+public void removeMouseListener(MouseListener listener);
 
 // public void addDOMListener(DOMListener containerListener); 
 // public void removeDOMListener(DOMListener containerListener); 

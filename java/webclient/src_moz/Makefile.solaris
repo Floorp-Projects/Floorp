@@ -8,6 +8,8 @@ DLLNAMESTUB = libwebclientstub.so
 MOZILLA_TOP = ../../..
 DIST = ${MOZILLA_TOP}/dist
 LIBDIR = ${DIST}/lib
+#CC = gcc -g -fno-rtti -fno-exceptions -pedantic -Wno-long-long
+#MKSHLIB = c++ -G
 CC = CC -pic
 MKSHLIB = CC -G
 # WARNING: YOU NEED TO RUN 'gtk-config --cflags' and stick it in here
@@ -114,6 +116,9 @@ jni_util.o: jni_util.cpp
 
 jni_util_export.o: jni_util_export.cpp
 	${CC} ${DEFINES} ${INCLUDE} -c jni_util_export.cpp
+
+bal_util.o: bal_util.cpp
+	${CC} ${DEFINES} ${INCLUDE} -c bal_util.cpp
 
 rdf_util.o: rdf_util.cpp
 	${CC} ${DEFINES} ${INCLUDE} -c rdf_util.cpp

@@ -25,10 +25,20 @@
  *               Ann Sunhachawee
  */
 
+#include "prlog.h" // for PR_ASSERT
+
 #include "jni_util.h"
 
 JavaVM *gVm = nsnull; // declared in ns_globals.h, which is included in
                       // jni_util.h
+
+//
+// Local cache variables of JNI data items
+//
+
+static jclass gPropertiesClass = nsnull;
+static jmethodID gPropertiesInitMethodID = nsnull;
+static jmethodID gPropertiesSetPropertyMethodID = nsnull;
 
 void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
 {
@@ -358,7 +368,73 @@ void util_SetIntValueForInstance(JNIEnv *env, jobject obj,
 #endif;
 }
 
+jobject util_CreatePropertiesObject(JNIEnv *env, jobject reserved_NotUsed)
+{
+    jobject result = nsnull;
+#ifdef BAL_INTERFACE
+    if (nsnull != externalCreatePropertiesObject) {
+        result = externalCreatePropertiesObject(env, reserved_NotUsed);
+    }
+#else
+    // For some reason, we have to do FindClass each time.  If we try to
+    // cache the class, it crashes.  I think this may have something to
+    // do with threading issues.
+    if (nsnull == (gPropertiesClass 
+                   = ::util_FindClass(env, "java/util/Properties"))) {
+        return result;
+    }
+    
+    if (nsnull == gPropertiesInitMethodID) {
+        if (nsnull == (gPropertiesInitMethodID = 
+                       env->GetMethodID(gPropertiesClass, "<init>", "()V"))) {
+            return result;
+        }
+    }
 
+    result = env->NewObject(gPropertiesClass, gPropertiesInitMethodID);
+
+#endif
+    return result;
+}
+
+void util_DestroyPropertiesObject(JNIEnv *env, jobject propertiesObject,
+                                  jobject reserved_NotUsed)
+{
+#ifdef BAL_INTERFACE
+    if (nsnull != externalDestroyPropertiesObject) {
+        externalDestroyPropertiesObject(env, propertiesObject, 
+                                        reserved_NotUsed);
+    }
+#else
+#endif
+}
+
+void util_StoreIntoPropertiesObject(JNIEnv *env, jobject propertiesObject,
+                                    jobject name, jobject value)
+{
+#ifdef BAL_INTERFACE
+    if (nsnull != externalStoreIntoPropertiesObject) {
+        externalStoreIntoPropertiesObject(env, propertiesObject, name, value);
+    }
+#else
+    if (nsnull == gPropertiesSetPropertyMethodID) {
+        PR_ASSERT(gPropertiesClass);
+        if (nsnull == (gPropertiesSetPropertyMethodID = 
+                       env->GetMethodID(gPropertiesClass, 
+                                        "setProperty",
+                                        "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;"))) {
+            return;
+        }
+    }
+    PR_ASSERT(gPropertiesSetPropertyMethodID);
+
+    env->CallObjectMethod(propertiesObject, gPropertiesSetPropertyMethodID,
+                          name, value);
+                       
+
+    
+#endif
+}
 
 JNIEXPORT jvalue JNICALL
 JNU_CallMethodByName(JNIEnv *env, 

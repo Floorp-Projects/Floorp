@@ -40,6 +40,12 @@ fpInstanceOfType externalInstanceOf = nsnull; // jni_util_export.h
 
 fpInitializeEventMaskType externalInitializeEventMask = nsnull; // jni_util_export.h
 
+fpCreatePropertiesObjectType externalCreatePropertiesObject = nsnull; // jni_util_export.h
+
+fpDestroyPropertiesObjectType externalDestroyPropertiesObject = nsnull; // jni_util_export.h
+
+fpStoreIntoPropertiesObjectType externalStoreIntoPropertiesObject = nsnull; // jni_util_export.h
+
 JNIEXPORT const char * JNICALL util_GetStringUTFChars(JNIEnv *env, 
                                                       jstring inString)
 {
@@ -114,10 +120,7 @@ JNIEXPORT  void JNICALL util_DeleteStringUTF(JNIEnv *env, jstring toDelete)
 #ifdef BAL_INTERFACE
     util_DeleteString(env, toDelete);
 #else
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
-               ("This shouldn't get called in a non-BAL context!\n"));
-    }
+    // do nothing, java takes care of it
 #endif
 
 }
@@ -140,10 +143,7 @@ JNIEXPORT  void JNICALL util_DeleteString(JNIEnv *env, jstring toDelete)
 #ifdef BAL_INTERFACE
     bal_jstring_release(toDelete);
 #else
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
-               ("This shouldn't get called in a non-BAL context!\n"));
-    }
+    // do nothing, java takes care of it
 #endif
 
 }
@@ -191,6 +191,21 @@ JNIEXPORT void JNICALL util_SetInstanceOfFunction(fpInstanceOfType fp)
 JNIEXPORT void JNICALL util_SetInitializeEventMaskFunction(fpInitializeEventMaskType fp)
 {
     externalInitializeEventMask = fp;
+}
+
+JNIEXPORT void JNICALL util_SetCreatePropertiesObjectFunction(fpCreatePropertiesObjectType fp)
+{
+    externalCreatePropertiesObject = fp;
+}
+
+JNIEXPORT void JNICALL util_SetDestroyPropertiesObjectFunction(fpDestroyPropertiesObjectType fp)
+{
+    externalDestroyPropertiesObject = fp;
+}
+
+JNIEXPORT void JNICALL util_SetStoreIntoPropertiesObjectFunction(fpStoreIntoPropertiesObjectType fp)
+{
+    externalStoreIntoPropertiesObject = fp;
 }
 
 JNIEXPORT void JNICALL 

@@ -34,6 +34,7 @@ import org.mozilla.webclient.BrowserControlCanvas;
 import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.DocumentLoadEvent;
 import org.mozilla.webclient.DocumentLoadListener;
+import java.awt.event.MouseListener;
 import org.mozilla.webclient.WebclientEvent;
 import org.mozilla.webclient.WebclientEventListener;
 
@@ -262,6 +263,18 @@ void nativeEventOccurred(WebclientEventListener target, long eventType,
         
         if (target instanceof DocumentLoadListener) {
             event = new DocumentLoadEvent(this, eventType, eventData);
+        }
+        else if (target instanceof MouseListener) {
+            Assert.assert(target instanceof WCMouseListenerImpl);
+
+            // We create a plain vanilla WebclientEvent, which the
+            // WCMouseListenerImpl target knows how to deal with.
+
+            // Also, the source happens to be the browserControlCanvas
+            // to satisfy the java.awt.event.MouseEvent's requirement
+            // that the source be a java.awt.Component subclass.
+
+            event = new WebclientEvent(browserControlCanvas, eventType, eventData);
         }
         // else...
         

@@ -28,21 +28,14 @@
 #include "DocumentLoaderObserverImpl.h"
 
 #include "nsString.h"
-#include "DocumentLoaderObserverImpl.h"
-#include<stdio.h>
 #include "jni_util.h"
+#include "dom_util.h"
 #include "nsActions.h"
 
-#ifdef XP_PC
-// PENDING(edburns): take this out
-#include "winbase.h"
-// end of take this out
-#endif
+#include "nsIDOMDocument.h"
+#include "nsIDOMEventTarget.h"
 
 #include "prlog.h" // for PR_ASSERT
-
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 
 jlong DocumentLoaderObserverImpl::maskValues[] = { -1L };
 
@@ -58,26 +51,21 @@ char *DocumentLoaderObserverImpl::maskNames[] = {
   nsnull
 };
 
-
-/*************
-NS_IMETHODIMP_(nsrefcnt) DocumentLoaderObserverImpl::AddRef(void)
-{
-    NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt"); 
-    ++mRefCnt;
-    return mRefCnt;
-}
-**************/
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
+static NS_DEFINE_IID(kIDocumentLoaderObserverImplIID, NS_IDOCLOADEROBSERVERIMPL_IID);
 
 NS_IMPL_ADDREF(DocumentLoaderObserverImpl);
 NS_IMPL_RELEASE(DocumentLoaderObserverImpl);  
 
-DocumentLoaderObserverImpl::DocumentLoaderObserverImpl(){
+DocumentLoaderObserverImpl::DocumentLoaderObserverImpl() : mRefCnt(1),
+mTarget(nsnull), mMouseListener(nsnull) {
 }
 
 DocumentLoaderObserverImpl::DocumentLoaderObserverImpl(JNIEnv *env,
-					 WebShellInitContext *yourInitContext,
-						       jobject yourTarget) :
-  mJNIEnv(env), mInitContext(yourInitContext), mTarget(yourTarget)
+					 WebShellInitContext *yourInitContext) :
+    mJNIEnv(env), mInitContext(yourInitContext), mTarget(nsnull), 
+    mMouseListener(nsnull)
 {
     if (nsnull == gVm) { // declared in jni_util.h
       ::util_GetJavaVM(env, &gVm);  // save this vm reference away for the callback!
@@ -93,23 +81,29 @@ DocumentLoaderObserverImpl::DocumentLoaderObserverImpl(JNIEnv *env,
     mRefCnt = 1; // PENDING(edburns): not sure about how right this is to do.
 }
 
-NS_IMETHODIMP DocumentLoaderObserverImpl::QueryInterface(REFNSIID aIID, void** aInstance)
+NS_IMETHODIMP DocumentLoaderObserverImpl::QueryInterface(REFNSIID aIID, 
+                                                         void** aInstance)
 {
-  if (nsnull == aInstance)
-    return NS_ERROR_NULL_POINTER;
-
-  *aInstance = nsnull;
-
- 
-  if (aIID.Equals(kIDocumentLoaderObserverIID)) {
-    *aInstance = (void*) ((nsIDocumentLoaderObserver*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  
-
-  return NS_NOINTERFACE;
+    if (nsnull == aInstance)
+        return NS_ERROR_NULL_POINTER;
+    
+    *aInstance = nsnull;
+    
+    
+    if (aIID.Equals(kIDocumentLoaderObserverIID)) {
+        *aInstance = (void*) ((nsIDocumentLoaderObserver*)this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    else if (aIID.Equals(kIDocumentLoaderObserverImplIID)) {
+            *aInstance = (void*) ((DocumentLoaderObserverImpl*)this);
+            NS_ADDREF_THIS();
+            return NS_OK;
+    }
+    
+    return NS_NOINTERFACE;
 }
+
 
   /* nsIDocumentLoaderObserver methods */
 NS_IMETHODIMP DocumentLoaderObserverImpl::OnStartDocumentLoad(nsIDocumentLoader* loader, 
@@ -122,6 +116,11 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnStartDocumentLoad(nsIDocumentLoader*
                ("DocumentLoaderObserverImpl.cpp: OnStartDocumentLoad\n"));
     }
 #endif
+    // If we don't have a target, don't take any action
+    if (nsnull == mTarget) {
+        return NS_OK;
+    }
+
     char *urlStr = nsnull;
     jobject urlJStr = nsnull;
     if (nsnull != aURL) {
@@ -141,16 +140,9 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnStartDocumentLoad(nsIDocumentLoader*
                          mInitContext->nativeEventThread, mTarget, 
                          maskValues[START_DOCUMENT_LOAD_EVENT_MASK], urlJStr);
 
-#ifdef BAL_INTERFACE
-    // This violates my goal of confining all #ifdef BAL_INTERFACE to
-    // jni_util files, but this is the only part of the code that knows
-    // that eventData is a jstring.  In java, this will get garbage
-    // collected, but in non-java contexts, it will not.  Thus, we have
-    // to manually de-allocate it.
     if (urlJStr) {
         ::util_DeleteStringUTF(mInitContext->env, (jstring) urlJStr);
     }
-#endif
     
     return NS_OK;
 }
@@ -165,6 +157,39 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnEndDocumentLoad(nsIDocumentLoader* l
                ("!!DocumentLoaderObserverImpl.cpp: OnEndDocumentLoad\n"));
     }
 #endif
+    // if we have a mouse listener
+    if (mMouseListener) {
+        // install the mouse listener into mozilla
+        
+        nsCOMPtr<nsIDOMDocument> doc;
+        PR_ASSERT(mMouseListener);
+        
+        if (nsnull == loader) {
+            // NOT really ok, but we can't do anything.
+            return NS_OK;
+        }
+        
+        if (!(doc = dom_getDocumentFromLoader(loader))) {
+            // NOT really ok, but we can't do anything.
+            return NS_OK;
+        }
+        nsCOMPtr<nsIDOMEventTarget> domEventTarget;
+        nsresult rv;
+        
+        rv = doc->QueryInterface(NS_GET_IID(nsIDOMEventTarget),
+                                 getter_AddRefs(domEventTarget));
+        if (NS_FAILED(rv) || !domEventTarget) {
+            return NS_OK;
+        }
+        nsAutoString eType("mouseover");
+        domEventTarget->AddEventListener(eType, mMouseListener, PR_FALSE);
+        
+    } // end of "install mouse listener"
+    
+    // If we don't have a target, don't take any action
+    if (nsnull == mTarget) {
+        return NS_OK;
+    }
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mTarget, 
@@ -181,6 +206,11 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnStartURLLoad(nsIDocumentLoader* load
                ("!DocumentLoaderObserverImpl: OnStartURLLoad\n"));
     }
 #endif
+    // If we don't have a target, don't take any action
+    if (nsnull == mTarget) {
+        return NS_OK;
+    }
+
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
 			 maskValues[START_URL_LOAD_EVENT_MASK], nsnull);
     
@@ -198,6 +228,11 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnProgressURLLoad(nsIDocumentLoader* l
                ("!DocumentLoaderObserverImpl: OnProgressURLLoad\n"));
     }
 #endif
+    // If we don't have a target, don't take any action
+    if (nsnull == mTarget) {
+        return NS_OK;
+    }
+
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
 			 maskValues[PROGRESS_URL_LOAD_EVENT_MASK], nsnull);
 
@@ -216,28 +251,26 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnStatusURLLoad(nsIDocumentLoader* loa
                 aMsg.GetUnicode()));
     }
 #endif
+    // If we don't have a target, don't take any action
+    if (nsnull == mTarget) {
+        return NS_OK;
+    }
+
     int length = aMsg.Length();
 
     // IMPORTANT: do not use initContext->env here since it comes
     // from another thread.  Use JNU_GetEnv instead.
     
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
-    jstring statusMessage = ::util_NewString(env, aMsg.GetUnicode(), length);
+    jstring statusMessage = ::util_NewString(env, (const jchar *) 
+                                             aMsg.GetUnicode(), length);
     
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
 			 maskValues[STATUS_URL_LOAD_EVENT_MASK], (jobject) statusMessage);
 
-#ifdef BAL_INTERFACE
-    // This violates my goal of confining all #ifdef BAL_INTERFACE to
-    // jni_util files, but this is the only part of the code that knows
-    // that eventData is a jstring.  In java, this will get garbage
-    // collected, but in non-java contexts, it will not.  Thus, we have
-    // to manually de-allocate it.
     if (statusMessage) {
         ::util_DeleteString(mInitContext->env, statusMessage);
     }
-#endif
-
     return NS_OK;
 }
 
@@ -251,6 +284,11 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnEndURLLoad(nsIDocumentLoader* loader
                ("!DocumentLoaderObserverImpl: OnEndURLLoad\n"));
     }
 #endif
+    // If we don't have a target, don't take any action
+    if (nsnull == mTarget) {
+        return NS_OK;
+    }
+
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
 			 maskValues[END_URL_LOAD_EVENT_MASK], nsnull);
 
@@ -268,11 +306,55 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::HandleUnknownContentType(nsIDocumentLo
                ("!DocumentLoaderObserverImpl: HandleUnknownContentType\n"));
     }
 #endif
+    // If we don't have a target, don't take any action
+    if (nsnull == mTarget) {
+        return NS_OK;
+    }
+
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
 			 maskValues[UNKNOWN_CONTENT_EVENT_MASK], nsnull);
     
     return NS_OK;
 }
 
+//
+// Methods from DocumentLoaderObserverImpl
+//
 
+NS_IMETHODIMP DocumentLoaderObserverImpl::AddMouseListener(nsCOMPtr<nsIDOMMouseListener> toAdd)
+{
+    nsresult rv = NS_ERROR_FAILURE;
 
+    if (nsnull == toAdd) {
+        return rv;
+    }
+
+    mMouseListener = toAdd;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP DocumentLoaderObserverImpl::RemoveMouseListener(nsCOMPtr<nsIDOMMouseListener> toRemove)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+
+    return rv;
+}
+
+NS_IMETHODIMP DocumentLoaderObserverImpl::SetTarget(jobject yourTarget)
+{
+    nsresult rv = NS_OK;
+
+    mTarget = yourTarget;
+
+    return rv;
+}
+
+NS_IMETHODIMP DocumentLoaderObserverImpl::ClearTarget(void)
+{
+    nsresult rv = NS_OK;
+
+    mTarget = nsnull;
+
+    return rv;
+}

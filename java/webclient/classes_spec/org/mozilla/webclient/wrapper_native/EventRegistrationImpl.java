@@ -22,6 +22,7 @@
 
 package org.mozilla.webclient.wrapper_native;
 
+
 import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
@@ -32,8 +33,10 @@ import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.WrapperFactory;
 import org.mozilla.webclient.DocumentLoadEvent;
 import org.mozilla.webclient.DocumentLoadListener;
+import java.awt.event.MouseListener;
 import org.mozilla.webclient.WebclientEvent;
 import org.mozilla.webclient.WebclientEventListener;
+import org.mozilla.webclient.UnimplementedException; 
 
 public class EventRegistrationImpl extends ImplObjectNative implements EventRegistration
 {
@@ -112,6 +115,7 @@ public void addDocumentLoadListener(DocumentLoadListener listener)
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     Assert.assert(null != nativeEventThread);
+    ParameterCheck.nonNull(listener);
     
     synchronized(myBrowserControl) {
         nativeEventThread.addListener(listener);
@@ -123,8 +127,41 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function EventRegistration.removeDocumentLoadListener has not yet been implemented.\n");
+    
+    //    synchronized(myBrowserControl) {
+    //    }
+}
+
+public void addMouseListener(MouseListener listener)
+{
+    myFactory.throwExceptionIfNotInitialized();
+    Assert.assert(-1 != nativeWebShell);
+    Assert.assert(null != nativeEventThread);
+    ParameterCheck.nonNull(listener);
+
+    // We have to wrap the user provided java.awt.event.MouseListener
+    // instance in a custom WebclientEventListener subclass that also
+    // implements java.awt.event.MouseListener.  See WCMouseListener for
+    // more information.
+
+    WCMouseListenerImpl mouseListenerWrapper = 
+        new WCMouseListenerImpl(listener);
+    
     synchronized(myBrowserControl) {
+        nativeEventThread.addListener(mouseListenerWrapper);
     }
+}
+
+public void removeMouseListener(MouseListener listener)
+{
+    myFactory.throwExceptionIfNotInitialized();
+    Assert.assert(-1 != nativeWebShell);
+    
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function EventRegistration.removeMouseListener has not yet been implemented.\n");
+    
+    //    synchronized(myBrowserControl) {
+    //    }
 }
 
 // ----VERTIGO_TEST_START
@@ -139,7 +176,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("EventRegistrationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.3 2000/03/13 18:42:23 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.4 2000/05/25 23:51:43 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

@@ -32,6 +32,8 @@
 
 #include "bal_util.h"
 
+#include "wchar.h"
+
 void JNICALL bal_jstring_newFromAscii(jstring *newStr, const char *value)
 {
 	jint length;

@@ -28,7 +28,11 @@
 #include "EventRegistration.h"
 
 #include "nsActions.h"
+#include "nsCOMPtr.h"
 #include "DocumentLoaderObserverImpl.h"
+#include "DOMMouseListenerImpl.h"
+
+static NS_DEFINE_IID(kIDocumentLoaderObserverImplIID, NS_IDOCLOADEROBSERVERIMPL_IID);
 
 void addDocumentLoadListener(JNIEnv *env, WebShellInitContext *initContext,
                              jobject listener)
@@ -39,19 +43,101 @@ void addDocumentLoadListener(JNIEnv *env, WebShellInitContext *initContext,
     }
 
     if (initContext->initComplete) {
-        // Assert (nsnull != initContext->nativeEventThread)
+
+
+        PR_ASSERT(initContext->nativeEventThread);
+        nsresult rv;
+        nsCOMPtr<nsIDocumentLoaderObserver> curObserver;
+        nsCOMPtr<DocumentLoaderObserverImpl> myListener = nsnull;
         
-        // create the c++ "peer" for the DocumentLoadListener, which is an
-        // nsIDocumentLoaderObserver.
-        DocumentLoaderObserverImpl *observerImpl = 
-            new DocumentLoaderObserverImpl(env, initContext, listener);
+        PR_ASSERT(nsnull != initContext->docShell);
+
+        // tricky logic to accomodate "piggybacking" a mouseListener. 
+
+        // See if there already is a DocListener
+        rv = initContext->docShell->GetDocLoaderObserver(getter_AddRefs(curObserver));
+        if (NS_FAILED(rv) || !curObserver) {
+            // if there is no listener, we need to create and add it now
+            
+            // create the c++ "peer" for the DocumentLoadListener, which is an
+            // nsIDocumentLoaderObserver.
+            curObserver =  new DocumentLoaderObserverImpl(env, initContext);
+            if (nsnull == curObserver) {
+                return;
+            }
+            
+            wsAddDocLoaderObserverEvent *actionEvent = 
+                new wsAddDocLoaderObserverEvent(initContext->docShell,
+                                                curObserver);
+            
+            PLEvent			* event       = (PLEvent*) *actionEvent;
+            
+            ::util_PostSynchronousEvent(initContext, event);
+        }
+
+        if (curObserver) {
+            // if we have an observer (either just created, or from mozilla),
+            // install the target.
+
+            rv = curObserver->QueryInterface(kIDocumentLoaderObserverImplIID,
+                                             getter_AddRefs(myListener));
+            if (NS_SUCCEEDED(rv) && myListener) {
+                myListener->SetTarget(listener);
+            }
+        }
+    }
+}
+
+void addMouseListener(JNIEnv *env, WebShellInitContext *initContext,
+                      jobject listener)
+{
+    if (initContext == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null initContext passed toaddDocumentLoadListener");
+        return;
+    }
+
+    if (initContext->initComplete) {
+        nsresult rv;
+        nsCOMPtr<nsIDocumentLoaderObserver> curObserver;
+        nsCOMPtr<DocumentLoaderObserverImpl> myListener = nsnull;
+
+        PR_ASSERT(nsnull != initContext->docShell);
+
+        // See if there already is a DocListener
+        rv = initContext->docShell->GetDocLoaderObserver(getter_AddRefs(curObserver));
+        if (NS_SUCCEEDED(rv) && curObserver) {
+
+            // if so, se if it's something we added
+            rv = curObserver->QueryInterface(kIDocumentLoaderObserverImplIID,
+                                         getter_AddRefs(myListener));
+        }
+        else {
+
+            // if not, we need to create a listener
+            myListener = new DocumentLoaderObserverImpl(env, initContext);
+            // note that we don't call setTarget, since this 
+            // DocumentLoaderObserver is just for getting mouse events
+
+            // install our listener into mozilla
+            wsAddDocLoaderObserverEvent *actionEvent = 
+                new wsAddDocLoaderObserverEvent(initContext->docShell,
+                                                myListener);
+            
+            PLEvent			* event       = (PLEvent*) *actionEvent;
+            
+            ::util_PostSynchronousEvent(initContext, event);
+        }
+         
+        if (nsnull == myListener) {
+            // either the new failed, or the currently installed listener
+            // wasn't installed by us.  Either way, do nothing.
+            return;
+        }
+        // we have a listener
         
-        wsAddDocLoaderObserverEvent *actionEvent = 
-            new wsAddDocLoaderObserverEvent(initContext->docShell,
-                                            observerImpl);
-        
-        PLEvent			* event       = (PLEvent*) *actionEvent;
-        
-        ::util_PostEvent(initContext, event);
+        nsCOMPtr<nsIDOMMouseListener> mouseListener = 
+            new DOMMouseListenerImpl(env, initContext, listener);
+
+        myListener->AddMouseListener(mouseListener);
     }
 }
