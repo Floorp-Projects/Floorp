@@ -841,7 +841,17 @@ NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::InvalidateRegion  isSync=<%d>\n",aIsSynchronous));
   //printf("nsWidget::InvalidateRegion  isSync=<%d> mWidget=<%p> mUpdateArea=<%p> IsRealized=<%d> \n",aIsSynchronous, mWidget, mUpdateArea, PtWidgetIsRealized(mWidget) ); 
-
+#if 1
+    mUpdateArea->Union(*aRegion);
+    if (aIsSynchronous)
+    {
+      UpdateWidgetDamage();
+    }
+    else
+    {
+      QueueWidgetDamage();
+    }
+#else
   if (!PtWidgetIsRealized(mWidget))
   {
 	return NS_OK;  
@@ -901,6 +911,7 @@ NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
   ((nsIRegion*)aRegion)->FreeRects(regionRectSet);
 
   ((nsIRegion*)aRegion)->SetTo(0,0,0,0);
+#endif
 
   return NS_OK;
 }
