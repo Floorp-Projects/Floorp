@@ -207,8 +207,8 @@ function ComposeStartup()
 		if (msgCompose)
 		{
 			//Creating a Editor Shell
-  			var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
-  			editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+      var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
+      editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
 			if (!editorShell)
 			{
 				dump("Failed to create editorShell!\n");
@@ -219,8 +219,6 @@ function ComposeStartup()
 			window.editorShell = editorShell;
 			window.editorShell.Init();
 			dump("Created editorShell\n");
-
-            contentWindow = window.content;
 
 			// setEditorType MUST be call before setContentWindow
 			if (msgCompose.composeHTML)
@@ -238,12 +236,11 @@ function ComposeStartup()
 				window.editorShell.SetEditorType("textmail");
 				dump("editor initialized in PLAIN TEXT mode\n");
 			}
-
 			window.editorShell.webShellWindow = window;
-			window.editorShell.contentWindow = contentWindow;
+			window.editorShell.contentWindow = window.content;
 
-			// set up JS-implemented commands
-			SetupControllerCommands();
+      // Do setup common to Message Composer and Web Composer
+      EditorSharedStartup();
 
 	    	var msgCompFields = msgCompose.compFields;
 	    	if (msgCompFields)
@@ -814,7 +811,7 @@ function AdjustFocus()
 	    else
     	{
     		dump("set focus on the body\n");
-    		contentWindow.focus();
+    		editorShell.contentWindow.focus();
     	}
     }
 }
