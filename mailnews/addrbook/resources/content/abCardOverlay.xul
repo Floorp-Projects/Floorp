@@ -52,22 +52,22 @@ Rights Reserved.
 					<box align="vertical" style="width:100%">
 						<box align="horizontal" flex="100%">
 							<spring flex="100%"/>
-							<html:label for="FirstName">&FirstName.label;</html:label>
-							<html:input type="text" id="FirstName" class="CardEdit" onkeyup="top.GenerateDisplayName()" />
+							<html:label for="FirstName" class="textInput">&FirstName.label;</html:label>
+							<html:input type="text" id="FirstName" class="CardEdit" onkeypress="top.GenerateDisplayName()" />
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="LastName">&LastName.label;</html:label>
-							<html:input id="LastName" type="text" class="CardEdit" onkeyup="top.GenerateDisplayName()"/>
+							<html:label for="LastName" class="textInput">&LastName.label;</html:label>
+							<html:input id="LastName" type="text" class="CardEdit" onkeypress="top.GenerateDisplayName()"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="DisplayName">&DisplayName.label;</html:label>
-							<html:input id="DisplayName" type="text" class="CardEdit" onkeyup="top.DisplayNameChanged()"/>
+							<html:label for="DisplayName" class="textInput">&DisplayName.label;</html:label>
+							<html:input id="DisplayName" type="text" class="CardEdit" onkeypress="top.DisplayNameChanged()"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="NickName">&NickName.label;</html:label>
+							<html:label for="NickName" class="textInput">&NickName.label;</html:label>
 							<html:input id="NickName" type="text" class="CardEdit"/>
 						</box>
 					</box>
@@ -81,12 +81,12 @@ Rights Reserved.
 					<box align="vertical" style="width:100%">
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="PrimaryEmail">&PrimaryEmail.label;</html:label>
+							<html:label for="PrimaryEmail" class="textInput">&PrimaryEmail.label;</html:label>
 							<html:input id="PrimaryEmail" type="text" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="SecondEmail">&SecondEmail.label;</html:label>
+							<html:label for="SecondEmail" class="textInput">&SecondEmail.label;</html:label>
 							<html:input id="SecondEmail" type="text" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
@@ -107,27 +107,27 @@ Rights Reserved.
 					<box align="vertical" style="width:100%">
 						<box align="horizontal" style="vertical-align:baseline">
 							<spring flex="100%"/>
-							<html:label for="WorkPhone" style="vertical-align:baseline">&WorkPhone.label;</html:label>
+							<html:label for="WorkPhone" class="textInput">&WorkPhone.label;</html:label>
 							<html:input id="WorkPhone" type="text" class="CardEdit" style="vertical-align:baseline"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="HomePhone">&HomePhone.label;</html:label>
+							<html:label for="HomePhone" class="textInput">&HomePhone.label;</html:label>
 							<html:input id="HomePhone" type="text" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="FaxNumber">&FaxNumber.label;</html:label>
+							<html:label for="FaxNumber" class="textInput">&FaxNumber.label;</html:label>
 							<html:input id="FaxNumber" type="text" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="PagerNumber">&PagerNumber.label;</html:label>
+							<html:label for="PagerNumber" class="textInput">&PagerNumber.label;</html:label>
 							<html:input id="PagerNumber" type="text" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="CellularNumber">&CellularNumber.label;</html:label>
+							<html:label for="CellularNumber" class="textInput">&CellularNumber.label;</html:label>
 							<html:input id="CellularNumber" type="text" class="CardEdit"/>
 						</box>
 					</box>
@@ -146,32 +146,32 @@ Rights Reserved.
 		
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="HomeAddress">&HomeAddress.label;</html:label>
+							<html:label for="HomeAddress" class="textInput">&HomeAddress.label;</html:label>
 							<html:input type="text" id="HomeAddress" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="HomeAddress2">&HomeAddress2.label;</html:label>
+							<html:label for="HomeAddress2" class="textInput">&HomeAddress2.label;</html:label>
 							<html:input type="text" id="HomeAddress2" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="HomeCity">&HomeCity.label;</html:label>
+							<html:label for="HomeCity" class="textInput">&HomeCity.label;</html:label>
 							<html:input id="HomeCity" type="text" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="HomeState">&HomeState.label;</html:label>
+							<html:label for="HomeState" class="textInput">&HomeState.label;</html:label>
 							<box class="CardEditWidth">
 								<html:input id="HomeState" type="text" class="CardEdit" style="min-width:1em; width:8em"/>
 								<spring flex="100%"/>
-								<html:label for="HomeZipCode">&HomeZipCode.label;</html:label>
+								<html:label for="HomeZipCode" class="textInput">&HomeZipCode.label;</html:label>
 								<html:input id="HomeZipCode" type="text" class="CardEdit" style="min-width:1em; width:8em"/>
 							</box>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="HomeCountry">&HomeCountry.label;</html:label>
+							<html:label for="HomeCountry" class="textInput">&HomeCountry.label;</html:label>
 							<html:input id="HomeCountry" type="text" class="CardEdit"/>
 						</box>
 					</box>
@@ -186,47 +186,47 @@ Rights Reserved.
 		
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="JobTitle">&JobTitle.label;</html:label>
+							<html:label for="JobTitle" class="textInput">&JobTitle.label;</html:label>
 							<html:input type="text" id="JobTitle" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="Department">&Department.label;</html:label>
+							<html:label for="Department" class="textInput">&Department.label;</html:label>
 							<html:input type="text" id="Department" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="Company">&Company.label;</html:label>
+							<html:label for="Company" class="textInput">&Company.label;</html:label>
 							<html:input type="text" id="Company" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="WorkAddress">&WorkAddress.label;</html:label>
+							<html:label for="WorkAddress" class="textInput">&WorkAddress.label;</html:label>
 							<html:input type="text" id="WorkAddress" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="WorkAddress2">&WorkAddress2.label;</html:label>
+							<html:label for="WorkAddress2" class="textInput">&WorkAddress2.label;</html:label>
 							<html:input type="text" id="WorkAddress2" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="WorkCity">&WorkCity.label;</html:label>
+							<html:label for="WorkCity" class="textInput">&WorkCity.label;</html:label>
 							<html:input id="WorkCity" type="text" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="WorkState">&WorkState.label;</html:label>
+							<html:label for="WorkState" class="textInput">&WorkState.label;</html:label>
 							<box class="CardEditWidth">
 								<html:input id="WorkState" type="text" class="CardEdit" style="min-width:1em; width:8em"/>
 								<spring flex="100%"/>
-								<html:label for="WorkZipCode">&WorkZipCode.label;</html:label>
+								<html:label for="WorkZipCode" class="textInput">&WorkZipCode.label;</html:label>
 								<html:input id="WorkZipCode" type="text" class="CardEdit" style="min-width:1em; width:8em"/>
 							</box>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="WorkCountry">&WorkCountry.label;</html:label>
+							<html:label for="WorkCountry" class="textInput">&WorkCountry.label;</html:label>
 							<html:input id="WorkCountry" type="text" class="CardEdit"/>
 						</box>
 					</box>
@@ -241,7 +241,7 @@ Rights Reserved.
 		
 						<box align="horizontal">
 							<!--spring flex="100%"/-->
-							<html:label for="WebPage1">&WebPage1.label;</html:label>
+							<html:label for="WebPage1" class="textInput">&WebPage1.label;</html:label>
 							<html:input type="text" id="WebPage1" class="CardEdit" flex="100%"/>
 						</box>
 					</box>
@@ -254,22 +254,22 @@ Rights Reserved.
 				<box align="vertical" style="width:100%">
 					<box align="horizontal" flex="100%">
 						<spring flex="100%"/>
-						<html:label for="Custom1">&Custom1.label;</html:label>
+						<html:label for="Custom1" class="textInput">&Custom1.label;</html:label>
 						<html:input type="text" id="Custom1" class="CardEdit"/>
 					</box>
 					<box align="horizontal" flex="100%">
 						<spring flex="100%"/>
-						<html:label for="Custom2">&Custom2.label;</html:label>
+						<html:label for="Custom2" class="textInput">&Custom2.label;</html:label>
 						<html:input type="text" id="Custom2" class="CardEdit"/>
 					</box>
 					<box align="horizontal" flex="100%">
 						<spring flex="100%"/>
-						<html:label for="Custom3">&Custom3.label;</html:label>
+						<html:label for="Custom3" class="textInput">&Custom3.label;</html:label>
 						<html:input type="text" id="Custom3" class="CardEdit"/>
 					</box>
 					<box align="horizontal" flex="100%">
 						<spring flex="100%"/>
-						<html:label for="Custom4">&Custom4.label;</html:label>
+						<html:label for="Custom4" class="textInput">&Custom4.label;</html:label>
 						<html:input type="text" id="Custom4" class="CardEdit"/>
 					</box>
 				</box>
@@ -279,7 +279,7 @@ Rights Reserved.
 						<html:div style="font-weight: bold">&Notes.box;</html:div>
 					</html:legend>
 		
-					<box align="vertical" style="width:100%">
+					<box align="vertical">
 						<html:textarea id="Notes" rows="15"/>
 					</box>
 				</html:fieldset>

@@ -29,14 +29,14 @@ Rights Reserved.
 	<!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
 	<tree id="resultsTree"
 		  class="abResults" 
-		  style="width:100%; height:100%; min-width:10px"
 		  datasources="rdf:addressdirectory rdf:addresscard"
 		  onselect="top.ResultsPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
 		  onblur="goOnEvent(this,'blur')"
-		  ondblclick="top.AbEditCard()"
+		  onclick="if ( event.clickCount == 2 ) top.AbEditCard();"
 		  containment="http://home.netscape.com/NC-rdf#CardChild"
 		  allownegativeassertions="false"
-          coalesceduplicatearcs="false">
+          coalesceduplicatearcs="false"
+          multiple="true">
 
 		<template>
 			<rule>
@@ -46,21 +46,26 @@ Rights Reserved.
 					    	<treecell class="cardicon" value="rdf:http://home.netscape.com/NC-rdf#DisplayName"/>
 					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail"/>
 					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#WorkPhone"/>
+					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#Company"/>
 						</treerow>
 					</treeitem>
 				</treechildren>
 			</rule>
 		</template>
 
-		<treecol style="width:1*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#DisplayName"/>
-		<treecol style="width:1*" id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#PrimaryEmail"/>
-		<treecol style="width:1*" id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
+		<treecolgroup id="theColumns">
+			<treecol persist="hidden width" style="width:2*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#DisplayName"/>
+			<treecol persist="hidden width" style="width:3*" id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#PrimaryEmail"/>
+			<treecol persist="hidden width" style="width:2*" id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
+			<treecol persist="hidden width" style="width:2*" id="OrganizationColumn" rdf:resource="http://home.netscape.com/NC-rdf#Company"/>
+		</treecolgroup>
 		
 		<treehead>
-			<treerow>
+			<treerow id="headRow">
 				<treecell value="&nameColumn.label;" onclick="return top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName');"/>
 				<treecell value="&emailColumn.label;" onclick="return top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail');"/>
-				<treecell value="&phoneColumn.label;" onclick="return top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone');"/>
+				<treecell value="&workPhoneColumn.label;" onclick="return top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone');"/>
+				<treecell value="&organizationColumn.label;" onclick="return top.SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Company');"/>
 			</treerow>
 		</treehead>
 

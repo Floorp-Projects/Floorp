@@ -38,6 +38,7 @@ Rights Reserved.
 		align="vertical"
 		title="&addressbookWindow.title;"
 		windowtype="mail:addressbook"
+		persist="width height screenX screenY"
 		onload="OnLoadAddressBook()">
 
 <html:script language="JavaScript" src="chrome://addressbook/content/addressbook.js"/>
@@ -101,9 +102,9 @@ Rights Reserved.
 				<menuitem value="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard()"/>
 				<menu id="menu_New">
 					<menupopup>
-						<menuitem value="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList()"/>
+						<menuitem value="&newListCmd.label;" accesskey="&newListCmd.accesskey;" disabled="true" oncommand="AbNewList()"/>
 						<menuitem value="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
-						<menuitem value="&newDirectoryCmd.label;" accesskey="&newDirectoryCmd.accesskey;" oncommand="AbNewDirectoryt()"/>
+						<menuitem value="&newDirectoryCmd.label;" accesskey="&newDirectoryCmd.accesskey;" disabled="true" oncommand="AbNewDirectoryt()"/>
 						<menuseparator/>
 						<menuitem id="menu_newNavigator"/>
 						<menuitem id="menu_newMessage"/>
@@ -114,12 +115,12 @@ Rights Reserved.
 				<menuitem id="menu_close"/>
 				<menuseparator/>
 				<menuitem value="&importCmd.label;" oncommand="AbImport()"/>
-				<menuitem value="&exportCmd.label;" oncommand="AbExport()"/>
+				<menuitem value="&exportCmd.label;" disabled="true" oncommand="AbExport()"/>
 				<menuseparator/>
 				<menuitem id="menu_pageSetup"/>
-				<menuitem value="&printPreviewCmd.label;" oncommand="AbPrintPreview()"/>
-				<menuitem value="&printCardViewCmd.label;" key="key_PrintCard" observes="cmd_PrintCard"/>
-				<menuitem value="&printAddressBook.label;" oncommand="AbPrintAddressBook()"/>
+				<menuitem value="&printPreviewCmd.label;" disabled="true" oncommand="AbPrintPreview()"/>
+				<menuitem value="&printCardViewCmd.label;" key="key_PrintCard" disabled="true" observes="cmd_PrintCard"/>
+				<menuitem value="&printAddressBook.label;" disabled="true" oncommand="AbPrintAddressBook()"/>
 				<menuseparator/>
 			</menupopup>
 		</menu>
@@ -141,6 +142,7 @@ Rights Reserved.
 			          oncommand="AbEditCard();"/>
 			<menuitem value="&htmlDomainCmd.label;"
 			          accesskey="&htmlDomainCmd.accesskey;"
+			          disabled="true"
 			          oncommand="AbHTMLDomain();"/>
 			<menuseparator/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://addressbook/content/pref-addressing.xul')"/>
@@ -159,7 +161,7 @@ Rights Reserved.
 						<menuitem id="menu_showTaskbar"/>
 					</menupopup>
 				</menu>
-				<menuitem value="&showCardPane.label;" oncommand="AbShowCardPane()"/>
+				<menuitem value="&showCardPane.label;" disabled="true" oncommand="AbShowCardPane()"/>
 				<menu value="&sortMenu.label;">
 				    <menupopup>
 						<menuitem value="&sortByNameCmd.label;"
@@ -170,16 +172,17 @@ Rights Reserved.
 								  id="cmd_SortByEmail"
 								  disabled="true"
 								  oncommand="top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail')"/>
-						<menuitem value="&sortByOrganizationCmd.label;" oncommand="AbSortByOrganization()"/>
-						<menuitem value="&sortByNicknameCmd.label;" oncommand="AbSortByNickname()"/>
-						<menuitem value="&sortByPhoneCmd.label;"
-								  id="cmd_SortByPhone"
+						<menuitem value="&sortByWorkPhoneCmd.label;"
+								  id="cmd_SortByWorkPhone"
 								  disabled="true"
 								  oncommand="top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone')"/>
-						<menuitem value="&sortByCityCmd.label;" oncommand="AbSortByCity()"/>
+						<menuitem value="&sortByOrganizationCmd.label;"
+								  id="cmd_SortByOrganization"
+								  disabled="true"
+								  oncommand="top.SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Comapny')"/>
 						<menuseparator/>
-						<menuitem value="&sortAscendingCmd.label;" oncommand="AbSortAscending()"/>
-						<menuitem value="&sortDescendingCmd.label;" oncommand="AbSortDescending()"/>
+						<menuitem value="&sortAscendingCmd.label;" disabled="true" oncommand="AbSortAscending()"/>
+						<menuitem value="&sortDescendingCmd.label;" disabled="true" oncommand="AbSortDescending()"/>
 					</menupopup>
 				</menu>
 			</menupopup>
@@ -195,7 +198,7 @@ Rights Reserved.
 		<toolbar class="standard" id="abToolbar" persist="collapsed">
 			<box id="toolbar_button_box">
 				<titledbutton id="button_newcard" class="button28" align="top" value="&newcardButton.label;" onclick="AbNewCard()"/>
-				<titledbutton id="button_newlist" class="button28" align="top" value="&newlistButton.label;" onclick="AbNewList()"/>
+				<titledbutton id="button_newlist" class="button28" align="top" value="&newlistButton.label;" disabled="true" onclick="AbNewList()"/>
             	<toolbarseparator/>
 				<titledbutton id="button_editcard" class="other28" align="top" value="&editButton.label;" onclick="AbEditCard()"/>
 				<titledbutton id="button_newmessage" class="other28" align="top" value="&newmsgButton.label;" onclick="AbNewMessage()"/>
@@ -208,8 +211,8 @@ Rights Reserved.
 					<spring flex="1"/> 
 				</box>
 
-				<titledbutton id="button_stop" class="other28" align="top" value="&stopButton.label;" onclick="AbStop()"/>
-				<titledbutton id="button_search" class="other28" align="top" value="&searchButton.label;" onclick="AbSearch()"/>
+				<titledbutton id="button_stop" class="other28" align="top" value="&stopButton.label;" disabled="true" onclick="AbStop()"/>
+				<titledbutton id="button_search" class="other28" align="top" value="&searchButton.label;" disabled="true" onclick="AbSearch()"/>
 			</box>
 
 			<box id="toolbar_throbber_box" align="vertical">
@@ -228,28 +231,22 @@ Rights Reserved.
 			          onclick="sidebarOpenClosePanel(this)"> 
 				<html:div class="panel-bar" style="min-width:1px">&addressbook-sidebar-header.label;</html:div>
 			</splitter>
-			<html:div style="width:100px; height:100px; min-width:10px" flex="1">
-				<tree id="dirTree"/>
-			</html:div>
+			
+			<tree id="dirTree" flex="1"/>
 		</box>
 		<splitter id="sidebar-splitter" collapse="before" persist="state"/>
 		
 		<box align="vertical" flex="100%" style="min-width:100px">
 
 			<!-- results tree -->
-			<box id="results_box" flex="50%" style="width:100%" align="vertical">
-				<!-- FIX ME - div is hack to make tree scroll properly -->
-				<html:div flex="1" style="width:100px; height:100px; min-width:10px">
-					<tree id="resultsTree"/>
-				</html:div>
+			<box id="results_box" flex="1" align="vertical">
+				<tree id="resultsTree" flex="1" style="height:0px"/>
 			</box>
 			
 			<splitter id="gray_horizontal_splitter" collapse="after"/>
 			
 			<!-- card view -->
-			<box style="height:170px">
-				<box id="CardViewBox"/>
-			</box>
+			<box id="CardViewBox" style="height:170px; min-height:1px; min-width:1px"/>
 		
 			<box id="status-bar">
 				<!-- replace spring with real stuff later -->

@@ -26,7 +26,7 @@ Rights Reserved.
 		<!ENTITY DisplayName.label		"Display:"> 
 		<!ENTITY NickName.label			"Nickname:"> 
 	<!ENTITY Internet.box			"Internet"> 
-		<!ENTITY PrimaryEmail.label		"* Email:"> 
+		<!ENTITY PrimaryEmail.label		"Email:"> 
 		<!ENTITY SecondEmail.label		"Additional Email:"> 
 		<!ENTITY SendPlainText.label	"Send email as plain text (no html)"> 
 	<!ENTITY Phones.box				"Phones"> 

@@ -29,7 +29,6 @@ Rights Reserved.
 	<!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
 	<tree id="dirTree" 
 		  class="abDirectory" 
-		  style="width:100%; height:100%"
 		  ref="abdirectory://"
 		  datasources="rdf:addressdirectory"
 		  rdf:containment="http://home.netscape.com/NC-rdf#child"
@@ -37,7 +36,8 @@ Rights Reserved.
 		  onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
 		  onblur="goOnEvent(this,'blur')"
 		  allownegativeassertions="false"
-          coalesceduplicatearcs="false">
+          coalesceduplicatearcs="false"
+          multiple="true">
 		
 		<template>
 			<rule>

@@ -21,5 +21,5 @@ Rights Reserved.
 <!-- Column Headings -->
 	<!ENTITY nameColumn.label "Name">
 	<!ENTITY emailColumn.label "Email">
-<!-- LOCALIZATION NOTE (phoneColumn.label): "#" means "number" -->
-	<!ENTITY phoneColumn.label "Phone#">
+	<!ENTITY workPhoneColumn.label "Work Phone">
+	<!ENTITY organizationColumn.label "Organization">

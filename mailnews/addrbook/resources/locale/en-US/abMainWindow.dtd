@@ -56,17 +56,15 @@ Rights Reserved.
 <!ENTITY htmlDomainCmd.accesskey			"h">  
 
 <!-- View Menu -->
-<!ENTITY showAbToolbarCmd.label				"Show Toolbar">  
+<!ENTITY showAbToolbarCmd.label				"Show Address Book Toolbar">  
 <!-- LOCALIZATION NOTE (showAbToolbarCmd.accesskey) : DONT_TRANSLATE -->  
-<!ENTITY showAbToolbarCmd.accesskey			"t">  
+<!ENTITY showAbToolbarCmd.accesskey			"o">  
 <!ENTITY showCardPane.label					".Card Pane">  
 <!ENTITY sortMenu.label						"Sort"> 
 <!ENTITY sortByNameCmd.label					"by Name">  
 <!ENTITY sortByEmailCmd.label					"by Email">  
-<!ENTITY sortByOrganizationCmd.label			".by Organization">  
-<!ENTITY sortByNicknameCmd.label				".by Nickname">  
-<!ENTITY sortByPhoneCmd.label					"by Phone Number">  
-<!ENTITY sortByCityCmd.label					".by City">  
+<!ENTITY sortByWorkPhoneCmd.label				"by Work Phone">  
+<!ENTITY sortByOrganizationCmd.label			"by Organization">  
 <!ENTITY sortAscendingCmd.label					".Ascending">  
 <!ENTITY sortDescendingCmd.label				".Descending">  
 <!ENTITY stopSearchingCmd.label				".Stop Searching"> 

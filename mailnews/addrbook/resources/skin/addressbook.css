@@ -27,40 +27,45 @@ Rights Reserved.
 
 box#CardViewBox {
 	overflow: auto;
+	background-color: #EEEEEE;
+	min-width: 150px;
+	user-focus: ignore;
+}
+
+box#CardViewInnerBox {
 	margin-top: 2px;
 	margin-bottom: 2px;
 	padding-left: 8px;
 	padding-right: 8px;
-	background-color: #EEEEEE;
-	min-width: 1px;
-	user-focus: ignore;
 }
 
 html|div#CardTitle {
 	font-size: 150%;
 	font-weight: bold;
 	border-bottom: 2px solid black;
+	min-width: 120px;
 }
  
-box.cardviewgroup {
+box.cardViewGroup {
 	margin-top: 8px;
 	padding-bottom: 5px;
-	min-width: 1px;
+	min-width: 50px;
 }
 
 html|div[class="CardViewHeading"] {
 	padding: 1px;
 	padding-left: 5px;
+	margin-bottom: 1px;
 	background-color: #99CCCC;
 	color: black;
 	font-weight: bold;
-	min-width: 1px;
+	min-width: 30px;
 }
 
 html|div[class="CardViewText"] {
 	padding-left: 20px;
 	padding-right: 2px;
-	min-width: 1px;
+	min-width: 30px;
 }
 
 
@@ -74,11 +79,13 @@ box[class="CardEditWidth"] {
 
 html|input[class="CardEdit"] {
 	width         : 25em;
-	height        : 1.5em;
-	margin        : 0px;
+	margin        : 2px 0px 2px 0px ;
 	padding       : 0px;
-	padding-right : 0px;
-	min-height    : 1.5em;
+}
+
+html|label[class="textInput"] {
+	padding: 0px;
+	margin-top: 3px;
 }
 
 
@@ -118,7 +125,7 @@ tree[class="abResults"] treeitem > treerow > treecell.cardicon {
 }
  
 [hide] {
-	display: none;
+  visibility: collapse;
 }
 
 #button_newcard {

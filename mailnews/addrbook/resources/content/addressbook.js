@@ -40,10 +40,11 @@ function CommandUpdate_AddressBook()
 		oneOrMoreCardsSelected = true;
 	
 	// set commands to enabled / disabled
-	goSetCommandEnabled('cmd_PrintCard', oneOrMoreCardsSelected);
+	//goSetCommandEnabled('cmd_PrintCard', oneAddressBookSelected);
 	goSetCommandEnabled('cmd_SortByName', oneAddressBookSelected);
 	goSetCommandEnabled('cmd_SortByEmail', oneAddressBookSelected);
-	goSetCommandEnabled('cmd_SortByPhone', oneAddressBookSelected);
+	goSetCommandEnabled('cmd_SortByWorkPhone', oneAddressBookSelected);
+	goSetCommandEnabled('cmd_SortByOrganization', oneAddressBookSelected);
 }
 
 

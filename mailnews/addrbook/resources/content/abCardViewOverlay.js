@@ -102,6 +102,7 @@ function DisplayCardViewPane(abNode)
 	visible = cvSetCityStateZip(data.cvHomeCityStZip, card.homeCity, card.homeState, card.homeZipCode) || visible;
 	visible = cvSetNode(data.cvHomeCountry, card.homeCountry) || visible;
 	cvSetVisible(data.cvhHome, visible);
+	cvSetVisible(data.cvbHome, visible);
 	// Other section
 	visible = cvSetNodeWithLabel(data.cvCustom1, zCustom1, card.custom1);
 	visible = cvSetNodeWithLabel(data.cvCustom2, zCustom2, card.custom2) || visible;
@@ -109,6 +110,7 @@ function DisplayCardViewPane(abNode)
 	visible = cvSetNodeWithLabel(data.cvCustom4, zCustom4, card.custom4) || visible;
 	visible = cvSetNode(data.cvNotes, card.notes) || visible;
 	cvSetVisible(data.cvhOther, visible);
+	cvSetVisible(data.cvbOther, visible);
 	// Phone section
 	visible = cvSetNodeWithLabel(data.cvPhWork, zWork, card.workPhone);
 	visible = cvSetNodeWithLabel(data.cvPhHome, zHome, card.homePhone) || visible;
@@ -116,6 +118,7 @@ function DisplayCardViewPane(abNode)
 	visible = cvSetNodeWithLabel(data.cvPhCellular, zCellular, card.cellularNumber) || visible;
 	visible = cvSetNodeWithLabel(data.cvPhPager, zPager, card.pagerNumber) || visible;
 	cvSetVisible(data.cvhPhone, visible);
+	cvSetVisible(data.cvbPhone, visible);
 	// Work section
 	visible = cvSetNode(data.cvJobTitle, card.jobTitle);
 	visible = cvSetNode(data.cvDepartment, card.department) || visible;
@@ -125,6 +128,7 @@ function DisplayCardViewPane(abNode)
 	visible = cvSetCityStateZip(data.cvWorkCityStZip, card.workCity, card.workState, card.workZipCode) || visible;
 	visible = cvSetNode(data.cvWorkCountry, card.workCountry) || visible;
 	cvSetVisible(data.cvhWork, visible);
+	cvSetVisible(data.cvbWork, visible);
 
 	// make the card view box visible
 	cvSetVisible(top.cvData.CardViewBox, true);
