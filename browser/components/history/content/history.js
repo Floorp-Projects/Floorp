@@ -69,25 +69,6 @@ function HistoryCommonInit()
     gHistoryTree.treeBoxObject.view.selection.select(0);
 }
 
-function historyOnClick(aEvent)
-{
-  // This is kind of a hack but matches the currently implemented behaviour. 
-  // If a status bar is not present, assume we're in sidebar mode, and thus single clicks on containers
-  // will open the container. Single clicks on non-containers are handled below in historyOnSelect.
-  if (!gHistoryStatus && aEvent.button == 0) {
-    var row = { };
-    var col = { };
-    var elt = { };
-    gHistoryTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, elt);
-    if (row.value >= 0 && col.value) {
-      if (!isContainer(gHistoryTree, row.value))
-        OpenURL(false);
-      else if (elt.value != "twisty")
-        gHistoryTree.treeBoxObject.view.toggleOpenState(row.value);
-    }
-  }
-}
-
 function historyOnSelect()
 {
     // every time selection changes, save the last hostname
@@ -185,7 +166,7 @@ function validClickConditions(event)
   var container = isContainer(gHistoryTree, currentIndex);
   return (event.button == 0 &&
           event.originalTarget.localName == 'treechildren' &&
-          !container && gHistoryStatus);
+          !container);
 }
 
 function collapseExpand()

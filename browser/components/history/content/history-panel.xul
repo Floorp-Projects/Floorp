@@ -22,7 +22,6 @@
 -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebarListView.css" type="text/css"?>
 
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
@@ -105,7 +104,7 @@
             onkeypress="if (event.keyCode == 13) OpenURL(event.ctrlKey || event.metaKey);" 
             onselect="this.treeBoxObject.view.selectionChanged();
                       historyOnSelect();"
-            onclick="historyOnClick(event);" hidecolumnpicker="true"
+            hidecolumnpicker="true"
             ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"
             ondblclick="if (validClickConditions(event)) OpenURL(event.ctrlKey || event.metaKey);">
     <template>

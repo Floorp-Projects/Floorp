@@ -24,7 +24,6 @@
 -->
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebarListView.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css" type="text/css"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
@@ -81,6 +80,6 @@
              type="timed" timeout="500"
              callback="document.getElementById('bookmarks-view').searchBookmarks(gSearchBox.value);"/>
   </hbox>
-  <bookmarks-tree id="bookmarks-view" class="sidebar" type="single-column" flex="1"/>
+  <bookmarks-tree id="bookmarks-view" type="single-column" flex="1"/>
 
 </page>

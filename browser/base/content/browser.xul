@@ -160,7 +160,6 @@ Contributor(s):
   <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" observes="isImage"/>
   
   <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'));"/>
-  <command id="Browser:ManageBookmark" oncommand="BrowserEditBookmarks();"/>
   
   <command id="Browser:Home"    oncommand="BrowserHome();"/>
   <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
@@ -227,13 +226,14 @@ Contributor(s):
     <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
 
     <key id="addBookmarkAsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
-    <key id="manBookmarkKb" key="&manBookmarksCmd.commandkey;" command="Browser:ManageBookmark" modifiers="accel"/>
+    <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
     <key id="key_gotoHistory"  key="&history.commandKey;"  command="viewHistorySidebar" modifiers="accel"/>
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
+    <key id="key_openDownloadsSidebar" key="&openDownloadsSidebar.commandkey;" command="viewDownloadsSidebar" modifiers="accel"/>
     <keyset id="navigationKeys"/>  
   </keyset>
   
@@ -511,8 +511,8 @@ Contributor(s):
             <menu label="&viewSidebarMenu.label;"
                   accesskey="&viewSidebarMenu.accesskey;">
               <menupopup id="viewSidebarMenu">
-                <menuitem observes="viewDownloadsSidebar"/>
-                <menuitem observes="viewBookmarksSidebar"/>
+                <menuitem key="key_openDownloadsSidebar" observes="viewDownloadsSidebar"/>
+                <menuitem key="viewBookmarksSidebarKb" observes="viewBookmarksSidebar"/>
                 <menuitem key="key_gotoHistory" observes="viewHistorySidebar"/>
               </menupopup>
             </menu>            
@@ -695,7 +695,7 @@ Contributor(s):
             <menuitem key="manBookmarkKb" 
                       label="&manBookmarksCmd.label;"
                       accesskey="&manBookmarksCmd.accesskey;"    
-                      command="Browser:ManageBookmark"/>
+                      oncommand="BrowserEditBookmarks();"/>
             <menuseparator/>
           </menupopup>
         </menu>
