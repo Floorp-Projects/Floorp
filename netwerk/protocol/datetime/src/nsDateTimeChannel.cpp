@@ -96,6 +96,7 @@ nsDateTimeChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsDateTimeChannel::Cancel(nsresult status)
 {
+    NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     NS_NOTREACHED("nsDateTimeChannel::Cancel");
     return NS_ERROR_NOT_IMPLEMENTED;
 }

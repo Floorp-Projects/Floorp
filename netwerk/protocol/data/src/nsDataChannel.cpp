@@ -224,6 +224,7 @@ nsDataChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsDataChannel::Cancel(nsresult status)
 {
+    NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     NS_NOTREACHED("nsDataChannel::Cancel");
     return NS_ERROR_NOT_IMPLEMENTED;
 }

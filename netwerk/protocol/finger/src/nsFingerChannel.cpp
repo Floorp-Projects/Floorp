@@ -136,6 +136,7 @@ nsFingerChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsFingerChannel::Cancel(nsresult status)
 {
+    NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     nsresult rv = NS_ERROR_FAILURE;
 
     mStatus = status;

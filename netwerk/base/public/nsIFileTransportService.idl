@@ -42,10 +42,12 @@ interface nsIFileTransportService : nsISupports
     // This version can be used with an existing input stream to serve
     // as a data pump:
     nsIChannel createTransportFromStream(in nsIInputStream fromStream,
+                                         in string streamName,
                                          in string contentType,
                                          in long contentLength);
 
-    nsIChannel createTransportFromFileSystem(in nsIFileSystem fsObj);
+    nsIChannel createTransportFromFileSystem(in nsIFileSystem fsObj,
+                                             in string streamName);
 
     void dispatchRequest(in nsIRunnable runnable);
     void suspend(in nsIRunnable trans);

@@ -58,16 +58,12 @@ interface nsIZipReader : nsISupports
      */
     void init(in nsIFile zipFile);
 
+    readonly attribute nsIFile file;
+
     /**
      * Opens a zip reader.
      */
 	void open();
-
-    /**
-     * Parses meta-information for the jar format. Must be called before calls 
-     * to getPrincipal and verifyExternalFile.
-     */
-	void parseManifest();
 
     /**
      * Closes a zip reader. Subsequent attempts to extract files or read from
@@ -107,6 +103,19 @@ interface nsIZipReader : nsISupports
                                  out short result);
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// nsIZipReaderCache
+
+[scriptable, uuid(52c45d86-0cc3-11d4-986e-00c04fa0cf4a)]
+interface nsIZipReaderCache : nsISupports
+{
+    void init(in unsigned long cacheSize);
+    nsIZipReader getZip(in nsIFile zipFile);
+    void releaseZip(in nsIZipReader zip);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 %{C++
 
 #define NS_ZIPREADER_CID                             \
@@ -117,5 +126,14 @@ interface nsIZipReader : nsISupports
     {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
+#define NS_ZIPREADERCACHE_CID                        \
+{ /* 1b117e16-0cad-11d4-986e-00c04fa0cf4a */         \
+    0x1b117e16,                                      \
+    0x0cad,                                          \
+    0x11d4,                                          \
+    {0x98, 0x6e, 0x00, 0xc0, 0x4f, 0xa0, 0xcf, 0x4a} \
+}
+
 %}
 
+////////////////////////////////////////////////////////////////////////////////

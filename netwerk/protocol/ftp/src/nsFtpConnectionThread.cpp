@@ -1490,6 +1490,7 @@ nsFtpConnectionThread::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsFtpConnectionThread::Cancel(nsresult status)
 {
+    NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     nsresult rv = NS_OK;
     nsAutoLock aLock(mLock);
 

@@ -79,8 +79,6 @@ public:
     nsresult AsyncReadJARElement();
     nsresult GetCacheFile(nsIFile* *cacheFile);
 
-    void SetJARBaseFile(nsIFileChannel* channel) { mJARBaseFile = channel; }
-
     friend class nsJARDownloadObserver;
 
 protected:

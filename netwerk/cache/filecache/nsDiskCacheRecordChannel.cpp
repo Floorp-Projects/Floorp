@@ -199,6 +199,7 @@ nsDiskCacheRecordChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::Cancel(nsresult status)
 {
+  NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
   mStatus = status;
   if(!mFileTransport)
     return NS_ERROR_FAILURE;

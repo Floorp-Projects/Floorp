@@ -65,9 +65,11 @@ public:
                   PRInt32 ioFlags,
                   PRInt32 perm);
     nsresult Init(nsIInputStream* fromStream, 
+                  const char* streamName,
                   const char* contentType,
                   PRInt32 contentLength);
-    nsresult Init(nsIFileSystem* fsObj);
+    nsresult Init(nsIFileSystem* fsObj,
+                  const char* streamName);
 
     void Process(void);
     void DoClose(void);
@@ -127,10 +129,7 @@ protected:
     nsCOMPtr<nsIStreamObserver>         mObserver;
     nsCOMPtr<nsIOutputStream>           mSink;
     char*                               mBuffer;
-
-#ifdef PR_LOGGING
-    char*                               mSpec;
-#endif
+    nsCString                           mStreamName;
 };
 
 #define NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE   (2*1024)

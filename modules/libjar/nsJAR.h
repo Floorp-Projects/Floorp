@@ -45,7 +45,7 @@
 #include "nsIEnumerator.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
-
+#include "nsAutoLock.h"
 #include "nsIZipReader.h"
 #include "nsZipArchive.h"
 #include "zipfile.h"
@@ -73,15 +73,19 @@ class nsJAR : public nsIZipReader
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSIZIPREADER
+
+    static NS_METHOD
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
   
-  private:
+  protected:
     //-- Private data members
     nsCOMPtr<nsIFile>        mZipFile;      // The zip/jar file on disk
     nsZipArchive             mZip;          // The underlying zip archive
     nsObjectHashtable        mManifestData; // Stores metadata for each entry
-    PRBool                   step1Complete; // True if manifest has been parsed
+    PRBool                   mParsedManifest; // True if manifest has been parsed
 
     //-- Private functions
+    nsresult ParseManifest();
     nsresult CreateInputStream(const char* aFilename, PRBool verify,
                                nsIInputStream** result);
     nsresult LoadEntry(const char* aFilename, char** aBuf, 
@@ -145,6 +149,32 @@ protected:
     nsZipItem    *mCurr;    // raw pointer to an nsZipItem owned by mArchive -- DON'T delete
     PRBool        mIsCurrStale;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+class nsZipCacheEntry;
+
+class nsZipReaderCache : public nsIZipReaderCache
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIZIPREADERCACHE
+
+  nsZipReaderCache();
+  virtual ~nsZipReaderCache();
+
+  static NS_METHOD
+  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+protected:
+  PRLock*               mLock;
+  PRUint32              mCacheSize;
+  nsObjectHashtable     mZips;
+  nsZipCacheEntry*      mFreeList;
+  PRUint32              mFreeCount;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif /* nsJAR_h__ */
 
