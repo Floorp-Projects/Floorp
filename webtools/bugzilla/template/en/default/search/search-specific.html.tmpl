@@ -58,7 +58,7 @@ for "crash secure SSL flash".
       <b><label for="bug_status">Status:</label></b>
     </td>
     <td>
-      <select name="bug_status">
+      <select name="bug_status" id="bug_status">
         [% FOREACH s = ['open', 'closed', 'all'] %]
             <option value="__[% s %]__" 
                   [% " selected" IF default.bug_status.0 == "__${s}__" %]>
@@ -73,7 +73,7 @@ for "crash secure SSL flash".
       <b><label for="product">Product:</label></b>
     </td>
     <td>
-      <select name="product">
+      <select name="product" id="product">
         <option value="">All</option>
         [% FOREACH p = product %]
           <option value="[% p.name FILTER html %]"
@@ -88,7 +88,7 @@ for "crash secure SSL flash".
       <b><label for="content">Words:</label></b>
     </td>
     <td>
-      <input name="content" size="40" 
+      <input name="content" size="40" id="content"
              value="[% default.content.0 FILTER html %]">
       <script language="JavaScript" type="text/javascript"> <!--
           document.forms['queryform'].content.focus(); 
