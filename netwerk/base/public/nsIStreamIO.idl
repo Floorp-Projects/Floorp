@@ -115,6 +115,7 @@ interface nsIFileIO : nsIStreamIO
 %{C++
 
 #include "nsCOMPtr.h"
+#include "nsXPCOM.h"
 #include "nsIComponentManager.h"
 
 #define NS_FILEIO_CLASSNAME     "File I/O"
@@ -135,12 +136,17 @@ NS_NewFileIO(nsIFileIO **result,
              PRInt32 perm = -1)
 {
     nsresult rv;
-    nsCOMPtr<nsIFileIO> fileIO;
     static NS_DEFINE_CID(kFileIOCID, NS_FILEIO_CID);
-    rv = nsComponentManager::CreateInstance(kFileIOCID,
-                                            nsnull, 
-                                            NS_GET_IID(nsIFileIO),
-                                            getter_AddRefs(fileIO));
+    nsCOMPtr<nsIFileIO> fileIO;
+    
+    nsCOMPtr<nsIComponentManager> compMgr;
+    rv = NS_GetComponentManager(getter_AddRefs(compMgr));
+
+    if (NS_FAILED(rv)) return rv;
+    rv = compMgr->CreateInstance(kFileIOCID,
+                                 nsnull, 
+                                 NS_GET_IID(nsIFileIO),
+                                 getter_AddRefs(fileIO));
     if (NS_FAILED(rv)) return rv;
     rv = fileIO->Init(file, ioFlags, perm);
     if (NS_FAILED(rv)) return rv;
@@ -196,10 +202,14 @@ NS_NewInputStreamIO(nsIInputStreamIO* *result,
     nsresult rv;
     nsCOMPtr<nsIInputStreamIO> io;
     static NS_DEFINE_CID(kInputStreamIOCID, NS_INPUTSTREAMIO_CID);
-    rv = nsComponentManager::CreateInstance(kInputStreamIOCID,
-                                            nsnull, 
-                                            NS_GET_IID(nsIInputStreamIO),
-                                            getter_AddRefs(io));
+    nsCOMPtr<nsIComponentManager> compMgr;
+    rv = NS_GetComponentManager(getter_AddRefs(compMgr));
+
+    if (NS_FAILED(rv)) return rv;
+    rv = compMgr->CreateInstance(kInputStreamIOCID,
+                                 nsnull, 
+                                 NS_GET_IID(nsIInputStreamIO),
+                                 getter_AddRefs(io));
     if (NS_FAILED(rv)) return rv;
     rv = io->Init(name, inStr, contentType, contentCharset, contentLength);
     if (NS_FAILED(rv)) return rv;
