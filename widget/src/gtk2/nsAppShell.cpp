@@ -220,7 +220,7 @@ nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen)
             GIOChannel *ioc;
             guint       tag;
             ioc = g_io_channel_unix_new(key);
-            tag = g_io_add_watch_full (ioc, G_PRIORITY_HIGH_IDLE,
+            tag = g_io_add_watch_full (ioc, G_PRIORITY_DEFAULT_IDLE,
                                        G_IO_IN,
                                        event_processor_callback, aQueue, NULL);
             // it's owned by the mainloop now
