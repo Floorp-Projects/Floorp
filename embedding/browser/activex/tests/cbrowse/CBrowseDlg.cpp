@@ -96,6 +96,8 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_COMMAND(ID_VIEW_VIEWSOURCE, OnViewViewSource)
 	ON_BN_CLICKED(IDC_STOP, OnStop)
+	ON_COMMAND(ID_FILE_SAVEAS, OnFileSaveAs)
+	ON_COMMAND(ID_FILE_PRINT, OnFilePrint)
 	//}}AFX_MSG_MAP
 	ON_COMMAND(IDB_BOLD, OnEditBold)
 	ON_COMMAND(IDB_ITALIC, OnEditItalic)
@@ -878,4 +880,14 @@ void CBrowseDlg::OnHelpAbout()
 void CBrowseDlg::OnViewViewSource() 
 {
 	ExecOleCommand(&CGID_MSHTML, 3);
+}
+
+void CBrowseDlg::OnFileSaveAs() 
+{
+	ExecOleCommand(NULL, OLECMDID_SAVEAS);
+}
+
+void CBrowseDlg::OnFilePrint() 
+{
+	ExecOleCommand(NULL, OLECMDID_PRINT);
 }
