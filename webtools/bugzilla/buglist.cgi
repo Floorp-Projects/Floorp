@@ -338,7 +338,7 @@ elsif ($::FORM{'cmdtype'} eq "doit" && $::FORM{'remember'}) {
                 if ($query->{'linkinfooter'} == 1) {
                     $new_in_footer = 0;
                 }
-                break;
+                last;
             }
         }        
         
