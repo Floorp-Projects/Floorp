@@ -374,8 +374,14 @@ bail:
         notifier->AfterJavascriptEvaluation( url.GetUnicode() );
 
     if (scriptBuffer) delete [] scriptBuffer;
-    if (jarpath) {
-        PR_Delete(jarpath);
+    if (jarpath) 
+    {
+        if ( !url.Equals("file://",7) )
+        {
+            // delete the jarfile only if we've downloaded it
+            PR_Delete(jarpath);
+        }
+
         nsCRT::free(jarpath);
     }
 
