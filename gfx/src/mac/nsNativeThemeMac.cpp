@@ -452,7 +452,7 @@ nsNativeThemeMac::DrawEditText ( const Rect& inBoxRect, PRBool inIsDisabled )
   ::BackPat(GetQDGlobalsWhite(&whitePat));
   ::EraseRect(&inBoxRect);
   
-  ThemeDrawState drawState = inIsDisabled ? kThemeStateActive : kThemeStateDisabled;
+  ThemeDrawState drawState = inIsDisabled ? kThemeStateDisabled : kThemeStateActive;
   ::DrawThemeEditTextFrame(&inBoxRect, drawState);
 #endif
 }
@@ -467,7 +467,7 @@ nsNativeThemeMac::DrawListBox ( const Rect& inBoxRect, PRBool inIsDisabled )
   ::BackPat(GetQDGlobalsWhite(&whitePat));
   ::EraseRect(&inBoxRect);
   
-  ThemeDrawState drawState = inIsDisabled ? kThemeStateActive : kThemeStateDisabled;
+  ThemeDrawState drawState = inIsDisabled ? kThemeStateDisabled : kThemeStateActive;
   ::DrawThemeListBoxFrame(&inBoxRect, drawState);
 #endif
 }
@@ -496,7 +496,7 @@ nsNativeThemeMac::DrawProgress ( const Rect& inBoxRect, PRBool inIsDisabled, PRB
 void
 nsNativeThemeMac::DrawTabPanel ( const Rect& inBoxRect, PRBool inIsDisabled )
 {
-  ThemeDrawState drawState = inIsDisabled ? kThemeStateActive : kThemeStateDisabled;
+  ThemeDrawState drawState = inIsDisabled ? kThemeStateDisabled : kThemeStateActive;
   ::DrawThemeTabPane(&inBoxRect, drawState);
 }
 
@@ -504,7 +504,7 @@ nsNativeThemeMac::DrawTabPanel ( const Rect& inBoxRect, PRBool inIsDisabled )
 void
 nsNativeThemeMac::DrawSeparator ( const Rect& inBoxRect, PRBool inIsDisabled )
 {
-  ThemeDrawState drawState = inIsDisabled ? kThemeStateActive : kThemeStateDisabled;
+  ThemeDrawState drawState = inIsDisabled ? kThemeStateDisabled : kThemeStateActive;
   ::DrawThemeSeparator(&inBoxRect, drawState);
 }
 

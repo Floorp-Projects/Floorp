@@ -87,6 +87,7 @@ tab:hover:active[selected="true"] > .tab-image-right {
 }
 
 .tab-border-top-left {
+  -moz-appearance: dialog;
   background-color  : #DEDEDE;
   border-bottom     : 3px solid;
   -moz-border-bottom-colors: #FFFFFF #CECECE #000000;
@@ -94,12 +95,14 @@ tab:hover:active[selected="true"] > .tab-image-right {
 }
 
 .tab-border-top-right {
+  -moz-appearance: dialog;
   background-color  : #DEDEDE;
   border-bottom     : 3px solid;
   -moz-border-bottom-colors: #FFFFFF #CECECE #000000;
 }
 
 .tab-border-top-left-cap, .tab-border-top-right-cap {
+  -moz-appearance: dialog;
   background-color  : #DEDEDE;
   border-bottom     : 3px solid;
   -moz-border-bottom-colors: #000000;
@@ -172,6 +175,7 @@ tabs {
 }
 
 .tabs-bottom > .tab-border-top-left {
+  -moz-appearance: dialog;
   background-color  : #DEDEDE;
   border-bottom     : 0px;
   border-top        : 3px solid;
@@ -180,6 +184,7 @@ tabs {
 }
 
 .tabs-bottom > stack > .tab-border-top-right {
+  -moz-appearance: dialog;
   background-color  : #DEDEDE;
   border-bottom     : 0px;
   border-top        : 3px solid;
@@ -187,6 +192,7 @@ tabs {
 }
 
 .tabs-bottom > .tab-border-top-left-cap, .tabs-bottom > .tab-border-top-right-cap {
+  -moz-appearance: dialog;
   background-color  : #DEDEDE;
   border-bottom     : 0px;
   border-top        : 3px solid;
