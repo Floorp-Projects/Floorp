@@ -419,6 +419,12 @@ nsInputStreamPump::OnStateTransfer()
                         //
                         NS_ERROR("OnDataAvailable implementation consumed no data");
                         mStatus = NS_ERROR_UNEXPECTED;
+                        // 
+                        // pass this error on to the async stream (the listener
+                        // should have really called our Cancel method, so we
+                        // simulate a call to Cancel instead).
+                        //
+                        mAsyncStream->CloseEx(mStatus);
                     }
                 }
                 else
