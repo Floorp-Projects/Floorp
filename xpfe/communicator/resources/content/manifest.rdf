@@ -5,6 +5,8 @@
   <!-- list all the packages being supplied by this jar -->
   <RDF:Seq about="urn:mozilla:package:root">
     <RDF:li resource="urn:mozilla:package:communicator"/>
+    <RDF:li resource="urn:mozilla:package:editor"/>
+    <RDF:li resource="urn:mozilla:package:navigator"/>
   </RDF:Seq>
 
   <!-- package information -->
@@ -12,5 +14,15 @@
         chrome:displayName="Communicator Shared"
         chrome:author="mozilla.org"
         chrome:name="communicator">
+  </RDF:Description>
+  <RDF:Description about="urn:mozilla:package:editor"
+        chrome:displayName="Editor"
+        chrome:author="mozilla.org"
+        chrome:name="editor">
+  </RDF:Description>
+  <RDF:Description about="urn:mozilla:package:navigator"
+        chrome:displayName="Navigator"
+        chrome:author="mozilla.org"
+        chrome:name="navigator">
   </RDF:Description>
 </RDF:RDF>
