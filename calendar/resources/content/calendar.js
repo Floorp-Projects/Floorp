@@ -1407,6 +1407,7 @@ function changeOnlyWorkdayCheckbox( menuindex ) {
     gOnlyWorkdayChecked = "false" ;
   }
   gCalendarWindow.currentView.refreshDisplay( );
+  gCalendarWindow.currentView.refreshEvents( );
 }
 
 /* Change the display-todo-inview checkbox */

@@ -998,7 +998,8 @@
 
 /* Week View: Day name header */
 #weekview-daynumber-spacer{
-   width: 125px;
+   width: 80px;
+   border-bottom         : 1px solid #2085c4;
 }
 #weekview-header-spacer-left
 {
@@ -1016,29 +1017,20 @@
    width                   : 43px;
 }
 
-#week-view-header-days
-{
-   -moz-border-top-colors:  #3f7d91 #E7EEEC  #E7EEEC;
-   -moz-border-right-colors:  #3f7d91 #E7EEEC  #E7EEEC;
-   border-top: 3px solid;
-   border-right: 3px solid;
-}
-
 .weekview-daynumber-class
 {
    -moz-box-align       : center;
    display              : -moz-stack;
-}
-
-#week-view-header
-{
    color                   : #3f7d91;
    font-size               : 11pt;
    font-family             : Arial, Helvetica;
    text-align              : center; 
    font-weight             : bold;
    background-color 	      : #ffffff;
-}
+   -moz-border-top-colors:  #3f7d91 #E7EEEC  #E7EEEC;
+    border-top: 3px solid;
+    border-bottom         : 1px solid #2085c4;
+ }
 
 .week-header-date{
    font-size               : 33px;
@@ -1057,27 +1049,25 @@
 
 /* Week View: Calendar Tree */
 
-#week-view-content-outer-box
-{
-   border-left          : 1px solid #2085c4;
-   border-bottom        : 1px solid #2085c4;
-   border-right         : 1px solid #2085c4;
-	padding					: 2px;
-   background-color     : #E7EEEC;
-}
+/*
 
+/*
+overflow can be set to scroll instead of auto
+because fewer errors in the event position are
+then observed (ERic 20/06/03)
+*/
 #week-view-content-box
 {
    overflow             : auto;
-   border               : 1px solid #2085c4;
    background-color     :#ffffff;
    -moz-user-focus      : normal;
+  padding		: 2px;
 }
-
 
 #week-view-content-holder{
     margin-right: 3px;
     background-color: #ffffff;
+   border-right        : 1px solid #2085c4;
 }
 
 .week-view-event-class
@@ -1112,25 +1102,23 @@
 .week-time-class-text
 {
    margin               : 5px; 	
-   margin-top           : 10px;
+   margin-top           : 2px;
    font-size            : 10pt;
    font-family          : Arial, Helvetica;
    color                : #1d7ab5;
-   width                : 80px;
+   width                : 50px;
 }
 
-.week-time-class
-{
-   -moz-box-pack        : end;
-   -moz-box-align       : center;
+.week-row-class{  
+   height               : 40px;
+   min-height:            30px;
 }
 
 .week-view-hour-box-class
 {
    border-bottom        : 1px solid #2085c4;
-	border-left          : 1px solid #2085c4;
+   border-left          : 1px solid #2085c4;
    width                : 78px;
-   height               : 50px;
    background-color     : white;
    -moz-user-focus      : normal;
 }
@@ -1169,39 +1157,37 @@
 .week-view-hours-only-box-class
 {
    border-bottom        : 1px solid #2085c4;
+   border-left        : 1px solid #2085c4;
    width                : 82px;
-   height               : 50px;
    background-color     : white;
+   -moz-box-pack        : start;
+   -moz-box-align       : start;
 }
-
-#week-view-all-day-content-box
-{
-	padding					: 2px;
-   background-color     : white;
-   border-top           : 1px solid #2085c4;
-   border-left          : 1px solid #2085c4;
-   border-right         : 1px solid #2085c4;
-   min-height       		: 25px;
-} 
 
 #weekview-daynumber-spacer-left
 {
-   width                : 122px;
+   width                : 82px;
+   border-bottom           : 1px solid #2085c4;
+   border-left           : 1px solid #2085c4;
 }
 
 .all-day-content-box-text-title
 {
-   font-size            : 10pt;
+   font-size            : 7pt;
    font-family          : Arial, Helvetica;
    color                : #1d7ab5;
    -moz-box-pack       : center;
-   text-align           : center;
+   text-align           : left;
 } 
 
 .all-day-content-box-week
 {
   	width				: 78px;
    -moz-box-align : start;
+	padding					: 2px;
+   background-color     : white;
+   border-bottom           : 1px solid #2085c4;
+   min-height       		: 25px;
 }
 
 #all-day-content-spacer

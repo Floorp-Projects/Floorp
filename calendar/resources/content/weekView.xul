@@ -23,6 +23,7 @@
    -                 Mike Potter <mikep@oeone.com>
    -                 Colin Phillips <colinp@oeone.com> 
    -                 Karl Guertin <grayrest@grayrest.com>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr> 
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -98,226 +99,157 @@
 
      <!-- Week View: All Day Boxes -->
            
-     <vbox id="inner-week-view-box" flex="1">
-       
-      <box id="week-view-header">
-	    <box id="weekview-daynumber-spacer">
-	       <box id="weekview-header-spacer-left" flex="1" />
-	       <box id="weekview-daynumber-spacer-mid" />
-         </box>
-         
-         <box id="week-view-header-days" flex="1">
-	       <hbox flex="1" class="weekview-daynumber-class">
-		  <label id="week-header-date-1" class="week-header-date" value=""/>
-		  <label id="week-header-date-text-1" class="week-header-date-text" value="&day.1.DDD;" />
-	       </hbox>
-            
-	       <hbox flex="1" class="weekview-daynumber-class">
-		  <label id="week-header-date-2" class="week-header-date" value="" />
-		  <label id="week-header-date-text-2" class="week-header-date-text" value="&day.2.DDD;" />
-	       </hbox>
-            
-	       <hbox flex="1" class="weekview-daynumber-class">
-		  <label id="week-header-date-3" class="week-header-date" value="" />
-		  <label id="week-header-date-text-3" class="week-header-date-text" value="&day.3.DDD;" />
-	       </hbox>
-                  
-	       <hbox flex="1" class="weekview-daynumber-class">
-		  <label id="week-header-date-4" class="week-header-date" value="" />
-		  <label id="week-header-date-text-4" class="week-header-date-text" value="&day.4.DDD;" />
-	       </hbox>
-                 
-	       <hbox flex="1" class="weekview-daynumber-class">
-		  <label id="week-header-date-5" class="week-header-date" value="" />
-		  <label id="week-header-date-text-5" class="week-header-date-text" value="&day.5.DDD;" />
-	       </hbox>
-                  
-	       <hbox flex="1" class="weekview-daynumber-class">
-		  <label id="week-header-date-6" class="week-header-date" value="" />
-		  <label id="week-header-date-text-6" class="week-header-date-text" value="&day.6.DDD;" />
-	       </hbox>
-            
-	       <hbox flex="1" class="weekview-daynumber-class">
-		  <label id="week-header-date-7" class="week-header-date" value="" />
-		  <label id="week-header-date-text-7" class="week-header-date-text" value="&day.7.DDD;" />
-	       </hbox>
-            
-            <vbox id="week-view-header-spacer"/>
-         </box>
-      </box>
-          
-      <box id="week-view-all-day-content-box" align="center" flex="1" >
-         <vbox id="weekview-daynumber-spacer-left">
-            <label class="all-day-content-box-text-title" value="&allDayEvents.label;"/>
-         </vbox>
-         <box equalsize="always" flex="1">
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-1" flex="1"/>
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-2" flex="1"/>
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-3" flex="1"/>
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-4" flex="1"/>
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-5" flex="1"/>
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-6" flex="1"/>
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-7" flex="1"/>
-         </box>
-         <vbox id="all-day-content-spacer"/>
-      </box>
-            
-      <box id="week-view-content-outer-box" flex="1">    
-         <box id="week-view-content-box" flex="1">    
-           
-	      <stack id="week-view-content-board" flex="1">    
-   
-		  <grid id="week-view-content-holder" flex="1">
-		     <columns equalsize="always">
-			<column id="week-view-top-left-box">
+    <vbox id="week-view-content-box" flex="1">    
+       <stack id="week-view-content-board" flex="1">    
+
+       <grid id="week-view-content-holder" flex="1">
+          <rows>
+	      <row id="week-view-header-row" class="week-row-header-class"/>
+	      <row id="week-view-allday-row" class="week-row-allday-class"/>
+	      <row id="week-view-row-0" class="week-row-class" flex="1"/>
+	      <row id="week-view-row-1" class="week-row-class" flex="1"/>
+              <row id="week-view-row-2" class="week-row-class" flex="1"/>
+              <row id="week-view-row-3" class="week-row-class" flex="1"/>
+              <row id="week-view-row-4" class="week-row-class" flex="1"/>
+              <row id="week-view-row-5" class="week-row-class" flex="1"/>
+              <row id="week-view-row-6" class="week-row-class" flex="1"/>
+              <row id="week-view-row-7" class="week-row-class" flex="1"/>
+              <row id="week-view-row-8" class="week-row-class" flex="1"/>
+              <row id="week-view-row-9" class="week-row-class" flex="1"/>
+              <row id="week-view-row-10" class="week-row-class" flex="1"/>
+              <row id="week-view-row-11" class="week-row-class" flex="1"/>
+              <row id="week-view-row-12" class="week-row-class" flex="1"/>
+              <row id="week-view-row-13" class="week-row-class" flex="1"/>
+              <row id="week-view-row-14" class="week-row-class" flex="1"/>
+              <row id="week-view-row-15" class="week-row-class" flex="1"/>
+              <row id="week-view-row-16" class="week-row-class" flex="1"/>
+              <row id="week-view-row-17" class="week-row-class" flex="1"/>
+              <row id="week-view-row-18" class="week-row-class" flex="1"/>
+              <row id="week-view-row-19" class="week-row-class" flex="1"/>
+              <row id="week-view-row-20" class="week-row-class" flex="1"/>
+              <row id="week-view-row-21" class="week-row-class" flex="1"/>
+              <row id="week-view-row-22" class="week-row-class" flex="1"/>
+              <row id="week-view-row-23" class="week-row-class" flex="1"/>
+           </rows>
+
+	   <columns equalsize="always">
+	      <column id="week-view-top-left-box">
                    <!-- HOURS -->
+		   <box id="weekview-daynumber-spacer">
+		     <box id="weekview-header-spacer-left" flex="1" />
+		     <box id="weekview-daynumber-spacer-mid" />
+		   </box>
+
+		   <vbox id="weekview-daynumber-spacer-left">
+		     <label class="all-day-content-box-text-title" value="&allDayEvents.label;"/>
+		   </vbox>
+
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-0">
-                      <box class="week-time-class" flex="1">
-				            <label class="week-time-class-text" id="week-view-hour-0" value="&time.midnight;"/>
-                      </box>
+		     <label class="week-time-class-text" id="week-view-hour-0" value="&time.midnight;"/>
                    </box>
                    
-			          <box class="week-view-hours-only-box-class" id="week-tree-hour-1">
-                      <box class="week-time-class" flex="1">
-				            <label class="week-time-class-text" id="week-view-hour-1"/>
-                      </box>
+		   <box class="week-view-hours-only-box-class" id="week-tree-hour-1">
+		     <label class="week-time-class-text" id="week-view-hour-1"/>
                    </box>
                    
-			          <box class="week-view-hours-only-box-class" id="week-tree-hour-2">
-                      <box class="week-time-class" flex="1">
-				            <label class="week-time-class-text" id="week-view-hour-2"/>
-                      </box>
+		   <box class="week-view-hours-only-box-class" id="week-tree-hour-2">
+		     <label class="week-time-class-text" id="week-view-hour-2"/>
                    </box>
                    
-			          <box class="week-view-hours-only-box-class" id="week-tree-hour-3">
-                      <box class="week-time-class" flex="1">
-				            <label class="week-time-class-text" id="week-view-hour-3"/>
-                      </box>
+		   <box class="week-view-hours-only-box-class" id="week-tree-hour-3">
+		     <label class="week-time-class-text" id="week-view-hour-3"/>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-4">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-4"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-5">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-5"/>
-                      </box>
                    </box>
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-6">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-6"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-7">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-7"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-8">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-8"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-9">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-9"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-10">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-10"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-11">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-11"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-12">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-12"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-13">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-13"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-14">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-14"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-15">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-15"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-16">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-16"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-17">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-17"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-18">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-18"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-19">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-19"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-20">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-20"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-21">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-21"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-22">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-22"/>
-                      </box>
                    </box>
                    
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-23">
-                      <box class="week-time-class" flex="1">
 				            <label class="week-time-class-text" id="week-view-hour-23"/>
-                      </box>
                    </box>
                    <!-- / HOURS -->
-			         </column>
+		</column>
                    
                 <!-- DAY 0 -->
-			       <column class="week-view-day-container-box" id="week-view-hour-0" flex="1">
+	  <column class="week-view-day-container-box" id="weekview-column-day-1" flex="1">
+	       <hbox flex="1" id="week-header-box-1" class="weekview-daynumber-class">
+		  <label id="week-header-date-1" class="week-header-date" value=""/>
+		  <label id="week-header-date-text-1" class="week-header-date-text" value="&day.1.DDD;" />
+	       </hbox>
+
+	       <hbox class="all-day-content-box-week" id="all-day-content-box-week-1" flex="1"/>
+
                    <box class="week-view-hour-box-class" id="week-tree-day-0-item-0" day="1" hour="0" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class" id="week-tree-day-0-item-1" day="1" hour="1" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class" id="week-tree-day-0-item-2" day="1" hour="2" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
@@ -346,7 +278,14 @@
                <!-- / DAY 0 -->
                 
                <!-- DAY 1 -->
-			<column class="week-view-day-container-box" flex="1">
+			<column id="weekview-column-day-2" class="week-view-day-container-box" flex="1">
+	       <hbox flex="1" id="week-header-box-2" class="weekview-daynumber-class">
+		  <label id="week-header-date-2" class="week-header-date" value="" />
+		  <label id="week-header-date-text-2" class="week-header-date-text" value="&day.2.DDD;" />
+	       </hbox>
+
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-2" flex="1"/>
+            
                   <box class="week-view-hour-box-class" id="week-tree-day-1-item-0" day="2" hour="0" onclick="weekViewHourClick( event  )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class" id="week-tree-day-1-item-1" day="2" hour="1" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class" id="week-tree-day-1-item-2" day="2" hour="2" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
@@ -376,7 +315,14 @@
                 
    
                 <!-- DAY 2 -->
-			<column class="week-view-day-container-box" flex="1">
+			<column id="weekview-column-day-3" class="week-view-day-container-box" flex="1">
+	       <hbox flex="1" id="week-header-box-3" class="weekview-daynumber-class">
+		  <label id="week-header-date-3" class="week-header-date" value="" />
+		  <label id="week-header-date-text-3" class="week-header-date-text" value="&day.3.DDD;" />
+	       </hbox>
+
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-3" flex="1"/>
+
                    <box class="week-view-hour-box-class" id="week-tree-day-2-item-0" day="3" hour="0" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class" id="week-tree-day-2-item-1" day="3" hour="1" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class" id="week-tree-day-2-item-2" day="3" hour="2" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
@@ -406,7 +352,14 @@
                 
    
                 <!-- DAY 3 -->
-			<column class="week-view-day-container-box" flex="1">
+			<column id="weekview-column-day-4" class="week-view-day-container-box" flex="1">
+	       <hbox flex="1" id="week-header-box-4" class="weekview-daynumber-class">
+		  <label id="week-header-date-4" class="week-header-date" value="" />
+		  <label id="week-header-date-text-4" class="week-header-date-text" value="&day.4.DDD;" />
+	       </hbox>
+
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-4" flex="1"/>
+                 
                    <box class="week-view-hour-box-class" id="week-tree-day-3-item-0" day="4" hour="0" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class" id="week-tree-day-3-item-1" day="4" hour="1" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class" id="week-tree-day-3-item-2" day="4" hour="2" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
@@ -436,7 +389,14 @@
                 
    
                 <!-- DAY 4 -->
-			<column class="week-view-day-container-box" flex="1">
+			<column id="weekview-column-day-5" class="week-view-day-container-box" flex="1">
+	       <hbox flex="1" id="week-header-box-5" class="weekview-daynumber-class">
+		  <label id="week-header-date-5" class="week-header-date" value="" />
+		  <label id="week-header-date-text-5" class="week-header-date-text" value="&day.5.DDD;" />
+	       </hbox>
+
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-5" flex="1"/>
+
                    <box class="week-view-hour-box-class" id="week-tree-day-4-item-0" day="5" hour="0" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class" id="week-tree-day-4-item-1" day="5" hour="1" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class" id="week-tree-day-4-item-2" day="5" hour="2" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
@@ -466,7 +426,14 @@
                 
    
                 <!-- DAY 5 -->
-			<column class="week-view-day-container-box" flex="1">
+			<column id="weekview-column-day-6" class="week-view-day-container-box" flex="1">
+	       <hbox flex="1" id="week-header-box-6" class="weekview-daynumber-class">
+		  <label id="week-header-date-6" class="week-header-date" value="" />
+		  <label id="week-header-date-text-6" class="week-header-date-text" value="&day.6.DDD;" />
+	       </hbox>
+            
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-6" flex="1"/>
+
                    <box class="week-view-hour-box-class" id="week-tree-day-5-item-0" day="6" hour="0" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class" id="week-tree-day-5-item-1" day="6" hour="1" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class" id="week-tree-day-5-item-2" day="6" hour="2" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
@@ -496,7 +463,14 @@
                 
    
                 <!-- DAY 6 -->
-			<column class="week-view-day-container-box" flex="1">
+			<column id="weekview-column-day-7" class="week-view-day-container-box" flex="1">
+	       <hbox flex="1" id="week-header-box-7" class="weekview-daynumber-class">
+		  <label id="week-header-date-7" class="week-header-date" value="" />
+		  <label id="week-header-date-text-7" class="week-header-date-text" value="&day.7.DDD;" />
+	       </hbox>
+
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-7" flex="1"/>
+
                    <box class="week-view-hour-box-class week-view-hour-box-class-last-day" id="week-tree-day-6-item-0" day="7" hour="0" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class week-view-hour-box-class-last-day" id="week-tree-day-6-item-1" day="7" hour="1" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
                    <box class="week-view-hour-box-class week-view-hour-box-class-last-day" id="week-tree-day-6-item-2" day="7" hour="2" onclick="weekViewHourClick( event )" ondblclick="weekViewHourDoubleClick( event )" ondraggesture="nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" ondragover="nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" ondragdrop="nsDragAndDrop.drop(event,calendarViewDNDObserver)" oncontextmenu="weekViewContextClick( event )"/>
@@ -526,12 +500,7 @@
                 
 		     </columns>
 		  </grid>
-            </stack>
-          
-           
-         </box>
-      </box>
-       
+            </stack>       
    </vbox>
    
  </vbox>

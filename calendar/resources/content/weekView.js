@@ -21,6 +21,7 @@
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
  *                 Colin Phillips <colinp@oeone.com> 
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -130,7 +131,7 @@ function WeekView( calendarWindow )
 
 WeekView.prototype.refreshEvents = function( )
 {
-   this.kungFooDeathGripOnEventBoxes = new Array();
+  this.kungFooDeathGripOnEventBoxes = new Array();
    
    var eventBoxList = document.getElementsByAttribute( "eventbox", "weekview" );
 
@@ -149,112 +150,111 @@ WeekView.prototype.refreshEvents = function( )
    }
    
    //get the all day box.
-   
-   var AllDayBox = document.getElementById( "week-view-all-day-content-box" );
-   AllDayBox.setAttribute( "collapsed", "true" );      
+  var AllDayRow = document.getElementById( "week-view-allday-row" ) ;
+  AllDayRow.setAttribute( "collapsed", "true" );
    
    //expand the day's content box by setting allday to false..
    
    document.getElementById( "week-view-content-box" ).removeAttribute( "allday" );
    
    //loop through the days to get the minimum and maximum start times
-   LowestStartHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
-	HighestEndHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17 );
+  LowestStartHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
+  HighestEndHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17 );
       
-   for ( dayIndex = 1; dayIndex <= 7; ++dayIndex )
-   {
-	   // get the events for the day and loop through them
-      var dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
-      
-      var dayEventList = new Array();
-      
-      dayEventList = gEventSource.getEventsForDay( dayToGet );
-	   
-	   //refresh the array and the current spot.
-	   
-	   for ( var i = 0; i < dayEventList.length; i++ ) 
-	   {
-	      dayEventList[i].OtherSpotArray = new Array('0');
-	      dayEventList[i].CurrentSpot = 0;
-	      dayEventList[i].NumberOfSameTimeEvents = 0;
-	      if( dayEventList[i].event.allDay != true )
-	      {
-	         var ThisLowestStartHour = new Date( dayEventList[i].displayDate );
-	         if( ThisLowestStartHour.getHours() < LowestStartHour ) 
-	            LowestStartHour = ThisLowestStartHour.getHours();
-	         
-	         var EndDate = dayEventList[i].event.end.hour;
-	         if( EndDate > HighestEndHour )
-	            HighestEndHour = EndDate;
-	      }
-	   }
-	}
-   
-	//now hide those that aren't applicable
-   for( i = 0; i < 24; i++ )
-	{
-		//document.getElementById( "week-view-hour-"+i ).removeAttribute( "collapsed" );
-		document.getElementById( "week-tree-hour-"+i ).removeAttribute( "collapsed" );
-	}
+  var allDayExist = false ;
 
-	//alert( "LowestStartHour is "+LowestStartHour );
-	//alert( "HighestEndHour is "+HighestEndHour );
+  var dayEventList = new Array();
+  var eventList = new Array();
 
-	for( i = 0; i < LowestStartHour; i++ )
-	{
-		document.getElementById( "week-tree-hour-"+i ).setAttribute( "collapsed", "true" );
-	}
-	
-	for( i = ( HighestEndHour + 1 ); i < 24; i++ )
-	{
-		document.getElementById( "week-tree-hour-"+i ).setAttribute( "collapsed", "true" );
-	}
-	
-	for ( dayIndex = 0; dayIndex <= 6; ++dayIndex )
-	{
-		for( i = 0; i < 24; i++ )
+  for ( dayIndex = 1; dayIndex <= 7; ++dayIndex )
+  {
+    // get the events for the day and loop through them
+    var dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
+    
+    var dayToGetDay = dayToGet.getDay() ;
+    if( gOnlyWorkdayChecked === "true" && ( dayToGetDay == 0 || dayToGetDay == 6 ))
       {
-         document.getElementById( "week-tree-day-"+dayIndex+"-item-"+i ).removeAttribute( "collapsed" );
+         /* its a weekend */
+	continue ;
       }
+    
+    dayEventList = gEventSource.getEventsForDay( dayToGet );
+    eventList[dayIndex] = new Array();
+    eventList[dayIndex] = dayEventList ;
 
-      for( i = 0; i < LowestStartHour; i++ )
-		{
-			document.getElementById( "week-tree-day-"+dayIndex+"-item-"+i ).setAttribute( "collapsed", "true" );
-		}
-		
-      for( i = ( HighestEndHour + 1 ); i < 24; i++ )
-		{
-			document.getElementById( "week-tree-day-"+dayIndex+"-item-"+i ).setAttribute( "collapsed", "true" );
-		}
-	}
+    //refresh the array and the current spot.
+    
+    for ( var i = 0; i < eventList[dayIndex].length; i++ ) 
+      {
+	if( eventList[dayIndex][i].event.allDay != true )
+	  {
+	    var ThisLowestStartHour = new Date( eventList[dayIndex][i].displayDate );
+	    if( ThisLowestStartHour.getHours() < LowestStartHour ) 
+	      LowestStartHour = ThisLowestStartHour.getHours();
+	    
+	    var EndDate = eventList[dayIndex][i].event.end.hour;
+	    if( EndDate > HighestEndHour )
+	      HighestEndHour = EndDate;
+	  }	else 
+	  {
+	    allDayExist = true ;
+	  }
+      }
+  }
+  if ( allDayExist == true ) {
+
+    //show the all day box 
+    AllDayRow.removeAttribute( "collapsed" );
+            
+    //shrink the day's content box.
+    document.getElementById( "week-view-content-box" ).setAttribute( "allday", "true" );
+  }
+   
+  //now hide those that aren't applicable
+  for( i = 0; i < 24; i++ )
+  { 
+    //alert(" week-view-row-"+i);
+    document.getElementById( "week-view-row-"+i ).removeAttribute( "collapsed" );
+  }
+  
+  //alert( "LowestStartHour is "+LowestStartHour );
+  //alert( "HighestEndHour is "+HighestEndHour );
+
+  for( i = 0; i < LowestStartHour; i++ )
+  {
+    document.getElementById( "week-view-row-"+i ).setAttribute( "collapsed", "true" );
+  }
+  
+  for( i = ( HighestEndHour + 1 ); i < 24; i++ )
+  {
+    document.getElementById( "week-view-row-"+i ).setAttribute( "collapsed", "true" );
+  }
+
 	
    //START FOR LOOP FOR DAYS---> 
    for ( dayIndex = 1; dayIndex <= 7; ++dayIndex )
    {
-      //make the text node that will contain the text for the all day box.
-      var TextNode = document.getElementById( "all-day-content-box-text-week-"+dayIndex );
+     var dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
+     var dayToGetDay = dayToGet.getDay() ;
+     if( gOnlyWorkdayChecked === "true" && ( dayToGetDay == 0 || dayToGetDay == 6 ))
+     {
+       /* its a weekend */
+       continue ;
+     }
       
-      // get the events for the day and loop through them
-      var dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
-      
-      var dayEventList = new Array();
-      
-      dayEventList = gEventSource.getEventsForDay( dayToGet );
-     
       //refresh the array and the current spot.
-      
-      for ( i = 0; i < dayEventList.length; i++ ) 
+      for ( i = 0; i < eventList[dayIndex].length; i++ ) 
       {
-         dayEventList[i].OtherSpotArray = new Array('0');
-         dayEventList[i].CurrentSpot = 0;
-         dayEventList[i].NumberOfSameTimeEvents = 0;
+         eventList[dayIndex][i].OtherSpotArray = new Array('0');
+         eventList[dayIndex][i].CurrentSpot = 0;
+         eventList[dayIndex][i].NumberOfSameTimeEvents = 0;
       }
    
-      for ( i = 0; i < dayEventList.length; i++ ) 
+      for ( i = 0; i < eventList[dayIndex].length; i++ ) 
       {
          var ThisSpot = 0;
 
-         var calendarEventDisplay = dayEventList[i];
+         var calendarEventDisplay = eventList[dayIndex][i];
          
          //check to make sure that the event is not an all day event...
          
@@ -262,9 +262,9 @@ WeekView.prototype.refreshEvents = function( )
          {
             //see if there's another event at the same start time.
             
-            for ( var j = 0; j < dayEventList.length; j++ ) 
+            for ( var j = 0; j < eventList[dayIndex].length; j++ ) 
             {
-               var thisCalendarEventDisplay = dayEventList[j];
+               var thisCalendarEventDisplay = eventList[dayIndex][j];
    
                //if this event overlaps with another event...
                if ( ( ( thisCalendarEventDisplay.displayDate >= calendarEventDisplay.displayDate &&
@@ -302,7 +302,7 @@ WeekView.prototype.refreshEvents = function( )
                calendarEventDisplay.NumberOfSameTimeEvents = SortedOtherSpotArray.length;
             }
             
-         dayEventList[i] = calendarEventDisplay;
+         eventList[dayIndex][i] = calendarEventDisplay;
          }
    
       }
@@ -313,9 +313,9 @@ WeekView.prototype.refreshEvents = function( )
          ThisDayAllDayBox.removeChild( ThisDayAllDayBox.firstChild );
       }
       
-      for ( var eventIndex = 0; eventIndex < dayEventList.length; ++eventIndex )
+      for ( var eventIndex = 0; eventIndex < eventList[dayIndex].length; ++eventIndex )
       {
-         calendarEventDisplay = dayEventList[ eventIndex ];
+         calendarEventDisplay = eventList[dayIndex][ eventIndex ];
    
          // get the day box for the calendarEvent's day
          
@@ -345,13 +345,7 @@ WeekView.prototype.refreshEvents = function( )
             {
                eventText += " " + calendarEventDisplay.event.description;
             }
-            
-            //show the all day box 
-            AllDayBox.removeAttribute( "collapsed" );
-            
-            //shrink the day's content box.
-            document.getElementById( "week-view-content-box" ).setAttribute( "allday", "true" );
-            
+                        
             //note the use of the WeekViewAllDayText Attribute.  
             //This is used to remove the text when the day is changed.
             
@@ -417,16 +411,22 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    eventBox.calendarEventDisplay = calendarEventDisplay;
    
    //alert("boxLeftOffset: "+boxLeftOffset);
-   var Height = ( eventDuration * document.getElementById("week-tree-day-0-item-"+startHour).boxObject.height );
+   var hourHeight = document.getElementById("week-tree-day-0-item-"+startHour).boxObject.height;
+   var Height = eventDuration * hourHeight + 1 ;
    eventBox.setAttribute( "height", Height );
    
-   var Width = Math.round( ( document.getElementById("week-tree-day-0-item-"+startHour).boxObject.width ) / calendarEventDisplay.NumberOfSameTimeEvents );
+   var Width = Math.floor( 
+			  ( document.getElementById("week-tree-day-0-item-"+startHour).boxObject.width ) 
+			  / 
+			  calendarEventDisplay.NumberOfSameTimeEvents 
+			  + 1);
    eventBox.setAttribute( "width", Width );
    
-   var top = eval( document.getElementById("week-tree-day-0-item-"+startHour).boxObject.y + ( ( startMinutes/60 ) * Height ) );
+   var top = eval( document.getElementById("week-tree-day-0-item-"+startHour).boxObject.y + ( ( startMinutes/60 ) * hourHeight ) );
 
-   top = top - document.getElementById("week-tree-day-0-item-"+startHour).parentNode.boxObject.y;
-   
+   top1 = top ;
+   top = top - document.getElementById("week-tree-day-0-item-"+startHour).parentNode.boxObject.y - 2;
+
    eventBox.setAttribute( "top", top );
    var dayIndex = new Date( gHeaderDateItemArray[1].getAttribute( "date" ) );
    
@@ -435,7 +435,7 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
       index = index + 7;
 
    eventBox.setAttribute( "left", ( document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
-                                    document.getElementById( "week-view-content-box" ).boxObject.x + 
+                                    document.getElementById( "week-view-content-box" ).boxObject.x - 3 + 
                                     ( Width * ( calendarEventDisplay.CurrentSpot - 1 ) ) 
                                   ) 
                         );
@@ -502,6 +502,10 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
 
 WeekView.prototype.switchFrom = function( )
 {
+  //Enable menu options
+  document.getElementById( "only-workday-checkbox-1" ).setAttribute( "disabled", "true" );
+  document.getElementById( "only-workday-checkbox-2" ).setAttribute( "disabled", "true"  );
+
 }
 
 
@@ -521,6 +525,11 @@ WeekView.prototype.switchTo = function( )
    monthViewButton.removeAttribute( "disabled" );
    weekViewButton.setAttribute( "disabled", "true" );
    dayViewButton.removeAttribute( "disabled" );
+
+   //Enable menu options
+
+   document.getElementById( "only-workday-checkbox-1" ).removeAttribute( "disabled" );
+   document.getElementById( "only-workday-checkbox-2" ).removeAttribute( "disabled" );
 
    // switch views in the deck
 
@@ -543,16 +552,12 @@ WeekView.prototype.refreshDisplay = function( )
    // Set the from-to title string, based on the selected date
    var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", defaultWeekStart );
    
-   var viewDay = this.calendarWindow.getSelectedDate().getDay();
-   var viewDayOfMonth = this.calendarWindow.getSelectedDate().getDate();
-   var viewMonth = this.calendarWindow.getSelectedDate().getMonth();
-   var viewYear = this.calendarWindow.getSelectedDate().getFullYear();
+   var selectedDate = this.calendarWindow.getSelectedDate();
+   var viewDay = selectedDate.getDay();
+   var viewDayOfMonth = selectedDate.getDate();
+   var viewMonth = selectedDate.getMonth();
+   var viewYear = selectedDate.getFullYear();
    
-   viewDay -= Offset;
-
-   if( viewDay < 0 )
-      viewDay += 7;
-
    NewArrayOfDayNames = new Array();
    
    /* 
@@ -569,6 +574,11 @@ WeekView.prototype.refreshDisplay = function( )
 
       NewArrayOfDayNames.push( FirstElement );
    }
+
+   viewDay -= Offset;
+
+   if( viewDay < 0 )
+      viewDay += 7;
 
    var dateOfLastDayInWeek = viewDayOfMonth + ( 6 - viewDay );
    
@@ -597,30 +607,34 @@ WeekView.prototype.refreshDisplay = function( )
    /* done setting the header information */
 
    /* Fix the day names because users can choose which day the week starts on  */
-   var weekDate = new Date( viewYear, viewMonth, dateOfFirstDayInWeek );
-   
    for( var dayIndex = 1; dayIndex < 8; ++dayIndex )
    {
-      var dateOfDay = weekDate.getDate();
+      var dateOfDay = firstDayOfWeek.getDate();
       
       var headerDateItem = document.getElementById( "week-header-date-"+dayIndex );
       headerDateItem.setAttribute( "value" , dateOfDay );
-      headerDateItem.setAttribute( "date", weekDate );
+      headerDateItem.setAttribute( "date", firstDayOfWeek );
       headerDateItem.numEvents = 0;
       
       document.getElementById( "week-header-date-text-"+dayIndex ).setAttribute( "value", NewArrayOfDayNames[dayIndex-1] );
       
       var arrayOfBoxes = new Array();
 
-      if( weekDate.getDay() == 0 || weekDate.getDay() == 6 )
+      if( firstDayOfWeek.getDay() == 0 || firstDayOfWeek.getDay() == 6 )
       {
          /* its a weekend */
          arrayOfBoxes = document.getElementsByAttribute( "day", dayIndex );
 
-         for( i = 0; i < arrayOfBoxes.length; i++ )
+	 if( gOnlyWorkdayChecked === "true" )
+	   document.getElementById( "weekview-column-day-"+dayIndex ).setAttribute( "collapsed", "true" );
+	 else 
+	   document.getElementById( "weekview-column-day-"+dayIndex ).removeAttribute( "collapsed" );
+
+	 for( i = 0; i < arrayOfBoxes.length; i++ )
          {
             arrayOfBoxes[i].setAttribute( "weekend", "true" );
          }
+	 
       }
       else
       {
@@ -635,7 +649,7 @@ WeekView.prototype.refreshDisplay = function( )
 
       // advance to next day 
       
-      weekDate.setDate( dateOfDay + 1 );
+      firstDayOfWeek.setDate( dateOfDay + 1 );
    }
 
    this.hiliteTodaysDate( );
