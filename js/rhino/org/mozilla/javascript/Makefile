@@ -20,7 +20,8 @@
 # This Makefile is intended to be called from the toplevel Makefile.
 #
 
-# List files explicitly to exclude TestScan.java (and others?)
+# List files explicitly to exclude .java files in this dir we don't want
+# to compile.  Also hack in classfile stuff...
 SOURCES =						\
 	$(PATH_PREFIX)/Arguments.java			\
 	$(PATH_PREFIX)/BinaryDigitReader.java		\
@@ -45,6 +46,7 @@ SOURCES =						\
 	$(PATH_PREFIX)/InterpretedScript.java		\
 	$(PATH_PREFIX)/Interpreter.java			\
 	$(PATH_PREFIX)/InterpreterData.java		\
+	$(PATH_PREFIX)/JavaAdapter.java			\
 	$(PATH_PREFIX)/JavaMembers.java			\
 	$(PATH_PREFIX)/JavaScriptException.java		\
 	$(PATH_PREFIX)/Label.java			\
@@ -92,7 +94,10 @@ SOURCES =						\
 	$(PATH_PREFIX)/regexp/NativeRegExp.java		\
 	$(PATH_PREFIX)/regexp/NativeRegExpCtor.java	\
 	$(PATH_PREFIX)/regexp/RegExpImpl.java		\
-	$(PATH_PREFIX)/regexp/SubString.java
+	$(PATH_PREFIX)/regexp/SubString.java		\
+	$(PATH_PREFIX)/../classfile/ByteCode.java	\
+	$(PATH_PREFIX)/../classfile/ClassFileWriter.java\
+	$(NULL)
 
 RESOURCEDIR = $(PATH_PREFIX)/resources
 RESOURCES = $(RESOURCEDIR)/*.properties
