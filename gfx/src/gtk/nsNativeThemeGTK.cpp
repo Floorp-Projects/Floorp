@@ -507,6 +507,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
 
       aResult->width += 11 + GTK_MISC(gArrowWidget)->xpad * 2;
       aResult->height += 11 + GTK_MISC(gArrowWidget)->ypad * 2;      
+      *aIsOverridable = PR_FALSE;
     }
     break;
   case NS_THEME_CHECKBOX:
