@@ -137,7 +137,7 @@ nsProxyObjectManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInst
 NS_IMETHODIMP 
 nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, nsISupports* aObj, PRInt32 proxyType, void** aProxyObject)
 {
-    nsIEventQueue *postQ = destQueue;
+    nsCOMPtr<nsIEventQueue> postQ(do_QueryInterface(destQueue));
 
     *aProxyObject = nsnull;
 
@@ -161,7 +161,7 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, ns
         if ( NS_FAILED( rv ) )
             return NS_ERROR_UNEXPECTED;
         
-        rv = eventQService->GetThreadEventQueue(mainThread, &postQ);
+        rv = eventQService->GetThreadEventQueue(mainThread, getter_AddRefs(postQ));
         
         if ( NS_FAILED( rv ) )
             return NS_ERROR_UNEXPECTED;
