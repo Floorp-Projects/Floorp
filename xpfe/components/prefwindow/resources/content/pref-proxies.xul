@@ -64,7 +64,7 @@
               <textfield id="networkProxyFTP" pref="true" preftype="string" prefstring="network.proxy.ftp"
                          prefattribute="value" flex="1"/>
               <text class="label" value="&port.label;" accesskey="&FTPport.accesskey;" for="networkProxyFTP_Port"/>
-              <textfield id="networkProxyFTP_Port" pref="true" preftype="string" prefstring="network.proxy.ftp_port"
+              <textfield id="networkProxyFTP_Port" pref="true" preftype="int" prefstring="network.proxy.ftp_port"
                          prefattribute="value" size="5"/>
             </box>
           </row>
@@ -74,7 +74,7 @@
               <textfield id="networkProxyHTTP" pref="true" preftype="string" prefstring="network.proxy.http"
                          prefattribute="value" flex="1"/>
               <text class="label" value="&port.label;" accesskey="&HTTPport.accesskey;" for="networkProxyHTTP_Port"/>
-              <textfield id="networkProxyHTTP_Port" pref="true" preftype="string" prefstring="network.proxy.http_port"
+              <textfield id="networkProxyHTTP_Port" pref="true" preftype="int" prefstring="network.proxy.http_port"
                          prefattribute="value" size="5"/>
             </box>
           </row>
@@ -89,7 +89,7 @@
       <box class="indent" flex="1">
         <textfield id="networkProxyAutoconfigURL" flex="1" 
                    pref="true" preftype="string" prefstring="network.proxy.autoconfig_url"
-                   prefattribute="value"/>        
+                   prefattribute="value"/>
         <button id="autoReload" class="dialog" value="&reload.label;" accesskey="&reload.accesskey;"/>
       </box>
     </radiogroup>
