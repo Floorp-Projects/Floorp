@@ -86,15 +86,15 @@ span[-moz-smiley="s4"] {
 }
 
 span[-moz-smiley="s5"] {
-  background-image: url(chrome://editor/content/images/smile.gif);
+  background-image: url(chrome://editor/content/images/s_smile.gif);
 }
 
 span[-moz-smiley="s6"] {
-  background-image: url(chrome://editor/content/images/frown.gif);
+  background-image: url(chrome://editor/content/images/s_frown.gif);
 }
 
 
 span[-moz-smiley="s7"] {
-  background-image: url(chrome://editor/content/images/wink.gif);
+  background-image: url(chrome://editor/content/images/s_wink.gif);
 }
 
