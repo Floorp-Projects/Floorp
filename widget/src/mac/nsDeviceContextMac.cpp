@@ -93,8 +93,8 @@ NS_IMETHODIMP nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
 NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   // XXX Should we push this to widget library
-  aWidth = 240.0;
-  aHeight = 240.0;
+  aWidth = 320.0;
+  aHeight = 320.0;
   return NS_OK;
 }
 
