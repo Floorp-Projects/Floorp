@@ -438,9 +438,9 @@
     </content>
     
     <implementation>
-      <constructor>
-         this._wizardButtonDeck = document.getAnonymousElementByAttribute(this, "anonid", "WizardButtonDeck");
-      </constructor>
+      <field name="_wizardButtonDeck" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "WizardButtonDeck");
+      </field>
       
       <method name="onPageChange">
         <body><![CDATA[
