@@ -481,8 +481,11 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
   if (!m_socketIsOpen)
   {
 
+    // When we are making a secure connection, we need to make sure that we
+    // pass an interface requestor down to the socket transport so that PSM can
+    // retrieve a nsIPrompt instance if needed.
     nsCOMPtr<nsIInterfaceRequestor> ir;
-    if (aMsgWindow) {
+    if (isSecure && aMsgWindow) {
       nsCOMPtr<nsIDocShell> docShell;
       aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
       ir = do_QueryInterface(docShell);
@@ -502,10 +505,7 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
     rv = NS_ExamineForProxy("nntp", hostName.get(), port, getter_AddRefs(proxyInfo));
     if (NS_FAILED(rv)) proxyInfo = nsnull;
 
-    if (isSecure)
-      rv = OpenNetworkSocketWithInfo(hostName.get(), port, "ssl", proxyInfo, ir);
-    else
-      rv = OpenNetworkSocketWithInfo(hostName.get(), port, nsnull, proxyInfo, ir);
+    rv = OpenNetworkSocketWithInfo(hostName.get(), port, isSecure ? "ssl" : nsnull, proxyInfo, ir);
 
 	NS_ENSURE_SUCCESS(rv,rv);
 	m_nextState = NNTP_LOGIN_RESPONSE;

@@ -83,6 +83,7 @@
 #include "nsIAsyncStreamCopier.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISyncStreamListener.h"
+#include "nsInterfaceRequestorAgg.h"
 
 // Helper, to simplify getting the I/O service.
 inline const nsGetServiceByCID
@@ -901,6 +902,99 @@ NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties **result,
         rv = NS_LoadPersistentPropertiesFromURI(result, uri, ioService);
 
     return rv;
+}
+
+/**
+ * NS_QueryNotificationCallbacks implements the canonical algorithm for
+ * querying interfaces from a channel's notification callbacks.  It first
+ * searches the channel's notificationCallbacks attribute, and if the interface
+ * is not found there, then it inspects the notificationCallbacks attribute of
+ * the channel's loadGroup.
+ */
+inline void
+NS_QueryNotificationCallbacks(nsIChannel   *aChannel,
+                              const nsIID  &aIID,
+                              void        **aResult)
+{
+    NS_PRECONDITION(aChannel, "null channel");
+    *aResult = nsnull;
+
+    nsCOMPtr<nsIInterfaceRequestor> cbs;
+    aChannel->GetNotificationCallbacks(getter_AddRefs(cbs));
+    if (cbs)
+        cbs->GetInterface(aIID, aResult);
+    if (!*aResult) {
+        // try load group's notification callbacks...
+        nsCOMPtr<nsILoadGroup> loadGroup;
+        aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+        if (loadGroup) {
+            loadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
+            if (cbs)
+                cbs->GetInterface(aIID, aResult);
+        }
+    }
+}
+
+/* template helper */
+template <class T> inline void
+NS_QueryNotificationCallbacks(nsIChannel  *aChannel,
+                              nsCOMPtr<T> &aResult)
+{
+    NS_QueryNotificationCallbacks(aChannel, NS_GET_IID(T),
+                                  getter_AddRefs(aResult));
+}
+
+/**
+ * Alternate form of NS_QueryNotificationCallbacks designed for use by
+ * nsIChannel implementations.
+ */
+inline void
+NS_QueryNotificationCallbacks(nsIInterfaceRequestor  *aCallbacks,
+                              nsILoadGroup           *aLoadGroup,
+                              const nsIID            &aIID,
+                              void                  **aResult)
+{
+    NS_PRECONDITION(aChannel, "null channel");
+    *aResult = nsnull;
+
+    if (aCallbacks)
+        aCallbacks->GetInterface(aIID, aResult);
+    if (!*aResult) {
+        // try load group's notification callbacks...
+        if (aLoadGroup) {
+            nsCOMPtr<nsIInterfaceRequestor> cbs;
+            aLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
+            if (cbs)
+                cbs->GetInterface(aIID, aResult);
+        }
+    }
+}
+
+/* template helper */
+template <class T> inline void
+NS_QueryNotificationCallbacks(nsIInterfaceRequestor *aCallbacks,
+                              nsILoadGroup          *aLoadGroup,
+                              nsCOMPtr<T>           &aResult)
+{
+    NS_QueryNotificationCallbacks(aCallbacks, aLoadGroup,
+                                  NS_GET_IID(T),
+                                  getter_AddRefs(aResult));
+}
+
+/**
+ * This function returns a nsIInterfaceRequestor instance that returns the
+ * same result as NS_QueryNotificationCallbacks when queried.  It is useful
+ * as the value for nsISocketTransport::securityCallbacks.
+ */
+inline nsresult
+NS_NewNotificationCallbacksAggregation(nsIInterfaceRequestor  *aCallbacks,
+                                       nsILoadGroup           *aLoadGroup,
+                                       nsIInterfaceRequestor **aResult)
+{
+    nsCOMPtr<nsIInterfaceRequestor> cbs;
+    if (aLoadGroup)
+        aLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
+    return NS_NewInterfaceRequestorAggregation(aCallbacks, cbs, aResult);
 }
 
 #endif // !nsNetUtil_h__

@@ -2353,12 +2353,8 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                                schedule,
                                nsCaseInsensitiveStringComparator()))
             {
-                nsCOMPtr<nsIInterfaceRequestor> interfaces;
                 nsCOMPtr<nsIPrompt> prompter;
-
-                channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
-                if (interfaces)
-                    interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
+                NS_QueryNotificationCallbacks(channel, prompter);
                 if (!prompter)
                 {
                     nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));

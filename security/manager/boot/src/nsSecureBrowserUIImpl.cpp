@@ -78,6 +78,7 @@
 #include "nsIFormSubmitObserver.h"
 #include "nsISecurityWarningDialogs.h"
 #include "nsIProxyObjectManager.h"
+#include "nsNetUtil.h"
 #include "nsCRT.h"
 
 #define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
@@ -912,13 +913,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 void nsSecureBrowserUIImpl::ObtainEventSink(nsIChannel *channel)
 {
   if (!mToplevelEventSink)
-  {
-    nsCOMPtr<nsIInterfaceRequestor> requestor;
-    channel->GetNotificationCallbacks(getter_AddRefs(requestor));
-    if (requestor)
-      mToplevelEventSink = do_GetInterface(requestor);
-  }
-
+    NS_QueryNotificationCallbacks(channel, mToplevelEventSink);
 }
 
 nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)

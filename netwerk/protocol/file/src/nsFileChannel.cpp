@@ -265,7 +265,6 @@ NS_IMETHODIMP
 nsFileChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
 {
     mCallbacks = aCallbacks;
-    mProgressSink = do_GetInterface(mCallbacks);
     return NS_OK;
 }
 
@@ -365,6 +364,9 @@ NS_IMETHODIMP
 nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 {
     NS_ENSURE_TRUE(!mRequest, NS_ERROR_IN_PROGRESS);
+
+    // Initialize mProgressSink
+    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
 
     nsCOMPtr<nsIStreamListener> grip;
     nsCOMPtr<nsIEventQueue> currentEventQ;

@@ -189,9 +189,10 @@ nsDateTimeChannel::Open(nsIInputStream **_retval)
 NS_IMETHODIMP
 nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
-    nsresult rv = NS_OK;
+    // Initialize mProgressSink
+    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
 
-    rv = NS_CheckPortSafety(mPort, "datetime");
+    nsresult rv = NS_CheckPortSafety(mPort, "datetime");
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIEventQueue> eventQ;
@@ -209,8 +210,7 @@ nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
                               getter_AddRefs(mTransport));
     if (NS_FAILED(rv)) return rv;
 
-    // not fatal if these fail
-    mTransport->SetSecurityCallbacks(mCallbacks);
+    // not fatal if this fails
     mTransport->SetEventSink(this, eventQ);
 
     //
@@ -357,7 +357,6 @@ NS_IMETHODIMP
 nsDateTimeChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
     mCallbacks = aNotificationCallbacks;
-    mProgressSink = do_GetInterface(mCallbacks);
     return NS_OK;
 }
 

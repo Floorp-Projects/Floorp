@@ -695,6 +695,21 @@ nsImapProtocol::SetupSinkProxy()
   NS_ASSERTION(NS_SUCCEEDED(res), "couldn't get proxies");
 }
 
+static void SetSecurityCallbacksFromChannel(nsISocketTransport* aTrans, nsIChannel* aChannel)
+{
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  aChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+
+  nsCOMPtr<nsIInterfaceRequestor> securityCallbacks;
+  NS_NewNotificationCallbacksAggregation(callbacks, loadGroup,
+                                         getter_AddRefs(securityCallbacks));
+  if (securityCallbacks)
+    aTrans->SetSecurityCallbacks(securityCallbacks);
+}
+
 // Setup With Url is intended to set up data which is held on a PER URL basis and not
 // a per connection basis. If you have data which is independent of the url we are currently
 // running, then you should put it in Initialize(). 
@@ -808,10 +823,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         if (m_transport)
         {
           // Ensure that the socket can get the notification callbacks
-          nsCOMPtr<nsIInterfaceRequestor> callbacks;
-          m_mockChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-          if (callbacks)
-            m_transport->SetSecurityCallbacks(callbacks);
+          SetSecurityCallbacksFromChannel(m_transport, m_mockChannel);
 
           // open buffered, blocking input stream
           rv = m_transport->OpenInputStream(nsITransport::OPEN_BLOCKING, 0, 0, getter_AddRefs(m_inputStream));
@@ -832,10 +844,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
       m_transport->GetSecurityInfo(getter_AddRefs(securityInfo));
       m_mockChannel->SetSecurityInfo(securityInfo);
     
-      nsCOMPtr<nsIInterfaceRequestor> callbacks;
-      m_mockChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-      if (callbacks && m_transport)
-        m_transport->SetSecurityCallbacks(callbacks);
+      SetSecurityCallbacksFromChannel(m_transport, m_mockChannel);
 
       nsCOMPtr<nsITransportEventSink> sink = do_QueryInterface(m_mockChannel);
       if (sink) {
@@ -4536,7 +4545,7 @@ nsImapProtocol::AlertUserEvent(const char * message)
   {
     nsCOMPtr<nsIMsgWindow> msgWindow;
     GetMsgWindow(getter_AddRefs(msgWindow));
-    m_imapServerSink->FEAlert(NS_ConvertASCIItoUCS2(message).get(), msgWindow);
+    m_imapServerSink->FEAlert(NS_ConvertASCIItoUTF16(message).get(), msgWindow);
   }
 }
 
@@ -8430,17 +8439,6 @@ NS_IMETHODIMP
 nsImapMockChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
   mCallbacks = aNotificationCallbacks;
-
-  // Verify that the event sink is http
-  if (mCallbacks) 
-  {
-      nsCOMPtr<nsIProgressEventSink> progressSink;
-     (void)mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink),
-                                   getter_AddRefs(progressSink));
-     // only replace our current progress event sink if we were given a new one..
-     if (progressSink) mProgressEventSink  = progressSink;
-  }
-  
   return NS_OK;
 }
 
@@ -8448,36 +8446,39 @@ NS_IMETHODIMP
 nsImapMockChannel::OnTransportStatus(nsITransport *transport, nsresult status,
                                      PRUint32 progress, PRUint32 progressMax)
 {
-  if (mProgressEventSink && NS_SUCCEEDED(m_cancelStatus) && !(mLoadFlags & LOAD_BACKGROUND))
+  if (NS_FAILED(m_cancelStatus) || (mLoadFlags & LOAD_BACKGROUND) || !m_url)
+    return NS_OK;
+
+  // these transport events should not generate any status messages
+  if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
+      status == nsISocketTransport::STATUS_SENDING_TO)
+    return NS_OK;
+
+  if (!mProgressEventSink)
   {
-    // these transport events should not generate any status messages
-    if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
-        status == nsISocketTransport::STATUS_SENDING_TO)
+    NS_QueryNotificationCallbacks(mCallbacks, m_loadGroup, mProgressEventSink);
+    if (!mProgressEventSink)
+      return NS_OK;
+  }
+
+  nsCAutoString host;
+  m_url->GetHost(host);
+
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
+  if (mailnewsUrl) 
+  {
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    mailnewsUrl->GetServer(getter_AddRefs(server));
+    if (server)
     {
-      // do nothing....do NOT report socket transport progress bytes either
+      char *realHostName = nsnull;
+      server->GetRealHostName(&realHostName);
+      if (realHostName)
+        host.Adopt(realHostName);
     }
-    else
-    {
-      nsCAutoString host;
-      if (m_url)
-      {
-        m_url->GetHost(host);
-        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
-        if (mailnewsUrl) 
-        {
-          nsCOMPtr<nsIMsgIncomingServer> server;
-          nsresult rv = mailnewsUrl->GetServer(getter_AddRefs(server));
-          if (NS_SUCCEEDED(rv) && server)
-          {
-            nsXPIDLCString realHostName;
-            rv = server->GetRealHostName(getter_Copies(realHostName));
-            if (NS_SUCCEEDED(rv))
-              host = realHostName;
-          }
-        }
-        mProgressEventSink->OnStatus(this, nsnull, status, NS_ConvertUTF8toUCS2(host).get()); 
-      }
-    }
-  } 
+  }
+  mProgressEventSink->OnStatus(this, nsnull, status,
+                               NS_ConvertUTF8toUTF16(host).get()); 
+
   return NS_OK;
 }

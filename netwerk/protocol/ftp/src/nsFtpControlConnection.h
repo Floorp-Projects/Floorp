@@ -53,7 +53,7 @@
 class nsIProxyInfo;
 class nsITransportEventSink;
 
-class nsFtpControlConnection  : public nsIStreamListener
+class nsFtpControlConnection : public nsIStreamListener
 {
 public:
     NS_DECL_ISUPPORTS
@@ -61,18 +61,18 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
 
     nsFtpControlConnection(const char* host, PRUint32 port);
-    virtual ~nsFtpControlConnection();
+    ~nsFtpControlConnection();
 
     nsresult Connect(nsIProxyInfo* proxyInfo, nsITransportEventSink* eventSink);
     nsresult Disconnect(nsresult status);
     nsresult Write(nsCString& command, PRBool suspend);
-    
-    void     GetReadRequest(nsIRequest** request) { NS_IF_ADDREF(*request=mReadRequest); }
 
-    PRBool   IsAlive();
-    
-    nsresult GetTransport(nsITransport** controlTransport);
-    nsresult SetStreamListener(nsIStreamListener *aListener);
+    PRBool IsAlive();
+
+    nsIRequest   *ReadRequest() { return mReadRequest; }
+    nsITransport *Transport()   { return mCPipe; }
+
+    void SetStreamListener(nsIStreamListener *l)  { mListener = l; }
 
     PRUint32         mServerType;           // what kind of server is it.
     nsString         mPassword;
@@ -80,18 +80,13 @@ public:
     nsCString        mPwd;
 
 private:
-    PRLock* mLock;  // protects mListener.
-
-    
-    nsXPIDLCString   mHost;
-    PRUint32         mPort;
-
+    nsCString mHost;
+    PRUint32  mPort;
 
     nsCOMPtr<nsIRequest>         mReadRequest;
     nsCOMPtr<nsISocketTransport> mCPipe;
     nsCOMPtr<nsIOutputStream>    mOutStream;
     nsCOMPtr<nsIStreamListener>  mListener;
 };
-
 
 #endif

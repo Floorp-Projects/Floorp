@@ -651,17 +651,6 @@ NS_IMETHODIMP
 nsMsgProtocol::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
   mCallbacks = aNotificationCallbacks;
-
-  // Verify that the event sink is http
-  if (mCallbacks) 
-  {
-      nsCOMPtr<nsIProgressEventSink> progressSink;
-     (void)mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink),
-                                   getter_AddRefs(progressSink));
-     // only replace our current progress event sink if we were given a new one..
-     if (progressSink) mProgressEventSink  = progressSink;
-  }
-  
   return NS_OK;
 }
 
@@ -669,37 +658,40 @@ NS_IMETHODIMP
 nsMsgProtocol::OnTransportStatus(nsITransport *transport, nsresult status,
                                  PRUint32 progress, PRUint32 progressMax)
 {
-  if (mProgressEventSink && !(mLoadFlags & LOAD_BACKGROUND))
+  if ((mLoadFlags & LOAD_BACKGROUND) || !m_url)
+    return NS_OK;
+
+  // these transport events should not generate any status messages
+  if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
+      status == nsISocketTransport::STATUS_SENDING_TO)
+    return NS_OK;
+
+  if (!mProgressEventSink)
   {
-    // these transport events should not generate any status messages
-    if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
-        status == nsISocketTransport::STATUS_SENDING_TO)
+    NS_QueryNotificationCallbacks(mCallbacks, m_loadGroup, mProgressEventSink);
+    if (!mProgressEventSink)
+      return NS_OK;
+  }
+
+  nsCAutoString host;
+  m_url->GetHost(host);
+
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
+  if (mailnewsUrl) 
+  {
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    mailnewsUrl->GetServer(getter_AddRefs(server));
+    if (server)
     {
-      // do nothing....do NOT report socket transport progress bytes either
+      char *realHostName = nsnull;
+      server->GetRealHostName(&realHostName);
+      if (realHostName)
+        host.Adopt(realHostName);
     }
-    else
-    {
-      nsCAutoString host;
-      if (m_url)
-      {
-        m_url->GetHost(host);
-        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
-        if (mailnewsUrl) 
-        {
-          nsCOMPtr<nsIMsgIncomingServer> server;
-          nsresult rv = mailnewsUrl->GetServer(getter_AddRefs(server));
-          if (NS_SUCCEEDED(rv) && server)
-          {
-            nsXPIDLCString realHostName;
-            rv = server->GetRealHostName(getter_Copies(realHostName));
-            if (NS_SUCCEEDED(rv))
-              host = realHostName;
-          }
-        }
-        mProgressEventSink->OnStatus(this, nsnull, status, NS_ConvertUTF8toUCS2(host).get());
-      }
-    }
-  } 
+  }
+  mProgressEventSink->OnStatus(this, nsnull, status,
+                               NS_ConvertUTF8toUTF16(host).get());
+
   return NS_OK;
 }
 

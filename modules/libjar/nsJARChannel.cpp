@@ -484,7 +484,6 @@ NS_IMETHODIMP
 nsJARChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
 {
     mCallbacks = aCallbacks;
-    mProgressSink = do_GetInterface(mCallbacks);
     return NS_OK;
 }
 
@@ -602,6 +601,9 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
     LOG(("nsJARChannel::AsyncOpen [this=%x]\n", this));
 
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
+
+    // Initialize mProgressSink
+    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
 
     nsresult rv = EnsureJarInput(PR_FALSE);
     if (NS_FAILED(rv)) return rv;

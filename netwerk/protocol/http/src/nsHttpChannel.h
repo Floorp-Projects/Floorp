@@ -117,6 +117,15 @@ public: /* internal; workaround lame compilers */
     typedef void (nsHttpChannel:: *nsAsyncCallback)(void);
 
 private:
+
+    // Helper function to simplify getting notification callbacks.
+    template <class T>
+    void GetCallback(nsCOMPtr<T> &aResult)
+    {
+        NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, NS_GET_IID(T),
+                                      getter_AddRefs(aResult));
+    }
+
     //
     // AsyncCall may be used to call a member function asynchronously.
     //
@@ -138,7 +147,6 @@ private:
     nsresult ProcessNotModified();
     nsresult ProcessRedirection(PRUint32 httpStatus);
     nsresult ProcessAuthentication(PRUint32 httpStatus);
-    void     GetCallback(const nsIID &aIID, void **aResult);
     PRBool   ResponseWouldVary();
 
     // redirection specific methods

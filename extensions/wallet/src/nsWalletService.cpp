@@ -55,8 +55,6 @@
 #include "nsIFormControl.h"
 #include "nsIDocShell.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrompt.h"
 #include "nsIChannel.h"
 #include "nsIWindowWatcher.h"
@@ -65,6 +63,7 @@
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsICategoryManager.h"
+#include "nsNetUtil.h"
 
 // for making the leap from nsIDOMWindowInternal -> nsIPresShell
 #include "nsIScriptGlobalObject.h"
@@ -448,14 +447,11 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
                               if (nameString) {
                                 nsAutoString value;
                                 PRUnichar* valueString = NULL;
-                                nsCOMPtr<nsIInterfaceRequestor> interfaces;
                                 nsCOMPtr<nsIPrompt> prompter;
 
                                 nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
                                 if (channel)
-                                  channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
-                                if (interfaces)
-                                  interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
+                                  NS_QueryNotificationCallbacks(channel, prompter);
                                 if (!prompter) {
                                   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
                                   if (wwatch)

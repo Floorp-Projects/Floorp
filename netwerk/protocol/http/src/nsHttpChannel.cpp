@@ -568,6 +568,13 @@ nsHttpChannel::SetupTransaction()
         }
     }
 
+    // create wrapper for this channel's notification callbacks
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
+                                           getter_AddRefs(callbacks));
+    if (!callbacks)
+        return NS_ERROR_OUT_OF_MEMORY;
+
     // create the transaction object
     mTransaction = new nsHttpTransaction();
     if (!mTransaction)
@@ -577,7 +584,7 @@ nsHttpChannel::SetupTransaction()
     nsCOMPtr<nsIAsyncInputStream> responseStream;
     rv = mTransaction->Init(mCaps, mConnectionInfo, &mRequestHead,
                             mUploadStream, mUploadStreamHasHeaders,
-                            mEventQ, mCallbacks, this,
+                            mEventQ, callbacks, this,
                             getter_AddRefs(responseStream));
     if (NS_FAILED(rv)) return rv;
 
@@ -846,22 +853,6 @@ nsHttpChannel::ProcessNormal()
     return rv;
 }
 
-void
-nsHttpChannel::GetCallback(const nsIID &aIID, void **aResult)
-{
-    NS_ASSERTION(aResult && !*aResult, "invalid argument in GetCallback");
-
-    if (mCallbacks)
-        mCallbacks->GetInterface(aIID, aResult);
-
-    if (!*aResult && mLoadGroup) {
-        nsCOMPtr<nsIInterfaceRequestor> cbs;
-        mLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
-        if (cbs)
-            cbs->GetInterface(aIID, aResult);
-    }
-}
-
 nsresult
 nsHttpChannel::PromptTempRedirect()
 {
@@ -881,7 +872,7 @@ nsHttpChannel::PromptTempRedirect()
         PRBool repost = PR_FALSE;
 
         nsCOMPtr<nsIPrompt> prompt;
-        GetCallback(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
+        GetCallback(prompt);
         if (!prompt)
             return NS_ERROR_NO_INTERFACE;
 
@@ -2476,17 +2467,18 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
     nsCOMPtr<nsIAuthPromptProvider> authPromptProvider;
     nsCOMPtr<nsIAuthPrompt> authPrompt;
 
-    GetCallback(NS_GET_IID(nsIAuthPromptProvider), getter_AddRefs(authPromptProvider));
+    GetCallback(authPromptProvider);
     if (authPromptProvider) {
         PRUint32 promptReason;
         if (proxyAuth)
             promptReason = nsIAuthPromptProvider::PROMPT_PROXY;
         else 
             promptReason = nsIAuthPromptProvider::PROMPT_NORMAL;
-        (void) authPromptProvider->GetAuthPrompt(promptReason, getter_AddRefs(authPrompt));
+        authPromptProvider->GetAuthPrompt(promptReason,
+                                          getter_AddRefs(authPrompt));
     }
     else
-        GetCallback(NS_GET_IID(nsIAuthPrompt), getter_AddRefs(authPrompt));
+        GetCallback(authPrompt);
 
     if (!authPrompt)
         return NS_ERROR_NO_INTERFACE;
@@ -2622,7 +2614,7 @@ nsHttpChannel::ConfirmAuth(const nsString &bundleKey, PRBool doYesNoPrompt)
         return PR_TRUE;
     
     nsCOMPtr<nsIPrompt> prompt;
-    GetCallback(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
+    GetCallback(prompt);
     if (!prompt)
         return PR_TRUE;
 
@@ -2962,18 +2954,13 @@ nsHttpChannel::SetOwner(nsISupports *owner)
 NS_IMETHODIMP
 nsHttpChannel::GetNotificationCallbacks(nsIInterfaceRequestor **callbacks)
 {
-    NS_ENSURE_ARG_POINTER(callbacks);
-    *callbacks = mCallbacks;
-    NS_IF_ADDREF(*callbacks);
+    NS_IF_ADDREF(*callbacks = mCallbacks);
     return NS_OK;
 }
 NS_IMETHODIMP
 nsHttpChannel::SetNotificationCallbacks(nsIInterfaceRequestor *callbacks)
 {
     mCallbacks = callbacks;
-
-    mHttpEventSink = do_GetInterface(mCallbacks);
-    mProgressSink = do_GetInterface(mCallbacks);
     return NS_OK;
 }
 
@@ -3088,6 +3075,10 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
     nsresult rv;
+
+    // Initialize callback interfaces
+    GetCallback(mHttpEventSink);
+    GetCallback(mProgressSink);
 
     // we want to grab a reference to the calling thread's event queue at
     // this point.  we will proxy all events back to the current thread via
@@ -3613,7 +3604,7 @@ nsHttpChannel::SetCookie(const char *aCookieHeader)
     NS_ENSURE_TRUE(cs, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIPrompt> prompt;
-    GetCallback(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
+    GetCallback(prompt);
 
     return cs->SetCookieStringFromHttp(mURI,
                                        mDocumentURI ? mDocumentURI : mOriginalURI,

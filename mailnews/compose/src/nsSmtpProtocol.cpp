@@ -325,6 +325,9 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s", hostName.get()));
 #endif
     
+    // When we are making a secure connection, we need to make sure that we
+    // pass an interface requestor down to the socket transport so that PSM can
+    // retrieve a nsIPrompt instance if needed.
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     nsCOMPtr<nsISmtpUrl> smtpUrl(do_QueryInterface(aURL));
     if (smtpUrl)

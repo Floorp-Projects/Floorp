@@ -47,9 +47,16 @@
 #include "nsEventQueueUtils.h"
 #include "nsCRT.h"
 
+
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
-#endif /* PR_LOGGING */
+#define LOG(args)         PR_LOG(gFTPLog, PR_LOG_DEBUG, args)
+#define LOG_ALWAYS(args)  PR_LOG(gFTPLog, PR_LOG_ALWAYS, args)
+#else
+#define LOG(args)
+#define LOG_ALWAYS(args)
+#endif
+
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
@@ -61,24 +68,18 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsFtpControlConnection,
                               nsIStreamListener, 
                               nsIRequestObserver)
 
-nsFtpControlConnection::nsFtpControlConnection(const char* host, 
-                                               PRUint32 port) 
+nsFtpControlConnection::nsFtpControlConnection(const char* host, PRUint32 port)
     : mServerType(0), mPort(port)
 {
-    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection created", this));
+    LOG_ALWAYS(("(%x) nsFtpControlConnection created", this));
 
-    mHost.Adopt(nsCRT::strdup(host));
-
-    mLock = PR_NewLock();
-    NS_ASSERTION(mLock, "null lock");
+    mHost.Assign(host);
 }
 
 nsFtpControlConnection::~nsFtpControlConnection() 
 {
-    if (mLock) PR_DestroyLock(mLock);
-    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection destroyed", this));
+    LOG_ALWAYS(("(%x) nsFtpControlConnection destroyed", this));
 }
-
 
 PRBool
 nsFtpControlConnection::IsAlive()
@@ -105,6 +106,7 @@ nsFtpControlConnection::Connect(nsIProxyInfo* proxyInfo,
                                   getter_AddRefs(mCPipe)); // the command transport
         if (NS_FAILED(rv)) return rv;
 
+        // proxy transport events back to current thread
         if (eventSink) {
             nsCOMPtr<nsIEventQueue> eventQ;
             rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
@@ -146,7 +148,7 @@ nsFtpControlConnection::Disconnect(nsresult status)
 {
     if (!mCPipe) return NS_ERROR_FAILURE;
     
-    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection disconnecting (%x)", this, status));
+    LOG_ALWAYS(("(%x) nsFtpControlConnection disconnecting (%x)", this, status));
 
     if (NS_FAILED(status)) {
         // break cyclic reference!
@@ -182,65 +184,30 @@ nsFtpControlConnection::Write(nsCString& command, PRBool suspend)
     return NS_OK;
 }
 
-nsresult 
-nsFtpControlConnection::GetTransport(nsITransport** controlTransport)
-{
-    NS_IF_ADDREF(*controlTransport = mCPipe);
-    return NS_OK;
-}
-
-nsresult 
-nsFtpControlConnection::SetStreamListener(nsIStreamListener *aListener)
-{
-    nsAutoLock lock(mLock);
-    mListener = aListener;
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsFtpControlConnection::OnStartRequest(nsIRequest *request, nsISupports *aContext)
 {
     if (!mCPipe)
         return NS_OK;
 
-    // we do not care about notifications from the write channel.
-    // a non null context indicates that this is a write notification.
-    if (aContext != nsnull) 
+    if (!mListener)
         return NS_OK;
     
-    PR_Lock(mLock);
-    nsCOMPtr<nsIStreamListener> myListener =  mListener;   
-    PR_Unlock(mLock);
-    
-    if (!myListener)
-        return NS_OK;
-    
-    return myListener->OnStartRequest(request, aContext);
+    return mListener->OnStartRequest(request, aContext);
 }
 
 NS_IMETHODIMP
 nsFtpControlConnection::OnStopRequest(nsIRequest *request, nsISupports *aContext,
                                       nsresult aStatus)
 {
-    
     if (!mCPipe) 
         return NS_OK;
 
-    // we do not care about successful notifications from the write channel.
-    // a non null context indicates that this is a write notification.
-    if (aContext != nsnull && NS_SUCCEEDED(aStatus))
-        return NS_OK;
-    
-    PR_Lock(mLock);
-    nsCOMPtr<nsIStreamListener> myListener =  mListener;   
-    PR_Unlock(mLock);
-    
-    if (!myListener)
+    if (!mListener)
         return NS_OK;
 
-    return myListener->OnStopRequest(request, aContext, aStatus);
+    return mListener->OnStopRequest(request, aContext, aStatus);
 }
-
 
 NS_IMETHODIMP
 nsFtpControlConnection::OnDataAvailable(nsIRequest *request,
@@ -252,14 +219,9 @@ nsFtpControlConnection::OnDataAvailable(nsIRequest *request,
     if (!mCPipe) 
         return NS_OK;
     
-    PR_Lock(mLock);
-    nsCOMPtr<nsIStreamListener> myListener =  mListener;   
-    PR_Unlock(mLock);
-    
-    if (!myListener)
+    if (!mListener)
         return NS_OK;
 
-    return myListener->OnDataAvailable(request, aContext, aInStream,
+    return mListener->OnDataAvailable(request, aContext, aInStream,
                                       aOffset,  aCount);
 }
-

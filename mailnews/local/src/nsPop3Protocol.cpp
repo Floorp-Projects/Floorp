@@ -565,14 +565,20 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
 
     m_url = do_QueryInterface(aURL);
 
+    // When we are making a secure connection, we need to make sure that we
+    // pass an interface requestor down to the socket transport so that PSM can
+    // retrieve a nsIPrompt instance if needed.
     nsCOMPtr<nsIInterfaceRequestor> ir;
-    nsCOMPtr<nsIMsgWindow> msgwin;
-    mailnewsUrl->GetMsgWindow(getter_AddRefs(msgwin));
-    if (msgwin) 
+    if (isSecure)
     {
+      nsCOMPtr<nsIMsgWindow> msgwin;
+      mailnewsUrl->GetMsgWindow(getter_AddRefs(msgwin));
+      if (msgwin) 
+      {
         nsCOMPtr<nsIDocShell> docshell;
         msgwin->GetRootDocShell(getter_AddRefs(docshell));
         ir = do_QueryInterface(docshell);
+      }
     }
 
     PRInt32 port = 0;
