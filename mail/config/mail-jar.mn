@@ -167,9 +167,7 @@ content/global/filepicker.xul,                        toolkit/content/global/fil
 
 # embedding\components\ui
 content/global/nsHelperAppDlg.xul,                    toolkit/content/global/nsHelperAppDlg.xul
-content/global/nsProgressDlg.xul,                     toolkit/content/global/nsProgressDlg.xul
 content/global/nsProgressDialog.xul,                  toolkit/content/global/nsProgressDialog.xul
-content/global/nsProgressDlg.js,                      toolkit/content/global/nsProgressDlg.js
 
 # from mozilla\toolkit
 content/global/widgets,                               toolkit/content/global/widgets
