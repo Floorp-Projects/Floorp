@@ -75,5 +75,9 @@ XPIDLSRCS 	= \
 		nsIPluginDocument.idl \
 		$(NULL)
 
+ifeq ($(OS_ARCH),OS2)
+XPIDLSRCS += nsILegacyPluginWrapperOS2.idl
+endif
+
 include $(topsrcdir)/config/rules.mk
 
