@@ -29,40 +29,17 @@ static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 nsImageMac :: nsImageMac()
 {
-/*  printf("[[[[[[[[[[[[[[[[[[[[ New Image Created ]]]]]]]]]]]]]]]]]]]]]]\n");
-  NS_INIT_REFCNT();
-  mImage = nsnull ;
-  mImageBits = nsnull;
-  mConvertedBits = nsnull;
-  mBitsForCreate = nsnull;
+
+	NS_INIT_REFCNT();
+	mThePixelmap.baseAddr = nsnull;
   mWidth = 0;
-  mHeight = 0;
-  mDepth = 0;
-  mOriginalDepth = 0;
-  mColorMap = nsnull;*/
+  mHeight = 0;	
 }
 
 //------------------------------------------------------------
 
 nsImageMac :: ~nsImageMac()
 {
-/*  if (nsnull != mImage) {
-    XDestroyImage(mImage);
-    mImage = nsnull;
-  }
-  if(nsnull != mConvertedBits) 
-    {
-    delete[] (PRUint8*)mConvertedBits;
-    mConvertedBits = nsnull;
-    }
-
-  if(nsnull != mImageBits)
-    {
-    delete[] (PRUint8*)mImageBits;
-    mImageBits = nsnull;
-    }
-  if(nsnull!= mColorMap)
-    delete mColorMap;*/
 }
 
 NS_IMPL_ISUPPORTS(nsImageMac, kIImageIID);
@@ -71,39 +48,59 @@ NS_IMPL_ISUPPORTS(nsImageMac, kIImageIID);
 
 nsresult nsImageMac :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
-/*  if(nsnull != mImageBits)
-    delete[] (PRUint8*)mImageBits;
 
-  if(nsnull != mColorMap)
-    delete[] mColorMap;
+		switch(aDepth)
+			{
+			case 8:
+				mThePixelmap.pixelType = chunky;
+				mThePixelmap.cmpCount = 1;
+				mThePixelmap.cmpSize = 8;
+				mThePixelmap.pmTable = GetCTable(8);
+				break;
+			case 16:
+				mThePixelmap.pixelType = chunky;
+				mThePixelmap.cmpCount = 3;
+				mThePixelmap.cmpSize = 5;
+				mThePixelmap.pmTable = 0;
+				break;
+			case 32:
+				mThePixelmap.pixelType = chunky;
+				mThePixelmap.cmpCount = 3;
+				mThePixelmap.cmpSize = 8;
+				mThePixelmap.pmTable = 0;
+				break;
+			default:
+				mThePixelmap.cmpCount = 0;
+				break;
+			}
+	
+	if(mThePixelmap.cmpCount)
+		{
+		mRowBytes = CalcBytesSpan(aWidth,aDepth);
+		mSizeImage = mRowBytes*aHeight;
+		mImageBits = new unsigned char[mSizeImage];
+		}
+		
+	if(mImageBits)
+		{
+		// we are cool
+		mThePixelmap.baseAddr = (char*) mImageBits;
+		mThePixelmap.rowBytes = mRowBytes | 0x8000;
+		mThePixelmap.bounds.top = 0;
+		mThePixelmap.bounds.left = 0;
+		mThePixelmap.bounds.bottom = aHeight;
+		mThePixelmap.bounds.right = aWidth;
+		mThePixelmap.pixelSize = aDepth;
+		mThePixelmap.packType = 0;
+		mThePixelmap.packSize = 0;
+		mThePixelmap.hRes = 72<<16;
+		mThePixelmap.vRes = 72<<16;
+		mThePixelmap.planeBytes = 0;
+		mThePixelmap.pmReserved = 0;
+		mWidth = aWidth;
+		mHeight = aHeight;
+		}
 
-  if (nsnull != mImage) {
-    XDestroyImage(mImage);
-    mImage = nsnull;
-  }
-  mWidth = aWidth;
-  mHeight = aHeight;
-  mDepth = aDepth;
-  mOriginalDepth = aDepth;
-  mOriginalRowBytes = CalcBytesSpan(aWidth);
-  mConverted = PR_FALSE;
-
-  ComputePaletteSize(aDepth);
-
-  // create the memory for the image
-  ComputMetrics();
-
-  mImageBits = (PRUint8*) new PRUint8[mSizeImage]; 
-
-  mColorMap = new nsColorMap;
-
-  if (mColorMap != nsnull)
-    {
-    mColorMap->NumColors = mNumPalleteColors;
-    mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
-    memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
-    }
-*/
   return NS_OK;
 }
 
@@ -119,42 +116,16 @@ nsresult nsImageMac :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 
 //------------------------------------------------------------
 
-// figure out how big our palette needs to be
-/*void nsImageMac :: ComputePaletteSize(PRIntn nBitCount)
+PRInt32  nsImageMac :: CalcBytesSpan(PRUint32  aWidth,PRUint32	aDepth)
 {
-  switch (nBitCount)
-    {
-    case 8:
-      mNumPalleteColors = 256;
-      mNumBytesPixel = 1;
-      break;
-    case 16:
-      mNumPalleteColors = 0;
-      mNumBytesPixel = 2;
-      break;
-    case 24:
-      mNumPalleteColors = 0;
-      mNumBytesPixel = 3;
-      break;
-    default:
-      mNumPalleteColors = -1;
-      mNumBytesPixel = 0;
-      break;
-    }
-}*/
+PRInt32 spanbytes;
 
-//------------------------------------------------------------
+  spanbytes = (aWidth * aDepth) >> 5;
 
-PRInt32  nsImageMac :: CalcBytesSpan(PRUint32  aWidth)
-{
-/*PRInt32 spanbytes;
-
-  spanbytes = (aWidth * mDepth) >> 5;
-
-  if (((PRUint32)aWidth * mDepth) & 0x1F) 
+  if (((PRUint32)aWidth * aDepth) & 0x1F) 
     spanbytes++;
   spanbytes <<= 2;
-  return(spanbytes);*/
+  return(spanbytes);
   return 0;
 }
 
@@ -179,14 +150,23 @@ void nsImageMac :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
 PRBool nsImageMac :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                           PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-/*nsDrawingSurfaceMac	*Macdrawing =(nsDrawingSurfaceMac*) aSurface;
- 
-  if (nsnull == mImage)
+PixMapPtr	destpix;
+RGBColor	rgbblack = {0x0000,0x0000,0x0000};
+RGBColor	rgbwhite = {0xFFFF,0xFFFF,0xFFFF};
+Rect			srcrect,dstrect;
+
+  if (nsnull == mThePixelmap.baseAddr)
     return PR_FALSE;
 
-  XPutImage(Macdrawing->display,Macdrawing->drawable,Macdrawing->gc,mImage,
-                    aSX,aSY,aDX,aDY,aDWidth,aDHeight);  
-*/
+	::SetRect(&srcrect,aSX,aSY,aSX+aSWidth,aSY+aSHeight);
+	::SetRect(&dstrect,aDX,aDY,aDX+aDWidth,aDY+aDHeight);
+
+	destpix = *((CGrafPtr)aSurface)->portPixMap;
+
+	::RGBForeColor(&rgbblack);
+	::RGBForeColor(&rgbwhite);
+	::CopyBits((BitMap*)&mThePixelmap,(BitMap*)destpix,&srcrect,&dstrect,ditherCopy,0L);
+
   return PR_TRUE;
 }
 
@@ -198,16 +178,8 @@ PRBool nsImageMac :: Draw(nsIRenderingContext &aContext,
                        PRInt32 aX, PRInt32 aY, 
                        PRInt32 aWidth, PRInt32 aHeight)
 {
-/*nsDrawingSurfaceMac	*Macdrawing =(nsDrawingSurfaceMac*) aSurface;
 
-    mImage = nsnull;
-    Optimize(aSurface);
- 
-  if (nsnull == mImage)
-    return PR_FALSE;
-  XPutImage(Macdrawing->display,Macdrawing->drawable,Macdrawing->gc,mImage,
-                    0,0,aX,aY,aWidth,aHeight);  */
-  return PR_TRUE;
+  return Draw(aContext,aSurface,0,0,mWidth,mHeight,aX,aY,aWidth,aHeight);
 }
 
 //------------------------------------------------------------
@@ -225,153 +197,11 @@ PRBool nsImageMac::SetAlphaMask(nsIImage *aTheMask)
   return(PR_FALSE);
 }
 
-
-void nsImageMac::AllocConvertedBits(PRUint32 aSize)
-{
-  /*if (nsnull == mConvertedBits)
-    mConvertedBits = (PRUint8*) new PRUint8[aSize]; */
-}
-
-//------------------------------------------------------------
-
-void nsImageMac::ConvertImage(nsDrawingSurface aDrawingSurface)
-{
-/*nsDrawingSurfaceMac	*Macdrawing =(nsDrawingSurfaceMac*) aDrawingSurface;
-PRUint8                 *tempbuffer,*cursrc,*curdest;
-PRInt32                 x,y;
-PRUint16                red,green,blue,*cur16;
-
-  mBitsForCreate = mImageBits;
-
-  if((Macdrawing->depth==24) &&  (mOriginalDepth==8))
-    {
-    // convert this nsImage to a 24 bit image
-    mDepth = 24;
-    ComputePaletteSize(mDepth);
-    ComputMetrics();
-    AllocConvertedBits(mSizeImage);
-    tempbuffer = mConvertedBits;
-    mBitsForCreate = mConvertedBits;
-
-    for(y=0;y<mHeight;y++)
-      {
-      cursrc = mImageBits+(y*mOriginalRowBytes);
-      curdest =tempbuffer+(y*mRowBytes);
-      for(x=0;x<mOriginalRowBytes;x++)
-        {
-        *curdest = mColorMap->Index[(3*(*cursrc))+2];  // red
-        curdest++;
-        *curdest = mColorMap->Index[(3*(*cursrc))+1];  // green
-        curdest++;
-        *curdest = mColorMap->Index[(3*(*cursrc))];  // blue
-        curdest++;
-        cursrc++;
-        } 
-      }
-   
-#if 0 
-    if(mColorMap)
-      delete mColorMap;
-
-    // after we are finished converting the image, build a new color map   
-    mColorMap = new nsColorMap;
-
-    if (mColorMap != nsnull)
-      {
-      mColorMap->NumColors = mNumPalleteColors;
-      mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
-      memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
-      }
-#endif
-    }
- 
-  // convert the 8 bit image to 16 bit
-  if((Macdrawing->depth==16) && (mOriginalDepth==8))
-    {
-    mDepth = 16;
-    ComputePaletteSize(mDepth);
-    ComputMetrics();
-    AllocConvertedBits(mSizeImage);
-    tempbuffer = mConvertedBits;
-    mBitsForCreate = mConvertedBits;
-
-    for(y=0;y<mHeight;y++)
-      {
-      cursrc = mImageBits+(y*mOriginalRowBytes);
-      cur16 = (PRUint16*) (tempbuffer+(y*mRowBytes));
-
-      for(x=0;x<mOriginalRowBytes;x++)
-        {
-        blue = mColorMap->Index[(3*(*cursrc))+2];  // red
-        green = mColorMap->Index[(3*(*cursrc))+1];  // green
-        red = mColorMap->Index[(3*(*cursrc))];  // blue
-        cursrc++;
-        *cur16 = ((red&0xf8)<<8)|((green&0xfc)<<3)| ((blue&0xf8)>>3);	
-        cur16++;
-        } 
-      }
-   
-#if 0
-    if (mColorMap != nsnull)
-      {
-      mColorMap->NumColors = mNumPalleteColors;
-      mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
-      memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
-      }
-#endif
-    }
-*/
-}
-
 //------------------------------------------------------------
 
 nsresult nsImageMac::Optimize(nsIDeviceContext* aContext)
 {
-/*PRInt16 i;
-
-  if (nsnull == mImage)
-    {
-    ConvertImage(aDrawingSurface);
-    CreateImage(aDrawingSurface);
-    }*/
   return NS_OK;
 }
 
 //------------------------------------------------------------
-
-void nsImageMac::CreateImage(nsDrawingSurface aSurface)
-{
-/*  PRUint32 wdepth;
-  Visual * visual ;
-  PRUint32 format ;
-  nsDrawingSurfaceMac	*Macdrawing =(nsDrawingSurfaceMac*) aSurface;
-  
-  if(mImageBits) {
-    if (Macdrawing->visual->c_class == TrueColor || 
-        Macdrawing->visual->c_class == DirectColor) 
-      {
-      format = ZPixmap;
-      } 
-    else 
-      {
-      format = XYPixmap;
-      }
-
-    mImage = ::XCreateImage(Macdrawing->display,
-			    Macdrawing->visual,
-			    Macdrawing->depth,
-			    format,
-			    0,
-			    (char *)mBitsForCreate,
-			    (unsigned int)mWidth, 
-			    (unsigned int)mHeight,
-			    32,mRowBytes);
-
-    mImage->byte_order       = ImageByteOrder(Macdrawing->display);
-    mImage->bits_per_pixel   = Macdrawing->depth;
-    mImage->bitmap_bit_order = BitmapBitOrder(Macdrawing->display);
-    mImage->bitmap_unit      = 32;
-
-  }	
-  return ;*/
-}

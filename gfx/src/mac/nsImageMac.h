@@ -20,6 +20,7 @@
 #define nsImageMac_h___
 
 #include "nsIImage.h"
+#include <QDOffscreen.h>
 
 class nsImageMac : public nsIImage
 {
@@ -32,9 +33,9 @@ public:
   /**
   @see nsIImage.h
   */
-  virtual PRInt32     GetHeight()         { return 0; }
-  virtual PRInt32     GetWidth()          { return 0; }
-  virtual PRUint8*    GetBits()           { return 0; }
+  virtual PRInt32     GetHeight()         { return mHeight;}
+  virtual PRInt32     GetWidth()          { return mWidth; }
+  virtual PRUint8*    GetBits()           { return mImageBits; }
   virtual void*       GetBitInfo()        { return nsnull; }
   virtual PRInt32     GetLineStride()     {return 0; }
   virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
@@ -73,40 +74,31 @@ public:
    * @param aWidth is the width to calculate the number of bytes for
    * @return the number of bytes in this span
    */
-  PRInt32  CalcBytesSpan(PRUint32  aWidth);
-  PRBool  SetAlphaMask(nsIImage *aTheMask);
-  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) {}
-  virtual PRInt32 GetAlphaLevel() {return(0);}
-  virtual void  MoveAlphaMask(PRInt32 aX, PRInt32 aY) {}
+  PRInt32  					CalcBytesSpan(PRUint32  aWidth,PRUint32	aDepth);
+  PRBool  					SetAlphaMask(nsIImage *aTheMask);
+  virtual void  		SetAlphaLevel(PRInt32 aAlphaLevel) {}
+  virtual PRInt32 	GetAlphaLevel() {return(0);}
+  virtual void  		MoveAlphaMask(PRInt32 aX, PRInt32 aY) {}
 
 private:
-  void CreateImage(nsDrawingSurface aSurface);
-  void ConvertImage(nsDrawingSurface aSurface);
+	PixMap							mThePixelmap;				
+	PRInt32							mWidth;
+	PRInt32							mHeight;
+	PRInt32							mSizeImage;
+  PRInt32             mRowBytes;          // number of bytes per row
+  PRUint8*            mImageBits;         // starting address of the bits
 
-  /** 
-   * Calculate the amount of memory needed for the initialization of the image
-   */
-  //void ComputMetrics();
-  //void ComputePaletteSize(PRIntn nBitCount);
-
-
-/*private:
-  PRInt32    mWidth;
-  PRInt32    mHeight;
-  PRInt32    mDepth;       // bits per pixel
-  PRInt32    mOriginalDepth;       // bits per pixel
-  PRInt32    mRowBytes;
-  PRInt32    mOriginalRowBytes;
-  Pixmap     mThePixMap;
-  PRUint8    *mImageBits;
-  PRUint8    *mConvertedBits;
-  PRBool     mConverted;
-  PRUint8    *mBitsForCreate;
-  PRInt32    mSizeImage;
-  XImage     *mImage ;
-  nsColorMap *mColorMap;
-  PRInt16     mNumPalleteColors;
-  PRInt8      mNumBytesPixel;*/
+	
+  nsColorMap*         mColorMap;          // Redundant with mColorTable, but necessary
+    
+  // alpha layer members
+  PRUint8             *mAlphaBits;         // alpha layer if we made one
+  PRInt8              mAlphaDepth;         // alpha layer depth
+  PRInt16             mAlphaWidth;        // alpha layer width
+  PRInt16             mAlphaHeight;       // alpha layer height
+  nsPoint             mLocation;          // alpha mask location
+  PRInt8              mImageCache;        // place to save off the old image for fast animation
+  PRInt16             mAlphaLevel;        // an alpha level every pixel uses
 };
 
 #endif
