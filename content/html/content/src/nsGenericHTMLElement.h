@@ -39,7 +39,7 @@ class nsIFrame;
 class nsIHTMLAttributes;
 class nsIHTMLMappedAttributes;
 class nsIHTMLContent;
-class nsIStyleContext;
+class nsIMutableStyleContext;
 class nsIStyleRule;
 class nsISupportsArray;
 class nsIDOMScriptObjectFactory;
@@ -247,32 +247,32 @@ public:
    */
 
   static void MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                      nsIStyleContext* aStyleContext,
+                                      nsIMutableStyleContext* aStyleContext,
                                       nsIPresContext* aPresContext);
   static PRBool GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
                                                 PRInt32& aHint);
 
   static void MapImageAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                     nsIStyleContext* aContext,
+                                     nsIMutableStyleContext* aContext,
                                      nsIPresContext* aPresContext);
   static PRBool GetImageMappedAttributesImpact(const nsIAtom* aAttribute,
                                                PRInt32& aHint);
 
   static void MapImageAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                         nsIStyleContext* aContext,
+                                         nsIMutableStyleContext* aContext,
                                          nsIPresContext* aPresContext);
   static PRBool GetImageAlignAttributeImpact(const nsIAtom* aAttribute,
                                              PRInt32& aHint);
 
   static void MapImageBorderAttributeInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                          nsIStyleContext* aContext,
+                                          nsIMutableStyleContext* aContext,
                                           nsIPresContext* aPresContext,
                                           nscolor aBorderColors[4]);
   static PRBool GetImageBorderAttributeImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint);
 
   static void MapBackgroundAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                          nsIStyleContext* aContext,
+                                          nsIMutableStyleContext* aContext,
                                           nsIPresContext* aPresContext);
   static PRBool GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint);

@@ -37,6 +37,9 @@ class nsISupportsArray;
 // The lifetime of these objects is managed by the nsIStyleContext.
 
 struct nsStyleFont : public nsStyleStruct {
+  nsStyleFont(void);
+  ~nsStyleFont(void);
+
   nsFont  mFont;        // [inherited]
   nsFont  mFixedFont;   // [inherited]
   PRUint8 mFlags;       // [inherited] See nsStyleConsts.h
@@ -44,10 +47,12 @@ struct nsStyleFont : public nsStyleStruct {
 protected:
   nsStyleFont(const nsFont& aVariableFont, const nsFont& aFixedFont);
   nsStyleFont(nsIPresContext& aPresContext);
-  ~nsStyleFont();
 };
 
 struct nsStyleColor : public nsStyleStruct {
+  nsStyleColor(void);
+  ~nsStyleColor(void);
+
   nscolor mColor;                 // [inherited]
  
   PRUint8 mBackgroundAttachment;  // [reset] See nsStyleConsts.h
@@ -66,13 +71,11 @@ struct nsStyleColor : public nsStyleStruct {
   PRBool BackgroundIsTransparent() const {return (mBackgroundFlags &
     (NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE)) ==
     (NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE);}
-
-protected:
-  nsStyleColor(void);
-  ~nsStyleColor();
 };
 
 struct nsStyleSpacing: public nsStyleStruct {
+  nsStyleSpacing(void);
+
   nsStyleSides  mMargin;          // [reset] length, percent, auto, inherit
   nsStyleSides  mPadding;         // [reset] length, percent, inherit
   nsStyleSides  mBorder;          // [reset] length, enum (see nsStyleConsts.h)
@@ -109,8 +112,6 @@ struct nsStyleSpacing: public nsStyleStruct {
   void CalcBorderPaddingFor(const nsIFrame* aFrame, nsMargin& aBorderPadding) const;
 
 protected:
-  nsStyleSpacing(void);
-
   PRBool    mHasCachedMargin;
   PRBool    mHasCachedPadding;
   PRBool    mHasCachedBorder;
@@ -128,16 +129,17 @@ protected:
 };
 
 struct nsStyleList : public nsStyleStruct {
+  nsStyleList(void);
+  ~nsStyleList(void);
+
   PRUint8   mListStyleType;             // [inherited] See nsStyleConsts.h
   PRUint8   mListStylePosition;         // [inherited] 
   nsString  mListStyleImage;            // [inherited] absolute url string
-
-protected:
-  nsStyleList(void);
-  ~nsStyleList(void);
 };
 
 struct nsStylePosition : public nsStyleStruct {
+  nsStylePosition(void);
+
   PRUint8   mPosition;                  // [reset] see nsStyleConsts.h
 
   nsStyleSides  mOffset;                // [reset]
@@ -153,12 +155,11 @@ struct nsStylePosition : public nsStyleStruct {
 
   PRBool IsAbsolutelyPositioned() const {return (NS_STYLE_POSITION_ABSOLUTE == mPosition) ||
                                                 (NS_STYLE_POSITION_FIXED == mPosition);}
-
-protected:
-  nsStylePosition(void);
 };
 
 struct nsStyleText : public nsStyleStruct {
+  nsStyleText(void);
+
   PRUint8 mTextAlign;                   // [inherited] see nsStyleConsts.h
   PRUint8 mTextDecoration;              // [reset] see nsStyleConsts.h
   PRUint8 mTextTransform;               // [inherited] see nsStyleConsts.h
@@ -173,12 +174,11 @@ struct nsStyleText : public nsStyleStruct {
   PRBool WhiteSpaceIsSignificant() const {
     return mWhiteSpace == NS_STYLE_WHITESPACE_PRE;
   }
-
-protected:
-  nsStyleText(void);
 };
 
 struct nsStyleDisplay : public nsStyleStruct {
+  nsStyleDisplay(void);
+
   PRUint8 mDirection;           // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
   PRUint8 mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
   PRUint8 mFloats;              // [reset] see nsStyleConsts.h NS_STYLE_FLOAT_*
@@ -198,12 +198,11 @@ struct nsStyleDisplay : public nsStyleStruct {
   PRBool IsFloating() const {
     return NS_STYLE_FLOAT_NONE != mFloats;
   }
-
-protected:
-  nsStyleDisplay(void);
 };
 
 struct nsStyleTable: public nsStyleStruct {
+  nsStyleTable(void);
+
   PRUint8       mLayoutStrategy;// [reset] see nsStyleConsts.h NS_STYLE_TABLE_LAYOUT_*
   PRUint8       mFrame;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_FRAME_*
   PRUint8       mRules;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_RULES_*
@@ -216,9 +215,6 @@ struct nsStyleTable: public nsStyleStruct {
   PRInt32       mCols;          // [reset] an integer if set, or see nsStyleConsts.h NS_STYLE_TABLE_COLS_*
   PRInt32       mSpan;          // [reset] the number of columns spanned by a colgroup or col
   nsStyleCoord  mSpanWidth;     // [reset] the amount of width this col gets from a spanning cell, if any
-
-protected:
-  nsStyleTable(void);
 };
 
 enum nsStyleContentType {
@@ -244,6 +240,9 @@ struct nsStyleCounterData {
 };
 
 struct nsStyleContent: public nsStyleStruct {
+  nsStyleContent(void);
+  ~nsStyleContent(void);
+
   PRUint32  ContentCount(void) const  { return mContentCount; } // [reset]
   nsresult  GetContentAt(PRUint32 aIndex, nsStyleContentType& aType, nsString& aContent) const;
   nsresult  AllocateContents(PRUint32 aCount);
@@ -267,9 +266,6 @@ struct nsStyleContent: public nsStyleStruct {
   nsresult  SetQuotesAt(PRUint32 aIndex, const nsString& aOpen, const nsString& aClose);
 
 protected:
-  nsStyleContent(void);
-  ~nsStyleContent(void);
-
   PRUint32            mContentCount;
   nsStyleContentData* mContents;
 
@@ -284,14 +280,14 @@ protected:
 };
 
 struct nsStyleUserInterface: public nsStyleStruct {
+  nsStyleUserInterface(void);
+
   PRUint8   mUserInput;       // [inherited]
   PRUint8   mUserModify;      // [inherited] (modify-content)
   PRUint8   mUserSelect;      // [reset] (selection-style)
   PRUint8   mUserFocus;       // [inherited] (auto-select)
   PRUnichar mKeyEquivalent;   // [reset] XXX what type should this be?
   PRUint8   mResizer;         // [reset]
-protected:
-  nsStyleUserInterface(void);
 };
 
 #define BORDER_PRECEDENT_EQUAL  0
@@ -368,7 +364,19 @@ public:
                                 nsISupportsArray* aRules,
                                 nsIStyleContext*& aResult) = 0;
 
+  // Fill a style struct with data
+  NS_IMETHOD GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const = 0;
+
+  // compute the effective difference between two contexts
+  NS_IMETHOD  CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint) const = 0;
+
+  // debugging
+  virtual void  List(FILE* out, PRInt32 aIndent) = 0;
+
+  // -------------------------------------------------------------
+  // DEPRECATED METHODS - these are all going away, stop using them
   // get a style data struct by ID, may return null 
+  // Replace calls to this with calls to GetStyle();
   virtual const nsStyleStruct* GetStyleData(nsStyleStructID aSID) = 0;
 
   // get a style data struct by ID, may return null 
@@ -381,12 +389,6 @@ public:
 
   // call if you change style data after creation
   virtual void    RecalcAutomaticData(nsIPresContext* aPresContext) = 0;
-
-  // compute the effective difference between two contexts
-  NS_IMETHOD  CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint) const = 0;
-
-  // debugging
-  virtual void  List(FILE* out, PRInt32 aIndent) = 0;
 };
 
 // this is private to nsStyleSet, don't call it

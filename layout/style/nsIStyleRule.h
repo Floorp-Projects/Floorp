@@ -24,7 +24,7 @@
 #include "nsISupports.h"
 
 class nsIStyleSheet;
-class nsIStyleContext;
+class nsIMutableStyleContext;
 class nsIPresContext;
 class nsIContent;
 
@@ -42,9 +42,9 @@ public:
   NS_IMETHOD GetStrength(PRInt32& aStrength) const = 0;
 
   // Map only font data into style context
-  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext) = 0;
   // Map all non-font info into style context
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext) = 0;
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 };

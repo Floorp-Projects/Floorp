@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
@@ -33,6 +34,11 @@ static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 // --------------------
 // nsStyleFont
 //
+nsStyleFont::nsStyleFont(void)
+  : mFont(nsnull, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 0),
+    mFixedFont(nsnull, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 0)
+{}
+
 nsStyleFont::nsStyleFont(const nsFont& aVariableFont, const nsFont& aFixedFont)
   : mFont(aVariableFont),
     mFixedFont(aFixedFont)
@@ -46,6 +52,8 @@ struct StyleFontImpl : public nsStyleFont {
   {}
 
   void ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresContext);
+  void SetFrom(const nsStyleFont& aSource);
+  void CopyTo(nsStyleFont& aDest) const;
   PRInt32 CalcDifference(const StyleFontImpl& aOther) const;
   static PRInt32 CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2);
 
@@ -66,6 +74,20 @@ void StyleFontImpl::ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresC
     aPresContext->GetDefaultFixedFont(mFixedFont);
     mFlags = NS_STYLE_FONT_DEFAULT;
   }
+}
+
+void StyleFontImpl::SetFrom(const nsStyleFont& aSource)
+{
+  mFont = aSource.mFont;
+  mFixedFont = aSource.mFixedFont;
+  mFlags = aSource.mFlags;
+}
+
+void StyleFontImpl::CopyTo(nsStyleFont& aDest) const
+{
+  aDest.mFont = mFont;
+  aDest.mFixedFont = mFixedFont;
+  aDest.mFlags = mFlags;
 }
 
 PRInt32 StyleFontImpl::CalcDifference(const StyleFontImpl& aOther) const
@@ -106,6 +128,8 @@ struct StyleColorImpl: public nsStyleColor {
   StyleColorImpl(void)  { }
 
   void ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPresContext);
+  void SetFrom(const nsStyleColor& aSource);
+  void CopyTo(nsStyleColor& aDest) const;
   PRInt32 CalcDifference(const StyleColorImpl& aOther) const;
 
 private:  // These are not allowed
@@ -146,6 +170,42 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
   }
 
   mCursor = NS_STYLE_CURSOR_AUTO;
+}
+
+void StyleColorImpl::SetFrom(const nsStyleColor& aSource)
+{
+  mColor = aSource.mColor;
+ 
+  mBackgroundAttachment = aSource.mBackgroundAttachment;
+  mBackgroundFlags = aSource.mBackgroundFlags;
+  mBackgroundRepeat = aSource.mBackgroundRepeat;
+
+  mBackgroundColor = aSource.mBackgroundColor;
+  mBackgroundXPosition = aSource.mBackgroundXPosition;
+  mBackgroundYPosition = aSource.mBackgroundYPosition;
+  mBackgroundImage = aSource.mBackgroundImage;
+
+  mCursor = aSource.mCursor;
+  mCursorImage = aSource.mCursorImage;
+  mOpacity = aSource.mOpacity;
+}
+
+void StyleColorImpl::CopyTo(nsStyleColor& aDest) const
+{
+  aDest.mColor = mColor;
+ 
+  aDest.mBackgroundAttachment = mBackgroundAttachment;
+  aDest.mBackgroundFlags = mBackgroundFlags;
+  aDest.mBackgroundRepeat = mBackgroundRepeat;
+
+  aDest.mBackgroundColor = mBackgroundColor;
+  aDest.mBackgroundXPosition = mBackgroundXPosition;
+  aDest.mBackgroundYPosition = mBackgroundYPosition;
+  aDest.mBackgroundImage = mBackgroundImage;
+
+  aDest.mCursor = mCursor;
+  aDest.mCursorImage = mCursorImage;
+  aDest.mOpacity = mOpacity;
 }
 
 PRInt32 StyleColorImpl::CalcDifference(const StyleColorImpl& aOther) const
@@ -461,6 +521,8 @@ struct StyleSpacingImpl: public nsStyleSpacing {
   {}
 
   void ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* aPresContext);
+  void SetFrom(const nsStyleSpacing& aSource);
+  void CopyTo(nsStyleSpacing& aDest) const;
   void RecalcData(nsIPresContext* aPresContext, nscolor color);
   PRInt32 CalcDifference(const StyleSpacingImpl& aOther) const;
 };
@@ -512,6 +574,16 @@ void StyleSpacingImpl::ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* 
   mHasCachedPadding = PR_FALSE;
   mHasCachedBorder = PR_FALSE;
   mHasCachedOutline = PR_FALSE;
+}
+
+void StyleSpacingImpl::SetFrom(const nsStyleSpacing& aSource)
+{
+  nsCRT::memcpy((nsStyleSpacing*)this, &aSource, sizeof(nsStyleSpacing));
+}
+
+void StyleSpacingImpl::CopyTo(nsStyleSpacing& aDest) const
+{
+  nsCRT::memcpy(&aDest, (const nsStyleSpacing*)this, sizeof(nsStyleSpacing));
 }
 
 inline PRBool IsFixedUnit(nsStyleUnit aUnit, PRBool aEnumOK)
@@ -703,6 +775,8 @@ struct StyleListImpl: public nsStyleList {
   StyleListImpl(void) { }
 
   void ResetFrom(const nsStyleList* aParent, nsIPresContext* aPresContext);
+  void SetFrom(const nsStyleList& aSource);
+  void CopyTo(nsStyleList& aDest) const;
   PRInt32 CalcDifference(const StyleListImpl& aOther) const;
 };
 
@@ -718,6 +792,20 @@ void StyleListImpl::ResetFrom(const nsStyleList* aParent, nsIPresContext* aPresC
     mListStylePosition = NS_STYLE_LIST_STYLE_POSITION_OUTSIDE;
     mListStyleImage.Truncate();
   }
+}
+
+void StyleListImpl::SetFrom(const nsStyleList& aSource)
+{
+  mListStyleType = aSource.mListStyleType;
+  mListStylePosition = aSource.mListStylePosition;
+  mListStyleImage = aSource.mListStyleImage;
+}
+
+void StyleListImpl::CopyTo(nsStyleList& aDest) const
+{
+  aDest.mListStyleType = mListStyleType;
+  aDest.mListStylePosition = mListStylePosition;
+  aDest.mListStyleImage = mListStyleImage;
 }
 
 PRInt32 StyleListImpl::CalcDifference(const StyleListImpl& aOther) const
@@ -744,6 +832,8 @@ struct StylePositionImpl: public nsStylePosition {
   StylePositionImpl(void) { }
 
   void ResetFrom(const nsStylePosition* aParent, nsIPresContext* aPresContext);
+  void SetFrom(const nsStylePosition& aSource);
+  void CopyTo(nsStylePosition& aDest) const;
   PRInt32 CalcDifference(const StylePositionImpl& aOther) const;
 
 private:  // These are not allowed
@@ -768,6 +858,16 @@ void StylePositionImpl::ResetFrom(const nsStylePosition* aParent, nsIPresContext
   mMaxHeight.Reset();
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
   mZIndex.SetAutoValue();
+}
+
+void StylePositionImpl::SetFrom(const nsStylePosition& aSource)
+{
+  nsCRT::memcpy((nsStylePosition*)this, &aSource, sizeof(nsStylePosition));
+}
+
+void StylePositionImpl::CopyTo(nsStylePosition& aDest) const
+{
+  nsCRT::memcpy(&aDest, (const nsStylePosition*)this, sizeof(nsStylePosition));
 }
 
 PRInt32 StylePositionImpl::CalcDifference(const StylePositionImpl& aOther) const
@@ -799,6 +899,8 @@ struct StyleTextImpl: public nsStyleText {
   StyleTextImpl(void) { }
 
   void ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresContext);
+  void SetFrom(const nsStyleText& aSource);
+  void CopyTo(nsStyleText& aDest) const;
   PRInt32 CalcDifference(const StyleTextImpl& aOther) const;
 };
 
@@ -837,7 +939,16 @@ void StyleTextImpl::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresC
     mTextIndent.SetCoordValue(0);
     mWordSpacing.SetNormalValue();
   }
+}
 
+void StyleTextImpl::SetFrom(const nsStyleText& aSource)
+{
+  nsCRT::memcpy((nsStyleText*)this, &aSource, sizeof(nsStyleText));
+}
+
+void StyleTextImpl::CopyTo(nsStyleText& aDest) const
+{
+  nsCRT::memcpy(&aDest, (const nsStyleText*)this, sizeof(nsStyleText));
 }
 
 PRInt32 StyleTextImpl::CalcDifference(const StyleTextImpl& aOther) const
@@ -868,6 +979,8 @@ struct StyleDisplayImpl: public nsStyleDisplay {
   StyleDisplayImpl(void) { }
 
   void ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* aPresContext);
+  void SetFrom(const nsStyleDisplay& aSource);
+  void CopyTo(nsStyleDisplay& aDest) const;
   PRInt32 CalcDifference(const StyleDisplayImpl& aOther) const;
 };
 
@@ -889,6 +1002,16 @@ void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* 
   mOverflow = NS_STYLE_OVERFLOW_VISIBLE;
   mClipFlags = NS_STYLE_CLIP_AUTO;
   mClip.SizeTo(0,0,0,0);
+}
+
+void StyleDisplayImpl::SetFrom(const nsStyleDisplay& aSource)
+{
+  nsCRT::memcpy((nsStyleDisplay*)this, &aSource, sizeof(nsStyleDisplay));
+}
+
+void StyleDisplayImpl::CopyTo(nsStyleDisplay& aDest) const
+{
+  nsCRT::memcpy(&aDest, (const nsStyleDisplay*)this, sizeof(nsStyleDisplay));
 }
 
 PRInt32 StyleDisplayImpl::CalcDifference(const StyleDisplayImpl& aOther) const
@@ -927,6 +1050,8 @@ struct StyleTableImpl: public nsStyleTable {
   StyleTableImpl(void);
 
   void ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPresContext);
+  void SetFrom(const nsStyleTable& aSource);
+  void CopyTo(nsStyleTable& aDest) const;
   PRInt32 CalcDifference(const StyleTableImpl& aOther) const;
 };
 
@@ -961,6 +1086,16 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
     mBorderSpacingY.Reset();
     mSpanWidth.Reset();
   }
+}
+
+void StyleTableImpl::SetFrom(const nsStyleTable& aSource)
+{
+  nsCRT::memcpy((nsStyleTable*)this, &aSource, sizeof(nsStyleTable));
+}
+
+void StyleTableImpl::CopyTo(nsStyleTable& aDest) const
+{
+  nsCRT::memcpy(&aDest, (const nsStyleTable*)this, sizeof(nsStyleTable));
 }
 
 PRInt32 StyleTableImpl::CalcDifference(const StyleTableImpl& aOther) const
@@ -1177,6 +1312,8 @@ struct StyleContentImpl: public nsStyleContent {
   StyleContentImpl(void) : nsStyleContent() { };
 
   void ResetFrom(const StyleContentImpl* aParent, nsIPresContext* aPresContext);
+  void SetFrom(const nsStyleContent& aSource);
+  void CopyTo(nsStyleContent& aDest) const;
   PRInt32 CalcDifference(const StyleContentImpl& aOther) const;
 };
 
@@ -1204,6 +1341,73 @@ StyleContentImpl::ResetFrom(const StyleContentImpl* aParent, nsIPresContext* aPr
   else {
     mQuotesCount = 0;
     DELETE_ARRAY_IF(mQuotes);
+  }
+}
+
+void StyleContentImpl::SetFrom(const nsStyleContent& aSource)
+{
+  mMarkerOffset = aSource.mMarkerOffset;
+
+  PRUint32 index;
+  if (NS_SUCCEEDED(AllocateContents(aSource.ContentCount()))) {
+    for (index = 0; index < mContentCount; index++) {
+      aSource.GetContentAt(index, mContents[index].mType, mContents[index].mContent);
+    }
+  }
+
+  if (NS_SUCCEEDED(AllocateCounterIncrements(aSource.CounterIncrementCount()))) {
+    for (index = 0; index < mIncrementCount; index++) {
+      aSource.GetCounterIncrementAt(index, mIncrements[index].mCounter,
+                                           mIncrements[index].mValue);
+    }
+  }
+
+  if (NS_SUCCEEDED(AllocateCounterResets(aSource.CounterResetCount()))) {
+    for (index = 0; index < mResetCount; index++) {
+      aSource.GetCounterResetAt(index, mResets[index].mCounter,
+                                       mResets[index].mValue);
+    }
+  }
+
+  if (NS_SUCCEEDED(AllocateQuotes(aSource.QuotesCount()))) {
+    PRUint32 count = (mQuotesCount * 2);
+    for (index = 0; index < count; index += 2) {
+      aSource.GetQuotesAt(index, mQuotes[index], mQuotes[index + 1]);
+    }
+  }
+}
+
+void StyleContentImpl::CopyTo(nsStyleContent& aDest) const
+{
+  aDest.mMarkerOffset = mMarkerOffset;
+
+  PRUint32 index;
+  if (NS_SUCCEEDED(aDest.AllocateContents(mContentCount))) {
+    for (index = 0; index < mContentCount; index++) {
+      aDest.SetContentAt(index, mContents[index].mType,
+                                mContents[index].mContent);
+    }
+  }
+
+  if (NS_SUCCEEDED(aDest.AllocateCounterIncrements(mIncrementCount))) {
+    for (index = 0; index < mIncrementCount; index++) {
+      aDest.SetCounterIncrementAt(index, mIncrements[index].mCounter,
+                                         mIncrements[index].mValue);
+    }
+  }
+
+  if (NS_SUCCEEDED(aDest.AllocateCounterResets(mResetCount))) {
+    for (index = 0; index < mResetCount; index++) {
+      aDest.SetCounterResetAt(index, mResets[index].mCounter,
+                                     mResets[index].mValue);
+    }
+  }
+
+  if (NS_SUCCEEDED(aDest.AllocateQuotes(mQuotesCount))) {
+    PRUint32 count = (mQuotesCount * 2);
+    for (index = 0; index < count; index += 2) {
+      aDest.SetQuotesAt(index, mQuotes[index], mQuotes[index + 1]);
+    }
   }
 }
 
@@ -1259,6 +1463,8 @@ struct StyleUserInterfaceImpl: public nsStyleUserInterface {
   StyleUserInterfaceImpl(void)  { }
 
   void ResetFrom(const nsStyleUserInterface* aParent, nsIPresContext* aPresContext);
+  void SetFrom(const nsStyleUserInterface& aSource);
+  void CopyTo(nsStyleUserInterface& aDest) const;
   PRInt32 CalcDifference(const StyleUserInterfaceImpl& aOther) const;
 
 private:  // These are not allowed
@@ -1282,6 +1488,16 @@ void StyleUserInterfaceImpl::ResetFrom(const nsStyleUserInterface* aParent, nsIP
   mUserSelect = NS_STYLE_USER_SELECT_TEXT;
   mKeyEquivalent = PRUnichar(0); // XXX what type should this be?
   mResizer = NS_STYLE_RESIZER_AUTO;
+}
+
+void StyleUserInterfaceImpl::SetFrom(const nsStyleUserInterface& aSource)
+{
+  nsCRT::memcpy((nsStyleUserInterface*)this, &aSource, sizeof(nsStyleUserInterface));
+}
+
+void StyleUserInterfaceImpl::CopyTo(nsStyleUserInterface& aDest) const
+{
+  nsCRT::memcpy(&aDest, (const nsStyleUserInterface*)this, sizeof(nsStyleUserInterface));
 }
 
 PRInt32 StyleUserInterfaceImpl::CalcDifference(const StyleUserInterfaceImpl& aOther) const
@@ -1309,7 +1525,8 @@ PRInt32 StyleUserInterfaceImpl::CalcDifference(const StyleUserInterfaceImpl& aOt
 
 //----------------------------------------------------------------------
 
-class StyleContextImpl : public nsIStyleContext {
+class StyleContextImpl : public nsIStyleContext,
+                         protected nsIMutableStyleContext { // you can't QI to nsIMutableStyleContext
 public:
   StyleContextImpl(nsIStyleContext* aParent, nsIAtom* aPseudoTag, 
                    nsISupportsArray* aRules, 
@@ -1332,6 +1549,9 @@ public:
   virtual PRUint32  HashValue(void) const;
 
   NS_IMETHOD RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse = PR_TRUE);
+
+  NS_IMETHOD GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const;
+  NS_IMETHOD SetStyle(nsStyleStructID aSID, const nsStyleStruct& aStruct);
 
   virtual const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
   virtual nsStyleStruct* GetMutableStyleData(nsStyleStructID aSID);
@@ -1432,7 +1652,29 @@ StyleContextImpl::~StyleContextImpl()
   NS_IF_RELEASE(mRules);
 }
 
-NS_IMPL_ISUPPORTS(StyleContextImpl, kIStyleContextIID)
+NS_IMPL_ADDREF(StyleContextImpl)
+NS_IMPL_RELEASE(StyleContextImpl)
+
+NS_IMETHODIMP
+StyleContextImpl::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(nsnull != aInstancePtr, "null pointer");
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (aIID.Equals(nsIStyleContext::GetIID())) {
+    *aInstancePtr = (void*)(nsIStyleContext*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*) (nsISupports*)(nsIStyleContext*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
 
 nsIStyleContext* StyleContextImpl::GetParent(void) const
 {
@@ -1713,13 +1955,101 @@ nsStyleStruct* StyleContextImpl::GetMutableStyleData(nsStyleStructID aSID)
   return result;
 }
 
+NS_IMETHODIMP
+StyleContextImpl::GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const
+{
+  nsresult result = NS_OK;
+  switch (aSID) {
+    case eStyleStruct_Font:
+      mFont.CopyTo((nsStyleFont&)aStruct);
+      break;
+    case eStyleStruct_Color:
+      mColor.CopyTo((nsStyleColor&)aStruct);
+      break;
+    case eStyleStruct_Spacing:
+      mSpacing.CopyTo((nsStyleSpacing&)aStruct);
+      break;
+    case eStyleStruct_List:
+      mList.CopyTo((nsStyleList&)aStruct);
+      break;
+    case eStyleStruct_Position:
+      mPosition.CopyTo((nsStylePosition&)aStruct);
+      break;
+    case eStyleStruct_Text:
+      mText.CopyTo((nsStyleText&)aStruct);
+      break;
+    case eStyleStruct_Display:
+      mDisplay.CopyTo((nsStyleDisplay&)aStruct);
+      break;
+    case eStyleStruct_Table:
+      mTable.CopyTo((nsStyleTable&)aStruct);
+      break;
+    case eStyleStruct_Content:
+      mContent.CopyTo((nsStyleContent&)aStruct);
+      break;
+    case eStyleStruct_UserInterface:
+      mUserInterface.CopyTo((nsStyleUserInterface&)aStruct);
+      break;
+    default:
+      NS_ERROR("Invalid style struct id");
+      result = NS_ERROR_INVALID_ARG;
+      break;
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+StyleContextImpl::SetStyle(nsStyleStructID aSID, const nsStyleStruct& aStruct)
+{
+  nsresult result = NS_OK;
+  switch (aSID) {
+    case eStyleStruct_Font:
+      mFont.SetFrom((const nsStyleFont&)aStruct);
+      break;
+    case eStyleStruct_Color:
+      mColor.SetFrom((const nsStyleColor&)aStruct);
+      break;
+    case eStyleStruct_Spacing:
+      mSpacing.SetFrom((const nsStyleSpacing&)aStruct);
+      break;
+    case eStyleStruct_List:
+      mList.SetFrom((const nsStyleList&)aStruct);
+      break;
+    case eStyleStruct_Position:
+      mPosition.SetFrom((const nsStylePosition&)aStruct);
+      break;
+    case eStyleStruct_Text:
+      mText.SetFrom((const nsStyleText&)aStruct);
+      break;
+    case eStyleStruct_Display:
+      mDisplay.SetFrom((const nsStyleDisplay&)aStruct);
+      break;
+    case eStyleStruct_Table:
+      mTable.SetFrom((const nsStyleTable&)aStruct);
+      break;
+    case eStyleStruct_Content:
+      mContent.SetFrom((const nsStyleContent&)aStruct);
+      break;
+    case eStyleStruct_UserInterface:
+      mUserInterface.SetFrom((const nsStyleUserInterface&)aStruct);
+      break;
+    default:
+      NS_ERROR("Invalid style struct id");
+      result = NS_ERROR_INVALID_ARG;
+      break;
+  }
+  return result;
+}
+
+
+
 struct MapStyleData {
-  MapStyleData(nsIStyleContext* aStyleContext, nsIPresContext* aPresContext)
+  MapStyleData(nsIMutableStyleContext* aStyleContext, nsIPresContext* aPresContext)
   {
     mStyleContext = aStyleContext;
     mPresContext = aPresContext;
   }
-  nsIStyleContext*  mStyleContext;
+  nsIMutableStyleContext*  mStyleContext;
   nsIPresContext*   mPresContext;
 };
 

@@ -30,6 +30,7 @@
 #include "nsICSSStyleRule.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 
@@ -49,9 +50,9 @@ public:
   NS_IMETHOD HashValue(PRUint32& aValue) const;
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext,
                           nsIPresContext* aPresContext);
-  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext,
+  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext,
                               nsIPresContext* aPresContext);
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -101,7 +102,7 @@ CSSFirstLineRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-CSSFirstLineRule::MapFontStyleInto(nsIStyleContext* aContext,
+CSSFirstLineRule::MapFontStyleInto(nsIMutableStyleContext* aContext,
                                    nsIPresContext* aPresContext)
 {
   return NS_OK;
@@ -117,7 +118,7 @@ CSSFirstLineRule::MapFontStyleInto(nsIStyleContext* aContext,
 //
 // Everything else doesn't apply.
 NS_IMETHODIMP
-CSSFirstLineRule::MapStyleInto(nsIStyleContext* aContext,
+CSSFirstLineRule::MapStyleInto(nsIMutableStyleContext* aContext,
                                nsIPresContext* aPresContext)
 {
   nsIStyleContext* parentContext;
@@ -188,7 +189,7 @@ class CSSFirstLetterRule : public CSSFirstLineRule {
 public:
   CSSFirstLetterRule(nsIHTMLCSSStyleSheet* aSheet);
 
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext,
                           nsIPresContext* aPresContext);
 };
 
@@ -208,7 +209,7 @@ CSSFirstLetterRule::CSSFirstLetterRule(nsIHTMLCSSStyleSheet* aSheet)
 //
 // Everything else doesn't apply.
 NS_IMETHODIMP
-CSSFirstLetterRule::MapStyleInto(nsIStyleContext* aContext,
+CSSFirstLetterRule::MapStyleInto(nsIMutableStyleContext* aContext,
                                  nsIPresContext* aPresContext)
 {
   nsIStyleContext* parentContext;

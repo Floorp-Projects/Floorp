@@ -23,7 +23,7 @@
 class nsIArena;
 class nsIStyleSheet;
 class nsICSSStyleSheet;
-class nsIStyleContext;
+class nsIMutableStyleContext;
 class nsIPresContext;
 
 class nsCSSRule {
@@ -45,8 +45,8 @@ public:
   // nsIStyleRule methods
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
-  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
 
 protected:
   PRUint32 mInHeap : 1;

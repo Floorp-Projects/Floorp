@@ -25,6 +25,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -64,9 +65,9 @@ public:
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
-  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext,
+  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext,
                               nsIPresContext* aPresContext);
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext,
                           nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -90,9 +91,9 @@ public:
   // Strength is an out-of-band weighting, always maxint here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
-  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, 
+  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, 
                               nsIPresContext* aPresContext);
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, 
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, 
                           nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -258,7 +259,7 @@ BodyRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-BodyRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+BodyRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   // set up the basefont (defaults to 3)
   nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
@@ -279,7 +280,7 @@ BodyRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresConte
 }
 
 NS_IMETHODIMP
-BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+BodyRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (nsnull != mPart) {
 
@@ -456,13 +457,13 @@ BodyFixupRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-BodyFixupRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+BodyFixupRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BodyFixupRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   // XXX do any other body processing here
   
@@ -640,7 +641,7 @@ nsHTMLBodyElement::AttributeToString(nsIAtom* aAttribute,
 
 static void
 MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIStyleContext* aContext,
+                  nsIMutableStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
   if (nsnull != aAttributes) {

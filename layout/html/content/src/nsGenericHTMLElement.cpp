@@ -40,6 +40,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsISizeOfHandler.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
@@ -1992,7 +1993,7 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsString& aValue, nsHTMLValue& a
  */
 void
 nsGenericHTMLElement::MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                              nsIStyleContext* aStyleContext,
+                                              nsIMutableStyleContext* aStyleContext,
                                               nsIPresContext* aPresContext)
 {
   nsHTMLValue value;
@@ -2021,7 +2022,7 @@ nsGenericHTMLElement::GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
 
 void
 nsGenericHTMLElement::MapImageAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                             nsIStyleContext* aContext, 
+                                             nsIMutableStyleContext* aContext, 
                                              nsIPresContext* aPresContext)
 {
   nsHTMLValue value;
@@ -2098,7 +2099,7 @@ nsGenericHTMLElement::GetImageMappedAttributesImpact(const nsIAtom* aAttribute,
 
 void
 nsGenericHTMLElement::MapImageAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
-                                                 nsIStyleContext* aContext,
+                                                 nsIMutableStyleContext* aContext,
                                                  nsIPresContext* aPresContext)
 {
   nsHTMLValue value;
@@ -2146,7 +2147,7 @@ nsGenericHTMLElement::GetImageAlignAttributeImpact(const nsIAtom* aAttribute,
 
 void
 nsGenericHTMLElement::MapImageBorderAttributeInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                                  nsIStyleContext* aContext, 
+                                                  nsIMutableStyleContext* aContext, 
                                                   nsIPresContext* aPresContext,
                                                   nscolor aBorderColors[4])
 {
@@ -2221,7 +2222,7 @@ nsGenericHTMLElement::GetImageBorderAttributeImpact(const nsIAtom* aAttribute,
 
 void
 nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                                  nsIStyleContext* aContext,
+                                                  nsIMutableStyleContext* aContext,
                                                   nsIPresContext* aPresContext)
 {
   nsHTMLValue value;

@@ -24,6 +24,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 
@@ -151,7 +152,7 @@ nsHTMLBaseFontElement::AttributeToString(nsIAtom* aAttribute,
 
 static void
 MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                      nsIStyleContext* aContext,
+                      nsIMutableStyleContext* aContext,
                       nsIPresContext* aPresContext)
 {
   // XXX write me
@@ -159,7 +160,7 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
 static void
 MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIStyleContext* aContext,
+                  nsIMutableStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);

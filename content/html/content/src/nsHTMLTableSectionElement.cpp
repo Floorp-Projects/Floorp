@@ -26,6 +26,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLParts.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "GenericElementCollection.h"
@@ -284,7 +285,7 @@ nsHTMLTableSectionElement::AttributeToString(nsIAtom* aAttribute,
 
 static void
 MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIStyleContext* aContext,
+                  nsIMutableStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
