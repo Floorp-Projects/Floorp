@@ -47,7 +47,9 @@ LIBRARY_NAME	= myspell
 #EXPORT_LIBRARY  = 1
 FORCE_SHARED_LIB = 1
 IS_COMPONENT	= 1
-MODULE_NAME	= mozMySpellModule
+# Do not set MODULE_NAME as we do not want the entry points
+# for this module translated in static builds
+#MODULE_NAME	= mozMySpellModule
 
 REQUIRES	= xpcom \
 		  string \

@@ -218,7 +218,7 @@ endif # BUILD_STATIC_LIBS
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 LOCAL_INCLUDES		+= -I$(topsrcdir)/widget/src/mac
 ifdef BUILD_STATIC_LIBS
-EXTRA_LIBS		+= -framework QuickTime
+EXTRA_LIBS		+= -framework QuickTime -framework IOKit
 endif
 endif
 
