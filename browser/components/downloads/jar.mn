@@ -3,6 +3,8 @@ browser.jar:
   content/browser/downloads/downloadPanel.xul   (content/downloadPanel.xul)
   content/browser/downloads/download-bindings.xml (content/download-bindings.xml)
   content/browser/downloads/downloadmanager.css   (content/downloadmanager.css)
+  content/browser/downloads/downloadProperties.xul   (content/downloadProperties.xul)
+  content/browser/downloads/downloadProperties.js   (content/downloadProperties.js)
 
 classic.jar:
   skin/classic/browser/downloads/downloadmanager.css        (skin/downloadmanager.css)
@@ -10,4 +12,5 @@ classic.jar:
 en-US.jar:
   locale/en-US/browser/downloads/downloadmanager.dtd        (locale/downloadmanager.dtd)
   locale/en-US/browser/downloads/downloadmanager.properties (locale/downloadmanager.properties)
+  locale/en-US/browser/downloads/downloadProperties.dtd (locale/downloadProperties.dtd)
 

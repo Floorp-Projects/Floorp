@@ -1,0 +1,41 @@
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://browser/skin/downloads/downloadmanager.css"?>
+
+<!DOCTYPE window [
+<!ENTITY % downloadPropertiesDTD SYSTEM "chrome://browser/locale/downloads/downloadProperties.dtd">
+%downloadPropertiesDTD;
+]>
+
+<dialog xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&window.title;"
+        onload="Startup();"
+        width="200"
+        height="120"
+        buttons="accept">
+
+  <script type="application/x-javascript" src="chrome://browser/content/downloads/downloadProperties.js"/>
+
+  <grid>
+    <columns>
+      <column/>
+      <column/>
+    </columns>
+    <rows>
+      <row>
+        <label value="&dateStarted.label;" class="bold"/>
+        <label id="dateStarted"/>
+      </row>
+      <separator class="thin"/>
+      <row>
+        <label value="&dateEnded.label;" class="bold"/>
+        <label id="dateEnded"/>
+      </row>
+    </rows>
+  </grid>
+
+  <spacer flex="1"/>
+  <separator class="groove"/>
+</dialog>
+    

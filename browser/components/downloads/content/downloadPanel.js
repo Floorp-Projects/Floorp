@@ -122,8 +122,8 @@ var downloadViewController = {
     var selectedItem = gDownloadHistoryView.selectedItem;
     switch (aCommand) {
     case "cmd_openfile":
-      return selectionCount == 1;
     case "cmd_showinshell":
+    case "cmd_properties":
       return selectionCount == 1;
     case "cmd_remove":
       return selectionCount;
@@ -162,6 +162,11 @@ var downloadViewController = {
       else {
         file.reveal();
       }
+      break;
+    case "cmd_properties":
+      selectedItem = gDownloadHistoryView.selectedItem;
+      window.openDialog("chrome://browser/content/downloads/downloadProperties.xul",
+                        "_blank", "modal,centerscreen,chrome,resizable=no", selectedItem.id);
       break;
     case "cmd_remove":
       selectedItems = gDownloadHistoryView.selectedItems;
@@ -240,9 +245,13 @@ function buildContextMenu()
   var launchSep = document.getElementById("menuseparator_launch");
   var removeItem = document.getElementById("menuitem_remove");
   var showItem = document.getElementById("menuitem_show");
+  var propsItem = document.getElementByid("menuitem_properties");
+  var propsSep = document.getElementById("menuseparator_properties");
   showItem.hidden = selectionCount != 1;
   launchItem.hidden = selectionCount != 1;
   launchSep.hidden = selectionCount != 1;
+  propsItem.hidden = selectionCount != 1;
+  propsSep.hidden = selectionCoun != 1;
   return true;
 }
     

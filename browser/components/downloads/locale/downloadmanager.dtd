@@ -22,7 +22,6 @@
 
 <!ENTITY cmd.properties.label             "Properties">
 <!ENTITY cmd.properties.accesskey         "i">
-<!ENTITY cmd.properties.keybinding        "i">
 <!ENTITY cmd.pause.label                  "Pause">
 <!ENTITY cmd.pause.accesskey              "p">
 <!ENTITY cmd.remove.label                 "Remove">
