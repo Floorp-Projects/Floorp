@@ -490,12 +490,12 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 			   const PRUnichar *aTipText)
 {
   nsAutoString tipText ( aTipText );
-  const char* tipString = ToNewCString(tipText);
+  const char* tipString = ToNewCString(tipText), *font = "TextFont08";
   PtArg_t args[10];
   PhRect_t extent;
   PhDim_t dim;
   PhPoint_t pos = {0, 0};
-  int n = 0;
+  int n = 0, w, h;
 
   if (sTipWindow)
     PtDestroyWidget(sTipWindow);
@@ -506,22 +506,27 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   PtWidget_t *window;
   window = NS_STATIC_CAST(PtWidget_t *, mainWidget->GetNativeData(NS_NATIVE_WINDOW));
 
-  PgExtentText(&extent, &pos, NULL, tipString, 0);
-  dim.w = extent.lr.x - extent.ul.x + 1;
-  dim.h = extent.lr.y - extent.ul.y + 1;
+  PgExtentText(&extent, &pos, font, tipString, 0);
+  w = extent.lr.x - extent.ul.x + 1;
+  h = extent.lr.y - extent.ul.y + 1;
 
-  pos.x = aXCoords;
-  pos.y = aYCoords; 
   n = 0;
+  pos.x = aXCoords;
+  pos.y = aYCoords + 10; /* we add 10 so that we don't position it right under the mouse */
+	dim.w = w + 6; dim.h = h + 6;
   PtSetArg(&args[n++], Pt_ARG_POS, &pos, 0);
   PtSetArg(&args[n++], Pt_ARG_DIM, &dim, 0);
+	PtSetArg( &args[n++], Pt_ARG_REGION_OPAQUE,   Ph_EV_EXPOSE, Ph_EV_EXPOSE);
   sTipWindow = PtCreateWidget(PtRegion, window, n, args);
+
   n = 0;
   pos.x = pos.y = 0;
+	dim.w = w; dim.h = h;
   PtSetArg(&args[n++], Pt_ARG_POS, &pos, 0);
   PtSetArg(&args[n++], Pt_ARG_DIM, &dim, 0);
   PtSetArg(&args[n++], Pt_ARG_FLAGS, Pt_HIGHLIGHTED, -1 );
   PtSetArg(&args[n++], Pt_ARG_FILL_COLOR, 0xfeffb1, 0);
+  PtSetArg(&args[n++], Pt_ARG_TEXT_FONT, font, 0);
   PtSetArg(&args[n++], Pt_ARG_TEXT_STRING, tipString, 0);
   PtSetArg(&args[n++], Pt_ARG_BASIC_FLAGS, Pt_STATIC_GRADIENT | Pt_TOP_OUTLINE | Pt_LEFT_OUTLINE |
       Pt_RIGHT_OUTLINE | Pt_BOTTOM_OUTLINE, -1 );

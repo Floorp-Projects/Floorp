@@ -962,6 +962,10 @@ static void mozilla_set_default_pref( nsIPref *pref )
 	pref->SetCharPref( "network.proxy.ftp_port", "80" );
 	pref->SetCharPref( "network.proxy.gopher_port", "80" );
 
+	pref->SetCharPref( "general.skins.selectedSkin", "classic/1.0" );
+	pref->SetIntPref( "browser.cache.memory.capacity", 100 ); /* 100k ( no cache ) */
+	pref->SetCharPref( "user.print.print_frame", "print_frame_selected" );
+
 	pref->SavePrefFile( nsnull );
 }
 

@@ -733,6 +733,13 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
 	else if( !strcmp( option, "Use_Explicit_Accept_Headers" ) ) 		; /* not used */
 	else if( !strcmp( option, "Visitation_Horizon" ) ) 		; /* not used */
 
+  else if( !strcmp( option, "Print_Frame" ) )
+    pref->SetCharPref( "user.print.print_frame", value );
+  else if( !strcmp( option, "SetPrintBGColors" ) )
+    pref->SetCharPref( "user.print.SetPrintBGColors", value );
+  else if( !strcmp( option, "SetPrintBGImages" ) )
+    pref->SetCharPref( "user.print.SetPrintBGImages", value );
+
 	pref->SavePrefFile( nsnull );
 	}
 
