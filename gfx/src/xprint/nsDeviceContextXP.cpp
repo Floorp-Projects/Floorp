@@ -26,7 +26,7 @@
 #include "nsRenderingContextXP.h"
 #include "nsString.h"
 #include "nsFontMetricsXP.h"
-#include "nsIDeviceContextSpecXP.h"
+#include "nsIDeviceContextSpecXPrint.h"
 #include "il_util.h"
 #include "nspr.h"
 

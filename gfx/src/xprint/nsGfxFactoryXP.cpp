@@ -30,9 +30,8 @@
 #include "nsIModule.h"
 #include "nsCOMPtr.h"
 #include "nsDeviceContextXP.h"
-#include "nsGfxXPCID.h"
+#include "nsGfxXPrintCID.h"
 
-#include "nsGfxXPCID.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextXP)
 
 static nsModuleComponentInfo components[] =

@@ -30,7 +30,7 @@
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
 #include "nsVoidArray.h"
-#include "nsIDeviceContextXP.h"
+#include "nsIDeviceContextXPrint.h"
 
 class nsXPrintContext;
 
