@@ -94,7 +94,7 @@ NS_IMETHODIMP nsMyObserver::Notify(
     const char* aCharset, nsDetectionConfident aConf)
 {
     nsresult rv = NS_OK;
-    if(mCharset != aCharset) {
+    if(!mCharset.Equals(aCharset)) {
       if(mNotifyByReload) {
         rv = mWebShellSvc->SetRendering( PR_FALSE);
         rv = mWebShellSvc->StopDocumentLoad();
