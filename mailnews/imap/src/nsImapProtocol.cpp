@@ -2903,6 +2903,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
 	if (DeathSignalReceived())
 		GetServerStateParser().ResetFlagInfo(0);
 	PR_FREEIF(new_spec->allocatedPathName); 
+	PR_FREEIF(new_spec->hostName);
 	PR_FREEIF(new_spec);
 }
 
