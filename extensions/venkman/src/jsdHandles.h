@@ -42,8 +42,8 @@
 class jsdThreadState : public jsdIThreadState
 {
   public:
-    NS_DECL_ISUPPORTS;
-    NS_DECL_JSDITHREADSTATE;
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDITHREADSTATE
 
     /* you'll normally use use FromPtr() instead of directly constructing one */
     jsdThreadState (JSDThreadState *aThreadState) : mThreadState(aThreadState)
@@ -51,8 +51,8 @@ class jsdThreadState : public jsdIThreadState
         NS_INIT_ISUPPORTS();
     }
 
-    /* XXX keep track of these somehow, so we don't create new wrappers for
-     * every script */
+    /* XXX keep track of these somehow, so we don't create new wrapper if we've
+     * got one already */
     static jsdIThreadState *FromPtr (JSDThreadState *aThreadState)
     {
         jsdIThreadState *rv = new jsdThreadState (aThreadState);
@@ -70,8 +70,8 @@ class jsdThreadState : public jsdIThreadState
 class jsdContext : public jsdIContext
 {
   public:
-    NS_DECL_ISUPPORTS;
-    NS_DECL_JSDICONTEXT;
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDICONTEXT
 
     /* you'll normally use use FromPtr() instead of directly constructing one */
     jsdContext (JSDContext *aCx) : mCx(aCx)
@@ -80,8 +80,8 @@ class jsdContext : public jsdIContext
         printf ("++++++ jsdContext: %i\n", mRefCnt);
     }
 
-    /* XXX keep track of these somehow, so we don't create new wrappers for
-     * every script */
+    /* XXX keep track of these somehow, so we don't create new wrapper if we've
+     * got one already */
     static jsdIContext *FromPtr (JSDContext *aCx)
     {
         jsdIContext *rv = new jsdContext (aCx);
@@ -100,8 +100,8 @@ class jsdContext : public jsdIContext
 class jsdScript : public jsdIScript
 {
   public:
-    NS_DECL_ISUPPORTS;
-    NS_DECL_JSDISCRIPT;
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDISCRIPT
 
     /* you'll normally use use FromPtr() instead of directly constructing one */
     jsdScript (JSDContext *aCx, JSDScript *aScript) : mCx(aCx), mScript(aScript)
@@ -109,8 +109,8 @@ class jsdScript : public jsdIScript
         NS_INIT_ISUPPORTS();
     }
 
-    /* XXX keep track of these somehow, so we don't create new wrappers for
-     * every script */
+    /* XXX keep track of these somehow, so we don't create new wrapper if we've
+     * got one already */
     static jsdIScript *FromPtr (JSDContext *aCx, JSDScript *aScript)
     {
         jsdIScript *rv = new jsdScript (aCx, aScript);

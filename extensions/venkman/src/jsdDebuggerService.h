@@ -51,8 +51,8 @@
 class jsdService : public jsdIDebuggerService
 {
   public:
-    NS_DECL_ISUPPORTS;
-    NS_DECL_JSDIDEBUGGERSERVICE;
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDIDEBUGGERSERVICE
 
     jsdService() : mJSrt(0), mJSDcx(0), mScriptHook(0), mInterruptHook(0)
     {

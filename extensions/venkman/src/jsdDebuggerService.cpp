@@ -130,8 +130,8 @@ jsdService::GetInterruptHook (jsdIExecutionHook **aHook)
     if (!aHook)
         return NS_ERROR_NULL_POINTER;
 
-    NS_IF_ADDREF(mInterruptHook);
     *aHook = mInterruptHook;
+    NS_IF_ADDREF(aHook);
     
     return NS_OK;
 }
@@ -149,8 +149,8 @@ jsdService::GetScriptHook (jsdIScriptHook **aHook)
     if (!aHook)
         return NS_ERROR_NULL_POINTER;
 
-    NS_IF_ADDREF(mScriptHook);
     *aHook = mScriptHook;
+    NS_IF_ADDREF(aHook);
     
     return NS_OK;
 }

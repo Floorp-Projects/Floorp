@@ -43,7 +43,7 @@ var scriptHooker = new Object();
 scriptHooker.onScriptHook =
 function sh_scripthook (cx, script, creating)
 {
-    dd ("onScriptHook (" + cx + ", " + script + " " + creating + ")");
+    dd ("onScriptHook (" + cx + ", " + script + ", " + creating + ")");
 }
 
 var interruptHooker = new Object();
