@@ -138,7 +138,7 @@ void nsNativeViewerApp::DispatchMenuItemWithoutWindow(PRInt32 menuResult)
 					break;
 			}
 			break;
-	}
+		}
 }
 
 #pragma mark -
@@ -200,6 +200,8 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				      nsIWidget* raptorWindow = *(nsIWidget**)::GetWRefCon(whichwindow);
 				      raptorWindow->Destroy();
 					break;
+				case 2000:		xpID = VIEW_SOURCE;				break;
+				case 2001:		xpID = VIEWER_TREEVIEW;			break;
 				case cmd_Save:		/*n.a.*/						break;
 				case cmd_SaveAs:	/*n.a.*/						break;
 				case cmd_Revert:	/*n.a.*/						break;
