@@ -1702,7 +1702,7 @@ NS_IMETHODIMP nsMsgFolder::SetNumNewMessages(PRInt32 aNumNewMessages)
 NS_IMETHODIMP nsMsgFolder::GetNewMessagesNotificationDescription(PRUnichar * *aDescription)
 {
 	nsresult rv;
-	nsString description("");
+	nsAutoString description("");
 	nsCOMPtr<nsIMsgIncomingServer> server;
 	rv = GetServer(getter_AddRefs(server));
   

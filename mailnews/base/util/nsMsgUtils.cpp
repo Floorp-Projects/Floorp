@@ -28,7 +28,6 @@
 #include "nsFileSpec.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
 #include "nsIImapUrl.h"
 #include "nsIMailboxUrl.h"
 #include "nsINntpUrl.h"
@@ -50,7 +49,7 @@ nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID)
 
 	nsresult rv = NS_OK;
 	//Find protocol
-	nsString uriStr = uri;
+	nsAutoString uriStr(uri);
 	PRInt32 pos = uriStr.FindChar(':');
 	if(pos == -1)
 		return NS_ERROR_FAILURE;

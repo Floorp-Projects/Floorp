@@ -201,7 +201,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetCharset(PRUnichar * *aCharset)
 			rv = prefs->CopyCharPref("intl.character_set_name", &prefCharset);
 		}
   
-		nsString prefCharsetStr;
+		nsAutoString prefCharsetStr;
 		if(prefCharset)
 		{
 			prefCharsetStr = prefCharset;
@@ -229,7 +229,7 @@ NS_IMETHODIMP nsMsgDBFolder::SetCharset(const PRUnichar * aCharset)
 	rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
 	if(NS_SUCCEEDED(rv))
 	{
-		nsString charset(aCharset);
+		nsAutoString charset(aCharset);
 		rv = folderInfo->SetCharacterSet(&charset);
 		db->Commit(nsMsgDBCommitType::kLargeCommit);
 	}

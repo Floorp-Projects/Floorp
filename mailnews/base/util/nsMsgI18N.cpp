@@ -279,8 +279,8 @@ PRBool nsMsgI18Nstateful_charset(const char *charset)
 PRBool nsMsgI18N7bit_data_part(const char *charset, const char *inString, const PRUint32 size)
 {
   char *aCString;
-  nsString aCharset(charset);
-  nsString outString;
+  nsAutoString aCharset(charset);
+  nsAutoString outString;
   nsresult res;
   
   aCString = (char *) PR_Malloc(size + 1);
