@@ -76,17 +76,6 @@ public:
     NS_IMETHOD LoadURL(const nsString& aURLSpec,
                        nsIStreamListener* aListener) = 0;
 
-    NS_IMETHOD LoadURLOnTimer(const nsString& aURLSpec,
-                              const char* aCommand,
-                              nsIContentViewerContainer* aContainer,
-                              nsIPostData* aPostData = nsnull,
-                              nsISupports* aExtraInfo = nsnull,
-                              nsIStreamObserver* anObserver = nsnull,
-                              PRInt32 millis = 0,
-                              PRBool repeat = 0) = 0;
-
-    NS_IMETHOD CancelLoadURLTimer(void) = 0;
-
     NS_IMETHOD Stop(void) = 0;
 
     NS_IMETHOD CreateDocumentLoader(nsIDocumentLoader** anInstance) = 0;
