@@ -416,15 +416,13 @@ PRBool nsUnknownDecoder::SniffForHTML(nsIRequest* aRequest)
     return PR_TRUE;
   }
 
-  nsCaseInsensitiveCStringComparator comparator;
-
-#define MATCHES_TAG(_tagstr)                                                  \
-  (Substring(str, pos, sizeof(_tagstr)).                                      \
-     Equals(NS_LITERAL_CSTRING(_tagstr " "), comparator)\
-   ||                                                                         \
-   Substring(str, pos, sizeof(_tagstr)).                                      \
-     Equals(NS_LITERAL_CSTRING(_tagstr ">"), comparator))
-  
+  const char* strPtr = str.get() + pos;
+  // We use sizeof(_tagstr) below because that's the length of _tagstr
+  // with the one char " " or ">" appended.
+#define MATCHES_TAG(_tagstr)                                              \
+  (PL_strncasecmp(strPtr, _tagstr " ", sizeof(_tagstr)) == 0 ||  \
+   PL_strncasecmp(strPtr, _tagstr ">", sizeof(_tagstr)) == 0)
+    
   if (MATCHES_TAG("html")     ||
       MATCHES_TAG("frameset") ||
       MATCHES_TAG("body")     ||
