@@ -985,6 +985,7 @@ if ($::FORM{'keywords'}) {
         }
         my $i = GetKeywordIdFromName($keyword);
         if (!$i) {
+            $vars->{keyword} = $keyword;
             ThrowUserError("unknown_keyword");
         }
         if (!$keywordseen{$i}) {
