@@ -505,10 +505,20 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         nsCOMPtr<nsIFocusController> focusController;
         piWin->GetRootFocusController(getter_AddRefs(focusController));
         if (focusController) {
+          // This is essentially the first stage of activation (NS_GOTFOCUS is
+          // followed by the DOM window getting activated (which is direct on Win32
+          // and done through web shell window via an NS_ACTIVATE message on the
+          // other platforms).
+          //
+          // Go ahead and mark the focus controller as being active.  We have
+          // to do this even before the activate message comes in, since focus
+          // memory kicks in prior to the activate being processed.
+          focusController->SetActive(PR_TRUE);
+
           nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
           focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
           if (focusedWindow) {
-            focusController->SetSuppressFocus(PR_TRUE);
+            focusController->SetSuppressFocus(PR_TRUE, "Activation Suppression");
             domWindow->Focus(); // This sets focus, but we'll ignore it.  
                                 // A subsequent activate will cause us to stop suppressing.
 
@@ -520,21 +530,8 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
             break;
           }
         }
-
-        nsCOMPtr<nsIWebShell> contentShell;
-        eventWindow->GetContentWebShell(getter_AddRefs(contentShell));
-        if (contentShell) {
-          
-          if (NS_SUCCEEDED(eventWindow->
-              ConvertWebShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
-            domWindow->Focus();
-          }
-        }
-        else if (domWindow)
-          domWindow->Focus();
         break;
       }
-      
       default:
         break;
 

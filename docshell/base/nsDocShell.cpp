@@ -2982,7 +2982,7 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
     ourWindow->GetRootFocusController(getter_AddRefs(focusController));
     if (focusController) {
       // Suppress the command dispatcher.
-      focusController->SetSuppressFocus(PR_TRUE);
+      focusController->SetSuppressFocus(PR_TRUE, "Win32-Only Link Traversal Issue");
     }
   }
 
@@ -3002,7 +3002,7 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
    // See the book I wrote above regarding why the focus controller is 
    // being used here.  -- hyatt
    if (focusController)
-     focusController->SetSuppressFocus(PR_FALSE);
+     focusController->SetSuppressFocus(PR_FALSE, "Win32-Only Link Traversal Issue");
 
    mContentViewer = aNewViewer;
 

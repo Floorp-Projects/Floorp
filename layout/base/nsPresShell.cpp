@@ -2329,7 +2329,7 @@ static void CheckForFocus(nsIDocument* aDocument)
 
   if (focusController) {
     // Suppress the command dispatcher.
-    focusController->SetSuppressFocus(PR_TRUE);
+    focusController->SetSuppressFocus(PR_TRUE, "PresShell suppression on Web page loads");
     nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
     focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
     
@@ -2358,7 +2358,7 @@ static void CheckForFocus(nsIDocument* aDocument)
         domWindow->Focus();
       }
     }
-    focusController->SetSuppressFocus(PR_FALSE);
+    focusController->SetSuppressFocus(PR_FALSE, "PresShell suppression on Web page loads");
   }
 }
 

@@ -25,7 +25,9 @@
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIControllers.h"
 #include "nsIEditorController.h"
-
+#include "nsIFocusController.h"
+#include "nsPIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -678,6 +680,21 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
     return NS_OK;
   }
  
+  // If the window is not active, do not allow the focus to bring the
+  // window to the front.  We update the focus controller, but do
+  // nothing else.
+  nsCOMPtr<nsIFocusController> focusController;
+  nsCOMPtr<nsIScriptGlobalObject> globalObj;
+  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObj));
+  win->GetRootFocusController(getter_AddRefs(focusController));
+  PRBool isActive = PR_FALSE;
+  focusController->GetActive(&isActive);
+  if (!isActive) {
+    focusController->SetFocusedElement(this);
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIEventStateManager> esm;
 
   aPresContext->GetEventStateManager(getter_AddRefs(esm));
