@@ -2806,3 +2806,39 @@ RDFElementImpl::SetController(nsIController* aController)
   NS_IF_ADDREF(mController);
   return NS_OK;
 }
+
+// Methods for setting/getting attributes from nsIDOMXULElement
+nsresult
+RDFElementImpl::GetId(nsString& aId)
+{
+  GetAttribute("id", aId);
+  return NS_OK;
+}
+
+nsresult
+RDFElementImpl::SetId(const nsString& aId)
+{
+  SetAttribute("id", aId);
+  return NS_OK;
+}
+
+nsresult
+RDFElementImpl::GetClassName(nsString& aClassName)
+{
+  GetAttribute("class", aClassName);
+  return NS_OK;
+}
+
+nsresult
+RDFElementImpl::SetClassName(const nsString& aClassName)
+{
+  SetAttribute("class", aClassName);
+  return NS_OK;
+}
+
+nsresult    
+RDFElementImpl::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

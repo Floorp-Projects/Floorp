@@ -27,6 +27,7 @@
 
 class nsIController;
 class nsIDOMElement;
+class nsIDOMCSSStyleDeclaration;
 class nsIRDFResource;
 class nsIDOMNodeList;
 
@@ -43,6 +44,14 @@ public:
   NS_IMETHOD    GetController(nsIController** aController)=0;
   NS_IMETHOD    SetController(nsIController* aController)=0;
 
+  NS_IMETHOD    GetId(nsString& aId)=0;
+  NS_IMETHOD    SetId(const nsString& aId)=0;
+
+  NS_IMETHOD    GetClassName(nsString& aClassName)=0;
+  NS_IMETHOD    SetClassName(const nsString& aClassName)=0;
+
+  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
+
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement)=0;
 
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement)=0;
@@ -57,6 +66,11 @@ public:
   NS_IMETHOD    GetResource(nsIRDFResource** aResource);  \
   NS_IMETHOD    GetController(nsIController** aController);  \
   NS_IMETHOD    SetController(nsIController* aController);  \
+  NS_IMETHOD    GetId(nsString& aId);  \
+  NS_IMETHOD    SetId(const nsString& aId);  \
+  NS_IMETHOD    GetClassName(nsString& aClassName);  \
+  NS_IMETHOD    SetClassName(const nsString& aClassName);  \
+  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);  \
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
   NS_IMETHOD    DoCommand();  \
@@ -68,6 +82,11 @@ public:
   NS_IMETHOD    GetResource(nsIRDFResource** aResource) { return _to GetResource(aResource); } \
   NS_IMETHOD    GetController(nsIController** aController) { return _to GetController(aController); } \
   NS_IMETHOD    SetController(nsIController* aController) { return _to SetController(aController); } \
+  NS_IMETHOD    GetId(nsString& aId) { return _to GetId(aId); } \
+  NS_IMETHOD    SetId(const nsString& aId) { return _to SetId(aId); } \
+  NS_IMETHOD    GetClassName(nsString& aClassName) { return _to GetClassName(aClassName); } \
+  NS_IMETHOD    SetClassName(const nsString& aClassName) { return _to SetClassName(aClassName); } \
+  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to GetStyle(aStyle); } \
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to AddBroadcastListener(aAttr, aElement); }  \
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to RemoveBroadcastListener(aAttr, aElement); }  \
   NS_IMETHOD    DoCommand() { return _to DoCommand(); }  \
