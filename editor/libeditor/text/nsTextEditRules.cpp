@@ -932,7 +932,7 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
       }
       // fix for bugzilla #125161: if we are about to forward delete a <BR>,
       // make sure it is not last node in editfield.  If it is, cancel deletion.
-      if ((aCollapsedAction == nsIEditor::eNext) && nsTextEditUtils::IsBreak(nextNode))
+      if (nextNode && (aCollapsedAction == nsIEditor::eNext) && nsTextEditUtils::IsBreak(nextNode))
       {
         nsCOMPtr<nsIDOMNode> lastChild;
         if (!mBody) return NS_ERROR_NULL_POINTER;
