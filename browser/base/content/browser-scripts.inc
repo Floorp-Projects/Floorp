@@ -48,3 +48,4 @@
 <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
 <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
 <script type="application/x-javascript" src="chrome://global/content/XPCNativeWrapper.js"/>
+<script type="application/x-javascript" src="chrome://browser/content/sanitize.js"/>

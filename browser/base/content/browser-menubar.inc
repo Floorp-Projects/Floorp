@@ -397,7 +397,10 @@
               <menuitem accesskey="&pageInfoCmd.accesskey;" label="&pageInfoCmd.label;"   
                         key="key_viewInfo" command="View:PageInfo"/>
 #endif
-
+              <menuseparator id="sanitizeSeparator"/>
+              <menuitem id="sanitizeItem" 
+                        accesskey="&sanitizeCmd.accesskey;" label="&sanitizeCmd.label;"
+                        key="key_sanitize" command="Tools:Sanitize"/>
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>
               <menuitem id="menu_preferences"

@@ -90,6 +90,8 @@ var gContextMenu = null;
 
 var gChromeState = null; // chrome state before we went into print preview
 
+var gSanitizeListener = null;
+
 var gFormFillPrefListener = null;
 var gFormHistory = null;
 var gFormFillEnabled = true;
@@ -201,7 +203,6 @@ const gPopupBlockerObserver = {
       this._reportButton = document.getElementById("page-report-button");
     
     if (gBrowser.selectedBrowser.pageReport) {
-    dump("*** intergoat\n");
       this._reportButton.setAttribute("blocked", "true");
       if (gPrefService && gPrefService.getBoolPref("privacy.popups.showBrowserMessage")) {
         var bundle_browser = document.getElementById("bundle_browser");
@@ -349,21 +350,24 @@ const gPopupBlockerObserver = {
     }
     catch (e) { } 
 
+    var bundlePreferences = document.getElementById("bundle_preferences");
+    var params = { blockVisible   : false, 
+                   sessionVisible : false, 
+                   allowVisible   : true, 
+                   prefilledHost  : host, 
+                   permissionType : "popup",
+                   windowTitle    : bundlePreferences.getString("popuppermissionstitle"),
+                   introText      : bundlePreferences.getString("popuppermissionstext") };
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                         .getService(Components.interfaces.nsIWindowMediator);
-    var existingWindow = wm.getMostRecentWindow("exceptions");
+    var existingWindow = wm.getMostRecentWindow("Browser:Permissions");
     if (existingWindow) {
-      existingWindow.setHost(host);
+      existingWindow.initWithParams(params);
       existingWindow.focus();
     }
-    else {
-      var params = { blockVisible: false, 
-                     allowVisible: true, 
-                     prefilledHost: host, 
-                     permissionType: "popup" };
-      window.openDialog("chrome://browser/content/cookieviewer/CookieExceptions.xul?permission=popup",
-                        "_blank", "chrome,modal,resizable=yes", params);
-    }
+    else
+      window.openDialog("chrome://browser/content/preferences/permissions.xul",
+                        "_blank", "resizable,dialog=no,centerscreen", params);
   },
   
   dontShowMessage: function ()
@@ -479,22 +483,25 @@ const gXPInstallObserver = {
     case "xpinstall-install-edit-permissions":
       var browser = this._getBrowser(aSubject.QueryInterface(Components.interfaces.nsIDocShell));
       if (browser) {
+        var bundlePreferences = document.getElementById("bundle_preferences");
+        var params = { blockVisible   : false, 
+                       sessionVisible : false, 
+                       allowVisible   : true, 
+                       prefilledHost  : webNav.currentURI.host, 
+                       permissionType : "install",
+                       windowTitle    : bundlePreferences.getString("installpermissionstitle"),
+                       introText      : bundlePreferences.getString("installpermissionstext") };
         var webNav = aSubject.QueryInterface(Components.interfaces.nsIWebNavigation);
         var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                           .getService(Components.interfaces.nsIWindowMediator);
-        var existingWindow = wm.getMostRecentWindow("exceptions");
+        var existingWindow = wm.getMostRecentWindow("Browser:Permissions");
         if (existingWindow) {
-          existingWindow.setHost(webNav.currentURI.host);
+          existingWindow.initWithParams(params);
           existingWindow.focus();
         }
-        else {
-          var params = { blockVisible:    false,
-                         allowVisible:    true,
-                         prefilledHost:   webNav.currentURI.host,
-                         permissionType:  "install" };
-          window.openDialog("chrome://browser/content/cookieviewer/CookieExceptions.xul?permission=install",
-                            "_blank", "chrome,modal,resizable=yes", params);
-        }
+        else
+          window.openDialog("chrome://browser/content/preferences/permissions.xul",
+                            "_blank", "resizable,dialog=no,centerscreen", params);
               
         var tabbrowser = getBrowser();
         tabbrowser.hideMessage(tabbrowser.selectedBrowser, "top");
@@ -777,6 +784,9 @@ function delayedStartup()
   var toolbox = document.getElementById("navigator-toolbox");
   toolbox.customizeDone = BrowserToolboxCustomizeDone;
 
+  // Set up Sanitize Item
+  gSanitizeListener = new SanitizeListener();
+
   var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
 
   // Enable/Disable Form Fill
@@ -795,41 +805,6 @@ function delayedStartup()
   pbi.addObserver(gHomeButton.prefDomain, gHomeButton, false);
   gHomeButton.updateTooltip();
   
-  // Initialize Plugin Overrides
-  const kOverridePref = "browser.download.pluginOverrideTypes";
-  if (gPrefService.prefHasUserValue(kOverridePref)) {
-    var types = gPrefService.getCharPref(kOverridePref);
-    types = types.split(",");
-    
-    const kPluginOverrideTypesNotHandled = "browser.download.pluginOverrideTypesNotHandled";
-    
-    var catman = Components.classes["@mozilla.org/categorymanager;1"].getService(Components.interfaces.nsICategoryManager);
-    var typesNotHandled = "";
-    for (var i = 0; i < types.length; ++i) {
-      // Keep track of all overrides for plugins that aren't actually installed,
-      // so we know not to show them in the plugin configuration dialog BUT 
-      // don't delete the overrides such that when the user actually installs the 
-      // plugin in this build their preferences are remembered.
-      try {
-        var catEntry = catman.getCategoryEntry("Gecko-Content-Viewers", types[i]);
-      }
-      catch (e) {
-        catEntry = "";
-      }
-      if (catEntry == "")
-        typesNotHandled += types[i] + ",";
-    
-      catman.deleteCategoryEntry("Gecko-Content-Viewers", types[i], false);
-    }
-    
-    if (typesNotHandled) {
-      typesNotHandled = typesNotHandled.substr(0, typesNotHandled.length - 1);
-      gPrefService.setCharPref(kPluginOverrideTypesNotHandled, typesNotHandled);
-    }
-    else if (gPrefService.prefHasUserValue(kPluginOverrideTypesNotHandled))
-      gPrefService.clearUserPref(kPluginOverrideTypesNotHandled);
-  }
-
   gClickSelectsAll = gPrefService.getBoolPref("browser.urlbar.clickSelectsAll");
 
   clearObsoletePrefs();
@@ -1124,6 +1099,80 @@ AutoHideTabbarPrefListener.prototype =
       gPrefService.setBoolPref("browser.tabs.forceHide", false);
     }
   }
+}
+
+function SanitizeListener()
+{
+  var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  pbi.addObserver(this.promptDomain, this, false);
+
+  this._setSanitizeItem();
+  
+  if (gPrefService.prefHasUserValue(this.didSanitizeDomain))
+    gPrefService.clearUserPref(this.didSanitizeDomain)
+    
+  this._os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+  this._os.addObserver(this, "quit-application-granted", false);
+}
+
+SanitizeListener.prototype =
+{
+  promptDomain      : "privacy.sanitize.promptOnSanitize",
+  shutdownDomain    : "privacy.sanitize.sanitizeOnShutdown",
+  didSanitizeDomain : "privacy.sanitize.didShutdownSanitize",
+  
+  observe: function (aSubject, aTopic, aPrefName)
+  {
+    switch (aTopic) {
+    case "nsPref:changed":
+      if (aPrefName != this.promptDomain)
+        return;
+      this._setSanitizeItem();
+      break;
+    case "quit-application-granted":
+      var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+      pbi.removeObserver(this.promptDomain, this);
+
+      this._os.removeObserver(this, "quit-application-granted");
+      
+      if (gPrefService.getBoolPref(this.shutdownDomain) &&
+          !gPrefService.prefHasUserValue(this.didSanitizeDomain)) {
+        this.sanitize(null);
+        gPrefService.setBoolPref(this.didSanitizeDomain, true);
+      }
+      break;
+    }
+  },
+  
+  _setSanitizeItem: function ()
+  {
+    var shouldPrompt = gPrefService.getBoolPref(this.promptDomain);
+    if (shouldPrompt) {
+      var sanitizeItem = document.getElementById("sanitizeItem");
+      var bundleBrowser = document.getElementById("bundle_browser");
+      var bundleBrand = document.getElementById("bundle_brand");
+      var brandShortName = bundleBrand.getString("brandShortName");
+      sanitizeItem.label = bundleBrowser.getFormattedString("sanitizeWithPromptLabel", 
+                                                            [brandShortName]);
+    }
+  },
+  
+  sanitize: function (aParentWindow)
+  {
+    var promptOnSanitize = gPrefService.getBoolPref("privacy.sanitize.promptOnSanitize");
+    if (promptOnSanitize) { 
+      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                         .getService(Components.interfaces.nsIWindowWatcher);
+      ww.openWindow(aParentWindow, 
+                    "chrome://browser/content/sanitize.xul", 
+                    "Sanitize", 
+                    "chrome,titlebar,centerscreen,modal",
+                    null);
+    }
+    else
+      (new Sanitizer()).sanitize();
+  },
 }
 
 function ctrlNumberTabSelection(event)
@@ -3622,8 +3671,17 @@ function asyncFocusSearchBox(event)
 
 function openPreferences()
 {
-  openDialog("chrome://browser/content/pref/pref.xul","PrefWindow", 
-             "chrome,titlebar,resizable,modal");
+  var instantApply = gPrefService.getBoolPref("browser.preferences.instantApply");
+  var features = "chrome,titlebar,centerscreen" + (instantApply ? "" : ",modal");
+
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
+  var win = wm.getMostRecentWindow("Browser:Preferences");
+  if (win)
+    win.focus();
+  else 
+    openDialog("chrome://browser/content/preferences/preferences.xul", 
+               "Preferences", features);
 }
 
 var gHomeButton = {

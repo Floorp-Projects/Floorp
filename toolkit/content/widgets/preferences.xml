@@ -1,0 +1,1014 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings SYSTEM "chrome://global/locale/preferences.dtd">
+
+<bindings id="preferencesBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+#
+# = Preferences Window Framework
+#
+#   The syntax for use looks something like:
+#
+#   <prefwindow>
+#     <prefpane id="prefPaneA">
+#       <preferences>
+#         <preference id="preference1" name="app.preference1" type="bool" onchange="foo();"/>
+#         <preference id="preference2" name="app.preference2" type="bool" useDefault="true"/>
+#       </preferences>
+#       <checkbox label="Preference" preference="preference1"/>
+#     </prefpane>
+#   </prefwindow>
+#
+
+  <binding id="preferences">
+    <implementation implements="nsIObserver">
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aData"/>
+        <body>
+        <![CDATA[
+          for (var i = 0; i < this.childNodes.length; ++i) {
+            var preference = this.childNodes[i];
+            if (preference.name == aData) {
+              preference.value = preference.valueFromPreferences;
+              this.fireChangedEvent(preference);
+            }
+          }
+        ]]>
+        </body>
+      </method>
+      
+      <method name="fireChangedEvent">
+        <parameter name="aPreference"/>
+        <body>
+        <![CDATA[
+          // Value changed, synthesize an event
+          try {
+            var event = document.createEvent("Events");
+            event.initEvent("change", false, true);
+            aPreference.dispatchEvent(event);
+            if (aPreference.hasAttribute("onchange"))
+              (new Function ("event", aPreference.getAttribute("onchange")))(event);
+          }
+          catch (e) {
+            dump(e);
+          }
+        ]]>
+        </body>
+      </method>
+      
+      <field name="service">
+        Components.classes["@mozilla.org/preferences-service;1"]
+                  .getService(Components.interfaces.nsIPrefService);
+      </field>
+      <field name="rootBranch">
+        Components.classes["@mozilla.org/preferences-service;1"]
+                  .getService(Components.interfaces.nsIPrefBranch);
+      </field>
+      <field name="defaultBranch">
+        this.service.getDefaultBranch("");
+      </field>
+      <field name="rootBranchInternal">
+        Components.classes["@mozilla.org/preferences-service;1"]
+                  .getService(Components.interfaces.nsIPrefBranchInternal);
+      </field>
+    </implementation>
+  </binding>
+
+  <binding id="preference">
+    <implementation>
+      <constructor>
+      <![CDATA[
+        this.preferences.rootBranchInternal
+            .addObserver(this.name, this.preferences, false);
+        // In non-instant apply mode, we must try and use the last saved state
+        // from any previous opens of a child dialog instead of the value from
+        // preferences, to pick up any edits a user may have made. 
+        if (document.documentElement.type == "child" && !this.instantApply) {
+          var pdoc = window.opener.document;
+          var lastStatePref = pdoc.getElementById(window.location.href + "#" + this.id);
+          this._setValue(lastStatePref ? lastStatePref.value 
+                                       : this.valueFromPreferences, false);
+        }
+        else
+          this._setValue(this.valueFromPreferences, false);
+      ]]>
+      </constructor>
+      <destructor>
+        this.preferences.rootBranchInternal
+            .removeObserver(this.name, this.preferences);
+      </destructor>
+      
+      <property name="instantApply">
+        <getter>
+          return this.getAttribute("instantApply") == "true" || document.documentElement.instantApply;
+        </getter>
+      </property>
+
+      <property name="preferences" onget="return this.parentNode"/>
+      <property name="name" onget="return this.getAttribute('name');"
+                            onset="this.setAttribute('name', val); return val;"/>
+      <property name="type" onget="return this.getAttribute('type');"
+                            onset="this.setAttribute('type', val); return val;"/>
+      <property name="inverted" onget="return this.getAttribute('inverted') == 'true';"
+                                onset="this.setAttribute('inverted', val); return val;"/>
+      <property name="readonly" onget="return this.getAttribute('readonly') == 'true';"
+                                onset="this.setAttribute('readonly', val); return val;"/>
+
+      <field name="_value">null</field>
+      <method name="_setValue">
+        <parameter name="aValue"/>
+        <parameter name="aUpdate"/>
+        <body>
+        <![CDATA[
+          this._value = aValue;
+          if (this.instantApply && aUpdate)
+            this.valueFromPreferences = aValue;
+          else {
+            // I wonder if we should synthesize a change event handler here. 
+            // As it stands we only fire onpreferenceread when UE calls 
+            // setElementValue. That's enough to reinit the UI element but
+            // may be counter intuitive.
+            this.updateElements();
+          }
+          return aValue;
+        ]]>
+        </body>
+      </method>
+      <property name="value" onget="return this._value" onset="return this._setValue(val, true);"/>
+      
+      <property name="locked">
+        <getter>
+          return this.preferences.rootBranch.prefIsLocked(this.name);
+        </getter>
+      </property>
+      
+      <property name="disabled">
+        <getter>
+          return this.getAttribute("disabled") == "true";
+        </getter>
+        <setter>
+        <![CDATA[
+          if (val) 
+            this.setAttribute("disabled", "true");
+          else
+            this.removeAttribute("disabled");
+
+          var elements = document.getElementsByAttribute("preference", this.id);
+          for (var i = 0; i < elements.length; ++i) {
+            elements[i].disabled = val;
+            
+            var labels = document.getElementsByAttribute("control", elements[i].id);
+            for (var j = 0; j < labels.length; ++j)
+              labels[j].disabled = val;
+          }
+            
+          return val;
+        ]]>
+        </setter>
+      </property>
+      
+      <property name="hasUserValue">
+        <getter>
+          return this.preferences.rootBranch.prefHasUserValue(this.name);
+        </getter>
+      </property>
+      
+      <method name="reset">
+        <body>
+          this.preferences.rootBranch.clearUserPref(this.name);
+        </body>
+      </method>
+
+      <field name="_useDefault">false</field>      
+      <property name="defaultValue">
+        <getter>
+        <![CDATA[
+          this._useDefault = true;
+          var val = this.valueFromPreferences;
+          this._useDefault = false;
+          return val;
+        ]]>
+        </getter>
+      </property>
+      
+      <property name="_branch">
+        <getter>
+          return this._useDefault ? this.preferences.defaultBranch : this.preferences.rootBranch;
+        </getter>
+      </property>
+      
+      <field name="batching">false</field>
+      
+      <property name="valueFromPreferences">
+        <getter>
+        <![CDATA[
+          try {
+            // Force a resync of value with preferences.
+            switch (this.type) {
+            case "int":
+              return this._branch.getIntPref(this.name);
+            case "bool":
+              return this._branch.getBoolPref(this.name);
+            case "string":
+              return this._branch.getCharPref(this.name);
+            case "wstring":
+              return this._branch
+                         .getComplexValue(this.name, Components.interfaces.nsIPrefLocalizedString)
+                         .data;
+            case "unichar":
+              var pref = Components.classes["@mozilla.org/preferences;1"] 
+                                   .getService(Components.interfaces.nsIPref);
+              return pref.CopyUnicharPref(this.name);
+            case "file":
+              var f = this._branch
+                          .getComplexValue(this.name, Components.interfaces.nsILocalFile);
+              return f;
+            }
+          }
+          catch (e) { }
+          return null;
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          if (this.readonly || this.valueFromPreferences == val)
+            return val;
+            
+          // Force a resync of preferences with value.
+          switch (this.type) {
+          case "int":
+            this.preferences.rootBranch.setIntPref(this.name, val);
+            break;
+          case "bool":
+            this.preferences.rootBranch.setBoolPref(this.name, val);
+            break;
+          case "string":
+            this.preferences.rootBranch.setCharPref(this.name, val);
+            break;
+          case "wstring":
+            var pls = Components.classes["@mozilla.org/pref-localizedstring;1"]
+                                .createInstance(Components.interfaces.nsIPrefLocalizedString);
+            pls.data = val;
+            this.preferences.rootBranch
+                .setComplexValue(this.name, Components.interfaces.nsIPrefLocalizedString, pls);
+            break;
+          case "unichar":
+            var pref = Components.classes["@mozilla.org/preferences;1"] 
+                                 .getService(Components.interfaces.nsIPref);
+            pref.SetUnicharPref(this.name, val);
+            break;
+          case "file":
+            var lf;
+            if (typeof(val) == "string") {
+              lf = Components.classes["@mozilla.org/file/local;1"]
+                             .createInstance(Components.interfaces.nsILocalFile);
+              lf.persistentDescriptor = val;
+              if (!lf.exists())
+                lf.initWithPath(val);
+            }
+            else 
+              lf = val.QueryInterface(Components.interfaces.nsILocalFile);
+            this.preferences.rootBranch
+                .setComplexValue(this.name, Components.interfaces.nsILocalFile, lf);
+            break;
+          }
+          if (!this.batching)
+            this.preferences.service.savePrefFile(null);
+          return val;
+        ]]>
+        </setter>
+      </property>
+      
+      <method name="setElementValue">
+        <parameter name="aElement"/>
+        <body>
+        <![CDATA[
+          if (this.locked)
+            aElement.disabled = true;
+
+          if (!this.isElementEditable(aElement))
+            return;
+          
+          var rv = undefined;
+          if (aElement.hasAttribute("onpreferenceread")) {
+            // Value changed, synthesize an event
+            try {
+              var event = document.createEvent("Events");
+              event.initEvent("preferenceread", false, true);
+              var f = new Function ("event", 
+                                    aElement.getAttribute("onpreferenceread"));
+              rv = f(event);
+            }
+            catch (e) {
+              dump(e);
+            }
+          }
+          var val = rv !== undefined ? rv : (this.instantApply ? this.valueFromPreferences : this.value);
+          if ("value" in aElement) 
+            aElement.value = val;
+          else
+            aElement.setAttribute("value", val);
+        ]]>
+        </body>
+      </method>
+
+      <method name="getElementValue">
+        <parameter name="aElement"/>
+        <body>
+        <![CDATA[
+          if (aElement.hasAttribute("onpreferencewrite")) {
+            // Value changed, synthesize an event
+            try {
+              var event = document.createEvent("Events");
+              event.initEvent("preferencewrite", false, true);
+              var f = new Function ("event", 
+                                    aElement.getAttribute("onpreferencewrite"));
+              var rv = f(event);
+              if (rv !== undefined) 
+                return rv;
+            }
+            catch (e) {
+              dump(e);
+            }
+          }
+          switch (this.type) {
+          case "int":
+            return aElement.value != "" ? parseInt(aElement.value) : 0;
+          case "bool":
+            return typeof(aElement.value) == "boolean" ? aElement.value : aElement.value == "true";
+          }
+          return aElement.value;
+        ]]>
+        </body>
+      </method>
+      
+      <method name="isElementEditable">
+        <parameter name="aElement"/>
+        <body>
+        <![CDATA[
+          switch (aElement.localName) {
+          case "checkbox":
+          case "colorpicker":
+          case "radiogroup":
+          case "textbox":
+          case "listitem":
+          case "listbox":
+          case "menulist":
+            return true;
+          }
+          return aElement.getAttribute("preference-editable") == "true";
+        ]]> 
+        </body>
+      </method>
+      
+      <method name="updateElements">
+        <body>
+        <![CDATA[
+          // This "change" event handler tracks changes made to preferences by 
+          // sources other than the user in this window. 
+          var elements = document.getElementsByAttribute("preference", this.id);
+          for (var i = 0; i < elements.length; ++i) 
+            this.setElementValue(elements[i]);
+        ]]>
+        </body>
+      </method>
+    </implementation>
+    
+    <handlers>
+      <handler event="change">
+        this.updateElements();
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="prefwindow"
+           extends="chrome://global/content/bindings/dialog.xml#dialog">
+    <resources>
+      <stylesheet src="chrome://global/skin/preferences.css"/>
+    </resources>
+    <content xul:dlgbuttons="accept,cancel" xul:persist="lastSelected screenX screenY"
+             xul:closebuttonlabel="&preferencesCloseButton.label;"
+             xul:closebuttonaccesskey="&preferencesCloseButton.accesskey;"
+#ifdef XP_WIN
+             xul:title="&preferencesDefaultTitleWin.title;">
+#else
+             xul:title="&preferencesDefaultTitleMac.title;">
+#endif
+      <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector"/>
+      <xul:hbox flex="1" class="paneDeckContainer">
+        <xul:deck anonid="paneDeck" flex="1">
+          <children includes="prefpane"/>
+        </xul:deck>
+      </xul:hbox>
+      <xul:hbox pack="end" anonid="dlg-buttons" class="prefWindow-dlgbuttons">
+        <xul:button dlgtype="extra2" class="dialog-button" hidden="true"/>
+        <xul:spacer anonid="spacer" flex="1" hidden="true"/>
+        <xul:button dlgtype="accept" class="dialog-button"/>
+        <xul:button dlgtype="extra1" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="cancel" class="dialog-button"/>
+        <xul:button dlgtype="help" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
+      </xul:hbox>
+      <xul:hbox>
+        <children/>
+      </xul:hbox>
+      <xul:keyset>
+        <xul:key anonid="keyClose" key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
+      </xul:keyset>
+    </content>
+    <implementation implements="nsITimerCallback">
+      <constructor>
+      <![CDATA[
+        this.setAttribute("animate", !this._shouldAnimate ? "off" : "on");
+        if (this.type != "child") {
+          var psvc = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefBranch);
+          this.instantApply = psvc.getBoolPref("browser.preferences.instantApply");
+          if (this.instantApply) {
+#ifdef XP_MACOSX
+            var dlgButtons = document.getAnonymousElementByAttribute(this, "anonid", "dlg-buttons");
+            dlgButtons.hidden = true;
+#else
+            var docElt = document.documentElement;
+            var acceptButton = docElt.getButton("accept");
+            acceptButton.hidden = true;
+            var cancelButton  = docElt.getButton("cancel");
+            cancelButton.label = docElt.getAttribute("closebuttonlabel");
+            cancelButton.accesskey = docElt.getAttribute("closebuttonaccesskey");
+#endif
+          }
+          else {
+            // No Cmd+W in non-instant-apply preferences windows
+            var keyClose = document.getAnonymousElementByAttribute(this, "anonid", "keyClose");
+            keyClose.parentNode.removeChild(keyClose);
+          }
+        }
+        else {
+          // No Cmd+W in child dialogs
+          var keyClose = document.getAnonymousElementByAttribute(this, "anonid", "keyClose");
+          keyClose.parentNode.removeChild(keyClose);          
+        }
+        var panes = this.preferencePanes;
+        var lastPane = this.lastSelected ? document.getElementById(this.lastSelected) : panes[0];
+        for (var i = 0; i < panes.length; ++i) {
+          var button = this._makePaneButton(panes[i]);
+          if (lastPane == panes[i])
+            this._selector.selectedItem = button;
+          if (panes[i].loaded) {
+            // Inline pane content, fire load event to force initialization.
+            this._fireEvent("paneload", panes[i]);
+          }
+        }
+        this.showPane(lastPane);
+        
+        if (panes.length == 1)
+          this._selector.setAttribute("collapsed", "true");
+      ]]>
+      </constructor>
+
+      <field name="instantApply">false</field>
+      
+      <property name="preferencePanes"
+                onget="return this.getElementsByTagName('prefpane');"/>
+
+      <property name="type" onget="return this.getAttribute('type');"/>
+      <property name="_paneDeck"
+                onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'paneDeck');"/>
+      <property name="_selector"
+                onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'selector');"/>
+      <property name="lastSelected" 
+                onget="return this.getAttribute('lastSelected');">
+        <setter>
+          this.setAttribute("lastSelected", val); 
+          document.persist(this.id, "lastSelected");
+          return val;
+        </setter>          
+      </property>
+      <field name="currentPane">null</field>
+      
+      <method name="_makePaneButton">
+        <parameter name="aPaneElement"/>
+        <body>
+        <![CDATA[
+          var radio = document.createElement("radio");
+          radio.setAttribute("pane", aPaneElement.id);
+          radio.setAttribute("label", aPaneElement.label);
+          if (aPaneElement.image)
+            radio.setAttribute("src", aPaneElement.image);
+          radio.style.listStyleImage = aPaneElement.style.listStyleImage;
+          this._selector.appendChild(radio);
+          return radio;
+        ]]>
+        </body>
+      </method>
+
+      <method name="showPane">
+        <parameter name="aPaneElement"/>
+        <body>
+        <![CDATA[
+          if (!aPaneElement.loaded) {
+            function OverlayLoadObserver(aPane)
+            {
+              this._pane = aPane;
+            }
+            OverlayLoadObserver.prototype = { 
+              _outer: this,
+              observe: function (aSubject, aTopic, aData) 
+              {
+                this._pane.loaded = true;
+                this._outer._fireEvent("paneload", this._pane);
+                this._outer._selectPane(this._pane);
+              }
+            };
+            
+            var obs = new OverlayLoadObserver(aPaneElement);
+            document.loadOverlay(aPaneElement.src, obs);
+          }
+          else
+            this._selectPane(aPaneElement);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="_fireEvent">
+        <parameter name="aEventName"/>
+        <parameter name="aTarget"/>
+        <body>
+        <![CDATA[
+          // Panel loaded, synthesize a load event. 
+          try {
+            var event = document.createEvent("Events");
+            event.initEvent(aEventName, false, true);
+            var cancel = !aTarget.dispatchEvent(event);
+            if (aTarget.hasAttribute("on" + aEventName)) {
+              var rv = (new Function ("event", aTarget.getAttribute("on" + aEventName)))(event);
+              if (rv == false)
+                cancel = true;
+            }
+            return !cancel;  
+          }
+          catch (e) { 
+            dump(e);
+          }
+          return false;
+        ]]>
+        </body>
+      </method>
+      
+      <field name="_initialized">false</field>
+      <method name="_selectPane">
+        <parameter name="aPaneElement"/>
+        <body>
+        <![CDATA[
+#ifdef XP_MACOSX
+          document.title = aPaneElement.label;
+#endif
+
+          // Find this pane's index in the deck and set the deck's 
+          // selectedIndex to that value to switch to it.
+          var prefpanes = this.preferencePanes;
+          for (var i = 0; i < prefpanes.length; ++i) {
+            if (prefpanes[i] == aPaneElement) {
+              this._paneDeck.setAttribute("selectedIndex", i);
+              
+              if (this.type != "child") {
+                var oldPane = this.lastSelected ? document.getElementById(this.lastSelected) : this.preferencePanes[0];
+                oldPane.selected = !(aPaneElement.selected = true);
+                if (!this._initialized || oldPane.id != aPaneElement.id) {
+                  this.lastSelected = aPaneElement.id;
+                  this.currentPane = aPaneElement;
+                  if (this._shouldAnimate) {
+                    aPaneElement.style.opacity = 0.0;
+                    this.animate(oldPane, aPaneElement);
+                  }
+                  this._initialized = true;
+                }
+              }
+              break;
+            }
+          }
+        ]]>
+        </body>
+      </method>
+      
+      <property name="_shouldAnimate">
+        <getter>
+        <![CDATA[
+          var psvc = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefBranch);
+          return psvc.getBoolPref("browser.preferences.animateFadeIn");
+        ]]>
+        </getter>
+      </property>
+      
+      <method name="animate">
+        <parameter name="aOldPane"/>
+        <parameter name="aNewPane"/>
+        <body>
+        <![CDATA[
+          this._multiplier = aNewPane.contentHeight > aOldPane.contentHeight ? 1 : -1;
+          var sizeDelta = Math.abs(aOldPane.contentHeight - aNewPane.contentHeight);
+          this._needsSizing = sizeDelta > this._animateIncrement;
+          
+          this._animateRemainder = sizeDelta % this._animateIncrement;
+
+          // Compute the opacity step, using 0.2 as a maximum step size. 
+          this._opacityStepSize = sizeDelta != 0 ? this._animateIncrement / sizeDelta : 1.0;
+          if (this._opacityStepSize > 0.2)
+            this._opacityStepSize = 0.2;
+
+          this._setUpTimer(aOldPane.contentHeight);
+        ]]>
+        </body>
+      </method>
+      
+      <property name="_sizeIncrement">
+        <getter>
+        <![CDATA[
+          var lastSelectedPane = document.getElementById(this.lastSelected);
+          var increment = this._animateIncrement * this._multiplier;
+          var newHeight = this._currentHeight + increment;
+          if ((this._multiplier > 0 && this._currentHeight >= lastSelectedPane.contentHeight) ||
+              (this._multiplier < 0 && this._currentHeight <= lastSelectedPane.contentHeight))
+            return 0;
+          
+          if ((this._multiplier > 0 && newHeight > lastSelectedPane.contentHeight) ||
+              (this._multiplier < 0 && newHeight < lastSelectedPane.contentHeight))
+            increment = this._animateRemainder * this._multiplier;
+          return increment;
+        ]]>
+        </getter>
+      </property>
+      
+      <field name="_animateState">0</field>
+      <method name="notify">
+        <parameter name="aTimer"/>
+        <body>
+        <![CDATA[
+          if (!document)
+            this._timer.cancel();
+            
+          const STATE_START    = 0;
+          const STATE_SIZE     = 1;
+          const STATE_OPACITY  = 2;
+          const STATE_DONE     = STATE_SIZE | STATE_OPACITY;
+          
+          var increment = this._sizeIncrement;
+          if (increment != 0) {
+            window.innerHeight += increment;
+            this._currentHeight += increment;
+          }
+          else 
+            this._animateState |= STATE_SIZE;
+          
+          var lastSelectedPane = document.getElementById(this.lastSelected);
+          if (parseFloat(window.getComputedStyle(lastSelectedPane, "").opacity) < 1.0) {
+            var elt = document.getElementById(this.lastSelected);
+            elt.style.opacity = parseFloat(window.getComputedStyle(elt, "").opacity) + this._opacityStepSize;
+          }
+          else
+            this._animateState |= STATE_OPACITY;
+          
+          if (this._animateState == STATE_DONE)
+            this._timer.cancel();
+        ]]>
+        </body>
+      </method>
+      
+      <method name="_setUpTimer">
+        <parameter name="aStartHeight"/>
+        <body>
+        <![CDATA[
+          if (!this._timer) 
+            this._timer = Components.classes["@mozilla.org/timer;1"]
+                                    .createInstance(Components.interfaces.nsITimer);
+          else
+            this._timer.cancel();
+          this._currentHeight = aStartHeight;
+          this._animateState = 0;
+          
+          this._timer.initWithCallback(this, this._animateDelay, 
+                                       Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+        ]]>
+        </body>
+      </method>
+      
+      <field name="_timer">null</field>
+      <field name="_animateDelay">50</field>
+      <field name="_animateIncrement">10</field>
+      <field name="_animateRemainder">0</field>
+      <field name="_currentHeight">0</field>
+      <field name="_multiplier">0</field>
+      <field name="_opacityStepSize">0</field>
+      <field name="_needsSizing">0</field>
+
+      <method name="addPane">
+        <parameter name="aPaneElement"/>
+        <body>
+        <![CDATA[
+          this.appendChild(aPaneElement);
+          
+          // Set up pane button
+          this._makePaneButton(aPaneElement);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="openSubDialog">
+        <parameter name="aURL"/>
+        <parameter name="aFeatures"/>
+        <parameter name="aParams"/>
+        <body>
+          return openDialog(aURL, "", "modal,centerscreen" + (aFeatures != "" ? ("," + aFeatures) : ""), aParams);
+        </body>
+      </method>
+      
+      <method name="openWindow">
+        <parameter name="aWindowType"/>
+        <parameter name="aURL"/>
+        <parameter name="aFeatures"/>
+        <parameter name="aParams"/>
+        <body>
+          var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                             .getService(Components.interfaces.nsIWindowMediator);
+          var win = aWindowType ? wm.getMostRecentWindow(aWindowType) : null;
+          if (win) {
+            if ("initWithParams" in win)
+              win.initWithParams(aParams);
+            win.focus();
+          }
+          else {
+            var features = "resizable,dialog=no,centerscreen" + (aFeatures != "" ? ("," + aFeatures) : "");
+            var parentWindow = this.instantApply ? window : window.opener;
+            win = parentWindow.openDialog(aURL, "_blank", features, aParams);
+          }
+          return win;
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="dialogaccept">
+      <![CDATA[
+        if (!this._fireEvent("beforeaccept", this)) 
+          return;
+        
+        if (this.type == "child") {
+          var psvc = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefBranch);
+          var instantApply = psvc.getBoolPref("browser.preferences.instantApply");
+          if (instantApply) {
+            var panes = this.preferencePanes;
+            for (var i = 0; i < panes.length; ++i)
+              panes[i].writePreferences(true);
+          }
+          else {
+            // Clone all the preferences elements from the child document and
+            // insert them into the pane collection of the parent. 
+            var pdoc = window.opener.document;
+            var currentPane = pdoc.documentElement.currentPane;
+            var id = window.location.href + "#childprefs";
+            var childPrefs = pdoc.getElementById(id);
+            if (!childPrefs) {
+              var childPrefs = pdoc.createElement("preferences");
+              currentPane.appendChild(childPrefs);
+              childPrefs.id = id;
+            }
+            var panes = this.preferencePanes;
+            for (var i = 0; i < panes.length; ++i) {
+              var preferences = panes[i].preferences;
+              for (var j = 0; j < preferences.length; ++j) {
+                var prefID = window.location.href + "#" + preferences[j].id;
+                var preference = pdoc.getElementById(prefID);
+                if (!preference) {
+                  var preference = pdoc.createElement("preference");
+                  childPrefs.appendChild(preference);
+                  preference.id       = prefID;
+                  preference.name     = preferences[j].name;
+                  preference.type     = preferences[j].type;
+                  preference.inverted = preferences[j].inverted;
+                  preference.readonly = preferences[j].readonly;
+                  preference.disabled = preferences[j].disabled;
+                }
+                preference.value    = preferences[j].value;
+              }
+            }
+          }
+        }
+        else {
+          var panes = this.preferencePanes;
+          for (var i = 0; i < panes.length; ++i)
+            panes[i].writePreferences(false);
+
+          var psvc = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefService);
+          psvc.savePrefFile(null);
+        }
+      ]]>
+      </handler>
+      <handler event="command">
+        if (event.originalTarget.hasAttribute("pane")) {
+          var pane = document.getElementById(event.originalTarget.getAttribute("pane"));
+          event.originalTarget.parentNode.parentNode.showPane(pane);
+        }
+      </handler>
+    </handlers>
+  </binding>
+  
+  <binding id="prefpane">
+    <resources>
+      <stylesheet src="chrome://global/skin/preferences.css"/>
+    </resources>
+    <content>
+      <xul:vbox class="content-box" xbl:inherits="flex">
+        <children/>
+      </xul:vbox>
+    </content>
+    <implementation>
+      <method name="writePreferences">
+        <parameter name="aFlushToDisk"/>
+        <body>
+        <![CDATA[
+          // Write all values to preferences.
+          var preferences = this.preferences;
+          for (var i = 0; i < preferences.length; ++i) {
+            var preference = preferences[i];
+            preference.batching = true;
+            preference.valueFromPreferences = preference.value;
+            preference.batching = false;
+          }
+          if (aFlushToDisk) {
+            var psvc = Components.classes["@mozilla.org/preferences-service;1"]
+                                 .getService(Components.interfaces.nsIPrefService);
+            psvc.savePrefFile(null);
+          }
+        ]]>
+        </body>
+      </method>
+      
+      <property name="src" 
+                onget="return this.getAttribute('src');"
+                onset="this.setAttribute('src', val); return val;"/>
+      <property name="selected" 
+                onget="return this.getAttribute('selected') == 'true';"
+                onset="this.setAttribute('selected', val); return val;"/>
+      <property name="image" 
+                onget="return this.getAttribute('image');"
+                onset="this.setAttribute('image', val); return val;"/>
+      <property name="label" 
+                onget="return this.getAttribute('label');"
+                onset="this.setAttribute('label', val); return val;"/>
+      
+      <property name="preferenceElements"
+                onget="return this.getElementsByAttribute('preference', '*');"/>
+      <property name="preferences"
+                onget="return this.getElementsByTagName('preference');"/>
+
+      <field name="_loaded">false</field>
+      <property name="loaded" 
+                onget="return !this.src ? true : this._loaded;"
+                onset="this._loaded = val; return val;"/>
+      
+      <method name="preferenceForElement">
+        <parameter name="aElement"/>
+        <body>
+          return document.getElementById(aElement.getAttribute("preference"));
+        </body>
+      </method>
+      
+      <method name="getPreferenceElement">
+        <parameter name="aStartElement"/>
+        <body>
+        <![CDATA[
+          var temp = aStartElement;
+          while (temp && temp.nodeType == Node.ELEMENT_NODE && 
+                 !temp.hasAttribute("preference"))
+            temp = temp.parentNode;
+          return temp.nodeType == Node.ELEMENT_NODE ? temp : aStartElement;
+        ]]>
+        </body>
+      </method>
+      
+      <method name="userChangedValue">
+        <parameter name="aElement"/>
+        <body>
+        <![CDATA[
+          var element = this.getPreferenceElement(aElement);
+          if (element.hasAttribute("preference")) {
+            var preference = document.getElementById(element.getAttribute("preference"));
+            var prefVal = preference.getElementValue(element);
+            preference.value = prefVal;
+          }
+        ]]>
+        </body>
+      </method>
+      
+      <property name="contentHeight">
+        <getter>
+          var targetHeight = parseInt(window.getComputedStyle(this._content, "").height);
+          targetHeight += parseInt(window.getComputedStyle(this._content, "").marginTop);
+          targetHeight += parseInt(window.getComputedStyle(this._content, "").marginBottom);
+          return targetHeight;
+        </getter>
+      </property>
+      <field name="_content">
+        document.getAnonymousElementByAttribute(this, "class", "content-box");
+      </field>
+    </implementation>
+    <handlers>
+      <handler event="command">
+        // This "command" event handler tracks changes made to preferences by 
+        // the user in this window. 
+        this.userChangedValue(event.target);
+      </handler>
+      <handler event="select">
+        // This "select" event handler tracks changes made to colorpicker 
+        // preferences by the user in this window.
+        if (event.target.localName == "colorpicker") 
+          this.userChangedValue(event.target);
+      </handler>
+      <handler event="change">
+        // This "change" event handler tracks changes made to preferences by 
+        // the user in this window. 
+        this.userChangedValue(event.target);
+      </handler>
+      <handler event="paneload">
+      <![CDATA[
+        // Initialize all values from preferences.
+        var elements = this.preferenceElements;
+        for (var i = 0; i < elements.length; ++i) {
+          try {
+            var preference = this.preferenceForElement(elements[i]);
+            preference.setElementValue(elements[i]);
+          }
+          catch (e) {
+            dump("*** No preference found for " + elements[i].getAttribute("preference") + "\n");
+          }
+        }
+      ]]>      
+      </handler>
+    </handlers>
+  </binding>
+          
+  <binding id="panebutton" extends="chrome://global/content/bindings/radio.xml#radio">
+    <resources>
+      <stylesheet src="chrome://global/skin/preferences.css"/>
+    </resources>
+    <content>
+      <xul:image class="paneButtonIcon" xbl:inherits="image"/>
+      <xul:label class="paneButtonLabel" xbl:inherits="value=label"/>
+    </content>
+  </binding>
+
+</bindings>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is the Preferences System.
+# 
+# The Initial Developer of the Original Code is Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#   Ben Goodger <ben@mozilla.org>
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****
+
+#
+# This is PrefWindow 6. The Code Could Well Be Ready, Are You?
+#
+#    Historical References:
+#    PrefWindow V   (February 1, 2003)
+#    PrefWindow IV  (April 24, 2000)
+#    PrefWindow III (January 6, 2000)
+#    PrefWindow II  (???)
+#    PrefWindow I   (June 4, 1999)
+#

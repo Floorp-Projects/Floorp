@@ -66,6 +66,8 @@
   <menuitem id="toggleSelected" label="&toggle.label;" accesskey="&toggle.accesskey;" oncommand="ModifySelected();"/>
   <menuitem id="modifySelected" label="&modify.label;" accesskey="&modify.accesskey;" oncommand="ModifySelected();"/>
   <menuitem id="resetSelected" label="&reset.label;" accesskey="&reset.accesskey;" oncommand="ResetSelected();"/>
+  <menuitem id="lockSelected" label="&lock.label;" accesskey="&lock.accesskey;" oncommand="LockSelected();"/>
+  <menuitem id="unlockSelected" label="&unlock.label;" accesskey="&unlock.accesskey;" oncommand="UnlockSelected();"/>
 </popup>
 
 <keyset>
@@ -73,14 +75,14 @@
   <key keycode="VK_RETURN" oncommand="ModifySelected();"/>
 </keyset>
 
-<hbox align="center">
+<hbox id="filterRow" align="center">
   <label value="&filterPrefs.label;" accesskey="&filterPrefs.accesskey;" control="textbox"/>
   <textbox id="textbox" flex="1" type="timed" timeout="500" oncommand="FilterPrefs();"/>
   <button id="button" label="&showAll.label;" accesskey="&showAll.accesskey;" oncommand="ClearFilter();" disabled="true"/>
 </hbox>
 
-<tree id="configTree" flex="1" class="plain focusring" seltype="single"
-      enableColumnDrag="true" context="configContext">
+<tree id="configTree" flex="1" seltype="single" enableColumnDrag="true" 
+      context="configContext">
   <treecols>
     <treecol id="prefCol" label="&prefColumn.label;" flex="7"
         class="sortDirectionIndicator"

@@ -40,7 +40,6 @@
       <constructor>
       <![CDATA[
         var els = this.getElementsByAttribute("selected", "true");
-        this.selectedItems = [];
         for (var i = 0; i < els.length; ++i)
           this.selectedItems.push(els[i]);
       ]]>
@@ -142,6 +141,7 @@
         ]]></setter>
       </property>
 
+      <field name="selectedItems">[]</field>
       <property name="selectedItem">
         <getter><![CDATA[
           return this.selectedItems.length > 0 ? this.selectedItems[0] : null;

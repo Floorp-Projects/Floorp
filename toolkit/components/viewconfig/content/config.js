@@ -464,6 +464,11 @@ function updateContextMenu()
   var toggleSelected = document.getElementById("toggleSelected");
   toggleSelected.setAttribute("disabled", lockCol == PREF_IS_LOCKED);
   toggleSelected.hidden = !canToggle;
+  
+  var entry = gPrefView[view.selection.currentIndex];
+  var isLocked = gPrefBranch.prefIsLocked(entry.prefCol);
+  document.getElementById("lockSelected").hidden = isLocked;
+  document.getElementById("unlockSelected").hidden = !isLocked;
 }
 
 function copyName()
@@ -544,5 +549,21 @@ function ModifyPref(entry)
       gPrefBranch.setComplexValue(entry.prefCol, nsISupportsString, supportsString);
     }
   }
+  
+  gPrefService.savePrefFile(null);
+  
   return true;
 }
+
+function LockSelected()
+{
+  var entry = gPrefView[view.selection.currentIndex];
+  gPrefBranch.lockPref(entry.prefCol);
+}
+
+function UnlockSelected()
+{
+  var entry = gPrefView[view.selection.currentIndex];
+  gPrefBranch.unlockPref(entry.prefCol);
+}
+

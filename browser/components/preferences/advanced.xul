@@ -1,0 +1,256 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is the Firefox Preferences System.
+# 
+# The Initial Developer of the Original Code is Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#   Ben Goodger <ben@mozilla.org>
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE overlay [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+%brandDTD;
+<!ENTITY % advancedDTD SYSTEM "chrome://browser/locale/preferences/advanced.dtd">
+%advancedDTD;
+]>
+
+<overlay id="AdvancedPaneOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <prefpane id="paneAdvanced" onpaneload="gAdvancedPane.init();">
+    <preferences>
+      <preference id="accessibility.browsewithcaret"   name="accessibility.browsewithcaret"   type="bool"/>
+      <preference id="accessibility.typeaheadfind"     name="accessibility.typeaheadfind"     type="bool"/>
+      <preference id="browser.enable_automatic_image_resizing"
+                  name="browser.enable_automatic_image_resizing"
+                  type="bool"/>
+      <preference id="general.autoScroll"              name="general.autoScroll"              type="bool"/>
+      <preference id="general.smoothScroll"            name="general.smoothScroll"            type="bool"/>
+      <preference id="app.update.autoUpdateEnabled"    name="app.update.autoUpdateEnabled"    type="bool"/>
+      <preference id="app.update.autoInstallEnabled"   name="app.update.autoInstallEnabled"   type="bool"/>
+      <preference id="app.update.autoInstallMode"      name="app.update.autoInstallMode"      type="int"/>
+      <preference id="extensions.update.autoUpdateEnabled"
+                  name="extensions.update.autoUpdateEnabled"
+                  type="bool"/>
+      <preference id="security.enable_ssl2"            name="security.enable_ssl2"            type="bool"/>
+      <preference id="security.enable_ssl3"            name="security.enable_ssl3"            type="bool"/>
+      <preference id="security.enable_tls"             name="security.enable_tls"             type="bool"/>
+      <preference id="security.default_personal_cert"  name="security.default_personal_cert"  type="string"/>
+      
+      <preference id="browser.preferences.advanced.selectedTabIndex"
+                  name="browser.preferences.advanced.selectedTabIndex"
+                  type="int"/>
+
+      <preference id="security.disable_button.openCertManager"
+                  name="security.disable_button.openCertManager"
+                  type="bool"/>
+      <preference id="security.OCSP.disable_button.managecrl"
+                  name="security.OCSP.disable_button.managecrl"
+                  type="bool"/>
+      <preference id="security.disable_button.openDeviceManager"
+                  name="security.disable_button.openDeviceManager"
+                  type="bool"/>
+      <preference id="pref.update.disable_button.update_app"
+                  name="pref.update.disable_button.update_app"
+                  type="bool"/>
+      <preference id="pref.update.disable_button.update_addons"
+                  name="pref.update.disable_button.update_addons"
+                  type="bool"/>
+    </preferences>
+    
+    <script type="application/x-javascript" src="chrome://browser/content/preferences/advanced.js"/>
+
+    <tabbox id="advancedPrefs" flex="1"
+            onselect="gAdvancedPane.tabSelectionChanged();">
+      <tabs>
+        <tab label="&generalTab.label;"/>
+        <tab label="&updateTab.label;"/>
+        <tab label="&securityTab.label;"/>
+      </tabs>
+      <tabpanels flex="1">
+        <tabpanel orient="vertical">
+          <groupbox align="start">
+            <caption label="&accessibility.label;"/>
+            <checkbox id="moveSystemCaret" label="&moveSystemCaret.label;" 
+                      accesskey="&moveSystemCaret.accesskey;"
+                      preference="accessibility.browsewithcaret"/>
+            <checkbox id="useTypeAheadFind" label="&useTypeAheadFind.label;"
+                      accesskey="&useTypeAheadFind.accesskey;"
+                      preference="accessibility.typeaheadfind"/>
+          </groupbox>
+          <groupbox align="start">
+            <caption label="&browsing.label;"/>
+            <checkbox id="enableAutoImageResizing"
+                      label="&enableAutoImageResizing.label;"
+                      accesskey="&enableAutoImageResizing.accesskey;"
+                      preference="browser.enable_automatic_image_resizing"/>
+            <checkbox id="useAutoScrolling" label="&useAutoScrolling.label;"
+                      accesskey="&useAutoScrolling.accesskey;"
+                      preference="general.autoScroll"/>
+            <checkbox id="useSmoothScrolling" label="&useSmoothScrolling.label;"
+                      accesskey="&useSmoothScrolling.accesskey;"
+                      preference="general.smoothScroll"/>
+          </groupbox>
+          <groupbox>
+            <caption label="&languages.caption;"/>
+            <hbox align="center">
+              <description flex="1">&languagesInfo.label;</description>
+              <button label="&showLanguages.label;"
+                      accesskey="&showLanguages.accesskey;"
+                      oncommand="gAdvancedPane.showLanguages();"/>
+            </hbox>
+          </groupbox>
+        </tabpanel>
+        <tabpanel orient="vertical">
+          <vbox>
+            <label>&softwareupdateinfo.label;</label>
+            <separator class="thin"/>
+            <vbox align="start">
+              <checkbox id="enableSmartUpdate"
+                        label="&enableSmartUpdate.label;"
+                        accesskey="&enableSmartUpdate.accesskey;"
+                        preference="app.update.autoUpdateEnabled"
+                        onpreferenceread="return gAdvancedPane.updateAppUpdateUI();"/>
+              <vbox class="indent" align="start">
+                <checkbox id="enableAutoInstall"
+                          label="&enableAutoInstall.label;"
+                          accesskey="&enableAutoInstall.accesskey;"
+                          preference="app.update.autoInstallEnabled"
+                          onpreferenceread="return gAdvancedPane.updateAutoInstallUI();"
+                          hidden="true"/>
+                <radiogroup id="autoInstallMode" preference="app.update.autoInstallMode" hidden="true">
+                  <grid class="indent">
+                    <columns>
+                      <column/>
+                      <column flex="1"/>
+                    </columns>
+                    <rows>
+                      <row><label id="updateAnd"
+                                  preference="app.update.autoUpdateEnabled">&updateAnd.label;</label>
+                           <radio label="&autoDownloadAndInstall.label;" 
+                                  accesskey="&autoDownloadAndInstall.accesskey;" value="0"/></row>
+                      <row><hbox/>
+                           <radio label="&autoDownloadAndPrompt.label;" 
+                                  accesskey="&autoDownloadAndPrompt.accesskey;" value="1"/></row>
+                    </rows>
+                  </grid>
+                </radiogroup>
+                <separator class="thin"/>
+                <hbox>
+                  <button label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
+                          oncommand="gAdvancedPane.checkForUpdates(Components.interfaces.nsIUpdateItem.TYPE_APP);"
+                          preference="pref.update.disable_button.update_app"/>
+                </hbox>
+              </vbox>
+            </vbox>
+            <separator class="thin"/>
+            <separator class="groove"/>
+            <separator class="thin"/>
+            <vbox align="start">
+              <checkbox id="enableExtensionUpdate"
+                        label="&enableExtensionUpdate.label;"
+                        accesskey="&enableExtensionUpdate.accesskey;"
+                        preference="extensions.update.autoUpdateEnabled"/>      
+              <separator class="thin"/>
+              <hbox class="indent">
+                <button label="&checkNow.label;" accesskey="&extensionsCheckNow.accesskey;"
+                        oncommand="gAdvancedPane.checkForUpdates(Components.interfaces.nsIUpdateItem.TYPE_ADDON);"
+                        preference="pref.update.disable_button.update_addons"/>
+              </hbox>
+            </vbox>
+          </vbox>
+        </tabpanel>
+        <tabpanel orient="vertical">
+          <groupbox>
+            <caption label="&protocols.label;"/>
+            <grid>
+              <columns>
+                <column flex="1"/>
+                <column flex="1"/>
+              </columns>
+              <rows>
+                <row>
+                  <hbox>
+                    <checkbox id="useSSL2" label="&useSSL2.label;" 
+                              accesskey="&useSSL2.accesskey;" 
+                              preference="security.enable_ssl2"/>
+                  </hbox>
+                  <hbox>
+                    <checkbox id="useSSL3" label="&useSSL3.label;"
+                              accesskey="&useSSL3.accesskey;"
+                              preference="security.enable_ssl3"/>
+                  </hbox>
+                </row>
+                <row>
+                  <hbox>
+                    <checkbox id="useTLS1" label="&useTLS1.label;"
+                              accesskey="&useTLS1.accesskey;"
+                              preference="security.enable_tls"/>
+                  </hbox>
+                  <hbox/>
+                </row>
+              </rows>
+            </grid>
+          </groupbox>
+          <groupbox>
+            <caption label="&certificates.label;"/>
+            <description>&certselect.description;</description>
+            <radiogroup id="certSelection" orient="horizontal" preftype="string" 
+	                      preference="security.default_personal_cert">
+              <radio label="&certselect.auto;" accesskey="&certselect.auto.accesskey;" 
+                     value="Select Automatically"/>
+              <radio label="&certselect.ask;" accesskey="&certselect.ask.accesskey;" 
+                     value="Ask Every Time"/>
+            </radiogroup>
+            
+            <separator/>
+            
+            <description>
+              <button label="&viewCertificates.label;" accesskey="&viewCertificates.accesskey;" 
+                      oncommand="gAdvancedPane.showCertificates();"
+                      preference="security.disable_button.openCertManager"/>
+              <button label="&viewCRLs.label;" accesskey="&viewCRLs.accesskey;" 
+                      oncommand="gAdvancedPane.showCRLs();"
+                      preference="security.OCSP.disable_button.managecrl"/>
+              <button label="&viewOCSP.label;" accesskey="&viewOCSP.accesskey;" 
+                      oncommand="gAdvancedPane.showOCSP();"/>
+              <button label="&viewSecurityDevices.label;" accesskey="&viewSecurityDevices.accesskey;" 
+                      oncommand="gAdvancedPane.showSecurityDevices();"
+                      preference="security.disable_button.openDeviceManager"/>
+            </description>                              
+          </groupbox>
+        </tabpanel>
+      </tabpanels>
+    </tabbox>   
+  </prefpane>
+
+</overlay>

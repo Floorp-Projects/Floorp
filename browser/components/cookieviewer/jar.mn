@@ -1,6 +1,0 @@
-browser.jar:
-*  content/browser/cookieviewer/CookieViewer.xul     (content/CookieViewer.xul)
-*  content/browser/cookieviewer/CookieViewer.js      (content/CookieViewer.js)
-*  content/browser/cookieviewer/CookieExceptions.xul (content/CookieExceptions.xul)
-*  content/browser/cookieviewer/CookieExceptions.js  (content/CookieExceptions.js)
-*  content/browser/cookieviewer/treeUtils.js         (content/treeUtils.js)

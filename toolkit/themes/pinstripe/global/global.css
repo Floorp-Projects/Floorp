@@ -81,11 +81,16 @@ menulist > menupopup,
 window,
 page,
 dialog,
-wizard { 
+wizard,
+prefwindow { 
   -moz-appearance: dialog;
   background-color: #FFFFFF;
   color: -moz-DialogText;
   font: message-box;
+}
+
+prefwindow {
+	  padding: 8px 10px 10px 8px;
 }
 
 /* deprecated */

@@ -50,8 +50,15 @@
       </method>
       
       <!-- public implementation -->
+      <property name="value"      onset="return this.checked = val;"
+                                  onget="return this.checked;"/>
       <property name="checked"    onset="return this.setChecked(val);"
                                   onget="return this.getAttribute('checked') == 'true';"/>
+
+      <constructor>
+        // Sync the checked value from the "value" attribute if necessary.
+        this.checked = this.value;
+      </constructor>
     </implementation>
     
     <handlers>

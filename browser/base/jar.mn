@@ -24,6 +24,8 @@ browser.jar:
 *       content/browser/pageReport.js                 (content/pageReport.js)
 *       content/browser/pageReport.xul                (content/pageReport.xul)
 *       content/browser/pageReportFirstTime.xul       (content/pageReportFirstTime.xul)   
+*       content/browser/sanitize.js                   (content/sanitize.js)
+*       content/browser/sanitize.xul                  (content/sanitize.xul)
 *       content/browser/search.xml                    (content/search.xml)
 *       content/browser/searchbarBindings.css         (content/searchbarBindings.css)
 *       content/browser/searchconfig.properties       (content/searchconfig.properties)

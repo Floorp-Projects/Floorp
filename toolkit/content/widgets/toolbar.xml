@@ -256,9 +256,9 @@
             if (aBeforeElt)
               this.insertBefore(insertItem, aBeforeElt);
             else if (aBeforePermanent && this.firstPermanentChild)
-                this.insertBefore(insertItem, this.firstPermanentChild);
+              this.insertBefore(insertItem, this.firstPermanentChild);
             else
-                this.appendChild(insertItem);
+              this.appendChild(insertItem);
                
             return newItem;
           ]]>
@@ -266,12 +266,6 @@
       </method>      
     </implementation>
   </binding>
-
-  // for now, empty binding to deal with -moz-binding rules from communicator.css
-  // (see bug 227993) we may need that binding one day to propagate
-  // the text/icons/both state to other windows. If we don't, this binding
-  // should be removed after we stop shipping the seamonkey communicator.css skin files.
-  <binding id="toolbar-primary" extends="chrome://global/content/bindings/toolbar.xml#toolbar"/>
 
   <binding id="menubar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" display="xul:menubar">
     <implementation implements="nsIAccessibleProvider">
@@ -303,17 +297,19 @@
     </implementation>
     <handlers>
         <handler event="DOMMenuBarActive">
+          <![CDATA[
             if (!this.statusbar) return;
             this._statusbar = document.getElementById(this.statusbar);
             if (!this._statusbar)
-                return;
+              return;
             this._active = true;
             this._originalStatusText = this._statusbar.label;
+          ]]>
         </handler>
         <handler event="DOMMenuBarInactive">
           <![CDATA[
             if (!this._active)
-                return;
+              return;
             this._active = false;
             this._statusbar.label = this._originalStatusText;
           ]]>

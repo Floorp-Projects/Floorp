@@ -68,6 +68,11 @@ menulist[open="true"]:focus > .menulist-label-box {
   border: 1px solid transparent;
   background-color: transparent;
   color: inherit;
+  -moz-box-align: center;
+}
+
+.menulist-icon[src] {
+  margin: 0px 2px 0px 2px;
 }
 
 .menulist-label {
