@@ -1,3 +1,4 @@
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -17,30 +18,9 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-#
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH=..\..
 
-include $(DEPTH)/config/autoconf.mk
+DIRS=content locale
 
-DIRS		= \
-		cache \
-		base \
-		dns \
-		socket \
-		build \
-		protocol \
-		resources \
-		mime \
-		streamconv \
-		$(NULL)
-
-ifdef ENABLE_TESTS
-DIRS		+= test
-endif
-
-include $(topsrcdir)/config/rules.mk
-
+include <$(DEPTH)\config\rules.mak>

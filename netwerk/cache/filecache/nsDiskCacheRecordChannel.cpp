@@ -172,7 +172,7 @@ nsDiskCacheRecordChannel::NotifyStorageInUse(PRInt32 aBytesUsed)
 }
 
 // implement nsISupports
-NS_IMPL_ISUPPORTS4(nsDiskCacheRecordChannel, 
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsDiskCacheRecordChannel, 
                    nsIChannel, 
                    nsIRequest,
                    nsIStreamListener,

@@ -1,3 +1,4 @@
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -17,30 +18,16 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-#
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH=..\..\..\..
 
-include $(DEPTH)/config/autoconf.mk
+include <$(DEPTH)\config\rules.mak>
 
-DIRS		= \
-		cache \
-		base \
-		dns \
-		socket \
-		build \
-		protocol \
-		resources \
-		mime \
-		streamconv \
-		$(NULL)
+LOCALEDIR=$(DIST)\bin\chrome\necko\locale
 
-ifdef ENABLE_TESTS
-DIRS		+= test
-endif
+install::
+	$(MAKE_INSTALL) necko.properties $(LOCALEDIR)
+	$(MAKE_INSTALL) redirect_loop.dtd $(LOCALEDIR)
 
-include $(topsrcdir)/config/rules.mk
-
+clobber::
+	rm -f $(DIST)\bin\chrome\necko\locale\*.*

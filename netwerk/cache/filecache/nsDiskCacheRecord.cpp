@@ -128,7 +128,7 @@ nsDiskCacheRecord::~nsDiskCacheRecord()
 //
 // Implement nsISupports methods
 //
-NS_IMPL_ISUPPORTS(nsDiskCacheRecord, NS_GET_IID(nsINetDataCacheRecord))
+NS_IMPL_THREADSAFE_ISUPPORTS(nsDiskCacheRecord, NS_GET_IID(nsINetDataCacheRecord))
 
 ///////////////////////////////////////////////////////////////////////
 // nsINetDataCacheRecord methods

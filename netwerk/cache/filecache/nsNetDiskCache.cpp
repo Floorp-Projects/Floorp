@@ -324,7 +324,7 @@ nsNetDiskCache::InitDB(void)
 //////////////////////////////////////////////////////////////////////////
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS3(nsNetDiskCache,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsNetDiskCache,
                    nsINetDataDiskCache,
                    nsINetDataCache,
                    nsISupports) 

@@ -32,6 +32,7 @@ DIRS=              \
 	streamconv \
 	build      \
 	protocol   \
+	resources  \
 !if !defined(DISABLE_TESTS)
         test \
 !endif

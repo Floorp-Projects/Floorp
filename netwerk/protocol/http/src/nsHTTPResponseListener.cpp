@@ -157,9 +157,11 @@ nsHTTPCacheListener::OnStopRequest(nsIChannel *aChannel,
     // is no socket transport involved nsnull is passed as the
     // transport...
     //
-    return mChannel->ResponseCompleted(mResponseDataListener, 
+    nsresult rv = mChannel->ResponseCompleted(mResponseDataListener, 
                                      aStatus, 
                                      aErrorMsg);
+//    NS_IF_RELEASE (mChannel);
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -620,7 +622,10 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
         {
             rv = mPipelinedRequest -> RestartRequest ();
             if (NS_SUCCEEDED (rv))
+            {
+//                NS_IF_RELEASE (mChannel);
                 return rv;
+            }
         }
     }
 
@@ -1018,15 +1023,21 @@ NS_IMPL_QUERY_INTERFACE2  (nsHTTPFinalListener,
                            nsIStreamListener, 
                            nsIStreamObserver);
 
+static  PRUint32    sFinalListenersCreated = 0;
+static  PRUint32    sFinalListenersDeleted = 0;
+
 nsHTTPFinalListener::nsHTTPFinalListener(
         nsHTTPChannel* aChannel, nsIStreamListener* aListener, nsISupports *aContext)
     :
     mOnStartFired (PR_FALSE),
-    mOnStopFired  (PR_FALSE)
-       
+    mOnStopFired  (PR_FALSE),
+    mShutdown     (PR_FALSE),
+    mBusy         (PR_FALSE),
+    mOnStopPending(PR_FALSE)
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-            ("Creating nsHTTPFinalListener [this=%x].\n", this));
+            ("Creating nsHTTPFinalListener [this=%x], created=%u, deleted=%u\n", 
+            this, ++sFinalListenersCreated, sFinalListenersDeleted));
 
     NS_INIT_REFCNT();
 
@@ -1036,13 +1047,13 @@ nsHTTPFinalListener::nsHTTPFinalListener(
 
     NS_ASSERTION (aChannel, "HTTPChannel is null.");
     NS_ADDREF  (mChannel);
-
 }
 
 nsHTTPFinalListener::~nsHTTPFinalListener()
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-            ("Deleting nsHTTPFinalListener [this=%x].\n", this));
+            ("Deleting nsHTTPFinalListener [this=%x], created=%u, deleted=%u\n",
+            this, sFinalListenersCreated, ++sFinalListenersDeleted));
 
     NS_IF_RELEASE(mChannel);
 }
@@ -1058,7 +1069,7 @@ nsHTTPFinalListener::OnStartRequest(nsIChannel *aChannel,
             ("nsHTTPFinalListener::OnStartRequest [this=%x]"
             ", mOnStartFired=%u\n", this, mOnStartFired));
 
-    if (mOnStartFired)
+    if (mShutdown || mOnStartFired || mBusy)
         return NS_OK;
 
     mOnStartFired = PR_TRUE;
@@ -1075,23 +1086,35 @@ nsHTTPFinalListener::OnStopRequest(nsIChannel *aChannel,
             ("nsHTTPFinalListener::OnStopRequest [this=%x]"
             ", mOnStopFired=%u\n", this, mOnStopFired));
 
-    if (mOnStopFired)
+    if (mShutdown || mOnStopFired)
         return NS_OK;
 
-    PRUint32 status;
-    mChannel -> GetStatus (&status);
+    if (mBusy)
+    {
+        mOnStopPending = PR_TRUE;
+        return NS_OK;
+    }
 
-    if (NS_FAILED (status) && NS_SUCCEEDED (aStatus))
-        aStatus = status;
+    if (mChannel)
+    {
+        PRUint32 status;
+        mChannel -> GetStatus (&status);
+
+        if (NS_FAILED (status) && NS_SUCCEEDED (aStatus))
+            aStatus = status;
+    }
 
     if (!mOnStartFired)
     {
-//        mOnStartFired = PR_TRUE;
-//        mListener -> OnStartRequest (aChannel, aContext);
+        // XXX/ruslan: uncomment me when the webshell is fixed
+        // mOnStartFired = PR_TRUE;
+        // mListener -> OnStartRequest (aChannel, aContext);
     }
 
     mOnStopFired = PR_TRUE;
-    return mListener -> OnStopRequest (aChannel, aContext, aStatus, aErrorMsg);
+    nsresult rv = mListener -> OnStopRequest (aChannel, aContext, aStatus, aErrorMsg);
+
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1108,12 +1131,30 @@ nsHTTPFinalListener::OnDataAvailable(nsIChannel *aChannel,
             ("nsHTTPFinalListener::OnDataAvailable [this=%x]\n",
             this));
 
-    PRUint32 status;
-    mChannel -> GetStatus (&status);
+    if (!mShutdown)
+    {
+        NS_ASSERTION (mOnStopFired == PR_FALSE, "OnDataAvailable fired after OnStopRequest");
 
-    if (NS_SUCCEEDED (status))
-        return mListener -> OnDataAvailable (aChannel, aContext, 
-                    aStream, aSourceOffset, aCount);
+        if (mOnStopFired)
+            return NS_ERROR_FAILURE;
+
+        PRUint32 status;
+        mChannel -> GetStatus (&status);
+
+        if (NS_SUCCEEDED (status))
+        {
+            mBusy = PR_TRUE;
+            nsresult rv = mListener -> OnDataAvailable (aChannel, aContext, 
+                                aStream, aSourceOffset, aCount);
+            
+            mBusy = PR_FALSE;
+
+            if (mOnStopPending)
+                OnStopRequest (mChannel, mContext, NS_OK, nsnull);
+
+            return rv;
+        }
+    }
 
     return NS_OK;
 }
@@ -1125,8 +1166,14 @@ nsHTTPFinalListener::FireNotifications ()
             ("nsHTTPFinalListener::FireNotifications [this=%x]\n",
             this));
 
-//    OnStartRequest (mChannel, mContext);
-    OnStopRequest  (mChannel, mContext, NS_OK, nsnull);
+    if (!mShutdown)
+        OnStopRequest  (mChannel, mContext, NS_OK, nsnull);
+}
+
+void
+nsHTTPFinalListener::Shutdown ()
+{
+    mShutdown = PR_TRUE;
 }
 
 // -----------------------------------------------------------------------------
