@@ -1904,8 +1904,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 			    table[j++].offset = off2;
 			}
 		    }
-                    js_qsort(table, (size_t)j, sizeof *table, CompareOffsets,
-                             NULL);
+                    js_HeapSort(table, (size_t) j, sizeof *table,
+                                CompareOffsets, NULL);
 		}
 
 		ok = DecompileSwitch(ss, table, (uintN)j, pc, len, off,
