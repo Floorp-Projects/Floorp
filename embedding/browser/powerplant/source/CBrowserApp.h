@@ -31,7 +31,6 @@
 
 class nsIEventQueueService;
 class nsIServiceManager;
-class nsIPref;
 
 // ---------------------------------------------------------------------------
 //		MMozillaApp - A class that can be mixed into an application class. It
@@ -49,7 +48,6 @@ class MMozillaApp
 		
 		nsIEventQueueService  *mpIEventQueueService;
 		nsIServiceManager     *mpIServiceManager;
-		nsIPref               *mpIPref;    
 };                  
 
 // WARNING: CBrowserApp must descend from these in this order - we need
