@@ -441,7 +441,7 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
                 ios->GetProtocolHandler(kDesignModeScheme, getter_AddRefs(ph));
                 if (ph &&
                     NS_SUCCEEDED(ph->GetScheme(phScheme)) &&
-                    phScheme.EqualsIgnoreCase(kDesignModeScheme))
+                    phScheme.LowerCaseEqualsASCII(kDesignModeScheme))
                 {
                     Navigate(const_cast<BSTR>(kDesignModeURL), NULL, NULL, NULL, NULL);
                 }
