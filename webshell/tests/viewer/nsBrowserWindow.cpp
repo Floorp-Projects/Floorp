@@ -250,7 +250,8 @@ NS_IMETHODIMP nsBrowserWindow::Destroy()
        docLoader->RemoveObserver(this);
     nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
     docShellWin->Destroy();
-    NS_RELEASE(mDocShell);
+    mDocShell = nsnull;
+    // NS_RELEASE(mDocShell);
   }
 
   nsrefcnt refCnt;
@@ -271,7 +272,8 @@ NS_IMETHODIMP nsBrowserWindow::Destroy()
   // Others are holding refs to this, 
   // but it gets released OK.
   DestroyWidget(mWindow);
-  NS_RELEASE(mWindow);
+  mWindow = nsnull;
+  // NS_RELEASE(mWindow);
 
   return NS_OK;
 }
@@ -1400,7 +1402,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   // Create top level window
   nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull,
                                                    kIWidgetIID,
-                                                   (void**)&mWindow);
+                                                   getter_AddRefs(mWindow));
   if (NS_OK != rv) {
     return rv;
   }
@@ -1424,8 +1426,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mWebBrowser->SetContainerWindow(mWebBrowserChrome);
 
   webBrowserWin->Create();
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWebBrowser);
-  mDocShell = docShell;
+  mDocShell = do_GetInterface(mWebBrowser);
   mDocShell->SetAllowPlugins(aAllowPlugins);
   nsCOMPtr<nsIDocumentLoader> docLoader;
   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
@@ -1485,7 +1486,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   // Create top level window
   nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull,
                                                    kIWidgetIID,
-                                                   (void**)&mWindow);
+                                                   getter_AddRefs(mWindow));
   if (NS_OK != rv) {
     return rv;
   }
@@ -1497,7 +1498,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   // Create web shell
   rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
                                           NS_GET_IID(nsIDocShell),
-                                          (void**)&mDocShell);
+                                          getter_AddRefs(mDocShell));
   if (NS_OK != rv) {
     return rv;
   }
