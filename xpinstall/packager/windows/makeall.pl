@@ -54,10 +54,8 @@ $inDefaultVersion     = $ARGV[0];
 $inStagePath          = $ARGV[1];
 $inDistPath           = $ARGV[2];
 
-#$inRedirIniUrl        = "ftp://not.needed.yet.until.release.eng.is.ready";
-#$inXpiURL             = "ftp://not.needed.yet.until.release.eng.is.ready";
-$inRedirIniUrl        = "ftp://sweetlou/products/client/temp/ssu/moztest";
-$inXpiURL             = "ftp://sweetlou/products/client/temp/ssu/moztest";
+$inRedirIniUrl        = "ftp://not.needed.yet.until.release.eng.is.ready";
+$inXpiURL             = "ftp://not.needed.yet.until.release.eng.is.ready";
 
 $seiFileNameGeneric   = "nsinstall.exe";
 $seiFileNameSpecific  = "mozilla-win32-installer.exe";
