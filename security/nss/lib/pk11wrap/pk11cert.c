@@ -1286,8 +1286,9 @@ filter_token_certs_nickname(NSSToken *token, NSSUTF8 *nickname)
          cert != (NSSCertificate *)NULL;
          cert  = (NSSCertificate *)nssListIterator_Next(certs))
     {
-	if (!cert->nickname) continue;
-	if (nssUTF8_Equal(cert->nickname, nickname, &nssrv)) {
+	NSSUTF8 *tokenNick = NSSCertificate_GetNickname(cert, token);
+	if (!tokenNick) continue;
+	if (nssUTF8_Equal(tokenNick, nickname, &nssrv)) {
 	    nssList_Add(rvList, nssCertificate_AddRef(cert));
 	}
     }

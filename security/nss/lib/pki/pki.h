@@ -35,7 +35,7 @@
 #define PKI_H
 
 #ifdef DEBUG
-static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.9 $ $Date: 2002/03/07 20:42:40 $ $Name:  $";
+static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.10 $ $Date: 2002/03/07 22:07:56 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -52,6 +52,13 @@ NSS_EXTERN NSSCertificate *
 nssCertificate_AddRef
 (
   NSSCertificate *c
+);
+
+NSS_EXTERN NSSUTF8 *
+NSSCertificate_GetNickname
+(
+  NSSCertificate *c,
+  NSSToken *tokenOpt
 );
 
 /* putting here for now, needs more thought */

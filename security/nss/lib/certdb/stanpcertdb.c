@@ -136,6 +136,7 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 		       CERTCertTrust *trust)
 {
     PRStatus nssrv;
+    NSSUTF8 *stanNick;
     PK11SlotInfo *slot;
     NSSToken *internal;
     NSSCryptoContext *context;
@@ -144,13 +145,14 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     if (!context) {
 	return PR_FAILURE; /* wasn't a temp cert */
     }
-    if (c->nickname && strcmp(nickname, c->nickname) != 0) {
-	nss_ZFreeIf(c->nickname);
+    stanNick = NSSCertificate_GetNickname(c, NULL);
+    if (stanNick && nickname && strcmp(nickname, stanNick) != 0) {
+	/* take the new nickname */
 	PORT_Free(cert->nickname);
-	c->nickname = NULL;
+	stanNick = NULL;
     }
-    if (!c->nickname) {
-	c->nickname = nssUTF8_Duplicate((NSSUTF8 *)nickname, c->object.arena);
+    if (!stanNick && nickname) {
+	stanNick = nssUTF8_Duplicate((NSSUTF8 *)nickname, c->object.arena);
 	cert->nickname = PORT_Strdup(nickname);
     }
     /* Delete the temp instance */
@@ -161,7 +163,7 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     /* Import the perm instance onto the internal token */
     slot = PK11_GetInternalKeySlot();
     internal = PK11Slot_GetNSSToken(slot);
-    nssrv = nssToken_ImportCertificate(internal, NULL, c, PR_TRUE);
+    nssrv = nssToken_ImportCertificate(internal, NULL, c, stanNick, PR_TRUE);
     if (nssrv != PR_SUCCESS) {
 	return SECFailure;
     }
@@ -240,10 +242,10 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 	PORT_Free(derSerial.data);
     }
     if (nickname) {
-	c->nickname = nssUTF8_Create(arena, 
-                                     nssStringType_UTF8String, 
-                                     (NSSUTF8 *)nickname, 
-                                     PORT_Strlen(nickname));
+	c->object.tempName = nssUTF8_Create(arena, 
+                                            nssStringType_UTF8String, 
+                                            (NSSUTF8 *)nickname, 
+                                            PORT_Strlen(nickname));
     }
     if (cc->emailAddr) {
 	c->email = nssUTF8_Create(arena, 
