@@ -108,6 +108,17 @@ function serverPageValidate()
 function serverPageInit() {
   gOnMailServersPage = (document.documentElement.currentPage.id == "serverpage");
   gOnNewsServerPage = (document.documentElement.currentPage.id == "newsserver");
+  if (gOnNewsServerPage)
+  {
+    var newsServer = document.getElementById("newsServer");
+    var pageData = parent.GetPageData()
+    try 
+    {
+      newsServer.value = pageData.newsserver.hostname.value;
+    }
+    catch (ex){}
+  }
+    
 
   // Server type selection (pop3 or imap) is for mail accounts only
   var isMailAccount = parent.GetPageData().accounttype.mailaccount;
