@@ -159,6 +159,7 @@ ImageConsumer::OnStartBinding(nsIURL* aURL, const char *aContentType)
     NS_RELEASE(reader);
     return NS_ERROR_ABORT;
   }
+  NS_RELEASE(reader);
     
   return NS_OK;
 }
