@@ -577,6 +577,46 @@ nsHTMLReflowState::CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWid
          margin.left + margin.right;
 }
 
+static void
+GetPlaceholderOffset(nsIFrame* aPlaceholderFrame,
+                     nsIFrame* aBlockFrame,
+                     nsPoint&  aOffset)
+{
+  aPlaceholderFrame->GetOrigin(aOffset);
+
+  // Convert the placeholder position to the coordinate space of the block
+  // frame that contains it
+  nsIFrame* parent;
+  aPlaceholderFrame->GetParent(&parent);
+  while (parent && (parent != aBlockFrame)) {
+    nsPoint origin;
+
+    parent->GetOrigin(origin);
+    aOffset += origin;
+    parent->GetParent(&parent);
+  }
+}
+
+static nsIFrame*
+FindImmediateChildOf(nsIFrame* aParent, nsIFrame* aDescendantFrame)
+{
+  nsIFrame* result = aDescendantFrame;
+
+  while (result) {
+    nsIFrame* parent;
+    
+    result->GetParent(&parent);
+    if (parent == aParent) {
+      break;
+    }
+
+    // The frame is not an immediate child of aParent so walk up another level
+    result = parent;
+  }
+
+  return result;
+}
+
 // Calculate the hypothetical box that the element would have if it were in
 // the flow. The values returned are relative to the padding edge of the
 // absolute containing block
@@ -650,19 +690,10 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
   // would have been inline-level or block-level
   if (NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mDisplay) {
     nsPoint placeholderOffset;
-    aPlaceholderFrame->GetOrigin(placeholderOffset);
 
-    // Convert the placeholder position to the coordinate space of the block
-    // frame that contains it
-    nsIFrame* parent;
-    aPlaceholderFrame->GetParent(&parent);
-    while (parent && (parent != aBlockFrame)) {
-      nsPoint origin;
-
-      parent->GetOrigin(origin);
-      placeholderOffset += origin;
-      parent->GetParent(&parent);
-    }
+    // Get the placeholder x-offset and y-offset in the coordinate
+    // space of the block frame that contains it
+    GetPlaceholderOffset(aPlaceholderFrame, aBlockFrame, placeholderOffset);
 
     // The y-offset is the baseline of where the text would be if it were
     // in the flow. We need the top position and not the baseline position
@@ -720,16 +751,26 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
     // The element would have been block-level which means it would be below
     // the line containing the placeholder frame
     if (aBlockFrame) {
+      nsIFrame*   blockChild;
       nsLineBox*  lineBox;
       nsLineBox*  prevLineBox;
       PRBool      isFloater;
 
-      lineBox = ((nsBlockFrame*)aBlockFrame)->FindLineFor(aPlaceholderFrame, &prevLineBox,
+      // We need the immediate child of the block frame, and that may not be
+      // the placeholder frame
+      blockChild = FindImmediateChildOf(aBlockFrame, aPlaceholderFrame);
+      lineBox = ((nsBlockFrame*)aBlockFrame)->FindLineFor(blockChild, &prevLineBox,
                                                           &isFloater);
       if (lineBox) {
         // The top of the hypothetical box is just below the line containing
         // the placeholder
         aHypotheticalBox.mTop = lineBox->mBounds.YMost();
+      } else {
+        nsPoint placeholderOffset;
+        
+        // Just use the placeholder's y-offset
+        GetPlaceholderOffset(aPlaceholderFrame, aBlockFrame, placeholderOffset);
+        aHypotheticalBox.mTop = placeholderOffset.y;
       }
     }
 
