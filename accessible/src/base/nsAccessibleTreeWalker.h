@@ -50,12 +50,14 @@
 #include "nsIBindingManager.h"
 #include "nsIWeakReference.h"
 
+enum { eSiblingsUninitialized = -1, eSiblingsWalkNormalDOM = -2, eSiblingsWalkFrames = -3 };
+
 struct WalkState {
   nsCOMPtr<nsIAccessible> accessible;
   nsCOMPtr<nsIDOMNode> domNode;
   nsCOMPtr<nsIDOMNodeList> siblingList;
   WalkState *prevState;
-  nsIFrame *frameHint;     // Helps avoid GetPrimaryFrameFor() calls
+  nsIFrame *frame;     // Helps avoid GetPrimaryFrameFor() calls
   PRInt32 siblingIndex;    // Holds a state flag or an index into the siblingList
   PRBool isHidden;         // Don't enter subtree if hidden
 };
@@ -72,26 +74,22 @@ public:
   virtual ~nsAccessibleTreeWalker();
 
   NS_IMETHOD GetNextSibling();
-  NS_IMETHOD GetPreviousSibling();
   NS_IMETHOD GetParent();
   NS_IMETHOD GetFirstChild();
-  NS_IMETHOD GetLastChild();
 
   WalkState mState;
-  WalkState mInitialState;
 
 protected:
-  NS_IMETHOD GetChildBefore(nsIDOMNode* aParent, nsIDOMNode* aChild);
   PRBool GetAccessible();
   NS_IMETHOD GetFullTreeParentNode(nsIDOMNode *aChildNode, nsIDOMNode **aParentNodeOut);
-  void GetSiblings(nsIDOMNode *aOneOfTheSiblings);
   void GetKids(nsIDOMNode *aParent);
 
   void ClearState();
   NS_IMETHOD PushState();
   NS_IMETHOD PopState();
 
-  void UpdateFrameHint(nsIDOMNode *aStartNode, PRBool aTryFirstChild);
+  void UpdateFrame(PRBool aTryFirstChild);
+  void GetNextDOMNode();
 
   nsCOMPtr<nsIWeakReference> mWeakShell;
   nsCOMPtr<nsIAccessibilityService> mAccService;
