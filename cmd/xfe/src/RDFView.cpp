@@ -23,12 +23,11 @@
 
 
 #include "RDFView.h"
-#include "Frame.h" // for xfe_ExecuteCommand
+#include "Command.h"
 #include "xfe2_extern.h"
 #include "xpgetstr.h"
 #include <Xm/Xm.h>
 #include <XmL/Tree.h>
-
 
 #define TREE_NAME "RdfTree"
 
@@ -88,17 +87,73 @@ void HTFE_MakePrettyDate(char* buffer, time_t lastVisited)
     }
 }
 
+
+//
+//  Command Handling
+//
+
+//
+//    This acts as an encapsulator for the doCommand() method.
+//    Sub-classes impliment a reallyDoCommand(), and leave the
+//    boring maintainence work to this class. This approach
+//    saves every sub-class from calling super::doCommand(),
+//    which would really be a drag, now wouldn't it.
+//
+class XFE_RDFViewCommand : public XFE_ViewCommand
+{
+public:
+	XFE_RDFViewCommand(char* name) : XFE_ViewCommand(name) {};
+	
+	virtual void    reallyDoCommand(XFE_RDFView*, XFE_CommandInfo*) = 0;
+	virtual XP_Bool requiresChromeUpdate() {
+		return TRUE;
+	};
+	void            doCommand(XFE_View* v_view, XFE_CommandInfo* info) {
+		XFE_RDFView* view = (XFE_RDFView*)v_view;
+		reallyDoCommand(view, info);
+		if (requiresChromeUpdate()) {
+			//XXX view->updateChrome();
+		}
+	}; 
+};
+
+class XFE_RDFViewAlwaysEnabledCommand : public XFE_RDFViewCommand
+{
+public:
+	XFE_RDFViewAlwaysEnabledCommand(char* name) : XFE_RDFViewCommand(name) {};
+
+	XP_Bool isEnabled(XFE_View*, XFE_CommandInfo*) {
+		return True;
+	};
+};
+
+class PopupCommand : public XFE_RDFViewAlwaysEnabledCommand
+{
+public:
+    PopupCommand() : XFE_RDFViewAlwaysEnabledCommand(xfeCmdShowPopup) {};
+
+    virtual XP_Bool isSlow() {
+        return FALSE;
+    };
+
+	void reallyDoCommand(XFE_RDFView* view, XFE_CommandInfo* info) {	
+        view->doPopup(info->event);
+    };
+};
+
+//    END OF COMMAND DEFINES
+
+static XFE_CommandList* my_commands = 0;
+
 XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
                          XFE_View *parent_view, MWContext *context,
                          HT_View htview)
   : XFE_View(toplevel, parent_view, context)
 {
-  m_toplevel = getToplevel();
-#ifdef DEBUG_spence
-  if (m_toplevel != toplevel) {
-    printf ("m_toplevel != toplevel\n");
-  }
-#endif
+  if (my_commands != 0)
+      return;
+    
+  registerCommand(my_commands, new PopupCommand);
 
   Widget tree = 
       XtVaCreateManagedWidget(TREE_NAME,
@@ -111,7 +166,17 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
                               XmNheadingRows,           1,
                               XmNvisibleRows,           14,
                               /*XmNshowHideButton,        True,*/
-                              XmNdebugLevel, 1,
+                              //XmNdebugLevel, 1,
+
+                              /* Form resources */
+                              XmNtopAttachment,    XmATTACH_FORM,
+                              XmNbottomAttachment, XmATTACH_FORM,
+                              XmNleftAttachment,   XmATTACH_FORM,
+                              XmNrightAttachment,  XmATTACH_FORM,
+                              XmNtopOffset,        2,
+                              XmNbottomOffset,     2,
+                              XmNleftOffset,       2,
+                              XmNrightOffset,      2,
                               NULL);
 
   setBaseWidget(tree);
@@ -342,6 +407,32 @@ XFE_RDFView::setRDFView(HT_View htview)
 
   fill_tree();
 }
+//////////////////////////////////////////////////////////////////////
+void
+XFE_RDFView::doPopup(XEvent *event)
+{
+    HT_Cursor menu_cursor = HT_NewContextualMenuCursor(m_rdfview,
+                                                  (PRBool)FALSE,
+                                                  (PRBool)FALSE/*bgcmds*/);
+    if (menu_cursor)
+    {
+        // We have a cursor. Attempt to iterate
+        HT_MenuCmd menu_command; 
+        while (HT_NextContextMenuItem(menu_cursor, &menu_command))
+        {
+            char* menu_name = HT_GetMenuCmdName(menu_command);
+            if (menu_command == HT_CMD_SEPARATOR)
+            {
+                D(fprintf(stderr,"RDF popup: Seperator\n"););
+            }
+            else
+            {
+                D(fprintf(stderr,"RDF popup: Add command(%s)\n",menu_name););
+            }
+        }
+        HT_DeleteCursor(menu_cursor);
+    }
+}
 
 void
 XFE_RDFView::fill_tree()
@@ -353,8 +444,9 @@ XFE_RDFView::fill_tree()
   XtVaSetValues(m_widget,
                 XmNlayoutFrozen, True,
                 XmNcolumns, 1,
-                XmNrows, 0,
                 NULL);
+
+  XmLGridDeleteAllRows(m_widget, XmCONTENT);
 
   // Set default values for column headings
   //  (Should make so that the grid widget has separate defaults

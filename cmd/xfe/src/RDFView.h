@@ -59,6 +59,8 @@ public:
 
   void setRDFView(HT_View view);
 
+  void doPopup(XEvent *event);
+
 private:
   //HT_Pane m_Pane;		// The pane that owns this view
   HT_View m_rdfview;		// The view as registered in the hypertree
