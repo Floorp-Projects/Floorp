@@ -821,7 +821,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	line = 0;
 	principals = NULL;
     }
-    
+
     if (!indirectCall)
         cx->fp->special |= JSFRAME_EVAL;
     script = JS_CompileUCScriptForPrincipals(cx, scopeobj, principals,
@@ -982,13 +982,13 @@ obj_defineGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 			     JSMSG_BAD_GETTER_OR_SETTER,
                              js_getter_str);
 	return JS_FALSE;
-    } 
+    }
 
     atom = js_ValueToStringAtom(cx, argv[0]);
     if (!atom)
 	return JS_FALSE;
 
-    return OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID, 
+    return OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
                                (JSPropertyOp) JSVAL_TO_OBJECT(fval), NULL,
                                JSPROP_GETTER, NULL);
 }

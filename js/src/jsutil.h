@@ -74,7 +74,7 @@ JS_BEGIN_EXTERN_C
 
 #ifdef DEBUG
 
-extern JS_PUBLIC_API(void) 
+extern JS_PUBLIC_API(void)
 JS_Assert(const char *s, const char *file, JSIntn ln);
 #define JS_ASSERT(_expr) \
     ((_expr)?((void)0):JS_Assert(# _expr,__FILE__,__LINE__))

@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -671,7 +671,7 @@ AddToTokenBuf(JSContext *cx, JSTokenBuf *tb, jschar c)
 * escape sequence - returning it's value if so.
 * Otherwise, non-destructively return the original '\'.
 */
-static int32 
+static int32
 GetUnicodeEscape(JSTokenStream *ts)
 {
     jschar cp[5];
@@ -740,7 +740,7 @@ retry:
     hadUnicodeEscape = JS_FALSE;
     if (JS_ISIDENT_START(c) ||
         (c == '\\' &&
-         (c = GetUnicodeEscape(ts), 
+         (c = GetUnicodeEscape(ts),
           hadUnicodeEscape = JS_ISIDENT_START(c)))) {
 	INIT_TOKENBUF(&ts->tokenbuf);
         for (;;) {

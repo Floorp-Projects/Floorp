@@ -2485,15 +2485,14 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #if JS_HAS_GETTER_SETTER
                     atom = CURRENT_TOKEN(ts).t_atom;
                     rt = cx->runtime;
-                    if (atom == rt->atomState.getAtom || 
+                    if (atom == rt->atomState.getAtom ||
                         atom == rt->atomState.setAtom) {
                         op = (atom == rt->atomState.getAtom)
-                             ? JSOP_GETTER 
+                             ? JSOP_GETTER
                              : JSOP_SETTER;
                         if (js_MatchToken(cx, ts, TOK_NAME)) {
-                            pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), 
-                                                                PN_NAME);
-                            if (!pn3) 
+                            pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME);
+                            if (!pn3)
                                 return NULL;
                             pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
                             pn3->pn_expr = NULL;

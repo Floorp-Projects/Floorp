@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -2057,7 +2057,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     todo = Sprint(&ss->sprinter, "%s%s%s %s%s",
                               lval,
                               (lval[1] != '\0') ? ", " : "",
-                              (lastop == JSOP_GETTER) 
+                              (lastop == JSOP_GETTER)
                               ? js_get_str : js_set_str,
                               xval,
                               rval + strlen(js_function_str) + 1);
