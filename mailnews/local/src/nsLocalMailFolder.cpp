@@ -399,28 +399,10 @@ nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 
 NS_IMPL_ADDREF_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
 NS_IMPL_RELEASE_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
-
-NS_IMETHODIMP nsMsgLocalMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
-	*aInstancePtr = nsnull;
-	if (aIID.Equals(NS_GET_IID(nsIMsgLocalMailFolder)))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIMsgLocalMailFolder*, this);
-	}              
-	else if(aIID.Equals(NS_GET_IID(nsICopyMessageListener)))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsICopyMessageListener*, this);
-	}
-
-	if(*aInstancePtr)
-	{
-		AddRef();
-		return NS_OK;
-	}
-
-	return nsMsgDBFolder::QueryInterface(aIID, aInstancePtr);
-}
+NS_IMPL_QUERY_INTERFACE_INHERITED2(nsMsgLocalMailFolder,
+                                   nsMsgDBFolder,
+                                   nsICopyMessageListener,
+                                   nsIMsgLocalMailFolder)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -678,21 +660,21 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       if (isServer) {
           nsCOMPtr<nsIMsgIncomingServer> server;
           rv = GetServer(getter_AddRefs(server));
-	  if (NS_FAILED(rv)) return rv;
-	  if (!server) return NS_ERROR_FAILURE;
+          if (NS_FAILED(rv)) return rv;
+          if (!server) return NS_ERROR_FAILURE;
 
-	  localMailServer = do_QueryInterface(server, &rv);
-	  if (NS_FAILED(rv)) return rv;
-	  if (!localMailServer) return NS_ERROR_FAILURE;
-
+          localMailServer = do_QueryInterface(server, &rv);
+          if (NS_FAILED(rv)) return rv;
+          if (!localMailServer) return NS_ERROR_FAILURE;
+          
           nsCOMPtr<nsIFileSpec> spec;
           rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
           if (NS_FAILED(rv)) return rv;
-
-	  // first create the folders on disk (as empty files)
+          
+          // first create the folders on disk (as empty files)
           rv = localMailServer->CreateDefaultMailboxes(spec);
           if (NS_FAILED(rv)) return rv;
-	  createdDefaultMailboxes = PR_TRUE;
+          createdDefaultMailboxes = PR_TRUE;
       }
 
       // now, discover those folders
@@ -700,8 +682,9 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       if (NS_FAILED(rv)) return rv;
 
       // must happen after CreateSubFolders, or the folders won't exist.
-      if (createdDefaultMailboxes && localMailServer) {
-		rv = localMailServer->SetFlagsOnDefaultMailboxes();
+      if (createdDefaultMailboxes && isServer) {
+        nsCOMPtr<nsIFolder> rootFolder;
+        rv = localMailServer->SetFlagsOnDefaultMailboxes();
         if (NS_FAILED(rv)) return rv;
       }
 	
@@ -2707,3 +2690,56 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
   return nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
 }
 
+NS_IMETHODIMP
+nsMsgLocalMailFolder::SetFlagsOnDefaultMailboxes(PRUint32 flags)
+{
+	nsresult rv = NS_OK;
+
+  if (flags & MSG_FOLDER_FLAG_INBOX)
+    setSubfolderFlag(kInboxName, MSG_FOLDER_FLAG_INBOX);
+
+  if (flags & MSG_FOLDER_FLAG_SENTMAIL)
+    setSubfolderFlag(kSentName, MSG_FOLDER_FLAG_SENTMAIL);
+  
+  if (flags & MSG_FOLDER_FLAG_DRAFTS)
+    setSubfolderFlag(kDraftsName, MSG_FOLDER_FLAG_DRAFTS);
+
+  if (flags & MSG_FOLDER_FLAG_TEMPLATES)
+    setSubfolderFlag(kTemplatesName, MSG_FOLDER_FLAG_TEMPLATES);
+  
+  if (flags & MSG_FOLDER_FLAG_TRASH)
+    setSubfolderFlag(kTrashName, MSG_FOLDER_FLAG_TRASH);
+
+  if (flags & MSG_FOLDER_FLAG_QUEUE)
+    setSubfolderFlag(kUnsentName, MSG_FOLDER_FLAG_QUEUE);
+	
+	return NS_OK;
+}
+
+nsresult
+nsMsgLocalMailFolder::setSubfolderFlag(PRUnichar* aFolderName,
+                                       PRUint32 flags)
+{
+
+  nsresult rv;
+
+  // this is safe because nsSubsumeStr will not take ownership
+  PRUnichar *folderName = NS_CONST_CAST(PRUnichar *, aFolderName);
+  
+  // no-copy conversion to utf8 string
+  nsSubsumeCStr utf8Name(nsSubsumeStr(folderName, PR_FALSE).ToNewUTF8String(), PR_TRUE);
+  
+  nsCOMPtr<nsIFolder> folder;
+	rv = FindSubFolder(utf8Name, getter_AddRefs(folder));
+  
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+  
+ 	nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+    
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_TRASH);
+	if (NS_FAILED(rv)) return rv;
+
+  return NS_OK;
+}

@@ -184,7 +184,9 @@ protected:
                                     //time
   nsCOMPtr<nsITransactionManager> mTxnMgr;
   const char *mType;
-  nsCOMPtr<nsIMsgStringService> mMsgStringService;  
+  nsCOMPtr<nsIMsgStringService> mMsgStringService;
+
+  nsresult setSubfolderFlag(PRUnichar *aFolderName, PRUint32 flags);
 };
 
 #endif // nsMsgLocalMailFolder_h__

@@ -21,17 +21,20 @@
  */
 
 #include "msgCore.h" // pre-compiled headers
+
+#include "prmem.h"
+#include "plstr.h"
+#include "prprf.h"
+
+#include "nsIFileSpec.h"
+#include "nsIPref.h"
+#include "nsXPIDLString.h"
+
 #include "nsNoIncomingServer.h"
 
 #include "nsMsgLocalCID.h"
 #include "nsMsgFolderFlags.h"
-#include "nsIFileSpec.h"
-#include "nsIPref.h"
-#include "prmem.h"
-#include "plstr.h"
-#include "prprf.h"
-#include "nsXPIDLString.h"
-
+#include "nsIMsgLocalMailFolder.h"
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsNoIncomingServer,
                             nsMsgIncomingServer,
@@ -60,59 +63,23 @@ nsNoIncomingServer::GetLocalStoreType(char **type)
 NS_IMETHODIMP 
 nsNoIncomingServer::SetFlagsOnDefaultMailboxes()
 {
-	nsresult rv;
+    nsresult rv;
+    
+    nsCOMPtr<nsIFolder> rootFolder;
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-	nsCOMPtr<nsIFolder> rootFolder;
-	rv = GetRootFolder(getter_AddRefs(rootFolder));
-	if (NS_FAILED(rv)) return rv;
-	if (!rootFolder) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIMsgLocalMailFolder> localFolder =
+        do_QueryInterface(rootFolder, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-	nsCOMPtr <nsIFolder> folder;
-	nsCOMPtr <nsIMsgFolder> msgFolder;
-
-	// notice, no Inbox
-
-	rv = rootFolder->FindSubFolder("Sent", getter_AddRefs(folder));
-	if (NS_FAILED(rv)) return rv;
-	if (!folder) return NS_ERROR_FAILURE;
- 	msgFolder = do_QueryInterface(folder);
-	if (!msgFolder) return NS_ERROR_FAILURE;
-	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = rootFolder->FindSubFolder("Drafts", getter_AddRefs(folder));
-	if (NS_FAILED(rv)) return rv;
-	if (!folder) return NS_ERROR_FAILURE;
- 	msgFolder = do_QueryInterface(folder);
-	if (!msgFolder) return NS_ERROR_FAILURE;
-	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-	if (NS_FAILED(rv)) return rv;
-	
-	rv = rootFolder->FindSubFolder("Templates", getter_AddRefs(folder));
-	if (NS_FAILED(rv)) return rv;
-	if (!folder) return NS_ERROR_FAILURE;
- 	msgFolder = do_QueryInterface(folder);
-	if (!msgFolder) return NS_ERROR_FAILURE;
-	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = rootFolder->FindSubFolder("Trash", getter_AddRefs(folder));
-	if (NS_FAILED(rv)) return rv;
-	if (!folder) return NS_ERROR_FAILURE;
- 	msgFolder = do_QueryInterface(folder);
-	if (!msgFolder) return NS_ERROR_FAILURE;
-	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_TRASH);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = rootFolder->FindSubFolder("Unsent Messages", getter_AddRefs(folder));
-	if (NS_FAILED(rv)) return rv;
-	if (!folder) return NS_ERROR_FAILURE;
- 	msgFolder = do_QueryInterface(folder);
-	if (!msgFolder) return NS_ERROR_FAILURE;
-	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_QUEUE);
-	if (NS_FAILED(rv)) return rv;
-	
-	return NS_OK;
+    // pop3 gets all flags
+    localFolder->SetFlagsOnDefaultMailboxes(MSG_FOLDER_FLAG_SENTMAIL |
+                                            MSG_FOLDER_FLAG_DRAFTS |
+                                            MSG_FOLDER_FLAG_TEMPLATES |
+                                            MSG_FOLDER_FLAG_TRASH |
+                                            MSG_FOLDER_FLAG_QUEUE);
+    return NS_OK;
 }	
 
 NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)

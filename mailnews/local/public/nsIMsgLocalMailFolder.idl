@@ -24,4 +24,12 @@
 
 [scriptable, uuid(27D2DE40-BAF1-11d2-9578-00805F8AC615)]
 interface nsIMsgLocalMailFolder : nsISupports {
+  /**
+   * set the default flags on the subfolders of this folder, such as
+   * Drafts, Templates, etc
+   * you should bitwise OR all the flags all mailboxes you want to flag,
+   * this function will be smart and find the right names.
+   * like MSG_FOLDER_FLAG_INBOX | MSG_FOLDER_FLAG_DRAFTS | etc
+   */
+  void setFlagsOnDefaultMailboxes(in unsigned long flags);
 };
