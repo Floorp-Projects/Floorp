@@ -1,0 +1,22 @@
+var err = initInstall("JavaScript Debugger", "Venkman", "$Version$"); 
+logComment("initInstall: " + err);
+
+addFile("Venkman Service",
+        "bin/components/venkman-service.js",
+        getFolder("Components"),
+        "");
+
+addFile("Venkman Chrome",
+        "bin/chrome/venkman.jar",   // jar source folder 
+        getFolder("Chrome"),        // target folder
+        "");                        // target subdir 
+
+registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "content/venkman/");
+registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "skin/modern/venkman/");
+registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "locale/en-US/venkman/");
+
+err = getLastError();
+if (err==SUCCESS)
+    performInstall(); 
+else
+    cancelInstall(err);

@@ -1,0 +1,25 @@
+var err = initInstall("DOM Inspector", "Inspector", "$Version$"); 
+logComment("initInstall: " + err);
+
+var fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+err = addDirectory("", "$Version$", "bin", fProgram, "", true);
+logComment("addDirectory: " + err);
+
+addFile("Inspector Command Line Handler",
+        "bin/components/inspector-cmdline.js",
+        getFolder("Components"),
+        "");
+
+var jarFolder = getFolder("Chrome", "inspector.jar");
+registerChrome(PACKAGE | DELAYED_CHROME, jarFolder, "content/inspector/");
+registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/modern/inspector/");
+registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/classic/inspector/");
+registerChrome(LOCALE | DELAYED_CHROME, jarFolder, "locale/en-US/inspector/");
+
+err = getLastError();
+if (err==SUCCESS)
+    performInstall(); 
+else
+    cancelInstall(err);
