@@ -160,9 +160,6 @@ nsPosixLocale::ParseLocaleString(const char* locale_string, char* language, char
     language[0]=locale_string[0];
     language[1]=locale_string[1];
     language[2]='\0';
-    country[0]=locale_string[3];
-    country[1]=locale_string[4];
-    country[2]='\0';
   }
   else if (7 <= len && '.' == locale_string[5]) {
     PL_strcpy(extra, &locale_string[6]);
