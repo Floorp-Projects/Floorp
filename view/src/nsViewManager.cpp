@@ -2383,7 +2383,6 @@ NS_IMETHODIMP nsViewManager::GetKeyEventGrabber(nsIView *&aView)
   return NS_OK;
 }
 
-
 // Recursively reparent widgets if necessary 
 
 void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
@@ -2396,7 +2395,10 @@ void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
     nsIWidget* widget = aView->GetWidget();
     nsCOMPtr<nsIWidget> parentWidget = getter_AddRefs(widget->GetParent());
     if (parentWidget.get() != aNewWidget) {
-      nsresult rv = widget->SetParent(aNewWidget);
+#ifdef DEBUG
+      nsresult rv =
+#endif
+        widget->SetParent(aNewWidget);
       NS_ASSERTION(NS_SUCCEEDED(rv), "SetParent failed!");
     }
     return;
