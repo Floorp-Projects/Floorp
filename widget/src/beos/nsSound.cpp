@@ -77,13 +77,10 @@ nsresult NS_NewSound(nsISound** aSound)
   return NS_OK;
 }
 
-#if 0
-// not currently used.. may go away
-NS_METHOD nsSound::Init(void)
+NS_IMETHODIMP nsSound::Init(void)
 {
   return NS_OK;
 }
-#endif
 
 NS_METHOD nsSound::Beep()
 {

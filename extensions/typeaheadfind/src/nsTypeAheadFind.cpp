@@ -520,23 +520,21 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-#ifdef XP_WIN
-  // Deal with nsISound impl quirks in Windows
   if (!mIsSoundInitialized) {
-    // Don't play a sound, just make sure sound system is initialized
-    // This makes sure system sound library (winmm.dll) is loaded so that
+    // This makes sure system sound library is loaded so that
     // there's no lag before the first sound is played
-    // by waiting for the first keystroke, we still get the startup time benefits
+    // by waiting for the first keystroke, we still get the startup time benefits.
     mIsSoundInitialized = PR_TRUE;
     mSoundInterface = do_CreateInstance("@mozilla.org/sound;1");
     if (mSoundInterface) {
-      mSoundInterface->PlaySystemSound("");
+      mSoundInterface->Init();
     }
   }
 
+#ifdef XP_WIN
   // After each keystroke, destroy sound object to free up memory 
   // allocated for error sound, otherwise Windows' nsISound impl 
-  // holds onto the last played sound.
+  // holds onto the last played sound, using up memory.
   mSoundInterface = nsnull;
 #endif
 

@@ -63,7 +63,7 @@ nsSound::~nsSound()
 {
 }
 
-nsresult nsSound::Init()
+NS_IMETHODIMP nsSound::Init()
 {
   if (mInited) return NS_OK;
 

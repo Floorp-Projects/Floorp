@@ -34,4 +34,10 @@ interface nsISound : nsISupports
    */
   void playSystemSound(in string soundAlias);  
   void beep();
+
+  /**
+    * Not strictly necessary, but avoids delay before first sound.
+    * The various methods on nsISound call Init() if they need to.
+	*/
+  void init(); 
 };

@@ -43,7 +43,6 @@ public:
     NS_DECL_NSISTREAMLOADEROBSERVER
 
 private:
-    nsresult Init();
     PRBool mInited;
 
 };
