@@ -65,14 +65,12 @@
 #include "plevent.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIEventQueueService.h"
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "nsViewsCID.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
-#include "nsICookieService.h"
 
 #include "nsIHTTPChannel.h"
 
@@ -167,7 +165,6 @@ typedef long int32;
 #include "WindowCreator.h"
 #include "WebBrowserContainer.h"
 #include "DropTarget.h"
-#include "guids.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.
