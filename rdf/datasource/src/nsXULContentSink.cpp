@@ -40,7 +40,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIParser.h"
 #include "nsIPresShell.h"
-#include "nsIRDFContent.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
