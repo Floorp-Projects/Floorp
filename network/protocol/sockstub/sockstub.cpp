@@ -451,13 +451,7 @@ net_flush_sockstub_data(ActiveEntry * ce)
     }
     else if(ce->status == 0)
     {
-        // temporary mscott testing hack:
-        cd->next_state = SOCKSTUB_FLUSH_DATA;
-        ce->status = 1;
-        cd->pause_for_read = TRUE;
-        return STATUS(ce->status);
-
-        // transfer finished 
+       // transfer finished 
         TRACEMSG(("SOCKSTUB: Caught TCP EOF ending stream"));
 
         ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_ZERO_LENGTH_FILE);
