@@ -288,25 +288,44 @@ PRBool nsMsgI18Nstateful_charset(const char *charset)
 // Or convert and check line by line.
 PRBool nsMsgI18N7bit_data_part(const char *charset, const char *inString, const PRUint32 size)
 {
-  char *aCString;
   nsAutoString aCharset(charset);
-  nsAutoString outString;
   nsresult res;
+  PRBool result = PR_TRUE;
   
-  aCString = (char *) PR_Malloc(size + 1);
-  if (nsnull != aCString) {
-    PL_strncpy(aCString, inString, size); // make a C string
-    res = ConvertToUnicode(aCharset, aCString, outString);
-    PR_Free(aCString);
-    if (NS_SUCCEEDED(res)) {
-      for (PRInt32 i = 0; i < outString.Length(); i++) {
-        if (outString.CharAt(i) > 127) {
-          return PR_FALSE;
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &res);
+
+  if (NS_SUCCEEDED(res)) {
+    nsIUnicodeDecoder* decoder = nsnull;
+
+    // get an unicode converter
+    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+    if(NS_SUCCEEDED(res)) {
+      char *currentSrcPtr = NS_CONST_CAST(char *, inString);
+      PRUint32 consumedLen = 0;
+      PRUnichar unicharBuff[512];
+      PRInt32 srcLen;
+      PRInt32 unicharLength;
+
+      // convert to unicode
+      while (consumedLen < size) {
+        srcLen = ((size - consumedLen) >= 512) ? 512 : (size - consumedLen);  // buffer len or remaining src len
+        res = decoder->Convert(currentSrcPtr, &srcLen, unicharBuff, &unicharLength);
+        if (NS_FAILED(res))
+          break;
+        for (PRInt32 i = 0; i < unicharLength; i++) {
+          if (unicharBuff[i] > 127) {
+            result = PR_FALSE;
+            break;
+          }
         }
+        currentSrcPtr += srcLen;
+        consumedLen = currentSrcPtr - inString; // src length used so far
       }
-    }
+      NS_IF_RELEASE(decoder);
+    }    
   }
-  return PR_TRUE;  // all 7 bit
+
+  return result;
 }
 
 // Simple parser to parse META charset. 
