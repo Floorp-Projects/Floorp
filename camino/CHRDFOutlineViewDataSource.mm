@@ -55,7 +55,7 @@
 
 - (id) init
 {
-    if (self = [super init]) {
+    if ((self = [super init])) {
         nsCOMPtr<nsIRDFContainer> ctr(do_CreateInstance("@mozilla.org/rdf/container;1"));
         NS_ADDREF(mContainer = ctr);
         
@@ -123,6 +123,12 @@
 //
 - (BOOL) outlineView: (NSOutlineView*) aOutlineView shouldEditTableColumn: (NSTableColumn*) aTableColumn
                                                     item: (id) aItem
+{
+    return NO;
+}
+
+// XXX write me
+- (BOOL)outlineView: (NSOutlineView*) aOutlineView isItemExpandable: (id) aItem
 {
     return NO;
 }
