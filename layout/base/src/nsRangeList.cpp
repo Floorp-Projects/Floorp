@@ -98,6 +98,8 @@ public:
   NS_IMETHOD    GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn);
   NS_IMETHOD    ClearSelection();
   NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);
+  NS_IMETHOD    CollapseToStart();
+  NS_IMETHOD    CollapseToEnd();
   NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);
   NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aAYes);
   NS_IMETHOD    DeleteFromDocument();
@@ -2035,6 +2037,76 @@ nsDOMSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
     return result;
     
 	return mRangeList->NotifySelectionListeners();
+}
+
+/*
+ * Sets the whole selection to be one point
+ * at the start of the current selection
+ */
+NS_IMETHODIMP
+nsDOMSelection::CollapseToStart()
+{
+  PRInt32 cnt;
+  nsresult rv = GetRangeCount(&cnt);
+  if (NS_FAILED(rv) || cnt<=0 || !mRangeArray)
+		return NS_ERROR_FAILURE;
+
+  // Get the first range (from GetRangeAt)
+	nsISupports*	element = mRangeArray->ElementAt(0);
+	nsCOMPtr<nsIDOMRange>	firstRange = do_QueryInterface(element);
+  if (!firstRange)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> parent;
+  rv = firstRange->GetStartParent(getter_AddRefs(parent));
+  if (NS_SUCCEEDED(rv))
+  {
+    if (parent)
+    {
+      PRInt32 startOffset;
+      firstRange->GetStartOffset(&startOffset);
+      rv = Collapse(parent, startOffset);
+    } else {
+      // not very likely!
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+  return rv;
+}
+
+/*
+ * Sets the whole selection to be one point
+ * at the end of the current selection
+ */
+NS_IMETHODIMP
+nsDOMSelection::CollapseToEnd()
+{
+  PRInt32 cnt;
+  nsresult rv = GetRangeCount(&cnt);
+  if (NS_FAILED(rv) || cnt<=0 || !mRangeArray)
+		return NS_ERROR_FAILURE;
+
+  // Get the last range (from GetRangeAt)
+	nsISupports*	element = mRangeArray->ElementAt(cnt-1);
+	nsCOMPtr<nsIDOMRange>	lastRange = do_QueryInterface(element);
+  if (!lastRange)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> parent;
+  rv = lastRange->GetEndParent(getter_AddRefs(parent));
+  if (NS_SUCCEEDED(rv))
+  {
+    if (parent)
+    {
+      PRInt32 endOffset;
+      lastRange->GetEndOffset(&endOffset);
+      rv = Collapse(parent, endOffset);
+    } else {
+      // not very likely!
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+  return rv;
 }
 
 /*
