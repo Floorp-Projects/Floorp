@@ -188,10 +188,10 @@ sub have_vers {
 # Check versions of dependencies.  0 for version = any version acceptible
 
 my @missing = ();
-unless (have_vers("DBI","1.13"))     { push @missing,"DBI" }
-unless (have_vers("Data::Dumper",0)) { push @missing,"Data::Dumper" }
-unless (have_vers("Mysql",0))        { push @missing,"Mysql" }
-unless (have_vers("Date::Parse",0))  { push @missing,"Data::Parse" }
+unless (have_vers("DBI","1.13"))          { push @missing,"DBI" }
+unless (have_vers("Data::Dumper",0))      { push @missing,"Data::Dumper" }
+unless (have_vers("DBD::mysql","1.2209")) { push @missing,"DBD::mysql" }
+unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
 # die and warn handlers, we don't want them changed, so we need to stash the
@@ -942,10 +942,8 @@ $table{duplicates} =
 # Create tables
 ###########################################################################
 
-# The current DBI::mysql tells me to use this:
-#my @tables = map { $_ =~ s/.*\.//; $_ } $dbh->tables();
-# but that doesn't work on a freshly created database, so I still use
-my @tables = $dbh->func('_ListTables');
+# Get a list of the existing tables (if any) in the database
+my @tables = map { $_ =~ s/.*\.//; $_ } $dbh->tables;
 #print 'Tables: ', join " ", @tables, "\n";
 
 # add lines here if you add more --LOCAL-- config vars that end up in the enums:
