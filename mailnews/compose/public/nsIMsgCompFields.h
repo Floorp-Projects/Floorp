@@ -190,6 +190,12 @@ class nsIMsgCompFields : public nsISupports {
 
   /*  <IDL>  */
   NS_IMETHOD GetAttachVCard(PRBool *_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD SetBody(const char *value, PRInt32 *_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD GetBody(char **_retval) = 0;
 };
 
 #endif /* __gen_nsImsgCompFields_h__ */

@@ -107,5 +107,8 @@ interface nsIMsgCompFields : nsISupports {
 
 	long SetAttachVCard(in boolean value);
 	boolean GetAttachVCard();
+
+	long SetBody(in string value);
+	string GetBody();
 };
 
