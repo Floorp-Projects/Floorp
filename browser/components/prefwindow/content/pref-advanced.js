@@ -36,7 +36,7 @@
 #define PROVISIONAL_SECURITY_UI
 
 var _elementIDs = ["moveSystemCaret", "hideTabBar",
-                    "loadInBackground", "useAutoScrolling",
+                    "loadInBackground", "warnOnClose", "useAutoScrolling",
                     "useSmoothScrolling", "enableAutoImageResizing",
                     "useSSL2", "useSSL3", "useTLS1", "useTypeAheadFind",
                     "linksOnlyTypeAheadFind",

@@ -33,6 +33,8 @@
                 prefstring="browser.tabs.autoHide"/>
       <checkbox id="loadInBackground" label="&loadInBackground.label;"
                 prefstring="browser.tabs.loadInBackground" reversed="true"/>
+      <checkbox id="warnOnClose" label="&warnOnClose.label;"
+                prefstring="browser.tabs.warnOnClose"/>
       <checkbox id="useAutoScrolling" label="&useAutoScrolling.label;"
                 prefstring="general.autoScroll"/>
       <checkbox id="useSmoothScrolling" label="&useSmoothScrolling.label;"
