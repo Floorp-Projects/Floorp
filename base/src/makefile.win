@@ -23,17 +23,35 @@ DIRS = windows
 DEFINES=-D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 LIBRARY_NAME=raptorbase 
 
-CPPSRCS=nsArena.cpp nsAtomTable.cpp nsBTree.cpp nsByteBuffer.cpp nsCRT.cpp \
-    nsDeque.cpp nsRBTree.cpp nsString.cpp nsUnicharBuffer.cpp \
-    nsUnicharInputStream.cpp nsVoidArray.cpp 
+CPPSRCS =				\
+	nsArena.cpp			\
+	nsAtomTable.cpp			\
+	nsBTree.cpp			\
+	nsByteBuffer.cpp		\
+	nsCRT.cpp			\
+	nsDeque.cpp			\
+	nsRBTree.cpp			\
+	nsSizeOfHandler.cpp		\
+	nsString.cpp			\
+	nsUnicharBuffer.cpp		\
+	nsUnicharInputStream.cpp	\
+	nsVoidArray.cpp			\
+	$(NULL)
 
-CPP_OBJS=.\$(OBJDIR)\nsArena.obj .\$(OBJDIR)\nsAtomTable.obj \
-    .\$(OBJDIR)\nsBTree.obj .\$(OBJDIR)\nsByteBuffer.obj \
-    .\$(OBJDIR)\nsCRT.obj        .\$(OBJDIR)\nsDeque.obj \
-    .\$(OBJDIR)\nsRBTree.obj \
-    .\$(OBJDIR)\nsString.obj \
-    .\$(OBJDIR)\nsUnicharBuffer.obj .\$(OBJDIR)\nsUnicharInputStream.obj \
-    .\$(OBJDIR)\nsVoidArray.obj 
+CPP_OBJS =					\
+	.\$(OBJDIR)\nsArena.obj			\
+	.\$(OBJDIR)\nsAtomTable.obj		\
+	.\$(OBJDIR)\nsBTree.obj			\
+	.\$(OBJDIR)\nsByteBuffer.obj		\
+	.\$(OBJDIR)\nsCRT.obj			\
+	.\$(OBJDIR)\nsDeque.obj			\
+	.\$(OBJDIR)\nsRBTree.obj		\
+	.\$(OBJDIR)\nsSizeOfHandler.obj		\
+	.\$(OBJDIR)\nsString.obj		\
+	.\$(OBJDIR)\nsUnicharBuffer.obj		\
+	.\$(OBJDIR)\nsUnicharInputStream.obj	\
+	.\$(OBJDIR)\nsVoidArray.obj		\
+	$(NULL)
 
 EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
     nsBTree.h nsCRT.h nsDeque.h nsITimer.h \
