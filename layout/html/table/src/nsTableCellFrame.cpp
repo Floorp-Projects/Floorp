@@ -106,7 +106,6 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                   const nsRect& aDirtyRect,
                                   nsFramePaintLayer aWhichLayer)
 {
-  printf("\npaint cell (%d,%d)\n", GetRowIndex(), GetColIndex());
   if (eFramePaintLayer_Underlay == aWhichLayer) {
     const nsStyleDisplay* disp =
       (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
