@@ -40,6 +40,9 @@ function initDialogObject()
   dialog.searchBackwards = document.getElementById("dialog.searchBackwards");
   dialog.find            = document.getElementById("ok");
   dialog.bundle          = null;
+
+  // Move dialog to center
+  moveToAlertPosition();
 }
 
 function fillDialog()
