@@ -221,7 +221,8 @@ RDF_ReleaseDataSource(RDF rdf, RDFT dataSource)
   rdf->numTranslators--;
   dataSource->rdf = deleteFromRDFList(dataSource->rdf, rdf);
   if ((dataSource->rdf == NULL) && (dataSource->destroy != NULL)) {
-    (*dataSource->destroy)(dataSource);
+      PL_HashTableRemove(dataSourceHash,  dataSource->url); 
+      (*dataSource->destroy)(dataSource);     (*dataSource->destroy)(dataSource);
   }
   return 0;
 }
