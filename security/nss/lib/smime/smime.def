@@ -189,6 +189,7 @@ CERT_DecodeCertFromPackage;
 NSS_CMSMessage_IsSigned;
 NSS_CMSSignedData_SetDigestValue;
 NSS_SMIMESignerInfo_SaveSMIMEProfile;
+SEC_PKCS12DecoderGetCerts;
 SEC_PKCS7ContainsCertsOrCrls;
 SEC_PKCS7ContentIsEncrypted;
 SEC_PKCS7ContentIsSigned;
