@@ -338,6 +338,19 @@ nsEventQueueImpl::IsQueueNative(PRBool *aResult)
 }
 
 NS_IMETHODIMP
+nsEventQueueImpl::PendingEvents(PRBool *aResult)
+{
+    *aResult = PL_EventAvailable(mEventQueue);
+    if (!*aResult && mElderQueue) {
+        nsCOMPtr<nsIEventQueue> elder(do_QueryInterface(mElderQueue));
+        if (elder)
+            return elder->EventAvailable(*aResult);
+    }
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsEventQueueImpl::ProcessPendingEvents()
 {
   PRBool correctThread = PL_IsQueueOnCurrentThread(mEventQueue);
