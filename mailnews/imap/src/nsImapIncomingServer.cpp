@@ -1592,7 +1592,11 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString, nsIM
 		if (whereRealMessage)
 			whereRealMessage = PL_strchr(whereRealMessage, ' ');
 		if (whereRealMessage)
-			whereRealMessage++;
+		{
+		    PRInt32 len = PL_strlen(whereRealMessage)-1;
+		    if (len > 0 && whereRealMessage[len] !=  '.')
+        	     whereRealMessage[len] = '.';
+		}
     
     // the alert string from the server IS UTF-8!!! We must convert it to unicode
     // correctly before appending it to our error message string...
