@@ -1,0 +1,56 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Mozilla browser.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications, Inc.  Portions created by Netscape are
+# Copyright (C) 1999, Mozilla.  All Rights Reserved.
+# 
+# Contributor(s):
+#   Travis Bogard <travis@netscape.com>
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+MODULE		= webbrwsr
+
+include $(DEPTH)/config/autoconf.mk
+
+LIBRARY_NAME	= webbrwsr
+
+CPPSRCS		= \
+		nsWebBrowserModule.cpp		\
+		$(NULL)
+
+SHARED_LIBRARY_LIBS= \
+		$(DIST)/lib/libnsWebBrowser_s.a	\
+		$(DIST)/lib/libnsWebBrowserSetup_s.a	\
+		$(NULL)
+
+EXTRA_DSO_LDOPTS= \
+		$(MKSHLIB_FORCE_ALL) \
+		$(SHARED_LIBRARY_LIBS) \
+		$(MKSHLIB_UNFORCE_ALL) \
+		-L$(DIST)/bin \
+		-ljsdom \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+INCLUDES	+= \
+		-I$(srcdir)			\
+		-I$(srcdir)/../webBrowser		\
+		-I$(srcdir)/../setup		\
+		$(NULL)
