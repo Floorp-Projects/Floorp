@@ -410,7 +410,9 @@
     border: 2px solid #1D7AB5;
 }
 /*the selected day box, since it's last, it has the highest priority*/
-.month-day-box-class[monthselected="true"]{
+.month-day-box-class[monthselected="true"],
+.month-day-box-class[monthselected="true"][weekend="true"]
+{
    background-color: #d5e3f2;
 }
 
