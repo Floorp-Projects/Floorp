@@ -1,0 +1,8 @@
+<!-- address labels -->
+<!ENTITY toAddr.label   "To:"> 
+<!ENTITY ccAddr.label   "Cc:"> 
+<!ENTITY bccAddr.label  "Bcc:"> 
+<!ENTITY replyAddr.label   "Reply:"> 
+<!ENTITY newsgroupsAddr.label   "Newsgroup:"> 
+<!ENTITY followupAddr.label   "Followup:"> 
+
