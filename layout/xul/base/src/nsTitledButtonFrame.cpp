@@ -192,6 +192,7 @@ nsTitledButtonFrame::DeleteFrame(nsIPresContext& aPresContext)
   return nsLeafFrame::DeleteFrame(aPresContext);
 }
 
+
 NS_IMETHODIMP
 nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
               nsIContent*      aContent,
@@ -201,7 +202,7 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
 {
   nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mRenderer.SetNameSpace(nsXULAtoms::nameSpaceID);
+  mRenderer.SetNameSpace(kNameSpaceID_None);
   mRenderer.SetFrame(this,aPresContext);
   
 
@@ -230,25 +231,24 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
   }
 
   if (mHasImage == PR_TRUE) {
-	  mImageLoader.SetURLSpec(src);
-    nsIURL* baseURL = nsnull;
-    nsIHTMLContent* htmlContent;
-    if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
-      htmlContent->GetBaseURL(baseURL);
-      NS_RELEASE(htmlContent);
-    }
-    else {
-      nsIDocument* doc;
-      if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
-        doc->GetBaseURL(baseURL);
-        NS_RELEASE(doc);
-      }
-    }
-    mImageLoader.SetBaseURL(baseURL);
-    NS_IF_RELEASE(baseURL);
-  } else {
-	  mHasImage = PR_FALSE;
-  }
+     	  mImageLoader.SetURLSpec(src);
+        nsIURL* baseURL = nsnull;
+        nsIHTMLContent* htmlContent;
+        if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+          htmlContent->GetBaseURL(baseURL);
+          NS_RELEASE(htmlContent);
+        }
+        else {
+          nsIDocument* doc;
+          if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
+            doc->GetBaseURL(baseURL);
+            NS_RELEASE(doc);
+          }
+        }
+        mImageLoader.SetBaseURL(baseURL);
+        NS_IF_RELEASE(baseURL);
+  } else 
+	   mHasImage = PR_FALSE;
   
    // get the alignment
   nsAutoString value;
@@ -304,72 +304,7 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
     return rv;
   }
   if (nsHTMLAtoms::src == aAttribute) {
-    nsAutoString oldSRC;
-    mImageLoader.GetURLSpec(oldSRC);
-    nsAutoString newSRC;
-
-    aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, newSRC);
-
-    if (newSRC.Equals("")) {
-         // if no src then get the list style image
-        const nsStyleList* myList =
-      (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
-  
-      if (myList->mListStyleImage.Length() > 0) {
-        newSRC = myList->mListStyleImage;
-      }
-    }
-
-	if (!oldSRC.Equals(newSRC)) {
-		if (newSRC.Length() == 0)
-		{
-			mHasImage = PR_FALSE;
-			mNeedsLayout = PR_TRUE;
-		    mSizeFrozen = PR_TRUE;
-		}  else {
-		
-#ifdef NS_DEBUG
-      char oldcbuf[100], newcbuf[100];
-      oldSRC.ToCString(oldcbuf, sizeof(oldcbuf));
-      newSRC.ToCString(newcbuf, sizeof(newcbuf));
-      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-         ("nsTitledButtonFrame::AttributeChanged: new image source; old='%s' new='%s'",
-          oldcbuf, newcbuf));
-#endif
-
-      // Get rid of old image loader and start a new image load going
-      mImageLoader.DestroyLoader();
-
-      // Fire up a new image load request
-      PRIntn loadStatus;
-
-      mImageLoader.SetURLSpec(newSRC);
-      mImageLoader.StartLoadImage(aPresContext, this, nsnull,
-                                  PR_FALSE, loadStatus);
- 
-      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                     ("nsTitledButtonFrame::AttributeChanged: loadImage status=%x",
-                      loadStatus));
-
-      // If the image is already ready then we need to trigger a
-      // redraw because the image loader won't.
-      if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
-        // XXX Stuff this into a method on nsIPresShell/Context
-        nsRect bounds;
-        nsPoint offset;
-        nsIView* view;
-        GetOffsetFromView(offset, &view);
-        nsIViewManager* vm;
-        view->GetViewManager(vm);
-        bounds.x = offset.x;
-        bounds.y = offset.y;
-        bounds.width = mRect.width;
-        bounds.height = mRect.height;
-        vm->UpdateView(view, bounds, 0);
-        NS_RELEASE(vm);
-	  }
-		}
-    }
+    ImageMayHaveChanged(aPresContext);
   } else if (nsHTMLAtoms::value == aAttribute) {
 	  nsAutoString value;
 	  aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
@@ -727,6 +662,9 @@ nsTitledButtonFrame::Reflow(nsIPresContext&   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+   // the list-style-image may have changed.
+  ImageMayHaveChanged(&aPresContext);
+
   mNeedsLayout = PR_TRUE;
   nsresult result = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
   mRenderer.AddFocusBordersAndPadding(aPresContext, aReflowState, aMetrics, mBorderPadding);
@@ -1099,6 +1037,74 @@ nsTitledButtonFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsI
   
 } // ReResolveStyleContext
 
+
+void 
+nsTitledButtonFrame::ImageMayHaveChanged(nsIPresContext* aPresContext)
+{
+   // see if the source changed
+   // get the old image src
+  nsString oldSrc ="";
+  mImageLoader.GetURLSpec(oldSrc);
+
+   // get the new image src
+   nsString src = "";
+   mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::src, src);
+
+   // if the new image is empty
+   if (src.Equals("")) {
+     // get the list-style-image
+            const nsStyleList* myList =
+          (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+  
+          if (myList->mListStyleImage.Length() > 0) {
+            src = myList->mListStyleImage;
+          }
+   }
+
+   // see if the images are different
+   if (PR_FALSE == oldSrc.Equals(src)) {
+      // if they are and the new image is not empty set it and reload
+      if (PR_FALSE == src.Equals(""))
+      {
+         // Get rid of old image loader and start a new image load going
+          mImageLoader.DestroyLoader();
+
+          // Fire up a new image load request
+          PRIntn loadStatus;
+
+          mImageLoader.SetURLSpec(src);
+          mImageLoader.StartLoadImage(aPresContext, this, nsnull,
+                                      PR_FALSE, loadStatus);
+
+          mSizeFrozen = PR_FALSE;
+          mHasImage = PR_TRUE;
+
+        // If the image is already ready then we need to trigger a
+        // redraw because the image loader won't.
+        if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
+          // XXX Stuff this into a method on nsIPresShell/Context
+          nsRect bounds;
+          nsPoint offset;
+          nsIView* view;
+          GetOffsetFromView(offset, &view);
+          nsIViewManager* vm;
+          view->GetViewManager(vm);
+          bounds.x = offset.x;
+          bounds.y = offset.y;
+          bounds.width = mRect.width;
+          bounds.height = mRect.height;
+          vm->UpdateView(view, bounds, 0);
+          NS_RELEASE(vm);
+        }
+      } else {
+         // other wise unset the image.
+         mSizeFrozen = PR_TRUE;
+         mHasImage = PR_FALSE;
+      }
+      mNeedsLayout = PR_TRUE;
+   }
+
+}
 
 /*
 //----------------------------------------

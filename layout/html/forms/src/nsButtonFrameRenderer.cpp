@@ -317,7 +317,7 @@ nsButtonFrameRenderer::PaintButton     (nsIPresContext& aPresContext,
 										nsFramePaintLayer aWhichLayer,
 										const nsRect& aRect)
 {
-  printf("painted width='%d' height='%d'\n",aRect.width, aRect.height);
+  //printf("painted width='%d' height='%d'\n",aRect.width, aRect.height);
 
 	// draw the border and background inside the focus and outline borders
 	PaintBorderAndBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aRect);
@@ -585,7 +585,7 @@ nsButtonFrameRenderer::AddFocusBordersAndPadding(nsIPresContext& aPresContext,
   aMetrics.width += aBorderPadding.left + aBorderPadding.right;
   aMetrics.height += aBorderPadding.top + aBorderPadding.bottom;
 
-  printf("requested width='%d' height='%d'\n",aMetrics.width, aMetrics.height);
+ // printf("requested width='%d' height='%d'\n",aMetrics.width, aMetrics.height);
 }
 
 

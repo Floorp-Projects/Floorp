@@ -121,6 +121,7 @@ protected:
   virtual void setTitle(nsAutoString aTitle);
   virtual void setAlignment(nsAutoString aAlign);
   virtual void SetDisabled(nsAutoString aDisabled);
+  virtual void ImageMayHaveChanged(nsIPresContext* aPresContext);
 
 private:
 
