@@ -43,17 +43,23 @@ interface nsIMsgAccountManager : nsISupports {
    * account already in the account manager */
   attribute nsIMsgAccount defaultAccount;
 
-  /* ordered list of all accounts */
+  /* ordered list of all accounts
+   * array of nsIMsgAccount
+   */
   readonly attribute nsISupportsArray accounts;
 
   /* Each account will have a unique key, which should not change
    * for the life of the account. */
   string getAccountKey(in nsIMsgAccount account);
 
-  /* list of all identities in all accounts */
+  /* list of all identities in all accounts
+   * array of nsIMsgIdentity
+   */
   readonly attribute nsISupportsArray allIdentities;
 
-  /* list of all servers in all accounts */
+  /* list of all servers in all accounts
+   * array of nsIMsgIncomingServer
+   */
   readonly attribute nsISupportsArray allServers;
 
   /* given the preferences key for an identity, find the identity in the
@@ -68,11 +74,15 @@ interface nsIMsgAccountManager : nsISupports {
   nsIMsgIncomingServer
       FindServer(in string userName, in string hostname, in string type);
 
-  /* given a server, return all identities in accounts that have this server */
+  /* given a server, return all identities in accounts that have this server
+   * returns an array of nsIMsgIdentity
+   */
   nsISupportsArray GetIdentitiesForServer(in nsIMsgIncomingServer server);
 
   /* given an identity, return all servers in accounts that have
-   * this identity */
+   * this identity
+   * returns an array of nsIMsgIncomingServer
+   */
   nsISupportsArray GetServersForIdentity(in nsIMsgIdentity identity);
 
   /* load accounts kicks off the creation of all accounts. You do not need

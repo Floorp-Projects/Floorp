@@ -38,7 +38,9 @@ interface nsIMsgAccount : nsISupports {
   /* incoming server stuff */
   attribute nsIMsgIncomingServer incomingServer;
 
-  /* outgoing identity list */
+  /* outgoing identity list
+   * array of nsIMsgIdentity's
+   */
   readonly attribute nsISupportsArray identities;
 
   /* the default identity for this account. */
