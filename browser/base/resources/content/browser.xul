@@ -395,14 +395,6 @@ Contributor(s): ______________________________________. -->
                 ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
                 ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
                 tooltiptext="&goButton.tooltip;"/> 
-
-        <button id="search-button" class="button-toolbar chromeclass-location"
-                label="&searchButton.label;" hidden="true" persist="hidden"
-                oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
-                ondragover="nsDragAndDrop.dragOver(event, searchButtonObserver);"
-                ondragdrop="nsDragAndDrop.drop(event, searchButtonObserver);"
-                ondragexit="nsDragAndDrop.dragExit(event, searchButtonObserver);"
-                tooltiptext="&searchButton.tooltip;"/> 
       </hbox>
     </toolbar>
 
