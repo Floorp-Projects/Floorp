@@ -20,7 +20,6 @@
   #%]
 
 [%# INTERFACE:
-  # login: string. The user's Bugzilla login email address.
   # tabs: List of hashes. May not be empty. Each hash has three members:
   #   name: string. Name of the tab (used internally.)
   #   description: string. Description of the tab (used in tab title.)
@@ -35,7 +34,7 @@
   #                message if required (which Perl still evaluates as True).
   #%]
 
-[% filtered_login = login FILTER html %]
+[% filtered_login = user.login FILTER html %]
 [% PROCESS global/header.html.tmpl
    title = "User Preferences"
    h2 = filtered_login

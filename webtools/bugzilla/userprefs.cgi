@@ -19,6 +19,7 @@
 #                 David Miller <justdave@syndicomm.com>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Gervase Markham <gerv@gerv.net>
+#                 Vlad Dascalu <jocuri@softhome.net>
 
 use strict;
 
@@ -78,18 +79,20 @@ sub DoAccount {
 }
 
 sub SaveAccount {
-    my $pwd1 = $::FORM{'new_password1'};
-    my $pwd2 = $::FORM{'new_password2'};
+    my $cgi = Bugzilla->cgi;
 
-    if ($::FORM{'Bugzilla_password'} ne "" || 
+    my $pwd1 = $cgi->param('new_password1');
+    my $pwd2 = $cgi->param('new_password2');
+
+    if ($cgi->param('Bugzilla_password') ne "" || 
         $pwd1 ne "" || $pwd2 ne "") 
     {
-        my $old = SqlQuote($::FORM{'Bugzilla_password'});
+        my $old = SqlQuote($cgi->param('Bugzilla_password'));
         SendSQL("SELECT cryptpassword FROM profiles WHERE userid = $userid");
         my $oldcryptedpwd = FetchOneColumn();
         $oldcryptedpwd || ThrowCodeError("unable_to_retrieve_password");
 
-        if (crypt($::FORM{'Bugzilla_password'}, $oldcryptedpwd) ne 
+        if (crypt($cgi->param('Bugzilla_password'), $oldcryptedpwd) ne 
                   $oldcryptedpwd) 
         {
             ThrowUserError("old_password_incorrect");
@@ -97,7 +100,8 @@ sub SaveAccount {
 
         if ($pwd1 ne "" || $pwd2 ne "")
         {
-            $::FORM{'new_password1'} || ThrowUserError("new_password_missing");
+            $cgi->param('new_password1')
+              || ThrowUserError("new_password_missing");
             ValidatePassword($pwd1, $pwd2);
         
             my $cryptedpassword = SqlQuote(Crypt($pwd1));
@@ -105,16 +109,16 @@ sub SaveAccount {
                      SET    cryptpassword = $cryptedpassword 
                      WHERE  userid = $userid");
             # Invalidate all logins except for the current one
-            InvalidateLogins($userid, $::COOKIE{"Bugzilla_logincookie"});
+            InvalidateLogins($userid, $cgi->cookie("Bugzilla_logincookie"));
         }
     }
 
-    if(Param("allowemailchange") && $::FORM{'new_login_name'}) {
-        my $old_login_name = $::FORM{'Bugzilla_login'};
-        my $new_login_name = trim($::FORM{'new_login_name'});
+    if(Param("allowemailchange") && $cgi->param('new_login_name')) {
+        my $old_login_name = $cgi->param('Bugzilla_login');
+        my $new_login_name = trim($cgi->param('new_login_name'));
 
         if($old_login_name ne $new_login_name) {
-            $::FORM{'Bugzilla_password'} 
+            $cgi->param('Bugzilla_password') 
               || ThrowCodeError("old_password_required");
 
             use Token;
@@ -137,7 +141,7 @@ sub SaveAccount {
     }
 
     SendSQL("UPDATE profiles SET " .
-            "realname = " . SqlQuote(trim($::FORM{'realname'})) .
+            "realname = " . SqlQuote(trim($cgi->param('realname'))) .
             " WHERE userid = $userid");
 }
 
@@ -207,15 +211,16 @@ sub DoEmail {
 # Note: we no longer store "off" values in the database.
 sub SaveEmail {
     my $updateString = "";
+    my $cgi = Bugzilla->cgi;
     
-    if (defined $::FORM{'ExcludeSelf'}) {
+    if (defined $cgi->param('ExcludeSelf')) {
         $updateString .= 'ExcludeSelf~on';
     } else {
         $updateString .= 'ExcludeSelf~';
     }
     
     foreach my $flag (qw(FlagRequestee FlagRequester)) {
-        $updateString .= "~$flag~" . (defined($::FORM{$flag}) ? "on" : "");
+        $updateString .= "~$flag~" . (defined $cgi->param($flag) ? "on" : "");
     }
     
     foreach my $role (@roles) {
@@ -226,14 +231,14 @@ sub SaveEmail {
             
             # If the form field for this preference is defined, then we
             # know the checkbox was checked, so set the value to "on".
-            $updateString .= "on" if defined $::FORM{"email$role$reason"};
+            $updateString .= "on" if defined $cgi->param("email$role$reason");
         }
     }
             
     SendSQL("UPDATE profiles SET emailflags = " . SqlQuote($updateString) . 
             " WHERE userid = $userid");
 
-    if (Param("supportwatchers") && exists $::FORM{'watchedusers'}) {
+    if (Param("supportwatchers") && defined $cgi->param('watchedusers')) {
         # Just in case.  Note that this much locking is actually overkill:
         # we don't really care if anyone reads the watch table.  So 
         # some small amount of contention could be gotten rid of by
@@ -246,7 +251,7 @@ sub SaveEmail {
                                        " watcher=$userid");
 
         # Update the database to look like the form
-        my $newWatchedUsers = new RelationSet($::FORM{'watchedusers'});
+        my $newWatchedUsers = new RelationSet($cgi->param('watchedusers'));
         my @CCDELTAS = $origWatchedUsers->generateSqlDeltas(
                                                          $newWatchedUsers, 
                                                          "watch", 
@@ -300,10 +305,9 @@ GetVersionTable();
 
 my $cgi = Bugzilla->cgi;
 
-$vars->{'login'} = $::COOKIE{'Bugzilla_login'};
-$vars->{'changes_saved'} = $::FORM{'dosave'};
+$vars->{'changes_saved'} = $cgi->param('dosave');
 
-my $current_tab_name = $::FORM{'tab'} || "account";
+my $current_tab_name = $cgi->param('tab') || "account";
 
 # The SWITCH below makes sure that this is valid
 trick_taint($current_tab_name);
@@ -313,12 +317,12 @@ $vars->{'current_tab_name'} = $current_tab_name;
 # Do any saving, and then display the current tab.
 SWITCH: for ($current_tab_name) {
     /^account$/ && do {
-        SaveAccount() if $::FORM{'dosave'};
+        SaveAccount() if $cgi->param('dosave');
         DoAccount();
         last SWITCH;
     };
     /^email$/ && do {
-        SaveEmail() if $::FORM{'dosave'};
+        SaveEmail() if $cgi->param('dosave');
         DoEmail();
         last SWITCH;
     };
