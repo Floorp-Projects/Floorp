@@ -1,9 +1,19 @@
 classic.jar:
-	skin/classic/messenger/msgHdrViewOverlay.css
-	skin/classic/messenger/threadPane.css
-	skin/classic/messenger/pref-mailnews.css
-	skin/classic/messenger/folderPane.css
-	skin/classic/messenger/messenger.css
-	skin/classic/messenger/subscribe.css
-	skin/classic/messenger/msgAccountCentral.css
 	skin/classic/messenger/resources.xml
+	skin/classic/messenger/accountCentral.css
+	skin/classic/messenger/accountManage.css
+	skin/classic/messenger/accountWizard.css
+	skin/classic/messenger/dialogs.css
+	skin/classic/messenger/filterDialog.css
+	skin/classic/messenger/folderMenus.css
+	skin/classic/messenger/folderPane.css
+	skin/classic/messenger/mailWindow1.css
+	skin/classic/messenger/mailWindow2.css
+	skin/classic/messenger/messageHeader.css
+	skin/classic/messenger/messenger.css
+	skin/classic/messenger/prefPanels.css
+	skin/classic/messenger/primaryToolbar.css
+	skin/classic/messenger/searchDialog.css
+	skin/classic/messenger/subscribe.css
+	skin/classic/messenger/threadPane.css
+

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://messenger/skin/accountManager.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/smtpEditOverlay.xul"?>

@@ -21,20 +21,18 @@
  *
  */
 
-/* ===== messenger.css ==================================================
-  == Styles shared throughout the Messenger application.
+/* ===== accountWizard.css ==============================================
+  == Styles for the Mail Account Wizard.
   ======================================================================= */
 
-@import url("chrome://communicator/skin/");
-@import url("chrome://messenger/content/messenger.css");
+@import url("chrome://messenger/skin/");
+@import url("chrome://global/skin/wizardOverlay.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: image precaching ::::: */
+/* ::::: account wizard :::::: */
 
-#resource_bundle_messenger {
-   -moz-binding: url("chrome://messenger/skin/resources.xml#resource_bundle_messenger");
+.awIdentityLabel {
+  width: 8em; 
+  margin-left: 5px;
 }
-
-
-  

@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+
 <bindings id="resourcesBindings" xmlns="http://www.mozilla.org/xbl">
          
  <binding id="resource_bundle_messenger">

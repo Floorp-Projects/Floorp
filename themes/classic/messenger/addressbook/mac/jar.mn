@@ -1,4 +1,7 @@
 classic.jar:
-    skin/classic/messenger/addressbook/addressbook.css                   (addressbook.css)
-    skin/classic/messenger/addressbook/resources.xml                     (resources.xml)
-
+  skin/classic/messenger/addressbook/addressbook.css
+  skin/classic/messenger/addressbook/addressPanes.css
+  skin/classic/messenger/addressbook/cardDialog.css
+  skin/classic/messenger/addressbook/selectAddressesDialog.css
+  skin/classic/messenger/addressbook/sidebarPanel.css
+  skin/classic/messenger/addressbook/resources.xml

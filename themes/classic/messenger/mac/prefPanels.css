@@ -21,20 +21,23 @@
  *
  */
 
-/* ===== messenger.css ==================================================
-  == Styles shared throughout the Messenger application.
+/* ===== prefPanels.css =================================================
+  == Styles for the Messenger preference panels.
   ======================================================================= */
 
-@import url("chrome://communicator/skin/");
-@import url("chrome://messenger/content/messenger.css");
+@import url("chrome://messenger/skin/");
+@import url("chrome://communicator/skin/dialogOverlay.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: image precaching ::::: */
+/* :::::: layout preference icons ::::: */
 
-#resource_bundle_messenger {
-   -moz-binding: url("chrome://messenger/skin/resources.xml#resource_bundle_messenger");
+#classic {
+  min-height       : 32px;
+  list-style-image : url("chrome://messenger/skin/winclassic.gif");
 }
 
-
-  
+#wide {
+  min-height       : 32px;
+  list-style-image : url("chrome://messenger/skin/winwide.gif");
+}
