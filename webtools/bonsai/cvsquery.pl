@@ -165,6 +165,7 @@ sub query_checkins {
     }
     if (defined $::query_who && $::query_who ne '') {
         my $q = SqlQuote($::query_who);
+        $::query_whotype ||= "exact";
         if ($::query_whotype eq 'regexp') {
             $qstring .= " and people.who regexp $q";
         }
