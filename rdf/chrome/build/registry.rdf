@@ -19,6 +19,41 @@
 
   </chrome> 
 
+  <chrome r:ID="chrome://messenger/"> 
+
+    <skin> 
+      <r:Description r:ID="chrome://messenger/skin/">
+	    <base>resource:/res/mailnews/messenger/</base>
+        <main>messenger.css</main> 
+      </r:Description> 
+    </skin> 
+
+    <content> 
+      <r:Description r:ID="chrome://messenger/content/">
+	    <base>resource:/res/mailnews/messenger/</base>
+        <main>mailshell.xul</main> 
+      </r:Description> 
+    </content> 
+
+  </chrome> 
+
+  <chrome r:ID="chrome://messengercompose/"> 
+
+    <skin> 
+      <r:Description r:ID="chrome://messengercompose/skin/">
+	    <base>resource:/res/mailnews/compose/</base>
+        <main>messengercompose.css</main> 
+      </r:Description> 
+    </skin> 
+
+    <content> 
+      <r:Description r:ID="chrome://messengercompose/content/">
+	    <base>resource:/res/mailnews/compose/</base>
+        <main>msgcompose.xul</main> 
+      </r:Description> 
+    </content> 
+
+  </chrome> 
 </r:RDF> 
 
 
