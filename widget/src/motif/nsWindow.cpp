@@ -634,8 +634,9 @@ void nsWindow::RemoveChild(nsIWidget* aChild)
 void nsWindow::Show(PRBool bState)
 {
   mShown = bState;
-  if (bState)
+  if (bState) {
     XtManageChild(mWidget);
+  }
   else
     XtUnmanageChild(mWidget);
 
@@ -880,14 +881,14 @@ nsCursor nsWindow::GetCursor()
 
 void nsWindow::SetCursor(nsCursor aCursor)
 {
-  if (PR_FALSE == mDisplayed)
-   return;
+  Window window = ::XtWindow(mWidget);
+  if (0==window)
+    return;
+
   // Only change cursor if it's changing
   if (aCursor != mCursor) {
-printf("Changind CURSOR --------------------\n");
     Cursor newCursor = 0;
     Display *display = ::XtDisplay(mWidget);
-    Window window = ::XtWindow(mWidget);
 
     switch(aCursor) {
       case eCursor_select:
