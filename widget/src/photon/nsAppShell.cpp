@@ -32,7 +32,6 @@ nsAppShell::nsAppShell()
 { 
   NS_INIT_REFCNT();
   mDispatchListener = 0;
-  mSelectionMgr = 0;
   mEventBufferSz = sizeof( PhEvent_t ) + 1000;
   mEvent = (PhEvent_t*) malloc( mEventBufferSz );
   NS_ASSERTION( mEvent, "Out of memory" );
@@ -48,10 +47,6 @@ nsAppShell::nsAppShell()
 
 NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 {
-  // Create the selection manager
-//  if( !mSelectionMgr )
-//    NS_NewSelectionMgr( &mSelectionMgr );
-
   return NS_OK;
 }
 
@@ -208,7 +203,6 @@ NS_METHOD nsAppShell::Exit()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
-//  NS_IF_RELEASE(mSelectionMgr);
 }
 
 //-------------------------------------------------------------------------
@@ -225,9 +219,4 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
   return nsnull;
 }
 
-NS_METHOD nsAppShell::GetSelectionMgr(nsISelectionMgr** aSelectionMgr)
-{
-
-  return NS_OK;
-}
 

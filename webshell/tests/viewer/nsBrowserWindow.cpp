@@ -85,9 +85,6 @@
 // For Copy
 #include "nsIDOMSelection.h"
 
-#include "nsISelectionMgr.h"
-
-
 // XXX For font setting below
 #include "nsFont.h"
 #include "nsUnitConversion.h"

@@ -61,7 +61,7 @@ CPPSRCS= nsWidgetFactory.cpp \
 	nsMenu.cpp \
 	nsMenuItem.cpp \
 	nsPopUpMenu.cpp \
-	nsSelectionMgr.cpp
+	$(NULL)
 
 TARGETS = $(LIBRARY)
 
