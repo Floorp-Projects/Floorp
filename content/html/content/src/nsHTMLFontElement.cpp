@@ -307,7 +307,8 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
-nsHTMLFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
+nsHTMLFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                            PRInt32 aModType,
                                             PRInt32& aHint) const
 {
   if (aAttribute == nsHTMLAtoms::color) {

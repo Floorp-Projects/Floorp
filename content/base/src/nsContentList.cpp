@@ -1009,7 +1009,7 @@ nsContentList::RemoveFromHashtable()
 {
   if (!gContentListHashTable.ops)
     return;
-    
+
   PL_DHashTableOperate(&gContentListHashTable,
                        GetKey(),
                        PL_DHASH_REMOVE);

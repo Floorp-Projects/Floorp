@@ -383,6 +383,9 @@ public:
    * history as a handle associated with the current document's state
    *
    * @param aID the unique ID for this content [OUT]
+   *
+   * These methods are DEPRECATED, DON'T USE THEM!!!
+   *
    */
   NS_IMETHOD GetContentID(PRUint32* aID) = 0;
   /**

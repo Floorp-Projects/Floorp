@@ -2758,7 +2758,7 @@ nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
                              nsIDOMTreeWalker **_retval)
 {
   *_retval = nsnull;
-  
+
   nsresult rv = nsContentUtils::CheckSameOrigin(this, aRoot);
   if(NS_FAILED(rv))
     return rv;

@@ -1333,7 +1333,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXBLBinding::InitClass(const nsCString& aClassName,
                         nsIScriptContext* aContext, 
                         nsIDocument* aDocument, void** aScriptObject,
