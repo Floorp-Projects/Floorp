@@ -993,7 +993,7 @@ NS_IMETHODIMP nsRenderingContextGTK::InvertRect(nscoord aX, nscoord aY, nscoord 
   // It's all way off the screen anyway.
   ConditionRect(x,y,w,h);
 
-  mFunction = GDK_XOR;
+  mFunction = GDK_INVERT;
 
   UpdateGC();
 
