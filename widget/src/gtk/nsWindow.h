@@ -77,6 +77,8 @@ public:
   NS_IMETHOD           BeginResizingChildren(void);
   NS_IMETHOD           EndResizingChildren(void);
 
+  NS_IMETHOD           GetScreenBounds(nsRect &aRect);
+
   NS_IMETHOD           CaptureRollupEvents(nsIRollupListener * aListener,
                                            PRBool aDoCapture,
                                            PRBool aConsumeRollupEvent);

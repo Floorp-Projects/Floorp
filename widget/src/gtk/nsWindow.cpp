@@ -186,6 +186,8 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
   gint x;
   gint y;
 
+  aNewRect.width = aOldRect.width;
+  aNewRect.height = aOldRect.height;
   if (mIsToplevel && mShell)
   {
     if (mMozArea->window)
@@ -2182,6 +2184,12 @@ NS_IMETHODIMP nsWindow::BeginResizingChildren(void)
 NS_IMETHODIMP nsWindow::EndResizingChildren(void)
 {
   //  gtk_layout_thaw(GTK_LAYOUT(mWidget));
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::GetScreenBounds(nsRect &aRect)
+{
+  WidgetToScreen(mBounds, aRect);
   return NS_OK;
 }
 
