@@ -208,7 +208,6 @@ nsWindow* nsWindow::gCurrentWindow = nsnull;
 static nsIRollupListener * gRollupListener           = nsnull;
 static nsIWidget         * gRollupWidget             = nsnull;
 static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
-static PRBool              gRollupOnNextMouseUp      = PR_FALSE;
 
 // Hook Data Memebers for Dropdowns
 //
@@ -1203,18 +1202,12 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
 {
   if ( gRollupListener && gRollupWidget) {
 
-    if (gRollupOnNextMouseUp && inMsg == WM_LBUTTONUP) {
-      gRollupOnNextMouseUp = PR_FALSE;
-      gRollupListener->Rollup();
-    }
-    else if (inMsg == WM_ACTIVATE || inMsg == WM_NCLBUTTONDOWN || inMsg == WM_LBUTTONDOWN ||
+    if (inMsg == WM_ACTIVATE || inMsg == WM_NCLBUTTONDOWN || inMsg == WM_LBUTTONDOWN ||
       inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN || 
       inMsg == WM_NCMBUTTONDOWN || inMsg == WM_NCRBUTTONDOWN || inMsg == WM_MOUSEACTIVATE ||
       inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL || inMsg == WM_ACTIVATEAPP ||
       inMsg == WM_MENUSELECT || inMsg == WM_MOVING || inMsg == WM_SIZING || inMsg == WM_GETMINMAXINFO)
     {
-      gRollupOnNextMouseUp = PR_FALSE;
-
       // Rollup if the event is outside the popup.
       PRBool rollup = !nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)gRollupWidget);
 
@@ -1278,25 +1271,20 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
 
       // if we've still determined that we should still rollup everything, do it.
       else if ( rollup ) {
-        if (inMsg == WM_LBUTTONDOWN && !gRollupConsumeRollupEvent) {
-          // Rollup on next msg, such as mouse button up
-          // This ensures that we don't rollup only to find that the click was
-          // on a dropmarker, which will toggle our popup back open
-          // The gRollupListener->Rollup() is safe in that it doesn't toggle the state.
-          // It only closes the popup, so we want to call gRollupListener->Rollup()
-          // after the dropmarker does its toggle.
-          gRollupOnNextMouseUp = PR_TRUE;  
-        }
-        else {
-          gRollupListener->Rollup();
-          gProcessHook = PR_FALSE;
-          gRollupMsgId = 0;
-          if (gRollupConsumeRollupEvent && inMsg != WM_RBUTTONDOWN) {
-            *outResult = TRUE;
-            // Tell hook to stop processing messages
-            return TRUE;
-          }
-        }
+        gRollupListener->Rollup();
+
+        // Tell hook to stop processing messages
+        gProcessHook = PR_FALSE;
+        gRollupMsgId = 0;
+
+        // return TRUE tells Windows that the event is consumed, 
+        // false allows the event to be dispatched
+        //
+        // So if we are NOT supposed to be consuming events, let it go through
+        if (gRollupConsumeRollupEvent && inMsg != WM_RBUTTONDOWN) {
+          *outResult = TRUE;
+          return TRUE;
+        } 
       }
     } // if event that might trigger a popup to rollup    
   } // if rollup listeners registered
@@ -4096,7 +4084,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_ACTIVATE:
-          gRollupOnNextMouseUp = PR_FALSE;
           if (mEventCallback) {
             PRInt32 fActive = LOWORD(wParam);
 
