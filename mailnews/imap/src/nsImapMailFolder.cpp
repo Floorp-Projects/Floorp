@@ -4745,9 +4745,7 @@ NS_IMETHODIMP nsImapMailFolder::GetCanIOpenThisFolder(PRBool *aBool)
   PRBool noSelect;
   GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
   *aBool = (noSelect) ? PR_FALSE : GetFolderACL()->GetCanIReadFolder();
-
   return NS_OK;
-
 }
 
 ///////// nsMsgIMAPFolderACL class ///////////////////////////////
@@ -6771,6 +6769,13 @@ nsImapMailFolder::GetCanFileMessages(PRBool *aCanFileMessages)
   if (NS_SUCCEEDED(rv) && server)
     rv = server->GetCanFileMessagesOnServer(aCanFileMessages);
 
+  if (*aCanFileMessages)
+  {
+    PRBool noSelect;
+    GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
+    *aCanFileMessages = (noSelect) ? PR_FALSE : GetFolderACL()->GetCanIInsertInFolder();
+    return NS_OK;
+  }
   if (*aCanFileMessages)
     rv = nsMsgFolder::GetCanFileMessages(aCanFileMessages);
 

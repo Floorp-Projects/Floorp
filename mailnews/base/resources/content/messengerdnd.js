@@ -116,18 +116,13 @@ function CanDropOnFolderOutliner(index)
                 debugDump("***isServer == true\n");
                 return false;
             }
+            // canFileMessages checks no select, and acl, for imap.
             var canFileMessages = GetFolderAttribute(folderOutliner, targetResource, "CanFileMessages");
             if (canFileMessages != "true")
             {
                 debugDump("***canFileMessages == false\n");
                 return false;
             }
-            var noSelect = GetFolderAttribute(folderOutliner, targetResource, "NoSelect");
-            if (noSelect == "true")
-            {
-                debugDump("***NoSelect == true\n");
-                return false;
-            } 
             var hdr = messenger.messageServiceFromURI(sourceUri).messageURIToMsgHdr(sourceUri);
             if (hdr.folder == targetFolder)
                 return false;
