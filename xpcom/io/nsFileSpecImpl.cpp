@@ -552,8 +552,8 @@ NS_IMETHODIMP nsFileSpecImpl::write(const char * data, PRInt32 requestedCount, P
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
-	if (!mOutputStream)
-		return NS_ERROR_NULL_POINTER;
+	//if (!mOutputStream)
+	//	return NS_ERROR_NULL_POINTER;
 	if (!mOutputStream) {
 		nsresult rv=openStreamForWriting();
 		if (NS_FAILED(rv)) return rv;
