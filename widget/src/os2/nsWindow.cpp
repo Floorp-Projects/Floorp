@@ -63,7 +63,6 @@
 static int WINDOWCOUNT = 0;
 #endif
 
-#define kWindowPositionSlop 20
 static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
 // HWNDs are mapped to nsWindow objects using a custom presentation parameter,
@@ -1249,6 +1248,8 @@ NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop,
     }
   }
 
+#define kWindowPositionSlop 100
+
   if (doConstrain) {
     if (aAllowSlop) {
       if (*aX < screenRect.xLeft - mBounds.width + kWindowPositionSlop)
@@ -1256,8 +1257,8 @@ NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop,
       else if (*aX >= screenRect.xRight - kWindowPositionSlop)
         *aX = screenRect.xRight - kWindowPositionSlop;
   
-      if (*aY < screenRect.yTop - mBounds.height + kWindowPositionSlop)
-        *aY = screenRect.yTop - mBounds.height + kWindowPositionSlop;
+      if (*aY < screenRect.yTop)
+        *aY = screenRect.yTop;
       else if (*aY >= screenRect.yBottom - kWindowPositionSlop)
         *aY = screenRect.yBottom - kWindowPositionSlop;
   
