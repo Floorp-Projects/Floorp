@@ -209,13 +209,14 @@ morkStore::morkStore(morkEnv* ev, const morkUsage& inUsage,
      nsIMdbHeap* ioPortHeap  // the heap to hold all content in the port
      )
 : morkPort(ev, inUsage, ioNodeHeap, inFactory, ioPortHeap)
-, mStore_File( 0 )
-, mStore_InStream( 0 )
-, mStore_OutStream( 0 )
-, mStore_Builder( 0 )
 , mStore_OidAtomSpace( 0 )
 , mStore_GroundAtomSpace( 0 )
 , mStore_GroundColumnSpace( 0 )
+
+, mStore_File( 0 )
+, mStore_InStream( 0 )
+, mStore_Builder( 0 )
+, mStore_OutStream( 0 )
 
 , mStore_RowSpaces(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
 , mStore_AtomSpaces(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
