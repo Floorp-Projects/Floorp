@@ -161,10 +161,6 @@
   <key id="key_paste"
        key="&pasteCmd.key;"
        modifiers="accel"/>
-  <key id="key_findTypeText"
-       key="&findTypeTextCmd.key;"/>
-  <key id="key_findTypeLinks"
-       key="&findTypeLinksCmd.key;"/>
 
   <commandset id="globalEditMenuItems"
               commandupdater="true"

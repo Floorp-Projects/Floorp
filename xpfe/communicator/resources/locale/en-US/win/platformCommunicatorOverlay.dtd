@@ -12,3 +12,6 @@
 <!ENTITY redoCmd.label			"Redo">  
 <!ENTITY redoCmd.key			"Y">  
 <!ENTITY redoCmd.accesskey		"r">
+
+<!ENTITY findTypeTextCmd.key            "/">
+<!ENTITY findTypeLinksCmd.key           "'">
