@@ -77,3 +77,4 @@ CSRCS = \
 	$(NULL)
 endif
 
+#DEFINES += -DUSE_MPI_EXPT_D

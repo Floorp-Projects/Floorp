@@ -48,7 +48,7 @@ DH_GenParam(int primeLen, DHParams **params)
 {
     PRArenaPool *arena;
     DHParams *dhparams;
-    unsigned char *qb = NULL;
+    unsigned char *pb = NULL;
     unsigned char *ab = NULL;
     unsigned long counter = 0;
     mp_int p, q, a, h, psub1, test;
@@ -83,15 +83,15 @@ DH_GenParam(int primeLen, DHParams **params)
     CHECK_MPI_OK( mp_init(&psub1) );
     CHECK_MPI_OK( mp_init(&test) );
     /* generate prime with MPI, uses Miller-Rabin to generate strong prime. */
-    qb = PORT_Alloc(primeLen);
-    CHECK_SEC_OK(RNG_GenerateGlobalRandomBytes(qb, primeLen) );
-    qb[0]          |= 0x80; /* set high-order bit */
-    qb[primeLen-1] |= 0x01; /* set low-order bit  */
-    CHECK_MPI_OK( mp_read_unsigned_octets(&q, qb, primeLen) );
-    CHECK_MPI_OK( mpp_make_prime(&q, primeLen * 8, PR_TRUE, &counter) );
-    /* construct Sophie-Germain prime p = 2q + 1. */
-    CHECK_MPI_OK( mp_mul_2(&q, &psub1)    );
-    CHECK_MPI_OK( mp_add_d(&psub1, 1, &p) );
+    pb = PORT_Alloc(primeLen);
+    CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(pb, primeLen) );
+    pb[0]          |= 0x80; /* set high-order bit */
+    pb[primeLen-1] |= 0x01; /* set low-order bit  */
+    CHECK_MPI_OK( mp_read_unsigned_octets(&p, pb, primeLen) );
+    CHECK_MPI_OK( mpp_make_prime(&p, primeLen * 8, PR_TRUE, &counter) );
+    /* construct Sophie-Germain prime q = (p-1)/2. */
+    CHECK_MPI_OK( mp_sub_d(&p, 1, &psub1) );
+    CHECK_MPI_OK( mp_div_2(&psub1, &q)    );
     /* construct a generator from the prime. */
     ab = PORT_Alloc(primeLen);
     do {
@@ -116,7 +116,7 @@ cleanup:
     mp_clear(&h);
     mp_clear(&psub1);
     mp_clear(&test);
-    if (qb) PORT_ZFree(qb, primeLen);
+    if (pb) PORT_ZFree(pb, primeLen);
     if (ab) PORT_ZFree(ab, primeLen);
     if (err) {
 	MP_TO_SEC_ERROR(err);
