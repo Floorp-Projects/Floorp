@@ -6,8 +6,8 @@
 # partitions and this will require making directory structure in
 # get_filename() less regular then we have defined it here.
 
-# $Revision: 1.9 $ 
-# $Date: 2002/05/07 22:47:02 $ 
+# $Revision: 1.10 $ 
+# $Date: 2003/08/17 02:13:17 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/FileStructure.pm,v $ 
 # $Name:  $ 
@@ -31,10 +31,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
