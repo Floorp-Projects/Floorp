@@ -774,73 +774,77 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
     break;
   case NS_KEY_PRESS:
     if (nsEventStatus_eConsumeNoDefault != aStatus) {
-      switch(((nsKeyEvent*)aEvent)->keyCode) {
-        case NS_VK_TAB:
-          //Shift focus forward or back depending on shift key
-          ShiftFocus(!((nsInputEvent*)aEvent)->isShift);
-          aStatus = nsEventStatus_eConsumeNoDefault;
-          break;
-        case NS_VK_PAGE_DOWN: 
-        case NS_VK_PAGE_UP:
-          if (!mCurrentFocus) {
-            nsIScrollableView* sv = GetNearestScrollingView(aView);
-            if (sv) {
-              nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-              sv->ScrollByPages((keyEvent->keyCode != NS_VK_PAGE_UP) ? 1 : -1);
-            }
-          }
-          break;
-        case NS_VK_HOME: 
-        case NS_VK_END:
-          if (!mCurrentFocus) {
-            nsIScrollableView* sv = GetNearestScrollingView(aView);
-            if (sv) {
-              nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-              sv->ScrollByWhole((keyEvent->keyCode != NS_VK_HOME) ? PR_FALSE : PR_TRUE);
-            }
-          }
-          break;
-        case NS_VK_DOWN: 
-        case NS_VK_UP:
-          if (!mCurrentFocus) {
-            nsIScrollableView* sv = GetNearestScrollingView(aView);
-            if (sv) {
-              nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-              sv->ScrollByLines((keyEvent->keyCode == NS_VK_DOWN) ? 1 : -1);
-              
-              // force the update to happen now, otherwise multiple scrolls can
-              // occur before the update is processed. (bug #7354)
-              nsIViewManager* vm = nsnull;
-             	if (NS_OK == aView->GetViewManager(vm) && nsnull != vm) {
-             	  // I'd use Composite here, but it doesn't always work.
-                // vm->Composite();
-                nsIView* rootView = nsnull;
-                if (NS_OK == vm->GetRootView(rootView) && nsnull != rootView) {
-              	  nsIWidget* rootWidget = nsnull;
-              		if (NS_OK == rootView->GetWidget(rootWidget) && nsnull != rootWidget) {
-                    rootWidget->Update();
-                    NS_RELEASE(rootWidget);
-                  }
-              	}
-                NS_RELEASE(vm);
-              }
-            }
-          }
-          break;
-      case 0: /* check charcode since keycode is 0 */
-        {
-        //Spacebar
-          nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-          if (keyEvent->charCode == 0x20) {
+      nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+      //This is to prevent keyboard scrolling while alt modifier in use.
+      if (!keyEvent->isAlt) {
+        switch(keyEvent->keyCode) {
+          case NS_VK_TAB:
+            //Shift focus forward or back depending on shift key
+            ShiftFocus(!((nsInputEvent*)aEvent)->isShift);
+            aStatus = nsEventStatus_eConsumeNoDefault;
+            break;
+          case NS_VK_PAGE_DOWN: 
+          case NS_VK_PAGE_UP:
             if (!mCurrentFocus) {
               nsIScrollableView* sv = GetNearestScrollingView(aView);
               if (sv) {
-                sv->ScrollByPages(1);
+                nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+                sv->ScrollByPages((keyEvent->keyCode != NS_VK_PAGE_UP) ? 1 : -1);
+              }
+            }
+            break;
+          case NS_VK_HOME: 
+          case NS_VK_END:
+            if (!mCurrentFocus) {
+              nsIScrollableView* sv = GetNearestScrollingView(aView);
+              if (sv) {
+                nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+                sv->ScrollByWhole((keyEvent->keyCode != NS_VK_HOME) ? PR_FALSE : PR_TRUE);
+              }
+            }
+            break;
+          case NS_VK_DOWN: 
+          case NS_VK_UP:
+            if (!mCurrentFocus) {
+              nsIScrollableView* sv = GetNearestScrollingView(aView);
+              if (sv) {
+                nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+                sv->ScrollByLines((keyEvent->keyCode == NS_VK_DOWN) ? 1 : -1);
+              
+                // force the update to happen now, otherwise multiple scrolls can
+                // occur before the update is processed. (bug #7354)
+                nsIViewManager* vm = nsnull;
+             	  if (NS_OK == aView->GetViewManager(vm) && nsnull != vm) {
+             	    // I'd use Composite here, but it doesn't always work.
+                  // vm->Composite();
+                  nsIView* rootView = nsnull;
+                  if (NS_OK == vm->GetRootView(rootView) && nsnull != rootView) {
+              	    nsIWidget* rootWidget = nsnull;
+              		  if (NS_OK == rootView->GetWidget(rootWidget) && nsnull != rootWidget) {
+                      rootWidget->Update();
+                      NS_RELEASE(rootWidget);
+                    }
+              	  }
+                  NS_RELEASE(vm);
+                }
+              }
+            }
+            break;
+        case 0: /* check charcode since keycode is 0 */
+          {
+          //Spacebar
+            nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+            if (keyEvent->charCode == 0x20) {
+              if (!mCurrentFocus) {
+                nsIScrollableView* sv = GetNearestScrollingView(aView);
+                if (sv) {
+                  sv->ScrollByPages(1);
+                }
               }
             }
           }
+          break;
         }
-        break;
       }
     }
   }
