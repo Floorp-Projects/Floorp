@@ -1244,15 +1244,11 @@ mime_fix_header_1 (const char *string, PRBool addr_p, PRBool news_p)
 		return 0;
 
 	if (addr_p) {
-		nsIMsgHeaderParser * pHeader;
-		nsresult rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                               NULL, 
-                                               nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(), 
-                                               (void **) &pHeader);
+    nsresult rv = NS_OK;
+		nsCOMPtr<nsIMsgHeaderParser> pHeader = do_GetService(kMsgHeaderParserCID, &rv);
 		if (NS_SUCCEEDED(rv)) {
 			char *n;
 			pHeader->ReformatHeaderAddresses(nsnull, string, &n);
-			pHeader->Release();
 			if (n)
 				return n;
 		}

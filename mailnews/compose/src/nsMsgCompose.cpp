@@ -473,11 +473,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
     identity->GetOrganization(getter_Copies(organization));
     
 	char * sender = nsnull;
-	nsCOMPtr<nsIMsgHeaderParser> parser;
-    nsComponentManager::CreateInstance(kHeaderParserCID,
-                                            nsnull,
-                                            nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
-                                            getter_AddRefs(parser));
+	nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
   if (parser) {
     // convert to UTF8 before passing to MakeFullAddress
     nsAutoString fullNameStr(fullName);
@@ -1034,11 +1030,8 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
     if (NS_SUCCEEDED(rv))
     {
       char * authorName = nsnull;
-      nsCOMPtr<nsIMsgHeaderParser> parser;
-      nsComponentManager::CreateInstance(kHeaderParserCID,
-        nsnull,
-        nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
-        getter_AddRefs(parser));
+      nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
+
       if (parser)
       {
         nsAutoString aCharset(msgCompHeaderInternalCharset());

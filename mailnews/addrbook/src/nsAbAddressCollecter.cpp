@@ -84,11 +84,9 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 	char	*names;
 	char	*addresses;
 
-	nsCOMPtr<nsIMsgHeaderParser>  pHeader;
+  nsresult res = NS_OK;
+	nsCOMPtr<nsIMsgHeaderParser>  pHeader = do_GetService(kMsgHeaderParserCID, &res);
 
-	nsresult res = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                                    NULL, nsIMsgHeaderParser::GetIID(), 
-                                                    (void **) getter_AddRefs(pHeader)); 
 	if (NS_FAILED(res)) return res;
 
 	nsresult ret = pHeader->ParseHeaderAddresses (nsnull, address, &names, &addresses, &numAddresses);

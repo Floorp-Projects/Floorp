@@ -683,11 +683,7 @@ nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, nsIMsgRec
 	rv = pAddrArray->QueryInterface(NS_GET_IID(nsIMsgRecipientArray), (void **)_retval);
 	if (NS_SUCCEEDED(rv))
 	{
-		nsCOMPtr<nsIMsgHeaderParser> parser;
-		nsComponentManager::CreateInstance(kHeaderParserCID,
-		                           nsnull,
-		                           nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
-		                           getter_AddRefs(parser));
+		nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);;
 		if (parser)
 		{
 			char * recipientsStr;

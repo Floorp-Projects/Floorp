@@ -200,11 +200,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(nsISupports *aParam, const P
 				|| nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].emailAddress,searchStringLen) == 0)
 			{
 				// get a mime header parser to generate a valid address
-				nsCOMPtr<nsIMsgHeaderParser> parser;
-				nsComponentManager::CreateInstance(kHeaderParserCID,
-													nsnull,
-													nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
-													getter_AddRefs(parser));
+				nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
 
 				char * fullAddress = nsnull;
 				if (parser)
