@@ -43,10 +43,12 @@
 #include "nsXFormsStubElement.h"
 #include "nsString.h"
 
+// Form controls
 NS_HIDDEN_(nsresult) NS_NewXFormsInputElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsOutputElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsTriggerElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsSubmitElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsLabelElement(nsIXTFElement **aElement);
 
 //Action Module Elements
 NS_HIDDEN_(nsresult) NS_NewXFormsDispatchElement(nsIXTFElement **aResult);
@@ -77,27 +79,29 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsInputElement(aElement);
   if (aTagName.EqualsLiteral("output"))
     return NS_NewXFormsOutputElement(aElement);
-  if (aTagName.Equals(NS_LITERAL_STRING("dispatch")))
+  if (aTagName.EqualsLiteral("label"))
+    return NS_NewXFormsLabelElement(aElement);
+  if (aTagName.EqualsLiteral("dispatch"))
     return NS_NewXFormsDispatchElement(aElement);
-  if (aTagName.Equals(NS_LITERAL_STRING("send")))
+  if (aTagName.EqualsLiteral("send"))
     return NS_NewXFormsSendElement(aElement);
-  if (aTagName.Equals(NS_LITERAL_STRING("setfocus")))
+  if (aTagName.EqualsLiteral("setfocus"))
     return NS_NewXFormsSetFocusElement(aElement);
-  if (aTagName.Equals(NS_LITERAL_STRING("reset")))
+  if (aTagName.EqualsLiteral("reset"))
     return NS_NewXFormsResetElement(aElement);
-  if (aTagName.Equals(NS_LITERAL_STRING("rebuild")))
+  if (aTagName.EqualsLiteral("rebuild"))
     return NS_NewXFormsRebuildElement(aElement);
-  if (aTagName.Equals(NS_LITERAL_STRING("recalculate")))
+  if (aTagName.EqualsLiteral("recalculate"))
     return NS_NewXFormsRecalculateElement(aElement);
-  if (aTagName.Equals(NS_LITERAL_STRING("revalidate")))
+  if (aTagName.EqualsLiteral("revalidate"))
     return NS_NewXFormsRevalidateElement(aElement);
-  if (aTagName.Equals(NS_LITERAL_STRING("refresh")))
+  if (aTagName.EqualsLiteral("refresh"))
     return NS_NewXFormsRefreshElement(aElement);
-  if (aTagName.Equals(NS_LITERAL_STRING("action")))
+  if (aTagName.EqualsLiteral("action"))
     return NS_NewXFormsActionElement(aElement);
-  if (aTagName.Equals(NS_LITERAL_STRING("load")))
+  if (aTagName.EqualsLiteral("load"))
     return NS_NewXFormsLoadElement(aElement);
-  if (aTagName.Equals(NS_LITERAL_STRING("setvalue")))
+  if (aTagName.EqualsLiteral("setvalue"))
     return NS_NewXFormsSetValueElement(aElement);
   if (aTagName.EqualsLiteral("submission"))
     return NS_NewXFormsSubmissionElement(aElement);

@@ -72,6 +72,7 @@ public:
 
   // nsIXTFVisual overrides
   NS_IMETHOD GetVisualContent(nsIDOMElement **aElement);
+  NS_IMETHOD GetInsertionPoint(nsIDOMElement **aPoint);
 
   // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
@@ -92,6 +93,7 @@ public:
   nsXFormsInputElement() : mElement(nsnull) {}
 
 private:
+  nsCOMPtr<nsIDOMElement> mLabel;
   nsCOMPtr<nsIDOMHTMLInputElement> mInput;
   nsIDOMElement *mElement;
 };
@@ -121,16 +123,39 @@ nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   mElement = node;
   NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
+  // Our anonymous content structure will look like this:
+  //
+  // <label>                (mLabel)
+  //   <span/>              (insertion point)
+  //   <input/>             (mInput)
+  // </label>
+
   nsCOMPtr<nsIDOMDocument> domDoc;
   node->GetOwnerDocument(getter_AddRefs(domDoc));
 
-  nsCOMPtr<nsIDOMElement> inputElement;
+  domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
+                          NS_LITERAL_STRING("label"),
+                          getter_AddRefs(mLabel));
+  NS_ENSURE_TRUE(mLabel, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMElement> element;
+  nsCOMPtr<nsIDOMNode> childReturn;
+
+  domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
+                          NS_LITERAL_STRING("span"),
+                          getter_AddRefs(element));
+  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+
+  mLabel->AppendChild(element, getter_AddRefs(childReturn));
+
   domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
                           NS_LITERAL_STRING("input"),
-                          getter_AddRefs(inputElement));
+                          getter_AddRefs(element));
 
-  mInput = do_QueryInterface(inputElement);
+  mInput = do_QueryInterface(element);
   NS_ENSURE_TRUE(mInput, NS_ERROR_FAILURE);
+
+  mLabel->AppendChild(mInput, getter_AddRefs(childReturn));
 
   // We can't use xtf handleDefault here because editor stops blur events from
   // bubbling, and we can't use a system event group handler because blur
@@ -151,8 +176,16 @@ nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 NS_IMETHODIMP
 nsXFormsInputElement::GetVisualContent(nsIDOMElement **aElement)
 {
-  NS_ADDREF(*aElement = mInput);
+  NS_ADDREF(*aElement = mLabel);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputElement::GetInsertionPoint(nsIDOMElement **aPoint)
+{
+  nsCOMPtr<nsIDOMNode> childNode;
+  mLabel->GetFirstChild(getter_AddRefs(childNode));
+  return CallQueryInterface(childNode, aPoint);
 }
 
 // nsIXTFElement

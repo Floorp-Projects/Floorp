@@ -50,6 +50,7 @@ nsIAtom* nsXFormsAtoms::constraint;
 nsIAtom* nsXFormsAtoms::p3ptype;
 nsIAtom* nsXFormsAtoms::modelListProperty;
 nsIAtom *nsXFormsAtoms::ref;
+nsIAtom *nsXFormsAtoms::model;
 
 const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "src",                      &nsXFormsAtoms::src },
@@ -63,6 +64,7 @@ const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "p3ptype",                  &nsXFormsAtoms::p3ptype },
   { "ModelListProperty",        &nsXFormsAtoms::modelListProperty },
   { "ref",                      &nsXFormsAtoms::ref },
+  { "model",                    &nsXFormsAtoms::model }
 };
 
 void

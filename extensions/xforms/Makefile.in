@@ -105,6 +105,7 @@ CPPSRCS		= \
 		nsXFormsSetFocusElement.cpp \
 		nsXFormsSetValueElement.cpp \
 		nsXFormsLoadElement.cpp \
+		nsXFormsLabelElement.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
