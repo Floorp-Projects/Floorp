@@ -94,24 +94,34 @@ enum nsWindowType {
 
 enum nsBorderStyle
 {
-  // no border.. opposite of all
+  // no border, titlebar, etc.. opposite of all
   eBorderStyle_none     = 0,
+
   // all window decorations
   eBorderStyle_all      = 1 << 0,
-  // show the border
+
+  // enables the border on the window.  these are only for decoration and are not resize hadles
   eBorderStyle_border   = 1 << 1,
-  // show the horizontal resize bar
+
+  // enables the resize handles for the window.  if this is set, border is implied to also be set
   eBorderStyle_resizeh  = 1 << 2,
-  // show the titlebar
+
+  // enables the titlebar for the window
   eBorderStyle_title    = 1 << 3,
-  // show the OS menu thing that might be in the corner
+
+  // enables the window menu button on the title bar.  this being on should force the title bar to display
   eBorderStyle_menu     = 1 << 4,
-  // show the minimize button
+
+  // enables the minimize button so the user can minimize the window.
+  //   turned off for tranient windows since they can not be minimized seperate from their parent
   eBorderStyle_minimize = 1 << 5,
-  // show the maximize button
+
+  // enables the maxmize button so the user can maximize the window
   eBorderStyle_maximize = 1 << 6,
+
   // show the close button
   eBorderStyle_close    = 1 << 7,
+
   // whatever the OS wants... i.e. don't do anything
   eBorderStyle_default  = -1
 };
