@@ -647,7 +647,7 @@ nsInstall::DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName
 }
 
 PRInt32    
-nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRUint32* aReturn)
+nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRUint64* aReturn)
 {
     nsFileSpec fsFolder(aFolder);
 
@@ -1574,7 +1574,7 @@ nsInstall::FileOpFileGetNativeVersion(nsFileSpec& aTarget, nsString* aReturn)
 }
 
 PRInt32
-nsInstall::FileOpFileGetDiskSpaceAvailable(nsFileSpec& aTarget, PRUint32* aReturn)
+nsInstall::FileOpFileGetDiskSpaceAvailable(nsFileSpec& aTarget, PRUint64* aReturn)
 {
   *aReturn = aTarget.GetDiskSpaceAvailable();
   return NS_OK;

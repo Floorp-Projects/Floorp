@@ -93,7 +93,7 @@ class nsFileSpecWithUIImpl
 	NS_IMETHOD GetFileSize(PRUint32 *aFileSize);
 
 	/* readonly attribute unsigned long DiskSpaceAvailable; */
-	NS_IMETHOD GetDiskSpaceAvailable(PRUint32 *aDiskSpaceAvailable);
+	NS_IMETHOD GetDiskSpaceAvailable(PRUint64 *aDiskSpaceAvailable);
 
 	/* nsIFileSpec AppendRelativeUnixPath (in string relativePath); */
 	NS_IMETHOD AppendRelativeUnixPath(const char *relativePath);

@@ -421,33 +421,37 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
 } // nsFileSpec::Execute
 
 //----------------------------------------------------------------------------------------
-PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
+PRUint64 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
+    PRUint64 int64;
+    
+    LL_I2L(int64 , ULONG_MAX);
+
     char curdir [MAXPATHLEN];
     if (!mPath || !*mPath)
     {
         (void) getcwd(curdir, MAXPATHLEN);
         if (!curdir)
-            return ULONG_MAX;  /* hope for the best as we did in cheddar */
+            return int64;  /* hope for the best as we did in cheddar */
     }
     else
         sprintf(curdir, "%.200s", (const char*)mPath);
 
     BEntry e(curdir);
     if(e.InitCheck() != B_OK)
-        return ULONG_MAX; /* hope for the best as we did in cheddar */
+        return int64; /* hope for the best as we did in cheddar */
     entry_ref ref;
     e.GetRef(&ref);
     BVolume v(ref.device);
 
     // HACK!!!
-    PRUint32 space = v.FreeBytes() > (int64)(ULONG_MAX) ? ULONG_MAX : (int32)v.FreeBytes();
- 
+    LL_I2L(int64 , (v.FreeBytes() > (int64)(ULONG_MAX) ? ULONG_MAX : (int32)v.FreeBytes()));
+
 #ifdef DEBUG_DISK_SPACE
     printf("DiskSpaceAvailable: %d bytes\n", space);
 #endif
-    return space;
+    return int64;
 } // nsFileSpec::GetDiskSpace()
 
 //========================================================================================
