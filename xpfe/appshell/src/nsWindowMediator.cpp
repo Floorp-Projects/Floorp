@@ -588,9 +588,9 @@ nsWindowMediator::CalculateZPosition(
 
     return NS_ERROR_INVALID_ARG;
 
-  nsWindowInfo *info;
+  nsWindowInfo *info = mTopmostWindow;
   nsIXULWindow *belowWindow = 0;
-  PRBool        found;
+  PRBool        found = PR_FALSE;
   nsresult      result = NS_OK;
   
   PRUint32      inZ;
@@ -604,8 +604,6 @@ nsWindowMediator::CalculateZPosition(
   if (inPosition == nsIWindowMediator::zLevelBelow) {
 
     // locate inBelow. it had better be in the z-list if it's a valid window.
-    info = mTopmostWindow;
-    found = PR_FALSE;
     if (inBelow && info)
       do {
         nsCOMPtr<nsIWidget> scanWidget;
@@ -634,7 +632,6 @@ nsWindowMediator::CalculateZPosition(
     if (mTopmostWindow && GetWindowZ(mTopmostWindow->mWindow) > inZ) {
 
       // asked for topmost, can't have it. locate highest allowed position.
-      info = mTopmostWindow;
       do {
         if (GetWindowZ(info->mWindow) <= inZ)
           break;
@@ -650,7 +647,6 @@ nsWindowMediator::CalculateZPosition(
     if (mTopmostWindow && GetWindowZ(mTopmostWindow->mHigher->mWindow) < inZ) {
 
       // asked for bottommost, can't have it. locate lowest allowed position.
-      info = mTopmostWindow;
       do {
         info = info->mHigher;
         if (GetWindowZ(info->mWindow) >= inZ)
@@ -768,9 +764,7 @@ nsWindowMediator::SetZPosition(
         return NS_ERROR_INVALID_ARG;
       else
         inPosition = nsIWindowMediator::zLevelTop;
-  }
-  if (inPosition == nsIWindowMediator::zLevelTop ||
-      inPosition == nsIWindowMediator::zLevelBottom)
+  } else /* zLevelTop or zLevelBottom */
     belowInfo = mTopmostWindow ? mTopmostWindow->mHigher : 0;
 
   if (inInfo != belowInfo) {
