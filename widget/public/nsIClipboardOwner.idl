@@ -1,0 +1,45 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla Communicator.
+ * 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corp.  Portions created by Netscape are Copyright (C) 1999 Netscape 
+ * Communications Corp.  All Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Mike Pinkerton
+ */
+
+
+#include "nsISupports.idl"
+#include "nsITransferable.idl"
+
+
+[scriptable, uuid(5A31C7A1-E122-11d2-9A57-000064657374)]
+interface nsIClipboardOwner : nsISupports
+{
+   /**
+    * Notifies the owner of the clipboard transferable that the
+    * transferable is being removed from the clipboard
+    *
+    * @param  aTransferable The transferable
+    * @result NS_Ok if no errors
+    */
+  
+    void LosingOwnership ( in nsITransferable aTransferable ) ;
+};
+
+
+%{ C++
+
+%}
