@@ -11,72 +11,7 @@
  * Contributors:
  *    Frank Mitchell (frank.mitchell@sun.com)
  */
-#include <jni.h>
-#include "nsISupports.h"
-#include "xptcall.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern nsresult InitXPCOM();
-
-extern jboolean InitJavaCaches(JNIEnv *env);
-
-extern nsISupports *This(JNIEnv *env, jobject self);
-
-extern nsID *This_IID(JNIEnv *env, jobject self);
-
-extern jobject NewComObject(JNIEnv *env,
-			    nsISupports *xpcobj, const nsIID *iid);
-
-extern int BuildParamsForOffset(const nsID *iid, jint offset, 
-				  nsXPTCVariant **_retval);
-
-extern void BuildParamsForMethodInfo(const nsXPTMethodInfo *mi, 
-				     nsXPTCVariant variantArray[]);
-
-extern nsresult GetMethodInfo(const nsID *iid, jint offset, 
-			      const nsXPTMethodInfo **_retval);
-
-extern nsresult GetMethodInfoByName(const nsID *iid, 
-				    const char *methodname,
-				    PRBool wantSetter, 
-				    const nsXPTMethodInfo **miptr,
-				    int *_retval);
-
-extern void PrintParams(const nsXPTCVariant params[], int paramcount);
-
-extern nsresult JArrayToVariant(JNIEnv *env, 
-				int paramcount,
-				nsXPTCVariant *params, 
-				const jobjectArray jarray);
-
-extern jboolean JObjectToVariant(JNIEnv *env, 
-				 nsXPTCVariant *param, 
-				 const jobject obj);
-
-extern nsresult VariantToJArray(JNIEnv *env, 
-				jobjectArray jarray,
-				int paramcount,
-				nsXPTCVariant *params);
-
-extern jobject  VariantToJObject(JNIEnv *env, 
-				 const nsXPTCVariant *param);
-
-
-/* Defined in nsID.cpp */
-extern jobject  ID_NewJavaID(JNIEnv *env, const nsID* id);
-extern nsID*    ID_GetNative(JNIEnv *env, jobject self);
-extern void     ID_SetNative(JNIEnv *env, jobject self, nsID* id);
-extern jboolean ID_IsEqual(JNIEnv *env, jobject self, jobject other);
-
-#ifndef jlong_L2I
-#  define jlong_L2I(_i, _l) ((_i) = (_l))
-#  define jlong_I2L(_l, _i) ((_l) = (_i))
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
+#include "xpj_dispatch.h"
+#include "xpj_proxy.h"
+#include "xpj_utils.h"

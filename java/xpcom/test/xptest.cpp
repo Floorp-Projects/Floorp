@@ -29,31 +29,24 @@
 
 #include "nsSpecialSystemDirectory.h" 
 
-#include "xpjava.h" 
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID); 
 static NS_DEFINE_IID(kISampleIID, JSISAMPLE_IID); 
 static NS_DEFINE_CID(kSampleCID, JS_SAMPLE_CID); 
 
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
-
 #ifdef XP_PC
-#define XPCOM_DLL  "xpcom.dll"
 #define SAMPLE_DLL "xpjtest.dll"
 #else
 #ifdef XP_MAC
-#define XPCOM_DLL  "XPCOM_DLL"
 #define SAMPLE_DLL "XPJTEST_DLL"
 #else
-#define XPCOM_DLL  "libxpcom.so"
 #define SAMPLE_DLL "libxpjtest.so"
 #endif
 #endif
 
 
-void ParamsFromArgv(nsXPTCVariant *result, 
-		    const nsXPTMethodInfo *mi,
-		    int argi, int argc, char **argv) {
+static void ParamsFromArgv(nsXPTCVariant *result, 
+			   const nsXPTMethodInfo *mi,
+			   int argi, int argc, char **argv) {
   uint8 paramcount = mi->GetParamCount();
 
   memset(result, 0, sizeof(nsXPTCVariant) * paramcount);
@@ -194,7 +187,126 @@ void ParamsFromArgv(nsXPTCVariant *result,
       }
     }
   }
-  return result;
+}
+
+
+static void xpjd_PrintParams(const nsXPTCVariant params[], int paramcount) {
+    for (int i = 0; i < paramcount; i++) {
+
+        cerr << i << ") ";
+
+        switch(params[i].type) {
+        case nsXPTType::T_I8:
+            cerr << params[i].val.i8;
+            break;
+        case nsXPTType::T_I16:
+            cerr << params[i].val.i16;
+            break;
+        case nsXPTType::T_I32:
+            cerr << params[i].val.i32;
+            break;
+        case nsXPTType::T_I64:
+            cerr << params[i].val.i64;
+            break;
+        case nsXPTType::T_U8:
+            cerr << params[i].val.u8;
+            break;
+        case nsXPTType::T_U16:
+            cerr << params[i].val.u16;
+            break;
+        case nsXPTType::T_U32:
+            cerr << params[i].val.u32;
+            break;
+        case nsXPTType::T_U64:
+            cerr << params[i].val.u64;
+            break;
+        case nsXPTType::T_FLOAT:
+            cerr <<       params[i].val.f;
+            break;
+        case nsXPTType::T_DOUBLE:
+            cerr << params[i].val.d;
+            break;
+        case nsXPTType::T_BOOL:
+            cerr << (params[i].val.b ? "true" : "false");
+            break;
+        case nsXPTType::T_CHAR:
+            cerr << "'" << params[i].val.c << "'";
+            break;
+        case nsXPTType::T_WCHAR:
+            cerr << "'" << params[i].val.wc << "'";
+            break;
+        case nsXPTType::T_CHAR_STR:
+            cerr << params[i].val.p << ' '
+                 << '"' << (char *)params[i].val.p << '"';
+            break;
+        default:
+            // Ignore for now
+            break;
+        }
+        cerr << " : type " << (int)(params[i].type)
+             << ", ptr=" << params[i].ptr
+             << (params[i].IsPtrData() ?      ", data" : "")
+             << (params[i].IsValOwned() ?     ", owned" : "")
+             << (params[i].IsValInterface() ? ", interface" : "")
+             << endl;
+    }
+}
+
+
+static nsresult GetMethodInfoByName(const nsID *iid, 
+				    const char *methodname, 
+				    PRBool wantSetter,
+				    const nsXPTMethodInfo **miptr,
+				    int *_retval) {
+    nsresult res;
+    nsIInterfaceInfoManager *iim;
+    nsIInterfaceInfo *info = nsnull;
+
+    // Get info
+    iim = XPTI_GetInterfaceInfoManager();
+
+    if (!iim) {
+        cerr << "Failed to find InterfaceInfoManager" << endl;
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    res = iim->GetInfoForIID(iid, &info);
+
+    if (NS_FAILED(res)) {
+        cerr << "Failed to find info for " << iid->ToString() << endl;
+        return res;
+    }
+
+    // Find info for command
+    uint16 methodcount;
+
+    info->GetMethodCount(&methodcount);
+
+    int i;
+    for (i = 0; i < methodcount; i++) {
+        const nsXPTMethodInfo *mi;
+
+        info->GetMethodInfo(i, &mi);
+        // PENDING(frankm): match against name, get/set, *AND* param types
+        if (strcmp(methodname, mi->GetName()) == 0) {
+            PRBool setter = mi->IsSetter();
+            PRBool getter = mi->IsGetter();
+            if ((!getter && !setter) 
+                || (setter && wantSetter)
+                || (getter && !wantSetter)) {
+                *miptr = mi;
+                *_retval = i;
+                break;
+            }
+        }
+    }
+    if (i >= methodcount) {
+        cerr << "Failed to find " << methodname << endl;
+        *miptr = NULL;
+        *_retval = -1;
+        return NS_ERROR_FAILURE;
+    }
+    return res;
 }
 
 
@@ -217,7 +329,7 @@ int main(int argc, char **argv)
     }
 
     // Initialize XPCOM
-    InitXPCOM();
+    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
 
     // Create Instance
     res = nsComponentManager::CreateInstance(kSampleCID,
@@ -275,7 +387,7 @@ int main(int argc, char **argv)
 
     cerr << "Arguments are: " << endl;
 
-    PrintParams(params, paramcount);
+    xpjd_PrintParams(params, paramcount);
 
     // Invoke command
 
@@ -294,9 +406,7 @@ int main(int argc, char **argv)
 
     cerr << "Results are: " << endl;
 
-    PrintParams(params, paramcount);
-
-    delete [] params;
+    xpjd_PrintParams(params, paramcount);
 
     // Release Instance
     NS_RELEASE(sample); 

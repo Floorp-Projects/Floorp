@@ -75,11 +75,13 @@ $(COMPDIR)/libxpjtest.so: libxpjtest.so
 #
 # C++ test program
 #
-xptest: xptest.o ../src/libxpjava.so
-	$(CPP) -g -Wall -o xptest $(LIBS) -L ../src -lxpjava xptest.o
+xptest: xptest.o
+	$(CPP) -g -Wall -o xptest $(LIBS) xptest.o
 
-xptest.cpp: ../src/xpjava.h
 
+#
+# Java proxies
+#
 $(PROXY_JAR): $(GENPROXY) $(COMPDIR)/xpjtest.xpt
 	- mkdir $(PROXY_DIR)
 	$(GENPROXY) -d $(PROXY_DIR) $(COMPDIR)/xpjtest.xpt

@@ -42,8 +42,6 @@
 #endif
 #endif
 
-#define JAVA_XPCOBJECT_CLASS "org/mozilla/xpcom/ComObject"
-
 
 /* Global references to frequently used classes and objects */
 static jclass classString;
@@ -55,7 +53,6 @@ static jclass classFloat;
 static jclass classDouble;
 static jclass classBoolean;
 static jclass classCharacter;
-static jclass classComObject;
 
 /* Cached field and method IDs */
 static jfieldID Byte_value_ID;
@@ -66,8 +63,6 @@ static jfieldID Float_value_ID;
 static jfieldID Double_value_ID;
 static jfieldID Boolean_value_ID;
 static jfieldID Character_value_ID;
-
-static jfieldID ComObject_objptr_ID;
 
 static jmethodID Byte_init_ID;
 static jmethodID Short_init_ID;
@@ -81,137 +76,35 @@ static jmethodID Character_init_ID;
 /* Global references to frequently used XPCOM objects */
 static nsIInterfaceInfoManager *interfaceInfoManager;
 
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
+/* Flag to indicate caches filled */
+static jboolean cache_initialized = JNI_FALSE;
 
-/* ---------- SUPPORT FUNCTIONS ------------ */
 
-nsISupports *This(JNIEnv *env, jobject self) {
-    jlong objptr = env->GetLongField(self, ComObject_objptr_ID);
+/* ---------- GENERAL API FUNCTIONS ------------ */
 
-    nsISupports *result = (nsISupports *)objptr;
-
-    return result;
-}
-
-jclass ClassForInterface(JNIEnv *env, const nsIID *iid) {
-#if 0
-    // Get info
-    jclass result = classComObject; // null?
-    nsIInterfaceInfo *info = nsnull;
-    char *interface_name;
-    char *name_space;
-    char *full_classname;
-    char *ch;
+nsresult xpj_InitXPCOM() {
     nsresult res;
 
-    res = interfaceInfoManager->GetInfoForIID(iid, &info);
-
-    if (NS_FAILED(res)) {
-        cerr << "Failed to find info for " << iid->ToString() << endl;
-        goto end;
-    }
-
-    // XXX: PENDING: find name_space somehow
-    name_space = "org.mozilla.xpcom";
-    
-    res = info->GetName(&interface_name);
-
-    if (NS_FAILED(res)) {
-        cerr << "Failed to find name for " << iid->ToString() << endl;
-        goto end;
-    }
-
-    // Construct class name
-    full_classname = 
-	(char*)nsAllocator::Alloc(strlen(interface_name) + strlen(name_space) + 2);
-
-    strcpy(full_classname, name_space);
-    ch = full_classname;
-    while (ch != '\0') {
-	if (*ch == '.') {
-	    *ch = '/';
-	}
-	ch++;
-    }
-    strcat(full_classname, "/");
-    strcat(full_classname, interface_name);
-
-    cerr << "Looking for " << full_classname << endl;
-
-    result = env->FindClass(full_classname);
-    // XXX: PENDING: If no such class found, make it
-
-    // XXX: PENDING: Cache result
- end:
-    // Cleanup
-    nsAllocator::Free(interface_name);
-    nsAllocator::Free(full_classname);
-    //nsAllocator::Free(name_space);
-
-    return result;
-#else
-    return classComObject;
+#ifdef DEBUG_frankm
+    cerr << "Initializing XPCOM" << endl;
 #endif
+
+    // Autoregistration magic.  Boogeda boogeda.
+    res = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 
+					   nsnull);
+
+#ifdef DEBUG_frankm
+    cerr << "XPCOM Initialized" << endl;
+#endif
+
+    return res;
 }
 
-jobject NewComObject(JNIEnv *env, nsISupports *xpcobj, const nsIID *iid) {
-    jobject result = 0;
-    jmethodID initID = 0;
-    jclass proxyClass = ClassForInterface(env, iid);
-    jobject jiid = ID_NewJavaID(env, iid);
-
-    assert(proxyClass != 0);
-
-    initID = env->GetMethodID(proxyClass, "<init>", "(J)V");
-
-    if (initID != NULL) {
-        result = env->NewObject(proxyClass, initID, (jlong)xpcobj, jiid);
-    }
-    else {
-        initID = env->GetMethodID(proxyClass, "<init>", "()V");
-
-        result = env->NewObject(proxyClass, initID);
-        env->SetLongField(result, ComObject_objptr_ID, (jlong)xpcobj);
-    }
-
-    return result; 
-}
-
-nsresult GetMethodInfo(const nsID *iid, jint offset, 
-                       const nsXPTMethodInfo **_retval) {
-    nsresult res;
-
-    // Get info
-    nsIInterfaceInfo *info = nsnull;
-
-    res = interfaceInfoManager->GetInfoForIID(iid, &info);
-
-    if (NS_FAILED(res)) {
-        cerr << "Failed to find info for " << iid->ToString() << endl;
-        return res;
-    }
-
-    // Find info for command
-    uint16 methodcount;
-
-    info->GetMethodCount(&methodcount);
-
-    if (offset < methodcount) {
-        info->GetMethodInfo(offset, _retval);
-    }
-    else {
-        cerr << "Offset " << offset << " out of range for IID " 
-             << iid->ToString() << endl;
-        return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
-}
-
-nsresult GetMethodInfoByName(const nsID *iid, 
-                             const char *methodname, 
-                             PRBool wantSetter,
-                             const nsXPTMethodInfo **miptr,
-                             int *_retval) {
+nsresult xpj_GetMethodInfoByName(const nsID *iid, 
+				 const char *methodname, 
+				 PRBool wantSetter,
+				 const nsXPTMethodInfo **miptr,
+				 int *_retval) {
     nsresult res;
 
     // Get info
@@ -256,11 +149,44 @@ nsresult GetMethodInfoByName(const nsID *iid,
     return res;
 }
 
-void BuildParamsForMethodInfo(const nsXPTMethodInfo *mi, 
-                              nsXPTCVariant variantArray[]) {
+/* ---------- DISPATCH SUPPORT FUNCTIONS ------------ */
+
+static 
+int xpjd_BuildParamsForOffset(nsIInterfaceInfo *info, 
+			      jint offset,
+			      jint arraysize,
+			      nsXPTCVariant **_retval) {
+    const nsXPTMethodInfo *mi;
+    nsresult res;
+
+    // Find info for command
+    uint16 methodcount;
+
+    info->GetMethodCount(&methodcount);
+
+    if (offset < methodcount) {
+        info->GetMethodInfo(offset, &mi);
+    }
+    else {
+        cerr << "Offset " << offset << " should be < " << methodcount << endl;
+        return -1;
+    }
+
+    if (NS_FAILED(res)) {
+        return -1;
+    }
+
+    // Make sure the array is large enough, and alloc more if 
+    // necessary.
     int paramcount = mi->GetParamCount();
 
-    nsXPTCVariant *current = variantArray;
+    if (paramcount > arraysize || *_retval == NULL) {
+	*_retval = (nsXPTCVariant *)
+	    nsAllocator::Alloc(sizeof(nsXPTCVariant) * paramcount);
+    }
+
+    // Set flags, pointers, and types for array elements
+    nsXPTCVariant *current = *_retval;
 
     for (int i = 0; i < paramcount; i++) {
         nsXPTParamInfo param = mi->GetParam(i);
@@ -292,140 +218,13 @@ void BuildParamsForMethodInfo(const nsXPTMethodInfo *mi,
         }
         current++;
     }
+    return paramcount;
 }
 
-int BuildParamsForOffset(const nsID *iid, jint offset, 
-                         nsXPTCVariant **_retval) {
-    const nsXPTMethodInfo *mi;
-
-    nsresult res = GetMethodInfo(iid, offset, &mi);
-    if (NS_FAILED(res)) {
-        return -1;
-    }
-    else {
-        int paramcount = mi->GetParamCount();
-
-        // Build result based on number and types of parameters
-        if (*_retval == NULL) {
-            *_retval = new nsXPTCVariant[paramcount];
-        }
-
-        BuildParamsForMethodInfo(mi, *_retval);
-        return paramcount;
-    }
-}
-
-void PrintParams(const nsXPTCVariant params[], int paramcount) {
-    for (int i = 0; i < paramcount; i++) {
-
-        cerr << i << ") ";
-
-        switch(params[i].type) {
-        case nsXPTType::T_I8:
-            cerr << params[i].val.i8;
-            break;
-        case nsXPTType::T_I16:
-            cerr << params[i].val.i16;
-            break;
-        case nsXPTType::T_I32:
-            cerr << params[i].val.i32;
-            break;
-        case nsXPTType::T_I64:
-            cerr << params[i].val.i64;
-            break;
-        case nsXPTType::T_U8:
-            cerr << params[i].val.u8;
-            break;
-        case nsXPTType::T_U16:
-            cerr << params[i].val.u16;
-            break;
-        case nsXPTType::T_U32:
-            cerr << params[i].val.u32;
-            break;
-        case nsXPTType::T_U64:
-            cerr << params[i].val.u64;
-            break;
-        case nsXPTType::T_FLOAT:
-            cerr <<       params[i].val.f;
-            break;
-        case nsXPTType::T_DOUBLE:
-            cerr << params[i].val.d;
-            break;
-        case nsXPTType::T_BOOL:
-            cerr << (params[i].val.b ? "true" : "false");
-            break;
-        case nsXPTType::T_CHAR:
-            cerr << "'" << params[i].val.c << "'";
-            break;
-        case nsXPTType::T_WCHAR:
-            cerr << "'" << params[i].val.wc << "'";
-            break;
-        case nsXPTType::T_CHAR_STR:
-            cerr << params[i].val.p << ' '
-                 << '"' << (char *)params[i].val.p << '"';
-            break;
-        default:
-            // Ignore for now
-            break;
-        }
-        cerr << " : type " << (int)(params[i].type)
-             << ", ptr=" << params[i].ptr
-             << (params[i].IsPtrData() ?      ", data" : "")
-             << (params[i].IsValOwned() ?     ", owned" : "")
-             << (params[i].IsValInterface() ? ", interface" : "")
-             << endl;
-    }
-}
-
-nsresult JArrayToVariant(JNIEnv *env, 
-                      int paramcount,
-                      nsXPTCVariant *params, 
-                         const jobjectArray jarray) {
-    /*
-     * Match the array elements to the expected parameters;
-     * 
-     * Match:
-     *     T_BOOL : Boolean
-     *     T_I8: Byte
-     *     T_I16: Short
-     *     T_I32: Integer
-     *     T_I64: Long
-     *         -- we may want to support widening casts
-     *     T_U<n>: T_I<2n> type (T_U64 not supported)
-     *         -- we may allow T_I<n> if actual value in range
-     *         -- negative values are disallowed.
-     *     T_FLOAT: Float
-     *     T_DOUBLE: Double (or Float?)
-     *     T_CHAR: Character if value is an ASCII value
-     *     T_WCHAR: Character
-     *     T_CHAR_STRING: String as UTF-8 chars
-     *     T_WCHAR_STRING: String as Unicode chars
-     *     T_BSTR: String as UTF-8 chars
-     *     T_INTERFACE(_IS): XPCOM pointer for an ComObject, if nsID matches
-     */
-
-    nsXPTCVariant *current = params;
-
-    for (jsize i = 0; i < paramcount; i++, current++) {
-        jobject elem = env->GetObjectArrayElement(jarray, i);
-
-        if (elem == NULL) {
-            continue;
-        }
-
-        if (JObjectToVariant(env, current, elem) == JNI_FALSE) {
-            // PENDING: throw an exception
-            cerr << "Argument " << i << " is not of the correct type" << endl;
-        }
-    }
-    return NS_OK;
-}
-
-       
-
-jboolean JObjectToVariant(JNIEnv *env, 
-                       nsXPTCVariant *current, 
-                          const jobject elem) {
+static jboolean JObjectToVariant(JNIEnv *env, 
+				 nsXPTCVariant *current, 
+				 const jobject elem,
+				 REFNSIID iid) {
     jboolean result = JNI_FALSE;
     /*
      * Match:
@@ -548,7 +347,6 @@ jboolean JObjectToVariant(JNIEnv *env,
             tmpstr[jstrlen] = '\0';
 
             current->val.p = tmpstr;
-            current->flags |= nsXPTCVariant::VAL_IS_OWNED;
 
             env->ReleaseStringChars(string, wstr);
             result = JNI_TRUE;
@@ -562,7 +360,13 @@ jboolean JObjectToVariant(JNIEnv *env,
         break;
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
-        // PENDING: unwrap the ComObject, or wrap Java object in stub
+	if (elem == NULL) {
+	    current->val.p = NULL;
+	}
+	else {
+	    xpjp_QueryInterfaceToXPCOM(env, elem, iid, &(current->val.p));
+	}
+	current->flags |= nsXPTCVariant::VAL_IS_IFACE;
         break;
     case nsXPTType::T_BSTR:
         // Ignore for now
@@ -573,51 +377,31 @@ jboolean JObjectToVariant(JNIEnv *env,
     return result;
 }
 
-nsresult VariantToJArray(JNIEnv *env, 
-                      jobjectArray jarray,
-                      int paramcount,
-                         nsXPTCVariant *params) {
+static nsresult JArrayToVariant(JNIEnv *env, 
+				int paramcount,
+				nsXPTCVariant *params, 
+				const jobjectArray jarray) {
     nsXPTCVariant *current = params;
 
     for (jsize i = 0; i < paramcount; i++, current++) {
-        jobject elem = NULL; // env->GetObjectArrayElement(jarray, i);
-        jboolean isequal = JNI_FALSE;
-        nsXPTCVariant currValue;
+        jobject elem = env->GetObjectArrayElement(jarray, i);
+	nsIID iid = NS_GET_IID(nsISupports);
+	// PENDING: get the iid of the object
 
-        if (!(current->flags & nsXPTCVariant::PTR_IS_DATA)) {
+        if (elem == NULL) {
             continue;
         }
 
-        if (elem != NULL) {
-            memcpy(&currValue, current, sizeof(nsXPTCVariant));
-            if (JObjectToVariant(env, &currValue, elem) != JNI_FALSE) {
-                isequal = 
-                    (memcmp(&currValue, current, sizeof(nsXPTCVariant)) != 0);
-            }
-        }
-
-        if (isequal) {
-            // PENDING: what about casting to more specific interfaces?
-            continue;
-        }
-
-        elem = VariantToJObject(env, current);
-
-        env->SetObjectArrayElement(jarray, i, elem);
-
-        if (current->flags & nsXPTCVariant::VAL_IS_IFACE) {
-            ((nsISupports*)current->val.p)->Release();
-        }
-
-        if (current->flags & nsXPTCVariant::VAL_IS_OWNED) {
-            delete [] current->val.p;
-            current->val.p = 0;  // for cleanliness sake
+        if (JObjectToVariant(env, current, elem, iid) == JNI_FALSE) {
+            // PENDING: throw an exception
+            cerr << "Argument " << i << " is not of the correct type" << endl;
         }
     }
     return NS_OK;
 }
 
-extern jobject VariantToJObject(JNIEnv *env, const nsXPTCVariant *current) {
+       
+static jobject VariantToJObject(JNIEnv *env, const nsXPTCVariant *current) {
     jobject result = NULL;
 
     // Integer code assumes that current->val.i# == current->val.u#
@@ -717,64 +501,61 @@ extern jobject VariantToJObject(JNIEnv *env, const nsXPTCVariant *current) {
     return result;
 }
 
-nsresult InitXPCOM() {
-    nsresult res;
 
-#ifdef DEBUG_frankm
-    cerr << "Initializing XPCOM" << endl;
-#endif
+static nsresult VariantToJArray(JNIEnv *env, 
+				jobjectArray jarray,
+				int paramcount,
+				nsXPTCVariant *params) {
+    nsXPTCVariant *current = params;
 
-    // Autoregistration magic.  Boogeda boogeda.
+    for (jsize i = 0; i < paramcount; i++, current++) {
+        jobject elem = NULL; // env->GetObjectArrayElement(jarray, i);
+        jboolean isequal = JNI_FALSE;
+        nsXPTCVariant currValue;
 
-    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+        if (!(current->flags & nsXPTCVariant::PTR_IS_DATA)) {
+            continue;
+        }
 
-#if 0
-    // XXX Remove when allocator autoregisters
-    cerr << "Registering Allocator" << endl;
+        if (elem != NULL) {
+	    nsIID iid = NS_GET_IID(nsISupports);
+	    // PENDING: get the iid of the object
 
-    res = nsComponentManager::RegisterComponent(kAllocatorCID,
-                                                "nsAllocator",
-                                                "allocator",
-                                                XPCOM_DLL,
-                                                PR_TRUE,
-                                                PR_TRUE);
+            memcpy(&currValue, current, sizeof(nsXPTCVariant));
+            if (JObjectToVariant(env, &currValue, elem, iid) != JNI_FALSE) {
+                isequal = 
+                    (memcmp(&currValue, current, sizeof(nsXPTCVariant)) != 0);
+            }
+        }
 
-    if (NS_FAILED(res)) {
-        cerr << "Failed to register allocator, res = " << res << endl;
-        return res;
+        if (isequal) {
+            // PENDING: what about casting to more specific interfaces?
+            continue;
+        }
+
+        elem = VariantToJObject(env, current);
+
+        env->SetObjectArrayElement(jarray, i, elem);
+
+        if (current->flags & nsXPTCVariant::VAL_IS_IFACE) {
+            xpjp_SafeRelease((nsISupports*)current->val.p);
+        }
+
+        if (current->flags & nsXPTCVariant::VAL_IS_OWNED) {
+            delete [] current->val.p;
+            current->val.p = 0;  // for cleanliness sake
+        }
     }
-#endif
-
-    // Get InterfaceInfoManager
-
-#ifdef DEBUG_frankm
-    cerr << "Getting InterfaceInfoManager" << endl;
-#endif
-
-    interfaceInfoManager = XPTI_GetInterfaceInfoManager();
-
-    if (!interfaceInfoManager) {
-        cerr << "Failed to find InterfaceInfoManager" << endl;
-        return res;
-    }
-
-#ifdef DEBUG_frankm
-    cerr << "XPCOM Initialized" << endl;
-#endif
-
-    return res;
+    return NS_OK;
 }
 
-jboolean InitJavaCaches(JNIEnv *env) {
+/* ---------- DISPATCH API FUNCTIONS ------------ */
 
-    // PENDING: move to ComObject, for better locality?
-    classComObject = env->FindClass(JAVA_XPCOBJECT_CLASS);
-    if (classComObject == NULL) return JNI_FALSE;
-    classComObject = (jclass)env->NewGlobalRef(classComObject);
-    if (classComObject == NULL) return JNI_FALSE;
+jboolean xpjd_InitJavaCaches(JNIEnv *env) {
 
-    ComObject_objptr_ID = env->GetFieldID(classComObject, "objptr", "J");
-    if (ComObject_objptr_ID == NULL) return JNI_FALSE;
+    if (cache_initialized) {
+	return JNI_TRUE;
+    }
 
     // For basic types
 
@@ -871,6 +652,159 @@ jboolean InitJavaCaches(JNIEnv *env) {
     Character_value_ID = env->GetFieldID(classCharacter, "value", "C");
     if (Character_value_ID == NULL) return JNI_FALSE;
 
-    return JNI_TRUE;
+    // Get InterfaceInfoManager
+
+#ifdef DEBUG_frankm
+    cerr << "Getting InterfaceInfoManager" << endl;
+#endif
+
+    interfaceInfoManager = XPTI_GetInterfaceInfoManager();
+
+    if (!interfaceInfoManager) {
+	// XXX: throw exception or something
+        cerr << "Failed to find InterfaceInfoManager" << endl;
+        return JNI_FALSE;
+    }
+
+#ifdef DEBUG_frankm
+    cerr << "InterfaceInfoManager found!" << endl;
+#endif
+
+    cache_initialized = JNI_TRUE;
+
+    return cache_initialized;
 }
+
+void xpjd_FlushJavaCaches(JNIEnv *env) {
+
+    cache_initialized = JNI_FALSE;
+
+    // For basic types
+
+    env->DeleteGlobalRef(classString);
+    classString = NULL;
+
+    env->DeleteGlobalRef(classByte);
+    classByte = NULL;
+
+    env->DeleteGlobalRef(classShort);
+    classShort = NULL;
+
+    env->DeleteGlobalRef(classInteger);
+    classInteger = NULL;
+
+    env->DeleteGlobalRef(classLong);
+    classLong = NULL;
+
+    env->DeleteGlobalRef(classFloat);
+    classFloat = NULL;
+
+    env->DeleteGlobalRef(classDouble);
+    classDouble = NULL;
+
+    env->DeleteGlobalRef(classBoolean);
+    classBoolean = NULL;
+
+    env->DeleteGlobalRef(classCharacter);
+    classCharacter = NULL;
+
+    Byte_init_ID = NULL;
+    Byte_value_ID = NULL;
+    Short_init_ID = NULL;
+    Short_value_ID = NULL;
+    Integer_init_ID = NULL;
+    Integer_value_ID = NULL;
+    Long_init_ID = NULL;
+    Long_value_ID = NULL;
+    Float_init_ID = NULL;
+    Float_value_ID = NULL;
+    Double_init_ID = NULL;
+    Double_value_ID = NULL;
+    Boolean_init_ID = NULL;
+    Boolean_value_ID = NULL;
+    Character_init_ID = NULL;
+    Character_value_ID = NULL;
+}
+
+jboolean xpjd_GetInterfaceInfo(JNIEnv *env, 
+			      jobject iid,
+			      nsIInterfaceInfo **info) {
+    nsID *nativeIID = ID_GetNative(env, iid);
+
+    return xpjd_GetInterfaceInfoNative(*nativeIID, info);
+}
+
+jboolean xpjd_GetInterfaceInfoNative(REFNSIID iid,
+				     nsIInterfaceInfo **info) {
+    nsresult res;
+
+    // Get info
+    *info = nsnull;
+
+    res = interfaceInfoManager->GetInfoForIID(&iid, info);
+
+    if (NS_FAILED(res)) {
+        cerr << "Failed to find info for " << iid.ToString() << endl;
+        return res;
+    }
+}
+
+void xpjd_InvokeMethod(JNIEnv *env, 
+		       nsISupports *target,
+		       nsIInterfaceInfo *info,
+		       jint methodIndex,
+		       jobjectArray jargs) {
+
+    nsresult res = NS_OK;
+    nsXPTCVariant paramArray[32];
+    nsXPTCVariant *params = paramArray;
+    int nparams = 0;
+    const int capacity = sizeof(paramArray)/sizeof(paramArray[0]);
+
+    // XXX: check info != NULL, target != null, jargs != null, env != null
+
+    // XXX: check bounds of methodIndex
+
+    nparams = xpjd_BuildParamsForOffset(info, 
+					methodIndex, 
+					capacity,
+					&params);
+    if (nparams < 0) {
+	// PENDING: throw an exception
+	cerr << "Couldn't initialize parameter array" << endl;
+	goto finally;
+    }
+
+    res = JArrayToVariant(env, nparams, params, jargs);
+    if (NS_FAILED(res)) {
+	// PENDING: throw an exception
+	cerr << "Array and parameter list mismatch" << endl;
+	goto finally;
+    }
+
+    //xpjp_SafeAddRef(target);
+
+    res = XPTC_InvokeByIndex(target, methodIndex, nparams, params);
+
+    //xpjp_SafeRelease(target);
+
+    if (NS_FAILED(res)) {
+	// PENDING: throw an exception
+	cerr << "Invocation failed, status: " << res << endl;
+	goto finally;
+    }
+
+    res = VariantToJArray(env, jargs, nparams, params);
+    if (NS_FAILED(res)) {
+	// PENDING: throw an exception
+	cerr << "Array and parameter list mismatch" << endl;
+	goto finally;
+    }
+
+finally:
+    if (params != paramArray) {
+	nsAllocator::Free(params);
+    }
+}
+
 

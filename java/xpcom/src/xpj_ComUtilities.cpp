@@ -36,39 +36,13 @@
 extern "C" {
 #endif
 
-/* Because not all platforms convert jlong to "long long" 
- *
- * NOTE: this code was cut&pasted from xpj_XPCMethod.cpp, with tweaks.
- *   Normally I wouldn't do this, but my reasons are:
- *
- *   1. My alternatives were to put it in xpjava.h or xpjava.cpp
- *      I'd like to take stuff *out* of xpjava.h, and putting it 
- *      in xpjava.cpp would preclude inlining.
- *
- *   2. How we map proxies to XPCOM objects is an implementation 
- *      detail, which may change in the future (e.g. an index 
- *      into a proxy table).  Thus ToPtr/ToJLong is only of 
- *      interest to those objects that stuff pointers into jlongs.
- *
- *   3. This allows adaptations to each implementation, for 
- *      type safety (e.g. ToPtr returning nsISupports*).
- *
- *   -- frankm, 99.09.09
- */
-static inline nsISupports* ToPtr(jlong l) {
-    int result;
-    jlong_L2I(result, l);
-    return (nsISupports *)result;
-}
-
-
 JNIEXPORT jboolean JNICALL 
     Java_org_mozilla_xpcom_XPComUtilities_initialize(JNIEnv *env, jclass cls)
 {
-    nsresult res = InitXPCOM();
+    nsresult res = xpj_InitXPCOM();
     if (NS_FAILED(res)) return JNI_FALSE;
 
-    return InitJavaCaches(env);
+    return xpjd_InitJavaCaches(env); // XXX: remove; do in dispatch
 }
 
 /*
@@ -88,7 +62,10 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_xpcom_XPComUtilities_CreateInstance
     nsISupports *delegate = NULL;
 
     if (jdelegate != NULL) {
-	delegate = This(env, jdelegate);
+	xpjp_QueryInterfaceToXPCOM(env, 
+				   jdelegate, 
+				   NS_GET_IID(nsISupports),
+				   (void **)&delegate);
     }
 
     assert(classID != NULL && interfaceID != NULL);
@@ -117,7 +94,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_xpcom_XPComUtilities_CreateInstance
     // cerr << "Wrapping " << sample << " in new ComObject" << endl;
 
     // Wrap it in an ComObject
-    result = NewComObject(env, xpcobj, interfaceID);
+    result = xpjp_QueryInterfaceToJava(env, xpcobj, *interfaceID);
 
     return result;    
 }
@@ -171,7 +148,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPComUtilities_RegisterComponent
 JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPComUtilities_AddRef
     (JNIEnv *env, jclass cls, jlong ref)
 {
-    (ToPtr(ref))->AddRef();
+    xpjp_SafeAddRefProxyID(ref);
 }
 
 /*
@@ -182,7 +159,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPComUtilities_AddRef
 JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPComUtilities_Release
     (JNIEnv *env, jclass cls, jlong ref)
 {
-    (ToPtr(ref))->Release();
+    xpjp_SafeReleaseProxyID(ref);
 }
 
 /*
@@ -197,51 +174,20 @@ JNIEXPORT void JNICALL
 					    jlong ref, 
 					    jint index, 
 					    jobjectArray args) {
-    nsXPTCVariant variantArray[12];
-    nsXPTCVariant *variantPtr = variantArray;
-    int paramcount;
-    nsID *nativeIID = ID_GetNative(env, iid);
+    nsIInterfaceInfo *info = nsnull;
+    nsISupports *target;
 
-    // PENDING: Get real IID
-    paramcount =
-	BuildParamsForOffset(nativeIID, index, &variantPtr);
+    // XXX: check for success
+    xpjd_GetInterfaceInfo(env, iid, &info);
 
-    if (paramcount < 0) {
-	// PENDING: throw an exception
-    }
-    else {
-	nsresult res;
+    // XXX: s.b. just |xpjp_UnwrapProxy(env, self);|
+    nsIID *nativeIID = ID_GetNative(env, iid);
+    xpjp_QueryInterfaceForProxyID(ref, *nativeIID, (void**)&target);
 
-	res = JArrayToVariant(env, paramcount, variantPtr, args);
-	if (NS_FAILED(res)) {
-	    // PENDING: throw an exception
-	    cerr << "Array and parameter list mismatch" << endl;
-	    return;
-	}
+    xpjd_InvokeMethod(env, target, info, index, args);
 
-	nsISupports* true_this = ToPtr(ref);
-
-	//true_this->AddRef();
-	res = XPTC_InvokeByIndex(true_this, 
-				 (PRUint32)index,
-				 (PRUint32)paramcount, 
-				 variantPtr);
-
-	//true_this->Release();
-
-	if (NS_FAILED(res)) {
-	    // PENDING: throw an exception
-	    cerr << "Invocation failed, status: " << res << endl;
-	    return;
-	}
-
-	res = VariantToJArray(env, args, paramcount, variantPtr);
-	if (NS_FAILED(res)) {
-	    // PENDING: throw an exception
-	    cerr << "Array and parameter list mismatch" << endl;
-	    return;
-	}
-    }
+    // XXX: remove when ref not QueryInterface'd
+    xpjp_SafeReleaseProxyID(ref);
 }
 
 #ifdef __cplusplus

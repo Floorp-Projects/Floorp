@@ -31,6 +31,7 @@ LIBRARY_NAME = xpjava
 
 CPPSRCS =				\
 	xpjava.cpp			\
+	xpj_proxy.cpp			\
 	xpj_XPCMethod.cpp		\
 	xpj_ComUtilities.cpp		\
 	xpj_nsID.cpp			\

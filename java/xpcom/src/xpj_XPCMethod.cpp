@@ -39,7 +39,7 @@ static jfieldID XPCMethod_count_ID = NULL;
 
 jclass classXPCMethod = NULL;
 
-#define USE_PARAM_TEMPLATE
+#undef USE_PARAM_TEMPLATE
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,10 +89,18 @@ JNIEXPORT jint JNICALL
     const char *tmpstr;
     nsresult res;
 
-    // Get method info
-    tmpstr = env->GetStringUTFChars(methodName, NULL);
-    res = GetMethodInfoByName(iidPtr, tmpstr, PR_FALSE, &mi, &offset);
+    // Get interface info
+    nsIInterfaceInfo *info = nsnull;
 
+    res = (XPTI_GetInterfaceInfoManager())->GetInfoForIID(iidPtr, &info);
+
+    if (NS_FAILED(res)) {
+	cerr << "Failed to find info for " << iidPtr->ToString() << endl;
+	return res;
+    }
+
+    tmpstr = env->GetStringUTFChars(methodName, NULL);
+    res = xpj_GetMethodInfoByName(iidPtr, tmpstr, PR_FALSE, &mi, &offset);
     if (NS_FAILED(res)) {
 	cerr << "Cannot find method for: " << (char *)tmpstr << endl;
 	return -1;
@@ -147,7 +155,7 @@ JNIEXPORT jint JNICALL
 
     env->SetLongField(self, 
 		      XPCMethod_infoptr_ID, 
-		      ToJLong(mi));
+		      ToJLong(info));
 
     env->SetIntField(self, 
 		     XPCMethod_count_ID, 
@@ -155,8 +163,8 @@ JNIEXPORT jint JNICALL
 
 #ifdef USE_PARAM_TEMPLATE
     // Build parameter array
-    nsXPTCVariant *variantPtr = new nsXPTCVariant[mi->GetParamCount()];
-    BuildParamsForMethodInfo(mi, variantPtr);
+    nsXPTCVariant *variantPtr = NULL;
+    xpjd_BuildParamsForOffset(info, offset, 0, &variantPtr);
 
     env->SetLongField(self, 
 		      XPCMethod_frameptr_ID, 
@@ -181,7 +189,9 @@ JNIEXPORT void JNICALL
 						 jobject self, jlong peer) {
 
     nsXPTCVariant *variantPtr = (nsXPTCVariant *)ToPtr(peer);
-    delete [] variantPtr;
+    if (variantPtr != NULL) {
+	nsAllocator::Free(variantPtr);
+    }
 }
 
 /*
@@ -199,9 +209,13 @@ JNIEXPORT jint JNICALL Java_org_mozilla_xpcom_XPCMethod_getParameterType
 	return -1;
     }
     else {
+	jint  offset = env->GetIntField(self, XPCMethod_offset_ID);
 	jlong ptrval = env->GetLongField(self, XPCMethod_infoptr_ID);
-	const nsXPTMethodInfo *mi =
-	    (const nsXPTMethodInfo *)ToPtr(ptrval);
+
+	const nsXPTMethodInfo *mi;
+	nsIInterfaceInfo *info = (nsIInterfaceInfo *)ToPtr(ptrval);
+
+	info->GetMethodInfo(offset, &mi);
 	return mi->GetParam(index).GetType().TagPart();
     }
 }
@@ -232,14 +246,18 @@ JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPCMethod_invoke
     }
 
     jint offset = env->GetIntField(self, XPCMethod_offset_ID);
-    jint paramcount = env->GetIntField(self, XPCMethod_count_ID);
 
-    nsXPTCVariant variantArray[paramcount];
+    jlong infoptr = env->GetLongField(self, XPCMethod_infoptr_ID);
+    nsIInterfaceInfo *info = 
+	(nsIInterfaceInfo *)ToPtr(infoptr);
 
 #ifdef USE_PARAM_TEMPLATE
-    jlong ptrval = env->GetLongField(self, XPCMethod_frameptr_ID);
+    jint paramcount = env->GetIntField(self, XPCMethod_count_ID);
+
     nsXPTCVariant *paramTemplate = 
-	(nsXPTCVariant *)ToPtr(ptrval);
+	(nsXPTCVariant *)ToPtr(env->GetLongField(self, XPCMethod_frameptr_ID));
+
+    nsXPTCVariant variantArray[paramcount];
 
     memcpy(variantArray, paramTemplate, paramcount * sizeof(nsXPTCVariant));
     // Fix pointers
@@ -249,42 +267,20 @@ JNIEXPORT void JNICALL Java_org_mozilla_xpcom_XPCMethod_invoke
 	    current->ptr = &current->val;
 	}
     }
-#else
-    jlong ptrval = env->GetLongField(self, XPCMethod_infoptr_ID);
-    const nsXPTMethodInfo *mi =
-	(const nsXPTMethodInfo *)ToPtr(ptrval);
-    BuildParamsForMethodInfo(mi, variantArray);
 #endif
+    nsIID* iid = nsnull;
+    nsISupports *true_target = nsnull;
 
-    res = JArrayToVariant(env, paramcount, variantArray, params);
+    // XXX: check for success
+    info->GetIID(&iid);
 
-    if (NS_FAILED(res)) {
-	// PENDING: throw an exception
-	cerr << "JArrayToVariant failed, status: " << res << endl;
-	return;
-    }
+    // XXX: check for success
+    xpjp_QueryInterfaceToXPCOM(env, target, *iid, (void**)&true_target);
 
-    nsISupports* true_target = This(env, target);
+    xpjd_InvokeMethod(env, true_target, info, offset, params);
 
-    res = XPTC_InvokeByIndex(true_target, 
-			     (PRUint32)offset,
-			     (PRUint32)paramcount, 
-			     variantArray);
-
-    if (NS_FAILED(res)) {
-	// PENDING: throw an exception
-	cerr << "Method failed, status: " << res << endl;
-	return;
-    }
-
-    res = VariantToJArray(env, params, paramcount, variantArray);
-
-    if (NS_FAILED(res)) {
-	// PENDING: throw an exception
-	cerr << "VariantToJArray failed, status: " << res << endl;
-	return;
-    }
-
+    xpjp_SafeRelease(true_target);
+    nsAllocator::Free(iid);
 }
 
 #ifdef __cplusplus
