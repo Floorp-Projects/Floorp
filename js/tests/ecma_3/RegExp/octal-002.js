@@ -1,62 +1,62 @@
 /* ***** BEGIN LICENSE BLOCK *****
-* Version: NPL 1.1/GPL 2.0/LGPL 2.1
-*
-* The contents of this file are subject to the Netscape Public License
-* Version 1.1 (the "License"); you may not use this file except in
-* compliance with the License. You may obtain a copy of the License at
-* http://www.mozilla.org/NPL/
-*
-* Software distributed under the License is distributed on an "AS IS" basis,
-* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-* for the specific language governing rights and limitations under the
-* License.
-*
-* The Original Code is JavaScript Engine testing utilities.
-*
-* The Initial Developer of the Original Code is Netscape Communications Corp.
-* Portions created by the Initial Developer are Copyright (C) 2002
-* the Initial Developer. All Rights Reserved.
-*
-* Contributor(s): pschwartau@netscape.com
-*
-* Alternatively, the contents of this file may be used under the terms of
-* either the GNU General Public License Version 2 or later (the "GPL"), or
-* the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-* in which case the provisions of the GPL or the LGPL are applicable instead
-* of those above. If you wish to allow use of your version of this file only
-* under the terms of either the GPL or the LGPL, and not to allow others to
-* use your version of this file under the terms of the NPL, indicate your
-* decision by deleting the provisions above and replace them with the notice
-* and other provisions required by the GPL or the LGPL. If you do not delete
-* the provisions above, a recipient may use your version of this file under
-* the terms of any one of the NPL, the GPL or the LGPL.
-*
-* ***** END LICENSE BLOCK *****
-*
-*
-* Date:    31 July 2002
-* SUMMARY: Testing regexps containing octal escape sequences
-* This is an elaboration of mozilla/js/tests/ecma_2/RegExp/octal-003.js
-*
-* See http://bugzilla.mozilla.org/show_bug.cgi?id=141078
-* for a reference on octal escape sequences in regexps.
-*
-* NOTE:
-* We will use the identities '\011' === '\u0009' === '\x09' === '\t'
-*
-* The first is an octal escape sequence (\(0-3)OO; O an octal digit).
-* See ECMA-262 Edition 2, Section 7.7.4 "String Literals". These were
-* dropped in Edition 3 but we support them for backward compatibility.
-*
-* The second is a Unicode escape sequence (\uHHHH; H a hex digit).
-* Since octal 11 = hex 9, the two escapes define the same character.
-*
-* The third is a hex escape sequence (\xHH; H a hex digit).
-* Since hex 09 = hex 0009, this defines the same character.
-*
-* The fourth is the familiar escape sequence for a horizontal tab,
-* defined in the ECMA spec as having Unicode value \u0009.
-*/
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is JavaScript Engine testing utilities.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s): pschwartau@netscape.com
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK *****
+ *
+ *
+ * Date:    31 July 2002
+ * SUMMARY: Testing regexps containing octal escape sequences
+ * This is an elaboration of mozilla/js/tests/ecma_2/RegExp/octal-003.js
+ *
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=141078
+ * for a reference on octal escape sequences in regexps.
+ *
+ * NOTE:
+ * We will use the identities '\011' === '\u0009' === '\x09' === '\t'
+ *
+ * The first is an octal escape sequence (\(0-3)OO; O an octal digit).
+ * See ECMA-262 Edition 2, Section 7.7.4 "String Literals". These were
+ * dropped in Edition 3 but we support them for backward compatibility.
+ *
+ * The second is a Unicode escape sequence (\uHHHH; H a hex digit).
+ * Since octal 11 = hex 9, the two escapes define the same character.
+ *
+ * The third is a hex escape sequence (\xHH; H a hex digit).
+ * Since hex 09 = hex 0009, this defines the same character.
+ *
+ * The fourth is the familiar escape sequence for a horizontal tab,
+ * defined in the ECMA spec as having Unicode value \u0009.
+ */
 //-----------------------------------------------------------------------------
 var i = 0;
 var bug = 141078;

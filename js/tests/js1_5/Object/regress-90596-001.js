@@ -1,30 +1,31 @@
 /*
-* The contents of this file are subject to the Netscape Public
-* License Version 1.1 (the "License"); you may not use this file
-* except in compliance with the License. You may obtain a copy of
-* the License at http://www.mozilla.org/NPL/
-*
-* Software distributed under the License is distributed on an "AS
-* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-* implied. See the License for the specific language governing
-* rights and limitations under the License.
-*
-* The Original Code is mozilla.org code.
-*
-* The Initial Developer of the Original Code is Netscape
-* Communications Corporation.  Portions created by Netscape are
-* Copyright (C) 1998 Netscape Communications Corporation.
-* All Rights Reserved.
-*
-* Contributor(s): pschwartau@netscape.com
-* Date: 28 August 2001
-*
-* SUMMARY: A [DontEnum] prop, if overridden, should appear in toSource().
-* See http://bugzilla.mozilla.org/show_bug.cgi?id=90596
-*
-* NOTE: some inefficiencies in the test are made for the sake of readability.
-* Sorting properties alphabetically is done for definiteness in comparisons.
-*/
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.
+ * All Rights Reserved.
+ *
+ * Contributor(s): pschwartau@netscape.com
+ *
+ * Date: 28 August 2001
+ *
+ * SUMMARY: A [DontEnum] prop, if overridden, should appear in toSource().
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=90596
+ *
+ * NOTE: some inefficiencies in the test are made for the sake of readability.
+ * Sorting properties alphabetically is done for definiteness in comparisons.
+ */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = 90596;

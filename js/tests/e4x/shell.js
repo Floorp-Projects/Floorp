@@ -19,8 +19,8 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Igor Bukanov 
- * Rob Ginda rginda@netscape.com
+ *   Igor Bukanov 
+ *   Rob Ginda rginda@netscape.com
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the

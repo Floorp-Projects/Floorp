@@ -17,7 +17,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * Norris Boyd
+ *   Norris Boyd
  * 
  */
     var SECTION = "JavaObject Field or method access";

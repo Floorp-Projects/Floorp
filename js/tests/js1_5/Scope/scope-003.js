@@ -1,50 +1,51 @@
 /*
-* The contents of this file are subject to the Netscape Public
-* License Version 1.1 (the "License"); you may not use this file
-* except in compliance with the License. You may obtain a copy of
-* the License at http://www.mozilla.org/NPL/
-*
-* Software distributed under the License is distributed on an
-* "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either expressed
-* or implied. See the License for the specific language governing
-* rights and limitations under the License.
-*
-* The Original Code is mozilla.org code.
-*
-* The Initial Developer of the Original Code is Netscape
-* Communications Corporation.  Portions created by Netscape are
-* Copyright (C) 1998 Netscape Communications Corporation.
-* All Rights Reserved.
-*
-* Contributor(s): coliver@mminternet.com, pschwartau@netscape.com
-* Date: 2001-07-03
-*
-* SUMMARY:  Testing scope with nested functions
-*
-* From correspondence with Christopher Oliver <coliver@mminternet.com>:
-*
-* > Running this test with Rhino produces the following exception:
-* >
-* > uncaught JavaScript exception: undefined: Cannot find default value for
-* > object. (line 3)
-* >
-* > This is due to a bug in org.mozilla.javascript.NativeCall which doesn't
-* > implement toString or valueOf or override getDefaultValue.
-* > However, even after I hacked in an implementation of getDefaultValue in
-* > NativeCall, Rhino still produces a different result then SpiderMonkey:
-* >
-* > [object Call]
-* > [object Object]
-* > [object Call]
-*
-* Note the results should be:
-*
-*   [object global]
-*   [object Object]
-*   [object global]
-*
-* This is what we are checking for in this testcase -
-*/
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either expressed
+ * or implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.
+ * All Rights Reserved.
+ *
+ * Contributor(s): coliver@mminternet.com, pschwartau@netscape.com
+ *
+ * Date: 2001-07-03
+ *
+ * SUMMARY:  Testing scope with nested functions
+ *
+ * From correspondence with Christopher Oliver <coliver@mminternet.com>:
+ *
+ * > Running this test with Rhino produces the following exception:
+ * >
+ * > uncaught JavaScript exception: undefined: Cannot find default value for
+ * > object. (line 3)
+ * >
+ * > This is due to a bug in org.mozilla.javascript.NativeCall which doesn't
+ * > implement toString or valueOf or override getDefaultValue.
+ * > However, even after I hacked in an implementation of getDefaultValue in
+ * > NativeCall, Rhino still produces a different result then SpiderMonkey:
+ * >
+ * > [object Call]
+ * > [object Object]
+ * > [object Call]
+ *
+ * Note the results should be:
+ *
+ *   [object global]
+ *   [object Object]
+ *   [object global]
+ *
+ * This is what we are checking for in this testcase -
+ */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = '(none)';

@@ -1,50 +1,51 @@
 /*
-* The contents of this file are subject to the Netscape Public
-* License Version 1.1 (the "License"); you may not use this file
-* except in compliance with the License. You may obtain a copy of
-* the License at http://www.mozilla.org/NPL/
-*
-* Software distributed under the License is distributed on an "AS
-* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-* implied. See the License for the specific language governing
-* rights and limitations under the License.
-*
-* The Original Code is mozilla.org code.
-*
-* The Initial Developer of the Original Code is Netscape
-* Communications Corporation.  Portions created by Netscape are
-* Copyright (C) 1998 Netscape Communications Corporation.
-* All Rights Reserved.
-*
-* Contributor(s): brendan@mozilla.org, pschwartau@netscape.com
-* Date: 09 October 2001
-*
-* SUMMARY: Regression test for Bugzilla bug 99663
-* See http://bugzilla.mozilla.org/show_bug.cgi?id=99663
-*
-*******************************************************************************
-*******************************************************************************
-* ESSENTIAL!: this test should contain, or be loaded after, a call to
-*
-*                         version(120);
-*
-* Only JS version 1.2 or less has the behavior we're expecting here -
-*
-* Brendan: "The JS_SetVersion stickiness is necessary for tests such as
-* this one to work properly. I think the existing js/tests have been lucky
-* in dodging the buggy way that JS_SetVersion's effect can be undone by
-* function return."
-*
-* Note: it is the function statements for f1(), etc. that MUST be compiled
-* in JS version 1.2 or less for the test to pass -
-*
-*******************************************************************************
-*******************************************************************************
-*
-*
-* NOTE: the test uses the |it| object of SpiderMonkey; don't run it in Rhino -
-*
-*/
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.
+ * All Rights Reserved.
+ *
+ * Contributor(s): brendan@mozilla.org, pschwartau@netscape.com
+ *
+ * Date: 09 October 2001
+ *
+ * SUMMARY: Regression test for Bugzilla bug 99663
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=99663
+ *
+ *******************************************************************************
+ *******************************************************************************
+ * ESSENTIAL!: this test should contain, or be loaded after, a call to
+ *
+ *                         version(120);
+ *
+ * Only JS version 1.2 or less has the behavior we're expecting here -
+ *
+ * Brendan: "The JS_SetVersion stickiness is necessary for tests such as
+ * this one to work properly. I think the existing js/tests have been lucky
+ * in dodging the buggy way that JS_SetVersion's effect can be undone by
+ * function return."
+ *
+ * Note: it is the function statements for f1(), etc. that MUST be compiled
+ * in JS version 1.2 or less for the test to pass -
+ *
+ *******************************************************************************
+ *******************************************************************************
+ *
+ *
+ * NOTE: the test uses the |it| object of SpiderMonkey; don't run it in Rhino -
+ *
+ */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = 99663;

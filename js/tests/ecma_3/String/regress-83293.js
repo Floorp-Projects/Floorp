@@ -1,51 +1,52 @@
 /*
-* The contents of this file are subject to the Netscape Public
-* License Version 1.1 (the "License"); you may not use this file
-* except in compliance with the License. You may obtain a copy of
-* the License at http://www.mozilla.org/NPL/
-*
-* Software distributed under the License is distributed on an "AS
-* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-* implied. See the License for the specific language governing
-* rights and limitations under the License.
-*
-* The Original Code is mozilla.org code.
-*
-* The Initial Developer of the Original Code is Netscape
-* Communications Corporation.  Portions created by Netscape are
-* Copyright (C) 1998 Netscape Communications Corporation. All
-* Rights Reserved.
-*
-* Contributor(s): pschwartau@netscape.com, jim@jibbering.com
-* Creation Date:   30 May 2001
-* Correction Date: 14 Aug 2001
-*
-* SUMMARY:  Regression test for bugs 83293, 103351
-* See http://bugzilla.mozilla.org/show_bug.cgi?id=83293
-*     http://bugzilla.mozilla.org/show_bug.cgi?id=103351
-*     http://bugzilla.mozilla.org/show_bug.cgi?id=92942
-*
-*
-* ********************   CORRECTION !!!  *****************************
-*
-* When I originally wrote this test, I thought this was true:
-* str.replace(strA, strB) == str.replace(new RegExp(strA),strB).
-* See ECMA-262 Final Draft, 15.5.4.11 String.prototype.replace
-*
-* However, in http://bugzilla.mozilla.org/show_bug.cgi?id=83293
-* Jim Ley points out the ECMA-262 Final Edition changed on this.
-* String.prototype.replace (searchValue, replaceValue), if provided
-* a searchValue that is not a RegExp, is NO LONGER to replace it with
-*
-*                  new RegExp(searchValue)
-* but rather:
-*                  String(searchValue)
-*
-* This puts the replace() method at variance with search() and match(),
-* which continue to follow the RegExp conversion of the Final Draft.
-* It also makes most of this testcase, as originally written, invalid.
-**********************************************************************
-*/
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): pschwartau@netscape.com, jim@jibbering.com
+ *
+ * Creation Date:   30 May 2001
+ * Correction Date: 14 Aug 2001
+ *
+ * SUMMARY:  Regression test for bugs 83293, 103351
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=83293
+ *     http://bugzilla.mozilla.org/show_bug.cgi?id=103351
+ *     http://bugzilla.mozilla.org/show_bug.cgi?id=92942
+ *
+ *
+ * ********************   CORRECTION !!!  *****************************
+ *
+ * When I originally wrote this test, I thought this was true:
+ * str.replace(strA, strB) == str.replace(new RegExp(strA),strB).
+ * See ECMA-262 Final Draft, 15.5.4.11 String.prototype.replace
+ *
+ * However, in http://bugzilla.mozilla.org/show_bug.cgi?id=83293
+ * Jim Ley points out the ECMA-262 Final Edition changed on this.
+ * String.prototype.replace (searchValue, replaceValue), if provided
+ * a searchValue that is not a RegExp, is NO LONGER to replace it with
+ *
+ *                  new RegExp(searchValue)
+ * but rather:
+ *                  String(searchValue)
+ *
+ * This puts the replace() method at variance with search() and match(),
+ * which continue to follow the RegExp conversion of the Final Draft.
+ * It also makes most of this testcase, as originally written, invalid.
+ **********************************************************************
+ */
 //-----------------------------------------------------------------------------
 var bug = 103351; // <--- (Outgrowth of original bug 83293)
 var summ_OLD = 'Testing str.replace(strA, strB) == str.replace(new RegExp(strA),strB)';
@@ -139,7 +140,7 @@ function test()
   expect = str.replace(new RegExp(strA), strB);
   reportCompare(expect, actual, status);
 
-*************************  END OF INCORRECT CASES ****************************/
+ *************************  END OF INCORRECT CASES ****************************/
 
 
 //////////////////////////  OK, LET'S START OVER //////////////////////////////

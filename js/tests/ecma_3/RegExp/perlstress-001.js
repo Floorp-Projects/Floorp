@@ -1,55 +1,55 @@
 /* ***** BEGIN LICENSE BLOCK *****
-* Version: NPL 1.1/GPL 2.0/LGPL 2.1
-*
-* The contents of this file are subject to the Netscape Public License
-* Version 1.1 (the "License"); you may not use this file except in
-* compliance with the License. You may obtain a copy of the License at
-* http://www.mozilla.org/NPL/
-*
-* Software distributed under the License is distributed on an "AS IS" basis,
-* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-* for the specific language governing rights and limitations under the
-* License.
-*
-* The Original Code is JavaScript Engine testing utilities.
-*
-* The Initial Developer of the Original Code is Netscape Communications Corp.
-* Portions created by the Initial Developer are Copyright (C) 2002
-* the Initial Developer. All Rights Reserved.
-*
-* Contributor(s): pschwartau@netscape.com, rogerl@netscape.com
-*
-* Alternatively, the contents of this file may be used under the terms of
-* either the GNU General Public License Version 2 or later (the "GPL"), or
-* the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-* in which case the provisions of the GPL or the LGPL are applicable instead
-* of those above. If you wish to allow use of your version of this file only
-* under the terms of either the GPL or the LGPL, and not to allow others to
-* use your version of this file under the terms of the NPL, indicate your
-* decision by deleting the provisions above and replace them with the notice
-* and other provisions required by the GPL or the LGPL. If you do not delete
-* the provisions above, a recipient may use your version of this file under
-* the terms of any one of the NPL, the GPL or the LGPL.
-*
-* ***** END LICENSE BLOCK *****
-*
-*
-* Date:    2002-07-07
-* SUMMARY: Testing JS RegExp engine against Perl 5 RegExp engine.
-* Adjust cnLBOUND, cnUBOUND below to restrict which sections are tested.
-*
-* This test was created by running various patterns and strings through the
-* Perl 5 RegExp engine. We saved the results below to test the JS engine.
-*
-* NOTE: ECMA/JS and Perl do differ on certain points. We have either commented
-* out such sections altogether, or modified them to fit what we expect from JS.
-*
-* EXAMPLES:
-*
-* - In JS, regexp captures (/(a) etc./) must hold |undefined| if not used.
-*   See http://bugzilla.mozilla.org/show_bug.cgi?id=123437.
-*   By contrast, in Perl, unmatched captures hold the empty string.
-*   We have modified such sections accordingly. Example:
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is JavaScript Engine testing utilities.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s): pschwartau@netscape.com, rogerl@netscape.com
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK *****
+ *
+ *
+ * Date:    2002-07-07
+ * SUMMARY: Testing JS RegExp engine against Perl 5 RegExp engine.
+ * Adjust cnLBOUND, cnUBOUND below to restrict which sections are tested.
+ *
+ * This test was created by running various patterns and strings through the
+ * Perl 5 RegExp engine. We saved the results below to test the JS engine.
+ *
+ * NOTE: ECMA/JS and Perl do differ on certain points. We have either commented
+ * out such sections altogether, or modified them to fit what we expect from JS.
+ *
+ * EXAMPLES:
+ *
+ * - In JS, regexp captures (/(a) etc./) must hold |undefined| if not used.
+ *   See http://bugzilla.mozilla.org/show_bug.cgi?id=123437.
+ *   By contrast, in Perl, unmatched captures hold the empty string.
+ *   We have modified such sections accordingly. Example:
 
     pattern = /^([^a-z])|(\^)$/;
     string = '.';
@@ -59,29 +59,29 @@
     addThis();
 
 
-* - In JS, you can't refer to a capture before it's encountered & completed
-*
-* - Perl supports ] & ^] inside a [], ECMA does not
-*
-* - ECMA does support (?: (?= and (?! operators, but doesn't support (?<  etc.
-*
-* - ECMA doesn't support (?imsx or (?-imsx
-*
-* - ECMA doesn't support (?(condition)
-*
-* - Perl has \Z has end-of-line, ECMA doesn't
-*
-* - In ECMA, ^ matches only the empty string before the first character
-*
-* - In ECMA, $ matches only the empty string at end of input (unless multiline)
-*
-* - ECMA spec says that each atom in a range must be a single character
-*
-* - ECMA doesn't support \A
-*
-* - ECMA doesn't have rules for [:
-*
-*/
+ * - In JS, you can't refer to a capture before it's encountered & completed
+ *
+ * - Perl supports ] & ^] inside a [], ECMA does not
+ *
+ * - ECMA does support (?: (?= and (?! operators, but doesn't support (?<  etc.
+ *
+ * - ECMA doesn't support (?imsx or (?-imsx
+ *
+ * - ECMA doesn't support (?(condition)
+ *
+ * - Perl has \Z has end-of-line, ECMA doesn't
+ *
+ * - In ECMA, ^ matches only the empty string before the first character
+ *
+ * - In ECMA, $ matches only the empty string at end of input (unless multiline)
+ *
+ * - ECMA spec says that each atom in a range must be a single character
+ *
+ * - ECMA doesn't support \A
+ *
+ * - ECMA doesn't have rules for [:
+ *
+ */
 //-----------------------------------------------------------------------------
 var i = 0;
 var bug = 85721;
@@ -346,7 +346,7 @@ string = 'a]b';
 actualmatch = string.match(pattern);
 expectedmatch = Array('a]b');
 addThis();
-*/
+ */
 
 status = inSection(36);
 pattern = /a[^bc]d/;
@@ -369,7 +369,7 @@ string = 'adc';
 actualmatch = string.match(pattern);
 expectedmatch = Array('adc');
 addThis();
-*/
+ */
 
 status = inSection(39);
 pattern = /\ba\b/;
@@ -889,7 +889,7 @@ string = 'bbaababbabaaaaabbaaaabba';
 actualmatch = string.match(pattern);
 expectedmatch = Array('bbaaaabba', 'bba', 'b', 'a');
 addThis();
-*/
+ */
 
 status = inSection(113);
 pattern = /abc/i;
@@ -1122,7 +1122,7 @@ string = 'A]B';
 actualmatch = string.match(pattern);
 expectedmatch = Array('A]B');
 addThis();
-*/
+ */
 
 status = inSection(146);
 pattern = /a[^bc]d/i;
@@ -1145,7 +1145,7 @@ string = 'ADC';
 actualmatch = string.match(pattern);
 expectedmatch = Array('ADC');
 addThis();
-*/
+ */
 
 status = inSection(149);
 pattern = /ab|cd/i;
@@ -1725,7 +1725,7 @@ string = 'aaaaaaaaaa';
 actualmatch = string.match(pattern);
 expectedmatch = Array('aaaaaaaaaa', 'aaaa');
 addThis();
-*/
+ */
 
 status = inSection(231);
 pattern = /((a{4})+)/;
@@ -1784,7 +1784,7 @@ string = 'b';
 actualmatch = string.match(pattern);
 expectedmatch = Array('b');
 addThis();
-*/
+ */
 
 status = inSection(239);
 pattern = /(?:..)*a/;
@@ -2012,7 +2012,7 @@ string = 'a\nB';
 actualmatch = string.match(pattern);
 expectedmatch = Array('a\nB', 'a\n');
 addThis();
-*/
+ */
 
 status = inSection(269);
 pattern = /(?:c|d)(?:)(?:a(?:)(?:b)(?:b(?:))(?:b(?:)(?:b)))/;
@@ -2063,7 +2063,7 @@ string = 'aaac';
 actualmatch = string.match(pattern);
 expectedmatch = Array('aaac');
 addThis();
-*/
+ */
 
 /* ECMA doesn't support (?< etc
 status = inSection(276);
@@ -2163,7 +2163,7 @@ string = 'a\nb\nc\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('b', 'b');
 addThis();
-*/
+ */
 
 /* ECMA doesn't support (?(condition)
 status = inSection(290);
@@ -2235,7 +2235,7 @@ string = 'a';
 actualmatch = string.match(pattern);
 expectedmatch = Array('a');
 addThis();
-*/
+ */
 
 status = inSection(300);
 pattern = /(?=(a+?))(\1ab)/;
@@ -2258,7 +2258,7 @@ string = 'a';
 actualmatch = string.match(pattern);
 expectedmatch = Array('', 'a');
 addThis();
-*/
+ */
 
 status = inSection(303);
 pattern = /(?=(a+?))(\1ab)/;
@@ -2327,7 +2327,7 @@ string = 'aaab';
 actualmatch = string.match(pattern);
 expectedmatch = Array('aaab');
 addThis();
-*/
+ */
 
 status = inSection(312);
 pattern = /([[:]+)/;
@@ -2357,7 +2357,7 @@ string = 'abc';
 actualmatch = string.match(pattern);
 expectedmatch = Array('abc');
 addThis();
-*/
+ */
 
 /* ECMA doesn't support (?>
 status = inSection(316);
@@ -2380,7 +2380,7 @@ string = '((abc(ade)ufh()()x';
 actualmatch = string.match(pattern);
 expectedmatch = Array('abc(ade)ufh()()x', 'x');
 addThis();
-*/
+ */
 
 /* Perl has \Z has end-of-line, ECMA doesn't
 status = inSection(319);
@@ -2396,7 +2396,7 @@ string = 'a\nb\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('');
 addThis();
-*/
+ */
 
 status = inSection(321);
 pattern = /$/;
@@ -2419,7 +2419,7 @@ string = 'b\na\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('');
 addThis();
-*/
+ */
 
 status = inSection(324);
 pattern = /$/;
@@ -2442,7 +2442,7 @@ string = 'b\na';
 actualmatch = string.match(pattern);
 expectedmatch = Array('');
 addThis();
-*/
+ */
 
 status = inSection(327);
 pattern = /$/;
@@ -2465,7 +2465,7 @@ string = 'a\nb\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('');
 addThis();
-*/
+ */
 
 status = inSection(330);
 pattern = /$/m;
@@ -2488,7 +2488,7 @@ string = 'b\na\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('');
 addThis();
-*/
+ */
 
 status = inSection(333);
 pattern = /$/m;
@@ -2511,7 +2511,7 @@ string = 'b\na';
 actualmatch = string.match(pattern);
 expectedmatch = Array('');
 addThis();
-*/
+ */
 
 status = inSection(336);
 pattern = /$/m;
@@ -2527,7 +2527,7 @@ string = 'b\na\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('a');
 addThis();
-*/
+ */
 
 /* $ only matches end of input unless multiline
 status = inSection(338);
@@ -2536,7 +2536,7 @@ string = 'b\na\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('a');
 addThis();
-*/
+ */
 
 /* Perl has \Z has end-of-line, ECMA doesn't
 status = inSection(339);
@@ -2552,7 +2552,7 @@ string = 'b\na';
 actualmatch = string.match(pattern);
 expectedmatch = Array('a');
 addThis();
-*/
+ */
 
 status = inSection(341);
 pattern = /a$/;
@@ -2575,7 +2575,7 @@ string = 'b\na\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('a');
 addThis();
-*/
+ */
 
 status = inSection(344);
 pattern = /a$/m;
@@ -2598,7 +2598,7 @@ string = 'b\na';
 actualmatch = string.match(pattern);
 expectedmatch = Array('a');
 addThis();
-*/
+ */
 
 status = inSection(347);
 pattern = /a$/m;
@@ -2614,7 +2614,7 @@ string = 'b\naa\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('aa');
 addThis();
-*/
+ */
 
 /* $ only matches end of input unless multiline
 status = inSection(349);
@@ -2623,7 +2623,7 @@ string = 'b\naa\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('aa');
 addThis();
-*/
+ */
 
 /* Perl has \Z has end-of-line, ECMA doesn't
 status = inSection(350);
@@ -2639,7 +2639,7 @@ string = 'b\naa';
 actualmatch = string.match(pattern);
 expectedmatch = Array('aa');
 addThis();
-*/
+ */
 
 status = inSection(352);
 pattern = /aa$/;
@@ -2662,7 +2662,7 @@ string = 'b\naa\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('aa');
 addThis();
-*/
+ */
 
 status = inSection(355);
 pattern = /aa$/m;
@@ -2685,7 +2685,7 @@ string = 'b\naa';
 actualmatch = string.match(pattern);
 expectedmatch = Array('aa');
 addThis();
-*/
+ */
 
 status = inSection(358);
 pattern = /aa$/m;
@@ -2701,7 +2701,7 @@ string = 'b\nab\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('ab');
 addThis();
-*/
+ */
 
 /* $ only matches end of input unless multiline
 status = inSection(360);
@@ -2710,7 +2710,7 @@ string = 'b\nab\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('ab');
 addThis();
-*/
+ */
 
 /* Perl has \Z has end-of-line, ECMA doesn't
 status = inSection(361);
@@ -2726,7 +2726,7 @@ string = 'b\nab';
 actualmatch = string.match(pattern);
 expectedmatch = Array('ab');
 addThis();
-*/
+ */
 
 status = inSection(363);
 pattern = /ab$/;
@@ -2749,7 +2749,7 @@ string = 'b\nab\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('ab');
 addThis();
-*/
+ */
 
 status = inSection(366);
 pattern = /ab$/m;
@@ -2772,7 +2772,7 @@ string = 'b\nab';
 actualmatch = string.match(pattern);
 expectedmatch = Array('ab');
 addThis();
-*/
+ */
 
 status = inSection(369);
 pattern = /ab$/m;
@@ -2788,7 +2788,7 @@ string = 'b\nabb\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('abb');
 addThis();
-*/
+ */
 
 /* $ only matches end of input unless multiline
 status = inSection(371);
@@ -2797,7 +2797,7 @@ string = 'b\nabb\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('abb');
 addThis();
-*/
+ */
 
 /* Perl has \Z has end-of-line, ECMA doesn't
 status = inSection(372);
@@ -2813,7 +2813,7 @@ string = 'b\nabb';
 actualmatch = string.match(pattern);
 expectedmatch = Array('abb');
 addThis();
-*/
+ */
 
 status = inSection(374);
 pattern = /abb$/;
@@ -2836,7 +2836,7 @@ string = 'b\nabb\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('abb');
 addThis();
-*/
+ */
 
 status = inSection(377);
 pattern = /abb$/m;
@@ -2859,7 +2859,7 @@ string = 'b\nabb';
 actualmatch = string.match(pattern);
 expectedmatch = Array('abb');
 addThis();
-*/
+ */
 
 status = inSection(380);
 pattern = /abb$/m;
@@ -2910,7 +2910,7 @@ string = 'a0-za';
 actualmatch = string.match(pattern);
 expectedmatch = Array('0-z', '0-z');
 addThis();
-*/
+ */
 
 /* ECMA doesn't support [:
 status = inSection(387);
@@ -2933,7 +2933,7 @@ string = '=0-z=';
 actualmatch = string.match(pattern);
 expectedmatch = Array('0-z', '0-z');
 addThis();
-*/
+ */
 
 status = inSection(390);
 pattern = /(\d+\.\d+)/;
@@ -3089,7 +3089,7 @@ string = 'a\nxb\n';
 actualmatch = string.match(pattern);
 expectedmatch = Array('\n');
 addThis();
-*/
+ */
 
 status = inSection(412);
 pattern = /^(a(b)?)+$/;
@@ -3133,7 +3133,7 @@ string = 'aaaaaa';
 actualmatch = string.match(pattern);
 expectedmatch = Array('aaaaaa', 'aaa');
 addThis();
-*/
+ */
 
 status = inSection(418);
 pattern = /^(0+)?(?:x(1))?/;

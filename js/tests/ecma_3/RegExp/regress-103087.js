@@ -1,33 +1,34 @@
 /*
-* The contents of this file are subject to the Netscape Public
-* License Version 1.1 (the "License"); you may not use this file
-* except in compliance with the License. You may obtain a copy of
-* the License at http://www.mozilla.org/NPL/
-*
-* Software distributed under the License is distributed on an "AS  IS"
-* basis, WITHOUT WARRANTY OF ANY KIND, either expressed
-* or implied. See the License for the specific language governing
-* rights and limitations under the License.
-*
-* The Original Code is mozilla.org code.
-*
-* The Initial Developer of the Original Code is Netscape
-* Communications Corporation.  Portions created by Netscape are
-* Copyright (C) 1998 Netscape Communications Corporation. 
-* All Rights Reserved.
-*
-* Contributor(s): bedney@technicalpursuit.com, pschwartau@netscape.com
-* Date: 04 October 2001
-*
-* SUMMARY:  Arose from Bugzilla bug 103087:
-* "The RegExp MarkupSPE in demo crashes Mozilla"
-*
-* See http://bugzilla.mozilla.org/show_bug.cgi?id=103087
-* The SpiderMonkey shell crashed on some of these regexps.
-*
-* The reported crash was on i=24 below ('MarkupSPE' regexp)
-* I crashed on that, and also on i=43 ('XML_SPE' regexp)
-*/
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS  IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either expressed
+ * or implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. 
+ * All Rights Reserved.
+ *
+ * Contributor(s): bedney@technicalpursuit.com, pschwartau@netscape.com
+ *
+ * Date: 04 October 2001
+ *
+ * SUMMARY:  Arose from Bugzilla bug 103087:
+ * "The RegExp MarkupSPE in demo crashes Mozilla"
+ *
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=103087
+ * The SpiderMonkey shell crashed on some of these regexps.
+ *
+ * The reported crash was on i=24 below ('MarkupSPE' regexp)
+ * I crashed on that, and also on i=43 ('XML_SPE' regexp)
+ */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = 103087;

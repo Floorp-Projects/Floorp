@@ -322,7 +322,7 @@ PCB_FreeContextItem(JSContext *cx) {
 
 /* later the object list should be bind to JS Context
    in this case is needed to update destructor PerlFreeObjectList
-*/
+ */
 
 /* property getter and setter - cooperate with AUTOLOAD */
 
@@ -464,7 +464,7 @@ PCB_SetProperty(JSContext *cx, JSObject *obj, jsval name, jsval *rval) {
 /* helper functions */ 
 /* JSClass pointer is disposed by 
    JS engine during context cleanup _PH_ 
-*/
+ */
 void
 PCB_FinalizeStub(JSContext *cx, JSObject *obj) {
 }
@@ -560,7 +560,7 @@ getContext()
 {
     return (JSContext *)SvIV((SV*)SvRV(perl_get_sv("JS::Context::this", FALSE)));
 }
-*/ /* commented as obsolete by __PH__ */
+ */ /* commented as obsolete by __PH__ */
 
 /*
     The following packages are defined below:
