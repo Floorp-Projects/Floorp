@@ -292,7 +292,7 @@ nsLoggingProgressListener::GetTime(char** aString)
     PRExplodedTime et;
     char line[256];
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &et);
-    PR_FormatTimeUSEnglish(line, sizeof(line), "%m/%d/%Y %H:%M:%S", &et);
+    PR_FormatTimeUSEnglish(line, sizeof(line), "%Y-%m-%d %H:%M:%S", &et);
     *aString = PL_strdup(line);
 }
 
