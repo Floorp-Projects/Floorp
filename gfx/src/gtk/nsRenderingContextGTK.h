@@ -42,7 +42,7 @@ class nsRenderingContextGTK : public nsIRenderingContext
 {
 public:
   nsRenderingContextGTK();
-  ~nsRenderingContextGTK();
+  virtual ~nsRenderingContextGTK();
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];

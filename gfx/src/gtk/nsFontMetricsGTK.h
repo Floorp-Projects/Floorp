@@ -34,7 +34,7 @@ class nsFontMetricsGTK : public nsIFontMetrics
 {
 public:
   nsFontMetricsGTK();
-  ~nsFontMetricsGTK();
+  virtual ~nsFontMetricsGTK();
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];

@@ -31,7 +31,7 @@ class nsImageGTK : public nsIImage
 {
 public:
   nsImageGTK();
-  ~nsImageGTK();
+  virtual ~nsImageGTK();
 
   NS_DECL_ISUPPORTS
 
