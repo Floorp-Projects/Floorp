@@ -170,13 +170,15 @@ t_printf(int fd, const char *buffer, size_t count, const char *format, ...)
     strcat (buff, ">\n");
     write (fd, buff, strlen(buff));
 
-    write (fd, buffer, count);		/* write the (possibly binary) data */
+    if (count)
+	write (fd, buffer, count);	/* write the (possibly binary) data */
 
     r = snprintf(buff, sizeof(buff),	/* terminate entry cleanly */
 		 "\n</LOG t=%lu length=%d>\n", t, count);
     write (fd, buff, strlen(buff));
 #else
-    write (fd, buffer, count);		/* write the (possibly binary) data */
+    if (count)
+	write (fd, buffer, count);	/* write the (possibly binary) data */
 #endif
     va_end(args);
     

@@ -1,5 +1,14 @@
 Mstone - version 4.x
 
+2000-04-05  Dan Christian <robodan@netscape.com>
+	* Fix bug in WMAP where the login field was reporting banner data.
+
+	* Add a reconnect concept to WMAP.  This separates out the
+	reconnect activity from the initial connections.  There is still a
+	bug/feature that the reconnect increments an error which can
+	eventually hit the maxErrors limit.  You have to record the error
+	or else you could not get the "connections" graph right.
+	
 2000-03-31  Dan Christian <robodan@netscape.com>
 	
 	* Merged setup and mstone into one script to reduce command

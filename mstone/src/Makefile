@@ -8,6 +8,10 @@ ifndef INCLUDED_CONFIG_MK
 include $(topsrcdir)/config/config.mk
 endif
 
+# you may want to force debug on the command line (default is release)
+# BUILD_VARIANT=debug
+# pass in extra compile arguments in CPPFLAGS
+
 BINDIR		= ../bin
 
 ########################################################################

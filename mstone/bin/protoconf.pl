@@ -41,6 +41,7 @@
        #internal name,	Printed name
        "total",		"total",
        "conn",		"connect",
+       "reconn",	"reconnect",
        "banner",	"banner",
        "login",		"login",
        "cmd",		"command",

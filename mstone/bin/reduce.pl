@@ -441,7 +441,7 @@ sub parseLine {
 		 $lastTime, $time, $timeD,
 		 $ltype, "PROTOCOLS:$1", $chunk);
 	    } else {
-		die "parseLine: Unkown seperator $posttext\n";
+		die "parseLine: Unkown separator $posttext\n";
 	    }
 	} else {		# direct assignment
 	    # Note: we dont graph any scalars at the line level
@@ -460,7 +460,8 @@ sub parseLine {
 	my $pcli = $subcli->{$prot};
 	next unless (($pcli->{"conn"}) && ($pcli->{"conn"}->{"Try"}));
 
-	my $connD = $pcli->{"conn"}->{"Try"}; # connections minus locouts
+	my $connD = $pcli->{"conn"}->{"Try"}; # connections minus logouts
+	$connD += $pcli->{"reconn"}->{"Try"} if ($pcli->{"reconn"});
 	$connD -= $pcli->{"logout"}->{"Try"};
 
 	$connD -= $pcli->{"total"}->{"Error"}; # subtract sum of errors
