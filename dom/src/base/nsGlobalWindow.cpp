@@ -645,14 +645,15 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
 
     if (mIsScopeClear) {
       mContext->InitContext(this);
-    } else if (mJSObject) {
-      // If we didn't clear the scope (i.e. the old document was
-      // about:blank) then we need to update the cached document
-      // property on the window to reflect the new document and not
-      // the old one.
-
-      nsWindowSH::CacheDocumentProperty(cx, mJSObject, this);
     }
+
+    // If we didn't clear the scope (i.e. the old document was
+    // about:blank) then we need to update the cached document
+    // property on the window to reflect the new document and not the
+    // old one. And even if we did clear the scope, we need to notify
+    // the scriptable helper about the document change.
+
+    nsWindowSH::OnDocumentChanged(cx, mJSObject, this);
   }
 
   // Clear our mutation bitfield.
