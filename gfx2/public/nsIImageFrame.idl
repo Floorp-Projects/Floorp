@@ -47,8 +47,8 @@ interface nsIImageFrame : nsISupports
    * @note The data of a new image is unspecified (Whats the word i'm looking for here?).
    */
   void init(in gfx_coord aX,
-			in gfx_coord aY,
-			in gfx_dimension aWidth,
+            in gfx_coord aY,
+            in gfx_dimension aWidth,
             in gfx_dimension aHeight,
             in gfx_format aFormat);
 
@@ -106,5 +106,12 @@ interface nsIImageFrame : nsISupports
   void setBits([array, size_is(length), const] in PRUint8 data,
                in unsigned long length,
                in long offset);
+
+
+  /**
+   * Represents the number of milliseconds until the next frame should be displayed.
+   * @note -1 means that this frame should be displayed forever.
+   */
+  attribute long timeout;
 
 };
