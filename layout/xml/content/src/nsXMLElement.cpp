@@ -34,6 +34,7 @@
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
+#include "nsXPIDLString.h"
 
 //static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
@@ -156,7 +157,10 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
 
         if (!base.IsEmpty()) {
           str.AssignWithConversion(base.GetUnicode());
-          rv = (*aURI)->SetRelativePath(str);
+          nsXPIDLCString resolvedStr;
+          rv = (*aURI)->Resolve(str, getter_Copies(resolvedStr));
+          if (NS_FAILED(rv)) break;
+          rv = (*aURI)->SetSpec(resolvedStr);
         }
         break;
 
