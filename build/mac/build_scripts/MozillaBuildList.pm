@@ -773,6 +773,8 @@ sub BuildClientDist()
 
     #XPINSTALL (the one and only!)
     InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                      "$distdirectory:xpinstall:");
+    InstallFromManifest(":mozilla:xpinstall:cleanup:MANIFEST",                      "$distdirectory:xpinstall:");
+
 
     # XPFE COMPONENTS
     InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",                "$distdirectory:xpfe:components");
@@ -1531,11 +1533,15 @@ sub BuildLayoutProjects()
     unless( $main::build{nglayout} ) { return; }
     assertRightDirectory();
 
+
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
     # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
     my($C) = $main::options{carbon} ? "Carbon" : "";
     my($dist_dir) = GetBinDirectory();
+    my($EssentialFiles) = $main::DEBUG ? ":mozilla:dist:viewer_debug:Essential Files:" : ":mozilla:dist:viewer:Essential Files:";
+    my($resource_dir) = "$dist_dir" . "res:";
+
     
     StartBuildModule("nglayout");
 
@@ -1589,6 +1595,7 @@ sub BuildLayoutProjects()
     BuildOneProject(":mozilla:xpinstall:macbuild:xpinstall.mcp",                "xpinstall$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     if (!$main::options{carbon}) {
         BuildOneProject(":mozilla:xpinstall:cleanup:macbuild:XPICleanup.mcp",       "XPICleanup$D", 1, $main::ALIAS_SYM_FILES, 0);
+        InstallFromManifest(":mozilla:xpinstall:cleanup:MANIFEST_CMESSAGE",         "$resource_dir");
     }
     BuildOneProject(":mozilla:xpinstall:macbuild:xpistub.mcp",                  "xpistub$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:xpinstall:wizard:libxpnet:macbuild:xpnet.mcp",    "xpnet$D.Lib", 0, 0, 0);
