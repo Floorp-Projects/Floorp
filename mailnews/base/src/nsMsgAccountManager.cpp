@@ -194,7 +194,7 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
   if (!aDefaultAccount) return NS_ERROR_NULL_POINTER;
 
   if (!m_defaultAccount) {
-#ifdef DEBUG_alecf
+#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer)
     printf("No default account. Looking for one..\n");
 #endif
     
@@ -205,7 +205,7 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
     // are there ANY entries?
     if (!entry.found) return NS_ERROR_UNEXPECTED;
 
-#ifdef DEBUG_alecf
+#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer)
     printf("Account (%p) found\n", entry.account);
 #endif
     m_defaultAccount = entry.account;
@@ -388,18 +388,38 @@ nsMsgAccountManager::LoadAccounts()
     printf("No accounts. I'll try to migrate 4.x prefs..\n");
     upgradePrefs();
   }
-
+  
   char *accountKey = nsnull;
+  char *str = nsnull;
+  nsIMsgAccount *account = nsnull;
+#ifdef DEBUG_sspitzer
+  printf("accountList = %s\n", accountList);
+#endif
 
-  /* XXX todo: parse accountList and run loadAccount on each string,
-   * probably comma-separated */
-  accountKey = PL_strdup(accountList);
-  nsIMsgAccount *account = LoadAccount(accountKey);
-  if (account) addAccount(account);
-  PR_Free(accountKey);
+  /* parse accountList and run loadAccount on each string, comma-separated */
+  str = strtok(accountList, ",");
+  while (str != nsnull) {
+    accountKey = PL_strdup(str);
+#ifdef DEBUG_sspitzer
+    printf("accountKey = %s\n", accountKey);
+#endif
+    account = LoadAccount(accountKey);
+    if (account) {
+      addAccount(account);
+    }
+    else {
+      return NS_ERROR_NULL_POINTER;
+    }
+
+    PR_Free(accountKey);
+    accountKey = nsnull;
+    account = nsnull;
+    str = strtok(nsnull, ",");
+  }
 
   /* finished loading accounts */
   PR_Free(accountList);
+  accountList = nsnull;
 
   return NS_OK;
 }
@@ -456,7 +476,7 @@ nsMsgAccountManager::upgradePrefs()
 
     if ( oldMailType == 0)       // POP
         serverProgID="component://netscape/messenger/server&type=pop3";
-    else if (oldMailType == 1)
+    else if (oldMailType == 1)   // IMAP
         serverProgID="component://netscape/messenger/server&type=imap";
     else {
         printf("Unrecognized server type %d\n", oldMailType);
