@@ -53,6 +53,15 @@
 #include "prprf.h"
 #include "prthread.h"
 
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gAbOutlookDirectoryLog
+    = PR_NewLogModule("nsAbOutlookDirectoryLog");
+#endif
+
+#define PRINTF(args) PR_LOG(nsAbOutlookDirectoryLog, PR_LOG_DEBUG, args)
+
 
 // Class for the int key
 class nsIntegerKey : public nsHashKey

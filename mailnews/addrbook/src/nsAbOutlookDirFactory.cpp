@@ -48,6 +48,15 @@
 
 #include "prprf.h"
 
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gAbOutlookDirFactoryLog
+    = PR_NewLogModule("nsAbOutlookDirFactoryLog");
+#endif
+
+#define PRINTF(args) PR_LOG(nsAbOutlookDirFactoryLog, PR_LOG_DEBUG, args)
+
 
 // In case someone is wondering WHY I have to undefine CreateDirectory,
 // it's because the windows files winbase.h and wininet.h define this

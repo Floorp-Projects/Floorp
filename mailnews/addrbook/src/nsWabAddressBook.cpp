@@ -38,6 +38,14 @@
 #include "nsWabAddressBook.h"
 #include "nsAbUtils.h"
 #include "nsAutoLock.h"
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gWabAddressBookLog
+    = PR_NewLogModule("nsWabAddressBookLog");
+#endif
+
+#define PRINTF(args) PR_LOG(nsWabAddressBookLog, PR_LOG_DEBUG, args)
 
 HMODULE nsWabAddressBook::mLibrary = NULL ;
 PRInt32 nsWabAddressBook::mLibUsage = 0 ;

@@ -38,6 +38,15 @@
 #include "nsAbOutlookCard.h"
 #include "nsAbWinHelper.h"
 
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gAbOutlookCardLog
+    = PR_NewLogModule("nsAbOutlookCardLog");
+#endif
+
+#define PRINTF(args) PR_LOG(nsAbOutlookCardLog, PR_LOG_DEBUG, args)
+
 extern const char *kOutlookDirectoryScheme ;
 extern const char *kOutlookCardScheme ;
 
