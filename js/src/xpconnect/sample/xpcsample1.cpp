@@ -332,5 +332,5 @@ static nsModuleComponentInfo components[] = {
   nsXPCSample_HookerUpperConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsXPCSampleModule", components)
+NS_IMPL_NSGETMODULE("xpconnect samples", components)
 
