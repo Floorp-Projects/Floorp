@@ -192,10 +192,18 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
 
   nsIFrame* kidFrame;
   for (kidFrame = mAbsoluteFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
+    // if the positioned frame has never had a reflow, change the reason to initial
+    PRBool initialReflow = PR_FALSE;
+    nsFrameState kidState;
+    kidFrame->GetFrameState(&kidState);
+    if (NS_FRAME_FIRST_REFLOW & kidState) {
+      initialReflow = PR_TRUE;
+    }
+
     // Reflow the frame
     nsReflowStatus  kidStatus;
     ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, reflowState, aContainingBlockWidth,
-                        aContainingBlockHeight, kidFrame, PR_FALSE, kidStatus);
+                        aContainingBlockHeight, kidFrame, initialReflow, kidStatus);
 
     // Add in the child's bounds
     nsRect  kidBounds;
