@@ -68,13 +68,14 @@ extern char *sys_errlist[];
 
 #define ERROR_BREAK rv = SECFailure;break;
 
-
-static void
+/* returns 0 for success, -1 for failure (EOF encountered) */
+static int
 UpdateRNG(void)
 {
     char *         randbuf;
     int            fd, i, count;
-    char           c;
+    int            c;
+    int            rv		= 0;
 #ifdef XP_UNIX
     cc_t           orig_cc_min;
     cc_t           orig_cc_time;
@@ -121,6 +122,10 @@ UpdateRNG(void)
 #else
 	c = getch();
 #endif
+	if (c == EOF) {
+	    rv = -1;
+	    break;
+	}
 	RNG_GetNoise(&randbuf[1], sizeof(randbuf)-1);
 	RNG_RandomUpdate(randbuf, sizeof(randbuf));
 	if (c != randbuf[0]) {
@@ -139,12 +144,14 @@ UpdateRNG(void)
     FPS "\n\n");
     FPS "Finished.  Press enter to continue: ");
 #if defined(VMS)
-    while(GENERIC_GETCHAR_NO_ECHO() != '\r')
+    while((c = GENERIC_GETCHAR_NO_ECHO()) != '\r' && c != EOF)
 	;
 #else
-    while (getc(stdin) != '\n')
+    while ((c = getc(stdin)) != '\n' && c != EOF)
 	;
 #endif
+    if (c == EOF) 
+	rv = -1;
     FPS "\n");
 
 #undef FPS
@@ -156,6 +163,7 @@ UpdateRNG(void)
     tio.c_cc[VTIME] = orig_cc_time;
     tcsetattr(fd, TCSAFLUSH, &tio);
 #endif
+    return rv;
 }
 
 
@@ -245,18 +253,18 @@ done:
 static char *
 SECU_GetpqgString(char *filename)
 {
-    unsigned char phrase[400];
+    char phrase[400];
     FILE *fh;
     char *rv;
 
     fh = fopen(filename,"r");
-    rv = fgets ((char*) phrase, sizeof(phrase), fh);
+    rv = fgets (phrase, sizeof(phrase), fh);
 
     fclose(fh);
     if (phrase[strlen(phrase)-1] == '\n')
 	phrase[strlen(phrase)-1] = '\0';
     if (rv) {
-	return (char*) PORT_Strdup((char*)phrase);
+	return (char*) PORT_Strdup(phrase);
     }
     fprintf(stderr,"pqg file contain no data\n");
     return NULL;
@@ -315,7 +323,11 @@ CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
     if (noise) {
     	RNG_FileForRNG(noise);
     } else {
-	UpdateRNG();
+	int rv = UpdateRNG();
+	if (rv) {
+	    PORT_SetError(PR_END_OF_FILE_ERROR);
+	    return NULL;
+	}
     }
 
     switch (keytype) {
