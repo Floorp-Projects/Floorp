@@ -944,7 +944,12 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
     if (mPresShell) {
       mPresShell->FlushPendingNotifications(PR_TRUE);
     }
-    printf("GECKO: PAINT FORCED AFTER ONLOAD\n");
+    nsIURI *uri = mDocument->GetDocumentURI();
+    nsCAutoString spec;
+    if (uri) {
+      uri->GetSpec(spec);
+    }
+    printf("GECKO: PAINT FORCED AFTER ONLOAD: %s\n", spec.get());
     fflush(stdout);
   }
 
