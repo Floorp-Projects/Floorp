@@ -15,6 +15,8 @@
 * The Initial Developer of the Original Code is Matt Judy.
 */
 
+#import "NSString+Utils.h"
+
 #import "CHExtendedTabView.h"
 #import "BookmarksService.h"
 #import "BookmarksDataSource.h"
@@ -182,7 +184,7 @@
         
         nsAutoString href;
         bookmarkElt->GetAttribute(NS_LITERAL_STRING("href"), href);
-        NSString* url = [NSString stringWithCharacters: href.get() length: nsCRT::strlen(href.get())];
+        NSString* url = [NSString stringWith_nsString: &href];
   
         nsAutoString group;
         bookmarkElt->GetAttribute(NS_LITERAL_STRING("group"), group);

@@ -21,7 +21,9 @@
 *   David Hyatt <hyatt@netscape.com> (Original Author)
 */
 
+#import "NSString+Utils.h"
 #import "CHBookmarksButton.h"
+
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
@@ -30,6 +32,7 @@
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsCRT.h"
+
 #import "BookmarkInfoController.h"
 #import "BookmarksDataSource.h"
 #import "BookmarksService.h"
@@ -215,13 +218,13 @@
     [self setTarget: self];
     nsAutoString href;
     mElement->GetAttribute(NS_LITERAL_STRING("href"), href);
-    NSString* helpText = [NSString stringWithCharacters: href.get() length: nsCRT::strlen(href.get())];
+    NSString* helpText = [NSString stringWith_nsString:&href];
     [self setToolTip: helpText];
   }
   
   nsAutoString name;
   mElement->GetAttribute(NS_LITERAL_STRING("name"), name);
-  [self setTitle: [NSString stringWithCharacters: name.get() length: nsCRT::strlen(name.get())]];
+  [self setTitle: [NSString stringWith_nsString: &name]];
   
   nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
   mBookmarkItem = BookmarksService::GetWrapperFor(content);

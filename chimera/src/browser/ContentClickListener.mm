@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "NSString+Utils.h"
+
 #include "nsCOMPtr.h"
 #include "ContentClickListener.h"
 #include "nsIDOMEventTarget.h"
@@ -178,7 +180,7 @@ ContentClickListener::MouseDown(nsIDOMEvent* aEvent)
       option->GetLabel(text);
       if (text.IsEmpty())
         option->GetText(text);
-      NSString* title = [NSString stringWithCharacters: text.get() length: nsCRT::strlen(text.get())];
+      NSString* title = [NSString stringWith_nsString: &text];
       NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle: title action: NULL keyEquivalent: @""] autorelease];
       [menu addItem: menuItem];
       [menuItem setTag: contentID];

@@ -57,8 +57,8 @@
   BookmarksService::GetTitleAndHrefForBrowserView(
     [[[[self window] windowController] getBrowserWrapper] getBrowserView], titleStr, hrefStr);
   
-  NSString     *url = [NSString stringWithCharacters: hrefStr.get() length: nsCRT::strlen(hrefStr.get())];
-  NSString     *title = [NSString stringWithCharacters: titleStr.get() length: nsCRT::strlen(titleStr.get())];
+  NSString     *url = [NSString stringWith_nsString: &hrefStr];
+  NSString     *title = [NSString stringWith_nsString: &titleStr];
 
   NSString     *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
 

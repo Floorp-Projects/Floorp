@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "NSString+Utils.h"
+
 #import "BrowserWindowController.h"
 
 #import "CHBrowserWrapper.h"
@@ -1292,7 +1294,7 @@ static NSArray* sToolbarDefaults = nil;
   if (!pref)
     return; // Something bad happened if we can't get prefs.
 
-  NSString* hrefStr = [NSString stringWithCharacters: href.get() length:nsCRT::strlen(href.get())];
+  NSString* hrefStr = [NSString stringWith_nsString:&href];
 
   PRBool loadInBackground;
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
@@ -1321,15 +1323,14 @@ static NSArray* sToolbarDefaults = nil;
   if (!linkContent || href.IsEmpty())
     return;
 
-  NSString* hrefStr = [NSString stringWithCharacters: href.get() length:nsCRT::strlen(href.get())];
+  NSString* hrefStr = [NSString stringWith_nsString: &href];
 
   // The user wants to save this link.
   nsAutoString text;
   CHGeckoUtils::GatherTextUnder(mContextMenuNode, text);
 
   [self saveURL: nil filterList: nil
-            url: hrefStr suggestedFilename: [NSString stringWithCharacters: text.get()
-                                                                      length:nsCRT::strlen(text.get())]];
+            url: hrefStr suggestedFilename: [NSString stringWith_nsString: &text]];
 }
 
 - (IBAction)saveImageAs:(id)aSender
@@ -1341,11 +1342,10 @@ static NSArray* sToolbarDefaults = nil;
       nsAutoString url;
       imgElement->GetSrc(url);
 
-      NSString* hrefStr = [NSString stringWithCharacters: url.get() length:nsCRT::strlen(url.get())];
+      NSString* hrefStr = [NSString stringWith_nsString: &url];
 
       [self saveURL: nil filterList: nil
-                url: hrefStr suggestedFilename: [NSString stringWithCharacters: text.get()
-                                                                          length:nsCRT::strlen(text.get())]];
+                url: hrefStr suggestedFilename: [NSString stringWith_nsString: &text]];
   }
 }
 
@@ -1371,7 +1371,7 @@ static NSArray* sToolbarDefaults = nil;
     nsAutoString url;
     imgElement->GetSrc(url);
 
-    NSString* urlStr = [NSString stringWithCharacters: url.get() length:nsCRT::strlen(url.get())];
+    NSString* urlStr = [NSString stringWith_nsString: &url];
     NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
     
     [self loadURL: urlStr referrer:referrer];

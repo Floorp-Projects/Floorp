@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "NSString+Utils.h"
+
 #import "nsCocoaBrowserService.h"
 #import "CocoaPromptService.h"
 

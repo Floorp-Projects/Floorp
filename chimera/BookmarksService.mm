@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "NSString+Utils.h"
+
 #import "CHBrowserView.h"
 #import "BookmarksService.h"
 #import "BookmarksDataSource.h"
@@ -1053,10 +1055,10 @@ NSString*
 BookmarksService::ResolveKeyword(NSString* aKeyword)
 {
   nsAutoString keyword;
-  NSStringTo_nsString(aKeyword, keyword);
+  [aKeyword assignTo_nsString:&keyword];
 
   if (keyword.IsEmpty())
-    return [NSString stringWithCString:""];
+    return [NSString string];
   
 #if DEBUG
   NSLog(@"str = %s", keyword.get());
@@ -1215,8 +1217,8 @@ BookmarksService::PerformProxyDrop(BookmarkItem* parentItem, BookmarkItem* befor
   nsCOMPtr<nsIDOMElement> beforeElt;
   beforeElt = do_QueryInterface([beforeItem contentNode]);
 
-  nsAutoString url; NSStringTo_nsString([data objectForKey:@"url"], url);
-  nsAutoString title; NSStringTo_nsString([data objectForKey:@"title"], title);
+  nsAutoString url; [[data objectForKey:@"url"] assignTo_nsString:&url];
+  nsAutoString title; [[data objectForKey:@"title"] assignTo_nsString:&title];
   BookmarksService::AddBookmarkToFolder(url, title, parentElt, beforeElt);
   return YES;  
 }

@@ -148,8 +148,8 @@
 
     // If no URL and title were specified, get them from the current page.
     if (aURL && aTitle) {
-      NSStringTo_nsString(aURL, href);
-      NSStringTo_nsString(aTitle, title);
+      [aURL assignTo_nsString:&href];
+      [aTitle assignTo_nsString:&title];
     } else {
       BookmarksService::GetTitleAndHrefForBrowserView([[mBrowserWindowController getBrowserWrapper] getBrowserView],
                                                       title, href);
@@ -214,7 +214,7 @@
   }
   
   nsAutoString title;
-  NSStringTo_nsString([[mBrowserWindowController getAddBookmarkTitle] stringValue], title);
+  [[[mBrowserWindowController getAddBookmarkTitle] stringValue] assignTo_nsString:&title];
 
   nsAutoString tagName;
   if (mCachedHref)
@@ -232,7 +232,7 @@
 
   if (mCachedHref) {
     nsAutoString href;
-    NSStringTo_nsString(mCachedHref, href);
+    [mCachedHref assignTo_nsString:&href];
     [mCachedHref release];
     elt->SetAttribute(NS_LITERAL_STRING("href"), href);
   }
