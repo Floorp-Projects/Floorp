@@ -672,7 +672,7 @@ nsLoadGroup::SetGroupObserver(nsIStreamObserver* aObserver)
 
     // Release the old observer (if any...)
     mObserver = null_nsCOMPtr();
-
+#if 0
     if (aObserver) {
         nsCOMPtr<nsIEventQueue> eventQueue;
         NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
@@ -685,6 +685,9 @@ nsLoadGroup::SetGroupObserver(nsIStreamObserver* aObserver)
         rv = NS_NewAsyncStreamObserver(getter_AddRefs(mObserver),
                                        eventQueue, aObserver);
     }
+#else
+    mObserver = aObserver;
+#endif
 
     return rv;
 }
