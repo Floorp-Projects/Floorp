@@ -142,7 +142,19 @@ sub BuildDist()
 	mkpath([ ":mozilla:dist:viewer:", ":mozilla:dist:viewer_debug:" ]);
 
 	my($distdirectory) = ":mozilla:dist";
-
+	
+	if ($MOZ_FULLCIRCLE = 1)
+	{
+		if ( $main::DEBUG )
+		{
+			mkpath([ "$distdirectory:viewer_debug:TalkBack"]);
+		} 
+		else
+		{
+			mkpath([ "$distdirectory:viewer:TalkBack"]);
+		}
+	}
+	
 	#MAC_COMMON
 	InstallFromManifest(":mozilla:build:mac:MANIFEST",								"$distdirectory:mac:common:");
 	InstallFromManifest(":mozilla:lib:mac:NSStdLib:include:MANIFEST",				"$distdirectory:mac:common:");
@@ -288,6 +300,22 @@ sub BuildDist()
 	#EDITOR
    InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
    InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",						"$distdirectory:editor:txmgr");
+
+   #FULL CIRCLE    
+   if ($MOZ_FULLCIRCLE = 1)
+   {
+		InstallFromManifest(":ns:fullsoft:public:MANIFEST",								"$distdirectory");
+	
+		if ($main::DEBUG)
+		{
+			#InstallFromManifest(":ns:fullsoft:public:MANIFEST",						"$distdirectory:viewer_debug:");
+		} 
+		else
+		{
+			#InstallFromManifest(":ns:fullsoft:public:MANIFEST",						"$distdirectory:viewer:");
+			InstallFromManifest(":ns:fullsoft:public:MANIFEST",							"$distdirectory");
+		}
+	}
 
 	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
 	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
