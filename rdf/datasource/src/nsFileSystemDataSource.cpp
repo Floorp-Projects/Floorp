@@ -274,7 +274,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 	if (! tv)
 		return rv;
 
-	if (peq(source, kNC_FileSystemRoot) || isFileURI(source))
+	if (isFileURI(source))
 	{
 		nsVoidArray		*array = nsnull;
 
