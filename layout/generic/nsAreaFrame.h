@@ -95,7 +95,7 @@ protected:
 
 private:
   nsSpaceManager* mSpaceManager;
-  nsIFrame*       mAbsoluteFrames;  // additional named child list
+  nsFrameList     mAbsoluteFrames;  // additional named child list
 
 #ifdef NS_DEBUG
   struct BandData : public nsBandData {

@@ -87,7 +87,8 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
     aReflowState.reflowCommand->GetNext(nextFrame);
 
     // Compute the y-offset of this page
-    for (nsIFrame* f = mFirstChild; f != nextFrame; f->GetNextSibling(f)) {
+    for (nsIFrame* f = mFrames.FirstChild(); f != nextFrame;
+         f->GetNextSibling(f)) {
       nsSize  size;
 
       f->GetSize(size);
@@ -124,7 +125,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
 
     // Tile the pages vertically
     nsHTMLReflowMetrics kidSize(nsnull);
-    for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; ) {
+    for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; ) {
       // Reflow the page
       nsHTMLReflowState kidReflowState(aPresContext, kidFrame,
                                        aReflowState, pageSize,
@@ -258,7 +259,7 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
 {
   // If printing a range of pages make sure at least the starting page
   // number is valid
-  PRInt32 totalPages = LengthOf(mFirstChild);
+  PRInt32 totalPages = mFrames.GetLength();
 
   if (ePrintRange_SpecifiedRange == aPrintOptions.range) {
     if (aPrintOptions.startPage > totalPages) {
@@ -275,7 +276,7 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
 
   // Print each specified page
   PRInt32 pageNum = 1;
-  for (nsIFrame* page = mFirstChild; nsnull != page; page->GetNextSibling(page)) {
+  for (nsIFrame* page = mFrames.FirstChild(); nsnull != page; page->GetNextSibling(page)) {
     // See whether we should print this page
     PRBool  printThisPage = PR_TRUE;
 

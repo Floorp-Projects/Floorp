@@ -66,7 +66,7 @@ nsAreaFrame::~nsAreaFrame()
 NS_IMETHODIMP
 nsAreaFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  DeleteFrameList(aPresContext, &mAbsoluteFrames);
+  mAbsoluteFrames.DeleteFrames(aPresContext);
   return nsBlockFrame::DeleteFrame(aPresContext);
 }
 
@@ -78,7 +78,7 @@ nsAreaFrame::SetInitialChildList(nsIPresContext& aPresContext,
   nsresult  rv;
 
   if (nsLayoutAtoms::absoluteList == aListName) {
-    mAbsoluteFrames = aChildList;
+    mAbsoluteFrames.SetFrames(aChildList);
     rv = NS_OK;
   } else {
     rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
@@ -108,7 +108,7 @@ NS_IMETHODIMP
 nsAreaFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
 {
   if (aListName == nsLayoutAtoms::absoluteList) {
-    aFirstChild = mAbsoluteFrames;
+    aFirstChild = mAbsoluteFrames.FirstChild();
     return NS_OK;
   }
 
@@ -290,28 +290,8 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
           nsIFrame* childFrame;
           aReflowState.reflowCommand->GetChildFrame(childFrame);
           
-          // Find the frame in our list of absolutely positioned children
-          // and remove it
-          if (mAbsoluteFrames == childFrame) {
-            childFrame->GetNextSibling(mAbsoluteFrames);
-
-          } else {
-            nsIFrame* prevSibling = nsnull;
-            for (nsIFrame* f = mAbsoluteFrames; nsnull != f; f->GetNextSibling(f)) {
-              if (f == childFrame) {
-                break;
-              }
-              prevSibling = f;
-            }
-  
-            NS_ASSERTION(nsnull != prevSibling, "didn't find frame");
-            nsIFrame* nextSibling;
-            childFrame->GetNextSibling(nextSibling);
-            prevSibling->SetNextSibling(nextSibling);
-          }
-
-          // Now go ahead and delete the child frame
-          childFrame->DeleteFrame(aPresContext);
+          PRBool zap = mAbsoluteFrames.DeleteFrame(aPresContext, childFrame);
+          NS_ASSERTION(zap, "didn't find frame");
 
           // XXX We don't need to reflow all the absolutely positioned
           // frames. Compute the desired size and exit...
@@ -327,15 +307,7 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
           aReflowState.reflowCommand->GetPrevSiblingFrame(prevSibling);
 
           // Insert the frame
-          if (nsnull == prevSibling) {
-            mAbsoluteFrames = childFrame;
-          } else {
-            nsIFrame* nextSibling;
-
-            prevSibling->GetNextSibling(nextSibling);
-            prevSibling->SetNextSibling(childFrame);
-            childFrame->SetNextSibling(nextSibling);
-          }
+          mAbsoluteFrames.InsertFrame(nsnull, prevSibling, childFrame);
           wasHandled = PR_TRUE;
 
         } else {
@@ -380,7 +352,8 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (NS_STYLE_OVERFLOW_HIDDEN != display->mOverflow) {
-    for (nsIFrame* f = mAbsoluteFrames; nsnull != f; f->GetNextSibling(f)) {
+    for (nsIFrame* f = mAbsoluteFrames.FirstChild(); nsnull != f;
+         f->GetNextSibling(f)) {
       nsRect  rect;
   
       f->GetRect(rect);
@@ -473,14 +446,7 @@ nsAreaFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
 // Add the frame to the end of the child list
 void nsAreaFrame::AddAbsoluteFrame(nsIFrame* aFrame)
 {
-  if (nsnull == mAbsoluteFrames) {
-    mAbsoluteFrames = aFrame;
-  } else {
-    nsIFrame* lastChild = LastFrame(mAbsoluteFrames);
-  
-    lastChild->SetNextSibling(aFrame);
-    aFrame->SetNextSibling(nsnull);
-  }
+  mAbsoluteFrames.AppendFrames(nsnull, aFrame);
 }
 
 // Called at the end of the Reflow() member function so we can process
@@ -489,7 +455,7 @@ void
 nsAreaFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
                                  const nsHTMLReflowState& aReflowState)
 {
-  for (nsIFrame* absoluteFrame = mAbsoluteFrames;
+  for (nsIFrame* absoluteFrame = mAbsoluteFrames.FirstChild();
        nsnull != absoluteFrame; absoluteFrame->GetNextSibling(absoluteFrame)) {
 
     PRBool            placeFrame = PR_FALSE;
@@ -735,17 +701,19 @@ nsAreaFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter* aFilter) const
   nsresult  rv = nsBlockFrame::List(out, aIndent, aFilter);
 
   // Output absolutely positioned frames
-  if (nsnull != mAbsoluteFrames) {
-    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+  if (mAbsoluteFrames.NotEmpty()) {
+    IndentBy(out, aIndent);
     fprintf(out, "absolute-items <\n");
+
+    nsIFrame* f = mAbsoluteFrames.FirstChild();
+    while (nsnull != f) {
+      f->List(out, aIndent+1, aFilter);
+      f->GetNextSibling(f);
+    }
+
+    IndentBy(out, aIndent);
+    fputs(">\n", out);
   }
-  nsIFrame* f = mAbsoluteFrames;
-  while (nsnull != f) {
-    f->List(out, aIndent+1, aFilter);
-    f->GetNextSibling(f);
-  }
-  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
-  fputs(">\n", out);
 
   return rv;
 }

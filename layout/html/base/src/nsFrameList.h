@@ -40,6 +40,10 @@ public:
 
   void DeleteFrames(nsIPresContext& aPresContext);
 
+  void SetFrames(nsIFrame* aFrameList) {
+    mFirstChild = aFrameList;
+  }
+
   void AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList);
 
   void AppendFrames(nsIFrame* aParent, nsFrameList& aFrameList) {
@@ -49,6 +53,8 @@ public:
   void AppendFrame(nsIFrame* aParent, nsIFrame* aFrame);
 
   PRBool RemoveFrame(nsIFrame* aFrame);
+
+  PRBool RemoveFirstChild();
 
   PRBool DeleteFrame(nsIPresContext& aPresContext, nsIFrame* aFrame);
 
@@ -86,11 +92,17 @@ public:
 
   nsIFrame* LastChild() const;
 
+  nsIFrame* FrameAt(PRInt32 aIndex) const;
+
   PRBool IsEmpty() const {
     return nsnull == mFirstChild;
   }
 
-  PRBool ContainsFrame(nsIFrame* aFrame) const;
+  PRBool NotEmpty() const {
+    return nsnull != mFirstChild;
+  }
+
+  PRBool ContainsFrame(const nsIFrame* aFrame) const;
 
   PRInt32 GetLength() const;
 

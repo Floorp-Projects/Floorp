@@ -26,8 +26,7 @@ nsFrameList::DeleteFrames(nsIPresContext& aPresContext)
     nsIFrame* next;
     frame->GetNextSibling(next);
     frame->DeleteFrame(aPresContext);
-    delete frame;
-    frame = next;
+    mFirstChild = frame = next;
   }
 }
 
@@ -94,12 +93,23 @@ nsFrameList::RemoveFrame(nsIFrame* aFrame)
 }
 
 PRBool
+nsFrameList::RemoveFirstChild()
+{
+  if (nsnull != mFirstChild) {
+    nsIFrame* nextFrame;
+    mFirstChild->GetNextSibling(nextFrame);
+    mFirstChild = nextFrame;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool
 nsFrameList::DeleteFrame(nsIPresContext& aPresContext, nsIFrame* aFrame)
 {
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
   if (RemoveFrame(aFrame)) {
     aFrame->DeleteFrame(aPresContext);
-    delete aFrame;
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -197,7 +207,6 @@ nsFrameList::ReplaceAndDeleteFrame(nsIPresContext& aPresContext,
   NS_PRECONDITION(nsnull != aNewFrame, "null ptr");
   if (ReplaceFrame(aParent, aOldFrame, aNewFrame)) {
     aNewFrame->DeleteFrame(aPresContext);
-    delete aNewFrame;
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -254,8 +263,20 @@ nsFrameList::LastChild() const
   return frame;
 }
 
+nsIFrame*
+nsFrameList::FrameAt(PRInt32 aIndex) const
+{
+  NS_PRECONDITION(aIndex >= 0, "invalid arg");
+  if (aIndex < 0) return nsnull;
+  nsIFrame* frame = mFirstChild;
+  while ((aIndex-- > 0) && (nsnull != frame)) {
+    frame->GetNextSibling(frame);
+  }
+  return frame;
+}
+
 PRBool
-nsFrameList::ContainsFrame(nsIFrame* aFrame) const
+nsFrameList::ContainsFrame(const nsIFrame* aFrame) const
 {
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
   nsIFrame* frame = mFirstChild;

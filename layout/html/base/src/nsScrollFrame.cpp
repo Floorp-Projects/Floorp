@@ -99,20 +99,21 @@ nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
   nsresult  rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName,
                                                            aChildList);
 
+  nsIFrame* frame = mFrames.FirstChild();
+
 #ifdef NS_DEBUG
   // Verify that the scrolled frame has a view
   nsIView*  scrolledView;
-
-  mFirstChild->GetView(scrolledView);
+  frame->GetView(scrolledView);
   NS_ASSERTION(nsnull != scrolledView, "no view");
 #endif
 
   // We need to allow the view's position to be different than the
   // frame's position
   nsFrameState  state;
-  mFirstChild->GetFrameState(state);
+  frame->GetFrameState(state);
   state &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
-  mFirstChild->SetFrameState(state);
+  frame->SetFrameState(state);
 
   return rv;
 }
@@ -129,9 +130,10 @@ nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
     rv = nsFrame::DidReflow(aPresContext, aStatus);
     
     // Send the DidReflow notification to the scrolled frame's view
+    nsIFrame* frame = mFrames.FirstChild();
     nsIHTMLReflow*  htmlReflow;
-    
-    mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+
+    frame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
     htmlReflow->DidReflow(aPresContext, aStatus);
 
     // Size the scrolled frame's view. Leave its position alone
@@ -139,8 +141,8 @@ nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
     nsIViewManager* vm;
     nsIView*        scrolledView;
 
-    mFirstChild->GetSize(size);
-    mFirstChild->GetView(scrolledView);
+    frame->GetSize(size);
+    frame->GetView(scrolledView);
     scrolledView->GetViewManager(vm);
     vm->ResizeView(scrolledView, size.width, size.height);
     NS_RELEASE(vm);
@@ -267,7 +269,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     // Get the next frame in the reflow chain, and verify that it's our
     // child frame
     aReflowState.reflowCommand->GetNext(nextFrame);
-    NS_ASSERTION(nextFrame == mFirstChild, "unexpected reflow command next-frame");
+    NS_ASSERTION(nextFrame == mFrames.FirstChild(), "unexpected reflow command next-frame");
   }
 
   // Calculate the amount of space needed for borders
@@ -316,12 +318,14 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Reflow the child and get its desired size. Let it be as high as it
   // wants
+  nsIFrame* myOnlyChild = mFrames.FirstChild();
   nsSize              kidReflowSize(scrollAreaSize.width, NS_UNCONSTRAINEDSIZE);
-  nsHTMLReflowState   kidReflowState(aPresContext, mFirstChild, aReflowState,
+  nsHTMLReflowState   kidReflowState(aPresContext, myOnlyChild, aReflowState,
                                      kidReflowSize);
   nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.maxElementSize);
 
-  ReflowChild(mFirstChild, aPresContext, kidDesiredSize, kidReflowState, aStatus);
+  ReflowChild(myOnlyChild, aPresContext, kidDesiredSize, kidReflowState,
+              aStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
   // Make sure the height of the scrolled frame fills the entire scroll area,
@@ -356,7 +360,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Place and size the child.
   nsRect rect(border.left, border.top, kidDesiredSize.width, kidDesiredSize.height);
-  mFirstChild->SetRect(rect);
+  myOnlyChild->SetRect(rect);
 
   // XXX Moved to root frame
 #if 0

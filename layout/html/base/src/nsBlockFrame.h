@@ -93,8 +93,8 @@ public:
 
 #endif
 
-  virtual PRBool DeleteChildsNextInFlow(nsIPresContext& aPresContext,
-                                        nsIFrame* aNextInFlow);
+  virtual void DeleteChildsNextInFlow(nsIPresContext& aPresContext,
+                                      nsIFrame* aNextInFlow);
 
 protected:
   nsBaseIBFrame();
@@ -380,7 +380,7 @@ protected:
   nsTextRun* mTextRuns;
 
   // List of all floaters in this block
-  nsIFrame* mFloaters;
+  nsFrameList mFloaters;
 
   // XXX_fix_me: subclass one more time!
   // For list-item frames, this is the bullet frame.

@@ -35,6 +35,8 @@ public:
   static void AddrefAtoms();
   static void ReleaseAtoms();
 
+  static nsIAtom* mozAnonymousBlock;
+
   // Special attribute atoms
   static nsIAtom* _baseHref;
   static nsIAtom* _baseTarget;

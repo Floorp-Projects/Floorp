@@ -33,27 +33,21 @@ public:
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
+
   nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                              nsIFrame*       aFloatedFrame);
 
-  // If the frame should be floated or absolutely positioned creates a placeholder
-  // frame and returns PR_TRUE. The sibling list is modified so aFrame's next
-  // sibling pointer is set to nsnull, and aPlaceholderFrame's sibling pointer
-  // is set to what aFrame's sibling pointer was. It's up to the caller to adjust
-  // any previous sibling pointers.
+  // If the frame should be floated or absolutely positioned creates a
+  // placeholder frame and returns PR_TRUE. The sibling list is
+  // modified so aFrame's next sibling pointer is set to nsnull, and
+  // aPlaceholderFrame's sibling pointer is set to what aFrame's
+  // sibling pointer was. It's up to the caller to adjust any previous
+  // sibling pointers.
   PRBool MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
                             nsIFrame*              aFrame,
                             const nsStyleDisplay*  aDisplay,
                             const nsStylePosition* aPosition,
                             nsIFrame*&             aPlaceholderFrame);
-
-  /* helper methods for incremental reflow */
-  /** */
-  NS_IMETHOD AddFrame(const nsHTMLReflowState& aReflowState,
-                      nsIFrame *               aAddedFrame);
-  /** */
-  NS_IMETHOD RemoveFrame(nsIFrame * aRemovedFrame);
-
 
   // Helper method to create next-in-flows if necessary
   static nsresult CreateNextInFlow(nsIPresContext& aPresContext,

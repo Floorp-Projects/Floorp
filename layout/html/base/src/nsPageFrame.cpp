@@ -45,16 +45,18 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
     // Verify the next reflow command frame is our one and only child frame
     nsIFrame* next;
     aReflowState.reflowCommand->GetNext(next);
-    NS_ASSERTION(next == mFirstChild, "bad reflow frame");
+    NS_ASSERTION(next == mFrames.FirstChild(), "bad reflow frame");
 
     // Dispatch the reflow command to our content child. Allow it to be as high
     // as it wants
     nsSize            maxSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
+    nsHTMLReflowState kidReflowState(aPresContext, mFrames.FirstChild(),
+                                     aReflowState,
                                      maxSize);
   
     kidReflowState.isTopOfPage = PR_TRUE;
-    ReflowChild(mFirstChild, aPresContext, aDesiredSize, kidReflowState, aStatus);
+    ReflowChild(mFrames.FirstChild(), aPresContext, aDesiredSize,
+                kidReflowState, aStatus);
   
     // Place and size the child. Make sure the child is at least as
     // tall as our max size (the containing window)
@@ -63,36 +65,40 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
     }
 
     nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-    mFirstChild->SetRect(rect);
+    mFrames.FirstChild()->SetRect(rect);
 
   } else {
     // Do we have any children?
     // XXX We should use the overflow list instead...
-    if ((nsnull == mFirstChild) && (nsnull != mPrevInFlow)) {
+    if (mFrames.IsEmpty() && (nsnull != mPrevInFlow)) {
       nsPageFrame*  prevPage = (nsPageFrame*)mPrevInFlow;
 
-      nsIFrame* prevLastChild = prevPage->LastFrame(prevPage->mFirstChild);
+      nsIFrame* prevLastChild = prevPage->mFrames.LastChild();
 
       // Create a continuing child of the previous page's last child
       nsIStyleContext* kidSC;
       prevLastChild->GetStyleContext(kidSC);
+      nsIFrame* newFrame;
       nsresult rv = prevLastChild->CreateContinuingFrame(aPresContext, this,
-                                                         kidSC, mFirstChild);
+                                                         kidSC,
+                                                         newFrame);
+      mFrames.SetFrames(newFrame);
       NS_RELEASE(kidSC);
     }
 
     // Resize our frame allowing it only to be as big as we are
     // XXX Pay attention to the page's border and padding...
-    if (nsnull != mFirstChild) {
+    if (mFrames.NotEmpty()) {
+      nsIFrame* frame = mFrames.FirstChild();
       nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
-      nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
+      nsHTMLReflowState kidReflowState(aPresContext, frame, aReflowState,
                                        maxSize);
       kidReflowState.isTopOfPage = PR_TRUE;
 
       nsIHTMLReflow*    htmlReflow;
-      if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+      if (NS_OK == frame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
         // Get the child's desired size
-        ReflowChild(mFirstChild, aPresContext, aDesiredSize, kidReflowState, aStatus);
+        ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
   
         // Make sure the child is at least as tall as our max size (the containing window)
         if (aDesiredSize.height < aReflowState.availableHeight) {
@@ -101,7 +107,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
   
         // Place and size the child
         nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-        mFirstChild->SetRect(rect);
+        frame->SetRect(rect);
         // XXX Should we be sending the DidReflow?
         htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   
@@ -109,7 +115,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
         if (NS_FRAME_IS_COMPLETE(aStatus)) {
           nsIFrame* childNextInFlow;
   
-          mFirstChild->GetNextInFlow(childNextInFlow);
+          frame->GetNextInFlow(childNextInFlow);
           NS_ASSERTION(nsnull == childNextInFlow, "bad child flow list");
         }
       }
