@@ -47,11 +47,6 @@
   height: 100%;   /* Need this so percentage heights of kids work right */
 }
 
-form {
-  display: block;
-  margin: 0 0 1em 0;
-}
-
 /* miscellaneous form elements */
 
 legend {
