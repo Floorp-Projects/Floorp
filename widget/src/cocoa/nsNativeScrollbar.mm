@@ -459,7 +459,7 @@ nsNativeScrollbar::RecreateHorizontalScrollbar()
   
   // create the new horizontal scroller, init it, hook it up to the
   // view hierarchy and reset the values.
-  mView = [[[NativeScrollbarView alloc] initWithFrame:orientation geckoChild:this] retain];
+  mView = [[NativeScrollbarView alloc] initWithFrame:orientation geckoChild:this];
   [mView setNativeWindow: [mParentView getNativeWindow]];
   [mView setFrame:oldBounds];
   [mView setFloatValue:oldValue knobProportion:oldProportion];
