@@ -2101,20 +2101,8 @@ void nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString
 
 void nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet)
 {
-  // Load the style sheet
-  nsresult rv; 
-  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "component://netscape/rdf/xul-prototype-cache", &rv);
-   
-  nsCOMPtr<nsICSSStyleSheet> sheet;
-  rv = xulCache->GetStyleSheet(aURL, getter_AddRefs(sheet));
-
-  if (NS_SUCCEEDED(rv) && sheet) {
-    sheet->Clone(*aSheet);
-    return;
-  }
-
   nsCOMPtr<nsICSSLoader> loader;
-  rv = nsComponentManager::CreateInstance(kCSSLoaderCID,
+  nsresult rv = nsComponentManager::CreateInstance(kCSSLoaderCID,
                                     nsnull,
                                     NS_GET_IID(nsICSSLoader),
                                     getter_AddRefs(loader));

@@ -1166,15 +1166,6 @@ nsXULDocument::AddStyleSheet(nsIStyleSheet* aSheet)
       else {
         mStyleSheets.AppendElement(aSheet);
       }
-
-      // Put the style sheet into the XUL cache if the XUL cache is
-      // actually enabled and the document is chrome.
-      if (gXULUtils->UseXULCache() && IsChromeURI(mDocumentURL)) {
-          nsCOMPtr<nsICSSStyleSheet> css = do_QueryInterface(aSheet);
-          if (css) {
-              gXULCache->PutStyleSheet(css);
-          }
-      }
     }
     NS_ADDREF(aSheet);
 
@@ -1242,15 +1233,6 @@ nsXULDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray*
         }
         else {
           mStyleSheets.AppendElement(sheet);
-        }
-
-        // Put the style sheet into the XUL cache if the XUL cache is
-        // actually enabled and the document is chrome.
-        if (gXULUtils->UseXULCache() && IsChromeURI(mDocumentURL)) {
-            nsCOMPtr<nsICSSStyleSheet> css = do_QueryInterface(sheet);
-            if (css) {
-                gXULCache->PutStyleSheet(css);
-            }
         }
       }
       
@@ -1324,15 +1306,6 @@ NS_IMETHODIMP
 nsXULDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aSheet, "null ptr");
-
-  // Put the style sheet into the XUL cache if the XUL cache is
-  // actually enabled and the document is chrome.
-  if (gXULUtils->UseXULCache() && IsChromeURI(mDocumentURL)) {
-      nsCOMPtr<nsICSSStyleSheet> css = do_QueryInterface(aSheet);
-      if (css) {
-          gXULCache->PutStyleSheet(css);
-      }
-  }
 
   mStyleSheets.InsertElementAt(aSheet, aIndex + 1); // offset by one for attribute sheet
 

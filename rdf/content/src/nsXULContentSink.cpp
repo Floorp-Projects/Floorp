@@ -875,26 +875,6 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
         // Add the style sheet reference to the prototype
         mPrototype->AddStyleSheetReference(url);
 
-        // See if the style sheet is in the style sheet cache. If so,
-        // just use it.
-        if (gXULUtils->UseXULCache()) {
-            nsCOMPtr<nsICSSStyleSheet> sheet;
-            rv = gXULCache->GetStyleSheet(url, getter_AddRefs(sheet));
-
-            if (NS_SUCCEEDED(rv) && sheet) {
-                nsCOMPtr<nsICSSStyleSheet> newsheet;
-                rv = sheet->Clone(*getter_AddRefs(newsheet));
-
-                if (NS_SUCCEEDED(rv) && newsheet) {
-                    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
-                    if (doc) {
-                        doc->AddStyleSheet(newsheet);
-                        return NS_OK;
-                    }
-                }
-            }
-        }
-
         // Nope, we need to load it asynchronously
         PRBool blockParser = PR_FALSE;
         if (! aAlternate) {
