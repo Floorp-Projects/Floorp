@@ -51,6 +51,7 @@
  *      Object.prototype.__defineProperty__
  *      Object.prototype.__proto__
  *      filename and line number arguments to *Error constructors
+ *      callable regular expression objects
  *
  * SpiderMonkey extensions supported metacircularly:
  *      catch guards
