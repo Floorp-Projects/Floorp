@@ -93,8 +93,8 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 		m_mailDB->ListAllKeys(keys);
 		for (PRUint32 index = 0; index < keys.GetSize(); index++)
 		{
-			nsMsgHdr *msgHdr = NULL;
-			nsresult ret = m_mailDB->GetMsgHdrForKey(keys[index], (nsIMessage**)&msgHdr);
+			nsIMessage *msgHdr = NULL;
+			nsresult ret = m_mailDB->GetMsgHdrForKey(keys[index], &msgHdr);
 			if (ret == NS_OK && msgHdr)
 			{
 				nsMsgKey key;
@@ -267,6 +267,7 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
 		else if (m_mailDB != NULL)
 		{
 			m_mailDB->AddNewHdrToDB(m_newMsgHdr, m_updateAsWeGo);
+			m_newMsgHdr->Release();
 			// should we release here?
 			m_newMsgHdr = NULL;
 		}
@@ -317,6 +318,7 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 //				return NS_MSG_NOT_A_MAIL_FOLDER; /* #### NOT_A_MAIL_FILE */
 		}
 	}
+	m_graph_progress_received += lineLength;
 
 	// mailbox parser needs to do special stuff when it finds an envelope
 	// after parsing a message body. So do that.
