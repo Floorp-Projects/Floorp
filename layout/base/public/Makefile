@@ -26,6 +26,7 @@ EXPORTS =			\
 	nsIDocumentContainer.h	\
 	nsIDocumentObserver.h	\
 	nsIFrame.h		\
+	nsIFrameReflow.h		\
 	nsIFrameImageLoader.h	\
 	nsIPresContext.h	\
 	nsIPresShell.h		\
