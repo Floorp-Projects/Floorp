@@ -227,38 +227,93 @@ public class ScriptRuntime {
                  * occurs when reading the number 0x1000000000000081, which
                  * rounds to 0x1000000000000000 instead of 0x1000000000000100.
                  */
-                BinaryDigitReader bdr = new BinaryDigitReader(radix, s, start, end);
-                int bit;
-                sum = 0.0;
+                int bitShiftInChar = 1;
+                int digit = 0;
 
-                /* Skip leading zeros. */
-                do {
-                    bit = bdr.getNextBinaryDigit();
-                } while (bit == 0);
+                final int SKIP_LEADING_ZEROS = 0;
+                final int FIRST_EXACT_53_BITS = 1;
+                final int AFTER_BIT_53         = 2;
+                final int ZEROS_AFTER_54 = 3;
+                final int MIXED_AFTER_54 = 4;
 
-                if (bit == 1) {
-                    /* Gather the 53 significant bits (including the leading 1) */
-                    sum = 1.0;
-                    for (int j = 52; j != 0; j--) {
-                        bit = bdr.getNextBinaryDigit();
-                        if (bit < 0)
-                            return sum;
-                        sum = sum*2 + bit;
+                int state = SKIP_LEADING_ZEROS;
+                int exactBitsLimit = 53;
+                double factor = 0.0;
+                boolean bit53 = false;
+                // bit54 is the 54th bit (the first dropped from the mantissa)
+                boolean bit54 = false;
+
+                for (;;) {
+                    if (bitShiftInChar == 1) {
+                        if (start == end)
+                            break;
+                        digit = s.charAt(start++);
+                        if ('0' <= digit && digit <= '9')
+                            digit -= '0';
+                        else if ('a' <= digit && digit <= 'z')
+                            digit -= 'a' - 10;
+                        else
+                            digit -= 'A' - 10;
+                        bitShiftInChar = radix;
                     }
-                    /* bit54 is the 54th bit (the first dropped from the mantissa) */
-                    int bit54 = bdr.getNextBinaryDigit();
-                    if (bit54 >= 0) {
-                        double factor = 2.0;
-                        int sticky = 0;  /* sticky is 1 if any bit beyond the 54th is 1 */
-                        int bit3;
+                    bitShiftInChar >>= 1;
+                    boolean bit = (digit & bitShiftInChar) != 0;
 
-                        while ((bit3 = bdr.getNextBinaryDigit()) >= 0) {
-                            sticky |= bit3;
-                            factor *= 2;
+                    switch (state) {
+                      case SKIP_LEADING_ZEROS:
+                          if (bit) {
+                            --exactBitsLimit;
+                            sum = 1.0;
+                            state = FIRST_EXACT_53_BITS;
                         }
-                        sum += bit54 & (bit | sticky);
-                        sum *= factor;
+                        break;
+                      case FIRST_EXACT_53_BITS:
+                           sum *= 2.0;
+                        if (bit)
+                            sum += 1.0;
+                        --exactBitsLimit;
+                        if (exactBitsLimit == 0) {
+                            bit53 = bit;
+                            state = AFTER_BIT_53;
+                        }
+                        break;
+                      case AFTER_BIT_53:
+                        bit54 = bit;
+                        factor = 2.0;
+                        state = ZEROS_AFTER_54;
+                        break;
+                      case ZEROS_AFTER_54:
+                        if (bit) {
+                            state = MIXED_AFTER_54;
+                        }
+                        // fallthrough
+                      case MIXED_AFTER_54:
+                        factor *= 2;
+                        break;
                     }
+                }
+                switch (state) {
+                  case SKIP_LEADING_ZEROS:
+                    sum = 0.0;
+                    break;
+                  case FIRST_EXACT_53_BITS:
+                  case AFTER_BIT_53:
+                    // do nothing
+                    break;
+                  case ZEROS_AFTER_54:
+                    // x1.1 -> x1 + 1 (round up)
+                    // x0.1 -> x0 (round down)
+                    if (bit54 & bit53)
+                        sum += 1.0;
+                    sum *= factor;
+                    break;
+                  case MIXED_AFTER_54:
+                    // x.100...1.. -> x + 1 (round up)
+                    // x.0anything -> x (round down)
+                    if (bit54)
+                        sum += 1.0;
+                    sum *= factor;
+                    break;
                 }
             }
             /* We don't worry about inaccurate numbers for any other base. */
