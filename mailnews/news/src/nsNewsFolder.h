@@ -99,10 +99,6 @@ protected:
 	nsresult AddDirectorySeparator(nsFileSpec &path);
 	nsresult GetDatabase();
 
-	//Creates a subfolder with the name 'name' and adds it to the list of children.
-	//Returns the child as well.
-	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *setStr);
-
   nsresult LoadNewsrcFileAndCreateNewsgroups();
   PRInt32 RememberLine(char *line);
   nsresult ForgetLine(void);
