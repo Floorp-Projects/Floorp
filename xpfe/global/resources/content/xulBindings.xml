@@ -391,6 +391,42 @@
         <children/>
       </xul:box>
     </content>
+    <interface>
+      <method name="openPopup">
+        <arg name="element"/>
+        <arg name="xpos"/>
+        <arg name="ypos"/>
+        <arg name="popuptype"/>
+        <arg name="anchoralignment"/>
+        <arg name="popupalignment"/>
+        <body>
+        <![CDATA[
+          try {
+            var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+            var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+          } catch(e) {}
+          if (popupSetBox)
+            popupSetBox.createPopup(element, this, xpos, ypos, popuptype, anchoralignment, popupalignment);
+          else if (menuBox)
+            menuBox.openMenu(true);
+        ]]>
+        </body>
+      </method>
+      <method name="closePopup">
+        <body>
+        <![CDATA[
+          try {
+            var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+            var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+          } catch(e) {}
+          if (popupSetBox)
+            popupSetBox.destroyPopup();
+          else if (menuBox)
+            menuBox.openMenu(false);
+        ]]>
+        </body>
+      </method>
+    </interface>     
   </binding>
   
   <binding id="toolbargrippy" extends="xul:image"/>
@@ -573,5 +609,29 @@
     </interface>
   </binding>
   
+  <binding id="browser">
+    <interface>
+      <property name="webBrowser"
+                readonly="true"
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).webBrowser"/>
+    </interface>
+  </binding>
+
+  <binding id="editor">
+    <interface>
+      <property name="editorShell"
+                readonly="true"
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).editorShell"/>
+    </interface>
+  </binding>
+
+  <binding id="iframe">
+    <interface>
+      <property name="iframe"
+                readonly="true"
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIIFrameBoxObject).docShell"/>
+    </interface>
+  </binding>
+
 </bindings>
 
