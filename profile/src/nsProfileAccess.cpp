@@ -108,8 +108,8 @@ nsProfileAccess::~nsProfileAccess()
 	CRTFREEIF(mVersion);
 	CRTFREEIF(mHavePREGInfo);
 
-    FreeProfileMembers(mProfiles, mProfiles->Count());
-    FreeProfileMembers(m4xProfiles, m4xProfiles->Count());
+    FreeProfileMembers(mProfiles, mCount);
+    FreeProfileMembers(m4xProfiles, m4xCount);
 }
 
 // Free up the member profile structs
