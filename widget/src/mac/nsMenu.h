@@ -21,6 +21,7 @@
 
 #include "nsIMenu.h"
 #include "nsVoidArray.h"
+#include "nsIMenuListener.h"
 
 #include <Menus.h>
 
@@ -30,7 +31,7 @@ class nsIMenuBar;
  * Native Motif Menu wrapper
  */
 
-class nsMenu : public nsIMenu
+class nsMenu : public nsIMenu, public nsIMenuListener
 {
 
 public:
@@ -38,6 +39,9 @@ public:
   virtual ~nsMenu();
 
   NS_DECL_ISUPPORTS
+  
+  // nsIMenuListener methods
+  nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
   
   NS_IMETHOD Create(nsIMenuBar * aParent, const nsString &aLabel);
   NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel);
@@ -65,13 +69,14 @@ protected:
 
   nsString     mLabel;
   PRUint32     mNumMenuItems;
-  nsVoidArray  mMenuItemVoidArrary;
+  nsVoidArray  mMenuItemVoidArray;
 
   nsIMenu    * mMenuParent;
   nsIMenuBar * mMenuBarParent;
 
   // MacSpecific
-  static PRUint32     mMacMenuID;
+  static PRInt16      mMacMenuIDCount;
+  PRInt16			  mMacMenuID;
   MenuHandle          mMacMenuHandle;
 };
 
