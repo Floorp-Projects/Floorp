@@ -17,8 +17,8 @@
  */
 <!--  to hide script contents from old browsers
 
-var globals = parent.parent.parent.globals;
-var controls = parent.parent.controls;
+var globals = parent.parent.globals;
+var controls = parent.controls;
 
 function go( msg )
 {
@@ -57,11 +57,11 @@ function insertISPName()
 
 function loadData()
 {
-	parent.twostepfooter.document.writeln( "<BODY BACKGROUND='images/bg.gif' BGCOLOR='cccccc'>" );
-	parent.twostepfooter.document.writeln( "<P>If you have trouble setting up your account call " );
-	parent.twostepfooter.document.writeln( globals.getSelectedISPName() );
-	parent.twostepfooter.document.writeln( "at (support number).</P>" );
-	parent.twostepfooter.document.close();
+	//parent.twostepfooter.document.writeln( "<BODY BACKGROUND='images/bg.gif' BGCOLOR='cccccc'>" );
+	//parent.twostepfooter.document.writeln( "<P>If you have trouble setting up your account call " );
+	//parent.twostepfooter.document.writeln( globals.getSelectedISPName() );
+	//parent.twostepfooter.document.writeln( "at (support number).</P>" );
+	//parent.twostepfooter.document.close();
 
 	if ( controls.generateControls )
 		controls.generateControls();

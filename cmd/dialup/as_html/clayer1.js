@@ -135,10 +135,10 @@ pages[ 55 ][ 1 ] = new method( "moreinfo.htm", "parent.content.go( '' )", true )
 
 pages[ 56 ] = new Array();
 pages[ 56 ][ 0 ] = new page( "moreinfo.htm", null, null );
-pages[ 56 ][ 1 ] = new method( "2stpwrap.htm", "parent.content.go( '' )", true );
+pages[ 56 ][ 1 ] = new method( "2step.htm", "parent.content.go( '' )", true );
 
 pages[ 57 ] = new Array();
-pages[ 57 ][ 0 ] = new page( "2stpwrap.htm", null, null );
+pages[ 57 ][ 0 ] = new page( "2step.htm", null, null );
 pages[ 57 ][ 1 ] = new method( "register.htm", "parent.content.go( '' )", true );
 
 pages[ 8 ] = new Array();
