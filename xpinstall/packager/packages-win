@@ -105,6 +105,7 @@ bin\components\jsurl.dll
 bin\components\jsurl.xpt
 bin\components\layout_base.xpt
 bin\components\layout_xul.xpt
+bin\components\layout_xul_outliner.xpt
 bin\components\locale.xpt
 bin\components\lwbrk.dll
 bin\components\mork.dll

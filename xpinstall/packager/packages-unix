@@ -184,6 +184,7 @@ bin/components/docshell.xpt
 bin/components/jsurl.xpt
 bin/components/layout_base.xpt
 bin/components/layout_xul.xpt
+bin/components/layout_xul_outliner.xpt
 bin/components/xuldoc.xpt
 bin/components/xultmpl.xpt
 bin/components/libjsloader.so
