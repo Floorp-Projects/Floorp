@@ -131,45 +131,48 @@ function onLoad()
   }
 }
 
-// save the controls back to the "gServerSettings" array
 function onOk()
 {
-  var controls = getControls();
-
-  radioGroup = document.getElementById("folderStorage");
-  gPrefsBundle = document.getElementById("bundle_prefs");
-
-  // if this account wasn't deferred, and is now...
-  if (radioGroup.value != 1 && !gFirstDeferredAccount.length)
+  // Handle account deferral settings for POP3 accounts.
+  if (gServerSettings.serverType == "pop3")
   {
-     var confirmDeferAccount =
+    var radioGroup = document.getElementById("folderStorage");
+    var gPrefsBundle = document.getElementById("bundle_prefs");
+
+    // if this account wasn't deferred, and is now...
+    if (radioGroup.value != 1 && !gFirstDeferredAccount.length)
+    {
+      var confirmDeferAccount =
         gPrefsBundle.getString("confirmDeferAccount");
 
       var confirmTitle = gPrefsBundle.getString("confirmDeferAccountTitle");
 
       var promptService =
         Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
-                   getService(Components.interfaces.nsIPromptService);
+                 getService(Components.interfaces.nsIPromptService);
       if (!promptService ||
           !promptService.confirm(window, confirmTitle, confirmDeferAccount))
         return;
-  }
-  switch (radioGroup.value)
-  {
-    case "0":
-      gServerSettings['deferredToAccount'] = getLocalFoldersAccount().key;
-      break;
-    case "1":
-      gServerSettings['deferredToAccount'] = "";
-      break;
-    case "2":
-      picker = document.getElementById("deferedServerFolderPicker");
-      var server = GetMsgFolderFromUri(picker.getAttribute("uri"), false).server;
-      var account = gAccountManager.FindAccountForServer(server);
-      gServerSettings['deferredToAccount'] = account.key;
-      break;
+    }
+    switch (radioGroup.value)
+    {
+      case "0":
+        gServerSettings['deferredToAccount'] = getLocalFoldersAccount().key;
+        break;
+      case "1":
+        gServerSettings['deferredToAccount'] = "";
+        break;
+      case "2":
+        picker = document.getElementById("deferedServerFolderPicker");
+        var server = GetMsgFolderFromUri(picker.getAttribute("uri"), false).server;
+        var account = gAccountManager.FindAccountForServer(server);
+        gServerSettings['deferredToAccount'] = account.key;
+        break;
+    }
   }
 
+  // Save the controls back to the "gServerSettings" array.
+  var controls = getControls();
   for (var i = 0; i < controls.length; i++)
   {
     var slot = controls[i].id;
