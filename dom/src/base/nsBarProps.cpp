@@ -93,7 +93,7 @@ BarPropImpl::SetBrowserWindow(nsIBrowserWindow *aBrowser) {
 }
 
 NS_IMETHODIMP
-BarPropImpl::GetVisible(PRBool *aVisible, PRUint32 aChromeFlag) {
+BarPropImpl::GetVisibleByFlag(PRBool *aVisible, PRUint32 aChromeFlag) {
   PRUint32 chromeFlags;
   *aVisible = PR_FALSE;
   if (mBrowser && NS_SUCCEEDED(mBrowser->GetChrome(chromeFlags))) {
@@ -105,7 +105,7 @@ BarPropImpl::GetVisible(PRBool *aVisible, PRUint32 aChromeFlag) {
 }
 
 NS_IMETHODIMP
-BarPropImpl::SetVisible(PRBool aVisible, PRUint32 aChromeFlag) {
+BarPropImpl::SetVisibleByFlag(PRBool aVisible, PRUint32 aChromeFlag) {
   PRUint32 chromeFlags;
   if (mBrowser && NS_SUCCEEDED(mBrowser->GetChrome(chromeFlags))) {
     if (aVisible)
@@ -130,7 +130,7 @@ MenubarPropImpl::~MenubarPropImpl() {
 NS_IMETHODIMP
 MenubarPropImpl::GetVisible(PRBool *aVisible) {
 #if 1
-  return BarPropImpl::GetVisible(aVisible, NS_CHROME_MENU_BAR_ON);
+  return BarPropImpl::GetVisibleByFlag(aVisible, NS_CHROME_MENU_BAR_ON);
 #else
   if (mBrowser)
     return mBrowser->IsMenuBarVisible(aVisible);
@@ -141,7 +141,7 @@ MenubarPropImpl::GetVisible(PRBool *aVisible) {
 NS_IMETHODIMP
 MenubarPropImpl::SetVisible(PRBool aVisible) {
 #if 1
-  return BarPropImpl::SetVisible(aVisible, NS_CHROME_MENU_BAR_ON);
+  return BarPropImpl::SetVisibleByFlag(aVisible, NS_CHROME_MENU_BAR_ON);
 #else
   if (mBrowser)
     return mBrowser->ShowMenuBar(aVisible);
@@ -161,12 +161,12 @@ ToolbarPropImpl::~ToolbarPropImpl() {
 
 NS_IMETHODIMP
 ToolbarPropImpl::GetVisible(PRBool *aVisible) {
-  return BarPropImpl::GetVisible(aVisible, NS_CHROME_TOOL_BAR_ON);
+  return BarPropImpl::GetVisibleByFlag(aVisible, NS_CHROME_TOOL_BAR_ON);
 }
 
 NS_IMETHODIMP
 ToolbarPropImpl::SetVisible(PRBool aVisible) {
-  return BarPropImpl::SetVisible(aVisible, NS_CHROME_TOOL_BAR_ON);
+  return BarPropImpl::SetVisibleByFlag(aVisible, NS_CHROME_TOOL_BAR_ON);
 }
 
 //
@@ -181,12 +181,12 @@ LocationbarPropImpl::~LocationbarPropImpl() {
 
 NS_IMETHODIMP
 LocationbarPropImpl::GetVisible(PRBool *aVisible) {
-  return BarPropImpl::GetVisible(aVisible, NS_CHROME_LOCATION_BAR_ON);
+  return BarPropImpl::GetVisibleByFlag(aVisible, NS_CHROME_LOCATION_BAR_ON);
 }
 
 NS_IMETHODIMP
 LocationbarPropImpl::SetVisible(PRBool aVisible) {
-  return BarPropImpl::SetVisible(aVisible, NS_CHROME_LOCATION_BAR_ON);
+  return BarPropImpl::SetVisibleByFlag(aVisible, NS_CHROME_LOCATION_BAR_ON);
 }
 
 //
@@ -201,12 +201,12 @@ PersonalbarPropImpl::~PersonalbarPropImpl() {
 
 NS_IMETHODIMP
 PersonalbarPropImpl::GetVisible(PRBool *aVisible) {
-  return BarPropImpl::GetVisible(aVisible, NS_CHROME_PERSONAL_TOOLBAR_ON);
+  return BarPropImpl::GetVisibleByFlag(aVisible, NS_CHROME_PERSONAL_TOOLBAR_ON);
 }
 
 NS_IMETHODIMP
 PersonalbarPropImpl::SetVisible(PRBool aVisible) {
-  return BarPropImpl::SetVisible(aVisible, NS_CHROME_PERSONAL_TOOLBAR_ON);
+  return BarPropImpl::SetVisibleByFlag(aVisible, NS_CHROME_PERSONAL_TOOLBAR_ON);
 }
 
 //
@@ -221,12 +221,12 @@ StatusbarPropImpl::~StatusbarPropImpl() {
 
 NS_IMETHODIMP
 StatusbarPropImpl::GetVisible(PRBool *aVisible) {
-  return BarPropImpl::GetVisible(aVisible, NS_CHROME_STATUS_BAR_ON);
+  return BarPropImpl::GetVisibleByFlag(aVisible, NS_CHROME_STATUS_BAR_ON);
 }
 
 NS_IMETHODIMP
 StatusbarPropImpl::SetVisible(PRBool aVisible) {
-  return BarPropImpl::SetVisible(aVisible, NS_CHROME_STATUS_BAR_ON);
+  return BarPropImpl::SetVisibleByFlag(aVisible, NS_CHROME_STATUS_BAR_ON);
 }
 
 //

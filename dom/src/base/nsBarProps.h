@@ -45,8 +45,8 @@ public:
 
   NS_IMETHOD_(void) SetBrowserWindow(nsIBrowserWindow *aBrowser);
 
-  NS_IMETHOD        GetVisible(PRBool *aVisible, PRUint32 aChromeFlag);
-  NS_IMETHOD        SetVisible(PRBool aVisible, PRUint32 aChromeFlag);
+  NS_IMETHOD        GetVisibleByFlag(PRBool *aVisible, PRUint32 aChromeFlag);
+  NS_IMETHOD        SetVisibleByFlag(PRBool aVisible, PRUint32 aChromeFlag);
 
 protected:
   nsIBrowserWindow* mBrowser;
@@ -59,8 +59,7 @@ public:
   MenubarPropImpl();
   virtual ~MenubarPropImpl();
 
-  NS_IMETHOD        GetVisible(PRBool *aVisible);
-  NS_IMETHOD        SetVisible(PRBool aVisible);
+  NS_DECL_IDOMBARPROP
 };
 
 // Script "toolbar" object
@@ -69,8 +68,7 @@ public:
   ToolbarPropImpl();
   virtual ~ToolbarPropImpl();
 
-  NS_IMETHOD        GetVisible(PRBool *aVisible);
-  NS_IMETHOD        SetVisible(PRBool aVisible);
+  NS_DECL_IDOMBARPROP
 };
 
 // Script "locationbar" object
@@ -79,8 +77,7 @@ public:
   LocationbarPropImpl();
   virtual ~LocationbarPropImpl();
 
-  NS_IMETHOD        GetVisible(PRBool *aVisible);
-  NS_IMETHOD        SetVisible(PRBool aVisible);
+  NS_DECL_IDOMBARPROP
 };
 
 // Script "personalbar" object
@@ -89,8 +86,7 @@ public:
   PersonalbarPropImpl();
   virtual ~PersonalbarPropImpl();
 
-  NS_IMETHOD        GetVisible(PRBool *aVisible);
-  NS_IMETHOD        SetVisible(PRBool aVisible);
+  NS_DECL_IDOMBARPROP
 };
 
 // Script "statusbar" object
@@ -99,8 +95,7 @@ public:
   StatusbarPropImpl();
   virtual ~StatusbarPropImpl();
 
-  NS_IMETHOD        GetVisible(PRBool *aVisible);
-  NS_IMETHOD        SetVisible(PRBool aVisible);
+  NS_DECL_IDOMBARPROP
 };
 
 // Script "scrollbars" object
@@ -109,8 +104,7 @@ public:
   ScrollbarsPropImpl();
   virtual ~ScrollbarsPropImpl();
 
-  NS_IMETHOD        GetVisible(PRBool *aVisible);
-  NS_IMETHOD        SetVisible(PRBool aVisible);
+  NS_DECL_IDOMBARPROP
 };
 
 #endif /* nsBarProps_h___ */
