@@ -268,7 +268,8 @@ protected:
 
   nsresult ProcessChildren(nsIPresContext* aPresContext,
                            nsIFrame*       aFrame,
-                           nsIContent*     aContent);
+                           nsIContent*     aContent,
+                           nsIFrame*&      aChildList);
 
   nsresult CreateInputFrame(nsIContent* aContent,
                             nsIFrame*   aParentFrame,
@@ -858,13 +859,16 @@ NS_IMETHODIMP HTMLStyleSheetImpl::UnsetAttributeFor(nsIAtom* aAttribute,
 
 nsresult HTMLStyleSheetImpl::ProcessChildren(nsIPresContext* aPresContext,
                                              nsIFrame*       aFrame,
-                                             nsIContent*     aContent)
+                                             nsIContent*     aContent,
+                                             nsIFrame*&      aChildList)
 {
-  nsIFrame* childList = nsnull;
+  // Initialize OUT parameter
+  aChildList = nsnull;
+
+  // Iterate the child content objects and construct a frame
   nsIFrame* lastChildFrame = nsnull;
   PRInt32   count;
   aContent->ChildCount(count);
-
   for (PRInt32 i = 0; i < count; i++) {
     nsIContent* childContent;
     aContent->ChildAt(i, childContent);
@@ -878,7 +882,7 @@ nsresult HTMLStyleSheetImpl::ProcessChildren(nsIPresContext* aPresContext,
       if (nsnull != childFrame) {
         // Link the frame into the child list
         if (nsnull == lastChildFrame) {
-          childList = childFrame;
+          aChildList = childFrame;
         } else {
           lastChildFrame->SetNextSibling(childFrame);
         }
@@ -889,10 +893,6 @@ nsresult HTMLStyleSheetImpl::ProcessChildren(nsIPresContext* aPresContext,
     }
   }
 
-  // Initialize the frame giving it its child list.
-  // XXX Should we call Init(), or just return the child list and let the
-  // caller call Init()?
-  aFrame->Init(*aPresContext, childList);
   return NS_OK;
 }
 
@@ -986,8 +986,10 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext* aPresContext,
     rootFrame->SetView(rootView);
     NS_RELEASE(viewManager);
 
-    // Process the children
-    ProcessChildren(aPresContext, rootFrame, aContent);
+    // Process the children and initialize the frame
+    nsIFrame* childList;
+    ProcessChildren(aPresContext, rootFrame, aContent, childList);
+    rootFrame->Init(*aPresContext, childList);
 
     // Return the frame sub-tree
     aFrameSubTree = rootFrame;
@@ -1006,8 +1008,10 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext* aPresContext,
     else if (nsHTMLAtoms::body == tag) {
       rv = NS_NewBodyFrame(aContent, aParentFrame, frame);
 
-      // Process the children
-      ProcessChildren(aPresContext, frame, aContent);
+      // Process the children and initialize the frame
+      nsIFrame* childList;
+      ProcessChildren(aPresContext, frame, aContent, childList);
+      frame->Init(*aPresContext, childList);
     }
     else if (nsHTMLAtoms::frameset == tag) {
       rv = NS_NewHTMLFramesetFrame(aContent, aParentFrame, frame);
@@ -1058,6 +1062,8 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext* aPresContext,
     // AREA, HEAD, META, MAP, etc...
   
     if (nsnull == frame) {
+      nsIFrame* childList;
+
       // When there is no explicit frame to create, assume it's a
       // container and let style dictate the rest.
       const nsStyleDisplay* styleDisplay = (const nsStyleDisplay*)
@@ -1069,12 +1075,14 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext* aPresContext,
       case NS_STYLE_DISPLAY_BLOCK:
       case NS_STYLE_DISPLAY_LIST_ITEM:
         rv = NS_NewCSSBlockFrame(&frame, aContent, aParentFrame);
-        ProcessChildren(aPresContext, frame, aContent);
+        ProcessChildren(aPresContext, frame, aContent, childList);
+        frame->Init(*aPresContext, childList);
         break;
   
       case NS_STYLE_DISPLAY_INLINE:
         rv = NS_NewCSSInlineFrame(&frame, aContent, aParentFrame);
-        ProcessChildren(aPresContext, frame, aContent);
+        ProcessChildren(aPresContext, frame, aContent, childList);
+        frame->Init(*aPresContext, childList);
         break;
   
       default:
