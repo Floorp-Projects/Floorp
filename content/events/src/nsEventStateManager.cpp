@@ -4149,7 +4149,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
           pusher.Pop();
 
           focusAfterBlur = mCurrentFocus;
-          esm->SetFocusedContent(nsnull);
+          if (!previousFocus || previousFocus == focusAfterBlur)
+            esm->SetFocusedContent(nsnull);
         }
       }
 
