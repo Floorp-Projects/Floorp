@@ -26,23 +26,12 @@
 
 */
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/res/rdf/bookmark-folder-closed.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/res/rdf/bookmark-folder-open.gif");
-}
-
-treeitem > treerow > treecell > titledbutton
-{
-  height: 16px;
-  width: 16px;
-  color: inherit;
-  border: none;
-  padding: 0px;
-  margin: 0px;
-  font: inherit;
 }
