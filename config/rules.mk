@@ -386,7 +386,7 @@ else
 ifeq ($(OS_ARCH),WINNT)
 	$(CC) $(PROGOBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
-ifdef CPP_PROG_LINK
+ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) $(CFLAGS) $(WRAP_MALLOC_CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 else
 	$(CCF) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
@@ -405,7 +405,7 @@ endif
 #
 $(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o 
 	@$(MAKE_OBJDIR)
-ifdef CPP_PROG_LINK
+ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) $(CFLAGS) $(WRAP_MALLOC_CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 else
 	$(CCF) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
@@ -417,7 +417,7 @@ endif
 # "gcc" and "g++" for now.
 #
 pure:	$(PROGRAM)
-ifdef CPP_PROG_LINK
+ifeq ($(CPP_PROG_LINK),1)
 	$(PURIFY) g++ $(CFLAGS) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 else
 	$(PURIFY) $(CCF) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
