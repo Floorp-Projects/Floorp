@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* XPTI_PUBLIC_API and XPTI_GetInterfaceInfoManager declarations. */
+/* Public declarations for xptcall. */
 
 #ifndef xptcall_h___
 #define xptcall_h___
