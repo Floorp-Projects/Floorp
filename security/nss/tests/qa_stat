@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/sh 
 ########################################################################
 #
 # /u/sonmi/bin/qa_stat - /u/svbld/bin/init/nss/qa_stat
@@ -24,7 +24,6 @@
 #
 ########################################################################
 
-
 O_OPTIONS=ON
 
 . `dirname $0`/header
@@ -33,19 +32,35 @@ EARLY_EXIT=TRUE
 
 DOCDIR=/u/sonmi/doc
 
+HTML_ERRORCOLOR=\"#FF0000\"
+HTML_ERRORMSG=Failed
+
+HTML_MISSINGCOLOR=\"#FFFFCC\"
+HTML_MISSINGMSG=Missing
+
+HTML_INCOMPLETECOLOR=$HTML_MISSINGCOLOR
+HTML_INCOMPLETEMSG=Incomplete
+
+HTML_PASSEDCOLOR=\"#66FF99\"
+HTML_PASSEDMSG=Passed
+
 # this file is used to deal with hanging rsh - a new shell is started 
 # for each rsh, and a function is called after it is finished - they
 # communicate with this file
+
 RSH_FILE=$TMP/rsh.$$
 echo >$RSH_FILE
 TMPFILES="$TMPFILES $RSH_FILE $WARNING_FILE"
-RSH_WAIT_TIME=60 #maximum time allowed for the 2 rsh to finish...
+RSH_WAIT_TIME=90 #maximum time allowed for the 2 rsh to finish...
 TOTAL_TESTS=106
 
 Debug "NTDIST $NTDIST"
 Debug "UXDIST $UXDIST"
 Debug "TESTSCRIPTDIR $TESTSCRIPTDIR"
 Debug "RESULTDIR $RESULTDIR"
+
+BEFORE_CONTEXT_GREP=10
+AFTER_CONTEXT_GREP=3
 
 ############################### watch_rsh ##############################
 # local shell function, deals with a hanging rsh (kills it...)
@@ -82,15 +97,12 @@ watch_rsh()
 ########################################################################
 find_qa_systems()
 {
-
-#the line below had a bug, which caused nssqa as being run when only 
-#the .nssqa file existed
 #FIXME remaining bugs: 
 #when only debug but not opt is being run this is not recognized. 
 #2000 and NT are reported the same way
 #it should also examine the directory (.1) for files 
 
-for w in `ls $RESULTDIR | grep \.1$ | sed -e "s/\..*//" | sort -u`
+for w in `ls $RESULTDIR | grep '\.1$' | sed -e "s/\..*//" | sort -u`
 do
     NO_RSH="FALSE"
     QA_OS=""
@@ -98,18 +110,21 @@ do
     IS_64=""
     IS_WIN=""
 
-    grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa && NO_RSH=TRUE
+    grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa >/dev/null && NO_RSH=TRUE
 
     if [ "$NO_RSH" = "TRUE" ]
     then
-        grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa | sed -e "s/ /_/g" \
-             -e "s/WINDOWS-OS-LINE:_Windows/${w}/g" >>$TMP_PLATFORMLIST_FILE
-        grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa | sed -e "s/ /_/g" \
-             -e "s/WINDOWS-OS-LINE:_Windows/${w}/g" 
+        grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa | sort -u | sed \
+             -e "s/WINDOWS-OS-LINE: /${w}_/" >>$TMP_PLATFORMLIST_FILE
+        if [ "$O_SILENT" != ON ] ; then
+            grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa | sort -u | sed \
+                 -e "s/WINDOWS-OS-LINE:/${w}/" 
+        fi
     else
         watch_rsh start $w &
         QA_SYS=`rsh $w uname -sr`
-        echo $QA_SYS | grep Linux && QA_RHVER=`rsh $w cat /etc/redhat-release`
+        echo $QA_SYS | grep Linux >/dev/null && 
+                  QA_RHVER=`rsh $w cat /etc/redhat-release`
         if [ -n "$QA_RHVER" ]
         then
             QA_OS=`echo $w $QA_RHVER | sed -e "s/Red Hat /RH /" \
@@ -135,36 +150,37 @@ do
             watch_rsh stop $w 
             QA_OS=`echo "$w $QA_SYS $IS_64"`
         fi
-        echo $QA_OS
-        echo $QA_OS | sed -e "s/ /_/g" >>$TMP_PLATFORMLIST_FILE    # use later for 
-                                                            # missing list
+        if [ "$O_SILENT" != ON ] ; then
+            echo $QA_OS
+        fi
+        echo $QA_OS | sed -e "s/^[_ ]//" -e "s/ /_/g" >>$TMP_PLATFORMLIST_FILE
+                              # use later for missing list
     fi
 done
 
 }
-################################### set_files ##########################
+################################### qa_stat_init ##########################
 # local shell function, sets the name of the resultfile to:
 #    <filename> if option -f <filename>
 #    $RESULTDIR/result if write permission 
 #        (mozilla/tests_results/security/result)
 #    $HOME/resultNSS${NSSVER}-${BUILDDATE} if no write permission in $RESULTDIR
 ########################################################################
-set_files()
+qa_stat_init()
 {
     if [ $O_FILE = ON -a $O_CRON = OFF ]    # if -f was specified write there 
     then
         RFILE=$FILENAME    
     else
         RFILE=${RESULTDIR}/result
-        #RFILE=${RESULTDIR}/result.$$
         if [ ! -w $RESULTDIR ]
         then
             RFILE=$HOME/resultNSS${NSSVER}-${BUILDDATE}
             Debug "Using alternate resultfile $RFILE"
-        elif [ $O_CRON = ON ]
-        then
-             find ${RESULTDIR} -exec chmod a+rw {} \;    #FIXME - umask 
-                            #doesn't seem to work - this is a tmp workaround
+        #elif [ $O_CRON = ON ]
+        #then
+             #find ${RESULTDIR} -exec chmod a+rw {} \;    #FIXME - umask 
+                            ##doesn't seem to work - this is a tmp workaround
         fi
     
         if [ ! -x $RESULTDIR -o ! -r  $RESULTDIR -o ! -w $RESULTDIR ]
@@ -178,28 +194,71 @@ set_files()
             glob_usage "$RESULTDIR does not exist"
         fi
     fi
-    TMP_E_FILE=${RFILE}.E$$
-    TMP_P_FILE=${RFILE}.P$$
+    ERRORLIST=${RFILE}.E$$
     TMP_PLATFORMLIST_FILE=${RFILE}.platform.$$
     rm $TMP_PLATFORMLIST_FILE 2>/dev/null
     TMP_PERF_FILE=${RFILE}.perf.$$
     HTML_FILE=${RFILE}.html
     WARNING_FILE=${RFILE}.warning
-    TMPFILES="$TMPFILES  $TMP_E_FILE $TMP_P_FILE $WARNING_FILE $TMP_PERF_FILE $TMP_PLATFORMLIST_FILE"
+    BCMISS=${RFILE}.bcmissing
+    BCERR=${RFILE}.bcerrors
+    TMPFILES="$TMPFILES  $ERRORLIST $WARNING_FILE $TMP_PERF_FILE "
 
 #FIXME rm the rest too - add them to the TMPFILES
     FILENAME=$RFILE        #we might want to mail it...later switch to html file
     O_FILE="ON"
-    rm $HTML_FILE $RFILE $TMP_E_FILE $TMP_P_FILE 2>/dev/null
-    cp $DOCDIR/QAheader.html $HTML_FILE
+    rm $HTML_FILE $RFILE $ERRORLIST $BCERR $BCMISS 2>/dev/null
+    HREF_HTML_FILE="http://cindercone${HTML_FILE}"
+    echo >$BCMISS
+    write_qa_header_html >$HTML_FILE
+    #cp $DOCDIR/QAheader.html $HTML_FILE
 }
 
-################################# html_eot #########################
-# local shell function, writes end of the html table
-####################################################################
-html_eot()
+################################# html_footer #########################
+# local shell function, writes end of the html body
+#######################################################################
+write_qa_header_html()
 {
-echo '</table>'
+echo 'Subject: QA Report ' $NSSVER $BUILDDATE '
+From: sonmi@netscape.com
+Reply-To: sonmi@netscape.com
+Content-Type: text/html; charset=us-ascii
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.7 [en] (X11; U; SunOS 5.8 sun4u) [N
+etscape]">
+</head>
+<body>
+<br>
+&nbsp;
+&nbsp;
+<br>&nbsp;
+<center>
+<h1>
+<a NAME="Top"></a><b><font size=+2>QA&nbsp;Results</font></b></h1></center>
+
+
+<table BORDER WIDTH="100%" NOSAVE >
+<tr>
+<td>&nbsp;<b><font size=+1>Build-OS and version</font></b></td>
+
+<td><b><font size=+1>QA-OS</font></b></td>
+
+<td><b><font size=+1>Systemname</font></b></td>
+
+<td><b><font size=+1>P/F</font></b></td>
+
+<td><b><font size=+1>result</font></b></td>
+
+<td><b><font size=+1>output</font></b></td>
+
+<td><b><font size=+1>errors</font></b></td>
+
+<td><b><font size=+1>QA time / #</font></b></td>
+</tr>
+'
 }
 
 ################################# html_footer #########################
@@ -207,10 +266,8 @@ echo '</table>'
 #######################################################################
 html_footer()
 {
-
-echo '</body>'
-echo '</html>'
-
+  echo '</body>'
+  echo '</html>'
 }
 
 ################################# setQAsysvars #########################
@@ -224,48 +281,54 @@ setQAsysvars()
         TESTNUMBER=`echo $MACHINE | sed -e 's/.*\.//'`
         SYSNAME=`echo $MACHINE | sed -e 's/\..*//'`
         Debug "SYSNAME= $SYSNAME"
+
         QA_SYS_OS=`grep $SYSNAME $TMP_PLATFORMLIST_FILE |sed -e 's///' | \
             sort | uniq | sed  -e "s/$SYSNAME//" \
-            -e "s/WINNT_WIN95/Windows NT/"  \
-            -e "s/WINNT_WINNT/Windows NT/"  \
-            -e "s/Windows_NT_WIN95/Windows NT/"  \
-            -e "s/Windows_NT_WINNT/Windows NT/"  | sort | uniq`
+            -e "s/^_//" | sort | uniq`
+            #-e "s/WINNT_WIN95/Windows NT/"  \
+            #-e "s/WINNT_WINNT/Windows NT/"  \
+            #-e "s/Windows_NT_WIN95/Windows NT/"  \
+            #-e "s/Windows_NT_WINNT/Windows NT/"  \
+ 
         Debug "QA_SYS_OS= $QA_SYS_OS"
     fi
     BUILD_SYS=`echo $BUILDPLATFORM | sed -e 's/\.OBJ//' -e 's/_DBG/ Debug/' \
             -e 's/_OPT/ Optimized/'  -e 's/_64/ 64bit/' -e 's/_glibc_PTH//' \
             -e 's/_/ /'`
     Debug "BUILD_SYS=$BUILD_SYS"
-    if [ -f "${RESULTDIR}/${MACHINE}/results.html" ] 
-    then
+    if [ -f "${RESULTDIR}/${MACHINE}/results.html" ] ; then
         RESULT="http://cindercone${RESULTDIR}/${MACHINE}/results.html"
-        Debug "RESULT=$RESULT"
     else
         RESULT="0"
-        Debug "no resultfile"
+    fi
+    if [ -f "${RESULTDIR}/bc_libs/${MACHINE}/results.html" ] ; then
+      BCL_RESULT="http://cindercone${RESULTDIR}/bc_libs/${MACHINE}/results.html"
+    else
+      BCL_RESULT="0"
+    fi
+    if [ -f "${RESULTDIR}/bc_bins/${MACHINE}/results.html" ] ; then
+      BCB_RESULT="http://cindercone${RESULTDIR}/bc_bins/${MACHINE}/results.html"
+    else
+      BCB_RESULT="0"
     fi
 
-    if [ -f "${RESULTDIR}/${MACHINE}/output.log" ] 
-    then
+    if [ -f "${RESULTDIR}/${MACHINE}/output.log" ] ; then
         LOG="http://cindercone${RESULTDIR}/${MACHINE}/output.log"
-        Debug "LOG=$LOG"
     else
         LOG="0"
-        Debug "no logfile"
+    fi
+    if [ -f "${RESULTDIR}/bc_libs/${MACHINE}/output.log" ] ; then
+        BCL_LOG="http://cindercone${RESULTDIR}/bc_libs/${MACHINE}/output.log"
+    else
+        BCL_LOG="0"
+    fi
+    if [ -f "${RESULTDIR}/bc_bins/${MACHINE}/output.log" ] ; then
+        BCB_LOG="http://cindercone${RESULTDIR}/bc_bins/${MACHINE}/output.log"
+    else
+        BCB_LOG="0"
     fi
 }
 
-HTML_ERRORCOLOR=\"#FF0000\"
-HTML_ERRORMSG=Failed
-
-HTML_MISSINGCOLOR=\"#FFFFCC\"
-HTML_MISSINGMSG=Missing
-
-HTML_INCOMPLETECOLOR=$HTML_MISSINGCOLOR
-HTML_INCOMPLETEMSG=Incomplete
-
-HTML_PASSEDCOLOR=\"#66FF99\"
-HTML_PASSEDMSG=Passed
 ################################# html_line() #########################
 # local shell function, writes a line in the html table
 ########################################################################
@@ -291,28 +354,55 @@ html_line()
   else
       echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'    
   fi
-  
-  if [ "$RESULT" = "0" ]
-  then
-      echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
+  if [ "$CURRENT_TABLE" != "BC" ] ; then
+      if [ "$RESULT" = "0" ] ; then
+          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
+      else
+          echo '<td>&nbsp;<a href="'$RESULT'">result</a>&nbsp;</td>'
+      fi
+      if [ "$LOG" = "0" ] ; then
+          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
+      else
+          echo '<td>&nbsp;<a href="'$LOG'">log</a>&nbsp;</td>'
+      fi
+      if [ "$1" = "failed" ] ; then
+          echo '<td>&nbsp;<a href="'${HREF_HTML_FILE}'#errorlist">error</a>&nbsp;</td>'
+      else
+          echo '<td></td>'
+      fi
+      echo '<td>'$TESTDATE $TESTNUMBER'</td>'
   else
-      echo '<td>&nbsp;<a href="'$RESULT'">result</a>&nbsp;</td>'
+     #echo '<td><b><font size=+1>All Current</font></b></td>'
+     #echo '<td><b><font size=+1>old dlls</font></b></td>'
+     #echo '<td><b><font size=+1>old executables</font></b></td>'
+      if [ "$RESULT" != "0" -a "$LOG" != "0" ] ; then
+          echo '<td><a href="'$RESULT'">result</a>, <a href="'$LOG'">log</td>'
+      elif [ "$RESULT" = "0" -a "$LOG" != "0" ] ; then
+          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$LOG'">log</a></td>'
+      elif [ "$RESULT" != "0" -a "$LOG" = "0" ] ; then
+          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$RESULT'">result</a></td>'
+      else
+          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
+      fi
+      if [ "$BCL_RESULT" != "0" -a "$BCL_LOG" != "0" ] ; then
+          echo '<td><a href="'$BCL_RESULT'">result</a><a href="'$BCL_LOG'"> log</td>'
+      elif [ "$BCL_RESULT" = "0" -a "$BCL_LOG" != "0" ] ; then
+          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$BCL_LOG'">log</a></td>'
+      elif [ "$BCL_RESULT" != "0" -a "$BCL_LOG" = "0" ] ; then
+          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$BCL_RESULT'">result</a></td>'
+      else
+          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
+      fi
+      if [ "$BCB_RESULT" != "0" -a "$BCB_LOG" != "0" ] ; then
+          echo '<td><a href="'$BCB_RESULT'">result</a><a href="'$BCB_LOG'"> log</td>'
+      elif [ "$BCB_RESULT" = "0" -a "$BCB_LOG" != "0" ] ; then
+          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$BCB_LOG'">log</a></td>'
+      elif [ "$BCB_RESULT" != "0" -a "$BCB_LOG" = "0" ] ; then
+          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$BCB_RESULT'">result</a></td>'
+      else
+          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
+      fi
   fi
-  echo ''
-  if [ "$LOG" = "0" ]
-  then
-      echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
-  else
-      echo '<td>&nbsp;<a href="'$LOG'">log</a>&nbsp;</td>'
-  fi
-  echo ''
-  if [ "$1" = "failed" ]
-  then
-      echo '<td>&nbsp;<a href="#errorlist">error</a>&nbsp;</td>'
-  else
-      echo '<td></td>'
-  fi
-  echo '<td>'$TESTDATE $TESTNUMBER'</td>'
   echo '</tr>'
 }
 
@@ -321,21 +411,8 @@ html_line()
 ########################################################################
 qa_errorlist()
 {
-    if [ "$1" = "1" ]
-    then
-        echo "    R e s u l t        E r r o r l i s t"
-        lline
-    fi
-
     grep "bgcolor=red" */results.html | 
         sed -e 's/.results.html:<TR><TD>/ /' -e 's/<[^>]*>/ /g'
-    if [ "$1" = "1" ]
-    then
-        lline
-        echo "    O u t p u t        E r r o r / W a r n i n g l i s t"
-        lline
-    fi
-
     grep 'cache hits; .* cache misses, .* cache not reusable' */output.log | 
         grep -v selfserv |
         grep -v '0 cache hits; 1 cache misses, 0 cache not reusable' | 
@@ -345,36 +422,19 @@ qa_errorlist()
         grep -vi "write to SSL socket" |
         grep -vi "HDX PR_Read returned error" |
         grep -vi "no error" |
-        grep -vi "12285"
+        grep -vi "12285" 
     grep -i failed */output.log | 
         grep -vi "write to SSL socket" | 
         grep -vi "peer cannot verify" | 
         grep -vi "error" |
         grep -vi "fatal" |
-        grep -vi "TCP connection reset"
-    grep -i fatal */output.log
-        #grep -v '999 cache hits; 1 cache misses, 0 cache not reusable'
-    #if [ "$1" = "1" ]
-    #then
-        #lline
-        #echo "    I n c o m p l e t e    Q A     L i s t"
-        #lline
-    #fi
-    if [ "$1" = "1" ]
-    then
-        lline
-        echo "    C o r e l i s t "
-        lline
-    fi
+        grep -vi "TCP connection reset" 
+    grep -i fatal */output.log 
     find . -name core -print 2>/dev/null
-
 }
 
 platformlist()
 {
-    lline
-    echo "    P l a t f o r m l i s t "
-    
     grep Platform */results.html | 
         sed -e 's/.results.html:<H4>Platform:/    /' \
             -e 's/<BR>//' |
@@ -387,11 +447,9 @@ platformlist()
         then
             echo "Failed $MACHINE $BUILDPLATFORM"
             html_line failed >>$HTML_FILE
-            #echo "1 $MACHINE $BUILDPLATFORM Failed 2" 
         else
             echo "Passed $MACHINE $BUILDPLATFORM"
             html_line passed >>$HTML_FILE
-            #echo "1 $MACHINE $BUILDPLATFORM passed 2"
         fi
     done 
 
@@ -402,16 +460,12 @@ platformlist()
 ########################################################################
 check_platforms()
 {
-    #lline
-    #echo "    M i s s i n g  P l a t f o r m s"
-    #lline
     QA_MISSING="QA report missing"
     MACHINE="0"
 
     for BUILDPLATFORM in `cat $TESTSCRIPTDIR/platformlist`
     do
         grep $BUILDPLATFORM $TMP_PLATFORMLIST_FILE > /dev/null || {
-            echo "$BUILDPLATFORM not tested: $QA_MISSING" >>$TMP_P_FILE
             setQAsysvars
             html_line missing >>$HTML_FILE
         }
@@ -434,34 +488,28 @@ check_platforms()
     done
 }
 
-lline()
+qa_stat_table()
 {
-    echo
-    echo "------------------------------------------------------------------"
-    echo
-}
-
-header()
-{
-    lline
-    echo "QA results for NSS $NSSVER builddate $QAYEAR $BUILDDATE "
-    echo "today's date `date`"
-    lline
-    echo "testing in $RESULTDIR"
-}
-
-rsaperf()
-{
-    grep RSAPERF */output.log | grep -v "_DBG" > $TMP_PERF_FILE
-    
     echo '&nbsp;'
     echo '<br>&nbsp;'
     echo '<center>'
     echo '<h1>'
-    echo '<a NAME="Performance list"></a>Performance list</h1></center>'
+    echo '<a NAME="'$1'"></a>'$1'</h1></center>'
     echo '&nbsp;'
     echo '<table BORDER WIDTH="100%" NOSAVE >'
     echo '<tr NOSAVE>'
+}
+
+############################### psaperf ########################
+# local shell function, copies results of the daily performance test
+# into a table in the QA report
+########################################################################
+rsaperf()
+{
+    grep RSAPERF */output.log | grep -v "_DBG" > $TMP_PERF_FILE
+    
+    qa_stat_table "Performance list"
+
     echo '<td NOSAVE><b><font size=+1>Build-OS and version</font></b></td>'
     echo ''
     echo '<td><b><font size=+1>Systemname</font></b></td>'
@@ -501,36 +549,80 @@ rsaperf()
     echo '</table>'
 }
 
-set_files
+############################### qa_stat_cleanup ########################
+# local shell function, finishes html file, sets variables for global Exit
+########################################################################
+qa_stat_cleanup()
+{
 
+    html_footer >>$HTML_FILE
+
+    EARLY_EXIT=FALSE
+    FILENAME=$HTML_FILE        #we might want to mail it...
+    Exit
+}
+
+
+############################### bc_test ########################
+# local shell function, evaluates the results of the backward u
+# compatibility tests
+########################################################################
+bc_test()
+{
+CURRENT_TABLE="BC"   #so html_line can determine which fields to write
+  
+  qa_stat_table "Backward Compatibility Test"
+  echo '<td NOSAVE><b><font size=+1>Build-OS and version</font></b></td>'
+  echo '<td><b><font size=+1>QA-OS</font></b></td>'
+  echo '<td><b><font size=+1>Systemname</font></b></td>'
+  echo '<td><b><font size=+1>P/F</font></b></td>'
+  echo '<td><b><font size=+1>All Current</font></b></td>'
+  echo '<td><b><font size=+1>old dlls</font></b></td>'
+  echo '<td><b><font size=+1>old executables</font></b></td>'
+  echo '</tr>'
+
+  for w in `ls */results.html`
+  do
+      for b in bc_libs bc_bins
+      do
+          diff -b $w $b/$w  2>>$BCMISS | 
+               grep -v "backward compatibility" |
+               grep -v "Can.t run pk12util tests for NSS 3.2" |
+               grep -v "porting Alice.s email cert " |
+               grep -v "^---$" | grep -v "^[<> ] $" | 
+               grep -v "^---.$" | grep -v "^[<> ] .$" | 
+               grep -v "^[0-9,ca]*$" 2>>$BCMISS >/dev/null &&  (
+                    echo "$w differs" >> $BCMISS
+                    echo "diff $w $b/$w"
+                    diff -b $w $b/$w 2>&1 | 
+                         grep -v "backward compatibility" |
+                         grep -v "Can.t run pk12util tests for NSS 3.2" |
+                         grep -v "porting Alice.s email cert "
+               )  2>&1 >>$BCERR
+      done
+  done
+  rm $ERRORLIST
+  cat $BCMISS | sed -e "s/^diff: bc_...s.//" \
+                    -e "s/.results.html.*/\/results.html/" | 
+                sort -u > $ERRORLIST
+
+  platformlist $ERRORLIST > $RFILE
+}
+
+O_DEBUG=OFF
+CURRENT_TABLE="Standard"
+qa_stat_init
 find_qa_systems 2>/dev/null
-
-#header > $RFILE
-
-qa_errorlist 1 > $TMP_E_FILE
-
-cat $TMP_E_FILE
-
-platformlist $TMP_E_FILE > $RFILE
-
-cat $RFILE
-
-echo "" >$TMP_P_FILE
-
+qa_errorlist > $ERRORLIST
+platformlist $ERRORLIST > $RFILE
 check_platforms $RFILE 
-
-html_eot >>$HTML_FILE
-
-
-rsaperf >>$HTML_FILE
-
+echo '</table>' >>$HTML_FILE
 echo '<a NAME="errorlist"></a>' >> $HTML_FILE
+cat $ERRORLIST  | sed -e "s/^/<br>/" >>$HTML_FILE
+cat $WARNING_FILE 2>/dev/null | sed -e "s/^/<br>/" >>$HTML_FILE 2>/dev/null
+rsaperf >>$HTML_FILE
+bc_test >>$HTML_FILE
+#cat $BCERR  | sed -e "s/^/<br>/" >>$HTML_FILE
+echo '</table>' >>$HTML_FILE
 
-qa_errorlist 2  | sed -e "s/^/<br>/" >>$HTML_FILE
-cat $WARNING_FILE   2>/dev/null | sed -e "s/^/<br>/" >>$HTML_FILE 2>/dev/null
-
-html_footer >>$HTML_FILE
-
-EARLY_EXIT=FALSE
-FILENAME=$HTML_FILE        #we might want to mail it...
-Exit
+qa_stat_cleanup
