@@ -33,7 +33,14 @@ Rights Reserved.
 #expandedHeaderView
   {
     min-width             : 1px;
+    border-bottom: 1px solid #999999;
   }
+
+#collapsedHeaderView[collapsed="true"],
+#expandedHeaderView[collapsed="true"]{
+	border-bottom: none;
+
+}
 
 mail-emailaddress {
   -moz-binding: url(chrome://messenger/content/mailWidgets.xml#mail-emailaddress);
