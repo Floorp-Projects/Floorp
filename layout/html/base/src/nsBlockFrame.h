@@ -56,10 +56,11 @@ class nsIntervalSet;
  * Child list name indices
  * @see #GetAdditionalChildListName()
  */
-#define NS_BLOCK_FRAME_FLOAT_LIST_INDEX   0
-#define NS_BLOCK_FRAME_BULLET_LIST_INDEX    1
-#define NS_BLOCK_FRAME_OVERFLOW_LIST_INDEX  2
-#define NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX  3
+#define NS_BLOCK_FRAME_FLOAT_LIST_INDEX         0
+#define NS_BLOCK_FRAME_BULLET_LIST_INDEX        1
+#define NS_BLOCK_FRAME_OVERFLOW_LIST_INDEX      2
+#define NS_BLOCK_FRAME_OVERFLOW_OOF_LIST_INDEX  3
+#define NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX      4
 #define NS_BLOCK_FRAME_LAST_LIST_INDEX      NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX
 
 #define nsBlockFrameSuper nsHTMLContainerFrame
@@ -542,15 +543,16 @@ protected:
 
   nsLineList* GetOverflowLines(nsIPresContext* aPresContext,
                                PRBool          aRemoveProperty) const;
-
   nsresult SetOverflowLines(nsIPresContext* aPresContext,
                             nsLineList*     aOverflowLines);
 
   nsFrameList* GetOverflowPlaceholders(nsIPresContext* aPresContext,
                                        PRBool          aRemoveProperty) const;
-
   nsresult SetOverflowPlaceholders(nsIPresContext* aPresContext,
                                    nsFrameList*    aOverflowPlaceholders);
+
+  nsFrameList* GetOverflowOutOfFlows(PRBool aRemoveProperty) const;
+  nsresult SetOverflowOutOfFlows(nsFrameList* aFloaters);
 
   nsIFrame* LastChild();
 
