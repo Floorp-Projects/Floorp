@@ -23,7 +23,7 @@
 // Remember that these 'words' are 32bit DWORDS
 
 #if !defined(LINUX)
-#error "This code is for Linux x86 only
+#error "This code is for Linux x86 only"
 #endif
 
 static uint32

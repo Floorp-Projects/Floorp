@@ -21,7 +21,7 @@
 #include "xpcprivate.h"
 
 #ifndef WIN32
-#error "This code is for Win32 only
+#error "This code is for Win32 only"
 #endif
 
 // Remember that on Win32 these 'words' are 32bit DWORDS

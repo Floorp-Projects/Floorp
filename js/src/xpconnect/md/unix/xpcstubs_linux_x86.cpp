@@ -20,10 +20,12 @@
 
 #include "xpcprivate.h"
 
-#ifndef WIN32
-#error "This code is for Win32 only"
+#if !defined(LINUX)
+#error "This code is for Linux x86 only"
 #endif
 
+// XXX quick to get it compiling - but not working
+#if 0
 static nsresult __stdcall
 PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex,
                    uint32* args, uint32* stackBytesToPop)
@@ -146,3 +148,65 @@ nsresult __stdcall nsXPCWrappedJS::Sentinel##n() \
 #include "xpcstubsdef.inc"
 #pragma warning(default : 4035) // restore default
 
+// XXX quick to get it compiling - but not working
+nsresult nsXPCWrappedJS::Stub##n() \
+{ \
+    return NS_ERROR_NOT_IMPLEMENTED; \
+}
+
+#endif
+
+static nsresult
+PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex, uint32* args)
+{
+    printf("PrepareAndDispatch called with methodIndex = %d\n", (int)methodIndex);
+    return NS_ERROR_FAILURE;
+}        
+
+static nsresult SharedStub(void)
+{
+  void* method = PrepareAndDispatch;
+  nsresult result;
+  __asm__ __volatile__(
+    "leal   0x14(%%ebp), %%edx\n\t"    /* args */
+    "pushl  %%edx\n\t"
+    "movl   0x08(%%ebp), %%ecx\n\t"    /* vtbl index */
+    "pushl  %%ecx\n\t"
+    "movl   0x10(%%ebp), %%edx\n\t"    /* this */
+    "pushl  %%edx\n\t"
+    "movl   %1, %%eax\n\t"             /* PrepareAndDispatch */
+    "call   *%%eax\n\t"
+    "addl   $0x0c, %%esp\n\t"
+    "movl   %%eax, %0"
+    : "=g" (result)     /* %0 */
+    : "g" (method)      /* %1 */
+    : "ax", "dx", "cx", "memory" );
+    return result;
+}   
+
+// these macros get expanded (many times) in the file #included below
+#define STUB_ENTRY(n) \
+nsresult nsXPCWrappedJS::Stub##n() \
+{ \
+  void* stub = SharedStub; \
+  __asm__ __volatile__( \
+    "popl  %%ebp\n\t" \
+    "pushl $"#n"\n\t" \
+    "call  *%%edx\n\t" \
+    "addl  $8, %%esp\n\t" \
+    "leave\n\t" \
+    "ret\n\t" \
+    : \
+    : "d" (stub) \
+    : "ax", "memory" ); \
+  return 0; /* just to avoid warning */ \
+}
+
+#define SENTINEL_ENTRY(n) \
+nsresult nsXPCWrappedJS::Sentinel##n() \
+{ \
+    NS_ASSERTION(0,"nsXPCWrappedJS::Sentinel called"); \
+    return NS_ERROR_NOT_IMPLEMENTED; \
+}
+
+#include "xpcstubsdef.inc"
