@@ -19,7 +19,9 @@
 #include "nsIDOMComposeAppCore.h"
 #include "nsComposeAppCore.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsAppCoresCIDs.h"
 #include "nsIDOMBaseAppCore.h"
+#include "nsIDOMAppCoresManager.h"
 #include "nsJSComposeAppCore.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
@@ -59,6 +61,8 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 
+static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
+static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentIID, nsIDocument::GetIID());
@@ -73,12 +77,6 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
-
-NS_BEGIN_EXTERN_C
-
-//nsresult NS_MailNewsLoadUrl(const nsString& urlString, nsISupports * aConsumer);
-
-NS_END_EXTERN_C
 
 // defined in msgCompGlue.cpp
 extern char * INTL_GetDefaultMailCharset(void);
@@ -158,6 +156,7 @@ protected:
 //
 nsComposeAppCore::nsComposeAppCore()
 {
+	NS_INIT_REFCNT();
 	mScriptObject		= nsnull;
 	mWebShell			= nsnull; 
 	mScriptContext	= nsnull;
@@ -165,18 +164,29 @@ nsComposeAppCore::nsComposeAppCore()
 	mEditor			= nsnull;
 	mMsgCompFields	= nsnull;
 	mMsgSend		= nsnull;
-
-	NS_INIT_REFCNT();
 }
 
 nsComposeAppCore::~nsComposeAppCore()
 {
-  NS_IF_RELEASE(mWebShell);
-  NS_IF_RELEASE(mScriptContext);
-  NS_IF_RELEASE(mWindow);
-  NS_IF_RELEASE(mEditor);
-  NS_IF_RELEASE(mMsgSend);
-  NS_IF_RELEASE(mMsgCompFields);
+	// remove ourselves from the app cores manager...
+	// if we were able to inherit directly from nsBaseAppCore then it would do this for
+	// us automatically
+
+	nsIDOMAppCoresManager * appCoreManager;
+	nsresult rv = nsServiceManager::GetService(kAppCoresManagerCID, kIDOMAppCoresManagerIID,
+											   (nsISupports**)&appCoreManager);
+	if (NS_SUCCEEDED(rv) && appCoreManager)
+	{
+		appCoreManager->Remove((nsIDOMBaseAppCore *) this);
+		nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
+	}
+
+	NS_IF_RELEASE(mWebShell);
+	NS_IF_RELEASE(mScriptContext);
+	NS_IF_RELEASE(mWindow);
+	NS_IF_RELEASE(mEditor);
+	NS_IF_RELEASE(mMsgSend);
+	NS_IF_RELEASE(mMsgCompFields);
 }
 
 NS_IMETHODIMP
@@ -310,7 +320,12 @@ nsComposeAppCore::HackToGetBody(PRInt32 what)
                 msgBody += "> ";
             msgBody += buffer;
         }
-        mMsgCompFields->SetBody(msgBody.ToNewCString(), NULL);
+
+		// mMsgCompFields->SetBody(msgBody.ToNewCString(), NULL);
+		// SetBody() strdup()'s cmsgBody.
+		char* cmsgBody = msgBody.ToNewCString();
+		mMsgCompFields->SetBody(cmsgBody, NULL);
+		delete[] cmsgBody;
         PR_Free(buffer);
     }
 }
@@ -446,9 +461,21 @@ nsComposeAppCore::SetScriptObject(void* aScriptObject)
 nsresult
 nsComposeAppCore::Init(const nsString& aId)
 {
-	printf("Init\n");
-	mId = aId;
 	nsresult res;
+	mId = aId;
+
+	// add ourselves to the app cores manager...
+	// if we were able to inherit directly from nsBaseAppCore then it would do this for
+	// us automatically
+
+	nsIDOMAppCoresManager * appCoreManager;
+	nsresult rv = nsServiceManager::GetService(kAppCoresManagerCID, kIDOMAppCoresManagerIID,
+											   (nsISupports**)&appCoreManager);
+	if (NS_SUCCEEDED(rv) && appCoreManager)
+	{
+		appCoreManager->Add((nsIDOMBaseAppCore *) this);
+		nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
+	}
 
 	if (!mMsgSend)
 	{
@@ -476,7 +503,6 @@ nsComposeAppCore::Init(const nsString& aId)
 nsresult
 nsComposeAppCore::GetId(nsString& aId)
 {
-	printf("GetID\n");
 	aId = mId;
 	return NS_OK;
 }
@@ -593,9 +619,15 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                 {
                     bString += "Re: ";
                     bString += aString;
-                    mMsgCompFields->SetSubject(bString.ToNewCString(), NULL);
-                    message->GetAuthor(aString);
-                    mMsgCompFields->SetTo(aString.ToNewCString(), NULL);
+					char* cSubject = bString.ToNewCString();
+					mMsgCompFields->SetSubject(cSubject, NULL);
+					delete[] cSubject;
+                    
+					message->GetAuthor(aString);		
+					char * cTo = aString.ToNewCString();
+					mMsgCompFields->SetTo(cTo, NULL);
+					delete[] cTo;
+
                     if (messageType == 1)
                     {
                         nsString cString, dString;
@@ -604,7 +636,9 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                         if (cString.Length() > 0 && dString.Length() > 0)
                             cString = cString + ", ";
                         cString = cString + dString;
-                        mMsgCompFields->SetCc(cString.ToNewCString(), NULL);
+						char* cCc = cString.ToNewCString();
+						mMsgCompFields->SetCc(cCc, NULL);
+						delete[] cCc;
                     }
                     HackToGetBody(1);
                     break;
@@ -616,7 +650,11 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                     bString += "[Fwd: ";
                     bString += aString;
                     bString += "]";
-                    mMsgCompFields->SetSubject(bString.ToNewCString(), NULL);
+
+					char* cSubject = bString.ToNewCString();
+					mMsgCompFields->SetSubject(cSubject, NULL);
+					delete[] cSubject;
+
                     /* We need to get more information out from the message. */
                     nsCOMPtr<nsIRDFResource> rdfResource;
                     rv = object->QueryInterface(kIRDFResourceIID,
@@ -670,65 +708,86 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 #endif //DEBUG
 
 //	nsIMsgCompose *pMsgCompose; 
-	if (mMsgCompFields) { 
-    // Get the default charset from pref, use this as a mail charset for now.
-    // TODO: For reply/forward, original charset need to be used instead.
-    // TODO: Also need to update charset for the charset menu.
-    mMsgCompFields->SetCharacterSet(INTL_GetDefaultMailCharset(), NULL);
+	if (mMsgCompFields) 
+	{ 
+		// Get the default charset from pref, use this as a mail charset for now.
+		// TODO: For reply/forward, original charset need to be used instead.
+		// TODO: Also need to update charset for the charset menu.
+		mMsgCompFields->SetCharacterSet(INTL_GetDefaultMailCharset(), NULL);
 
-    nsString aString;
-    nsString aCharset(msgCompHeaderInternalCharset());
-    char *outCString;
+		nsString aString;
+		nsString aCharset(msgCompHeaderInternalCharset());
+		char *outCString;
 
-    // Pref values are supposed to be stored as UTF-8, so no conversion
+		// Pref values are supposed to be stored as UTF-8, so no conversion
 		mMsgCompFields->SetFrom((char *)pCompPrefs.GetUserEmail(), NULL);
 		mMsgCompFields->SetReplyTo((char *)pCompPrefs.GetReplyTo(), NULL);
 		mMsgCompFields->SetOrganization((char *)pCompPrefs.GetOrganization(), NULL);
 
-    // Convert fields to UTF-8
-    if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aAddrTo, &outCString))) {
-      mMsgCompFields->SetTo(outCString, NULL);
-      PR_Free(outCString);
-    }
-    else {
-      mMsgCompFields->SetTo(aAddrTo.ToNewCString(), NULL);
-    }
+		// Convert fields to UTF-8
+		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aAddrTo, &outCString))) 
+		{
+			mMsgCompFields->SetTo(outCString, NULL);
+			PR_Free(outCString);
+		}
+		else 
+		{
+			char* cAddrTo = aAddrTo.ToNewCString();
+			mMsgCompFields->SetTo(cAddrTo, NULL);
+			delete[] cAddrTo;
+		}
 
-    if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aAddrCc, &outCString))) {
-      mMsgCompFields->SetCc(outCString, NULL);
-      PR_Free(outCString);
-    }
-    else {
-      mMsgCompFields->SetCc(aAddrCc.ToNewCString(), NULL);
-    }
+		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aAddrCc, &outCString))) 
+		{
+			mMsgCompFields->SetCc(outCString, NULL);
+			PR_Free(outCString);
+		}
+		else 
+		{
+			char* cAddrCc = aAddrCc.ToNewCString();
+			mMsgCompFields->SetCc(cAddrCc, NULL);
+			delete[] cAddrCc;
+		}
 
-    if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aAddrBcc, &outCString))) {
-      mMsgCompFields->SetBcc(outCString, NULL);
-      PR_Free(outCString);
-    }
-    else {
-      mMsgCompFields->SetBcc(aAddrBcc.ToNewCString(), NULL);
-    }
+		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aAddrBcc, &outCString))) 
+		{
+			mMsgCompFields->SetBcc(outCString, NULL);
+			PR_Free(outCString);
+		}
+		else 
+		{
+			char* cAddrBcc = aAddrBcc.ToNewCString();
+			mMsgCompFields->SetBcc(cAddrBcc, NULL);
+			delete[] cAddrBcc;
+		}
 
-    if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aSubject, &outCString))) {
-      mMsgCompFields->SetSubject(outCString, NULL);
-      PR_Free(outCString);
-    }
-    else {
-      mMsgCompFields->SetSubject(aSubject.ToNewCString(), NULL);
-    }
+		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aSubject, &outCString))) 
+		{
+			mMsgCompFields->SetSubject(outCString, NULL);
+			PR_Free(outCString);
+		}
+		else 
+		{
+			char* cSubject = aSubject.ToNewCString();
+			mMsgCompFields->SetSubject(cSubject, NULL);
+			delete[] cSubject;
+		}
 
-    // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
-    char *mail_charset;
-    mMsgCompFields->GetCharacterSet(&mail_charset);
-    aCharset.SetString(mail_charset);
-    if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aMsg, &outCString))) {
-      mMsgCompFields->SetBody(outCString, NULL);
-      PR_Free(outCString);
-    }
-    else {
-      mMsgCompFields->SetBody(aMsg.ToNewCString(), NULL);
-    }
+		// Convert body to mail charset not to utf-8 (because we don't manipulate body text)
+		char *mail_charset;
+		mMsgCompFields->GetCharacterSet(&mail_charset);
+		aCharset.SetString(mail_charset);
+		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aMsg, &outCString))) 
+		{
+			mMsgCompFields->SetBody(outCString, NULL);
+			PR_Free(outCString);
+		}
+		else 
+		{
+			char* cMsg = aMsg.ToNewCString();
+			mMsgCompFields->SetBody(cMsg, NULL);
+			delete[] cMsg;
+		}
 
 		if (mMsgSend)
 			mMsgSend->SendMessage(mMsgCompFields, NULL);
