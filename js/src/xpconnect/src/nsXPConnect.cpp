@@ -24,6 +24,7 @@
  * Contributor(s):
  *   John Bandhauer <jband@netscape.com> (original author)
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Nate Nielsen <nielsen@memberwebs.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1209,6 +1210,50 @@ nsXPConnect::DebugDumpEvalInJSStackFrame(PRUint32 aFrameNumber, const char *aSou
     else
         xpc_DumpEvalInJSStackFrame(cx, aFrameNumber, aSourceText);
 #endif
+    return NS_OK;
+}
+
+/* JSVal variantToJS (in JSContextPtr ctx, in JSObjectPtr scope, in nsIVariant value); */
+NS_IMETHODIMP 
+nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scope, nsIVariant* value, jsval* _retval)
+{
+    NS_PRECONDITION(ctx, "bad param");
+    NS_PRECONDITION(scope, "bad param");
+    NS_PRECONDITION(value, "bad param");
+    NS_PRECONDITION(_retval, "bad param");
+
+    XPCCallContext ccx(NATIVE_CALLER, ctx);
+    if(!ccx.IsValid())
+        return NS_ERROR_FAILURE;
+
+    nsresult rv = NS_OK;
+    if(!XPCVariant::VariantDataToJS(ccx, value, scope, &rv, _retval))
+    {
+        if(NS_FAILED(rv)) 
+            return rv;
+
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
+/* nsIVariant JSToVariant (in JSContextPtr ctx, in JSVal value); */
+NS_IMETHODIMP 
+nsXPConnect::JSToVariant(JSContext* ctx, jsval value, nsIVariant** _retval)
+{
+    NS_PRECONDITION(ctx, "bad param");
+    NS_PRECONDITION(value, "bad param");
+    NS_PRECONDITION(_retval, "bad param");
+
+    XPCCallContext ccx(NATIVE_CALLER, ctx);
+    if(!ccx.IsValid())
+        return NS_ERROR_FAILURE;
+
+    *_retval = XPCVariant::newVariant(ccx, value);
+    if(!(*_retval)) 
+        return NS_ERROR_FAILURE;
+
     return NS_OK;
 }
 
