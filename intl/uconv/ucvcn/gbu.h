@@ -1,4 +1,4 @@
-
+#if 0 // obsoleted code
 #ifndef _GBU_TABLE_
 #define _GBU_TABLE_
 
@@ -8234,3 +8234,4 @@ typedef struct
 extern PRUnichar GBToUnicodeTable[MAX_GB_LENGTH];
 
 #endif /* ifndef _GBU_TABLE_ */
+#endif // obsoleted code

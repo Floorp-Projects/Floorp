@@ -28,8 +28,4 @@
 extern "C" PRInt32 g_InstanceCount;
 extern "C" PRInt32 g_LockCount;
 
-extern "C" PRUint16 g_AsciiMapping[];
-extern "C" PRUint16 g_utGB2312Mapping[];
-extern "C" PRUint16 g_ufGB2312Mapping[];
-
 #endif /* nsUCvCnDll_h___ */
