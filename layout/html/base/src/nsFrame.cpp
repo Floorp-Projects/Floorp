@@ -72,7 +72,7 @@
 #include "nsILineIterator.h"
 // [HACK] Foward Declarations
 void ForceDrawFrame(nsIPresContext* aPresContext, nsFrame * aFrame);
-PRBool IsSelectable(nsIFrame *aFrame); //checks style to see if we can selected
+static PRBool IsSelectable(nsIFrame *aFrame); //checks style to see if we can selected
 
 //non Hack prototypes
 #if 0
