@@ -53,30 +53,20 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuBar;
+/*
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSeparator;
+*/
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.BoxLayout;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
-import com.sun.xml.parser.Resolver;
-import com.sun.xml.parser.Parser;
-import com.sun.xml.tree.XmlDocument;
-import com.sun.xml.tree.XmlDocumentBuilder;
-import com.sun.xml.tree.TreeWalker;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 //import netscape.orion.toolbars.BarLayout;
 //import netscape.orion.toolbars.CollapsibleToolbarPanel;
@@ -282,170 +272,20 @@ public class GeneralFrame extends JFrame
    * @return a menubar built from the file
    */
   protected JMenuBar buildMenu(String file) {
-    String id;
     JMenuBar menubar = null;
-    Node node;
-    TreeWalker tree;
-    InputSource input;
-    XmlDocument doc;
-    URL linkURL;
-    Element current;
+    URL url;
+    XMLMenuBuilder builder = new XMLMenuBuilder();
 
     try {
-      // handle to the document
-      input = Resolver.getSource(getClass().getResource(file), false);
-      // build the doc
-      doc = XmlDocumentBuilder.createXmlDocument(input, false);
-      // get the root node
-      current = doc.getDocumentElement();
-
-      // create a tree
-      tree = new TreeWalker(current);
-
-      // pull out the properties if any
-      node = tree.getNextElement("link");
-      if (node != null) {
-	current = (Element)node;
-	linkURL = getClass().getResource(current.getAttribute("href"));
-	prop = new Properties();
-	prop.load(linkURL.openStream());
-      }
-
-      // build the menu bar
-      node = tree.getNextElement("menubar");
-      if (node == null) { // what? no menubar? screw that, i'm outta here
-	return menubar;
-      }
-      current = (Element)node;
-      menubar = new JMenuBar();
-      widgets.put(current.getAttribute("id"), menubar);
-      node = tree.getNext();
-
-      while (node != null) {
-	processNode(node);
-	node = tree.getNext();
-      }
+      url = getClass().getResource(file);
+      builder.buildFrom(url.openStream());
+      menubar = (JMenuBar)builder.getComponent();
     } catch (Throwable t) {
       t.printStackTrace();
     }
 
     return menubar;
   }
-
-  protected void processNode(Node node)
-    throws SAXParseException {
-    Element current = null;
-    Container con = null;
-    JComponent item = buildItem(node);
-
-    if (item != null) {
-      Element parent;
-      current = (Element)node;
-      parent = (Element)current.getParentNode();
-      con = (Container)widgets.get(parent.getAttribute("id"));
-      if (con != null) {
-	// what's the frequency kenneth?
-	String label = getReferencedLabel(current, "label");
-	if (label != null) ((JMenuItem)item).setText(label);
-	label = getReferencedLabel(current, "accel");
-	if (label != null) ((JMenuItem)item).setMnemonic(label.charAt(0));
-	con.add(item);
-      }
-    }
-  }
-
-  /**
-   */
-  protected JComponent buildItem(Node node) 
-    throws SAXParseException {
-    JComponent item = null;
-    Element current = null;
-    Element parent = null;
-
-    if (node.getNodeType() == 1) {
-      current = (Element)node;
-      parent = (Element)current.getParentNode();
-
-      item = createFromElement(current);
-    }
-
-    return item;
-  }
-
-  /**
-   * Reads the an attribute from the XML element. If the element is 
-   * crossed referenced to a string property (it starts with '$'), 
-   * look it up.
-   *
-   * @param current the current XML element
-   * @param attr the attribute to look up
-   */
-  protected String getReferencedLabel(Element current, String attr)
-    throws SAXParseException {
-    String label = current.getAttribute(attr);
-
-    if (prop == null) return label;
-
-    // if there's a key, and it begins with '$', look up in properties
-    if (label != null && label.charAt(0) == '$') {
-      String key = label.substring(1);
-      label = prop.getProperty(key);
-    }
-
-    return label;
-  }
-
-  /**
-   * Create components that can be added to a menu.
-   *
-   * @param current the XML element node to be processed
-   * @return the component composed from the element
-   */
-  protected JComponent createFromElement(Element current) 
-    throws SAXParseException {
-    String tag = current.getTagName();
-    JComponent item = null;
-    // if it's a container (menu) we need to store it into 
-    // widgets
-    if (tag.equals("menu")) { // menu tag
-      String my_id = current.getAttribute("id");
-      item = new JMenu();
-      widgets.put(my_id, item);
-    } else if (tag.equals("menuitem")) { // menu item tag
-      String type = current.getAttribute("type");
-      if (type == null) {
-	item = new JMenuItem();
-      } else {
-	if (type.equals("separator")) { // type = separator
-	  item = new JSeparator(SwingConstants.HORIZONTAL);
-	} else if (type.equals("checkbox")) { // type = checkbox
-	  String value = current.getAttribute("value");
-	  JCheckBoxMenuItem cb = new JCheckBoxMenuItem();
-	  item = cb;
-	  if (value != null) {
-	    cb.setState(value.trim().toLowerCase().equals("true"));
-	  }
-	} else if (type.equals("radio")) { // type = radio
-	  ButtonGroup bg;
-	  String group = current.getAttribute("group");
-	  item = new JRadioButtonMenuItem();
-
-	  if (group != null) {
-	    if (groups.containsKey(group)) {
-	      bg = (ButtonGroup)groups.get(group);
-	    } else {
-	      bg = new ButtonGroup();
-	      groups.put(group, bg);
-	    }
-
-	    bg.add((JRadioButtonMenuItem)item);
-	  }
-	}
-      }
-    }
-
-    return item;
-  }  
 
   protected Component buildStatusBar() {
     JPanel res = new JPanel();
