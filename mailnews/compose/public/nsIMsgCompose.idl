@@ -23,7 +23,7 @@
 [object, uuid(4E606270-B588-11D2-8289-00805F2A0107)]
 interface nsIMsgCompose : nsISupports {
 
-	void CreateAndInit(in long a_context, in long old_context, in long prefs, in nsIMsgCompFields initfields, in long master);
+	void CreateAndInitialize(in long a_context, in long old_context, in long prefs, in nsIMsgCompFields initfields, in long master);
 	void Create(in long a_context, in long prefs, in long master);
 	void Initialize(in long old_context, in nsIMsgCompFields initfields);
 	void Dispose();
