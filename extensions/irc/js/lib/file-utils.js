@@ -125,6 +125,8 @@ function futils_nosepicker(initialPath, typeList, attribs)
         picker.displayDirectory = localFile
     }
 
+    var allIncluded = false;
+
     if (typeof typeList == "string")
         typeList = typeList.split(" ");
 
@@ -135,6 +137,7 @@ function futils_nosepicker(initialPath, typeList, attribs)
             switch (typeList[i])
             {
                 case "$all":
+                    allIncluded = true;
                     picker.appendFilters(FILTER_ALL);
                     break;
                     
@@ -164,6 +167,9 @@ function futils_nosepicker(initialPath, typeList, attribs)
             }
         }
     }
+
+    if (!allIncluded)
+        picker.appendFilters(FILTER_ALL);
  
     return picker;
 }
