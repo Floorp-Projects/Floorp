@@ -3905,9 +3905,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
         nscoord frameAlignX = frameBounds.x + (frameBounds.width * aHPercent) / 100;
         scrollOffsetX = frameAlignX - (visibleRect.width * aHPercent) / 100;
       }
-      if (scrollOffsetX != 0 || scrollOffsetY != 0) {
-        scrollingView->ScrollTo(scrollOffsetX, scrollOffsetY, NS_VMREFRESH_IMMEDIATE);
-      }
+      scrollingView->ScrollTo(scrollOffsetX, scrollOffsetY, NS_VMREFRESH_IMMEDIATE);
     }
   }
   return rv;
