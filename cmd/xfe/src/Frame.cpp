@@ -1762,7 +1762,7 @@ XFE_Frame::initializeMWContext(EFrameType frame_type,
 		case FRAME_DOWNLOAD:			type = MWContextSaveToDisk; break;
 		case FRAME_HTML_DIALOG:			type = MWContextDialog; break;
         case FRAME_HISTORY:             type = MWContextHistory; break;
-        case FRAME_NAVCENTER:           type = MWContextHistory; break; //??
+        case FRAME_NAVCENTER:           type = MWContextPane; break; //??
 		default:
 			XP_ASSERT(0);
 			break;
