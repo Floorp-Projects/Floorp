@@ -710,7 +710,7 @@ void nsEudoraWin32::GetAccountName( const char *pSection, nsString& str)
 	nsCString	s(pSection);
 	
 	if (s.Equals(NS_LITERAL_CSTRING("Settings"), nsCaseInsensitiveCStringComparator())) {
-		str.Assign(NS_LITERAL_STRING("Eudora "));
+		str.AssignLiteral("Eudora ");
 		str.AppendWithConversion( pSection);
 	}
 	else {
@@ -1393,8 +1393,7 @@ nsresult nsEudoraWin32::FoundAddressBook( nsIFileSpec *spec, const PRUnichar *pN
 		nsCRT::free( pLeaf);
 		nsString	tStr;
 		name.Right( tStr, 4);
-		if (tStr.Equals(NS_LITERAL_STRING(".txt"),
-                        nsCaseInsensitiveStringComparator())) {
+		if (tStr.LowerCaseEqualsLiteral(".txt")) {
 			name.Left( tStr, name.Length() - 4);
 			name = tStr;
 		}

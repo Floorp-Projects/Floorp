@@ -180,7 +180,7 @@ CMozillaBrowser::CMozillaBrowser()
     mBrowserHelperListCount = 0;
 
     // Name of the default profile to use
-    mProfileName = NS_LITERAL_STRING("MozillaControl");
+    mProfileName.AssignLiteral("MozillaControl");
 
     // Initialise the web browser
     Initialize();
@@ -789,7 +789,7 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
     uri->GetSpec(aURI);
 
     nsAutoString strURI;
-    strURI.Assign(NS_LITERAL_STRING("view-source:"));
+    strURI.AssignLiteral("view-source:");
     strURI.Append(NS_ConvertUTF8toUCS2(aURI));
 
     // Ask the client to create a window to view the source in

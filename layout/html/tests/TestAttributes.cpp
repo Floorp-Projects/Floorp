@@ -141,19 +141,19 @@ void testStrings(nsIDocument* aDoc) {
     printf("test 3 failed\n");
   }
   // EqualsIgnoreCase
-  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsIgnoreCase("mrString");
+  val = (NS_ConvertASCIItoUCS2("mrString")).LowerCaseEqualsLiteral("mrstring");
   if (PR_TRUE != val) {
     printf("test 4 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsIgnoreCase("mrStrinG");
+  val = (NS_ConvertASCIItoUCS2("mrString")).LowerCaseEqualsLiteral("mrstring");
   if (PR_TRUE != val) {
     printf("test 5 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsIgnoreCase("mrStri");
+  val = (NS_ConvertASCIItoUCS2("mrString")).LowerCaseEqualsLiteral("mrstri");
   if (PR_FALSE != val) {
     printf("test 6 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrStri")).EqualsIgnoreCase("mrString");
+  val = (NS_ConvertASCIItoUCS2("mrStri")).LowerCaseEqualsLiteral("mrstring");
   if (PR_FALSE != val) {
     printf("test 7 failed\n");
   }

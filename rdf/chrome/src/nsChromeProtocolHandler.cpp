@@ -348,7 +348,7 @@ nsCachedChromeChannel::SetNotificationCallbacks(nsIInterfaceRequestor * aNotific
 NS_IMETHODIMP
 nsCachedChromeChannel::GetContentType(nsACString &aContentType)
 {
-    aContentType = NS_LITERAL_CSTRING("mozilla.application/cached-xul");
+    aContentType.AssignLiteral("mozilla.application/cached-xul");
     return NS_OK;
 }
 

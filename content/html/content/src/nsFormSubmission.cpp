@@ -447,7 +447,7 @@ HandleMailtoSubject(nsCString& aPath) {
       aPath.Append('?');
     }
 
-    aPath += NS_LITERAL_CSTRING("subject=Form%20Post%20From%20Mozilla&");
+    aPath.AppendLiteral("subject=Form%20Post%20From%20Mozilla&");
   }
 }
 
@@ -809,7 +809,7 @@ nsFSMultipartFormData::AddNameFilePair(nsIDOMHTMLElement* aSource,
   //
   // CRLF after file
   //
-  mPostDataChunk += NS_LITERAL_CSTRING(CRLF);
+  mPostDataChunk.AppendLiteral(CRLF);
 
   return NS_OK;
 }
@@ -835,7 +835,7 @@ nsFSMultipartFormData::Init()
   //
   // Build boundary
   //
-  mBoundary = NS_LITERAL_CSTRING("---------------------------");
+  mBoundary.AssignLiteral("---------------------------");
   mBoundary.AppendInt(rand());
   mBoundary.AppendInt(rand());
   mBoundary.AppendInt(rand());
@@ -1258,7 +1258,7 @@ nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
                                    PRUint8 aCtrlsModAtSubmit,
                                    nsACString& oCharset)
 {
-  oCharset = NS_LITERAL_CSTRING("UTF-8"); // default to utf-8
+  oCharset.AssignLiteral("UTF-8"); // default to utf-8
 
   nsresult rv = NS_OK;
   nsAutoString acceptCharsetValue;
@@ -1304,22 +1304,22 @@ nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
      && oCharset.Equals(NS_LITERAL_CSTRING("windows-1256"),
                         nsCaseInsensitiveCStringComparator())) {
 //Mohamed
-    oCharset = NS_LITERAL_CSTRING("IBM864");
+    oCharset.AssignLiteral("IBM864");
   }
   else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_LOGICAL
           && oCharset.Equals(NS_LITERAL_CSTRING("IBM864"),
                              nsCaseInsensitiveCStringComparator())) {
-    oCharset = NS_LITERAL_CSTRING("IBM864i");
+    oCharset.AssignLiteral("IBM864i");
   }
   else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
           && oCharset.Equals(NS_LITERAL_CSTRING("ISO-8859-6"),
                              nsCaseInsensitiveCStringComparator())) {
-    oCharset = NS_LITERAL_CSTRING("IBM864");
+    oCharset.AssignLiteral("IBM864");
   }
   else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
           && oCharset.Equals(NS_LITERAL_CSTRING("UTF-8"),
                              nsCaseInsensitiveCStringComparator())) {
-    oCharset = NS_LITERAL_CSTRING("IBM864");
+    oCharset.AssignLiteral("IBM864");
   }
 
 }
@@ -1337,7 +1337,7 @@ nsFormSubmission::GetEncoder(nsIHTMLContent* aForm,
 
   nsCAutoString charset(aCharset);
   if(charset.EqualsLiteral("ISO-8859-1"))
-    charset.Assign(NS_LITERAL_CSTRING("windows-1252"));
+    charset.AssignLiteral("windows-1252");
 
   rv = CallCreateInstance( NS_SAVEASCHARSET_CONTRACTID, aEncoder);
   NS_ASSERTION(NS_SUCCEEDED(rv), "create nsISaveAsCharset failed");

@@ -411,7 +411,7 @@ nsFTPChannel::GetContentType(nsACString &aContentType)
     nsAutoLock lock(mLock);
 
     if (mContentType.IsEmpty()) {
-        aContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+        aContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
     } else {
         aContentType = mContentType;
     }

@@ -318,7 +318,7 @@ nsLDAPChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 NS_IMETHODIMP
 nsLDAPChannel::GetContentType(nsACString &aContentType)
 {
-    aContentType = NS_LITERAL_CSTRING(TEXT_PLAIN);
+    aContentType.AssignLiteral(TEXT_PLAIN);
     return NS_OK;
 }
 

@@ -226,7 +226,7 @@ NS_IMETHODIMP SetDocTitleTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
 
 NS_IMETHODIMP SetDocTitleTxn::GetTxnDescription(nsAString& aString)
 {
-  aString.Assign(NS_LITERAL_STRING("SetDocTitleTxn: "));
+  aString.AssignLiteral("SetDocTitleTxn: ");
   aString += mValue;
   return NS_OK;
 }

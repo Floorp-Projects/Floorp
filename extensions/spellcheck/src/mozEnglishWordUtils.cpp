@@ -49,7 +49,7 @@ NS_IMPL_ISUPPORTS1(mozEnglishWordUtils, mozISpellI18NUtil)
 
 mozEnglishWordUtils::mozEnglishWordUtils()
 {
-  mLanguage.Assign(NS_LITERAL_STRING("en"));
+  mLanguage.AssignLiteral("en");
 
   nsresult rv;
   mURLDetector = do_CreateInstance(MOZ_TXTTOHTMLCONV_CONTRACTID, &rv);

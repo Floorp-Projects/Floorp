@@ -1020,22 +1020,22 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
     *aResult      = nsnull;
     *aIsNewWindow = PR_FALSE;
 
-    if(!name.Length() || name.EqualsIgnoreCase("_self"))
+    if(!name.Length() || name.LowerCaseEqualsLiteral("_self"))
     {
         *aResult = this;
     }
-    else if (name.EqualsIgnoreCase("_blank") || name.EqualsIgnoreCase("_new"))
+    else if (name.LowerCaseEqualsLiteral("_blank") || name.LowerCaseEqualsLiteral("_new"))
     {
         mustMakeNewWindow = PR_TRUE;
         name.Truncate();
     }
-    else if(name.EqualsIgnoreCase("_parent"))
+    else if(name.LowerCaseEqualsLiteral("_parent"))
     {
         GetSameTypeParent(getter_AddRefs(treeItem));
         if(!treeItem)
             *aResult = this;
     }
-    else if(name.EqualsIgnoreCase("_top"))
+    else if(name.LowerCaseEqualsLiteral("_top"))
     {
         GetSameTypeRootTreeItem(getter_AddRefs(treeItem));
         if(!treeItem)
@@ -1043,7 +1043,7 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
     }
     // _main is an IE target which should be case-insensitive but isn't
     // see bug 217886 for details
-    else if(name.EqualsIgnoreCase("_content") || name.EqualsLiteral("_main"))
+    else if(name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main"))
     {
         if (mTreeOwner) {
             mTreeOwner->FindItemWithName(name.get(), nsnull, 
@@ -2573,7 +2573,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         aURI->GetScheme(scheme);
         CopyASCIItoUCS2(scheme, formatStrs[0]);
         formatStrCount = 1;
-        error.Assign(NS_LITERAL_STRING("protocolNotFound"));
+        error.AssignLiteral("protocolNotFound");
     }
     else if (NS_ERROR_FILE_NOT_FOUND == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
@@ -2591,7 +2591,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
           rv = NS_OK;
         }
         formatStrCount = 1;
-        error.Assign(NS_LITERAL_STRING("fileNotFound"));
+        error.AssignLiteral("fileNotFound");
     }
     else if (NS_ERROR_UNKNOWN_HOST == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
@@ -2600,7 +2600,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         aURI->GetHost(host);
         CopyUTF8toUTF16(host, formatStrs[0]);
         formatStrCount = 1;
-        error.Assign(NS_LITERAL_STRING("dnsNotFound"));
+        error.AssignLiteral("dnsNotFound");
     }
     else if(NS_ERROR_CONNECTION_REFUSED == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
@@ -2609,7 +2609,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         aURI->GetHostPort(hostport);
         CopyUTF8toUTF16(hostport, formatStrs[0]);
         formatStrCount = 1;
-        error.Assign(NS_LITERAL_STRING("connectionFailure"));
+        error.AssignLiteral("connectionFailure");
     }
     else if(NS_ERROR_NET_INTERRUPT == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
@@ -2618,7 +2618,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         aURI->GetHostPort(hostport);
         CopyUTF8toUTF16(hostport, formatStrs[0]);
         formatStrCount = 1;
-        error.Assign(NS_LITERAL_STRING("netInterrupt"));
+        error.AssignLiteral("netInterrupt");
     }
     else if (NS_ERROR_NET_TIMEOUT == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
@@ -2627,48 +2627,48 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         aURI->GetHost(host);
         CopyUTF8toUTF16(host, formatStrs[0]);
         formatStrCount = 1;
-        error.Assign(NS_LITERAL_STRING("netTimeout"));
+        error.AssignLiteral("netTimeout");
     }
     else {
         // Errors requiring simple formatting
         switch (aError) {
         case NS_ERROR_MALFORMED_URI:
             // URI is malformed
-            error.Assign(NS_LITERAL_STRING("malformedURI"));
+            error.AssignLiteral("malformedURI");
             break;
         case NS_ERROR_REDIRECT_LOOP:
             // Doc failed to load because the server generated too many redirects
-            error.Assign(NS_LITERAL_STRING("redirectLoop"));
+            error.AssignLiteral("redirectLoop");
             break;
         case NS_ERROR_UNKNOWN_SOCKET_TYPE:
             // Doc failed to load because PSM is not installed
-            error.Assign(NS_LITERAL_STRING("unknownSocketType"));
+            error.AssignLiteral("unknownSocketType");
             break;
         case NS_ERROR_NET_RESET:
             // Doc failed to load because the server kept reseting the connection
             // before we could read any data from it
-            error.Assign(NS_LITERAL_STRING("netReset"));
+            error.AssignLiteral("netReset");
             break;
         case NS_ERROR_DOCUMENT_NOT_CACHED:
             // Doc falied to load because we are offline and the cache does not
             // contain a copy of the document.
-            error.Assign(NS_LITERAL_STRING("netOffline"));
+            error.AssignLiteral("netOffline");
             break;
         case NS_ERROR_DOCUMENT_IS_PRINTMODE:
             // Doc navigation attempted while Printing or Print Preview
-            error.Assign(NS_LITERAL_STRING("isprinting"));
+            error.AssignLiteral("isprinting");
             break;
         case NS_ERROR_PORT_ACCESS_NOT_ALLOWED:
             // Port blocked for security reasons
-            error.Assign(NS_LITERAL_STRING("deniedPortAccess"));
+            error.AssignLiteral("deniedPortAccess");
             break;
         case NS_ERROR_UNKNOWN_PROXY_HOST:
             // Proxy hostname could not be resolved.
-            error.Assign(NS_LITERAL_STRING("proxyResolveFailure"));
+            error.AssignLiteral("proxyResolveFailure");
             break;
         case NS_ERROR_PROXY_CONNECTION_REFUSED:
             // Proxy connection was refused.
-            error.Assign(NS_LITERAL_STRING("proxyConnectFailure"));
+            error.AssignLiteral("proxyConnectFailure");
             break;
         }
     }
@@ -2747,11 +2747,11 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL, const PRUnichar *
     nsAutoString errorType(aErrorType);
     nsAutoString errorPageUrl;
 
-    errorPageUrl.Assign(NS_LITERAL_STRING("chrome://global/content/netError.xhtml?e="));
+    errorPageUrl.AssignLiteral("chrome://global/content/netError.xhtml?e=");
     errorPageUrl.AppendWithConversion(escapedError);
-    errorPageUrl.Append(NS_LITERAL_STRING("&u="));
+    errorPageUrl.AppendLiteral("&u=");
     errorPageUrl.AppendWithConversion(escapedUrl);
-    errorPageUrl.Append(NS_LITERAL_STRING("&d="));
+    errorPageUrl.AppendLiteral("&d=");
     errorPageUrl.AppendWithConversion(escapedDescription);
 
     PR_FREEIF(escapedDescription);
@@ -2981,7 +2981,7 @@ nsDocShell::LoadPage(nsISupports *aPageDescriptor, PRUint32 aDisplayType)
               return rv;
 
         oldUri->GetSpec(spec);
-        newSpec.Append(NS_LITERAL_CSTRING("view-source:"));
+        newSpec.AppendLiteral("view-source:");
         newSpec.Append(spec);
 
         rv = NS_NewURI(getter_AddRefs(newUri), newSpec);
@@ -5183,8 +5183,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             // _main is an IE target which should be case-insensitive but isn't
             // see bug 217886 for details            
             if (!bIsJavascript &&
-                (name.EqualsIgnoreCase("_content") || name.EqualsLiteral("_main") ||
-                 name.EqualsIgnoreCase("_blank"))) 
+                (name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main") ||
+                 name.LowerCaseEqualsLiteral("_blank"))) 
             {
                 nsCOMPtr<nsIExternalProtocolService> extProtService;
                 nsCAutoString urlScheme;
@@ -5220,15 +5220,15 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 }
             }
             if (!bIsChromeOrResource) {
-                if (name.EqualsIgnoreCase("_blank") ||
-                    name.EqualsIgnoreCase("_new")) {
-                    name.Assign(NS_LITERAL_STRING("_top"));
+                if (name.LowerCaseEqualsLiteral("_blank") ||
+                    name.LowerCaseEqualsLiteral("_new")) {
+                    name.AssignLiteral("_top");
                 }
                 // _main is an IE target which should be case-insensitive but isn't
                 // see bug 217886 for details
-                else if (!name.EqualsIgnoreCase("_parent") &&
-                         !name.EqualsIgnoreCase("_self") &&
-                         !name.EqualsIgnoreCase("_content") &&
+                else if (!name.LowerCaseEqualsLiteral("_parent") &&
+                         !name.LowerCaseEqualsLiteral("_self") &&
+                         !name.LowerCaseEqualsLiteral("_content") &&
                          !name.EqualsLiteral("_main")) {
                     nsCOMPtr<nsIDocShellTreeItem> targetTreeItem;
                     FindItemWithName(name.get(),
@@ -5237,7 +5237,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                     if (targetTreeItem)
                         targetDocShell = do_QueryInterface(targetTreeItem);
                     else
-                        name.Assign(NS_LITERAL_STRING("_top"));
+                        name.AssignLiteral("_top");
                 }
             }
         }

@@ -562,12 +562,12 @@ nsMenuFrame::SelectMenu(PRBool aActivateFlag)
     // Highlight the menu.
     mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, NS_LITERAL_STRING("true"), PR_TRUE);
     // The menuactivated event is used by accessibility to track the user's movements through menus
-    domEventToFire.Assign(NS_LITERAL_STRING("DOMMenuItemActive"));
+    domEventToFire.AssignLiteral("DOMMenuItemActive");
   }
   else {
     // Unhighlight the menu.
     mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
-    domEventToFire.Assign(NS_LITERAL_STRING("DOMMenuItemInactive"));
+    domEventToFire.AssignLiteral("DOMMenuItemInactive");
   }
 
   FireDOMEvent(mPresContext, domEventToFire);
@@ -784,15 +784,15 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
       if (onMenuBar) {
         if (popupAnchor.IsEmpty())
-          popupAnchor = NS_LITERAL_STRING("bottomleft");
+          popupAnchor.AssignLiteral("bottomleft");
         if (popupAlign.IsEmpty())
-          popupAlign = NS_LITERAL_STRING("topleft");
+          popupAlign.AssignLiteral("topleft");
       }
       else {
         if (popupAnchor.IsEmpty())
-          popupAnchor = NS_LITERAL_STRING("topright");
+          popupAnchor.AssignLiteral("topright");
         if (popupAlign.IsEmpty())
-          popupAlign = NS_LITERAL_STRING("topleft");
+          popupAlign.AssignLiteral("topleft");
       }
 
       nsBoxLayoutState state(mPresContext);
@@ -1109,40 +1109,40 @@ static void ConvertPosition(nsIContent* aPopupElt, nsString& aAnchor, nsString& 
     return;
 
   if (position.EqualsLiteral("before_start")) {
-    aAnchor.Assign(NS_LITERAL_STRING("topleft"));
-    aAlign.Assign(NS_LITERAL_STRING("bottomleft"));
+    aAnchor.AssignLiteral("topleft");
+    aAlign.AssignLiteral("bottomleft");
   }
   else if (position.EqualsLiteral("before_end")) {
-    aAnchor.Assign(NS_LITERAL_STRING("topright"));
-    aAlign.Assign(NS_LITERAL_STRING("bottomright"));
+    aAnchor.AssignLiteral("topright");
+    aAlign.AssignLiteral("bottomright");
   }
   else if (position.EqualsLiteral("after_start")) {
-    aAnchor.Assign(NS_LITERAL_STRING("bottomleft"));
-    aAlign.Assign(NS_LITERAL_STRING("topleft"));
+    aAnchor.AssignLiteral("bottomleft");
+    aAlign.AssignLiteral("topleft");
   }
   else if (position.EqualsLiteral("after_end")) {
-    aAnchor.Assign(NS_LITERAL_STRING("bottomright"));
-    aAlign.Assign(NS_LITERAL_STRING("topright"));
+    aAnchor.AssignLiteral("bottomright");
+    aAlign.AssignLiteral("topright");
   }
   else if (position.EqualsLiteral("start_before")) {
-    aAnchor.Assign(NS_LITERAL_STRING("topleft"));
-    aAlign.Assign(NS_LITERAL_STRING("topright"));
+    aAnchor.AssignLiteral("topleft");
+    aAlign.AssignLiteral("topright");
   }
   else if (position.EqualsLiteral("start_after")) {
-    aAnchor.Assign(NS_LITERAL_STRING("bottomleft"));
-    aAlign.Assign(NS_LITERAL_STRING("bottomright"));
+    aAnchor.AssignLiteral("bottomleft");
+    aAlign.AssignLiteral("bottomright");
   }
   else if (position.EqualsLiteral("end_before")) {
-    aAnchor.Assign(NS_LITERAL_STRING("topright"));
-    aAlign.Assign(NS_LITERAL_STRING("topleft"));
+    aAnchor.AssignLiteral("topright");
+    aAlign.AssignLiteral("topleft");
   }
   else if (position.EqualsLiteral("end_after")) {
-    aAnchor.Assign(NS_LITERAL_STRING("bottomright"));
-    aAlign.Assign(NS_LITERAL_STRING("bottomleft"));
+    aAnchor.AssignLiteral("bottomright");
+    aAlign.AssignLiteral("bottomleft");
   }
   else if (position.EqualsLiteral("overlap")) {
-    aAnchor.Assign(NS_LITERAL_STRING("topleft"));
-    aAlign.Assign(NS_LITERAL_STRING("topleft"));
+    aAnchor.AssignLiteral("topleft");
+    aAlign.AssignLiteral("topleft");
   }
 }
 
@@ -1169,15 +1169,15 @@ nsMenuFrame::RePositionPopup(nsBoxLayoutState& aState)
 
     if (onMenuBar) {
       if (popupAnchor.IsEmpty())
-          popupAnchor = NS_LITERAL_STRING("bottomleft");
+          popupAnchor.AssignLiteral("bottomleft");
       if (popupAlign.IsEmpty())
-          popupAlign = NS_LITERAL_STRING("topleft");
+          popupAlign.AssignLiteral("topleft");
     }
     else {
       if (popupAnchor.IsEmpty())
-        popupAnchor = NS_LITERAL_STRING("topright");
+        popupAnchor.AssignLiteral("topright");
       if (popupAlign.IsEmpty())
-        popupAlign = NS_LITERAL_STRING("topleft");
+        popupAlign.AssignLiteral("topleft");
     }
 
     menuPopup->SyncViewWithFrame(presContext, popupAnchor, popupAlign, this, -1, -1);

@@ -281,7 +281,7 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
       if (NS_FAILED(rc)) 
         return rc;
       stringType.Append(gSOAPStrings->kQualifiedSeparator);
-      stringType.Append(NS_LITERAL_STRING("anyURI"));
+      stringType.AppendLiteral("anyURI");
     }
 
     //  If it is available, add the sourceURI 
@@ -358,7 +358,7 @@ nsHTTPSOAPTransport::SetupRequest(nsISOAPCall* aCall, PRBool async,
 
     //XXXdoron necko doesn't allow empty header values, so set it to " "
     if (action.IsEmpty())
-      action = NS_LITERAL_STRING(" ");
+      action.AssignLiteral(" ");
 
     rv = request->SetRequestHeader(NS_LITERAL_CSTRING("SOAPAction"),
                                    NS_ConvertUTF16toUTF8(action));

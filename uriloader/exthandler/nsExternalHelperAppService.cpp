@@ -245,7 +245,7 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
     // RFC 2183, section 2.8 says that an unknown disposition
     // value should be treated as "attachment"
     if (NS_FAILED(rv) || 
-        (!dispToken.EqualsIgnoreCase("inline") &&
+        (!dispToken.LowerCaseEqualsLiteral("inline") &&
         // Broken sites just send
         // Content-Disposition: filename="file"
         // without a disposition token... screen those out.
@@ -1528,23 +1528,23 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
     {
     case NS_ERROR_OUT_OF_MEMORY:
         // No memory
-        msgId = NS_LITERAL_STRING("noMemory");
+        msgId.AssignLiteral("noMemory");
         break;
 
     case NS_ERROR_FILE_DISK_FULL:
     case NS_ERROR_FILE_NO_DEVICE_SPACE:
         // Out of space on target volume.
-        msgId = NS_LITERAL_STRING("diskFull");
+        msgId.AssignLiteral("diskFull");
         break;
 
     case NS_ERROR_FILE_READ_ONLY:
         // Attempt to write to read/only file.
-        msgId = NS_LITERAL_STRING("readOnly");
+        msgId.AssignLiteral("readOnly");
         break;
 
     case NS_ERROR_FILE_ACCESS_DENIED:
         // Attempt to write without sufficient permissions.
-        msgId = NS_LITERAL_STRING("accessError");
+        msgId.AssignLiteral("accessError");
         break;
 
     case NS_ERROR_FILE_NOT_FOUND:
@@ -1552,7 +1552,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
     case NS_ERROR_FILE_UNRECOGNIZED_PATH:
         // Helper app not found, let's verify this happened on launch
         if (type == kLaunchError) {
-          msgId = NS_LITERAL_STRING("helperAppNotFound");
+          msgId.AssignLiteral("helperAppNotFound");
           break;
         }
         // fall through
@@ -1562,13 +1562,13 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
         switch(type)
         {
         case kReadError:
-          msgId = NS_LITERAL_STRING("readError");
+          msgId.AssignLiteral("readError");
           break;
         case kWriteError:
-          msgId = NS_LITERAL_STRING("writeError");
+          msgId.AssignLiteral("writeError");
           break;
         case kLaunchError:
-          msgId = NS_LITERAL_STRING("launchError");
+          msgId.AssignLiteral("launchError");
           break;
         }
         break;
@@ -2008,7 +2008,7 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
       // Get the old leaf name and append .part to it
       nsCAutoString name;
       mFinalFileDestination->GetNativeLeafName(name);
-      name.Append(NS_LITERAL_CSTRING(".part"));
+      name.AppendLiteral(".part");
       movedFile->SetNativeLeafName(name);
 
       nsCOMPtr<nsIFile> dir;

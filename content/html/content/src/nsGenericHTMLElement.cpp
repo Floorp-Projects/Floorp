@@ -2040,13 +2040,13 @@ nsGenericHTMLElement::ListAttributes(FILE* out) const
     // value
     nsAutoString value;
     GetAttr(nameSpaceID, attr, value);
-    buffer.Append(NS_LITERAL_STRING("=\""));
+    buffer.AppendLiteral("=\"");
     for (int i = value.Length(); i >= 0; --i) {
       if (value[i] == PRUnichar('"'))
         value.Insert(PRUnichar('\\'), PRUint32(i));
     }
     buffer.Append(value);
-    buffer.Append(NS_LITERAL_STRING("\""));
+    buffer.AppendLiteral("\"");
 
     fputs(" ", out);
     fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
@@ -3708,7 +3708,7 @@ nsGenericHTMLElement::SetHostInHrefString(const nsAString &aHref,
   uri->GetPath(path);
 
   CopyASCIItoUTF16(scheme, aResult);
-  aResult.Append(NS_LITERAL_STRING("://"));
+  aResult.AppendLiteral("://");
   if (!userpass.IsEmpty()) {
     AppendUTF8toUTF16(userpass, aResult);
     aResult.Append(PRUnichar('@'));
@@ -3832,7 +3832,7 @@ nsGenericHTMLElement::GetProtocolFromHrefString(const nsAString& aHref,
     if (protocol.IsEmpty()) {
       // set the protocol to http since it is the most likely protocol
       // to be used.
-      aProtocol.Assign(NS_LITERAL_STRING("http"));
+      aProtocol.AssignLiteral("http");
     } else {
       CopyASCIItoUTF16(protocol, aProtocol);
     }

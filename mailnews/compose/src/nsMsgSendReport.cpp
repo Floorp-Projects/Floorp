@@ -366,7 +366,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
       if (! currMessage.Equals(temp))
       {
         if (! dialogMessage.IsEmpty())
-          temp.Append(NS_LITERAL_STRING("\n"));
+          temp.AppendLiteral("\n");
         temp.Append(currMessage);
         dialogMessage.Assign(temp);
       }
@@ -379,7 +379,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
       composebundle->GetStringByID(NS_MSG_ASK_TO_COMEBACK_TO_COMPOSE, getter_Copies(text1));
       nsAutoString temp((const PRUnichar *)dialogMessage);  // Because of bug 74726, we cannot use directly an XPIDLString
       if (! dialogMessage.IsEmpty())
-        temp.Append(NS_LITERAL_STRING("\n"));
+        temp.AppendLiteral("\n");
       temp.Append(text1);
       dialogMessage.Assign(temp);
       nsMsgAskBooleanQuestionByString(prompt, dialogMessage, &oopsGiveMeBackTheComposeWindow, dialogTitle);
@@ -432,7 +432,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
     {
       nsAutoString temp((const PRUnichar *)dialogMessage);  // Because of bug 74726, we cannot use directly an XPIDLString
       if (! dialogMessage.IsEmpty())
-        temp.Append(NS_LITERAL_STRING("\n"));
+        temp.AppendLiteral("\n");
       temp.Append(currMessage);
       dialogMessage.Assign(temp);
     }

@@ -97,7 +97,7 @@ nsMathMLContainerFrame::ReflowError(nsIPresContext*      aPresContext,
   aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
 
   // bounding metrics
-  nsAutoString errorMsg; errorMsg.AssignWithConversion("invalid-markup");
+  nsAutoString errorMsg; errorMsg.AssignLiteral("invalid-markup");
   rv = aRenderingContext.GetBoundingMetrics(errorMsg.get(),
                                             PRUint32(errorMsg.Length()),
                                             mBoundingMetrics);
@@ -146,7 +146,7 @@ nsMathMLContainerFrame::PaintError(nsIPresContext*      aPresContext,
     aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
     fm->GetMaxAscent(ascent);
 
-    nsAutoString errorMsg; errorMsg.AssignWithConversion("invalid-markup");
+    nsAutoString errorMsg; errorMsg.AssignLiteral("invalid-markup");
     aRenderingContext.DrawString(errorMsg.get(),
                                  PRUint32(errorMsg.Length()),
                                  0, ascent);
@@ -642,12 +642,12 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
           gap = NS_MATHML_CSS_NEGATIVE_SCRIPTLEVEL_LIMIT;
         gap = -gap;
         scriptsizemultiplier = 1.0f / scriptsizemultiplier;
-        fontsize.Assign(NS_LITERAL_STRING("-"));
+        fontsize.AssignLiteral("-");
       }
       else { // the size is going to be decreased
         if (gap > NS_MATHML_CSS_POSITIVE_SCRIPTLEVEL_LIMIT)
           gap = NS_MATHML_CSS_POSITIVE_SCRIPTLEVEL_LIMIT;
-        fontsize.Assign(NS_LITERAL_STRING("+"));
+        fontsize.AssignLiteral("+");
       }
       fontsize.AppendInt(gap, 10);
       // we want to make sure that the size will stay readable
@@ -657,7 +657,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
         newFontSize = (nscoord)((float)(newFontSize) * scriptsizemultiplier);
       }
       if (newFontSize <= scriptminsize) {
-        fontsize.Assign(NS_LITERAL_STRING("scriptminsize"));
+        fontsize.AssignLiteral("scriptminsize");
       }
 
       // set the -moz-math-font-size attribute without notifying that we want a reflow

@@ -182,21 +182,21 @@ nsShouldIgnoreFile(nsString& name)
   if (firstChar == '.' || firstChar == '#' || name.CharAt(name.Length() - 1) == '~')
     return PR_TRUE;
 
-  if (name.EqualsIgnoreCase("msgFilterRules.dat") ||
-      name.EqualsIgnoreCase("rules.dat") || 
-      name.EqualsIgnoreCase("filterlog.html") || 
-      name.EqualsIgnoreCase("junklog.html") || 
-      name.EqualsIgnoreCase("rulesbackup.dat"))
+  if (name.LowerCaseEqualsLiteral("msgfilterrules.dat") ||
+      name.LowerCaseEqualsLiteral("rules.dat") || 
+      name.LowerCaseEqualsLiteral("filterlog.html") || 
+      name.LowerCaseEqualsLiteral("junklog.html") || 
+      name.LowerCaseEqualsLiteral("rulesbackup.dat"))
     return PR_TRUE;
 
 
   // don't add summary files to the list of folders;
   // don't add popstate files to the list either, or rules (sort.dat). 
   if (nsStringEndsWith(name, ".snm") ||
-      name.EqualsIgnoreCase("popstate.dat") ||
-      name.EqualsIgnoreCase("sort.dat") ||
-      name.EqualsIgnoreCase("mailfilt.log") ||
-      name.EqualsIgnoreCase("filters.js") ||
+      name.LowerCaseEqualsLiteral("popstate.dat") ||
+      name.LowerCaseEqualsLiteral("sort.dat") ||
+      name.LowerCaseEqualsLiteral("mailfilt.log") ||
+      name.LowerCaseEqualsLiteral("filters.js") ||
       nsStringEndsWith(name, ".toc"))
     return PR_TRUE;
 
@@ -320,15 +320,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(const nsAString &name,
   //Only set these is these are top level children.
   if(NS_SUCCEEDED(rv) && isServer)
   {
-    if(name.Equals(NS_LITERAL_STRING("Inbox"), nsCaseInsensitiveStringComparator()))
+    if(name.LowerCaseEqualsLiteral("inbox"))
     {
       flags |= MSG_FOLDER_FLAG_INBOX;
       SetBiffState(nsIMsgFolder::nsMsgBiffState_Unknown);
     }
-    else if (name.Equals(NS_LITERAL_STRING("Trash"), nsCaseInsensitiveStringComparator()))
+    else if (name.LowerCaseEqualsLiteral("trash"))
       flags |= MSG_FOLDER_FLAG_TRASH;
-    else if (name.Equals(NS_LITERAL_STRING("Unsent Messages"), nsCaseInsensitiveStringComparator()) ||
-      name.Equals(NS_LITERAL_STRING("Outbox"), nsCaseInsensitiveStringComparator()))
+    else if (name.LowerCaseEqualsLiteral("unsent messages") ||
+      name.LowerCaseEqualsLiteral("outbox"))
       flags |= MSG_FOLDER_FLAG_QUEUE;
 #if 0
     // the logic for this has been moved into 
@@ -1781,7 +1781,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   nsCAutoString protocolType(uri);
   protocolType.SetLength(protocolType.FindChar(':'));
   
-  if (WeAreOffline() && (protocolType.EqualsIgnoreCase("imap") || protocolType.EqualsIgnoreCase("news")))
+  if (WeAreOffline() && (protocolType.LowerCaseEqualsLiteral("imap") || protocolType.LowerCaseEqualsLiteral("news")))
   {
     PRUint32 numMessages = 0;
     messages->Count(&numMessages);
@@ -1813,7 +1813,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   if (NS_FAILED(rv))
     return OnCopyCompleted(srcSupport, PR_FALSE);
 
-  if (!protocolType.EqualsIgnoreCase("mailbox"))
+  if (!protocolType.LowerCaseEqualsLiteral("mailbox"))
   {
     mCopyState->m_dummyEnvelopeNeeded = PR_TRUE;
     nsParseMailMessageState* parseMsgState = new nsParseMailMessageState();
@@ -1863,7 +1863,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   }
   PRUint32 numMsgs = 0;
   mCopyState->m_messages->Count(&numMsgs);
-  if (numMsgs > 1 && ((protocolType.EqualsIgnoreCase("imap") && !WeAreOffline()) || protocolType.EqualsIgnoreCase("mailbox")))
+  if (numMsgs > 1 && ((protocolType.LowerCaseEqualsLiteral("imap") && !WeAreOffline()) || protocolType.LowerCaseEqualsLiteral("mailbox")))
   {
     mCopyState->m_copyingMultipleMessages = PR_TRUE;
     rv = CopyMessagesTo(mCopyState->m_messages, msgWindow, this, isMove);

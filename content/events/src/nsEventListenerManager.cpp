@@ -1606,19 +1606,19 @@ nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
   *aDOMEvent = nsnull;
 
   nsAutoString str(aEventType);
-  if (!aEvent && !str.EqualsIgnoreCase("MouseEvents") &&
-                 !str.EqualsIgnoreCase("KeyEvents") &&
-                 !str.EqualsIgnoreCase("HTMLEvents") &&
-                 !str.EqualsIgnoreCase("MutationEvents") &&
-                 !str.EqualsIgnoreCase("MouseScrollEvents") &&
-                 !str.EqualsIgnoreCase("PopupBlockedEvents") &&
-                 !str.EqualsIgnoreCase("UIEvents") &&
-                 !str.EqualsIgnoreCase("Events")) {
+  if (!aEvent && !str.LowerCaseEqualsLiteral("mouseevents") &&
+                 !str.LowerCaseEqualsLiteral("keyevents") &&
+                 !str.LowerCaseEqualsLiteral("htmlevents") &&
+                 !str.LowerCaseEqualsLiteral("mutationevents") &&
+                 !str.LowerCaseEqualsLiteral("mousescrollevents") &&
+                 !str.LowerCaseEqualsLiteral("popupblockedevents") &&
+                 !str.LowerCaseEqualsLiteral("uievents") &&
+                 !str.LowerCaseEqualsLiteral("events")) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
   if ((aEvent && aEvent->eventStructType == NS_MUTATION_EVENT) ||
-      (!aEvent && str.EqualsIgnoreCase("MutationEvents")))
+      (!aEvent && str.LowerCaseEqualsLiteral("mutationevents")))
     return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, aEvent);
   return NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEventType, aEvent);
 }

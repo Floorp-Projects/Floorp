@@ -2680,21 +2680,21 @@ NS_IMETHODIMP nsMsgDBFolder::SetPrettyName(const PRUnichar *name)
   nsAutoString unicodeName(name);
 
   //Set pretty name only if special flag is set and if it the default folder name
-  if (mFlags & MSG_FOLDER_FLAG_INBOX && unicodeName.Equals(NS_LITERAL_STRING("Inbox"), nsCaseInsensitiveStringComparator()))
+  if (mFlags & MSG_FOLDER_FLAG_INBOX && unicodeName.LowerCaseEqualsLiteral("inbox"))
     rv = SetName(kLocalizedInboxName);
-  else if (mFlags & MSG_FOLDER_FLAG_SENTMAIL && unicodeName.Equals(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
+  else if (mFlags & MSG_FOLDER_FLAG_SENTMAIL && unicodeName.LowerCaseEqualsLiteral("sent"))
     rv = SetName(kLocalizedSentName);
   //netscape webmail uses "Draft" instead of "Drafts"
-  else if (mFlags & MSG_FOLDER_FLAG_DRAFTS && (unicodeName.Equals(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()) 
-                                                || unicodeName.Equals(NS_LITERAL_STRING("Draft"), nsCaseInsensitiveStringComparator())))  
+  else if (mFlags & MSG_FOLDER_FLAG_DRAFTS && (unicodeName.LowerCaseEqualsLiteral("drafts") 
+                                                || unicodeName.LowerCaseEqualsLiteral("draft")))  
     rv = SetName(kLocalizedDraftsName);
-  else if (mFlags & MSG_FOLDER_FLAG_TEMPLATES && unicodeName.Equals(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
+  else if (mFlags & MSG_FOLDER_FLAG_TEMPLATES && unicodeName.LowerCaseEqualsLiteral("templates"))
     rv = SetName(kLocalizedTemplatesName);
-  else if (mFlags & MSG_FOLDER_FLAG_TRASH && unicodeName.Equals(NS_LITERAL_STRING("Trash"), nsCaseInsensitiveStringComparator()))
+  else if (mFlags & MSG_FOLDER_FLAG_TRASH && unicodeName.LowerCaseEqualsLiteral("trash"))
     rv = SetName(kLocalizedTrashName);
-  else if (mFlags & MSG_FOLDER_FLAG_QUEUE && unicodeName.Equals(NS_LITERAL_STRING("Unsent Messages"), nsCaseInsensitiveStringComparator()))
+  else if (mFlags & MSG_FOLDER_FLAG_QUEUE && unicodeName.LowerCaseEqualsLiteral("unsent messages"))
     rv = SetName(kLocalizedUnsentName);
-  else if (mFlags & MSG_FOLDER_FLAG_JUNK && unicodeName.Equals(NS_LITERAL_STRING("Junk"), nsCaseInsensitiveStringComparator()))
+  else if (mFlags & MSG_FOLDER_FLAG_JUNK && unicodeName.LowerCaseEqualsLiteral("junk"))
     rv = SetName(kLocalizedJunkName);
   else
     rv = SetName(name);
@@ -3741,7 +3741,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetNewMessagesNotificationDescription(PRUnichar * *
       // put this test here because we don't want to just put "folder name on"
       // in case the above failed
       if (!(mFlags & MSG_FOLDER_FLAG_INBOX))
-        description.Append(NS_LITERAL_STRING(" on "));
+        description.AppendLiteral(" on ");
       description.Append(serverName);
     }
   }
@@ -4100,7 +4100,7 @@ nsresult nsMsgDBFolder::NotifyFolderEvent(nsIAtom* aEvent)
 nsresult
 nsGetMailFolderSeparator(nsString& result)
 {
-  result.Assign(NS_LITERAL_STRING(".sbd"));
+  result.AssignLiteral(".sbd");
   return NS_OK;
 }
 

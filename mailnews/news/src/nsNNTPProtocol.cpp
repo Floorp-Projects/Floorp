@@ -3749,9 +3749,9 @@ nsresult nsNNTPProtocol::GetNewsStringByID(PRInt32 stringID, PRUnichar **aString
     rv = m_stringBundle->GetStringFromID(stringID, &ptrv);
     
     if (NS_FAILED(rv)) {
-      resultString.Assign(NS_LITERAL_STRING("[StringID"));
+      resultString.AssignLiteral("[StringID");
       resultString.AppendInt(stringID);
-      resultString.Append(NS_LITERAL_STRING("?]"));
+      resultString.AppendLiteral("?]");
       *aString = ToNewUnicode(resultString);
     }
     else {
@@ -3788,9 +3788,9 @@ nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aStr
     
     if (NS_FAILED(rv)) 
     {
-      resultString.Assign(NS_LITERAL_STRING("[StringName"));
+      resultString.AssignLiteral("[StringName");
       resultString.AppendWithConversion(aName);
-      resultString.Append(NS_LITERAL_STRING("?]"));
+      resultString.AppendLiteral("?]");
       *aString = ToNewUnicode(resultString);
     }
     else
@@ -5434,11 +5434,11 @@ NS_IMETHODIMP nsNNTPProtocol::GetContentType(nsACString &aContentType)
   // otherwise do what we did before...  
 
   if (m_typeWanted == GROUP_WANTED)  
-    aContentType = NS_LITERAL_CSTRING("x-application-newsgroup");
+    aContentType.AssignLiteral("x-application-newsgroup");
   else if (m_typeWanted == IDS_WANTED)
-    aContentType = NS_LITERAL_CSTRING("x-application-newsgroup-listids");
+    aContentType.AssignLiteral("x-application-newsgroup-listids");
   else 
-    aContentType = NS_LITERAL_CSTRING("message/rfc822");
+    aContentType.AssignLiteral("message/rfc822");
   return NS_OK;
 }
 

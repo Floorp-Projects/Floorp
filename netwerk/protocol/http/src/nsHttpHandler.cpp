@@ -219,7 +219,7 @@ nsHttpHandler::Init()
         PrefsChanged(prefBranch, nsnull);
     }
 
-    mMisc = NS_LITERAL_CSTRING("rv:" MOZILLA_VERSION);
+    mMisc.AssignLiteral("rv:" MOZILLA_VERSION);
 
 #if DEBUG
     // dump user agent prefs
@@ -1268,7 +1268,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsHttpHandler,
 NS_IMETHODIMP
 nsHttpHandler::GetScheme(nsACString &aScheme)
 {
-    aScheme = NS_LITERAL_CSTRING("http");
+    aScheme.AssignLiteral("http");
     return NS_OK;
 }
 
@@ -1618,7 +1618,7 @@ nsHttpsHandler::Init()
 NS_IMETHODIMP
 nsHttpsHandler::GetScheme(nsACString &aScheme)
 {
-    aScheme = NS_LITERAL_CSTRING("https");
+    aScheme.AssignLiteral("https");
     return NS_OK;
 }
 

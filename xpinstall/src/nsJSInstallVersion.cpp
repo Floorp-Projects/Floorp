@@ -302,7 +302,7 @@ InstallVersionInit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
   else 
   {
-      b0.Assign(NS_LITERAL_STRING("0.0.0.0"));
+      b0.AssignLiteral("0.0.0.0");
   }
     
   if (NS_OK != nativeThis->Init(b0)) 

@@ -103,7 +103,7 @@ nsDll::GetDisplayPath(nsACString& aLeafName)
     m_dllSpec->GetNativeLeafName(aLeafName);
     
     if (aLeafName.IsEmpty())
-        aLeafName.Assign(NS_LITERAL_CSTRING("unknown!"));
+        aLeafName.AssignLiteral("unknown!");
 }
 
 PRBool

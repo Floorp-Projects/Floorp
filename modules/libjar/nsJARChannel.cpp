@@ -522,7 +522,7 @@ nsJARChannel::GetContentType(nsACString &result)
                 mimeServ->GetTypeFromExtension(nsDependentCString(ext), mContentType);
         }
         if (mContentType.IsEmpty())
-            mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+            mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
     }
     result = mContentType;
     return NS_OK;

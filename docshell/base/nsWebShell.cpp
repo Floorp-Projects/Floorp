@@ -664,7 +664,7 @@ nsWebShell::OnLinkClickSyncInternal(nsIContent *aContent,
 
   switch(aVerb) {
     case eLinkVerb_New:
-      target.Assign(NS_LITERAL_STRING("_blank"));
+      target.AssignLiteral("_blank");
       // Fall into replace case
     case eLinkVerb_Undefined:
       // Fall through, this seems like the most reasonable action

@@ -361,9 +361,9 @@ nsMsgIdentity::GetIdentityName(PRUnichar **idName) {
 
     nsAutoString str;
     str += (const PRUnichar*)fullName;
-    str.Append(NS_LITERAL_STRING(" <"));
+    str.AppendLiteral(" <");
     str.AppendWithConversion((const char*)email);
-    str.Append(NS_LITERAL_STRING(">"));
+    str.AppendLiteral(">");
     *idName = ToNewUnicode(str);
     rv = NS_OK;
   }
@@ -380,7 +380,7 @@ nsMsgIdentity::ToString(PRUnichar **aResult)
 {
   nsString idname(NS_LITERAL_STRING("[nsIMsgIdentity: "));
   idname.AppendWithConversion(m_identityKey);
-  idname.Append(NS_LITERAL_STRING("]"));
+  idname.AppendLiteral("]");
 
   *aResult = ToNewUnicode(idname);
   return NS_OK;

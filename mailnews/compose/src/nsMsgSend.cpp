@@ -1463,7 +1463,7 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
   {
     nsAutoString attributeValue;
     if (NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("moz-do-not-send"), attributeValue)))
-      if (attributeValue.Equals(NS_LITERAL_STRING("true"), nsCaseInsensitiveStringComparator()))
+      if (attributeValue.LowerCaseEqualsLiteral("true"))
         return NS_OK;
   }
     

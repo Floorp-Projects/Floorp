@@ -5594,7 +5594,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         if (aTag == nsXULAtoms::tooltip) {
           nsAutoString defaultTooltip;
           aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::defaultz, defaultTooltip);
-          if (defaultTooltip.EqualsIgnoreCase("true")) {
+          if (defaultTooltip.LowerCaseEqualsLiteral("true")) {
             // Locate the root frame and tell it about the tooltip.
             nsIFrame* rootFrame = aState.mFrameManager->GetRootFrame();
             if (rootFrame)

@@ -85,7 +85,7 @@ nsImapMoveCopyMsgTxn::Init(
   nsCString protocolType(uri);
   protocolType.SetLength(protocolType.FindChar(':'));
   // ** jt -- only do this for mailbox protocol
-  if (protocolType.EqualsIgnoreCase("mailbox"))
+  if (protocolType.LowerCaseEqualsLiteral("mailbox"))
   {
     m_srcIsPop3 = PR_TRUE;
     PRUint32 i, count = m_srcKeyArray.GetSize();

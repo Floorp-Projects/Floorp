@@ -922,7 +922,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache* aFloatCache,
             if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
               // we're interested only if previous frame is align=left
               // IE messes things up when "right" (overlapping frames) 
-              if (value.EqualsIgnoreCase("left")) {
+              if (value.LowerCaseEqualsLiteral("left")) {
                 keepFloatOnSameLine = PR_TRUE;
                 // don't advance to next line (IE quirkie behaviour)
                 // it breaks rule CSS2/9.5.1/1, but what the hell

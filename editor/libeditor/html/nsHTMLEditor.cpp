@@ -1316,8 +1316,8 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
           else if (nsHTMLEditUtils::IsListItem(blockParent))
           {
             nsAutoString indentstr;
-            if (isShift) indentstr.Assign(NS_LITERAL_STRING("outdent"));
-            else         indentstr.Assign(NS_LITERAL_STRING("indent"));
+            if (isShift) indentstr.AssignLiteral("outdent");
+            else         indentstr.AssignLiteral("indent");
             res = Indent(indentstr);
             bHandled = PR_TRUE;
           }
@@ -2374,7 +2374,7 @@ nsHTMLEditor::GetHighlightColorState(PRBool *aMixed, nsAString &aOutColor)
   PRBool useCSS;
   GetIsCSSEnabled(&useCSS);
   *aMixed = PR_FALSE;
-  aOutColor.Assign(NS_LITERAL_STRING("transparent"));
+  aOutColor.AssignLiteral("transparent");
   if (useCSS) {
     // in CSS mode, text background can be added by the Text Highlight button
     // we need to query the background of the selection without looking for
@@ -2404,7 +2404,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
   if (!aMixed) return NS_ERROR_NULL_POINTER;
   *aMixed = PR_FALSE;
   // the default background color is transparent
-  aOutColor.Assign(NS_LITERAL_STRING("transparent"));
+  aOutColor.AssignLiteral("transparent");
   
   // get selection
   nsCOMPtr<nsISelection>selection;
@@ -2483,7 +2483,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
       if (NS_FAILED(res)) return res;
       if (isBlock) {
         // yes it is a block; in that case, the text background color is transparent
-        aOutColor.Assign(NS_LITERAL_STRING("transparent"));
+        aOutColor.AssignLiteral("transparent");
         break;
       }
       else {
@@ -2694,7 +2694,7 @@ nsHTMLEditor::RemoveList(const nsAString& aListType)
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kRemoveList);
-  if (aListType.Equals(NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()))
+  if (aListType.LowerCaseEqualsLiteral("ol"))
     ruleInfo.bOrdered = PR_TRUE;
   else  ruleInfo.bOrdered = PR_FALSE;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -2817,7 +2817,7 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
   PRBool cancel, handled;
   PRInt32 theAction = nsTextEditRules::kIndent;
   PRInt32 opID = kOpIndent;
-  if (aIndent.Equals(NS_LITERAL_STRING("outdent"),nsCaseInsensitiveStringComparator()))
+  if (aIndent.LowerCaseEqualsLiteral("outdent"))
   {
     theAction = nsTextEditRules::kOutdent;
     opID = kOpOutdent;
@@ -2964,7 +2964,7 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName, nsIDOMNode 
   PRBool getNamedAnchor = IsNamedAnchorTag(TagName);
   if ( getLink || getNamedAnchor)
   {
-    TagName.Assign(NS_LITERAL_STRING("a"));  
+    TagName.AssignLiteral("a");  
   }
   PRBool findTableCell = TagName.EqualsLiteral("td");
   PRBool findList = TagName.EqualsLiteral("list");
@@ -3021,7 +3021,7 @@ NODE_FOUND:
     //  but that's too messy when you are trying to find the parent table
     //PRBool isRoot;
     //if (NS_FAILED(IsRootTag(parentTagName, isRoot)) || isRoot)
-    if(parentTagName.EqualsIgnoreCase("body"))
+    if(parentTagName.LowerCaseEqualsLiteral("body"))
       break;
 
     currentNode = parent;
@@ -3293,7 +3293,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement
 
   if (IsLinkTag(TagName) || IsNamedAnchorTag(TagName))
   {
-    realTagName.Assign(NS_LITERAL_STRING("a"));
+    realTagName.AssignLiteral("a");
   } else {
     realTagName = TagName;
   }
@@ -4334,20 +4334,20 @@ PRBool
 nsHTMLEditor::TagCanContainTag(const nsAString& aParentTag, const nsAString& aChildTag)  
 {
   // COtherDTD gives some unwanted results.  We override them here.
-  if (aParentTag.Equals(NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()) ||
-      aParentTag.Equals(NS_LITERAL_STRING("ul"),nsCaseInsensitiveStringComparator()))
+  if (aParentTag.LowerCaseEqualsLiteral("ol") ||
+      aParentTag.LowerCaseEqualsLiteral("ul"))
   {
     // if parent is a list and tag is also a list, say "yes".
     // This is because the editor does sublists illegally for now. 
-      if (aChildTag.Equals(NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()) ||
-          aChildTag.Equals(NS_LITERAL_STRING("ul"),nsCaseInsensitiveStringComparator()))
+      if (aChildTag.LowerCaseEqualsLiteral("ol") ||
+          aChildTag.LowerCaseEqualsLiteral("ul"))
       return PR_TRUE;
   }
 
-  if (aParentTag.Equals(NS_LITERAL_STRING("li"),nsCaseInsensitiveStringComparator()))
+  if (aParentTag.LowerCaseEqualsLiteral("li"))
   {
     // list items cant contain list items
-    if (aChildTag.Equals(NS_LITERAL_STRING("li"),nsCaseInsensitiveStringComparator()))
+    if (aChildTag.LowerCaseEqualsLiteral("li"))
       return PR_FALSE;
   }
 
@@ -5518,7 +5518,7 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
         PRBool wasSet = PR_FALSE;
         res = GetAttributeValue(aElement, NS_LITERAL_STRING("style"), existingValue, &wasSet);
         if (NS_FAILED(res)) return res;
-        existingValue.Append(NS_LITERAL_STRING(" "));
+        existingValue.AppendLiteral(" ");
         existingValue.Append(aValue);
         if (aSuppressTransaction)
           res = aElement->SetAttribute(aAttribute, existingValue);
@@ -5620,7 +5620,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
     // loop thru the ranges in the selection
     enumerator->First(); 
     nsCOMPtr<nsISupports> currentItem;
-    nsAutoString bgcolor; bgcolor.AssignWithConversion("bgcolor");
+    nsAutoString bgcolor; bgcolor.AssignLiteral("bgcolor");
     nsCOMPtr<nsIDOMNode> cachedBlockParent = nsnull;
     while ((NS_ENUMERATOR_FALSE == enumerator->IsDone()))
     {

@@ -405,7 +405,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctx
         {
           nsAutoString resultString(NS_LITERAL_STRING("[StringID "));
           resultString.AppendInt(errorID);
-          resultString.Append(NS_LITERAL_STRING("?]"));
+          resultString.AppendLiteral("?]");
           errorMsg = ToNewUnicode(resultString);
         }
         rv = msgPrompt->Alert(nsnull, errorMsg);
@@ -571,7 +571,7 @@ NS_IMETHODIMP nsMsgProtocol::GetContentType(nsACString &aContentType)
   // a part in the message that has a content type that is not message/rfc822
 
   if (m_ContentType.IsEmpty())
-    aContentType = NS_LITERAL_CSTRING("message/rfc822");
+    aContentType.AssignLiteral("message/rfc822");
   else
     aContentType = m_ContentType;
   return NS_OK;

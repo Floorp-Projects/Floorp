@@ -79,11 +79,11 @@ nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo *slot)
     mSlotManID.Trim(" ", PR_FALSE, PR_TRUE);
     // Set the Hardware Version field
     mSlotHWVersion.AppendInt(slot_info.hardwareVersion.major);
-    mSlotHWVersion.Append(NS_LITERAL_STRING("."));
+    mSlotHWVersion.AppendLiteral(".");
     mSlotHWVersion.AppendInt(slot_info.hardwareVersion.minor);
     // Set the Firmware Version field
     mSlotFWVersion.AppendInt(slot_info.firmwareVersion.major);
-    mSlotFWVersion.Append(NS_LITERAL_STRING("."));
+    mSlotFWVersion.AppendLiteral(".");
     mSlotFWVersion.AppendInt(slot_info.firmwareVersion.minor);
   }
 

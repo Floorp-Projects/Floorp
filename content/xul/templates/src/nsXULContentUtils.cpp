@@ -510,13 +510,13 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElemen
     rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::events, events);
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        events.Assign(NS_LITERAL_STRING("*"));
+        events.AssignLiteral("*");
 
     nsAutoString targets;
     rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::targets, targets);
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        targets.Assign(NS_LITERAL_STRING("*"));
+        targets.AssignLiteral("*");
 
     nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
     NS_ASSERTION(domelement != nsnull, "not a DOM element");

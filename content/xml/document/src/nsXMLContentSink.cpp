@@ -1329,7 +1329,7 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
     nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("type"), type);
     if (mState == eXMLContentSinkState_InProlog && 
         target.EqualsLiteral("xml-stylesheet") && 
-        !type.EqualsIgnoreCase("text/css")) {
+        !type.LowerCaseEqualsLiteral("text/css")) {
       nsAutoString href, title, media, alternate;
 
       nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("href"), href);

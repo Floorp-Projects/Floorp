@@ -56,7 +56,7 @@ NS_IMPL_ISUPPORTS3_CI(nsSOAPArray,
 NS_IMETHODIMP 
 nsSOAPArray::GetTargetNamespace(nsAString& aTargetNamespace)
 {
-  aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE));
+  aTargetNamespace.AssignLiteral(NS_SOAP_1_2_ENCODING_NAMESPACE);
   return NS_OK;
 }
 
@@ -78,7 +78,7 @@ nsSOAPArray::Clear()
 NS_IMETHODIMP 
 nsSOAPArray::GetName(nsAString& aName)
 {
-  aName.Assign(NS_LITERAL_STRING("Array")); 
+  aName.AssignLiteral("Array"); 
   return NS_OK;
 }
 
@@ -220,7 +220,7 @@ NS_IMPL_ISUPPORTS4_CI(nsSOAPArrayType,
 NS_IMETHODIMP 
 nsSOAPArrayType::GetTargetNamespace(nsAString& aTargetNamespace)
 {
-  aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE));
+  aTargetNamespace.AssignLiteral(NS_SOAP_1_2_ENCODING_NAMESPACE);
   return NS_OK;
 }
 
@@ -242,7 +242,7 @@ nsSOAPArrayType::Clear()
 NS_IMETHODIMP 
 nsSOAPArrayType::GetName(nsAString& aName)
 {
-  aName.Assign(NS_LITERAL_STRING("arrayType"));
+  aName.AssignLiteral("arrayType");
   return NS_OK;
 }
 

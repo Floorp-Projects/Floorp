@@ -256,7 +256,7 @@ PRBool nsMsgI18Nmultibyte_charset(const char *charset)
     nsAutoString charsetData;
     res = ccm->GetCharsetData(charset, NS_LITERAL_STRING(".isMultibyte").get(), charsetData);
     if (NS_SUCCEEDED(res)) {
-      result = charsetData.EqualsIgnoreCase("true");
+      result = charsetData.LowerCaseEqualsLiteral("true");
     }
   }
 

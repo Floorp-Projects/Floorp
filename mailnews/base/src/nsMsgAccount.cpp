@@ -487,7 +487,7 @@ nsMsgAccount::ToString(PRUnichar **aResult)
 {
   nsAutoString val(NS_LITERAL_STRING("[nsIMsgAccount: "));
   val.AppendWithConversion(m_accountKey);
-  val.Append(NS_LITERAL_STRING("]"));
+  val.AppendLiteral("]");
   *aResult = ToNewUnicode(val);
   return NS_OK;
 }

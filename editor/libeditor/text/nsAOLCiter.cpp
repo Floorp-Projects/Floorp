@@ -58,7 +58,7 @@ NS_IMPL_ISUPPORTS1(nsAOLCiter, nsICiter)
 NS_IMETHODIMP
 nsAOLCiter::GetCiteString(const nsAString& aInString, nsAString& aOutString)
 {
-  aOutString = NS_LITERAL_STRING("\n\n>> ");
+  aOutString.AssignLiteral("\n\n>> ");
   aOutString += aInString;
 
   // See if the last char is a newline, and replace it if so
@@ -68,7 +68,7 @@ nsAOLCiter::GetCiteString(const nsAString& aInString, nsAString& aOutString)
     aOutString.SetLength(aOutString.Length() - 1);
   }
 
-  aOutString.Append(NS_LITERAL_STRING(" <<\n"));
+  aOutString.AppendLiteral(" <<\n");
 
   return NS_OK;
 }

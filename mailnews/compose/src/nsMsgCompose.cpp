@@ -511,7 +511,7 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
     if (!aPrefix.IsEmpty())
     {
       if (!aHTMLEditor)
-        aPrefix.Append(NS_LITERAL_STRING("\n"));
+        aPrefix.AppendLiteral("\n");
       textEditor->InsertText(aPrefix);
       m_editor->EndOfDocument();
     }
@@ -1084,7 +1084,7 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
                   attachment->SetName(NS_LITERAL_STRING("vcard.vcf"));
               else
               {
-                  userid.Append(NS_LITERAL_CSTRING(".vcf"));
+                  userid.AppendLiteral(".vcf");
                   attachment->SetName(NS_ConvertASCIItoUCS2(userid));
               }
  
@@ -1800,7 +1800,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
       PRInt32 reply_on_top = 0;
       mIdentity->GetReplyOnTop(&reply_on_top);
       if (reply_on_top == 1)
-        mCitePrefix += NS_LITERAL_STRING("\n\n");
+        mCitePrefix.AppendLiteral("\n\n");
 
       
       PRBool header, headerDate;
@@ -1961,9 +1961,9 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
                                 getter_Copies(replyHeaderColon),
                                 getter_Copies(replyHeaderOriginalmessage));
       }
-      mCitePrefix.Append(NS_LITERAL_STRING("\n\n"));
+      mCitePrefix.AppendLiteral("\n\n");
       mCitePrefix.Append(replyHeaderOriginalmessage);
-      mCitePrefix.Append(NS_LITERAL_STRING("\n"));
+      mCitePrefix.AppendLiteral("\n");
     }
   }
 }
@@ -2009,7 +2009,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
       compose->GetCompFields(getter_AddRefs(compFields));
       if (compFields)
       {
-        aCharset = NS_LITERAL_STRING("UTF-8");
+        aCharset.AssignLiteral("UTF-8");
         nsAutoString recipient;
         nsAutoString cc;
         nsAutoString replyTo;
@@ -2042,7 +2042,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
           }
               
           if (recipient.Length() > 0 && cc.Length() > 0)
-            recipient.Append(NS_LITERAL_STRING(", "));
+            recipient.AppendLiteral(", ");
           recipient += cc;
           compFields->SetCc(recipient);
 
@@ -2179,7 +2179,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
 #endif
 
     if (! mHeadersOnly)
-      mMsgBody.Append(NS_LITERAL_STRING("</html>"));
+      mMsgBody.AppendLiteral("</html>");
     
     // Now we have an HTML representation of the quoted message.
     // If we are in plain text mode, we need to convert this to plain
@@ -2355,7 +2355,7 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
     if (!mCitePrefix.IsEmpty())
     {
       if (!aHTMLEditor)
-        mCitePrefix.Append(NS_LITERAL_STRING("\n"));
+        mCitePrefix.AppendLiteral("\n");
       nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(aEditor));
       if (textEditor)
         textEditor->InsertText(mCitePrefix);
@@ -2807,8 +2807,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       {
         if (!fieldsFCC.IsEmpty())
         {
-          if (fieldsFCC.Equals(NS_LITERAL_STRING("nocopy://"),
-                               nsCaseInsensitiveStringComparator()))
+          if (fieldsFCC.LowerCaseEqualsLiteral("nocopy://"))
           {
             compose->NotifyStateListeners(eComposeProcessDone, NS_OK);
             if (progress)
@@ -3410,11 +3409,11 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
       if (reply_on_top != 1 || sig_bottom || !aQuoted)
         sigOutput.AppendWithConversion(dashes);
       sigOutput.AppendWithConversion(htmlBreak);
-      sigOutput.Append(NS_LITERAL_STRING("<img src=\"file:///"));
+      sigOutput.AppendLiteral("<img src=\"file:///");
            /* XXX pp This gives me 4 slashes on Unix, that's at least one to
               much. Better construct the URL with some service. */
       sigOutput.AppendWithConversion(testSpec);
-      sigOutput.Append(NS_LITERAL_STRING("\" border=0>"));
+      sigOutput.AppendLiteral("\" border=0>");
       sigOutput.AppendWithConversion(htmlsigclose);
     }
   }
@@ -3989,7 +3988,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                     {
                       //oops, parser problem! I will try to do my best...
                       fullNameStr = pDisplayName;
-                      fullNameStr.Append(NS_LITERAL_STRING(" <"));
+                      fullNameStr.AppendLiteral(" <");
                       if (bIsMailList)
                       {
                         if (pEmail && pEmail[0] != 0)
@@ -4195,56 +4194,56 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
 
     nsCOMPtr<nsIDOMNode> pItem;
     if      (
-              element.EqualsIgnoreCase("#text") ||
-              element.EqualsIgnoreCase("br") ||
-              element.EqualsIgnoreCase("p") ||
-              element.EqualsIgnoreCase("pre") ||
-              element.EqualsIgnoreCase("tt") ||
-              element.EqualsIgnoreCase("html") ||
-              element.EqualsIgnoreCase("head") ||
-              element.EqualsIgnoreCase("title")
+              element.LowerCaseEqualsLiteral("#text") ||
+              element.LowerCaseEqualsLiteral("br") ||
+              element.LowerCaseEqualsLiteral("p") ||
+              element.LowerCaseEqualsLiteral("pre") ||
+              element.LowerCaseEqualsLiteral("tt") ||
+              element.LowerCaseEqualsLiteral("html") ||
+              element.LowerCaseEqualsLiteral("head") ||
+              element.LowerCaseEqualsLiteral("title")
             )
     {
       *_retval = nsIMsgCompConvertible::Plain;
     }
     else if (
-              //element.EqualsIgnoreCase("blockquote") || // see below
-              element.EqualsIgnoreCase("ul") ||
-              element.EqualsIgnoreCase("ol") ||
-              element.EqualsIgnoreCase("li") ||
-              element.EqualsIgnoreCase("dl") ||
-              element.EqualsIgnoreCase("dt") ||
-              element.EqualsIgnoreCase("dd")
+              //element.LowerCaseEqualsLiteral("blockquote") || // see below
+              element.LowerCaseEqualsLiteral("ul") ||
+              element.LowerCaseEqualsLiteral("ol") ||
+              element.LowerCaseEqualsLiteral("li") ||
+              element.LowerCaseEqualsLiteral("dl") ||
+              element.LowerCaseEqualsLiteral("dt") ||
+              element.LowerCaseEqualsLiteral("dd")
             )
     {
       *_retval = nsIMsgCompConvertible::Yes;
     }
     else if (
-              //element.EqualsIgnoreCase("a") || // see below
-              element.EqualsIgnoreCase("h1") ||
-              element.EqualsIgnoreCase("h2") ||
-              element.EqualsIgnoreCase("h3") ||
-              element.EqualsIgnoreCase("h4") ||
-              element.EqualsIgnoreCase("h5") ||
-              element.EqualsIgnoreCase("h6") ||
-              element.EqualsIgnoreCase("hr") ||
+              //element.LowerCaseEqualsLiteral("a") || // see below
+              element.LowerCaseEqualsLiteral("h1") ||
+              element.LowerCaseEqualsLiteral("h2") ||
+              element.LowerCaseEqualsLiteral("h3") ||
+              element.LowerCaseEqualsLiteral("h4") ||
+              element.LowerCaseEqualsLiteral("h5") ||
+              element.LowerCaseEqualsLiteral("h6") ||
+              element.LowerCaseEqualsLiteral("hr") ||
               (
                 mConvertStructs
                 &&
                 (
-                  element.EqualsIgnoreCase("em") ||
-                  element.EqualsIgnoreCase("strong") ||
-                  element.EqualsIgnoreCase("code") ||
-                  element.EqualsIgnoreCase("b") ||
-                  element.EqualsIgnoreCase("i") ||
-                  element.EqualsIgnoreCase("u")
+                  element.LowerCaseEqualsLiteral("em") ||
+                  element.LowerCaseEqualsLiteral("strong") ||
+                  element.LowerCaseEqualsLiteral("code") ||
+                  element.LowerCaseEqualsLiteral("b") ||
+                  element.LowerCaseEqualsLiteral("i") ||
+                  element.LowerCaseEqualsLiteral("u")
                 )
               )
             )
     {
       *_retval = nsIMsgCompConvertible::Altering;
     }
-    else if (element.EqualsIgnoreCase("body"))
+    else if (element.LowerCaseEqualsLiteral("body"))
     {
       *_retval = nsIMsgCompConvertible::Plain;
 
@@ -4265,7 +4264,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
         else if (NS_SUCCEEDED(domElement->HasAttribute(NS_LITERAL_STRING("bgcolor"), &hasAttribute)) &&
                  hasAttribute &&
                  NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("bgcolor"), color)) &&
-                 !color.Equals(NS_LITERAL_STRING("#FFFFFF"), nsCaseInsensitiveStringComparator())) {
+                 !color.LowerCaseEqualsLiteral("#ffffff")) {
           *_retval = nsIMsgCompConvertible::Altering;
         }
 		else if (NS_SUCCEEDED(domElement->HasAttribute(NS_LITERAL_STRING("dir"), &hasAttribute))
@@ -4276,7 +4275,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
       }
 
     }
-    else if (element.EqualsIgnoreCase("blockquote"))
+    else if (element.LowerCaseEqualsLiteral("blockquote"))
     {
       // Skip <blockquote type="cite">
       *_retval = nsIMsgCompConvertible::Yes;
@@ -4285,7 +4284,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
       if (NS_SUCCEEDED(node->GetAttributes(getter_AddRefs(pAttributes)))
           && pAttributes)
       {
-        nsAutoString typeName; typeName.Assign(NS_LITERAL_STRING("type"));
+        nsAutoString typeName; typeName.AssignLiteral("type");
         if (NS_SUCCEEDED(pAttributes->GetNamedItem(typeName,
                                                    getter_AddRefs(pItem)))
             && pItem)
@@ -4294,17 +4293,16 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
           if (NS_SUCCEEDED(pItem->GetNodeValue(typeValue)))
           {
             typeValue.StripChars("\"");
-            if (typeValue.Equals(NS_LITERAL_STRING("cite"),
-                                 nsCaseInsensitiveStringComparator()))
+            if (typeValue.LowerCaseEqualsLiteral("cite"))
               *_retval = nsIMsgCompConvertible::Plain;
           }
         }
       }
     }
     else if (
-              element.EqualsIgnoreCase("div") ||
-              element.EqualsIgnoreCase("span") ||
-              element.EqualsIgnoreCase("a")
+              element.LowerCaseEqualsLiteral("div") ||
+              element.LowerCaseEqualsLiteral("span") ||
+              element.LowerCaseEqualsLiteral("a")
             )
     {
       /* Do some special checks for these tags. They are inside this |else if|
@@ -4321,7 +4319,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
           && pAttributes)
       {
         nsAutoString className;
-        className.Assign(NS_LITERAL_STRING("class"));
+        className.AssignLiteral("class");
         if (NS_SUCCEEDED(pAttributes->GetNamedItem(className,
                                                    getter_AddRefs(pItem)))
             && pItem)
@@ -4338,7 +4336,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
       }
 
       // Maybe, it's an <a> element inserted by another recognizer (e.g. 4.x')
-      if (element.EqualsIgnoreCase("a"))
+      if (element.LowerCaseEqualsLiteral("a"))
       {
         /* Ignore anchor tag, if the URI is the same as the text
            (as inserted by recognizers) */
@@ -4347,7 +4345,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
         if (NS_SUCCEEDED(node->GetAttributes(getter_AddRefs(pAttributes)))
             && pAttributes)
         {
-          nsAutoString hrefName; hrefName.Assign(NS_LITERAL_STRING("href"));
+          nsAutoString hrefName; hrefName.AssignLiteral("href");
           if (NS_SUCCEEDED(pAttributes->GetNamedItem(hrefName,
                                                      getter_AddRefs(pItem)))
               && pItem)
@@ -4375,8 +4373,8 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
 
       // Lastly, test, if it is just a "simple" <div> or <span>
       else if (
-                element.EqualsIgnoreCase("div") ||
-                element.EqualsIgnoreCase("span")
+                element.LowerCaseEqualsLiteral("div") ||
+                element.LowerCaseEqualsLiteral("span")
               )
       {
         /* skip only if no style attribute */
@@ -4386,7 +4384,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
             && pAttributes)
         {
           nsAutoString styleName;
-          styleName.Assign(NS_LITERAL_STRING("style"));
+          styleName.AssignLiteral("style");
           if (NS_SUCCEEDED(pAttributes->GetNamedItem(styleName,
                                                      getter_AddRefs(pItem)))
               && pItem)
@@ -4496,7 +4494,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
       {
         nsAutoString attributeName;
         nsAutoString attributeValue;
-        attributeName.Assign(NS_LITERAL_STRING("class"));
+        attributeName.AssignLiteral("class");
 
         rv = element->GetAttribute(attributeName, attributeValue);
         if (NS_SUCCEEDED(rv))
@@ -4746,7 +4744,7 @@ nsMsgMailList::nsMsgMailList(nsString listName, nsString listDescription, nsIAbD
   {
       //oops, parser problem! I will try to do my best...
       mFullName = listName;
-      mFullName.Append(NS_LITERAL_STRING(" <"));
+      mFullName.AppendLiteral(" <");
       if (listDescription.IsEmpty())
         mFullName += listName;
       else

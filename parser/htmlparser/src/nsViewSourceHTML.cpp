@@ -531,7 +531,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       if (StringBeginsWith(mFilename, NS_LITERAL_STRING("data:")) &&
           mFilename.Length() > 50) {
         nsAutoString dataFilename(Substring(mFilename, 0, 50));
-        dataFilename.Append(NS_LITERAL_STRING("..."));
+        dataFilename.AppendLiteral("...");
         mSink->SetTitle(dataFilename);
       } else {
         mSink->SetTitle(mFilename);
@@ -654,7 +654,7 @@ nsresult  CViewSourceHTML::GenerateSummary() {
 
   if(mErrorCount && mTagCount) {
 
-    mErrors.Append(NS_LITERAL_STRING("\n\n "));
+    mErrors.AppendLiteral("\n\n ");
     mErrors.AppendInt(mErrorCount);
     mErrors.Append(NS_LITERAL_STRING(" error(s) detected -- see highlighted portions.\n"));
 
@@ -1109,9 +1109,9 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_cdatasection:
       {
         nsAutoString theStr;
-        theStr.Assign(NS_LITERAL_STRING("<!"));
+        theStr.AssignLiteral("<!");
         theStr.Append(aToken->GetStringValue());
-        theStr.Append(NS_LITERAL_STRING(">"));
+        theStr.AppendLiteral(">");
         result=WriteTag(mCDATATag,theStr,0,PR_TRUE);
       }
       break;
@@ -1119,9 +1119,9 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_markupDecl:
       {
         nsAutoString theStr;
-        theStr.Assign(NS_LITERAL_STRING("<!"));
+        theStr.AssignLiteral("<!");
         theStr.Append(aToken->GetStringValue());
-        theStr.Append(NS_LITERAL_STRING(">"));
+        theStr.AppendLiteral(">");
         result=WriteTag(mMarkupDeclaration,theStr,0,PR_TRUE);
       }
       break;
@@ -1186,7 +1186,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         nsAutoString theStr;
         theStr.Assign(aToken->GetStringValue());
-        if(!theStr.Equals(NS_LITERAL_STRING("XI"), nsCaseInsensitiveStringComparator())) {
+        if(!theStr.LowerCaseEqualsLiteral("xi")) {
           PRUnichar theChar=theStr.CharAt(0);
           if((nsCRT::IsAsciiDigit(theChar)) || ('X'==theChar) || ('x'==theChar)){
             theStr.Assign(NS_LITERAL_STRING("#") + theStr);

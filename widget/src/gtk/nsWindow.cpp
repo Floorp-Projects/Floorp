@@ -2276,7 +2276,7 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsAString& aTitle)
 
   // This is broken, it's just a random guess
   if (NS_FAILED(rv))
-    platformCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+    platformCharset.AssignLiteral("ISO-8859-1");
 
   // get the encoder
   nsCOMPtr<nsICharsetConverterManager> ccm = 

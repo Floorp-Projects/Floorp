@@ -1286,7 +1286,7 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
 
                 // An empty folder, or a folder that contains just "desktop.ini",
                 // is considered to be a IE Favorite; otherwise, its a folder
-                if (!name.EqualsIgnoreCase("desktop.ini"))
+                if (!name.LowerCaseEqualsLiteral("desktop.ini"))
                 {
                     isValid = PR_TRUE;
                     break;
@@ -1603,8 +1603,8 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
     {
         nsAutoString extension;
         name.Right(extension, 4);
-        if (extension.EqualsIgnoreCase(".url") ||
-            extension.EqualsIgnoreCase(".lnk"))
+        if (extension.LowerCaseEqualsLiteral(".url") ||
+            extension.LowerCaseEqualsLiteral(".lnk"))
         {
             name.Truncate(nameLen - 4);
         }
@@ -1708,14 +1708,14 @@ FileSystemDataSource::getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL
     {
         if (isValidFolder(source))
             return(NS_RDF_NO_VALUE);
-        aFileURL += NS_LITERAL_STRING("desktop.ini");
+        aFileURL.AppendLiteral("desktop.ini");
     }
     else if (aFileURL.Length() > 4)
     {
         nsAutoString    extension;
 
         aFileURL.Right(extension, 4);
-        if (!extension.EqualsIgnoreCase(".url"))
+        if (!extension.LowerCaseEqualsLiteral(".url"))
         {
             return(NS_RDF_NO_VALUE);
         }

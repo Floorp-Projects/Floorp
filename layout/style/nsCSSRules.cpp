@@ -302,9 +302,9 @@ CSSCharsetRuleImpl::GetType(PRUint16* aType)
 NS_IMETHODIMP
 CSSCharsetRuleImpl::GetCssText(nsAString& aCssText)
 {
-  aCssText.Assign(NS_LITERAL_STRING("@charset \""));
+  aCssText.AssignLiteral("@charset \"");
   aCssText.Append(mEncoding);
-  aCssText.Append(NS_LITERAL_STRING("\";"));
+  aCssText.AppendLiteral("\";");
   return NS_OK;
 }
 
@@ -552,18 +552,18 @@ CSSImportRuleImpl::GetType(PRUint16* aType)
 NS_IMETHODIMP
 CSSImportRuleImpl::GetCssText(nsAString& aCssText)
 {
-  aCssText.Assign(NS_LITERAL_STRING("@import url("));
+  aCssText.AssignLiteral("@import url(");
   aCssText.Append(mURLSpec);
   aCssText.Append(NS_LITERAL_STRING(")"));
   if (mMedia) {
     nsAutoString mediaText;
     mMedia->GetText(mediaText);
     if (!mediaText.IsEmpty()) {
-      aCssText.Append(NS_LITERAL_STRING(" "));
+      aCssText.AppendLiteral(" ");
       aCssText.Append(mediaText);
     }
   }
-  aCssText.Append(NS_LITERAL_STRING(";"));
+  aCssText.AppendLiteral(";");
   return NS_OK;
 }
 
@@ -996,7 +996,7 @@ CSSMediaRuleImpl::GetCssText(nsAString& aCssText)
 {
   PRUint32 index;
   PRUint32 count;
-  aCssText.Assign(NS_LITERAL_STRING("@media "));
+  aCssText.AssignLiteral("@media ");
   // get all the media
   if (mMedia) {
     mMedia->Count(&count);
@@ -1005,14 +1005,14 @@ CSSMediaRuleImpl::GetCssText(nsAString& aCssText)
       if (medium) {
         nsAutoString tempString;
         if (index > 0)
-          aCssText.Append(NS_LITERAL_STRING(", "));
+          aCssText.AppendLiteral(", ");
         medium->ToString(tempString);
         aCssText.Append(tempString);
       }
     }
   }
 
-  aCssText.Append(NS_LITERAL_STRING(" {\n"));
+  aCssText.AppendLiteral(" {\n");
 
   // get all the rules
   if (mRules) {
@@ -1032,7 +1032,7 @@ CSSMediaRuleImpl::GetCssText(nsAString& aCssText)
     }
   }
 
-  aCssText.Append(NS_LITERAL_STRING("}"));
+  aCssText.AppendLiteral("}");
   
   return NS_OK;
 }
@@ -1301,14 +1301,14 @@ CSSNameSpaceRuleImpl::GetType(PRUint16* aType)
 NS_IMETHODIMP
 CSSNameSpaceRuleImpl::GetCssText(nsAString& aCssText)
 {
-  aCssText.Assign(NS_LITERAL_STRING("@namespace "));
+  aCssText.AssignLiteral("@namespace ");
   if (mPrefix) {
     nsString atomStr;
     mPrefix->ToString(atomStr);
     aCssText.Append(atomStr);
-    aCssText.Append(NS_LITERAL_STRING(" "));
+    aCssText.AppendLiteral(" ");
   }
-  aCssText.Append(NS_LITERAL_STRING("url("));
+  aCssText.AppendLiteral("url(");
   aCssText.Append(mURLSpec);
   aCssText.Append(NS_LITERAL_STRING(");"));
   return NS_OK;

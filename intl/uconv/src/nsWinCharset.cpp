@@ -94,26 +94,26 @@ nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharse
 {
   //delay loading wincharset.properties bundle if possible
   if (inANSICodePage.EqualsLiteral("acp.1252")) {
-    outCharset = NS_LITERAL_CSTRING("windows-1252");
+    outCharset.AssignLiteral("windows-1252");
     return NS_OK;
   } 
 
   if (inANSICodePage.EqualsLiteral("acp.932")) {
-    outCharset = NS_LITERAL_CSTRING("Shift_JIS");
+    outCharset.AssignLiteral("Shift_JIS");
     return NS_OK;
   } 
 
   // ensure the .property file is loaded
   nsresult rv = InitInfo();
   if (NS_FAILED(rv)) {
-    outCharset.Assign(NS_LITERAL_CSTRING("windows-1252"));
+    outCharset.AssignLiteral("windows-1252");
     return rv;
   }
 
   nsAutoString charset;
   rv = gInfo->Get(inANSICodePage, charset);
   if (NS_FAILED(rv)) {
-    outCharset.Assign(NS_LITERAL_CSTRING("windows-1252"));
+    outCharset.AssignLiteral("windows-1252");
     return rv;
   }
 

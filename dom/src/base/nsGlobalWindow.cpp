@@ -2247,7 +2247,7 @@ GlobalWindowImpl::MakeScriptDialogTitle(const nsAString &aInTitle, nsAString &aO
   // Just in case
   if (aOutTitle.IsEmpty()) {
     NS_WARNING("could not get ScriptDlgTitle string from string bundle");
-    aOutTitle.Assign(NS_LITERAL_STRING("[Script] "));
+    aOutTitle.AssignLiteral("[Script] ");
     aOutTitle.Append(aInTitle);
   }
 }
@@ -3140,9 +3140,9 @@ PRBool GlobalWindowImpl::CheckOpenAllow(PRUint32 aAbuseLevel,
     // _main is an IE target which should be case-insensitive but isn't
     // see bug 217886 for details
     if (!name.IsEmpty()) {
-      if (name.EqualsIgnoreCase("_top") ||
-          name.EqualsIgnoreCase("_self") ||
-          name.EqualsIgnoreCase("_content") ||
+      if (name.LowerCaseEqualsLiteral("_top") ||
+          name.LowerCaseEqualsLiteral("_self") ||
+          name.LowerCaseEqualsLiteral("_content") ||
           name.EqualsLiteral("_main"))
         allowWindow = PR_TRUE;
       else {
@@ -5883,14 +5883,14 @@ NavigatorImpl::GetAppVersion(nsAString& aAppVersion)
     res = service->GetAppVersion(str);
     CopyASCIItoUCS2(str, aAppVersion);
 
-    aAppVersion.Append(NS_LITERAL_STRING(" ("));
+    aAppVersion.AppendLiteral(" (");
     res = service->GetPlatform(str);
     if (NS_FAILED(res))
       return res;
 
     AppendASCIItoUTF16(str, aAppVersion);
 
-    aAppVersion.Append(NS_LITERAL_STRING("; "));
+    aAppVersion.AppendLiteral("; ");
     res = service->GetLanguage(str);
     if (NS_FAILED(res))
       return res;
@@ -5906,7 +5906,7 @@ NavigatorImpl::GetAppVersion(nsAString& aAppVersion)
 NS_IMETHODIMP
 NavigatorImpl::GetAppName(nsAString& aAppName)
 {
-  aAppName.Assign(NS_LITERAL_STRING("Netscape"));
+  aAppName.AssignLiteral("Netscape");
   return NS_OK;
 }
 
@@ -5936,13 +5936,13 @@ NavigatorImpl::GetPlatform(nsAString& aPlatform)
     // likewise hardcoded and we're seeking backward compatibility
     // here (bug 47080)
 #if defined(WIN32)
-    aPlatform = NS_LITERAL_STRING("Win32");
+    aPlatform.AssignLiteral("Win32");
 #elif defined(XP_MAC) || defined(XP_MACOSX)
     // XXX not sure what to do about Mac OS X on non-PPC, but since Comm 4.x
     // doesn't know about it this will actually be backward compatible
-    aPlatform = NS_LITERAL_STRING("MacPPC");
+    aPlatform.AssignLiteral("MacPPC");
 #elif defined(XP_OS2)
-    aPlatform = NS_LITERAL_STRING("OS/2");
+    aPlatform.AssignLiteral("OS/2");
 #else
     // XXX Communicator uses compiled-in build-time string defines
     // to indicate the platform it was compiled *for*, not what it is

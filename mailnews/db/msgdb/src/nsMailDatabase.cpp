@@ -536,22 +536,22 @@ NS_IMETHODIMP nsMailDatabase::GetSummaryValid(PRBool *aResult)
 #else
       if (!*aResult)
       {
-        errorMsg.AppendWithConversion("time stamp didn't match delta = ");
+        errorMsg.AppendLiteral("time stamp didn't match delta = ");
         errorMsg.AppendInt(actualFolderTimeStamp - folderDate);
-        errorMsg.AppendWithConversion(" leeway = ");
+        errorMsg.AppendLiteral(" leeway = ");
         errorMsg.AppendInt(gTimeStampLeeway);
       }
     }
     else if (folderSize != m_folderSpec->GetFileSize())
     {
-      errorMsg.AppendWithConversion("folder size didn't match db size = ");
+      errorMsg.AppendLiteral("folder size didn't match db size = ");
       errorMsg.AppendInt(folderSize);
-      errorMsg.AppendWithConversion(" actual size = ");
+      errorMsg.AppendLiteral(" actual size = ");
       errorMsg.AppendInt(m_folderSpec->GetFileSize());
     }
     else if (numUnreadMessages < 0)
     {
-      errorMsg.AppendWithConversion("numUnreadMessages < 0");
+      errorMsg.AppendLiteral("numUnreadMessages < 0");
     }
   }
   if (errorMsg.Length())

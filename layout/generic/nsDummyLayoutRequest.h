@@ -72,7 +72,7 @@ public:
 
 	// nsIRequest
   NS_IMETHOD GetName(nsACString &result) { 
-    result = NS_LITERAL_CSTRING("about:layout-dummy-request");
+    result.AssignLiteral("about:layout-dummy-request");
     return NS_OK;
   }
   NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }

@@ -513,10 +513,10 @@ nsPlaintextEditor::SetupDocEncoder(nsIDocumentEncoder **aDocEncoder)
   if (bIsPlainTextControl)
   {
     docEncoderFlags |= nsIDocumentEncoder::OutputBodyOnly | nsIDocumentEncoder::OutputPreformatted;
-    mimeType = NS_LITERAL_STRING(kUnicodeMime);
+    mimeType.AssignLiteral(kUnicodeMime);
   }
   else
-    mimeType = NS_LITERAL_STRING(kHTMLMime);
+    mimeType.AssignLiteral(kHTMLMime);
 
   // set up docEncoder
   nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);

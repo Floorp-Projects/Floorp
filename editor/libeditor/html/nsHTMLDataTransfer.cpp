@@ -775,7 +775,7 @@ nsHTMLEditor::GetAttributeToModifyOnNode(nsIDOMNode *aNode, nsAString &aAttr)
   nsCOMPtr<nsIDOMHTMLAnchorElement> nodeAsAnchor = do_QueryInterface(aNode);
   if (nodeAsAnchor)
   {
-    aAttr = NS_LITERAL_STRING("href");
+    aAttr.AssignLiteral("href");
     return NS_OK;
   }
 
@@ -825,7 +825,7 @@ nsHTMLEditor::GetAttributeToModifyOnNode(nsIDOMNode *aNode, nsAString &aAttr)
   nsCOMPtr<nsIDOMHTMLObjectElement> nodeAsObject = do_QueryInterface(aNode);
   if (nodeAsObject)
   {
-    aAttr = NS_LITERAL_STRING("data");
+    aAttr.AssignLiteral("data");
     return NS_OK;
   }
   
@@ -857,10 +857,9 @@ nsHTMLEditor::GetAttributeToModifyOnNode(nsIDOMNode *aNode, nsAString &aAttr)
         } while (current != end && !nsCRT::IsAsciiSpace(*current));
 
         // Store the link for fix up if it says "stylesheet"
-        if (Substring(startWord, current).Equals(NS_LITERAL_STRING("stylesheet"),
-                      nsCaseInsensitiveStringComparator()))
+        if (Substring(startWord, current).LowerCaseEqualsLiteral("stylesheet"))
         {
-          aAttr = NS_LITERAL_STRING("href");
+          aAttr.AssignLiteral("href");
           return NS_OK;
         }
         if (current == end)
@@ -1368,17 +1367,17 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
           {
             if (insertAsImage)
             {
-              stuffToPaste.Assign(NS_LITERAL_STRING("<IMG src=\""));
+              stuffToPaste.AssignLiteral("<IMG src=\"");
               AppendUTF8toUTF16(urltext, stuffToPaste);
-              stuffToPaste.Append(NS_LITERAL_STRING("\" alt=\"\" >"));
+              stuffToPaste.AppendLiteral("\" alt=\"\" >");
             }
             else /* insert as link */
             {
-              stuffToPaste.Assign(NS_LITERAL_STRING("<A href=\""));
+              stuffToPaste.AssignLiteral("<A href=\"");
               AppendUTF8toUTF16(urltext, stuffToPaste);
-              stuffToPaste.Append(NS_LITERAL_STRING("\">"));
+              stuffToPaste.AppendLiteral("\">");
               AppendUTF8toUTF16(urltext, stuffToPaste);
-              stuffToPaste.Append(NS_LITERAL_STRING("</A>"));
+              stuffToPaste.AppendLiteral("</A>");
             }
             nsAutoEditBatch beginBatching(this);
 
@@ -2220,9 +2219,9 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
       // Wrap the inserted quote in a <pre> so it won't be wrapped:
       nsAutoString tag;
       if (quotesInPre)
-        tag.Assign(NS_LITERAL_STRING("pre"));
+        tag.AssignLiteral("pre");
       else
-        tag.Assign(NS_LITERAL_STRING("span"));
+        tag.AssignLiteral("span");
 
       rv = DeleteSelectionAndCreateNode(tag, getter_AddRefs(preNode));
       

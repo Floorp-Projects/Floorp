@@ -590,7 +590,7 @@ nsHTMLDocument::UseWeakDocTypeDefault(PRInt32& aCharsetSource,
   if (kCharsetFromWeakDocTypeDefault <= aCharsetSource)
     return PR_TRUE;
   // fallback value in case docshell return error
-  aCharset = NS_LITERAL_CSTRING("ISO-8859-1");
+  aCharset.AssignLiteral("ISO-8859-1");
 
   const nsAdoptingString& defCharset =
     nsContentUtils::GetLocalizedStringPref("intl.charset.default");
@@ -796,7 +796,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   if (IsXHTML()) {
     charsetSource = kCharsetFromDocTypeDefault;
-    charset = NS_LITERAL_CSTRING("UTF-8");
+    charset.AssignLiteral("UTF-8");
     TryChannelCharset(aChannel, charsetSource, charset);
   } else {
     charsetSource = kCharsetUninitialized;
@@ -858,8 +858,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // ahmed
     // Check if 864 but in Implicit mode !
     if ((mTexttype == IBMBIDI_TEXTTYPE_LOGICAL) &&
-        (charset.EqualsIgnoreCase("ibm864"))) {
-      charset = NS_LITERAL_CSTRING("IBM864i");
+        (charset.LowerCaseEqualsLiteral("ibm864"))) {
+      charset.AssignLiteral("IBM864i");
     }
   }
 
@@ -1648,7 +1648,7 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   nsCAutoString path;
   if (NS_FAILED(uri->GetPath(path)))
     return NS_ERROR_FAILURE;
-  newURIString.Append(NS_LITERAL_CSTRING("://"));
+  newURIString.AppendLiteral("://");
   AppendUTF16toUTF8(aDomain, newURIString);
   newURIString.Append(path);
 
@@ -2929,9 +2929,9 @@ nsHTMLDocument::GetCompatMode(nsAString& aCompatMode)
                "mCompatMode is neither quirks nor strict for this document");
 
   if (mCompatMode == eCompatibility_NavQuirks) {
-    aCompatMode.Assign(NS_LITERAL_STRING("BackCompat"));
+    aCompatMode.AssignLiteral("BackCompat");
   } else {
-    aCompatMode.Assign(NS_LITERAL_STRING("CSS1Compat"));
+    aCompatMode.AssignLiteral("CSS1Compat");
   }
 
   return NS_OK;
@@ -3563,10 +3563,10 @@ NS_IMETHODIMP
 nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
 {
   if (mEditingIsOn) {
-    aDesignMode.Assign(NS_LITERAL_STRING("on"));
+    aDesignMode.AssignLiteral("on");
   }
   else {
-    aDesignMode.Assign(NS_LITERAL_STRING("off"));
+    aDesignMode.AssignLiteral("off");
   }
   return NS_OK;
 }
@@ -3600,8 +3600,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
   if (!editSession)
     return NS_ERROR_FAILURE;
 
-  if (aDesignMode.Equals(NS_LITERAL_STRING("on"),
-                         nsCaseInsensitiveStringComparator())) {
+  if (aDesignMode.LowerCaseEqualsLiteral("on")) {
     // go through hoops to get dom window (see nsHTMLDocument::GetSelection)
     nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
     NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
@@ -3889,13 +3888,13 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
 
   nsresult rv = NS_OK;
 
-  if (commandID.Equals(NS_LITERAL_STRING("gethtml"), nsCaseInsensitiveStringComparator()))
+  if (commandID.LowerCaseEqualsLiteral("gethtml"))
     return NS_ERROR_FAILURE;
 
-  if (commandID.Equals(NS_LITERAL_STRING("cut"), nsCaseInsensitiveStringComparator()) ||
-      (commandID.Equals(NS_LITERAL_STRING("copy"), nsCaseInsensitiveStringComparator()))) {
+  if (commandID.LowerCaseEqualsLiteral("cut") ||
+      (commandID.LowerCaseEqualsLiteral("copy"))) {
     rv = DoClipboardSecurityCheck(PR_FALSE);
-  } else if (commandID.Equals(NS_LITERAL_STRING("paste"), nsCaseInsensitiveStringComparator())) {
+  } else if (commandID.LowerCaseEqualsLiteral("paste")) {
     rv = DoClipboardSecurityCheck(PR_TRUE);
   }
 

@@ -56,7 +56,7 @@ NS_IMETHODIMP                                                           \
 cname::GetPathSegTypeAsLetter(nsAString & aPathSegTypeAsLetter)         \
 {                                                                       \
   aPathSegTypeAsLetter.Truncate();                                      \
-  aPathSegTypeAsLetter.Append(NS_LITERAL_STRING(letter));               \
+  aPathSegTypeAsLetter.AppendLiteral(letter);               \
   return NS_OK;                                                         \
 }
 
@@ -130,7 +130,7 @@ NS_IMETHODIMP
 nsSVGPathSegClosePath::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
-  aValue.Append(NS_LITERAL_STRING("z"));
+  aValue.AppendLiteral("z");
   
   return NS_OK;
 }

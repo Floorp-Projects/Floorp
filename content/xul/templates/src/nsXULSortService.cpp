@@ -1348,13 +1348,13 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
       sortState->sortProperty = sortInfo.sortProperty;
       
       nsAutoString resourceUrl = sortResource;
-      resourceUrl.Append(NS_LITERAL_STRING("?collation=true"));
+      resourceUrl.AppendLiteral("?collation=true");
       rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertyColl));
       if (NS_FAILED(rv)) return rv;
       sortState->sortPropertyColl = sortInfo.sortPropertyColl;
 
       resourceUrl = sortResource;
-      resourceUrl.Append(NS_LITERAL_STRING("?sort=true"));
+      resourceUrl.AppendLiteral("?sort=true");
       rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertySort));
       if (NS_FAILED(rv)) return rv;
       sortState->sortPropertySort = sortInfo.sortPropertySort;
@@ -1366,13 +1366,13 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
         sortState->sortProperty2 = sortInfo.sortProperty2;
 
         resourceUrl = sortResource2;
-        resourceUrl.Append(NS_LITERAL_STRING("?collation=true"));
+        resourceUrl.AppendLiteral("?collation=true");
         rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertyColl2));
         if (NS_FAILED(rv)) return rv;
         sortState->sortPropertyColl2 = sortInfo.sortPropertyColl2;
 
         resourceUrl = sortResource2;
-        resourceUrl.Append(NS_LITERAL_STRING("?sort=true"));
+        resourceUrl.AppendLiteral("?sort=true");
         rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertySort2));
         if (NS_FAILED(rv)) return rv;
         sortState->sortPropertySort2 = sortInfo.sortPropertySort2;
@@ -1634,12 +1634,12 @@ XULSortServiceImpl::Sort(nsIDOMNode* node, const nsAString& sortResource, const 
 
   nsAutoString resourceUrl;
   resourceUrl.Assign(sortResource);
-  resourceUrl.Append(NS_LITERAL_STRING("?collation=true"));
+  resourceUrl.AppendLiteral("?collation=true");
   rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertyColl));
   if (NS_FAILED(rv)) return rv;
 
   resourceUrl.Assign(sortResource);
-  resourceUrl.Append(NS_LITERAL_STRING("?sort=true"));
+  resourceUrl.AppendLiteral("?sort=true");
   rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertySort));
   if (NS_FAILED(rv)) return rv;
 
@@ -1649,12 +1649,12 @@ XULSortServiceImpl::Sort(nsIDOMNode* node, const nsAString& sortResource, const 
     if (NS_FAILED(rv)) return rv;
 
     resourceUrl = sortResource2;
-    resourceUrl.Append(NS_LITERAL_STRING("?collation=true"));
+    resourceUrl.AppendLiteral("?collation=true");
     rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertyColl2));
     if (NS_FAILED(rv)) return rv;
 
     resourceUrl = sortResource2;
-    resourceUrl.Append(NS_LITERAL_STRING("?sort=true"));
+    resourceUrl.AppendLiteral("?sort=true");
     rv = gRDFService->GetUnicodeResource(resourceUrl, getter_AddRefs(sortInfo.sortPropertySort2));
     if (NS_FAILED(rv)) return rv;
   }

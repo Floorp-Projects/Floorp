@@ -88,7 +88,7 @@ NS_IMETHODIMP nsXULProgressMeterAccessibleWrap::SetCurrentValue(double aValue, P
   PRUint32 value = PRUint32(aValue * 100.0 + 0.5);
   nsAutoString valueString;
   valueString.AppendInt(value);
-  valueString.Append(NS_LITERAL_STRING("%"));
+  valueString.AppendLiteral("%");
   if (NS_SUCCEEDED(element->SetAttribute(NS_LITERAL_STRING("value"), valueString))) {
     *_retval = PR_TRUE;
     return NS_OK;

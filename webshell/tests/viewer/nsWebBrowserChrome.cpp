@@ -377,7 +377,7 @@ NS_IMETHODIMP nsWebBrowserChrome::SetTitle(const PRUnichar* aTitle)
 
    nsAutoString newTitle(aTitle);
 
-   newTitle.Append(NS_LITERAL_STRING(" - Raptor"));
+   newTitle.AppendLiteral(" - Raptor");
    
    mBrowserWindow->SetTitle(newTitle.get());
    return NS_OK;
@@ -401,13 +401,13 @@ nsWebBrowserChrome::OnProgressChange(nsIWebProgress* aProgress,
     nsAutoString buf;
     PRUint32 size;
 
-    buf.Append(NS_LITERAL_STRING("Loaded "));
+    buf.AppendLiteral("Loaded ");
     buf.AppendInt(mCurrent);
-    buf.Append(NS_LITERAL_STRING(" of "));
+    buf.AppendLiteral(" of ");
     buf.AppendInt(mTotal);
-    buf.Append(NS_LITERAL_STRING(" items.  ("));
+    buf.AppendLiteral(" items.  (");
     buf.AppendInt(mProgress);
-    buf.Append(NS_LITERAL_STRING(" bytes of "));
+    buf.AppendLiteral(" bytes of ");
     buf.AppendInt(mMaxProgress);
     buf.Append(NS_LITERAL_STRING(" bytes)"));
 
@@ -440,13 +440,13 @@ nsWebBrowserChrome::OnStateChange(nsIWebProgress* aProgress,
         nsAutoString buf;
         PRUint32 size;
 
-        buf.Append(NS_LITERAL_STRING("Loaded "));
+        buf.AppendLiteral("Loaded ");
         buf.AppendInt(mCurrent);
-        buf.Append(NS_LITERAL_STRING(" of "));
+        buf.AppendLiteral(" of ");
         buf.AppendInt(mTotal);
-        buf.Append(NS_LITERAL_STRING(" items.  ("));
+        buf.AppendLiteral(" items.  (");
         buf.AppendInt(mProgress);
-        buf.Append(NS_LITERAL_STRING(" bytes of "));
+        buf.AppendLiteral(" bytes of ");
         buf.AppendInt(mMaxProgress);
         buf.Append(NS_LITERAL_STRING(" bytes)"));
 
@@ -576,7 +576,7 @@ mCurrent=mTotal=mProgress=mMaxProgress=0;
         uri->GetSpec(uriString);
 
         NS_ConvertUTF8toUCS2 url(uriString);
-        url.Append(NS_LITERAL_STRING(": start"));
+        url.AppendLiteral(": start");
         PRUint32 size;
         mBrowserWindow->mStatus->SetText(url,size);
       }
@@ -628,7 +628,7 @@ void nsWebBrowserChrome::OnLoadFinished(nsIRequest* aRequest,
      {
 //     PRUint32 size;
 
-     msg.Append(NS_LITERAL_STRING(" done."));
+     msg.AppendLiteral(" done.");
 
 ///      mBrowserWindow->mStatus->SetText(msg, size);
       }

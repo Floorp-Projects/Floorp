@@ -1165,14 +1165,14 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   if (!styleValue.IsEmpty())
   {
     styleValue.Trim("; \t", PR_FALSE, PR_TRUE);
-    styleValue.Append(NS_LITERAL_STRING("; "));
+    styleValue.AppendLiteral("; ");
   }
 
   // Make sure we have fixed-width font.  This should be done for us,
   // but it isn't, see bug 22502, so we have to add "font: -moz-fixed;".
   // Only do this if we're wrapping.
   if ((flags & eEditorEnableWrapHackMask) && aWrapColumn >= 0)
-    styleValue.Append(NS_LITERAL_STRING("font-family: -moz-fixed; "));
+    styleValue.AppendLiteral("font-family: -moz-fixed; ");
 
   // If "mail.compose.wrap_to_window_width" is set, and we're a mail editor,
   // then remember our wrap width (for output purposes) but set the visual
@@ -1191,14 +1191,14 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   // and now we're ready to set the new whitespace/wrapping style.
   if (aWrapColumn > 0 && !mWrapToWindow)        // Wrap to a fixed column
   {
-    styleValue.Append(NS_LITERAL_STRING("white-space: -moz-pre-wrap; width: "));
+    styleValue.AppendLiteral("white-space: -moz-pre-wrap; width: ");
     styleValue.AppendInt(aWrapColumn);
-    styleValue.Append(NS_LITERAL_STRING("ch;"));
+    styleValue.AppendLiteral("ch;");
   }
   else if (mWrapToWindow || aWrapColumn == 0)
-    styleValue.Append(NS_LITERAL_STRING("white-space: -moz-pre-wrap;"));
+    styleValue.AppendLiteral("white-space: -moz-pre-wrap;");
   else
-    styleValue.Append(NS_LITERAL_STRING("white-space: pre;"));
+    styleValue.AppendLiteral("white-space: pre;");
 
   return bodyElement->SetAttribute(styleName, styleValue);
 }
@@ -1423,7 +1423,7 @@ nsPlaintextEditor::OutputToString(const nsAString& aFormatType,
   nsCAutoString charsetStr;
   rv = GetDocumentCharacterSet(charsetStr);
   if(NS_FAILED(rv) || charsetStr.IsEmpty())
-    charsetStr = NS_LITERAL_CSTRING("ISO-8859-1");
+    charsetStr.AssignLiteral("ISO-8859-1");
 
   nsCOMPtr<nsIDocumentEncoder> encoder;
   rv = GetAndInitDocEncoder(aFormatType, aFlags, charsetStr, getter_AddRefs(encoder));

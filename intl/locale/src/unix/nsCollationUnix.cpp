@@ -100,8 +100,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       nsXPIDLString prefValue;
       prefLocalString->GetData(getter_Copies(prefValue));
       mUseCodePointOrder =
-        prefValue.Equals(NS_LITERAL_STRING("useCodePointOrder"),
-                         nsCaseInsensitiveStringComparator());
+        prefValue.LowerCaseEqualsLiteral("usecodepointorder");
     }
   }
 
@@ -138,8 +137,8 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   // Get platform locale and charset name from locale, if available
   if (NS_SUCCEEDED(res)) {
     // keep the same behavior as 4.x as well as avoiding Linux collation key problem
-    if (localeStr.EqualsIgnoreCase("en_US")) { // note: locale is in platform format
-      localeStr.Assign(NS_LITERAL_STRING("C"));
+    if (localeStr.LowerCaseEqualsLiteral("en_us")) { // note: locale is in platform format
+      localeStr.AssignLiteral("C");
     }
 
     nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(NS_POSIXLOCALE_CONTRACTID, &res);

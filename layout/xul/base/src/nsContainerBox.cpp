@@ -96,7 +96,7 @@ nsContainerBox::Destroy(nsBoxLayoutState& aState)
 void
 nsContainerBox::GetBoxName(nsAutoString& aName)
 {
-  aName.Assign(NS_LITERAL_STRING("ContainerBox"));
+  aName.AssignLiteral("ContainerBox");
 }
 #endif
 

@@ -211,7 +211,7 @@ nsLocalFile::GetRelativeDescriptor(nsILocalFile *fromFile, nsACString& _retval)
     
     PRInt32 branchIndex = nodeIndex;
     for (nodeIndex = branchIndex; nodeIndex < fromNodeCnt; nodeIndex++) 
-      _retval.Append(NS_LITERAL_CSTRING("../"));
+      _retval.AppendLiteral("../");
     for (nodeIndex = branchIndex; nodeIndex < thisNodeCnt; nodeIndex++) {
       NS_ConvertUCS2toUTF8 nodeStr(thisNodes[nodeIndex]);
 #ifdef XP_MAC

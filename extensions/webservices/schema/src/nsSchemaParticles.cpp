@@ -447,7 +447,7 @@ nsSchemaAnyParticle::GetParticleType(PRUint16 *aParticleType)
 NS_IMETHODIMP
 nsSchemaAnyParticle::GetName(nsAString& aName)
 {
-  aName.Assign(NS_LITERAL_STRING("any"));
+  aName.AssignLiteral("any");
 
   return NS_OK;
 }

@@ -691,7 +691,7 @@ nsHTMLStyleSheet::GetTitle(nsString& aTitle) const
 NS_IMETHODIMP
 nsHTMLStyleSheet::GetType(nsString& aType) const
 {
-  aType.Assign(NS_LITERAL_STRING("text/html"));
+  aType.AssignLiteral("text/html");
   return NS_OK;
 }
 

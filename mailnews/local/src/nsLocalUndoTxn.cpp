@@ -107,7 +107,7 @@ nsLocalMoveCopyMsgTxn::Init(nsIMsgFolder* srcFolder, nsIMsgFolder* dstFolder,
     rv = srcFolder->GetURI(getter_Copies(uri));
     nsCString protocolType(uri);
     protocolType.SetLength(protocolType.FindChar(':'));
-    if (protocolType.EqualsIgnoreCase("imap"))
+    if (protocolType.LowerCaseEqualsLiteral("imap"))
     {
         m_srcIsImap4 = PR_TRUE;
     }

@@ -568,13 +568,13 @@ NS_IMETHODIMP nsAppRootAccessible::Shutdown()
 
 NS_IMETHODIMP nsAppRootAccessible::GetName(nsAString& _retval)
 {
-    _retval = NS_LITERAL_STRING("Mozilla");
+    _retval.AssignLiteral("Mozilla");
     return NS_OK;
 }
 
 NS_IMETHODIMP nsAppRootAccessible::GetDescription(nsAString& aDescription)
 {
-    aDescription = NS_LITERAL_STRING("Mozilla Root Accessible");
+    aDescription.AssignLiteral("Mozilla Root Accessible");
     return NS_OK;
 }
 

@@ -229,7 +229,7 @@ nsImapIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
     if ((const char*)username && (const char *) hostName &&
         PL_strcmp((const char*)username, "")!=0) {
       emailAddress.AssignWithConversion(username);
-      emailAddress.Append(NS_LITERAL_STRING("@"));
+      emailAddress.AppendLiteral("@");
       emailAddress.AppendWithConversion(hostName);
 
     }
@@ -3450,12 +3450,12 @@ nsImapIncomingServer::GeneratePrettyNameForMigration(PRUnichar **aPrettyName)
     // Construct pretty name from username and hostname
     nsAutoString constructedPrettyName;
     constructedPrettyName.AssignWithConversion(userName);
-    constructedPrettyName.Append(NS_LITERAL_STRING("@"));
+    constructedPrettyName.AppendLiteral("@");
     constructedPrettyName.AppendWithConversion(hostName);
 
     // If the port is valid and not default, add port value to the pretty name
     if ((serverPort > 0) && (!isItDefaultPort)) {
-        constructedPrettyName.Append(NS_LITERAL_STRING(":"));
+        constructedPrettyName.AppendLiteral(":");
         constructedPrettyName.AppendInt(serverPort);
     }
 

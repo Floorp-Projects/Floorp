@@ -2466,7 +2466,7 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
       }
       else {
         // Who're we kidding. This only works for html.
-        contentType = NS_LITERAL_CSTRING("text/html");
+        contentType.AssignLiteral("text/html");
       }
 
       // If there's no JS or system JS running,

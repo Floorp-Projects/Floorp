@@ -96,7 +96,7 @@ nsDateTimeChannel::Init(nsIURI *uri, nsIProxyInfo *proxyInfo)
     if (mHost.IsEmpty())
         return NS_ERROR_MALFORMED_URI;
 
-    mContentType = NS_LITERAL_CSTRING(TEXT_HTML); // expected content-type
+    mContentType.AssignLiteral(TEXT_HTML); // expected content-type
     return NS_OK;
 }
 

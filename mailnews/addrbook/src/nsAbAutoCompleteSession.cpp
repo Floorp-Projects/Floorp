@@ -179,9 +179,9 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
       // check this so we do not get a bogus entry "someName <>"
       if (pStr && pStr[0] != 0) {
         nsAutoString aStr(pDisplayNameStr);
-        aStr.Append(NS_LITERAL_STRING(" <"));
+        aStr.AppendLiteral(" <");
         aStr += pStr;
-        aStr.Append(NS_LITERAL_STRING(">"));
+        aStr.AppendLiteral(">");
         fullAddrStr = ToNewUnicode(aStr);
       }
       else

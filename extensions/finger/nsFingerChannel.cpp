@@ -115,7 +115,7 @@ nsFingerChannel::Init(nsIURI *uri, nsIProxyInfo *proxyInfo)
     if (mHost.IsEmpty())
         return NS_ERROR_MALFORMED_URI;
 
-    mContentType = NS_LITERAL_CSTRING(TEXT_HTML); // expected content-type
+    mContentType.AssignLiteral(TEXT_HTML); // expected content-type
     return NS_OK;
 }
 
@@ -256,7 +256,7 @@ nsFingerChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
         rv = mURI->GetPath(userHost);
 
         nsAutoString title;
-        title = NS_LITERAL_STRING("Finger information for ");
+        title.AssignLiteral("Finger information for ");
         AppendUTF8toUTF16(userHost, title);
 
         conv->SetTitle(title.get());

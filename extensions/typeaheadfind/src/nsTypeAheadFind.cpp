@@ -2756,25 +2756,25 @@ nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent,
       nsAutoString key;
 
       if (mLinksOnly) {
-        key.Assign(NS_LITERAL_STRING("startlinkfind"));
+        key.AssignLiteral("startlinkfind");
       } else {
-        key.Assign(NS_LITERAL_STRING("starttextfind"));
+        key.AssignLiteral("starttextfind");
       }
       GetTranslatedString(key, statusString);
     } else {
       nsAutoString key;
 
       if (mLinksOnly) {
-        key.Assign(NS_LITERAL_STRING("link"));
+        key.AssignLiteral("link");
       } else {
-        key.Assign(NS_LITERAL_STRING("text"));
+        key.AssignLiteral("text");
       }
 
       if (!aSuccess) {
-        key.Append(NS_LITERAL_STRING("not"));
+        key.AppendLiteral("not");
       }
 
-      key.Append(NS_LITERAL_STRING("found"));
+      key.AppendLiteral("found");
 
       if (NS_SUCCEEDED(GetTranslatedString(key, statusString))) {
         if (mRepeatingMode == eRepeatingChar || 
@@ -2791,13 +2791,13 @@ nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent,
 
         if (mRepeatingMode != eRepeatingNone) {
           if (mRepeatingMode == eRepeatingChar) {
-            key = NS_LITERAL_STRING("repeated");
+            key.AssignLiteral("repeated");
           }
           else if (mRepeatingMode == eRepeatingForward) {
-            key = NS_LITERAL_STRING("nextmatch");
+            key.AssignLiteral("nextmatch");
           }
           else {
-            key = NS_LITERAL_STRING("prevmatch");
+            key.AssignLiteral("prevmatch");
           }
           nsAutoString repeatedModeString;
           GetTranslatedString(key, repeatedModeString);

@@ -3583,7 +3583,7 @@ nsFontMetricsWin::RealizeFont()
       mGeneric.Assign(value);
     }
     else {
-      mGeneric.Assign(NS_LITERAL_STRING("serif"));
+      mGeneric.AssignLiteral("serif");
     }
   }
 

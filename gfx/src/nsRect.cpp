@@ -211,15 +211,15 @@ FILE* operator<<(FILE* out, const nsRect& rect)
   nsAutoString tmp;
 
   // Output the coordinates in fractional points so they're easier to read
-  tmp.Append(NS_LITERAL_STRING("{"));
+  tmp.AppendLiteral("{");
   tmp.AppendFloat(NSTwipsToFloatPoints(rect.x));
-  tmp.Append(NS_LITERAL_STRING(", "));
+  tmp.AppendLiteral(", ");
   tmp.AppendFloat(NSTwipsToFloatPoints(rect.y));
-  tmp.Append(NS_LITERAL_STRING(", "));
+  tmp.AppendLiteral(", ");
   tmp.AppendFloat(NSTwipsToFloatPoints(rect.width));
-  tmp.Append(NS_LITERAL_STRING(", "));
+  tmp.AppendLiteral(", ");
   tmp.AppendFloat(NSTwipsToFloatPoints(rect.height));
-  tmp.Append(NS_LITERAL_STRING("}"));
+  tmp.AppendLiteral("}");
   fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
   return out;
 }

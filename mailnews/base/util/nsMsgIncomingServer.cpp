@@ -750,7 +750,7 @@ nsMsgIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
   if ((const char*)username &&
       PL_strcmp((const char*)username, "")!=0) {
     prettyName.AssignWithConversion(username);
-    prettyName.Append(NS_LITERAL_STRING(" on "));
+    prettyName.AppendLiteral(" on ");
   }
   
   nsXPIDLCString hostname;
@@ -1866,10 +1866,10 @@ nsMsgIncomingServer::ConfigureTemporaryServerSpamFilters(nsIMsgFilterList *filte
   // check if filters have been setup already.
   nsAutoString yesFilterName, noFilterName;
   yesFilterName.AppendWithConversion(serverFilterName);
-  yesFilterName.AppendWithConversion("Yes");
+  yesFilterName.AppendLiteral("Yes");
 
   noFilterName.AppendWithConversion(serverFilterName);
-  noFilterName.AppendWithConversion("No");
+  noFilterName.AppendLiteral("No");
 
   nsCOMPtr<nsIMsgFilter> newFilter;
   (void) filterList->GetFilterNamed(yesFilterName.get(),

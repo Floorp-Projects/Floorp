@@ -235,7 +235,7 @@ nsresult nsOutlookCompose::CreateIdentity( void)
     if (NS_FAILED(rv)) return( rv);
 	rv = accMgr->CreateIdentity( &m_pIdentity);
 	nsString	name;
-	name.Assign(NS_LITERAL_STRING("Import Identity"));
+	name.AssignLiteral("Import Identity");
 	if (m_pIdentity) {
 		m_pIdentity->SetFullName( name.get());
 		m_pIdentity->SetIdentityName( name.get());
@@ -515,7 +515,7 @@ void nsOutlookCompose::ExtractType( nsString& str)
 	// valid multipart!
 	if (str.Length() > 10) {
 		str.Left( tStr, 10);
-		if (tStr.Equals(NS_LITERAL_STRING("multipart/"), nsCaseInsensitiveStringComparator()))
+		if (tStr.LowerCaseEqualsLiteral("multipart/"))
 			str.Truncate();
 	}
 }

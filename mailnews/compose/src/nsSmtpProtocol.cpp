@@ -369,9 +369,9 @@ void nsSmtpProtocol::GetUserDomainName(nsACString& aResult)
         "unexpected IPv4-mapped IPv6 address");
 
       if (iaddr.raw.family == PR_AF_INET6)   // IPv6 style address?
-        aResult.Assign(NS_LITERAL_CSTRING("[IPv6:"));
+        aResult.AssignLiteral("[IPv6:");
       else
-        aResult.Assign(NS_LITERAL_CSTRING("["));
+        aResult.AssignLiteral("[");
 
       aResult.Append(nsDependentCString(ipAddressString) + NS_LITERAL_CSTRING("]"));
     }

@@ -130,8 +130,8 @@ NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
         PRINTF(("Cannot get name.\n")) ;
         return NS_ERROR_FAILURE ;
     }
-    if (mAbWinType == nsAbWinType_Outlook) { prefix.Assign(NS_LITERAL_STRING("OP ")) ; }
-    else { prefix.Assign(NS_LITERAL_STRING("OE ")) ; }
+    if (mAbWinType == nsAbWinType_Outlook) { prefix.AssignLiteral("OP ") ; }
+    else { prefix.AssignLiteral("OE ") ; }
     prefix.Append(unichars) ;
     SetDirName(prefix.get()) ; 
     if (objectType == MAPI_DISTLIST) {

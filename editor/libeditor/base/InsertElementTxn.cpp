@@ -157,6 +157,6 @@ NS_IMETHODIMP InsertElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDid
 
 NS_IMETHODIMP InsertElementTxn::GetTxnDescription(nsAString& aString)
 {
-  aString.Assign(NS_LITERAL_STRING("InsertElementTxn"));
+  aString.AssignLiteral("InsertElementTxn");
   return NS_OK;
 }

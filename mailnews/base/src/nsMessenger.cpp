@@ -1024,19 +1024,19 @@ nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity,
       case HTML_FILE_TYPE:
           if ( (fileName.RFind(HTML_FILE_EXTENSION, PR_TRUE, -1, sizeof(HTML_FILE_EXTENSION)-1) == kNotFound) &&
                (fileName.RFind(HTML_FILE_EXTENSION2, PR_TRUE, -1, sizeof(HTML_FILE_EXTENSION2)-1) == kNotFound) ) {
-           fileName.Append(NS_LITERAL_STRING(HTML_FILE_EXTENSION2));
+           fileName.AppendLiteral(HTML_FILE_EXTENSION2);
            localFile->SetLeafName(fileName);
         }
         break;
       case TEXT_FILE_TYPE:
         if (fileName.RFind(TEXT_FILE_EXTENSION, PR_TRUE, -1, sizeof(TEXT_FILE_EXTENSION)-1) == kNotFound) {
-         fileName.Append(NS_LITERAL_STRING(TEXT_FILE_EXTENSION));
+         fileName.AppendLiteral(TEXT_FILE_EXTENSION);
          localFile->SetLeafName(fileName);
         }
         break;
       case EML_FILE_TYPE:
         if (fileName.RFind(EML_FILE_EXTENSION, PR_TRUE, -1, sizeof(EML_FILE_EXTENSION)-1) == kNotFound) {
-         fileName.Append(NS_LITERAL_STRING(EML_FILE_EXTENSION));
+         fileName.AppendLiteral(EML_FILE_EXTENSION);
          localFile->SetLeafName(fileName);
         }
         break;
@@ -1063,7 +1063,7 @@ nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity,
         if (noExtensionFound)
         {
           saveAsFileType = EML_FILE_TYPE; 
-          fileName.Append(NS_LITERAL_STRING(EML_FILE_EXTENSION));
+          fileName.AppendLiteral(EML_FILE_EXTENSION);
           localFile->SetLeafName(fileName);
         }
         break;
@@ -1111,13 +1111,13 @@ nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity,
       {
         saveListener->m_outputFormat = nsSaveMsgListener::ePlainText;
         saveListener->m_doCharsetConversion = PR_TRUE;
-        urlString += NS_LITERAL_CSTRING("?header=print");  
+        urlString.AppendLiteral("?header=print");  
       }
       else 
       {
         saveListener->m_outputFormat = nsSaveMsgListener::eHTML;
         saveListener->m_doCharsetConversion = PR_FALSE;
-        urlString += NS_LITERAL_CSTRING("?header=saveas");  
+        urlString.AppendLiteral("?header=saveas");  
       }
       
       rv = CreateStartupUrl(urlString.get(), getter_AddRefs(url));

@@ -165,7 +165,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
-    if (!tagName.EqualsIgnoreCase("iframe"))
+    if (!tagName.LowerCaseEqualsLiteral("iframe"))
       return NS_ERROR_FAILURE;
 
     if (mMaxResizeHeight > 0) {

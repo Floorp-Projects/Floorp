@@ -419,7 +419,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
         NS_ENSURE_SUCCESS(rv,rv);
 
         nsAutoString panelTitleName;
-        panelTitleName = NS_LITERAL_STRING("prefPanel-");
+        panelTitleName.AssignLiteral("prefPanel-");
         panelTitleName.AppendWithConversion(sourceValue + strlen(NC_RDF_PAGETITLE_PREFIX));
         bundle->GetStringFromName(panelTitleName.get(), getter_Copies(pageTitle));
       }
@@ -429,18 +429,18 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
   else if (property == kNC_PageTag) {
     // do NOT localize these strings. these are the urls of the XUL files
     if (source == kNC_PageTitleServer)
-      str = NS_LITERAL_STRING("am-server.xul");
+      str.AssignLiteral("am-server.xul");
     else if (source == kNC_PageTitleCopies)
-      str = NS_LITERAL_STRING("am-copies.xul");
+      str.AssignLiteral("am-copies.xul");
     else if ((source == kNC_PageTitleOfflineAndDiskSpace) ||
              (source == kNC_PageTitleDiskSpace))
-      str = NS_LITERAL_STRING("am-offline.xul");
+      str.AssignLiteral("am-offline.xul");
     else if (source == kNC_PageTitleAddressing)
-      str = NS_LITERAL_STRING("am-addressing.xul");
+      str.AssignLiteral("am-addressing.xul");
     else if (source == kNC_PageTitleSMTP)
-      str = NS_LITERAL_STRING("am-smtp.xul");
+      str.AssignLiteral("am-smtp.xul");
     else if (source == kNC_PageTitleFakeAccount)
-      str = NS_LITERAL_STRING("am-fakeaccount.xul");
+      str.AssignLiteral("am-fakeaccount.xul");
     else {
       nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source, &rv);
       if (NS_SUCCEEDED(rv) && folder) {
@@ -451,14 +451,14 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
           PRBool hasIdentities;
           rv = serverHasIdentities(server, &hasIdentities);
           if (NS_SUCCEEDED(rv) && !hasIdentities) {
-            str = NS_LITERAL_STRING("am-serverwithnoidentities.xul");
+            str.AssignLiteral("am-serverwithnoidentities.xul");
           }
           else {
-            str = NS_LITERAL_STRING("am-main.xul");
+            str.AssignLiteral("am-main.xul");
           }
         }
         else {
-          str = NS_LITERAL_STRING("am-main.xul");
+          str.AssignLiteral("am-main.xul");
         }
       }
       else {
@@ -471,9 +471,9 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
         NS_ENSURE_TRUE(sourceValue && (strlen(sourceValue) > strlen(NC_RDF_PAGETITLE_PREFIX)), NS_ERROR_UNEXPECTED);
 
         // turn NC#PageTitlefoobar into foobar, so we can get the am-foobar.xul file
-        str = NS_LITERAL_STRING("am-");
+        str.AssignLiteral("am-");
         str.AppendWithConversion((sourceValue + strlen(NC_RDF_PAGETITLE_PREFIX)));
-        str += NS_LITERAL_STRING(".xul");
+        str.AppendLiteral(".xul");
       }
     }
   }
@@ -501,7 +501,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       nsCOMPtr<nsIMsgAccountManager> am = do_QueryReferent(mAccountManager);
 
       if (isDefaultServer(server))
-        str = NS_LITERAL_STRING("0000");
+        str.AssignLiteral("0000");
       else {
         rv = am->FindServerIndex(server, &accountNum);
         if (NS_FAILED(rv)) return rv;
@@ -534,19 +534,19 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       // so that the folder data source will take care of it.
       if (sourceValue && (strncmp(sourceValue, NC_RDF_PAGETITLE_PREFIX, strlen(NC_RDF_PAGETITLE_PREFIX)) == 0)) {
         if (source == kNC_PageTitleSMTP)
-          str = NS_LITERAL_STRING("4000");
+          str.AssignLiteral("4000");
         else if (source == kNC_PageTitleFakeAccount)
-          str = NS_LITERAL_STRING("5000");
+          str.AssignLiteral("5000");
         else if (source == kNC_PageTitleServer)
-          str = NS_LITERAL_STRING("1");
+          str.AssignLiteral("1");
         else if (source == kNC_PageTitleCopies)
-          str = NS_LITERAL_STRING("2");
+          str.AssignLiteral("2");
         else if (source == kNC_PageTitleAddressing)
-          str = NS_LITERAL_STRING("3");
+          str.AssignLiteral("3");
         else if (source == kNC_PageTitleOfflineAndDiskSpace)
-          str = NS_LITERAL_STRING("4");
+          str.AssignLiteral("4");
         else if (source == kNC_PageTitleDiskSpace)
-          str = NS_LITERAL_STRING("4");
+          str.AssignLiteral("4");
         else {
           // allow for the accountmanager to be dynamically extended
           // all the other pages come after the standard ones
@@ -571,7 +571,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     folder->GetIsServer(&isServer);
     // no need to localize this!
     if (isServer)
-      str = NS_LITERAL_STRING("ServerSettings");
+      str.AssignLiteral("ServerSettings");
   }
 
   else if (property == kNC_IsDefaultServer) {
@@ -580,7 +580,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     if (NS_FAILED(rv) || !thisServer) return NS_RDF_NO_VALUE;
 
     if (isDefaultServer(thisServer))
-      str = NS_LITERAL_STRING("true");
+      str.AssignLiteral("true");
   }
 
   else if (property == kNC_SupportsFilters) {
@@ -589,7 +589,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     if (NS_FAILED(rv) || !server) return NS_RDF_NO_VALUE;
 
     if (supportsFilters(server))
-      str = NS_LITERAL_STRING("true");
+      str.AssignLiteral("true");
   }
   else if (property == kNC_CanGetMessages) {
     nsCOMPtr<nsIMsgIncomingServer> server;
@@ -597,7 +597,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     if (NS_FAILED(rv) || !server) return NS_RDF_NO_VALUE;
 
     if (canGetMessages(server))
-      str = NS_LITERAL_STRING("true");
+      str.AssignLiteral("true");
   }
   else if (property == kNC_CanGetIncomingMessages) {
     nsCOMPtr<nsIMsgIncomingServer> server;
@@ -605,11 +605,11 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     if (NS_FAILED(rv) || !server) return NS_RDF_NO_VALUE;
 
     if (canGetIncomingMessages(server))
-      str = NS_LITERAL_STRING("true");
+      str.AssignLiteral("true");
   }
   else if (property == kNC_PageTitleFakeAccount) {
     if (source == kNC_PageTitleFakeAccount)
-      str = NS_LITERAL_STRING("true");
+      str.AssignLiteral("true");
   }
   if (!str.IsEmpty())
     rv = createNode(str.get(), target, getRDFService());

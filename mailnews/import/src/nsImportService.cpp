@@ -153,7 +153,7 @@ NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsStrin
 			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, m_sysCharset);
 
 		if (NS_FAILED(rv)) 
-			m_sysCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+			m_sysCharset.AssignLiteral("ISO-8859-1");
 	}
 
 	if (!sysStr) {
@@ -168,8 +168,8 @@ NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsStrin
 	
 
 	if (m_sysCharset.IsEmpty() ||
-		m_sysCharset.EqualsIgnoreCase("us-ascii") ||
-		m_sysCharset.EqualsIgnoreCase("ISO-8859-1")) {
+		m_sysCharset.LowerCaseEqualsLiteral("us-ascii") ||
+		m_sysCharset.LowerCaseEqualsLiteral("iso-8859-1")) {
 		uniStr.AssignWithConversion( sysStr);
 		return( NS_OK);
 	}
@@ -218,7 +218,7 @@ NS_IMETHODIMP nsImportService::SystemStringFromUnicode(const PRUnichar *uniStr, 
 			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, m_sysCharset);
 
 		if (NS_FAILED(rv)) 
-			m_sysCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+			m_sysCharset.AssignLiteral("ISO-8859-1");
 	}
 
 	if (!uniStr) {
@@ -232,8 +232,8 @@ NS_IMETHODIMP nsImportService::SystemStringFromUnicode(const PRUnichar *uniStr, 
 	}
 
 	if (m_sysCharset.IsEmpty() ||
-		m_sysCharset.EqualsIgnoreCase("us-ascii") ||
-		m_sysCharset.EqualsIgnoreCase("ISO-8859-1")) {
+		m_sysCharset.LowerCaseEqualsLiteral("us-ascii") ||
+		m_sysCharset.LowerCaseEqualsLiteral("iso-8859-1")) {
 		sysStr.AssignWithConversion(uniStr);
 		return NS_OK;
 	}
@@ -552,7 +552,7 @@ nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSuppo
                 nsMemory::Free(pName);
 	}
 	else
-		theTitle.Assign(NS_LITERAL_STRING("Unknown"));
+		theTitle.AssignLiteral("Unknown");
 		
 	rv = module->GetDescription( &pName);
 	if (NS_SUCCEEDED( rv)) {
@@ -560,7 +560,7 @@ nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSuppo
                 nsMemory::Free(pName);
 	}
 	else
-		theDescription.Assign(NS_LITERAL_STRING("Unknown description"));
+		theDescription.AssignLiteral("Unknown description");
 	
 	// call the module to get the info we need
 	m_pModules->AddModule( clsId, pSupports, theTitle.get(), theDescription.get());

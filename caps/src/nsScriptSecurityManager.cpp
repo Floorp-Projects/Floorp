@@ -755,13 +755,13 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         switch(aAction)
         {
         case nsIXPCSecurityManager::ACCESS_GET_PROPERTY:
-            stringName.Assign(NS_LITERAL_STRING("GetPropertyDenied"));
+            stringName.AssignLiteral("GetPropertyDenied");
             break;
         case nsIXPCSecurityManager::ACCESS_SET_PROPERTY:
-            stringName.Assign(NS_LITERAL_STRING("SetPropertyDenied"));
+            stringName.AssignLiteral("SetPropertyDenied");
             break;
         case nsIXPCSecurityManager::ACCESS_CALL_METHOD:
-            stringName.Assign(NS_LITERAL_STRING("CallMethodDenied"));
+            stringName.AssignLiteral("CallMethodDenied");
         }
 
         NS_ConvertUTF8toUTF16 className(classInfoData.GetName());

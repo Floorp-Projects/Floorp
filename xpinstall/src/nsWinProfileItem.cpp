@@ -90,17 +90,17 @@ char* nsWinProfileItem::toString()
   
   nsString* filename = new nsString(mProfile->GetFilename());
   nsString* result = new nsString;
-  result->Assign(NS_LITERAL_STRING("Write "));
+  result->AssignLiteral("Write ");
 
   if (filename == nsnull || result == nsnull)
       return nsnull;
 
   result->Append(*filename);
-  result->Append(NS_LITERAL_STRING(": ["));
+  result->AppendLiteral(": [");
   result->Append(*mSection);
-  result->Append(NS_LITERAL_STRING("] "));
+  result->AppendLiteral("] ");
   result->Append(*mKey);
-  result->Append(NS_LITERAL_STRING("="));
+  result->AppendLiteral("=");
   result->Append(*mValue);
 
   resultCString = new char[result->Length() + 1];

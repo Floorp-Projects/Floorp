@@ -181,9 +181,9 @@ NS_IMETHODIMP nsAccessible::GetKeyboardShortcut(nsAString& _retval)
     }
     nsAutoString propertyKey;
     switch (gGeneralAccesskeyModifier) {
-      case nsIDOMKeyEvent::DOM_VK_CONTROL: propertyKey = NS_LITERAL_STRING("VK_CONTROL"); break;
-      case nsIDOMKeyEvent::DOM_VK_ALT: propertyKey = NS_LITERAL_STRING("VK_ALT"); break;
-      case nsIDOMKeyEvent::DOM_VK_META: propertyKey = NS_LITERAL_STRING("VK_META"); break;
+      case nsIDOMKeyEvent::DOM_VK_CONTROL: propertyKey.AssignLiteral("VK_CONTROL"); break;
+      case nsIDOMKeyEvent::DOM_VK_ALT: propertyKey.AssignLiteral("VK_ALT"); break;
+      case nsIDOMKeyEvent::DOM_VK_META: propertyKey.AssignLiteral("VK_META"); break;
     }
     if (!propertyKey.IsEmpty())
       nsAccessible::GetFullKeyName(propertyKey, accesskey, _retval);
@@ -1044,7 +1044,7 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
 
   nsCOMPtr<nsIDOMHTMLBRElement> brElement(do_QueryInterface(aContent));
   if (brElement) {   // If it's a line break, insert a space so that words aren't jammed together
-    aFlatString->Append(NS_LITERAL_STRING("\r\n"));
+    aFlatString->AppendLiteral("\r\n");
     return NS_OK;
   }
 

@@ -1012,7 +1012,7 @@ NS_IMETHODIMP
 nsStandardURL::GetOriginCharset(nsACString &result)
 {
     if (mOriginCharset.IsEmpty())
-        result = NS_LITERAL_CSTRING("UTF-8");
+        result.AssignLiteral("UTF-8");
     else
         result = mOriginCharset;
     return NS_OK;

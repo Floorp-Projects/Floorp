@@ -84,11 +84,11 @@ nsPrintSettings::nsPrintSettings() :
 
   mPrintOptions = kPrintOddPages | kPrintEvenPages;
 
-  mHeaderStrs[0].AssignWithConversion("&T");
-  mHeaderStrs[2].AssignWithConversion("&U");
+  mHeaderStrs[0].AssignLiteral("&T");
+  mHeaderStrs[2].AssignLiteral("&U");
 
-  mFooterStrs[0].AssignWithConversion("&PT"); // Use &P (Page Num Only) or &PT (Page Num of Page Total)
-  mFooterStrs[2].AssignWithConversion("&D");
+  mFooterStrs[0].AssignLiteral("&PT"); // Use &P (Page Num Only) or &PT (Page Num of Page Total)
+  mFooterStrs[2].AssignLiteral("&D");
 
 }
 

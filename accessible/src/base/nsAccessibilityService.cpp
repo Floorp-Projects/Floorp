@@ -1629,7 +1629,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // Please leave this in for now, it's a convenient debugging method
   nsAutoString name;
   aNode->GetLocalName(name);
-  if (name.EqualsIgnoreCase("ol")) 
+  if (name.LowerCaseEqualsLiteral("ol")) 
     printf("## aaronl debugging tag name\n");
 
   nsAutoString attrib;

@@ -96,11 +96,11 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
   nsAutoString mimeType;
 
   if (bIsHTMLCopy)
-    mimeType = NS_LITERAL_STRING(kHTMLMime);
+    mimeType.AssignLiteral(kHTMLMime);
   else
   {
     flags |= nsIDocumentEncoder::OutputBodyOnly | nsIDocumentEncoder::OutputPreformatted;
-    mimeType = NS_LITERAL_STRING(kUnicodeMime);
+    mimeType.AssignLiteral(kUnicodeMime);
   }
 
   rv = docEncoder->Init(aDoc, mimeType, flags);

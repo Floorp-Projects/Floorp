@@ -266,28 +266,28 @@ nsString* nsWinRegItem::keystr(PRInt32 root, nsString* mSubkey, nsString* mName)
 	switch(root)
 	{
 	  case nsWinReg::NS_HKEY_CLASSES_ROOT:
-		  rootstr.Assign(NS_LITERAL_STRING("HKEY_CLASSES_ROOT\\"));
+		  rootstr.AssignLiteral("HKEY_CLASSES_ROOT\\");
 		  break;
 
 	  case nsWinReg::NS_HKEY_CURRENT_USER:
-		  rootstr.Assign(NS_LITERAL_STRING("HKEY_CURRENT_USER\\"));
+		  rootstr.AssignLiteral("HKEY_CURRENT_USER\\");
 		  break;
 
 	  case nsWinReg::NS_HKEY_LOCAL_MACHINE:
-		  rootstr.Assign(NS_LITERAL_STRING("HKEY_LOCAL_MACHINE\\"));
+		  rootstr.AssignLiteral("HKEY_LOCAL_MACHINE\\");
 		  break;
 
 	  case nsWinReg::NS_HKEY_USERS:
-		  rootstr.Assign(NS_LITERAL_STRING("HKEY_USERS\\"));
+		  rootstr.AssignLiteral("HKEY_USERS\\");
 		  break;
 
     default:
       istr = itoa(root);
       if (istr)
       {
-        rootstr.Assign(NS_LITERAL_STRING("#"));
+        rootstr.AssignLiteral("#");
         rootstr.AppendWithConversion(istr);
-        rootstr.Append(NS_LITERAL_STRING("\\"));
+        rootstr.AppendLiteral("\\");
         
         PR_DELETE(istr);
       }
@@ -298,12 +298,12 @@ nsString* nsWinRegItem::keystr(PRInt32 root, nsString* mSubkey, nsString* mName)
 	if(finalstr != nsnull)
 	{
     finalstr->Append(*mSubkey);
-    finalstr->Append(NS_LITERAL_STRING(" ["));
+    finalstr->AppendLiteral(" [");
 
     if(mName != nsnull)
       finalstr->Append(*mName);
 
-    finalstr->Append(NS_LITERAL_STRING("]"));
+    finalstr->AppendLiteral("]");
 	}
 
   return finalstr;

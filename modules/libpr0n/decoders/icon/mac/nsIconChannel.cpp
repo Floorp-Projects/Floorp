@@ -535,7 +535,7 @@ NS_IMETHODIMP nsIconChannel::SetLoadFlags(PRUint32 aLoadAttributes)
 
 NS_IMETHODIMP nsIconChannel::GetContentType(nsACString &aContentType) 
 {
-  aContentType = NS_LITERAL_CSTRING("image/icon");
+  aContentType.AssignLiteral("image/icon");
   return NS_OK;
 }
 
@@ -549,7 +549,7 @@ nsIconChannel::SetContentType(const nsACString &aContentType)
 
 NS_IMETHODIMP nsIconChannel::GetContentCharset(nsACString &aContentCharset) 
 {
-  aContentCharset = NS_LITERAL_CSTRING("image/icon");
+  aContentCharset.AssignLiteral("image/icon");
   return NS_OK;
 }
 

@@ -99,26 +99,26 @@ nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharse
 {
   //delay loading os2charset.properties bundle if possible
   if (inANSICodePage.EqualsLiteral("os2.850")) {
-    outCharset = NS_LITERAL_CSTRING("IBM850");
+    outCharset.AssignLiteral("IBM850");
     return NS_OK;
   } 
 
   if (inANSICodePage.EqualsLiteral("os2.932")) {
-    outCharset = NS_LITERAL_CSTRING("Shift_JIS");
+    outCharset.AssignLiteral("Shift_JIS");
     return NS_OK;
   } 
 
   // ensure the .property file is loaded
   nsresult rv = InitInfo();
   if (NS_FAILED(rv)) {
-    outCharset.Assign(NS_LITERAL_CSTRING("IBM850"));
+    outCharset.AssignLiteral("IBM850");
     return rv;
   }
 
   nsAutoString charset;
   rv = gInfo->Get(inANSICodePage, charset);
   if (NS_FAILED(rv)) {
-    outCharset.Assign(NS_LITERAL_CSTRING("IBM850"));
+    outCharset.AssignLiteral("IBM850");
     return rv;
   }
 
@@ -132,15 +132,15 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector,
 {
   if ((selector == kPlatformCharsetSel_4xBookmarkFile) || (selector == kPlatformCharsetSel_4xPrefsJS)) {
     if ((mCharset.Find("IBM850", IGNORE_CASE) != -1) || (mCharset.Find("IBM437", IGNORE_CASE) != -1)) 
-      oResult.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+      oResult.AssignLiteral("ISO-8859-1");
     else if (mCharset.Find("IBM852", IGNORE_CASE) != -1)
-      oResult.Assign(NS_LITERAL_CSTRING("windows-1250"));
+      oResult.AssignLiteral("windows-1250");
     else if ((mCharset.Find("IBM855", IGNORE_CASE) != -1) || (mCharset.Find("IBM866", IGNORE_CASE) != -1))
-      oResult.Assign(NS_LITERAL_CSTRING("windows-1251"));
+      oResult.AssignLiteral("windows-1251");
     else if ((mCharset.Find("IBM869", IGNORE_CASE) != -1) || (mCharset.Find("IBM813", IGNORE_CASE) != -1))
-      oResult.Assign(NS_LITERAL_CSTRING("windows-1253"));
+      oResult.AssignLiteral("windows-1253");
     else if (mCharset.Find("IBM857", IGNORE_CASE) != -1)
-      oResult.Assign(NS_LITERAL_CSTRING("windows-1254"));
+      oResult.AssignLiteral("windows-1254");
     else
       oResult = mCharset;
   } else {

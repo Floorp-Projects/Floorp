@@ -842,7 +842,7 @@ ImportMailThread( void *stuff)
 				nsCRT::free( pName);
 			}
 			else
-				lastName.Assign(NS_LITERAL_STRING("Unknown!"));
+				lastName.AssignLiteral("Unknown!");
 				
 			exists = PR_FALSE;
 			rv = curProxy->ContainsChildNamed( lastName.get(), &exists);

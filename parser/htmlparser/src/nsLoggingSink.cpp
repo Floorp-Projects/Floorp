@@ -745,13 +745,13 @@ nsLoggingSink::QuoteText(const nsAString& aValue, nsString& aResult) {
   while (cp < end) {
     PRUnichar ch = *cp++;
     if (ch == '"') {
-      aResult.Append(NS_LITERAL_STRING("&quot;"));
+      aResult.AppendLiteral("&quot;");
     }
     else if (ch == '&') {
-      aResult.Append(NS_LITERAL_STRING("&amp;"));
+      aResult.AppendLiteral("&amp;");
     }
     else if ((ch < 32) || (ch >= 127)) {
-      aResult.Append(NS_LITERAL_STRING("&#"));
+      aResult.AppendLiteral("&#");
       aResult.AppendInt(PRInt32(ch), 10);
       aResult.Append(PRUnichar(';'));
     }

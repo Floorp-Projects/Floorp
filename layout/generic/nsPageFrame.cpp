@@ -512,7 +512,7 @@ nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
                                 PRInt32(contentWidth), indx, textWidth)) {
       if (indx < len-1 && len > 3) {
         str.SetLength(indx-3);
-        str.Append(NS_LITERAL_STRING("..."));
+        str.AppendLiteral("...");
       }
     } else { 
       return; // bail if couldn't find the correct length

@@ -61,7 +61,7 @@ nsXBLProtoImplProperty::nsXBLProtoImplProperty(const PRUnichar* aName,
 
   if (aReadOnly) {
     nsAutoString readOnly; readOnly.Assign(*aReadOnly);
-    if (readOnly.EqualsIgnoreCase("true"))
+    if (readOnly.LowerCaseEqualsLiteral("true"))
       mJSAttributes |= JSPROP_READONLY;
   }
 

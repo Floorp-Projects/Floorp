@@ -652,7 +652,7 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
 #ifdef PR_LOGGING
     LOG_WARN(("  Falling back to ISO-8859-1"));
 #endif
-    aCharset = NS_LITERAL_CSTRING("ISO-8859-1");
+    aCharset.AssignLiteral("ISO-8859-1");
   }
 
   mCharset = aCharset;

@@ -997,7 +997,7 @@ nsresult nsXULWindow::LoadChromeHidingFromXUL()
   nsAutoString attr;
   nsresult rv = windowElement->GetAttribute(NS_LITERAL_STRING("hidechrome"), attr);
 
-  if (NS_SUCCEEDED(rv) && attr.EqualsIgnoreCase("true")) {
+  if (NS_SUCCEEDED(rv) && attr.LowerCaseEqualsLiteral("true")) {
     mWindow->HideWindowChrome(PR_TRUE);
   }
 
@@ -1366,7 +1366,7 @@ NS_IMETHODIMP nsXULWindow::LoadWindowClassFromXUL()
          mContentTreeOwner->
            GetPersistence(&persistPosition, &persistSize, &persistSizeMode)
         ) && !persistPosition && !persistSize && !persistSizeMode)
-      windowClass.Append(NS_LITERAL_STRING("-jsSpamPopupCrap"));
+      windowClass.AppendLiteral("-jsSpamPopupCrap");
 
     char *windowClass_cstr = ToNewCString(windowClass);
     mWindow->SetWindowClass(windowClass_cstr);
@@ -1420,19 +1420,19 @@ NS_IMETHODIMP nsXULWindow::LoadIconFromXUL()
 
     // Whew.  Now get "list-style-image" property value.
     nsAutoString windowIcon;
-    windowIcon.Assign(NS_LITERAL_STRING("-moz-window-icon"));
+    windowIcon.AssignLiteral("-moz-window-icon");
     nsAutoString icon;
     cssDecl->GetPropertyValue(windowIcon, icon);
 #endif
 
     nsAutoString icon;
-    icon.Assign(NS_LITERAL_STRING("resource:///chrome/icons/default/"));
+    icon.AssignLiteral("resource:///chrome/icons/default/");
 
     nsAutoString id;
     windowElement->GetAttribute(NS_LITERAL_STRING("id"), id);
 
     if (id.IsEmpty()) {
-        id.Assign(NS_LITERAL_STRING("default"));
+        id.AssignLiteral("default");
     }
 
     icon.Append(id);

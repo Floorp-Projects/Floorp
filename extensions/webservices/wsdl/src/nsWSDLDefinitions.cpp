@@ -190,7 +190,7 @@ NS_IMPL_ISUPPORTS3_CI(nsSOAPPortBinding, nsIWSDLBinding, nsIWSDLSOAPBinding,
 NS_IMETHODIMP
 nsSOAPPortBinding::GetProtocol(nsAString& aProtocol)
 {
-  aProtocol.Assign(NS_LITERAL_STRING("soap"));
+  aProtocol.AssignLiteral("soap");
 
   return NS_OK;
 }
@@ -501,7 +501,7 @@ NS_IMPL_ISUPPORTS3_CI(nsSOAPOperationBinding, nsIWSDLBinding,
 NS_IMETHODIMP
 nsSOAPOperationBinding::GetProtocol(nsAString& aProtocol)
 {
-  aProtocol.Assign(NS_LITERAL_STRING("soap"));
+  aProtocol.AssignLiteral("soap");
 
   return NS_OK;
 }
@@ -710,7 +710,7 @@ NS_IMPL_ISUPPORTS3_CI(nsSOAPMessageBinding, nsIWSDLBinding, nsIWSDLSOAPBinding,
 NS_IMETHODIMP
 nsSOAPMessageBinding::GetProtocol(nsAString& aProtocol)
 {
-  aProtocol.Assign(NS_LITERAL_STRING("soap"));
+  aProtocol.AssignLiteral("soap");
 
   return NS_OK;
 }
@@ -844,7 +844,7 @@ NS_IMPL_ISUPPORTS3_CI(nsSOAPPartBinding, nsIWSDLBinding, nsIWSDLSOAPBinding,
 NS_IMETHODIMP
 nsSOAPPartBinding::GetProtocol(nsAString& aProtocol)
 {
-  aProtocol.Assign(NS_LITERAL_STRING("soap"));
+  aProtocol.AssignLiteral("soap");
 
   return NS_OK;
 }

@@ -2225,7 +2225,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
   }
 
   if (!certList || CERT_LIST_EMPTY(certList)) {
-    aResult.Append(NS_LITERAL_STRING("error:noMatchingCert"));
+    aResult.AppendLiteral("error:noMatchingCert");
 
     return NS_OK;
   }
@@ -2394,7 +2394,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
   }
 
   if (canceled) {
-    aResult.Append(NS_LITERAL_STRING("error:userCancel"));
+    aResult.AppendLiteral("error:userCancel");
 
     return NS_OK;
   }
@@ -2411,7 +2411,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
   // XXX Doing what nsFormSubmission::GetEncoder does (see
   //     http://bugzilla.mozilla.org/show_bug.cgi?id=81203).
   if (charset.EqualsLiteral("ISO-8859-1")) {
-    charset.Assign(NS_LITERAL_CSTRING("windows-1252"));
+    charset.AssignLiteral("windows-1252");
   }
 
   nsCOMPtr<nsISaveAsCharset> encoder =

@@ -531,14 +531,14 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
        for browser windows by name, as it does.)
      */
     if (aParent) {
-      if (name.EqualsIgnoreCase("_self")) {
+      if (name.LowerCaseEqualsLiteral("_self")) {
         GetWindowTreeItem(aParent, getter_AddRefs(newDocShellItem));
-      } else if (name.EqualsIgnoreCase("_top")) {
+      } else if (name.LowerCaseEqualsLiteral("_top")) {
         nsCOMPtr<nsIDocShellTreeItem> shelltree;
         GetWindowTreeItem(aParent, getter_AddRefs(shelltree));
         if (shelltree)
           shelltree->GetSameTypeRootTreeItem(getter_AddRefs(newDocShellItem));
-      } else if (name.EqualsIgnoreCase("_parent")) {
+      } else if (name.LowerCaseEqualsLiteral("_parent")) {
         nsCOMPtr<nsIDocShellTreeItem> shelltree;
         GetWindowTreeItem(aParent, getter_AddRefs(shelltree));
         if (shelltree)
@@ -680,7 +680,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
      _self where the given name is different (and invalid)). also _blank
      is not a window name. */
   if (windowIsNew)
-    newDocShellItem->SetName(nameSpecified && !name.EqualsIgnoreCase("_blank") ?
+    newDocShellItem->SetName(nameSpecified && !name.LowerCaseEqualsLiteral("_blank") ?
                              name.get() : nsnull);
 
   nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
@@ -1151,7 +1151,7 @@ void nsWindowWatcher::CheckWindowName(nsString& aName)
       // Don't use js_ReportError as this will cause the application
       // to shut down (JS_ASSERT calls abort())  See bug 32898
       nsAutoString warn;
-      warn.Assign(NS_LITERAL_STRING("Illegal character in window name "));
+      warn.AssignLiteral("Illegal character in window name ");
       warn.Append(aName);
       char *cp = ToNewCString(warn);
       NS_WARNING(cp);
@@ -1395,7 +1395,7 @@ nsWindowWatcher::FindItemWithName(
   /* special cases */
   if(name.IsEmpty())
     return NS_OK;
-  if(name.EqualsIgnoreCase("_blank") || name.EqualsIgnoreCase("_new"))
+  if(name.LowerCaseEqualsLiteral("_blank") || name.LowerCaseEqualsLiteral("_new"))
     return NS_OK;
   // _content will be handled by individual windows, below
 

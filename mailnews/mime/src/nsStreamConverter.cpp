@@ -425,13 +425,13 @@ nsStreamConverter::DetermineOutputFormat(const char *aUrl, nsMimeOutputType *aNe
       char *nextField = PL_strchr(typeField, '&');
       mRealContentType.Assign(typeField, nextField ? nextField - typeField : -1);
 
-      if (mRealContentType.EqualsIgnoreCase("message/rfc822"))
+      if (mRealContentType.LowerCaseEqualsLiteral("message/rfc822"))
       {
         mRealContentType = "x-message-display";
         mOutputFormat = "text/html";
         *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
       }
-      else if (mRealContentType.EqualsIgnoreCase("x-message-display"))
+      else if (mRealContentType.LowerCaseEqualsLiteral("x-message-display"))
       {
         mRealContentType = "";
         mOutputFormat = "text/html";
@@ -709,7 +709,7 @@ NS_IMETHODIMP nsStreamConverter::GetContentType(char **aOutputContentType)
   //  (1) check to see if we have a real content type...use it first...
   if (!mRealContentType.IsEmpty())
     *aOutputContentType = ToNewCString(mRealContentType);
-  else if (mOutputFormat.EqualsIgnoreCase("raw"))
+  else if (mOutputFormat.LowerCaseEqualsLiteral("raw"))
   {
     *aOutputContentType = (char *) nsMemory::Clone(UNKNOWN_CONTENT_TYPE, sizeof(UNKNOWN_CONTENT_TYPE));
   }

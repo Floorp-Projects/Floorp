@@ -376,8 +376,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAString& name, nsIFileSpe
   if(NS_SUCCEEDED(rv))
   {
     if(isServer &&
-       name.Equals(NS_LITERAL_STRING("Inbox"),
-                    nsCaseInsensitiveStringComparator()))
+       name.LowerCaseEqualsLiteral("inbox"))
       flags |= MSG_FOLDER_FLAG_INBOX;
     else if(isServer || isParentInbox) 
     {
@@ -387,11 +386,11 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAString& name, nsIFileSpe
         flags |= MSG_FOLDER_FLAG_TRASH;
     }
 #if 0
-    else if(name.Equals(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
+    else if(name.LowerCaseEqualsLiteral("sent"))
       folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-    else if(name.Equals(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()))
+    else if(name.LowerCaseEqualsLiteral("drafts"))
       folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-    else if (name.Equals(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
+    else if (name.LowerCaseEqualsLiteral("templates"))
       folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 #endif
   }
@@ -787,7 +786,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const PRUnichar* folderName, nsI
         ThrowAlertMsg("folderExists", msgWindow);
         return NS_MSG_FOLDER_EXISTS;
     }
-    else if (mIsServer && nsDependentString(folderName).Equals(NS_LITERAL_STRING("Inbox"),nsCaseInsensitiveStringComparator()) )  // Inbox, a special folder
+    else if (mIsServer && nsDependentString(folderName).LowerCaseEqualsLiteral("inbox") )  // Inbox, a special folder
     {
         ThrowAlertMsg("folderExists", msgWindow);
         return NS_MSG_FOLDER_EXISTS;
@@ -5650,49 +5649,49 @@ nsresult nsMsgIMAPFolderACL::CreateACLRightsString(PRUnichar **rightsString)
     }
     if (GetCanIWriteFolder())
     {
-      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights.AppendLiteral(", ");
       bundle->GetStringFromID(IMAP_ACL_WRITE_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanIInsertInFolder())
     {
-      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights.AppendLiteral(", ");
       bundle->GetStringFromID(IMAP_ACL_INSERT_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanILookupFolder())
     {
-      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights.AppendLiteral(", ");
       bundle->GetStringFromID(IMAP_ACL_LOOKUP_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanIStoreSeenInFolder())
     {
-      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights.AppendLiteral(", ");
       bundle->GetStringFromID(IMAP_ACL_SEEN_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanIDeleteInFolder())
     {
-      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights.AppendLiteral(", ");
       bundle->GetStringFromID(IMAP_ACL_DELETE_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanICreateSubfolder())
     {
-      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights.AppendLiteral(", ");
       bundle->GetStringFromID(IMAP_ACL_CREATE_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanIPostToFolder())
     {
-      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights.AppendLiteral(", ");
       bundle->GetStringFromID(IMAP_ACL_POST_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
     if (GetCanIAdministerFolder())
     {
-      if (!rights.IsEmpty()) rights += NS_LITERAL_STRING(", ");
+      if (!rights.IsEmpty()) rights.AppendLiteral(", ");
       bundle->GetStringFromID(IMAP_ACL_ADMINISTER_RIGHT, getter_Copies(curRight));
       rights.Append(curRight);
     }
@@ -6842,7 +6841,7 @@ NS_IMETHODIMP nsImapMailFolder::MatchName(nsString *name, PRBool *matches)
 {
   if (!matches)
     return NS_ERROR_NULL_POINTER;
-    PRBool isInbox = mName.EqualsIgnoreCase("inbox");
+    PRBool isInbox = mName.LowerCaseEqualsLiteral("inbox");
     if (isInbox)
         *matches = mName.Equals(*name, nsCaseInsensitiveStringComparator());
     else

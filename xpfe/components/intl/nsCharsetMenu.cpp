@@ -1542,7 +1542,7 @@ nsresult nsCharsetMenu::AddFromStringToMenu(
 nsresult nsCharsetMenu::AddSeparatorToContainer(nsIRDFContainer * aContainer)
 {
   nsCAutoString str;
-  str.Assign(NS_LITERAL_CSTRING("----"));
+  str.AssignLiteral("----");
 
   // hack to generate unique id's for separators
   static PRInt32 u = 0;

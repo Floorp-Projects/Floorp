@@ -286,9 +286,9 @@ nsFileChannel::GetContentType(nsACString &aContentType)
     if (mContentType.IsEmpty()) {
         if (mIsDir) {
             if (mListFormat == FORMAT_HTML)
-                mContentType = NS_LITERAL_CSTRING(TEXT_HTML);
+                mContentType.AssignLiteral(TEXT_HTML);
             else
-                mContentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
+                mContentType.AssignLiteral(APPLICATION_HTTP_INDEX_FORMAT);
         } else {
             // Get content type from file extension
             nsCOMPtr<nsIFile> file;
@@ -300,7 +300,7 @@ nsFileChannel::GetContentType(nsACString &aContentType)
                 mime->GetTypeFromFile(file, mContentType);
 
             if (mContentType.IsEmpty())
-                mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+                mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
         }
     }
     

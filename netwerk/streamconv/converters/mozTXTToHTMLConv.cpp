@@ -67,13 +67,13 @@ mozTXTToHTMLConv::EscapeChar(const PRUnichar ch, nsString& aStringToAppendTo)
     switch (ch)
     {
     case '<':
-      aStringToAppendTo.Append(NS_LITERAL_STRING("&lt;"));
+      aStringToAppendTo.AppendLiteral("&lt;");
       break;
     case '>':
-      aStringToAppendTo.Append(NS_LITERAL_STRING("&gt;"));
+      aStringToAppendTo.AppendLiteral("&gt;");
       break;
     case '&':
-      aStringToAppendTo.Append(NS_LITERAL_STRING("&amp;"));
+      aStringToAppendTo.AppendLiteral("&amp;");
       break;
     default:
       aStringToAppendTo += ch;
@@ -173,7 +173,7 @@ mozTXTToHTMLConv::CompleteAbbreviatedURL(const PRUnichar * aInString, PRInt32 aI
     nsDependentString inString(aInString, aInLength);
     if (inString.FindChar('.', pos) != kNotFound) // if we have a '.' after the @ sign....
     {
-      aOutString.Assign(NS_LITERAL_STRING("mailto:"));
+      aOutString.AssignLiteral("mailto:");
       aOutString += aInString;
     }
   }
@@ -182,12 +182,12 @@ mozTXTToHTMLConv::CompleteAbbreviatedURL(const PRUnichar * aInString, PRInt32 aI
     if (ItMatchesDelimited(aInString, aInLength,
                            NS_LITERAL_STRING("www.").get(), 4, LT_IGNORE, LT_IGNORE))
     {
-      aOutString.Assign(NS_LITERAL_STRING("http://"));
+      aOutString.AssignLiteral("http://");
       aOutString += aInString;
     }
     else if (ItMatchesDelimited(aInString,aInLength, NS_LITERAL_STRING("ftp.").get(), 4, LT_IGNORE, LT_IGNORE))
     { 
-      aOutString.Assign(NS_LITERAL_STRING("ftp://"));
+      aOutString.AssignLiteral("ftp://");
       aOutString += aInString;
     }
   }
@@ -433,28 +433,28 @@ mozTXTToHTMLConv::CheckURLAndCreateHTML(
   // Real work
   if (NS_SUCCEEDED(rv) && uri)
   {
-    outputHTML.Assign(NS_LITERAL_STRING("<a class=\"moz-txt-link-"));
+    outputHTML.AssignLiteral("<a class=\"moz-txt-link-");
     switch(mode)
     {
     case RFC1738:
-      outputHTML.Append(NS_LITERAL_STRING("rfc1738"));
+      outputHTML.AppendLiteral("rfc1738");
       break;
     case RFC2396E:
-      outputHTML.Append(NS_LITERAL_STRING("rfc2396E"));
+      outputHTML.AppendLiteral("rfc2396E");
       break;
     case freetext:
-      outputHTML.Append(NS_LITERAL_STRING("freetext"));
+      outputHTML.AppendLiteral("freetext");
       break;
     case abbreviated:
-      outputHTML.Append(NS_LITERAL_STRING("abbreviated"));
+      outputHTML.AppendLiteral("abbreviated");
       break;
     default: break;
     }
-    outputHTML.Append(NS_LITERAL_STRING("\" href=\""));
+    outputHTML.AppendLiteral("\" href=\"");
     outputHTML += txtURL;
-    outputHTML.Append(NS_LITERAL_STRING("\">"));
+    outputHTML.AppendLiteral("\">");
     outputHTML += desc;
-    outputHTML.Append(NS_LITERAL_STRING("</a>"));
+    outputHTML.AppendLiteral("</a>");
     return PR_TRUE;
   }
   else
@@ -663,13 +663,13 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
     )
   {
     openTags++;
-    aOutString.Append(NS_LITERAL_STRING("<"));
+    aOutString.AppendLiteral("<");
     aOutString.AppendWithConversion(tagHTML);
     aOutString.Append(PRUnichar(' '));
     aOutString.AppendWithConversion(attributeHTML);
-    aOutString.Append(NS_LITERAL_STRING("><span class=\"moz-txt-tag\">"));
+    aOutString.AppendLiteral("><span class=\"moz-txt-tag\">");
     aOutString.Append(tagTXT);
-    aOutString.Append(NS_LITERAL_STRING("</span>"));
+    aOutString.AppendLiteral("</span>");
     return PR_TRUE;
   }
 
@@ -678,9 +678,9 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
        && ItMatchesDelimited(aInString, aInStringLength, tagTXT, aTagTXTLen, LT_ALPHA, LT_DELIMITER))
   {
     openTags--;
-    aOutString.Append(NS_LITERAL_STRING("<span class=\"moz-txt-tag\">"));
+    aOutString.AppendLiteral("<span class=\"moz-txt-tag\">");
     aOutString.Append(tagTXT);
-    aOutString.Append(NS_LITERAL_STRING("</span></"));
+    aOutString.AppendLiteral("</span></");
     aOutString.AppendWithConversion(tagHTML);
     aOutString.Append(PRUnichar('>'));
     return PR_TRUE;
@@ -733,11 +733,11 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool 
       outputHTML.Append(PRUnichar(' '));
     }
 
-    outputHTML += NS_LITERAL_STRING("<span class=\""); // <span class="
+    outputHTML.AppendLiteral("<span class=\""); // <span class="
     AppendASCIItoUTF16(imageName, outputHTML);        // smiley-frown
-    outputHTML += NS_LITERAL_STRING("\"><span> ");     // "> <span> 
+    outputHTML.AppendLiteral("\"><span> ");     // "> <span> 
     AppendASCIItoUTF16(tagTXT, outputHTML);           // alt text
-    outputHTML += NS_LITERAL_STRING(" </span></span>"); // </span></span>
+    outputHTML.AppendLiteral(" </span></span>"); // </span></span>
     glyphTextLen = (col0 ? 0 : 1) + tagLen;
     return PR_TRUE;
   }
@@ -900,7 +900,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
   }
   if (text0 == '\f')
   {
-      aOutputString.Append(NS_LITERAL_STRING("<span class='moz-txt-formfeed'></span>"));
+      aOutputString.AppendLiteral("<span class='moz-txt-formfeed'></span>");
       glyphTextLen = 1;
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
@@ -911,7 +911,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
                            NS_LITERAL_STRING(" +/-").get(), 4,
                            LT_IGNORE, LT_IGNORE))
     {
-      aOutputString.Append(NS_LITERAL_STRING(" &plusmn;"));
+      aOutputString.AppendLiteral(" &plusmn;");
       glyphTextLen = 4;
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
@@ -920,7 +920,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
                                    NS_LITERAL_STRING("+/-").get(), 3,
                                    LT_IGNORE, LT_IGNORE))
     {
-      aOutputString.Append(NS_LITERAL_STRING("&plusmn;"));
+      aOutputString.AppendLiteral("&plusmn;");
       glyphTextLen = 3;
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
@@ -960,11 +960,11 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
 
     outputHTML.Truncate();
     outputHTML += text0;
-    outputHTML.Append(NS_LITERAL_STRING("<sup class=\"moz-txt-sup\">"));
+    outputHTML.AppendLiteral("<sup class=\"moz-txt-sup\">");
 
     aOutputString.Append(outputHTML);
     aOutputString.Append(&aInString[2], delimPos - 2);
-    aOutputString.Append(NS_LITERAL_STRING("</sup>"));
+    aOutputString.AppendLiteral("</sup>");
 
     glyphTextLen = delimPos /* - 1 + 1 */ ;
     MOZ_TIMER_STOP(mGlyphHitTimer);

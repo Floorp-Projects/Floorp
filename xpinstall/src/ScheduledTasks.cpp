@@ -292,7 +292,7 @@ PRInt32 ReplaceFileNow(nsIFile* aReplacementFile, nsIFile* aDoomedFile )
             // We found the extension; 
             doomedLeafname.Truncate(extpos + 1); //strip off the old extension
         }
-        doomedLeafname.Append(NS_LITERAL_STRING("old"));
+        doomedLeafname.AppendLiteral("old");
         
         //Now reset the doomedLeafname
         tmpLocalFile->SetLeafName(doomedLeafname);

@@ -112,7 +112,7 @@ nsMsgSearchValueImpl::ToString(PRUnichar **aResult)
     NS_ENSURE_ARG_POINTER(aResult);
 
     nsAutoString resultStr;
-    resultStr.Assign(NS_LITERAL_STRING("[nsIMsgSearchValue: "));
+    resultStr.AssignLiteral("[nsIMsgSearchValue: ");
     if (IS_STRING_ATTRIBUTE(mValue.attribute)) {
         resultStr.Append(NS_ConvertUTF8toUCS2(mValue.string));
         return NS_OK;
@@ -130,14 +130,14 @@ nsMsgSearchValueImpl::ToString(PRUnichar **aResult)
     case nsMsgSearchAttrib::FolderInfo:
     case nsMsgSearchAttrib::Label:
     case nsMsgSearchAttrib::JunkStatus:
-        resultStr.Append(NS_LITERAL_STRING("type="));
+        resultStr.AppendLiteral("type=");
         resultStr.AppendInt(mValue.attribute);
         break;
     default:
         NS_ASSERTION(0, "Unknown search value type");
     }        
 
-    resultStr.Append(NS_LITERAL_STRING("]"));
+    resultStr.AppendLiteral("]");
 
     *aResult = ToNewUnicode(resultStr);
     return NS_OK;

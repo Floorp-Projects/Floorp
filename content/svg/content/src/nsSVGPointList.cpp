@@ -236,7 +236,7 @@ nsSVGPointList::GetValueString(nsAString& aValue)
 
     if (++i >= count) break;
 
-    aValue.Append(NS_LITERAL_STRING(" "));
+    aValue.AppendLiteral(" ");
   }
   
   return NS_OK;

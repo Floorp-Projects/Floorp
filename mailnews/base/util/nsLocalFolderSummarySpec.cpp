@@ -89,7 +89,7 @@ void nsLocalFolderSummarySpec::	CreateSummaryFileName()
 	// Append .msf (msg summary file) this is what windows will want.
 	// Mac and Unix can decide for themselves.
 
-	fullLeafName.Append(NS_LITERAL_STRING(".msf"));				// message summary file
+	fullLeafName.AppendLiteral(".msf");				// message summary file
 	char *cLeafName = ToNewCString(fullLeafName);
 	SetLeafName(cLeafName);
     nsMemory::Free(cLeafName);

@@ -1137,8 +1137,8 @@ NS_METHOD CBrowserShell::SaveInternal(nsIURI* inURI, nsIDOMDocument* inDocument,
     nsAutoString tmpNo; tmpNo.AppendInt(tmpRandom++);
     nsAutoString saveFile(NS_LITERAL_STRING("-sav"));
     saveFile += tmpNo;
-    saveFile += NS_LITERAL_STRING("tmp");
-    tmpFile->Append(saveFile); 
+    saveFile.Append(NS_LITERAL_STRING("tmp"));
+    tmpFile->Append(saveFile);
     
     // Get the post data if we're an HTML doc.
     nsCOMPtr<nsIInputStream> postData;

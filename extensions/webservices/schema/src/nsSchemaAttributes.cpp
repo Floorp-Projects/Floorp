@@ -637,7 +637,7 @@ nsSchemaAnyAttribute::GetComponentType(PRUint16 *aComponentType)
 NS_IMETHODIMP
 nsSchemaAnyAttribute::GetName(nsAString & aName)
 {
-  aName.Assign(NS_LITERAL_STRING("anyAttribute"));
+  aName.AssignLiteral("anyAttribute");
 
   return NS_OK;
 }

@@ -1799,7 +1799,7 @@ FieldToValue(
 
     nsAutoString localSchemaUCS2;
     wallet_GetHostFile(wallet_lastUrl, localSchemaUCS2);
-    localSchemaUCS2.Append(NS_LITERAL_STRING(":"));
+    localSchemaUCS2.AppendLiteral(":");
     localSchemaUCS2.Append(field);
     nsCAutoString localSchemaUTF8 = NS_ConvertUCS2toUTF8(localSchemaUCS2);
     nsCAutoString valueUTF8;
@@ -1909,16 +1909,14 @@ wallet_StepForwardOrBack
       if (goForward) {
         if (NS_SUCCEEDED(result) &&
             (type.IsEmpty() ||
-             type.Equals(NS_LITERAL_STRING("text"), 
-                         nsCaseInsensitiveStringComparator()))) {
+             type.LowerCaseEqualsLiteral("text"))) {
           /* at <input> element and it's type is either "text" or is missing ("text" by default) */
           atInputOrSelect = PR_TRUE;
           return;
         }
       } else {
         if (NS_SUCCEEDED(result) &&
-            !type.Equals(NS_LITERAL_STRING("hidden"),
-                         nsCaseInsensitiveStringComparator())) {
+            !type.LowerCaseEqualsLiteral("hidden")) {
           /* at <input> element and it's type is not "hidden" */
           atInputOrSelect = PR_TRUE;
           return;
@@ -1937,14 +1935,14 @@ wallet_StepForwardOrBack
     nsAutoString siblingNameUCS2;
     result = elementNode->GetNodeName(siblingNameUCS2);
     nsCAutoString siblingNameUTF8; siblingNameUTF8.AssignWithConversion(siblingNameUCS2);
-    if (siblingNameUTF8.EqualsIgnoreCase("#text")) {
+    if (siblingNameUTF8.LowerCaseEqualsLiteral("#text")) {
       nsAutoString siblingValue;
       result = elementNode->GetNodeValue(siblingValue);
       text.Append(siblingValue);
     }
 
     /* if we've reached a SCRIPT node, don't fetch its siblings */
-    if (siblingNameUTF8.EqualsIgnoreCase("SCRIPT")) {
+    if (siblingNameUTF8.LowerCaseEqualsLiteral("script")) {
       return;
     }
 
@@ -2355,8 +2353,7 @@ wallet_GetPrefills(
     result = inputElement->GetType(type);
     if (NS_SUCCEEDED(result) &&
         (type.IsEmpty() ||
-         type.Equals(NS_LITERAL_STRING("text"),
-                     nsCaseInsensitiveStringComparator()))) {
+         type.LowerCaseEqualsLiteral("text"))) {
       nsAutoString field;
       result = inputElement->GetName(field);
       if (NS_SUCCEEDED(result)) {
@@ -2366,7 +2363,7 @@ wallet_GetPrefills(
         if (localSchema.IsEmpty()) {
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
           if (element) {
-            nsAutoString vcard; vcard.Assign(NS_LITERAL_STRING("VCARD_NAME"));
+            nsAutoString vcard; vcard.AssignLiteral("VCARD_NAME");
             nsAutoString vcardValueUCS2;
             result = element->GetAttribute(vcard, vcardValueUCS2);
             if (NS_OK == result) {
@@ -2891,7 +2888,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
 
     nsAutoString concatParamUCS2;
     wallet_GetHostFile(wallet_lastUrl, concatParamUCS2);
-    concatParamUCS2.Append(NS_LITERAL_STRING(":"));
+    concatParamUCS2.AppendLiteral(":");
     concatParamUCS2.Append(field);
     nsCAutoString concatParamUTF8 = NS_ConvertUCS2toUTF8(concatParamUCS2);
     while(wallet_ReadFromList
@@ -2920,7 +2917,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
 
       //??? aren't these next four lines redundant?
       wallet_GetHostFile(wallet_lastUrl, concatParamUCS2);
-      concatParamUCS2.Append(NS_LITERAL_STRING(":"));
+      concatParamUCS2.AppendLiteral(":");
       concatParamUCS2.Append(field);
       concatParamUTF8 = NS_ConvertUCS2toUTF8(concatParamUCS2);
     }
@@ -2929,7 +2926,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
     dummy = nsnull;
     nsAutoString hostFileFieldUCS2;
     wallet_GetHostFile(wallet_lastUrl, hostFileFieldUCS2);
-    hostFileFieldUCS2.Append(NS_LITERAL_STRING(":"));
+    hostFileFieldUCS2.AppendLiteral(":");
     hostFileFieldUCS2.Append(field);
 
     if (wallet_WriteToList
@@ -3575,8 +3572,7 @@ wallet_CaptureInputElement(nsIDOMNode* elementNode, nsIDocument* doc) {
     result = inputElement->GetType(type);
     if (NS_SUCCEEDED(result) &&
         (type.IsEmpty() ||
-         type.Equals(NS_LITERAL_STRING("text"),
-                     nsCaseInsensitiveStringComparator()))) {
+         type.LowerCaseEqualsLiteral("text"))) {
       nsAutoString field;
       result = inputElement->GetName(field);
       if (NS_SUCCEEDED(result)) {
@@ -3587,7 +3583,7 @@ wallet_CaptureInputElement(nsIDOMNode* elementNode, nsIDocument* doc) {
           nsCAutoString schema;
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
           if (element) {
-            nsAutoString vcardName; vcardName.Assign(NS_LITERAL_STRING("VCARD_NAME"));
+            nsAutoString vcardName; vcardName.AssignLiteral("VCARD_NAME");
             nsAutoString vcardValueUCS2;
             result = element->GetAttribute(vcardName, vcardValueUCS2);
             if (NS_OK == result) {
@@ -3652,7 +3648,7 @@ wallet_CaptureSelectElement(nsIDOMNode* elementNode, nsIDocument* doc) {
                 nsCAutoString schema;
                 nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
                 if (element) {
-                  nsAutoString vcardName; vcardName.Assign(NS_LITERAL_STRING("VCARD_NAME"));
+                  nsAutoString vcardName; vcardName.AssignLiteral("VCARD_NAME");
                   nsAutoString vcardValueUCS2;
                   result = element->GetAttribute(vcardName, vcardValueUCS2);
                   if (NS_OK == result) {
@@ -3891,8 +3887,8 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                 rv = inputElement->GetType(type);
                 if (NS_SUCCEEDED(rv)) {
 
-                  PRBool isText = (type.IsEmpty() || type.Equals(NS_LITERAL_STRING("text"), nsCaseInsensitiveStringComparator()));
-                  PRBool isPassword = type.Equals(NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator());
+                  PRBool isText = (type.IsEmpty() || type.LowerCaseEqualsLiteral("text"));
+                  PRBool isPassword = type.LowerCaseEqualsLiteral("password");
 
                   // don't save password if field was left blank
                   if (isPassword) {
@@ -3910,11 +3906,11 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                   if (isPassword && !SI_GetBoolPref(pref_AutoCompleteOverride, PR_FALSE)) {
                     nsAutoString val;
                     (void) inputElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), val);
-                    if (val.EqualsIgnoreCase("off")) {
+                    if (val.LowerCaseEqualsLiteral("off")) {
                       isPassword = PR_FALSE;
                     } else {
                       (void) formElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), val);
-                      if (val.EqualsIgnoreCase("off")) {
+                      if (val.LowerCaseEqualsLiteral("off")) {
                         isPassword = PR_FALSE;
                       }
                     }

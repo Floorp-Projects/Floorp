@@ -259,7 +259,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
   mScriptcode = smSystemScript;
   mLangcode = langEnglish;
   mRegioncode = verUS;
-  mCharset.Assign(NS_LITERAL_CSTRING("x-mac-roman"));
+  mCharset.AssignLiteral("x-mac-roman");
   
 
   // get application locale

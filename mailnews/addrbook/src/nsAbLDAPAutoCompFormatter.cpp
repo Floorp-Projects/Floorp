@@ -269,7 +269,7 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
 
         // put the entire nsresult in string form
         //
-        errCodeNum += NS_LITERAL_STRING("0x");
+        errCodeNum.AppendLiteral("0x");
         errCodeNum.AppendInt(aErrorCode, 16);    
 
         // figure out the key to index into the string bundle

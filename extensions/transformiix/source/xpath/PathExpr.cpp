@@ -234,7 +234,7 @@ PathExpr::toString(nsAString& dest)
     while ((pxi = (PathExprItem*)iter.next())) {
         switch (pxi->pathOp) {
             case DESCENDANT_OP:
-                dest.Append(NS_LITERAL_STRING("//"));
+                dest.AppendLiteral("//");
                 break;
             case RELATIVE_OP:
                 dest.Append(PRUnichar('/'));

@@ -251,7 +251,7 @@ nsWyciwygChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 NS_IMETHODIMP
 nsWyciwygChannel::GetContentType(nsACString &aContentType)
 {
-  aContentType = NS_LITERAL_CSTRING(wyciwyg_TYPE);
+  aContentType.AssignLiteral(wyciwyg_TYPE);
   return NS_OK;
 }
 

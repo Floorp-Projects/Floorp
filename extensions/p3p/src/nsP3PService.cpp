@@ -80,7 +80,7 @@ nsP3PService::PrefChanged(nsIPrefBranch *aPrefBranch)
   // check for a malformed string, or no prefbranch
   if (!aPrefBranch || NS_FAILED(rv) || mCookiesP3PString.Length() != 8) {
     // reassign to default string
-    mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PStringDefault);
+    mCookiesP3PString.AssignLiteral(kCookiesP3PStringDefault);
   }
 }
 

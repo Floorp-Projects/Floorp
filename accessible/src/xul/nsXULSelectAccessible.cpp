@@ -287,7 +287,7 @@ NS_IMETHODIMP nsXULSelectListAccessible::GetState(PRUint32 *_retval)
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No nsIDOMElement for caption node!");
   element->GetAttribute(NS_LITERAL_STRING("seltype"), selectionTypeString) ;
-  if (selectionTypeString.EqualsIgnoreCase("multiple"))
+  if (selectionTypeString.LowerCaseEqualsLiteral("multiple"))
     *_retval |= STATE_MULTISELECTABLE | STATE_EXTSELECTABLE;
 
   return NS_OK;

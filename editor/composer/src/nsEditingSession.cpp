@@ -316,7 +316,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
 
       if (IsSupportedTextType(mimeCType.get()))
       {
-        mEditorType = NS_LITERAL_CSTRING("text");
+        mEditorType.AssignLiteral("text");
         mimeCType = "text/plain";
       }
       else if (!mimeCType.EqualsLiteral("text/html"))
@@ -325,8 +325,8 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
         mEditorStatus = eEditorErrorCantEditMimeType;
 
         // Turn editor into HTML -- we will load blank page later
-        mEditorType = NS_LITERAL_CSTRING("html");
-        mimeCType = NS_LITERAL_CSTRING("text/html");
+        mEditorType.AssignLiteral("html");
+        mimeCType.AssignLiteral("text/html");
       }
     }
   }

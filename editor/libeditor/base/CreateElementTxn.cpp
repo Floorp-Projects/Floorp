@@ -230,7 +230,7 @@ NS_IMETHODIMP CreateElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDid
 
 NS_IMETHODIMP CreateElementTxn::GetTxnDescription(nsAString& aString)
 {
-  aString.Assign(NS_LITERAL_STRING("CreateElementTxn: "));
+  aString.AssignLiteral("CreateElementTxn: ");
   aString += mTag;
   return NS_OK;
 }

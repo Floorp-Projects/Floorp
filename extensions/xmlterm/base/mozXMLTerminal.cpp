@@ -686,7 +686,7 @@ NS_IMETHODIMP mozXMLTerminal::SendText(const PRUnichar* aString,
     if (NS_FAILED(result)) {
       // Abort XMLterm session
       nsAutoString abortCode;
-      abortCode.Assign(NS_LITERAL_STRING("SendText"));
+      abortCode.AssignLiteral("SendText");
       mXMLTermSession->Abort(mLineTermAux, abortCode);
       return NS_ERROR_FAILURE;
     }

@@ -78,17 +78,17 @@ nsShouldIgnoreFile(nsString& name)
     if (firstChar == '.' || firstChar == '#' || name.CharAt(name.Length() - 1) == '~')
       return PR_TRUE;
  
-    if (name.EqualsIgnoreCase("rules.dat") || name.EqualsIgnoreCase("rulesbackup.dat"))
+    if (name.LowerCaseEqualsLiteral("rules.dat") || name.LowerCaseEqualsLiteral("rulesbackup.dat"))
         return PR_TRUE;
  
  
     // don't add summary files to the list of folders;
     // don't add popstate files to the list either, or rules (sort.dat). 
     if (nsStringEndsWith(name, ".snm") ||
-        name.EqualsIgnoreCase("popstate.dat") ||
-        name.EqualsIgnoreCase("sort.dat") ||
-        name.EqualsIgnoreCase("mailfilt.log") ||
-        name.EqualsIgnoreCase("filters.js") ||
+        name.LowerCaseEqualsLiteral("popstate.dat") ||
+        name.LowerCaseEqualsLiteral("sort.dat") ||
+        name.LowerCaseEqualsLiteral("mailfilt.log") ||
+        name.LowerCaseEqualsLiteral("filters.js") ||
         nsStringEndsWith(name, ".toc")||
         nsStringEndsWith(name,".sbd"))
         return PR_TRUE;

@@ -210,9 +210,9 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
         // Should we test for ".cgi", ".asp", ".jsp" and other
         // "generated" html pages?
 
-        if ( ext.EqualsIgnoreCase(".htm")  ||
-             ext.EqualsIgnoreCase(".html") ||
-             ext.EqualsIgnoreCase(".shtml") ) {
+        if ( ext.LowerCaseEqualsLiteral(".htm")  ||
+             ext.LowerCaseEqualsLiteral(".html") ||
+             ext.LowerCaseEqualsLiteral(".shtml") ) {
           // This is supposed to append ".htm" if user doesn't supply an extension
           //XXX Actually, behavior is sort of weird:
           //    often appends ".html" even if you have an extension
@@ -531,13 +531,13 @@ nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
   mFilterList.Append(PRUnichar('\0'));
 
   if (aFilter.EqualsLiteral("..apps"))
-    mFilterList.Append(NS_LITERAL_STRING("*.exe;*.com"));
+    mFilterList.AppendLiteral("*.exe;*.com");
   else
   {
     nsAutoString filter(aFilter);
     filter.StripWhitespace();
     if (filter.EqualsLiteral("*"))
-      filter.Append(NS_LITERAL_STRING(".*"));
+      filter.AppendLiteral(".*");
     mFilterList.Append(filter);
   }
 

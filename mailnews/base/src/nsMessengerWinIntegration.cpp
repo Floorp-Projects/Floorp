@@ -622,7 +622,7 @@ void nsMessengerWinIntegration::FillToolTipInfo()
     	    if (index > 0)
             toolTipText.Append(NS_LITERAL_STRING("\n").get());
           toolTipText.Append(accountName);
-          toolTipText.Append(NS_LITERAL_STRING(" "));
+          toolTipText.AppendLiteral(" ");
 		      toolTipText.Append(finalText);
         }
       } // if we got a bundle

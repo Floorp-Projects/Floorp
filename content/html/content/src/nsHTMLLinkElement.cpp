@@ -227,7 +227,7 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
   // doing the "right" thing costs virtually nothing here, even if it doesn't
   // make much sense.
   if (aRev.IsEmpty() &&
-      (aRel.IsEmpty() || aRel.EqualsIgnoreCase("stylesheet")))
+      (aRel.IsEmpty() || aRel.LowerCaseEqualsLiteral("stylesheet")))
     return;
 
   nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
@@ -355,13 +355,13 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
   nsAutoString notUsed;
   GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType);
   nsParserUtils::SplitMimeType(aType, mimeType, notUsed);
-  if (!mimeType.IsEmpty() && !mimeType.EqualsIgnoreCase("text/css")) {
+  if (!mimeType.IsEmpty() && !mimeType.LowerCaseEqualsLiteral("text/css")) {
     return;
   }
 
   // If we get here we assume that we're loading a css file, so set the
   // type to 'text/css'
-  aType.Assign(NS_LITERAL_STRING("text/css"));
+  aType.AssignLiteral("text/css");
 
   return;
 }

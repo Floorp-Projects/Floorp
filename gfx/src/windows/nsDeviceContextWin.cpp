@@ -776,7 +776,7 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle, PRUnichar*
     titleStr = aTitle;
     if (titleStr.Length() > DOC_TITLE_LENGTH) {
       titleStr.SetLength(DOC_TITLE_LENGTH-3);
-      titleStr.AppendWithConversion("...");
+      titleStr.AppendLiteral("...");
     }
     char *title = GetACPString(titleStr);
 

@@ -373,7 +373,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
                     }
                 else
                     {
-                        prefix.Assign(NS_LITERAL_STRING("<default>"));
+                        prefix.AssignLiteral("<default>");
                     }
 
                 char* prefixStr = ToNewCString(prefix);
@@ -1396,8 +1396,8 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           nsAutoString  params;
           nsParserUtils::SplitMimeType(type, mimeType, params);
 
-          isJavaScript = mimeType.EqualsIgnoreCase("application/x-javascript") ||
-                         mimeType.EqualsIgnoreCase("text/javascript");
+          isJavaScript = mimeType.LowerCaseEqualsLiteral("application/x-javascript") ||
+                         mimeType.LowerCaseEqualsLiteral("text/javascript");
           if (isJavaScript) {
               JSVersion jsVersion = JSVERSION_DEFAULT;
               if (params.Find("version=", PR_TRUE) == 0) {
@@ -1527,7 +1527,7 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
           nsAutoString extraWhiteSpace;
           PRInt32 cnt = mContextStack.Depth();
           while (--cnt >= 0)
-              extraWhiteSpace.Append(NS_LITERAL_STRING("  "));
+              extraWhiteSpace.AppendLiteral("  ");
           nsAutoString qnameC,valueC;
           qnameC.Assign(aAttributes[0]);
           valueC.Assign(aAttributes[1]);

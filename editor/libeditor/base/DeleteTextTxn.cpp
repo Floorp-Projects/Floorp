@@ -140,7 +140,7 @@ NS_IMETHODIMP DeleteTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMer
 
 NS_IMETHODIMP DeleteTextTxn::GetTxnDescription(nsAString& aString)
 {
-  aString.Assign(NS_LITERAL_STRING("DeleteTextTxn: "));
+  aString.AssignLiteral("DeleteTextTxn: ");
   aString += mDeletedText;
   return NS_OK;
 }

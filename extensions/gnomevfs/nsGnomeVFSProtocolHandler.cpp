@@ -614,13 +614,13 @@ nsGnomeVFSInputStream::DoRead(char *aBuf, PRUint32 aCount, PRUint32 *aCountRead)
         switch (info->type)
         {
           case GNOME_VFS_FILE_TYPE_REGULAR:
-            mDirBuf += NS_LITERAL_CSTRING("FILE ");
+            mDirBuf.AppendLiteral("FILE ");
             break;
           case GNOME_VFS_FILE_TYPE_DIRECTORY:
-            mDirBuf += NS_LITERAL_CSTRING("DIRECTORY ");
+            mDirBuf.AppendLiteral("DIRECTORY ");
             break;
           case GNOME_VFS_FILE_TYPE_SYMBOLIC_LINK:
-            mDirBuf += NS_LITERAL_CSTRING("SYMBOLIC-LINK ");
+            mDirBuf.AppendLiteral("SYMBOLIC-LINK ");
             break;
           default:
             break;
@@ -861,7 +861,7 @@ nsGnomeVFSProtocolHandler::InitSupportedProtocolsPref(nsIPrefBranch *prefs)
   if (NS_SUCCEEDED(rv))
     mSupportedProtocols.StripWhitespace();
   else
-    mSupportedProtocols = NS_LITERAL_CSTRING("smb:,sftp:"); // use defaults
+    mSupportedProtocols.AssignLiteral("smb:,sftp:"); // use defaults
 
   LOG(("gnomevfs: supported protocols \"%s\"\n", mSupportedProtocols.get()));
 }
@@ -888,7 +888,7 @@ nsGnomeVFSProtocolHandler::IsSupportedProtocol(const nsCString &spec)
 NS_IMETHODIMP
 nsGnomeVFSProtocolHandler::GetScheme(nsACString &aScheme)
 {
-  aScheme = NS_LITERAL_CSTRING(MOZ_GNOMEVFS_SCHEME);
+  aScheme.AssignLiteral(MOZ_GNOMEVFS_SCHEME);
   return NS_OK;
 }
 

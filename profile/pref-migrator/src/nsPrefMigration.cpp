@@ -2526,7 +2526,7 @@ nsPrefConverter::GetPlatformCharset(nsCString& aCharset)
    rv = platformCharset->GetCharset(kPlatformCharsetSel_4xPrefsJS, aCharset);
   }
   if (NS_FAILED(rv)) {
-   aCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));  // use ISO-8859-1 in case of any error
+   aCharset.AssignLiteral("ISO-8859-1");  // use ISO-8859-1 in case of any error
   }
  
   return rv;

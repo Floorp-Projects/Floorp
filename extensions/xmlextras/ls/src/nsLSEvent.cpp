@@ -155,7 +155,7 @@ nsLSParserLoadEvent::GetTargetInternal(nsIDOMEventTarget **aTarget)
 nsresult
 nsLSParserLoadEvent::GetTypeInternal(nsAString& aType)
 {
-  aType = NS_LITERAL_STRING("ls-load");
+  aType.AssignLiteral("ls-load");
 
   return NS_OK;
 }

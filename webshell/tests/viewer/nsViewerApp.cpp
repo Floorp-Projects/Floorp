@@ -1389,7 +1389,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     //mSiteDialog->SetClientData(this);
     nsAutoString titleStr(NS_LITERAL_STRING("Top "));
     titleStr.AppendInt(gTop100LastPointer);
-    titleStr.Append(NS_LITERAL_STRING(" Sites"));
+    titleStr.AppendLiteral(" Sites");
     mSiteDialog->SetTitle(titleStr);
 
     nscoord w  = 65;

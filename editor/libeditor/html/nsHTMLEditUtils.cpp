@@ -406,7 +406,7 @@ nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
   }
 
   // ... but our plaintext mailcites by "_moz_quote=true".  go figure.
-  attrName.Assign(NS_LITERAL_STRING("_moz_quote"));
+  attrName.AssignLiteral("_moz_quote");
   res = elem->GetAttribute(attrName, attrVal);
   if (NS_SUCCEEDED(res))
   {

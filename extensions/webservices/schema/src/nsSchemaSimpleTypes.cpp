@@ -62,7 +62,7 @@ NS_IMPL_ISUPPORTS4_CI(nsSchemaBuiltinType,
 NS_IMETHODIMP
 nsSchemaBuiltinType::GetTargetNamespace(nsAString& aTargetNamespace)
 {
-  aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SCHEMA_2001_NAMESPACE));
+  aTargetNamespace.AssignLiteral(NS_SCHEMA_2001_NAMESPACE);
   
   return NS_OK;
 }
@@ -87,139 +87,139 @@ nsSchemaBuiltinType::GetName(nsAString& aName)
 {
   switch(mBuiltinType) {
     case BUILTIN_TYPE_ANYTYPE:
-      aName.Assign(NS_LITERAL_STRING("anyType"));
+      aName.AssignLiteral("anyType");
       break;
     case BUILTIN_TYPE_STRING:
-      aName.Assign(NS_LITERAL_STRING("string"));
+      aName.AssignLiteral("string");
       break;
     case BUILTIN_TYPE_NORMALIZED_STRING:
-      aName.Assign(NS_LITERAL_STRING("normalizedString"));
+      aName.AssignLiteral("normalizedString");
       break;
     case BUILTIN_TYPE_TOKEN:
-      aName.Assign(NS_LITERAL_STRING("token"));
+      aName.AssignLiteral("token");
       break;
     case BUILTIN_TYPE_BYTE:
-      aName.Assign(NS_LITERAL_STRING("byte"));
+      aName.AssignLiteral("byte");
       break;
     case BUILTIN_TYPE_UNSIGNEDBYTE:
-      aName.Assign(NS_LITERAL_STRING("unsignedByte"));
+      aName.AssignLiteral("unsignedByte");
       break;
     case BUILTIN_TYPE_BASE64BINARY:
-      aName.Assign(NS_LITERAL_STRING("base64Binary"));
+      aName.AssignLiteral("base64Binary");
       break;
     case BUILTIN_TYPE_HEXBINARY:
-      aName.Assign(NS_LITERAL_STRING("hexBinary"));
+      aName.AssignLiteral("hexBinary");
       break;
     case BUILTIN_TYPE_INTEGER:
-      aName.Assign(NS_LITERAL_STRING("integer"));
+      aName.AssignLiteral("integer");
       break;
     case BUILTIN_TYPE_POSITIVEINTEGER:
-      aName.Assign(NS_LITERAL_STRING("positiveInteger"));
+      aName.AssignLiteral("positiveInteger");
       break;
     case BUILTIN_TYPE_NEGATIVEINTEGER:
-      aName.Assign(NS_LITERAL_STRING("negativeInteger"));
+      aName.AssignLiteral("negativeInteger");
       break;
     case BUILTIN_TYPE_NONNEGATIVEINTEGER:
-      aName.Assign(NS_LITERAL_STRING("nonNegativeInteger"));
+      aName.AssignLiteral("nonNegativeInteger");
       break;
     case BUILTIN_TYPE_NONPOSITIVEINTEGER:
-      aName.Assign(NS_LITERAL_STRING("nonPositiveInteger"));
+      aName.AssignLiteral("nonPositiveInteger");
       break;
     case BUILTIN_TYPE_INT:
-      aName.Assign(NS_LITERAL_STRING("int"));
+      aName.AssignLiteral("int");
       break;
     case BUILTIN_TYPE_UNSIGNEDINT:
-      aName.Assign(NS_LITERAL_STRING("unsignedInt"));
+      aName.AssignLiteral("unsignedInt");
       break;
     case BUILTIN_TYPE_LONG:
-      aName.Assign(NS_LITERAL_STRING("long"));
+      aName.AssignLiteral("long");
       break;
     case BUILTIN_TYPE_UNSIGNEDLONG:
-      aName.Assign(NS_LITERAL_STRING("unsignedLong"));
+      aName.AssignLiteral("unsignedLong");
       break;
     case BUILTIN_TYPE_SHORT:
-      aName.Assign(NS_LITERAL_STRING("short"));
+      aName.AssignLiteral("short");
       break;
     case BUILTIN_TYPE_UNSIGNEDSHORT:
-      aName.Assign(NS_LITERAL_STRING("unsignedShort"));
+      aName.AssignLiteral("unsignedShort");
       break;
     case BUILTIN_TYPE_DECIMAL:
-      aName.Assign(NS_LITERAL_STRING("decimal"));
+      aName.AssignLiteral("decimal");
       break;
     case BUILTIN_TYPE_FLOAT:
-      aName.Assign(NS_LITERAL_STRING("float"));
+      aName.AssignLiteral("float");
       break;
     case BUILTIN_TYPE_DOUBLE:
-      aName.Assign(NS_LITERAL_STRING("double"));
+      aName.AssignLiteral("double");
       break;
     case BUILTIN_TYPE_BOOLEAN:
-      aName.Assign(NS_LITERAL_STRING("boolean"));
+      aName.AssignLiteral("boolean");
       break;
     case BUILTIN_TYPE_TIME:
-      aName.Assign(NS_LITERAL_STRING("time"));
+      aName.AssignLiteral("time");
       break;
     case BUILTIN_TYPE_DATETIME:
-      aName.Assign(NS_LITERAL_STRING("dateTime"));
+      aName.AssignLiteral("dateTime");
       break;
     case BUILTIN_TYPE_DURATION:
-      aName.Assign(NS_LITERAL_STRING("duration"));
+      aName.AssignLiteral("duration");
       break;
     case BUILTIN_TYPE_DATE:
-      aName.Assign(NS_LITERAL_STRING("date"));
+      aName.AssignLiteral("date");
       break;
     case BUILTIN_TYPE_GMONTH:
-      aName.Assign(NS_LITERAL_STRING("gMonth"));
+      aName.AssignLiteral("gMonth");
       break;
     case BUILTIN_TYPE_GYEAR:
-      aName.Assign(NS_LITERAL_STRING("gYear"));
+      aName.AssignLiteral("gYear");
       break;
     case BUILTIN_TYPE_GYEARMONTH:
-      aName.Assign(NS_LITERAL_STRING("gYearMonth"));
+      aName.AssignLiteral("gYearMonth");
       break;
     case BUILTIN_TYPE_GDAY:
-      aName.Assign(NS_LITERAL_STRING("gDay"));
+      aName.AssignLiteral("gDay");
       break;
     case BUILTIN_TYPE_GMONTHDAY:
-      aName.Assign(NS_LITERAL_STRING("gMonthDay"));
+      aName.AssignLiteral("gMonthDay");
       break;
     case BUILTIN_TYPE_NAME:
-      aName.Assign(NS_LITERAL_STRING("name"));
+      aName.AssignLiteral("name");
       break;
     case BUILTIN_TYPE_QNAME:
-      aName.Assign(NS_LITERAL_STRING("QName"));
+      aName.AssignLiteral("QName");
       break;
     case BUILTIN_TYPE_NCNAME:
-      aName.Assign(NS_LITERAL_STRING("NCName"));
+      aName.AssignLiteral("NCName");
       break;
     case BUILTIN_TYPE_ANYURI:
-      aName.Assign(NS_LITERAL_STRING("anyURI"));
+      aName.AssignLiteral("anyURI");
       break;
     case BUILTIN_TYPE_LANGUAGE:
-      aName.Assign(NS_LITERAL_STRING("language"));
+      aName.AssignLiteral("language");
       break;
     case BUILTIN_TYPE_ID:
-      aName.Assign(NS_LITERAL_STRING("ID"));
+      aName.AssignLiteral("ID");
       break;
     case BUILTIN_TYPE_IDREF:
-      aName.Assign(NS_LITERAL_STRING("IDREF"));
+      aName.AssignLiteral("IDREF");
       break;
     case BUILTIN_TYPE_IDREFS:
-      aName.Assign(NS_LITERAL_STRING("IDREFS"));
+      aName.AssignLiteral("IDREFS");
       break;
     case BUILTIN_TYPE_ENTITY:
-      aName.Assign(NS_LITERAL_STRING("ENTITY"));
+      aName.AssignLiteral("ENTITY");
       break;
     case BUILTIN_TYPE_ENTITIES:
-      aName.Assign(NS_LITERAL_STRING("ENTITIES"));
+      aName.AssignLiteral("ENTITIES");
       break;
     case BUILTIN_TYPE_NOTATION:
-      aName.Assign(NS_LITERAL_STRING("NOTATION"));
+      aName.AssignLiteral("NOTATION");
       break;
     case BUILTIN_TYPE_NMTOKEN:
-      aName.Assign(NS_LITERAL_STRING("NMTOKEN"));
+      aName.AssignLiteral("NMTOKEN");
       break;
     case BUILTIN_TYPE_NMTOKENS:
-      aName.Assign(NS_LITERAL_STRING("NMTOKENS"));
+      aName.AssignLiteral("NMTOKENS");
       break;
     default:
       NS_ERROR("Unknown builtin type!");

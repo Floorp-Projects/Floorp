@@ -71,11 +71,11 @@ nsTXTToHTMLConv::AsyncConvertData(const PRUnichar *aFromType,
 // nsIRequestObserver methods
 NS_IMETHODIMP
 nsTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
-    mBuffer.Assign(NS_LITERAL_STRING("<html>\n<head><title>"));
+    mBuffer.AssignLiteral("<html>\n<head><title>");
     mBuffer.Append(mPageTitle);
-    mBuffer.Append(NS_LITERAL_STRING("</title></head>\n<body>\n"));
+    mBuffer.AppendLiteral("</title></head>\n<body>\n");
     if (mPreFormatHTML) {     // Use <pre> tags
-      mBuffer.Append(NS_LITERAL_STRING("<pre>\n"));
+      mBuffer.AppendLiteral("<pre>\n");
     }
 
     // Push mBuffer to the listener now, so the initial HTML will not
@@ -111,9 +111,9 @@ nsTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
         (void)CatHTML(0, mBuffer.Length());
     }
     if (mPreFormatHTML) {
-      mBuffer.Append(NS_LITERAL_STRING("</pre>\n"));
+      mBuffer.AppendLiteral("</pre>\n");
     }
-    mBuffer.Append(NS_LITERAL_STRING("\n</body></html>"));    
+    mBuffer.AppendLiteral("\n</body></html>");    
     
     nsCOMPtr<nsIInputStream> inputData;
 
@@ -229,14 +229,14 @@ nsTXTToHTMLConv::Init() {
     convToken *token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = PR_TRUE;
-    token->token.Assign(NS_LITERAL_STRING("http://")); // XXX need to iterate through all protos
+    token->token.AssignLiteral("http://"); // XXX need to iterate through all protos
     mTokens.AppendElement(token);
 
     token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = PR_TRUE;
     token->token.Assign(PRUnichar('@'));
-    token->modText.Assign(NS_LITERAL_STRING("mailto:"));
+    token->modText.AssignLiteral("mailto:");
     mTokens.AppendElement(token);
   
     return rv;

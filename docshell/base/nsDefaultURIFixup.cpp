@@ -141,7 +141,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
     // after it. The easiest way to do that is to call this method again with the
     // "view-source:" lopped off and then prepend it again afterwards.
 
-    if (scheme.EqualsIgnoreCase("view-source"))
+    if (scheme.LowerCaseEqualsLiteral("view-source"))
     {
         nsCOMPtr<nsIURI> uri;
         PRUint32 newFixupFlags = aFixupFlags & ~FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
@@ -178,9 +178,9 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
         //   http:\\broken.com#odd\ref (stops at hash)
         //  
         if (scheme.IsEmpty() ||
-            scheme.EqualsIgnoreCase("http") ||
-            scheme.EqualsIgnoreCase("https") ||
-            scheme.EqualsIgnoreCase("ftp"))
+            scheme.LowerCaseEqualsLiteral("http") ||
+            scheme.LowerCaseEqualsLiteral("https") ||
+            scheme.LowerCaseEqualsLiteral("ftp"))
         {
             // Walk the string replacing backslashes with forward slashes until
             // the end is reached, or a question mark, or a hash, or a forward
@@ -208,10 +208,10 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
     PRBool bUseNonDefaultCharsetForURI =
                         !bAsciiURI &&
                         (scheme.IsEmpty() ||
-                         scheme.EqualsIgnoreCase("http") ||
-                         scheme.EqualsIgnoreCase("https") ||
-                         scheme.EqualsIgnoreCase("ftp") ||
-                         scheme.EqualsIgnoreCase("file"));
+                         scheme.LowerCaseEqualsLiteral("http") ||
+                         scheme.LowerCaseEqualsLiteral("https") ||
+                         scheme.LowerCaseEqualsLiteral("ftp") ||
+                         scheme.LowerCaseEqualsLiteral("file"));
 
     // Now we need to check whether "scheme" is something we don't
     // really know about.
@@ -641,7 +641,7 @@ const char * nsDefaultURIFixup::GetFileSystemCharset()
       rv = plat->GetCharset(kPlatformCharsetSel_FileName, charset);
 
     if (charset.IsEmpty())
-      mFsCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+      mFsCharset.AssignLiteral("ISO-8859-1");
     else
       mFsCharset.Assign(charset);
   }

@@ -3341,13 +3341,13 @@ nsHTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
         else if (atom == nsEditProperty::table)
         {
           tableOrCellElement = do_QueryInterface(selectedNode);
-          aTagName = NS_LITERAL_STRING("table");
+          aTagName.AssignLiteral("table");
           *aSelectedCount = 1;
         }
         else if (atom == nsEditProperty::tr)
         {
           tableOrCellElement = do_QueryInterface(selectedNode);
-          aTagName = NS_LITERAL_STRING("tr");
+          aTagName.AssignLiteral("tr");
           *aSelectedCount = 1;
         }
       }

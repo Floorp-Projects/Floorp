@@ -2230,7 +2230,7 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
 
   switch(aPrintError)
   {
-#define NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(nserr) case nserr: stringName = NS_LITERAL_STRING(#nserr); break;
+#define NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(nserr) case nserr: stringName.AssignLiteral(#nserr); break;
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_CMD_NOT_FOUND)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_CMD_FAILURE)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE)
@@ -3411,14 +3411,14 @@ nsPrintEngine::ElipseLongString(PRUnichar *& aStr, const PRUint32 aLen, PRBool a
     if (aDoFront) {
       PRUnichar * ptr = &aStr[nsCRT::strlen(aStr)-aLen+3];
       nsAutoString newStr;
-      newStr.AppendWithConversion("...");
+      newStr.AppendLiteral("...");
       newStr += ptr;
       nsMemory::Free(aStr);
       aStr = ToNewUnicode(newStr);
     } else {
       nsAutoString newStr(aStr);
       newStr.SetLength(aLen-3);
-      newStr.AppendWithConversion("...");
+      newStr.AppendLiteral("...");
       nsMemory::Free(aStr);
       aStr = ToNewUnicode(newStr);
     }

@@ -161,7 +161,7 @@ public:
         nsCAutoString name;
         rv = file->GetNativeLeafName(name);
         if (NS_FAILED(rv)) return rv;
-        name += NS_LITERAL_CSTRING(".bak");
+        name.AppendLiteral(".bak");
         rv = file->SetNativeLeafName(name);
         if (NS_FAILED(rv)) return rv;
         rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOut),
@@ -250,7 +250,7 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString outFile(fileName);
-    outFile += NS_LITERAL_CSTRING(".out");
+    outFile.AppendLiteral(".out");
     nsITransport* fileTrans;
     nsCOMPtr<nsILocalFile> file;
     rv = NS_NewNativeLocalFile(outFile, PR_FALSE, getter_AddRefs(file));

@@ -1162,11 +1162,11 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
         mIsAnchor = PR_TRUE;
         GetAnchorURL(area, mUrlString);  // gives an absolute link
 
-        mHtmlString = NS_LITERAL_STRING("<a href=\"");
+        mHtmlString.AssignLiteral("<a href=\"");
         mHtmlString.Append(mUrlString);
-        mHtmlString.Append(NS_LITERAL_STRING("\">"));
+        mHtmlString.AppendLiteral("\">");
         mHtmlString.Append(mTitleString);
-        mHtmlString.Append(NS_LITERAL_STRING("</a>"));
+        mHtmlString.AppendLiteral("</a>");
       }
       else if (image)
       {
@@ -1268,7 +1268,7 @@ nsTransferableFactory::ConvertStringsToTransferable(nsITransferable** outTrans)
   // in the drag data
   if ( !mUrlString.IsEmpty() && mIsAnchor ) {
     nsAutoString dragData ( mUrlString );
-    dragData += NS_LITERAL_STRING("\n");
+    dragData.AppendLiteral("\n");
     dragData += mTitleString;
     nsCOMPtr<nsISupportsString> urlPrimitive(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
     if ( !urlPrimitive )

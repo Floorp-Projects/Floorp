@@ -1086,7 +1086,7 @@ nsNativeComponentLoader::AddDependentLibrary(nsIFile* aFile, const char* libName
     manager->GetOptionalData(aFile, nsnull, getter_Copies(data));
 
     if (!data.IsEmpty())
-        data.Append(NS_LITERAL_CSTRING(" "));
+        data.AppendLiteral(" ");
 
     data.Append(nsDependentCString(libName));
     

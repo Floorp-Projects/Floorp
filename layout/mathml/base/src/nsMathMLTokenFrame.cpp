@@ -308,16 +308,16 @@ nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
     if (isStyleInvariant) {
       // bug 65951 - we always enforce the style to normal for a non-stylable char
       // XXX also disable bold type? (makes sense to let the set IR be bold, no?)
-      fontstyle.Assign(NS_LITERAL_STRING("normal"));
+      fontstyle.AssignLiteral("normal");
       restyle = PR_TRUE;
     }
     else {
-      fontstyle.Assign(NS_LITERAL_STRING("italic"));
+      fontstyle.AssignLiteral("italic");
     }
   }
   else {
     // our textual content consists of multiple characters
-    fontstyle.Assign(NS_LITERAL_STRING("normal"));
+    fontstyle.AssignLiteral("normal");
   }
 
   // set the -moz-math-font-style attribute without notifying that we want a reflow

@@ -1782,7 +1782,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     if (offset > 0)
         parentPath.Truncate(offset);
     else
-        parentPath = NS_LITERAL_CSTRING("\\\\.");
+        parentPath.AssignLiteral("\\\\.");
 
     nsCOMPtr<nsILocalFile> localFile;
     nsresult rv = NS_NewNativeLocalFile(parentPath, mFollowSymlinks, getter_AddRefs(localFile));

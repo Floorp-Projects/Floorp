@@ -210,7 +210,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMer
 
 NS_IMETHODIMP InsertTextTxn::GetTxnDescription(nsAString& aString)
 {
-  aString.Assign(NS_LITERAL_STRING("InsertTextTxn: "));
+  aString.AssignLiteral("InsertTextTxn: ");
   aString += mStringToInsert;
   return NS_OK;
 }

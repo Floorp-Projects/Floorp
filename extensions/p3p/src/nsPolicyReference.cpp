@@ -186,7 +186,7 @@ nsPolicyReference::LoadPolicyReferenceFileFor(nsIURI* aURI,
     if (!mDocument) {
       nsXPIDLCString value;
       mMainURI->GetPrePath(value);
-      value += NS_LITERAL_CSTRING(kWellKnownLocation);
+      value.AppendLiteral(kWellKnownLocation);
       result = Load(value);
     }
     else {
@@ -200,7 +200,7 @@ nsPolicyReference::LoadPolicyReferenceFileFor(nsIURI* aURI,
     // well known location
     nsXPIDLCString value;
     mCurrentURI->GetPrePath(value);
-    value += NS_LITERAL_CSTRING(kWellKnownLocation);
+    value.AppendLiteral(kWellKnownLocation);
     result = Load(value);
   }
   else if (mFlags & IS_LINKED_URI) {

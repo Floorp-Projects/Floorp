@@ -84,11 +84,11 @@ nsHttpResponseHead::Flatten(nsACString &buf, PRBool pruneTransients)
     if (mVersion == NS_HTTP_VERSION_0_9)
         return;
 
-    buf.Append(NS_LITERAL_CSTRING("HTTP/"));
+    buf.AppendLiteral("HTTP/");
     if (mVersion == NS_HTTP_VERSION_1_1)
-        buf.Append(NS_LITERAL_CSTRING("1.1 "));
+        buf.AppendLiteral("1.1 ");
     else
-        buf.Append(NS_LITERAL_CSTRING("1.0 "));
+        buf.AppendLiteral("1.0 ");
 
     buf.Append(nsPrintfCString("%u", PRUintn(mStatus)) +
                NS_LITERAL_CSTRING(" ") +
@@ -174,7 +174,7 @@ nsHttpResponseHead::ParseStatusLine(char *line)
     
     if ((mVersion == NS_HTTP_VERSION_0_9) || !(line = PL_strchr(line, ' '))) {
         mStatus = 200;
-        mStatusText = NS_LITERAL_CSTRING("OK");
+        mStatusText.AssignLiteral("OK");
     }
     else {
         // Status-Code
@@ -187,7 +187,7 @@ nsHttpResponseHead::ParseStatusLine(char *line)
         // Reason-Phrase is whatever is remaining of the line
         if (!(line = PL_strchr(line, ' '))) {
             LOG(("mal-formed response status line; assuming statusText = 'OK'\n"));
-            mStatusText = NS_LITERAL_CSTRING("OK");
+            mStatusText.AssignLiteral("OK");
         }
         else
             mStatusText = ++line;

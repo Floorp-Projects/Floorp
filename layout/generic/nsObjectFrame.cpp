@@ -1390,12 +1390,9 @@ nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
     // widget in layout. See bug 188959.
     if (NS_CONTENT_ATTR_NOT_THERE != result &&
        (hidden.IsEmpty() ||
-        !hidden.Equals(NS_LITERAL_STRING("false"),
-                       nsCaseInsensitiveStringComparator()) &&
-        !hidden.Equals(NS_LITERAL_STRING("no"),
-                       nsCaseInsensitiveStringComparator()) &&
-        !hidden.Equals(NS_LITERAL_STRING("off"),
-                       nsCaseInsensitiveStringComparator()))) {
+        !hidden.LowerCaseEqualsLiteral("false") &&
+        !hidden.LowerCaseEqualsLiteral("no") &&
+        !hidden.LowerCaseEqualsLiteral("off"))) {
       return PR_TRUE;
     }
   }
@@ -2813,8 +2810,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetMayScript(PRBool *result)
 // |value| for certain inputs of |name|
 void nsObjectFrame::FixUpURLS(const nsString &name, nsAString &value)
 {
-  if (name.EqualsIgnoreCase("PLUGINURL") ||
-      name.EqualsIgnoreCase("PLUGINSPAGE")) {        
+  if (name.LowerCaseEqualsLiteral("pluginurl") ||
+      name.LowerCaseEqualsLiteral("pluginspage")) {        
     
     nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
     nsAutoString newURL;

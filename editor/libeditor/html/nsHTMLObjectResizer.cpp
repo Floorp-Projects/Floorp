@@ -238,9 +238,9 @@ nsHTMLEditor::CreateShadow(nsIDOMElement ** aReturn, nsIDOMNode * aParentNode,
   // let's create an image through the element factory
   nsAutoString name;
   if (nsHTMLEditUtils::IsImage(aOriginalObject))
-    name = NS_LITERAL_STRING("img");
+    name.AssignLiteral("img");
   else
-    name = NS_LITERAL_STRING("span");
+    name.AssignLiteral("span");
   nsresult res = CreateAnonymousElement(name,
                                         aParentNode,
                                         NS_LITERAL_STRING("mozResizingShadow"),
@@ -754,9 +754,9 @@ nsHTMLEditor::SetResizingInfoPosition(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt3
   PRInt32 diffWidth  = aW - mResizedObjectWidth;
   PRInt32 diffHeight = aH - mResizedObjectHeight;
   if (diffWidth > 0)
-    diffWidthStr = NS_LITERAL_STRING("+");
+    diffWidthStr.AssignLiteral("+");
   if (diffHeight > 0)
-    diffHeightStr = NS_LITERAL_STRING("+");
+    diffHeightStr.AssignLiteral("+");
   diffWidthStr.AppendInt(diffWidth);
   diffHeightStr.AppendInt(diffHeight);
 

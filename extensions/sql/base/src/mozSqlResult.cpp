@@ -256,28 +256,28 @@ mozSqlResult::GetColumnTypeAsString(PRInt32 aColumnIndex, nsAString& _retval)
   PRInt32 type = ((ColumnInfo*)mColumnInfo[aColumnIndex])->mType;
   switch (type) {
     case mozISqlResult::TYPE_STRING:
-      _retval.Assign(NS_LITERAL_STRING("string"));
+      _retval.AssignLiteral("string");
       break;
     case mozISqlResult::TYPE_INT:
-      _retval.Assign(NS_LITERAL_STRING("int"));
+      _retval.AssignLiteral("int");
       break;
     case mozISqlResult::TYPE_FLOAT:
-      _retval.Assign(NS_LITERAL_STRING("float"));
+      _retval.AssignLiteral("float");
       break;
     case mozISqlResult::TYPE_DECIMAL:
-      _retval.Assign(NS_LITERAL_STRING("decimal"));
+      _retval.AssignLiteral("decimal");
       break;
     case mozISqlResult::TYPE_DATE:
-      _retval.Assign(NS_LITERAL_STRING("date"));
+      _retval.AssignLiteral("date");
       break;
     case mozISqlResult::TYPE_TIME:
-      _retval.Assign(NS_LITERAL_STRING("time"));
+      _retval.AssignLiteral("time");
       break;
     case mozISqlResult::TYPE_DATETIME:
-      _retval.Assign(NS_LITERAL_STRING("datetime"));
+      _retval.AssignLiteral("datetime");
       break;
     case mozISqlResult::TYPE_BOOL:
-      _retval.Assign(NS_LITERAL_STRING("bool"));
+      _retval.AssignLiteral("bool");
       break;
   }
 
@@ -827,9 +827,9 @@ mozSqlResult::GetCellValue(PRInt32 row, nsITreeColumn* col, nsAString & _retval)
     PRInt32 type = cell->GetType();
     if (type == mozISqlResult::TYPE_BOOL) {
       if (cell->mBool)
-        _retval.Assign(NS_LITERAL_STRING("true"));
+        _retval.AssignLiteral("true");
       else
-        _retval.Assign(NS_LITERAL_STRING("false"));
+        _retval.AssignLiteral("false");
     }
   }
   return NS_OK;
@@ -844,7 +844,7 @@ mozSqlResult::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString & _retval)
   Cell* cell = ((Row*)mRows[row])->mCells[columnIndex];
   if (cell->IsNull()) {
     if (mDisplayNullAsText)
-      _retval.Assign(NS_LITERAL_STRING("null"));
+      _retval.AssignLiteral("null");
   }
   else {
     PRInt32 type = cell->GetType();
@@ -874,9 +874,9 @@ mozSqlResult::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString & _retval)
     }
     else if (type == mozISqlResult::TYPE_BOOL) {
       if (cell->mBool)
-        _retval.Assign(NS_LITERAL_STRING("true"));
+        _retval.AssignLiteral("true");
       else
-        _retval.Assign(NS_LITERAL_STRING("false"));
+        _retval.AssignLiteral("false");
     }
   }
   return NS_OK;
@@ -1064,9 +1064,9 @@ void
 mozSqlResult::AppendValue(Cell* aCell, nsAutoString& aValues)
 {
   if (aCell->IsNull())
-    aValues.Append(NS_LITERAL_STRING("NULL"));
+    aValues.AppendLiteral("NULL");
   else if (aCell->IsDefault())
-    aValues.Append(NS_LITERAL_STRING("DEFAULT"));
+    aValues.AppendLiteral("DEFAULT");
   else {
     PRInt32 type = aCell->GetType();
     if (type == mozISqlResult::TYPE_STRING) {
@@ -1108,7 +1108,7 @@ mozSqlResult::AppendKeys(Row* aRow, nsAutoString& aKeys)
   PRBool hasNext = PR_FALSE;
   do {
     if (hasNext)
-      aKeys.Append(NS_LITERAL_STRING(" AND "));
+      aKeys.AppendLiteral(" AND ");
 
     mPrimaryKeys->Next(&hasNext);
 
@@ -1120,7 +1120,7 @@ mozSqlResult::AppendKeys(Row* aRow, nsAutoString& aKeys)
     PRInt32 index;
     GetColumnIndex(value, &index);
     if (index == -1) {
-      mErrorMessage = NS_LITERAL_STRING("MOZSQL: The result doesn't contain all primary key fields");
+      mErrorMessage.AssignLiteral("MOZSQL: The result doesn't contain all primary key fields");
       return NS_ERROR_FAILURE;
     }
 
@@ -1162,7 +1162,7 @@ mozSqlResult::GetValues(Row* aRow, mozISqlResult** aResult, PRBool aUseID)
         return rv;
     }
 
-    keys.Append(NS_LITERAL_STRING(" AND "));
+    keys.AppendLiteral(" AND ");
     query.Insert(keys, Distance(start, e));
   }
   else {
@@ -1279,8 +1279,8 @@ mozSqlResult::InsertRow(Row* aSrcRow, PRInt32* _retval)
   PRInt32 i;
   for (i = 0; i < mColumnInfo.Count(); i++) {
     if (i) {
-      names.Append(NS_LITERAL_STRING(", "));
-      values.Append(NS_LITERAL_STRING(", "));
+      names.AppendLiteral(", ");
+      values.AppendLiteral(", ");
     }
     names.Append(((ColumnInfo*)mColumnInfo[i])->mName);
 
@@ -1350,7 +1350,7 @@ mozSqlResult::UpdateRow(PRInt32 aRowIndex, Row* aSrcRow, PRInt32* _retval)
   PRInt32 i;
   for (i = 0; i < mColumnInfo.Count(); i++) {
     if (i)
-      values.Append(NS_LITERAL_STRING(", "));
+      values.AppendLiteral(", ");
     values.Append(((ColumnInfo*)mColumnInfo[i])->mName);
     values.Append(PRUnichar('='));
 
@@ -2234,18 +2234,18 @@ nsresult
 mozSqlResultStream::EnsureBuffer()
 {
   if (!mInitialized) {
-    mBuffer.Append(NS_LITERAL_CSTRING("<?xml version=\"1.0\"?>\n"));
-    mBuffer.Append(NS_LITERAL_CSTRING("<document>\n<body>\n"));
+    mBuffer.AppendLiteral("<?xml version=\"1.0\"?>\n");
+    mBuffer.AppendLiteral("<document>\n<body>\n");
     PRInt32 rowCount = mResult->mRows.Count();
     PRInt32 columnCount = mResult->mColumnInfo.Count();
     for (PRInt32 i = 0; i < rowCount; i++) {
-      mBuffer.Append(NS_LITERAL_CSTRING("<row>\n"));
+      mBuffer.AppendLiteral("<row>\n");
       Row* row = (Row*)mResult->mRows[i];
       for (PRInt32 j = 0; j < columnCount; j++) {
-        mBuffer.Append(NS_LITERAL_CSTRING("<cell>\n"));
+        mBuffer.AppendLiteral("<cell>\n");
         Cell* cell = row->mCells[j];
         if (cell->IsNull())
-          mBuffer.Append(NS_LITERAL_CSTRING("null"));
+          mBuffer.AppendLiteral("null");
         else {
           PRInt32 type = cell->GetType();
           if (type == mozISqlResult::TYPE_STRING)
@@ -2268,16 +2268,16 @@ mozSqlResultStream::EnsureBuffer()
           }
           else if (type == mozISqlResult::TYPE_BOOL) {
             if (cell->mBool)
-              mBuffer.Append(NS_LITERAL_CSTRING("true"));
+              mBuffer.AppendLiteral("true");
             else
-              mBuffer.Append(NS_LITERAL_CSTRING("false"));
+              mBuffer.AppendLiteral("false");
           }
         }
-        mBuffer.Append(NS_LITERAL_CSTRING("</cell>\n"));
+        mBuffer.AppendLiteral("</cell>\n");
       }
-      mBuffer.Append(NS_LITERAL_CSTRING("</row>\n"));
+      mBuffer.AppendLiteral("</row>\n");
     }
-    mBuffer.Append(NS_LITERAL_CSTRING("</body>\n</document>\n"));
+    mBuffer.AppendLiteral("</body>\n</document>\n");
 
     mInitialized = PR_TRUE;
   }

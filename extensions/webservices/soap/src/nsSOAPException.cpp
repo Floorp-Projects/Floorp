@@ -165,13 +165,13 @@ nsSOAPException::ToString(char **_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   nsAutoString s;
   s.Append(mName);
-  s.Append(NS_LITERAL_STRING(": "));
+  s.AppendLiteral(": ");
   s.Append(mMessage);
   if (mFrame) {
     char* str = nsnull;
     mFrame->ToString(&str);
     if (str) {
-      s.Append(NS_LITERAL_STRING(", called by "));
+      s.AppendLiteral(", called by ");
       nsAutoString i;
       CopyASCIItoUCS2(nsDependentCString(str),i);
       nsMemory::Free(str);
@@ -185,7 +185,7 @@ nsSOAPException::ToString(char **_retval)
       nsAutoString i;
       CopyASCIItoUCS2(nsDependentCString(str),i);
       nsMemory::Free(str);
-      s.Append(NS_LITERAL_STRING(", caused by "));
+      s.AppendLiteral(", caused by ");
       s.Append(i);
     }
   }

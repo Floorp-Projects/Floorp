@@ -109,21 +109,21 @@ nsresult nsAbBoolExprToLDAPFilter::FilterExpression (
         }
     }
 
-    filter += NS_LITERAL_CSTRING("(");
+    filter.AppendLiteral("(");
     switch (operation)
     {
         case nsIAbBooleanOperationTypes::AND:
-            filter += NS_LITERAL_CSTRING("&");
+            filter.AppendLiteral("&");
             rv = FilterExpressions (childExpressions, filter, flags);
             break;
         case nsIAbBooleanOperationTypes::OR:
-            filter += NS_LITERAL_CSTRING("|");
+            filter.AppendLiteral("|");
             rv = FilterExpressions (childExpressions, filter, flags);
             break;
         case nsIAbBooleanOperationTypes::NOT:
             if (count > 1)
                 return NS_ERROR_FAILURE;
-            filter += NS_LITERAL_CSTRING("!");
+            filter.AppendLiteral("!");
             rv = FilterExpressions (childExpressions, filter, flags);
             break;
         default:

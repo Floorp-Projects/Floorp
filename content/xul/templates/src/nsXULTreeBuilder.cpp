@@ -435,15 +435,15 @@ nsXULTreeBuilder::Sort(nsIDOMElement* aElement)
     header->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
 
     if (dir.EqualsLiteral("ascending")) {
-        dir = NS_LITERAL_STRING("descending");
+        dir.AssignLiteral("descending");
         mSortDirection = eDirection_Descending;
     }
     else if (dir.EqualsLiteral("descending")) {
-        dir = NS_LITERAL_STRING("natural");
+        dir.AssignLiteral("natural");
         mSortDirection = eDirection_Natural;
     }
     else {
-        dir = NS_LITERAL_STRING("ascending");
+        dir.AssignLiteral("ascending");
         mSortDirection = eDirection_Ascending;
     }
 

@@ -2680,9 +2680,9 @@ GetEncoding(const char *aFontName, char **aEncoding, nsXftFontType &aType,
           
             if (NS_FAILED(rv)) 
                 aFTEncoding = ft_encoding_none;
-            else if (ftCharMap.EqualsIgnoreCase("mac_roman"))
+            else if (ftCharMap.LowerCaseEqualsLiteral("mac_roman"))
                 aFTEncoding = ft_encoding_apple_roman;
-            else if (ftCharMap.EqualsIgnoreCase("unicode"))
+            else if (ftCharMap.LowerCaseEqualsLiteral("unicode"))
                 aFTEncoding = ft_encoding_unicode;
         }
 

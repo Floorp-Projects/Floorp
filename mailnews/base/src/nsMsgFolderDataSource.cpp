@@ -1129,22 +1129,22 @@ nsMsgFolderDataSource::createFolderSpecialNode(nsIMsgFolder *folder,
   
   nsAutoString specialFolderString;
   if (flags & MSG_FOLDER_FLAG_INBOX)
-    specialFolderString = NS_LITERAL_STRING("Inbox");
+    specialFolderString.AssignLiteral("Inbox");
   else if (flags & MSG_FOLDER_FLAG_TRASH)
-    specialFolderString = NS_LITERAL_STRING("Trash");
+    specialFolderString.AssignLiteral("Trash");
   else if (flags & MSG_FOLDER_FLAG_QUEUE)
-    specialFolderString = NS_LITERAL_STRING("Unsent Messages");
+    specialFolderString.AssignLiteral("Unsent Messages");
   else if (flags & MSG_FOLDER_FLAG_SENTMAIL)
-    specialFolderString = NS_LITERAL_STRING("Sent");
+    specialFolderString.AssignLiteral("Sent");
   else if (flags & MSG_FOLDER_FLAG_DRAFTS)
-    specialFolderString = NS_LITERAL_STRING("Drafts");
+    specialFolderString.AssignLiteral("Drafts");
   else if (flags & MSG_FOLDER_FLAG_TEMPLATES)
-    specialFolderString = NS_LITERAL_STRING("Templates");
+    specialFolderString.AssignLiteral("Templates");
   else if (flags & MSG_FOLDER_FLAG_JUNK)
-    specialFolderString = NS_LITERAL_STRING("Junk");
+    specialFolderString.AssignLiteral("Junk");
   else {
     // XXX why do this at all? or just ""
-    specialFolderString = NS_LITERAL_STRING("none");
+    specialFolderString.AssignLiteral("none");
   }
   
   createNode(specialFolderString.get(), target, getRDFService());
@@ -1861,9 +1861,9 @@ nsMsgFolderDataSource::GetFolderSizeNode(PRInt32 aFolderSize, nsIRDFNode **aNode
     // can we catch this problem at compile time?
     // see #179234
     if (sizeInMB)
-      sizeString.Append(NS_LITERAL_STRING(" MB"));
+      sizeString.AppendLiteral(" MB");
     else
-      sizeString.Append(NS_LITERAL_STRING(" KB"));
+      sizeString.AppendLiteral(" KB");
     createNode(sizeString.get(), aNode, getRDFService());
   }
   return NS_OK;

@@ -470,7 +470,7 @@ public:
 	// nsIRequest
   NS_IMETHOD GetName(nsACString &result)
   {
-    result = NS_LITERAL_CSTRING("about:layout-dummy-request");
+    result.AssignLiteral("about:layout-dummy-request");
     return NS_OK;
   }
 
@@ -3486,7 +3486,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
     }
 
     if (name.IsEmpty()) {
-      name.Assign(NS_LITERAL_STRING("HTML"));
+      name.AssignLiteral("HTML");
     }
 
     rv = domImpl->CreateDocumentType(name, publicId, systemId,

@@ -209,7 +209,7 @@ nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , PRInt32 aSou
     if(NS_FAILED(res) && (kCharsetUninitialized == mCharsetSource) )
     {
        // failed - unknown alias , fallback to ISO-8859-1
-      charsetName.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+      charsetName.AssignLiteral("ISO-8859-1");
     }
     mCharset = charsetName;
     mCharsetSource = aSource;

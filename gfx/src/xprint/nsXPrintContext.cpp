@@ -768,7 +768,7 @@ nsXPrintContext::BeginDocument( PRUnichar * aTitle, PRUnichar* aPrintToFileName,
   }
   else
   {
-    job_title.Assign(NS_LITERAL_CSTRING("Mozilla document without title"));
+    job_title.AssignLiteral("Mozilla document without title");
   }
  
   /* Set the Job Attributes */

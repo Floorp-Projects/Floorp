@@ -8159,9 +8159,9 @@ NS_IMETHODIMP nsImapMockChannel::GetContentType(nsACString &aContentType)
       }
     } 
     if (imapAction == nsIImapUrl::nsImapSelectFolder)
-      aContentType = NS_LITERAL_CSTRING("x-application-imapfolder");
+      aContentType.AssignLiteral("x-application-imapfolder");
     else
-      aContentType = NS_LITERAL_CSTRING("message/rfc822");
+      aContentType.AssignLiteral("message/rfc822");
   }
   else
     aContentType = m_ContentType;

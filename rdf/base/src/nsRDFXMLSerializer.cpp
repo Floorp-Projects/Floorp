@@ -256,7 +256,7 @@ nsRDFXMLSerializer::MakeQName(nsIRDFResource* aResource,
 
     // Just generate a random prefix
     static PRInt32 gPrefixID = 0;
-    aNameSpacePrefix = NS_LITERAL_STRING("NS");
+    aNameSpacePrefix.AssignLiteral("NS");
     aNameSpacePrefix.AppendInt(++gPrefixID, 10);
     return PR_FALSE;
 }
@@ -805,13 +805,13 @@ nsRDFXMLSerializer::SerializeContainer(nsIOutputStream* aStream,
     // appropriate tag-open sequence
 
     if (IsA(mDataSource, aContainer, kRDF_Bag)) {
-        tag = NS_LITERAL_STRING("RDF:Bag");
+        tag.AssignLiteral("RDF:Bag");
     }
     else if (IsA(mDataSource, aContainer, kRDF_Seq)) {
-        tag = NS_LITERAL_STRING("RDF:Seq");
+        tag.AssignLiteral("RDF:Seq");
     }
     else if (IsA(mDataSource, aContainer, kRDF_Alt)) {
-        tag = NS_LITERAL_STRING("RDF:Alt");
+        tag.AssignLiteral("RDF:Alt");
     }
     else {
         NS_ASSERTION(PR_FALSE, "huh? this is _not_ a container.");

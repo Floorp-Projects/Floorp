@@ -112,9 +112,9 @@ PRUnichar *nsOutlookStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundl
 	}
 
 	nsString resultString;
-	resultString.Append(NS_LITERAL_STRING("[StringID "));
+	resultString.AppendLiteral("[StringID ");
 	resultString.AppendInt(stringID);
-	resultString.Append(NS_LITERAL_STRING("?]"));
+	resultString.AppendLiteral("?]");
 
 	return ToNewUnicode(resultString);
 }

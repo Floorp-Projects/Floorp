@@ -504,7 +504,7 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
         nsString Body;
         Body.AssignWithConversion(aMessage->lpszNoteText);
         if (Body.Last() != nsCRT::LF)
-          Body.Append(NS_LITERAL_STRING(CRLF));
+          Body.AppendLiteral(CRLF);
         rv = aCompFields->SetBody(Body) ;
     }
 
@@ -686,7 +686,7 @@ nsresult nsMapiHook::PopulateCompFieldsWithConversion(lpnsMapiMessage aMessage,
         rv = ConvertToUnicode(platformCharSet.get(), (char *) aMessage->lpszNoteText, Body);
         if (NS_FAILED(rv)) return rv ;
         if (Body.Last() != nsCRT::LF)
-          Body.Append(NS_LITERAL_STRING(CRLF));
+          Body.AppendLiteral(CRLF);
         rv = aCompFields->SetBody(Body) ;
     }
 
@@ -735,7 +735,7 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
 
     // only 1 file is to be sent, no delim specified
     if (strDelimChars.IsEmpty())
-        strDelimChars.Assign(NS_LITERAL_STRING(";"));
+        strDelimChars.AssignLiteral(";");
 
     PRInt32 offset = 0 ;
     PRInt32 FilePathsLen = strFilePaths.Length() ;
@@ -785,7 +785,7 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
             if(NS_FAILED(rv) || leafName.IsEmpty()) return rv ;
 
             if (!Subject.IsEmpty()) 
-                Subject.Append(NS_LITERAL_STRING(", "));
+                Subject.AppendLiteral(", ");
             Subject += leafName;
 
             // create MsgCompose attachment object

@@ -849,31 +849,31 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
 {
   //-- Generate error message
   nsAutoString message; 
-  message.Assign(NS_LITERAL_STRING("Signature Verification Error: the signature on "));
+  message.AssignLiteral("Signature Verification Error: the signature on ");
   if (aFilename)
     message.AppendWithConversion(aFilename);
   else
-    message.Append(NS_LITERAL_STRING("this .jar archive"));
-  message.Append(NS_LITERAL_STRING(" is invalid because "));
+    message.AppendLiteral("this .jar archive");
+  message.AppendLiteral(" is invalid because ");
   switch(errorCode)
   {
   case nsIJAR::NOT_SIGNED:
-    message.Append(NS_LITERAL_STRING("the archive did not contain a valid PKCS7 signature."));
+    message.AppendLiteral("the archive did not contain a valid PKCS7 signature.");
     break;
   case nsIJAR::INVALID_SIG:
     message.Append(NS_LITERAL_STRING("the digital signature (*.RSA) file is not a valid signature of the signature instruction file (*.SF)."));
     break;
   case nsIJAR::INVALID_UNKNOWN_CA:
-    message.Append(NS_LITERAL_STRING("the certificate used to sign this file has an unrecognized issuer."));
+    message.AppendLiteral("the certificate used to sign this file has an unrecognized issuer.");
     break;
   case nsIJAR::INVALID_MANIFEST:
     message.Append(NS_LITERAL_STRING("the signature instruction file (*.SF) does not contain a valid hash of the MANIFEST.MF file."));
     break;
   case nsIJAR::INVALID_ENTRY:
-    message.Append(NS_LITERAL_STRING("the MANIFEST.MF file does not contain a valid hash of the file being verified."));
+    message.AppendLiteral("the MANIFEST.MF file does not contain a valid hash of the file being verified.");
     break;
   default:
-    message.Append(NS_LITERAL_STRING("of an unknown problem."));
+    message.AppendLiteral("of an unknown problem.");
   }
   
   // Report error in JS console

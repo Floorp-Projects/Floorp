@@ -887,9 +887,9 @@ nsFontMetricsOS2::FindGlobalFont(HPS aPS, PRUint32 aChar)
   nsFontOS2* fh = nsnull;
   nsAutoString fontname;
   if (!IsDBCS())
-    fontname = NS_LITERAL_STRING("Helv");
+    fontname.AssignLiteral("Helv");
   else
-    fontname = NS_LITERAL_STRING("Helv Combined");
+    fontname.AssignLiteral("Helv Combined");
   fh = LoadFont(aPS, fontname);
   NS_ASSERTION(fh, "Couldn't load default font - BAD things are happening");
   return fh;
@@ -1293,9 +1293,9 @@ nsFontMetricsOS2::GetVectorSubstitute(HPS aPS, const nsAString& aFamilyname,
                                       nsAString& aAlias)
 {
   if (aFamilyname.EqualsLiteral("Tms Rmn")) {
-    aAlias = NS_LITERAL_STRING("Times New Roman");
+    aAlias.AssignLiteral("Times New Roman");
   } else if (aFamilyname.EqualsLiteral("Helv")) {
-    aAlias = NS_LITERAL_STRING("Helvetica");
+    aAlias.AssignLiteral("Helvetica");
   }
 
   // When printing, substitute vector fonts for these common bitmap fonts
@@ -1303,11 +1303,11 @@ nsFontMetricsOS2::GetVectorSubstitute(HPS aPS, const nsAString& aFamilyname,
     if (aFamilyname.EqualsLiteral("System Proportional") ||
         aFamilyname.EqualsLiteral("WarpSans"))
     {
-      aAlias = NS_LITERAL_STRING("Helvetica");
+      aAlias.AssignLiteral("Helvetica");
     } else if (aFamilyname.EqualsLiteral("System Monospaced") ||
                aFamilyname.EqualsLiteral("System VIO"))
     {
-      aAlias = NS_LITERAL_STRING("Courier");
+      aAlias.AssignLiteral("Courier");
     }
   }
 
@@ -1345,7 +1345,7 @@ nsFontMetricsOS2::RealizeFont()
       mGeneric.Assign(value);
     }
     else {
-      mGeneric.Assign(NS_LITERAL_STRING("serif"));
+      mGeneric.AssignLiteral("serif");
     }
   }
 

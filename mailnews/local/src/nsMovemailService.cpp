@@ -396,7 +396,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
     // Try and obtain the lock for the spool file
     if (!ObtainSpoolLock(spoolPath.get(), 5)) {
         nsAutoString lockFile = NS_ConvertUTF8toUCS2(spoolPath);
-        lockFile += NS_LITERAL_STRING(".lock");
+        lockFile.AppendLiteral(".lock");
         const PRUnichar *params[] = {
             lockFile.get()
         };
@@ -425,10 +425,10 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
 
         // 'From' lines delimit messages
         if (isMore && !PL_strncasecmp(buffer.get(), "From ", 5)) {
-            buffer = NS_LITERAL_CSTRING("X-Mozilla-Status: 8000" MSG_LINEBREAK);
+            buffer.AssignLiteral("X-Mozilla-Status: 8000" MSG_LINEBREAK);
             newMailParser->HandleLine(buffer.BeginWriting(), buffer.Length());
             outFileStream << buffer.get();
-            buffer = NS_LITERAL_CSTRING("X-Mozilla-Status2: 00000000" MSG_LINEBREAK);
+            buffer.AssignLiteral("X-Mozilla-Status2: 00000000" MSG_LINEBREAK);
             newMailParser->HandleLine(buffer.BeginWriting(), buffer.Length());
             outFileStream << buffer.get();
         }
@@ -451,7 +451,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
 
     if (!YieldSpoolLock(spoolPath.get())) {
         nsAutoString spoolLock = NS_ConvertUTF8toUCS2(spoolPath);
-        spoolLock += NS_LITERAL_STRING(".lock");
+        spoolLock.AppendLiteral(".lock");
         const PRUnichar *params[] = {
             spoolLock.get()
         };

@@ -312,13 +312,13 @@ nsHTMLStyleElement::GetStyleSheetInfo(nsAString& aTitle,
   nsAutoString mimeType;
   nsAutoString notUsed;
   nsParserUtils::SplitMimeType(aType, mimeType, notUsed);
-  if (!mimeType.IsEmpty() && !mimeType.EqualsIgnoreCase("text/css")) {
+  if (!mimeType.IsEmpty() && !mimeType.LowerCaseEqualsLiteral("text/css")) {
     return;
   }
 
   // If we get here we assume that we're loading a css file, so set the
   // type to 'text/css'
-  aType.Assign(NS_LITERAL_STRING("text/css"));
+  aType.AssignLiteral("text/css");
 
   return;
 }

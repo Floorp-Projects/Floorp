@@ -1266,7 +1266,7 @@ ShowNativePrintDialogEx(HWND              aHWnd,
   if (NS_SUCCEEDED(GetLocalizedBundle(PRINTDLG_PROPERTIES, getter_AddRefs(strBundle)))) {
     nsAutoString doExtendStr;
     if (NS_SUCCEEDED(GetLocalizedString(strBundle, "extend", doExtendStr))) {
-      doExtend = doExtendStr.EqualsIgnoreCase("true");
+      doExtend = doExtendStr.LowerCaseEqualsLiteral("true");
     }
   }
 

@@ -1108,7 +1108,7 @@ DOMMediaListImpl::GetText(nsAString& aMediaText)
     medium->ToString(buffer);
     aMediaText.Append(buffer);
     if (index < count) {
-      aMediaText.Append(NS_LITERAL_STRING(", "));
+      aMediaText.AppendLiteral(", ");
     }
   }
 
@@ -1782,7 +1782,7 @@ CSSStyleSheetImpl::SetTitle(const nsAString& aTitle)
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetType(nsString& aType) const
 {
-  aType.Assign(NS_LITERAL_STRING("text/css"));
+  aType.AssignLiteral("text/css");
   return NS_OK;
 }
 
@@ -2420,7 +2420,7 @@ CSSStyleSheetImpl::SetModified(PRBool aModified)
 NS_IMETHODIMP    
 CSSStyleSheetImpl::GetType(nsAString& aType)
 {
-  aType.Assign(NS_LITERAL_STRING("text/css"));
+  aType.AssignLiteral("text/css");
   return NS_OK;
 }
 

@@ -587,7 +587,7 @@ nsresult nsMsgDBView::FetchSubject(nsIMsgHdr * aMsgHdr, PRUint32 aFlags, PRUnich
     nsXPIDLString subject;
     aMsgHdr->GetMime2DecodedSubject(getter_Copies(subject));
     nsAutoString reSubject;
-    reSubject.Assign(NS_LITERAL_STRING("Re: "));
+    reSubject.AssignLiteral("Re: ");
     reSubject.Append(subject);
     *aValue = ToNewUnicode(reSubject);
   }
@@ -733,7 +733,7 @@ nsresult nsMsgDBView::FetchSize(nsIMsgHdr * aHdr, PRUnichar ** aSizeString)
     
     formattedSizeString.AppendInt(sizeInKB);
     // XXX todo, fix this hard coded string?
-    formattedSizeString.Append(NS_LITERAL_STRING("KB"));
+    formattedSizeString.AppendLiteral("KB");
   }
   
   *aSizeString = ToNewUnicode(formattedSizeString);

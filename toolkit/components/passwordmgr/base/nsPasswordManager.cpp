@@ -1033,13 +1033,13 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         userFieldElement->GetAttribute(NS_LITERAL_STRING("autocomplete"),
                                        autocomplete);
 
-        if (autocomplete.EqualsIgnoreCase("off"))
+        if (autocomplete.LowerCaseEqualsLiteral("off"))
           return NS_OK;
       }
 
       nsCOMPtr<nsIDOMElement> formDOMEl = do_QueryInterface(aFormNode);
       formDOMEl->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-      if (autocomplete.EqualsIgnoreCase("off"))
+      if (autocomplete.LowerCaseEqualsLiteral("off"))
         return NS_OK;
 
       nsCOMPtr<nsIDOMElement> passFieldElement = do_QueryInterface(passFields.ObjectAt(0));
@@ -1876,7 +1876,7 @@ nsPasswordManager::GetPasswordRealm(nsIURI* aURI, nsACString& aRealm)
   aURI->GetScheme(buffer);
 
   aRealm.Append(buffer);
-  aRealm.Append(NS_LITERAL_CSTRING("://"));
+  aRealm.AppendLiteral("://");
 
   aURI->GetHostPort(buffer);
   if (buffer.IsEmpty()) {

@@ -250,7 +250,7 @@ nsresult CHeaderSniffer::PerformSave(nsIURI* inOriginalURI, const ESaveFormat in
     
     // One last case to handle about:blank and other fruity untitled pages.
     if (defaultFileName.IsEmpty())
-        defaultFileName.AssignWithConversion("untitled");
+        defaultFileName.AssignLiteral("untitled");
         
     // Validate the file name to ensure legality.
     for (PRUint32 i = 0; i < defaultFileName.Length(); i++)
@@ -271,7 +271,7 @@ nsresult CHeaderSniffer::PerformSave(nsIURI* inOriginalURI, const ESaveFormat in
     PRBool setExtension = PR_FALSE;
     if (mContentType.Equals("text/html")) {
         if (fileExtension.IsEmpty() || (!fileExtension.Equals("htm") && !fileExtension.Equals("html"))) {
-            defaultFileName.AppendWithConversion(".html");
+            defaultFileName.AppendLiteral(".html");
             setExtension = PR_TRUE;
         }
     }
@@ -434,7 +434,7 @@ nsresult CHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsILocalFil
       PRInt32 index = nameMinusExt.RFind(".");
       if (index >= 0)
           nameMinusExt.Left(nameMinusExt, index);
-      nameMinusExt += NS_LITERAL_STRING(" Files"); // XXXdwh needs to be localizable!
+      nameMinusExt.AppendLiteral(" Files"); // XXXdwh needs to be localizable!
       filesFolder->SetLeafName(nameMinusExt);
       PRBool exists = PR_FALSE;
       filesFolder->Exists(&exists);

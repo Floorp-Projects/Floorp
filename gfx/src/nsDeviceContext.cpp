@@ -462,13 +462,13 @@ nsresult DeviceContextImpl::CreateFontAliasTable()
     mFontAliasTable = new nsHashtable();
     if (nsnull != mFontAliasTable) {
 
-      nsAutoString  times;              times.Assign(NS_LITERAL_STRING("Times"));
-      nsAutoString  timesNewRoman;      timesNewRoman.Assign(NS_LITERAL_STRING("Times New Roman"));
-      nsAutoString  timesRoman;         timesRoman.Assign(NS_LITERAL_STRING("Times Roman"));
-      nsAutoString  arial;              arial.Assign(NS_LITERAL_STRING("Arial"));
-      nsAutoString  helvetica;          helvetica.Assign(NS_LITERAL_STRING("Helvetica"));
-      nsAutoString  courier;            courier.Assign(NS_LITERAL_STRING("Courier"));
-      nsAutoString  courierNew;         courierNew.Assign(NS_LITERAL_STRING("Courier New"));
+      nsAutoString  times;              times.AssignLiteral("Times");
+      nsAutoString  timesNewRoman;      timesNewRoman.AssignLiteral("Times New Roman");
+      nsAutoString  timesRoman;         timesRoman.AssignLiteral("Times Roman");
+      nsAutoString  arial;              arial.AssignLiteral("Arial");
+      nsAutoString  helvetica;          helvetica.AssignLiteral("Helvetica");
+      nsAutoString  courier;            courier.AssignLiteral("Courier");
+      nsAutoString  courierNew;         courierNew.AssignLiteral("Courier New");
       nsAutoString  nullStr;
 
       AliasFont(times, timesNewRoman, timesRoman, PR_FALSE);

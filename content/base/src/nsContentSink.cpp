@@ -398,7 +398,7 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
   else if (aHeader == nsHTMLAtoms::msthemecompatible) {
     // Disable theming for the presshell if the value is no.
     nsAutoString value(aValue);
-    if (value.EqualsIgnoreCase("no")) {
+    if (value.LowerCaseEqualsLiteral("no")) {
       nsIPresShell* shell = mDocument->GetShellAt(0);
       if (shell) {
         shell->DisableThemeSupport();
@@ -553,22 +553,22 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
             value++;
           }
 
-          if (attr.EqualsIgnoreCase("rel")) {
+          if (attr.LowerCaseEqualsLiteral("rel")) {
             if (rel.IsEmpty()) {
               rel = value;
               rel.CompressWhitespace();
             }
-          } else if (attr.EqualsIgnoreCase("title")) {
+          } else if (attr.LowerCaseEqualsLiteral("title")) {
             if (title.IsEmpty()) {
               title = value;
               title.CompressWhitespace();
             }
-          } else if (attr.EqualsIgnoreCase("type")) {
+          } else if (attr.LowerCaseEqualsLiteral("type")) {
             if (type.IsEmpty()) {
               type = value;
               type.StripWhitespace();
             }
-          } else if (attr.EqualsIgnoreCase("media")) {
+          } else if (attr.LowerCaseEqualsLiteral("media")) {
             if (media.IsEmpty()) {
               media = value;
 
@@ -656,7 +656,7 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
   nsParserUtils::SplitMimeType(aType, mimeType, params);
 
   // see bug 18817
-  if (!mimeType.IsEmpty() && !mimeType.EqualsIgnoreCase("text/css")) {
+  if (!mimeType.IsEmpty() && !mimeType.LowerCaseEqualsLiteral("text/css")) {
     // Unknown stylesheet language
     return NS_OK;
   }

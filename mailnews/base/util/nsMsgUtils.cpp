@@ -204,22 +204,22 @@ nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriorityValue p, nsString *outN
 	{
 	case nsMsgPriority::notSet:
 	case nsMsgPriority::none:
-		outName->Assign(NS_LITERAL_STRING("None"));
+		outName->AssignLiteral("None");
 		break;
 	case nsMsgPriority::lowest:
-		outName->Assign(NS_LITERAL_STRING("Lowest"));
+		outName->AssignLiteral("Lowest");
 		break;
 	case nsMsgPriority::low:
-		outName->Assign(NS_LITERAL_STRING("Low"));
+		outName->AssignLiteral("Low");
 		break;
 	case nsMsgPriority::normal:
-		outName->Assign(NS_LITERAL_STRING("Normal"));
+		outName->AssignLiteral("Normal");
 		break;
 	case nsMsgPriority::high:
-		outName->Assign(NS_LITERAL_STRING("High"));
+		outName->AssignLiteral("High");
 		break;
 	case nsMsgPriority::highest:
-		outName->Assign(NS_LITERAL_STRING("Highest"));
+		outName->AssignLiteral("Highest");
 		break;
 	default:
 		NS_ASSERTION(PR_FALSE, "invalid priority value");

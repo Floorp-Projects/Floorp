@@ -63,10 +63,10 @@ void ProcessBValue(const nsAString * aInputString, nsAString & aOutputString,
                    const char * aPrependString, const char* aAppendString)
 {
   if (aInputString && aInputString->EqualsLiteral("-moz-editor-invert-value")) {
-      aOutputString.Assign(NS_LITERAL_STRING("normal"));
+      aOutputString.AssignLiteral("normal");
   }
   else {
-    aOutputString.Assign(NS_LITERAL_STRING("bold"));
+    aOutputString.AssignLiteral("bold");
   }
 }
 
@@ -116,7 +116,7 @@ void ProcessLengthValue(const nsAString * aInputString, nsAString & aOutputStrin
   if (aInputString) {
     aOutputString.Append(*aInputString);
     if (-1 == aOutputString.FindChar(PRUnichar('%'))) {
-      aOutputString.Append(NS_LITERAL_STRING("px"));
+      aOutputString.AppendLiteral("px");
     }
   }
 }
@@ -129,19 +129,19 @@ void ProcessListStyleTypeValue(const nsAString * aInputString, nsAString & aOutp
   aOutputString.Truncate();
   if (aInputString) {
     if (aInputString->EqualsLiteral("1")) {
-      aOutputString.Append(NS_LITERAL_STRING("decimal"));
+      aOutputString.AppendLiteral("decimal");
     }
     else if (aInputString->EqualsLiteral("a")) {
-      aOutputString.Append(NS_LITERAL_STRING("lower-alpha"));
+      aOutputString.AppendLiteral("lower-alpha");
     }
     else if (aInputString->EqualsLiteral("A")) {
-      aOutputString.Append(NS_LITERAL_STRING("upper-alpha"));
+      aOutputString.AppendLiteral("upper-alpha");
     }
     else if (aInputString->EqualsLiteral("i")) {
-      aOutputString.Append(NS_LITERAL_STRING("lower-roman"));
+      aOutputString.AppendLiteral("lower-roman");
     }
     else if (aInputString->EqualsLiteral("I")) {
-      aOutputString.Append(NS_LITERAL_STRING("upper-roman"));
+      aOutputString.AppendLiteral("upper-roman");
     }
     else if (aInputString->EqualsLiteral("square")
              || aInputString->EqualsLiteral("circle")
@@ -160,14 +160,14 @@ void ProcessMarginLeftValue(const nsAString * aInputString, nsAString & aOutputS
   if (aInputString) {
     if (aInputString->EqualsLiteral("center") ||
         aInputString->EqualsLiteral("-moz-center")) {
-      aOutputString.Append(NS_LITERAL_STRING("auto")); 
+      aOutputString.AppendLiteral("auto"); 
     }
     else if (aInputString->EqualsLiteral("right") ||
              aInputString->EqualsLiteral("-moz-right")) {
-      aOutputString.Append(NS_LITERAL_STRING("auto")); 
+      aOutputString.AppendLiteral("auto"); 
     }
     else {
-      aOutputString.Append(NS_LITERAL_STRING("0px")); 
+      aOutputString.AppendLiteral("0px"); 
     }
   }
 }
@@ -181,14 +181,14 @@ void ProcessMarginRightValue(const nsAString * aInputString, nsAString & aOutput
   if (aInputString) {
     if (aInputString->EqualsLiteral("center") ||
         aInputString->EqualsLiteral("-moz-center")) {
-      aOutputString.Append(NS_LITERAL_STRING("auto")); 
+      aOutputString.AppendLiteral("auto"); 
     }
     else if (aInputString->EqualsLiteral("left") ||
              aInputString->EqualsLiteral("-moz-left")) {
-      aOutputString.Append(NS_LITERAL_STRING("auto")); 
+      aOutputString.AppendLiteral("auto"); 
     }
     else {
-      aOutputString.Append(NS_LITERAL_STRING("0px")); 
+      aOutputString.AppendLiteral("0px"); 
     }
   }
 }
@@ -690,7 +690,7 @@ nsHTMLCSSUtils::GetDefaultBackgroundColor(nsAString & aColor)
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
   if (NS_FAILED(result)) return result;
-  aColor.Assign(NS_LITERAL_STRING("#ffffff"));
+  aColor.AssignLiteral("#ffffff");
   nsXPIDLCString returnColor;
   if (prefBranch) {
     PRBool useCustomColors;
@@ -726,7 +726,7 @@ nsHTMLCSSUtils::GetDefaultLengthUnit(nsAString & aLengthUnit)
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
   if (NS_FAILED(result)) return result;
-  aLengthUnit.Assign(NS_LITERAL_STRING("px"));
+  aLengthUnit.AssignLiteral("px");
   if (NS_SUCCEEDED(result) && prefBranch) {
     nsXPIDLCString returnLengthUnit;
     result = prefBranch->GetCharPref("editor.css.default_length_unit",
@@ -1177,7 +1177,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
         }
         else {
           aIsSet = PR_FALSE;
-          valueString.Assign(NS_LITERAL_STRING("normal"));
+          valueString.AssignLiteral("normal");
         }
       }
     }
@@ -1191,13 +1191,13 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
 
     else if (nsEditProperty::u == aHTMLProperty) {
       nsAutoString val;
-      val.Assign(NS_LITERAL_STRING("underline"));
+      val.AssignLiteral("underline");
       aIsSet = PRBool(ChangeCSSInlineStyleTxn::ValueIncludes(valueString, val, PR_FALSE));
     }
 
     else if (nsEditProperty::strike == aHTMLProperty) {
       nsAutoString val;
-      val.Assign(NS_LITERAL_STRING("line-through"));
+      val.AssignLiteral("line-through");
       aIsSet = PRBool(ChangeCSSInlineStyleTxn::ValueIncludes(valueString, val, PR_FALSE));
     }
 
@@ -1214,7 +1214,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
         if (NS_ColorNameToRGB(htmlValueString, &rgba) ||
             NS_HexToRGB(subStr, &rgba)) {
           nsAutoString htmlColor, tmpStr;
-          htmlColor.Append(NS_LITERAL_STRING("rgb("));
+          htmlColor.AppendLiteral("rgb(");
 
           NS_NAMED_LITERAL_STRING(comma, ", ");
 

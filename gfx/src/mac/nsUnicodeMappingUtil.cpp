@@ -479,17 +479,17 @@ void nsUnicodeMappingUtil::InitBlockToScriptMapping()
 //--------------------------------------------------------------------------
 nsGenericFontNameType nsUnicodeMappingUtil::MapGenericFontNameType(const nsString& aGenericName)
 {
-	if (aGenericName.EqualsIgnoreCase("serif"))
+	if (aGenericName.LowerCaseEqualsLiteral("serif"))
 	  return kSerif;
-	if (aGenericName.EqualsIgnoreCase("sans-serif"))
+	if (aGenericName.LowerCaseEqualsLiteral("sans-serif"))
 	  return kSansSerif;
-	if (aGenericName.EqualsIgnoreCase("monospace"))
+	if (aGenericName.LowerCaseEqualsLiteral("monospace"))
 	  return kMonospace;
-	if (aGenericName.EqualsIgnoreCase("-moz-fixed"))
+	if (aGenericName.LowerCaseEqualsLiteral("-moz-fixed"))
 	  return kMonospace;
-	if (aGenericName.EqualsIgnoreCase("cursive"))
+	if (aGenericName.LowerCaseEqualsLiteral("cursive"))
 	  return kCursive;
-	if (aGenericName.EqualsIgnoreCase("fantasy"))
+	if (aGenericName.LowerCaseEqualsLiteral("fantasy"))
 	  return kFantasy;
 	  
 	return kUknownGenericFontName;			

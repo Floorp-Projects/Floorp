@@ -2378,7 +2378,7 @@ DocumentViewerImpl::GetDefaultCharacterSet(nsACString& aDefaultCharacterSet)
     if (!defCharset.IsEmpty())
       LossyCopyUTF16toASCII(defCharset, mDefaultCharacterSet);
     else
-      mDefaultCharacterSet.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+      mDefaultCharacterSet.AssignLiteral("ISO-8859-1");
   }
   aDefaultCharacterSet = mDefaultCharacterSet;
   return NS_OK;

@@ -600,7 +600,7 @@ nsresult  nsDragService::GetUrlAndTitle(nsISupports *aGenericData,
     urlObj->GetHost(strTitle);
     urlObj->GetFileName(strFile);
     if (!strFile.IsEmpty()) {
-      strTitle.Append(NS_LITERAL_CSTRING("/"));
+      strTitle.AppendLiteral("/");
       strTitle.Append(strFile);
     }
     else {

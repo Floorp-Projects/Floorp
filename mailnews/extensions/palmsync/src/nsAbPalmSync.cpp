@@ -234,7 +234,7 @@ nsresult nsAbPalmHotSync::GetABInterface()
         // to match "Personal" category.
         if(description == mAbName || 
             (prefName.Equals("ldap_2.servers.pab", nsCaseInsensitiveCStringComparator())
-             && mAbName.Equals(NS_LITERAL_STRING("Personal"), nsCaseInsensitiveStringComparator())))
+             && mAbName.LowerCaseEqualsLiteral("personal")))
           break;
         directory = nsnull;
       }

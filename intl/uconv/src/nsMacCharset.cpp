@@ -86,10 +86,10 @@ nsresult nsPlatformCharset::MapToCharset(short script, short region, nsACString&
     case verUS:
     case verFrance:
     case verGermany:
-      outCharset.Assign(NS_LITERAL_CSTRING("x-mac-roman"));
+      outCharset.AssignLiteral("x-mac-roman");
       return NS_OK;
     case verJapan:
-      outCharset.Assign(NS_LITERAL_CSTRING("Shift_JIS"));
+      outCharset.AssignLiteral("Shift_JIS");
       return NS_OK;
   }
 
@@ -106,14 +106,14 @@ nsresult nsPlatformCharset::MapToCharset(short script, short region, nsACString&
   if (NS_SUCCEEDED(rv))
     CopyUCS2toASCII(uCharset, outCharset);
   else {
-    key.Assign(NS_LITERAL_STRING("script."));
+    key.AssignLiteral("script.");
     key.AppendInt(script, 10);
     rv = gInfo->Get(key, uCharset);
     // not found in the .property file, assign x-mac-roman
     if (NS_SUCCEEDED(rv))
       CopyUCS2toASCII(uCharset, outCharset);
     else {
-      outCharset.Assign(NS_LITERAL_CSTRING("x-mac-roman"));
+      outCharset.AssignLiteral("x-mac-roman");
     }
   }
   
@@ -135,7 +135,7 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& oResult
   switch (selector) {
 #ifdef XP_MACOSX  
     case kPlatformCharsetSel_FileName:
-      oResult.Assign(NS_LITERAL_CSTRING("UTF-8"));
+      oResult.AssignLiteral("UTF-8");
       break;
 #endif
     case  kPlatformCharsetSel_KeyboardInput:
@@ -169,7 +169,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
   }
 
   // fallback 
-  oResult.Assign(NS_LITERAL_CSTRING("x-mac-roman"));
+  oResult.AssignLiteral("x-mac-roman");
   return NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
 

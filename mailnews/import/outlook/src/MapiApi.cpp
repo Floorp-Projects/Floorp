@@ -1495,7 +1495,7 @@ void CMapiFolderList::AddItem( CMapiFolder *pFolder)
 void CMapiFolderList::ChangeName( nsString& name)
 {
 	if (name.IsEmpty()) {
-		name.Assign(NS_LITERAL_STRING("1"));
+		name.AssignLiteral("1");
 		return;
 	}
 	PRUnichar lastC = name.Last();
@@ -1504,14 +1504,14 @@ void CMapiFolderList::ChangeName( nsString& name)
 		if (lastC > '9') {
 			lastC = '1';
 			name.SetCharAt( lastC, name.Length() - 1);
-			name.Append(NS_LITERAL_STRING("0"));
+			name.AppendLiteral("0");
 		}
 		else {
 			name.SetCharAt( lastC, name.Length() - 1);
 		}
 	}
 	else {
-		name.Append(NS_LITERAL_STRING(" 2"));
+		name.AppendLiteral(" 2");
 	}
 }
 
@@ -1564,7 +1564,7 @@ void CMapiFolderList::GenerateFilePath( CMapiFolder *pFolder)
 		pCurrent = (CMapiFolder *) GetAt( i);
 		if (pCurrent->GetDepth() == (pFolder->GetDepth() - 1)) {
 			pCurrent->GetFilePath( path);
-			path.Append(NS_LITERAL_STRING(".sbd\\"));
+			path.AppendLiteral(".sbd\\");
 			pFolder->GetDisplayName( name);
 			path += name;
 			pFolder->SetFilePath(path.get());

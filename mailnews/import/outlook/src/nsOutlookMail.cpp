@@ -217,9 +217,9 @@ nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
 PRBool nsOutlookMail::IsAddressBookNameUnique( nsString& name, nsString& list)
 {
 	nsString		usedName;
-	usedName.Append(NS_LITERAL_STRING("["));
+	usedName.AppendLiteral("[");
 	usedName.Append( name);
-	usedName.Append(NS_LITERAL_STRING("],"));
+	usedName.AppendLiteral("],");
 
 	return( list.Find( usedName) == -1);
 }
@@ -238,9 +238,9 @@ void nsOutlookMail::MakeAddressBookNameUnique( nsString& name, nsString& list)
 	}
 	
 	name = newName;
-	list.Append(NS_LITERAL_STRING("["));
+	list.AppendLiteral("[");
 	list.Append( name);
-	list.Append(NS_LITERAL_STRING("],"));
+	list.AppendLiteral("],");
 }
 
 nsresult nsOutlookMail::GetAddressBooks( nsISupportsArray **pArray)
@@ -490,7 +490,7 @@ nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRI
       nsAutoString folderName(pName);
       nsMsgDeliverMode mode = nsIMsgSend::nsMsgDeliverNow;
       mode = nsIMsgSend::nsMsgSaveAsDraft;
-      if ( folderName.Equals(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()) )
+      if ( folderName.LowerCaseEqualsLiteral("drafts") )
         mode = nsIMsgSend::nsMsgSaveAsDraft;
 			
 			/*

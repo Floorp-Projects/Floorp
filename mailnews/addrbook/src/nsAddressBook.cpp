@@ -1423,7 +1423,7 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIDOMWindowInternal *aParentWin,
        (fileName.RFind(LDIF_FILE_EXTENSION2, PR_TRUE, -1, sizeof(LDIF_FILE_EXTENSION2)-1) == kNotFound)) {
 
        // Add the extenstion and build a new localFile.
-       fileName.Append(NS_LITERAL_STRING(LDIF_FILE_EXTENSION2));
+       fileName.AppendLiteral(LDIF_FILE_EXTENSION2);
        localFile->SetLeafName(fileName);
     }
       rv = ExportDirectoryToLDIF(aDirectory, localFile);
@@ -1434,7 +1434,7 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIDOMWindowInternal *aParentWin,
       if (fileName.RFind(CSV_FILE_EXTENSION, PR_TRUE, -1, sizeof(CSV_FILE_EXTENSION)-1) == kNotFound) {
 
        // Add the extenstion and build a new localFile.
-       fileName.Append(NS_LITERAL_STRING(CSV_FILE_EXTENSION));
+       fileName.AppendLiteral(CSV_FILE_EXTENSION);
        localFile->SetLeafName(fileName);
     }
       rv = ExportDirectoryToDelimitedText(aDirectory, CSV_DELIM, CSV_DELIM_LEN, localFile);
@@ -1446,7 +1446,7 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIDOMWindowInternal *aParentWin,
           (fileName.RFind(TAB_FILE_EXTENSION, PR_TRUE, -1, sizeof(TAB_FILE_EXTENSION)-1) == kNotFound) ) {
 
        // Add the extenstion and build a new localFile.
-       fileName.Append(NS_LITERAL_STRING(TXT_FILE_EXTENSION));
+       fileName.AppendLiteral(TXT_FILE_EXTENSION);
        localFile->SetLeafName(fileName);
   }
       rv = ExportDirectoryToDelimitedText(aDirectory, TAB_DELIM, TAB_DELIM_LEN, localFile);
@@ -1556,7 +1556,7 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
               if (needsQuotes)
               {
                 newValue.Insert(NS_LITERAL_STRING("\""), 0);
-                newValue.Append(NS_LITERAL_STRING("\""));
+                newValue.AppendLiteral("\"");
               }
 
               // For notes, make sure CR/LF is converted to spaces 
@@ -1696,9 +1696,9 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
  
               if (!PL_strcmp(EXPORT_ATTRIBUTES_TABLE[i].abColName, kPreferMailFormatColumn)) {
                 if (value.Equals(NS_LITERAL_STRING("html").get()))
-                  value = NS_LITERAL_STRING("true");
+                  value.AssignLiteral("true");
                 else if (value.Equals(NS_LITERAL_STRING("plaintext").get()))
-                  value = NS_LITERAL_STRING("false");
+                  value.AssignLiteral("false");
                 else
                   value.Truncate(); // unknown.
               }
@@ -1835,7 +1835,7 @@ nsresult nsAddressBook::AppendDNForCard(const char *aProperty, nsIAbCard *aCard,
   if (!displayName.IsEmpty()) {
     cnStr += NS_LITERAL_STRING("cn=") + displayName;
     if (!email.IsEmpty()) {
-      cnStr += NS_LITERAL_STRING(",");
+      cnStr.AppendLiteral(",");
     }
   }
 

@@ -238,7 +238,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
 
 NS_IMETHODIMP PlaceholderTxn::GetTxnDescription(nsAString& aString)
 {
-  aString.Assign(NS_LITERAL_STRING("PlaceholderTxn: "));
+  aString.AssignLiteral("PlaceholderTxn: ");
 
   if (mName)
   {

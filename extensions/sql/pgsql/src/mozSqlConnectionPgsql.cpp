@@ -88,17 +88,17 @@ mozSqlConnectionPgsql::GetPrimaryKeys(const nsAString& aSchema, const nsAString&
   nsAutoString from;
   nsAutoString where;
   if (mVersion >= SERVER_VERSION(7,3,0)) {
-    select = NS_LITERAL_STRING("SELECT n.nspname AS TABLE_SCHEM, ");
-    from = NS_LITERAL_STRING(" FROM pg_catalog.pg_namespace n, pg_catalog.pg_class ct, pg_catalog.pg_class ci, pg_catalog.pg_attribute a, pg_catalog.pg_index i");
-    where = NS_LITERAL_STRING(" AND ct.relnamespace = n.oid ");
+    select.AssignLiteral("SELECT n.nspname AS TABLE_SCHEM, ");
+    from.AssignLiteral(" FROM pg_catalog.pg_namespace n, pg_catalog.pg_class ct, pg_catalog.pg_class ci, pg_catalog.pg_attribute a, pg_catalog.pg_index i");
+    where.AssignLiteral(" AND ct.relnamespace = n.oid ");
     if (!aSchema.IsEmpty()) {
       where.Append(NS_LITERAL_STRING(" AND n.nspname = '") + aSchema);
       where.Append(PRUnichar('\''));
     }
   }
   else {
-    select = NS_LITERAL_STRING("SELECT NULL AS TABLE_SCHEM, ");
-    from = NS_LITERAL_STRING(" FROM pg_class ct, pg_class ci, pg_attribute a, pg_index i ");
+    select.AssignLiteral("SELECT NULL AS TABLE_SCHEM, ");
+    from.AssignLiteral(" FROM pg_class ct, pg_class ci, pg_attribute a, pg_index i ");
   }
 
   if (!aTable.IsEmpty()) {
@@ -272,6 +272,6 @@ mozSqlConnectionPgsql::CancelExec()
 nsresult
 mozSqlConnectionPgsql::GetIDName(nsAString& aIDName)
 {
-  aIDName = NS_LITERAL_STRING("OID");
+  aIDName.AssignLiteral("OID");
   return NS_OK;
 }

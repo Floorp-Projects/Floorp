@@ -459,7 +459,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
                               /* If wrap, convert all spaces but the last in
                                  a row into nbsp, otherwise all. */,
                             lineResult2);
-    lineResult2 += NS_LITERAL_STRING("<br>");
+    lineResult2.AppendLiteral("<br>");
     exdata->inflow = PR_FALSE;
   } // End Fixed line
 
@@ -578,12 +578,12 @@ static void Convert_whitespace(const PRUnichar a_current_char,
   }
 
   while(number_of_nbsp--) {
-    a_out_string += NS_LITERAL_STRING("&nbsp;");
+    a_out_string.AppendLiteral("&nbsp;");
   }
 
   while(number_of_space--) {
     // a_out_string += ' '; gives error
-    a_out_string += NS_LITERAL_STRING(" ");
+    a_out_string.AppendLiteral(" ");
   }
 
   return;

@@ -118,7 +118,7 @@ NS_IMETHODIMP mozMySpell::SetDictionary(const PRUnichar * aDictionary)
     nsString language;
     PRInt32 pos = mDictionary.FindChar('-');
     if(pos == -1){
-      language.Assign(NS_LITERAL_STRING("en"));      
+      language.AssignLiteral("en");      
     }
     else{
       language = Substring(mDictionary,0,pos);
@@ -143,7 +143,7 @@ NS_IMETHODIMP mozMySpell::GetLanguage(PRUnichar * *aLanguage)
     nsString language;
     PRInt32 pos = mDictionary.FindChar('-');
     if(pos == -1){
-      language.Assign(NS_LITERAL_STRING("en"));      
+      language.AssignLiteral("en");      
     }
     else{
       language = Substring(mDictionary,0,pos);

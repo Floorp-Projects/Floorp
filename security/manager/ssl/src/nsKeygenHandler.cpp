@@ -417,10 +417,10 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
     }
 
     // Set the keygen mechanism
-    if (aKeyType.IsEmpty() || aKeyType.EqualsIgnoreCase("rsa")) {
+    if (aKeyType.IsEmpty() || aKeyType.LowerCaseEqualsLiteral("rsa")) {
         type = rsaKey;
         keyGenMechanism = CKM_RSA_PKCS_KEY_PAIR_GEN;
-    } else if (aKeyType.EqualsIgnoreCase("dsa")) {
+    } else if (aKeyType.LowerCaseEqualsLiteral("dsa")) {
         char * end;
         pqgString = ToNewCString(aPqg);
         type = dsaKey;
@@ -618,7 +618,7 @@ nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement,
       res = selectElement->GetAttribute(NS_LITERAL_STRING("keytype"), keyTypeValue);
       if (NS_FAILED(res) || keyTypeValue.IsEmpty()) {
         // If this field is not present, we default to rsa.
-  	    keyTypeValue.Assign(NS_LITERAL_STRING("rsa"));
+  	    keyTypeValue.AssignLiteral("rsa");
       }
       res = selectElement->GetAttribute(NS_LITERAL_STRING("challenge"), challengeValue);
       rv = GetPublicKey(aValue, challengeValue, keyTypeValue, 
@@ -639,7 +639,7 @@ NS_METHOD nsKeygenFormProcessor::ProvideContent(const nsString& aFormType,
       nsString *str = new nsString(choice->name);
       aContent.AppendElement(str);
     }
-    aAttribute.Assign(NS_LITERAL_STRING("-mozilla-keygen"));
+    aAttribute.AssignLiteral("-mozilla-keygen");
   }
   return NS_OK;
 } 

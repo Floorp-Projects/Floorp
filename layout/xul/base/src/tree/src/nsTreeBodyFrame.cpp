@@ -339,7 +339,7 @@ nsTreeBodyFrame::Destroy(nsIPresContext* aPresContext)
   if (mTreeBoxObject) {
     nsCOMPtr<nsIBoxObject> box(do_QueryInterface(mTreeBoxObject));
     if (mTopRowIndex > 0) {
-      nsAutoString topRowStr; topRowStr.Assign(NS_LITERAL_STRING("topRow"));
+      nsAutoString topRowStr; topRowStr.AssignLiteral("topRow");
       nsAutoString topRow;
       topRow.AppendInt(mTopRowIndex);
       box->SetProperty(topRowStr.get(), topRow.get());
@@ -899,13 +899,13 @@ nsTreeBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, nsITreeColumn*
   if (col) {
     NS_ADDREF(*aCol = col);
     if (child == nsCSSAnonBoxes::moztreecell)
-      aChildElt = NS_LITERAL_CSTRING("cell");
+      aChildElt.AssignLiteral("cell");
     else if (child == nsCSSAnonBoxes::moztreetwisty)
-      aChildElt = NS_LITERAL_CSTRING("twisty");
+      aChildElt.AssignLiteral("twisty");
     else if (child == nsCSSAnonBoxes::moztreeimage)
-      aChildElt = NS_LITERAL_CSTRING("image");
+      aChildElt.AssignLiteral("image");
     else if (child == nsCSSAnonBoxes::moztreecelltext)
-      aChildElt = NS_LITERAL_CSTRING("text");
+      aChildElt.AssignLiteral("text");
   }
 
   return NS_OK;
@@ -2768,7 +2768,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
     if (ellipsisWidth > width)
       text.SetLength(0);
     else if (ellipsisWidth == width)
-      text.Assign(NS_LITERAL_STRING(ELLIPSIS));
+      text.AssignLiteral(ELLIPSIS);
     else {
       // We will be drawing an ellipsis, thank you very much.
       // Subtract out the required width of the ellipsis.
@@ -2792,7 +2792,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
             twidth += cwidth;
           }
           text.Truncate(i);
-          text += NS_LITERAL_STRING(ELLIPSIS);
+          text.AppendLiteral(ELLIPSIS);
         }
         break;
 
@@ -2812,7 +2812,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
 
           nsAutoString copy;
           text.Right(copy, length-1-i);
-          text.Assign(NS_LITERAL_STRING(ELLIPSIS));
+          text.AssignLiteral(ELLIPSIS);
           text += copy;
         }
         break;
