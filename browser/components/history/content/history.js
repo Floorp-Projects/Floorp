@@ -327,7 +327,8 @@ function GroupBy(groupingType)
 var groupObserver = {
   observe: function(aPrefBranch, aTopic, aPrefName) {
     try {
-      GroupBy(aPrefBranch.QueryInterface(Components.interfaces.nsIPrefBranch).getCharPref(aPrefName));
+      gHistoryGrouping = aPrefBranch.QueryInterface(Components.interfaces.nsIPrefBranch).getCharPref(aPrefName);
+      GroupBy(gHistoryGrouping);
     }
     catch(ex) {
     }
@@ -446,6 +447,12 @@ function updateItems()
   return true;
 }
 
-
-
- 
+function searchHistory(aInput)
+{
+   if (!aInput) 
+     GroupBy(gHistoryGrouping);
+   else
+     gHistoryTree.setAttribute("ref",
+                               "find:datasource=history&match=Name&method=contains&text=" + escape(aInput));
+ }
+                                                                       

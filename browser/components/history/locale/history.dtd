@@ -33,3 +33,5 @@
 <!ENTITY menuitem.view.show_columns.accesskey "S">
 <!ENTITY fileMenu.label            "File">
 <!ENTITY fileMenu.accesskey        "F">
+<!ENTITY find.label                "Find">
+<!ENTITY find.accesskey            "n">
