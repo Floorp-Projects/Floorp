@@ -36,10 +36,10 @@ IDLSRCS = \
 	$(NULL)
 
 # for testing purposes
-EXPORTS = $(IDLSRCS:.idl=.h)
+#EXPORTS = $(IDLSRCS:.idl=.h)
 
 # to build in the static methods
-CPPSRCS = $(IDLSRCS:.idl=.cpp)
-LIBRARY_NAME = rdfidl
+#CPPSRCS = $(IDLSRCS:.idl=.cpp)
+#LIBRARY_NAME = rdfidl
 
 include $(topsrcdir)/config/rules.mk
