@@ -31,6 +31,7 @@
 #include "nsIMsgParseMailMsgState.h"
 #include "nsITransactionManager.h"
 #include "nsMsgTxn.h"
+#include "nsIMsgMessageService.h"
 #ifdef DEBUG_bienvenu
 #define DOING_FILTERS
 #endif
@@ -41,6 +42,25 @@
 class nsImapMoveCoalescer;
 
 #endif
+
+#define FOUR_K 4096
+
+struct nsImapMailCopyState
+{
+    nsImapMailCopyState();
+    virtual ~nsImapMailCopyState();
+
+    nsCOMPtr<nsISupports> srcSupport;
+    nsCOMPtr<nsISupportsArray> messages;
+    nsCOMPtr<nsMsgTxn> undoMsgTxn;
+    nsCOMPtr<nsIMessage> message;
+    nsCOMPtr<nsISupports> clientSupport;
+    nsIMsgMessageService* msgService;
+    PRBool isMoveOrDraft;
+    PRUint32 curIndex;
+    PRUint32 totalCount;
+    char *dataBuffer;
+};
 
 class nsImapMailFolder : public nsMsgDBFolder, 
                          public nsIMsgImapMailFolder,
@@ -105,7 +125,16 @@ public:
     virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
                                           nsIMsgDatabase **db);
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages,
-                              nsITransactionManager *txnMgr, PRBool deleteStorage);
+                              nsITransactionManager *txnMgr, PRBool
+                              deleteStorage);
+    NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, 
+                            nsISupportsArray* messages,
+                            PRBool isMove, nsITransactionManager* txnMgr);
+    NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, 
+                               nsIMessage* msgToReplace,
+                               PRBool isDraft,
+                               nsISupports* clientSupport,
+                               nsITransactionManager* txnMgr);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage
                                          **message);
     NS_IMETHOD GetNewMessages();
@@ -277,10 +306,21 @@ protected:
 	//Creates a subfolder with the name 'name' and adds it to the list of
     //children. Returns the child as well.
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
-
 	nsresult GetDatabase();
-
 	virtual const char *GetIncomingServerType() {return "imap";}
+
+    // Uber message copy service
+    nsresult CopyMessages2(nsIMsgFolder* srcFolder,
+                           nsISupportsArray* messages,
+                           PRBool isMove,
+                           nsITransactionManager* txnMgr);
+    nsresult InitCopyState(nsISupports* srcSupport, 
+                           nsISupportsArray* messages,
+                           PRBool isMoveOrDraft);
+    void ClearCopyState();
+    nsresult SetTransactionManager(nsITransactionManager* txnMgr);
+    nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
+                                 nsString2& msgIds, nsMsgKeyArray& keyArray);
 
     nsNativeFileSpec *m_pathName;
     PRBool m_initialized;
@@ -305,6 +345,7 @@ protected:
     // *** jt - undo move/copy trasaction support
     nsCOMPtr<nsITransactionManager> m_transactionManager;
     nsCOMPtr<nsMsgTxn> m_pendingUndoTxn;
+    nsImapMailCopyState* m_copyState;
 };
 
 #endif
