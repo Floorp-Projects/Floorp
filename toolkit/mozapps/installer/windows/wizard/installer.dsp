@@ -814,6 +814,10 @@ SOURCE=.\setuprsc\bitmap1.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\setuprsc\browser.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\setuprsc\Header.bmp
 # End Source File
 # Begin Source File

@@ -12,8 +12,8 @@
 #define IDRESUME                        3
 #define IDPAUSE                         4
 #define IDS_MSG_RETRIEVE_INSTALLINI     11
-#define IDI_ICON1                       105
 #define IDI_SETUP                       105
+#define IDI_BROWSER                     106
 #define IDB_BITMAP_WELCOME              108
 #define DLG_MESSAGE                     110
 #define IDB_BITMAP_BANNER               114
@@ -115,6 +115,7 @@
 #define IDC_STATIC_DOWNLOAD_SIZE        1088
 #define DLG_INSTALL_SUCCESSFUL          1089
 #define IDC_START_APP                   1090
+#define IDC_APP_ICON                    1091
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003

@@ -46,6 +46,7 @@ LRESULT CALLBACK  NewListBoxWndProc( HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK  DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 
 BOOL              IsSelectableComponent(siC* aComponent);
+BOOL              IsComponentSelected(siC* aComponent);
 HFONT             MakeFont(TCHAR* aFaceName, int aFontSize, LONG aWeight);
 void              SaveUserChanges();
 BOOL              IsDownloadRequired();
