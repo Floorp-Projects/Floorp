@@ -108,7 +108,7 @@ PRUint8 nsSampleWordBreaker::GetClass(PRUnichar c)
   return 0;
 }
 
-nsresult nsSampleWordBreaker::PostionToBoundary(
+nsresult nsSampleWordBreaker::FindWord(
   const PRUnichar* aText , PRUint32 aTextLen,
   PRUint32 aOffset,
   PRUint32 *oWordBegin,
@@ -130,6 +130,7 @@ nsresult nsSampleWordBreaker::PostionToBoundary(
   PRUint8 c = this->GetClass(aText[aOffset]);
   PRUint32 i;
   // Scan forward
+  *oWordEnd = aTextLen;
   for(i = aOffset +1;i <= aTextLen; i++)
   {
      if( c != this->GetClass(aText[i]))
@@ -140,9 +141,10 @@ nsresult nsSampleWordBreaker::PostionToBoundary(
   }
 
   // Scan backward
-  for(i = aOffset -1;i >= 0; i++)
+  *oWordBegin = 0;
+  for(i = aOffset ;i > 0; i--)
   {
-     if( c != this->GetClass(aText[i]))
+     if( c != this->GetClass(aText[i-1]))
      {
        *oWordBegin = i;
        break;
@@ -171,9 +173,6 @@ nsresult nsSampleWordBreaker::FirstForwardBreak   (nsIBreakState* state)
 
   const PRUnichar* text;
   res = state->GetText(&text);
-
-  PRUint32 cur;
-  res = state->Current(&cur);
 
   PRUint32 next = Next(text, len, 0);
   res = state->Set(next , (next == len) );
@@ -208,6 +207,58 @@ nsresult nsSampleWordBreaker::NextForwardBreak    (nsIBreakState* state)
   return NS_OK;
 }
 
+nsresult nsSampleWordBreaker::FirstBackwardBreak   (nsIBreakState* state)
+{
+  NS_PRECONDITION( nsnull != state, "null ptr");
+  if(nsnull == state ) 
+    return NS_ERROR_NULL_POINTER; 
+
+  nsresult res;
+
+  PRUint32 len;
+  res = state->Length(&len);
+
+  if(len < 2)
+  {
+    res = state->Set(0, PR_TRUE);
+    return NS_OK;
+  }
+
+  const PRUnichar* text;
+  res = state->GetText(&text);
+
+  PRUint32 next = Prev(text, len, len-1);
+  res = state->Set(next , (next == 0) );
+
+  return NS_OK;
+}
+nsresult nsSampleWordBreaker::NextBackwardBreak    (nsIBreakState* state)
+{
+  NS_PRECONDITION( nsnull != state, "null ptr");
+  if(nsnull == state ) 
+    return NS_ERROR_NULL_POINTER; 
+
+
+  PRBool done;
+  nsresult res;
+  res = state->IsDone(&done);
+  if(done)
+    return NS_OK;
+
+  const PRUnichar* text;
+  res = state->GetText(&text);
+
+  PRUint32 len;
+  res = state->Length(&len);
+
+  PRUint32 cur;
+  res = state->Current(&cur);
+
+
+  PRUint32 next = Prev(text, len, cur);
+  res = state->Set(next , (next == 0) );
+  return NS_OK;
+}
 PRUint32 nsSampleWordBreaker::Next(
   const PRUnichar* aText,
   PRUint32 aLen,
@@ -219,6 +270,26 @@ PRUint32 nsSampleWordBreaker::Next(
   c1 = this->GetClass(aText[cur]);
 
   for(cur++; cur <aLen; cur++)
+  {
+     c2 = this->GetClass(aText[cur]);
+     if(c2 != c1) 
+       break;
+  }
+  return cur;
+}
+
+
+PRUint32 nsSampleWordBreaker::Prev(
+  const PRUnichar* aText,
+  PRUint32 aLen,
+  PRUint32 aPos
+)
+{
+  PRInt8 c1, c2;
+  PRUint32 cur = aPos;
+  c1 = this->GetClass(aText[cur]);
+
+  for(cur--; cur > 0; cur--)
   {
      c2 = this->GetClass(aText[cur]);
      if(c2 != c1) 

@@ -248,9 +248,6 @@ nsresult nsJISx4501LineBreaker::FirstForwardBreak   (nsIBreakState* state)
   const PRUnichar* text;
   res = state->GetText(&text);
 
-  PRUint32 cur;
-  res = state->Current(&cur);
-
   PRUint32 next = Next(text, len, 0);
   res = state->Set(next , (next == len) );
 
