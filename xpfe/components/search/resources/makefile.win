@@ -36,4 +36,4 @@ FILES=\
         $(NULL)
 
 install:: $(FILES:/=\)
-	!@$(MAKE_INSTALL) $** $(DIST)\bin\res\searchui
+	!@$(MAKE_INSTALL) $** $(DIST)\bin\res\samples

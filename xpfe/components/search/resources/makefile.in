@@ -45,5 +45,5 @@ FILES = \
 FILES := $(addprefix $(srcdir)/, $(FILES))
 
 install::
-	$(INSTALL) $(FILES) $(DIST)/bin/res/searchui
+	$(INSTALL) $(FILES) $(DIST)/bin/res/samples
 
