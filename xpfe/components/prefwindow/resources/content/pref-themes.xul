@@ -92,9 +92,4 @@
     </box>
   </box>
   
-  <separator class="groove"/>
-  <box>
-    <button value="&restoreDefaults.label;" accesskey="&restoreDefaults.accesskey;" oncommand="restoreDefaults();"/>
-  </box>
-
 </window>
