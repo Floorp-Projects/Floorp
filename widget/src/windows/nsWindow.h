@@ -136,6 +136,8 @@ public:
     virtual PRBool          AutoErase();
     nsPoint*                GetLastPoint() { return &mLastPoint; }
 
+    PRInt32                 GetNewCmdMenuId() { mMenuCmdId++; return mMenuCmdId;}
+
 protected:
 
   virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
@@ -196,6 +198,9 @@ protected:
 
     PRInt32     mPreferredWidth;
     PRInt32     mPreferredHeight;
+
+    nsIMenuBar * mMenuBar;
+    PRInt32      mMenuCmdId;
 
 
     // Enumeration of the methods which are accessable on the "main GUI thread"

@@ -33,6 +33,11 @@
 #include "prtime.h"
 #include "nsIRenderingContextWin.h"
 
+#include "nsIMenu.h"
+#include "nsIMenuItem.h"
+#include "nsIMenuListener.h"
+#include "nsMenuItem.h"
+
 BOOL nsWindow::sIsRegistered = FALSE;
 
 nsWindow* nsWindow::gCurrentWindow = nsnull;
@@ -43,7 +48,10 @@ nsWindow* nsWindow::gCurrentWindow = nsnull;
 //     g_hinst - handle of the application instance 
 extern HINSTANCE g_hinst; 
 
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIWidgetIID,       NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIMenuIID,         NS_IMENU_IID);
+static NS_DEFINE_IID(kIMenuItemIID,     NS_IMENUITEM_IID);
+//static NS_DEFINE_IID(kIMenuListenerIID, NS_IMENULISTENER_IID);
 
 //-------------------------------------------------------------------------
 //
@@ -73,6 +81,9 @@ nsWindow::nsWindow() : nsBaseWidget()
     mFont               = nsnull;
     mIsVisible          = PR_FALSE;
     mHas3DBorder        = PR_FALSE;
+    mMenuBar            = nsnull;
+    mMenuCmdId          = 0;
+
 }
 
 
@@ -1279,6 +1290,28 @@ void nsWindow::SetUpForPaint(HDC aHDC)
 }
 
 //-------------------------------------------------------------------------
+nsIMenuItem * FindMenuItem(nsIMenu * aMenu, PRUint32 aId)
+{
+  PRUint32 i, count;
+  aMenu->GetItemCount(count);
+  for (i=0;i<count;i++) {
+    nsISupports * item;
+    aMenu->GetItemAt(i, item);
+    nsIMenuItem * menuItem;
+    nsIMenu     * menu;
+    if (NS_OK == item->QueryInterface(kIMenuItemIID, (void **)&menuItem)) {
+      if (((nsMenuItem *)menuItem)->GetCmdId() == (PRInt32)aId) {
+        return menuItem;
+      }
+    } else if (NS_OK == item->QueryInterface(kIMenuIID, (void **)&menu)) {
+      return FindMenuItem(menu, aId);
+    }
+  }
+  return nsnull;
+}
+
+
+//-------------------------------------------------------------------------
 //
 // Process all nsWindows messages
 //
@@ -1300,6 +1333,23 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             event.eventStructType = NS_MENU_EVENT;
             InitEvent(event, NS_MENU_SELECTED);
             result = DispatchWindowEvent(&event);
+            if (mMenuBar) {
+              PRUint32 i, count;
+              mMenuBar->GetMenuCount(count);
+              for (i=0;i<count;i++) {
+                nsIMenu * menu;
+                mMenuBar->GetMenuAt(i, menu);
+                nsIMenuItem * menuItem = FindMenuItem(menu, event.mCommand);
+                if (menuItem) {
+                  nsIMenuListener * listener;
+                  if (NS_OK == menuItem->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+                    listener->MenuSelected(event);
+                    NS_RELEASE(listener);
+                  }
+                  NS_RELEASE(menuItem);
+                }
+              }
+            }
             NS_RELEASE(event.widget);
           }
         }
@@ -2038,6 +2088,9 @@ PRBool nsWindow::AutoErase()
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar) 
 {
+  mMenuBar = aMenuBar;
+  NS_ADDREF(mMenuBar);
+
   HMENU nativeMenuHandle;
   void * voidData;
   aMenuBar->GetNativeData(voidData);
