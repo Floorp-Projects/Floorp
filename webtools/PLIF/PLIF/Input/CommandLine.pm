@@ -93,7 +93,7 @@ sub createArgument {
             $self->SUPER::createArgument(@_);
         } else {
             $self->warn(5, "going to request '$argument' from user!");
-            $self->app->output->request($argument);
+            $self->app->output->request(@_);
             # get input from user
             my $term = Term::ReadLine->new($self->app->name);
             my $value = $term->readline(''); # (the parameter passed is the prompt, if any)
