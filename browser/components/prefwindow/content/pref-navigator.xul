@@ -32,6 +32,7 @@
       headertitle="&lHeader;">
 
   <stringbundle id="bundle_prefutilities" src="chrome://browser/locale/pref/prefutilities.properties"/>
+  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-navigator.js"/>
 
   <script type="application/x-javascript">
@@ -56,6 +57,10 @@
               oncommand="setHomePageToCurrentPage();"
               id="browserUseCurrent"
               prefstring="pref.browser.homepage.disable_button.current_page"/>
+      <button label="&useBookmark.label;" accesskey="&useBookmark.accesskey;"
+              oncommand="setHomePageToBookmark();"
+              id="browserUseBookmark"
+              prefstring="pref.browser.homepage.disable_button.bookmark_page"/>
       <button label="&useBlank.label;" accesskey="&useBlank.accesskey;"
               oncommand="document.getElementById('browserStartupHomepage').value = 'about:blank';"
               id="browserUseBlank"
