@@ -880,8 +880,24 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
 }
 
 void
-nsInlineReflow::HorizontalAlignFrames(const nsRect& aLineBox)
+nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aIsLastLine)
 {
+  // Before we start, trim any trailing whitespace off of the last
+  // frame in the line.
+  nscoord deltaWidth;
+  PerFrameData* pfd = mFrameDataBase + (mFrameNum - 1);
+  if (pfd->mBounds.width > 0) {
+    nsIFrame* frame = pfd->mFrame;
+    nsIHTMLReflow* ihr;
+    if (NS_OK == frame->QueryInterface(kIHTMLReflowIID, (void**)&ihr)) {
+      ihr->TrimTrailingWhiteSpace(mPresContext,
+                                  *mOuterReflowState.rendContext,
+                                  deltaWidth);
+      aLineBox.width -= deltaWidth;
+      pfd->mBounds.width -= deltaWidth;
+    }
+  }
+
   const nsStyleText* styleText = mOuterReflowState.mStyleText;
   nscoord maxWidth = mRightEdge - mLeftEdge;
   if (aLineBox.width < maxWidth) {
@@ -900,24 +916,38 @@ nsInlineReflow::HorizontalAlignFrames(const nsRect& aLineBox)
       break;
 
     case NS_STYLE_TEXT_ALIGN_LEFT:
-    case NS_STYLE_TEXT_ALIGN_JUSTIFY:
-      // Default layout has everything aligned left
       return;
+
+    case NS_STYLE_TEXT_ALIGN_JUSTIFY:
+      // If this is not the last line then go ahead and justify the
+      // frames in the line. If it is the last line then if the
+      // direction is right-to-left then we right-align the frames.
+      if (!aIsLastLine) {
+        JustifyFrames(maxWidth, aLineBox);
+        return;
+      }
+      else if (NS_STYLE_DIRECTION_RTL == mOuterReflowState.mDirection) {
+        // right align the frames
+        dx = maxWidth - aLineBox.width;
+      }
+      break;
 
     case NS_STYLE_TEXT_ALIGN_CENTER:
       dx = (maxWidth - aLineBox.width) / 2;
       break;
     }
 
-    // Position children
-    PerFrameData* pfd = mFrameDataBase;
-    PerFrameData* end = pfd + mFrameNum;
-    nsPoint origin;
-    for (; pfd < end; pfd++) {
-      nsIFrame* kid = pfd->mFrame;;
-      kid->GetOrigin(origin);
-      kid->MoveTo(origin.x + dx, origin.y);
-      kid->GetNextSibling(kid);
+    if (0 != dx) {
+      // Position children
+      pfd = mFrameDataBase;
+      PerFrameData* end = pfd + mFrameNum;
+      nsPoint origin;
+      for (; pfd < end; pfd++) {
+        nsIFrame* kid = pfd->mFrame;;
+        kid->GetOrigin(origin);
+        kid->MoveTo(origin.x + dx, origin.y);
+        kid->GetNextSibling(kid);
+      }
     }
   }
 }
@@ -1031,4 +1061,76 @@ nsInlineReflow::CalcLineHeightFor(nsIPresContext& aPresContext,
   }
 
   return lineHeight;
+}
+
+void
+nsInlineReflow::JustifyFrames(nscoord aMaxWidth, nsRect& aLineBox)
+{
+  // Gather up raw data for justification
+  PRInt32 i, n = mFrameNum;
+  PerFrameData* pfd = mFrameDataBase;
+  PRInt32 fixed = 0;
+  nscoord fixedWidth = 0;
+  for (i = 0; i < n; i++, pfd++) {
+    nsIFrame* frame = pfd->mFrame;
+    nsSplittableType isSplittable = NS_FRAME_NOT_SPLITTABLE;
+    frame->IsSplittable(isSplittable);
+    if ((0 == pfd->mBounds.width) ||
+        NS_FRAME_IS_NOT_SPLITTABLE(isSplittable)) {
+      pfd->mSplittable = PR_FALSE;
+      fixed++;
+      fixedWidth += pfd->mBounds.width;
+    }
+    else {
+      pfd->mSplittable = PR_TRUE;
+    }
+  }
+
+  nscoord variableWidth = aLineBox.width - fixedWidth;
+  if (variableWidth > 0) {
+    // Each variable width frame gets a portion of the available extra
+    // space that is proportional to the space it takes in the
+    // line. The extra space is given to the frame by updating its
+    // position and size. The frame is responsible for adjusting the
+    // position of its contents on its own (during rendering).
+    PRInt32 splittable = n - fixed;
+    nscoord extraSpace = aMaxWidth - aLineBox.width;
+    nscoord remainingExtra = extraSpace;
+    nscoord dx = 0;
+    float lineWidth = float(aLineBox.width);
+    pfd = mFrameDataBase;
+    for (i = 0; i < n; i++, pfd++) {
+      nsRect r;
+      nsIFrame* frame = pfd->mFrame;
+      nsIHTMLReflow* ihr;
+      if (NS_OK == frame->QueryInterface(kIHTMLReflowIID, (void**)&ihr)) {
+        if (pfd->mSplittable && (pfd->mBounds.width > 0)) {
+          float pctOfLine = float(pfd->mBounds.width) / lineWidth;
+          nscoord extra = nscoord(pctOfLine * extraSpace);
+          if (--splittable == 0) {
+            extra = remainingExtra;
+          }
+          if (0 != extra) {
+            nscoord used;
+            ihr->AdjustFrameSize(extra, used);
+            frame->GetRect(r);
+            r.x += dx;
+            frame->SetRect(r);
+            dx += extra;
+          }
+          else if (0 != dx) {
+            frame->GetRect(r);
+            r.x += dx;
+            frame->SetRect(r);
+          }
+          remainingExtra -= extra;
+        }
+        else if (0 != dx) {
+          frame->GetRect(r);
+          r.x += dx;
+          frame->SetRect(r);
+        }
+      }
+    }
+  }
 }

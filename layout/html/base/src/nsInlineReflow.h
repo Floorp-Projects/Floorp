@@ -60,7 +60,8 @@ public:
                            nscoord& aMaxAscent,
                            nscoord& aMaxDescent);
 
-  void HorizontalAlignFrames(const nsRect& aLineBox);
+  void HorizontalAlignFrames(nsRect& aLineBox,
+                             PRBool aIsLastLine = PR_FALSE);
 
   void RelativePositionFrames();
 
@@ -138,6 +139,8 @@ protected:
 
   void UpdateFrames();
 
+  void JustifyFrames(nscoord aMaxWidth, nsRect& aLineBox);
+
   // The outer frame that contains the frames that we reflow.
   nsHTMLContainerFrame* mOuterFrame;
   nsISpaceManager* mSpaceManager;
@@ -165,6 +168,8 @@ protected:
     nsRect mBounds;
 
     nsSize mMaxElementSize;
+
+    PRBool mSplittable;
   };
 
   PerFrameData* mFrameData;
