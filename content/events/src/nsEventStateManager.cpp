@@ -453,7 +453,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 	    }
 
       // Focus the DOM window.
-      focusedWindow->Focus();
+      if(focusedWindow)
+        focusedWindow->Focus();
 
       if (focusedElement) {
         nsCOMPtr<nsIContent> focusContent = do_QueryInterface(focusedElement);
