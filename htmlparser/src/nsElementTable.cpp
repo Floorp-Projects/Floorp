@@ -58,7 +58,7 @@ TagList  gLegendParents={1,{eHTMLTag_fieldset}};
 TagList  gAreaParent={1,{eHTMLTag_map}};
 TagList  gParamParents={2,{eHTMLTag_applet,eHTMLTag_object}};
 TagList  gTRParents={4,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table}};
-TagList  gTREndParents={4,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table}};
+TagList  gTREndParents={5,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table,eHTMLTag_applet}};
 
 //*********************************************************************************************
 //  Next, define the set of taglists for tags with special kids...
@@ -86,7 +86,6 @@ TagList  gHeadKids={9,{eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_met
 TagList  gLabelKids={1,{eHTMLTag_span}};
 TagList  gLIKids={2,{eHTMLTag_ol,eHTMLTag_ul}};
 TagList  gMapKids={1,{eHTMLTag_area}};
-TagList  gNoframesKids={1,{eHTMLTag_body}};
 TagList  gPreKids={2,{eHTMLTag_hr,eHTMLTag_center}};  //note that CENTER is here for backward compatibility; it's not 4.0 spec.
 
 TagList  gTableKids={10,{eHTMLTag_caption,eHTMLTag_col,eHTMLTag_colgroup,eHTMLTag_form,
@@ -104,13 +103,13 @@ TagList  gULKids={2,{eHTMLTag_li,eHTMLTag_p}};
 //*********************************************************************************************
 
 TagList  gRootTags={4,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet}};
-TagList  gTableRootTags={6,{eHTMLTag_applet,eHTMLTag_body,eHTMLTag_dl,eHTMLTag_ol,eHTMLTag_td,eHTMLTag_ul}};
+TagList  gTableRootTags={7,{eHTMLTag_applet,eHTMLTag_body,eHTMLTag_dl,eHTMLTag_ol,eHTMLTag_td,eHTMLTag_th,eHTMLTag_ul}};
 TagList  gHTMLRootTags={1,{eHTMLTag_unknown}};
  
-TagList  gLIRootTags={7,{eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td}};
+TagList  gLIRootTags={8,{eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td,eHTMLTag_th}};
 
-TagList  gOLRootTags={3,{eHTMLTag_body,eHTMLTag_li,eHTMLTag_td}};
-TagList  gTDRootTags={5,{eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_table}};
+TagList  gOLRootTags={4,{eHTMLTag_body,eHTMLTag_li,eHTMLTag_td,eHTMLTag_th}};
+TagList  gTDRootTags={6,{eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_table,eHTMLTag_applet}};
 TagList  gNoframeRoot={2,{eHTMLTag_body,eHTMLTag_frameset}};
 
 //*********************************************************************************************
@@ -840,7 +839,7 @@ void InitializeElementTable(void) {
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
       /*special props, prop-range*/       0, kNoPropRange,
-      /*special parents,kids,skip*/       &gNoframeRoot,&gNoframesKids,eHTMLTag_unknown);
+      /*special parents,kids,skip*/       &gNoframeRoot,0,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_nolayer,
