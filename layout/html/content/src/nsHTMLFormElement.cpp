@@ -24,6 +24,7 @@
 #include "nsIDOMNSHTMLFormElement.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIScriptContextOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -51,7 +52,8 @@ class nsHTMLFormElement : public nsIDOMHTMLFormElement,
                           public nsIScriptObjectOwner,
                           public nsIDOMEventReceiver,
                           public nsIHTMLContent,
-                          public nsIForm
+                          public nsIForm,
+                          public nsIJSScriptObject
 {
 public:
   nsHTMLFormElement(nsIAtom* aTag);
@@ -102,6 +104,16 @@ public:
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+
+  // nsIJSScriptObject
+  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    EnumerateProperty(JSContext *aContext);
+  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, jsval aID);
+  virtual void      Finalize(JSContext *aContext);
 
   // nsIForm
   NS_IMETHOD AddElement(nsIFormControl* aElement);
@@ -188,6 +200,15 @@ nsTraceRefcnt::Destroy((nsIForm*)this, __FILE__, __LINE__);
 NS_IMETHODIMP
 nsHTMLFormElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
+  // Note that this has to stay above the generic element
+  // QI macro, since it overrides the nsIJSScriptObject implementation
+  // from the generic element.
+  if (aIID.Equals(kIJSScriptObjectIID)) {
+    nsIJSScriptObject* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    AddRef();
+    return NS_OK;
+  }                                                             
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIFormIID)) {
     *aInstancePtr = (void*)(nsIForm*)this;
@@ -473,6 +494,99 @@ nsHTMLFormElement::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
   return result;
 }
 
+PRBool    
+nsHTMLFormElement::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return mInner.AddProperty(aContext, aID, aVp);
+}
+
+PRBool    
+nsHTMLFormElement::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return mInner.DeleteProperty(aContext, aID, aVp);
+}
+
+PRBool    
+nsHTMLFormElement::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return mInner.GetProperty(aContext, aID, aVp);
+}
+
+PRBool    
+nsHTMLFormElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return mInner.SetProperty(aContext, aID, aVp);
+}
+
+PRBool    
+nsHTMLFormElement::EnumerateProperty(JSContext *aContext)
+{
+  return mInner.EnumerateProperty(aContext);
+}
+
+PRBool    
+nsHTMLFormElement::Resolve(JSContext *aContext, jsval aID)
+{
+  nsCOMPtr<nsIDOMElement> element;
+  char* str = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+  nsAutoString name(str); 
+  nsresult result = NS_OK;
+  PRBool ret = PR_TRUE;
+
+  result = NamedItem(name, getter_AddRefs(element));
+  if (NS_SUCCEEDED(result) && element) {
+    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(element);
+    
+    if (owner) {
+      nsCOMPtr<nsIScriptContext> scriptContext;
+      
+      if (nsnull != mInner.mDocument) {
+        nsCOMPtr<nsIScriptContextOwner> contextOwner;
+
+        contextOwner = getter_AddRefs(mInner.mDocument->GetScriptContextOwner());
+        if (contextOwner) {
+          result = contextOwner->GetScriptContext(getter_AddRefs(scriptContext));
+        }
+      }
+      else {
+        scriptContext = dont_AddRef((nsIScriptContext*)JS_GetContextPrivate(aContext));
+      }
+
+      JSObject* obj;
+      if (scriptContext) {
+        result = owner->GetScriptObject(scriptContext, (void**)&obj);
+        if (NS_SUCCEEDED(result) && (nsnull != obj)) {
+          JSObject* myObj;
+          result = mInner.GetScriptObject(scriptContext, (void**)&myObj);
+          ret = ::JS_DefineProperty(aContext, myObj,
+                                    str, OBJECT_TO_JSVAL(obj),
+                                    nsnull, nsnull, 0);
+        }
+      }
+    }
+  }
+  else {
+    ret = mInner.Resolve(aContext, aID);
+  }
+
+  if (NS_FAILED(result)) {
+    ret = PR_FALSE;
+  }
+
+  return ret;
+}
+
+PRBool    
+nsHTMLFormElement::Convert(JSContext *aContext, jsval aID)
+{
+  return mInner.Convert(aContext, aID);
+}
+
+void      
+nsHTMLFormElement::Finalize(JSContext *aContext)
+{
+  mInner.Finalize(aContext);
+}
 
 // nsFormControlList implementation, this could go away if there were a lightweight collection implementation somewhere
 
