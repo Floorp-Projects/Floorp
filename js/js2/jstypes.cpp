@@ -35,12 +35,15 @@
 #include "jsclasses.h"
 #include "numerics.h"
 #include "icodegenerator.h"
+#include "interpreter.h"
 
 namespace JavaScript {
 namespace JSTypes {
 
 using namespace JSClasses;
+using namespace Interpreter;
 
+/********** Object Object Stuff **************************/
 
 JSValue object_toString(Context *cx, const JSValues& argv)
 {
@@ -93,13 +96,93 @@ JSObject *JSObject::initJSObject()
 // a new JSObject does all the work of setting the prototype and [[class]] values.
 void JSObject::initObjectObject(JSScope *g)
 {
-    JSObject* o = new JSObject();
+    JSNativeFunction *objCon = new JSNativeFunction(objectConstructor);
 
-    g->setProperty(ObjectString, JSValue(new JSNativeFunction(objectConstructor)));
+    objCon->setProperty(widenCString("prototype"), JSValue(objectPrototypeObject));
+    
 
+
+
+    g->setProperty(ObjectString, JSValue(objCon));
 }
 
 
+
+/********** Function Object Stuff **************************/
+
+// An empty function that returns undefined
+JSValue functionPrototypeFunction(Context *cx, const JSValues& argv)
+{
+    return kUndefinedValue;
+}
+
+
+JSValue function_constructor(Context *cx, const JSValues& argv)
+{
+    // build a function from the arguments into the this.
+    ASSERT(argv.size() > 0);
+    JSValue theThis = argv[0];
+    ASSERT(theThis.isObject());
+
+    if (argv.size() == 2) {        
+        JSValue s = JSValue::valueToString(argv[1]);
+        theThis = new JSFunction(cx->compile((String)(*s.string)));
+    }
+
+    return theThis;
+}
+
+JSValue function_toString(Context *cx, const JSValues& argv)
+{
+    return JSValue(new JSString("function XXX() { }" ));
+}
+JSValue function_apply(Context *cx, const JSValues& argv)
+{
+    // XXX
+    return kUndefinedValue;
+}
+JSValue function_call(Context *cx, const JSValues& argv)
+{
+    // XXX
+    return kUndefinedValue;
+}
+
+
+
+String JSFunction::FunctionString = widenCString("Function");
+JSObject *JSFunction::functionPrototypeObject = NULL;   // the 'original Function prototype object'
+
+struct FunctionFunctionEntry {
+    char *name;
+    JSNativeFunction::JSCode fn;
+} FunctionFunctions[] = {
+    { "constructor",    function_constructor },
+    { "toString",       function_toString },
+    { "apply",          function_apply },
+    { "call",           function_call },
+};
+
+void JSFunction::initFunctionObject(JSScope *g)
+{
+    // first build the Function Prototype Object
+    functionPrototypeObject = new JSNativeFunction(functionPrototypeFunction);
+    for (int i = 0; i < sizeof(FunctionFunctions) / sizeof(FunctionFunctionEntry); i++)
+        functionPrototypeObject->setProperty(widenCString(FunctionFunctions[i].name), JSValue(new JSNativeFunction(FunctionFunctions[i].fn) ) );
+
+    // now the Function Constructor Object
+    JSNativeFunction *functionConstructorObject = new JSNativeFunction(function_constructor);
+    functionConstructorObject->setPrototype(functionPrototypeObject);
+    functionConstructorObject->setProperty(widenCString("length"), JSValue((int32)1));
+    functionConstructorObject->setProperty(widenCString("prototype"), JSValue(functionPrototypeObject));
+
+    // This is interesting - had to use defineVariable here to specify a type because
+    // when left as Any_Type (via setProperty), the Function predefined type interacted
+    // badly with this value. (I think setProperty perhaps should have reset the entry
+    // in mTypes) (?)
+    g->defineVariable(FunctionString, &Function_Type, JSValue(functionConstructorObject));
+}
+
+/**************************************************************************************/
 
 JSType Any_Type = JSType(widenCString("any"), NULL);
 JSType Integer_Type = JSType(widenCString("Integer"), &Any_Type);

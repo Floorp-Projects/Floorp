@@ -1100,7 +1100,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                     JSClass* clazz = dynamic_cast<JSClass*>(value.type);
                     if (clazz) {
                         ret = newClass(clazz);
-                        call(getStatic(clazz, className), ret, &args);
+                        ret = call(getStatic(clazz, className), ret, &args);
                     }
                     else
                         NOT_REACHED("new <name>, where <name> is not a new-able type (whatever that means)");   // XXX Runtime error.
@@ -1109,7 +1109,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                     if (value.isFunction()) {
                         TypedRegister f = loadName(className, value.type);
                         ret = newObject(f);
-                        call(f, ret, &args);
+                        ret = call(f, ret, &args);
                     }
                     else
                         NOT_REACHED("new <name>, where <name> is not a function");   // XXX Runtime error.
@@ -1695,7 +1695,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                     else
                                         thisClass->defineMethod(name, new JSFunction(icm));
                             }
-                       }
+                        }                        
                         break;
                     default:
                         NOT_REACHED("unimplemented class member statement");
@@ -1712,9 +1712,11 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     TypedRegister thisValue = TypedRegister(0, thisClass);
                     RegisterList args;
                     ICodeGenerator icg(mWorld, thisScope, thisClass, kIsStaticMethod);
+                    icg.allocateParameter(mWorld->identifiers["this"], thisClass);   // always parameter #0
                     if (superclass)
                         icg.call(icg.getStatic(superclass, superclass->getName()), thisValue, &args);
                     icg.call(icg.getStatic(thisClass, initName), thisValue, &args);
+                    icg.returnStmt(thisValue);
                     thisClass->defineConstructor(nameExpr->name);
                     scg.setStatic(thisClass, nameExpr->name, scg.newFunction(icg.complete()));
                 }
