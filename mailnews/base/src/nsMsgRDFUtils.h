@@ -45,6 +45,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_FLAGGED				NC_NAMESPACE_URI "Flagged"
 #define NC_RDF_PRIORITY				NC_NAMESPACE_URI "Priority"
 #define NC_RDF_SIZE					NC_NAMESPACE_URI "Size"
+#define NC_RDF_ISUNREAD				NC_NAMESPACE_URI "IsUnread"
 
 #define NC_RDF_CHILD				NC_NAMESPACE_URI "child"
 #define NC_RDF_MESSAGECHILD			NC_NAMESPACE_URI "MessageChild"

@@ -370,8 +370,8 @@ function ToggleMessageRead(treeItem)
 {
 
 	var tree = GetThreadTree();
-	var status = treeItem.getAttribute('Status');
-	var unread = (status == " ") || (status == "new");
+	var isUnread = treeItem.getAttribute('IsUnread');
+	var unread = (isUnread == "true");
 	messenger.MarkMessageRead(tree.database, treeItem.resource, unread);
 }
 

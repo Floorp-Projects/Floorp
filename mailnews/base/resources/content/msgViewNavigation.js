@@ -32,14 +32,14 @@ function ResourceGoMessage(message)
 
 function GoUnreadMessage(message)
 {
-	var status = message.getAttribute('Status');
-	return(status == ' ' || status == 'New');
+	var isUnread = message.getAttribute('IsUnread');
+	return(isUnread == 'true');
 }
 
 function ResourceGoUnreadMessage(message)
 {
-	var statusValue = GetMessageValue(message, "http://home.netscape.com/NC-rdf#Status");
-	return(statusValue == ' ' || statusValue == 'New');
+	var isUnreadValue = GetMessageValue(message, "http://home.netscape.com/NC-rdf#IsUnread");
+	return(isUnreadValue == 'true');
 }
 
 function GoFlaggedMessage(message)
@@ -67,13 +67,26 @@ function GetMessageValue(message, propertyURI)
 	return null;
 }
 
+function GoUnreadThread(messageElement)
+{
+	var messageuri = messageElement.getAttribute('id');
+	var messageResource = RDF.GetResource(messageuri);
+
+	var unreadCount = GetMessageValue(messageResource, "http://home.netscape.com/NC-rdf#TotalUnreadMessages");
+	return (unreadCount !="");
+}
+
 /*GoNextMessage finds the message that matches criteria and selects it.  
   nextFunction is the function that will be used to detertime if a message matches criteria.
   It must take a node and return a boolean.
+  nextResourceFunction is the function that will be used to determine if a message in the form of a resource
+  matches criteria.  Takes a resource and returns a boolean
+  nextThreadFunction is an optional function that can be used to optimize whether or not a thread will have a
+  message that matches the criteria.  Takes the top level message in the form of a node and returns a boolean.
   startFromBeginning is a boolean that states whether or not we should start looking at the beginning
   if we reach the end 
 */
-function GoNextMessage(nextFunction, nextResourceFunction, startFromBeginning)
+function GoNextMessage(nextFunction, nextResourceFunction, nextThreadFunction, startFromBeginning)
 {
 	var tree = GetThreadTree();
 	
@@ -93,7 +106,7 @@ function GoNextMessage(nextFunction, nextResourceFunction, startFromBeginning)
 
 		if(messageView.showThreads)
 		{
-			nextMessage = GetNextMessageInThreads(tree, currentMessage, nextFunction, nextResourceFunction, startFromBeginning);	
+			nextMessage = GetNextMessageInThreads(tree, currentMessage, nextFunction, nextResourceFunction, nextThreadFunction, startFromBeginning);	
 		}
 		else
 		{
@@ -157,7 +170,7 @@ function GetNextMessage(tree, currentMessage, nextFunction, startFromBeginning)
 	return nextMessage;
 }
 
-function GetNextMessageInThreads(tree, currentMessage, nextFunction, nextResourceFunction, startFromBeginning)
+function GetNextMessageInThreads(tree, currentMessage, nextFunction, nextResourceFunction, nextThreadFunction, startFromBeginning)
 {
 	var checkStartMessage = false;
 
@@ -168,16 +181,30 @@ function GetNextMessageInThreads(tree, currentMessage, nextFunction, nextResourc
 		checkStartMessage = true;
 	}
 
-	return FindNextMessageInThreads(currentMessage, currentMessage, nextFunction, nextResourceFunction, startFromBeginning, checkStartMessage);
+	return FindNextMessageInThreads(currentMessage, currentMessage, nextFunction, nextResourceFunction, nextThreadFunction, startFromBeginning, checkStartMessage);
 }
 
-function FindNextMessageInThreads(startMessage, originalStartMessage, nextFunction, nextResourceFunction, startFromBeginning, checkStartMessage)
+function FindNextMessageInThreads(startMessage, originalStartMessage, nextFunction, nextResourceFunction, nextThreadFunction, startFromBeginning, checkStartMessage)
 {
+	var nextMessage;
+	var nextChildMessage;
+
 	//First check startMessage if we are supposed to
 	if(checkStartMessage)
 	{
 		if(nextFunction(startMessage))
 			return startMessage;
+	}
+
+	//if we're on the top level and a thread function has been passed in, we might be able to search faster.
+	if(startMessage.parentNode.parentNode.nodeName != "treeitem" && nextThreadFunction)
+	{
+		var nextTopMessage = FindNextThread(startMessage, nextThreadFunction, startFromBeginning, true);
+		nextMessage = GetNextInThread(nextTopMessage, nextFunction, nextResourceFunction);
+		if(nextMessage)
+		{
+			return nextMessage;
+		}
 	}
 
 	//Next, search the current messages children.
@@ -210,7 +237,7 @@ function FindNextMessageInThreads(startMessage, originalStartMessage, nextFuncti
 	{
 		if(parentMessage.nextSibling != null)
 		{
-			nextMessage = FindNextMessageInThreads(parentMessage.nextSibling, originalStartMessage, nextFunction, nextResourceFunction, startFromBeginning, true);
+			nextMessage = FindNextMessageInThreads(parentMessage.nextSibling, originalStartMessage, nextFunction, nextResourceFunction, nextThreadFunction, startFromBeginning, true);
 			return nextMessage;
 		}
 		parentMessage = parentMessage.parentNode.parentNode;
@@ -218,7 +245,7 @@ function FindNextMessageInThreads(startMessage, originalStartMessage, nextFuncti
 	//otherwise it's the tree so we need to stop and potentially start from the beginning
 	if(startFromBeginning)
 	{
-		nextMessage = FindNextMessageInThreads(FindFirstMessage(parentMessage), originalStartMessage, nextFunction, nextResourceFunction, false, true);
+		nextMessage = FindNextMessageInThreads(FindFirstMessage(parentMessage), originalStartMessage, nextFunction, nextResourceFunction, nextThreadFunction, false, true);
 		return nextMessage;
 	}
 	return null;
@@ -390,15 +417,150 @@ function ChangeSelection(tree, newMessage)
 
 function FindFirstMessage(tree)
 {
-	var treeChildren = tree.getElementsByTagName('treechildren');
-	if(treeChildren.length > 1)
+	//getElementsByTagName is too slow which is why I'm using this loop.  Just find the first
+	//child of the tree that has the 'treechildren' tag and return it's first child.  This will
+	//be the first message.
+
+	var children = tree.childNodes;
+	var numChildren = children.length;
+
+	for(var i = 0; i < numChildren; i++)
 	{
-		//The first treeChildren will be for the template.
-		return treeChildren[1].firstChild;
+		if(children[i].nodeName == 'treechildren')
+		{
+			return children[i].firstChild;
+		}
 
 	}
 
 	return null;	
 
 }
+
+// nextThreadFunction is the function that determines whether a top level message is part of a thread that fits criteria.
+// nextMessageFunction is the function that would be used to find the next message in a thread if gotoNextInThread is true
+// nextResourceFunction is the function that would be used to find the next message in a thread as a resource if gotoNextInThread is true
+// startFromBeginning is true if we should start looking from the beginning after we get to the end of the thread pane.
+// gotoNextInThread is true if once we find an unrad thread we should select the first message in that thread that fits criteria
+function GoNextThread(nextThreadFunction, nextMessageFunction, nextResourceFunction, startFromBeginning, gotoNextInThread)
+{
+
+	if(messageView.showThreads)
+	{
+		var tree = GetThreadTree();
+		
+		var selArray = tree.selectedItems;
+		var length = selArray.length;
+
+		if ( selArray && ((length == 0) || (length == 1)) )
+		{
+			var currentMessage;
+
+			if(length == 0)
+				currentMessage = null;
+			else
+				currentMessage = selArray[0];
+
+			var nextMessage;
+			var currentTopMessage;
+			var checkCurrentTopMessage;
+			//Need to get the parent message for the current selection to begin to find thread
+			if(currentMessage)
+			{
+				//need to find its top level message and we don't want it to be checked for criteria
+				currentTopMessage = FindTopLevelMessage(currentMessage);
+				checkCurrentTopMessage = false;
+			}
+			else
+			{
+				//currentTopmessage is the first one in the tree and we want it to be checked for criteria.
+				currentTopMessage = FindFirstMessage(tree);
+				checkCurrentTopMessage = true;
+			}
+
+			var nextTopMessage = FindNextThread(currentTopMessage, nextThreadFunction, startFromBeginning, checkCurrentTopMessage);
+			var changeSelection = (nextTopMessage != null && ((currentTopMessage != nextTopMessage) || checkCurrentTopMessage));
+			if(changeSelection)
+			{
+				if(gotoNextInThread)
+				{
+					nextMessage = GetNextInThread(nextTopMessage, nextMessageFunction, nextResourceFunction);
+					ChangeSelection(tree, nextMessage);
+				}
+				else
+					ChangeSelection(tree, nextTopMessage);	
+			}
+		}
+	}
+
+}
+
+//Given the top level message of a thread and the searching functions, this returns the first message in that thread that matches
+//the criteria
+function GetNextInThread(topMessage, nextMessageFunction, nextResourceFunction)
+{
+	var nextMessage;
+
+	if(nextMessageFunction(topMessage))
+		nextMessage = topMessage;
+	else
+	{
+		nextMessage = FindNextInChildren(topMessage, null, nextMessageFunction, nextResourceFunction);
+	}
+
+	return nextMessage;
+}
+
+function FindTopLevelMessage(startMessage)
+{
+	var currentTop = startMessage;
+	var parent = startMessage.parentNode.parentNode;
+
+	while(parent.nodeName == 'treeitem')
+	{
+		currentTop = parent;
+		parent = parent.parentNode.parentNode;
+	}
+
+	return currentTop;
+}
+
+function FindNextThread(startThread, nextThreadFunction, startFromBeginning, checkStartThread)
+{
+	if(checkStartThread)
+	{
+		if(nextThreadFunction(startThread))
+			return startThread;
+		dump("start thread doesn't match\n");
+	}
+
+	var nextThread = startThread.nextSibling;
+
+	//In case we are currently the bottom message
+	if(!nextThread && startFromBeginning)
+	{
+		var parent = startThread.parentNode;
+		nextThread = parent.firstChild;
+	}
+
+
+	while(nextThread && (nextThread != startThread))
+	{
+		if(nextThreadFunction(nextThread))
+		{
+		 break;
+		}
+		nextThread = nextThread.nextSibling;
+		/*If there's no nextMessage we may have to start from top.*/
+		if(!nextThread && (nextThread!= startThread) && startFromBeginning)
+		{
+			var parent = startThread.parentNode;
+			nextThread = parent.firstChild;
+		}
+	}
+
+	return nextThread;
+}
+
+
 

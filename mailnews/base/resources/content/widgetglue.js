@@ -840,16 +840,21 @@ function MsgStop() {
 
 function MsgNextMessage()
 {
-	GoNextMessage(GoMessage, ResourceGoMessage, false);
+	GoNextMessage(GoMessage, ResourceGoMessage, null, false);
 }
 
 function MsgNextUnreadMessage()
 {
-	GoNextMessage(GoUnreadMessage, ResourceGoUnreadMessage, true);
+	GoNextMessage(GoUnreadMessage, ResourceGoUnreadMessage, GoUnreadThread, true);
 }
 function MsgNextFlaggedMessage()
 {
-	GoNextMessage(GoFlaggedMessage, ResourceGoFlaggedMessage, true);
+	GoNextMessage(GoFlaggedMessage, ResourceGoFlaggedMessage, null, true);
+}
+
+function MsgNextUnreadThread()
+{
+	GoNextThread(GoUnreadThread, GoUnreadMessage, ResourceGoUnreadMessage, true, true);
 }
 
 function MsgPreviousMessage()

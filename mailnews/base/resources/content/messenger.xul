@@ -370,6 +370,8 @@ Rights Reserved.
 		<menuitem value="&nextMsgCmd.label;" oncommand="MsgNextMessage();"/>
         <menuitem value="&nextUnreadMsgCmd.label;" oncommand="MsgNextUnreadMessage();"/>
         <menuitem value="&nextFlaggedMsgCmd.label;" oncommand="MsgNextFlaggedMessage();"/>
+		<menuseparator/>
+		<menuitem value="&nextUnreadThread.label;" oncommand="MsgNextUnreadThread();"/>
 		</menupopup>
       </menu>
       <menu value="&prevMenu.label;">

@@ -56,14 +56,15 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
 	nsIRDFService *getRDFService();
 	static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
 	static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);
+	static PRBool changeEnumFunc(nsISupports *aElement, void *aData);
 	nsresult  NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
-								nsIRDFNode *object, PRBool assert);
+								nsIRDFNode *object, PRBool assert, PRBool change);
 	nsresult NotifyPropertyChanged(nsIRDFResource *resource,
 													  nsIRDFResource *propertyResource,
-													  const char *oldValue, const char *newValue);
+													  const char *newValue);
 	nsresult NotifyPropertyChanged(nsIRDFResource *resource,
 													  nsIRDFResource *propertyResource,
-													  nsIRDFNode *oldNode, nsIRDFNode *newNode);
+													  nsIRDFNode *newNode);
 	nsresult GetTransactionManager(nsISupportsArray *sources, nsITransactionManager **aTransactionManager);
 
 	nsCOMPtr<nsIMsgWindow> mWindow;

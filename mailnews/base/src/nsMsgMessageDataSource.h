@@ -141,12 +141,15 @@ protected:
 	nsresult createMessageSizeNode(nsIMessage *message,
 								   nsIRDFNode **target);
 
+	nsresult createMessageIsUnreadNode(nsIMessage *message, nsIRDFNode **target);
+
 	nsresult createMessageUnreadNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageTotalNode(nsIMessage *message, nsIRDFNode **target);
   nsresult createMessageMessageChildNode(nsIMessage* message, nsIRDFNode **target);
 	nsresult GetMessageFolderAndThread(nsIMessage *message, nsIMsgFolder **folder,
 										nsIMsgThread **thread);
 	PRBool IsThreadsFirstMessage(nsIMsgThread *thread, nsIMessage *message);
+	nsresult GetThreadsFirstMessage(nsIMsgThread *thread, nsIMsgFolder *folder, nsIMessage **message);
 
 	nsresult DoMarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 	nsresult DoMarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
@@ -166,6 +169,15 @@ protected:
 	nsresult OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item, const char *viewString,
 								  PRBool added);
 
+	nsresult OnChangeStatus(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag);
+	nsresult OnChangeStatusString(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag);
+	nsresult OnChangeIsUnread(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag);
+	nsresult OnChangeUnreadMessageCount(nsIMessage *message);
+	nsresult OnChangeTotalMessageCount(nsIMessage *message);
+
+	nsresult GetUnreadChildrenNode(nsIMsgThread *thread, nsIRDFNode **target);
+	nsresult GetTotalChildrenNode(nsIMsgThread *thread, nsIRDFNode **target);
+
 	static nsIRDFResource* kNC_Subject;
 	static nsIRDFResource* kNC_SubjectCollation;
 	static nsIRDFResource* kNC_Sender;
@@ -178,6 +190,7 @@ protected:
 	static nsIRDFResource* kNC_Total;
 	static nsIRDFResource* kNC_Unread;
 	static nsIRDFResource* kNC_MessageChild;
+	static nsIRDFResource* kNC_IsUnread;
 
 
 	// commands
@@ -199,6 +212,8 @@ protected:
 	nsCOMPtr<nsIRDFNode> kForwardedLiteral;
 	nsCOMPtr<nsIRDFNode> kNewLiteral;
 	nsCOMPtr<nsIRDFNode> kReadLiteral;
+	nsCOMPtr<nsIRDFNode> kTrueLiteral;
+	nsCOMPtr<nsIRDFNode> kFalseLiteral;
 
 	nsCOMPtr<nsISupportsArray> kThreadsArcsOutArray;
 	nsCOMPtr<nsISupportsArray> kNoThreadsArcsOutArray;

@@ -467,6 +467,11 @@ NS_IMETHODIMP nsMsgThread::MarkChildRead(PRBool bRead)
 {
 	nsresult ret = NS_OK;
 
+	if(bRead)
+		ChangeUnreadChildCount(-1);
+	else
+		ChangeUnreadChildCount(1);
+
 	return ret;
 }
 

@@ -732,7 +732,7 @@ nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, ns
 			if(NS_SUCCEEDED(rv))
 			{
 				//Notify folders that a message was added or deleted.
-				NotifyObservers(parentResource, kNC_MessageChild, itemNode, added);
+				NotifyObservers(parentResource, kNC_MessageChild, itemNode, added, PR_FALSE);
 			}
 		}
 	}
@@ -743,7 +743,7 @@ nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, ns
 		if(NS_SUCCEEDED(rv))
 		{
 			//Notify folders that a message was added or deleted.
-			NotifyObservers(parentResource, kNC_Child, itemNode, added);
+			NotifyObservers(parentResource, kNC_Child, itemNode, added, PR_FALSE);
 		}
 	}
   return NS_OK;
@@ -796,15 +796,12 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item
 		{
 			if(PL_strcmp("BiffState", property) == 0)
 			{
-				nsCAutoString oldBiffStateStr, newBiffStateStr;
+				nsCAutoString newBiffStateStr;
 
-				rv = GetBiffStateString(oldFlag, oldBiffStateStr);
-				if(NS_FAILED(rv))
-					return rv;
 				rv = GetBiffStateString(newFlag, newBiffStateStr);
 				if(NS_FAILED(rv))
 					return rv;
-				NotifyPropertyChanged(resource, kNC_BiffState, oldBiffStateStr, newBiffStateStr);
+				NotifyPropertyChanged(resource, kNC_BiffState, newBiffStateStr);
 			}
 		}
 
@@ -1208,12 +1205,10 @@ nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRIn
 	if(folderResource)
 	{
 		//First send a regular unread message changed notification
-		nsCOMPtr<nsIRDFNode> oldNode;
 		nsCOMPtr<nsIRDFNode> newNode;
 
-		GetNumMessagesNode(oldValue, getter_AddRefs(oldNode));
 		GetNumMessagesNode(newValue, getter_AddRefs(newNode));
-		NotifyPropertyChanged(folderResource, kNC_TotalUnreadMessages, oldNode, newNode);
+		NotifyPropertyChanged(folderResource, kNC_TotalUnreadMessages, newNode);
 	
 		//Now see if hasUnreadMessages has changed
 		nsCOMPtr<nsIRDFNode> oldHasUnreadMessages;
@@ -1222,13 +1217,12 @@ nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRIn
 		{
 			oldHasUnreadMessages = kFalseLiteral;
 			newHasUnreadMessages = kTrueLiteral;
-			NotifyPropertyChanged(folderResource, kNC_HasUnreadMessages, oldHasUnreadMessages, newHasUnreadMessages);
+			NotifyPropertyChanged(folderResource, kNC_HasUnreadMessages, newHasUnreadMessages);
 		}
 		else if(oldValue > 0 && newValue <= 0)
 		{
-			oldHasUnreadMessages = kTrueLiteral;
 			newHasUnreadMessages = kFalseLiteral;
-			NotifyPropertyChanged(folderResource, kNC_HasUnreadMessages, oldHasUnreadMessages, newHasUnreadMessages);
+			NotifyPropertyChanged(folderResource, kNC_HasUnreadMessages, newHasUnreadMessages);
 		}
 		//We will have to change the folderTreeName also
 
@@ -1236,18 +1230,14 @@ nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRIn
 		nsresult rv = folder->GetAbbreviatedName(getter_Copies(name));
 		if (NS_SUCCEEDED(rv)) 
 		{
-			nsAutoString oldNameString(name);
 			nsAutoString newNameString(name);
 			
-			CreateUnreadMessagesNameString(oldValue, oldNameString);	
 			CreateUnreadMessagesNameString(newValue, newNameString);	
 			
-			nsCOMPtr<nsIRDFNode> oldNameNode;
 			nsCOMPtr<nsIRDFNode> newNameNode;
-			createNode(oldNameString, getter_AddRefs(oldNameNode), getRDFService());
 			createNode(newNameString, getter_AddRefs(newNameNode), getRDFService());
 
-			NotifyPropertyChanged(folderResource, kNC_FolderTreeName, oldNameNode, newNameNode);
+			NotifyPropertyChanged(folderResource, kNC_FolderTreeName, newNameNode);
 			
 		}
 
@@ -1263,12 +1253,10 @@ nsMsgFolderDataSource::OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt
 	if(folderResource)
 	{
 		//First send a regular unread message changed notification
-		nsCOMPtr<nsIRDFNode> oldNode;
 		nsCOMPtr<nsIRDFNode> newNode;
 
-		GetNumMessagesNode(oldValue, getter_AddRefs(oldNode));
 		GetNumMessagesNode(newValue, getter_AddRefs(newNode));
-		NotifyPropertyChanged(folderResource, kNC_TotalMessages, oldNode, newNode);
+		NotifyPropertyChanged(folderResource, kNC_TotalMessages, newNode);
 	}
 	return NS_OK;
 }

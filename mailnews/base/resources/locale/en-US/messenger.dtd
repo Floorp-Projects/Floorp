@@ -203,6 +203,7 @@ Rights Reserved.
 <!ENTITY nextUnreadMsgCmd.label "Unread Message">  
 <!ENTITY nextFlaggedMsgCmd.label "Flagged Message">  
 <!ENTITY nextUnflaggedMsgCmd.label "Unflagged Message">  
+<!ENTITY nextUnreadThread.label "Unread Thread">
 <!ENTITY prevMenu.label "Previous"> 
 <!ENTITY prevMsgCmd.label "Message">  
 <!ENTITY prevUnreadMsgCmd.label "Unread Message">  

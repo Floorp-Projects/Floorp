@@ -61,6 +61,7 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_Size= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Total = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Unread = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MessageChild = nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_IsUnread = nsnull;
 
 
 //commands
@@ -107,6 +108,7 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_Total, refcnt);
 		NS_RELEASE2(kNC_Unread, refcnt);
 		NS_RELEASE2(kNC_MessageChild, refcnt);
+		NS_RELEASE2(kNC_IsUnread, refcnt);
 
 		NS_RELEASE2(kNC_MarkRead, refcnt);
 		NS_RELEASE2(kNC_MarkUnread, refcnt);
@@ -155,6 +157,7 @@ nsresult nsMsgMessageDataSource::Init()
 		rdf->GetResource(NC_RDF_TOTALMESSAGES,   &kNC_Total);
 		rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES,   &kNC_Unread);
 		rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
+		rdf->GetResource(NC_RDF_ISUNREAD, &kNC_IsUnread);
 
 		rdf->GetResource(NC_RDF_MARKREAD, &kNC_MarkRead);
 		rdf->GetResource(NC_RDF_MARKUNREAD, &kNC_MarkUnread);
@@ -198,7 +201,10 @@ nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
 	createNode(str, getter_AddRefs(kNewLiteral), rdf);
 	str = "read";
 	createNode(str, getter_AddRefs(kReadLiteral), rdf);
-
+	str = "true";
+	createNode(str, getter_AddRefs(kTrueLiteral), rdf);
+	str = "false";
+	createNode(str, getter_AddRefs(kFalseLiteral), rdf);
 	return NS_OK;
 }
 
@@ -355,7 +361,8 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 		}
 		else if((kNC_Subject == property) || (kNC_Date == property) ||
 				(kNC_Status == property) || (kNC_Flagged == property) ||
-				(kNC_Priority == property) || (kNC_Size == property))
+				(kNC_Priority == property) || (kNC_Size == property) ||
+				(kNC_IsUnread == property))
 		{
 			nsSingletonEnumerator* cursor =
 				new nsSingletonEnumerator(source);
@@ -479,7 +486,7 @@ nsMsgMessageDataSource::getMessageArcLabelsOut(PRBool showThreads,
 	(*arcs)->AppendElement(kNC_Flagged);
 	(*arcs)->AppendElement(kNC_Priority);
 	(*arcs)->AppendElement(kNC_Size);
-
+	(*arcs)->AppendElement(kNC_IsUnread);
 
 	return NS_OK;
 }
@@ -608,8 +615,20 @@ nsresult nsMsgMessageDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, n
 			if(NS_SUCCEEDED(rv))
 			{
 				//Notify folders that a message was deleted.
-				NotifyObservers(parentResource, kNC_MessageChild, itemNode, added);
+				NotifyObservers(parentResource, kNC_MessageChild, itemNode, added, PR_FALSE);
 			}
+
+			//Unread and total message counts will have changed.
+			PRUint32 flags;
+			//use the changed message to get the flags, but use the parent message to change the counts since
+			//it hasn't been removed from the thread yet.
+			rv = message->GetFlags(&flags);
+			if(NS_SUCCEEDED(rv))
+			{
+				if(!(flags & MSG_FLAG_READ))
+					OnChangeUnreadMessageCount(parentMessage);
+			}
+			OnChangeTotalMessageCount(parentMessage);
 		}
 	}
 	return NS_OK;
@@ -648,25 +667,15 @@ NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyFlagChanged(nsISupports *ite
 	{
 		if(PL_strcmp("Status", property) == 0)
 		{
-			nsCAutoString oldStatusStr, newStatusStr;
-			rv = createStatusStringFromFlag(oldFlag, oldStatusStr);
-			if(NS_FAILED(rv))
-				return rv;
-			rv = createStatusStringFromFlag(newFlag, newStatusStr);
-			if(NS_FAILED(rv))
-				return rv;
-			rv = NotifyPropertyChanged(resource, kNC_Status, oldStatusStr, newStatusStr);
+			OnChangeStatus(resource, oldFlag, newFlag);
 		}
 		else if(PL_strcmp("Flagged", property) == 0)
 		{
-			nsCAutoString oldFlaggedStr, newFlaggedStr;
-			rv = createFlaggedStringFromFlag(oldFlag, oldFlaggedStr);
-			if(NS_FAILED(rv))
-				return rv;
+			nsCAutoString newFlaggedStr;
 			rv = createFlaggedStringFromFlag(newFlag, newFlaggedStr);
 			if(NS_FAILED(rv))
 				return rv;
-			rv = NotifyPropertyChanged(resource, kNC_Flagged, oldFlaggedStr, newFlaggedStr);
+			rv = NotifyPropertyChanged(resource, kNC_Flagged, newFlaggedStr);
 		}
 	}
 	return rv;
@@ -678,7 +687,121 @@ NS_IMETHODIMP nsMsgMessageDataSource::OnFolderLoaded(nsIFolder *folder)
 	return rv;
 }
 
+nsresult nsMsgMessageDataSource::OnChangeStatus(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag)
+{
+	OnChangeStatusString(resource, oldFlag, newFlag);
 
+	PRUint32 changedFlag = oldFlag ^ newFlag;
+	if(changedFlag & MSG_FLAG_READ)
+	{
+		OnChangeIsUnread(resource, oldFlag, newFlag);
+		PRBool showThreads;
+		GetIsThreaded(&showThreads);
+		if(showThreads)
+		{
+			nsCOMPtr<nsIMessage> message = do_QueryInterface(resource);
+			if(message)
+				OnChangeUnreadMessageCount(message);
+		}
+
+	}
+
+	return NS_OK;
+}
+
+nsresult nsMsgMessageDataSource::OnChangeStatusString(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag)
+{
+
+	nsresult rv;
+	nsCAutoString newStatusStr;
+	rv = createStatusStringFromFlag(newFlag, newStatusStr);
+	if(NS_FAILED(rv))
+		return rv;
+	rv = NotifyPropertyChanged(resource, kNC_Status, newStatusStr);
+
+	
+	return rv;
+}
+
+nsresult nsMsgMessageDataSource::OnChangeIsUnread(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag)
+{
+	nsresult rv;
+	nsCOMPtr<nsIRDFNode> newIsUnreadNode;
+	
+	newIsUnreadNode = (newFlag & MSG_FLAG_READ) ? kFalseLiteral : kTrueLiteral;
+
+	rv = NotifyPropertyChanged(resource, kNC_IsUnread, newIsUnreadNode);
+
+	return rv;
+}
+
+nsresult nsMsgMessageDataSource::OnChangeUnreadMessageCount(nsIMessage *message)
+{
+	nsresult rv;
+	nsCOMPtr<nsIMsgFolder> folder;
+	nsCOMPtr<nsIMsgThread> thread;
+
+	rv = message->GetMsgFolder(getter_AddRefs(folder));
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = folder->GetThreadForMessage(message, getter_AddRefs(thread));
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIRDFNode> unreadChildrenNode;
+	rv = GetUnreadChildrenNode(thread, getter_AddRefs(unreadChildrenNode));
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIMessage> firstMessage;
+	rv = GetThreadsFirstMessage(thread, folder, getter_AddRefs(firstMessage));
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIRDFResource> firstMessageResource = do_QueryInterface(firstMessage);
+	if(firstMessageResource)
+		rv = NotifyPropertyChanged(firstMessageResource, kNC_Unread, unreadChildrenNode);
+	else
+		return NS_ERROR_FAILURE;
+
+	return rv;
+
+}
+
+nsresult nsMsgMessageDataSource::OnChangeTotalMessageCount(nsIMessage *message)
+{
+	nsresult rv;
+	nsCOMPtr<nsIMsgFolder> folder;
+	nsCOMPtr<nsIMsgThread> thread;
+
+	rv = message->GetMsgFolder(getter_AddRefs(folder));
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = folder->GetThreadForMessage(message, getter_AddRefs(thread));
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIRDFNode> numChildrenNode;
+	rv = GetTotalChildrenNode(thread, getter_AddRefs(numChildrenNode));
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIMessage> firstMessage;
+	rv = GetThreadsFirstMessage(thread, folder, getter_AddRefs(firstMessage));
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIRDFResource> firstMessageResource = do_QueryInterface(firstMessage);
+	if(firstMessageResource)
+		rv = NotifyPropertyChanged(firstMessageResource, kNC_Total, numChildrenNode);
+	else
+		return NS_ERROR_FAILURE;
+
+	return rv;
+
+}
 nsresult
 nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
                                          nsIRDFResource *property,
@@ -708,6 +831,8 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 		rv = createMessageTotalNode(message, target);
 	else if ((kNC_Unread == property))
 		rv = createMessageUnreadNode(message, target);
+	else if((kNC_IsUnread == property))
+		rv = createMessageIsUnreadNode(message, target);
   else if ((kNC_MessageChild == property))
     rv = createMessageMessageChildNode(message, target);
 
@@ -814,6 +939,23 @@ nsMsgMessageDataSource::createMessageStatusNode(nsIMessage *message,
 		*target = kNewLiteral;
 	else if(flags & MSG_FLAG_READ)
 		*target = kReadLiteral;
+
+	NS_IF_ADDREF(*target);
+	return NS_OK;
+}
+
+nsresult
+nsMsgMessageDataSource::createMessageIsUnreadNode(nsIMessage *message, nsIRDFNode **target)
+{
+	nsresult rv;
+	PRUint32 flags;
+	rv = message->GetFlags(&flags);
+	if(NS_FAILED(rv))
+		return rv;
+	if(flags & MSG_FLAG_READ)
+		*target = kFalseLiteral;
+	else
+		*target = kTrueLiteral;
 
 	NS_IF_ADDREF(*target);
 	return NS_OK;
@@ -971,15 +1113,7 @@ nsresult nsMsgMessageDataSource::createMessageTotalNode(nsIMessage *message, nsI
 		{
 			if(IsThreadsFirstMessage(thread, message))
 			{
-				PRUint32 numChildren;
-				rv = thread->GetNumChildren(&numChildren);
-				if(NS_SUCCEEDED(rv))
-				{
-					if(numChildren > 1)
-						rv = createNode(numChildren, target, getRDFService());
-					else
-						rv = createNode(emptyString, target, getRDFService());
-				}
+				rv = GetTotalChildrenNode(thread, target);
 			}
 			else
 			{
@@ -1000,7 +1134,7 @@ nsresult nsMsgMessageDataSource::createMessageUnreadNode(nsIMessage *message, ns
 	nsCOMPtr<nsIMsgFolder> folder;
 	nsCOMPtr<nsIMsgThread> thread;
 	nsresult rv;
-	nsString emptyString("");
+	nsAutoString emptyString("");
 
 	PRBool showThreads;
   rv = GetIsThreaded(&showThreads);
@@ -1015,15 +1149,7 @@ nsresult nsMsgMessageDataSource::createMessageUnreadNode(nsIMessage *message, ns
 		{
 			if(IsThreadsFirstMessage(thread, message))
 			{
-				PRUint32 numUnread;
-				rv = thread->GetNumUnreadChildren(&numUnread);
-				if(NS_SUCCEEDED(rv))
-				{
-					if(numUnread > 0)
-						rv = createNode(numUnread, target, getRDFService());
-					else
-						rv = createNode(emptyString, target, getRDFService());
-				}
+				rv = GetUnreadChildrenNode(thread, target);
 			}
 			else
 			{
@@ -1036,6 +1162,40 @@ nsresult nsMsgMessageDataSource::createMessageUnreadNode(nsIMessage *message, ns
 		return rv;
 	else 
 		return NS_RDF_NO_VALUE;
+}
+
+nsresult nsMsgMessageDataSource::GetUnreadChildrenNode(nsIMsgThread *thread, nsIRDFNode **target)
+{
+	nsresult rv;
+	nsAutoString emptyString("");
+	PRUint32 numUnread;
+	rv = thread->GetNumUnreadChildren(&numUnread);
+	if(NS_SUCCEEDED(rv))
+	{
+		if(numUnread > 0)
+			rv = createNode(numUnread, target, getRDFService());
+		else
+			rv = createNode(emptyString, target, getRDFService());
+	}
+
+	return rv;
+}
+
+nsresult nsMsgMessageDataSource::GetTotalChildrenNode(nsIMsgThread *thread, nsIRDFNode **target)
+{
+	nsresult rv;
+	nsAutoString emptyString("");
+	PRUint32 numChildren;
+	rv = thread->GetNumChildren(&numChildren);
+	if(NS_SUCCEEDED(rv))
+	{
+		if(numChildren > 0)
+			rv = createNode(numChildren, target, getRDFService());
+		else
+			rv = createNode(emptyString, target, getRDFService());
+	}
+
+	return rv;
 }
 
 nsresult
@@ -1096,6 +1256,20 @@ PRBool nsMsgMessageDataSource::IsThreadsFirstMessage(nsIMsgThread *thread, nsIMe
 
 	return messageKey == firstHdrKey;
 
+}
+
+nsresult nsMsgMessageDataSource::GetThreadsFirstMessage(nsIMsgThread *thread, nsIMsgFolder *folder, nsIMessage **message)
+{
+	nsCOMPtr<nsIMsgDBHdr> firstHdr;
+	nsresult rv;
+
+	rv = thread->GetRootHdr(nsnull, getter_AddRefs(firstHdr));
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = folder->CreateMessageFromMsgDBHdr(firstHdr, message);
+
+	return rv;
 }
 
 nsresult
