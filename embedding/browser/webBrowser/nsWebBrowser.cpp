@@ -408,11 +408,11 @@ NS_IMETHODIMP nsWebBrowser::Stop()
    return mDocShellAsNav->Stop();
 }
 
-NS_IMETHODIMP nsWebBrowser::GetCurrentURI(PRUnichar** aCurrentURI)
+NS_IMETHODIMP nsWebBrowser::GetCurrentURI(nsIURI** aURI)
 {
    NS_ENSURE_STATE(mDocShell);
 
-   return mDocShellAsNav->GetCurrentURI(aCurrentURI);
+   return mDocShellAsNav->GetCurrentURI(aURI);
 }
 
 NS_IMETHODIMP nsWebBrowser::SetSessionHistory(nsISHistory* aSessionHistory)
