@@ -57,6 +57,8 @@ public:
   nsGfxTextControlFrame2();
   virtual ~nsGfxTextControlFrame2();
 
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);//remove yourself as a form control
+
   NS_IMETHOD Reflow(nsIPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
