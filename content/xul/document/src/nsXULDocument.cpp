@@ -693,7 +693,8 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
                                  nsIChannel* aChannel,
                                  nsILoadGroup* aLoadGroup,
                                  nsISupports* aContainer,
-                                 nsIStreamListener **aDocListener)
+                                 nsIStreamListener **aDocListener,
+                                 PRBool aReset)
 {
     nsresult rv;
     mCommand.AssignWithConversion(aCommand);
@@ -2683,6 +2684,13 @@ NS_IMETHODIMP
 nsXULDocument::GetHeight(PRInt32* aHeight)
 {
     NS_NOTREACHED("nsXULDocument::GetHeight");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULDocument::Load(const nsString& aUrl, const nsString& aMimeType)
+{
+    NS_NOTREACHED("nsXULDocument::Load");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

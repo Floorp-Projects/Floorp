@@ -1132,7 +1132,7 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
   // Hook up the content sink to the parser's output and ask the parser
   // to start parsing the URL specified by aURL.
   parser->SetContentSink(sink);
-  nsAutoString utf8("UTF-8");
+  nsAutoString utf8(NS_ConvertASCIItoUCS2("UTF-8"));
   mDocument->SetDocumentCharacterSet(utf8);
   parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
   parser->Parse(aUrl);
@@ -1281,7 +1281,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
       result = ProcessCSSStyleLink(node, href, alternate.EqualsWithConversion("yes"),
                                 title, type, media);
 #else
-      result = ProcessStyleLink(node, href, alternate.Equals("yes"),
+      result = ProcessStyleLink(node, href, alternate.EqualsWithConversion("yes"),
                                 title, type, media);
 #endif
     }

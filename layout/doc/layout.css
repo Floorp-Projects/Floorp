@@ -1,3 +1,5 @@
+@namespace xlink url("http://www.w3.org/1999/xlink"); 
+
 Documentation {
   display: block;
   font-family: Verdana, sans-serif;
@@ -56,12 +58,12 @@ Components {
 }
 
 /* workaround for above rule not working */
-*[xlink:type] {
+*[xlink|type] {
   cursor: pointer;
 }
 
 /* workaround for above rule not working */
-*[xlink:show="replace"] {
+*[xlink|show="replace"] {
   cursor: pointer;
 }
 

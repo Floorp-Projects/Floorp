@@ -392,7 +392,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   nsIChannel* aChannel,
                                   nsILoadGroup* aLoadGroup,
                                   nsISupports* aContainer,
-                                  nsIStreamListener **aDocListener)
+                                  nsIStreamListener **aDocListener,
+                                  PRBool aReset)
 {
   PRBool needsParser=PR_TRUE;
   if (aCommand)
@@ -406,8 +407,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
-                                              aContainer, 
-                                              aDocListener);
+                                              aContainer,
+                                              aDocListener, aReset);
   if (NS_FAILED(rv)) { return rv; }
 
   nsAutoString charset; charset.AssignWithConversion("ISO-8859-1"); // fallback value in case webShell return error

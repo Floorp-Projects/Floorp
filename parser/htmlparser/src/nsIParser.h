@@ -149,6 +149,7 @@ class nsIParser : public nsISupports {
      *  @param   aCommand -- ptrs to string that contains command
      *  @return	 nada
      */
+    virtual void GetCommand(nsString& aCommand)=0;
     virtual void SetCommand(const char* aCommand)=0;
     virtual void SetCommand(eParserCommands aParserCommand)=0;
 

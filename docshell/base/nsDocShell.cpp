@@ -294,7 +294,7 @@ nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
    nsCOMPtr<nsIStreamListener> outStreamListener;
    NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, 
       NS_STATIC_CAST(nsIContentViewerContainer*, this), 
-      getter_AddRefs(outStreamListener)), NS_ERROR_FAILURE);
+      getter_AddRefs(outStreamListener), PR_TRUE), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(FireStartDocumentLoad(mDocLoader, uri, "load"), NS_ERROR_FAILURE);
 
    // (5) hook up the document and its content

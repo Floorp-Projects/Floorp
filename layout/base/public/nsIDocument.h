@@ -57,6 +57,8 @@ class nsIWordBreaker;
 class nsIDOMSelection;
 class nsIChannel;
 class nsIPrincipal;
+class nsIDOMDocument;
+class nsIDOMDocumentType;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -102,7 +104,8 @@ public:
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
                                nsISupports* aContainer,
-                               nsIStreamListener **aDocListener) = 0;
+                               nsIStreamListener **aDocListener,
+                               PRBool aReset) = 0;
 
   NS_IMETHOD StopDocumentLoad() = 0;
 
@@ -340,6 +343,12 @@ extern NS_LAYOUT nsresult
 extern NS_LAYOUT nsresult
    NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
                           nsIDocument* aOwnerDocument);
+extern NS_LAYOUT nsresult
+   NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
+                     const nsString& aNamespaceURI, 
+                     const nsString& aQualifiedName, 
+                     nsIDOMDocumentType* aDoctype,
+                     nsIURI* aBaseURI);
 
 // Note: The buffer passed into NewPostData(...) becomes owned by the IPostData
 //       instance and is freed when the instance is destroyed...

@@ -305,6 +305,11 @@ nsIParserFilter * nsParser::SetParserFilter(nsIParserFilter * aFilter)
 }
 
 
+void nsParser::GetCommand(nsString& aCommand)
+{
+  aCommand = mCommandStr;  
+}
+
 /**
  *  Call this method once you've created a parser, and want to instruct it
  *  about the command which caused the parser to be constructed. For example,
@@ -319,6 +324,7 @@ void nsParser::SetCommand(const char* aCommand){
   if(theCommand.Equals(kViewSourceCommand))
     mCommand=eViewSource;
   else mCommand=eViewNormal;
+  mCommandStr.AssignWithConversion(aCommand);
 }
 
 /**

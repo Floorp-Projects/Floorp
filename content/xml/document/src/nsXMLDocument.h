@@ -40,7 +40,7 @@ class nsXMLDocument : public nsMarkupDocument,
                       public nsIHTMLContentContainer
 {
 public:
-  nsXMLDocument();
+  nsXMLDocument(nsIURI* aBaseURI = nsnull);
   virtual ~nsXMLDocument();
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
@@ -54,7 +54,8 @@ public:
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
                                nsISupports* aContainer,
-                               nsIStreamListener **aDocListener);
+                               nsIStreamListener **aDocListener,
+                               PRBool aReset = PR_TRUE);
 
   NS_IMETHOD EndLoad();
 
@@ -82,7 +83,7 @@ public:
   NS_IMETHOD    GetElementsByTagNameNS(const nsString& aNamespaceURI,
                                        const nsString& aLocalName,
                                        nsIDOMNodeList** aReturn);
-
+  NS_IMETHOD    Load(const nsString& aUrl, const nsString& aMimeType);
 
   // nsIXMLDocument interface
   NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent);

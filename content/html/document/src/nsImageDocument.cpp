@@ -62,7 +62,8 @@ public:
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
                                nsISupports* aContainer,
-                               nsIStreamListener **aDocListener);
+                               nsIStreamListener **aDocListener,
+                               PRBool aReset = PR_TRUE);
 
   nsresult CreateSyntheticDocument();
 
@@ -178,12 +179,13 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
                                    nsIChannel* aChannel,
                                    nsILoadGroup* aLoadGroup,
                                    nsISupports* aContainer,
-                                   nsIStreamListener **aDocListener)
+                                   nsIStreamListener **aDocListener,
+                                   PRBool aReset)
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer, 
-                                              aDocListener);
+                                              aDocListener, aReset);
   if (NS_FAILED(rv)) {
     return rv;
   }

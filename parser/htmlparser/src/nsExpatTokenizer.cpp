@@ -178,7 +178,7 @@ void nsExpatTokenizer::SetupExpatParser(void) {
 nsExpatTokenizer::nsExpatTokenizer(nsString* aURL) : nsHTMLTokenizer() {  
   NS_INIT_REFCNT();
   mBytesParsed = 0;
-  mState = new XMLParserState;    
+  mState = new XMLParserState;
   mState->tokenRecycler = (CTokenRecycler*)GetTokenRecycler();
   mState->cdataToken = nsnull;
   mState->parser = nsnull;

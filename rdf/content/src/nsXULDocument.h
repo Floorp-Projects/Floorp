@@ -116,7 +116,8 @@ public:
                                  nsIChannel* aChannel,
                                  nsILoadGroup* aLoadGroup,
                                  nsISupports* aContainer,
-                                 nsIStreamListener **aDocListener);
+                                 nsIStreamListener **aDocListener,
+                                 PRBool aReset);
 
     NS_IMETHOD StopDocumentLoad();
 
@@ -343,6 +344,7 @@ public:
     NS_IMETHOD    CreateRange(nsIDOMRange** aRange);
     NS_IMETHOD    GetWidth(PRInt32* aWidth);
     NS_IMETHOD    GetHeight(PRInt32* aHeight);
+    NS_IMETHOD    Load (const nsString& aUrl, const nsString& aMimeType);
 
     // nsIDOMXULDocument interface
     NS_DECL_IDOMXULDOCUMENT

@@ -65,6 +65,7 @@
 #include "nsCharsetDetectionAdaptorCID.h"
 #include "nsICharsetAlias.h"
 #include "nsIParserFilter.h"
+#include "nsNetUtil.h"
 
 
 // XXX The XML world depends on the html atoms
@@ -92,6 +93,7 @@ static PRBool gInitDetector = PR_FALSE;
 static PRBool gPlugDetector = PR_FALSE;
 static NS_DEFINE_IID(kIParserFilterIID, NS_IPARSERFILTER_IID);
 
+static const char* kLoadAsData = "loadAsData";
 
 // ==================================================================
 // =
@@ -121,6 +123,20 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 	return 0;
 }
 
+NS_LAYOUT nsresult
+NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
+                  const nsString& aNamespaceURI, 
+                  const nsString& aQualifiedName, 
+                  nsIDOMDocumentType* aDoctype,
+                  nsIURI* aBaseURI)
+{
+  // XXX Ignoring the namespace, qualified name, and doctype parameters for now
+  nsXMLDocument* doc = new nsXMLDocument(aBaseURI);
+  if (doc == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return doc->QueryInterface(kIDOMDocumentIID, (void**) aInstancePtrResult);
+}
+
 
 NS_LAYOUT nsresult
 NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
@@ -131,13 +147,15 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
   return doc->QueryInterface(kIDocumentIID, (void**) aInstancePtrResult);
 }
 
-nsXMLDocument::nsXMLDocument()
+nsXMLDocument::nsXMLDocument(nsIURI* aBaseURI)
 {
   mParser = nsnull;
   mAttrStyleSheet = nsnull;
   mInlineStyleSheet = nsnull;
   mCSSLoader = nsnull;
-  
+  mDocumentURL = aBaseURI;
+  NS_IF_ADDREF(mDocumentURL);
+
 #ifdef XSL
   mTransformMediator = nsnull;
 #endif
@@ -234,17 +252,47 @@ nsXMLDocument::GetContentType(nsString& aContentType) const
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXMLDocument::Load(const nsString& aUrl, const nsString& aMimeType)
+{
+  nsCOMPtr<nsIChannel> channel;
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_OK;
+  
+  // Create a new URI and channel
+  rv = NS_NewURI(getter_AddRefs(uri), aUrl, mDocumentURL);
+  if (NS_FAILED(rv)) return rv;
+  rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull);
+  if (NS_FAILED(rv)) return rv;
+
+  // Prepare for loading the XML document "into oneself"
+  nsCOMPtr<nsIStreamListener> listener;
+  if (NS_FAILED(rv = StartDocumentLoad(kLoadAsData, channel, 
+                                       nsnull, nsnull, 
+                                       getter_AddRefs(listener),
+                                       PR_FALSE))) {
+    NS_ERROR("nsXMLDocument::Load: Failed to start the document load.");
+    return rv;
+  }
+
+  // Start an asynchronous read of the XML document
+  rv = channel->AsyncRead(listener, nsnull);
+
+  return rv;
+}
+
 NS_IMETHODIMP 
 nsXMLDocument::StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
                                nsISupports* aContainer,
-                               nsIStreamListener **aDocListener)
+                               nsIStreamListener **aDocListener,
+                               PRBool aReset)
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer, 
-                                              aDocListener);
+                                              aDocListener, aReset);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -525,8 +573,20 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 NS_IMETHODIMP 
 nsXMLDocument::EndLoad()
 {
+  nsAutoString cmd;
+  mParser->GetCommand(cmd);
   NS_IF_RELEASE(mParser);
-  return nsDocument::EndLoad();
+  if (cmd.EqualsWithConversion(kLoadAsData)) {
+    // Generate a document load event for the case when an XML document was loaded
+    // as pure data without any presentation attached to it.
+    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal;
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsMouseEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_PAGE_LOAD;
+    HandleDOMEvent(nsnull, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  }    
+  return nsDocument::EndLoad();  
 }
 
 NS_IMETHODIMP 
