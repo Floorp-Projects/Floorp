@@ -291,8 +291,9 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
                                    getter_AddRefs(mCurrentRequest));
 
     if (NS_FAILED(rv)) {
-        nsresult rv2 = mLoadGroup->RemoveRequest(this, ctxt, rv);  // XXX fix error message
-        NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveRequest failed");
+        if (mLoadGroup) {
+            (void) mLoadGroup->RemoveRequest(this, ctxt, rv);  
+        }
         // release the transport so that we don't think we're in progress
         mFileTransport = nsnull;
         mCurrentRequest = nsnull;
