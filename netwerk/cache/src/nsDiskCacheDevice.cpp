@@ -871,7 +871,7 @@ nsresult nsDiskCacheDevice::visitEntries(nsICacheVisitor * visitor)
         if (NS_FAILED(rv)) break;
         nsXPIDLCString name;
         rv = file->GetLeafName(getter_Copies(name));
-        if (nsCRT::strlen(name) == 9) {
+        if (name.get()[8] == 'm') {
             // this must be a metadata file.
             nsCOMPtr<nsITransport> transport;
             rv = getTransportForFile(file, nsICache::ACCESS_READ, getter_AddRefs(transport));
