@@ -167,6 +167,7 @@ nsXIContext::LoadResources()
         "PREPARING",
         "EXTRACTING",
         "INSTALLING_XPI",
+        "COMPLETING_INSTALL",
         "PROCESSING_FILE",
         "NO_PERMS",
         "DL_SETTINGS",

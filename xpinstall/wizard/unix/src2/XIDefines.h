@@ -95,6 +95,7 @@
 #define DOWNLOAD_ONLY_ATTR  "DOWNLOAD_ONLY"
 
 #define RUNAPPd             "RunApp%d"
+#define POSTINSTALLRUNd     "PostInstallRun%d"
 #define TARGET              "Target"
 #define ARGS                "Arguments"
 

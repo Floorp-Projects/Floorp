@@ -67,7 +67,8 @@ public:
     {
         ACT_DOWNLOAD,
         ACT_EXTRACT,
-        ACT_INSTALL
+        ACT_INSTALL,
+        ACT_COMPLETE
     };
 
     enum
@@ -89,9 +90,9 @@ private:
     static void     ShowProxySettings(GtkWidget *aWidget, gpointer aData);
     static void     PSDlgOK    (GtkWidget *aWidget, gpointer aData);
     static void     PSDlgCancel(GtkWidget *aWidget, gpointer aData);
-    static void     RunApps();
-    static void     FreeRunAppList();
-    int             AppendRunApp(nsRunApp *aNewRunApp);
+    static void     RunApps(nsRunApp *aRunAppList, int aSequential);
+    static void     FreeRunAppList(nsRunApp *aRunAppList);
+    int             AppendRunApp(nsRunApp **aRunAppList, nsRunApp *aNewRunApp);
     static void     DLPause(GtkWidget *aWidget, gpointer aData);
     static void     DLResume(GtkWidget *aWidget, gpointer aData);
     static void     DLCancel(GtkWidget *aWidget, gpointer aData);
