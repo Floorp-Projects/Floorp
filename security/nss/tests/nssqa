@@ -47,6 +47,9 @@ KILL_SELFSERV=ON		# cleanup will also kill the leftover selfserv processes
 
 #. `dirname $0`/nssqa.header	#derived from init.sh
 
+TMP_ALL_SH_OUT=${TMP}/nssqa_all_sh_out.$$	#redirecting all.sh's output
+TMPFILES="$TMPFILES $TMP_ALL_SH_OUT"
+
 ################################ check_distdir #########################
 # local shell function to check if the DIST directory exists, if not there 
 # is no use to continue the test
@@ -94,12 +97,13 @@ run_all()
 			all.sh >/dev/null 2>/dev/null
 		fi
 	else
-		#if [ $O_DEBUG = ON -a $O_FILE = ON ]	#FIXME - write to tmp file and copy
-		#then
-			#all.sh 2>&1 | tee $FILENAME
-		#else
+		if [ $O_FILE = ON ]	#FIXME - write to tmp file and copy
+		then
+			all.sh 2>&1 | tee $TMP_ALL_SH_OUT
+			cat $TMP_ALL_SH_OUT >>$FILENAME
+		else
 			all.sh
-		#fi
+		fi
 	fi
 	Debug "Done with all.sh "
 	line
@@ -110,6 +114,12 @@ all_sh()
 echo
 }
 
+
+############################# nssqa_main ###############################
+# local shell function main controlling function of the nss qa
+########################################################################
+nssqa_main()
+{
 # determine if all needed symbolic links are present, in case
 # we build on one platform and QA on another
 
@@ -234,3 +244,12 @@ else
 fi
 
 Exit "Done."
+}
+
+if [ $O_FILE = ON ]
+then
+	nssqa_main 2>>$FILENAME
+else
+	nssqa_main
+fi
+
