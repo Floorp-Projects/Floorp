@@ -41,7 +41,7 @@ nsHTMLEditUtils::IsBody(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "body")
+  if (tag.Equals("body"))
   {
     return PR_TRUE;
   }
@@ -60,7 +60,7 @@ nsHTMLEditUtils::IsBreak(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "br")
+  if (tag.Equals("br"))
   {
     return PR_TRUE;
   }
@@ -78,7 +78,7 @@ nsHTMLEditUtils::IsBig(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "big")
+  if (tag.Equals("big"))
   {
     return PR_TRUE;
   }
@@ -96,7 +96,7 @@ nsHTMLEditUtils::IsSmall(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "small")
+  if (tag.Equals("small"))
   {
     return PR_TRUE;
   }
@@ -132,7 +132,7 @@ nsHTMLEditUtils::HasMozAttr(nsIDOMNode *node)
     nsAutoString typeAttrVal;
     nsresult res = elem->GetAttribute(typeAttrName, typeAttrVal);
     typeAttrVal.ToLowerCase();
-    if (NS_SUCCEEDED(res) && (typeAttrVal == "_moz"))
+    if (NS_SUCCEEDED(res) && (typeAttrVal.Equals("_moz")))
       return PR_TRUE;
   }
   return PR_FALSE;
@@ -174,12 +174,12 @@ nsHTMLEditUtils::IsHeader(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if ( (tag == "h1") ||
-       (tag == "h2") ||
-       (tag == "h3") ||
-       (tag == "h4") ||
-       (tag == "h5") ||
-       (tag == "h6") )
+  if ( (tag.Equals("h1")) ||
+       (tag.Equals("h2")) ||
+       (tag.Equals("h3")) ||
+       (tag.Equals("h4")) ||
+       (tag.Equals("h5")) ||
+       (tag.Equals("h6")) )
   {
     return PR_TRUE;
   }
@@ -197,7 +197,7 @@ nsHTMLEditUtils::IsParagraph(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "p")
+  if (tag.Equals("p"))
   {
     return PR_TRUE;
   }
@@ -215,7 +215,7 @@ nsHTMLEditUtils::IsListItem(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "li")
+  if (tag.Equals("li"))
   {
     return PR_TRUE;
   }
@@ -232,7 +232,7 @@ nsHTMLEditUtils::IsTable(nsIDOMNode *node)
   NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTable");
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
-  if (tag == "table")
+  if (tag.Equals("table"))
     return PR_TRUE;
 
   return PR_FALSE;
@@ -248,7 +248,7 @@ nsHTMLEditUtils::IsTableRow(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "tr")
+  if (tag.Equals("tr"))
   {
     return PR_TRUE;
   }
@@ -266,7 +266,7 @@ nsHTMLEditUtils::IsTableCell(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "td" || tag == "th")
+  if (tag.Equals("td") || tag.Equals("th"))
   {
     return PR_TRUE;
   }
@@ -284,8 +284,8 @@ nsHTMLEditUtils::IsList(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if ( (tag == "ol") ||
-       (tag == "ul") )
+  if ( (tag.Equals("ol")) ||
+       (tag.Equals("ul")) )
   {
     return PR_TRUE;
   }
@@ -303,7 +303,7 @@ nsHTMLEditUtils::IsOrderedList(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "ol")
+  if (tag.Equals("ol"))
   {
     return PR_TRUE;
   }
@@ -321,7 +321,7 @@ nsHTMLEditUtils::IsUnorderedList(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "ul")
+  if (tag.Equals("ul"))
   {
     return PR_TRUE;
   }
@@ -339,7 +339,7 @@ nsHTMLEditUtils::IsBlockquote(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "blockquote")
+  if (tag.Equals("blockquote"))
   {
     return PR_TRUE;
   }
@@ -357,7 +357,7 @@ nsHTMLEditUtils::IsPre(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "pre")
+  if (tag.Equals("pre"))
   {
     return PR_TRUE;
   }
@@ -375,7 +375,7 @@ nsHTMLEditUtils::IsAddress(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "address")
+  if (tag.Equals("address"))
   {
     return PR_TRUE;
   }
@@ -393,7 +393,7 @@ nsHTMLEditUtils::IsAnchor(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "a")
+  if (tag.Equals("a"))
   {
     return PR_TRUE;
   }
@@ -411,7 +411,7 @@ nsHTMLEditUtils::IsImage(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "img")
+  if (tag.Equals("img"))
   {
     return PR_TRUE;
   }
@@ -429,7 +429,7 @@ nsHTMLEditUtils::IsDiv(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag == "div")
+  if (tag.Equals("div"))
   {
     return PR_TRUE;
   }

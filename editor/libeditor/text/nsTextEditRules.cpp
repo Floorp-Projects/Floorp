@@ -624,7 +624,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     theString.Cut(0, pos);
 
     // is it a solo return?
-    if (partialString == "\n")
+    if (partialString.Equals("\n"))
     {
       res = mEditor->InsertBreak();
     }

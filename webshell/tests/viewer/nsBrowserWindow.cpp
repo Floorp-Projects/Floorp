@@ -2782,7 +2782,7 @@ static void DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* out, PRInt32 aI
   fprintf(out, "%p '", aShellItem);
   aShellItem->GetName(getter_Copies(name));
   aShellItem->GetSameTypeParent(getter_AddRefs(parent));
-  str = name;
+  str.Assign(name);
   fputs(str, out);
   fprintf(out, "' parent=%p <\n", parent.get());
 

@@ -218,7 +218,7 @@ NS_IMETHODIMP nsEditorController::IsCommandEnabled(const PRUnichar *aCommand, PR
   {
 #if DEBUG
     nsCAutoString msg("EditorController asked about a command that it does not handle -- ");
-    msg += aCommand;
+    msg.Append(aCommand);
     NS_WARNING(msg);
 #endif
     return NS_OK;    // we don't handle this command
@@ -264,7 +264,7 @@ NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
   {
 #if DEBUG
     nsCAutoString msg("EditorController asked to do a command that it does not handle -- ");
-    msg += aCommand;
+    msg.Append(aCommand);
     NS_WARNING(msg);
 #endif
     return NS_OK;    // we don't handle this command

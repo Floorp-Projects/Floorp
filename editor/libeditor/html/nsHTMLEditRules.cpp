@@ -468,7 +468,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         theString.Left(partialString, pos);
         theString.Cut(0, pos);
         // is it a return?
-        if (partialString == "\n")
+        if (partialString.Equals("\n"))
         {
           res = mEditor->JoeCreateBR(&curNode, &curOffset, &unused, nsIEditor::eNone);
         }
@@ -492,13 +492,13 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         theString.Left(partialString, pos);
         theString.Cut(0, pos);
         // is it a tab?
-        if (partialString == "\t")
+        if (partialString.Equals("\t"))
         {
           partialString = "    ";
           res = mEditor->JoeInsertTextImpl(tabString, &curNode, &curOffset, doc);
         }
         // is it a return?
-        else if (partialString == "\n")
+        else if (partialString.Equals("\n"))
         {
           res = mEditor->JoeCreateBR(&curNode, &curOffset, &unused, nsIEditor::eNone);
         }
@@ -3136,7 +3136,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
   
   // we special case an empty tag name to mean "remove block parents".
   // This is used for the "normal" paragraph style in mail-compose
-  if (aBlockTag->IsEmpty() || *aBlockTag=="normal") bNoParent = PR_TRUE;
+  if (aBlockTag->IsEmpty() || aBlockTag->Equals("normal")) bNoParent = PR_TRUE;
   
   arrayOfNodes->Count(&listCount);
   
@@ -3163,15 +3163,15 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
     // it with a new block of correct type.
     // xxx floppy moose: pre cant hold everything the others can
     if (nsHTMLEditUtils::IsMozDiv(curNode)     ||
-        (curNodeTag == "pre") || 
-        (curNodeTag == "p")   ||
-        (curNodeTag == "h1")  ||
-        (curNodeTag == "h2")  ||
-        (curNodeTag == "h3")  ||
-        (curNodeTag == "h4")  ||
-        (curNodeTag == "h5")  ||
-        (curNodeTag == "h6")  ||
-        (curNodeTag == "address"))
+        (curNodeTag.Equals("pre")) || 
+        (curNodeTag.Equals("p"))   ||
+        (curNodeTag.Equals("h1"))  ||
+        (curNodeTag.Equals("h2"))  ||
+        (curNodeTag.Equals("h3"))  ||
+        (curNodeTag.Equals("h4"))  ||
+        (curNodeTag.Equals("h5"))  ||
+        (curNodeTag.Equals("h6"))  ||
+        (curNodeTag.Equals("address")))
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
       if (bNoParent)
@@ -3187,15 +3187,15 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
       }
       if (NS_FAILED(res)) return res;
     }
-    else if ((curNodeTag == "table")      || 
-             (curNodeTag == "tbody")      ||
-             (curNodeTag == "tr")         ||
-             (curNodeTag == "td")         ||
-             (curNodeTag == "ol")         ||
-             (curNodeTag == "ul")         ||
-             (curNodeTag == "li")         ||
-             (curNodeTag == "blockquote") ||
-             (curNodeTag == "div"))  // div's other than mozdivs
+    else if ((curNodeTag.Equals("table"))      || 
+             (curNodeTag.Equals("tbody"))      ||
+             (curNodeTag.Equals("tr"))         ||
+             (curNodeTag.Equals("td"))         ||
+             (curNodeTag.Equals("ol"))         ||
+             (curNodeTag.Equals("ul"))         ||
+             (curNodeTag.Equals("li"))         ||
+             (curNodeTag.Equals("blockquote")) ||
+             (curNodeTag.Equals("div")))  // div's other than mozdivs
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
       // recursion time
@@ -3207,7 +3207,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
     }
     
     // if the node is a break, we honor it by putting further nodes in a new parent
-    else if (curNodeTag == "br")
+    else if (curNodeTag.Equals("br"))
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
       if (!bNoParent)
@@ -3228,7 +3228,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
     else if (nsEditor::IsInlineNode(curNode) && !bNoParent)
     {
       // if curNode is a non editable, drop it if we are going to <pre>
-      if ((*aBlockTag == "pre") && (!mEditor->IsEditable(curNode)))
+      if ((aBlockTag->Equals("pre")) && (!mEditor->IsEditable(curNode)))
         continue; // do nothing to this block
       
       // if no curBlock, make one
@@ -3946,7 +3946,7 @@ nsHTMLEditRules::ConvertWhitespace(const nsString & inString, nsString & outStri
       outString = "";
       return NS_OK;
     case 1:
-      if (inString == "\n")   // a bit of a hack: don't convert single newlines that 
+      if (inString.Equals("\n"))   // a bit of a hack: don't convert single newlines that 
         outString = "\n";     // dont have whitespace adjacent.  This is to preserve 
       else                    // html source formatting to some degree.
         outString = " ";
