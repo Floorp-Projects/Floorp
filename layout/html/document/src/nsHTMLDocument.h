@@ -54,6 +54,11 @@ public:
 
   NS_IMETHOD GetContentType(nsString& aContentType) const;
 
+  NS_IMETHOD CreateShell(nsIPresContext* aContext,
+                         nsIViewManager* aViewManager,
+                         nsIStyleSet* aStyleSet,
+                         nsIPresShell** aInstancePtrResult);
+
   NS_IMETHOD StartDocumentLoad(nsIURI* aUrl, 
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener** aDocListener,
