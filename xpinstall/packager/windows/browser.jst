@@ -479,7 +479,6 @@ if(verifyDiskSpace(fProgram, srDest))
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global-platform/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator-platform/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator-platform/");
-
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global-region/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/autoconfig/");
@@ -506,6 +505,17 @@ if(verifyDiskSpace(fProgram, srDest))
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/navigator/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","help.jar"),"content/help/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/xbl-marquee/");
+
+    // We need to register the psm chrome files.
+    // We're checking to see if they exist first in case
+    // they were not built and packaged up.
+    var pki = getFolder("Chrome", "pippki.jar");
+    if(File.exists(pki)) 
+      registerChrome(CONTENT | DELAYED_CHROME, pki, "content/pippki/");
+
+    var nss = getFolder("Chrome", "pipnss.jar");
+    if(File.exists(nss)) 
+      registerChrome(CONTENT | DELAYED_CHROME, nss, "content/pipnss/");
 
     /* Log files that are created after the installer is done, so they can be uninstalled */
     logComment("Installing: "    + fProgram + ".autoreg");
