@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.44 $ ';
+$Version = '$Revision: 1.45 $ ';
 
 
 sub PrintUsage {
@@ -278,7 +278,7 @@ sub BuildIt {
 		  $BuildStatus = 
 			&RunFileBasedTest("MailNewsTest", 
 							  "mozilla-bin http://www.mozilla.org/quality/mailnews/APITest.html", 
-							  60, "enablePrivile33");
+							  60, "enablePrivilege");
 		}
 
         # Run Editor test.
