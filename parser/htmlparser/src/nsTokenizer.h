@@ -50,19 +50,13 @@ class nsIURL;
 
 class  CTokenizer {
   public:
-    CTokenizer(nsIURL* aURL,ITokenizerDelegate* aDelegate,eParseMode aMode);
+
+    CTokenizer(ITokenizerDelegate* aDelegate,eParseMode aMode=eParseMode_navigator);
+    CTokenizer(const char* aFilename,ITokenizerDelegate* aDelegate,eParseMode aMode=eParseMode_navigator);
+    CTokenizer(nsIURL* aURL,ITokenizerDelegate* aDelegate,eParseMode aMode=eParseMode_navigator);
+
     ~CTokenizer();
     
-    /**
-     *  This control routine causes the entire stream to be
-     *  tokenized. You probably want to call TokenizeAvailable()
-     *  instead (for incremental tokenization).
-     *  
-     *  @update  gess 3/25/98
-     *  @return  TRUE if it's ok to proceed
-     */
-    PRInt32 Tokenize(void);
-
     /**
      *  This method incrementally tokenizes as much content as
      *  it can get its hands on.
@@ -70,7 +64,14 @@ class  CTokenizer {
      *  @update  gess 3/25/98
      *  @return  TRUE if it's ok to proceed
      */
-    PRInt32 TokenizeAvailable(int anIteration); //your friendly incremental version
+    PRInt32 Tokenize(int anIteration); //your friendly incremental version
+
+    /**
+     *  
+     *  @update  gess 3/25/98
+     *  @return  TRUE if it's ok to proceed
+     */
+    PRInt32 Tokenize(nsString& aSourceBuffer,PRBool appendTokens=PR_TRUE); 
 
     /**
      *  Cause the tokenizer to consume the next token, and 
@@ -97,6 +98,23 @@ class  CTokenizer {
      * @return  deque reference
      */
     nsDeque& GetDeque(void);
+
+    /**
+     *
+     * @update  gess 4/20/98
+     * @return  deque reference
+     */
+    PRBool Append(nsString& aBuffer);
+
+
+    /**
+     *  
+     *  
+     *  @update  gess 5/13/98
+     *  @param   
+     *  @return  
+     */
+    PRBool SetBuffer(nsString& aBuffer);
 
     /**
      *  This debug routine is used to cause the tokenizer to

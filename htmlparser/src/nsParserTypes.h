@@ -37,13 +37,16 @@ enum  eParseMode {
   
   eParseMode_unknown=0,
   eParseMode_navigator,
-  eParseMode_other
+  eParseMode_other,
+  eParseMode_autodetect
 };
 
 const PRInt32   kEOF          = 1000000L;
+const PRInt32   kBadFilename  = -4;
+const PRInt32   kBadURL       = -3;
+const PRInt32   kInterrupted  = -2;
 const PRInt32   kNotFound     = -1;
 const PRInt32   kNoError      = 0;
-const PRInt32   kInterrupted  = 2;
 
 const PRUint32  kNewLine      = '\n';
 const PRUint32  kCR           = '\r';
