@@ -267,10 +267,13 @@ private:
   PRBool HandleIconLoads(imgIRequest* aRequest, PRBool aCompleted);
   void InvalidateIcon(nsIPresContext *aPresContext);
 
+  // SingleIconLoad needs to not be private to be accessible by IconLoad
+protected:
   struct SingleIconLoad {
     nsCOMPtr<imgIRequest> mRequest;
   };
 
+private:
   class IconLoad {
     // private class that wraps the data and logic needed for 
     // broken image and loading image icons
