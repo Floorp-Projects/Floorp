@@ -51,4 +51,10 @@ class StringTable {
         }
         return result;
     }
+    
+    public String internAs(String key, String value) {
+        value = new String(value);
+        strings.put(key, value);
+        return value;
+    }
 }
