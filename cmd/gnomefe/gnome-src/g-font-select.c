@@ -983,8 +983,11 @@ moz_get_font(LO_TextAttr *text_attr) {
 	break;
       /* wipe out the name, and go on to the next */
       index = 0;
-      while (fam[index] != '\0') 
-	fam[index] = ' ';
+      while (fam[index] != '\0')
+	{
+	  fam[index] = ' ';
+	  index++;
+	}
       if (index != length) 
 	fam[index] = ' ';      
       family_name = NameFromList(fam);
