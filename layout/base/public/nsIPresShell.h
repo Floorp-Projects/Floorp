@@ -21,6 +21,7 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 #include "nsCoord.h"
+
 class nsIContent;
 class nsIDocument;
 class nsIDocumentObserver;
@@ -35,6 +36,7 @@ class nsIPageSequenceFrame;
 class nsIDOMSelection;
 class nsString;
 class nsStringArray;
+class nsICaret;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -180,11 +182,22 @@ public:
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame) = 0;
 
+
   /**
    * Scrolls the view of the document so that the anchor with the specified
    * name is displayed at the top of the window
    */
   NS_IMETHOD GoToAnchor(const nsString& aAnchorName) const = 0;
+
+  /**
+   * Get the caret, if it exists. AddRefs it.
+   */
+  NS_IMETHOD GetCaret(nsICaret **outCaret) = 0;
+  
+  /**
+   * Refresh the caret. Called by frames when they redraw
+   */
+  NS_IMETHOD RefreshCaret() = 0;
 
   // XXX events
   // XXX selection
