@@ -979,7 +979,6 @@ static PK11Attribute *
 pk11_FindCrlAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 {
     certDBEntryRevocation *crl;
-    char *url;
 
     switch (type) {
     case CKA_PRIVATE:
