@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -70,16 +70,19 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
   return nsnull;
 }
 
-NS_METHOD nsMenuItem::Create(nsIMenu * aParent, const nsString &aLabel, PRUint32 aCommand)
+NS_METHOD nsMenuItem::Create(nsIMenu        *aParent, 
+                             const nsString &aLabel, 
+                             PRBool         isSeparator)
 {
   return NS_OK;
 }
-
-NS_METHOD nsMenuItem::Create(nsIPopUpMenu * aParent, const nsString &aLabel, PRUint32 aCommand)
+    
+NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent, 
+                             const nsString &aLabel,  
+                             PRUint32        aCommand)
 {
   return NS_OK;
 }
-
 NS_METHOD nsMenuItem::Create(nsIMenu * aParent)
 {
   return NS_OK;
