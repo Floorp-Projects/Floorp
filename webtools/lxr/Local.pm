@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.5 1999/04/30 19:00:47 endico%mozilla.org Exp $
+# $Id: Local.pm,v 1.6 2001/02/21 05:14:10 endico%mozilla.org Exp $
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <endico@mozilla.org>
@@ -232,7 +232,7 @@ sub descexpand {
         # Disallowing embedded spans theoretically removes some flexibility
         # but this seems to be a little used tag and doing this makes lxr 
         # a lot faster.
-        if ($desc =~ /<SPAN CLASS=LXRSHORTDESC>(.*?)<\/SPAN>/is) {
+        if ($desc =~ /<SPAN CLASS=\"?LXRSHORTDESC\"?>(.*?)<\/SPAN>/is) {
             $short = $1;
             if (!($short =~ /\<span/is)) {
                 return ($short);
@@ -317,12 +317,12 @@ sub descreadmehtml {
     # check if there's a short desc nested inside the long desc. If not, do
     # a non-greedy search for a long desc. assume there are no other stray
     # spans within the description.
-    if ($string =~ /<SPAN CLASS=LXRLONGDESC>(.*?<SPAN CLASS=LXRSHORTDESC>.*?<\/SPAN>.*?)<\/SPAN>/is) {
+    if ($string =~ /<SPAN CLASS=\"?LXRLONGDESC\"?>(.*?<SPAN CLASS=\"?LXRSHORTDESC\"?>.*?<\/SPAN>.*?)<\/SPAN>/is) {
         $long = $1;
         if (!($long =~ /<span.*?\<span/is)) {
             print($long . "<P>\nSEE ALSO: <A HREF=\"README.html\">README</A>\n");
         }
-    } elsif ($string =~ /<SPAN CLASS=LXRLONGDESC>(.*?)<\/SPAN>/is) {
+    } elsif ($string =~ /<SPAN CLASS=\"?LXRLONGDESC\"?>(.*?)<\/SPAN>/is) {
         $long = $1;
         if (!($long =~ /\<span/is)) {
             print($long . "<P>\nSEE ALSO: <A HREF=\"README.html\">README</A>\n");
