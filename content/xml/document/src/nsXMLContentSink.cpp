@@ -1109,6 +1109,7 @@ nsXMLContentSink::LoadXSLStyleSheet(const nsIURL* aUrl)
       parser->SetContentSink(sink);
  
       nsAutoString utf8("UTF-8");
+      mDocument->SetDocumentCharacterSet(utf8);
       parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
       parser->Parse(aUrl);
       
