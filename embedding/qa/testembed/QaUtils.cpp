@@ -56,7 +56,7 @@ CQaUtils::~CQaUtils()
 }
 
 // ***********************************************************************
-// ***************** Local QA Methods ******************
+// ********************* Local QA Methods *********************
 // ***********************************************************************
 
 
@@ -65,7 +65,7 @@ void CQaUtils::RvTestResult(nsresult rv, const char *pLine, int displayMethod)
 	// note: default displayMethod = 1 in .h file
 
 	CString strLine = pLine;
-	char theOutputLine[100];
+	char theOutputLine[200];
 
 	if (NS_FAILED(rv))
 	   strLine += " failed.";

@@ -398,12 +398,11 @@ NS_IMETHODIMP CBrowserImpl::OnDataAvailable(nsIRequest *request,
 				nsISupports *ctxt, nsIInputStream *input,
 				PRUint32 offset, PRUint32 count)
 {
-	CQaUtils::QAOutput("Inside OnDataAvailable().");
+	CQaUtils::QAOutput("***** nsIRequest async tests inside nsIStreamListener::OnDataAvailable(). *****");
 	CTests::IsPendingReqTest(request);
 	CTests::GetStatusReqTest(request);
 
 	CTests::SuspendReqTest(request);	
-	CQaUtils::QAOutput("nsIRequest: Between Suspend and Resume.");
 	CTests::ResumeReqTest(request);	
 
 //	CTests::CancelReqTest(request);	
