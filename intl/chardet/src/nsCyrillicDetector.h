@@ -89,6 +89,7 @@ class nsCyrillicDetector
     virtual void   DataEnd();
   protected:
     virtual void Report(const char* aCharset) = 0;
+    PRBool  mDone;
 
   private:
     PRUint8  mItems;
@@ -96,7 +97,6 @@ class nsCyrillicDetector
     const char** mCharsets;
     PRUint32 mProb[NUM_CYR_CHARSET];
     PRUint8 mLastCls[NUM_CYR_CHARSET];
-    PRBool  mDone;
 };
 
 class nsCyrXPCOMDetector :  
