@@ -95,13 +95,13 @@ protected:
 };
 
 nsresult
-NS_NewFieldSetFrame(nsIFrame** aNewFrame)
+NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsFieldSetFrame* it = new nsFieldSetFrame;
+  nsFieldSetFrame* it = new (aPresShell) nsFieldSetFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -127,7 +127,10 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext* aPresContext,
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
   
   PRUint8 flags = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay) ? NS_BLOCK_SHRINK_WRAP : 0;
-  NS_NewAreaFrame(&mContentFrame, flags);
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  NS_NewAreaFrame(shell, &mContentFrame, flags);
   mFrames.SetFrames(mContentFrame);
 
   // Resolve style and initialize the frame

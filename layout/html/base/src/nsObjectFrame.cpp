@@ -376,8 +376,10 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
   
   if(bImage)
   {
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
     nsIFrame * aNewFrame = nsnull;
-    rv = NS_NewImageFrame(&aNewFrame);
+    rv = NS_NewImageFrame(shell, &aNewFrame);
     if(rv != NS_OK)
       return rv;
 
@@ -1341,13 +1343,13 @@ nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
 }
 
 nsresult
-NS_NewObjectFrame(nsIFrame** aNewFrame)
+NS_NewObjectFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsObjectFrame* it = new nsObjectFrame;
+  nsObjectFrame* it = new (aPresShell) nsObjectFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -76,13 +76,13 @@ const char * kMozSelected = "-moz-option-selected";
 
 //---------------------------------------------------------
 nsresult
-NS_NewListControlFrame(nsIFrame** aNewFrame)
+NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsListControlFrame* it = new nsListControlFrame;
+  nsListControlFrame* it = new (aPresShell) nsListControlFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -36,7 +36,7 @@
 class nsString;
 
 
-nsresult NS_NewFontPickerFrame(nsIFrame** aResult) ;
+nsresult NS_NewFontPickerFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 
 class nsFontPickerFrame : public nsLeafFrame

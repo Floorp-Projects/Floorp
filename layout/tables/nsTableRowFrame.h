@@ -114,7 +114,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableRowFrame(nsIFrame** aResult);
+  NS_NewTableRowFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,

@@ -36,7 +36,7 @@ class nsTreeItemDragCapturer;
 class nsTreeRowGroupFrame : public nsTableRowGroupFrame, public nsIScrollbarListener
 {
 public:
-  friend nsresult NS_NewTreeRowGroupFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewTreeRowGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
     // hook in to setup d&d capturers
   NS_IMETHOD Init ( nsIPresContext*  aPresContext, nsIContent* aContent,

@@ -30,7 +30,7 @@ class nsTableColFrame;
 class nsTreeRowFrame : public nsTableRowFrame
 {
 public:
-  friend nsresult NS_NewTreeRowFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewTreeRowFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   // Overridden methods
   NS_IMETHOD     IR_TargetIsChild(nsIPresContext*      aPresContext,

@@ -19,8 +19,10 @@
  *
  * Contributor(s): 
  */ 
+
 #include "nsIPresShell.h"
-#include "nsIPresContext.h" 
+#include "nsIPresContext.h"
+#include "nsIArena.h" 
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
@@ -99,6 +101,9 @@ static NS_DEFINE_IID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 
 // comment out to hide caret
 #define SHOW_CARET
+
+// The size of the presshell's recyclers array
+#define RECYCLER_SIZE 300
 
 //----------------------------------------------------------------------
 
@@ -196,6 +201,10 @@ public:
                   nsIPresContext* aPresContext,
                   nsIViewManager* aViewManager,
                   nsIStyleSet* aStyleSet);
+
+  NS_IMETHOD AllocateFrame(size_t aSize, void** aResult);
+  NS_IMETHOD FreeFrame(size_t aSize, void* aFreeChunk);
+  
   NS_IMETHOD GetDocument(nsIDocument** aResult);
   NS_IMETHOD GetPresContext(nsIPresContext** aResult);
   NS_IMETHOD GetViewManager(nsIViewManager** aResult);
@@ -378,6 +387,9 @@ protected:
   PresShellViewEventListener    *mViewEventListener;
   PRBool                        mPendingReflowEvent;
   nsCOMPtr<nsIEventQueue>       mEventQueue;
+  nsCOMPtr<nsIArena>            mArena;
+
+  void*                         mRecyclers[RECYCLER_SIZE];
 
   MOZ_TIMER_DECLARE(mReflowWatch)  // Used for measuring time spent in reflow
   MOZ_TIMER_DECLARE(mFrameCreationWatch)  // Used for measuring time spent in frame creation
@@ -615,6 +627,14 @@ PresShell::Init(nsIDocument* aDocument,
   NS_PRECONDITION(nsnull != aDocument, "null ptr");
   NS_PRECONDITION(nsnull != aPresContext, "null ptr");
   NS_PRECONDITION(nsnull != aViewManager, "null ptr");
+
+  // Make the arena that will be used to allocate frames.
+  NS_NewHeapArena(getter_AddRefs(mArena));
+
+  // Zero out the recyclers array.
+  for (PRInt32 i = 0; i < RECYCLER_SIZE; i++)
+    mRecyclers[i] = nsnull;
+
   if ((nsnull == aDocument) || (nsnull == aPresContext) ||
       (nsnull == aViewManager)) {
     return NS_ERROR_NULL_POINTER;
@@ -689,6 +709,39 @@ PresShell::Init(nsIDocument* aDocument,
   if (NS_SUCCEEDED(result))                    // XXX this implies that the UI is the current thread.
     result = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
   
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::FreeFrame(size_t aSize, void* aPtr)
+{
+  if (aSize >= RECYCLER_SIZE)
+    return NS_OK;
+
+  void* currentTop = mRecyclers[aSize];
+  mRecyclers[aSize] = aPtr;
+  *((void**)aPtr) = currentTop;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::AllocateFrame(size_t aSize, void** aResult)
+{
+  void* result = nsnull;
+  if (aSize < RECYCLER_SIZE) {
+    result = mRecyclers[aSize];
+    if (result) {
+      // Need to move to the next object
+      void* next = *((void**)result);
+      mRecyclers[aSize] = next;
+    }
+  }
+
+  if (!result) {
+    result = mArena->Alloc(PRInt32(aSize));
+  }
+
+  *aResult = result;
   return NS_OK;
 }
 

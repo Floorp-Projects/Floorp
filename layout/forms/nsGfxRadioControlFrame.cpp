@@ -34,13 +34,13 @@
 
 
 nsresult
-NS_NewGfxRadioControlFrame(nsIFrame** aNewFrame)
+NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsGfxRadioControlFrame* it = new nsGfxRadioControlFrame;
+  nsGfxRadioControlFrame* it = new (aPresShell) nsGfxRadioControlFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

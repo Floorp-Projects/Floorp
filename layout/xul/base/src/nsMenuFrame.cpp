@@ -59,13 +59,13 @@ nsMenuDismissalListener* nsMenuFrame::mDismissalListener = nsnull;
 // Wrapper for creating a new menu popup container
 //
 nsresult
-NS_NewMenuFrame(nsIFrame** aNewFrame, PRUint32 aFlags)
+NS_NewMenuFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMenuFrame* it = new nsMenuFrame;
+  nsMenuFrame* it = new (aPresShell) nsMenuFrame;
   if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
   *aNewFrame = it;

@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -932,6 +933,9 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus)
 {
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+            
   //printf("FramesetFrame2::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
   // Always get the size so that the caller knows how big we are
   GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
@@ -1030,7 +1034,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
           aPresContext->ResolveStyleContextFor(child, mStyleContext,
                                               PR_FALSE, &kidSC);
           if (nsHTMLAtoms::frameset == tag) {
-            result = NS_NewHTMLFramesetFrame(&frame);
+            result = NS_NewHTMLFramesetFrame(shell, &frame);
             frame->Init(aPresContext, child, this, kidSC, nsnull);
 
             childTypes[mChildCount] = FRAMESET;
@@ -1040,7 +1044,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
             childFrame->SetParentBorderColor(borderColor);
             childBorderColors[mChildCount].Set(childFrame->GetBorderColor());
           } else { // frame
-            result = NS_NewHTMLFrameOuterFrame(&frame);
+            result = NS_NewHTMLFrameOuterFrame(shell, &frame);
             frame->Init(aPresContext, child, this, kidSC, nsnull);
 
             childTypes[mChildCount] = FRAME;
@@ -1072,7 +1076,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
       for (int blankX = mChildCount; blankX < numCells; blankX++) {
         // XXX the blank frame is using the content of its parent - at some point it 
         // should just have null content, if we support that
-        nsHTMLFramesetBlankFrame* blankFrame = new nsHTMLFramesetBlankFrame;
+        nsHTMLFramesetBlankFrame* blankFrame = new (shell.get()) nsHTMLFramesetBlankFrame;
         nsIStyleContext* pseudoStyleContext;
         aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::framesetBlankPseudo,
                                                   mStyleContext, PR_FALSE,
@@ -1113,7 +1117,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
       offset.y += lastSize.height;
       if ((borderWidth > 0) && (eFrameborder_No != frameborder)) {
         if (firstTime) { // create horizontal border
-          borderFrame = new nsHTMLFramesetBorderFrame(borderWidth, PR_FALSE, PR_FALSE);
+          borderFrame = new (shell.get()) nsHTMLFramesetBorderFrame(borderWidth, PR_FALSE, PR_FALSE);
           nsIStyleContext* pseudoStyleContext;
           aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::horizontalFramesetBorderPseudo,
                                                     mStyleContext, PR_FALSE,
@@ -1140,7 +1144,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
       if ((cellIndex.x > 0) && (borderWidth > 0)) {  // moved to next col in same row
         if (0 == cellIndex.y) { // in 1st row
           if (firstTime) { // create vertical border
-            borderFrame = new nsHTMLFramesetBorderFrame(borderWidth, PR_TRUE, PR_FALSE);
+            borderFrame = new (shell.get()) nsHTMLFramesetBorderFrame(borderWidth, PR_TRUE, PR_FALSE);
             nsIStyleContext* pseudoStyleContext;
             aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::verticalFramesetBorderPseudo,
                                                       mStyleContext,
@@ -1519,13 +1523,13 @@ nsHTMLFramesetFrame::EndMouseDrag(nsIPresContext* aPresContext)
 }  
 
 nsresult
-NS_NewHTMLFramesetFrame(nsIFrame** aNewFrame)
+NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsHTMLFramesetFrame* it = new nsHTMLFramesetFrame;
+  nsHTMLFramesetFrame* it = new (aPresShell) nsHTMLFramesetFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

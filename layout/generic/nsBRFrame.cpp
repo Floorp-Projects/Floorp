@@ -64,13 +64,13 @@ protected:
 };
 
 nsresult
-NS_NewBRFrame(nsIFrame** aNewFrame)
+NS_NewBRFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* frame = new BRFrame;
+  nsIFrame* frame = new (aPresShell) BRFrame;
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

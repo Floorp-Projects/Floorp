@@ -69,13 +69,13 @@ protected:
 };
 
 nsresult
-NS_NewHRFrame(nsIFrame** aNewFrame)
+NS_NewHRFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  HRuleFrame* it = new HRuleFrame;
+  HRuleFrame* it = new (aPresShell) HRuleFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -43,7 +43,7 @@
 #include "nsIDOMText.h"
 #include "nsIContent.h"
 
-nsresult NS_NewMenuFrame(nsIFrame** aResult, PRUint32 aFlags) ;
+nsresult NS_NewMenuFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aFlags) ;
 
 class nsMenuBarFrame;
 class nsMenuPopupFrame;

@@ -33,13 +33,13 @@
 #include "nsIPresShell.h"
 
 nsresult
-NS_NewPageFrame(nsIFrame** aNewFrame)
+NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsPageFrame* it = new nsPageFrame;
+  nsPageFrame* it = new (aPresShell) nsPageFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

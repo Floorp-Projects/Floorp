@@ -24,6 +24,7 @@
 
 #include "nsISupports.h"
 
+class nsIPresShell;
 class nsIPresContext;
 class nsIContent;
 class nsIFrame;
@@ -42,7 +43,8 @@ public:
   /**
    * Create frames for the root content element and its child content.
    */
-  NS_IMETHOD ConstructRootFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD ConstructRootFrame(nsIPresShell* aPresShell, 
+                                nsIPresContext* aPresContext,
                                 nsIContent*     aDocElement,
                                 nsIFrame*&      aFrameSubTree) = 0;
 
@@ -100,11 +102,13 @@ public:
                                    nsIPresContext* aPresContext) = 0;
   
   // Notification that we were unable to render a replaced element.
-  NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
+  NS_IMETHOD CantRenderReplacedElement(nsIPresShell* aPresShell, 
+                                       nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame) = 0;
 
   // Request to create a continuing frame
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD CreateContinuingFrame(nsIPresShell* aPresShell, 
+                                   nsIPresContext* aPresContext,
                                    nsIFrame*       aFrame,
                                    nsIFrame*       aParentFrame,
                                    nsIFrame**      aContinuingFrame) = 0;

@@ -31,7 +31,7 @@ class nsTreeTwistyListener;
 class nsTreeFrame : public nsTableFrame, public nsISelfScrollingFrame
 {
 public:
-  friend nsresult NS_NewTreeFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewTreeFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_DECL_ISUPPORTS_INHERITED
 

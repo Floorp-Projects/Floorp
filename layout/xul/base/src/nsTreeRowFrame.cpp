@@ -47,13 +47,13 @@
 // Creates a new tree frame
 //
 nsresult
-NS_NewTreeRowFrame (nsIFrame** aNewFrame)
+NS_NewTreeRowFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTreeRowFrame* it = new nsTreeRowFrame;
+  nsTreeRowFrame* it = new (aPresShell) nsTreeRowFrame;
   if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
 

@@ -125,13 +125,13 @@ protected:
 };
 
 nsresult
-NS_NewLabelFrame(nsIFrame** aNewFrame)
+NS_NewLabelFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsLabelFrame* it = new nsLabelFrame;
+  nsLabelFrame* it = new (aPresShell) nsLabelFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -371,8 +371,11 @@ nsLabelFrame::SetInitialChildList(nsIPresContext* aPresContext,
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
   PRUint8 flags = (mInline) ? NS_BLOCK_SHRINK_WRAP : 0;
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+
   nsIFrame* areaFrame;
-  NS_NewAreaFrame(&areaFrame, flags);
+  NS_NewAreaFrame(shell, &areaFrame, flags);
   mFrames.SetFrames(areaFrame);
 
   // Resolve style and initialize the frame

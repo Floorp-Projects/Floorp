@@ -46,13 +46,13 @@
 
 
 nsresult
-NS_NewDeckFrame ( nsIFrame** aNewFrame )
+NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsDeckFrame* it = new nsDeckFrame;
+  nsDeckFrame* it = new (aPresShell) nsDeckFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 

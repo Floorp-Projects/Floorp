@@ -42,7 +42,7 @@ class nsAnonymousBlockFrame;
 class nsInlineFrame : public nsInlineFrameSuper
 {
 public:
-  friend nsresult NS_NewInlineFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   // nsISupports overrides
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -129,7 +129,7 @@ protected:
  */
 class nsFirstLineFrame : public nsInlineFrame {
 public:
-  friend nsresult NS_NewFirstLineFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;

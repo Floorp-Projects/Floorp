@@ -1116,13 +1116,13 @@ NS_IMETHODIMP nsTableOuterFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColC
 
 
 nsresult 
-NS_NewTableOuterFrame(nsIFrame** aNewFrame)
+NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTableOuterFrame* it = new nsTableOuterFrame;
+  nsTableOuterFrame* it = new (aPresShell) nsTableOuterFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

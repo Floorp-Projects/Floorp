@@ -55,13 +55,13 @@
 // Wrapper for creating a new menu popup container
 //
 nsresult
-NS_NewPopupSetFrame(nsIFrame** aNewFrame)
+NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsPopupSetFrame* it = new nsPopupSetFrame;
+  nsPopupSetFrame* it = new (aPresShell) nsPopupSetFrame;
   if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
   *aNewFrame = it;

@@ -39,13 +39,13 @@ static NS_DEFINE_IID(kIRadioIID, NS_IRADIOBUTTON_IID);
 #define NS_DEFAULT_RADIOBOX_SIZE  12
 
 nsresult
-NS_NewNativeRadioControlFrame(nsIFrame** aNewFrame)
+NS_NewNativeRadioControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsNativeRadioControlFrame* it = new nsNativeRadioControlFrame;
+  nsNativeRadioControlFrame* it = new (aPresShell) nsNativeRadioControlFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -38,7 +38,7 @@ public:
   nsToolbarItemFrame();
   ~nsToolbarItemFrame();
 
-  friend nsresult NS_NewToolbarItemFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewToolbarItemFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);

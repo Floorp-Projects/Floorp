@@ -73,7 +73,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableColFrame(nsIFrame** aResult);
+  NS_NewTableColFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 
   NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,

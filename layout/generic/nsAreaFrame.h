@@ -47,7 +47,7 @@ struct nsStylePosition;
 class nsAreaFrame : public nsBlockFrame, public nsIAreaFrame
 {
 public:
-  friend nsresult NS_NewAreaFrame(nsIFrame** aResult, PRUint32 aFlags);
+  friend nsresult NS_NewAreaFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aFlags);
   
   // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

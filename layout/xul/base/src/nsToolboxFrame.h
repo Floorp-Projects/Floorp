@@ -56,7 +56,7 @@
 class nsToolboxFrame : public nsBoxFrame
 {
 public:
-  friend nsresult NS_NewToolboxFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewToolboxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
     // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,

@@ -37,7 +37,7 @@ class nsDeckFrame : public nsBoxFrame
 {
 public:
 
-  friend nsresult NS_NewDeckFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewDeckFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
  
 

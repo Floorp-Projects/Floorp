@@ -55,13 +55,13 @@ static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewScrollFrame(nsIFrame** aNewFrame)
+NS_NewScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsScrollFrame* it = new nsScrollFrame;
+  nsScrollFrame* it = new (aPresShell) nsScrollFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

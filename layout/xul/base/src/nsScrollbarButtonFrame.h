@@ -43,7 +43,7 @@ public:
   // Overrides
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
-  friend nsresult NS_NewScrollBarButtonFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewScrollBarButtonFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,

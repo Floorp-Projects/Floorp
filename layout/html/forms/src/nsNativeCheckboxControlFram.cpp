@@ -39,13 +39,13 @@ static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 
 
 nsresult
-NS_NewNativeCheckboxControlFrame(nsIFrame** aNewFrame)
+NS_NewNativeCheckboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsNativeCheckboxControlFrame* it = new nsNativeCheckboxControlFrame;
+  nsNativeCheckboxControlFrame* it = new (aPresShell) nsNativeCheckboxControlFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

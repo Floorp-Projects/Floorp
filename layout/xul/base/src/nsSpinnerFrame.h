@@ -36,7 +36,7 @@
 class nsString;
 
 
-nsresult NS_NewSpinnerFrame(nsIFrame** aResult) ;
+nsresult NS_NewSpinnerFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 
 class nsSpinnerFrame : public nsLeafFrame

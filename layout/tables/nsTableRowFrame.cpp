@@ -1566,13 +1566,13 @@ nsTableRowFrame::GetFrameType(nsIAtom** aType) const
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableRowFrame(nsIFrame** aNewFrame)
+NS_NewTableRowFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTableRowFrame* it = new nsTableRowFrame;
+  nsTableRowFrame* it = new (aPresShell) nsTableRowFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

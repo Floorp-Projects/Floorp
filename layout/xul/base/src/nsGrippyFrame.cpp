@@ -56,13 +56,13 @@
 // Creates a new Toolbar frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewGrippyFrame ( nsIFrame** aNewFrame )
+NS_NewGrippyFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsGrippyFrame* it = new nsGrippyFrame;
+  nsGrippyFrame* it = new (aPresShell) nsGrippyFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 

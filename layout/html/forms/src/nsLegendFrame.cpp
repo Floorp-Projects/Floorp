@@ -44,13 +44,13 @@ static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
 static NS_DEFINE_IID(kIDOMHTMLLegendElementIID, NS_IDOMHTMLLEGENDELEMENT_IID);
  
 nsresult
-NS_NewLegendFrame(nsIFrame** aNewFrame)
+NS_NewLegendFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsLegendFrame* it = new nsLegendFrame;
+  nsLegendFrame* it = new (aPresShell) nsLegendFrame;
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -52,7 +52,7 @@ class nsListControlFrame : public nsScrollFrame,
 			   public nsIStatefulFrame
 {
 public:
-  friend nsresult NS_NewListControlFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
    // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

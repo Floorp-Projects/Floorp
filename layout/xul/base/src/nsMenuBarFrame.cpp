@@ -47,13 +47,13 @@ static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 // Wrapper for creating a new menu Bar container
 //
 nsresult
-NS_NewMenuBarFrame(nsIFrame** aNewFrame)
+NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMenuBarFrame* it = new nsMenuBarFrame;
+  nsMenuBarFrame* it = new (aPresShell) nsMenuBarFrame;
   if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
   *aNewFrame = it;

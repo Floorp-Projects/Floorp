@@ -232,13 +232,13 @@ public:
 NS_IMPL_ISUPPORTS2(nsGfxScrollFrameInner, nsIDocumentObserver, nsIScrollPositionListener)
 
 nsresult
-NS_NewGfxScrollFrame(nsIFrame** aNewFrame, nsIDocument* aDocument)
+NS_NewGfxScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIDocument* aDocument)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsGfxScrollFrame* it = new nsGfxScrollFrame(aDocument);
+  nsGfxScrollFrame* it = new (aPresShell) nsGfxScrollFrame(aDocument);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

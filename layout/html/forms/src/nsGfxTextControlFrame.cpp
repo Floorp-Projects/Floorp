@@ -118,13 +118,13 @@ static const PRBool gNoisy = PR_FALSE;
 #endif
 
 nsresult
-NS_NewGfxTextControlFrame(nsIFrame** aNewFrame)
+NS_NewGfxTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  *aNewFrame = new nsGfxTextControlFrame;
+  *aNewFrame = new (aPresShell) nsGfxTextControlFrame;
   if (nsnull == aNewFrame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1765,7 +1765,9 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
             if (NS_FAILED(rv)) return rv;
           }
 
-          rv = NS_NewBlockFrame((nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);
+          nsCOMPtr<nsIPresShell> shell;
+          aPresContext->GetShell(getter_AddRefs(shell));
+          rv = NS_NewBlockFrame(shell, (nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);
           if (NS_FAILED(rv)) { return rv; }
           if (!mDisplayFrame) { return NS_ERROR_NULL_POINTER; }
         
@@ -1781,7 +1783,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 
           // create a text frame and put it inside the block frame
           nsIFrame *textFrame;
-          rv = NS_NewTextFrame(&textFrame);
+          rv = NS_NewTextFrame(shell, &textFrame);
           if (NS_FAILED(rv)) { return rv; }
           if (!textFrame) { return NS_ERROR_NULL_POINTER; }
           nsCOMPtr<nsIStyleContext> textStyleContext;

@@ -25,6 +25,7 @@
 #include "nsLineLayout.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
+#include "nsIArena.h"
 #include "nsString.h"
 #include "nsIStyleContext.h"
 #include "nsIView.h"
@@ -174,13 +175,13 @@ nsIFrameDebug::GetLogModuleInfo()
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIFrameSelection, NS_IFRAMESELECTION_IID);
 nsresult
-NS_NewEmptyFrame(nsIFrame** aNewFrame)
+NS_NewEmptyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsFrame* it = new nsFrame;
+  nsFrame* it = new (aPresShell) nsFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -188,9 +189,39 @@ NS_NewEmptyFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-NS_IMPL_ZEROING_OPERATOR_NEW(nsFrame)
-
 MOZ_DECL_CTOR_COUNTER(nsFrame);
+
+// Overloaded new operator. Initializes the memory to 0 and relies on an arena
+// (which comes from the presShell) to perform the allocation.
+void* 
+nsFrame::operator new(size_t sz, nsIPresShell* aPresShell)
+{
+  // Check the recycle list first.
+  void* result = nsnull;
+  aPresShell->AllocateFrame(sz, &result);
+  
+  if (result) {
+    nsCRT::zero(result, sz);
+  }
+
+  return result;
+}
+
+// Overridden to prevent the global delete from being called, since the memory
+// came out of an nsIArena instead of the global delete operator's heap.
+void 
+nsFrame::operator delete(void* aPtr, size_t sz)
+{
+  // Don't let the memory be freed, since it will be recycled
+  // instead. Don't call the global operator delete.
+
+  // Stash the size of the object in the first four bytes of the
+  // freed up memory.  The Destroy method can then use this information
+  // to recycle the object.
+  size_t* szPtr = (size_t*)aPtr;
+  *szPtr = sz;
+}
+
 
 nsFrame::nsFrame()
 {
@@ -371,7 +402,15 @@ nsFrame::Destroy(nsIPresContext* aPresContext)
     view->Destroy();
   }
 
+  // Deleting the frame doesn't really free the memory, since we're using an
+  // nsIArena for allocation, but we will get our destructors called.
   delete this;
+
+  // Now that we're totally cleaned out, we need to add ourselves to the presshell's
+  // recycler.
+  size_t* sz = (size_t*)this;
+  shell->FreeFrame(*sz, (void*)this);
+
   return NS_OK;
 }
 

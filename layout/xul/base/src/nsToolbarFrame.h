@@ -59,7 +59,7 @@ class nsToolbarDragListener;
 class nsToolbarFrame : public nsBoxFrame
 {
 public:
-  friend nsresult NS_NewToolbarFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewToolbarFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,

@@ -36,7 +36,7 @@
 #include "nsITimerCallback.h"
 #include "nsISupportsArray.h"
 
-nsresult NS_NewPopupSetFrame(nsIFrame** aResult) ;
+nsresult NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 class nsPopupSetFrame : public nsBoxFrame, public nsIPopupSetFrame
 {

@@ -335,12 +335,12 @@ nsCommentNode::HandleDOMEvent(nsIPresContext* aPresContext,
                                aFlags, aEventStatus);
 }
 
-nsresult NS_NewCommentFrame(nsIFrame*& aResult);
+nsresult NS_NewCommentFrame(nsIPresShell* aPresShell, nsIFrame*& aResult);
 nsresult
-NS_NewCommentFrame(nsIFrame*& aResult)
+NS_NewCommentFrame(nsIPresShell* aPresShell, nsIFrame*& aResult)
 {
   nsIFrame* frame;
-  NS_NewEmptyFrame(&frame);
+  NS_NewEmptyFrame(aPresShell, &frame);
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

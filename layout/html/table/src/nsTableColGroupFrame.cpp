@@ -44,6 +44,8 @@ static NS_DEFINE_IID(kIHTMLTableColElementIID, NS_IHTMLTABLECOLELEMENT_IID);
 NS_IMETHODIMP
 nsTableColGroupFrame::InitNewFrames(nsIPresContext* aPresContext, nsIFrame* aChildList)
 {
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
   nsresult rv=NS_OK;
   nsTableFrame* tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
@@ -84,7 +86,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext* aPresContext, nsIFrame* aChi
 
         // Create a new col frame
         nsIFrame* colFrame;
-        NS_NewTableColFrame(&colFrame);
+        NS_NewTableColFrame(shell, &colFrame);
 
         // Set its style context
         nsCOMPtr<nsIStyleContext> colStyleContext;
@@ -686,13 +688,13 @@ void nsTableColGroupFrame::DeleteColFrame(nsIPresContext* aPresContext, nsTableC
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableColGroupFrame(nsIFrame** aNewFrame)
+NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTableColGroupFrame* it = new nsTableColGroupFrame;
+  nsTableColGroupFrame* it = new (aPresShell) nsTableColGroupFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

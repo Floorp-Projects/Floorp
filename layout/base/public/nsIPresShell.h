@@ -45,6 +45,7 @@ class nsIStyleContext;
 class nsIFrameSelection;
 class nsIFrameManager;
 class nsILayoutHistoryState;
+class nsIArena;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -91,6 +92,12 @@ public:
                   nsIViewManager* aViewManager,
                   nsIStyleSet* aStyleSet) = 0;
 
+  // All frames owned by the shell are allocated from an arena.  They are also recycled
+  // using free lists (separate free lists being maintained for each size_t).
+  // Methods for recycling frames.
+  NS_IMETHOD AllocateFrame(size_t aSize, void** aResult) = 0;
+  NS_IMETHOD FreeFrame(size_t aSize, void* aFreeChunk) = 0;
+  
   NS_IMETHOD GetDocument(nsIDocument** aResult) = 0;
 
   NS_IMETHOD GetPresContext(nsIPresContext** aResult) = 0;

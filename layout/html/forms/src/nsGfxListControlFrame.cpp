@@ -78,13 +78,13 @@ static const char * kMozSelected = "-moz-option-selected";
 
 //---------------------------------------------------------
 nsresult
-NS_NewGfxListControlFrame(nsIFrame** aNewFrame)
+NS_NewGfxListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsGfxListControlFrame* it = new nsGfxListControlFrame();
+  nsGfxListControlFrame* it = new (aPresShell) nsGfxListControlFrame();
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
