@@ -33,8 +33,3 @@ libs::
     $(MAKE_INSTALL) resources\content\res\winInspectorMain.ico $(DIST)\bin\chrome\icons\default
     $(MAKE_INSTALL) resources\content\prefs\inspector.js $(DIST)\bin\defaults\pref
 
-chrome::
-    $(REGCHROME) content inspector inspector.jar
-    $(REGCHROME) locale en-US/inspector inspector.jar
-    $(REGCHROME) skin modern/inspector inspector.jar
-    $(REGCHROME) skin classic/inspector inspector.jar

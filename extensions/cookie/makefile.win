@@ -82,6 +82,3 @@ DIRS=tests
 
 include <$(DEPTH)\config\rules.mak>
 
-chrome::
-	$(REGCHROME) content cookie comm.jar
-	$(REGCHROME) locale en-US/cookie en-US.jar
