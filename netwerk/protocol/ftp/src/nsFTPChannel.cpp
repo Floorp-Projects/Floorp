@@ -393,6 +393,7 @@ nsFTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallb
         (void)mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink), 
                                        getter_AddRefs(mEventSink));
 
+
         (void)mCallbacks->GetInterface(NS_GET_IID(nsIPrompt),
                                        getter_AddRefs(mPrompter));
     }

@@ -173,7 +173,7 @@ UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
 #include "mozTXTToHTMLConv.h"
 #include "nsUnknownDecoder.h"
 #include "nsTXTToHTMLConv.h"
-
+#include "nsIndexedToHTML.h"
 nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 nsresult NS_NewMultiMixedConv (nsMultiMixedConv** result);
 nsresult MOZ_NewTXTToHTMLConv (mozTXTToHTMLConv** result);
@@ -514,6 +514,12 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_FTPDIRLISTINGCONVERTER_CID,
       NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-nt&to=application/http-index-format", 
       CreateNewFTPDirListingConv
+    },
+
+    { "Indexed to HTML Converter", 
+      NS_NSINDEXEDTOHTMLCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY "?from=application/http-index-format&to=text/html", 
+      nsIndexedToHTML::Create
     },
     
     { "MultiMixedConverter", 

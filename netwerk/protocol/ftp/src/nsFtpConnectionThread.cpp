@@ -42,11 +42,13 @@
 #include "nsIProxy.h"
 #include "nsIMemory.h"
 #include "nsIStringStream.h"
+#include "nsIPref.h"
 
 #ifdef MOZ_NEW_CACHE
 #include "nsIInputStreamTee.h"
 #endif
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -235,6 +237,12 @@ nsFtpState::nsFtpState() {
     mIPv6ServerAddress = nsnull;
     
     mControlConnection = nsnull;
+
+    mGenerateHTMLContent = PR_FALSE;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    if (NS_SUCCEEDED(rv) || pPref) 
+        pPref->GetBoolPref("network.dir.generate_html", &mGenerateHTMLContent);
 }
 
 nsFtpState::~nsFtpState() 
@@ -1284,11 +1292,13 @@ nsFtpState::R_cwd() {
 
         // update
         mURL->SetPath(mCwd);
-#ifdef FTP_NO_HTTP_INDEX_FORMAT
-        nsresult rv = mChannel->SetContentType("text/html");
-#else
-        nsresult rv = mChannel->SetContentType("application/http-index-format");
-#endif        
+        nsresult rv;
+        
+        if (mGenerateHTMLContent)
+            rv = mChannel->SetContentType("text/html");
+        else
+            rv = mChannel->SetContentType("application/http-index-format");
+        
         if (NS_FAILED(rv)) return FTP_ERROR;
 
         // success
@@ -1401,8 +1411,29 @@ nsFtpState::S_list() {
     NS_WITH_SERVICE(nsIStreamConverterService, streamConvService, kStreamConverterServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString fromStr; fromStr.AssignWithConversion("text/ftp-dir-");
+    nsAutoString httpIndexFormatStr = NS_LITERAL_STRING("application/http-index-format");
+    nsAutoString fromStr = NS_LITERAL_STRING("text/ftp-dir-");
     SetDirMIMEType(fromStr);
+
+    if (mGenerateHTMLContent) {
+        nsAutoString textHTMLStr = NS_LITERAL_STRING("text/html");
+        nsCOMPtr<nsIStreamListener> converterListener2;
+        
+        rv = streamConvService->AsyncConvertData(httpIndexFormatStr.GetUnicode(), textHTMLStr.GetUnicode(),
+                                                 mListener, mURL, getter_AddRefs(converterListener2));
+        
+        if (NS_FAILED(rv)){
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) streamConvService->AsyncConvertData failed (rv=%d)\n", this, rv));
+            return rv;
+        }
+        
+        rv = streamConvService->AsyncConvertData(fromStr.GetUnicode(), httpIndexFormatStr.GetUnicode(),
+                                                 converterListener2, mURL, getter_AddRefs(converterListener));
+    } else {
+    
+        rv = streamConvService->AsyncConvertData(fromStr.GetUnicode(), httpIndexFormatStr.GetUnicode(),
+                                                 mListener, mURL, getter_AddRefs(converterListener));
+    }
 
 #ifdef MOZ_NEW_CACHE
     if ( mCacheEntry ) {
@@ -1417,26 +1448,13 @@ nsFtpState::S_list() {
     } 
 #endif
 
-    nsAutoString toStr; toStr.AssignWithConversion("application/http-index-format");
-
-    rv = streamConvService->AsyncConvertData(fromStr.GetUnicode(), toStr.GetUnicode(),
-                                             mListener, mURL, getter_AddRefs(converterListener));
-
-    if (NS_FAILED(rv)){
-        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) streamConvService->AsyncConvertData failed (rv=%d)\n", this, rv));
-        return rv;
-    }
     mFireCallbacks = PR_FALSE; // listener callbacks will be handled by the transport.
 
     DataRequestForwarder *forwarder = new DataRequestForwarder;
     if (!forwarder) return NS_ERROR_FAILURE;
     NS_ADDREF(forwarder);
 
-#ifdef FTP_NO_HTTP_INDEX_FORMAT
-    fowarder->Init(mChannel, mListener);
-#else
     forwarder->Init(mChannel, converterListener);
-#endif
 
 #ifdef MOZ_NEW_CACHE
     if (mCacheEntry && mReadingFromCache)
