@@ -1277,18 +1277,42 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
     /* truncate at semi-colon and advance */
     *semi_colon++ = '\0';
 
-    /* there must be some attributes. (hopefully) */
-    char * localString = nsCRT::strdup(semi_colon); // needed because strtok modifies it arg
+    /* look for the secure attribute */
+
+    // Note the following will consider the cookie as secure if the set-cookie header
+    // in in either of the following two forms:
+    //   secure;  -- this is the correct syntax according to the cookie spec
+    //   secure=<anything>; -- this violates the spec but is accepted by IE
+    // This means that things like "secure=yes", "secure=true", etc will set the
+    // secure attribute.  But so will things like "secure=no", "secure=false", etc.
+    // Seems like the wrong thing to do, but this is indeed what IE does, so we might
+    // break some sites if we don't do the same.  In any event, any site that has
+    // an equal sign is in violation of the spec so whatever we do to them is fair game.
+
     char * ptr;
-    char * token = nsCRT::strtok(localString, " ;", &ptr);
-    while (token) {
-      if (PL_strcasecmp(token, "secure") == 0) {
-        isSecure = PR_TRUE;
-        break;
+    static const char secureToken[] = "secure";
+    ptr = PL_strcasestr(semi_colon, secureToken);
+    while (ptr) {
+      char * ptr2 = ptr + sizeof(secureToken) -1; // -1 for the null terminator
+
+      // make sure nothing follows "secure" except for equal sign or semicolon
+      while (*ptr2 == ' ' || *ptr2 == '\t') { // skip over trailing whitespace
+        ptr2++;
       }
-      token = nsCRT::strtok(ptr, " ;", &ptr);
+      if (*ptr2 == ';' || *ptr2 == '=' || *ptr2 == '\0') {
+
+        // make sure nothing precedes "secure" except for ';'
+        ptr--;
+        while (*ptr == ' ' || *ptr == '\t') { // skip over leading whitespace
+          ptr--;
+        }
+        if (*ptr == ';' || *ptr == '\0') { // note: '\0' means we got to beginning of string
+          isSecure = PR_TRUE;
+          break;
+        }
+      }
+      ptr = PL_strcasestr(ptr2, "secure");
     }
-    nsCRT::free(localString);
 
     /* look for the path attribute */
     ptr = PL_strcasestr(semi_colon, "path=");
