@@ -18,13 +18,17 @@
 #ifndef nsStyleConsts_h___
 #define nsStyleConsts_h___
 
+#include "nsFont.h"
+
+// XXX fold this into nsIStyleContext and group by nsStyleXXX struct
+
 // Defines for various style related constants
 
-// See nsStyleMolecule.backgroundAttachment
+// See nsStyleColor
 #define NS_STYLE_BG_ATTACHMENT_FIXED            0x01
 #define NS_STYLE_BG_ATTACHMENT_SCROLL           0x02
 
-// See nsStyleMolecule.backgroundFlags
+// See nsStyleColor
 #define NS_STYLE_BG_COLOR_TRANSPARENT           0x01
 #define NS_STYLE_BG_IMAGE_NONE                  0x02
 #define NS_STYLE_BG_X_POSITION_PCT              0x04
@@ -32,19 +36,19 @@
 #define NS_STYLE_BG_Y_POSITION_PCT              0x10
 #define NS_STYLE_BG_Y_POSITION_LENGTH           0x20
 
-// See nsStyleMolecule.backgroundRepeat
+// See nsStyleColor
 #define NS_STYLE_BG_REPEAT_OFF                  0x00
 #define NS_STYLE_BG_REPEAT_X                    0x01
 #define NS_STYLE_BG_REPEAT_Y                    0x02
 #define NS_STYLE_BG_REPEAT_XY                   0x03
 
-// See nsStyleMolecule.borderSizeFlags
+// See nsStyleBorder
 #define NS_STYLE_BORDER_WIDTH_THIN              0
 #define NS_STYLE_BORDER_WIDTH_MEDIUM            1
 #define NS_STYLE_BORDER_WIDTH_THICK             2
 #define NS_STYLE_BORDER_WIDTH_LENGTH_VALUE      3
 
-// See nsStyleMolecule.borderStyle
+// See nsStyleBorder
 #define NS_STYLE_BORDER_STYLE_NONE              0
 #define NS_STYLE_BORDER_STYLE_GROOVE            1
 #define NS_STYLE_BORDER_STYLE_RIDGE             2
@@ -56,49 +60,56 @@
 #define NS_STYLE_BORDER_STYLE_INSET             8
 #define NS_STYLE_BORDER_STYLE_OUTSET            9
 
-// See nsStyleMolecule.clear
-#define NS_STYLE_CLEAR_NONE                     0x0
-#define NS_STYLE_CLEAR_LEFT                     0x1
-#define NS_STYLE_CLEAR_RIGHT                    0x2
-#define NS_STYLE_CLEAR_BOTH                     0x3
+// See nsStyleDisplay
+#define NS_STYLE_CLEAR_NONE                     0
+#define NS_STYLE_CLEAR_LEFT                     1
+#define NS_STYLE_CLEAR_RIGHT                    2
+#define NS_STYLE_CLEAR_LEFT_AND_RIGHT           3
+#define NS_STYLE_CLEAR_LINE                     4
+#define NS_STYLE_CLEAR_BLOCK                    5
+#define NS_STYLE_CLEAR_COLUMN                   6
+#define NS_STYLE_CLEAR_PAGE                     7
 
-// See nsStyleMolecule.cursor
+// See nsStyleXXX
+#define NS_STYLE_CLIP_AUTO                      0
+
+// See nsStyleColor
 #define NS_STYLE_CURSOR_INHERIT                 0
 #define NS_STYLE_CURSOR_DEFAULT                 1
 #define NS_STYLE_CURSOR_HAND                    2
 #define NS_STYLE_CURSOR_IBEAM                   3
 
-// See nsStyleMolecule.direction
+// See nsStyleDisplay
 #define NS_STYLE_DIRECTION_LTR                  0
 #define NS_STYLE_DIRECTION_RTL                  1
 
-// See nsStyleMolecule.display
+// See nsStyleDisplay
 #define NS_STYLE_DISPLAY_NONE                   0
 #define NS_STYLE_DISPLAY_BLOCK                  1
 #define NS_STYLE_DISPLAY_INLINE                 2
 #define NS_STYLE_DISPLAY_LIST_ITEM              3
 
-// See nsStyleMolecule.floats
+// See nsStyleDisplay
 #define NS_STYLE_FLOAT_NONE                     0
 #define NS_STYLE_FLOAT_LEFT                     1
 #define NS_STYLE_FLOAT_RIGHT                    2
 
-// See nsStyleMolecule.fontStyle
+// See nsStyleFont
 #define NS_STYLE_FONT_STYLE_NORMAL              0
 #define NS_STYLE_FONT_STYLE_ITALIC              1
 #define NS_STYLE_FONT_STYLE_OBLIQUE             2
 
-// See nsStyleMolecule.fontVariant
+// See nsStyleFont
 #define NS_STYLE_FONT_VARIANT_NORMAL            0
 #define NS_STYLE_FONT_VARIANT_SMALL_CAPS        1
 
-// See nsStyleMolecule.fontWeight
+// See nsStyleFont
 #define NS_STYLE_FONT_WEIGHT_NORMAL             400
 #define NS_STYLE_FONT_WEIGHT_BOLD               700
 #define NS_STYLE_FONT_WEIGHT_BOLDER             100
 #define NS_STYLE_FONT_WEIGHT_LIGHTER            -100
 
-// See nsStyleMolecule.fontSize
+// See nsStyleFont
 #define NS_STYLE_FONT_SIZE_XXSMALL              0
 #define NS_STYLE_FONT_SIZE_XSMALL               1
 #define NS_STYLE_FONT_SIZE_SMALL                2
@@ -114,11 +125,12 @@
 #define NS_STYLE_POSITION_RELATIVE              1
 #define NS_STYLE_POSITION_ABSOLUTE              2
 
-// See nsStylePosition
+// See nsStylePosition flags; used for width, height, left, top
 #define NS_STYLE_POSITION_VALUE_LENGTH          0
 #define NS_STYLE_POSITION_VALUE_PCT             1
 #define NS_STYLE_POSITION_VALUE_AUTO            2
 #define NS_STYLE_POSITION_VALUE_INHERIT         3
+#define NS_STYLE_POSITION_VALUE_PROPORTIONAL    4
 
 // See nsStylePosition.mClip
 #define NS_STYLE_CLIP_AUTO                      0
@@ -130,14 +142,13 @@
 #define NS_STYLE_OVERFLOW_SCROLL                2
 #define NS_STYLE_OVERFLOW_AUTO                  3
 
-#define NS_STYLE_HEIGHT_AUTO                    0
-
-#define NS_STYLE_LEFT_AUTO                      0
-
+// See nsStyleDisplay
 #define NS_STYLE_LINE_HEIGHT_NORMAL             0
 
+// See nsStyleList
 #define NS_STYLE_LIST_STYLE_IMAGE_NONE          0
 
+// See nsStyleList
 #define NS_STYLE_LIST_STYLE_NONE                0
 #define NS_STYLE_LIST_STYLE_DISC                1
 #define NS_STYLE_LIST_STYLE_CIRCLE              2
@@ -149,31 +160,36 @@
 #define NS_STYLE_LIST_STYLE_UPPER_ALPHA         8
 #define NS_STYLE_LIST_STYLE_BASIC               9       // not in css
 
+// See nsStyleList
 #define NS_STYLE_LIST_STYLE_POSITION_INSIDE     0
 #define NS_STYLE_LIST_STYLE_POSITION_OUTSIDE    1
 
+// See nsStyleSpacing
 #define NS_STYLE_MARGIN_SIZE_AUTO               0
 
+// See nsStyleText (word/letter)
 #define NS_STYLE_SPACING_NORMAL                 0
 
+// See nsStyleText
 #define NS_STYLE_TEXT_ALIGN_LEFT                0
 #define NS_STYLE_TEXT_ALIGN_RIGHT               1
 #define NS_STYLE_TEXT_ALIGN_CENTER              2
 #define NS_STYLE_TEXT_ALIGN_JUSTIFY             3
 
+// See nsStyleText, nsStyleFont
 #define NS_STYLE_TEXT_DECORATION_NONE           0
-#define NS_STYLE_TEXT_DECORATION_UNDERLINE      0x1
-#define NS_STYLE_TEXT_DECORATION_OVERLINE       0x2
-#define NS_STYLE_TEXT_DECORATION_LINE_THROUGH   0x4
+#define NS_STYLE_TEXT_DECORATION_UNDERLINE      NS_FONT_DECORATION_UNDERLINE
+#define NS_STYLE_TEXT_DECORATION_OVERLINE       NS_FONT_DECORATION_OVERLINE
+#define NS_STYLE_TEXT_DECORATION_LINE_THROUGH   NS_FONT_DECORATION_LINE_THROUGH
 #define NS_STYLE_TEXT_DECORATION_BLINK          0x8
 
+// See nsStyleText
 #define NS_STYLE_TEXT_TRANSFORM_NONE            0
 #define NS_STYLE_TEXT_TRANSFORM_CAPITALIZE      1
 #define NS_STYLE_TEXT_TRANSFORM_LOWERCASE       2
 #define NS_STYLE_TEXT_TRANSFORM_UPPERCASE       3
 
-#define NS_STYLE_TOP_AUTO                       0
-
+// See nsStyleText
 // Note: these values pickup after the text-align values because there
 // are a few html cases where an object can have both types of
 // alignment applied with a single attribute
@@ -188,12 +204,12 @@
 #define NS_STYLE_VERTICAL_ALIGN_LENGTH          18
 #define NS_STYLE_VERTICAL_ALIGN_PCT             19
 
+// See nsStyleDisplay
 #define NS_STYLE_VISIBILITY_INHERIT             0
 #define NS_STYLE_VISIBILITY_VISIBLE             1
 #define NS_STYLE_VISIBILITY_HIDDEN              2
 
-#define NS_STYLE_WIDTH_AUTO                     0
-
+// See nsStyleText
 #define NS_STYLE_WHITESPACE_NORMAL              0
 #define NS_STYLE_WHITESPACE_PRE                 1
 #define NS_STYLE_WHITESPACE_NOWRAP              2
