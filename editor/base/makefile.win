@@ -17,6 +17,7 @@
 
 DEPTH=..\..
 IGNORE_MANIFEST=1
+include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=ender
 
