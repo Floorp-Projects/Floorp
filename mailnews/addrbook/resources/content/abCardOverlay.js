@@ -215,6 +215,7 @@ function GetCardValues(cardproperty, doc)
 		doc.getElementById('HomeState').value = cardproperty.homeState;
 		doc.getElementById('HomeZipCode').value = cardproperty.homeZipCode;
 		doc.getElementById('HomeCountry').value = cardproperty.homeCountry;
+		doc.getElementById('WebPage2').value = cardproperty.webPage2;
 
 		doc.getElementById('JobTitle').value = cardproperty.jobTitle;
 		doc.getElementById('Department').value = cardproperty.department;
@@ -225,7 +226,6 @@ function GetCardValues(cardproperty, doc)
 		doc.getElementById('WorkState').value = cardproperty.workState;
 		doc.getElementById('WorkZipCode').value = cardproperty.workZipCode;
 		doc.getElementById('WorkCountry').value = cardproperty.workCountry;
-
 		doc.getElementById('WebPage1').value = cardproperty.webPage1;
 
 		doc.getElementById('Custom1').value = cardproperty.custom1;
@@ -266,6 +266,7 @@ function SetCardValues(cardproperty, doc)
 		cardproperty.homeState = doc.getElementById('HomeState').value;
 		cardproperty.homeZipCode = doc.getElementById('HomeZipCode').value;
 		cardproperty.homeCountry = doc.getElementById('HomeCountry').value;
+		cardproperty.webPage2 = CleanUpWebPage(doc.getElementById('WebPage2').value);
 
 		cardproperty.jobTitle = doc.getElementById('JobTitle').value;
 		cardproperty.department = doc.getElementById('Department').value;
@@ -276,8 +277,7 @@ function SetCardValues(cardproperty, doc)
 		cardproperty.workState = doc.getElementById('WorkState').value;
 		cardproperty.workZipCode = doc.getElementById('WorkZipCode').value;
 		cardproperty.workCountry = doc.getElementById('WorkCountry').value;
-
-		cardproperty.webPage1 = doc.getElementById('WebPage1').value;
+		cardproperty.webPage1 = CleanUpWebPage(doc.getElementById('WebPage1').value);
 
 		cardproperty.custom1 = doc.getElementById('Custom1').value;
 		cardproperty.custom2 = doc.getElementById('Custom2').value;
@@ -286,6 +286,21 @@ function SetCardValues(cardproperty, doc)
 		cardproperty.notes = doc.getElementById('Notes').value;
 	}
   CallSaveListeners();
+}
+
+function CleanUpWebPage(webPage)
+{
+	// no :// yet so we should add something
+	if ( webPage.length && webPage.search("://") == -1 )
+	{
+		// check for missing / on http://
+		if ( webPage.substr(0, 6) == "http:/" )
+			return( "http://" + webPage.substr(6) );
+		else
+			return( "http://" + webPage );
+	}
+	else
+		return(webPage);
 }
 
 

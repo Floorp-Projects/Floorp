@@ -50,6 +50,9 @@ Rights Reserved.
 					<html:div class="CardViewText" hide="true" id="cvHomeAddress2"/>
 					<html:div class="CardViewText" hide="true" id="cvHomeCityStZip"/>
 					<html:div class="CardViewText" hide="true" id="cvHomeCountry"/>
+					<html:div class="CardViewText"><html:p>
+						<html:a href="" id="cvHomeWebPage" hide="true"/>
+					</html:p></html:div>
 				</box>
 
 				<box id="cvbOther" class="cardViewGroup" align="vertical">
@@ -83,6 +86,9 @@ Rights Reserved.
 					<html:div class="CardViewText" hide="true" id="cvWorkAddress2"/>
 					<html:div class="CardViewText" hide="true" id="cvWorkCityStZip"/>
 					<html:div class="CardViewText" hide="true" id="cvWorkCountry"/>
+					<html:div class="CardViewText"><html:p>
+						<html:a href="" id="cvWorkWebPage" hide="true"/>
+					</html:p></html:div>
 				</box>
 			</box>
 

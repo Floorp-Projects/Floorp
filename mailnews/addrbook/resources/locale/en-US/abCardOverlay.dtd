@@ -44,6 +44,7 @@ Rights Reserved.
 		<!ENTITY HomeState.label		"State:"> 
 		<!ENTITY HomeZipCode.label		"Zip:"> 
 		<!ENTITY HomeCountry.label		"Country:">
+		<!ENTITY HomeWebPage.label		"Web Page:"> 
 	<!ENTITY Work.box				"Work"> 
 		<!ENTITY JobTitle.label			"Title:"> 
 		<!ENTITY Department.label		"Department:"> 
@@ -54,8 +55,7 @@ Rights Reserved.
 		<!ENTITY WorkState.label		"State:"> 
 		<!ENTITY WorkZipCode.label		"Zip:"> 
 		<!ENTITY WorkCountry.label		"Country:">
-	<!--ENTITY Web.box				"Web"--> 
-		<!ENTITY WebPage1.label			"Web Page:"> 
+		<!ENTITY WorkWebPage.label		"Web Page:"> 
 	
 <!ENTITY Other.tab				"Other"> 
 		<!ENTITY Custom1.label			"Custom 1:"> 

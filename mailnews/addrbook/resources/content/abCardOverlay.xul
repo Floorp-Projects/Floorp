@@ -209,6 +209,13 @@ Rights Reserved.
 								<html:input id="HomeCountry" type="text" class="CardEdit" flex="1"/>
 							</box>
 						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="WebPage2" class="CardEdit">&HomeWebPage.label;</html:label>
+							<box class="CardEditWidth">
+								<html:input id="WebPage2" type="text" class="CardEdit" flex="1"/>
+							</box>
+						</box>
 					</box>
 				</titledbox>
 
@@ -280,7 +287,7 @@ Rights Reserved.
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="WebPage1" class="CardEdit">&WebPage1.label;</html:label>
+							<html:label for="WebPage1" class="CardEdit">&WorkWebPage.label;</html:label>
 							<box class="CardEditWidth">
 								<html:input id="WebPage1" type="text" class="CardEdit" flex="1"/>
 							</box>
