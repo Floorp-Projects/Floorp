@@ -58,7 +58,8 @@
 #include "nsLayoutCID.h"
 #include "nsEditorUtils.h"
 #include "EditTxn.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsISupportsArray.h"
 #include "nsUnicharUtils.h"
 
@@ -556,10 +557,11 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   };
   PRInt32 singleLineNewlineBehavior = 1;
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv) && prefs)
-    rv = prefs->GetIntPref("editor.singleLine.pasteNewlines",
-                           &singleLineNewlineBehavior);
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefBranch)
+    rv = prefBranch->GetIntPref("editor.singleLine.pasteNewlines",
+                                &singleLineNewlineBehavior);
 
   if (nsIPlaintextEditor::eEditorSingleLineMask & mFlags)
   {

@@ -98,7 +98,8 @@
 
 // Misc
 #include "nsEditorUtils.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
 #include "nsUnicharUtils.h"
@@ -118,7 +119,6 @@ const PRUnichar nbsp = 160;
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
 static NS_DEFINE_CID(kCDOMSelectionCID,      NS_DOMSELECTION_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
@@ -1306,9 +1306,11 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   if (flags & eEditorMailMask)
   {
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+    nsCOMPtr<nsIPrefBranch> prefBranch =
+      do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
-      prefs->GetBoolPref("mail.compose.wrap_to_window_width", &mWrapToWindow);
+      prefBranch->GetBoolPref("mail.compose.wrap_to_window_width",
+                              &mWrapToWindow);
   }
 
   // and now we're ready to set the new whitespace/wrapping style.
@@ -1680,11 +1682,12 @@ static nsICiter* MakeACiter()
   // Make a citer of an appropriate type
   nsICiter* citer = 0;
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return 0;
 
   char *citationType = 0;
-  rv = prefs->CopyCharPref("mail.compose.citationType", &citationType);
+  rv = prefBranch->GetCharPref("mail.compose.citationType", &citationType);
                           
   if (NS_SUCCEEDED(rv) && citationType[0])
   {

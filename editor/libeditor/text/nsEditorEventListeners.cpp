@@ -61,7 +61,8 @@
 #include "nsIEditorMailSupport.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMNSUIEvent.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresContext.h"
 #include "nsGUIEvent.h"
@@ -87,7 +88,6 @@
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kLookAndFeelCID,          NS_LOOKANDFEEL_CID);
-static NS_DEFINE_CID(kPrefServiceCID,          NS_PREF_CID);
 
 //#define DEBUG_IME
 
@@ -401,11 +401,12 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   if (button == 1)
   {
     nsresult rv;
-    nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
-    if (NS_SUCCEEDED(rv) && prefService)
+    nsCOMPtr<nsIPrefBranch> prefBranch =
+      do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && prefBranch)
     {
       PRBool doMiddleMousePaste = PR_FALSE;;
-      rv = prefService->GetBoolPref("middlemouse.paste", &doMiddleMousePaste);
+      rv = prefBranch->GetBoolPref("middlemouse.paste", &doMiddleMousePaste);
       if (NS_SUCCEEDED(rv) && doMiddleMousePaste)
       {
         // Set the selection to the point under the mouse cursor:

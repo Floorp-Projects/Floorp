@@ -40,7 +40,8 @@
 #include "nsHTMLEditor.h"
 #include "nsCOMPtr.h"
 #include "nsHTMLEditUtils.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #include "nsIEditProperty.h"
 #include "ChangeCSSInlineStyleTxn.h"
@@ -53,8 +54,6 @@
 #include "nsTextEditUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsHTMLCSSUtils.h"
-
-static NS_DEFINE_CID(kPrefServiceCID,       NS_PREF_CID);
 
 static
 void ProcessBValue(const nsAString * aInputString, nsAString & aOutputString,
@@ -318,9 +317,10 @@ nsHTMLCSSUtils::Init(nsHTMLEditor *aEditor)
   mHTMLEditor = NS_STATIC_CAST(nsHTMLEditor*, aEditor);
 
   // let's retrieve the value of the "CSS editing" pref
-  nsCOMPtr<nsIPref> prefService = do_GetService(kPrefServiceCID, &result);
-  if (NS_SUCCEEDED(result) && prefService) {
-    result = prefService->GetBoolPref("editor.use_css", &mIsCSSPrefChecked);
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
+  if (NS_SUCCEEDED(result) && prefBranch) {
+    result = prefBranch->GetBoolPref("editor.use_css", &mIsCSSPrefChecked);
     if (NS_FAILED(result)) return result;
   }
   return result;
@@ -677,26 +677,27 @@ nsresult
 nsHTMLCSSUtils::GetDefaultBackgroundColor(nsAString & aColor)
 {
   nsresult result;
-  nsCOMPtr<nsIPref> prefService = do_GetService(kPrefServiceCID, &result);
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
   if (NS_FAILED(result)) return result;
   aColor.Assign(NS_LITERAL_STRING("#ffffff"));
   nsXPIDLCString returnColor;
-  if (prefService) {
+  if (prefBranch) {
     PRBool useCustomColors;
-    result = prefService->GetBoolPref("editor.use_custom_colors", &useCustomColors);
+    result = prefBranch->GetBoolPref("editor.use_custom_colors", &useCustomColors);
     if (NS_FAILED(result)) return result;
     if (useCustomColors) {
-      result = prefService->CopyCharPref("editor.background_color",
-                                         getter_Copies(returnColor));
+      result = prefBranch->GetCharPref("editor.background_color",
+                                       getter_Copies(returnColor));
       if (NS_FAILED(result)) return result;
     }
     else {
       PRBool useSystemColors;
-      result = prefService->GetBoolPref("browser.display.use_system_colors", &useSystemColors);
+      result = prefBranch->GetBoolPref("browser.display.use_system_colors", &useSystemColors);
       if (NS_FAILED(result)) return result;
       if (!useSystemColors) {
-        result = prefService->CopyCharPref("browser.display.background_color",
-                                           getter_Copies(returnColor));
+        result = prefBranch->GetCharPref("browser.display.background_color",
+                                         getter_Copies(returnColor));
         if (NS_FAILED(result)) return result;
       }
     }
@@ -712,13 +713,14 @@ nsresult
 nsHTMLCSSUtils::GetDefaultLengthUnit(nsAString & aLengthUnit)
 {
   nsresult result;
-  nsCOMPtr<nsIPref> prefService = do_GetService(kPrefServiceCID, &result);
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
   if (NS_FAILED(result)) return result;
   aLengthUnit.Assign(NS_LITERAL_STRING("px"));
-  if (NS_SUCCEEDED(result) && prefService) {
+  if (NS_SUCCEEDED(result) && prefBranch) {
     nsXPIDLCString returnLengthUnit;
-    result = prefService->CopyCharPref("editor.css.default_length_unit",
-                                       getter_Copies(returnLengthUnit));
+    result = prefBranch->GetCharPref("editor.css.default_length_unit",
+                                     getter_Copies(returnLengthUnit));
     if (NS_FAILED(result)) return result;
     if (returnLengthUnit) {
       aLengthUnit.Assign(NS_ConvertASCIItoUCS2(returnLengthUnit));

@@ -40,7 +40,8 @@
 
 #include "pratom.h"
 #include "nsIDOMDocument.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 
@@ -971,9 +972,10 @@ nsEditor::GetWrapWidth(PRInt32 *aWrapColumn)
   *aWrapColumn = 72;
 
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv) && prefs)
-    (void) prefs->GetIntPref("editor.htmlWrapColumn", aWrapColumn);
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefBranch)
+    (void) prefBranch->GetIntPref("editor.htmlWrapColumn", aWrapColumn);
   return NS_OK;
 }
 
