@@ -305,11 +305,6 @@ Contributor(s): ______________________________________. -->
 			  class="bookmarkbutton"  
 		      onclick="BrowserHome(); event.preventBubble();"/>
 		    <spring class="personaltoolbarspacer" flex="1"/>
-		    <titledbutton id="netscape-button" align="left"
-		      value="&netscapeButton.label;" 
-			  class="bookmarkbutton" 
-		      onclick="window.content.location.href='&myNetscape.url;'; event.preventBubble();"/>
-		    <spring class="personaltoolbarspacer" flex="1"/>
 	    
 	    </box>
 	    <spring flex="9999999"/>

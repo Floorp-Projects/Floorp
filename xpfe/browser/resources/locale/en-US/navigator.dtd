@@ -12,8 +12,6 @@
 <!ENTITY viewsourcetitle.preface "Source for: ">
 <!-- LOCALIZATION NOTE (throbber.url): DONT_TRANSLATE --> 
 <!ENTITY throbber.url "http://www.mozilla.org"> 
-<!-- LOCALIZATION NOTE (myNetscape.url): DONT_TRANSLATE -->
-<!ENTITY myNetscape.url "http://my.netscape.com">
 
 <!ENTITY browserCmd.label					"New Navigator Window">
 <!ENTITY browserCmd.accesskey				"n">
@@ -294,8 +292,6 @@
 <!-- Toolbar items --> 
 <!ENTITY  bookmarksButton.label "Bookmarks">
 <!ENTITY  homeButton.label "Home">
-<!-- LOCALIZATION NOTE (netscapeButton.label) : DONT_TRANSLATE -->
-<!ENTITY  netscapeButton.label "My Netscape">
 <!-- LOCALIZATION NOTE (bugzillaButton.label) : DONT_TRANSLATE -->
 <!ENTITY  bugzillaButton.label "Bugzilla">
 <!-- LOCALIZATION NOTE (tinderboxButton.label) : DONT_TRANSLATE -->
