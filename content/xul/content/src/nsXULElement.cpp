@@ -378,7 +378,8 @@ private:
     static nsIAtom*             kTooltipAtom;
     static nsIAtom*             kContextAtom;
     static nsIAtom*             kObservesAtom;
-
+    static nsIAtom*             kXULContentsGeneratedAtom;
+    
     nsIDocument*           mDocument;           // [WEAK]
     void*                  mScriptObject;       // [OWNER]
     nsISupportsArray*      mChildren;           // [OWNER]
@@ -414,6 +415,7 @@ nsIAtom*             RDFElementImpl::kPopupAtom;
 nsIAtom*             RDFElementImpl::kTooltipAtom;
 nsIAtom*             RDFElementImpl::kContextAtom;
 nsIAtom*             RDFElementImpl::kObservesAtom;
+nsIAtom*             RDFElementImpl::kXULContentsGeneratedAtom;
 PRInt32              RDFElementImpl::kNameSpaceID_RDF;
 PRInt32              RDFElementImpl::kNameSpaceID_XUL;
 
@@ -502,6 +504,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         kTooltipAtom     = NS_NewAtom("tooltip");
         kContextAtom     = NS_NewAtom("context");
         kObservesAtom    = NS_NewAtom("observes");
+        kXULContentsGeneratedAtom = NS_NewAtom("xulcontentsgenerated");
 
         EventHandlerMapEntry* entry = kEventHandlerMap;
         while (entry->mAttributeName) {
@@ -584,6 +587,8 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kContextAtom);
         NS_IF_RELEASE(kTooltipAtom);
         NS_IF_RELEASE(kObservesAtom);
+        NS_IF_RELEASE(kXULContentsGenerated);
+
         NS_IF_RELEASE(gNameSpaceManager);
 
         EventHandlerMapEntry* entry = kEventHandlerMap;
@@ -2076,7 +2081,9 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         count = mBroadcastListeners->Count();
         for (i = 0; i < count; i++) {
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
-            if (xulListener->ObservingAttribute(attribute)) {
+            if (xulListener->ObservingAttribute(attribute) && 
+               (aName != kXULContentsGeneratedAtom && aName != kIdAtom)) {
+                // XXX Should have a function that knows which attributes are special.
                 // First we set the attribute in the observer.
                 xulListener->mListener->SetAttribute(attribute, aValue);
                 ExecuteOnChangeHandler(xulListener->mListener, attribute);
@@ -2275,7 +2282,9 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
             nsAutoString str;
             aName->ToString(str);
-            if (xulListener->ObservingAttribute(str)) {
+            if (xulListener->ObservingAttribute(attribute) && 
+               (aName != kXULContentsGeneratedAtom && aName != kIdAtom)) {
+                // XXX Should have a function that knows which attributes are special.
                 // Unset the attribute in the broadcast listener.
                 nsCOMPtr<nsIDOMElement> element;
                 element = do_QueryInterface(xulListener->mListener);
@@ -2586,7 +2595,7 @@ RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElem
         for (PRInt32 i = mAttributes->Count() - 1; i >= 0; --i) {
             const nsXULAttribute* attr = (const nsXULAttribute*) mAttributes->ElementAt(i);
             if ((attr->mNameSpaceID == kNameSpaceID_None) &&
-                (attr->mName == kIdAtom))
+                (attr->mName == kIdAtom || attr->mName == kXULContentsGeneratedAtom))
               continue;
 
             // We aren't the id atom, so it's ok to set us in the listener.
