@@ -3923,10 +3923,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         break;
       }
 
-      if (!sIMEIsComposing)
+      if (!sIMEIsComposing && (msg != WM_KEYUP || wParam != VK_MENU)) {
+        // Ignore VK_MENU if it's not a system key release, so that the menu bar does not trigger
+        // This helps avoid triggering the menu bar for ALT key accelerators used in
+        // assistive technologies such as Window-Eyes and ZoomText, and when using Alt+Tab
+        // to switch back to Mozilla in Windows 95 and Windows 98
         result = OnKeyUp(wParam, (HIWORD(lParam)), lParam);
-      else
+      }
+      else {
         result = PR_FALSE;
+      }
 
       DispatchPendingEvents();
       break;
