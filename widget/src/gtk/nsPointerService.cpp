@@ -44,6 +44,13 @@ nsPointerService::WidgetUnderPointer(nsIWidget **_retval,
   int win_x_return, win_y_return;
   unsigned int mask_return;
 
+  // Flush the queue to get any pending destroys out the door.  If we
+  // don't then we can end up with a sitution where the XQueryPointer
+  // flushes the queue and then the XTranslateCoordinates will cause
+  // an X error since the window doesn't exist anymore.  God,
+  // sometimes I just hate X.
+  XSync(GDK_DISPLAY(), False);
+
   // Query the pointer
   retval = XQueryPointer(GDK_DISPLAY(),
 			 GDK_WINDOW_XWINDOW(GDK_ROOT_PARENT()),
