@@ -346,7 +346,7 @@ printf("unable to get rc\n");
 
 void nsViewManager :: Composite()
 {
-  if (mDirtyRect.IsEmpty() == PR_FALSE)
+  if ((nsnull != mRootView) && (mDirtyRect.IsEmpty() == PR_FALSE))
     Refresh(mRootView, nsnull, &mDirtyRect, NS_VMREFRESH_DOUBLE_BUFFER);
 }
 
