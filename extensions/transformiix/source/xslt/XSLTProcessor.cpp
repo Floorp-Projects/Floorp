@@ -61,8 +61,6 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIConsoleService.h"
 //#include "nslog.h"
-#include <MacTypes.h>
-#include "ProfilerUtils.h"
 #else
 #include "printers.h"
 #include "TxLog.h"
@@ -75,7 +73,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.60 $ $Date: 2001/06/26 14:10:28 $
+ * @version $Revision: 1.61 $ $Date: 2001/06/26 14:51:53 $
 **/
 
 /**
