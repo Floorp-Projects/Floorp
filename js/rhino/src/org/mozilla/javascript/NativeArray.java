@@ -284,26 +284,26 @@ public class NativeArray extends IdScriptable {
             N = (int)currentLength;
         }
         if (N == 0) { return superIds; }
-        int shift = superIds.length;
-        Object[] ids = new Object[shift + N];
+        int superLength = superIds.length;
+        Object[] ids = new Object[N + superLength];
         // Make a copy of dense to be immune to removing
         // of array elems from other thread when calculating presentCount
-        System.arraycopy(dense, 0, ids, shift, N);
+        System.arraycopy(dense, 0, ids, 0, N);
         int presentCount = 0;
         for (int i = 0; i != N; ++i) {
             // Replace existing elements by their indexes
-            if (ids[shift + i] != NOT_FOUND) {
-                ids[shift + presentCount] = new Integer(i);
+            if (ids[i] != NOT_FOUND) {
+                ids[presentCount] = new Integer(i);
                 ++presentCount;
             }
         }
         if (presentCount != N) {
             // dense contains deleted elems, need to shrink the result
-            Object[] tmp = new Object[shift + presentCount];
-            System.arraycopy(ids, shift, tmp, shift, presentCount);
+            Object[] tmp = new Object[presentCount + superLength];
+            System.arraycopy(ids, 0, tmp, 0, presentCount);
             ids = tmp;
         }
-        System.arraycopy(superIds, 0, ids, 0, shift);
+        System.arraycopy(superIds, 0, ids, presentCount, superLength);
         return ids;
     }
 
