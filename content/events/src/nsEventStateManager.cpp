@@ -1045,7 +1045,10 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
           // B) Click on it if the users prefs indicate to do so.
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
+          nsCOMPtr<nsIContent> oldTargetContent = mCurrentTargetContent;
+          mCurrentTargetContent = content;
           content->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+          mCurrentTargetContent = oldTargetContent;
         }
 
       }
