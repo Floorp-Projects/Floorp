@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="outliner.css"?>
+     
+<window id="insaneInsertion"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        orient="vertical">
+<script>
+  var view = ({
+    rowCount : 5000000,
+	getRowProperties : function(index, prop) {},
+	getCellProperties : function(index, prop) {},
+	outliner : null,
+	setOutliner : function(out) { this.outliner = out; },
+	getCellText : function(i, col) { return "Text at row #" + i + " in col " + col; }
+	});
+  
+  function setView(outliner, v) {
+    dump('Outliner is ' + outliner + '\n');
+	outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = v;
+  }
+</script>
+
+  <html>
+    This outliner contains 5,000,000 rows.  Can you believe it?
+  </html>
+  <spring style="height: 16px"/>
+
+  <outliner id="out" flex="1">
+    <outlinercol id="Col1" value="Col1" flex="1"/>
+    <outlinercol id="Col2" value="Col2" flex="1"/>
+	<outlinercol id="Col3" value="Col3" flex="1"/>
+    <outlinercol id="Col4" value="Col4" flex="1"/>
+    <outlinerbody flex="1"/>
+  </outliner>
+
+  <hbox>
+    <button value="Attach View" oncommand="setView(document.getElementById('out'), view)"/>
+    <button value="Clear View" oncommand="setView(document.getElementById('out'), null)"/>
+
+  </hbox>
+</window>
