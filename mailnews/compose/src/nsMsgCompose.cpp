@@ -64,6 +64,7 @@
 #include "nsIMIMEService.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIIOService.h"
 
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
@@ -73,6 +74,7 @@ static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgRecipientArrayCID, NS_MSGRECIPIENTARRAY_CID);
 static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static PRInt32 GetReplyOnTop()
 {
@@ -248,11 +250,14 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
     if (!aBuf.IsEmpty())
     {
       if (!mCiteReference.IsEmpty())
-        aEditorShell->InsertAsCitedQuotation(aBuf.GetUnicode(), mCiteReference.GetUnicode(),
-                                             PR_TRUE,
-                                             NS_ConvertASCIItoUCS2("UTF-8").GetUnicode(), getter_AddRefs(nodeInserted));
+        aEditorShell->InsertAsCitedQuotation(aBuf.GetUnicode(),
+                               mCiteReference.GetUnicode(),
+                               PR_TRUE,
+                               NS_ConvertASCIItoUCS2("UTF-8").GetUnicode(),
+                               getter_AddRefs(nodeInserted));
       else
-        aEditorShell->InsertAsQuotation(aBuf.GetUnicode(), getter_AddRefs(nodeInserted));
+        aEditorShell->InsertAsQuotation(aBuf.GetUnicode(),
+                                        getter_AddRefs(nodeInserted));
     }
 
     if (!aSignature.IsEmpty())
@@ -1153,16 +1158,29 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
   if (originalMsg && !quoteHeaders)
   {
     nsresult rv;
-    nsXPIDLString author;
 
     // Setup the cite information....
-    char    *msgID = nsnull;
-    if (NS_SUCCEEDED(originalMsg->GetMessageId(&msgID)) && msgID)
+    nsXPIDLCString myGetter;
+    if (NS_SUCCEEDED(originalMsg->GetMessageId(getter_Copies(myGetter))))
     {
-      mCiteReference.AssignWithConversion(msgID);
-      PR_FREEIF(msgID);
+      nsCString unencodedURL(myGetter);
+           // would be nice, if nsXPIDL*String were ns*String
+      NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv)
+      if (!unencodedURL.IsEmpty() && NS_SUCCEEDED(rv) && serv)
+      {
+        if (NS_SUCCEEDED(serv->Escape(unencodedURL.GetBuffer(),
+                 nsIIOService::url_FileBaseName | nsIIOService::url_Forced,
+                 getter_Copies(myGetter))))
+        {
+          mCiteReference.AssignWithConversion(myGetter);
+          mCiteReference.Insert(NS_LITERAL_STRING("mid:"), 0);
+        }
+        else
+          mCiteReference.Truncate();
+      }
     }
 
+    nsXPIDLString author;
     rv = originalMsg->GetMime2DecodedAuthor(getter_Copies(author));
     if (NS_SUCCEEDED(rv))
     {
