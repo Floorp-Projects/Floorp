@@ -33,6 +33,7 @@ class nsIImageGroup;
 class nsILinkHandler;
 class nsIPresShell;
 class nsIStyleContext;
+class nsIAtom;
 class nsString;
 
 #define NS_IPRESCONTEXT_IID   \
@@ -57,11 +58,27 @@ public:
 
   /**
    * Resolve style for the given piece of content that will be a child
-   * of the aParentFrame frame.
+   * of the aParentFrame frame. Don't use this for pseudo frames.
    */
   virtual nsIStyleContext* ResolveStyleContextFor(nsIContent* aContent,
                                                   nsIFrame* aParentFrame) = 0;
 
+  /**
+   * Resolve style for a pseudo frame within the given aParentFrame frame.
+   * The tag should be uppercase and inclue the colon.
+   * ie: NS_NewAtom(":FIRST-LINE");
+   */
+  virtual nsIStyleContext* ResolvePseudoStyleContextFor(nsIAtom* aPseudoTag,
+                                                        nsIFrame* aParentFrame) = 0;
+
+  /**
+   * Probe style for a pseudo frame within the given aParentFrame frame.
+   * This will return nsnull id there are no explicit rules for the pseudo element.
+   * The tag should be uppercase and inclue the colon.
+   * ie: NS_NewAtom(":FIRST-LINE");
+   */
+  virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIAtom* aPseudoTag,
+                                                      nsIFrame* aParentFrame) = 0;
   /**
    * Get the font metrics for a given font.
    */

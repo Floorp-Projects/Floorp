@@ -42,6 +42,11 @@ public:
                                 nsIFrame* aParentFrame,
                                 nsISupportsArray* aResults) = 0;
 
+  virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
+                                nsIAtom* aPseudoTag,
+                                nsIFrame* aParentFrame,
+                                nsISupportsArray* aResults) = 0;
+
   // XXX style rule enumerations
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
