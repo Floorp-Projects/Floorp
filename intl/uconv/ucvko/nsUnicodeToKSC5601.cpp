@@ -29,7 +29,7 @@ static PRUint16 g2BytesShiftTable[] =  {
 };
 
 static PRUint16 gComposedHangulShiftTable[] =  {
-  0, uComposedHangulCharset,
+  0, uComposedHangulGLCharset,
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
