@@ -140,7 +140,8 @@ public:
     * Get the widget associated with this input
     * @return the widget, not a copy
    **/
-  nsIWidget* GetWidget();
+  nsIWidget*   GetWidget();
+  nsISupports* GetWidgetSupports();
 
   /**
     * Set the widget associated with this input
@@ -166,6 +167,7 @@ protected:
     * Get the type of this control
     */
   nsIWidget*      mWidget;
+  nsISupports*    mWidgetSupports;
   nsIFormManager* mFormMan;
   nsPoint         mLastClickPoint;
 

@@ -361,32 +361,15 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
                                     nsEventStatus& aEventStatus)
 {
 	// make sure that the widget in the event is this
-  static NS_DEFINE_IID(kSupportsIID, NS_ISUPPORTS_IID);
-  nsIWidget* thisWidget;
-
+  // XXX if there is no view, it could be an image button. Unfortunately,
+  // every image button will get every event.
   nsIView* view;
   GetView(view);
-  if (view != nsnull) {
-    nsresult result = GetWidget(view, &thisWidget);
-    nsISupports* thisWidgetSup;
-    result = thisWidget->QueryInterface(kSupportsIID, (void **)&thisWidgetSup);
-    if (thisWidget == nsnull) {
-      return nsEventStatus_eIgnore;
-    }
-    nsISupports* eventWidgetSup;
-    result = aEvent->widget->QueryInterface(kSupportsIID, (void **)&eventWidgetSup);
-
-    PRBool isOurEvent = (thisWidgetSup == eventWidgetSup) ? PR_TRUE : PR_FALSE;
-    
-    NS_RELEASE(eventWidgetSup);
-    NS_RELEASE(thisWidgetSup);
-    NS_IF_RELEASE(view);
-    NS_IF_RELEASE(thisWidget);
-
-	  if (!isOurEvent) {
-		  aEventStatus = nsEventStatus_eIgnore;
-      return NS_OK;
-	  }
+  nsInput* content = (nsInput *)mContent;
+  if (view && (content->GetWidgetSupports() != aEvent->widgetSupports)) {
+    aEventStatus = nsEventStatus_eIgnore;
+    NS_RELEASE(view);
+    return NS_OK;
   }
 
   switch (aEvent->message) {

@@ -245,6 +245,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType)
 {
     event.widget = this;
+    event.widgetSupports = mOuter;
     
     // get the message position in client coordinates and in twips
     DWORD pos = ::GetMessagePos();
