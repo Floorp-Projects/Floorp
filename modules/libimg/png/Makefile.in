@@ -54,7 +54,7 @@ CSRCS		= \
 		pngwutil.c \
 		$(NULL)
 
-EXPORTS		= png.h pngconf.h
+EXPORTS		= png.h pngconf.h mozpngconf.h
 
 LOCAL_INCLUDES	= -I$(srcdir)
 
