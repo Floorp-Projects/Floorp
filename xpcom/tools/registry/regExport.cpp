@@ -230,7 +230,7 @@ static void displayValues( nsIRegistry *reg, nsRegistryKey root ) {
                         // Print name:
                         printf( "\t\t%s", name );
                         // Get info about this value.
-                        uint32 type;
+                        PRUint32 type;
                         rv = reg->GetValueType( root, name, &type );
                         if ( rv == NS_OK ) {
                             // Print value contents.
@@ -249,7 +249,7 @@ static void displayValues( nsIRegistry *reg, nsRegistryKey root ) {
 
                                 case nsIRegistry::Int32:
                                     {
-                                        int32 val = 0;
+                                        PRInt32 val = 0;
                                         rv = reg->GetInt( root, name, &val );
                                         if (NS_SUCCEEDED(rv)) {
                                             printf( "\t= Int32 [%d, 0x%x]", val, val);
