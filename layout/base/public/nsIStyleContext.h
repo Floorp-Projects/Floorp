@@ -139,17 +139,12 @@ struct nsStylePosition : public nsStyleStruct {
   PRUint8   mOverflow;                  // see nsStyleConsts.h
   PRUint8   mClipFlags;                 // see nsStyleConsts.h
 
-  PRUint8   mLeftOffsetFlags;           // see nsStyleConsts.h
-  PRUint8   mTopOffsetFlags;            // see nsStyleConsts.h
-  PRUint8   mWidthFlags;                // see nsStyleConsts.h
-  PRUint8   mHeightFlags;               // see nsStyleConsts.h
+  nsStyleCoord  mLeftOffset;
+  nsStyleCoord  mTopOffset;
+  nsStyleCoord  mWidth;
+  nsStyleCoord  mHeight;
 
-  nscoord   mLeftOffset;
-  nscoord   mTopOffset;
-  nscoord   mWidth;
-  nscoord   mHeight;
-
-  PRInt32   mZIndex;
+  nsStyleCoord  mZIndex;
   nsMargin  mClip;                      // offsets from respective edge
 
 protected:
