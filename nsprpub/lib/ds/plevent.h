@@ -402,9 +402,9 @@ struct PLEvent {
 */
 #ifdef XP_PC
 PR_EXTERN(PLEventQueue *)
-PL_GetMainEventQueue(void);
+    PL_GetMainEventQueue(void);
 PR_EXTERN(void)
-PL_InitializeEventsLib(char *name);
+    PL_InitializeEventsLib(char *name);
 #endif /* XP_PC */
 
 PR_END_EXTERN_C
