@@ -235,7 +235,7 @@ function openTopWin( url )
        use this function with chrome controls */
     /* also, do we want to
        limit the number of help windows that can be spawned? */
-    if ((url == null) || (url == "")) return;
+    if ((url == null) || (url == "")) return null;
 
     // xlate the URL if necessary
     if (url.indexOf("urn:") == 0)
