@@ -586,7 +586,7 @@ AC_HEADER_SYS_WAIT
 AC_HEADER_TIME
 AC_CHECK_HEADERS(fcntl.h limits.h malloc.h paths.h strings.h unistd.h)
 AC_CHECK_HEADERS(sys/bittypes.h sys/file.h sys/ioctl.h sys/time.h)
-AC_CHECK_HEADERS(getopt.h ioctl.h filio.h systeminfo.h)
+AC_CHECK_HEADERS(getopt.h ioctl.h filio.h systeminfo.h compat.h)
 
 case $target in
 *-aix4.3*)
