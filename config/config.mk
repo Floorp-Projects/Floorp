@@ -132,11 +132,6 @@ ifeq ($(OS_ARCH),OS_2)
 OS_ARCH		:= OS2
 OS_RELEASE	:= $(shell uname -v)
 endif
-ifeq ($(OS_ARCH),Mac OS)
-ifeq ($(OS_RELEASE),10.0)
-OS_ARCH		:= Rhapsody
-endif
-endif
 ifeq ($(OS_ARCH),BeOS)
 BEOS_ADDON_WORKAROUND	= 1
 endif

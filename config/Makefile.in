@@ -70,10 +70,6 @@ ifeq ($(OS_CONFIG),SunOS4.1)
 NSPR_CFLAGS	+= -I$(srcdir)/../nsprpub/pr/include/md
 endif
 
-ifeq ($(OS_CONFIG),Rhapsody10.0)
-NSPR_CFLAGS	+= -DGETCWD_CANT_MALLOC
-endif
-
 HEADERS		= nsBuildID.h
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 HEADERS		+= $(srcdir)/os2/dirent.h

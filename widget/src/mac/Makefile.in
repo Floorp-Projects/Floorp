@@ -28,6 +28,32 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetMacModule
 XPIDL_MODULE	= widget
+REQUIRES	= xpcom \
+		  gfx \
+		  string \
+		  uconv \
+		  dom \
+		  webshell \
+		  docshell \
+		  plugin \
+		  content \
+		  layout \
+		  view \
+		  xul \
+		  necko \
+          nkcache \
+		  locale \
+          pref \
+          appshell \
+          intl \
+          timer \
+          mimetype \
+		  $(NULL)
+
+GFX_LCPPSRCS = \
+		nsRegionMac.cpp \
+		nsWatchTask.cpp \
+		$(NULL)
 
 CPPSRCS         = nsAppShell.cpp \
 		nsBidiKeyboard.cpp \
@@ -37,6 +63,7 @@ CPPSRCS         = nsAppShell.cpp \
 		nsDeleteObserver.cpp \
 		nsDragService.cpp \
 		nsFilePicker.cpp \
+		nsLabel.cpp \
 		nsLookAndFeel.cpp \
 		nsMacControl.cpp \
 		nsMacEventHandler.cpp \
@@ -49,29 +76,43 @@ CPPSRCS         = nsAppShell.cpp \
 		nsMenuBarX.cpp \
 		nsMenuItemX.cpp \
 		nsMimeMapper.cpp \
-		$(topsrcdir)/gfx/src/mac/nsRegionMac.cpp \
 		nsScrollbar.cpp \
 		nsSound.cpp \
 		nsTextWidget.cpp \
+		nsTSMStrategy.cpp \
 		nsToolkit.cpp \
 		nsWidgetFactory.cpp \
 		nsWidgetSupport.cpp \
 		nsWindow.cpp \
+		$(GFX_LCPPSRCS) \
 		$(NULL)
 
 XPIDLSRCS	+= \
 		nsIChangeManager.idl \
 		$(NULL)
 
+GARBAGE		+= $(GFX_LCPPSRCS)
+
 include $(topsrcdir)/config/rules.mk
+
+export:: $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
+	$(INSTALL) $^ .
 
 EXTRA_DSO_LDOPTS += \
                 $(DIST)/lib/libxpwidgets_s.a \
                 $(TK_LIBS) \
-                -lgkgfx \
                 $(MOZ_COMPONENT_LIBS) \
+                -lgkgfx \
+                -ltimer_mac \
                 $(NULL)
 
-INCLUDES	+= $(TK_CFLAGS) -I$(topsrcdir)/gfx/src/mac -I$(srcdir)/../xpwidgets \
-		-I$(topsrcdir)/widget/timer/src/mac \
-		$(NULL)
+LOCAL_INCLUDES	= \
+	$(TK_CFLAGS) \
+	-I$(topsrcdir)/gfx/src/mac \
+	-I$(srcdir)/../xpwidgets \
+	-I$(topsrcdir)/widget/timer/src/mac \
+	$(NULL)
+
+# for "EnterMovies" in nsSound.cpp
+LDFLAGS	+= -framework QuickTime
+
