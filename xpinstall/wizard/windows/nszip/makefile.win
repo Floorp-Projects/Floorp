@@ -34,10 +34,13 @@ OBJS =                          \
     .\$(OBJDIR)\stdafx.obj      \
     $(NULL)
 
-LCFLAGS= -UMOZILLA_CLIENT
-
 LLIBS=                          \
     $(DIST)\lib\zlib_s.lib      \
+    $(NULL)
+
+LLFLAGS=                        \
+    /subsystem:windows          \
+    /machine:i386               \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
