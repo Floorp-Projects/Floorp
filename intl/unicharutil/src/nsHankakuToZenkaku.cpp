@@ -104,7 +104,7 @@ void HankakuToZenkaku (
     }
 
     // handle the last character
-    if(IS_HANKAKU(aSrc[i])) 
+    if(IS_HANKAKU(*aSrc)) 
          *aDest = gBasicMapping[(*aSrc) - 0xff60];
     else
          *aDest = *aSrc;
