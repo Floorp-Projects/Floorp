@@ -5473,6 +5473,7 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 		if(hIMC) {
 			BOOL ret = FALSE;
       NS_IMM_NOTIFYIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, NULL, ret);
+      NS_IMM_NOTIFYIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, NULL, ret);
 			//NS_ASSERTION(ret, "ImmNotify failed");
 			NS_IMM_RELEASECONTEXT(mWnd, hIMC);
 		}
