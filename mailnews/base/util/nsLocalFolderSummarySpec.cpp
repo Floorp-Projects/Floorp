@@ -63,7 +63,7 @@ void nsLocalFolderSummarySpec::	CreateSummaryFileName()
 	fullLeafName += ".msf";				// message summary file
 	char *cLeafName = fullLeafName.ToNewCString();
 	SetLeafName(cLeafName);
-	delete [] cLeafName;	// ###use nsCString when it's available!@
+    nsAllocator::Free(cLeafName);
 	PL_strfree(leafName);
 }
 
