@@ -665,7 +665,7 @@ nsXBLBinding::InstallEventHandlers()
         // This is a weak ref. systemEventGroup above is already a
         // strong ref, so we are guaranteed it will not go away.
         nsIDOMEventGroup* eventGroup = nsnull;
-        if (curr->GetType() & NS_HANDLER_TYPE_XBL_COMMAND) {
+        if (curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
           if (!systemEventGroup)
             receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
           eventGroup = systemEventGroup;
@@ -696,7 +696,7 @@ nsXBLBinding::InstallEventHandlers()
         // This is a weak ref. systemEventGroup above is already a
         // strong ref, so we are guaranteed it will not go away.
         nsIDOMEventGroup* eventGroup = nsnull;
-        if (handler->GetType() & NS_HANDLER_TYPE_XBL_COMMAND) {
+        if (handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
           if (!systemEventGroup)
             receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
           eventGroup = systemEventGroup;
@@ -803,7 +803,7 @@ nsXBLBinding::UnhookEventHandlers()
         // This is a weak ref. systemEventGroup above is already a
         // strong ref, so we are guaranteed it will not go away.
         nsIDOMEventGroup* eventGroup = nsnull;
-        if (curr->GetType() & NS_HANDLER_TYPE_XBL_COMMAND) {
+        if (curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
           if (!systemEventGroup)
             receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
           eventGroup = systemEventGroup;
@@ -832,7 +832,7 @@ nsXBLBinding::UnhookEventHandlers()
       // This is a weak ref. systemEventGroup above is already a
       // strong ref, so we are guaranteed it will not go away.
       nsIDOMEventGroup* eventGroup = nsnull;
-      if (handler->GetType() & NS_HANDLER_TYPE_XBL_COMMAND) {
+      if (handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
         if (!systemEventGroup)
           receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
         eventGroup = systemEventGroup;

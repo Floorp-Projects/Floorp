@@ -631,6 +631,8 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber
       command = aAtts[1];
     else if (localName == nsXBLAtoms::action)
       action = aAtts[1];
+    else if (localName == nsXBLAtoms::group)
+      group = aAtts[1];
     else if (localName == nsXBLAtoms::preventdefault)
       preventdefault = aAtts[1];
   }
@@ -645,7 +647,7 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber
   nsXBLPrototypeHandler* newHandler;
   newHandler = new nsXBLPrototypeHandler(event, phase, action, command,
                                          keycode, charcode, modifiers, button,
-                                         clickcount, preventdefault, mBinding);
+                                         clickcount, group, preventdefault, mBinding);
 
   if (newHandler) {
     newHandler->SetLineNumber(aLineNumber);

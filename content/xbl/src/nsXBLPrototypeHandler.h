@@ -60,9 +60,10 @@ class nsXBLPrototypeBinding;
 #define NS_HANDLER_TYPE_XUL             (1 << 2)
 #define NS_HANDLER_TYPE_PREVENTDEFAULT  (1 << 7)
 
-#define NS_PHASE_BUBBLING           0
-#define NS_PHASE_TARGET             1
-#define NS_PHASE_CAPTURING          2
+// XXX Use nsIDOMEvent:: codes?
+#define NS_PHASE_CAPTURING          1
+#define NS_PHASE_TARGET             2
+#define NS_PHASE_BUBBLING           3
 
 class nsXBLPrototypeHandler
 {
@@ -72,7 +73,8 @@ public:
                         const PRUnichar* aAction, const PRUnichar* aCommand,
                         const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
                         const PRUnichar* aModifiers, const PRUnichar* aButton,
-                        const PRUnichar* aClickCount, const PRUnichar* aPreventDefault,
+                        const PRUnichar* aClickCount, const PRUnichar* aGroup,
+                        const PRUnichar* aPreventDefault,
                         nsXBLPrototypeBinding* aBinding);
 
   // This constructor is used only by XUL key handlers (e.g., <key>)
@@ -146,7 +148,8 @@ protected:
                           const PRUnichar* aAction=nsnull, const PRUnichar* aCommand=nsnull,
                           const PRUnichar* aKeyCode=nsnull, const PRUnichar* aCharCode=nsnull,
                           const PRUnichar* aModifiers=nsnull, const PRUnichar* aButton=nsnull,
-                          const PRUnichar* aClickCount=nsnull, const PRUnichar* aPreventDefault=nsnull);
+                          const PRUnichar* aClickCount=nsnull, const PRUnichar* aGroup=nsnull,
+                          const PRUnichar* aPreventDefault=nsnull);
 
   void GetEventType(nsAString& type);
   PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);

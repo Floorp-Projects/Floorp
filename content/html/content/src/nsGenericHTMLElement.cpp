@@ -1579,6 +1579,9 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
           if (keyEvent->keyCode == NS_VK_RETURN) {
             nsEventStatus status = nsEventStatus_eIgnore;
             ret = DispatchClickEvent(aPresContext, keyEvent, this, PR_FALSE, &status);
+            if (NS_SUCCEEDED(ret)) {
+              *aEventStatus = nsEventStatus_eConsumeNoDefault;
+            }
           }
         }
         break;
