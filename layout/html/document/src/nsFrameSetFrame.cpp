@@ -1396,7 +1396,12 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
     nsHTMLReflowMetrics metrics(nsnull);
     nsSize size;
     GetSize(size);
-    nsReflowState state(this, eReflowReason_Initial, size);
+    nsIPresShell        *shell;
+    nsIRenderingContext *acx;
+    shell = aPresContext.GetShell();
+    shell->CreateRenderingContext(this, acx);
+    NS_RELEASE(shell);
+    nsReflowState state(this, eReflowReason_Initial, size, acx);
     state.reason = eReflowReason_Incremental;
     nsReflowStatus status;
     nsDidReflowStatus didStatus;
@@ -1404,6 +1409,7 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
     nsFramesetDrag drag(mDragger->mVertical, mDragger->mPrevNeighbor, change, this);
     Reflow(aPresContext, &drag, metrics, state, status);
     DidReflow(aPresContext, didStatus);
+    NS_IF_RELEASE(acx);
   }
 
   mLastDragPoint.x = aEvent->point.x;

@@ -30,6 +30,7 @@ class nsIStyleSet;
 class nsIViewManager;
 class nsIReflowCommand;
 class nsIDeviceContext;
+class nsIRenderingContext;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -93,6 +94,12 @@ public:
   virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
 
   virtual void ProcessReflowCommands() = 0;
+
+  /**
+   * Given a frame, cough up a rendering context suitable for use with
+   * the frame.
+   */
+  NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame, nsIRenderingContext *&aContext) = 0;
 
   // XXX events
   // XXX selection

@@ -334,7 +334,8 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
       nsInputDimensionSpec spec(nsHTMLAtoms::size, PR_TRUE, nsHTMLAtoms::value, 
                                 &defaultLabel, 1, PR_FALSE, nsnull, 1);
       CalculateSize(aPresContext, this, styleSize, spec, size, 
-                    widthExplicit, heightExplicit, ignore);
+                    widthExplicit, heightExplicit, ignore,
+                    aReflowState.rendContext);
       aDesiredLayoutSize.width = size.width;
       aDesiredLayoutSize.height= size.height;
     }

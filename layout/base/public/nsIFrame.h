@@ -214,10 +214,12 @@ public:
                    nsGUIEvent *    aEvent,
                    nsEventStatus&  aEventStatus) = 0;
 
-  virtual PRInt32 GetPosition(nsIPresContext& aPresContext,
-                              nsGUIEvent*     aEvent,
-                              nsIFrame *      aNewFrame,
-                              PRUint32&       aAcutalContentOffset) = 0;
+  NS_IMETHOD GetPosition(nsIPresContext&       aPresContext,
+                         nsIRenderingContext * aRendContext,
+                         nsGUIEvent*           aEvent,
+                         nsIFrame *            aNewFrame,
+                         PRUint32&             aAcutalContentOffset,
+                         PRInt32&              aOffset) = 0;
 
 
   /**

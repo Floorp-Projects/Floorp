@@ -98,11 +98,11 @@ protected:
   PRBool IsServerImageMap();
   PRIntn GetSuppress();
 
-  nscoord MeasureString(nsIFontMetrics*  aFontMetrics,
-                        const PRUnichar* aString,
-                        PRInt32          aLength,
-                        nscoord          aMaxWidth,
-                        PRUint32&        aMaxFit);
+  nscoord MeasureString(const PRUnichar*     aString,
+                        PRInt32              aLength,
+                        nscoord              aMaxWidth,
+                        PRUint32&            aMaxFit,
+                        nsIRenderingContext& aContext);
 
   void DisplayAltText(nsIPresContext&      aPresContext,
                       nsIRenderingContext& aRenderingContext,
@@ -459,17 +459,18 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
 // Computes the width of the specified string. aMaxWidth specifies the maximum
 // width available. Once this limit is reached no more characters are measured.
 // The number of characters that fit within the maximum width are returned in
-// aMaxFit
+// aMaxFit. NOTE: it is assumed that the fontmetrics have already been selected
+// into the rendering context before this is called (for performance). MMP
 nscoord
-ImageFrame::MeasureString(nsIFontMetrics*  aFontMetrics,
-                          const PRUnichar* aString,
-                          PRInt32          aLength,
-                          nscoord          aMaxWidth,
-                          PRUint32&        aMaxFit)
+ImageFrame::MeasureString(const PRUnichar*     aString,
+                          PRInt32              aLength,
+                          nscoord              aMaxWidth,
+                          PRUint32&            aMaxFit,
+                          nsIRenderingContext& aContext)
 {
   nscoord totalWidth = 0;
   nscoord spaceWidth;
-  aFontMetrics->GetWidth(' ', spaceWidth);
+  aContext.GetWidth(' ', spaceWidth);
 
   aMaxFit = 0;
   while (aLength > 0) {
@@ -486,7 +487,7 @@ ImageFrame::MeasureString(nsIFontMetrics*  aFontMetrics,
   
     // Measure this chunk of text, and see if it fits
     nscoord width;
-    aFontMetrics->GetWidth(aString, len, width);
+    aContext.GetWidth(aString, len, width);
     PRBool  fits = (totalWidth + width) <= aMaxWidth;
 
     // If it fits on the line, or it's the first word we've processed then
@@ -554,7 +555,7 @@ ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
   while ((strLen > 0) && ((y + maxDescent) < aRect.YMost())) {
     // Determine how much of the text to display on this line
     PRUint32  maxFit;  // number of characters that fit
-    nscoord   width = MeasureString(fm, str, strLen, aRect.width, maxFit);
+    nscoord   width = MeasureString(str, strLen, aRect.width, maxFit, aRenderingContext);
     
     // Display the text
     aRenderingContext.DrawString(str, maxFit, aRect.x, y, 0);

@@ -21,6 +21,7 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 #include "nsSize.h"
+#include "nsIRenderingContext.h"
 
 class nsIFrame;
 class nsIPresContext;
@@ -88,21 +89,24 @@ struct nsReflowState {
   nsReflowReason       reason;            // the reason for the reflow
   nsIReflowCommand*    reflowCommand;     // only used for incremental changes
   nsSize               maxSize;           // the max available space in which to reflow
+  nsIRenderingContext* rendContext;       // rendering context to use for measurement
 
   // Note: there is no copy constructor so that the compiler can
   // generate an optimal one.
 
   // Constructs an initial reflow state (no parent reflow state) for a
   // non-incremental reflow command
-  nsReflowState(nsIFrame*      aFrame,
-                nsReflowReason aReason, 
-                const nsSize&  aMaxSize);
+  nsReflowState(nsIFrame*            aFrame,
+                nsReflowReason       aReason, 
+                const nsSize&        aMaxSize,
+                nsIRenderingContext* aContext);
 
   // Constructs an initial reflow state (no parent reflow state) for an
   // incremental reflow command
-  nsReflowState(nsIFrame*         aFrame,
-                nsIReflowCommand& aReflowCommand,
-                const nsSize&     aMaxSize);
+  nsReflowState(nsIFrame*            aFrame,
+                nsIReflowCommand&    aReflowCommand,
+                const nsSize&        aMaxSize,
+                nsIRenderingContext* aContext);
 
   // Construct a reflow state for the given frame, parent reflow state, and
   // max size. Uses the reflow reason and reflow command from the parent's
@@ -252,29 +256,35 @@ private:
 
 // Constructs an initial reflow state (no parent reflow state) for a
 // non-incremental reflow command
-inline nsReflowState::nsReflowState(nsIFrame*      aFrame,
-                                    nsReflowReason aReason, 
-                                    const nsSize&  aMaxSize)
+inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
+                                    nsReflowReason       aReason, 
+                                    const nsSize&        aMaxSize,
+                                    nsIRenderingContext* aContext)
 {
   NS_PRECONDITION(aReason != eReflowReason_Incremental, "unexpected reflow reason");
+  NS_PRECONDITION(!(aContext == nsnull), "no rendering context");
   reason = aReason;
   reflowCommand = nsnull;
   maxSize = aMaxSize;
   parentReflowState = nsnull;
   frame = aFrame;
+  rendContext = aContext;
 }
 
 // Constructs an initial reflow state (no parent reflow state) for an
 // incremental reflow command
-inline nsReflowState::nsReflowState(nsIFrame*         aFrame,
-                                    nsIReflowCommand& aReflowCommand,
-                                    const nsSize&     aMaxSize)
+inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
+                                    nsIReflowCommand&    aReflowCommand,
+                                    const nsSize&        aMaxSize,
+                                    nsIRenderingContext* aContext)
 {
+  NS_PRECONDITION(!(aContext == nsnull), "no rendering context");
   reason = eReflowReason_Incremental;
   reflowCommand = &aReflowCommand;
   maxSize = aMaxSize;
   parentReflowState = nsnull;
   frame = aFrame;
+  rendContext = aContext;
 }
 
 // Construct a reflow state for the given frame, parent reflow state, and
@@ -289,6 +299,7 @@ inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
   maxSize = aMaxSize;
   parentReflowState = &aParentReflowState;
   frame = aFrame;
+  rendContext = aParentReflowState.rendContext;
 }
 
 // Constructs a reflow state that overrides the reflow reason of the parent
@@ -303,6 +314,7 @@ inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
   maxSize = aMaxSize;
   parentReflowState = &aParentReflowState;
   frame = aFrame;
+  rendContext = aParentReflowState.rendContext;
 }
 
 #endif /* nsIFrameReflow_h___ */
