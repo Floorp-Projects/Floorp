@@ -33,13 +33,16 @@ NSS3_LIB = $(LIB_PREFIX)nss3$(DLL_SUFFIX)
 SMIME3_LIB = $(LIB_PREFIX)smime3$(DLL_SUFFIX)
 SSL3_LIB =  $(LIB_PREFIX)ssl3$(DLL_SUFFIX)
 SOFTOKEN3_LIB = $(LIB_PREFIX)softokn3$(DLL_SUFFIX)
+SOFTOKEN3_CHK = $(LIB_PREFIX)softokn3.chk
 
 ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
 ifeq (,$(filter i86pc ia64,$(OS_TEST)))
 ifndef HAVE_64BIT_OS
 HAVE_FREEBL_MODULES = 1
 FREEBL_PURE32_MODULE = libfreebl_pure32_3$(DLL_SUFFIX)
+FREEBL_PURE32_CHK = libfreebl_pure32_3.chk
 FREEBL_HYBRID_MODULE = libfreebl_hybrid_3$(DLL_SUFFIX)
+FREEBL_HYBRID_CHK = libfreebl_hybrid_3.chk
 endif
 endif
 endif
@@ -94,6 +97,8 @@ export::
 		`grep -c '^U mozilla/security/coreconf' $(topsrcdir)/../cvsco.log 2>/dev/null` != 0 ; then \
 		$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean ; \
 		$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean ; \
+		$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS) clean ; \
+		$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean ; \
 		touch .nss_cleaned ; \
 	fi \
 	fi
@@ -111,25 +116,33 @@ else
 	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) $(LIB_PREFIX)dbm.$(LIB_SUFFIX); $(RANLIB) $(LIB_PREFIX)dbm.$(LIB_SUFFIX)
 endif
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
+	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)
+	$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS)
 ifndef DISABLE_DIST_GRE
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(GRE_DIST)
+	$(INSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(GRE_DIST)
 	$(INSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(GRE_DIST)
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(GRE_DIST)
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(GRE_DIST)
 	$(INSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(GRE_DIST)
 ifdef HAVE_FREEBL_MODULES
+	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_PURE32_CHK) $(GRE_DIST)
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_PURE32_MODULE) $(GRE_DIST)
+	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_HYBRID_CHK) $(GRE_DIST)
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_HYBRID_MODULE) $(GRE_DIST)
 endif
 endif
 ifndef _SKIP_OLD_GRE_INSTALL
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
+	$(INSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DIST)/bin
 ifdef HAVE_FREEBL_MODULES
+	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_PURE32_CHK) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_PURE32_MODULE) $(DIST)/bin
+	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_HYBRID_CHK) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_HYBRID_MODULE) $(DIST)/bin
 endif
 endif
@@ -139,12 +152,15 @@ endif
 
 install::
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DESTDIR)$(mozappdir)
 ifdef HAVE_FREEBL_MODULES
+	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_PURE32_CHK) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_PURE32_MODULE) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_HYBRID_CHK) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_HYBRID_MODULE) $(DESTDIR)$(mozappdir)
 endif
 	$(MAKE) -C boot $@
@@ -157,3 +173,5 @@ clean clobber clobber_all realclean distclean depend::
 	$(MAKE) -C pki $@
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
+	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS) clean
+	$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean
