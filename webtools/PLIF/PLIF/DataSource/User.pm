@@ -283,7 +283,7 @@ sub setGroup {
     $self->notImplemented();
 }
 
-sub getRightForGroups {
+sub getRightsForGroups {
     my $self = shift;
     my($app, @groups) = @_;
     $self->notImplemented();

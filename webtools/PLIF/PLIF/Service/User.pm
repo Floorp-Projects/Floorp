@@ -350,7 +350,7 @@ sub insertField {
 
 sub invalidateRights {
     my $self = shift;
-    my $rights = $self->app->getService('dataSource.user')->getRightsForGroup($self->app, keys(%{$self->{'groupsByID'}}));
+    my $rights = $self->app->getService('dataSource.user')->getRightsForGroups($self->app, keys(%{$self->{'groupsByID'}}));
     $self->rights({ map {$_ => 1} @$rights }); # map a list of strings into a hash for easy access
     # don't set a dirty flag, because rights are merely a convenient
     # cached expansion of the rights data. Changing this externally

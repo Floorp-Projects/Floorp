@@ -304,10 +304,10 @@ sub setGroup {
     return $groupID;
 }
 
-sub getRightForGroups {
+sub getRightsForGroups {
     my $self = shift;
     my($app, @groups) = @_;
-    my $rights = $self->database($app)->execute('SELECT rights.name FROM rights, groupRightsMapping WHERE groupRightsMapping.rightID = rights.ID AND groupRightsMapping.groupID IN(' .
+    my $rights = $self->database($app)->execute('SELECT rights.name FROM rights, groupRightsMapping WHERE groupRightsMapping.rightID = rights.rightID AND groupRightsMapping.groupID IN(' .
                                                 ('?, ' x (@groups-1)) . '?'.')', @groups)->rows;
     foreach my $right (@$rights) {
         $right = $right->[0];
