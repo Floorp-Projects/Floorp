@@ -299,33 +299,7 @@ typedef struct _findAccountByKeyEntry {
 
 
 
-
-
-NS_IMPL_ADDREF(nsMsgAccountManager)
-NS_IMPL_RELEASE(nsMsgAccountManager)
-  
-nsresult
-nsMsgAccountManager::QueryInterface(const nsIID& iid, void **result)
-{
-  nsresult rv = NS_NOINTERFACE;
-  if (! result)
-    return NS_ERROR_NULL_POINTER;
-
-  void *res = nsnull;
-  if (iid.Equals(nsCOMTypeInfo<nsIMsgAccountManager>::GetIID()) ||
-      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-    res = NS_STATIC_CAST(nsIMsgAccountManager*, this);
-  else if (iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
-    res = NS_STATIC_CAST(nsIShutdownListener*, this);
-
-  if (res) {
-    NS_ADDREF(this);
-    *result = res;
-    rv = NS_OK;
-  }
-
-  return rv;
-}
+NS_IMPL_ISUPPORTS1(nsMsgAccountManager, nsIMsgAccountManager)
 
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
@@ -357,8 +331,7 @@ nsMsgAccountManager::getPrefService()
   if (!m_prefs)
     rv = nsServiceManager::GetService(kPrefServiceCID,
                                       nsCOMTypeInfo<nsIPref>::GetIID(),
-                                      (nsISupports**)&m_prefs,
-                                      this);
+                                      (nsISupports**)&m_prefs);
   if (NS_FAILED(rv)) return rv;
 
   /* m_prefs is good now */
@@ -405,18 +378,6 @@ nsMsgAccountManager::getUniqueAccountKey(const char *prefix,
   } while (!unique);
 
   return nsCRT::strdup(key);
-}
-
-/* called if the prefs service goes offline */
-NS_IMETHODIMP
-nsMsgAccountManager::OnShutdown(const nsCID& aClass, nsISupports *service)
-{
-  if (aClass.Equals(kPrefServiceCID)) {
-    if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
-    m_prefs = nsnull;
-  }
-
-  return NS_OK;
 }
 
 nsresult

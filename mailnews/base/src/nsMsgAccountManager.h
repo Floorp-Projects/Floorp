@@ -51,8 +51,7 @@
 
 #endif /* XP_UNIX || XP_BEOS */
 
-class nsMsgAccountManager : public nsIMsgAccountManager,
-                            public nsIShutdownListener
+class nsMsgAccountManager : public nsIMsgAccountManager
 {
 public:
 
@@ -60,11 +59,7 @@ public:
   virtual ~nsMsgAccountManager();
   
   NS_DECL_ISUPPORTS
-
-  /* nsIShutdownListener methods */
-
-  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
-  
+ 
   /* nsIMsgAccountManager methods */
   
   NS_DECL_NSIMSGACCOUNTMANAGER
