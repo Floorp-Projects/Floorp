@@ -105,7 +105,7 @@ nsresult nsSocketTransportStream::Init(nsSocketTransport* aTransport,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = NS_NewBuffer(&mBuffer, MAX_IO_BUFFER_SIZE, 1*MAX_IO_BUFFER_SIZE);
+    rv = NS_NewBuffer(&mBuffer, MAX_IO_BUFFER_SIZE/2, 2*MAX_IO_BUFFER_SIZE);
   }
   if (NS_SUCCEEDED(rv)) {
     rv = NS_NewBufferInputStream(&mStream, mBuffer);
@@ -135,17 +135,14 @@ nsresult nsSocketTransportStream::BlockTransport(void)
   return NS_OK;
 }
 
-nsresult nsSocketTransportStream::GetWriteAmount(PRUint32 *aResultSize)
+
+nsresult nsSocketTransportStream::FillStream(nsReadSegmentFun reader, 
+                                    void* closure, 
+                                    PRUint32 count,
+                                    PRUint32 *writeCount)
 {
-  nsresult rv;
-  char *segment;
-
-  *aResultSize = 0;
-  rv = mBuffer->GetWriteSegment(&segment, aResultSize);
-
-  return rv;
+  return mBuffer->WriteSegments(reader, closure, count, writeCount);
 }
-
 
 //
 // --------------------------------------------------------------------------

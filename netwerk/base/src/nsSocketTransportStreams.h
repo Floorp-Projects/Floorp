@@ -21,7 +21,7 @@
 
 #include "prtypes.h"
 #include "nsIBufferInputStream.h"
-
+#include "nsIBuffer.h"
 
 // Forward declarations...
 class nsSocketTransport;
@@ -50,7 +50,9 @@ public:
   // nsSocketTransportStream methods:
   nsresult Init(nsSocketTransport* aTransport, PRBool aBlockingFlag);
   nsresult BlockTransport(void);
-  nsresult GetWriteAmount(PRUint32* aResultSize);
+
+  nsresult FillStream(nsReadSegmentFun reader, void* closure, PRUint32 count,
+                      PRUint32 *writeCount);
 
   void Lock(void)   { NS_ASSERTION(mMonitor, "Monitor null."); PR_EnterMonitor(mMonitor); }
   void Notify(void) { NS_ASSERTION(mMonitor, "Monitor null."); PR_Notify(mMonitor); }
