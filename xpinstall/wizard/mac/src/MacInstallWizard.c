@@ -325,31 +325,36 @@ void ErrorHandler(short errCode)
 //		* handle a "fatality" parameter for recovery
 
     Str255      pErrorStr = "\pUnexpected error!";
-    Str255      pMessage = "\pError: ";
+    Str255      pMessage = "\pError ";
     char        *cErrNo = 0;
     StringPtr   pErrNo = 0;
+    
+    cErrNo = ltoa(errCode);
+    pErrNo = CToPascal(cErrNo);
     
     if (errCode > 0)    // negative errors are definitely from the system so we don't interpret
     {
         GetIndString(pErrorStr, rErrorList, errCode);
+        pstrcat(pMessage, pErrNo);
+        pstrcat(pMessage, "\p: ");
         pstrcat(pMessage, pErrorStr);
     }
     else
     {
         pstrcpy(pMessage, "\pSystem error: ");
-        cErrNo = ltoa(errCode);
-        pErrNo = CToPascal(cErrNo);
         pstrcat(pMessage, pErrNo);
-        if (cErrNo)
-            free(cErrNo);
-        if (pErrNo)
-            DisposePtr((Ptr) pErrNo);
-    }
-       
+    }  
+        
     ParamText(pMessage, "\p", "\p", "\p");
     
     StopAlert(rAlrtError, nil);
 	SysBeep(10);
+	
+    if (cErrNo)
+        free(cErrNo);
+    if (pErrNo)
+        DisposePtr((Ptr) pErrNo); 
+        
 	gDone = true;
 }
 

@@ -224,13 +224,31 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 	int					i, len, compsDone = 0, numXPIs, currXPICount = 0, instChoice = gControls->opt->instChoice-1;
 	Boolean				isCurrXPI = false, indeterminateFlag = false;
 	Str255				installingStr;
+	StringPtr           pTargetSubfolder = "\p"; /* subfodler is optional so init empty */
+	long                dummyDirID = 0;
 	
-	err = FSMakeFSSpec(vRefNum, dirID, kViewerFolder, &xpiStubDirSpec); /* xpistub dir */
-	err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, 0, &tgtDirSpec);	/* program dir */
-	
+    err = FSMakeFSSpec(vRefNum, dirID, kViewerFolder, &xpiStubDirSpec); /* xpistub dir */
+    if (gControls->cfg->targetSubfolder)
+    {
+        HLock(gControls->cfg->targetSubfolder);
+        if (*gControls->cfg->targetSubfolder)
+            pTargetSubfolder = CToPascal(*gControls->cfg->targetSubfolder);
+        HUnlock(gControls->cfg->targetSubfolder);
+    }
+    err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, /* program dir */
+	                   pTargetSubfolder, &tgtDirSpec);
+	if (err == fnfErr)
+	    err = FSpDirCreate(&tgtDirSpec, smSystemScript, &dummyDirID);
+	    
+	if (err != noErr)
+    {
+        ErrorHandler(err);
+        return err;
+    }
+
 	ERR_CHECK_RET(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, xpiStubDirSpec), err);
 	XPI_ERR_CHECK(xpi_initProc( xpiStubDirSpec, tgtDirSpec, xpicbProgress ));
-	
+	    
 	// init overall xpi indicator
 	numXPIs = CountSelectedXPIs();
 	if (gControls->tw->allProgressBar)
@@ -302,6 +320,9 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 	
 	xpi_exitProc();	
 	UnloadXPIStub(&connID);
+	
+    if (pTargetSubfolder)
+	    DisposePtr((Ptr)pTargetSubfolder);
 	return err;
 }
 

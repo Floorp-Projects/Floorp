@@ -79,6 +79,7 @@ ParseConfig(void)
 	    return;
 	}
 	
+	ERR_CHECK(PopulateGeneralKeys(cfgText));
 	ERR_CHECK(PopulateLicWinKeys(cfgText));
 	ERR_CHECK(PopulateWelcWinKeys(cfgText));
 	ERR_CHECK(PopulateCompWinKeys(cfgText));
@@ -144,6 +145,25 @@ ReadConfigFile(char **text)
 }	
 
 #pragma mark -
+
+OSErr
+PopulateGeneralKeys(char *cfgText)
+{
+    OSErr err = noErr;
+    
+    /* General section: subdir */
+    gControls->cfg->targetSubfolder = NewHandleClear(kValueMaxLen);
+    if (!gControls->cfg->targetSubfolder)
+    {
+        ErrorHandler(eMem);
+        return eParseFailed;
+    }
+    
+    /* don't check retval siunce we don't care if we don't find this: it's optional */
+    FillKeyValueUsingResID(sGeneral, sSubfolder, gControls->cfg->targetSubfolder, cfgText);
+    		
+    return err;
+}
 
 OSErr
 PopulateLicWinKeys(char *cfgText)
