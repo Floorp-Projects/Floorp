@@ -19,9 +19,8 @@
  *
  * Original Author:
  *   Navin Gupta <naving@netscape.com>
- *
  * Contributor(s):
- * 
+ *   Seth Spitzer <sspitzer@netscape.com>
  */
 
 var gSearchSession = null;
@@ -284,31 +283,38 @@ function createSearchTerms()
   var searchTermsArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
   var selectedFolder = GetThreadPaneFolder();
 
-  var term = gSearchSession.createTerm();
-  var value = term.value;
+  var searchAttrib = (IsSpecialFolder(selectedFolder, MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE)) ? nsMsgSearchAttrib.ToOrCC : nsMsgSearchAttrib.Sender;
+  // implement | for QS
+  // does this break if the user types "foo|bar" expecting to see subjects with that string?
+  // I claim no, since "foo|bar" will be a hit for "foo" || "bar"
+  // they just might get more false positives
+  var termList = gSearchInput.value.split("|");
+  for (var i = 0; i < termList.length; i ++)
+  {
+    // if the term is empty, skip it
+    if (termList[i] == "")
+      continue;
+ 
+    // create, fill, and append the subject term
+    var term = gSearchSession.createTerm();
+    var value = term.value;
+    value.str = termList[i];
+    term.value = value;
+    term.attrib = nsMsgSearchAttrib.Subject;
+    term.op = nsMsgSearchOp.Contains;
+    term.booleanAnd = false;
+    searchTermsArray.AppendElement(term);
 
-  value.str = gSearchInput.value;
-  term.value = value;
-  term.attrib = nsMsgSearchAttrib.Subject;
-  term.op = nsMsgSearchOp.Contains;
-  term.booleanAnd = false;
-
-  searchTermsArray.AppendElement(term);
-
-  // fill in the 2nd term
-  term = gSearchSession.createTerm();
-
-  if (IsSpecialFolder(selectedFolder, MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE))
-    term.attrib = nsMsgSearchAttrib.ToOrCC;
-  else
-    term.attrib = nsMsgSearchAttrib.Sender;
-
-  value = term.value;
-  value.str = gSearchInput.value;
-  term.value = value;
-  term.op = nsMsgSearchOp.Contains; 
-  term.booleanAnd = false;
-  searchTermsArray.AppendElement(term);
+    // create, fill, and append the sender (or recipient) term
+    term = gSearchSession.createTerm();
+    value = term.value;
+    value.str = termList[i];
+    term.value = value;
+    term.attrib = searchAttrib;
+    term.op = nsMsgSearchOp.Contains; 
+    term.booleanAnd = false;
+    searchTermsArray.AppendElement(term);
+  }
 
   // now append the default view criteria to the quick search so we don't lose any default
   // view information
@@ -317,7 +323,7 @@ function createSearchTerms()
     var isupports = null;
     var searchTerm; 
     var termsArray = gDefaultSearchViewTerms.QueryInterface(Components.interfaces.nsISupportsArray);
-    for (var i = 0; i < termsArray.Count(); i++)
+    for (i = 0; i < termsArray.Count(); i++)
     {
       isupports = termsArray.GetElementAt(i);
       searchTerm = isupports.QueryInterface(Components.interfaces.nsIMsgSearchTerm);
