@@ -1,0 +1,142 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+
+  Interface for importing address books using the standard UI.  Address
+  book import occurs in several forms (yuck!).
+  The destination can be 1..n new address books corresponding to the source
+  format.  For instance a text file would import into a new address book
+  with the same name as the text file, Eudora may import multiple address books
+  with the same names as the ones in Eudora.
+  The destination can be 1 pre-defined address book, all entries will be 
+  added to the supplied address book - this allows the address book UI so provide
+  an import command specific for an individual address book.
+  
+  The source can import 1 or mulitple address books.
+  The address books can be auto-discoverable or user specified.
+  The address books can require field mapping or not.
+  
+  All of this is rather complicated but it should work out OK.  
+  1) The first UI
+  panel will allow selection of the address book and will indicate to the user
+  if the address book will be imported into an existing address book or new address
+  books.  (This could be 2 seperate xul UI's?).
+  2) The second panel will show field mapping if it is required - if it is required then
+  there will be one panel per address book for formats that support multiple
+  address books.  If it is not required then there will be no second panel.
+  3) Show the progress dialog for the import - this could be per address book if
+  mapping is required? what to do, what to doooooo.....
+  4) All done, maybe a what was done panel??
+  
+
+*/
+
+/*
+*/
+
+/*
+		
+*/
+
+#include "nsISupports.idl"
+
+interface 	nsIFileSpec;
+interface 	nsISupportsArray;
+interface	nsIImportABDescriptor;
+interface	nsIOutputStream;
+interface	nsIAddrDatabase;
+
+[scriptable, uuid(3fe29be0-3539-11d3-a206-00a0cc26da63)]
+interface nsIImportAddressBooks : nsISupports
+{	
+	
+	/*
+		Does this interface supports 1 or 1..n address books.  You only
+		get to choose 1 location so for formats where 1..n address books
+		are imported from a directory, then return true.  For a 1 to 1 relationship
+		between location and address books return false.
+	*/
+	PRBool	GetSupportsMultiple();
+	
+	/*
+		If the address book is not found via a file location.then return true
+		along with a description string of how or where the address book is
+		located.  If it is a file location then return false.
+		If true, return a string like: "Outlook Express standard address book,
+		also known as the Windows address book" or just "Outlook Express address book".
+		If false, GetDefaultLocation will be called.
+	*/
+	
+	PRBool GetAutoFind( out wstring description);
+	
+	/*
+		Returns true if the address book needs the user to specify a field map
+		for address books imported from this format.
+	*/
+	PRBool GetNeedsFieldMap();
+	
+	/*
+		If found and userVerify BOTH return false, then it is assumed that this
+		means an error - mail cannot be found on this machine.
+		If userVerify is true, the user will have an opportunity to specify
+		a different location to import mail from.
+	*/
+	void 	GetDefaultLocation( out nsIFileSpec location,
+								out boolean	found,
+								out boolean	userVerify);	
+	/*
+		Returns an nsISupportsArray which contains an nsIImportABDescriptor for each 
+		mailbox.  The array is not sorted before display to the user.  location is
+		null if GetAutoFind returned true.
+	*/
+	nsISupportsArray FindAddressBooks( in nsIFileSpec location);
+	
+	/*
+		Get a field map for a given address book.
+	*/
+	nsISupports GetFieldMap( in nsIImportABDescriptor source);
+	
+	/*
+		Import a specific mailbox into the destination file supplied.  If an error
+		occurs that is non-fatal, the destination will be deleted and other mailbox's
+		will be imported.  If a fatal error occurs, the destination will be deleted
+		and the import operation will abort.
+	*/
+	void 	ImportAddressBook( 	in nsIImportABDescriptor source, 
+						   		in nsIAddrDatabase destination,
+						   		in nsISupports fieldMap,
+								in nsIOutputStream errorLog,
+								in nsIOutputStream successLog,
+						   		out boolean fatalError);
+	
+	/*
+		Return the amount of the address book that has been imported so far.  This number
+		is used to present progress information and must never be larger than the
+		size specified in nsIImportABDescriptor.GetSize();  May be called from
+		a different thread than ImportAddressBook()
+	*/
+	unsigned long GetImportProgress();
+	
+};
+	
+
+
+%{ C++
+
+%}

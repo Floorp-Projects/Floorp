@@ -1,0 +1,115 @@
+<html>
+<body>
+
+<script language="javascript">
+function test1() {
+	dump( "test1\n");
+	dump( "Loading outlook express component\n");
+	var module = Components.classes["component://netscape/import/import-oe"].createInstance();
+	module = module.QueryInterface(Components.interfaces.nsIImportModule);
+	
+	dump( "Loaded outlook express import module\n");
+	dump( "Getting the mail interface\n");
+
+	var mailInterface = module.GetImportInterface( "mail");
+	mailInterface = mailInterface.QueryInterface( Components.interfaces.nsIImportGeneric);
+
+	dump( "Got the mail interface\n");
+	
+	var loc = mailInterface.GetData( "mailLocation");
+
+	dump( "Mail location: " + loc + "\n");
+
+	if (mailInterface.WantsProgress()) {
+		dump( "Beginning import with progress\n");
+		if (mailInterface.BeginImport( null, null)) {
+			var count = 0;
+			dump( "Importing ");
+			while (mailInterface.ContinueImport() && (mailInterface.GetProgress() < 100)) {
+				count = count + 1;
+				if (count > 100) {
+					dump( ".");
+					count = 0;
+				}
+			}
+			dump( "\nImport finished\n");
+		}
+		else {
+			dump( "BeginImport returned failure\n");
+		}
+	}
+	else {
+		if (mailInterface.BeginImport( null, null)) {
+			dump( "BeginImport successful without progress\n");
+		}
+		else {
+			dump( "BeginImport FAILED without progress\n");
+		}
+	}
+
+
+}
+
+function test2() {
+	dump( "test2\n");
+
+	dump( "Loading outlook express component\n");
+	var module = Components.classes["component://netscape/import/import-oe"].createInstance();
+	module = module.QueryInterface(Components.interfaces.nsIImportModule);
+	
+	dump( "Loaded outlook express import module\n");
+
+	dump( "Getting address book interface\n");
+
+	var addInterface = module.GetImportInterface( "addressbook");
+	addInterface = addInterface.QueryInterface( Components.interfaces.nsIImportGeneric);
+
+	dump( "Got the address book interface\n");
+	
+	var loc = addInterface.GetData( "addressLocation");
+
+	dump( "Address location: " + loc + "\n");
+
+	if (addInterface.WantsProgress()) {
+		dump( "Beginning address import with progress\n");
+		if (addInterface.BeginImport( null, null)) {
+			var count = 0;
+			dump( "Importing ");
+			while (addInterface.ContinueImport() && (addInterface.GetProgress() < 100)) {
+				count = count + 1;
+				if (count > 100) {
+					dump( ".");
+					count = 0;
+				}
+			}
+			dump( "\nImport address finished\n");
+		}
+		else {
+			dump( "BeginImport address returned failure\n");
+		}
+	}
+	else {
+		if (addInterface.BeginImport( null, null)) {
+			dump( "BeginImport address successful without progress\n");
+		}
+		else {
+			dump( "BeginImport address FAILED without progress\n");
+		}
+	}
+}
+
+function test3() {
+	dump( "test3\n");
+}
+
+</script>
+
+<p>
+<form name="form">
+<input type="button" value="Import Outlook Express Mail" onclick="test1();"><br>
+<input type="button" value="Import Outlook Express Address Book" onclick="test2();"><br>
+<input type="button" value="Test3" onclick="test3();">
+<form> 
+
+</body>
+</html>
