@@ -39,9 +39,9 @@
 //inc_global.php -- Stuff that needs to be done globally to all of Mozilla Update
 
 // ---------------------------
-// quote_smart() --  Quote a variable to make it safe
+// escape_string() --  Quote a variable to make it safe
 // ---------------------------
-function quote_smart($value)
+function escape_string($value)
 {
    // Stripslashes if we need to
    if (get_magic_quotes_gpc()) {
@@ -49,8 +49,8 @@ function quote_smart($value)
    }
 
    // Quote it if it's not an integer
-   if (!is_int($value)) {
-       $value = "'" . mysql_real_escape_string($value) . "'";
+   if (!is_numeric($value)) {
+       $value = mysql_real_escape_string($value);
    }
 
    return $value;
@@ -68,8 +68,8 @@ if ($_GET["debug"]=="true") {$_SESSION["debug"]=$_GET["debug"]; } else if ($_GET
 
 // Bug 250596 Fixes for incoming $_GET variables.
 if ($_GET["application"]) {
-$_GET["application"] = strtolower($_GET["application"]);
-$sql = "SELECT AppID FROM  `t_applications` WHERE `AppName` = ".quote_smart(ucwords(strtolower($_GET["application"])))." LIMIT 1";
+$_GET["application"] = escape_string(strtolower($_GET["application"]));
+$sql = "SELECT AppID FROM  `t_applications` WHERE `AppName` = '".ucwords(strtolower($_GET["application"]))."' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    if (mysql_num_rows($sql_result)===0) {unset($_GET["application"]);}
 }
@@ -83,7 +83,7 @@ $sql = "SELECT AppID FROM  `t_applications` WHERE `AppName` = ".quote_smart(ucwo
 if ($_GET["category"] AND $_GET["category"] !=="All"
     AND $_GET["category"] !=="Editors Pick" AND $_GET["category"] !=="Popular"
     AND $_GET["category"] !=="Top Rated" AND $_GET["category"] !=="Newest") {
-$sql = "SELECT CatName FROM  `t_categories` WHERE `CatName` = '".ucwords(strtolower($_GET["category"]))."' LIMIT 1";
+$sql = "SELECT CatName FROM  `t_categories` WHERE `CatName` = '".escape_string(ucwords(strtolower($_GET["category"])))."' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    if (mysql_num_rows($sql_result)===0) {unset($_GET["category"]);}
 }
