@@ -47,6 +47,7 @@ sub main {
   # No tests for now, since Chimera can't open a URL passed on the command line.
   my $chimera_alive_test = 1;
   my $chimera_test8_test = 0;
+  my $chimera_layout_performance_test = 0;
 
   # Build flags
   my $chimera_build_static = 0;
@@ -58,15 +59,19 @@ sub main {
 
   unless ($Settings::TestOnly) {
     # Checkout/update the chimera code.
-    #$status = checkout($mozilla_build_dir);
-    TinderUtils::print_log "Status from checkout: $status\n";
-    if ($status != 0) {
-      $post_status = 'busted';
-    }
+    # Chimera branch doing this for us, we will need this later.
+    # $status = checkout($mozilla_build_dir);
+    # TinderUtils::print_log "Status from checkout: $status\n";
+    # if ($status != 0) {
+    #   $post_status = 'busted';
+    # }
     
     # Build chimera if we passed the checkout command.
     if ($post_status ne 'busted') {
+
+      #
       # Build embedding/config.
+      #
       
       chdir $embedding_dir;
       
@@ -123,27 +128,45 @@ sub main {
         $post_status = 'success';
       }
     }  
-  } # TestOnly
+  }
 
+  #
+  # Tests...
+  #
 
-  # Test chimera, about:blank
+  # Clean profile out, if set.
+  if ($Settings::CleanProfile) {
+    # Clean profile here.
+  }
+
+  # AliveTest for chimera, about:blank
   if ($chimera_alive_test and $post_status eq 'success') {
     $post_status = TinderUtils::AliveTest("ChimeraAliveTest",
                                           "$chimera_dir/build/Navigator.app/Contents/MacOS",
                                           "Navigator",
-                                          "about:blank",
+                                          "",  # about:blank, commandline not working
                                           60);
   }
 
-  # Test chimera, test8
+  # LayoutTest8
   # resource:///res/samples/test8.html
   if ($chimera_test8_test and $post_status eq 'success') {
-    $post_status = TinderUtils::AliveTest("ChimeraTest8Test",
+    $post_status = TinderUtils::AliveTest("ChimeraLayoutTest8Test",
                                           "$chimera_dir/build/Navigator.app/Contents/MacOS",
                                           "Navigator",
                                           "http://lxr.mozilla.org/seamonkey/source/webshell/tests/viewer/samples/test8.html",
                                           60);
   }
+
+  # Pageload test.
+  if ($chimera_layout_performance_test and $post_status eq 'success') {
+    $post_status = TinderUtils::AliveTest("ChimeraAliveTest",
+                                          "$chimera_dir/build/Navigator.app/Contents/MacOS",
+                                          "Navigator",
+                                          "",  # commandline not working
+                                          600); # 600 = Tp hack, normally 60
+  }
+
   
   # Pass our status back to calling script.
   return $post_status;
