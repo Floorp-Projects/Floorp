@@ -155,6 +155,15 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFileControlFrame::SetDocumentForAnonymousContent(nsIDocument* aDocument,
+                                                   PRBool aDeep,
+                                                   PRBool aCompileEventHandlers)
+{
+  // XXX WRITE ME
+  return NS_OK;
+}
+
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)

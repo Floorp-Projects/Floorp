@@ -5350,9 +5350,16 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
       return NS_OK;
     }
   }
-  // if we have no anonymous content from XBL see if we have some from these tags.
-  // only these tags types can have anonymous content. We do this check for performance
-  // reasons. If we did a query interface on every tag it would be very inefficient.
+  // If we have no anonymous content from XBL see if we might have
+  // some by looking at the tag rather than doing a QueryInterface on
+  // the frame.  Only these tags' frames can have anonymous content
+  // through nsIAnonymousContentCreator.  We do this check for
+  // performance reasons. If we did a QueryInterface on every tag it
+  // would be inefficient.
+
+  // nsGenericElement::SetDocument ought to keep a list like this one,
+  // but it can't because nsGfxScrollFrames get around this.
+
   if (aTag !=  nsHTMLAtoms::input &&
       aTag !=  nsHTMLAtoms::textarea &&
       aTag !=  nsHTMLAtoms::combobox &&

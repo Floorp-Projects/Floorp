@@ -111,6 +111,7 @@
 #include "nsIDOMWindow.h"
 
 #include "nsIDOMElement.h"
+#include "nsIAnonymousContentCreator.h"
 
 static NS_DEFINE_CID(kXIFConverterCID, NS_XIFCONVERTER_CID);
 static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
@@ -1685,6 +1686,28 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
       for (index = 0; index < count; index++) {
         content = (nsIContent*)mEpilog->ElementAt(index);
         content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+      }
+    }
+
+    // XXX You thought that was a hack?  Let's unroot the scrollbars
+    // around the root element.  The frame that created the anonymous
+    // content for them isn't the primary frame for any element, so
+    // we do it here.  This tries not to have too much knowledge of
+    // how scrollbars are implemented today by actually checking all
+    // the frames up to the top.
+    nsCOMPtr<nsIPresShell> shell( dont_AddRef(GetShellAt(0)) );
+    if (shell) {
+      nsIFrame *kidFrame = nsnull;
+      shell->GetPrimaryFrameFor(mRootContent, &kidFrame);
+      while (kidFrame) {
+        // XXX Don't release a frame!
+        nsCOMPtr<nsIAnonymousContentCreator> acc( do_QueryInterface(kidFrame) );
+        if (acc) {
+          acc->SetDocumentForAnonymousContent(nsnull, PR_TRUE, PR_TRUE);
+        }
+        nsIFrame *parentFrame;
+        kidFrame->GetParent(&parentFrame);
+        kidFrame = parentFrame;
       }
     }
   }

@@ -298,36 +298,6 @@ nsHTMLInputElement::SetParent(nsIContent* aParent)
 NS_IMETHODIMP
 nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
-#ifdef ENDER_LITE
-  // We must tell the anonymous content to remove roots holding their
-  // JS Objects
-  // XXX This is somewhat ugly, and could go away if the anonymous
-  // content creation is done in XBL.
-  if (!aDocument && aDeep) {
-    nsIFormControlFrame* formControlFrame = nsnull;
-    // Note that we'll call GetPrimaryFrame() with aFlushNotifications
-    // set to false. Flushing now causes evil interactions with the
-    // content sink (see bug 45568). Furthermore, if the frame has
-    // never been created, then the nsIEditor won't have been created,
-    // so there'd be no work to do anyway.
-    nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame, PR_FALSE);
-    if (NS_SUCCEEDED(rv) && formControlFrame) {
-      nsCOMPtr<textControlPlace> textControlFrame(do_QueryInterface(formControlFrame));
-      if (textControlFrame) {
-        nsCOMPtr<nsIEditor> editor;
-        textControlFrame->GetEditor(getter_AddRefs(editor));
-        if (editor) {
-          nsCOMPtr<nsIDOMElement> root;
-          editor->GetRootElement(getter_AddRefs(root));
-          if (root) {
-            nsCOMPtr<nsIContent> rootContent( do_QueryInterface(root) );
-            rootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-          }
-        }
-      }
-    }
-  }
-#endif
   return mInner.SetDocumentForFormControls(aDocument, aDeep, aCompileEventHandlers, this, mForm);
 }
 
