@@ -1162,51 +1162,6 @@ sub GetLongDescriptionAsText {
     return $result;
 }
 
-
-sub GetLongDescriptionAsHTML {
-    my ($id, $start, $end) = (@_);
-    my $result = "";
-    my $count = 0;
-
-    my ($query) = ("SELECT profiles.realname, profiles.login_name, longdescs.bug_when, " .
-                   "       longdescs.thetext " .
-                   "FROM longdescs, profiles " .
-                   "WHERE profiles.userid = longdescs.who " .
-                   "      AND longdescs.bug_id = $id ");
-
-    if ($start && $start =~ /[1-9]/) {
-        # If the start is all zeros, then don't do this (because we want to
-        # not emit a leading "Additional Comments" line in that case.)
-        $query .= "AND longdescs.bug_when > '$start'";
-        $count = 1;
-    }
-    if ($end) {
-        $query .= "AND longdescs.bug_when <= '$end'";
-    }
-
-    $query .= "ORDER BY longdescs.bug_when";
-    SendSQL($query);
-    while (MoreSQLData()) {
-        my ($who, $email, $when, $text) = (FetchSQLData());
-        $email .= Param('emailsuffix');
-        if ($count) {
-            $result .= qq|<BR><BR><I>------- Additional Comment <a name="c$count" href="#c$count">#$count</a> From |;
-            if ($who) {
-                $result .= qq{<A HREF="mailto:$email">$who</A> };
-            } else {
-                $result .= qq{<A HREF="mailto:$email">$email</A> };
-            }
-              
-            $result .= time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------</I><BR>\n";
-        }
-        $result .= "<PRE>" . quoteUrls($text) . "</PRE>\n";
-        $count++;
-    }
-
-    return $result;
-}
-
-
 sub GetComments {
     my ($id) = (@_);
     my @comments;
