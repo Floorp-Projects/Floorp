@@ -327,7 +327,7 @@ ErrorExit:
 }
 
 /* File I/O functions called by PR I/O routines */
-PRInt32 _MD_Open(const char *path, PRIntn oflag, int mode)
+PRInt32 _MD_Open(const char *path, PRIntn flags, int mode)
 {
 // Macintosh doesn¹t really have mode bits, just drop them
 #pragma unused (mode)
@@ -337,20 +337,7 @@ PRInt32 _MD_Open(const char *path, PRIntn oflag, int mode)
 	char	 			*macFileName = NULL;
 	Str255				pascalName;
 	PRInt8 				perm;
-	PRInt32				flags = oflag;
 
-	if (flags & PR_RDWR) {
-		oflag = O_RDWR;
-	} else if (flags & PR_WRONLY) {
-		oflag = O_WRONLY;
-	} else {
-		oflag = O_RDONLY;
-	}
-
-	if (flags & PR_CREATE_FILE) {
-		oflag |= O_CREAT ;
-	}
-	
     err = ConvertUnixPathToMacPath(path, &macFileName);
 	
 	if (err != noErr)
@@ -364,10 +351,9 @@ PRInt32 _MD_Open(const char *path, PRIntn oflag, int mode)
 	pb.ioParam.ioVersNum 		= 0;
 
 open:
-	perm =  oflag & 3;
-	if (perm == O_RDWR)
+	if (flags & PR_RDWR)
 		perm = fsRdWrPerm;
-	else if (perm == O_WRONLY)
+	else if (flags & PR_WRONLY)
 		perm = fsWrPerm;
 	else
 		perm = fsRdPerm;	
@@ -378,7 +364,7 @@ open:
 	err = PBHOpenSync(&pb);
 	if (err == noErr)
 		return pb.ioParam.ioRefNum;
-	else if ((err != fnfErr) || ((oflag & O_CREAT) == 0))
+	else if ((err != fnfErr) || ((flags & PR_CREATE_FILE) == 0))
 		goto ErrorExit;
 		
 	err = PBHCreateSync(&pb);
