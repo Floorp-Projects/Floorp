@@ -136,6 +136,9 @@ dnl ========================================================
 case "$target" in
 *-*-aix*)
     DSO_CFLAGS=
+    if [ test "$GNU_CC" != 1 ]; then
+	DSO_LDOPTS='-brtl -bM:SRE -bnoentry -bexpall'
+    fi
     ;;
 
 *-*-solaris*) 
