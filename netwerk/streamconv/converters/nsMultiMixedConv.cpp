@@ -586,7 +586,7 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
 
     boundaryString.Trim(" \"");
 
-    mToken = boundaryString.get();
+    mToken.Adopt(nsCRT::strdup(boundaryString.get()));
     mTokenLen = boundaryString.Length();
     
     return NS_OK;
@@ -890,7 +890,7 @@ nsMultiMixedConv::FindToken(char *aCursor, PRUint32 aLen) {
                         // we're playing w/ double dash tokens, adjust.
                         nsCString newToken("--");
                         newToken.Append(mToken);
-                        mToken = newToken.get();
+                        mToken.Adopt(nsCRT::strdup(newToken.get()));
                         mTokenLen += 2;
                     }
                 }

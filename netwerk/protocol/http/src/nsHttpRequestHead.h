@@ -41,7 +41,7 @@ public:
 
     void SetMethod(nsHttpAtom method) { mMethod = method; }
     void SetVersion(nsHttpVersion version) { mVersion = version; }
-    void SetRequestURI(const char *s) { mRequestURI = s; }
+    void SetRequestURI(const char *s) { mRequestURI.Adopt(nsCRT::strdup(s)); }
 
     nsHttpHeaderArray &Headers()    { return mHeaders; }
     nsHttpAtom         Method()     { return mMethod; }

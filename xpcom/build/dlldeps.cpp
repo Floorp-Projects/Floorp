@@ -116,7 +116,6 @@ void XXXNeverCalled()
     nsDeque(NULL);
     NS_NewObserver(NULL, NULL);
     nsTraceRefcnt::DumpStatistics();
-    nsXPIDLCString::Copy(NULL);
     NS_NewEmptyEnumerator(NULL);
     nsArrayEnumerator(NULL);
     NS_NewIntersectionEnumerator(NULL, NULL, NULL);

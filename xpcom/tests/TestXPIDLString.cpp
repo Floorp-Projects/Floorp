@@ -1,20 +1,11 @@
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 
 static void
 nsXPIDLStringTest_Value(PRUnichar** aResult)
 {
-    nsAutoString s(NS_ConvertASCIItoUCS2("Hello, World"));
-    *aResult = nsXPIDLString::Copy(s.GetUnicode());
-}
-
-static void
-nsXPIDLStringTest_Reference(const PRUnichar** aResult)
-{
-    static const PRUnichar s[] = { 'H', 'e', 'l', 'l', 'o', ',', ' ',
-                                   'w', 'o', 'r', 'l', 'd', '\0' };
-
-    *aResult = s;
+    *aResult = ToNewUnicode(NS_LITERAL_STRING("Hello, World"));
 }
 
 int
@@ -22,7 +13,6 @@ main(int argc, char* argv[])
 {
     nsXPIDLString s1;
     nsXPIDLStringTest_Value(getter_Copies(s1));
-    nsXPIDLStringTest_Reference(getter_Shares(s1));
     return 0;
 }
 

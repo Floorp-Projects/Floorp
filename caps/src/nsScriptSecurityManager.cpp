@@ -208,7 +208,9 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
     }
     else
     {
-        nsXPIDLCString className;
+        nsXPIDLCString classNameStr;
+        const char* className;
+
         nsCAutoString propertyName(aProperty);
         if (aClassName)
             className = aClassName;
@@ -216,7 +218,9 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         //-- Get className and propertyName from aClassInfo and aName, repectively
         {
             if(aClassInfo)
-                aClassInfo->GetClassDescription(getter_Copies(className));
+                aClassInfo->GetClassDescription(getter_Copies(classNameStr));
+            className = classNameStr.get();
+
             if (!className)
                 className = "UnknownClass";
             propertyName.AssignWithConversion((PRUnichar*)JSValIDToString(aJSContext, aName));

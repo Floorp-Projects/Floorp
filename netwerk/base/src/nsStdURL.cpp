@@ -152,10 +152,12 @@ nsStdURL::Init(PRUint32 urlType, PRInt32 defaultPort,
 
     if (initialSpec == nsnull) return NS_OK;
 
-    nsXPIDLCString resolvedURI;
+    nsXPIDLCString resolvedURIStr;
+    const char* resolvedURI;
     if (baseURI) {
-        rv = baseURI->Resolve(initialSpec, getter_Copies(resolvedURI));
+        rv = baseURI->Resolve(initialSpec, getter_Copies(resolvedURIStr));
         if (NS_FAILED(rv)) return rv;
+        resolvedURI = resolvedURIStr.get();
     }
     else {
         resolvedURI = initialSpec;

@@ -788,11 +788,11 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aR
 
     if (x >= cellRect.x && x < cellRect.x + cellRect.width) {
       // We know the column hit now.
-      *aColID = nsXPIDLString::Copy(currCol->GetID());
+      *aColID = nsCRT::strdup(currCol->GetID());
 
       if (currCol->IsCycler())
         // Cyclers contain only images.  Fill this in immediately and return.
-        *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("image").get());
+        *aChildElt = ToNewUnicode(NS_LITERAL_STRING("image"));
       else
         GetItemWithinCellAt(x, cellRect, *aRow, currCol, aChildElt);
       break;
@@ -1050,7 +1050,7 @@ nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
 
   if (aX < cellRect.x || aX >= cellRect.x + cellRect.width) {
     // The user clicked within the cell's margins/borders/padding.  This constitutes a click on the cell.
-    *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("cell").get());
+    *aChildElt = ToNewUnicode(NS_LITERAL_STRING("cell"));
     return NS_OK;
   }
 
@@ -1069,7 +1069,7 @@ nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
 
     if (aX < currX) {
       // The user clicked within the indentation.
-      *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("cell").get());
+      *aChildElt = ToNewUnicode(NS_LITERAL_STRING("cell"));
       return NS_OK;
     }
 
@@ -1104,9 +1104,9 @@ nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
     // then we return "cell".
     if (aX >= twistyRect.x && aX < twistyRect.x + twistyRect.width) {
       if (hasTwisty)
-        *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("twisty").get());
+        *aChildElt = ToNewUnicode(NS_LITERAL_STRING("twisty"));
       else
-        *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("cell").get());
+        *aChildElt = ToNewUnicode(NS_LITERAL_STRING("cell"));
       return NS_OK;
     }
 
@@ -1130,13 +1130,13 @@ nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
 
   if (aX >= iconRect.x && aX < iconRect.x + iconRect.width) {
     // The user clicked on the image.
-    *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("image").get());
+    *aChildElt = ToNewUnicode(NS_LITERAL_STRING("image"));
     return NS_OK;
   }
 
   // Just assume "text".
   // XXX For marquee selection, we'll have to make this more precise and do text measurement.
-  *aChildElt = nsXPIDLString::Copy(NS_LITERAL_STRING("text").get());
+  *aChildElt = ToNewUnicode(NS_LITERAL_STRING("text"));
   return NS_OK;
 }
 

@@ -808,7 +808,7 @@ nsHTTPIndex::GetEncoding(char **encoding)
   if (! encoding)
     return(NS_ERROR_NULL_POINTER);
   
-  *encoding = nsXPIDLCString::Copy(mEncoding);
+  *encoding = ToNewCString(mEncoding);
   if (!*encoding)
     return(NS_ERROR_OUT_OF_MEMORY);
   
@@ -1257,7 +1257,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsHTTPIndex, nsIHTTPIndex, nsIRDFDataSource);
 NS_IMETHODIMP
 nsHTTPIndex::GetBaseURL(char** _result)
 {
-  *_result = nsXPIDLCString::Copy(mBaseURL);
+  *_result = ToNewCString(mBaseURL);
   if (! *_result)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1293,11 +1293,13 @@ void nsHTTPIndex::GetDestination(nsIRDFResource* r, nsXPIDLCString& dest) {
     url = do_QueryInterface(node);
 
   if (!url) {
-     r->GetValueConst(getter_Shares(dest));
+     const char* temp;
+     r->GetValueConst(&temp);
+     dest.Adopt(nsCRT::strdup(temp));
   } else {
     const PRUnichar* uri;
     url->GetValueConst(&uri);
-    *getter_Copies(dest) = ToNewUTF8String(nsDependentString(uri));
+    dest.Adopt(ToNewUTF8String(nsDependentString(uri)));
   }
 }
 
@@ -1371,7 +1373,7 @@ nsHTTPIndex::GetURI(char * *uri)
 	if (! uri)
 		return(NS_ERROR_NULL_POINTER);
 
-	if ((*uri = nsXPIDLCString::Copy("rdf:httpindex")) == nsnull)
+	if ((*uri = nsCRT::strdup("rdf:httpindex")) == nsnull)
 		return(NS_ERROR_OUT_OF_MEMORY);
 
 	return(NS_OK);

@@ -121,11 +121,10 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
 
     if (!pref || !PL_strcmp(pref, "network.proxy.http"))
     {
-        mHTTPProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.http", 
-                getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv))
-            mHTTPProxyHost = nsCRT::strdup(tempString);
+                getter_Copies(mHTTPProxyHost));
+        if (!NS_SUCCEEDED(rv))
+            mHTTPProxyHost.Adopt(nsCRT::strdup(""));
     }
 
     if (!pref || !PL_strcmp(pref, "network.proxy.http_port"))
@@ -139,11 +138,10 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
 
     if (!pref || !PL_strcmp(pref, "network.proxy.ssl"))
     {
-        mHTTPSProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.ssl", 
-                getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv))
-            mHTTPSProxyHost = nsCRT::strdup(tempString);
+                getter_Copies(mHTTPSProxyHost));
+        if (!NS_SUCCEEDED(rv))
+            mHTTPSProxyHost.Adopt(nsCRT::strdup(""));
     }
 
     if (!pref || !PL_strcmp(pref, "network.proxy.ssl_port"))
@@ -157,11 +155,10 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
 
     if (!pref || !PL_strcmp(pref, "network.proxy.ftp"))
     {
-        mFTPProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.ftp", 
-                getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv))
-            mFTPProxyHost = nsCRT::strdup(tempString);
+                getter_Copies(mFTPProxyHost));
+        if (!NS_SUCCEEDED(rv))
+            mFTPProxyHost.Adopt(nsCRT::strdup(""));
     }
 
     if (!pref || !PL_strcmp(pref, "network.proxy.ftp_port"))
@@ -175,11 +172,10 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
 
     if (!pref || !PL_strcmp(pref, "network.proxy.gopher"))
     {
-        mGopherProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.gopher", 
-                                      getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv) && tempString && *tempString)
-            mGopherProxyHost = nsCRT::strdup(tempString);
+                                      getter_Copies(mGopherProxyHost));
+        if (!NS_SUCCEEDED(rv) || !mGopherProxyHost)
+            mGopherProxyHost.Adopt(nsCRT::strdup(""));
     }
 
     if (!pref || !PL_strcmp(pref, "network.proxy.gopher_port"))
@@ -193,11 +189,10 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
 
     if (!pref || !PL_strcmp(pref, "network.proxy.socks"))
     {
-        mSOCKSProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.socks", 
-                                  getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv))
-            mSOCKSProxyHost = nsCRT::strdup(tempString);
+                                  getter_Copies(mSOCKSProxyHost));
+        if (!NS_SUCCEEDED(rv))
+            mSOCKSProxyHost.Adopt(nsCRT::strdup(""));
     }
     
     if (!pref || !PL_strcmp(pref, "network.proxy.socks_port"))
@@ -223,7 +218,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
         rv = mPrefs->CopyCharPref("network.proxy.autoconfig_url", 
                                   getter_Copies(tempString));
         if (NS_SUCCEEDED(rv) && (!reloadPAC || PL_strcmp(tempString, mPACURL))) {
-            mPACURL = nsCRT::strdup(tempString);
+            mPACURL.Adopt(nsCRT::strdup(tempString));
 
             // create pac js component
             mPAC = do_CreateInstance(NS_PROXY_AUTO_CONFIG_CONTRACTID, &rv);

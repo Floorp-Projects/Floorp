@@ -215,12 +215,9 @@ nsFactoryEntry::nsFactoryEntry(const nsCID &aClass,
                                const char *aLocation,
                                const char *aType,
                                nsIComponentLoader *aLoader)
-    : cid(aClass), factory(nsnull), loader(aLoader)
+    : cid(aClass), location(aLocation), factory(nsnull), type(aType), loader(aLoader)
 {
     MOZ_COUNT_CTOR(nsFactoryEntry);
-    loader = aLoader;
-    type = aType;
-    location = aLocation;
 }
 
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory)
@@ -725,9 +722,10 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
         return rv;
     }
 
-    nsXPIDLCString componentType;
+    nsXPIDLCString componentTypeStr;
     rv = mRegistry->GetStringUTF8(cidKey, componentTypeValueName, 
-                              getter_Copies(componentType));
+                              getter_Copies(componentTypeStr));
+    const char* componentType = componentTypeStr.get();
 
     if (NS_FAILED(rv))
     if (rv == NS_ERROR_REG_NOT_FOUND)

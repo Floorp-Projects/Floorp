@@ -221,9 +221,9 @@ public:
     }
 
     nsCID cid;
-    nsXPIDLCString location;
+    nsCString location;
     nsCOMPtr<nsIFactory> factory;
-    nsXPIDLCString type;
+    nsCString type;
     nsCOMPtr<nsIComponentLoader> loader;
 };
 

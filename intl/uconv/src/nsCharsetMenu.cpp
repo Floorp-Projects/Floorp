@@ -1604,7 +1604,7 @@ NS_IMETHODIMP nsCharsetMenu::GetURI(char ** uri)
 {
   if (!uri) return NS_ERROR_NULL_POINTER;
 
-  *uri = nsXPIDLCString::Copy("rdf:charset-menu");
+  *uri = nsCRT::strdup("rdf:charset-menu");
   if (!(*uri)) return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;

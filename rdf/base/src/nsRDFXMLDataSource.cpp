@@ -656,7 +656,7 @@ RDFXMLDataSourceImpl::GetURI(char* *aURI)
     if (mOriginalURLSpec) {
         // We don't use the mURL, because it might get re-written when
         // it's actually opened.
-        *aURI = nsXPIDLCString::Copy(mOriginalURLSpec);
+        *aURI = nsCRT::strdup(mOriginalURLSpec);
         if (! *aURI)
             return NS_ERROR_OUT_OF_MEMORY;
     }

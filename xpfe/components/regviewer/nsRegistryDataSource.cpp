@@ -225,7 +225,7 @@ nsRegistryDataSource::OpenDefaultRegistry()
 NS_IMETHODIMP
 nsRegistryDataSource::GetURI(char * *aURI)
 {
-    *aURI = nsXPIDLCString::Copy("rdf:registry");
+    *aURI = nsCRT::strdup("rdf:registry");
     return *aURI ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

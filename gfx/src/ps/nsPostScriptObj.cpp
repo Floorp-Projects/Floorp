@@ -1670,8 +1670,8 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
   if (((psnativefont)&&(*psnativefont)) && ((psnativecode)&&(*psnativecode))) {
     use_prefsfile = PR_TRUE;
   } else {
-    psnativefont = nsnull;
-    psnativecode = nsnull;
+    psnativefont.Adopt(0);
+    psnativecode.Adopt(0);
   }
 
   //
@@ -1683,8 +1683,8 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
     if ((psnativefont) && (psnativecode)) {
       use_vendorfile = PR_TRUE;
     } else {
-      psnativefont = nsnull;
-      psnativecode = nsnull;
+      psnativefont.Adopt(0);
+      psnativecode.Adopt(0);
     }
   }
   if (!use_prefsfile && !use_vendorfile) {
@@ -1694,8 +1694,8 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
 
   /* psnativefont and psnativecode both should be set */
   if (!psnativefont || !psnativecode) {
-    psnativefont = nsnull;
-    psnativecode = nsnull;
+    psnativefont.Adopt(0);
+    psnativecode.Adopt(0);
   } else {
     nsCAutoString namepsfontorder("print.psfontorder.");
     namepsfontorder.AppendWithConversion(lang);

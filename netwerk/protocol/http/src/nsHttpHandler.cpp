@@ -47,6 +47,7 @@
 #include "nsNetCID.h"
 #include "nsAutoLock.h"
 #include "prprf.h"
+#include "nsReadableUtils.h"
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <sys/utsname.h>
@@ -882,36 +883,38 @@ nsHttpHandler::InitUserAgentComponents()
         getter_Copies(mMisc));
 
     // Gather Application name and Version.
-    mAppName = UA_APPNAME;
-    mAppVersion = UA_APPVERSION;
+    mAppName.Adopt(nsCRT::strdup(UA_APPNAME));
+    mAppVersion.Adopt(nsCRT::strdup(UA_APPVERSION));
 
     // Get Security level supported
     mPrefs->CopyCharPref(UA_PREF_PREFIX "security",
         getter_Copies(mSecurity));
     if (!mSecurity)
-        mSecurity = UA_APPSECURITY_FALLBACK;
+        mSecurity.Adopt(nsCRT::strdup(UA_APPSECURITY_FALLBACK));
 
     // Gather locale.
     nsXPIDLString uval;
     mPrefs->GetLocalizedUnicharPref(UA_PREF_PREFIX "locale", 
         getter_Copies(uval));
     if (uval)
-        mLanguage = NS_ConvertUCS2toUTF8(uval).get();
+        mLanguage.Adopt(ToNewUTF8String(nsDependentString(uval)));
 
-    // Gather platform.
+      // Gather platform.
+    mPlatform.Adopt(nsCRT::strdup(
 #if defined(XP_OS2)
-    mPlatform = "OS/2";
+    "OS/2"
 #elif defined(XP_PC)
-    mPlatform = "Windows";
+    "Windows"
 #elif defined(RHAPSODY)
-    mPlatform = "Macintosh";
+    "Macintosh"
 #elif defined (XP_UNIX)
-    mPlatform = "X11";
+    "X11"
 #elif defined(XP_BEOS)
-    mPlatform = "BeOS";
+    "BeOS"
 #elif defined(XP_MAC)
-    mPlatform = "Macintosh";
+    "Macintosh"
 #endif
+    ));
 
     // Gather OS/CPU.
 #if defined(XP_OS2)
@@ -919,40 +922,40 @@ nsHttpHandler::InitUserAgentComponents()
     DosQuerySysInfo(QSV_VERSION_MINOR, QSV_VERSION_MINOR,
                     &os2ver, sizeof(os2ver));
     if (os2ver == 11)
-        mOscpu = "2.11";
+        mOscpu.Adopt(nsCRT::strdup("2.11"));
     else if (os2ver == 30)
-        mOscpu = "Warp 3";
+        mOscpu.Adopt(nsCRT::strdup("Warp 3"));
     else if (os2ver == 40)
-        mOscpu = "Warp 4";
+        mOscpu.Adopt(nsCRT::strdup("Warp 4"));
     else if (os2ver == 45)
-        mOscpu = "Warp 4.5";
+        mOscpu.Adopt(nsCRT::strdup("Warp 4.5"));
 
 #elif defined(XP_PC)
     OSVERSIONINFO info = { sizeof OSVERSIONINFO };
     if (GetVersionEx(&info)) {
         if (info.dwPlatformId == VER_PLATFORM_WIN32_NT) {
             if (info.dwMajorVersion      == 3)
-                mOscpu = "WinNT3.51";
+                mOscpu.Adopt(nsCRT::strdup("WinNT3.51"));
             else if (info.dwMajorVersion == 4)
-                mOscpu = "WinNT4.0";
+                mOscpu.Adopt(nsCRT::strdup("WinNT4.0"));
             else if (info.dwMajorVersion >= 5) {
                 char *buf = PR_smprintf("Windows NT %ld.%ld",
                                         info.dwMajorVersion,
                                         info.dwMinorVersion);
                 if (buf) {
-                    mOscpu = buf;
+                    mOscpu.Adopt(nsCRT::strdup(buf));
                     PR_smprintf_free(buf);
                 }
             }
             else
-                mOscpu = "WinNT";
+                mOscpu.Adopt(nsCRT::strdup("WinNT"));
         } else if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
             if (info.dwMinorVersion == 90)
-                mOscpu = "Win 9x 4.90";
+                mOscpu.Adopt(nsCRT::strdup("Win 9x 4.90"));
             else if (info.dwMinorVersion > 0)
-                mOscpu = "Win98";
+                mOscpu.Adopt(nsCRT::strdup("Win98"));
             else
-                mOscpu = "Win95";
+                mOscpu.Adopt(nsCRT::strdup("Win95"));
         }
     }
 #elif defined (XP_UNIX) || defined (XP_BEOS)
@@ -964,10 +967,10 @@ nsHttpHandler::InitUserAgentComponents()
         buf =  (char*)name.sysname;
         buf += ' ';
         buf += (char*)name.machine;
-        mOscpu = buf;
+        mOscpu.Adopt(ToNewCString(buf));
     }
 #elif defined (XP_MAC)
-    mOscpu = "PPC";
+    mOscpu.Adopt(nsCRT::strdup("PPC"));
 #endif
 
     mUserAgentIsDirty = PR_TRUE;
@@ -1103,13 +1106,15 @@ nsHttpHandler::PrefsChanged(const char *pref)
 
     // general.useragent.override
     if (bChangedAll || PL_strcmp(pref, UA_PREF_PREFIX "override") == 0) {
-        nsXPIDLCString uval;
+        char* temp = 0;
         rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "override",
-                                  getter_Copies(uval));
+                                  &temp);
         if (NS_SUCCEEDED(rv)) {
-            mUserAgentOverride = uval.get();
+            mUserAgentOverride.Adopt(temp);
+            temp = 0;
             mUserAgentIsDirty = PR_TRUE;
         }
+        NS_ASSERTION(!temp, "trouble: |CopyCharPref| failed, but returned a string anyway!");
     }
 
     if (bChangedAll || PL_strcmp(pref, UA_PREF_PREFIX "locale") == 0) {
@@ -1118,20 +1123,22 @@ nsHttpHandler::PrefsChanged(const char *pref)
         rv = mPrefs->GetLocalizedUnicharPref(UA_PREF_PREFIX "locale", 
                                              getter_Copies(uval));
         if (NS_SUCCEEDED(rv)) {
-            mLanguage = NS_ConvertUCS2toUTF8(uval).get();
+            mLanguage.Adopt(ToNewUTF8String(nsDependentString(uval)));
             mUserAgentIsDirty = PR_TRUE;
         }
     }
 
     // general.useragent.misc
     if (bChangedAll || PL_strcmp(pref, UA_PREF_PREFIX "misc") == 0) {
-        nsXPIDLCString uval;
+        char* temp;
         rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "misc",
-                                  getter_Copies(uval));
+                                  &temp);
         if (NS_SUCCEEDED(rv)) {
-            mMisc = uval.get();
+            mMisc.Adopt(temp);
+            temp = 0;
             mUserAgentIsDirty = PR_TRUE;
         }
+        NS_ASSERTION(!temp, "trouble: |CopyCharPref| failed, but returned a string anyway!");
     }
 
     if (bChangedAll || PL_strcmp(pref, "network.http.accept.default") == 0) {
@@ -1590,7 +1597,7 @@ nsHttpHandler::GetVendor(char **aVendor)
 NS_IMETHODIMP
 nsHttpHandler::SetVendor(const char *aVendor)
 {
-    mVendor = aVendor;
+    mVendor.Adopt(nsCRT::strdup(aVendor));
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1603,7 +1610,7 @@ nsHttpHandler::GetVendorSub(char **aVendorSub)
 NS_IMETHODIMP
 nsHttpHandler::SetVendorSub(const char *aVendorSub)
 {
-    mVendorSub = aVendorSub;
+    mVendorSub.Adopt(nsCRT::strdup(aVendorSub));
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1616,7 +1623,7 @@ nsHttpHandler::GetVendorComment(char **aVendorComment)
 NS_IMETHODIMP
 nsHttpHandler::SetVendorComment(const char *aVendorComment)
 {
-    mVendorComment = aVendorComment;
+    mVendorComment.Adopt(nsCRT::strdup(aVendorComment));
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1629,7 +1636,7 @@ nsHttpHandler::GetProduct(char **aProduct)
 NS_IMETHODIMP
 nsHttpHandler::SetProduct(const char *aProduct)
 {
-    mProduct = aProduct;
+    mProduct.Adopt(nsCRT::strdup(aProduct));
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1642,7 +1649,7 @@ nsHttpHandler::GetProductSub(char **aProductSub)
 NS_IMETHODIMP
 nsHttpHandler::SetProductSub(const char *aProductSub)
 {
-    mProductSub = aProductSub;
+    mProductSub.Adopt(nsCRT::strdup(aProductSub));
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1655,7 +1662,7 @@ nsHttpHandler::GetProductComment(char **aProductComment)
 NS_IMETHODIMP
 nsHttpHandler::SetProductComment(const char *aProductComment)
 {
-    mProductComment = aProductComment;
+    mProductComment.Adopt(nsCRT::strdup(aProductComment));
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1680,7 +1687,7 @@ nsHttpHandler::GetLanguage(char **aLanguage)
 NS_IMETHODIMP
 nsHttpHandler::SetLanguage(const char *aLanguage)
 {
-    mLanguage = aLanguage;
+    mLanguage.Adopt(nsCRT::strdup(aLanguage));
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1693,7 +1700,7 @@ nsHttpHandler::GetMisc(char **aMisc)
 NS_IMETHODIMP
 nsHttpHandler::SetMisc(const char *aMisc)
 {
-    mMisc = aMisc;
+    mMisc.Adopt(nsCRT::strdup(aMisc));
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }

@@ -1608,8 +1608,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
         rv = mURL->GetPath(&path);
     
     if (NS_FAILED(rv)) return rv;
-    mPath = nsUnescape(path);
-    nsMemory::Free(path);
+    mPath.Adopt(nsUnescape(path));
 
     // pull any username and/or password out of the uri
     nsXPIDLCString uname;

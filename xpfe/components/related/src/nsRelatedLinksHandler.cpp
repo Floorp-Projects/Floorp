@@ -663,7 +663,7 @@ RelatedLinksHandlerImpl::GetURL(char** aURL)
 
 	if (mRelatedLinksURL)
 	{
-		*aURL = nsXPIDLCString::Copy(mRelatedLinksURL);
+		*aURL = nsCRT::strdup(mRelatedLinksURL);
 		return *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 	}
 	else
@@ -734,7 +734,7 @@ RelatedLinksHandlerImpl::GetURI(char **aURI)
 	// XXX We could munge in the current URL that we're looking at I
 	// suppose. Not critical because this datasource shouldn't be
 	// registered with the RDF service.
-	*aURI = nsXPIDLCString::Copy("rdf:related-links");
+	*aURI = nsCRT::strdup("rdf:related-links");
 	if (! *aURI)
 		return NS_ERROR_OUT_OF_MEMORY;
 

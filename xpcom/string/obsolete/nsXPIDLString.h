@@ -76,14 +76,15 @@
 
   Like nsCOMPtr, nsXPIDLString uses some syntactic sugar to make it
   painfully clear exactly what the code expects. You need to wrap an
-  nsXPIDLString object with either `getter_Copies()' or
-  `getter_Shares()' before passing it to a getter: these tell the
+  nsXPIDLString object with `getter_Copies()' 
+  before passing it to a getter: these tell the
   nsXPIDLString how ownership is being handled.
 
   In the case of `getter_Copies()', the callee is allocating a copy
-  (which is usually the case). In the case of `getter_Shares()', the
+  (which is usually the case). In the case where the
   callee is returning a const reference to `the real deal' (this can
-  be done using the [shared] attribute in XPIDL).
+  be done using the [shared] attribute in XPIDL) you can just use
+  a |const char*|.
 
  */
 
@@ -99,8 +100,8 @@ typedef PRUint16 PRUnichar;
 ////////////////////////////////////////////////////////////////////////
 // nsXPIDLString
 //
-//   A wrapper for Unicode strings. With the |getter_Copies()| and
-//   |getter_Shares()| helper functions, this can be used instead of
+//   A wrapper for Unicode strings. With the |getter_Copies()|
+//   helper function, this can be used instead of
 //   the "naked" |PRUnichar*| interface for |wstring| parameters in
 //   XPIDL interfaces.
 //
@@ -108,16 +109,14 @@ typedef PRUint16 PRUnichar;
 class NS_COM nsXPIDLString {
 private:
     PRUnichar* mBuf;
-    PRBool     mBufOwner;
 
     PRUnichar** StartAssignmentByValue();
-    const PRUnichar** StartAssignmentByReference();
 
 public:
     /**
      * Construct a new, uninitialized wrapper for a Unicode string.
      */
-    nsXPIDLString() : mBuf(0), mBufOwner(PR_FALSE) {}
+    nsXPIDLString() : mBuf(0) {}
 
     ~nsXPIDLString();
 
@@ -130,12 +129,6 @@ public:
      * Return a reference to the immutable Unicode string.
      */
     const PRUnichar* get() const { return mBuf; }
-
-    /**
-     * Make a copy of the Unicode string. Use this function in the
-     * callee to ensure that the correct memory allocator is used.
-     */
-    static PRUnichar* Copy(const PRUnichar* aString);
 
     // A helper class for assignment-by-value. This class is an
     // implementation detail and should not be considered part of the
@@ -157,32 +150,13 @@ public:
 
     friend class GetterCopies;
 
-    // A helper class for assignment-by-reference. This class is an
-    // implementation detail and should not be considered part of the
-    // public interface.
-    class NS_COM GetterShares {
-    private:
-        nsXPIDLString& mXPIDLString;
-
-    public:
-        GetterShares(nsXPIDLString& aXPIDLString)
-            : mXPIDLString(aXPIDLString) {}
-
-        operator const PRUnichar**() {
-            return mXPIDLString.StartAssignmentByReference();
-        }
-
-        friend GetterShares getter_Shares(nsXPIDLString& aXPIDLString);
-    };
-
-    friend class GetterShares;
+    inline void Adopt( PRUnichar* );
 
 private:
     // not to be implemented
     nsXPIDLString(nsXPIDLString& /* aXPIDLString */) {}
     void operator=(nsXPIDLString& /* aXPIDLString */) {}
 };
-
 
 /**
  * Use this function to "wrap" the nsXPIDLString object that is to
@@ -194,30 +168,26 @@ getter_Copies(nsXPIDLString& aXPIDLString)
     return nsXPIDLString::GetterCopies(aXPIDLString);
 }
 
-/**
- * Use this function to "wrap" the nsXPIDLString object that is to
- * receive a |[shared] out| value.
- */
-inline nsXPIDLString::GetterShares
-getter_Shares(nsXPIDLString& aXPIDLString)
-{
-    return nsXPIDLString::GetterShares(aXPIDLString);
-}
-
+inline
+void
+nsXPIDLString::Adopt( PRUnichar* aNewValue )
+  {
+    *getter_Copies(*this) = aNewValue;
+  }
 
 // XXX THESE ARE NOT strcmp()! DON'T TRY TO USE THEM AS SUCH!
 inline
 PRBool
 operator==(const PRUnichar* lhs, const nsXPIDLString& rhs)
 {
-    return lhs == NS_STATIC_CAST(const PRUnichar*, rhs);
+    return lhs == rhs.get();
 }
 
 inline
 PRBool
 operator==(const nsXPIDLString& lhs, const PRUnichar* rhs)
 {
-    return NS_STATIC_CAST(const PRUnichar*, lhs) == rhs;
+    return lhs.get() == rhs;
 }
 
 
@@ -242,8 +212,8 @@ operator==(const nsXPIDLString& lhs, int rhs)
 ////////////////////////////////////////////////////////////////////////
 // nsXPIDLCString
 //
-//   A wrapper for Unicode strings. With the |getter_Copies()| and
-//   |getter_Shares()| helper functions, this can be used instead of
+//   A wrapper for Unicode strings. With the |getter_Copies()|
+//   helper function, this can be used instead of
 //   the "naked" |char*| interface for |string| parameters in XPIDL
 //   interfaces.
 //
@@ -251,24 +221,16 @@ operator==(const nsXPIDLString& lhs, int rhs)
 class NS_COM nsXPIDLCString {
 private:
     char*  mBuf;
-    PRBool mBufOwner;
 
     char** StartAssignmentByValue();
-    const char** StartAssignmentByReference();
 
 public:
     /**
      * Construct a new, uninitialized wrapper for a single-byte string.
      */
-    nsXPIDLCString() : mBuf(0), mBufOwner(PR_FALSE) {}
+    nsXPIDLCString() : mBuf(0) {}
 
     ~nsXPIDLCString();
-
-    /**
-     * Assign a single-byte string to this wrapper. Copies
-     * and owns the result.
-     */
-    nsXPIDLCString& operator=(const char* aString);
 
     /**
      * Return a reference to the immutable single-byte string.
@@ -279,12 +241,6 @@ public:
      * Return a reference to the immutable single-byte string.
      */
     const char* get() const { return mBuf; }
-
-    /**
-     * Make a copy of the single-byte string. Use this function in the
-     * callee to ensure that the correct memory allocator is used.
-     */
-    static char* Copy(const char* aString);
 
     // A helper class for assignment-by-value. This class is an
     // implementation detail and should not be considered part of the
@@ -306,25 +262,7 @@ public:
 
     friend class GetterCopies;
 
-    // A helper class for assignment-by-reference. This class is an
-    // implementation detail and should not be considered part of the
-    // public interface.
-    class NS_COM GetterShares {
-    private:
-        nsXPIDLCString& mXPIDLString;
-
-    public:
-        GetterShares(nsXPIDLCString& aXPIDLString)
-            : mXPIDLString(aXPIDLString) {}
-
-        operator const char**() {
-            return mXPIDLString.StartAssignmentByReference();
-        }
-
-        friend GetterShares getter_Shares(nsXPIDLCString& aXPIDLString);
-    };
-
-    friend class GetterShares;
+    inline void Adopt( char* );
 
 private:
     // not to be implemented
@@ -342,30 +280,26 @@ getter_Copies(nsXPIDLCString& aXPIDLString)
     return nsXPIDLCString::GetterCopies(aXPIDLString);
 }
 
-
-/**
- * Use this function to "wrap" the nsXPIDLCString object that is to
- * receive a |[shared] out| value.
- */
-inline nsXPIDLCString::GetterShares
-getter_Shares(nsXPIDLCString& aXPIDLString)
-{
-    return nsXPIDLCString::GetterShares(aXPIDLString);
-}
+inline
+void
+nsXPIDLCString::Adopt( char* aNewValue )
+  {
+    *getter_Copies(*this) = aNewValue;
+  }
 
 // XXX THESE ARE NOT strcmp()! DON'T TRY TO USE THEM AS SUCH!
 inline
 PRBool
 operator==(const char* lhs, const nsXPIDLCString& rhs)
 {
-    return lhs == NS_STATIC_CAST(const char*, rhs);
+    return lhs == rhs.get();
 }
 
 inline
 PRBool
 operator==(const nsXPIDLCString& lhs, const char* rhs)
 {
-    return NS_STATIC_CAST(const char*, lhs) == rhs;
+    return lhs.get() == rhs;
 }
 
 #ifdef HAVE_CPP_TROUBLE_COMPARING_TO_ZERO

@@ -1148,7 +1148,7 @@ nsGlobalHistory::GetURI(char* *aURI)
   if (! aURI)
     return NS_ERROR_NULL_POINTER;
 
-  *aURI = nsXPIDLCString::Copy("rdf:history");
+  *aURI = nsCRT::strdup("rdf:history");
   if (! *aURI)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1698,8 +1698,8 @@ nsGlobalHistory::Unassert(nsIRDFResource* aSource,
 
     if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED; 
 
-    nsXPIDLCString targetUrl;
-    rv = resource->GetValueConst(getter_Shares(targetUrl));
+    const char* targetUrl;
+    rv = resource->GetValueConst(&targetUrl);
     if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED;
 
     // ignore any error
@@ -2294,8 +2294,8 @@ nsGlobalHistory::CreateFindEnumerator(nsIRDFResource *aSource,
   if (!IsFindResource(aSource))
     return NS_ERROR_FAILURE;
 
-  nsXPIDLCString uri;
-  rv = aSource->GetValueConst(getter_Shares(uri));
+  const char* uri;
+  rv = aSource->GetValueConst(&uri);
   if (NS_FAILED(rv)) return rv;
 
   // convert uri to a query
@@ -3055,8 +3055,9 @@ nsGlobalHistory::NotifyFindUnassertions(nsIRDFResource *aSource,
   query.terms.AppendElement((void *)&hostterm);
   GetFindUriPrefix(query, PR_FALSE, findUri);
   
-  nsXPIDLCString sourceStr;
-  aSource->GetValueConst(getter_Shares(sourceStr));
+    // XXX |sourceStr| unused ... why are we doing this?
+  const char* sourceStr;
+  aSource->GetValueConst(&sourceStr);
 
   gRDFService->GetResource(findUri.get(), getter_AddRefs(findResource));
   

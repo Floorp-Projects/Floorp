@@ -130,7 +130,7 @@ nsHttpResponseHead::ParseStatusLine(char *line)
     
     if ((mVersion == NS_HTTP_VERSION_0_9) || !(line = PL_strchr(line, ' '))) {
         mStatus = 200;
-        mStatusText = "OK";
+        mStatusText.Adopt(nsCRT::strdup("OK"));
         LOG(("Have status line [version=%d status=%d statusText=%s]\n",
             mVersion, mStatus, mStatusText.get()));
         return;
@@ -146,10 +146,10 @@ nsHttpResponseHead::ParseStatusLine(char *line)
     // Reason-Phrase is whatever is remaining of the line
     if (!(line = PL_strchr(line, ' '))) {
         LOG(("mal-formed response status line; assuming statusText = 'OK'\n"));
-        mStatusText = "OK";
+        mStatusText.Adopt(nsCRT::strdup("OK"));
     }
     else
-        mStatusText = ++line;
+        mStatusText.Adopt(nsCRT::strdup(++line));
 
     LOG(("Have status line [version=%d status=%d statusText=%s]\n",
         mVersion, mStatus, mStatusText.get()));
@@ -356,10 +356,10 @@ nsHttpResponseHead::Reset()
 
     mVersion = NS_HTTP_VERSION_1_1;
     mStatus = 200;
-    mStatusText = 0;
+    mStatusText.Adopt(0);
     mContentLength = -1;
-    mContentType = 0;
-    mContentCharset = 0;
+    mContentType.Adopt(0);
+    mContentCharset.Adopt(0);
 }
 
 //-----------------------------------------------------------------------------
@@ -435,7 +435,7 @@ nsHttpResponseHead::ParseContentType(char *type)
             } while ((*p3 == ' ') || (*p3 == '\t'));
             *++p3 = 0; // overwrite first char after the charset field
 
-            mContentCharset = p2;
+            mContentCharset.Adopt(nsCRT::strdup(p2));
         }
     }
     else
@@ -450,7 +450,7 @@ nsHttpResponseHead::ParseContentType(char *type)
     while (--p >= type)
         *p = nsCRT::ToLower(*p);
 
-    mContentType = type;
+    mContentType.Adopt(nsCRT::strdup(type));
 
     return NS_OK;
 }

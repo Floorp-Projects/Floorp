@@ -294,16 +294,18 @@ nsHttpChannel::SetupTransaction()
 
     // use the URI path if not proxying (transparent proxying such as SSL proxy
     // does not count here).
-    nsXPIDLCString requestURI;
+    nsXPIDLCString requestURIStr;
+    const char* requestURI;
     if ((mConnectionInfo->ProxyHost() == nsnull) || mConnectionInfo->UsingSSL()) {
-        rv = mURI->GetPath(getter_Copies(requestURI));
+        rv = mURI->GetPath(getter_Copies(requestURIStr));
         if (NS_FAILED(rv)) return rv;
+        requestURI = requestURIStr.get();
     }
     else
         requestURI = mSpec.get();
 
     // trim off the #ref portion if any...
-    char *p = PL_strrchr(requestURI.get(), '#');
+    char *p = PL_strrchr(requestURI, '#');
     if (p) *p = 0;
 
     mRequestHead.SetVersion(nsHttpHandler::get()->DefaultVersion());
@@ -672,7 +674,7 @@ nsHttpChannel::CheckCache()
         if (mRequestHead.Method() != nsHttp::Head)
             return NS_OK;
     }
-    buf = 0;
+    buf.Adopt(0);
 
     // Get the cached HTTP response headers
     rv = mCacheEntry->GetMetaDataElement("response-head", getter_Copies(buf));
@@ -685,7 +687,7 @@ nsHttpChannel::CheckCache()
         return NS_ERROR_OUT_OF_MEMORY;
     rv = mCachedResponseHead->Parse((char *) buf.get());
     if (NS_FAILED(rv)) return rv;
-    buf = 0;
+    buf.Adopt(0);
 
     // If we were only granted read access, then assume the entry is valid.
     if (mCacheAccess == nsICache::ACCESS_READ) {

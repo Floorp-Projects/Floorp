@@ -27,6 +27,7 @@
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
 #include "nsXPIDLString.h"
+#include "nsCRT.h"
 
 class nsWindowEnumerator;
 struct nsWindowInfo;
@@ -54,7 +55,7 @@ public:
     if (! uri)
       return NS_ERROR_NULL_POINTER;
 
-    *uri = nsXPIDLCString::Copy("rdf:window-mediator");
+    *uri = nsCRT::strdup("rdf:window-mediator");
     if (! *uri)
       return NS_ERROR_OUT_OF_MEMORY;
 
