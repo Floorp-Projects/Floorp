@@ -523,16 +523,8 @@ PRInt32 CTextToken::GetTokenType(void) {
  *  @return  error result
  *------------------------------------------------------*/
 PRInt32 CTextToken::Consume(PRUnichar aChar, CScanner& aScanner) {
-
-#ifdef TOKENIZE_CRLF
-    static nsAutoString terminals("&<\r\n");
-#else
-    static nsAutoString terminals("&<");
-#endif
-    PRInt32 result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE);
-#ifndef TOKENIZE_CRLF
-    mTextValue.StripChars("\r");
-#endif
+  static nsAutoString terminals("&<\r\n");
+  PRInt32 result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE);
   return result;
 };
 
@@ -607,7 +599,6 @@ PRInt32 CCommentToken::GetTokenType(void) {
   return eToken_comment;
 }
 
-#ifdef TOKENIZE_CRLF
 /**-------------------------------------------------------
  *  default constructor
  *  
@@ -656,7 +647,6 @@ PRInt32 CNewlineToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   mTextValue.StripChars("\r");
   return result;
 };
-#endif /* TOKENIZE_CRLF */
 
 /**-------------------------------------------------------
  *  default constructor
@@ -834,7 +824,6 @@ void CAttributeToken::DebugDumpSource(ostream& out) {
     out<<">";
 }
 
-#ifdef TOKENIZE_WHITESPACE
 /**-------------------------------------------------------
  *  default constructor
  *  
@@ -884,7 +873,6 @@ PRInt32 CWhitespaceToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   mTextValue.StripChars("\r");
   return result;
 };
-#endif /* TOKENIZE_WHITESPACE */
 
 /**-------------------------------------------------------
  *  default constructor

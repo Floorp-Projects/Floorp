@@ -234,7 +234,6 @@ CToken* CHTMLTokenizerDelegate::ConsumeEntity(PRUnichar aChar,CScanner& aScanner
    return result;
 }
 
-#ifdef TOKENIZE_WHITESPACE
 /**-------------------------------------------------------
  *  This method is called just after whitespace has been 
  *  consumed and we know we're at the start a whitespace run.  
@@ -250,7 +249,6 @@ CToken* CHTMLTokenizerDelegate::ConsumeWhitespace(PRUnichar aChar,CScanner& aSca
   anErrorCode=result->Consume(aChar,aScanner);
   return result;
 }
-#endif
 
 /**-------------------------------------------------------
  *  This method is called just after a "<!" has been consumed 
@@ -287,7 +285,6 @@ CToken* CHTMLTokenizerDelegate::ConsumeText(const nsString& aString,CScanner& aS
   return result;
 }
 
-#ifdef TOKENIZE_CRLF
 /**-------------------------------------------------------
  *  This method is called just after a newline has been consumed. 
  *  
@@ -304,7 +301,6 @@ CToken* CHTMLTokenizerDelegate::ConsumeNewline(PRUnichar aChar,CScanner& aScanne
   }
   return result;
 }
-#endif
 
 /**-------------------------------------------------------
  *  This method repeatedly called by the tokenizer. 
@@ -333,18 +329,14 @@ CToken* CHTMLTokenizerDelegate::GetToken(CScanner& aScanner,PRInt32& anErrorCode
         return ConsumeEntity(aChar,aScanner,anErrorCode);
       case kLessThan:
         return ConsumeTag(aChar,aScanner,anErrorCode);
-#ifdef TOKENIZE_CRLF
       case kCR: case kLF:
         return ConsumeNewline(aChar,aScanner,anErrorCode);
       case kNotFound:
         break;
-#endif
       default:
-#ifdef TOKENIZE_WHITESPACE
         if(nsString::IsSpace(aChar))
             return ConsumeWhitespace(aChar,aScanner,anErrorCode);
         else
-#endif
         {
           nsAutoString temp(aChar);
           return ConsumeText(temp,aScanner,anErrorCode);

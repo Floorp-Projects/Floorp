@@ -35,10 +35,6 @@
 #include "nsToken.h"
 #include <iostream.h>
 
-// If you define these to true then crlf sequences and whitespace come
-// through the scanner as seperate tokens.
-#undef TOKENIZE_CRLF
-#undef TOKENIZE_WHITESPACE
 
 class CScanner;
 
@@ -222,7 +218,6 @@ class CEntityToken : public CHTMLToken {
  *  
  *  @update  gess 3/25/98
  */ //---------------------------------------------------
-#ifdef TOKENIZE_WHITESPACE
 class CWhitespaceToken: public CHTMLToken {
 	public:
                         CWhitespaceToken(const nsString& aString);
@@ -230,7 +225,6 @@ class CWhitespaceToken: public CHTMLToken {
     virtual const char*	GetClassName(void);
 		virtual PRInt32			GetTokenType(void);
 };
-#endif
 
 /** -----------------------------------------------------
  *  Text tokens contain the normalized form of html text.
@@ -278,7 +272,6 @@ class CAttributeToken: public CHTMLToken {
  *  
  *  @update  gess 3/25/98
  */ //---------------------------------------------------
-#ifdef TOKENIZE_CRLF
 class CNewlineToken: public CHTMLToken { 
 	public:
                         CNewlineToken(const nsString& aString);
@@ -286,7 +279,6 @@ class CNewlineToken: public CHTMLToken {
     virtual const char*	GetClassName(void);
 		virtual PRInt32			GetTokenType(void);
 };
-#endif
 
 
 /** -----------------------------------------------------
