@@ -28,12 +28,11 @@ class CellData;
   * Each cell is represented by a CellData object.
   *
   * @see CellData
-  * @see nsTablePart::BuildCellMap
-  * @see nsTablePart::GrowCellMap
-  * @see nsTablePart::BuildCellIntoMap
+  * @see nsTableFrame::BuildCellMap
+  * @see nsTableFrame::GrowCellMap
+  * @see nsTableFrame::BuildCellIntoMap
   *
   * acts like a 2-dimensional array, so all offsets are 0-indexed
-  TODO:  inline methods
   */
 class nsCellMap
 {

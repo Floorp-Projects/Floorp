@@ -89,6 +89,7 @@ nsTableRowGroup::~nsTableRowGroup()
 }
 
 /** return the number of columns in the widest row in this group */
+///QQQ could be removed
 PRInt32 nsTableRowGroup::GetMaxColumns()
 { // computed every time for now, could be cached
   PRInt32 result = 0;
@@ -187,10 +188,7 @@ nsTableRowGroup::CreateFrame(nsIPresContext* aPresContext,
 
 void nsTableRowGroup::ResetCellMap ()
 {
-  // GREG:  enable this assertion when the content notification code is checked in
-  // NS_ASSERTION(nsnull!=mTable, "illegal table content state");
-  if (nsnull != mTable)
-    mTable->ResetCellMap ();
+
 }
 
 NS_IMETHODIMP
@@ -211,10 +209,7 @@ nsTableRowGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
     if (NS_OK==result)
     {
       ((nsTableRow *)aContent)->SetRowGroup (this);
-      // after each row insertion, make sure we have corresponding column content objects
-      if (nsnull!=mTable)
-        mTable->EnsureColumns();
-      // also make sure the table cell map gets rebuilt
+      // make sure the table cell map gets rebuilt
       ResetCellMap ();
     }
   }

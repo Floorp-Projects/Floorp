@@ -16,13 +16,13 @@
  * Reserved.
  */
 #include "nsTableColGroupFrame.h"
+#include "nsTableColFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIPtr.h"
 #include "nsIContentDelegate.h"
-#include "nsTableContent.h"
 #include "nsHTMLAtoms.h"
 
 NS_DEF_PTR(nsIContent);
@@ -35,6 +35,7 @@ nsTableColGroupFrame::nsTableColGroupFrame(nsIContent* aContent,
                      nsIFrame*   aParentFrame)
   : nsContainerFrame(aContent, aParentFrame)
 {
+  mColCount=0;
 }
 
 nsTableColGroupFrame::~nsTableColGroupFrame()
@@ -66,7 +67,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*      aPresContext,
    
     LastChild(prevKidFrame);  // XXX remember this...
     PRInt32 kidIndex = 0;
-    for (;;)
+    for (PRInt32 colIndex = 0; ;colIndex++) // colIndex is used to set the column frames' index field
     {
       nsIContentPtr kid = mContent->ChildAt(kidIndex);   // kid: REFCNT++
       if (kid.IsNull()) {
@@ -75,7 +76,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*      aPresContext,
 
       // Resolve style
       nsIStyleContextPtr kidSC =
-        aPresContext->ResolveStyleContextFor(kid, this);
+        aPresContext->ResolveStyleContextFor(kid, this, PR_TRUE);
       const nsStyleSpacing* kidSpacing = (const nsStyleSpacing*)
         kidSC->GetStyleData(eStyleStruct_Spacing);
 
@@ -94,6 +95,9 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*      aPresContext,
                                           kidReflowState);
       // note that DidReflow is called as the result of some ancestor firing off a DidReflow above me
       kidFrame->SetRect(nsRect(0,0,0,0));
+
+      // set nsColFrame-specific information
+      ((nsTableColFrame *)kidFrame)->SetColumnIndex(colIndex+mStartColIndex);
 
       // Link child frame into the list of children
       if (nsnull != prevKidFrame) {
@@ -178,6 +182,42 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPre
   return NS_OK;
 }
 
+
+/** returns the number of columns represented by this group.
+  * if there are col children, count them (taking into account the span of each)
+  * else, check my own span attribute.
+  */
+int nsTableColGroupFrame::GetColumnCount ()
+{
+  if (0 == mColCount)
+  {
+    int count;
+    ChildCount (count);
+    if (0 < count)
+    {
+      nsIFrame * child = nsnull;
+      ChildAt(0, child);
+      NS_ASSERTION(nsnull!=child, "bad child");
+      while (nsnull!=child)
+      {
+        nsTableColFrame *col = (nsTableColFrame *)child;
+        col->SetColumnIndex (mStartColIndex + mColCount);
+        mColCount += col->GetRepeat ();
+        child->GetNextSibling(child);
+      }
+    }
+    else
+    {
+      const nsStyleTable *tableStyle;
+      GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+      mColCount = tableStyle->mSpan;
+    }
+  }
+  return mColCount;
+}
+
+/* ----- static methods ----- */
+
 nsresult nsTableColGroupFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                         nsIContent* aContent,
                                         nsIFrame*   aParent)
@@ -193,3 +233,5 @@ nsresult nsTableColGroupFrame::NewFrame(nsIFrame** aInstancePtrResult,
   *aInstancePtrResult = it;
   return NS_OK;
 }
+
+

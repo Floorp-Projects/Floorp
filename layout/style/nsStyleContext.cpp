@@ -530,6 +530,7 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
   mRules = NS_STYLE_TABLE_RULES_NONE;
   mCellPadding.Reset();
   mCellSpacing.Reset();
+  mSpan=0;
 }
 
 

@@ -463,7 +463,10 @@ PRBool BasicTableLayoutStrategy::SetColumnsToMinWidth(nsIPresContext* aPresConte
       for (PRInt32 cellIndex = 0; cellIndex<numCells; cellIndex++)
       { // this col has proportional width, so determine its width requirements
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(cellIndex));
-        NS_ASSERTION(nsnull != data, "bad data");
+        if (nsnull==data)
+        { // For cells that span rows there's only cell layout data for the first row
+          continue;
+        }
         nsSize * cellMinSize = data->GetMaxElementSize();
         NS_ASSERTION(nsnull != cellMinSize, "bad cellMinSize");
         nsReflowMetrics * cellDesiredSize = data->GetDesiredSize();

@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsTableCellFrame.h"
+#include "nsCellLayoutData.h"
 #include "nsBodyFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
@@ -48,7 +49,8 @@ static const PRBool gsDebug = PR_FALSE;
   */
 nsTableCellFrame::nsTableCellFrame(nsIContent* aContent,
                                    nsIFrame*   aParentFrame)
-  : nsContainerFrame(aContent, aParentFrame)
+  : nsContainerFrame(aContent, aParentFrame),
+  mCellLayoutData(nsnull)
 {
   mRowSpan=1;
   mColSpan=1;
@@ -57,6 +59,8 @@ nsTableCellFrame::nsTableCellFrame(nsIContent* aContent,
 
 nsTableCellFrame::~nsTableCellFrame()
 {
+  if (nsnull!=mCellLayoutData)
+    delete mCellLayoutData;
 }
 
 NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,

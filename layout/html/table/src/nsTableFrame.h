@@ -22,11 +22,12 @@
 #include "nsContainerFrame.h"
 #include "nsStyleCoord.h"
 
+class nsCellMap;
 class nsCellLayoutData;
-class nsTableCell;
 class nsVoidArray;
 class nsTableCellFrame;
 class nsTableColFrame;
+class nsTableRowFrame;
 class CellData;
 class nsITableLayoutStrategy;
 class nsHTMLValue;
@@ -120,6 +121,14 @@ public:
                                   nsReflowMetrics& aDesiredSize,
                                   nsSize* aMaxElementSize);
   
+  /** allow the cell and row attributes to effect the column frame
+    * currently, the only reason this exists is to support the HTML "rule"
+    * that a width attribute on a cell in the first column sets the column width.
+    */
+  virtual NS_METHOD SetColumnStyleFromCell(nsIPresContext  * aPresContext,
+                                           nsTableCellFrame* aCellFrame,
+                                           nsTableRowFrame * aRowFrame);
+
   /** return the column frame corresponding to the given column index
     * there are two ways to do this, depending on whether we have cached
     * column information yet.
@@ -140,15 +149,15 @@ public:
     * @return PR_TRUE if the data was successfully associated with a Cell
     *         PR_FALSE if there was an error, such as aRow or aCol being invalid
     */
-  virtual PRBool SetCellLayoutData(nsIPresContext* aPresContext,
+  virtual PRBool SetCellLayoutData(nsIPresContext   * aPresContext,
                                    nsCellLayoutData * aData, 
-                                   nsTableCell *aCell);
+                                   nsTableCellFrame * aCell);
 
   /** Get the layout data associated with the cell at (aRow,aCol)
     * @return PR_NULL if there was an error, such as aRow or aCol being invalid
     *         otherwise, the data is returned.
     */
-  virtual nsCellLayoutData * GetCellLayoutData(nsTableCell *aCell);
+  virtual nsCellLayoutData * GetCellLayoutData(nsTableCellFrame *aCell);
           
   /**
     * DEBUG METHOD
@@ -167,16 +176,11 @@ public:
     * Calculate Layout Information
     *
     */
-  void    AppendLayoutData(nsVoidArray* aList, nsTableCell* aTableCell);
+  void    AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTableCell);
   void    RecalcLayoutData();
-  void    ResetCellLayoutData( nsTableCell* aCell, 
-                               nsTableCell* aAbove,
-                               nsTableCell* aBelow,
-                               nsTableCell* aLeft,
-                               nsTableCell* aRight);
 
   // Get cell margin information
-  NS_IMETHOD GetCellMarginData(nsIFrame* aKidFrame, nsMargin& aMargin);
+  NS_IMETHOD GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin& aMargin);
 
   /** get cached column information for a subset of the columns
     *
@@ -220,7 +224,8 @@ protected:
     */
   virtual nsReflowStatus ResizeReflowPass1(nsIPresContext*      aPresContext,
                                            nsReflowMetrics&     aDesiredSize,
-                                           const nsReflowState& aReflowState);
+                                           const nsReflowState& aReflowState,
+                                           nsReflowStatus&      aStatus);
 
   /** second pass of ResizeReflow.
     * lays out all table content with aMaxSize(computed_table_width, given_table_height) 
@@ -328,6 +333,85 @@ protected:
   void      MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 
+  /** return the row span of a cell, taking into account row span magic at the bottom
+    * of a table.
+    * @param aRowIndex  the first row that contains the cell
+    * @param aCell      the content object representing the cell
+    * @return  the row span, correcting for row spans that extend beyond the bottom
+    *          of the table.
+    */
+  virtual PRInt32  GetEffectiveRowSpan(PRInt32 aRowIndex, nsTableCellFrame *aCell);
+
+  /** build as much of the CellMap as possible from the info we have so far 
+    */
+  virtual void BuildCellMap ();
+
+  /** called whenever the number of columns changes, to increase the storage in mCellMap 
+    */
+  virtual void GrowCellMap(PRInt32 aColCount);
+
+  /** ResetCellMap is called when the cell structure of the table is changed.
+    * Call with caution, only when changing the structure of the table such as 
+    * inserting or removing rows, changing the rowspan or colspan attribute of a cell, etc.
+    */
+  virtual void ResetCellMap ();
+
+  /** ResetColumns is called when the column structure of the table is changed.
+    * Call with caution, only when adding or removing columns, changing 
+    * column attributes, changing the rowspan or colspan attribute of a cell, etc.
+    */
+  virtual void ResetColumns ();
+
+  /** sum the columns represented by all nsTableColGroup objects. 
+    * if the cell map says there are more columns than this, 
+    * add extra implicit columns to the content tree.
+    */ 
+  virtual void EnsureColumns (nsIPresContext*      aPresContext,
+                              nsReflowMetrics&     aDesiredSize,
+                              const nsReflowState& aReflowState,
+                              nsReflowStatus&      aStatus);
+
+  /** Ensure that the cell map has been built for the table
+    */
+  virtual void EnsureCellMap();
+
+  virtual void BuildColumnCache(nsIPresContext*      aPresContext,
+                                nsReflowMetrics&     aDesiredSize,
+                                const nsReflowState& aReflowState,
+                                nsReflowStatus&      aStatus);
+
+  /** called every time we discover we have a new cell to add to the table.
+    * This could be because we got actual cell content, because of rowspan/colspan attributes, etc.
+    * This method changes mCellMap as necessary to account for the new cell.
+    *
+    * @param aCell     the content object created for the cell
+    * @param aRowIndex the row into which the cell is to be inserted
+    * @param aColIndex the col into which the cell is to be inserted
+    */
+  virtual void BuildCellIntoMap (nsTableCellFrame *aCell, PRInt32 aRowIndex, PRInt32 aColIndex);
+
+  /** returns the index of the first child after aStartIndex that is a row group 
+    */
+  virtual PRInt32 NextRowGroup (PRInt32 aStartIndex);
+
+  /** returns the number of rows in this table.
+    * if mCellMap has been created, it is asked for the number of rows.<br>
+    * otherwise, the content is enumerated and the rows are counted.
+    */
+  virtual PRInt32 GetRowCount();
+
+
+  /** return the number of columns as specified by the input. 
+    * has 2 side effects:<br>
+    * calls SetStartColumnIndex on each nsTableColumn<br>
+    * sets mSpecifiedColCount.<br>
+    */
+  virtual PRInt32 GetSpecifiedColumnCount ();
+
+public:
+  virtual void        DumpCellMap() const; 
+  virtual nsCellMap*  GetCellMap() const;
+
 
 private:
   void DebugPrintCount() const; // Debugging routine
@@ -346,6 +430,8 @@ private:
   PRInt32      mPass;               // which Reflow pass are we currently in?
   PRBool       mIsInvariantWidth;   // PR_TRUE if table width cannot change
   nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
+  PRInt32      mColCount;           // the number of columns in this table
+  nsCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
 };
 
 #endif

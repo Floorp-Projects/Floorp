@@ -22,6 +22,7 @@
 #include "nsContainerFrame.h"
 #include "nsTableFrame.h"
 
+class nsCellLayoutData;
 struct nsStyleSpacing;
 
 /**
@@ -68,10 +69,15 @@ public:
   /** return the mapped cell's column index (starting at 0 for the first column) */
   virtual PRInt32 GetColIndex();
 
+  virtual void SetColIndex (int aColIndex);
+
   virtual ~nsTableCellFrame();
 
   // Get the TableFrame that contains this cell frame
   virtual nsTableFrame* GetTableFrame();
+
+  nsCellLayoutData * GetCellLayoutData();
+  void SetCellLayoutData(nsCellLayoutData *aData);
 
   // For DEBUGGING Purposes Only
   NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
@@ -106,6 +112,8 @@ protected:
   /** the starting column for this cell */
   int          mColIndex;
 
+  nsCellLayoutData *mCellLayoutData;
+
 };
 
 inline void nsTableCellFrame::Init(PRInt32 aRowSpan, PRInt32 aColSpan, PRInt32 aColIndex)
@@ -127,5 +135,16 @@ inline PRInt32 nsTableCellFrame::GetColSpan()
 inline PRInt32 nsTableCellFrame::GetColIndex()
 {  return mColIndex;}
 
+inline void nsTableCellFrame::SetColIndex (int aColIndex)
+{
+  NS_ASSERTION(0<=aColIndex, "illegal negative column index.");
+  mColIndex = aColIndex;
+}
+
+inline nsCellLayoutData * nsTableCellFrame::GetCellLayoutData()
+{ return mCellLayoutData;}
+  
+inline void nsTableCellFrame::SetCellLayoutData(nsCellLayoutData *aData)
+{ mCellLayoutData = aData;}
 
 #endif

@@ -21,7 +21,6 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 
-
 class nsTableColFrame : public nsFrame {
 public:
 
@@ -45,6 +44,9 @@ public:
 
   /** return the number of the columns the col represents.  always >= 0 */
   virtual int GetRepeat ();
+
+  /** set the index of the column this content object represents.  must be >= 0 */
+  virtual void SetColumnIndex (int aColIndex);
 
 protected:
 
@@ -75,6 +77,9 @@ inline nsTableColFrame::GetColumnIndex()
 
 inline nsTableColFrame::GetRepeat()
 { return mRepeat; }
+  
+inline void nsTableColFrame::SetColumnIndex (int aColIndex)
+{  mColIndex = aColIndex;}
 
 #endif
 

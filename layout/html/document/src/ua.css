@@ -209,7 +209,7 @@ PLAINTEXT, XMP, PRE {
 
 // Table tags
 TABLE {
-  display: block;
+  display: table;
   border-style: outset;
   border-color: #C0C0C0;
   cell-spacing: 4px;
@@ -225,7 +225,7 @@ TD, TH {
   font-weight: normal;
   font-size: 11pt;
   line-height: 1.1;
-  display: block;
+  display: table-cell;
   cursor: arrow;
 }
 TH {
@@ -234,8 +234,14 @@ TH {
 }
 CAPTION {
   text-align: center;
-  display: block;
+  display: table-caption;
 }
+TBODY { display: table-row-group;    }
+THEAD { display: table-header-group; }
+TFOOT { display: table-footer-group; }
+COL   { display: table-column;       }
+COLGROUP { display: table-column-group;}
+
 MULTICOL {
   display: block;
 }
