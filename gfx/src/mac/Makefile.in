@@ -26,13 +26,13 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= gfx_mac
 MODULE		= layout
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom string img widget view util dom pref js uconv necko unicharutil gfx2 mozcomps windowwatcher
 
 CPPSRCS = \
 		nsATSUIUtils.cpp \
 		nsDeviceContextMac.cpp \
 		nsDeviceContextSpecFactoryM.cpp \
-		nsDeviceContextSpecMac.cpp \
+		nsDeviceContextSpecX.cpp \
 		nsDrawingSurfaceMac.cpp \
 		nsFontMetricsMac.cpp \
 		nsGfxFactoryMac.cpp \
