@@ -26,9 +26,18 @@
  * implement the problematic GetSize and DidAlloc routines.
  */
 
+#define NS_IALLOCATOR_IID                            \
+{ /* 56def700-b1b9-11d2-8177-006008119d7a */         \
+    0x56def700,                                      \
+    0xb1b9,                                          \
+    0x11d2,                                          \
+    {0x81, 0x77, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 class nsIAllocator : public nsISupports {
 public:
-
+    static const nsIID& IID() { static nsIID iid = NS_IALLOCATOR_IID; return iid; }
+    
     /**
      * Allocates a block of memory of a particular size. 
      *
@@ -59,14 +68,6 @@ public:
     NS_IMETHOD HeapMinimize(void) = 0;
 
 };
-
-#define NS_IALLOCATOR_IID                            \
-{ /* 56def700-b1b9-11d2-8177-006008119d7a */         \
-    0x56def700,                                      \
-    0xb1b9,                                          \
-    0x11d2,                                          \
-    {0x81, 0x77, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 // To get the global memory manager service:
 #define NS_ALLOCATOR_CID                             \
