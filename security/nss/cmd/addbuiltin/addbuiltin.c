@@ -37,7 +37,7 @@
 /*
  * Tool for converting builtin CA certs.
  *
- * $Id: addbuiltin.c,v 1.11 2005/02/02 22:28:02 gerv%gerv.net Exp $
+ * $Id: addbuiltin.c,v 1.12 2005/04/02 06:21:20 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "nssrenam.h"
@@ -173,7 +173,7 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
 
 }
 
-printheader() {
+void printheader() {
     printf("# \n"
 "# ***** BEGIN LICENSE BLOCK *****\n"
 "# Version: MPL 1.1/GPL 2.0/LGPL 2.1\n"
@@ -211,7 +211,7 @@ printheader() {
 "#\n"
 "# ***** END LICENSE BLOCK *****\n"
      "#\n"
-     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.11 $ $Date: 2005/02/02 22:28:02 $\"\n"
+     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.12 $ $Date: 2005/04/02 06:21:20 $\"\n"
      "\n"
      "#\n"
      "# certdata.txt\n"
@@ -307,7 +307,7 @@ static secuCommandFlag addbuiltin_options[] =
 	{ /* opt_Trust         */  't', PR_TRUE, 0, PR_FALSE }
 };
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     SECStatus rv;
     char *nickname;
