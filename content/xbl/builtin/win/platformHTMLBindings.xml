@@ -4,8 +4,9 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  
-  <binding id="inputFields" extends="resource://gre/res/builtin/htmlBindings.xml#inputFieldsBase">
+  <binding id="inputFields">
     <handlers>
+#include ../input-fields-base.inc
       <handler event="keypress" keycode="VK_UP" command="cmd_charPrevious"/>
       <handler event="keypress" keycode="VK_DOWN" command="cmd_charNext"/>
       <handler event="keypress" keycode="VK_UP" modifiers="shift" command="cmd_selectCharPrevious"/>
@@ -48,8 +49,9 @@
     </handlers>
   </binding>
 
-  <binding id="textAreas" extends="resource://gre/res/builtin/htmlBindings.xml#textAreasBase">
+  <binding id="textAreas">
     <handlers>
+#include ../textareas-base.inc
       <handler event="keypress" keycode="VK_HOME" 
         command="cmd_beginLine"/>
       <handler event="keypress" keycode="VK_END" 
@@ -87,6 +89,7 @@
 
   <binding id="browser">
     <handlers>
+#include ../browser-base.inc
       <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_movePageUp"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_movePageDown"/>
       <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift" command="cmd_selectPageUp"/>
@@ -112,6 +115,7 @@
 
   <binding id="editor">
     <handlers>
+#include ../editor-base.inc
       <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_cutOrDelete"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_deleteWordForward"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>

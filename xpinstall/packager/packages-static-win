@@ -280,7 +280,6 @@ bin\res\rdf\loading.gif
 bin\res\throbber\*
 ;debug menus reference samples dir - remove for actual releases:
 bin\res\samples\*
-bin\res\builtin\htmlBindings.xml
 bin\res\builtin\platformHTMLBindings.xml
 
 [mail]

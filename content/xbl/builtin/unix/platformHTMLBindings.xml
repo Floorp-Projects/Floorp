@@ -4,8 +4,9 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  
-  <binding id="inputFields" extends="resource://gre/res/builtin/htmlBindings.xml#inputFieldsBase">
+  <binding id="inputFields">
     <handlers>
+#include ../input-fields-base.inc
     <!-- Emacsish single-line motion and delete keys -->
     <handler event="keypress" key="a" modifiers="control"
         command="cmd_beginLine"/>
@@ -75,9 +76,9 @@
     </handlers>
   </binding>
 
-  <binding id="textAreas" extends="resource://gre/res/builtin/htmlBindings.xml#textAreasBase">
+  <binding id="textAreas">
     <handlers>
-
+#include ../textareas-base.inc
     <!-- Emacsish single-line motion and delete keys -->
     <handler event="keypress" key="a" modifiers="control"
         command="cmd_beginLine"/>
@@ -165,6 +166,7 @@
 
   <binding id="browser">
     <handlers>
+#include ../browser-base.inc
       <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_movePageUp"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_movePageDown"/>
       <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift" command="cmd_selectPageUp"/>
@@ -195,6 +197,7 @@
 
   <binding id="editor">
     <handlers>
+#include ../editor-base.inc
       <handler event="keypress" key="h" modifiers="control" command="cmd_deleteCharBackward"/>
       <handler event="keypress" key="d" modifiers="control" command="cmd_deleteCharForward"/>
       <handler event="keypress" key="k" modifiers="control" command="cmd_deleteToEndOfLine"/>

@@ -72,11 +72,9 @@ class nsXBLSpecialDocInfo
 {
 public:
   nsCOMPtr<nsIXBLDocumentInfo> mHTMLBindings;
-  nsCOMPtr<nsIXBLDocumentInfo> mPlatformHTMLBindings;
   nsCOMPtr<nsIXBLDocumentInfo> mUserHTMLBindings;
 
   static const char sHTMLBindingStr[];
-  static const char sPlatformHTMLBindingStr[];
   static const char sUserHTMLBindingStr[];
 
   PRBool mInitialized;
@@ -85,7 +83,6 @@ public:
   void LoadDocInfo();
   void GetAllHandlers(const char* aType,
                       nsXBLPrototypeHandler** handler,
-                      nsXBLPrototypeHandler** platformHandler,
                       nsXBLPrototypeHandler** userHandler);
   void GetHandlers(nsIXBLDocumentInfo* aInfo,
                    const nsACString& aRef,
@@ -94,8 +91,7 @@ public:
   nsXBLSpecialDocInfo() : mInitialized(PR_FALSE) {};
 };
 
-const char nsXBLSpecialDocInfo::sHTMLBindingStr[] = "resource://gre/res/builtin/htmlBindings.xml";
-const char nsXBLSpecialDocInfo::sPlatformHTMLBindingStr[] = "resource://gre/res/builtin/platformHTMLBindings.xml";
+const char nsXBLSpecialDocInfo::sHTMLBindingStr[] = "resource://gre/res/builtin/platformHTMLBindings.xml";
 // Allow for a userHTMLBindings.xml.
 // XXXbsmedberg Should be in the profile chrome directory, when we have a resource mapping for that
 const char nsXBLSpecialDocInfo::sUserHTMLBindingStr[] = "resource://gre/res/builtin/userHTMLBindings.xml";
@@ -112,27 +108,16 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
   if (NS_FAILED(rv) || !xblService)
     return;
 
-  // Obtain the XP and platform doc infos
+  // Obtain the platform doc info
   nsCOMPtr<nsIURI> bindingURI;
   NS_NewURI(getter_AddRefs(bindingURI), sHTMLBindingStr);
   if (!bindingURI) {
     return;
   }
-  xblService->LoadBindingDocumentInfo(nsnull, nsnull, 
-                                      bindingURI,
-                                      PR_TRUE, 
-                                      getter_AddRefs(mHTMLBindings));
-  
-  rv = bindingURI->SetSpec(NS_LITERAL_CSTRING(sPlatformHTMLBindingStr));
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Shouldn't fail to set spec here");
-    return;
-  }
-  
   xblService->LoadBindingDocumentInfo(nsnull, nsnull,
                                       bindingURI,
                                       PR_TRUE, 
-                                      getter_AddRefs(mPlatformHTMLBindings));
+                                      getter_AddRefs(mHTMLBindings));
 
   rv = bindingURI->SetSpec(NS_LITERAL_CSTRING(sUserHTMLBindingStr));
   if (NS_FAILED(rv)) {
@@ -168,7 +153,6 @@ nsXBLSpecialDocInfo::GetHandlers(nsIXBLDocumentInfo* aInfo,
 void
 nsXBLSpecialDocInfo::GetAllHandlers(const char* aType,
                                     nsXBLPrototypeHandler** aHandler,
-                                    nsXBLPrototypeHandler** aPlatformHandler,
                                     nsXBLPrototypeHandler** aUserHandler)
 {
   if (mUserHTMLBindings) {
@@ -176,14 +160,8 @@ nsXBLSpecialDocInfo::GetAllHandlers(const char* aType,
     type.Append("User");
     GetHandlers(mUserHTMLBindings, type, aUserHandler);
   }
-  if (mPlatformHTMLBindings) {
-    nsCAutoString type(aType);
-    GetHandlers(mPlatformHTMLBindings, type, aPlatformHandler);
-  }
   if (mHTMLBindings) {
-    nsCAutoString type(aType);
-    type.Append("Base");
-    GetHandlers(mHTMLBindings, type, aHandler);
+    GetHandlers(mHTMLBindings, nsDependentCString(aType), aHandler);
   }
 }
 
@@ -202,7 +180,6 @@ nsXBLWindowHandler::nsXBLWindowHandler(nsIDOMElement* aElement,
   : mElement(aElement),
     mReceiver(aReceiver),
     mHandler(nsnull),
-    mPlatformHandler(nsnull),
     mUserHandler(nsnull)
 {
   ++sRefCnt;
@@ -339,10 +316,10 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
 //
 // EnsureHandlers
 //
-// Lazily load the XP and platform-specific bindings
+// Lazily load the platform and user bindings
 //
 nsresult
-nsXBLWindowHandler::EnsureHandlers()
+nsXBLWindowHandler::EnsureHandlers(PRBool *aIsEditor)
 {
   if (!sXBLSpecialDocInfo)
     sXBLSpecialDocInfo = new nsXBLSpecialDocInfo();    
@@ -351,14 +328,16 @@ nsXBLWindowHandler::EnsureHandlers()
   sXBLSpecialDocInfo->LoadDocInfo();
 
   // Now determine which handlers we should be using.
-  if (IsEditor()) {
-    sXBLSpecialDocInfo->GetAllHandlers("editor", &mHandler, &mPlatformHandler,
-                                       &mUserHandler);
+  PRBool isEditor = IsEditor();
+  if (isEditor) {
+    sXBLSpecialDocInfo->GetAllHandlers("editor", &mHandler, &mUserHandler);
   }
   else {
-    sXBLSpecialDocInfo->GetAllHandlers("browser", &mHandler, &mPlatformHandler,
-                                       &mUserHandler);
+    sXBLSpecialDocInfo->GetAllHandlers("browser", &mHandler, &mUserHandler);
   }
+
+  if (aIsEditor)
+    *aIsEditor = isEditor;
 
   return NS_OK;
   

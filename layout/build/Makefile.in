@@ -229,6 +229,7 @@ INCLUDES	+= -I$(srcdir)/../base/src \
 		   -I$(srcdir)/../../content/xul/content/src \
 		   -I$(srcdir)/../../content/xul/templates/src \
 		   -I$(srcdir)/../../content/events/src \
+		   -I$(srcdir)/../../content/xbl/src \
 		   -I$(topsrcdir)/view/src \
 		   -I$(topsrcdir)/dom/src/base \
 		   -I$(topsrcdir)/dom/src/jsurl \
