@@ -223,6 +223,10 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 REQUIRES += xpconnect intl appcomps
+ifdef MOZ_PHOENIX
+REQUIRES += winhooks
+endif
+
 RCINCLUDE = splash.rc
 CPPSRCS += nsNativeAppSupportWin.cpp nsNativeAppSupportBase.cpp
 OS_LIBS	+= $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool gdi32)
