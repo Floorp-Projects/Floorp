@@ -75,10 +75,20 @@ public:
   // The frames border+padding value
   nsMargin mBorderPadding;
 
+  // Is this frame a root for margin collapsing?
   PRBool mIsMarginRoot;
 
+  // The computed collapsed top margin value that the frame did not
+  // apply but is passing out to the frames parent so that the parent
+  // can perform generational margin collapsing.
   nscoord mCollapsedTopMargin;
+
+  // The previous child frames collapsed bottom margin value.
   nscoord mPrevBottomMargin;
+
+  // The top and bottom margin flags for the first and last child
+  // frame.
+  nscoord mCarriedOutMarginFlags;
 };
 
 #endif /* nsFrameReflowState_h___ */
