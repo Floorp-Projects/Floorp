@@ -1652,6 +1652,10 @@ FE_MakeGridWindow (MWContext *old_context, void *history, int32 x, int32 y,
   CONTEXT_DATA (context)->backdrop_pixmap = (Pixmap) ~0;
   CONTEXT_DATA (context)->grid_scrolling = scrolling;
 
+  /* Set the image library callbacks */
+  CONTEXT_DATA(context)->DisplayPixmap = DisplayPixmap;
+  CONTEXT_DATA(context)->NewPixmap = (NewPixmapPtr)NULL;
+
   /* FRAMES_HAVE_THEIR_OWN_COLORMAP was an unfinished
 	 experiment by kevina. */
 #ifdef FRAMES_HAVE_THEIR_OWN_COLORMAP
