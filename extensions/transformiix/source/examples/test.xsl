@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    - original author.
  *
- * $Id: test.xsl,v 1.7 2000/10/25 16:45:33 axel%pike.org Exp $
+ * $Id: test.xsl,v 1.8 2001/01/22 09:56:42 kvisco%ziplink.net Exp $
  */
 -->
 
@@ -287,6 +287,25 @@
          <xsl:if test="not(descendant-or-self::no-element)">
            <FONT COLOR="blue">true</FONT>
          </xsl:if>
+      </TD>
+   </TR>
+   <!-- new test -->
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="count(x/attribute::*)"/&gt;<BR />
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">1</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue"><xsl:value-of select="count(x/attribute::*)"/></FONT>
       </TD>
    </TR>
    </TABLE>
