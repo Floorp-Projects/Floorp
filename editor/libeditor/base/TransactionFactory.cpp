@@ -110,7 +110,7 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
   else
     result = NS_ERROR_NO_INTERFACE;
   
-  if (NS_SUCCEEDED(result) && nsnull==*aResult)
+  if (NS_SUCCEEDED(result) && !*aResult)
     result = NS_ERROR_OUT_OF_MEMORY;
 
   if (NS_SUCCEEDED(result))
@@ -118,5 +118,4 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
 
   return result;
 }
-
 

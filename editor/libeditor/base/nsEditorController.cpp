@@ -41,7 +41,6 @@
 #include "nsString.h"
 #include "nsIComponentManager.h"
 #include "nsEditorController.h"
-#include "nsIEditor.h"
 #include "nsEditorCommands.h"
 #include "nsIControllerCommandTable.h"
 
@@ -140,5 +139,4 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandTable *i
 
   return NS_OK;
 }
-
 
