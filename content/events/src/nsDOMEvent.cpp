@@ -338,6 +338,67 @@ NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
   return NS_OK;
 }
 
+NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
+{
+  nsIFrame* targetFrame;
+  nsIEventStateManager* manager;
+
+  if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+    manager->GetEventTarget(&targetFrame);
+    NS_RELEASE(manager);
+  }
+
+  if (targetFrame) {
+    nsIContent* parent = nsnull;
+    PRUint32 actualOffset;
+    PRInt32 offset, endOffset;
+
+    if (NS_SUCCEEDED(targetFrame->GetPosition(*mPresContext, 
+                                              (nsGUIEvent*)mEvent,
+                                              targetFrame,
+                                              &parent,
+                                              actualOffset,
+                                              offset,
+                                              endOffset))) {
+      if (parent && NS_SUCCEEDED(parent->QueryInterface(kIDOMNodeIID, (void**)aRangeParent))) {
+        NS_RELEASE(parent);
+        return NS_OK;
+      }
+      NS_IF_RELEASE(parent);
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
+{
+  nsIFrame* targetFrame;
+  nsIEventStateManager* manager;
+
+  if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+    manager->GetEventTarget(&targetFrame);
+    NS_RELEASE(manager);
+  }
+
+  if (targetFrame) {
+    nsIContent* parent = nsnull;
+    PRUint32 actualOffset;
+    PRInt32 offset, endOffset;
+
+    if (NS_SUCCEEDED(targetFrame->GetPosition(*mPresContext, 
+                                              (nsGUIEvent*)mEvent,
+                                              targetFrame,
+                                              &parent,
+                                              actualOffset,
+                                              *aRangeOffset,
+                                              endOffset))) {
+      NS_IF_RELEASE(parent);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
 NS_METHOD nsDOMEvent::DuplicatePrivateData()
 {
   //XXX Write me!

@@ -223,7 +223,6 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   NS_IMETHOD GetPosition(nsIPresContext& aCX,
-                         nsIRenderingContext * aRendContext,
                          nsGUIEvent*     aEvent,
                          nsIFrame *      aNewFrame,
                          nsIContent **   aNewContent,
@@ -1700,7 +1699,6 @@ BinarySearchForPosition(nsIRenderingContext* acx,
 //---------------------------------------------------------------------------
 NS_IMETHODIMP
 nsTextFrame::GetPosition(nsIPresContext& aPresContext,
-                         nsIRenderingContext* aRendContext,
                          nsGUIEvent* aEvent,
                          nsIFrame* aNewFrame,
                          nsIContent **aNewContent,
@@ -1708,106 +1706,115 @@ nsTextFrame::GetPosition(nsIPresContext& aPresContext,
                          PRInt32& aOffset,
                          PRInt32& aOffsetEnd)
 {
-  TextStyle ts(&aPresContext, *aRendContext, mStyleContext);
-  if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing) {
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell) {
+    nsCOMPtr<nsIRenderingContext> acx;      
+    rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
+    if (NS_SUCCEEDED(rv)) {
+      TextStyle ts(&aPresContext, *acx, mStyleContext);
+      if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing) {
 
-    nsresult result = GetPositionSlowly(aPresContext, aRendContext, aEvent, aNewContent,
-                             aActualContentOffset, aOffset);
-    aOffsetEnd = aOffset;
-    return result;
-  }
-
-  PRUnichar wordBufMem[WORD_BUF_SIZE];
-  PRUnichar paintBufMem[TEXT_BUF_SIZE];
-  PRInt32 indicies[TEXT_BUF_SIZE];
-  PRInt32* ip = indicies;
-  PRUnichar* paintBuf = paintBufMem;
-  if (mContentLength >= TEXT_BUF_SIZE) {
-    ip = new PRInt32[mContentLength+1];
-    paintBuf = new PRUnichar[mContentLength];
-  }
-  PRInt32 textLength;
-
-  // Find the font metrics for this text
-  nsIStyleContext* styleContext;
-  aNewFrame->GetStyleContext(&styleContext);
-  const nsStyleFont *font = (const nsStyleFont*)
-    styleContext->GetStyleData(eStyleStruct_Font);
-  NS_RELEASE(styleContext);
-  nsCOMPtr<nsIFontMetrics> fm;
-  aPresContext.GetMetricsFor(font->mFont, getter_AddRefs(fm));
-  aRendContext->SetFont(fm);
-
-  // Get the document
-  nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(&aPresContext)));
-
-  // Get the renderable form of the text
-  nsCOMPtr<nsILineBreaker> lb;
-  doc->GetLineBreaker(getter_AddRefs(lb));
-  nsCOMPtr<nsIWordBreaker> wb;
-  doc->GetWordBreaker(getter_AddRefs(wb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
-  PrepareUnicodeText(tx, ip, paintBuf, &textLength);
-  ip[mContentLength] = ip[mContentLength-1];
-  if ((ip[mContentLength]-mContentOffset) < textLength) {
-    //must set up last one for selection beyond edge if in boundary
-    ip[mContentLength]++;
-  }
-
-  PRInt32 index;
-  PRInt32 textWidth = 0;
-  PRUnichar* text = paintBuf;
-  nsPoint origin;
-  nsIView * view;
-  GetView(&view);
-  GetOffsetFromView(origin, &view);
-  PRBool found = BinarySearchForPosition(aRendContext, text, origin.x, 0, 0,
-                                         PRInt32(textLength),
-                                         PRInt32(aEvent->point.x) , //go to local coordinates
-                                         index, textWidth);
-  if (found) {
-    PRInt32 charWidth;
-    aRendContext->GetWidth(text[index], charWidth);
-    charWidth /= 2;
-
-    if (PRInt32(aEvent->point.x) - origin.x > textWidth+charWidth) {
-      index++;
-    }
-
-/*    offset = 0;
-    PRInt32 j;
-    PRInt32* ptr = ip;
-    for (j=0;j<=PRInt32(mContentLength);j++) {
-      if (*ptr == index+mContentOffset) {
-        offset = j;//+mContentOffset;
-        break;
+        nsresult result = GetPositionSlowly(aPresContext, acx, aEvent, aNewContent,
+                                 aActualContentOffset, aOffset);
+        aOffsetEnd = aOffset;
+        return result;
       }
-      ptr++;
-    }      */
-  }
 
-  if (ip != indicies) {
-    delete [] ip;
-  }
-  if (paintBuf != paintBufMem) {
-    delete [] paintBuf;
-  }
+      PRUnichar wordBufMem[WORD_BUF_SIZE];
+      PRUnichar paintBufMem[TEXT_BUF_SIZE];
+      PRInt32 indicies[TEXT_BUF_SIZE];
+      PRInt32* ip = indicies;
+      PRUnichar* paintBuf = paintBufMem;
+      if (mContentLength >= TEXT_BUF_SIZE) {
+        ip = new PRInt32[mContentLength+1];
+        paintBuf = new PRUnichar[mContentLength];
+      }
+      PRInt32 textLength;
 
-  aActualContentOffset = mContentOffset;//offset;//((nsTextFrame *)aNewFrame)->mContentOffset;
-  aOffset = index;
-  aOffsetEnd = aOffset;
-  //reusing wordBufMem
-  PRInt32 i;
-  for (i = 0;i <= mContentLength; i ++){
-    if (ip[i] == aOffset + mContentOffset){ //reverse mapping
-        aOffset = i;
-        break;
+      // Find the font metrics for this text
+      nsIStyleContext* styleContext;
+      aNewFrame->GetStyleContext(&styleContext);
+      const nsStyleFont *font = (const nsStyleFont*)
+        styleContext->GetStyleData(eStyleStruct_Font);
+      NS_RELEASE(styleContext);
+      nsCOMPtr<nsIFontMetrics> fm;
+      aPresContext.GetMetricsFor(font->mFont, getter_AddRefs(fm));
+      acx->SetFont(fm);
+
+      // Get the document
+      nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(&aPresContext)));
+
+      // Get the renderable form of the text
+      nsCOMPtr<nsILineBreaker> lb;
+      doc->GetLineBreaker(getter_AddRefs(lb));
+      nsCOMPtr<nsIWordBreaker> wb;
+      doc->GetWordBreaker(getter_AddRefs(wb));
+      nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
+      PrepareUnicodeText(tx, ip, paintBuf, &textLength);
+      ip[mContentLength] = ip[mContentLength-1];
+      if ((ip[mContentLength]-mContentOffset) < textLength) {
+        //must set up last one for selection beyond edge if in boundary
+        ip[mContentLength]++;
+      }
+
+      PRInt32 index;
+      PRInt32 textWidth = 0;
+      PRUnichar* text = paintBuf;
+      nsPoint origin;
+      nsIView * view;
+      GetView(&view);
+      GetOffsetFromView(origin, &view);
+      PRBool found = BinarySearchForPosition(acx, text, origin.x, 0, 0,
+                                             PRInt32(textLength),
+                                             PRInt32(aEvent->point.x) , //go to local coordinates
+                                             index, textWidth);
+      if (found) {
+        PRInt32 charWidth;
+        acx->GetWidth(text[index], charWidth);
+        charWidth /= 2;
+
+        if (PRInt32(aEvent->point.x) - origin.x > textWidth+charWidth) {
+          index++;
+        }
+
+        /*offset = 0;
+        PRInt32 j;
+        PRInt32* ptr = ip;
+        for (j=0;j<=PRInt32(mContentLength);j++) {
+          if (*ptr == index+mContentOffset) {
+            offset = j;//+mContentOffset;
+            break;
+          }
+          ptr++;
+        }      */
+      }
+
+      if (ip != indicies) {
+        delete [] ip;
+      }
+      if (paintBuf != paintBufMem) {
+        delete [] paintBuf;
+      }
+
+      aActualContentOffset = mContentOffset;//offset;//((nsTextFrame *)aNewFrame)->mContentOffset;
+      aOffset = index;
+      aOffsetEnd = aOffset;
+      //reusing wordBufMem
+      PRInt32 i;
+      for (i = 0;i <= mContentLength; i ++){
+        if (ip[i] == aOffset + mContentOffset){ //reverse mapping
+            aOffset = i;
+            break;
+        }
+      }
+      NS_ASSERTION(i<= mContentLength, "offset we got from binary search is messed up");
+      *aNewContent = mContent;
+      if (*aNewContent) {
+        (*aNewContent)->AddRef();
+      }
     }
   }
-  NS_ASSERTION(i<= mContentLength, "offset we got from binary search is messed up");
-  *aNewContent = mContent;
-  if (*aNewContent)
-    (*aNewContent)->AddRef();
   return NS_OK;
 }
 
@@ -2256,7 +2263,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
       PRUint32 contentOffset = 0;
       PRInt32 contentOffsetEnd = 0;
       nsCOMPtr<nsIContent> newContent;
-      if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, 
+      if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent, this, 
                        getter_AddRefs(newContent), contentOffset, startPos, contentOffsetEnd))){
         //find which word needs to be selected! use peek offset one way then the other
         nsCOMPtr<nsIContent> startContent;

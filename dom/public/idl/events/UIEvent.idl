@@ -177,18 +177,20 @@
 	      const int EVENT_FORWARD		= 0x08000000;
 	      const int EVENT_HELP	        = 0x10000000;
 	      const int EVENT_BACK		= 0x20000000;
-		  const int EVENT_TEXT		= 0x40000000;
+		    const int EVENT_TEXT		= 0x40000000;
 
 	      const int EVENT_ALT_MASK	= 0x00000001;
 	      const int EVENT_CONTROL_MASK	= 0x00000002;
 	      const int EVENT_SHIFT_MASK	= 0x00000004;
 	      const int EVENT_META_MASK	= 0x00000008;
 
-	      readonly    attribute   int			layerX;
-	      readonly    attribute   int			layerY;
-	      readonly    attribute   int			pageX;
-	      readonly    attribute   int			pageY;
+	      readonly    attribute   int			      layerX;
+	      readonly    attribute   int			      layerY;
+	      readonly    attribute   int			      pageX;
+	      readonly    attribute   int			      pageY;
 	      readonly    attribute   unsigned long which;
+		    readonly	  attribute   Node		  	  rangeParent;
+		    readonly	  attribute   int           rangeOffset;
 
 	      readonly    attribute RenderingContext rc;
       };

@@ -28,6 +28,7 @@
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMUIEvent.h"
 #include "nsIDOMRenderingContext.h"
 
@@ -36,10 +37,12 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINSUIEventIID, NS_IDOMNSUIEVENT_IID);
+static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIUIEventIID, NS_IDOMUIEVENT_IID);
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 
 NS_DEF_PTR(nsIDOMNSUIEvent);
+NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMUIEvent);
 NS_DEF_PTR(nsIDOMRenderingContext);
 
@@ -65,7 +68,9 @@ enum UIEvent_slots {
   NSUIEVENT_PAGEX = -16,
   NSUIEVENT_PAGEY = -17,
   NSUIEVENT_WHICH = -18,
-  NSUIEVENT_RC = -19
+  NSUIEVENT_RANGEPARENT = -19,
+  NSUIEVENT_RANGEOFFSET = -20,
+  NSUIEVENT_RC = -21
 };
 
 /***********************************************************************/
@@ -423,6 +428,57 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case NSUIEVENT_RANGEPARENT:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.rangeparent", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMNode* prop;
+        nsIDOMNSUIEvent* b;
+        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+          if(NS_OK == b->GetRangeParent(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSUIEvent");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSUIEVENT_RANGEOFFSET:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.rangeoffset", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        PRInt32 prop;
+        nsIDOMNSUIEvent* b;
+        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+          if(NS_OK == b->GetRangeOffset(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSUIEvent");
+          return JS_FALSE;
+        }
+        break;
+      }
       case NSUIEVENT_RC:
       {
         secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.rc", &ok);
@@ -583,6 +639,8 @@ static JSPropertySpec UIEventProperties[] =
   {"pageX",    NSUIEVENT_PAGEX,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"pageY",    NSUIEVENT_PAGEY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"which",    NSUIEVENT_WHICH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"rangeParent",    NSUIEVENT_RANGEPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"rangeOffset",    NSUIEVENT_RANGEOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"rc",    NSUIEVENT_RC,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
