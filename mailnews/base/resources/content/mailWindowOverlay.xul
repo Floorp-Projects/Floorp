@@ -150,7 +150,10 @@ Rights Reserved.
 	<key id="key_findAgain" key="&findAgainCmd.key;"   observes="cmd_findAgain" modifiers="accel"/>
 
 	<!-- Tab Keys -->
-	<key id="tabpane" keycode="VK_TAB" oncommand="SwitchPaneFocus(event)" />
+        <key id="tabpaneCounterClockwise" keycode="VK_TAB" oncommand="SwitchPaneFocus('counter-clockwise');"
+             modifiers="shift"/>
+        <key id="tabpaneClockwise" keycode="VK_TAB" oncommand="SwitchPaneFocus('clockwise');"/>
+
 
 </keyset>
 

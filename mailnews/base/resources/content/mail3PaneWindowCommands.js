@@ -915,19 +915,13 @@ function SetTemplateTreeItemOpen(open)
 	}
 }
 
-// global variable for the gray_vertical_splitter
-	var gray_vertical_splitter_exists = false;
-
-function SwitchPaneFocus(event)
+function SwitchPaneFocus(direction)
 {
-	gray_vertical_splitter_exists = document.getElementById("gray_vertical_splitter");
-	var focusedElement;
-	var focusedElementId;
-//The first if statement is a check for the Shift+Tab -the else statement is for Tab
-	if (event && (event.shiftKey))
+        var gray_vertical_splitter = document.getElementById("gray_vertical_splitter");
+        var focusedElement = document.commandDispatcher.focusedElement;
+        var focusedElementId;
+        if (direction == "counter-clockwise")
 	{
-		focusedElement = document.commandDispatcher.focusedElement;
-		focusedElementId="";
 
 		if ( MessagePaneHasFocus() )
 			SetFocusThreadPane();
@@ -938,9 +932,9 @@ function SwitchPaneFocus(event)
 				focusedElementId = focusedElement.getAttribute('id');
 				if(focusedElementId == "threadTree")
 				{
-					if (gray_vertical_splitter_exists)
+					if (gray_vertical_splitter)
 					{
-						if (!(is_folderpane_collapsed()))
+						if (!(is_collapsed(gray_vertical_splitter)))
 						SetFocusFolderPane();
 						else if(!(IsThreadAndMessagePaneSplitterCollapsed()))
 						SetFocusMessagePane();
@@ -969,14 +963,12 @@ function SwitchPaneFocus(event)
 	}
 	else
 	{
-		focusedElement = document.commandDispatcher.focusedElement;
-		focusedElementId="";
 
 		if ( MessagePaneHasFocus() )
 		{
-			if (gray_vertical_splitter_exists)
+			if (gray_vertical_splitter)
 			{
-				if (!(is_folderpane_collapsed()))
+				if (!(is_collapsed(gray_vertical_splitter)))
 					SetFocusFolderPane();
 				else
 					SetFocusThreadPane();
@@ -998,9 +990,9 @@ function SwitchPaneFocus(event)
 				{
 					if (!(IsThreadAndMessagePaneSplitterCollapsed()))
 						SetFocusMessagePane();
-					else if (gray_vertical_splitter_exists)
+					else if (gray_vertical_splitter)
 					{
-						if (!(is_folderpane_collapsed()))
+						if (!(is_collapsed(gray_vertical_splitter)))
 						SetFocusFolderPane();
 					}
 					else if (!(sidebar_is_collapsed()))
@@ -1037,12 +1029,8 @@ function SetFocusMessagePane()
 	return;
 }
 
-function is_folderpane_collapsed() 
+function is_collapsed(element) 
 {
-	if (gray_vertical_splitter_exists)
-	{ 
-		return (gray_vertical_splitter_exists.getAttribute('state') == 'collapsed');
-	}
-	return false;
+    return (element.getAttribute('state') == 'collapsed');
 }
 
