@@ -593,8 +593,8 @@ function BrowserHome()
 
 function loadOneOrMoreURIs(aURIString)
 {
-  if (aURIString.indexOf(" ") != -1) {
-    var urls = aURIString.split(" ");
+  if (aURIString.indexOf("|") != -1) {
+    var urls = aURIString.split("|");
     loadURI(urls[0]);
     for (var i = 1; i < urls.length; ++i)
       gBrowser.addTab(urls[i]);

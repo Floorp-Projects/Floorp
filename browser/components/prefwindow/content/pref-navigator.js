@@ -17,7 +17,7 @@ function setHomePageToCurrentPage()
     var l = browser.mPanelContainer.childNodes.length;
     for (var i = 0; i < l; i++) {
       if (i)
-        newVal += " ";
+        newVal += "|";
       newVal += browser.mPanelContainer.childNodes[i].webNavigation.currentURI.spec;
     }
     
