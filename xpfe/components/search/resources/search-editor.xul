@@ -85,7 +85,9 @@
 
 				<treehead>
 					<treerow>
-						<treecell observes="EngineColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" flex="100%"/>
+						<treecell class="treecell-header sortDirectionIndicator" observes="EngineColumn"
+						align="center" value="&engine.column.label;" flex="100%"
+						resource="http://home.netscape.com/NC-rdf#Name" />
 					</treerow>
 				</treehead>
 			</tree>
@@ -137,7 +139,10 @@
 
 				<treehead>
 					<treerow>
-						<treecell observes="NameColumn" align="center" value="&allengines.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn', null);" sortActive="true" sortDirection="ascending" flex="100%"/>
+						<treecell class="treecell-header sortDirectionIndicator" observes="NameColumn" align="center"
+							value="&allengines.label;" resource="http://home.netscape.com/NC-rdf#Name"
+							sortActive="true" sortDirection="ascending" flex="100%"
+							onclick="return doSort('NameColumn', null);" />
 					</treerow>
 				</treehead>
 			</tree>

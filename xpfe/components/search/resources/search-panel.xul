@@ -123,7 +123,7 @@
 
           <treehead>
             <treerow>
-              <treecell observes="SortNameColumn" align="center" value="&results.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('SortNameColumn', 'http://home.netscape.com/NC-rdf#PageRank');" sortActive="true" sortDirection="ascending" flex="1"/>
+              <treecell class="treecell-header sortDirectionIndicator" observes="SortNameColumn" align="center" value="&results.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('SortNameColumn', 'http://home.netscape.com/NC-rdf#PageRank');" sortActive="true" sortDirection="ascending" flex="1"/>
             </treerow>
           </treehead>
 
@@ -161,10 +161,11 @@
               </treeitem>
             </treechildren>
           </template>
+
           <treehead>
             <treerow>
-              <treecell value="&checkbox.column.label;" style="width: 23px;"/>
-              <treecell observes="NameColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn', null);" flex="1"/>
+              <treecell class="treecell-header sortDirectionIndicator" value="&checkbox.column.label;" style="width: 23px;"/>
+              <treecell class="treecell-header sortDirectionIndicator" observes="NameColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn', null);" flex="1"/>
             </treerow>
           </treehead>
         </tree>

@@ -56,9 +56,12 @@
 
       <treehead>
         <treerow>
-          <treecell value="&directoryWindow.filename.label;" onclick="return doSort('FilenameColumn');" observes="FilenameColumn" sortActive="true" sortDirection="ascending" />
-          <treecell value="&directoryWindow.contentlength.label;" onclick="return doSort('ContentLengthColumn');" observes="ContentLengthColumn" />
-          <treecell value="&directoryWindow.lastmodified.label;" onclick="return doSort('LastModColumn');" observes="LastModColumn" />
+          <treecell class="treecell-header sortDirectionIndicator" value="&directoryWindow.filename.label;"
+          	onclick="return doSort('FilenameColumn');" observes="FilenameColumn" sortActive="true" sortDirection="ascending" />
+          <treecell class="treecell-header sortDirectionIndicator" value="&directoryWindow.contentlength.label;"
+          	onclick="return doSort('ContentLengthColumn');" observes="ContentLengthColumn" />
+          <treecell class="treecell-header sortDirectionIndicator" value="&directoryWindow.lastmodified.label;"
+          	onclick="return doSort('LastModColumn');" observes="LastModColumn" />
         </treerow>
       </treehead>
 
