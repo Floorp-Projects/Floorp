@@ -54,3 +54,17 @@ interface nsIExternalHelperAppService : nsISupports
   nsIStreamListener doContent (in string aMimeContentType, in nsIURI aURI, 
                                in nsISupports aWindowContext, out boolean aAbortProcess); 
 };
+
+// this is a private interface shared between external app handlers and the platform specific
+// external helper app service
+[scriptable, uuid(491D04D5-449C-11d4-98D0-001083010E9B)]
+interface nsPIExternalAppLauncher : nsISupports
+{
+  // launchAppWithTempFile --> used by the handler to actually launch the helper application
+  // aTempFile --> the file which contains the data we want the helper app to use when it is launched
+  // aAppCookie --> a cookie that was given to the app handler when it was created by the OS specific
+  //                external helper app service. This cookie contains all the information the service
+  //                needs to know about the application in order to launch it. It's content differs by
+  //                platform.
+  void launchAppWithTempFile(in nsIFile aTempFile, in nsISupports aAppCookie);
+};
