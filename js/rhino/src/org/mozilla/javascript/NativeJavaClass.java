@@ -61,10 +61,20 @@ import java.io.*;
 
 public class NativeJavaClass extends NativeJavaObject implements Function {
 
+    public NativeJavaClass() {
+    }
+
     public NativeJavaClass(Scriptable scope, Class cl) {
-        super(scope, cl, JavaMembers.lookupClass(scope, cl, cl));
-        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject,
-                                                            true);
+        this.parent = scope;
+        this.javaObject = cl;
+        initMembers();
+    }
+
+    protected void initMembers() {
+        Class cl = (Class)javaObject;
+        members = JavaMembers.lookupClass(parent, cl, cl);
+        staticFieldAndMethods
+            = members.getFieldAndMethodsObjects(this, cl, true);
     }
 
     public String getClassName() {
@@ -86,8 +96,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
         Object result = Scriptable.NOT_FOUND;
 
-        if (fieldAndMethods != null) {
-            result = fieldAndMethods.get(name);
+        if (staticFieldAndMethods != null) {
+            result = staticFieldAndMethods.get(name);
             if (result != null)
                 return result;
         }
@@ -99,7 +109,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
             try {
                 String nestedName = getClassObject().getName() + '$' + name;
                 Class nestedClass = ScriptRuntime.loadClassName(nestedName);
-                Scriptable nestedValue = wrap(ScriptableObject.getTopLevelScope(this), nestedClass);
+                NativeJavaClass nestedValue = new NativeJavaClass
+                    (ScriptableObject.getTopLevelScope(this), nestedClass);
                 nestedValue.setParentScope(this);
                 result = nestedValue;
             } catch (ClassNotFoundException ex) {
@@ -122,11 +133,6 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
     public Class getClassObject() {
         return (Class) super.unwrap();
-    }
-
-    // XXX ??
-    public static NativeJavaClass wrap(Scriptable scope, Class cls) {
-        return new NativeJavaClass(scope, cls);
     }
 
     public Object getDefaultValue(Class hint) {
@@ -169,40 +175,40 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         if (! (Modifier.isInterface(modifiers) ||
                Modifier.isAbstract(modifiers)))
         {
-                Constructor[] ctors = members.getConstructors();
-                Member member = NativeJavaMethod.findFunction(ctors, args);
-                Constructor ctor = (Constructor) member;
-                if (ctor == null) {
-                    String sig = NativeJavaMethod.scriptSignature(args);
+            Constructor[] ctors = members.getConstructors();
+            Member member = NativeJavaMethod.findFunction(ctors, args);
+            Constructor ctor = (Constructor) member;
+            if (ctor == null) {
+                String sig = NativeJavaMethod.scriptSignature(args);
                 throw Context.reportRuntimeError2(
                     "msg.no.java.ctor", classObject.getName(), sig);
-                }
+            }
 
-                // Found the constructor, so try invoking it.
-                return NativeJavaClass.constructSpecific(cx, scope,
-                                                         this, ctor, args);
+            // Found the constructor, so try invoking it.
+            return NativeJavaClass.constructSpecific(cx, scope,
+                                                     this, ctor, args);
         } else {
-                Scriptable topLevel = ScriptableObject.getTopLevelScope(this);
-                String msg = "";
-                try {
-                    // trying to construct an interface; use JavaAdapter to
-                    // construct a new class on the fly that implements this
-                    // interface.
-                    Object v = topLevel.get("JavaAdapter", topLevel);
-                    if (v != NOT_FOUND) {
-                        Function f = (Function) v;
-                        Object[] adapterArgs = { this, args[0] };
-                        return (Scriptable) f.construct(cx, topLevel,
-                                                        adapterArgs);
-                    }
-                } catch (Exception ex) {
-                    // fall through to error
-                    String m = ex.getMessage();
-                    if (m != null)
-                        msg = m;
+            Scriptable topLevel = ScriptableObject.getTopLevelScope(this);
+            String msg = "";
+            try {
+                // trying to construct an interface; use JavaAdapter to
+                // construct a new class on the fly that implements this
+                // interface.
+                Object v = topLevel.get("JavaAdapter", topLevel);
+                if (v != NOT_FOUND) {
+                    Function f = (Function) v;
+                    Object[] adapterArgs = { this, args[0] };
+                    return (Scriptable) f.construct(cx, topLevel,
+                                                    adapterArgs);
                 }
-                  throw Context.reportRuntimeError2(
-                      "msg.cant.instantiate", msg, classObject.getName());
+            } catch (Exception ex) {
+                // fall through to error
+                String m = ex.getMessage();
+                if (m != null)
+                    msg = m;
+            }
+            throw Context.reportRuntimeError2(
+                "msg.cant.instantiate", msg, classObject.getName());
         }
     }
 
@@ -268,22 +274,5 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         return false;
     }
 
-    private Hashtable fieldAndMethods;
-
-    // beard: need a scope for finding top-level prototypes.
-    private Scriptable parent;
-
-    public void writeExternal(ObjectOutput out) throws IOException {
-        super.writeExternal(out);
-        out.writeObject(parent);
-    }
-
-    public void readExternal(ObjectInput in)
-        throws IOException, ClassNotFoundException
-    {
-        super.readExternal(in);
-        parent = (Scriptable)in.readObject();
-        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject,
-                                                            true);
-    }
+    private Hashtable staticFieldAndMethods;
 }

@@ -57,16 +57,7 @@ import java.util.Enumeration;
 
 public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
 
-    public NativeJavaObject() {
-    }
-
-    public NativeJavaObject(Scriptable scope, Object javaObject,
-                            JavaMembers members)
-    {
-        this.parent = scope;
-        this.javaObject = javaObject;
-        this.members = members;
-    }
+    public NativeJavaObject() { }
 
     public NativeJavaObject(Scriptable scope, Object javaObject,
                             Class staticType)
@@ -74,10 +65,19 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
         this.parent = scope;
         this.javaObject = javaObject;
         this.staticType = staticType;
-        Class dynamicType = javaObject != null ? javaObject.getClass()
-            : staticType;
-        members = JavaMembers.lookupClass(scope, dynamicType, staticType);
-        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject, false);
+        initMembers();
+    }
+
+    protected void initMembers() {
+        Class dynamicType;
+        if (javaObject != null) {
+            dynamicType = javaObject.getClass();
+        } else {
+            dynamicType = staticType;
+        }
+        members = JavaMembers.lookupClass(parent, dynamicType, staticType);
+        fieldAndMethods
+            = members.getFieldAndMethodsObjects(this, javaObject, false);
     }
 
     public boolean has(String name, Scriptable start) {
@@ -130,7 +130,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
     }
 
     public Scriptable getPrototype() {
-        if (prototype == null && javaObject.getClass() == ScriptRuntime.StringClass) {
+        if (prototype == null && javaObject instanceof String) {
             return ScriptableObject.getClassPrototype(parent, "String");
         }
         return prototype;
@@ -858,28 +858,11 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
              value.toString(), NativeJavaMethod.javaSignature(type));
     }
 
-    /**
-     * The prototype of this object.
-     */
-    protected Scriptable prototype;
-
-    /**
-     * The parent scope of this object.
-     */
-    protected Scriptable parent;
-
-    protected Object javaObject;
-    protected JavaMembers members;
-    protected Class staticType;
-    private Hashtable fieldAndMethods;
-
     public void writeExternal(ObjectOutput out)
         throws IOException
     {
         out.writeObject(prototype);
         out.writeObject(parent);
-        out.writeObject(staticType != null ? staticType.getClass().getName()
-                                           : null);
 
         if (javaObject != null) {
             Class joClass = javaObject.getClass();
@@ -897,18 +880,27 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 out.writeObject(interfaceNames);
 
                 try {
-                    out.writeObject(joClass.getField("delegee").get(javaObject));
-                    out.writeObject(joClass.getField("self").get(javaObject));
+                    Object delegee
+                        = joClass.getField("delegee").get(javaObject);
+                    Object self
+                        = joClass.getField("self").get(javaObject);
+                    out.writeObject(delegee);
+                    out.writeObject(self);
                 } catch (IllegalAccessException e) {
                 } catch (NoSuchFieldException e) {
                 }
-
             } else {
                 out.writeBoolean(false);
                 out.writeObject(javaObject);
             }
         } else {
             out.writeBoolean(false);
+            out.writeObject(javaObject);
+        }
+
+        if (staticType != null) {
+            out.writeObject(staticType.getClass().getName());
+        } else {
             out.writeObject(null);
         }
     }
@@ -918,9 +910,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     {
         prototype = (Scriptable)in.readObject();
         parent = (Scriptable)in.readObject();
-
-        String className = (String)in.readObject();
-        staticType = className != null ? Class.forName(className) : null;
 
         if (in.readBoolean()) {
             Class superclass = Class.forName((String)in.readObject());
@@ -937,12 +926,30 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             javaObject = in.readObject();
         }
 
-        Class dynamicType = javaObject != null ? javaObject.getClass()
-                                               : staticType;
-        members = JavaMembers.lookupClass(parent, dynamicType, staticType);
-        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject,
-                                                            false);
+        String className = (String)in.readObject();
+        if (className != null) {
+            staticType = Class.forName(className);
+        } else {
+            staticType = null;
+        }
+
+        initMembers();
     }
 
-}
+    /**
+     * The prototype of this object.
+     */
+    protected Scriptable prototype;
 
+    /**
+     * The parent scope of this object.
+     */
+    protected Scriptable parent;
+
+    protected Object javaObject;
+
+    protected Class staticType;
+    protected JavaMembers members;
+    private Hashtable fieldAndMethods;
+
+}

@@ -217,7 +217,7 @@ public class NativeJavaPackage extends ScriptableObject {
             Class newClass = classLoader != null
                 ? classLoader.loadClass(newPackage)
                 : ScriptRuntime.loadClassName(newPackage);
-            newValue =  NativeJavaClass.wrap(getTopLevelScope(this), newClass);
+            newValue = new NativeJavaClass(getTopLevelScope(this), newClass);
             newValue.setParentScope(this);
             newValue.setPrototype(this.prototype);
         } catch (ClassNotFoundException ex) {
