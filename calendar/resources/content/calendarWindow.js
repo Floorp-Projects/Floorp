@@ -483,6 +483,8 @@ CalendarWindow.prototype.switchToView = function calWin_switchToView( newView )
 
 CalendarWindow.prototype.changeMouseOverInfo = function calWin_changeMouseOverInfo( calendarEvent, event )
 {
+    return;
+    // XXX fixme
    const toolTip = document.getElementById( "eventTooltip" );
 
    while( toolTip.hasChildNodes() )
