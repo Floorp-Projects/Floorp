@@ -797,9 +797,23 @@ nsWebShell::LoadURL(const nsString& aURLSpec,
                     nsIPostData* aPostData)
 {
   nsresult rv;
-
-  // Give web-shell-container right of refusal
+  PRInt32 colon, fSlash;
+  PRUnichar port;
   nsAutoString urlSpec(aURLSpec);
+
+  fSlash=urlSpec.Find('/');
+
+  // if no scheme (protocol) is found, assume http.
+  if ( ((colon=urlSpec.Find(':')) == -1) // no colon at all
+      || ( (fSlash > -1) && (colon > fSlash) ) // the only colon comes after the first slash
+      || ( (colon < urlSpec.Length()-1) // the first char after the first colon is a digit (i.e. a port)
+            && ((port=urlSpec.CharAt(colon+1)) < '9')
+            && (port > '0') )
+      ) {
+    nsString httpDef("http://");
+    urlSpec.Insert(httpDef, 0, 7);
+  }
+  // Give web-shell-container right of refusal
   if (nsnull != mContainer) {
     rv = mContainer->WillLoadURL(this, urlSpec);
     if (NS_OK != rv) {
