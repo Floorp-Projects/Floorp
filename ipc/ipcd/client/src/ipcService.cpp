@@ -37,7 +37,10 @@
 
 #include "ipcService.h"
 
-NS_IMPL_ISUPPORTS1(ipcService, ipcIService)
+// The ipcService implementation is nothing more than a thin XPCOM wrapper
+// around the ipcdclient.h API.
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(ipcService, ipcIService)
 
 NS_IMETHODIMP
 ipcService::GetID(PRUint32 *aID)

@@ -74,17 +74,24 @@
  * Initialization and Shutdown
  */
 
+// XXX limit these to the main thread, and call them from our module's ctor/dtor?
+
 /**
- * Ensures that this process is connected to the IPC daemon.  If it is already
- * connected, then this function call has no effect.  Each call to IPC_Init
- * should be balanced by a call to IPC_Shutdown.  A reference counter is used
- * to determine when to disconnect from the IPC daemon.
+ * Connects this process to the IPC daemon and initializes it for use as a
+ * client of the IPC daemon.  This function must be called once before any
+ * other methods defined in this file can be used.
+ *
+ * @returns NS_ERROR_ALREADY_INITIALIZED if IPC_Shutdown was not called since
+ * the last time IPC_Init was called.
  */
 IPC_METHOD IPC_Init();
 
 /**
- * Disconnects this process from the IPC daemon.  Must be called once for
- * every call to IPC_Init when the IPC connection is no longer needed.
+ * Disconnects this process from the IPC daemon.  After this function is
+ * called, no other methods in this file except for IPC_Init may be called.
+ *
+ * @returns NS_ERROR_NOT_INITIALIZED if IPC_Init has not been called or if
+ * IPC_Init did not return a success code.
  */
 IPC_METHOD IPC_Shutdown();
 
@@ -99,16 +106,40 @@ IPC_METHOD IPC_Shutdown();
  * whenever a message is sent to this target in this process.
  *
  * This function has three main effects:
- *  o  If the message target is already defined, then this function simply resets
- *     its message observer.
- *  o  If the message target is not already defined, then the IPC daemon will be
- *     notified of the existance of this message target.
+ *  o  If the message target is already defined, then this function simply
+ *     resets its message observer.
+ *  o  If the message target is not already defined, then the message target
+ *     is defined and the IPC daemon is notified of the existance of this
+ *     message target.
  *  o  If null is passed for the message observer, then the message target is
  *     removed, and the daemon is notified of the removal of this message target.
+ *
+ * If aOnCurrentThread is true, then notifications to the observer will occur
+ * on the current thread.  This means that there must be a nsIEventTarget
+ * associated with the calling thread.  If aOnCurrentThread is false, then
+ * notifications to the observer will occur on a background thread.  In which
+ * case, the observer must be threadsafe.
  */
 IPC_METHOD IPC_DefineTarget(
   const nsID          &aTarget,
-  ipcIMessageObserver *aObserver
+  ipcIMessageObserver *aObserver,
+  PRBool               aOnCurrentThread = PR_TRUE
+);
+
+/**
+ * Call this method to temporarily disable the message observer configured
+ * for a message target.
+ */
+IPC_METHOD IPC_DisableMessageObserver(
+  const nsID          &aTarget
+);
+
+/**
+ * Call this method to re-enable the message observer configured for a
+ * message target that was disabled by a call to IPC_DisableMessageObserver.
+ */
+IPC_METHOD IPC_EnableMessageObserver(
+  const nsID          &aTarget
 );
 
 /**
@@ -135,9 +166,9 @@ IPC_METHOD IPC_SendMessage(
  *     the IPC daemon.
  *  o  If aSenderID is IPC_SENDER_ANY, then this function waits for a message
  *     to be sent from any source.
- *  o  Otherwise, this function waits for a message to be sent by client with
- *     ID given by aSenderID.  If aSenderID does not identify a valid client,
- *     then this function will return an error.
+ *  o  Otherwise, this function waits for a message to be sent by the client
+ *     with ID given by aSenderID.  If aSenderID does not identify a valid
+ *     client, then this function will return an error.
  *
  * The aObserver parameter is interpreted as follows:
  *  o  If aObserver is null, then the default message observer for the target
@@ -157,7 +188,8 @@ IPC_METHOD IPC_SendMessage(
  * If aObserver's OnMessageAvailable function returns IPC_WAIT_NEXT_MESSAGE,
  * then the function will continue blocking until the next matching message
  * is received.  Bypassed messages will be dispatched to the default message
- * observer when the thread's event queue is processed.
+ * observer when the event queue, associated with the thread that called
+ * IPC_DefineTarget, is processed.
  *
  * This function runs the risk of hanging the calling thread indefinitely if
  * no matching message is ever received.
@@ -195,7 +227,7 @@ IPC_METHOD IPC_RemoveName(
 );
 
 /**
- * Adds client observer.
+ * Adds client observer.  Will be called on the main thread.
  */
 IPC_METHOD IPC_AddClientObserver(
   ipcIClientObserver *aObserver
@@ -224,5 +256,32 @@ IPC_METHOD IPC_ClientExists(
   PRUint32  aClientID,
   PRBool   *aResult
 );
+
+/*****************************************************************************/
+
+/**
+ * This class can be used to temporarily disable the default message observer
+ * defined for a particular message target.
+ */
+class ipcDisableMessageObserverForScope
+{
+public:
+  ipcDisableMessageObserverForScope(const nsID &aTarget)
+    : mTarget(aTarget)
+  {
+    IPC_DisableMessageObserver(mTarget);
+  }
+
+  ~ipcDisableMessageObserverForScope()
+  {
+    IPC_EnableMessageObserver(mTarget);
+  }
+
+private:
+  const nsID &mTarget;
+};
+
+#define IPC_DISABLE_MESSAGE_OBSERVER_FOR_SCOPE(_t) \
+  ipcDisableMessageObserverForScope ipc_dmo_for_scope##_t(_t)
 
 #endif /* ipcdclient_h__ */

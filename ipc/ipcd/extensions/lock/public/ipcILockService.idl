@@ -40,34 +40,25 @@
 interface ipcILockNotify;
 
 /**
- * This service provides named interprocess locking with either synchronous
- * or asynchronous waiting.
+ * This service provides named interprocess locking.
  */
 [scriptable, uuid(9f6dbe15-d851-4b00-912a-5ac0be88a409)]
 interface ipcILockService : nsISupports
 {
     /**
-     * Call this method to acquire a named lock.  Pass a notification handler
-     * to be notified asynchronously when the lock is acquired.  Otherwise,
-     * this function will block until the lock is acquired.
+     * Call this method to acquire a named interprocess lock.
      *
      * @param aLockName
      *        specifies the name of the lock
-     * @param aNotify
-     *        notification callback (NULL to synchronously acquire lock)
      * @param aWaitIfBusy
      *        wait for the lock to become available; otherwise, fail if lock
      *        is already held by some other process.
      */
     void acquireLock(in string aLockName,
-                     in ipcILockNotify aNotify,
                      in boolean aWaitIfBusy);
 
     /**
-     * Call this method to release a named lock.  This method can be called
-     * before OnAcquireLockComplete has been called, which will effectively
-     * cancel the request to acquire the named lock.  OnAcquireLockComplete
-     * will not be called after a call to ReleaseLock.
+     * Call this method to release a named lock.
      *
      * @param aLockName
      *        specifies the name of the lock

@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=4 sts=4 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -42,7 +43,14 @@
 #include "ipcList.h"
 #include "ipcdclient.h"
 #include "nsCOMPtr.h"
-#include "nsHashtable.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
+
+//-----------------------------------------------------------------------------
+
+typedef nsDataHashtableMT<nsCStringHashKey, nsresult*> ipcLockResultMap;
+
+//-----------------------------------------------------------------------------
 
 class ipcLockService : public ipcILockService
                      , public ipcIMessageObserver
@@ -52,20 +60,14 @@ public:
     NS_DECL_IPCILOCKSERVICE
     NS_DECL_IPCIMESSAGEOBSERVER
 
-    ipcLockService() : mSyncLockName(nsnull) {}
-    ~ipcLockService() { IPC_Shutdown(); }
     NS_HIDDEN_(nsresult) Init();
 
 private:
-    NS_HIDDEN_(void) NotifyComplete(const char *lockName, nsresult status);
-
-    // map from lockname to locknotify for pending notifications
-    nsSupportsHashtable  mPendingTable;
-
-    // if non-null, then this is the name of the lock we are trying to
-    // synchronously acquire.
-    const char          *mSyncLockName;
-    nsresult             mSyncLockStatus;
+    // maps lockname to the address of a nsresult, which will be assigned a
+    // value once a STATUS event is received.
+    ipcLockResultMap mResultMap;
 };
+
+//-----------------------------------------------------------------------------
 
 #endif // !ipcLockService_h__

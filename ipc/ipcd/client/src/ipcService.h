@@ -46,11 +46,6 @@ class ipcService : public ipcIService
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_IPCISERVICE
-
-    NS_HIDDEN_(nsresult) Init() { return IPC_Init(); }
-
-private:
-    ~ipcService() { IPC_Shutdown(); }
 };
 
 #endif // !defined( ipcService_h__ )

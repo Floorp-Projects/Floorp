@@ -97,8 +97,6 @@ tmTransactionService::~tmTransactionService() {
     if (qmap)
       delete qmap;
   }
-
-  IPC_Shutdown();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -116,11 +114,7 @@ tmTransactionService::Init(const nsACString & aNamespace) {
 
   nsresult rv;
   
-  rv = IPC_Init();
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = IPC_DefineTarget(kTransModuleID, this);
+  rv = IPC_DefineTarget(kTransModuleID, this, PR_TRUE);
   if (NS_FAILED(rv))
     return rv;
 
@@ -189,7 +183,7 @@ tmTransactionService::Attach(const nsACString & aDomainName,
 
   // acquire a lock if neccessary
   if (aLockingCall)
-    lockService->AcquireLock(joinedQueueName, nsnull, PR_TRUE);
+    lockService->AcquireLock(joinedQueueName, PR_TRUE);
   // XXX need to handle lock failures
 
   if (NS_SUCCEEDED(trans.Init(0,                             // no IPC client
@@ -224,7 +218,7 @@ tmTransactionService::Flush(const nsACString & aDomainName,
                             PRBool aLockingCall) {
   // acquire a lock if neccessary
   if (aLockingCall)
-    lockService->AcquireLock(GetJoinedQueueName(aDomainName), nsnull, PR_TRUE);
+    lockService->AcquireLock(GetJoinedQueueName(aDomainName), PR_TRUE);
 
   // synchronous flush
   nsresult rv = SendDetachOrFlush(GetQueueID(aDomainName), TM_FLUSH, PR_TRUE);
