@@ -438,7 +438,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 #if defined(CookieManagement)
 	else if(!PL_strcasecmp(which, "cookies"))
 	{
-//		NET_DisplayCookieInfoAsHTML(cur_entry->window_id);
+/*		NET_DisplayCookieInfoAsHTML(cur_entry->window_id); */
 		return(-1);
 	}
 #endif
