@@ -19,7 +19,7 @@
                 onclick="window.location.reload()" />
   <titledbutton class="borderless paneltitle" 
                 value="&sidebar.customize.label;" 
-				onclick="dialogWindow=customize();" />
+				onclick="var dialogWindow=customize();" />
  </box>
 </box>
 </window>
