@@ -608,9 +608,10 @@ cert_fips()
   modutil -dbdir ${PROFILEDIR} -fips true 2>&1 <<MODSCRIPT
 y
 MODSCRIPT
-  if [ "$?" -ne 0 ]; then
-    html_failed "<TR><TD>${CU_ACTION} ($?) " 
-    cert_log "ERROR: ${CU_ACTION} failed $?"
+  RET=$?
+  if [ "$RET" -ne 0 ]; then
+    html_failed "<TR><TD>${CU_ACTION} ($RET) " 
+    cert_log "ERROR: ${CU_ACTION} failed $RET"
   else
     html_passed "<TR><TD>${CU_ACTION}"
   fi
