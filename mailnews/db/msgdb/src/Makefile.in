@@ -33,7 +33,17 @@ CPPSRCS = \
 	nsDBFolderInfo.cpp\
 	nsMsgHdr.cpp\
 	nsMailDatabase.cpp\
-	mdbstubs.cpp \
+	$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+	-L$(DIST)/bin	\
+	-L$(DIST)/lib	\
+	$(NSPR_LIBS)	\
+	-lxpcom		\
+	-lraptorbase	\
+	-lrdfutil_s	\
+	-lmork		\
+	-lmsgbaseutil	\
 	$(NULL)
 
 
