@@ -27,9 +27,6 @@
 #include "nsBlockFrame.h"
 #include "nsHTMLIIDs.h"
 
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
-
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
 
@@ -65,7 +62,7 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     nsIStyleContextPtr kidSC;
 
     kid->GetStyleContext(aCX, kidSC.AssignRef());
-    nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(kStyleTextSID);
+    nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(eStyleStruct_Text);
     nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
     PRUint8 verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_BASELINE;
 
@@ -168,7 +165,7 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
       nsIStyleContextPtr kidSC;
 
       kid->GetStyleContext(aCX, kidSC.AssignRef());
-      nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(kStyleTextSID);
+      nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(eStyleStruct_Text);
       nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
 
       if (eStyleUnit_Percent == verticalAlignUnit) {
@@ -258,7 +255,7 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
 
     kid->GetStyleContext(aCX, kidSC.AssignRef());
     nsStylePosition* kidPosition = (nsStylePosition*)
-      kidSC->GetData(kStylePositionSID);
+      kidSC->GetData(eStyleStruct_Position);
     if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
       kid->GetOrigin(origin);
       // XXX Check the unit: could be auto or percent (not just length)
@@ -329,7 +326,7 @@ nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
   nsIStyleContext* sc = nsnull;
   aFrame->GetStyleContext(aPresContext, sc);
   if (nsnull != sc) {
-    nsStylePosition* pos = (nsStylePosition*) sc->GetData(kStylePositionSID);
+    nsStylePosition* pos = (nsStylePosition*) sc->GetData(eStyleStruct_Position);
     if (GetStyleDimension(aPresContext, aFrame, pos, pos->mWidth,
                           aStyleSize.width)) {
       rv |= NS_SIZE_HAS_WIDTH;

@@ -40,10 +40,6 @@
 // 4. number bullets correctly when dealing with <LI VALUE=x>
 // 5. size and render circle, square, disc bullets like nav4 does
 
-static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
-static NS_DEFINE_IID(kStyleListSID, NS_STYLELIST_SID);
-
 /**
  * A pseudo-frame class that reflows the list item bullet.
  */
@@ -98,11 +94,11 @@ NS_METHOD BulletFrame::Paint(nsIPresContext& aCX,
                              const nsRect& aDirtyRect)
 {
   nsStyleFont* myFont =
-    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
+    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
   nsStyleColor* myColor =
-    (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
   nsStyleList* myList =
-    (nsStyleList*)mStyleContext->GetData(kStyleListSID);
+    (nsStyleList*)mStyleContext->GetData(eStyleStruct_List);
   nsIFontMetrics* fm = aCX.GetMetricsFor(myFont->mFont);
 
   nscoord pad;
@@ -353,9 +349,9 @@ void BulletFrame::GetBulletSize(nsIPresContext* aCX,
                                 const nsSize& aMaxSize)
 {
   nsStyleList* myList =
-    (nsStyleList*)mStyleContext->GetData(kStyleListSID);
+    (nsStyleList*)mStyleContext->GetData(eStyleStruct_List);
   nsStyleFont* myFont =
-    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
+    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
 
   nscoord pad;
 
@@ -455,7 +451,7 @@ void nsListItemFrame::PlaceOutsideBullet(nsIFrame* aBullet,
 
   // Get bullet style (which is our style)
   nsStyleFont* font =
-    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
+    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
   nsIFontMetrics* fm = aCX->GetMetricsFor(font->mFont);
   nscoord kidAscent = fm->GetMaxAscent();
   nscoord dx = fm->GetHeight() / 2;             // from old layout engine
@@ -470,7 +466,7 @@ void nsListItemFrame::PlaceOutsideBullet(nsIFrame* aBullet,
     nsIContent* kidContent = firstKid->GetContent();
     nsIStyleContext* kidStyleContext = firstKid->GetStyleContext(aCX);
     nsStyleFont* kidFont =
-      (nsStyleFont*)kidStyleContext->GetData(kStyleFontSID);
+      (nsStyleFont*)kidStyleContext->GetData(eStyleStruct_Font);
     nsPoint origin;
     firstKid->GetOrigin(origin);
     // XXX this is wrong if the first kid was relative positioned!
@@ -580,7 +576,7 @@ NS_METHOD nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
 
   // Get bullet style (which is our style)
   nsStyleList* myList =
-    (nsStyleList*)mStyleContext->GetData(kStyleListSID);
+    (nsStyleList*)mStyleContext->GetData(eStyleStruct_List);
   if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
     insideBullet = PR_TRUE;
   }

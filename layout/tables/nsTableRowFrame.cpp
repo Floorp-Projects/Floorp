@@ -38,8 +38,6 @@ static const PRBool gsDebug1 = PR_FALSE;
 static const PRBool gsDebug2 = PR_FALSE;
 #endif
 
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-
 /* ----------- RowReflowState ---------- */
 
 struct RowReflowState {
@@ -280,7 +278,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     nsIStyleContext* kidSC;
     kidFrame->GetStyleContext(aPresContext, kidSC);
     nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-      kidSC->GetData(kStyleSpacingSID);
+      kidSC->GetData(eStyleStruct_Spacing);
     nsMargin kidMargin;
     kidSpacing->CalcMarginFor(kidFrame, kidMargin);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);
@@ -806,7 +804,7 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
     nsIStyleContext* kidStyleContext =
       aPresContext->ResolveStyleContextFor(cell, this);
     nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-      kidStyleContext->GetData(kStyleSpacingSID);
+      kidStyleContext->GetData(eStyleStruct_Spacing);
     nsMargin kidMargin;
     kidSpacing->CalcMarginFor(this, kidMargin);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);

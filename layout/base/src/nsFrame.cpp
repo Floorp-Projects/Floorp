@@ -60,9 +60,6 @@ PRInt32      fTrackerAddListMax = 0;
 PRBool  gTrackerDebug   = PR_FALSE;
 PRBool  gCalcDebug      = PR_FALSE;
 
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
-
 // [HACK] Foward Declarations
 void BuildContentList(nsIContent*aContent);
 PRBool IsInRange(nsIContent * aStartContent, nsIContent * aEndContent, nsIContent * aContent);
@@ -304,7 +301,7 @@ NS_METHOD nsFrame::DidSetStyleContext(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetStyleData(const nsIID& aSID, nsStyleStruct*& aStyleStruct) const
+NS_METHOD nsFrame::GetStyleData(nsStyleStructID aSID, nsStyleStruct*& aStyleStruct) const
 {
   NS_ASSERTION(mStyleContext!=nsnull,"null style context");
   if (mStyleContext) {
@@ -1272,13 +1269,13 @@ NS_METHOD nsFrame::GetWindow(nsIWidget*& aWindow) const
 NS_METHOD nsFrame::IsPercentageBase(PRBool& aBase) const
 {
   nsStylePosition* position;
-  GetStyleData(kStylePositionSID, (nsStyleStruct*&)position);
+  GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)position);
   if (position->mPosition != NS_STYLE_POSITION_NORMAL) {
     aBase = PR_TRUE;
   }
   else {
     nsStyleDisplay* display;
-    GetStyleData(kStyleDisplaySID, (nsStyleStruct*&)display);
+    GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
     if ((display->mDisplay == NS_STYLE_DISPLAY_BLOCK) || 
         (display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM)) {
       aBase = PR_TRUE;

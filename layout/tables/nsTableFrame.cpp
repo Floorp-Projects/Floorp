@@ -60,10 +60,6 @@ static const PRBool gsDebugMBP = PR_FALSE;
 #define max(x, y) ((x) > (y) ? (x) : (y))
 #endif
 
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
 NS_DEF_PTR(nsTableContent);
@@ -428,9 +424,9 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
 {
   // table paint code is concerned primarily with borders and bg color
   nsStyleColor* myColor =
-    (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
   nsStyleSpacing* mySpacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   NS_ASSERTION(nsnull != myColor, "null style color");
   NS_ASSERTION(nsnull != mySpacing, "null style spacing");
   if (nsnull!=mySpacing)
@@ -590,7 +586,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
 
   // Compute the insets (sum of border and padding)
   nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   nscoord topInset = borderPadding.top;
@@ -754,7 +750,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
   MoveOverflowToChildList();
 
   nsStyleSpacing* mySpacing = (nsStyleSpacing*)
-    mStyleContext->GetData(kStyleSpacingSID);
+    mStyleContext->GetData(eStyleStruct_Spacing);
   nsMargin myBorderPadding;
   mySpacing->CalcBorderPaddingFor(this, myBorderPadding);
 
@@ -994,7 +990,7 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
 
       kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
       nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-        kidSC->GetData(kStyleSpacingSID);
+        kidSC->GetData(eStyleStruct_Spacing);
       nsMargin kidMargin;
       kidSpacing->CalcMarginFor(kidFrame, kidMargin);
 
@@ -1524,7 +1520,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   PRInt32 totalFixedWidth = 0;
 
   nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
 
@@ -1532,7 +1528,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   // default case, get 100% of available space
   PRInt32 maxWidth;
   nsStylePosition* position =
-    (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
+    (nsStylePosition*)mStyleContext->GetData(eStyleStruct_Position);
   switch (position->mWidth.GetUnit()) {
   case eStyleUnit_Coord:
     maxWidth = position->mWidth.GetCoordValue();
@@ -1591,7 +1587,7 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
 
   // Compute the insets (sum of border and padding)
   nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
 
@@ -1625,7 +1621,7 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
   PRInt32 tableHeight = 0;
 
   nsStyleSpacing* spacing = (nsStyleSpacing*)
-    mStyleContext->GetData(kStyleSpacingSID);
+    mStyleContext->GetData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
 
@@ -2215,7 +2211,7 @@ nsresult nsTableFrame::NewFrame(nsIFrame** aInstancePtrResult,
         nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
         nsTableColPtr col = colData->GetCol();  // col: ADDREF++
         nsStyleMolecule* colStyle =
-          (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+          (nsStyleMolecule*)mStyleContext->GetData(eStyleStruct_Molecule);
         if (PR_TRUE==IsProportionalWidth(colStyle))
         {
           PRInt32 percentage = (100*mColumnWidths[colIndex]) / aMaxWidth;

@@ -30,8 +30,6 @@
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
 
-static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 
 class BRFrame : public nsFrame
 {
@@ -69,7 +67,7 @@ NS_METHOD BRFrame::Paint(nsIPresContext& aPresContext,
 {
   if (nsIFrame::GetShowFrameBorders()) {
     nsStyleColor* color = (nsStyleColor*)
-      mStyleContext->GetData(kStyleColorSID);
+      mStyleContext->GetData(eStyleStruct_Color);
     float p2t = aPresContext.GetPixelsToTwips();
     aRenderingContext.SetColor(color->mColor);
     aRenderingContext.FillRect(0, 0, nscoord(5 * p2t), mRect.height);
@@ -81,7 +79,7 @@ NS_METHOD BRFrame::GetReflowMetrics(nsIPresContext* aPresContext, nsReflowMetric
 {
   // We have no width, but we're the height of the default font
   nsStyleFont* font =
-    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
+    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
   nsIFontMetrics* fm = aPresContext->GetMetricsFor(font->mFont);
 
   aMetrics.width = 0;

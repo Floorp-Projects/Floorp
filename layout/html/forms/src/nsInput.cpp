@@ -37,8 +37,6 @@
 #include "nsStyleConsts.h"
 
 #define ALIGN_UNSET PRUint8(-1)
-static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
-static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
 // Note: we inherit a base class operator new that zeros our memory
 nsInput::nsInput(nsIAtom* aTag, nsIFormManager* aManager)
@@ -91,9 +89,9 @@ void nsInput::MapAttributesInto(nsIStyleContext* aContext,
 {
   if (ALIGN_UNSET != mAlign) {
     nsStyleDisplay* display = (nsStyleDisplay*)
-      aContext->GetData(kStyleDisplaySID);
+      aContext->GetData(eStyleStruct_Display);
     nsStyleText* text = (nsStyleText*)
-      aContext->GetData(kStyleTextSID);
+      aContext->GetData(eStyleStruct_Text);
     switch (mAlign) {
     case NS_STYLE_TEXT_ALIGN_LEFT:
       display->mFloats = NS_STYLE_FLOAT_LEFT;

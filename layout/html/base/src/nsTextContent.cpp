@@ -86,9 +86,6 @@ PRBool IsInRange(nsIContent * aStart, nsIContent * aEnd, nsIContent * aContent);
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXTCONTENT_IID);
 #endif
 
-static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
-static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kIScriptObjectOwner, NS_ISCRIPTOBJECTOWNER_IID);
 
 class TextFrame;
@@ -434,9 +431,9 @@ NS_METHOD TextFrame::Paint(nsIPresContext& aPresContext,
 
   // Get style data
   nsStyleColor* color =
-    (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
   nsStyleFont* font =
-    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
+    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
 
   // Set font and color
   aRenderingContext.SetColor(color->mColor);
@@ -554,11 +551,11 @@ void TextFrame::PaintRegularText(nsIPresContext& aPresContext,
 
         // Render the text
         aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
-        nsStyleColor* color = (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+        nsStyleColor* color = (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
         aRenderingContext.SetColor(color->mColor);
       } else {
         // Render the text
-        nsStyleColor* color = (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+        nsStyleColor* color = (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
         aRenderingContext.SetColor(color->mColor);
         aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
       }
@@ -631,11 +628,11 @@ void TextFrame::PaintRegularText(nsIPresContext& aPresContext,
 
         // Render the text
         aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
-        nsStyleColor* color = (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+        nsStyleColor* color = (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
         aRenderingContext.SetColor(color->mColor);
       } else {
         // Render the text
-        nsStyleColor* color = (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+        nsStyleColor* color = (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
         aRenderingContext.SetColor(color->mColor);
         aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
       }
@@ -721,7 +718,7 @@ NS_METHOD TextFrame::GetReflowMetrics(nsIPresContext* aCX,
   aMetrics.height = mRect.height;
 
   nsStyleFont* font =
-    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
+    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
   nsIFontMetrics* fm = aCX->GetMetricsFor(font->mFont);
   aMetrics.ascent = fm->GetMaxAscent();
   aMetrics.descent = fm->GetMaxDescent();
@@ -769,7 +766,7 @@ NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
   }
 
   nsStyleFont* font =
-    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
+    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
 
   // Initialize mFlags (without destroying the TEXT_BLINK_ON bit) bits
   // that are filled in by the reflow routines.
@@ -782,7 +779,7 @@ NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
   }
 
   nsStyleText* text =
-    (nsStyleText*)mStyleContext->GetData(kStyleTextSID);
+    (nsStyleText*)mStyleContext->GetData(eStyleStruct_Text);
 
   if (NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace) {
     // Use a specialized routine for pre-formatted text
@@ -1057,7 +1054,7 @@ NS_METHOD TextFrame::JustifyReflow(nsIPresContext* aCX, nscoord aAvailableSpace)
   }
 
   nsStyleFont* font =
-    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
+    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
   nsIFontMetrics* fm = aCX->GetMetricsFor(font->mFont);
   PRInt32 spaceWidth = fm->GetWidth(' ');
 
@@ -1323,8 +1320,8 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
   nsIStyleContext * styleContext;
 
   aNewFrame->GetStyleContext(&aCX, styleContext);
-  nsStyleFont *font      = (nsStyleFont*)styleContext->GetData(kStyleFontSID);
-  nsStyleText *styleText = (nsStyleText*)styleContext->GetData(kStyleTextSID);
+  nsStyleFont *font      = (nsStyleFont*)styleContext->GetData(eStyleStruct_Font);
+  nsStyleText *styleText = (nsStyleText*)styleContext->GetData(eStyleStruct_Text);
   NS_RELEASE(styleContext);
 
   nsIFontMetrics* fm   = aCX.GetMetricsFor(font->mFont);

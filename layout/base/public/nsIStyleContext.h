@@ -25,43 +25,12 @@
 #include "nsMargin.h"
 #include "nsFont.h"
 #include "nsStyleCoord.h"
+#include "nsStyleStruct.h"
 
 class nsIFrame;
 class nsIPresContext;
 class nsIContent;
 class nsISupportsArray;
-
-// SID e31e1bc0-ca9b-11d1-8031-006008159b5a
-#define NS_STYLEFONT_SID   \
-{0xe31e1bc0, 0xca9b, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
-// SID 05953860-ca9c-11d1-8031-006008159b5a
-#define NS_STYLECOLOR_SID   \
-{0x05953860, 0xca9c, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
-// SID 0ba04d20-d89e-11d1-8031-006008159b5a
-#define NS_STYLESPACING_SID   \
-{0x0ba04d20, 0xd89e, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
-// SID 4fb83b60-cf27-11d1-8031-006008159b5a
-#define NS_STYLELIST_SID   \
-{0x4fb83b60, 0xcf27, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
-// SID AD5993F0-DA2B-11d1-80B9-00805F8A274D
-#define NS_STYLEPOSITION_SID  \
-{0xad5993f0, 0xda2b, 0x11d1, {0x80, 0xb9, 0x00, 0x80, 0x5f, 0x8a, 0x27, 0x4d}}
-
-// SID 3C29D620-DAF5-11D1-932B-00805F8ADD32
-#define NS_STYLETEXT_SID  \
-{0x3c29d620, 0xdaf5, 0x11d1, {0x93, 0x2b, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
-// SID 3C29D621-DAF5-11D1-932B-00805F8ADD32
-#define NS_STYLEDISPLAY_SID  \
-{0x3c29d621, 0xdaf5, 0x11d1, {0x93, 0x2b, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
-// SID 8a9d1f50-e094-11d1-8031-006008159b5a
-#define NS_STYLETABLE_SID  \
-{0x8a9d1f50, 0xe094, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
 
 // Indicies into border/padding/margin arrays
@@ -71,9 +40,6 @@ class nsISupportsArray;
 #define NS_SIDE_LEFT    3
 
 // The lifetime of these objects is managed by the nsIStyleContext.
-
-struct nsStyleStruct {
-};
 
 struct nsStyleFont : public nsStyleStruct {
   nsFont  mFont;
@@ -210,7 +176,7 @@ public:
   virtual PRInt32 GetStyleRuleCount(void) const = 0;
 
   // get a style data struct by ID, may return null 
-  virtual nsStyleStruct* GetData(const nsIID& aSID) = 0;
+  virtual nsStyleStruct* GetData(nsStyleStructID aSID) = 0;
 
   // call if you change style data after creation
   virtual void    RecalcAutomaticData(nsIPresContext* aPresContext) = 0;

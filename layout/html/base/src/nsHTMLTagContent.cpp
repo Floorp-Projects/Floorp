@@ -31,10 +31,6 @@ static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwner, NS_ISCRIPTOBJECTOWNER_IID);
 
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-
 nsHTMLTagContent::nsHTMLTagContent()
 {
 }
@@ -682,7 +678,7 @@ nsHTMLTagContent::MapImagePropertiesInto(nsIStyleContext* aContext,
 
     float p2t = aPresContext->GetPixelsToTwips();
     nsStylePosition* pos = (nsStylePosition*)
-      aContext->GetData(kStylePositionSID);
+      aContext->GetData(eStyleStruct_Position);
 
     // width: value
     GetAttribute(nsHTMLAtoms::width, value);
@@ -731,7 +727,7 @@ nsHTMLTagContent::MapImageBorderInto(nsIStyleContext* aContext,
     // Fixup border-padding sums: subtract out the old size and then
     // add in the new size.
     nsStyleSpacing* spacing = (nsStyleSpacing*)
-      aContext->GetData(kStyleSpacingSID);
+      aContext->GetData(eStyleStruct_Spacing);
     nsStyleCoord coord;
     coord.SetCoordValue(twips);
     spacing->mBorder.SetTop(coord);
@@ -754,7 +750,7 @@ nsHTMLTagContent::MapImageBorderInto(nsIStyleContext* aContext,
     else {
       // Color is inherited from "color"
       nsStyleColor* styleColor = (nsStyleColor*)
-        aContext->GetData(kStyleColorSID);
+        aContext->GetData(eStyleStruct_Color);
       nscolor color = styleColor->mColor;
       spacing->mBorderColor[0] = color;
       spacing->mBorderColor[1] = color;

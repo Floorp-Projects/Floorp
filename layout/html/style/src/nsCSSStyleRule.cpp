@@ -33,14 +33,6 @@ static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
-static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
-static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
-static NS_DEFINE_IID(kStyleListSID, NS_STYLELIST_SID);
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
-
 static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
 static NS_DEFINE_IID(kCSSColorSID, NS_CSS_COLOR_SID);
 static NS_DEFINE_IID(kCSSTextSID, NS_CSS_TEXT_SID);
@@ -518,7 +510,7 @@ PRBool CSSStyleRuleImpl::SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord
 void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (nsnull != mDeclaration) {
-    nsStyleFont*  font = (nsStyleFont*)aContext->GetData(kStyleFontSID);
+    nsStyleFont*  font = (nsStyleFont*)aContext->GetData(eStyleStruct_Font);
 
     nsCSSFont*  ourFont;
     if (NS_OK == mDeclaration->GetData(kCSSFontSID, (nsCSSStruct**)&ourFont)) {
@@ -526,7 +518,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         nsStyleFont* parentFont = font;
         nsIStyleContext* parentContext = aContext->GetParent();
         if (nsnull != parentContext) {
-          parentFont = (nsStyleFont*)parentContext->GetData(kStyleFontSID);
+          parentFont = (nsStyleFont*)parentContext->GetData(eStyleStruct_Font);
         }
 
         // font-family: string list
@@ -628,7 +620,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
     if (NS_OK == mDeclaration->GetData(kCSSTextSID, (nsCSSStruct**)&ourText)) {
       if (nsnull != ourText) {
         // Get our text style and our parent's text style
-        nsStyleText* text = (nsStyleText*) aContext->GetData(kStyleTextSID);
+        nsStyleText* text = (nsStyleText*) aContext->GetData(eStyleStruct_Text);
 
         // letter-spacing
         SetCoord(ourText->mLetterSpacing, text->mLetterSpacing, SETCOORD_LH | SETCOORD_NORMAL, 
@@ -678,7 +670,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
       if (nsnull != ourDisplay) {
         // Get our style and our parent's style
         nsStyleDisplay* display = (nsStyleDisplay*)
-          aContext->GetData(kStyleDisplaySID);
+          aContext->GetData(eStyleStruct_Display);
 
         // display
         if (ourDisplay->mDisplay.GetUnit() == eCSSUnit_Enumerated) {
@@ -706,7 +698,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
     nsCSSColor*  ourColor;
     if (NS_OK == mDeclaration->GetData(kCSSColorSID, (nsCSSStruct**)&ourColor)) {
       if (nsnull != ourColor) {
-        nsStyleColor* color = (nsStyleColor*)aContext->GetData(kStyleColorSID);
+        nsStyleColor* color = (nsStyleColor*)aContext->GetData(eStyleStruct_Color);
 
         // color: color
         if (ourColor->mColor.GetUnit() == eCSSUnit_Color) {
@@ -790,7 +782,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
     if (NS_OK == mDeclaration->GetData(kCSSMarginSID, (nsCSSStruct**)&ourMargin)) {
       if (nsnull != ourMargin) {
         nsStyleSpacing* spacing = (nsStyleSpacing*)
-          aContext->GetData(kStyleSpacingSID);
+          aContext->GetData(eStyleStruct_Spacing);
 
         // margin: length, percent, auto, inherit
         if (nsnull != ourMargin->mMargin) {
@@ -861,7 +853,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         }
 
         // border-color
-        nsStyleColor* color = (nsStyleColor*)aContext->GetData(kStyleColorSID);
+        nsStyleColor* color = (nsStyleColor*)aContext->GetData(eStyleStruct_Color);
         if (nsnull != ourMargin->mColor) {
           nsCSSRect* ourColor = ourMargin->mColor;
           if (ourColor->mTop.GetUnit() == eCSSUnit_Color) {
@@ -883,7 +875,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
     nsCSSPosition*  ourPosition;
     if (NS_OK == mDeclaration->GetData(kCSSPositionSID, (nsCSSStruct**)&ourPosition)) {
       if (nsnull != ourPosition) {
-        nsStylePosition* position = (nsStylePosition*)aContext->GetData(kStylePositionSID);
+        nsStylePosition* position = (nsStylePosition*)aContext->GetData(eStyleStruct_Position);
 
         // position: normal, enum, inherit
         if (ourPosition->mPosition.GetUnit() == eCSSUnit_Normal) {
@@ -896,7 +888,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           // explicit inheritance
           nsIStyleContext* parentContext = aContext->GetParent();
           if (nsnull != parentContext) {
-            nsStylePosition* parentPosition = (nsStylePosition*)parentContext->GetData(kStylePositionSID);
+            nsStylePosition* parentPosition = (nsStylePosition*)parentContext->GetData(eStyleStruct_Position);
             position->mPosition = parentPosition->mPosition;
           }
         }
@@ -968,7 +960,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
     nsCSSList* ourList;
     if (NS_OK == mDeclaration->GetData(kCSSListSID, (nsCSSStruct**)&ourList)) {
       if (nsnull != ourList) {
-        nsStyleList* list = (nsStyleList*)aContext->GetData(kStyleListSID);
+        nsStyleList* list = (nsStyleList*)aContext->GetData(eStyleStruct_List);
 
         // list-style-type: enum
         if (ourList->mType.GetUnit() == eCSSUnit_Enumerated) {

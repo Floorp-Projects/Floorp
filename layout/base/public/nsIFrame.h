@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsSize.h"
 #include "nsGUIEvent.h"
+#include "nsStyleStruct.h"
 
 class nsIContent;
 class nsIPresContext;
@@ -168,7 +169,7 @@ public:
   /**
    * Get the style data associated with this frame
    */
-  NS_IMETHOD  GetStyleData(const nsIID& aSID, nsStyleStruct*& aStyleStruct) const = 0;
+  NS_IMETHOD  GetStyleData(nsStyleStructID aSID, nsStyleStruct*& aStyleStruct) const = 0;
 
   /**
    * Accessor functions for geometric and content parent.

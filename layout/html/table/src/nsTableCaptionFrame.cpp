@@ -33,10 +33,6 @@ static PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebug = PR_FALSE;
 #endif
 
-static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
-static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
-
 /**
   */
 nsTableCaptionFrame::nsTableCaptionFrame(nsIContent* aContent,
@@ -103,9 +99,9 @@ NS_METHOD nsTableCaptionFrame::Paint(nsIPresContext& aPresContext,
                                      const nsRect& aDirtyRect)
 {
   nsStyleSpacing* mySpacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsStyleColor* myColor =
-    (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
+    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
   NS_ASSERTION(nsnull!=myColor, "bad style color");
   NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
   if (nsnull==mySpacing) return NS_OK;
@@ -133,9 +129,9 @@ void  nsTableCaptionFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
 {
   
   nsStyleText* textStyle =
-    (nsStyleText*)mStyleContext->GetData(kStyleTextSID);
+    (nsStyleText*)mStyleContext->GetData(eStyleStruct_Text);
   nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   
@@ -212,7 +208,7 @@ NS_METHOD nsTableCaptionFrame::ResizeReflow(nsIPresContext* aPresContext,
 
   // Compute the insets (sum of border and padding)
   nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
   nsMargin  borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   nscoord topInset = borderPadding.top;

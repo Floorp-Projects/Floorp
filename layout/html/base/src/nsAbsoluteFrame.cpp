@@ -28,7 +28,6 @@
 #include "nsStyleConsts.h"
 #include "nsViewsCID.h"
 
-static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 NS_DEF_PTR(nsIStyleContext);
@@ -144,7 +143,7 @@ void AbsoluteFrame::ComputeViewBounds(const nsRect&    aContainingInnerRect,
 {
   // Compute the offset and size of the view based on the position properties
   // and the inner rect of the containing block
-  nsStylePosition*  position = (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
+  nsStylePosition*  position = (nsStylePosition*)mStyleContext->GetData(eStyleStruct_Position);
 
   // x-offset
   if (eStyleUnit_Auto == position->mLeftOffset.GetUnit()) {
@@ -219,7 +218,7 @@ nsIFrame* AbsoluteFrame::GetContainingBlock()
     nsStylePosition* position;
 
     // Get the style data
-    result->GetStyleData(kStylePositionSID, (nsStyleStruct*&)position);
+    result->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)position);
 
     if (position->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
       break;
@@ -282,7 +281,7 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
     containingRect.x = containingRect.y = 0;
 
     // Use the position properties to determine the offset and size
-    nsStylePosition*  position = (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
+    nsStylePosition*  position = (nsStylePosition*)mStyleContext->GetData(eStyleStruct_Position);
     nsRect            rect;
 
     ComputeViewBounds(containingRect, position, rect);
