@@ -15,6 +15,13 @@
  *  03.10.2000: Fixed off-by-1 error in StripChar() (rickg)
  *  03.20.2000: Ran regressions by comparing operations against original nsString (rickg)
  *  
+ * To Do:
+ *
+ *  1. Use shared buffer for empty strings
+ *  2. Test refcounting
+ *  3. Implement copy semantics between autostring and nsCSubsumeString to ensure
+ *     that actual character copying occurs if necessary.
+ *
  *************************************************************************************/
 
 #ifndef NS_BUFFERMANAGER_
@@ -198,14 +205,15 @@ inline nsresult SVRealloc(nsStringValueImpl<CharType>&aDest,PRUint32 aCount){
   nsresult result=SVAlloc(temp,aCount);
   if(NS_SUCCEEDED(result)) {
 
-    if(0<aDest.mLength) {
-      memcpy(temp.mBuffer,aDest.mBuffer,aDest.mLength*sizeof(CharType));
-      temp.mLength=aDest.mLength;
-      temp.mBuffer[temp.mLength]=0;
+    if(aDest.mBuffer) {
+      if(0<aDest.mLength) {
+        memcpy(temp.mBuffer,aDest.mBuffer,aDest.mLength*sizeof(CharType));
+        temp.mLength=aDest.mLength;        
+      }
+      SVFree(aDest);
     }
-
-    SVFree(aDest);
     aDest=temp;
+    aDest.mBuffer[aDest.mLength]=0;
   }
   return result;
 }

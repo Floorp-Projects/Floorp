@@ -22,10 +22,29 @@
 
 #include "nsStringValue.h"
 #include "nsString2.h"
+#include <stddef.h>
+
 
 class NS_COM nsSubsumeCStr;
 
-typedef nsStackBuffer<char> nsCStackBuffer;
+/***************************************************************************
+ *
+ *  This is the templatized base class from which stringvalues are derived. (rickg)
+ *
+ ***************************************************************************/
+struct CBufDescriptor {
+  CBufDescriptor(char *aBuffer,PRUint32 aLength,PRUint32 aCapacity,PRBool aOwnsBuffer) {
+    mBuffer=aBuffer;
+    mLength=aLength;
+    mCapacity=aCapacity-1;
+    mOwnsBuffer=aOwnsBuffer;
+  }
+  char*     mBuffer;
+  PRUint32  mLength;
+  PRUint32  mCapacity;
+  PRBool    mOwnsBuffer;
+};
+
 
 class NS_COM nsCString {
 public:
@@ -57,11 +76,11 @@ public:
     //call this version for stack-based string buffers...
   nsCString(nsSubsumeCStr &aSubsumeString);
 
+    //call this version for cbufdescriptor string buffers...
+  nsCString(const CBufDescriptor &aSubsumeString);
+
     //call this version for all other ABT versions of readable strings
   nsCString(const nsAReadableString &aString) ;
-
-    //call this version for stack-based string buffers...
-  nsCString(const nsCStackBuffer &aBuffer);
 
   virtual ~nsCString();
 
@@ -86,7 +105,7 @@ public:
   nsCString& operator=(const char* aString);
   nsCString& operator=(const PRUnichar* aString);
   nsCString& operator=(const char aChar);
-  nsCString& operator=(const nsSubsumeCStr &aSubsumeString);
+  nsCString& operator=(const nsSubsumeCStr &aBufDescriptor);
 
   //******************************************
   // Here are the accessor methods...
@@ -156,15 +175,10 @@ public:
    *  @return this
    */
   virtual nsresult Assign(const nsCString& aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
-
   virtual nsresult Assign(const nsString& aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
-
   virtual nsresult Assign(const char* aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
-
   virtual nsresult Assign(const PRUnichar* aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
-
   virtual nsresult Assign(const nsAReadableString &aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
-
   virtual nsresult Assign(char aChar);
 
   nsCString& SetString(const char* aString,PRInt32 aLength=-1) {Assign(aString, aLength); return *this;}
@@ -185,21 +199,13 @@ public:
    *  @return this
    */
   virtual nsresult Append(const nsCString &aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
-
   virtual nsresult Append(const nsString &aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
-
   virtual nsresult Append(const char* aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
-
   virtual nsresult Append(const PRUnichar* aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
-
   virtual nsresult Append(const char aChar) ;
-
   virtual nsresult Append(const PRUnichar aChar);
-
   virtual nsresult Append(const nsAReadableString &aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
-
   virtual nsresult Append(PRInt32 anInteger,PRInt32 aRadix=10);
-
   virtual nsresult Append(float aFloat);
 
 
@@ -250,9 +256,7 @@ public:
    *  @return this
    */
   nsresult Insert(const nsCString& aString,PRUint32 anOffset=0,PRInt32 aCount=-1);
-
   nsresult Insert(const char* aString,PRUint32 anOffset=0,PRInt32 aLength=-1);
-
   nsresult Insert(char aChar,PRUint32 anOffset=0);
 
   
@@ -266,11 +270,8 @@ public:
    *  @return  this
    */
   nsresult ReplaceSubstring( const nsCString& aTarget,const nsCString& aNewValue);
-
   nsresult ReplaceChar(char anOldChar, char aNewChar);
-
   nsresult ReplaceChar(const char* aSet,char aNewPRUnichar);
-
   nsresult ReplaceSubstring(const char* aTarget,const char* aNewValue);
 
 
@@ -288,11 +289,8 @@ public:
    *  @return *this 
    */
   nsresult StripChar(char aChar,PRUint32 anOffset=0);
-
   nsresult StripChar(PRInt32 anInt,PRUint32 anOffset=0);
-
   nsresult StripChars(const char* aSet,PRInt32 aLength=-1);
-
   nsresult StripWhitespace();
 
     //**************************************************
@@ -316,10 +314,7 @@ public:
   nsCString& operator+=(const PRUnichar aChar);
   nsCString& operator+=(const char aChar);
   nsCString& operator+=(const int anInt);
-  nsCString& operator+=(const nsSubsumeCStr &aSubsumeString) {
-    //NOT IMPLEMENTED
-    return *this;
-  }
+  nsCString& operator+=(const nsSubsumeCStr &aBuffer);
 
 
   /***********************************
@@ -456,35 +451,19 @@ protected:
 
   friend class nsString;
   friend class nsSubsumeCStr;
+  friend class nsCAutoString;
 };
 
 /*****************************************************************
   Now we declare the nsSubsumeCStr class
  *****************************************************************/
 
-class NS_COM nsSubsumeCStr  {
+class NS_COM nsSubsumeCStr : public nsCString {
 public:
-
-  nsSubsumeCStr();
-
-  nsSubsumeCStr(const nsCString& aCString);
-
-  nsSubsumeCStr(const nsSubsumeCStr& aSubsumeString);
-
-  nsSubsumeCStr(const nsStringValueImpl<char> &aLHS,const nsSubsumeCStr& aSubsumeString);
-
-  nsSubsumeCStr(const nsStringValueImpl<char> &aLHS,const nsStringValueImpl<char> &aSubsumeString);
-
+  nsSubsumeCStr(nsCString& aString);
   nsSubsumeCStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
 
-  nsSubsumeCStr operator+(const nsSubsumeCStr &aSubsumeString);
-
-  nsSubsumeCStr operator+(const nsCString &aCString);
-
-  operator const char*() {return 0;}
-
-  nsStringValueImpl<char> mLHS;
-  nsStringValueImpl<char> mRHS;
+  PRBool  mOwnsBuffer;
 };
 
 
@@ -515,11 +494,9 @@ public:
     //call this version for all other ABT versions of readable strings
   nsCAutoString(const nsAReadableString &aString);
 
-  nsCAutoString(const nsCStackBuffer &aBuffer) ;
+  nsCAutoString(const CBufDescriptor&aBuffer) ;
 
-  nsCAutoString(const CBufDescriptor& aBuffer) ;
-
-  nsCAutoString(const nsSubsumeCStr& aCSubsumeStringX) ;
+  nsCAutoString(const nsSubsumeCStr& aSubsumeString) ;
 
   virtual ~nsCAutoString() ;
 

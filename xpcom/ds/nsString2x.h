@@ -22,11 +22,28 @@
 
 #include "nsStringValue.h"
 
-typedef nsStackBuffer<PRUnichar> nsUStackBuffer;
-
 
 class NS_COM nsCString;
 class NS_COM nsSubsumeStr;
+
+
+/***************************************************************************
+ *
+ *  This is the templatized base class from which stringvalues are derived. (rickg)
+ *
+ ***************************************************************************/
+struct UBufDescriptor {
+  UBufDescriptor(PRUnichar *aBuffer,PRUint32 aLength,PRUint32 aCapacity,PRBool aOwnsBuffer) {
+    mBuffer=aBuffer;
+    mLength=aLength;
+    mCapacity=aCapacity-1;
+    mOwnsBuffer=aOwnsBuffer;
+  }
+  PRUnichar*  mBuffer;
+  PRUint32    mLength;
+  PRUint32    mCapacity;
+  PRBool      mOwnsBuffer;
+};
 
 
 class NS_COM nsString {
@@ -65,8 +82,6 @@ public:
     //call this version for all other ABT versions of readable strings
   nsString(const nsAReadableString &aString) ;
 
-    //call this version for stack-based string buffers...
-  nsString(const nsUStackBuffer &aBuffer);
 
   virtual ~nsString();
 
@@ -489,37 +504,13 @@ protected:
 
 
 
-/*****************************************************************
-  Now we declare the nsSubsumeStr class
- *****************************************************************/
-
-class NS_COM nsSubsumeStr  {
+class NS_COM nsSubsumeStr : public nsString {
 public:
-
-  nsSubsumeStr();
-
-  nsSubsumeStr(const nsString& aString);
-
-  nsSubsumeStr(const nsSubsumeStr& aSubsumeString);
-
-  nsSubsumeStr(const nsStringValueImpl<PRUnichar> &aLHS,const nsSubsumeStr& aSubsumeString);
-
-  nsSubsumeStr(const nsStringValueImpl<PRUnichar> &aLHS,const nsStringValueImpl<PRUnichar> &aSubsumeString);
-
+  nsSubsumeStr(nsString& aString);
   nsSubsumeStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
 
-  nsSubsumeStr operator+(const nsSubsumeStr &aSubsumeString);
-
-  nsSubsumeStr operator+(const nsString &aString);
-
-  operator const PRUnichar*() {return 0;}
-
-  int Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
-
-  nsStringValueImpl<PRUnichar> mLHS;
-  nsStringValueImpl<PRUnichar> mRHS;
+  PRBool mOwnsBuffer;
 };
-
 
 
 /*****************************************************************
@@ -554,9 +545,7 @@ public:
     //call this version for all other ABT versions of readable strings
   nsAutoString(const nsAReadableString &aString);
 
-  nsAutoString(const nsUStackBuffer &aBuffer) ;
-
-  nsAutoString(const CBufDescriptor& aBuffer) ;
+  nsAutoString(const UBufDescriptor &aBuffer) ;
 
   nsAutoString(const nsSubsumeStr& aSubsumeStringX) ;
 
