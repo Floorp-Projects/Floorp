@@ -50,6 +50,7 @@
 #include "nsCSecurityContext.h"
 #include "nsIScriptContext.h"
 #include "jvmmgr.h"
+#include "jsjava.h"
 
 // For GetOrigin()
 
@@ -87,7 +88,12 @@ nsCSecurityContext::Implies(const char* target, const char* action, PRBool *bAll
         // |m_HasUniversalBrowserReadCapability| into the out parameter
         // once Java's origin checking code is fixed.
         // See bug 146458 for details.
-        *bAllowedAccess = PR_TRUE;
+        if (JSJ_IsJSCallApplet()) {
+            *bAllowedAccess = PR_TRUE;
+        }
+        else {
+            *bAllowedAccess = m_HasUniversalBrowserReadCapability;
+        }
     } else if(!nsCRT::strcmp(target,"UniversalJavaPermission")) {
         *bAllowedAccess = m_HasUniversalJavaCapability;
     } else {

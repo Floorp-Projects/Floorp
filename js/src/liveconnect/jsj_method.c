@@ -1375,9 +1375,9 @@ static JSBool
 invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
                    jobject java_class_or_instance,
                    JavaClassDescriptor *class_descriptor,
-           JavaMethodSpec *method,
+                   JavaMethodSpec *method,
                    JSBool is_static_method,
-           jsval *argv, jsval *vp)
+                   jsval *argv, jsval *vp)
 {
     jvalue java_value;
     jvalue *jargv;
@@ -1802,6 +1802,10 @@ jsj_JavaInstanceMethodWrapper(JSContext *cx, JSObject *obj,
     jsj_env = jsj_EnterJava(cx, &jEnv);
     if (!jEnv)
         return JS_FALSE;
+
+    if (jaApplet && (*jEnv)->IsInstanceOf(jEnv, java_obj, jaApplet)) {
+        JSIsCallingApplet = JS_TRUE;
+    }
 
     /* Try to find an instance method with the given name first */
     member_descriptor = jsj_LookupJavaMemberDescriptorById(cx, jEnv, class_descriptor, id);

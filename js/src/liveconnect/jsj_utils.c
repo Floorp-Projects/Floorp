@@ -470,7 +470,10 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp)
         return NULL;
     }
 
-    JS_ASSERT((jsj_env->recursion_depth == 0) || (jsj_env->cx == cx));
+    /* simultaneous calls from different JSContext are not allowed */
+    if ((jsj_env->recursion_depth > 0) && (jsj_env->cx != cx))
+        return NULL;
+
     jsj_env->recursion_depth++;
 
     /* bug #60018:  prevent dangling pointer to JSContext */
@@ -485,6 +488,7 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp)
 extern void
 jsj_ExitJava(JSJavaThreadState *jsj_env)
 {
+    JSIsCallingApplet = JS_FALSE;
     if (jsj_env) {
         JS_ASSERT(jsj_env->recursion_depth > 0);
         if (--jsj_env->recursion_depth == 0)
