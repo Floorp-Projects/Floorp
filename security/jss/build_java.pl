@@ -11,7 +11,6 @@ provider\.new/
 org/mozilla/jss/pkcs11/PK11DSAPrivateKey\.java
 org/mozilla/jss/provider/java/security/KeyFactorySpi1_4\.java
 org/mozilla/jss/pkix/cert/X509Certificate\.java
-org/mozilla/jss/provider/java/security/.*Cipher.*
 samples/
 );
 
@@ -93,10 +92,12 @@ sub setup_vars {
     grab_cmdline_vars($argv);
     dump_cmdline_vars();
 
+    $ENV{JAVA_HOME} or die "Must specify JAVA_HOME environment variable";
     $javac = "$ENV{JAVA_HOME}/bin/javac";
     $javah = "$ENV{JAVA_HOME}/bin/javah";
 
     $dist_dir = $cmdline_vars{SOURCE_PREFIX};
+    $ENV{JCE_JAR} or die "Must specify JCE_JAR environment variable";
     $jce_jar = $ENV{JCE_JAR};
 
     $class_release_dir = $cmdline_vars{SOURCE_RELEASE_PREFIX};
