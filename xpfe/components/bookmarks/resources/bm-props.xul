@@ -77,7 +77,7 @@
               </row>
               <row id="locationrow" align="center">
                 <label value="&bookmarks.location.label;" control="url"/>
-          			<textbox id="url" />
+          			<textbox id="url" class="uri-element" />
               </row>
               <row id="shortcutrow" align="center">
                 <label value="&bookmarks.shortcut.label;" control="shortcut"/>
