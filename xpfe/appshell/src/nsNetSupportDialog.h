@@ -30,7 +30,7 @@ class nsNetSupportDialog  : public nsINetSupportDialogService, public nsIXULWind
 {
 public:
 			nsNetSupportDialog();
-			~nsNetSupportDialog();
+			virtual ~nsNetSupportDialog();
 	NS_IMETHOD 	Alert( const nsString &aText );
   	NS_IMETHOD 	Confirm( const nsString &aText,PRInt32* returnValue );
 

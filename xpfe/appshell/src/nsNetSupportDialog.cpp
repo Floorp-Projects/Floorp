@@ -31,7 +31,7 @@
 #include "nsAppShellCIDs.h"
 #include "nsIURL.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIWebShellWindow.H"
+#include "nsIWebShellWindow.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIURL.h"
 
