@@ -60,7 +60,6 @@ pass_1(TreeState *state)
         if (g_hash_table_size(state->includes)) {
             fputc('\n', state->file);
             g_hash_table_foreach(state->includes, write_header, state);
-            fputc('\n', state->file);
         }
     } else {
         fprintf(state->file, "\n#endif /* __gen_%s_h__ */\n", define);
@@ -69,7 +68,7 @@ pass_1(TreeState *state)
 }
 
 static gboolean
-output_classname_iid_define(FILE *file, const char *className)
+write_classname_iid_define(FILE *file, const char *className)
 {
     const char *iidName;
     if (className[0] == 'n' && className[1] == 's') {
@@ -101,10 +100,10 @@ interface(TreeState *state)
             /* XXX report error */
             return FALSE;
         fprintf(state->file, "\n/* {%s} */\n#define ", iid);
-        if (!output_classname_iid_define(state->file, className))
+        if (!write_classname_iid_define(state->file, className))
             return FALSE;
         fprintf(state->file, "_STR \"%s\"\n#define ", iid);
-        if (!output_classname_iid_define(state->file, className))
+        if (!write_classname_iid_define(state->file, className))
             return FALSE;
         /* This is such a gross hack... */
         fprintf(state->file, " \\\n  {0x%.8s, 0x%.4s, 0x%.4s, \\\n    "
@@ -116,12 +115,12 @@ interface(TreeState *state)
     fprintf(state->file, "class %s", className);
     if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
         fputs(" : ", state->file);
-        for (; iter; iter = IDL_LIST(iter).next) {
+        do {
             fprintf(state->file, "public %s",
                     IDL_IDENT(IDL_LIST(iter).data).str);
             if (IDL_LIST(iter).next)
                 fputs(", ", state->file);
-        }
+        } while ((iter = IDL_LIST(iter).next));
     }
     fputs(" {\n"
           " public: \n", state->file);
@@ -129,7 +128,7 @@ interface(TreeState *state)
         fputs("  static const nsIID& IID() {\n"
               "    static nsIID iid = ",
               state->file);
-        if (!output_classname_iid_define(state->file, className))
+        if (!write_classname_iid_define(state->file, className))
             return FALSE;
         fputs(";\n    return iid;\n  }\n", state->file);
     }
@@ -142,8 +141,8 @@ interface(TreeState *state)
     /* XXXbe keep this statement until -m stub dies */
     fprintf(state->file,
             "\n"
-            "  static JSObject *InitJSClass(JSContext *cx);\n"
-            "  static JSObject *GetJSObject(JSContext *cx, %s *priv);\n",
+            "  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);\n"
+            "  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, %s *priv);\n",
             className);
 
     fputs("};\n", state->file);
@@ -260,7 +259,7 @@ static gboolean
 attr_dcl(TreeState *state)
 {
     gboolean ro = IDL_ATTR_DCL(state->tree).f_readonly;
-    xpidl_dump_comment(state, 2);
+    xpidl_write_comment(state, 2);
     return attr_accessor(state, TRUE) && (ro || attr_accessor(state, FALSE));
 }
 
@@ -273,9 +272,11 @@ do_enum(TreeState *state)
             IDL_IDENT(IDL_TYPE_ENUM(enumb).ident).str);
 
     for (iter = IDL_TYPE_ENUM(enumb).enumerator_list;
-         iter; iter = IDL_LIST(iter).next)
+         iter;
+         iter = IDL_LIST(iter).next) {
         fprintf(state->file, "  %s%s\n", IDL_IDENT(IDL_LIST(iter).data).str,
                 IDL_LIST(iter).next ? ",": "");
+    }
 
     fputs("};\n\n", state->file);
     return TRUE;
@@ -356,7 +357,7 @@ op_dcl(TreeState *state)
     struct _IDL_OP_DCL *op = &IDL_OP_DCL(state->tree);
     IDL_tree iter;
 
-    xpidl_dump_comment(state, 2);
+    xpidl_write_comment(state, 2);
 
     fprintf(state->file, "  NS_IMETHOD %s(", IDL_IDENT(op->ident).str);
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
@@ -390,7 +391,7 @@ op_dcl(TreeState *state)
 }
 
 static void
-dump_codefrag_line(gpointer data, gpointer user_data)
+write_codefrag_line(gpointer data, gpointer user_data)
 {
     TreeState *state = (TreeState *)user_data;
     char *line = (char *)data;
@@ -403,7 +404,7 @@ codefrag(TreeState *state)
 {
     if (strcmp(IDL_CODEFRAG(state->tree).desc, "C++"))
         return TRUE;
-    g_slist_foreach(IDL_CODEFRAG(state->tree).lines, dump_codefrag_line,
+    g_slist_foreach(IDL_CODEFRAG(state->tree).lines, write_codefrag_line,
                     (gpointer)state);
     fputc('\n', state->file);
     return TRUE;
