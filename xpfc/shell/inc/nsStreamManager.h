@@ -21,8 +21,6 @@
 #include "nsIArray.h"
 #include "nsIIterator.h"
 #include "nsIStreamManager.h"
-#include "nsIXPFCContentSinkContainer.h"
-//#include "nsIXPFCCanvas.h"
 
 class nsStreamManager : public nsIStreamManager 
 {

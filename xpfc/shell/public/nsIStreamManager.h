@@ -25,7 +25,6 @@
 #include "nsIWebViewerContainer.h"
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
-#include "nsIXPFCContentSinkContainer.h"
 
 class nsIXPFCCanvas;
 
