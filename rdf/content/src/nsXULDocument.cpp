@@ -3048,16 +3048,40 @@ nsXULDocument::Finalize(JSContext *aContext)
 NS_IMETHODIMP
 nsXULDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
-    nsresult res = NS_OK;
-    nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+    if (! mScriptObject) {
+        // ...we need to instantiate our script object for the first
+        // time.
 
-    if (nsnull == mScriptObject) {
-        res = NS_NewScriptXULDocument(aContext, NS_STATIC_CAST(nsISupports *, NS_STATIC_CAST(nsIDOMXULDocument *, this)), global, (void**)&mScriptObject);
+        // Make sure that we've got our script context owner; this
+        // assertion will fire if we've tried to get the script object
+        // before our scope has been set up.
+        NS_ASSERTION(mScriptContextOwner != nsnull, "no script context owner");
+        if (! mScriptContextOwner)
+            return NS_ERROR_NOT_INITIALIZED;
+
+        nsresult rv;
+
+        // Use the global object from our script context owner (the
+        // window) as the parent of our own script object. (Using the
+        // global object from aContext would make our script object
+        // dynamically scoped in the first context that ever tried to
+        // use us!)
+        nsCOMPtr<nsIScriptGlobalObject> global;
+        rv = mScriptContextOwner->GetScriptGlobalObject(getter_AddRefs(global));
+        if (NS_FAILED(rv)) return rv;
+
+        NS_ASSERTION(global != nsnull, "script context owner has no global object");
+        if (! global)
+            return NS_ERROR_UNEXPECTED;
+
+        rv = NS_NewScriptXULDocument(aContext,
+                                     NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(nsIDOMXULDocument*, this)),
+                                     global, &mScriptObject);
+        if (NS_FAILED(rv)) return rv;
     }
-    *aScriptObject = mScriptObject;
 
-    NS_RELEASE(global);
-    return res;
+    *aScriptObject = mScriptObject;
+    return NS_OK;
 }
 
 
