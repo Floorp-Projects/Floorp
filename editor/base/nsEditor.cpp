@@ -1934,7 +1934,7 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
                         nsIDOMNode * aParent,
                         PRBool       aNodeToKeepIsFirst)
 {
-  nsresult result;
+  nsresult result = NS_OK;
   NS_ASSERTION(((nsnull!=aNodeToKeep) &&
                 (nsnull!=aNodeToJoin) &&
                 (nsnull!=aParent)),
