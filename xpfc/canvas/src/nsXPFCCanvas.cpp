@@ -2265,6 +2265,7 @@ void nsXPFCCanvas::Notify(nsIImageRequest *aImageRequest,
   {
     bounds.x = 0;
     bounds.y = 0;
+    aImageRequest->RemoveObserver((nsIImageRequestObserver*)this);
     gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
   }
   return ;
@@ -2273,6 +2274,7 @@ void nsXPFCCanvas::Notify(nsIImageRequest *aImageRequest,
 void nsXPFCCanvas::NotifyError(nsIImageRequest *aImageRequest,
                                nsImageError aErrorType)
 {
+  aImageRequest->RemoveObserver((nsIImageRequestObserver*)this);
   return ;
 }
 

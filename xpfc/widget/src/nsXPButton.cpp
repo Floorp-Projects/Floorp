@@ -59,6 +59,10 @@ nsXPButton :: nsXPButton(nsISupports* outer) : nsXPItem(outer)
 
 nsXPButton :: ~nsXPButton()
 {
+  NS_IF_RELEASE(mMiniHoverImageRequest);
+  NS_IF_RELEASE(mFullHoverImageRequest);
+  NS_IF_RELEASE(mMiniPressedImageRequest);
+  NS_IF_RELEASE(mFullPressedImageRequest);
 }
 
 nsresult nsXPButton::QueryInterface(REFNSIID aIID, void** aInstancePtr)      

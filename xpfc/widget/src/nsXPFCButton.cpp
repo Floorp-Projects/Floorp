@@ -57,6 +57,8 @@ nsXPFCButton :: nsXPFCButton(nsISupports* outer) : nsXPFCCanvas(outer)
 
 nsXPFCButton :: ~nsXPFCButton()
 {
+  if (GetLabel() == "Throbber")
+    NS_IF_RELEASE(mThrobber);
 }
 
 nsresult nsXPFCButton::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
