@@ -436,22 +436,23 @@ namespace JavaScript {
         virtual Label *getBreakLabel(ICodeGenerator *icg)    { if (breakLabel == NULL) breakLabel = icg->getLabel(); return breakLabel; }
 
         Register controlExpression;
-        InstructionStream *caseStatementsStream;
         Label *defaultLabel;
+        InstructionStream *caseStatementsStream;
     };
 
     inline ICodeState::ICodeState(StateKind kind, ICodeGenerator *icg) 
-                    : stateKind(kind), breakLabel(NULL), continueLabel(NULL), registerBase(icg->getRegisterBase()) { }
+        : stateKind(kind), registerBase(icg->getRegisterBase()), breakLabel(NULL), continueLabel(NULL) { }
 
     inline SwitchCodeState::SwitchCodeState(Register control, ICodeGenerator *icg)
-                    : ICodeState(Switch_state, icg), controlExpression(control), defaultLabel(NULL), caseStatementsStream(icg->get_iCode()) {}
+        : ICodeState(Switch_state, icg), controlExpression(control), defaultLabel(NULL),
+          caseStatementsStream(icg->get_iCode()) {}
 
     inline WhileCodeState::WhileCodeState(Label *conditionLabel, Label *bodyLabel, ICodeGenerator *icg) 
-                    : ICodeState(While_state, icg), whileCondition(conditionLabel), whileBody(bodyLabel),
-                            whileExpressionStream(icg->get_iCode()) { }
+        : ICodeState(While_state, icg), whileCondition(conditionLabel), whileBody(bodyLabel),
+          whileExpressionStream(icg->get_iCode()) { }
 
     inline ForCodeState::ForCodeState(Label *conditionLabel, Label *bodyLabel, ICodeGenerator *icg) 
-                    : ICodeState(For_state, icg), forCondition(conditionLabel), forBody(bodyLabel), 
-                            forConditionStream(icg->get_iCode()), forIncrementStream(icg->get_iCode()) { }
+        : ICodeState(For_state, icg), forCondition(conditionLabel), forBody(bodyLabel), 
+          forConditionStream(icg->get_iCode()), forIncrementStream(icg->get_iCode()) { }
 }
 #endif
