@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: shlibsign.c,v 1.7 2003/03/21 20:57:07 wtc%netscape.com Exp $
+ * $Id: shlibsign.c,v 1.8 2003/03/22 07:52:25 wtc%netscape.com Exp $
  */
 
 #ifdef XP_UNIX
@@ -55,6 +55,7 @@
 #include "pk11pqg.h"
 
 #ifdef USES_LINKS
+#include <errno.h>
 #include <unistd.h>
 #include <sys/param.h>
 #include <sys/types.h>
@@ -393,9 +394,8 @@ main (int argc, char **argv)
 
 #ifdef USES_LINKS
     if (link_file) {
-	(void)unlink(link_file);
 	ret = symlink(output_file, link_file);
-	if (ret < 0) {
+	if (ret < 0 && errno != EEXIST) {
 	   perror(link_file);
 	   goto loser;
 	}
