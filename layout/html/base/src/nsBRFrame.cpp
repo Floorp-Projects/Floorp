@@ -103,8 +103,9 @@ BRFrame::Reflow(nsIPresContext& aPresContext,
 
   // Only when the BR is operating in a line-layout situation will it
   // behave like a BR.
-  if (nsnull != aReflowState.mLineLayout) {
-    if (aReflowState.mLineLayout->CanPlaceFloaterNow()) {
+  nsLineLayout* ll = aReflowState.mLineLayout;
+  if (ll) {
+    if (ll->CanPlaceFloaterNow()) {
       // If we can place a floater on the line now it means that the
       // line is effectively empty (there may be zero sized compressed
       // white-space frames on the line, but they are to be ignored).
@@ -151,6 +152,7 @@ BRFrame::Reflow(nsIPresContext& aPresContext,
 
     aStatus = NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
       NS_INLINE_MAKE_BREAK_TYPE(breakType);
+    ll->SetLineEndsInBR(PR_TRUE);
   }
   else {
     aStatus = NS_FRAME_COMPLETE;
