@@ -201,6 +201,11 @@ CFLAGS=$(CFLAGS) -DSTAND_ALONE_JAVA
 NECKO=1
 CFLAGS=$(CFLAGS) -DNECKO
 
+# to be removed once socket provider build for linux/mac
+# checked in
+NET_SOCKET_PROVIDER_BUILD=1
+CFLAGS=$(CFLAGS) -DNET_SOCKET_PROVIDER_BUILD
+
 !ifndef MOZ_JAVA
 MOZ_OJI = 1             # on by default now
 !endif
