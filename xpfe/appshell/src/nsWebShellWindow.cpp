@@ -930,28 +930,29 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebS
 PRInt32 nsWebShellWindow::GetDocHeight(nsIDocument * aDoc)
 {
   nsIPresShell * presShell = aDoc->GetShellAt(0);
-  if (presShell) {
-    nsCOMPtr<nsIPresContext> presContext;
-    presShell->GetPresContext(getter_AddRefs(presContext));
-    if (presContext) {
-      nsRect rect;
-      presContext->GetVisibleArea(rect);
-      nsIFrame * rootFrame;
-      nsSize size;
-      presShell->GetRootFrame(&rootFrame);
-      if (rootFrame) {
-        rootFrame->GetSize(size);
-        float t2p;
-        presContext->GetTwipsToPixels(&t2p);
-        printf("Doc size %d,%d\n", PRInt32((float)size.width*t2p), 
-                                   PRInt32((float)size.height*t2p));
-        //return rect.height;
-        return PRInt32((float)rect.height*t2p);
-        //return PRInt32((float)size.height*presContext->GetTwipsToPixels());
-      }
+  if (!presShell)
+    return 0;
+
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
+  if (presContext) {
+    nsRect rect;
+    presContext->GetVisibleArea(rect);
+    nsIFrame * rootFrame;
+    nsSize size;
+    presShell->GetRootFrame(&rootFrame);
+    if (rootFrame) {
+      rootFrame->GetSize(size);
+      float t2p;
+      presContext->GetTwipsToPixels(&t2p);
+      printf("Doc size %d,%d\n", PRInt32((float)size.width*t2p), 
+                                 PRInt32((float)size.height*t2p));
+      //return rect.height;
+      return PRInt32((float)rect.height*t2p);
+      //return PRInt32((float)size.height*presContext->GetTwipsToPixels());
     }
-    NS_RELEASE(presShell);
   }
+  NS_RELEASE(presShell);
   return 0;
 }
 
@@ -989,14 +990,15 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
   if (menubarDOMDoc)
     LoadMenus(menubarDOMDoc, mWindow);
 
+  SetSizeFromXUL();
+  SetTitleFromXUL();
 
-  // Calculate size of windows
 #if 0
   nsCOMPtr<nsIDOMDocument> toolbarDOMDoc(GetNamedDOMDoc(nsAutoString("browser.toolbar")));
   nsCOMPtr<nsIDOMDocument> contentDOMDoc(GetNamedDOMDoc(nsAutoString("browser.webwindow")));
-  nsCOMPtr<nsIDocument> contentDoc(contentDOMDoc);
-  nsCOMPtr<nsIDocument> statusDoc(statusDOMDoc);
-  nsCOMPtr<nsIDocument> toolbarDoc(toolbarDOMDoc);
+  nsCOMPtr<nsIDocument> contentDoc(do_QueryInterface(contentDOMDoc));
+  nsCOMPtr<nsIDocument> statusDoc(do_QueryInterface(statusDOMDoc));
+  nsCOMPtr<nsIDocument> toolbarDoc(do_QueryInterface(toolbarDOMDoc));
 
   nsIWebShell* statusWebShell = nsnull;
   mWebShell->FindChildWithName(nsAutoString("browser.status"), statusWebShell);
@@ -1109,7 +1111,7 @@ void nsWebShellWindow::ExecuteStartupCode()
 
   // Execute the string in the onLoad attribute of the webshellElement.
   nsString startupCode;
-  if (webshellElement && NS_SUCCEEDED(webshellElement->GetAttribute("onload", startupCode))) 
+  if (webshellElement && NS_SUCCEEDED(webshellElement->GetAttribute("onload", startupCode)))
     ExecuteJavaScriptString(startupCode);
 
   if (mCallbacks)
@@ -1117,6 +1119,25 @@ void nsWebShellWindow::ExecuteStartupCode()
 
 }
 
+
+void nsWebShellWindow::SetSizeFromXUL()
+{
+} // SetSizeFromXUL
+
+
+void nsWebShellWindow::SetTitleFromXUL()
+{
+  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
+  nsIWidget *windowWidget = GetWidget();
+  nsCOMPtr<nsIDOMElement> webshellElement;
+  nsString windowTitle;
+
+  if (webshellNode)
+    webshellElement = do_QueryInterface(webshellNode);
+  if (webshellElement && windowWidget &&
+      NS_SUCCEEDED(webshellElement->GetAttribute("title", windowTitle)))
+    windowWidget->SetTitle(windowTitle);
+} // SetTitleFromXUL
 
 
 //----------------------------------------------------------------
