@@ -57,13 +57,13 @@ sub Told {
                 $self->say($event, "No help for topic '$1'.");
             }
         } else {
-            # XXX amusingly, $helpline is defined here, because this
-            # entire module is evaluated in the scope of mozbot.pl.
+            my $helpline = $self->getHelpLine();
             $self->directSay($event, "Help topics for mozbot $VERSION ($helpline):");
             $self->say($event, "$event->{'from'}: help info /msg'ed") if ($event->{'channel'});
             local @" = ', '; # to reset font-lock: "
             my @helplist;
-            foreach my $module (@modules) {
+            foreach my $module ($self->getModules()) {
+                $module = $self->getModule($module);
                 my %commands = %{$module->Help($event)};
                 my $moduleHelp = delete($commands{''});
                 my @commands = sort keys %commands;
@@ -87,6 +87,7 @@ sub Told {
 sub CTCPVersion {
     my $self = shift;
     my ($event, $who, $what) = @_;
+    my @modulenames = $self->getModules();
     local $" = ', ';
     $self->ctcpReply($event, 'VERSION', "mozbot $VERSION (@modulenames)");
 }
