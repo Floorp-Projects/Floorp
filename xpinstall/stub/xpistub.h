@@ -41,22 +41,7 @@
 #include "nsError.h"
 #include "prtypes.h"
 
-#ifdef XP_MAC
-#include <Files.h>
-#endif
-
 PR_BEGIN_EXTERN_C
-
-/** pfnXPIStart  -- script start callback
- *  
- *  When an install script gets to StartInstall() this function
- *  will be called to tell the observer the pretty-name of the
- *  install package. You are not guaranteed this will be called
- *  for all scripts--there might be a fatal error before it gets
- *  to StartInstall(), either in the script itself or in the
- *  engine trying to set up for it.
- */
-typedef void     (*pfnXPIStart)   (const char* URL, const char* UIName);
 
 /** pfnXPIProgress  -- individual install item callback
  *
@@ -66,14 +51,6 @@ typedef void     (*pfnXPIStart)   (const char* URL, const char* UIName);
  */
 typedef void    (*pfnXPIProgress)(const char* msg, PRInt32 val, PRInt32 max);
 
-/** pfnXPIFinal  -- script end callback
- *
- *  This function will be called when the script calls either
- *  AbortInstall() or FinalizeInstall() and will return the
- *  last error code.
- */
-typedef void     (*pfnXPIFinal)   (const char* URL, PRInt32 finalStatus);
-
 
 
 /** XPI_Init
@@ -81,24 +58,15 @@ typedef void     (*pfnXPIFinal)   (const char* URL, PRInt32 finalStatus);
  *  call XPI_Init() to initialize XPCOM and the XPInstall
  *  engine, and to pass in your callback functions.
  *
- *  @param aXPIStubDir   [MAC only] directory of the xpistub shlb off of which
- *                       the component manager derives the components directory.
  *  @param aProgramDir   directory to use as "program" directory. If NULL default
  *                       will be used -- the location of the calling executable.
  *                       Must be native filename format.
- *  @param startCB       Called when script started
+ *  @param aLogName      filename for log.
  *  @param progressCB    Called for each installed file
- *  @param finalCB       Called with status code at end
  *
  *  @returns    XPCOM status code indicating success or failure
  */
-PR_EXTERN(nsresult) XPI_Init( 
-#ifdef XP_MAC
-                              const FSSpec&     aXPIStubDir,
-                              const FSSpec&     aProgramDir,
-#else
-                              const char*       aProgramDir,
-#endif
+PR_EXTERN(nsresult) XPI_Init( const char*       aProgramDir,
                               const char*       aLogName,
                               pfnXPIProgress    progressCB );
 
@@ -112,14 +80,9 @@ PR_EXTERN(nsresult) XPI_Init(
  *
  *  @returns status  Status from the installed archive
  */
-PR_EXTERN(PRInt32) XPI_Install( 
-#ifdef XP_MAC
-                                 const FSSpec& file,
-#else
-                                 const char*    file,
-#endif
-                                 const char* args, 
-                                 long flags         );
+PR_EXTERN(PRInt32) XPI_Install( const char*    file,
+                                const char* args, 
+                                long flags         );
 
 /** XPI_Exit
  * 
