@@ -221,10 +221,14 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
         return NS_FALSE;
     }
 
+#if defined(NETLIB_THREAD)
     consumer = ns_NewStreamListenerProxy(aConsumer);
     if (nsnull == consumer) {
         return NS_FALSE;
     }
+#else
+    consumer = aConsumer;
+#endif
 
     /* Create the nsConnectionInfo object... */
     pConn = new nsConnectionInfo(aUrl, NULL, consumer);
@@ -329,12 +333,16 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
     }
 
     if (NULL != aUrl) {
+#if defined(NETLIB_THREAD)
         if (nsnull != aConsumer) {
             consumer = ns_NewStreamListenerProxy(aConsumer);
             if (nsnull == consumer) {
                 goto loser;
             }
         }
+#else
+        consumer = aConsumer;
+#endif
 
         /* Create the blocking stream... */
         pBlockingStream = new nsBlockingStream();
