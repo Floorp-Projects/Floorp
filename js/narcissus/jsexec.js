@@ -101,21 +101,17 @@ var global = {
         return new FunctionObject(f, s);
     },
     Array: function Array() {
-        var a = this;
-        if (a instanceof Array) {
-            // Called as constructor.
-        } else {
-            a.__proto__ = Array.prototype;
-        }
-        return a;
+        // Array when called as a function acts as a constructor.
+        return GLOBAL.Array.apply(this, arguments);
     },
-    String: function String() {
+    String: function String(v) {
         var s = this;
         if (s instanceof String) {
-            // Called as constructor.
+            // Called as constructor: save the argument as a string value.
+            this.value = "" + v;
         } else {
-            // Called as function.
-            s = GLOBAL.String.apply(this, arguments);
+            // Called as function: convert this to string type.
+            s = "" + s;
         }
         return s;
     },
@@ -133,10 +129,17 @@ function reflectClass(name, proto) {
     var gctor = global[name];
     gctor.__defineProperty__('prototype', proto, true, true, true);
     proto.__defineProperty__('constructor', gctor, false, false, true);
+    return proto;
 }
 
+// Reflect Array -- note that all Array methods are generic.
 reflectClass('Array', new Array);
-reflectClass('String', new String);
+
+// Reflect String, overriding non-generic methods.
+var gSp = reflectClass('String', new String);
+gSp.toSource = function () { return this.value.toSource(); };
+gSp.toString = function () { return this.value; };
+gSp.valueOf  = function () { return this.value; };
 
 var XCp = ExecutionContext.prototype;
 ExecutionContext.current = XCp.caller = XCp.callee = null;
@@ -846,7 +849,7 @@ reflectClass('Function', FOp);
 
 // Help native and host-scripted functions be like FunctionObjects.
 var Fp = Function.prototype;
-var Rp = RegExp.prototype;
+var REp = RegExp.prototype;
 
 Fp.__call__ = function (t, a, x) {
     // Curse ECMA yet again!
@@ -854,7 +857,7 @@ Fp.__call__ = function (t, a, x) {
     return this.apply(t, a);
 };
 
-Rp.__call__ = function (t, a, x) {
+REp.__call__ = function (t, a, x) {
     a = Array.prototype.splice.call(a, 0, a.length);
     return this.exec.apply(this, a);
 };
