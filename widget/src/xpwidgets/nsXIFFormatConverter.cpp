@@ -128,9 +128,10 @@ NS_IMETHODIMP nsXIFFormatConverter::GetOutputDataFlavors(nsVoidArray ** aDataFla
   nsVoidArray * array = new nsVoidArray();
   if (nsnull != array) {
     array->AppendElement(new nsString(kXIFMime));
+    array->AppendElement(new nsString(kHTMLMime));
+    array->AppendElement(new nsString(kUnicodeMime));
     array->AppendElement(new nsString(kTextMime));
     array->AppendElement(new nsString(kAOLMailMime));
-    array->AppendElement(new nsString(kHTMLMime));
     *aDataFlavorList = array;
   }
   return NS_OK;
@@ -153,6 +154,8 @@ NS_IMETHODIMP nsXIFFormatConverter::CanConvert(nsString * aFromDataFlavor, nsStr
   if (aToDataFlavor->Equals(kTextMime)) {
     return NS_OK;
   } else if (aToDataFlavor->Equals(kHTMLMime)) {
+    return NS_OK;
+  } else if (aToDataFlavor->Equals(kUnicodeMime)) {
     return NS_OK;
   } else if (aToDataFlavor->Equals(kAOLMailMime)) {
     return NS_OK;
@@ -187,10 +190,10 @@ NS_IMETHODIMP nsXIFFormatConverter::Convert(nsString * aFromDataFlavor, void * a
       *aToData = (void *)text.ToNewCString();
       *aDataToLen = text.Length();
     }
-  } else if (aToDataFlavor->Equals(kHTMLMime)) {
+  } else if (aToDataFlavor->Equals(kHTMLMime) || aToDataFlavor->Equals(kUnicodeMime)) {
     if (NS_OK == ConvertFromXIFToHTML(srcText, text)) {
-      *aToData = (void *)text.ToNewCString();
-      *aDataToLen = text.Length();
+      *aToData = (void *)text.ToNewUnicode();
+      *aDataToLen = text.Length()*2;
     }
   } else if (aToDataFlavor->Equals(kAOLMailMime)) {
     if (NS_OK == ConvertFromXIFToAOLMail(srcText, text)) {
