@@ -135,9 +135,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   rv = aParams->GetBooleanValue("plugins", &allowPlugins);
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsISupports> container;
-    rv = presContext->GetContainer(getter_AddRefs(container));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsISupports> container = presContext->GetContainer();
     if (!container) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container, &rv));
@@ -190,9 +188,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
   rv = aParams->GetBooleanValue("plugins", &allowPlugins);
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsISupports> container;
-    rv = presContext->GetContainer(getter_AddRefs(container));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsISupports> container = presContext->GetContainer();
     if (!container) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container, &rv));

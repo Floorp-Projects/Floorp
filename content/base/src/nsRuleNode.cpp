@@ -1343,9 +1343,9 @@ static PRBool
 IsChrome(nsIPresContext* aPresContext)
 {
   PRBool isChrome = PR_FALSE;
-  nsCOMPtr<nsISupports> container;
-  nsresult result = aPresContext->GetContainer(getter_AddRefs(container));
-  if (NS_SUCCEEDED(result) && container) {
+  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
+  if (container) {
+    nsresult result;
     nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(container, &result));
     if (NS_SUCCEEDED(result) && docShell) {
       PRInt32 docShellType;

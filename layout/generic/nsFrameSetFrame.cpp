@@ -694,8 +694,7 @@ nsHTMLFramesetFrame::GetDesiredSize(nsIPresContext*          aPresContext,
 {
   nsHTMLFramesetFrame* framesetParent = GetFramesetParent(this);
   if (nsnull == framesetParent) {
-    nsRect area;
-    aPresContext->GetVisibleArea(area);
+    nsRect area = aPresContext->GetVisibleArea();
 
     aDesiredSize.width = area.width;
     aDesiredSize.height= area.height;

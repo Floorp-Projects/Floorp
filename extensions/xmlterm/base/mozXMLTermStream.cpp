@@ -386,10 +386,7 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
   PRInt32 scrollBarHeight = PRInt32(sbHeight*pixelScale);
 
   // Determine docshell size in pixels
-  nsRect shellArea;
-  result = presContext->GetVisibleArea(shellArea);
-  if (NS_FAILED(result))
-    return result;
+  nsRect shellArea = presContext->GetVisibleArea();
 
   PRInt32 shellWidth = PRInt32((float)shellArea.width * pixelScale);
   PRInt32 shellHeight = PRInt32((float)shellArea.height * pixelScale);

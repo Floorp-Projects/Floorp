@@ -374,8 +374,7 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIPresContext> presContext;
     docShell->GetPresContext(getter_AddRefs(presContext));
     if (presContext) {
-      nsCOMPtr<nsISupports> container;
-      presContext->GetContainer(getter_AddRefs(container));
+      nsCOMPtr<nsISupports> container = presContext->GetContainer();
       nsCOMPtr<nsIDocument> document = do_QueryInterface(*aReturn);
       if (document) {
         document->SetContainer(container);
@@ -2557,9 +2556,8 @@ nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
   nsresult rv = shell->GetPresContext(getter_AddRefs(ctx));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && ctx, rv);
 
-  nsCOMPtr<nsISupports> container;
-  rv = ctx->GetContainer(getter_AddRefs(container));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && container, rv);
+  nsCOMPtr<nsISupports> container = ctx->GetContainer();
+  NS_ENSURE_TRUE(container, NS_OK);
 
   nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(container);
   NS_ENSURE_TRUE(window, NS_OK);
@@ -2603,10 +2601,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
     nsresult rv = shell->GetPresContext(getter_AddRefs(context));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsISupports> container;
-    rv = context->GetContainer(getter_AddRefs(container));
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    nsCOMPtr<nsISupports> container = context->GetContainer();
     if (!container)
       continue;
 

@@ -45,6 +45,7 @@
 #include "nsCompatibility.h"
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
+#include "nsRect.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
@@ -241,23 +242,23 @@ public:
    * method will be invoked (via the ViewManager) so that the
    * appropriate damage repair is done.
    */
-  NS_IMETHOD LoadImage(nsIURI* aURL,
-                       nsIFrame* aTargetFrame,
-                       imgIRequest **aRequest) = 0;
+  virtual nsresult LoadImage(nsIURI* aURL,
+                             nsIFrame* aTargetFrame,
+                             imgIRequest **aRequest) = 0;
 
   /**
    * This method is called when a frame is being destroyed to
    * ensure that the image load gets disassociated from the prescontext
    */
-  NS_IMETHOD StopImagesFor(nsIFrame* aTargetFrame) = 0;
+  virtual void StopImagesFor(nsIFrame* aTargetFrame) = 0;
 
-  NS_IMETHOD SetContainer(nsISupports* aContainer) = 0;
+  virtual void SetContainer(nsISupports* aContainer) = 0;
 
-  NS_IMETHOD GetContainer(nsISupports** aResult) = 0;
+  virtual already_AddRefed<nsISupports> GetContainer() = 0;
 
   // XXX this are going to be replaced with set/get container
-  NS_IMETHOD SetLinkHandler(nsILinkHandler* aHandler) = 0;
-  NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult) = 0;
+  void SetLinkHandler(nsILinkHandler* aHandler) { mLinkHandler = aHandler; }
+  nsILinkHandler* GetLinkHandler() { return mLinkHandler; }
 
   /**
    * Get the visible area associated with this presentation context.
@@ -265,13 +266,13 @@ public:
    * presenting the document. The returned value is in the standard
    * nscoord units (as scaled by the device context).
    */
-  NS_IMETHOD GetVisibleArea(nsRect& aResult) = 0;
+  nsRect GetVisibleArea() { return mVisibleArea; }
 
   /**
    * Set the currently visible area. The units for r are standard
    * nscoord units (as scaled by the device context).
    */
-  NS_IMETHOD SetVisibleArea(const nsRect& r) = 0;
+  void SetVisibleArea(const nsRect& r) { mVisibleArea = r; }
 
   /**
    * Return true if this presentation context is a paginated
@@ -300,7 +301,7 @@ public:
    * @param aActualRect returns the size of the actual device/surface
    * @param aRect returns the adjusted size 
    */
-  NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect) = 0;
+  virtual void GetPageDim(nsRect* aActualRect, nsRect* aAdjRect) = 0;
 
   /**
    * Sets the "adjusted" rect for the page Dimimensions, 
@@ -309,7 +310,7 @@ public:
    *
    * @param aRect returns the adjusted size 
    */
-  NS_IMETHOD SetPageDim(nsRect* aRect) = 0;
+  virtual void SetPageDim(nsRect* aRect) = 0;
 
   NS_IMETHOD GetPixelsToTwips(float* aResult) const = 0;
 
@@ -330,7 +331,7 @@ public:
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager) = 0;
   nsIEventStateManager* GetEventStateManager();
 
-  NS_IMETHOD GetLanguage(nsILanguageAtom** aLanguage) = 0;
+  nsILanguageAtom* GetLanguage() { return mLanguage; }
 
   /**
    * Get the language-specific transform type for the current document.
@@ -496,7 +497,12 @@ protected:
   nsIAtom*              mMedium;        // initialized by subclass ctors;
                                         // weak pointer to static atom
 
+  nsILinkHandler*       mLinkHandler;   // [WEAK]
+  nsILanguageAtom*      mLanguage;      // [STRONG]
+
   PRInt32               mFontScaler;
+
+  nsRect                mVisibleArea;
 
   nscolor               mDefaultColor;
   nscolor               mBackgroundColor;

@@ -2294,8 +2294,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   NS_ENSURE_TRUE(mContext,NS_ERROR_NULL_POINTER);
 
   // the container of the pres context will give us the link handler
-  nsCOMPtr<nsISupports> container;
-  nsresult rv = mContext->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = mContext->GetContainer();
   NS_ENSURE_TRUE(container,NS_ERROR_FAILURE);
   nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
   NS_ENSURE_TRUE(lh, NS_ERROR_FAILURE);
@@ -2304,7 +2303,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
 
   nsCOMPtr<nsIURI> baseURL;
   nsCOMPtr<nsIDocument> doc;
-  rv = GetDocument(getter_AddRefs(doc));
+  nsresult rv = GetDocument(getter_AddRefs(doc));
   if (NS_SUCCEEDED(rv) && doc) {
     // XXX should this really be the document base URL?  Or the
     // content's base URL?
@@ -2367,12 +2366,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const PRUnichar *aStatusMsg)
   if (!mContext) {
     return rv;
   }
-  nsCOMPtr<nsISupports> cont;
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  
-  rv = mContext->GetContainer(getter_AddRefs(cont));
-  if (NS_FAILED(rv) || !cont) {
-    return rv;
+  nsCOMPtr<nsISupports> cont = mContext->GetContainer();
+  if (!cont) {
+    return NS_OK;
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(cont, &rv));
@@ -2380,6 +2376,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const PRUnichar *aStatusMsg)
     return rv;
   }
 
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   rv = docShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
   if (NS_FAILED(rv) || !treeOwner) {
     return rv;
@@ -3831,8 +3828,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
   // is destroyed. Here we make sure the plugin instance in the old
   // document is destroyed before we try to create the new one.
 
-  nsCOMPtr<nsISupports> container;
-  aPresContext->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
   if (container) {
     // We need to suppress the focus controller so that destroying the old
     // content viewer doesn't transfer focus to the toplevel window.

@@ -426,8 +426,7 @@ nsDocLoaderImpl::GetContentViewerContainer(nsISupports* aDocumentID,
       nsCOMPtr<nsIPresContext> presContext;
       pres->GetPresContext(getter_AddRefs(presContext));
       if (presContext) {
-        nsCOMPtr<nsISupports> supp;
-        presContext->GetContainer(getter_AddRefs(supp));
+        nsCOMPtr<nsISupports> supp = presContext->GetContainer();
         if (supp) {
           return CallQueryInterface(supp, aResult);          
         }

@@ -1231,8 +1231,7 @@ nsFormSubmission::SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
   //
   // Actually submit the data
   //
-  nsCOMPtr<nsILinkHandler> handler;
-  aPresContext->GetLinkHandler(getter_AddRefs(handler));
+  nsILinkHandler *handler = aPresContext->GetLinkHandler();
   NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
 
   return handler->OnLinkClickSync(aSource, eLinkVerb_Replace,

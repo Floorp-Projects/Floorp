@@ -415,8 +415,7 @@ nsAccessNode::GetComputedStyleValue(const nsAString& aPseudoElt, const nsAString
   nsCOMPtr<nsIPresContext> presContext(GetPresContext());
   NS_ENSURE_TRUE(domElement && presContext, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISupports> container;
-  presContext->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = presContext->GetContainer();
   nsCOMPtr<nsIDOMWindow> domWin(do_GetInterface(container));
   nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(domWin));
   NS_ENSURE_TRUE(viewCSS, NS_ERROR_FAILURE);

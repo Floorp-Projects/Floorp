@@ -238,8 +238,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
   // if marginwidth or marginheight is set in the <frame> and not set in the <body>
   // reflect them as margin in the <body>
   if (bodyMarginWidth == -1 || bodyMarginHeight == -1) {
-    nsCOMPtr<nsISupports> container;
-    aData->mPresContext->GetContainer(getter_AddRefs(container));
+    nsCOMPtr<nsISupports> container = aData->mPresContext->GetContainer();
     if (container) {
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
       if (docShell) {

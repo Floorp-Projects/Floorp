@@ -3042,9 +3042,7 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
   shell->GetPresContext(getter_AddRefs(cx));
   NS_ENSURE_TRUE(cx, NS_OK);
 
-  nsCOMPtr<nsISupports> container;
-
-  cx->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = cx->GetContainer();
   NS_ENSURE_TRUE(container, NS_OK);
 
   nsCOMPtr<nsIDOMWindow> window(do_GetInterface(container));
@@ -3775,8 +3773,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     shell->GetPresContext(getter_AddRefs(cx));
     NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsISupports> container;
-    cx->GetContainer(getter_AddRefs(container));
+    nsCOMPtr<nsISupports> container = cx->GetContainer();
     NS_ENSURE_TRUE(container, NS_OK);
 
     // get content root frame

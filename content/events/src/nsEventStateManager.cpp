@@ -948,8 +948,7 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
   if (nsEventStatus_eConsumeNoDefault != *aStatus) {
     // checking all sub docshells
 
-    nsCOMPtr<nsISupports> pcContainer;
-    aPresContext->GetContainer(getter_AddRefs(pcContainer));
+    nsCOMPtr<nsISupports> pcContainer = aPresContext->GetContainer();
     NS_ASSERTION(pcContainer, "no container for presContext");
 
     nsCOMPtr<nsIDocShellTreeNode> docShell(do_QueryInterface(pcContainer));
@@ -997,8 +996,7 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
 
   // bubble up the process to the parent docShell if necesary
   if (eAccessKeyProcessingDown != aAccessKeyState && nsEventStatus_eConsumeNoDefault != *aStatus) {
-    nsCOMPtr<nsISupports> pcContainer;
-    aPresContext->GetContainer(getter_AddRefs(pcContainer));
+    nsCOMPtr<nsISupports> pcContainer = aPresContext->GetContainer();
     NS_ASSERTION(pcContainer, "no container for presContext");
 
     nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(pcContainer));
@@ -1473,8 +1471,7 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   presShell->GetPresContext(getter_AddRefs(presContext));
   if(!presContext) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsISupports> pcContainer;
-  presContext->GetContainer(getter_AddRefs(pcContainer));
+  nsCOMPtr<nsISupports> pcContainer = presContext->GetContainer();
   if(!pcContainer) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(pcContainer));
@@ -1923,8 +1920,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
 
       case MOUSE_SCROLL_HISTORY:
         {
-          nsCOMPtr<nsISupports> pcContainer;
-          mPresContext->GetContainer(getter_AddRefs(pcContainer));
+          nsCOMPtr<nsISupports> pcContainer = mPresContext->GetContainer();
           if (pcContainer) {
             nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(pcContainer));
             if (webNav) {
@@ -2101,7 +2097,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       case NS_APPCOMMAND_REFRESH:
       case NS_APPCOMMAND_STOP:
         // handle these commands using nsIWebNavigation
-        mPresContext->GetContainer(getter_AddRefs(pcContainer));
+        pcContainer = mPresContext->GetContainer();
         if (pcContainer) {
           nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(pcContainer));
           if (webNav) {
@@ -2264,8 +2260,7 @@ nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext,
   }
 
   // Check whether or not to show the busy cursor
-  nsCOMPtr<nsISupports> pcContainer;
-  aPresContext->GetContainer(getter_AddRefs(pcContainer));    
+  nsCOMPtr<nsISupports> pcContainer = aPresContext->GetContainer();
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));    
   if (!docShell) return;
   PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
@@ -2960,8 +2955,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 
   nsCOMPtr<nsIContent> rootContent = mDocument->GetRootContent();
 
-  nsCOMPtr<nsISupports> pcContainer;
-  mPresContext->GetContainer(getter_AddRefs(pcContainer));
+  nsCOMPtr<nsISupports> pcContainer = mPresContext->GetContainer();
   NS_ASSERTION(pcContainer, "no container for presContext");
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));
@@ -4785,8 +4779,7 @@ nsEventStateManager::MoveCaretToFocus()
   PRInt32 itemType = nsIDocShellTreeItem::typeChrome;
 
   if (mPresContext) {
-    nsCOMPtr<nsISupports> pcContainer;
-    mPresContext->GetContainer(getter_AddRefs(pcContainer));
+    nsCOMPtr<nsISupports> pcContainer = mPresContext->GetContainer();
     nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(pcContainer));
     if (treeItem) 
       treeItem->GetItemType(&itemType);
@@ -4936,8 +4929,7 @@ nsEventStateManager::ResetBrowseWithCaret(PRBool *aBrowseWithCaret)
   *aBrowseWithCaret = PR_FALSE;
   if (!mPresContext) return NS_ERROR_FAILURE;
   
-  nsCOMPtr<nsISupports> pcContainer;
-  mPresContext->GetContainer(getter_AddRefs(pcContainer));
+  nsCOMPtr<nsISupports> pcContainer = mPresContext->GetContainer();
   PRInt32 itemType;
   nsCOMPtr<nsIDocShellTreeItem> shellItem(do_QueryInterface(pcContainer));
   if (!shellItem)
@@ -5254,8 +5246,7 @@ nsEventStateManager::ShiftFocusByDoc(PRBool aForward)
   
   NS_ASSERTION(mPresContext, "no prescontext");
 
-  nsCOMPtr<nsISupports> pcContainer;
-  mPresContext->GetContainer(getter_AddRefs(pcContainer));
+  nsCOMPtr<nsISupports> pcContainer = mPresContext->GetContainer();
   nsCOMPtr<nsIDocShellTreeNode> curNode = do_QueryInterface(pcContainer);
   
   // perform a depth first search (preorder) of the docshell tree

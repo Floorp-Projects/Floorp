@@ -852,9 +852,9 @@ nsJVMManager::GetChrome(nsIWebBrowserChrome **theChrome)
     if (!presContext) {
         return rv;
     }
-    rv = presContext->GetContainer(getter_AddRefs(cont));
+    cont = presContext->GetContainer();
     if (!cont) {
-        return rv;
+        return NS_OK;
     }
     treeItem = do_QueryInterface(cont, &rv);
     if (!treeItem) {

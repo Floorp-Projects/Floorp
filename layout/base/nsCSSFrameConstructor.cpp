@@ -798,8 +798,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresContext*        aPresCon
 {
   mPresShell = aPresContext->PresShell();
   mPresShell->GetFrameManager(getter_AddRefs(mFrameManager));
-  nsCOMPtr<nsISupports> container;
-  aPresContext->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
   if (docShell) 
     docShell->GetLayoutHistoryState(getter_AddRefs(mFrameState));
@@ -3628,10 +3627,9 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
 #endif
   {
     nsresult rv;
-    nsCOMPtr<nsISupports> container;
-    if (nsnull != aPresContext) {
-      aPresContext->GetContainer(getter_AddRefs(container));
-      if (nsnull != container) {
+    if (aPresContext) {
+      nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
+      if (container) {
         nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(container, &rv);
         if (NS_SUCCEEDED(rv) && scrollableContainer) {
           PRInt32 scrolling = -1;
@@ -4588,8 +4586,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     
     PRBool allowSubframes = PR_TRUE;
     if (aPresContext) {
-      nsCOMPtr<nsISupports> container;
-      aPresContext->GetContainer(getter_AddRefs(container));
+      nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
       if (docShell) {
         docShell->GetAllowSubframes(&allowSubframes);
@@ -4607,8 +4604,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     isReplaced = PR_TRUE;
     PRBool allowSubframes = PR_TRUE;
     if (aPresContext) {
-      nsCOMPtr<nsISupports> container;
-      aPresContext->GetContainer(getter_AddRefs(container));
+      nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
       if (docShell) {
         docShell->GetAllowSubframes(&allowSubframes);
@@ -4635,8 +4631,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
 
     PRBool allowSubframes = PR_TRUE;
     if (aPresContext) {
-      nsCOMPtr<nsISupports> container;
-      aPresContext->GetContainer(getter_AddRefs(container));
+      nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
       if (docShell) {
         docShell->GetAllowSubframes(&allowSubframes);
@@ -5299,8 +5294,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         // XXX should turning off frames allow XUL iframes?
         PRBool allowSubframes = PR_TRUE;
         if (aPresContext) {
-          nsCOMPtr<nsISupports> container;
-          aPresContext->GetContainer(getter_AddRefs(container));
+          nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
           nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
           if (docShell) {
             docShell->GetAllowSubframes(&allowSubframes);

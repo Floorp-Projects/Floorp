@@ -1476,9 +1476,8 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
                           PRBool aClick)
 {
   // We get here with server side image map
-  nsCOMPtr<nsILinkHandler> handler;
-  aPresContext->GetLinkHandler(getter_AddRefs(handler));
-  if (nsnull != handler) {
+  nsILinkHandler *handler = aPresContext->GetLinkHandler();
+  if (handler) {
     if (aClick) {
       // Check that this page is allowed to load this URI.
       // Almost a copy of the similarly named method in nsGenericElement
