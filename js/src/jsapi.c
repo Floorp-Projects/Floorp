@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -1515,9 +1515,9 @@ JS_AddNamedRoot(JSContext *cx, void *rp, const char *name)
     return js_AddRoot(cx, rp, name);
 }
 
-#ifdef DEBUG
-
 #include "jshash.h" /* Added by JSIFY */
+
+#ifdef DEBUG
 
 typedef struct NamedRootDumpArgs {
     void (*dump)(const char *name, void *rp, void *data);
@@ -1530,7 +1530,7 @@ js_named_root_dumper(JSHashEntry *he, intN i, void *arg)
     NamedRootDumpArgs *args = (NamedRootDumpArgs *) arg;
 
     if (he->value)
-	args->dump((char *) he->value, (void *)he->key, args->data);
+	args->dump((char *)he->value, (void *)he->key, args->data);
     return HT_ENUMERATE_NEXT;
 }
 
@@ -1547,6 +1547,48 @@ JS_DumpNamedRoots(JSRuntime *rt,
 }
 
 #endif /* DEBUG */
+
+typedef struct GCRootMapArgs {
+    JSGCRootMapFun map;
+    void *data;
+} GCRootMapArgs;
+
+JS_STATIC_DLL_CALLBACK(intN)
+js_gcroot_mapper(JSHashEntry *he, intN i, void *arg)
+{
+    GCRootMapArgs *args = (GCRootMapArgs *) arg;
+    intN mapflags, htflags;
+
+    mapflags = args->map((void *)he->key, (char *)he->value, args->data);
+
+#if JS_MAP_GCROOT_NEXT == HT_ENUMERATE_NEXT &&                                \
+    JS_MAP_GCROOT_STOP == HT_ENUMERATE_STOP &&                                \
+    JS_MAP_GCROOT_REMOVE == HT_ENUMERATE_REMOVE
+    htflags = mapflags;
+#else
+    htflags = HT_ENUMERATE_NEXT;
+    if (mapflags & JS_MAP_GCROOT_STOP)
+        htflags |= HT_ENUMERATE_STOP;
+    if (mapflags & JS_MAP_GCROOT_REMOVE)
+        htflags |= HT_ENUMERATE_REMOVE;
+#endif
+
+    return htflags;
+}
+
+JS_PUBLIC_API(intN)
+JS_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
+{
+    GCRootMapArgs args;
+    intN rv;
+
+    args.map = map;
+    args.data = data;
+    JS_LOCK_GC(rt);
+    rv = JS_HashTableEnumerateEntries(rt->gcRootsHash, js_gcroot_mapper, &args);
+    JS_UNLOCK_GC(rt);
+    return rv;
+}
 
 JS_PUBLIC_API(JSBool)
 JS_LockGCThing(JSContext *cx, void *thing)
@@ -3131,7 +3173,7 @@ JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
     JSScript tmp;
     JSRuntime *rt;
     JSBool ok;
-    
+
     /* Make a temporary copy of the JSScript structure and farble it a bit. */
     tmp = *script;
     if (part == JSEXEC_PROLOG) {
@@ -3649,7 +3691,7 @@ JS_SetLocaleCallbacks(JSContext *cx, JSLocaleCallbacks *callbacks)
     cx->localeCallbacks = callbacks;
 }
 
-JS_PUBLIC_API(JSLocaleCallbacks *) 
+JS_PUBLIC_API(JSLocaleCallbacks *)
 JS_GetLocaleCallbacks(JSContext *cx)
 {
     return cx->localeCallbacks;
