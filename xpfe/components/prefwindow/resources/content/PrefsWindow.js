@@ -42,6 +42,20 @@ function StartUp(windowName)
 }
 
 
+//function to open and close the manual prefs
+function openit()  {
+
+   var manualProxy = document.getElementById('manual-proxy');
+   var formStyle = manualProxy.getAttribute('style');
+   if (!(formStyle == "display: block; "))	
+    {
+	manualProxy.setAttribute("style", "display: block;");
+	}
+   else  {
+    manualProxy.setAttribute("style", "display: none;");
+	}   
+   }
+
  function choose() {
     var toolkit;
     var browser;
@@ -107,4 +121,42 @@ function PrefCacheSelectFolder() {
 
 function OpenProxyManualDialog() {
 	var dialog = window.openDialog("chrome://pref/content/pref-proxy-manual.xul", "", "chrome", {});
+}
+
+
+
+//dialog function that is not being called yet
+function onOK()
+{
+	//dump("\nDoing " + windowName + " startup...\n");
+	dump("Looking up prefwindow object...\n");
+	if (prefwindow == null)
+	{
+		dump("Creating prefwindow object...\n");
+    	prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
+	}
+	else
+	{
+		dump("prefwindow has already been created! Hurrah!\n");
+	}
+	if (prefwindow)
+	{
+		prefwindow.changePanel("chrome://prefs/content/pref-proxies.xul");
+	}
+	return true
+}
+
+function startUpProxy() {
+	doSetOKCancel(onOK, null);
+
+}
+
+function manualSelected()  {
+	manualSelect = document.getElementById('pref:1:int:network.proxy.type');
+	manualProxy = document.getElementById('manual-proxy');
+	dump("\n" + manualSelect);
+	dump("\n" + manualSelect.checked);
+	if (manualSelect.checked)
+	  manualProxy.setAttribute("style", "display: block");
+
 }
