@@ -56,7 +56,7 @@
 #define _MAX_LENGTH   256
 
 class nsProfile: public nsIProfileInternal,
-                 public nsIProfileChangeStatus 
+                 public nsIProfileChangeStatus
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROFILE
@@ -93,7 +93,6 @@ private:
 
     nsString mCurrentProfileName;
     PRBool mCurrentProfileAvailable;
-    nsProfileLock mCurrentProfileLock;
 
     PRBool mIsUILocaleSpecified;
     nsCString mUILocaleName;

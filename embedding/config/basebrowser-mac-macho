@@ -107,6 +107,7 @@ res/dtd/xhtml11.dtd
 components/libgklayout.dylib                   
 components/libhtmlpars.dylib                 
 components/layout_xul.xpt               
+components/layout_xul_tree.xpt
 components/content_base.xpt
 components/layout_base.xpt              
 
@@ -186,6 +187,7 @@ components/libuconv.dylib
 components/libi18n.dylib
 components/uconv.xpt
 components/unicharutil.xpt
+components/intl.xpt
 
 res/language.properties
 res/langGroups.properties

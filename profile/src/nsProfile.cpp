@@ -37,6 +37,7 @@
 
 #include "nscore.h" 
 #include "nsProfile.h"
+#include "nsProfileLock.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
@@ -1221,12 +1222,12 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     }
 
     // Do the profile switch
+    localLock.Unlock(); // gDirServiceProvider will get and hold its own lock
     gDirServiceProvider->SetProfileDir(profileDir);  
     mCurrentProfileName.Assign(aCurrentProfile);    
     gProfileDataAccess->SetCurrentProfile(aCurrentProfile);
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry(nsnull);
-    mCurrentProfileLock = localLock;
             
     if (NS_FAILED(rv)) return rv;
     mCurrentProfileAvailable = PR_TRUE;
@@ -1330,7 +1331,6 @@ NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
     UpdateCurrentProfileModTime(PR_TRUE);
     mCurrentProfileAvailable = PR_FALSE;
     mCurrentProfileName.Truncate(0);
-    mCurrentProfileLock.Unlock();
     
     return NS_OK;
 }
@@ -2459,6 +2459,7 @@ NS_IMETHODIMP nsProfile::VetoChange()
     mProfileChangeVetoed = PR_TRUE;
     return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsProfile::GetRegStrings(const PRUnichar *aProfileName, 

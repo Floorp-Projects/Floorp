@@ -33,6 +33,10 @@ ifdef MOZ_XUL
 DIRS += printingui
 endif
 
+ifdef MOZ_PROFILESHARING
+DIRS += profilesharingsetup
+endif
+
 DIRS += build
 
 include $(topsrcdir)/config/rules.mk
