@@ -478,7 +478,7 @@ if [ "$MOZ_MAIL_NEWS" ]; then
 fi
 
 if [ "$NECKO" ]; then
-  add_makefiles < ${srcdir}/mailnews/makefiles
+  add_makefiles < ${srcdir}/netwerk/makefiles
   add_makefiles <<END_NECKO_MAKEFILES
   extensions/cookie/Makefile
   extensions/cookie/tests/Makefile
