@@ -613,6 +613,8 @@ sub BuildClientDist()
    _InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",					"$distdirectory:mailnews:");
    _InstallFromManifest(":mozilla:mailnews:local:src:MANIFEST",						"$distdirectory:mailnews:");
    _InstallFromManifest(":mozilla:mailnews:imap:public:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:imap:build:MANIFEST",					"$distdirectory:mailnews:");
+   _InstallFromManifest(":mozilla:mailnews:imap:src:MANIFEST",					"$distdirectory:mailnews:");
    _InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
    _InstallFromManifest(":mozilla:mailnews:mime:src:MANIFEST",						"$distdirectory:mailnews:");
    _InstallFromManifest(":mozilla:mailnews:mime:emitters:src:MANIFEST",				"$distdirectory:mailnews:");
