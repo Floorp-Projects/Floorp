@@ -101,10 +101,10 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     case eColor_highlighttext:  // CSS2 color
     case eColor_TextSelectForeground:
     		GetColor(eColor_TextSelectBackground, aColor);
-    		if (aColor == 0xffffff)
-    			aColor = NS_RGB(0x00,0x00,0x00);
+    		if (aColor == 0x000000)
+					aColor = NS_RGB(0xff,0xff,0xff);
     		else
-				aColor = NS_RGB(0xff,0xff,0xff);
+    			aColor = NS_DONT_CHANGE_COLOR;
         break;
 
     //

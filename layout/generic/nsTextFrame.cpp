@@ -60,6 +60,7 @@
 #include "nsIFrameSelection.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMRange.h"
+#include "nsILookAndFeel.h"
 
 #include "nsILineIterator.h"
 
@@ -508,9 +509,15 @@ public:
       // Reset to the decoration saved earlier
       plainFont->decorations = originalDecorations; 
 
-      // XXX Get these from style
+      // Get colors from look&feel
       mSelectionBGColor = NS_RGB(0, 0, 0);
       mSelectionTextColor = NS_RGB(255, 255, 255);
+	    nsILookAndFeel* look = nsnull;
+	    if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
+	      look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, mSelectionBGColor);
+	      look->GetColor(nsILookAndFeel::eColor_TextSelectForeground, mSelectionTextColor);
+	      NS_RELEASE(look);
+	    }
 
       // Get the word and letter spacing
       mWordSpacing = 0;
@@ -745,6 +752,19 @@ nsContinuingTextFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) con
 #endif
 
 
+inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB)
+{
+    if (colorA == colorB)
+    {
+      nscolor res;
+      res = NS_RGB(NS_GET_R(colorA) ^ 0xff,
+                   NS_GET_G(colorA) ^ 0xff,
+                   NS_GET_B(colorA) ^ 0xff);
+      return res;
+    }
+    return colorA;
+}
+
 
 //DRAW SELECTION ITERATOR USED FOR TEXTFRAMES ONLY
 //helper class for drawing multiply selected text
@@ -932,14 +952,26 @@ DrawSelectionIterator::CurrentStyle()
 nscolor
 DrawSelectionIterator::CurrentForeGroundColor()
 {
+	nscolor foreColor;
+	PRBool colorSet = PR_FALSE;
   
   if (!mTypes)
   {
       if (mCurrentIdx == (PRUint32)mDetails->mStart)
-        return NS_RGB(255,255,255);
+      {
+   			foreColor = mOldStyle.mSelectionTextColor;
+   			colorSet = PR_TRUE;
+   		}
   }
   else if (mTypes[mCurrentIdx] | SELECTION_NORMAL)//Find color based on mTypes[mCurrentIdx];
-    return NS_RGB(255,255,255);
+  {
+    foreColor = mOldStyle.mSelectionTextColor;
+   	colorSet = PR_TRUE;
+  }
+
+	if (colorSet && (foreColor != NS_DONT_CHANGE_COLOR))
+			return foreColor;
+
   return mOldStyle.mColor->mColor;
 }
 
@@ -951,13 +983,13 @@ DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor)
   {
       if (mCurrentIdx == (PRUint32)mDetails->mStart)
       {
-        aColor=NS_RGB(0,128,0);
+    		aColor = mOldStyle.mSelectionBGColor;
         return PR_TRUE;
       }
   }
   else if (mTypes[mCurrentIdx] | SELECTION_NORMAL)
   {
-    aColor=NS_RGB(0,128,0);
+    aColor = mOldStyle.mSelectionBGColor;
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -1716,6 +1748,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
               {//DRAW RECT HERE!!!
                 aRenderingContext.SetColor(currentBKColor);
                 aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+								currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
               }
             }
             else
@@ -2177,12 +2210,12 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
               {//DRAW RECT HERE!!!
                 aRenderingContext.SetColor(currentBKColor);
                 aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+								currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
               }
             }
             else
               newWidth =0;
             
-
             aRenderingContext.SetColor(currentFGColor);
             RenderString(aRenderingContext,aStyleContext, aTextStyle, currenttext, 
                           currentlength, currentX, dy, width, details);
@@ -2329,12 +2362,12 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
               {//DRAW RECT HERE!!!
                 aRenderingContext.SetColor(currentBKColor);
                 aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+								currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
               }
             }
             else
               newWidth =0;
             
-
             aRenderingContext.SetColor(currentFGColor);
             aRenderingContext.DrawString(currenttext, currentlength, currentX, dy);
 
