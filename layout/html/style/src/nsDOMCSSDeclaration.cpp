@@ -200,32 +200,13 @@ nsDOMCSSDeclaration::SetProperty(const nsString& aPropertyName,
                                  const nsString& aPriority)
 {
   nsAutoString declString;
-  nsICSSDeclaration *decl;
-  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
 
-  if ((NS_OK == result) && (nsnull != decl)) {
-    declString=aPropertyName;
-    declString.Append(":");
-    declString.Append(aValue);
-    declString.Append(aPriority);
+  declString=aPropertyName;
+  declString.Append(":");
+  declString.Append(aValue);
+  declString.Append(aPriority);
 
-    nsICSSParser* css;
-    result = NS_NewCSSParser(&css);
-    if (NS_OK == result) {
-      PRInt32 hint;
-      nsIURI* baseURL = nsnull;
-      GetBaseURL(&baseURL);
-      result = css->ParseAndAppendDeclaration(declString, baseURL, decl, &hint);
-      NS_IF_RELEASE(baseURL);
-      if (NS_OK == result) {
-        result = StylePropertyChanged(aPropertyName, hint);
-      }
-      NS_RELEASE(css);
-    }
-    NS_RELEASE(decl);
-  }
-
-  return result;
+  return ParseDeclaration(declString);
 }
 
 NS_IMETHODIMP 
