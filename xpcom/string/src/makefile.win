@@ -28,20 +28,23 @@ LIBRARY_NAME=string_s
 
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
-CPP_OBJS =                                      \
-        .\$(OBJDIR)\nsAFlatString.obj           \
-        .\$(OBJDIR)\nsAString.obj               \
-        .\$(OBJDIR)\nsFragmentedString.obj      \
-        .\$(OBJDIR)\nsLocalString.obj           \
-        .\$(OBJDIR)\nsPrintfCString.obj         \
-        .\$(OBJDIR)\nsPrivateSharableString.obj \
-        .\$(OBJDIR)\nsPromiseConcatenation.obj  \
-        .\$(OBJDIR)\nsPromiseFlatString.obj     \
-        .\$(OBJDIR)\nsPromiseSubstring.obj      \
-        .\$(OBJDIR)\nsReadableUtils.obj         \
-        .\$(OBJDIR)\nsSharableString.obj        \
-        .\$(OBJDIR)\nsSharedBufferList.obj      \
-        .\$(OBJDIR)\nsSlidingString.obj         \
+CPP_OBJS =                                        \
+        .\$(OBJDIR)\nsAFlatString.obj             \
+        .\$(OBJDIR)\nsAString.obj                 \
+        .\$(OBJDIR)\nsDependentConcatenation.obj  \
+        .\$(OBJDIR)\nsDependentString.obj         \
+        .\$(OBJDIR)\nsDependentSubstring.obj      \
+        .\$(OBJDIR)\nsFragmentedString.obj        \
+        .\$(OBJDIR)\nsLocalString.obj             \
+        .\$(OBJDIR)\nsPrintfCString.obj           \
+        .\$(OBJDIR)\nsPrivateSharableString.obj   \
+        .\$(OBJDIR)\nsPromiseConcatenation.obj    \
+        .\$(OBJDIR)\nsPromiseFlatString.obj       \
+        .\$(OBJDIR)\nsPromiseSubstring.obj        \
+        .\$(OBJDIR)\nsReadableUtils.obj           \
+        .\$(OBJDIR)\nsSharableString.obj          \
+        .\$(OBJDIR)\nsSharedBufferList.obj        \
+        .\$(OBJDIR)\nsSlidingString.obj           \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
