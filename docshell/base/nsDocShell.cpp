@@ -421,9 +421,11 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo, PRUint32 aLoad
   }
 
   if (shEntry) {
-    rv = LoadHistoryEntry(shEntry, loadType);
+      // Load is from SH. SH does normal load only
+      mViewMode = viewNormal;
+      rv = LoadHistoryEntry(shEntry, loadType);
   } else {
-    rv = InternalLoad(aURI, referrer, owner, inheritOwner, stopActiveDoc, (const char*) target, nsnull, 
+      rv = InternalLoad(aURI, referrer, owner, inheritOwner, stopActiveDoc, (const char*) target, nsnull, 
                       nsnull, loadType, nsnull);
   }
 
