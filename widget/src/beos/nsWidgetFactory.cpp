@@ -204,9 +204,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)(nsWindow *)new nsLabel();
     }
     else if (mClassID.Equals(kCSound)) {
-    	nsISound* aSound = nsnull;
-    	NS_NewSound(&aSound);
-        inst = (nsISupports*) aSound;
+        inst = (nsISupports*)new nsSound();
     }
     else if (mClassID.Equals(kCTransferable)) {
         inst = (nsISupports*)new nsTransferable();
