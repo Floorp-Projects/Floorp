@@ -27,7 +27,6 @@ var gSearchSession = null;
 var gPreQuickSearchView = null;
 var gSearchTimer = null;
 var gViewSearchListener;
-var gNumOfSearchHits = 0;
 var gSearchBundle;
 var gStatusBar = null;
 var gSearchInProgress = false;
@@ -36,34 +35,36 @@ var gClearButton = null;
 var gDefaultSearchViewTerms = null;
 var gQSViewIsDirty = false;
 
+function SetQSStatusText(aNumHits)
+{
+  var statusMsg;
+  // if there are no hits, it means no matches were found in the search.
+  if (aNumHits == 0)
+    statusMsg = gSearchBundle.getString("searchFailureMessage");
+  else 
+  {
+    if (aNumHits == 1) 
+      statusMsg = gSearchBundle.getString("searchSuccessMessage");
+    else
+      statusMsg = gSearchBundle.getFormattedString("searchSuccessMessages", [aNumHits]);
+  }
+
+  statusFeedback.showStatusString(statusMsg);
+}
+
 // nsIMsgSearchNotify object
 var gSearchNotificationListener =
 {
     onSearchHit: function(header, folder)
     {
-        gNumOfSearchHits++;
+        // XXX todo
+        // update status text?
     },
 
     onSearchDone: function(status)
     {
-
-        var statusMsg;
-        // if there are no hits, it means no matches were found in the search.
-        if (gNumOfSearchHits == 0) {
-            statusMsg = gSearchBundle.getString("searchFailureMessage");
-        }
-        else 
-        {
-            if (gNumOfSearchHits == 1) 
-                statusMsg = gSearchBundle.getString("searchSuccessMessage");
-            else
-                statusMsg = gSearchBundle.getFormattedString("searchSuccessMessages", [gNumOfSearchHits]);
-
-            gNumOfSearchHits = 0;
-        }
-
+        SetQSStatusText(gDBView.QueryInterface(Components.interfaces.nsITreeView).rowCount)
         statusFeedback.showProgress(0);
-        statusFeedback.showStatusString(statusMsg);
         gStatusBar.setAttribute("mode","normal");
         gSearchInProgress = false;
     },
@@ -113,7 +114,7 @@ function initializeGlobalListeners()
 
 function createQuickSearchView()
 {
-  if(gDBView.viewType != nsMsgViewType.eShowQuickSearchResults)  //otherwise we are already in quick search view
+  if (gDBView.viewType != nsMsgViewType.eShowQuickSearchResults)  //otherwise we are already in quick search view
   {
     var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);  //clear selection
     treeView.selection.clearSelection();

@@ -396,7 +396,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
   else {
     if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) 
     {
-      viewSize = treeView.rowCount;
+      var viewSize = treeView.rowCount;
       if (gNextMessageViewIndexAfterDelete >= viewSize) 
       {
         if (viewSize > 0)
@@ -405,7 +405,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
         {           
           gNextMessageViewIndexAfterDelete = nsMsgViewIndex_None;
 
-          // there is nothing to select viewSize is 0
+          // there is nothing to select since viewSize is 0
           treeSelection.clearSelection();
           setTitleFromFolder(folder, null);
           ClearMessagePane();
