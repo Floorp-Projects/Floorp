@@ -466,7 +466,7 @@
 
       <menuitem label="Frequently Reported Bugs" oncommand="window._content.location.href='http://bugzilla.mozilla.org/duplicates.cgi'"/>
       <menuitem label="Bug Writing Guidelines" oncommand="window._content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
-      <menuitem label="File a Bug..." oncommand="window._content.location.href='http://www.mozilla.org/quality/bug-form.html'"/>
+      <menuitem label="File a Bug" oncommand="window._content.location.href='http://www.mozilla.org/quality/help/bug-form.html'"/>
 
       <menuseparator />
 
