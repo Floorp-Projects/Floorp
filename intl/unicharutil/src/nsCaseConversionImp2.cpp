@@ -246,6 +246,18 @@ nsresult nsCaseConversionImp2::ToTitle(
   } 
   else
   {
+    // First check for uppercase characters whose titlecase mapping is
+    //  different, like U+01F1 DZ: they must remain unchanged.
+    if( 0x01C0 == ( aChar & 0xFFC0)) // 0x01Cx - 0x01Fx
+    {
+      for(PRUint32 i = 0 ; i < gUpperToTitleItems; i++) {
+        if ( aChar == gUpperToTitle[(i*2)+kUpperIdx]) {
+          *aReturn = aChar;
+          return NS_OK;
+        }
+      }
+    }
+
     PRUnichar upper;
     upper = gUpperMap->Map(aChar);
     
@@ -323,7 +335,7 @@ nsresult nsCaseConversionImp2::ToTitle(
   PRBool bLastIsSpace =  IS_ASCII_SPACE(anArray[0]);
   if(aStartInWordBoundary)
   {
-     this->ToTitle(aReturn[0], &aReturn[0]);
+     this->ToTitle(anArray[0], &aReturn[0]);
   }
 
   PRUint32 i;
@@ -331,7 +343,11 @@ nsresult nsCaseConversionImp2::ToTitle(
   {
     if(bLastIsSpace)
     {
-      this->ToTitle(aReturn[i], &aReturn[i]);
+      this->ToTitle(anArray[i], &aReturn[i]);
+    }
+    else
+    {
+      aReturn[i] = anArray[i];
     }
 
     bLastIsSpace = IS_ASCII_SPACE(aReturn[i]);
