@@ -345,6 +345,22 @@ function CurrentSynonym() {
 /* a schema has just been selected */
 function SchemaSelected()
 {
+  // display caption above the entry tree
+  var schemaId = document.getElementById("schematree").selectedItems[0].getAttribute("id");
+  var schemanumb =parseInt(schemaId.substring(5, schemaId.length));
+  var schemaName = strings[entries[schemas[schemanumb]]];
+  var entryText = document.getElementById("entrytext");
+  entryText.setAttribute("value", entryText.getAttribute("value2") + schemaName);
+
+  // display instructions above synonym tree
+  var synonymText = document.getElementById("synonymtext");
+  synonymText.setAttribute("value", synonymText.getAttribute("value3"));
+
+  // display buttons next to enty tree
+  document.getElementById("addEntry").setAttribute("style", "display: inline;")
+  document.getElementById("removeEntry").setAttribute("style", "display: inline;")
+
+  // enable certain buttons
   document.getElementById("removeSchema").setAttribute("disabled", "false")
   document.getElementById("addEntry").setAttribute("disabled", "false")
 }
@@ -352,6 +368,20 @@ function SchemaSelected()
 /* an entry has just been selected */
 function EntrySelected()
 {
+  // display caption above synonym tree
+  var schemaId = document.getElementById("schematree").selectedItems[0].getAttribute("id");
+  var schemanumb =parseInt(schemaId.substring(5, schemaId.length));
+  var entryId = document.getElementById("entrytree").selectedItems[0].getAttribute("id");
+  var entrynumb =parseInt(entryId.substring(5, entryId.length));
+  var entryName = Decrypt(strings[entries[schemas[schemanumb]+entrynumb]+1]);
+  var synonymText = document.getElementById("synonymtext");
+  synonymText.setAttribute("value", synonymText.getAttribute("value2") + entryName);
+
+  // display buttons next to synonym tree
+  document.getElementById("addSynonym").setAttribute("style", "display: inline;");
+  document.getElementById("removeSynonym").setAttribute("style", "display: inline;");
+
+  // enable certain buttons
   document.getElementById("removeEntry").setAttribute("disabled", "false")
   document.getElementById("addSynonym").setAttribute("disabled", "false")
 }
@@ -368,6 +398,15 @@ function SynonymSelected()
 /* a schema has just been deselected */
 function SchemaDeselected()
 {
+  // hide buttons next to entry tree
+  document.getElementById("addEntry").setAttribute("style", "display: none")
+  document.getElementById("removeEntry").setAttribute("style", "display: none")
+
+  // hide captions above entry tree and synonym tree
+  document.getElementById("entrytext").setAttribute("value", "")
+  document.getElementById("synonymtext").setAttribute("value", "");
+
+  // disable certain buttons
   document.getElementById("removeSchema").setAttribute("disabled", "true")
   document.getElementById("addEntry").setAttribute("disabled", "true")
 }
@@ -375,6 +414,11 @@ function SchemaDeselected()
 /* an entry has just been deselected */
 function EntryDeselected()
 {
+  // hide buttons next to synonym tree
+  document.getElementById("addSynonym").setAttribute("style", "display: none")
+  document.getElementById("removeSynonym").setAttribute("style", "display: none")
+
+  // disable certain buttons
   document.getElementById("removeEntry").setAttribute("disabled", "true")
   document.getElementById("addSynonym").setAttribute("disabled", "true")
 }
@@ -536,10 +580,33 @@ function DeleteSynonym0() {
   deleteString(stringToDelete);
 }
 
+function myPrompt(message, oldValue, title) {
+  /*
+   * Can't simply call javascript's "prompt" because it puts up a checkbox (see bug 41390)
+   * so we are using a local rewrite of prompt here.
+   */
+
+//  if bug 41390 gets fixed, use the following line and delete rest of routine
+//  prompt(message, oldValue, title); /* use this if bug 41390 gets fixed */
+
+  var newValue = { };
+  if (!title) {
+    title = " ";
+  }
+  var commonDialogService =
+    Components.classes["component://netscape/appshell/commonDialogs"].getService();
+  commonDialogService =
+    commonDialogService.QueryInterface(Components.interfaces.nsICommonDialogs);
+  commonDialogService.Prompt(window, title, message, oldValue, newValue)
+  return newValue.value;
+}
+
 /* low-level add-schema routine */
 function AddSchema0() {
   var i;
-  var text = prompt(bundle.GetStringFromName("EnterNewSchema"), "" );
+  var text = myPrompt
+    (bundle.GetStringFromName("EnterNewSchema"), "",
+     bundle.GetStringFromName("AddingTitle"));
   if (text == "") {
     return;
   }
@@ -573,7 +640,9 @@ function AddSchema0() {
 /* low-level add-entry routine */ 
 function AddEntry0() {
   var i;
-  var text = prompt(bundle.GetStringFromName("EnterNewEntry"), "" );
+  var text = myPrompt
+    (bundle.GetStringFromName("EnterNewEntry"), "",
+     bundle.GetStringFromName("AddingTitle"));
   if (text == "") {
     return;
   }
@@ -605,7 +674,9 @@ function AddEntry0() {
 
 /* low-level add-synonym routine */
 function AddSynonym0() {
-  var text = prompt(bundle.GetStringFromName("EnterNewSynonym"), "" );
+  var text = myPrompt
+    (bundle.GetStringFromName("EnterNewSynonym"), "",
+     bundle.GetStringFromName("AddingTitle"));
   if (text == "") {
     return;
   }

@@ -59,19 +59,19 @@
           <spring style="height: 7px;"/>
           <box align="horizontal">
             <button id="removeSchema" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteSchema();"/>
-            <button id="addSchema" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddSchema();"/>
+            <button id="addSchema" class="dialog push" disabled="false" value="&button.addschema.label;" onclick="AddSchema();"/>
           </box>
         </div>
         <spring style="width: 7px;"/>
         <div style="width: 195px;">
-          <text class="label" value="&treehead.entries.label;"/>
+          <text class="label" id="entrytext" value2="&treehead.entries.label;"/>
           <tree multiple="true" id="entrytree" class="inset"
             style="height: 113px; width: 195px;" align="vertical" onclick="ViewSynonyms();">
             <treecol width="100%"/>
             <treechildren id="entrieslist"/>
           </tree>
           <spring style="height: 7px;"/>
-          <text class="label" value="&treehead.synonyms.label;"/>
+          <text class="label" id="synonymtext" value2="&treehead.synonyms.label;" value3="&treehead.synonymsoff.label;"/>
           <tree multiple="true" id="synonymtree" class="inset"
             style="height: 113px; width: 195px;" align="vertical" onclick="SynonymSelected();">
             <treecol width="100%"/>
@@ -79,14 +79,14 @@
           </tree>
         </div>
         <spring style="width: 7px;"/>
-        <div>
+        <div style="width: 120px;">
           <box align="vertical">
-            <spring style="height: 12px;"/>
+            <spring style="height: 15px;"/>
             <button id="removeEntry" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteEntry();"/>
-            <button id="addEntry" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddEntry();"/>
-            <spring style="height: 88px;"/>
+            <button id="addEntry" class="dialog push" disabled="false" value="&button.addentry.label;" onclick="AddEntry();"/>
+            <spring style="height: 93px;"/>
             <button id="removeSynonym" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteSynonym();"/>
-            <button id="addSynonym" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddSynonym();"/>
+            <button id="addSynonym" class="dialog push" disabled="false" value="&button.addsynonym.label;" onclick="AddSynonym();"/>
           </box>
         </div>
         <spring style="width: 7px;"/>
