@@ -2056,7 +2056,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aC
       specStr.Length() - extLoc < 20) 
   {
     return GetTypeFromExtension(PromiseFlatCString(
-             Substring(specStr, extLoc, specStr.Length() - extLoc - 1)
+             Substring(specStr, extLoc + 1, specStr.Length() - extLoc - 1)
            ).get(), aContentType);
   }
 
