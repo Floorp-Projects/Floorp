@@ -1713,25 +1713,7 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   nsIFrame* me = this;
   if (NS_SUCCEEDED(result) && shell) {
     shell->GetViewManager(getter_AddRefs(kungFuDeathGrip));
-
-    // See if we have a command elt.  If so, we execute on the command instead
-    // of on our content element.
-    nsAutoString command;
-    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
-    if (!command.IsEmpty()) {
-      nsCOMPtr<nsIDocument> doc;
-      mContent->GetDocument(*getter_AddRefs(doc));
-      nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
-      nsCOMPtr<nsIDOMElement> commandElt;
-      domDoc->GetElementById(command, getter_AddRefs(commandElt));
-      nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
-      if (commandContent)
-        shell->HandleDOMEventWithTarget(commandContent, &event, &status);
-      else
-        NS_ASSERTION(PR_FALSE, "A XUL <menuitem> is attached to a command that doesn't exist! Unable to execute menu item!\n");
-    }
-    else
-      shell->HandleDOMEventWithTarget(mContent, &event, &status);
+    shell->HandleDOMEventWithTarget(mContent, &event, &status);
   }
 
   // XXX HACK. Just gracefully exit if the node has been removed, e.g., window.close()

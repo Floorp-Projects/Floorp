@@ -3145,6 +3145,25 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
     nsIDOMEvent* domEvent = nsnull;
     if (NS_EVENT_FLAG_INIT & aFlags) {
+        if (aEvent->message == NS_XUL_COMMAND) {
+            // See if we have a command elt.  If so, we execute on the command instead
+            // of on our content element.
+            nsAutoString command;
+            GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
+            if (!command.IsEmpty()) {
+                nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mDocument));
+                nsCOMPtr<nsIDOMElement> commandElt;
+                domDoc->GetElementById(command, getter_AddRefs(commandElt));
+                nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
+                if (commandContent) {
+                    return commandContent->HandleDOMEvent(aPresContext, aEvent, nsnull, NS_EVENT_FLAG_INIT, aEventStatus);
+                }
+                else {
+                    NS_WARNING("A XUL element is attached to a command that doesn't exist!\n");
+                    return NS_ERROR_FAILURE;
+                }
+            }
+        }
         if (aDOMEvent) {
             if (*aDOMEvent)
               externalDOMEvent = PR_TRUE;
