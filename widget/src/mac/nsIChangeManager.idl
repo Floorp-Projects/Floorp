@@ -43,6 +43,9 @@ interface nsIChangeObserver : nsISupports
 
   void ContentRemoved ( in nsIDocument aDocument, in nsIContent aChild, 
                           in long aIndexInContainer ) ;
+                          
+  void ContentInserted ( in nsIDocument aDocument, in nsIContent aChild, 
+                          in long aIndexInContainer ) ;
   
 }; // nsIChangeObserver
 

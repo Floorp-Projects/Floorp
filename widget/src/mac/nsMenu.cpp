@@ -1167,40 +1167,33 @@ void nsMenu::LoadMenuItem(
       xulDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
     
     if ( keyElement ) {
-      PRUint8 modifiers = knsMenuItemNoModifier;
-      nsAutoString shiftAtom; shiftAtom.AssignWithConversion("shift");
-      nsAutoString altAtom; altAtom.AssignWithConversion("alt");
-      nsAutoString commandAtom; commandAtom.AssignWithConversion("command");
-      nsAutoString shiftValue;
-      nsAutoString altValue;
-      nsAutoString commandValue;
-      nsAutoString controlValue;
       nsAutoString keyChar; keyChar.AssignWithConversion(" ");
-	    
+      nsAutoString keyAtom; keyAtom.AssignWithConversion("key");
       keyElement->GetAttribute(keyAtom, keyChar);
-      keyElement->GetAttribute(shiftAtom, shiftValue);
-      keyElement->GetAttribute(altAtom, altValue);
-      keyElement->GetAttribute(commandAtom, commandValue);
-	    
-      nsAutoString xulkey;
-      keyElement->GetAttribute(NS_LITERAL_STRING("xulkey"), xulkey);
-      if (xulkey == NS_LITERAL_STRING("true"))
-        modifiers |= knsMenuItemCommandModifier;
-
-      if(keyChar != NS_LITERAL_STRING(" ")) 
+	    if(keyChar != NS_LITERAL_STRING(" ")) 
         pnsMenuItem->SetShortcutChar(keyChar);
         
-      if(shiftValue == NS_LITERAL_STRING("true")) 
-      modifiers |= knsMenuItemShiftModifier;
-
-      if(altValue == NS_LITERAL_STRING("true"))
-        modifiers |= knsMenuItemAltModifier;
-
-      if(commandValue == NS_LITERAL_STRING("true"))
-        modifiers |= knsMenuItemCommandModifier;
-
-      if(controlValue == NS_LITERAL_STRING("true"))
-        modifiers |= knsMenuItemControlModifier;
+      PRUint8 modifiers = knsMenuItemNoModifier;
+	    nsAutoString modifiersStr;
+      keyElement->GetAttribute(NS_LITERAL_STRING("modifiers"), modifiersStr);
+		  char* str = modifiersStr.ToNewCString();
+		  char* newStr;
+		  char* token = nsCRT::strtok( str, ", ", &newStr );
+		  while( token != NULL ) {
+		    if (PL_strcmp(token, "shift") == 0)
+		      modifiers |= knsMenuItemShiftModifier;
+		    else if (PL_strcmp(token, "alt") == 0) 
+		      modifiers |= knsMenuItemAltModifier;
+		    else if (PL_strcmp(token, "control") == 0) 
+		      modifiers |= knsMenuItemControlModifier;
+		    else if ((PL_strcmp(token, "accel") == 0) ||
+		             (PL_strcmp(token, "meta") == 0)) {
+          modifiers |= knsMenuItemCommandModifier;
+		    }
+		    
+		    token = nsCRT::strtok( newStr, ", ", &newStr );
+		  }
+		  nsMemory::Free(str);
 
 	    pnsMenuItem->SetModifiers ( modifiers );
     }
@@ -1604,3 +1597,14 @@ nsMenu :: ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIn
 } // ContentRemoved
 
 
+NS_IMETHODIMP
+nsMenu :: ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
+{  
+  if(gConstructingMenu)
+    return NS_OK;
+
+  mNeedsRebuild = PR_TRUE;
+  
+  return NS_OK;
+  
+} // ContentInserted

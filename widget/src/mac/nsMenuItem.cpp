@@ -429,3 +429,12 @@ nsMenuItem :: ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32
   
 } // ContentRemoved
 
+NS_IMETHODIMP
+nsMenuItem :: ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
+{
+  
+  nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
+  listener->SetRebuild(PR_TRUE);
+  return NS_OK;
+  
+} // ContentInserted
