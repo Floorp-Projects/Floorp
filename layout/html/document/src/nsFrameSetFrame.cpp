@@ -971,18 +971,18 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
     CalculateRowCol(aPresContext, height, mNumRows, mRowSpecs, mRowSizes);
   }
 
-  PRBool*    verBordersVis;                // vertical borders visibility    
-  nsHTMLFramesetBorderFrame** verBorders;  // vertical borders
-  nscolor*   verBorderColors;
-  PRBool*    horBordersVis;                // horizontal borders visibility
-  nsHTMLFramesetBorderFrame** horBorders;  // horizontal borders
-  nscolor*   horBorderColors;
-  PRInt32*   childTypes;                   // frameset/frame distinction of children  
-  nsFrameborder* childFrameborder;         // the frameborder attr of children 
-  nsFrameborder frameborder;
-  frameborder = GetFrameBorder(PR_FALSE);
-  nsBorderColor* childBorderColors;             
-  nscolor borderColor;
+  nsHTMLFramesetBorderFrame** verBorders = nsnull;  // vertical borders
+  nsHTMLFramesetBorderFrame** horBorders = nsnull;  // horizontal borders
+  PRBool*        verBordersVis     = nsnull; // vertical borders visibility
+  nscolor*       verBorderColors   = nsnull;
+  PRBool*        horBordersVis     = nsnull; // horizontal borders visibility
+  nscolor*       horBorderColors   = nsnull;
+  PRInt32*       childTypes        = nsnull; // frameset/frame distinction of children  
+  nsFrameborder* childFrameborder  = nsnull; // the frameborder attr of children 
+  nsBorderColor* childBorderColors = nsnull;
+  nscolor        borderColor       = NO_COLOR;
+  nsFrameborder  frameborder       = GetFrameBorder(PR_FALSE);
+
   if (firstTime) {
     verBorders    = new nsHTMLFramesetBorderFrame*[mNumCols];  // 1 more than number of ver borders
     verBordersVis = new PRBool[mNumCols];
