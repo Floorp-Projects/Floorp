@@ -105,12 +105,9 @@ protected:
 ////////////////////////////////////////////////////////////////////////
 
 /**
- * All the constructor needs does is initailize reference counting and
- * record the CID/ progID it should return when CreateInstance is called.
- * Convention dictates a one-to-one mapping between progIDs and CIDs.  Think
- * of a CID as an IP address, and a progID as the canonical name.  The
- * class name is a more descriptive representation of the progID.  Classnames
- * do not have to be unique.
+ * The constructor needs to initailize reference counting and
+ * record the CID / ProgID of the object it should return when CreateInstance
+ * is called.
  */
 SampleFactoryImpl::SampleFactoryImpl(const nsCID &aClass, 
                                      const char* className,
@@ -247,18 +244,34 @@ NSGetFactory(nsISupports* aServMgr,
 /**
  * When the XPCOM runtime is initialized, it searches the component directory
  * for shared objects, and attempts to call NSRegisterSelf for each one it
- * encounters.  You are expected to register each component the factory can
- * create as either a Service or a Component.  By convention, Services are
- * singletons, while Components are not.  Services are managed by the 
- * Service Manager, and Components are managed by (what else?) the Component
- * Manager.  The Component Manager itself is a Service, and so you can
- * retrieve it via the ServiceManager, as this function does.
+ * encounters.
  *
- * If you've gto some spare time, and _really_ want to see whats going on
+ * Clients create instances of XPCOM objects using the ComponentManager.
+ * In order for a Client to be able to create an instance of your
+ * object, you must register your object and CLSID with the ComponentManager.
+ *
+ * The ServiceManager is used to access a "service", which is an object
+ * that exists for the lifetime of the program.  Notice the distinction
+ * between accessing a singleton object using the ServiceManager and
+ * creating new instances using the ComponentManager.
+ *
+ * The ComponentManager is an example of an object which persists for
+ * the length of the program.  To register with the ComponentManager
+ * you first retrieve it using the ServiceManager.
+ *
+ * If you've got some spare time, and _really_ want to see whats going on
  * behind the scenes at registration time, soak up PlatformPrePopulateRegistry
  * (and all the functions it calls) in 
  * mozilla/xpcom/components/nsComponentManager.cpp
+ *
+ * It is possible to register that your component corresponds to a
+ * ProgID, which is a human readable string such as
+ * "component://netscape/image/decoder&type=image/gif".
+ * Instead of using the 32 digit CLSID, Clients can use the
+ * convienient ProgID.  ProgIDs are the preferred way of
+ * accessing components.
  */
+
 extern "C" PR_IMPLEMENT(nsresult)
 NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 {
