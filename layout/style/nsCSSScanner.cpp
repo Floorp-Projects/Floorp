@@ -438,6 +438,7 @@ PRBool nsCSSScanner::NextURL(PRInt32& aErrorCode, nsCSSToken& aToken)
           // Whitespace is allowed at the end of the URL
           (void) EatWhiteSpace(aErrorCode);
           if (LookAhead(aErrorCode, ')')) {
+            Pushback(')');  // leave the closing symbol
             // done!
             break;
           }
