@@ -7488,8 +7488,9 @@ dropOn (HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction)
 	RDF_BT			targetType;
 	RDF_BT			objType;
 
-	if (dropTarget == NULL)	return(DROP_NOT_ALLOWED);
-	if (dropObject == NULL)	return(DROP_NOT_ALLOWED);
+	if (dropTarget == NULL)		return(DROP_NOT_ALLOWED);
+	if (dropObject == NULL)		return(DROP_NOT_ALLOWED);
+	if (dropTarget == dropObject)   return(DROP_NOT_ALLOWED);
 
 	targetType  = resourceType(dropTarget->node);
 	objType     = resourceType(dropObject->node);
@@ -7501,7 +7502,8 @@ dropOn (HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction)
 	elders = dropTarget;
 	while (elders != NULL)
 	{
-		if (elders == dropObject)  return DROP_NOT_ALLOWED;
+		if (elders == dropObject)		return DROP_NOT_ALLOWED;
+		if (elders->node == dropObject->node)	return DROP_NOT_ALLOWED;
 		elders = elders->parent;
 	}
 
