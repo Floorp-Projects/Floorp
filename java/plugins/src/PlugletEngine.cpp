@@ -208,7 +208,7 @@ JNIEnv * PlugletEngine::GetJNIEnv(void) {
 	   StartJVM();
    }
    jvm->AttachCurrentThread(&res,NULL);
-#endif /* OJI_DISABLED */
+#endif /* OJI_DISABLE */
    return res;
 }
 

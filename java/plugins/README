@@ -39,7 +39,7 @@ How to Run:
 
 * Add following directories to to your path:
   %MOZILLA_FIVE_HOME%
-  In case OJI_DISABLED add %JDKHOME%\jre\bin\classic to your path
+  In case OJI_DISABLE add %JDKHOME%\jre\bin\classic to your path
 
 * Copy class files from mozilla/dist/classes to your JRE/lib/ext directory and
 add JRE/lib/ext to your classpath

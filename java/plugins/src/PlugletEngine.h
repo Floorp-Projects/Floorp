@@ -26,7 +26,7 @@
 #include "PlugletsDir.h"
 #include "nsComPtr.h"
 
-#ifndef OJI_DISABLED
+#ifndef OJI_DISABLE
 #include "nsJVMManager.h"
 #include "PlugletSecurityContext.h"
 #endif /* OJI_DISABLE */
