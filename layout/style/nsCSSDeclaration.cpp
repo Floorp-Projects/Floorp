@@ -549,6 +549,21 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       }
       break;
     }
+    case eCSSProperty_margin_left:
+    case eCSSProperty_margin_right:
+    case eCSSProperty_margin_start:
+    case eCSSProperty_margin_end:
+    case eCSSProperty_padding_left:
+    case eCSSProperty_padding_right:
+    case eCSSProperty_padding_start:
+    case eCSSProperty_padding_end: {
+      const nsCSSProperty* subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+      NS_ASSERTION(subprops[3] == eCSSProperty_UNKNOWN,
+                   "not box property with physical vs. logical cascading");
+      AppendValueToString(subprops[0], aValue);
+      break;
+    }
     case eCSSProperty_background: {
       if (AppendValueToString(eCSSProperty_background_color, aValue))
         aValue.Append(PRUnichar(' '));
@@ -1032,13 +1047,13 @@ nsCSSDeclaration::ToString(nsAString& aString) const
 
       case eCSSProperty_margin_top:            marginTop         = index+1; break;
       case eCSSProperty_margin_bottom:         marginBottom      = index+1; break;
-      case eCSSProperty_margin_left:           marginLeft        = index+1; break;
-      case eCSSProperty_margin_right:          marginRight       = index+1; break;
+      case eCSSProperty_margin_left_value:     marginLeft        = index+1; break;
+      case eCSSProperty_margin_right_value:    marginRight       = index+1; break;
 
       case eCSSProperty_padding_top:           paddingTop        = index+1; break;
       case eCSSProperty_padding_bottom:        paddingBottom     = index+1; break;
-      case eCSSProperty_padding_left:          paddingLeft       = index+1; break;
-      case eCSSProperty_padding_right:         paddingRight      = index+1; break;
+      case eCSSProperty_padding_left_value:    paddingLeft       = index+1; break;
+      case eCSSProperty_padding_right_value:   paddingRight      = index+1; break;
 
       case eCSSProperty_background_color:      bgColor           = index+1; break;
       case eCSSProperty_background_image:      bgImage           = index+1; break;

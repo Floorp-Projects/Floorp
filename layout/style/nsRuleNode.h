@@ -497,6 +497,17 @@ protected:
                              const nsRuleDataFont& aFontData,
                              PRUint8 aGenericFontID, nscoord aMinFontSize,
                              PRBool aUseDocumentFonts, nsStyleFont* aFont);
+
+  void AdjustLogicalBoxProp(nsStyleContext* aContext,
+                            const nsCSSValue& aLTRSource,
+                            const nsCSSValue& aRTLSource,
+                            const nsCSSValue& aLTRLogicalValue,
+                            const nsCSSValue& aRTLLogicalValue,
+                            const nsStyleSides& aParentRect,
+                            nsStyleSides& aRect,
+                            PRUint8 aSide,
+                            PRInt32 aMask,
+                            PRBool& aInherited);
   
   inline RuleDetail CheckSpecifiedProperties(const nsStyleStructID aSID, const nsRuleDataStruct& aRuleDataStruct);
 

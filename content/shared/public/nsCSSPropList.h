@@ -353,8 +353,26 @@ CSS_PROP_LIST(list-style-position, list_style_position, ListStylePosition, List,
 CSS_PROP_LIST(list-style-type, list_style_type, ListStyleType, List, mType, eCSSType_Value, PR_FALSE)
 CSS_PROP_SHORTHAND(margin, margin, Margin)
 CSS_PROP_MARGIN(margin-bottom, margin_bottom, MarginBottom, Margin, mMargin.mBottom, eCSSType_Value, PR_TRUE)
-CSS_PROP_MARGIN(margin-left, margin_left, MarginLeft, Margin, mMargin.mLeft, eCSSType_Value, PR_TRUE)
-CSS_PROP_MARGIN(margin-right, margin_right, MarginRight, Margin, mMargin.mRight, eCSSType_Value, PR_TRUE)
+CSS_PROP_SHORTHAND(-moz-margin-end, margin_end, MozMarginEnd)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_MARGIN(margin-end-value, margin_end_value, X, Margin, mMarginEnd, eCSSType_Value, PR_TRUE)
+#endif
+CSS_PROP_SHORTHAND(margin-left, margin_left, MarginLeft)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_MARGIN(margin-left-value, margin_left_value, X, Margin, mMargin.mLeft, eCSSType_Value, PR_TRUE)
+CSS_PROP_MARGIN(margin-left-ltr-source, margin_left_ltr_source, X, Margin, mMarginLeftLTRSource, eCSSType_Value, PR_TRUE)
+CSS_PROP_MARGIN(margin-left-rtl-source, margin_left_rtl_source, X, Margin, mMarginLeftRTLSource, eCSSType_Value, PR_TRUE)
+#endif
+CSS_PROP_SHORTHAND(margin-right, margin_right, MarginRight)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_MARGIN(margin-right-value, margin_right_value, X, Margin, mMargin.mRight, eCSSType_Value, PR_TRUE)
+CSS_PROP_MARGIN(margin-right-ltr-source, margin_right_ltr_source, X, Margin, mMarginRightLTRSource, eCSSType_Value, PR_TRUE)
+CSS_PROP_MARGIN(margin-right-rtl-source, margin_right_rtl_source, X, Margin, mMarginRightRTLSource, eCSSType_Value, PR_TRUE)
+#endif
+CSS_PROP_SHORTHAND(-moz-margin-start, margin_start, MozMarginStart)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_MARGIN(margin-start-value, margin_start_value, X, Margin, mMarginStart, eCSSType_Value, PR_TRUE)
+#endif
 CSS_PROP_MARGIN(margin-top, margin_top, MarginTop, Margin, mMargin.mTop, eCSSType_Value, PR_TRUE)
 CSS_PROP_CONTENT(marker-offset, marker_offset, MarkerOffset, Content, mMarkerOffset, eCSSType_Value, PR_TRUE)
 CSS_PROP_BACKENDONLY(marks, marks, Marks, Page, mMarks, eCSSType_Value, PR_FALSE)
@@ -375,8 +393,26 @@ CSS_PROP_OUTLINE(-moz-outline-width, _moz_outline_width, MozOutlineWidth, Margin
 CSS_PROP_DISPLAY(overflow, overflow, Overflow, Display, mOverflow, eCSSType_Value, PR_FALSE)
 CSS_PROP_SHORTHAND(padding, padding, Padding)
 CSS_PROP_PADDING(padding-bottom, padding_bottom, PaddingBottom, Margin, mPadding.mBottom, eCSSType_Value, PR_TRUE)
-CSS_PROP_PADDING(padding-left, padding_left, PaddingLeft, Margin, mPadding.mLeft, eCSSType_Value, PR_TRUE)
-CSS_PROP_PADDING(padding-right, padding_right, PaddingRight, Margin, mPadding.mRight, eCSSType_Value, PR_TRUE)
+CSS_PROP_SHORTHAND(-moz-padding-end, padding_end, MozPaddingEnd)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_PADDING(padding-end-value, padding_end_value, X, Margin, mPaddingEnd, eCSSType_Value, PR_TRUE)
+#endif
+CSS_PROP_SHORTHAND(padding-left, padding_left, PaddingLeft)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_PADDING(padding-left-value, padding_left_value, X, Margin, mPadding.mLeft, eCSSType_Value, PR_TRUE)
+CSS_PROP_PADDING(padding-left-ltr-source, padding_left_ltr_source, X, Margin, mPaddingLeftLTRSource, eCSSType_Value, PR_TRUE)
+CSS_PROP_PADDING(padding-left-rtl-source, padding_left_rtl_source, X, Margin, mPaddingLeftRTLSource, eCSSType_Value, PR_TRUE)
+#endif
+CSS_PROP_SHORTHAND(padding-right, padding_right, PaddingRight)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_PADDING(padding-right-value, padding_right_value, X, Margin, mPadding.mRight, eCSSType_Value, PR_TRUE)
+CSS_PROP_PADDING(padding-right-ltr-source, padding_right_ltr_source, X, Margin, mPaddingRightLTRSource, eCSSType_Value, PR_TRUE)
+CSS_PROP_PADDING(padding-right-rtl-source, padding_right_rtl_source, X, Margin, mPaddingRightRTLSource, eCSSType_Value, PR_TRUE)
+#endif
+CSS_PROP_SHORTHAND(-moz-padding-start, padding_start, MozPaddingStart)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_PADDING(padding-start-value, padding_start_value, X, Margin, mPaddingStart, eCSSType_Value, PR_TRUE)
+#endif
 CSS_PROP_PADDING(padding-top, padding_top, PaddingTop, Margin, mPadding.mTop, eCSSType_Value, PR_TRUE)
 CSS_PROP_BACKENDONLY(page, page, Page, Breaks, mPage, eCSSType_Value, PR_FALSE)
 CSS_PROP_DISPLAY(page-break-after, page_break_after, PageBreakAfter, Display, mBreakAfter, eCSSType_Value, PR_FALSE) // temp fix for bug 24000
@@ -459,7 +495,7 @@ CSS_PROP_SVG(stroke-width, stroke_width, StrokeWidth, SVG, mStrokeWidth, eCSSTyp
 // the style structs but not in the nsCSS* structs should define
 // |CSS_PROP_INCLUDE_NOT_CSS|.  (Some of these are also in nsRuleData*,
 // and a distinction might be needed at some point.)
-// The first 4 parameters don't matter, but some compilers don't like
+// The first 3 parameters don't matter, but some compilers don't like
 // empty arguments to macros.
 #ifdef CSS_PROP_INCLUDE_NOT_CSS
 CSS_PROP_VISIBILITY(X, X, X, Display, mLang, eCSSType_Value, PR_FALSE)

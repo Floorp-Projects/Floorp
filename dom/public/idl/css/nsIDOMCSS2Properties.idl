@@ -495,6 +495,12 @@ interface nsIDOMNSCSS2Properties : nsIDOMCSS2Properties
            attribute DOMString        MozKeyEquivalent;
                                         // raises(DOMException) on setting
 
+           attribute DOMString        MozMarginEnd;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozMarginStart;
+                                        // raises(DOMException) on setting
+
            attribute DOMString        MozOpacity;
                                         // raises(DOMException) on setting
 
@@ -523,6 +529,12 @@ interface nsIDOMNSCSS2Properties : nsIDOMCSS2Properties
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozOutlineWidth;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozPaddingEnd;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozPaddingStart;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozResizer;

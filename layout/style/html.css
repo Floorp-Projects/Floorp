@@ -55,7 +55,7 @@ p, dl, multicol {
 
 dd {
   display: block;
-  margin-left: 40px;
+  -moz-margin-start: 40px;
 }
 
 blockquote {
@@ -307,7 +307,7 @@ ul, menu, dir {
   display: block;
   list-style-type: disc;
   margin: 1em 0;
-  padding-left: 40px;
+  -moz-padding-start: 40px;
   -moz-counter-reset: -html-counter 0;
 }
 
@@ -315,7 +315,7 @@ ol {
   display: block;
   list-style-type: decimal;
   margin: 1em 0;
-  padding-left: 40px;
+  -moz-padding-start: 40px;
   -moz-counter-reset: -html-counter 0;
 }
 

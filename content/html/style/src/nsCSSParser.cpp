@@ -266,6 +266,9 @@ protected:
   void AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue);
   PRBool ParseBoxProperties(nsresult& aErrorCode, nsCSSRect& aResult,
                             const nsCSSProperty aPropIDs[]);
+  PRBool ParseDirectionalBoxProperty(nsresult& aErrorCode,
+                                     nsCSSProperty aProperty,
+                                     PRInt32 aSourceType);
   PRInt32 ParseChoice(nsresult& aErrorCode, nsCSSValue aValues[],
                       const nsCSSProperty aPropIDs[], PRInt32 aNumIDs);
   PRBool ParseColor(nsresult& aErrorCode, nsCSSValue& aValue);
@@ -3774,6 +3777,26 @@ PRBool CSSParserImpl::ParseBoxProperties(nsresult& aErrorCode,
   return PR_TRUE;
 }
 
+PRBool CSSParserImpl::ParseDirectionalBoxProperty(nsresult& aErrorCode,
+                                                  nsCSSProperty aProperty,
+                                                  PRInt32 aSourceType)
+{
+  const nsCSSProperty* subprops = nsCSSProps::SubpropertyEntryFor(aProperty);
+  NS_ASSERTION(subprops[3] == eCSSProperty_UNKNOWN,
+               "not box property with physical vs. logical cascading");
+  nsCSSValue value;
+  if (!ParseSingleValueProperty(aErrorCode, value, subprops[0]) ||
+      !ExpectEndProperty(aErrorCode, PR_TRUE))
+    return PR_FALSE;
+
+  AppendValue(subprops[0], value);
+  nsCSSValue typeVal(aSourceType, eCSSUnit_Enumerated);
+  AppendValue(subprops[1], typeVal);
+  AppendValue(subprops[2], typeVal);
+  aErrorCode = NS_OK;
+  return PR_TRUE;
+}
+
 PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
                                     nsCSSProperty aPropID)
 {
@@ -3846,12 +3869,36 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
     return ParseListStyle(aErrorCode);
   case eCSSProperty_margin:
     return ParseMargin(aErrorCode);
+  case eCSSProperty_margin_end:
+    return ParseDirectionalBoxProperty(aErrorCode, eCSSProperty_margin_end,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
+  case eCSSProperty_margin_left:
+    return ParseDirectionalBoxProperty(aErrorCode, eCSSProperty_margin_left,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_margin_right:
+    return ParseDirectionalBoxProperty(aErrorCode, eCSSProperty_margin_right,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_margin_start:
+    return ParseDirectionalBoxProperty(aErrorCode, eCSSProperty_margin_start,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
 #ifdef ENABLE_OUTLINE
   case eCSSProperty__moz_outline:
     return ParseOutline(aErrorCode);
 #endif
   case eCSSProperty_padding:
     return ParsePadding(aErrorCode);
+  case eCSSProperty_padding_end:
+    return ParseDirectionalBoxProperty(aErrorCode, eCSSProperty_padding_end,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
+  case eCSSProperty_padding_left:
+    return ParseDirectionalBoxProperty(aErrorCode, eCSSProperty_padding_left,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_padding_right:
+    return ParseDirectionalBoxProperty(aErrorCode, eCSSProperty_padding_right,
+                                       NS_BOXPROP_SOURCE_PHYSICAL);
+  case eCSSProperty_padding_start:
+    return ParseDirectionalBoxProperty(aErrorCode, eCSSProperty_padding_start,
+                                       NS_BOXPROP_SOURCE_LOGICAL);
   case eCSSProperty_pause:
     return ParsePause(aErrorCode);
   case eCSSProperty_play_during:
@@ -3873,6 +3920,22 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
   case eCSSProperty_play_during_uri:
   case eCSSProperty_size_height:
   case eCSSProperty_size_width:
+  case eCSSProperty_margin_end_value:
+  case eCSSProperty_margin_left_value:
+  case eCSSProperty_margin_right_value:
+  case eCSSProperty_margin_start_value:
+  case eCSSProperty_margin_left_ltr_source:
+  case eCSSProperty_margin_left_rtl_source:
+  case eCSSProperty_margin_right_ltr_source:
+  case eCSSProperty_margin_right_rtl_source:
+  case eCSSProperty_padding_end_value:
+  case eCSSProperty_padding_left_value:
+  case eCSSProperty_padding_right_value:
+  case eCSSProperty_padding_start_value:
+  case eCSSProperty_padding_left_ltr_source:
+  case eCSSProperty_padding_left_rtl_source:
+  case eCSSProperty_padding_right_ltr_source:
+  case eCSSProperty_padding_right_rtl_source:
     // The user can't use these
     REPORT_UNEXPECTED(NS_LITERAL_STRING("Attempt to use inaccessible property"));
     return PR_FALSE;
@@ -3947,11 +4010,19 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_image_region:
   case eCSSProperty_list_style:
   case eCSSProperty_margin:
+  case eCSSProperty_margin_end:
+  case eCSSProperty_margin_left:
+  case eCSSProperty_margin_right:
+  case eCSSProperty_margin_start:
 #ifdef ENABLE_OUTLINE
   case eCSSProperty__moz_outline:
   case eCSSProperty__moz_outline_radius:
 #endif
   case eCSSProperty_padding:
+  case eCSSProperty_padding_end:
+  case eCSSProperty_padding_left:
+  case eCSSProperty_padding_right:
+  case eCSSProperty_padding_start:
   case eCSSProperty_pause:
   case eCSSProperty_play_during:
   case eCSSProperty_quotes:
@@ -3967,6 +4038,14 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_play_during_uri:
   case eCSSProperty_size_height:
   case eCSSProperty_size_width:
+  case eCSSProperty_margin_left_ltr_source:
+  case eCSSProperty_margin_left_rtl_source:
+  case eCSSProperty_margin_right_ltr_source:
+  case eCSSProperty_margin_right_rtl_source:
+  case eCSSProperty_padding_left_ltr_source:
+  case eCSSProperty_padding_left_rtl_source:
+  case eCSSProperty_padding_right_ltr_source:
+  case eCSSProperty_padding_right_rtl_source:
     NS_ERROR("not currently parsed here");
     return PR_FALSE;
 
@@ -3995,8 +4074,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_background_repeat:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundRepeatKTable);
-  case eCSSProperty_background_x_position:
-  case eCSSProperty_background_y_position:
+  case eCSSProperty_background_x_position: // for internal use
+  case eCSSProperty_background_y_position: // for internal use
     return ParseVariant(aErrorCode, aValue, VARIANT_HKLP,
                         kBackgroundXYPositionKTable);
   case eCSSProperty_binding:
@@ -4172,8 +4251,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_list_style_type:
     return ParseVariant(aErrorCode, aValue, VARIANT_HOK, nsCSSProps::kListStyleKTable);
   case eCSSProperty_margin_bottom:
-  case eCSSProperty_margin_left:
-  case eCSSProperty_margin_right:
+  case eCSSProperty_margin_end_value: // for internal use
+  case eCSSProperty_margin_left_value: // for internal use
+  case eCSSProperty_margin_right_value: // for internal use
+  case eCSSProperty_margin_start_value: // for internal use
   case eCSSProperty_margin_top:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHLP, nsnull);
   case eCSSProperty_marker_offset:
@@ -4206,8 +4287,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
                         nsCSSProps::kOverflowKTable);
   case eCSSProperty_padding_bottom:
-  case eCSSProperty_padding_left:
-  case eCSSProperty_padding_right:
+  case eCSSProperty_padding_end_value: // for internal use
+  case eCSSProperty_padding_left_value: // for internal use
+  case eCSSProperty_padding_right_value: // for internal use
+  case eCSSProperty_padding_start_value: // for internal use
   case eCSSProperty_padding_top:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
   case eCSSProperty_page:
@@ -5239,10 +5322,19 @@ PRBool CSSParserImpl::ParseMargin(nsresult& aErrorCode)
 {
   static const nsCSSProperty kMarginSideIDs[] = {
     eCSSProperty_margin_top,
-    eCSSProperty_margin_right,
+    eCSSProperty_margin_right_value,
     eCSSProperty_margin_bottom,
-    eCSSProperty_margin_left
+    eCSSProperty_margin_left_value
   };
+  // do this now, in case 4 values weren't specified
+  mTempData.SetPropertyBit(eCSSProperty_margin_left_ltr_source);
+  mTempData.SetPropertyBit(eCSSProperty_margin_left_rtl_source);
+  mTempData.SetPropertyBit(eCSSProperty_margin_right_ltr_source);
+  mTempData.SetPropertyBit(eCSSProperty_margin_right_rtl_source);
+  mTempData.mMargin.mMarginLeftLTRSource.SetIntValue(NS_BOXPROP_SOURCE_PHYSICAL, eCSSUnit_Enumerated);
+  mTempData.mMargin.mMarginLeftRTLSource.SetIntValue(NS_BOXPROP_SOURCE_PHYSICAL, eCSSUnit_Enumerated);
+  mTempData.mMargin.mMarginRightLTRSource.SetIntValue(NS_BOXPROP_SOURCE_PHYSICAL, eCSSUnit_Enumerated);
+  mTempData.mMargin.mMarginRightRTLSource.SetIntValue(NS_BOXPROP_SOURCE_PHYSICAL, eCSSUnit_Enumerated);
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mMargin,
                             kMarginSideIDs);
 }
@@ -5304,10 +5396,19 @@ PRBool CSSParserImpl::ParsePadding(nsresult& aErrorCode)
 {
   static const nsCSSProperty kPaddingSideIDs[] = {
     eCSSProperty_padding_top,
-    eCSSProperty_padding_right,
+    eCSSProperty_padding_right_value,
     eCSSProperty_padding_bottom,
-    eCSSProperty_padding_left
+    eCSSProperty_padding_left_value
   };
+  // do this now, in case 4 values weren't specified
+  mTempData.SetPropertyBit(eCSSProperty_padding_left_ltr_source);
+  mTempData.SetPropertyBit(eCSSProperty_padding_left_rtl_source);
+  mTempData.SetPropertyBit(eCSSProperty_padding_right_ltr_source);
+  mTempData.SetPropertyBit(eCSSProperty_padding_right_rtl_source);
+  mTempData.mMargin.mPaddingLeftLTRSource.SetIntValue(NS_BOXPROP_SOURCE_PHYSICAL, eCSSUnit_Enumerated);
+  mTempData.mMargin.mPaddingLeftRTLSource.SetIntValue(NS_BOXPROP_SOURCE_PHYSICAL, eCSSUnit_Enumerated);
+  mTempData.mMargin.mPaddingRightLTRSource.SetIntValue(NS_BOXPROP_SOURCE_PHYSICAL, eCSSUnit_Enumerated);
+  mTempData.mMargin.mPaddingRightRTLSource.SetIntValue(NS_BOXPROP_SOURCE_PHYSICAL, eCSSUnit_Enumerated);
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mPadding,
                             kPaddingSideIDs);
 }

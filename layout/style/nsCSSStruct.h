@@ -245,7 +245,19 @@ struct nsCSSMargin : public nsCSSStruct  {
 #endif
 
   nsCSSRect   mMargin;
+  nsCSSValue  mMarginStart;
+  nsCSSValue  mMarginEnd;
+  nsCSSValue  mMarginLeftLTRSource;
+  nsCSSValue  mMarginLeftRTLSource;
+  nsCSSValue  mMarginRightLTRSource;
+  nsCSSValue  mMarginRightRTLSource;
   nsCSSRect   mPadding;
+  nsCSSValue  mPaddingStart;
+  nsCSSValue  mPaddingEnd;
+  nsCSSValue  mPaddingLeftLTRSource;
+  nsCSSValue  mPaddingLeftRTLSource;
+  nsCSSValue  mPaddingRightLTRSource;
+  nsCSSValue  mPaddingRightRTLSource;
   nsCSSRect   mBorderWidth;
   nsCSSRect   mBorderColor;
   nsCSSValueListRect mBorderColors;

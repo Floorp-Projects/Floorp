@@ -41,12 +41,15 @@
 
 // XXX fold this into nsStyleContext and group by nsStyleXXX struct
 
-// Indicies into border/padding/margin arrays
+// Indices into border/padding/margin arrays
 #define NS_SIDE_TOP     0
 #define NS_SIDE_RIGHT   1
 #define NS_SIDE_BOTTOM  2
 #define NS_SIDE_LEFT    3
 
+// {margin,padding}-{left,right}-{ltr,rtl}-source
+#define NS_BOXPROP_SOURCE_PHYSICAL 0
+#define NS_BOXPROP_SOURCE_LOGICAL  1
 
 // box-sizing
 #define NS_STYLE_BOX_SIZING_CONTENT       0
