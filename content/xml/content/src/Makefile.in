@@ -41,6 +41,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  htmlparser \
 		  xpconnect \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \

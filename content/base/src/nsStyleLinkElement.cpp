@@ -30,6 +30,7 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsINameSpaceManager.h"
+#include "nsUnicharUtils.h"
 
 #include "nsNetUtil.h"
 #include "nsVoidArray.h"

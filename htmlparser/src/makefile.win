@@ -27,6 +27,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  util \
 		  uconv \
+		  unicharutil \
 		  expat \
 		  layout \
 		  dom \
@@ -106,6 +107,7 @@ SUB_LIBRARIES=         \
  $(NULL)
 
 LLIBS=                  \
+ $(DIST)\lib\unicharutil_s.lib \
  $(DIST)\lib\xpcom.lib  \
 !ifdef MOZ_PERF
  $(DIST)\lib\util.lib   \

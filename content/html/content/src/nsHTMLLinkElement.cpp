@@ -51,6 +51,7 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsStyleLinkElement.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsHTMLUtils.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"

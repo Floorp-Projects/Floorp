@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  caps \
 		  editor \
-		  uconv \
 		  gfx2 \
 		  imglib2 \
 		  layout \

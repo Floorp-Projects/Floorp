@@ -51,6 +51,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsUnicharUtils.h"
 #include "nsIXMLContent.h"
 #include "nsStyleLinkElement.h"
 
