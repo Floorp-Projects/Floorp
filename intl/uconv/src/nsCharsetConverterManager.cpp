@@ -48,7 +48,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsIStringBundle.h"
-#include "nsICharsetDetector.h"
 #include "nsILocaleService.h"
 #include "nsUConvDll.h"
 #include "prmem.h"
@@ -99,10 +98,10 @@ private:
       const char * aRegistryPath);
 
   nsresult GetBundleValue(nsIStringBundle * aBundle, const nsIAtom * aName, 
-    nsString * aProp, PRUnichar ** aResult);
+                          const nsAFlatString& aProp, PRUnichar ** aResult);
 
   nsresult GetBundleValue(nsIStringBundle * aBundle, const nsIAtom * aName, 
-    nsString * aProp, nsIAtom ** aResult);
+                          const nsAFlatString& aProp, nsIAtom ** aResult);
 
   nsresult GetRegistryEnumeration(const char * aRegistryKey,
     const char * aAddPrefix, nsISupportsArray ** aArray);
@@ -295,7 +294,7 @@ nsresult nsCharsetConverterManager::LoadExtensibleBundle(
 
 nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle, 
                                                    const nsIAtom * aName, 
-                                                   nsString * aProp, 
+                                                   const nsAFlatString& aProp, 
                                                    PRUnichar ** aResult)
 {
   nsresult res = NS_OK;
@@ -305,7 +304,7 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
   if (NS_FAILED(res)) return res;
 
   key.ToLowerCase(); // we lowercase the main comparison key
-  if (aProp != NULL) key.Append(*aProp); // yes, this param may be NULL
+  if (!aProp.IsEmpty()) key.Append(aProp.get()); // yes, this param may be NULL
 
   res = aBundle->GetStringFromName(key.get(), aResult);
   return res;
@@ -313,7 +312,7 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
 
 nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle, 
                                                    const nsIAtom * aName, 
-                                                   nsString * aProp, 
+                                                   const nsAFlatString& aProp, 
                                                    nsIAtom ** aResult)
 {
   nsresult res = NS_OK;
@@ -632,7 +631,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetDetectorList(
   if (aResult == NULL) return NS_ERROR_NULL_POINTER;
   *aResult = NULL;
 
-  return GetRegistryEnumeration(NS_CHARSET_DETECTOR_REG_BASE, "chardet.", 
+  return GetRegistryEnumeration("software/netscape/intl/charsetdetector/", "chardet.", 
     aResult);
 }
 
@@ -693,7 +692,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(
     if (NS_FAILED(res)) return res;
   }
 
-  res = GetBundleValue(mTitleBundle, aCharset, &prop, aResult);
+  res = GetBundleValue(mTitleBundle, aCharset, NS_LITERAL_STRING(".title"), aResult);
   return res;
 }
 
@@ -725,14 +724,13 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetData(
   *aResult = NULL;
 
   nsresult res = NS_OK;
-  nsAutoString prop(aProp);
 
   if (mDataBundle == NULL) {
     res = LoadExtensibleBundle(NS_DATA_BUNDLE_REGISTRY_KEY, &mDataBundle);
     if (NS_FAILED(res)) return res;
   }
 
-  res = GetBundleValue(mDataBundle, aCharset, &prop, aResult);
+  res = GetBundleValue(mDataBundle, aCharset, nsDependentString(aProp), aResult);
   return res;
 }
 
@@ -763,13 +761,12 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
   *aResult = NULL;
 
   nsresult res = NS_OK;
-  nsAutoString prop; prop.AssignWithConversion(".LangGroup");
 
   if (mDataBundle == NULL) {
     res = LoadExtensibleBundle(NS_DATA_BUNDLE_REGISTRY_KEY, &mDataBundle);
     if (NS_FAILED(res)) return res;
   }
 
-  res = GetBundleValue(mDataBundle, aCharset, &prop, aResult);
+  res = GetBundleValue(mDataBundle, aCharset, NS_LITERAL_STRING(".LangGroup"), aResult);
   return res;
 }

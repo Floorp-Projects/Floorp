@@ -25,7 +25,6 @@ REQUIRES	= xpcom \
 		  string \
 		  intl \
 		  locale \
-		  chardet \
 		  unicharutil \
 		  necko \
 		  $(NULL)
@@ -56,6 +55,7 @@ CPPSRCS =				\
 	nsUnicodeToUTF8.cpp     \
 	nsUCvMinSupport.cpp		\
 	nsScriptableUConv.cpp	\
+	nsConverterInputStream.cpp   \
 	$(NULL)
 
 CPP_OBJS=						\
@@ -78,6 +78,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToUTF8.obj			\
 	.\$(OBJDIR)\nsUCvMinSupport.obj			\
 	.\$(OBJDIR)\nsScriptableUConv.obj	\
+	.\$(OBJDIR)\nsConverterInputStream.obj	\
 	$(NULL)
 
 CSRCS =		\
