@@ -521,6 +521,11 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
                                   nsIFileSpecWithUI::eAllFiles);
   nsCRT::free(unescapedDisplayName);
 
+  if (rv = NS_ERROR_ABORT)
+  {
+      rv = NS_OK;
+      goto done;
+  }
   if (NS_FAILED(rv)) goto done;
             
   aSpec = do_QueryInterface(fileSpec, &rv);
@@ -1157,8 +1162,6 @@ nsMessenger::MarkMessagesFlagged(nsIRDFCompositeDataSource *database,
 	return rv;
 
 }
-
-
 
 NS_IMETHODIMP
 nsMessenger::RenameFolder(nsIRDFCompositeDataSource* db,
