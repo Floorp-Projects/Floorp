@@ -33,7 +33,7 @@
 // interfaces into the web shell and so forth.
 
 class CWebBrowserContainer :
-		public nsIBaseWindow,
+		public nsIWebBrowserSiteWindow,
 		public nsIWebBrowserChrome,
 		public nsIWebProgressListener,
 		public nsIStreamObserver,
@@ -65,7 +65,7 @@ protected:
 
 public:
 	NS_DECL_ISUPPORTS
-	NS_DECL_NSIBASEWINDOW
+	NS_DECL_NSIWEBBROWSERSITEWINDOW
 	NS_DECL_NSIWEBBROWSERCHROME
 	NS_DECL_NSIDOCSHELLTREEOWNER
 	NS_DECL_NSIURICONTENTLISTENER
