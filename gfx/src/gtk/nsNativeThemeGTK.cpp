@@ -46,6 +46,7 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIEventStateManager.h"
+#include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsILookAndFeel.h"
 #include "nsIDeviceContext.h"
@@ -81,6 +82,8 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   mInputAtom = do_GetAtom("input");
   mFocusedAtom = do_GetAtom("focused");
   mFirstTabAtom = do_GetAtom("first-tab");
+
+  memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
@@ -104,6 +107,22 @@ static void GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
   content->GetDocument(*getter_AddRefs(doc));
   if (doc)
     doc->GetShellAt(0, aResult); // Addref happens here.
+}
+
+static void RefreshWidgetWindow(nsIFrame* aFrame)
+{
+  nsCOMPtr<nsIPresShell> shell;
+
+  GetPrimaryPresShell(aFrame, getter_AddRefs(shell));
+  if (!shell)
+    return;
+
+  nsCOMPtr<nsIViewManager> vm;
+  shell->GetViewManager(getter_AddRefs(vm));
+  if (!vm)
+    return;
+ 
+  vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
 }
 
 static PRInt32 GetContentState(nsIFrame* aFrame)
@@ -172,6 +191,14 @@ GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont)
   return NS_ERROR_FAILURE;
 }
 
+static PRBool IsWidgetTypeDisabled(PRUint8* aDisabledVector, PRUint8 aWidgetType) {
+  return aDisabledVector[aWidgetType >> 3] & (1 << (aWidgetType & 7));
+}
+
+static void SetWidgetTypeDisabled(PRUint8* aDisabledVector, PRUint8 aWidgetType) {
+  aDisabledVector[aWidgetType >> 3] |= (1 << (aWidgetType & 7));
+}
+
 void
 nsNativeThemeGTK::GetGtkWidgetState(PRUint8 aWidgetType,
                                     nsIFrame* aFrame, GtkWidgetState* aState)
@@ -220,6 +247,10 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   GtkWidgetState state;
   GetGtkWidgetState(aWidgetType, aFrame, &state);
+
+  NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType), "Trying to render an unsafe widget!");
+
+  gdk_error_trap_push();
 
   switch (aWidgetType) {
     
@@ -381,6 +412,20 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                         tab_flags);
       break;
     }
+  }
+
+  gdk_flush();
+  int err = gdk_error_trap_pop();
+  if (err) {
+#ifdef DEBUG
+    printf("GTK theme failed for widget type %d, error was %d, state was [active=%d,focused=%d,inHover=%d,disabled=%d]\n",
+           aWidgetType, err, state.active, state.focused, state.inHover, state.disabled);
+#endif
+    NS_WARNING("GTK theme failed; disabling unsafe widget");
+    SetWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType);
+    // force refresh of the window, because the widget was not successfully drawn
+    // it must be redrawn using the default look
+    RefreshWidgetWindow(aFrame);
   }
 
   return NS_OK;
@@ -572,6 +617,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
 NS_IMETHODIMP
 nsNativeThemeGTK::ThemeChanged()
 {
+  memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
   return NS_OK;
 }
 
@@ -588,6 +634,9 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
     if (content->IsContentOfType(nsIContent::eHTML))
       return PR_FALSE;
   }
+
+  if (IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType))
+    return PR_FALSE;
 
   switch (aWidgetType) {
   case NS_THEME_BUTTON:
