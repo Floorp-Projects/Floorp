@@ -40,6 +40,7 @@ LDFLAGS		= 		\
 	-lxpt \
 	-lxptinfo \
 	-lxptcall \
+	-lxptcmd \
 	-lreg       \
 	-l$(MOZ_LIB_UTIL_PREFIX)util    \
 	$(NSPR_LIBS) 	\
