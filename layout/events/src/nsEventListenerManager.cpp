@@ -606,7 +606,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
 
               eventString.Insert("on", 0, 2);
               nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(eventString));
-              nsString handlerBody;
+              nsAutoString handlerBody;
               result = content->GetAttribute(kNameSpaceID_None, atom, handlerBody);
               if (NS_SUCCEEDED(result)) {
                 result = scriptCX->CompileFunction(jsobj, atom, handlerBody);
