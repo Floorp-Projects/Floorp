@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -O -ggdb -DDEBUG -DXP_UNIX -Wall -W -Wpointer-arith -Wbad-function-cast -Wstrict-prototypes -Wmissing-prototypes \
-	-Wno-non-virtual-dtor
+CFLAGS = -g -ggdb -DDEBUG -DXP_UNIX -Wall -W -Wpointer-arith -Wbad-function-cast \
+	-Wstrict-prototypes -Wmissing-prototypes -Wno-non-virtual-dtor
 
 objs = 	hash.o \
 	js2.o \
@@ -9,7 +9,7 @@ objs = 	hash.o \
 	utilities.o \
 	world.o
 
-libs =	-lstdc++
+libs =	-lstdc++ -lm
 
 
 %.o : %.cpp
@@ -17,6 +17,9 @@ libs =	-lstdc++
 
 js2: $(objs)
 	$(CC) -o $@ -ggdb $^ $(libs)
+
+gctest: gc_allocator.o
+	$(CC) -o $@ -ggdb $^ gc.a $(libs)
 
 clean:
 	rm -f $(objs)
