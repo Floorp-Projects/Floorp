@@ -28,11 +28,16 @@ interface nsIRegistry : nsISupports
     const long Users = 1;
     const long Common = 2;
     const long CurrentUser = 3;
-    
+
     const long ApplicationComponentRegistry = 1;
+    const long ApplicationRegistry = 2;
+
+    // Dont use this one. This for internal use only.
+    const long ApplicationCustomRegistry = -1;
 
     void open(in string regFile);
     void openWellKnownRegistry(in long regid);
+    // Deprecated
     void openDefault();
     void close();
     void flush();
