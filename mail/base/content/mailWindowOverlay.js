@@ -178,6 +178,20 @@ function view_init()
       }
   }
 
+  // Disable some menus if account manager is showing
+  var sort_menuitem = document.getElementById('viewSortMenu');
+  if (sort_menuitem) {
+    sort_menuitem.setAttribute("disabled", gAccountCentralLoaded);
+  }
+  var view_menuitem = document.getElementById('viewMessageViewMenu');
+  if (view_menuitem) {
+    view_menuitem.setAttribute("disabled", gAccountCentralLoaded);
+  }
+  var threads_menuitem = document.getElementById('viewMessagesMenu');
+  if (threads_menuitem) {
+    threads_menuitem.setAttribute("disabled", gAccountCentralLoaded);
+  }
+
   // Initialize the View Attachment Inline menu
   var viewAttachmentInline = pref.getBoolPref("mail.inline_attachments");
   document.getElementById("viewAttachmentsInlineMenuitem").setAttribute("checked", viewAttachmentInline ? "true" : "false");
@@ -256,8 +270,8 @@ function InitViewSortByMenu()
 
 function InitViewMessagesMenu()
 {
-  var viewFlags = gDBView.viewFlags;
-  var viewType = gDBView.viewType;
+  var viewFlags = (gDBView) ? gDBView.viewFlags : 0;
+  var viewType = (gDBView) ? gDBView.viewType : 0;
 
   var allMenuItem = document.getElementById("viewAllMessagesMenuItem");
   if(allMenuItem)
@@ -282,8 +296,8 @@ function InitViewMessagesMenu()
 
 function InitViewMessageViewMenu()
 {
-  var viewFlags = gDBView.viewFlags;
-  var viewType = gDBView.viewType;
+  var viewFlags = (gDBView) ? gDBView.viewFlags : 0;
+  var viewType = (gDBView) ? gDBView.viewType : 0;
 
   var threadedMenuItem = document.getElementById("viewThreaded");
   if (threadedMenuItem)
