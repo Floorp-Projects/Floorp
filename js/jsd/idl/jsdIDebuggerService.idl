@@ -104,6 +104,14 @@ interface jsdIScript : nsISupports
     [noscript] readonly attribute JSDContext JSDContext;
     [noscript] readonly attribute JSDScript  JSDScript;
 
+    /* Releases the private data held by the wrapped JSDScript, and clears the
+     * wrapped JSDScript.
+     * This jsdIScript instance will no longer be useful.
+     * This should ONLY be called internally, in response to a JSDScript's 
+     * destruction by the jsd library.
+     */
+    [noscript] void invalidate(); 
+
     readonly attribute boolean       isActive;
     readonly attribute string        fileName;
     readonly attribute string        functionName;
@@ -198,8 +206,8 @@ interface jsdIValue : nsISupports
 [scriptable, uuid(ae89a7e2-1dd1-11b2-8c2f-af82086291a5)]
 interface jsdIScriptHook : nsISupports
 {
-    void onScriptLoaded (in jsdIContext cx, in jsdIScript script,
-                         in boolean creating);
+    void onScriptCreated (in jsdIContext cx, in jsdIScript script);
+    void onScriptDestroyed (in jsdIContext cx, in jsdIScript script);
 };
 
 [scriptable, uuid(9a7b6ad0-1dd1-11b2-a789-fcfae96356a2)]
